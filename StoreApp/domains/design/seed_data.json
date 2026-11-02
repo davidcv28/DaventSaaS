@@ -1365,6 +1365,1072 @@
         "corners": "square"
       },
       "concept": "Papel deportivo + tinta + lima de pizarra."
+    },
+    {
+      "slug": "esencial",
+      "nombre": "Esencial",
+      "categoria": "general",
+      "descripcion": "El estilo del diseño base: índigo sobrio, Inter y contenedores suaves. Claro, ordenado y neutro para cualquier rubro.",
+      "tier": "base",
+      "template": "raiz",
+      "page_theme": "light",
+      "tokens": {
+        "palette": {
+          "primary": "#4f46e5",
+          "secondary": "#3730a3",
+          "accent": "#4f46e5",
+          "bg": "#ffffff",
+          "surface": "#f8fafc",
+          "text": "#0f172a",
+          "muted": "#64748b",
+          "border": "#e2e8f0",
+          "success": "#059669",
+          "danger": "#dc2626"
+        },
+        "containers": {
+          "radius": "md",
+          "shadow": "soft",
+          "border": "thin",
+          "density": "comfortable",
+          "surface": "elevated"
+        },
+        "typography": {
+          "heading": "inter",
+          "subheading": "inter",
+          "body": "inter",
+          "scale": "balanced",
+          "weightHeading": 700,
+          "letterSpacing": "-0.01em"
+        },
+        "buttons": {
+          "shape": "rounded",
+          "style": "solid",
+          "size": "md"
+        },
+        "background": {
+          "type": "solid",
+          "overlay": "none"
+        },
+        "motion": {
+          "reveal": "fade",
+          "hover": "lift",
+          "intensity": "subtle"
+        },
+        "mobile": {
+          "gridCols": 1,
+          "cardStyle": "standard",
+          "heroHeight": "tall"
+        }
+      },
+      "layout": {
+        "landing": [
+          {
+            "id": "announcements",
+            "variant": "marquee",
+            "enabled": true,
+            "order": 0
+          },
+          {
+            "id": "hero",
+            "variant": "centered",
+            "enabled": true,
+            "order": 1
+          },
+          {
+            "id": "highlights",
+            "enabled": true,
+            "order": 2
+          },
+          {
+            "id": "categories",
+            "variant": "row",
+            "enabled": true,
+            "order": 3
+          },
+          {
+            "id": "featured",
+            "variant": "grid",
+            "enabled": true,
+            "order": 4
+          },
+          {
+            "id": "offers",
+            "variant": "grid",
+            "enabled": true,
+            "order": 5
+          },
+          {
+            "id": "services",
+            "enabled": true,
+            "order": 6
+          },
+          {
+            "id": "about",
+            "enabled": true,
+            "order": 7
+          },
+          {
+            "id": "benefits",
+            "variant": "cards",
+            "enabled": true,
+            "order": 8
+          },
+          {
+            "id": "stats",
+            "variant": "band",
+            "enabled": true,
+            "order": 9
+          },
+          {
+            "id": "plans",
+            "variant": "cards",
+            "enabled": true,
+            "order": 10
+          },
+          {
+            "id": "brands",
+            "variant": "marquee",
+            "enabled": true,
+            "order": 11
+          },
+          {
+            "id": "countdown",
+            "variant": "band",
+            "enabled": true,
+            "order": 12
+          },
+          {
+            "id": "timeline",
+            "enabled": true,
+            "order": 13
+          },
+          {
+            "id": "team",
+            "enabled": true,
+            "order": 14
+          },
+          {
+            "id": "steps",
+            "enabled": true,
+            "order": 15
+          },
+          {
+            "id": "compare",
+            "enabled": true,
+            "order": 16
+          },
+          {
+            "id": "gallery",
+            "variant": "grid",
+            "enabled": true,
+            "order": 17
+          },
+          {
+            "id": "video",
+            "enabled": true,
+            "order": 18
+          },
+          {
+            "id": "testimonials",
+            "variant": "cards",
+            "enabled": true,
+            "order": 19
+          },
+          {
+            "id": "faq",
+            "variant": "accordion",
+            "enabled": true,
+            "order": 20
+          },
+          {
+            "id": "cta",
+            "variant": "band",
+            "enabled": true,
+            "order": 21
+          },
+          {
+            "id": "contact",
+            "variant": "card",
+            "enabled": true,
+            "order": 22
+          }
+        ],
+        "catalog": [
+          {
+            "id": "note",
+            "enabled": true,
+            "order": 0
+          },
+          {
+            "id": "banner",
+            "enabled": true,
+            "order": 1
+          },
+          {
+            "id": "promo",
+            "enabled": true,
+            "order": 2
+          },
+          {
+            "id": "filters",
+            "variant": "chips",
+            "enabled": true,
+            "order": 3
+          },
+          {
+            "id": "sort",
+            "enabled": true,
+            "order": 4
+          },
+          {
+            "id": "grid",
+            "variant": "auto",
+            "enabled": true,
+            "order": 5
+          }
+        ],
+        "services": [
+          {
+            "id": "hero",
+            "variant": "centered",
+            "enabled": true,
+            "order": 0
+          },
+          {
+            "id": "band",
+            "enabled": true,
+            "order": 1
+          },
+          {
+            "id": "picker",
+            "enabled": true,
+            "order": 2
+          },
+          {
+            "id": "steps",
+            "enabled": true,
+            "order": 3
+          },
+          {
+            "id": "form",
+            "enabled": true,
+            "order": 4
+          },
+          {
+            "id": "faq",
+            "variant": "accordion",
+            "enabled": true,
+            "order": 5
+          }
+        ]
+      },
+      "layout_spec": {
+        "landing": {
+          "on": [
+            "announcements",
+            "hero",
+            "highlights",
+            "categories",
+            "featured",
+            "offers",
+            "services",
+            "about",
+            "benefits",
+            "stats",
+            "plans",
+            "brands",
+            "countdown",
+            "timeline",
+            "team",
+            "steps",
+            "compare",
+            "gallery",
+            "video",
+            "testimonials",
+            "faq",
+            "cta",
+            "contact"
+          ],
+          "var": {
+            "hero": "centered",
+            "announcements": "marquee",
+            "featured": "grid",
+            "categories": "row",
+            "plans": "cards",
+            "stats": "band",
+            "benefits": "cards",
+            "offers": "grid",
+            "brands": "marquee",
+            "countdown": "band",
+            "gallery": "grid",
+            "testimonials": "cards",
+            "faq": "accordion",
+            "cta": "band",
+            "contact": "card"
+          }
+        },
+        "catalog": {
+          "on": [
+            "note",
+            "banner",
+            "promo",
+            "filters",
+            "sort",
+            "grid"
+          ],
+          "var": {
+            "filters": "chips",
+            "grid": "auto"
+          }
+        },
+        "services": {
+          "on": [
+            "hero",
+            "band",
+            "picker",
+            "steps",
+            "form",
+            "faq"
+          ],
+          "var": {
+            "hero": "centered",
+            "faq": "accordion"
+          }
+        }
+      },
+      "tags": [
+        "general",
+        "base",
+        "esencial"
+      ],
+      "preview": "",
+      "style": "Esencial",
+      "anim": {
+        "hero": "fade-rise",
+        "reveal": "fade",
+        "hover": "lift",
+        "button": "soft-press"
+      },
+      "easing": "cubic-bezier(.4,0,.2,1)",
+      "duration": "480ms",
+      "icons": {
+        "style": "line",
+        "stroke": "1.5",
+        "size": "20",
+        "corners": "rounded"
+      },
+      "concept": "Base completa en claro: índigo institucional e Inter."
+    },
+    {
+      "slug": "esencial-noche",
+      "nombre": "Esencial Noche",
+      "categoria": "general",
+      "descripcion": "Versión nocturna del diseño base: azul tinta, índigo luminoso y brillo sutil al pasar el cursor.",
+      "tier": "base",
+      "template": "raiz",
+      "page_theme": "dark",
+      "tokens": {
+        "palette": {
+          "primary": "#818cf8",
+          "secondary": "#6366f1",
+          "accent": "#818cf8",
+          "bg": "#0b1120",
+          "surface": "#131c31",
+          "text": "#e2e8f0",
+          "muted": "#94a3b8",
+          "border": "#1e293b",
+          "success": "#34d399",
+          "danger": "#f87171"
+        },
+        "containers": {
+          "radius": "md",
+          "shadow": "medium",
+          "border": "thin",
+          "density": "comfortable",
+          "surface": "elevated"
+        },
+        "typography": {
+          "heading": "inter",
+          "subheading": "inter",
+          "body": "inter",
+          "scale": "balanced",
+          "weightHeading": 700,
+          "letterSpacing": "-0.01em"
+        },
+        "buttons": {
+          "shape": "rounded",
+          "style": "solid",
+          "size": "md"
+        },
+        "background": {
+          "type": "solid",
+          "overlay": "none"
+        },
+        "motion": {
+          "reveal": "fade",
+          "hover": "glow",
+          "intensity": "subtle"
+        },
+        "mobile": {
+          "gridCols": 1,
+          "cardStyle": "standard",
+          "heroHeight": "tall"
+        }
+      },
+      "layout": {
+        "landing": [
+          {
+            "id": "announcements",
+            "variant": "marquee",
+            "enabled": true,
+            "order": 0
+          },
+          {
+            "id": "hero",
+            "variant": "centered",
+            "enabled": true,
+            "order": 1
+          },
+          {
+            "id": "highlights",
+            "enabled": true,
+            "order": 2
+          },
+          {
+            "id": "categories",
+            "variant": "row",
+            "enabled": true,
+            "order": 3
+          },
+          {
+            "id": "featured",
+            "variant": "grid",
+            "enabled": true,
+            "order": 4
+          },
+          {
+            "id": "offers",
+            "variant": "grid",
+            "enabled": true,
+            "order": 5
+          },
+          {
+            "id": "services",
+            "enabled": true,
+            "order": 6
+          },
+          {
+            "id": "about",
+            "enabled": true,
+            "order": 7
+          },
+          {
+            "id": "benefits",
+            "variant": "cards",
+            "enabled": true,
+            "order": 8
+          },
+          {
+            "id": "stats",
+            "variant": "band",
+            "enabled": true,
+            "order": 9
+          },
+          {
+            "id": "plans",
+            "variant": "cards",
+            "enabled": true,
+            "order": 10
+          },
+          {
+            "id": "brands",
+            "variant": "marquee",
+            "enabled": true,
+            "order": 11
+          },
+          {
+            "id": "countdown",
+            "variant": "band",
+            "enabled": true,
+            "order": 12
+          },
+          {
+            "id": "timeline",
+            "enabled": true,
+            "order": 13
+          },
+          {
+            "id": "team",
+            "enabled": true,
+            "order": 14
+          },
+          {
+            "id": "steps",
+            "enabled": true,
+            "order": 15
+          },
+          {
+            "id": "compare",
+            "enabled": true,
+            "order": 16
+          },
+          {
+            "id": "gallery",
+            "variant": "grid",
+            "enabled": true,
+            "order": 17
+          },
+          {
+            "id": "video",
+            "enabled": true,
+            "order": 18
+          },
+          {
+            "id": "testimonials",
+            "variant": "cards",
+            "enabled": true,
+            "order": 19
+          },
+          {
+            "id": "faq",
+            "variant": "accordion",
+            "enabled": true,
+            "order": 20
+          },
+          {
+            "id": "cta",
+            "variant": "band",
+            "enabled": true,
+            "order": 21
+          },
+          {
+            "id": "contact",
+            "variant": "card",
+            "enabled": true,
+            "order": 22
+          }
+        ],
+        "catalog": [
+          {
+            "id": "note",
+            "enabled": true,
+            "order": 0
+          },
+          {
+            "id": "banner",
+            "enabled": true,
+            "order": 1
+          },
+          {
+            "id": "promo",
+            "enabled": true,
+            "order": 2
+          },
+          {
+            "id": "filters",
+            "variant": "chips",
+            "enabled": true,
+            "order": 3
+          },
+          {
+            "id": "sort",
+            "enabled": true,
+            "order": 4
+          },
+          {
+            "id": "grid",
+            "variant": "auto",
+            "enabled": true,
+            "order": 5
+          }
+        ],
+        "services": [
+          {
+            "id": "hero",
+            "variant": "centered",
+            "enabled": true,
+            "order": 0
+          },
+          {
+            "id": "band",
+            "enabled": true,
+            "order": 1
+          },
+          {
+            "id": "picker",
+            "enabled": true,
+            "order": 2
+          },
+          {
+            "id": "steps",
+            "enabled": true,
+            "order": 3
+          },
+          {
+            "id": "form",
+            "enabled": true,
+            "order": 4
+          },
+          {
+            "id": "faq",
+            "variant": "accordion",
+            "enabled": true,
+            "order": 5
+          }
+        ]
+      },
+      "layout_spec": {
+        "landing": {
+          "on": [
+            "announcements",
+            "hero",
+            "highlights",
+            "categories",
+            "featured",
+            "offers",
+            "services",
+            "about",
+            "benefits",
+            "stats",
+            "plans",
+            "brands",
+            "countdown",
+            "timeline",
+            "team",
+            "steps",
+            "compare",
+            "gallery",
+            "video",
+            "testimonials",
+            "faq",
+            "cta",
+            "contact"
+          ],
+          "var": {
+            "hero": "centered",
+            "announcements": "marquee",
+            "featured": "grid",
+            "categories": "row",
+            "plans": "cards",
+            "stats": "band",
+            "benefits": "cards",
+            "offers": "grid",
+            "brands": "marquee",
+            "countdown": "band",
+            "gallery": "grid",
+            "testimonials": "cards",
+            "faq": "accordion",
+            "cta": "band",
+            "contact": "card"
+          }
+        },
+        "catalog": {
+          "on": [
+            "note",
+            "banner",
+            "promo",
+            "filters",
+            "sort",
+            "grid"
+          ],
+          "var": {
+            "filters": "chips",
+            "grid": "auto"
+          }
+        },
+        "services": {
+          "on": [
+            "hero",
+            "band",
+            "picker",
+            "steps",
+            "form",
+            "faq"
+          ],
+          "var": {
+            "hero": "centered",
+            "faq": "accordion"
+          }
+        }
+      },
+      "tags": [
+        "general",
+        "base",
+        "esencial"
+      ],
+      "preview": "",
+      "style": "Esencial Noche",
+      "anim": {
+        "hero": "fade",
+        "reveal": "fade",
+        "hover": "glow",
+        "button": "soft-press"
+      },
+      "easing": "cubic-bezier(.4,0,.2,1)",
+      "duration": "480ms",
+      "icons": {
+        "style": "line",
+        "stroke": "1.5",
+        "size": "20",
+        "corners": "rounded"
+      },
+      "concept": "Base completa de noche: tinta e índigo con glow."
+    },
+    {
+      "slug": "esencial-premium",
+      "nombre": "Esencial Premium",
+      "categoria": "general",
+      "descripcion": "La cara de gala del diseño base: negro humo, dorado, Playfair Display, superficies de vidrio y animaciones con presencia.",
+      "tier": "base",
+      "template": "raiz",
+      "page_theme": "dark",
+      "tokens": {
+        "palette": {
+          "primary": "#b45309",
+          "secondary": "#92400e",
+          "accent": "#d4a017",
+          "bg": "#0c0a09",
+          "surface": "#1c1917",
+          "text": "#fafaf9",
+          "muted": "#a8a29e",
+          "border": "#292524",
+          "success": "#34d399",
+          "danger": "#f87171"
+        },
+        "containers": {
+          "radius": "lg",
+          "shadow": "deep",
+          "border": "thin",
+          "density": "spacious",
+          "surface": "glass"
+        },
+        "typography": {
+          "heading": "playfair-display",
+          "subheading": "inter",
+          "body": "inter",
+          "scale": "editorial",
+          "weightHeading": 600,
+          "letterSpacing": "-0.02em"
+        },
+        "buttons": {
+          "shape": "pill",
+          "style": "gradient",
+          "size": "lg"
+        },
+        "background": {
+          "type": "mesh",
+          "value": "radial-gradient(ellipse at top, #292524, #0c0a09)",
+          "overlay": "soft"
+        },
+        "motion": {
+          "reveal": "stagger",
+          "hover": "glow",
+          "intensity": "bold"
+        },
+        "mobile": {
+          "gridCols": 1,
+          "cardStyle": "overlay",
+          "heroHeight": "tall"
+        }
+      },
+      "layout": {
+        "landing": [
+          {
+            "id": "announcements",
+            "variant": "marquee",
+            "enabled": true,
+            "order": 0
+          },
+          {
+            "id": "hero",
+            "variant": "centered",
+            "enabled": true,
+            "order": 1
+          },
+          {
+            "id": "highlights",
+            "enabled": true,
+            "order": 2
+          },
+          {
+            "id": "categories",
+            "variant": "row",
+            "enabled": true,
+            "order": 3
+          },
+          {
+            "id": "featured",
+            "variant": "grid",
+            "enabled": true,
+            "order": 4
+          },
+          {
+            "id": "offers",
+            "variant": "grid",
+            "enabled": true,
+            "order": 5
+          },
+          {
+            "id": "services",
+            "enabled": true,
+            "order": 6
+          },
+          {
+            "id": "about",
+            "enabled": true,
+            "order": 7
+          },
+          {
+            "id": "benefits",
+            "variant": "cards",
+            "enabled": true,
+            "order": 8
+          },
+          {
+            "id": "stats",
+            "variant": "band",
+            "enabled": true,
+            "order": 9
+          },
+          {
+            "id": "plans",
+            "variant": "cards",
+            "enabled": true,
+            "order": 10
+          },
+          {
+            "id": "brands",
+            "variant": "marquee",
+            "enabled": true,
+            "order": 11
+          },
+          {
+            "id": "countdown",
+            "variant": "band",
+            "enabled": true,
+            "order": 12
+          },
+          {
+            "id": "timeline",
+            "enabled": true,
+            "order": 13
+          },
+          {
+            "id": "team",
+            "enabled": true,
+            "order": 14
+          },
+          {
+            "id": "steps",
+            "enabled": true,
+            "order": 15
+          },
+          {
+            "id": "compare",
+            "enabled": true,
+            "order": 16
+          },
+          {
+            "id": "gallery",
+            "variant": "grid",
+            "enabled": true,
+            "order": 17
+          },
+          {
+            "id": "video",
+            "enabled": true,
+            "order": 18
+          },
+          {
+            "id": "testimonials",
+            "variant": "cards",
+            "enabled": true,
+            "order": 19
+          },
+          {
+            "id": "faq",
+            "variant": "accordion",
+            "enabled": true,
+            "order": 20
+          },
+          {
+            "id": "cta",
+            "variant": "band",
+            "enabled": true,
+            "order": 21
+          },
+          {
+            "id": "contact",
+            "variant": "card",
+            "enabled": true,
+            "order": 22
+          }
+        ],
+        "catalog": [
+          {
+            "id": "note",
+            "enabled": true,
+            "order": 0
+          },
+          {
+            "id": "banner",
+            "enabled": true,
+            "order": 1
+          },
+          {
+            "id": "promo",
+            "enabled": true,
+            "order": 2
+          },
+          {
+            "id": "filters",
+            "variant": "chips",
+            "enabled": true,
+            "order": 3
+          },
+          {
+            "id": "sort",
+            "enabled": true,
+            "order": 4
+          },
+          {
+            "id": "grid",
+            "variant": "auto",
+            "enabled": true,
+            "order": 5
+          }
+        ],
+        "services": [
+          {
+            "id": "hero",
+            "variant": "centered",
+            "enabled": true,
+            "order": 0
+          },
+          {
+            "id": "band",
+            "enabled": true,
+            "order": 1
+          },
+          {
+            "id": "picker",
+            "enabled": true,
+            "order": 2
+          },
+          {
+            "id": "steps",
+            "enabled": true,
+            "order": 3
+          },
+          {
+            "id": "form",
+            "enabled": true,
+            "order": 4
+          },
+          {
+            "id": "faq",
+            "variant": "accordion",
+            "enabled": true,
+            "order": 5
+          }
+        ]
+      },
+      "layout_spec": {
+        "landing": {
+          "on": [
+            "announcements",
+            "hero",
+            "highlights",
+            "categories",
+            "featured",
+            "offers",
+            "services",
+            "about",
+            "benefits",
+            "stats",
+            "plans",
+            "brands",
+            "countdown",
+            "timeline",
+            "team",
+            "steps",
+            "compare",
+            "gallery",
+            "video",
+            "testimonials",
+            "faq",
+            "cta",
+            "contact"
+          ],
+          "var": {
+            "hero": "centered",
+            "announcements": "marquee",
+            "featured": "grid",
+            "categories": "row",
+            "plans": "cards",
+            "stats": "band",
+            "benefits": "cards",
+            "offers": "grid",
+            "brands": "marquee",
+            "countdown": "band",
+            "gallery": "grid",
+            "testimonials": "cards",
+            "faq": "accordion",
+            "cta": "band",
+            "contact": "card"
+          }
+        },
+        "catalog": {
+          "on": [
+            "note",
+            "banner",
+            "promo",
+            "filters",
+            "sort",
+            "grid"
+          ],
+          "var": {
+            "filters": "chips",
+            "grid": "auto"
+          }
+        },
+        "services": {
+          "on": [
+            "hero",
+            "band",
+            "picker",
+            "steps",
+            "form",
+            "faq"
+          ],
+          "var": {
+            "hero": "centered",
+            "faq": "accordion"
+          }
+        }
+      },
+      "tags": [
+        "general",
+        "base",
+        "esencial"
+      ],
+      "preview": "",
+      "style": "Esencial Premium",
+      "anim": {
+        "hero": "stagger-rise",
+        "reveal": "stagger",
+        "hover": "glow",
+        "button": "gradient-sheen"
+      },
+      "easing": "cubic-bezier(.4,0,.2,1)",
+      "duration": "480ms",
+      "icons": {
+        "style": "line",
+        "stroke": "1.5",
+        "size": "20",
+        "corners": "rounded"
+      },
+      "concept": "Premium: humo, oro, serif editorial y motion bold."
     }
   ],
   "patterns": [
@@ -2027,6 +3093,259 @@
       "variables": {},
       "supports_dark_mode": false,
       "style": "gimnasio"
+    },
+    {
+      "slug": "esencial",
+      "nombre": "Esencial",
+      "categoria": "general",
+      "descripcion": "Diseño base de la plataforma: portada completa con todas las secciones habilitadas — catálogo, suscripción, servicios, ofertas y contacto.",
+      "tier": "base",
+      "template": "raiz",
+      "layout": {
+        "landing": [
+          {
+            "id": "announcements",
+            "variant": "marquee",
+            "enabled": true,
+            "order": 0
+          },
+          {
+            "id": "hero",
+            "variant": "centered",
+            "enabled": true,
+            "order": 1
+          },
+          {
+            "id": "highlights",
+            "enabled": true,
+            "order": 2
+          },
+          {
+            "id": "categories",
+            "variant": "row",
+            "enabled": true,
+            "order": 3
+          },
+          {
+            "id": "featured",
+            "variant": "grid",
+            "enabled": true,
+            "order": 4
+          },
+          {
+            "id": "offers",
+            "variant": "grid",
+            "enabled": true,
+            "order": 5
+          },
+          {
+            "id": "services",
+            "enabled": true,
+            "order": 6
+          },
+          {
+            "id": "about",
+            "enabled": true,
+            "order": 7
+          },
+          {
+            "id": "benefits",
+            "variant": "cards",
+            "enabled": true,
+            "order": 8
+          },
+          {
+            "id": "stats",
+            "variant": "band",
+            "enabled": true,
+            "order": 9
+          },
+          {
+            "id": "plans",
+            "variant": "cards",
+            "enabled": true,
+            "order": 10
+          },
+          {
+            "id": "brands",
+            "variant": "marquee",
+            "enabled": true,
+            "order": 11
+          },
+          {
+            "id": "countdown",
+            "variant": "band",
+            "enabled": true,
+            "order": 12
+          },
+          {
+            "id": "timeline",
+            "enabled": true,
+            "order": 13
+          },
+          {
+            "id": "team",
+            "enabled": true,
+            "order": 14
+          },
+          {
+            "id": "steps",
+            "enabled": true,
+            "order": 15
+          },
+          {
+            "id": "compare",
+            "enabled": true,
+            "order": 16
+          },
+          {
+            "id": "gallery",
+            "variant": "grid",
+            "enabled": true,
+            "order": 17
+          },
+          {
+            "id": "video",
+            "enabled": true,
+            "order": 18
+          },
+          {
+            "id": "testimonials",
+            "variant": "cards",
+            "enabled": true,
+            "order": 19
+          },
+          {
+            "id": "faq",
+            "variant": "accordion",
+            "enabled": true,
+            "order": 20
+          },
+          {
+            "id": "cta",
+            "variant": "band",
+            "enabled": true,
+            "order": 21
+          },
+          {
+            "id": "contact",
+            "variant": "card",
+            "enabled": true,
+            "order": 22
+          }
+        ],
+        "catalog": [
+          {
+            "id": "note",
+            "enabled": true,
+            "order": 0
+          },
+          {
+            "id": "banner",
+            "enabled": true,
+            "order": 1
+          },
+          {
+            "id": "promo",
+            "enabled": true,
+            "order": 2
+          },
+          {
+            "id": "filters",
+            "variant": "chips",
+            "enabled": true,
+            "order": 3
+          },
+          {
+            "id": "sort",
+            "enabled": true,
+            "order": 4
+          },
+          {
+            "id": "grid",
+            "variant": "auto",
+            "enabled": true,
+            "order": 5
+          }
+        ],
+        "services": [
+          {
+            "id": "hero",
+            "variant": "centered",
+            "enabled": true,
+            "order": 0
+          },
+          {
+            "id": "band",
+            "enabled": true,
+            "order": 1
+          },
+          {
+            "id": "picker",
+            "enabled": true,
+            "order": 2
+          },
+          {
+            "id": "steps",
+            "enabled": true,
+            "order": 3
+          },
+          {
+            "id": "form",
+            "enabled": true,
+            "order": 4
+          },
+          {
+            "id": "faq",
+            "variant": "accordion",
+            "enabled": true,
+            "order": 5
+          }
+        ]
+      },
+      "tokens": {
+        "accent": "#4f46e5",
+        "palette": {
+          "primary": "#4f46e5",
+          "secondary": "#3730a3",
+          "accent": "#4f46e5",
+          "bg": "#ffffff",
+          "surface": "#f8fafc",
+          "text": "#0f172a",
+          "muted": "#64748b",
+          "border": "#e2e8f0",
+          "success": "#059669",
+          "danger": "#dc2626"
+        },
+        "fonts": [
+          "inter"
+        ],
+        "radius": "10px",
+        "anim": {
+          "hero": "fade-rise",
+          "reveal": "fade",
+          "hover": "lift",
+          "button": "soft-press"
+        },
+        "easing": "cubic-bezier(.4,0,.2,1)",
+        "duration": "480ms",
+        "icons": {
+          "style": "line",
+          "stroke": "1.5",
+          "size": "20",
+          "corners": "rounded"
+        }
+      },
+      "tags": [
+        "general",
+        "base",
+        "todas-las-secciones",
+        "suscripcion",
+        "catalogo"
+      ],
+      "preview": "",
+      "supports_dark_mode": true,
+      "style": "esencial"
     }
   ]
 }

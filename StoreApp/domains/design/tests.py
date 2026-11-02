@@ -163,7 +163,7 @@ class DesignCatalogDefaultsTests(TestCase):
         call_command('seed_design_catalog', verbosity = 0)
         call_command('seed_design_catalog', verbosity = 0)
         self.assertTrue(DesignStyle.objects.filter(slug = 'base', is_default = True).exists())
-        self.assertTrue(DesignPattern.objects.filter(slug = 'mercado', is_default = True).exists())
+        self.assertTrue(DesignPattern.objects.filter(slug = 'esencial', is_default = True).exists())
         self.assertEqual(DesignStyle.objects.filter(is_default = True).count(), 1)
         self.assertEqual(DesignPattern.objects.filter(is_default = True).count(), 1)
         self.assertGreaterEqual(DesignStyle.objects.count(), 2)
