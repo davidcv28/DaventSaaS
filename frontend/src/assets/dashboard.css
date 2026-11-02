@@ -675,35 +675,41 @@
    la barra contextual (volver + título + buscar + campana). */
 @media (max-width: 860px) {
   .app--tabs .sidebar { display: none; }
-  .app--tabs .topbar { display: flex; margin: -12px -16px 18px; padding: 10px 14px; gap: 10px; border-bottom: 1px solid var(--line-soft); }
+  .app--tabs .topbar { display: flex; margin: -12px -16px 18px; padding: 10px 14px; gap: 10px; border-bottom: 1px solid var(--line-soft); box-shadow: 0 10px 26px -18px rgba(9, 12, 24, .3); }
   .app--tabs .topbar-date, .app--tabs .top-search-label, .app--tabs .top-search .kbd { display: none; }
   .app--tabs .top-search { width: 38px; padding: 0; justify-content: center; margin-left: auto; }
-  .app--tabs .main { padding-top: 12px; padding-bottom: calc(84px + env(safe-area-inset-bottom)); }
+  .app--tabs .main { padding-top: 12px; padding-bottom: calc(104px + env(safe-area-inset-bottom)); }
   .app--tabs .nav-indicator { display: none; }
 }
 
-/* Tab bar inferior: 4 destinos + Más, al alcance del pulgar. */
+/* Tab bar inferior: píldora flotante de vidrio (4 destinos + Más, al
+   alcance del pulgar). Despega del borde para un look de app nativa. */
 .tabbar { display: none; }
 @media (max-width: 860px) {
   .tabbar {
-    position: fixed; left: 0; right: 0; bottom: 0; z-index: 70;
+    position: fixed; z-index: 70;
+    left: calc(12px + env(safe-area-inset-left)); right: calc(12px + env(safe-area-inset-right)); bottom: calc(10px + env(safe-area-inset-bottom));
     display: flex; align-items: stretch; justify-content: space-around;
-    background: color-mix(in srgb, var(--bg) 88%, transparent);
-    backdrop-filter: blur(14px) saturate(1.3); -webkit-backdrop-filter: blur(14px) saturate(1.3);
-    border-top: 1px solid var(--line);
-    padding: 6px calc(6px + env(safe-area-inset-right)) calc(6px + env(safe-area-inset-bottom)) calc(6px + env(safe-area-inset-left));
+    background: color-mix(in srgb, var(--raise-2) 74%, transparent);
+    backdrop-filter: blur(18px) saturate(1.5); -webkit-backdrop-filter: blur(18px) saturate(1.5);
+    border: 1px solid var(--line-soft); border-radius: 22px;
+    box-shadow: 0 14px 34px -12px rgba(9, 12, 24, .35), 0 2px 8px -2px rgba(9, 12, 24, .12), inset 0 1px 0 rgba(255, 255, 255, .45);
+    padding: 6px;
+  }
+  [data-theme='dark'] .tabbar {
+    background: color-mix(in srgb, #141a3a 78%, transparent);
+    border-color: rgba(255, 255, 255, .1);
+    box-shadow: 0 14px 34px -12px rgba(0, 0, 0, .6), inset 0 1px 0 rgba(255, 255, 255, .08);
   }
   .tabbar > button {
     position: relative; flex: 1 1 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px;
-    min-height: 52px; border: none; border-radius: 12px; background: transparent; color: var(--muted);
+    min-height: 52px; border: none; border-radius: 16px; background: transparent; color: var(--muted);
     font: inherit; font-size: 10.5px; font-weight: 600; cursor: pointer; touch-action: manipulation;
     transition: color .18s, background-color .18s;
   }
   .tabbar > button .icon { transition: transform .22s var(--ease-spring), color .18s; }
   .tabbar > button.active { color: var(--brand-ink); }
-  .tabbar > button.active .icon { transform: translateY(-1px); }
-  .tabbar > button.active::before { content: ''; position: absolute; top: 2px; left: 50%; width: 18px; height: 3px; border-radius: 3px; background: var(--brand-500); transform: translateX(-50%); }
-  .tabbar > button:active { background: var(--brand-soft); }
+  .tabbar > button.active .icon { transform: translateY(-1px); color: var(--brand-ink); }
   .tabbar > button.locked { opacity: .65; }
 }
 
@@ -714,13 +720,13 @@
 }
 
 /* Sheet "Más": el menú completo sube desde abajo con el look del rail. */
-.sheet-scrim { position: fixed; inset: 0; z-index: 78; background: rgba(8, 10, 24, .55); animation: gs-fade .18s ease both; }
+.sheet-scrim { position: fixed; inset: 0; z-index: 78; background: rgba(8, 10, 24, .55); backdrop-filter: blur(4px); -webkit-backdrop-filter: blur(4px); animation: gs-fade .18s ease both; }
 .more-sheet {
   position: fixed; left: 0; right: 0; bottom: 0; z-index: 80;
   display: flex; flex-direction: column; max-height: min(78dvh, 640px);
   background: var(--rail, #0f1130); color: var(--rail-ink-hi, #fff);
-  border-radius: 20px 20px 0 0; border-top: 1px solid var(--rail-line, rgba(255, 255, 255, .1));
-  box-shadow: 0 -18px 50px -18px rgba(8, 10, 24, .75);
+  border-radius: 24px 24px 0 0; border-top: 1px solid rgba(129, 140, 248, .3);
+  box-shadow: 0 -18px 50px -18px rgba(8, 10, 24, .75), inset 0 1px 0 rgba(255, 255, 255, .08);
   transform: translateY(102%); visibility: hidden;
   transition: transform .28s var(--ease-out), visibility .28s;
 }
@@ -731,8 +737,10 @@
 .sheet-plan { margin-left: auto; font-size: 11px; font-weight: 600; letter-spacing: 0; color: var(--brand-200); background: rgba(129, 140, 248, .16); border: 1px solid rgba(129, 140, 248, .35); border-radius: 99px; padding: 3px 10px; }
 .sheet-x { position: absolute; top: 16px; right: 14px; display: grid; place-items: center; width: 36px; height: 36px; border: none; border-radius: 10px; background: rgba(255, 255, 255, .07); color: var(--rail-ink-hi, #fff); cursor: pointer; }
 .sheet-nav { flex: 1; overflow-y: auto; overscroll-behavior: contain; padding: 8px 12px; display: grid; gap: 2px; align-content: start; }
-.sheet-nav > button { display: flex; align-items: center; gap: 12px; min-height: 48px; padding: 8px 12px; border: none; border-radius: var(--radius-sm); background: transparent; color: var(--rail-ink, #a5b4d4); font: inherit; font-size: 15px; font-weight: 500; text-align: left; cursor: pointer; touch-action: manipulation; }
-.sheet-nav > button.active { background: rgba(99, 102, 241, .26); color: #fff; box-shadow: inset 2px 0 0 var(--brand-400); }
+.sheet-nav > button { display: flex; align-items: center; gap: 12px; min-height: 48px; padding: 6px 12px 6px 6px; border: 1px solid transparent; border-radius: 14px; background: transparent; color: var(--rail-ink, #a5b4d4); font: inherit; font-size: 15px; font-weight: 500; text-align: left; cursor: pointer; touch-action: manipulation; }
+.sheet-nav > button .icon { flex: none; width: 40px; height: 40px; padding: 10px; box-sizing: border-box; border-radius: 12px; background: rgba(255, 255, 255, .06); }
+.sheet-nav > button.active { background: rgba(99, 102, 241, .16); border-color: rgba(129, 140, 248, .34); color: #fff; }
+.sheet-nav > button.active .icon { background: var(--brand-500); color: #fff; }
 .sheet-nav > button.locked { opacity: .62; }
 .sheet-go { margin-left: auto; color: var(--rail-ink, #a5b4d4); opacity: .5; }
 .sheet-nav .nav-heading { margin: 10px 12px 2px; }
@@ -851,13 +859,27 @@
 .today > .steps-card { grid-area: steps; }
 .today > .feed-card { grid-area: feed; }
 
-/* Acción recomendada: única decisión principal (Hick). */
-.next-do { position: relative; overflow: hidden; padding: 24px 26px; background: linear-gradient(135deg, var(--brand-soft), transparent 70%), var(--card); border-color: var(--brand-soft-line); }
-.next-do-tag { display: inline-flex; align-items: center; gap: 6px; margin-bottom: 8px; font-size: 11.5px; font-weight: 700; letter-spacing: .09em; text-transform: uppercase; color: var(--brand-ink); }
-.next-do h2 { margin: 0 0 4px; font-size: 21px; letter-spacing: -.015em; }
-.next-do p { margin: 0 0 16px; color: var(--muted); font-size: 14.5px; }
-.next-do-cta { min-height: 46px; padding: 10px 20px; font-size: 15px; }
-.next-do-step { display: block; margin-top: 12px; font-size: 12px; color: var(--muted); }
+/* Acción recomendada: única decisión principal (Hick). Tarjeta oscura
+   premium con glow de marca — el foco visual del Inicio en ambos temas. */
+.next-do {
+  position: relative; overflow: hidden; padding: 24px 26px;
+  border-color: rgba(129, 140, 248, .3); color: #eef0ff;
+  background:
+    radial-gradient(130% 160% at 100% -10%, color-mix(in srgb, var(--brand-500) 36%, transparent), transparent 58%),
+    linear-gradient(140deg, #1b2148, #0f1130 78%);
+  box-shadow: 0 18px 44px -20px rgba(15, 17, 48, .65), inset 0 1px 0 rgba(255, 255, 255, .07);
+}
+.next-do-tag { display: inline-flex; align-items: center; gap: 6px; margin-bottom: 8px; font-size: 11.5px; font-weight: 700; letter-spacing: .09em; text-transform: uppercase; color: #c3ccff; }
+.next-do h2 { margin: 0 0 4px; font-size: 21px; letter-spacing: -.015em; color: #fff; }
+.next-do p { margin: 0 0 16px; color: rgba(226, 232, 255, .74); font-size: 14.5px; }
+.next-do-cta { min-height: 46px; padding: 10px 20px; font-size: 15px; box-shadow: 0 10px 24px -10px rgba(79, 70, 229, .75); }
+.next-do-step { display: block; margin-top: 12px; font-size: 12px; color: rgba(226, 232, 255, .6); }
+.next-do .btn.ghost { color: #e0e7ff; border-color: rgba(255, 255, 255, .24); }
+.next-do .btn.ghost:hover { background: rgba(255, 255, 255, .08); }
+.next-do .first-steps li { border-color: rgba(255, 255, 255, .12); background: rgba(255, 255, 255, .06); }
+.next-do .first-steps li.done { border-color: rgba(52, 211, 153, .4); background: rgba(16, 185, 129, .14); }
+.next-do .first-steps-txt strong { color: #eef0ff; }
+.next-do .first-steps-txt small { color: rgba(226, 232, 255, .62); }
 
 /* Primera vez en el panel: bienvenida guiada. Un solo CTA, tres pasos y
    aire de marca; los paneles sin datos no se muestran (ver .today.first-run). */
@@ -865,9 +887,9 @@
 .next-do.first-run {
   padding: 26px 28px;
   background:
-    radial-gradient(120% 140% at 0% 0%, color-mix(in srgb, var(--brand-500) 18%, transparent), transparent 62%),
-    linear-gradient(135deg, var(--brand-soft), transparent 72%),
-    var(--card);
+    radial-gradient(120% 140% at 0% 0%, color-mix(in srgb, var(--accent) 22%, transparent), transparent 62%),
+    radial-gradient(130% 160% at 100% -10%, color-mix(in srgb, var(--brand-500) 36%, transparent), transparent 58%),
+    linear-gradient(140deg, #1b2148, #0f1130 78%);
 }
 .next-do.first-run::after {
   content: ''; position: absolute; right: -48px; top: -48px; width: 180px; height: 180px; border-radius: 50%;
@@ -1157,3 +1179,57 @@
   .tabbar > button.active::after { opacity: 1; transform: none; }
   .tabbar > button > * { position: relative; z-index: 1; }
 }
+
+/* ===== Pase premium mobile: chip de plan, vidrio y jerarquía del Inicio ===== */
+
+/* Chip del plan vigente en la topbar móvil (contexto de cuenta sin abrir
+   el menú). Oculto en escritorio: allá vive el badge del rail. */
+.top-plan { display: none; }
+@media (max-width: 860px) {
+  .top-plan {
+    flex: none; display: inline-flex; align-items: center; gap: 5px; margin-left: auto;
+    max-width: 34vw; padding: 4px 11px; border-radius: 99px;
+    font-size: 11px; font-weight: 700; letter-spacing: .02em; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    color: var(--brand-ink); background: var(--brand-soft); border: 1px solid var(--brand-soft-line);
+  }
+  .app--tabs .top-search { margin-left: 0; }
+}
+
+@media (max-width: 860px) {
+  /* Cards con más aire: radio mayor y borde más fino que el card genérico. */
+  .app--tabs .card { border-radius: 18px; }
+
+  /* Franja de plan: la meta info y los botones ocupan su propia fila. */
+  .plan-strip { gap: 8px 12px; padding: 12px 14px; border-radius: 18px; }
+  .ps-bar { flex: 1 1 100%; max-width: none; order: 3; }
+  .ps-actions { margin-left: 0; order: 4; width: 100%; }
+  .ps-actions .chip-btn { flex: 1 1 auto; justify-content: center; min-height: 36px; }
+
+  /* Chips de acción rápida con vidrio. */
+  .qa-chip { background: color-mix(in srgb, var(--card) 82%, transparent); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); border-radius: 99px; }
+
+  /* Stats: ícono en tile de marca, número protagonista. */
+  .stats { gap: 10px; }
+  .stat { border-radius: 16px; }
+  .stat-icon { display: grid; place-items: center; width: 38px; height: 38px; border-radius: 12px; background: var(--brand-soft); color: var(--brand-ink); }
+
+  /* Alertas: radio acorde al sistema. */
+  .aq { border-radius: 16px; }
+
+  /* Preview de la web: la miniatura manda, acciones compactas abajo. */
+  .wp-card h3 { margin-bottom: 10px; }
+  .wp-frame { border-radius: 14px; }
+  .wp-icon { width: 42px; height: 42px; border-radius: 12px; }
+  .wp-actions .btn { flex: 1 1 auto; justify-content: center; }
+
+  /* Checklist: botón "ir" más grande para el pulgar. */
+  .steps-go { width: 40px; height: 40px; border-radius: 12px; }
+
+  /* Actividad: CTA siempre visible como chip de marca. */
+  .feed-cta { min-height: 36px; }
+}
+
+/* Ghost sobre la tarjeta oscura también en desktop (sin cambiar el ghost
+   global). */
+.next-do .btn.ghost { color: #e0e7ff; border-color: rgba(255, 255, 255, .26); background: transparent; }
+.next-do .btn.ghost:hover { background: rgba(255, 255, 255, .09); }

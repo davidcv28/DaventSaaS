@@ -199,6 +199,7 @@ onBeforeUnmount(() => {
             </span>
           </Transition>
         </div>
+        <span v-if="planName && hasTabs" class="top-plan" :title="`Plan ${planName}`"><AppIcon name="crown" :size="12" /> {{ planName }}</span>
         <button type="button" class="top-search" aria-label="Buscar en el panel" @click="emit('search')">
           <AppIcon name="search" :size="16" />
           <span class="top-search-label">Buscar</span>
