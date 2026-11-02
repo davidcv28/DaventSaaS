@@ -740,6 +740,38 @@
 }
 .store-page.mt-skin .rz-pdp-frame img { position: relative; z-index: 1; }
 
+/* Destacados de la portada: doble capa — el ::before queda como glow suave
+   y el ::after agrega un filo de luz nítido que orbita la media (más
+   "haz de luz", menos mancha). Misma caja: solo rodea la imagen. */
+.store-page[data-template='moderntec'] .sp-shop-featured .tpc::after {
+  content: "";
+  position: absolute;
+  z-index: -1;
+  inset: -5px -5px auto -5px;
+  aspect-ratio: var(--tpc-ratio, 1 / 1);
+  border-radius: var(--mt-rad-md);
+  background: conic-gradient(from 0deg,
+    transparent 0deg 74%,
+    color-mix(in srgb, var(--mt-accent) 65%, transparent) 84%,
+    var(--mt-accent) 89%,
+    #ffffff 91%,
+    var(--mt-accent-2) 94%,
+    transparent 100%);
+  filter: blur(4px);
+  opacity: .95;
+  animation: mt-spin 5.5s linear infinite;
+  pointer-events: none;
+}
+/* Glow ambiental extra solo en destacados (refuerza el halo sin tapar). */
+.store-page[data-template='moderntec'] .sp-shop-featured .tpc::before {
+  filter: blur(16px);
+  opacity: .95;
+}
+/* La sección "Productos destacados" no se muestra en móvil. */
+@media (max-width: 900px) {
+  .store-page[data-template='moderntec'] [data-blk='featured'] { display: none; }
+}
+
 /* Catálogo / ficha / servicios (.mt-skin): mismos acabados */
 .store-page.mt-skin :is(.rz-btn, button, a) { transition-timing-function: var(--mt-ease-out); }
 .store-page.mt-skin :is(.rz-cat-title, .rz-prod-title, .rz-svc-title, h1) {
@@ -777,7 +809,8 @@
   .store-page[data-template='moderntec'] :is(.mt-orb, .mt-beam, .mt-particles, .mt-device, .mt-scan, .mt-device-badge, .mt-meter i, .mt-hero-title em),
   .store-page[data-template='moderntec'] .sp-cta-inner::before,
   .store-page[data-template='moderntec'] :is(.tpc, .sp-gallery-item, .sp-about-photo, .sp-showcase-frame)::before,
-  .store-page.mt-skin :is(.tpc, .rz-pdp-frame)::before { animation: none; }
+  .store-page.mt-skin :is(.tpc, .rz-pdp-frame)::before,
+  .store-page[data-template='moderntec'] .sp-shop-featured .tpc::after { animation: none; }
   .store-page[data-template='moderntec'] :is(.tpc, .sp-card):hover { transform: none; }
   .store-page[data-template='moderntec'] .tpc:hover img { transform: none; }
 }
