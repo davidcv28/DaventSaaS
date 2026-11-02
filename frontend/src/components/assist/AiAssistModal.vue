@@ -9,6 +9,8 @@ import AppIcon from '../AppIcon.vue'
 import AiIdeaCard from '../ai/AiIdeaCard.vue'
 import { useStoreStore } from '../../stores/store.store.js'
 import { useAuthStore } from '../../stores/auth.store.js'
+import { useCatalogStore } from '../../stores/catalog.store.js'
+import { useServicesStore } from '../../stores/services.store.js'
 import { authApi } from '../../api/auth.api.js'
 import { locationsApi } from '../../api/locations.api.js'
 import { http } from '../../api/http.js'
@@ -17,8 +19,8 @@ import {
   resolveStoreTemplate, allowedTemplatesFor, publicStoreUrl
 } from '../../api/stores.api.js'
 import {
-  RUBROS, GOALS, TONES, AUDIENCES, STYLE_HINTS, SECTIONS,
-  emptyAssistAnswers, resolvedTone, buildPrompt, suggestDescription, toggleId
+  RUBROS, SECTIONS,
+  emptyAssistAnswers, buildPrompt, suggestDescription, toggleId
 } from '../../composables/useAiAssist.js'
 import '../../assets/ai-design.css'
 
@@ -30,6 +32,8 @@ const emit = defineEmits(['close', 'applied', 'navigate'])
 
 const store = useStoreStore()
 const auth = useAuthStore()
+const catalog = useCatalogStore()
+const servicesStore = useServicesStore()
 
 const isBusiness = computed(() => props.origin === 'business')
 const benefits = computed(() => props.plan?.benefits || {})
@@ -39,8 +43,7 @@ const allowed = computed(() => allowedTemplatesFor(benefits.value))
 // ---------- Pasos por origen ----------
 const DESIGN_STEPS = [
   { id: 'rubro', icon: 'store', title: 'Tu rubro', subtitle: 'De qué es tu negocio', hint: 'Con eso elegimos el diseño base.' },
-  { id: 'sections', icon: 'checklist', title: 'Qué mostrar', subtitle: 'Secciones y objetivos de tu web', hint: 'Lo que marques aparece en la web.', optional: true },
-  { id: 'style', icon: 'palette', title: 'Tu estilo', subtitle: 'Cómo querés que se sienta tu web', hint: 'Elegí sensaciones, no colores: el diseño se arma solo.' }
+  { id: 'sections', icon: 'checklist', title: 'Qué mostrar', subtitle: 'Las secciones que tu cliente tiene que encontrar', hint: 'Solo se listan las que ya tenés cargadas; lo que marques aparece en la web.', optional: true }
 ]
 const BUSINESS_STEPS = [
   { id: 'contact', icon: 'store', title: 'Nombre y contacto', subtitle: 'Cómo te encuentran tus clientes', hint: 'Solo se completa lo que esté vacío.' },
@@ -75,11 +78,10 @@ const hasAnswers = computed(() => Boolean(
   answers.province || answers.city || answers.hours_label || answers.hours_value ||
   answers.goals.length || answers.tone || answers.style_hint.length || answers.audience
 ))
-const canSubmit = computed(() => Boolean(answers.rubro && resolvedTone(answers)))
+const canSubmit = computed(() => Boolean(answers.rubro))
 const stepValid = computed(() => {
   const id = currentStep.value?.id
   if (id === 'rubro') return Boolean(answers.rubro)
-  if (id === 'style') return Boolean(resolvedTone(answers))
   if (id === 'contact') return Boolean(answers.name.trim())
   return true
 })
@@ -155,6 +157,37 @@ const proposalNameFont = (p) => ({ fontFamily: storeFontFamily(proposalForm(p).n
 const proposalCover = (p) => (p?.cover?.mode === 'logo' ? '' : cover.value)
 const selectedProposal = computed(() => proposals.value.find((p) => p.id === selectedId.value) || null)
 
+// Secciones disponibles = las que el negocio YA tiene cargadas (contenido
+// real en customization/catálogo/servicios). Las otras ni se muestran.
+const loadedSections = computed(() => {
+  const c = store.customization || {}
+  const n = (v) => (Array.isArray(v) ? v.length : 0)
+  const has = {
+    catalog: catalog.products.length > 0 || n(c.products),
+    services: servicesStore.items.some((s) => s.is_active) || n(c.services),
+    gallery: n(c.gallery),
+    testimonials: n(c.testimonials),
+    map: Boolean(c.location_address || c.address || profile.value.address || (profile.value.province && profile.value.city)),
+    contact: Boolean(c.whatsapp || c.instagram || c.tiktok || c.facebook || c.contact_email),
+    faqs: n(c.faqs),
+    hours: n(c.hours)
+  }
+  return SECTIONS.filter((s) => {
+    if (s.needs && !benefits.value[s.needs]) return false
+    return has[s.id] !== false
+  })
+})
+
+// Resultado: el motor devuelve N propuestas; acá se elige entre las 2 que
+// mejor se ajustan y que el plan permite (allowed templates = tier del plan).
+const shownProposals = computed(() => {
+  const ok = proposals.value.filter((p) => {
+    const tpl = resolveStoreTemplate(p.template, allowed.value)
+    return !allowed.value.length || allowed.value.includes(tpl)
+  })
+  return (ok.length ? ok : proposals.value).slice(0, 2)
+})
+
 // ---------- Ubicación ----------
 async function loadProvinces() {
   if (provinces.value.length) return
@@ -170,6 +203,9 @@ watch(() => answers.province, async (id) => {
 })
 watch(() => currentStep.value?.id, (id) => {
   if (id === 'place') loadProvinces()
+  if (id === 'sections' && !isBusiness.value && !answers.sections_dirty) {
+    answers.sections = loadedSections.value.map((s) => s.id)
+  }
 }, { immediate: true })
 
 // ---------- Navegación del wizard ----------
@@ -199,11 +235,7 @@ function onStepKey(event) {
 
 // ---------- Selecciones ----------
 const pickRubro = (id) => { answers.rubro = answers.rubro === id ? '' : id }
-const pickTone = (id) => { answers.tone = answers.tone === id ? '' : id }
-const pickAudience = (id) => { answers.audience = answers.audience === id ? '' : id }
-const toggleGoal = (id) => toggleId(answers.goals, id)
-const toggleHint = (id) => toggleId(answers.style_hint, id, 2)
-const toggleSection = (id) => toggleId(answers.sections, id)
+const toggleSection = (id) => { answers.sections_dirty = true; toggleId(answers.sections, id) }
 function suggest() {
   const city = cities.value.find((c) => c.id === answers.city)?.name || ''
   answers.description = suggestDescription({ name: shopName.value, rubro: answers.rubro, city })
@@ -376,50 +408,19 @@ function finish() {
               </div>
             </template>
 
-            <!-- DISEÑO · secciones + objetivos -->
+            <!-- DISEÑO · qué mostrar (solo lo cargado) -->
             <template v-else-if="currentStep.id === 'sections'">
-              <p class="aidw-field-title">Marcá lo que tiene que aparecer en tu web</p>
-              <div class="aidw-grid must" role="group" aria-label="Secciones de la web">
-                <button v-for="s in SECTIONS" :key="s.id" type="button" class="aidw-card" :class="{ on: answers.sections.includes(s.id) }" :aria-pressed="answers.sections.includes(s.id)" :disabled="s.needs && !benefits[s.needs]" @click="toggleSection(s.id)">
-                  <span class="aidw-card-ico" aria-hidden="true"><AppIcon :name="s.icon" :size="18" /></span>
-                  <span class="aidw-card-txt"><strong>{{ s.label }} <AppIcon v-if="s.needs && !benefits[s.needs]" name="lock" :size="12" /></strong><small>{{ s.desc }}</small></span>
-                  <span class="aidw-card-check" aria-hidden="true"><AppIcon v-if="answers.sections.includes(s.id)" name="check" :size="13" :stroke="2.5" /></span>
-                </button>
-              </div>
-              <p class="aidw-field-title">¿Qué querés lograr con la web?</p>
-              <div class="aidw-grid goals" role="group" aria-label="¿Qué querés lograr con la web?">
-                <button v-for="g in GOALS" :key="g.id" type="button" class="aidw-card" :class="{ on: answers.goals.includes(g.id) }" :aria-pressed="answers.goals.includes(g.id)" @click="toggleGoal(g.id)">
-                  <span class="aidw-card-ico" aria-hidden="true"><AppIcon :name="g.icon" :size="18" /></span>
-                  <span class="aidw-card-txt"><strong>{{ g.label }}</strong><small>{{ g.desc }}</small></span>
-                  <span class="aidw-card-check" aria-hidden="true"><AppIcon v-if="answers.goals.includes(g.id)" name="check" :size="13" :stroke="2.5" /></span>
-                </button>
-              </div>
-            </template>
-
-            <!-- DISEÑO · estilo -->
-            <template v-else-if="currentStep.id === 'style'">
-              <p class="aidw-field-title">¿Cómo se tiene que sentir tu web?</p>
-              <div class="aidw-grid tones" role="radiogroup" aria-label="¿Cómo se tiene que sentir tu web?">
-                <button v-for="t in TONES" :key="t.id" type="button" role="radio" class="aidw-card tone" :class="{ on: answers.tone === t.id }" :aria-checked="answers.tone === t.id" @click="pickTone(t.id)">
-                  <span class="aidw-card-ico big" aria-hidden="true"><AppIcon :name="t.icon" :size="22" /></span>
-                  <span class="aidw-card-txt"><strong>{{ t.label }}</strong><small>{{ t.desc }}</small></span>
-                  <span class="aidw-card-check" aria-hidden="true"><AppIcon v-if="answers.tone === t.id" name="check" :size="13" :stroke="2.5" /></span>
-                </button>
-              </div>
-              <p class="aidw-field-title">¿A quién le hablás? <span class="aidw-opt">Opcional</span></p>
-              <div class="aidw-grid audiences" role="radiogroup" aria-label="¿A quién le hablás?">
-                <button v-for="a in AUDIENCES" :key="a.id" type="button" role="radio" class="aidw-card" :class="{ on: answers.audience === a.id }" :aria-checked="answers.audience === a.id" @click="pickAudience(a.id)">
-                  <span class="aidw-card-ico" aria-hidden="true"><AppIcon :name="a.icon" :size="18" /></span>
-                  <span class="aidw-card-txt"><strong>{{ a.label }}</strong><small>{{ a.desc }}</small></span>
-                  <span class="aidw-card-check" aria-hidden="true"><AppIcon v-if="answers.audience === a.id" name="check" :size="13" :stroke="2.5" /></span>
-                </button>
-              </div>
-              <p class="aidw-field-title">¿Qué te importa más? <span class="aidw-opt">Opcional, hasta dos</span></p>
-              <div class="aidw-chips" role="group" aria-label="¿Qué te importa más?">
-                <button v-for="h in STYLE_HINTS" :key="h.id" type="button" class="aidw-chip" :class="{ on: answers.style_hint.includes(h.id) }" :aria-pressed="answers.style_hint.includes(h.id)" @click="toggleHint(h.id)">
-                  <AppIcon :name="h.icon" :size="15" aria-hidden="true" /> {{ h.label }}
-                </button>
-              </div>
+              <template v-if="loadedSections.length">
+                <p class="aidw-field-title">De lo que ya cargaste, ¿qué mostramos en tu web?</p>
+                <div class="aidw-grid must" role="group" aria-label="Secciones de la web">
+                  <button v-for="s in loadedSections" :key="s.id" type="button" class="aidw-card" :class="{ on: answers.sections.includes(s.id) }" :aria-pressed="answers.sections.includes(s.id)" @click="toggleSection(s.id)">
+                    <span class="aidw-card-ico" aria-hidden="true"><AppIcon :name="s.icon" :size="18" /></span>
+                    <span class="aidw-card-txt"><strong>{{ s.label }}</strong><small>{{ s.desc }}</small></span>
+                    <span class="aidw-card-check" aria-hidden="true"><AppIcon v-if="answers.sections.includes(s.id)" name="check" :size="13" :stroke="2.5" /></span>
+                  </button>
+                </div>
+              </template>
+              <p v-else class="aidw-note"><AppIcon name="info" :size="13" /> Todavía no cargaste contenido (productos, fotos, horarios…). El diseño se arma igual: después podés sumar secciones desde «Sobre mi negocio».</p>
             </template>
 
             <!-- NEGOCIO · contacto -->
@@ -528,10 +529,10 @@ function finish() {
               <strong>Elegimos el diseño «{{ mcp.pattern.nombre }}»{{ mcp.style ? ` con el estilo «${mcp.style.nombre}»` : '' }}</strong>
             </div>
           </div>
-          <h3 ref="stepTitle" tabindex="-1" class="aia-results-title">Tu propuesta</h3>
+          <h3 ref="stepTitle" tabindex="-1" class="aia-results-title">Elegí tu diseño</h3>
           <div class="aid-grid">
             <AiIdeaCard
-              v-for="p in proposals" :key="p.id"
+              v-for="p in shownProposals" :key="p.id"
               :proposal="p" :form="proposalForm(p)" :vars="proposalVars(p)" :template="proposalTemplate(p)"
               :shop-name="shopName" :initial="initial" :logo="logo" :cover="proposalCover(p)"
               :advanced="hasDesignAdvanced" :show-map="answers.sections.includes('map')"
@@ -540,7 +541,7 @@ function finish() {
             />
           </div>
           <div class="aid-actions">
-            <button class="btn btn-auto" type="button" :disabled="busy || !proposals.length" @click="applyProposal(selectedProposal || proposals[0])">
+            <button class="btn btn-auto" type="button" :disabled="busy || !shownProposals.length" @click="applyProposal(selectedProposal || shownProposals[0])">
               <AppIcon name="check" :size="16" /> Publicar así
             </button>
             <button class="btn btn-auto" type="button" @click="anotherStyle"><AppIcon name="refresh" :size="16" /> Ver otro estilo</button>
