@@ -61,6 +61,7 @@ import AppIcon from '../components/AppIcon.vue'
 import IconSelect from '../components/IconSelect.vue'
 import CountUp from '../components/CountUp.vue'
 import FlyerStudio from '../components/FlyerStudio.vue'
+import AiAssistModal from '../components/assist/AiAssistModal.vue'
 import ChatDock from '../components/ChatDock.vue'
 import GlobalSearch from '../components/GlobalSearch.vue'
 import TourGuide from '../components/TourGuide.vue'
@@ -334,7 +335,7 @@ const navLocks = computed(() => {
   const hasAccess = Boolean(plan.value?.isCurrent)
   const map = {}
   const gated = (id) => (SECTION_BENEFITS[id] || []).some((k) => !b[k])
-  for (const id of ['catalogs', 'services', 'pos', 'reviews', 'support', 'bot', 'tools', 'stats']) {
+  for (const id of ['catalogs', 'services', 'pos', 'reviews', 'support', 'bot', 'tools', 'stats', 'design_assisted', 'design_studio', 'design_ai']) {
     map[id] = !hasAccess ? 'expired' : gated(id) ? 'upgrade' : null
   }
   return map
@@ -1287,6 +1288,20 @@ const designTab = ref('look')
 const designPreviewOpen = ref(false)
 const canCustomize = computed(() => Boolean(plan.value?.benefits?.has_customization))
 const canDesignAdvanced = computed(() => Boolean(plan.value?.benefits?.has_design_advanced))
+
+// "Asistencia con IA": mismo modal con dos contextos ('design' | 'business').
+// Candado = has_ai_design (mismo gate que el diseño asistido).
+const assistOpen = ref(false)
+const assistOrigin = ref('design')
+function openAssist(origin) {
+  if (navLocks.value.design_assisted) { openLocked('design_assisted'); return }
+  assistOrigin.value = origin
+  assistOpen.value = true
+}
+function onAssistApplied() {
+  Object.assign(designForm, store.customization)
+  pushToast('Listo ✓')
+}
 const canLocationMap = computed(() => Boolean(plan.value?.benefits?.has_location_map))
 const canProductComments = computed(() => Boolean(plan.value?.benefits?.has_product_comments))
 const canDiscounts = computed(() => Boolean(plan.value?.benefits?.has_discounts))
@@ -4067,6 +4082,14 @@ async function changePassword() {
       </div>
       <SectionTabs :tabs="tabGroups.web" active="design" @select="section = $event" />
 
+      <div class="next-card assist-card">
+        <span class="next-icon"><AppIcon name="sparkles" :size="22" /></span>
+        <div><strong>Asistencia con IA</strong><small>Respondé unas preguntas y te armamos el diseño de tu web.</small></div>
+        <button class="btn btn-auto" @click="openAssist('design')">
+          <AppIcon v-if="navLocks.design_assisted" name="lock" :size="15" /><AppIcon v-else name="sparkles" :size="15" /> Empezar
+        </button>
+      </div>
+
       <DesignStylesTab
         :form="designForm" :benefits="plan?.benefits || {}"
         :shop-name="store.customization?.display_name || business" :can-studio="canDesignAdvanced"
@@ -4108,6 +4131,14 @@ async function changePassword() {
         <button class="btn ghost btn-auto" @click="openStore"><AppIcon name="external-link" :size="16" /> Ver mi página</button>
       </div>
       <SectionTabs :tabs="tabGroups.web" active="company" @select="section = $event" />
+
+      <div class="next-card assist-card">
+        <span class="next-icon"><AppIcon name="sparkles" :size="22" /></span>
+        <div><strong>Asistencia con IA</strong><small>Te ayudamos a completar los datos de tu negocio, sin pisar lo que ya cargaste.</small></div>
+        <button class="btn btn-auto" @click="openAssist('business')">
+          <AppIcon v-if="navLocks.design_assisted" name="lock" :size="15" /><AppIcon v-else name="sparkles" :size="15" /> Empezar
+        </button>
+      </div>
 
       <AlertMessage v-if="store.notice" kind="success" :message="store.notice" />
       <AlertMessage v-if="store.lastError" kind="error" :message="store.lastError" />
@@ -5572,6 +5603,18 @@ async function changePassword() {
       </div>
     </div>
     <TourGuide v-model:open="tourOpen" />
+
+    <!-- Asistencia con IA: mismo asistente para Diseño y Mi negocio -->
+    <Teleport to="body">
+      <AiAssistModal
+        v-if="assistOpen"
+        :origin="assistOrigin"
+        :plan="plan"
+        @close="assistOpen = false"
+        @applied="onAssistApplied"
+        @navigate="assistOpen = false; section = $event"
+      />
+    </Teleport>
 
     <!-- Toast "Guardado ✓" con deshacer donde la acción es reversible -->
     <Teleport to="body">
