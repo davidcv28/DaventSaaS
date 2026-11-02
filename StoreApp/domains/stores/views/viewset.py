@@ -551,6 +551,7 @@ class StoreViewSet(StoreBaseViewSet):
         if preview:
             customization.template          =   customization.template_draft or customization.template
             customization.site_theme        =   customization.site_theme_draft
+            customization.layout_config     =   customization.layout_config_draft or customization.layout_config
             #El Studio prueba un diseño antes de guardarlo: el override solo
             #vale con el token de vista previa (nunca en la web pública).
             override                        =   (request.query_params.get('template') or '').strip()

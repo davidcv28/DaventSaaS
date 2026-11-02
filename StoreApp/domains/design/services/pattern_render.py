@@ -159,6 +159,27 @@ def _page_flags(store, customization):
         'plans':    'plans' in pages and on('show_plans'),
         'contact':  on('show_contact'),
         'gallery':  on('show_gallery'),
+        #Interruptores finos del dueño: el documento apaga las zonas que el
+        #diseño marque `data-flag="<nombre>"` cuando el show_* está off, así
+        #la vista previa y la web no pintan cáscaras de secciones quitadas.
+        'hours':        on('show_hours'),
+        'benefits':     on('show_benefits'),
+        'highlights':   on('show_highlights'),
+        'stats':        on('show_stats'),
+        'testimonials': on('show_testimonials'),
+        'faq':          on('show_faq'),
+        'timeline':     on('show_timeline'),
+        'team':         on('show_team'),
+        'cta':          on('show_cta'),
+        'announcements': on('show_announcements'),
+        'video':        on('show_video'),
+        'about':        on('show_about'),
+        'location':     on('show_location'),
+        'offers':       on('show_offers'),
+        'brands':       on('show_brands'),
+        'countdown':    on('show_countdown'),
+        'reviews':      on('show_reviews', False),
+        'comments':     on('show_comments', False),
     }
 
 def _product_fragment(store, products = None, flags = None):

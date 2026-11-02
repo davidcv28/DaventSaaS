@@ -76,6 +76,16 @@ html[data-ds-surface="services"] [data-surface]:not([data-surface="services"]),
 html[data-ds-surface="product"] [data-surface]:not([data-surface="product"]){display:none!important}
 [hidden]{display:none!important}
 img[src=""]{display:none!important}
+
+/* Cáscaras sin dato: una fila de resumen/contacto cuyo valor salió vacío, un
+   título bajada sin texto o una sección cuya grilla quedó sin ítems no se
+   muestran — la vista previa y la web no pintan residuos. */
+.stat:has(.txt>span:last-child:empty),
+.contact-row:has(>span:last-child:empty){display:none!important}
+.eyebrow:empty,.lead:empty,p:empty{display:none!important}
+li:empty,dd:empty,dt:has(+dd:empty){display:none!important}
+section:has(.catalog-grid:empty),
+section:has(.ds-plans:empty){display:none!important}
 [data-ds-filters] .ds-cat{font:inherit;cursor:pointer;background:none;border:0;color:inherit;padding:0}
 [data-ds-filters] .ds-cat[aria-pressed="true"]{color:var(--ds-accent,#111);text-decoration:underline;text-underline-offset:5px}
 .cat-head{display:flex;justify-content:space-between;align-items:baseline;gap:14px;border-bottom:1px solid currentColor;padding-bottom:10px}
