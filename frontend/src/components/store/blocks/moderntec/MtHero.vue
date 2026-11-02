@@ -68,6 +68,12 @@ const specs = computed(() => {
 
 <template>
   <section class="mt-hero" aria-labelledby="mt-hero-title">
+    <div class="mt-decor" aria-hidden="true">
+      <span class="mt-orb mt-orb--a"></span>
+      <span class="mt-orb mt-orb--b"></span>
+      <span class="mt-beam"></span>
+      <span class="mt-particles"></span>
+    </div>
     <div class="mt-wrap mt-hero-grid">
       <div class="mt-hero-copy">
         <span v-reveal class="mt-chip mono">{{ chip }}</span>
@@ -92,13 +98,17 @@ const specs = computed(() => {
       </div>
 
       <div v-reveal="300" class="mt-device">
+        <i class="mt-corner mt-corner--tl" aria-hidden="true"></i>
+        <i class="mt-corner mt-corner--br" aria-hidden="true"></i>
         <div class="mt-device-in">
           <div class="mt-device-bar" aria-hidden="true"><i></i><i></i><i></i></div>
+          <span class="mt-scan" aria-hidden="true"></span>
           <span class="mt-device-badge mono">● EN STOCK</span>
           <div v-for="row in specs" :key="row.k" class="mt-spec mono">
             <span class="mt-spec-k">{{ row.k }}</span>
             <span class="mt-spec-v" :class="{ 'is-accent': row.accent, 'is-strike': row.strike }">{{ row.v }}</span>
           </div>
+          <div class="mt-meter mono" aria-hidden="true"><span>sys</span><b><i></i></b><span>ok</span></div>
         </div>
       </div>
     </div>

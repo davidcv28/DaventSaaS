@@ -8,7 +8,7 @@ import { landingViews, catalogViews, productViews, servicesViews, CATALOG_BLOCKS
 // Inter ya va cargada en index.html.
 export default {
   usesSectionOrder: false,
-  fonts: ['space-grotesk', 'jetbrains-mono'],
+  fonts: ['space-grotesk', 'sora', 'jetbrains-mono'],
   surfaces: {
     landing: landingViews.moderntec,
     catalog: catalogViews.moderntec,

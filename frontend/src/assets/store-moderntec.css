@@ -142,6 +142,9 @@
   --mt-shadow-device: 0 30px 70px -20px rgba(11, 21, 36, .35);
   --mt-glow: 0 0 0 1px rgba(8, 145, 178, .4), 0 8px 26px rgba(8, 145, 178, .18);
   --mt-theme-color: #f2f5f9;
+  --mt-accent-2: #5b3df5;
+  --mt-display: 'Sora', 'Space Grotesk', var(--store-font, 'Inter'), system-ui, sans-serif;
+  --mt-track-label: .12em;
 
   color-scheme: light;
   background: var(--mt-bg);
@@ -467,14 +470,199 @@
 }
 
 /* ==========================================================================
+   4b. PREMIUM — decorado, animaciones y refinamiento de plantillas
+   ========================================================================== */
+/* Jerarquía tipográfica: display ajustado, mono en metadatos y precios. */
+.store-page[data-template='moderntec'] .mt-hero-title { font-weight: 700; letter-spacing: -.035em; text-wrap: balance; }
+.store-page[data-template='moderntec'] .tpc-price,
+.store-page[data-template='moderntec'] .sp-stat-value,
+.store-page[data-template='moderntec'] .sp-card-promo { font-family: var(--mt-mono); letter-spacing: -.02em; }
+.store-page[data-template='moderntec'] :is(.sp-section-title, .rh-title, .sp-contact-title, .sp-cta-title) {
+  font-family: var(--mt-display);
+  letter-spacing: -.03em;
+}
+
+/* Gradiente animado en la palabra clave */
+.store-page[data-template='moderntec'] .mt-hero-title em {
+  background-image: linear-gradient(100deg, var(--mt-accent), var(--mt-accent-2), var(--mt-accent), var(--mt-accent-2));
+  background-size: 300% 100%;
+  animation: mt-shift 8s ease-in-out infinite alternate;
+  filter: drop-shadow(0 0 22px color-mix(in srgb, var(--mt-accent) 35%, transparent));
+}
+@keyframes mt-shift { to { background-position: 100% 0; } }
+
+/* Capa decorativa del hero */
+.store-page[data-template='moderntec'] .mt-decor { position: absolute; inset: 0; overflow: hidden; pointer-events: none; }
+.store-page[data-template='moderntec'] .mt-orb {
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(70px);
+  opacity: .55;
+  will-change: transform;
+}
+.store-page[data-template='moderntec'] .mt-orb--a {
+  width: 380px; height: 380px; top: -120px; right: 8%;
+  background: radial-gradient(circle, var(--mt-accent), transparent 70%);
+  animation: mt-drift 14s ease-in-out infinite alternate;
+}
+.store-page[data-template='moderntec'] .mt-orb--b {
+  width: 320px; height: 320px; bottom: -140px; left: 4%;
+  background: radial-gradient(circle, var(--mt-accent-2), transparent 70%);
+  animation: mt-drift 18s ease-in-out infinite alternate-reverse;
+}
+@keyframes mt-drift { to { transform: translate3d(40px, 30px, 0) scale(1.15); } }
+.store-page[data-template='moderntec'] .mt-beam {
+  position: absolute; left: 0; right: 0; top: 0; height: 1px;
+  background: linear-gradient(90deg, transparent, var(--mt-accent), transparent);
+  opacity: .6;
+  animation: mt-beam 7s ease-in-out infinite;
+}
+@keyframes mt-beam { 0% { transform: translateY(0); opacity: 0; } 15% { opacity: .7; } 100% { transform: translateY(520px); opacity: 0; } }
+.store-page[data-template='moderntec'] .mt-particles {
+  position: absolute; inset: 0;
+  background-image:
+    radial-gradient(1.5px 1.5px at 12% 28%, var(--mt-accent), transparent),
+    radial-gradient(1.5px 1.5px at 34% 72%, var(--mt-accent-2), transparent),
+    radial-gradient(1px 1px at 58% 18%, var(--mt-accent), transparent),
+    radial-gradient(1.5px 1.5px at 76% 60%, var(--mt-accent-2), transparent),
+    radial-gradient(1px 1px at 90% 30%, var(--mt-accent), transparent);
+  opacity: .7;
+  animation: mt-twinkle 5s ease-in-out infinite alternate;
+}
+@keyframes mt-twinkle { from { opacity: .25; } to { opacity: .85; } }
+.store-page[data-template='moderntec'] .mt-hero-grid { position: relative; z-index: 1; }
+
+/* Device: flotación, esquinas tipo HUD, línea de escaneo y medidor */
+.store-page[data-template='moderntec'] .mt-device {
+  animation: mt-float 6s ease-in-out infinite;
+  border-color: color-mix(in srgb, var(--mt-accent) 22%, var(--mt-line));
+}
+@keyframes mt-float { 50% { transform: translateY(-8px); } }
+.store-page[data-template='moderntec'] .mt-corner {
+  position: absolute; z-index: 2; width: 18px; height: 18px;
+  border: 0 solid var(--mt-accent); pointer-events: none;
+}
+.store-page[data-template='moderntec'] .mt-corner--tl { top: 8px; left: 8px; border-width: 2px 0 0 2px; border-top-left-radius: 6px; }
+.store-page[data-template='moderntec'] .mt-corner--br { bottom: 8px; right: 8px; border-width: 0 2px 2px 0; border-bottom-right-radius: 6px; }
+.store-page[data-template='moderntec'] .mt-scan {
+  position: absolute; left: 0; right: 0; top: 0; height: 40px; z-index: 1; pointer-events: none;
+  background: linear-gradient(180deg, transparent, color-mix(in srgb, var(--mt-accent) 14%, transparent), transparent);
+  animation: mt-scan 4.5s linear infinite;
+}
+@keyframes mt-scan { from { transform: translateY(-40px); } to { transform: translateY(320px); } }
+.store-page[data-template='moderntec'] .mt-device-badge { animation: mt-pulse 2.4s ease-in-out infinite; }
+@keyframes mt-pulse { 50% { box-shadow: 0 0 14px color-mix(in srgb, var(--mt-ok) 45%, transparent); } }
+.store-page[data-template='moderntec'] .mt-meter {
+  display: flex; align-items: center; gap: 10px; padding: 12px 14px;
+  font-size: var(--mt-fs-label); text-transform: uppercase; letter-spacing: var(--mt-track-label); color: var(--mt-ink-3);
+}
+.store-page[data-template='moderntec'] .mt-meter b { flex: 1; height: 4px; border-radius: 4px; background: var(--mt-line); overflow: hidden; }
+.store-page[data-template='moderntec'] .mt-meter i {
+  display: block; height: 100%; width: 100%; border-radius: inherit;
+  background: linear-gradient(90deg, var(--mt-accent), var(--mt-accent-2));
+  transform-origin: left; animation: mt-load 3.6s var(--mt-ease-out) infinite;
+}
+@keyframes mt-load { 0% { transform: scaleX(.08); } 70%, 100% { transform: scaleX(.92); } }
+.store-page[data-template='moderntec'] .mt-spec { transition: background var(--mt-dur-2) ease, padding var(--mt-dur-2) ease; }
+.store-page[data-template='moderntec'] .mt-spec:hover { background: var(--mt-accent-soft); padding-left: 18px; }
+
+/* Botones: brillo que cruza al hover */
+.store-page[data-template='moderntec'] .mt-btn { position: relative; overflow: hidden; }
+.store-page[data-template='moderntec'] .mt-btn--primary::after {
+  content: ""; position: absolute; inset: 0; transform: translateX(-120%);
+  background: linear-gradient(105deg, transparent 35%, rgba(255, 255, 255, .45) 50%, transparent 65%);
+  transition: transform .7s var(--mt-ease-out);
+}
+.store-page[data-template='moderntec'] .mt-btn--primary:hover { transform: translateY(-2px); }
+.store-page[data-template='moderntec'] .mt-btn--primary:hover::after { transform: translateX(120%); }
+.store-page[data-template='moderntec'] .mt-btn--ghost:hover { transform: translateY(-2px); border-color: var(--mt-accent); }
+
+/* Cabezales de sección: kicker "//" mono y subrayado de acento */
+.store-page[data-template='moderntec'] .sp-section-title::before {
+  content: "// "; font-family: var(--mt-mono); font-weight: 500; color: var(--mt-accent); opacity: .85;
+}
+.store-page[data-template='moderntec'] .sp-section-title::after {
+  content: ""; display: block; width: 44px; height: 2px; margin-top: 10px; border-radius: 2px;
+  background: linear-gradient(90deg, var(--mt-accent), var(--mt-accent-2));
+}
+
+/* Tarjetas: borde-gradiente en hover, lift y brillo en la media */
+.store-page[data-template='moderntec'] .tpc,
+.store-page[data-template='moderntec'] .sp-card {
+  position: relative;
+  transition: transform .35s var(--mt-ease-out), border-color .25s ease, box-shadow .35s var(--mt-ease-out);
+}
+.store-page[data-template='moderntec'] .tpc:hover,
+.store-page[data-template='moderntec'] .sp-card:hover {
+  transform: translateY(-5px);
+  border-color: color-mix(in srgb, var(--mt-accent) 55%, transparent);
+  box-shadow: 0 18px 44px -22px color-mix(in srgb, var(--mt-accent) 55%, transparent), 0 0 0 1px color-mix(in srgb, var(--mt-accent-2) 30%, transparent);
+}
+.store-page[data-template='moderntec'] .tpc img { transition: transform .6s var(--mt-ease-out); }
+.store-page[data-template='moderntec'] .tpc:hover img { transform: scale(1.05); }
+
+/* Bandas (stats / CTA): fondo tech en vez de bloque plano */
+.store-page[data-template='moderntec'] :is(.sp-stats-grid, .sp-cta-inner) {
+  background:
+    linear-gradient(var(--mt-line-soft) 1px, transparent 1px) 0 0 / 28px 28px,
+    linear-gradient(135deg, color-mix(in srgb, var(--mt-accent) 88%, #000), color-mix(in srgb, var(--mt-accent-2) 85%, #000));
+  border: 1px solid color-mix(in srgb, var(--mt-accent) 40%, transparent);
+  box-shadow: 0 24px 60px -30px color-mix(in srgb, var(--mt-accent) 60%, transparent);
+}
+.store-page[data-template='moderntec'] .sp-cta-inner::before {
+  content: ""; position: absolute; inset: -50%; pointer-events: none;
+  background: conic-gradient(from 0deg, transparent 75%, rgba(255, 255, 255, .16), transparent 90%);
+  animation: mt-spin 14s linear infinite;
+}
+.store-page[data-template='moderntec'] .sp-cta-inner > * { position: relative; }
+
+/* FAQ y campos */
+.store-page[data-template='moderntec'] .sp-faq-item { transition: border-color .25s ease, background .25s ease; }
+.store-page[data-template='moderntec'] .sp-faq-item:hover,
+.store-page[data-template='moderntec'] .sp-faq-item[open] { border-color: color-mix(in srgb, var(--mt-accent) 45%, transparent); }
+.store-page[data-template='moderntec'] .rz-field:focus,
+.store-page[data-template='moderntec'] .rz-cat-sort select:focus {
+  border-color: var(--mt-accent);
+  box-shadow: 0 0 0 3px var(--mt-accent-soft);
+  outline: none;
+}
+
+/* Catálogo / ficha / servicios (.mt-skin): mismos acabados */
+.store-page.mt-skin :is(.rz-btn, button, a) { transition-timing-function: var(--mt-ease-out); }
+.store-page.mt-skin :is(.rz-cat-title, .rz-prod-title, .rz-svc-title, h1) {
+  font-family: var(--mt-display);
+  letter-spacing: -.03em;
+}
+.store-page.mt-skin :is(.rz-cat-title, h1)::after {
+  content: ""; display: block; width: 56px; height: 2px; margin-top: 12px; border-radius: 2px;
+  background: linear-gradient(90deg, var(--mt-accent), var(--mt-accent-2));
+}
+.store-page.mt-skin::before {
+  content: ""; position: fixed; inset: 0; z-index: -1; pointer-events: none;
+  background:
+    radial-gradient(800px 420px at 85% -10%, color-mix(in srgb, var(--mt-accent) 14%, transparent), transparent 60%),
+    radial-gradient(600px 420px at 5% 105%, color-mix(in srgb, var(--mt-accent-2) 12%, transparent), transparent 60%);
+}
+.store-page.mt-skin { isolation: isolate; }
+.store-page.mt-skin .tpc:hover {
+  border-color: color-mix(in srgb, var(--mt-accent) 55%, transparent);
+}
+
+/* ==========================================================================
    5. RESPONSIVE + MOVIMIENTO
    ========================================================================== */
 @media (max-width: 900px) {
   .store-page[data-template='moderntec'] .mt-hero-grid { grid-template-columns: 1fr; }
   .store-page[data-template='moderntec'] .mt-hero { padding: 56px 0 40px; }
+  .store-page[data-template='moderntec'] .mt-orb { width: 220px; height: 220px; }
+  .store-page[data-template='moderntec'] .mt-device { animation: none; }
 }
 
 @media (prefers-reduced-motion: reduce) {
   .store-page[data-template='moderntec'] .mt-device::before { animation: none; }
   .store-page[data-template='moderntec'] .mt-btn { transition: none; }
+  .store-page[data-template='moderntec'] :is(.mt-orb, .mt-beam, .mt-particles, .mt-device, .mt-scan, .mt-device-badge, .mt-meter i, .mt-hero-title em),
+  .store-page[data-template='moderntec'] .sp-cta-inner::before { animation: none; }
+  .store-page[data-template='moderntec'] :is(.tpc, .sp-card):hover { transform: none; }
+  .store-page[data-template='moderntec'] .tpc:hover img { transform: none; }
 }
