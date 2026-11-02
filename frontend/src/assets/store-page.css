@@ -370,6 +370,12 @@ html.sp-lock body{ overflow: hidden; overscroll-behavior: none; }
   .store-page.is-home .sp-top{ display: none; }
 }
 @media (max-width: 1100px){
+  /* Móvil/tablet: la cabecera queda fija arriba (el sticky se perdía cuando
+     alguna piel mete overflow en .store-page) y la página compensa su alto.
+     --sp-shopnav-h suma la fila de secciones de la Tienda Pro. */
+  .sp-top{ position: fixed; top: 0; left: 0; right: 0; }
+  .store-page{ padding-top: calc(var(--sp-top-h) + var(--sp-shopnav-h, 0px)); }
+  .store-page:has(.sp-shop-nav){ --sp-shopnav-h: 44px; }
   .sp-top-links{ display: none; }
   /* El burger y su drawer de navegación cubren el hueco 961–1100px: sin
      esto la barra quedaba sin menú entre ambos cortes. */
@@ -2143,6 +2149,7 @@ html{ scroll-behavior: smooth; }
      secciones: en móvil alcanza con el menú. */
   
   .sp-shop-nav-inner{ min-height: 42px; gap: 10px; }
+  .store-page:has(.sp-shop-nav){ --sp-shopnav-h: 42px; }
   .sp-shop-nav-note{ display: none; }
   .sp-shop-nav-links a{ padding: 8px 9px; font-size: 11px; }
   
