@@ -7,12 +7,14 @@
 import { ref, computed, nextTick, onMounted, onBeforeUnmount } from 'vue'
 import AppIcon from '../AppIcon.vue'
 import { http } from '../../api/http.js'
-import { storesApi } from '../../api/stores.api.js'
+import { storesApi, publicStoreUrl } from '../../api/stores.api.js'
 import { useStoreStore } from '../../stores/store.store.js'
 
-const emit = defineEmits(['close', 'applied'])
+const emit = defineEmits(['close', 'applied', 'navigate'])
 
 const store = useStoreStore()
+
+const publicUrl = computed(() => (store.store?.slug ? publicStoreUrl(store.store.slug) : ''))
 
 const messages = ref([])   // {role:'user'|'assistant', content, proposals?, seed?, mcp?}
 const draft = ref('')
@@ -98,6 +100,12 @@ async function applyProposal(msg, proposal) {
     await store.refreshCustomization()
     msg.applied = proposal.id
     emit('applied', { action: 'apply' })
+    //El diseño ya quedó publicado: se abre la web en otra pestaña y el
+    //chat se cierra — el usuario sale de la sección Diseño con su página
+    //final a la vista.
+    if (publicUrl.value) window.open(publicUrl.value, '_blank', 'noopener')
+    emit('navigate', 'overview')
+    emit('close')
   } catch (e) {
     errorMsg.value = e?.response?.data?.detail || 'No pude aplicar el diseño. Reintentá.'
   } finally {

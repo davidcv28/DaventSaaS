@@ -291,6 +291,10 @@ async function applyProposal(proposal) {
     await store.refreshCustomization()
     phase.value = 'done'
     emit('applied', { action: 'publish' })
+    //La web ya quedó publicada: se abre en otra pestaña y se sale de la
+    //sección Diseño — el usuario termina viendo su página final.
+    if (publicUrl.value) window.open(publicUrl.value, '_blank', 'noopener')
+    emit('navigate', 'overview')
   } catch (e) {
     actionError.value = e?.response?.data?.detail || 'No pudimos establecer el estilo. Probá de nuevo.'
   } finally {

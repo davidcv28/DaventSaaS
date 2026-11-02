@@ -5669,6 +5669,7 @@ async function changePassword() {
         v-if="mcpChatOpen"
         @close="mcpChatOpen = false"
         @applied="onAssistApplied"
+        @navigate="mcpChatOpen = false; section = $event"
       />
     </Teleport>
 
