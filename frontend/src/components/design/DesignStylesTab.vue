@@ -36,9 +36,20 @@ const { patterns, styles, status, load } = useDesignCatalog()
 // Cada elección de diseño/estilo recarga la vista previa (el iframe hace un
 // refresh real, no solo postMessage): contador que DesignLivePreview mira.
 const previewReload = ref(0)
+// Panel embebido solo existe en escritorio (>=1100px, donde .dmenu-live se
+// ve). En pantallas chicas el aside queda display:none pero el componente
+// se montaba igual: pedía el token, cargaba un iframe completo de la web y
+// escuchaba postMessage sin mostrarse nunca.
+const liveVisible = ref(typeof window !== 'undefined' && window.matchMedia('(min-width: 1100px)').matches)
+const liveQuery = typeof window !== 'undefined' ? window.matchMedia('(min-width: 1100px)') : null
+const onLiveQuery = (e) => { liveVisible.value = e.matches }
 // Revalidar contra la base al entrar: los diseños/estilos nuevos se ven sin
 // recargar la página.
-onMounted(() => load(true))
+onMounted(() => {
+  load(true)
+  liveQuery?.addEventListener('change', onLiveQuery)
+})
+onBeforeUnmount(() => liveQuery?.removeEventListener('change', onLiveQuery))
 
 // "Patrones de diseño" se alimenta directo del modelo DesignPattern
 // (/api/design/patterns/), no del catálogo resumido: así aparece todo lo
@@ -223,12 +234,19 @@ const showGroups = computed(() => {
     let blocks = declared[surface]?.blocks
     const saved = props.form.layout_config?.[surface]?.blocks || []
     const byId = new Map(saved.filter((b) => b && b.id != null).map((b) => [String(b.id), b]))
+    let unavailable = []
     if (Array.isArray(blocks) && blocks.length) {
       blocks = blocks.map((b) => ({ ...b, enabled: byId.get(b.id) ? byId.get(b.id).enabled !== false : b.enabled !== false }))
+      //Bloques canónicos que el diseño no declara: se listan apagados con
+      //marca "No disponible en este diseño" (nunca se escriben al layout).
+      const declaredIds = new Set(blocks.map((b) => String(b.id)))
+      unavailable = templateBlocks(tpl, surface, props.form.layout_config)
+        .filter((b) => b && !declaredIds.has(String(b.id)))
+        .map((b) => ({ ...b, enabled: false, unavailable: true }))
     } else {
       blocks = templateBlocks(tpl, surface, props.form.layout_config)
     }
-    const rows = blocks
+    const rows = [...blocks, ...unavailable]
       .map((b) => ({ block: b, spec: blockSpec(surface, b.id) }))
       .filter((r) => r.spec && (!r.spec.aiOnly || props.benefits.has_ai_design))
     return { surface, label: SURFACE_LABELS[surface] || surface, rows }
@@ -239,6 +257,9 @@ function blockLocked(spec) {
   if (spec.premium && !props.benefits.has_design_advanced) return 'Plan premium'
   return ''
 }
+//Sección no declarada por el diseño elegido: el ítem queda visible pero
+//apagado y sin acción.
+const blockUnavailable = (block) => Boolean(block?.unavailable)
 function toggleBlock(surface, id) {
   const lc = props.form.layout_config && typeof props.form.layout_config === 'object'
     ? props.form.layout_config : (props.form.layout_config = {})
@@ -348,7 +369,7 @@ onBeforeUnmount(() => {
       </div>
 
       <aside class="dmenu-live">
-        <DesignLivePreview :form="form" :reload-key="previewReload" />
+        <DesignLivePreview v-if="liveVisible" :form="form" :reload-key="previewReload" />
         <slot name="actions" />
       </aside>
     </div>
@@ -400,17 +421,18 @@ onBeforeUnmount(() => {
               <div class="check-list" role="group">
                 <label
                   v-for="r in g.rows" :key="r.block.id" class="check-item"
-                  :class="{ disabled: Boolean(blockLocked(r.spec)) }"
+                  :class="{ disabled: blockUnavailable(r.block) || Boolean(blockLocked(r.spec)) }"
                 >
                   <input
                     type="checkbox" :checked="r.block.enabled !== false"
-                    :disabled="Boolean(blockLocked(r.spec))" @change="toggleBlock(g.surface, r.block.id)"
+                    :disabled="blockUnavailable(r.block) || Boolean(blockLocked(r.spec))" @change="toggleBlock(g.surface, r.block.id)"
                   />
                   <span class="check-text">
                     <strong>
                       <AppIcon :name="r.spec.icon || 'package'" :size="14" aria-hidden="true" class="dshow-ico" />
                       {{ r.spec.label }}
-                      <span v-if="blockLocked(r.spec)" class="lock-badge"><AppIcon name="lock" :size="11" :stroke="2" /> {{ blockLocked(r.spec) }}</span>
+                      <span v-if="blockUnavailable(r.block)" class="lock-badge"><AppIcon name="lock" :size="11" :stroke="2" /> No disponible en este diseño</span>
+                      <span v-else-if="blockLocked(r.spec)" class="lock-badge"><AppIcon name="lock" :size="11" :stroke="2" /> {{ blockLocked(r.spec) }}</span>
                     </strong>
                     <small>{{ r.spec.desc }}</small>
                   </span>
