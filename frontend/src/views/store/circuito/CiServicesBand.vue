@@ -6,7 +6,7 @@
 // marketing de `services`. Respeta show_services y se auto-oculta sin contenido.
 import { computed, inject } from 'vue'
 import { storeHostSlug } from '../../../config/env.js'
-import { SERVICE_ICONS } from '../../../api/stores.api.js'
+import { SERVICE_ICONS, storeContactLink, hasContactChannel } from '../../../api/stores.api.js'
 import { servicePriceLabel } from '../../../api/services.api.js'
 import AppIcon from '../../../components/AppIcon.vue'
 import { vReveal } from '../../../directives/reveal.js'
@@ -38,7 +38,7 @@ const rows = computed(() => {
   }))
 })
 const note = computed(() => (priced.value.length ? (custom.value.service_price_note || 'Precios orientativos: el valor final se confirma por WhatsApp.') : ''))
-const whatsappUrl = computed(() => (custom.value.whatsapp ? `https://wa.me/${custom.value.whatsapp.replace(/\D/g, '')}` : ''))
+const whatsappUrl = computed(() => (hasContactChannel(custom.value, 'whatsapp') ? storeContactLink(slug.value, 'whatsapp') : ''))
 const show = computed(() => custom.value.show_services !== false && rows.value.length > 0)
 const pad = (n) => String(n + 1).padStart(2, '0')
 </script>

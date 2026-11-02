@@ -6,6 +6,7 @@
 // embudo de Servicios (presupuesto por WhatsApp) o a WhatsApp directo.
 import { computed, inject } from 'vue'
 import { storeHostSlug } from '../../../config/env.js'
+import { storeContactLink, hasContactChannel } from '../../../api/stores.api.js'
 import AppIcon from '../../../components/AppIcon.vue'
 import { vReveal } from '../../../directives/reveal.js'
 
@@ -25,7 +26,7 @@ const title = computed(() => props.block?.props?.title?.trim()
   || 'Recarga, control y mantenimiento')
 // Bajada: la misión/descripción del negocio si existe, en una línea.
 const lead = computed(() => custom.value.about_mission?.trim() || custom.value.about_text?.trim() || '')
-const whatsappUrl = computed(() => (custom.value.whatsapp ? `https://wa.me/${custom.value.whatsapp.replace(/\D/g, '')}` : ''))
+const whatsappUrl = computed(() => (hasContactChannel(custom.value, 'whatsapp') ? storeContactLink(slug.value, 'whatsapp') : ''))
 </script>
 
 <template>

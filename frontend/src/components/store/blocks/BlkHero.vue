@@ -8,6 +8,7 @@
 import { ref, computed, inject, onMounted, onBeforeUnmount } from 'vue'
 import { storeHostSlug } from '../../../config/env.js'
 import { openStatus } from '../../../utils/storeHours.js'
+import { storeContactLink, hasContactChannel } from '../../../api/stores.api.js'
 import AppIcon from '../../AppIcon.vue'
 import { vReveal } from '../../../directives/reveal.js'
 import BlkHeroAlt from './BlkHeroAlt.vue'
@@ -25,7 +26,7 @@ const copied = ref(false)
 const catalogTo = computed(() => ({ name: 'store-catalog', params: storeHostSlug ? {} : { slug: slug.value } }))
 const servicesPage = ctx.showServices
 const servicesTo = computed(() => ({ name: 'store-services', params: storeHostSlug ? {} : { slug: slug.value } }))
-const whatsappUrl = computed(() => (custom.value.whatsapp ? `https://wa.me/${custom.value.whatsapp.replace(/\D/g, '')}` : ''))
+const whatsappUrl = computed(() => (hasContactChannel(custom.value, 'whatsapp') ? storeContactLink(slug.value, 'whatsapp') : ''))
 
 // Imagen de portada (premium): fondo del hero. Sin diseño avanzado no se usa
 // aunque haya quedado una guardada.

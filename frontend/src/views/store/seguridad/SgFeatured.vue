@@ -8,6 +8,7 @@ import { computed, inject } from 'vue'
 import { storeHostSlug } from '../../../config/env.js'
 import { effectivePrice, offerPct, productOffer } from '../../../api/catalog.api.js'
 import { formatARS } from '../../../api/billing.api.js'
+import { storeContactLink, hasContactChannel } from '../../../api/stores.api.js'
 import { useFeaturedCatalog } from '../../../composables/useFeaturedCatalog.js'
 import { useRouter } from 'vue-router'
 import TplProductCard from '../../../components/store/TplProductCard.vue'
@@ -42,10 +43,9 @@ const openProduct = (p) => router.push(productTo(p))
 // WhatsApp del dueño con el producto citado (mensaje armado en el cliente,
 // igual que el resto de la web: la plataforma nunca persiste pedidos).
 const waHref = (p) => {
-  const digits = String(custom.value.whatsapp || '').replace(/\D/g, '')
-  if (!digits) return ''
+  if (!hasContactChannel(custom.value, 'whatsapp')) return ''
   const msg = `Hola, quiero consultar por ${p.name}${p.price ? ` (${priceOf(p)})` : ''}`
-  return `https://wa.me/${digits}?text=${encodeURIComponent(msg)}`
+  return storeContactLink(slug.value, 'whatsapp', msg)
 }
 </script>
 

@@ -243,7 +243,7 @@ watch(() => props.template, (t) => {
           </div>
           <footer class="dp-bq-foot" aria-hidden="true">
             <span class="dp-bq-foot-brand">{{ shopName }}</span>
-            <span v-if="form.whatsapp" class="dp-bq-foot-wa">{{ form.whatsapp }}</span>
+            <span v-if="form.whatsapp" class="dp-bq-foot-wa">WhatsApp</span>
             <span class="dp-bq-foot-line">Información · Términos y condiciones · Denunciar contenido</span>
             <span class="dp-bq-foot-copy">© {{ bqYear }} {{ shopName }}. Todos los derechos reservados.</span>
           </footer>

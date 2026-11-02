@@ -642,6 +642,50 @@ class MarketingFieldsTests(TestCase):
         self.assertEqual(custom['services'][0]['title'], 'Envíos')
         self.assertEqual(custom['cta_title'], 'Escribinos')
 
+    def test_public_payload_hides_contact_values(self):
+        #Anti-spam: el número y las redes nunca viajan en el JSON público,
+        #solo flags has_*. El link se arma server-side con /r/<kind>/.
+        client      =   self._client()
+        client.patch(
+            f'{STORES_URL}customization/',
+            {
+                'whatsapp': '11 5555-1234', 'instagram': '@tienda',
+                'tiktok': 'tienda.ok', 'facebook': 'TiendaFB',
+                'contact_email': 'hola@tienda.com',
+            },
+            format = 'json',
+        )
+        response    =   APIClient().get(f'{STORES_URL}public/mi-tienda/')
+        custom      =   response.data['customization']
+        self.assertEqual(custom['has_whatsapp'], True)
+        self.assertEqual(custom['has_instagram'], True)
+        self.assertEqual(custom['has_tiktok'], True)
+        self.assertEqual(custom['has_facebook'], True)
+        for field in ('whatsapp', 'instagram', 'tiktok', 'facebook', 'contact_email'):
+            self.assertNotIn(field, custom)
+
+    def test_contact_redirects_resolve_server_side(self):
+        client      =   self._client()
+        client.patch(
+            f'{STORES_URL}customization/',
+            {'whatsapp': '11 5555-1234', 'instagram': '@tienda'},
+            format = 'json',
+        )
+        public      =   APIClient()
+        wa          =   public.get(f'{STORES_URL}public/mi-tienda/r/whatsapp/?text=Hola')
+        self.assertEqual(wa.status_code, 302)
+        self.assertEqual(wa['Location'], 'https://wa.me/1155551234?text=Hola')
+        ig          =   public.get(f'{STORES_URL}public/mi-tienda/r/instagram/')
+        self.assertEqual(ig['Location'], 'https://instagram.com/tienda')
+        #Canal no cargado o kind desconocido: nunca redirige.
+        self.assertEqual(public.get(f'{STORES_URL}public/mi-tienda/r/tiktok/').status_code, 404)
+        self.assertEqual(public.get(f'{STORES_URL}public/mi-tienda/r/inventado/').status_code, 404)
+        #Texto de consulta con límite (el mensaje viaja, el número no).
+        long_msg    = 'x' * 700
+        url         = public.get(f'{STORES_URL}public/mi-tienda/r/whatsapp/?text={long_msg}')['Location']
+        self.assertIn('text=' + 'x' * 600, url)
+        self.assertNotIn('x' * 601, url)
+
     def test_announcements_are_sanitized(self):
         payload     =   [
             {'icon': 'truck', 'text': 'Envíos a todo el país'},

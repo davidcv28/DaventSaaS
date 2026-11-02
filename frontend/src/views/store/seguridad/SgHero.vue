@@ -11,6 +11,7 @@ import { openStatus } from '../../../utils/storeHours.js'
 import AppIcon from '../../../components/AppIcon.vue'
 import { vReveal } from '../../../directives/reveal.js'
 import { useFeaturedCatalog } from '../../../composables/useFeaturedCatalog.js'
+import { storeContactLink, hasContactChannel } from '../../../api/stores.api.js'
 import SgHazard from './SgHazard.vue'
 
 defineProps({ block: { type: Object, default: null } })
@@ -63,7 +64,7 @@ const meta = computed(() => {
   if (custom.value.about_years) items.push({ key: 'years', text: `${custom.value.about_years} años de trayectoria` })
   return items
 })
-const whatsappUrl = computed(() => (custom.value.whatsapp ? `https://wa.me/${custom.value.whatsapp.replace(/\D/g, '')}` : ''))
+const whatsappUrl = computed(() => (hasContactChannel(custom.value, 'whatsapp') ? storeContactLink(slug.value, 'whatsapp') : ''))
 </script>
 
 <template>

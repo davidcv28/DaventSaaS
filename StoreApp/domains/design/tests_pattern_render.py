@@ -98,7 +98,12 @@ class PatternRenderServiceTests(TestCase):
         context, raw    =   build_store_context(store)
         self.assertEqual(context['store_name'], 'Don Pedro')
         self.assertEqual(context['store_initial'], 'D')
-        self.assertEqual(context['store_whatsapp_url'], 'https://wa.me/1155551234')
+        #El número nunca viaja en el documento: el canal enlaza el redirect
+        #público (/r/whatsapp/) y se muestra solo por nombre.
+        self.assertEqual(context['store_whatsapp_url'], '/api/stores/public/mi-tienda/r/whatsapp/')
+        self.assertEqual(context['store_phone'], 'WhatsApp')
+        self.assertEqual(context['store_email'], '')
+        self.assertNotIn('1155551234', str(context))
         self.assertEqual(context['store_accent'], '#0f766e')
         self.assertIn('products', raw)
 

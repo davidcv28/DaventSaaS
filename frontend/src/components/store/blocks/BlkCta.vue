@@ -5,6 +5,7 @@
 // título o texto cargados. props.title pisa el título de la banda.
 import { computed, inject } from 'vue'
 import { storeHostSlug } from '../../../config/env.js'
+import { storeContactLink, hasContactChannel } from '../../../api/stores.api.js'
 import AppIcon from '../../AppIcon.vue'
 import { vReveal } from '../../../directives/reveal.js'
 
@@ -16,7 +17,7 @@ const servicesPage = ctx.showServices
 
 const catalogTo = computed(() => ({ name: 'store-catalog', params: storeHostSlug ? {} : { slug: slug.value } }))
 const servicesTo = computed(() => ({ name: 'store-services', params: storeHostSlug ? {} : { slug: slug.value } }))
-const whatsappUrl = computed(() => (custom.value.whatsapp ? `https://wa.me/${custom.value.whatsapp.replace(/\D/g, '')}` : ''))
+const whatsappUrl = computed(() => (hasContactChannel(custom.value, 'whatsapp') ? storeContactLink(slug.value, 'whatsapp') : ''))
 
 const show = computed(() => custom.value.show_cta !== false
   && Boolean(custom.value.cta_title?.trim() || custom.value.cta_text?.trim() || props.block?.props?.title?.trim()))

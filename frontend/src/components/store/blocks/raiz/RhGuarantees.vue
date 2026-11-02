@@ -33,8 +33,8 @@ const show = computed(() => items.value.length >= 2)
         <component
           :is="item.to ? 'RouterLink' : item.href ? 'a' : 'span'"
           class="rh-guarantee-inner" :to="item.to" :href="item.href"
-          :target="item.href?.startsWith('http') ? '_blank' : null"
-          :rel="item.href?.startsWith('http') ? 'noopener' : null"
+          :target="item.href && !item.href.startsWith('#') ? '_blank' : null"
+          :rel="item.href && !item.href.startsWith('#') ? 'noopener' : null"
         >
           <AppIcon :name="item.icon" :size="16" aria-hidden="true" />
           <span>{{ item.label }}</span>
