@@ -21,8 +21,12 @@ const slug = computed(() => store.store?.slug || '')
 // documento del diseño que se publica, pero con el borrador guardado
 // (template/site_theme) en vez de lo último publicado.
 const previewToken = ref('')
+// El iframe no se monta hasta que el intento de token resuelve: antes
+// navegaba dos veces (sin token y después con token) y se veía una
+// pantalla blanca "cargando" al entrar a la sección.
+const tokenReady = ref(false)
 const src = computed(() => {
-  if (!slug.value) return ''
+  if (!slug.value || !tokenReady.value) return ''
   const params = new URLSearchParams({ studio: '1' })
   if (previewToken.value) params.set('preview', previewToken.value)
   return `/${slug.value}?${params}`
@@ -126,6 +130,7 @@ onMounted(() => {
   storesApi.sharePreview()
     .then((data) => { previewToken.value = data?.token || '' })
     .catch(() => { previewToken.value = '' })
+    .finally(() => { tokenReady.value = true })
   window.addEventListener('message', onMessage)
   loadTimer = setTimeout(() => { if (state.value === 'loading') state.value = 'failed' }, 12000)
   if (stage.value) {
@@ -191,7 +196,11 @@ function reload() {
           ></iframe>
         </div>
       </div>
-      <p v-if="!src" class="dlp-empty">Guardá la dirección de tu web para verla acá.</p>
+      <div v-if="src && state === 'loading'" class="dlp-veil" aria-hidden="true">
+        <span class="spinner spinner-brand"></span>
+        <small>Cargando tu web…</small>
+      </div>
+      <p v-if="!src" class="dlp-empty">{{ tokenReady ? 'Guardá la dirección de tu web para verla acá.' : 'Preparando la vista previa…' }}</p>
       <p v-if="state === 'failed'" class="dlp-empty" role="alert">
         No pudimos cargar la vista previa.
         <button type="button" class="btn ghost btn-auto" @click="reload">Reintentar</button>
@@ -280,4 +289,8 @@ function reload() {
   .dlp-chrome { display: none; }
 }
 .dlp-empty { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; gap: 8px; margin: 0; font-size: 12px; opacity: .8; }
+.dlp-veil {
+  position: absolute; inset: 0; z-index: 2; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 10px;
+  background: var(--surface-2, #f1f5f9); color: var(--muted, #64748b); font-size: 12px; font-weight: 600;
+}
 </style>

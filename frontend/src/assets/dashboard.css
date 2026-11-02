@@ -734,7 +734,7 @@
 .sheet-head { display: grid; gap: 6px; padding: 10px 16px 8px; border-bottom: 1px solid var(--rail-line, rgba(255, 255, 255, .08)); }
 .sheet-grab { justify-self: center; width: 38px; height: 4px; border-radius: 4px; background: rgba(255, 255, 255, .22); }
 .sheet-brand { display: flex; align-items: center; gap: 10px; font-size: 14px; letter-spacing: .12em; }
-.sheet-plan { margin-left: auto; font-size: 11px; font-weight: 600; letter-spacing: 0; color: var(--brand-200); background: rgba(129, 140, 248, .16); border: 1px solid rgba(129, 140, 248, .35); border-radius: 99px; padding: 3px 10px; }
+.sheet-plan { margin-left: auto; margin-right: 42px; font-size: 11px; font-weight: 600; letter-spacing: 0; color: var(--brand-200); background: rgba(129, 140, 248, .16); border: 1px solid rgba(129, 140, 248, .35); border-radius: 99px; padding: 3px 10px; }
 .sheet-x { position: absolute; top: 16px; right: 14px; display: grid; place-items: center; width: 36px; height: 36px; border: none; border-radius: 10px; background: rgba(255, 255, 255, .07); color: var(--rail-ink-hi, #fff); cursor: pointer; }
 .sheet-nav { flex: 1; overflow-y: auto; overscroll-behavior: contain; padding: 8px 12px; display: grid; gap: 2px; align-content: start; }
 .sheet-nav > button { display: flex; align-items: center; gap: 12px; min-height: 48px; padding: 6px 12px 6px 6px; border: 1px solid transparent; border-radius: 14px; background: transparent; color: var(--rail-ink, #a5b4d4); font: inherit; font-size: 15px; font-weight: 500; text-align: left; cursor: pointer; touch-action: manipulation; }
@@ -750,9 +750,9 @@
 .sheet-foot .link { display: flex; align-items: center; gap: 10px; min-height: 44px; padding: 8px 10px; border: none; border-radius: 8px; background: none; color: #94a3b8; font: inherit; font-size: 14px; text-align: left; text-decoration: none; cursor: pointer; }
 .sheet-foot .link:hover { color: #fca5a5; background: rgba(255, 255, 255, .05); }
 
-/* El FAB de mensajes sube por encima de la tab bar. */
+/* El FAB de mensajes sube por encima de la tab bar flotante. */
 @media (max-width: 860px) {
-  .app--tabs ~ .chat-dock .dock-fab, .app--tabs .dock-fab { bottom: calc(76px + env(safe-area-inset-bottom)); }
+  .app--tabs ~ .chat-dock .dock-fab, .app--tabs .dock-fab { bottom: calc(98px + env(safe-area-inset-bottom)); }
 }
 
 /* ===== Buscador global (⌘K) ===== */
