@@ -167,8 +167,9 @@
     .status{grid-template-columns:1fr}
     .pdp-grid{grid-template-columns:1fr}
     .top nav{display:none}
-    /* Tab bar inferior + hoja, calcado del dashboard del dueño. */
-    body{padding-bottom:calc(70px + env(safe-area-inset-bottom))}
+    /* Cabecera fija + tab bar inferior con hoja, calcado del dashboard. */
+    .top{position:fixed;top:0;left:0;right:0;z-index:60;background:var(--void)}
+    body{padding-top:60px;padding-bottom:calc(70px + env(safe-area-inset-bottom))}
     .m-tabs{
       position:fixed;left:0;right:0;bottom:0;z-index:68;display:flex;align-items:stretch;justify-content:space-around;
       background:color-mix(in srgb,var(--panel) 92%,transparent);backdrop-filter:blur(12px);

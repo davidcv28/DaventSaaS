@@ -439,9 +439,11 @@
   /* Móvil: resultados en una sola columna, foto más chica y filas densas. */
   @media(max-width:760px){
     /* Menú móvil del dashboard: la riel de secciones pasa a la tab bar
-       inferior (Inicio/Catálogo/Contacto) y la hoja de "Más" reúne todo. */
+       inferior (Inicio/Catálogo/Contacto) y la hoja de "Más" reúne todo.
+       El masthead queda fijo arriba. */
     .tabs{display:none}
-    body{padding-bottom:calc(70px + env(safe-area-inset-bottom))}
+    .top{position:fixed;top:0;left:0;right:0;z-index:60}
+    body{padding-top:76px;padding-bottom:calc(70px + env(safe-area-inset-bottom))}
     .m-tabs{
       position:fixed;left:0;right:0;bottom:0;z-index:68;display:flex;align-items:stretch;justify-content:space-around;
       background:color-mix(in srgb,var(--surface) 92%,transparent);backdrop-filter:blur(14px) saturate(1.2);
@@ -497,6 +499,8 @@
     .cat-surface .grid[data-ds-view-mode="list"] .ds-product-price[data-off]::after{font-size:11px;padding:2px 6px}
   }
   @media(max-width:600px){
+    /* Masthead fijo a dos filas (marca + búsqueda): más aire sobre el contenido. */
+    body{padding-top:116px}
     .shell{padding:0 14px}
     .top-in{gap:10px;min-height:60px;flex-wrap:wrap;padding-top:10px;padding-bottom:10px;row-gap:8px}
     .brand{font-size:16px;order:1}

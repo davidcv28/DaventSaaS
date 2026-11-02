@@ -522,10 +522,11 @@ html[data-ds-style="esencial-premium"][data-ds-theme="dark"] .ticker-item .icon{
   /* Menú móvil: tab bar inferior + hoja, calcado del dashboard del dueño.
      El nav de la cabecera es solo escritorio; en pantallas chicas los
      destinos viven en la barra fija (Inicio/Catálogo/Servicios) y el resto
-     en la hoja que abre "Más". */
+     en la hoja que abre "Más". La cabecera queda fija arriba. */
   .site-header .wrap{flex-wrap:nowrap;gap:10px}
   .nav{display:none}
-  body{padding-bottom:calc(70px + env(safe-area-inset-bottom))}
+  .site-header{position:fixed;top:0;left:0;right:0}
+  body{padding-top:64px;padding-bottom:calc(70px + env(safe-area-inset-bottom))}
   .m-tabs{
     position:fixed;left:0;right:0;bottom:0;z-index:68;display:flex;align-items:stretch;justify-content:space-around;
     background:color-mix(in srgb,var(--bg) 90%,transparent);backdrop-filter:blur(14px) saturate(1.3);
