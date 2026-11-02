@@ -11,6 +11,7 @@ import { useFeaturedCatalog } from '../../../composables/useFeaturedCatalog.js'
 import { effectivePrice, offerPct, productOffer } from '../../../api/catalog.api.js'
 import { formatARS } from '../../../api/billing.api.js'
 import { storeContactLink, hasContactChannel } from '../../../api/stores.api.js'
+import { vSpot } from './useMcFx.js'
 
 const props = defineProps({ block: { type: Object, default: null } })
 
@@ -76,7 +77,7 @@ const tones = [
             <img :src="t.image" alt="" loading="lazy" />
           </span>
         </div>
-        <RouterLink v-if="lead" class="mc-hero-card" :to="productTo(lead)">
+        <RouterLink v-if="lead" v-spot class="mc-hero-card" :to="productTo(lead)">
           <span v-if="leadPct" class="mc-hero-badge">-{{ leadPct }}%</span>
           <span class="mc-hero-media">
             <img v-if="lead.image" :src="lead.image" :alt="lead.name" loading="lazy" />

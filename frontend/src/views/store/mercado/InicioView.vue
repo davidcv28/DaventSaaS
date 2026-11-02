@@ -35,10 +35,12 @@ import McOffers from './McOffers.vue'
 import McFeatured from './McFeatured.vue'
 import McBenefits from './McBenefits.vue'
 import { useCardTitles } from './useCardTitles.js'
+import { useMcFx } from './useMcFx.js'
 
 const { pageTemplate, custom } = useStorePage()
 const pageEl = ref(null)
 useCardTitles(pageEl)
+useMcFx(pageEl)
 
 const MAP = {
   announcements: BlkAnnouncements,

@@ -120,7 +120,8 @@
   overflow-x: clip;
 }
 
-/* Mercado no usa los glows ambientales del layout base. */
+/* Mercado reemplaza los glows ambientales del layout base por su propia
+   atmósfera (mesh + deriva, bloque CAPA PREMIUM al final de la hoja). */
 .store-page[data-template='mercado']::before,
 .store-page[data-template='mercado']::after { display: none; }
 
@@ -1422,4 +1423,379 @@
   .store-page[data-template='mercado'] .mc-cat-list .tpc-row { transition: none; }
   .store-page[data-template='mercado'] .mc-cat-skel-media,
   .store-page[data-template='mercado'] .mc-cat-skel-line { animation: none; }
+}
+
+/* ==========================================================================
+   CAPA PREMIUM (tier plus/advanced — estilos mercado / -noche / -oferta)
+   Atmósfera propia (mesh + grano + deriva), vidrio en chrome y riel,
+   sombras en capas, borde-gradiente y spotlight en tarjetas, sheen en
+   ofertas/CTA y micro-movimiento de iconos. Todo corre con tokens --mc-* y
+   se desactiva con reduced-motion / pestaña oculta / fuera de viewport.
+   ========================================================================== */
+.store-page[data-template='mercado'] {
+  --mc-ease: cubic-bezier(.22, 1, .36, 1);
+  --mc-dur-1: 150ms;
+  --mc-dur-2: 250ms;
+  --mc-dur-3: 400ms;
+  --mc-shadow-sm: 0 1px 2px rgba(16, 17, 20, .06), 0 1px 5px -1px rgba(16, 17, 20, .09);
+  --mc-shadow-md: 0 2px 6px -2px rgba(16, 17, 20, .12), 0 14px 30px -18px rgba(16, 17, 20, .3);
+  --mc-shadow-lg: 0 4px 10px -4px rgba(16, 17, 20, .16), 0 26px 48px -24px rgba(16, 17, 20, .34);
+  --mc-ring: color-mix(in srgb, var(--mc-accent-raw) 55%, transparent);
+}
+
+/* --- Atmósfera: mesh del acento + grano + figuras en deriva lenta --- */
+.store-page[data-template='mercado']::before {
+  display: block;
+  inset: 0;
+  width: auto;
+  height: auto;
+  border-radius: 0;
+  background-image:
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='140' height='140' filter='url(%23n)' opacity='.16'/%3E%3C/svg%3E"),
+    radial-gradient(760px 420px at 84% -10%, color-mix(in srgb, var(--mc-accent-raw) 9%, transparent), transparent 62%),
+    radial-gradient(620px 420px at -8% 26%, color-mix(in srgb, var(--mc-yellow) 16%, transparent), transparent 62%),
+    radial-gradient(920px 560px at 52% 118%, color-mix(in srgb, var(--mc-blue-deep) 7%, transparent), transparent 64%);
+  background-size: 140px 140px, auto, auto, auto;
+  animation: none;
+}
+.store-page[data-template='mercado']::after {
+  display: block;
+  inset: -14%;
+  width: auto;
+  height: auto;
+  border-radius: 0;
+  background:
+    radial-gradient(38% 30% at 18% 30%, color-mix(in srgb, var(--mc-yellow) 11%, transparent), transparent 70%),
+    radial-gradient(30% 26% at 84% 64%, color-mix(in srgb, var(--mc-accent-raw) 9%, transparent), transparent 70%);
+  will-change: transform;
+  animation: mc-drift 36s ease-in-out infinite alternate;
+}
+@keyframes mc-drift {
+  from { transform: translate3d(0, 0, 0); }
+  to { transform: translate3d(-2.4%, 2%, 0); }
+}
+/* Noche: brillo ámbar más presente sobre grafito. */
+.store-page[data-template='mercado'][data-style='mercado-noche']::before,
+.store-page[data-template='mercado'][data-store-theme='dark']::before {
+  background-image:
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='140' height='140' filter='url(%23n)' opacity='.12'/%3E%3C/svg%3E"),
+    radial-gradient(760px 420px at 84% -10%, color-mix(in srgb, var(--mc-yellow) 14%, transparent), transparent 62%),
+    radial-gradient(620px 420px at -8% 26%, color-mix(in srgb, var(--mc-accent-raw) 14%, transparent), transparent 62%),
+    radial-gradient(920px 560px at 52% 118%, color-mix(in srgb, var(--mc-yellow) 8%, transparent), transparent 64%);
+}
+.store-page[data-template='mercado'][data-style='mercado-noche']::after,
+.store-page[data-template='mercado'][data-store-theme='dark']::after {
+  background:
+    radial-gradient(38% 30% at 18% 30%, color-mix(in srgb, var(--mc-yellow) 13%, transparent), transparent 70%),
+    radial-gradient(30% 26% at 84% 64%, color-mix(in srgb, var(--mc-accent-raw) 12%, transparent), transparent 70%);
+}
+/* Oferta: destellos en deriva sobre la crema. */
+.store-page[data-template='mercado'][data-style='mercado-oferta']::after {
+  background:
+    radial-gradient(circle 1.4px at 24% 30%, color-mix(in srgb, var(--mc-yellow) 70%, transparent) 0 1.4px, transparent 1.8px),
+    radial-gradient(circle 1.2px at 70% 60%, color-mix(in srgb, var(--mc-accent-raw) 60%, transparent) 0 1.2px, transparent 1.6px),
+    radial-gradient(38% 30% at 18% 30%, color-mix(in srgb, var(--mc-yellow) 13%, transparent), transparent 70%),
+    radial-gradient(30% 26% at 84% 64%, color-mix(in srgb, var(--mc-accent-raw) 10%, transparent), transparent 70%);
+  background-size: 180px 180px, 150px 150px, auto, auto;
+}
+/* Móvil: sin deriva ni destellos (menos capas y sin puntero). */
+@media (max-width: 760px) {
+  .store-page[data-template='mercado']::after {
+    background:
+      radial-gradient(38% 30% at 18% 30%, color-mix(in srgb, var(--mc-yellow) 10%, transparent), transparent 70%),
+      radial-gradient(30% 26% at 84% 64%, color-mix(in srgb, var(--mc-accent-raw) 8%, transparent), transparent 70%);
+    animation: none;
+    will-change: auto;
+  }
+}
+
+/* --- Pausa de loops: pestaña oculta o bloque fuera del viewport --- */
+.store-page.mc-fx-paused *,
+.store-page.mc-fx-paused::before,
+.store-page.mc-fx-paused::after { animation-play-state: paused !important; }
+.store-page[data-template='mercado'] .sp-ann.mc-fx-off .sp-ann-track { animation-play-state: paused; }
+
+/* --- Vidrio en chrome y riel sticky --- */
+.store-page[data-template='mercado'] .sp-top {
+  background: color-mix(in srgb, var(--mc-yellow) 94%, transparent);
+  -webkit-backdrop-filter: saturate(1.25) blur(8px);
+  backdrop-filter: saturate(1.25) blur(8px);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, .08), 0 8px 24px -14px rgba(0, 0, 0, .25);
+}
+.store-page[data-template='mercado'] .sp-shop-nav {
+  background: color-mix(in srgb, var(--mc-surface) 84%, transparent);
+  -webkit-backdrop-filter: saturate(1.15) blur(10px);
+  backdrop-filter: saturate(1.15) blur(10px);
+  box-shadow: var(--mc-shadow-sm);
+}
+.store-page[data-template='mercado'] .mc-cat-aside,
+.store-page[data-template='mercado'] .mc-cat-results {
+  box-shadow: var(--mc-shadow-sm);
+}
+.store-page[data-template='mercado'] .mc-cat-aside-head,
+.store-page[data-template='mercado'] .mc-cat-aside-foot {
+  background: color-mix(in srgb, var(--mc-surface) 78%, transparent);
+  -webkit-backdrop-filter: blur(8px);
+  backdrop-filter: blur(8px);
+}
+
+/* --- Foco visible con el anillo del acento --- */
+.store-page[data-template='mercado'] :is(a, button, input, select, .tpc):focus-visible {
+  outline: 2px solid var(--mc-accent-raw);
+  outline-offset: 2px;
+  box-shadow: 0 0 0 4px var(--mc-ring);
+}
+
+/* --- Botones, chips y controles --- */
+.store-page[data-template='mercado'] .mc-btn {
+  position: relative;
+  overflow: hidden;
+  transition: transform var(--mc-dur-1) var(--mc-ease), box-shadow var(--mc-dur-2) var(--mc-ease),
+    background var(--mc-dur-1) var(--mc-ease), color var(--mc-dur-1) var(--mc-ease), border-color var(--mc-dur-1) var(--mc-ease);
+}
+.store-page[data-template='mercado'] .mc-btn--primary {
+  box-shadow: 0 1px 2px rgba(0, 0, 0, .18), 0 10px 22px -14px color-mix(in srgb, var(--mc-blue-deep) 75%, transparent);
+}
+.store-page[data-template='mercado'] .mc-btn--primary:hover { transform: translateY(-1px); box-shadow: 0 2px 4px rgba(0, 0, 0, .16), 0 16px 30px -16px color-mix(in srgb, var(--mc-blue-deep) 80%, transparent); }
+.store-page[data-template='mercado'] .mc-btn--primary:active { transform: translateY(0) scale(.985); }
+.store-page[data-template='mercado'] .mc-btn--primary::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(105deg, transparent 30%, rgba(255, 255, 255, .38) 50%, transparent 70%);
+  transform: translateX(-130%);
+  animation: mc-sheen 5.5s var(--mc-ease) infinite;
+  pointer-events: none;
+}
+@keyframes mc-sheen {
+  0%, 62% { transform: translateX(-130%); }
+  82%, 100% { transform: translateX(130%); }
+}
+.store-page[data-template='mercado'] .mc-btn--ghost { transition: transform var(--mc-dur-1) var(--mc-ease), border-color var(--mc-dur-1) var(--mc-ease), background var(--mc-dur-1) var(--mc-ease), box-shadow var(--mc-dur-2) var(--mc-ease); }
+.store-page[data-template='mercado'] .mc-btn--ghost:hover { transform: translateY(-1px); box-shadow: var(--mc-shadow-sm); }
+.store-page[data-template='mercado'] .mc-f-apply,
+.store-page[data-template='mercado'] .mc-f-done {
+  transition: transform var(--mc-dur-1) var(--mc-ease), background var(--mc-dur-1) var(--mc-ease), box-shadow var(--mc-dur-2) var(--mc-ease);
+}
+.store-page[data-template='mercado'] .mc-f-apply:hover,
+.store-page[data-template='mercado'] .mc-f-done:hover { transform: translateY(-1px); box-shadow: var(--mc-shadow-sm); }
+.store-page[data-template='mercado'] .mc-f-apply:active { transform: translateY(0) scale(.98); }
+.store-page[data-template='mercado'] .mc-f-check input { transition: border-color var(--mc-dur-1) var(--mc-ease), background var(--mc-dur-1) var(--mc-ease), box-shadow var(--mc-dur-1) var(--mc-ease); }
+.store-page[data-template='mercado'] .mc-f-check input:checked { box-shadow: 0 0 0 3px color-mix(in srgb, var(--mc-blue) 22%, transparent); }
+.store-page[data-template='mercado'] .mc-f-check input:checked::after { animation: mc-check .25s var(--mc-ease); }
+@keyframes mc-check { from { transform: rotate(-45deg) translate(1px, -1px) scale(.4); opacity: 0; } }
+.store-page[data-template='mercado'] .mc-f-price input { transition: border-color var(--mc-dur-1) var(--mc-ease), box-shadow var(--mc-dur-1) var(--mc-ease); }
+.store-page[data-template='mercado'] .mc-f-price input:focus { box-shadow: 0 0 0 3px color-mix(in srgb, var(--mc-blue) 20%, transparent); outline: none; }
+.store-page[data-template='mercado'] .mc-cat-view button,
+.store-page[data-template='mercado'] .mc-cat-pager button,
+.store-page[data-template='mercado'] .mc-cat-sort select {
+  transition: background var(--mc-dur-1) var(--mc-ease), color var(--mc-dur-1) var(--mc-ease), transform var(--mc-dur-1) var(--mc-ease);
+}
+.store-page[data-template='mercado'] .mc-cat-view button:active { transform: scale(.92); }
+.store-page[data-template='mercado'] .mc-cat-pager button[aria-current='page'] { box-shadow: 0 2px 8px -3px color-mix(in srgb, var(--mc-blue) 70%, transparent); }
+.store-page[data-template='mercado'] .mc-f-cat { transition: color var(--mc-dur-1) var(--mc-ease), padding-inline-start var(--mc-dur-2) var(--mc-ease); }
+.store-page[data-template='mercado'] .mc-f-cat:hover { padding-inline-start: 4px; }
+.store-page[data-template='mercado'] .sp-shop-nav-links a { transition: color var(--mc-dur-1) var(--mc-ease), background var(--mc-dur-1) var(--mc-ease), box-shadow var(--mc-dur-2) var(--mc-ease); }
+.store-page[data-template='mercado'] .sp-shop-nav-links a.is-current { box-shadow: inset 0 -2px 0 var(--mc-link), 0 6px 14px -10px color-mix(in srgb, var(--mc-link) 60%, transparent); }
+
+/* --- Iconos: micro-movimiento al hover/focus del control padre --- */
+.store-page[data-template='mercado'] .icon { transition: transform var(--mc-dur-2) var(--mc-ease); }
+.store-page[data-template='mercado'] .mc-btn:hover .icon,
+.store-page[data-template='mercado'] .mc-sec-link:hover .icon,
+.store-page[data-template='mercado'] .mc-hero-card-link:hover .icon { transform: translateX(3px); }
+.store-page[data-template='mercado'] .mc-cat-filters-toggle:hover .icon,
+.store-page[data-template='mercado'] .mc-cat-view button:hover .icon,
+.store-page[data-template='mercado'] .mc-cat-aside-close:hover .icon { transform: scale(1.12); }
+.store-page[data-template='mercado'] .mc-trust-item:hover .mc-trust-icon .icon { animation: mc-ico-pop .45s var(--mc-ease); }
+.store-page[data-template='mercado'] .mc-cat:hover .icon { transform: translateY(-1px); }
+@keyframes mc-ico-pop {
+  0% { transform: scale(1); }
+  45% { transform: scale(1.22); }
+  100% { transform: scale(1); }
+}
+
+/* --- Sheen periódico en badges de oferta --- */
+.store-page[data-template='mercado'] .mc-hero-badge,
+.store-page[data-template='mercado'] .mc-cat-off {
+  display: inline-flex;
+  align-items: center;
+  position: relative;
+  overflow: hidden;
+}
+.store-page[data-template='mercado'] .mc-hero-badge::after,
+.store-page[data-template='mercado'] .mc-cat-off::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(105deg, transparent 30%, rgba(255, 255, 255, .45) 50%, transparent 70%);
+  transform: translateX(-140%);
+  animation: mc-sheen 4.2s var(--mc-ease) infinite;
+  pointer-events: none;
+}
+.store-page[data-template='mercado'] .mc-off {
+  display: inline-flex;
+  align-items: center;
+  position: relative;
+  padding: 2px 7px;
+  border-radius: 4px;
+  background: color-mix(in srgb, var(--mc-green) 12%, var(--mc-surface));
+  overflow: hidden;
+}
+.store-page[data-template='mercado'] .mc-off::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(105deg, transparent 30%, color-mix(in srgb, var(--mc-green) 22%, transparent) 50%, transparent 70%);
+  transform: translateX(-140%);
+  animation: mc-sheen 4.8s var(--mc-ease) infinite;
+  pointer-events: none;
+}
+/* Pulso en contador de filtros y en "Solo ofertas". */
+.store-page[data-template='mercado'] .mc-cat-filters-count { animation: mc-pulse-badge 2.8s var(--mc-ease) infinite; }
+.store-page[data-template='mercado'] .mc-f-offer input:checked { box-shadow: 0 0 0 3px color-mix(in srgb, var(--mc-green) 22%, transparent); }
+.store-page[data-template='mercado'] .mc-f-offer input:checked ~ span { color: var(--mc-green-ink); font-weight: 700; }
+.store-page[data-template='mercado'] .mc-f-offer .icon { color: var(--mc-green-ink); animation: mc-pulse-badge 2.8s var(--mc-ease) infinite; }
+@keyframes mc-pulse-badge {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.14); }
+}
+
+/* --- Tarjetas: elevación en capas, borde-gradiente y spotlight --- */
+.store-page[data-template='mercado'] .mc-card.tpc {
+  box-shadow: var(--mc-shadow-sm);
+  transition: transform var(--mc-dur-2) var(--mc-ease), box-shadow var(--mc-dur-2) var(--mc-ease);
+}
+.store-page[data-template='mercado'] .mc-card.tpc::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 3;
+  border-radius: inherit;
+  padding: 1px;
+  background: linear-gradient(160deg,
+    color-mix(in srgb, var(--mc-accent-raw) 42%, transparent) 0%,
+    transparent 34%, transparent 66%,
+    color-mix(in srgb, var(--mc-accent-raw) 26%, transparent) 100%);
+  -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  -webkit-mask-composite: xor;
+  mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  mask-composite: exclude;
+  opacity: 0;
+  transition: opacity var(--mc-dur-2) var(--mc-ease);
+  pointer-events: none;
+}
+.store-page[data-template='mercado'] .mc-card.tpc:hover { transform: translateY(-4px); box-shadow: var(--mc-shadow-lg); }
+.store-page[data-template='mercado'] .mc-card.tpc:hover::before,
+.store-page[data-template='mercado'] .mc-card.tpc:focus-visible::before { opacity: 1; }
+.store-page[data-template='mercado'] .mc-spot::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  border-radius: inherit;
+  background: radial-gradient(240px circle at var(--mx, 50%) var(--my, 50%),
+    color-mix(in srgb, var(--mc-accent-raw) 10%, transparent), transparent 68%);
+  opacity: 0;
+  transition: opacity var(--mc-dur-2) var(--mc-ease);
+  pointer-events: none;
+}
+.store-page[data-template='mercado'] .mc-spot.is-spot::after { opacity: 1; }
+/* Grilla del catálogo: mismo lenguaje que las tarjetas de portada. */
+.store-page[data-template='mercado'] .mc-cat-list[data-view='grid'] .mc-cat-card {
+  border-color: transparent;
+  box-shadow: var(--mc-shadow-sm);
+  transition: transform var(--mc-dur-2) var(--mc-ease), box-shadow var(--mc-dur-2) var(--mc-ease);
+}
+.store-page[data-template='mercado'] .mc-cat-list[data-view='grid'] .mc-cat-card::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 3;
+  border-radius: inherit;
+  padding: 1px;
+  background: linear-gradient(160deg,
+    color-mix(in srgb, var(--mc-accent-raw) 42%, transparent) 0%,
+    transparent 34%, transparent 66%,
+    color-mix(in srgb, var(--mc-accent-raw) 26%, transparent) 100%);
+  -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  -webkit-mask-composite: xor;
+  mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  mask-composite: exclude;
+  opacity: 0;
+  transition: opacity var(--mc-dur-2) var(--mc-ease);
+  pointer-events: none;
+}
+.store-page[data-template='mercado'] .mc-cat-list[data-view='grid'] .mc-cat-card:hover { transform: translateY(-4px); box-shadow: var(--mc-shadow-lg); }
+.store-page[data-template='mercado'] .mc-cat-list[data-view='grid'] .mc-cat-card:hover::before { opacity: 1; }
+/* Filas: elevación sutil en vez de cambio de fondo plano. */
+.store-page[data-template='mercado'] .mc-cat-list .tpc-row {
+  border-radius: 6px;
+  transition: background var(--mc-dur-1) var(--mc-ease), box-shadow var(--mc-dur-2) var(--mc-ease);
+}
+.store-page[data-template='mercado'] .mc-cat-list .tpc-row:hover { box-shadow: var(--mc-shadow-sm); }
+
+/* --- Hero: tarjeta de oferta con spotlight y profundidad --- */
+.store-page[data-template='mercado'] .mc-hero-card {
+  box-shadow: 0 2px 4px rgba(0, 0, 0, .1), 0 18px 36px -20px rgba(0, 0, 0, .5);
+  transition: transform var(--mc-dur-2) var(--mc-ease), box-shadow var(--mc-dur-2) var(--mc-ease);
+}
+.store-page[data-template='mercado'] .mc-hero-card:hover { transform: translateY(-4px); box-shadow: 0 4px 8px rgba(0, 0, 0, .12), 0 28px 48px -22px rgba(0, 0, 0, .55); }
+.store-page[data-template='mercado'] .mc-hero-tile { transition: transform var(--mc-dur-3) var(--mc-ease); }
+.store-page[data-template='mercado'] .mc-hero-art:hover .mc-hero-tile { transform: translateY(-2px); }
+/* Detalle editorial: índice del riel de filtros y etiquetas de sección. */
+.store-page[data-template='mercado'] .mc-f-group { counter-increment: mc-f; }
+.store-page[data-template='mercado'] .mc-cat-aside { counter-reset: mc-f; }
+.store-page[data-template='mercado'] .mc-f-title::before {
+  content: "0" counter(mc-f);
+  display: block;
+  margin-bottom: 3px;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: .12em;
+  color: var(--mc-muted);
+}
+
+/* --- Footer premium --- */
+.store-page[data-template='mercado'] .sp-foot {
+  box-shadow: 0 -1px 0 var(--mc-line), 0 -12px 30px -24px rgba(0, 0, 0, .2);
+}
+.store-page[data-template='mercado'] .sp-foot a { transition: color var(--mc-dur-1) var(--mc-ease), transform var(--mc-dur-2) var(--mc-ease); }
+
+/* --- Ficha / servicios (puente .mc-skin): misma atmósfera de capas --- */
+.store-page[data-template='mercado'] .mc-product .rz-pdp-frame { box-shadow: var(--mc-shadow-sm); }
+.store-page[data-template='mercado'] .mc-product .rz-pdp-buy-btn {
+  position: relative;
+  overflow: hidden;
+  transition: transform var(--mc-dur-1) var(--mc-ease), background var(--mc-dur-1) var(--mc-ease), box-shadow var(--mc-dur-2) var(--mc-ease);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, .18), 0 12px 26px -14px color-mix(in srgb, var(--mc-blue-deep) 75%, transparent);
+}
+.store-page[data-template='mercado'] .mc-product .rz-pdp-buy-btn::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(105deg, transparent 30%, rgba(255, 255, 255, .38) 50%, transparent 70%);
+  transform: translateX(-130%);
+  animation: mc-sheen 5.5s var(--mc-ease) infinite;
+  pointer-events: none;
+}
+.store-page[data-template='mercado'] .mc-product .rz-pdp-buy-btn:hover { transform: translateY(-1px); }
+.store-page[data-template='mercado'] .mc-services .rz-sv-item { transition: border-color var(--mc-dur-1) var(--mc-ease), background var(--mc-dur-1) var(--mc-ease), transform var(--mc-dur-2) var(--mc-ease), box-shadow var(--mc-dur-2) var(--mc-ease); }
+.store-page[data-template='mercado'] .mc-services .rz-sv-item:hover { transform: translateY(-2px); box-shadow: var(--mc-shadow-sm); }
+
+/* --- Accesibilidad: sin loops ni atmósfera animada con reduced-motion --- */
+@media (prefers-reduced-motion: reduce) {
+  .store-page[data-template='mercado']::before { animation: none !important; }
+  .store-page[data-template='mercado']::after { animation: none !important; transform: none; }
+  .store-page[data-template='mercado'] .mc-btn--primary::after,
+  .store-page[data-template='mercado'] .mc-hero-badge::after,
+  .store-page[data-template='mercado'] .mc-cat-off::after,
+  .store-page[data-template='mercado'] .mc-off::after,
+  .store-page[data-template='mercado'] .mc-product .rz-pdp-buy-btn::after { animation: none !important; }
+  .store-page[data-template='mercado'] .mc-cat-filters-count,
+  .store-page[data-template='mercado'] .mc-f-offer .icon { animation: none !important; }
+  .store-page[data-template='mercado'] .mc-card.tpc::before,
+  .store-page[data-template='mercado'] .mc-cat-list[data-view='grid'] .mc-cat-card::before { transition: none; }
+  .store-page[data-template='mercado'] .icon,
+  .store-page[data-template='mercado'] .mc-f-cat { transition: none; }
+  .store-page[data-template='mercado'] .mc-trust-item:hover .mc-trust-icon .icon { animation: none; }
 }

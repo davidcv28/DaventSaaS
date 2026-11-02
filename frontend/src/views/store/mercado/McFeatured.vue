@@ -7,6 +7,7 @@ import { storeHostSlug } from '../../../config/env.js'
 import AppIcon from '../../../components/AppIcon.vue'
 import TplProductCard from '../../../components/store/TplProductCard.vue'
 import { vReveal } from '../../../directives/reveal.js'
+import { vSpot } from './useMcFx.js'
 import { useFeaturedCatalog } from '../../../composables/useFeaturedCatalog.js'
 import { effectivePrice, offerPct, productOffer } from '../../../api/catalog.api.js'
 import { formatARS } from '../../../api/billing.api.js'
@@ -41,7 +42,7 @@ const openProduct = (p) => router.push(productTo(p))
       <div class="mc-grid">
         <TplProductCard
           v-for="(p, i) in products" :key="p.id" v-reveal="(i % 5) * 55"
-          class="mc-card" :p="p" :stars="custom.show_reviews" stars-icon="star"
+          v-spot class="mc-card" :p="p" :stars="custom.show_reviews" stars-icon="star"
           seal-shape="" :go="false" quick="" @open="openProduct"
         >
           <template #foot="{ p: product }">

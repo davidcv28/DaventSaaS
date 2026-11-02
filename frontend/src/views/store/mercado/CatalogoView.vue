@@ -11,7 +11,9 @@ import { productDiscount, offerEndsLabel, offerPct } from '../../../api/catalog.
 import { useStoreCatalog, SORT_OPTIONS } from '../../../composables/useStoreCatalog.js'
 import TplProductCard from '../../../components/store/TplProductCard.vue'
 import AppIcon from '../../../components/AppIcon.vue'
+import { vReveal } from '../../../directives/reveal.js'
 import { useCardTitles } from './useCardTitles.js'
+import { vSpot, useMcFx } from './useMcFx.js'
 
 const ctx = inject('storePage')
 const { custom, shopName, slug, ui } = ctx
@@ -26,6 +28,7 @@ const {
 
 const pageEl = ref(null)
 useCardTitles(pageEl)
+useMcFx(pageEl)
 
 // ===== Paginado (páginas de 24, como el listado del marketplace) =====
 const perPage = 24
@@ -96,6 +99,13 @@ const visibleBrands = computed(() => {
 // ===== Vista lista / grilla =====
 const view = ref('list')
 const crumb = computed(() => activeCategoryName.value || ui.search.trim() || 'Todos los productos')
+// Firma de resultados: cambia con vista/página/orden/filtros → las tarjetas
+// se remontan y re-animan (reveal con stagger) en cada cambio de estado.
+const sig = computed(() => [
+  view.value, page.value, sort.value, onlyOffer.value,
+  priceMin.value, priceMax.value, ui.search.trim(),
+  activeCategories.value.join(','), activeBrands.value.join(',')
+].join('|'))
 const promoOf = (p) => productDiscount(p)
 </script>
 
@@ -177,9 +187,10 @@ const promoOf = (p) => productDiscount(p)
 
           <section class="mc-f-group">
             <h2 class="mc-f-title">Ofertas</h2>
-            <label class="mc-f-check">
+            <label class="mc-f-check mc-f-offer">
               <input type="checkbox" :checked="onlyOffer" @change="toggleOffer" />
               <span>Solo ofertas</span>
+              <AppIcon name="percent" :size="13" aria-hidden="true" />
             </label>
           </section>
 
@@ -201,6 +212,7 @@ const promoOf = (p) => productDiscount(p)
               </button>
             </div>
             <label class="mc-cat-sort">
+              <AppIcon name="arrow-down-wide-narrow" :size="14" aria-hidden="true" />
               <span>Ordenar por</span>
               <select v-model="sort">
                 <option v-for="opt in SORT_OPTIONS" :key="opt.value" :value="opt.value">{{ opt.label }}</option>
@@ -228,7 +240,8 @@ const promoOf = (p) => productDiscount(p)
 
           <div v-else-if="total" class="mc-cat-list" :data-view="view">
             <TplProductCard
-              v-for="p in pagedProducts" :key="p.id" class="mc-cat-card"
+              v-for="(p, i) in pagedProducts" :key="`${sig}|${p.id}`"
+              v-reveal="(i % 8) * 40" v-spot class="mc-cat-card"
               :p="p" :cat="categoryNameOf(p)" :brand="brandNameOf(p)" :desc="p.description || ''"
               :layout="view === 'list' ? 'row' : 'card'"
               :stars="custom.show_reviews" stars-icon="star"
