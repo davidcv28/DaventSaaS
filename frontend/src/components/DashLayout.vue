@@ -68,6 +68,11 @@ const hasTabs = computed(() => props.tabs.length > 0)
 // La sección actual no está en la tab bar: "Más" queda marcado para que el
 // usuario sepa dónde está parado.
 const moreActive = computed(() => hasTabs.value && !props.tabs.some((t) => t.id === props.active))
+// Posición de la píldora activa en la tab bar (Más = última columna).
+const tabIndex = computed(() => {
+  const i = props.tabs.findIndex((t) => t.id === props.active)
+  return i < 0 ? props.tabs.length : i
+})
 const current = computed(() => props.items.find((i) => i.id === props.active))
 const currentLabel = computed(() => props.title || current.value?.label || 'Resumen')
 const todayLabel = new Date().toLocaleDateString('es-AR', { weekday: 'long', day: 'numeric', month: 'long' })
@@ -257,6 +262,7 @@ onBeforeUnmount(() => {
 
     <!-- Tab bar móvil: 4 destinos + "Más" (abre el sheet con todo el menú) -->
     <nav v-if="hasTabs" class="tabbar" aria-label="Secciones principales">
+      <span class="tab-ind" :style="{ '--ti': tabIndex, '--tn': tabs.length + 1 }" aria-hidden="true"></span>
       <button
         v-for="t in tabs"
         :key="t.id"
