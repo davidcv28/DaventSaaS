@@ -24,7 +24,7 @@ const variant = computed(() => (props.block?.variant === 'table' ? 'table' : 'ca
     <div class="sp-container sp-aipricing-inner">
       <h2 v-reveal class="sp-section-title sp-aipricing-title">{{ title }}</h2>
       <ul class="sp-aipricing-list">
-        <li v-for="(plan, i) in items" :key="`${i}-${plan.name}`" v-reveal="(i % 4) * 70" class="sp-aipricing-card">
+        <li v-for="(plan, i) in items" :key="`${i}-${plan.name}`" v-reveal="(i % 4) * 70" class="sp-aipricing-card" :class="{ 'has-feats': plan.items?.length }">
           <h3 class="sp-aipricing-name">{{ plan.name }}</h3>
           <span v-if="plan.price" class="sp-aipricing-amount">{{ plan.price }}</span>
           <p v-if="plan.note" class="sp-aipricing-note">{{ plan.note }}</p>

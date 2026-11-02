@@ -404,13 +404,17 @@
   color: var(--gy-on-lime);
   border-top: 1px solid var(--gy-ink);
   border-bottom: 1px solid var(--gy-ink);
+  overflow: hidden;
+}
+.gy-strip-track {
+  display: flex;
+  width: max-content;
+  animation: gy-strip-loop 24s linear infinite;
 }
 .gy-strip-inner {
+  flex: none;
   display: flex;
-  flex-wrap: wrap;
   align-items: center;
-  justify-content: space-between;
-  gap: 10px 28px;
   padding-block: 22px;
   font-family: var(--gy-display);
   font-size: 28px;
@@ -418,7 +422,22 @@
   letter-spacing: .06em;
   text-transform: uppercase;
   white-space: nowrap;
-  overflow: hidden;
+}
+.gy-strip-inner span {
+  display: inline-flex;
+  align-items: center;
+}
+.gy-strip-inner span::after {
+  content: '';
+  width: 9px;
+  height: 9px;
+  margin-inline: 28px;
+  background: var(--gy-on-lime);
+  opacity: .45;
+  transform: rotate(45deg);
+}
+@keyframes gy-strip-loop {
+  to { transform: translateX(-50%); }
 }
 
 /* ==========================================================================
@@ -1095,12 +1114,100 @@
   --sp-shadow-sm: 0 10px 28px -18px rgb(0 0 0 / .7);
   --sp-shadow-md: 0 26px 60px -30px rgb(0 0 0 / .8);
 }
+.store-page[data-template='gimnasio'][data-style='gimnasio-elite'] .gy-btn--solid {
+  position: relative;
+  isolation: isolate;
+}
+@property --gy-beam {
+  syntax: '<angle>';
+  initial-value: 0deg;
+  inherits: false;
+}
+.store-page[data-template='gimnasio'][data-style='gimnasio-elite'] .gy-btn--solid::after {
+  content: '';
+  position: absolute;
+  inset: -2.5px;
+  z-index: -1;
+  background: conic-gradient(
+    from var(--gy-beam),
+    transparent 0deg 260deg,
+    color-mix(in srgb, var(--gy-lime) 45%, transparent) 300deg,
+    #FFF6DE 330deg,
+    #FFF 338deg,
+    transparent 360deg
+  );
+  animation: gy-beam-orbit 2.8s linear infinite;
+  pointer-events: none;
+}
+@keyframes gy-beam-orbit {
+  to { --gy-beam: 360deg; }
+}
+/* Cinta: en elite el loop pisa el acento con la banda dorada invertida. */
+.store-page[data-template='gimnasio'][data-style='gimnasio-elite'] .gy-strip {
+  background: linear-gradient(90deg, #8A6F2E, var(--gy-lime) 40%, #B89A4A 80%);
+}
+/* Planes elite: tarjeta de membresía trabajada — gradiente profundo,
+   índice dorado, precio con filete y feats en lista caligráfica. */
 .store-page[data-template='gimnasio'][data-style='gimnasio-elite'] .sp-aipricing-card {
+  padding: 30px 26px 26px;
+  border-color: var(--gy-line);
+  border-top: 3px solid var(--gy-line-strong);
+  background: linear-gradient(165deg, #1D1B14 0%, var(--gy-card) 55%, #14130E 100%);
   box-shadow: var(--sp-shadow-sm);
+  transition: border-color .25s, box-shadow .25s, transform .25s;
+}
+.store-page[data-template='gimnasio'][data-style='gimnasio-elite'] .sp-aipricing-card::before {
+  font-size: 17px;
+  color: color-mix(in srgb, var(--gy-lime) 70%, transparent);
+}
+.store-page[data-template='gimnasio'][data-style='gimnasio-elite'] .sp-aipricing-card::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border: 1px solid color-mix(in srgb, var(--gy-lime) 10%, transparent);
+  pointer-events: none;
 }
 .store-page[data-template='gimnasio'][data-style='gimnasio-elite'] .sp-aipricing-card:hover {
   border-color: var(--gy-lime);
   box-shadow: var(--sp-shadow-md);
+  transform: translateY(-4px);
+}
+.store-page[data-template='gimnasio'][data-style='gimnasio-elite'] .sp-aipricing-amount {
+  font-size: 46px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid var(--gy-line);
+  background: linear-gradient(100deg, #F4E6B8, var(--gy-lime) 60%, #8A6F2E);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+.store-page[data-template='gimnasio'][data-style='gimnasio-elite'] .sp-aipricing-feats {
+  border-top: 0;
+  padding-top: 4px;
+}
+.store-page[data-template='gimnasio'][data-style='gimnasio-elite'] .sp-aipricing-feats svg {
+  color: var(--gy-lime);
+}
+/* Con detalles: el plan completo pasa a primer plano — banda dorada,
+   sello "Más completo" y realce sutil del fondo. */
+.store-page[data-template='gimnasio'][data-style='gimnasio-elite'] .sp-aipricing-card.has-feats {
+  border-top-color: var(--gy-lime);
+  background: linear-gradient(165deg, #241F10 0%, var(--gy-card) 50%, #171510 100%);
+  box-shadow: var(--sp-shadow-md), inset 0 0 0 1px color-mix(in srgb, var(--gy-lime) 26%, transparent);
+}
+.store-page[data-template='gimnasio'][data-style='gimnasio-elite'] .sp-aipricing-card.has-feats .sp-aipricing-name::after {
+  content: 'Más completo';
+  display: inline-block;
+  margin-left: 10px;
+  padding: 3px 8px;
+  background: var(--gy-lime);
+  color: var(--gy-on-lime);
+  font-family: var(--gy-label);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: .12em;
+  text-transform: uppercase;
+  vertical-align: 6px;
 }
 
 /* ==========================================================================
@@ -1119,5 +1226,8 @@
   .store-page[data-template='gimnasio'] .sp-service-title { font-size: 30px; }
 }
 @media (prefers-reduced-motion: reduce) {
-  .gy-btn, .gy-card-link, .gy-card-go { transition: none; }
+  .gy-btn, .gy-card-link, .gy-card-go,
+  .store-page[data-template='gimnasio'] .sp-aipricing-card { transition: none; }
+  .gy-strip-track { animation: none; }
+  .store-page[data-template='gimnasio'][data-style='gimnasio-elite'] .gy-btn--solid::after { animation: none; }
 }
