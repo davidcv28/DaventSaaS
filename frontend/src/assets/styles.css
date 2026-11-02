@@ -1054,12 +1054,53 @@ body{ transition: background-color .2s ease, color .2s ease; }
 .qa-fields .textarea{ min-height: 60px; }
 .qa-actions{ display: flex; flex-direction: column; gap: 4px; flex: none; }
 .qa-actions .icon-btn{ width: 28px; height: 28px; border-radius: 7px; }
-/* ===== Mi empresa (editor de marketing): nav por bloques, filas con
-   ícono/pares y lista de reordenamiento de secciones de la portada. ===== */
-.mk-nav{ display: flex; flex-wrap: wrap; gap: 8px; margin: -4px 0 20px; }
-.mk-chip{ padding: 8px 14px; border: 1px solid var(--line); border-radius: 99px; background: var(--card); color: var(--ink-2); font: inherit; font-size: 12.5px; font-weight: 600; cursor: pointer; transition: border-color .15s, color .15s, background .15s; }
-.mk-chip:hover{ border-color: var(--brand-500); color: var(--brand-ink); background: var(--brand-soft); }
-.mk-card{ scroll-margin-top: 24px; }
+/* ===== Sobre mi negocio: grilla de tarjetas-lanzador + modal por bloque.
+   Cada lanzador muestra ícono de color, nombre, qué hace y un sello con lo
+   cargado; abre el formulario correspondiente dentro de .mk-modal. ===== */
+.mk-launch{ display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 12px; margin-bottom: 14px; }
+.mk-launcher{ display: flex; align-items: center; gap: 12px; padding: 14px; border: 1px solid var(--line); border-radius: 14px; background: var(--card); text-align: left; font: inherit; color: inherit; cursor: pointer; transition: border-color .15s, box-shadow .15s, transform .15s; }
+.mk-launcher:hover{ border-color: var(--brand-500); box-shadow: 0 0 0 3px var(--brand-soft); transform: translateY(-1px); }
+.mk-launcher-ico{ flex: none; width: 42px; height: 42px; display: grid; place-items: center; border-radius: 12px; color: #fff; }
+.mk-launcher-txt{ flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
+.mk-launcher-txt strong{ font-size: 14.5px; }
+.mk-launcher-txt small{ color: var(--muted); font-size: 12px; }
+.mk-launcher-side{ flex: none; display: flex; align-items: center; gap: 8px; }
+.mk-done{ display: inline-flex; align-items: center; gap: 4px; padding: 3px 9px; border-radius: 99px; background: var(--ok-bg); border: 1px solid var(--ok-line); color: var(--ok-ink); font-size: 11px; font-weight: 700; white-space: nowrap; }
+.mk-launcher-go{ color: var(--ink-3, var(--muted)); }
+.mk-launch-hint{ margin: -4px 0 18px; }
+/* Un color por tarjeta, fijo y reconocible. */
+.hue-about{ background: #4f46e5; }
+.hue-services{ background: #0ea5e9; }
+.hue-plans{ background: #b45309; }
+.hue-stats{ background: #059669; }
+.hue-testimonials{ background: #d97706; }
+.hue-faqs{ background: #7c3aed; }
+.hue-benefits{ background: #16a34a; }
+.hue-timeline{ background: #db2777; }
+.hue-team{ background: #0891b2; }
+.hue-hours{ background: #4d7c0f; }
+.hue-cta{ background: #ea580c; }
+.hue-ann{ background: #dc2626; }
+.hue-video{ background: #475569; }
+.hue-extras{ background: #6366f1; }
+/* Modal de edición: cabecera fija + cuerpo con scroll. */
+.mk-overlay{ position: fixed; inset: 0; z-index: 80; display: flex; align-items: center; justify-content: center; padding: 20px; background: rgba(15, 15, 12, .5); backdrop-filter: blur(3px); }
+.mk-modal{ width: min(720px, 100%); max-height: min(88vh, 900px); display: flex; flex-direction: column; background: var(--bg); border: 1px solid var(--line); border-radius: 18px; box-shadow: 0 30px 70px -20px rgba(15, 23, 42, .45); overflow: hidden; }
+.mk-modal-head{ display: flex; align-items: center; gap: 12px; padding: 14px 18px; border-bottom: 1px solid var(--line); background: var(--card); }
+.mk-modal-ico{ flex: none; width: 38px; height: 38px; display: grid; place-items: center; border-radius: 11px; background: var(--brand-soft); color: var(--brand-ink); }
+.mk-modal-txt{ flex: 1; min-width: 0; }
+.mk-modal-txt h2{ font-size: 16px; margin: 0; }
+.mk-modal-txt small{ color: var(--muted); }
+.mk-modal-x{ flex: none; width: 34px; height: 34px; display: grid; place-items: center; border: 0; border-radius: 10px; background: transparent; color: var(--ink-2); cursor: pointer; }
+.mk-modal-x:hover{ background: var(--surface); color: var(--ink); }
+.mk-modal-body{ overflow: auto; padding: 16px 18px; }
+.mk-modal-body .mk-card{ margin-bottom: 0; }
+@media (max-width: 640px){
+  .mk-overlay{ padding: 0; align-items: flex-end; }
+  .mk-modal{ width: 100%; max-height: 92vh; border-radius: 18px 18px 0 0; border-left: 0; border-right: 0; border-bottom: 0; }
+  .mk-launch{ grid-template-columns: 1fr 1fr; }
+  .mk-launcher{ flex-direction: column; align-items: flex-start; }
+}
 /* Apartado no soportado por el diseño elegido: el fieldset deshabilita
    todos los controles de la tarjeta (mismo patrón que lock-badge). */
 .mk-fieldset{ border: 0; padding: 0; margin: 0; min-width: 0; }

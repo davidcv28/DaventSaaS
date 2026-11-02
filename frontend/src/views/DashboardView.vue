@@ -1413,26 +1413,57 @@ function moveRow(list, index, direction) {
   ;[list[index], list[target]] = [list[target], list[index]]
 }
 
-// Atajos a cada bloque de la sección (es larga: chips con scroll suave).
+// "Sobre mi negocio": cada bloque es una tarjeta-lanzador que abre su
+// formulario dentro de un modal (menos scroll, más amigable para usuarios
+// no técnicos). El orden de las tarjetas sigue el de las secciones de la web.
+const mkOpen = ref(null)
 const mkNav = [
-  { id: 'mk-about', label: 'Sobre nosotros' },
-  { id: 'mk-services', label: 'Qué ofrecemos' },
-  { id: 'mk-plans', label: 'Planes' },
-  { id: 'mk-stats', label: 'Tus números' },
-  { id: 'mk-testimonials', label: 'Testimonios' },
-  { id: 'mk-faqs', label: 'Preguntas' },
-  { id: 'mk-benefits', label: 'Garantías' },
-  { id: 'mk-timeline', label: 'Trayectoria' },
-  { id: 'mk-team', label: 'Equipo' },
-  { id: 'mk-hours', label: 'Horarios' },
-  { id: 'mk-cta', label: 'Llamado a la acción' },
-  { id: 'mk-ann', label: 'Anuncios' },
-  { id: 'mk-video', label: 'Video' },
-  { id: 'mk-extras', label: 'Extras' }
+  { key: 'about', label: 'Sobre nosotros', icon: 'store', desc: 'Tu historia, años y misión' },
+  { key: 'services', label: 'Qué ofrecemos', icon: 'layout-grid', desc: 'Ventajas y servicios con ícono' },
+  { key: 'plans', label: 'Planes y membresías', icon: 'crown', desc: 'Packs y clubs para tus clientes' },
+  { key: 'stats', label: 'Tus números', icon: 'trending-up', desc: 'Cifras que generan confianza' },
+  { key: 'testimonials', label: 'Testimonios', icon: 'star', desc: 'Lo que dicen tus clientes' },
+  { key: 'faqs', label: 'Preguntas frecuentes', icon: 'message-circle', desc: 'Respuestas a dudas comunes' },
+  { key: 'benefits', label: 'Garantías', icon: 'shield-check', desc: 'Envíos, garantía y formas de pago' },
+  { key: 'timeline', label: 'Tu trayectoria', icon: 'calendar', desc: 'Hitos del negocio, paso a paso' },
+  { key: 'team', label: 'Tu equipo', icon: 'users', desc: 'Quiénes trabajan con vos' },
+  { key: 'hours', label: 'Horarios', icon: 'clock', desc: 'Cuándo atendés al público' },
+  { key: 'cta', label: 'Llamado a la acción', icon: 'zap', desc: 'El botón final que invita a escribirte' },
+  { key: 'ann', label: 'Anuncios', icon: 'megaphone', desc: 'Novedades que corren bajo la portada' },
+  { key: 'video', label: 'Video', icon: 'eye', desc: 'Un video de YouTube o Vimeo' },
+  { key: 'extras', label: 'Extras', icon: 'plus', desc: 'Aviso del catálogo y frase del pie' }
 ]
-function scrollToCard(id) {
-  document.getElementById(id)?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+const mkOpenMeta = computed(() => mkNav.find((m) => m.key === mkOpen.value) || null)
+// Estado resumido de cada bloque: cuánto hay cargado (para el sello de la
+// tarjeta-lanzador — el usuario ve de un vistazo qué le falta).
+function mkSummary(key) {
+  const f = designForm
+  const n = (list) => (Array.isArray(list) ? list.length : 0)
+  switch (key) {
+    case 'about': return (f.about_text || f.about_mission || f.about_specialties || f.about_years) ? 'Con contenido' : ''
+    case 'services': return n(f.services) ? `${n(f.services)} cargado${n(f.services) === 1 ? '' : 's'}` : ''
+    case 'plans': return n(f.plans) ? `${n(f.plans)} cargado${n(f.plans) === 1 ? '' : 's'}` : ''
+    case 'stats': return n(f.stats) ? `${n(f.stats)} cargado${n(f.stats) === 1 ? '' : 's'}` : ''
+    case 'testimonials': return n(f.testimonials) ? `${n(f.testimonials)} cargado${n(f.testimonials) === 1 ? '' : 's'}` : ''
+    case 'faqs': return n(f.faqs) ? `${n(f.faqs)} cargada${n(f.faqs) === 1 ? '' : 's'}` : ''
+    case 'benefits': return n(f.benefits) ? `${n(f.benefits)} cargada${n(f.benefits) === 1 ? '' : 's'}` : ''
+    case 'timeline': return n(f.timeline) ? `${n(f.timeline)} cargado${n(f.timeline) === 1 ? '' : 's'}` : ''
+    case 'team': return n(f.team) ? `${n(f.team)} cargado${n(f.team) === 1 ? '' : 's'}` : ''
+    case 'hours': return n(f.hours) ? `${n(f.hours)} cargado${n(f.hours) === 1 ? '' : 's'}` : ''
+    case 'cta': return (f.cta_title || f.cta_text || f.cta_label) ? 'Con contenido' : ''
+    case 'ann': return n(f.announcements) ? `${n(f.announcements)} cargado${n(f.announcements) === 1 ? '' : 's'}` : ''
+    case 'video': return f.video_url ? 'Con video' : ''
+    case 'extras': return (f.catalog_note || f.footer_text) ? 'Con contenido' : ''
+    default: return ''
+  }
 }
+watch(mkOpen, (on) => { document.body.style.overflow = on ? 'hidden' : '' })
+function onMkKey(e) { if (e.key === 'Escape' && mkOpen.value) mkOpen.value = null }
+onMounted(() => window.addEventListener('keydown', onMkKey))
+onUnmounted(() => {
+  window.removeEventListener('keydown', onMkKey)
+  document.body.style.overflow = ''
+})
 
 async function saveCompany() {
   COMPANY_FIELDS.forEach((k) => { designTouched[k] = true })
@@ -4000,7 +4031,7 @@ async function changePassword() {
       <div class="page-head">
         <div>
           <h1>Sobre mi negocio</h1>
-          <p>Contale a tus clientes quién sos, qué ofrecés y cuándo atendés. Cada bloque es opcional: si lo dejás vacío, no se muestra.</p>
+          <p>Elegí qué querés contar en tu página. Tocá una tarjeta, completá el formulario y listo — lo que dejes vacío no se muestra.</p>
         </div>
         <button class="btn ghost btn-auto" @click="openStore"><AppIcon name="external-link" :size="16" /> Ver mi página</button>
       </div>
@@ -4010,12 +4041,39 @@ async function changePassword() {
       <AlertMessage v-if="store.lastError" kind="error" :message="store.lastError" />
 
       <template v-if="canCustomize">
-        <nav class="mk-nav" aria-label="Bloques de contenido">
-          <button v-for="l in mkNav" :key="l.id" type="button" class="mk-chip" @click="scrollToCard(l.id)">{{ l.label }}</button>
+        <nav class="mk-launch" aria-label="Secciones de tu página">
+          <button
+            v-for="l in mkNav" :key="l.key" type="button" class="mk-launcher"
+            @click="mkOpen = l.key"
+          >
+            <span class="mk-launcher-ico" :class="`hue-${l.key}`"><AppIcon :name="l.icon" :size="20" /></span>
+            <span class="mk-launcher-txt">
+              <strong>{{ l.label }}</strong>
+              <small>{{ l.desc }}</small>
+            </span>
+            <span class="mk-launcher-side">
+              <span v-if="mkSummary(l.key)" class="mk-done"><AppIcon name="check" :size="12" :stroke="2.5" /> {{ mkSummary(l.key) }}</span>
+              <AppIcon name="chevron-right" :size="16" class="mk-launcher-go" />
+            </span>
+          </button>
         </nav>
+        <p class="hint mk-launch-hint">Tocá una tarjeta para abrir su formulario. Todo lo que dejes vacío simplemente no aparece en tu página.</p>
+
+        <!-- ===== Modal de edición: un bloque a la vez ===== -->
+        <div v-if="mkOpen" class="mk-overlay" @click.self="mkOpen = null">
+          <div class="mk-modal" role="dialog" aria-modal="true" :aria-label="mkOpenMeta?.label || 'Editar sección'">
+            <header class="mk-modal-head">
+              <span class="mk-modal-ico"><AppIcon :name="mkOpenMeta?.icon || 'pencil'" :size="20" /></span>
+              <div class="mk-modal-txt">
+                <h2>{{ mkOpenMeta?.label }}</h2>
+                <small>{{ mkOpenMeta?.desc }}</small>
+              </div>
+              <button type="button" class="mk-modal-x" aria-label="Cerrar" @click="mkOpen = null"><AppIcon name="x" :size="18" /></button>
+            </header>
+            <div class="mk-modal-body">
 
         <!-- ===== Sobre nosotros ===== -->
-        <div id="mk-about" class="card mk-card">
+        <div v-show="mkOpen === 'about'" class="card mk-card">
           <h3><AppIcon name="building-2" :size="18" /> Sobre nosotros</h3>
           <AppInput v-model="designForm.about_title" label="Título de la sección" name="company_about_title" placeholder="Sobre nosotros" hint="Encabezado de la sección en tu web. Vacío: se muestra 'Sobre nosotros'." :error="designFieldErr('about_title')" @blur="designTouched.about_title = true" />
           <div class="field">
@@ -4059,7 +4117,7 @@ async function changePassword() {
         </div>
 
         <!-- ===== Qué ofrecemos (servicios/ventajas con ícono) ===== -->
-        <div id="mk-services" class="card mk-card">
+        <div v-show="mkOpen === 'services'" class="card mk-card">
           <h3><AppIcon name="layout-grid" :size="18" /> Qué ofrecemos <span v-if="!supportsServices" class="lock-badge"><AppIcon name="lock" :size="11" :stroke="2" /> No disponible en este diseño</span></h3>
           <p v-if="!supportsServices" class="hint">La plantilla que elegiste no tiene apartado de servicios. Disponible en: {{ blockDesigns('services') }}.</p>
           <fieldset class="mk-fieldset" :disabled="!supportsServices">
@@ -4107,7 +4165,7 @@ async function changePassword() {
         </div>
 
         <!-- ===== Planes de suscripción (publicidad, sin cobro online) ===== -->
-        <div id="mk-plans" class="card mk-card">
+        <div v-show="mkOpen === 'plans'" class="card mk-card">
           <h3><AppIcon name="crown" :size="18" /> Planes de suscripción <span v-if="!supportsPlans" class="lock-badge"><AppIcon name="lock" :size="11" :stroke="2" /> No disponible en este diseño</span></h3>
           <p v-if="!supportsPlans" class="hint">La plantilla que elegiste no tiene apartado de suscripciones. Disponible en: {{ blockDesigns('plans') }}.</p>
           <fieldset class="mk-fieldset" :disabled="!supportsPlans">
@@ -4153,7 +4211,7 @@ async function changePassword() {
         </div>
 
         <!-- ===== Tus números (cifras destacadas) ===== -->
-        <div id="mk-stats" class="card mk-card">
+        <div v-show="mkOpen === 'stats'" class="card mk-card">
           <h3><AppIcon name="trending-up" :size="18" /> Tus números</h3>
           <div class="check-list">
             <label class="check-item">
@@ -4191,7 +4249,7 @@ async function changePassword() {
         </div>
 
         <!-- ===== Testimonios ===== -->
-        <div id="mk-testimonials" class="card mk-card">
+        <div v-show="mkOpen === 'testimonials'" class="card mk-card">
           <h3><AppIcon name="quote" :size="18" /> Testimonios</h3>
           <div class="check-list">
             <label class="check-item">
@@ -4233,7 +4291,7 @@ async function changePassword() {
         </div>
 
         <!-- ===== Preguntas frecuentes ===== -->
-        <div id="mk-faqs" class="card mk-card">
+        <div v-show="mkOpen === 'faqs'" class="card mk-card">
           <h3><AppIcon name="message-circle" :size="18" /> Preguntas frecuentes</h3>
           <div class="check-list">
             <label class="check-item">
@@ -4271,7 +4329,7 @@ async function changePassword() {
         </div>
 
         <!-- ===== Garantías y beneficios ===== -->
-        <div id="mk-benefits" class="card mk-card">
+        <div v-show="mkOpen === 'benefits'" class="card mk-card">
           <h3><AppIcon name="shield-check" :size="18" /> Garantías y beneficios</h3>
           <div class="check-list">
             <label class="check-item">
@@ -4314,7 +4372,7 @@ async function changePassword() {
         </div>
 
         <!-- ===== Línea de tiempo ===== -->
-        <div id="mk-timeline" class="card mk-card">
+        <div v-show="mkOpen === 'timeline'" class="card mk-card">
           <h3><AppIcon name="flag" :size="18" /> Línea de tiempo</h3>
           <div class="check-list">
             <label class="check-item">
@@ -4351,7 +4409,7 @@ async function changePassword() {
         </div>
 
         <!-- ===== Equipo ===== -->
-        <div id="mk-team" class="card mk-card">
+        <div v-show="mkOpen === 'team'" class="card mk-card">
           <h3><AppIcon name="users" :size="18" /> Equipo</h3>
           <div class="check-list">
             <label class="check-item">
@@ -4390,7 +4448,7 @@ async function changePassword() {
         </div>
 
         <!-- ===== Horarios de atención ===== -->
-        <div id="mk-hours" class="card mk-card">
+        <div v-show="mkOpen === 'hours'" class="card mk-card">
           <h3><AppIcon name="clock" :size="18" /> Horarios de atención</h3>
           <div class="check-list">
             <label class="check-item">
@@ -4428,7 +4486,7 @@ async function changePassword() {
         </div>
 
         <!-- ===== Llamado a la acción ===== -->
-        <div id="mk-cta" class="card mk-card">
+        <div v-show="mkOpen === 'cta'" class="card mk-card">
           <h3><AppIcon name="megaphone" :size="18" /> Llamado a la acción</h3>
           <div class="check-list">
             <label class="check-item">
@@ -4450,7 +4508,7 @@ async function changePassword() {
         </div>
 
         <!-- ===== Cinta de anuncios (marquee bajo la portada) ===== -->
-        <div id="mk-ann" class="card mk-card">
+        <div v-show="mkOpen === 'ann'" class="card mk-card">
           <h3><AppIcon name="megaphone" :size="18" /> Cinta de anuncios</h3>
           <div class="check-list">
             <label class="check-item">
@@ -4493,7 +4551,7 @@ async function changePassword() {
         </div>
 
         <!-- ===== Video (embed YouTube/Vimeo) ===== -->
-        <div id="mk-video" class="card mk-card">
+        <div v-show="mkOpen === 'video'" class="card mk-card">
           <h3><AppIcon name="eye" :size="18" /> Video</h3>
           <div class="check-list">
             <label class="check-item">
@@ -4514,7 +4572,7 @@ async function changePassword() {
         </div>
 
         <!-- ===== Extras (aviso del catálogo + texto del pie) ===== -->
-        <div id="mk-extras" class="card mk-card">
+        <div v-show="mkOpen === 'extras'" class="card mk-card">
           <h3><AppIcon name="plus" :size="18" /> Extras</h3>
           <AppInput v-model="designForm.catalog_note" label="Aviso del catálogo" name="company_catalog_note" placeholder="Ej. Envíos a todo el país · Aceptamos todos los medios de pago" hint="Tira informativa que aparece arriba de tu página de catálogo. Vacío: no se muestra." maxlength="160" />
           <AppInput v-model="designForm.footer_text" label="Frase del pie" name="company_footer_text" placeholder="Ej. Tienda familiar desde 1998" hint="Línea extra al final de tu web, debajo del copyright. Vacío: no se muestra." maxlength="160" />
@@ -4524,6 +4582,9 @@ async function changePassword() {
           </div>
         </div>
 
+            </div>
+          </div>
+        </div>
       </template>
       <div v-else class="empty">
         <span class="empty-icon"><AppIcon name="lock" :size="28" /></span>
