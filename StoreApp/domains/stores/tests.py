@@ -1824,9 +1824,11 @@ class SiteThemeTests(TestCase):
             'mobile': {'nav': 'drawer'},
         }})
         self.assertEqual(response.status_code, 200)
+        #mobile.nav es piso de cualquier plan (pestaña Diseño), igual que
+        #style/skin/decorations: no se descarta en Estándar.
         self.assertEqual(
             response.data['customization']['site_theme'],
-            {'containers': {'radius': 'pill', 'density': 'compact'}},
+            {'containers': {'radius': 'pill', 'density': 'compact'}, 'mobile': {'nav': 'drawer'}},
         )
 
     def test_plus_still_validates_the_subset(self):
