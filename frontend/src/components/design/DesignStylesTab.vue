@@ -11,7 +11,8 @@ import { useDesignCatalog } from '../../composables/useDesignCatalog.js'
 import { designApi } from '../../api/design.api.js'
 import { ensureStoreFont, STORE_TEMPLATE_RETIRED_MAP } from '../../api/stores.api.js'
 import { resolveSiteTheme } from '../../studio/contract.js'
-import { normalizeLayoutConfig } from '../../templates/index.js'
+import { normalizeLayoutConfig, templateBlocks, templateOf } from '../../templates/index.js'
+import { LAYOUT_SURFACES, SURFACE_LABELS, blockSpec } from '../../templates/blocks.js'
 import DesignLivePreview from './DesignLivePreview.vue'
 import DesignSelect from './DesignSelect.vue'
 import AppIcon from '../AppIcon.vue'
@@ -22,11 +23,14 @@ const props = defineProps({
   shopName: { type: String, default: '' },
   canStudio: { type: Boolean, default: false },
   siteTemplates: { type: Array, default: () => [] },
+  // Opciones de páginas para el modal "Qué mostrar": las arma el padre
+  // ({key,label,desc,on,lock,disabled,busy}) y el toggle viaja por evento.
+  pageOptions: { type: Array, default: () => [] },
   // Estado del panel de vista previa: lo controla el padre para que la
   // savebar sticky también pueda abrirlo en mobile.
   previewOpen: { type: Boolean, default: false }
 })
-const emit = defineEmits(['navigate', 'ring', 'open-studio', 'update:previewOpen'])
+const emit = defineEmits(['navigate', 'ring', 'open-studio', 'update:previewOpen', 'toggle-page'])
 
 const { patterns, styles, status, load } = useDesignCatalog()
 // Cada elección de diseño/estilo recarga la vista previa (el iframe hace un
@@ -169,6 +173,68 @@ watch([patternOptions, styles], () => {
   }
 }, { immediate: true })
 
+// --- "Qué mostrar": modal con las páginas y las secciones que el diseño
+// elegido soporta (sus bloques por superficie). Apagar una sección escribe
+// enabled:false en layout_config — el diseño declara la whitelist, el
+// renderer público respeta el flag y saveDesign lo publica.
+const showOpen = ref(false)
+const closeShowBtn = ref(null)
+let lastShowFocus = null
+function openShow() {
+  lastShowFocus = document.activeElement
+  showOpen.value = true
+}
+function closeShow() { showOpen.value = false }
+watch(showOpen, async (open) => {
+  if (props.previewOpen) return
+  document.body.style.overflow = open ? 'hidden' : ''
+  if (open) {
+    await nextTick()
+    closeShowBtn.value?.focus()
+  } else {
+    lastShowFocus?.focus?.()
+    lastShowFocus = null
+  }
+})
+// Capacidades del diseño: las superficies/bloques que declara el patrón
+// (su layout normalizado) o, si no declara una, la composición canónica
+// del template base. Cada bloque muestra su enabled efectivo (canónico ∪
+// layout_config guardado).
+const showGroups = computed(() => {
+  const p = patternOptions.value.find((x) => x.slug === currentPattern.value)
+  const declared = p ? normalizeLayoutConfig(p.layout) : {}
+  const tpl = templateOf(p?.template || props.form.template)
+  return LAYOUT_SURFACES.map((surface) => {
+    let blocks = declared[surface]?.blocks
+    const saved = props.form.layout_config?.[surface]?.blocks || []
+    const byId = new Map(saved.filter((b) => b && b.id != null).map((b) => [String(b.id), b]))
+    if (Array.isArray(blocks) && blocks.length) {
+      blocks = blocks.map((b) => ({ ...b, enabled: byId.get(b.id) ? byId.get(b.id).enabled !== false : b.enabled !== false }))
+    } else {
+      blocks = templateBlocks(tpl, surface, props.form.layout_config)
+    }
+    const rows = blocks
+      .map((b) => ({ block: b, spec: blockSpec(surface, b.id) }))
+      .filter((r) => r.spec && (!r.spec.aiOnly || props.benefits.has_ai_design))
+    return { surface, label: SURFACE_LABELS[surface] || surface, rows }
+  }).filter((g) => g.rows.length)
+})
+function blockLocked(spec) {
+  if (spec.locked) return 'Fijo en el diseño'
+  if (spec.premium && !props.benefits.has_design_advanced) return 'Plan premium'
+  return ''
+}
+function toggleBlock(surface, id) {
+  const lc = props.form.layout_config && typeof props.form.layout_config === 'object'
+    ? props.form.layout_config : (props.form.layout_config = {})
+  const surf = lc[surface] && typeof lc[surface] === 'object' ? lc[surface] : (lc[surface] = { blocks: [] })
+  if (!Array.isArray(surf.blocks)) surf.blocks = []
+  const found = surf.blocks.find((b) => b && String(b.id) === id)
+  if (found) found.enabled = !(found.enabled !== false)
+  else surf.blocks.push({ id, enabled: false, order: surf.blocks.length })
+}
+function onShowKey(e) { if (e.key === 'Escape' && showOpen.value) closeShow() }
+
 // --- Vista previa en móvil: overlay a demanda ---------------------------
 // En pantallas chicas no se muestra ningún panel embebido: la web real se
 // abre desde el botón flotante en una hoja a pantalla completa.
@@ -191,19 +257,24 @@ watch(() => props.previewOpen, async (open) => {
     lastFocusEl = null
   }
 })
-function onMobilePreviewKey(e) { if (e.key === 'Escape' && props.previewOpen) closeMobilePreview() }
+function onMobilePreviewKey(e) {
+  if (e.key === 'Escape' && props.previewOpen) closeMobilePreview()
+  else if (e.key === 'Escape' && showOpen.value) closeShow()
+}
 // Si el viewport crece a escritorio, la hoja se cierra (ahí ya está el panel).
 function onViewport() {
   if (props.previewOpen && window.matchMedia('(min-width: 1100px)').matches) closeMobilePreview()
 }
 onMounted(() => {
   window.addEventListener('keydown', onMobilePreviewKey)
+  window.addEventListener('keydown', onShowKey)
   window.addEventListener('resize', onViewport, { passive: true })
 })
 onBeforeUnmount(() => {
   window.removeEventListener('keydown', onMobilePreviewKey)
+  window.removeEventListener('keydown', onShowKey)
   window.removeEventListener('resize', onViewport)
-  if (props.previewOpen) document.body.style.overflow = ''
+  if (props.previewOpen || showOpen.value) document.body.style.overflow = ''
 })
 </script>
 
@@ -213,8 +284,15 @@ onBeforeUnmount(() => {
       <div class="dmenu-main">
         <div class="card dmenu-card">
           <header class="dmenu-head">
-            <strong><AppIcon name="palette" :size="17" aria-hidden="true" /> Diseño</strong>
-            <small>Elegí el diseño y el estilo de tu web. La vista previa muestra los cambios al instante.</small>
+            <div class="dmenu-head-row">
+              <div class="dmenu-head-txt">
+                <strong><AppIcon name="palette" :size="17" aria-hidden="true" /> Diseño</strong>
+                <small>Elegí el diseño y el estilo de tu web. La vista previa muestra los cambios al instante.</small>
+              </div>
+              <button type="button" class="btn secondary btn-auto dmenu-show-btn" @click="openShow">
+                <AppIcon name="layout-grid" :size="16" /> Qué mostrar
+              </button>
+            </div>
           </header>
 
           <div class="dmenu-fields">
@@ -246,7 +324,6 @@ onBeforeUnmount(() => {
             El catálogo está vacío: corré <code>manage.py seed_design_catalog</code> en el servidor.
           </p>
         </div>
-        <slot name="pages" />
       </div>
 
       <aside class="dmenu-live">
@@ -264,6 +341,66 @@ onBeforeUnmount(() => {
       <span>Ver mi web</span>
     </button>
   </div>
+
+  <Teleport to="body">
+    <Transition name="dmenu-pv">
+      <div
+        v-if="showOpen" class="dmenu-pv dshow" role="dialog" aria-modal="true"
+        aria-label="Qué mostrar en tu web" @click.self="closeShow"
+      >
+        <div class="dshow-panel">
+          <header class="dmenu-pv-head">
+            <strong><AppIcon name="layout-grid" :size="16" aria-hidden="true" /> Qué mostrar</strong>
+            <button
+              ref="closeShowBtn" type="button" class="dmenu-pv-x"
+              aria-label="Cerrar" @click="closeShow"
+            >
+              <AppIcon name="x" :size="18" />
+            </button>
+          </header>
+          <div class="dshow-body">
+            <p class="dshow-hint">Elegí qué páginas y secciones aparecen en tu web. Las opciones dependen del diseño que elegiste; los cambios se publican con «Guardar cambios».</p>
+
+            <section v-if="pageOptions.length" class="dshow-group" aria-label="Páginas de tu web">
+              <h3>Páginas</h3>
+              <div class="check-list" role="group">
+                <label v-for="opt in pageOptions" :key="opt.key" class="check-item" :class="{ disabled: opt.disabled }">
+                  <input type="checkbox" :checked="opt.on" :disabled="opt.disabled" @change="emit('toggle-page', opt.key)" />
+                  <span class="check-text">
+                    <strong>{{ opt.label }} <span v-if="opt.lock" class="lock-badge"><AppIcon name="lock" :size="11" :stroke="2" /> {{ opt.lock }}</span> <span v-if="opt.busy" class="spinner spinner-brand" aria-hidden="true"></span></strong>
+                    <small>{{ opt.desc }}</small>
+                  </span>
+                </label>
+              </div>
+            </section>
+
+            <section v-for="g in showGroups" :key="g.surface" class="dshow-group" :aria-label="`Secciones de ${g.label}`">
+              <h3>{{ g.label }}</h3>
+              <div class="check-list" role="group">
+                <label
+                  v-for="r in g.rows" :key="r.block.id" class="check-item"
+                  :class="{ disabled: Boolean(blockLocked(r.spec)) }"
+                >
+                  <input
+                    type="checkbox" :checked="r.block.enabled !== false"
+                    :disabled="Boolean(blockLocked(r.spec))" @change="toggleBlock(g.surface, r.block.id)"
+                  />
+                  <span class="check-text">
+                    <strong>
+                      <AppIcon :name="r.spec.icon || 'package'" :size="14" aria-hidden="true" class="dshow-ico" />
+                      {{ r.spec.label }}
+                      <span v-if="blockLocked(r.spec)" class="lock-badge"><AppIcon name="lock" :size="11" :stroke="2" /> {{ blockLocked(r.spec) }}</span>
+                    </strong>
+                    <small>{{ r.spec.desc }}</small>
+                  </span>
+                </label>
+              </div>
+            </section>
+          </div>
+        </div>
+      </div>
+    </Transition>
+  </Teleport>
 
   <Teleport to="body">
     <Transition name="dmenu-pv">
@@ -295,6 +432,9 @@ onBeforeUnmount(() => {
 .dmenu-live { min-width: 0; display: flex; flex-direction: column; gap: 12px; }
 .dmenu-card { padding: 18px; display: flex; flex-direction: column; gap: 16px; container-type: inline-size; }
 .dmenu-head { display: flex; flex-direction: column; gap: 3px; min-width: 0; }
+.dmenu-head-row { display: flex; align-items: flex-start; justify-content: space-between; gap: 14px; min-width: 0; }
+.dmenu-head-txt { display: flex; flex-direction: column; gap: 3px; min-width: 0; }
+.dmenu-show-btn { flex: none; }
 .dmenu-head strong { display: inline-flex; align-items: center; gap: 7px; font-size: 15px; color: var(--ink); }
 .dmenu-head strong .icon { color: var(--brand-600); flex: none; }
 .dmenu-head small { font-size: 12.5px; line-height: 1.4; color: var(--muted); }
@@ -371,6 +511,20 @@ onBeforeUnmount(() => {
 .dmenu-pv-enter-active .dmenu-pv-body, .dmenu-pv-leave-active .dmenu-pv-body { transition: transform .22s var(--ease-out, cubic-bezier(.2, .8, .2, 1)); }
 .dmenu-pv-enter-from, .dmenu-pv-leave-to { opacity: 0; }
 .dmenu-pv-enter-from .dmenu-pv-body, .dmenu-pv-leave-to .dmenu-pv-body { transform: translateY(14px); }
+
+/* Modal "Qué mostrar": hoja centrada que scrollea su contenido. */
+.dshow { align-items: center; justify-content: center; }
+.dshow-panel {
+  display: flex; flex-direction: column; width: min(680px, 100%);
+  max-height: min(720px, 100%); margin: auto; border-radius: 20px;
+  border: 1px solid var(--line, #e5e7eb); background: var(--card, #fff);
+  box-shadow: 0 30px 70px -30px rgba(9, 12, 24, .5); overflow: hidden;
+}
+.dshow-body { flex: 1 1 auto; min-height: 0; overflow-y: auto; padding: 6px 18px 18px; display: flex; flex-direction: column; gap: 18px; }
+.dshow-hint { margin: 0; font-size: 12.5px; line-height: 1.45; color: var(--muted, #64748b); }
+.dshow-group { display: flex; flex-direction: column; gap: 10px; }
+.dshow-group h3 { margin: 0; font-size: 13px; font-weight: 700; letter-spacing: .02em; text-transform: uppercase; color: var(--muted, #64748b); }
+.dshow-ico { vertical-align: -2px; margin-right: 5px; color: var(--brand-600, #4f46e5); }
 @media (prefers-reduced-motion: reduce) {
   .dmenu-fab, .dmenu-pv, .dmenu-pv-body { transition: none !important; }
 }

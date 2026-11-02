@@ -1805,6 +1805,17 @@ function canToggleSiteTemplate(key) {
   if (on) return designSiteTemplates.value.length > 1 // la web nunca queda vacía
   return siteTemplatesMax.value === null || designSiteTemplates.value.length < siteTemplatesMax.value
 }
+// Opciones del grupo "Páginas" del modal Qué mostrar (DesignStylesTab):
+// mismo estado y locks que la lista de Diseño → las arma el padre.
+const designPageOptions = computed(() => siteTemplateKeys.map((key) => ({
+  key,
+  label: siteTemplates[key].label,
+  desc: siteTemplates[key].desc,
+  on: designSiteTemplates.value.includes(key),
+  lock: siteTemplateLock(key),
+  disabled: !canToggleSiteTemplate(key),
+  busy: siteTemplatesBusy.value
+})))
 // Diseños compatibles con la combinación de páginas: un patrón cubre una
 // superficie si su `layout` la declara (o la hereda su template). Si la
 // combinación elegida no tiene ningún diseño, el toggle se revierte y se
@@ -4100,24 +4111,9 @@ async function changePassword() {
         :form="designForm" :benefits="plan?.benefits || {}"
         :shop-name="store.customization?.display_name || business" :can-studio="canDesignAdvanced"
         :site-templates="designSiteTemplates" v-model:preview-open="designPreviewOpen"
+        :page-options="designPageOptions" @toggle-page="toggleSiteTemplate"
         @navigate="section = $event" @open-studio="router.push({ name: 'design-studio' })"
       >
-        <template #pages>
-          <div class="card">
-            <h3><AppIcon name="layout-grid" :size="18" /> Páginas de tu web</h3>
-            <p class="hint">Elegí qué páginas querés tener habilitadas. Al menos una tiene que quedar marcada; se guarda al instante.</p>
-            <div class="check-list" role="group" aria-label="Páginas de tu web">
-              <label v-for="key in siteTemplateKeys" :key="key" class="check-item" :class="{ disabled: !allowedSiteTemplates.includes(key) || !canToggleSiteTemplate(key) }">
-                <input type="checkbox" :checked="designSiteTemplates.includes(key)" :disabled="!canToggleSiteTemplate(key)" @change="toggleSiteTemplate(key)" />
-                <span class="check-text">
-                  <strong>{{ siteTemplates[key].label }} <span v-if="siteTemplateLock(key)" class="lock-badge"><AppIcon name="lock" :size="11" :stroke="2" /> {{ siteTemplateLock(key) }}</span> <span v-if="siteTemplatesBusy" class="spinner spinner-brand" aria-hidden="true"></span></strong>
-                  <small>{{ siteTemplates[key].desc }}</small>
-                </span>
-              </label>
-            </div>
-            <p class="hint">{{ siteTemplatesHint }}</p>
-          </div>
-        </template>
         <template #actions>
           <div class="design-actions">
             <AppButton :loading="designBusy" :disabled="!designDirtyAll" @click="saveDesign()"><AppIcon name="check" :size="16" /> Guardar cambios</AppButton>
