@@ -12,9 +12,10 @@
 // descarta (el diseño no lo soporta).
 // La piel del chrome/tokens vive en assets/store-raiz.css; la portada en
 // assets/store-raiz-home.css.
-import { computed, inject } from 'vue'
+import { computed, inject, ref } from 'vue'
 import { templateBlocks } from '../../../templates/index.js'
 import { landingExtras } from '../../../templates/_shared.js'
+import { useRzFx } from './useRzFx.js'
 import RhAnnouncements from '../../../components/store/blocks/raiz/RhAnnouncements.vue'
 import RhHero from '../../../components/store/blocks/raiz/RhHero.vue'
 import RhGuarantees from '../../../components/store/blocks/raiz/RhGuarantees.vue'
@@ -60,10 +61,15 @@ const MAP = {
 const { pageTemplate, custom } = inject('storePage')
 const visible = computed(() => templateBlocks(pageTemplate.value, 'landing', custom.value?.layout_config)
   .filter((b) => b.enabled !== false && MAP[b.id]))
+
+// Capa premium (parallax, tilt, contadores, pausa ambiental): se activa por
+// estilo — en `esencial` base solo queda la pausa de loops fuera de vista.
+const pageEl = ref(null)
+useRzFx(pageEl)
 </script>
 
 <template>
-  <main class="sp-page-root rz-home">
+  <main ref="pageEl" class="sp-page-root rz-home">
     <component v-for="b in visible" :key="b.id" :is="MAP[b.id]" :block="b" :data-blk="b.id" />
   </main>
 </template>

@@ -1627,3 +1627,181 @@ select:where(.rz-field) {
   background-clip: text;
   color: transparent;
 }
+
+/* ==========================================================================
+   11. CAPA PREMIUM ESENCIAL — motion/ambient por estilo
+   El JS (views/store/raiz/useRzFx.js) marca la página con .rz-fx y sube a
+   .rz-fx-rich en esencial-noche/esencial-premium. Lo ambiental corre por
+   estilo (data-style); lo interactivo (tilt, parallax) solo en rich.
+   Jerarquía del brief: base = look actual intacto · noche = atmósfera viva
+   (aurora + destellos + glow) · premium = gala completa (conic + tilt +
+   parallax + sheen). Todo transform/opacity/filter y pausado fuera de
+   viewport (.rz-fx-off) u oculta (.rz-fx-paused).
+   ========================================================================== */
+
+/* --- Pausa ambiental: loops congelados con pestaña oculta o sección lejos - */
+.store-page[data-template='raiz'].rz-fx-paused,
+.store-page[data-template='raiz'].rz-fx-paused *,
+.store-page[data-template='raiz'] .rz-fx-off,
+.store-page[data-template='raiz'] .rz-fx-off * {
+  animation-play-state: paused !important;
+}
+
+/* --- Micro-feedback de press en CTA (todos los estilos raíz) ------------- */
+@media (prefers-reduced-motion: no-preference) {
+  .store-page[data-template='raiz'] :is(.rz-btn, .sp-btn, .sp-top-cta, .rz-cat-filters-toggle, .sp-chip):active {
+    transform: scale(.97);
+    transition-duration: 60ms;
+  }
+}
+
+/* --- Tilt 3D (≤4°): useRzFx escribe --rx/--ry siguiendo el puntero ------- */
+@media (prefers-reduced-motion: no-preference) {
+  .store-page[data-template='raiz'].rz-fx-rich :is(.tpc, .sp-card, .rz-tilt) {
+    transform: perspective(900px) rotateX(var(--rx, 0deg)) rotateY(var(--ry, 0deg));
+    transition: transform var(--rz-dur-2) var(--rz-ease-out);
+  }
+  .store-page[data-template='raiz'].rz-fx-rich :is(.tpc, .sp-card).is-tilting {
+    transform: perspective(900px) rotateX(var(--rx, 0deg)) rotateY(var(--ry, 0deg)) translateY(-4px);
+    transition-duration: 90ms;
+    box-shadow: var(--rz-shadow-2), 0 24px 60px -32px rgb(0 0 0 / .5);
+  }
+}
+.store-page[data-template='raiz'] .rz-parallax { will-change: transform; }
+
+/* ==========================================================================
+   11a. ESENCIAL-NOCHE (plus) — atmósfera viva: aurora en deriva, destellos
+   mínimos, glow en tarjetas, sheen discreto en el CTA principal.
+   ========================================================================== */
+@keyframes rzn-aurora {
+  0%, 100% { transform: translate3d(-4%, -2%, 0) scale(1); }
+  50% { transform: translate3d(4%, 3%, 0) scale(1.08); }
+}
+@keyframes rzn-aurora-2 {
+  0%, 100% { transform: translate3d(3%, 2%, 0) scale(1.05); opacity: .5; }
+  50% { transform: translate3d(-3%, -3%, 0) scale(1); opacity: .8; }
+}
+@keyframes rzn-twinkle {
+  0%, 100% { opacity: 0; scale: .5; }
+  50% { opacity: .9; scale: 1; }
+}
+
+/* Aurora detrás del contenido del hero: dos masas de acento en screen,
+   deriva 26-38s, blur fuerte para que lea "luz", no forma. */
+.store-page[data-template='raiz'][data-style='esencial-noche'] .rh-hero,
+.store-page[data-template='raiz'][data-style='esencial-noche'] .rz-sv-hero {
+  position: relative;
+  isolation: isolate;
+}
+.store-page[data-template='raiz'][data-style='esencial-noche'] :is(.rh-hero, .rz-sv-hero)::before,
+.store-page[data-template='raiz'][data-style='esencial-noche'] :is(.rh-hero, .rz-sv-hero)::after {
+  content: "";
+  position: absolute;
+  inset: -20% -10%;
+  z-index: -1;
+  pointer-events: none;
+  background:
+    radial-gradient(38% 42% at 24% 30%, color-mix(in srgb, var(--rz-accent) 30%, transparent), transparent 70%),
+    radial-gradient(30% 36% at 78% 22%, color-mix(in srgb, var(--rz-warm) 16%, transparent), transparent 70%);
+  filter: blur(40px);
+  animation: rzn-aurora 34s var(--rz-ease-inout) infinite;
+}
+.store-page[data-template='raiz'][data-style='esencial-noche'] :is(.rh-hero, .rz-sv-hero)::after {
+  background:
+    radial-gradient(26% 30% at 62% 78%, color-mix(in srgb, var(--rz-accent) 22%, transparent), transparent 70%);
+  animation-name: rzn-aurora-2;
+  animation-duration: 26s;
+}
+
+/* Destellos mínimos: dos puntos que titilan sobre el media del hero. */
+.store-page[data-template='raiz'][data-style='esencial-noche'] .rh-hero-aside::before,
+.store-page[data-template='raiz'][data-style='esencial-noche'] .rh-hero-aside::after {
+  content: "";
+  position: absolute;
+  z-index: 3;
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: color-mix(in srgb, var(--rz-inverse-ink, #E9EFEA) 90%, transparent);
+  box-shadow: 0 0 10px 2px color-mix(in srgb, var(--rz-accent) 60%, transparent);
+  pointer-events: none;
+  animation: rzn-twinkle 4.6s ease-in-out infinite;
+}
+.store-page[data-template='raiz'][data-style='esencial-noche'] .rh-hero-aside::before { top: 6%; left: 12%; }
+.store-page[data-template='raiz'][data-style='esencial-noche'] .rh-hero-aside::after { top: 18%; right: 8%; animation-delay: 2.3s; animation-duration: 5.8s; }
+
+/* Tarjetas: glow del acento + zoom de imagen 1.04 con la curva larga. */
+.store-page[data-template='raiz'][data-style='esencial-noche'] :is(.sp-card, .tpc) {
+  transition: transform var(--rz-dur-3) var(--rz-ease-out), box-shadow var(--rz-dur-3) var(--rz-ease-out), border-color var(--rz-dur-2) ease-out;
+}
+.store-page[data-template='raiz'][data-style='esencial-noche'] :is(.sp-card, .tpc):hover {
+  transform: translateY(-5px);
+  border-color: color-mix(in srgb, var(--rz-accent) 38%, var(--rz-line));
+  box-shadow: var(--rz-shadow-2), 0 14px 48px -24px color-mix(in srgb, var(--rz-accent) 50%, transparent);
+}
+.store-page[data-template='raiz'][data-style='esencial-noche'] :is(.sp-card, .tpc) .tpc-media img,
+.store-page[data-template='raiz'][data-style='esencial-noche'] :is(.sp-card, .tpc) > img {
+  transition: transform var(--rz-dur-4) cubic-bezier(.22, 1, .36, 1);
+}
+.store-page[data-template='raiz'][data-style='esencial-noche'] :is(.sp-card, .tpc):hover .tpc-media img,
+.store-page[data-template='raiz'][data-style='esencial-noche'] :is(.sp-card, .tpc):hover > img {
+  transform: scale(1.04);
+}
+
+/* Sheen discreto en el CTA principal (más lento y más tenue que premium). */
+.store-page[data-template='raiz'][data-style='esencial-noche'] .rh-hero-btn:not(.rz-btn--ghost) {
+  position: relative;
+  overflow: hidden;
+  isolation: isolate;
+}
+.store-page[data-template='raiz'][data-style='esencial-noche'] .rh-hero-btn:not(.rz-btn--ghost)::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  pointer-events: none;
+  background: linear-gradient(105deg, transparent 40%, rgb(255 255 255 / .22) 50%, transparent 60%);
+  animation: rzp-sheen 7s ease-in-out infinite;
+}
+.store-page[data-template='raiz'][data-style='esencial-noche'] .rh-hero-btn > * { position: relative; z-index: 2; }
+
+/* Línea de acento que respira bajo el chrome superior. */
+.store-page[data-template='raiz'][data-style='esencial-noche'] .sp-top {
+  border-bottom-color: transparent;
+  background-image: linear-gradient(var(--rz-surface), var(--rz-surface)),
+    linear-gradient(90deg, transparent, var(--rz-accent) 50%, transparent);
+  background-origin: border-box;
+  background-clip: padding-box, border-box;
+  background-size: 100% 100%, 200% 1px;
+  background-position: 0 0, 50% 100%;
+  background-repeat: no-repeat;
+  animation: rzp-glow-pulse 6s ease-in-out infinite;
+}
+
+/* ==========================================================================
+   11b. ESENCIAL-PREMIUM (advanced) — la tarjeta destacada del hero lleva el
+   borde cónico que gira (misma firma que sp-aipricing-card) y el media ya
+   recibe parallax + float desde useRzFx.
+   ========================================================================== */
+.store-page[data-template='raiz'][data-style='esencial-premium'] .rh-hero-media {
+  position: relative;
+  border: 1px solid color-mix(in srgb, var(--rz-warm) 30%, var(--rz-line));
+}
+.store-page[data-template='raiz'][data-style='esencial-premium'] .rh-hero-media::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  padding: 1px;
+  border-radius: inherit;
+  pointer-events: none;
+  background: conic-gradient(from var(--rzp-angle, 0deg), transparent 0deg, color-mix(in srgb, var(--rz-warm) 80%, transparent) 55deg, transparent 120deg, transparent 200deg, color-mix(in srgb, var(--rz-warm) 45%, transparent) 260deg, transparent 320deg);
+  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+  mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+  mask-composite: exclude;
+  animation: rzp-border-spin 10s linear infinite;
+}
+.store-page[data-template='raiz'][data-style='esencial-premium'] .rh-hero-media img {
+  border-radius: calc(var(--rz-rad-lg, 18px) - 1px);
+}

@@ -18,6 +18,7 @@ import AppIcon from '../../../components/AppIcon.vue'
 import { templateBlocks } from '../../../templates/index.js'
 import { resolveSiteTheme } from '../../../studio/contract.js'
 import { vReveal } from '../../../directives/reveal.js'
+import { useRzFx } from './useRzFx.js'
 
 const ctx = inject('storePage')
 // Layout de la superficie 'services': el editor (Diseño web → Bloques)
@@ -266,10 +267,13 @@ onBeforeUnmount(() => { if (sheetOpen.value) document.documentElement.classList.
 
 const pickError = ref('')
 watch(chosenItems, (v) => { if (v.length) pickError.value = '' })
+
+const pageEl = ref(null)
+useRzFx(pageEl)
 </script>
 
 <template>
-  <div class="sp-page-root rz-sv-page">
+  <div ref="pageEl" class="sp-page-root rz-sv-page">
     <main id="sv-main">
       <!-- ===== Hero editorial ===== -->
       <div v-if="on('hero')" data-blk="hero" class="rz-sv-block rz-sv-hero" :style="{ order: pos('hero') }">

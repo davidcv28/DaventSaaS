@@ -1817,8 +1817,8 @@
       "slug": "esencial-noche",
       "nombre": "Esencial Noche",
       "categoria": "general",
-      "descripcion": "Versión nocturna del diseño base: verde profundo, teal luminoso y brillo sutil al pasar el cursor.",
-      "tier": "base",
+      "descripcion": "Versión nocturna del diseño base: verde profundo, teal luminoso, aurora en deriva sobre el hero, destellos y glow del acento al pasar el cursor.",
+      "tier": "plus",
       "template": "raiz",
       "page_theme": "dark",
       "tokens": {
@@ -2172,8 +2172,8 @@
       "slug": "esencial-premium",
       "nombre": "Esencial Premium",
       "categoria": "general",
-      "descripcion": "El diseño base en su versión con presencia: papel claro, tinta verde bosque, acento teal y un toque cálido ámbar. Bricolage en titulares, entradas escalonadas, revelado al hacer scroll, tarjeta con inclinación al puntero y cintas en marquesina.",
-      "tier": "base",
+      "descripcion": "El diseño base en su versión con presencia: papel claro, tinta verde bosque, acento teal y un toque cálido ámbar. Bricolage en titulares, entradas escalonadas, revelado al hacer scroll, tarjeta con inclinación al puntero, borde de luz girando en la portada y cintas en marquesina.",
+      "tier": "advanced",
       "template": "raiz",
       "page_theme": "light",
       "tokens": {
