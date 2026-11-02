@@ -1,0 +1,429 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Mi página — Boceto nuevo dashboard</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Hanken+Grotesk:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#F6F4EF; --surface:#FFFFFF; --ink:#211E1A; --ink-2:#6B655C; --ink-3:#A39C90;
+  --line:#E7E2D8; --accent:#2E6B4F; --accent-soft:#E4EFE9; --accent-ink:#fff;
+  --warn:#B4551F; --r:14px; --r-sm:10px;
+  --shadow:0 1px 2px rgba(30,25,18,.05),0 8px 24px -12px rgba(30,25,18,.12);
+}
+*{box-sizing:border-box;margin:0;padding:0}
+[hidden]{display:none!important}
+body{font-family:'Hanken Grotesk',system-ui,sans-serif;background:var(--bg);color:var(--ink);font-size:15px;line-height:1.45}
+button{font:inherit;cursor:pointer;border:0;background:none;color:inherit}
+input,textarea,select{font:inherit;color:inherit}
+
+/* ===== Shell ===== */
+.shell{display:grid;grid-template-columns:230px 1fr;min-height:100vh}
+.sidebar{background:var(--surface);border-right:1px solid var(--line);padding:20px 12px;position:sticky;top:0;height:100vh}
+.brand{display:flex;align-items:center;gap:10px;padding:4px 10px 18px;font-weight:800;font-size:17px}
+.brand .dot{width:26px;height:26px;border-radius:8px;background:var(--accent);color:#fff;display:grid;place-items:center;font-size:13px}
+.nav-h{font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--ink-3);padding:14px 10px 6px;font-weight:700}
+.nav-i{display:flex;align-items:center;gap:10px;padding:9px 10px;border-radius:10px;color:var(--ink-2);font-weight:600;width:100%;text-align:left}
+.nav-i:hover{background:var(--bg)}
+.nav-i.on{background:var(--accent-soft);color:var(--accent)}
+.nav-i svg{width:17px;height:17px;flex:none}
+.nav-i small{margin-left:auto;font-size:11px;color:var(--ink-3)}
+
+.main{padding:26px 30px 60px;min-width:0}
+.crumb{font-size:13px;color:var(--ink-3);margin-bottom:4px}
+h1{font-size:26px;font-weight:800;letter-spacing:-.02em}
+.sub{color:var(--ink-2);margin:4px 0 20px;max-width:640px}
+
+/* ===== Stepper (menú amigable) ===== */
+.steps{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:22px}
+.step{display:flex;align-items:center;gap:10px;background:var(--surface);border:1px solid var(--line);border-radius:999px;padding:8px 14px 8px 8px;font-weight:700;color:var(--ink-2)}
+.step .n{width:26px;height:26px;border-radius:50%;background:var(--bg);display:grid;place-items:center;font-size:13px}
+.step small{display:block;font-size:11px;font-weight:600;color:var(--ink-3)}
+.step.on{border-color:var(--accent);color:var(--ink);box-shadow:var(--shadow)}
+.step.on .n{background:var(--accent);color:#fff}
+.step.done .n{background:var(--accent-soft);color:var(--accent)}
+.step:hover{border-color:var(--ink-3)}
+
+/* ===== Workspace: editor + preview ===== */
+.work{display:grid;grid-template-columns:minmax(0,1fr) 380px;gap:22px;align-items:start}
+.panel{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);box-shadow:var(--shadow)}
+.panel-h{padding:18px 20px 0}
+.panel-h h2{font-size:18px;font-weight:800;letter-spacing:-.01em}
+.panel-h p{color:var(--ink-2);font-size:13.5px;margin-top:3px}
+.panel-b{padding:16px 20px 20px}
+
+/* Preview */
+.preview{position:sticky;top:22px}
+.pv-bar{display:flex;align-items:center;gap:8px;padding:10px 12px;border-bottom:1px solid var(--line)}
+.pv-url{flex:1;background:var(--bg);border-radius:8px;padding:6px 10px;font-size:12px;color:var(--ink-2);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.pv-dot{width:9px;height:9px;border-radius:50%;background:var(--line)}
+.pv-frame{margin:14px;border:1px solid var(--line);border-radius:12px;overflow:hidden;background:#fff;aspect-ratio:4/4.6;position:relative}
+.pv-page{position:absolute;inset:0;transform-origin:top left;transition:.3s}
+.pv-actions{display:flex;gap:8px;padding:0 14px 14px}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;border-radius:10px;padding:10px 16px;font-weight:700;border:1px solid var(--line);background:var(--surface);transition:.15s}
+.btn:hover{border-color:var(--ink-3)}
+.btn.pri{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
+.btn.pri:hover{filter:brightness(1.05)}
+.btn.ghost{color:var(--accent);border-color:transparent}
+.btn.sm{padding:7px 12px;font-size:13px;border-radius:8px}
+.btn.block{width:100%}
+
+/* Cards de diseño / estilo */
+.designs{display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:12px}
+.dcard{border:2px solid var(--line);border-radius:12px;overflow:hidden;text-align:left;background:#fff;transition:.15s;position:relative}
+.dcard:hover{border-color:var(--ink-3)}
+.dcard.on{border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-soft)}
+.dcard .thumb{aspect-ratio:16/10;background:var(--bg);position:relative;overflow:hidden}
+.dcard .meta{padding:8px 10px;font-weight:700;font-size:13.5px}
+.dcard .meta small{display:block;color:var(--ink-3);font-weight:600;font-size:11.5px}
+.dcard .check{position:absolute;top:8px;right:8px;width:22px;height:22px;border-radius:50%;background:var(--accent);color:#fff;display:none;place-items:center}
+.dcard.on .check{display:grid}
+.styles{display:flex;gap:10px;flex-wrap:wrap}
+.swatch{display:flex;flex-direction:column;gap:6px;align-items:center}
+.swatch .chip{width:52px;height:52px;border-radius:14px;border:2px solid var(--line);display:grid;grid-template-columns:1fr 1fr;overflow:hidden}
+.swatch.on .chip{border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-soft)}
+.swatch span{font-size:12px;font-weight:700;color:var(--ink-2)}
+.swatch.on span{color:var(--ink)}
+
+/* Secciones visibles */
+.sec-list{display:flex;flex-direction:column;gap:10px}
+.sec-i{display:flex;align-items:center;gap:12px;border:1px solid var(--line);border-radius:12px;padding:12px 14px;background:#fff}
+.sec-i .ic{width:36px;height:36px;border-radius:10px;background:var(--bg);display:grid;place-items:center;color:var(--ink-2);flex:none}
+.sec-i .tx{flex:1;min-width:0}
+.sec-i .tx b{font-size:14px}
+.sec-i .tx small{display:block;color:var(--ink-3);font-size:12px}
+.tgl{width:44px;height:24px;border-radius:99px;background:var(--line);position:relative;flex:none;transition:.15s}
+.tgl::after{content:"";position:absolute;top:3px;left:3px;width:18px;height:18px;border-radius:50%;background:#fff;box-shadow:0 1px 3px rgba(0,0,0,.2);transition:.15s}
+.tgl.on{background:var(--accent)}
+.tgl.on::after{left:23px}
+.tgl.lock{opacity:.4}
+.warn{display:flex;gap:8px;align-items:center;background:#FDF3EC;color:var(--warn);border:1px solid #F0D9C8;border-radius:10px;padding:10px 12px;font-size:13px;font-weight:600;margin-top:12px}
+.mut{color:var(--ink-3);font-size:12.5px}
+
+/* Negocio */
+.subtabs{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:16px}
+.subtab{padding:8px 14px;border-radius:999px;font-weight:700;font-size:13.5px;color:var(--ink-2);border:1px solid var(--line);background:#fff}
+.subtab.on{background:var(--ink);color:#fff;border-color:var(--ink)}
+.fgrid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.f{display:flex;flex-direction:column;gap:5px}
+.f.full{grid-column:1/-1}
+.f label{font-size:12.5px;font-weight:700;color:var(--ink-2)}
+.f input,.f textarea,.f select{border:1px solid var(--line);border-radius:10px;padding:10px 12px;background:#fff}
+.f input:focus,.f textarea:focus{outline:2px solid var(--accent-soft);border-color:var(--accent)}
+.f .hint{font-size:11.5px;color:var(--ink-3)}
+.imgup{display:flex;gap:12px;align-items:center}
+.imgup .box{width:64px;height:64px;border-radius:12px;background:var(--bg);border:1px dashed var(--ink-3);display:grid;place-items:center;color:var(--ink-3);font-size:11px;text-align:center}
+.chipsel{display:flex;gap:8px;flex-wrap:wrap}
+.chip{padding:8px 14px;border-radius:999px;border:1px solid var(--line);background:#fff;font-weight:600;font-size:13px;color:var(--ink-2)}
+.chip.on{background:var(--accent-soft);border-color:var(--accent);color:var(--accent)}
+
+/* Contenido unificado */
+.cblock{border:1px solid var(--line);border-radius:12px;overflow:hidden;margin-bottom:12px;background:#fff}
+.cblock-h{display:flex;align-items:center;gap:12px;padding:14px 16px;cursor:pointer;user-select:none}
+.cblock-h .ic{width:34px;height:34px;border-radius:10px;background:var(--bg);display:grid;place-items:center;color:var(--ink-2)}
+.cblock-h b{flex:1}
+.cblock-h small{display:block;color:var(--ink-3);font-weight:600;font-size:12px}
+.cblock-h .arr{color:var(--ink-3);transition:.2s}
+.cblock.open .cblock-h .arr{transform:rotate(90deg)}
+.cblock-b{display:none;padding:0 16px 16px}
+.cblock.open .cblock-b{display:block}
+
+.savebar{position:sticky;bottom:16px;margin-top:18px;display:flex;gap:10px;align-items:center;background:var(--ink);color:#fff;border-radius:14px;padding:12px 16px;box-shadow:0 12px 30px -10px rgba(0,0,0,.35)}
+.savebar .st{flex:1;font-size:13px;color:#CFC9BF}
+.savebar .btn{background:#fff;color:var(--ink);border:0}
+
+/* Mini fake web preview */
+.wp{position:absolute;inset:0;background:#FBF9F5;display:flex;flex-direction:column;font-size:8px}
+.wp-nav{display:flex;justify-content:space-between;align-items:center;padding:8px 10px;background:#fff;border-bottom:1px solid #eee}
+.wp-logo{width:14px;height:14px;border-radius:4px;background:var(--pvA,#2E6B4F)}
+.wp-links{display:flex;gap:6px}
+.wp-links i{width:14px;height:3px;border-radius:2px;background:#DDD;display:block}
+.wp-hero{background:linear-gradient(160deg,var(--pvA,#2E6B4F),var(--pvB,#1d4634));color:#fff;padding:16px 12px;text-align:center}
+.wp-hero b{font-size:11px;display:block;margin-bottom:4px}
+.wp-hero i{display:block;width:60%;height:3px;background:rgba(255,255,255,.5);margin:0 auto 6px;border-radius:2px}
+.wp-hero .cta{display:inline-block;background:#fff;color:#333;border-radius:99px;padding:3px 8px;font-size:6.5px;font-weight:700}
+.wp-sec{padding:8px 10px}
+.wp-sec h6{font-size:7px;color:#999;text-transform:uppercase;letter-spacing:.08em;margin-bottom:5px}
+.wp-cards{display:grid;grid-template-columns:repeat(3,1fr);gap:5px}
+.wp-cards i{aspect-ratio:1;border-radius:5px;background:#EDE8DE;display:block}
+.wp-rows i{display:block;height:8px;border-radius:4px;background:#EDE8DE;margin-bottom:4px}
+.wp.off .wp-sec{display:none}
+
+@media (max-width:1100px){.work{grid-template-columns:1fr}.preview{position:static}}
+@media (max-width:820px){.shell{grid-template-columns:1fr}.sidebar{display:none}.fgrid{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<div class="shell">
+  <!-- ======= Sidebar (contexto) ======= -->
+  <aside class="sidebar">
+    <div class="brand"><span class="dot">D</span> Davent</div>
+    <div class="nav-h">Vender</div>
+    <button class="nav-i"><svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M21 8l-9-5-9 5v8l9 5 9-5V8z"/></svg> Mis productos</button>
+    <button class="nav-i"><svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M14.7 6.3a4 4 0 105.4 5.4L22 9.6 14.4 2l-2.1 2.1a4 4 0 002.4 2.2z"/></svg> Mis servicios</button>
+    <div class="nav-h">Mi web</div>
+    <button class="nav-i on"><svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M3 9l9-6 9 6v11a1 1 0 01-1 1H4a1 1 0 01-1-1z"/></svg> Mi página</button>
+    <div class="nav-h">Clientes</div>
+    <button class="nav-i"><svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M12 2l3 6 7 .8-5 5 1.2 7-6.2-3.4L5.8 20.8 7 14 2 8.8 9 8z"/></svg> Opiniones</button>
+    <div class="nav-h">Crecer</div>
+    <button class="nav-i"><svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M3 14h4l10-6v8l-10-2z"/></svg> Promocionar</button>
+    <button class="nav-i"><svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M3 20l6-6 4 4 8-9"/></svg> Mis visitas</button>
+    <div class="nav-h">Mi cuenta</div>
+    <button class="nav-i"><svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="14" rx="2"/></svg> Plan y pagos</button>
+  </aside>
+
+  <!-- ======= Main ======= -->
+  <main class="main">
+    <div class="crumb">Mi web / Mi página</div>
+    <h1>Tu página web, paso a paso</h1>
+    <p class="sub">Seguí estos pasos en orden. Todo se guarda solo y lo ves al instante en la vista previa.</p>
+
+    <!-- Menú amigable: pasos -->
+    <nav class="steps" id="steps">
+      <button class="step on" data-s="0"><span class="n">1</span><span>Diseño<small>Cómo se ve</small></span></button>
+      <button class="step" data-s="1"><span class="n">2</span><span>Qué muestra<small>Sus secciones</small></span></button>
+      <button class="step" data-s="2"><span class="n">3</span><span>Mi negocio<small>Tus datos</small></span></button>
+      <button class="step" data-s="3"><span class="n">4</span><span>Contenido<small>Textos y páginas</small></span></button>
+    </nav>
+
+    <div class="work">
+      <div>
+        <!-- PASO 1: DISEÑO -->
+        <section class="panel" data-p="0">
+          <div class="panel-h"><h2>Elegí el diseño</h2><p>Cada diseño ya viene con su estilo pensado. Solo elegí el que más te guste — no hay nada más que configurar.</p></div>
+          <div class="panel-b">
+            <div class="designs" id="designs"></div>
+            <h3 style="margin:20px 0 10px;font-size:14px">Estilo del diseño</h3>
+            <div class="styles" id="styles"></div>
+          </div>
+        </section>
+
+        <!-- PASO 2: SECCIONES -->
+        <section class="panel" data-p="1" hidden>
+          <div class="panel-h"><h2>Qué muestra tu web</h2><p>El diseño <b id="secDesignName">Bazar</b> permite estas secciones. Marcá cuáles querés mostrar (al menos una siempre queda activa).</p></div>
+          <div class="panel-b">
+            <div class="sec-list" id="secList"></div>
+            <div class="warn" id="secWarn" hidden>Tu web necesita al menos una sección visible — activá otra antes de apagar esta.</div>
+          </div>
+        </section>
+
+        <!-- PASO 3: NEGOCIO -->
+        <section class="panel" data-p="2" hidden>
+          <div class="panel-h"><h2>Datos de tu negocio</h2><p>Esta información aparece en tu web: contacto, ubicación, horarios y cómo te pagan.</p></div>
+          <div class="panel-b">
+            <div class="subtabs" id="bizTabs">
+              <button class="subtab on" data-b="0">Identidad</button>
+              <button class="subtab" data-b="1">Contacto</button>
+              <button class="subtab" data-b="2">Ubicación</button>
+              <button class="subtab" data-b="3">Horarios</button>
+              <button class="subtab" data-b="4">Pagos y envíos</button>
+              <button class="subtab" data-b="5">Redes y links</button>
+            </div>
+            <div data-bp="0" class="fgrid">
+              <div class="f"><label>Nombre del negocio</label><input value="Almacén Don José"></div>
+              <div class="f"><label>Rubro</label><select><option>Almacén / Tienda</option><option>Gastronomía</option><option>Servicios</option><option>Indumentaria</option></select></div>
+              <div class="f full"><label>Descripción corta</label><textarea rows="2">Tu almacén de barrio con productos frescos todos los días.</textarea><span class="hint">Aparece en la portada y en Google. Máx. 160 caracteres.</span></div>
+              <div class="f"><label>Logo</label><div class="imgup"><div class="box">Logo</div><button class="btn sm">Cambiar</button></div></div>
+              <div class="f"><label>Foto de portada</label><div class="imgup"><div class="box">Portada</div><button class="btn sm">Cambiar</button></div></div>
+            </div>
+            <div data-bp="1" class="fgrid" hidden>
+              <div class="f"><label>WhatsApp</label><input value="+54 9 11 5555-5555"><span class="hint">El botón de contacto de tu web escribe a este número.</span></div>
+              <div class="f"><label>Teléfono fijo</label><input placeholder="Opcional"></div>
+              <div class="f"><label>Email público</label><input placeholder="contacto@tunegocio.com"></div>
+              <div class="f"><label>¿Mostrar email en la web?</label><div class="chipsel"><button class="chip on">Sí</button><button class="chip">No</button></div></div>
+            </div>
+            <div data-bp="2" class="fgrid" hidden>
+              <div class="f"><label>Provincia</label><select><option>Buenos Aires</option><option>CABA</option></select></div>
+              <div class="f"><label>Ciudad</label><input value="Lanús"></div>
+              <div class="f full"><label>Dirección</label><input placeholder="Calle y número"><span class="hint">Si trabajás solo a domicilio, dejalo vacío.</span></div>
+              <div class="f"><label>¿Mostrar mapa?</label><div class="chipsel"><button class="chip on">Sí</button><button class="chip">No</button></div></div>
+              <div class="f"><label>Zona de entrega</label><input placeholder="Ej: Lanús y alrededores"></div>
+            </div>
+            <div data-bp="3" class="fgrid" hidden>
+              <div class="f full"><label>Horario de atención</label><textarea rows="3">Lun a Vie 9 a 19 hs · Sáb 9 a 13 hs</textarea><span class="hint">Se muestra tal cual lo escribas.</span></div>
+              <div class="f"><label>¿Atiende feriados?</label><div class="chipsel"><button class="chip">Sí</button><button class="chip on">No</button></div></div>
+              <div class="f"><label>Aviso especial</label><input placeholder="Ej: cerrado por vacaciones hasta…"></div>
+            </div>
+            <div data-bp="4" class="fgrid" hidden>
+              <div class="f full"><label>Medios de pago que aceptás</label>
+                <div class="chipsel"><button class="chip on">Efectivo</button><button class="chip on">Mercado Pago</button><button class="chip on">Transferencia</button><button class="chip">Tarjetas</button><button class="chip">Cuenta DNI</button></div>
+              </div>
+              <div class="f"><label>¿Hacés envíos?</label><div class="chipsel"><button class="chip on">Sí</button><button class="chip">No</button></div></div>
+              <div class="f"><label>Costo / condición de envío</label><input placeholder="Ej: gratis desde $15.000"></div>
+            </div>
+            <div data-bp="5" class="fgrid" hidden>
+              <div class="f"><label>Instagram</label><input placeholder="@tunegocio"></div>
+              <div class="f"><label>Facebook</label><input placeholder="facebook.com/tunegocio"></div>
+              <div class="f"><label>TikTok</label><input placeholder="@tunegocio"></div>
+              <div class="f"><label>Otra web / catálogo externo</label><input placeholder="https://…"></div>
+            </div>
+          </div>
+        </section>
+
+        <!-- PASO 4: CONTENIDO UNIFICADO -->
+        <section class="panel" data-p="3" hidden>
+          <div class="panel-h"><h2>Contenido de tu web</h2><p>Todo lo que tus visitas leen: portada, catálogo, servicios y membresías — en un solo lugar.</p></div>
+          <div class="panel-b">
+            <div class="cblock open">
+              <div class="cblock-h"><span class="ic">▤</span><b>Portada <small>Título, texto de bienvenida y botón principal</small></b><span class="arr">▸</span></div>
+              <div class="cblock-b">
+                <div class="fgrid">
+                  <div class="f"><label>Título de bienvenida</label><input value="Todo fresco, cerca de casa"></div>
+                  <div class="f"><label>Texto del botón</label><input value="Ver productos"></div>
+                  <div class="f full"><label>Texto de bienvenida</label><textarea rows="2">Hace tu pedido por WhatsApp y retiralo cuando quieras.</textarea></div>
+                </div>
+              </div>
+            </div>
+            <div class="cblock">
+              <div class="cblock-h"><span class="ic">▦</span><b>Catálogo <small>12 productos · 3 categorías</small></b><button class="btn sm">Administrar</button><span class="arr">▸</span></div>
+              <div class="cblock-b">
+                <div class="fgrid">
+                  <div class="f"><label>Título de la sección</label><input value="Nuestros productos"></div>
+                  <div class="f"><label>Orden</label><select><option>Más vendidos primero</option><option>Más nuevos primero</option><option>Precio: menor a mayor</option></select></div>
+                  <div class="f"><label>¿Mostrar precios?</label><div class="chipsel"><button class="chip on">Sí</button><button class="chip">No</button></div></div>
+                  <div class="f"><label>¿Mostrar ofertas destacadas?</label><div class="chipsel"><button class="chip on">Sí</button><button class="chip">No</button></div></div>
+                </div>
+              </div>
+            </div>
+            <div class="cblock">
+              <div class="cblock-h"><span class="ic">▧</span><b>Servicios <small>4 servicios cargados</small></b><button class="btn sm">Administrar</button><span class="arr">▸</span></div>
+              <div class="cblock-b">
+                <div class="fgrid">
+                  <div class="f"><label>Título de la sección</label><input value="Qué hacemos"></div>
+                  <div class="f"><label>Botón de consulta</label><input value="Consultar por WhatsApp"></div>
+                </div>
+              </div>
+            </div>
+            <div class="cblock">
+              <div class="cblock-h"><span class="ic">♦</span><b>Suscripciones / membresías <small>Plan mensual activo</small></b><button class="btn sm">Administrar</button><span class="arr">▸</span></div>
+              <div class="cblock-b">
+                <div class="fgrid">
+                  <div class="f"><label>Título</label><input value="Sumate al club"></div>
+                  <div class="f"><label>Descripción</label><input value="Descuentos exclusivos cada semana"></div>
+                </div>
+              </div>
+            </div>
+            <div class="cblock">
+              <div class="cblock-h"><span class="ic">◔</span><b>Preguntas frecuentes <small>Sección opcional</small></b><span class="arr">▸</span></div>
+              <div class="cblock-b"><p class="mut">Sumá preguntas y respuestas que tus clientes preguntan siempre (envíos, pagos, garantía…).</p></div>
+            </div>
+          </div>
+        </section>
+
+        <div class="savebar">
+          <span class="st" id="saveState">Guardado automáticamente · hace un momento</span>
+          <button class="btn sm" id="nextBtn">Siguiente paso →</button>
+        </div>
+      </div>
+
+      <!-- ======= Vista previa ======= -->
+      <aside class="preview panel">
+        <div class="pv-bar"><span class="pv-dot"></span><span class="pv-dot"></span><span class="pv-dot"></span><span class="pv-url">almacendonjose.davent.ar</span></div>
+        <div class="pv-frame"><div class="pv-page wp" id="wp">
+          <div class="wp-nav"><span class="wp-logo"></span><span class="wp-links"><i></i><i></i><i></i></span></div>
+          <div class="wp-hero"><b id="wpName">Almacén Don José</b><i></i><span class="cta">Ver productos</span></div>
+          <div class="wp-sec" data-sec="destacados"><h6>Destacados</h6><div class="wp-cards"><i></i><i></i><i></i></div></div>
+          <div class="wp-sec" data-sec="catalogo"><h6>Catálogo</h6><div class="wp-cards"><i></i><i></i><i></i><i></i><i></i><i></i></div></div>
+          <div class="wp-sec" data-sec="servicios"><h6>Servicios</h6><div class="wp-rows"><i></i><i></i><i></i></div></div>
+          <div class="wp-sec" data-sec="info"><h6>Ubicación y horarios</h6><div class="wp-rows"><i></i><i></i></div></div>
+          <div class="wp-sec" data-sec="suscripciones"><h6>Membresías</h6><div class="wp-rows"><i></i></div></div>
+          <div class="wp-sec" data-sec="contacto"><h6>Contacto</h6><div class="wp-rows"><i></i></div></div>
+        </div></div>
+        <div class="pv-actions">
+          <button class="btn block pri">Abrir mi web</button>
+          <button class="btn block">Compartir</button>
+        </div>
+      </aside>
+    </div>
+  </main>
+</div>
+
+<script>
+const $=(s,c=document)=>c.querySelector(s), $$=(s,c=document)=>[...c.querySelectorAll(s)];
+
+/* ---- Datos del boceto ---- */
+const DESIGNS=[
+ {id:'mercado',name:'Bazar',desc:'Ideal tiendas',a:'#E07B2A',b:'#8A4A14',sections:['destacados','catalogo','info','contacto','suscripciones','servicios']},
+ {id:'raiz',name:'Raíz',desc:'Sobrio y claro',a:'#2E6B4F',b:'#1d4634',sections:['destacados','catalogo','servicios','info','contacto']},
+ {id:'sastreria',name:'Sastrería',desc:'Editorial',a:'#4A3A2E',b:'#2A211A',sections:['destacados','servicios','info','contacto']},
+ {id:'atelier',name:'Atelier',desc:'Cálido',a:'#2D4A3E',b:'#1E322B',sections:['destacados','catalogo','servicios','info','contacto','suscripciones']},
+];
+const STYLES={mercado:[['Bazar','#F6EFE4','#E07B2A'],['Noche','#22201E','#E8A24A'],['Oferta','#FBF3E4','#D9541E']],
+ raiz:[['Raíz','#F7F5F0','#2E6B4F'],['Raíz noche','#1E1B17','#7FB894']],
+ sastreria:[['Sastrería','#EDE7DC','#4A3A2E'],['Noche','#221D18','#C9A86A'],['Cruda','#F1EEE8','#3E3A33']],
+ atelier:[['Atelier','#F4F2EC','#2D4A3E'],['Atelier noche','#20241F','#A8C5AE']]};
+const SEC_LABELS={destacados:['◈','Destacados','Lo primero que ven al entrar'],catalogo:['▦','Catálogo','Tus productos con foto y precio'],servicios:['▧','Servicios','Lo que ofrecés hacer'],info:['◔','Ubicación y horarios','Dirección, mapa y atención'],contacto:['◌','Contacto','WhatsApp y redes'],suscripciones:['♦','Membresías','Planes para clientes frecuentes']};
+
+let cur={design:'mercado',style:0,on:{destacados:1,catalogo:1,info:1,contacto:1,servicios:0,suscripciones:0}};
+
+/* ---- Diseños ---- */
+function renderDesigns(){
+ $('#designs').innerHTML=DESIGNS.map(d=>`<button class="dcard ${d.id===cur.design?'on':''}" data-d="${d.id}">
+   <span class="check">✓</span>
+   <div class="thumb"><svg width="100%" height="100%" viewBox="0 0 160 100" preserveAspectRatio="none">
+     <rect width="160" height="100" fill="#fff"/><rect width="160" height="34" fill="${d.a}"/>
+     <rect x="12" y="12" width="50" height="6" rx="3" fill="#fff" opacity=".9"/>
+     <rect x="12" y="46" width="40" height="5" rx="2" fill="#D8D2C6"/><rect x="12" y="56" width="60" height="5" rx="2" fill="#D8D2C6"/>
+     <rect x="12" y="70" width="30" height="18" rx="4" fill="${d.a}" opacity=".18"/><rect x="48" y="70" width="30" height="18" rx="4" fill="${d.a}" opacity=".18"/><rect x="84" y="70" width="30" height="18" rx="4" fill="${d.a}" opacity=".18"/>
+   </svg></div>
+   <div class="meta">${d.name}<small>${d.desc}</small></div></button>`).join('');
+ $$('#designs .dcard').forEach(b=>b.onclick=()=>{cur.design=b.dataset.d;cur.style=0;DESIGNS.find(d=>d.id===cur.design).sections.forEach(s=>{if(!cur.on[s])cur.on[s]=1});syncAll()});
+}
+function renderStyles(){
+ $('#styles').innerHTML=(STYLES[cur.design]||[]).map((s,i)=>`<button class="swatch ${i===cur.style?'on':''}" data-i="${i}">
+   <span class="chip"><i style="background:${s[1]}"></i><i style="background:${s[2]}"></i></span><span>${s[0]}</span></button>`).join('');
+ $$('#styles .swatch').forEach(b=>b.onclick=()=>{cur.style=+b.dataset.i;syncAll()});
+}
+
+/* ---- Secciones ---- */
+function renderSections(){
+ const d=DESIGNS.find(x=>x.id===cur.design);
+ $('#secDesignName').textContent=d.name;
+ $('#secList').innerHTML=d.sections.map(id=>{const[l,t,h]=SEC_LABELS[id];
+  return `<div class="sec-i"><span class="ic">${l}</span><div class="tx"><b>${t}</b><small>${h}</small></div><button class="tgl ${cur.on[id]?'on':''}" data-s="${id}" aria-label="${t}"></button></div>`}).join('');
+ $$('#secList .tgl').forEach(t=>t.onclick=()=>{
+  const id=t.dataset.s;
+  if(cur.on[id] && d.sections.filter(s=>cur.on[s]).length===1){$('#secWarn').hidden=false;setTimeout(()=>$('#secWarn').hidden=true,2600);return}
+  cur.on[id]=cur.on[id]?0:1;syncAll();
+ });
+}
+
+/* ---- Preview ---- */
+function renderPreview(){
+ const d=DESIGNS.find(x=>x.id===cur.design),s=(STYLES[cur.design]||[])[cur.style]||['','#F6EFE4','#2E6B4F'];
+ const wp=$('#wp');wp.style.setProperty('--pvA',s[2]);wp.style.setProperty('--pvB',d.b);
+ $$('.wp-sec',wp).forEach(el=>{el.style.display=cur.on[el.dataset.sec]?'':'none'});
+}
+function syncAll(){renderDesigns();renderStyles();renderSections();renderPreview();saveFlash()}
+
+/* ---- Pasos ---- */
+let step=0;
+$$('#steps .step').forEach(b=>b.onclick=()=>{step=+b.dataset.s;show()});
+function show(){
+ $$('#steps .step').forEach((b,i)=>{b.classList.toggle('on',i===step);b.classList.toggle('done',i<step)});
+ $$('[data-p]').forEach(p=>p.hidden=+p.dataset.p!==step);
+ $('#nextBtn').textContent=step<3?'Siguiente paso →':'Listo, ver mi web';
+}
+$('#nextBtn').onclick=()=>{if(step<3){step++;show()}};
+
+/* ---- Sub-pestañas negocio ---- */
+$$('#bizTabs .subtab').forEach(b=>b.onclick=()=>{
+ $$('#bizTabs .subtab').forEach(x=>x.classList.remove('on'));b.classList.add('on');
+ $$('[data-bp]').forEach(p=>p.hidden=p.dataset.bp!==b.dataset.b);
+});
+
+/* ---- Acordeones contenido ---- */
+$$('.cblock-h').forEach(h=>h.addEventListener('click',e=>{if(e.target.closest('.btn'))return;h.parentElement.classList.toggle('open')}));
+
+/* ---- Chips / toggles genéricos ---- */
+document.addEventListener('click',e=>{const c=e.target.closest('.chip');if(c&&c.parentElement.classList.contains('chipsel')){const sibs=$$('.chip',c.parentElement);if(sibs.length<=2){sibs.forEach(x=>x.classList.remove('on'));c.classList.add('on')}else c.classList.toggle('on')}});
+
+/* ---- Guardado fake ---- */
+let st;function saveFlash(){const el=$('#saveState');el.textContent='Guardando…';clearTimeout(st);st=setTimeout(()=>el.textContent='Guardado automáticamente · hace un momento',700)}
+
+syncAll();show();
+</script>
+</body>
+</html>
