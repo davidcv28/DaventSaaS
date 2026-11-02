@@ -305,6 +305,12 @@
     html[data-ds-style] .top-in .ds-theme-toggle{order:2;margin-inline-start:auto}
     html[data-ds-style] .top-meta{display:none}
 
+    /* Cabecera fija: el documento se sirve en un iframe estirado y el
+       puente solo re-ancla lo position:fixed — sin esto la barra (y el
+       burger del estilo cruda) se va con el scroll. */
+    html[data-ds-style] .top{position:fixed;top:0;left:0;right:0;z-index:60}
+    html[data-ds-style] body{padding-top:78px}
+
     /* Hoja compartida: panel deslizante. */
     html[data-ds-style] .m-sheet{
       display:flex;flex-direction:column;visibility:hidden;position:fixed;z-index:70;
