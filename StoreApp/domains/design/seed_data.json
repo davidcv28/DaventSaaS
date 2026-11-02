@@ -1080,6 +1080,1012 @@
         "button_shape": "rounded",
         "divider": "line"
       }
+    },
+    {
+      "slug": "mercado",
+      "nombre": "Bazar",
+      "categoria": "Marketplace",
+      "descripcion": "Marketplace masivo: masthead amarillo, buscador blanco, grilla densa de productos y descuentos en verde.",
+      "tier": "plus",
+      "template": "mercado",
+      "page_theme": "light",
+      "tokens": {
+        "palette": {
+          "primary": "#2563eb",
+          "secondary": "#1d4ed8",
+          "accent": "#ffe600",
+          "bg": "#ebebeb",
+          "surface": "#ffffff",
+          "text": "#333333",
+          "muted": "#666666",
+          "border": "#e6e6e6",
+          "success": "#007a3d",
+          "danger": "#e53935"
+        },
+        "containers": {
+          "radius": "sm",
+          "shadow": "soft",
+          "border": "none",
+          "density": "compact",
+          "surface": "flat"
+        },
+        "typography": {
+          "heading": "inter",
+          "subheading": "inter",
+          "body": "inter",
+          "scale": "balanced",
+          "weightHeading": 600,
+          "letterSpacing": "-0.01em"
+        },
+        "buttons": {
+          "shape": "rounded",
+          "style": "solid",
+          "size": "md"
+        },
+        "background": {
+          "type": "solid",
+          "overlay": "none"
+        },
+        "motion": {
+          "reveal": "fade",
+          "hover": "lift",
+          "intensity": "subtle"
+        },
+        "mobile": {
+          "gridCols": 1,
+          "cardStyle": "standard",
+          "heroHeight": "standard"
+        }
+      },
+      "layout": {
+        "landing": {
+          "blocks": [
+            {
+              "id": "hero",
+              "variant": "split",
+              "enabled": true,
+              "order": 0
+            },
+            {
+              "id": "categories",
+              "enabled": true,
+              "order": 1
+            },
+            {
+              "id": "offers",
+              "enabled": true,
+              "order": 2
+            },
+            {
+              "id": "featured",
+              "enabled": true,
+              "order": 3
+            },
+            {
+              "id": "announcements",
+              "variant": "static",
+              "enabled": true,
+              "order": 4
+            },
+            {
+              "id": "highlights",
+              "enabled": true,
+              "order": 5
+            },
+            {
+              "id": "brands",
+              "enabled": true,
+              "order": 6
+            },
+            {
+              "id": "about",
+              "enabled": true,
+              "order": 7
+            },
+            {
+              "id": "services",
+              "enabled": true,
+              "order": 8
+            },
+            {
+              "id": "stats",
+              "enabled": true,
+              "order": 9
+            },
+            {
+              "id": "gallery",
+              "variant": "grid",
+              "enabled": true,
+              "order": 10
+            },
+            {
+              "id": "testimonials",
+              "enabled": true,
+              "order": 11
+            },
+            {
+              "id": "faq",
+              "enabled": true,
+              "order": 12
+            },
+            {
+              "id": "cta",
+              "enabled": true,
+              "order": 13
+            },
+            {
+              "id": "contact",
+              "variant": "card",
+              "enabled": true,
+              "order": 14
+            }
+          ]
+        },
+        "catalog": {
+          "blocks": [
+            {
+              "id": "note",
+              "enabled": true,
+              "order": 0
+            },
+            {
+              "id": "promo",
+              "enabled": true,
+              "order": 1
+            },
+            {
+              "id": "filters",
+              "enabled": true,
+              "order": 2
+            },
+            {
+              "id": "sort",
+              "enabled": true,
+              "order": 3
+            },
+            {
+              "id": "grid",
+              "enabled": true,
+              "order": 4
+            }
+          ]
+        },
+        "services": {
+          "blocks": [
+            {
+              "id": "hero",
+              "enabled": true,
+              "order": 0
+            },
+            {
+              "id": "band",
+              "enabled": true,
+              "order": 1
+            },
+            {
+              "id": "picker",
+              "enabled": true,
+              "order": 2
+            },
+            {
+              "id": "steps",
+              "enabled": true,
+              "order": 3
+            },
+            {
+              "id": "form",
+              "enabled": true,
+              "order": 4
+            },
+            {
+              "id": "faq",
+              "enabled": true,
+              "order": 5
+            }
+          ]
+        }
+      },
+      "layout_spec": {
+        "landing": {
+          "on": [
+            "hero",
+            "categories",
+            "offers",
+            "featured",
+            "announcements",
+            "highlights",
+            "brands",
+            "about",
+            "services",
+            "stats",
+            "gallery",
+            "testimonials",
+            "faq",
+            "cta",
+            "contact"
+          ],
+          "var": {
+            "hero": "split",
+            "announcements": "static",
+            "gallery": "grid",
+            "contact": "card"
+          }
+        },
+        "catalog": {
+          "on": [
+            "note",
+            "promo",
+            "filters",
+            "sort",
+            "grid"
+          ]
+        },
+        "services": {
+          "on": [
+            "hero",
+            "band",
+            "picker",
+            "steps",
+            "form",
+            "faq"
+          ]
+        }
+      },
+      "tags": [
+        "marketplace",
+        "retail",
+        "ecommerce",
+        "ofertas",
+        "mercado"
+      ],
+      "preview": "/design-previews/styles/mercado.png",
+      "style": "Marketplace",
+      "anim": {
+        "hero": "fade-up",
+        "reveal": "fade",
+        "hover": "card-lift",
+        "button": "solid-press"
+      },
+      "easing": "cubic-bezier(.2,.7,.3,1)",
+      "duration": "420ms",
+      "icons": {
+        "style": "line",
+        "stroke": "1.75",
+        "size": "20",
+        "corners": "rounded"
+      },
+      "concept": "Marketplace masivo: amarillo, azul y tarjetas blancas densas."
+    },
+    {
+      "slug": "mercado-noche",
+      "nombre": "Bazar Noche",
+      "categoria": "Marketplace nocturno",
+      "descripcion": "Marketplace de noche: fondo grafito, masthead ámbar y tarjetas oscuras con precios grandes.",
+      "tier": "plus",
+      "template": "mercado",
+      "page_theme": "dark",
+      "tokens": {
+        "palette": {
+          "primary": "#2563eb",
+          "secondary": "#1d4ed8",
+          "accent": "#ffc400",
+          "bg": "#121418",
+          "surface": "#1c1f24",
+          "text": "#f2f3f5",
+          "muted": "#a0a5ae",
+          "border": "#30343b",
+          "success": "#0e7a3d",
+          "danger": "#ff6b6b"
+        },
+        "containers": {
+          "radius": "sm",
+          "shadow": "soft",
+          "border": "none",
+          "density": "compact",
+          "surface": "flat"
+        },
+        "typography": {
+          "heading": "inter",
+          "subheading": "inter",
+          "body": "inter",
+          "scale": "balanced",
+          "weightHeading": 600,
+          "letterSpacing": "-0.01em"
+        },
+        "buttons": {
+          "shape": "rounded",
+          "style": "solid",
+          "size": "md"
+        },
+        "background": {
+          "type": "solid",
+          "overlay": "none"
+        },
+        "motion": {
+          "reveal": "fade",
+          "hover": "lift",
+          "intensity": "subtle"
+        },
+        "mobile": {
+          "gridCols": 1,
+          "cardStyle": "standard",
+          "heroHeight": "standard"
+        }
+      },
+      "layout": {
+        "landing": {
+          "blocks": [
+            {
+              "id": "hero",
+              "variant": "split",
+              "enabled": true,
+              "order": 0
+            },
+            {
+              "id": "categories",
+              "enabled": true,
+              "order": 1
+            },
+            {
+              "id": "offers",
+              "enabled": true,
+              "order": 2
+            },
+            {
+              "id": "featured",
+              "enabled": true,
+              "order": 3
+            },
+            {
+              "id": "announcements",
+              "variant": "static",
+              "enabled": true,
+              "order": 4
+            },
+            {
+              "id": "highlights",
+              "enabled": true,
+              "order": 5
+            },
+            {
+              "id": "brands",
+              "enabled": true,
+              "order": 6
+            },
+            {
+              "id": "about",
+              "enabled": true,
+              "order": 7
+            },
+            {
+              "id": "services",
+              "enabled": true,
+              "order": 8
+            },
+            {
+              "id": "stats",
+              "enabled": true,
+              "order": 9
+            },
+            {
+              "id": "gallery",
+              "variant": "grid",
+              "enabled": true,
+              "order": 10
+            },
+            {
+              "id": "testimonials",
+              "enabled": true,
+              "order": 11
+            },
+            {
+              "id": "faq",
+              "enabled": true,
+              "order": 12
+            },
+            {
+              "id": "cta",
+              "enabled": true,
+              "order": 13
+            },
+            {
+              "id": "contact",
+              "variant": "card",
+              "enabled": true,
+              "order": 14
+            }
+          ]
+        },
+        "catalog": {
+          "blocks": [
+            {
+              "id": "note",
+              "enabled": true,
+              "order": 0
+            },
+            {
+              "id": "promo",
+              "enabled": true,
+              "order": 1
+            },
+            {
+              "id": "filters",
+              "enabled": true,
+              "order": 2
+            },
+            {
+              "id": "sort",
+              "enabled": true,
+              "order": 3
+            },
+            {
+              "id": "grid",
+              "enabled": true,
+              "order": 4
+            }
+          ]
+        },
+        "services": {
+          "blocks": [
+            {
+              "id": "hero",
+              "enabled": true,
+              "order": 0
+            },
+            {
+              "id": "band",
+              "enabled": true,
+              "order": 1
+            },
+            {
+              "id": "picker",
+              "enabled": true,
+              "order": 2
+            },
+            {
+              "id": "steps",
+              "enabled": true,
+              "order": 3
+            },
+            {
+              "id": "form",
+              "enabled": true,
+              "order": 4
+            },
+            {
+              "id": "faq",
+              "enabled": true,
+              "order": 5
+            }
+          ]
+        }
+      },
+      "layout_spec": {
+        "landing": {
+          "on": [
+            "hero",
+            "categories",
+            "offers",
+            "featured",
+            "announcements",
+            "highlights",
+            "brands",
+            "about",
+            "services",
+            "stats",
+            "gallery",
+            "testimonials",
+            "faq",
+            "cta",
+            "contact"
+          ],
+          "var": {
+            "hero": "split",
+            "announcements": "static",
+            "gallery": "grid",
+            "contact": "card"
+          }
+        },
+        "catalog": {
+          "on": [
+            "note",
+            "promo",
+            "filters",
+            "sort",
+            "grid"
+          ]
+        },
+        "services": {
+          "on": [
+            "hero",
+            "band",
+            "picker",
+            "steps",
+            "form",
+            "faq"
+          ]
+        }
+      },
+      "tags": [
+        "mercado",
+        "marketplace",
+        "retail",
+        "noche",
+        "oscuro"
+      ],
+      "preview": "",
+      "style": "Marketplace",
+      "anim": {
+        "hero": "fade-up",
+        "reveal": "fade",
+        "hover": "card-lift",
+        "button": "solid-press"
+      },
+      "easing": "cubic-bezier(.2,.7,.3,1)",
+      "duration": "420ms",
+      "icons": {
+        "style": "line",
+        "stroke": "1.75",
+        "size": "20",
+        "corners": "rounded"
+      },
+      "concept": "Marketplace nocturno: ámbar sobre grafito y tarjetas oscuras."
+    },
+    {
+      "slug": "mercado-oferta",
+      "nombre": "Bazar Oferta",
+      "categoria": "Marketplace de ofertas",
+      "descripcion": "Marketplace de ofertas: fondo crema, masthead naranja y descuentos en verde.",
+      "tier": "plus",
+      "template": "mercado",
+      "page_theme": "light",
+      "tokens": {
+        "palette": {
+          "primary": "#c81e1e",
+          "secondary": "#9f1239",
+          "accent": "#ff6a00",
+          "bg": "#f7f3ee",
+          "surface": "#ffffff",
+          "text": "#2b2320",
+          "muted": "#6b625c",
+          "border": "#e7dfd8",
+          "success": "#007a3d",
+          "danger": "#c81e1e"
+        },
+        "containers": {
+          "radius": "sm",
+          "shadow": "soft",
+          "border": "none",
+          "density": "compact",
+          "surface": "flat"
+        },
+        "typography": {
+          "heading": "inter",
+          "subheading": "inter",
+          "body": "inter",
+          "scale": "balanced",
+          "weightHeading": 600,
+          "letterSpacing": "-0.01em"
+        },
+        "buttons": {
+          "shape": "rounded",
+          "style": "solid",
+          "size": "md"
+        },
+        "background": {
+          "type": "solid",
+          "overlay": "none"
+        },
+        "motion": {
+          "reveal": "fade",
+          "hover": "lift",
+          "intensity": "subtle"
+        },
+        "mobile": {
+          "gridCols": 1,
+          "cardStyle": "standard",
+          "heroHeight": "standard"
+        }
+      },
+      "layout": {
+        "landing": {
+          "blocks": [
+            {
+              "id": "hero",
+              "variant": "split",
+              "enabled": true,
+              "order": 0
+            },
+            {
+              "id": "categories",
+              "enabled": true,
+              "order": 1
+            },
+            {
+              "id": "offers",
+              "enabled": true,
+              "order": 2
+            },
+            {
+              "id": "featured",
+              "enabled": true,
+              "order": 3
+            },
+            {
+              "id": "announcements",
+              "variant": "static",
+              "enabled": true,
+              "order": 4
+            },
+            {
+              "id": "highlights",
+              "enabled": true,
+              "order": 5
+            },
+            {
+              "id": "brands",
+              "enabled": true,
+              "order": 6
+            },
+            {
+              "id": "about",
+              "enabled": true,
+              "order": 7
+            },
+            {
+              "id": "services",
+              "enabled": true,
+              "order": 8
+            },
+            {
+              "id": "stats",
+              "enabled": true,
+              "order": 9
+            },
+            {
+              "id": "gallery",
+              "variant": "grid",
+              "enabled": true,
+              "order": 10
+            },
+            {
+              "id": "testimonials",
+              "enabled": true,
+              "order": 11
+            },
+            {
+              "id": "faq",
+              "enabled": true,
+              "order": 12
+            },
+            {
+              "id": "cta",
+              "enabled": true,
+              "order": 13
+            },
+            {
+              "id": "contact",
+              "variant": "card",
+              "enabled": true,
+              "order": 14
+            }
+          ]
+        },
+        "catalog": {
+          "blocks": [
+            {
+              "id": "note",
+              "enabled": true,
+              "order": 0
+            },
+            {
+              "id": "promo",
+              "enabled": true,
+              "order": 1
+            },
+            {
+              "id": "filters",
+              "enabled": true,
+              "order": 2
+            },
+            {
+              "id": "sort",
+              "enabled": true,
+              "order": 3
+            },
+            {
+              "id": "grid",
+              "enabled": true,
+              "order": 4
+            }
+          ]
+        },
+        "services": {
+          "blocks": [
+            {
+              "id": "hero",
+              "enabled": true,
+              "order": 0
+            },
+            {
+              "id": "band",
+              "enabled": true,
+              "order": 1
+            },
+            {
+              "id": "picker",
+              "enabled": true,
+              "order": 2
+            },
+            {
+              "id": "steps",
+              "enabled": true,
+              "order": 3
+            },
+            {
+              "id": "form",
+              "enabled": true,
+              "order": 4
+            },
+            {
+              "id": "faq",
+              "enabled": true,
+              "order": 5
+            }
+          ]
+        }
+      },
+      "layout_spec": {
+        "landing": {
+          "on": [
+            "hero",
+            "categories",
+            "offers",
+            "featured",
+            "announcements",
+            "highlights",
+            "brands",
+            "about",
+            "services",
+            "stats",
+            "gallery",
+            "testimonials",
+            "faq",
+            "cta",
+            "contact"
+          ],
+          "var": {
+            "hero": "split",
+            "announcements": "static",
+            "gallery": "grid",
+            "contact": "card"
+          }
+        },
+        "catalog": {
+          "on": [
+            "note",
+            "promo",
+            "filters",
+            "sort",
+            "grid"
+          ]
+        },
+        "services": {
+          "on": [
+            "hero",
+            "band",
+            "picker",
+            "steps",
+            "form",
+            "faq"
+          ]
+        }
+      },
+      "tags": [
+        "mercado",
+        "marketplace",
+        "retail",
+        "ofertas",
+        "promociones"
+      ],
+      "preview": "",
+      "style": "Marketplace",
+      "anim": {
+        "hero": "fade-up",
+        "reveal": "fade",
+        "hover": "card-lift",
+        "button": "solid-press"
+      },
+      "easing": "cubic-bezier(.2,.7,.3,1)",
+      "duration": "420ms",
+      "icons": {
+        "style": "line",
+        "stroke": "1.75",
+        "size": "20",
+        "corners": "rounded"
+      },
+      "concept": "Marketplace de ofertas: naranja y rojo sobre crema."
+    },
+    {
+      "slug": "gimnasio",
+      "nombre": "Gimnasio",
+      "categoria": "Deporte oscuro",
+      "descripcion": "Negro oliva y lima: Barlow Condensed 800 en mayúsculas, Inter en cuerpo, bordes rectos y banda de disciplinas en acento.",
+      "tier": "plus",
+      "template": "gimnasio",
+      "page_theme": "dark",
+      "tokens": {
+        "palette": {
+          "accent": "#C8F169",
+          "primary": "#F2EFE8",
+          "secondary": "#A9A79E",
+          "bg": "#0E0F0C",
+          "surface": "#171914",
+          "text": "#F2EFE8",
+          "muted": "#A9A79E",
+          "border": "#2A2D25",
+          "success": "#C8F169",
+          "danger": "#F45B4C"
+        },
+        "containers": {
+          "radius": "none",
+          "shadow": "none",
+          "border": "thin",
+          "density": "compact",
+          "surface": "flat"
+        },
+        "typography": {
+          "heading": "barlow-condensed",
+          "subheading": "inter",
+          "body": "inter",
+          "scale": "impact",
+          "weightHeading": 800,
+          "letterSpacing": "0"
+        },
+        "buttons": {
+          "shape": "square",
+          "style": "solid",
+          "size": "lg"
+        },
+        "background": {
+          "type": "solid",
+          "value": null,
+          "overlay": "none"
+        },
+        "motion": {
+          "reveal": "fade-up",
+          "hover": "card-lift",
+          "intensity": "media"
+        },
+        "mobile": {
+          "cardStyle": "standard",
+          "heroHeight": "tall"
+        },
+        "preview": "",
+        "icons": {
+          "style": "line",
+          "stroke": "1.8",
+          "size": "20",
+          "corners": "square"
+        }
+      },
+      "layout": {},
+      "layout_spec": {},
+      "tags": [
+        "deporte",
+        "gimnasio",
+        "fitness",
+        "musculacion",
+        "funcional",
+        "clases"
+      ],
+      "preview": "",
+      "style": "Deporte oscuro",
+      "anim": {
+        "hero": "fade-up",
+        "reveal": "fade-up",
+        "hover": "card-lift",
+        "button": "solid-press"
+      },
+      "easing": "cubic-bezier(.2,.8,.2,1)",
+      "duration": "380ms",
+      "icons": {
+        "style": "line",
+        "stroke": "1.8",
+        "size": "20",
+        "corners": "square"
+      },
+      "concept": "Carbón + lima, titulares condensados y energía de pista."
+    },
+    {
+      "slug": "gimnasio-dia",
+      "nombre": "Gimnasio Día",
+      "categoria": "Deporte claro",
+      "descripcion": "La versión diurna del gym: papel hueso, tinta casi negra y lima apagado.",
+      "tier": "plus",
+      "template": "gimnasio",
+      "page_theme": "light",
+      "tokens": {
+        "palette": {
+          "accent": "#6FA318",
+          "primary": "#0E0F0C",
+          "secondary": "#55534B",
+          "bg": "#F2EFE8",
+          "surface": "#FAF8F1",
+          "text": "#0E0F0C",
+          "muted": "#55534B",
+          "border": "#C9C5B8",
+          "success": "#6FA318",
+          "danger": "#C2402F"
+        },
+        "containers": {
+          "radius": "none",
+          "shadow": "none",
+          "border": "thin",
+          "density": "compact",
+          "surface": "flat"
+        },
+        "typography": {
+          "heading": "barlow-condensed",
+          "subheading": "inter",
+          "body": "inter",
+          "scale": "impact",
+          "weightHeading": 800,
+          "letterSpacing": "0"
+        },
+        "buttons": {
+          "shape": "square",
+          "style": "solid",
+          "size": "lg"
+        },
+        "background": {
+          "type": "solid",
+          "value": null,
+          "overlay": "none"
+        },
+        "motion": {
+          "reveal": "fade-up",
+          "hover": "card-lift",
+          "intensity": "media"
+        },
+        "mobile": {
+          "cardStyle": "standard",
+          "heroHeight": "tall"
+        },
+        "preview": "",
+        "icons": {
+          "style": "line",
+          "stroke": "1.8",
+          "size": "20",
+          "corners": "square"
+        }
+      },
+      "layout": {},
+      "layout_spec": {},
+      "tags": [
+        "deporte",
+        "gimnasio",
+        "fitness",
+        "musculacion",
+        "clases"
+      ],
+      "preview": "",
+      "style": "Deporte claro",
+      "anim": {
+        "hero": "fade-up",
+        "reveal": "fade-up",
+        "hover": "card-lift",
+        "button": "solid-press"
+      },
+      "easing": "cubic-bezier(.2,.8,.2,1)",
+      "duration": "380ms",
+      "icons": {
+        "style": "line",
+        "stroke": "1.8",
+        "size": "20",
+        "corners": "square"
+      },
+      "concept": "Papel deportivo + tinta + lima de pizarra."
     }
   ],
   "patterns": [
@@ -1337,6 +2343,333 @@
       "supports_dark_mode": true,
       "icon_style": "premium",
       "style": "esencial"
+    },
+    {
+      "slug": "gimnasio",
+      "nombre": "Gimnasio",
+      "categoria": "deporte",
+      "descripcion": "Gimnasio y fitness: negro oliva con hueso, lima eléctrico, titulares Barlow Condensed 800 en mayúsculas, banda de disciplinas en acento, clases en filas sobre papel y planes en tarjetas de precio.",
+      "tier": "plus",
+      "template": "gimnasio",
+      "layout": {
+        "landing": [
+          {
+            "id": "announcements",
+            "variant": "static",
+            "enabled": true,
+            "order": 0
+          },
+          {
+            "id": "hero",
+            "enabled": true,
+            "order": 1
+          },
+          {
+            "id": "categories",
+            "variant": "row",
+            "enabled": true,
+            "order": 2
+          },
+          {
+            "id": "featured",
+            "variant": "grid",
+            "enabled": true,
+            "order": 3
+          },
+          {
+            "id": "plans",
+            "enabled": true,
+            "order": 4
+          },
+          {
+            "id": "benefits",
+            "enabled": true,
+            "order": 5
+          },
+          {
+            "id": "stats",
+            "enabled": true,
+            "order": 6
+          },
+          {
+            "id": "gallery",
+            "variant": "grid",
+            "enabled": true,
+            "order": 7
+          },
+          {
+            "id": "testimonials",
+            "variant": "cards",
+            "enabled": true,
+            "order": 8
+          },
+          {
+            "id": "faq",
+            "variant": "accordion",
+            "enabled": true,
+            "order": 9
+          },
+          {
+            "id": "cta",
+            "variant": "band",
+            "enabled": true,
+            "order": 10
+          },
+          {
+            "id": "contact",
+            "variant": "card",
+            "enabled": true,
+            "order": 11
+          }
+        ],
+        "catalog": [
+          {
+            "id": "note",
+            "enabled": true,
+            "order": 0
+          },
+          {
+            "id": "promo",
+            "enabled": true,
+            "order": 1
+          },
+          {
+            "id": "filters",
+            "enabled": true,
+            "order": 2
+          },
+          {
+            "id": "sort",
+            "enabled": true,
+            "order": 3
+          },
+          {
+            "id": "grid",
+            "enabled": true,
+            "order": 4
+          }
+        ],
+        "decorations": [
+          "extras"
+        ]
+      },
+      "tokens": {
+        "accent": "#C8F169",
+        "palette": {
+          "accent": "#C8F169",
+          "primary": "#F2EFE8",
+          "secondary": "#A9A79E",
+          "bg": "#0E0F0C",
+          "surface": "#171914",
+          "text": "#F2EFE8",
+          "muted": "#A9A79E",
+          "border": "#2A2D25",
+          "success": "#C8F169",
+          "danger": "#F45B4C"
+        },
+        "fonts": [
+          "barlow-condensed",
+          "inter"
+        ],
+        "radius": "0px",
+        "anim": {
+          "hero": "fade-up",
+          "reveal": "fade-up",
+          "hover": "card-lift",
+          "button": "solid-press"
+        },
+        "easing": "cubic-bezier(.2,.8,.2,1)",
+        "duration": "380ms",
+        "icons": {
+          "style": "line",
+          "stroke": "1.8",
+          "size": "20",
+          "corners": "square"
+        }
+      },
+      "tags": [
+        "deporte",
+        "gimnasio",
+        "fitness",
+        "musculacion",
+        "funcional",
+        "clases",
+        "crossfit"
+      ],
+      "preview": "",
+      "variables": {},
+      "supports_dark_mode": false,
+      "style": "gimnasio"
+    },
+    {
+      "slug": "mercado",
+      "nombre": "Bazar",
+      "categoria": "retail",
+      "descripcion": "Marketplace masivo: barra amarilla, búsqueda al frente, grilla densa de productos y descuentos en verde.",
+      "tier": "plus",
+      "template": "mercado",
+      "layout": {
+        "landing": [
+          {
+            "id": "hero",
+            "variant": "split",
+            "enabled": true,
+            "order": 0
+          },
+          {
+            "id": "categories",
+            "enabled": true,
+            "order": 1
+          },
+          {
+            "id": "offers",
+            "enabled": true,
+            "order": 2
+          },
+          {
+            "id": "featured",
+            "enabled": true,
+            "order": 3
+          },
+          {
+            "id": "announcements",
+            "variant": "static",
+            "enabled": true,
+            "order": 4
+          },
+          {
+            "id": "highlights",
+            "enabled": true,
+            "order": 5
+          },
+          {
+            "id": "brands",
+            "enabled": true,
+            "order": 6
+          },
+          {
+            "id": "about",
+            "enabled": true,
+            "order": 7
+          },
+          {
+            "id": "stats",
+            "enabled": true,
+            "order": 8
+          },
+          {
+            "id": "gallery",
+            "variant": "grid",
+            "enabled": true,
+            "order": 9
+          },
+          {
+            "id": "testimonials",
+            "enabled": true,
+            "order": 10
+          },
+          {
+            "id": "faq",
+            "enabled": true,
+            "order": 11
+          },
+          {
+            "id": "cta",
+            "enabled": true,
+            "order": 12
+          },
+          {
+            "id": "contact",
+            "variant": "card",
+            "enabled": true,
+            "order": 13
+          }
+        ],
+        "catalog": [
+          {
+            "id": "note",
+            "enabled": true,
+            "order": 0
+          },
+          {
+            "id": "promo",
+            "enabled": true,
+            "order": 1
+          },
+          {
+            "id": "filters",
+            "enabled": true,
+            "order": 2
+          },
+          {
+            "id": "sort",
+            "enabled": true,
+            "order": 3
+          },
+          {
+            "id": "grid",
+            "enabled": true,
+            "order": 4
+          }
+        ]
+      },
+      "tokens": {
+        "accent": "#ffe600",
+        "palette": {
+          "accent": "#ffe600",
+          "primary": "#2563eb",
+          "secondary": "#1d4ed8",
+          "bg": "#ebebeb",
+          "surface": "#ffffff",
+          "text": "#333333",
+          "muted": "#666666",
+          "border": "#e6e6e6",
+          "success": "#007a3d",
+          "danger": "#e53935"
+        },
+        "fonts": [
+          "inter"
+        ],
+        "radius": "6px",
+        "anim": {
+          "hero": "fade-up",
+          "reveal": "fade",
+          "hover": "card-lift",
+          "button": "solid-press"
+        },
+        "easing": "cubic-bezier(.2,.7,.3,1)",
+        "duration": "420ms",
+        "icons": {
+          "style": "line",
+          "stroke": "1.75",
+          "size": "20",
+          "corners": "rounded"
+        }
+      },
+      "tags": [
+        "mercado",
+        "marketplace",
+        "retail",
+        "ecommerce",
+        "ofertas"
+      ],
+      "preview": "",
+      "variables": {},
+      "style": "mercado"
+    },
+    {
+      "slug": "moderntec",
+      "nombre": "ModernTec",
+      "categoria": "tecnologia",
+      "descripcion": "Landing tech premium importada del boceto.",
+      "tier": "base",
+      "template": "raiz",
+      "layout": {},
+      "tokens": {},
+      "tags": [
+        "tecnologia",
+        "premium"
+      ]
     }
   ]
 }
