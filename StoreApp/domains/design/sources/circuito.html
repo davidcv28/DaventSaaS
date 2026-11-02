@@ -23,6 +23,8 @@
   .brand img{width:26px;height:26px;object-fit:contain}
   .brand i{width:7px;height:7px;border-radius:50%;background:var(--lime);box-shadow:0 0 10px var(--lime);animation:blink 2.4s infinite}
   @keyframes blink{0%,100%{opacity:1}50%{opacity:.35}}
+  /* Menú móvil del dashboard (tab bar + hoja): solo existe bajo 960px. */
+  .m-tabs,.m-scrim,.m-sheet{display:none}
   .top nav{display:flex;gap:16px;font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:var(--muted)}
   .top nav a:hover{color:var(--cyan)}
   .top .link{border:1px solid var(--cyan);color:var(--cyan);font-size:10px;letter-spacing:.12em;text-transform:uppercase;padding:8px 12px}
@@ -165,6 +167,43 @@
     .status{grid-template-columns:1fr}
     .pdp-grid{grid-template-columns:1fr}
     .top nav{display:none}
+    /* Tab bar inferior + hoja, calcado del dashboard del dueño. */
+    body{padding-bottom:calc(70px + env(safe-area-inset-bottom))}
+    .m-tabs{
+      position:fixed;left:0;right:0;bottom:0;z-index:68;display:flex;align-items:stretch;justify-content:space-around;
+      background:color-mix(in srgb,var(--panel) 92%,transparent);backdrop-filter:blur(12px);
+      border-top:1px solid var(--line);
+      padding:6px calc(6px + env(safe-area-inset-right)) calc(6px + env(safe-area-inset-bottom)) calc(6px + env(safe-area-inset-left));
+    }
+    .m-tab{
+      position:relative;flex:1 1 0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;
+      min-height:52px;padding:0 4px;border:0;background:none;color:var(--muted);
+      font:600 9px "Lucida Console",Monaco,monospace;letter-spacing:.12em;text-transform:uppercase;text-align:center;text-decoration:none;cursor:pointer;
+    }
+    .m-tab:hover{color:var(--text)}
+    .m-tab.is-on{color:var(--cyan)}
+    .m-tab.is-on::before{content:"";position:absolute;top:2px;left:50%;width:18px;height:2px;background:var(--cyan);transform:translateX(-50%)}
+    .m-tab:active{background:var(--line)}
+    .m-sheet{
+      display:flex;flex-direction:column;visibility:hidden;position:fixed;z-index:70;
+      left:0;right:0;bottom:0;max-height:min(78dvh,560px);
+      background:var(--panel);color:var(--text);border-top:1px solid var(--cyan);
+      transform:translateY(102%);transition:transform .3s var(--ease),visibility .3s;
+      box-shadow:0 -18px 50px -18px rgba(0,0,0,.6);
+    }
+    .m-sheet.open{visibility:visible;transform:none}
+    .m-sheet-head{position:relative;display:grid;gap:6px;padding:10px 16px 8px;border-bottom:1px solid var(--line)}
+    .m-grab{justify-self:center;width:38px;height:3px;background:var(--line)}
+    .m-sheet-brand{display:flex;align-items:center;gap:10px;min-width:0;padding-right:44px}
+    .m-sheet-brand .mark{display:grid;place-items:center;width:30px;height:30px;border:1px solid var(--cyan);color:var(--cyan);font-size:10px}
+    .m-sheet-brand strong{font-size:12px;letter-spacing:.12em;text-transform:uppercase;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+    .m-close{position:absolute;top:14px;right:12px;display:grid;place-items:center;width:40px;height:40px;border:1px solid var(--line);background:var(--void);color:var(--text);font-size:20px;line-height:1;cursor:pointer}
+    .m-sheet-nav{display:grid;gap:0;padding:8px 12px calc(12px + env(safe-area-inset-bottom));overflow-y:auto}
+    .m-sheet-nav a{display:flex;align-items:center;justify-content:space-between;gap:12px;min-height:48px;padding:8px 12px;border-bottom:1px solid var(--line);font-size:11px;letter-spacing:.14em;text-transform:uppercase}
+    .m-sheet-nav a span:last-child{font-size:9px;letter-spacing:.16em;color:var(--muted)}
+    .m-sheet-nav a:hover{color:var(--cyan)}
+    .m-scrim.open{display:block;position:fixed;inset:0;z-index:69;background:rgba(3,6,11,.6)}
+    html.m-lock,html.m-lock body{overflow:hidden}
   }
   @media (max-width:560px){
     .metrics{grid-template-columns:1fr}
@@ -187,6 +226,47 @@
       {{store_name}} <i aria-hidden="true"></i>
     </a>
     <nav aria-label="Principal"><a href="#modulos" data-ds-route="catalog">Módulos</a><a href="#sistema" data-ds-route="services">Sistema</a><a href="#contacto">Contacto</a></nav>
+  </header>
+
+<nav class="m-tabs" aria-label="Secciones principales">
+  <a class="m-tab" href="#inicio" data-ds-route="home">
+    <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 10.5 12 3l9 7.5"/><path d="M5 9.5V21h14V9.5"/></svg>
+    <span>Inicio</span>
+  </a>
+  <a class="m-tab" href="#modulos" data-ds-route="catalog">
+    <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16"/><path d="M7 7v10M17 7v10"/></svg>
+    <span>Módulos</span>
+  </a>
+  <a class="m-tab" href="#sistema" data-ds-route="services">
+    <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="6" cy="6" r="2.4"/><circle cx="18" cy="18" r="2.4"/><path d="m8 8 8 8M18 6 8 18"/></svg>
+    <span>Sistema</span>
+  </a>
+  <button class="m-tab" type="button" aria-expanded="false" aria-controls="m-sheet" data-m-open>
+    <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16"/></svg>
+    <span>Más</span>
+  </button>
+</nav>
+
+<div class="m-scrim" data-m-close aria-hidden="true"></div>
+<div id="m-sheet" class="m-sheet" role="dialog" aria-modal="true" aria-label="Todas las secciones">
+  <div class="m-sheet-head">
+    <span class="m-grab" aria-hidden="true"></span>
+    <div class="m-sheet-brand">
+      <span class="mark">{{store_initial}}</span>
+      <strong>{{store_name}}</strong>
+    </div>
+    <button class="m-close" type="button" aria-label="Cerrar menú" data-m-close>×</button>
+  </div>
+  <nav class="m-sheet-nav" aria-label="Todas las secciones">
+    <a href="#inicio" data-ds-route="home" data-m-close><span>Inicio</span><span aria-hidden="true">01</span></a>
+    <a href="#modulos" data-ds-route="catalog" data-m-close><span>Módulos</span><span aria-hidden="true">02</span></a>
+    <a href="#sistema" data-ds-route="services" data-m-close><span>Sistema</span><span aria-hidden="true">03</span></a>
+    <a href="#contacto" data-m-close><span>Contacto</span><span aria-hidden="true">04</span></a>
+    <a href="{{store_whatsapp_url}}" data-m-close><span>WhatsApp</span><span aria-hidden="true">↗</span></a>
+  </nav>
+</div>
+
+
     <a class="link" href="{{store_whatsapp_url}}">Soporte</a>
   </header>
 
@@ -295,6 +375,38 @@
 </div>
 <script>
 (function(){
+  // Menú móvil del dashboard: "Más" abre la hoja; cierra con fondo, cruz,
+  // Esc o al navegar. Scroll bloqueado mientras está abierta.
+  var sheet = document.getElementById('m-sheet');
+  if (sheet) {
+    var scrim = document.querySelector('.m-scrim');
+    var openers = [].slice.call(document.querySelectorAll('[data-m-open]'));
+    var closers = [].slice.call(document.querySelectorAll('[data-m-close]'));
+    var setOpen = function(open){
+      sheet.classList.toggle('open', open);
+      if (scrim) scrim.classList.toggle('open', open);
+      openers.forEach(function(b){ b.setAttribute('aria-expanded', open ? 'true' : 'false'); });
+      document.documentElement.classList.toggle('m-lock', open);
+    };
+    openers.forEach(function(b){
+      b.addEventListener('click', function(){ setOpen(!sheet.classList.contains('open')); });
+    });
+    closers.forEach(function(el){ el.addEventListener('click', function(){ setOpen(false); }); });
+    document.addEventListener('keydown', function(e){ if (e.key === 'Escape') setOpen(false); });
+  }
+  var paintTabs = function(){
+    var surface = document.documentElement.getAttribute('data-ds-surface') || 'landing';
+    [].forEach.call(document.querySelectorAll('.m-tab[data-ds-route]'), function(tab){
+      var route = tab.getAttribute('data-ds-route');
+      var on = (surface === 'landing' && route === 'home') || (surface === 'catalog' && route === 'catalog') || (surface === 'services' && route === 'services');
+      tab.classList.toggle('is-on', on);
+      if (on) tab.setAttribute('aria-current', 'page');
+      else tab.removeAttribute('aria-current');
+    });
+  };
+  paintTabs();
+  new MutationObserver(paintTabs).observe(document.documentElement, { attributes: true, attributeFilter: ['data-ds-surface'] });
+
   var reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
   var items = document.querySelectorAll('.reveal');
   if (reduce || !('IntersectionObserver' in window)) { items.forEach(function(el){el.classList.add('on')}); return; }

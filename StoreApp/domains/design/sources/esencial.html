@@ -120,16 +120,13 @@ a{color:inherit}
 .brand .mark{position:relative}
 .brand:hover .mark{transform:rotate(-18deg) scale(1.08)}
 .nav{display:flex;flex-wrap:wrap;gap:6px 20px;align-items:center}
+/* Menú móvil del dashboard (tab bar + hoja): solo existe bajo 760px. */
+.m-tabs,.m-scrim,.m-sheet{display:none}
 .nav-toggle{
   display:none;place-items:center;width:40px;height:40px;flex:none;
   border:1px solid var(--line);border-radius:10px;background:var(--surface);
   color:var(--ink);cursor:pointer;transition:border-color .2s,color .2s;
 }
-.nav-toggle:hover{border-color:var(--accent);color:var(--accent)}
-.nav-toggle svg{width:20px;height:20px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round}
-.nav-toggle .ic-close{display:none}
-.nav-toggle[aria-expanded="true"] .ic-close{display:block}
-.nav-toggle[aria-expanded="true"] .ic-open{display:none}
 .nav a{position:relative;text-decoration:none;color:var(--muted);font-size:.95rem;transition:color .2s}
 .nav a::after{
   content:"";position:absolute;left:0;right:0;bottom:-4px;height:2px;border-radius:2px;
@@ -522,29 +519,50 @@ html[data-ds-style="esencial-premium"][data-ds-theme="dark"] .ticker-item .icon{
   .ds-service{grid-template-columns:44px minmax(0,1fr);gap:14px}
   .ds-service::before{width:44px;height:44px;border-radius:12px}
 
-  /* Menú móvil: burger + panel desplegable bajo la cabecera. */
+  /* Menú móvil: tab bar inferior + hoja, calcado del dashboard del dueño.
+     El nav de la cabecera es solo escritorio; en pantallas chicas los
+     destinos viven en la barra fija (Inicio/Catálogo/Servicios) y el resto
+     en la hoja que abre "Más". */
   .site-header .wrap{flex-wrap:nowrap;gap:10px}
-  .nav-toggle{display:grid}
-  .nav{
-    position:absolute;top:100%;left:0;right:0;z-index:6;
-    flex-direction:column;align-items:stretch;flex-wrap:nowrap;gap:2px;
-    padding:8px 4vw 12px;
-    background:color-mix(in srgb,var(--bg) 96%,transparent);
-    backdrop-filter:blur(10px);
-    border-bottom:1px solid var(--line);
-    box-shadow:0 22px 34px -26px color-mix(in srgb,var(--ink) 55%,transparent);
-    transform:translateY(-6px);opacity:0;visibility:hidden;
-    transition:transform .22s var(--ease),opacity .22s,visibility .22s;
+  .nav{display:none}
+  body{padding-bottom:calc(70px + env(safe-area-inset-bottom))}
+  .m-tabs{
+    position:fixed;left:0;right:0;bottom:0;z-index:68;display:flex;align-items:stretch;justify-content:space-around;
+    background:color-mix(in srgb,var(--bg) 90%,transparent);backdrop-filter:blur(14px) saturate(1.3);
+    border-top:1px solid var(--line);
+    padding:6px calc(6px + env(safe-area-inset-right)) calc(6px + env(safe-area-inset-bottom)) calc(6px + env(safe-area-inset-left));
   }
-  .nav.open{transform:none;opacity:1;visibility:visible}
-  .nav a{padding:12px 12px;font-size:1rem;border-radius:10px}
-  .nav a::after{display:none}
-  .nav a:hover{background:color-mix(in srgb,var(--accent) 10%,transparent)}
-  html[data-ds-surface="landing"] .nav a[data-ds-route="home"]:not([data-ds-anchor]),
-  html[data-ds-surface="catalog"] .nav a[data-ds-route="catalog"],
-  html[data-ds-surface="services"] .nav a[data-ds-route="services"]{
-    background:color-mix(in srgb,var(--accent) 12%,transparent);color:var(--ink);font-weight:600;
+  .m-tab{
+    position:relative;flex:1 1 0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;
+    min-height:52px;padding:0 4px;border:0;border-radius:12px;background:none;color:var(--muted);
+    font:600 10.5px var(--font-body);text-align:center;text-decoration:none;cursor:pointer;
   }
+  .m-tab svg{transition:transform .2s}
+  .m-tab:hover{color:var(--ink)}
+  .m-tab.is-on{color:var(--accent)}
+  .m-tab.is-on::before{content:"";position:absolute;top:2px;left:50%;width:18px;height:3px;border-radius:3px;background:var(--accent);transform:translateX(-50%)}
+  .m-tab:active{background:var(--surface)}
+  .m-sheet{
+    display:flex;flex-direction:column;visibility:hidden;position:fixed;z-index:70;
+    left:0;right:0;bottom:0;max-height:min(78dvh,560px);
+    background:var(--surface);color:var(--ink);border-top:1px solid var(--line);
+    border-radius:18px 18px 0 0;
+    transform:translateY(102%);transition:transform .3s var(--ease),visibility .3s;
+    box-shadow:0 -18px 50px -18px color-mix(in srgb,var(--ink) 45%,transparent);
+  }
+  .m-sheet.open{visibility:visible;transform:none}
+  .m-sheet-head{position:relative;display:grid;gap:6px;padding:10px 16px 8px;border-bottom:1px solid var(--line)}
+  .m-grab{justify-self:center;width:38px;height:4px;border-radius:4px;background:var(--line)}
+  .m-sheet-brand{display:flex;align-items:center;gap:10px;min-width:0;padding-right:44px}
+  .m-sheet-brand .mark{display:grid;place-items:center;width:30px;height:30px;border-radius:10px;background:var(--accent);color:var(--accent-ink);font-family:var(--font-display);font-weight:700;font-size:.85rem}
+  .m-sheet-brand strong{font-family:var(--font-display);font-weight:700;font-size:16px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .m-close{position:absolute;top:14px;right:12px;display:grid;place-items:center;width:40px;height:40px;border:1px solid var(--line);border-radius:50%;background:var(--bg);color:var(--ink);font-size:22px;line-height:1;cursor:pointer}
+  .m-sheet-nav{display:grid;gap:0;padding:8px 12px calc(12px + env(safe-area-inset-bottom));overflow-y:auto}
+  .m-sheet-nav a{display:flex;align-items:center;justify-content:space-between;gap:12px;min-height:48px;padding:8px 12px;border-bottom:1px solid var(--line);font-size:15px;text-decoration:none;color:var(--ink)}
+  .m-sheet-nav a span:last-child{font-family:var(--font-display);font-size:9.5px;letter-spacing:.14em;color:var(--muted)}
+  .m-sheet-nav a:hover{color:var(--accent)}
+  .m-scrim.open{display:block;position:fixed;inset:0;z-index:69;background:rgba(9,12,10,.55)}
+  html.m-lock,html.m-lock body{overflow:hidden}
 }
 
 @keyframes fadeUp{from{opacity:0;translate:0 18px}to{opacity:1;translate:0 0}}
@@ -572,10 +590,6 @@ html[data-ds-style="esencial-premium"][data-ds-theme="dark"] .ticker-item .icon{
       <span class="mark">{{store_initial}}<img src="{{store_logo}}" alt=""></span>
       {{store_name}}
     </a>
-    <button class="nav-toggle" type="button" aria-expanded="false" aria-controls="site-nav" aria-label="Abrir menú">
-      <svg class="ic-open" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16"/></svg>
-      <svg class="ic-close" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg>
-    </button>
     <nav class="nav" id="site-nav" aria-label="Principal">
       <a href="#inicio" data-ds-route="home">Inicio</a>
       <a href="#catalogo" data-ds-route="catalog">Catálogo</a>
@@ -584,6 +598,44 @@ html[data-ds-style="esencial-premium"][data-ds-theme="dark"] .ticker-item .icon{
     </nav>
   </div>
 </header>
+
+<nav class="m-tabs" aria-label="Secciones principales">
+  <a class="m-tab" href="#inicio" data-ds-route="home">
+    <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 10.5 12 3l9 7.5"/><path d="M5 9.5V21h14V9.5"/></svg>
+    <span>Inicio</span>
+  </a>
+  <a class="m-tab" href="#catalogo" data-ds-route="catalog">
+    <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16"/><path d="M7 7v10M17 7v10"/></svg>
+    <span>Catálogo</span>
+  </a>
+  <a class="m-tab" href="#servicios" data-ds-route="services">
+    <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="6" cy="6" r="2.4"/><circle cx="18" cy="18" r="2.4"/><path d="m8 8 8 8M18 6 8 18"/></svg>
+    <span>Servicios</span>
+  </a>
+  <button class="m-tab" type="button" aria-expanded="false" aria-controls="m-sheet" data-m-open>
+    <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16"/></svg>
+    <span>Más</span>
+  </button>
+</nav>
+
+<div class="m-scrim" data-m-close aria-hidden="true"></div>
+<div id="m-sheet" class="m-sheet" role="dialog" aria-modal="true" aria-label="Todas las secciones">
+  <div class="m-sheet-head">
+    <span class="m-grab" aria-hidden="true"></span>
+    <div class="m-sheet-brand">
+      <span class="mark">{{store_initial}}</span>
+      <strong>{{store_name}}</strong>
+    </div>
+    <button class="m-close" type="button" aria-label="Cerrar menú" data-m-close>×</button>
+  </div>
+  <nav class="m-sheet-nav" aria-label="Todas las secciones">
+    <a href="#inicio" data-ds-route="home" data-m-close><span>Inicio</span><span aria-hidden="true">01</span></a>
+    <a href="#catalogo" data-ds-route="catalog" data-m-close><span>Catálogo</span><span aria-hidden="true">02</span></a>
+    <a href="#servicios" data-ds-route="services" data-m-close><span>Servicios</span><span aria-hidden="true">03</span></a>
+    <a href="#contacto" data-m-close><span>Contacto</span><span aria-hidden="true">04</span></a>
+    <a href="{{store_whatsapp_url}}" data-m-close><span>WhatsApp</span><span aria-hidden="true">↗</span></a>
+  </nav>
+</div>
 
 <main>
 <div data-surface="landing">
@@ -802,30 +854,39 @@ html[data-ds-style="esencial-premium"][data-ds-theme="dark"] .ticker-item .icon{
     header.classList.toggle('scrolled', window.scrollY > 8);
   }, {passive: true});
 
-  // Menú móvil: burger abre/cierra el panel; se cierra al navegar, con Esc
-  // o al tocar fuera de la cabecera.
-  var navToggle = document.querySelector('.nav-toggle');
-  var nav = document.getElementById('site-nav');
-  if (navToggle && nav) {
-    var setNav = function(open){
-      nav.classList.toggle('open', open);
-      navToggle.setAttribute('aria-expanded', open ? 'true' : 'false');
-      navToggle.setAttribute('aria-label', open ? 'Cerrar menú' : 'Abrir menú');
+  // Menú móvil del dashboard: "Más" abre la hoja; se cierra con el fondo,
+  // la cruz, Esc o al navegar. El scroll queda bloqueado mientras está abierta.
+  var sheet = document.getElementById('m-sheet');
+  if (sheet) {
+    var scrim = document.querySelector('.m-scrim');
+    var openers = [].slice.call(document.querySelectorAll('[data-m-open]'));
+    var closers = [].slice.call(document.querySelectorAll('[data-m-close]'));
+    var setOpen = function(open){
+      sheet.classList.toggle('open', open);
+      if (scrim) scrim.classList.toggle('open', open);
+      openers.forEach(function(b){ b.setAttribute('aria-expanded', open ? 'true' : 'false'); });
+      document.documentElement.classList.toggle('m-lock', open);
     };
-    navToggle.addEventListener('click', function(e){
-      e.stopPropagation();
-      setNav(!nav.classList.contains('open'));
+    openers.forEach(function(b){
+      b.addEventListener('click', function(){ setOpen(!sheet.classList.contains('open')); });
     });
-    nav.addEventListener('click', function(e){
-      if (e.target && e.target.closest && e.target.closest('a')) setNav(false);
-    });
-    document.addEventListener('keydown', function(e){
-      if (e.key === 'Escape') setNav(false);
-    });
-    document.addEventListener('click', function(e){
-      if (nav.classList.contains('open') && !(e.target && e.target.closest && e.target.closest('.site-header'))) setNav(false);
-    });
+    closers.forEach(function(el){ el.addEventListener('click', function(){ setOpen(false); }); });
+    document.addEventListener('keydown', function(e){ if (e.key === 'Escape') setOpen(false); });
   }
+
+  // Pestaña activa de la barra móvil (el host cambia data-ds-surface).
+  var paintTabs = function(){
+    var surface = document.documentElement.getAttribute('data-ds-surface') || 'landing';
+    [].forEach.call(document.querySelectorAll('.m-tab[data-ds-route]'), function(tab){
+      var route = tab.getAttribute('data-ds-route');
+      var on = (surface === 'landing' && route === 'home') || (surface === 'catalog' && route === 'catalog') || (surface === 'services' && route === 'services');
+      tab.classList.toggle('is-on', on);
+      if (on) tab.setAttribute('aria-current', 'page');
+      else tab.removeAttribute('aria-current');
+    });
+  };
+  paintTabs();
+  new MutationObserver(paintTabs).observe(document.documentElement, { attributes: true, attributeFilter: ['data-ds-surface'] });
 
   // Tarjeta del hero: se inclina siguiendo el puntero (solo con mouse).
   var tilt = document.getElementById('hero-tilt');
