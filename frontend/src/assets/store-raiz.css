@@ -33,17 +33,17 @@
      ink/bg 16.0 · ink-2/bg 10.5 · muted/bg 5.48 · muted/surface-2 5.05
      accent-text 58% acento + ink ≥ 4.83 (bg/surface/surface-2/surface-3/soft)
      blanco sobre accent-deep (banda segura) ≥ 4.52 en los 8 acentos */
-  --rz-bg: #F7F6F2;
+  --rz-bg: #F4F5F0;
   --rz-surface: #FFFFFF;
-  --rz-surface-2: #EFEEE7;
-  --rz-surface-3: #E5E3DA;
-  --rz-line: var(--st-border, #D8D6CA);
+  --rz-surface-2: #ECEEE6;
+  --rz-surface-3: #DFE3D8;
+  --rz-line: var(--st-border, #D9DED6);
   --rz-line-strong: color-mix(in srgb, var(--rz-line) 62%, var(--rz-ink));
   --rz-line-ui: color-mix(in srgb, var(--rz-line) 42%, var(--rz-ink));
-  --rz-ink: #101A16;
-  --rz-ink-2: #2F3B35;
-  --rz-muted: #59655E;
-  --rz-accent: var(--store-accent, #0F766E);
+  --rz-ink: #16201C;
+  --rz-ink-2: #33413B;
+  --rz-muted: #5C6B64;
+  --rz-accent: var(--store-accent, #0E5A4F);
   --rz-accent-soft: color-mix(in srgb, var(--rz-accent) 9%, #fff);
   --rz-accent-text: color-mix(in srgb, var(--rz-accent) 58%, var(--rz-ink));
   --rz-accent-deep: var(--sp-band-base1, var(--rz-accent-text));
@@ -53,17 +53,18 @@
   --rz-on-band: #fff;
   --rz-on-band-2: #fff;
   --rz-on-band-muted: color-mix(in srgb, #fff 78%, transparent);
-  --rz-ok: #146C43;
-  --rz-danger: #A3221A;
+  --rz-ok: #0E7A55;
+  --rz-danger: #B3402E;
+  --rz-warm: #C77F1D;
   --rz-focus: var(--rz-ink);
   --rz-scrim: rgb(9 15 12 / .58);
   --rz-selection: color-mix(in srgb, var(--rz-accent) 26%, #fff);
-  --rz-inverse-bg: #101A16;
-  --rz-inverse-bg-2: #18241F;
-  --rz-inverse-ink: #F4F3EE;
-  --rz-inverse-ink-2: #D5D4C9;
-  --rz-inverse-muted: #A9A79C;
-  --rz-inverse-line: rgb(244 243 238 / .16);
+  --rz-inverse-bg: #0F1613;
+  --rz-inverse-bg-2: #18221E;
+  --rz-inverse-ink: #E9EFEA;
+  --rz-inverse-ink-2: #C3D1C8;
+  --rz-inverse-muted: #9DB0A6;
+  --rz-inverse-line: rgb(233 239 234 / .16);
   --rz-inverse-accent: color-mix(in srgb, var(--rz-accent) 46%, #fff);
 
   /* --- Tipografía ---
@@ -167,17 +168,17 @@
    aclaran y sombras profundas de bajo spread.
    ========================================================================== */
 .store-page[data-template='raiz'][data-store-theme='dark'] {
-  --rz-bg: #0B1210;
-  --rz-surface: #111A16;
-  --rz-surface-2: #16211C;
-  --rz-surface-3: #1C2A23;
-  --rz-line: #27352E;
-  --rz-line-strong: #3B4C43;
+  --rz-bg: #0F1613;
+  --rz-surface: #18221E;
+  --rz-surface-2: #1F2C26;
+  --rz-surface-3: #27352E;
+  --rz-line: #2A3832;
+  --rz-line-strong: #3C4E45;
   --rz-line-ui: #5E7268;
-  --rz-ink: #EDF2EE;
-  --rz-ink-2: #C4CFC8;
-  --rz-muted: #93A29A;
-  --rz-accent: var(--store-accent, #0F766E);
+  --rz-ink: #E9EFEA;
+  --rz-ink-2: #C3D1C8;
+  --rz-muted: #9DB0A6;
+  --rz-accent: var(--store-accent, #5FC7B2);
   --rz-accent-soft: color-mix(in srgb, var(--rz-accent) 16%, transparent);
   --rz-accent-text: color-mix(in srgb, var(--rz-accent) 42%, #fff);
   --rz-accent-deep: var(--sp-band-base1, var(--rz-accent-text));
@@ -189,14 +190,15 @@
   --rz-on-band-muted: color-mix(in srgb, #fff 78%, transparent);
   --rz-ok: #6EE7A8;
   --rz-danger: #FF8A7A;
-  --rz-focus: #EDF2EE;
+  --rz-warm: #F0B55A;
+  --rz-focus: #E9EFEA;
   --rz-scrim: rgb(2 6 5 / .84);
-  --rz-selection: color-mix(in srgb, var(--rz-accent) 42%, #111A16);
-  --rz-inverse-bg: #060B09;
-  --rz-inverse-bg-2: #0C1512;
-  --rz-inverse-ink: #EDF2EE;
-  --rz-inverse-ink-2: #C4CFC8;
-  --rz-inverse-muted: #93A29A;
+  --rz-selection: color-mix(in srgb, var(--rz-accent) 42%, #18221E);
+  --rz-inverse-bg: #080D0B;
+  --rz-inverse-bg-2: #101915;
+  --rz-inverse-ink: #E9EFEA;
+  --rz-inverse-ink-2: #C3D1C8;
+  --rz-inverse-muted: #9DB0A6;
   --rz-inverse-line: rgb(237 242 238 / .12);
   --rz-inverse-accent: color-mix(in srgb, var(--rz-accent) 58%, #fff);
 
@@ -258,7 +260,7 @@
   --sp-ease: var(--rz-ease-out);
   --sp-top-h: 64px;
   --sp-tabbar-h: 64px;
-  --rz-theme-color: #111A16;
+  --rz-theme-color: #18221E;
 
   color-scheme: dark;
   background: var(--rz-bg);
@@ -875,7 +877,7 @@ select:where(.rz-field) {
 }
 .store-page[data-template='raiz'] .sp-modal-close:hover { border-color: var(--rz-ink); color: var(--rz-ink); }
 .store-page[data-template='raiz'] .sp-modal-img { background: var(--rz-surface-2); border-right-color: var(--rz-line); }
-.store-page[data-template='raiz'] .sp-modal-tag { border-radius: 2px; border-color: var(--rz-line); background: var(--rz-surface-2); color: var(--rz-accent-text); }
+.store-page[data-template='raiz'] .sp-modal-tag { border-radius: 2px; border-color: color-mix(in srgb, var(--rz-warm) 30%, var(--rz-line)); background: color-mix(in srgb, var(--rz-warm) 12%, var(--rz-surface)); color: color-mix(in srgb, var(--rz-warm) 62%, var(--rz-ink)); }
 .store-page[data-template='raiz'] .sp-modal-name { font-family: var(--rz-display); }
 .store-page[data-template='raiz'] .sp-modal-price { border-bottom-color: var(--rz-line); color: var(--rz-ink); font-variant-numeric: tabular-nums; }
 .store-page[data-template='raiz'] .sp-modal-label { color: var(--rz-muted); }

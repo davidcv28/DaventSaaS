@@ -1370,37 +1370,37 @@
       "slug": "esencial",
       "nombre": "Esencial",
       "categoria": "general",
-      "descripcion": "El estilo del diseño base: índigo sobrio, Inter y contenedores suaves. Claro, ordenado y neutro para cualquier rubro.",
+      "descripcion": "El estilo del diseño base: papel claro, tinta verde bosque y acento teal. Bricolage en titulares e Instrument Sans en lecturas — editorial, serio y neutro para cualquier rubro.",
       "tier": "base",
       "template": "raiz",
       "page_theme": "light",
       "tokens": {
         "palette": {
-          "primary": "#4f46e5",
-          "secondary": "#3730a3",
-          "accent": "#4f46e5",
-          "bg": "#ffffff",
-          "surface": "#f8fafc",
-          "text": "#0f172a",
-          "muted": "#64748b",
-          "border": "#e2e8f0",
-          "success": "#059669",
-          "danger": "#dc2626"
+          "primary": "#0e5a4f",
+          "secondary": "#0b453d",
+          "accent": "#0e5a4f",
+          "bg": "#f4f5f0",
+          "surface": "#ffffff",
+          "text": "#16201c",
+          "muted": "#5c6b64",
+          "border": "#d9ded6",
+          "success": "#0e7a55",
+          "danger": "#b3402e"
         },
         "containers": {
-          "radius": "md",
+          "radius": "lg",
           "shadow": "soft",
           "border": "thin",
           "density": "comfortable",
           "surface": "elevated"
         },
         "typography": {
-          "heading": "inter",
-          "subheading": "inter",
-          "body": "inter",
+          "heading": "bricolage-grotesque",
+          "subheading": "instrument-sans",
+          "body": "instrument-sans",
           "scale": "balanced",
           "weightHeading": 700,
-          "letterSpacing": "-0.01em"
+          "letterSpacing": "-0.02em"
         },
         "buttons": {
           "shape": "rounded",
@@ -1719,43 +1719,43 @@
         "size": "20",
         "corners": "rounded"
       },
-      "concept": "Base completa en claro: índigo institucional e Inter."
+      "concept": "Base completa en claro: papel, tinta verde bosque, Bricolage + Instrument Sans."
     },
     {
       "slug": "esencial-noche",
       "nombre": "Esencial Noche",
       "categoria": "general",
-      "descripcion": "Versión nocturna del diseño base: azul tinta, índigo luminoso y brillo sutil al pasar el cursor.",
+      "descripcion": "Versión nocturna del diseño base: verde profundo, teal luminoso y brillo sutil al pasar el cursor.",
       "tier": "base",
       "template": "raiz",
       "page_theme": "dark",
       "tokens": {
         "palette": {
-          "primary": "#818cf8",
-          "secondary": "#6366f1",
-          "accent": "#818cf8",
-          "bg": "#0b1120",
-          "surface": "#131c31",
-          "text": "#e2e8f0",
-          "muted": "#94a3b8",
-          "border": "#1e293b",
+          "primary": "#5fc7b2",
+          "secondary": "#3e9e8c",
+          "accent": "#5fc7b2",
+          "bg": "#0f1613",
+          "surface": "#18221e",
+          "text": "#e9efea",
+          "muted": "#9db0a6",
+          "border": "#2a3832",
           "success": "#34d399",
           "danger": "#f87171"
         },
         "containers": {
-          "radius": "md",
+          "radius": "lg",
           "shadow": "medium",
           "border": "thin",
           "density": "comfortable",
           "surface": "elevated"
         },
         "typography": {
-          "heading": "inter",
-          "subheading": "inter",
-          "body": "inter",
+          "heading": "bricolage-grotesque",
+          "subheading": "instrument-sans",
+          "body": "instrument-sans",
           "scale": "balanced",
           "weightHeading": 700,
-          "letterSpacing": "-0.01em"
+          "letterSpacing": "-0.02em"
         },
         "buttons": {
           "shape": "rounded",
@@ -2074,7 +2074,7 @@
         "size": "20",
         "corners": "rounded"
       },
-      "concept": "Base completa de noche: tinta e índigo con glow."
+      "concept": "Base completa de noche: verde profundo y teal con glow."
     },
     {
       "slug": "esencial-premium",
@@ -2106,8 +2106,8 @@
         },
         "typography": {
           "heading": "playfair-display",
-          "subheading": "inter",
-          "body": "inter",
+          "subheading": "instrument-sans",
+          "body": "instrument-sans",
           "scale": "editorial",
           "weightHeading": 600,
           "letterSpacing": "-0.02em"
@@ -3320,23 +3320,24 @@
         ]
       },
       "tokens": {
-        "accent": "#4f46e5",
+        "accent": "#0e5a4f",
         "palette": {
-          "primary": "#4f46e5",
-          "secondary": "#3730a3",
-          "accent": "#4f46e5",
-          "bg": "#ffffff",
-          "surface": "#f8fafc",
-          "text": "#0f172a",
-          "muted": "#64748b",
-          "border": "#e2e8f0",
-          "success": "#059669",
-          "danger": "#dc2626"
+          "primary": "#0e5a4f",
+          "secondary": "#0b453d",
+          "accent": "#0e5a4f",
+          "bg": "#f4f5f0",
+          "surface": "#ffffff",
+          "text": "#16201c",
+          "muted": "#5c6b64",
+          "border": "#d9ded6",
+          "success": "#0e7a55",
+          "danger": "#b3402e"
         },
         "fonts": [
-          "inter"
+          "bricolage-grotesque",
+          "instrument-sans"
         ],
-        "radius": "10px",
+        "radius": "14px",
         "anim": {
           "hero": "fade-rise",
           "reveal": "fade",
