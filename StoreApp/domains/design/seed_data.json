@@ -3387,27 +3387,27 @@
       "layout": {
         "landing": [
           {
-            "id": "announcements",
+            "id": "hero",
             "enabled": true,
             "order": 0
           },
           {
-            "id": "hero",
+            "id": "categories",
             "enabled": true,
             "order": 1
           },
           {
-            "id": "highlights",
+            "id": "featured",
             "enabled": true,
             "order": 2
           },
           {
-            "id": "categories",
+            "id": "benefits",
             "enabled": true,
             "order": 3
           },
           {
-            "id": "featured",
+            "id": "offers",
             "enabled": true,
             "order": 4
           },
@@ -3417,59 +3417,24 @@
             "order": 5
           },
           {
-            "id": "stats",
+            "id": "gallery",
             "enabled": true,
             "order": 6
           },
           {
-            "id": "services",
+            "id": "faq",
             "enabled": true,
             "order": 7
           },
           {
-            "id": "benefits",
+            "id": "cta",
             "enabled": true,
             "order": 8
           },
           {
-            "id": "countdown",
-            "enabled": true,
-            "order": 9
-          },
-          {
-            "id": "offers",
-            "enabled": true,
-            "order": 10
-          },
-          {
-            "id": "brands",
-            "enabled": true,
-            "order": 11
-          },
-          {
-            "id": "gallery",
-            "enabled": true,
-            "order": 12
-          },
-          {
-            "id": "testimonials",
-            "enabled": true,
-            "order": 13
-          },
-          {
-            "id": "faq",
-            "enabled": true,
-            "order": 14
-          },
-          {
-            "id": "cta",
-            "enabled": true,
-            "order": 15
-          },
-          {
             "id": "contact",
             "enabled": true,
-            "order": 16
+            "order": 9
           }
         ],
         "catalog": [
