@@ -1288,3 +1288,38 @@
   .app--tabs .card h3 { justify-content: flex-start; }
   .app--tabs .card > p { text-align: left; }
 }
+
+/* ===== Pase mobile 3: listas internas (productos, taxonomías, secciones) ===== */
+@media (max-width: 860px) {
+  /* Buscador de productos con altura táctil. */
+  .app--tabs .prod-search { height: 46px; border-radius: 12px; }
+  .app--tabs .prod-search input { font-size: 16px; }
+
+  /* Ítem de producto: thumb mayor, precio con aire, acciones sin wrap. */
+  .app--tabs .prod-item { flex-wrap: nowrap; padding: 10px 12px; border-radius: 14px; gap: 10px; }
+  .app--tabs .prod-thumb { width: 48px; height: 48px; border-radius: 12px; }
+  .app--tabs .prod-info small { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .app--tabs .prod-item .pill { flex: none; }
+  .app--tabs .prod-item .icon-btn { flex: none; width: 40px; height: 40px; }
+
+  /* Taxonomías: acciones siempre visibles a la derecha. */
+  .app--tabs .tax-list li { border-radius: 14px; padding: 10px 12px; }
+  .app--tabs .tax-item-actions { flex: none; display: flex; gap: 4px; }
+  .app--tabs .tax-item-actions .icon-btn { width: 40px; height: 40px; }
+
+  /* Listas con check (descuentos, qué mostrar): filas táctiles. */
+  .app--tabs .check-list { border-radius: 14px; }
+  .app--tabs .check-list label, .app--tabs .check-list > * { min-height: 48px; }
+
+  /* Sub-pestañas de sección (Mi página, Diseño): grilla compacta 2 cols,
+     sin el hint para no comerse el viewport. */
+  .app--tabs .sec-tabs { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 8px; }
+  .app--tabs .sec-tab { padding: 10px 12px; border-radius: 14px; gap: 10px; }
+  .app--tabs .sec-tab .icon { width: 32px; height: 32px; padding: 7px; border-radius: 9px; }
+  .app--tabs .sec-tab small { display: none; }
+  .app--tabs .sec-tab strong { font-size: 13.5px; }
+}
+@media (max-width: 380px) {
+  .app--tabs .sec-tabs { grid-template-columns: minmax(0, 1fr); }
+  .app--tabs .sec-tab small { display: block; }
+}
