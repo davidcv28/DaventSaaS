@@ -1218,7 +1218,7 @@ function onStepKey(event) {
         </div>
 
         <div class="aid-actions">
-          <button class="btn btn-auto" type="button" :disabled="busy" @click="choose(proposals[0]?.id)">
+          <button class="btn btn-auto" type="button" :disabled="busy || !proposals.length" @click="apply({ proposal: proposals[0], autofill: autofillDefault })">
             <AppIcon name="check" :size="16" /> Publicar así
           </button>
           <button class="btn btn-auto" type="button" @click="anotherStyle">

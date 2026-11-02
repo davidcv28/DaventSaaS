@@ -333,6 +333,13 @@ class ResolveDesignTests(TestCase):
     def _pattern(self, slug, *, tags = None, categoria = 'general', position = 0,
                  landing = None, is_default = False, is_active = True):
         from StoreApp.domains.design.models import DesignPattern
+        if is_default:
+            #La test DB ya trae el default del seed: único por constraint,
+            #se reusa y se lo apunta a un slug reconocible.
+            DesignPattern.objects.filter(is_default = True).update(
+                slug = slug, is_active = True, tags = [], categoria = 'general',
+            )
+            return DesignPattern.objects.get(slug = slug)
         layout  =   {}
         if landing is not None:
             layout  =   {'landing': [{'id': i, 'enabled': True, 'order': n}
