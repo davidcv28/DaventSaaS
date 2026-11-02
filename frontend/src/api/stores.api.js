@@ -777,6 +777,7 @@ export const STORE_THEMES = {
 export const STORE_TEMPLATES = {
   raiz:        { label: 'Raíz',        rubro: 'general',      tier: 'base',     defaultAccent: '#0F766E', desc: 'Generalista, claro y comercial: retail y servicios con portada partida, garantías y presupuesto.' },
   alimentos:   { label: 'Alimentos',   rubro: 'alimentos',    tier: 'base',     defaultAccent: '#C8321D', desc: 'Gastronomía y almacén: crema y rojo, titular serif, tarjetas con WhatsApp y banda «Cómo pedir».' },
+  default:     { label: 'Default',     rubro: 'general',      tier: 'base',     defaultAccent: '#4F46E5', desc: 'Neutro para todos los planes: hero centrado, etiquetas, vitrina y confianza; dos temas (claro índigo / premium oscuro dorado).' },
   trama:       { label: 'Trama',       rubro: 'indumentaria', tier: 'plus',     defaultAccent: '#1F3A5F', desc: 'Indumentaria profesional: Inter Tight, crema y tinta, acento marino y aire de marca de ropa.' },
   indumentaria:{ label: 'Indumentaria',rubro: 'indumentaria', tier: 'plus',     defaultAccent: '#1F3A5F', desc: 'Misma piel que Trama con composición propia: hero marino/crema, ofertas, garantías y editorial de marca.' },
   boutique:    { label: 'Boutique',    rubro: 'boutique',     tier: 'plus',     defaultAccent: '#6B2D4F', desc: 'Moda premium y deco: serif Cormorant, aire generoso, foto en arco y acento ciruela.' },
@@ -796,6 +797,7 @@ export const STORE_TEMPLATES = {
 // misma familia de rubro: el select usa `templates[0]`.
 export const STORE_TEMPLATE_FAMILIES = [
   { key: 'general',      label: 'Generalista',  caption: 'Retail y servicios',      templates: ['raiz'] },
+  { key: 'default',      label: 'Generalista',  caption: 'Neutro multiuso',         templates: ['default'] },
   { key: 'alimentos',    label: 'Alimentos',    caption: 'Gastronomía y almacén',   templates: ['alimentos'] },
   { key: 'indumentaria', label: 'Indumentaria', caption: 'Moda y accesorios',       templates: ['trama'] },
   { key: 'moda-pro',     label: 'Indumentaria', caption: 'Moda profesional',        templates: ['indumentaria'] },
@@ -823,7 +825,7 @@ export const STORE_TEMPLATE_SKIN = {
   sastreria: 'sastreria',
   mercado: 'mercado',
   circuito: 'circuito', seguridad: 'seguridad', clasico: 'clasico',
-  gimnasio: 'gimnasio', nexo: 'nexo'
+  gimnasio: 'gimnasio', nexo: 'nexo', default: 'default'
 }
 export function storeSkinOf(t) { return STORE_TEMPLATE_SKIN[t] || 'raiz' }
 

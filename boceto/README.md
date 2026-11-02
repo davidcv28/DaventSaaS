@@ -33,6 +33,12 @@ del sistema (`TEMPLATE_BLOCKS.landing` en `StoreApp/domains/stores/layout_blocks
 
 ## Bocetos
 
+- `default/` — diseño default para todos los planes: una sola plantilla
+  neutra que cubre las 4 superficies (portada, catálogo, servicios,
+  suscripciones) con los bloques universales (hero centered, highlights,
+  categories rail, featured grid, about+stats, testimonials, faq, cta,
+  contact). Barra superior del boceto conmuta tema `normal` (tier base,
+  defaults de `SITE_THEME_DEFAULTS`) y `premium` (dark, Fraunces, dorado).
 - `tecnologia-premium/` — tienda de tecnología, tier Premium (hero cinema,
   ticker de anuncios, categories rail, vitrina cols4, stats band, benefits
   bento, brands marquee, offer + countdown, gallery, testimonials, faq

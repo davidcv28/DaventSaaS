@@ -139,7 +139,7 @@ class StoreCustomization(models.Model):
     #(store-<id>.css).
     TEMPLATE_RAIZ               =   'raiz'
     TEMPLATE_DEFAULT            =   TEMPLATE_RAIZ
-    TEMPLATE_BASE               =   ('raiz', 'alimentos')
+    TEMPLATE_BASE               =   ('raiz', 'alimentos', 'default')
     TEMPLATE_PLUS               =   ('trama', 'indumentaria', 'boutique', 'atelier', 'sastreria', 'mercado', 'clasico', 'gimnasio')
     TEMPLATE_ADVANCED           =   ('circuito', 'seguridad', 'nexo')
     #El motor "Diseñar con IA" no tiene patrones exclusivos ni propone los
@@ -150,6 +150,7 @@ class StoreCustomization(models.Model):
     TEMPLATE_CHOICES            =   [
         ('raiz',          'Raíz'),
         ('alimentos',     'Alimentos'),
+        ('default',       'Default'),
         ('trama',         'Trama'),
         ('indumentaria',  'Indumentaria'),
         ('boutique',      'Boutique'),

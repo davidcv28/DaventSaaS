@@ -2719,6 +2719,187 @@
         "corners": "rounded"
       },
       "concept": "Misma tinta casi negra y retícula, con acento ámbar de oferta: más cálido y comercial."
+    },
+    {
+      "slug": "default",
+      "nombre": "Default",
+      "categoria": "General neutro",
+      "descripcion": "Tema normal del diseño default: fondo hielo, acento índigo, Inter, radios amplios y sombra suave — sirve a cualquier rubro.",
+      "tier": "base",
+      "template": "default",
+      "page_theme": "light",
+      "tokens": {
+        "palette": {
+          "accent": "#4F46E5",
+          "primary": "#4F46E5",
+          "secondary": "#6366F1",
+          "bg": "#EAEEF8",
+          "surface": "#FFFFFF",
+          "text": "#0F172A",
+          "muted": "#5B6678",
+          "border": "#DFE4F3",
+          "success": "#059669",
+          "danger": "#DC2626"
+        },
+        "containers": {
+          "radius": "large",
+          "shadow": "soft",
+          "border": "thin",
+          "density": "comfortable",
+          "surface": "elevated"
+        },
+        "typography": {
+          "heading": "inter",
+          "subheading": "inter",
+          "body": "inter",
+          "scale": "balanced",
+          "weightHeading": 800,
+          "letterSpacing": "-0.02em"
+        },
+        "buttons": {
+          "shape": "pill",
+          "style": "solid",
+          "size": "md"
+        },
+        "background": {
+          "type": "solid",
+          "value": null,
+          "overlay": "none"
+        },
+        "motion": {
+          "reveal": "fade-up",
+          "hover": "card-lift",
+          "intensity": "subtle"
+        },
+        "mobile": {
+          "cardStyle": "standard",
+          "heroHeight": "standard"
+        },
+        "preview": "",
+        "icons": {
+          "style": "line",
+          "stroke": "1.5",
+          "size": "20",
+          "corners": "rounded"
+        }
+      },
+      "layout": {},
+      "layout_spec": {},
+      "tags": [
+        "general",
+        "default",
+        "neutro",
+        "base",
+        "claro"
+      ],
+      "preview": "",
+      "style": "General neutro",
+      "anim": {
+        "hero": "fade-up",
+        "reveal": "fade-up",
+        "hover": "card-lift",
+        "button": "soft-press"
+      },
+      "easing": "cubic-bezier(.4,0,.2,1)",
+      "duration": "400ms",
+      "icons": {
+        "style": "line",
+        "stroke": "1.5",
+        "size": "20",
+        "corners": "rounded"
+      },
+      "concept": "Tema normal del diseño default: fondo hielo, acento índigo, Inter, radios amplios y sombra suave — sirve a cualquier rubro."
+    },
+    {
+      "slug": "default-premium",
+      "nombre": "Default Premium",
+      "categoria": "General premium",
+      "descripcion": "Tema premium del diseño default: fondo casi negro, acento dorado, titulares Fraunces y aire editorial oscuro.",
+      "tier": "advanced",
+      "template": "default",
+      "page_theme": "dark",
+      "tokens": {
+        "palette": {
+          "accent": "#C9A24B",
+          "primary": "#C9A24B",
+          "secondary": "#8A7440",
+          "bg": "#0D0F14",
+          "surface": "#14171F",
+          "text": "#F2EFE8",
+          "muted": "#9AA0AE",
+          "border": "#2A2F3D",
+          "success": "#4ADE80",
+          "danger": "#F45B4C"
+        },
+        "containers": {
+          "radius": "medium",
+          "shadow": "deep",
+          "border": "thin",
+          "density": "spacious",
+          "surface": "glass"
+        },
+        "typography": {
+          "heading": "fraunces",
+          "subheading": "inter",
+          "body": "inter",
+          "scale": "editorial",
+          "weightHeading": 600,
+          "letterSpacing": "-0.01em"
+        },
+        "buttons": {
+          "shape": "pill",
+          "style": "solid",
+          "size": "md"
+        },
+        "background": {
+          "type": "solid",
+          "value": null,
+          "overlay": "none"
+        },
+        "motion": {
+          "reveal": "fade-up",
+          "hover": "glow",
+          "intensity": "media"
+        },
+        "mobile": {
+          "cardStyle": "standard",
+          "heroHeight": "standard"
+        },
+        "preview": "",
+        "icons": {
+          "style": "line",
+          "stroke": "1.5",
+          "size": "20",
+          "corners": "rounded"
+        }
+      },
+      "layout": {},
+      "layout_spec": {},
+      "tags": [
+        "general",
+        "default",
+        "premium",
+        "oscuro",
+        "dorado",
+        "editorial"
+      ],
+      "preview": "",
+      "style": "General premium",
+      "anim": {
+        "hero": "fade-up",
+        "reveal": "fade-up",
+        "hover": "card-lift",
+        "button": "soft-press"
+      },
+      "easing": "cubic-bezier(.4,0,.2,1)",
+      "duration": "400ms",
+      "icons": {
+        "style": "line",
+        "stroke": "1.5",
+        "size": "20",
+        "corners": "rounded"
+      },
+      "concept": "Tema premium del diseño default: fondo casi negro, acento dorado, titulares Fraunces y aire editorial oscuro."
     }
   ],
   "patterns": [
@@ -3594,6 +3775,180 @@
       "variables": {},
       "supports_dark_mode": true,
       "style": "nexo"
+    },
+    {
+      "slug": "default",
+      "nombre": "Default",
+      "categoria": "general",
+      "descripcion": "Plantilla neutra para todos los planes: hero centrado, etiquetas de confianza, departamentos en riel, vitrina en grilla, sobre nosotros con cifras, testimonios, FAQ, CTA y contacto. Cubre portada, catálogo, servicios y suscripciones.",
+      "tier": "base",
+      "template": "default",
+      "layout": {
+        "landing": [
+          {
+            "id": "hero",
+            "enabled": true,
+            "order": 0,
+            "variant": "centered"
+          },
+          {
+            "id": "highlights",
+            "enabled": true,
+            "order": 1
+          },
+          {
+            "id": "categories",
+            "enabled": true,
+            "order": 2,
+            "variant": "rail"
+          },
+          {
+            "id": "featured",
+            "enabled": true,
+            "order": 3,
+            "variant": "grid"
+          },
+          {
+            "id": "about",
+            "enabled": true,
+            "order": 4
+          },
+          {
+            "id": "stats",
+            "enabled": true,
+            "order": 5,
+            "variant": "cards"
+          },
+          {
+            "id": "testimonials",
+            "enabled": true,
+            "order": 6,
+            "variant": "cards"
+          },
+          {
+            "id": "faq",
+            "enabled": true,
+            "order": 7,
+            "variant": "accordion"
+          },
+          {
+            "id": "cta",
+            "enabled": true,
+            "order": 8,
+            "variant": "band"
+          },
+          {
+            "id": "contact",
+            "enabled": true,
+            "order": 9,
+            "variant": "card"
+          }
+        ],
+        "catalog": [
+          {
+            "id": "note",
+            "enabled": true,
+            "order": 0
+          },
+          {
+            "id": "promo",
+            "enabled": true,
+            "order": 1
+          },
+          {
+            "id": "filters",
+            "enabled": true,
+            "order": 2
+          },
+          {
+            "id": "sort",
+            "enabled": true,
+            "order": 3
+          },
+          {
+            "id": "grid",
+            "enabled": true,
+            "order": 4
+          }
+        ],
+        "services": [
+          {
+            "id": "hero",
+            "enabled": true,
+            "order": 0
+          },
+          {
+            "id": "band",
+            "enabled": true,
+            "order": 1
+          },
+          {
+            "id": "picker",
+            "enabled": true,
+            "order": 2
+          },
+          {
+            "id": "steps",
+            "enabled": true,
+            "order": 3
+          },
+          {
+            "id": "form",
+            "enabled": true,
+            "order": 4
+          },
+          {
+            "id": "faq",
+            "enabled": true,
+            "order": 5
+          }
+        ]
+      },
+      "tokens": {
+        "accent": "#4F46E5",
+        "palette": {
+          "accent": "#4F46E5",
+          "primary": "#4F46E5",
+          "secondary": "#6366F1",
+          "bg": "#EAEEF8",
+          "surface": "#FFFFFF",
+          "text": "#0F172A",
+          "muted": "#5B6678",
+          "border": "#DFE4F3",
+          "success": "#059669",
+          "danger": "#DC2626"
+        },
+        "fonts": [
+          "inter",
+          "fraunces"
+        ],
+        "radius": "16px",
+        "anim": {
+          "hero": "fade-up",
+          "reveal": "fade-up",
+          "hover": "card-lift",
+          "button": "soft-press"
+        },
+        "easing": "cubic-bezier(.4,0,.2,1)",
+        "duration": "400ms",
+        "icons": {
+          "style": "line",
+          "stroke": "1.5",
+          "size": "20",
+          "corners": "rounded"
+        }
+      },
+      "tags": [
+        "general",
+        "default",
+        "neutro",
+        "retail",
+        "servicios"
+      ],
+      "preview": "",
+      "variables": {},
+      "supports_dark_mode": true,
+      "style": "default"
     }
   ]
 }
