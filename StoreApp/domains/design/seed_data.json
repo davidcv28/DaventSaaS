@@ -2806,6 +2806,140 @@
         "corners": "square"
       },
       "concept": "Azul noche + gris acero: sastrería ejecutiva."
+    },
+    {
+      "slug": "ruta",
+      "nombre": "Ruta",
+      "categoria": "Turismo",
+      "descripcion": "Guía de viaje diurna: papel crema, verde pino y ámbar, con Fraunces editorial e Instrument Sans.",
+      "tier": "plus",
+      "template": "raiz",
+      "page_theme": "light",
+      "pattern": "ruta",
+      "tokens": {
+        "palette": {
+          "primary": "#14443B",
+          "secondary": "#E8A33D",
+          "accent": "#14443B",
+          "bg": "#F4ECDC",
+          "surface": "#FBF6EA",
+          "text": "#20332C",
+          "muted": "#6F7F74",
+          "border": "#D8CBB0",
+          "success": "#2E7D54",
+          "danger": "#C0472F"
+        },
+        "containers": {
+          "radius": "lg",
+          "shadow": "soft",
+          "border": "thin",
+          "density": "comfortable",
+          "surface": "flat"
+        },
+        "typography": {
+          "heading": "fraunces",
+          "subheading": "instrument-sans",
+          "body": "instrument-sans",
+          "scale": "editorial",
+          "weightHeading": 600,
+          "letterSpacing": "-0.01em"
+        },
+        "buttons": {
+          "shape": "pill",
+          "style": "solid",
+          "size": "md"
+        },
+        "background": {
+          "type": "solid",
+          "overlay": "none"
+        },
+        "motion": {
+          "reveal": "rise",
+          "hover": "lift",
+          "intensity": "subtle"
+        },
+        "mobile": {
+          "gridCols": 1,
+          "cardStyle": "standard",
+          "heroHeight": "tall"
+        }
+      },
+      "tags": [
+        "turismo",
+        "viajes",
+        "agencia",
+        "destinos",
+        "excursiones"
+      ],
+      "preview": "",
+      "concept": "Papel crema, pino y ámbar: guía de viaje editorial."
+    },
+    {
+      "slug": "ruta-noche",
+      "nombre": "Ruta Noche",
+      "categoria": "Turismo nocturno",
+      "descripcion": "La ruta de noche: pino profundo, ámbar encendido y crema, con el mismo aire editorial de Fraunces.",
+      "tier": "plus",
+      "template": "raiz",
+      "page_theme": "dark",
+      "pattern": "ruta",
+      "tokens": {
+        "palette": {
+          "primary": "#E8A33D",
+          "secondary": "#7FB89E",
+          "accent": "#F0B95A",
+          "bg": "#0F2620",
+          "surface": "#16332B",
+          "text": "#F0E9D8",
+          "muted": "#A3B4A8",
+          "border": "#2A4A3F",
+          "success": "#4CAF7D",
+          "danger": "#E5735C"
+        },
+        "containers": {
+          "radius": "lg",
+          "shadow": "medium",
+          "border": "thin",
+          "density": "comfortable",
+          "surface": "elevated"
+        },
+        "typography": {
+          "heading": "fraunces",
+          "subheading": "instrument-sans",
+          "body": "instrument-sans",
+          "scale": "editorial",
+          "weightHeading": 600,
+          "letterSpacing": "-0.01em"
+        },
+        "buttons": {
+          "shape": "pill",
+          "style": "solid",
+          "size": "md"
+        },
+        "background": {
+          "type": "solid",
+          "overlay": "none"
+        },
+        "motion": {
+          "reveal": "rise",
+          "hover": "glow",
+          "intensity": "subtle"
+        },
+        "mobile": {
+          "gridCols": 1,
+          "cardStyle": "standard",
+          "heroHeight": "tall"
+        }
+      },
+      "tags": [
+        "turismo",
+        "viajes",
+        "agencia",
+        "destinos",
+        "noche"
+      ],
+      "preview": "",
+      "concept": "Pino profundo y ámbar: la guía de viaje de noche."
     }
   ],
   "patterns": [
@@ -3873,6 +4007,43 @@
       "variables": {},
       "supports_dark_mode": true,
       "style": "sastreria"
+    },
+    {
+      "slug": "ruta",
+      "nombre": "Ruta",
+      "categoria": "turismo",
+      "descripcion": "Guía de viaje: escena animada con sol, nubes y ruta punteada, destinos como tickets, servicios en itinerario y galería de postales.",
+      "tier": "plus",
+      "template": "raiz",
+      "layout": {},
+      "tokens": {
+        "fonts": [
+          "instrument-sans",
+          "fraunces"
+        ],
+        "accent": "#14443B",
+        "palette": {
+          "bg": "#F4ECDC",
+          "text": "#20332C",
+          "muted": "#6F7F74",
+          "accent": "#14443B",
+          "border": "#D8CBB0",
+          "primary": "#14443B",
+          "surface": "#FBF6EA",
+          "secondary": "#E8A33D"
+        }
+      },
+      "tags": [
+        "turismo",
+        "viajes",
+        "agencia",
+        "destinos",
+        "excursiones"
+      ],
+      "preview": "",
+      "variables": {},
+      "supports_dark_mode": true,
+      "style": "ruta"
     }
   ]
 }

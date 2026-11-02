@@ -46,6 +46,14 @@ class Command(BaseCommand):
         with transaction.atomic():
             style_count     =   self._styles(styles)
             pattern_count   =   self._patterns(patterns)
+            #Vínculo explícito al diseño (slug de DesignPattern) declarado en
+            #el seed: se resuelve después de cargar los patrones porque el
+            #diseño puede no existir todavía en la primera corrida.
+            for style in styles:
+                if style.get('pattern'):
+                    DesignStyle.objects.filter(slug = style['slug']).update(
+                        pattern = DesignPattern.objects.filter(slug = style['pattern']).first()
+                    )
             self._link_styles()
             self._mark_defaults(styles, patterns)
         self.stdout.write(self.style.SUCCESS(
