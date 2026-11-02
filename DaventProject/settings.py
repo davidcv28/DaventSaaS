@@ -493,3 +493,26 @@ LOGGING = {
         },
     },
 }
+
+# Observabilidad (Sentry): se activa solo con SENTRY_DSN definida — vacía en
+# dev/test no cambia nada. send_default_pii=False porque el vault ya cifra la
+# PII en reposo y no queremos copiarla a un tercero en los eventos.
+SENTRY_DSN = config('SENTRY_DSN', default = '')
+if SENTRY_DSN:
+    try:
+        import sentry_sdk
+        from sentry_sdk.integrations.celery import CeleryIntegration
+        from sentry_sdk.integrations.django import DjangoIntegration
+
+        sentry_sdk.init(
+            dsn                     =   SENTRY_DSN,
+            integrations            =   [DjangoIntegration(), CeleryIntegration()],
+            environment             =   config('SENTRY_ENVIRONMENT', default = 'development' if DEBUG else 'production'),
+            traces_sample_rate      =   config('SENTRY_TRACES_SAMPLE_RATE', default = 0.0, cast = float),
+            send_default_pii        =   False,
+        )
+    except ImportError:
+        import logging
+        logging.getLogger(__name__).warning(
+            'SENTRY_DSN está definida pero sentry-sdk no está instalado: eventos descartados.'
+        )

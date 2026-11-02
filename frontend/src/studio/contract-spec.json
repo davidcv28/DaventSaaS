@@ -1,0 +1,357 @@
+{
+  "generated_by": "manage.py export_contract — no editar a mano",
+  "sections": {
+    "palette": {
+      "primary": {
+        "kind": "hex"
+      },
+      "secondary": {
+        "kind": "hex"
+      },
+      "accent": {
+        "kind": "hex"
+      },
+      "bg": {
+        "kind": "hex"
+      },
+      "surface": {
+        "kind": "hex"
+      },
+      "text": {
+        "kind": "hex"
+      },
+      "muted": {
+        "kind": "hex"
+      },
+      "border": {
+        "kind": "hex"
+      },
+      "success": {
+        "kind": "hex"
+      },
+      "danger": {
+        "kind": "hex"
+      }
+    },
+    "containers": {
+      "radius": {
+        "kind": "enum",
+        "values": [
+          "none",
+          "sm",
+          "md",
+          "lg",
+          "xl",
+          "pill"
+        ]
+      },
+      "shadow": {
+        "kind": "enum",
+        "values": [
+          "none",
+          "soft",
+          "medium",
+          "deep"
+        ]
+      },
+      "border": {
+        "kind": "enum",
+        "values": [
+          "none",
+          "thin",
+          "bold"
+        ]
+      },
+      "density": {
+        "kind": "enum",
+        "values": [
+          "compact",
+          "comfortable",
+          "spacious"
+        ]
+      },
+      "surface": {
+        "kind": "enum",
+        "values": [
+          "flat",
+          "glass",
+          "elevated",
+          "outlined"
+        ]
+      }
+    },
+    "typography": {
+      "heading": {
+        "kind": "font"
+      },
+      "subheading": {
+        "kind": "font"
+      },
+      "body": {
+        "kind": "font"
+      },
+      "scale": {
+        "kind": "enum",
+        "values": [
+          "compact",
+          "balanced",
+          "editorial"
+        ]
+      },
+      "weightHeading": {
+        "kind": "int",
+        "min": 100,
+        "max": 900
+      },
+      "letterSpacing": {
+        "kind": "tracking"
+      },
+      "roles": {
+        "kind": "roles"
+      }
+    },
+    "buttons": {
+      "shape": {
+        "kind": "enum",
+        "values": [
+          "square",
+          "rounded",
+          "pill"
+        ]
+      },
+      "style": {
+        "kind": "enum",
+        "values": [
+          "solid",
+          "outline",
+          "ghost",
+          "gradient"
+        ]
+      },
+      "size": {
+        "kind": "enum",
+        "values": [
+          "sm",
+          "md",
+          "lg"
+        ]
+      }
+    },
+    "background": {
+      "type": {
+        "kind": "enum",
+        "values": [
+          "solid",
+          "gradient",
+          "mesh",
+          "pattern",
+          "image"
+        ]
+      },
+      "value": {
+        "kind": "bg"
+      },
+      "overlay": {
+        "kind": "enum",
+        "values": [
+          "none",
+          "soft",
+          "strong"
+        ]
+      }
+    },
+    "motion": {
+      "reveal": {
+        "kind": "enum",
+        "values": [
+          "none",
+          "fade",
+          "rise",
+          "stagger"
+        ]
+      },
+      "hover": {
+        "kind": "enum",
+        "values": [
+          "none",
+          "lift",
+          "glow"
+        ]
+      },
+      "intensity": {
+        "kind": "enum",
+        "values": [
+          "subtle",
+          "medium",
+          "bold"
+        ]
+      }
+    },
+    "mobile": {
+      "nav": {
+        "kind": "enum",
+        "values": [
+          "top",
+          "bottom",
+          "drawer"
+        ]
+      },
+      "gridCols": {
+        "kind": "int",
+        "min": 1,
+        "max": 2
+      },
+      "cardStyle": {
+        "kind": "enum",
+        "values": [
+          "standard",
+          "compact",
+          "overlay"
+        ]
+      },
+      "stickyCta": {
+        "kind": "bool"
+      },
+      "heroHeight": {
+        "kind": "enum",
+        "values": [
+          "compact",
+          "tall"
+        ]
+      }
+    },
+    "style": {
+      "id": {
+        "kind": "styleId"
+      },
+      "palette": {
+        "kind": "enum",
+        "values": [
+          "original",
+          "warm",
+          "cool",
+          "contrast"
+        ]
+      }
+    },
+    "styleColors": {
+      "light": {
+        "kind": "styleSet"
+      },
+      "dark": {
+        "kind": "styleSet"
+      }
+    },
+    "blocks": {},
+    "layout": {
+      "density": {
+        "kind": "enum",
+        "values": [
+          "compact",
+          "comfortable",
+          "spacious"
+        ]
+      },
+      "grid": {
+        "kind": "enum",
+        "values": [
+          "12",
+          "asym",
+          "split",
+          "bento",
+          "editorial"
+        ]
+      },
+      "hero": {
+        "kind": "enum",
+        "values": [
+          "centered",
+          "split",
+          "cinema",
+          "logo",
+          "editorial"
+        ]
+      },
+      "gutter": {
+        "kind": "enum",
+        "values": [
+          "sm",
+          "md",
+          "lg"
+        ]
+      },
+      "measure": {
+        "kind": "enum",
+        "values": [
+          "narrow",
+          "normal",
+          "wide"
+        ]
+      },
+      "radiusScale": {
+        "kind": "enum",
+        "values": [
+          "none",
+          "sm",
+          "md",
+          "lg",
+          "xl"
+        ]
+      }
+    },
+    "skin": {
+      "id": {
+        "kind": "skin"
+      },
+      "family": {
+        "kind": "enum",
+        "values": [
+          "atelier",
+          "aurora",
+          "brutal",
+          "cinematic",
+          "cobre",
+          "corporate",
+          "craft",
+          "editorial",
+          "glass",
+          "gradient",
+          "kinetic",
+          "lumen",
+          "luxury",
+          "magazine",
+          "minimal",
+          "mono",
+          "neon",
+          "nostalgia",
+          "organic",
+          "paper",
+          "playful",
+          "pop",
+          "prestige",
+          "retro",
+          "riso",
+          "showcase",
+          "soft",
+          "swiss",
+          "tech",
+          "terminal",
+          "vitrina",
+          "warm"
+        ]
+      }
+    },
+    "decorations": {},
+    "images": {
+      "treatment": {
+        "kind": "enum",
+        "values": [
+          "none",
+          "soft",
+          "grayscale",
+          "duotone"
+        ]
+      }
+    }
+  }
+}

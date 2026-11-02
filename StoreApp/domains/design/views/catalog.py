@@ -2,6 +2,7 @@ from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
+from DaventProject.cache_utils import cache_get, cache_set
 from DaventProject.throttling import PublicReadThrottle
 from StoreApp.domains.design.models import DesignIconStyle, DesignPattern, DesignStyle
 from StoreApp.domains.design.serializers import (
@@ -11,6 +12,7 @@ from StoreApp.domains.design.serializers import (
     DesignStyleListSerializer,
     DesignStyleSerializer,
 )
+from StoreApp.domains.stores.public_cache import public_cache_stamp
 
 """
 
@@ -33,6 +35,29 @@ def default_style():
 def default_icon_style():
     return DesignIconStyle.objects.filter(is_default = True, is_active = True).first()
 
+#TTL del cache server-side del payload serializado. Corto a propósito: la
+#key ya lleva la época pública (bump_public_epoch corre en cada save/delete
+#del catálogo vía signals.py), así el TTL solo cubre el caso de un bump
+#perdido con Redis caído — nunca sirve un catálogo viejo por minutos.
+_CATALOG_CACHE_TTL  =   300
+
+
+def _catalog_epoch():
+    #La época pública cambia con CADA edición del catálogo (signals.py): es
+    #la invalidación gratis del cache server-side de estos payloads.
+    return public_cache_stamp(0)[0]
+
+
+def catalog_cached(key_suffix, produce):
+    """Cache server-side fail-open keyed por época pública."""
+    key     =   f'design:catalog:v1:{_catalog_epoch()}:{key_suffix}'
+    data    =   cache_get(key)
+    if data is None:
+        data    =   produce()
+        if data is not None:
+            cache_set(key, data, timeout = _CATALOG_CACHE_TTL)
+    return data
+
 #=========================================
 # DESIGN CATALOG VIEW
 #=========================================
@@ -43,10 +68,10 @@ class DesignCatalogView(APIView):
     #CGNAT y deja el catálogo vacío con 429.
     throttle_classes    =   [PublicReadThrottle]
 
-    def get(self, request):
+    def _build(self):
         pattern     =   default_pattern()
         style       =   default_style()
-        response    =   Response({
+        return {
             'pattern':  DesignPatternSerializer(pattern).data if pattern else None,
             'style':    DesignStyleSerializer(style).data if style else None,
             'patterns': DesignPatternListSerializer(
@@ -60,8 +85,11 @@ class DesignCatalogView(APIView):
             ).data,
             'default_icon_style': DesignIconStyleSerializer(default_icon_style()).data
                 if default_icon_style() else None,
-        })
-        # El catálogo cambia cuando el staff edita la base: nunca se sirve
-        # desde caché del navegador/proxy.
+        }
+
+    def get(self, request):
+        response    =   Response(catalog_cached('all', self._build))
+        # El caché es server-side keyed por época: el navegador/proxy sigue
+        # sin guardar nada (una edición staff se ve al instante).
         response['Cache-Control'] = 'no-store'
         return response

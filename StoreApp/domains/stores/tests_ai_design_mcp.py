@@ -396,3 +396,50 @@ class ResolveDesignTests(TestCase):
     def test_same_prompt_resolves_same_pattern(self):
         self._pattern('con-tag', tags = ['gastronomia'])
         self.assertEqual(self._resolve(**PROMPT), self._resolve(**PROMPT))
+
+    def test_inactive_default_is_not_returned(self):
+        #Un default apagado no puede ser el fallback: con el catálogo
+        #completamente inactivo resolve_design devuelve None y el wizard
+        #cae al MCP de estilos (fuentes de repo).
+        from StoreApp.domains.design.models import DesignPattern
+        DesignPattern.objects.update(is_active = False)
+        from StoreApp.domains.stores.services.ai_design_mcp import resolve_design
+        self.assertIsNone(resolve_design(PROMPT))
+
+    def test_default_pattern_carries_active_style(self):
+        #El estilo resuelto para el patrón siempre es uno activo: FK directa,
+        #hijo del catálogo o el default global — nunca un estilo apagado.
+        from StoreApp.domains.design.models import DesignStyle
+        self._pattern('el-default', is_default = True)
+        DesignStyle.objects.update(is_active = False)
+        from StoreApp.domains.stores.services.ai_design_mcp import resolve_design
+        resolved    =   resolve_design({'rubro': 'xx-sin-match'}) or {}
+        self.assertIsNotNone(resolved.get('pattern'))
+        style       =   resolved.get('style')
+        self.assertTrue(style is None or style.is_active)
+
+
+class CatalogTokensTests(TestCase):
+    """_catalog_tokens: solo secciones/claves del contrato y valores dentro
+    de los enums cerrados — los tokens propios del catálogo se recortan."""
+
+    def test_drops_unknown_sections_keys_and_off_enum_values(self):
+        from StoreApp.domains.stores.services.ai_design_mcp import _catalog_tokens
+        tokens  =   {
+            'containers'    :   {'radius': 'gigante', 'density': 'compact'},
+            'mobile'        :   {'heroHeight': 'medium'},
+            'inventada'     :   {'x': 'y'},
+            'palette'       :   {'primary': '#aabbcc', 'hack': 'javascript:alert(1)'},
+        }
+        clean   =   _catalog_tokens(tokens)
+        self.assertNotIn('inventada', clean)
+        self.assertNotIn('radius', clean.get('containers', {}))
+        self.assertEqual(clean['containers']['density'], 'compact')
+        self.assertNotIn('heroHeight', clean.get('mobile', {}))
+        self.assertEqual(clean['palette']['primary'], '#aabbcc')
+        self.assertNotIn('hack', clean['palette'])
+
+    def test_non_dict_input_returns_empty(self):
+        from StoreApp.domains.stores.services.ai_design_mcp import _catalog_tokens
+        self.assertEqual(_catalog_tokens(None), {})
+        self.assertEqual(_catalog_tokens('tema'), {})

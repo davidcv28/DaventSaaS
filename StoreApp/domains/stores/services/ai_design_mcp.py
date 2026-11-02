@@ -689,12 +689,14 @@ def resolve_design(prompt):
             score == best[0] and (pattern.position, pattern.pk) < (best[1].position, best[1].pk)
         ):
             best    =   (score, pattern)
-    pattern     =   best[1] if best and best[0] > 0 else DesignPattern.objects.filter(is_default = True).first()
+    pattern     =   best[1] if best and best[0] > 0 else DesignPattern.objects.filter(
+        is_default = True, is_active = True).first()
     if pattern is None:
         return None
     style       =   pattern.style if pattern.style_id and pattern.style and pattern.style.is_active else None
     if style is None:
-        style   =   pattern.styles.filter(is_active = True).first() or DesignStyle.objects.filter(is_default = True).first()
+        style   =   pattern.styles.filter(is_active = True).first() or DesignStyle.objects.filter(
+            is_default = True, is_active = True).first()
     return {'pattern': pattern, 'style': style}
 
 

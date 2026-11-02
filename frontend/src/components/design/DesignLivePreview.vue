@@ -19,6 +19,10 @@ const props = defineProps({
 })
 
 const store = useStoreStore()
+// Modo mock (VITE_PREVIEW_MOCK=1): el iframe apunta a una maqueta estática
+// (/preview-mock.html) y no pide token ni slug — sirve para trabajar el
+// panel de diseño con el front solo, sin backend corriendo.
+const MOCK = import.meta.env.VITE_PREVIEW_MOCK === '1'
 const slug = computed(() => store.store?.slug || '')
 // Token firmado del borrador: la vista previa tiene que mostrar el mismo
 // documento del diseño que se publica, pero con el borrador guardado
@@ -29,6 +33,7 @@ const previewToken = ref('')
 // pantalla blanca "cargando" al entrar a la sección.
 const tokenReady = ref(false)
 const src = computed(() => {
+  if (MOCK) return tokenReady.value ? '/preview-mock.html' : ''
   if (!slug.value || !tokenReady.value) return ''
   const params = new URLSearchParams({ studio: '1' })
   if (previewToken.value) params.set('preview', previewToken.value)
@@ -131,10 +136,14 @@ watch(
 watch(() => props.form.name_font, (font) => { if (font) ensureStoreFont(font) })
 
 onMounted(() => {
+  if (MOCK) {
+    tokenReady.value = true
+  } else {
   storesApi.sharePreview()
     .then((data) => { previewToken.value = data?.token || '' })
     .catch(() => { previewToken.value = '' })
     .finally(() => { tokenReady.value = true })
+  }
   window.addEventListener('message', onMessage)
   loadTimer = setTimeout(() => { if (state.value === 'loading') state.value = 'failed' }, 12000)
   if (stage.value) {

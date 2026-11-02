@@ -28,6 +28,19 @@ const app = createApp(App)
 app.use(createPinia())
 app.use(router)
 
+// Observabilidad: Sentry solo se activa con VITE_SENTRY_DSN en el build
+// (vacío en dev no cambia nada). Import dinámico para no inflar el bundle
+// inicial cuando no hay DSN.
+if (import.meta.env.VITE_SENTRY_DSN) {
+  import('@sentry/vue').then((Sentry) => {
+    Sentry.init({
+      app,
+      dsn: import.meta.env.VITE_SENTRY_DSN,
+      environment: import.meta.env.MODE,
+    })
+  }).catch(() => {})
+}
+
 // Restaura sesión desde la cookie httpOnly antes del primer render (FRONTEND_RULES §3).
 const auth = useAuthStore()
 auth.initSession()

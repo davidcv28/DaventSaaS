@@ -10,6 +10,7 @@ from StoreApp.domains.design.serializers import (
     DesignStyleSerializer,
 )
 
+from .catalog import catalog_cached
 from .viewset_base import DesignCatalogViewSet
 
 
@@ -24,10 +25,13 @@ class DesignStyleViewSet(DesignCatalogViewSet):
     #ESTILO BASE (el que aplica la web si la tienda no eligió uno)
     @action(detail = False, methods = ['get'], url_path = 'default')
     def default(self, request):
-        style = self.get_queryset().filter(is_default = True, is_active = True).first()
-        if not style:
+        def _produce():
+            style   =   self.get_queryset().filter(is_default = True, is_active = True).first()
+            return DesignStyleSerializer(style).data if style else None
+        data    =   catalog_cached('style:default', _produce)
+        if data is None:
             return Response({'detail': 'No hay estilo predeterminado.'}, status = 404)
-        return Response(DesignStyleSerializer(style).data)
+        return Response(data)
 
 #=========================================
 # DESIGN PATTERN VIEWSET (/api/design/patterns/)
@@ -40,10 +44,13 @@ class DesignPatternViewSet(DesignCatalogViewSet):
     #PATRÓN BASE (el que aplica la web si la tienda no eligió uno)
     @action(detail = False, methods = ['get'], url_path = 'default')
     def default(self, request):
-        pattern = self.get_queryset().filter(is_default = True, is_active = True).first()
-        if not pattern:
+        def _produce():
+            pattern =   self.get_queryset().filter(is_default = True, is_active = True).first()
+            return DesignPatternSerializer(pattern).data if pattern else None
+        data    =   catalog_cached('pattern:default', _produce)
+        if data is None:
             return Response({'detail': 'No hay patrón predeterminado.'}, status = 404)
-        return Response(DesignPatternSerializer(pattern).data)
+        return Response(data)
 
     #VISTA PREVIA CON DATOS DE EJEMPLO (modal "Ver este diseño")
     @action(detail = True, methods = ['get'], url_path = 'preview')
@@ -72,7 +79,10 @@ class DesignIconStyleViewSet(DesignCatalogViewSet):
     #SET BASE (el que hereda un diseno sin set propio)
     @action(detail = False, methods = ['get'], url_path = 'default')
     def default(self, request):
-        icon_style = self.get_queryset().filter(is_default = True, is_active = True).first()
-        if not icon_style:
+        def _produce():
+            icon    =   self.get_queryset().filter(is_default = True, is_active = True).first()
+            return DesignIconStyleSerializer(icon).data if icon else None
+        data    =   catalog_cached('icon-style:default', _produce)
+        if data is None:
             return Response({'detail': 'No hay estilo de iconos predeterminado.'}, status = 404)
-        return Response(DesignIconStyleSerializer(icon_style).data)
+        return Response(data)
