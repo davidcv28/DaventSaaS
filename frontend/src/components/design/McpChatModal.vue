@@ -89,7 +89,12 @@ async function applyProposal(msg, proposal) {
   busy.value = `${msg.seed}:${proposal.id}`
   errorMsg.value = ''
   try {
-    await http.post('/stores/ai-design/apply/', { seed: msg.seed, proposal_id: proposal.id, autofill: false })
+    await http.post('/stores/ai-design/apply/', {
+      seed: msg.seed,
+      proposal_id: proposal.apply_id || proposal.id,
+      overlay_id: proposal.id,
+      autofill: false
+    })
     await store.refreshCustomization()
     msg.applied = proposal.id
     emit('applied', { action: 'apply' })

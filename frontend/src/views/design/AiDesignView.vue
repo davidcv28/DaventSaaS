@@ -576,7 +576,8 @@ async function apply({ proposal, autofill, extras }) {
   try {
     await http.post('/stores/ai-design/apply/', {
       seed: seed.value,
-      proposal_id: proposal.id,
+      proposal_id: proposal.apply_id || proposal.id,
+      overlay_id: proposal.id,
       autofill: Boolean(autofill),
       ...(extras ? { extras } : {})
     })

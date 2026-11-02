@@ -824,6 +824,76 @@ def _decorate_catalog(store, seed, result, resolved, prompt, repo_styles = None)
     }
 
 
+def _mix_proposal(store, seed, result, resolved):
+    """Patrón EFÍMERO generado por el MCP: layout del patrón ganador con
+    los tokens del estilo de OTRO patrón activo — una combinación que el
+    catálogo no guarda como fila.
+
+    No toca la DB: vive solo en el overlay cacheado por (tienda, semilla)
+    y desaparece al regenerar propuestas o al vencer el TTL. `apply_id`
+    apunta a la propuesta base para que `ai-design/apply` la recalcule
+    (el id propio no existe en la tanda regenerada).
+    """
+    from StoreApp.domains.design.models import DesignPattern
+
+    proposals   =   result.get('proposals') or []
+    pattern     =   resolved['pattern']
+    style       =   resolved.get('style')
+    other       =   (
+        DesignPattern.objects
+        .filter(is_active = True, style__is_active = True)
+        .exclude(pk = pattern.pk)
+        .exclude(style_id = getattr(style, 'pk', None) or 0)
+        .select_related('style')
+        .order_by('position', 'pk')
+        .first()
+    )
+    mix_style   =   getattr(other, 'style', None) if other else None
+    if not proposals or mix_style is None:
+        return None
+    try:
+        from StoreApp.domains.stores.site_theme import clean_site_theme
+
+        base    =   proposals[0]
+        theme   =   clean_site_theme(
+            _deep_merge(base.get('site_theme'), _catalog_tokens(mix_style.tokens)),
+            has_plus        =   _benefit(store, 'has_design_plus'),
+            has_advanced    =   _benefit(store, 'has_design_advanced'),
+            has_style       =   _benefit(store, 'has_customization'),
+            store           =   store,
+        )
+    except serializers.ValidationError:
+        return None
+    proposal    =   copy.deepcopy(base)
+    proposal['id']          =   f"{base.get('id')}:mcp-mix"
+    proposal['apply_id']    =   str(base.get('id'))
+    proposal['label']       =   f'Mezcla MCP · {pattern.nombre} × {mix_style.nombre}'
+    mcp_style   =   {
+        'slug'          :   'mcp-mix',
+        'nombre'        :   proposal['label'],
+        'categoria'     :   pattern.categoria,
+        'tags'          :   list(pattern.tags or [])[:6],
+        #El frontend muestra de dónde sale cada mitad del diseño.
+        'source_repo'   :   'mcp-generated',
+        'style'         :   mix_style.slug,
+        'pattern'       :   [block.get('id') for block in _landing_blocks(pattern.layout)],
+    }
+    overlay =   {
+        'site_theme'    :   theme,
+        'layout_config' :   copy.deepcopy(base.get('layout_config')),
+        'theme'         :   _theme_mode(theme),
+        'theme_toggle'  :   True,
+        'accent'        :   (theme.get('palette') or {}).get('accent') or '',
+        'mcp_style'     :   mcp_style,
+    }
+    apply_design_overlay(proposal, overlay)
+    overlays    =   overlay_of(store, seed) or {}
+    overlays[str(proposal['id'])]   =   overlay
+    save_overlays(store, seed, overlays)
+    proposals.append(proposal)
+    return mcp_style
+
+
 #=========================================
 # FLUJO
 #=========================================
@@ -938,6 +1008,11 @@ def generate_from_prompt(store, prompt = None, history = None, seed = None, mess
         #con la fuente #1 y todas viajan como `alternatives`.
         repo_styles =   select_styles(clean_prompt, limit = MAX_STYLES)
         mcp =   _decorate_catalog(store, result.get('seed'), result, resolved, clean_prompt, repo_styles)
+        #Patrón efímero: mezcla del ganador con otro estilo del catálogo;
+        #suma una propuesta más a la grilla sin tocar la base.
+        draft   =   _mix_proposal(store, result.get('seed'), result, resolved)
+        if draft:
+            mcp['draft']    =   draft
     else:
         styles  =   select_styles(clean_prompt)
         mcp     =   _decorate(store, result.get('seed'), result, styles, clean_prompt)

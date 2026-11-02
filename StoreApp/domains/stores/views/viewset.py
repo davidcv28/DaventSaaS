@@ -1179,8 +1179,12 @@ class StoreViewSet(StoreBaseViewSet):
                 extras          =   request.data.get('extras'),
                 skip_extras     =   _flag(request.data.get('skip_extras')),
                 #Piel elegida por el MCP en el wizard "Diseño asistido".
+                #`overlay_id` difiere de `proposal_id` solo en el patrón
+                #efímero (`…:mcp-mix`), que se aplica sobre su propuesta
+                #base — el resto manda el mismo id en ambos campos.
                 theme_overlay   =   ai_design_mcp_overlay(
-                    store, request.data.get('seed'), request.data.get('proposal_id'),
+                    store, request.data.get('seed'),
+                    request.data.get('overlay_id') or request.data.get('proposal_id'),
                 ),
             )
         except AiDesignError as error:
