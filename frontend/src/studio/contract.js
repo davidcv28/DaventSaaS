@@ -129,6 +129,9 @@ export const SITE_THEME_DEFAULTS = deepFreeze({
     cardStyle: 'standard',
     stickyCta: false,
     heroHeight: 'compact'
+  },
+  decorations: {
+    extras: false
   }
 })
 
@@ -266,6 +269,9 @@ export function resolveSiteTheme(partial = {}) {
     }
     if (Object.keys(block).length) resolved.styleColors = block
   }
+  // Adornos opcionales del diseño: apagados salvo que el tema los pida.
+  const dec = p.decorations && typeof p.decorations === 'object' ? p.decorations : {}
+  resolved.decorations = { extras: dec.extras === true }
   if (p.style && typeof p.style === 'object' && typeof p.style.id === 'string' && p.style.id.trim()) {
     resolved.style = { id: p.style.id.trim().slice(0, 60) }
     const paletteDef = STYLE_PALETTES.find((x) => x.id === p.style.palette)
@@ -557,7 +563,8 @@ const THEME_SECTION_KEYS = {
   buttons: Object.keys(SITE_THEME_DEFAULTS.buttons),
   background: Object.keys(SITE_THEME_DEFAULTS.background),
   motion: Object.keys(SITE_THEME_DEFAULTS.motion),
-  mobile: Object.keys(SITE_THEME_DEFAULTS.mobile)
+  mobile: Object.keys(SITE_THEME_DEFAULTS.mobile),
+  decorations: Object.keys(SITE_THEME_DEFAULTS.decorations)
 }
 
 export function themeExplicitKeys(partial) {

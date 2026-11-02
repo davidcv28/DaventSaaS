@@ -226,6 +226,11 @@ _SECTION_SPECS  =   {
         'id'            :   ('skin',),
         'family'        :   ('enum', tuple(sorted(_skin_families()))),
     },
+    #Adornos opcionales del diseño (cintas, marcos, brillos decorativos):
+    #apagados por defecto; el dueño los prende desde el panel de Diseño.
+    'decorations'   :   {
+        'extras'        :   ('bool',),
+    },
 }
 #Subconjunto básico del tema que admite has_design_plus (Estándar): el
 #resto de las secciones/claves exige has_design_advanced (Premium).
@@ -245,6 +250,9 @@ SITE_THEME_STYLE_KEYS   =   frozenset({
     #Básico: una web diseñada no puede quedar con la piel base al publicar.
     ('skin', 'id'),
     ('skin', 'family'),
+    #El interruptor de adornos no es un nivel de diseño: solo prende o apaga
+    #piezas que el diseño ya trae, así que entra en el piso de cualquier plan.
+    ('decorations', 'extras'),
 })
 #=========================================
 # VALIDADORES DE VALOR

@@ -1,7 +1,7 @@
 <script setup>
 // Inicio del diseño GIMNASIO (deporte / fitness, nivel plus).
 // Render generativo: monta los bloques del layout efectivo de la portada en
-// su orden. Piezas firma: GyHero (portada oscura con cinta de disciplinas)
+// su orden. Piezas firma: GyHero (portada oscura con cinta opcional de disciplinas)
 // y GyFeatured (productos/planes en tarjetas de pista numeradas); el resto
 // son los bloques compartidos re-skineados desde store-gimnasio.css.
 import { computed, ref } from 'vue'

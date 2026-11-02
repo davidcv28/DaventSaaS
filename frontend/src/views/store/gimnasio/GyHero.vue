@@ -2,7 +2,8 @@
 // Portada firma de GIMNASIO (deporte / fitness, nivel plus).
 // Oscura y energética: titular Barlow Condensed gigante con la última frase
 // en lima, ficha de sede (horario/zona/contacto) y placa de imagen con
-// medidor de intensidad. Debajo, una cinta de disciplinas cierra el hueco.
+// medidor de intensidad. Debajo puede cerrar una cinta con las disciplinas
+// del negocio: adorno opcional (Decoraciones extra) apagado por defecto.
 // Markup propio; reusa helpers comunes (openStatus, vReveal) y la primera
 // imagen disponible (portada → galería → catálogo) como en los otros diseños.
 import { computed, inject, onBeforeUnmount, onMounted, ref } from 'vue'
@@ -63,6 +64,14 @@ const meta = computed(() => {
 })
 const whatsappUrl = computed(() => (custom.value.whatsapp ? `https://wa.me/${custom.value.whatsapp.replace(/\D/g, '')}` : ''))
 const centered = computed(() => props.block?.variant === 'centered')
+// Cinta de disciplinas: adorno opcional (site_theme.decorations.extras) y
+// con contenido propio — los servicios cargados por el negocio, no una
+// lista fija de deportes (un club de boxeo no ofrece yoga).
+const stripItems = computed(() => {
+  if (custom.value.site_theme?.decorations?.extras !== true) return []
+  const services = Array.isArray(custom.value.services) ? custom.value.services : []
+  return services.map((s) => String(s?.title || s?.name || '').trim()).filter(Boolean).slice(0, 8)
+})
 const kicker = computed(() => `Gimnasio${location.value ? ` · ${location.value}` : ' · Centro de entrenamiento'}`)
 const metaIcon = { open: 'clock', loc: 'map-pin', years: 'flame' }
 </script>
@@ -113,14 +122,9 @@ const metaIcon = { open: 'clock', loc: 'map-pin', years: 'flame' }
         </figcaption>
       </figure>
     </div>
-    <div v-reveal="210" class="gy-strip" aria-hidden="true">
+    <div v-if="stripItems.length > 1" v-reveal="210" class="gy-strip" aria-hidden="true">
       <div class="gy-wrap gy-strip-inner">
-        <span>Musculación</span>
-        <span>Funcional</span>
-        <span>Spinning</span>
-        <span>Boxeo</span>
-        <span>Yoga</span>
-        <span>HIIT</span>
+        <span v-for="(item, i) in stripItems" :key="i">{{ item }}</span>
       </div>
     </div>
   </section>

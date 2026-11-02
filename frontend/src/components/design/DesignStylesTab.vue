@@ -96,6 +96,20 @@ const currentIconStyle = computed(() => props.form.icon_style || '')
 function onIconStylePick(value) {
   props.form.icon_style = value || ''
 }
+
+// Adornos opcionales del diseño (cintas, marcos, brillos): apagados por
+// defecto — el dueño decide si el estilo los muestra.
+const decorationsOptions = [
+  { value: 'off', label: 'Sin decoraciones extra', icon: 'minus' },
+  { value: 'on', label: 'Con decoraciones extra', icon: 'sparkles' }
+]
+const currentDecorations = computed(() => (props.form.site_theme?.decorations?.extras === true ? 'on' : 'off'))
+function onDecorationsPick(value) {
+  withTheme((theme) => {
+    if (value === 'on') theme.decorations = { extras: true }
+    else delete theme.decorations
+  })
+}
 const currentPatternMeta = computed(() => patternOptions.value.find((p) => p.slug === currentPattern.value) || null)
 
 // Vista del HTML propio del patrón (el diseño fuente, con su menú y sus
@@ -366,6 +380,16 @@ onMounted(() => {
                 :disabled="!iconStyles.length" @change="onIconStylePick"
               />
               <p class="dmenu-hint">Se pueden cambiar sin tocar el diseño.</p>
+            </div>
+
+            <div class="dmenu-field">
+              <label>Decoraciones extra</label>
+              <DesignSelect
+                :model-value="currentDecorations" :options="decorationsOptions" icon="sparkles"
+                aria-label="Decoraciones extra" placeholder="Sin decoraciones extra…"
+                @change="onDecorationsPick"
+              />
+              <p class="dmenu-hint">Cintas, marcos y brillos que el diseño ofrece de forma opcional.</p>
             </div>
 
             <div v-for="r in FONT_ROLES" :key="r.key" class="dmenu-field" :class="{ locked: !advanced }" @focusin="emit('ring', r.ring)">

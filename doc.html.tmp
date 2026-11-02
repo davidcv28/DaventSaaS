@@ -1,0 +1,213 @@
+<header class="site-header top" id="site-header">
+  <div class="wrap top-in">
+    <a class="brand" href="#inicio" data-ds-route="home">
+      <span class="mark">C<img src="" alt=""></span>
+      Café La Esquina
+    </a>
+    <nav class="nav" aria-label="Principal">
+      <a href="#inicio" data-ds-route="home">Inicio</a>
+      <a href="#catalogo" data-ds-route="catalog">Catálogo</a>
+      <a href="#servicios" data-ds-route="services">Servicios</a>
+      <a href="#contacto" data-ds-route="home">Contacto</a>
+    </nav>
+  </div>
+</header>
+
+<main>
+<div data-surface="landing">
+
+  <section class="hero" id="inicio">
+    <div class="blob b1" aria-hidden="true"></div>
+    <div class="blob b2" aria-hidden="true"></div>
+    <div class="wrap hero-grid">
+      <div>
+        <p class="eyebrow enter" style="--d:0ms">La Plata, Buenos Aires</p>
+        <h1 class="enter" style="--d:100ms">Café La Esquina: gastronomia con trato de barrio</h1>
+        <p class="lead enter" style="--d:200ms">Productos y atención de siempre.</p>
+        <div class="hero-actions enter" style="--d:300ms">
+          <a class="btn" href="#catalogo" data-ds-route="catalog">Ver catálogo <svg class="icon arrow" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg></a>
+          <a class="btn ghost" href="https://wa.me/5492215551234">Consultar</a>
+        </div>
+      </div>
+      <div class="hero-card-wrap" id="hero-tilt">
+        <aside class="hero-card" id="hero-card" aria-label="Resumen">
+          <span class="shot"><img src="" alt="Café La Esquina"></span>
+          <div class="stat">
+            <span class="ico-box"><svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M21 8l-9-5-9 5v8l9 5 9-5z"/><path d="M3 8l9 5 9-5M12 13v8"/></svg></span>
+            <span class="txt"><strong>Café La Esquina</strong><span></span></span>
+          </div>
+          <div class="stat">
+            <span class="ico-box"><svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg></span>
+            <span class="txt"><strong>Horarios</strong><span></span></span>
+          </div>
+          <div class="stat">
+            <span class="ico-box"><svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M21 12a8 8 0 0 1-11.6 7.1L4 20l1-4.6A8 8 0 1 1 21 12z"/></svg></span>
+            <span class="txt"><strong>Atención directa</strong><span>5492215551234</span></span>
+          </div>
+        </aside>
+      </div>
+    </div>
+  </section>
+
+  <div class="ticker" aria-label="Beneficios">
+    <div class="ticker-track">
+      <span class="ticker-item"><svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 7h11v9H3zM14 10h4l3 3v3h-7"/><circle cx="7" cy="17" r="1.8"/><circle cx="17" cy="17" r="1.8"/></svg>Retiro y envíos</span>
+      <span class="ticker-item"><svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3l8 3v6c0 5-3.5 8-8 9-4.5-1-8-4-8-9V6z"/><path d="M9 12l2 2 4-4"/></svg>Compra protegida</span>
+      <span class="ticker-item"><svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 14v-2a8 8 0 0 1 16 0v2"/><rect x="3" y="14" width="4" height="6" rx="1"/><rect x="17" y="14" width="4" height="6" rx="1"/></svg>Atención personalizada</span>
+      <span class="ticker-item"><svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="6" width="18" height="12" rx="2"/><path d="M3 10h18M7 15h3"/></svg>Pagos coordinados</span>
+      <span class="ticker-item"><svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 7h11v9H3zM14 10h4l3 3v3h-7"/><circle cx="7" cy="17" r="1.8"/><circle cx="17" cy="17" r="1.8"/></svg>Retiro y envíos</span>
+      <span class="ticker-item"><svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3l8 3v6c0 5-3.5 8-8 9-4.5-1-8-4-8-9V6z"/><path d="M9 12l2 2 4-4"/></svg>Compra protegida</span>
+      <span class="ticker-item"><svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 14v-2a8 8 0 0 1 16 0v2"/><rect x="3" y="14" width="4" height="6" rx="1"/><rect x="17" y="14" width="4" height="6" rx="1"/></svg>Atención personalizada</span>
+      <span class="ticker-item"><svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="6" width="18" height="12" rx="2"/><path d="M3 10h18M7 15h3"/></svg>Pagos coordinados</span>
+    </div>
+  </div>
+
+  <section class="section band" id="destacados">
+    <div class="wrap">
+      <div class="section-head reveal">
+        <p class="eyebrow">Catálogo</p>
+        <h2>Productos seleccionados</h2>
+        <p class="lead">Lo último que cargamos para vos.</p>
+      </div>
+      <div class="catalog-grid reveal"><article class="ds-product" data-cat="" data-brand="" data-name="gastronomia producto 4" data-price="1750.00"><a class="ds-product-link" href="#catalogo" data-ds-product="118" aria-label="Gastronomia producto 4"><img class="ds-product-img" src="https://pub-7d2a1621ac1a4e648ff0c8756f2781b9.r2.dev/qa/v6/2-3.webp" alt="Gastronomia producto 4" loading="lazy"><span class="ds-product-copy"><h3 class="ds-product-name">Gastronomia producto 4</h3><small class="ds-product-desc">Hecho con materia prima local.</small></span><span class="ds-product-cat"></span><span class="ds-product-price"><span class="ds-product-amount">$1.750</span></span></a></article><article class="ds-product" data-cat="" data-brand="" data-name="gastronomia producto 5" data-price="2000.00"><a class="ds-product-link" href="#catalogo" data-ds-product="119" aria-label="Gastronomia producto 5"><img class="ds-product-img" src="https://pub-7d2a1621ac1a4e648ff0c8756f2781b9.r2.dev/qa/v6/2-4.webp" alt="Gastronomia producto 5" loading="lazy"><span class="ds-product-copy"><h3 class="ds-product-name">Gastronomia producto 5</h3><small class="ds-product-desc">Hecho con materia prima local.</small></span><span class="ds-product-cat"></span><span class="ds-product-price"><span class="ds-product-amount">$2.000</span></span></a></article><article class="ds-product" data-cat="" data-brand="" data-name="gastronomia producto 6" data-price="2250.00"><a class="ds-product-link" href="#catalogo" data-ds-product="120" aria-label="Gastronomia producto 6"><img class="ds-product-img" src="https://pub-7d2a1621ac1a4e648ff0c8756f2781b9.r2.dev/qa/v6/2-5.webp" alt="Gastronomia producto 6" loading="lazy"><span class="ds-product-copy"><h3 class="ds-product-name">Gastronomia producto 6</h3><small class="ds-product-desc">Hecho con materia prima local.</small></span><span class="ds-product-cat"></span><span class="ds-product-price"><span class="ds-product-amount">$2.250</span></span></a></article><article class="ds-product" data-cat="" data-brand="" data-name="gastronomia producto 1" data-price="1000.00"><a class="ds-product-link" href="#catalogo" data-ds-product="115" aria-label="Gastronomia producto 1"><img class="ds-product-img" src="https://pub-7d2a1621ac1a4e648ff0c8756f2781b9.r2.dev/qa/v6/2-0.webp" alt="Gastronomia producto 1" loading="lazy"><span class="ds-product-copy"><h3 class="ds-product-name">Gastronomia producto 1</h3><small class="ds-product-desc">Hecho con materia prima local.</small></span><span class="ds-product-cat"></span><span class="ds-product-price"><span class="ds-product-amount">$1.000</span></span></a></article><article class="ds-product" data-cat="" data-brand="" data-name="gastronomia producto 2" data-price="1250.00"><a class="ds-product-link" href="#catalogo" data-ds-product="116" aria-label="Gastronomia producto 2"><img class="ds-product-img" src="https://pub-7d2a1621ac1a4e648ff0c8756f2781b9.r2.dev/qa/v6/2-1.webp" alt="Gastronomia producto 2" loading="lazy"><span class="ds-product-copy"><h3 class="ds-product-name">Gastronomia producto 2</h3><small class="ds-product-desc">Hecho con materia prima local.</small></span><span class="ds-product-cat"></span><span class="ds-product-price"><span class="ds-product-amount">$1.250</span></span></a></article><article class="ds-product" data-cat="" data-brand="" data-name="gastronomia producto 3" data-price="1500.00"><a class="ds-product-link" href="#catalogo" data-ds-product="117" aria-label="Gastronomia producto 3"><img class="ds-product-img" src="https://pub-7d2a1621ac1a4e648ff0c8756f2781b9.r2.dev/qa/v6/2-2.webp" alt="Gastronomia producto 3" loading="lazy"><span class="ds-product-copy"><h3 class="ds-product-name">Gastronomia producto 3</h3><small class="ds-product-desc">Hecho con materia prima local.</small></span><span class="ds-product-cat"></span><span class="ds-product-price"><span class="ds-product-amount">$1.500</span></span></a></article></div>
+    </div>
+  </section>
+
+  <section class="section" id="servicios-landing">
+    <div class="wrap">
+      <div class="section-head reveal">
+        <p class="eyebrow">Servicios</p>
+        <h2>Lo hacemos por vos</h2>
+        <p class="lead">Hacemos las cosas bien desde el primer día.</p>
+      </div>
+      
+      <div style="margin-top:24px"><a class="btn ghost" href="#servicios" data-ds-route="services">Ver todos los servicios <svg class="icon arrow" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg></a></div>
+    </div>
+  </section>
+
+  <section class="section band" id="contacto">
+    <div class="wrap contact-grid reveal">
+      <div>
+        <p class="eyebrow">Contacto</p>
+        <h2 style="font-size:clamp(1.9rem,4.5vw,2.8rem);margin-top:12px">Escribinos</h2>
+        <p class="lead" style="margin-top:16px">Respondemos en menos de un día hábil.</p>
+      </div>
+      <div class="contact-card">
+        <a class="contact-row" href="https://wa.me/5492215551234"><svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M21 12a8 8 0 0 1-11.6 7.1L4 20l1-4.6A8 8 0 1 1 21 12z"/></svg><span>5492215551234</span></a>
+        <span class="contact-row"><svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="m3 7 9 6 9-6"/></svg><span></span></span>
+        <span class="contact-row"><svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 21s6.5-5.6 6.5-10.5a6.5 6.5 0 1 0-13 0C5.5 15.4 12 21 12 21z"/><circle cx="12" cy="10.5" r="2.4"/></svg><span> La Plata, Buenos Aires</span></span>
+        <span class="contact-row"><svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg><span></span></span>
+        <a class="btn" href="https://wa.me/5492215551234" style="margin-top:8px">Escribir por WhatsApp <svg class="icon arrow" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg></a>
+      </div>
+    </div>
+  </section>
+
+</div>
+
+<section class="section" data-surface="catalog" id="catalogo">
+  <div class="wrap">
+    <h1 class="sr-only">Catálogo de Café La Esquina</h1>
+    <nav class="cat-crumbs" aria-label="Ruta">
+      <a href="#inicio" data-ds-route="home">Inicio</a>
+      <span class="sep" aria-hidden="true">›</span>
+      <strong data-ds-crumb aria-current="page">Todos los productos</strong>
+    </nav>
+    <div class="section-head">
+      <p class="eyebrow">Catálogo</p>
+      <h2>Todos los productos</h2>
+    </div>
+    <div class="filters" data-ds-filters role="group" aria-label="Filtrar por categoría"></div>
+    <div class="cat-bar">
+      <p class="cat-count" data-ds-count aria-live="polite"></p>
+      <label class="cat-sort"><span>Ordenar por</span>
+        <select data-ds-sort>
+          <option value="relevance">Más relevantes</option>
+          <option value="price-asc">Menor precio</option>
+          <option value="price-desc">Mayor precio</option>
+          <option value="recent">Más nuevos</option>
+          <option value="name">Nombre</option>
+        </select>
+      </label>
+    </div>
+    <div class="catalog-grid" data-ds-products><article class="ds-product" data-cat="" data-brand="" data-name="gastronomia producto 4" data-price="1750.00"><a class="ds-product-link" href="#catalogo" data-ds-product="118" aria-label="Gastronomia producto 4"><img class="ds-product-img" src="https://pub-7d2a1621ac1a4e648ff0c8756f2781b9.r2.dev/qa/v6/2-3.webp" alt="Gastronomia producto 4" loading="lazy"><span class="ds-product-copy"><h3 class="ds-product-name">Gastronomia producto 4</h3><small class="ds-product-desc">Hecho con materia prima local.</small></span><span class="ds-product-cat"></span><span class="ds-product-price"><span class="ds-product-amount">$1.750</span></span></a></article><article class="ds-product" data-cat="" data-brand="" data-name="gastronomia producto 5" data-price="2000.00"><a class="ds-product-link" href="#catalogo" data-ds-product="119" aria-label="Gastronomia producto 5"><img class="ds-product-img" src="https://pub-7d2a1621ac1a4e648ff0c8756f2781b9.r2.dev/qa/v6/2-4.webp" alt="Gastronomia producto 5" loading="lazy"><span class="ds-product-copy"><h3 class="ds-product-name">Gastronomia producto 5</h3><small class="ds-product-desc">Hecho con materia prima local.</small></span><span class="ds-product-cat"></span><span class="ds-product-price"><span class="ds-product-amount">$2.000</span></span></a></article><article class="ds-product" data-cat="" data-brand="" data-name="gastronomia producto 6" data-price="2250.00"><a class="ds-product-link" href="#catalogo" data-ds-product="120" aria-label="Gastronomia producto 6"><img class="ds-product-img" src="https://pub-7d2a1621ac1a4e648ff0c8756f2781b9.r2.dev/qa/v6/2-5.webp" alt="Gastronomia producto 6" loading="lazy"><span class="ds-product-copy"><h3 class="ds-product-name">Gastronomia producto 6</h3><small class="ds-product-desc">Hecho con materia prima local.</small></span><span class="ds-product-cat"></span><span class="ds-product-price"><span class="ds-product-amount">$2.250</span></span></a></article><article class="ds-product" data-cat="" data-brand="" data-name="gastronomia producto 1" data-price="1000.00"><a class="ds-product-link" href="#catalogo" data-ds-product="115" aria-label="Gastronomia producto 1"><img class="ds-product-img" src="https://pub-7d2a1621ac1a4e648ff0c8756f2781b9.r2.dev/qa/v6/2-0.webp" alt="Gastronomia producto 1" loading="lazy"><span class="ds-product-copy"><h3 class="ds-product-name">Gastronomia producto 1</h3><small class="ds-product-desc">Hecho con materia prima local.</small></span><span class="ds-product-cat"></span><span class="ds-product-price"><span class="ds-product-amount">$1.000</span></span></a></article><article class="ds-product" data-cat="" data-brand="" data-name="gastronomia producto 2" data-price="1250.00"><a class="ds-product-link" href="#catalogo" data-ds-product="116" aria-label="Gastronomia producto 2"><img class="ds-product-img" src="https://pub-7d2a1621ac1a4e648ff0c8756f2781b9.r2.dev/qa/v6/2-1.webp" alt="Gastronomia producto 2" loading="lazy"><span class="ds-product-copy"><h3 class="ds-product-name">Gastronomia producto 2</h3><small class="ds-product-desc">Hecho con materia prima local.</small></span><span class="ds-product-cat"></span><span class="ds-product-price"><span class="ds-product-amount">$1.250</span></span></a></article><article class="ds-product" data-cat="" data-brand="" data-name="gastronomia producto 3" data-price="1500.00"><a class="ds-product-link" href="#catalogo" data-ds-product="117" aria-label="Gastronomia producto 3"><img class="ds-product-img" src="https://pub-7d2a1621ac1a4e648ff0c8756f2781b9.r2.dev/qa/v6/2-2.webp" alt="Gastronomia producto 3" loading="lazy"><span class="ds-product-copy"><h3 class="ds-product-name">Gastronomia producto 3</h3><small class="ds-product-desc">Hecho con materia prima local.</small></span><span class="ds-product-cat"></span><span class="ds-product-price"><span class="ds-product-amount">$1.500</span></span></a></article></div>
+    <p class="ds-empty" data-ds-noresults hidden>No hay productos que coincidan con tu búsqueda.</p>
+  </div>
+</section>
+
+<section class="section" data-surface="services" id="servicios">
+  <div class="wrap">
+    <h1 class="sr-only">Servicios de Café La Esquina</h1>
+    <nav class="cat-crumbs" aria-label="Ruta">
+      <a href="#inicio" data-ds-route="home">Inicio</a>
+      <span class="sep" aria-hidden="true">›</span>
+      <strong aria-current="page">Servicios</strong>
+    </nav>
+    <div class="section-head">
+      <p class="eyebrow">Servicios</p>
+      <h2>Lo hacemos por vos</h2>
+      <p class="lead">Hacemos las cosas bien desde el primer día.</p>
+    </div>
+    
+    <div style="margin-top:24px"><a class="btn" href="https://wa.me/5492215551234">Consultar por WhatsApp <svg class="icon arrow" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg></a></div>
+  </div>
+</section>
+
+<section class="section" data-surface="product">
+  <div class="wrap">
+    <h1 class="sr-only">Gastronomia producto 1 · Café La Esquina</h1>
+    <nav class="cat-crumbs" aria-label="Ruta">
+      <a href="#inicio" data-ds-route="home">Inicio</a>
+      <span class="sep" aria-hidden="true">›</span>
+      <a href="#catalogo" data-ds-route="catalog">Catálogo</a>
+      <span class="sep" aria-hidden="true">›</span>
+      <strong aria-current="page">Gastronomia producto 1</strong>
+    </nav>
+
+    <div class="pdp-layout">
+      <figure class="pdp-gallery">
+        <span class="pdp-tag"></span>
+        <img src="https://pub-7d2a1621ac1a4e648ff0c8756f2781b9.r2.dev/qa/v6/2-0.webp" alt="Gastronomia producto 1" fetchpriority="high">
+      </figure>
+      <aside class="pdp-info" aria-label="Información del producto">
+        <p class="pdp-kicker"><span></span><span></span></p>
+        <h1>Gastronomia producto 1</h1>
+        <p class="pdp-ref">Ref. 115 · Vendido por Café La Esquina</p>
+        <div class="pdp-price"><b>$1.000</b><em></em><s></s></div>
+        <a class="btn" href="https://wa.me/5492215551234?text=Hola%20Caf%C3%A9%20La%20Esquina%2C%20me%20interesa%20%22Gastronomia%20producto%201%22%20%28%241.000%29%20que%20vi%20en%20tu%20cat%C3%A1logo.">Consultar por WhatsApp <svg class="icon arrow" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg></a>
+        <a class="btn ghost" href="#catalogo" data-ds-route="catalog">‹ Volver al catálogo</a>
+        <div class="pdp-seller">
+          <span>Vendido por <strong>Café La Esquina</strong></span>
+          <span>La Plata, Buenos Aires</span>
+          <span></span>
+        </div>
+      </aside>
+    </div>
+
+    <div class="pdp-box">
+      <h2>Características</h2>
+      <table class="pdp-specs"><tbody></tbody></table>
+      <p class="pdp-desc">Hecho con materia prima local.</p>
+    </div>
+
+    <section class="pdp-rev" aria-label="Opiniones">
+      <div class="pdp-rev-head">
+        <h2>Opiniones</h2>
+        <p class="pdp-score"><b></b><span>promedio ·  valoraciones</span></p>
+      </div>
+      
+    </section>
+
+    <section class="pdp-rel" aria-label="También te puede interesar">
+      <h2>También te puede interesar</h2>
+      <div class="catalog-grid"><article class="ds-product" data-cat="" data-brand="" data-name="gastronomia producto 4" data-price="1750.00"><a class="ds-product-link" href="#catalogo" data-ds-product="118" aria-label="Gastronomia producto 4"><img class="ds-product-img" src="https://pub-7d2a1621ac1a4e648ff0c8756f2781b9.r2.dev/qa/v6/2-3.webp" alt="Gastronomia producto 4" loading="lazy"><span class="ds-product-copy"><h3 class="ds-product-name">Gastronomia producto 4</h3><small class="ds-product-desc">Hecho con materia prima local.</small></span><span class="ds-product-cat"></span><span class="ds-product-price"><span class="ds-product-amount">$1.750</span></span></a></article><article class="ds-product" data-cat="" data-brand="" data-name="gastronomia producto 5" data-price="2000.00"><a class="ds-product-link" href="#catalogo" data-ds-product="119" aria-label="Gastronomia producto 5"><img class="ds-product-img" src="https://pub-7d2a1621ac1a4e648ff0c8756f2781b9.r2.dev/qa/v6/2-4.webp" alt="Gastronomia producto 5" loading="lazy"><span class="ds-product-copy"><h3 class="ds-product-name">Gastronomia producto 5</h3><small class="ds-product-desc">Hecho con materia prima local.</small></span><span class="ds-product-cat"></span><span class="ds-product-price"><span class="ds-product-amount">$2.000</span></span></a></article><article class="ds-product" data-cat="" data-brand="" data-name="gastronomia producto 6" data-price="2250.00"><a class="ds-product-link" href="#catalogo" data-ds-product="120" aria-label="Gastronomia producto 6"><img class="ds-product-img" src="https://pub-7d2a1621ac1a4e648ff0c8756f2781b9.r2.dev/qa/v6/2-5.webp" alt="Gastronomia producto 6" loading="lazy"><span class="ds-product-copy"><h3 class="ds-product-name">Gastronomia producto 6</h3><small class="ds-product-desc">Hecho con materia prima local.</small></span><span class="ds-product-cat"></span><span class="ds-product-price"><span class="ds-product-amount">$2.250</span></span></a></article><article class="ds-product" data-cat="" data-brand="" data-name="gastronomia producto 2" data-price="1250.00"><a class="ds-product-link" href="#catalogo" data-ds-product="116" aria-label="Gastronomia producto 2"><img class="ds-product-img" src="https://pub-7d2a1621ac1a4e648ff0c8756f2781b9.r2.dev/qa/v6/2-1.webp" alt="Gastronomia producto 2" loading="lazy"><span class="ds-product-copy"><h3 class="ds-product-name">Gastronomia producto 2</h3><small class="ds-product-desc">Hecho con materia prima local.</small></span><span class="ds-product-cat"></span><span class="ds-product-price"><span class="ds-product-amount">$1.250</span></span></a></article></div>
+    </section>
+  </div>
+</section>
+</main>
+
+<footer class="site-footer">
+  <div class="wrap">
+    <span class="foot-name">Café La Esquina</span>
+    <span>© 2026 Café La Esquina · Todos los derechos reservados</span>
+  </div>
+</footer>
