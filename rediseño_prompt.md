@@ -148,7 +148,7 @@
   `seed_data.json`. Fragmentos con clases `ds-*` (producto, categoría, servicio,
   galería, vacío).
 - [x] Convertir los 8 patrones restantes (`alimentos`, `trama`, `indumentaria`,
-  `boutique`, `atelier`, `clasico`, `circuito`, `seguridad`) al mismo contrato.
+  `boutique`, `atelier`, `clasico`, `seguridad`) al mismo contrato.
   **(TERMINADO)** — fuente editable `sources/<slug>.html` para los 9 patrones;
   `seed_design_catalog` parte la fuente (`services/source_document.py`) y
   **deriva `variables` de los placeholders reales** (solo claves del contrato),

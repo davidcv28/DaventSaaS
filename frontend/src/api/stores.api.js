@@ -763,7 +763,7 @@ export const STORE_THEMES = {
 //   'base'     -> todo plan con has_customization: raiz/esencial
 //   'plus'     -> has_design_plus (Estándar y Premium): mercado, gimnasio,
 //                 sastreria, moderntec
-//   'advanced' -> has_design_advanced (Premium): circuito
+//   'advanced' -> has_design_advanced (Premium): hoy no suma diseños
 // El backend descarta del PATCH un diseño fuera del nivel y la web fuerza
 // 'raiz' (fallback global) si el guardado deja de estar permitido. Todo id
 // retirado se remapea al más cercano (STORE_TEMPLATE_RETIRED_MAP).
@@ -774,7 +774,6 @@ export const STORE_TEMPLATES = {
   gimnasio:    { label: 'Gimnasio',    rubro: 'gimnasio',     tier: 'plus',     defaultAccent: '#F97316', desc: 'Gimnasio: energía deportiva, planes y sedes.' },
   sastreria:   { label: 'Sastrería',   rubro: 'indumentaria', tier: 'plus',     defaultAccent: '#6E4A2F', desc: 'Sastrería editorial: papel hueso, tinta y cuero, índice numerado y filas de prendas tipo fichero.' },
   moderntec:   { label: 'ModernTec',   rubro: 'tecnologia',   tier: 'plus',     defaultAccent: '#3dd6ff', desc: 'ModernTec: oscuro tecnológico, acento cyan/violeta — tiendas de tecnología, electrónica y gaming.' },
-  circuito:    { label: 'Circuito',    rubro: 'tecnologia',   tier: 'advanced', defaultAccent: '#22D3EE', desc: 'Tecnología oscura y técnica: retícula sutil, mono en etiquetas y tarjetas de producto con specs.' },
 }
 
 // Familias de diseño para el selector del dashboard.
@@ -784,7 +783,6 @@ export const STORE_TEMPLATE_FAMILIES = [
   { key: 'deporte',      label: 'Deporte',      caption: 'Gimnasios y fitness',     templates: ['gimnasio'] },
   { key: 'sastreria',    label: 'Indumentaria', caption: 'Sastrería de autor',      templates: ['sastreria'] },
   { key: 'tecnologia',   label: 'Tecnología',   caption: 'Electrónica y gaming',    templates: ['moderntec'] },
-  { key: 'circuito',     label: 'Tecnología',   caption: 'Tech premium oscura',     templates: ['circuito'] },
 ]
 export const FAMILY_TEMPLATE_KEYS = STORE_TEMPLATE_FAMILIES.flatMap((f) => f.templates)
 
@@ -793,7 +791,7 @@ export const FAMILY_TEMPLATE_KEYS = STORE_TEMPLATE_FAMILIES.flatMap((f) => f.tem
 // desde TEMPLATE_CSS con esta misma clave.
 export const STORE_TEMPLATE_SKIN = {
   raiz: 'raiz', mercado: 'mercado', gimnasio: 'gimnasio',
-  sastreria: 'sastreria', circuito: 'circuito',
+  sastreria: 'sastreria',
   moderntec: 'moderntec'
 }
 export function storeSkinOf(t) { return STORE_TEMPLATE_SKIN[t] || 'raiz' }
@@ -810,8 +808,9 @@ export const STORE_TEMPLATE_RETIRED_MAP = {
   riso: 'sastreria', promo: 'sastreria', aurora: 'sastreria',
   trama: 'sastreria', indumentaria: 'sastreria', boutique: 'sastreria',
   atelier: 'sastreria', ai_pulse: 'sastreria',
-  perspective: 'circuito', circuit: 'circuito', terminal: 'circuito',
-  lab: 'circuito', ai_lumen: 'circuito', seguridad: 'circuito',
+  perspective: 'moderntec', circuit: 'moderntec', terminal: 'moderntec',
+  lab: 'moderntec', ai_lumen: 'moderntec', seguridad: 'moderntec',
+  circuito: 'moderntec',
 }
 
 // Patrones exclusivos del motor "Diseñar con IA": ya no existen (el motor

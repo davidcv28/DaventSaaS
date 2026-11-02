@@ -15,7 +15,7 @@ export const landingViews = {
   mercado:      () => import('../views/store/mercado/InicioView.vue'),
   gimnasio:     () => import('../views/store/gimnasio/InicioView.vue'),
   sastreria:    () => import('../views/store/sastreria/InicioView.vue'),
-  circuito:     () => import('../views/store/circuito/InicioView.vue'),
+
   moderntec:    () => import('../views/store/moderntec/InicioView.vue')
 }
 
@@ -24,7 +24,7 @@ export const catalogViews = {
   mercado:      () => import('../views/store/mercado/CatalogoView.vue'),
   gimnasio:     () => import('../views/store/gimnasio/CatalogoView.vue'),
   sastreria:    () => import('../views/store/sastreria/CatalogoView.vue'),
-  circuito:     () => import('../views/store/circuito/CatalogoView.vue'),
+
   moderntec:    () => import('../views/store/moderntec/CatalogoView.vue')
 }
 
@@ -33,7 +33,7 @@ export const productViews = {
   mercado:      () => import('../views/store/mercado/ProductoView.vue'),
   gimnasio:     () => import('../views/store/gimnasio/ProductoView.vue'),
   sastreria:    () => import('../views/store/sastreria/ProductoView.vue'),
-  circuito:     () => import('../views/store/circuito/ProductoView.vue'),
+
   moderntec:    () => import('../views/store/moderntec/ProductoView.vue')
 }
 
@@ -41,7 +41,7 @@ export const servicesViews = {
   raiz:         () => import('../views/store/raiz/ServiciosView.vue'),
   gimnasio:     () => import('../views/store/gimnasio/ServiciosView.vue'),
   sastreria:    () => import('../views/store/sastreria/ServiciosView.vue'),
-  circuito:     () => import('../views/store/circuito/ServiciosView.vue'),
+
   moderntec:    () => import('../views/store/moderntec/ServiciosView.vue')
 }
 

@@ -487,7 +487,7 @@ class AiOnlyLooksTests(unittest.TestCase):
     def test_the_engine_proposes_ai_only_looks(self):
         stats   =   {'products': 20, 'images': 18, 'categories': 4, 'brands': 3,
                      'gallery': 6, 'carousel': 3, 'offers': 2, 'text_chars': 400}
-        allowed =   ('raiz', 'alimentos', 'trama', 'indumentaria', 'boutique', 'clasico', 'circuito', 'seguridad')
+        allowed =   ('raiz', 'alimentos', 'trama', 'indumentaria', 'boutique', 'clasico', 'seguridad')
         hits    =   0
         for rubro in RUBROS:
             for seed in range(4):

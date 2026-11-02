@@ -10,7 +10,7 @@
    REGLA: Raiz queda intacta. Todo selector de esta hoja esta prefijado con
    .store-page:not([data-template='raiz']), asi que store-raiz.css sigue
    siendo la unica fuente para el diseno raiz. Las pieles de cada diseno
-   (circuito, alimentos, boutique, trama, seguridad) se cargan despues y
+   (mercado, gimnasio, sastreria, moderntec) se cargan despues y
    pueden repintar dentro de su wrapper.
 
    Generado por qa/build_services_base.py; si se toca la base de raiz, volver

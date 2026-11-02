@@ -156,7 +156,6 @@ export const TEMPLATE_FAMILY = {
   sastreria: 'editorial',
   mercado: 'editorial',
   gimnasio: 'brutal',
-  circuito: 'tech',
   moderntec: 'tech'
 }
 
@@ -192,7 +191,6 @@ export const STYLE_ICON_OVERRIDES = {
 // Ajuste por plantilla (tienda sin estilo elegido): catálogo de UN diseño.
 export const TEMPLATE_ICON_OVERRIDES = {
   sastreria: { store: 'scissors', tag: 'percent' },
-  circuito: { store: 'terminal', sparkles: 'zap' },
   moderntec: { store: 'terminal', sparkles: 'zap' },
   gimnasio: { store: 'dumbbell', sparkles: 'zap', tag: 'percent' }
 }

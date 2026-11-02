@@ -13,7 +13,7 @@ from StoreApp.domains.stores.models import Store
 OUT = Path('.tmp/qa-surfaces')
 OUT.mkdir(parents=True, exist_ok=True)
 SLUGS = sys.argv[1:] or ['raiz', 'alimentos', 'trama', 'indumentaria', 'boutique',
-                         'atelier', 'clasico', 'circuito', 'seguridad']
+                         'atelier', 'clasico', 'seguridad']
 
 HIDE = ('html[data-ds-surface="catalog"] [data-surface]:not([data-surface="catalog"]),'
         'html[data-ds-surface="services"] [data-surface]:not([data-surface="services"]){display:none!important}'

@@ -533,8 +533,8 @@ _FALLBACK_FONT  =   'inter'
 #tono o las fotos los favorecen.
 _DATA_SIGNALS   =   {
     #fotos/texto largo/catálogo amplio: qué DISEÑOS se defienden mejor
-    #(catálogo nuevo por rubro: raiz generalista, trama editorial, circuito técnico)
-    'photos'    :   ('trama', 'circuito', 'raiz'),
+    #(catálogo nuevo por rubro: raiz generalista, trama editorial, moderntec técnico)
+    'photos'    :   ('trama', 'moderntec', 'raiz'),
     'text'      :   ('raiz', 'trama'),
     'catalog'   :   ('raiz', 'trama'),
     'empty'     :   ('raiz',),

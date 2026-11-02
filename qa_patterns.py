@@ -13,7 +13,7 @@ from StoreApp.domains.stores.models import Store
 OUT = Path('.tmp/qa-patterns')
 OUT.mkdir(parents=True, exist_ok=True)
 SLUGS = sys.argv[1:] or ['raiz', 'alimentos', 'trama', 'indumentaria', 'boutique',
-                         'atelier', 'clasico', 'circuito', 'seguridad']
+                         'atelier', 'clasico', 'seguridad']
 WIDTHS = [360, 390, 768, 1024, 1360, 1920]
 
 store = Store.objects.get(slug='demo')

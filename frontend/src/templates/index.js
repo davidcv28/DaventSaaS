@@ -23,10 +23,9 @@ import raiz         from './raiz/index.js'
 import mercado      from './mercado/index.js'
 import gimnasio     from './gimnasio/index.js'
 import sastreria    from './sastreria/index.js'
-import circuito     from './circuito/index.js'
 import moderntec    from './moderntec/index.js'
 
-export const TEMPLATE_DEFS = { raiz, mercado, gimnasio, sastreria, circuito, moderntec }
+export const TEMPLATE_DEFS = { raiz, mercado, gimnasio, sastreria, moderntec }
 
 export const DEFAULT_TEMPLATE = 'raiz'
 

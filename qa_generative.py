@@ -22,11 +22,11 @@ API = 'http://127.0.0.1:8000/api/stores/public/bench-store/'
 CAT = API + 'catalog/'
 OUT = sys.argv[1] if len(sys.argv) > 1 else 'generative'
 ONLY = sys.argv[2:] or None
-TEMPLATES = ['raiz', 'alimentos', 'trama', 'boutique', 'circuito', 'seguridad']
+TEMPLATES = ['raiz', 'alimentos', 'trama', 'boutique', 'seguridad']
 # El acento del dueño es un slug del catálogo cerrado STORE_ACCENTS.
 ACCENTS = {
     'raiz': 'emerald', 'alimentos': 'rose', 'trama': 'orange',
-    'boutique': 'violet', 'circuito': 'sky', 'seguridad': 'rose',
+    'boutique': 'violet', 'seguridad': 'rose',
 }
 
 server = None

@@ -778,15 +778,15 @@ SKIN_STYLE_PRESET   =   {
 #se mapean al diseño del catálogo que les da su aire: luxury -> boutique,
 #craft -> alimentos, bold -> seguridad.
 #Catálogo por rubro: cada preset publica con el diseño que mejor le da aire
-#(lujo/moda -> sastreria, oscuros/técnicos -> circuito, oficio -> mercado).
+#(lujo/moda -> sastreria, oscuros/técnicos -> moderntec, oficio -> mercado).
 STYLE_PRESET_TEMPLATES  =   {
     'editorial-minima'  :   'raiz',
-    'vidrio-nocturno'   :   'circuito',
+    'vidrio-nocturno'   :   'moderntec',
     'bento'             :   'sastreria',
-    'neo-brutalista'    :   'circuito',
+    'neo-brutalista'    :   'moderntec',
     'lujo-serif'        :   'sastreria',
     'pastel-suave'      :   'raiz',
-    'neon-tech'         :   'circuito',
+    'neon-tech'         :   'moderntec',
     'terracota'         :   'mercado',
     'monocromo'         :   'raiz',
     'retail-vibrante'   :   'mercado',
@@ -796,12 +796,12 @@ STYLE_PRESET_TEMPLATES  =   {
     'gourmet-calido'    :   'mercado',
     'belleza-rosa'      :   'sastreria',
     'kids-ludico'       :   'gimnasio',
-    'urbano-sticker'    :   'circuito',
-    'consola-retro'     :   'circuito',
+    'urbano-sticker'    :   'moderntec',
+    'consola-retro'     :   'moderntec',
     'denim-urbano'      :   'sastreria',
     'atelier-moda'      :   'sastreria',
     'suizo-editorial'   :   'raiz',
-    'cobalto-nocturno'  :   'circuito',
+    'cobalto-nocturno'  :   'moderntec',
 }
 #Par tipográfico por familia (ids de ai_design_typography.TYPE_PAIRS). Es el
 #par con el que arranca el motor para esa piel; la elección final la cierra

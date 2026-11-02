@@ -100,8 +100,8 @@ class CatalogoCerrado(unittest.TestCase):
         self.assertGreater(len(TYPE.TYPE_PAIRS), 0)
 
     def test_public_catalog_is_one_design(self):
-        self.assertEqual(R.PUBLIC_TEMPLATES, ('raiz', 'esencial', 'mercado', 'gimnasio', 'sastreria', 'moderntec', 'circuito'))
-        self.assertEqual(len(R.PUBLIC_TEMPLATES), 7)
+        self.assertEqual(R.PUBLIC_TEMPLATES, ('raiz', 'esencial', 'mercado', 'gimnasio', 'sastreria', 'moderntec'))
+        self.assertEqual(len(R.PUBLIC_TEMPLATES), 6)
         self.assertEqual(R.PUBLIC_TEMPLATE_MAP['boutique'], 'sastreria')
 
     def test_retired_ids_never_come_back_to_the_engine(self):
@@ -403,7 +403,7 @@ class StyleCandidatesEdgeTests(unittest.TestCase):
     def test_data_signals_reward_photos_for_photo_templates(self):
         photo_stats =   dict(stats_empty(), images = 10, gallery = 5)
         candidates  =   A._style_candidates(facts_empty(), photo_stats, answers(), PLAN_BASIC, 0)
-        #Con fotos y sin texto/catálogo el diseño visual (trama/circuito)
+        #Con fotos y sin texto/catálogo el diseño visual (trama/moderntec)
         #puntúa; la tienda vacía premia el generalista (raiz).
         self.assertGreater(A._data_signal('trama', photo_stats, facts_empty()), 0)
         self.assertEqual(A._data_signal('raiz', stats_empty(), facts_empty()), 2)

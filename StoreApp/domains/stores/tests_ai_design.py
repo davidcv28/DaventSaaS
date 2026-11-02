@@ -620,7 +620,7 @@ class AiDesignV2Tests(AiDesignBase):
         sources     =   {proposal['style_source'] for proposal in data['proposals']}
         self.assertEqual(sources, {'plan'})
         self.assertEqual(set(allowed_templates_of(store.user)),
-                         {'raiz', 'esencial', 'moderntec', 'mercado', 'gimnasio', 'sastreria', 'circuito'})
+                         {'raiz', 'esencial', 'moderntec', 'mercado', 'gimnasio', 'sastreria'})
 
     def test_ai_templates_never_outside_plan(self):
         #Sin has_ai_design los ai_* no están en la whitelist del plan y el
@@ -972,7 +972,7 @@ def _contrast(a, b):
     return (max(la, lb) + 0.05) / (min(la, lb) + 0.05)
 
 
-CATALOG_TEMPLATES   =   frozenset(('raiz', 'esencial', 'mercado', 'gimnasio', 'sastreria', 'moderntec', 'circuito'))
+CATALOG_TEMPLATES   =   frozenset(('raiz', 'esencial', 'mercado', 'gimnasio', 'sastreria', 'moderntec'))
 
 
 class AiDesignV4Tests(AiDesignBase):
@@ -1014,7 +1014,7 @@ class AiDesignV4Tests(AiDesignBase):
 
     def test_all_proposals_come_from_the_public_catalog(self):
         #Ninguna propuesta sale del catálogo público y los diseños base del
-        #motor (raiz/trama/circuito) siempre aparecen en alguna generación.
+        #motor (raiz/sastreria/moderntec) siempre aparecen en alguna generación.
         #La igualdad exacta con los 8 ya no aplica: la exploración varía el
         #set por rubro/semilla (indumentaria/clasico entran solo si ganan).
         store, _    =   self._store()
@@ -1043,7 +1043,7 @@ class AiDesignV4Tests(AiDesignBase):
         self.assertTrue(seen <= set(allowed_templates_of(store.user)))
 
     def test_standard_plan_never_gets_advanced_designs(self):
-        #Estándar = base + plus; circuito/seguridad quedan fuera.
+        #Estándar = base + plus; los ids retirados quedan fuera.
         _, profile =   _make_user('estandar')
         _grant(
             profile,
@@ -1060,7 +1060,7 @@ class AiDesignV4Tests(AiDesignBase):
         self.assertTrue(data['proposals'])
         for proposal in data['proposals']:
             self.assertIn(proposal['template'], allowed)
-            self.assertNotIn(proposal['template'], ('circuito', 'seguridad'))
+            self.assertNotIn(proposal['template'], ('circuito', 'seguridad'))  # ids retirados
 
     def test_legacy_and_ai_templates_never_without_the_flag(self):
         store, _    =   self._store(ai = False)
@@ -1072,7 +1072,7 @@ class AiDesignV4Tests(AiDesignBase):
     def test_allowed_templates_grow_with_the_flag(self):
         premium, _  =   self._store()
         self.assertEqual(set(allowed_templates_of(premium.user)),
-                         {'raiz', 'esencial', 'mercado', 'gimnasio', 'sastreria', 'moderntec', 'circuito'})
+                         {'raiz', 'esencial', 'mercado', 'gimnasio', 'sastreria', 'moderntec'})
         basic, _    =   self._store(advanced = False, username = 'basico')
         self.assertEqual(set(allowed_templates_of(basic.user)), {'raiz', 'esencial'})
 

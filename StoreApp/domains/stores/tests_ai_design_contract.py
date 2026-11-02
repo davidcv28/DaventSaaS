@@ -94,7 +94,7 @@ PREMIUM_LIMITS      =   {'max_gallery_images': 20, 'max_images': 50, 'max_storag
 
 #Catálogo del plan (UN diseño: 'raiz' = Esencial) y los exclusivos de IA.
 PLAN_TEMPLATES      =   ('raiz', 'esencial', 'mercado', 'gimnasio', 'moderntec')
-STYLE_TEMPLATES     =   frozenset(('raiz', 'esencial', 'mercado', 'gimnasio', 'sastreria', 'moderntec', 'circuito'))
+STYLE_TEMPLATES     =   frozenset(('raiz', 'esencial', 'mercado', 'gimnasio', 'sastreria', 'moderntec'))
 
 #Bloques exclusivos de "Diseñar con IA" (TEMPLATE_BLOCKS[*]['ai_only']).
 AI_ONLY_BLOCKS      =   frozenset({
@@ -399,7 +399,7 @@ class FuentesDeEstilo(_AiDesignBase):
     def test_with_advanced_the_whitelist_covers_the_eight_designs(self):
         _, profile, _   =   _make_account(*(CUSTOMIZATION + AI_DESIGN + DESIGN_PLUS + DESIGN_ADVANCED))
         allowed         =   allowed_templates_of(profile)
-        self.assertEqual(tuple(allowed), ('raiz', 'esencial', 'mercado', 'gimnasio', 'sastreria', 'moderntec', 'circuito'))
+        self.assertEqual(tuple(allowed), ('raiz', 'esencial', 'mercado', 'gimnasio', 'sastreria', 'moderntec'))
 
     def test_without_the_ai_flag_the_whitelist_is_exactly_the_plan(self):
         #El flag de IA ya no suma diseños: el techo lo pone el nivel del plan.
@@ -412,7 +412,7 @@ class FuentesDeEstilo(_AiDesignBase):
         _, advanced, _  =   _make_account(*(CUSTOMIZATION + DESIGN_PLUS + DESIGN_ADVANCED))
         self.assertEqual(tuple(allowed_templates_of(base)), ('raiz', 'esencial'))
         self.assertEqual(tuple(allowed_templates_of(plus)), ('raiz', 'esencial', 'mercado', 'gimnasio', 'sastreria', 'moderntec'))
-        self.assertEqual(tuple(allowed_templates_of(advanced)), ('raiz', 'esencial', 'mercado', 'gimnasio', 'sastreria', 'moderntec', 'circuito'))
+        self.assertEqual(tuple(allowed_templates_of(advanced)), ('raiz', 'esencial', 'mercado', 'gimnasio', 'sastreria', 'moderntec'))
 
     def test_the_engine_has_no_exclusive_or_legacy_designs(self):
         from StoreApp.domains.stores.models import StoreCustomization

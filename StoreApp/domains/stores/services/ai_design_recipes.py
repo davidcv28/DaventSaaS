@@ -283,7 +283,7 @@ RUBRO_STYLES                =   {
     ),
     'servicios_profesionales': (
         {'template': 'raiz',      'skin': 'corporate-blue',  'pair': 'classic-serif'},
-        {'template': 'circuito',  'skin': 'gradient-plum',   'pair': 'mono-tech'},
+        {'template': 'moderntec',  'skin': 'gradient-plum',   'pair': 'mono-tech'},
         {'template': 'trama',     'skin': 'minimal-slate',   'pair': 'humanist'},
     ),
     'salud': (
@@ -299,17 +299,17 @@ RUBRO_STYLES                =   {
     'construccion': (
         {'template': 'seguridad', 'skin': 'brutal-concrete', 'pair': 'brutal'},
         {'template': 'raiz',      'skin': 'mono-grey',       'pair': 'bold-sans'},
-        {'template': 'circuito',  'skin': 'kinetic-flash',   'pair': 'technical'},
+        {'template': 'moderntec',  'skin': 'kinetic-flash',   'pair': 'technical'},
     ),
     'tecnologia': (
-        {'template': 'circuito',  'skin': 'tech-neon',       'pair': 'technical'},
+        {'template': 'moderntec',  'skin': 'tech-neon',       'pair': 'technical'},
         {'template': 'raiz',      'skin': 'minimal-slate',   'pair': 'mono-tech'},
         {'template': 'trama',     'skin': 'magazine-cover',  'pair': 'grotesk-clean'},
     ),
     'educacion': (
         {'template': 'raiz',      'skin': 'playful-candy',   'pair': 'friendly'},
         {'template': 'trama',     'skin': 'paper-ink',       'pair': 'serif-book'},
-        {'template': 'circuito',  'skin': 'corporate-steel', 'pair': 'humanist'},
+        {'template': 'moderntec',  'skin': 'corporate-steel', 'pair': 'humanist'},
     ),
     'turismo': (
         {'template': 'raiz',      'skin': 'organic-moss',    'pair': 'warm-serif'},
@@ -329,12 +329,12 @@ RUBRO_STYLES                =   {
     'seguridad': (
         {'template': 'seguridad', 'skin': 'pop-poster',      'pair': 'bold-sans'},
         {'template': 'raiz',      'skin': 'brutal-acid',     'pair': 'condensed-bold'},
-        {'template': 'circuito',  'skin': 'mono-grey',       'pair': 'technical'},
+        {'template': 'moderntec',  'skin': 'mono-grey',       'pair': 'technical'},
     ),
     'otro': (
         {'template': 'raiz',      'skin': 'corporate-steel', 'pair': 'classic-serif'},
         {'template': 'trama',     'skin': 'editorial-ink',   'pair': 'modern-sans'},
-        {'template': 'circuito',  'skin': 'neon-night',      'pair': 'geometric'},
+        {'template': 'moderntec',  'skin': 'neon-night',      'pair': 'geometric'},
     ),
 }
 
@@ -477,7 +477,7 @@ RUBROS                      =   {
     'servicios_profesionales': {
         'label': 'Servicios profesionales',
         'look': 'sobrio',
-        'templates': ('raiz', 'circuito', 'trama'),
+        'templates': ('raiz', 'moderntec', 'trama'),
         'goals': ('conseguir_consultas', 'dar_confianza', 'mostrar_servicios'),
         'priority': {
             'landing':  ('hero', 'services', 'benefits', 'about', 'stats', 'testimonials', 'faq', 'steps', 'cta', 'contact'),
@@ -513,7 +513,7 @@ RUBROS                      =   {
     'construccion': {
         'label': 'Construcción y oficios',
         'look': 'obra',
-        'templates': ('seguridad', 'raiz', 'circuito'),
+        'templates': ('seguridad', 'raiz', 'moderntec'),
         'goals': ('mostrar_trabajos', 'conseguir_consultas', 'dar_confianza'),
         'priority': {
             'landing':  ('hero', 'services', 'gallery', 'stats', 'about', 'benefits', 'testimonials', 'faq', 'cta', 'contact'),
@@ -525,7 +525,7 @@ RUBROS                      =   {
     'tecnologia': {
         'label': 'Tecnología',
         'look': 'tech',
-        'templates': ('circuito', 'raiz', 'trama'),
+        'templates': ('moderntec', 'raiz', 'trama'),
         'goals': ('vender_online', 'mostrar_servicios', 'conseguir_consultas'),
         'priority': {
             'landing':  ('hero', 'services', 'featured', 'benefits', 'stats', 'compare', 'testimonials', 'faq', 'cta', 'contact'),
@@ -537,7 +537,7 @@ RUBROS                      =   {
     'educacion': {
         'label': 'Educación',
         'look': 'aula',
-        'templates': ('raiz', 'trama', 'circuito'),
+        'templates': ('raiz', 'trama', 'moderntec'),
         'goals': ('conseguir_consultas', 'dar_confianza', 'mostrar_servicios'),
         'priority': {
             'landing':  ('hero', 'services', 'steps', 'benefits', 'stats', 'testimonials', 'team', 'faq', 'cta', 'contact'),
@@ -585,7 +585,7 @@ RUBROS                      =   {
     'seguridad': {
         'label': 'Seguridad y bomberos',
         'look': 'seguridad',
-        'templates': ('seguridad', 'raiz', 'circuito'),
+        'templates': ('seguridad', 'raiz', 'moderntec'),
         'goals': ('dar_confianza', 'mostrar_servicios', 'conseguir_consultas'),
         'priority': {
             'landing':  ('hero', 'highlights', 'categories', 'featured', 'services', 'steps', 'stats', 'gallery', 'testimonials', 'faq', 'cta', 'contact'),
@@ -597,7 +597,7 @@ RUBROS                      =   {
     'otro': {
         'label': 'Otro rubro',
         'look': 'neutro',
-        'templates': ('raiz', 'trama', 'circuito'),
+        'templates': ('raiz', 'trama', 'moderntec'),
         'goals': ('mostrar_servicios', 'dar_confianza', 'conseguir_consultas'),
         'priority': {
             'landing':  ('hero', 'about', 'services', 'featured', 'benefits', 'gallery', 'testimonials', 'faq', 'cta', 'contact'),
@@ -856,7 +856,7 @@ BLOCK_TITLES                =   {
 #SOLO ids públicos sin reescribir cada receta a mano.
 #Espejo de StoreCustomization.TEMPLATE_RETIRED_MAP (fuente única):
 #catálogo por rubro — todo id viejo remapea al diseño más cercano.
-PUBLIC_TEMPLATES            =   ('raiz', 'esencial', 'mercado', 'gimnasio', 'sastreria', 'moderntec', 'circuito')
+PUBLIC_TEMPLATES            =   ('raiz', 'esencial', 'mercado', 'gimnasio', 'sastreria', 'moderntec')
 PUBLIC_TEMPLATE_MAP         =   {
     'classic': 'raiz', 'duo': 'raiz', 'minimal': 'raiz', 'calma': 'raiz',
     'studio': 'raiz', 'arena': 'raiz', 'proceso': 'raiz',
@@ -867,8 +867,9 @@ PUBLIC_TEMPLATE_MAP         =   {
     'street': 'sastreria', 'riso': 'sastreria', 'promo': 'sastreria',
     'aurora': 'sastreria', 'ai_pulse': 'sastreria',
     'trama': 'sastreria', 'indumentaria': 'sastreria', 'boutique': 'sastreria',
-    'perspective': 'circuito', 'circuit': 'circuito', 'terminal': 'circuito',
-    'lab': 'circuito', 'ai_lumen': 'circuito', 'seguridad': 'circuito',
+    'perspective': 'moderntec', 'circuit': 'moderntec', 'terminal': 'moderntec',
+    'lab': 'moderntec', 'ai_lumen': 'moderntec', 'seguridad': 'moderntec',
+    'circuito': 'moderntec',
 }
 
 
@@ -901,7 +902,7 @@ TEMPLATE_TONE_AFFINITY.update({
     'alimentos': {'calido': 3, 'moderno': 2, 'audaz': 1, 'serio': 1},
     'trama':     {'audaz': 3, 'moderno': 2, 'calido': 1, 'serio': 1},
     'boutique':  {'calido': 3, 'serio': 2, 'moderno': 1, 'audaz': 0},
-    'circuito':  {'moderno': 3, 'serio': 2, 'audaz': 1, 'calido': 0},
+    'moderntec':  {'moderno': 3, 'serio': 2, 'audaz': 1, 'calido': 0},
     'seguridad': {'audaz': 3, 'serio': 3, 'moderno': 1, 'calido': 0},
 })
 TEMPLATE_LABELS.update({'raiz': 'Esencial'})
@@ -911,6 +912,6 @@ TEMPLATE_GOAL_AFFINITY.update({
     'vender_online':        ('mercado', 'sastreria'),
     'mostrar_servicios':    ('raiz', 'gimnasio'),
     'conseguir_consultas':  ('raiz', 'sastreria'),
-    'dar_confianza':        ('raiz', 'circuito'),
-    'mostrar_trabajos':     ('sastreria', 'circuito'),
+    'dar_confianza':        ('raiz', 'moderntec'),
+    'mostrar_trabajos':     ('sastreria', 'moderntec'),
 })

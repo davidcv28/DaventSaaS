@@ -136,11 +136,10 @@ class StoreCustomization(models.Model):
     TEMPLATE_MODERNTEC          =   'moderntec'
     TEMPLATE_DEFAULT            =   TEMPLATE_RAIZ
     #Base: 'raiz'/'esencial' van con cualquier plan; Plus suma los diseños
-    #de rubro (has_design_plus, Estándar); Advanced queda para 'circuito'
-    #(has_design_advanced, Premium).
+    #de rubro (has_design_plus, Estándar). Advanced no agrega diseños hoy.
     TEMPLATE_BASE               =   ('raiz', 'esencial')
     TEMPLATE_PLUS               =   ('mercado', 'gimnasio', 'sastreria', 'moderntec')
-    TEMPLATE_ADVANCED           =   ('circuito',)
+    TEMPLATE_ADVANCED           =   ()
     TEMPLATE_AI                 =   ()
     TEMPLATE_CHOICES            =   [
         ('raiz',          'Esencial'),
@@ -149,7 +148,6 @@ class StoreCustomization(models.Model):
         ('gimnasio',      'Gimnasio'),
         ('sastreria',     'Sastrería'),
         ('moderntec',     'ModernTec'),
-        ('circuito',      'Circuito'),
     ]
     #Todo diseño retirado remapea al más cercano del catálogo: una tienda
     #vieja nunca cae al fallback ni rompe el render.
@@ -164,9 +162,10 @@ class StoreCustomization(models.Model):
         'aurora': 'sastreria', 'ai_pulse': 'sastreria',
         'trama': 'sastreria', 'indumentaria': 'sastreria',
         'boutique': 'sastreria', 'atelier': 'sastreria',
-        'perspective': 'circuito', 'circuit': 'circuito',
-        'terminal': 'circuito', 'lab': 'circuito',
-        'ai_lumen': 'circuito', 'seguridad': 'circuito',
+        'perspective': 'moderntec', 'circuit': 'moderntec',
+        'terminal': 'moderntec', 'lab': 'moderntec',
+        'ai_lumen': 'moderntec', 'seguridad': 'moderntec',
+        'circuito': 'moderntec',
     }
     NAME_SIZE_MIN               =   20
     NAME_SIZE_MAX               =   64

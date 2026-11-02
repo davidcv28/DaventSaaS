@@ -205,7 +205,7 @@ const themeVars = computed(() => storeThemeVars(custom.value))
 // En modo Studio manda el borrador (studioVars/studioAttrs): lo publicado no
 // se mezcla para que un campo que el borrador no fija no se cuele en el
 // lienzo y preview/publicada queden idénticas.
-// Los diseños del catálogo (raiz/trama/circuito/…) consumen los mismos
+// Los diseños del catálogo (raiz/sastreria/moderntec/…) consumen los mismos
 // tokens --sp-*/--st-* que el Studio escribe: aplicar el site_theme también
 // fuera del Studio es lo que evita que el lienzo muestre un cambio que la
 // web publicada descarta.
@@ -236,8 +236,8 @@ const pageAttrs = computed(() => ({ ...publishedThemeAttrs.value, ...studioAttrs
 // destacados o, en su lugar, un botón de modo claro/oscuro en el nav.
 const hasDesignAdvanced = computed(() => Boolean(store.value?.has_design_advanced))
 // Diseño de la web (template): la whitelist allowed_templates del payload
-// marca el nivel del plan (Básico: Raíz; Estándar suma Trama; Premium suma Circuito).
-// Urbano/Publicidad; Premium, todo). Si el guardado quedó fuera — baja de
+// marca el nivel del plan (Básico: Raíz/Esencial; Estándar suma los diseños
+// de rubro). Si el guardado quedó fuera — baja de
 // plan o plantilla retirada — se fuerza 'raiz'.
 // En modo Studio la plantilla en ensayo se resuelve contra el catálogo
 // completo (los presets bloqueados también se pueden probar — el gate de
@@ -270,7 +270,6 @@ const TEMPLATE_CSS = {
   mercado:   () => import('../assets/store-mercado.css'),
   gimnasio:  () => import('../assets/store-gimnasio.css'),
   sastreria: () => import('../assets/store-sastreria.css'),
-  circuito:  () => import('../assets/store-circuito.css'),
   moderntec: () => import('../assets/store-moderntec.css')
 }
 watch(pageTemplate, (tpl) => {
@@ -318,7 +317,7 @@ const pageTheme = computed(() => resolveStoreTheme({
 // Interruptor de noche: lo habilita el negocio (theme_toggle). Payloads
 // viejos sin el campo conservan la regla anterior (sin diseño avanzado el
 // visitante ya podía alternarlo).
-// Los diseños avanzados (circuito/seguridad) son oscuros por defecto: ahí el
+// Los diseños oscuros (moderntec) arrancan de noche: ahí el
 // interruptor depende del switch "Modo noche" del panel (theme_toggle=true).
 // En los diseños base se mantiene visible siempre (comportamiento histórico);
 // con theme_toggle explícito en true también aparece en cualquier diseño.

@@ -1,5 +1,5 @@
 /* ===== Catálogo de la web pública: base compartida =====
-   StoreCatalogView monta la página del diseño activo (raiz/trama/circuito);
+   StoreCatalogView monta la página del diseño activo (raiz/sastreria/moderntec);
    esta hoja conserva la tira de aviso y las capas compartidas del catálogo.
    Todo se pinta con los tokens que cada diseño define en .store-page
    (--sp-*, --rz-*, --tr-*, --ci-*) y con el acento de la tienda
