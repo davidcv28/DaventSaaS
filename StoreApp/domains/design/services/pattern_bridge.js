@@ -135,6 +135,11 @@
   var pinned = null
   var pinnedIh = 0
   function collectFixed() {
+    /* Antes de medir hay que soltar los top/bottom aplicados por el pin:
+     * el rect se toma de la posición NATURAL del CSS (abajo del documento
+     * para la tab bar). Medir con el pin puesto devolvía un base gigante
+     * y la barra quedaba clavada en top:0 para siempre. */
+    if (pinned) pinned.forEach(function (p) { p.el.style.top = ''; p.el.style.bottom = '' })
     pinned = []
     if (!document.body || !window.getComputedStyle) return
     var ih = window.innerHeight || 1
@@ -168,6 +173,13 @@
       }
     })
   }
+  /* Invalida la medición soltando ANTES los top/bottom aplicados: si se
+   * nulea `pinned` sin limpiar, collectFixed re-mide con el pin puesto y
+   * la base sale gigante — la barra queda clavada en top:0 para siempre. */
+  function resetFixed() {
+    ;(pinned || []).forEach(function (p) { p.el.style.top = ''; p.el.style.bottom = '' })
+    pinned = null
+  }
   function pinFixed() {
     if (!frameBox) return
     /* Si el iframe cambió de alto desde la medición (pasa de ~150px al
@@ -176,11 +188,12 @@
      * clavada al tope del documento. Se limpian los estilos aplicados —
      * si no, el rect mediría la posición ya compensada — y se re-mide. */
     var ih = window.innerHeight || 1
-    if (pinned && Math.abs(ih - pinnedIh) > 2) {
-      ;(pinned || []).forEach(function (p) { p.el.style.top = ''; p.el.style.bottom = '' })
-      pinned = null
-    }
+    if (pinned && Math.abs(ih - pinnedIh) > 2) resetFixed()
     if (!pinned) collectFixed()
+    root.setAttribute('data-ds-pin-debug', JSON.stringify({
+      fb: frameBox, ih: window.innerHeight || 1,
+      pins: (pinned || []).map(function (p) { return { cls: p.el.className, prop: p.prop, base: p.base } })
+    }))
     var dyTop = Math.max(0, -frameBox.top)
     var dyBot = Math.max(0, frameBox.bottom - frameBox.vh)
     ;(pinned || []).forEach(function (p) {
@@ -215,7 +228,7 @@
       }
     })
   }
-  window.addEventListener('resize', function () { pinned = null; pinFixed() })
+  window.addEventListener('resize', function () { resetFixed(); pinFixed() })
 
   window.addEventListener('message', function (e) {
     var d = e.data || {}
@@ -233,7 +246,7 @@
         document.body.classList.remove('filters-open')
       }
       catalog()
-      pinned = null
+      resetFixed()
       pinFixed()
       window.scrollTo(0, 0)
       send()
@@ -242,6 +255,7 @@
     if (d.type === 'davent:ds-measure') send()
     if (d.type === 'davent:ds-frame') {
       frameBox = { top: Number(d.top) || 0, bottom: Number(d.bottom) || 0, vh: Number(d.vh) || 0 }
+      window.__dsFrame = frameBox
       pinFixed()
     }
   })
