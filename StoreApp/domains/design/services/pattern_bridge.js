@@ -152,16 +152,17 @@
       var r = el.getBoundingClientRect()
       /* El anclaje se puede declarar a mano (`data-ds-pin="top|bottom"`):
        * la heurística por rectángulo depende del viewport del momento y
-       * una medición temprana (iframe sin estirar) salía invertida. */
+       * una medición temprana (iframe sin estirar) salía invertida. La
+       * `base` queda en null si el rect está vacío (display:none / aún
+       * sin layout): se mide perezosa en pinFixed, nunca de un rect nulo. */
       var hint = (el.getAttribute('data-ds-pin') || '').toLowerCase()
       if (hint !== 'bottom' && ih - r.bottom < ih * 0.25 && r.top > ih * 0.5) hint = 'bottom'
       if (hint === 'bottom') {
-        //La base es el bottom SIN transform: una hoja cerrada con
-        //translateY(110%) informa un bottom negativo que no es el real.
         var ty = 0
         var m = /matrix\([^)]*,\s*(-?[\d.]+)\s*\)/.exec(cs.transform || '')
         if (m) ty = parseFloat(m[1]) || 0
-        pinned.push({ el: el, prop: 'bottom', base: Math.max(0, ih - (r.bottom - ty)) })
+        var base = (r.width || r.height) ? Math.max(0, ih - (r.bottom - ty)) : null
+        pinned.push({ el: el, prop: 'bottom', base: base })
       } else {
         pinned.push({ el: el, prop: 'top', base: parseFloat(cs.top) || 0 })
       }
@@ -186,9 +187,21 @@
       if (p.prop === 'bottom') {
         /* Posición directa por `top`: el borde visible inferior dentro del
          * documento del iframe es min(vh-top, bottom-top); el elemento se
-         * apoya ahí respetando su margen original (base). Nada de
-         * `bottom`: el valor dependía del alto del documento y una mala
-         * clasificación lo mandaba al otro extremo. */
+         * apoya ahí respetando su margen original (base). La base se mide
+         * acá si todavía no se pudo (display:none temprano): sin estilos
+         * aplicados el rect vuelve a la posición natural del CSS. */
+        if (p.base == null) {
+          p.el.style.top = ''
+          p.el.style.bottom = ''
+          var cs2 = getComputedStyle(p.el)
+          var r2 = p.el.getBoundingClientRect()
+          if (!r2.width && !r2.height) return
+          var ty2 = 0
+          var m2 = /matrix\([^)]*,\s*(-?[\d.]+)\s*\)/.exec(cs2.transform || '')
+          if (m2) ty2 = parseFloat(m2[1]) || 0
+          var ih2 = window.innerHeight || 1
+          p.base = Math.max(0, ih2 - (r2.bottom - ty2))
+        }
         var docBot = Math.min(frameBox.vh - frameBox.top, frameBox.bottom - frameBox.top)
         p.el.style.bottom = ''
         p.el.style.top = Math.max(0, docBot - p.el.offsetHeight - p.base) + 'px'
