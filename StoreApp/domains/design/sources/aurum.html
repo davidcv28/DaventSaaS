@@ -64,8 +64,10 @@ html[data-ds-surface="product"] [data-surface]:not([data-surface="product"]){dis
 html[data-ds-theme="light"] .ribbon,html[data-ds-style="aurum-dia"] .ribbon{background:var(--bone);color:var(--ink)}
 
 /* ===== Nav ===== */
-.top{position:sticky;top:0;z-index:50;background:color-mix(in srgb,var(--ink) 84%,transparent);
+.top{position:fixed;inset:0 0 auto;z-index:50;background:color-mix(in srgb,var(--ink) 84%,transparent);
   backdrop-filter:blur(14px);border-bottom:1px solid var(--line)}
+body{padding-top:69px}
+section[id]{scroll-margin-top:84px}
 .top-in{display:flex;align-items:center;justify-content:space-between;gap:24px;
   padding:15px clamp(20px,4vw,48px);max-width:1180px;margin:0 auto}
 .brand{display:flex;align-items:center;gap:12px;min-width:0}
@@ -225,16 +227,29 @@ section{padding:clamp(52px,8vh,96px) 0;border-bottom:1px solid var(--line)}
 .ds-product[data-off] .ds-product-copy::before{content:"-" attr(data-off) "%";position:absolute;top:-15px;right:16px;
   background:var(--gold);color:var(--gold-ink);font:700 10px var(--mono);letter-spacing:.08em;
   padding:5px 10px;border-radius:6px}
-.ds-product-name{font-size:19px;margin:0}
-.ds-product-desc{display:block;color:var(--muted);font-size:12.5px;margin-top:5px}
+.ds-product{min-width:0}
+.ds-product-name{font-size:19px;margin:0;overflow-wrap:break-word}
+.ds-product-desc{display:block;color:var(--muted);font-size:12.5px;margin-top:5px;overflow-wrap:break-word}
 .ds-product-desc:empty{display:none}
 .ds-product-cat{display:block;font:600 9.5px var(--mono);letter-spacing:.18em;text-transform:uppercase;
   color:var(--gold);margin-bottom:8px}
 .ds-product-cat:empty{display:none}
-.ds-product-price{display:flex;align-items:baseline;gap:10px;padding:14px 20px 20px;margin-top:auto}
-.ds-product-amount{font:400 21px var(--serif)}
+.ds-product-price{display:flex;align-items:baseline;flex-wrap:wrap;gap:8px 10px;padding:14px 20px 20px;margin-top:auto}
+.ds-product-amount{font:400 21px var(--serif);overflow-wrap:break-word}
 .ds-product-old{color:var(--muted);font-size:13px}
 .ds-empty{color:var(--muted);font-size:14px;padding:26px;border:1px dashed var(--line);border-radius:var(--radius)}
+@media(max-width:640px){
+  .grid{grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:12px}
+  .ds-product-copy{padding:14px 14px 6px}
+  .ds-product-name{font-size:16px}
+  .ds-product-desc{display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+  .ds-product-price{padding:12px 14px 14px}
+  .ds-product-amount{font-size:18px}
+  /*En móvil la "vista grilla" (filas) aplasta el texto contra los bordes:
+    vuelve a tarjeta vertical con la imagen a todo lo ancho.*/
+  [data-ds-view-mode="grid"] .ds-product-link{flex-direction:column}
+  [data-ds-view-mode="grid"] .ds-product-img{width:100%;aspect-ratio:4/3}
+}
 
 /* Galería */
 .gal{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}
