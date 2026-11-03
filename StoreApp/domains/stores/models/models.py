@@ -226,9 +226,12 @@ class StoreCustomization(models.Model):
     instagram                   =   models.CharField(max_length = 40, blank = True, verbose_name = 'Instagram')
     tiktok                      =   models.CharField(max_length = 40, blank = True, verbose_name = 'TikTok')
     facebook                    =   models.CharField(max_length = 60, blank = True, verbose_name = 'Facebook')
-    #Default off por privacidad: el mapa expone el domicilio del perfil (que
-    #puede ser la casa del dueño) — opt-in consciente desde el dashboard.
-    show_location               =   models.BooleanField(default = False, verbose_name = 'Mostrar mapa de ubicación')
+    #Encendido por defecto: la web completa muestra toda la info del negocio
+    #y el dueño decide qué quitar desde Diseño. El mapa expone el domicilio
+    #del perfil — quien no quiera publicarlo lo apaga manualmente (además
+    #requiere el beneficio 'has_location_map': sin el flag el viewset lo
+    #descarta del PATCH y la web pública no lo renderiza).
+    show_location               =   models.BooleanField(default = True, verbose_name = 'Mostrar mapa de ubicación')
     #Sección "Galería": grilla de imágenes propias del negocio. El dueño
     #decide si aparece (además se oculta sola si no hay imágenes cargadas);
     #el cupo lo fija el beneficio 'max_gallery_images' del plan.
@@ -280,10 +283,10 @@ class StoreCustomization(models.Model):
     #todos los planes). Comentarios: texto de la opinión en la ficha —
     #requiere el beneficio 'has_product_comments' (premium); si la tienda
     #baja de plan quedan guardados pero la web los oculta (el serializer
-    #público expone show_comments=False sin el flag). Apagados por
-    #defecto: el dueño los enciende desde "Mis catálogos".
-    show_reviews                =   models.BooleanField(default = False, verbose_name = 'Valoraciones en productos')
-    show_comments               =   models.BooleanField(default = False, verbose_name = 'Comentarios en productos (premium)')
+    #público expone show_comments=False sin el flag). Encendidos por
+    #defecto: el dueño los apaga desde "Opiniones" si no los quiere.
+    show_reviews                =   models.BooleanField(default = True, verbose_name = 'Valoraciones en productos')
+    show_comments               =   models.BooleanField(default = True, verbose_name = 'Comentarios en productos (premium)')
     #===== Secciones de marketing de la portada ("Mi empresa") =====
     #Bloques de contenido rico para que la web funcione como landing
     #completa, no solo como vidriera: servicios, cifras, testimonios,
