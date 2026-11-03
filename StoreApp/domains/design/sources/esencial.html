@@ -594,6 +594,54 @@ html[data-ds-style="esencial-premium"][data-ds-theme="dark"] .ticker-item .icon{
   html.m-lock,html.m-lock body{overflow:hidden}
 }
 
+/* Refinamientos: escritorio ancho */
+@media (min-width:1100px){
+  .wrap{max-width:1200px}
+  .hero-grid{gap:64px}
+  .catalog-grid{gap:24px}
+  .section-head{margin-bottom:48px}
+}
+@media (min-width:761px){
+  .ds-product{box-shadow:0 1px 0 color-mix(in srgb,var(--ink) 4%,transparent)}
+  .hero-card{box-shadow:var(--ds-shadow,0 40px 70px -44px color-mix(in srgb,var(--ink) 55%,transparent),0 2px 0 color-mix(in srgb,var(--ink) 4%,transparent))}
+}
+/* Refinamientos: móvil */
+@media (max-width:760px){
+  .section{padding-block:clamp(40px,10vw,64px)}
+  .section-head{margin-bottom:28px;gap:8px}
+  .hero{padding-block:36px 40px}
+  .hero h1{font-size:clamp(2.1rem,10vw,2.8rem);margin-block:12px 16px}
+  .lead{font-size:1rem}
+  .hero-actions{display:grid;grid-template-columns:1fr;gap:10px;margin-top:22px}
+  .hero-actions .btn{width:100%}
+  .blob{filter:blur(40px);opacity:.4}
+  .b1{width:300px;height:300px}
+  .b2{width:260px;height:260px}
+  .catalog-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+  .ds-product-cat{margin:10px 12px 0;font-size:.7rem}
+  .ds-product-copy{padding:2px 12px 0}
+  .ds-product-name{font-size:.98rem}
+  .ds-product-price{padding:10px 12px 14px}
+  .ds-product-amount{font-size:1.05rem}
+  .ds-product-price[data-off]::after{margin-left:0}
+  .filters{flex-wrap:nowrap;overflow-x:auto;margin-inline:-16px;padding-inline:16px;padding-bottom:4px;scrollbar-width:none;scroll-snap-type:x proximity}
+  .filters::-webkit-scrollbar{display:none}
+  .filters .ds-cat{flex:none;min-height:40px;scroll-snap-align:start}
+  .cat-sort select{font-size:16px;min-height:40px}
+  .ds-service:hover{padding-inline:0}
+  .ticker-track{gap:32px;padding-block:12px}
+}
+@media (max-width:360px){
+  .catalog-grid{grid-template-columns:minmax(0,1fr)}
+}
+/* Sin hover real (táctil): no dejar estados pegados */
+@media (hover:none){
+  .ds-product:hover{transform:none;box-shadow:none;border-color:var(--line)}
+  .btn:hover{transform:none;box-shadow:none}
+  .brand:hover .mark{transform:none}
+  .ds-service:hover{padding-inline:0}
+}
+
 @keyframes fadeUp{from{opacity:0;translate:0 18px}to{opacity:1;translate:0 0}}
 @keyframes revealUp{from{opacity:0;translate:0 48px}to{opacity:1;translate:0 0}}
 @keyframes popIn{from{opacity:0;scale:.92;translate:0 10px}to{opacity:1;scale:1;translate:0 0}}
