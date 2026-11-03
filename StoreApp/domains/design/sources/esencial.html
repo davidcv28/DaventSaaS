@@ -288,7 +288,9 @@ a[href=""].btn{display:none}
 .hero-card .shot:has(img[src=""]){display:none}
 
 /* Chips de filtro (los arma el puente: data-cat + aria-pressed) */
-.filters{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:28px}
+/* Tope de alto + scroll: con decenas de categorías los chips no empujan
+   la grilla al infinito. */
+.filters{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:28px;max-height:188px;overflow-y:auto}
 .filters .ds-cat{
   min-height:36px;padding:0 14px;border-radius:999px;border:1px solid var(--line);
   background:transparent;color:var(--muted);font:inherit;font-size:.92rem;cursor:pointer;

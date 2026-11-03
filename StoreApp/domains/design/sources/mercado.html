@@ -176,8 +176,11 @@
   .crumbs strong{color:var(--ink);font-weight:600}
 
   .cat-layout{display:grid;grid-template-columns:238px minmax(0,1fr);gap:20px;align-items:start}
+  /* Sticky con scroll propio: con muchas categorías/marcas el riel queda
+     alto y sin altura propia el fondo queda inalcanzable. */
   .cat-aside{
-    position:sticky;top:16px;min-width:0;overflow:hidden;
+    position:sticky;top:16px;min-width:0;
+    max-height:calc(100dvh - 32px);overflow-y:auto;overscroll-behavior:contain;
     background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow);
   }
   .cat-aside-head{display:none;align-items:center;justify-content:space-between;gap:10px;padding:12px 16px;border-bottom:1px solid var(--line);background:var(--surface)}

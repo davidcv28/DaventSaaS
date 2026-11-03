@@ -520,6 +520,8 @@
       })
       host.setAttribute('data-built', '1')
       if (names.length > 6) host.setAttribute('data-collapsed', '')
+      var moreBtn = document.querySelector('[data-ds-brands-more]')
+      if (moreBtn) moreBtn.hidden = names.length <= 6
     }
     syncFilterUI()
   }
