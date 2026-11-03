@@ -79,14 +79,24 @@ a{color:inherit}
 .sr-only{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
 
 .wrap{max-width:1120px;margin:0 auto;padding-inline:max(16px,env(safe-area-inset-left,0px))}
-.eyebrow{font-size:.8rem;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--accent)}
+/* Eyebrow editorial: punto ámbar con halo — firma del diseño. En premium
+   lo reemplaza la regla + rombo. */
+.eyebrow{
+  display:inline-flex;align-items:center;gap:9px;
+  font-size:.8rem;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--accent);
+}
+.eyebrow::before{
+  content:"";width:6px;height:6px;border-radius:50%;flex:none;
+  background:var(--warm);
+  box-shadow:0 0 0 3px color-mix(in srgb,var(--warm) 22%,transparent);
+}
 .lead{font-size:1.1rem;color:var(--muted);max-width:60ch}
 /* content-visibility: el documento va dentro de un iframe que reporta su
    alto; saltar el render de las secciones fuera de pantalla recorta el
    primer pintado sin cambiar el layout (intrinsic-size reserva el hueco). */
 .section{padding-block:clamp(56px,9vw,104px);content-visibility:auto;contain-intrinsic-size:auto 720px}
 .section-head{display:grid;gap:12px;margin-bottom:40px}
-.section-head h2{font-size:clamp(1.9rem,4.5vw,2.8rem)}
+.section-head h2{font-size:clamp(1.9rem,4.5vw,2.8rem);letter-spacing:-.015em}
 .band{background:var(--surface);border-block:1px solid var(--line)}
 
 .icon{width:22px;height:22px;flex:none;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
@@ -111,7 +121,10 @@ a{color:inherit}
 .btn:hover{transform:translateY(-2px);box-shadow:0 12px 24px -14px var(--accent)}
 .btn:active{transform:translateY(0) scale(.98)}
 .btn.ghost{background:transparent;color:var(--ink);border-color:var(--line)}
-.btn.ghost:hover{border-color:var(--accent);color:var(--accent);box-shadow:none}
+.btn.ghost:hover{
+  border-color:var(--accent);color:var(--accent);box-shadow:none;
+  background:color-mix(in srgb,var(--accent) 6%,transparent);
+}
 .btn .arrow{transition:transform .3s var(--ease)}
 .btn:hover .arrow{transform:translateX(4px)}
 .btn.loading{pointer-events:none}
@@ -177,6 +190,15 @@ html[data-ds-surface="services"] .nav a[data-ds-route="services"]::after{transfo
 
 /* Hero */
 .hero{position:relative;isolation:isolate;overflow:hidden;padding-block:clamp(56px,10vw,120px) clamp(48px,7vw,80px)}
+/* Trama de puntos que se desvanece hacia abajo: textura propia del papel,
+   no un gradiente genérico. */
+.hero::before{
+  content:"";position:absolute;inset:0;z-index:-1;pointer-events:none;
+  background-image:radial-gradient(color-mix(in srgb,var(--ink) 10%,transparent) 1px,transparent 1px);
+  background-size:22px 22px;opacity:.45;
+  -webkit-mask-image:linear-gradient(180deg,#000 55%,transparent 92%);
+  mask-image:linear-gradient(180deg,#000 55%,transparent 92%);
+}
 .blob{position:absolute;z-index:-1;border-radius:50%;pointer-events:none;filter:blur(50px);opacity:.55}
 .b1{width:440px;height:440px;top:-140px;left:-120px;background:color-mix(in srgb,var(--accent) 35%,transparent);animation:drift 14s ease-in-out infinite}
 .b2{width:380px;height:380px;right:-110px;bottom:-110px;background:color-mix(in srgb,var(--warm) 32%,transparent);animation:drift 18s ease-in-out infinite reverse}
@@ -189,6 +211,13 @@ html[data-ds-surface="services"] .nav a[data-ds-route="services"]::after{transfo
 .hero-card{
   background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);
   overflow:hidden;display:grid;min-width:0;
+}
+/* Filo superior acento→ámbar: la tarjeta "lleva la marca" del negocio. */
+.hero-card::before{
+  content:"";height:3px;
+  background:linear-gradient(90deg,var(--accent),var(--warm));
+}
+.hero-card{
   transform:rotateX(var(--rx,0deg)) rotateY(var(--ry,0deg));
   transition:transform .35s var(--ease),box-shadow .35s;
   box-shadow:var(--ds-shadow,0 30px 60px -40px color-mix(in srgb,var(--ink) 50%,transparent));
@@ -201,12 +230,27 @@ html[data-ds-surface="services"] .nav a[data-ds-route="services"]::after{transfo
   background:linear-gradient(180deg,transparent 62%,color-mix(in srgb,var(--ink) 16%,transparent));
 }
 .hero-card:hover .shot img{transform:scale(1.045)}
-.hero-card .stat{display:flex;align-items:center;gap:14px;padding:16px 20px;border-bottom:1px solid var(--line)}
+.hero-card .stat{
+  display:flex;align-items:center;gap:14px;padding:16px 20px;border-bottom:1px solid var(--line);
+  animation:statIn .5s var(--ease-back) both;
+  transition:background-color .3s;
+}
+.hero-card .stat:nth-child(2){animation-delay:.45s}
+.hero-card .stat:nth-child(3){animation-delay:.55s}
+.hero-card .stat:nth-child(4){animation-delay:.65s}
+.hero-card .stat:hover{background:color-mix(in srgb,var(--accent) 5%,transparent)}
 .hero-card .stat:last-child{border-bottom:0}
 .stat .ico-box{
   width:42px;height:42px;border-radius:12px;flex:none;display:grid;place-items:center;
   background:color-mix(in srgb,var(--accent) 12%,transparent);color:var(--accent);
   animation:float 4s ease-in-out infinite;
+  transition:box-shadow .3s;
+}
+/* El float ya anima transform: el hover marca con halo en vez de pelear
+   por la misma propiedad. */
+.stat:hover .ico-box{
+  animation-play-state:paused;
+  box-shadow:0 0 0 4px color-mix(in srgb,var(--accent) 16%,transparent);
 }
 .hero-card .stat:nth-child(3) .ico-box{animation-delay:-1.3s}
 .hero-card .stat:nth-child(4) .ico-box{animation-delay:-2.6s}
@@ -224,6 +268,8 @@ html[data-ds-surface="services"] .nav a[data-ds-route="services"]::after{transfo
 .ticker-track{display:flex;gap:48px;width:max-content;padding-block:14px;animation:marquee 28s linear infinite;will-change:transform}
 .ticker:hover .ticker-track{animation-play-state:paused}
 .ticker-item{display:inline-flex;align-items:center;gap:10px;font-weight:600;color:var(--muted);white-space:nowrap}
+/* Separador de rombo entre beneficios (en premium viaja en ámbar). */
+.ticker-item::after{content:"·";margin-left:38px;color:var(--warm);font-weight:800;opacity:.7}
 .ticker-item .icon{color:var(--accent);width:20px;height:20px}
 
 /* Catálogo */
@@ -263,7 +309,9 @@ html[data-ds-surface="services"] .nav a[data-ds-route="services"]::after{transfo
   background:currentColor;clip-path:polygon(50% 0,100% 30%,100% 70%,50% 100%,0 70%,0 30%)}
 .ds-product-cat{min-height:1.2em;margin:14px 16px 0;font-size:.78rem;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--accent)}
 .ds-product-copy{display:grid;gap:4px;min-width:0;padding:2px 16px 0;flex:1}
-.ds-product-name{margin:0;font-size:1.08rem;font-family:var(--font-display);line-height:1.25;overflow-wrap:anywhere}
+.ds-product-name{margin:0;font-size:1.08rem;font-family:var(--font-display);line-height:1.25;overflow-wrap:anywhere;transition:color .25s}
+/* El título confirma que la tarjeta entera es clicable. */
+.ds-product:hover .ds-product-name{color:var(--accent)}
 .ds-product-desc{font-size:.9rem;color:var(--muted);display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;overflow-wrap:anywhere}
 .ds-product-desc:empty{display:none}
 .ds-product-price{display:flex;flex-wrap:wrap;align-items:baseline;gap:4px 10px;min-width:0;padding:12px 16px 16px;font-variant-numeric:tabular-nums}
@@ -275,7 +323,12 @@ html[data-ds-surface="services"] .nav a[data-ds-route="services"]::after{transfo
   padding:2px 8px;border-radius:999px;
 }
 html[data-ds-theme="dark"] .ds-product-price[data-off]::after{color:#241a05}
-.ds-empty{padding:22px 0;color:var(--muted)}
+/* Vacío con marco de guiones: se lee como estado diseñado, no como error. */
+.ds-empty{
+  padding:38px 24px;color:var(--muted);text-align:center;
+  border:1.5px dashed var(--line);border-radius:var(--radius);
+  background:color-mix(in srgb,var(--accent) 4%,transparent);
+}
 .catalog-grid > .ds-empty{grid-column:1/-1}
 /* Sin WhatsApp/email/horario cargado, el dato y su CTA se apagan:
    un href vacío recargaba el documento. */
@@ -305,6 +358,12 @@ a[href=""].btn{display:none}
 .cat-sort select{
   font:inherit;color:var(--ink);background:var(--surface);
   border:1px solid var(--line);border-radius:var(--radius-btn);padding:8px 10px;
+  cursor:pointer;transition:border-color .25s,box-shadow .25s;
+}
+.cat-sort select:hover{border-color:color-mix(in srgb,var(--ink) 30%,var(--line))}
+.cat-sort select:focus{
+  outline:none;border-color:var(--accent);
+  box-shadow:0 0 0 3px color-mix(in srgb,var(--accent) 20%,transparent);
 }
 .cat-crumbs{display:flex;flex-wrap:wrap;gap:6px;align-items:baseline;font-size:.9rem;color:var(--muted);margin-bottom:18px}
 .cat-crumbs a{text-decoration:none}
@@ -328,6 +387,7 @@ a[href=""].btn{display:none}
   background:color-mix(in srgb,var(--accent) 12%,transparent);
   font-family:var(--font-display);font-size:1rem;font-weight:700;line-height:1;
   letter-spacing:.02em;color:var(--accent);
+  transition:background-color .3s,color .3s,transform .3s var(--ease-back);
 }
 .ds-service-name{grid-column:2;grid-row:1;font-family:var(--font-display);font-size:1.35rem;line-height:1.2;overflow-wrap:break-word}
 .ds-service-desc{grid-column:2;grid-row:2;color:var(--muted);display:block;margin-top:0}
@@ -371,7 +431,16 @@ body:not(:has(.ds-plan)) a[href="#suscripciones"]{display:none}
 .contact-grid{display:grid;gap:40px;grid-template-columns:minmax(0,1fr) minmax(0,1fr);align-items:start}
 .contact-card{display:grid;gap:14px;background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);padding:26px}
 .contact-row{display:flex;align-items:center;gap:12px;color:var(--muted);min-width:0}
-.contact-row .icon{width:20px;height:20px;color:var(--accent)}
+.contact-row .icon{
+  width:20px;height:20px;color:var(--accent);flex:none;
+  padding:9px;box-sizing:content-box;border-radius:11px;
+  background:color-mix(in srgb,var(--accent) 9%,transparent);
+  transition:transform .3s var(--ease-back),background-color .3s;
+}
+.contact-row:hover .icon{
+  transform:scale(1.08);
+  background:color-mix(in srgb,var(--accent) 17%,transparent);
+}
 .contact-row span{overflow-wrap:anywhere}
 .contact-row a{color:inherit;text-decoration:none}
 .contact-row a:hover{color:var(--accent)}
@@ -384,6 +453,12 @@ body:not(:has(.ds-plan)) a[href="#suscripciones"]{display:none}
   width:100%;min-height:46px;padding:10px 12px;border-radius:var(--radius-btn);
   border:1px solid var(--line);background:var(--surface);color:var(--ink);font:inherit;
   transition:border-color .25s,box-shadow .25s;
+}
+.field input:hover:not(:focus),.field textarea:hover:not(:focus){
+  border-color:color-mix(in srgb,var(--ink) 35%,var(--line));
+}
+.field input::placeholder,.field textarea::placeholder{
+  color:color-mix(in srgb,var(--muted) 72%,transparent);
 }
 .field input:focus,.field textarea:focus{
   outline:none;border-color:var(--accent);
@@ -405,6 +480,7 @@ body:not(:has(.ds-plan)) a[href="#suscripciones"]{display:none}
   position:absolute;top:14px;left:14px;z-index:1;
   background:var(--warm);color:#1a1305;font-size:.78rem;font-weight:700;
   padding:4px 10px;border-radius:999px;
+  box-shadow:0 8px 18px -8px color-mix(in srgb,var(--warm) 85%,transparent);
 }
 .pdp-tag:empty{display:none}
 .pdp-info{display:grid;gap:14px;min-width:0}
@@ -515,7 +591,7 @@ html[data-ds-style="esencial-premium"] .eyebrow{
   display:inline-flex;align-items:center;gap:10px;
 }
 html[data-ds-style="esencial-premium"] .eyebrow::before{
-  content:"";width:26px;height:1px;background:currentColor;opacity:.7;
+  content:"";width:26px;height:1px;background:currentColor;opacity:.7;box-shadow:none;
 }
 html[data-ds-style="esencial-premium"] .eyebrow::after{content:"◆";font-size:.55em;opacity:.8}
 /* Titulares de sección con subrayado animado. */
@@ -568,6 +644,7 @@ html[data-ds-style="esencial-premium"] .ds-plan:hover{
   box-shadow:0 0 0 1px color-mix(in srgb,var(--warm) 35%,transparent),
     0 18px 36px -26px color-mix(in srgb,var(--ink) 55%,transparent);
 }
+.ds-service:hover::before{background:var(--accent);color:var(--accent-ink)}
 /* Fila de servicio: el mosaico se vuelve rombo al hover. */
 html[data-ds-style="esencial-premium"] .ds-service::before{
   transition:transform .45s var(--ease),background-color .3s;
@@ -614,6 +691,22 @@ html[data-ds-style="esencial-premium"][data-ds-theme="dark"] .ticker-item .icon{
 .site-footer{padding-block:40px;border-top:1px solid var(--line);color:var(--muted);font-size:.92rem}
 .site-footer .wrap{display:flex;flex-wrap:wrap;justify-content:space-between;gap:12px 24px}
 .foot-name{font-family:var(--font-display);font-weight:700;color:var(--ink);font-size:1.1rem}
+.site-footer a{position:relative;text-decoration:none;transition:color .2s}
+.site-footer a::after{
+  content:"";position:absolute;left:0;right:0;bottom:-2px;height:1px;
+  background:currentColor;transform:scaleX(0);transform-origin:left;
+  transition:transform .3s var(--ease);
+}
+.site-footer a:hover{color:var(--ink)}
+.site-footer a:hover::after{transform:scaleX(1)}
+
+/* Scrollbar fina con tinta del diseño (webkit); Firefox hereda scrollbar-width. */
+.filters::-webkit-scrollbar,
+.m-sheet-nav::-webkit-scrollbar{width:6px;height:4px}
+.filters::-webkit-scrollbar-thumb,
+.m-sheet-nav::-webkit-scrollbar-thumb{
+  background:color-mix(in srgb,var(--ink) 22%,transparent);border-radius:99px;
+}
 
 /* Revelado al hacer scroll (solo donde hay scroll-driven animations). */
 @supports (animation-timeline:view()){
@@ -659,7 +752,8 @@ html.io .reveal.in{opacity:1;translate:0 0}
   .m-sheet-brand strong{font-family:var(--font-display);font-weight:700;font-size:16px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
   .m-close{position:absolute;top:14px;right:12px;display:grid;place-items:center;width:44px;height:44px;border:1px solid var(--line);border-radius:50%;background:var(--bg);color:var(--ink);font-size:22px;line-height:1;cursor:pointer}
   .m-sheet-nav{display:grid;gap:0;align-content:start;padding:16px 12px calc(16px + env(safe-area-inset-bottom));overflow-y:auto;counter-reset:mnav}
-  .m-sheet-nav a{display:flex;align-items:center;justify-content:space-between;gap:12px;min-height:56px;padding:8px 12px;border-bottom:1px solid var(--line);font-size:17px;text-decoration:none;color:var(--ink)}
+  .m-sheet-nav a{display:flex;align-items:center;justify-content:space-between;gap:12px;min-height:56px;padding:8px 12px;border-bottom:1px solid var(--line);font-size:17px;text-decoration:none;color:var(--ink);transition:color .2s,padding-left .3s var(--ease)}
+  .m-sheet-nav a:hover{padding-left:20px}
   /* Numeración viva: al apagar una página (p. ej. Suscripciones sin planes)
      la lista no salta de 03 a 05. Los display:none no incrementan. */
   .m-sheet-nav a[data-m-num]{counter-increment:mnav}
@@ -732,6 +826,7 @@ html.io .reveal.in{opacity:1;translate:0 0}
 }
 
 @keyframes fadeUp{from{opacity:0;translate:0 18px}to{opacity:1;translate:0 0}}
+@keyframes statIn{from{opacity:0;translate:14px 0}to{opacity:1;translate:0 0}}
 @keyframes revealUp{from{opacity:0;translate:0 48px}to{opacity:1;translate:0 0}}
 @keyframes popIn{from{opacity:0;scale:.92;translate:0 10px}to{opacity:1;scale:1;translate:0 0}}
 @keyframes float{0%,100%{transform:translateY(0)}50%{transform:translateY(-5px)}}
