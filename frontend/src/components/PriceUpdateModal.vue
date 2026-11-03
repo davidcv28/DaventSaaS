@@ -3,7 +3,7 @@
 // (%, monto o precio nuevo, con redondeo) e importación de la lista del
 // proveedor en CSV (preview antes de aplicar). Toca price/offer_price de
 // verdad — para ofertas temporarias están los Descuentos programados.
-import { computed, reactive, ref } from 'vue'
+import { computed, reactive, ref, watch } from 'vue'
 import { catalogApi } from '../api/catalog.api.js'
 import { formatARS } from '../api/billing.api.js'
 import { useCatalogStore } from '../stores/catalog.store.js'
@@ -18,9 +18,15 @@ const tab = ref('bulk') // bulk | import
 
 // ----- Aumento masivo -----
 const MODES = [
-  { value: 'percent', label: 'Porcentaje', hint: 'Ej. 15 sube 15%, -10 baja 10%' },
-  { value: 'delta', label: 'Monto fijo', hint: 'Ej. 500 suma $500, -200 resta $200' },
-  { value: 'set', label: 'Precio nuevo', hint: 'Todos los elegidos quedan al mismo precio' }
+  { value: 'percent', label: 'Porcentaje', icon: 'percent', accent: 'violet', hint: 'Ej. 15 sube 15%, -10 baja 10%' },
+  { value: 'delta', label: 'Monto fijo', icon: 'plus', accent: 'amber', hint: 'Ej. 500 suma $500, -200 resta $200' },
+  { value: 'set', label: 'Precio nuevo', icon: 'tag', accent: 'teal', hint: 'Todos quedan al mismo precio' }
+]
+const SCOPES = [
+  { value: 'all', label: 'Todo el catálogo', icon: 'package' },
+  { value: 'category', label: 'Una categoría', icon: 'layout-grid' },
+  { value: 'brand', label: 'Una marca', icon: 'tag' },
+  { value: 'products', label: 'Productos elegidos', icon: 'checklist' }
 ]
 const ROUNDINGS = [
   { value: 'none', label: 'Sin redondeo' },
@@ -40,6 +46,12 @@ const bulk = reactive({
 const bulkBusy = ref(false)
 const bulkError = ref('')
 
+watch(() => bulk.scope, () => {
+  bulk.category = ''
+  bulk.brand = ''
+  bulk.product_ids = []
+})
+
 const bulkTargets = computed(() => {
   if (bulk.scope === 'category') return catalog.products.filter((p) => p.category === bulk.category)
   if (bulk.scope === 'brand') return catalog.products.filter((p) => p.brand === bulk.brand)
@@ -55,7 +67,7 @@ const bulkPreview = computed(() => {
   if (bulk.rounding === 'unit') next = Math.round(next)
   if (bulk.rounding === 'ten') next = Math.round(next / 10) * 10
   if (bulk.rounding === 'hundred') next = Math.round(next / 100) * 100
-  return { from: base, to: Math.max(0, next) }
+  return { name: p.name, from: base, to: Math.max(0, next) }
 })
 
 const bulkValid = computed(() => {
@@ -118,26 +130,31 @@ async function runImport(dryRun) {
   <div class="pu-overlay" @click.self="emit('close')">
     <div class="pu-modal" role="dialog" aria-modal="true" aria-labelledby="pu-title">
       <header class="pu-head">
-        <h3 id="pu-title"><AppIcon name="tag" :size="18" /> Actualizar precios</h3>
+        <span class="pu-head-icon"><AppIcon name="trending-up" :size="22" /></span>
+        <div class="pu-head-text">
+          <h3 id="pu-title">Actualizar precios</h3>
+          <p>Subí o bajá precios de a muchos, o traé la lista del proveedor.</p>
+        </div>
         <button type="button" class="icon-btn" aria-label="Cerrar" @click="emit('close')"><AppIcon name="x" :size="16" /></button>
       </header>
 
-      <div class="tabs">
-        <button type="button" class="tab" :class="{ active: tab === 'bulk' }" @click="tab = 'bulk'">
-          <AppIcon name="percent" :size="15" /> Aumento masivo
+      <div class="pu-tabs" role="tablist">
+        <button type="button" role="tab" class="pu-tab" :class="{ active: tab === 'bulk' }" :aria-selected="tab === 'bulk'" @click="tab = 'bulk'">
+          <span class="pu-tab-icon violet"><AppIcon name="percent" :size="15" /></span> Aumento masivo
         </button>
-        <button type="button" class="tab" :class="{ active: tab === 'import' }" @click="tab = 'import'">
-          <AppIcon name="upload" :size="15" /> Lista del proveedor
+        <button type="button" role="tab" class="pu-tab" :class="{ active: tab === 'import' }" :aria-selected="tab === 'import'" @click="tab = 'import'">
+          <span class="pu-tab-icon teal"><AppIcon name="upload" :size="15" /></span> Lista del proveedor
         </button>
       </div>
 
       <!-- -------- Aumento masivo -------- -->
       <div v-show="tab === 'bulk'" class="pu-body">
         <div class="field">
-          <label>¿Cómo actualizar?</label>
+          <label class="pu-label"><AppIcon name="sliders" :size="14" /> ¿Cómo actualizar?</label>
           <div class="pu-modes">
-            <label v-for="m in MODES" :key="m.value" class="pu-mode" :class="{ on: bulk.mode === m.value }">
+            <label v-for="m in MODES" :key="m.value" class="pu-mode" :class="[m.accent, { on: bulk.mode === m.value }]">
               <input v-model="bulk.mode" type="radio" :value="m.value" class="sr-only" />
+              <span class="pu-mode-icon"><AppIcon :name="m.icon" :size="17" /></span>
               <strong>{{ m.label }}</strong>
               <small>{{ m.hint }}</small>
             </label>
@@ -145,24 +162,25 @@ async function runImport(dryRun) {
         </div>
         <div class="grid-2">
           <div class="field">
-            <label for="pu-value">{{ bulk.mode === 'percent' ? 'Porcentaje (%)' : 'Monto ($)' }}</label>
+            <label class="pu-label" for="pu-value"><AppIcon name="wallet" :size="14" /> {{ bulk.mode === 'percent' ? 'Porcentaje (%)' : 'Monto ($)' }}</label>
             <input id="pu-value" v-model="bulk.value" type="number" step="0.01" class="input" :placeholder="bulk.mode === 'percent' ? '15' : '500'" />
           </div>
           <div class="field">
-            <label for="pu-round">Redondeo</label>
+            <label class="pu-label" for="pu-round"><AppIcon name="sliders" :size="14" /> Redondeo</label>
             <select id="pu-round" v-model="bulk.rounding" class="select">
               <option v-for="r in ROUNDINGS" :key="r.value" :value="r.value">{{ r.label }}</option>
             </select>
           </div>
         </div>
         <div class="field">
-          <label for="pu-scope">¿A qué productos?</label>
-          <select id="pu-scope" v-model="bulk.scope" class="select">
-            <option value="all">Todo el catálogo ({{ catalog.products.length }})</option>
-            <option value="category">Una categoría</option>
-            <option value="brand">Una marca</option>
-            <option value="products">Productos elegidos</option>
-          </select>
+          <label class="pu-label"><AppIcon name="package" :size="14" /> ¿A qué productos?</label>
+          <div class="pu-scopes">
+            <label v-for="s in SCOPES" :key="s.value" class="pu-scope" :class="{ on: bulk.scope === s.value }">
+              <input v-model="bulk.scope" type="radio" :value="s.value" class="sr-only" />
+              <AppIcon :name="s.icon" :size="15" />
+              <span>{{ s.label }}<small v-if="s.value === 'all'"> ({{ catalog.products.length }})</small></span>
+            </label>
+          </div>
         </div>
         <div v-if="bulk.scope === 'category'" class="field">
           <select v-model="bulk.category" class="select" aria-label="Categoría">
@@ -191,9 +209,11 @@ async function runImport(dryRun) {
             </li>
           </ul>
         </div>
-        <p v-if="bulkPreview" class="hint">
-          Vista previa con «{{ bulkTargets[0].name }}»: <s>{{ formatARS(bulkPreview.from) }}</s> → <strong>{{ formatARS(bulkPreview.to) }}</strong> · {{ bulkTargets.length }} producto{{ bulkTargets.length === 1 ? '' : 's' }} en el alcance.
-        </p>
+        <div v-if="bulkPreview" class="pu-preview">
+          <span class="pu-preview-icon"><AppIcon name="eye" :size="15" /></span>
+          <p>«{{ bulkPreview.name }}» queda <s>{{ formatARS(bulkPreview.from) }}</s> <AppIcon name="arrow-right" :size="13" /> <strong>{{ formatARS(bulkPreview.to) }}</strong></p>
+          <span class="pu-count">{{ bulkTargets.length }} producto{{ bulkTargets.length === 1 ? '' : 's' }}</span>
+        </div>
         <AlertMessage v-if="bulkError" kind="error" :message="bulkError" />
         <div class="btn-row">
           <AppButton :loading="bulkBusy" :disabled="!bulkValid" @click="applyBulk"><AppIcon name="check" :size="16" /> Aplicar a {{ bulkTargets.length }} productos</AppButton>
@@ -202,23 +222,28 @@ async function runImport(dryRun) {
 
       <!-- -------- Importar lista -------- -->
       <div v-show="tab === 'import'" class="pu-body">
-        <p class="hint">
-          Subí el CSV del proveedor con columnas <code>id</code> o <code>nombre</code>, <code>precio</code> y opcional <code>oferta</code>.
-          <button type="button" class="pu-link" @click="catalogApi.exportPrices()"><AppIcon name="download" :size="13" /> Descargar plantilla con mis productos</button>
-        </p>
+        <div class="pu-tip">
+          <AppIcon name="info" :size="15" />
+          <p>El CSV necesita <code>id</code> o <code>nombre</code>, <code>precio</code> y opcional <code>oferta</code>.</p>
+          <button type="button" class="pu-link" @click="catalogApi.exportPrices()"><AppIcon name="download" :size="13" /> Descargar plantilla</button>
+        </div>
         <input ref="fileInput" type="file" accept=".csv,text/csv" class="sr-only" @change="onFilePicked" />
-        <button type="button" class="pu-drop" @click="fileInput?.click()">
-          <AppIcon name="upload" :size="20" />
-          <span>{{ file ? file.name : 'Elegir archivo CSV' }}</span>
+        <button type="button" class="pu-drop" :class="{ filled: file }" @click="fileInput?.click()">
+          <span class="pu-drop-icon"><AppIcon :name="file ? 'file-text' : 'upload'" :size="20" /></span>
+          <span class="pu-drop-text"><strong>{{ file ? file.name : 'Elegir archivo CSV' }}</strong><small>{{ file ? 'Tocá para cambiarlo' : 'La lista del proveedor en CSV' }}</small></span>
         </button>
         <AlertMessage v-if="importError" kind="error" :message="importError" />
         <template v-if="report">
-          <p class="hint"><strong>{{ report.matched }}</strong> encontrados · <strong>{{ report.preview.length }}</strong> con cambios · <strong>{{ report.skipped.length }}</strong> sin matchear</p>
+          <div class="pu-stats">
+            <span class="pu-stat ok"><AppIcon name="check" :size="13" /> {{ report.matched }} encontrados</span>
+            <span class="pu-stat brand"><AppIcon name="refresh" :size="13" /> {{ report.preview.length }} con cambios</span>
+            <span class="pu-stat warn"><AppIcon name="circle-alert" :size="13" /> {{ report.skipped.length }} sin matchear</span>
+          </div>
           <ul v-if="report.preview.length" class="pu-report">
-            <li v-for="r in report.preview" :key="r.id"><span>{{ r.name }}</span><span><s>{{ formatARS(r.old_price) }}</s> → <strong>{{ formatARS(r.new_price) }}</strong></span></li>
+            <li v-for="r in report.preview" :key="r.id"><span>{{ r.name }}</span><span><s>{{ formatARS(r.old_price) }}</s> <AppIcon name="arrow-right" :size="11" /> <strong>{{ formatARS(r.new_price) }}</strong></span></li>
           </ul>
           <ul v-if="report.skipped.length" class="pu-report pu-report-skip">
-            <li v-for="(s, i) in report.skipped" :key="i"><span>Línea {{ s.line }}: {{ s.label || '(vacío)' }}</span><small>{{ s.reason }}</small></li>
+            <li v-for="(s, i) in report.skipped" :key="i"><span><AppIcon name="circle-alert" :size="12" /> Línea {{ s.line }}: {{ s.label || '(vacío)' }}</span><small>{{ s.reason }}</small></li>
           </ul>
         </template>
         <div class="btn-row">
@@ -233,23 +258,92 @@ async function runImport(dryRun) {
 </template>
 
 <style scoped>
-.pu-overlay { position: fixed; inset: 0; z-index: 60; display: grid; place-items: center; padding: 16px; background: rgba(10, 12, 18, .55); }
-.pu-modal { width: min(560px, 100%); max-height: 90vh; overflow-y: auto; background: var(--card, #fff); color: var(--ink); border-radius: 16px; padding: 18px 20px 20px; box-shadow: 0 24px 60px rgba(0, 0, 0, .3); }
-.pu-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px; }
-.pu-head h3 { display: flex; align-items: center; gap: 8px; margin: 0; font-size: 1.05rem; }
-.pu-body { display: flex; flex-direction: column; gap: 4px; padding-top: 10px; }
-.pu-modes { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
-.pu-mode { display: flex; flex-direction: column; gap: 2px; padding: 10px; border: 1px solid var(--line, #e3e5ea); border-radius: 10px; cursor: pointer; }
-.pu-mode.on { border-color: var(--brand-500, #4f46e5); background: var(--brand-soft, rgba(79, 70, 229, .07)); }
-.pu-mode small { font-size: .72rem; opacity: .75; }
+.pu-overlay { position: fixed; inset: 0; z-index: 60; display: grid; place-items: center; padding: 16px; background: rgba(10, 12, 18, .55); backdrop-filter: blur(3px); }
+.pu-modal { width: min(600px, 100%); max-height: 90vh; overflow-y: auto; background: var(--card, #fff); color: var(--ink); border-radius: 18px; padding: 20px 22px 22px; box-shadow: 0 24px 60px rgba(0, 0, 0, .35); }
+
+/* Header con identidad */
+.pu-head { display: flex; align-items: flex-start; gap: 13px; margin-bottom: 16px; }
+.pu-head-icon { flex: none; width: 44px; height: 44px; display: grid; place-items: center; border-radius: 13px; color: #fff; background: linear-gradient(135deg, #6366f1, #8b5cf6 55%, #d946ef); box-shadow: 0 8px 18px rgba(99, 102, 241, .35); }
+.pu-head-text { flex: 1; min-width: 0; }
+.pu-head-text h3 { margin: 2px 0 3px; font-size: 1.08rem; }
+.pu-head-text p { margin: 0; font-size: .82rem; color: var(--muted); }
+
+/* Tabs en píldora */
+.pu-tabs { display: flex; gap: 6px; padding: 5px; border-radius: 13px; background: var(--surface, #f1f5f9); border: 1px solid var(--line); margin-bottom: 14px; }
+.pu-tab { flex: 1; display: flex; align-items: center; justify-content: center; gap: 8px; padding: 9px 10px; border: none; border-radius: 10px; background: transparent; color: var(--muted); font: inherit; font-weight: 600; font-size: .85rem; cursor: pointer; transition: background .15s, color .15s, box-shadow .15s; }
+.pu-tab.active { background: var(--card, #fff); color: var(--ink); box-shadow: 0 2px 8px rgba(15, 23, 42, .12); }
+.pu-tab-icon { display: grid; place-items: center; width: 26px; height: 26px; border-radius: 8px; }
+.pu-tab-icon.violet { background: rgba(99, 102, 241, .14); color: #6366f1; }
+.pu-tab-icon.teal { background: rgba(13, 148, 136, .14); color: #0d9488; }
+.pu-tab.active .pu-tab-icon.violet { background: #6366f1; color: #fff; }
+.pu-tab.active .pu-tab-icon.teal { background: #0d9488; color: #fff; }
+
+.pu-body { display: flex; flex-direction: column; gap: 4px; }
+.pu-label { display: inline-flex; align-items: center; gap: 6px; color: var(--ink-2, var(--ink)); }
+.pu-label svg { color: var(--brand-500, #6366f1); }
+
+/* Tarjetas de modo con acento propio */
+.pu-modes { display: grid; grid-template-columns: repeat(3, 1fr); gap: 9px; }
+.pu-mode { display: flex; flex-direction: column; gap: 3px; padding: 12px 11px; border: 1.5px solid var(--line); border-radius: 13px; cursor: pointer; background: var(--card); transition: border-color .15s, background .15s, transform .1s; }
+.pu-mode:hover { transform: translateY(-1px); }
+.pu-mode-icon { display: grid; place-items: center; width: 30px; height: 30px; border-radius: 9px; margin-bottom: 3px; }
+.pu-mode small { font-size: .7rem; line-height: 1.35; color: var(--muted); }
+.pu-mode.violet .pu-mode-icon { background: rgba(99, 102, 241, .13); color: #6366f1; }
+.pu-mode.amber .pu-mode-icon { background: rgba(217, 119, 6, .13); color: #b45309; }
+.pu-mode.teal .pu-mode-icon { background: rgba(13, 148, 136, .13); color: #0d9488; }
+.pu-mode.violet.on { border-color: #6366f1; background: rgba(99, 102, 241, .07); }
+.pu-mode.amber.on { border-color: #d97706; background: rgba(217, 119, 6, .07); }
+.pu-mode.teal.on { border-color: #0d9488; background: rgba(13, 148, 136, .07); }
+.pu-mode.violet.on .pu-mode-icon { background: #6366f1; color: #fff; }
+.pu-mode.amber.on .pu-mode-icon { background: #d97706; color: #fff; }
+.pu-mode.teal.on .pu-mode-icon { background: #0d9488; color: #fff; }
+
+/* Alcance en chips */
+.pu-scopes { display: flex; flex-wrap: wrap; gap: 7px; }
+.pu-scope { display: inline-flex; align-items: center; gap: 7px; padding: 8px 13px; border: 1.5px solid var(--line); border-radius: 999px; cursor: pointer; font-size: .82rem; font-weight: 600; color: var(--ink-2, var(--ink)); background: var(--card); transition: border-color .15s, background .15s, color .15s; }
+.pu-scope svg { color: var(--muted); transition: color .15s; }
+.pu-scope small { color: var(--muted); font-weight: 500; }
+.pu-scope.on { border-color: var(--brand-500, #6366f1); background: var(--brand-soft, rgba(99, 102, 241, .08)); color: var(--brand-ink, var(--brand-600)); }
+.pu-scope.on svg { color: var(--brand-500, #6366f1); }
+
 .pu-pick { display: flex; align-items: center; gap: 8px; margin-bottom: 6px; }
-.pu-list { list-style: none; margin: 0; padding: 0; max-height: 200px; overflow-y: auto; border: 1px solid var(--line, #e3e5ea); border-radius: 10px; }
-.pu-report { list-style: none; margin: 6px 0 0; padding: 8px 12px; max-height: 180px; overflow-y: auto; border: 1px solid var(--line, #e3e5ea); border-radius: 10px; font-size: .85rem; }
-.pu-report li { display: flex; justify-content: space-between; gap: 10px; padding: 3px 0; }
-.pu-report-skip li { flex-direction: column; gap: 0; }
-.pu-report-skip small { opacity: .7; }
-.pu-drop { display: flex; align-items: center; justify-content: center; gap: 10px; width: 100%; padding: 22px; border: 1.5px dashed var(--line, #e3e5ea); border-radius: 12px; background: transparent; cursor: pointer; color: inherit; font: inherit; margin: 8px 0; }
-.pu-drop:hover { border-color: var(--brand-500, #4f46e5); }
-.pu-link { display: inline-flex; align-items: center; gap: 4px; background: none; border: none; padding: 0; color: var(--brand-600, #4f46e5); cursor: pointer; font: inherit; }
+.pu-list { list-style: none; margin: 0; padding: 0; max-height: 200px; overflow-y: auto; border: 1px solid var(--line); border-radius: 12px; }
+
+/* Preview del bulk */
+.pu-preview { display: flex; align-items: center; gap: 10px; padding: 10px 13px; border-radius: 12px; border: 1px dashed var(--brand-soft-line, #c7d2fe); background: var(--brand-soft, rgba(99, 102, 241, .07)); }
+.pu-preview-icon { flex: none; display: grid; place-items: center; width: 28px; height: 28px; border-radius: 8px; background: var(--card, #fff); color: var(--brand-500, #6366f1); }
+.pu-preview p { flex: 1; min-width: 0; margin: 0; font-size: .84rem; display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+.pu-preview s { color: var(--muted); }
+.pu-preview strong { color: var(--brand-ink, #4f46e5); }
+.pu-count { flex: none; font-size: .72rem; font-weight: 700; padding: 3px 9px; border-radius: 999px; background: var(--card, #fff); color: var(--brand-ink, #4f46e5); border: 1px solid var(--brand-soft-line, #c7d2fe); }
+
+/* Import: tip y dropzone */
+.pu-tip { display: flex; align-items: center; gap: 9px; padding: 10px 13px; border-radius: 12px; background: rgba(13, 148, 136, .08); border: 1px solid rgba(13, 148, 136, .25); }
+.pu-tip > svg { flex: none; color: #0d9488; }
+.pu-tip p { flex: 1; margin: 0; font-size: .8rem; color: var(--ink-2, var(--ink)); }
+.pu-tip code { font-size: .78rem; background: var(--card, #fff); padding: 1px 5px; border-radius: 5px; border: 1px solid rgba(13, 148, 136, .3); }
+.pu-link { flex: none; display: inline-flex; align-items: center; gap: 4px; background: none; border: none; padding: 0; color: #0d9488; font-weight: 700; cursor: pointer; font: inherit; font-size: .8rem; }
 .pu-link:hover { text-decoration: underline; }
+.pu-drop { display: flex; align-items: center; justify-content: center; gap: 12px; width: 100%; padding: 20px; border: 1.5px dashed var(--line); border-radius: 14px; background: var(--surface, #f8fafc); cursor: pointer; color: inherit; font: inherit; margin: 10px 0 4px; transition: border-color .15s, background .15s; }
+.pu-drop:hover { border-color: #0d9488; background: rgba(13, 148, 136, .05); }
+.pu-drop.filled { border-style: solid; border-color: #0d9488; background: rgba(13, 148, 136, .07); }
+.pu-drop-icon { display: grid; place-items: center; width: 40px; height: 40px; border-radius: 11px; background: rgba(13, 148, 136, .12); color: #0d9488; }
+.pu-drop.filled .pu-drop-icon { background: #0d9488; color: #fff; }
+.pu-drop-text { display: flex; flex-direction: column; text-align: left; }
+.pu-drop-text small { color: var(--muted); font-size: .75rem; }
+
+/* Reporte del import */
+.pu-stats { display: flex; flex-wrap: wrap; gap: 7px; margin-top: 8px; }
+.pu-stat { display: inline-flex; align-items: center; gap: 5px; font-size: .74rem; font-weight: 700; padding: 4px 10px; border-radius: 999px; }
+.pu-stat.ok { background: rgba(22, 163, 74, .12); color: #15803d; }
+.pu-stat.brand { background: var(--brand-soft, rgba(99, 102, 241, .1)); color: var(--brand-ink, #4f46e5); }
+.pu-stat.warn { background: rgba(217, 119, 6, .13); color: #b45309; }
+.pu-report { list-style: none; margin: 8px 0 0; padding: 8px 12px; max-height: 180px; overflow-y: auto; border: 1px solid var(--line); border-radius: 12px; font-size: .85rem; }
+.pu-report li { display: flex; justify-content: space-between; align-items: center; gap: 10px; padding: 4px 0; }
+.pu-report li span:last-child { display: inline-flex; align-items: center; gap: 5px; }
+.pu-report s { color: var(--muted); }
+.pu-report strong { color: #15803d; }
+.pu-report-skip li { flex-direction: column; align-items: flex-start; gap: 1px; }
+.pu-report-skip span { display: inline-flex; align-items: center; gap: 5px; color: #b45309; font-weight: 600; }
+.pu-report-skip small { color: var(--muted); padding-left: 17px; }
 </style>
