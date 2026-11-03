@@ -69,6 +69,23 @@ PATTERN_VARIABLES = {
     'products':          {'type': 'list',  'label': 'Productos'},
     'categories':        {'type': 'list',  'label': 'Categorías'},
     'services':          {'type': 'list',  'label': 'Servicios'},
+    'offerings':         {'type': 'list',  'label': 'Qué ofrecemos'},
+    'offerings_title':   {'type': 'text',  'label': 'Título de Qué ofrecemos'},
+    'stats':             {'type': 'list',  'label': 'Números del negocio'},
+    'testimonials':      {'type': 'list',  'label': 'Testimonios'},
+    'testimonials_title': {'type': 'text', 'label': 'Título de Testimonios'},
+    'faqs':              {'type': 'list',  'label': 'Preguntas frecuentes'},
+    'faqs_title':        {'type': 'text',  'label': 'Título de Preguntas frecuentes'},
+    'benefits':          {'type': 'list',  'label': 'Garantías y beneficios'},
+    'timeline':          {'type': 'list',  'label': 'Hitos del negocio'},
+    'team':              {'type': 'list',  'label': 'Equipo'},
+    'announcements':     {'type': 'list',  'label': 'Cinta de anuncios'},
+    'video_url':         {'type': 'text',  'label': 'Video (URL)'},
+    'video_title':       {'type': 'text',  'label': 'Título de la sección Video'},
+    'cta_title':         {'type': 'text',  'label': 'Título del llamado a la acción'},
+    'cta_text':          {'type': 'text',  'label': 'Texto del llamado a la acción'},
+    'cta_label':         {'type': 'text',  'label': 'Botón del llamado a la acción'},
+    'footer_text':       {'type': 'text',  'label': 'Texto del pie'},
     'plans':             {'type': 'list',  'label': 'Planes de suscripción'},
     'plans_title':       {'type': 'text',  'label': 'Título de la sección Planes'},
     'gallery':           {'type': 'list',  'label': 'Galería'},
@@ -307,6 +324,196 @@ def _plans_fragment(store, customization, flags = None):
         )
     return ''.join(cards)
 
+#Iconos del panel (mismos ids que SERVICE_ICONS del front): paths lucide
+#24×24 trazo, `currentColor`. El patrón los envuelve en su propia marca.
+_ICON_PATHS = {
+    'package':        '<path d="m7.5 4.27 9 5.15"/><path d="M21 8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16Z"/><path d="m3.3 7 8.7 5 8.7-5"/><path d="M12 22V12"/>',
+    'truck':          '<path d="M14 18V6a2 2 0 0 0-2-2H4a2 2 0 0 0-2 2v11a1 1 0 0 0 1 1h2"/><path d="M15 18h-5"/><path d="M15 8h4l4 4v4a1 1 0 0 1-1 1h-1"/><circle cx="7" cy="18" r="2"/><circle cx="17" cy="18" r="2"/>',
+    'wrench':         '<path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/>',
+    'tag':            '<path d="M12.586 2.586A2 2 0 0 0 11.172 2H4a2 2 0 0 0-2 2v7.172a2 2 0 0 0 .586 1.414l8.704 8.704a2.426 2.426 0 0 0 3.42 0l6.58-6.58a2.426 2.426 0 0 0 0-3.42Z"/><circle cx="7.5" cy="7.5" r="1"/>',
+    'percent':        '<line x1="19" x2="5" y1="5" y2="19"/><circle cx="6.5" cy="6.5" r="2.5"/><circle cx="17.5" cy="17.5" r="2.5"/>',
+    'gift':           '<rect x="3" y="8" width="18" height="4" rx="1"/><path d="M12 8v13"/><path d="M19 12v7a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2v-7"/><path d="M7.5 8a2.5 2.5 0 0 1 0-5A4.8 8 0 0 1 12 8a4.8 8 0 0 1 4.5-5 2.5 2.5 0 0 1 0 5"/>',
+    'star':           '<path d="m12 2 3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01z"/>',
+    'zap':            '<path d="M13 2 3 14h9l-1 8 10-12h-9l1-8z"/>',
+    'shield-check':   '<path d="M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z"/><path d="m9 12 2 2 4-4"/>',
+    'clock':          '<circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/>',
+    'map-pin':        '<path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/>',
+    'users':          '<path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/>',
+    'phone':          '<path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/>',
+    'message-circle': '<path d="M7.9 20A9 9 0 1 0 4 16.1L2 22Z"/>',
+    'store':          '<path d="m2 7 4.41-4.41A2 2 0 0 1 7.83 2h8.34a2 2 0 0 1 1.42.59L22 7"/><path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8"/><path d="M15 22v-4a2 2 0 0 0-2-2h-2a2 2 0 0 0-2 2v4"/><path d="M2 7h20"/><path d="M22 7v3a2 2 0 0 1-2 2 2.7 2.7 0 0 1-1.59-.63.7.7 0 0 0-.82 0A2.7 2.7 0 0 1 16 12a2.7 2.7 0 0 1-1.59-.63.7.7 0 0 0-.82 0A2.7 2.7 0 0 1 12 12a2.7 2.7 0 0 1-1.59-.63.7.7 0 0 0-.82 0A2.7 2.7 0 0 1 8 12a2.7 2.7 0 0 1-1.59-.63.7.7 0 0 0-.82 0A2.7 2.7 0 0 1 4 12a2 2 0 0 1-2-2V7"/>',
+    'credit-card':    '<rect x="2" y="5" width="20" height="14" rx="2"/><line x1="2" x2="22" y1="10" y2="10"/>',
+    'wallet':         '<path d="M21 12V7H5a2 2 0 0 1 0-4h14v4"/><path d="M3 5v14a2 2 0 0 0 2 2h16v-5"/><path d="M18 12a2 2 0 0 0 0 4h4v-4Z"/>',
+    'crown':          '<path d="m2 4 3 12h14l3-12-6 7-4-7-4 7-6-7zm3 16h14"/>',
+    'badge-check':    '<path d="M3.85 8.62a4 4 0 0 1 4.78-4.77 4 4 0 0 1 6.74 0 4 4 0 0 1 4.78 4.78 4 4 0 0 1 0 6.74 4 4 0 0 1-4.77 4.78 4 4 0 0 1-6.75 0 4 4 0 0 1-4.78-4.77 4 4 0 0 1 0-6.76Z"/><path d="m9 12 2 2 4-4"/>',
+    'trending-up':    '<path d="m22 7-8.5 8.5-5-5L2 17"/><path d="M16 7h6v6"/>',
+    'calendar':       '<path d="M8 2v4"/><path d="M16 2v4"/><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M3 10h18"/>',
+    'flame':          '<path d="M8.5 14.5A2.5 2.5 0 0 0 11 12c0-1.38-.5-2-1-3-1.072-2.143-.224-4.054 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 1 1-14 0c0-1.153.433-2.294 1-3a2.5 2.5 0 0 0 2.5 2.5z"/>',
+    'megaphone':      '<path d="m3 11 18-5v12L3 14v-3z"/><path d="M11.6 16.8a3 3 0 1 1-5.8-1.6"/>',
+    'sparkles':       '<path d="m12 3-1.9 5.8a2 2 0 0 1-1.3 1.3L3 12l5.8 1.9a2 2 0 0 1 1.3 1.3L12 21l1.9-5.8a2 2 0 0 1 1.3-1.3L21 12l-5.8-1.9a2 2 0 0 1-1.3-1.3Z"/>',
+    'award':          '<circle cx="12" cy="8" r="6"/><path d="M15.5 13 17 22l-5-3-5 3 1.5-9"/>',
+    'check':          '<path d="M20 6 9 17l-5-5"/>',
+    'heart':          '<path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"/>',
+    'leaf':           '<path d="M11 20A7 7 0 0 1 9.8 6.1C15.5 5 17 4.48 19 2c1 2 2 4.18 2 8 0 5.5-4.78 10-10 10Z"/><path d="M2 21c0-3 1.85-5.36 5.08-6C9.5 14.52 12 13 13 12"/>',
+    'camera':         '<path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z"/><circle cx="12" cy="13" r="3"/>',
+    'book':           '<path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1 0-5H20"/>',
+    'music':          '<path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/>',
+    'graduation-cap': '<path d="M22 10v6M2 10l10-5 10 5-10 5z"/><path d="M6 12v5c3 3 9 3 12 0v-5"/>',
+    'dumbbell':       '<path d="M14.4 14.4 9.6 9.6"/><path d="M18.657 21.485a2 2 0 1 1-2.829-2.828l-1.767 1.768a2 2 0 1 1-2.829-2.829l6.364-6.364a2 2 0 1 1 2.829 2.828l-1.768 1.768a2 2 0 1 1 2.829 2.829Z"/><path d="m21.5 21.5-1.4-1.4"/><path d="M3.9 3.9 2.5 2.5"/><path d="M6.404 12.768a2 2 0 1 1-2.829-2.829l1.768-1.767a2 2 0 1 1-2.828-2.829l2.828-2.828a2 2 0 1 1 2.829 2.828l1.767-1.768a2 2 0 1 1 2.829 2.829Z"/>',
+    'paw-print':      '<circle cx="11" cy="4" r="2"/><circle cx="18" cy="8" r="2"/><circle cx="20" cy="16" r="2"/><path d="M9 10a5 5 0 0 1 5 5v3.5a3.5 3.5 0 0 1-6.84 1.045Q6.52 17.48 4.46 16.84A3.5 3.5 0 0 1 5.5 10Z"/>',
+    'scissors':       '<circle cx="6" cy="6" r="3"/><circle cx="6" cy="18" r="3"/><path d="M20 4 8.12 15.88"/><path d="M14.47 14.48 20 20"/><path d="M8.12 8.12 12 12"/>',
+    'coffee':         '<path d="M17 8h1a4 4 0 1 1 0 8h-1"/><path d="M3 8h14v9a4 4 0 0 1-4 4H7a4 4 0 0 1-4-4Z"/><path d="M6 2v2"/><path d="M10 2v2"/><path d="M14 2v2"/>',
+    'umbrella':       '<path d="M22 12a10.06 10.06 0 0 0-20 0Z"/><path d="M12 12v8a2 2 0 0 0 4 0"/><path d="M12 2v1"/>',
+    'hard-hat':       '<path d="M2 18a1 1 0 0 0 1 1h18a1 1 0 0 0 1-1v-2a1 1 0 0 0-1-1H3a1 1 0 0 0-1 1z"/><path d="M10 5V3a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1v2"/><path d="M4 15v-3a6 6 0 0 1 6-6"/><path d="M14 6a6 6 0 0 1 6 6v3"/>',
+    'film':           '<rect x="3" y="3" width="18" height="18" rx="2"/><path d="M7 3v18"/><path d="M17 3v18"/><path d="M3 7.5h4"/><path d="M3 12h18"/><path d="M3 16.5h4"/><path d="M17 7.5h4"/><path d="M17 16.5h4"/>',
+    'flower':         '<circle cx="12" cy="12" r="3"/><path d="M12 16.5A4.5 4.5 0 1 1 7.5 12 4.5 4.5 0 1 1 12 7.5a4.5 4.5 0 1 1 4.5 4.5 4.5 4.5 0 1 1-4.5 4.5"/><path d="M12 7.5V9"/><path d="M7.5 12H9"/><path d="M16.5 12H15"/><path d="M12 16.5V15"/>',
+    'hand':           '<path d="M18 11V6a2 2 0 0 0-2-2 2 2 0 0 0-2 2"/><path d="M14 10V4a2 2 0 0 0-2-2 2 2 0 0 0-2 2v2"/><path d="M10 10.5V6a2 2 0 0 0-2-2 2 2 0 0 0-2 2v8"/><path d="M18 8a2 2 0 1 1 4 0v6a8 8 0 0 1-8 8h-2c-2.8 0-4.5-.86-5.99-2.34l-3.6-3.6a2 2 0 0 1 2.83-2.82L7 15"/>',
+}
+
+def _icon_svg(name):
+    key = str(name or '').strip()
+    return (
+        '<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" '
+        f'stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">'
+        f'{_ICON_PATHS.get(key, _ICON_PATHS["check"])}</svg>'
+    )
+
+def _rows(value):
+    return [row for row in (value or []) if isinstance(row, dict)]
+
+def _offerings_fragment(customization, flags):
+    if customization is None or not flags.get('services', True):
+        return ''
+    cards = []
+    for row in _rows(customization.services):
+        title = _text(row.get('title'), 60)
+        if not title:
+            continue
+        cards.append(
+            '<article class="ds-offer">'
+            f'<span class="ds-offer-icon">{_icon_svg(row.get("icon"))}</span>'
+            f'<h3 class="ds-offer-name">{escape(title)}</h3>'
+            f'<p class="ds-offer-text">{escape(_text(row.get("text"), 160))}</p>'
+            '</article>'
+        )
+    return ''.join(cards)
+
+def _stats_fragment(customization, flags):
+    if customization is None or not flags.get('stats', True):
+        return ''
+    cards = []
+    for row in _rows(customization.stats):
+        value = _text(row.get('value'), 20)
+        label = _text(row.get('label'), 60)
+        if not (value or label):
+            continue
+        cards.append(
+            '<article class="ds-stat">'
+            f'<b class="ds-stat-value">{escape(value)}</b>'
+            f'<span class="ds-stat-label">{escape(label)}</span>'
+            '</article>'
+        )
+    return ''.join(cards)
+
+def _testimonials_fragment(customization, flags):
+    if customization is None or not flags.get('testimonials', True):
+        return ''
+    cards = []
+    for row in _rows(customization.testimonials):
+        text = _text(row.get('text'), 300)
+        if not text:
+            continue
+        name = _text(row.get('name'), 60)
+        cards.append(
+            '<figure class="ds-quote">'
+            f'<blockquote class="ds-quote-text">{escape(text)}</blockquote>'
+            f'<figcaption class="ds-quote-name">{escape(name)}</figcaption>'
+            '</figure>'
+        )
+    return ''.join(cards)
+
+def _faqs_fragment(customization, flags):
+    if customization is None or not flags.get('faq', True):
+        return ''
+    items = []
+    for row in _rows(customization.faqs):
+        q = _text(row.get('q'), 160)
+        a = _text(row.get('a'), 600)
+        if not q:
+            continue
+        items.append(
+            '<details class="ds-faq">'
+            f'<summary class="ds-faq-q">{escape(q)}</summary>'
+            f'<p class="ds-faq-a">{escape(a)}</p>'
+            '</details>'
+        )
+    return ''.join(items)
+
+def _benefits_fragment(customization, flags):
+    if customization is None or not flags.get('benefits', True):
+        return ''
+    cards = []
+    for row in _rows(customization.benefits):
+        title = _text(row.get('title'), 40)
+        if not title:
+            continue
+        cards.append(
+            '<article class="ds-guar">'
+            f'<span class="ds-guar-icon">{_icon_svg(row.get("icon"))}</span>'
+            f'<span class="ds-guar-copy"><b>{escape(title)}</b>'
+            f'<span>{escape(_text(row.get("text"), 90))}</span></span>'
+            '</article>'
+        )
+    return ''.join(cards)
+
+def _timeline_fragment(customization, flags):
+    if customization is None or not flags.get('timeline', True):
+        return ''
+    items = []
+    for row in _rows(customization.timeline):
+        label = _text(row.get('label'), 24)
+        text = _text(row.get('text'), 160)
+        if not (label or text):
+            continue
+        items.append(
+            '<li class="ds-mile">'
+            f'<b class="ds-mile-label">{escape(label)}</b>'
+            f'<span class="ds-mile-text">{escape(text)}</span>'
+            '</li>'
+        )
+    return f'<ol class="ds-miles">{"".join(items)}</ol>' if items else ''
+
+def _team_fragment(customization, flags):
+    if customization is None or not flags.get('team', True):
+        return ''
+    cards = []
+    for row in _rows(customization.team):
+        name = _text(row.get('name'), 60)
+        if not name:
+            continue
+        initials = ''.join(part[0] for part in name.split()[:2]).upper()
+        cards.append(
+            '<article class="ds-mate">'
+            f'<span class="ds-mate-mark" aria-hidden="true">{escape(initials)}</span>'
+            f'<b class="ds-mate-name">{escape(name)}</b>'
+            f'<span class="ds-mate-role">{escape(_text(row.get("role"), 60))}</span>'
+            '</article>'
+        )
+    return ''.join(cards)
+
+def _announcements_fragment(customization, flags):
+    """Spans de la cinta: el patrón duplica el track para el marquee."""
+    if customization is None or not flags.get('announcements', True):
+        return ''
+    notes = []
+    for row in _rows(customization.announcements):
+        text = _text(row.get('text'), 120)
+        if text:
+            notes.append(
+                f'<span class="ds-note">{_icon_svg(row.get("icon"))}{escape(text)}</span>'
+            )
+    return ''.join(notes)
+
 def _gallery_fragment(store, customization):
     from StoreApp.domains.stores.models import StoreGalleryImage
     from StoreApp.domains.stores.services.storage import object_url
@@ -544,6 +751,15 @@ def build_store_context(store, product = None, flags = None):
         'store_cover': '',
         'store_accent': '',
         'plans_title': _text(getattr(customization, 'plans_title', ''), 80) or 'Suscripciones y membresías',
+        'offerings_title': _text(getattr(customization, 'services_title', ''), 80) or 'Qué ofrecemos',
+        'testimonials_title': _text(getattr(customization, 'testimonials_title', ''), 80) or 'Testimonios',
+        'faqs_title': _text(getattr(customization, 'faqs_title', ''), 80) or 'Preguntas frecuentes',
+        'video_url': _text(getattr(customization, 'video_url', ''), 400) if flags.get('video') else '',
+        'video_title': _text(getattr(customization, 'video_title', ''), 80),
+        'cta_title': _text(getattr(customization, 'cta_title', ''), 120),
+        'cta_text': _text(getattr(customization, 'cta_text', ''), 280),
+        'cta_label': _text(getattr(customization, 'cta_label', ''), 40),
+        'footer_text': _text(getattr(customization, 'footer_text', ''), 200),
         'year': str(timezone.now().year),
     }
     from StoreApp.domains.stores.services.storage import object_url
@@ -557,6 +773,14 @@ def build_store_context(store, product = None, flags = None):
         'categories': _category_fragment(store, flags = flags),
         'services': _service_fragment(store, flags = flags),
         'plans': _plans_fragment(store, customization, flags = flags),
+        'offerings': _offerings_fragment(customization, flags),
+        'stats': _stats_fragment(customization, flags),
+        'testimonials': _testimonials_fragment(customization, flags),
+        'faqs': _faqs_fragment(customization, flags),
+        'benefits': _benefits_fragment(customization, flags),
+        'timeline': _timeline_fragment(customization, flags),
+        'team': _team_fragment(customization, flags),
+        'announcements': _announcements_fragment(customization, flags),
         'gallery': _gallery_fragment(store, customization),
     }
     product_ctx, product_raw = _product_values(store, product, customization, name, flags = flags)
