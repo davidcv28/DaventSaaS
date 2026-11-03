@@ -187,6 +187,42 @@
   --sp-on-band: #08111f;
 }
 
+/* Nav y pie: el cromo es grafito (no la banda de acento), así que la tinta
+   "sobre banda" tiene que ser la del lienzo. Sin esto los enlaces del nav y
+   del pie salían en el acento oscuro sobre grafito (texto casi invisible). */
+.store-page[data-template='moderntec'] :is(.sp-top, .sp-foot) {
+  --sp-on-band: var(--mt-ink);
+  --sp-on-band-2: color-mix(in srgb, var(--mt-ink) 16%, transparent);
+  --sp-on-band-muted: var(--mt-ink-3);
+  color: var(--mt-ink);
+}
+.store-page[data-template='moderntec'] .sp-top-links a:hover { background: color-mix(in srgb, var(--mt-ink) 10%, transparent); }
+.store-page[data-template='moderntec'] .sp-top-links a.router-link-exact-active {
+  background: var(--mt-accent-soft);
+  color: var(--mt-accent);
+  box-shadow: inset 0 0 0 1px var(--mt-accent-line);
+}
+.store-page[data-template='moderntec'] .sp-top .sp-burger {
+  background: color-mix(in srgb, var(--mt-ink) 10%, transparent);
+  border-color: var(--mt-line-strong);
+  color: var(--mt-ink);
+}
+.store-page[data-template='moderntec'] .sp-top .sp-icon-btn {
+  background: color-mix(in srgb, var(--mt-ink) 8%, transparent);
+  border-color: var(--mt-line-strong);
+  color: var(--mt-ink);
+}
+.store-page[data-template='moderntec'] .sp-top .sp-icon-btn:hover {
+  background: color-mix(in srgb, var(--mt-ink) 16%, transparent);
+  border-color: var(--mt-accent-line);
+  color: var(--mt-ink);
+}
+.store-page[data-template='moderntec'] .sp-top .sp-icon-btn.primary {
+  background: var(--mt-accent);
+  border-color: transparent;
+  color: var(--mt-accent-ink);
+}
+
 /* ==========================================================================
    2. BASE — tipografía, foco, selección, lienzo
    ========================================================================== */
