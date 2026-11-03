@@ -21,6 +21,7 @@
   --font-display:"Bricolage Grotesque","Arial Narrow",system-ui,sans-serif;
   --font-body:"Instrument Sans",system-ui,-apple-system,"Segoe UI",sans-serif;
   --ease:cubic-bezier(.2,.7,.2,1);
+  --ease-back:cubic-bezier(.34,1.45,.64,1);
 }
 /* Modo oscuro por tema: cada estilo trae su propia noche.
    - esencial: bosque nocturno con teal luminoso (misma paleta que Esencial Noche).
@@ -59,9 +60,11 @@ html:not([data-ds-theme="dark"]):not([data-ds-style="esencial-noche"]){color-sch
 html[data-ds-style="esencial-noche"]{color-scheme:dark}
 
 *{box-sizing:border-box}
+::selection{background:color-mix(in srgb,var(--accent) 26%,transparent);color:var(--ink)}
 body{
   margin:0;background:var(--bg);color:var(--ink);
   font-family:var(--font-body);line-height:1.6;overflow-x:hidden;
+  -webkit-font-smoothing:antialiased;text-rendering:optimizeLegibility;
   /* El header va fijo también en escritorio: dentro del iframe estirado
      `sticky` no pega al viewport (el documento no scrollea por dentro) y la
      navegación desaparecía al bajar. 44px de control + 14px de padding +
@@ -78,7 +81,10 @@ a{color:inherit}
 .wrap{max-width:1120px;margin:0 auto;padding-inline:max(16px,env(safe-area-inset-left,0px))}
 .eyebrow{font-size:.8rem;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--accent)}
 .lead{font-size:1.1rem;color:var(--muted);max-width:60ch}
-.section{padding-block:clamp(56px,9vw,104px)}
+/* content-visibility: el documento va dentro de un iframe que reporta su
+   alto; saltar el render de las secciones fuera de pantalla recorta el
+   primer pintado sin cambiar el layout (intrinsic-size reserva el hueco). */
+.section{padding-block:clamp(56px,9vw,104px);content-visibility:auto;contain-intrinsic-size:auto 720px}
 .section-head{display:grid;gap:12px;margin-bottom:40px}
 .section-head h2{font-size:clamp(1.9rem,4.5vw,2.8rem)}
 .band{background:var(--surface);border-block:1px solid var(--line)}
@@ -93,6 +99,15 @@ a{color:inherit}
   font:inherit;font-weight:600;text-decoration:none;cursor:pointer;
   transition:transform .25s var(--ease),box-shadow .25s var(--ease),background-color .25s,color .25s;
 }
+/* Brillo que viaja al hover: firma del sistema, no solo premium. */
+.btn{overflow:hidden}
+.btn::before{
+  content:"";position:absolute;inset:0;pointer-events:none;
+  background:linear-gradient(115deg,transparent 35%,color-mix(in srgb,var(--accent-ink) 26%,transparent) 50%,transparent 65%);
+  background-size:250% 100%;background-position:130% 0;
+  transition:background-position .7s var(--ease);
+}
+.btn:hover::before{background-position:-40% 0}
 .btn:hover{transform:translateY(-2px);box-shadow:0 12px 24px -14px var(--accent)}
 .btn:active{transform:translateY(0) scale(.98)}
 .btn.ghost{background:transparent;color:var(--ink);border-color:var(--line)}
@@ -115,6 +130,12 @@ a{color:inherit}
   background:color-mix(in srgb,var(--bg) 96%,transparent);
   border-bottom:1px solid var(--line);
   transition:box-shadow .3s;
+}
+/* Barra de progreso de lectura: gradiente acento→ámbar, solo scaleX. */
+.site-header::after{
+  content:"";position:absolute;left:0;right:0;bottom:-1px;height:2px;
+  background:linear-gradient(90deg,var(--accent),var(--warm));
+  transform:scaleX(var(--progress,0));transform-origin:0 50%;
 }
 .site-header.scrolled{box-shadow:0 10px 28px -20px color-mix(in srgb,var(--ink) 60%,transparent)}
 .site-header .wrap{display:flex;flex-wrap:nowrap;align-items:center;justify-content:space-between;gap:12px 24px;padding-block:14px}
@@ -172,8 +193,14 @@ html[data-ds-surface="services"] .nav a[data-ds-route="services"]::after{transfo
   transition:transform .35s var(--ease),box-shadow .35s;
   box-shadow:var(--ds-shadow,0 30px 60px -40px color-mix(in srgb,var(--ink) 50%,transparent));
 }
-.hero-card .shot{position:relative;aspect-ratio:16/9;background:color-mix(in srgb,var(--accent) 10%,var(--bg));border-bottom:1px solid var(--line)}
-.hero-card .shot img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+.hero-card .shot{position:relative;aspect-ratio:16/9;background:color-mix(in srgb,var(--accent) 10%,var(--bg));border-bottom:1px solid var(--line);overflow:hidden}
+.hero-card .shot img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;transition:transform .8s var(--ease)}
+/* Velo editorial: pie de imagen levemente hundido, como una foto montada. */
+.hero-card .shot::after{
+  content:"";position:absolute;inset:0;pointer-events:none;
+  background:linear-gradient(180deg,transparent 62%,color-mix(in srgb,var(--ink) 16%,transparent));
+}
+.hero-card:hover .shot img{transform:scale(1.045)}
 .hero-card .stat{display:flex;align-items:center;gap:14px;padding:16px 20px;border-bottom:1px solid var(--line)}
 .hero-card .stat:last-child{border-bottom:0}
 .stat .ico-box{
@@ -194,7 +221,7 @@ html[data-ds-surface="services"] .nav a[data-ds-route="services"]::after{transfo
   -webkit-mask-image:linear-gradient(90deg,transparent,#000 var(--ticker-fade),#000 calc(100% - var(--ticker-fade)),transparent);
   mask-image:linear-gradient(90deg,transparent,#000 var(--ticker-fade),#000 calc(100% - var(--ticker-fade)),transparent);
 }
-.ticker-track{display:flex;gap:48px;width:max-content;padding-block:14px;animation:marquee 28s linear infinite}
+.ticker-track{display:flex;gap:48px;width:max-content;padding-block:14px;animation:marquee 28s linear infinite;will-change:transform}
 .ticker:hover .ticker-track{animation-play-state:paused}
 .ticker-item{display:inline-flex;align-items:center;gap:10px;font-weight:600;color:var(--muted);white-space:nowrap}
 .ticker-item .icon{color:var(--accent);width:20px;height:20px}
@@ -202,10 +229,17 @@ html[data-ds-surface="services"] .nav a[data-ds-route="services"]::after{transfo
 /* Catálogo */
 .catalog-grid{display:grid;gap:20px;grid-template-columns:repeat(auto-fill,minmax(min(100%,240px),1fr))}
 .ds-product{
-  display:flex;flex-direction:column;min-width:0;
+  position:relative;display:flex;flex-direction:column;min-width:0;
   background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);overflow:hidden;
   transition:transform .35s var(--ease),box-shadow .35s var(--ease),border-color .3s;
 }
+/* Filo de acento que se despliega al hover: firma del sistema. */
+.ds-product::before{
+  content:"";position:absolute;left:0;right:0;top:0;height:3px;z-index:2;
+  background:linear-gradient(90deg,var(--accent),var(--warm));
+  transform:scaleX(0);transform-origin:0 50%;transition:transform .4s var(--ease);
+}
+.ds-product:hover::before{transform:scaleX(1)}
 .ds-product:hover{
   transform:translateY(-4px);border-color:color-mix(in srgb,var(--accent) 45%,var(--line));
   box-shadow:0 18px 36px -26px color-mix(in srgb,var(--ink) 55%,transparent);
@@ -220,7 +254,10 @@ html[data-ds-surface="services"] .nav a[data-ds-route="services"]::after{transfo
 .ds-product-img{
   display:block;width:100%;aspect-ratio:4/3;object-fit:cover;
   background:color-mix(in srgb,var(--accent) 10%,var(--bg));border-bottom:1px solid var(--line);
+  transition:transform .6s var(--ease),filter .6s var(--ease);
 }
+/* Zoom interno: la tarjeta no cambia de tamaño, la foto respira dentro. */
+.ds-product:hover .ds-product-img:not(.is-empty){transform:scale(1.05);filter:saturate(1.06)}
 .ds-product-img.is-empty{display:grid;place-items:center}
 .ds-product-img.is-empty::after{content:"";width:56px;height:56px;color:var(--accent);opacity:.5;
   background:currentColor;clip-path:polygon(50% 0,100% 30%,100% 70%,50% 100%,0 70%,0 30%)}
@@ -292,6 +329,14 @@ a[href=""].btn{display:none}
 }
 .ds-service-name{grid-column:2;grid-row:1;font-family:var(--font-display);font-size:1.35rem;line-height:1.2;overflow-wrap:break-word}
 .ds-service-desc{grid-column:2;grid-row:2;color:var(--muted);display:block;margin-top:0}
+/* Flecha que entra desde la derecha al hover: el ítem "se abre" al cursor. */
+.ds-service{position:relative}
+.ds-service::after{
+  content:"→";position:absolute;right:16px;top:28px;font-family:var(--font-display);
+  color:var(--accent);opacity:0;transform:translateX(-10px);
+  transition:opacity .3s var(--ease),transform .3s var(--ease);
+}
+.ds-service:hover::after{opacity:1;transform:translateX(0)}
 
 /* Suscripciones / membresías (fragmento ds-plan): solo publicidad, el
    alta se coordina por WhatsApp. Sin planes cargados la sección y sus
@@ -352,7 +397,8 @@ body:not(:has(.ds-plan)) a[href="#suscripciones"]{display:none}
   border:1px solid var(--line);background:color-mix(in srgb,var(--accent) 10%,var(--bg));
   aspect-ratio:4/3;display:grid;place-items:center;
 }
-.pdp-gallery img{width:100%;height:100%;object-fit:cover;display:block}
+.pdp-gallery img{width:100%;height:100%;object-fit:cover;display:block;transition:transform .8s var(--ease)}
+.pdp-gallery:hover img{transform:scale(1.04)}
 .pdp-tag{
   position:absolute;top:14px;left:14px;z-index:1;
   background:var(--warm);color:#1a1305;font-size:.78rem;font-weight:700;
@@ -476,15 +522,11 @@ html[data-ds-style="esencial-premium"] .section-head h2::after{
   content:"";position:absolute;left:0;bottom:0;height:2px;width:64px;border-radius:2px;
   background:linear-gradient(90deg,var(--accent),var(--warm));
 }
-/* CTA con brillo que viaja al pasar el cursor. */
-html[data-ds-style="esencial-premium"] .btn{overflow:hidden}
+/* CTA: el brillo que viaja ya es de base; premium lo tiñe de ámbar. */
 html[data-ds-style="esencial-premium"] .btn::before{
-  content:"";position:absolute;inset:0;pointer-events:none;
-  background:linear-gradient(115deg,transparent 35%,color-mix(in srgb,var(--accent-ink) 28%,transparent) 50%,transparent 65%);
+  background:linear-gradient(115deg,transparent 35%,color-mix(in srgb,var(--warm) 34%,transparent) 50%,transparent 65%);
   background-size:250% 100%;background-position:130% 0;
-  transition:background-position .7s var(--ease);
 }
-html[data-ds-style="esencial-premium"] .btn:hover::before{background-position:-40% 0}
 /* Tarjeta del hero con marco doble y cantos dorados. */
 html[data-ds-style="esencial-premium"] .hero-card{
   border-color:color-mix(in srgb,var(--warm) 55%,var(--line));
@@ -574,6 +616,14 @@ html[data-ds-style="esencial-premium"][data-ds-theme="dark"] .ticker-item .icon{
 /* Revelado al hacer scroll (solo donde hay scroll-driven animations). */
 @supports (animation-timeline:view()){
   .reveal{animation:revealUp linear both;animation-timeline:view();animation-range:entry 0% entry 45%}
+}
+/* Fallback sin scroll-timeline: el script marca html.io y observa .reveal. */
+html.io .reveal{opacity:0;translate:0 24px;transition:opacity .65s var(--ease),translate .65s var(--ease)}
+html.io .reveal.in{opacity:1;translate:0 0}
+/* Parallax de blobs con el scroll: corre en el compositor, gratis. */
+@supports (animation-timeline:scroll()){
+  .b1{animation:drift 14s ease-in-out infinite,blobDrift linear both;animation-timeline:auto,scroll(root)}
+  .b2{animation:drift 18s ease-in-out infinite reverse,blobDrift linear both;animation-timeline:auto,scroll(root)}
 }
 
 @media (max-width:760px){
@@ -686,6 +736,7 @@ html[data-ds-style="esencial-premium"][data-ds-theme="dark"] .ticker-item .icon{
 /* Sin scale: escalar un elemento con filter:blur obliga a re-rasterizar el
    desenfoque en cada ciclo; trasladar la capa ya compuesta es gratis. */
 @keyframes drift{0%,100%{transform:translate(0,0)}50%{transform:translate(30px,-20px)}}
+@keyframes blobDrift{from{translate:0 0}to{translate:0 90px}}
 @keyframes marquee{to{transform:translateX(-50%)}}
 @keyframes bump{0%{transform:scale(1)}40%{transform:scale(1.3)}100%{transform:scale(1)}}
 @keyframes spin{to{transform:rotate(360deg)}}
@@ -962,11 +1013,36 @@ html[data-ds-style="esencial-premium"][data-ds-theme="dark"] .ticker-item .icon{
     if (href === '' || href === '#') e.preventDefault();
   });
 
-  // Cabecera: sombra al hacer scroll.
+  // Cabecera: sombra al hacer scroll + barra de progreso de lectura
+  // (--progress mueve un scaleX en ::after, solo compositor).
   var header = document.getElementById('site-header');
-  if (header) addEventListener('scroll', function(){
-    header.classList.toggle('scrolled', window.scrollY > 8);
-  }, {passive: true});
+  if (header) {
+    var ticking = false;
+    var onScroll = function(){
+      if (ticking) return;
+      ticking = true;
+      requestAnimationFrame(function(){
+        ticking = false;
+        header.classList.toggle('scrolled', window.scrollY > 8);
+        var h = document.documentElement;
+        var max = h.scrollHeight - h.clientHeight;
+        h.style.setProperty('--progress', max > 0 ? Math.min(1, window.scrollY / max) : 0);
+      });
+    };
+    addEventListener('scroll', onScroll, {passive: true});
+    onScroll();
+  }
+
+  // Reveal: fallback con IntersectionObserver donde no hay animation-timeline.
+  if (!CSS.supports('animation-timeline: view()')) {
+    document.documentElement.classList.add('io');
+    var io = new IntersectionObserver(function(entries){
+      entries.forEach(function(en){
+        if (en.isIntersecting) { en.target.classList.add('in'); io.unobserve(en.target); }
+      });
+    }, {rootMargin: '0px 0px -8% 0px'});
+    document.querySelectorAll('.reveal').forEach(function(el){ io.observe(el); });
+  }
 
   // Menú móvil del dashboard: "Más" abre la hoja; se cierra con el fondo,
   // la cruz, Esc o al navegar. El scroll queda bloqueado mientras está abierta.
