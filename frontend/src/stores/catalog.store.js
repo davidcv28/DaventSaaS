@@ -138,6 +138,25 @@ export const useCatalogStore = defineStore('catalog', () => {
     return { ok: false, storage: null }
   }
 
+  // ----- Actualización masiva de precios (bulk + import CSV) -----
+  async function applyBulkPrices(payload) {
+    const res = await run(() => catalogApi.bulkUpdatePrices(payload), 'Los precios se actualizaron.')
+    if (res.ok) {
+      products.value = await catalogApi.listProducts()
+      return { ok: true, updated: res.data?.updated ?? 0 }
+    }
+    return { ok: false, updated: 0 }
+  }
+  // dryRun=true devuelve {preview, skipped} sin guardar; dryRun=false aplica y recarga.
+  async function importPrices(file, dryRun) {
+    const res = await run(() => catalogApi.importPrices(file, dryRun), 'Los precios se actualizaron.')
+    if (res.ok) {
+      if (!dryRun) products.value = await catalogApi.listProducts()
+      return { ok: true, report: res.data }
+    }
+    return { ok: false, report: null }
+  }
+
   // ----- Descuentos programados -----
   // Un alta/cambio puede alterar discount_offer de los productos: se recargan
   // los dos listados para que la vitrina del panel refleje el precio efectivo.
@@ -207,7 +226,8 @@ export const useCatalogStore = defineStore('catalog', () => {
     categories, brands, products, discounts, reviews, status, lastError, notice, fieldErrors, denied,
     productLimitReached,
     loadAll, saveCategory, removeCategory, saveBrand, removeBrand,
-    saveProduct, removeProduct, saveDiscount, toggleDiscount, removeDiscount,
+    saveProduct, removeProduct, applyBulkPrices, importPrices,
+    saveDiscount, toggleDiscount, removeDiscount,
     loadReviews, removeReview, reset
   }
 })

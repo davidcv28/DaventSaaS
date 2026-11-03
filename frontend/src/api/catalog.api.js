@@ -28,6 +28,13 @@ import { http } from './http.js'
 // El precio promocionado viaja en product.discount_offer/discount_names
 // (mi lista) y en offer_price efectivo (catálogo público).
 //
+// POST   /api/products/bulk-prices/       Bearer {mode:'percent'|'delta'|'set',value,field?,scope?,category?,brand?,product_ids?[],rounding?} -> {Exito,updated}
+// POST   /api/products/import-prices/     Bearer multipart {file,dry_run?} -> {Exito,updated,matched,skipped[],preview[]}
+// GET    /api/products/export-prices/     Bearer -> precios.csv (plantilla del import)
+// Actualización masiva de precios: percent = +/-%, delta = +/- monto,
+// set = precio nuevo; scope = all|category|brand|products; rounding =
+// none|unit|ten|hundred. El CSV matchea por id o nombre.
+//
 // GET    /api/reviews/                    Bearer -> [{id,product,product_name,is_positive,text,name,surname,email,created_at}]
 // DELETE /api/reviews/<pk>/               Bearer -> {Exito}
 // Opiniones de visitantes (valoraciones 1-5 y/o comentarios): se crean en
@@ -110,6 +117,32 @@ export const catalogApi = {
   async deleteProduct(pk) {
     const { data } = await http.delete(`/products/${pk}/`)
     return data
+  },
+
+  // ----- Actualización masiva de precios -----
+  async bulkUpdatePrices(payload) {
+    const { data } = await http.post('/products/bulk-prices/', payload)
+    return data
+  },
+  // Lista del proveedor en CSV; dryRun=true devuelve el preview sin guardar.
+  async importPrices(file, dryRun = false) {
+    const form = new FormData()
+    form.append('file', file)
+    if (dryRun) form.append('dry_run', '1')
+    const { data } = await http.post('/products/import-prices/', form, {
+      headers: { 'Content-Type': 'multipart/form-data' }
+    })
+    return data
+  },
+  // Plantilla/backup: dispara la descarga de precios.csv.
+  async exportPrices() {
+    const { data } = await http.get('/products/export-prices/', { responseType: 'blob' })
+    const url = URL.createObjectURL(data)
+    const a = document.createElement('a')
+    a.href = url
+    a.download = 'precios.csv'
+    a.click()
+    URL.revokeObjectURL(url)
   },
 
   // ----- Descuentos programados -----

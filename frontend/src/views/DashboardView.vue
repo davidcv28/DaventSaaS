@@ -63,6 +63,7 @@ import CountUp from '../components/CountUp.vue'
 import FlyerStudio from '../components/FlyerStudio.vue'
 import AiAssistModal from '../components/assist/AiAssistModal.vue'
 import McpChatModal from '../components/design/McpChatModal.vue'
+import PriceUpdateModal from '../components/PriceUpdateModal.vue'
 import ChatDock from '../components/ChatDock.vue'
 import GlobalSearch from '../components/GlobalSearch.vue'
 import TourGuide from '../components/TourGuide.vue'
@@ -714,6 +715,7 @@ async function togglePublished() {
 // --- Mis catálogos: productos, categorías y marcas de la tienda ---
 // El catálogo se habilita con suscripción activa (el backend devuelve 403 sin plan).
 const catalogTab = ref('products') // products | categories | brands | discounts
+const showPriceUpdate = ref(false) // modal "Actualizar precios" (bulk + import CSV)
 const catalogLoaded = ref(false)
 
 // El interruptor del catálogo público (customization.show_catalog) y el
@@ -3474,7 +3476,10 @@ async function changePassword() {
             </div>
 
             <div class="card">
-              <h3><AppIcon name="package" :size="18" /> Tus productos</h3>
+              <div class="prod-head">
+                <h3><AppIcon name="package" :size="18" /> Tus productos</h3>
+                <button v-if="catalog.products.length" type="button" class="btn ghost btn-auto" @click="showPriceUpdate = true"><AppIcon name="tag" :size="15" /> Actualizar precios</button>
+              </div>
               <StorageMeter />
               <div v-if="!catalog.products.length" class="empty-mini">
                 <AppIcon name="package" :size="22" />
@@ -5671,6 +5676,7 @@ async function changePassword() {
         @applied="onAssistApplied"
         @navigate="mcpChatOpen = false; section = $event"
       />
+      <PriceUpdateModal v-if="showPriceUpdate" @close="showPriceUpdate = false" />
     </Teleport>
 
     <!-- Toast "Guardado ✓" con deshacer donde la acción es reversible -->

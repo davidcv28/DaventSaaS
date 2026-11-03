@@ -968,3 +968,109 @@ class ReviewTests(TestCase):
         calza           =   next(p for p in products if p['name'] == 'Calza')
         self.assertIsNone(calza['rating_avg'])
         self.assertIsNone(calza['rating_count'])
+
+
+BULK_PRICES_URL   =   '/api/products/bulk-prices/'
+IMPORT_PRICES_URL =   '/api/products/import-prices/'
+EXPORT_PRICES_URL =   '/api/products/export-prices/'
+
+
+class PriceUpdateTests(TestCase):
+    """
+    Actualización masiva e importación de precios del dueño: bulk por
+    alcance con redondeo y clamp en 0, CSV por id/nombre con dry_run y
+    reporte de filas sin matchear. Todo scopeado a su tienda y al plan.
+    """
+
+    def setUp(self):
+        cache.clear()
+
+    def _owner(self, with_plan = True):
+        user, profile   =   _make_user('precios')
+        if with_plan:
+            _grant(profile, has_public_link = True)
+        store           =   Store.objects.create(user = profile, slug = 'tienda-precios')
+        client          =   APIClient()
+        client.force_authenticate(user = user)
+        return client, store
+
+    def test_bulk_percent_all(self):
+        client, store   =   self._owner()
+        Product.objects.create(store = store, name = 'A', price = 100)
+        Product.objects.create(store = store, name = 'B', price = 50)
+        response        =   client.post(BULK_PRICES_URL, {'mode': 'percent', 'value': '10'}, format = 'json')
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.data['updated'], 2)
+        self.assertEqual(list(Product.objects.order_by('name').values_list('price', flat = True)), [110, 55])
+
+    def test_bulk_scope_and_rounding(self):
+        client, store   =   self._owner()
+        cat             =   Category.objects.create(store = store, name = 'Indumentaria')
+        Product.objects.create(store = store, name = 'A', price = 101, category = cat)
+        Product.objects.create(store = store, name = 'B', price = 50)
+        response        =   client.post(BULK_PRICES_URL, {'mode': 'percent', 'value': '10', 'scope': 'category', 'category': cat.id, 'rounding': 'ten'}, format = 'json')
+        self.assertEqual(response.data['updated'], 1)
+        self.assertEqual(Product.objects.get(name = 'A').price, 110)
+        self.assertEqual(Product.objects.get(name = 'B').price, 50)
+
+    def test_bulk_delta_clamps_at_zero(self):
+        client, store   =   self._owner()
+        Product.objects.create(store = store, name = 'A', price = 30)
+        response        =   client.post(BULK_PRICES_URL, {'mode': 'delta', 'value': '-50'}, format = 'json')
+        self.assertEqual(response.data['updated'], 1)
+        self.assertEqual(Product.objects.get(name = 'A').price, 0)
+
+    def test_bulk_rejects_foreign_category_and_bad_input(self):
+        client, store   =   self._owner()
+        _, profile2     =   _make_user('otro')
+        store2          =   Store.objects.create(user = profile2, slug = 'otra')
+        foreign_cat     =   Category.objects.create(store = store2, name = 'Ajena')
+        response        =   client.post(BULK_PRICES_URL, {'mode': 'percent', 'value': '10', 'scope': 'category', 'category': foreign_cat.id}, format = 'json')
+        self.assertEqual(response.status_code, 400)
+        response        =   client.post(BULK_PRICES_URL, {'mode': 'percent', 'value': '-100'}, format = 'json')
+        self.assertEqual(response.status_code, 400)
+
+    def test_bulk_needs_plan(self):
+        client, _       =   self._owner(with_plan = False)
+        self.assertEqual(client.post(BULK_PRICES_URL, {'mode': 'set', 'value': '10'}, format = 'json').status_code, 403)
+
+    def _csv(self, text):
+        from django.core.files.uploadedfile import SimpleUploadedFile
+        return SimpleUploadedFile('precios.csv', text.encode('utf-8'), content_type = 'text/csv')
+
+    def test_import_matches_and_dry_run(self):
+        client, store   =   self._owner()
+        Product.objects.create(store = store, name = 'Calza', price = 100)
+        Product.objects.create(store = store, name = 'Remera', price = 80)
+        payload         =   'id,nombre,precio,oferta\n,Calza,"1.234,56",\n,Remera,70,60\n999,Falta,10,\n'
+        dry             =   client.post(IMPORT_PRICES_URL, {'file': self._csv(payload), 'dry_run': '1'}, format = 'multipart')
+        self.assertEqual(dry.status_code, 200)
+        self.assertEqual(dry.data['matched'], 2)
+        self.assertEqual(len(dry.data['skipped']), 1)
+        self.assertEqual(Product.objects.get(name = 'Calza').price, 100)
+        real            =   client.post(IMPORT_PRICES_URL, {'file': self._csv(payload)}, format = 'multipart')
+        self.assertEqual(real.data['updated'], 2)
+        self.assertEqual(str(Product.objects.get(name = 'Calza').price), '1234.56')
+        self.assertEqual(str(Product.objects.get(name = 'Remera').offer_price), '60.00')
+
+    def test_import_offer_cleared_when_price_rises(self):
+        #La oferta vieja dejaría de ser menor que el nuevo precio: se limpia.
+        client, store   =   self._owner()
+        Product.objects.create(store = store, name = 'Calza', price = 100, offer_price = 90)
+        response        =   client.post(IMPORT_PRICES_URL, {'file': self._csv('nombre,precio\nCalza,50\n')}, format = 'multipart')
+        self.assertEqual(response.status_code, 200)
+        calza           =   Product.objects.get(name = 'Calza')
+        self.assertEqual(calza.price, 50)
+        self.assertIsNone(calza.offer_price)
+
+    def test_import_rejects_bad_file(self):
+        client, _       =   self._owner()
+        response        =   client.post(IMPORT_PRICES_URL, {'file': self._csv('a,b\n1,2\n')}, format = 'multipart')
+        self.assertEqual(response.status_code, 400)
+
+    def test_export_csv(self):
+        client, store   =   self._owner()
+        Product.objects.create(store = store, name = 'Calza', price = 100)
+        response        =   client.get(EXPORT_PRICES_URL)
+        self.assertEqual(response.status_code, 200)
+        self.assertIn('Calza', response.content.decode('utf-8-sig'))

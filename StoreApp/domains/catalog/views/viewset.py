@@ -1,3 +1,7 @@
+import csv
+import io
+from decimal import Decimal
+
 from django.db import transaction
 from django.http import HttpResponse
 from rest_framework import status
@@ -6,6 +10,16 @@ from rest_framework.response import Response
 from rest_framework.throttling import UserRateThrottle
 
 from StoreApp.domains.catalog.serializers.serializers import ProductSerializerList
+from StoreApp.domains.catalog.services.price_updates import (
+    BULK_FIELDS,
+    BULK_MODES,
+    BULK_SCOPES,
+    ROUNDINGS,
+    bulk_update_prices,
+    import_prices,
+    parse_decimal,
+    parse_price_csv,
+)
 from StoreApp.domains.catalog.services.services import (
     can_add_product,
     catalog_enabled,
@@ -169,6 +183,99 @@ class ProductViewSet(CatalogGateMixin, CatalogBaseViewSet):
         except ValueError as error:
             return Response({'image': str(error)}, status = status.HTTP_400_BAD_REQUEST)
         return HttpResponse(body, content_type = content_type)
+    #=========================================
+    # BULK PRICES (aumento/baja masiva del dueño)
+    #=========================================
+    @action(detail = False, methods = ['post'], url_path = 'bulk-prices')
+    def bulk_prices(self, request):
+        """
+        {mode: percent|delta|set, value, field?: price|offer_price,
+         scope?: all|category|brand|products, category?, brand?,
+         product_ids?[], rounding?: none|unit|ten|hundred}
+        Actualiza el campo elegido en el recorte pedido y devuelve cuántos
+        productos cambiaron. Nunca baja de 0 (clamp).
+        """
+        denied      =   self._deny_without_catalog()
+        if denied: return denied
+        data        =   request.data or {}
+        errors      =   {}
+        mode        =   data.get('mode')
+        if mode not in BULK_MODES:
+            errors['mode']  =   'Elegí cómo actualizar: porcentaje, monto fijo o precio nuevo.'
+        field       =   data.get('field') or 'price'
+        if field not in BULK_FIELDS:
+            errors['field'] =   'Campo inválido.'
+        scope       =   data.get('scope') or 'all'
+        if scope not in BULK_SCOPES:
+            errors['scope'] =   'Alcance inválido.'
+        rounding    =   data.get('rounding') or 'none'
+        if rounding not in ROUNDINGS:
+            errors['rounding']  =   'Redondeo inválido.'
+        value       =   parse_decimal(data.get('value'))
+        if value is None:
+            errors['value'] =   'Ingresá un número válido.'
+        elif mode == 'percent' and value <= Decimal(-100):
+            errors['value'] =   'La baja no puede ser del 100% o más.'
+        elif mode == 'set' and value < 0:
+            errors['value'] =   'El precio no puede ser negativo.'
+        store       =   self.my_store()
+        category_id =   data.get('category')
+        brand_id    =   data.get('brand')
+        product_ids =   data.get('product_ids') or []
+        if scope == 'category' and not store.categories.filter(pk = category_id).exists():
+            errors['category']  =   'Elegí una categoría de tu tienda.'
+        if scope == 'brand' and not store.brands.filter(pk = brand_id).exists():
+            errors['brand'] =   'Elegí una marca de tu tienda.'
+        if scope == 'products' and not product_ids:
+            errors['product_ids']   =   'Elegí al menos un producto.'
+        if errors:
+            return Response(errors, status = status.HTTP_400_BAD_REQUEST)
+        updated     =   bulk_update_prices(
+            store, mode = mode, value = value, field = field, scope = scope,
+            category_id = category_id, brand_id = brand_id,
+            product_ids = product_ids, rounding = rounding,
+        )
+        return Response({'Exito': f'Se actualizaron {updated} productos.', 'updated': updated})
+    #=========================================
+    # IMPORT PRICES (lista del proveedor en CSV)
+    #=========================================
+    @action(detail = False, methods = ['post'], url_path = 'import-prices')
+    def import_prices_csv(self, request):
+        """
+        multipart {file, dry_run?}: CSV con columnas id|nombre + precio
+        (+ oferta opcional). Devuelve {updated, matched, skipped[],
+        preview[]}; dry_run=1 reporta sin guardar.
+        """
+        denied      =   self._deny_without_catalog()
+        if denied: return denied
+        upload      =   request.FILES.get('file')
+        if upload is None:
+            return Response({'file': 'Adjuntá el archivo CSV de la lista de precios.'}, status = status.HTTP_400_BAD_REQUEST)
+        if upload.size > 2 * 1024 * 1024:
+            return Response({'file': 'El archivo supera los 2 MB.'}, status = status.HTTP_400_BAD_REQUEST)
+        rows, fatal =   parse_price_csv(upload)
+        if fatal:
+            return Response({'file': fatal}, status = status.HTTP_400_BAD_REQUEST)
+        dry_run     =   str(request.data.get('dry_run', '')).lower() in ('1', 'true')
+        report      =   import_prices(self.my_store(), rows, dry_run = dry_run)
+        report['Exito'] =   f'Se actualizaron {report["updated"]} productos.' if not dry_run else 'Vista previa: no se guardó nada todavía.'
+        return Response(report)
+    #=========================================
+    # EXPORT PRICES (plantilla/backup de la lista)
+    #=========================================
+    @action(detail = False, methods = ['get'], url_path = 'export-prices')
+    def export_prices(self, request):
+        """CSV id,nombre,precio,oferta,categoría,marca de la tienda (base del import)."""
+        denied      =   self._deny_without_catalog()
+        if denied: return denied
+        buffer      =   io.StringIO()
+        writer      =   csv.writer(buffer)
+        writer.writerow(['id', 'nombre', 'precio', 'oferta', 'categoria', 'marca'])
+        for p in self.get_queryset():
+            writer.writerow([p.id, p.name, p.price, p.offer_price if p.offer_price is not None else '', p.category.name if p.category else '', p.brand.name if p.brand else ''])
+        response    =   HttpResponse('\ufeff' + buffer.getvalue(), content_type = 'text/csv; charset=utf-8')
+        response['Content-Disposition'] =   'attachment; filename="precios.csv"'
+        return response
     def _normalize_relations(self, request):
         """
         En multipart los selects vacíos llegan como ''/none: se mapean a
