@@ -3478,7 +3478,7 @@ async function changePassword() {
             <div class="card">
               <div class="prod-head">
                 <h3><AppIcon name="package" :size="18" /> Tus productos</h3>
-                <button v-if="catalog.products.length" type="button" class="btn ghost btn-auto" @click="showPriceUpdate = true"><AppIcon name="tag" :size="15" /> Actualizar precios</button>
+                <button v-if="catalog.products.length" type="button" class="prod-price-btn" @click="showPriceUpdate = true"><AppIcon name="tag" :size="15" /> Actualizar precios</button>
               </div>
               <StorageMeter />
               <div v-if="!catalog.products.length" class="empty-mini">
