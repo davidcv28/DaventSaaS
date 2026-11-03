@@ -23,6 +23,11 @@ from django.utils.html import escape, strip_tags
 
 from StoreApp.domains.design.models import DesignPattern
 
+#Placeholders `{{variable}}` del markup: se usan para armar solo los
+#fragmentos que el patrón consume de verdad (categorías, galería, FAQ…
+#quedaban fuera del render aunque el diseño no los tuviera).
+VAR_RE = re.compile(r'{{\s*([a-zA-Z_][a-zA-Z0-9_]*)\s*}}')
+
 #=========================================
 # VARIABLES QUE DECLARA UN PATRON
 #=========================================
@@ -267,7 +272,7 @@ def _product_fragment(store, products = None, flags = None):
             #número, la etiqueta la dibuja la hoja del diseño.
             off = str(max(1, min(99, int(round((1 - _amount(amount) / _amount(product.price)) * 100)))))
         media = (
-            f'<img class="ds-product-img" src="{_attr(image)}" alt="{_attr(product.name)}" loading="lazy">'
+            f'<img class="ds-product-img" src="{_attr(image)}" alt="{_attr(product.name)}" loading="lazy" decoding="async">'
             if image else '<span class="ds-product-img is-empty" aria-hidden="true"></span>'
         )
         category = _text(getattr(product.category, 'name', ''), 40)
@@ -755,10 +760,12 @@ def _product_values(store, product, customization, store_name, flags = None):
 #=========================================
 # CONTEXTO DE LA TIENDA
 #=========================================
-def build_store_context(store, product = None, flags = None):
+def build_store_context(store, product = None, flags = None, raw_keys = None):
     """
     Devuelve `(context, raw)`: `context` son las variables de texto que
-    interpola el patrón y `raw` los fragmentos HTML ya escapados.
+    interpola el patrón y `raw` los fragmentos HTML ya escapados. Con
+    `raw_keys` solo se arman los fragmentos que el markup usa: un diseño sin
+    galería/FAQ no paga esas consultas ni ese HTML.
     """
     customization = getattr(store, 'customization', None)
     flags = flags if flags is not None else _page_flags(store, customization)
@@ -821,22 +828,24 @@ def build_store_context(store, product = None, flags = None):
         context['store_logo'] = object_url(customization.logo_key) or ''
         context['store_cover'] = object_url(customization.cover_key) or ''
         context['store_accent'] = _text(customization.accent_custom, 7) or ''
-    raw = {
-        'products': _product_fragment(store, flags = flags),
-        'categories': _category_fragment(store, flags = flags),
-        'services': _service_fragment(store, flags = flags),
-        'plans': _plans_fragment(store, customization, flags = flags),
-        'offerings': _offerings_fragment(customization, flags),
-        'stats': _stats_fragment(customization, flags),
-        'testimonials': _testimonials_fragment(customization, flags),
-        'faqs': _faqs_fragment(customization, flags),
-        'benefits': _benefits_fragment(customization, flags),
-        'timeline': _timeline_fragment(customization, flags),
-        'team': _team_fragment(customization, flags),
-        'announcements': _announcements_fragment(customization, flags),
-        'contact_form': _contact_fragment(store, flags),
-        'gallery': _gallery_fragment(store, customization),
+    builders = {
+        'products': lambda: _product_fragment(store, flags = flags),
+        'categories': lambda: _category_fragment(store, flags = flags),
+        'services': lambda: _service_fragment(store, flags = flags),
+        'plans': lambda: _plans_fragment(store, customization, flags = flags),
+        'offerings': lambda: _offerings_fragment(customization, flags),
+        'stats': lambda: _stats_fragment(customization, flags),
+        'testimonials': lambda: _testimonials_fragment(customization, flags),
+        'faqs': lambda: _faqs_fragment(customization, flags),
+        'benefits': lambda: _benefits_fragment(customization, flags),
+        'timeline': lambda: _timeline_fragment(customization, flags),
+        'team': lambda: _team_fragment(customization, flags),
+        'announcements': lambda: _announcements_fragment(customization, flags),
+        'contact_form': lambda: _contact_fragment(store, flags),
+        'gallery': lambda: _gallery_fragment(store, customization),
     }
+    keys = builders.keys() if raw_keys is None else [key for key in builders if key in raw_keys]
+    raw = {key: builders[key]() for key in keys}
     product_ctx, product_raw = _product_values(store, product, customization, name, flags = flags)
     context.update(product_ctx)
     raw.update(product_raw)
@@ -963,7 +972,10 @@ def render_store_pattern(store, customization = None, product = None):
         return None
     flags = _page_flags(store, customization)
     zone_flags = _zone_flags(flags, customization)
-    context, raw = build_store_context(store, product, flags = zone_flags)
+    #Solo los fragmentos que el markup referencia: el resto de la tienda
+    #(galería, FAQ, equipo, testimonios…) no se consulta ni se renderiza.
+    needed = set(VAR_RE.findall(pattern.html or ''))
+    context, raw = build_store_context(store, product, flags = zone_flags, raw_keys = needed)
     html = pattern.render(context, raw = raw)
     from StoreApp.domains.catalog.models import Product
 
@@ -1002,5 +1014,9 @@ def render_store_pattern(store, customization = None, product = None):
         'html': html,
         'css': f'{theme_css(customization, pattern)}\n{flags_css}\n{pattern.css or ""}',
         'js': pattern.js or '',
+        #Imágenes críticas del primer viewport: el documento las preloadea
+        #en el head (portada del hero y logo) en vez de descubrirlas al
+        #parsear el body.
+        'preload': [url for url in (context.get('store_cover'), context.get('store_logo')) if url],
         'dark': bool(pattern.supports_dark_mode),
     }

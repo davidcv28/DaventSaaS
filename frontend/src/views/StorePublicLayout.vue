@@ -86,11 +86,14 @@ const patternSurface = computed(() => (
         : 'landing'
 ))
 const usePattern = computed(() => Boolean(
+  //Sin el payload de la tienda no se conoce el tema/identidad: montar antes
+  //cargaba el documento en claro y el cambio a oscuro se veía como flash.
+  store.value &&
   //También en el Studio: la vista previa tiene que mostrar el mismo
   //documento que se publica (antes enseñaba la plantilla Vue y la web
   //publicada rompía).
-  patternDoc.value?.ready && patternDoc.value?.html &&
-  (patternDoc.value.surfaces || []).includes(patternSurface.value) &&
+  patternDoc.value?.ready && (patternDoc.value?.has_html || patternDoc.value?.html) &&
+  (patternDoc.value?.surfaces || []).includes(patternSurface.value) &&
   //El documento trae los productos ya pintados: si no entran todos, el
   //catálogo sigue en la plantilla Vue (que pagina y filtra contra la API).
   (patternSurface.value !== 'catalog' ||
@@ -825,8 +828,8 @@ onMounted(async () => {
   // El documento del diseño viaja en paralelo con la ficha: si el patrón
   // todavía no tiene contrato de datos vuelve `{}` y se usa la plantilla Vue.
   if (isHome.value || isCatalog.value || isServices.value || isProduct.value) {
-    storesApi.publicPattern(slug.value, { preview: previewToken.value })
-      .then((doc) => { patternDoc.value = doc && doc.html ? doc : null })
+    storesApi.publicPattern(slug.value, { preview: previewToken.value, meta: true })
+      .then((doc) => { patternDoc.value = doc && (doc.has_html || doc.html) ? doc : null })
       .catch(() => { patternDoc.value = null })
   }
   try {
@@ -879,7 +882,7 @@ onBeforeUnmount(() => {
 </script>
 
 <template>
-  <div ref="pageRoot" class="store-page" :class="{ 'is-home': isHome, 'is-scrolled': scrolled }" :data-store-theme="pageTheme" :data-theme="pageTheme" :data-template="pageTemplate" :data-store-template="pageTemplate" :data-style="pageStyle" :data-skin="storeSkinOf(pageTemplate)" :data-logo-mode="custom.logo_mode" :data-has-logo="custom.logo ? '' : null" :data-mono="custom.mono_style" :data-st-tabbar="showTabbar ? '' : null" :style="[themeVars, publishedThemeVars, studioVars]" v-bind="pageAttrs">
+  <div ref="pageRoot" class="store-page" :class="{ 'is-home': isHome, 'is-scrolled': scrolled, 'has-pattern': usePattern }" :data-store-theme="pageTheme" :data-theme="pageTheme" :data-template="pageTemplate" :data-store-template="pageTemplate" :data-style="pageStyle" :data-skin="storeSkinOf(pageTemplate)" :data-logo-mode="custom.logo_mode" :data-has-logo="custom.logo ? '' : null" :data-mono="custom.mono_style" :data-st-tabbar="showTabbar ? '' : null" :style="[themeVars, publishedThemeVars, studioVars]" v-bind="pageAttrs">
     <button type="button" class="sp-skip" @click="skipToContent">Saltar al contenido</button>
     <span v-if="previewMode" class="sp-preview-badge" role="status">Vista previa — el diseño todavía no se publicó</span>
     <!-- Diseño del catálogo con contrato de datos: se pinta el documento

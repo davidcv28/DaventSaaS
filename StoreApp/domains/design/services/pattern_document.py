@@ -12,6 +12,8 @@ import re
 from pathlib import Path
 from urllib.parse import urlencode
 
+from django.utils.html import escape
+
 #El CSP de producción no permite inline: se sacan handlers `on*=` y
 #`<script>` del markup (el JS del diseño viaja por `pattern.js`).
 #El handler se elimina con comillas dobles, simples o sin comillas: la
@@ -142,7 +144,20 @@ section:has(.ds-plans:empty){display:none!important}
 #documento (`../bridge.js/`): el CSP de producción solo permite
 #`script-src 'self'`, así que nada de scripts inline ni de assets del front.
 BRIDGE_SCRIPT = Path(__file__).with_name('pattern_bridge.js').read_text(encoding = 'utf-8')
+BRIDGE_FILE = Path(__file__).with_name('pattern_bridge.js')
 BRIDGE_URL = '../bridge.js/'
+
+def bridge_url():
+    """
+    URL del puente con la versión del archivo. El puente se sirve con cache
+    larga; al cambiar el archivo (deploy o edición) cambia la query y el
+    navegador pide la versión nueva sin esperar al TTL.
+    """
+    try:
+        version = int(BRIDGE_FILE.stat().st_mtime)
+    except OSError:
+        version = 0
+    return f'{BRIDGE_URL}?v={version}'
 
 
 def sanitize_markup(html):
@@ -159,11 +174,12 @@ def sanitize_markup(html):
     return META_REFRESH_RE.sub('', html)
 
 
-def pattern_document(html, css, theme, surface, preview = '', style = '', nonce = ''):
+def pattern_document(html, css, theme, surface, preview = '', style = '', nonce = '', preload = None):
     """
     Documento completo listo para servir como `text/html`.
     `html` ya viene renderizado contra la tienda y `css` ya trae el tema del
-    estilo + la hoja del patrón.
+    estilo + la hoja del patrón. `preload` son las imágenes críticas
+    (portada del hero) que conviene descubrir antes de parsear el body.
     """
     query = {'surface': surface, 'theme': theme}
     if preview:
@@ -182,10 +198,15 @@ def pattern_document(html, css, theme, surface, preview = '', style = '', nonce 
     #(CSP `script-src 'nonce-…'`) los autoriza sin depender del origen.
     nonce   =   str(nonce or '')
     nonce_attr = f' nonce="{nonce}"' if re.fullmatch(r'[A-Za-z0-9_\-]{8,64}', nonce) else ''
+    preload_links = ''.join(
+        f'<link rel="preload" as="image" href="{escape(str(url))}" fetchpriority="high">'
+        for url in (preload or [])[:2] if url
+    )
     return (
         f'<!doctype html><html lang="es" data-ds-theme="{theme}" data-ds-surface="{surface}"{style_attr}>'
         '<head><meta charset="utf-8">'
         '<meta name="viewport" content="width=device-width,initial-scale=1">'
+        f'{preload_links}'
         #La hoja base del host va ANTES de la del diseño: si va después,
         #sus reglas genéricas (.ds-cat, .cat-sort) pisan la piel del patrón
         #por empate de especificidad (los chips del catálogo quedaban sin
@@ -193,6 +214,6 @@ def pattern_document(html, css, theme, surface, preview = '', style = '', nonce 
         f'<style>html,body{{margin:0}}{SURFACE_CSS}{css}</style></head><body>'
         f'{html}'
         f'<script src="{script}"{nonce_attr}></script>'
-        f'<script src="{BRIDGE_URL}"{nonce_attr}></script>'
+        f'<script src="{bridge_url()}"{nonce_attr}></script>'
         '</body></html>'
     )

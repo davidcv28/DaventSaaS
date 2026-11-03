@@ -595,7 +595,16 @@ class StoreViewSet(StoreBaseViewSet):
         #DesignPattern con las variables resueltas contra la tienda. `{}`
         #cuando el diseño no trae markup (la web sigue con la plantilla Vue).
         data                =   self._pattern_doc(request, self._pattern_store(slug))
-        response            =   Response(data, status = status.HTTP_200_OK)
+        #La web publicada solo necesita saber si el diseño está listo y qué
+        #superficies cubre: pedir el documento completo (HTML+CSS+JS) acá
+        #duplicaba ~100 KB por carga. `?meta=1` devuelve el sobre liviano.
+        if request.query_params.get('meta'):
+            keys        =   ('slug', 'nombre', 'style', 'ready', 'surfaces', 'products_total', 'products_shown', 'dark')
+            payload     =   {key: data.get(key) for key in keys}
+            payload['has_html'] = bool(data.get('html'))
+            response    =   Response(payload, status = status.HTTP_200_OK)
+        else:
+            response    =   Response(data, status = status.HTTP_200_OK)
         patch_cache_control(response, public = True, max_age = 30)
         return response
 
@@ -624,6 +633,7 @@ class StoreViewSet(StoreBaseViewSet):
             data['html'], data.get('css') or '', theme, surface,
             request.query_params.get('preview') or '', data.get('style') or '',
             nonce   =   nonce,
+            preload =   data.get('preload') or [],
         )
         response            =   HttpResponse(html, content_type = 'text/html; charset=utf-8')
         #El documento se embebe en la web (iframe same-origin): el default
@@ -633,7 +643,13 @@ class StoreViewSet(StoreBaseViewSet):
         #opaco), así que `'self'` no matchea nada y el JS del diseño/puente
         #se autoriza por nonce. El middleware no la pisa (solo rellena).
         response['Content-Security-Policy'] = document_csp(nonce)
-        patch_cache_control(response, private = True, no_store = True)
+        #El dueño ve su edición al instante: el preview no se cachea. La web
+        #pública sí puede reusar el documento 30 s (mismo TTL que el puente y
+        #el JSON): volver a una página ya visitada no re-baja 100 KB.
+        if request.query_params.get('preview'):
+            patch_cache_control(response, private = True, no_store = True)
+        else:
+            patch_cache_control(response, private = True, max_age = 30)
         return response
 
     @action(detail = False, methods = ['get'], url_path = r'public/(?P<slug>[a-z0-9-]+)/pattern/bridge.js', throttle_classes = [PublicReadThrottle])
@@ -650,7 +666,9 @@ class StoreViewSet(StoreBaseViewSet):
         script              =   Path(pattern_document.__file__).with_name('pattern_bridge.js').read_text(encoding = 'utf-8')
         response            =   HttpResponse(script, content_type = 'application/javascript; charset=utf-8')
         response['Cross-Origin-Resource-Policy'] = 'cross-origin'
-        patch_cache_control(response, public = True, max_age = 30)
+        #La URL del documento lleva `?v=<mtime del archivo>`: cache larga
+        #segura, una edición del puente cambia la versión al instante.
+        patch_cache_control(response, public = True, max_age = 604800)
         return response
 
     @action(detail = False, methods = ['get'], url_path = r'public/(?P<slug>[a-z0-9-]+)/pattern/script.js', throttle_classes = [PublicReadThrottle])

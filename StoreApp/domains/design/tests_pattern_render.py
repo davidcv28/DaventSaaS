@@ -185,6 +185,15 @@ class PatternRenderServiceTests(TestCase):
         self.assertIn('Consultar', doc['html'])
         self.assertNotIn('$0', doc['html'])
 
+    def test_render_only_builds_fragments_used_by_markup(self):
+        store = _store()
+        _pattern(slug = 'raiz')
+        with patch('StoreApp.domains.design.services.pattern_render._category_fragment') as categories, \
+             patch('StoreApp.domains.design.services.pattern_render._gallery_fragment') as gallery:
+            render_store_pattern(store)
+        categories.assert_not_called()
+        gallery.assert_not_called()
+
     def test_render_store_pattern_none_without_markup(self):
         DesignPattern.objects.all().delete()
         store   =   _store()
@@ -313,6 +322,18 @@ class PublicPatternEndpointTests(TestCase):
         data = response.json()
         self.assertEqual(data['slug'], 'raiz')
         self.assertIn('Don Pedro', data['html'])
+
+    def test_meta_endpoint_returns_light_envelope(self):
+        with patch('StoreApp.domains.stores.views.viewset.profile_has_benefit', return_value = True):
+            response = self.client.get(PATTERN_URL, {'meta': 1})
+        self.assertEqual(response.status_code, 200)
+        data = response.json()
+        self.assertEqual(data['slug'], 'raiz')
+        self.assertTrue(data['has_html'])
+        #El host solo necesita el sobre: el documento lo carga el iframe.
+        self.assertNotIn('html', data)
+        self.assertNotIn('css', data)
+        self.assertNotIn('js', data)
 
     def test_unpublished_store_is_404(self):
         self.store.is_published = False

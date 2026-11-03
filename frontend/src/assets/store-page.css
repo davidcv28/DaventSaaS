@@ -375,6 +375,9 @@ html.sp-lock body{ overflow: hidden; overscroll-behavior: none; }
      --sp-shopnav-h suma la fila de secciones de la Tienda Pro. */
   .sp-top{ position: fixed; top: 0; left: 0; right: 0; }
   .store-page{ padding-top: calc(var(--sp-top-h) + var(--sp-shopnav-h, 0px)); }
+  /* Con el documento del diseño no se pinta la barra Vue: su cabecera fija
+     vive dentro del iframe y el hueco reservado quedaba como banda vacía. */
+  .store-page.has-pattern{ padding-top: 0; }
   .store-page:has(.sp-shop-nav){ --sp-shopnav-h: 44px; }
   .sp-top-links{ display: none; }
   /* El burger y su drawer de navegación cubren el hueco 961–1100px: sin

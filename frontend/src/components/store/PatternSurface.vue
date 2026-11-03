@@ -36,8 +36,19 @@ const height = ref(0)
 //documento — si theme estuviera en el src reactivo, cada toggle recargaría
 //el iframe y la página saltaría.
 const mountTheme = props.theme
+/* El documento sirve TODAS las superficies: cambiar de Inicio a Catálogo o
+ * Servicios no necesita recargar el iframe (el puente cambia
+ * `data-ds-surface`). Solo la ficha de producto viaja con `product` y
+ * obliga a un documento nuevo. `reloadSurface` se actualiza al salir de una
+ * ficha para que esa recarga caiga en la ruta destino. */
+const mountSurface = props.surface === 'product' ? 'landing' : props.surface
+const reloadSurface = ref(mountSurface)
+watch(() => props.surface, (next, prev) => {
+  if (prev === 'product' && next !== 'product') reloadSurface.value = next
+})
+const srcSurface = computed(() => (props.product ? props.surface : reloadSurface.value))
 const src = computed(() => {
-  const params = new URLSearchParams({ theme: mountTheme, surface: props.surface })
+  const params = new URLSearchParams({ theme: mountTheme, surface: srcSurface.value })
   if (props.preview) params.set('preview', props.preview)
   if (props.preview && props.template) params.set('template', props.template)
   if (props.revision) params.set('v', props.revision)

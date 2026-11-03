@@ -206,6 +206,11 @@ MIDDLEWARE = [
     'DaventProject.middleware.RequestIdMiddleware',
     'corsheaders.middleware.CorsMiddleware',
     'django.middleware.security.SecurityMiddleware',
+    #Compresión de respuestas dinámicas (documento del diseño, JSON de la
+    #web pública): ~100 KB de HTML/CSS a ~15 KB. Va antes que los middlewares
+    #que pueden escribir el body y después de Security para no comprimir
+    #redirects/errores tempranos.
+    'django.middleware.gzip.GZipMiddleware',
     'DaventProject.middleware.AdminLoginRateLimitMiddleware',
     #CSP de respaldo para HTML servido por Django (admin, browsable API):
     #rellena el header solo si ninguna capa previa lo seteó (SPA/nginx).
