@@ -717,9 +717,11 @@ html[data-ds-style="aurum-dia"] .pdp-shot{background:linear-gradient(150deg,#ece
   .quotes-grid:has(.ds-quote:nth-child(3)) .ds-quote:first-child .ds-quote-text{
     font-size:19px;line-height:1.5}
 }
-.ds-quote{border:1px solid var(--line);border-radius:var(--radius);padding:30px;
-  background:linear-gradient(155deg,color-mix(in srgb,var(--gold) 7%,var(--card)),var(--card) 58%);
+.ds-quote{border:1px solid var(--line);border-radius:var(--radius);padding:30px;background:var(--card);
   position:relative;margin:0;transition:border-color .3s,transform .3s var(--ease)}
+/*El primer testimonio lleva el tinte dorado: abre la serie sin teñir las
+  otras tarjetas.*/
+.ds-quote:first-child{background:linear-gradient(155deg,color-mix(in srgb,var(--gold) 8%,var(--card)),var(--card) 58%)}
 .ds-quote:hover{border-color:var(--gold-line);transform:translateY(-3px)}
 .ds-quote::before{content:"“";position:absolute;top:14px;right:22px;font:400 64px/1 var(--serif);
   color:var(--gold-text);opacity:.32}
@@ -940,7 +942,7 @@ html[data-ds-style="aurum-dia"] .pdp-shot{background:linear-gradient(150deg,#ece
   .cat-aside.is-open{display:grid}
   body.filters-open{overflow:hidden}
   /*iOS no hace zoom al enfocar: inputs/selects >=16px en el sheet.*/
-  .cat-sort select,.f-price-field input,.ds-contact-input{font-size:16px}
+  .cat-sort select,.f-price-field input,.ds-contact-input,.ds-rev-input{font-size:16px}
   .cat-aside-head{display:flex;align-items:center;justify-content:space-between}
   .cat-aside-close{border:1px solid var(--line);background:none;color:var(--muted);width:34px;height:34px;
     border-radius:50%;cursor:pointer}
