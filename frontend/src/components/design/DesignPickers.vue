@@ -105,7 +105,13 @@ const previewDoc = computed(() => (
 ))
 
 function patternDoc(p) {
-  const html = String(p.html || '')
+  // Los redirects de contacto (/api/stores/public/…/r/…) abren en pestaña:
+  // sin target el iframe de la vista previa navegaba al 302 y quedaba
+  // bloqueado por el X-Frame-Options del destino (instagram, wa.me…).
+  const html = String(p.html || '').replace(
+    /(<a\b[^>]*?href="\/api\/stores\/public\/[^"]*"[^>]*?)>/g,
+    (m, head) => (/target=/i.test(head) ? m : `${head} target="_blank" rel="noopener">`)
+  )
   if (/^\s*(<!doctype|<html)/i.test(html)) return html
   const css = p.css ? `<style>${p.css}</style>` : ''
   const js = p.js ? `<script>${p.js}<` + `/script>` : ''
@@ -264,7 +270,7 @@ function onStylePick(event) {
         </button>
       </div>
       <iframe
-        class="dpv-frame" :srcdoc="previewDoc" sandbox="allow-scripts"
+        class="dpv-frame" :srcdoc="previewDoc" sandbox="allow-scripts allow-popups allow-popups-to-escape-sandbox"
         :title="`Diseño ${patternPreview.nombre}`"
       ></iframe>
     </div>

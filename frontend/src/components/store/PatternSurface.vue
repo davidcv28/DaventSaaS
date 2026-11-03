@@ -91,6 +91,17 @@ function onMessage(e) {
     relayApi(e)
     return
   }
+  if (e.data?.type === 'davent:ds-open') {
+    /* Link externo del documento (redirect de contacto): se abre desde el
+     * host, que es mismo origen y no está sandboxeado. La URL se reescribe
+     * al slug de ESTA tienda — el documento nunca elige a dónde navegar. */
+    const raw = String(e.data.url || '')
+    if (/^\/api\/stores\/public\/[a-z0-9-]+\/r\/[a-z]+\/?(\?[^\s"'<>]*)?$/.test(raw)) {
+      const url = raw.replace(/^\/api\/stores\/public\/[a-z0-9-]+\//, `/api/stores/public/${props.slug}/`)
+      window.open(url, '_blank', 'noopener')
+    }
+    return
+  }
   if (e.data?.type === 'davent:ds-theme-toggle') {
     emit('toggle-theme')
     return

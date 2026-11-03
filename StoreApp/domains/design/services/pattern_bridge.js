@@ -177,6 +177,16 @@
     if (!t || !t.closest) return
     var card = t.closest('[data-ds-product]')
     if (card) { e.preventDefault(); go('product', card.getAttribute('data-ds-product')); return }
+    /* Redirects de contacto (/r/whatsapp|instagram|…): el anchor viaja sin
+     * target y el iframe navegaría él mismo al 302 — instagram/wa.me mandan
+     * X-Frame-Options y el documento entero queda en "refused to connect".
+     * El host lo abre en pestaña nueva (fuera del sandbox). */
+    var anchor = t.closest('a[href]')
+    if (anchor && /^\/api\/stores\/public\/[a-z0-9-]+\/r\/[a-z]+\/?/.test(anchor.getAttribute('href') || '')) {
+      e.preventDefault()
+      parent.postMessage({ type: 'davent:ds-open', url: anchor.getAttribute('href') }, '*')
+      return
+    }
     var link = t.closest('[data-ds-route]')
     if (!link) return
     e.preventDefault()
