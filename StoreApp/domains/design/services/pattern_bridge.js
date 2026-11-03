@@ -271,9 +271,24 @@
       return
     }
     var link = t.closest('[data-ds-route]')
-    if (!link) return
-    e.preventDefault()
-    go(link.getAttribute('data-ds-route'))
+    if (link) {
+      e.preventDefault()
+      go(link.getAttribute('data-ds-route'))
+      return
+    }
+    /* Anchor interno (#contacto): el iframe se estira al alto del documento
+     * y no scrollea por dentro — el scroll real es de la página host. Se
+     * manda la posición del destino y el host hace scrollTo. */
+    if (anchor) {
+      var href = anchor.getAttribute('href') || ''
+      if (href.charAt(0) === '#' && href.length > 1) {
+        var targetEl = document.getElementById(href.slice(1))
+        if (targetEl) {
+          e.preventDefault()
+          parent.postMessage({ type: 'davent:ds-scroll', top: targetEl.getBoundingClientRect().top + (window.scrollY || 0) }, '*')
+        }
+      }
+    }
   })
   /* ------------------------------------------------------------------
    * Catálogo + búsqueda del marketplace.

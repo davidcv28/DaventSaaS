@@ -102,6 +102,13 @@ function onMessage(e) {
     }
     return
   }
+  if (e.data?.type === 'davent:ds-scroll') {
+    /* Anchor interno del documento: el iframe va estirado al alto del doc,
+     * así que el scroll lo hace la página. top llega en coords del doc. */
+    const fr = frame.value?.getBoundingClientRect()
+    if (fr) window.scrollTo({ top: fr.top + window.scrollY + (Number(e.data.top) || 0) - 72, behavior: 'smooth' })
+    return
+  }
   if (e.data?.type === 'davent:ds-theme-toggle') {
     emit('toggle-theme')
     return
