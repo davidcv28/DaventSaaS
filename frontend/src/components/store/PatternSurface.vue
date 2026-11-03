@@ -153,6 +153,10 @@ function postFrame() {
 }
 
 watch(() => props.theme, syncTheme)
+/* Al estirarse el iframe (ds-height) cambia su rect: si no se reenvía el
+ * marco, el puente posiciona los fijos con un rect viejo (~70vh) y la tab
+ * bar queda clavada arriba del documento. */
+watch(height, postFrame)
 watch(() => props.surface, () => {
   post('davent:ds-surface', { surface: props.surface })
   syncTheme()
