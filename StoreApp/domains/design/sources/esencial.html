@@ -7,6 +7,23 @@
    contacto. Cada rol sale del tema del panel (--ds-*); sin tema, la piel
    propia del diseño. Todo el movimiento se apaga con prefers-reduced-motion. */
 
+/* Tipografías del diseño. El documento se sirve solo (CSP `font-src https:`),
+   así que la identidad tipográfica viaja con la hoja: sin estos `@font-face`
+   el navegador caía al sans del sistema y Bricolage Grotesque —la mitad del
+   carácter del diseño— nunca llegaba a verse. */
+@font-face{font-family:"Bricolage Grotesque";font-style:normal;font-weight:400 800;font-stretch:100%;font-display:swap;
+  src:url(https://fonts.gstatic.com/s/bricolagegrotesque/v9/3y9K6as8bTXq_nANBjzKo3IeZx8z6up5BeSl9D4dj_x9PpZBMlGIInE.woff2) format("woff2");
+  unicode-range:U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+0304,U+0308,U+0329,U+2000-206F,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD}
+@font-face{font-family:"Bricolage Grotesque";font-style:normal;font-weight:400 800;font-stretch:100%;font-display:swap;
+  src:url(https://fonts.gstatic.com/s/bricolagegrotesque/v9/3y9K6as8bTXq_nANBjzKo3IeZx8z6up5BeSl9D4dj_x9PpZBMlGGInHEVA.woff2) format("woff2");
+  unicode-range:U+0100-02BA,U+02BD-02C5,U+02C7-02CC,U+02CE-02D7,U+02DD-02FF,U+0304,U+0308,U+0329,U+1D00-1DBF,U+1E00-1E9F,U+1EF2-1EFF,U+2020,U+20A0-20AB,U+20AD-20C4,U+2113,U+2C60-2C7F,U+A720-A7FF}
+@font-face{font-family:"Instrument Sans";font-style:normal;font-weight:400 700;font-stretch:100%;font-display:swap;
+  src:url(https://fonts.gstatic.com/s/instrumentsans/v4/pxiTypc9vsFDm051Uf6KVwgkfoSxQ0GsQv8ToedPibnr0SZe1Q.woff2) format("woff2");
+  unicode-range:U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+0304,U+0308,U+0329,U+2000-206F,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD}
+@font-face{font-family:"Instrument Sans";font-style:normal;font-weight:400 700;font-stretch:100%;font-display:swap;
+  src:url(https://fonts.gstatic.com/s/instrumentsans/v4/pxiTypc9vsFDm051Uf6KVwgkfoSxQ0GsQv8ToedPibnr0She1YmV.woff2) format("woff2");
+  unicode-range:U+0100-02BA,U+02BD-02C5,U+02C7-02CC,U+02CE-02D7,U+02DD-02FF,U+0304,U+0308,U+0329,U+1D00-1DBF,U+1E00-1E9F,U+1EF2-1EFF,U+2020,U+20A0-20AB,U+20AD-20C4,U+2113,U+2C60-2C7F,U+A720-A7FF}
+
 :root{
   --bg:var(--ds-bg,#F4F5F0);
   --surface:var(--ds-surface,#FFFFFF);
@@ -15,7 +32,11 @@
   --line:var(--ds-border,#D9DED6);
   --accent:var(--ds-accent,#0E5A4F);
   --accent-ink:var(--ds-accent-ink,#FFFFFF);
-  --warm:var(--ds-secondary,#E9A23B);
+  /* El ámbar es firma del diseño, no un rol del tema: si colgara de
+     --ds-secondary cualquier paleta lo teñiría de verde y el degradado
+     acento→ámbar (filo de tarjetas, cinta, subrayados) perdía su lectura. */
+  --warm:#E9A23B;
+  --warm-ink:#1A1305;
   --radius:var(--ds-radius,14px);
   --radius-btn:var(--ds-radius-btn,10px);
   --font-display:"Bricolage Grotesque","Arial Narrow",system-ui,sans-serif;
@@ -95,8 +116,34 @@ a{color:inherit}
    alto; saltar el render de las secciones fuera de pantalla recorta el
    primer pintado sin cambiar el layout (intrinsic-size reserva el hueco). */
 .section{padding-block:clamp(56px,9vw,104px);content-visibility:auto;contain-intrinsic-size:auto 720px}
+/* Índice editorial de secciones: filete superior con tick de acento y el
+   número de la sección a la derecha. Da ritmo de revista sin sumar markup
+   (el contador salta las secciones que no tienen cabecera propia). */
+main{counter-reset:sec}
+.section:has(> .wrap > .section-head){counter-increment:sec}
+.wrap > .section-head{position:relative;padding-top:22px;border-top:1px solid var(--line)}
+.wrap > .section-head::before{
+  content:"";position:absolute;top:-1px;left:0;width:64px;height:1px;
+  background:linear-gradient(90deg,var(--accent),var(--warm));
+}
+.wrap > .section-head::after{
+  content:counter(sec,decimal-leading-zero);
+  position:absolute;top:18px;right:0;
+  font-family:var(--font-display);font-size:.78rem;font-weight:600;
+  letter-spacing:.16em;color:var(--muted);opacity:.65;font-variant-numeric:tabular-nums;
+}
 .section-head{display:grid;gap:12px;margin-bottom:40px}
 .section-head h2{font-size:clamp(1.9rem,4.5vw,2.8rem);letter-spacing:-.015em}
+/* Atajo al catálogo completo desde la vitrina de la home. */
+.head-link{
+  justify-self:start;display:inline-flex;align-items:center;gap:8px;
+  font-size:.95rem;font-weight:600;color:var(--accent);text-decoration:none;
+  padding-bottom:2px;border-bottom:1px solid color-mix(in srgb,var(--accent) 35%,transparent);
+  transition:border-color .25s,color .25s;
+}
+.head-link .icon{width:16px;height:16px;transition:transform .3s var(--ease)}
+.head-link:hover{border-color:var(--accent)}
+.head-link:hover .icon{transform:translateX(4px)}
 .band{background:var(--surface);border-block:1px solid var(--line)}
 
 .icon{width:22px;height:22px;flex:none;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
@@ -171,7 +218,7 @@ a{color:inherit}
 .m-scrim,.m-sheet{display:none}
 .nav-toggle{
   display:none;place-items:center;width:44px;height:44px;flex:none;
-  border:1px solid var(--line);border-radius:10px;background:var(--surface);
+  border:1px solid var(--line);border-radius:50%;background:var(--surface);
   color:var(--ink);cursor:pointer;transition:border-color .2s,color .2s;
 }
 .nav a{position:relative;text-decoration:none;color:var(--muted);font-size:.95rem;transition:color .2s}
@@ -203,7 +250,7 @@ html[data-ds-surface="services"] .nav a[data-ds-route="services"]::after{transfo
 .b1{width:440px;height:440px;top:-140px;left:-120px;background:color-mix(in srgb,var(--accent) 35%,transparent);animation:drift 14s ease-in-out infinite}
 .b2{width:380px;height:380px;right:-110px;bottom:-110px;background:color-mix(in srgb,var(--warm) 32%,transparent);animation:drift 18s ease-in-out infinite reverse}
 .hero-grid{display:grid;gap:40px;align-items:center;grid-template-columns:minmax(0,1.2fr) minmax(0,1fr)}
-.hero h1{font-size:clamp(2.4rem,6.4vw,4.4rem);letter-spacing:-.02em;margin-block:16px 20px}
+.hero h1{font-size:clamp(2.3rem,5.6vw,4.2rem);letter-spacing:-.025em;margin-block:16px 20px}
 .hero-actions{display:flex;flex-wrap:wrap;gap:12px;margin-top:28px}
 .enter{animation:fadeUp .8s var(--ease) both;animation-delay:var(--d,0ms)}
 
@@ -290,6 +337,19 @@ html[data-ds-surface="services"] .nav a[data-ds-route="services"]::after{transfo
   transform:translateY(-4px);border-color:color-mix(in srgb,var(--accent) 45%,var(--line));
   box-shadow:0 18px 36px -26px color-mix(in srgb,var(--ink) 55%,transparent);
 }
+/* Flecha de "abrir" en la esquina de la foto: la tarjeta entera es el enlace,
+   pero el control aparece al pasar el cursor (nunca en táctil). */
+.ds-product::after{
+  content:"↗";position:absolute;top:12px;right:12px;z-index:3;
+  width:34px;height:34px;border-radius:50%;
+  display:grid;place-items:center;pointer-events:none;
+  background:color-mix(in srgb,var(--surface) 94%,transparent);
+  border:1px solid var(--line);color:var(--accent);
+  font-family:var(--font-display);font-size:1rem;line-height:1;
+  opacity:0;transform:translateY(-6px) scale(.92);
+  transition:opacity .3s var(--ease),transform .3s var(--ease-back);
+}
+.ds-product:hover::after,.ds-product:focus-within::after{opacity:1;transform:none}
 .ds-product-link{display:flex;flex-direction:column;height:100%;min-width:0;text-decoration:none;color:inherit}
 /* El fragmento llega img→copy→cat→price; el orden visual es media,
    categoría, texto y precio. */
@@ -298,28 +358,40 @@ html[data-ds-surface="services"] .nav a[data-ds-route="services"]::after{transfo
 .ds-product-link > .ds-product-price{order:4}
 .ds-product-link > .ds-product-img{order:1}
 .ds-product-img{
-  display:block;width:100%;aspect-ratio:4/3;object-fit:cover;
+  position:relative;display:block;width:100%;aspect-ratio:4/3;object-fit:cover;
   background:color-mix(in srgb,var(--accent) 10%,var(--bg));border-bottom:1px solid var(--line);
   transition:transform .6s var(--ease),filter .6s var(--ease);
 }
 /* Zoom interno: la tarjeta no cambia de tamaño, la foto respira dentro. */
 .ds-product:hover .ds-product-img:not(.is-empty){transform:scale(1.05);filter:saturate(1.06)}
-.ds-product-img.is-empty{display:grid;place-items:center}
+.ds-product-img.is-empty{
+  display:grid;place-items:center;
+  background:
+    radial-gradient(circle at 50% 45%,color-mix(in srgb,var(--accent) 15%,transparent),transparent 62%),
+    color-mix(in srgb,var(--accent) 8%,var(--bg));
+}
+/* Anillo de guiones detrás del glifo: el hueco se lee como lámina, no error. */
+.ds-product-img.is-empty::before{
+  content:"";position:absolute;inset:19%;border-radius:50%;
+  border:1px dashed color-mix(in srgb,var(--accent) 26%,transparent);
+}
 .ds-product-img.is-empty::after{content:"";width:56px;height:56px;color:var(--accent);opacity:.5;
   background:currentColor;clip-path:polygon(50% 0,100% 30%,100% 70%,50% 100%,0 70%,0 30%)}
 .ds-product-cat{min-height:1.2em;margin:14px 16px 0;font-size:.78rem;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--accent)}
+.ds-product-cat:empty{display:none}
+.ds-product-cat:empty + .ds-product-copy{padding-top:16px}
 .ds-product-copy{display:grid;gap:4px;min-width:0;padding:2px 16px 0;flex:1}
 .ds-product-name{margin:0;font-size:1.08rem;font-family:var(--font-display);line-height:1.25;overflow-wrap:anywhere;transition:color .25s}
 /* El título confirma que la tarjeta entera es clicable. */
 .ds-product:hover .ds-product-name{color:var(--accent)}
 .ds-product-desc{font-size:.9rem;color:var(--muted);display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;overflow-wrap:anywhere}
 .ds-product-desc:empty{display:none}
-.ds-product-price{display:flex;flex-wrap:wrap;align-items:baseline;gap:4px 10px;min-width:0;padding:12px 16px 16px;font-variant-numeric:tabular-nums}
+.ds-product-price{display:flex;flex-wrap:wrap;align-items:baseline;gap:4px 10px;min-width:0;padding:12px 16px 16px;font-weight:700;font-size:1.15rem;letter-spacing:-.01em;font-variant-numeric:tabular-nums}
 .ds-product-amount{font-weight:700;font-size:1.15rem}
 .ds-product-old{font-size:.85rem;color:var(--muted);text-decoration:line-through}
 .ds-product-price[data-off]::after{
   content:"-" attr(data-off) "%";margin-left:auto;align-self:center;
-  font-size:.72rem;font-weight:700;color:#1a1305;background:var(--warm);
+  font-size:.72rem;font-weight:700;color:var(--warm-ink);background:var(--warm);
   padding:2px 8px;border-radius:999px;
 }
 html[data-ds-theme="dark"] .ds-product-price[data-off]::after{color:#241a05}
@@ -338,7 +410,30 @@ a[href=""].btn{display:none}
 .lead:empty,.eyebrow:empty{display:none}
 .stat .txt span:empty{display:none}
 .hero-card .shot:has(img[src=""]),.pdp-gallery:has(img[src=""]){display:grid}
-.hero-card .shot:has(img[src=""]){display:none}
+/* Sin portada el marco no se cae: se vuelve una lámina con el monograma del
+   negocio. El hero conserva su peso visual y la tarjeta deja de quedar
+   flotando como una lista suelta. */
+.hero-card .shot:has(img[src=""]){
+  place-items:center;
+  background:
+    radial-gradient(120% 120% at 82% 0%,color-mix(in srgb,var(--warm) 26%,transparent),transparent 56%),
+    radial-gradient(120% 120% at 0% 100%,color-mix(in srgb,var(--accent) 22%,transparent),transparent 62%),
+    color-mix(in srgb,var(--accent) 6%,var(--bg));
+}
+.hero-card .shot:has(img[src=""])::before{
+  content:attr(data-initial);
+  font-family:var(--font-display);font-weight:800;line-height:1;
+  font-size:clamp(3.6rem,8vw,5rem);letter-spacing:-.05em;
+  color:var(--accent);opacity:.92;
+}
+.hero-card .shot:has(img[src=""])::after{
+  background:repeating-linear-gradient(135deg,transparent 0 9px,color-mix(in srgb,var(--ink) 6%,transparent) 9px 10px);
+  opacity:.55;
+}
+.pdp-gallery:has(img[src=""])::before{
+  content:"Sin imagen";font-size:.85rem;font-weight:600;
+  letter-spacing:.1em;text-transform:uppercase;color:var(--muted);
+}
 
 /* Chips de filtro (los arma el puente: data-cat + aria-pressed) */
 /* Tope de alto + scroll: con decenas de categorías los chips no empujan
@@ -379,7 +474,7 @@ a[href=""].btn{display:none}
   padding-block:28px;border-bottom:1px solid var(--line);
   transition:padding-inline .35s var(--ease);counter-increment:svc;
 }
-.ds-service:hover{padding-inline:12px}
+.ds-service:hover{padding-inline:12px;background:color-mix(in srgb,var(--accent) 3.5%,transparent)}
 .ds-service::before{
   grid-column:1;grid-row:1/3;align-self:start;
   content:counter(svc,decimal-leading-zero);
@@ -428,10 +523,37 @@ body:not(:has(.ds-plan)) a[href="#suscripciones"]{display:none}
 .ds-plan-feats li::before{content:"✓";color:var(--accent);font-weight:700}
 
 /* Contacto */
+/* Cabecera propia (el contacto no usa `.section-head` porque va dentro de la
+   grilla de dos columnas): mismo filete y misma escala que el resto. */
+.contact-head{
+  position:relative;display:grid;gap:12px;
+  padding-top:22px;border-top:1px solid var(--line);
+}
+.contact-head::before{
+  content:"";position:absolute;top:-1px;left:0;width:64px;height:1px;
+  background:linear-gradient(90deg,var(--accent),var(--warm));
+}
+.contact-head h2{font-size:clamp(1.9rem,4.5vw,2.8rem);letter-spacing:-.015em}
+.contact-head .lead{max-width:46ch}
+.contact-card{margin-top:24px}
 .contact-grid{display:grid;gap:40px;grid-template-columns:minmax(0,1fr) minmax(0,1fr);align-items:start}
 .contact-grid:not(:has(.ds-contact)){grid-template-columns:minmax(0,1fr)}
-.contact-card{display:grid;gap:14px;background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);padding:26px}
-.contact-row{display:flex;align-items:center;gap:12px;color:var(--muted);min-width:0}
+.contact-card{
+  position:relative;display:grid;gap:14px;background:var(--surface);
+  border:1px solid var(--line);border-radius:var(--radius);padding:26px;
+  overflow:hidden;max-width:560px;
+}
+/* Filete acento→ámbar: la tarjeta de contacto "lleva la marca" igual que la
+   del hero, así el bloque no se lee como un formulario cualquiera. */
+.contact-card::before{
+  content:"";position:absolute;left:0;right:0;top:0;height:3px;
+  background:linear-gradient(90deg,var(--accent),var(--warm));
+}
+.contact-label{
+  font-size:.72rem;font-weight:700;letter-spacing:.12em;text-transform:uppercase;
+  color:var(--muted);padding-bottom:2px;
+}
+.contact-row{display:flex;align-items:center;gap:12px;color:var(--muted);min-width:0;text-decoration:none}
 .contact-row .icon{
   width:20px;height:20px;color:var(--accent);flex:none;
   padding:9px;box-sizing:content-box;border-radius:11px;
@@ -445,6 +567,9 @@ body:not(:has(.ds-plan)) a[href="#suscripciones"]{display:none}
 .contact-row span{overflow-wrap:anywhere}
 .contact-row a{color:inherit;text-decoration:none}
 .contact-row a:hover{color:var(--accent)}
+/* El CTA cierra la tarjeta a todo el ancho: en una columna angosta el botón
+   suelto a la izquierda dejaba un hueco muerto debajo. */
+.contact-card > .btn{width:100%;justify-content:center;margin-top:10px}
 .form-note{display:flex;align-items:center;gap:8px;font-size:.95rem;color:var(--accent);min-height:1.6em}
 .form-note .icon{width:20px;height:20px}
 .form-note.show{animation:popIn .45s var(--ease) both}
@@ -479,7 +604,7 @@ body:not(:has(.ds-plan)) a[href="#suscripciones"]{display:none}
 .pdp-gallery:hover img{transform:scale(1.04)}
 .pdp-tag{
   position:absolute;top:14px;left:14px;z-index:1;
-  background:var(--warm);color:#1a1305;font-size:.78rem;font-weight:700;
+  background:var(--warm);color:var(--warm-ink);font-size:.78rem;font-weight:700;
   padding:4px 10px;border-radius:999px;
   box-shadow:0 8px 18px -8px color-mix(in srgb,var(--warm) 85%,transparent);
 }
@@ -495,7 +620,7 @@ body:not(:has(.ds-plan)) a[href="#suscripciones"]{display:none}
 .pdp-ref{color:var(--muted);font-size:.9rem}
 .pdp-price{display:flex;align-items:baseline;flex-wrap:wrap;gap:8px 14px;font-variant-numeric:tabular-nums}
 .pdp-price b{font-family:var(--font-display);font-size:2.4rem}
-.pdp-price em{font-style:normal;font-weight:700;color:#1a1305;background:var(--warm);padding:2px 10px;border-radius:999px;font-size:.8rem}
+.pdp-price em{font-style:normal;font-weight:700;color:var(--warm-ink);background:var(--warm);padding:2px 10px;border-radius:999px;font-size:.8rem}
 .pdp-price em:empty{display:none}
 .pdp-price s{color:var(--muted)}
 .pdp-price s:empty{display:none}
@@ -503,6 +628,8 @@ body:not(:has(.ds-plan)) a[href="#suscripciones"]{display:none}
 .pdp-seller strong{color:var(--ink)}
 .pdp-seller span:empty{display:none}
 .pdp-box{margin-top:48px;border-top:1px solid var(--line);padding-top:28px}
+/* Sin características ni descripción el bloque no existe. */
+.pdp-box:not(:has(.pdp-specs td, .pdp-desc:not(:empty))){display:none}
 .pdp-specs{width:100%;border-collapse:collapse}
 .pdp-specs th,.pdp-specs td{padding:10px 0;border-bottom:1px solid var(--line);text-align:left;font-weight:400}
 .pdp-specs th{color:var(--muted);font-weight:600;width:40%}
@@ -514,6 +641,11 @@ body:not(:has(.ds-plan)) a[href="#suscripciones"]{display:none}
 .pdp-rev-head:has(.pdp-score b:empty) .pdp-score{display:none}
 .pdp-rev:not(:has(.ds-reviews)){display:none}
 .pdp-rel:not(:has(.ds-product)){display:none}
+/* El saneo del host apaga cualquier sección con una `.catalog-grid` vacía.
+   En la ficha los relacionados son opcionales: sin ellos se apaga el bloque
+   (`.pdp-rel`), nunca la ficha entera. Se ancla a la superficie `product`
+   para no reactivar la ficha dentro de la landing. */
+html[data-ds-surface="product"] section[data-surface="product"]:has(.catalog-grid:empty){display:block!important}
 .pdp-rel h2,.pdp-box h2,.pdp-rev h2{font-size:clamp(1.5rem,3vw,2rem);margin-bottom:18px}
 .ds-rev-list{list-style:none;margin:0;padding:0;display:grid;gap:14px}
 .ds-rev-item{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);padding:16px 18px;display:grid;gap:6px}
@@ -582,8 +714,10 @@ body:not(:has(.ds-plan)) a[href="#suscripciones"]{display:none}
 .about-card:has(p:empty),
 .about-years:not(:has(b:not(:empty))),
 .base-row:has(.base-val:empty){display:none}
-/* La sección Nosotros existe si hay texto, cifras o años. */
-.about-sec:not(:has(.about-lede:not(:empty),p:not(:empty) , .ds-stat, .about-years b:not(:empty))){display:none}
+/* La sección Nosotros existe si hay trama propia (título, tarjetas, cifras o
+   años). El `store_about` suelto ya lo cuenta Servicios: repetirlo acá dejaba
+   una franja vacía con un párrafo huérfano. */
+.about-sec:not(:has(h2:not(:empty), .about-card p:not(:empty), .ds-stat, .about-years b:not(:empty))){display:none}
 .about-sec h2:empty{display:none}
 
 /* Meta del hero: horarios y dirección en chips. */
@@ -891,9 +1025,36 @@ html[data-ds-style="esencial-premium"][data-ds-theme="dark"] .ticker-item .icon{
 @keyframes spin-slow{to{transform:rotate(360deg)}}
 
 /* Pie */
-.site-footer{padding-block:40px;border-top:1px solid var(--line);color:var(--muted);font-size:.92rem}
-.site-footer .wrap{display:flex;flex-wrap:wrap;justify-content:space-between;gap:12px 24px}
-.foot-name{font-family:var(--font-display);font-weight:700;color:var(--ink);font-size:1.1rem}
+.site-footer{
+  position:relative;padding-block:clamp(40px,6vw,64px);
+  border-top:1px solid var(--line);background:var(--surface);
+  color:var(--muted);font-size:.92rem;
+}
+/* Filete de marca en el borde superior del pie. */
+.site-footer::before{
+  content:"";position:absolute;top:-1px;left:0;width:132px;height:1px;
+  background:linear-gradient(90deg,var(--accent),var(--warm));
+}
+.foot-grid{
+  display:grid;gap:32px;align-items:start;
+  grid-template-columns:minmax(0,1fr) auto;
+}
+.foot-brand{display:grid;gap:12px;justify-items:start;min-width:0}
+.foot-name{font-family:var(--font-display);font-weight:700;color:var(--ink);font-size:1.35rem;letter-spacing:-.015em;line-height:1.15;overflow-wrap:anywhere}
+.foot-tag{margin:0;color:var(--muted);max-width:34ch;font-size:.95rem;line-height:1.6}
+.foot-tag:empty{display:none}
+.foot-nav{display:flex;flex-wrap:wrap;gap:10px 22px;justify-content:flex-end;align-content:start}
+.foot-nav a{color:var(--muted)}
+/* Barra inferior: legal a la izquierda, ubicación y "volver arriba" a la
+   derecha, separadas por un filete. Cierra la página sin dejarla cortada. */
+.foot-base{
+  display:flex;flex-wrap:wrap;align-items:baseline;justify-content:space-between;
+  gap:10px 24px;margin-top:34px;padding-top:18px;border-top:1px solid var(--line);
+  font-size:.85rem;
+}
+.foot-base span:empty{display:none}
+.foot-top{color:var(--muted);white-space:nowrap}
+.foot-top:hover{color:var(--ink)}
 .site-footer a{position:relative;text-decoration:none;transition:color .2s}
 .site-footer a::after{
   content:"";position:absolute;left:0;right:0;bottom:-2px;height:1px;
@@ -910,6 +1071,10 @@ html[data-ds-style="esencial-premium"][data-ds-theme="dark"] .ticker-item .icon{
 .m-sheet-nav::-webkit-scrollbar-thumb{
   background:color-mix(in srgb,var(--ink) 22%,transparent);border-radius:99px;
 }
+
+/* La cabecera es fija (73px): un salto a #catalogo/#nosotros tiene que dejar
+   aire arriba o el título nace debajo de la barra. */
+section[id]{scroll-margin-top:86px}
 
 /* Revelado al hacer scroll (solo donde hay scroll-driven animations). */
 @supports (animation-timeline:view()){
@@ -978,6 +1143,14 @@ html.io .reveal.in{opacity:1;translate:0 0}
   .catalog-grid{gap:24px}
   .section-head{margin-bottom:48px}
 }
+/* Servicios en dos columnas: cuatro filas a todo el ancho dejaban media
+   sección vacía a la derecha. */
+@media (min-width:1000px){
+  .ds-services-list{grid-template-columns:repeat(2,minmax(0,1fr));column-gap:56px}
+  .ds-service{padding-block:26px}
+  .ds-service:hover{padding-inline:10px}
+  .ds-service::after{right:4px}
+}
 @media (min-width:761px){
   .ds-product{box-shadow:0 1px 0 color-mix(in srgb,var(--ink) 4%,transparent)}
   .hero-card{box-shadow:var(--ds-shadow,0 40px 70px -44px color-mix(in srgb,var(--ink) 55%,transparent),0 2px 0 color-mix(in srgb,var(--ink) 4%,transparent))}
@@ -1019,6 +1192,12 @@ html.io .reveal.in{opacity:1;translate:0 0}
   .ds-service:hover{padding-inline:0}
   .ds-service::before{font-size:.9rem}
   .ticker-track{gap:32px;padding-block:12px}
+  /* Pie en una columna: la marca arriba, los accesos y el legal debajo. */
+  .foot-grid{grid-template-columns:minmax(0,1fr);gap:26px}
+  .foot-nav{justify-content:flex-start;gap:10px 20px}
+  .foot-base{margin-top:26px}
+  .site-footer{padding-block:36px 30px}
+  .wrap > .section-head::after{top:20px;font-size:.72rem}
 }
 @media (max-width:360px){
   .catalog-grid{grid-template-columns:minmax(0,1fr)}
@@ -1026,6 +1205,7 @@ html.io .reveal.in{opacity:1;translate:0 0}
 /* Sin hover real (táctil): no dejar estados pegados */
 @media (hover:none){
   .ds-product:hover{transform:none;box-shadow:none;border-color:var(--line)}
+  .ds-product::after{display:none}
   .btn:hover{transform:none;box-shadow:none}
   .brand:hover .mark{transform:none}
   .ds-service:hover{padding-inline:0}
@@ -1123,7 +1303,7 @@ html.io .reveal.in{opacity:1;translate:0 0}
       </div>
       <div class="hero-card-wrap" id="hero-tilt">
         <aside class="hero-card" id="hero-card" aria-label="Resumen">
-          <span class="shot"><img src="{{store_cover}}" alt="{{store_name}}" decoding="async" fetchpriority="high"></span>
+          <span class="shot" data-initial="{{store_initial}}"><img src="{{store_cover}}" alt="{{store_name}}" decoding="async" fetchpriority="high"></span>
           <div class="stat">
             <span class="ico-box"><svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M21 8l-9-5-9 5v8l9 5 9-5z"/><path d="M3 8l9 5 9-5M12 13v8"/></svg></span>
             <span class="txt"><strong>{{store_name}}</strong><span>{{store_address}}</span></span>
@@ -1162,6 +1342,7 @@ html.io .reveal.in{opacity:1;translate:0 0}
         <p class="eyebrow">Catálogo</p>
         <h2>Productos seleccionados</h2>
         <p class="lead">Lo último que cargamos para vos.</p>
+        <a class="head-link" href="#catalogo" data-ds-route="catalog" data-flag="catalog">Ver todo el catálogo <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg></a>
       </div>
       <div class="cats ds-zone">{{categories}}</div>
       <div class="catalog-grid reveal">{{products}}</div>
@@ -1262,10 +1443,13 @@ html.io .reveal.in{opacity:1;translate:0 0}
   <section class="section" id="contacto" data-flag="contact">
     <div class="wrap contact-grid reveal">
       <div>
-        <p class="eyebrow">Contacto</p>
-        <h2 style="font-size:clamp(1.9rem,4.5vw,2.8rem);margin-top:12px">Escribinos</h2>
-        <p class="lead" style="margin-top:16px">Respondemos en menos de un día hábil.</p>
-        <div class="contact-card" style="margin-top:24px">
+        <div class="contact-head">
+          <p class="eyebrow">Contacto</p>
+          <h2>Escribinos</h2>
+          <p class="lead">Respondemos en menos de un día hábil.</p>
+        </div>
+        <div class="contact-card">
+        <span class="contact-label">Contacto directo</span>
         <a class="contact-row" href="{{store_whatsapp_url}}"><svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M21 12a8 8 0 0 1-11.6 7.1L4 20l1-4.6A8 8 0 1 1 21 12z"/></svg><span>{{store_phone}}</span></a>
         <span class="contact-row"><svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="m3 7 9 6 9-6"/></svg><span>{{store_email}}</span></span>
         <span class="contact-row"><svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 21s6.5-5.6 6.5-10.5a6.5 6.5 0 1 0-13 0C5.5 15.4 12 21 12 21z"/><circle cx="12" cy="10.5" r="2.4"/></svg><span>{{store_address}} {{store_location}}</span></span>
@@ -1381,15 +1565,29 @@ html.io .reveal.in{opacity:1;translate:0 0}
 </main>
 
 <footer class="site-footer">
-  <div class="wrap">
-    <span class="foot-name">{{store_name}}</span>
-    <span class="social">
-      <a href="{{store_instagram_url}}" aria-label="Instagram" rel="noopener"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><rect x="3" y="3" width="18" height="18" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.2" cy="6.8" r="1" fill="currentColor" stroke="none"/></svg></a>
-      <a href="{{store_facebook_url}}" aria-label="Facebook" rel="noopener"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z"/></svg></a>
-      <a href="{{store_tiktok_url}}" aria-label="TikTok" rel="noopener"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M9 12a4 4 0 1 0 4 4V4c.6 2.5 2.4 4.4 5 5"/></svg></a>
-      <a href="{{store_maps_url}}" aria-label="Mapa" rel="noopener"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21s7-5.8 7-11a7 7 0 1 0-14 0c0 5.2 7 11 7 11Z"/><circle cx="12" cy="10" r="2.5"/></svg></a>
-    </span>
+  <div class="wrap foot-grid">
+    <div class="foot-brand">
+      <span class="foot-name">{{store_name}}</span>
+      <p class="foot-tag">{{store_tagline}}</p>
+      <span class="social">
+        <a href="{{store_instagram_url}}" aria-label="Instagram" rel="noopener"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><rect x="3" y="3" width="18" height="18" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.2" cy="6.8" r="1" fill="currentColor" stroke="none"/></svg></a>
+        <a href="{{store_facebook_url}}" aria-label="Facebook" rel="noopener"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z"/></svg></a>
+        <a href="{{store_tiktok_url}}" aria-label="TikTok" rel="noopener"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M9 12a4 4 0 1 0 4 4V4c.6 2.5 2.4 4.4 5 5"/></svg></a>
+        <a href="{{store_maps_url}}" aria-label="Mapa" rel="noopener"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21s7-5.8 7-11a7 7 0 1 0-14 0c0 5.2 7 11 7 11Z"/><circle cx="12" cy="10" r="2.5"/></svg></a>
+      </span>
+    </div>
+    <nav class="foot-nav" aria-label="Secciones del sitio">
+      <a href="#inicio" data-ds-route="home">Inicio</a>
+      <a href="#catalogo" data-ds-route="catalog" data-flag="catalog">Catálogo</a>
+      <a href="#nosotros" data-ds-anchor data-flag="about">Nosotros</a>
+      <a href="#servicios" data-ds-route="services" data-flag="services">Servicios</a>
+      <a href="#contacto" data-ds-route="home" data-ds-anchor data-flag="contact">Contacto</a>
+    </nav>
+  </div>
+  <div class="wrap foot-base">
     <span>© {{year}} {{store_name}} · Todos los derechos reservados</span>
+    <span>{{store_location}}</span>
+    <a class="foot-top" href="#inicio" data-ds-route="home">Volver arriba ↑</a>
   </div>
 </footer>
 
