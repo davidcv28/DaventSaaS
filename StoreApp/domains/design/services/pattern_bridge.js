@@ -13,7 +13,20 @@
  */
 (function () {
   var root = document.documentElement
+  /* Sección cuya zona de datos quedó vacía: la regla
+   * `[data-flag]:has(.ds-zone:empty)` del diseño la apaga, pero donde
+   * `:has()` no llega la cáscara (título + paddings) quedaba visible y
+   * varias seguidas dejaban un hueco enorme. Refuerzo por DOM: solo
+   * apaga, nunca enciende (el toggle del dueño sigue mandando). */
+  function hideEmptyZones() {
+    ;[].forEach.call(document.querySelectorAll('.ds-zone'), function (z) {
+      if (z.children.length || (z.textContent || '').trim()) return
+      var sec = z.closest('[data-flag]')
+      if (sec) sec.hidden = true
+    })
+  }
   function send() {
+    hideEmptyZones()
     // Medir después del frame: al cambiar de superficie el display de los
     // bloques todavía no se recalculó y el alto queda viejo.
     requestAnimationFrame(function () {
@@ -123,13 +136,28 @@
   function collectFixed() {
     pinned = []
     if (!document.body || !window.getComputedStyle) return
+    var ih = window.innerHeight || 1
     ;[].forEach.call(document.body.querySelectorAll('*'), function (el) {
       var cs = getComputedStyle(el)
       if (cs.position !== 'fixed') return
-      var top = parseFloat(cs.top)
-      var bottom = parseFloat(cs.bottom)
-      if (!isNaN(top)) pinned.push({ el: el, prop: 'top', base: top })
-      else if (!isNaN(bottom)) pinned.push({ el: el, prop: 'bottom', base: bottom })
+      /* `top`/`bottom` computados siempre resuelven a píxeles para un
+       * elemento fijo, así que no dicen a qué borde está anclado: una tab
+       * bar con `bottom:12px` devuelve `top: ~4865px` (alto del documento)
+       * y quedaba clavada al fondo de la página — invisible hasta el
+       * final. El anclaje real sale del rectángulo: si el borde inferior
+       * está cerca del borde inferior del viewport y el elemento no llega
+       * a la mitad superior, es de abajo. */
+      var r = el.getBoundingClientRect()
+      if (ih - r.bottom < ih * 0.25 && r.top > ih * 0.5) {
+        //La base es el bottom SIN transform: una hoja cerrada con
+        //translateY(110%) informa un bottom negativo que no es el real.
+        var ty = 0
+        var m = /matrix\([^)]*,\s*(-?[\d.]+)\s*\)/.exec(cs.transform || '')
+        if (m) ty = parseFloat(m[1]) || 0
+        pinned.push({ el: el, prop: 'bottom', base: Math.max(0, ih - (r.bottom - ty)) })
+      } else {
+        pinned.push({ el: el, prop: 'top', base: parseFloat(cs.top) || 0 })
+      }
     })
   }
   function pinFixed() {
@@ -138,6 +166,8 @@
     var dyTop = Math.max(0, -frameBox.top)
     var dyBot = Math.max(0, frameBox.bottom - frameBox.vh)
     ;(pinned || []).forEach(function (p) {
+      var other = p.prop === 'top' ? 'bottom' : 'top'
+      if (p.el.style[other]) p.el.style[other] = ''
       p.el.style[p.prop] = (p.base + (p.prop === 'top' ? dyTop : dyBot)) + 'px'
     })
   }

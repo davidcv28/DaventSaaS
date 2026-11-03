@@ -101,8 +101,9 @@ section[id]{scroll-margin-top:84px}
   .m-scrim.open{opacity:1;pointer-events:auto}
   .m-sheet{display:block;position:fixed;left:0;right:0;bottom:0;z-index:57;background:var(--ink-2);
     border:1px solid var(--line);border-bottom:0;border-radius:26px 26px 0 0;padding:14px 20px 34px;
-    transform:translateY(105%);transition:transform .45s var(--ease)}
-  .m-sheet.open{transform:none}
+    transform:translateY(105%);visibility:hidden;
+    transition:transform .45s var(--ease),visibility 0s .45s}
+  .m-sheet.open{transform:none;visibility:visible;transition:transform .45s var(--ease)}
   .m-sheet-head{display:flex;align-items:center;gap:12px;padding:6px 0 16px}
   .m-grab{position:absolute;top:10px;left:50%;transform:translateX(-50%);width:40px;height:4px;
     border-radius:99px;background:var(--line)}

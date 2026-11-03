@@ -303,6 +303,7 @@
 
   /* ===== Galería: tira de postales ===== */
   .postal-strip{display:flex;gap:16px;overflow-x:auto;padding:30px 4px 20px;scrollbar-width:thin}
+  .postal-strip:empty{display:none}
   .postal-strip .ds-shot{flex:0 0 auto;width:210px;margin:0;transform:rotate(var(--tilt,0deg));
     transition:transform .3s var(--ease)}
   .postal-strip .ds-shot:nth-child(odd){--tilt:-1.6deg}
