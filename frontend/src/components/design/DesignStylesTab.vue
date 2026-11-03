@@ -516,11 +516,12 @@ onBeforeUnmount(() => {
   .dmenu-fab { display: none; }
 }
 
-/* Botón flotante de vista previa (solo < 1100px). Vive por encima de la
-   savebar sticky y de la tab bar, sin tapar los controles del formulario. */
+/* Botón flotante de vista previa (solo < 1100px). En tablet/desktop chico
+   va abajo a la derecha; en móvil pasa a la izquierda, sobre la tab bar y
+   sin chocar con el FAB del chat (abajo a la derecha). */
 .dmenu-fab {
   position: fixed; right: calc(14px + env(safe-area-inset-right));
-  bottom: calc(184px + env(safe-area-inset-bottom)); z-index: 45;
+  bottom: calc(18px + env(safe-area-inset-bottom)); z-index: 45;
   display: inline-flex; align-items: center; gap: 8px; min-height: 46px;
   padding: 0 16px 0 12px; border: 0; border-radius: 999px;
   background: linear-gradient(135deg, var(--brand-500, #6366f1), var(--accent, #8b5cf6));
@@ -533,6 +534,12 @@ onBeforeUnmount(() => {
 .dmenu-fab:active { transform: scale(.96); }
 .dmenu-fab:focus-visible { outline: 2px solid var(--brand-500, #6366f1); outline-offset: 3px; }
 .dmenu-fab-ico { display: grid; place-items: center; width: 26px; height: 26px; border-radius: 50%; background: rgba(255, 255, 255, .2); }
+@media (max-width: 860px) {
+  .dmenu-fab {
+    right: auto; left: calc(14px + env(safe-area-inset-left));
+    bottom: calc(88px + env(safe-area-inset-bottom));
+  }
+}
 
 /* Hoja de vista previa a pantalla completa (móvil/tablet). */
 .dmenu-pv {
