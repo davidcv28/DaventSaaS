@@ -53,7 +53,7 @@ const emit = defineEmits(['navigate', 'toggle-theme'])
 //los busca este componente, que sí es mismo origen.
 //Whitelist cerrada: el documento no elige el endpoint. Solo estas dos
 //rutas de la tienda que embebe, y siempre con su slug (nunca el de otra).
-const PUBLIC_API_RE = /^\/api\/stores\/public\/[a-z0-9-]+\/(?:reviews\/captcha|products\/\d+\/reviews)\/?$/
+const PUBLIC_API_RE = /^\/api\/stores\/public\/[a-z0-9-]+\/(?:reviews\/captcha|contact\/captcha|contact|products\/\d+\/reviews)\/?$/
 
 function publicApiUrl(raw) {
   const url = String(raw || '')

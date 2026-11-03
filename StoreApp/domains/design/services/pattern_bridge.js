@@ -957,6 +957,94 @@
     })
     loadCaptcha()
   }
+  /* Formulario "Contáctanos": el diseño marca una zona con
+   * `[data-ds-contact]` + data-url/data-cap-url (mismos endpoints que el
+   * bloque Vue `contact`). El puente arma los campos, carga el captcha
+   * firmado y publica por `ds-api`. Sin zona no se monta nada. */
+  function initContact() {
+    var box = document.querySelector('[data-ds-contact]')
+    if (!box || box.getAttribute('data-ds-contact-ready')) return
+    box.setAttribute('data-ds-contact-ready', '1')
+    var url = box.getAttribute('data-url') || ''
+    var capUrl = box.getAttribute('data-cap-url') || ''
+    var challenge = null
+    var busy = false
+    var form = document.createElement('form')
+    form.className = 'ds-contact-fields'
+    form.setAttribute('novalidate', '')
+    form.innerHTML =
+      '<div class="ds-contact-row">' +
+      '<input class="ds-contact-input" name="name" maxlength="80" autocomplete="name" placeholder="Tu nombre" required>' +
+      '<input class="ds-contact-input" name="email" type="email" autocomplete="email" placeholder="nombre@correo.com" required>' +
+      '</div>' +
+      '<textarea class="ds-contact-input ds-contact-area" name="message" rows="4" maxlength="2000" placeholder="Escribí tu mensaje" required></textarea>' +
+      '<div class="ds-contact-cap">' +
+      '<span class="ds-contact-q" data-contact-question>Cargando…</span>' +
+      '<input class="ds-contact-input" name="captcha_answer" inputmode="numeric" autocomplete="off" placeholder="Respuesta" required>' +
+      '<button type="button" class="ds-contact-reload" data-contact-reload aria-label="Nueva pregunta" title="Nueva pregunta">↻</button>' +
+      '</div>' +
+      '<div class="ds-rev-hp" aria-hidden="true"><label>Website <input name="website" tabindex="-1" autocomplete="off"></label></div>' +
+      '<p class="ds-contact-status" data-contact-status role="status" aria-live="polite"></p>' +
+      '<button type="submit" class="ds-contact-send">Enviar mensaje</button>'
+    box.appendChild(form)
+    var status = form.querySelector('[data-contact-status]')
+    var question = form.querySelector('[data-contact-question]')
+    function say(msg, ok) {
+      if (!status) return
+      status.textContent = msg || ''
+      status.setAttribute('data-ok', ok ? '1' : '0')
+    }
+    function loadCaptcha() {
+      challenge = null
+      if (question) question.textContent = 'Cargando…'
+      if (!capUrl) { if (question) question.textContent = '—'; return }
+      api(capUrl).then(function (out) {
+        var data = out && out.ok ? out.data : null
+        challenge = data || null
+        if (question) question.textContent = (data && data.question) ? data.question : '—'
+        var capInput = form.querySelector('[name="captcha_answer"]')
+        if (capInput) capInput.value = ''
+      })
+    }
+    var reloadBtn = form.querySelector('[data-contact-reload]')
+    if (reloadBtn) reloadBtn.addEventListener('click', loadCaptcha)
+    form.addEventListener('submit', function (e) {
+      e.preventDefault()
+      if (busy || !url) return
+      var fd = new FormData(form)
+      var payload = {
+        name: String(fd.get('name') || '').trim(),
+        email: String(fd.get('email') || '').trim(),
+        message: String(fd.get('message') || '').trim(),
+        website: String(fd.get('website') || ''),
+        challenge_id: challenge ? challenge.challenge_id : '',
+        captcha_answer: String(fd.get('captcha_answer') || '').trim()
+      }
+      busy = true
+      say('')
+      api(url, { method: 'POST', body: payload })
+        .then(function (out) {
+          if (!out) { say('Sin conexión. Probá de nuevo.'); return }
+          var data = out.data || {}
+          if (!out.ok) {
+            var msg = ''
+            Object.keys(data).some(function (key) {
+              var val = data[key]
+              msg = Array.isArray(val) ? String(val[0]) : String(val)
+              return !!msg
+            })
+            say(msg || 'No pudimos enviar tu mensaje. Probá de nuevo.')
+            loadCaptcha()
+            return
+          }
+          form.reset()
+          say(String(data['Exito'] || 'Tu mensaje fue enviado.'), true)
+          loadCaptcha()
+        })
+        .finally(function () { busy = false; send() })
+    })
+    loadCaptcha()
+  }
   var sortSel = document.querySelector('[data-ds-sort]')
   if (sortSel) sortSel.addEventListener('change', applyCatalog)
   catalog()
@@ -973,6 +1061,7 @@
   initFilters()
   initView()
   initReviews()
+  initContact()
   syncFilterUI()
   applyCatalog()
   mountThemeToggle()

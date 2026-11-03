@@ -117,7 +117,7 @@ def verify_captcha(slug : str, challenge_id : str, answer : str) -> bool:
 #responde 302 al destino real — un scraper que lee el payload o el DOM no
 #ve ni el número de WhatsApp ni los usuarios de las redes.
 CONTACT_REDIRECT_TEXT_MAX =   600
-CONTACT_REDIRECT_KINDS    =   ('whatsapp', 'instagram', 'tiktok', 'facebook')
+CONTACT_REDIRECT_KINDS    =   ('whatsapp', 'instagram', 'tiktok', 'facebook', 'maps')
 
 def _social_handle(value) -> str:
     handle  =   re.sub(r'[^A-Za-z0-9._-]', '', str(value or '')).lstrip('@')
@@ -145,6 +145,18 @@ def contact_redirect_url(store, customization, kind : str, text : str = '') -> s
     if kind == 'tiktok':
         handle  =   _social_handle(customization.tiktok)
         return f'https://tiktok.com/@{handle}' if handle else ''
+    if kind == 'maps':
+        #Ubicación en Google Maps: domicilio + ciudad + provincia del perfil.
+        #El documento enlaza /r/maps/ y Google resuelve la búsqueda — no se
+        #guardan coordenadas ni se expone el domicilio en el HTML servido.
+        user        =   getattr(store, 'user', None)
+        parts       =   [
+            str(getattr(user, 'address', '') or '').strip(),
+            str(getattr(getattr(user, 'city', None), 'name_city', '') or '').strip(),
+            str(getattr(getattr(user, 'province', None), 'name_province', '') or '').strip(),
+        ]
+        query       =   ', '.join(part for part in parts if part)
+        return f'https://maps.google.com/?q={quote(query)}' if query else ''
     if kind == 'facebook':
         handle  =   _social_handle(customization.facebook)
         return f'https://facebook.com/{handle}' if handle else ''

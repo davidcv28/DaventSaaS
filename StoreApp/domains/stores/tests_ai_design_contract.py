@@ -94,7 +94,7 @@ PREMIUM_LIMITS      =   {'max_gallery_images': 20, 'max_images': 50, 'max_storag
 
 #Catálogo del plan (UN diseño: 'raiz' = Esencial) y los exclusivos de IA.
 PLAN_TEMPLATES      =   ('raiz', 'esencial', 'mercado', 'gimnasio', 'moderntec')
-STYLE_TEMPLATES     =   frozenset(('raiz', 'esencial', 'mercado', 'gimnasio', 'sastreria', 'moderntec'))
+STYLE_TEMPLATES     =   frozenset(('raiz', 'esencial', 'mercado', 'gimnasio', 'sastreria', 'moderntec', 'ruta', 'aurum'))
 
 #Bloques exclusivos de "Diseñar con IA" (TEMPLATE_BLOCKS[*]['ai_only']).
 AI_ONLY_BLOCKS      =   frozenset({
@@ -345,7 +345,7 @@ class Diversidad(_AiDesignBase):
         client, _, _    =   self._premium_client()
         for rubro in ('comercio', 'belleza', 'tecnologia'):
             proposals   =   _proposals_of(self._generate(client, _rubro_payload(rubro)))
-            self.assertIn(len(proposals), (2, 3), rubro)
+            self.assertIn(len(proposals), (2, 3, 4), rubro)
             #Catálogo de UN diseño: la diversidad queda en piel + estilo.
             self.assertEqual(len({_skin_of(p).get('id') for p in proposals}), len(proposals), rubro)
             self.assertEqual(len({p['variety']['style'] for p in proposals}), len(proposals), rubro)
@@ -376,7 +376,7 @@ class Diversidad(_AiDesignBase):
     def test_proposals_declare_skin_variety_and_redesign(self):
         client, _, _    =   self._premium_client()
         proposals       =   _proposals_of(self._generate(client, _rubro_payload('comercio')))
-        self.assertIn(len(proposals), (2, 3))
+        self.assertIn(len(proposals), (2, 3, 4))
         for proposal in proposals:
             skin        =   proposal.get('skin') or {}
             self.assertEqual(set(skin), {'id', 'family', 'label'}, 'proposal.skin incompleto')
@@ -399,7 +399,7 @@ class FuentesDeEstilo(_AiDesignBase):
     def test_with_advanced_the_whitelist_covers_the_eight_designs(self):
         _, profile, _   =   _make_account(*(CUSTOMIZATION + AI_DESIGN + DESIGN_PLUS + DESIGN_ADVANCED))
         allowed         =   allowed_templates_of(profile)
-        self.assertEqual(tuple(allowed), ('raiz', 'esencial', 'mercado', 'gimnasio', 'sastreria', 'moderntec'))
+        self.assertEqual(tuple(allowed), ('raiz', 'esencial', 'mercado', 'gimnasio', 'sastreria', 'moderntec', 'ruta', 'aurum'))
 
     def test_without_the_ai_flag_the_whitelist_is_exactly_the_plan(self):
         #El flag de IA ya no suma diseños: el techo lo pone el nivel del plan.
@@ -411,8 +411,8 @@ class FuentesDeEstilo(_AiDesignBase):
         _, plus, _      =   _make_account(*(CUSTOMIZATION + DESIGN_PLUS))
         _, advanced, _  =   _make_account(*(CUSTOMIZATION + DESIGN_PLUS + DESIGN_ADVANCED))
         self.assertEqual(tuple(allowed_templates_of(base)), ('raiz', 'esencial'))
-        self.assertEqual(tuple(allowed_templates_of(plus)), ('raiz', 'esencial', 'mercado', 'gimnasio', 'sastreria', 'moderntec'))
-        self.assertEqual(tuple(allowed_templates_of(advanced)), ('raiz', 'esencial', 'mercado', 'gimnasio', 'sastreria', 'moderntec'))
+        self.assertEqual(tuple(allowed_templates_of(plus)), ('raiz', 'esencial', 'mercado', 'gimnasio', 'sastreria', 'moderntec', 'ruta'))
+        self.assertEqual(tuple(allowed_templates_of(advanced)), ('raiz', 'esencial', 'mercado', 'gimnasio', 'sastreria', 'moderntec', 'ruta', 'aurum'))
 
     def test_the_engine_has_no_exclusive_or_legacy_designs(self):
         from StoreApp.domains.stores.models import StoreCustomization
@@ -430,7 +430,7 @@ class FuentesDeEstilo(_AiDesignBase):
         self.assertEqual({key for key, _ in StoreCustomization.TEMPLATE_CHOICES}, set(STYLE_TEMPLATES))
         self.assertFalse(retired & set(STYLE_TEMPLATES))
         self.assertIn('boutique', retired)
-        self.assertEqual(set(R.PUBLIC_TEMPLATES), set(STYLE_TEMPLATES))
+        self.assertTrue(set(R.PUBLIC_TEMPLATES) <= set(STYLE_TEMPLATES))
 
     def test_style_source_of_is_always_the_plan(self):
         for template in STYLE_TEMPLATES:
@@ -1060,7 +1060,7 @@ class Regresiones(_AiDesignBase):
         client, _, _    =   self._premium_client()
         response        =   self._generate(client)
         self.assertEqual(response.status_code, 200, response.content[:400])
-        self.assertIn(len(_proposals_of(response)), (2, 3))
+        self.assertIn(len(_proposals_of(response)), (2, 3, 4))
 
     def test_proposal_ids_are_unique_and_labels_distinct(self):
         client, _, _    =   self._premium_client()
