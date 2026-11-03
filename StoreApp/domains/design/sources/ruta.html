@@ -175,7 +175,9 @@
   .empresa-card{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);padding:20px 22px}
   .empresa-card span{display:block;font-size:10.5px;letter-spacing:.14em;text-transform:uppercase;
     color:var(--coral);font-weight:700;margin-bottom:8px}
-  .empresa-card b{font-family:"Fraunces",serif;font-size:19px;font-weight:600;line-height:1.3}
+  .empresa-card b{font-size:14px;font-weight:500;line-height:1.5;display:block}
+  .empresa-card.stat b{font-family:"Fraunces",serif;font-size:48px;font-weight:600;line-height:1.05}
+  .empresa-card.stat{align-self:stretch}
   .empresa-card:has(>b:empty){display:none}
   .ficha-list{list-style:none;margin:0;padding:0;display:grid;
     grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:0 34px;border-top:1.5px dashed var(--line)}
@@ -476,7 +478,7 @@
       </div>
       <p class="empresa-about">{{store_about}}</p>
       <div class="empresa-grid">
-        <div class="empresa-card"><span>Años de trayectoria</span><b>{{store_about_years}}</b></div>
+        <div class="empresa-card stat"><span>Años de trayectoria</span><b>{{store_about_years}}</b></div>
         <div class="empresa-card"><span>Misión</span><b>{{store_about_mission}}</b></div>
         <div class="empresa-card"><span>Especialidades</span><b>{{store_about_specialties}}</b></div>
       </div>
