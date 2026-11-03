@@ -1,0 +1,548 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Atelier Norte — Boceto Premium</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300..700;1,9..144,300..700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<style>
+/* ============================================================
+   BOCETO PREMIUM — plantilla insignia (todos los rubros)
+   Paleta: tinta casi negra + champagne/dorado + hueso
+   ============================================================ */
+:root{
+  --ink:#111210;
+  --ink-2:#191a17;
+  --bone:#f4f0e6;
+  --bone-2:#ece6d8;
+  --gold:#c8a25a;
+  --gold-ink:#3a2c10;
+  --line:#2a2b26;
+  --line-bone:#d8d0bd;
+  --muted:#a09c8e;
+  --muted-bone:#7c7666;
+  --radius:22px;
+  --serif:"Fraunces",serif;
+  --sans:"Inter",system-ui,sans-serif;
+  --mono:"JetBrains Mono",monospace;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+body{background:var(--ink);color:var(--bone);font-family:var(--sans);font-size:15px;line-height:1.6;
+  -webkit-font-smoothing:antialiased}
+::selection{background:var(--gold);color:var(--ink)}
+img{max-width:100%;display:block}
+a{color:inherit;text-decoration:none}
+.wrap{max-width:1180px;margin:0 auto;padding:0 clamp(20px,4vw,48px)}
+
+/* grano sutil */
+body::after{content:"";position:fixed;inset:0;pointer-events:none;z-index:60;opacity:.05;mix-blend-mode:overlay;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2'/%3E%3C/filter%3E%3Crect width='160' height='160' filter='url(%23n)'/%3E%3C/svg%3E")}
+
+/* ===== cinta de anuncios ===== */
+.ribbon{background:var(--gold);color:var(--gold-ink);overflow:hidden;padding:9px 0;
+  font:600 10.5px/1 var(--mono);letter-spacing:.18em;text-transform:uppercase;white-space:nowrap}
+.ribbon-track{display:inline-flex;gap:56px;animation:marquee 26s linear infinite}
+.ribbon-track span{display:inline-flex;align-items:center;gap:10px}
+.ribbon-track i{font-style:normal;opacity:.55}
+@keyframes marquee{to{transform:translateX(-50%)}}
+
+/* ===== nav ===== */
+nav{position:sticky;top:0;z-index:50;background:color-mix(in srgb,var(--ink) 82%,transparent);
+  backdrop-filter:blur(14px);border-bottom:1px solid var(--line)}
+.nav-in{display:flex;align-items:center;justify-content:space-between;gap:24px;padding:16px clamp(20px,4vw,48px);
+  max-width:1180px;margin:0 auto}
+.brand{display:flex;align-items:center;gap:12px}
+.brand-mark{width:40px;height:40px;border:1px solid var(--gold);border-radius:50%;display:grid;place-items:center;
+  font:400 19px var(--serif);color:var(--gold)}
+.brand b{font:500 17px var(--serif);letter-spacing:.02em}
+.brand small{display:block;font:600 9px var(--mono);letter-spacing:.22em;text-transform:uppercase;color:var(--muted)}
+.nav-links{display:flex;gap:26px;font-size:12.5px;font-weight:600;letter-spacing:.06em;text-transform:uppercase}
+.nav-links a{color:var(--muted);transition:color .2s}
+.nav-links a:hover{color:var(--gold)}
+.nav-cta{display:inline-flex;align-items:center;gap:8px;border:1px solid var(--gold);color:var(--gold);
+  padding:9px 20px;border-radius:99px;font-size:12px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;
+  transition:.25s}
+.nav-cta:hover{background:var(--gold);color:var(--ink)}
+@media(max-width:860px){.nav-links{display:none}}
+
+/* ===== hero ===== */
+.hero{position:relative;overflow:hidden;border-bottom:1px solid var(--line)}
+.hero-grid{display:grid;grid-template-columns:1.15fr .85fr;gap:clamp(28px,5vw,72px);align-items:end;
+  padding:clamp(56px,9vh,110px) 0 clamp(48px,7vh,80px)}
+@media(max-width:860px){.hero-grid{grid-template-columns:1fr}}
+.eyebrow{display:inline-flex;align-items:center;gap:10px;font:600 10.5px var(--mono);letter-spacing:.24em;
+  text-transform:uppercase;color:var(--gold);margin-bottom:26px}
+.eyebrow::before{content:"";width:34px;height:1px;background:var(--gold)}
+.hero h1{font:300 clamp(44px,6.4vw,86px)/1.02 var(--serif);letter-spacing:-.015em}
+.hero h1 em{font-style:italic;color:var(--gold)}
+.hero-sub{margin-top:26px;max-width:44ch;color:var(--muted);font-size:16px}
+.hero-meta{display:flex;flex-wrap:wrap;gap:10px 28px;margin-top:30px;font:600 11px var(--mono);
+  letter-spacing:.14em;text-transform:uppercase;color:var(--muted)}
+.hero-meta span{display:inline-flex;align-items:center;gap:8px}
+.hero-meta svg{color:var(--gold)}
+.hero-cta{display:flex;flex-wrap:wrap;gap:14px;margin-top:38px}
+.btn{display:inline-flex;align-items:center;gap:10px;padding:15px 30px;border-radius:99px;
+  font-size:12.5px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;transition:.25s}
+.btn-gold{background:var(--gold);color:var(--ink)}
+.btn-gold:hover{transform:translateY(-2px);box-shadow:0 14px 34px -12px color-mix(in srgb,var(--gold) 60%,transparent)}
+.btn-ghost{border:1px solid var(--line-bone);color:var(--bone)}
+.btn-ghost:hover{border-color:var(--gold);color:var(--gold)}
+.hero-fig{position:relative}
+.hero-fig .ph{aspect-ratio:4/5;border-radius:var(--radius);overflow:hidden;position:relative;
+  background:linear-gradient(160deg,#23241f,#191a16 60%,#1e2018)}
+.hero-fig .ph::before{content:"";position:absolute;inset:0;
+  background:radial-gradient(90% 60% at 70% 20%,color-mix(in srgb,var(--gold) 26%,transparent),transparent 60%),
+             radial-gradient(70% 50% at 20% 90%,color-mix(in srgb,var(--gold) 14%,transparent),transparent)}
+.hero-fig .ph::after{content:"FOTO DE PORTADA";position:absolute;inset:0;display:grid;place-items:center;
+  font:600 10px var(--mono);letter-spacing:.3em;color:var(--muted)}
+.hero-badge{position:absolute;left:-26px;bottom:34px;background:var(--bone);color:var(--ink);
+  border-radius:16px;padding:16px 20px;box-shadow:0 24px 50px -20px #000}
+.hero-badge b{display:block;font:400 26px var(--serif)}
+.hero-badge span{font:600 9.5px var(--mono);letter-spacing:.18em;text-transform:uppercase;color:var(--muted-bone)}
+
+/* ===== secciones ===== */
+section{padding:clamp(56px,9vh,104px) 0;border-bottom:1px solid var(--line)}
+.sec-head{display:flex;align-items:baseline;justify-content:space-between;gap:24px;margin-bottom:clamp(32px,5vh,56px)}
+.sec-head .idx{font:600 11px var(--mono);letter-spacing:.2em;color:var(--gold)}
+.sec-head h2{font:300 clamp(30px,4vw,52px)/1.08 var(--serif);letter-spacing:-.01em}
+.sec-head h2 em{font-style:italic;color:var(--gold)}
+.sec-head p{max-width:38ch;color:var(--muted);font-size:13.5px;text-align:right}
+@media(max-width:700px){.sec-head{flex-direction:column}.sec-head p{text-align:left}}
+
+/* ofrecemos */
+.offers{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:1px;background:var(--line);
+  border:1px solid var(--line);border-radius:var(--radius);overflow:hidden}
+.offer{background:var(--ink-2);padding:30px 28px;transition:background .3s}
+.offer:hover{background:#1f201b}
+.offer .num{font:600 10px var(--mono);letter-spacing:.2em;color:var(--gold)}
+.offer h3{font:400 21px var(--serif);margin:14px 0 8px}
+.offer p{color:var(--muted);font-size:13.5px}
+
+/* números — banda dorada */
+.stats{background:var(--gold);color:var(--gold-ink)}
+.stats-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:32px;text-align:center}
+.stat b{display:block;font:300 clamp(44px,5vw,72px)/1 var(--serif)}
+.stat span{display:block;margin-top:10px;font:600 10px var(--mono);letter-spacing:.2em;text-transform:uppercase;opacity:.75}
+
+/* sobre nosotros */
+.about{display:grid;grid-template-columns:1fr 1fr;gap:clamp(32px,5vw,72px);align-items:start}
+@media(max-width:860px){.about{grid-template-columns:1fr}}
+.about .lede{font:300 clamp(24px,2.6vw,34px)/1.3 var(--serif)}
+.about .lede em{font-style:italic;color:var(--gold)}
+.about-copy{color:var(--muted);font-size:14.5px;display:grid;gap:16px}
+.about-copy b{color:var(--bone)}
+.about-tags{display:flex;flex-wrap:wrap;gap:8px;margin-top:8px}
+.about-tags span{border:1px solid var(--line);border-radius:99px;padding:6px 14px;
+  font:600 10.5px var(--mono);letter-spacing:.12em;text-transform:uppercase;color:var(--muted)}
+.years-card{margin-top:22px;display:inline-flex;align-items:center;gap:16px;border:1px solid var(--gold);
+  border-radius:16px;padding:14px 22px}
+.years-card b{font:400 40px var(--serif);color:var(--gold)}
+.years-card span{font:600 10px var(--mono);letter-spacing:.16em;text-transform:uppercase;color:var(--muted);max-width:14ch}
+
+/* garantías */
+.guars{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:14px}
+.guar{display:flex;gap:14px;border:1px solid var(--line);border-radius:16px;padding:18px 20px;background:var(--ink-2)}
+.guar-icon{flex:none;width:36px;height:36px;border-radius:10px;display:grid;place-items:center;
+  background:color-mix(in srgb,var(--gold) 16%,transparent);color:var(--gold)}
+.guar b{display:block;font-size:13.5px}
+.guar span{display:block;color:var(--muted);font-size:12.5px;margin-top:2px}
+
+/* catálogo */
+.cats{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:30px}
+.cats span{border:1px solid var(--line);border-radius:99px;padding:8px 18px;font-size:12px;font-weight:600;
+  letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
+.cats span.on{background:var(--bone);color:var(--ink);border-color:var(--bone)}
+.products{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:18px}
+.product{border:1px solid var(--line);border-radius:var(--radius);overflow:hidden;background:var(--ink-2);transition:.3s}
+.product:hover{border-color:color-mix(in srgb,var(--gold) 45%,var(--line));transform:translateY(-4px)}
+.product .ph{aspect-ratio:4/3;position:relative;
+  background:linear-gradient(150deg,#26271f,#191a16)}
+.product .ph::after{content:"FOTO";position:absolute;inset:0;display:grid;place-items:center;
+  font:600 9px var(--mono);letter-spacing:.3em;color:var(--muted)}
+.product .tag{position:absolute;top:12px;left:12px;background:var(--gold);color:var(--gold-ink);
+  font:700 10px var(--mono);letter-spacing:.1em;padding:5px 10px;border-radius:6px;z-index:2}
+.product-body{padding:18px 20px 20px}
+.product-body small{font:600 9.5px var(--mono);letter-spacing:.18em;text-transform:uppercase;color:var(--gold)}
+.product-body h3{font:400 19px var(--serif);margin:8px 0 4px}
+.product-body p{color:var(--muted);font-size:12.5px}
+.product-foot{display:flex;align-items:center;justify-content:space-between;margin-top:14px}
+.price{font:400 20px var(--serif)}
+.price s{color:var(--muted);font-size:14px;margin-right:8px}
+.product-foot a{font:700 10.5px var(--mono);letter-spacing:.14em;text-transform:uppercase;color:var(--gold)}
+
+/* galería */
+.gal{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}
+@media(max-width:700px){.gal{grid-template-columns:repeat(2,1fr)}}
+.gal .ph{aspect-ratio:1;border-radius:14px;position:relative;overflow:hidden;
+  background:linear-gradient(140deg,#23241f,#191a16)}
+.gal .ph:nth-child(even){background:linear-gradient(140deg,#2a2b22,#1d1e18)}
+.gal .ph::after{content:"";position:absolute;inset:0;background:radial-gradient(80% 60% at 60% 30%,color-mix(in srgb,var(--gold) 14%,transparent),transparent)}
+
+/* trayectoria */
+.miles{list-style:none;max-width:640px}
+.mile{display:grid;grid-template-columns:86px 1fr;gap:22px;padding:22px 0;border-bottom:1px dashed var(--line)}
+.mile b{font:400 24px var(--serif);color:var(--gold)}
+.mile p{color:var(--muted);font-size:14px}
+.mile p b{color:var(--bone);font:600 14px var(--sans)}
+
+/* equipo */
+.team{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:14px}
+.mate{border:1px solid var(--line);border-radius:var(--radius);padding:28px 20px;text-align:center;background:var(--ink-2)}
+.mate .mark{width:64px;height:64px;margin:0 auto 14px;border-radius:50%;border:1px solid var(--gold);
+  display:grid;place-items:center;font:400 22px var(--serif);color:var(--gold)}
+.mate b{display:block;font:400 17px var(--serif)}
+.mate span{font:600 10px var(--mono);letter-spacing:.14em;text-transform:uppercase;color:var(--muted)}
+
+/* testimonios */
+.quotes{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:16px}
+.quote{border:1px solid var(--line);border-radius:var(--radius);padding:30px;background:var(--ink-2);position:relative}
+.quote::before{content:"“";position:absolute;top:14px;right:22px;font:400 64px/1 var(--serif);color:var(--gold);opacity:.35}
+.quote blockquote{font:italic 400 17px/1.55 var(--serif)}
+.quote figcaption{margin-top:18px;font:600 10.5px var(--mono);letter-spacing:.16em;text-transform:uppercase;color:var(--muted)}
+.quote .stars{color:var(--gold);letter-spacing:3px;margin-bottom:12px;font-size:12px}
+
+/* planes */
+.plans{display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:16px}
+.plan{border:1px solid var(--line);border-radius:var(--radius);padding:30px 28px;background:var(--ink-2);position:relative}
+.plan.star{border-color:var(--gold)}
+.plan .flag{position:absolute;top:-11px;left:26px;background:var(--gold);color:var(--gold-ink);
+  font:700 9.5px var(--mono);letter-spacing:.16em;text-transform:uppercase;padding:5px 12px;border-radius:99px}
+.plan small{font:600 10.5px var(--mono);letter-spacing:.2em;text-transform:uppercase;color:var(--gold)}
+.plan h3{font:400 24px var(--serif);margin:10px 0 4px}
+.plan .price{margin:14px 0 18px}
+.plan .price b{font:400 38px var(--serif)}
+.plan .price span{color:var(--muted);font-size:12px}
+.plan ul{list-style:none;display:grid;gap:9px;color:var(--muted);font-size:13px}
+.plan ul li::before{content:"—";color:var(--gold);margin-right:8px}
+.plan .btn{width:100%;justify-content:center;margin-top:22px}
+
+/* faq */
+.faqs{max-width:760px;display:grid;gap:10px}
+details{border:1px solid var(--line);border-radius:14px;background:var(--ink-2);padding:0 24px}
+summary{cursor:pointer;list-style:none;font:400 17px var(--serif);padding:18px 0;display:flex;justify-content:space-between;align-items:center}
+summary::after{content:"+";font:300 24px var(--serif);color:var(--gold)}
+details[open] summary::after{content:"–"}
+details p{color:var(--muted);font-size:13.5px;padding:0 0 18px;max-width:60ch}
+
+/* video */
+.video-card{display:flex;align-items:center;gap:22px;border:1px solid var(--line);border-radius:var(--radius);
+  padding:26px 30px;background:linear-gradient(120deg,#1d1e19,#191a16);transition:.25s}
+.video-card:hover{border-color:var(--gold)}
+.video-play{flex:none;width:64px;height:64px;border-radius:50%;background:var(--gold);color:var(--ink);
+  display:grid;place-items:center}
+.video-card b{font:400 20px var(--serif);display:block}
+.video-card span{color:var(--muted);font-size:13px}
+
+/* cta final */
+.cta-band{margin:clamp(56px,9vh,104px) 0;border:1px solid var(--gold);border-radius:32px;
+  padding:clamp(48px,7vw,84px) clamp(28px,5vw,72px);text-align:center;position:relative;overflow:hidden;
+  background:radial-gradient(120% 160% at 50% -20%,color-mix(in srgb,var(--gold) 18%,transparent),var(--ink-2) 55%)}
+.cta-band h2{font:300 clamp(34px,5vw,64px)/1.05 var(--serif)}
+.cta-band h2 em{font-style:italic;color:var(--gold)}
+.cta-band p{color:var(--muted);max-width:48ch;margin:18px auto 0}
+.cta-band .btn{margin-top:34px}
+
+/* contacto */
+.contact-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:1px;background:var(--line);
+  border:1px solid var(--line);border-radius:var(--radius);overflow:hidden}
+.cel{background:var(--ink-2);padding:26px 24px}
+.cel small{display:block;font:600 9.5px var(--mono);letter-spacing:.2em;text-transform:uppercase;color:var(--gold);margin-bottom:10px}
+.cel p{font-size:14px}
+.cel p+p{color:var(--muted);font-size:13px}
+.socials{display:flex;gap:10px;margin-top:26px}
+.socials a{width:42px;height:42px;border:1px solid var(--line);border-radius:50%;display:grid;place-items:center;
+  font:600 10px var(--mono);letter-spacing:.05em;color:var(--muted);transition:.2s}
+.socials a:hover{border-color:var(--gold);color:var(--gold)}
+
+/* footer */
+footer{padding:40px 0 56px}
+.foot{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:18px;
+  font:600 10.5px var(--mono);letter-spacing:.16em;text-transform:uppercase;color:var(--muted)}
+.foot-note{width:100%;margin-top:16px;font:italic 400 13px var(--serif);color:var(--muted);text-transform:none;letter-spacing:0}
+
+/* reveal */
+.reveal{opacity:0;transform:translateY(26px);transition:opacity .8s ease,transform .8s cubic-bezier(.22,1,.36,1)}
+.reveal.in{opacity:1;transform:none}
+@media(prefers-reduced-motion:reduce){.reveal{opacity:1;transform:none}.ribbon-track{animation:none}}
+</style>
+</head>
+<body>
+
+<!-- ANUNCIOS -->
+<div class="ribbon"><div class="ribbon-track">
+  <span><i>◆</i> Envíos a todo el país</span>
+  <span><i>◆</i> Atención personalizada por WhatsApp</span>
+  <span><i>◆</i> Nuevos ingresos cada semana</span>
+  <span><i>◆</i> Envíos a todo el país</span>
+  <span><i>◆</i> Atención personalizada por WhatsApp</span>
+  <span><i>◆</i> Nuevos ingresos cada semana</span>
+</div></div>
+
+<!-- NAV -->
+<nav><div class="nav-in">
+  <div class="brand">
+    <span class="brand-mark">A</span>
+    <span><b>Atelier Norte</b><small>Comercio &amp; oficio</small></span>
+  </div>
+  <div class="nav-links">
+    <a href="#ofrecemos">Qué ofrecemos</a>
+    <a href="#catalogo">Catálogo</a>
+    <a href="#nosotros">Nosotros</a>
+    <a href="#opiniones">Opiniones</a>
+    <a href="#planes">Planes</a>
+    <a href="#contacto">Contacto</a>
+  </div>
+  <a class="nav-cta" href="#contacto">Escribinos</a>
+</div></nav>
+
+<!-- HERO -->
+<header class="hero"><div class="wrap hero-grid">
+  <div>
+    <span class="eyebrow">San Miguel de Tucumán · Desde 2009</span>
+    <h1>Oficio, calidad y<br><em>trato de confianza.</em></h1>
+    <p class="hero-sub">Somos un negocio familiar dedicado a ofrecer productos y servicios seleccionados con criterio. Cada detalle, desde la elección del material hasta la entrega, está pensado para durar.</p>
+    <div class="hero-meta">
+      <span><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 21s7-5.8 7-11a7 7 0 1 0-14 0c0 5.2 7 11 7 11Z"/><circle cx="12" cy="10" r="3"/></svg> Centro, Tucumán</span>
+      <span><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg> Lun a Sáb · 9 a 19 h</span>
+      <span><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m9 12 2 2 4-4"/><circle cx="12" cy="12" r="10"/></svg> Abierto ahora</span>
+    </div>
+    <div class="hero-cta">
+      <a class="btn btn-gold" href="#contacto">Consultar por WhatsApp</a>
+      <a class="btn btn-ghost" href="#catalogo">Ver catálogo</a>
+    </div>
+  </div>
+  <figure class="hero-fig">
+    <div class="ph"></div>
+    <div class="hero-badge"><b>+15 años</b><span>de trayectoria</span></div>
+  </figure>
+</div></header>
+
+<!-- QUÉ OFRECEMOS -->
+<section id="ofrecemos"><div class="wrap">
+  <div class="sec-head">
+    <span class="idx">01 /</span>
+    <h2>Qué <em>ofrecemos</em></h2>
+    <p>Todo lo que el negocio pone a disposición, en un vistazo.</p>
+  </div>
+  <div class="offers">
+    <article class="offer reveal"><span class="num">01</span><h3>Venta minorista</h3><p>Productos seleccionados con stock permanente y renovación semanal.</p></article>
+    <article class="offer reveal"><span class="num">02</span><h3>Pedidos especiales</h3><p>Encargos a medida según la necesidad de cada cliente.</p></article>
+    <article class="offer reveal"><span class="num">03</span><h3>Envíos y entregas</h3><p>Reparto en el día dentro de la ciudad y envíos al interior.</p></article>
+    <article class="offer reveal"><span class="num">04</span><h3>Asesoramiento</h3><p>Acompañamiento personalizado antes, durante y después de la compra.</p></article>
+  </div>
+</div></section>
+
+<!-- NÚMEROS -->
+<section class="stats"><div class="wrap stats-grid">
+  <div class="stat reveal"><b>15+</b><span>Años de experiencia</span></div>
+  <div class="stat reveal"><b>4.800</b><span>Clientes atendidos</span></div>
+  <div class="stat reveal"><b>1.200</b><span>Productos en catálogo</span></div>
+  <div class="stat reveal"><b>4.9★</b><span>Valoración promedio</span></div>
+</div></section>
+
+<!-- SOBRE NOSOTROS -->
+<section id="nosotros"><div class="wrap about">
+  <div>
+    <p class="lede">Un negocio que crece con su gente: <em>cada cliente vuelve</em> porque sabe lo que va a encontrar.</p>
+    <div class="years-card"><b>15</b><span>años de trayectoria</span></div>
+  </div>
+  <div class="about-copy">
+    <p><b>Atelier Norte</b> nació en 2009 como un emprendimiento familiar y hoy es un referente local en calidad y atención. Creemos en el trabajo bien hecho, en los materiales honestos y en el trato directo.</p>
+    <p>Nuestra misión es acercar productos de excelencia con un servicio cercano, sin intermediarios ni vueltas.</p>
+    <div class="about-tags">
+      <span>Selección propia</span><span>Atención directa</span><span>Garantía real</span>
+    </div>
+  </div>
+</div></section>
+
+<!-- GARANTÍAS -->
+<section><div class="wrap">
+  <div class="sec-head">
+    <span class="idx">02 /</span>
+    <h2>Comprá con <em>confianza</em></h2>
+    <p>Las garantías que respaldan cada venta.</p>
+  </div>
+  <div class="guars">
+    <div class="guar"><span class="guar-icon"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z"/><path d="m9 12 2 2 4-4"/></svg></span><div><b>Garantía escrita</b><span>Todos los productos con garantía real del local.</span></div></div>
+    <div class="guar"><span class="guar-icon"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M14 18V6a2 2 0 0 0-2-2H4a2 2 0 0 0-2 2v11a1 1 0 0 0 1 1h2"/><path d="M15 18h-5"/><path d="M15 8h4l4 4v4a1 1 0 0 1-1 1h-1"/><circle cx="7" cy="18" r="2"/><circle cx="17" cy="18" r="2"/></svg></span><div><b>Entrega en el día</b><span>Reparto propio dentro de la ciudad.</span></div></div>
+    <div class="guar"><span class="guar-icon"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="2" y="5" width="20" height="14" rx="2"/><line x1="2" x2="22" y1="10" y2="10"/></svg></span><div><b>Todos los medios de pago</b><span>Efectivo, tarjetas, transferencia y billeteras.</span></div></div>
+    <div class="guar"><span class="guar-icon"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M7.9 20A9 9 0 1 0 4 16.1L2 22Z"/></svg></span><div><b>Respuesta en minutos</b><span>Atención directa por WhatsApp, sin bots.</span></div></div>
+  </div>
+</div></section>
+
+<!-- CATÁLOGO -->
+<section id="catalogo"><div class="wrap">
+  <div class="sec-head">
+    <span class="idx">03 /</span>
+    <h2>Catálogo <em>destacado</em></h2>
+    <p>Una selección de lo más elegido. El catálogo completo se actualiza cada semana.</p>
+  </div>
+  <div class="cats">
+    <span class="on">Todos</span><span>Línea clásica</span><span>Edición limitada</span><span>Ofertas</span><span>Accesorios</span>
+  </div>
+  <div class="products">
+    <article class="product reveal">
+      <div class="ph"><span class="tag">-20%</span></div>
+      <div class="product-body"><small>Línea clásica</small><h3>Pieza Signature</h3><p>El más vendido del local, terminación artesanal.</p>
+        <div class="product-foot"><span class="price"><s>$62.000</s>$49.600</span><a href="#">Consultar →</a></div></div>
+    </article>
+    <article class="product reveal">
+      <div class="ph"></div>
+      <div class="product-body"><small>Edición limitada</small><h3>Serie Atelier N°7</h3><p>Tirada corta, numerada a mano.</p>
+        <div class="product-foot"><span class="price">$88.000</span><a href="#">Consultar →</a></div></div>
+    </article>
+    <article class="product reveal">
+      <div class="ph"><span class="tag">Nuevo</span></div>
+      <div class="product-body"><small>Línea clásica</small><h3>Modelo Norte</h3><p>Ingreso de temporada, stock limitado.</p>
+        <div class="product-foot"><span class="price">$54.900</span><a href="#">Consultar →</a></div></div>
+    </article>
+    <article class="product reveal">
+      <div class="ph"></div>
+      <div class="product-body"><small>Accesorios</small><h3>Kit complemento</h3><p>El complemento ideal para la línea principal.</p>
+        <div class="product-foot"><span class="price">$18.500</span><a href="#">Consultar →</a></div></div>
+    </article>
+  </div>
+</div></section>
+
+<!-- GALERÍA -->
+<section><div class="wrap">
+  <div class="sec-head">
+    <span class="idx">04 /</span>
+    <h2>El local y el <em>trabajo</em></h2>
+    <p>Una muestra del espacio, los materiales y el proceso.</p>
+  </div>
+  <div class="gal"><div class="ph"></div><div class="ph"></div><div class="ph"></div><div class="ph"></div></div>
+</div></section>
+
+<!-- TRAYECTORIA -->
+<section><div class="wrap">
+  <div class="sec-head">
+    <span class="idx">05 /</span>
+    <h2>Nuestra <em>trayectoria</em></h2>
+  </div>
+  <ol class="miles">
+    <li class="mile reveal"><b>2009</b><p><b>Apertura del local.</b> Primeras ventas en el centro de la ciudad.</p></li>
+    <li class="mile reveal"><b>2015</b><p><b>Ampliación.</b> Doblamos el espacio y sumamos la línea premium.</p></li>
+    <li class="mile reveal"><b>2021</b><p><b>Venta online.</b> Catálogo digital y envíos a todo el país.</p></li>
+    <li class="mile reveal"><b>2026</b><p><b>Hoy.</b> Más de 4.800 clientes y un equipo de 6 personas.</p></li>
+  </ol>
+</div></section>
+
+<!-- EQUIPO -->
+<section><div class="wrap">
+  <div class="sec-head">
+    <span class="idx">06 /</span>
+    <h2>El <em>equipo</em></h2>
+    <p>Las personas detrás del mostrador.</p>
+  </div>
+  <div class="team">
+    <div class="mate reveal"><span class="mark">MN</span><b>Marta Núñez</b><span>Fundadora</span></div>
+    <div class="mate reveal"><span class="mark">JR</span><b>Julián Ríos</b><span>Ventas</span></div>
+    <div class="mate reveal"><span class="mark">LP</span><b>Lucía Paz</b><span>Atención al cliente</span></div>
+    <div class="mate reveal"><span class="mark">DA</span><b>Diego Aldao</b><span>Logística</span></div>
+  </div>
+</div></section>
+
+<!-- TESTIMONIOS -->
+<section id="opiniones"><div class="wrap">
+  <div class="sec-head">
+    <span class="idx">07 /</span>
+    <h2>Lo que dicen <em>nuestros clientes</em></h2>
+  </div>
+  <div class="quotes">
+    <figure class="quote reveal"><div class="stars">★★★★★</div><blockquote>Atención impecable y productos de primera. Compro hace años y nunca una falla.</blockquote><figcaption>— Claudia M. · Cliente desde 2016</figcaption></figure>
+    <figure class="quote reveal"><div class="stars">★★★★★</div><blockquote>Pedí por WhatsApp un lunes a la mañana y a la tarde ya lo tenía en casa. No se pide más.</blockquote><figcaption>— Fernando G. · San Miguel de Tucumán</figcaption></figure>
+    <figure class="quote reveal"><div class="stars">★★★★★</div><blockquote>Calidad superior a todo lo que probé en la zona. El asesoramiento marca la diferencia.</blockquote><figcaption>— Rocío V. · Yerba Buena</figcaption></figure>
+  </div>
+</div></section>
+
+<!-- PLANES -->
+<section id="planes"><div class="wrap">
+  <div class="sec-head">
+    <span class="idx">08 /</span>
+    <h2>Planes y <em>membresías</em></h2>
+    <p>Beneficios para quienes nos eligen siempre.</p>
+  </div>
+  <div class="plans">
+    <article class="plan reveal"><small>Cliente frecuente</small><h3>Club Norte</h3>
+      <div class="price"><b>Gratis</b><span> / siempre</span></div>
+      <ul><li>Descuentos exclusivos cada mes</li><li>Acceso anticipado a ofertas</li><li>Acumulación de puntos</li></ul>
+      <a class="btn btn-ghost" href="#contacto">Sumarme</a></article>
+    <article class="plan star reveal"><span class="flag">Más elegido</span><small>Membresía</small><h3>Norte Plus</h3>
+      <div class="price"><b>$9.900</b><span> / mes</span></div>
+      <ul><li>10% off en todo el catálogo</li><li>Envíos gratis en la ciudad</li><li>Atención prioritaria</li><li>Regalo de aniversario</li></ul>
+      <a class="btn btn-gold" href="#contacto">Quiero Plus</a></article>
+    <article class="plan reveal"><small>Empresas</small><h3>Corporativo</h3>
+      <div class="price"><b>A medida</b><span> / convenio</span></div>
+      <ul><li>Precios mayoristas</li><li>Facturación mensual</li><li>Cuenta corriente</li></ul>
+      <a class="btn btn-ghost" href="#contacto">Consultar</a></article>
+  </div>
+</div></section>
+
+<!-- VIDEO -->
+<section><div class="wrap">
+  <div class="sec-head">
+    <span class="idx">09 /</span>
+    <h2>Conocenos en <em>video</em></h2>
+  </div>
+  <a class="video-card" href="#" target="_blank" rel="noopener">
+    <span class="video-play"><svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg></span>
+    <span><b>Así trabajamos, así entregamos</b><span>Un recorrido de 90 segundos por el local y el proceso.</span></span>
+  </a>
+</div></section>
+
+<!-- FAQ -->
+<section><div class="wrap">
+  <div class="sec-head">
+    <span class="idx">10 /</span>
+    <h2>Preguntas <em>frecuentes</em></h2>
+  </div>
+  <div class="faqs">
+    <details open><summary>¿Hacen envíos fuera de la ciudad?</summary><p>Sí, enviamos a todo el país por correo. Dentro de la ciudad, el reparto propio llega en el día.</p></details>
+    <details><summary>¿Qué medios de pago aceptan?</summary><p>Efectivo, todas las tarjetas, transferencia bancaria y billeteras virtuales.</p></details>
+    <details><summary>¿Los productos tienen garantía?</summary><p>Todos los productos incluyen garantía escrita del local, además de la garantía oficial del fabricante.</p></details>
+    <details><summary>¿Puedo hacer un pedido especial?</summary><p>Sí, tomamos encargos a medida. Escribinos por WhatsApp con lo que necesitás y te cotizamos en el día.</p></details>
+  </div>
+</div></section>
+
+<!-- CTA -->
+<div class="wrap"><div class="cta-band reveal">
+  <h2>Hablemos de lo que<br><em>estás buscando.</em></h2>
+  <p>Respondemos en minutos. Contanos qué necesitás y te armamos una propuesta sin compromiso.</p>
+  <a class="btn btn-gold" href="#contacto">Escribir por WhatsApp</a>
+</div></div>
+
+<!-- CONTACTO -->
+<section id="contacto"><div class="wrap">
+  <div class="sec-head">
+    <span class="idx">11 /</span>
+    <h2>Contacto</h2>
+  </div>
+  <div class="contact-grid">
+    <div class="cel"><small>Dirección</small><p>Av. Siempre Viva 742</p><p>Centro, San Miguel de Tucumán</p></div>
+    <div class="cel"><small>WhatsApp</small><p>+54 9 381 555-0142</p><p>Respuesta en minutos</p></div>
+    <div class="cel"><small>Email</small><p>hola@ateliernorte.com</p><p>Cotizaciones y convenios</p></div>
+    <div class="cel"><small>Horarios</small><p>Lun a Vie · 9 a 19 h</p><p>Sábados · 9 a 13 h</p></div>
+  </div>
+  <div class="socials"><a href="#">IG</a><a href="#">FB</a><a href="#">TT</a></div>
+</div></section>
+
+<!-- FOOTER -->
+<footer><div class="wrap foot">
+  <span>© 2026 Atelier Norte</span>
+  <span>Tucumán · Argentina</span>
+  <span>Hecho con Davent</span>
+  <p class="foot-note">Gracias por elegir un negocio local. Cada compra sostiene el trabajo de un equipo real.</p>
+</div></footer>
+
+<script>
+const io = new IntersectionObserver((es) => {
+  es.forEach(e => { if (e.isIntersecting) { e.target.classList.add('in'); io.unobserve(e.target) } })
+}, { threshold: .15 })
+document.querySelectorAll('.reveal').forEach(el => io.observe(el))
+</script>
+</body>
+</html>

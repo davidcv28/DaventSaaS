@@ -139,7 +139,7 @@ class StoreCustomization(models.Model):
     #de rubro (has_design_plus, Estándar). Advanced no agrega diseños hoy.
     TEMPLATE_BASE               =   ('raiz', 'esencial')
     TEMPLATE_PLUS               =   ('mercado', 'gimnasio', 'sastreria', 'moderntec', 'ruta')
-    TEMPLATE_ADVANCED           =   ()
+    TEMPLATE_ADVANCED           =   ('aurum',)
     TEMPLATE_AI                 =   ()
     TEMPLATE_CHOICES            =   [
         ('raiz',          'Esencial'),
@@ -149,6 +149,7 @@ class StoreCustomization(models.Model):
         ('sastreria',     'Sastrería'),
         ('moderntec',     'ModernTec'),
         ('ruta',          'Ruta'),
+        ('aurum',         'Áurea'),
     ]
     #Todo diseño retirado remapea al más cercano del catálogo: una tienda
     #vieja nunca cae al fallback ni rompe el render.

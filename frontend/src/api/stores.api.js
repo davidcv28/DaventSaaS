@@ -767,6 +767,7 @@ export const STORE_TEMPLATES = {
   sastreria:   { label: 'Sastrería',   rubro: 'indumentaria', tier: 'plus',     defaultAccent: '#6E4A2F', desc: 'Sastrería editorial: papel hueso, tinta y cuero, índice numerado y filas de prendas tipo fichero.' },
   moderntec:   { label: 'ModernTec',   rubro: 'tecnologia',   tier: 'plus',     defaultAccent: '#3dd6ff', desc: 'ModernTec: oscuro tecnológico, acento cyan/violeta — tiendas de tecnología, electrónica y gaming.' },
   ruta:        { label: 'Ruta',        rubro: 'turismo',      tier: 'plus',     defaultAccent: '#14443B', desc: 'Ruta: guía de viaje editorial — papel crema, verde pino y ámbar, destinos como tickets y galería de postales.' },
+  aurum:       { label: 'Áurea',       rubro: 'general',      tier: 'advanced', defaultAccent: '#C8A25A', desc: 'Áurea: insignia premium — tinta y dorado, índices numerados y todas las secciones del negocio.' },
 }
 
 // Familias de diseño para el selector del dashboard.
@@ -777,6 +778,7 @@ export const STORE_TEMPLATE_FAMILIES = [
   { key: 'sastreria',    label: 'Indumentaria', caption: 'Sastrería de autor',      templates: ['sastreria'] },
   { key: 'tecnologia',   label: 'Tecnología',   caption: 'Electrónica y gaming',    templates: ['moderntec'] },
   { key: 'turismo',      label: 'Turismo',      caption: 'Viajes y experiencias',   templates: ['ruta'] },
+  { key: 'premium',      label: 'Premium',      caption: 'Insignia para todo rubro', templates: ['aurum'] },
 ]
 export const FAMILY_TEMPLATE_KEYS = STORE_TEMPLATE_FAMILIES.flatMap((f) => f.templates)
 
@@ -787,7 +789,8 @@ export const STORE_TEMPLATE_SKIN = {
   raiz: 'raiz', mercado: 'mercado', gimnasio: 'gimnasio',
   sastreria: 'sastreria',
   moderntec: 'moderntec',
-  ruta: 'raiz'
+  ruta: 'raiz',
+  aurum: 'raiz'
 }
 export function storeSkinOf(t) { return STORE_TEMPLATE_SKIN[t] || 'raiz' }
 
@@ -836,7 +839,8 @@ export function allowedTemplatesFor(benefits = {}) {
 // se resuelve igual por slug en el backend (pattern_for_template), pero el
 // chrome, la piel y las vistas Vue del fallback son las del template base.
 export const STORE_TEMPLATE_RENDER = {
-  ruta: 'raiz'
+  ruta: 'raiz',
+  aurum: 'raiz'
 }
 export function resolveStoreTemplate(value, allowed) {
   const list = Array.isArray(allowed) && allowed.length ? allowed : ['raiz']

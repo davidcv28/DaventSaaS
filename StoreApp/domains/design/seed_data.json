@@ -2940,6 +2940,142 @@
       ],
       "preview": "",
       "concept": "Pino profundo y ámbar: la guía de viaje de noche."
+    },
+    {
+      "slug": "aurum",
+      "nombre": "Áurea",
+      "categoria": "Premium",
+      "descripcion": "Insignia oscura: tinta casi negra, champagne dorado, índices numerados y serif editorial. Premium generalista.",
+      "tier": "advanced",
+      "template": "aurum",
+      "pattern": "aurum",
+      "page_theme": "dark",
+      "tokens": {
+        "palette": {
+          "primary": "#c8a25a",
+          "secondary": "#191a17",
+          "accent": "#c8a25a",
+          "bg": "#111210",
+          "surface": "#191a17",
+          "text": "#f4f0e6",
+          "muted": "#a09c8e",
+          "border": "#2a2b26",
+          "success": "#4caf7d",
+          "danger": "#e0604f"
+        },
+        "containers": {
+          "radius": "xl",
+          "shadow": "medium",
+          "border": "line",
+          "density": "normal",
+          "surface": "flat"
+        },
+        "typography": {
+          "heading": "fraunces",
+          "subheading": "fraunces",
+          "body": "inter",
+          "scale": "balanced",
+          "weightHeading": 400,
+          "letterSpacing": "-0.01em"
+        },
+        "buttons": {
+          "shape": "pill",
+          "style": "solid",
+          "size": "md"
+        },
+        "background": {
+          "type": "solid",
+          "overlay": "none"
+        },
+        "motion": {
+          "reveal": "fade",
+          "hover": "lift",
+          "intensity": "subtle"
+        },
+        "mobile": {
+          "gridCols": 1,
+          "cardStyle": "standard",
+          "heroHeight": "tall"
+        }
+      },
+      "layout": {},
+      "layout_spec": {},
+      "tags": [
+        "general",
+        "premium",
+        "elegante",
+        "dorado"
+      ],
+      "is_default": false,
+      "is_active": true
+    },
+    {
+      "slug": "aurum-dia",
+      "nombre": "Áurea Día",
+      "categoria": "Premium",
+      "descripcion": "La misma insignia en claro: hueso cálido, tinta y dorado.",
+      "tier": "advanced",
+      "template": "aurum",
+      "pattern": "aurum",
+      "page_theme": "light",
+      "tokens": {
+        "palette": {
+          "primary": "#a5823f",
+          "secondary": "#fbf7ec",
+          "accent": "#a5823f",
+          "bg": "#f4f0e6",
+          "surface": "#fffdf6",
+          "text": "#1c1a14",
+          "muted": "#7c7362",
+          "border": "#ddd3bc",
+          "success": "#2e7d54",
+          "danger": "#c94f3d"
+        },
+        "containers": {
+          "radius": "xl",
+          "shadow": "medium",
+          "border": "line",
+          "density": "normal",
+          "surface": "flat"
+        },
+        "typography": {
+          "heading": "fraunces",
+          "subheading": "fraunces",
+          "body": "inter",
+          "scale": "balanced",
+          "weightHeading": 400,
+          "letterSpacing": "-0.01em"
+        },
+        "buttons": {
+          "shape": "pill",
+          "style": "solid",
+          "size": "md"
+        },
+        "background": {
+          "type": "solid",
+          "overlay": "none"
+        },
+        "motion": {
+          "reveal": "fade",
+          "hover": "lift",
+          "intensity": "subtle"
+        },
+        "mobile": {
+          "gridCols": 1,
+          "cardStyle": "standard",
+          "heroHeight": "tall"
+        }
+      },
+      "layout": {},
+      "layout_spec": {},
+      "tags": [
+        "general",
+        "premium",
+        "elegante",
+        "dorado"
+      ],
+      "is_default": false,
+      "is_active": true
     }
   ],
   "patterns": [
@@ -3840,19 +3976,63 @@
       "template": "ruta",
       "layout": {
         "landing": [
-          {"id": "hero", "enabled": true, "order": 0},
-          {"id": "services", "enabled": true, "order": 1},
-          {"id": "about", "enabled": true, "order": 2},
-          {"id": "contact", "enabled": true, "order": 3},
-          {"id": "gallery", "enabled": true, "order": 4}
+          {
+            "id": "hero",
+            "enabled": true,
+            "order": 0
+          },
+          {
+            "id": "services",
+            "enabled": true,
+            "order": 1
+          },
+          {
+            "id": "about",
+            "enabled": true,
+            "order": 2
+          },
+          {
+            "id": "contact",
+            "enabled": true,
+            "order": 3
+          },
+          {
+            "id": "gallery",
+            "enabled": true,
+            "order": 4
+          }
         ],
         "services": [
-          {"id": "hero", "enabled": true, "order": 0},
-          {"id": "band", "enabled": true, "order": 1},
-          {"id": "picker", "enabled": true, "order": 2},
-          {"id": "steps", "enabled": true, "order": 3},
-          {"id": "form", "enabled": true, "order": 4},
-          {"id": "faq", "enabled": true, "order": 5}
+          {
+            "id": "hero",
+            "enabled": true,
+            "order": 0
+          },
+          {
+            "id": "band",
+            "enabled": true,
+            "order": 1
+          },
+          {
+            "id": "picker",
+            "enabled": true,
+            "order": 2
+          },
+          {
+            "id": "steps",
+            "enabled": true,
+            "order": 3
+          },
+          {
+            "id": "form",
+            "enabled": true,
+            "order": 4
+          },
+          {
+            "id": "faq",
+            "enabled": true,
+            "order": 5
+          }
         ]
       },
       "tokens": {
@@ -3883,6 +4063,132 @@
       "variables": {},
       "supports_dark_mode": true,
       "style": "ruta"
+    },
+    {
+      "slug": "aurum",
+      "nombre": "Áurea",
+      "categoria": "premium",
+      "descripcion": "Insignia premium generalista: tinta y dorado, índices numerados, todas las secciones del negocio (ofrecemos, números, garantías, trayectoria, equipo, opiniones, planes, FAQ, video y CTA).",
+      "tier": "advanced",
+      "template": "aurum",
+      "style": "aurum",
+      "layout": {
+        "landing": [
+          {
+            "id": "hero",
+            "enabled": true,
+            "order": 0
+          },
+          {
+            "id": "services",
+            "enabled": true,
+            "order": 1
+          },
+          {
+            "id": "stats",
+            "enabled": true,
+            "order": 2
+          },
+          {
+            "id": "about",
+            "enabled": true,
+            "order": 3
+          },
+          {
+            "id": "benefits",
+            "enabled": true,
+            "order": 4
+          },
+          {
+            "id": "featured",
+            "enabled": true,
+            "order": 5
+          },
+          {
+            "id": "gallery",
+            "enabled": true,
+            "order": 6
+          },
+          {
+            "id": "timeline",
+            "enabled": true,
+            "order": 7
+          },
+          {
+            "id": "team",
+            "enabled": true,
+            "order": 8
+          },
+          {
+            "id": "testimonials",
+            "enabled": true,
+            "order": 9
+          },
+          {
+            "id": "plans",
+            "enabled": true,
+            "order": 10
+          },
+          {
+            "id": "video",
+            "enabled": true,
+            "order": 11
+          },
+          {
+            "id": "faq",
+            "enabled": true,
+            "order": 12
+          },
+          {
+            "id": "cta",
+            "enabled": true,
+            "order": 13
+          },
+          {
+            "id": "contact",
+            "enabled": true,
+            "order": 14
+          }
+        ],
+        "catalog": [
+          {
+            "id": "filters",
+            "enabled": true,
+            "order": 0
+          },
+          {
+            "id": "sort",
+            "enabled": true,
+            "order": 1
+          },
+          {
+            "id": "grid",
+            "enabled": true,
+            "order": 2
+          }
+        ],
+        "services": [
+          {
+            "id": "hero",
+            "enabled": true,
+            "order": 0
+          },
+          {
+            "id": "list",
+            "enabled": true,
+            "order": 1
+          }
+        ]
+      },
+      "supports_dark_mode": true,
+      "tags": [
+        "general",
+        "premium",
+        "elegante",
+        "dorado",
+        "todos"
+      ],
+      "preview": ""
     }
   ]
 }
