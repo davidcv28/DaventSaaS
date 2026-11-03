@@ -20,6 +20,9 @@ const specialties = computed(() => String(custom.value.about_specialties || '')
   .filter(Boolean)
   .slice(0, 12))
 const productCount = computed(() => featured.value.products.length)
+// Sin relato ni especialidades la columna izquierda queda vacía: la sección
+// se rearma en una sola columna (título + registro) en vez de dejar un hueco.
+const hasCopy = computed(() => Boolean(custom.value.about_text?.trim() || specialties.value.length))
 
 // Ficha técnica del negocio: solo filas con dato real (la trayectoria ya la
 // muestra el gauge, no se repite en la lista).
@@ -34,7 +37,7 @@ const registry = computed(() => {
 
 <template>
   <section v-if="hasAbout" id="nosotros" class="mt-about" aria-labelledby="mt-about-title">
-    <div class="mt-wrap mt-about-grid">
+    <div class="mt-wrap mt-about-grid" :class="{ 'is-bare': !hasCopy }">
       <div v-reveal class="mt-about-copy">
         <p class="mt-about-eyebrow mono"><span>02</span> conócenos</p>
         <h2 id="mt-about-title" class="mt-about-title">{{ aboutTitle }}</h2>

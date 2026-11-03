@@ -1024,6 +1024,13 @@
   gap: clamp(28px, 4vw, 56px);
   align-items: start;
 }
+/* Sin relato ni especialidades: una sola columna, el registro debajo. */
+.store-page[data-template='moderntec'] .mt-about-grid.is-bare {
+  grid-template-columns: minmax(0, 1fr);
+  gap: 22px;
+}
+.store-page[data-template='moderntec'] .mt-about-grid.is-bare .mt-registry { max-width: 560px; }
+.store-page[data-template='moderntec'] .mt-about-grid.is-bare .mt-about-title { margin-bottom: 0; }
 .store-page[data-template='moderntec'] .mt-about-eyebrow { margin-bottom: 18px; }
 .store-page[data-template='moderntec'] .mt-about-title {
   font-size: var(--mt-fs-h2);
