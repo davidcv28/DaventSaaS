@@ -62,8 +62,13 @@ html[data-ds-style="esencial-noche"]{color-scheme:dark}
 body{
   margin:0;background:var(--bg);color:var(--ink);
   font-family:var(--font-body);line-height:1.6;overflow-x:hidden;
+  /* El header va fijo también en escritorio: dentro del iframe estirado
+     `sticky` no pega al viewport (el documento no scrollea por dentro) y la
+     navegación desaparecía al bajar. 44px de control + 14px de padding +
+     1px de borde. */
+  padding-top:73px;
 }
-h1,h2,h3{font-family:var(--font-display);line-height:1.1;text-wrap:balance;margin:0}
+h1,h2,h3{font-family:var(--font-display);line-height:1.1;text-wrap:balance;margin:0;overflow-wrap:break-word}
 p{margin:0;text-wrap:pretty}
 img{max-width:100%}
 a{color:inherit}
@@ -103,14 +108,15 @@ a{color:inherit}
 
 /* Cabecera */
 .site-header{
-  position:sticky;top:0;z-index:5;
+  position:fixed;top:0;left:0;right:0;z-index:5;
   background:color-mix(in srgb,var(--bg) 88%,transparent);
   backdrop-filter:blur(8px);border-bottom:1px solid var(--line);
   transition:box-shadow .3s;
 }
 .site-header.scrolled{box-shadow:0 10px 28px -20px color-mix(in srgb,var(--ink) 60%,transparent)}
-.site-header .wrap{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:12px 24px;padding-block:14px}
+.site-header .wrap{display:flex;flex-wrap:nowrap;align-items:center;justify-content:space-between;gap:12px 24px;padding-block:14px}
 .brand{display:inline-flex;align-items:center;gap:10px;font-family:var(--font-display);font-weight:700;font-size:1.25rem;text-decoration:none;min-width:0}
+.brand-name{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .brand .mark{
   width:32px;height:32px;flex:none;border-radius:10px;display:grid;place-items:center;overflow:hidden;
   background:var(--accent);color:var(--accent-ink);font-size:.95rem;
@@ -119,11 +125,15 @@ a{color:inherit}
 .brand .mark img{width:100%;height:100%;object-fit:cover;position:absolute;inset:0}
 .brand .mark{position:relative}
 .brand:hover .mark{transform:rotate(-18deg) scale(1.08)}
-.nav{display:flex;flex-wrap:wrap;gap:6px 20px;align-items:center}
+.nav{display:flex;flex-wrap:wrap;gap:6px 20px;align-items:center;margin-inline-start:auto;flex:none}
+/* El interruptor de tema lo inyecta el puente al final del header: con el
+   auto-margin del nav (escritorio) o del burger (móvil), el toggle queda
+   pegado a ellos a la derecha en vez de abrir un hueco en el medio. */
+.site-header .ds-theme-toggle{margin-inline-start:0}
 /* Menú móvil del dashboard (tab bar + hoja): solo existe bajo 760px. */
 .m-scrim,.m-sheet{display:none}
 .nav-toggle{
-  display:none;place-items:center;width:40px;height:40px;flex:none;
+  display:none;place-items:center;width:44px;height:44px;flex:none;
   border:1px solid var(--line);border-radius:10px;background:var(--surface);
   color:var(--ink);cursor:pointer;transition:border-color .2s,color .2s;
 }
@@ -175,7 +185,12 @@ html[data-ds-surface="services"] .nav a[data-ds-route="services"]::after{transfo
 .stat .txt strong{font-family:var(--font-display);font-size:1rem;font-weight:700;overflow-wrap:anywhere}
 
 /* Cinta de beneficios */
-.ticker{overflow:hidden;border-block:1px solid var(--line);background:var(--surface)}
+.ticker{
+  overflow:hidden;border-block:1px solid var(--line);background:var(--surface);
+  --ticker-fade:clamp(32px,4vw,56px);
+  -webkit-mask-image:linear-gradient(90deg,transparent,#000 var(--ticker-fade),#000 calc(100% - var(--ticker-fade)),transparent);
+  mask-image:linear-gradient(90deg,transparent,#000 var(--ticker-fade),#000 calc(100% - var(--ticker-fade)),transparent);
+}
 .ticker-track{display:flex;gap:48px;width:max-content;padding-block:14px;animation:marquee 28s linear infinite}
 .ticker:hover .ticker-track{animation-play-state:paused}
 .ticker-item{display:inline-flex;align-items:center;gap:10px;font-weight:600;color:var(--muted);white-space:nowrap}
@@ -244,7 +259,7 @@ a[href=""].btn{display:none}
 .filters .ds-cat[aria-pressed="true"]{background:var(--ink);color:var(--bg);border-color:var(--ink)}
 .cat-bar{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:10px 16px;margin-bottom:20px}
 .cat-count{color:var(--muted);font-size:.92rem;font-variant-numeric:tabular-nums}
-.cat-sort{display:inline-flex;align-items:center;gap:8px;color:var(--muted);font-size:.92rem}
+.cat-sort{display:inline-flex;align-items:center;gap:8px;color:var(--muted);font-size:.92rem;letter-spacing:normal;text-transform:none;opacity:1}
 .cat-sort select{
   font:inherit;color:var(--ink);background:var(--surface);
   border:1px solid var(--line);border-radius:var(--radius-btn);padding:8px 10px;
@@ -256,19 +271,24 @@ a[href=""].btn{display:none}
 .cat-crumbs strong{color:var(--ink);font-weight:600}
 
 /* Servicios (fragmento ds-services-list) */
-.services-list,.ds-services-list{list-style:none;margin:0;padding:0;display:grid;border-top:1px solid var(--line)}
+.services-list,.ds-services-list{list-style:none;margin:0;padding:0;display:grid;border-top:1px solid var(--line);counter-reset:svc}
 .ds-service{
-  display:grid;grid-template-columns:56px minmax(0,1fr);gap:20px;align-items:start;
+  display:grid;grid-template-columns:56px minmax(0,1fr);grid-template-rows:auto auto;
+  column-gap:20px;row-gap:4px;align-items:start;
   padding-block:28px;border-bottom:1px solid var(--line);
-  transition:padding-inline .35s var(--ease);
+  transition:padding-inline .35s var(--ease);counter-increment:svc;
 }
 .ds-service:hover{padding-inline:12px}
 .ds-service::before{
-  content:"";width:56px;height:56px;border-radius:16px;
+  grid-column:1;grid-row:1/3;align-self:start;
+  content:counter(svc,decimal-leading-zero);
+  display:grid;place-items:center;width:56px;height:56px;border-radius:16px;
   background:color-mix(in srgb,var(--accent) 12%,transparent);
+  font-family:var(--font-display);font-size:1rem;font-weight:700;line-height:1;
+  letter-spacing:.02em;color:var(--accent);
 }
-.ds-service-name{grid-column:2;font-family:var(--font-display);font-size:1.35rem;line-height:1.2}
-.ds-service-desc{grid-column:2;color:var(--muted);display:block;margin-top:4px}
+.ds-service-name{grid-column:2;grid-row:1;font-family:var(--font-display);font-size:1.35rem;line-height:1.2;overflow-wrap:break-word}
+.ds-service-desc{grid-column:2;grid-row:2;color:var(--muted);display:block;margin-top:0}
 
 /* Suscripciones / membresías (fragmento ds-plan): solo publicidad, el
    alta se coordina por WhatsApp. Sin planes cargados la sección y sus
@@ -285,7 +305,7 @@ body:not(:has(.ds-plan)) a[href="#suscripciones"]{display:none}
   transform:translateY(-4px);border-color:color-mix(in srgb,var(--accent) 45%,var(--line));
   box-shadow:0 18px 36px -26px color-mix(in srgb,var(--ink) 55%,transparent);
 }
-.ds-plan-name{margin:0;font-size:1.2rem}
+.ds-plan-name{margin:0;font-size:1.2rem;overflow-wrap:break-word}
 .ds-plan-price{font-family:var(--font-display);font-size:1.6rem;font-weight:700;color:var(--accent)}
 .ds-plan-price:empty{display:none}
 .ds-plan-note{color:var(--muted);font-size:.92rem}
@@ -363,7 +383,7 @@ body:not(:has(.ds-plan)) a[href="#suscripciones"]{display:none}
 .pdp-rev-head{display:flex;flex-wrap:wrap;align-items:baseline;gap:8px 20px;margin-bottom:18px}
 .pdp-score b{font-family:var(--font-display);font-size:1.8rem}
 .pdp-score span{color:var(--muted)}
-.pdp-rev-head:has(.pdp-score b:empty){display:none}
+.pdp-rev-head:has(.pdp-score b:empty) .pdp-score{display:none}
 .pdp-rev:not(:has(.ds-reviews)){display:none}
 .pdp-rel:not(:has(.ds-product)){display:none}
 .pdp-rel h2,.pdp-box h2,.pdp-rev h2{font-size:clamp(1.5rem,3vw,2rem);margin-bottom:18px}
@@ -371,7 +391,10 @@ body:not(:has(.ds-plan)) a[href="#suscripciones"]{display:none}
 .ds-rev-item{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);padding:16px 18px;display:grid;gap:6px}
 .ds-rev-name{font-weight:700}
 .ds-rev-date{color:var(--muted);font-size:.85rem}
-.ds-rev-vote{color:var(--accent)}
+.ds-rev-vote{display:inline-flex;align-items:center;gap:6px;color:var(--accent)}
+.ds-rev-vote::after{font-size:.85rem;font-weight:600;color:var(--muted)}
+.ds-rev-up::after{content:"Le gustó"}
+.ds-rev-down::after{content:"No le gustó"}
 .ds-rev-down{color:var(--muted)}
 .ds-rev-text{color:var(--muted)}
 
@@ -544,7 +567,7 @@ html[data-ds-style="esencial-premium"][data-ds-theme="dark"] .ticker-item .icon{
 
 @media (max-width:760px){
   .hero-grid,.contact-grid,.pdp-layout{grid-template-columns:minmax(0,1fr)}
-  .ds-service{grid-template-columns:44px minmax(0,1fr);gap:14px}
+  .ds-service{grid-template-columns:44px minmax(0,1fr);gap:4px 14px}
   .ds-service::before{width:44px;height:44px;border-radius:12px}
 
   /* Menú móvil como gimnasio: hamburguesa en la cabecera (fija arriba) +
@@ -555,7 +578,9 @@ html[data-ds-style="esencial-premium"][data-ds-theme="dark"] .ticker-item .icon{
   .nav{display:none}
   .nav-toggle{display:grid;margin-inline-start:auto}
   .site-header{position:fixed;top:0;left:0;right:0}
-  body{padding-top:64px}
+  /* El header fijo mide 44px de control + 14px de padding + 1px de borde:
+     el padding del body tiene que cubrir el alto real, no 64px viejos. */
+  body{padding-top:73px}
   .m-sheet{
     display:flex;flex-direction:column;visibility:hidden;position:fixed;z-index:70;
     inset:0;
@@ -566,12 +591,18 @@ html[data-ds-style="esencial-premium"][data-ds-theme="dark"] .ticker-item .icon{
   .m-sheet-head{position:relative;display:grid;gap:6px;padding:10px 16px 8px;border-bottom:1px solid var(--line)}
   .m-grab{justify-self:center;width:38px;height:4px;border-radius:4px;background:var(--line)}
   .m-sheet-brand{display:flex;align-items:center;gap:10px;min-width:0;padding-right:44px}
-  .m-sheet-brand .mark{display:grid;place-items:center;width:30px;height:30px;border-radius:10px;background:var(--accent);color:var(--accent-ink);font-family:var(--font-display);font-weight:700;font-size:.85rem}
+  .m-sheet-brand .mark{position:relative;overflow:hidden;display:grid;place-items:center;width:30px;height:30px;border-radius:10px;background:var(--accent);color:var(--accent-ink);font-family:var(--font-display);font-weight:700;font-size:.85rem}
+  .m-sheet-brand .mark img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
   .m-sheet-brand strong{font-family:var(--font-display);font-weight:700;font-size:16px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-  .m-close{position:absolute;top:14px;right:12px;display:grid;place-items:center;width:40px;height:40px;border:1px solid var(--line);border-radius:50%;background:var(--bg);color:var(--ink);font-size:22px;line-height:1;cursor:pointer}
-  .m-sheet-nav{display:grid;gap:0;align-content:start;padding:16px 12px calc(16px + env(safe-area-inset-bottom));overflow-y:auto}
+  .m-close{position:absolute;top:14px;right:12px;display:grid;place-items:center;width:44px;height:44px;border:1px solid var(--line);border-radius:50%;background:var(--bg);color:var(--ink);font-size:22px;line-height:1;cursor:pointer}
+  .m-sheet-nav{display:grid;gap:0;align-content:start;padding:16px 12px calc(16px + env(safe-area-inset-bottom));overflow-y:auto;counter-reset:mnav}
   .m-sheet-nav a{display:flex;align-items:center;justify-content:space-between;gap:12px;min-height:56px;padding:8px 12px;border-bottom:1px solid var(--line);font-size:17px;text-decoration:none;color:var(--ink)}
+  /* Numeración viva: al apagar una página (p. ej. Suscripciones sin planes)
+     la lista no salta de 03 a 05. Los display:none no incrementan. */
+  .m-sheet-nav a[data-m-num]{counter-increment:mnav}
   .m-sheet-nav a span:last-child{font-family:var(--font-display);font-size:9.5px;letter-spacing:.14em;color:var(--muted)}
+  .m-sheet-nav a[data-m-num] span:last-child::before{content:counter(mnav,decimal-leading-zero)}
+  .m-sheet-nav a[href=""]{display:none}
   .m-sheet-nav a:hover{color:var(--accent)}
   .m-scrim.open{display:block;position:fixed;inset:0;z-index:69;background:rgba(9,12,10,.55)}
   html.m-lock,html.m-lock body{overflow:hidden}
@@ -606,12 +637,24 @@ html[data-ds-style="esencial-premium"][data-ds-theme="dark"] .ticker-item .icon{
   .ds-product-name{font-size:.98rem}
   .ds-product-price{padding:10px 12px 14px}
   .ds-product-amount{font-size:1.05rem}
-  .ds-product-price[data-off]::after{margin-left:0}
-  .filters{flex-wrap:nowrap;overflow-x:auto;margin-inline:-16px;padding-inline:16px;padding-bottom:4px;scrollbar-width:none;scroll-snap-type:x proximity}
+  /* El descuento se va a la esquina de la imagen: en una tarjeta de 2
+     columnas el precio + tachado + pastilla no entran en una línea y la
+     pastilla quedaba sola abajo, estirando unas tarjetas y no otras. */
+  .ds-product{position:relative}
+  .ds-product-price[data-off]::after{
+    position:absolute;top:10px;right:10px;z-index:2;margin:0;
+  }
+  .filters{
+    flex-wrap:nowrap;overflow-x:auto;margin-inline:-16px;padding-inline:16px;padding-bottom:4px;
+    scrollbar-width:none;scroll-snap-type:x proximity;
+    -webkit-mask-image:linear-gradient(90deg,#000 calc(100% - 28px),transparent);
+    mask-image:linear-gradient(90deg,#000 calc(100% - 28px),transparent);
+  }
   .filters::-webkit-scrollbar{display:none}
   .filters .ds-cat{flex:none;min-height:40px;scroll-snap-align:start}
   .cat-sort select{font-size:16px;min-height:40px}
   .ds-service:hover{padding-inline:0}
+  .ds-service::before{font-size:.9rem}
   .ticker-track{gap:32px;padding-block:12px}
 }
 @media (max-width:360px){
@@ -648,7 +691,7 @@ html[data-ds-style="esencial-premium"][data-ds-theme="dark"] .ticker-item .icon{
   <div class="wrap top-in">
     <a class="brand" href="#inicio" data-ds-route="home">
       <span class="mark">{{store_initial}}<img src="{{store_logo}}" alt=""></span>
-      {{store_name}}
+      <span class="brand-name">{{store_name}}</span>
     </a>
     <nav class="nav" id="site-nav" aria-label="Principal">
       <a href="#inicio" data-ds-route="home">Inicio</a>
@@ -668,17 +711,17 @@ html[data-ds-style="esencial-premium"][data-ds-theme="dark"] .ticker-item .icon{
   <div class="m-sheet-head">
     <span class="m-grab" aria-hidden="true"></span>
     <div class="m-sheet-brand">
-      <span class="mark">{{store_initial}}</span>
+      <span class="mark">{{store_initial}}<img src="{{store_logo}}" alt=""></span>
       <strong>{{store_name}}</strong>
     </div>
     <button class="m-close" type="button" aria-label="Cerrar menú" data-m-close>×</button>
   </div>
   <nav class="m-sheet-nav" aria-label="Todas las secciones">
-    <a href="#inicio" data-ds-route="home" data-m-close><span>Inicio</span><span aria-hidden="true">01</span></a>
-    <a href="#catalogo" data-ds-route="catalog" data-m-close data-flag="catalog"><span>Catálogo</span><span aria-hidden="true">02</span></a>
-    <a href="#servicios" data-ds-route="services" data-m-close data-flag="services"><span>Servicios</span><span aria-hidden="true">03</span></a>
-    <a href="#suscripciones" data-m-close data-flag="plans"><span>Suscripciones</span><span aria-hidden="true">04</span></a>
-    <a href="#contacto" data-m-close data-flag="contact"><span>Contacto</span><span aria-hidden="true">05</span></a>
+    <a href="#inicio" data-ds-route="home" data-m-num data-m-close><span>Inicio</span><span aria-hidden="true"></span></a>
+    <a href="#catalogo" data-ds-route="catalog" data-m-num data-m-close data-flag="catalog"><span>Catálogo</span><span aria-hidden="true"></span></a>
+    <a href="#servicios" data-ds-route="services" data-m-num data-m-close data-flag="services"><span>Servicios</span><span aria-hidden="true"></span></a>
+    <a href="#suscripciones" data-m-num data-m-close data-flag="plans"><span>Suscripciones</span><span aria-hidden="true"></span></a>
+    <a href="#contacto" data-m-num data-m-close data-flag="contact"><span>Contacto</span><span aria-hidden="true"></span></a>
     <a href="{{store_whatsapp_url}}" data-m-close><span>WhatsApp</span><span aria-hidden="true">↗</span></a>
   </nav>
 </div>
@@ -919,11 +962,26 @@ html[data-ds-style="esencial-premium"][data-ds-theme="dark"] .ticker-item .icon{
     var scrim = document.querySelector('.m-scrim');
     var openers = [].slice.call(document.querySelectorAll('[data-m-open]'));
     var closers = [].slice.call(document.querySelectorAll('[data-m-close]'));
+    var lastFocus = null;
     var setOpen = function(open){
       sheet.classList.toggle('open', open);
       if (scrim) scrim.classList.toggle('open', open);
       openers.forEach(function(b){ b.setAttribute('aria-expanded', open ? 'true' : 'false'); });
       document.documentElement.classList.toggle('m-lock', open);
+      // La hoja es modal: el fondo deja de ser focusable y el foco entra
+      // en la cruz al abrir y vuelve al burger al cerrar.
+      [document.querySelector('.site-header'), document.querySelector('main'), document.querySelector('.site-footer')]
+        .forEach(function(el){ if (el) el.inert = open; });
+      if (open) {
+        lastFocus = document.activeElement;
+        var close = sheet.querySelector('.m-close');
+        // La hoja pasa de visibility:hidden a visible en este mismo frame:
+        // enfocar antes de que el navegador recalcule no mueve el foco.
+        if (close) setTimeout(function(){ close.focus(); }, 40);
+      } else if (lastFocus && lastFocus.focus) {
+        lastFocus.focus();
+        lastFocus = null;
+      }
     };
     openers.forEach(function(b){
       b.addEventListener('click', function(){ setOpen(!sheet.classList.contains('open')); });

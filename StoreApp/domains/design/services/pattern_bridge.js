@@ -270,6 +270,20 @@
       parent.postMessage({ type: 'davent:ds-open', url: anchor.getAttribute('href') }, '*')
       return
     }
+    /* Enlaces de sección del chrome (Suscripciones, Contacto): si el
+     * destino existe y se ve en la superficie actual, scrollean dentro del
+     * documento. `data-ds-route` sigue mandando cuando la sección está en
+     * otra superficie (p. ej. desde el catálogo se vuelve al inicio). */
+    var section = t.closest('[data-ds-anchor]')
+    if (section && anchor) {
+      var hash = anchor.getAttribute('href') || ''
+      var sectionEl = hash.charAt(0) === '#' ? document.getElementById(hash.slice(1)) : null
+      if (sectionEl && sectionEl.getClientRects().length) {
+        e.preventDefault()
+        parent.postMessage({ type: 'davent:ds-scroll', top: sectionEl.getBoundingClientRect().top + (window.scrollY || 0) }, '*')
+        return
+      }
+    }
     var link = t.closest('[data-ds-route]')
     if (link) {
       e.preventDefault()
