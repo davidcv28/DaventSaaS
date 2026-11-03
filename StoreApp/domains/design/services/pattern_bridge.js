@@ -133,10 +133,12 @@
    * Se cachea la lista y se re-mide si el documento cambia de tamaño. */
   var frameBox = null
   var pinned = null
+  var pinnedIh = 0
   function collectFixed() {
     pinned = []
     if (!document.body || !window.getComputedStyle) return
     var ih = window.innerHeight || 1
+    pinnedIh = ih
     ;[].forEach.call(document.body.querySelectorAll('*'), function (el) {
       var cs = getComputedStyle(el)
       if (cs.position !== 'fixed') return
@@ -162,6 +164,16 @@
   }
   function pinFixed() {
     if (!frameBox) return
+    /* Si el iframe cambió de alto desde la medición (pasa de ~150px al
+     * alto completo del documento), la clasificación anterior es inválida:
+     * una tab bar medida con viewport chico puede salir como 'top' y quedar
+     * clavada al tope del documento. Se limpian los estilos aplicados —
+     * si no, el rect mediría la posición ya compensada — y se re-mide. */
+    var ih = window.innerHeight || 1
+    if (pinned && Math.abs(ih - pinnedIh) > 2) {
+      ;(pinned || []).forEach(function (p) { p.el.style.top = ''; p.el.style.bottom = '' })
+      pinned = null
+    }
     if (!pinned) collectFixed()
     var dyTop = Math.max(0, -frameBox.top)
     var dyBot = Math.max(0, frameBox.bottom - frameBox.vh)
