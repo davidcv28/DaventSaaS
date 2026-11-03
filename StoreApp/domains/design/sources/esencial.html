@@ -635,7 +635,7 @@ html[data-ds-style="esencial-premium"][data-ds-theme="dark"] .ticker-item .icon{
   body{padding-bottom:calc(92px + env(safe-area-inset-bottom))}
   .m-tabs{
     left:12px;right:12px;bottom:calc(10px + env(safe-area-inset-bottom));
-    gap:4px;padding:6px;border:1px solid var(--line);border-radius:22px;
+    height:64px;gap:4px;padding:6px;border:1px solid var(--line);border-radius:22px;
     background:color-mix(in srgb,var(--surface) 92%,transparent);
     backdrop-filter:blur(16px) saturate(1.4);-webkit-backdrop-filter:blur(16px) saturate(1.4);
     box-shadow:0 16px 36px -16px color-mix(in srgb,var(--ink) 55%,transparent),0 2px 6px -2px color-mix(in srgb,var(--ink) 18%,transparent);
@@ -698,7 +698,7 @@ html[data-ds-style="esencial-premium"][data-ds-theme="dark"] .ticker-item .icon{
   </div>
 </header>
 
-<nav class="m-tabs" aria-label="Secciones principales">
+<nav class="m-tabs" aria-label="Secciones principales" data-ds-pin="bottom">
   <a class="m-tab" href="#inicio" data-ds-route="home">
     <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 10.5 12 3l9 7.5"/><path d="M5 9.5V21h14V9.5"/></svg>
     <span>Inicio</span>
@@ -718,7 +718,7 @@ html[data-ds-style="esencial-premium"][data-ds-theme="dark"] .ticker-item .icon{
 </nav>
 
 <div class="m-scrim" data-m-close aria-hidden="true"></div>
-<div id="m-sheet" class="m-sheet" role="dialog" aria-modal="true" aria-label="Todas las secciones">
+<div id="m-sheet" class="m-sheet" role="dialog" aria-modal="true" aria-label="Todas las secciones" data-ds-pin="bottom">
   <div class="m-sheet-head">
     <span class="m-grab" aria-hidden="true"></span>
     <div class="m-sheet-brand">
