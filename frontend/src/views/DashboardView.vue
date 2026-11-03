@@ -1783,9 +1783,9 @@ const designSitePages = computed(() => {
         // declara el template del patrón en `pages`, no su layout.
         ...templatePages(selectedSitePattern.value.template).filter((k) => !LAYOUT_SURFACE_SET.has(k))
       ])
-  // 'plans' siempre se puede activar: si el diseño no la cubre, la web
-  // pública simplemente no la muestra.
-  pages.add('plans')
+  // 'plans' solo se puede activar cuando el diseño la declara en `pages`
+  // (Ruta/Turismo no la cubre: la opción desaparece del selector).
+  if (templatePages(selectedSitePattern.value?.template || designForm.template).includes('plans')) pages.add('plans')
   return [...pages]
 })
 const allowedSiteTemplates = computed(() =>

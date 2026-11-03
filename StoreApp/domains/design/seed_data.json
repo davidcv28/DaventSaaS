@@ -3835,10 +3835,26 @@
       "slug": "ruta",
       "nombre": "Ruta",
       "categoria": "turismo",
-      "descripcion": "Guía de viaje: escena animada con sol, nubes y ruta punteada, destinos como tickets, servicios en itinerario y galería de postales.",
+      "descripcion": "Guía de viaje: escena animada con sol, nubes y ruta punteada, servicios en itinerario, datos de la empresa y galería de postales.",
       "tier": "plus",
-      "template": "raiz",
-      "layout": {},
+      "template": "ruta",
+      "layout": {
+        "landing": [
+          {"id": "hero", "enabled": true, "order": 0},
+          {"id": "services", "enabled": true, "order": 1},
+          {"id": "about", "enabled": true, "order": 2},
+          {"id": "contact", "enabled": true, "order": 3},
+          {"id": "gallery", "enabled": true, "order": 4}
+        ],
+        "services": [
+          {"id": "hero", "enabled": true, "order": 0},
+          {"id": "band", "enabled": true, "order": 1},
+          {"id": "picker", "enabled": true, "order": 2},
+          {"id": "steps", "enabled": true, "order": 3},
+          {"id": "form", "enabled": true, "order": 4},
+          {"id": "faq", "enabled": true, "order": 5}
+        ]
+      },
       "tokens": {
         "fonts": [
           "instrument-sans",
