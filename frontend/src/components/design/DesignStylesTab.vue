@@ -281,6 +281,40 @@ function openMobilePreview() {
   lastFocusEl = document.activeElement
   emit('update:previewOpen', true)
 }
+// El FAB se esconde al scrollear hacia abajo (en cualquier contenedor) y
+// vuelve al subir o al frenar el scroll: no tapa el contenido ni la
+// savebar mientras el usuario lee.
+const fabHidden = ref(false)
+let lastScrollY = 0
+let fabTimer = null
+function onAnyScroll(e) {
+  if (props.previewOpen || showOpen.value) return
+  const t = e.target
+  const y = t === document ? window.scrollY : (t?.scrollTop ?? window.scrollY)
+  if (Math.abs(y - lastScrollY) < 10) return
+  fabHidden.value = y > lastScrollY && y > 140
+  lastScrollY = y
+  clearTimeout(fabTimer)
+  fabTimer = setTimeout(() => { fabHidden.value = false }, 900)
+}
+// Hoja de vista previa: swipe-down para cerrar (gesto nativo de sheet).
+const pvDrag = ref(0)
+let pvDragStart = null
+function onPvPointerDown(e) {
+  if (e.pointerType === 'mouse' || e.target.closest('button')) return
+  pvDragStart = e.clientY
+  e.currentTarget.setPointerCapture?.(e.pointerId)
+}
+function onPvPointerMove(e) {
+  if (pvDragStart == null) return
+  pvDrag.value = Math.max(0, e.clientY - pvDragStart)
+}
+function onPvPointerEnd() {
+  if (pvDragStart == null) return
+  if (pvDrag.value > 140) closeMobilePreview()
+  pvDrag.value = 0
+  pvDragStart = null
+}
 function closeMobilePreview() {
   emit('update:previewOpen', false)
 }
@@ -306,11 +340,15 @@ onMounted(() => {
   window.addEventListener('keydown', onMobilePreviewKey)
   window.addEventListener('keydown', onShowKey)
   window.addEventListener('resize', onViewport, { passive: true })
+  // capture:true: el scroll del dashboard vive en contenedores internos.
+  window.addEventListener('scroll', onAnyScroll, { passive: true, capture: true })
 })
 onBeforeUnmount(() => {
   window.removeEventListener('keydown', onMobilePreviewKey)
   window.removeEventListener('keydown', onShowKey)
   window.removeEventListener('resize', onViewport)
+  window.removeEventListener('scroll', onAnyScroll, { capture: true })
+  clearTimeout(fabTimer)
   if (props.previewOpen || showOpen.value) document.body.style.overflow = ''
 })
 </script>
@@ -374,7 +412,7 @@ onBeforeUnmount(() => {
 
     <!-- Punto de acceso único a la vista previa en pantallas chicas. -->
     <button
-      v-if="!previewOpen" type="button" class="dmenu-fab"
+      v-if="!previewOpen" type="button" class="dmenu-fab" :class="{ 'fab-off': fabHidden }"
       aria-label="Ver mi web en vista previa" @click="openMobilePreview"
     >
       <span class="dmenu-fab-ico" aria-hidden="true"><AppIcon name="eye" :size="18" /></span>
@@ -448,8 +486,18 @@ onBeforeUnmount(() => {
       <div
         v-if="previewOpen" class="dmenu-pv" role="dialog" aria-modal="true"
         aria-label="Vista previa de tu web"
+        :style="pvDrag ? { transform: `translateY(${pvDrag}px)`, transition: 'none' } : null"
       >
-        <header class="dmenu-pv-head">
+        <div
+          class="dmenu-pv-grip" aria-hidden="true"
+          @pointerdown="onPvPointerDown" @pointermove="onPvPointerMove"
+          @pointerup="onPvPointerEnd" @pointercancel="onPvPointerEnd"
+        ></div>
+        <header
+          class="dmenu-pv-head"
+          @pointerdown="onPvPointerDown" @pointermove="onPvPointerMove"
+          @pointerup="onPvPointerEnd" @pointercancel="onPvPointerEnd"
+        >
           <strong><AppIcon name="eye" :size="16" aria-hidden="true" /> Tu web en vivo</strong>
           <button
             ref="closePvBtn" type="button" class="dmenu-pv-x"
@@ -528,10 +576,15 @@ onBeforeUnmount(() => {
   color: #fff; font: inherit; font-size: 13.5px; font-weight: 650; letter-spacing: -.01em;
   box-shadow: 0 14px 30px -12px rgba(79, 70, 229, .75), 0 0 0 1px rgba(255, 255, 255, .16) inset;
   cursor: pointer; touch-action: manipulation; -webkit-tap-highlight-color: transparent;
-  transition: transform .18s var(--ease-out, cubic-bezier(.2, .8, .2, 1)), box-shadow .18s, filter .18s;
+  user-select: none; -webkit-user-select: none; -webkit-touch-callout: none;
+  transition: transform .22s var(--ease-out, cubic-bezier(.2, .8, .2, 1)), opacity .22s, box-shadow .18s, filter .18s;
 }
-.dmenu-fab:hover { filter: brightness(1.06); }
+@media (hover: hover) and (pointer: fine) {
+  .dmenu-fab:hover { filter: brightness(1.06); }
+}
 .dmenu-fab:active { transform: scale(.96); }
+.dmenu-fab.fab-off { transform: translateY(calc(100% + 24px)); opacity: 0; pointer-events: none; }
+.dmenu-fab.fab-off:active { transform: translateY(calc(100% + 24px)); }
 .dmenu-fab:focus-visible { outline: 2px solid var(--brand-500, #6366f1); outline-offset: 3px; }
 .dmenu-fab-ico { display: grid; place-items: center; width: 26px; height: 26px; border-radius: 50%; background: rgba(255, 255, 255, .2); }
 @media (max-width: 860px) {
@@ -547,10 +600,21 @@ onBeforeUnmount(() => {
   background: color-mix(in srgb, var(--bg, #f8fafc) 94%, transparent);
   backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
   padding: calc(10px + env(safe-area-inset-top)) 12px calc(12px + env(safe-area-inset-bottom));
+  overscroll-behavior: none;
+  transition: transform .3s var(--ease-out, cubic-bezier(.2, .8, .2, 1));
+}
+/* Tirador de la hoja: swipe-down para cerrar (zona de gesto vertical). */
+.dmenu-pv-grip {
+  flex: none; display: grid; place-items: center;
+  margin: -6px 0 -2px; padding: 6px 0 4px; touch-action: pan-x; cursor: grab;
+}
+.dmenu-pv-grip::before {
+  content: ''; width: 44px; height: 5px; border-radius: 99px;
+  background: color-mix(in srgb, var(--ink, #0f172a) 24%, transparent);
 }
 .dmenu-pv-head {
   flex: none; display: flex; align-items: center; justify-content: space-between; gap: 12px;
-  padding: 2px 4px 10px;
+  padding: 2px 4px 10px; touch-action: pan-x;
 }
 .dmenu-pv-head strong {
   display: inline-flex; align-items: center; gap: 8px;
@@ -561,9 +625,12 @@ onBeforeUnmount(() => {
   display: grid; place-items: center; width: 40px; height: 40px; border-radius: 12px;
   border: 1px solid var(--line, #e5e7eb); background: var(--card, #fff); color: var(--ink-2, #334155);
   cursor: pointer; touch-action: manipulation;
+  user-select: none; -webkit-user-select: none; -webkit-tap-highlight-color: transparent;
   transition: background .15s, transform .15s, border-color .15s;
 }
-.dmenu-pv-x:hover { border-color: var(--brand-soft-line, #c7d2fe); }
+@media (hover: hover) and (pointer: fine) {
+  .dmenu-pv-x:hover { border-color: var(--brand-soft-line, #c7d2fe); }
+}
 .dmenu-pv-x:active { transform: scale(.94); }
 .dmenu-pv-body { flex: 1 1 auto; min-height: 0; display: flex; }
 .dmenu-pv-body :deep(.dlp) {
@@ -573,10 +640,8 @@ onBeforeUnmount(() => {
 .dmenu-pv-body :deep(.dlp-stage) { height: 100%; min-height: 0; }
 .dmenu-pv-body :deep(.dlp-stage.mobile) { padding: 10px 0; }
 .dmenu-pv-body :deep(.dlp-stage.mobile .dlp-device) { border-radius: 22px; }
-.dmenu-pv-enter-active, .dmenu-pv-leave-active { transition: opacity .2s ease; }
-.dmenu-pv-enter-active .dmenu-pv-body, .dmenu-pv-leave-active .dmenu-pv-body { transition: transform .22s var(--ease-out, cubic-bezier(.2, .8, .2, 1)); }
-.dmenu-pv-enter-from, .dmenu-pv-leave-to { opacity: 0; }
-.dmenu-pv-enter-from .dmenu-pv-body, .dmenu-pv-leave-to .dmenu-pv-body { transform: translateY(14px); }
+.dmenu-pv-enter-active, .dmenu-pv-leave-active { transition: opacity .22s ease, transform .3s var(--ease-out, cubic-bezier(.2, .8, .2, 1)); }
+.dmenu-pv-enter-from, .dmenu-pv-leave-to { opacity: 0; transform: translateY(4%); }
 
 /* Modal "Qué mostrar": hoja centrada que scrollea su contenido. */
 .dshow { align-items: center; justify-content: center; }
