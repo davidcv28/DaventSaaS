@@ -118,6 +118,10 @@ function onMessage(e) {
   if (e.data?.type !== 'davent:ds-height') return
   const next = Number(e.data.height) || 0
   if (next > 0) height.value = next
+  /* El iframe cambió de alto: el rectángulo del marco quedó viejo y las
+   * barras fijas del documento se posicionan con datos de otro alto —
+   * repostear el frame para que el puente re-mida con el tamaño real. */
+  postFrame()
 }
 
 function post(type, payload) {

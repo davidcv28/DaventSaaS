@@ -190,10 +190,6 @@
     var ih = window.innerHeight || 1
     if (pinned && Math.abs(ih - pinnedIh) > 2) resetFixed()
     if (!pinned) collectFixed()
-    root.setAttribute('data-ds-pin-debug', JSON.stringify({
-      fb: frameBox, ih: window.innerHeight || 1,
-      pins: (pinned || []).map(function (p) { return { cls: p.el.className, prop: p.prop, base: p.base } })
-    }))
     var dyTop = Math.max(0, -frameBox.top)
     var dyBot = Math.max(0, frameBox.bottom - frameBox.vh)
     ;(pinned || []).forEach(function (p) {
@@ -255,7 +251,6 @@
     if (d.type === 'davent:ds-measure') send()
     if (d.type === 'davent:ds-frame') {
       frameBox = { top: Number(d.top) || 0, bottom: Number(d.bottom) || 0, vh: Number(d.vh) || 0 }
-      window.__dsFrame = frameBox
       pinFixed()
     }
   })
