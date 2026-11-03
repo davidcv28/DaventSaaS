@@ -7,11 +7,24 @@
 <style>
   :root{
     --sand:#f4ecdc; --sand-2:#eee2c9; --ink:#20332c; --muted:#6f7f74;
-    --pine:#14443b; --sun:#e8a33d; --coral:#d95f3b; --sky:#a8ccc4;
+    --pine:#14443b; --pine-ink:#14443b; --sun:#e8a33d; --coral:#d95f3b; --sky:#a8ccc4;
     --accent:var(--ds-accent,#14443b); --radius:var(--ds-radius,18px);
     --line:#d8cbb0; --card:#fbf6ea;
     --ease:cubic-bezier(.22,1,.36,1);
   }
+  /* Noche: el toggle del diseño (o el estilo Ruta Noche) invierte la
+     paleta. --pine queda como superficie oscura; --pine-ink es la tinta
+     verde legible sobre fondo oscuro. */
+  html[data-ds-theme="dark"]:not([data-ds-style="ruta-noche"]),
+  html[data-ds-style="ruta-noche"]{
+    --sand:#0f2620; --sand-2:#16332b; --ink:#f0e9d8; --muted:#a3b4a8;
+    --pine-ink:#9fd8c2; --sun:#f0b95a; --coral:#e5735c; --sky:#7fb89e;
+    --line:#2a4a3f; --card:#16332b;
+    --accent:color-mix(in srgb,var(--ds-accent,#f0b95a) 55%,#f0e9d8);
+    color-scheme:dark;
+  }
+  html:not([data-ds-theme="dark"]):not([data-ds-style="ruta-noche"]){color-scheme:light}
+  html[data-ds-style="ruta-noche"]{color-scheme:dark}
   *{box-sizing:border-box}
   img[src=""]{display:none}
   body{margin:0;background:var(--sand);color:var(--ink);line-height:1.55;
@@ -42,7 +55,7 @@
   .hero{position:relative;display:grid;grid-template-columns:1.05fr .95fr;gap:40px;align-items:center;
     padding:56px 0 64px;overflow:hidden}
   .stamp{display:inline-flex;align-items:center;gap:8px;font-size:11px;font-weight:700;letter-spacing:.18em;
-    text-transform:uppercase;color:var(--pine);border:1.5px dashed var(--pine);border-radius:8px;padding:7px 12px;
+    text-transform:uppercase;color:var(--pine-ink);border:1.5px dashed var(--pine-ink);border-radius:8px;padding:7px 12px;
     transform:rotate(-2deg);background:var(--card)}
   .hero h1{font-size:clamp(38px,5.4vw,72px);margin:22px 0 18px;max-width:16ch}
   .hero h1 em{font-style:italic;color:var(--coral)}
@@ -74,10 +87,10 @@
   @keyframes drift{from{left:-30%}to{left:110%}}
   .scene svg.mts{position:absolute;bottom:0;left:0;width:100%;height:62%;z-index:1}
   .scene svg.route{position:absolute;inset:0;width:100%;height:100%;z-index:2}
-  .route .path{fill:none;stroke:var(--pine);stroke-width:2.5;stroke-linecap:round;stroke-dasharray:2 10;
+  .route .path{fill:none;stroke:var(--pine-ink);stroke-width:2.5;stroke-linecap:round;stroke-dasharray:2 10;
     animation:routeRun 2.4s linear infinite}
   @keyframes routeRun{to{stroke-dashoffset:-24}}
-  .plane{position:absolute;z-index:3;width:30px;height:30px;color:var(--pine);
+  .plane{position:absolute;z-index:3;width:30px;height:30px;color:var(--pine-ink);
     offset-path:path("M-40 300 C 120 240, 200 320, 300 210 S 460 120, 560 160");
     offset-rotate:auto;animation:fly 14s linear infinite}
   @keyframes fly{from{offset-distance:0%}to{offset-distance:100%}}
@@ -105,13 +118,13 @@
   .loop:hover .loop-track{animation-play-state:paused}
   @keyframes loop{to{transform:translateX(-50%)}}
   .loop span{display:inline-flex;align-items:center;gap:10px;font-family:"Fraunces",serif;font-size:17px;
-    font-style:italic;color:var(--pine)}
+    font-style:italic;color:var(--pine-ink)}
   .loop svg{color:var(--sun)}
 
   /* ===== Categorías como sellos ===== */
   .chips{display:flex;flex-wrap:wrap;gap:10px;margin:34px 0 8px}
   .chips .ds-cat{font-size:12px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;
-    border:1.5px solid var(--pine);color:var(--pine);padding:8px 16px;border-radius:99px;background:var(--card);
+    border:1.5px solid var(--pine-ink);color:var(--pine-ink);padding:8px 16px;border-radius:99px;background:var(--card);
     transition:background .25s,color .25s,transform .25s var(--ease)}
   .chips .ds-cat:hover{background:var(--pine);color:var(--card);transform:rotate(-2deg) translateY(-2px)}
 
@@ -185,7 +198,7 @@
     padding:14px 4px;border-bottom:1.5px dashed var(--line);font-size:13.5px}
   .ficha-list li>span{font-size:10.5px;letter-spacing:.14em;text-transform:uppercase;color:var(--muted);font-weight:700}
   .ficha-list li b{font-family:"Fraunces",serif;font-weight:600;text-align:right}
-  .ficha-list a{color:var(--pine);font-weight:700;border-bottom:1.5px solid var(--sun)}
+  .ficha-list a{color:var(--pine-ink);font-weight:700;border-bottom:1.5px solid var(--sun)}
   .ficha-list a[href=""]{display:none}
   .ficha-list li:has(>:is(b:empty,a[href=""])){display:none}
 
@@ -224,7 +237,7 @@
   .cat-tools{display:flex;flex-wrap:wrap;gap:14px;align-items:center;margin-bottom:26px}
   .cat-tools [data-ds-filters]{display:flex;flex-wrap:wrap;gap:8px}
   .cat-tools [data-ds-filters] button{font:inherit;font-size:12px;font-weight:700;letter-spacing:.05em;
-    text-transform:uppercase;border:1.5px solid var(--pine);background:var(--card);color:var(--pine);
+    text-transform:uppercase;border:1.5px solid var(--pine-ink);background:var(--card);color:var(--pine-ink);
     padding:7px 14px;border-radius:99px;cursor:pointer;transition:background .2s,color .2s}
   .cat-tools [data-ds-filters] button.is-on,[data-ds-filters] button:hover{background:var(--pine);color:var(--card)}
   .cat-sort{margin-left:auto;font-size:12px;color:var(--muted);display:flex;align-items:center;gap:8px}
@@ -247,7 +260,7 @@
 
   /* ===== Ficha: pasaje ===== */
   .pdp-crumb{display:flex;justify-content:space-between;font-size:12.5px;color:var(--muted);margin-bottom:24px}
-  .pdp-crumb a{font-weight:700;color:var(--pine)}
+  .pdp-crumb a{font-weight:700;color:var(--pine-ink)}
   .pdp-grid{display:grid;grid-template-columns:1.05fr .95fr;gap:34px;align-items:start}
   .pdp-media{margin:0;position:relative}
   .pdp-media img{width:100%;aspect-ratio:4/3.4;object-fit:cover;border-radius:22px;display:block;
@@ -287,7 +300,7 @@
   .ds-rev-item{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);padding:18px 20px}
   .ds-rev-name{font-family:"Fraunces",serif;font-size:16px}
   .ds-rev-date{display:block;font-size:11.5px;color:var(--muted);margin:3px 0 8px}
-  .ds-rev-vote{display:inline-flex;color:var(--pine);margin-right:8px}
+  .ds-rev-vote{display:inline-flex;color:var(--pine-ink);margin-right:8px}
   .ds-rev-down{color:var(--coral)}
   .ds-rev-text{margin:6px 0 0;font-size:13.5px;color:var(--muted)}
   .ds-rev-form{margin-top:18px}
@@ -298,7 +311,7 @@
   footer{display:flex;flex-wrap:wrap;gap:14px;align-items:center;justify-content:space-between;
     padding:34px 0 46px;border-top:1.5px dashed var(--line);font-size:13px;color:var(--muted)}
   footer .foot-links{display:flex;gap:16px}
-  footer .wa-link{font-weight:700;color:var(--pine)}
+  footer .wa-link{font-weight:700;color:var(--pine-ink)}
   footer .wa-link[href=""]{display:none}
   .wa-link{border-bottom:1.5px solid var(--sun)}
 
@@ -313,12 +326,12 @@
     .route-sec{padding:40px 26px}
     .cat-sort{margin-left:0}
     /* tab bar */
-    .m-tabs{display:flex;position:fixed;left:12px;right:12px;bottom:12px;z-index:60;background:#fbf6eaf2;
+    .m-tabs{display:flex;position:fixed;left:12px;right:12px;bottom:12px;z-index:60;background:color-mix(in srgb,var(--card) 94%,transparent);
       backdrop-filter:blur(10px);border:1px solid var(--line);border-radius:18px;padding:8px;
       box-shadow:0 12px 32px -12px rgba(32,51,44,.4)}
     .m-tab{flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;font:inherit;font-size:10px;
       font-weight:700;color:var(--muted);background:none;border:0;padding:8px 4px;border-radius:12px;cursor:pointer}
-    .m-tab.is-on{color:var(--pine);background:#14443b12}
+    .m-tab.is-on{color:var(--pine-ink);background:#14443b12}
     .m-scrim{display:block;position:fixed;inset:0;z-index:70;background:#20332c66;opacity:0;pointer-events:none;transition:opacity .3s}
     .m-scrim.open{opacity:1;pointer-events:auto}
     .m-sheet{display:block;position:fixed;left:0;right:0;bottom:0;z-index:80;background:var(--card);
@@ -327,7 +340,7 @@
     .m-sheet.open{transform:none}
     .m-grab{display:block;width:44px;height:4px;border-radius:99px;background:var(--line);margin:0 auto 14px}
     .m-sheet-head{display:flex;align-items:center;gap:12px;margin-bottom:14px}
-    .m-sheet-head .mark{width:38px;height:38px;border-radius:50%;background:var(--pine);color:var(--card);
+    .m-sheet-head .mark{width:38px;height:38px;border-radius:50%;background:var(--pine);color:#eaf3ec;
       display:grid;place-items:center;font-family:"Fraunces",serif;font-size:18px}
     .m-sheet-head strong{font-family:"Fraunces",serif;font-size:19px;margin-right:auto}
     .m-close{font:inherit;font-size:22px;background:none;border:0;color:var(--muted);cursor:pointer;padding:4px 8px}

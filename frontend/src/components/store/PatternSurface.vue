@@ -31,8 +31,13 @@ const props = defineProps({
 const frame = ref(null)
 const height = ref(0)
 
+//El tema va en la URL solo en la carga inicial: al alternar claro/oscuro
+//el puente (`davent:ds-theme`) cambia data-ds-theme sin recargar el
+//documento — si theme estuviera en el src reactivo, cada toggle recargaría
+//el iframe y la página saltaría.
+const mountTheme = props.theme
 const src = computed(() => {
-  const params = new URLSearchParams({ theme: props.theme, surface: props.surface })
+  const params = new URLSearchParams({ theme: mountTheme, surface: props.surface })
   if (props.preview) params.set('preview', props.preview)
   if (props.preview && props.template) params.set('template', props.template)
   if (props.revision) params.set('v', props.revision)
