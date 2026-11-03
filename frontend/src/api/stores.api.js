@@ -282,14 +282,6 @@ export const storesApi = {
     return data
   },
 
-  // Chat de diseño ("Diseñar con IA", has_ai_chat): el mensaje se interpreta
-  // con el motor de ai_design y vuelve {reply, patch, proposal_id, seed,
-  // needs}. El patch NO se aplica solo: se confirma con updateCustomization.
-  async aiDesignChat({ message, history = [] }) {
-    const { data } = await http.post('/stores/ai-design/chat/', { message, history })
-    return data
-  },
-
   // Wizard "Diseño asistido": el pedido viaja como estructura de dato
   // ({rubro, goals, tone, audience, must_have, notes}) y el MCP del backend
   // decide qué skill de diseño aplicar. Devuelve el mismo contrato que
