@@ -203,7 +203,11 @@
           p.base = Math.max(0, ih2 - (r2.bottom - ty2))
         }
         var docBot = Math.min(frameBox.vh - frameBox.top, frameBox.bottom - frameBox.top)
-        p.el.style.bottom = ''
+        /* `bottom` hay que neutralizarlo ('auto'), no limpiarlo (''): con
+         * '' vuelve el bottom del CSS y top+bottom estiran el elemento a
+         * todo el documento. El alto se mide DESPUÉS de soltar el bottom —
+         * si no, offsetHeight informa el documento entero. */
+        p.el.style.bottom = 'auto'
         p.el.style.top = Math.max(0, docBot - p.el.offsetHeight - p.base) + 'px'
       } else {
         p.el.style.bottom = ''
