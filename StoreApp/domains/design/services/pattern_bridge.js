@@ -150,7 +150,12 @@
        * está cerca del borde inferior del viewport y el elemento no llega
        * a la mitad superior, es de abajo. */
       var r = el.getBoundingClientRect()
-      if (ih - r.bottom < ih * 0.25 && r.top > ih * 0.5) {
+      /* El anclaje se puede declarar a mano (`data-ds-pin="top|bottom"`):
+       * la heurística por rectángulo depende del viewport del momento y
+       * una medición temprana (iframe sin estirar) salía invertida. */
+      var hint = (el.getAttribute('data-ds-pin') || '').toLowerCase()
+      if (hint !== 'bottom' && ih - r.bottom < ih * 0.25 && r.top > ih * 0.5) hint = 'bottom'
+      if (hint === 'bottom') {
         //La base es el bottom SIN transform: una hoja cerrada con
         //translateY(110%) informa un bottom negativo que no es el real.
         var ty = 0
@@ -178,9 +183,19 @@
     var dyTop = Math.max(0, -frameBox.top)
     var dyBot = Math.max(0, frameBox.bottom - frameBox.vh)
     ;(pinned || []).forEach(function (p) {
-      var other = p.prop === 'top' ? 'bottom' : 'top'
-      if (p.el.style[other]) p.el.style[other] = ''
-      p.el.style[p.prop] = (p.base + (p.prop === 'top' ? dyTop : dyBot)) + 'px'
+      if (p.prop === 'bottom') {
+        /* Posición directa por `top`: el borde visible inferior dentro del
+         * documento del iframe es min(vh-top, bottom-top); el elemento se
+         * apoya ahí respetando su margen original (base). Nada de
+         * `bottom`: el valor dependía del alto del documento y una mala
+         * clasificación lo mandaba al otro extremo. */
+        var docBot = Math.min(frameBox.vh - frameBox.top, frameBox.bottom - frameBox.top)
+        p.el.style.bottom = ''
+        p.el.style.top = Math.max(0, docBot - p.el.offsetHeight - p.base) + 'px'
+      } else {
+        p.el.style.bottom = ''
+        p.el.style.top = (p.base + dyTop) + 'px'
+      }
     })
   }
   window.addEventListener('resize', function () { pinned = null; pinFixed() })
