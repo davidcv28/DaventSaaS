@@ -16,7 +16,7 @@ const ctx = inject('storePage')
 // Aviso configurable del dueño: tira informativa arriba del catálogo
 // (envíos, medios de pago, retiro). Vacío -> no se muestra. Es un bloque
 // del layout del catálogo ('note'): el editor puede apagarlo.
-const catalogBlock = (id) => templateBlock(ctx?.pageTemplate?.value, 'catalog', id)
+const catalogBlock = (id) => templateBlock(ctx?.pageTemplate?.value, 'catalog', id, ctx?.custom?.value?.layout_config)
 const catalogNote = computed(() => (ctx?.custom?.value?.catalog_note || '').trim())
 const component = computed(() => surfaceComponent(ctx?.pageTemplate?.value, 'catalog'))
 // Las variantes de composición de 'grid' y 'filters' viajan como

@@ -47,6 +47,8 @@ PATTERN_VARIABLES = {
     'store_instagram_url': {'type': 'text', 'label': 'Instagram'},
     'store_facebook_url': {'type': 'text', 'label': 'Facebook'},
     'store_tiktok_url':  {'type': 'text',  'label': 'TikTok'},
+    'store_maps_url':    {'type': 'text',  'label': 'Link al mapa'},
+    'contact_form':      {'type': 'list',  'label': 'Formulario de contacto'},
     'store_logo':        {'type': 'image', 'label': 'Logo'},
     'store_cover':       {'type': 'image', 'label': 'Portada'},
     'store_accent':      {'type': 'color', 'label': 'Color de acento'},
@@ -202,6 +204,40 @@ def _page_flags(store, customization):
         'reviews':      on('show_reviews', False),
         'comments':     on('show_comments', False),
     }
+
+#Bloques de "Qué mostrar" (layout_config) que comparten nombre con las
+#zonas `data-flag` del documento: apagarlos apaga la zona igual que el
+#show_*. 'catalog' y 'services' quedan fuera a propósito: son páginas
+#(site_templates) y sus bloques de inicio comparten el flag con la
+#superficie entera — un toggle de sección no puede apagar la página.
+_BLOCK_FLAGS = frozenset({
+    'about', 'announcements', 'benefits', 'contact', 'countdown', 'brands',
+    'cta', 'faq', 'gallery', 'highlights', 'offers', 'plans', 'stats',
+    'team', 'testimonials', 'timeline', 'video',
+})
+
+def _zone_flags(flags, customization):
+    """
+    Flags de zona = flags de página ∪ bloques apagados en "Qué mostrar"
+    (layout_config: {superficie: {blocks: [{id, enabled:false}]}}). El
+    filtro de superficies sigue usando los flags de página: un bloque
+    apagado oculta sus zonas `data-flag` pero nunca quita una página.
+    """
+    layout = getattr(customization, 'layout_config', None) if customization is not None else None
+    if not isinstance(layout, dict):
+        return flags
+    off = set()
+    for surface in layout.values():
+        blocks = surface.get('blocks') if isinstance(surface, dict) else None
+        if not isinstance(blocks, list):
+            continue
+        for block in blocks:
+            if isinstance(block, dict) and block.get('enabled') is False:
+                off.add(str(block.get('id') or ''))
+    off &= _BLOCK_FLAGS
+    if not off:
+        return flags
+    return {name: enabled and name not in off for name, enabled in flags.items()}
 
 def _product_fragment(store, products = None, flags = None):
     from StoreApp.domains.catalog.models import Product
@@ -514,6 +550,21 @@ def _announcements_fragment(customization, flags):
             )
     return ''.join(notes)
 
+def _contact_fragment(store, flags):
+    """
+    Contenedor del formulario "Contáctanos": el puente arma los campos,
+    pide el captcha y publica por `ds-api` — mismos endpoints que el
+    bloque Vue `contact` (email + honeypot + captcha firmado).
+    """
+    if not flags.get('contact', True):
+        return ''
+    slug = store.slug
+    return (
+        f'<div class="ds-contact" data-ds-contact '
+        f'data-url="/api/stores/public/{slug}/contact/" '
+        f'data-cap-url="/api/stores/public/{slug}/contact/captcha/"></div>'
+    )
+
 def _gallery_fragment(store, customization):
     from StoreApp.domains.stores.models import StoreGalleryImage
     from StoreApp.domains.stores.services.storage import object_url
@@ -725,6 +776,7 @@ def build_store_context(store, product = None, flags = None):
     headline = _text(getattr(customization, 'headline', ''), 140)
     about = _text(getattr(customization, 'about_text', ''), 400)
     from django.utils import timezone
+    from StoreApp.domains.stores.services import contact_redirect_path
 
     context = {
         'store_name': name,
@@ -747,6 +799,7 @@ def build_store_context(store, product = None, flags = None):
         'store_instagram_url': _contact_link(store, customization, 'instagram', 'instagram'),
         'store_facebook_url': _contact_link(store, customization, 'facebook', 'facebook'),
         'store_tiktok_url': _contact_link(store, customization, 'tiktok', 'tiktok'),
+        'store_maps_url': contact_redirect_path(store, 'maps') if address else '',
         'store_logo': '',
         'store_cover': '',
         'store_accent': '',
@@ -781,6 +834,7 @@ def build_store_context(store, product = None, flags = None):
         'timeline': _timeline_fragment(customization, flags),
         'team': _team_fragment(customization, flags),
         'announcements': _announcements_fragment(customization, flags),
+        'contact_form': _contact_fragment(store, flags),
         'gallery': _gallery_fragment(store, customization),
     }
     product_ctx, product_raw = _product_values(store, product, customization, name, flags = flags)
@@ -908,7 +962,8 @@ def render_store_pattern(store, customization = None, product = None):
     if pattern is None or not (pattern.html or '').strip():
         return None
     flags = _page_flags(store, customization)
-    context, raw = build_store_context(store, product, flags = flags)
+    zone_flags = _zone_flags(flags, customization)
+    context, raw = build_store_context(store, product, flags = zone_flags)
     html = pattern.render(context, raw = raw)
     from StoreApp.domains.catalog.models import Product
 
@@ -925,7 +980,7 @@ def render_store_pattern(store, customization = None, product = None):
         surfaces = [name for name in surfaces if name != 'services']
     flags_css = ''.join(
         f'[data-flag="{name}"]{{display:none!important}}'
-        for name, enabled in flags.items() if not enabled
+        for name, enabled in zone_flags.items() if not enabled
     )
     return {
         'slug': pattern.slug,
