@@ -35,6 +35,11 @@ html[data-ds-style="aurum-dia"]{
 }
 html:not([data-ds-theme="light"]):not([data-ds-style="aurum-dia"]){color-scheme:dark}
 html[data-ds-style="aurum-dia"]{color-scheme:light}
+/*Los huecos de imagen acompañan el tema: en claro no son manchas negras.*/
+html[data-ds-theme="light"] .hero-fig .ph{background:linear-gradient(160deg,#e9dfc9,#f4f0e6 60%,#e4d9c2)}
+html[data-ds-theme="light"] .ds-product-img.is-empty{background:linear-gradient(150deg,#e9dfc9,#f4f0e6)}
+html[data-ds-theme="light"] .gal .ds-shot{background:linear-gradient(140deg,#e9dfc9,#f4f0e6)}
+html[data-ds-theme="light"] .pdp-shot{background:linear-gradient(150deg,#e9dfc9,#f4f0e6)}
 *{box-sizing:border-box}
 img[src=""]{display:none}
 body{margin:0;background:var(--ink);color:var(--bone);font-family:var(--sans);
@@ -51,7 +56,9 @@ html[data-ds-surface="services"] [data-surface]:not([data-surface="services"]),
 html[data-ds-surface="product"] [data-surface]:not([data-surface="product"]){display:none!important}
 /* Zona vacía → sección apagada */
 .ds-zone:empty{display:none!important}
-[data-flag]:has(.ds-zone:empty){display:none!important}
+/*Una sección con varias zonas (catálogo: categorías + productos) solo se
+  apaga si TODAS quedaron vacías; contacto nunca se apaga por su formulario.*/
+[data-flag]:has(.ds-zone:empty):not(:has(.ds-zone:not(:empty))):not(:has(.contact-2)){display:none!important}
 .m-lock{overflow:hidden}
 
 /* ===== Cinta de anuncios ===== */
@@ -72,6 +79,9 @@ section[id]{scroll-margin-top:84px}
   padding:15px clamp(20px,4vw,48px);max-width:1180px;margin:0 auto}
 .brand{display:flex;align-items:center;gap:12px;min-width:0}
 .brand img{width:38px;height:38px;object-fit:contain;border-radius:50%}
+.brand img[src=""]{display:none}
+/*Con logo cargado no se duplica la inicial.*/
+.brand img:not([src=""]) + .brand-mark{display:none}
 .brand-mark{width:38px;height:38px;flex:none;border:1px solid var(--gold);border-radius:50%;
   display:grid;place-items:center;font:400 18px var(--serif);color:var(--gold)}
 .brand b{font:500 17px var(--serif);letter-spacing:.02em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
@@ -84,6 +94,26 @@ section[id]{scroll-margin-top:84px}
 .top .pill:hover{background:var(--gold);color:var(--gold-ink)}
 .top .pill[href=""]{display:none}
 @media(max-width:900px){.top nav{display:none}}
+/*En superficies internas los anclajes que viven en la landing no existen:
+  se ocultan para no dejar enlaces muertos en el menú.*/
+html[data-ds-surface="catalog"] .top nav a[href="#nosotros"],
+html[data-ds-surface="catalog"] .top nav a[href="#planes"],
+html[data-ds-surface="services"] .top nav a[href="#nosotros"],
+html[data-ds-surface="services"] .top nav a[href="#planes"],
+html[data-ds-surface="product"] .top nav a[href="#nosotros"],
+html[data-ds-surface="product"] .top nav a[href="#planes"]{display:none}
+/*El contacto es compartido, pero su "12 /" es numeración de la landing:
+  en catálogo/servicios/ficha sobra.*/
+html[data-ds-surface="catalog"] #contacto .idx,
+html[data-ds-surface="services"] #contacto .idx,
+html[data-ds-surface="product"] #contacto .idx{display:none}
+/*En móvil el botón de WhatsApp se come el nombre: queda en la hoja y en el
+  héroe, y el encabezado respira con el logo + tema.*/
+@media(max-width:600px){
+  .top-in{gap:12px}
+  .top .pill{display:none}
+  .top .ds-theme-toggle{width:38px;height:38px}
+}
 
 /* Menú móvil: tab bar + hoja */
 .m-tabs,.m-scrim,.m-sheet{display:none}
@@ -96,6 +126,8 @@ section[id]{scroll-margin-top:84px}
     border:0;background:none;color:var(--muted);font:600 10px var(--mono);letter-spacing:.08em;
     text-transform:uppercase;border-radius:14px;cursor:pointer}
   .m-tab.is-on{color:var(--gold);background:color-mix(in srgb,var(--gold) 12%,transparent)}
+  /*Cinco pestañas en 320px: la etiqueta se aprieta para no cortarse.*/
+  @media(max-width:360px){.m-tab{font-size:9px;letter-spacing:.02em;padding:9px 2px}}
   .m-scrim{display:block;position:fixed;inset:0;z-index:56;background:rgba(0,0,0,.55);
     opacity:0;pointer-events:none;transition:opacity .3s}
   .m-scrim.open{opacity:1;pointer-events:auto}
@@ -116,6 +148,7 @@ section[id]{scroll-margin-top:84px}
   .m-sheet-nav{display:grid}
   .m-sheet-nav a{display:flex;align-items:center;justify-content:space-between;padding:15px 4px;
     border-top:1px solid var(--line-soft);font:400 19px var(--serif)}
+  .m-sheet-nav a[href=""]{display:none}
   .m-sheet-nav a span:last-child{font:600 10px var(--mono);letter-spacing:.16em;color:var(--gold)}
   body{padding-bottom:86px}
 }
@@ -136,22 +169,28 @@ section[id]{scroll-margin-top:84px}
   letter-spacing:.14em;text-transform:uppercase;color:var(--muted)}
 .hero-meta span{display:inline-flex;align-items:center;gap:8px}
 .hero-meta span:empty{display:none}
+.hero-meta:not(:has(span:not(:empty))){display:none}
 .hero-meta svg{color:var(--gold);flex:none}
 .hero-cta{display:flex;flex-wrap:wrap;gap:14px;margin-top:36px}
+.hero-cta:not(:has(a:not([href=""]))){display:none}
 .btn{display:inline-flex;align-items:center;gap:10px;padding:15px 30px;border-radius:var(--ds-radius-btn,99px);
   font-size:12.5px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;transition:.25s;border:0;cursor:pointer}
+.btn:empty{display:none}
 .btn-gold{background:var(--gold);color:var(--gold-ink)}
 .btn-gold:hover{transform:translateY(-2px);box-shadow:0 14px 34px -12px color-mix(in srgb,var(--gold) 55%,transparent)}
 .btn-gold[href=""]{display:none}
 .btn-ghost{border:1px solid var(--line);color:var(--bone)}
 .btn-ghost:hover{border-color:var(--gold);color:var(--gold)}
-.hero-fig{position:relative}
+.hero-fig{position:relative;margin:0}
 .hero-fig .ph{aspect-ratio:4/5;border-radius:var(--radius);overflow:hidden;position:relative;
   background:linear-gradient(160deg,#26271f,var(--ink-2) 60%,#1e2018)}
 .hero-fig .ph::before{content:"";position:absolute;inset:0;
   background:radial-gradient(90% 60% at 70% 20%,color-mix(in srgb,var(--gold) 26%,transparent),transparent 60%),
              radial-gradient(70% 50% at 20% 90%,color-mix(in srgb,var(--gold) 14%,transparent),transparent)}
 .hero-fig img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+/*En una columna el 4/5 de escritorio se vuelve una pared de 900px.*/
+@media(max-width:860px){.hero-fig .ph{aspect-ratio:4/3}}
+@media(max-width:480px){.hero-fig .ph{aspect-ratio:1/1}}
 .hero-badge{position:absolute;left:-26px;bottom:34px;background:var(--card);color:var(--bone);
   border:1px solid var(--line);border-radius:16px;padding:16px 20px;box-shadow:0 24px 50px -20px rgba(0,0,0,.55)}
 .hero-badge b{display:block;font:400 26px var(--serif)}
@@ -164,7 +203,7 @@ section{padding:clamp(52px,8vh,96px) 0;border-bottom:1px solid var(--line)}
 .sec-head{display:flex;align-items:baseline;justify-content:space-between;gap:24px;
   margin-bottom:clamp(30px,5vh,52px)}
 .sec-head .idx{font:600 11px var(--mono);letter-spacing:.2em;color:var(--gold);white-space:nowrap}
-.sec-head h2{font-size:clamp(30px,4vw,50px);line-height:1.08}
+.sec-head h2{font-size:clamp(30px,4vw,50px);line-height:1.08;margin-right:auto}
 .sec-head h2 em{font-style:italic;color:var(--gold)}
 .sec-head p{max-width:38ch;color:var(--muted);font-size:13.5px;text-align:right}
 @media(max-width:700px){.sec-head{flex-direction:column}.sec-head p{text-align:left}}
@@ -218,38 +257,63 @@ section{padding:clamp(52px,8vh,96px) 0;border-bottom:1px solid var(--line)}
 .cats .ds-cat:hover{border-color:var(--gold);color:var(--gold)}
 .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:18px}
 .ds-product{border:1px solid var(--line);border-radius:var(--radius);overflow:hidden;background:var(--ink-2);
-  transition:border-color .3s,transform .3s}
+  transition:border-color .3s,transform .3s;position:relative;min-width:0}
 .ds-product:hover{border-color:color-mix(in srgb,var(--gold) 45%,var(--line));transform:translateY(-4px)}
-.ds-product-link{display:flex;flex-direction:column;height:100%}
-.ds-product-img{width:100%;aspect-ratio:4/3;object-fit:cover;display:block}
+/*La tarjeta es una grilla con áreas: así la categoría va arriba del nombre
+  y la vista lista puede reordenar sin aplastar el texto.*/
+.ds-product-link{display:grid;grid-template-columns:1fr;grid-template-rows:auto auto 1fr auto;
+  grid-template-areas:"img" "cat" "copy" "price";height:100%}
+.ds-product-img{grid-area:img;width:100%;aspect-ratio:4/3;object-fit:cover;display:block}
 .ds-product-img.is-empty{aspect-ratio:4/3;background:linear-gradient(150deg,#26271f,var(--ink-2));
   position:relative}
-.ds-product-copy{padding:18px 20px 8px;position:relative}
-.ds-product[data-off] .ds-product-copy::before{content:"-" attr(data-off) "%";position:absolute;top:-15px;right:16px;
-  background:var(--gold);color:var(--gold-ink);font:700 10px var(--mono);letter-spacing:.08em;
+.ds-product-copy{grid-area:copy;padding:10px 20px 8px;position:relative}
+.ds-product-price[data-off]::before{content:"-" attr(data-off) "%";position:absolute;top:14px;right:14px;
+  z-index:2;background:var(--gold);color:var(--gold-ink);font:700 10px var(--mono);letter-spacing:.08em;
   padding:5px 10px;border-radius:6px}
-.ds-product{min-width:0}
 .ds-product-name{font-size:19px;margin:0;overflow-wrap:break-word}
 .ds-product-desc{display:block;color:var(--muted);font-size:12.5px;margin-top:5px;overflow-wrap:break-word}
 .ds-product-desc:empty{display:none}
-.ds-product-cat{display:block;font:600 9.5px var(--mono);letter-spacing:.18em;text-transform:uppercase;
-  color:var(--gold);margin-bottom:8px}
-.ds-product-cat:empty{display:none}
-.ds-product-price{display:flex;align-items:baseline;flex-wrap:wrap;gap:8px 10px;padding:14px 20px 20px;margin-top:auto}
+.ds-product-cat{grid-area:cat;display:block;font:600 9.5px var(--mono);letter-spacing:.18em;
+  text-transform:uppercase;color:var(--gold);margin:14px 20px 0;overflow-wrap:anywhere}
+/*La categoría vacía reserva su línea: los nombres de una misma fila de
+  tarjetas quedan alineados aunque un producto no tenga categoría.*/
+.ds-product-cat:empty{visibility:hidden;min-height:11px}
+.ds-product-price{grid-area:price;display:flex;align-items:baseline;flex-wrap:wrap;gap:8px 10px;
+  padding:14px 20px 20px;align-self:end}
 .ds-product-amount{font:400 21px var(--serif);overflow-wrap:break-word}
 .ds-product-old{color:var(--muted);font-size:13px}
+/*Vista lista: imagen al costado y el texto en dos filas (categoría/nombre),
+  con el precio como columna propia. Antes la fila usaba flex y el nombre
+  quedaba en una columna de 60px.*/
+[data-ds-products][data-ds-view-mode="list"]{grid-template-columns:1fr}
+[data-ds-view-mode="list"] .ds-product-link{
+  grid-template-columns:180px minmax(0,1fr) auto;
+  grid-template-rows:auto 1fr;
+  grid-template-areas:"img cat price" "img copy price"}
+[data-ds-view-mode="list"] .ds-product-img{width:100%;height:100%;aspect-ratio:auto;min-height:150px}
+[data-ds-view-mode="list"] .ds-product-cat{margin:18px 20px 0}
+[data-ds-view-mode="list"] .ds-product-copy{padding:6px 20px 18px}
+[data-ds-view-mode="list"] .ds-product-price{align-self:center;padding:16px 20px;
+  flex-direction:column;align-items:flex-end;gap:4px}
+[data-ds-view-mode="list"] .ds-product-price[data-off]::before{left:14px;right:auto}
 .ds-empty{color:var(--muted);font-size:14px;padding:26px;border:1px dashed var(--line);border-radius:var(--radius)}
 @media(max-width:640px){
   .grid{grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:12px}
-  .ds-product-copy{padding:14px 14px 6px}
+  .ds-product-copy{padding:10px 14px 6px}
+  .ds-product-cat{margin:12px 14px 0}
   .ds-product-name{font-size:16px}
   .ds-product-desc{display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
   .ds-product-price{padding:12px 14px 14px}
   .ds-product-amount{font-size:18px}
-  /*En móvil la "vista grilla" (filas) aplasta el texto contra los bordes:
-    vuelve a tarjeta vertical con la imagen a todo lo ancho.*/
-  [data-ds-view-mode="grid"] .ds-product-link{flex-direction:column}
-  [data-ds-view-mode="grid"] .ds-product-img{width:100%;aspect-ratio:4/3}
+  /*En móvil la fila se parte: imagen + texto arriba y precio a lo ancho
+    abajo, para que no quede una columna de texto de 100px.*/
+  [data-ds-view-mode="list"] .ds-product-link{
+    grid-template-columns:110px minmax(0,1fr);
+    grid-template-rows:auto 1fr auto;
+    grid-template-areas:"img cat" "img copy" "price price"}
+  [data-ds-view-mode="list"] .ds-product-img{min-height:120px}
+  [data-ds-view-mode="list"] .ds-product-price{align-items:baseline;
+    padding:12px 14px 14px;flex-direction:row;gap:8px 10px}
 }
 
 /* Galería */
@@ -332,18 +396,24 @@ section{padding:clamp(52px,8vh,96px) 0;border-bottom:1px solid var(--line)}
 
 /* Contacto: info + mapa | formulario */
 .contact-2{display:grid;grid-template-columns:.9fr 1.1fr;gap:clamp(24px,4vw,56px);align-items:start}
+/*Sin formulario la columna derecha desaparece: la información usa el ancho.*/
+.contact-2:has(> .ds-zone:empty){grid-template-columns:1fr}
 @media(max-width:860px){.contact-2{grid-template-columns:1fr}}
-.contact-grid{display:grid;grid-template-columns:1fr 1fr;gap:1px;
+/*Flex y no grilla fija: si quedan una o tres celdas con datos, no aparece
+  un bloque gris vacío en la columna que faltó.*/
+.contact-grid{display:flex;flex-wrap:wrap;gap:1px;
   background:var(--line);border:1px solid var(--line);border-radius:var(--radius);overflow:hidden}
-@media(max-width:520px){.contact-grid{grid-template-columns:1fr}}
-.cel{background:var(--ink-2);padding:24px 22px}
+.cel{flex:1 1 180px;background:var(--ink-2);padding:24px 22px}
+@media(max-width:520px){.cel{flex-basis:100%}}
 .cel small{display:block;font:600 9.5px var(--mono);letter-spacing:.2em;text-transform:uppercase;
   color:var(--gold);margin-bottom:10px}
-.cel p{margin:0;font-size:14px}
+.cel p{margin:0;font-size:14px;overflow-wrap:anywhere}
 .cel p+p,.cel a{color:var(--muted);font-size:13px}
 .cel a{display:block;margin-top:2px}
 .cel a:hover{color:var(--gold)}
-.cel:has(p:empty):has(a:empty),.cel:has(p:empty):not(:has(a)){display:none}
+/*Sin datos reales no queda la etiqueta sola: la celda se apaga si no hay
+  texto ni un enlace con destino (los href vacíos de redes no cuentan).*/
+.cel:not(:has(p:not(:empty))):not(:has(a[href]:not([href=""]))){display:none}
 .cel a[href=""]{display:none}
 /* Mapa: tarjeta-pin que abre Google Maps (el iframe embed está prohibido
    por el saneo del documento — el redirect /r/maps sale por el host). */
@@ -358,7 +428,7 @@ section{padding:clamp(52px,8vh,96px) 0;border-bottom:1px solid var(--line)}
 .map-pin{flex:none;width:48px;height:48px;border-radius:50%;border:1px solid var(--gold);
   display:grid;place-items:center;color:var(--gold)}
 .map-card b{display:block;font:400 17px var(--serif)}
-.map-card span{color:var(--muted);font-size:12.5px;display:block}
+.map-card span{color:var(--muted);font-size:12.5px;display:block;min-width:0;overflow-wrap:anywhere}
 .map-card .map-go{margin-left:auto;font:700 10px var(--mono);letter-spacing:.16em;
   text-transform:uppercase;color:var(--gold);white-space:nowrap}
 /* Formulario (lo arma el puente dentro de .ds-contact) */
@@ -387,13 +457,15 @@ section{padding:clamp(52px,8vh,96px) 0;border-bottom:1px solid var(--line)}
 
 /* ===== Superficie catálogo ===== */
 .cat-surface,.svc-surface,.pdp-surface{padding:40px 0 70px;min-height:60vh}
-.crumbs{display:flex;align-items:center;gap:10px;font-size:12.5px;color:var(--muted);margin-bottom:26px}
+.crumbs{display:flex;align-items:center;flex-wrap:wrap;gap:10px;font-size:12.5px;color:var(--muted);
+  margin-bottom:26px;overflow-wrap:anywhere}
 .crumbs a:hover{color:var(--gold)}
 .crumbs .sep{opacity:.5}
-.crumbs strong{color:var(--bone);font-weight:600}
+.crumbs strong{color:var(--bone);font-weight:600;min-width:0;overflow-wrap:anywhere}
 .cat-layout{display:grid;grid-template-columns:240px 1fr;gap:32px;align-items:start}
 @media(max-width:860px){.cat-layout{grid-template-columns:1fr}}
-.cat-aside{display:grid;gap:22px;position:sticky;top:86px}
+.cat-aside{display:grid;gap:22px;position:sticky;top:86px;
+  max-height:calc(100vh - 100px);overflow:auto;overscroll-behavior:contain}
 .f-group{border:1px solid var(--line);border-radius:16px;padding:18px;background:var(--ink-2)}
 .f-title{font:600 10.5px var(--mono);letter-spacing:.2em;text-transform:uppercase;color:var(--gold);margin:0 0 14px}
 .f-list{display:grid;gap:6px}
@@ -421,8 +493,6 @@ section{padding:clamp(52px,8vh,96px) 0;border-bottom:1px solid var(--line)}
 .cat-sort{display:flex;align-items:center;gap:10px;font-size:12px;color:var(--muted)}
 .cat-sort select{background:var(--ink-2);border:1px solid var(--line);border-radius:10px;color:var(--bone);
   font:inherit;font-size:12.5px;padding:9px 12px}
-[data-ds-view-mode="grid"] .ds-product-link{flex-direction:row}
-[data-ds-view-mode="grid"] .ds-product-img{width:180px;aspect-ratio:1}
 @media(max-width:860px){
   .cat-filters-toggle{display:inline-flex;align-items:center;gap:8px;border:1px solid var(--line);
     background:var(--ink-2);color:var(--bone);font:700 11px var(--mono);letter-spacing:.14em;
@@ -430,8 +500,9 @@ section{padding:clamp(52px,8vh,96px) 0;border-bottom:1px solid var(--line)}
   .cat-filters-badge{background:var(--gold);color:var(--gold-ink);border-radius:99px;
     font:700 10px var(--mono);padding:2px 8px}
   .cat-aside{display:none;position:fixed;inset:auto 0 0 0;top:14vh;z-index:58;background:var(--ink-2);
-    border:1px solid var(--line);border-radius:24px 24px 0 0;padding:20px;overflow:auto}
-  .cat-aside.open{display:grid}
+    border:1px solid var(--line);border-radius:24px 24px 0 0;padding:20px;overflow:auto;max-height:none}
+  .cat-aside.is-open{display:grid}
+  body.filters-open{overflow:hidden}
   .cat-aside-head{display:flex;align-items:center;justify-content:space-between}
   .cat-aside-close{border:1px solid var(--line);background:none;color:var(--muted);width:34px;height:34px;
     border-radius:50%;cursor:pointer}
@@ -461,11 +532,11 @@ section{padding:clamp(52px,8vh,96px) 0;border-bottom:1px solid var(--line)}
   font:700 11px var(--mono);letter-spacing:.08em;padding:7px 12px;border-radius:8px}
 .pdp-media-tag:empty{display:none}
 .pdp-info h1{font-size:clamp(30px,4vw,50px);margin:8px 0 6px}
-.pdp-kicker{display:flex;gap:14px;font:600 10.5px var(--mono);letter-spacing:.18em;text-transform:uppercase;
-  color:var(--gold);margin:0}
+.pdp-kicker{display:flex;flex-wrap:wrap;gap:6px 14px;font:600 10.5px var(--mono);
+  letter-spacing:.18em;text-transform:uppercase;color:var(--gold);margin:0}
 .pdp-kicker span:empty{display:none}
-.pdp-ref{color:var(--muted);font-size:12px}
-.pdp-price{display:flex;align-items:baseline;gap:12px;margin:22px 0 8px}
+.pdp-ref{color:var(--muted);font-size:12px;overflow-wrap:anywhere}
+.pdp-price{display:flex;flex-wrap:wrap;align-items:baseline;gap:12px;margin:22px 0 8px}
 .pdp-price b{font:400 44px var(--serif)}
 .pdp-price em{font:700 13px var(--mono);font-style:normal;color:var(--gold)}
 .pdp-price em:empty{display:none}
@@ -478,7 +549,7 @@ section{padding:clamp(52px,8vh,96px) 0;border-bottom:1px solid var(--line)}
 .pdp-back{display:block;margin-top:16px;color:var(--muted);font-size:12.5px}
 .pdp-back:hover{color:var(--gold)}
 .pdp-seller{margin-top:24px;border:1px solid var(--line);border-radius:16px;padding:18px 20px;
-  display:grid;gap:5px;font-size:12.5px;color:var(--muted);background:var(--ink-2)}
+  display:grid;gap:5px;font-size:12.5px;color:var(--muted);background:var(--ink-2);overflow-wrap:anywhere}
 .pdp-seller strong{color:var(--bone)}
 .pdp-seller span:empty{display:none}
 .pdp-box{grid-column:1/-1;border:1px solid var(--line);border-radius:var(--radius);padding:30px;background:var(--ink-2)}
@@ -486,10 +557,14 @@ section{padding:clamp(52px,8vh,96px) 0;border-bottom:1px solid var(--line)}
 .pdp-specs{width:100%;border-collapse:collapse;font-size:13.5px}
 .pdp-specs .ds-pdp-spec th{text-align:left;font-weight:600;color:var(--muted);padding:10px 16px 10px 0;
   border-bottom:1px solid var(--line-soft);white-space:nowrap}
-.pdp-specs .ds-pdp-spec td{padding:10px 0;border-bottom:1px solid var(--line-soft)}
-.pdp-desc{color:var(--muted);font-size:14px;margin-top:20px}
+.pdp-specs .ds-pdp-spec td{padding:10px 0;border-bottom:1px solid var(--line-soft);overflow-wrap:anywhere}
+.pdp-specs:has(tbody:empty){display:none}
+.pdp-desc{color:var(--muted);font-size:14px;margin-top:20px;overflow-wrap:anywhere}
 .pdp-desc:empty{display:none}
+.pdp-box:has(.pdp-specs tbody:empty):has(.pdp-desc:empty){display:none}
 .pdp-rev,.pdp-rel{margin-top:44px}
+.pdp-rev:has(.ds-rev-list:empty):has(.ds-rev-form:empty){display:none}
+.pdp-rel:has(.grid:empty){display:none}
 .pdp-rev h2,.pdp-rel h2{font-size:24px;margin-bottom:20px}
 .pdp-rev-head{display:flex;align-items:baseline;justify-content:space-between;gap:16px}
 .pdp-score{display:flex;align-items:baseline;gap:8px;margin:0}
@@ -559,6 +634,10 @@ footer{padding:34px 0 44px;border-top:1px solid var(--line)}
   <a class="m-tab" href="#catalogo" data-ds-route="catalog" data-flag="catalog">
     <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.7"><rect x="4" y="4" width="7" height="7" rx="1"/><rect x="13" y="4" width="7" height="7" rx="1"/><rect x="4" y="13" width="7" height="7" rx="1"/><rect x="13" y="13" width="7" height="7" rx="1"/></svg>
     <span>Catálogo</span>
+  </a>
+  <a class="m-tab" href="#servicios" data-ds-route="services" data-flag="services">
+    <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M4 8h16v12H4z"/><path d="M9 8V6a3 3 0 0 1 6 0v2"/></svg>
+    <span>Servicios</span>
   </a>
   <a class="m-tab" href="#contacto" data-flag="contact">
     <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M21 11.5a8.4 8.4 0 0 1-8.5 8.4 8.6 8.6 0 0 1-3.8-.9L3 21l2-5.3a8.3 8.3 0 0 1-1-4A8.4 8.4 0 0 1 12.5 3.2 8.4 8.4 0 0 1 21 11.5Z"/></svg>
@@ -737,10 +816,10 @@ footer{padding:34px 0 44px;border-top:1px solid var(--line)}
         <div class="cat-bar">
           <p class="cat-count" data-ds-count aria-live="polite"></p>
           <div class="cat-view" role="group" aria-label="Vista">
-            <button type="button" data-ds-view="list" aria-pressed="true" aria-label="Vista lista">
+            <button type="button" data-ds-view="list" aria-pressed="false" aria-label="Vista lista">
               <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M4 6h16M4 12h16M4 18h16"/></svg>
             </button>
-            <button type="button" data-ds-view="grid" aria-pressed="false" aria-label="Vista grilla">
+            <button type="button" data-ds-view="grid" aria-pressed="true" aria-label="Vista grilla">
               <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="4" y="4" width="7" height="7" rx="1"/><rect x="13" y="4" width="7" height="7" rx="1"/><rect x="4" y="13" width="7" height="7" rx="1"/><rect x="13" y="13" width="7" height="7" rx="1"/></svg>
             </button>
           </div>
@@ -856,6 +935,10 @@ footer{padding:34px 0 44px;border-top:1px solid var(--line)}
 
 <script>
 (function(){
+  /*Sin anuncios cargados la cinta dorada quedaba como una franja vacía.*/
+  var ribbon = document.querySelector('.ribbon');
+  var track = ribbon && ribbon.querySelector('.ribbon-track');
+  if (ribbon && track && !track.children.length && !track.textContent.trim()) ribbon.remove();
   var sheet = document.getElementById('m-sheet');
   if (sheet) {
     var scrim = document.querySelector('.m-scrim');
