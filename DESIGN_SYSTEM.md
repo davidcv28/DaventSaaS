@@ -72,3 +72,34 @@
 - Claro y oscuro: contraste AA en texto y estados.
 - Estados vacíos: sin huecos (secciones/CTA/filas se apagan con `:has`/`:empty`).
 - `prefers-reduced-motion`: página estática y completa.
+
+## 8. ModernTec — lenguaje "instrumento de laboratorio"
+
+Grafito profundo (`#06080c`), grilla técnica enmascarada, reglas de 1px,
+telemetría en JetBrains Mono y display Outfit con tracking negativo. El
+acento de la tienda es la única señal de color (se aclara un 22% en oscuro
+para pasar AA sobre grafito). Composición:
+
+- **Hero**: rail `01 · nombre` + titular con la última palabra en gradiente +
+  telemetría (datos reales: productos, años, base) + ficha técnica del
+  destacado (foto, specs con línea de puntos guía, medidor). Regla de
+  medición al pie como firma.
+- **Departamentos** (`MtCategories`): celdas de 1px con índice, miniatura
+  cuadrada en escala de grises que se colorea al hover y conteo mono; en
+  ≤900px pasan a riel con snap.
+- **Sobre nosotros** (`MtAbout`): relato + "registro" (gauge de años y filas
+  con datos reales) + misión como nota técnica.
+- **Tarjetas**: marco de 1px, filo de acento que aparece al hover, nombre en
+  display, precio mono tabular y "Nuevo" en contorno / descuento en acento.
+
+Trampas del sistema que esta piel resuelve explícitamente (no repetirlas):
+
+- `styles.css` define `.mono` como chip del panel → `store-page.css` lo
+  resetea; si no, cada etiqueta mono sale como pastilla blanca.
+- `store-page.css` pinta `::before/::after` de `.store-page` como orbes con
+  `border-radius:50%` → la piel los desarma (`border-radius:0`,
+  `animation:none`) o el lienzo se recorta en un disco.
+- El tema publicado escribe `--sp-*` **inline** en `.store-page` y fija
+  `color`/`background-color` con `[data-st-palette]`/`[data-st-bgrole]`:
+  la piel remapea esos tokens y colores en los contenedores hijos y con
+  `[data-store-template]` para ganar especificidad.

@@ -1,18 +1,20 @@
 <script setup>
 // Inicio del diseño MODERNTEC (tecnología / electrónica / gaming) —
 // generativa: monta las secciones del layout efectivo de la portada en su
-// orden. Pieza firma: MtHero (chip mono + gradiente cyan→violeta + tarjeta
-// device con specs); el resto son los bloques compartidos Blk* re-skineados
-// por store-moderntec.css (tokens --sp-* bajo [data-template='moderntec']).
+// orden. Piezas propias: MtHero (rail de índice + gradiente cyan→violeta +
+// ficha técnica del destacado), MtCategories (celdas de departamento) y
+// MtAbout (relato + registro de la tienda); el resto son los bloques
+// compartidos Blk* re-skineados por store-moderntec.css (tokens --sp-* bajo
+// [data-template='moderntec']).
 import { computed, inject } from 'vue'
 import { templateBlocks } from '../../../templates/index.js'
 import { landingExtras } from '../../../templates/_shared.js'
 import MtHero from '../../../components/store/blocks/moderntec/MtHero.vue'
+import MtAbout from '../../../components/store/blocks/moderntec/MtAbout.vue'
+import MtCategories from '../../../components/store/blocks/moderntec/MtCategories.vue'
 import BlkAnnouncements from '../../../components/store/blocks/BlkAnnouncements.vue'
 import BlkHighlights from '../../../components/store/blocks/BlkHighlights.vue'
-import BlkCategories from '../../../components/store/blocks/BlkCategories.vue'
 import BlkFeatured from '../../../components/store/blocks/BlkFeatured.vue'
-import BlkAbout from '../../../components/store/blocks/BlkAbout.vue'
 import BlkStats from '../../../components/store/blocks/BlkStats.vue'
 import BlkServices from '../../../components/store/blocks/BlkServices.vue'
 import BlkBenefits from '../../../components/store/blocks/BlkBenefits.vue'
@@ -31,9 +33,9 @@ const MAP = {
   announcements: BlkAnnouncements,
   hero: MtHero,
   highlights: BlkHighlights,
-  categories: BlkCategories,
+  categories: MtCategories,
   featured: BlkFeatured,
-  about: BlkAbout,
+  about: MtAbout,
   stats: BlkStats,
   services: BlkServices,
   benefits: BlkBenefits,

@@ -1,3 +1,9 @@
+/* `.mono` es un chip del panel (styles.css: fondo, borde, padding): en la web
+   pública se usa solo como familia tipográfica por las pieles (mercado,
+   moderntec, sastrería). Sin este reset cada etiqueta mono salía como una
+   pastilla blanca sobre el diseño. */
+.store-page .mono{ background: none; border: 0; border-radius: 0; padding: 0; font-size: inherit; }
+
 /* ===== Web pública del cliente (StorePublicView) =====
    Paleta propia (--sp-*) + acento de la tienda (--store-accent*, lo setea
    StorePublicView desde StoreCustomization): la página no hereda el tema
@@ -832,7 +838,7 @@ html{ scroll-behavior: smooth; }
 .sp-foot::before{ background: linear-gradient(90deg, transparent 8%, rgba(255, 255, 255, .45), transparent 92%); }
 .sp-foot-brand strong{ color: var(--sp-on-band, #fff); }
 .sp-foot-brand span, .sp-foot-copy{ color: color-mix(in srgb, var(--sp-on-band, #fff) 72%, transparent); }
-.sp-foot-heading{ color: color-mix(in srgb, var(--sp-on-band, #fff) 6%, transparent); }
+.sp-foot-heading{ color: color-mix(in srgb, var(--sp-on-band, #fff) 72%, transparent); }
 .sp-foot-col a{ color: color-mix(in srgb, var(--sp-on-band, #fff) 88%, transparent); }
 .sp-foot-col a:hover{ color: var(--sp-on-band, #fff); }
 .sp-foot-bottom{ border-top-color: rgba(255, 255, 255, .2); }
@@ -3235,9 +3241,17 @@ html{ scroll-behavior: smooth; }
 .sp-shop-rail{ display: flex; gap: 14px; overflow-x: auto; overscroll-behavior-x: contain; scroll-snap-type: x mandatory; scrollbar-width: thin; padding: 2px 2px 12px; -webkit-overflow-scrolling: touch; }
 .sp-shop-rail > .tpc{ flex: 0 0 min(240px, 68vw); scroll-snap-align: start; }
 @media (max-width: 860px){
+  /* La grilla base (4-up) no tenía breakpoint: en móvil las tarjetas quedaban
+     de 4 columnas y el nombre se cortaba por letra. */
+  .sp-shop-featured.is-grid .sp-shop-featured-grid,
+  .sp-offers .sp-shop-featured-grid{ grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
   .sp-shop-featured.is-cols3 .sp-shop-featured-grid,
   .sp-shop-featured.is-cols4 .sp-shop-featured-grid,
   .sp-shop-featured.is-lead .sp-shop-featured-grid{ grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+@media (max-width: 420px){
+  .sp-shop-featured.is-grid .sp-shop-featured-grid,
+  .sp-offers .sp-shop-featured-grid{ gap: 10px; }
 }
 @media (max-width: 560px){
   .sp-shop-featured.is-masonry .sp-shop-featured-grid{ column-width: 150px; column-gap: 10px; }
