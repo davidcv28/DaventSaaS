@@ -94,6 +94,7 @@
     border:1px solid var(--line)}
   .postcard::before{content:"";position:absolute;top:8px;right:8px;width:34px;height:26px;border:1px solid var(--line);
     border-radius:3px;background:repeating-linear-gradient(45deg,var(--sky),var(--sky) 3px,#fff 3px,#fff 6px)}
+  .postcard img{width:100%;max-width:170px;aspect-ratio:4/3;object-fit:cover;border-radius:6px;display:block;margin-bottom:8px}
   .postcard small{display:block;font-size:9.5px;letter-spacing:.16em;text-transform:uppercase;color:var(--muted);margin-bottom:4px}
   .postcard b{font-family:"Fraunces",serif;font-size:15px;display:block;max-width:14ch}
 
@@ -186,6 +187,23 @@
   .ficha-list a[href=""]{display:none}
   .ficha-list li:has(>:is(b:empty,a[href=""])){display:none}
 
+  /* ===== Packs: membresías y planes del negocio ===== */
+  .packs .packs-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:18px}
+  .packs .ds-plan{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);
+    padding:24px 22px;position:relative;transition:transform .3s var(--ease)}
+  .packs .ds-plan:hover{transform:translateY(-4px)}
+  .packs .ds-plan::before{content:"";position:absolute;top:0;left:24px;right:24px;border-top:2px dashed var(--line)}
+  .packs .ds-plan-name{font-size:21px;margin:0 0 10px}
+  .packs .ds-plan-price{display:inline-block;background:var(--sun);color:var(--ink);font-weight:800;
+    font-size:12px;padding:4px 10px;border-radius:6px;margin-bottom:8px}
+  .packs .ds-plan-price:empty{display:none}
+  .packs .ds-plan-note{color:var(--muted);font-size:13.5px;margin:4px 0 0}
+  .packs .ds-plan-note:empty{display:none}
+  .packs .ds-plan-feats{margin:12px 0 0;padding-left:18px;color:var(--muted);font-size:13px;display:grid;gap:5px}
+  .packs-cta{display:inline-flex;margin-top:26px;background:var(--accent);color:var(--card);font-weight:700;
+    font-size:14px;padding:14px 26px;border-radius:99px;transition:transform .25s var(--ease)}
+  .packs-cta:hover{transform:translateY(-3px)}
+
   /* ===== Galería: tira de postales ===== */
   .postal-strip{display:flex;gap:16px;overflow-x:auto;padding:30px 4px 20px;scrollbar-width:thin}
   .postal-strip .ds-shot{flex:0 0 auto;width:210px;margin:0;transform:rotate(var(--tilt,0deg));
@@ -277,7 +295,9 @@
   /* ===== Footer ===== */
   footer{display:flex;flex-wrap:wrap;gap:14px;align-items:center;justify-content:space-between;
     padding:34px 0 46px;border-top:1.5px dashed var(--line);font-size:13px;color:var(--muted)}
+  footer .foot-links{display:flex;gap:16px}
   footer .wa-link{font-weight:700;color:var(--pine)}
+  footer .wa-link[href=""]{display:none}
   .wa-link{border-bottom:1.5px solid var(--sun)}
 
   /* ===== Reveal ===== */
@@ -336,6 +356,7 @@
       <a href="#destinos" data-ds-route="catalog" data-flag="catalog">Destinos</a>
       <a href="#servicios" data-ds-route="services" data-flag="services">Servicios</a>
       <a href="#empresa" data-flag="about">La empresa</a>
+      <a href="#packs" data-flag="plans">Packs</a>
       <a href="#contacto" data-flag="contact">Contacto</a>
     </nav>
     <a class="pill" href="{{store_whatsapp_url}}">Consultar</a>
@@ -373,7 +394,8 @@
       <a href="#destinos" data-ds-route="catalog" data-m-close data-flag="catalog"><span>Destinos</span><span>02</span></a>
       <a href="#servicios" data-ds-route="services" data-m-close data-flag="services"><span>Servicios</span><span>03</span></a>
       <a href="#empresa" data-m-close data-flag="about"><span>La empresa</span><span>04</span></a>
-      <a href="#contacto" data-m-close data-flag="contact"><span>Contacto</span><span>05</span></a>
+      <a href="#packs" data-m-close data-flag="plans"><span>Packs</span><span>05</span></a>
+      <a href="#contacto" data-m-close data-flag="contact"><span>Contacto</span><span>06</span></a>
       <a href="{{store_whatsapp_url}}" data-m-close><span>WhatsApp</span><span>↗</span></a>
     </nav>
   </div>
@@ -410,6 +432,7 @@
         <span class="pin" style="left:9%;top:82%"><i></i></span>
         <span class="pin" style="left:88%;top:56%;animation-delay:.8s"><i></i></span>
         <div class="postcard">
+          <img src="{{store_cover}}" alt="{{store_name}}">
           <small>Postcard · {{store_location}}</small>
           <b>{{store_name}}</b>
         </div>
@@ -459,9 +482,19 @@
       </div>
     </section>
 
-    <section class="ficha sec reveal" id="contacto" data-flag="contact">
+    <section class="packs sec reveal" id="packs" data-flag="plans">
       <div class="sec-head">
         <span class="idx">03 —</span>
+        <h2>{{plans_title}}</h2>
+        <span>Reservá por WhatsApp</span>
+      </div>
+      <div class="packs-grid">{{plans}}</div>
+      <a class="packs-cta" href="{{store_whatsapp_url}}">Consultar pack ↗</a>
+    </section>
+
+    <section class="ficha sec reveal" id="contacto" data-flag="contact">
+      <div class="sec-head">
+        <span class="idx">04 —</span>
         <h2>Datos de la empresa</h2>
         <span>Cómo encontrarnos</span>
       </div>
@@ -469,6 +502,8 @@
         <li data-flag="location"><span>Dirección</span><b>{{store_address}}</b></li>
         <li><span>Ciudad</span><b>{{store_location}}</b></li>
         <li data-flag="hours"><span>Horarios</span><b>{{store_hours}}</b></li>
+        <li><span>Atención directa</span><b>{{store_phone}}</b></li>
+        <li><span>Email</span><b>{{store_email}}</b></li>
         <li><span>WhatsApp</span><a href="{{store_whatsapp_url}}">Consultar ↗</a></li>
         <li><span>Instagram</span><a href="{{store_instagram_url}}">Instagram ↗</a></li>
         <li><span>Facebook</span><a href="{{store_facebook_url}}">Facebook ↗</a></li>
@@ -537,7 +572,12 @@
 
   <footer>
     <span>{{store_name}} · {{store_tagline}}</span>
-    <a class="wa-link" href="{{store_whatsapp_url}}">WhatsApp</a>
+    <nav class="foot-links" aria-label="Canales">
+      <a class="wa-link" href="{{store_whatsapp_url}}">WhatsApp</a>
+      <a class="wa-link" href="{{store_instagram_url}}">Instagram</a>
+      <a class="wa-link" href="{{store_facebook_url}}">Facebook</a>
+      <a class="wa-link" href="{{store_tiktok_url}}">TikTok</a>
+    </nav>
     <span>© {{year}} {{store_name}}</span>
   </footer>
 </div>
