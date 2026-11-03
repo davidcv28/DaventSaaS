@@ -10,6 +10,18 @@
    Tinta casi negra + champagne/dorado + hueso. Índices
    numerados, líneas finas, reveal suave.
    ============================================================ */
+/* Tipografías reales (subset latin, woff2 variable en CDN inmutable). El
+   CSP del documento autoriza font-src https; sin hojas externas el
+   style-src 'unsafe-inline' no se debilita. */
+@font-face{font-family:"Fraunces";font-style:normal;font-weight:300 700;font-display:swap;
+  src:url(https://fonts.gstatic.com/s/fraunces/v38/6NU78FyLNQOQZAnv9bYEvDiIdE9Ea92uemAk_WBq8U_9v0c2Wa0KxC9TeA.woff2) format("woff2");
+  unicode-range:U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+0304,U+0308,U+0329,U+2000-206F,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD}
+@font-face{font-family:"Instrument Sans";font-style:normal;font-weight:400 700;font-stretch:100%;font-display:swap;
+  src:url(https://fonts.gstatic.com/s/instrumentsans/v4/pxiTypc9vsFDm051Uf6KVwgkfoSxQ0GsQv8ToedPibnr0SZe1Q.woff2) format("woff2");
+  unicode-range:U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+0304,U+0308,U+0329,U+2000-206F,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD}
+@font-face{font-family:"JetBrains Mono";font-style:normal;font-weight:400 700;font-display:swap;
+  src:url(https://fonts.gstatic.com/s/jetbrainsmono/v24/tDbv2o-flEEny0FZhsfKu5WU4zr3E_BX0PnT8RD8yKwBNntkaToggR7BYRbKPxDcwg.woff2) format("woff2");
+  unicode-range:U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+0304,U+0308,U+0329,U+2000-206F,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD}
 :root{
   --ink:#111210; --ink-2:#191a17;
   --bone:#f4f0e6; --bone-2:#ece6d8;
@@ -42,13 +54,23 @@ html[data-ds-theme="light"] .gal .ds-shot{background:linear-gradient(140deg,#e9d
 html[data-ds-theme="light"] .pdp-shot{background:linear-gradient(150deg,#e9dfc9,#f4f0e6)}
 *{box-sizing:border-box}
 img[src=""]{display:none}
+html{-webkit-text-size-adjust:100%;text-size-adjust:100%}
+a,button{-webkit-tap-highlight-color:transparent;touch-action:manipulation}
+::selection{background:var(--gold);color:var(--gold-ink)}
+a:focus-visible,button:focus-visible,select:focus-visible,input:focus-visible,
+.ds-faq-q:focus-visible{outline:2px solid var(--gold);outline-offset:2px}
 body{margin:0;background:var(--ink);color:var(--bone);font-family:var(--sans);
   font-size:15px;line-height:1.6;-webkit-font-smoothing:antialiased}
 h1,h2,h3{font-family:var(--serif);font-weight:400;letter-spacing:-.01em;margin:0}
 a{color:inherit;text-decoration:none}
 .wrap{width:min(1180px,92vw);margin:0 auto}
-body::after{content:"";position:fixed;inset:0;pointer-events:none;z-index:60;opacity:.05;mix-blend-mode:overlay;
+/* Capas baratas: la veta de papel va como textura fija a baja opacidad (sin
+   blend mode, que obliga a recomponer el viewport en cada repintado) y las
+   secciones fuera de pantalla se saltan con content-visibility. */
+body::after{content:"";position:fixed;inset:0;pointer-events:none;z-index:60;opacity:.05;
   background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2'/%3E%3C/filter%3E%3Crect width='160' height='160' filter='url(%23n)'/%3E%3C/svg%3E")}
+body>section,[data-surface="landing"]>section{content-visibility:auto;contain-intrinsic-size:auto 480px}
+.cat-layout>*,.contact-2>*,.about>*,.hero-grid>*,.pdp-layout>*{min-width:0}
 /* Superficie activa: el puente fija data-ds-surface en <html>. */
 html[data-ds-surface="landing"] [data-surface]:not([data-surface="landing"]),
 html[data-ds-surface="catalog"] [data-surface]:not([data-surface="catalog"]),
@@ -64,15 +86,19 @@ html[data-ds-surface="product"] [data-surface]:not([data-surface="product"]){dis
 /* ===== Cinta de anuncios ===== */
 .ribbon{background:var(--gold);color:var(--gold-ink);overflow:hidden;padding:9px 0;
   font:600 10.5px/1 var(--mono);letter-spacing:.18em;text-transform:uppercase;white-space:nowrap}
-.ribbon-track{display:inline-flex;gap:56px;animation:marquee 28s linear infinite}
-.ribbon-track span,.ribbon-track .ds-note{display:inline-flex;align-items:center;gap:10px}
-.ribbon-track .ds-note svg{width:12px;height:12px}
+/* Dos copias idénticas (la segunda aria-hidden) dentro del track: el gap
+   vive como padding del set, así translateX(-50%) cae exacto en la copia —
+   bucle sin salto de medio gap. will-change lo mantiene en el compositor. */
+.ribbon-track{display:inline-flex;animation:marquee 28s linear infinite;will-change:transform}
+.ribbon-set{display:inline-flex;gap:56px;padding-right:56px}
+.ribbon-set .ds-note{display:inline-flex;align-items:center;gap:10px}
+.ribbon-set .ds-note svg{width:12px;height:12px}
 @keyframes marquee{to{transform:translateX(-50%)}}
 html[data-ds-theme="light"] .ribbon,html[data-ds-style="aurum-dia"] .ribbon{background:var(--bone);color:var(--ink)}
 
 /* ===== Nav ===== */
 .top{position:fixed;inset:0 0 auto;z-index:50;background:color-mix(in srgb,var(--ink) 84%,transparent);
-  backdrop-filter:blur(14px);border-bottom:1px solid var(--line)}
+  -webkit-backdrop-filter:blur(14px);backdrop-filter:blur(14px);border-bottom:1px solid var(--line)}
 body{padding-top:69px}
 section[id]{scroll-margin-top:84px}
 .top-in{display:flex;align-items:center;justify-content:space-between;gap:24px;
@@ -118,8 +144,10 @@ html[data-ds-surface="product"] #contacto .idx{display:none}
 /* Menú móvil: tab bar + hoja */
 .m-tabs,.m-scrim,.m-sheet{display:none}
 @media(max-width:900px){
-  .m-tabs{position:fixed;left:12px;right:12px;bottom:12px;z-index:55;display:flex;gap:4px;
-    background:color-mix(in srgb,var(--ink-2) 92%,transparent);backdrop-filter:blur(16px);
+  .m-tabs{position:fixed;left:12px;right:12px;bottom:calc(12px + env(safe-area-inset-bottom,0px));
+    z-index:55;display:flex;gap:4px;user-select:none;-webkit-user-select:none;
+    background:color-mix(in srgb,var(--ink-2) 92%,transparent);
+    -webkit-backdrop-filter:blur(16px);backdrop-filter:blur(16px);
     border:1px solid var(--line);border-radius:20px;padding:8px;
     box-shadow:0 18px 50px -18px rgba(0,0,0,.55)}
   .m-tab{flex:1;display:flex;flex-direction:column;align-items:center;gap:4px;padding:9px 4px;
@@ -132,7 +160,8 @@ html[data-ds-surface="product"] #contacto .idx{display:none}
     opacity:0;pointer-events:none;transition:opacity .3s}
   .m-scrim.open{opacity:1;pointer-events:auto}
   .m-sheet{display:block;position:fixed;left:0;right:0;bottom:0;z-index:57;background:var(--ink-2);
-    border:1px solid var(--line);border-bottom:0;border-radius:26px 26px 0 0;padding:14px 20px 34px;
+    border:1px solid var(--line);border-bottom:0;border-radius:26px 26px 0 0;
+    padding:14px 20px calc(34px + env(safe-area-inset-bottom,0px));overscroll-behavior:contain;
     transform:translateY(105%);visibility:hidden;
     transition:transform .45s var(--ease),visibility 0s .45s}
   .m-sheet.open{transform:none;visibility:visible;transition:transform .45s var(--ease)}
@@ -157,11 +186,13 @@ html[data-ds-surface="product"] #contacto .idx{display:none}
 .hero{border-bottom:1px solid var(--line);position:relative;overflow:hidden}
 .hero-grid{display:grid;grid-template-columns:1.15fr .85fr;gap:clamp(28px,5vw,72px);align-items:end;
   padding:clamp(52px,9vh,104px) 0 clamp(44px,7vh,76px)}
-@media(max-width:860px){.hero-grid{grid-template-columns:1fr}}
-.stamp{display:inline-flex;align-items:center;gap:10px;font:600 10.5px var(--mono);letter-spacing:.24em;
+@media(max-width:860px){.hero-grid{grid-template-columns:1fr;align-items:start}}
+.stamp{display:inline-flex;align-items:center;gap:10px;max-width:100%;overflow-wrap:anywhere;
+  font:600 10.5px var(--mono);letter-spacing:.24em;
   text-transform:uppercase;color:var(--gold)}
-.stamp::before{content:"";width:34px;height:1px;background:var(--gold)}
-.hero h1{font-size:clamp(42px,6.2vw,84px);line-height:1.02;margin:24px 0 0;max-width:14ch}
+.stamp::before{content:"";width:34px;height:1px;flex:none;background:var(--gold)}
+.hero h1{font-size:clamp(42px,6.2vw,84px);line-height:1.02;letter-spacing:-.02em;margin:24px 0 0;
+  max-width:14ch;text-wrap:balance;overflow-wrap:anywhere}
 .hero h1 em{font-style:italic;color:var(--gold)}
 .hero-sub{margin-top:24px;max-width:44ch;color:var(--muted);font-size:16px}
 .hero-sub:empty{display:none}
@@ -193,7 +224,7 @@ html[data-ds-surface="product"] #contacto .idx{display:none}
 @media(max-width:480px){.hero-fig .ph{aspect-ratio:1/1}}
 .hero-badge{position:absolute;left:-26px;bottom:34px;background:var(--card);color:var(--bone);
   border:1px solid var(--line);border-radius:16px;padding:16px 20px;box-shadow:0 24px 50px -20px rgba(0,0,0,.55)}
-.hero-badge b{display:block;font:400 26px var(--serif)}
+.hero-badge b{display:block;font:400 26px var(--serif);font-variant-numeric:tabular-nums}
 .hero-badge span{font:600 9.5px var(--mono);letter-spacing:.18em;text-transform:uppercase;color:var(--muted)}
 .hero-badge:has(b:empty){display:none}
 @media(max-width:860px){.hero-badge{left:14px}}
@@ -203,7 +234,8 @@ section{padding:clamp(52px,8vh,96px) 0;border-bottom:1px solid var(--line)}
 .sec-head{display:flex;align-items:baseline;justify-content:space-between;gap:24px;
   margin-bottom:clamp(30px,5vh,52px)}
 .sec-head .idx{font:600 11px var(--mono);letter-spacing:.2em;color:var(--gold);white-space:nowrap}
-.sec-head h2{font-size:clamp(30px,4vw,50px);line-height:1.08;margin-right:auto}
+.sec-head h2{font-size:clamp(30px,4vw,50px);line-height:1.08;margin-right:auto;
+  text-wrap:balance;overflow-wrap:anywhere}
 .sec-head h2 em{font-style:italic;color:var(--gold)}
 .sec-head p{max-width:38ch;color:var(--muted);font-size:13.5px;text-align:right}
 @media(max-width:700px){.sec-head{flex-direction:column}.sec-head p{text-align:left}}
@@ -222,7 +254,8 @@ section{padding:clamp(52px,8vh,96px) 0;border-bottom:1px solid var(--line)}
 /* Números — banda dorada */
 .band-gold{background:var(--gold);color:var(--gold-ink)}
 .stats-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:32px;text-align:center}
-.ds-stat b,.ds-stat-value{display:block;font:400 clamp(44px,5vw,70px)/1 var(--serif)}
+.ds-stat b,.ds-stat-value{display:block;font:400 clamp(44px,5vw,70px)/1 var(--serif);
+  font-variant-numeric:tabular-nums}
 .ds-stat span,.ds-stat-label{display:block;margin-top:10px;font:600 10px var(--mono);
   letter-spacing:.2em;text-transform:uppercase;opacity:.75}
 
@@ -257,13 +290,18 @@ section{padding:clamp(52px,8vh,96px) 0;border-bottom:1px solid var(--line)}
 .cats .ds-cat:hover{border-color:var(--gold);color:var(--gold)}
 .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:18px}
 .ds-product{border:1px solid var(--line);border-radius:var(--radius);overflow:hidden;background:var(--ink-2);
-  transition:border-color .3s,transform .3s;position:relative;min-width:0}
-.ds-product:hover{border-color:color-mix(in srgb,var(--gold) 45%,var(--line));transform:translateY(-4px)}
+  transition:border-color .3s,transform .3s,box-shadow .3s;position:relative;min-width:0}
+.ds-product:hover{border-color:color-mix(in srgb,var(--gold) 45%,var(--line));transform:translateY(-4px);
+  box-shadow:0 22px 44px -28px rgba(0,0,0,.65)}
 /*La tarjeta es una grilla con áreas: así la categoría va arriba del nombre
   y la vista lista puede reordenar sin aplastar el texto.*/
 .ds-product-link{display:grid;grid-template-columns:1fr;grid-template-rows:auto auto 1fr auto;
   grid-template-areas:"img" "cat" "copy" "price";height:100%}
-.ds-product-img{grid-area:img;width:100%;aspect-ratio:4/3;object-fit:cover;display:block}
+.ds-product-img{grid-area:img;width:100%;aspect-ratio:4/3;object-fit:cover;display:block;
+  transition:transform .5s var(--ease)}
+@media(hover:hover) and (prefers-reduced-motion:no-preference){
+  .ds-product:hover .ds-product-img{transform:scale(1.04)}
+}
 .ds-product-img.is-empty{aspect-ratio:4/3;background:linear-gradient(150deg,#26271f,var(--ink-2));
   position:relative}
 .ds-product-copy{grid-area:copy;padding:10px 20px 8px;position:relative}
@@ -280,7 +318,7 @@ section{padding:clamp(52px,8vh,96px) 0;border-bottom:1px solid var(--line)}
 .ds-product-cat:empty{visibility:hidden;min-height:11px}
 .ds-product-price{grid-area:price;display:flex;align-items:baseline;flex-wrap:wrap;gap:8px 10px;
   padding:14px 20px 20px;align-self:end}
-.ds-product-amount{font:400 21px var(--serif);overflow-wrap:break-word}
+.ds-product-amount{font:400 21px var(--serif);overflow-wrap:break-word;font-variant-numeric:tabular-nums}
 .ds-product-old{color:var(--muted);font-size:13px}
 /*Vista lista: imagen al costado y el texto en dos filas (categoría/nombre),
   con el precio como columna propia. Antes la fila usaba flex y el nombre
@@ -327,7 +365,7 @@ section{padding:clamp(52px,8vh,96px) 0;border-bottom:1px solid var(--line)}
 /* Trayectoria */
 .ds-miles{list-style:none;max-width:640px;margin:0;padding:0}
 .ds-mile{display:grid;grid-template-columns:86px 1fr;gap:22px;padding:22px 0;border-bottom:1px dashed var(--line)}
-.ds-mile-label{font:400 24px var(--serif);color:var(--gold)}
+.ds-mile-label{font:400 24px var(--serif);color:var(--gold);font-variant-numeric:tabular-nums}
 .ds-mile-text{color:var(--muted);font-size:14px}
 
 /* Equipo */
@@ -365,6 +403,7 @@ section{padding:clamp(52px,8vh,96px) 0;border-bottom:1px solid var(--line)}
 /* FAQ */
 .faqs-list{max-width:760px;display:grid;gap:10px}
 .ds-faq{border:1px solid var(--line);border-radius:14px;background:var(--ink-2);padding:0 24px}
+.ds-faq-q::-webkit-details-marker{display:none}
 .ds-faq-q{cursor:pointer;list-style:none;font:400 17px var(--serif);padding:18px 0;
   display:flex;justify-content:space-between;align-items:center;gap:16px}
 .ds-faq-q::after{content:"+";font:300 24px var(--serif);color:var(--gold);flex:none}
@@ -387,7 +426,8 @@ section{padding:clamp(52px,8vh,96px) 0;border-bottom:1px solid var(--line)}
 .cta-band{margin:clamp(52px,8vh,96px) 0;border:1px solid var(--gold);border-radius:32px;
   padding:clamp(44px,7vw,80px) clamp(26px,5vw,72px);text-align:center;position:relative;overflow:hidden;
   background:radial-gradient(120% 160% at 50% -20%,color-mix(in srgb,var(--gold) 18%,transparent),var(--ink-2) 55%)}
-.cta-band h2{font-size:clamp(32px,5vw,60px);line-height:1.05;margin:0}
+.cta-band h2{font-size:clamp(32px,5vw,60px);line-height:1.05;margin:0;
+  text-wrap:balance;overflow-wrap:anywhere}
 .cta-band h2 em{font-style:italic;color:var(--gold)}
 .cta-band p{color:var(--muted);max-width:48ch;margin:18px auto 0}
 .cta-band p:empty{display:none}
@@ -474,6 +514,7 @@ section{padding:clamp(52px,8vh,96px) 0;border-bottom:1px solid var(--line)}
   cursor:pointer;text-align:left}
 .f-list button:hover,.f-list button.is-on{background:color-mix(in srgb,var(--gold) 14%,transparent);color:var(--bone)}
 .f-price{display:flex;align-items:center;gap:8px}
+.f-price-field{flex:1;min-width:0}
 .f-price-field input{width:100%;background:var(--ink);border:1px solid var(--line);border-radius:8px;
   color:var(--bone);font:inherit;font-size:13px;padding:9px 10px}
 .f-apply,.f-clear,.f-done{margin-top:12px;width:100%;border:1px solid var(--gold);background:none;color:var(--gold);
@@ -500,9 +541,12 @@ section{padding:clamp(52px,8vh,96px) 0;border-bottom:1px solid var(--line)}
   .cat-filters-badge{background:var(--gold);color:var(--gold-ink);border-radius:99px;
     font:700 10px var(--mono);padding:2px 8px}
   .cat-aside{display:none;position:fixed;inset:auto 0 0 0;top:14vh;z-index:58;background:var(--ink-2);
-    border:1px solid var(--line);border-radius:24px 24px 0 0;padding:20px;overflow:auto;max-height:none}
+    border:1px solid var(--line);border-radius:24px 24px 0 0;padding:20px 20px calc(20px + env(safe-area-inset-bottom,0px));
+    overflow:auto;max-height:none}
   .cat-aside.is-open{display:grid}
   body.filters-open{overflow:hidden}
+  /*iOS no hace zoom al enfocar: inputs/selects >=16px en el sheet.*/
+  .cat-sort select,.f-price-field input,.ds-contact-input{font-size:16px}
   .cat-aside-head{display:flex;align-items:center;justify-content:space-between}
   .cat-aside-close{border:1px solid var(--line);background:none;color:var(--muted);width:34px;height:34px;
     border-radius:50%;cursor:pointer}
@@ -511,13 +555,14 @@ section{padding:clamp(52px,8vh,96px) 0;border-bottom:1px solid var(--line)}
 }
 
 /* ===== Superficie servicios ===== */
-.svc-head h1{font-size:clamp(34px,5vw,60px)}
+.svc-head h1{font-size:clamp(34px,5vw,60px);text-wrap:balance;overflow-wrap:anywhere}
 .svc-head p{color:var(--muted);max-width:52ch;margin-top:14px}
 .svc-head p:empty{display:none}
 .svc-surface .ds-services-list{list-style:none;margin:34px 0 0;padding:0;display:grid;
   grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:14px}
 .svc-surface .ds-service{border:1px solid var(--line);border-radius:var(--radius);padding:26px;background:var(--ink-2)}
-.svc-surface .ds-service-name{display:block;font:400 20px var(--serif);margin-bottom:6px}
+.svc-surface .ds-service-name{display:block;font:400 20px var(--serif);margin-bottom:6px;
+  overflow-wrap:anywhere}
 .svc-surface .ds-service-desc{color:var(--muted);font-size:13.5px}
 .svc-cta{display:inline-flex;margin-top:30px}
 
@@ -531,13 +576,14 @@ section{padding:clamp(52px,8vh,96px) 0;border-bottom:1px solid var(--line)}
 .pdp-media-tag{position:absolute;top:16px;left:16px;z-index:2;background:var(--gold);color:var(--gold-ink);
   font:700 11px var(--mono);letter-spacing:.08em;padding:7px 12px;border-radius:8px}
 .pdp-media-tag:empty{display:none}
-.pdp-info h1{font-size:clamp(30px,4vw,50px);margin:8px 0 6px}
+.pdp-info h1{font-size:clamp(30px,4vw,50px);margin:8px 0 6px;
+  text-wrap:balance;overflow-wrap:anywhere}
 .pdp-kicker{display:flex;flex-wrap:wrap;gap:6px 14px;font:600 10.5px var(--mono);
   letter-spacing:.18em;text-transform:uppercase;color:var(--gold);margin:0}
 .pdp-kicker span:empty{display:none}
 .pdp-ref{color:var(--muted);font-size:12px;overflow-wrap:anywhere}
 .pdp-price{display:flex;flex-wrap:wrap;align-items:baseline;gap:12px;margin:22px 0 8px}
-.pdp-price b{font:400 44px var(--serif)}
+.pdp-price b{font:400 44px var(--serif);font-variant-numeric:tabular-nums}
 .pdp-price em{font:700 13px var(--mono);font-style:normal;color:var(--gold)}
 .pdp-price em:empty{display:none}
 .pdp-price s{color:var(--muted);font-size:16px}
@@ -568,9 +614,9 @@ section{padding:clamp(52px,8vh,96px) 0;border-bottom:1px solid var(--line)}
 .pdp-rev h2,.pdp-rel h2{font-size:24px;margin-bottom:20px}
 .pdp-rev-head{display:flex;align-items:baseline;justify-content:space-between;gap:16px}
 .pdp-score{display:flex;align-items:baseline;gap:8px;margin:0}
-.pdp-score b{font:400 30px var(--serif);color:var(--gold)}
+.pdp-score b{font:400 30px var(--serif);color:var(--gold);font-variant-numeric:tabular-nums}
 .pdp-score b:empty{display:none}
-.pdp-score span{color:var(--muted);font-size:12px}
+.pdp-score span{color:var(--muted);font-size:12px;overflow-wrap:anywhere}
 .pdp-score:has(b:empty){display:none}
 .ds-rev-list{list-style:none;margin:0;padding:0;display:grid;gap:12px}
 .ds-rev-item{border:1px solid var(--line);border-radius:14px;padding:18px 20px;background:var(--ink-2)}
@@ -599,14 +645,18 @@ footer{padding:34px 0 44px;border-top:1px solid var(--line)}
 /* Reveal */
 .reveal{opacity:0;transform:translateY(24px);transition:opacity .8s ease,transform .8s var(--ease)}
 .reveal.on{opacity:1;transform:none}
-@media(prefers-reduced-motion:reduce){.reveal{opacity:1;transform:none}.ribbon-track{animation:none}}
+@media(prefers-reduced-motion:reduce){
+  .reveal{opacity:1;transform:none}
+  .ribbon-track{animation:none}
+  .ds-product:hover,.btn-gold:hover,.btn-ghost:hover,.ds-offer:hover,.ds-plan:hover{transform:none}
+}
 </style>
 </head>
 <body>
 
 <div class="ribbon" data-flag="announcements"><div class="ribbon-track">
-  {{announcements}}
-  {{announcements}}
+  <span class="ribbon-set">{{announcements}}</span>
+  <span class="ribbon-set" aria-hidden="true">{{announcements}}</span>
 </div></div>
 
 <header class="top"><div class="top-in">
@@ -938,7 +988,7 @@ footer{padding:34px 0 44px;border-top:1px solid var(--line)}
   /*Sin anuncios cargados la cinta dorada quedaba como una franja vacía.*/
   var ribbon = document.querySelector('.ribbon');
   var track = ribbon && ribbon.querySelector('.ribbon-track');
-  if (ribbon && track && !track.children.length && !track.textContent.trim()) ribbon.remove();
+  if (ribbon && track && !track.querySelector('.ds-note')) ribbon.remove();
   var sheet = document.getElementById('m-sheet');
   if (sheet) {
     var scrim = document.querySelector('.m-scrim');
