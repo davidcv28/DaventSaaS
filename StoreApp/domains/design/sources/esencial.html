@@ -121,7 +121,7 @@ a{color:inherit}
 .brand:hover .mark{transform:rotate(-18deg) scale(1.08)}
 .nav{display:flex;flex-wrap:wrap;gap:6px 20px;align-items:center}
 /* Menú móvil del dashboard (tab bar + hoja): solo existe bajo 760px. */
-.m-tabs,.m-scrim,.m-sheet{display:none}
+.m-scrim,.m-sheet{display:none}
 .nav-toggle{
   display:none;place-items:center;width:40px;height:40px;flex:none;
   border:1px solid var(--line);border-radius:10px;background:var(--surface);
@@ -547,37 +547,20 @@ html[data-ds-style="esencial-premium"][data-ds-theme="dark"] .ticker-item .icon{
   .ds-service{grid-template-columns:44px minmax(0,1fr);gap:14px}
   .ds-service::before{width:44px;height:44px;border-radius:12px}
 
-  /* Menú móvil: tab bar inferior + hoja, calcado del dashboard del dueño.
-     El nav de la cabecera es solo escritorio; en pantallas chicas los
-     destinos viven en la barra fija (Inicio/Catálogo/Servicios) y el resto
-     en la hoja que abre "Más". La cabecera queda fija arriba. */
+  /* Menú móvil como gimnasio: hamburguesa en la cabecera (fija arriba) +
+     hoja a pantalla completa. El nav de la cabecera es solo escritorio.
+     La hoja cubre el documento entero (inset:0), así el puente no tiene
+     que repinnarla al viewport visible. */
   .site-header .wrap{flex-wrap:nowrap;gap:10px}
   .nav{display:none}
+  .nav-toggle{display:grid;margin-inline-start:auto}
   .site-header{position:fixed;top:0;left:0;right:0}
-  body{padding-top:64px;padding-bottom:calc(70px + env(safe-area-inset-bottom))}
-  .m-tabs{
-    position:fixed;left:0;right:0;bottom:0;z-index:68;display:flex;align-items:stretch;justify-content:space-around;
-    background:color-mix(in srgb,var(--bg) 90%,transparent);backdrop-filter:blur(14px) saturate(1.3);
-    border-top:1px solid var(--line);
-    padding:6px calc(6px + env(safe-area-inset-right)) calc(6px + env(safe-area-inset-bottom)) calc(6px + env(safe-area-inset-left));
-  }
-  .m-tab{
-    position:relative;flex:1 1 0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;
-    min-height:52px;padding:0 4px;border:0;border-radius:12px;background:none;color:var(--muted);
-    font:600 10.5px var(--font-body);text-align:center;text-decoration:none;cursor:pointer;
-  }
-  .m-tab svg{transition:transform .2s}
-  .m-tab:hover{color:var(--ink)}
-  .m-tab.is-on{color:var(--accent)}
-  .m-tab.is-on::before{content:"";position:absolute;top:2px;left:50%;width:18px;height:3px;border-radius:3px;background:var(--accent);transform:translateX(-50%)}
-  .m-tab:active{background:var(--surface)}
+  body{padding-top:64px}
   .m-sheet{
     display:flex;flex-direction:column;visibility:hidden;position:fixed;z-index:70;
-    left:0;right:0;bottom:0;max-height:min(78dvh,560px);
-    background:var(--surface);color:var(--ink);border-top:1px solid var(--line);
-    border-radius:18px 18px 0 0;
-    transform:translateY(102%);transition:transform .3s var(--ease),visibility .3s;
-    box-shadow:0 -18px 50px -18px color-mix(in srgb,var(--ink) 45%,transparent);
+    inset:0;
+    background:var(--surface);color:var(--ink);
+    transform:translateY(-102%);transition:transform .3s var(--ease),visibility .3s;
   }
   .m-sheet.open{visibility:visible;transform:none}
   .m-sheet-head{position:relative;display:grid;gap:6px;padding:10px 16px 8px;border-bottom:1px solid var(--line)}
@@ -586,8 +569,8 @@ html[data-ds-style="esencial-premium"][data-ds-theme="dark"] .ticker-item .icon{
   .m-sheet-brand .mark{display:grid;place-items:center;width:30px;height:30px;border-radius:10px;background:var(--accent);color:var(--accent-ink);font-family:var(--font-display);font-weight:700;font-size:.85rem}
   .m-sheet-brand strong{font-family:var(--font-display);font-weight:700;font-size:16px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
   .m-close{position:absolute;top:14px;right:12px;display:grid;place-items:center;width:40px;height:40px;border:1px solid var(--line);border-radius:50%;background:var(--bg);color:var(--ink);font-size:22px;line-height:1;cursor:pointer}
-  .m-sheet-nav{display:grid;gap:0;padding:8px 12px calc(12px + env(safe-area-inset-bottom));overflow-y:auto}
-  .m-sheet-nav a{display:flex;align-items:center;justify-content:space-between;gap:12px;min-height:48px;padding:8px 12px;border-bottom:1px solid var(--line);font-size:15px;text-decoration:none;color:var(--ink)}
+  .m-sheet-nav{display:grid;gap:0;align-content:start;padding:16px 12px calc(16px + env(safe-area-inset-bottom));overflow-y:auto}
+  .m-sheet-nav a{display:flex;align-items:center;justify-content:space-between;gap:12px;min-height:56px;padding:8px 12px;border-bottom:1px solid var(--line);font-size:17px;text-decoration:none;color:var(--ink)}
   .m-sheet-nav a span:last-child{font-family:var(--font-display);font-size:9.5px;letter-spacing:.14em;color:var(--muted)}
   .m-sheet-nav a:hover{color:var(--accent)}
   .m-scrim.open{display:block;position:fixed;inset:0;z-index:69;background:rgba(9,12,10,.55)}
@@ -630,27 +613,6 @@ html[data-ds-style="esencial-premium"][data-ds-theme="dark"] .ticker-item .icon{
   .cat-sort select{font-size:16px;min-height:40px}
   .ds-service:hover{padding-inline:0}
   .ticker-track{gap:32px;padding-block:12px}
-
-  /* Tab bar flotante: píldora con pestaña activa rellena. */
-  body{padding-bottom:calc(92px + env(safe-area-inset-bottom))}
-  .m-tabs{
-    position:fixed;left:0;right:0;bottom:0;
-    height:calc(64px + env(safe-area-inset-bottom));gap:4px;padding:6px 6px calc(6px + env(safe-area-inset-bottom));border:0;border-top:1px solid var(--line);border-radius:0;
-    background:color-mix(in srgb,var(--surface) 92%,transparent);
-    backdrop-filter:blur(16px) saturate(1.4);-webkit-backdrop-filter:blur(16px) saturate(1.4);
-    box-shadow:0 16px 36px -16px color-mix(in srgb,var(--ink) 55%,transparent),0 2px 6px -2px color-mix(in srgb,var(--ink) 18%,transparent);
-  }
-  .m-tab{
-    min-height:54px;gap:4px;border-radius:16px;font-size:11px;letter-spacing:.01em;
-    -webkit-tap-highlight-color:transparent;
-    transition:background-color .25s var(--ease),color .25s var(--ease),transform .15s;
-  }
-  .m-tab svg{width:22px;height:22px;stroke-width:1.8}
-  .m-tab.is-on{background:color-mix(in srgb,var(--accent) 14%,transparent);color:var(--accent)}
-  .m-tab.is-on::before{display:none}
-  .m-tab.is-on svg{transform:translateY(-1px) scale(1.08)}
-  .m-tab:active{transform:scale(.94);background:color-mix(in srgb,var(--accent) 10%,transparent)}
-  .m-tab:focus-visible{outline-offset:-2px}
 }
 @media (max-width:360px){
   .catalog-grid{grid-template-columns:minmax(0,1fr)}
@@ -695,30 +657,14 @@ html[data-ds-style="esencial-premium"][data-ds-theme="dark"] .ticker-item .icon{
       <a href="#suscripciones" data-ds-route="home" data-ds-anchor data-flag="plans">Suscripciones</a>
       <a href="#contacto" data-ds-route="home" data-ds-anchor data-flag="contact">Contacto</a>
     </nav>
+    <button class="nav-toggle" type="button" aria-expanded="false" aria-controls="m-sheet" aria-label="Abrir menú" data-m-open>
+      <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16"/></svg>
+    </button>
   </div>
 </header>
 
-<nav class="m-tabs" aria-label="Secciones principales" data-ds-pin="bottom">
-  <a class="m-tab" href="#inicio" data-ds-route="home">
-    <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 10.5 12 3l9 7.5"/><path d="M5 9.5V21h14V9.5"/></svg>
-    <span>Inicio</span>
-  </a>
-  <a class="m-tab" href="#catalogo" data-ds-route="catalog" data-flag="catalog">
-    <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16"/><path d="M7 7v10M17 7v10"/></svg>
-    <span>Catálogo</span>
-  </a>
-  <a class="m-tab" href="#servicios" data-ds-route="services" data-flag="services">
-    <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="6" cy="6" r="2.4"/><circle cx="18" cy="18" r="2.4"/><path d="m8 8 8 8M18 6 8 18"/></svg>
-    <span>Servicios</span>
-  </a>
-  <button class="m-tab" type="button" aria-expanded="false" aria-controls="m-sheet" data-m-open>
-    <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16"/></svg>
-    <span>Más</span>
-  </button>
-</nav>
-
 <div class="m-scrim" data-m-close aria-hidden="true"></div>
-<div id="m-sheet" class="m-sheet" role="dialog" aria-modal="true" aria-label="Todas las secciones" data-ds-pin="bottom">
+<div id="m-sheet" class="m-sheet" role="dialog" aria-modal="true" aria-label="Todas las secciones">
   <div class="m-sheet-head">
     <span class="m-grab" aria-hidden="true"></span>
     <div class="m-sheet-brand">
@@ -985,20 +931,6 @@ html[data-ds-style="esencial-premium"][data-ds-theme="dark"] .ticker-item .icon{
     closers.forEach(function(el){ el.addEventListener('click', function(){ setOpen(false); }); });
     document.addEventListener('keydown', function(e){ if (e.key === 'Escape') setOpen(false); });
   }
-
-  // Pestaña activa de la barra móvil (el host cambia data-ds-surface).
-  var paintTabs = function(){
-    var surface = document.documentElement.getAttribute('data-ds-surface') || 'landing';
-    [].forEach.call(document.querySelectorAll('.m-tab[data-ds-route]'), function(tab){
-      var route = tab.getAttribute('data-ds-route');
-      var on = (surface === 'landing' && route === 'home') || (surface === 'catalog' && route === 'catalog') || (surface === 'services' && route === 'services');
-      tab.classList.toggle('is-on', on);
-      if (on) tab.setAttribute('aria-current', 'page');
-      else tab.removeAttribute('aria-current');
-    });
-  };
-  paintTabs();
-  new MutationObserver(paintTabs).observe(document.documentElement, { attributes: true, attributeFilter: ['data-ds-surface'] });
 
   // Tarjeta del hero: se inclina siguiendo el puntero (solo con mouse).
   var tilt = document.getElementById('hero-tilt');
