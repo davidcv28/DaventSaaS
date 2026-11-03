@@ -630,6 +630,27 @@ html[data-ds-style="esencial-premium"][data-ds-theme="dark"] .ticker-item .icon{
   .cat-sort select{font-size:16px;min-height:40px}
   .ds-service:hover{padding-inline:0}
   .ticker-track{gap:32px;padding-block:12px}
+
+  /* Tab bar flotante: píldora con pestaña activa rellena. */
+  body{padding-bottom:calc(92px + env(safe-area-inset-bottom))}
+  .m-tabs{
+    left:12px;right:12px;bottom:calc(10px + env(safe-area-inset-bottom));
+    gap:4px;padding:6px;border:1px solid var(--line);border-radius:22px;
+    background:color-mix(in srgb,var(--surface) 92%,transparent);
+    backdrop-filter:blur(16px) saturate(1.4);-webkit-backdrop-filter:blur(16px) saturate(1.4);
+    box-shadow:0 16px 36px -16px color-mix(in srgb,var(--ink) 55%,transparent),0 2px 6px -2px color-mix(in srgb,var(--ink) 18%,transparent);
+  }
+  .m-tab{
+    min-height:54px;gap:4px;border-radius:16px;font-size:11px;letter-spacing:.01em;
+    -webkit-tap-highlight-color:transparent;
+    transition:background-color .25s var(--ease),color .25s var(--ease),transform .15s;
+  }
+  .m-tab svg{width:22px;height:22px;stroke-width:1.8}
+  .m-tab.is-on{background:color-mix(in srgb,var(--accent) 14%,transparent);color:var(--accent)}
+  .m-tab.is-on::before{display:none}
+  .m-tab.is-on svg{transform:translateY(-1px) scale(1.08)}
+  .m-tab:active{transform:scale(.94);background:color-mix(in srgb,var(--accent) 10%,transparent)}
+  .m-tab:focus-visible{outline-offset:-2px}
 }
 @media (max-width:360px){
   .catalog-grid{grid-template-columns:minmax(0,1fr)}
