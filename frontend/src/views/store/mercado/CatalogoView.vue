@@ -9,12 +9,15 @@ import { ref, computed, inject, nextTick, watch } from 'vue'
 import { storeHostSlug } from '../../../config/env.js'
 import { productDiscount, offerEndsLabel, offerPct } from '../../../api/catalog.api.js'
 import { useStoreCatalog, SORT_OPTIONS } from '../../../composables/useStoreCatalog.js'
+import { templateBlock } from '../../../templates/index.js'
 import TplProductCard from '../../../components/store/TplProductCard.vue'
 import AppIcon from '../../../components/AppIcon.vue'
 import { useCardTitles } from './useCardTitles.js'
 
 const ctx = inject('storePage')
 const { custom, shopName, slug, ui } = ctx
+// enabled de cada bloque del catálogo según layout_config (editor "Qué mostrar").
+const blkOn = (id) => templateBlock(ctx.pageTemplate.value, 'catalog', id, ctx.custom.value?.layout_config).enabled !== false
 const homeTo = computed(() => ({ path: storeHostSlug ? '/' : `/${slug.value}` }))
 const c = useStoreCatalog({ pageSize: 24 })
 const {
@@ -137,6 +140,7 @@ const activeChips = computed(() => {
 
       <div class="mc-cat-layout">
         <button
+          v-if="blkOn('filters')"
           ref="filtersToggle" type="button" class="mc-cat-filters-toggle"
           :aria-expanded="filtersOpen" aria-controls="mc-cat-filters" @click="filtersOpen = !filtersOpen"
         >
@@ -144,7 +148,7 @@ const activeChips = computed(() => {
           <span v-if="filtersCount" class="mc-cat-filters-count">{{ filtersCount }}</span>
         </button>
 
-        <aside id="mc-cat-filters" class="mc-cat-aside" :class="{ 'is-open': filtersOpen }" aria-label="Filtros del catálogo">
+        <aside v-if="blkOn('filters')" id="mc-cat-filters" class="mc-cat-aside" :class="{ 'is-open': filtersOpen }" aria-label="Filtros del catálogo">
           <div class="mc-cat-aside-head">
             <strong>Filtros</strong>
             <button type="button" class="mc-cat-aside-close" aria-label="Cerrar filtros" @click="closeFilters">
@@ -225,7 +229,7 @@ const activeChips = computed(() => {
                 <AppIcon name="layout-grid" :size="16" aria-hidden="true" />
               </button>
             </div>
-            <label class="mc-cat-sort">
+            <label v-if="blkOn('sort')" class="mc-cat-sort">
               <span>Ordenar por</span>
               <select v-model="sort">
                 <option v-for="opt in SORT_OPTIONS" :key="opt.value" :value="opt.value">{{ opt.label }}</option>
@@ -279,7 +283,7 @@ const activeChips = computed(() => {
                 </span>
                 <span v-if="view === 'grid'" class="tpc-go" aria-hidden="true">Ver producto</span>
               </template>
-              <template v-if="promoOf(p)" #tags>
+              <template v-if="promoOf(p) && blkOn('promo')" #tags>
                 <p class="mc-cat-promo">{{ promoOf(p).name }}<span v-if="offerEndsLabel(promoOf(p))"> · {{ offerEndsLabel(promoOf(p)) }}</span></p>
               </template>
             </TplProductCard>

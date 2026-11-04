@@ -9,12 +9,15 @@ import { storeHostSlug } from '../../../config/env.js'
 import { formatARS } from '../../../api/billing.api.js'
 import { productDiscount, offerEndsLabel } from '../../../api/catalog.api.js'
 import { useStoreCatalog, SORT_OPTIONS } from '../../../composables/useStoreCatalog.js'
+import { templateBlock } from '../../../templates/index.js'
 import TplProductCard from '../../../components/store/TplProductCard.vue'
 import AppIcon from '../../../components/AppIcon.vue'
 import { vReveal } from '../../../directives/reveal.js'
 
 const ctx = inject('storePage')
 const { custom, shopName, slug } = ctx
+// enabled de cada bloque del catálogo según layout_config (editor "Qué mostrar").
+const blkOn = (id) => templateBlock(ctx.pageTemplate.value, 'catalog', id, ctx.custom.value?.layout_config).enabled !== false
 const homeTo = computed(() => ({ path: storeHostSlug ? '/' : `/${slug.value}` }))
 const c = useStoreCatalog({ pageSize: 12 })
 const {
@@ -82,7 +85,7 @@ const toggleFeature = (name, value) => pickFeature(name, value)
     </header>
 
     <!-- Promociones vigentes: tira hairline, no tarjeta flotante -->
-    <div v-if="promotions.length" class="rz-cat-promos" role="status">
+    <div v-if="promotions.length && blkOn('promo')" class="rz-cat-promos" role="status">
       <div class="rz-cat-wrap rz-cat-promos-inner">
         <span class="rz-cat-promos-label">Promociones vigentes</span>
         <ul>
@@ -98,6 +101,7 @@ const toggleFeature = (name, value) => pickFeature(name, value)
       <div class="rz-cat-body" @keydown.esc="closeFilters">
         <!-- Filtros: riel sticky de 280 con secciones hairline -->
         <button
+          v-if="blkOn('filters')"
           ref="filtersToggle" type="button" class="rz-cat-filters-toggle" :aria-expanded="filtersOpen"
           aria-controls="rz-cat-filters" @click="filtersOpen = !filtersOpen"
         >
@@ -106,6 +110,7 @@ const toggleFeature = (name, value) => pickFeature(name, value)
         </button>
 
         <aside
+          v-if="blkOn('filters')"
           id="rz-cat-filters" class="rz-cat-rail" :class="{ 'is-open': filtersOpen }"
           aria-label="Filtros del catálogo"
         >
@@ -191,7 +196,7 @@ const toggleFeature = (name, value) => pickFeature(name, value)
               <p class="rz-eyebrow"><span class="rz-eyebrow-num">03</span> Resultados</p>
               <h2 id="rz-cat-results-title">{{ productLabel }}</h2>
             </div>
-            <label class="rz-cat-sort">
+            <label v-if="blkOn('sort')" class="rz-cat-sort">
               <span>Ordenar</span>
               <select v-model="sort">
                 <option v-for="opt in SORT_OPTIONS" :key="opt.value" :value="opt.value">{{ opt.label }}</option>

@@ -1873,7 +1873,10 @@ async function saveShowFromModal() {
     pushToast(store.lastError || 'No se pudo guardar las páginas de tu web')
     return false
   }
-  return await saveDesign()
+  const okDesign = await saveDesign(false, true)
+  if (okDesign) pushToast('Cambios guardados ✓')
+  else pushToast(store.lastError || 'No se pudo guardar el diseño')
+  return okDesign
 }
 
 // ----- Mis servicios (sección propia del menú, gated por has_services_site) -----

@@ -245,7 +245,7 @@ async function applyShow() {
   showSaving.value = true
   const ok = await props.onSaveShow()
   showSaving.value = false
-  if (ok) { showSnapshot = takeShowSnapshot(); showOpen.value = false }
+  if (ok) { showSnapshot = takeShowSnapshot(); previewReload.value++; showOpen.value = false }
 }
 watch(showOpen, async (open) => {
   if (props.previewOpen) return
