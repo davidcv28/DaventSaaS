@@ -2768,21 +2768,9 @@ async function sendChat() {
 }
 
 // --- Asistente automático (contacto del equipo, respuestas locales) ---
-// Mismas respuestas que tenía el SupportBot en modo panel: temas sugeridos
-// + texto libre matcheado por keywords. Todo local, sin API.
-const PANEL_TOPICS = [
-  { id: 'sub', label: 'Mi suscripción', kw: 'suscripcion plan dias restantes vencida vigente' },
-  { id: 'link', label: 'Mi link público', kw: 'link url publico direccion dominio slug web' },
-  { id: 'products', label: 'Cargar productos', kw: 'productos producto catalogo cargar subir categorias marcas fotos' },
-  { id: 'design', label: 'Diseño de mi web', kw: 'diseno logo color fuente carrusel personalizar portada' },
-  { id: 'renew', label: 'Renovación del plan', kw: 'renovacion renovar debito automatico vencimiento' },
-  { id: 'invoices', label: 'Pagos y facturas', kw: 'facturas factura pagos comprobantes historial cobros' }
-]
 const botMsgs = ref([])
 const botTyping = ref(false)
 let botSeq = 0
-// Temas sugeridos del asistente: viajan como texto al endpoint MCP.
-const botPending = PANEL_TOPICS
 const BOT_FALLBACK = 'No pude responder eso todavía. Probá preguntarme por tu plan, tu tienda, tus productos, visitas, pagos o facturas.'
 
 function botPush(mine, body) {
@@ -2805,12 +2793,6 @@ async function loadAssistant() {
     }
   }
   nextTick(scrollChat)
-}
-
-function selectBotTopic(t) {
-  // Los temas sugeridos viajan como texto al asistente real (MCP).
-  if (botTyping.value) return
-  askAssistant(t.label)
 }
 
 function sendBotChat() {
@@ -5701,15 +5683,6 @@ async function changePassword() {
                 <div v-if="botTyping" class="chat-row first last">
                   <span class="chat-avatar bot"><AppIcon name="bot" :size="14" /></span>
                   <div class="chat-msg"><p class="chat-typing"><i /><i /><i /></p></div>
-                </div>
-                <div v-if="botPending.length && !botTyping" class="chat-sugg">
-                  <button
-                    v-for="t in botPending" :key="t.id" type="button"
-                    class="chat-sugg-msg"
-                    @click="selectBotTopic(t)"
-                  >
-                    {{ t.label }}
-                  </button>
                 </div>
               </template>
               <template v-else>
