@@ -144,7 +144,7 @@ export const useBillingStore = defineStore('billing', () => {
     try {
       redemptions.value = await billingApi.myRedemptions()
       redemptionsStatus.value = 'success'
-    } catch (e) {
+    } catch {
       redemptionsStatus.value = 'error'
     }
   }

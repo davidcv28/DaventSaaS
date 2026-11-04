@@ -1,7 +1,6 @@
 from .anthropic import anthropic_enabled, ask_claude
 from .llm import ask_llm, llm_enabled
 from .mcp import SERVER_NAME, SERVER_VERSION, call_tool, tools_list
-from .user_tools import assistant_snapshot, mcp_user_access
 from .services import (
     apply_style,
     catalog_summary,
@@ -11,6 +10,7 @@ from .services import (
     list_design_styles,
     search_design_styles,
 )
+from .user_tools import assistant_snapshot, mcp_user_access
 
 __all__ = [
     'SERVER_NAME',

@@ -137,7 +137,7 @@ export const usePaymentsStore = defineStore('payments', () => {
     try {
       const data = await paymentsApi.syncPayments(paymentId)
       return data?.synced || 0
-    } catch (e) {
+    } catch {
       return 0
     }
   }

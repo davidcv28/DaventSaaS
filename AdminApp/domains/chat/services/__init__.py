@@ -1,5 +1,5 @@
-from .attachments import CHAT_PRIVATE_PREFIX, chat_image_url, upload_chat_image
 from .assistant import ensure_greeting, reply_to_user
+from .attachments import CHAT_PRIVATE_PREFIX, chat_image_url, upload_chat_image
 from .services import (
     ONLINE_SECONDS,
     chat_enabled,

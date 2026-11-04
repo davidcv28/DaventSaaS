@@ -7,7 +7,7 @@ cupos del plan se rechequean bajo lock en el create.
 """
 import secrets
 import time
-from datetime import timedelta, timezone as dt_timezone
+from datetime import UTC, timedelta
 
 from django.contrib.auth.models import User
 from django.core import signing
@@ -1172,9 +1172,9 @@ class SpecialOfferCampaignTests(TestCase):
             slug = 'ano-nuevo', name = 'Año Nuevo', accent = '#0E7C7B',
             month = 12, day = 28, duration_days = 6,
         )
-        self.assertTrue(campaign.is_running(timezone.datetime(2030, 1, 1, 12, 0, tzinfo = dt_timezone.utc)))
-        self.assertTrue(campaign.is_running(timezone.datetime(2030, 12, 30, 12, 0, tzinfo = dt_timezone.utc)))
-        self.assertFalse(campaign.is_running(timezone.datetime(2030, 1, 10, 12, 0, tzinfo = dt_timezone.utc)))
+        self.assertTrue(campaign.is_running(timezone.datetime(2030, 1, 1, 12, 0, tzinfo = UTC)))
+        self.assertTrue(campaign.is_running(timezone.datetime(2030, 12, 30, 12, 0, tzinfo = UTC)))
+        self.assertFalse(campaign.is_running(timezone.datetime(2030, 1, 10, 12, 0, tzinfo = UTC)))
 
     def test_owner_can_tag_discount_with_active_campaign(self):
         #El dueño etiqueta su descuento por id de campaña; el listado le

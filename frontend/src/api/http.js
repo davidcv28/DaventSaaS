@@ -10,8 +10,6 @@ import { env } from '../config/env.js'
 //   - Los endpoints que consumen la cookie exigen doble-submit CSRF:
 //     cookie 'davent_csrf' (legible) == header X-CSRFToken.
 // =============================================================================
-const CSRF_COOKIE = 'davent_csrf'
-
 // Higiene: tokens que hayan quedado en localStorage de versiones anteriores
 // (pre cookie-refresh) se borran — un XSS no debería encontrar credenciales.
 try {

@@ -813,6 +813,7 @@ def build_store_context(store, product = None, flags = None, raw_keys = None):
     headline = _text(getattr(customization, 'headline', ''), 140)
     about = _text(getattr(customization, 'about_text', ''), 400)
     from django.utils import timezone
+
     from StoreApp.domains.stores.services import contact_redirect_path
 
     context = {

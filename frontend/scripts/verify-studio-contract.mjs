@@ -3,7 +3,7 @@
 // Corre en node puro — contract.js es autocontenido justamente para esto.
 
 import {
-  SITE_THEME_DEFAULTS, STUDIO_ENUMS, STUDIO_MSG, STUDIO_SURFACES,
+  SITE_THEME_DEFAULTS, STUDIO_MSG, STUDIO_SURFACES,
   resolveSiteTheme, themeToCssVars, themeDataAttrs, themeExplicitKeys, pickThemeVars,
   contrastRatio, fixContrast, textOn, normalizeHex,
   resolveStudioPreset, presetToPatch,

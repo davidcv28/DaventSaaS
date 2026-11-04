@@ -59,9 +59,9 @@ def _session_user(ctx : Context):
     token   =   (headers.get('authorization') or headers.get('Authorization') or '')
     if not token.startswith('Bearer '):
         return None
-    from rest_framework_simplejwt.authentication import JWTAuthentication
     from rest_framework.request import Request
     from rest_framework.test import APIRequestFactory
+    from rest_framework_simplejwt.authentication import JWTAuthentication
     try:
         django_request  =   APIRequestFactory().get('/')
         django_request.META['HTTP_AUTHORIZATION']   =   token

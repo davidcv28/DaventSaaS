@@ -20,7 +20,7 @@ export const useLegalStore = defineStore('legal', () => {
     } catch (err) {
       status.value = 'error'
       const parsed = extractApiError(err)
-      const { nonField, status: _s, pendingBackend, ...fields } = parsed
+      const { nonField, status: _s, pendingBackend: _pb, ...fields } = parsed
       fieldErrors.value = fields
       lastError.value = nonField || Object.values(fields)[0] || 'Ocurrió un error'
       if (err.response?.status === 404) {

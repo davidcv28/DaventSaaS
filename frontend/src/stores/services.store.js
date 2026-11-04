@@ -20,7 +20,7 @@ export const useServicesStore = defineStore('services', () => {
 
   function setApiError(err) {
     const parsed = extractApiError(err)
-    const { nonField, status: _s, pendingBackend, ...fields } = parsed
+    const { nonField, status: _s, pendingBackend: _pb, ...fields } = parsed
     lastError.value = nonField || Object.values(fields)[0] || 'Ocurrió un error'
     if (parsed.status === 403) denied.value = true
     fieldErrors.value = fields
