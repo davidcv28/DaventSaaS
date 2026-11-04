@@ -1300,8 +1300,8 @@ footer::before{content:"";position:absolute;top:-1px;left:50%;transform:translat
       <h2>Catálogo <em>destacado</em></h2>
       <p><a href="#catalogo" data-ds-route="catalog">Ver catálogo completo →</a></p>
     </div>
-    <div class="cats ds-zone">{{categories}}</div>
-    <div class="grid ds-zone">{{products}}</div>
+    <div class="cats ds-zone" data-flag="categories">{{categories}}</div>
+    <div class="grid ds-zone" data-flag="featured">{{products}}</div>
   </div></section>
 
   <section data-flag="gallery"><div class="wrap reveal">

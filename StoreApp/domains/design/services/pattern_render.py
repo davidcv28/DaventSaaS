@@ -181,8 +181,16 @@ def _page_flags(store, customization):
     pages = set(effective_site_templates(store))
     def on(name, default = True):
         return bool(getattr(customization, name, default))
+    catalog_on = 'catalog' in pages and on('show_catalog')
     return {
-        'catalog':  'catalog' in pages and on('show_catalog'),
+        'catalog':  catalog_on,
+        #Bloques de landing que viven del catálogo: apagar la página también
+        #apaga sus zonas; el bloque individual las apaga vía _BLOCK_FLAGS.
+        'categories': catalog_on,
+        'featured':   catalog_on,
+        #Bloques de landing sin show_* propio: solo los apaga "Qué mostrar".
+        'steps':      True,
+        'compare':    True,
         'services': 'services' in pages and on('show_services'),
         'plans':    'plans' in pages and on('show_plans'),
         'contact':  on('show_contact'),
@@ -216,9 +224,10 @@ def _page_flags(store, customization):
 #(site_templates) y sus bloques de inicio comparten el flag con la
 #superficie entera — un toggle de sección no puede apagar la página.
 _BLOCK_FLAGS = frozenset({
-    'about', 'announcements', 'benefits', 'contact', 'countdown', 'brands',
-    'cta', 'faq', 'gallery', 'highlights', 'offers', 'plans', 'stats',
-    'team', 'testimonials', 'timeline', 'video',
+    'about', 'announcements', 'benefits', 'brands', 'categories', 'compare',
+    'contact', 'countdown', 'cta', 'faq', 'featured', 'gallery', 'highlights',
+    'offers', 'plans', 'stats', 'steps', 'team', 'testimonials', 'timeline',
+    'video',
 })
 
 def _zone_flags(flags, customization):

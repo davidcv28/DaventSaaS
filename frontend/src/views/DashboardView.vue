@@ -1839,6 +1839,9 @@ function loadSitePatterns() {
   return sitePatternPromise
 }
 onMounted(() => loadSitePatterns())
+// Toggle de página en "Qué mostrar": solo muta el form (borrador). La
+// publicación sale del footer del modal — «Aplicar y guardar» →
+// saveShowFromModal — que hace el PATCH de páginas + saveDesign una vez.
 async function toggleSiteTemplate(key) {
   if (!canToggleSiteTemplate(key)) return
   const current = [...designSiteTemplates.value]
@@ -1853,17 +1856,24 @@ async function toggleSiteTemplate(key) {
       return
     }
   }
-  const prev = normalizeSiteTemplates(designForm.site_templates)
   designForm.site_templates = next
   designForm.show_catalog = next.includes('catalog')
+}
+// «Aplicar y guardar» del modal: primero el set de páginas (reglas de
+// plan/diseño propias del PATCH), después el diseño completo — publica
+// layout_config con los bloques apagados/prendidos.
+async function saveShowFromModal() {
   siteTemplatesBusy.value = true
-  const ok = await store.saveCustomization({ site_templates: next })
-  if (!ok) {
-    designForm.site_templates = prev
-    designForm.show_catalog = prev.includes('catalog')
-    pushToast(store.lastError || 'No se pudo guardar las páginas de tu web')
-  }
+  const okPages = await store.saveCustomization({
+    site_templates: normalizeSiteTemplates(designForm.site_templates),
+    show_catalog: Boolean(designForm.show_catalog)
+  })
   siteTemplatesBusy.value = false
+  if (!okPages) {
+    pushToast(store.lastError || 'No se pudo guardar las páginas de tu web')
+    return false
+  }
+  return await saveDesign()
 }
 
 // ----- Mis servicios (sección propia del menú, gated por has_services_site) -----
@@ -4159,7 +4169,7 @@ async function changePassword() {
         :form="designForm" :benefits="plan?.benefits || {}"
         :shop-name="store.customization?.display_name || business" :can-studio="canDesignAdvanced"
         :site-templates="designSiteTemplates" v-model:preview-open="designPreviewOpen"
-        :page-options="designPageOptions" @toggle-page="toggleSiteTemplate"
+        :page-options="designPageOptions" @toggle-page="toggleSiteTemplate" :on-save-show="saveShowFromModal"
         @navigate="section = $event" @open-studio="router.push({ name: 'design-studio' })"
       >
         <template #actions>

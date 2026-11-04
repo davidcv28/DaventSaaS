@@ -3,7 +3,7 @@
 // mostrar iconos y muestras de color en cada opción (el nativo no lo permite).
 // Mantiene la semántica de listbox y el teclado básico (Escape, flechas,
 // Enter) y emite el valor, no el evento.
-import { computed, onBeforeUnmount, onMounted, ref } from 'vue'
+import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import AppIcon from '../AppIcon.vue'
 
 const props = defineProps({
@@ -67,11 +67,29 @@ function onKey(e) {
     pick(flat.value[active.value])
   }
 }
+// En pantallas chicas el menú deja de ser un dropdown absoluto dentro del
+// card (el contenedor lo recortaba por overflow y por ancho) y pasa a ser
+// una hoja inferior fija, teletransportada a <body>, con scrim y scroll
+// propio — el patrón de picker nativo en touch.
+const mobileQuery = typeof window !== 'undefined' ? window.matchMedia('(max-width: 640px)') : null
+const isMobile = ref(Boolean(mobileQuery?.matches))
+const onMobileQuery = (e) => { isMobile.value = e.matches }
+watch(open, (v) => { document.body.style.overflow = v && isMobile.value ? 'hidden' : '' })
+
 function onDocClick(e) {
-  if (root.value && !root.value.contains(e.target)) open.value = false
+  // El menú teletransportado vive fuera de `root`: no cerrar si el toque
+  // cayó dentro de la hoja (el scrim cierra por su propio handler).
+  if (root.value && !root.value.contains(e.target) && !e.target.closest?.('.ds-menu')) open.value = false
 }
-onMounted(() => document.addEventListener('pointerdown', onDocClick))
-onBeforeUnmount(() => document.removeEventListener('pointerdown', onDocClick))
+onMounted(() => {
+  document.addEventListener('pointerdown', onDocClick)
+  mobileQuery?.addEventListener('change', onMobileQuery)
+})
+onBeforeUnmount(() => {
+  document.removeEventListener('pointerdown', onDocClick)
+  mobileQuery?.removeEventListener('change', onMobileQuery)
+  if (open.value && isMobile.value) document.body.style.overflow = ''
+})
 </script>
 
 <template>
@@ -87,7 +105,9 @@ onBeforeUnmount(() => document.removeEventListener('pointerdown', onDocClick))
       <AppIcon name="chevron-down" :size="15" class="ds-chev" aria-hidden="true" />
     </button>
 
-    <div v-if="open" class="ds-menu" role="listbox" :aria-label="ariaLabel || placeholder">
+    <Teleport to="body" :disabled="!isMobile">
+      <div v-if="open && isMobile" class="ds-scrim" aria-hidden="true" @click="open = false"></div>
+      <div v-if="open" class="ds-menu" :class="{ 'ds-sheet': isMobile }" role="listbox" :aria-label="ariaLabel || placeholder">
       <template v-for="g in (groups.length ? groups : [{ label: '', options }])" :key="g.label">
         <p v-if="g.label" class="ds-group">{{ g.label }}</p>
         <button
@@ -106,7 +126,8 @@ onBeforeUnmount(() => document.removeEventListener('pointerdown', onDocClick))
           <AppIcon v-if="String(o.value) === String(modelValue)" name="check" :size="14" :stroke="2.4" class="ds-check" aria-hidden="true" />
         </button>
       </template>
-    </div>
+      </div>
+    </Teleport>
   </div>
 </template>
 
@@ -137,10 +158,27 @@ onBeforeUnmount(() => document.removeEventListener('pointerdown', onDocClick))
 .ds-opt-icon { flex: none; color: var(--ink-2, #334155); }
 .ds-menu {
   position: absolute; z-index: 30; top: calc(100% + 6px); left: 0; right: 0;
-  max-height: 300px; overflow-y: auto; padding: 6px;
+  max-height: min(300px, 50vh); overflow-y: auto; padding: 6px;
   border: 1px solid var(--line, #e5e7eb); border-radius: 12px;
   background: var(--card, #fff); box-shadow: 0 18px 40px -18px rgba(15, 23, 42, .35);
 }
+/* Móvil: hoja inferior fija teletransportada a <body> — ningún ancestro
+   con overflow la recorta y usa todo el ancho del viewport. */
+.ds-scrim {
+  position: fixed; inset: 0; z-index: 1400;
+  background: rgba(9, 12, 24, .45); touch-action: none;
+}
+@media (max-width: 640px) {
+  .ds-menu.ds-sheet {
+    position: fixed; top: auto; left: 10px; right: 10px;
+    bottom: calc(10px + env(safe-area-inset-bottom)); z-index: 1401;
+    max-height: min(58vh, 430px); border-radius: 18px; padding: 8px;
+    box-shadow: 0 -18px 50px -18px rgba(9, 12, 24, .5);
+    animation: ds-sheet-in .24s var(--ease-out, cubic-bezier(.2, .8, .2, 1));
+  }
+  .ds-menu.ds-sheet .ds-option { min-height: 46px; }
+}
+@keyframes ds-sheet-in { from { opacity: 0; transform: translateY(14px); } }
 .ds-group {
   margin: 8px 8px 4px; font-size: 10.5px; font-weight: 700; letter-spacing: .08em;
   text-transform: uppercase; color: var(--muted, #64748b);

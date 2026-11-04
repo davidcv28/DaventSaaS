@@ -28,7 +28,10 @@ const props = defineProps({
   pageOptions: { type: Array, default: () => [] },
   // Estado del panel de vista previa: lo controla el padre para que la
   // savebar sticky también pueda abrirlo en mobile.
-  previewOpen: { type: Boolean, default: false }
+  previewOpen: { type: Boolean, default: false },
+  // Persistencia del modal "Qué mostrar": el padre publica páginas +
+  // secciones en un solo gesto (async → bool). Sin él el footer no sale.
+  onSaveShow: { type: Function, default: null }
 })
 const emit = defineEmits(['navigate', 'ring', 'open-studio', 'update:previewOpen', 'toggle-page'])
 
@@ -206,12 +209,44 @@ watch([patternOptions, styles], () => {
 // renderer público respeta el flag y saveDesign lo publica.
 const showOpen = ref(false)
 const closeShowBtn = ref(null)
+const showSaving = ref(false)
 let lastShowFocus = null
+// Borrador del modal: los toggles de páginas y secciones mutan el form
+// local (la vista previa los refleja al instante) pero nada se publica
+// hasta «Aplicar y guardar». El snapshot permite descartar al cerrar.
+let showSnapshot = null
+const takeShowSnapshot = () => JSON.stringify({
+  site_templates: props.form.site_templates,
+  show_catalog: props.form.show_catalog,
+  layout_config: props.form.layout_config
+})
+const showDirty = computed(() => Boolean(showSnapshot) && takeShowSnapshot() !== showSnapshot)
 function openShow() {
   lastShowFocus = document.activeElement
+  showSnapshot = takeShowSnapshot()
   showOpen.value = true
 }
-function closeShow() { showOpen.value = false }
+function restoreShow() {
+  if (!showSnapshot) return
+  const s = JSON.parse(showSnapshot)
+  props.form.site_templates = s.site_templates
+  props.form.show_catalog = s.show_catalog
+  props.form.layout_config = s.layout_config
+}
+function closeShow() {
+  if (showSaving.value) return
+  // Cerrar sin aplicar descarta el borrador (el toggle visual del checkbox
+  // vuelve solo porque el form se restaura).
+  if (showDirty.value) restoreShow()
+  showOpen.value = false
+}
+async function applyShow() {
+  if (showSaving.value || !props.onSaveShow) return
+  showSaving.value = true
+  const ok = await props.onSaveShow()
+  showSaving.value = false
+  if (ok) { showSnapshot = takeShowSnapshot(); showOpen.value = false }
+}
 watch(showOpen, async (open) => {
   if (props.previewOpen) return
   document.body.style.overflow = open ? 'hidden' : ''
@@ -219,6 +254,7 @@ watch(showOpen, async (open) => {
     await nextTick()
     closeShowBtn.value?.focus()
   } else {
+    showSnapshot = null
     lastShowFocus?.focus?.()
     lastShowFocus = null
   }
@@ -364,9 +400,17 @@ onBeforeUnmount(() => {
                 <strong><AppIcon name="palette" :size="17" aria-hidden="true" /> Diseño</strong>
                 <small>Elegí el diseño y el estilo de tu web. La vista previa muestra los cambios al instante.</small>
               </div>
-              <button type="button" class="btn secondary btn-auto dmenu-show-btn" @click="openShow">
-                <AppIcon name="layout-grid" :size="16" /> Qué mostrar
-              </button>
+              <div class="dmenu-head-actions">
+                <button
+                  type="button" class="btn secondary btn-auto dmenu-preview-btn"
+                  aria-label="Ver mi web en vista previa" @click="openMobilePreview"
+                >
+                  <AppIcon name="eye" :size="16" /> Vista previa
+                </button>
+                <button type="button" class="btn secondary btn-auto dmenu-show-btn" @click="openShow">
+                  <AppIcon name="layout-grid" :size="16" /> Qué mostrar
+                </button>
+              </div>
             </div>
           </header>
 
@@ -437,7 +481,7 @@ onBeforeUnmount(() => {
             </button>
           </header>
           <div class="dshow-body">
-            <p class="dshow-hint">Elegí qué páginas y secciones aparecen en tu web. Las opciones dependen del diseño que elegiste; los cambios se publican con «Guardar cambios».</p>
+            <p class="dshow-hint">Elegí qué páginas y secciones aparecen en tu web. Las opciones dependen del diseño que elegiste; los cambios se publican con «Aplicar y guardar».</p>
 
             <section v-if="pageOptions.length" class="dshow-group" aria-label="Páginas de tu web">
               <h3>Páginas</h3>
@@ -476,6 +520,16 @@ onBeforeUnmount(() => {
               </div>
             </section>
           </div>
+          <footer v-if="onSaveShow" class="dshow-foot" :class="{ dirty: showDirty }">
+            <span v-if="showDirty" class="dshow-foot-note"><AppIcon name="pencil" :size="13" aria-hidden="true" /> Cambios sin publicar</span>
+            <span v-else class="dshow-foot-note is-clean">Sin cambios</span>
+            <div class="dshow-foot-btns">
+              <button type="button" class="btn ghost btn-auto" :disabled="!showDirty || showSaving" @click="closeShow">Descartar</button>
+              <button type="button" class="btn primary btn-auto" :disabled="!showDirty || showSaving" @click="applyShow">
+                <AppIcon name="check" :size="16" aria-hidden="true" /> {{ showSaving ? 'Guardando…' : 'Aplicar y guardar' }}
+              </button>
+            </div>
+          </footer>
         </div>
       </div>
     </Transition>
@@ -531,7 +585,17 @@ onBeforeUnmount(() => {
 .dmenu-head { display: flex; flex-direction: column; gap: 3px; min-width: 0; }
 .dmenu-head-row { display: flex; align-items: flex-start; justify-content: space-between; gap: 14px; min-width: 0; }
 .dmenu-head-txt { display: flex; flex-direction: column; gap: 3px; min-width: 0; }
+.dmenu-head-actions { flex: none; display: flex; align-items: center; gap: 8px; flex-wrap: wrap; justify-content: flex-end; }
 .dmenu-show-btn { flex: none; }
+/* Acceso siempre visible a la vista previa en pantallas sin panel embebido
+   (el FAB se auto-oculta al scrollear: no puede ser el único acceso). */
+.dmenu-preview-btn { display: none; }
+@media (max-width: 1099px) { .dmenu-preview-btn { display: inline-flex; } }
+@media (max-width: 560px) {
+  .dmenu-head-row { flex-direction: column; }
+  .dmenu-head-actions { width: 100%; justify-content: stretch; }
+  .dmenu-head-actions .btn { flex: 1 1 0; justify-content: center; }
+}
 .dmenu-head strong { display: inline-flex; align-items: center; gap: 7px; font-size: 15px; color: var(--ink); }
 .dmenu-head strong .icon { color: var(--brand-600); flex: none; }
 .dmenu-head small { font-size: 12.5px; line-height: 1.4; color: var(--muted); }
@@ -656,6 +720,25 @@ onBeforeUnmount(() => {
 .dshow-group { display: flex; flex-direction: column; gap: 10px; }
 .dshow-group h3 { margin: 0; font-size: 13px; font-weight: 700; letter-spacing: .02em; text-transform: uppercase; color: var(--muted, #64748b); }
 .dshow-ico { vertical-align: -2px; margin-right: 5px; color: var(--brand-600, #4f46e5); }
+/* Barra de acción del modal "Qué mostrar": los toggles son borrador; acá
+   se aplican y publican de una vez (o se descartan). */
+.dshow-foot {
+  flex: none; display: flex; align-items: center; justify-content: space-between; gap: 12px;
+  padding: 12px 16px calc(12px + env(safe-area-inset-bottom));
+  border-top: 1px solid var(--line, #e5e7eb); background: var(--card, #fff);
+}
+.dshow-foot.dirty { border-top-color: color-mix(in srgb, var(--brand-500, #6366f1) 34%, var(--line, #e5e7eb)); }
+.dshow-foot-note {
+  display: inline-flex; align-items: center; gap: 6px; min-width: 0;
+  font-size: 12px; font-weight: 600; color: var(--warn-ink, #b45309);
+}
+.dshow-foot-note.is-clean { color: var(--muted, #64748b); font-weight: 500; }
+.dshow-foot-btns { display: flex; align-items: center; gap: 8px; flex: none; }
+@media (max-width: 560px) {
+  .dshow-foot { flex-direction: column; align-items: stretch; gap: 8px; }
+  .dshow-foot-note { justify-content: center; }
+  .dshow-foot-btns { display: grid; grid-template-columns: 1fr 1fr; }
+}
 @media (prefers-reduced-motion: reduce) {
   .dmenu-fab, .dmenu-pv, .dmenu-pv-body { transition: none !important; }
 }
