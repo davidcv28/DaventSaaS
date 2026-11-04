@@ -197,7 +197,7 @@ body.m-open .mmenu{transform:none;visibility:visible}
    auto-dimensionado 100svh = alto del documento y realimenta el resize. */
 .hero{position:relative;min-height:var(--hero-h,640px);display:flex;align-items:flex-end;color:#fff;padding-top:var(--head-h)}
 .hero-media{position:absolute;inset:0;overflow:hidden}
-.hero-media img{width:100%;height:100%;object-fit:cover;transform:translate3d(var(--mx,0),calc(var(--my,0) + var(--py,0)),0) scale(1.08);transition:transform .3s ease-out}
+.hero-media img{width:100%;height:100%;object-fit:cover;transform:translate3d(var(--mx,0),calc(var(--my,0) + var(--py,0)),0) scale(1.04);transition:transform .3s ease-out}
 .hero-media::after{
   content:"";position:absolute;inset:0;
   background:linear-gradient(180deg,rgba(15,22,32,.42) 0%,rgba(15,22,32,.18) 40%,rgba(15,22,32,.72) 100%);
@@ -1333,7 +1333,10 @@ html[data-ds-theme="dark"] .services-list .ds-service::before{color:var(--accent
   function syncHero() {
     if (!hero) return
     var vh = frame ? frame.vh : (window.parent === window ? window.innerHeight : 0)
-    if (vh) document.documentElement.style.setProperty('--hero-h', Math.max(520, Math.round(vh)) + 'px')
+    if (vh) {
+      var h = Math.round(vh * 0.82)
+      document.documentElement.style.setProperty('--hero-h', Math.max(480, Math.min(h, 780)) + 'px')
+    }
   }
 
   /* ---------- Alto real del chrome fijo ---------- */
@@ -1463,7 +1466,7 @@ html[data-ds-theme="dark"] .services-list .ds-service::before{color:var(--accent
     if (cue) cue.style.opacity = top > 60 ? '0' : ''
     if (heroImg && !reduce) {
       var hr = heroMedia.getBoundingClientRect()
-      var py = Math.max(-34, Math.min(34, (top - hr.top + vh * 0.5) * 0.05))
+      var py = Math.max(-20, Math.min(20, (top - hr.top + vh * 0.5) * 0.04))
       heroImg.style.setProperty('--py', py.toFixed(1) + 'px')
     }
     var visibleBottom = top + vh
@@ -1517,7 +1520,7 @@ html[data-ds-theme="dark"] .services-list .ds-service::before{color:var(--accent
     if (!frame) {
       qsa('.reveal').forEach(function (el) { el.classList.add('is-in') })
       qsa('.ds-stat-value').forEach(animateStat)
-      document.documentElement.style.setProperty('--hero-h', Math.max(520, window.innerHeight) + 'px')
+      document.documentElement.style.setProperty('--hero-h', Math.max(480, Math.min(Math.round(window.innerHeight * 0.82), 780)) + 'px')
     }
     paint()
     syncHead()
