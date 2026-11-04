@@ -97,6 +97,31 @@ const visibleBrands = computed(() => {
 const view = ref('list')
 const crumb = computed(() => activeCategoryName.value || ui.search.trim() || 'Todos los productos')
 const promoOf = (p) => productDiscount(p)
+
+// ===== Chips de filtros activos (misma lectura que el documento del diseño) =====
+const activeChips = computed(() => {
+  const chips = []
+  for (const id of activeCategories.value) {
+    const cat = catalog.value.categories.find((c) => c.id === id)
+    chips.push({ key: `c-${id}`, tag: 'Categoría', label: cat?.name || 'Categoría', remove: () => pickCategory(id) })
+  }
+  for (const id of activeBrands.value) {
+    const brand = catalog.value.brands.find((b) => b.id === id)
+    chips.push({ key: `b-${id}`, tag: 'Marca', label: brand?.name || 'Marca', remove: () => pickBrand(id) })
+  }
+  if (onlyOffer.value) chips.push({ key: 'offer', tag: 'Oferta', label: 'Solo ofertas', remove: () => toggleOffer() })
+  if (priceMin.value !== '' || priceMax.value !== '') {
+    chips.push({
+      key: 'price', tag: 'Precio',
+      label: `${priceMin.value === '' ? '0' : priceMin.value} – ${priceMax.value === '' ? '∞' : priceMax.value}`,
+      remove: () => { priceMin.value = ''; priceMax.value = ''; minDraft.value = ''; maxDraft.value = '' }
+    })
+  }
+  if (ui.search.trim()) {
+    chips.push({ key: 'q', tag: 'Búsqueda', label: `“${ui.search.trim()}”`, remove: () => { ui.search = '' } })
+  }
+  return chips
+})
 </script>
 
 <template>
@@ -206,6 +231,16 @@ const promoOf = (p) => productDiscount(p)
                 <option v-for="opt in SORT_OPTIONS" :key="opt.value" :value="opt.value">{{ opt.label }}</option>
               </select>
             </label>
+          </div>
+
+          <div v-if="activeChips.length" class="mc-cat-chips">
+            <button
+              v-for="chip in activeChips" :key="chip.key" type="button" class="mc-chip"
+              :aria-label="`Quitar filtro ${chip.tag}: ${chip.label}`" @click="chip.remove()"
+            >
+              <b>{{ chip.tag }}</b><span>{{ chip.label }}</span><i aria-hidden="true">×</i>
+            </button>
+            <button v-if="activeChips.length > 1" type="button" class="mc-chip-clear" @click="clearAll">Limpiar todo</button>
           </div>
 
           <div v-if="(catalogStatus === 'loading' || catalogStatus === 'idle') && !total" class="mc-cat-list" aria-busy="true">

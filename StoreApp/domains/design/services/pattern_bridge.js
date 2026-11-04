@@ -258,6 +258,13 @@
   document.addEventListener('click', function (e) {
     var t = e.target
     if (!t || !t.closest) return
+    /* Alto del chrome fijo del diseño (masthead + pestañas) para que el
+     * host deje el destino debajo y no tapado. Opt-in: sin atributo, 72. */
+    var scrollOffset = function () {
+      var host = document.querySelector('[data-ds-offset]')
+      var n = parseInt((host && host.getAttribute('data-ds-offset')) || '', 10)
+      return n > 0 ? n : 72
+    }
     var card = t.closest('[data-ds-product]')
     if (card) { e.preventDefault(); go('product', card.getAttribute('data-ds-product')); return }
     /* Redirects de contacto (/r/whatsapp|instagram|…): el anchor viaja sin
@@ -280,7 +287,7 @@
       var sectionEl = hash.charAt(0) === '#' ? document.getElementById(hash.slice(1)) : null
       if (sectionEl && sectionEl.getClientRects().length) {
         e.preventDefault()
-        parent.postMessage({ type: 'davent:ds-scroll', top: sectionEl.getBoundingClientRect().top + (window.scrollY || 0) }, '*')
+        parent.postMessage({ type: 'davent:ds-scroll', top: sectionEl.getBoundingClientRect().top + (window.scrollY || 0), offset: scrollOffset() }, '*')
         return
       }
     }
@@ -299,7 +306,7 @@
         var targetEl = document.getElementById(href.slice(1))
         if (targetEl) {
           e.preventDefault()
-          parent.postMessage({ type: 'davent:ds-scroll', top: targetEl.getBoundingClientRect().top + (window.scrollY || 0) }, '*')
+          parent.postMessage({ type: 'davent:ds-scroll', top: targetEl.getBoundingClientRect().top + (window.scrollY || 0), offset: scrollOffset() }, '*')
         }
       }
     }
@@ -430,6 +437,71 @@
     }
     var crumb = document.querySelector('[data-ds-crumb]')
     if (crumb) crumb.textContent = state.cat || (state.q.trim() ? '“' + state.q.trim() + '”' : 'Todos los productos')
+    renderChips()
+  }
+  /* Chips de filtros activos: opt-in del diseño (`[data-ds-chips]`). Cada
+   * chip quita su propio filtro; con dos o más aparece "Limpiar todo". */
+  function removeChip(kind, value) {
+    if (kind === 'all') { resetFilters(); return }
+    if (kind === 'cat') state.cat = ''
+    else if (kind === 'brand') {
+      var i = state.brands.indexOf(value)
+      if (i >= 0) state.brands.splice(i, 1)
+    } else if (kind === 'offers') state.offers = false
+    else if (kind === 'price') {
+      state.min = ''
+      state.max = ''
+      var minInput = document.querySelector('[data-ds-price-min]')
+      var maxInput = document.querySelector('[data-ds-price-max]')
+      if (minInput) minInput.value = ''
+      if (maxInput) maxInput.value = ''
+    } else if (kind === 'q') {
+      state.q = ''
+      var search = document.querySelector('[data-ds-search-input]')
+      if (search) search.value = ''
+      var clear = document.querySelector('[data-ds-search-clear]')
+      if (clear) clear.hidden = true
+    }
+    saveState()
+    syncFilterUI()
+    applyCatalog()
+  }
+  function renderChips() {
+    var host = document.querySelector('[data-ds-chips]')
+    if (!host) return
+    var chips = []
+    if (state.cat) chips.push({ kind: 'cat', value: '', tag: 'Categoría', label: state.cat })
+    state.brands.forEach(function (brand) {
+      chips.push({ kind: 'brand', value: brand, tag: 'Marca', label: brand })
+    })
+    if (state.offers) chips.push({ kind: 'offers', value: '', tag: 'Oferta', label: 'Solo ofertas' })
+    if (state.min !== '' || state.max !== '') {
+      chips.push({
+        kind: 'price', value: '', tag: 'Precio',
+        label: (state.min === '' ? '0' : state.min) + ' – ' + (state.max === '' ? '∞' : state.max)
+      })
+    }
+    if (state.q.trim()) chips.push({ kind: 'q', value: '', tag: 'Búsqueda', label: '“' + state.q.trim() + '”' })
+    host.textContent = ''
+    host.hidden = chips.length === 0
+    if (!chips.length) return
+    chips.forEach(function (chip) {
+      var btn = document.createElement('button')
+      btn.type = 'button'
+      btn.className = 'cat-chip'
+      btn.innerHTML = '<b>' + esc(chip.tag) + '</b><span>' + esc(chip.label) + '</span><i aria-hidden="true">×</i>'
+      btn.setAttribute('aria-label', 'Quitar filtro ' + chip.tag + ': ' + chip.label)
+      btn.addEventListener('click', function () { removeChip(chip.kind, chip.value) })
+      host.appendChild(btn)
+    })
+    if (chips.length > 1) {
+      var clear = document.createElement('button')
+      clear.type = 'button'
+      clear.className = 'cat-chip-clear'
+      clear.textContent = 'Limpiar todo'
+      clear.addEventListener('click', function () { removeChip('all') })
+      host.appendChild(clear)
+    }
   }
   function setCategory(cat) {
     state.cat = cat || ''
