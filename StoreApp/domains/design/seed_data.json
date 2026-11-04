@@ -4124,37 +4124,37 @@
       "slug": "calzado",
       "nombre": "Calzado",
       "categoria": "Calzado y deportes",
-      "descripcion": "Vitrina deportiva: billboard en caja alta con Anton, foto a toda columna, grilla de fichas con badge de ahorro y pie oscuro con columnas.",
+      "descripcion": "Vitrina deportiva clásica: billboard a sangre completa con titular fino, collage mosaico con paneles rojos/negros y riel de productos.",
       "tier": "plus",
       "template": "raiz",
       "page_theme": "light",
       "pattern": "calzado",
       "tokens": {
         "palette": {
-          "primary": "#17150F",
-          "secondary": "#2A2820",
-          "accent": "#E8501E",
-          "bg": "#F2F1EC",
+          "primary": "#1A1A1A",
+          "secondary": "#333333",
+          "accent": "#EE2D45",
+          "bg": "#FFFFFF",
           "surface": "#FFFFFF",
-          "text": "#17150F",
-          "muted": "#6B6759",
-          "border": "#DDDAD0",
+          "text": "#1A1A1A",
+          "muted": "#8A8A8A",
+          "border": "#E9E9E9",
           "success": "#1a7f4b",
           "danger": "#c0392b"
         },
         "containers": {
-          "radius": "sm",
+          "radius": "none",
           "shadow": "soft",
           "border": "thin",
           "density": "comfortable",
           "surface": "flat"
         },
         "typography": {
-          "heading": "anton",
-          "subheading": "archivo",
-          "body": "archivo",
+          "heading": "montserrat",
+          "subheading": "montserrat",
+          "body": "lato",
           "scale": "balanced",
-          "weightHeading": 400,
+          "weightHeading": 600,
           "letterSpacing": "0.01em"
         },
         "buttons": {
@@ -4329,13 +4329,13 @@
         "vitrina"
       ],
       "preview": "",
-      "concept": "Papel + tinta + naranja señal: catálogo de zapatillas estilo vitrina clásica."
+      "concept": "Blanco + rojo señal: la zapatería de catálogo con foto a todo ancho."
     },
     {
       "slug": "calzado-noche",
       "nombre": "Calzado Noche",
       "categoria": "Calzado y deportes",
-      "descripcion": "La vitrina de noche: asfalto, señal flúor y el mismo billboard deportivo.",
+      "descripcion": "La vitrina de noche: asfalto, paneles rojos y el mismo billboard deportivo.",
       "tier": "plus",
       "template": "raiz",
       "page_theme": "dark",
@@ -4344,28 +4344,28 @@
         "palette": {
           "primary": "#F0EEE6",
           "secondary": "#2A2820",
-          "accent": "#FF6A3D",
-          "bg": "#141310",
-          "surface": "#1D1B16",
-          "text": "#F0EEE6",
-          "muted": "#A39E8E",
-          "border": "#2E2B24",
+          "accent": "#FF4D63",
+          "bg": "#161616",
+          "surface": "#1E1E1E",
+          "text": "#F0EFEC",
+          "muted": "#9C9A93",
+          "border": "#2C2C2C",
           "success": "#34c77b",
           "danger": "#e05d44"
         },
         "containers": {
-          "radius": "sm",
+          "radius": "none",
           "shadow": "soft",
           "border": "thin",
           "density": "comfortable",
           "surface": "flat"
         },
         "typography": {
-          "heading": "anton",
-          "subheading": "archivo",
-          "body": "archivo",
+          "heading": "montserrat",
+          "subheading": "montserrat",
+          "body": "lato",
           "scale": "balanced",
-          "weightHeading": 400,
+          "weightHeading": 600,
           "letterSpacing": "0.01em"
         },
         "buttons": {
@@ -4540,7 +4540,7 @@
         "vitrina"
       ],
       "preview": "",
-      "concept": "Asfalto + señal flúor: la tienda de zapatillas en modo nocturno."
+      "concept": "Asfalto + rojo señal: la zapatería en modo nocturno."
     },
     {
       "slug": "moda",
@@ -6307,28 +6307,28 @@
       "slug": "calzado",
       "nombre": "Calzado",
       "categoria": "calzado",
-      "descripcion": "Vitrina deportiva: billboard oscuro con titular Anton, cinta de novedades, grilla de fichas con badge de ahorro, membresías y pie oscuro con columnas.",
+      "descripcion": "Vitrina deportiva clásica: billboard a sangre completa con titular fino y dots, collage mosaico con paneles rojos/negros, riel de productos, catálogo con sidebar y ficha con tabs.",
       "tier": "plus",
       "template": "raiz",
       "tokens": {
-        "accent": "#E8501E",
+        "accent": "#EE2D45",
         "palette": {
-          "primary": "#17150F",
-          "secondary": "#2A2820",
-          "accent": "#E8501E",
-          "bg": "#F2F1EC",
+          "primary": "#1A1A1A",
+          "secondary": "#333333",
+          "accent": "#EE2D45",
+          "bg": "#FFFFFF",
           "surface": "#FFFFFF",
-          "text": "#17150F",
-          "muted": "#6B6759",
-          "border": "#DDDAD0",
+          "text": "#1A1A1A",
+          "muted": "#8A8A8A",
+          "border": "#E9E9E9",
           "success": "#1a7f4b",
           "danger": "#c0392b"
         },
         "fonts": [
-          "anton",
-          "archivo"
+          "montserrat",
+          "lato"
         ],
-        "radius": "10px",
+        "radius": "0px",
         "anim": {
           "hero": "rise",
           "reveal": "rise",
