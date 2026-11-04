@@ -4541,6 +4541,191 @@
       ],
       "preview": "",
       "concept": "Asfalto + señal flúor: la tienda de zapatillas en modo nocturno."
+    },
+    {
+      "slug": "moda",
+      "nombre": "Moda",
+      "categoria": "Tienda de moda",
+      "descripcion": "Fashion club clásico: barra superior con datos, marca en mayúsculas, tiles de sale a todo color y grilla de productos con Montserrat + Lato.",
+      "tier": "plus",
+      "template": "moda",
+      "page_theme": "light",
+      "pattern": "moda",
+      "tokens": {
+        "palette": {
+          "accent": "#F2711C",
+          "primary": "#1F1F1F",
+          "secondary": "#3D3D3D",
+          "bg": "#FFFFFF",
+          "surface": "#F7F7F5",
+          "text": "#1F1F1F",
+          "muted": "#8A8A8A",
+          "border": "#E9E9E6",
+          "success": "#2FA36B",
+          "danger": "#D64545"
+        },
+        "containers": {
+          "radius": "sm",
+          "shadow": "soft",
+          "border": "thin",
+          "density": "comfortable",
+          "surface": "flat"
+        },
+        "typography": {
+          "heading": "montserrat",
+          "subheading": "lato",
+          "body": "lato",
+          "scale": "balanced",
+          "weightHeading": 800,
+          "letterSpacing": "0.01em"
+        },
+        "buttons": {
+          "shape": "square",
+          "style": "solid",
+          "size": "md"
+        },
+        "background": {
+          "type": "solid",
+          "value": null,
+          "overlay": "none"
+        },
+        "motion": {
+          "reveal": "fade-up",
+          "hover": "lift",
+          "intensity": "subtle"
+        },
+        "mobile": {
+          "cardStyle": "standard",
+          "heroHeight": "standard"
+        },
+        "preview": "",
+        "icons": {
+          "style": "line",
+          "stroke": "1.8",
+          "size": "20",
+          "corners": "rounded"
+        }
+      },
+      "layout": {},
+      "layout_spec": {},
+      "tags": [
+        "indumentaria",
+        "moda",
+        "fashion",
+        "retail",
+        "tienda",
+        "ofertas",
+        "ecommerce"
+      ],
+      "preview": "",
+      "style": "Tienda de moda",
+      "anim": {
+        "hero": "fade-up",
+        "reveal": "fade-up",
+        "hover": "lift",
+        "button": "solid-press"
+      },
+      "easing": "cubic-bezier(.4,0,.2,1)",
+      "duration": "420ms",
+      "icons": {
+        "style": "line",
+        "stroke": "1.8",
+        "size": "20",
+        "corners": "rounded"
+      },
+      "concept": "Blanco, negro y naranja de retail: Montserrat en mayúsculas y Lato en lectura."
+    },
+    {
+      "slug": "moda-noche",
+      "nombre": "Moda Noche",
+      "categoria": "Tienda de moda nocturna",
+      "descripcion": "Carbón y naranja señal: la versión nocturna del fashion club, con tiles de sale que brillan sobre fondo tinta.",
+      "tier": "plus",
+      "template": "moda",
+      "page_theme": "dark",
+      "pattern": "moda",
+      "tokens": {
+        "palette": {
+          "accent": "#FF8A3C",
+          "primary": "#FF8A3C",
+          "secondary": "#B05E22",
+          "bg": "#161617",
+          "surface": "#1F1F21",
+          "text": "#F2F2F0",
+          "muted": "#9C9C97",
+          "border": "#2E2E31",
+          "success": "#4CC38A",
+          "danger": "#E56464"
+        },
+        "containers": {
+          "radius": "sm",
+          "shadow": "medium",
+          "border": "thin",
+          "density": "comfortable",
+          "surface": "elevated"
+        },
+        "typography": {
+          "heading": "montserrat",
+          "subheading": "lato",
+          "body": "lato",
+          "scale": "balanced",
+          "weightHeading": 800,
+          "letterSpacing": "0.01em"
+        },
+        "buttons": {
+          "shape": "square",
+          "style": "solid",
+          "size": "md"
+        },
+        "background": {
+          "type": "solid",
+          "value": null,
+          "overlay": "none"
+        },
+        "motion": {
+          "reveal": "fade-up",
+          "hover": "glow",
+          "intensity": "subtle"
+        },
+        "mobile": {
+          "cardStyle": "standard",
+          "heroHeight": "standard"
+        },
+        "preview": "",
+        "icons": {
+          "style": "line",
+          "stroke": "1.8",
+          "size": "20",
+          "corners": "rounded"
+        }
+      },
+      "layout": {},
+      "layout_spec": {},
+      "tags": [
+        "indumentaria",
+        "moda",
+        "noche",
+        "fashion",
+        "retail",
+        "premium"
+      ],
+      "preview": "",
+      "style": "Tienda de moda nocturna",
+      "anim": {
+        "hero": "fade",
+        "reveal": "fade",
+        "hover": "glow",
+        "button": "solid-press"
+      },
+      "easing": "cubic-bezier(.4,0,.2,1)",
+      "duration": "420ms",
+      "icons": {
+        "style": "line",
+        "stroke": "1.8",
+        "size": "20",
+        "corners": "rounded"
+      },
+      "concept": "Carbón + naranja señal: el fashion club de noche."
     }
   ],
   "patterns": [
@@ -6267,6 +6452,128 @@
       "preview": "",
       "supports_dark_mode": true,
       "style": "calzado"
+    },
+    {
+      "slug": "moda",
+      "nombre": "Moda",
+      "categoria": "indumentaria",
+      "descripcion": "Fashion club: barra superior con datos del negocio, marca en mayúsculas Montserrat, franja de sale tiles a todo color, productos con tabs por categoría, servicios, testimonios, marcas y banda de newsletter.",
+      "tier": "plus",
+      "template": "moda",
+      "layout": {
+        "landing": [
+          {
+            "id": "hero",
+            "variant": "split",
+            "enabled": true,
+            "order": 0
+          },
+          {
+            "id": "offers",
+            "enabled": true,
+            "order": 1
+          },
+          {
+            "id": "featured",
+            "enabled": true,
+            "order": 2
+          },
+          {
+            "id": "benefits",
+            "variant": "cards",
+            "enabled": true,
+            "order": 3
+          },
+          {
+            "id": "testimonials",
+            "variant": "cards",
+            "enabled": true,
+            "order": 4
+          },
+          {
+            "id": "brands",
+            "enabled": true,
+            "order": 5
+          },
+          {
+            "id": "cta",
+            "variant": "band",
+            "enabled": true,
+            "order": 6
+          }
+        ],
+        "catalog": [
+          {
+            "id": "hero",
+            "enabled": true,
+            "order": 0
+          },
+          {
+            "id": "grid",
+            "enabled": true,
+            "order": 1
+          }
+        ],
+        "services": [
+          {
+            "id": "hero",
+            "enabled": true,
+            "order": 0
+          },
+          {
+            "id": "list",
+            "enabled": true,
+            "order": 1
+          }
+        ]
+      },
+      "tokens": {
+        "accent": "#F2711C",
+        "palette": {
+          "accent": "#F2711C",
+          "primary": "#1F1F1F",
+          "secondary": "#3D3D3D",
+          "bg": "#FFFFFF",
+          "surface": "#F7F7F5",
+          "text": "#1F1F1F",
+          "muted": "#8A8A8A",
+          "border": "#E9E9E6",
+          "success": "#2FA36B",
+          "danger": "#D64545"
+        },
+        "fonts": [
+          "montserrat",
+          "lato"
+        ],
+        "radius": "3px",
+        "anim": {
+          "hero": "fade-up",
+          "reveal": "fade-up",
+          "hover": "lift",
+          "button": "solid-press"
+        },
+        "easing": "cubic-bezier(.4,0,.2,1)",
+        "duration": "420ms",
+        "icons": {
+          "style": "line",
+          "stroke": "1.8",
+          "size": "20",
+          "corners": "rounded"
+        }
+      },
+      "tags": [
+        "indumentaria",
+        "moda",
+        "fashion",
+        "retail",
+        "tienda",
+        "ofertas",
+        "ecommerce"
+      ],
+      "preview": "",
+      "variables": {},
+      "supports_dark_mode": true,
+      "style": "moda"
     }
   ]
 }
