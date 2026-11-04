@@ -298,13 +298,25 @@ function blockLocked(spec) {
 //apagado y sin acción.
 const blockUnavailable = (block) => Boolean(block?.unavailable)
 function toggleBlock(surface, id) {
+  const g = showGroups.value.find((x) => x.surface === surface)
+  if (!g) return
   const lc = props.form.layout_config && typeof props.form.layout_config === 'object'
     ? props.form.layout_config : (props.form.layout_config = {})
   const surf = lc[surface] && typeof lc[surface] === 'object' ? lc[surface] : (lc[surface] = { blocks: [] })
-  if (!Array.isArray(surf.blocks)) surf.blocks = []
-  const found = surf.blocks.find((b) => b && String(b.id) === id)
-  if (found) found.enabled = !(found.enabled !== false)
-  else surf.blocks.push({ id, enabled: false, order: surf.blocks.length })
+  // Se escribe la composición COMPLETA de la superficie (el estado efectivo
+  // de cada bloque con el tocado invertido), no solo el ítem: el backend
+  // persiste la lista tal cual y un layout parcial apagaría el resto de
+  // las secciones. Los bloques "No disponible en este diseño" no se
+  // escriben nunca. Invertir el estado efectivo (no el del saved) permite
+  // prender bloques que el diseño declara apagados.
+  surf.blocks = g.rows
+    .filter((r) => !blockUnavailable(r.block))
+    .map((r, i) => {
+      const b = { id: r.block.id, enabled: r.block.id === id ? !(r.block.enabled !== false) : r.block.enabled !== false, order: i }
+      if (r.block.variant) b.variant = r.block.variant
+      if (r.block.props) b.props = r.block.props
+      return b
+    })
 }
 function onShowKey(e) { if (e.key === 'Escape' && showOpen.value) closeShow() }
 
