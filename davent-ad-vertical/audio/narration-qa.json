@@ -1,0 +1,58 @@
+{
+  "version": 1,
+  "pass": true,
+  "duration": 35.363833,
+  "alignment": "tts-segments",
+  "checks": [
+    {
+      "name": "duration",
+      "pass": true,
+      "detail": "recorded 35.363833s; maximum 1200s"
+    },
+    {
+      "name": "source",
+      "pass": true,
+      "detail": "TTS must use user-provided text; recordings must come from the user"
+    },
+    {
+      "name": "alignment",
+      "pass": true,
+      "detail": "Need real segment timestamps. Supply --timestamps SRT/JSON or an available --transcriber; guessed sentence times are not accepted"
+    },
+    {
+      "name": "segments",
+      "pass": true,
+      "detail": "4 ordered text segments within the audio"
+    },
+    {
+      "name": "audio-duration",
+      "pass": true,
+      "detail": "actual 35.363833s, recorded 35.363833s"
+    },
+    {
+      "name": "audio-hash",
+      "pass": true,
+      "detail": "Narration file must match the audio used to derive the segment timeline"
+    },
+    {
+      "name": "target-duration",
+      "pass": true,
+      "detail": "Target must be at most 1200 seconds and must not truncate narration"
+    },
+    {
+      "name": "final-audio-duration",
+      "pass": true,
+      "detail": "final 36s, target 36s"
+    },
+    {
+      "name": "mixed-voice",
+      "pass": true,
+      "detail": "Prepared mix must use the checked narration path and audio hash, or explicitly contain no voice"
+    },
+    {
+      "name": "mixed-output",
+      "pass": true,
+      "detail": "Final audio path/hash must match the current mix record; rebuild after changing any narration"
+    }
+  ]
+}

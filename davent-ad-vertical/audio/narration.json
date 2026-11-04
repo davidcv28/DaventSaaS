@@ -1,0 +1,49 @@
+{
+  "version": 1,
+  "source": {
+    "type": "user-script",
+    "provenance": "user-provided",
+    "file": "user-script.txt",
+    "sha256": "b3e750195cc5343cef961a626ecaddc4ac10ea2cac22dc0fbf239aad9e4cd8d3"
+  },
+  "provider": {
+    "id": "gemini",
+    "model": "gemini-2.5-flash-preview-tts",
+    "voice": "Kore"
+  },
+  "alignment": "tts-segments",
+  "duration": 35.363833,
+  "file": "audio/narration.wav",
+  "audioSha256": "353bc049512c8bc6820f1e5a577c83502ec955ef9af01875b8c859567e1f9dea",
+  "segments": [
+    {
+      "id": "n0001",
+      "text": "Vender solo por redes no alcanza: los mensajes se pierden, el catálogo no se encuentra y tu marca compite con miles iguales.",
+      "start": 0,
+      "end": 8.810958,
+      "file": "audio/narration-cache/02a2016107334308c2a06932ef405e252b476cf3946e313a34a4749e68dec978.wav"
+    },
+    {
+      "id": "n0002",
+      "text": "DAVENT te da tu web propia, con diseño de nivel profesional: catálogo por categorías, fichas de cada producto y ofertas de temporada.",
+      "start": 8.810958,
+      "end": 17.421916,
+      "file": "audio/narration-cache/2a08cdfa5e5d5d9eb65a5d92210856d5abe5271e1096aa457a875dd0a6ff56e0.wav"
+    },
+    {
+      "id": "n0003",
+      "text": "Y no es solo para tiendas: servicios, gimnasios, estudios y consultoras también tienen su diseño.",
+      "start": 17.421916,
+      "end": 25.872874,
+      "file": "audio/narration-cache/51b3370a5fb968f305ce2c00fa5c0ad2cf6027dffcf1df05ce43ba94779fba5b.wav"
+    },
+    {
+      "id": "n0004",
+      "text": "Sin programar y sin saber diseñar. Empezá hoy con la prueba gratis en davent.com. Tu marca, tu web, tus reglas.",
+      "start": 25.872874,
+      "end": 35.363832,
+      "file": "audio/narration-cache/3993f379e363549856516e8113f55eb3eb77d422df8c70ffa52014dd206ac18c.wav"
+    }
+  ],
+  "missing": []
+}
