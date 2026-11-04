@@ -193,7 +193,9 @@ body.m-open .mmenu{transform:none;visibility:visible}
 .mmenu .btn{margin-top:34px;align-self:flex-start}
 
 /* ---------- Héroe ---------- */
-.hero{position:relative;min-height:100svh;display:flex;align-items:flex-end;color:#fff;padding-top:var(--head-h)}
+/* El alto llega en --hero-h desde el host (frame.vh): dentro del iframe
+   auto-dimensionado 100svh = alto del documento y realimenta el resize. */
+.hero{position:relative;min-height:var(--hero-h,640px);display:flex;align-items:flex-end;color:#fff;padding-top:var(--head-h)}
 .hero-media{position:absolute;inset:0;overflow:hidden}
 .hero-media img{width:100%;height:100%;object-fit:cover;transform:translate3d(var(--mx,0),calc(var(--my,0) + var(--py,0)),0) scale(1.08);transition:transform .3s ease-out}
 .hero-media::after{
@@ -228,6 +230,33 @@ body.m-open .mmenu{transform:none;visibility:visible}
 .hero-card .score{display:flex;align-items:baseline;gap:8px;font:700 30px/1 var(--display)}
 .hero-card .score svg{width:18px;height:18px;color:var(--accent);align-self:center}
 .hero-card p{font:400 12.5px/1.5 var(--sans);color:rgba(255,255,255,.82)}
+
+/* Ruta decorativa: trazo de navegación que se dibuja y un plano que la recorre */
+.hero-route{
+  position:absolute;top:16%;right:4%;width:min(340px,32vw);z-index:1;
+  color:rgba(255,255,255,.7);pointer-events:none;opacity:.9;
+}
+.hero-route .dash{stroke-dasharray:6 10;animation:route-dash 2.6s linear infinite}
+@keyframes route-dash{to{stroke-dashoffset:-32}}
+.hero-route .plane{transform-box:fill-box;transform-origin:center;animation:plane-bob 4.5s var(--ease-soft) infinite}
+@keyframes plane-bob{0%,100%{transform:translate(0,0) rotate(0deg)}50%{transform:translate(0,-10px) rotate(-6deg)}}
+.hero-coords{
+  position:absolute;top:calc(var(--head-h) + 26px);left:clamp(18px,4vw,56px);z-index:1;
+  font:500 10px/1.6 var(--mono);letter-spacing:.2em;text-transform:uppercase;
+  color:rgba(255,255,255,.72);display:flex;align-items:center;gap:10px;pointer-events:none;
+}
+.hero-coords::before{content:"";width:26px;height:1px;background:var(--accent)}
+.hero-scroll{
+  position:absolute;left:50%;bottom:110px;transform:translateX(-50%);z-index:2;
+  display:flex;flex-direction:column;align-items:center;gap:8px;
+  font:600 9.5px/1 var(--mono);letter-spacing:.3em;text-transform:uppercase;
+  color:rgba(255,255,255,.75);pointer-events:none;
+}
+.hero-scroll::after{
+  content:"";width:1px;height:34px;background:linear-gradient(180deg,var(--accent),transparent);
+  animation:scroll-cue 1.8s var(--ease-soft) infinite;
+}
+@keyframes scroll-cue{0%{transform:scaleY(.3);transform-origin:top;opacity:0}35%{transform:scaleY(1);opacity:1}100%{transform:scaleY(1) translateY(10px);opacity:0}}
 
 /* Barra de reserva (firma Travellian) */
 .booking{
@@ -383,6 +412,11 @@ html[data-ds-theme="dark"] .grid-products .ds-product-cat{color:var(--accent)}
 .about-media .years span{font:600 10px/1.5 var(--mono);letter-spacing:.2em;text-transform:uppercase;color:color-mix(in srgb,var(--paper) 70%,transparent);margin-top:8px}
 .about-media .about-mark{position:absolute;top:22px;right:22px;width:52px;height:52px;border-radius:50%;background:var(--accent);color:var(--on-accent);display:grid;place-items:center;font:700 22px/1 var(--display);overflow:hidden}
 .about-media .about-mark img{width:100%;height:100%;object-fit:cover}
+.about-stamp{
+  position:absolute;top:20px;left:20px;width:76px;height:76px;color:var(--paper);
+  animation:stamp-spin 22s linear infinite;opacity:.85;pointer-events:none;
+}
+@keyframes stamp-spin{to{transform:rotate(360deg)}}
 .about-copy h3{font:600 clamp(26px,3.4vw,40px)/1.18 var(--display);margin-top:16px}
 .about-lead{margin-top:16px;font:400 15px/1.7 var(--sans);color:var(--ink-2)}
 .specialties{margin-top:14px;font:500 13px/1.6 var(--sans);color:var(--muted)}
@@ -478,6 +512,7 @@ html[data-ds-theme="dark"] .faq-list .ds-faq .ds-faq-q::after{color:var(--accent
 .cta-marquee{
   position:absolute;top:50%;left:0;transform:translateY(-50%);white-space:nowrap;
   font:700 clamp(90px,14vw,190px)/1 var(--display);opacity:.08;pointer-events:none;
+  display:inline-block;animation:marq 46s linear infinite;
 }
 .cta-inner{position:relative;display:flex;align-items:center;justify-content:space-between;gap:30px;padding:clamp(60px,8vw,100px) 0;flex-wrap:wrap}
 .cta-inner .eyebrow{color:var(--on-accent)}
@@ -539,6 +574,7 @@ html[data-ds-theme="dark"] .crumbs a{color:var(--accent)}
 .cat-hero-meta{display:flex;gap:22px;margin-top:22px;flex-wrap:wrap}
 .cat-hero-meta span{font:600 10px/1 var(--mono);letter-spacing:.18em;text-transform:uppercase;color:var(--muted);display:inline-flex;align-items:center;gap:8px}
 .cat-hero-meta span::before{content:"";width:6px;height:6px;border-radius:50%;background:var(--accent)}
+.cat-hero-meta span:empty{display:none}
 
 .cat-filters-toggle{
   display:none;align-items:center;gap:10px;margin-top:26px;
@@ -754,6 +790,7 @@ html[data-ds-theme="dark"] .services-list .ds-service::before{color:var(--accent
   .cat-scrim{display:block;position:fixed;inset:0;z-index:65;background:rgba(15,22,32,.5);opacity:0;visibility:hidden;transition:opacity .3s}
   body.f-open .cat-scrim{opacity:1;visibility:visible}
   .cat-filters-toggle{display:inline-flex}
+  .hero-route,.hero-coords,.hero-scroll{display:none}
   .quotes{grid-template-columns:1fr}
   .offerings{grid-template-columns:1fr}
   .foot-top{grid-template-columns:1fr 1fr}
@@ -837,6 +874,14 @@ html[data-ds-theme="dark"] .services-list .ds-service::before{color:var(--accent
     <div class="hero-media">
       <img src="{{store_cover}}" alt="{{store_name}}" fetchpriority="high" decoding="async">
     </div>
+    <span class="hero-coords" aria-hidden="true">{{store_location}} · {{year}}</span>
+    <svg class="hero-route" viewBox="0 0 340 170" fill="none" aria-hidden="true">
+      <path class="dash" d="M18 150 C 90 120, 120 40, 200 60 S 320 30, 322 24" stroke="currentColor" stroke-width="1.5"/>
+      <circle cx="18" cy="150" r="4" fill="currentColor"/>
+      <circle cx="322" cy="24" r="5" fill="var(--accent)"/>
+      <path class="plane" d="M322 24 l-26 10 8-4 -2-8z" fill="var(--accent)"/>
+    </svg>
+    <div class="hero-scroll" aria-hidden="true">Deslizá</div>
     <div class="wrap hero-inner">
       <p class="hero-kicker"><span class="live" aria-hidden="true"></span>{{store_location}}</p>
       <h1 class="hero-title">{{store_tagline}}</h1>
@@ -869,9 +914,9 @@ html[data-ds-theme="dark"] .services-list .ds-service::before{color:var(--accent
           <span class="b-label">Horario</span>
           <span class="b-value">{{store_hours}}</span>
         </div>
-        <div class="booking-field" data-flag="catalog">
-          <span class="b-label">Catálogo</span>
-          <span class="b-value">Envíos y retiros coordinados</span>
+        <div class="booking-field" data-hide-blank=".b-value">
+          <span class="b-label">Contacto</span>
+          <span class="b-value">{{store_phone}}</span>
         </div>
         <a class="booking-go" href="#catalogo" data-ds-route="catalog" data-flag="catalog">
           Reservar
@@ -929,6 +974,12 @@ html[data-ds-theme="dark"] .services-list .ds-service::before{color:var(--accent
       </header>
       <div class="about-grid">
         <div class="about-media">
+          <svg class="about-stamp" viewBox="0 0 76 76" fill="none" aria-hidden="true">
+            <defs><path id="vj-stamp-c" d="M38 38 m-27 0 a27 27 0 1 1 54 0 a27 27 0 1 1 -54 0"/></defs>
+            <circle cx="38" cy="38" r="35" stroke="currentColor" stroke-width="1" stroke-dasharray="3 5"/>
+            <text font-size="9.5" letter-spacing="2.6" fill="currentColor" style="font:600 9.5px/1 var(--mono)"><textPath href="#vj-stamp-c">GUÍA CERTIFICADA · DAVENT ·</textPath></text>
+            <circle cx="38" cy="38" r="4" fill="var(--accent)"/>
+          </svg>
           <span class="about-mark">{{store_initial}}<img src="{{store_logo}}" alt=""></span>
           <span class="years"><b>{{store_about_years}}</b><span>Años de ruta</span></span>
         </div>
@@ -1065,7 +1116,7 @@ html[data-ds-theme="dark"] .services-list .ds-service::before{color:var(--accent
       <nav class="crumbs" aria-label="Ruta"><a href="#inicio" data-ds-route="home">Inicio</a><span>/</span><strong>Catálogo</strong></nav>
       <h1>Catálogo <em>{{store_name}}</em></h1>
       <p>{{store_tagline}}</p>
-      <div class="cat-hero-meta"><span>Catálogo completo</span><span>Guía {{year}}</span><span>Envíos y retiros coordinados</span></div>
+      <div class="cat-hero-meta"><span>{{store_location}}</span><span>Guía {{year}}</span><span>{{store_phone}}</span></div>
     </div>
   </header>
   <div class="wrap">
@@ -1276,6 +1327,15 @@ html[data-ds-theme="dark"] .services-list .ds-service::before{color:var(--accent
     })
   }
 
+  /* Alto real del héroe: lo fija el viewport del HOST (frame.vh), nunca el del
+     iframe, que es el alto del documento y realimentaba el resize. */
+  var hero = document.querySelector('.hero')
+  function syncHero() {
+    if (!hero) return
+    var vh = frame ? frame.vh : (window.parent === window ? window.innerHeight : 0)
+    if (vh) document.documentElement.style.setProperty('--hero-h', Math.max(520, Math.round(vh)) + 'px')
+  }
+
   /* ---------- Alto real del chrome fijo ---------- */
   function syncHead() {
     if (!head) return
@@ -1328,6 +1388,10 @@ html[data-ds-theme="dark"] .services-list .ds-service::before{color:var(--accent
         return node && (node.children.length || (node.textContent || '').trim())
       })
       if (!has) sec.hidden = true
+    })
+    qsa('[data-hide-blank]').forEach(function (el) {
+      var node = el.querySelector(el.getAttribute('data-hide-blank'))
+      el.hidden = !node || !(node.textContent || '').trim()
     })
   }
 
@@ -1395,6 +1459,8 @@ html[data-ds-theme="dark"] .services-list .ds-service::before{color:var(--accent
     var vh = frame ? frame.vh : window.innerHeight
     var top = frame ? Math.max(0, -frame.top) : (window.scrollY || 0)
     if (head) head.classList.toggle('is-scrolled', top > 16)
+    var cue = document.querySelector('.hero-scroll')
+    if (cue) cue.style.opacity = top > 60 ? '0' : ''
     if (heroImg && !reduce) {
       var hr = heroMedia.getBoundingClientRect()
       var py = Math.max(-34, Math.min(34, (top - hr.top + vh * 0.5) * 0.05))
@@ -1414,7 +1480,8 @@ html[data-ds-theme="dark"] .services-list .ds-service::before{color:var(--accent
   window.addEventListener('message', function (e) {
     var d = e.data || {}
     if (d.type === 'davent:ds-frame') {
-      frame = { top: Number(d.top) || 0, bottom: Number(d.bottom) || 0, vh: Number(d.vh) || window.innerHeight }
+      frame = { top: Number(d.top) || 0, bottom: Number(d.bottom) || 0, vh: Number(d.vh) || 0 }
+      syncHero()
       paint()
       return
     }
@@ -1443,12 +1510,14 @@ html[data-ds-theme="dark"] .services-list .ds-service::before{color:var(--accent
   setupTabs()
   initReveal()
   syncHead()
+  syncHero()
   if (document.fonts && document.fonts.ready) document.fonts.ready.then(syncHead)
   requestAnimationFrame(paint)
   setTimeout(function () {
     if (!frame) {
       qsa('.reveal').forEach(function (el) { el.classList.add('is-in') })
       qsa('.ds-stat-value').forEach(animateStat)
+      document.documentElement.style.setProperty('--hero-h', Math.max(520, window.innerHeight) + 'px')
     }
     paint()
     syncHead()
