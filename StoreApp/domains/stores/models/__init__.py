@@ -5,6 +5,7 @@ from .models import (
     StoreChatbot,
     StoreCustomization,
     StoreDailyVisit,
+    StoreDomain,
     StoreGalleryImage,
     StudioVersion,
 )

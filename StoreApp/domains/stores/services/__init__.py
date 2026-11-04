@@ -7,6 +7,17 @@ from .contact import (
     send_contact_message,
     verify_captcha,
 )
+from .domains import (
+    check_domain,
+    is_platform_domain,
+    new_verify_token,
+    normalize_domain,
+    public_domain,
+    refresh_status,
+    resolve_slug,
+    serialize_domain,
+    verify_txt_name,
+)
 from .imaging import remove_background
 from .services import (
     allowed_templates_of,

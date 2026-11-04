@@ -2330,3 +2330,78 @@ class PatternDocumentSecurityTests(TestCase):
         #Nonce por respuesta: dos pedidos no comparten autorizador.
         other       =   APIClient().get(f'{STORES_URL}public/mi-tienda/pattern/document/')
         self.assertNotEqual(other['Content-Security-Policy'], csp)
+
+
+class StoreDomainTests(TestCase):
+    """
+    Dominio propio (StoreDomain, beneficio 'has_custom_domain'): alta,
+    gate por plan, verificación DNS y resolución pública dominio → slug.
+    El DNS real nunca se toca: check_domain va mockeado.
+    """
+
+    def _make(self, with_benefit = True):
+        user, profile   =   _make_user(verified = True)
+        if with_benefit:
+            _grant(profile, has_custom_domain = True)
+        store           =   Store.objects.create(user = profile, slug = 'mi-tienda')
+        client          =   APIClient()
+        client.force_authenticate(user = user)
+        return client, store
+
+    def test_save_normalizes_and_exposes_dns_instructions(self):
+        client, _       =   self._make()
+        response        =   client.post(f'{STORES_URL}domain/', {'domain': 'https://www.MiTienda.com/x'}, format = 'json')
+        self.assertEqual(response.status_code, 200)
+        domain          =   response.json()['domain']
+        self.assertEqual(domain['domain'], 'mitienda.com')
+        self.assertEqual(domain['status'], 'pending')
+        self.assertEqual(domain['txt_name'], '_davent-verify.mitienda.com')
+        self.assertTrue(domain['txt_value'])
+
+    def test_rejects_platform_domain(self):
+        client, _       =   self._make()
+        response        =   client.post(f'{STORES_URL}domain/', {'domain': 'davent.com.ar'}, format = 'json')
+        self.assertEqual(response.status_code, 400)
+
+    def test_rejects_domain_taken_by_other_store(self):
+        client, _       =   self._make()
+        client.post(f'{STORES_URL}domain/', {'domain': 'mitienda.com'}, format = 'json')
+        user, profile   =   _make_named_user('otro')
+        _grant(profile, has_custom_domain = True)
+        Store.objects.create(user = profile, slug = 'otra-tienda')
+        other           =   APIClient()
+        other.force_authenticate(user = user)
+        response        =   other.post(f'{STORES_URL}domain/', {'domain': 'mitienda.com'}, format = 'json')
+        self.assertEqual(response.status_code, 400)
+
+    def test_save_forbidden_without_benefit(self):
+        client, _       =   self._make(with_benefit = False)
+        response        =   client.post(f'{STORES_URL}domain/', {'domain': 'mitienda.com'}, format = 'json')
+        self.assertEqual(response.status_code, 403)
+
+    def test_verify_and_public_resolve(self):
+        client, _       =   self._make()
+        client.post(f'{STORES_URL}domain/', {'domain': 'mitienda.com'}, format = 'json')
+        #DNS aún no configurado -> failed; luego verified con el check mockeado.
+        with patch('StoreApp.domains.stores.services.domains.check_domain', return_value = False):
+            response    =   client.post(f'{STORES_URL}domain/verify/')
+            self.assertEqual(response.json()['domain']['status'], 'failed')
+        with patch('StoreApp.domains.stores.services.domains.check_domain', return_value = True):
+            response    =   client.post(f'{STORES_URL}domain/verify/')
+            self.assertEqual(response.json()['domain']['status'], 'verified')
+        response        =   APIClient().get(f'{STORES_URL}domain/resolve/', {'domain': 'mitienda.com'})
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.json()['slug'], 'mi-tienda')
+
+    def test_resolve_404_without_verified_domain(self):
+        client, _       =   self._make()
+        client.post(f'{STORES_URL}domain/', {'domain': 'mitienda.com'}, format = 'json')
+        response        =   APIClient().get(f'{STORES_URL}domain/resolve/', {'domain': 'mitienda.com'})
+        self.assertEqual(response.status_code, 404)
+
+    def test_delete_unlinks_domain(self):
+        client, _       =   self._make()
+        client.post(f'{STORES_URL}domain/', {'domain': 'mitienda.com'}, format = 'json')
+        response        =   client.delete(f'{STORES_URL}domain/')
+        self.assertEqual(response.status_code, 200)
+        self.assertIsNone(client.get(f'{STORES_URL}domain/').json()['domain'])

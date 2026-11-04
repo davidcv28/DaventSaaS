@@ -6,7 +6,7 @@ import {
   storeContactLink, hasContactChannel
 } from '../api/stores.api.js'
 import { extractApiError } from '../api/http.js'
-import { env, storeHostSlug } from '../config/env.js'
+import { env, storeHostSlug, customDomainHost, setStoreHostSlug } from '../config/env.js'
 import AppIcon from '../components/AppIcon.vue'
 import BrandLogo from '../components/BrandLogo.vue'
 import StoreBot from '../components/StoreBot.vue'
@@ -825,6 +825,18 @@ function applyFavicon(logo) {
 watch(() => custom.value.logo, applyFavicon)
 
 onMounted(async () => {
+  // Dominio propio (mitienda.com): el host no revela el slug — se resuelve
+  // contra la API antes de cualquier fetch y queda en storeHostSlug para
+  // que el resto de la página arme sus links como en un subdominio.
+  if (customDomainHost && !storeHostSlug) {
+    try {
+      setStoreHostSlug(await storesApi.resolveDomain(customDomainHost))
+    } catch {
+      status.value = 'error'
+      errorMsg.value = 'Esta tienda no está disponible.'
+      return
+    }
+  }
   // El catálogo vuela en paralelo con la ficha de la tienda: en Inicio es la
   // vitrina de destacados ({sort:'recent'}), en Catálogo el listado inicial
   // ({sort:'name'}) y en la ficha de producto el catálogo completo. La vista

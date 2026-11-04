@@ -703,6 +703,11 @@ body{ transition: background-color .2s ease, color .2s ease; }
 .link-bar{ display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin-bottom: 14px; }
 .link-url{ font-size: 13.5px; padding: 8px 12px; }
 .link-actions{ margin-top: 0; }
+/* Dominio propio: instrucciones DNS */
+.domain-dns{ margin: 4px 0 14px; }
+.dns-row{ display: flex; align-items: center; gap: 10px; flex-wrap: wrap; padding: 8px 0; border-top: 1px dashed var(--line); font-size: 13.5px; }
+.dns-row .mono{ font-size: 12.5px; word-break: break-all; }
+.dns-txt{ user-select: all; }
 
 /* ===== Diseño web (editor del dashboard) ===== */
 .theme-options{ display: flex; gap: 10px; }

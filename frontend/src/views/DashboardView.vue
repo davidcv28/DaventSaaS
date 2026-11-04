@@ -718,6 +718,82 @@ async function togglePublished() {
   }
 }
 
+// --- Dominio propio (has_custom_domain, Plan premium): alta, DNS y verificación ---
+const canCustomDomain = computed(() => Boolean(plan.value?.benefits?.has_custom_domain))
+const domainInfo = ref(null)
+const domainInput = ref('')
+const domainBusy = ref(false)
+const domainErr = ref('')
+let domainLoaded = false
+const domainStatus = computed(() => {
+  const s = domainInfo.value?.status
+  return { verified: { text: 'Verificado', kind: 'ok' }, failed: { text: 'DNS sin configurar', kind: 'danger' }, pending: { text: 'Pendiente', kind: 'muted' } }[s] || null
+})
+const domainUrl = computed(() => (domainInfo.value?.status === 'verified' ? `https://${domainInfo.value.domain}` : ''))
+
+async function loadDomain() {
+  try {
+    domainInfo.value = await storesApi.getDomain()
+    domainInput.value = domainInfo.value?.domain || ''
+  } catch { /* sin web o error de red: la tarjeta queda con el formulario */ }
+}
+watch([section, () => store.hasStore], ([s, has]) => {
+  if (s === 'store' && has && !domainLoaded) {
+    domainLoaded = true
+    loadDomain()
+  }
+}, { immediate: true })
+
+async function saveDomainLink() {
+  if (domainBusy.value) return
+  domainBusy.value = true
+  domainErr.value = ''
+  try {
+    domainInfo.value = await storesApi.saveDomain(domainInput.value)
+    domainInput.value = domainInfo.value?.domain || domainInput.value.trim().toLowerCase()
+    pushToast('Dominio guardado. Ahora configurá el DNS y verificalo')
+  } catch (e) {
+    const err = extractApiError(e)
+    domainErr.value = err.domain || err.nonField || 'No se pudo guardar el dominio.'
+  } finally {
+    domainBusy.value = false
+  }
+}
+
+function openDomain() {
+  if (domainUrl.value) window.open(domainUrl.value, '_blank', 'noopener')
+}
+
+async function checkDomainNow() {
+  if (domainBusy.value) return
+  domainBusy.value = true
+  domainErr.value = ''
+  try {
+    domainInfo.value = await storesApi.verifyDomain()
+    if (domainInfo.value?.status === 'verified') pushToast('Dominio verificado: tu web ya responde ahí')
+  } catch (e) {
+    domainErr.value = extractApiError(e).nonField || 'No se pudo verificar el dominio.'
+  } finally {
+    domainBusy.value = false
+  }
+}
+
+async function removeDomain() {
+  if (domainBusy.value) return
+  domainBusy.value = true
+  domainErr.value = ''
+  try {
+    await storesApi.deleteDomain()
+    domainInfo.value = null
+    domainInput.value = ''
+    pushToast('Dominio desvinculado')
+  } catch (e) {
+    domainErr.value = extractApiError(e).nonField || 'No se pudo quitar el dominio.'
+  } finally {
+    domainBusy.value = false
+  }
+}
+
 // --- Mis catálogos: productos, categorías y marcas de la tienda ---
 // El catálogo se habilita con suscripción activa (el backend devuelve 403 sin plan).
 const catalogTab = ref('products') // products | categories | brands | discounts
@@ -4121,6 +4197,64 @@ async function changePassword() {
             <span v-if="renameBusy" class="spinner" aria-hidden="true"></span>Guardar nueva dirección
           </button>
         </details>
+
+        <div class="card domain-card">
+          <h3><AppIcon name="globe" :size="18" /> Tu dominio propio</h3>
+          <template v-if="!canCustomDomain">
+            <p>Usá un dominio que ya sea tuyo (por ejemplo <code class="mono">mitienda.com</code>) en lugar del link de DAVENT.</p>
+            <p class="hint">Disponible en el plan Premium.</p>
+            <button class="btn secondary btn-auto" @click="section = 'plans'">Ver planes <AppIcon name="arrow-right" :size="16" /></button>
+          </template>
+          <template v-else>
+            <p>Tu web también responde en un dominio tuyo: lo comprás en cualquier registrador y lo apuntás a DAVENT.</p>
+            <AlertMessage v-if="domainErr" kind="error" :message="domainErr" />
+            <div v-if="domainInfo?.status === 'verified'" class="link-bar">
+              <code class="mono link-url">{{ domainUrl }}</code>
+              <span class="pill ok">Verificado</span>
+            </div>
+            <div v-else class="field">
+              <label for="custom-domain">Dominio</label>
+              <input
+                id="custom-domain"
+                name="custom-domain"
+                type="text"
+                class="input"
+                v-model="domainInput"
+                placeholder="mitienda.com"
+                maxlength="253"
+                autocomplete="off"
+                @keyup.enter="saveDomainLink"
+              />
+            </div>
+            <div v-if="domainInfo && domainInfo.status !== 'verified'" class="domain-dns">
+              <p class="hint">Creá estos registros en el panel DNS de tu dominio y después verificá:</p>
+              <div class="dns-row">
+                <span class="pill muted">CNAME</span>
+                <code class="mono">{{ domainInfo.domain }}</code>
+                <span>→</span>
+                <code class="mono">{{ domainInfo.cname_target }}</code>
+              </div>
+              <div class="dns-row">
+                <span class="pill muted">TXT</span>
+                <code class="mono">{{ domainInfo.txt_name }}</code>
+                <span>→</span>
+                <code class="mono dns-txt">{{ domainInfo.txt_value }}</code>
+              </div>
+              <p class="hint">Los cambios de DNS pueden tardar un rato en propagarse.</p>
+              <p v-if="domainStatus" class="slug-check" role="status">
+                <span class="pill" :class="domainStatus.kind">{{ domainStatus.text }}</span>
+              </p>
+            </div>
+            <div class="btn-row link-actions">
+              <button v-if="domainInfo?.status === 'verified'" class="btn btn-auto" @click="openDomain"><AppIcon name="external-link" :size="16" /> Abrir {{ domainInfo.domain }}</button>
+              <button v-else class="btn btn-auto" :disabled="domainBusy || !domainInput.trim()" @click="saveDomainLink">
+                <span v-if="domainBusy" class="spinner" aria-hidden="true"></span>{{ domainInfo ? 'Guardar dominio' : 'Vincular dominio' }}
+              </button>
+              <button v-if="domainInfo && domainInfo.status !== 'verified'" class="btn secondary btn-auto" :disabled="domainBusy" @click="checkDomainNow">Verificar DNS</button>
+              <button v-if="domainInfo" class="btn ghost btn-auto" :disabled="domainBusy" @click="removeDomain">Quitar dominio</button>
+            </div>
+          </template>
+        </div>
 
         <div v-if="canCustomize" class="next-card">
           <span class="next-icon"><AppIcon name="palette" :size="22" /></span>

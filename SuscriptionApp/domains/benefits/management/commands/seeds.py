@@ -31,6 +31,7 @@ dict_benefits = {
     'has_services_site' :   {'label': 'Página de servicios con pedidos por WhatsApp', 'kind': 'flag'},
     'max_site_templates':   {'label': 'Páginas de la web (portada, servicios, catálogo, suscripciones)', 'kind': 'limit'},
     'has_ai_design'     :   {'label': 'Diseño web automático con IA propia', 'kind': 'flag'},
+    'has_custom_domain' :   {'label': 'Dominio propio para tu web',          'kind': 'flag'},
 }
 
 dict_plan_benefits = {
@@ -60,6 +61,7 @@ dict_plan_benefits = {
             'has_services_site' :   True,
             'max_site_templates':   None,
             'has_ai_design'     :   True,
+            'has_custom_domain' :   True,
         },
         'presentation'  :   {
             'slug'          :   'prueba',
@@ -98,6 +100,7 @@ dict_plan_benefits = {
             'has_services_site' :   False,
             'max_site_templates':   2,
             'has_ai_design'     :   False,
+            'has_custom_domain' :   False,
         },
         'presentation'  :   {
             'slug'          :   'basico',
@@ -139,6 +142,7 @@ dict_plan_benefits = {
             'has_services_site' :   True,
             'max_site_templates':   2,
             'has_ai_design'     :   True,
+            'has_custom_domain' :   False,
         },
         'presentation'  :   {
             'slug'          :   'estandar',
@@ -182,6 +186,7 @@ dict_plan_benefits = {
             'has_services_site' :   True,
             'max_site_templates':   None,
             'has_ai_design'     :   True,
+            'has_custom_domain' :   True,
         },
         'presentation'  :   {
             'slug'          :   'premium',
@@ -202,6 +207,7 @@ dict_plan_benefits = {
                 'Descuentos programados que se activan solos',
                 'Valoraciones y comentarios de tus clientes',
                 'Menú administrador avanzado',
+                'Tu propio dominio: mitienda.com en vez del link de DAVENT',
             ],
         },
     },

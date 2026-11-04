@@ -25,6 +25,7 @@ from StoreApp.domains.stores.models import (
     StoreCarouselImage,
     StoreChatbot,
     StoreCustomization,
+    StoreDomain,
     StoreGalleryImage,
     StudioVersion,
 )
@@ -46,6 +47,12 @@ from StoreApp.domains.stores.serializers.validators import (
 from StoreApp.domains.stores.services import (
     allowed_templates_of,
     contact_redirect_url,
+    is_platform_domain,
+    new_verify_token,
+    normalize_domain,
+    refresh_status,
+    resolve_slug,
+    serialize_domain,
     contact_target,
     delete_carousel_image,
     delete_cover,
@@ -337,7 +344,7 @@ class AiDesignImageThrottle(UserRateThrottle):
 class StoreViewSet(StoreBaseViewSet):
     viewset_config  =   StoreConfigs
     #Acciones que atienden visitantes anónimos (web pública, contacto, reseñas).
-    PUBLIC_ACTIONS  =   ('public', 'public_catalog', 'public_pattern', 'public_pattern_document', 'public_pattern_bridge', 'public_pattern_script', 'public_contact', 'contact_captcha', 'contact', 'review_captcha', 'product_reviews')
+    PUBLIC_ACTIONS  =   ('public', 'public_catalog', 'public_pattern', 'public_pattern_document', 'public_pattern_bridge', 'public_pattern_script', 'public_contact', 'public_resolve', 'contact_captcha', 'contact', 'review_captcha', 'product_reviews')
 
     def initialize_request(self, request, *args, **kwargs):
         #get_authenticators() corre dentro de super().initialize_request(),
@@ -404,6 +411,64 @@ class StoreViewSet(StoreBaseViewSet):
             return Response({'slug': slug, 'available': False, 'reason': 'reserved'}, status = status.HTTP_200_OK)
         available   =   validate_slug_available(slug)
         return Response({'slug': slug, 'available': available, 'reason': None if available else 'taken'}, status = status.HTTP_200_OK)
+    #=========================================
+    # CUSTOM DOMAIN (dominio propio del cliente — has_custom_domain, premium)
+    #=========================================
+    def _domain_payload(self, store):
+        return serialize_domain(getattr(store, 'domain', None))
+    @action(detail = False, methods = ['get', 'post', 'delete'], url_path = 'domain')
+    def domain(self, request):
+        store   =   get_object_or_404(Store, user__user = request.user)
+        if request.method == 'GET':
+            return Response({'domain': self._domain_payload(store)}, status = status.HTTP_200_OK)
+        if not profile_has_benefit(store.user, 'has_custom_domain'):
+            return Response({'detail': 'Tu plan actual no incluye dominio propio.'}, status = status.HTTP_403_FORBIDDEN)
+        if request.method == 'DELETE':
+            StoreDomain.objects.filter(store = store).delete()
+            return Response({'Exito': 'El dominio se desvinculó de tu web', 'domain': None}, status = status.HTTP_200_OK)
+        #POST: alta o reemplazo. Cambiar de dominio resetea la verificación:
+        #un token verificado del dominio viejo no valida el nuevo.
+        domain  =   normalize_domain(request.data.get('domain'))
+        if not domain:
+            return Response({'domain': ['Escribí un dominio válido (ej. mitienda.com).']}, status = status.HTTP_400_BAD_REQUEST)
+        if is_platform_domain(domain):
+            return Response({'domain': ['Ese dominio ya es de DAVENT: usá tu link público directamente.']}, status = status.HTTP_400_BAD_REQUEST)
+        clash   =   StoreDomain.objects.filter(domain = domain).exclude(store = store).first()
+        if clash:
+            return Response({'domain': ['Ese dominio ya está vinculado a otra web.']}, status = status.HTTP_400_BAD_REQUEST)
+        store_domain    =   getattr(store, 'domain', None)
+        if store_domain is None:
+            store_domain    =   StoreDomain(store = store, domain = domain, verify_token = new_verify_token())
+        else:
+            store_domain.domain         =   domain
+            store_domain.status         =   StoreDomain.STATUS_PENDING
+            store_domain.verified_at    =   None
+        store_domain.last_checked_at    =   None
+        store_domain.save()
+        return Response(
+            {'Exito': 'Dominio guardado. Ahora configurá el DNS y verificalo.', 'domain': self._domain_payload(store)},
+            status = status.HTTP_200_OK,
+        )
+    @action(detail = False, methods = ['post'], url_path = 'domain/verify')
+    def domain_verify(self, request):
+        store   =   get_object_or_404(Store, user__user = request.user)
+        if not profile_has_benefit(store.user, 'has_custom_domain'):
+            return Response({'detail': 'Tu plan actual no incluye dominio propio.'}, status = status.HTTP_403_FORBIDDEN)
+        store_domain    =   getattr(store, 'domain', None)
+        if store_domain is None:
+            return Response({'domain': ['Primero guardá tu dominio.']}, status = status.HTTP_400_BAD_REQUEST)
+        refresh_status(store_domain)
+        return Response({'domain': self._domain_payload(store)}, status = status.HTTP_200_OK)
+    #=========================================
+    # PUBLIC RESOLVE (dominio propio -> slug, para la SPA servida en ese host)
+    #=========================================
+    @action(detail = False, methods = ['get'], url_path = 'domain/resolve', throttle_classes = [PublicReadThrottle])
+    def public_resolve(self, request):
+        domain  =   normalize_domain(request.query_params.get('domain'))
+        slug    =   resolve_slug(domain) if domain else ''
+        if not slug:
+            raise Http404
+        return Response({'slug': slug}, status = status.HTTP_200_OK)
     #=========================================
     # BLOCK / UNBLOCK (moderación staff: la web pública pasa a 404)
     #=========================================

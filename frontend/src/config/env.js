@@ -29,13 +29,39 @@ const PLATFORM_SUBDOMAINS = new Set(['www', 'app', 'api', 'admin', 'panel', 'mai
 // Si la app se está visitando desde <slug>.<platformDomain> devuelve ese slug
 // (la raíz es la web pública de la tienda); si no, null. En dev,
 // mitienda.localhost:5173 resuelve a loopback en Chrome/Firefox sin configurar nada.
-export const storeHostSlug = (() => {
+// `let` + setter: un dominio propio (ver abajo) resuelve su slug contra la
+// API después del boot — los import leen el binding en vivo.
+export let storeHostSlug = (() => {
   const host = hostname.toLowerCase()
   if (host === platformDomain || !host.endsWith(`.${platformDomain}`)) return null
   const sub = host.slice(0, -(platformDomain.length + 1))
   if (!sub || sub.includes('.') || PLATFORM_SUBDOMAINS.has(sub)) return null
   return sub
 })()
+
+// Dominio propio del cliente (mitienda.com CNAME -> plataforma): el host no
+// es la plataforma ni un subdominio de ella. El slug lo confirma la API
+// (/stores/domain/resolve/) recién en StorePublicLayout — hasta entonces la
+// web solo sabe que el host ES candidato a tienda.
+export const customDomainHost = (() => {
+  if (storeHostSlug) return null
+  const host = hostname.toLowerCase()
+  if (!host || host === 'localhost') return null
+  if (/^\d{1,3}(\.\d{1,3}){3}$/.test(host)) return null // IPv4 literal
+  if (host === platformDomain || host.endsWith(`.${platformDomain}`)) return null
+  // Con platformDomain 'localhost' (dev), solo un host con TLD real o
+  // *.localhost califica — evita tratar la IP o '127.0.0.1' como tienda.
+  if (!host.includes('.')) return null
+  return host
+})()
+
+// ¿Este host sirve la web pública de una tienda? (subdominio o dominio propio).
+// Lo leen el router (árbol de rutas) y el guard que redirige a appUrl.
+export const isStoreHost = Boolean(storeHostSlug || customDomainHost)
+
+export function setStoreHostSlug(slug) {
+  storeHostSlug = slug || null
+}
 
 // Render no enruta ni certifica subdominios wildcard en onrender.com (deploy
 // de test): los links públicos usan el alias de path <appUrl>/<slug> hasta

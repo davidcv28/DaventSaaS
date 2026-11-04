@@ -188,6 +188,38 @@ export const storesApi = {
     return data
   },
 
+  // Dominio propio del cliente (beneficio has_custom_domain, Plan premium):
+  // GET  -> {domain|null} con status, instrucciones DNS (txt_name/txt_value/
+  //         cname_target) y fechas; POST {domain} -> alta/reemplazo (resetea
+  //         la verificación); verify -> re-corre el chequeo DNS; DELETE ->
+  //         desvincular.
+  async getDomain() {
+    const { data } = await http.get('/stores/domain/')
+    return data.domain || null
+  },
+
+  async saveDomain(domain) {
+    const { data } = await http.post('/stores/domain/', { domain })
+    return data.domain || null
+  },
+
+  async verifyDomain() {
+    const { data } = await http.post('/stores/domain/verify/')
+    return data.domain || null
+  },
+
+  async deleteDomain() {
+    const { data } = await http.delete('/stores/domain/')
+    return data
+  },
+
+  // Resolución pública: la SPA servida en un dominio propio (mitienda.com)
+  // pregunta a qué tienda pertenece. 404 si el dominio no está verificado.
+  async resolveDomain(domain) {
+    const { data } = await publicHttp.get('/stores/domain/resolve/', { params: { domain } })
+    return data.slug || ''
+  },
+
   async publicStore(slug, { preview } = {}) {
     // ?preview=<token firmado>: el backend muestra el borrador del Studio
     // (link temporal de "compartir vista previa") en vez de lo publicado.

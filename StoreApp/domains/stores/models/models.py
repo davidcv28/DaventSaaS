@@ -604,6 +604,38 @@ class AiDesignEvent(models.Model):
 
 
 #=========================================
+# STORE DOMAIN MODEL (dominio propio del cliente)
+#=========================================
+class StoreDomain(models.Model):
+    """
+    Dominio propio de la tienda (mitienda.com) — beneficio 'has_custom_domain'
+    (Plan premium). El cliente apunta su DNS a la plataforma y lo verifica
+    por TXT '_davent-verify.<dominio>' o por CNAME al host canónico: solo
+    un dominio 'verified' resuelve la web pública en /public/resolve/.
+    Un dominio por tienda (OneToOne) y único en toda la plataforma.
+    """
+    STATUS_PENDING              =   'pending'
+    STATUS_VERIFIED             =   'verified'
+    STATUS_FAILED               =   'failed'
+    STATUS_CHOICES              =   [
+        (STATUS_PENDING,  'Pendiente'),
+        (STATUS_VERIFIED, 'Verificado'),
+        (STATUS_FAILED,   'Error de DNS'),
+    ]
+    store                       =   models.OneToOneField(Store, on_delete = models.CASCADE, related_name = 'domain')
+    domain                      =   models.CharField(max_length = 253, unique = True, verbose_name = 'Dominio')
+    verify_token                =   models.CharField(max_length = 64, verbose_name = 'Token de verificación')
+    status                      =   models.CharField(max_length = 10, choices = STATUS_CHOICES, default = STATUS_PENDING)
+    verified_at                 =   models.DateTimeField(null = True, blank = True)
+    last_checked_at             =   models.DateTimeField(null = True, blank = True)
+    created_at                  =   models.DateTimeField(auto_now_add = True)
+    class Meta:
+        app_label               =   'stores'
+        verbose_name            =   'Dominio propio'
+        verbose_name_plural     =   'Dominios propios'
+    def __str__(self):
+        return f'{self.domain} -> {self.store.slug}'
+#=========================================
 # PUBLIC CACHE BUST (ver public_cache.py: las ediciones del dueño se ven
 # al instante en su web pública — el payload no queda servido viejo)
 #=========================================
