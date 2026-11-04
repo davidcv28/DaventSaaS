@@ -5,6 +5,7 @@ import QRCode from 'qrcode'
 import { storesApi, publicStoreUrl, CUSTOMIZATION_DEFAULTS, ensureStoreFont } from '../api/stores.api.js'
 import { formatARS } from '../api/billing.api.js'
 import { useAuthStore } from '../stores/auth.store.js'
+import { useBillingStore } from '../stores/billing.store.js'
 import { extractApiError } from '../api/http.js'
 import AppIcon from '../components/AppIcon.vue'
 import BrandLogo from '../components/BrandLogo.vue'
@@ -19,6 +20,7 @@ import { loadFlyerDraft, imposition, sizeById, sheetById, layoutById, flyerProdu
 // DAVENT: banda de marca arriba, beneficios, destacados y pie con QR.
 // En pantalla se ve 1 copia; al imprimir la hoja A4 sale llena (2×2).
 const auth = useAuthStore()
+const billing = useBillingStore()
 const route = useRoute()
 // Modo "a medida": el folleto armado en el diseñador (A5, 2 por hoja A4 apaisada).
 const isCustom = route.query.custom === '1'
@@ -102,6 +104,16 @@ const featured = computed(() => products.value.slice(0, 3))
 onMounted(async () => {
   try {
     if (!auth.user?.profile) await auth.fetchMe().catch(() => {})
+    if (isFree) {
+      // El editor libre es solo Premium: verificar el beneficio del plan
+      // aunque la URL se abra a mano fuera del dashboard.
+      await Promise.all([billing.loadPlans(), billing.loadMine()]).catch(() => {})
+      if (!billing.currentPlan?.benefits?.has_flyer_editor) {
+        status.value = 'error'
+        error.value = 'El editor avanzado de folletos es solo para el plan Premium.'
+        return
+      }
+    }
     const rows = await storesApi.listMine()
     store.value = rows[0] || null
     if (!store.value) {

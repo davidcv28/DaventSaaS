@@ -318,7 +318,8 @@ const SECTION_BENEFITS = {
   support: ['has_support_chat'],
   bot: ['has_chatbot'],
   stats: ['has_stats'],
-  tools: ['has_qr', 'has_flyers']
+  tools: ['has_qr', 'has_flyers'],
+  flyer_editor: ['has_flyer_editor']
 }
 const LOCKED_FEATURES = {
   design_assisted: { icon: 'sparkles', title: 'Diseño asistido', text: 'Contale a qué te dedicás y recibí tu web armada: plantilla, orden de secciones y textos. Después la ajustás a mano.' },
@@ -330,6 +331,7 @@ const LOCKED_FEATURES = {
   support: { icon: 'message-circle', title: 'Tu Asistente', text: 'Te responde sobre tu cuenta: plan, tienda, productos, visitas, pagos y facturas.' },
   bot: { icon: 'bot', title: 'Asistente virtual', text: 'Un ayudante en tu web que responde solo las preguntas frecuentes de tus clientes, las 24 horas.' },
   tools: { icon: 'qr-code', title: 'QR y folletos', text: 'Código QR y folletos listos para imprimir y repartir: del papel a tu web en un escaneo.' },
+  flyer_editor: { icon: 'pen-tool', title: 'Editor avanzado de folletos', text: 'Un lienzo libre para diseñar tu folleto pieza por pieza: textos, fotos, productos y QR donde quieras, y salida lista para imprenta.' },
   stats: { icon: 'trending-up', title: 'Estadísticas de visitas', text: 'Cuánta gente entra a tu web día por día durante el último mes.' }
 }
 
@@ -341,7 +343,7 @@ const navLocks = computed(() => {
   const hasAccess = Boolean(plan.value?.isCurrent)
   const map = {}
   const gated = (id) => (SECTION_BENEFITS[id] || []).some((k) => !b[k])
-  for (const id of ['catalogs', 'services', 'pos', 'reviews', 'support', 'bot', 'tools', 'stats', 'design_assisted', 'design_studio']) {
+  for (const id of ['catalogs', 'services', 'pos', 'reviews', 'support', 'bot', 'tools', 'stats', 'design_assisted', 'design_studio', 'flyer_editor']) {
     // El asistente/soporte es para planes pagos (gate mcp_user_access en
     // el backend): el trial queda con candado de upgrade aunque esté vigente.
     map[id] = !hasAccess ? 'expired' : (id === 'support' && plan.value?.isTrial) ? 'upgrade' : gated(id) ? 'upgrade' : null
@@ -1340,6 +1342,7 @@ const visitAvg = computed(() => {
 })
 const canQr = computed(() => Boolean(plan.value?.benefits?.has_qr))
 const canFlyers = computed(() => Boolean(plan.value?.benefits?.has_flyers))
+const canFlyerEditor = computed(() => Boolean(plan.value?.benefits?.has_flyer_editor))
 
 async function buildQr() {
   if (!publicUrl.value || !canQr.value) return
@@ -1367,7 +1370,10 @@ function downloadQr() {
 // ejemplo explica mejor qué va a ver el cliente.
 const discountPreviewPct = computed(() => Math.min(99, Math.max(1, Math.round(Number(discountForm.percent)) || 25)))
 const toolsTab = ref('ready')
-watch([section, canFlyers], () => { if (!canFlyers.value && toolsTab.value === 'studio') toolsTab.value = 'ready' })
+watch([section, canFlyers, canFlyerEditor], () => {
+  if (!canFlyers.value && toolsTab.value === 'studio') toolsTab.value = 'ready'
+  if (!canFlyerEditor.value && toolsTab.value === 'editor') toolsTab.value = 'ready'
+})
 
 function openFlyer(custom = false) {
   const href = router.resolve({ name: 'store-flyer', query: custom ? { custom: custom === true ? '1' : String(custom) } : {} }).href
@@ -5016,7 +5022,7 @@ async function changePassword() {
       <nav class="dsg-tabs tools-tabs" role="tablist" aria-label="Herramientas">
         <button type="button" role="tab" class="dsg-tab" :class="{ active: toolsTab === 'ready' }" :aria-selected="toolsTab === 'ready'" @click="toolsTab = 'ready'"><AppIcon name="qr-code" :size="15" /> QR y folleto rápido</button>
         <button v-if="canFlyers" type="button" role="tab" class="dsg-tab" :class="{ active: toolsTab === 'studio' }" :aria-selected="toolsTab === 'studio'" @click="toolsTab = 'studio'"><AppIcon name="sparkles" :size="15" /> Diseñá tu folleto <span class="tools-new">Nuevo</span></button>
-        <button v-if="canFlyers" type="button" role="tab" class="dsg-tab" :class="{ active: toolsTab === 'editor' }" :aria-selected="toolsTab === 'editor'" @click="toolsTab = 'editor'"><AppIcon name="pen-tool" :size="15" /> Editor libre <span class="tools-new">Nuevo</span></button>
+        <button v-if="canFlyers" type="button" role="tab" class="dsg-tab" :class="{ active: toolsTab === 'editor', locked: !canFlyerEditor }" :aria-selected="toolsTab === 'editor'" @click="canFlyerEditor ? toolsTab = 'editor' : openLocked('flyer_editor')"><AppIcon name="pen-tool" :size="15" /> Editor libre <span v-if="canFlyerEditor" class="tools-new">Nuevo</span><AppIcon v-else name="lock" :size="13" /></button>
       </nav>
 
       <div v-show="toolsTab === 'ready'" class="grid-2 tools-grid">
@@ -5067,7 +5073,7 @@ async function changePassword() {
       />
 
       <FlyerEditor
-        v-if="canFlyers && toolsTab === 'editor'"
+        v-if="canFlyerEditor && toolsTab === 'editor'"
         :slug="store.store?.slug || ''"
         :shop-name="designShopName"
         :logo="currentLogo"
@@ -5382,9 +5388,10 @@ async function changePassword() {
       </div>
       <div class="price-grid">
         <PlanCard
-          v-for="p in billing.plans"
+          v-for="(p, i) in billing.plans"
           :key="p.id"
           :plan="p"
+          :prev="i > 0 ? billing.plans[i - 1] : null"
           :current="billing.hasSubscription && plan?.pk === p.id"
           :busy="busyPlan === p.id"
           @select="planAction"

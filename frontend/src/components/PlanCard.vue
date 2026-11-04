@@ -5,6 +5,7 @@ import AppIcon from './AppIcon.vue'
 
 const props = defineProps({
   plan: { type: Object, required: true },
+  prev: { type: Object, default: null },
   current: { type: Boolean, default: false },
   busy: { type: Boolean, default: false }
 })
@@ -12,6 +13,18 @@ const props = defineProps({
 const emit = defineEmits(['select'])
 
 const b = computed(() => props.plan.benefits || {})
+const bPrev = computed(() => props.prev?.benefits || null)
+
+// Ventaja sobre el plan anterior: flag que el anterior no tiene, o tope más
+// alto (None = ilimitado, siempre mejora salvo que el anterior también lo sea).
+function improves(key, val) {
+  if (!bPrev.value) return false
+  const pv = bPrev.value[key]
+  if (val === true) return pv !== true
+  if (val == null) return pv !== null && key in bPrev.value
+  if (typeof val === 'number') return pv == null ? false : val > pv
+  return false
+}
 
 // Medallón por nivel: la prueba regala, el avanzado corona, el medio despega.
 const tierIcon = computed(() => {
@@ -22,21 +35,25 @@ const tierIcon = computed(() => {
 })
 
 // Ventajas clave en chips con ícono, las más vendedoras primero (máx. 5).
+// `up` marca las que mejoran respecto del plan anterior (`prev`).
 const perks = computed(() => {
   const v = b.value
   const list = []
-  if ('max_products' in v) list.push({ icon: 'package', text: v.max_products == null ? 'Productos ilimitados' : `Hasta ${v.max_products} productos` })
-  if (v.max_gallery_images) list.push({ icon: 'images', text: `${v.max_gallery_images} fotos` })
-  if (v.has_design_advanced) list.push({ icon: 'palette', text: 'Diseños premium' })
-  else if (v.has_design_plus) list.push({ icon: 'layout-grid', text: 'Diseños extra' })
-  if (v.has_discounts) list.push({ icon: 'percent', text: 'Descuentos' })
-  if (v.has_product_comments) list.push({ icon: 'star', text: 'Opiniones' })
-  if (v.has_flyers) list.push({ icon: 'megaphone', text: 'Folletos y QR' })
-  else if (v.has_qr) list.push({ icon: 'qr-code', text: 'Código QR' })
-  if (v.has_chatbot) list.push({ icon: 'bot', text: 'Chatbot' })
-  if (v.has_stats) list.push({ icon: 'trending-up', text: 'Estadísticas' })
+  const add = (key, icon, text) => list.push({ icon, text, up: improves(key, v[key]) })
+  if ('max_products' in v) add('max_products', 'package', v.max_products == null ? 'Productos ilimitados' : `Hasta ${v.max_products} productos`)
+  if (v.max_gallery_images) add('max_gallery_images', 'images', `${v.max_gallery_images} fotos`)
+  if (v.has_design_advanced) add('has_design_advanced', 'palette', 'Diseños premium')
+  else if (v.has_design_plus) add('has_design_plus', 'layout-grid', 'Diseños extra')
+  if (v.has_discounts) add('has_discounts', 'percent', 'Descuentos')
+  if (v.has_product_comments) add('has_product_comments', 'star', 'Opiniones')
+  if (v.has_flyer_editor) add('has_flyer_editor', 'pen-tool', 'Editor de folletos')
+  else if (v.has_flyers) add('has_flyers', 'megaphone', 'Folletos y QR')
+  else if (v.has_qr) add('has_qr', 'qr-code', 'Código QR')
+  if (v.has_chatbot) add('has_chatbot', 'bot', 'Chatbot')
+  if (v.has_stats) add('has_stats', 'trending-up', 'Estadísticas')
   return list.slice(0, 5)
 })
+const upsCount = computed(() => perks.value.filter((p) => p.up).length)
 </script>
 
 <template>
@@ -51,8 +68,9 @@ const perks = computed(() => {
       </div>
       <p class="price">{{ formatARS(plan.price) }}<small v-if="Number(plan.price) > 0">/mes</small></p>
     </div>
+    <p v-if="prev && upsCount" class="plan-vs"><AppIcon name="plus" :size="11" /> Ventajas sobre {{ prev.name }}</p>
     <div v-if="perks.length" class="plan-perks">
-      <span v-for="p in perks" :key="p.text" class="plan-perk"><AppIcon :name="p.icon" :size="12" /> {{ p.text }}</span>
+      <span v-for="p in perks" :key="p.text" class="plan-perk" :class="{ up: p.up }"><AppIcon :name="p.icon" :size="12" /> {{ p.text }}</span>
     </div>
     <details v-if="plan.bullets?.length" class="plan-more">
       <summary>Todo lo que incluye <AppIcon name="chevron-down" :size="13" /></summary>

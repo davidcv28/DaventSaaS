@@ -418,6 +418,8 @@
 .price-card.trial .plan-medal { background: linear-gradient(135deg, #10b981, #0d9488); box-shadow: 0 8px 18px -8px rgba(16, 185, 129, .7); }
 .plan-perks { display: flex; flex-wrap: wrap; gap: 5px; z-index: 2; position: relative; }
 .plan-perk { display: inline-flex; align-items: center; gap: 5px; padding: 3px 8px; border-radius: 99px; background: var(--brand-soft); color: var(--brand-ink); font-size: 11px; font-weight: 700; }
+.plan-vs { display: flex; align-items: center; gap: 4px; margin: 0; font-size: 10px; font-weight: 800; letter-spacing: .08em; text-transform: uppercase; color: var(--ok); z-index: 2; position: relative; }
+.plan-perk.up { background: var(--ok-bg); color: var(--ok); box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--ok) 35%, transparent); }
 .plan-more { z-index: 2; position: relative; }
 .plan-more > summary { display: flex; align-items: center; gap: 6px; cursor: pointer; font-size: 11px; font-weight: 800; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); list-style: none; }
 .plan-more > summary::-webkit-details-marker { display: none; }
