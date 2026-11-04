@@ -259,7 +259,7 @@ router.beforeEach(async (to) => {
     return false
   }
   const auth = useAuthStore()
-  document.title = to.meta?.title ? `DAVENT · ${to.meta.title}` : 'DAVENT · Acceso'
+  document.title = to.meta?.title ? `DAVENT · ${to.meta.title}` : 'DAVENT · Tu comercio en internet'
   // Landing: un usuario con sesión activa va directo a su panel (staff → /admin).
   if (to.name === 'landing') {
     await auth.ensureSession()
