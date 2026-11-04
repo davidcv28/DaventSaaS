@@ -444,7 +444,7 @@ class StoreTemplateGatingTests(TestCase):
         #Todos los ids viejos se remapean al único diseño del catálogo
         #('raiz') y el mapa no conserva ni inventa claves fuera de él.
         known       =   {key for key, _ in StoreCustomization.TEMPLATE_CHOICES}
-        self.assertEqual(known, {'raiz', 'esencial', 'mercado', 'gimnasio', 'sastreria', 'moderntec', 'ruta', 'aurum'})
+        self.assertEqual(known, {'raiz', 'esencial', 'mercado', 'gimnasio', 'sastreria', 'moderntec', 'indumentaria', 'ruta', 'aurum'})
         self.assertTrue(StoreCustomization.TEMPLATE_RETIRED_MAP)
         for old, new in StoreCustomization.TEMPLATE_RETIRED_MAP.items():
             self.assertIn(new, known, f'{old} -> {new}')
@@ -452,7 +452,7 @@ class StoreTemplateGatingTests(TestCase):
     def test_public_payload_lists_allowed_templates(self):
         client, store   =   self._client('has_design_plus')
         response        =   APIClient().get(f'{STORES_URL}public/mi-tienda/')
-        self.assertEqual(response.data['allowed_templates'], ['raiz', 'esencial', 'mercado', 'gimnasio', 'sastreria', 'moderntec', 'ruta'])
+        self.assertEqual(response.data['allowed_templates'], ['raiz', 'esencial', 'mercado', 'gimnasio', 'sastreria', 'moderntec', 'indumentaria', 'ruta'])
 
     def test_theme_toggle_patch_is_visible_in_the_public_payload_immediately(self):
         #Modo noche: el dueño guarda theme_toggle y la web pública ya lo ve
@@ -545,7 +545,7 @@ class StoreTemplateGatingTests(TestCase):
     def test_public_allowed_templates_match_the_plan(self):
         client, _       =   self._client('has_design_plus', 'has_design_advanced')
         response        =   APIClient().get(f'{STORES_URL}public/mi-tienda/')
-        self.assertEqual(response.data['allowed_templates'], ['raiz', 'esencial', 'mercado', 'gimnasio', 'sastreria', 'moderntec', 'ruta', 'aurum'])
+        self.assertEqual(response.data['allowed_templates'], ['raiz', 'esencial', 'mercado', 'gimnasio', 'sastreria', 'moderntec', 'indumentaria', 'ruta', 'aurum'])
 
 
 class MarketingFieldsTests(TestCase):

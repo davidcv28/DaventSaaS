@@ -77,6 +77,11 @@ const patternLayout = computed(() => normalizeLayoutConfig(defaultPattern.value?
 // declara su contrato de datos (`ready`); en el Studio se sigue editando
 // con la plantilla Vue, que es la que responde a los cambios en vivo.
 const patternDoc = ref(null)
+// Diseños con identidad propia: su composición canónica y su paleta viven en
+// la Template Definition y en la hoja store-<id>.css. El layout y el tema del
+// patrón base (esencial/raiz) NO se les aplica: les pisaba variantes firma
+// (hero 'centered') y el acento de la tienda con la paleta neutra del estilo.
+const SKIN_TEMPLATES = new Set(['mercado', 'gimnasio', 'sastreria', 'moderntec', 'indumentaria'])
 //Superficie que el documento del patrón debe pintar en esta ruta. Si el
 //diseño no la declara (`surfaces`), esa ruta sigue con la plantilla Vue.
 const patternSurface = computed(() => (
@@ -115,13 +120,14 @@ const custom = computed(() => {
   const style = defaultStyle.value
   if (!raw.template && pattern?.template) merged.template = pattern.template
   const savedLayout = merged.layout_config && typeof merged.layout_config === 'object' ? merged.layout_config : {}
-  const baseLayout = patternLayout.value
+  const ownsSkin = SKIN_TEMPLATES.has(merged.template)
+  const baseLayout = ownsSkin ? {} : patternLayout.value
   merged.layout_config = Object.keys(savedLayout).length || Object.keys(baseLayout).length
     ? { ...baseLayout, ...savedLayout }
     : {}
-  // Mercado (Bazar) trae su propia piel: sin tema elegido no se le aplica la
-  // paleta neutra del estilo base, que le pisaba el amarillo/azul firma.
-  if (!studioMode.value && (!raw.site_theme || !Object.keys(raw.site_theme).length) && style?.tokens && merged.template !== 'mercado') merged.site_theme = style.tokens
+  // Los diseños con piel propia tampoco heredan la paleta del estilo base:
+  // sin tema elegido, su acento y sus superficies salen de su hoja.
+  if (!studioMode.value && !ownsSkin && (!raw.site_theme || !Object.keys(raw.site_theme).length) && style?.tokens) merged.site_theme = style.tokens
   // Saneo contra el catálogo de la base: un estilo/fuente que ya no existe
   // se descarta y cae al default en vez de renderizar un valor huérfano.
   if (merged.site_theme && typeof merged.site_theme === 'object') {
@@ -273,7 +279,8 @@ const TEMPLATE_CSS = {
   mercado:   () => import('../assets/store-mercado.css'),
   gimnasio:  () => import('../assets/store-gimnasio.css'),
   sastreria: () => import('../assets/store-sastreria.css'),
-  moderntec: () => import('../assets/store-moderntec.css')
+  moderntec: () => import('../assets/store-moderntec.css'),
+  indumentaria: () => import('../assets/store-indumentaria.css')
 }
 watch(pageTemplate, (tpl) => {
   const loaded = TEMPLATE_CSS[tpl]?.()

@@ -1,0 +1,1159 @@
+/* ==========================================================================
+   DISEÑO INDUMENTARIA — lookbook / runway de moda (nivel plus)
+   Raíz del CSS: [data-template="indumentaria"] (lo emite StorePublicLayout).
+   Piel editorial de indumentaria: crudo tela, carbón y piedra, un acento de
+   temporada (el del dueño), Fraunces display + Archivo + JetBrains Mono.
+   Firma del rubro: hilván (líneas punteadas de costura), etiqueta colgante,
+   cinta marquee de temporada y numeración LOOK 01/02 en las grillas.
+   Catálogo / ficha / servicios reutilizan Raíz bajo `.in-skin`: la hoja
+   re-escribe los tokens --sp-* y los componentes .rz-* del lookbook.
+   ========================================================================== */
+
+.store-page[data-template='indumentaria'] {
+  --in-crudo: #F2EEE7;
+  --in-card: #FAF7F1;
+  --in-soft: #E8E2D6;
+  --in-line: #D8D1C3;
+  --in-line-strong: #BFB6A4;
+  --in-ink: #1C1B18;
+  --in-ink-2: #3B3833;
+  --in-muted: #7A7468;
+  --in-accent: var(--store-accent-ink, #B4442A);
+  --in-accent-raw: var(--store-accent, #B4442A);
+  --in-on-accent: #FFFDF6;
+  --in-display: 'Fraunces', Georgia, 'Times New Roman', serif;
+  --in-body: 'Archivo', system-ui, -apple-system, 'Segoe UI', sans-serif;
+  --in-mono: 'JetBrains Mono', ui-monospace, SFMono-Regular, monospace;
+  --in-wrap: 1200px;
+  --in-gutter: 32px;
+  --in-section: clamp(54px, 6vw, 80px);
+  --in-top-h: 118px;
+  --in-stitch: repeating-linear-gradient(90deg, var(--in-line-strong) 0 7px, transparent 7px 13px);
+
+  --sp-bg: var(--in-crudo);
+  --sp-card: var(--in-card);
+  --sp-card-solid: var(--in-card);
+  --sp-surface: var(--in-soft);
+  --sp-soft: var(--in-soft);
+  --sp-ink: var(--in-ink);
+  --sp-ink-2: var(--in-ink-2);
+  --sp-muted: var(--in-muted);
+  --sp-line: var(--in-line);
+  --sp-radius: 0;
+  --sp-accent-text: var(--in-accent);
+  --sp-shadow-sm: 0 1px 0 rgba(28, 27, 24, .05);
+  --sp-shadow-md: 0 26px 50px -34px rgba(28, 27, 24, .5);
+  --sp-chrome: var(--in-crudo);
+
+  --tpc-bg: var(--in-card);
+  --tpc-border: 1px solid var(--in-line);
+  --tpc-radius: 0;
+  --tpc-shadow: none;
+  --tpc-ratio: 3 / 4;
+  --tpc-media-bg: var(--in-soft);
+  --tpc-pad: 12px 0 16px;
+  --tpc-gap: 4px;
+  --tpc-name-font: var(--in-body);
+  --tpc-name-size: 14.5px;
+  --tpc-name-weight: 500;
+  --tpc-name-lh: 1.3;
+  --tpc-eyebrow-size: 9.5px;
+  --tpc-eyebrow-weight: 500;
+  --tpc-eyebrow-track: .18em;
+  --tpc-eyebrow-ink: var(--in-muted);
+  --tpc-price-font: var(--in-mono);
+  --tpc-price-size: 14px;
+  --tpc-price-weight: 600;
+  --tpc-price-ink: var(--in-ink);
+  --tpc-old-size: 11px;
+  --tpc-old-ink: var(--in-muted);
+  --tpc-flag-radius: 0;
+  --tpc-flag-bg: var(--in-ink);
+  --tpc-flag-ink: var(--in-crudo);
+  --tpc-flag-border: 0;
+  --tpc-flag-transform: uppercase;
+  --tpc-flag-track: .14em;
+  --tpc-offer-bg: var(--in-accent-raw);
+  --tpc-offer-ink: var(--in-on-accent);
+  --tpc-quick-bg: var(--in-ink);
+  --tpc-add-radius: 0;
+  --tpc-add-bg: var(--in-ink);
+  --tpc-add-ink: var(--in-crudo);
+  --tpc-add-shadow: none;
+  --tpc-go-size: 10px;
+  --tpc-go-weight: 600;
+  --tpc-go-ink: var(--in-accent);
+  --tpc-focus: var(--in-accent);
+  --tpc-img-hover: scale(1.05);
+
+  font-family: var(--in-body);
+  background: var(--in-crudo);
+  color: var(--in-ink);
+  font-size: 15.5px;
+  line-height: 1.6;
+  overflow-x: clip;
+}
+
+/* Trama de tejido sutil: dos hilos cruzados a <6% de tinta (firma, no
+   ornamento). Sin los orbes del layout base. */
+.store-page[data-template='indumentaria']::before,
+.store-page[data-template='indumentaria']::after {
+  border-radius: 0;
+  animation: none;
+}
+.store-page[data-template='indumentaria']::before {
+  inset: 0;
+  width: auto;
+  height: auto;
+  opacity: 1;
+  background:
+    repeating-linear-gradient(0deg, color-mix(in srgb, var(--in-ink) 4%, transparent) 0 1px, transparent 1px 9px),
+    repeating-linear-gradient(90deg, color-mix(in srgb, var(--in-ink) 3%, transparent) 0 1px, transparent 1px 9px);
+}
+.store-page[data-template='indumentaria']::after { display: none; }
+
+/* ==========================================================================
+   TIPOGRAFÍA, CONTENEDOR, BOTONES
+   ========================================================================== */
+.store-page[data-template='indumentaria'] h1,
+.store-page[data-template='indumentaria'] h2,
+.store-page[data-template='indumentaria'] h3,
+.store-page[data-template='indumentaria'] .sp-section-title {
+  font-family: var(--in-display);
+  font-weight: 340;
+  line-height: 1.04;
+  letter-spacing: -.025em;
+  color: var(--in-ink);
+}
+.store-page[data-template='indumentaria'] h1 em,
+.store-page[data-template='indumentaria'] h2 em,
+.store-page[data-template='indumentaria'] h3 em {
+  font-style: italic;
+  color: var(--in-accent);
+}
+.store-page[data-template='indumentaria'] h2,
+.store-page[data-template='indumentaria'] .sp-section-title { font-size: clamp(30px, 3.8vw, 46px); }
+.store-page[data-template='indumentaria'] h3 { font-size: clamp(20px, 2vw, 26px); }
+.store-page[data-template='indumentaria'] p { color: var(--in-ink-2); }
+.store-page[data-template='indumentaria'] .in-wrap,
+.store-page[data-template='indumentaria'] .sp-container,
+.store-page[data-template='indumentaria'] .bq-container {
+  max-width: var(--in-wrap);
+  margin-inline: auto;
+  padding-inline: var(--in-gutter);
+}
+.store-page[data-template='indumentaria'] .sp-eyebrow,
+.store-page[data-template='indumentaria'] .bq-eyebrow {
+  font-family: var(--in-mono);
+  font-size: 9.5px;
+  font-weight: 500;
+  letter-spacing: .22em;
+  text-transform: uppercase;
+  color: var(--in-accent);
+}
+.store-page[data-template='indumentaria'] .sp-btn,
+.store-page[data-template='indumentaria'] .bq-btn {
+  min-height: 46px;
+  padding: 0 24px;
+  border: 1px solid var(--in-ink);
+  border-radius: 0;
+  background: var(--in-ink);
+  color: var(--in-crudo);
+  font-family: var(--in-mono);
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: .16em;
+  text-transform: uppercase;
+  box-shadow: none;
+}
+.store-page[data-template='indumentaria'] .sp-btn:hover,
+.store-page[data-template='indumentaria'] .bq-btn:hover {
+  background: var(--in-accent-raw);
+  border-color: var(--in-accent-raw);
+  color: var(--in-on-accent);
+  transform: translateY(-1px);
+}
+.store-page[data-template='indumentaria'] .sp-btn.ghost,
+.store-page[data-template='indumentaria'] .bq-btn--ghost {
+  background: transparent;
+  border-color: var(--in-line-strong);
+  color: var(--in-ink);
+}
+.store-page[data-template='indumentaria'] .sp-btn.ghost:hover,
+.store-page[data-template='indumentaria'] .bq-btn--ghost:hover {
+  background: var(--in-card);
+  border-color: var(--in-ink);
+  color: var(--in-ink);
+}
+.store-page[data-template='indumentaria'] :is(a, button, input, textarea, select, summary):focus-visible {
+  outline: 2px solid var(--in-accent);
+  outline-offset: 3px;
+}
+
+/* ==========================================================================
+   CHROME: cabecera editorial con subrayado de hilván
+   ========================================================================== */
+.store-page[data-template='indumentaria'] { --sp-top-h: var(--in-top-h); }
+.store-page[data-template='indumentaria'] .sp-top {
+  background: color-mix(in srgb, var(--in-crudo) 94%, transparent);
+  border-bottom: 1px solid var(--in-line);
+  box-shadow: none;
+}
+.store-page[data-template='indumentaria'] .sp-top::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: -4px;
+  height: 1px;
+  background: var(--in-stitch);
+}
+.store-page[data-template='indumentaria'] .sp-top-inner {
+  max-width: var(--in-wrap);
+  min-height: 74px;
+  gap: 26px;
+}
+.store-page[data-template='indumentaria'] .sp-brand .sp-name {
+  font-family: var(--in-display);
+  font-size: 20px;
+  font-weight: 420;
+  letter-spacing: -.015em;
+  color: var(--in-ink);
+}
+.store-page[data-template='indumentaria'] .sp-brand .sp-mono {
+  font-family: var(--in-mono);
+  font-size: 9.5px;
+  letter-spacing: .2em;
+  text-transform: uppercase;
+  color: var(--in-muted);
+}
+.store-page[data-template='indumentaria'] .sp-brand .sp-logo {
+  width: 42px;
+  height: 42px;
+  border: 1px solid var(--in-ink);
+  border-radius: 0;
+  background: var(--in-card);
+}
+.store-page[data-template='indumentaria'] .sp-top-links { gap: 22px; margin-left: auto; }
+.store-page[data-template='indumentaria'] .sp-top-links a {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  min-height: 74px;
+  font-size: 13px;
+  color: var(--in-ink-2);
+}
+.store-page[data-template='indumentaria'] .sp-top-links a::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 20px;
+  height: 1px;
+  background: var(--in-accent);
+  transform: scaleX(0);
+  transform-origin: left;
+  transition: transform .25s cubic-bezier(.2, .7, .2, 1);
+}
+.store-page[data-template='indumentaria'] .sp-top-links a:hover { color: var(--in-ink); }
+.store-page[data-template='indumentaria'] .sp-top-links a:hover::after,
+.store-page[data-template='indumentaria'] .sp-top-links a.router-link-exact-active::after {
+  transform: scaleX(1);
+}
+.store-page[data-template='indumentaria'] .sp-top-links a.router-link-exact-active { color: var(--in-accent); }
+.store-page[data-template='indumentaria'] .sp-top-end .sp-icon-btn,
+.store-page[data-template='indumentaria'] .sp-top .sp-burger {
+  border: 1px solid var(--in-line);
+  border-radius: 0;
+  color: var(--in-ink);
+}
+.store-page[data-template='indumentaria'] .sp-top-end .sp-icon-btn:hover,
+.store-page[data-template='indumentaria'] .sp-top .sp-burger:hover {
+  border-color: var(--in-ink);
+  background: var(--in-card);
+}
+.store-page[data-template='indumentaria'] .sp-foot {
+  background: var(--in-crudo);
+  border-top: 1px solid var(--in-line);
+}
+.store-page[data-template='indumentaria'] .sp-foot-name {
+  font-family: var(--in-display);
+  font-weight: 340;
+  letter-spacing: -.02em;
+}
+
+/* ==========================================================================
+   PORTADA — hero editorial + cinta marquee
+   ========================================================================== */
+.in-hero { padding: 60px 0 0; }
+.in-hero-grid {
+  position: relative;
+  display: grid;
+  grid-template-columns: minmax(0, 1.02fr) minmax(0, .98fr);
+  gap: 60px;
+  align-items: end;
+}
+.in-hero.is-centered .in-hero-grid { grid-template-columns: 1fr; justify-items: center; text-align: center; }
+.in-hero.is-centered .in-hero-meta { justify-content: center; }
+.in-rail {
+  position: absolute;
+  top: 6px;
+  right: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 4px;
+  margin: 0 22px 0 0;
+  font-family: var(--in-mono);
+  font-size: 9.5px;
+  letter-spacing: .26em;
+  text-transform: uppercase;
+  color: var(--in-muted);
+  writing-mode: vertical-rl;
+  transform: rotate(180deg);
+}
+.in-rail b { color: var(--in-accent); font-weight: 600; }
+.in-kicker {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin: 0 0 22px;
+  font-family: var(--in-mono);
+  font-size: 10px;
+  font-weight: 500;
+  letter-spacing: .26em;
+  text-transform: uppercase;
+  color: var(--in-accent);
+}
+.in-kicker::after { content: ''; width: 84px; height: 1px; background: var(--in-stitch); }
+.in-hero h1 {
+  margin: 0;
+  font-family: var(--in-display);
+  font-size: clamp(44px, 6.4vw, 88px);
+  font-weight: 320;
+  line-height: .96;
+  letter-spacing: -.03em;
+  text-wrap: balance;
+}
+.in-hero h1 em { font-style: italic; color: var(--in-accent); }
+.in-hero-text { max-width: 44ch; margin: 24px 0 0; font-size: 16.5px; color: var(--in-ink-2); }
+.in-actions { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 30px; }
+.in-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 9px;
+  min-height: 48px;
+  padding: 0 26px;
+  border: 1px solid var(--in-ink);
+  border-radius: 0;
+  text-decoration: none;
+  cursor: pointer;
+  font-family: var(--in-mono);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: .16em;
+  text-transform: uppercase;
+  transition: background .2s, color .2s, transform .2s, border-color .2s;
+}
+.in-btn-primary { background: var(--in-ink); color: var(--in-crudo); }
+.in-btn-primary:hover { background: var(--in-accent-raw); border-color: var(--in-accent-raw); color: var(--in-on-accent); transform: translateY(-1px); }
+.in-btn-ghost { background: transparent; color: var(--in-ink); }
+.in-btn-ghost:hover { background: var(--in-card); }
+.in-hero-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0;
+  margin: 40px 0 0;
+  padding: 0;
+  list-style: none;
+  border-top: 1px solid var(--in-line);
+}
+.in-hero-meta li {
+  display: grid;
+  gap: 4px;
+  padding: 14px 22px 0 0;
+  margin-right: 22px;
+  font-size: 13px;
+}
+.in-hero-meta li + li { padding-left: 22px; border-left: 1px dashed var(--in-line-strong); margin-right: 22px; }
+.in-meta-k {
+  font-family: var(--in-mono);
+  font-size: 9px;
+  letter-spacing: .2em;
+  text-transform: uppercase;
+  color: var(--in-muted);
+}
+.in-hero-media {
+  position: relative;
+  margin: 0;
+  min-height: 460px;
+  background: var(--in-card);
+  border: 1px solid var(--in-line);
+}
+.in-hero-media img {
+  width: 100%;
+  height: 100%;
+  min-height: 460px;
+  object-fit: cover;
+  display: block;
+  filter: saturate(.95);
+  animation: in-hero-drift 22s ease-in-out infinite alternate;
+}
+@keyframes in-hero-drift {
+  from { transform: scale(1.02) translateY(0); }
+  to { transform: scale(1.06) translateY(-1.6%); }
+}
+.in-hero-initial {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  font-family: var(--in-display);
+  font-size: clamp(96px, 22vw, 190px);
+  font-weight: 320;
+  color: color-mix(in srgb, var(--in-ink) 8%, transparent);
+}
+/* Etiqueta colgante: tarjeta rotada con piquete, parpadeo sutil. */
+.in-tag {
+  position: absolute;
+  top: 26px;
+  right: 26px;
+  display: grid;
+  gap: 0;
+  padding: 20px 16px 12px;
+  background: var(--in-card);
+  border: 1px solid var(--in-ink);
+  font-family: var(--in-mono);
+  text-align: center;
+  transform: rotate(4deg);
+  animation: in-tag-sway 7s ease-in-out infinite;
+}
+.in-tag::before {
+  content: '';
+  position: absolute;
+  top: 7px;
+  left: 50%;
+  width: 7px;
+  height: 7px;
+  border: 1px solid var(--in-ink);
+  border-radius: 50%;
+  background: var(--in-crudo);
+  transform: translateX(-50%);
+}
+.in-tag i { font-style: normal; font-size: 8.5px; letter-spacing: .3em; color: var(--in-muted); }
+.in-tag b { font-size: 20px; font-weight: 700; color: var(--in-accent); }
+@keyframes in-tag-sway {
+  0%, 100% { transform: rotate(4deg); }
+  50% { transform: rotate(1.5deg); }
+}
+.in-hero-note {
+  position: absolute;
+  left: -1px;
+  right: 96px;
+  bottom: -1px;
+  display: grid;
+  gap: 3px;
+  padding: 18px 20px;
+  background: color-mix(in srgb, var(--in-card) 95%, transparent);
+  border-top: 1px solid var(--in-line);
+  border-right: 1px solid var(--in-line);
+}
+.in-hero-note .tag {
+  font-family: var(--in-mono);
+  font-size: 9px;
+  letter-spacing: .22em;
+  text-transform: uppercase;
+  color: var(--in-accent);
+}
+.in-hero-note strong { font-family: var(--in-display); font-size: 16px; font-weight: 460; }
+.in-hero-note a {
+  font-family: var(--in-mono);
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: .14em;
+  text-transform: uppercase;
+  color: var(--in-accent);
+}
+/* Cinta marquee de temporada: pista duplicada al 50%, pausa al hover. */
+.in-marq {
+  margin-top: 58px;
+  overflow: hidden;
+  border-top: 1px solid var(--in-ink);
+  border-bottom: 1px solid var(--in-ink);
+  background: var(--in-ink);
+  color: var(--in-crudo);
+}
+.in-marq-track {
+  display: flex;
+  align-items: center;
+  width: max-content;
+  padding: 11px 0;
+  will-change: transform;
+  animation: in-marq 30s linear infinite;
+}
+.in-marq:hover .in-marq-track { animation-play-state: paused; }
+.in-marq-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 18px;
+  padding-right: 18px;
+  font-family: var(--in-mono);
+  font-size: 10.5px;
+  font-weight: 500;
+  letter-spacing: .24em;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+.in-marq-item i { font-style: normal; color: var(--in-accent); }
+@keyframes in-marq {
+  from { transform: translateX(0); }
+  to { transform: translateX(-50%); }
+}
+
+/* ==========================================================================
+   CATEGORÍAS COMO PÁGINAS DE LOOKBOOK
+   ========================================================================== */
+.in-depts { padding: var(--in-section) 0 0; }
+.in-sec-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 18px;
+  padding-bottom: 16px;
+  border-bottom: 1px solid var(--in-line-strong);
+}
+.in-sec-head h2 { margin: 0; }
+.in-sec-head span {
+  font-family: var(--in-mono);
+  font-size: 10px;
+  letter-spacing: .18em;
+  text-transform: uppercase;
+  color: var(--in-accent);
+}
+.in-lookbook {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 1px;
+  margin-top: 0;
+  border-inline: 1px solid var(--in-line);
+  background: var(--in-line);
+}
+.in-look {
+  position: relative;
+  display: grid;
+  gap: 0;
+  padding: 18px 18px 20px;
+  background: var(--in-crudo);
+  color: inherit;
+  text-decoration: none;
+  transition: background .2s;
+}
+.in-look:hover { background: var(--in-card); }
+.in-look-idx {
+  font-family: var(--in-mono);
+  font-size: 9px;
+  letter-spacing: .24em;
+  color: var(--in-muted);
+  margin-bottom: 12px;
+}
+.in-look-media {
+  position: relative;
+  display: block;
+  aspect-ratio: 3 / 4;
+  overflow: hidden;
+  background: var(--in-soft);
+  border: 1px solid var(--in-line);
+}
+.in-look-media img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+  transition: transform .5s cubic-bezier(.2, .7, .2, 1);
+}
+.in-look:hover .in-look-media img { transform: scale(1.05); }
+.in-look-media::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(to top, color-mix(in srgb, var(--in-ink) 30%, transparent), transparent 34%);
+  opacity: 0;
+  transition: opacity .3s;
+}
+.in-look:hover .in-look-media::after { opacity: 1; }
+.in-look-initial {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  font-family: var(--in-display);
+  font-size: 64px;
+  font-weight: 320;
+  color: color-mix(in srgb, var(--in-ink) 12%, transparent);
+}
+.in-look-media--all {
+  display: grid;
+  place-items: center;
+  color: var(--in-accent);
+}
+.in-look-foot {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+  padding-top: 14px;
+}
+.in-look-foot strong { font-size: 15px; font-weight: 600; letter-spacing: -.01em; }
+.in-look:hover .in-look-foot strong { color: var(--in-accent); }
+.in-look-count {
+  font-family: var(--in-mono);
+  font-size: 9.5px;
+  letter-spacing: .12em;
+  text-transform: uppercase;
+  color: var(--in-muted);
+  white-space: nowrap;
+}
+
+/* ==========================================================================
+   LA MARCA — ficha como etiqueta de ropa
+   ========================================================================== */
+.in-about { padding: var(--in-section) 0; }
+.in-about-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1.1fr) minmax(0, .9fr);
+  gap: 56px;
+  align-items: start;
+}
+.in-about-grid.is-bare { grid-template-columns: minmax(0, 1fr); }
+.in-eyebrow {
+  margin: 0 0 18px;
+  font-family: var(--in-mono);
+  font-size: 10px;
+  font-weight: 500;
+  letter-spacing: .26em;
+  text-transform: uppercase;
+  color: var(--in-accent);
+}
+.in-about-copy h2 { margin: 0; }
+.in-about-text { margin: 22px 0 0; font-size: 16px; max-width: 52ch; }
+.in-sizes {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 26px 0 0;
+  padding: 0;
+  list-style: none;
+}
+.in-sizes li {
+  padding: 7px 14px;
+  border: 1px solid var(--in-line-strong);
+  font-family: var(--in-mono);
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: .12em;
+  text-transform: uppercase;
+  color: var(--in-ink-2);
+  transition: background .18s, color .18s, border-color .18s;
+}
+.in-sizes li:hover { background: var(--in-ink); border-color: var(--in-ink); color: var(--in-crudo); }
+/* La etiqueta: hilo + tarjeta con piquete y letra chica en mono. */
+.in-label {
+  position: relative;
+  margin-top: 34px;
+  padding: 26px 26px 22px;
+  background: var(--in-card);
+  border: 1px solid var(--in-ink);
+  transform: rotate(-1.4deg);
+}
+.in-label-string {
+  position: absolute;
+  left: 50%;
+  bottom: 100%;
+  width: 1px;
+  height: 34px;
+  background: var(--in-ink);
+}
+.in-label-string::before {
+  content: '';
+  position: absolute;
+  top: -4px;
+  left: -3px;
+  width: 7px;
+  height: 7px;
+  border: 1px solid var(--in-ink);
+  border-radius: 50%;
+  background: var(--in-crudo);
+}
+.in-label::after {
+  content: '';
+  position: absolute;
+  top: 9px;
+  left: 50%;
+  width: 8px;
+  height: 8px;
+  border: 1px solid var(--in-ink);
+  border-radius: 50%;
+  background: var(--in-crudo);
+  transform: translateX(-50%);
+}
+.in-label-head {
+  margin: 0 0 18px;
+  padding-top: 10px;
+  border-top: 1px dashed var(--in-line-strong);
+  font-family: var(--in-mono);
+  font-size: 9.5px;
+  letter-spacing: .24em;
+  text-transform: uppercase;
+  color: var(--in-muted);
+}
+.in-label-head b { color: var(--in-accent); }
+.in-label-years {
+  display: flex;
+  align-items: baseline;
+  gap: 14px;
+  padding-bottom: 16px;
+  border-bottom: 1px dashed var(--in-line-strong);
+}
+.in-label-years strong {
+  font-family: var(--in-display);
+  font-size: 64px;
+  font-weight: 340;
+  line-height: 1;
+  color: var(--in-accent);
+}
+.in-label-years span {
+  font-family: var(--in-mono);
+  font-size: 10px;
+  letter-spacing: .18em;
+  text-transform: uppercase;
+  color: var(--in-muted);
+}
+.in-label-rows { margin: 14px 0 0; display: grid; gap: 10px; }
+.in-label-rows div { display: flex; align-items: baseline; gap: 10px; }
+.in-label-rows dt {
+  font-family: var(--in-mono);
+  font-size: 9.5px;
+  letter-spacing: .16em;
+  text-transform: uppercase;
+  color: var(--in-muted);
+}
+.in-label-dots { flex: 1; border-bottom: 1px dashed var(--in-line-strong); }
+.in-label-rows dd { margin: 0; font-size: 13px; }
+.in-label-empty {
+  margin: 14px 0 0;
+  font-family: var(--in-mono);
+  font-size: 10px;
+  letter-spacing: .16em;
+  text-transform: uppercase;
+  color: var(--in-muted);
+}
+.in-mission {
+  grid-column: 1 / -1;
+  margin: 8px 0 0;
+  padding: 22px 0 0;
+  border-top: 1px solid var(--in-line);
+}
+.in-mission-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-family: var(--in-mono);
+  font-size: 9.5px;
+  letter-spacing: .22em;
+  text-transform: uppercase;
+  color: var(--in-accent);
+}
+.in-mission p {
+  margin: 10px 0 0;
+  font-family: var(--in-display);
+  font-size: clamp(19px, 2vw, 25px);
+  font-weight: 340;
+  font-style: italic;
+  line-height: 1.35;
+  color: var(--in-ink);
+  max-width: 56ch;
+}
+
+/* ==========================================================================
+   BLOQUES COMPARTIDOS RE-SKINEADOS
+   ========================================================================== */
+.store-page[data-template='indumentaria'] .sp-block,
+.store-page[data-template='indumentaria'] .sp-section { padding-block: var(--in-section); }
+.store-page[data-template='indumentaria'] .sp-card {
+  background: var(--in-card);
+  border: 1px solid var(--in-line);
+  border-radius: 0;
+  box-shadow: none;
+}
+.store-page[data-template='indumentaria'] .sp-card:hover { border-color: var(--in-line-strong); }
+.store-page[data-template='indumentaria'] .sp-card .tpc-body { padding: 14px 0 0; }
+.store-page[data-template='indumentaria'] .sp-card .tpc-quick { display: none; }
+.store-page[data-template='indumentaria'] .sp-shop-dept {
+  border: 1px solid var(--in-line);
+  border-radius: 0;
+  background: var(--in-card);
+}
+.store-page[data-template='indumentaria'] .sp-shop-dept:hover { border-color: var(--in-accent); }
+.store-page[data-template='indumentaria'] .sp-shop-dept-count {
+  font-family: var(--in-mono);
+  font-size: 9px;
+  letter-spacing: .14em;
+  text-transform: uppercase;
+  color: var(--in-muted);
+}
+.store-page[data-template='indumentaria'] .sp-about,
+.store-page[data-template='indumentaria'] .sp-benefits { border-top: 1px solid var(--in-line); }
+/* Chips de filtro con subrayado animado (firma del rubro). */
+.store-page[data-template='indumentaria'] .mc-cat-chips button,
+.store-page[data-template='indumentaria'] .f-cat {
+  position: relative;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  font-family: var(--in-mono);
+  font-size: 10px;
+  letter-spacing: .16em;
+  text-transform: uppercase;
+  color: var(--in-ink-2);
+}
+.store-page[data-template='indumentaria'] .mc-cat-chips button::after,
+.store-page[data-template='indumentaria'] .f-cat::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 2px;
+  height: 1px;
+  background: var(--in-accent);
+  transform: scaleX(0);
+  transform-origin: left;
+  transition: transform .25s;
+}
+.store-page[data-template='indumentaria'] .mc-cat-chips button:hover::after,
+.store-page[data-template='indumentaria'] .mc-cat-chips button.is-on::after,
+.store-page[data-template='indumentaria'] .f-cat:hover::after,
+.store-page[data-template='indumentaria'] .f-cat.is-on::after {
+  transform: scaleX(1);
+}
+.store-page[data-template='indumentaria'] .mc-cat-chips button.is-on,
+.store-page[data-template='indumentaria'] .f-cat.is-on { color: var(--in-accent); }
+
+/* ==========================================================================
+   CATÁLOGO / FICHA / SERVICIOS (subárbol Raíz + capa indumentaria)
+   ========================================================================== */
+.store-page[data-template='raiz'].in-skin {
+  --sp-bg: #F2EEE7;
+  --sp-card: #FAF7F1;
+  --sp-card-solid: #FAF7F1;
+  --sp-surface: #E8E2D6;
+  --sp-soft: #E8E2D6;
+  --sp-ink: #1C1B18;
+  --sp-ink-2: #3B3833;
+  --sp-muted: #7A7468;
+  --sp-line: #D8D1C3;
+  --sp-radius: 0;
+  --sp-accent-text: #B4442A;
+  --sp-shadow-sm: 0 1px 0 rgba(28, 27, 24, .05);
+  --sp-shadow-md: 0 26px 50px -34px rgba(28, 27, 24, .5);
+  --sp-chrome: #F2EEE7;
+  font-family: var(--in-body, 'Archivo', system-ui, sans-serif);
+  background: #F2EEE7;
+  color: #1C1B18;
+}
+.store-page[data-template='raiz'].in-skin .rz-cat-head,
+.store-page[data-template='raiz'].in-skin .rz-sv-head,
+.store-page[data-template='raiz'].in-skin .rz-pdp-sec-head {
+  border-bottom: 1px solid #BFB6A4;
+}
+.store-page[data-template='raiz'].in-skin .rz-cat-title,
+.store-page[data-template='raiz'].in-skin .rz-sv-hero-title,
+.store-page[data-template='raiz'].in-skin .rz-pdp-name,
+.store-page[data-template='raiz'].in-skin .rz-pdp-sec-title {
+  font-family: var(--in-display, 'Fraunces', Georgia, serif);
+  font-weight: 340;
+  letter-spacing: -.025em;
+}
+.store-page[data-template='raiz'].in-skin .rz-eyebrow,
+.store-page[data-template='raiz'].in-skin .rz-cat-kicker {
+  font-family: var(--in-mono, 'JetBrains Mono', monospace);
+  letter-spacing: .22em;
+  color: #B4442A;
+}
+.store-page[data-template='raiz'].in-skin .rz-cat-rail,
+.store-page[data-template='raiz'].in-skin .rz-cat-card,
+.store-page[data-template='raiz'].in-skin .rz-cat-products,
+.store-page[data-template='raiz'].in-skin .rz-sv-plate,
+.store-page[data-template='raiz'].in-skin .rz-pdp-pricebox,
+.store-page[data-template='raiz'].in-skin .rz-pdp-gallery {
+  border: 1px solid #D8D1C3;
+  border-radius: 0;
+  background: #FAF7F1;
+  box-shadow: none;
+}
+.store-page[data-template='raiz'].in-skin .rz-btn {
+  border-radius: 0;
+  font-family: var(--in-mono, 'JetBrains Mono', monospace);
+  font-size: 10px;
+  letter-spacing: .16em;
+  text-transform: uppercase;
+}
+.store-page[data-template='raiz'].in-skin .rz-btn:not(.rz-btn--ghost) {
+  background: #1C1B18;
+  border-color: #1C1B18;
+  color: #F2EEE7;
+}
+.store-page[data-template='raiz'].in-skin .rz-btn:not(.rz-btn--ghost):hover {
+  background: #B4442A;
+  border-color: #B4442A;
+  color: #FFFDF6;
+}
+.store-page[data-template='raiz'].in-skin .rz-cat-results .tpc,
+.store-page[data-template='raiz'].in-skin .rz-pdp-rel-card {
+  border: 1px solid #D8D1C3;
+  border-radius: 0;
+  background: #FAF7F1;
+  box-shadow: none;
+}
+.store-page[data-template='raiz'].in-skin .rz-cat-results .tpc .tpc-media { aspect-ratio: 3 / 4; }
+.store-page[data-template='raiz'].in-skin .rz-cat-results .tpc-price,
+.store-page[data-template='raiz'].in-skin .rz-pdp-rel-card .tpc-price,
+.store-page[data-template='raiz'].in-skin .rz-pdp-price {
+  font-family: var(--in-mono, 'JetBrains Mono', monospace);
+  font-variant-numeric: tabular-nums;
+}
+.store-page[data-template='raiz'].in-skin .rz-sv-hero,
+.store-page[data-template='raiz'].in-skin .rz-sv-band {
+  background: #E8E2D6;
+  border-color: #D8D1C3;
+}
+.store-page[data-template='raiz'].in-skin .rz-sv-hero-num,
+.store-page[data-template='raiz'].in-skin .rz-sv-flow-num {
+  font-family: var(--in-mono, 'JetBrains Mono', monospace);
+  color: #B4442A;
+}
+.store-page[data-template='raiz'].in-skin .rz-sv-hero-card,
+.store-page[data-template='raiz'].in-skin .rz-sv-bar {
+  border-radius: 0;
+  border: 1px solid #D8D1C3;
+  background: #FAF7F1;
+  box-shadow: none;
+}
+.store-page[data-template='raiz'].in-skin .rz-field,
+.store-page[data-template='raiz'].in-skin .rz-cat-apply {
+  border-radius: 0;
+  border-color: #D8D1C3;
+  background: #FAF7F1;
+}
+.store-page[data-template='raiz'].in-skin .f-cat {
+  border-radius: 0;
+  font-family: var(--in-mono, 'JetBrains Mono', monospace);
+  font-size: 10px;
+  letter-spacing: .16em;
+  text-transform: uppercase;
+}
+
+/* ==========================================================================
+   MODO NOCHE (runway)
+   ========================================================================== */
+.store-page[data-template='indumentaria'][data-store-theme='dark'] {
+  --in-crudo: #14120F;
+  --in-card: #1C1A16;
+  --in-soft: #26231E;
+  --in-line: #37332C;
+  --in-line-strong: #574F42;
+  --in-ink: #F1EDE3;
+  --in-ink-2: #D6D0C1;
+  --in-muted: #9C9484;
+  --in-accent: color-mix(in srgb, var(--store-accent, #D96B4A) 84%, #F1EDE3);
+  --in-on-accent: #14120F;
+  --sp-bg: var(--in-crudo);
+  --sp-card: var(--in-card);
+  --sp-card-solid: var(--in-card);
+  --sp-surface: var(--in-soft);
+  --sp-soft: var(--in-soft);
+  --sp-ink: var(--in-ink);
+  --sp-ink-2: var(--in-ink-2);
+  --sp-muted: var(--in-muted);
+  --sp-line: var(--in-line);
+  --sp-accent-text: var(--in-accent);
+  --sp-chrome: var(--in-crudo);
+  --tpc-bg: var(--in-card);
+  --tpc-border: 1px solid var(--in-line);
+  --tpc-media-bg: var(--in-soft);
+  --tpc-flag-bg: var(--in-ink);
+  --tpc-flag-ink: var(--in-crudo);
+  background: var(--in-crudo);
+  color: var(--in-ink);
+}
+.store-page[data-template='indumentaria'][data-store-theme='dark'] .sp-top {
+  background: color-mix(in srgb, var(--in-crudo) 94%, transparent);
+}
+.store-page[data-template='indumentaria'][data-store-theme='dark'] .in-hero-media img { filter: saturate(.85) brightness(.92); }
+.store-page[data-template='indumentaria'][data-store-theme='dark'] .in-marq { background: var(--in-card); color: var(--in-ink); border-color: var(--in-line-strong); }
+.store-page[data-template='raiz'].in-skin[data-store-theme='dark'] {
+  --sp-bg: #14120F;
+  --sp-card: #1C1A16;
+  --sp-card-solid: #1C1A16;
+  --sp-surface: #26231E;
+  --sp-soft: #26231E;
+  --sp-ink: #F1EDE3;
+  --sp-ink-2: #D6D0C1;
+  --sp-muted: #9C9484;
+  --sp-line: #37332C;
+  --sp-chrome: #14120F;
+  background: #14120F;
+  color: #F1EDE3;
+}
+
+/* ==========================================================================
+   ESTILOS HIJOS (data-style = slug del DesignStyle)
+   ========================================================================== */
+/* indumentaria-noche: runway oscuro — fuerza la paleta noche aunque el
+   tema esté en claro, display más liviano y acento pleno. */
+.store-page[data-template='indumentaria'][data-style='indumentaria-noche'] {
+  --in-crudo: #100F0D;
+  --in-card: #181613;
+  --in-soft: #221F1B;
+  --in-line: #332F29;
+  --in-line-strong: #564E40;
+  --in-ink: #F1EDE3;
+  --in-ink-2: #D6D0C1;
+  --in-muted: #9C9484;
+  --in-accent: color-mix(in srgb, var(--store-accent, #D96B4A) 88%, #F1EDE3);
+  --in-on-accent: #100F0D;
+  --sp-bg: var(--in-crudo);
+  --sp-card: var(--in-card);
+  --sp-card-solid: var(--in-card);
+  --sp-surface: var(--in-soft);
+  --sp-soft: var(--in-soft);
+  --sp-ink: var(--in-ink);
+  --sp-ink-2: var(--in-ink-2);
+  --sp-muted: var(--in-muted);
+  --sp-line: var(--in-line);
+  --sp-accent-text: var(--in-accent);
+  --sp-chrome: var(--in-crudo);
+  --tpc-bg: var(--in-card);
+  --tpc-border: 1px solid var(--in-line);
+  --tpc-media-bg: var(--in-soft);
+  --tpc-flag-bg: var(--in-ink);
+  --tpc-flag-ink: var(--in-crudo);
+  background: var(--in-crudo);
+  color: var(--in-ink);
+}
+.store-page[data-template='indumentaria'][data-style='indumentaria-noche'] .sp-top {
+  background: color-mix(in srgb, var(--in-crudo) 92%, transparent);
+}
+.store-page[data-template='indumentaria'][data-style='indumentaria-noche'] .in-hero-media img { filter: saturate(.8) brightness(.9); }
+.store-page[data-template='indumentaria'][data-style='indumentaria-noche'] .in-marq { background: var(--in-card); color: var(--in-ink); }
+/* Noche: píldora flotante en vez de tab bar pegada. */
+.store-page[data-template='indumentaria'][data-style='indumentaria-noche'] .sp-tabbar {
+  left: 16px;
+  right: 16px;
+  bottom: 14px;
+  border: 1px solid var(--in-line-strong);
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--in-card) 92%, transparent);
+}
+/* indumentaria-street: streetwear — bordes duros, titulares Archivo Black
+   y acento a pleno en etiquetas y cinta. */
+.store-page[data-template='indumentaria'][data-style='indumentaria-street'] {
+  --in-radius: 0;
+}
+.store-page[data-template='indumentaria'][data-style='indumentaria-street'] h1,
+.store-page[data-template='indumentaria'][data-style='indumentaria-street'] h2,
+.store-page[data-template='indumentaria'][data-style='indumentaria-street'] .in-hero h1,
+.store-page[data-template='indumentaria'][data-style='indumentaria-street'] .in-sec-head h2 {
+  font-family: 'Archivo Black', var(--in-body);
+  font-weight: 400;
+  letter-spacing: -.02em;
+  text-transform: uppercase;
+}
+.store-page[data-template='indumentaria'][data-style='indumentaria-street'] h1 em,
+.store-page[data-template='indumentaria'][data-style='indumentaria-street'] .in-hero h1 em { font-style: normal; color: var(--in-accent); }
+.store-page[data-template='indumentaria'][data-style='indumentaria-street'] .in-marq {
+  background: var(--in-accent-raw);
+  border-color: var(--in-ink);
+  color: var(--in-on-accent);
+}
+.store-page[data-template='indumentaria'][data-style='indumentaria-street'] .in-marq-item i { color: var(--in-on-accent); }
+.store-page[data-template='indumentaria'][data-style='indumentaria-street'] .in-tag { transform: rotate(-3deg); }
+.store-page[data-template='indumentaria'][data-style='indumentaria-street'] .in-label { transform: rotate(0); }
+
+/* ==========================================================================
+   MENÚ MÓVIL POR ESTILO
+   Base: tab bar inferior al ras con hilván superior. Noche: píldora
+   flotante (arriba). Street: drawer de bordes duros con índice mono.
+   ========================================================================== */
+.store-page[data-template='indumentaria'] .sp-tabbar {
+  background: var(--in-card);
+  border-top: 1px solid var(--in-line);
+}
+.store-page[data-template='indumentaria'] .sp-tabbar a {
+  font-family: var(--in-mono);
+  font-size: 9px;
+  letter-spacing: .12em;
+  text-transform: uppercase;
+}
+.store-page[data-template='indumentaria'] .sp-tabbar a.is-on { color: var(--in-accent); }
+.store-page[data-template='indumentaria'][data-style='indumentaria-street'] .sp-drawer,
+.store-page[data-template='indumentaria'] .sp-drawer {
+  background: var(--in-card);
+  border-radius: 0;
+}
+.store-page[data-template='indumentaria'][data-style='indumentaria-street'] .sp-drawer a {
+  font-family: var(--in-mono);
+  font-size: 11px;
+  letter-spacing: .18em;
+  text-transform: uppercase;
+  border-bottom: 1px dashed var(--in-line-strong);
+}
+
+/* ==========================================================================
+   RESPONSIVE
+   ========================================================================== */
+@media (max-width: 1180px) {
+  .in-rail { display: none; }
+}
+@media (max-width: 1024px) {
+  .in-hero-grid { gap: 40px; }
+  .in-hero-media, .in-hero-media img { min-height: 400px; }
+  .in-lookbook { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+@media (max-width: 860px) {
+  .in-hero-grid { grid-template-columns: 1fr; gap: 34px; }
+  .in-hero-media, .in-hero-media img { min-height: 360px; }
+  .in-about-grid { grid-template-columns: 1fr; gap: 44px; }
+  /* Lookbook a riel con snap, como carrusel de colección. */
+  .in-lookbook {
+    display: flex;
+    gap: 0;
+    overflow-x: auto;
+    scroll-snap-type: x mandatory;
+    border-inline: 0;
+    background: transparent;
+    scrollbar-width: none;
+  }
+  .in-lookbook::-webkit-scrollbar { display: none; }
+  .in-look { flex: 0 0 74%; scroll-snap-align: start; border-right: 1px solid var(--in-line); }
+}
+@media (max-width: 680px) {
+  .store-page[data-template='indumentaria'] { --in-gutter: 18px; }
+  .store-page[data-template='indumentaria'] .sp-top-inner { min-height: 64px; }
+  .store-page[data-template='indumentaria'] .sp-top-links a { min-height: 46px; }
+  .in-hero { padding: 38px 0 0; }
+  .in-hero h1 { font-size: clamp(38px, 11.5vw, 58px); }
+  .in-hero-meta { display: grid; grid-template-columns: 1fr; gap: 0; }
+  .in-hero-meta li { padding: 12px 0; margin: 0; border-bottom: 1px dashed var(--in-line-strong); }
+  .in-hero-meta li + li { padding-left: 0; border-left: 0; margin-right: 0; }
+  .in-hero-note { right: -1px; }
+  .in-tag { top: 16px; right: 16px; padding: 16px 12px 10px; }
+  .in-marq { margin-top: 40px; }
+  .in-label { transform: rotate(0); }
+  .store-page[data-template='raiz'].in-skin .rz-cat-results { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .store-page[data-template='indumentaria'] * { transition: none !important; animation: none !important; }
+  .in-marq-track { animation: none; transform: none; }
+  .in-hero-media img { animation: none; transform: none; }
+}

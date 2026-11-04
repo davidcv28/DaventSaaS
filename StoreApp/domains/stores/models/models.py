@@ -138,7 +138,7 @@ class StoreCustomization(models.Model):
     #Base: 'raiz'/'esencial' van con cualquier plan; Plus suma los diseños
     #de rubro (has_design_plus, Estándar). Advanced no agrega diseños hoy.
     TEMPLATE_BASE               =   ('raiz', 'esencial')
-    TEMPLATE_PLUS               =   ('mercado', 'gimnasio', 'sastreria', 'moderntec', 'ruta')
+    TEMPLATE_PLUS               =   ('mercado', 'gimnasio', 'sastreria', 'moderntec', 'indumentaria', 'ruta')
     TEMPLATE_ADVANCED           =   ('aurum',)
     TEMPLATE_AI                 =   ()
     TEMPLATE_CHOICES            =   [
@@ -148,6 +148,7 @@ class StoreCustomization(models.Model):
         ('gimnasio',      'Gimnasio'),
         ('sastreria',     'Sastrería'),
         ('moderntec',     'ModernTec'),
+        ('indumentaria',  'Indumentaria'),
         ('ruta',          'Ruta'),
         ('aurum',         'Áurea'),
     ]
@@ -162,7 +163,7 @@ class StoreCustomization(models.Model):
         'signature': 'sastreria', 'cobre': 'sastreria', 'vitrina': 'sastreria',
         'street': 'sastreria', 'riso': 'sastreria', 'promo': 'sastreria',
         'aurora': 'sastreria', 'ai_pulse': 'sastreria',
-        'trama': 'sastreria', 'indumentaria': 'sastreria',
+        'trama': 'sastreria',
         'boutique': 'sastreria', 'atelier': 'sastreria',
         'perspective': 'moderntec', 'circuit': 'moderntec',
         'terminal': 'moderntec', 'lab': 'moderntec',

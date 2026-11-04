@@ -24,12 +24,13 @@ import mercado      from './mercado/index.js'
 import gimnasio     from './gimnasio/index.js'
 import sastreria    from './sastreria/index.js'
 import moderntec    from './moderntec/index.js'
+import indumentaria from './indumentaria/index.js'
 
 // Ruta (turismo): reusa las superficies de 'raiz' pero es una web de
 // empresa — no ofrece Catálogo ni Suscripciones (site_templates recortado).
 const ruta = { ...raiz, pages: ['landing', 'services'] }
 
-export const TEMPLATE_DEFS = { raiz, mercado, gimnasio, sastreria, moderntec, ruta }
+export const TEMPLATE_DEFS = { raiz, mercado, gimnasio, sastreria, moderntec, indumentaria, ruta }
 
 export const DEFAULT_TEMPLATE = 'raiz'
 
