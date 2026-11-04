@@ -1453,7 +1453,8 @@
   function apply(){
     raf = 0;
     if (standalone) frameVh = window.innerHeight || 1;
-    var viewTop = standalone ? (window.scrollY || window.pageYOffset || 0) : Math.max(0, -frameTop);
+    var inScroll = window.scrollY || window.pageYOffset || 0;
+    var viewTop = standalone ? inScroll : Math.max(0, -frameTop);
     var viewBot = viewTop + frameVh;
 
     var docH = Math.max(1, document.body.scrollHeight);
@@ -1470,7 +1471,7 @@
       spySections.forEach(function(sec){
         if (!sec.getClientRects().length) return;
         var r = sec.getBoundingClientRect();
-        if (r.top + viewTop <= probe) current = sec.getAttribute('data-spy-section');
+        if (r.top + inScroll <= probe) current = sec.getAttribute('data-spy-section');
       });
       setSpy(current);
     }
@@ -1479,7 +1480,7 @@
       if (reveals[i].classList.contains('on')) continue;
       var r = reveals[i].getBoundingClientRect();
       if (!r.height && !r.width) continue;
-      if (r.top + viewTop < viewBot - 24) {
+      if (r.top + inScroll < viewBot - 24) {
         reveals[i].classList.add('on');
         [].forEach.call(reveals[i].querySelectorAll('.ds-stat-value'), countUp);
       }
