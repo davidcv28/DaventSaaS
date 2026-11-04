@@ -8,17 +8,54 @@ let seq = 0
 const uid = () => `e${Date.now().toString(36)}${(seq++).toString(36)}`
 
 // Familias elegibles en textos: 'store' hereda la fuente de la web (como el
-// resto del folleto); las demás son stacks locales, siempre disponibles.
-export const EL_FONTS = [
-  { id: 'store', label: 'Fuente de tu web' },
-  { id: 'sans', label: 'Moderna', family: "Inter, 'Segoe UI', system-ui, sans-serif" },
-  { id: 'serif', label: 'Editorial', family: "Georgia, 'Times New Roman', serif" },
-  { id: 'mono', label: 'Técnica', family: "'JetBrains Mono', 'Courier New', monospace" },
-  { id: 'display', label: 'Impacto', family: "'Arial Black', Impact, sans-serif" }
+// resto del folleto); el resto sale del catálogo STORE_FONTS del Diseño web
+// (Google Fonts, se cargan on-demand con ensureStoreFont). Las familias se
+// ofrecen agrupadas por estilo para el selectbox del inspector.
+import { STORE_FONTS, storeFontFamily, ensureStoreFont } from '../api/stores.api.js'
+
+export const EL_FONT_GROUPS = [
+  { label: 'Sans serif', keys: ['inter', 'roboto', 'open-sans', 'lato', 'montserrat', 'poppins', 'raleway', 'nunito', 'work-sans', 'dm-sans', 'sora', 'space-grotesk', 'rubik', 'manrope', 'instrument-sans', 'figtree', 'hanken-grotesk', 'outfit', 'plus-jakarta-sans', 'jost', 'barlow', 'archivo', 'bricolage-grotesque', 'quicksand', 'comfortaa', 'inter-tight'] },
+  { label: 'Serif y editorial', keys: ['playfair-display', 'merriweather', 'lora', 'fraunces', 'cinzel', 'cormorant-garamond', 'dm-serif-display', 'libre-baskerville'] },
+  { label: 'Display e impacto', keys: ['oswald', 'bebas-neue', 'anton', 'archivo-black', 'righteous', 'orbitron', 'barlow-condensed'] },
+  { label: 'Manuscritas', keys: ['pacifico', 'dancing-script', 'caveat', 'lobster'] },
+  { label: 'Monoespaciadas', keys: ['space-mono', 'jetbrains-mono'] }
 ]
-export const fontFamilyOf = (id) => id === 'store'
-  ? 'var(--store-font, Inter, system-ui, sans-serif)'
-  : (EL_FONTS.find((f) => f.id === id)?.family || EL_FONTS[1].family)
+export const EL_FONT_SLUGS = EL_FONT_GROUPS.flatMap((g) => g.keys)
+
+// Borradores viejos guardaban ids de stacks genéricos: se mapean al slug
+// equivalente del catálogo para que sigan viéndose igual (y mejor).
+const LEGACY_FONTS = { sans: 'inter', serif: 'lora', mono: 'jetbrains-mono', display: 'anton' }
+
+export function fontFamilyOf(id) {
+  if (id === 'store' || !id) return 'var(--store-font, Inter, system-ui, sans-serif)'
+  return storeFontFamily(LEGACY_FONTS[id] || id)
+}
+
+// Normaliza el id guardado (legacy → slug del catálogo).
+export const fontSlugOf = (id) => LEGACY_FONTS[id] || id
+// Carga el css2 de la fuente elegida (no-op para 'store' y stacks locales).
+export function ensureElFont(id) {
+  const slug = fontSlugOf(id)
+  if (slug && slug !== 'store' && STORE_FONTS[slug]) ensureStoreFont(slug)
+}
+
+// Un solo <link> css2 con todas las familias del catálogo: la vista previa
+// del selectbox y cualquier texto ya guardado se ven al instante sin N
+// requests separadas (mismo patrón que ensureStoreFontPicker).
+export function ensureElFontCatalog() {
+  const families = EL_FONT_SLUGS
+    .map((k) => STORE_FONTS[k]?.google)
+    .filter(Boolean)
+    .sort()
+    .map((g) => `family=${g}`)
+    .join('&')
+  if (!families || document.getElementById('flyer-fonts-catalog')) return
+  const link = document.createElement('link')
+  link.id = 'flyer-fonts-catalog'
+  link.rel = 'stylesheet'
+  link.href = `https://fonts.googleapis.com/css2?${families}&display=swap`
+  document.head.appendChild(link)
+}
 
 // Rellenos: los tokens ('accent', 'ink'…) resuelven a las vars de marca de
 // la web para que el folleto salga con los colores de la tienda; cualquier
@@ -86,7 +123,7 @@ const clamp = (n, min, max) => Math.min(max, Math.max(min, n))
 // Valores por defecto de cada herramienta (posiciones en % del lienzo).
 const DEFS = {
   title: { type: 'text', x: 8, y: 40, w: 84, h: 14, text: 'TU TITULAR ACÁ', font: 'store', size: 9, bold: true, align: 'center', color: 'ink', uppercase: true, spacing: 0, line: 1.05 },
-  text: { type: 'text', x: 12, y: 56, w: 76, h: 9, text: 'Tu frase de apoyo', font: 'sans', size: 4, bold: false, align: 'center', color: 'dark', uppercase: false, spacing: 0, line: 1.3 },
+  text: { type: 'text', x: 12, y: 56, w: 76, h: 9, text: 'Tu frase de apoyo', font: 'inter', size: 4, bold: false, align: 'center', color: 'dark', uppercase: false, spacing: 0, line: 1.3 },
   image: { type: 'image', x: 15, y: 15, w: 40, h: 36, src: '', fit: 'cover', radius: 10 },
   shape: { type: 'shape', x: 10, y: 10, w: 34, h: 20, shape: 'round', fill: 'accent', stroke: '', strokeW: 0 },
   icon: { type: 'icon', x: 44, y: 44, w: 12, h: 12, name: 'star', color: 'accent' },
@@ -142,6 +179,7 @@ function cleanElement(raw) {
   out.h = num(out.h, el.h, 0.5, 300)
   out.rot = num(out.rot, 0, -360, 360)
   out.opacity = num(out.opacity, 1, 0, 1)
+  if (out.type === 'text') out.font = fontSlugOf(out.font)
   return out
 }
 

@@ -1,10 +1,10 @@
 <script setup>
 import { ref, reactive, computed, watch, onMounted, onUnmounted } from 'vue'
 import { useStoreStore } from '../stores/store.store.js'
-import { validateImageFile, LOGO_ACCEPT, ensureStoreFont } from '../api/stores.api.js'
+import { validateImageFile, LOGO_ACCEPT, ensureStoreFont, STORE_FONTS } from '../api/stores.api.js'
 import { catalogApi } from '../api/catalog.api.js'
 import { FLYER_SIZES, sizeById, isDigitalSize, imposition, pngSizeOf, flyerProduct, flyerVars, flyerFontSlug, exportFlyerPng, downloadBlob } from '../utils/flyer.js'
-import { EL_FONTS, EL_SHAPES, EL_ICONS, EL_TOOLS, EL_SWATCHES, EL_TYPE_LABELS, makeElement, loadEditorDoc, saveEditorDoc, clearEditorDoc, fillOf } from '../utils/flyerEditor.js'
+import { EL_FONT_GROUPS, EL_SHAPES, EL_ICONS, EL_TOOLS, EL_SWATCHES, EL_TYPE_LABELS, makeElement, loadEditorDoc, saveEditorDoc, clearEditorDoc, fillOf, fontSlugOf, ensureElFont, ensureElFontCatalog } from '../utils/flyerEditor.js'
 import AppIcon from './AppIcon.vue'
 import AlertMessage from './AlertMessage.vue'
 import FlyerBoard from './FlyerBoard.vue'
@@ -225,7 +225,17 @@ onMounted(async () => {
   const prods = await catalogApi.listProducts().catch(() => [])
   products.value = prods.filter((p) => p.is_active !== false).map(flyerProduct)
   ensureStoreFont(flyerFontSlug(store.customization))
+  ensureElFontCatalog()
+  doc.elements.forEach((el) => ensureElFont(el.font))
 })
+
+// Fuentes de textos: el select muestra los nombres del catálogo; al elegir
+// una se carga su css2 (idempotente) para verla en el lienzo al instante.
+const fontLabel = (slug) => STORE_FONTS[fontSlugOf(slug)]?.label || slug
+function onFontChange() {
+  if (element.value) element.value.font = fontSlugOf(element.value.font)
+  ensureElFont(element.value?.font)
+}
 onUnmounted(() => window.removeEventListener('keydown', onKey))
 
 const zoomIn = () => { zoom.value = Math.min(2, +(zoom.value + 0.2).toFixed(2)) }
@@ -347,8 +357,11 @@ const zoomReset = () => { zoom.value = 1 }
             <div class="fed-row">
               <div class="field">
                 <label>Fuente</label>
-                <select v-model="element.font" class="input">
-                  <option v-for="f in EL_FONTS" :key="f.id" :value="f.id">{{ f.label }}</option>
+                <select v-model="element.font" class="input" @change="onFontChange">
+                  <option value="store">Fuente de tu web</option>
+                  <optgroup v-for="g in EL_FONT_GROUPS" :key="g.label" :label="g.label">
+                    <option v-for="k in g.keys" :key="k" :value="k">{{ fontLabel(k) }}</option>
+                  </optgroup>
                 </select>
               </div>
               <div class="field">
