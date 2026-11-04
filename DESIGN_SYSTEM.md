@@ -180,3 +180,53 @@ tema (`--ds-*` / `--st-*`) con caída a amarillo toldo `#FFE600`, tinta
   `.mc-cat-chips` en Vue. Cada chip quita su filtro; con dos o más aparece
   "Limpiar todo". Nunca dejar un filtro aplicado invisible en móvil.
 
+
+## 10. Indumentaria — lenguaje "lookbook / runway" (`indumentaria`, plus)
+
+Destilado de `awesome-design-skills/skills/{editorial,terracotta,dramatic}` +
+convenciones `store-sastreria.css`/`store-moderntec.css`. Aplica a
+`views/store/indumentaria/`, `components/store/blocks/indumentaria/` y
+`assets/store-indumentaria.css` (tokens `--in-*` + puente `--sp-*`, como
+`--ss-*`/`--mt-*`).
+
+- **Editorial (skill `editorial`)**: grilla estructurada con índices,
+  serif display para titulares, jerarquía eyebrow→titular→lead→CTA,
+  nunca una grilla de cards idénticas. Se traduce a: rail lateral
+  "COLECCIÓN / 01", numeración LOOK 01/02… en grillas, titular con palabra
+  destacada en itálica/acento.
+- **Neutros tela (skill `terracotta`)**: una sola superficie cálida
+  (crudo `#F4F0EA`-ish), tinta carbón, un único acento de temporada
+  fuerte — nunca dos acentos peleando. `indumentaria-noche` invierte a
+  carbón/negro runway (skill `dramatic`: contraste teatral, hero
+  inmersivo); `indumentaria-street` mantiene tinta pero sube el acento
+  (naranja/rojo señal) con radios 0 y bordes duros.
+- **Tipografía**: display serif/sans fashion (`fraunces`/`dm-serif-display`
+  o sans geométrica para street) + sans limpia de cuerpo + mono para
+  etiquetas, talles, precios y fichas (`jetbrains-mono`,
+  `tabular-nums`). Escala `editorial`.
+- **Motivos propios del rubro** (firma, no ornamento genérico):
+  hilván/costura (`border-top:1px dashed`, puntadas `repeating-linear`),
+  etiqueta colgante (badge rotado con piquete, nunca pill plano),
+  cinta/marquee de temporada ("Nueva temporada · Envíos · Sale"),
+  tickets de precio en mono, trama de tejido sutil (2 líneas cruzadas a
+  <6% de tinta) como textura de fondo.
+- **Catálogo**: card con imagen dominante `aspect-ratio 3/4`, hover con
+  zoom interno `scale(1.04)` o reveal de segunda foto, badge "NUEVO"/
+  "SALE" como etiqueta, precio mono. Chips de categoría con subrayado
+  animado (`scaleX`), igual que `.mc-cat-chips`.
+- **Motion**: marquee infinito con pista duplicada (pausa en hover),
+  reveal on-scroll con stagger (`v-reveal`, doble rAF ya resuelto por
+  la directiva), parallax leve en hero, parpadeo sutil de etiquetas.
+  Solo `transform`/`opacity`; `prefers-reduced-motion` lo apaga todo.
+- **Móvil por estilo** (`data-style`/`data-ds-style`, como sastreria):
+  `indumentaria` → tab bar inferior + hoja; `indumentaria-noche` →
+  píldora flotante; `indumentaria-street` → hamburguesa + drawer.
+- **Registro**: template `indumentaria` (12 chars, límite del campo),
+  tier `plus`, `TEMPLATE_PLUS`, `TEMPLATE_CHOICES`, `STORE_TEMPLATES`
+  (rubro `indumentaria`), `STORE_TEMPLATE_SKIN` → `indumentaria`,
+  `TEMPLATE_CSS` → `store-indumentaria.css`, loaders en `_shared.js`,
+  def en `templates/indumentaria/index.js`. Sacar `'indumentaria':
+  'sastreria'` de ambos `*_RETIRED_MAP` (backend `models.py` +
+  `stores.api.js`) — el id pasa a ser diseño real.
+- **Iconos**: `AppIcon` (el set del repo), nunca librerías nuevas.
+
