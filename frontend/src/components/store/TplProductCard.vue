@@ -94,6 +94,7 @@ onMounted(() => {
       <ProductStars v-if="stars && p.rating_count" :avg="p.rating_avg" :count="p.rating_count" :icon="starsIcon" :size="starsSize" />
       <span v-if="desc" class="tpc-desc">{{ desc }}</span>
       <slot name="tags" :p="p" />
+      <span class="tpc-stock"><i aria-hidden="true"></i>En stock</span>
       <span class="tpc-foot">
         <slot name="foot" :p="p" :price="price" :old-price="oldPrice" :offer="offer">
           <span class="tpc-price-wrap">

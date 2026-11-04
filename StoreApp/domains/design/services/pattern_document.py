@@ -145,6 +145,15 @@ section:has(.ds-plans:empty){display:none!important}
   box-shadow:0 8px 16px -10px rgba(0,0,0,.55);
 }
 
+/* Tag de disponibilidad de la tarjeta: el catálogo solo publica productos
+   en stock (no hay inventario en el sistema). */
+.ds-stock{
+  display:inline-flex;align-items:center;gap:5px;
+  font-size:11px;font-weight:600;letter-spacing:.04em;
+  color:var(--ds-success,#0f9d58);
+}
+.ds-stock i{width:6px;height:6px;border-radius:50%;background:currentColor;flex:none}
+
 /* Opiniones de producto: honeypot fuera de pantalla y pulgar inline. */
 .ds-rev-hp{position:absolute!important;left:-9999px;width:1px;height:1px;overflow:hidden}
 .ds-rev-vote{display:inline-block;vertical-align:-1px}

@@ -190,6 +190,9 @@ onMounted(() => {
                   :height="productDiscount(product).campaign.label_height || undefined"
                   loading="lazy" decoding="async"
                 />
+                <p class="rz-pdp-stock">
+                  <i aria-hidden="true"></i> En stock
+                </p>
                 <p class="rz-pdp-pay">
                   <AppIcon name="credit-card" :size="15" aria-hidden="true" />
                   Medios de pago, cuotas y envío se coordinan con el vendedor

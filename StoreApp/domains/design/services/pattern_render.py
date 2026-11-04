@@ -323,6 +323,9 @@ def _product_fragment(store, products = None, flags = None):
             f'<small class="ds-product-desc">{escape(_text(product.description, 110))}</small>'
             '</span>'
             f'<span class="ds-product-cat">{escape(category)}</span>'
+            #Todo producto publicado está en stock: el sistema no maneja
+            #inventario, así que el tag va siempre.
+            '<span class="ds-stock"><i aria-hidden="true"></i>En stock</span>'
             f'<span class="ds-product-price"{off_attr}{campaign_attr}>'
             f'{campaign_img}<span class="ds-product-amount">{price}</span>{old}</span>'
             '</a></article>'

@@ -99,6 +99,24 @@
   color: var(--tpc-idx-ink, var(--sp-muted, #64748b));
   pointer-events: none;
 }
+/* Tag de disponibilidad: el catálogo solo publica productos en stock (no
+   hay inventario en el sistema), así que se muestra siempre. */
+.tpc-stock {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  margin-top: 2px;
+  font: var(--tpc-stock-weight, 600) var(--tpc-stock-size, 11px)/1 var(--tpc-stock-font, inherit);
+  letter-spacing: .04em;
+  color: var(--tpc-stock-ink, var(--sp-success, #0f9d58));
+}
+.tpc-stock i {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: currentColor;
+  flex: none;
+}
 /* Fila de flags planos (cuando el diseño no usa OfferSeal): el flag de
    "nuevo" queda a la izquierda y el de oferta a la derecha (como tenían
    las pieles originales) — nunca colisionan entre sí. */
