@@ -151,7 +151,7 @@ html[data-ds-theme="dark"] .hero-kicker::before{background:var(--accent)}
 .hero-fig{position:relative}
 .hero-fig .ph{position:relative;aspect-ratio:5/6;border-radius:26px;overflow:hidden;background:var(--card);border:1px solid var(--line);transform:translate(var(--mx,0),var(--my,0));transition:transform .5s var(--ease)}
 .hero-fig img{width:100%;height:100%;object-fit:cover;transform:scale(1.06) translate(var(--px,0),var(--py,0));transition:transform .6s var(--ease)}
-.ph-mono{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font:900 34vw/1 var(--sans);letter-spacing:-.06em;color:var(--line)}
+.ph-mono{display:none}
 .hero-fig .ph-id{position:absolute;left:18px;bottom:18px;display:flex;align-items:center;gap:10px;background:var(--paper);border:1px solid var(--line);border-radius:var(--pill);padding:8px 18px 8px 8px;box-shadow:0 10px 30px -14px rgba(0,0,0,.3)}
 .hero-fig .ph-id b{font-size:13px;display:block;max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .hero-fig .ph-id small{display:block;color:var(--muted);font-size:11px}
@@ -627,7 +627,7 @@ html[data-ds-theme="dark"] .ds-rev-send{background:var(--accent);color:var(--on-
     <span class="spark s2" style="right:14%;top:-10px">✦</span>
     <div class="ph">
       <img src="{{store_cover}}" alt="{{store_name}}">
-      <span class="ph-mono" aria-hidden="true">{{store_initial}}</span>
+      <span class="ph-mono" aria-hidden="true"></span>
       <span class="ph-id">
         <span class="ph-logo"><img src="{{store_logo}}" alt="">{{store_initial}}</span>
         <span><b>{{store_name}}</b><small>{{store_location}}</small></span>

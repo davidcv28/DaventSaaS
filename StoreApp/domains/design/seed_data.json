@@ -4913,6 +4913,191 @@
         "corners": "rounded"
       },
       "concept": "Grafito + lima ácido: el e-commerce editorial después de hora."
+    },
+    {
+      "slug": "viajero",
+      "nombre": "Viajero",
+      "categoria": "Viajes y experiencias",
+      "descripcion": "Arena calida, tinta nautica y coral de senalizacion: Playfair Display para titulares de guia, Rubik para lectura y JetBrains Mono en datos; heroe a sangre con barra de reserva, indice de destinos y tarjeta flotante.",
+      "tier": "plus",
+      "template": "viajero",
+      "page_theme": "light",
+      "pattern": "viajero",
+      "tokens": {
+        "palette": {
+          "accent": "#FF7757",
+          "primary": "#172432",
+          "secondary": "#3D4A57",
+          "bg": "#FBF7F0",
+          "surface": "#FFFFFF",
+          "text": "#172432",
+          "muted": "#5C6672",
+          "border": "#EADFD1",
+          "success": "#2F7D5B",
+          "danger": "#B3261E"
+        },
+        "containers": {
+          "radius": "sm",
+          "shadow": "soft",
+          "border": "thin",
+          "density": "comfortable",
+          "surface": "flat"
+        },
+        "typography": {
+          "heading": "playfair-display",
+          "subheading": "rubik",
+          "body": "rubik",
+          "scale": "editorial",
+          "weightHeading": 600,
+          "letterSpacing": "-0.01em"
+        },
+        "buttons": {
+          "shape": "square",
+          "style": "solid",
+          "size": "md"
+        },
+        "background": {
+          "type": "solid",
+          "value": null,
+          "overlay": "none"
+        },
+        "motion": {
+          "reveal": "fade-up",
+          "hover": "lift",
+          "intensity": "subtle"
+        },
+        "mobile": {
+          "cardStyle": "standard",
+          "heroHeight": "standard"
+        },
+        "preview": "",
+        "icons": {
+          "style": "line",
+          "stroke": "1.8",
+          "size": "20",
+          "corners": "rounded"
+        }
+      },
+      "layout": {},
+      "layout_spec": {},
+      "tags": [
+        "viajes",
+        "turismo",
+        "experiencias",
+        "agencia",
+        "tienda",
+        "ofertas",
+        "retail"
+      ],
+      "preview": "",
+      "style": "Tienda de moda",
+      "anim": {
+        "hero": "fade-up",
+        "reveal": "fade-up",
+        "hover": "lift",
+        "button": "solid-press"
+      },
+      "easing": "cubic-bezier(.4,0,.2,1)",
+      "duration": "420ms",
+      "icons": {
+        "style": "line",
+        "stroke": "1.8",
+        "size": "20",
+        "corners": "rounded"
+      },
+      "concept": "Papel arena + coral: la guia de viaje de la tienda."
+    },
+    {
+      "slug": "viajero-noche",
+      "nombre": "Viajero Noche",
+      "categoria": "Viajes y experiencias nocturnas",
+      "descripcion": "Nautica profunda y coral: la edicion nocturna del viajero, con el mismo aparato editorial en clave de escala nocturna.",
+      "tier": "plus",
+      "template": "viajero",
+      "page_theme": "dark",
+      "pattern": "viajero",
+      "tokens": {
+        "palette": {
+          "accent": "#FF8A6B",
+          "primary": "#FF8A6B",
+          "secondary": "#C96B50",
+          "bg": "#0F1822",
+          "surface": "#182433",
+          "text": "#F4EFE4",
+          "muted": "#98A2AE",
+          "border": "#263444",
+          "success": "#4CC38A",
+          "danger": "#E56464"
+        },
+        "containers": {
+          "radius": "sm",
+          "shadow": "medium",
+          "border": "thin",
+          "density": "comfortable",
+          "surface": "elevated"
+        },
+        "typography": {
+          "heading": "playfair-display",
+          "subheading": "rubik",
+          "body": "rubik",
+          "scale": "editorial",
+          "weightHeading": 600,
+          "letterSpacing": "-0.01em"
+        },
+        "buttons": {
+          "shape": "square",
+          "style": "solid",
+          "size": "md"
+        },
+        "background": {
+          "type": "solid",
+          "value": null,
+          "overlay": "none"
+        },
+        "motion": {
+          "reveal": "fade-up",
+          "hover": "glow",
+          "intensity": "subtle"
+        },
+        "mobile": {
+          "cardStyle": "standard",
+          "heroHeight": "standard"
+        },
+        "preview": "",
+        "icons": {
+          "style": "line",
+          "stroke": "1.8",
+          "size": "20",
+          "corners": "rounded"
+        }
+      },
+      "layout": {},
+      "layout_spec": {},
+      "tags": [
+        "viajes",
+        "turismo",
+        "noche",
+        "experiencias",
+        "agencia",
+        "premium"
+      ],
+      "preview": "",
+      "style": "Tienda de moda nocturna",
+      "anim": {
+        "hero": "fade",
+        "reveal": "fade",
+        "hover": "glow",
+        "button": "solid-press"
+      },
+      "easing": "cubic-bezier(.4,0,.2,1)",
+      "duration": "420ms",
+      "icons": {
+        "style": "line",
+        "stroke": "1.8",
+        "size": "20",
+        "corners": "rounded"
+      },
+      "concept": "Navy profundo + coral: la agencia despues del atardecer."
     }
   ],
   "patterns": [
@@ -6786,29 +6971,109 @@
       "template": "raiz",
       "layout": {
         "landing": [
-          { "id": "hero", "variant": "split", "enabled": true, "order": 0 },
-          { "id": "featured", "enabled": true, "order": 1 },
-          { "id": "categories", "enabled": true, "order": 2 },
-          { "id": "about", "enabled": true, "order": 3 },
-          { "id": "benefits", "variant": "cards", "enabled": true, "order": 4 },
-          { "id": "offerings", "enabled": true, "order": 5 },
-          { "id": "gallery", "enabled": true, "order": 6 },
-          { "id": "timeline", "enabled": true, "order": 7 },
-          { "id": "team", "enabled": true, "order": 8 },
-          { "id": "testimonials", "variant": "cards", "enabled": true, "order": 9 },
-          { "id": "plans", "enabled": true, "order": 10 },
-          { "id": "video", "enabled": true, "order": 11 },
-          { "id": "faq", "enabled": true, "order": 12 },
-          { "id": "cta", "variant": "band", "enabled": true, "order": 13 },
-          { "id": "contact", "enabled": true, "order": 14 }
+          {
+            "id": "hero",
+            "variant": "split",
+            "enabled": true,
+            "order": 0
+          },
+          {
+            "id": "featured",
+            "enabled": true,
+            "order": 1
+          },
+          {
+            "id": "categories",
+            "enabled": true,
+            "order": 2
+          },
+          {
+            "id": "about",
+            "enabled": true,
+            "order": 3
+          },
+          {
+            "id": "benefits",
+            "variant": "cards",
+            "enabled": true,
+            "order": 4
+          },
+          {
+            "id": "offerings",
+            "enabled": true,
+            "order": 5
+          },
+          {
+            "id": "gallery",
+            "enabled": true,
+            "order": 6
+          },
+          {
+            "id": "timeline",
+            "enabled": true,
+            "order": 7
+          },
+          {
+            "id": "team",
+            "enabled": true,
+            "order": 8
+          },
+          {
+            "id": "testimonials",
+            "variant": "cards",
+            "enabled": true,
+            "order": 9
+          },
+          {
+            "id": "plans",
+            "enabled": true,
+            "order": 10
+          },
+          {
+            "id": "video",
+            "enabled": true,
+            "order": 11
+          },
+          {
+            "id": "faq",
+            "enabled": true,
+            "order": 12
+          },
+          {
+            "id": "cta",
+            "variant": "band",
+            "enabled": true,
+            "order": 13
+          },
+          {
+            "id": "contact",
+            "enabled": true,
+            "order": 14
+          }
         ],
         "catalog": [
-          { "id": "hero", "enabled": true, "order": 0 },
-          { "id": "grid", "enabled": true, "order": 1 }
+          {
+            "id": "hero",
+            "enabled": true,
+            "order": 0
+          },
+          {
+            "id": "grid",
+            "enabled": true,
+            "order": 1
+          }
         ],
         "services": [
-          { "id": "hero", "enabled": true, "order": 0 },
-          { "id": "list", "enabled": true, "order": 1 }
+          {
+            "id": "hero",
+            "enabled": true,
+            "order": 0
+          },
+          {
+            "id": "list",
+            "enabled": true,
+            "order": 1
+          }
         ]
       },
       "anim": {
@@ -6839,6 +7104,143 @@
       "variables": {},
       "supports_dark_mode": true,
       "style": "topmodern"
+    },
+    {
+      "slug": "viajero",
+      "nombre": "Viajero",
+      "categoria": "viajes",
+      "descripcion": "Agencia de viajes editorial inspirada en Travellian: portada a sangre con barra de reserva, indice de destinos numerado, vitrina con tabs, bitacora de la agencia, garantias, membresias, testimonios, FAQ, CTA coral y contacto. Solo datos reales de la tienda.",
+      "tier": "plus",
+      "template": "viajero",
+      "layout": {
+        "landing": [
+          {
+            "id": "hero",
+            "variant": "split",
+            "enabled": true,
+            "order": 0
+          },
+          {
+            "id": "categories",
+            "enabled": true,
+            "order": 1
+          },
+          {
+            "id": "featured",
+            "enabled": true,
+            "order": 2
+          },
+          {
+            "id": "about",
+            "enabled": true,
+            "order": 3
+          },
+          {
+            "id": "benefits",
+            "variant": "cards",
+            "enabled": true,
+            "order": 4
+          },
+          {
+            "id": "plans",
+            "enabled": true,
+            "order": 5
+          },
+          {
+            "id": "testimonials",
+            "variant": "cards",
+            "enabled": true,
+            "order": 6
+          },
+          {
+            "id": "faq",
+            "enabled": true,
+            "order": 7
+          },
+          {
+            "id": "cta",
+            "variant": "band",
+            "enabled": true,
+            "order": 8
+          },
+          {
+            "id": "contact",
+            "enabled": true,
+            "order": 9
+          }
+        ],
+        "catalog": [
+          {
+            "id": "hero",
+            "enabled": true,
+            "order": 0
+          },
+          {
+            "id": "grid",
+            "enabled": true,
+            "order": 1
+          }
+        ],
+        "services": [
+          {
+            "id": "hero",
+            "enabled": true,
+            "order": 0
+          },
+          {
+            "id": "list",
+            "enabled": true,
+            "order": 1
+          }
+        ]
+      },
+      "tokens": {
+        "accent": "#FF7757",
+        "palette": {
+          "accent": "#FF7757",
+          "primary": "#172432",
+          "secondary": "#3D4A57",
+          "bg": "#FBF7F0",
+          "surface": "#FFFFFF",
+          "text": "#172432",
+          "muted": "#5C6672",
+          "border": "#EADFD1",
+          "success": "#2F7D5B",
+          "danger": "#B3261E"
+        },
+        "fonts": [
+          "rubik",
+          "playfair-display"
+        ],
+        "radius": "14px",
+        "anim": {
+          "hero": "fade-up",
+          "reveal": "fade-up",
+          "hover": "lift",
+          "button": "solid-press"
+        },
+        "easing": "cubic-bezier(.4,0,.2,1)",
+        "duration": "420ms",
+        "icons": {
+          "style": "line",
+          "stroke": "1.8",
+          "size": "20",
+          "corners": "rounded"
+        }
+      },
+      "tags": [
+        "viajes",
+        "turismo",
+        "experiencias",
+        "agencia",
+        "tienda",
+        "ofertas",
+        "retail"
+      ],
+      "preview": "",
+      "variables": {},
+      "supports_dark_mode": true,
+      "style": "viajero"
     }
   ]
 }
