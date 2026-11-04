@@ -2,7 +2,7 @@
 <html lang="es">
 <head>
 <meta charset="utf-8">
-<title>davent — ad</title>
+<title>davent — ad v2</title>
 <style>
   html, body { margin: 0; background: #000; overflow: hidden; }
   canvas { display: block; }
@@ -12,228 +12,148 @@
 <canvas id="c"></canvas>
 <script type="module" src="./preview.js"></script>
 <script type="module">
-import { DUR, NAR, LOGO_HIT, CARD_IN, SHOTS, b } from './timeline.js';
-import { seg, lerp, ease, glide, snap, spring, springTo, stagger, pulse, stageSize, setupCanvas, camera, mix, rgba, loadFonts } from './motion.js';
+import { DUR, NAR, LOGO_HIT, CARD_IN, SHOTS } from './timeline.js';
+import { seg, lerp, ease, glide, snap, spring, springTo, pulse, stageSize, setupCanvas, camera, mix, rgba, loadFonts, loadImage } from './motion.js';
 
 const { W, H } = stageSize();
 const ctx = setupCanvas(document.getElementById('c'), W, H);
 const U = Math.min(W, H) / 1080;
-const DIR = new URLSearchParams(location.search).get('dir') || 'a';
 
-const THEMES = {
-  a: { bg: '#f6f7fb', card: '#ffffff', ink: '#0f172a', ink2: '#64748b', line: '#e8ecf4', rail: '#0f1130', railInk: '#a5b4d4', brand: '#4f46e5', brand2: '#818cf8', sunk: '#f1f4f9' },
-  b: { bg: '#0b0f1e', card: '#151b2e', ink: '#e8ecf7', ink2: '#8b94b8', line: '#212842', rail: '#080b18', railInk: '#a5b4d4', brand: '#818cf8', brand2: '#4f46e5', sunk: '#0a0f1d' },
-  c: { bg: '#0d0a1f', card: '#171331', ink: '#f3f1ff', ink2: '#9d94d4', line: '#2b2450', rail: '#0a0820', railInk: '#a5b4d4', brand: '#a78bfa', brand2: '#4f46e5', sunk: '#120e2b' },
-};
-const C = THEMES[DIR];
+const C = { bg: '#070917', card: '#10132b', ink: '#eef0ff', ink2: '#9aa0c8', accent: '#7b6cf6', accent2: '#a78bfa', line: '#262b52' };
 const SANS = '"Segoe UI", "Helvetica Neue", Arial, sans-serif';
 const F = (s, w = 400) => `${w} ${s}px ${SANS}`;
-const shot = id => SHOTS.find(s => s.id === id);
-const FEATURES = [
-  { t: 3.1, label: 'PRODUCTOS', card: 3 },
-  { t: 4.35, label: 'DISEÑO', card: 4 },
-  { t: 5.55, label: 'VENTAS', card: 2 },
+
+const imgs = await Promise.all(['inicio', 'productos', 'diseno', 'landing'].map(n => loadImage(`assets/${n}.png`)));
+const [IMG_INICIO, IMG_PRODUCTOS, IMG_DISENO, IMG_LANDING] = imgs;
+
+// shot list: [img, t0, t1, label, panFrom, panTo] — pan in image-cover space [-1..1]
+const SHOTS2 = [
+  { img: IMG_INICIO,    t0: 0,     t1: 3.15,  label: '',          pan: [0.0, -0.25], enter: true },
+  { img: IMG_PRODUCTOS, t0: 2.851, t1: 4.35,  label: 'PRODUCTOS', pan: [-0.15, 0.15] },
+  { img: IMG_DISENO,    t0: 4.35,  t1: 5.55,  label: 'DISEÑO',    pan: [0.15, -0.15] },
+  { img: IMG_LANDING,   t0: 5.55,  t1: 7.6,   label: 'TU WEB',    pan: [-0.2, 0.0] },
 ];
+const XF = 0.34; // crossfade duration
 
 window.DUR = DUR;
 window.render = t => {
   ctx.fillStyle = C.bg; ctx.fillRect(0, 0, W, H);
-  if (DIR === 'b' || DIR === 'c') glowBg(t);
+  glow();
 
-  // camera: settle in, drift to feature card, pull back for logo
-  const zoom = springTo(t, [[0, 1.14], [1.6, 1.0], [NAR.s2[0], 1.12], [NAR.s3[0], 0.82], [CARD_IN, 0.86]], { freq: 2.2, damp: 0.85 });
-  const [fx, fy] = focusPoint(t);
-  ctx.save(); camera(ctx, W, H, { x: fx, y: fy, zoom });
+  // current + incoming shot during crossfades
+  for (let i = 0; i < SHOTS2.length; i++) {
+    const s = SHOTS2[i];
+    if (t < s.t0 - (i ? XF : 0) || t > s.t1) continue;
+    drawShot(s, t, i === 0 ? spring(t - s.t0, { freq: 2.4, damp: 0.8 }) : ease.outCubic(seg(t, s.t0 - XF, s.t0)));
+  }
 
-  const dim = dir_c_dim(t);
-  drawDashboard(t, dim);
-
-  ctx.restore();
-
-  if (DIR === 'c' && t < NAR.s3[0]) bigType(t);
   featureLabel(t);
+  logoWash(t);
   endCard(t);
 };
 
-// ── dashboard mock ──
-const DB = { x: 240, y: 150, w: 1440, h: 810 };   // in U-scaled units, set in draw()
-function layout() { const w = 1440 * U, h = 810 * U; return { x: W / 2 - w / 2, y: H / 2 - h / 2 + 10 * U, w, h, rail: 84 * U, pad: 26 * U }; }
+function drawShot(s, t, inK) {
+  if (inK <= 0) return;
+  const local = seg(t, s.t0, s.t1);
+  const fw = W * 0.84, fh = fw * (s.img.height / s.img.width);
+  const fhMax = H * 0.78, scale = Math.min(1, fhMax / fh), ww = fw * scale, hh = fh * scale;
+  const cx = W / 2, cy = H / 2 - 12 * U;
 
-function drawDashboard(t, dim = 0) {
-  const L = layout();
-  const railIn = spring(t - 0.15, { freq: 2.6, damp: 0.8 });
-  const bodyIn = spring(t - 0.3, { freq: 2.6, damp: 0.8 });
+  // slow push-in + pan
+  const push = lerp(1.0, 1.06, ease.inOutCubic(local)) * lerp(0.94, 1, inK);
+  const px = lerp(s.pan[0], s.pan[1], local) * s.img.width * 0.04;
 
   ctx.save();
-  ctx.globalAlpha = 1 - dim * 0.75;
-  // rail
-  ctx.save(); ctx.translate(-(1 - railIn) * L.rail, 0);
-  rrect(L.x, L.y, L.rail, L.h, 18 * U, C.rail);
-  ctx.fillStyle = C.brand; ctx.beginPath(); ctx.arc(L.x + L.rail / 2, L.y + 44 * U, 12 * U, 0, 7); ctx.fill();
-  for (let i = 0; i < 6; i++) {
-    const yy = L.y + 110 * U + i * 62 * U, act = i === 0;
-    ctx.fillStyle = act ? rgba(C.brand, .9) : rgba(C.railInk, .28);
-    rrect(L.x + 24 * U, yy, L.rail - 48 * U, 38 * U, 10 * U, ctx.fillStyle);
-  }
+  ctx.globalAlpha = inK;
+  // shadow
+  ctx.shadowColor = 'rgba(0,0,0,.55)'; ctx.shadowBlur = 60 * U; ctx.shadowOffsetY = 24 * U;
+  ctx.fillStyle = C.card;
+  ctx.beginPath(); ctx.roundRect(cx - ww / 2, cy - hh / 2, ww, hh, 22 * U); ctx.fill();
+  ctx.shadowColor = 'transparent'; ctx.shadowBlur = 0; ctx.shadowOffsetY = 0;
+  // clipped image
+  ctx.save();
+  ctx.beginPath(); ctx.roundRect(cx - ww / 2, cy - hh / 2, ww, hh, 22 * U); ctx.clip();
+  const cover = Math.max(ww / s.img.width, hh / s.img.height) * push;
+  ctx.drawImage(s.img, cx - s.img.width * cover / 2 - px * cover, cy - s.img.height * cover / 2, s.img.width * cover, s.img.height * cover);
   ctx.restore();
-
-  // body
-  const bx = L.x + L.rail + L.pad, bw = L.w - L.rail - L.pad;
-  ctx.save(); ctx.globalAlpha = bodyIn * (1 - dim * 0.75);
-  ctx.translate(0, (1 - bodyIn) * 24 * U);
-  // topbar
-  ctx.fillStyle = C.ink; ctx.font = F(26 * U, 700);
-  ctx.fillText('Hola, Mi Tienda', bx, L.y + 46 * U);
-  ctx.fillStyle = C.sunk; rrect(bx + bw - 300 * U, L.y + 20 * U, 250 * U, 34 * U, 17 * U, C.sunk);
-  ctx.fillStyle = C.brand; ctx.beginPath(); ctx.arc(bx + bw - 10 * U, L.y + 37 * U, 17 * U, 0, 7); ctx.fill();
-
-  const rowY = L.y + 74 * U, cardH = 132 * U, gap = 22 * U, cw = (bw - 2 * gap) / 3;
-  const stats = [['VENTAS', '$ 1.284.300'], ['VISITAS', '8.412'], ['PRODUCTOS', '124']];
-  stats.forEach(([k, v], i) => {
-    const kIn = spring(t - (0.5 + i * 0.3), { freq: 3, damp: 0.7 });
-    const x = bx + i * (cw + gap);
-    ctx.save(); ctx.globalAlpha *= kIn; ctx.translate(0, (1 - kIn) * 30 * U);
-    rrect(x, rowY, cw, cardH, 16 * U, C.card); hairline(x, rowY, cw, cardH, 16 * U);
-    ctx.fillStyle = C.ink2; ctx.font = F(15 * U, 600); ctx.fillText(k, x + 22 * U, rowY + 34 * U);
-    ctx.fillStyle = C.ink; ctx.font = F(34 * U, 800); ctx.fillText(v, x + 22 * U, rowY + 84 * U);
-    ctx.fillStyle = rgba(C.brand, .12); rrect(x + cw - 68 * U, rowY + 22 * U, 46 * U, 46 * U, 12 * U, rgba(C.brand, .12));
-    ctx.fillStyle = C.brand; rrect(x + cw - 54 * U, rowY + 36 * U, 18 * U, 18 * U, 5 * U, C.brand);
-    ctx.restore();
-  });
-
-  // chart card (left, big) + products card (right)
-  const y2 = rowY + cardH + gap, chH = L.y + L.h - y2 - 8 * U, chW = bw * 0.58, prW = bw - chW - gap;
-  const c4 = spring(t - 1.4, { freq: 2.8, damp: 0.75 });
-  ctx.save(); ctx.globalAlpha *= c4; ctx.translate(0, (1 - c4) * 30 * U);
-  rrect(bx, y2, chW, chH, 16 * U, C.card); hairline(bx, y2, chW, chH, 16 * U);
-  ctx.fillStyle = C.ink2; ctx.font = F(15 * U, 600); ctx.fillText('VENTAS · ÚLTIMOS 30 DÍAS', bx + 22 * U, y2 + 34 * U);
-  lineChart(t, bx + 26 * U, y2 + 70 * U, chW - 52 * U, chH - 110 * U);
-  ctx.restore();
-
-  const c5 = spring(t - 1.7, { freq: 2.8, damp: 0.75 });
-  const px = bx + chW + gap;
-  ctx.save(); ctx.globalAlpha *= c5; ctx.translate(0, (1 - c5) * 30 * U);
-  rrect(px, y2, prW, chH, 16 * U, C.card); hairline(px, y2, prW, chH, 16 * U);
-  ctx.fillStyle = C.ink2; ctx.font = F(15 * U, 600); ctx.fillText('PRODUCTOS', px + 22 * U, y2 + 34 * U);
-  const cols = 3, rows = 3, pg = 14 * U, pw = (prW - 44 * U - (cols - 1) * pg) / cols, ph = (chH - 70 * U - (rows - 1) * pg) / rows;
-  const hues = [232, 262, 200, 20, 340, 160];
-  for (let i = 0; i < cols * rows; i++) {
-    const pi = spring(t - (1.9 + i * 0.08), { freq: 3.4, damp: 0.65 });
-    const x = px + 22 * U + (i % cols) * (pw + pg), y = y2 + 56 * U + Math.floor(i / cols) * (ph + pg);
-    ctx.globalAlpha *= 1;
-    ctx.save(); ctx.globalAlpha *= pi;
-    rrect(x, y + (1 - pi) * 10 * U, pw, ph, 10 * U, `hsl(${hues[i % 6]},45%,${DIR === 'a' ? 88 : 26}%)`);
-    ctx.restore();
-  }
-  ctx.restore();
-
-  ctx.restore(); // body
+  ctx.beginPath(); ctx.roundRect(cx - ww / 2, cy - hh / 2, ww, hh, 22 * U); ctx.strokeStyle = rgba(C.accent, .28); ctx.lineWidth = 1.5; ctx.stroke();
   ctx.restore();
 }
 
-function lineChart(t, x, y, w, h) {
-  const pts = [0.62, 0.55, 0.66, 0.5, 0.58, 0.42, 0.5, 0.36, 0.44, 0.3, 0.38, 0.24, 0.32, 0.18];
-  const draw = ease.inOutCubic(seg(t, 1.8, 3.6));
-  ctx.strokeStyle = C.brand; ctx.lineWidth = 4 * U; ctx.lineJoin = 'round'; ctx.lineCap = 'round';
-  ctx.beginPath();
-  const n = Math.max(2, Math.floor(pts.length * draw));
-  for (let i = 0; i < n; i++) { const px = x + (i / (pts.length - 1)) * w, py = y + pts[i] * h; i ? ctx.lineTo(px, py) : ctx.moveTo(px, py); }
-  ctx.stroke();
-  // area
-  const g = ctx.createLinearGradient(0, y, 0, y + h);
-  g.addColorStop(0, rgba(C.brand, .18)); g.addColorStop(1, rgba(C.brand, 0));
-  ctx.fillStyle = g; ctx.lineTo(x + ((n - 1) / (pts.length - 1)) * w, y + h); ctx.lineTo(x, y + h); ctx.closePath(); ctx.fill();
-  if (draw > 0.95) { const lx = x + w, ly = y + pts[pts.length - 1] * h; ctx.fillStyle = C.brand; ctx.beginPath(); ctx.arc(lx, ly, 7 * U, 0, 7); ctx.fill(); }
-}
-
-// feature spotlight: which card is "hot" + dim the rest
+const FEATURES = [
+  { t: 3.1, label: 'PRODUCTOS' },
+  { t: 4.35, label: 'DISEÑO' },
+  { t: 5.55, label: 'TU WEB' },
+];
 function featureIdx(t) { let k = -1; FEATURES.forEach((f, i) => { if (t >= f.t) k = i; }); return k; }
-function focusPoint(t) {
-  const L = layout();
-  const i = featureIdx(t);
-  const base = [W / 2, H / 2 + 10 * U];
-  if (t < NAR.s2[0] || i < 0) return springTo(t, [[0, base], [NAR.s3[0], base]], { freq: 2 });
-  const targets = [
-    [L.x + L.rail + L.pad + (L.w - L.rail - L.pad) * 0.58 + (L.w - L.rail - L.pad) * 0.42 / 2, L.y + 74 * U + 132 * U + 22 * U + 300 * U], // productos card
-    [W / 2, H / 2],                       // diseño → whole board
-    [L.x + L.rail + L.pad + (L.w - L.rail - L.pad) * 0.29, L.y + 74 * U + 132 * U + 22 * U + 300 * U], // chart
-  ];
-  const target = targets[i];
-  const keys = [[NAR.s2[0], base]];
-  FEATURES.forEach((f, j) => { if (j <= i) keys.push([f.t, targets[j]]); });
-  keys.push([NAR.s3[0], base]);
-  return springTo(t, keys, { freq: 2.4, damp: 0.85 });
-}
 
 function featureLabel(t) {
   const i = featureIdx(t);
-  if (i < 0 || t >= NAR.s3[0]) return;
+  if (i < 0 || t >= NAR.s3[0] + 0.4) return;
   const f = FEATURES[i];
   const k = spring(t - f.t, { freq: 3, damp: 0.7 });
-  const out = 1 - ease.inCubic(seg(t, f.t + 1.05, f.t + 1.25));
+  const out = 1 - ease.inCubic(seg(t, f.t + 1.0, f.t + 1.2));
   ctx.save(); ctx.globalAlpha = Math.min(k, out);
-  ctx.font = F(64 * U, 800); ctx.textAlign = 'center';
-  ctx.fillStyle = DIR === 'a' ? C.ink : '#fff';
-  ctx.shadowColor = rgba('#000', DIR === 'a' ? .18 : .5); ctx.shadowBlur = 24 * U;
-  ctx.fillText(f.label, W / 2, H - 90 * U + (1 - k) * 40 * U);
+  ctx.font = F(58 * U, 800); ctx.textAlign = 'center';
+  ctx.fillStyle = C.ink; ctx.shadowColor = 'rgba(0,0,0,.6)'; ctx.shadowBlur = 20 * U;
+  ctx.fillText(f.label, W / 2, H - 84 * U + (1 - k) * 36 * U);
   ctx.shadowBlur = 0;
-  // underline bar
-  ctx.fillStyle = C.brand; rrect(W / 2 - 60 * U * k, H - 62 * U, 120 * U * k, 6 * U, 3 * U, C.brand);
+  ctx.fillStyle = C.accent;
+  ctx.beginPath(); ctx.roundRect(W / 2 - 56 * U * k, H - 60 * U, 112 * U * k, 6 * U, 3 * U); ctx.fill();
   ctx.restore();
 }
 
-function bigType(t) {
-  const k = ease.outCubic(seg(t, 0.2, 1.2));
-  const out = 1 - ease.inCubic(seg(t, NAR.s2[1] - 0.4, NAR.s2[1]));
-  ctx.save(); ctx.globalAlpha = 0.10 * k * out;
-  ctx.font = F(340 * U, 900); ctx.textAlign = 'left'; ctx.textBaseline = 'middle';
-  ctx.fillStyle = C.brand2;
-  ctx.fillText('DAVENT', -30 * U, H / 2);
-  ctx.restore();
-}
-
-function dir_c_dim(t) { return DIR === 'c' ? 0.25 : 0; }
-
-// ── end card: wordmark + CTA ──
-function endCard(t) {
-  const inK = ease.outCubic(seg(t, LOGO_HIT - 0.25, LOGO_HIT + 0.5));
+// wash to brand bg as the dashboard leaves
+function logoWash(t) {
+  const inK = ease.outCubic(seg(t, NAR.s3[0], LOGO_HIT + 0.15));
   if (inK <= 0) return;
-  // wash to brand background
-  ctx.fillStyle = DIR === 'a' ? '#f6f7fb' : C.bg;
-  ctx.globalAlpha = inK; ctx.fillRect(0, 0, W, H); ctx.globalAlpha = 1;
+  ctx.fillStyle = C.bg; ctx.globalAlpha = inK; ctx.fillRect(0, 0, W, H); ctx.globalAlpha = 1;
+  ctx.globalAlpha = inK; glow(); ctx.globalAlpha = 1;
+  const g0 = ctx.createRadialGradient(W / 2, H / 2 - 40 * U, 0, W / 2, H / 2 - 40 * U, H * 0.55);
+  g0.addColorStop(0, rgba(C.accent, .10)); g0.addColorStop(1, rgba(C.accent, 0));
+  ctx.fillStyle = g0; ctx.globalAlpha = inK; ctx.fillRect(0, 0, W, H); ctx.globalAlpha = 1;
 
   const k = spring(t - LOGO_HIT, { freq: 2.6, damp: 0.68 });
-  const cx = W / 2, cy = H / 2 - 30 * U;
-  ctx.save(); ctx.translate(cx, cy); ctx.scale(0.6 + 0.4 * k, 0.6 + 0.4 * k); ctx.translate(-cx, -cy);
-  ctx.globalAlpha = Math.min(1, k);
-  ctx.font = F(150 * U, 900); ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
-  ctx.fillStyle = C.ink;
-  ctx.fillText('davent', cx, cy);
-  ctx.fillStyle = C.brand; ctx.beginPath(); ctx.arc(cx + ctx.measureText('davent').width / 2 + 20 * U, cy + 34 * U, 16 * U * k, 0, 7); ctx.fill();
+  const cx = W / 2, cy = H / 2 - 40 * U;
+  ctx.save(); ctx.globalAlpha = Math.min(1, k);
+  // logo mark: violet rounded square + D
+  const m = 92 * U * (0.6 + 0.4 * k);
+  const g = ctx.createLinearGradient(cx - m, cy - m, cx + m, cy + m);
+  g.addColorStop(0, C.accent); g.addColorStop(1, '#5b4bd6');
+  ctx.beginPath(); ctx.roundRect(cx - m / 2 - 150 * U * 0 - m * 1.55, cy - m / 2, m, m, m * 0.28); ctx.fillStyle = g; ctx.fill();
+  ctx.fillStyle = '#fff'; ctx.font = F(m * 0.5, 900); ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+  ctx.fillText('D', cx - m * 1.05, cy + m * 0.05);
+  ctx.fillStyle = C.ink; ctx.font = F(120 * U, 800); ctx.textAlign = 'left';
+  ctx.fillText('DAVENT', cx - m * 0.75, cy + 6 * U);
   ctx.restore();
+}
 
-  // tagline + CTA after s3
-  const t2 = spring(t - (CARD_IN), { freq: 2.8, damp: 0.75 });
+function endCard(t) {
+  const t2 = spring(t - CARD_IN, { freq: 2.8, damp: 0.75 });
+  if (t2 <= 0) return;
+  const cx = W / 2, cy = H / 2 - 40 * U;
   ctx.save(); ctx.globalAlpha = Math.min(1, t2);
-  ctx.font = F(40 * U, 600); ctx.textAlign = 'center';
-  ctx.fillStyle = C.ink2; ctx.fillText('Publicá hoy.', cx, cy + 120 * U);
-  const pulseK = 1 + 0.04 * Math.sin(t * 3) * seg(t, 10.5, 11.2);
-  ctx.save(); ctx.translate(cx, cy + 210 * U); ctx.scale(pulseK, pulseK);
-  rrect(-170 * U, -34 * U, 340 * U, 68 * U, 34 * U, C.brand);
+  ctx.font = F(42 * U, 500); ctx.textAlign = 'center';
+  ctx.fillStyle = C.ink2; ctx.fillText('Publicá hoy.', cx, cy + 110 * U);
+  const pulseK = 1 + 0.035 * Math.sin(t * 3) * seg(t, 10.5, 11.2);
+  ctx.save(); ctx.translate(cx, cy + 205 * U); ctx.scale(pulseK, pulseK);
+  const g = ctx.createLinearGradient(-180 * U, 0, 180 * U, 0);
+  g.addColorStop(0, C.accent); g.addColorStop(1, '#5b4bd6');
+  ctx.beginPath(); ctx.roundRect(-185 * U, -36 * U, 370 * U, 72 * U, 36 * U); ctx.fillStyle = g; ctx.fill();
   ctx.fillStyle = '#fff'; ctx.font = F(28 * U, 700); ctx.textBaseline = 'middle';
-  ctx.fillText('Empezar gratis', 0, 2 * U);
+  ctx.fillText('Crear cuenta gratis', 0, 2 * U);
   ctx.restore();
   ctx.restore();
 }
 
-function glowBg(t) {
-  const g = ctx.createRadialGradient(W * 0.7, H * 0.25, 0, W * 0.7, H * 0.25, H);
-  g.addColorStop(0, rgba(C.brand2, .12)); g.addColorStop(1, rgba(C.brand2, 0));
+function glow() {
+  const g = ctx.createRadialGradient(W * 0.75, H * 0.2, 0, W * 0.75, H * 0.2, H * 0.9);
+  g.addColorStop(0, rgba(C.accent, .14)); g.addColorStop(1, rgba(C.accent, 0));
   ctx.fillStyle = g; ctx.fillRect(0, 0, W, H);
+  const g2 = ctx.createRadialGradient(W * 0.15, H * 0.9, 0, W * 0.15, H * 0.9, H * 0.8);
+  g2.addColorStop(0, rgba('#3b2f8f', .18)); g2.addColorStop(1, rgba('#3b2f8f', 0));
+  ctx.fillStyle = g2; ctx.fillRect(0, 0, W, H);
 }
-
-function rrect(x, y, w, h, r, fill) { ctx.beginPath(); ctx.roundRect(x, y, Math.max(w, .01), h, Math.min(r, h / 2, Math.abs(w) / 2)); ctx.fillStyle = fill; ctx.fill(); }
-function hairline(x, y, w, h, r) { ctx.beginPath(); ctx.roundRect(x, y, w, h, r); ctx.strokeStyle = C.line; ctx.lineWidth = 1.5; ctx.stroke(); }
 
 await loadFonts([]);
 window.render(0);
