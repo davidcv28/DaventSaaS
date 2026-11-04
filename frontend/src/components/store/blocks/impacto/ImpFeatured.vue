@@ -3,10 +3,12 @@
 // numerado. Usa la tarjeta única de las plantillas (TplProductCard) con su
 // prop `index` —el número 01/02/03 del pliego es parte del contrato de la
 // tarjeta, no un pseudo-elemento de la piel— y la cabecera de sección con
-// conteo en mono. Sin catálogo o sin productos se auto-oculta.
+// conteo, rango de precios y marcas en mono. Sin catálogo o sin productos se
+// auto-oculta.
 import { computed, inject } from 'vue'
 import { useRouter } from 'vue-router'
 import { storeHostSlug } from '../../../../config/env.js'
+import { formatARS } from '../../../../api/billing.api.js'
 import AppIcon from '../../../AppIcon.vue'
 import TplProductCard from '../../TplProductCard.vue'
 import { vReveal } from '../../../../directives/reveal.js'
@@ -26,6 +28,21 @@ const shopCatOf = (p) => featured.value.categories.find((c) => c.id === p.catego
 const productTo = (p) => ({ name: 'store-product', params: storeHostSlug ? { productId: p.id } : { slug: slug.value, productId: p.id } })
 const openProduct = (p) => router.push(productTo(p))
 const total = computed(() => featured.value.products.length)
+
+// Rango real de la vitrina: solo precios cargados, nunca un número inventado.
+const priceRange = computed(() => {
+  const prices = featured.value.products.map((p) => Number(p.price)).filter((n) => Number.isFinite(n) && n > 0)
+  if (!prices.length) return ''
+  const min = Math.min(...prices)
+  const max = Math.max(...prices)
+  return min === max ? formatARS(min) : `${formatARS(min)} — ${formatARS(max)}`
+})
+const brandCount = computed(() => featured.value.brands.filter((b) => featured.value.products.some((p) => p.brand === b.id)).length)
+const headerLines = computed(() => [
+  `${String(total.value).padStart(2, '0')} prendas publicadas`,
+  [priceRange.value, brandCount.value ? `${String(brandCount.value).padStart(2, '0')} marcas` : 'series cortas']
+    .filter(Boolean).join(' · ')
+].filter(Boolean))
 </script>
 
 <template>
@@ -36,7 +53,9 @@ const total = computed(() => featured.value.products.length)
           <p class="mi-label">04 — Recién llegados</p>
           <h2 id="mi-featured-title">{{ title }}</h2>
         </div>
-        <p class="mi-head-copy">{{ String(total).padStart(2, '0') }} prendas publicadas · series cortas</p>
+        <p class="mi-head-copy">
+          <span v-for="line in headerLines" :key="line">{{ line }}</span>
+        </p>
       </header>
 
       <div class="sp-shop-featured-grid mi-featured-grid">
@@ -49,9 +68,12 @@ const total = computed(() => featured.value.products.length)
         />
       </div>
 
-      <RouterLink v-if="showCatalog" v-reveal class="mi-featured-all" :to="catalogTo">
-        Ver todo el catálogo <AppIcon name="arrow-right" :size="15" />
-      </RouterLink>
+      <div class="mi-featured-foot">
+        <RouterLink v-if="showCatalog" v-reveal class="mi-featured-all" :to="catalogTo">
+          Ver todo el catálogo <AppIcon name="arrow-right" :size="15" />
+        </RouterLink>
+        <p class="mi-featured-note">Pliego {{ String(products.length).padStart(2, '0') }} / {{ String(total).padStart(2, '0') }} · edición {{ new Date().getFullYear() }}</p>
+      </div>
     </div>
   </section>
 </template>

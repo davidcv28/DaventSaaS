@@ -336,3 +336,74 @@ y a los subárboles Raíz bajo `.mv-skin` (catálogo, ficha y servicios).
   `has_design_advanced`, Premium), familia `deporte` suma `movimiento`.
   Patrón `movimiento` + 3 estilos en `seed_data.json`; migración
   `stores.0073`; sync: `manage.py sync_design_neon --slug movimiento`.
+
+## 13. Indumentaria ModernImpact — lenguaje "revista suiza de moda" (`impacto`, plus)
+
+Aplica a `views/store/impacto/` (envoltorios de Raíz), a las piezas propias
+`components/store/blocks/impacto/` (`ImpHero`, `ImpCategories`, `ImpFeatured`,
+`ImpAbout`) y a `assets/store-impacto.css` (tokens `--mi-*` + puente `--sp-*`).
+Destilado de `awesome-design-skills/skills/{editorial,dramatic,terracotta}`:
+una sola superficie de papel crudo, tinta de imprenta y UN acento de
+temporada; display Anton en caja alta, cuerpo Space Grotesk y datos en
+JetBrains Mono. Reglas de 2px, retícula visible y numeración de pliego.
+
+- **Pliego de tapa** (`ImpHero`): cabecera marca · temporada · Nº, rail
+  vertical de temporada (desktop), kicker con punto vivo, titular con la
+  última palabra en acento y raya que se dibuja, cifras reales del catálogo
+  (`Piezas / Líneas / Años`), ficha de canales (web, Instagram, showroom,
+  horario) y foto de campaña con marcas de corte, sello girado y ficha de la
+  pieza destacada (nombre, rubro y precio reales). Cierra con **dos cintas**
+  en loop (tinta hacia un lado, acento al revés) y una marca de scroll.
+- **Índice de colección** (`ImpCategories`): retícula de 3 columnas que
+  siempre cierra. Las celdas anchas (`is-wide`, span 2) se calculan para que
+  las unidades sumen múltiplos de 3; su media usa `16/10` para igualar el
+  alto de la celda `4/5`. "Ver todo" es una banda a todo el ancho, no una
+  celda suelta. Etiqueta "Ver línea" sobre la foto y flecha **en flujo**
+  dentro del pie (la versión absoluta se montaba sobre el conteo).
+- **Vitrina** (`ImpFeatured`): grilla de 4 celdas con reglas, índice de
+  pliego en acento, flags al pie de la foto, rango de precios y marcas en la
+  cabecera, y pie `Pliego 04 / 14 · edición`. La tarjeta no se eleva al
+  hover: el lift rompía las líneas de la celda.
+- **Dossier de marca** (`ImpAbout`): relato con filete de acento, chips de
+  líneas, firma de la casa con tijera y "Edición {año}" (nunca "Est."), y
+  ficha con años en Anton, filas de puntos guía, horario real, misión como
+  letra chica, perforación de archivo y código de barras + `ARCHIVO / año`.
+- **Secciones compartidas re-eskínadas**: cifras, garantías numeradas,
+  ofertas, galería con índice por contador, testimonios, FAQ con filete de
+  acento al abrir, CTA en banda de tinta con "TEMPORADA" en contorno y
+  contacto como ficha de showroom (columna no sticky: el mapa la tapaba).
+- **Movimiento**: revelado `v-reveal` con stagger, titular por línea,
+  cintas con pista duplicada al 50% (pausa al hover), sello flotante con
+  anillo punteado girando, punto vivo, marca de scroll y barrido de tinta en
+  botones. Solo `transform/opacity`; `prefers-reduced-motion` apaga todo y
+  `hover:none` deja visibles las pistas de acción.
+- **Contraste**: el acento puro se reserva a superficies y filetes. Para
+  texto chico sobre papel existe `--mi-accent-text` (acento mezclado con
+  tinta) porque `#FF4B1F` sobre `#EDEBE4` no llega a AA a 9–10px; para
+  display (≥24px) `--mi-accent-display` conserva la vibración con 3:1. En
+  noche ambas mezclas se aclaran solas contra la tinta clara.
+- **Trampas resueltas**: (1) `.mi-skin` es un `.store-page` anidado y **no
+  hereda** `data-store-theme`: sin el remapeo oscuro el catálogo, la ficha y
+  servicios quedaban en papel claro dentro de la edición noche; (2)
+  `store-raiz.css` se inyecta después de esta hoja y empata en
+  especificidad — los overrides del sub-árbol usan
+  `.store-page.mi-skin[data-template='raiz']`; (3) `input.rz-field` lleva la
+  clase en el propio input (no un contenedor), y el `<select>` de orden vive
+  sin clase dentro de `.rz-cat-sort`: sin reglas propias el navegador pinta
+  fondo blanco con texto claro (ilegible en noche); (4) `store-motion.css`
+  aplica `mo-halo` a todo `.sp-btn:not(.ghost)`: en esta piel se apaga
+  (la imprenta no brilla); (5) `store-page.css` fija `border-radius` en
+  iconos, chips, modales y captcha: se normalizan a 0; (6) con tema
+  publicado, `.store-page[data-st-brand]` pinta todo `.sp-btn` con
+  `--sp-btn-bg`/`--st-on-primary` desde una regla de especificidad (0,7,0):
+  el CTA y los botones del sub-árbol reescriben esos tokens en el propio
+  elemento (no pelean con selectores); (7) el reset `[data-template] a`
+  (0,2,1) gana a una clase sola: los estados de tinta de celdas-enlace
+  (`.mi-dept`, `.mi-dept-all`, `.mi-featured-all`) llevan el prefijo del
+  diseño.
+- **Registro**: `tier: 'plus'` (Estándar y superiores), `TEMPLATE_PLUS`,
+  `TEMPLATE_CSS` → `store-impacto.css`, `SKIN_TEMPLATES`, `fonts:
+  ['anton','space-grotesk','jetbrains-mono']`, patrón `impacto` + estilos
+  `impacto`/`impacto-noche` en `seed_data.json`. QA: `/mi-qa` (papel) y
+  `/mi-qa-noche` (grafito); sync del catálogo:
+  `manage.py sync_design_neon --slug impacto`.

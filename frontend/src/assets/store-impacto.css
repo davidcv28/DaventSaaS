@@ -32,6 +32,11 @@
   --mi-line-2: #A9A497;
   --mi-accent: var(--st-accent, var(--store-accent, #FF4B1F));
   --mi-accent-ink: var(--st-accent-ink, #111111);
+  /* Acento para TEXTO chico sobre papel: el naranja puro no llega a AA a
+     9–10px, así que se oscurece contra la tinta. En noche se aclara. */
+  --mi-accent-text: color-mix(in srgb, var(--mi-accent) 70%, var(--mi-ink));
+  /* Acento para display (>= 24px): conserva la vibración con 3:1. */
+  --mi-accent-display: color-mix(in srgb, var(--mi-accent) 86%, var(--mi-ink));
   --mi-accent-soft: color-mix(in srgb, var(--mi-accent) 16%, var(--mi-paper));
   --mi-on-accent: var(--st-on-accent, #FFFDF6);
   --mi-focus: var(--mi-accent);
@@ -47,6 +52,7 @@
   --mi-fs-h2: clamp(30px, 4.4vw, 54px);
   --mi-fs-h3: clamp(20px, 2vw, 26px);
   --mi-fs-lead: clamp(15px, 1.25vw, 18px);
+  --mi-fs-stat: clamp(26px, 2.6vw, 38px);
   --mi-fs-body: 15.5px;
   --mi-fs-sm: 13.5px;
   --mi-fs-xs: 12px;
@@ -69,6 +75,13 @@
   --mi-dur-2: 280ms;
   --mi-dur-3: 620ms;
   --mi-ticker: 42s;
+  --mi-ticker-alt: 58s;
+  /* Cintas: la principal va a tinta, la secundaria a acento (en noche se
+     invierten para conservar el contraste AA). */
+  --mi-ribbon-bg: var(--mi-ink);
+  --mi-ribbon-ink: var(--mi-paper);
+  --mi-ribbon-alt-bg: var(--mi-accent);
+  --mi-ribbon-alt-ink: var(--mi-accent-ink);
   --mi-theme-color: var(--mi-paper);
 
   /* --- Trama de rayado: el "hueco de foto" del pliego --- */
@@ -100,6 +113,10 @@
   --mi-line-2: #4B4B43;
   --mi-accent-soft: color-mix(in srgb, var(--mi-accent) 20%, #131311);
   --mi-scrim: rgba(8, 8, 7, .72);
+  --mi-ribbon-bg: var(--mi-accent);
+  --mi-ribbon-ink: var(--mi-accent-ink);
+  --mi-ribbon-alt-bg: var(--mi-ink);
+  --mi-ribbon-alt-ink: var(--mi-paper);
   --mi-theme-color: #131311;
 }
 
@@ -205,7 +222,7 @@
   text-transform: uppercase;
   color: var(--mi-muted);
 }
-.mi-label b { color: var(--mi-accent); font-weight: 500; }
+.mi-label b { color: var(--mi-accent-text); font-weight: 500; }
 .mi-label::before {
   content: '';
   width: 22px;
@@ -234,7 +251,7 @@
   margin-bottom: clamp(24px, 3vw, 40px);
 }
 .mi-head h2 { font-size: var(--mi-fs-h2); }
-.mi-head h2 em { font-style: normal; color: var(--mi-accent); }
+.mi-head h2 em { font-style: normal; color: var(--mi-accent-display); }
 .mi-head-copy {
   font-family: var(--mi-mono);
   font-size: var(--mi-fs-xs);
@@ -244,6 +261,7 @@
   color: var(--mi-muted);
   text-align: right;
 }
+.mi-head-copy span { display: block; }
 
 /* --- Botones: rectángulo de tinta con barrido de acento --- */
 .store-page[data-template='impacto'] .mi-btn {
@@ -296,6 +314,31 @@
 .store-page[data-template='impacto'] .mi-btn svg { flex: none; transition: transform var(--mi-dur-2) var(--mi-ease); }
 .store-page[data-template='impacto'] .mi-btn:hover svg { transform: translateX(4px); }
 
+/* Controles compartidos: la imprenta no usa píldoras ni halos. */
+.store-page[data-template='impacto'] :is(.sp-icon-btn, .sp-chip, .sp-select, .sp-textarea, .sp-modal, .sp-modal-close, .sp-captcha-q, .sp-captcha-row .sp-icon-btn),
+.store-page.mi-skin :is(.sp-icon-btn, .sp-chip, .sp-select, .sp-textarea, .sp-modal, .sp-modal-close, .sp-captcha-q, .sp-captcha-row .sp-icon-btn) {
+  border-radius: 0;
+}
+.store-page[data-template='impacto'] :is(.sp-icon-btn, .sp-captcha-row .sp-icon-btn),
+.store-page.mi-skin :is(.sp-icon-btn, .sp-captcha-row .sp-icon-btn) {
+  box-shadow: none;
+  animation: none;
+}
+.store-page[data-template='impacto'] .sp-captcha-q {
+  border: 1px dashed var(--mi-accent);
+  background: var(--mi-accent-soft);
+  color: var(--mi-ink);
+  font-family: var(--mi-mono);
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: .06em;
+}
+.store-page[data-template='impacto'] .sp-captcha-row .sp-icon-btn:hover {
+  background: var(--mi-ink);
+  border-color: var(--mi-ink);
+  color: var(--mi-paper);
+}
+
 /* Chip de dato (talle, rubro, línea). */
 .mi-chip {
   display: inline-flex;
@@ -317,6 +360,7 @@
 
 /* Sello circular girado (el "drop" del pliego). */
 .mi-stamp {
+  position: relative;
   display: grid;
   place-content: center;
   gap: 2px;
@@ -329,6 +373,16 @@
   text-align: center;
   transform: rotate(-11deg);
   transition: transform var(--mi-dur-3) var(--mi-ease);
+}
+/* Anillo punteado que gira: el sello se lee como un cuño vivo. */
+.mi-stamp::before {
+  content: '';
+  position: absolute;
+  inset: 6px;
+  border: 1px dashed currentColor;
+  border-radius: 50%;
+  opacity: .5;
+  animation: mi-spin 30s linear infinite;
 }
 .mi-stamp:hover { transform: rotate(-4deg) scale(1.04); }
 .mi-stamp span {
@@ -366,6 +420,12 @@
   height: 1px;
   background: var(--mi-rule);
   opacity: .28;
+}
+/* Progreso de lectura: filete de acento sobre la regla del header. */
+.store-page[data-template='impacto'] .sp-top .sp-progress {
+  height: 3px;
+  background: var(--mi-accent);
+  transform-origin: left center;
 }
 .store-page[data-template='impacto'] .sp-top .sp-brand,
 .store-page[data-template='impacto'] .sp-top .sp-name { color: var(--mi-ink); }
@@ -453,6 +513,19 @@
   line-height: .9;
   text-transform: uppercase;
 }
+/* Cuño de barras del pie: cierra la edición como la contratapa. */
+.store-page[data-template='impacto'] .sp-foot-brand::after {
+  content: '';
+  display: block;
+  width: 84px;
+  height: 18px;
+  margin-top: 14px;
+  background-image: repeating-linear-gradient(90deg,
+    var(--mi-ink) 0 1px, transparent 1px 3px,
+    var(--mi-ink) 3px 5px, transparent 5px 6px,
+    var(--mi-ink) 6px 7px, transparent 7px 11px);
+  opacity: .5;
+}
 .store-page[data-template='impacto'] .sp-foot-brand span,
 .store-page[data-template='impacto'] .sp-foot-copy {
   color: var(--mi-muted);
@@ -500,8 +573,46 @@
   position: relative;
   padding-top: clamp(24px, 3vw, 40px);
   background: var(--mi-paper);
-  border-bottom: var(--mi-rule-w) solid var(--mi-rule);
   isolation: isolate;
+}
+/* Rail vertical de temporada: firma editorial del pliego (solo desktop). */
+.mi-hero-rail {
+  position: absolute;
+  left: 12px;
+  top: 50%;
+  z-index: 1;
+  writing-mode: vertical-rl;
+  transform: translateY(-50%) rotate(180deg);
+  font-family: var(--mi-mono);
+  font-size: 9.5px;
+  letter-spacing: .34em;
+  text-transform: uppercase;
+  color: var(--mi-muted);
+  pointer-events: none;
+}
+/* Marca de scroll: línea que se dibuja en loop. */
+.mi-hero-cue {
+  position: absolute;
+  right: var(--mi-gutter);
+  bottom: 62px;
+  z-index: 2;
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  font-family: var(--mi-mono);
+  font-size: 9px;
+  letter-spacing: .2em;
+  text-transform: uppercase;
+  color: var(--mi-muted);
+  pointer-events: none;
+}
+.mi-hero-cue i {
+  display: block;
+  width: 1px;
+  height: 30px;
+  background: linear-gradient(var(--mi-ink), transparent);
+  transform-origin: top center;
+  animation: mi-cue 2.6s var(--mi-ease) infinite;
 }
 /* Marcas de registro de imprenta en las esquinas del pliego. */
 .mi-hero::before,
@@ -531,7 +642,19 @@
   text-transform: uppercase;
   color: var(--mi-ink);
 }
-.mi-masthead-brand { font-weight: 500; }
+.mi-masthead-brand {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-weight: 500;
+}
+.mi-masthead-brand i {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--mi-accent);
+  animation: mi-blink 2.4s var(--mi-ease) infinite;
+}
 .mi-masthead-mid { color: var(--mi-muted); }
 .mi-masthead-num {
   display: inline-flex;
@@ -582,7 +705,7 @@
 .mi-hero-title em {
   display: block;
   font-style: normal;
-  color: var(--mi-accent);
+  color: var(--mi-accent-display);
 }
 /* Raya de acento que se dibuja bajo la última línea del titular. */
 .mi-hero-title::after {
@@ -603,6 +726,42 @@
   color: var(--mi-ink-2);
 }
 .mi-hero-actions { display: flex; flex-wrap: wrap; gap: 10px; }
+
+/* Cifras del pliego: número Anton + rótulo mono, separadas por reglas. */
+.mi-hero-stats {
+  display: grid;
+  grid-auto-flow: column;
+  grid-auto-columns: minmax(0, 1fr);
+  margin: 4px 0 0;
+  border-top: var(--mi-rule-w) solid var(--mi-rule);
+  border-bottom: var(--mi-hair) solid var(--mi-line);
+}
+.mi-hero-stats > div {
+  display: flex;
+  flex-direction: column-reverse;
+  gap: 2px;
+  padding: 10px 14px 12px 0;
+}
+.mi-hero-stats > div + div {
+  padding-left: 14px;
+  border-left: var(--mi-hair) solid var(--mi-line);
+}
+.mi-hero-stats dt {
+  font-family: var(--mi-mono);
+  font-size: 9px;
+  letter-spacing: .16em;
+  text-transform: uppercase;
+  color: var(--mi-muted);
+}
+.mi-hero-stats dd {
+  margin: 0;
+  font-family: var(--mi-display);
+  font-size: var(--mi-fs-stat);
+  line-height: .86;
+  letter-spacing: -.01em;
+  color: var(--mi-ink);
+}
+.mi-hero-stats > div:first-child dd { color: var(--mi-accent-display); }
 
 /* Ficha de datos del negocio: web, redes, envíos, tienda. */
 .mi-hero-data {
@@ -630,7 +789,7 @@
   margin: 0;
   overflow-wrap: anywhere;
 }
-.mi-hero-data a:hover { color: var(--mi-accent); text-decoration: underline; text-underline-offset: 3px; }
+.mi-hero-data a:hover { color: var(--mi-accent-text); text-decoration: underline; text-underline-offset: 3px; }
 
 /* --- Media: hueco de foto con trama, sello y pie de campaña --- */
 .mi-hero-media {
@@ -679,6 +838,17 @@
   text-transform: uppercase;
   color: var(--mi-ink);
 }
+/* Marcas de corte del pliego fotográfico (esquinas de imprenta). */
+.mi-hero-corner {
+  position: absolute;
+  z-index: 2;
+  width: 22px;
+  height: 22px;
+  border: 0 solid var(--mi-accent);
+  pointer-events: none;
+}
+.mi-hero-corner--tl { top: 8px; right: 8px; border-top-width: 2px; border-right-width: 2px; }
+.mi-hero-corner--br { bottom: 8px; left: 8px; border-bottom-width: 2px; border-left-width: 2px; }
 .mi-hero-media .mi-stamp {
   position: absolute;
   right: -22px;
@@ -713,15 +883,68 @@
   letter-spacing: .02em;
 }
 .mi-hero-caption a { color: var(--mi-ink); border-bottom: var(--mi-hair) solid currentColor; }
-.mi-hero-caption a:hover { color: var(--mi-accent); border-color: var(--mi-accent); }
+.mi-hero-caption a:hover { color: var(--mi-accent-text); border-color: var(--mi-accent); }
 
-/* --- Cinta marquee: datos reales de la tienda en loop --- */
+/* Ficha de la pieza de tapa: tarjeta de papel pegada al pliego, con sombra
+   dura de imprenta y micro-rotación que se endereza al hover. */
+.mi-hero-look {
+  position: absolute;
+  left: -22px;
+  bottom: 68px;
+  z-index: 4;
+  display: grid;
+  gap: 4px;
+  width: min(238px, 66%);
+  padding: 10px 12px 11px;
+  border: var(--mi-rule-w) solid var(--mi-ink);
+  background: var(--mi-paper);
+  color: var(--mi-ink);
+  box-shadow: 7px 7px 0 color-mix(in srgb, var(--mi-ink) 14%, transparent);
+  transform: rotate(-1.6deg);
+  transition: transform var(--mi-dur-2) var(--mi-ease), box-shadow var(--mi-dur-2) var(--mi-ease);
+}
+.mi-hero-look:hover,
+.mi-hero-look:focus-visible {
+  transform: rotate(0deg) translateY(-3px);
+  box-shadow: 9px 11px 0 color-mix(in srgb, var(--mi-accent) 42%, transparent);
+}
+.mi-hero-look-idx {
+  font-family: var(--mi-mono);
+  font-size: 9px;
+  font-weight: 500;
+  letter-spacing: .18em;
+  text-transform: uppercase;
+  color: var(--mi-accent-text);
+}
+.mi-hero-look-name {
+  font-family: var(--mi-display);
+  font-size: 16px;
+  line-height: 1;
+  letter-spacing: .01em;
+  text-transform: uppercase;
+}
+.mi-hero-look-meta {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 8px;
+  padding-top: 6px;
+  border-top: var(--mi-hair) solid var(--mi-line);
+  font-family: var(--mi-mono);
+  font-size: 9.5px;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+  color: var(--mi-muted);
+}
+.mi-hero-look-meta strong { color: var(--mi-ink); font-weight: 600; letter-spacing: .02em; }
+
+/* --- Cintas marquee: datos reales de la tienda en loop --- */
 .mi-ribbon {
   position: relative;
   overflow: hidden;
   border-top: var(--mi-rule-w) solid var(--mi-rule);
-  background: var(--mi-ink);
-  color: var(--mi-paper);
+  background: var(--mi-ribbon-bg);
+  color: var(--mi-ribbon-ink);
   padding-block: 9px;
 }
 .mi-ribbon-track {
@@ -749,6 +972,15 @@
   font-size: 13px;
   line-height: 1;
 }
+.mi-ribbon--alt {
+  border-top: var(--mi-hair) solid color-mix(in srgb, var(--mi-rule) 30%, transparent);
+  background: var(--mi-ribbon-alt-bg);
+  color: var(--mi-ribbon-alt-ink);
+  padding-block: 6px;
+}
+.mi-ribbon--alt .mi-ribbon-item { font-size: 9.5px; letter-spacing: .22em; }
+.mi-ribbon--alt .mi-ribbon-item i { color: currentColor; font-size: 9px; opacity: .7; }
+.mi-ribbon-track--rev { animation-name: mi-ticker-rev; animation-duration: var(--mi-ticker-alt); }
 
 /* ==========================================================================
    5. CATEGORÍAS — índice de colección
@@ -756,15 +988,16 @@
 .mi-depts {
   padding-block: var(--mi-section);
   background: var(--mi-paper);
-  border-bottom: var(--mi-hair) solid var(--mi-line);
 }
 .mi-dept-grid {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-auto-flow: dense;
   gap: 0;
   border-top: var(--mi-hair) solid var(--mi-line-2);
   border-left: var(--mi-hair) solid var(--mi-line-2);
 }
+.mi-dept.is-wide { grid-column: span 2; }
 .mi-dept {
   position: relative;
   display: flex;
@@ -784,6 +1017,10 @@
   background: var(--mi-stripe);
   border-bottom: var(--mi-hair) solid var(--mi-line-2);
 }
+/* La celda ancha usa una proporción más apaisada para que su alto coincida
+   con el de la celda normal de la fila (4/5): la retícula no deja huecos ni
+   filas gigantes. */
+.mi-dept.is-wide .mi-dept-media { aspect-ratio: 16 / 10; }
 .mi-dept-media img {
   width: 100%;
   height: 100%;
@@ -800,7 +1037,10 @@
   color: color-mix(in srgb, var(--mi-ink) 18%, transparent);
   transition: color var(--mi-dur-2) linear;
 }
-.mi-dept:hover { background: var(--mi-ink); color: var(--mi-paper); }
+/* El reset de enlaces del layout (`[data-template] a`) tiene más
+   especificidad que una clase sola: los estados de tinta de estas celdas
+   necesitan el prefijo del diseño o el texto queda tinta sobre tinta. */
+.store-page[data-template='impacto'] .mi-dept:hover { background: var(--mi-ink); color: var(--mi-paper); }
 .mi-dept:hover .mi-dept-media img { transform: scale(1.05); filter: grayscale(.1); }
 .mi-dept:hover .mi-dept-initial { color: color-mix(in srgb, var(--mi-paper) 24%, transparent); }
 .mi-dept-idx {
@@ -819,12 +1059,13 @@
 }
 .mi-dept-foot {
   display: flex;
-  align-items: baseline;
-  justify-content: space-between;
-  gap: 12px;
+  align-items: center;
+  gap: 10px;
   padding: 12px 14px 14px;
 }
 .mi-dept-foot strong {
+  flex: 1;
+  min-width: 0;
   font-family: var(--mi-display);
   font-size: clamp(17px, 1.6vw, 21px);
   font-weight: 400;
@@ -841,22 +1082,101 @@
   white-space: nowrap;
 }
 .mi-dept:hover .mi-dept-count { color: color-mix(in srgb, var(--mi-paper) 72%, transparent); }
-.mi-dept-arrow {
+/* Etiqueta de acción sobre la foto (aparece al hover, nunca tapa el pie). */
+.mi-dept-view {
   position: absolute;
-  right: 10px;
+  left: 10px;
   bottom: 10px;
+  z-index: 2;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 8px;
+  border: var(--mi-hair) solid var(--mi-ink);
+  background: var(--mi-paper);
+  color: var(--mi-ink);
+  font-family: var(--mi-mono);
+  font-size: 9px;
+  font-weight: 500;
+  letter-spacing: .14em;
+  text-transform: uppercase;
+  opacity: 0;
+  transform: translateY(6px);
+  transition: opacity var(--mi-dur-2) linear, transform var(--mi-dur-2) var(--mi-ease), background var(--mi-dur-1) linear, color var(--mi-dur-1) linear;
+}
+.mi-dept:hover .mi-dept-view,
+.mi-dept:focus-visible .mi-dept-view {
+  opacity: 1;
+  transform: none;
+  background: var(--mi-accent);
+  border-color: var(--mi-accent);
+  color: var(--mi-accent-ink);
+}
+/* Flecha en flujo dentro del pie: antes estaba absoluta y se montaba sobre
+   el conteo de piezas. */
+.mi-dept-arrow {
   display: grid;
   place-items: center;
-  width: 28px;
-  height: 28px;
-  border: var(--mi-hair) solid currentColor;
-  opacity: 0;
-  transform: translateX(-6px);
-  transition: opacity var(--mi-dur-2) linear, transform var(--mi-dur-2) var(--mi-ease);
+  width: 26px;
+  height: 26px;
+  flex: none;
+  border: var(--mi-hair) solid var(--mi-line-2);
+  color: var(--mi-ink);
+  transition: background var(--mi-dur-1) linear, color var(--mi-dur-1) linear, border-color var(--mi-dur-1) linear, transform var(--mi-dur-2) var(--mi-ease);
 }
-.mi-dept:hover .mi-dept-arrow { opacity: 1; transform: none; }
-.mi-dept--all .mi-dept-media { background: var(--mi-ink); }
-.mi-dept--all .mi-dept-initial { color: var(--mi-accent); font-size: clamp(38px, 5vw, 56px); }
+.mi-dept:hover .mi-dept-arrow {
+  background: var(--mi-accent);
+  border-color: var(--mi-accent);
+  color: var(--mi-accent-ink);
+  transform: translateX(2px);
+}
+
+/* Banda de cierre del índice: ocupa todo el ancho (la retícula nunca queda
+   coja en la última fila) y es el segundo destino al catálogo. */
+.store-page[data-template='impacto'] .mi-dept-all {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 18px;
+  margin-top: 18px;
+  padding: 15px 18px;
+  border: var(--mi-rule-w) solid var(--mi-ink);
+  background: var(--mi-ink);
+  color: var(--mi-paper);
+  transition: background var(--mi-dur-2) linear, border-color var(--mi-dur-2) linear, color var(--mi-dur-2) linear;
+}
+.store-page[data-template='impacto'] .mi-dept-all:hover,
+.store-page[data-template='impacto'] .mi-dept-all:focus-visible {
+  background: var(--mi-accent);
+  border-color: var(--mi-accent);
+  color: var(--mi-accent-ink);
+}
+.mi-dept-all-copy { display: grid; gap: 3px; }
+.mi-dept-all-label {
+  font-family: var(--mi-mono);
+  font-size: 9px;
+  letter-spacing: .18em;
+  text-transform: uppercase;
+  opacity: .7;
+}
+.mi-dept-all strong {
+  font-family: var(--mi-display);
+  font-size: clamp(22px, 2.6vw, 34px);
+  font-weight: 400;
+  line-height: 1;
+  letter-spacing: .01em;
+  text-transform: uppercase;
+}
+.mi-dept-all-arrow {
+  display: grid;
+  place-items: center;
+  width: 52px;
+  height: 52px;
+  flex: none;
+  border: var(--mi-hair) solid currentColor;
+  transition: transform var(--mi-dur-2) var(--mi-ease), background var(--mi-dur-1) linear;
+}
+.mi-dept-all:hover .mi-dept-all-arrow { transform: translateX(4px); background: color-mix(in srgb, currentColor 12%, transparent); }
 
 /* ==========================================================================
    6. VITRINA / TARJETAS DE PRODUCTO (TplProductCard)
@@ -965,7 +1285,7 @@
   transition: color var(--mi-dur-1) linear, border-color var(--mi-dur-1) linear;
 }
 :is(.store-page[data-template='impacto'], .store-page.mi-skin) .sp-shop-viewall:hover {
-  color: var(--mi-accent);
+  color: var(--mi-accent-text);
   border-color: var(--mi-accent);
   text-decoration: none;
 }
@@ -983,12 +1303,21 @@
 :is(.store-page[data-template='impacto'], .store-page.mi-skin) .mi-featured-grid > .sp-card {
   position: relative;
   padding: 16px 14px 16px;
+  border: 0;
   border-right: var(--mi-hair) solid var(--mi-line-2);
   border-bottom: var(--mi-hair) solid var(--mi-line-2);
   background: transparent;
   transition: background var(--mi-dur-2) linear;
 }
 :is(.store-page[data-template='impacto'], .store-page.mi-skin) .mi-featured-grid > .sp-card:hover { background: var(--mi-paper-2); }
+/* La tarjeta no se eleva: vive dentro de una retícula con reglas y un lift
+   rompería las líneas de la celda. */
+:is(.store-page[data-template='impacto'], .store-page.mi-skin) .mi-featured-grid > .sp-card:hover,
+:is(.store-page[data-template='impacto'], .store-page.mi-skin) .mi-featured-grid > .sp-card:active {
+  transform: none;
+  box-shadow: none;
+  border-color: transparent;
+}
 /* Flags ("Nuevo", "-14%"): el layout las ancla arriba y ahí chocan con el
    número de pliego — en este diseño bajan al pie de la foto. */
 :is(.store-page[data-template='impacto'], .store-page.mi-skin) .tpc-flags {
@@ -1016,11 +1345,18 @@
   letter-spacing: .06em;
   z-index: 3;
 }
-.mi-featured-all {
+.mi-featured-foot {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 12px 24px;
+  margin-top: 22px;
+}
+.store-page[data-template='impacto'] .mi-featured-all {
   display: inline-flex;
   align-items: center;
   gap: 10px;
-  margin-top: 22px;
   padding-bottom: 3px;
   border-bottom: var(--mi-rule-w) solid var(--mi-ink);
   font-family: var(--mi-mono);
@@ -1031,9 +1367,16 @@
   color: var(--mi-ink);
   transition: color var(--mi-dur-1) linear, border-color var(--mi-dur-1) linear;
 }
-.mi-featured-all:hover { color: var(--mi-accent); border-color: var(--mi-accent); }
-.mi-featured-all svg { transition: transform var(--mi-dur-2) var(--mi-ease); }
-.mi-featured-all:hover svg { transform: translateX(4px); }
+.store-page[data-template='impacto'] .mi-featured-all:hover { color: var(--mi-accent-text); border-color: var(--mi-accent); }
+.store-page[data-template='impacto'] .mi-featured-all svg { transition: transform var(--mi-dur-2) var(--mi-ease); }
+.store-page[data-template='impacto'] .mi-featured-all:hover svg { transform: translateX(4px); }
+.mi-featured-note {
+  font-family: var(--mi-mono);
+  font-size: 9.5px;
+  letter-spacing: .14em;
+  text-transform: uppercase;
+  color: var(--mi-muted);
+}
 :is(.store-page[data-template='impacto'], .store-page.mi-skin) .tpc {
   display: flex;
   flex-direction: column;
@@ -1141,10 +1484,21 @@
    7. SOBRE LA MARCA — ficha de dossier
    ========================================================================== */
 .mi-about {
-  padding-block: var(--mi-section);
+  position: relative;
+  padding-block: calc(var(--mi-section) + 8px) var(--mi-section);
   background: var(--mi-paper-2);
   border-top: var(--mi-rule-w) solid var(--mi-rule);
   border-bottom: var(--mi-rule-w) solid var(--mi-rule);
+}
+/* Franja de rayado que abre el dossier, como el canto de un cuadernillo. */
+.mi-about::before {
+  content: '';
+  position: absolute;
+  inset: 0 0 auto;
+  height: 8px;
+  background: var(--mi-stripe);
+  border-bottom: var(--mi-hair) solid var(--mi-line-2);
+  pointer-events: none;
 }
 .mi-about-grid {
   display: grid;
@@ -1154,16 +1508,43 @@
 }
 .mi-about-copy { display: flex; flex-direction: column; gap: 18px; }
 .mi-about-title { font-size: var(--mi-fs-h1); line-height: .9; }
-.mi-about-title em { font-style: normal; color: var(--mi-accent); }
+.mi-about-title em { font-style: normal; color: var(--mi-accent-display); }
 .mi-about-text {
   max-width: 58ch;
   font-size: var(--mi-fs-lead);
   line-height: 1.6;
   color: var(--mi-ink-2);
-  border-left: var(--mi-rule-w) solid var(--mi-line-2);
+  border-left: var(--mi-rule-w) solid var(--mi-accent);
   padding-left: 16px;
 }
 .mi-about-lines { display: flex; flex-wrap: wrap; gap: 8px; margin: 0; padding: 0; list-style: none; }
+/* Firma de la casa: mono, con tijera de sastrería como cuño. */
+.mi-about-sign {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px 12px;
+  margin-top: auto;
+  padding-top: 14px;
+  border-top: var(--mi-hair) solid var(--mi-line-2);
+  font-family: var(--mi-mono);
+  font-size: 10px;
+  letter-spacing: .14em;
+  text-transform: uppercase;
+  color: var(--mi-muted);
+}
+.mi-about-sign-mark {
+  display: grid;
+  place-items: center;
+  width: 26px;
+  height: 26px;
+  flex: none;
+  border: var(--mi-hair) solid var(--mi-ink);
+  color: var(--mi-ink);
+  transform: rotate(-8deg);
+}
+.mi-about-sign strong { color: var(--mi-ink); font-weight: 500; }
+.mi-about-sign-year { margin-left: auto; color: var(--mi-accent-text); }
 
 /* Registro de la marca: años en Anton + filas con puntos guía. */
 .mi-dossier {
@@ -1173,6 +1554,19 @@
   display: grid;
   gap: 14px;
   position: relative;
+  box-shadow: 9px 9px 0 color-mix(in srgb, var(--mi-ink) 9%, transparent);
+}
+/* Perforación de archivo: el dossier se lee como una ficha encuadernada. */
+.mi-dossier-punch {
+  position: absolute;
+  left: 12px;
+  bottom: 12px;
+  width: 9px;
+  height: 9px;
+  border: var(--mi-hair) solid var(--mi-line-2);
+  border-radius: 50%;
+  background: var(--mi-paper-2);
+  pointer-events: none;
 }
 .mi-dossier::after {
   content: 'FICHA / MARCA';
@@ -1199,7 +1593,7 @@
   font-weight: 400;
   line-height: .8;
   letter-spacing: -.01em;
-  color: var(--mi-accent);
+  color: var(--mi-accent-display);
 }
 .mi-dossier-years span {
   font-family: var(--mi-mono);
@@ -1246,7 +1640,35 @@
   font-size: var(--mi-fs-label);
   letter-spacing: .14em;
   text-transform: uppercase;
-  color: var(--mi-accent);
+  color: var(--mi-accent-text);
+}
+/* Pie de archivo: código de barras impreso + número de ficha. */
+.mi-dossier-code {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 12px;
+  padding-top: 10px;
+  padding-left: 18px;
+  border-top: var(--mi-hair) solid var(--mi-line-2);
+}
+.mi-barcode {
+  display: block;
+  width: 92px;
+  height: 20px;
+  background-image: repeating-linear-gradient(90deg,
+    var(--mi-ink) 0 1px, transparent 1px 3px,
+    var(--mi-ink) 3px 5px, transparent 5px 6px,
+    var(--mi-ink) 6px 7px, transparent 7px 11px);
+  opacity: .72;
+}
+.mi-dossier-code-num {
+  font-family: var(--mi-mono);
+  font-size: 8px;
+  letter-spacing: .18em;
+  text-transform: uppercase;
+  color: var(--mi-muted);
+  text-align: right;
 }
 
 /* ==========================================================================
@@ -1296,14 +1718,20 @@
   text-transform: uppercase;
   box-shadow: none;
   overflow: hidden;
+  --sp-btn-bg: var(--mi-ink);
+  --st-on-primary: var(--mi-paper);
 }
 .store-page[data-template='impacto'] .sp-btn:hover {
   background: var(--mi-accent);
   border-color: var(--mi-accent);
   color: var(--mi-accent-ink);
+  --sp-btn-bg: var(--mi-accent);
+  --st-on-primary: var(--mi-accent-ink);
   transform: none;
   box-shadow: none;
 }
+/* Sin halo: la imprenta no brilla; el CTA se resuelve con tinta y acento. */
+.store-page[data-template='impacto'] .sp-btn:not(.ghost) { animation: none; }
 .store-page[data-template='impacto'] .sp-btn.ghost {
   background: transparent;
   color: var(--mi-ink);
@@ -1419,12 +1847,34 @@
 .store-page[data-template='impacto'] .sp-rail-btn:hover { background: var(--mi-ink); color: var(--mi-paper); }
 
 /* Galería: mosaico con reglas */
-.store-page[data-template='impacto'] .sp-gallery-grid { gap: 2px; background: var(--mi-line-2); }
+.store-page[data-template='impacto'] .sp-gallery-grid { gap: 2px; background: var(--mi-line-2); counter-reset: mi-gal; }
 .store-page[data-template='impacto'] .sp-gallery-item {
+  position: relative;
   border-radius: 0;
   background: var(--mi-paper);
   overflow: hidden;
+  counter-increment: mi-gal;
 }
+/* Índice de pliego sobre cada foto de la galería. */
+.store-page[data-template='impacto'] .sp-gallery-item::after {
+  content: counter(mi-gal, decimal-leading-zero);
+  position: absolute;
+  top: 8px;
+  left: 8px;
+  z-index: 2;
+  padding: 2px 6px;
+  background: var(--mi-paper);
+  border: var(--mi-hair) solid var(--mi-ink);
+  color: var(--mi-ink);
+  font-family: var(--mi-mono);
+  font-size: 9px;
+  letter-spacing: .1em;
+  pointer-events: none;
+  opacity: 0;
+  transform: translateY(-4px);
+  transition: opacity var(--mi-dur-2) linear, transform var(--mi-dur-2) var(--mi-ease);
+}
+.store-page[data-template='impacto'] .sp-gallery-item:hover::after { opacity: 1; transform: none; }
 .store-page[data-template='impacto'] .sp-gallery-item img { transition: transform 900ms var(--mi-ease), filter var(--mi-dur-2) linear; }
 .store-page[data-template='impacto'] .sp-gallery-item:hover img { transform: scale(1.05); filter: saturate(1.05); }
 
@@ -1450,6 +1900,11 @@
   box-shadow: none;
   padding: 22px 20px;
   gap: 12px;
+  transition: background var(--mi-dur-2) linear, border-color var(--mi-dur-2) linear;
+}
+.store-page[data-template='impacto'] .sp-testimonial:hover {
+  background: var(--mi-paper-2);
+  border-color: var(--mi-ink);
 }
 .store-page[data-template='impacto'] .sp-testimonial-quote {
   border-radius: 0;
@@ -1497,7 +1952,8 @@
   align-items: center;
   justify-content: space-between;
   gap: 16px;
-  padding: 15px 0;
+  padding: 15px 0 15px 12px;
+  border-left: var(--mi-rule-w) solid transparent;
   list-style: none;
   cursor: pointer;
   font-family: var(--mi-body);
@@ -1505,12 +1961,12 @@
   font-weight: 700;
   letter-spacing: .01em;
   color: var(--mi-ink);
-  transition: color var(--mi-dur-1) linear;
+  transition: color var(--mi-dur-1) linear, border-color var(--mi-dur-2) var(--mi-ease);
 }
 .store-page[data-template='impacto'] .sp-faq-item > summary::-webkit-details-marker { display: none; }
-.store-page[data-template='impacto'] .sp-faq-item > summary:hover { color: var(--mi-accent); }
-.store-page[data-template='impacto'] .sp-faq-item[open] > summary { color: var(--mi-accent); }
-.store-page[data-template='impacto'] .sp-faq-item.is-open .sp-faq-q { color: var(--mi-accent); }
+.store-page[data-template='impacto'] .sp-faq-item > summary:hover { color: var(--mi-accent-text); border-left-color: var(--mi-accent); }
+.store-page[data-template='impacto'] .sp-faq-item[open] > summary { color: var(--mi-accent-text); border-left-color: var(--mi-accent); }
+.store-page[data-template='impacto'] .sp-faq-item.is-open .sp-faq-q { color: var(--mi-accent-text); }
 .store-page[data-template='impacto'] .sp-faq-caret {
   display: grid;
   place-items: center;
@@ -1532,10 +1988,28 @@
 
 /* CTA: banda de tinta con acento */
 .store-page[data-template='impacto'] .sp-cta {
+  position: relative;
+  overflow: hidden;
   background: var(--mi-ink);
   color: var(--mi-paper);
   padding-block: 0;
   border-block: var(--mi-rule-w) solid var(--mi-ink);
+}
+/* Palabra de temporada en contorno, impresa al pie de la banda. */
+.store-page[data-template='impacto'] .sp-cta::after {
+  content: 'TEMPORADA';
+  position: absolute;
+  right: -1%;
+  bottom: -7%;
+  z-index: 0;
+  font-family: var(--mi-display);
+  font-size: clamp(90px, 17vw, 230px);
+  line-height: .72;
+  letter-spacing: -.01em;
+  color: transparent;
+  -webkit-text-stroke: 1px color-mix(in srgb, var(--mi-paper) 26%, transparent);
+  pointer-events: none;
+  user-select: none;
 }
 .store-page[data-template='impacto'] .sp-cta-inner {
   border-radius: 0;
@@ -1555,7 +2029,7 @@
   opacity: .07;
   pointer-events: none;
 }
-.store-page[data-template='impacto'] .sp-cta-inner { position: relative; }
+.store-page[data-template='impacto'] .sp-cta-inner { position: relative; z-index: 1; }
 .store-page[data-template='impacto'] .sp-cta-title {
   font-family: var(--mi-display);
   font-size: var(--mi-fs-h1);
@@ -1566,16 +2040,23 @@
   color: var(--mi-paper);
 }
 .store-page[data-template='impacto'] .sp-cta-text { color: color-mix(in srgb, var(--mi-paper) 78%, transparent); font-size: var(--mi-fs-lead); }
-.store-page[data-template='impacto'] .sp-cta-btn,
-.store-page[data-template='impacto'] .sp-cta .sp-btn {
+/* store-raiz.css también estiliza `.sp-cta .sp-btn` (se inyecta después):
+   el selector doble garantiza el acento de esta piel. */
+.store-page[data-template='impacto'] .sp-cta .sp-btn.sp-cta-btn {
   background: var(--mi-accent);
   border-color: var(--mi-accent);
   color: var(--mi-accent-ink);
+  /* El tema publicado pinta los botones con `--sp-btn-bg` desde una regla
+     de mayor especificidad: se reescribe el token en el propio CTA. */
+  --sp-btn-bg: var(--mi-accent);
+  --st-on-primary: var(--mi-accent-ink);
 }
-.store-page[data-template='impacto'] .sp-cta .sp-btn:hover {
+.store-page[data-template='impacto'] .sp-cta .sp-btn.sp-cta-btn:hover {
   background: var(--mi-paper);
   border-color: var(--mi-paper);
   color: var(--mi-ink);
+  --sp-btn-bg: var(--mi-paper);
+  --st-on-primary: var(--mi-ink);
 }
 
 /* Contacto: ficha de showroom */
@@ -1743,7 +2224,7 @@
   box-shadow: none;
 }
 .store-page[data-template='impacto'] .sp-dock a { font-family: var(--mi-mono); font-size: 9.5px; letter-spacing: .1em; text-transform: uppercase; }
-.store-page[data-template='impacto'] .sp-dock a.is-active { color: var(--mi-accent); }
+.store-page[data-template='impacto'] .sp-dock a.is-active { color: var(--mi-accent-text); }
 
 /* Aviso de la plataforma y buscador */
 .store-page[data-template='impacto'] .sp-search {
@@ -1775,6 +2256,8 @@
   --mi-line-2: #A9A497;
   --mi-accent: var(--st-accent, var(--store-accent, #FF4B1F));
   --mi-accent-ink: var(--st-accent-ink, #111111);
+  --mi-accent-text: color-mix(in srgb, var(--mi-accent) 70%, var(--mi-ink));
+  --mi-accent-display: color-mix(in srgb, var(--mi-accent) 86%, var(--mi-ink));
   --mi-on-accent: var(--st-on-accent, #FFFDF6);
   --mi-stripe: repeating-linear-gradient(135deg,
     var(--mi-hatch-a) 0, var(--mi-hatch-a) 2px,
@@ -1805,6 +2288,40 @@
 .store-page.mi-skin::before,
 .store-page.mi-skin::after { display: none; }
 
+/* El sub-árbol Raíz es un `.store-page` anidado y no hereda el atributo de
+   tema: sin este remapeo el catálogo, la ficha y servicios quedaban en papel
+   claro dentro de la edición noche. */
+.store-page[data-template='impacto'][data-store-theme='dark'] .mi-skin {
+  --mi-paper: #131311;
+  --mi-paper-2: #191917;
+  --mi-card: #1B1B18;
+  --mi-hatch-a: #232320;
+  --mi-hatch-b: #2B2B27;
+  --mi-ink: #EDEBE4;
+  --mi-ink-2: #D6D3C9;
+  --mi-muted: #9A968A;
+  --mi-rule: #EDEBE4;
+  --mi-line: #35352F;
+  --mi-line-2: #4B4B43;
+  --mi-accent-soft: color-mix(in srgb, var(--mi-accent) 20%, #131311);
+  --sp-bg: var(--mi-paper);
+  --sp-card: var(--mi-card);
+  --sp-card-solid: var(--mi-card);
+  --sp-surface: var(--mi-paper-2);
+  --sp-ink: var(--mi-ink);
+  --sp-ink-2: var(--mi-ink-2);
+  --sp-muted: var(--mi-muted);
+  --sp-line: var(--mi-line);
+  --rz-ink: var(--mi-ink);
+  --rz-ink-2: var(--mi-ink-2);
+  --rz-muted: var(--mi-muted);
+  --rz-line: var(--mi-line-2);
+  --rz-bg: var(--mi-paper);
+  --rz-card: var(--mi-card);
+  background: var(--mi-paper);
+  color: var(--mi-ink);
+}
+
 .store-page.mi-skin :is(.rz-btn) {
   border: var(--mi-rule-w) solid var(--mi-ink);
   border-radius: 0;
@@ -1828,7 +2345,83 @@
   text-transform: uppercase;
   color: var(--mi-muted);
 }
-.store-page.mi-skin .rz-eyebrow-num { color: var(--mi-accent); font-family: var(--mi-mono); }
+.store-page.mi-skin .rz-eyebrow-num { color: var(--mi-accent-text); font-family: var(--mi-mono); }
+
+/* Primitivas compartidas que también viven dentro del sub-árbol (opiniones,
+   formularios inyectados): mismas reglas de tinta que la portada. El prefijo
+   con [data-template='raiz'] es necesario: store-raiz.css se inyecta después
+   de esta hoja y empata en especificidad. */
+.store-page.mi-skin[data-template='raiz'] .sp-form {
+  border: var(--mi-rule-w) solid var(--mi-ink);
+  border-radius: 0;
+  background: var(--mi-paper);
+  box-shadow: none;
+}
+.store-page.mi-skin[data-template='raiz'] .sp-form::before { height: var(--mi-rule-w); background: var(--mi-ink); }
+.store-page.mi-skin[data-template='raiz'] .sp-form::after { display: none; }
+.store-page.mi-skin[data-template='raiz'] .sp-form-head { border-bottom: var(--mi-hair) solid var(--mi-line-2); padding-bottom: 14px; }
+.store-page.mi-skin[data-template='raiz'] :is(.sp-form-head, .sp-form-title) {
+  font-family: var(--mi-display);
+  font-size: var(--mi-fs-h3);
+  font-weight: 400;
+  letter-spacing: .01em;
+  text-transform: uppercase;
+}
+.store-page.mi-skin[data-template='raiz'] .sp-form-badge {
+  border-radius: 0;
+  background: var(--mi-accent);
+  color: var(--mi-accent-ink);
+  border: var(--mi-hair) solid var(--mi-ink);
+  box-shadow: none;
+  transform: none;
+}
+.store-page.mi-skin[data-template='raiz'] .sp-label {
+  font-family: var(--mi-mono);
+  font-size: var(--mi-fs-label);
+  letter-spacing: .14em;
+  text-transform: uppercase;
+  color: var(--mi-muted);
+}
+.store-page.mi-skin[data-template='raiz'] .sp-input {
+  border: var(--mi-hair) solid var(--mi-line-2);
+  border-radius: 0;
+  background: var(--mi-paper-2);
+  color: var(--mi-ink);
+  transition: border-color var(--mi-dur-1) linear, background var(--mi-dur-1) linear;
+}
+.store-page.mi-skin[data-template='raiz'] .sp-input:focus {
+  border-color: var(--mi-ink);
+  background: var(--mi-paper);
+  outline: none;
+  box-shadow: inset 0 calc(-1 * var(--mi-rule-w)) 0 var(--mi-accent);
+}
+.store-page.mi-skin[data-template='raiz'] .sp-input::placeholder { color: var(--mi-muted); opacity: 1; }
+.store-page.mi-skin[data-template='raiz'] .sp-btn {
+  border: var(--mi-rule-w) solid var(--mi-ink);
+  border-radius: 0;
+  background: var(--mi-ink);
+  color: var(--mi-paper);
+  font-family: var(--mi-mono);
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: .12em;
+  text-transform: uppercase;
+  box-shadow: none;
+  animation: none;
+  --sp-btn-bg: var(--mi-ink);
+  --st-on-primary: var(--mi-paper);
+}
+.store-page.mi-skin[data-template='raiz'] .sp-btn:hover {
+  background: var(--mi-accent);
+  border-color: var(--mi-accent);
+  color: var(--mi-accent-ink);
+  transform: none;
+  box-shadow: none;
+  --sp-btn-bg: var(--mi-accent);
+  --st-on-primary: var(--mi-accent-ink);
+}
+.store-page.mi-skin[data-template='raiz'] .sp-field-error { color: #B3261E; font-family: var(--mi-mono); font-size: 11px; }
+.store-page[data-template='impacto'][data-store-theme='dark'] .mi-skin .sp-field-error { color: #FF8A7A; }
 .store-page.mi-skin :is(.rz-cat-card, .rz-pdp-rel-card, .sp-card, .tpc) {
   --tpc-radius: 0;
   --tpc-shadow: none;
@@ -1896,8 +2489,7 @@
   text-transform: uppercase;
 }
 .store-page.mi-skin .rz-cat-sort,
-.store-page.mi-skin .rz-field input,
-.store-page.mi-skin .rz-field select {
+.store-page.mi-skin .rz-field {
   border: var(--mi-hair) solid var(--mi-line-2);
   border-radius: 0;
   background: var(--mi-paper);
@@ -1906,6 +2498,18 @@
   font-size: var(--mi-fs-xs);
   letter-spacing: .04em;
 }
+.store-page.mi-skin .rz-field::placeholder { color: var(--mi-muted); opacity: 1; }
+/* El select nativo vive sin clase dentro del label: sin esto conserva el
+   fondo blanco del navegador y el texto claro queda ilegible en noche. */
+.store-page.mi-skin .rz-cat-sort select {
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  color: var(--mi-ink);
+  font-family: var(--mi-mono);
+  font-size: var(--mi-fs-xs);
+}
+.store-page.mi-skin .rz-cat-sort option { background: var(--mi-paper); color: var(--mi-ink); }
 .store-page.mi-skin .rz-cat-products { gap: 0; border-top: var(--mi-hair) solid var(--mi-line-2); border-left: var(--mi-hair) solid var(--mi-line-2); }
 .store-page.mi-skin .rz-cat-products > * {
   border-right: var(--mi-hair) solid var(--mi-line-2);
@@ -1940,6 +2544,10 @@
   letter-spacing: var(--mi-track-label);
   text-transform: uppercase;
   color: var(--mi-muted);
+  /* El kicker comparte fila con el botón de compartir: sin flex:1 se
+     encogía a 224px y el rubro/marca caía en una segunda línea. */
+  flex: 1 1 auto;
+  min-width: 0;
 }
 .store-page.mi-skin .rz-pdp-price {
   font-family: var(--mi-mono);
@@ -2139,6 +2747,19 @@
   from { transform: translate3d(0, 0, 0); }
   to { transform: translate3d(-50%, 0, 0); }
 }
+@keyframes mi-ticker-rev {
+  from { transform: translate3d(-50%, 0, 0); }
+  to { transform: translate3d(0, 0, 0); }
+}
+@keyframes mi-spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+@keyframes mi-cue {
+  0% { transform: scaleY(0); opacity: 0; }
+  35% { transform: scaleY(1); opacity: 1; }
+  100% { transform: scaleY(1); opacity: 0; }
+}
 @keyframes mi-blink {
   0%, 100% { opacity: 1; transform: scale(1); }
   50% { opacity: .35; transform: scale(.82); }
@@ -2177,13 +2798,25 @@
 @media (prefers-reduced-motion: reduce) {
   .store-page[data-template='impacto'] .mi-ribbon-track,
   .store-page[data-template='impacto'] .mi-hero-media .mi-stamp,
+  .store-page[data-template='impacto'] .mi-stamp::before,
   .mi-hero-kicker i,
+  .mi-masthead-brand i,
+  .mi-hero-cue i,
   .mi-hero-title span,
   .mi-hero-title em,
   .mi-hero-title::after {
     animation: none !important;
   }
   .store-page[data-template='impacto'] .sp-rv { opacity: 1; translate: none; }
+}
+
+/* Táctil: sin hover no hay pista de acción — la etiqueta y la flecha quedan
+   visibles y el sello no se inclina de más. */
+@media (hover: none) {
+  .mi-dept-view { opacity: 1; transform: none; }
+  .mi-dept-arrow { transform: none; }
+  .mi-hero-look { transform: none; }
+  .mi-stamp:hover { transform: rotate(-11deg); }
 }
 
 /* ==========================================================================
@@ -2193,6 +2826,9 @@
   .mi-hero-grid { grid-template-columns: minmax(0, 1fr); }
   .mi-hero-media { aspect-ratio: 16 / 11; max-height: 62vh; }
   .mi-hero-media .mi-stamp { right: 12px; bottom: 54px; }
+  .mi-hero-rail,
+  .mi-hero-cue,
+  .mi-hero-look { display: none; }
   .mi-about-grid { grid-template-columns: minmax(0, 1fr); }
   .store-page[data-template='impacto'] .mi-featured-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
   .store-page[data-template='impacto'] .sp-shop-featured-head { grid-template-columns: minmax(0, 1fr); align-items: start; }
@@ -2206,6 +2842,7 @@
   .store-page[data-template='impacto'] .mi-featured-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .store-page[data-template='impacto'] .sp-stat { padding: 18px 14px; }
   .mi-hero-data { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .mi-hero-stats dd { font-size: 30px; }
 }
 
 @media (max-width: 640px) {
@@ -2219,14 +2856,26 @@
   .mi-hero-media .mi-stamp { width: 92px; right: -8px; bottom: -16px; }
   .mi-hero-caption { flex-direction: column; align-items: flex-start; gap: 2px; }
   .mi-hero-data { grid-template-columns: minmax(0, 1fr); gap: 10px; }
+  .mi-hero-stats > div { padding: 8px 10px 10px 0; }
+  .mi-hero-stats > div + div { padding-left: 10px; }
+  .mi-hero-stats dd { font-size: 24px; }
   .mi-dept-grid { grid-template-columns: minmax(0, 1fr); }
+  .mi-dept.is-wide { grid-column: span 1; }
+  .mi-dept.is-wide .mi-dept-media { aspect-ratio: 16 / 11; min-height: 0; }
   .mi-dept-media { aspect-ratio: 16 / 11; }
+  .mi-dept-all { padding: 13px 14px; gap: 12px; }
+  .mi-dept-all strong { font-size: 22px; }
+  .mi-dept-all-arrow { width: 44px; height: 44px; }
   .mi-dossier-years strong { font-size: 54px; }
+  .mi-dossier { box-shadow: 6px 6px 0 color-mix(in srgb, var(--mi-ink) 9%, transparent); }
+  .mi-about-sign-year { margin-left: 0; }
   .store-page[data-template='impacto'] .mi-featured-grid { grid-template-columns: minmax(0, 1fr); }
   .store-page[data-template='impacto'] .mi-featured-grid > .sp-card { padding: 14px 12px; }
+  .mi-featured-foot { flex-direction: column; align-items: flex-start; gap: 10px; }
   .store-page[data-template='impacto'] .sp-foot-grid { grid-template-columns: minmax(0, 1fr); }
   .store-page[data-template='impacto'] .sp-cta-title { font-size: clamp(32px, 11vw, 48px); }
   .mi-ribbon-item { font-size: 10px; letter-spacing: .14em; }
+  .mi-ribbon--alt .mi-ribbon-item { font-size: 9px; }
 }
 
 /* Chrome móvil: barra de pestañas inferior de imprenta y CTA de la barra. */
