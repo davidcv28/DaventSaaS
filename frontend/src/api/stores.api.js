@@ -761,6 +761,7 @@ export const STORE_TEMPLATES = {
   sastreria:   { label: 'Sastrería',   rubro: 'indumentaria', tier: 'plus',     defaultAccent: '#6E4A2F', desc: 'Sastrería editorial: papel hueso, tinta y cuero, índice numerado y filas de prendas tipo fichero.' },
   moderntec:   { label: 'ModernTec',   rubro: 'tecnologia',   tier: 'plus',     defaultAccent: '#3dd6ff', desc: 'ModernTec: oscuro tecnológico, acento cyan/violeta — tiendas de tecnología, electrónica y gaming.' },
   indumentaria: { label: 'Indumentaria', rubro: 'indumentaria', tier: 'plus',   defaultAccent: '#B4442A', desc: 'Indumentaria: lookbook editorial — crudo tela, acento de temporada, rail COLECCIÓN, etiquetas colgantes y cinta marquee.' },
+  impacto:     { label: 'Indumentaria ModernImpact', rubro: 'indumentaria', tier: 'plus', defaultAccent: '#FF4B1F', desc: 'ModernImpact: revista suiza de moda — papel crudo, tinta y acento señal, Anton en caja alta, numeración 01/02 y cintas marquee.' },
   ruta:        { label: 'Ruta',        rubro: 'turismo',      tier: 'plus',     defaultAccent: '#14443B', desc: 'Ruta: guía de viaje editorial — papel crema, verde pino y ámbar, destinos como tickets y galería de postales.' },
   aurum:       { label: 'Áurea',       rubro: 'general',      tier: 'advanced', defaultAccent: '#C8A25A', desc: 'Áurea: insignia premium — tinta y dorado, índices numerados y todas las secciones del negocio.' },
 }
@@ -772,6 +773,7 @@ export const STORE_TEMPLATE_FAMILIES = [
   { key: 'deporte',      label: 'Deporte',      caption: 'Gimnasios y fitness',     templates: ['gimnasio', 'movimiento'] },
   { key: 'sastreria',    label: 'Indumentaria', caption: 'Sastrería de autor',      templates: ['sastreria'] },
   { key: 'indumentaria', label: 'Indumentaria', caption: 'Moda y lookbook',         templates: ['indumentaria'] },
+  { key: 'impacto',      label: 'Indumentaria', caption: 'Revista de moda',         templates: ['impacto'] },
   { key: 'tecnologia',   label: 'Tecnología',   caption: 'Electrónica y gaming',    templates: ['moderntec'] },
   { key: 'turismo',      label: 'Turismo',      caption: 'Viajes y experiencias',   templates: ['ruta'] },
   { key: 'premium',      label: 'Premium',      caption: 'Insignia para todo rubro', templates: ['aurum'] },
@@ -786,6 +788,7 @@ export const STORE_TEMPLATE_SKIN = {
   sastreria: 'sastreria',
   moderntec: 'moderntec',
   indumentaria: 'indumentaria',
+  impacto: 'impacto',
   ruta: 'raiz',
   aurum: 'raiz'
 }

@@ -1,0 +1,2325 @@
+/* ==========================================================================
+   INDUMENTARIA MODERNIMPACT — piel editorial de moda (nivel plus)
+   Raíz del CSS: [data-template="impacto"] (lo emite StorePublicLayout).
+
+   Lenguaje: revista suiza de moda. Papel crudo, tinta de imprenta y un solo
+   acento de temporada; reglas de 2px, retícula visible, numeración 01/02,
+   tramas de rayado diagonal (donde iría la foto), sellos girados, cintas
+   marquee y etiquetas en JetBrains Mono. Display Anton en caja alta.
+   El tema "noche" (data-store-theme="dark") conserva la retícula sobre
+   grafito con el acento ácido.
+
+   Esta hoja se carga SOLO con el diseño `impacto` (TEMPLATE_CSS en
+   StorePublicLayout). Por eso las primitivas `mi-*` viven sin scope y todo
+   override de una clase compartida (`sp-*`, `rz-*`, `tpc`) va scopeado.
+   ========================================================================== */
+
+/* ==========================================================================
+   1. TOKENS — papel de imprenta
+   ========================================================================== */
+.store-page[data-template='impacto'] {
+  /* --- Color --- */
+  --mi-paper: #EDEBE4;
+  --mi-paper-2: #E4E1D8;
+  --mi-card: #F4F2EC;
+  --mi-hatch-a: #D9D6CC;
+  --mi-hatch-b: #E4E1D8;
+  --mi-ink: #111111;
+  --mi-ink-2: #2B2A26;
+  --mi-muted: #5C5A52;
+  --mi-rule: #111111;
+  --mi-line: #C9C5B8;
+  --mi-line-2: #A9A497;
+  --mi-accent: var(--st-accent, var(--store-accent, #FF4B1F));
+  --mi-accent-ink: var(--st-accent-ink, #111111);
+  --mi-accent-soft: color-mix(in srgb, var(--mi-accent) 16%, var(--mi-paper));
+  --mi-on-accent: var(--st-on-accent, #FFFDF6);
+  --mi-focus: var(--mi-accent);
+  --mi-scrim: rgba(17, 17, 17, .62);
+  --mi-selection: color-mix(in srgb, var(--mi-accent) 88%, transparent);
+
+  /* --- Tipografía --- */
+  --mi-display: 'Anton', 'Arial Narrow', Impact, sans-serif;
+  --mi-body: 'Space Grotesk', var(--store-font, 'Inter'), system-ui, sans-serif;
+  --mi-mono: 'JetBrains Mono', ui-monospace, SFMono-Regular, monospace;
+  --mi-fs-mega: clamp(58px, 12.5vw, 168px);
+  --mi-fs-h1: clamp(40px, 7vw, 84px);
+  --mi-fs-h2: clamp(30px, 4.4vw, 54px);
+  --mi-fs-h3: clamp(20px, 2vw, 26px);
+  --mi-fs-lead: clamp(15px, 1.25vw, 18px);
+  --mi-fs-body: 15.5px;
+  --mi-fs-sm: 13.5px;
+  --mi-fs-xs: 12px;
+  --mi-fs-label: 10.5px;
+  --mi-track-label: .16em;
+  --mi-track-display: -.01em;
+
+  /* --- Retícula --- */
+  --mi-wrap: 1280px;
+  --mi-gutter: clamp(16px, 4.4vw, 48px);
+  --mi-section: clamp(56px, 7vw, 96px);
+  --mi-gap: 18px;
+  --mi-rule-w: 2px;
+  --mi-hair: 1px;
+
+  /* --- Movimiento --- */
+  --mi-ease: cubic-bezier(.16, 1, .3, 1);
+  --mi-ease-snap: cubic-bezier(.22, .61, .36, 1);
+  --mi-dur-1: 160ms;
+  --mi-dur-2: 280ms;
+  --mi-dur-3: 620ms;
+  --mi-ticker: 42s;
+  --mi-theme-color: var(--mi-paper);
+
+  /* --- Trama de rayado: el "hueco de foto" del pliego --- */
+  --mi-stripe: repeating-linear-gradient(135deg,
+    var(--mi-hatch-a) 0, var(--mi-hatch-a) 2px,
+    var(--mi-hatch-b) 2px, var(--mi-hatch-b) 14px);
+
+  font-family: var(--mi-body);
+  background: var(--mi-paper);
+  color: var(--mi-ink);
+  font-size: var(--mi-fs-body);
+  line-height: 1.62;
+  overflow-x: clip;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* --- Tema NOCHE: grafito, tinta cruda y acento ácido --- */
+.store-page[data-template='impacto'][data-store-theme='dark'] {
+  --mi-paper: #131311;
+  --mi-paper-2: #191917;
+  --mi-card: #1B1B18;
+  --mi-hatch-a: #232320;
+  --mi-hatch-b: #2B2B27;
+  --mi-ink: #EDEBE4;
+  --mi-ink-2: #D6D3C9;
+  --mi-muted: #9A968A;
+  --mi-rule: #EDEBE4;
+  --mi-line: #35352F;
+  --mi-line-2: #4B4B43;
+  --mi-accent-soft: color-mix(in srgb, var(--mi-accent) 20%, #131311);
+  --mi-scrim: rgba(8, 8, 7, .72);
+  --mi-theme-color: #131311;
+}
+
+/* El layout base pinta dos orbes difusos en ::before/::after. En este diseño
+   el fondo es una retícula impresa: los orbes se apagan y ::before pasa a
+   ser la trama de puntos de registro de la retícula. */
+.store-page[data-template='impacto']::before,
+.store-page[data-template='impacto']::after {
+  border-radius: 0;
+  animation: none;
+  filter: none;
+  pointer-events: none;
+}
+.store-page[data-template='impacto']::before {
+  inset: 0;
+  width: auto;
+  height: auto;
+  opacity: 1;
+  background-image:
+    radial-gradient(circle at center, color-mix(in srgb, var(--mi-ink) 9%, transparent) 1px, transparent 1.4px);
+  background-size: 30px 30px;
+  background-position: -1px -1px;
+  mask-image: radial-gradient(120% 90% at 50% 0%, #000 20%, transparent 78%);
+  -webkit-mask-image: radial-gradient(120% 90% at 50% 0%, #000 20%, transparent 78%);
+}
+.store-page[data-template='impacto']::after { display: none; }
+
+.store-page[data-template='impacto'] ::selection {
+  background: var(--mi-selection);
+  color: var(--mi-accent-ink);
+}
+
+/* Puente al layout compartido. Los --sp-* pueden llegar inline desde el tema
+   publicado (previewBridge): se redeclaran en los contenedores hijos, donde
+   la declaración propia vence al valor heredado del root. */
+.store-page[data-template='impacto'] :is(.sp-page-root, .sp-top, .sp-foot, .mi-skin) {
+  --sp-bg: var(--mi-paper);
+  --sp-card: var(--mi-card);
+  --sp-card-solid: var(--mi-card);
+  --sp-surface: var(--mi-paper-2);
+  --sp-soft: var(--mi-paper-2);
+  --sp-ink: var(--mi-ink);
+  --sp-ink-2: var(--mi-ink-2);
+  --sp-muted: var(--mi-muted);
+  --sp-line: var(--mi-line);
+  --sp-accent-text: var(--mi-accent);
+  --sp-radius: 0;
+  --sp-shadow-sm: none;
+  --sp-shadow-md: none;
+  --sp-chrome: var(--mi-paper);
+  --sp-on-band: var(--mi-ink);
+  --sp-on-band-2: var(--mi-ink-2);
+  --sp-on-band-muted: var(--mi-muted);
+  --sp-top-h: 74px;
+  --sp-ease: var(--mi-ease);
+  color: var(--mi-ink);
+  font-family: var(--mi-body);
+}
+
+/* ==========================================================================
+   2. TIPOGRAFÍA, RETÍCULA, CONTROLES
+   ========================================================================== */
+.store-page[data-template='impacto'] :is(h1, h2, h3, h4) {
+  margin: 0;
+  font-family: var(--mi-display);
+  font-weight: 400;
+  text-transform: uppercase;
+  letter-spacing: var(--mi-track-display);
+  line-height: .92;
+  color: var(--mi-ink);
+  text-wrap: balance;
+}
+.store-page[data-template='impacto'] h1 { font-size: var(--mi-fs-h1); }
+.store-page[data-template='impacto'] h2 { font-size: var(--mi-fs-h2); }
+.store-page[data-template='impacto'] h3 { font-size: var(--mi-fs-h3); line-height: 1; }
+.store-page[data-template='impacto'] p { margin: 0; }
+.store-page[data-template='impacto'] :is(a, button, input, textarea, select) { font-family: inherit; }
+.store-page[data-template='impacto'] a { color: inherit; text-decoration: none; }
+.store-page[data-template='impacto'] img { display: block; max-width: 100%; }
+
+.store-page[data-template='impacto'] :is(a, button, input, textarea, select):focus-visible {
+  outline: 2px solid var(--mi-focus);
+  outline-offset: 3px;
+}
+
+.mi-wrap {
+  width: 100%;
+  max-width: var(--mi-wrap);
+  margin: 0 auto;
+  padding-inline: var(--mi-gutter);
+}
+
+/* Etiqueta mono: el idioma tipográfico secundario del diseño. */
+.mi-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0;
+  font-family: var(--mi-mono);
+  font-size: var(--mi-fs-label);
+  font-weight: 500;
+  letter-spacing: var(--mi-track-label);
+  text-transform: uppercase;
+  color: var(--mi-muted);
+}
+.mi-label b { color: var(--mi-accent); font-weight: 500; }
+.mi-label::before {
+  content: '';
+  width: 22px;
+  height: var(--mi-rule-w);
+  background: currentColor;
+  flex: none;
+}
+.mi-label--bare::before { display: none; }
+
+.mi-num {
+  font-family: var(--mi-mono);
+  font-size: var(--mi-fs-label);
+  font-weight: 500;
+  letter-spacing: .1em;
+  color: var(--mi-muted);
+}
+
+/* Cabecera de sección: número + título Anton + bajada en columna. */
+.mi-head {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 340px);
+  align-items: end;
+  gap: 20px 40px;
+  padding-bottom: 18px;
+  border-bottom: var(--mi-rule-w) solid var(--mi-rule);
+  margin-bottom: clamp(24px, 3vw, 40px);
+}
+.mi-head h2 { font-size: var(--mi-fs-h2); }
+.mi-head h2 em { font-style: normal; color: var(--mi-accent); }
+.mi-head-copy {
+  font-family: var(--mi-mono);
+  font-size: var(--mi-fs-xs);
+  line-height: 1.7;
+  letter-spacing: .06em;
+  text-transform: uppercase;
+  color: var(--mi-muted);
+  text-align: right;
+}
+
+/* --- Botones: rectángulo de tinta con barrido de acento --- */
+.store-page[data-template='impacto'] .mi-btn {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  min-height: 48px;
+  padding: 0 22px;
+  border: var(--mi-rule-w) solid var(--mi-ink);
+  border-radius: 0;
+  background: transparent;
+  color: var(--mi-ink);
+  font-family: var(--mi-mono);
+  font-size: 11.5px;
+  font-weight: 500;
+  letter-spacing: .12em;
+  text-transform: uppercase;
+  cursor: pointer;
+  overflow: hidden;
+  transition: color var(--mi-dur-2) var(--mi-ease), border-color var(--mi-dur-2) var(--mi-ease), background var(--mi-dur-2) var(--mi-ease);
+}
+.store-page[data-template='impacto'] .mi-btn::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: var(--mi-ink);
+  transform: translateY(101%);
+  transition: transform var(--mi-dur-2) var(--mi-ease);
+  z-index: 0;
+}
+.store-page[data-template='impacto'] .mi-btn > * { position: relative; z-index: 1; }
+.store-page[data-template='impacto'] .mi-btn:hover::before,
+.store-page[data-template='impacto'] .mi-btn:focus-visible::before { transform: none; }
+.store-page[data-template='impacto'] .mi-btn:hover,
+.store-page[data-template='impacto'] .mi-btn:focus-visible { color: var(--mi-paper); }
+.store-page[data-template='impacto'] .mi-btn:active { transform: translateY(1px); }
+
+.store-page[data-template='impacto'] .mi-btn--ink { background: var(--mi-ink); color: var(--mi-paper); border-color: var(--mi-ink); }
+.store-page[data-template='impacto'] .mi-btn--ink::before { background: var(--mi-accent); }
+.store-page[data-template='impacto'] .mi-btn--ink:hover,
+.store-page[data-template='impacto'] .mi-btn--ink:focus-visible { color: var(--mi-accent-ink); border-color: var(--mi-accent); }
+
+.store-page[data-template='impacto'] .mi-btn--accent { background: var(--mi-accent); border-color: var(--mi-accent); color: var(--mi-accent-ink); }
+.store-page[data-template='impacto'] .mi-btn--accent::before { background: var(--mi-ink); }
+.store-page[data-template='impacto'] .mi-btn--accent:hover,
+.store-page[data-template='impacto'] .mi-btn--accent:focus-visible { color: var(--mi-paper); }
+
+.store-page[data-template='impacto'] .mi-btn svg { flex: none; transition: transform var(--mi-dur-2) var(--mi-ease); }
+.store-page[data-template='impacto'] .mi-btn:hover svg { transform: translateX(4px); }
+
+/* Chip de dato (talle, rubro, línea). */
+.mi-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 9px;
+  border: var(--mi-hair) solid var(--mi-line-2);
+  border-radius: 0;
+  background: transparent;
+  font-family: var(--mi-mono);
+  font-size: var(--mi-fs-label);
+  font-weight: 500;
+  letter-spacing: .1em;
+  text-transform: uppercase;
+  color: var(--mi-ink-2);
+  transition: background var(--mi-dur-1) linear, color var(--mi-dur-1) linear, border-color var(--mi-dur-1) linear;
+}
+.mi-chip:hover { background: var(--mi-ink); border-color: var(--mi-ink); color: var(--mi-paper); }
+
+/* Sello circular girado (el "drop" del pliego). */
+.mi-stamp {
+  display: grid;
+  place-content: center;
+  gap: 2px;
+  width: clamp(96px, 11vw, 132px);
+  aspect-ratio: 1;
+  border: var(--mi-rule-w) solid var(--mi-ink);
+  border-radius: 50%;
+  background: var(--mi-accent);
+  color: var(--mi-accent-ink);
+  text-align: center;
+  transform: rotate(-11deg);
+  transition: transform var(--mi-dur-3) var(--mi-ease);
+}
+.mi-stamp:hover { transform: rotate(-4deg) scale(1.04); }
+.mi-stamp span {
+  font-family: var(--mi-mono);
+  font-size: 9px;
+  letter-spacing: .14em;
+  text-transform: uppercase;
+}
+.mi-stamp strong {
+  font-family: var(--mi-display);
+  font-size: clamp(22px, 2.6vw, 32px);
+  font-weight: 400;
+  line-height: .9;
+  text-transform: uppercase;
+}
+
+/* ==========================================================================
+   3. CHROME — barra superior y pie
+   ========================================================================== */
+.store-page[data-template='impacto'] .sp-top {
+  background: var(--mi-paper);
+  background-image: none;
+  color: var(--mi-ink);
+  border-bottom: var(--mi-rule-w) solid var(--mi-rule);
+  box-shadow: none;
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+}
+.store-page[data-template='impacto'] .sp-top::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: calc(-1 * var(--mi-rule-w) - 5px);
+  height: 1px;
+  background: var(--mi-rule);
+  opacity: .28;
+}
+.store-page[data-template='impacto'] .sp-top .sp-brand,
+.store-page[data-template='impacto'] .sp-top .sp-name { color: var(--mi-ink); }
+.store-page[data-template='impacto'] .sp-top .sp-name {
+  font-family: var(--mi-display);
+  font-size: 21px;
+  font-weight: 400;
+  letter-spacing: .04em;
+  text-transform: uppercase;
+}
+.store-page[data-template='impacto'] .sp-top-links { gap: 0; }
+.store-page[data-template='impacto'] .sp-top-links a {
+  border-radius: 0;
+  padding: 8px 14px;
+  color: var(--mi-ink-2);
+  font-family: var(--mi-mono);
+  font-size: var(--mi-fs-label);
+  font-weight: 500;
+  letter-spacing: .12em;
+  text-transform: uppercase;
+  border-left: var(--mi-hair) solid transparent;
+  transition: color var(--mi-dur-1) linear, background var(--mi-dur-1) linear;
+}
+.store-page[data-template='impacto'] .sp-top-links a:hover {
+  background: transparent;
+  color: var(--mi-ink);
+  text-decoration: underline;
+  text-decoration-thickness: var(--mi-rule-w);
+  text-underline-offset: 6px;
+}
+.store-page[data-template='impacto'] .sp-top-links a.router-link-exact-active {
+  background: transparent;
+  color: var(--mi-ink);
+  box-shadow: inset 0 calc(-1 * var(--mi-rule-w)) 0 var(--mi-accent);
+}
+.store-page[data-template='impacto'] .sp-top .sp-icon-btn,
+.store-page[data-template='impacto'] .sp-top .sp-burger {
+  border: var(--mi-hair) solid var(--mi-line-2);
+  border-radius: 0;
+  background: transparent;
+  color: var(--mi-ink);
+  box-shadow: none;
+}
+.store-page[data-template='impacto'] .sp-top .sp-icon-btn:hover,
+.store-page[data-template='impacto'] .sp-top .sp-burger:hover {
+  background: var(--mi-ink);
+  border-color: var(--mi-ink);
+  color: var(--mi-paper);
+  filter: none;
+}
+.store-page[data-template='impacto'] .sp-top .sp-logo,
+.store-page[data-template='impacto'] .sp-top .sp-mono { border-radius: 0; }
+.store-page[data-template='impacto'] .sp-top .sp-search { border-radius: 0; background: var(--mi-paper-2); }
+.store-page[data-template='impacto'] .sp-top .sp-search input { background: transparent; }
+.store-page[data-template='impacto'] .sp-top .sp-icon-btn.primary {
+  background: var(--mi-accent);
+  border-color: var(--mi-accent);
+  color: var(--mi-accent-ink);
+}
+.store-page[data-template='impacto'] .sp-top .sp-icon-btn.primary:hover {
+  background: var(--mi-ink);
+  border-color: var(--mi-ink);
+  color: var(--mi-paper);
+}
+
+.store-page[data-template='impacto'] .sp-foot {
+  border-top: var(--mi-rule-w) solid var(--mi-rule);
+  background: var(--mi-paper-2);
+  color: var(--mi-ink);
+  padding-top: clamp(40px, 5vw, 64px);
+}
+.store-page[data-template='impacto'] .sp-foot::before {
+  content: '';
+  display: block;
+  height: 10px;
+  margin-bottom: clamp(28px, 4vw, 44px);
+  background: var(--mi-stripe);
+  border-bottom: var(--mi-hair) solid var(--mi-line);
+}
+.store-page[data-template='impacto'] .sp-foot-brand strong {
+  font-family: var(--mi-display);
+  font-size: clamp(30px, 4.6vw, 54px);
+  font-weight: 400;
+  letter-spacing: .01em;
+  line-height: .9;
+  text-transform: uppercase;
+}
+.store-page[data-template='impacto'] .sp-foot-brand span,
+.store-page[data-template='impacto'] .sp-foot-copy {
+  color: var(--mi-muted);
+  font-family: var(--mi-mono);
+  font-size: var(--mi-fs-label);
+  letter-spacing: .1em;
+  text-transform: uppercase;
+}
+.store-page[data-template='impacto'] .sp-foot-heading {
+  color: var(--mi-ink);
+  font-family: var(--mi-mono);
+  font-size: var(--mi-fs-label);
+  font-weight: 500;
+  letter-spacing: var(--mi-track-label);
+  text-transform: uppercase;
+  padding-bottom: 8px;
+  border-bottom: var(--mi-hair) solid var(--mi-line-2);
+}
+.store-page[data-template='impacto'] .sp-foot-col a {
+  color: var(--mi-ink-2);
+  font-size: var(--mi-fs-sm);
+  transition: color var(--mi-dur-1) linear, padding var(--mi-dur-1) var(--mi-ease);
+}
+.store-page[data-template='impacto'] .sp-foot-col a:hover {
+  color: var(--mi-ink);
+  text-decoration: none;
+  padding-left: 6px;
+  box-shadow: inset 2px 0 0 var(--mi-accent);
+}
+.store-page[data-template='impacto'] .sp-foot-bottom { border-top: var(--mi-hair) solid var(--mi-line-2); }
+.store-page[data-template='impacto'] .sp-foot-social a {
+  border: var(--mi-hair) solid var(--mi-line-2);
+  border-radius: 0;
+}
+.store-page[data-template='impacto'] .sp-foot-social a:hover {
+  background: var(--mi-ink);
+  border-color: var(--mi-ink);
+  color: var(--mi-paper);
+}
+
+/* ==========================================================================
+   4. HERO — pliego de portada
+   ========================================================================== */
+.mi-hero {
+  position: relative;
+  padding-top: clamp(24px, 3vw, 40px);
+  background: var(--mi-paper);
+  border-bottom: var(--mi-rule-w) solid var(--mi-rule);
+  isolation: isolate;
+}
+/* Marcas de registro de imprenta en las esquinas del pliego. */
+.mi-hero::before,
+.mi-hero::after {
+  content: '';
+  position: absolute;
+  width: 14px;
+  height: 14px;
+  border: 0 solid var(--mi-line-2);
+  pointer-events: none;
+  z-index: 2;
+}
+.mi-hero::before { top: 18px; left: 14px; border-top-width: 1px; border-left-width: 1px; }
+.mi-hero::after { top: 18px; right: 14px; border-top-width: 1px; border-right-width: 1px; }
+
+/* Cabecera del pliego: marca · temporada · número de edición. */
+.mi-masthead {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px 20px;
+  padding-bottom: 12px;
+  border-bottom: var(--mi-rule-w) solid var(--mi-rule);
+  font-family: var(--mi-mono);
+  font-size: var(--mi-fs-label);
+  letter-spacing: .14em;
+  text-transform: uppercase;
+  color: var(--mi-ink);
+}
+.mi-masthead-brand { font-weight: 500; }
+.mi-masthead-mid { color: var(--mi-muted); }
+.mi-masthead-num {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 3px 8px;
+  background: var(--mi-ink);
+  color: var(--mi-paper);
+}
+
+.mi-hero-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1.06fr) minmax(0, .94fr);
+  align-items: stretch;
+  gap: clamp(24px, 3.4vw, 52px);
+  padding-block: clamp(26px, 3.4vw, 46px) clamp(28px, 3.6vw, 48px);
+}
+.mi-hero-copy { display: flex; flex-direction: column; gap: 20px; min-width: 0; }
+
+.mi-hero-kicker {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  width: fit-content;
+  padding: 5px 10px;
+  border: var(--mi-hair) solid var(--mi-ink);
+  font-family: var(--mi-mono);
+  font-size: var(--mi-fs-label);
+  letter-spacing: .16em;
+  text-transform: uppercase;
+  color: var(--mi-ink);
+}
+.mi-hero-kicker i {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--mi-accent);
+  animation: mi-blink 2.4s var(--mi-ease) infinite;
+}
+
+.mi-hero-title {
+  font-size: var(--mi-fs-mega);
+  line-height: .84;
+  letter-spacing: -.015em;
+  margin: 0;
+}
+.mi-hero-title span { display: block; }
+.mi-hero-title em {
+  display: block;
+  font-style: normal;
+  color: var(--mi-accent);
+}
+/* Raya de acento que se dibuja bajo la última línea del titular. */
+.mi-hero-title::after {
+  content: '';
+  display: block;
+  width: clamp(72px, 16%, 168px);
+  height: 6px;
+  margin-top: 14px;
+  background: var(--mi-ink);
+  transform-origin: left center;
+  animation: mi-rule-in 900ms var(--mi-ease) 260ms both;
+}
+
+.mi-hero-text {
+  max-width: 46ch;
+  font-size: var(--mi-fs-lead);
+  line-height: 1.55;
+  color: var(--mi-ink-2);
+}
+.mi-hero-actions { display: flex; flex-wrap: wrap; gap: 10px; }
+
+/* Ficha de datos del negocio: web, redes, envíos, tienda. */
+.mi-hero-data {
+  margin-top: auto;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 14px 20px;
+  padding-top: 14px;
+  border-top: var(--mi-rule-w) solid var(--mi-rule);
+  font-family: var(--mi-mono);
+  font-size: var(--mi-fs-xs);
+  line-height: 1.5;
+  letter-spacing: .04em;
+  text-transform: uppercase;
+  color: var(--mi-ink);
+}
+.mi-hero-data dt {
+  display: block;
+  margin-bottom: 3px;
+  font-size: var(--mi-fs-label);
+  letter-spacing: .14em;
+  color: var(--mi-muted);
+}
+.mi-hero-data dd {
+  margin: 0;
+  overflow-wrap: anywhere;
+}
+.mi-hero-data a:hover { color: var(--mi-accent); text-decoration: underline; text-underline-offset: 3px; }
+
+/* --- Media: hueco de foto con trama, sello y pie de campaña --- */
+.mi-hero-media {
+  position: relative;
+  margin: 0;
+  border: var(--mi-rule-w) solid var(--mi-ink);
+  background: var(--mi-stripe);
+  aspect-ratio: 4 / 5;
+  overflow: visible;
+}
+.mi-hero-media-frame {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+}
+.mi-hero-media img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: var(--store-cover-pos, 50% 50%);
+  filter: saturate(.94) contrast(1.04);
+  transition: transform 1.2s var(--mi-ease), filter var(--mi-dur-3) linear;
+}
+.mi-hero-media:hover img { transform: scale(1.035); filter: saturate(1) contrast(1.06); }
+.mi-hero-initial {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  font-family: var(--mi-display);
+  font-size: clamp(120px, 18vw, 240px);
+  line-height: 1;
+  color: color-mix(in srgb, var(--mi-ink) 16%, transparent);
+}
+.mi-hero-tag {
+  position: absolute;
+  top: 12px;
+  left: 12px;
+  z-index: 2;
+  padding: 4px 9px;
+  border: var(--mi-hair) solid var(--mi-ink);
+  background: var(--mi-paper);
+  font-family: var(--mi-mono);
+  font-size: var(--mi-fs-label);
+  letter-spacing: .14em;
+  text-transform: uppercase;
+  color: var(--mi-ink);
+}
+.mi-hero-media .mi-stamp {
+  position: absolute;
+  right: -22px;
+  bottom: 62px;
+  z-index: 3;
+  animation: mi-float 7s ease-in-out infinite;
+}
+.mi-hero-caption {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 2;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 10px 12px;
+  background: color-mix(in srgb, var(--mi-paper) 92%, transparent);
+  border-top: var(--mi-hair) solid var(--mi-ink);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+  font-family: var(--mi-mono);
+  font-size: var(--mi-fs-label);
+  letter-spacing: .1em;
+  text-transform: uppercase;
+}
+.mi-hero-caption strong {
+  font-family: var(--mi-display);
+  font-size: 16px;
+  font-weight: 400;
+  letter-spacing: .02em;
+}
+.mi-hero-caption a { color: var(--mi-ink); border-bottom: var(--mi-hair) solid currentColor; }
+.mi-hero-caption a:hover { color: var(--mi-accent); border-color: var(--mi-accent); }
+
+/* --- Cinta marquee: datos reales de la tienda en loop --- */
+.mi-ribbon {
+  position: relative;
+  overflow: hidden;
+  border-top: var(--mi-rule-w) solid var(--mi-rule);
+  background: var(--mi-ink);
+  color: var(--mi-paper);
+  padding-block: 9px;
+}
+.mi-ribbon-track {
+  display: flex;
+  width: max-content;
+  animation: mi-ticker var(--mi-ticker) linear infinite;
+  will-change: transform;
+}
+.mi-ribbon:hover .mi-ribbon-track { animation-play-state: paused; }
+.mi-ribbon-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 14px;
+  padding-right: 14px;
+  font-family: var(--mi-mono);
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: .18em;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+.mi-ribbon-item i {
+  font-style: normal;
+  color: var(--mi-accent);
+  font-size: 13px;
+  line-height: 1;
+}
+
+/* ==========================================================================
+   5. CATEGORÍAS — índice de colección
+   ========================================================================== */
+.mi-depts {
+  padding-block: var(--mi-section);
+  background: var(--mi-paper);
+  border-bottom: var(--mi-hair) solid var(--mi-line);
+}
+.mi-dept-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0;
+  border-top: var(--mi-hair) solid var(--mi-line-2);
+  border-left: var(--mi-hair) solid var(--mi-line-2);
+}
+.mi-dept {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  padding: 0;
+  border-right: var(--mi-hair) solid var(--mi-line-2);
+  border-bottom: var(--mi-hair) solid var(--mi-line-2);
+  background: var(--mi-paper);
+  color: var(--mi-ink);
+  transition: background var(--mi-dur-2) linear, color var(--mi-dur-2) linear;
+}
+.mi-dept-media {
+  position: relative;
+  aspect-ratio: 4 / 5;
+  overflow: hidden;
+  background: var(--mi-stripe);
+  border-bottom: var(--mi-hair) solid var(--mi-line-2);
+}
+.mi-dept-media img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 900ms var(--mi-ease), filter var(--mi-dur-2) linear;
+}
+.mi-dept-initial {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  font-family: var(--mi-display);
+  font-size: clamp(64px, 9vw, 108px);
+  color: color-mix(in srgb, var(--mi-ink) 18%, transparent);
+  transition: color var(--mi-dur-2) linear;
+}
+.mi-dept:hover { background: var(--mi-ink); color: var(--mi-paper); }
+.mi-dept:hover .mi-dept-media img { transform: scale(1.05); filter: grayscale(.1); }
+.mi-dept:hover .mi-dept-initial { color: color-mix(in srgb, var(--mi-paper) 24%, transparent); }
+.mi-dept-idx {
+  position: absolute;
+  top: 10px;
+  left: 10px;
+  z-index: 2;
+  padding: 3px 7px;
+  background: var(--mi-accent);
+  color: var(--mi-accent-ink);
+  border: var(--mi-hair) solid var(--mi-ink);
+  font-family: var(--mi-mono);
+  font-size: 9.5px;
+  letter-spacing: .12em;
+  text-transform: uppercase;
+}
+.mi-dept-foot {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 12px 14px 14px;
+}
+.mi-dept-foot strong {
+  font-family: var(--mi-display);
+  font-size: clamp(17px, 1.6vw, 21px);
+  font-weight: 400;
+  letter-spacing: .01em;
+  text-transform: uppercase;
+  line-height: 1;
+}
+.mi-dept-count {
+  font-family: var(--mi-mono);
+  font-size: var(--mi-fs-label);
+  letter-spacing: .1em;
+  text-transform: uppercase;
+  color: var(--mi-muted);
+  white-space: nowrap;
+}
+.mi-dept:hover .mi-dept-count { color: color-mix(in srgb, var(--mi-paper) 72%, transparent); }
+.mi-dept-arrow {
+  position: absolute;
+  right: 10px;
+  bottom: 10px;
+  display: grid;
+  place-items: center;
+  width: 28px;
+  height: 28px;
+  border: var(--mi-hair) solid currentColor;
+  opacity: 0;
+  transform: translateX(-6px);
+  transition: opacity var(--mi-dur-2) linear, transform var(--mi-dur-2) var(--mi-ease);
+}
+.mi-dept:hover .mi-dept-arrow { opacity: 1; transform: none; }
+.mi-dept--all .mi-dept-media { background: var(--mi-ink); }
+.mi-dept--all .mi-dept-initial { color: var(--mi-accent); font-size: clamp(38px, 5vw, 56px); }
+
+/* ==========================================================================
+   6. VITRINA / TARJETAS DE PRODUCTO (TplProductCard)
+   ========================================================================== */
+:is(.store-page[data-template='impacto'], .store-page.mi-skin) {
+  --tpc-bg: transparent;
+  --tpc-border: 0;
+  --tpc-radius: 0;
+  --tpc-shadow: none;
+  --tpc-ratio: 3 / 4;
+  --tpc-media-bg: var(--mi-paper-2);
+  --tpc-pad: 0;
+  --tpc-gap: 0;
+  --tpc-ink: var(--mi-ink);
+  --tpc-name-font: var(--mi-body);
+  --tpc-name-size: 15px;
+  --tpc-name-weight: 500;
+  --tpc-name-lh: 1.25;
+  --tpc-eyebrow-size: 9.5px;
+  --tpc-eyebrow-weight: 500;
+  --tpc-eyebrow-track: .16em;
+  --tpc-eyebrow-ink: var(--mi-muted);
+  --tpc-price-font: var(--mi-mono);
+  --tpc-price-size: 13.5px;
+  --tpc-price-weight: 600;
+  --tpc-price-ink: var(--mi-ink);
+  --tpc-old-size: 11px;
+  --tpc-old-ink: var(--mi-muted);
+  --tpc-flag-radius: 0;
+  --tpc-flag-bg: var(--mi-ink);
+  --tpc-flag-ink: var(--mi-paper);
+  --tpc-flag-border: 0;
+  --tpc-flag-transform: uppercase;
+  --tpc-flag-track: .12em;
+  --tpc-offer-bg: var(--mi-accent);
+  --tpc-offer-ink: var(--mi-accent-ink);
+  --tpc-quick-bg: var(--mi-ink);
+  --tpc-add-radius: 0;
+  --tpc-add-bg: var(--mi-ink);
+  --tpc-add-ink: var(--mi-paper);
+  --tpc-add-shadow: none;
+  --tpc-go-size: 10px;
+  --tpc-go-weight: 500;
+  --tpc-go-ink: var(--mi-ink);
+  --tpc-focus: var(--mi-focus);
+  --tpc-img-hover: scale(1.06);
+}
+
+.mi-featured {
+  padding-block: var(--mi-section);
+  background: var(--mi-paper);
+  border-top: var(--mi-hair) solid var(--mi-line);
+}
+:is(.store-page[data-template='impacto'], .store-page.mi-skin) .sp-shop-featured { padding: 0; }
+:is(.store-page[data-template='impacto'], .store-page.mi-skin) .sp-shop-featured-head {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: end;
+  gap: 16px 32px;
+  padding-bottom: 16px;
+  border-bottom: var(--mi-rule-w) solid var(--mi-rule);
+  margin-bottom: clamp(22px, 2.6vw, 32px);
+}
+:is(.store-page[data-template='impacto'], .store-page.mi-skin) .sp-shop-featured-eyebrow {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0 0 8px;
+  font-family: var(--mi-mono);
+  font-size: var(--mi-fs-label);
+  font-weight: 500;
+  letter-spacing: var(--mi-track-label);
+  text-transform: uppercase;
+  color: var(--mi-muted);
+}
+:is(.store-page[data-template='impacto'], .store-page.mi-skin) .sp-shop-featured-eyebrow::before {
+  content: '';
+  width: 22px;
+  height: var(--mi-rule-w);
+  background: var(--mi-accent);
+}
+:is(.store-page[data-template='impacto'], .store-page.mi-skin) .sp-shop-featured-title {
+  font-family: var(--mi-display);
+  font-size: var(--mi-fs-h2);
+  font-weight: 400;
+  line-height: .94;
+  letter-spacing: -.01em;
+  text-transform: uppercase;
+}
+:is(.store-page[data-template='impacto'], .store-page.mi-skin) .sp-shop-viewall {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 40px;
+  padding: 0 0 3px;
+  border: 0;
+  border-bottom: var(--mi-rule-w) solid var(--mi-ink);
+  border-radius: 0;
+  background: transparent;
+  color: var(--mi-ink);
+  font-family: var(--mi-mono);
+  font-size: var(--mi-fs-label);
+  font-weight: 500;
+  letter-spacing: .12em;
+  text-transform: uppercase;
+  transition: color var(--mi-dur-1) linear, border-color var(--mi-dur-1) linear;
+}
+:is(.store-page[data-template='impacto'], .store-page.mi-skin) .sp-shop-viewall:hover {
+  color: var(--mi-accent);
+  border-color: var(--mi-accent);
+  text-decoration: none;
+}
+:is(.store-page[data-template='impacto'], .store-page.mi-skin) .sp-shop-viewall svg { transition: transform var(--mi-dur-2) var(--mi-ease); }
+:is(.store-page[data-template='impacto'], .store-page.mi-skin) .sp-shop-viewall:hover svg { transform: translateX(4px); }
+
+/* Grilla numerada: el contador imprime el 01/02/03 del pliego. */
+:is(.store-page[data-template='impacto'], .store-page.mi-skin) .mi-featured-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 0;
+  border-top: var(--mi-hair) solid var(--mi-line-2);
+  border-left: var(--mi-hair) solid var(--mi-line-2);
+}
+:is(.store-page[data-template='impacto'], .store-page.mi-skin) .mi-featured-grid > .sp-card {
+  position: relative;
+  padding: 16px 14px 16px;
+  border-right: var(--mi-hair) solid var(--mi-line-2);
+  border-bottom: var(--mi-hair) solid var(--mi-line-2);
+  background: transparent;
+  transition: background var(--mi-dur-2) linear;
+}
+:is(.store-page[data-template='impacto'], .store-page.mi-skin) .mi-featured-grid > .sp-card:hover { background: var(--mi-paper-2); }
+/* Flags ("Nuevo", "-14%"): el layout las ancla arriba y ahí chocan con el
+   número de pliego — en este diseño bajan al pie de la foto. */
+:is(.store-page[data-template='impacto'], .store-page.mi-skin) .tpc-flags {
+  top: auto;
+  bottom: 10px;
+  inset-inline: 10px;
+}
+/* Número de pliego: .tpc-idx es el hueco que el contrato de la tarjeta
+   reserva para el índice — acá se viste de etiqueta de tinta y acento. */
+:is(.store-page[data-template='impacto'], .store-page.mi-skin) .tpc-idx {
+  inset-inline-start: 10px;
+  top: 10px;
+  bottom: auto;
+  display: grid;
+  place-items: center;
+  min-width: 28px;
+  height: 23px;
+  padding: 0 6px;
+  background: var(--mi-accent);
+  color: var(--mi-accent-ink);
+  border: var(--mi-hair) solid var(--mi-ink);
+  font-family: var(--mi-mono);
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: .06em;
+  z-index: 3;
+}
+.mi-featured-all {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: 22px;
+  padding-bottom: 3px;
+  border-bottom: var(--mi-rule-w) solid var(--mi-ink);
+  font-family: var(--mi-mono);
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: .12em;
+  text-transform: uppercase;
+  color: var(--mi-ink);
+  transition: color var(--mi-dur-1) linear, border-color var(--mi-dur-1) linear;
+}
+.mi-featured-all:hover { color: var(--mi-accent); border-color: var(--mi-accent); }
+.mi-featured-all svg { transition: transform var(--mi-dur-2) var(--mi-ease); }
+.mi-featured-all:hover svg { transform: translateX(4px); }
+:is(.store-page[data-template='impacto'], .store-page.mi-skin) .tpc {
+  display: flex;
+  flex-direction: column;
+  background: transparent;
+  border: 0;
+  border-radius: 0;
+  box-shadow: none;
+  height: 100%;
+}
+:is(.store-page[data-template='impacto'], .store-page.mi-skin) .tpc-media {
+  position: relative;
+  overflow: hidden;
+  background: var(--mi-stripe);
+  border: var(--mi-hair) solid var(--mi-line-2);
+  border-radius: 0;
+  margin: 0;
+  aspect-ratio: var(--tpc-ratio, 3 / 4);
+}
+:is(.store-page[data-template='impacto'], .store-page.mi-skin) .tpc-media img { border-radius: 0; }
+:is(.store-page[data-template='impacto'], .store-page.mi-skin) .tpc-media::after { display: none; }
+:is(.store-page[data-template='impacto'], .store-page.mi-skin) .tpc-media img { transition: transform 900ms var(--mi-ease); }
+:is(.store-page[data-template='impacto'], .store-page.mi-skin) .tpc:hover .tpc-media img { transform: var(--tpc-img-hover); }
+:is(.store-page[data-template='impacto'], .store-page.mi-skin) .tpc-body {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 12px 2px 0;
+}
+:is(.store-page[data-template='impacto'], .store-page.mi-skin) .tpc-name {
+  font-family: var(--mi-body);
+  font-size: 14.5px;
+  font-weight: 500;
+  letter-spacing: .01em;
+  text-transform: uppercase;
+  color: var(--mi-ink);
+}
+:is(.store-page[data-template='impacto'], .store-page.mi-skin) .tpc-eyebrow {
+  font-family: var(--mi-mono);
+  font-size: 9.5px;
+  letter-spacing: .14em;
+  text-transform: uppercase;
+  color: var(--mi-muted);
+}
+:is(.store-page[data-template='impacto'], .store-page.mi-skin) .tpc-price {
+  font-family: var(--mi-mono);
+  font-size: 13.5px;
+  font-weight: 600;
+  color: var(--mi-ink);
+}
+/* El layout ancla cada flag en absoluto sobre la foto con su verde de
+   marketplace; acá van estáticas dentro de la fila y en tinta/acento. */
+:is(.store-page[data-template='impacto'], .store-page.mi-skin) .sp-card .tpc-flag {
+  position: static;
+  inset: auto;
+  padding: 3px 8px;
+  border-radius: 0;
+  background: var(--mi-ink);
+  color: var(--mi-paper);
+  box-shadow: none;
+  font-family: var(--mi-mono);
+  font-size: 9px;
+  font-weight: 600;
+  letter-spacing: .12em;
+}
+:is(.store-page[data-template='impacto'], .store-page.mi-skin) .sp-card .tpc-flag.offer {
+  background: var(--mi-accent);
+  color: var(--mi-accent-ink);
+}
+:is(.store-page[data-template='impacto'], .store-page.mi-skin) .tpc-foot {
+  flex-direction: row;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  border-top: var(--mi-hair) solid var(--mi-line);
+  padding-top: 10px;
+}
+:is(.store-page[data-template='impacto'], .store-page.mi-skin) .tpc-go {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  height: 34px;
+  padding: 0 12px;
+  border: var(--mi-hair) solid var(--mi-ink);
+  border-radius: 0;
+  background: transparent;
+  color: var(--mi-ink);
+  box-shadow: none;
+  font-family: var(--mi-mono);
+  font-size: 10px;
+  font-weight: 500;
+  letter-spacing: .12em;
+  text-transform: uppercase;
+  transition: background var(--mi-dur-1) linear, color var(--mi-dur-1) linear;
+}
+:is(.store-page[data-template='impacto'], .store-page.mi-skin) .tpc-go:hover {
+  background: var(--mi-ink);
+  color: var(--mi-paper);
+  filter: none;
+  transform: none;
+  box-shadow: none;
+}
+:is(.store-page[data-template='impacto'], .store-page.mi-skin) .tpc-quick { border-radius: 0; }
+
+/* ==========================================================================
+   7. SOBRE LA MARCA — ficha de dossier
+   ========================================================================== */
+.mi-about {
+  padding-block: var(--mi-section);
+  background: var(--mi-paper-2);
+  border-top: var(--mi-rule-w) solid var(--mi-rule);
+  border-bottom: var(--mi-rule-w) solid var(--mi-rule);
+}
+.mi-about-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1.15fr) minmax(0, .85fr);
+  gap: clamp(28px, 4vw, 64px);
+  align-items: start;
+}
+.mi-about-copy { display: flex; flex-direction: column; gap: 18px; }
+.mi-about-title { font-size: var(--mi-fs-h1); line-height: .9; }
+.mi-about-title em { font-style: normal; color: var(--mi-accent); }
+.mi-about-text {
+  max-width: 58ch;
+  font-size: var(--mi-fs-lead);
+  line-height: 1.6;
+  color: var(--mi-ink-2);
+  border-left: var(--mi-rule-w) solid var(--mi-line-2);
+  padding-left: 16px;
+}
+.mi-about-lines { display: flex; flex-wrap: wrap; gap: 8px; margin: 0; padding: 0; list-style: none; }
+
+/* Registro de la marca: años en Anton + filas con puntos guía. */
+.mi-dossier {
+  border: var(--mi-rule-w) solid var(--mi-ink);
+  background: var(--mi-paper);
+  padding: 16px 18px 18px;
+  display: grid;
+  gap: 14px;
+  position: relative;
+}
+.mi-dossier::after {
+  content: 'FICHA / MARCA';
+  position: absolute;
+  top: -11px;
+  right: 14px;
+  padding: 1px 8px;
+  background: var(--mi-ink);
+  color: var(--mi-paper);
+  font-family: var(--mi-mono);
+  font-size: 9px;
+  letter-spacing: .16em;
+}
+.mi-dossier-years {
+  display: flex;
+  align-items: flex-end;
+  gap: 12px;
+  padding-bottom: 12px;
+  border-bottom: var(--mi-hair) solid var(--mi-line-2);
+}
+.mi-dossier-years strong {
+  font-family: var(--mi-display);
+  font-size: clamp(48px, 6.4vw, 78px);
+  font-weight: 400;
+  line-height: .8;
+  letter-spacing: -.01em;
+  color: var(--mi-accent);
+}
+.mi-dossier-years span {
+  font-family: var(--mi-mono);
+  font-size: var(--mi-fs-label);
+  line-height: 1.5;
+  letter-spacing: .12em;
+  text-transform: uppercase;
+  color: var(--mi-muted);
+  padding-bottom: 4px;
+}
+.mi-dossier-rows { display: grid; gap: 8px; margin: 0; }
+.mi-dossier-rows > div {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  font-family: var(--mi-mono);
+  font-size: var(--mi-fs-xs);
+  letter-spacing: .06em;
+  text-transform: uppercase;
+}
+.mi-dossier-rows dt { color: var(--mi-muted); }
+.mi-dossier-rows dd { margin: 0; color: var(--mi-ink); font-weight: 500; text-align: right; }
+.mi-dossier-dots {
+  flex: 1;
+  height: 1px;
+  background-image: linear-gradient(90deg, var(--mi-line-2) 0 2px, transparent 2px 6px);
+  background-size: 6px 1px;
+  transform: translateY(-3px);
+}
+.mi-dossier-mission {
+  margin: 0;
+  padding-top: 12px;
+  border-top: var(--mi-hair) solid var(--mi-line-2);
+  font-size: var(--mi-fs-sm);
+  line-height: 1.6;
+  color: var(--mi-ink-2);
+}
+.mi-dossier-mission span {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 4px;
+  font-family: var(--mi-mono);
+  font-size: var(--mi-fs-label);
+  letter-spacing: .14em;
+  text-transform: uppercase;
+  color: var(--mi-accent);
+}
+
+/* ==========================================================================
+   8. SECCIONES COMPARTIDAS RE-ESKINADAS
+   ========================================================================== */
+.store-page[data-template='impacto'] :is(.sp-page-root > section, .sp-page-root > div) {
+  scroll-margin-top: calc(var(--sp-top-h) + 12px);
+}
+.store-page[data-template='impacto'] :is(.sp-testimonials, .sp-faq, .sp-gallery, .sp-benefits, .sp-offers, .sp-showcase, .sp-stats, .sp-services, .sp-brands, .sp-plans) {
+  padding-block: var(--mi-section);
+  border-top: var(--mi-hair) solid var(--mi-line);
+}
+.store-page[data-template='impacto'] .sp-section-title {
+  font-family: var(--mi-display);
+  font-size: var(--mi-fs-h2);
+  font-weight: 400;
+  letter-spacing: -.01em;
+  line-height: .95;
+  text-transform: uppercase;
+}
+.store-page[data-template='impacto'] .sp-eyebrow {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-family: var(--mi-mono);
+  font-size: var(--mi-fs-label);
+  font-weight: 500;
+  letter-spacing: var(--mi-track-label);
+  text-transform: uppercase;
+  color: var(--mi-muted);
+}
+.store-page[data-template='impacto'] .sp-eyebrow::before {
+  content: '';
+  width: 20px;
+  height: var(--mi-rule-w);
+  background: var(--mi-accent);
+}
+.store-page[data-template='impacto'] .sp-btn {
+  border: var(--mi-rule-w) solid var(--mi-ink);
+  border-radius: 0;
+  background: var(--mi-ink);
+  color: var(--mi-paper);
+  font-family: var(--mi-mono);
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: .12em;
+  text-transform: uppercase;
+  box-shadow: none;
+  overflow: hidden;
+}
+.store-page[data-template='impacto'] .sp-btn:hover {
+  background: var(--mi-accent);
+  border-color: var(--mi-accent);
+  color: var(--mi-accent-ink);
+  transform: none;
+  box-shadow: none;
+}
+.store-page[data-template='impacto'] .sp-btn.ghost {
+  background: transparent;
+  color: var(--mi-ink);
+  border-color: var(--mi-ink);
+}
+.store-page[data-template='impacto'] .sp-btn.ghost:hover {
+  background: var(--mi-ink);
+  color: var(--mi-paper);
+}
+
+/* Cifras */
+.store-page[data-template='impacto'] .sp-stats-grid {
+  border-top: var(--mi-rule-w) solid var(--mi-rule);
+  border-left: var(--mi-hair) solid var(--mi-line-2);
+}
+.store-page[data-template='impacto'] .sp-stat {
+  border-right: var(--mi-hair) solid var(--mi-line-2);
+  border-bottom: var(--mi-hair) solid var(--mi-line-2);
+  padding: 22px 18px;
+  background: var(--mi-paper);
+}
+.store-page[data-template='impacto'] .sp-stat-value {
+  font-family: var(--mi-display);
+  font-size: clamp(34px, 4.4vw, 54px);
+  line-height: .9;
+  letter-spacing: -.01em;
+  color: var(--mi-ink);
+}
+.store-page[data-template='impacto'] .sp-stat-label {
+  font-family: var(--mi-mono);
+  font-size: var(--mi-fs-label);
+  letter-spacing: .14em;
+  text-transform: uppercase;
+  color: var(--mi-muted);
+}
+
+/* Garantías / beneficios: filas de fichero con número */
+.store-page[data-template='impacto'] .sp-benefits-grid {
+  counter-reset: mi-ben;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 0;
+  border-top: var(--mi-hair) solid var(--mi-line-2);
+  border-left: var(--mi-hair) solid var(--mi-line-2);
+}
+.store-page[data-template='impacto'] .sp-benefit {
+  counter-increment: mi-ben;
+  position: relative;
+  padding: 20px 18px 22px;
+  border-right: var(--mi-hair) solid var(--mi-line-2);
+  border-bottom: var(--mi-hair) solid var(--mi-line-2);
+  background: var(--mi-paper);
+  transition: background var(--mi-dur-2) linear, color var(--mi-dur-2) linear;
+}
+.store-page[data-template='impacto'] .sp-benefit::before {
+  content: counter(mi-ben, decimal-leading-zero);
+  position: absolute;
+  top: 14px;
+  right: 14px;
+  font-family: var(--mi-mono);
+  font-size: var(--mi-fs-label);
+  letter-spacing: .1em;
+  color: var(--mi-line-2);
+}
+.store-page[data-template='impacto'] .sp-benefit:hover { background: var(--mi-ink); }
+.store-page[data-template='impacto'] .sp-benefit:hover :is(.sp-benefit-text, .sp-benefit-text strong) { color: var(--mi-paper); }
+.store-page[data-template='impacto'] .sp-benefit:hover .sp-benefit-icon {
+  background: var(--mi-accent);
+  border-color: var(--mi-accent);
+  color: var(--mi-accent-ink);
+}
+.store-page[data-template='impacto'] .sp-benefit-icon {
+  display: grid;
+  place-items: center;
+  width: 38px;
+  height: 38px;
+  border: var(--mi-hair) solid var(--mi-ink);
+  border-radius: 0;
+  background: transparent;
+  color: var(--mi-ink);
+  margin-bottom: 14px;
+  transition: background var(--mi-dur-2) linear, color var(--mi-dur-2) linear, border-color var(--mi-dur-2) linear;
+}
+.store-page[data-template='impacto'] .sp-benefit-text { color: var(--mi-ink-2); font-size: var(--mi-fs-sm); line-height: 1.55; }
+.store-page[data-template='impacto'] .sp-benefit-text strong {
+  display: block;
+  margin-bottom: 4px;
+  font-family: var(--mi-body);
+  font-size: 15px;
+  font-weight: 700;
+  letter-spacing: .01em;
+  text-transform: uppercase;
+  color: var(--mi-ink);
+}
+
+/* Ofertas: fichas con sello de porcentaje */
+.store-page[data-template='impacto'] .sp-offers { background: var(--mi-paper-2); }
+.store-page[data-template='impacto'] .sp-offers .sp-card {
+  border: var(--mi-hair) solid var(--mi-line-2);
+  border-radius: 0;
+  background: var(--mi-paper);
+  padding: 14px 14px 12px;
+}
+.store-page[data-template='impacto'] .sp-offers .sp-card:hover { background: var(--mi-card); }
+.store-page[data-template='impacto'] .sp-offers .tpc-media { margin: 0 0 4px; }
+.store-page[data-template='impacto'] .sp-offers .tpc-media { border: var(--mi-hair) solid var(--mi-line-2); }
+.store-page[data-template='impacto'] .sp-rail-btn {
+  border: var(--mi-hair) solid var(--mi-ink);
+  border-radius: 0;
+  background: var(--mi-paper);
+  color: var(--mi-ink);
+}
+.store-page[data-template='impacto'] .sp-rail-btn:hover { background: var(--mi-ink); color: var(--mi-paper); }
+
+/* Galería: mosaico con reglas */
+.store-page[data-template='impacto'] .sp-gallery-grid { gap: 2px; background: var(--mi-line-2); }
+.store-page[data-template='impacto'] .sp-gallery-item {
+  border-radius: 0;
+  background: var(--mi-paper);
+  overflow: hidden;
+}
+.store-page[data-template='impacto'] .sp-gallery-item img { transition: transform 900ms var(--mi-ease), filter var(--mi-dur-2) linear; }
+.store-page[data-template='impacto'] .sp-gallery-item:hover img { transform: scale(1.05); filter: saturate(1.05); }
+
+/* Testimonios: cita editorial */
+.store-page[data-template='impacto'] .sp-showcase { background: var(--mi-paper); border-top: var(--mi-hair) solid var(--mi-line); }
+.store-page[data-template='impacto'] .sp-showcase-title {
+  font-family: var(--mi-display);
+  font-size: var(--mi-fs-h2);
+  font-weight: 400;
+  line-height: .95;
+  text-transform: uppercase;
+}
+.store-page[data-template='impacto'] .sp-showcase-text { color: var(--mi-ink-2); font-size: var(--mi-fs-lead); }
+.store-page[data-template='impacto'] .sp-showcase-frame {
+  border: var(--mi-rule-w) solid var(--mi-ink);
+  border-radius: 0;
+  background: var(--mi-paper-2);
+}
+.store-page[data-template='impacto'] .sp-testimonial {
+  border-radius: 0;
+  border: var(--mi-hair) solid var(--mi-line-2);
+  background: var(--mi-paper);
+  box-shadow: none;
+  padding: 22px 20px;
+  gap: 12px;
+}
+.store-page[data-template='impacto'] .sp-testimonial-quote {
+  border-radius: 0;
+  background: var(--mi-accent);
+  color: var(--mi-accent-ink);
+  border: var(--mi-hair) solid var(--mi-ink);
+  width: 34px;
+  height: 34px;
+}
+.store-page[data-template='impacto'] .sp-testimonial-text {
+  font-size: 15px;
+  line-height: 1.6;
+  color: var(--mi-ink-2);
+}
+.store-page[data-template='impacto'] .sp-testimonial-by strong {
+  font-family: var(--mi-mono);
+  font-size: 10.5px;
+  font-weight: 600;
+  letter-spacing: .12em;
+  text-transform: uppercase;
+  color: var(--mi-ink);
+}
+.store-page[data-template='impacto'] .sp-testimonial-by span {
+  font-family: var(--mi-mono);
+  font-size: 10px;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+  color: var(--mi-muted);
+}
+.store-page[data-template='impacto'] .sp-ava { border-radius: 0; }
+.store-page[data-template='impacto'] .sp-stars { color: var(--mi-accent); }
+
+/* FAQ: acordeón de reglas */
+.store-page[data-template='impacto'] .sp-faq-wrap { display: block; }
+.store-page[data-template='impacto'] .sp-faq-list { max-width: none; }
+.store-page[data-template='impacto'] .sp-faq-item {
+  border: 0;
+  border-top: var(--mi-hair) solid var(--mi-line-2);
+  border-radius: 0;
+  background: transparent;
+}
+.store-page[data-template='impacto'] .sp-faq-item:last-child { border-bottom: var(--mi-hair) solid var(--mi-line-2); }
+.store-page[data-template='impacto'] .sp-faq-item > summary {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 15px 0;
+  list-style: none;
+  cursor: pointer;
+  font-family: var(--mi-body);
+  font-size: 16px;
+  font-weight: 700;
+  letter-spacing: .01em;
+  color: var(--mi-ink);
+  transition: color var(--mi-dur-1) linear;
+}
+.store-page[data-template='impacto'] .sp-faq-item > summary::-webkit-details-marker { display: none; }
+.store-page[data-template='impacto'] .sp-faq-item > summary:hover { color: var(--mi-accent); }
+.store-page[data-template='impacto'] .sp-faq-item[open] > summary { color: var(--mi-accent); }
+.store-page[data-template='impacto'] .sp-faq-item.is-open .sp-faq-q { color: var(--mi-accent); }
+.store-page[data-template='impacto'] .sp-faq-caret {
+  display: grid;
+  place-items: center;
+  width: 30px;
+  height: 30px;
+  flex: none;
+  border-radius: 0;
+  border: var(--mi-hair) solid var(--mi-ink);
+  color: var(--mi-ink);
+  transition: transform var(--mi-dur-2) var(--mi-ease), background var(--mi-dur-1) linear, color var(--mi-dur-1) linear;
+}
+.store-page[data-template='impacto'] .sp-faq-item[open] .sp-faq-caret {
+  transform: rotate(90deg);
+  background: var(--mi-accent);
+  border-color: var(--mi-accent);
+  color: var(--mi-accent-ink);
+}
+.store-page[data-template='impacto'] .sp-faq-answer { color: var(--mi-ink-2); font-size: var(--mi-fs-sm); line-height: 1.65; }
+
+/* CTA: banda de tinta con acento */
+.store-page[data-template='impacto'] .sp-cta {
+  background: var(--mi-ink);
+  color: var(--mi-paper);
+  padding-block: 0;
+  border-block: var(--mi-rule-w) solid var(--mi-ink);
+}
+.store-page[data-template='impacto'] .sp-cta-inner {
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+  padding-block: clamp(48px, 6vw, 76px);
+  justify-items: start;
+  text-align: left;
+  gap: 16px;
+}
+.store-page[data-template='impacto'] .sp-cta-inner::after { display: none; }
+.store-page[data-template='impacto'] .sp-cta::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background-image: var(--mi-stripe);
+  opacity: .07;
+  pointer-events: none;
+}
+.store-page[data-template='impacto'] .sp-cta-inner { position: relative; }
+.store-page[data-template='impacto'] .sp-cta-title {
+  font-family: var(--mi-display);
+  font-size: var(--mi-fs-h1);
+  font-weight: 400;
+  line-height: .9;
+  letter-spacing: -.01em;
+  text-transform: uppercase;
+  color: var(--mi-paper);
+}
+.store-page[data-template='impacto'] .sp-cta-text { color: color-mix(in srgb, var(--mi-paper) 78%, transparent); font-size: var(--mi-fs-lead); }
+.store-page[data-template='impacto'] .sp-cta-btn,
+.store-page[data-template='impacto'] .sp-cta .sp-btn {
+  background: var(--mi-accent);
+  border-color: var(--mi-accent);
+  color: var(--mi-accent-ink);
+}
+.store-page[data-template='impacto'] .sp-cta .sp-btn:hover {
+  background: var(--mi-paper);
+  border-color: var(--mi-paper);
+  color: var(--mi-ink);
+}
+
+/* Contacto: ficha de showroom */
+.store-page[data-template='impacto'] .sp-contact {
+  background: var(--mi-paper-2);
+  border-top: var(--mi-rule-w) solid var(--mi-rule);
+}
+.store-page[data-template='impacto'] .sp-contact-title {
+  font-family: var(--mi-display);
+  font-size: var(--mi-fs-h2);
+  font-weight: 400;
+  line-height: .95;
+  text-transform: uppercase;
+}
+.store-page[data-template='impacto'] .sp-contact-sub { color: var(--mi-ink-2); }
+/* La columna de datos era sticky y el mapa (que va después en el DOM) la
+   tapaba al scrollear: en este diseño la ficha fluye con la página. */
+.store-page[data-template='impacto'] .sp-contact-info { position: static; }
+.store-page[data-template='impacto'] .sp-contact > .sp-container > .sp-map-frame { margin-top: 36px; }
+.store-page[data-template='impacto'] .sp-contact-channels a,
+.store-page[data-template='impacto'] .sp-contact-hours {
+  border-radius: 0;
+  border: var(--mi-hair) solid var(--mi-line-2);
+  background: var(--mi-paper);
+}
+.store-page[data-template='impacto'] .sp-contact-channels a:hover {
+  background: var(--mi-ink);
+  border-color: var(--mi-ink);
+  color: var(--mi-paper);
+}
+.store-page[data-template='impacto'] .sp-map-frame {
+  border: var(--mi-rule-w) solid var(--mi-ink);
+  border-radius: 0;
+  overflow: hidden;
+}
+.store-page[data-template='impacto'] .sp-map-open {
+  border-radius: 0;
+  background: var(--mi-ink);
+  color: var(--mi-paper);
+  font-family: var(--mi-mono);
+  font-size: 10.5px;
+  letter-spacing: .12em;
+  text-transform: uppercase;
+}
+
+/* Formularios (contacto / servicios) */
+.store-page[data-template='impacto'] :is(.sp-form, .sp-about-card) {
+  border: var(--mi-rule-w) solid var(--mi-ink);
+  border-radius: 0;
+  background: var(--mi-paper);
+  box-shadow: none;
+}
+/* El layout decora el formulario con una franja de degradado y un orbe de
+   acento; acá la tarjeta es una ficha de papel con su regla de tinta. */
+.store-page[data-template='impacto'] .sp-form::before {
+  height: var(--mi-rule-w);
+  background: var(--mi-ink);
+}
+.store-page[data-template='impacto'] .sp-form::after { display: none; }
+.store-page[data-template='impacto'] .sp-form-head {
+  border-bottom: var(--mi-hair) solid var(--mi-line-2);
+  padding-bottom: 14px;
+}
+.store-page[data-template='impacto'] .sp-form-badge {
+  border-radius: 0;
+  background: var(--mi-accent);
+  color: var(--mi-accent-ink);
+  border: var(--mi-hair) solid var(--mi-ink);
+  box-shadow: none;
+  transform: none;
+}
+.store-page[data-template='impacto'] .sp-form:hover .sp-form-badge { transform: none; }
+.store-page[data-template='impacto'] .sp-form-head,
+.store-page[data-template='impacto'] .sp-form-title {
+  font-family: var(--mi-display);
+  font-size: var(--mi-fs-h3);
+  font-weight: 400;
+  letter-spacing: .01em;
+  text-transform: uppercase;
+}
+.store-page[data-template='impacto'] .sp-form-badge {
+  border-radius: 0;
+  background: var(--mi-accent);
+  color: var(--mi-accent-ink);
+  font-family: var(--mi-mono);
+  letter-spacing: .1em;
+}
+.store-page[data-template='impacto'] .sp-label {
+  font-family: var(--mi-mono);
+  font-size: var(--mi-fs-label);
+  letter-spacing: .14em;
+  text-transform: uppercase;
+  color: var(--mi-muted);
+}
+.store-page[data-template='impacto'] .sp-input {
+  border: var(--mi-hair) solid var(--mi-line-2);
+  border-radius: 0;
+  background: var(--mi-paper-2);
+  color: var(--mi-ink);
+  transition: border-color var(--mi-dur-1) linear, background var(--mi-dur-1) linear;
+}
+.store-page[data-template='impacto'] .sp-input:focus {
+  border-color: var(--mi-ink);
+  background: var(--mi-paper);
+  outline: none;
+  box-shadow: inset 0 calc(-1 * var(--mi-rule-w)) 0 var(--mi-accent);
+}
+.store-page[data-template='impacto'] .sp-field-error { color: #B3261E; font-family: var(--mi-mono); font-size: 11px; }
+.store-page[data-template='impacto'][data-store-theme='dark'] .sp-field-error { color: #FF8A7A; }
+
+/* Planes (vidriera) */
+.store-page[data-template='impacto'] .sp-plan-card,
+.store-page[data-template='impacto'] .sp-plan {
+  border: var(--mi-rule-w) solid var(--mi-ink);
+  border-radius: 0;
+  background: var(--mi-paper);
+  box-shadow: none;
+}
+.store-page[data-template='impacto'] .sp-plan-name {
+  font-family: var(--mi-display);
+  font-size: var(--mi-fs-h3);
+  font-weight: 400;
+  text-transform: uppercase;
+}
+.store-page[data-template='impacto'] .sp-plan-price { font-family: var(--mi-mono); }
+
+/* Marcas: cinta de logos en mono */
+.store-page[data-template='impacto'] .sp-brands {
+  border-top: var(--mi-hair) solid var(--mi-line-2);
+  border-bottom: var(--mi-hair) solid var(--mi-line-2);
+}
+.store-page[data-template='impacto'] .sp-brand-item {
+  font-family: var(--mi-mono);
+  font-size: var(--mi-fs-xs);
+  letter-spacing: .16em;
+  text-transform: uppercase;
+  color: var(--mi-muted);
+  transition: color var(--mi-dur-1) linear;
+}
+.store-page[data-template='impacto'] .sp-brand-item:hover { color: var(--mi-ink); }
+
+/* Cinta de anuncios */
+.store-page[data-template='impacto'] .sp-banner {
+  border-radius: 0;
+  background: var(--mi-ink);
+  color: var(--mi-paper);
+  font-family: var(--mi-mono);
+  font-size: 11px;
+  letter-spacing: .16em;
+  text-transform: uppercase;
+}
+
+/* Servicios de la portada */
+.store-page[data-template='impacto'] .sp-service-title {
+  font-family: var(--mi-display);
+  font-weight: 400;
+  text-transform: uppercase;
+}
+
+/* Barra de pestañas inferior (móvil) */
+.store-page[data-template='impacto'] .sp-dock {
+  border-top: var(--mi-rule-w) solid var(--mi-rule);
+  border-radius: 0;
+  background: var(--mi-paper);
+  box-shadow: none;
+}
+.store-page[data-template='impacto'] .sp-dock a { font-family: var(--mi-mono); font-size: 9.5px; letter-spacing: .1em; text-transform: uppercase; }
+.store-page[data-template='impacto'] .sp-dock a.is-active { color: var(--mi-accent); }
+
+/* Aviso de la plataforma y buscador */
+.store-page[data-template='impacto'] .sp-search {
+  border: var(--mi-hair) solid var(--mi-line-2);
+  border-radius: 0;
+  background: var(--mi-paper-2);
+}
+.store-page[data-template='impacto'] .sp-search:focus-within { border-color: var(--mi-ink); }
+.store-page[data-template='impacto'] .sp-davent-badge {
+  border-radius: 0;
+  font-family: var(--mi-mono);
+  letter-spacing: .12em;
+}
+
+/* ==========================================================================
+   9. SUB-ÁRBOL RAÍZ (.mi-skin) — catálogo, ficha y servicios
+   ========================================================================== */
+.store-page.mi-skin {
+  --mi-paper: #EDEBE4;
+  --mi-paper-2: #E4E1D8;
+  --mi-card: #F4F2EC;
+  --mi-hatch-a: #D9D6CC;
+  --mi-hatch-b: #E4E1D8;
+  --mi-ink: #111111;
+  --mi-ink-2: #2B2A26;
+  --mi-muted: #5C5A52;
+  --mi-rule: #111111;
+  --mi-line: #C9C5B8;
+  --mi-line-2: #A9A497;
+  --mi-accent: var(--st-accent, var(--store-accent, #FF4B1F));
+  --mi-accent-ink: var(--st-accent-ink, #111111);
+  --mi-on-accent: var(--st-on-accent, #FFFDF6);
+  --mi-stripe: repeating-linear-gradient(135deg,
+    var(--mi-hatch-a) 0, var(--mi-hatch-a) 2px,
+    var(--mi-hatch-b) 2px, var(--mi-hatch-b) 14px);
+  --sp-bg: var(--mi-paper);
+  --sp-card: var(--mi-card);
+  --sp-card-solid: var(--mi-card);
+  --sp-surface: var(--mi-paper-2);
+  --sp-ink: var(--mi-ink);
+  --sp-ink-2: var(--mi-ink-2);
+  --sp-muted: var(--mi-muted);
+  --sp-line: var(--mi-line);
+  --sp-radius: 0;
+  --sp-shadow-sm: none;
+  --sp-shadow-md: none;
+  --sp-accent-text: var(--mi-accent);
+  --rz-ink: var(--mi-ink);
+  --rz-ink-2: var(--mi-ink-2);
+  --rz-muted: var(--mi-muted);
+  --rz-line: var(--mi-line-2);
+  --rz-bg: var(--mi-paper);
+  --rz-card: var(--mi-card);
+  --rz-radius: 0;
+  background: var(--mi-paper);
+  color: var(--mi-ink);
+  font-family: var(--mi-body);
+}
+.store-page.mi-skin::before,
+.store-page.mi-skin::after { display: none; }
+
+.store-page.mi-skin :is(.rz-btn) {
+  border: var(--mi-rule-w) solid var(--mi-ink);
+  border-radius: 0;
+  background: var(--mi-ink);
+  color: var(--mi-paper);
+  font-family: var(--mi-mono);
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: .12em;
+  text-transform: uppercase;
+  box-shadow: none;
+  transition: background var(--mi-dur-2) linear, color var(--mi-dur-2) linear, border-color var(--mi-dur-2) linear;
+}
+.store-page.mi-skin .rz-btn:hover { background: var(--mi-accent); border-color: var(--mi-accent); color: var(--mi-accent-ink); }
+.store-page.mi-skin .rz-btn--ghost { background: transparent; color: var(--mi-ink); }
+.store-page.mi-skin .rz-btn--ghost:hover { background: var(--mi-ink); color: var(--mi-paper); }
+.store-page.mi-skin .rz-eyebrow {
+  font-family: var(--mi-mono);
+  font-size: var(--mi-fs-label);
+  letter-spacing: var(--mi-track-label);
+  text-transform: uppercase;
+  color: var(--mi-muted);
+}
+.store-page.mi-skin .rz-eyebrow-num { color: var(--mi-accent); font-family: var(--mi-mono); }
+.store-page.mi-skin :is(.rz-cat-card, .rz-pdp-rel-card, .sp-card, .tpc) {
+  --tpc-radius: 0;
+  --tpc-shadow: none;
+  --tpc-bg: transparent;
+  --tpc-ratio: 3 / 4;
+  --tpc-flag-radius: 0;
+  --tpc-focus: var(--mi-focus);
+  --tpc-ink: var(--mi-ink);
+}
+.store-page.mi-skin :is(.rz-cat-title, .rz-prod-title, .rz-svc-title, h1) {
+  font-family: var(--mi-display);
+  font-weight: 400;
+  letter-spacing: -.01em;
+  line-height: .92;
+  text-transform: uppercase;
+}
+.store-page.mi-skin .rz-rule { background: var(--mi-rule); height: var(--mi-rule-w); }
+.store-page.mi-skin .rz-tag,
+.store-page.mi-skin .rz-plate {
+  border-radius: 0;
+  font-family: var(--mi-mono);
+  letter-spacing: .1em;
+  text-transform: uppercase;
+}
+.store-page.mi-skin .rz-frame { border: var(--mi-rule-w) solid var(--mi-ink); border-radius: 0; }
+.store-page.mi-skin .rz-price { font-family: var(--mi-mono); font-weight: 600; }
+
+/* Catálogo */
+.store-page.mi-skin .rz-cat-head {
+  border-bottom: var(--mi-rule-w) solid var(--mi-rule);
+  padding-bottom: 16px;
+}
+.store-page.mi-skin .rz-cat-kicker {
+  font-family: var(--mi-mono);
+  font-size: var(--mi-fs-label);
+  letter-spacing: var(--mi-track-label);
+  text-transform: uppercase;
+  color: var(--mi-muted);
+}
+.store-page.mi-skin .rz-cat-lead { color: var(--mi-ink-2); font-size: var(--mi-fs-lead); }
+.store-page.mi-skin .rz-cat-crumbs { font-family: var(--mi-mono); font-size: var(--mi-fs-label); letter-spacing: .1em; text-transform: uppercase; }
+.store-page.mi-skin .rz-cat-rail {
+  border: var(--mi-hair) solid var(--mi-line-2);
+  border-radius: 0;
+  background: var(--mi-paper-2);
+}
+.store-page.mi-skin .rz-cat-group { border-top: var(--mi-hair) solid var(--mi-line-2); }
+.store-page.mi-skin .rz-cat-group:first-child { border-top: 0; }
+.store-page.mi-skin .rz-cat-rail-head,
+.store-page.mi-skin .rz-cat-pricelabel,
+.store-page.mi-skin .rz-cat-counts {
+  font-family: var(--mi-mono);
+  font-size: var(--mi-fs-label);
+  letter-spacing: .12em;
+  text-transform: uppercase;
+  color: var(--mi-muted);
+}
+.store-page.mi-skin .rz-cat-apply {
+  border-radius: 0;
+  background: var(--mi-ink);
+  color: var(--mi-paper);
+  font-family: var(--mi-mono);
+  font-size: 10.5px;
+  letter-spacing: .12em;
+  text-transform: uppercase;
+}
+.store-page.mi-skin .rz-cat-sort,
+.store-page.mi-skin .rz-field input,
+.store-page.mi-skin .rz-field select {
+  border: var(--mi-hair) solid var(--mi-line-2);
+  border-radius: 0;
+  background: var(--mi-paper);
+  color: var(--mi-ink);
+  font-family: var(--mi-mono);
+  font-size: var(--mi-fs-xs);
+  letter-spacing: .04em;
+}
+.store-page.mi-skin .rz-cat-products { gap: 0; border-top: var(--mi-hair) solid var(--mi-line-2); border-left: var(--mi-hair) solid var(--mi-line-2); }
+.store-page.mi-skin .rz-cat-products > * {
+  border-right: var(--mi-hair) solid var(--mi-line-2);
+  border-bottom: var(--mi-hair) solid var(--mi-line-2);
+  padding: 14px;
+  background: transparent;
+}
+.store-page.mi-skin .rz-cat-res-head {
+  font-family: var(--mi-mono);
+  font-size: var(--mi-fs-label);
+  letter-spacing: .12em;
+  text-transform: uppercase;
+  color: var(--mi-muted);
+  border-bottom: var(--mi-hair) solid var(--mi-line-2);
+  padding-bottom: 8px;
+}
+.store-page.mi-skin .rz-cat-empty { border: var(--mi-rule-w) dashed var(--mi-line-2); border-radius: 0; }
+.store-page.mi-skin .rz-cat-page a,
+.store-page.mi-skin .rz-cat-more {
+  border-radius: 0;
+  font-family: var(--mi-mono);
+  letter-spacing: .1em;
+  text-transform: uppercase;
+}
+
+/* Ficha de producto */
+.store-page.mi-skin .rz-pdp-gallery { border: var(--mi-rule-w) solid var(--mi-ink); border-radius: 0; background: var(--mi-stripe); }
+.store-page.mi-skin .rz-pdp-ph { background: var(--mi-stripe); }
+.store-page.mi-skin .rz-pdp-kicker {
+  font-family: var(--mi-mono);
+  font-size: var(--mi-fs-label);
+  letter-spacing: var(--mi-track-label);
+  text-transform: uppercase;
+  color: var(--mi-muted);
+}
+.store-page.mi-skin .rz-pdp-price {
+  font-family: var(--mi-mono);
+  font-weight: 600;
+  letter-spacing: -.01em;
+}
+.store-page.mi-skin .rz-pdp-pricebox { border-radius: 0; border: var(--mi-hair) solid var(--mi-line-2); background: var(--mi-paper-2); }
+.store-page.mi-skin .rz-pdp-buy { border: var(--mi-rule-w) solid var(--mi-ink); border-radius: 0; background: var(--mi-paper); }
+.store-page.mi-skin .rz-pdp-buy-head { font-family: var(--mi-mono); font-size: var(--mi-fs-label); letter-spacing: .14em; text-transform: uppercase; }
+.store-page.mi-skin .rz-pdp-buy-btn {
+  border-radius: 0;
+  background: var(--mi-ink);
+  color: var(--mi-paper);
+  font-family: var(--mi-mono);
+  font-size: 11px;
+  letter-spacing: .12em;
+  text-transform: uppercase;
+}
+.store-page.mi-skin .rz-pdp-buy-btn:hover { background: var(--mi-accent); color: var(--mi-accent-ink); }
+.store-page.mi-skin .rz-pdp-specs { border-top: var(--mi-hair) solid var(--mi-line-2); }
+.store-page.mi-skin .rz-pdp-specs dt { font-family: var(--mi-mono); font-size: var(--mi-fs-label); letter-spacing: .1em; text-transform: uppercase; color: var(--mi-muted); }
+.store-page.mi-skin .rz-pdp-seal { border-radius: 0; }
+.store-page.mi-skin .rz-pdp-sec-title { font-family: var(--mi-display); font-weight: 400; text-transform: uppercase; }
+.store-page.mi-skin .rz-pdp-rel-card { border: var(--mi-hair) solid var(--mi-line-2); border-radius: 0; }
+
+/* Servicios */
+.store-page.mi-skin .rz-svc-title { font-size: var(--mi-fs-h1); }
+.store-page.mi-skin .rz-sv-block { border: var(--mi-hair) solid var(--mi-line-2); border-radius: 0; background: var(--mi-paper); }
+.store-page.mi-skin .rz-sv-block.is-now { border-color: var(--mi-ink); box-shadow: inset 0 0 0 1px var(--mi-ink); }
+.store-page.mi-skin .rz-sv-choices { border-radius: 0; }
+.store-page.mi-skin :is(.rz-sv-book, .rz-sv-form) { border: var(--mi-rule-w) solid var(--mi-ink); border-radius: 0; background: var(--mi-paper); }
+.store-page.mi-skin .rz-sv-book-lead { font-family: var(--mi-mono); font-size: var(--mi-fs-label); letter-spacing: .14em; text-transform: uppercase; color: var(--mi-muted); }
+.store-page.mi-skin .rz-sv-bar {
+  border-radius: 0;
+  background: var(--mi-ink);
+  color: var(--mi-paper);
+  border: 0;
+}
+.store-page.mi-skin .rz-sv-bar-cta {
+  border-radius: 0;
+  background: var(--mi-accent);
+  color: var(--mi-accent-ink);
+  font-family: var(--mi-mono);
+  font-size: 11px;
+  letter-spacing: .12em;
+  text-transform: uppercase;
+}
+/* Ficha: galería a sangre y panel de compra sin radios */
+.store-page.mi-skin .rz-pdp-frame {
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: var(--mi-stripe);
+}
+.store-page.mi-skin .rz-pdp-frame img { width: 100%; height: 100%; object-fit: cover; }
+.store-page.mi-skin .rz-pdp-share {
+  width: 40px;
+  height: 40px;
+  border: var(--mi-hair) solid var(--mi-ink);
+  border-radius: 0;
+  background: transparent;
+  color: var(--mi-ink);
+  transform: none;
+}
+.store-page.mi-skin .rz-pdp-share:hover { background: var(--mi-ink); color: var(--mi-paper); border-color: var(--mi-ink); }
+.store-page.mi-skin .rz-pdp-caption {
+  border-bottom: 0;
+  border-top: var(--mi-hair) solid var(--mi-line-2);
+  font-family: var(--mi-mono);
+  letter-spacing: .1em;
+  color: var(--mi-muted);
+}
+.store-page.mi-skin .rz-pdp-seller,
+.store-page.mi-skin .rz-pdp-pay { font-family: var(--mi-mono); font-size: 11px; letter-spacing: .04em; color: var(--mi-muted); }
+.store-page.mi-skin .rz-pdp-buy-head { align-items: center; }
+
+/* Opiniones: ficha de papel, sin radios ni sombras del tema */
+.store-page.mi-skin .spd-rev-form,
+.store-page.mi-skin .spd-rev-item,
+.store-page.mi-skin .spd-rev-pick {
+  border: var(--mi-hair) solid var(--mi-line-2);
+  border-radius: 0;
+  background: var(--mi-paper);
+  box-shadow: none;
+  color: var(--mi-ink-2);
+}
+.store-page.mi-skin .spd-rev-pick.on { border-color: var(--mi-ink); background: var(--mi-paper-2); }
+.store-page.mi-skin .spd-rev-avatar { border-radius: 0; background: var(--mi-accent); color: var(--mi-accent-ink); }
+.store-page.mi-skin .spd-sec-title {
+  font-family: var(--mi-display);
+  font-weight: 400;
+  letter-spacing: -.01em;
+  text-transform: uppercase;
+}
+.store-page.mi-skin .spd-rev-form-head strong { font-family: var(--mi-body); font-weight: 700; text-transform: uppercase; letter-spacing: .01em; }
+.store-page.mi-skin .spd-rev-form-head small { font-family: var(--mi-mono); font-size: 10.5px; letter-spacing: .06em; text-transform: uppercase; color: var(--mi-muted); }
+
+/* Servicios: hero, flujo y fichas del embudo */
+.store-page.mi-skin .rz-sv-hero-card {
+  border: var(--mi-rule-w) solid var(--mi-ink);
+  border-radius: 0;
+  background: var(--mi-paper-2);
+  box-shadow: none;
+}
+.store-page.mi-skin .rz-sv-hero-kicker {
+  font-family: var(--mi-mono);
+  font-size: var(--mi-fs-label);
+  letter-spacing: var(--mi-track-label);
+  text-transform: uppercase;
+  color: var(--mi-muted);
+}
+.store-page.mi-skin .rz-sv-hero-num {
+  font-family: var(--mi-display);
+  font-weight: 400;
+  line-height: .9;
+  color: var(--mi-ink);
+}
+.store-page.mi-skin .rz-sv-hero-note { font-family: var(--mi-mono); font-size: 10.5px; letter-spacing: .1em; text-transform: uppercase; color: var(--mi-muted); }
+.store-page.mi-skin .rz-sv-flow-num {
+  border: var(--mi-hair) solid var(--mi-ink);
+  border-radius: 0;
+  font-family: var(--mi-mono);
+  color: var(--mi-ink);
+}
+.store-page.mi-skin .rz-sv-flow li.is-now .rz-sv-flow-num { background: var(--mi-accent); border-color: var(--mi-accent); color: var(--mi-accent-ink); }
+.store-page.mi-skin .rz-sv-flow-lbl { font-family: var(--mi-mono); font-size: var(--mi-fs-label); letter-spacing: .12em; text-transform: uppercase; }
+.store-page.mi-skin .rz-sv-item { border: var(--mi-hair) solid var(--mi-line-2); border-radius: 0; background: var(--mi-paper); }
+.store-page.mi-skin .rz-sv-item.is-sel,
+.store-page.mi-skin .rz-sv-item:hover { border-color: var(--mi-ink); }
+.store-page.mi-skin .rz-sv-item-num { font-family: var(--mi-mono); color: var(--mi-muted); }
+.store-page.mi-skin .rz-sv-item-price { font-family: var(--mi-mono); font-weight: 600; }
+.store-page.mi-skin .rz-sv-perk-ico { color: var(--mi-accent); }
+.store-page.mi-skin .rz-sv-perk strong { font-size: 15px; font-weight: 700; text-transform: uppercase; letter-spacing: .01em; color: var(--mi-ink); }
+.store-page.mi-skin .rz-sv-perk span { font-size: 13.5px; color: var(--mi-ink-2); }
+.store-page.mi-skin .rz-sv-quote { border: var(--mi-rule-w) solid var(--mi-ink); border-radius: 0; background: var(--mi-paper); }
+.store-page.mi-skin .rz-sv-quote-name { font-family: var(--mi-mono); font-size: 10.5px; letter-spacing: .12em; text-transform: uppercase; color: var(--mi-muted); }
+.store-page.mi-skin .rz-sv-sel-chip { border-radius: 0; font-family: var(--mi-mono); font-size: 10px; letter-spacing: .1em; text-transform: uppercase; }
+.store-page.mi-skin .rz-sv-faq .rz-faq-item { border-radius: 0; }
+.store-page.mi-skin :is(.rz-sv-plate, .rz-plate) {
+  border: var(--mi-hair) solid var(--mi-ink);
+  border-radius: 0;
+  background: var(--mi-accent);
+  color: var(--mi-accent-ink);
+  box-shadow: none;
+  transform: none;
+  font-family: var(--mi-mono);
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: .14em;
+  text-transform: uppercase;
+}
+
+/* Tarjetas de Raíz dentro del sub-árbol: la piel de catálogo fija radio y
+   margen en el elemento (.rz-cat-card .tpc-media), así que la corrección va
+   con el scope completo del sub-árbol para ganarle. */
+.store-page.mi-skin[data-template='raiz'] :is(.rz-cat-card, .rz-pdp-rel-card, .sp-card) .tpc-media {
+  border-radius: 0;
+  margin: 0;
+  aspect-ratio: var(--tpc-ratio, 3 / 4);
+  border: var(--mi-hair) solid var(--mi-line-2);
+}
+.store-page.mi-skin .rz-cat-rail-head { gap: 8px; }
+.store-page.mi-skin .rz-cat-rail-head :is(.rz-eyebrow, .rz-cat-linkbtn) { letter-spacing: .06em; }
+
+/* Catálogo: numeración de pliego sobre la foto y controles nativos a tinta */
+.store-page.mi-skin .rz-cat-products { counter-reset: mi-cat; }
+.store-page.mi-skin .rz-cat-products > * { counter-increment: mi-cat; }
+.store-page.mi-skin .rz-cat-products .tpc-media::before {
+  content: counter(mi-cat, decimal-leading-zero);
+  position: absolute;
+  top: 10px;
+  left: 10px;
+  z-index: 3;
+  display: grid;
+  place-items: center;
+  min-width: 28px;
+  height: 23px;
+  padding: 0 6px;
+  background: var(--mi-accent);
+  color: var(--mi-accent-ink);
+  border: var(--mi-hair) solid var(--mi-ink);
+  font-family: var(--mi-mono);
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: .06em;
+  pointer-events: none;
+}
+.store-page.mi-skin :is(input[type='checkbox'], input[type='radio']) { accent-color: var(--mi-ink); }
+.store-page.mi-skin .rz-cat-rail-head { letter-spacing: .08em; }
+.store-page.mi-skin .rz-sv-chips .rz-tag { border-radius: 0; }
+.store-page.mi-skin .rz-sv-crumbs { font-family: var(--mi-mono); font-size: var(--mi-fs-label); letter-spacing: .1em; text-transform: uppercase; }
+
+/* ==========================================================================
+   10. MOVIMIENTO
+   ========================================================================== */
+@keyframes mi-ticker {
+  from { transform: translate3d(0, 0, 0); }
+  to { transform: translate3d(-50%, 0, 0); }
+}
+@keyframes mi-blink {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: .35; transform: scale(.82); }
+}
+@keyframes mi-float {
+  0%, 100% { translate: 0 0; }
+  50% { translate: 0 -6px; }
+}
+@keyframes mi-rule-in {
+  from { transform: scaleX(0); }
+  to { transform: scaleX(1); }
+}
+
+/* Revelado propio: las piezas entran desde el borde de la retícula. */
+.store-page[data-template='impacto'] .sp-rv {
+  opacity: 0;
+  translate: 0 26px;
+  transition:
+    opacity 700ms var(--mi-ease) var(--rv-d, 0ms),
+    translate 700ms var(--mi-ease) var(--rv-d, 0ms);
+}
+.store-page[data-template='impacto'] .sp-rv.is-in { opacity: 1; translate: 0 0; }
+
+/* Titular del hero: sube por línea con máscara. */
+.mi-hero-title span,
+.mi-hero-title em {
+  animation: mi-line-up 900ms var(--mi-ease) both;
+}
+.mi-hero-title span:nth-child(2) { animation-delay: 90ms; }
+.mi-hero-title em { animation-delay: 170ms; }
+@keyframes mi-line-up {
+  from { opacity: 0; transform: translateY(28px); }
+  to { opacity: 1; transform: none; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .store-page[data-template='impacto'] .mi-ribbon-track,
+  .store-page[data-template='impacto'] .mi-hero-media .mi-stamp,
+  .mi-hero-kicker i,
+  .mi-hero-title span,
+  .mi-hero-title em,
+  .mi-hero-title::after {
+    animation: none !important;
+  }
+  .store-page[data-template='impacto'] .sp-rv { opacity: 1; translate: none; }
+}
+
+/* ==========================================================================
+   11. RESPONSIVE
+   ========================================================================== */
+@media (max-width: 1080px) {
+  .mi-hero-grid { grid-template-columns: minmax(0, 1fr); }
+  .mi-hero-media { aspect-ratio: 16 / 11; max-height: 62vh; }
+  .mi-hero-media .mi-stamp { right: 12px; bottom: 54px; }
+  .mi-about-grid { grid-template-columns: minmax(0, 1fr); }
+  .store-page[data-template='impacto'] .mi-featured-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .store-page[data-template='impacto'] .sp-shop-featured-head { grid-template-columns: minmax(0, 1fr); align-items: start; }
+  .store-page[data-template='impacto'] .sp-shop-viewall { justify-self: start; }
+}
+
+@media (max-width: 860px) {
+  .mi-dept-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .mi-head { grid-template-columns: minmax(0, 1fr); }
+  .mi-head-copy { text-align: left; }
+  .store-page[data-template='impacto'] .mi-featured-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .store-page[data-template='impacto'] .sp-stat { padding: 18px 14px; }
+  .mi-hero-data { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+
+@media (max-width: 640px) {
+  .store-page[data-template='impacto'] { --mi-section: 52px; --mi-gutter: 16px; }
+  .mi-masthead { flex-wrap: wrap; row-gap: 6px; }
+  .mi-masthead-mid { display: none; }
+  .mi-hero-title { font-size: clamp(46px, 15vw, 78px); }
+  .mi-hero-text { font-size: 15px; }
+  .mi-hero-actions .mi-btn { flex: 1 1 100%; }
+  .mi-hero-media { aspect-ratio: 4 / 5; max-height: none; }
+  .mi-hero-media .mi-stamp { width: 92px; right: -8px; bottom: -16px; }
+  .mi-hero-caption { flex-direction: column; align-items: flex-start; gap: 2px; }
+  .mi-hero-data { grid-template-columns: minmax(0, 1fr); gap: 10px; }
+  .mi-dept-grid { grid-template-columns: minmax(0, 1fr); }
+  .mi-dept-media { aspect-ratio: 16 / 11; }
+  .mi-dossier-years strong { font-size: 54px; }
+  .store-page[data-template='impacto'] .mi-featured-grid { grid-template-columns: minmax(0, 1fr); }
+  .store-page[data-template='impacto'] .mi-featured-grid > .sp-card { padding: 14px 12px; }
+  .store-page[data-template='impacto'] .sp-foot-grid { grid-template-columns: minmax(0, 1fr); }
+  .store-page[data-template='impacto'] .sp-cta-title { font-size: clamp(32px, 11vw, 48px); }
+  .mi-ribbon-item { font-size: 10px; letter-spacing: .14em; }
+}
+
+/* Chrome móvil: barra de pestañas inferior de imprenta y CTA de la barra. */
+.store-page[data-template='impacto'] .sp-tabbar {
+  background: var(--mi-paper);
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+  border-top: var(--mi-rule-w) solid var(--mi-rule);
+  padding-top: 4px;
+}
+.store-page[data-template='impacto'] .sp-tab {
+  border-radius: 0;
+  color: var(--mi-muted);
+  font-family: var(--mi-mono);
+  font-size: 9px;
+  font-weight: 500;
+  letter-spacing: .1em;
+  text-transform: uppercase;
+}
+.store-page[data-template='impacto'] .sp-tab.active { color: var(--mi-ink); }
+.store-page[data-template='impacto'] .sp-tab.active::before {
+  top: 0;
+  width: 100%;
+  height: 2px;
+  border-radius: 0;
+  background: var(--mi-accent);
+}
+.store-page[data-template='impacto'] .sp-tab:active { background: var(--mi-paper-2); }
+.store-page[data-template='impacto'] .sp-more-sheet {
+  border-radius: 0;
+  border-top: var(--mi-rule-w) solid var(--mi-rule);
+  background: var(--mi-paper);
+  box-shadow: 0 -18px 40px -22px rgba(0, 0, 0, .5);
+}
+.store-page[data-template='impacto'] .sp-more-link,
+.store-page[data-template='impacto'] .sp-more-close { border-radius: 0; }
+.store-page[data-template='impacto'] .sp-more-link {
+  font-family: var(--mi-mono);
+  font-size: 11px;
+  letter-spacing: .12em;
+  text-transform: uppercase;
+  border-bottom: var(--mi-hair) solid var(--mi-line);
+}
+.store-page[data-template='impacto'] .sp-more-grab { border-radius: 0; background: var(--mi-line-2); }
+.store-page[data-template='impacto'] .sp-top-cta {
+  border: var(--mi-hair) solid var(--mi-ink);
+  border-radius: 0;
+  background: var(--mi-ink);
+  color: var(--mi-paper);
+  font-family: var(--mi-mono);
+  font-size: 10px;
+  font-weight: 500;
+  letter-spacing: .12em;
+  text-transform: uppercase;
+  height: 40px;
+  padding: 0 12px;
+}
+.store-page[data-template='impacto'] .sp-top-cta:hover {
+  background: var(--mi-accent);
+  border-color: var(--mi-accent);
+  color: var(--mi-accent-ink);
+  transform: none;
+}
+@media (max-width: 640px) {
+  .store-page[data-template='impacto'] .sp-top .sp-name {
+    font-size: 17px;
+    letter-spacing: .02em;
+    max-width: 46vw;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .store-page[data-template='impacto'] .sp-top .sp-logo.sm { width: 30px; height: 30px; border-radius: 0; }
+}
+
+/* La barra superior en móvil: fondo papel (el texto del acento no se lee). */
+@media (max-width: 1100px) {
+  .store-page[data-template='impacto'] .sp-top {
+    background: var(--mi-paper);
+    border-bottom: var(--mi-rule-w) solid var(--mi-rule);
+  }
+  .store-page[data-template='impacto'] .sp-top .sp-icon-btn,
+  .store-page[data-template='impacto'] .sp-top .sp-burger { color: var(--mi-ink); }
+  .store-page[data-template='impacto'] .sp-drawer {
+    border-radius: 0;
+    border-right: var(--mi-rule-w) solid var(--mi-rule);
+    background: var(--mi-paper);
+  }
+  .store-page[data-template='impacto'] .sp-drawer a {
+    font-family: var(--mi-mono);
+    font-size: var(--mi-fs-label);
+    letter-spacing: .12em;
+    text-transform: uppercase;
+    border-bottom: var(--mi-hair) solid var(--mi-line);
+  }
+}

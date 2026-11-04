@@ -18,7 +18,8 @@ export const landingViews = {
   sastreria:    () => import('../views/store/sastreria/InicioView.vue'),
 
   moderntec:    () => import('../views/store/moderntec/InicioView.vue'),
-  indumentaria: () => import('../views/store/indumentaria/InicioView.vue')
+  indumentaria: () => import('../views/store/indumentaria/InicioView.vue'),
+  impacto:      () => import('../views/store/impacto/InicioView.vue')
 }
 
 export const catalogViews = {
@@ -29,7 +30,8 @@ export const catalogViews = {
   sastreria:    () => import('../views/store/sastreria/CatalogoView.vue'),
 
   moderntec:    () => import('../views/store/moderntec/CatalogoView.vue'),
-  indumentaria: () => import('../views/store/indumentaria/CatalogoView.vue')
+  indumentaria: () => import('../views/store/indumentaria/CatalogoView.vue'),
+  impacto:      () => import('../views/store/impacto/CatalogoView.vue')
 }
 
 export const productViews = {
@@ -40,7 +42,8 @@ export const productViews = {
   sastreria:    () => import('../views/store/sastreria/ProductoView.vue'),
 
   moderntec:    () => import('../views/store/moderntec/ProductoView.vue'),
-  indumentaria: () => import('../views/store/indumentaria/ProductoView.vue')
+  indumentaria: () => import('../views/store/indumentaria/ProductoView.vue'),
+  impacto:      () => import('../views/store/impacto/ProductoView.vue')
 }
 
 export const servicesViews = {
@@ -50,7 +53,8 @@ export const servicesViews = {
   sastreria:    () => import('../views/store/sastreria/ServiciosView.vue'),
 
   moderntec:    () => import('../views/store/moderntec/ServiciosView.vue'),
-  indumentaria: () => import('../views/store/indumentaria/ServiciosView.vue')
+  indumentaria: () => import('../views/store/indumentaria/ServiciosView.vue'),
+  impacto:      () => import('../views/store/impacto/ServiciosView.vue')
 }
 
 // ===== Listas canónicas de bloques =====

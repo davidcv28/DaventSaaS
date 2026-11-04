@@ -81,7 +81,7 @@ const patternDoc = ref(null)
 // la Template Definition y en la hoja store-<id>.css. El layout y el tema del
 // patrón base (esencial/raiz) NO se les aplica: les pisaba variantes firma
 // (hero 'centered') y el acento de la tienda con la paleta neutra del estilo.
-const SKIN_TEMPLATES = new Set(['mercado', 'gimnasio', 'movimiento', 'sastreria', 'moderntec', 'indumentaria'])
+const SKIN_TEMPLATES = new Set(['mercado', 'gimnasio', 'movimiento', 'sastreria', 'moderntec', 'indumentaria', 'impacto'])
 //Superficie que el documento del patrón debe pintar en esta ruta. Si el
 //diseño no la declara (`surfaces`), esa ruta sigue con la plantilla Vue.
 const patternSurface = computed(() => (
@@ -281,7 +281,8 @@ const TEMPLATE_CSS = {
   movimiento: () => import('../assets/store-movimiento.css'),
   sastreria: () => import('../assets/store-sastreria.css'),
   moderntec: () => import('../assets/store-moderntec.css'),
-  indumentaria: () => import('../assets/store-indumentaria.css')
+  indumentaria: () => import('../assets/store-indumentaria.css'),
+  impacto:   () => import('../assets/store-impacto.css')
 }
 watch(pageTemplate, (tpl) => {
   const loaded = TEMPLATE_CSS[tpl]?.()
