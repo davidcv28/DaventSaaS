@@ -55,3 +55,6 @@ qa_token.tmp
 
 # Temp local de esbuild/Vite en Windows
 .tmpbuild/
+
+# Artefactos de Playwright en la raiz
+.pw-*
