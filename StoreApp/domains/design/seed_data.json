@@ -4726,6 +4726,193 @@
         "corners": "rounded"
       },
       "concept": "Grafito + ámbar: el fashion club después de hora."
+    },
+    {
+      "slug": "topmodern",
+      "nombre": "TopModern",
+      "categoria": "Tienda de indumentaria",
+      "descripcion": "E-commerce editorial en clave SHOP.CO: papel claro, tipografía ultra-negrita en mayúsculas, píldoras redondeadas, tira de marcas en negro y grillas de producto con rating y badges de descuento.",
+      "tier": "plus",
+      "template": "raiz",
+      "page_theme": "light",
+      "pattern": "topmodern",
+      "tokens": {
+        "palette": {
+          "accent": "#0A0A0A",
+          "primary": "#0A0A0A",
+          "secondary": "#3A3A3A",
+          "bg": "#F2F0F1",
+          "surface": "#FFFFFF",
+          "text": "#0A0A0A",
+          "muted": "#6B6B6B",
+          "border": "#E3E1E2",
+          "success": "#2F6B4F",
+          "danger": "#D63030"
+        },
+        "containers": {
+          "radius": "lg",
+          "shadow": "soft",
+          "border": "thin",
+          "density": "comfortable",
+          "surface": "flat"
+        },
+        "typography": {
+          "heading": "montserrat",
+          "subheading": "montserrat",
+          "body": "montserrat",
+          "scale": "bold",
+          "weightHeading": 900,
+          "letterSpacing": "-0.03em"
+        },
+        "buttons": {
+          "shape": "pill",
+          "style": "solid",
+          "size": "md"
+        },
+        "background": {
+          "type": "solid",
+          "value": null,
+          "overlay": "none"
+        },
+        "motion": {
+          "reveal": "fade-up",
+          "hover": "lift",
+          "intensity": "subtle"
+        },
+        "mobile": {
+          "cardStyle": "standard",
+          "heroHeight": "standard"
+        },
+        "preview": "",
+        "icons": {
+          "style": "line",
+          "stroke": "2",
+          "size": "20",
+          "corners": "rounded"
+        }
+      },
+      "layout": {},
+      "layout_spec": {},
+      "tags": [
+        "indumentaria",
+        "moda",
+        "fashion",
+        "ecommerce",
+        "retail",
+        "tienda",
+        "ofertas",
+        "shop"
+      ],
+      "preview": "",
+      "style": "Tienda de indumentaria",
+      "anim": {
+        "hero": "fade-up",
+        "reveal": "fade-up",
+        "hover": "lift",
+        "button": "solid-press"
+      },
+      "easing": "cubic-bezier(.4,0,.2,1)",
+      "duration": "420ms",
+      "icons": {
+        "style": "line",
+        "stroke": "2",
+        "size": "20",
+        "corners": "rounded"
+      },
+      "concept": "E-commerce editorial: Montserrat 900, papel claro y bandas de tinta."
+    },
+    {
+      "slug": "topmodern-noche",
+      "nombre": "TopModern Noche",
+      "categoria": "Tienda de indumentaria nocturna",
+      "descripcion": "La edición nocturna de TopModern: grafito casi negro, acento lima ácido y el mismo aparato de e-commerce editorial en clave after-hours.",
+      "tier": "plus",
+      "template": "raiz",
+      "page_theme": "dark",
+      "pattern": "topmodern",
+      "tokens": {
+        "palette": {
+          "accent": "#C8F031",
+          "primary": "#C8F031",
+          "secondary": "#8FB51F",
+          "bg": "#101010",
+          "surface": "#191919",
+          "text": "#F4F2EE",
+          "muted": "#9C9C9C",
+          "border": "#2A2A2A",
+          "success": "#4CC38A",
+          "danger": "#E56464"
+        },
+        "containers": {
+          "radius": "lg",
+          "shadow": "medium",
+          "border": "thin",
+          "density": "comfortable",
+          "surface": "elevated"
+        },
+        "typography": {
+          "heading": "montserrat",
+          "subheading": "montserrat",
+          "body": "montserrat",
+          "scale": "bold",
+          "weightHeading": 900,
+          "letterSpacing": "-0.03em"
+        },
+        "buttons": {
+          "shape": "pill",
+          "style": "solid",
+          "size": "md"
+        },
+        "background": {
+          "type": "solid",
+          "value": null,
+          "overlay": "none"
+        },
+        "motion": {
+          "reveal": "fade-up",
+          "hover": "glow",
+          "intensity": "subtle"
+        },
+        "mobile": {
+          "cardStyle": "standard",
+          "heroHeight": "standard"
+        },
+        "preview": "",
+        "icons": {
+          "style": "line",
+          "stroke": "2",
+          "size": "20",
+          "corners": "rounded"
+        }
+      },
+      "layout": {},
+      "layout_spec": {},
+      "tags": [
+        "indumentaria",
+        "moda",
+        "noche",
+        "fashion",
+        "ecommerce",
+        "retail",
+        "premium"
+      ],
+      "preview": "",
+      "style": "Tienda de indumentaria nocturna",
+      "anim": {
+        "hero": "fade",
+        "reveal": "fade",
+        "hover": "glow",
+        "button": "solid-press"
+      },
+      "easing": "cubic-bezier(.4,0,.2,1)",
+      "duration": "420ms",
+      "icons": {
+        "style": "line",
+        "stroke": "2",
+        "size": "20",
+        "corners": "rounded"
+      },
+      "concept": "Grafito + lima ácido: el e-commerce editorial después de hora."
     }
   ],
   "patterns": [
@@ -6589,6 +6776,69 @@
       "variables": {},
       "supports_dark_mode": true,
       "style": "moda"
+    },
+    {
+      "slug": "topmodern",
+      "nombre": "TopModern",
+      "categoria": "indumentaria",
+      "descripcion": "E-commerce editorial estilo SHOP.CO: hero ultra-negrita con stats, tira de marcas en tinta, nuevos ingresos, explorá por estilo, garantías, membresías, testimonios, FAQ, CTA de tinta y contacto. Solo datos de la tienda.",
+      "tier": "plus",
+      "template": "raiz",
+      "layout": {
+        "landing": [
+          { "id": "hero", "variant": "split", "enabled": true, "order": 0 },
+          { "id": "featured", "enabled": true, "order": 1 },
+          { "id": "categories", "enabled": true, "order": 2 },
+          { "id": "about", "enabled": true, "order": 3 },
+          { "id": "benefits", "variant": "cards", "enabled": true, "order": 4 },
+          { "id": "offerings", "enabled": true, "order": 5 },
+          { "id": "gallery", "enabled": true, "order": 6 },
+          { "id": "timeline", "enabled": true, "order": 7 },
+          { "id": "team", "enabled": true, "order": 8 },
+          { "id": "testimonials", "variant": "cards", "enabled": true, "order": 9 },
+          { "id": "plans", "enabled": true, "order": 10 },
+          { "id": "video", "enabled": true, "order": 11 },
+          { "id": "faq", "enabled": true, "order": 12 },
+          { "id": "cta", "variant": "band", "enabled": true, "order": 13 },
+          { "id": "contact", "enabled": true, "order": 14 }
+        ],
+        "catalog": [
+          { "id": "hero", "enabled": true, "order": 0 },
+          { "id": "grid", "enabled": true, "order": 1 }
+        ],
+        "services": [
+          { "id": "hero", "enabled": true, "order": 0 },
+          { "id": "list", "enabled": true, "order": 1 }
+        ]
+      },
+      "anim": {
+        "hero": "fade-up",
+        "reveal": "fade-up",
+        "hover": "lift",
+        "button": "solid-press"
+      },
+      "easing": "cubic-bezier(.4,0,.2,1)",
+      "duration": "420ms",
+      "icons": {
+        "style": "line",
+        "stroke": "2",
+        "size": "20",
+        "corners": "rounded"
+      },
+      "tags": [
+        "indumentaria",
+        "moda",
+        "fashion",
+        "ecommerce",
+        "retail",
+        "tienda",
+        "ofertas",
+        "shop"
+      ],
+      "preview": "",
+      "variables": {},
+      "supports_dark_mode": true,
+      "style": "topmodern"
     }
   ]
 }
