@@ -1435,6 +1435,16 @@ body.m-open .m-sheet{transform:none}
 
   function qsa(sel, ctx) { return [].slice.call((ctx || document).querySelectorAll(sel)) }
 
+  function measure() {
+    requestAnimationFrame(function () {
+      if (window.parent === window) return
+      parent.postMessage({
+        type: 'davent:ds-height',
+        height: Math.max(document.documentElement.scrollHeight, document.body ? document.body.scrollHeight : 0)
+      }, '*')
+    })
+  }
+
   /* ---------- Alto real del chrome fijo ---------- */
   function syncHead() {
     if (!head) return
@@ -1513,6 +1523,7 @@ body.m-open .m-sheet{transform:none}
           card.style.display = cat === 'Todos' || card.getAttribute('data-cat') === cat ? '' : 'none'
         })
         paint()
+        measure()
       })
       tabs.appendChild(btn)
     })

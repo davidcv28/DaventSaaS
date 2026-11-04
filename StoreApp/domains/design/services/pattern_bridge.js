@@ -30,7 +30,30 @@
     // Medir después del frame: al cambiar de superficie el display de los
     // bloques todavía no se recalculó y el alto queda viejo.
     requestAnimationFrame(function () {
-      var h = Math.max(root.scrollHeight, document.body ? document.body.scrollHeight : 0)
+      /* `scrollHeight` nunca baja del viewport del iframe: al pasar de una
+       * superficie larga (landing) a una corta (catálogo) el alto quedaba
+       * clavado en el anterior y el pie flotaba sobre un hueco enorme. Se
+       * mide el borde inferior del pie (o del último bloque en flujo), que
+       * sí es el alto real del contenido. */
+      var h = 0
+      var foot = document.querySelector('footer')
+      if (foot && foot.getClientRects().length) {
+        var fr = foot.getBoundingClientRect()
+        if (fr.height) h = fr.bottom + (window.scrollY || 0)
+      }
+      if (!h && document.body) {
+        var kids = document.body.children
+        for (var i = kids.length - 1; i >= 0; i--) {
+          var el = kids[i]
+          if (!el || el.tagName === 'SCRIPT' || el.tagName === 'STYLE' || el.tagName === 'LINK') continue
+          var cs = window.getComputedStyle(el)
+          if (cs.position === 'fixed' || cs.display === 'none') continue
+          var r = el.getBoundingClientRect()
+          if (r.height > 0) { h = r.bottom + (window.scrollY || 0); break }
+        }
+        if (!h) h = document.body.scrollHeight
+      }
+      if (!h) h = root.scrollHeight
       parent.postMessage({ type: 'davent:ds-height', height: h }, '*')
     })
   }
@@ -666,6 +689,10 @@
         }
       }
     }
+    /* Filtrar/ordenar cambia el alto del documento: sin re-medir, el iframe
+     * queda con el alto anterior y el pie del diseño se despega del fondo
+     * (queda un hueco grande debajo). */
+    send()
   }
   function catalog() {
     wrap = document.querySelector('[data-ds-products]')
