@@ -78,6 +78,43 @@ def history_of(user : User) -> list[dict]:
 
 
 #=========================================
+# ACCIONES QUE EL PANEL EJECUTA SOLO (respuesta aditiva `action`)
+#=========================================
+#El texto lo sigue redactando el LLM/fallback; la acción la decide este
+#mapa determinista — nunca el modelo (no inventa ni navega a lo loco).
+_ACTION_BUSINESS    =   'assist_business'   # sección "Sobre mi negocio" + Asistencia con IA
+_ACTION_DESIGN      =   'assist_design'     # sección "Diseño" + diseño asistido
+_ACTION_KEYS    =   [
+    (_ACTION_BUSINESS, (
+        'datos de mi negocio', 'datos de la empresa', 'datos de mi empresa',
+        'mi negocio', 'mi empresa', 'sobre mi negocio', 'perfil del negocio',
+        'completar mis datos', 'completar el perfil', 'completar mi negocio',
+        'completar la empresa', 'cargar mis datos', 'cargo mis datos',
+        'cargo los datos', 'cargar datos', 'rellenar', 'rellená', 'relleno', 'formulario',
+        'descripción del negocio', 'descripcion de mi', 'mis horarios',
+        'dirección', 'redes sociales', 'mi whatsapp', 'mis redes',
+    )),
+    (_ACTION_DESIGN, (
+        'diseñ', 'plantilla', 'personaliz', 'estilo de mi web', 'estilo de la web',
+        'colores de mi web', 'color de mi web', 'fuente de mi web', 'tipografía',
+        'tipografia', 'armar mi web', 'hacer mi web', 'crear mi web', 'crear mi página',
+        'armar mi página', 'hacer mi página', 'crear mi sitio', 'armar mi sitio',
+        'hacer mi sitio', 'cómo se ve mi web', 'como se ve mi web', 'mejorar mi web',
+        'cambiar el diseño', 'mi página se ve', 'logo', 'foto de portada',
+    )),
+]
+
+
+def _intent_action(text : str) -> str | None:
+    """Acción del panel que acompaña a la respuesta (o None si es charla)."""
+    t   =   f' {(text or "").lower()} '
+    for action, keys in _ACTION_KEYS:
+        if any(k in t for k in keys):
+            return action
+    return None
+
+
+#=========================================
 # SYSTEM PROMPT — asistente de cuenta, no vendedor de diseño
 #=========================================
 def _system_prompt(user : User, latest : str) -> str:
@@ -91,12 +128,22 @@ def _system_prompt(user : User, latest : str) -> str:
         'Reglas:\n'
         '- Respondé SOLO con los datos del bloque "Datos del cliente en sesión". '
         'Si el dato pedido no está en el bloque, decilo y orientalo a la sección '
-        'del panel donde se ve (Planes, Mis catálogos, Pagos, Facturas, Mi tienda, '
-        'Estadísticas). Nunca inventes números ni hables de otros clientes.\n'
-        '- No hagas entrevistas ni preguntes por diseño salvo que el cliente lo '
-        'pida explícitamente. Sos un asistente de cuenta, no un vendedor.\n'
-        '- Si piden algo que no podés hacer (cambiar datos, ejecutar acciones), '
-        'decí que sos de solo consulta y señalá dónde hacerlo en el panel.'
+        'del panel donde se ve. Nunca inventes números ni hables de otros clientes.\n'
+        '- También respondés dudas de uso del panel (cómo cargar un producto, '
+        'dónde cambiar el logo, cómo se renueva el plan). Mapa del panel: '
+        'Mi tienda (nombre, slug, link público y dominio propio), Sobre mi '
+        'negocio (descripción, horarios, dirección, redes, WhatsApp de la '
+        'portada), Diseño (plantilla, tema, tipografías, logo y fotos en la '
+        'pestaña Fotos), Mis catálogos (productos, categorías, marcas, '
+        'descuentos), Planes (cambio de plan y renovación), Pagos, Facturas, '
+        'Estadísticas, Herramientas (QR y folletos), Opiniones, Servicios.\n'
+        '- Cuando el usuario quiera diseñar su web o cargar los datos de su '
+        'negocio, la app ABRE SOLA la "Asistencia con IA" de esa sección: '
+        'avisalo ("te abrí la asistencia con IA para que la completes más '
+        'cómodo") en vez de solo mandarlo a la sección.\n'
+        '- Si piden algo que no podés hacer (cambiar datos, ejecutar acciones '
+        'fuera de esas asistencias), decí que sos de solo consulta y señalá '
+        'dónde hacerlo en el panel.'
         f'{data}'
     )
 
@@ -121,11 +168,16 @@ def assistant_reply(user : User, latest : str = '') -> str:
     return _fallback_reply(user, latest)
 
 
-def reply_to_user(user : User, body : str) -> AssistantMessage | None:
-    """El usuario escribió: guarda su mensaje y responde el bot."""
+def reply_to_user(user : User, body : str) -> tuple[AssistantMessage | None, str | None]:
+    """El usuario escribió: guarda su mensaje y responde el bot.
+
+    Devuelve (mensaje del bot, acción de panel) — la acción viaja suelta en
+    la respuesta del endpoint (no se persiste ni se repite al releer el
+    historial): el front la ejecuta una sola vez.
+    """
     AssistantMessage.objects.create(user = user, from_bot = False, body = (body or '').strip()[:2000])
     try:
-        return send_bot_message(user, assistant_reply(user, body))
+        return send_bot_message(user, assistant_reply(user, body)), _intent_action(body)
     except Exception as exc:  # noqa: BLE001
         logger.exception('Tu Asistente falló: %s', exc)
-        return send_bot_message(user, 'Tuve un problema leyendo tus datos. Probá de nuevo en un momento.')
+        return send_bot_message(user, 'Tuve un problema leyendo tus datos. Probá de nuevo en un momento.'), None

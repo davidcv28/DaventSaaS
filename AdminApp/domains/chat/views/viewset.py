@@ -243,8 +243,13 @@ class AssistantViewSet(viewsets.GenericViewSet):
         body    =   (request.data.get('body') or '').strip()[:2000]
         if not body:
             return Response({'body': ['Escribí un mensaje.']}, status = status.HTTP_400_BAD_REQUEST)
-        reply   =   reply_to_user(request.user, body)
+        reply, action   =   reply_to_user(request.user, body)
         return Response(
-            {'reply': AssistantMessageSerializer(reply).data if reply else None},
+            {
+                'reply'     :   AssistantMessageSerializer(reply).data if reply else None,
+                #Acción de panel (assist_design / assist_business) o None:
+                #el front la ejecuta una vez; no viaja en el historial.
+                'action'    :   action,
+            },
             status = status.HTTP_201_CREATED,
         )

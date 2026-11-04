@@ -2803,14 +2803,25 @@ function sendBotChat() {
   askAssistant(text.slice(0, 2000))
 }
 
+// El asistente puede pedir que el panel ejecute una acción: abrir la
+// Asistencia con IA de la sección que corresponde (diseño asistido o
+// datos del negocio) en vez de solo mandar al usuario a buscarla.
+function runBotAction(action) {
+  if (action === 'assist_design' || action === 'assist_business') {
+    section.value = action === 'assist_design' ? 'design' : 'company'
+    openAssist(action === 'assist_design' ? 'design' : 'business')
+  }
+}
+
 async function askAssistant(text) {
   botPush(true, text)
   botTyping.value = true
   try {
-    const { reply } = await sendAssistant(text)
+    const { reply, action } = await sendAssistant(text)
     botTyping.value = false
     if (reply) botPush(false, reply.body)
     else botPush(false, BOT_FALLBACK)
+    if (action) runBotAction(action)
   } catch (err) {
     botTyping.value = false
     botPush(false, err?.response?.data?.detail || BOT_FALLBACK)
