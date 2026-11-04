@@ -31,9 +31,9 @@
   --bg:var(--ds-bg,#FFFFFF);
   --surface:var(--ds-surface,#FFFFFF);
   --ink:var(--ds-text,#141414);
-  --muted:var(--ds-muted,#7B7974);
+  --muted:var(--ds-muted,#6E6B64);
   --line:var(--ds-border,#E7E4DF);
-  --accent:var(--ds-accent,#EE2D45);
+  --accent:var(--ds-accent,#E0122B);
   --accent-ink:var(--ds-accent-ink,#FFFFFF);
   --soft:#F5F3EF;
   --panel:#141414;
@@ -56,7 +56,7 @@ html[data-ds-theme="dark"],html[data-ds-style="calzado-noche"]{
   --ink:#F2F0EC;
   --muted:#9E9B95;
   --line:#2B2B2B;
-  --accent:color-mix(in srgb,var(--ds-accent,#EE2D45) 86%,#F2F0EC);
+  --accent:color-mix(in srgb,var(--ds-accent,#E0122B) 82%,#F2F0EC);
   --accent-ink:#121212;
   --soft:#1A1A1A;
   --panel:#1E1E1E;
@@ -230,7 +230,7 @@ html.m-lock,html.m-lock body,body.filters-open{overflow:hidden}
 .hero-veil{position:absolute;inset:0;z-index:1;
   background:
     linear-gradient(180deg,rgba(8,8,8,.62) 0%,rgba(8,8,8,.18) 34%,rgba(8,8,8,.34) 68%,rgba(8,8,8,.86) 100%),
-    linear-gradient(100deg,rgba(238,45,69,.24),transparent 52%)}
+    linear-gradient(100deg,color-mix(in srgb,var(--accent) 24%,transparent),transparent 52%)}
 /* Retícula de pista al pie: decoración, nunca detrás de texto. */
 .hero::after{content:"";position:absolute;left:0;right:0;bottom:0;height:110px;z-index:1;
   background:repeating-linear-gradient(90deg,rgba(255,255,255,.16) 0 1px,transparent 1px 46px);
@@ -377,8 +377,10 @@ html.m-lock,html.m-lock body,body.filters-open{overflow:hidden}
 /* En una celda de alto fijo los hijos con `overflow:hidden` se encogen a 0
    (el párrafo desaparecía): el panel nunca comprime su contenido. */
 .panel>*{flex:none}
-.panel.red{grid-column:7/13;grid-row:1/2;background:var(--accent);color:var(--accent-ink)}
-.panel.dark{grid-column:7/10;grid-row:2/3;background:var(--panel);color:var(--panel-ink)}
+.panel.red{grid-column:7/13;grid-row:1/2;background:var(--accent);color:var(--accent-ink);
+  background-image:repeating-linear-gradient(90deg,rgba(0,0,0,.08) 0 1px,transparent 1px 34px)}
+.panel.dark{grid-column:7/10;grid-row:2/3;background:var(--panel);color:var(--panel-ink);
+  background-image:repeating-linear-gradient(90deg,rgba(255,255,255,.06) 0 1px,transparent 1px 34px)}
 .panel-tag{font-family:var(--font-display);font-size:9px;font-weight:700;
   letter-spacing:.28em;text-transform:uppercase;opacity:.72}
 .panel h2{font-size:clamp(22px,2.6vw,34px);font-weight:300;line-height:1.08;letter-spacing:-.01em;
@@ -445,7 +447,13 @@ html.m-lock,html.m-lock body,body.filters-open{overflow:hidden}
 
 /* ── secciones y cabeceras ── */
 .sec{padding-block:clamp(48px,7vw,84px)}
-.sec.band{background:var(--soft)}
+.sec.band{position:relative;background:var(--soft);border-block:1px solid var(--line)}
+/* Retícula de pista a lo largo del filo superior: marca el cambio de bloque
+   sin competir con el contenido. */
+.sec.band::before{content:"";position:absolute;left:0;right:0;top:-1px;height:1px;
+  background:repeating-linear-gradient(90deg,var(--accent) 0 26px,transparent 26px 44px);
+  opacity:.5;pointer-events:none}
+.sec.band+.sec.band::before{display:none}
 .sec.tight{padding-block:clamp(34px,4vw,54px)}
 .head{display:flex;align-items:flex-end;justify-content:space-between;gap:20px;
   flex-wrap:wrap;margin-bottom:30px}
@@ -486,7 +494,8 @@ html.m-lock,html.m-lock body,body.filters-open{overflow:hidden}
 .rail{display:grid;grid-template-columns:264px 1fr;align-items:stretch;gap:0;
   border:1px solid var(--line)}
 .rail-side{display:flex;flex-direction:column;gap:14px;padding:clamp(22px,2.6vw,32px);
-  background:var(--accent);color:var(--accent-ink)}
+  background:var(--accent);color:var(--accent-ink);
+  background-image:repeating-linear-gradient(90deg,rgba(0,0,0,.09) 0 1px,transparent 1px 34px)}
 .rail-kicker{font-family:var(--font-display);font-size:9px;font-weight:700;
   letter-spacing:.28em;text-transform:uppercase;opacity:.8}
 .rail-side h2{font-size:clamp(26px,2.8vw,36px);font-weight:300;line-height:.98;
@@ -539,8 +548,8 @@ html.m-lock,html.m-lock body,body.filters-open{overflow:hidden}
   color:var(--ink);background:color-mix(in srgb,var(--surface) 88%,transparent);
   padding:3px 6px;opacity:.9}
 .ds-product-img{aspect-ratio:1/1;width:100%;object-fit:cover;background:var(--soft);
-  transition:transform .7s var(--ease)}
-.ds-product:hover .ds-product-img{transform:scale(1.04)}
+  filter:saturate(.92);transition:transform .7s var(--ease),filter .4s}
+.ds-product:hover .ds-product-img{transform:scale(1.04);filter:saturate(1)}
 span.ds-product-img.is-empty{display:block}
 .ds-product-copy{display:block;padding:14px 14px 0;text-align:center}
 .ds-product-name{display:block;font-family:var(--font-display);font-size:12.5px;font-weight:600;
@@ -573,7 +582,12 @@ span.ds-product-img.is-empty{display:block}
   background:var(--accent);color:var(--accent-ink);
   font-family:var(--font-display);font-size:10px;font-weight:800;letter-spacing:.06em;
   padding:4px 9px;box-shadow:0 6px 14px -8px rgba(0,0,0,.6)}
-.ds-empty{padding:34px 0;color:var(--muted);font-size:13.5px}
+.ds-empty{display:flex;align-items:center;gap:14px;margin-top:4px;
+  padding:26px 22px;border:1px dashed var(--line);background:var(--surface);
+  color:var(--muted);font-size:13px}
+.ds-empty::before{content:"";flex:none;width:38px;height:38px;
+  border:1.5px solid var(--accent);
+  background:radial-gradient(circle at center,var(--accent) 0 4px,transparent 4.5px)}
 
 /* ── servicios ── */
 .ds-services-list{list-style:none;margin:0;padding:0;display:grid;
@@ -597,6 +611,7 @@ span.ds-product-img.is-empty{display:block}
 .ds-service:hover .ds-service-desc{color:inherit;opacity:.8}
 @media(max-width:880px){.ds-services-list{grid-template-columns:1fr 1fr}}
 @media(max-width:560px){.ds-services-list{grid-template-columns:1fr}}
+.svc-cta{margin-top:26px}
 
 /* ── nosotros + dorsal + números ── */
 /* Flex (no grid): si la tienda no cargó relato, la placa del dorsal ocupa
@@ -684,7 +699,11 @@ span.ds-product-img.is-empty{display:block}
 .ds-plan::before{content:counter(plan,decimal-leading-zero);position:absolute;
   top:24px;right:24px;font-family:var(--font-body);font-size:9.5px;font-weight:700;
   letter-spacing:.18em;color:var(--accent);opacity:.75}
+.ds-plan::after{content:"";position:absolute;left:0;right:0;top:0;height:3px;
+  background:var(--accent);transform:scaleX(0);transform-origin:left;
+  transition:transform .4s var(--ease)}
 .ds-plan:hover{background:var(--soft)}
+.ds-plan:hover::after{transform:scaleX(1)}
 .ds-plan-name{margin:0;font-family:var(--font-display);font-size:12px;font-weight:700;
   letter-spacing:.18em;text-transform:uppercase}
 .ds-plan-price{display:block;margin-top:12px;font-family:var(--font-display);
@@ -731,6 +750,8 @@ span.ds-product-img.is-empty{display:block}
   border-color:var(--accent);color:var(--accent-ink);transform:rotate(180deg)}
 .ds-faq-a{padding:0 0 18px;font-size:12.5px;font-weight:300;color:var(--muted);
   max-width:70ch;line-height:1.7}
+.ds-faq[open] .ds-faq-a{animation:faq-in .3s var(--ease)}
+@keyframes faq-in{from{opacity:0;transform:translateY(-6px)}to{opacity:1;transform:none}}
 .ds-faq[open]{box-shadow:inset 3px 0 0 var(--accent)}
 
 /* ── llamado a la acción ── */
@@ -754,6 +775,10 @@ span.ds-product-img.is-empty{display:block}
 /* ── contacto ── */
 .contact-grid{display:grid;grid-template-columns:1fr 1fr;gap:clamp(28px,4vw,52px);
   align-items:start}
+.contact-title{font-size:clamp(26px,3.2vw,38px);font-weight:300;letter-spacing:-.02em;
+  line-height:1.08;margin-top:12px}
+.contact-lead{color:var(--muted);margin-top:12px;font-size:13.5px;font-weight:300;
+  max-width:52ch}
 .contact-card{border:1px solid var(--line);background:var(--surface);margin-top:24px}
 /* Sin teléfono, dirección, horario ni email no hay tarjeta: el marco vacío
    con el rótulo "contacto directo" parecía un error. */
@@ -795,11 +820,13 @@ a.contact-row:hover{background:var(--soft);color:var(--accent)}
 @media(max-width:560px){.ds-contact-row{grid-template-columns:1fr}}
 
 /* ── pie ── */
-.site-footer{background:var(--panel);color:var(--panel-ink)}
+.site-footer{background:var(--panel);color:var(--panel-ink);
+  border-top:4px solid var(--accent)}
 .foot-grid{display:grid;grid-template-columns:1.5fr 1fr 1.2fr 1fr;gap:clamp(24px,3vw,44px);
   padding-block:clamp(38px,5vw,54px)}
 .foot-name{font-family:var(--font-display);font-size:15px;font-weight:700;
   letter-spacing:.16em;text-transform:uppercase}
+.foot-name::after{content:".";color:var(--accent)}
 .foot-tag{margin-top:10px;max-width:38ch;font-size:12.5px;font-weight:300;
   opacity:.68;line-height:1.65}
 .social{display:flex;gap:8px;margin-top:18px}
@@ -841,12 +868,13 @@ a.contact-row:hover{background:var(--soft);color:var(--accent)}
 
 /* ── cabecera de página interior ── */
 .page-hero{position:relative;min-height:230px;display:flex;align-items:flex-end;
-  overflow:hidden;color:#fff;background:var(--panel)}
+  overflow:hidden;color:#fff;background:var(--panel);
+  border-bottom:3px solid var(--accent)}
 .page-hero img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;
   object-position:center 32%}
 .page-hero::after{content:"";position:absolute;inset:0;
   background:linear-gradient(180deg,rgba(8,8,8,.6),rgba(8,8,8,.28) 42%,rgba(8,8,8,.82)),
-    linear-gradient(100deg,rgba(238,45,69,.2),transparent 55%)}
+    linear-gradient(100deg,color-mix(in srgb,var(--accent) 20%,transparent),transparent 55%)}
 .page-hero .wrap{position:relative;z-index:2;width:100%;
   padding-block:calc(var(--head) + 44px) 24px}
 .crumbs{display:flex;align-items:center;gap:10px;flex-wrap:wrap;
@@ -975,8 +1003,10 @@ a.contact-row:hover{background:var(--soft);color:var(--accent)}
 .cat-brandbar::before{content:"";position:absolute;inset:0;
   background:repeating-linear-gradient(90deg,rgba(255,255,255,.07) 0 1px,transparent 1px 34px);
   pointer-events:none}
-.cat-brandbar b{position:relative;flex:none;font-family:var(--font-display);font-size:11px;
+.cat-brandbar b{position:relative;flex:none;display:inline-flex;align-items:center;gap:10px;
+  font-family:var(--font-display);font-size:11px;
   font-weight:700;letter-spacing:.26em;text-transform:uppercase}
+.cat-brandbar b::before{content:"";width:9px;height:9px;background:var(--accent);flex:none}
 .cat-brandbar span{position:relative;min-width:0;font-size:12px;font-weight:300;
   opacity:.72;max-width:52ch;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .cat-bar{display:flex;align-items:center;justify-content:space-between;gap:14px;
@@ -1064,6 +1094,12 @@ a.contact-row:hover{background:var(--soft);color:var(--accent)}
 .pdp-layout{display:grid;grid-template-columns:1.02fr 1fr;gap:clamp(26px,4vw,52px);
   align-items:start}
 .pdp-gallery{position:relative;margin:0;border:1px solid var(--line);background:var(--soft)}
+/* Escuadras de registro: marco técnico deportivo sobre la foto principal. */
+.pdp-gallery::before,.pdp-gallery::after{content:"";position:absolute;z-index:2;
+  width:26px;height:26px;pointer-events:none;
+  border:2px solid var(--accent)}
+.pdp-gallery::before{top:12px;left:12px;border-right:0;border-bottom:0}
+.pdp-gallery::after{bottom:12px;left:12px;border-right:0;border-top:0}
 .pdp-gallery>img{width:100%;aspect-ratio:1/1;object-fit:cover}
 .pdp-tag{position:absolute;top:14px;right:14px;z-index:2;transform:rotate(-4deg);
   background:var(--accent);color:var(--accent-ink);
@@ -1219,6 +1255,7 @@ a.contact-row:hover{background:var(--soft);color:var(--accent)}
   .hero-media{animation:none!important}
   .ribbon-track,.gal-track,.foot-word-track{animation:none!important}
   .hero-stamp svg{animation:none!important}
+  .ds-faq[open] .ds-faq-a{animation:none!important}
 }
 </style>
 
@@ -1506,8 +1543,8 @@ a.contact-row:hover{background:var(--soft);color:var(--accent)}
     <div class="wrap contact-grid">
       <div class="rv">
         <span class="kicker">Contacto</span>
-        <h2 style="font-size:clamp(26px,3.2vw,38px);font-weight:300;letter-spacing:-.02em;line-height:1.08;margin-top:12px">Escribinos</h2>
-        <p class="lead" style="color:var(--muted);margin-top:12px;font-size:13.5px;font-weight:300">Respondemos en menos de un día hábil.</p>
+        <h2 class="contact-title">Escribinos</h2>
+        <p class="contact-lead">Respondemos en menos de un día hábil.</p>
         <div class="contact-card">
           <span class="contact-label">Contacto directo</span>
           <a class="contact-row" href="{{store_whatsapp_url}}" rel="noopener">
@@ -1664,7 +1701,7 @@ a.contact-row:hover{background:var(--soft);color:var(--accent)}
       </div>
     </div>
     {{services}}
-    <div style="margin-top:26px">
+    <div class="svc-cta">
       <a class="btn" href="{{store_whatsapp_url}}" rel="noopener">Consultar por WhatsApp
         <svg class="icon" viewBox="0 0 24 24"><path d="M5 12h14M13 6l6 6-6 6"/></svg></a>
     </div>
