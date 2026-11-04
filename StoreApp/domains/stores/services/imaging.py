@@ -26,7 +26,7 @@ Procesado automático de imágenes del cliente (Pillow, server-side).
 
 """
 Image.MAX_IMAGE_PIXELS  =   40_000_000
-WEBP_QUALITY            =   86
+WEBP_QUALITY            =   78
 MAX_SIDE_GALLERY        =   1600
 MAX_SIDE_PRODUCT        =   1200
 PRODUCT_CANVAS          =   1000
@@ -37,7 +37,7 @@ MAX_SIDE_CHAT           =   1600
 #Studio a propósito — el dueño sube varias fotos de una vez desde el celular
 #y el resultado se muestra en grillas con lazy-load, así que 78 de calidad
 #(en vez de 86) se nota apenas y ahorra cuota de almacenamiento por imagen.
-AI_WEBP_QUALITY         =   78
+AI_WEBP_QUALITY         =   72
 MAX_SIDE_AI             =   1600
 COVER_MIN_RATIO         =   1.0               # portadas verticales se recortan a cuadrado (el hero es apaisado)
 GALLERY_RATIO           =   (3 / 4, 16 / 9)   # (alto máximo relativo, ancho máximo relativo)
@@ -74,11 +74,20 @@ def _clamp_ratio(image):
     if ratio < low:
         return ImageOps.fit(image, (width, int(width / low)), method = Image.LANCZOS, centering = (0.5, 0.35))
     return image
+#Tope de salida por imagen: si el WebP supera este peso se re-codifica a
+#calidad menor hasta entrar en el objetivo (ahorra cuota de R2 y acelera la
+#web pública; por debajo de ~65 ya se nota en fotos con degradados).
+WEBP_TARGET_BYTES       =   350 * 1024
+WEBP_QUALITY_FLOOR      =   60
 def _encode(image, quality = WEBP_QUALITY):
-    buffer          =   io.BytesIO()
     # method=6: máximo esfuerzo de compresión (más lento, archivos menores).
-    image.save(buffer, format = 'WEBP', quality = quality, method = 6)
-    return buffer.getvalue()
+    while True:
+        buffer          =   io.BytesIO()
+        image.save(buffer, format = 'WEBP', quality = quality, method = 6)
+        data            =   buffer.getvalue()
+        if len(data) <= WEBP_TARGET_BYTES or quality <= WEBP_QUALITY_FLOOR:
+            return data
+        quality         =   max(WEBP_QUALITY_FLOOR, quality - 12)
 def normalize_image(upload, kind = 'gallery'):
     """
     Devuelve (bytes, 'webp', 'image/webp') listo para subir a R2.
