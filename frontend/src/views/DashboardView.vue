@@ -3236,7 +3236,7 @@ async function changePassword() {
       <!-- 1. Héroe: saludo + estado de la tienda en una frase + UN solo CTA -->
       <div class="oh-hero">
         <div class="oh-hero-main">
-          <p class="oh-hi">{{ greeting }}<template v-if="business">, <span class="ov-name">{{ business }}</span></template></p>
+          <p class="oh-hi"><AppIcon name="sparkles" :size="12" class="oh-hi-icon" aria-hidden="true" />{{ greeting }}<template v-if="business">, <span class="ov-name">{{ business }}</span></template></p>
           <h1 class="oh-title">
             <span class="oh-dot" :class="statusInfo.kind" aria-hidden="true"></span>{{ statusInfo.title }}
           </h1>

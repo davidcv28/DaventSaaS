@@ -4,6 +4,7 @@ import BrandLogo from './BrandLogo.vue'
 import AppIcon from './AppIcon.vue'
 import { useThemeStore } from '../stores/theme.store.js'
 import '../assets/dashboard.css'
+import '../assets/dashboard-v3.css'
 
 const theme = useThemeStore()
 
@@ -178,7 +179,7 @@ onBeforeUnmount(() => {
 <template>
   <div class="app" :class="{ 'app--tabs': hasTabs, 'top-hidden': topHidden }">
     <aside ref="sidebarEl" class="sidebar">
-      <div class="brand"><BrandLogo :size="34" /> <span>DAVENT</span></div>
+      <div class="brand"><BrandLogo :size="34" /> <span class="brand-word">DAVENT</span><span class="brand-ping" aria-hidden="true"></span></div>
       <div v-if="planName" class="plan-badge"><AppIcon name="dot" :size="12" /> {{ planName }}</div>
       <button
         class="menu-toggle"
