@@ -335,15 +335,15 @@ function toggleBlock(surface, id) {
   const g = showGroups.value.find((x) => x.surface === surface)
   if (!g) return
   const lc = props.form.layout_config && typeof props.form.layout_config === 'object'
-    ? props.form.layout_config : (props.form.layout_config = {})
-  const surf = lc[surface] && typeof lc[surface] === 'object' ? lc[surface] : (lc[surface] = { blocks: [] })
+    ? props.form.layout_config : {}
+  const surf = lc[surface] && typeof lc[surface] === 'object' ? lc[surface] : {}
   // Se escribe la composición COMPLETA de la superficie (el estado efectivo
   // de cada bloque con el tocado invertido), no solo el ítem: el backend
   // persiste la lista tal cual y un layout parcial apagaría el resto de
   // las secciones. Los bloques "No disponible en este diseño" no se
   // escriben nunca. Invertir el estado efectivo (no el del saved) permite
   // prender bloques que el diseño declara apagados.
-  surf.blocks = g.rows
+  const blocks = g.rows
     .filter((r) => !blockUnavailable(r.block))
     .map((r, i) => {
       const b = { id: r.block.id, enabled: r.block.id === id ? !(r.block.enabled !== false) : r.block.enabled !== false, order: i }
@@ -351,6 +351,9 @@ function toggleBlock(surface, id) {
       if (r.block.props) b.props = r.block.props
       return b
     })
+  // Copia nueva: mutar in-place pisa store.customization/lastServerDesign
+  // (mismo objeto por referencia) y el guard del watcher no ve el cambio.
+  props.form.layout_config = { ...lc, [surface]: { ...surf, blocks } }
 }
 function onShowKey(e) { if (e.key === 'Escape' && showOpen.value) closeShow() }
 
