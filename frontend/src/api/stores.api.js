@@ -287,18 +287,6 @@ export const storesApi = {
     return data
   },
 
-  // Wizard "Diseño asistido": el pedido viaja como estructura de dato
-  // ({rubro, goals, tone, audience, must_have, notes}) y el MCP del backend
-  // decide qué skill de diseño aplicar. Devuelve el mismo contrato que
-  // aiDesign (proposals + seed + missing) más `mcp` con los estilos elegidos.
-  async aiDesignMcp({ prompt, history = [], seed = null, message = '' }) {
-    const payload = { prompt, history }
-    if (seed) payload.seed = seed
-    if (message) payload.message = message
-    const { data } = await http.post('/stores/ai-design/mcp/', payload)
-    return data
-  },
-
   // Studio — flujo borrador → publicar: publish aplica los *_draft a la
   // web y guarda la versión; discard los vuelve a lo publicado; versions
   // lista el historial y restore recupera un snapshot; sharePreview emite
@@ -771,6 +759,7 @@ export const STORE_TEMPLATES = {
   gimnasio:    { label: 'Gimnasio',    rubro: 'gimnasio',     tier: 'plus',     defaultAccent: '#F97316', desc: 'Gimnasio: energía deportiva, planes y sedes.' },
   sastreria:   { label: 'Sastrería',   rubro: 'indumentaria', tier: 'plus',     defaultAccent: '#6E4A2F', desc: 'Sastrería editorial: papel hueso, tinta y cuero, índice numerado y filas de prendas tipo fichero.' },
   moderntec:   { label: 'ModernTec',   rubro: 'tecnologia',   tier: 'plus',     defaultAccent: '#3dd6ff', desc: 'ModernTec: oscuro tecnológico, acento cyan/violeta — tiendas de tecnología, electrónica y gaming.' },
+  indumentaria: { label: 'Indumentaria', rubro: 'indumentaria', tier: 'plus',   defaultAccent: '#B4442A', desc: 'Indumentaria: lookbook editorial — crudo tela, acento de temporada, rail COLECCIÓN, etiquetas colgantes y cinta marquee.' },
   ruta:        { label: 'Ruta',        rubro: 'turismo',      tier: 'plus',     defaultAccent: '#14443B', desc: 'Ruta: guía de viaje editorial — papel crema, verde pino y ámbar, destinos como tickets y galería de postales.' },
   aurum:       { label: 'Áurea',       rubro: 'general',      tier: 'advanced', defaultAccent: '#C8A25A', desc: 'Áurea: insignia premium — tinta y dorado, índices numerados y todas las secciones del negocio.' },
 }
@@ -781,6 +770,7 @@ export const STORE_TEMPLATE_FAMILIES = [
   { key: 'mercado',      label: 'Generalista',  caption: 'Marketplace y retail',     templates: ['mercado'] },
   { key: 'deporte',      label: 'Deporte',      caption: 'Gimnasios y fitness',     templates: ['gimnasio'] },
   { key: 'sastreria',    label: 'Indumentaria', caption: 'Sastrería de autor',      templates: ['sastreria'] },
+  { key: 'indumentaria', label: 'Indumentaria', caption: 'Moda y lookbook',         templates: ['indumentaria'] },
   { key: 'tecnologia',   label: 'Tecnología',   caption: 'Electrónica y gaming',    templates: ['moderntec'] },
   { key: 'turismo',      label: 'Turismo',      caption: 'Viajes y experiencias',   templates: ['ruta'] },
   { key: 'premium',      label: 'Premium',      caption: 'Insignia para todo rubro', templates: ['aurum'] },
@@ -794,6 +784,7 @@ export const STORE_TEMPLATE_SKIN = {
   raiz: 'raiz', mercado: 'mercado', gimnasio: 'gimnasio',
   sastreria: 'sastreria',
   moderntec: 'moderntec',
+  indumentaria: 'indumentaria',
   ruta: 'raiz',
   aurum: 'raiz'
 }
@@ -809,7 +800,7 @@ export const STORE_TEMPLATE_RETIRED_MAP = {
   lookbook: 'sastreria', signature: 'sastreria',
   cobre: 'sastreria', vitrina: 'sastreria', street: 'sastreria',
   riso: 'sastreria', promo: 'sastreria', aurora: 'sastreria',
-  trama: 'sastreria', indumentaria: 'sastreria', boutique: 'sastreria',
+  trama: 'sastreria', boutique: 'sastreria',
   atelier: 'sastreria', ai_pulse: 'sastreria',
   perspective: 'moderntec', circuit: 'moderntec', terminal: 'moderntec',
   lab: 'moderntec', ai_lumen: 'moderntec', seguridad: 'moderntec',

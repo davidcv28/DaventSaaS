@@ -1,7 +1,7 @@
 <script setup>
 // Modal "Asistencia con IA": mismo asistente con dos contextos.
-//  - origin 'design': preguntas de diseño -> POST /stores/ai-design/mcp/ ->
-//    propuesta -> apply (mismos endpoints y gates que AiDesignView).
+//  - origin 'design': preguntas de diseño -> POST /stores/ai-design/ ->
+//    propuesta -> apply.
 //  - origin 'business': preguntas de datos del negocio -> resumen que SOLO
 //    rellena campos vacíos de customization/perfil (no pisa lo ya cargado).
 import { ref, reactive, computed, nextTick, watch, onMounted, onBeforeUnmount } from 'vue'
@@ -65,7 +65,6 @@ const busy = ref('')
 const saving = ref(false)
 const proposals = ref([])
 const seed = ref(null)
-const mcp = ref(null)
 const selectedId = ref('')
 const provinces = ref([])
 const cities = ref([])
@@ -140,7 +139,7 @@ const fillRows = computed(() => {
 })
 const fillCount = computed(() => fillRows.value.filter((r) => !r.skip).length)
 
-// ---------- Helpers de propuesta (misma vista que AiDesignView) ----------
+// ---------- Helpers de propuesta ----------
 const HEX_RE = /^#[0-9a-f]{6}$/i
 function proposalForm(p) {
   const form = { ...CUSTOMIZATION_DEFAULTS, ...(store.customization || {}), ...(p.site_theme || {}), ...(p.copy || {}) }
@@ -262,13 +261,12 @@ async function submitDesign(extraSeed = 0) {
   errorMsg.value = ''
   actionError.value = ''
   try {
-    const body = { prompt: buildPrompt(answers), history: [] }
+    const body = buildPrompt(answers)
     if (extraSeed) body.seed = extraSeed
-    const data = await storesApi.aiDesignMcp(body)
+    const data = await storesApi.aiDesign(body)
     if (!data || !Array.isArray(data.proposals) || !data.proposals.length) throw new Error('empty')
     seed.value = data.seed
     proposals.value = data.proposals
-    mcp.value = data.mcp || null
     phase.value = 'results'
     await nextTick()
     stepTitle.value?.focus?.()
@@ -528,12 +526,6 @@ function finish() {
         <!-- RESULTADO DISEÑO -->
         <div v-else-if="phase === 'results'" class="aia-body">
           <p v-if="actionError" class="aid-error" role="alert">{{ actionError }}</p>
-          <div v-if="mcp?.pattern" class="aid-mcp">
-            <div class="aid-mcp-head">
-              <AppIcon name="gem" :size="16" aria-hidden="true" />
-              <strong>Elegimos el diseño «{{ mcp.pattern.nombre }}»{{ mcp.style ? ` con el estilo «${mcp.style.nombre}»` : '' }}</strong>
-            </div>
-          </div>
           <h3 ref="stepTitle" tabindex="-1" class="aia-results-title">Elegí tu diseño</h3>
           <div class="aid-grid">
             <AiIdeaCard

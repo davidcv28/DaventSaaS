@@ -1,5 +1,5 @@
 // Catálogo de opciones y helpers compartidos por el asistente de diseño
-// (AiDesignView) y el modal "Asistencia con IA" (AiAssistModal). Los ids son
+// "Asistencia con IA" (AiAssistModal). Los ids son
 // canónicos del motor: RUBROS/GOALS/TONES/MUST_HAVE_BLOCKS de ai_design_recipes.
 
 export const RUBROS = [
@@ -104,7 +104,7 @@ export function resolvedTone(answers) {
   return keys.sort((a, b) => (votes[b] - votes[a]) || (HINT_TONE_ORDER.indexOf(a) - HINT_TONE_ORDER.indexOf(b)))[0]
 }
 
-// Pedido estructurado que viaja a POST /stores/ai-design/mcp/.
+// Pedido estructurado que viaja a POST /stores/ai-design/.
 export function buildPrompt(answers) {
   const p = {}
   if (answers.rubro) p.rubro = answers.rubro

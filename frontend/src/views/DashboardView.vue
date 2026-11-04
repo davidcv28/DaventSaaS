@@ -62,7 +62,6 @@ import IconSelect from '../components/IconSelect.vue'
 import CountUp from '../components/CountUp.vue'
 import FlyerStudio from '../components/FlyerStudio.vue'
 import AiAssistModal from '../components/assist/AiAssistModal.vue'
-import McpChatModal from '../components/design/McpChatModal.vue'
 import PriceUpdateModal from '../components/PriceUpdateModal.vue'
 import ChatDock from '../components/ChatDock.vue'
 import GlobalSearch from '../components/GlobalSearch.vue'
@@ -307,7 +306,6 @@ const tabGroups = computed(() => {
 const SECTION_BENEFITS = {
   design_assisted: ['has_ai_design'],
   design_studio: ['has_design_advanced'],
-  design_ai: ['has_ai_chat'],
   services: ['has_services_site'],
   reviews: ['has_product_comments'],
   support: ['has_support_chat'],
@@ -318,7 +316,6 @@ const SECTION_BENEFITS = {
 const LOCKED_FEATURES = {
   design_assisted: { icon: 'sparkles', title: 'Diseño asistido', text: 'Contale a qué te dedicás y recibí tu web armada: plantilla, orden de secciones y textos. Después la ajustás a mano.' },
   design_studio: { icon: 'layout-panel-left', title: 'Studio de diseño', text: 'El editor completo con vista previa en vivo: colores, tipografía, contenedores, portada y versión de prueba antes de publicar.' },
-  design_ai: { icon: 'bot', title: 'Diseñar con IA', text: 'Un chat donde describís tu web ideal y la IA la configura por vos. Revisás la propuesta y la aplicás cuando te gusta.' },
   catalogs: { icon: 'package', title: 'Tu catálogo de productos', text: 'Cargá productos con foto, precio y categorías: se publican solos en tu web.' },
   services: { icon: 'wrench', title: 'Página de servicios', text: 'Una página propia para mostrar lo que hacés, con duración, precio y botón de consulta directa a tu WhatsApp.' },
   pos: { icon: 'monitor', title: 'Venta en persona', text: 'Cobrá en tu local usando el mismo catálogo de tu web. Llega muy pronto.' },
@@ -337,7 +334,7 @@ const navLocks = computed(() => {
   const hasAccess = Boolean(plan.value?.isCurrent)
   const map = {}
   const gated = (id) => (SECTION_BENEFITS[id] || []).some((k) => !b[k])
-  for (const id of ['catalogs', 'services', 'pos', 'reviews', 'support', 'bot', 'tools', 'stats', 'design_assisted', 'design_studio', 'design_ai']) {
+  for (const id of ['catalogs', 'services', 'pos', 'reviews', 'support', 'bot', 'tools', 'stats', 'design_assisted', 'design_studio']) {
     map[id] = !hasAccess ? 'expired' : gated(id) ? 'upgrade' : null
   }
   return map
@@ -1294,17 +1291,11 @@ const canDesignAdvanced = computed(() => Boolean(plan.value?.benefits?.has_desig
 // "Asistencia con IA": mismo modal con dos contextos ('design' | 'business').
 // Candado = has_ai_design (mismo gate que el diseño asistido).
 const assistOpen = ref(false)
-const mcpChatOpen = ref(false)
 const assistOrigin = ref('design')
 function openAssist(origin) {
   if (navLocks.value.design_assisted) { openLocked('design_assisted'); return }
   assistOrigin.value = origin
   assistOpen.value = true
-}
-// Chat de diseño MCP: mismo candado (has_ai_design) que el asistido.
-function openMcpChat() {
-  if (navLocks.value.design_assisted) { openLocked('design_assisted'); return }
-  mcpChatOpen.value = true
 }
 function onAssistApplied() {
   Object.assign(designForm, store.customization)
@@ -4178,14 +4169,6 @@ async function changePassword() {
         </button>
       </div>
 
-      <div class="next-card assist-card">
-        <span class="next-icon"><AppIcon name="bot" :size="22" /></span>
-        <div><strong>Chat de diseño (MCP)</strong><small>Escribí cómo querés tu web en texto libre; el MCP elige el diseño y te muestra sus fuentes.</small></div>
-        <button class="btn btn-auto assist-btn" @click="openMcpChat">
-          <AppIcon v-if="navLocks.design_assisted" name="lock" :size="15" /><AppIcon v-else name="message-circle" :size="15" /> Abrir chat
-        </button>
-      </div>
-
       <DesignStylesTab
         :form="designForm" :benefits="plan?.benefits || {}"
         :shop-name="store.customization?.display_name || business" :can-studio="canDesignAdvanced"
@@ -5703,12 +5686,6 @@ async function changePassword() {
         @close="assistOpen = false"
         @applied="onAssistApplied"
         @navigate="assistOpen = false; section = $event"
-      />
-      <McpChatModal
-        v-if="mcpChatOpen"
-        @close="mcpChatOpen = false"
-        @applied="onAssistApplied"
-        @navigate="mcpChatOpen = false; section = $event"
       />
       <PriceUpdateModal v-if="showPriceUpdate" @close="showPriceUpdate = false" />
     </Teleport>

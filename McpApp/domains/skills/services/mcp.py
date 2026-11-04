@@ -8,7 +8,6 @@ from McpApp.domains.skills.services.services import (
     list_design_patterns,
     list_design_styles,
     pattern_payload,
-    propose_design,
     search_design_styles,
 )
 
@@ -103,21 +102,6 @@ TOOLS   =   [
             'required'  :   ['slug'],
         },
     },
-    {
-        'name'          :   'propose_design',
-        'description'   :   'Resuelve el diseño que elegiría el wizard "Diseño asistido" para un pedido {rubro, goals[], tone, audience, must_have[], notes}: patrón + estilo con layout y tokens.',
-        'inputSchema'   :   {
-            'type'      :   'object',
-            'properties':   {
-                'rubro'     :   {'type': 'string', 'description': 'Id del rubro (ej: gastronomia, moda, tecnologia).'},
-                'goals'     :   {'type': 'array', 'items': {'type': 'string'}},
-                'tone'      :   {'type': 'string'},
-                'audience'  :   {'type': 'string'},
-                'must_have' :   {'type': 'array', 'items': {'type': 'string'}},
-                'notes'     :   {'type': 'string'},
-            },
-        },
-    },
 ]
 
 
@@ -162,11 +146,6 @@ def call_tool(name : str, arguments : dict | None = None) -> dict:
         if pattern is None:
             raise ValueError(f'No existe el patrón "{args.get("slug", "")}".')
         return pattern_payload(pattern, full = True)
-    if name == 'propose_design':
-        proposal    =   propose_design(args)
-        if proposal is None:
-            raise ValueError('Sin patrón elegible para ese pedido (catálogo vacío).')
-        return proposal
     raise ValueError(f'Herramienta desconocida: {name}')
 
 

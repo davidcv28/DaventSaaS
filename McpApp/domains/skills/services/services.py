@@ -152,26 +152,3 @@ def get_design_pattern(slug : str):
     from StoreApp.domains.design.models import DesignPattern
     return DesignPattern.objects.select_related('style').filter(slug = slug, is_active = True).first()
 
-
-def propose_design(prompt : dict) -> dict | None:
-    """
-    El mismo mapeo determinista que usa el wizard "Diseño asistido"
-    (rubro/tags → DesignPattern + DesignStyle): expone por MCP la decisión
-    real del producto, no una copia.
-    """
-    from StoreApp.domains.stores.services.ai_design_mcp import resolve_design
-    resolved    =   resolve_design(prompt or {})
-    if not resolved:
-        return None
-    pattern     =   resolved['pattern']
-    style       =   resolved.get('style')
-    return {
-        'pattern'   :   pattern_payload(pattern, full = True),
-        'style'     :   {
-            'slug'      :   style.slug,
-            'nombre'    :   style.nombre,
-            'categoria' :   style.categoria,
-            'tier'      :   style.tier,
-            'tokens'    :   style.tokens or {},
-        } if style else None,
-    }
