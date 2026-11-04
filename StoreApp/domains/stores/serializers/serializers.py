@@ -166,6 +166,11 @@ class StoreCustomizationSerializer(serializers.ModelSerializer):
     instagram                   =   serializers.CharField(**CustomizationFields['instagram'])
     tiktok                      =   serializers.CharField(**CustomizationFields['tiktok'])
     facebook                    =   serializers.CharField(**CustomizationFields['facebook'])
+    #El diseño también puede ser el slug de un DesignPattern del catálogo
+    #(brigada…): TEMPLATE_CHOICES solo cubre las plantillas Vue, así que el
+    #ChoiceField del modelo rechazaba el id y el PATCH lo perdía.
+    template                    =   serializers.CharField(max_length = 12)
+    template_draft              =   serializers.CharField(max_length = 12, required = False)
     logo                        =   serializers.SerializerMethodField()
     cover                       =   serializers.SerializerMethodField()
     carousel                    =   serializers.SerializerMethodField()
@@ -204,6 +209,22 @@ class StoreCustomizationSerializer(serializers.ModelSerializer):
         if not DesignIconStyle.objects.filter(slug = slug, is_active = True).exists():
             raise serializers.ValidationError('Ese estilo de iconos no existe.')
         return slug
+    @staticmethod
+    def _template_id(value):
+        #Id de plantilla Vue (TEMPLATE_CHOICES) o slug de un DesignPattern
+        #activo del catálogo (la web resuelve ambos por slug).
+        slug                    =   str(value or '').strip().lower()
+        known                   =   {key for key, _ in StoreCustomization.TEMPLATE_CHOICES}
+        if slug in known:
+            return slug
+        from StoreApp.domains.design.models import DesignPattern
+        if DesignPattern.objects.filter(slug = slug, is_active = True).exists():
+            return slug
+        raise serializers.ValidationError('Ese diseño no existe.')
+    def validate_template(self, value):
+        return self._template_id(value)
+    def validate_template_draft(self, value):
+        return self._template_id(value)
     def get_logo(self, customization):
         return object_url(customization.logo_key)
     def get_cover(self, customization):

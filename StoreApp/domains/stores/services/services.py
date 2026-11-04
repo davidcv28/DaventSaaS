@@ -90,10 +90,22 @@ def allowed_templates_of(profile):
     if not benefits.get('has_customization'):
         return (StoreCustomization.TEMPLATE_RAIZ,)
     allowed         =   list(StoreCustomization.TEMPLATE_BASE)
+    tiers           =   {'base'}
     if benefits.get('has_design_plus'):
         allowed         +=  StoreCustomization.TEMPLATE_PLUS
+        tiers.add('plus')
     if benefits.get('has_design_advanced'):
         allowed         +=  StoreCustomization.TEMPLATE_ADVANCED
+        tiers.add('advanced')
+    #Patrones del catálogo de diseño: `template` guarda el slug del
+    #DesignPattern (brigada, esencial…) y pattern_for_template lo resuelve
+    #por slug. Sin esto el PATCH descartaba el diseño como "fuera de plan".
+    from StoreApp.domains.design.models import DesignPattern
+    allowed         +=  list(
+        DesignPattern.objects.filter(is_active = True, tier__in = tiers)
+        .exclude(slug__in = allowed)
+        .values_list('slug', flat = True)
+    )
     return tuple(allowed)
 #=========================================
 # RECORD STORE VISIT (+1 por visitante/día, sin guardar IPs)
