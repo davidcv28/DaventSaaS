@@ -4119,6 +4119,428 @@
         "corners": "square"
       },
       "concept": "Galería blanca y magenta: cinta en acento, sombra rosada y la misma tapa de revista."
+    },
+    {
+      "slug": "calzado",
+      "nombre": "Calzado",
+      "categoria": "Calzado y deportes",
+      "descripcion": "Vitrina deportiva: billboard en caja alta con Anton, foto a toda columna, grilla de fichas con badge de ahorro y pie oscuro con columnas.",
+      "tier": "plus",
+      "template": "raiz",
+      "page_theme": "light",
+      "pattern": "calzado",
+      "tokens": {
+        "palette": {
+          "primary": "#17150F",
+          "secondary": "#2A2820",
+          "accent": "#E8501E",
+          "bg": "#F2F1EC",
+          "surface": "#FFFFFF",
+          "text": "#17150F",
+          "muted": "#6B6759",
+          "border": "#DDDAD0",
+          "success": "#1a7f4b",
+          "danger": "#c0392b"
+        },
+        "containers": {
+          "radius": "sm",
+          "shadow": "soft",
+          "border": "thin",
+          "density": "comfortable",
+          "surface": "flat"
+        },
+        "typography": {
+          "heading": "anton",
+          "subheading": "archivo",
+          "body": "archivo",
+          "scale": "balanced",
+          "weightHeading": 400,
+          "letterSpacing": "0.01em"
+        },
+        "buttons": {
+          "shape": "square",
+          "style": "solid",
+          "size": "md"
+        },
+        "background": {
+          "type": "solid",
+          "overlay": "none"
+        },
+        "motion": {
+          "reveal": "rise",
+          "hover": "lift",
+          "intensity": "subtle"
+        },
+        "mobile": {
+          "gridCols": 1,
+          "cardStyle": "standard",
+          "heroHeight": "tall"
+        }
+      },
+      "layout": {
+        "landing": {
+          "blocks": [
+            {
+              "id": "hero",
+              "enabled": true,
+              "order": 0
+            },
+            {
+              "id": "announcements",
+              "enabled": true,
+              "order": 1
+            },
+            {
+              "id": "categories",
+              "enabled": true,
+              "order": 2
+            },
+            {
+              "id": "featured",
+              "enabled": true,
+              "order": 3
+            },
+            {
+              "id": "services",
+              "enabled": true,
+              "order": 4
+            },
+            {
+              "id": "about",
+              "enabled": true,
+              "order": 5
+            },
+            {
+              "id": "stats",
+              "enabled": true,
+              "order": 6
+            },
+            {
+              "id": "benefits",
+              "enabled": true,
+              "order": 7
+            },
+            {
+              "id": "plans",
+              "enabled": true,
+              "order": 8
+            },
+            {
+              "id": "gallery",
+              "enabled": true,
+              "order": 9
+            },
+            {
+              "id": "testimonials",
+              "enabled": true,
+              "order": 10
+            },
+            {
+              "id": "faq",
+              "enabled": true,
+              "order": 11
+            },
+            {
+              "id": "cta",
+              "enabled": true,
+              "order": 12
+            },
+            {
+              "id": "contact",
+              "enabled": true,
+              "order": 13
+            }
+          ]
+        },
+        "catalog": {
+          "blocks": [
+            {
+              "id": "filters",
+              "enabled": true,
+              "order": 0
+            },
+            {
+              "id": "sort",
+              "enabled": true,
+              "order": 1
+            },
+            {
+              "id": "grid",
+              "enabled": true,
+              "order": 2
+            }
+          ]
+        },
+        "services": {
+          "blocks": [
+            {
+              "id": "hero",
+              "enabled": true,
+              "order": 0
+            },
+            {
+              "id": "list",
+              "enabled": true,
+              "order": 1
+            }
+          ]
+        }
+      },
+      "layout_spec": {
+        "landing": {
+          "on": [
+            "hero",
+            "announcements",
+            "categories",
+            "featured",
+            "services",
+            "about",
+            "stats",
+            "benefits",
+            "plans",
+            "gallery",
+            "testimonials",
+            "faq",
+            "cta",
+            "contact"
+          ]
+        },
+        "catalog": {
+          "on": [
+            "filters",
+            "sort",
+            "grid"
+          ]
+        },
+        "services": {
+          "on": [
+            "hero",
+            "list"
+          ]
+        }
+      },
+      "tags": [
+        "calzado",
+        "zapatillas",
+        "deporte",
+        "retail",
+        "sneakers",
+        "indumentaria",
+        "vitrina"
+      ],
+      "preview": "",
+      "concept": "Papel + tinta + naranja señal: catálogo de zapatillas estilo vitrina clásica."
+    },
+    {
+      "slug": "calzado-noche",
+      "nombre": "Calzado Noche",
+      "categoria": "Calzado y deportes",
+      "descripcion": "La vitrina de noche: asfalto, señal flúor y el mismo billboard deportivo.",
+      "tier": "plus",
+      "template": "raiz",
+      "page_theme": "dark",
+      "pattern": "calzado",
+      "tokens": {
+        "palette": {
+          "primary": "#F0EEE6",
+          "secondary": "#2A2820",
+          "accent": "#FF6A3D",
+          "bg": "#141310",
+          "surface": "#1D1B16",
+          "text": "#F0EEE6",
+          "muted": "#A39E8E",
+          "border": "#2E2B24",
+          "success": "#34c77b",
+          "danger": "#e05d44"
+        },
+        "containers": {
+          "radius": "sm",
+          "shadow": "soft",
+          "border": "thin",
+          "density": "comfortable",
+          "surface": "flat"
+        },
+        "typography": {
+          "heading": "anton",
+          "subheading": "archivo",
+          "body": "archivo",
+          "scale": "balanced",
+          "weightHeading": 400,
+          "letterSpacing": "0.01em"
+        },
+        "buttons": {
+          "shape": "square",
+          "style": "solid",
+          "size": "md"
+        },
+        "background": {
+          "type": "solid",
+          "overlay": "none"
+        },
+        "motion": {
+          "reveal": "rise",
+          "hover": "lift",
+          "intensity": "subtle"
+        },
+        "mobile": {
+          "gridCols": 1,
+          "cardStyle": "standard",
+          "heroHeight": "tall"
+        }
+      },
+      "layout": {
+        "landing": {
+          "blocks": [
+            {
+              "id": "hero",
+              "enabled": true,
+              "order": 0
+            },
+            {
+              "id": "announcements",
+              "enabled": true,
+              "order": 1
+            },
+            {
+              "id": "categories",
+              "enabled": true,
+              "order": 2
+            },
+            {
+              "id": "featured",
+              "enabled": true,
+              "order": 3
+            },
+            {
+              "id": "services",
+              "enabled": true,
+              "order": 4
+            },
+            {
+              "id": "about",
+              "enabled": true,
+              "order": 5
+            },
+            {
+              "id": "stats",
+              "enabled": true,
+              "order": 6
+            },
+            {
+              "id": "benefits",
+              "enabled": true,
+              "order": 7
+            },
+            {
+              "id": "plans",
+              "enabled": true,
+              "order": 8
+            },
+            {
+              "id": "gallery",
+              "enabled": true,
+              "order": 9
+            },
+            {
+              "id": "testimonials",
+              "enabled": true,
+              "order": 10
+            },
+            {
+              "id": "faq",
+              "enabled": true,
+              "order": 11
+            },
+            {
+              "id": "cta",
+              "enabled": true,
+              "order": 12
+            },
+            {
+              "id": "contact",
+              "enabled": true,
+              "order": 13
+            }
+          ]
+        },
+        "catalog": {
+          "blocks": [
+            {
+              "id": "filters",
+              "enabled": true,
+              "order": 0
+            },
+            {
+              "id": "sort",
+              "enabled": true,
+              "order": 1
+            },
+            {
+              "id": "grid",
+              "enabled": true,
+              "order": 2
+            }
+          ]
+        },
+        "services": {
+          "blocks": [
+            {
+              "id": "hero",
+              "enabled": true,
+              "order": 0
+            },
+            {
+              "id": "list",
+              "enabled": true,
+              "order": 1
+            }
+          ]
+        }
+      },
+      "layout_spec": {
+        "landing": {
+          "on": [
+            "hero",
+            "announcements",
+            "categories",
+            "featured",
+            "services",
+            "about",
+            "stats",
+            "benefits",
+            "plans",
+            "gallery",
+            "testimonials",
+            "faq",
+            "cta",
+            "contact"
+          ]
+        },
+        "catalog": {
+          "on": [
+            "filters",
+            "sort",
+            "grid"
+          ]
+        },
+        "services": {
+          "on": [
+            "hero",
+            "list"
+          ]
+        }
+      },
+      "tags": [
+        "calzado",
+        "zapatillas",
+        "deporte",
+        "retail",
+        "sneakers",
+        "indumentaria",
+        "vitrina"
+      ],
+      "preview": "",
+      "concept": "Asfalto + señal flúor: la tienda de zapatillas en modo nocturno."
     }
   ],
   "patterns": [
@@ -5695,6 +6117,156 @@
       "variables": {},
       "supports_dark_mode": true,
       "style": "impacto"
+    },
+    {
+      "slug": "calzado",
+      "nombre": "Calzado",
+      "categoria": "calzado",
+      "descripcion": "Vitrina deportiva: billboard oscuro con titular Anton, cinta de novedades, grilla de fichas con badge de ahorro, membresías y pie oscuro con columnas.",
+      "tier": "plus",
+      "template": "raiz",
+      "tokens": {
+        "accent": "#E8501E",
+        "palette": {
+          "primary": "#17150F",
+          "secondary": "#2A2820",
+          "accent": "#E8501E",
+          "bg": "#F2F1EC",
+          "surface": "#FFFFFF",
+          "text": "#17150F",
+          "muted": "#6B6759",
+          "border": "#DDDAD0",
+          "success": "#1a7f4b",
+          "danger": "#c0392b"
+        },
+        "fonts": [
+          "anton",
+          "archivo"
+        ],
+        "radius": "10px",
+        "anim": {
+          "hero": "rise",
+          "reveal": "rise",
+          "hover": "lift",
+          "button": "hard-press"
+        },
+        "easing": "cubic-bezier(.2,.7,.2,1)",
+        "duration": "480ms"
+      },
+      "layout": {
+        "landing": [
+          {
+            "id": "hero",
+            "enabled": true,
+            "order": 0
+          },
+          {
+            "id": "announcements",
+            "enabled": true,
+            "order": 1
+          },
+          {
+            "id": "categories",
+            "enabled": true,
+            "order": 2
+          },
+          {
+            "id": "featured",
+            "enabled": true,
+            "order": 3
+          },
+          {
+            "id": "services",
+            "enabled": true,
+            "order": 4
+          },
+          {
+            "id": "about",
+            "enabled": true,
+            "order": 5
+          },
+          {
+            "id": "stats",
+            "enabled": true,
+            "order": 6
+          },
+          {
+            "id": "benefits",
+            "enabled": true,
+            "order": 7
+          },
+          {
+            "id": "plans",
+            "enabled": true,
+            "order": 8
+          },
+          {
+            "id": "gallery",
+            "enabled": true,
+            "order": 9
+          },
+          {
+            "id": "testimonials",
+            "enabled": true,
+            "order": 10
+          },
+          {
+            "id": "faq",
+            "enabled": true,
+            "order": 11
+          },
+          {
+            "id": "cta",
+            "enabled": true,
+            "order": 12
+          },
+          {
+            "id": "contact",
+            "enabled": true,
+            "order": 13
+          }
+        ],
+        "catalog": [
+          {
+            "id": "filters",
+            "enabled": true,
+            "order": 0
+          },
+          {
+            "id": "sort",
+            "enabled": true,
+            "order": 1
+          },
+          {
+            "id": "grid",
+            "enabled": true,
+            "order": 2
+          }
+        ],
+        "services": [
+          {
+            "id": "hero",
+            "enabled": true,
+            "order": 0
+          },
+          {
+            "id": "list",
+            "enabled": true,
+            "order": 1
+          }
+        ]
+      },
+      "tags": [
+        "calzado",
+        "zapatillas",
+        "deporte",
+        "retail",
+        "sneakers",
+        "vitrina"
+      ],
+      "preview": "",
+      "supports_dark_mode": true,
+      "style": "calzado"
     }
   ]
 }
