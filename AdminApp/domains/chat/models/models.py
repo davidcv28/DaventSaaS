@@ -63,6 +63,34 @@ class ChatMessage(models.Model):
 
 
 #=========================================
+# ASSISTANT MESSAGE MODEL ("Tu Asistente" — conversación usuario <-> MCP)
+#=========================================
+class AssistantMessage(models.Model):
+    """
+    Conversación del usuario con el asistente automático (MCP). Es un
+    hilo APARTE del chat de soporte: el staff no la ve ni la responde —
+    el asistente responde solo con datos de la cuenta del usuario en
+    sesión (tools my_*, gate mcp_user_access).
+    """
+    user                =   models.ForeignKey(settings.AUTH_USER_MODEL, on_delete = models.CASCADE, related_name = 'assistant_messages', verbose_name = 'Usuario')
+    #from_bot=True lo fija el service al crear (nunca viene del request).
+    from_bot            =   models.BooleanField(default = False, verbose_name = 'Del asistente')
+    body                =   models.TextField(max_length = 2000, verbose_name = 'Mensaje')
+    created_at          =   models.DateTimeField(auto_now_add = True)
+
+    class Meta:
+        verbose_name        =   'Mensaje del asistente'
+        verbose_name_plural =   'Mensajes del asistente'
+        ordering            =   ['created_at']
+        indexes             =   [
+            models.Index(fields = ['user', 'created_at'], name = 'idx_asstmsg_user_date'),
+        ]
+
+    def __str__(self):
+        return f'{"bot" if self.from_bot else self.user.username}: {self.body[:40]}'
+
+
+#=========================================
 # CHAT PRESENCE MODEL
 #=========================================
 class ChatPresence(models.Model):

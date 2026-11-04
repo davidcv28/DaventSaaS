@@ -95,10 +95,10 @@ class ChatGateTests(TestCase):
         _grant_chat(profile)
         response    =   _client(user).get(CHAT_URL)
         self.assertEqual(response.status_code, 200)
-        #El asistente abre el hilo con la primera pregunta de diseño.
+        #Hilo de soporte puro (cliente <-> equipo): arranca vacío — el
+        #asistente vive en /api/assistant/, no contamina este hilo.
         self.assertIsNotNone(response.data['thread'])
-        self.assertEqual(len(response.data['messages']), 1)
-        self.assertTrue(response.data['messages'][0]['from_staff'])
+        self.assertEqual(len(response.data['messages']), 0)
 
     def test_trial_plan_gets_403_even_with_flag(self):
         #El asistente es solo para quienes pagan: el trial queda fuera
@@ -148,7 +148,7 @@ class ChatMessagingTests(TestCase):
         response    =   _client(self.staff).post(CHAT_SEND_URL, {'body': 'Contanos', 'thread': thread.id}, format = 'json')
         self.assertEqual(response.status_code, 201)
         self.assertTrue(response.data['message']['from_staff'])
-        self.assertEqual(response.data['message']['sender_name'], 'Asistente de diseño')
+        self.assertEqual(response.data['message']['sender_name'], 'Soporte DAVENT')
 
     def test_staff_send_requires_existing_thread(self):
         response    =   _client(self.staff).post(CHAT_SEND_URL, {'body': 'Hola'}, format = 'json')
@@ -226,8 +226,8 @@ class ChatMessagingTests(TestCase):
         thread      =   response.data['threads'][0]
         self.assertEqual(thread['unread'], 1)
         self.assertEqual(thread['customer']['name'], 'Negocio cliente')
-        #El último mensaje es la siguiente pregunta del asistente.
-        self.assertTrue(thread['last_message']['from_staff'])
+        #El último mensaje es el del propio cliente (soporte sin bot).
+        self.assertFalse(thread['last_message']['from_staff'])
 
 
 class ChatPresenceTests(TestCase):
@@ -280,7 +280,7 @@ class ChatPresenceTests(TestCase):
         self.assertNotIn('email', str(response.data['messages']))
         for m in response.data['messages']:
             if m['from_staff']:
-                self.assertEqual(m['sender_name'], 'Asistente de diseño')
+                self.assertEqual(m['sender_name'], 'Soporte DAVENT')
 
 
 class ChatAttachmentTests(TestCase):
@@ -394,36 +394,72 @@ class ChatAttachmentTests(TestCase):
         self.assertTrue(response.data['message']['image_url'])
 
 
+ASSISTANT_URL       =   '/api/assistant/'
+ASSISTANT_SEND_URL  =   '/api/assistant/send/'
+
+
 @override_settings(AI_PROVIDER = '', ANTHROPIC_API_KEY = '', GEMINI_API_KEY = '', GROQ_API_KEY = '', OPENROUTER_API_KEY = '')
-class ChatDesignBotTests(TestCase):
-    """El chat de soporte ahora es un asistente de diseño que entrevista."""
+class AssistantTests(TestCase):
+    """
+    "Tu Asistente": bot MCP por usuario — hilo APARTE del chat de
+    soporte, solo plan pago vigente (mcp_user_access), y nunca ve datos
+    de otros clientes.
+    """
 
     def setUp(self):
         cache.clear()
-        self.user, self.profile =   _make_user('disenante')
+        self.user, self.profile =   _make_user('asistido')
         _grant_chat(self.profile)
+        self.other, other_profile =   _make_user('otro')
+        _grant_chat(other_profile)
 
-    def test_opening_asks_first_design_question(self):
-        response    =   _client(self.user).get(CHAT_URL)
+    def test_first_get_sends_greeting(self):
+        response    =   _client(self.user).get(ASSISTANT_URL)
         self.assertEqual(response.status_code, 200)
-        self.assertEqual(len(response.data['messages']), 1)
-        self.assertIn('qué vendés', response.data['messages'][0]['body'])
-        self.assertTrue(response.data['messages'][0]['from_staff'])
+        messages    =   response.data['messages']
+        self.assertEqual(len(messages), 1)
+        self.assertTrue(messages[0]['from_bot'])
+        self.assertIn('Tu Asistente', messages[0]['body'])
 
-    def test_each_answer_advances_the_interview(self):
+    def test_send_saves_and_replies(self):
+        client      =   _client(self.user)
+        client.get(ASSISTANT_URL)  # crea el saludo
+        response    =   client.post(ASSISTANT_SEND_URL, {'body': '¿Cuál es mi plan?'}, format = 'json')
+        self.assertEqual(response.status_code, 201)
+        self.assertTrue(response.data['reply']['from_bot'])
+        #El hilo guarda pregunta + respuesta.
+        response    =   client.get(ASSISTANT_URL)
+        self.assertEqual(len(response.data['messages']), 3)  # saludo + pregunta + respuesta
+
+    def test_reply_uses_session_data_only(self):
+        #La respuesta menciona datos reales de ESTE usuario (su plan), no
+        #los del otro usuario ni datos inventados.
+        response    =   _client(self.user).post(ASSISTANT_SEND_URL, {'body': '¿qué plan tengo?'}, format = 'json')
+        body        =   response.data['reply']['body']
+        self.assertIn(f'Plan {self.user.username}', body)
+        self.assertNotIn('Plan otro', body)
+
+    def test_threads_are_isolated_per_user(self):
+        _client(self.user).post(ASSISTANT_SEND_URL, {'body': 'hola'}, format = 'json')
+        other_msgs  =   _client(self.other).get(ASSISTANT_URL).data['messages']
+        self.assertFalse(any(m['body'] == 'hola' for m in other_msgs))
+
+    def test_trial_and_anonymous_get_403(self):
+        trial, profile  =   _make_user('tri')
+        plan            =   SuscriptionPlan.objects.create(name = 'Trial asst', is_trial = True)
+        Suscription.objects.create(
+            user = profile, plan_suscription = plan,
+            end_date = timezone.now() + timedelta(days = 1),
+            status = Suscription.STATUS_ACTIVE,
+        )
+        self.assertEqual(_client(trial).get(ASSISTANT_URL).status_code, 403)
+        self.assertEqual(APIClient().get(ASSISTANT_URL).status_code, 401)
+
+    def test_support_thread_stays_bot_free(self):
+        #El chat de soporte ya NO tiene mensajes automáticos: es solo
+        #cliente <-> equipo.
         client      =   _client(self.user)
         client.get(CHAT_URL)
-        client.post(CHAT_SEND_URL, {'body': 'Vendo ropa urbana'}, format = 'json')
+        client.post(CHAT_SEND_URL, {'body': 'hola equipo'}, format = 'json')
         thread      =   ChatThread.objects.get(customer = self.user)
-        bot_bodies  =   list(thread.messages.filter(from_staff = True).values_list('body', flat = True))
-        self.assertEqual(len(bot_bodies), 2)
-        self.assertIn('objetivo principal', bot_bodies[-1])
-
-    def test_after_interview_recommends_a_style(self):
-        client      =   _client(self.user)
-        answers     =   ['ropa', 'vender online', 'jóvenes', 'premium', 'negro', 'productos', 'fotos', 'whatsapp', 'midominio.com', 'sí, ese']
-        for answer in answers:
-            client.post(CHAT_SEND_URL, {'body': answer}, format = 'json')
-        thread      =   ChatThread.objects.get(customer = self.user)
-        last        =   thread.messages.filter(from_staff = True).order_by('-created_at').first()
-        self.assertIn('estilo', last.body.lower())
+        self.assertFalse(thread.messages.filter(from_staff = True).exists())

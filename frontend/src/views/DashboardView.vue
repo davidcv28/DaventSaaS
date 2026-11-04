@@ -42,6 +42,7 @@ import { paymentStatusMeta, formatDateTime, MONTH_NAMES } from '../api/payments.
 import { locationsApi } from '../api/locations.api.js'
 import { authApi } from '../api/auth.api.js'
 import { fetchChat, fetchChatMessages, sendChatMessage, chatHeartbeat } from '../api/chat.api.js'
+import { fetchAssistant, sendAssistant } from '../api/assistant.api.js'
 import { extractApiError } from '../api/http.js'
 import { env } from '../config/env.js'
 import {
@@ -320,7 +321,7 @@ const LOCKED_FEATURES = {
   services: { icon: 'wrench', title: 'Página de servicios', text: 'Una página propia para mostrar lo que hacés, con duración, precio y botón de consulta directa a tu WhatsApp.' },
   pos: { icon: 'monitor', title: 'Venta en persona', text: 'Cobrá en tu local usando el mismo catálogo de tu web. Llega muy pronto.' },
   reviews: { icon: 'star', title: 'Opiniones de clientes', text: 'Tus clientes valoran tus productos y dejan comentarios que se muestran en tu web; vos decidís qué se ve.' },
-  support: { icon: 'message-circle', title: 'Asistente de diseño', text: 'Un asistente te hace preguntas sobre tu negocio y te recomienda el estilo ideal para tu web.' },
+  support: { icon: 'message-circle', title: 'Tu Asistente', text: 'Te responde sobre tu cuenta: plan, tienda, productos, visitas, pagos y facturas.' },
   bot: { icon: 'bot', title: 'Asistente virtual', text: 'Un ayudante en tu web que responde solo las preguntas frecuentes de tus clientes, las 24 horas.' },
   tools: { icon: 'qr-code', title: 'QR y folletos', text: 'Código QR y folletos listos para imprimir y repartir: del papel a tu web en un escaneo.' },
   stats: { icon: 'trending-up', title: 'Estadísticas de visitas', text: 'Cuánta gente entra a tu web día por día durante el último mes.' }
@@ -335,7 +336,9 @@ const navLocks = computed(() => {
   const map = {}
   const gated = (id) => (SECTION_BENEFITS[id] || []).some((k) => !b[k])
   for (const id of ['catalogs', 'services', 'pos', 'reviews', 'support', 'bot', 'tools', 'stats', 'design_assisted', 'design_studio']) {
-    map[id] = !hasAccess ? 'expired' : gated(id) ? 'upgrade' : null
+    // El asistente/soporte es para planes pagos (gate mcp_user_access en
+    // el backend): el trial queda con candado de upgrade aunque esté vigente.
+    map[id] = !hasAccess ? 'expired' : (id === 'support' && plan.value?.isTrial) ? 'upgrade' : gated(id) ? 'upgrade' : null
   }
   return map
 })
@@ -353,7 +356,7 @@ const navItems = computed(() => {
     { id: 'web', label: 'Mi página', icon: 'store', hint: 'Diseño, secciones y dirección' },
     { heading: 'Clientes' },
     { id: 'reviews', label: 'Opiniones', icon: 'star', hint: 'Lo que dicen de vos', locked: L.reviews },
-    { id: 'support', label: 'Asistente de diseño', icon: 'message-circle', hint: 'Te ayuda a armar tu web', locked: L.support },
+    { id: 'support', label: 'Tu Asistente', icon: 'message-circle', hint: 'Te ayuda a armar tu web', locked: L.support },
     { id: 'bot', label: 'Asistente virtual', icon: 'bot', hint: 'Responde por vos en tu web', locked: L.bot },
     { heading: 'Crecer' },
     { id: 'tools', label: 'Promocionar', icon: 'megaphone', hint: 'QR y folletos para imprimir', locked: L.tools },
@@ -2286,7 +2289,7 @@ const chatOnlineCount = computed(() => chatStaff.value.filter((s) => s.online).l
 const canChat = computed(() => Boolean(plan.value?.benefits?.has_support_chat))
 // El asistente figura como un integrante más del equipo de soporte: es un
 // contacto local (respuestas automáticas, nunca toca la API del chat).
-const BOT_MEMBER = { id: 'bot', name: 'Asistente de diseño', online: true, bot: true }
+const BOT_MEMBER = { id: 'bot', name: 'Tu Asistente', online: true, bot: true }
 const chatContacts = computed(() => canChat.value ? [BOT_MEMBER, ...chatStaff.value] : [BOT_MEMBER])
 const botMode = computed(() => Boolean(chatTarget.value?.bot))
 // Panel de contactos que abre la burbuja flotante.
@@ -2360,10 +2363,11 @@ function openChat(member = null) {
   chatDockPanel.value = false
   window.addEventListener('keydown', onChatKey)
   if (member?.bot) {
-    // Conversación local con el asistente: no hay hilo en el servidor ni
-    // lectura que marcar — el saludo se agrega la primera vez.
+    // "Tu Asistente" (bot MCP): hilo propio en el servidor, separado del
+    // chat de soporte. El GET trae el historial (+ saludo en el primer
+    // acceso); 403 = sin plan pago → se avisa dentro de la ventana.
     resetChatFiles()
-    if (!botMsgs.value.length) botPush(false, BOT_GREETING)
+    loadAssistant()
     nextTick(() => {
       scrollChat()
       resizeChatInput()
@@ -2605,74 +2609,12 @@ const PANEL_TOPICS = [
   { id: 'renew', label: 'Renovación del plan', kw: 'renovacion renovar debito automatico vencimiento' },
   { id: 'invoices', label: 'Pagos y facturas', kw: 'facturas factura pagos comprobantes historial cobros' }
 ]
-const BOT_GREETING = 'Hola, soy el asistente de DAVENT. Elegí un tema o escribime tu consulta y te explico cómo funciona.'
-const BOT_FALLBACK = 'No tengo una respuesta automática para eso. Probá con alguna de las preguntas sugeridas — o escribí al equipo de soporte, que responde a la brevedad.'
 const botMsgs = ref([])
 const botTyping = ref(false)
-const botAsked = ref(new Set())
 let botSeq = 0
-// Temas todavía no preguntados: se ofrecen como mensajes sugeridos en el chat.
-const botPending = computed(() => PANEL_TOPICS.filter((t) => !botAsked.value.has(t.id)))
-
-function panelAnswer(id) {
-  const p = plan.value
-  switch (id) {
-    case 'sub': {
-      if (!p) return 'Todavía no tenés una suscripción activa. En la sección Planes elegís el que mejor te quede y se activa cuando se acredita el pago.'
-      const parts = [`Tu plan actual es ${p.name}.`]
-      if (p.remaining != null) parts.push(`Te quedan ${p.remaining} días.`)
-      if (p.autoRenew) parts.push('El débito automático está activo: se renueva solo cada mes.')
-      else if (p.cancelledAt) parts.push('La renovación automática está desactivada: al terminar el período vas a tener que pagar de nuevo.')
-      const pending = billing.subscription?.pending_plan_name
-      if (pending) parts.push(`Tenés un cambio a ${pending} pendiente.`)
-      if (!p.isCurrent) parts.push('Ojo: tu suscripción está vencida. En Planes podés reactivarla.')
-      return parts.join(' ')
-    }
-    case 'link': {
-      const s = store.store
-      if (!s) return 'Todavía no reservaste tu link público.'
-      const state = s.is_published ? 'Está activo.' : 'Está pausado: podés reactivarlo desde "Mi tienda".'
-      return `Tu link público es ${publicStoreUrl(s.slug)} — ese es el que compartís con tus clientes. ${state}`
-    }
-    case 'products':
-      return 'En "Mis catálogos" cargás productos con foto, nombre, precio, categoría y marca. Todo lo que publiques aparece al instante en tu web pública. Las categorías y marcas se crean en las pestañas de ese mismo panel.'
-    case 'design': {
-      const b = p?.benefits || {}
-      const mapa = b.has_location_map ? ', el mapa de ubicación' : ''
-      if (b.has_design_advanced) return 'En "Diseño web" personalizás todo: logo, nombre, titular, descripción, tema, color de acento, fuente y tamaño del nombre, carrusel de portada, mapa de ubicación y botones de WhatsApp y redes.'
-      if (b.has_customization) return `En "Diseño web" personalizás el logo, el nombre, el titular, la descripción, el tema claro/oscuro${mapa} y los botones de WhatsApp y redes. El color de acento, la fuente y el carrusel de portada se habilitan con el Plan premium.`
-      return 'Con una suscripción activa podés personalizar el diseño de tu web (logo, textos, tema y botones de contacto). El color de acento, las fuentes y el carrusel son del Plan premium. En "Planes" elegís el que mejor te quede.'
-    }
-    case 'renew':
-      return 'Podés pagar cada mes a mano desde "Planes", o activar el débito automático con Mercado Pago y el plan se renueva solo. Si un débito falla, Mercado Pago reintenta durante unos días y tu plan sigue activo mientras tanto.'
-    case 'invoices':
-      return 'En "Pagos" ves el historial de cobros con su estado; en "Facturas" están los comprobantes de cada pago acreditado, listos para imprimir o bajar en PDF.'
-    default:
-      return ''
-  }
-}
-
-const normChatText = (s) => String(s || '').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '')
-
-// Matching del texto libre contra etiqueta + keywords del tema (mismo
-// criterio que el SupportBot: exacto > inclusión > solape de palabras >3).
-function findBotTopic(text) {
-  const t = normChatText(text)
-  if (!t) return null
-  let best = null
-  let score = 0
-  for (const topic of PANEL_TOPICS) {
-    const q = normChatText(`${topic.label} ${topic.kw}`)
-    let s = 0
-    if (t === normChatText(topic.label)) s += 20
-    else if (t.length > 3 && q.includes(t)) s += 6
-    for (const w of q.split(/[^a-z0-9ñ]+/).filter((w) => w.length > 3)) {
-      if (t.includes(w)) s += 2
-    }
-    if (s > score) { score = s; best = topic }
-  }
-  return score >= 3 ? best : null
-}
+// Temas sugeridos del asistente: viajan como texto al endpoint MCP.
+const botPending = PANEL_TOPICS
+const BOT_FALLBACK = 'No pude responder eso todavía. Probá preguntarme por tu plan, tu tienda, tus productos, visitas, pagos o facturas.'
 
 function botPush(mine, body) {
   botMsgs.value.push({
@@ -2683,17 +2625,23 @@ function botPush(mine, body) {
   nextTick(scrollChat)
 }
 
-function botAnswer(topicId) {
-  botAsked.value = new Set([...botAsked.value, topicId])
-  botPush(false, panelAnswer(topicId))
+// Trae el historial de "Tu Asistente" (hilo propio, no el de soporte).
+async function loadAssistant() {
+  try {
+    const data = await fetchAssistant()
+    botMsgs.value = (data.messages || []).map((m) => ({ ...m, bot: m.from_bot }))
+  } catch (err) {
+    if (!botMsgs.value.length) {
+      botPush(false, err?.response?.data?.detail || BOT_FALLBACK)
+    }
+  }
+  nextTick(scrollChat)
 }
 
 function selectBotTopic(t) {
+  // Los temas sugeridos viajan como texto al asistente real (MCP).
   if (botTyping.value) return
-  botPush(true, t.label)
-  botTyping.value = true
-  // Pausa breve de "escribiendo…" como en el asistente de las tiendas.
-  window.setTimeout(() => { botTyping.value = false; botAnswer(t.id) }, 450)
+  askAssistant(t.label)
 }
 
 function sendBotChat() {
@@ -2701,14 +2649,21 @@ function sendBotChat() {
   if (!text || botTyping.value) return
   chatInput.value = ''
   nextTick(resizeChatInput)
-  botPush(true, text.slice(0, 2000))
+  askAssistant(text.slice(0, 2000))
+}
+
+async function askAssistant(text) {
+  botPush(true, text)
   botTyping.value = true
-  window.setTimeout(() => {
+  try {
+    const { reply } = await sendAssistant(text)
     botTyping.value = false
-    const topic = findBotTopic(text)
-    if (topic) botAnswer(topic.id)
+    if (reply) botPush(false, reply.body)
     else botPush(false, BOT_FALLBACK)
-  }, 450)
+  } catch (err) {
+    botTyping.value = false
+    botPush(false, err?.response?.data?.detail || BOT_FALLBACK)
+  }
 }
 
 // ~2.5s de poll: latencia media de ~1.2s contra ~2.5s antes. El throttle
@@ -5121,8 +5076,8 @@ async function changePassword() {
     <div v-if="seen.support" v-show="section === 'support'" :class="{ 'sec-on': section === 'support' }">
       <div class="page-head">
         <div>
-          <h1>Asistente de diseño</h1>
-          <p>Contale a DAVENT qué vendés y cómo querés que se vea tu web: te guía con preguntas y te recomienda un estilo del catálogo.</p>
+          <h1>Mensajes y Tu Asistente</h1>
+          <p>El equipo de soporte responde en tu hilo, y Tu Asistente te informa sobre tu plan, tienda, productos, visitas, pagos y facturas.</p>
         </div>
         <span class="presence-chip" :class="{ on: chatStaffOnline }">
           <span class="presence-dot"></span>
@@ -5135,7 +5090,7 @@ async function changePassword() {
       <div class="support-grid">
         <aside class="card support-team">
           <div class="support-team-head">
-            <h3>Asistente de diseño</h3>
+            <h3>Tu Asistente</h3>
             <span class="support-count">{{ chatOnlineCount }}/{{ chatStaff.length }}</span>
           </div>
           <ul class="support-list">
@@ -5478,7 +5433,7 @@ async function changePassword() {
       :online="chatStaffOnline"
       :unread="chatUnread"
       :minimized="chatMin"
-      label="Asistente de diseño"
+      label="Tu Asistente"
       dismissible
       @toggle="onDockToggle"
       @dismiss="hideChatDock"
@@ -5487,7 +5442,7 @@ async function changePassword() {
            integrante más del equipo. -->
       <div v-if="chatDockPanel" class="chat-dock-panel">
         <div class="chat-threads-head">
-          <h3><AppIcon name="message-circle" :size="16" /> Asistente de diseño</h3>
+          <h3><AppIcon name="message-circle" :size="16" /> Tu Asistente</h3>
           <span class="presence-chip" :class="{ on: chatStaffOnline }">
             <span class="presence-dot"></span>
             {{ chatStaffOnline ? `${chatOnlineCount} en línea` : 'Desconectado' }}
@@ -5530,7 +5485,7 @@ async function changePassword() {
               <span class="support-status" :class="{ on: botMode || (chatPeer ? chatPeer.online : chatStaffOnline) }"></span>
             </span>
             <div class="chat-modal-who">
-              <strong>{{ chatPeer?.name || 'Asistente de diseño' }}</strong>
+              <strong>{{ chatPeer?.name || 'Tu Asistente' }}</strong>
               <small><span class="chat-win-state" :class="{ on: botMode || (chatPeer ? chatPeer.online : chatStaffOnline) }">{{ botMode ? 'Respuestas automáticas · siempre disponible' : chatPeer ? (chatPeer.online ? 'En línea ahora' : 'Asistente disponible') : (chatStaffOnline ? 'Asistente en línea' : 'Asistente disponible') }}</span></small>
             </div>
             <span class="chat-win-actions">
@@ -5585,7 +5540,7 @@ async function changePassword() {
               </template>
               <template v-else>
                 <p v-if="!chatMessages.length" class="chat-empty">
-                  Contale a tu asistente qué vendés y qué estilo te gustaría para tu web.
+                  Preguntale a Tu Asistente por tu plan, tu tienda, tus productos, visitas, pagos o facturas.
                 </p>
                 <template v-for="r in chatRows(chatMessages)" :key="r.key">
                   <div v-if="r.day" class="chat-day">{{ r.day }}</div>

@@ -8,8 +8,9 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.throttling import ScopedRateThrottle
 
-from AdminApp.domains.chat.models import ChatMessage, ChatThread
+from AdminApp.domains.chat.models import AssistantMessage, ChatMessage, ChatThread
 from AdminApp.domains.chat.serializers import (
+    AssistantMessageSerializer,
     ChatMessageSerializer,
     ChatSendSerializer,
     ChatThreadSerializer,
@@ -17,10 +18,11 @@ from AdminApp.domains.chat.serializers import (
 from AdminApp.domains.chat.services import (
     CHAT_PRIVATE_PREFIX,
     chat_enabled,
+    ensure_greeting,
     get_or_create_thread,
     messages_payload,
     online_customer_ids,
-    reply_to_customer,
+    reply_to_user,
     send_message,
     staff_online,
     staff_roster,
@@ -29,8 +31,8 @@ from AdminApp.domains.chat.services import (
     touch_presence,
     unread_for,
     upload_chat_image,
-    welcome_question,
 )
+from McpApp.domains.skills.services import mcp_user_access
 
 """
 Viewset del chat de soporte cliente <-> staff (asincrono: polling +
@@ -91,9 +93,9 @@ class SupportChatViewSet(viewsets.GenericViewSet):
             })
         thread      =   thread_of(request.user)
         if thread is None:
-            #El asistente abre la conversación con la primera pregunta de diseño.
+            #Hilo de soporte puro (cliente <-> equipo): sin mensajes del
+            #asistente — "Tu Asistente" vive en /api/assistant/, no acá.
             thread      =   get_or_create_thread(request.user)
-            welcome_question(thread)
         messages    =   messages_payload(request.user, thread)
         return Response({
             'thread'        :   {'id': thread.id} if thread else None,
@@ -145,9 +147,6 @@ class SupportChatViewSet(viewsets.GenericViewSet):
             except ValueError as exc:
                 return Response({'image': [str(exc)]}, status = status.HTTP_400_BAD_REQUEST)
         message     =   send_message(request.user, serializer.validated_data['body'], thread, image_key = image_key)
-        if not request.user.is_staff:
-            #Asistente de diseño: responde y hace la siguiente pregunta.
-            reply_to_customer(thread, serializer.validated_data['body'])
         return Response(
             {'message': ChatMessageSerializer(message, context = {'request': request}).data},
             status = status.HTTP_201_CREATED,
@@ -203,3 +202,49 @@ class SupportChatViewSet(viewsets.GenericViewSet):
                 return None
             return ChatThread.objects.filter(pk = thread_id).first()
         return thread_of(request.user)
+
+
+#=========================================
+# ASSISTANT VIEWSET — "Tu Asistente" (MCP, solo plan pago)
+#=========================================
+class AssistantViewSet(viewsets.GenericViewSet):
+    """
+    Conversación del usuario con Tu Asistente (bot MCP). Hilo aparte del
+    soporte: el staff no lo ve. Gate: autenticado + plan pago vigente
+    no-trial (mcp_user_access) — el asistente solo conoce los datos del
+    usuario en sesión vía las tools my_*.
+    """
+    permission_classes  =   [IsAuthenticated]
+    throttle_classes    =   [ChatPollThrottle]
+
+    def get_throttles(self):
+        throttles   =   super().get_throttles()
+        if self.action == 'send':
+            throttles.append(ChatSendThrottle())
+        return throttles
+
+    def _gate(self, request):
+        if not mcp_user_access(request.user):
+            raise PermissionDenied('Tu Asistente está disponible con un plan pago (básico, estándar o premium).')
+
+    #GET /api/assistant/ — historial propio (+ saludo en el primer acceso)
+    def list(self, request):
+        self._gate(request)
+        ensure_greeting(request.user)
+        messages    =   AssistantMessage.objects.filter(user = request.user)
+        return Response({
+            'messages'  :   AssistantMessageSerializer(messages, many = True).data,
+        })
+
+    #POST /api/assistant/send/ {body} — guarda y responde el bot
+    @action(detail = False, methods = ['post'], url_path = 'send')
+    def send(self, request):
+        self._gate(request)
+        body    =   (request.data.get('body') or '').strip()[:2000]
+        if not body:
+            return Response({'body': ['Escribí un mensaje.']}, status = status.HTTP_400_BAD_REQUEST)
+        reply   =   reply_to_user(request.user, body)
+        return Response(
+            {'reply': AssistantMessageSerializer(reply).data if reply else None},
+            status = status.HTTP_201_CREATED,
+        )

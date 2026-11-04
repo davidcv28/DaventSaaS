@@ -1,6 +1,6 @@
 from rest_framework import serializers
 
-from AdminApp.domains.chat.models import ChatMessage, ChatThread
+from AdminApp.domains.chat.models import AssistantMessage, ChatMessage, ChatThread
 
 """
 Serializers del chat de soporte.
@@ -32,9 +32,30 @@ class ChatMessageSerializer(serializers.ModelSerializer):
         #El cliente ve "Soporte" para los del staff (no se filtra el nombre
         #del empleado); el staff ve el nombre del cliente.
         if obj.from_staff:
-            return 'Asistente de diseño'
+            return 'Soporte DAVENT'
         profile     =   getattr(obj.sender, 'profile', None)
         return getattr(profile, 'business_name', None) or obj.sender.username
+
+
+#=========================================
+# ASSISTANT MESSAGE SERIALIZER ("Tu Asistente")
+#=========================================
+class AssistantMessageSerializer(serializers.ModelSerializer):
+    mine            =   serializers.SerializerMethodField()
+    sender_name     =   serializers.SerializerMethodField()
+
+    class Meta:
+        model   =   AssistantMessage
+        fields  =   ['id', 'body', 'from_bot', 'mine', 'sender_name', 'created_at']
+
+    def get_mine(self, obj):
+        return not obj.from_bot
+
+    def get_sender_name(self, obj):
+        if obj.from_bot:
+            return 'Tu Asistente'
+        profile     =   getattr(obj.user, 'profile', None)
+        return getattr(profile, 'business_name', None) or obj.user.username
 
 
 #=========================================
