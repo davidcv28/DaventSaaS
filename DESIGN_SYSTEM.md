@@ -477,3 +477,54 @@ completo: landing, catálogo, ficha y servicios salen del mismo HTML/CSS/JS.
   `manage.py seed_design_catalog --patterns-only` y
   `manage.py sync_design_neon --slug moda` (el comando arrastra también el
   estilo `moda-noche` por la FK `DesignStyle.pattern`).
+
+## 10. Calzado — lenguaje "vitrina deportiva"
+
+Vive en `StoreApp/domains/design/sources/calzado.html` (patrón `calzado`,
+estilos `calzado` y `calzado-noche`). Papel blanco, tinta `#141414`, rojo
+señal `#EE2D45` y paneles duros; Montserrat 200/600 para titulares y
+etiquetas, Lato para lectura. La identidad sale de la señalética deportiva,
+no de una grilla de tarjetas.
+
+- **Dorsales y reglas de pista**: todo se numera con contadores CSS
+  (`01`, `02`…) — categorías, servicios, planes, tarjetas, ficha del
+  producto. Las secciones se separan con `repeating-linear-gradient` de 1px
+  (carriles) y los índices nunca se escriben a mano.
+- **Portada**: foto a sangre con kenburns, velo en dos capas (tinta + acento),
+  titular fino a la izquierda, CTA doble, sello circular giratorio con datos
+  reales (`textPath`) y **marcador al pie** con horarios / showroom / WhatsApp
+  (tres datos reales; cada celda se apaga si el dato falta).
+- **Collage**: 12 columnas con portada 2×2, panel de relato en acento, panel
+  oscuro de showroom y galería. Los paneles sin dato se apagan y el resto se
+  recoloca (las reglas de recolocación repiten la condición porque `:has()` ve
+  el DOM, no el `display`).
+- **Cintas**: tres loops (datos de la tienda bajo la portada, anuncios en el
+  pie y wordmark). El script arma dos mitades idénticas y **repite el grupo
+  hasta cubrir el ancho** (una sola foto de galería dejaba medio lienzo
+  vacío); la duración se calcula a ~42 px/s.
+- **Chrome**: header fijo (`data-ds-pin="top"`, `data-ds-offset="76"`) que se
+  condensa al scrollear y pinta el progreso de lectura desde
+  `davent:ds-frame`; el interruptor de tema lo inyecta el puente en
+  `.top-inner` y se estiliza cuadrado.
+- **Catálogo**: barra de marca, riel de filtros (buscador con sugerencias
+  `[data-ds-suggest]`, categorías en lista `button.f-cat`, marcas con conteo,
+  precio con "Aplicar", ofertas), contador, vista lista/grilla y chips.
+- **Ficha**: pestañas **reales** (antes eran `span` decorativos) con
+  `role="tab"`; el panel de opiniones se apaga si no hay lista ni formulario.
+- **Trampas resueltas**: (1) en una celda de alto fijo un hijo con
+  `overflow:hidden` se encoge a 0 — el panel lleva `>*{flex:none}`; (2) las
+  rejillas de filo dibujan la línea con **cada celda** (`border-right/bottom`
+  + `box-shadow` interior en el contenedor): con `gap` + fondo, una última
+  fila incompleta dejaba bloques grises; (3) `:empty` no matchea nodos con
+  espacios, así que los datos van pegados a la etiqueta
+  (`<h2>{{…}}</h2>`) y las uniones de dos variables se separan en spans
+  propios; (4) `vh` dentro del iframe estirado equivale al alto del
+  documento — la portada usa `clamp()` en px, nunca `vh`; (5) en oscuro los
+  botones y paneles salen de `--btn`/`--panel` (el `#111` fijo desaparecía);
+  (6) el puente arma `button.f-cat`, `.cat-chip` y `.cat-chip-clear`: hay que
+  pintarlos o quedan con el estilo del navegador.
+- **QA**: renderizar `render_store_pattern` con una tienda (claro/oscuro,
+  1440 y 390) y revisar landing, catálogo lista/grilla y ficha. Tras editar la
+  fuente: `manage.py seed_design_catalog --patterns-only` y
+  `manage.py sync_design_neon --slug calzado` (arrastra `calzado-noche` por la
+  FK `DesignStyle.pattern`).
