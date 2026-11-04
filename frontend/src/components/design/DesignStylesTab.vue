@@ -9,7 +9,10 @@
 import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { useDesignCatalog } from '../../composables/useDesignCatalog.js'
 import { designApi } from '../../api/design.api.js'
-import { ensureStoreFont, STORE_TEMPLATE_RETIRED_MAP, STORE_TEMPLATES } from '../../api/stores.api.js'
+import {
+  ensureStoreFont, ensureStoreFontPicker, STORE_FONT_GROUPS, STORE_FONT_PICKER, STORE_FONTS,
+  storeFontFamily, STORE_TEMPLATE_RETIRED_MAP, STORE_TEMPLATES
+} from '../../api/stores.api.js'
 import { resolveSiteTheme } from '../../studio/contract.js'
 import { normalizeLayoutConfig, templateBlocks, templateOf } from '../../templates/index.js'
 import { LAYOUT_SURFACES, SURFACE_LABELS, blockSpec } from '../../templates/blocks.js'
@@ -50,6 +53,7 @@ const onLiveQuery = (e) => { liveVisible.value = e.matches }
 // recargar la página.
 onMounted(() => {
   load(true)
+  ensureStoreFontPicker()
   liveQuery?.addEventListener('change', onLiveQuery)
 })
 onBeforeUnmount(() => liveQuery?.removeEventListener('change', onLiveQuery))
@@ -182,6 +186,36 @@ function onStylePick(value) {
   const s = styleOptions.value.find((x) => x.slug === value)
   if (!s) return
   applyStyle(s)
+  previewReload.value++
+}
+
+// Fuente del nombre junto al logo (`name_font`): catálogo popular de
+// Google Fonts agrupado por familia, cada opción se muestra escrita con su
+// propia fuente (el picker las carga todas con ensureStoreFontPicker).
+// Una fuente guardada que no esté en el picker viaja en el grupo
+// "Guardada" para no mostrar el select vacío.
+const fontSelectGroups = computed(() => {
+  const groups = STORE_FONT_GROUPS.map((g) => ({
+    label: g.label,
+    options: g.keys.map((k) => ({
+      value: k,
+      label: STORE_FONTS[k]?.label || k,
+      style: { fontFamily: storeFontFamily(k) }
+    }))
+  }))
+  const saved = props.form.name_font
+  if (saved && !STORE_FONT_PICKER.includes(saved) && STORE_FONTS[saved]) {
+    groups.push({
+      label: 'Guardada',
+      options: [{ value: saved, label: STORE_FONTS[saved].label, style: { fontFamily: storeFontFamily(saved) } }]
+    })
+  }
+  return groups
+})
+function onFontPick(value) {
+  if (!STORE_FONTS[value]) return
+  ensureStoreFont(value)
+  props.form.name_font = value
   previewReload.value++
 }
 
@@ -427,6 +461,16 @@ onBeforeUnmount(() => {
                 :disabled="!styleOptions.length" @change="onStylePick"
               />
               <p class="dmenu-hint">Cada diseño trae sus estilos: color, tipografía y modo.</p>
+            </div>
+
+            <div class="dmenu-field">
+              <label>Nombre</label>
+              <DesignSelect
+                :model-value="form.name_font" :groups="fontSelectGroups" icon="type"
+                aria-label="Fuente del nombre" placeholder="Elegí una fuente…"
+                @change="onFontPick"
+              />
+              <p class="dmenu-hint">La fuente del texto junto al logo.</p>
             </div>
           </div>
 

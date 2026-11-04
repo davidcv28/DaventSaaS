@@ -101,7 +101,7 @@ onBeforeUnmount(() => {
       <AppIcon v-if="icon" :name="icon" :size="15" class="ds-icon" aria-hidden="true" />
       <span v-if="selected?.swatch" class="ds-swatch" :style="{ background: selected.swatch }" aria-hidden="true"></span>
       <AppIcon v-else-if="selected?.icon" :name="selected.icon" :size="15" class="ds-opt-icon" aria-hidden="true" />
-      <span class="ds-label" :class="{ 'is-empty': !selected }">{{ selected?.label || placeholder }}</span>
+      <span class="ds-label" :class="{ 'is-empty': !selected }" :style="selected?.style">{{ selected?.label || placeholder }}</span>
       <AppIcon name="chevron-down" :size="15" class="ds-chev" aria-hidden="true" />
     </button>
 
@@ -120,7 +120,7 @@ onBeforeUnmount(() => {
           <span v-if="o.swatch" class="ds-swatch" :style="{ background: o.swatch }" aria-hidden="true"></span>
           <AppIcon v-else-if="o.icon" :name="o.icon" :size="15" class="ds-opt-icon" aria-hidden="true" />
           <span class="ds-option-label">
-            <span class="ds-option-text">{{ o.label }}</span>
+            <span class="ds-option-text" :style="o.style">{{ o.label }}</span>
             <span v-if="o.badge" class="ds-badge" :class="o.badgeTone || ''">{{ o.badge }}</span>
           </span>
           <AppIcon v-if="String(o.value) === String(modelValue)" name="check" :size="14" :stroke="2.4" class="ds-check" aria-hidden="true" />
