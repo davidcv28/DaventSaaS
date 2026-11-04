@@ -9,7 +9,7 @@ import { landingViews, catalogViews, productViews, CATALOG_BLOCKS } from '../_sh
 // (bloque `plans` — membresías), no el pedido de servicios.
 export default {
   usesSectionOrder: false,
-  fonts: ['barlow-condensed', 'inter'],
+  fonts: ['barlow-condensed', 'inter', 'jetbrains-mono'],
   surfaces: {
     landing: landingViews.gimnasio,
     catalog: catalogViews.gimnasio,
@@ -18,7 +18,7 @@ export default {
   blocks: {
     landing: [
       'announcements', 'hero', 'categories', 'featured', 'plans',
-      'benefits', 'stats', 'gallery', 'testimonials', 'faq', 'cta', 'contact'
+      'benefits', 'stats', 'gallery', 'testimonials', 'team', 'faq', 'cta', 'contact'
     ],
     catalog: [...new Set(['note', 'promo', ...CATALOG_BLOCKS])]
   }

@@ -1,7 +1,7 @@
 <script setup>
-// Vitrina firma de GIMNASIO: productos/planes como tarjetas de precio —
-// nombre condensado, precio gigante y CTA recto; las ofertas van en placa
-// lima ("Recomendado"/"Oferta"). Sin catálogo o sin productos se auto-oculta.
+// Vitrina firma de GIMNASIO: productos/planes como tarjetas de pista —
+// imagen con índice, nombre condensado, precio gigante y CTA recto; la
+// oferta va en placa lima. Sin catálogo o sin productos se auto-oculta.
 import { computed, inject } from 'vue'
 import { storeHostSlug } from '../../../config/env.js'
 import { formatARS } from '../../../api/billing.api.js'
@@ -9,7 +9,10 @@ import AppIcon from '../../../components/AppIcon.vue'
 import { vReveal } from '../../../directives/reveal.js'
 import { useFeaturedCatalog } from '../../../composables/useFeaturedCatalog.js'
 
-const props = defineProps({ block: { type: Object, default: null } })
+const props = defineProps({
+  block: { type: Object, default: null },
+  sectionIndex: { type: Number, default: 0 }
+})
 
 const ctx = inject('storePage')
 const { slug, showCatalog } = ctx
@@ -31,8 +34,13 @@ const oldOf = (p) => (p.offer_price != null && p.price ? formatARS(p.price) : ''
   <section v-if="showCatalog && products.length" class="gy-shop" aria-labelledby="gy-shop-title">
     <div class="gy-wrap">
       <header v-reveal class="gy-shop-head">
-        <h2 id="gy-shop-title">{{ title }}</h2>
-        <span>Elegí cómo querés entrenar. El catálogo completo está a un clic.</span>
+        <div>
+          <p class="gy-eyebrow"><span class="gy-eyebrow-idx">{{ String(sectionIndex || 1).padStart(2, '0') }}</span> Tienda</p>
+          <h2 id="gy-shop-title">{{ title }}</h2>
+        </div>
+        <RouterLink class="gy-shop-all" :to="catalogTo">
+          Ver catálogo completo <AppIcon name="arrow-right" :size="15" aria-hidden="true" />
+        </RouterLink>
       </header>
       <div class="gy-grid">
         <article
@@ -40,22 +48,27 @@ const oldOf = (p) => (p.offer_price != null && p.price ? formatARS(p.price) : ''
           class="gy-card" :class="{ 'is-offer': p.offer_price != null }"
         >
           <RouterLink class="gy-card-link" :to="productTo(p)">
-            <span class="gy-card-top">
-              <strong class="gy-card-name">{{ p.name }}</strong>
+            <span class="gy-card-media" :class="{ 'is-empty': !p.image }">
+              <img v-if="p.image" :src="p.image" :alt="p.name" loading="lazy" decoding="async" />
+              <template v-else>
+                <span class="gy-card-media-mark" aria-hidden="true">GY</span>
+                <span class="gy-card-media-lines" aria-hidden="true"></span>
+              </template>
+              <span class="gy-card-index" aria-hidden="true">{{ String(i + 1).padStart(2, '0') }}</span>
               <span v-if="p.offer_price != null" class="gy-card-flag">Oferta</span>
             </span>
-            <span class="gy-card-price">
-              {{ priceOf(p) }}
-              <s v-if="oldOf(p)">{{ oldOf(p) }}</s>
+            <span class="gy-card-body">
+              <span v-if="catOf(p)" class="gy-card-cat">{{ catOf(p) }}</span>
+              <strong class="gy-card-name">{{ p.name }}</strong>
+              <span class="gy-card-price">
+                {{ priceOf(p) }}
+                <s v-if="oldOf(p)">{{ oldOf(p) }}</s>
+              </span>
+              <span class="gy-card-go">Ver producto <AppIcon name="arrow-up-right" :size="16" aria-hidden="true" /></span>
             </span>
-            <span v-if="catOf(p)" class="gy-card-cat">{{ catOf(p) }}</span>
-            <span class="gy-card-go">Ver producto <AppIcon name="arrow-right" :size="16" aria-hidden="true" /></span>
           </RouterLink>
         </article>
       </div>
-      <RouterLink v-reveal class="gy-viewall" :to="catalogTo">
-        Ver todo el catálogo <AppIcon name="arrow-right" :size="14" />
-      </RouterLink>
     </div>
   </section>
 </template>

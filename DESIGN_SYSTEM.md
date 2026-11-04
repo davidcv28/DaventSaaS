@@ -230,3 +230,55 @@ convenciones `store-sastreria.css`/`store-moderntec.css`. Aplica a
   `stores.api.js`) — el id pasa a ser diseño real.
 - **Iconos**: `AppIcon` (el set del repo), nunca librerías nuevas.
 
+
+## 11. Gimnasio — lenguaje "sala de fuerza" (`gimnasio`, plus)
+
+Aplica a `views/store/gimnasio/` (`GyHero`, `GyStats`, `GyPlans`, `GyTeam`,
+`GyFeatured`), `assets/store-gimnasio.css` y a la página genérica
+`PlanesView` cuando la piel activa es `gimnasio`.
+
+- **Paleta**: tinta oliva `#0A0B08`, panel `#10120D`, tarjeta `#151711`,
+  hueso `#F4F1E8` y el acento del dueño como única señal. En noche el acento
+  se mezcla `78%` con hueso (`color-mix`) para que los presets oscuros (lima
+  `#65a30d` del plan Estándar, índigo, violeta) lean AA sobre tinta. En día
+  se usa `--sp-band-c1` (tono de banda del acento) con texto blanco: un
+  acento claro como `#C8F169` no desaparece sobre papel.
+- **Tipografía**: Barlow Condensed 800 en titulares (uppercase, `line-height
+  .86–.96`), Inter en cuerpo y JetBrains Mono en datos (índices, horarios,
+  precios, cifras). `text-wrap:balance`, `tabular-nums` en precios/cifras.
+- **Portada**: rail `01 · CENTRO DE ENTRENAMIENTO` + chip de estado en vivo,
+  titular gigante con la última frase en acento y subrayado sesgado, ficha
+  de imagen con esquina cortada, código `GY/26`, texto vertical, línea de
+  escaneo, panel de horarios reales y sello circular giratorio. Sin foto, la
+  placa se resuelve con monograma, medidor de barras y "Sala principal".
+  Debajo: ficha de datos derivados (años, disciplinas, membresías, sede) y
+  cinta de disciplinas en loop.
+- **Secciones firma**: `GyStats` (cifras con count-up al entrar en viewport,
+  barra proporcional al valor real), `GyPlans` (tarjetas de precio, la
+  central en placa lima, CTA por WhatsApp/contacto), `GyTeam` (fichas de
+  coach con iniciales en contorno y rol), `GyFeatured` (tarjetas de pista
+  con imagen, índice, precio y oferta). Galería en bento 4 columnas
+  (primera 2×2, cuarta 2×1), FAQ numerada con `+`/`−`, CTA en banda de
+  señal con franjas de riesgo.
+- **Movimiento**: cinta con pista duplicada al 50% (pausa al hover), sello
+  girando 34 s, scan de la placa, barras del medidor, count-up y micro-lift
+  de tarjetas. Solo `transform`/`opacity`; `prefers-reduced-motion` apaga
+  todo y `hover:none` elimina los lifts en táctil.
+- **Responsive**: ≤960 la portada apila, planes 1 columna (destacado
+  primero), stats 2, equipo 2 y FAQ 1; ≤620 todo a 1 columna, CTAs full
+  width, anuncios como cinta de una línea y el CTA "Catálogo" del header se
+  apaga (vive en la tab bar). En catálogo (≥1101) el buscador va en una
+  segunda fila del header: el nombre del club no compite con siete links.
+- **Trampas resueltas**: (1) `*/` dentro de un comentario CSS cierra el
+  comentario antes de tiempo y **descarta el bloque de tokens completo** —
+  nunca escribir `--sp-*/--rz-*` en un comentario; (2) `StorePublicLayout`
+  no aplica el layout ni la paleta del patrón base a los diseños con piel
+  propia (`SKIN_TEMPLATES`): les pisaba el hero `centered` y el acento;
+  (3) la galería necesita `aspect-ratio:auto` en las celdas para que el
+  bento no desborde la sección; (4) el header de catálogo con buscador usa
+  grid de dos filas y `--sp-top-h:128px` también en `.scrolled`.
+- **Registro**: `fonts: ['barlow-condensed','inter','jetbrains-mono']`,
+  `blocks.landing` suma `team`, `TEMPLATE_CSS` → `store-gimnasio.css`,
+  tier `plus` (Estándar y Premium). Catálogo/ficha/servicios siguen en Raíz
+  bajo `.gy-skin`. Migración del catálogo: `manage.py sync_design_neon
+  --slug gimnasio` (upsert del patrón + estilos `gimnasio`/`gimnasio-dia`).

@@ -10,8 +10,6 @@ import { useStorePage } from '../../../composables/useStorePage.js'
 import BlkAnnouncements from '../../../components/store/blocks/BlkAnnouncements.vue'
 import BlkCategories from '../../../components/store/blocks/BlkCategories.vue'
 import BlkServices from '../../../components/store/blocks/BlkServices.vue'
-import BlkPlans from '../../../components/store/blocks/BlkPlans.vue'
-import BlkStats from '../../../components/store/blocks/BlkStats.vue'
 import BlkBrands from '../../../components/store/blocks/BlkBrands.vue'
 import BlkBenefits from '../../../components/store/blocks/BlkBenefits.vue'
 import BlkCountdown from '../../../components/store/blocks/BlkCountdown.vue'
@@ -32,6 +30,9 @@ import BlkAiPricing from '../../../components/store/blocks/BlkAiPricing.vue'
 import BlkAiMosaic from '../../../components/store/blocks/BlkAiMosaic.vue'
 import GyHero from './GyHero.vue'
 import GyFeatured from './GyFeatured.vue'
+import GyStats from './GyStats.vue'
+import GyPlans from './GyPlans.vue'
+import GyTeam from './GyTeam.vue'
 
 const { pageTemplate, custom } = useStorePage()
 const pageEl = ref(null)
@@ -43,13 +44,14 @@ const MAP = {
   featured: GyFeatured,
   about: BlkAbout,
   services: BlkServices,
-  plans: BlkPlans,
-  stats: BlkStats,
+  plans: GyPlans,
+  stats: GyStats,
   brands: BlkBrands,
   benefits: BlkBenefits,
   countdown: BlkCountdown,
   offers: BlkOffers,
   testimonials: BlkTestimonials,
+  team: GyTeam,
   gallery: BlkGallery,
   faq: BlkFaq,
   cta: BlkCta,
@@ -74,6 +76,7 @@ function withDefaults(block) {
   if (block.id === 'brands') return { ...block, variant: block.variant || 'logos' }
   if (block.id === 'gallery') return { ...block, variant: block.variant || 'grid', props: { title: 'El gimnasio', ...(block.props || {}) } }
   if (block.id === 'testimonials') return { ...block, variant: block.variant || 'cards' }
+  if (block.id === 'team') return { ...block, variant: block.variant || 'grid', props: { title: 'El equipo', ...(block.props || {}) } }
   if (block.id === 'faq') return { ...block, variant: block.variant || 'accordion' }
   if (block.id === 'cta') return { ...block, variant: block.variant || 'band' }
   if (block.id === 'contact') return { ...block, variant: block.variant || 'card', props: { title: 'Contacto', ...(block.props || {}) } }
@@ -88,8 +91,9 @@ const items = computed(() => templateBlocks(pageTemplate.value, 'landing', custo
 <template>
   <div ref="pageEl" class="sp-page-root gy-home">
     <component
-      :is="MAP[b.id]" v-for="b in items" :key="b.id"
+      :is="MAP[b.id]" v-for="(b, i) in items" :key="b.id"
       :block="b" :data-blk="b.id"
+      :section-index="['featured', 'plans', 'stats', 'team'].includes(b.id) ? i + 1 : undefined"
     />
   </div>
 </template>
