@@ -129,17 +129,20 @@ jobs:
       - name: Dependencias
         run: pip install -r requirements.txt coverage==7.6.10
 
+      # setup-python exporta LD_LIBRARY_PATH (toolchain del runner): no es
+      # config de producción pero envguard (project.E006) la marca como
+      # inyección de runtime. Se limpia solo para estos comandos.
       - name: Checklist de despliegue de Django
-        run: python manage.py check --deploy
+        run: env -u LD_LIBRARY_PATH python manage.py check --deploy
 
       - name: Guard de variables de entorno
-        run: python manage.py check_env
+        run: env -u LD_LIBRARY_PATH python manage.py check_env
 
       - name: Migraciones sin commitear (drift de modelos)
         # `manage.py test` ya aplica TODAS las migraciones sobre la DB de test:
         # un `migrate` acá era el mismo trabajo dos veces. Lo que falta de
         # verdad es detectar un modelo cambiado sin su makemigrations.
-        run: python manage.py makemigrations --check --dry-run
+        run: env -u LD_LIBRARY_PATH python manage.py makemigrations --check --dry-run
 
       - name: Tests
         env:
@@ -150,7 +153,7 @@ jobs:
           SESSION_COOKIE_SECURE: "False"
           CSRF_COOKIE_SECURE: "False"
         run: |
-          coverage run manage.py test --parallel
+          env -u LD_LIBRARY_PATH coverage run manage.py test --parallel
           coverage combine
           coverage report --fail-under=50
 
