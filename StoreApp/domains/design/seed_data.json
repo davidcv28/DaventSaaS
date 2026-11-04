@@ -4918,22 +4918,22 @@
       "slug": "viajero",
       "nombre": "Viajero",
       "categoria": "Viajes y experiencias",
-      "descripcion": "Arena calida, tinta nautica y coral de senalizacion: Playfair Display para titulares de guia, Rubik para lectura y JetBrains Mono en datos; heroe a sangre con barra de reserva, indice de destinos y tarjeta flotante.",
+      "descripcion": "Editorial de viajes en papel arena: Fraunces para titulares de guia, Instrument Sans para lectura y JetBrains Mono en datos. Portada a sangre con ficha de agencia tipo ticket, indice de destinos numerado, itinerarios con cinta de categorias, bitacora, membresias y contacto.",
       "tier": "plus",
       "template": "viajero",
       "page_theme": "light",
       "pattern": "viajero",
       "tokens": {
         "palette": {
-          "accent": "#FF7757",
-          "primary": "#172432",
-          "secondary": "#3D4A57",
-          "bg": "#FBF7F0",
-          "surface": "#FFFFFF",
-          "text": "#172432",
-          "muted": "#5C6672",
-          "border": "#EADFD1",
-          "success": "#2F7D5B",
+          "accent": "#E0522B",
+          "primary": "#0D1A22",
+          "secondary": "#1C5D57",
+          "bg": "#F5EFE3",
+          "surface": "#FFFDF8",
+          "text": "#0D1A22",
+          "muted": "#5B6570",
+          "border": "#E2D5BF",
+          "success": "#2C6E55",
           "danger": "#B3261E"
         },
         "containers": {
@@ -4944,12 +4944,12 @@
           "surface": "flat"
         },
         "typography": {
-          "heading": "playfair-display",
-          "subheading": "rubik",
-          "body": "rubik",
+          "heading": "fraunces",
+          "subheading": "instrument-sans",
+          "body": "instrument-sans",
           "scale": "editorial",
           "weightHeading": 600,
-          "letterSpacing": "-0.01em"
+          "letterSpacing": "-0.02em"
         },
         "buttons": {
           "shape": "square",
@@ -5011,22 +5011,22 @@
       "slug": "viajero-noche",
       "nombre": "Viajero Noche",
       "categoria": "Viajes y experiencias nocturnas",
-      "descripcion": "Nautica profunda y coral: la edicion nocturna del viajero, con el mismo aparato editorial en clave de escala nocturna.",
+      "descripcion": "Noche de navegacion: grafito profundo, coral encendido y la misma retícula editorial del viajero, con tipografia Fraunces e Instrument Sans.",
       "tier": "plus",
       "template": "viajero",
       "page_theme": "dark",
       "pattern": "viajero",
       "tokens": {
         "palette": {
-          "accent": "#FF8A6B",
-          "primary": "#FF8A6B",
-          "secondary": "#C96B50",
-          "bg": "#0F1822",
-          "surface": "#182433",
-          "text": "#F4EFE4",
-          "muted": "#98A2AE",
-          "border": "#263444",
-          "success": "#4CC38A",
+          "accent": "#FF7A52",
+          "primary": "#0A131A",
+          "secondary": "#5FB8AC",
+          "bg": "#0A131A",
+          "surface": "#111E27",
+          "text": "#F4ECDD",
+          "muted": "#9AA6AF",
+          "border": "#22323D",
+          "success": "#5BC49A",
           "danger": "#E56464"
         },
         "containers": {
@@ -5037,12 +5037,12 @@
           "surface": "elevated"
         },
         "typography": {
-          "heading": "playfair-display",
-          "subheading": "rubik",
-          "body": "rubik",
+          "heading": "fraunces",
+          "subheading": "instrument-sans",
+          "body": "instrument-sans",
           "scale": "editorial",
           "weightHeading": 600,
-          "letterSpacing": "-0.01em"
+          "letterSpacing": "-0.02em"
         },
         "buttons": {
           "shape": "square",
@@ -7109,7 +7109,7 @@
       "slug": "viajero",
       "nombre": "Viajero",
       "categoria": "viajes",
-      "descripcion": "Agencia de viajes editorial inspirada en Travellian: portada a sangre con barra de reserva, indice de destinos numerado, vitrina con tabs, bitacora de la agencia, garantias, membresias, testimonios, FAQ, CTA coral y contacto. Solo datos reales de la tienda.",
+      "descripcion": "Agencia de viajes editorial en papel arena y tinta nautica: portada a sangre con ficha tipo ticket, indice de destinos numerado, itinerarios con cinta de categorias, bitacora, garantias, membresias, testimonios, FAQ, CTA coral y contacto. Solo datos reales de la agencia.",
       "tier": "plus",
       "template": "viajero",
       "layout": {
@@ -7195,22 +7195,22 @@
         ]
       },
       "tokens": {
-        "accent": "#FF7757",
+        "accent": "#E0522B",
         "palette": {
-          "accent": "#FF7757",
-          "primary": "#172432",
-          "secondary": "#3D4A57",
-          "bg": "#FBF7F0",
-          "surface": "#FFFFFF",
-          "text": "#172432",
-          "muted": "#5C6672",
-          "border": "#EADFD1",
-          "success": "#2F7D5B",
+          "accent": "#E0522B",
+          "primary": "#0D1A22",
+          "secondary": "#1C5D57",
+          "bg": "#F5EFE3",
+          "surface": "#FFFDF8",
+          "text": "#0D1A22",
+          "muted": "#5B6570",
+          "border": "#E2D5BF",
+          "success": "#2C6E55",
           "danger": "#B3261E"
         },
         "fonts": [
-          "rubik",
-          "playfair-display"
+          "fraunces",
+          "instrument-sans"
         ],
         "radius": "14px",
         "anim": {
