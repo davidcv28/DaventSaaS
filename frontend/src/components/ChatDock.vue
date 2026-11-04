@@ -13,9 +13,12 @@ const props = defineProps({
   online: { type: Boolean, default: false },
   unread: { type: Number, default: 0 },
   minimized: { type: Boolean, default: false },
-  label: { type: String, default: 'Mensajes de soporte' }
+  label: { type: String, default: 'Mensajes de soporte' },
+  // Con dismissible la burbuja muestra una × para ocultarla (el padre
+  // decide cómo reabrirla — ayuda/campana); sin él no hay botón.
+  dismissible: { type: Boolean, default: false }
 })
-const emit = defineEmits(['toggle'])
+const emit = defineEmits(['toggle', 'dismiss'])
 
 const SIZE = 56 // alto/ancho de la burbuja en px (coincide con .dock-fab)
 const EDGE = 18
@@ -74,6 +77,15 @@ const boxStyle = computed(() => {
 const fabStyle = computed(() => {
   const p = cur()
   return pos.value ? { left: `${p.x}px`, top: `${p.y}px` } : {}
+})
+// La × de "ocultar" sigue a la burbuja: va pegada a su arista superior
+// (del lado contrario al anclaje, para no tapar el badge de no-leídos).
+const hideStyle = computed(() => {
+  const p = cur()
+  if (!pos.value) return {}
+  return side.value === 'right'
+    ? { left: `${p.x - 8}px`, top: `${p.y - 8}px` }
+    : { left: `${p.x + SIZE - 14}px`, top: `${p.y - 8}px` }
 })
 
 // --- Arrastre (Pointer Events: mouse + touch). >6px se considera drag, no
@@ -138,6 +150,16 @@ function onClick() {
       <AppIcon name="message-circle" :size="24" />
       <span class="dock-status" :class="{ on: online }" aria-hidden="true"></span>
       <span v-if="unread" class="chat-badge dock-badge">{{ unread > 99 ? '99+' : unread }}</span>
+    </button>
+    <!-- Ocultar la burbuja (queda reabrible desde Ayuda / la campana). -->
+    <button
+      v-if="!content && dismissible"
+      type="button" class="dock-hide" aria-label="Ocultar el asistente"
+      title="Ocultar el asistente"
+      :style="hideStyle"
+      @pointerdown.stop @pointermove.stop @pointerup.stop @click.stop="emit('dismiss')"
+    >
+      <AppIcon name="x" :size="12" :stroke="2.4" />
     </button>
   </div>
 </template>

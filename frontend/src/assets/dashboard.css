@@ -607,6 +607,13 @@
 .dock-status { position: absolute; right: 1px; bottom: 1px; width: 14px; height: 14px; border-radius: 50%; background: var(--muted); border: 2.5px solid var(--card); }
 .dock-status.on { background: var(--ok, #10b981); box-shadow: 0 0 0 3px rgba(16, 185, 129, .22); }
 .dock-badge { position: absolute; top: -5px; right: -5px; }
+/* × para ocultar la burbuja: discreta hasta que se le acerca el puntero;
+   en touch siempre visible (no hay hover para descubrirla). */
+.dock-hide { position: fixed; z-index: 97; right: 66px; bottom: 64px; display: grid; place-items: center; width: 22px; height: 22px; border-radius: 50%; border: 1px solid var(--line); background: var(--card); color: var(--ink-3); cursor: pointer; box-shadow: 0 4px 10px -4px rgba(9, 12, 24, .4); opacity: .35; transition: opacity .15s, transform .15s, color .15s; touch-action: none; }
+.dock-hide:hover, .dock-hide:focus-visible, .chat-dock:hover .dock-hide { opacity: 1; color: var(--ink-2); }
+.dock-hide:active { transform: scale(.92); }
+.dock-hide:focus-visible { outline: 2px solid var(--brand-500); outline-offset: 2px; }
+@media (hover: none) { .dock-hide { opacity: .8; } }
 /* Caja anclada a la burbuja: la posición/tamaño los marca el componente
    (estilo inline); el contenido la llena. */
 .chat-dock-box { position: fixed; z-index: 96; }

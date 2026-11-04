@@ -317,22 +317,6 @@ function openMobilePreview() {
   lastFocusEl = document.activeElement
   emit('update:previewOpen', true)
 }
-// El FAB se esconde al scrollear hacia abajo (en cualquier contenedor) y
-// vuelve al subir o al frenar el scroll: no tapa el contenido ni la
-// savebar mientras el usuario lee.
-const fabHidden = ref(false)
-let lastScrollY = 0
-let fabTimer = null
-function onAnyScroll(e) {
-  if (props.previewOpen || showOpen.value) return
-  const t = e.target
-  const y = t === document ? window.scrollY : (t?.scrollTop ?? window.scrollY)
-  if (Math.abs(y - lastScrollY) < 10) return
-  fabHidden.value = y > lastScrollY && y > 140
-  lastScrollY = y
-  clearTimeout(fabTimer)
-  fabTimer = setTimeout(() => { fabHidden.value = false }, 900)
-}
 // Hoja de vista previa: swipe-down para cerrar (gesto nativo de sheet).
 const pvDrag = ref(0)
 let pvDragStart = null
@@ -376,15 +360,11 @@ onMounted(() => {
   window.addEventListener('keydown', onMobilePreviewKey)
   window.addEventListener('keydown', onShowKey)
   window.addEventListener('resize', onViewport, { passive: true })
-  // capture:true: el scroll del dashboard vive en contenedores internos.
-  window.addEventListener('scroll', onAnyScroll, { passive: true, capture: true })
 })
 onBeforeUnmount(() => {
   window.removeEventListener('keydown', onMobilePreviewKey)
   window.removeEventListener('keydown', onShowKey)
   window.removeEventListener('resize', onViewport)
-  window.removeEventListener('scroll', onAnyScroll, { capture: true })
-  clearTimeout(fabTimer)
   if (props.previewOpen || showOpen.value) document.body.style.overflow = ''
 })
 </script>
@@ -454,14 +434,6 @@ onBeforeUnmount(() => {
       </aside>
     </div>
 
-    <!-- Punto de acceso único a la vista previa en pantallas chicas. -->
-    <button
-      v-if="!previewOpen" type="button" class="dmenu-fab" :class="{ 'fab-off': fabHidden }"
-      aria-label="Ver mi web en vista previa" @click="openMobilePreview"
-    >
-      <span class="dmenu-fab-ico" aria-hidden="true"><AppIcon name="eye" :size="18" /></span>
-      <span>Ver mi web</span>
-    </button>
   </div>
 
   <Teleport to="body">
@@ -624,40 +596,6 @@ onBeforeUnmount(() => {
   /* Sin panel embebido: la vista previa vive en la hoja a pantalla completa. */
   .dmenu-live { display: none; }
 }
-@media (min-width: 1100px) {
-  .dmenu-fab { display: none; }
-}
-
-/* Botón flotante de vista previa (solo < 1100px). En tablet/desktop chico
-   va abajo a la derecha; en móvil pasa a la izquierda, sobre la tab bar y
-   sin chocar con el FAB del chat (abajo a la derecha). */
-.dmenu-fab {
-  position: fixed; right: calc(14px + env(safe-area-inset-right));
-  bottom: calc(18px + env(safe-area-inset-bottom)); z-index: 45;
-  display: inline-flex; align-items: center; gap: 8px; min-height: 46px;
-  padding: 0 16px 0 12px; border: 0; border-radius: 999px;
-  background: linear-gradient(135deg, var(--brand-500, #6366f1), var(--accent, #8b5cf6));
-  color: #fff; font: inherit; font-size: 13.5px; font-weight: 650; letter-spacing: -.01em;
-  box-shadow: 0 14px 30px -12px rgba(79, 70, 229, .75), 0 0 0 1px rgba(255, 255, 255, .16) inset;
-  cursor: pointer; touch-action: manipulation; -webkit-tap-highlight-color: transparent;
-  user-select: none; -webkit-user-select: none; -webkit-touch-callout: none;
-  transition: transform .22s var(--ease-out, cubic-bezier(.2, .8, .2, 1)), opacity .22s, box-shadow .18s, filter .18s;
-}
-@media (hover: hover) and (pointer: fine) {
-  .dmenu-fab:hover { filter: brightness(1.06); }
-}
-.dmenu-fab:active { transform: scale(.96); }
-.dmenu-fab.fab-off { transform: translateY(calc(100% + 24px)); opacity: 0; pointer-events: none; }
-.dmenu-fab.fab-off:active { transform: translateY(calc(100% + 24px)); }
-.dmenu-fab:focus-visible { outline: 2px solid var(--brand-500, #6366f1); outline-offset: 3px; }
-.dmenu-fab-ico { display: grid; place-items: center; width: 26px; height: 26px; border-radius: 50%; background: rgba(255, 255, 255, .2); }
-@media (max-width: 860px) {
-  .dmenu-fab {
-    right: auto; left: calc(14px + env(safe-area-inset-left));
-    bottom: calc(88px + env(safe-area-inset-bottom));
-  }
-}
-
 /* Hoja de vista previa a pantalla completa (móvil/tablet). */
 .dmenu-pv {
   position: fixed; inset: 0; z-index: 1300; display: flex; flex-direction: column;
@@ -740,6 +678,6 @@ onBeforeUnmount(() => {
   .dshow-foot-btns { display: grid; grid-template-columns: 1fr 1fr; }
 }
 @media (prefers-reduced-motion: reduce) {
-  .dmenu-fab, .dmenu-pv, .dmenu-pv-body { transition: none !important; }
+  .dmenu-pv, .dmenu-pv-body { transition: none !important; }
 }
 </style>

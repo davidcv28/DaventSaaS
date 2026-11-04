@@ -2301,6 +2301,24 @@ const botMode = computed(() => Boolean(chatTarget.value?.bot))
 // Panel de contactos que abre la burbuja flotante.
 const chatDockPanel = ref(false)
 const chatDockContent = computed(() => (chatOpen.value ? 'win' : chatDockPanel.value ? 'panel' : null))
+// Ocultar la burbuja del asistente (persiste en localStorage): vuelve sola
+// si entra un mensaje del equipo o si se abre el chat desde Ayuda/campana.
+const chatDockHidden = ref(false)
+try { chatDockHidden.value = localStorage.getItem('davent:dock-hidden') === '1' } catch { /* storage bloqueado */ }
+function hideChatDock() {
+  if (chatDockPanel.value) chatDockPanel.value = false
+  if (chatOpen.value) closeChat()
+  chatDockHidden.value = true
+  try { localStorage.setItem('davent:dock-hidden', '1') } catch { /* storage bloqueado */ }
+  pushToast('Asistente oculto — reabrilo desde Ayuda o la campana ✓')
+}
+watch([chatDockContent, chatUnread], () => {
+  if (!chatDockHidden.value) return
+  if (chatDockContent.value || chatUnread.value > 0) {
+    chatDockHidden.value = false
+    try { localStorage.removeItem('davent:dock-hidden') } catch { /* storage bloqueado */ }
+  }
+})
 //El objetivo del chat se resuelve contra el roster vivo: si cambia su
 //presencia, el header refleja el estado nuevo sin reabrir la ventana.
 const chatPeer = computed(() => {
@@ -5472,12 +5490,15 @@ async function changePassword() {
          a una arista): punto verde = equipo en línea, badge = no leídos.
          Abre el panel de contactos o la ventana de conversación. -->
     <ChatDock
+      v-if="!chatDockHidden"
       :content="chatDockContent"
       :online="chatStaffOnline"
       :unread="chatUnread"
       :minimized="chatMin"
       label="Asistente de diseño"
+      dismissible
       @toggle="onDockToggle"
+      @dismiss="hideChatDock"
     >
       <!-- Panel de contactos: el asistente automático figura como un
            integrante más del equipo. -->
