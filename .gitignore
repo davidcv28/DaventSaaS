@@ -58,3 +58,6 @@ qa_token.tmp
 
 # Artefactos de Playwright en la raiz
 .pw-*
+
+# Referencia de diseño (clon de awesome-design-skills, solo lectura)
+awesome-design-skills/

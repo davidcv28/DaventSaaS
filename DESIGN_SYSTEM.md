@@ -103,3 +103,80 @@ Trampas del sistema que esta piel resuelve explícitamente (no repetirlas):
   `color`/`background-color` con `[data-st-palette]`/`[data-st-bgrole]`:
   la piel remapea esos tokens y colores en los contenedores hijos y con
   `[data-store-template]` para ganar especificidad.
+
+## 9. Brigada — lenguaje "cuartel / placa de inspección"
+
+Papel hueso, banda de cuartel y franja de riesgo: la identidad sale de la
+señalética industrial, no de una grilla de tarjetas. Composición:
+
+- **Franja de riesgo** (`repeating-linear-gradient(-45deg, accent, band)`):
+  borde del header, subrayado de titular, tapas del CTA y del pie. Nunca
+  detrás de texto.
+- **Placa de verificación**: marco duro + sombra sólida, sello circular que
+  respira (`@keyframes stamp`), filas `span/b` y código de barras de `i`.
+  Es el objeto firma del hero; el resto de la página lo cita en pequeño.
+- **Registro**: las secciones se numeran con contador (`counter-increment` en
+  `.sec`, `::before` del `.idx`) y cada grilla lleva su propio índice
+  (categorías, protocolo, equipo, hitos). Los índices no se escriben a mano.
+- **Hitos**: filas de ancho completo (`150px` + texto) con año en display;
+  no una línea de tiempo en una columna angosta.
+- **Tinta y señal**: `--primary` (rojo) para acción, `--hazard` (acento) para
+  señalización, `--band` para superficies institucionales. En noche
+  `--frame`/`--hard` se derivan de `--band-ink` y del acento para que los
+  marcos y las sombras duras sigan leyéndose sobre negro.
+- **Formularios inyectados por el puente** (`.ds-contact-*`, `.ds-rev-*`):
+  la piel es responsable de sus clases; sin `grid` en `.ds-contact-row` los
+  dos inputs salen desalineados y el captcha se apila mal.
+
+Trampas propias de esta piel:
+
+- `.ds-service` es un grid de 2 columnas: sin `grid-column:2` explícito en
+  nombre y descripción, la descripción cae en la columna del número (56px).
+- Los filtros del catálogo en modo lista los arma el puente como
+  `button.f-cat` (no `.ds-cat`): hay que pintar `.f-cat` o quedan botones
+  con el borde del navegador.
+- `h2[data-fallback]:empty::before{content:attr(data-fallback)}` es
+  obligatorio: los títulos opcionales viajan vacíos y sin la regla queda un
+  hueco en el encabezado (y una sección fantasma si además falta el bloque).
+- La portada muestra 8 productos (`.sec .grid > :nth-child(n+9)` oculta);
+  el catálogo completo vive en su ruta.
+
+
+## 9. Bazar — lenguaje "feria de barrio, edición moderna"
+
+Vive en dos capas que deben leerse igual: el documento publicado
+(`StoreApp/domains/design/sources/mercado.html`, servido como patrón) y la
+piel Vue de respaldo (`frontend/src/assets/store-mercado.css`). Paleta del
+tema (`--ds-*` / `--st-*`) con caída a amarillo toldo `#FFE600`, tinta
+`#2B2B2B`, azul `#2563EB`, verde ahorro `#007A3D` y gris papel `#EDEDE9`.
+
+- **Toldo**: el masthead es fijo (el puente lo ancla al marco real) con
+  rayas de lona al 7% de tinta, borde inferior dentado y buscador blanco.
+  El `padding-top` del body se **mide** con JS, nunca se estima.
+- **Ticket**: precios, índices, conteos y etiquetas usan
+  `--mono` (`ui-monospace`) con `tabular-nums`; los títulos usan Inter con
+  tracking `-.04em`. Es la firma tipográfica del diseño.
+- **Sticker**: descuentos y sellos son etiquetas rotadas 3–9°, con sombra
+  corta y borde punteado. Nunca un badge plano.
+- **Feria**: categorías y beneficios son celdas numeradas (`01`, `02`…) con
+  contador CSS; el número se reserva aunque el dato falte para no romper la
+  grilla. Los productos llevan índice en la esquina, filo amarillo→azul que
+  se despliega al hover y sticker de ahorro anclado a la tarjeta.
+- **Movimiento**: entrada del hero con stagger (solo `transform/opacity`),
+  cinta de marca en loop de 30 s con pausa al hover, sello flotante,
+  brillo del CTA al hover. **Sin reveals por scroll**: el iframe se estira
+  al alto del documento y el `IntersectionObserver` dispararía todo al
+  cargar. `prefers-reduced-motion` apaga todo.
+- **Estados**: sin foto = marco punteado + glifo + rayas diagonales; sin
+  filtros = chips ocultos; sin resultados = panel punteado con glifo.
+- **Móvil**: grilla de 2 columnas (no una), tab bar inferior con
+  `data-ds-pin="bottom"`, hoja "Más" y chips de filtros visibles al
+  aplicar. El catálogo conserva filas densas y el toggle lista/grilla se
+  oculta.
+- **Noche**: el toldo conserva el acento; kicker, sello y "Destacado"
+  pasan a acento pleno con tinta oscura. La cinta y el pie tienen fondo
+  propio (`--ribbon-bg`, `--footer-bg`) para no invertirse.
+- **Chips de filtros**: opt-in por `[data-ds-chips]` en el documento y
+  `.mc-cat-chips` en Vue. Cada chip quita su filtro; con dos o más aparece
+  "Limpiar todo". Nunca dejar un filtro aplicado invisible en móvil.
+
