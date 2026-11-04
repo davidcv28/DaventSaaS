@@ -671,6 +671,33 @@
   -webkit-backdrop-filter: blur(8px);
 }
 
+/* ---------- Gráfico de visitas y chips de acción ---------- */
+.app .stats-chart { gap: 4px; }
+.app .stats-bar {
+  border-radius: 4px 4px 2px 2px;
+  background: linear-gradient(180deg, var(--brand-400), var(--brand-600));
+  opacity: .55;
+  transform-origin: bottom center;
+  animation: dv-grow .5s var(--ease-out) both;
+  transition: opacity .18s ease, filter .18s ease;
+}
+.app .stats-bar:hover { opacity: 1; filter: brightness(1.06); }
+.app .stats-bar.today {
+  background: linear-gradient(180deg, var(--accent), var(--brand-600));
+  opacity: 1;
+  box-shadow: 0 0 16px -3px color-mix(in srgb, var(--brand-500) 85%, transparent);
+}
+.app .qa-chip {
+  background: color-mix(in srgb, var(--card) 86%, transparent);
+  box-shadow: var(--dv-elev-1);
+}
+.app .qa-chip:not(:disabled):hover { box-shadow: var(--dv-elev-2); }
+.app .sec-tab.active .icon {
+  background: linear-gradient(135deg, var(--brand-500), var(--accent));
+  box-shadow: 0 8px 18px -10px rgba(79, 70, 229, .95);
+}
+@keyframes dv-grow { from { transform: scaleY(.18); opacity: 0; } }
+
 /* ---------- Planes, estados vacíos y barras de herramientas ---------- */
 .app .price-card { border-radius: 18px; transition: transform .26s var(--ease-out), box-shadow .26s var(--ease-out); }
 .app .price-card:hover { transform: translateY(-3px); box-shadow: var(--dv-elev-2); }
@@ -744,6 +771,7 @@
   .app .ps-dot.ok::after,
   .app .oh-cta::after,
   .app .steps-bar span::after,
+  .app .stats-bar,
   .app .brand-ping { animation: none !important; }
   .app .card,
   .app .stat,
