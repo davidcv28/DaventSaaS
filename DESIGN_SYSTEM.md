@@ -434,13 +434,12 @@ completo: landing, catálogo, ficha y servicios salen del mismo HTML/CSS/JS.
   `01 / Líneas`…, cinta de anuncios en loop, cinta de categorías, sello
   circular giratorio con el nombre real, cinta vertical "Colección {año}",
   marcas de corte en la portada, fondo de trama de puntos, índice de líneas
-  numerado, fichas de producto con badge de ahorro real y lookbook con
-  contador. Nada de tiles de "Sale hasta 75%" ni marcas inventadas: las
+  numerado, fichas de producto con badge de ahorro real. Nada de tiles de "Sale hasta 75%" ni marcas inventadas: las
   ofertas salen de `data-off` del descuento vigente y las líneas de
   `{{categories}}`.
 - **Secciones**: portada editorial → cinta de líneas → índice → vitrina con
   tabs por categoría real → atelier (años, relato, misión, especialidades,
-  cifras y lookbook) → garantías → membresías → testimonios → FAQ → CTA en
+  cifras) → garantías → membresías → testimonios → FAQ → CTA en
   banda de tinta → contacto con formulario del puente → pie. Cada bloque
   dinámico vive en `data-flag` y se apaga solo si su fragmento viene vacío
   (`data-hide-if-empty`, `:has()`, `.ds-zone`).

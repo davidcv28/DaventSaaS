@@ -424,38 +424,6 @@ body.m-open .m-sheet{transform:none}
 .ds-stat-value{font:500 clamp(26px,3vw,40px)/1 var(--display);letter-spacing:-.02em;color:var(--ink);font-variant-numeric:tabular-nums}
 .ds-stat-label{font:500 8px/1.4 var(--mono);letter-spacing:.16em;text-transform:uppercase;color:var(--muted)}
 
-/* ---------- Lookbook ---------- */
-.lookbook-head{display:flex;align-items:center;justify-content:space-between;gap:14px;margin-top:clamp(34px,5vw,64px);padding-bottom:12px;border-bottom:1px solid var(--line)}
-.lookbook-head b{font:500 11px/1 var(--mono);letter-spacing:.2em;text-transform:uppercase;color:var(--muted)}
-.look-arrows{display:flex;gap:6px}
-.look-arrows button{
-  width:38px;height:38px;border:1px solid var(--line);background:transparent;cursor:pointer;
-  display:grid;place-items:center;border-radius:var(--r);transition:background .2s,color .2s,border-color .2s;
-}
-.look-arrows button:hover{background:var(--ink);color:var(--paper);border-color:var(--ink)}
-.look-arrows svg{width:16px;height:16px}
-.lookbook{
-  display:flex;gap:clamp(10px,1.6vw,18px);overflow-x:auto;padding:16px 0 8px;
-  scroll-snap-type:x mandatory;scrollbar-width:none;counter-reset:shot;
-}
-.lookbook::-webkit-scrollbar{display:none}
-.lookbook .ds-shot{
-  position:relative;flex:none;width:clamp(190px,23vw,300px);aspect-ratio:3/4;overflow:hidden;
-  background:var(--surface);scroll-snap-align:start;border:1px solid var(--line);
-}
-.lookbook .ds-shot img{width:100%;height:100%;object-fit:cover;transition:transform .7s var(--ease)}
-.lookbook .ds-shot:hover img{transform:scale(1.05)}
-.lookbook .ds-shot::before{
-  content:counter(shot,decimal-leading-zero);counter-increment:shot;position:absolute;z-index:2;
-  left:10px;bottom:10px;background:var(--paper);color:var(--ink);padding:5px 7px;
-  font:500 8px/1 var(--mono);letter-spacing:.14em;
-}
-.lookbook .ds-shot::after{
-  content:"";position:absolute;inset:0;background:linear-gradient(180deg,transparent 62%,rgba(10,8,6,.4));
-  opacity:0;transition:opacity .3s;
-}
-.lookbook .ds-shot:hover::after{opacity:1}
-
 /* ---------- Beneficios ---------- */
 .guars{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:1px;background:var(--line);border:1px solid var(--line)}
 .ds-guar{display:flex;align-items:flex-start;gap:15px;padding:clamp(20px,2.6vw,30px);background:var(--paper);transition:background .25s,transform .25s}
@@ -931,7 +899,6 @@ body.m-open .m-sheet{transform:none}
   .grid-products[data-ds-view-mode="list"] .ds-product-price{justify-content:flex-start;margin-top:8px}
   .pdp-info h1{font-size:clamp(30px,9vw,44px)}
   .pdp-related h2{font-size:26px}
-  .lookbook .ds-shot{width:64vw}
 }
 @media (max-width:460px){
   .brand-word{max-width:40vw;font-size:15px}
@@ -1094,7 +1061,7 @@ body.m-open .m-sheet{transform:none}
       </div>
     </section>
 
-    <section class="sec atelier" id="atelier" data-flag="about" data-hide-if-empty=".about-copy h3|.about-lead|.lookbook">
+    <section class="sec atelier" id="atelier" data-flag="about" data-hide-if-empty=".about-copy h3|.about-lead">
       <div class="wrap">
         <header class="sec-head">
           <span class="sec-num">03 / Atelier</span>
@@ -1123,20 +1090,6 @@ body.m-open .m-sheet{transform:none}
         </div>
         <div data-flag="stats">
           <div class="stats ds-zone">{{stats}}</div>
-        </div>
-        <div data-flag="gallery" data-hide-if-empty=".ds-shot">
-          <div class="lookbook-head">
-            <b>Lookbook · {{year}}</b>
-            <div class="look-arrows">
-              <button type="button" data-look-prev aria-label="Fotos anteriores">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 12H5M11 18l-6-6 6-6"/></svg>
-              </button>
-              <button type="button" data-look-next aria-label="Fotos siguientes">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
-              </button>
-            </div>
-          </div>
-          <div class="lookbook" data-lookbook>{{gallery}}</div>
         </div>
       </div>
     </section>
@@ -1565,20 +1518,6 @@ body.m-open .m-sheet{transform:none}
     })
   }
 
-  /* ---------- Lookbook: flechas ---------- */
-  function setupLookbook() {
-    var strip = document.querySelector('[data-lookbook]')
-    if (!strip) return
-    var step = function () {
-      var first = strip.querySelector('.ds-shot')
-      return first ? first.getBoundingClientRect().width + 16 : 280
-    }
-    var prev = document.querySelector('[data-look-prev]')
-    var next = document.querySelector('[data-look-next]')
-    if (prev) prev.addEventListener('click', function () { strip.scrollBy({ left: -step() * 2, behavior: 'smooth' }) })
-    if (next) next.addEventListener('click', function () { strip.scrollBy({ left: step() * 2, behavior: 'smooth' }) })
-  }
-
   /* ---------- Reveal + progreso + parallax (scroll del host) ---------- */
   function initReveal() {
     qsa('[data-reveal]').forEach(function (el) { el.classList.add('reveal') })
@@ -1588,7 +1527,7 @@ body.m-open .m-sheet{transform:none}
         el.style.setProperty('--d', (i % 6) * 55 + 'ms')
       })
     })
-    ;['.sec-head', '.atelier-grid', '.contact-grid', '.lookbook-head'].forEach(function (sel) {
+    ;['.sec-head', '.atelier-grid', '.contact-grid'].forEach(function (sel) {
       qsa(sel).forEach(function (el) { el.classList.add('reveal') })
     })
   }
@@ -1663,7 +1602,6 @@ body.m-open .m-sheet{transform:none}
   /* ---------- Arranque ---------- */
   hideEmpty()
   setupTabs()
-  setupLookbook()
   initReveal()
   syncHead()
   if (document.fonts && document.fonts.ready) document.fonts.ready.then(syncHead)
