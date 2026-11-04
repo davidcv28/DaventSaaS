@@ -9,6 +9,8 @@ import { extractApiError } from '../api/http.js'
 import AppIcon from '../components/AppIcon.vue'
 import BrandLogo from '../components/BrandLogo.vue'
 import FlyerCanvas from '../components/FlyerCanvas.vue'
+import FlyerBoard from '../components/FlyerBoard.vue'
+import { loadEditorDoc } from '../utils/flyerEditor.js'
 import { catalogApi } from '../api/catalog.api.js'
 import { servicesApi } from '../api/services.api.js'
 import { loadFlyerDraft, imposition, sizeById, layoutById, flyerProduct, flyerService, flyerLegacyService, resolveFlyerItems, flyerVars, flyerFontSlug } from '../utils/flyer.js'
@@ -20,10 +22,16 @@ const auth = useAuthStore()
 const route = useRoute()
 // Modo "a medida": el folleto armado en el diseñador (A5, 2 por hoja A4 apaisada).
 const isCustom = route.query.custom === '1'
+const isFree = route.query.custom === '2'
 const draft = ref(null)
+const freeDoc = ref(null)
+const freeProducts = ref([])
 const chosenProducts = ref([])
 let pageStyle = null
-const imp = computed(() => (draft.value ? imposition(draft.value.size, draft.value.sheet) : null))
+const imp = computed(() => {
+  const d = isFree ? freeDoc.value : draft.value
+  return d ? imposition(d.size, d.sheet) : null
+})
 const sheetVars = computed(() => imp.value && ({
   '--fw': `${imp.value.fw}mm`, '--fh': `${imp.value.fh}mm`,
   '--cols': imp.value.cols, '--rows': imp.value.rows,
@@ -31,11 +39,13 @@ const sheetVars = computed(() => imp.value && ({
 }))
 const customLabel = computed(() => {
   if (!imp.value) return ''
-  const s = sizeById(draft.value.size).label
-  if (imp.value.digital) return `Folleto a medida ${s} · formato digital, sale ajustado en A4`
+  const d = isFree ? freeDoc.value : draft.value
+  const s = sizeById(d.size).label
+  const prefix = isFree ? 'Folleto del editor libre' : 'Folleto a medida'
+  if (imp.value.digital) return `${prefix} ${s} · formato digital, sale ajustado en A4`
   return imp.value.count === 1
-    ? `Folleto a medida ${s} · sale 1 por hoja, a color`
-    : `Folleto a medida ${s} · salen ${imp.value.count} por hoja A4${imp.value.landscape ? ' apaisada' : ''}, a color`
+    ? `${prefix} ${s} · sale 1 por hoja, a color`
+    : `${prefix} ${s} · salen ${imp.value.count} por hoja A4${imp.value.landscape ? ' apaisada' : ''}, a color`
 })
 const store = ref(null)
 const place = ref(null) // datos públicos: city_name/province_name
@@ -116,6 +126,17 @@ onMounted(async () => {
         chosenProducts.value = resolveFlyerItems(d, layout, { products: prodItems, services: pool })
       }
       const o = imposition(d.size, d.sheet)
+      pageStyle = document.createElement('style')
+      pageStyle.textContent = `@page { size: ${o.pageW}mm ${o.pageH}mm; margin: 0 }`
+      document.head.appendChild(pageStyle)
+    } else if (isFree) {
+      freeDoc.value = loadEditorDoc(store.value.slug)
+      const needsProducts = freeDoc.value.elements.some((e) => e.type === 'product')
+      if (needsProducts) {
+        const prods = await catalogApi.listProducts().catch(() => [])
+        freeProducts.value = prods.filter((p) => p.is_active !== false).map(flyerProduct)
+      }
+      const o = imposition(freeDoc.value.size, freeDoc.value.sheet)
       pageStyle = document.createElement('style')
       pageStyle.textContent = `@page { size: ${o.pageW}mm ${o.pageH}mm; margin: 0 }`
       document.head.appendChild(pageStyle)
@@ -216,7 +237,7 @@ function closeTab() {
 <template>
   <div class="print-page" :style="themeVars">
     <div class="print-bar">
-      <span class="print-bar-text">{{ isCustom ? customLabel : 'Folleto de tu tienda A6 · salen 4 por hoja A4, a color' }}</span>
+      <span class="print-bar-text">{{ isCustom || isFree ? customLabel : 'Folleto de tu tienda A6 · salen 4 por hoja A4, a color' }}</span>
       <div class="print-bar-actions">
         <button class="btn btn-auto" type="button" :disabled="status !== 'ready'" @click="print">
           <AppIcon name="printer" :size="16" /> Imprimir / PDF
@@ -231,6 +252,13 @@ function closeTab() {
     </div>
     <div v-else-if="status === 'error'" class="print-status">
       <p>{{ error }}</p>
+    </div>
+
+    <div v-else-if="isFree && freeDoc" class="cf-sheet" :style="sheetVars">
+      <FlyerBoard
+        v-for="n in imp.count" :key="n" class="cf-card" :aria-hidden="n > 1 || undefined"
+        :doc="freeDoc" :shop-name="shopName" :logo="custom.logo" :qr="qrDataUrl" :url="publicUrl" :products="freeProducts"
+      />
     </div>
 
     <div v-else-if="isCustom && draft" class="cf-sheet" :style="sheetVars">

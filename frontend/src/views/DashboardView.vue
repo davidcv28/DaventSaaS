@@ -62,6 +62,7 @@ import AppIcon from '../components/AppIcon.vue'
 import IconSelect from '../components/IconSelect.vue'
 import CountUp from '../components/CountUp.vue'
 import FlyerStudio from '../components/FlyerStudio.vue'
+import FlyerEditor from '../components/FlyerEditor.vue'
 import AiAssistModal from '../components/assist/AiAssistModal.vue'
 import PriceUpdateModal from '../components/PriceUpdateModal.vue'
 import CampaignPicker from '../components/dashboard/catalog/CampaignPicker.vue'
@@ -1291,7 +1292,7 @@ const toolsTab = ref('ready')
 watch([section, canFlyers], () => { if (!canFlyers.value && toolsTab.value === 'studio') toolsTab.value = 'ready' })
 
 function openFlyer(custom = false) {
-  const href = router.resolve({ name: 'store-flyer', query: custom === true ? { custom: '1' } : {} }).href
+  const href = router.resolve({ name: 'store-flyer', query: custom ? { custom: custom === true ? '1' : String(custom) } : {} }).href
   window.open(href, '_blank', 'noopener')
 }
 
@@ -4874,6 +4875,7 @@ async function changePassword() {
       <nav class="dsg-tabs tools-tabs" role="tablist" aria-label="Herramientas">
         <button type="button" role="tab" class="dsg-tab" :class="{ active: toolsTab === 'ready' }" :aria-selected="toolsTab === 'ready'" @click="toolsTab = 'ready'"><AppIcon name="qr-code" :size="15" /> QR y folleto rápido</button>
         <button v-if="canFlyers" type="button" role="tab" class="dsg-tab" :class="{ active: toolsTab === 'studio' }" :aria-selected="toolsTab === 'studio'" @click="toolsTab = 'studio'"><AppIcon name="sparkles" :size="15" /> Diseñá tu folleto <span class="tools-new">Nuevo</span></button>
+        <button v-if="canFlyers" type="button" role="tab" class="dsg-tab" :class="{ active: toolsTab === 'editor' }" :aria-selected="toolsTab === 'editor'" @click="toolsTab = 'editor'"><AppIcon name="pen-tool" :size="15" /> Editor libre <span class="tools-new">Nuevo</span></button>
       </nav>
 
       <div v-show="toolsTab === 'ready'" class="grid-2 tools-grid">
@@ -4921,6 +4923,17 @@ async function changePassword() {
         :contact="designForm.whatsapp || auth.user?.profile?.phone || ''"
         :can-add-gallery="canAddGallery"
         @print="openFlyer(true)"
+      />
+
+      <FlyerEditor
+        v-if="canFlyers && toolsTab === 'editor'"
+        :slug="store.store?.slug || ''"
+        :shop-name="designShopName"
+        :logo="currentLogo"
+        :qr="qrDataUrl"
+        :url="publicUrl"
+        :can-add-gallery="canAddGallery"
+        @print="openFlyer('2')"
       />
     </div>
 
