@@ -70,6 +70,8 @@ body{
 h1,h2,h3{font-family:var(--font-display);margin:0;overflow-wrap:break-word;font-weight:400}
 p{margin:0;text-wrap:pretty}
 img{max-width:100%;display:block}
+img[src=""],img:not([src]){display:none}
+.tile:has(>img[src=""]),.promo:has(>img[src=""]),.ds-shot:has(img[src=""]){display:none}
 a{color:inherit;text-decoration:none}
 button{font:inherit;cursor:pointer}
 :focus-visible{outline:2px solid var(--accent);outline-offset:3px}
@@ -601,7 +603,7 @@ html[data-ds-theme="dark"] .pdp-thumbs span,html[data-ds-style="calzado-noche"] 
     <div class="mosaic reveal">
       <figure class="tile big"><img src="{{store_cover}}" alt="{{store_name}}"><span class="tile-tag">{{store_name}}</span></figure>
       <div class="panel red">
-        <h3>{{store_tagline}}</h3>
+        <h3>{{store_about_title}}</h3>
         <p>{{store_about}}</p>
         <a class="shop" href="#catalogo" data-ds-route="catalog">Comprar ahora</a>
       </div>
