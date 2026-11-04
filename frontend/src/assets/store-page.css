@@ -728,6 +728,18 @@ html{ scroll-behavior: smooth; }
 /* ===== Filtros: barra unificada ===== */
 .store-page{ color-scheme: light; }
 .store-page[data-store-theme='dark']{ color-scheme: dark; }
+
+/* Barra de la ventana: en Windows Chrome/Firefox la dibuja overlay y se
+   auto-oculta — declararla la vuelve clásica (siempre visible). Neutra
+   porque los tokens --sp-* y --store-* viven en .store-page, no en html;
+   las plantillas con piel propia (raiz) la re-teman con más especificidad. */
+html:has(.store-page){ scrollbar-width: thin; scrollbar-color: #9aa4b5 #e6eaf2; }
+html:has(.store-page[data-store-theme='dark']){ scrollbar-color: #3c4a68 #0d1220; }
+html:has(.store-page)::-webkit-scrollbar{ width: 11px; height: 11px; }
+html:has(.store-page)::-webkit-scrollbar-track{ background: #e6eaf2; }
+html:has(.store-page)::-webkit-scrollbar-thumb{ background: #9aa4b5; border: 3px solid #e6eaf2; border-radius: 99px; }
+html:has(.store-page[data-store-theme='dark'])::-webkit-scrollbar-track{ background: #0d1220; }
+html:has(.store-page[data-store-theme='dark'])::-webkit-scrollbar-thumb{ background: #3c4a68; border-color: #0d1220; }
 .sp-filters{ display: flex; align-items: flex-end; gap: 20px; flex-wrap: wrap; margin: -8px 0 24px; padding: 16px 20px; border: 1px solid var(--sp-line); border-radius: var(--sp-radius); background: var(--sp-card); box-shadow: var(--sp-shadow-sm); }
 .sp-field{ display: grid; gap: 6px; min-width: 0; }
 .sp-field-label{ font-size: 11px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; color: var(--sp-muted); }
