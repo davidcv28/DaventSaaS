@@ -64,6 +64,10 @@ def _ask_gemini(system : str, messages : list[dict], max_tokens : int, temperatu
         }
         for m in messages
     ]
+    #Gemini exige que la conversación arranque en 'user': el saludo
+    #inicial del bot queda afuera del historial enviado.
+    while contents and contents[0]['role'] == 'model':
+        contents.pop(0)
     payload =   {
         'systemInstruction' :   {'parts': [{'text': system}]},
         'contents'          :   contents,

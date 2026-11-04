@@ -66,7 +66,7 @@ def ensure_greeting(user : User):
 
 
 def history_of(user : User) -> list[dict]:
-    rows    =   list(AssistantMessage.objects.filter(user = user).order_by('-created_at')[:HISTORY_LIMIT])[::-1]
+    rows    =   list(AssistantMessage.objects.filter(user = user).order_by('-pk')[:HISTORY_LIMIT])[::-1]
     history =   []
     for row in rows:
         role    =   'assistant' if row.from_bot else 'user'
