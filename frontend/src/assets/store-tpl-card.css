@@ -62,7 +62,7 @@
 }
 .tpc-media img.is-in { opacity: 1; }
 @media (hover: hover) and (pointer: fine) {
-  .tpc:hover .tpc-media img { transform: var(--tpc-img-hover, scale(1.04)); }
+  .tpc:hover .tpc-media img:not(.tpc-campaign) { transform: var(--tpc-img-hover, scale(1.04)); }
 }
 .tpc-ph {
   position: absolute;

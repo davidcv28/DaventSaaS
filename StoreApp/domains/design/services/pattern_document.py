@@ -134,6 +134,17 @@ section:has(.ds-plans:empty){display:none!important}
 }
 .ds-product-img.is-empty::after{opacity:.55}
 
+/* Etiqueta de campaña que firma la oferta (Hot Sale, Navidad…): sticker
+   anclado a la esquina superior de la tarjeta. Vive en la hoja del host —
+   no en cada patrón — porque pattern_render la emite en todos los
+   documentos y sin regla la <img> fluye a tamaño completo. */
+.ds-product{position:relative}
+.ds-campaign-label{
+  position:absolute;top:10px;left:10px;z-index:4;height:22px;width:auto;
+  max-width:60%;object-fit:contain;border-radius:3px;
+  box-shadow:0 8px 16px -10px rgba(0,0,0,.55);
+}
+
 /* Opiniones de producto: honeypot fuera de pantalla y pulgar inline. */
 .ds-rev-hp{position:absolute!important;left:-9999px;width:1px;height:1px;overflow:hidden}
 .ds-rev-vote{display:inline-block;vertical-align:-1px}

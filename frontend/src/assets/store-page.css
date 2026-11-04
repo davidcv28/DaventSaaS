@@ -236,8 +236,8 @@ html.sp-lock body{ overflow: hidden; overscroll-behavior: none; }
 .sp-card{ background: var(--sp-card); border: 1px solid var(--sp-line); border-radius: var(--sp-radius); overflow: hidden; display: flex; flex-direction: column; box-shadow: var(--sp-shadow-sm); transition: box-shadow .15s, transform .15s, border-color .15s; }
 .sp-card:hover{ box-shadow: var(--sp-shadow-md); transform: translateY(-2px); border-color: color-mix(in srgb, var(--store-accent) 45%, var(--sp-line)); }
 .sp-card .tpc-media{ aspect-ratio: 1 / 1; background: var(--sp-soft); border-bottom: 1px solid var(--sp-line); display: grid; place-items: center; overflow: hidden; }
-.sp-card .tpc-media img{ width: 100%; height: 100%; object-fit: cover; display: block; transition: transform .3s ease; }
-.sp-card:hover .tpc-media img{ transform: scale(1.04); }
+.sp-card .tpc-media img:not(.tpc-campaign){ width: 100%; height: 100%; object-fit: cover; display: block; transition: transform .3s ease; }
+.sp-card:hover .tpc-media img:not(.tpc-campaign){ transform: scale(1.04); }
 .sp-card .tpc-ph{ color: var(--sp-accent-text); opacity: .5; }
 .sp-card .tpc-body{ flex: 1; display: flex; flex-direction: column; gap: 6px; padding: 18px 20px 20px; }
 .sp-card .tpc-name{ margin: 0; font-size: 15px; font-weight: 650; line-height: 1.35; letter-spacing: -.01em; display: -webkit-box; -webkit-line-clamp: 2; line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
@@ -519,7 +519,7 @@ html.sp-lock body{ overflow: hidden; overscroll-behavior: none; }
 .sp-card:hover::before{ opacity: 1; }
 .sp-card:hover{ transform: translateY(-6px); }
 .sp-card .tpc-media img{ transition: transform .7s var(--sp-ease); }
-.sp-card:hover .tpc-media img{ transform: scale(1.07); }
+.sp-card:hover .tpc-media img:not(.tpc-campaign){ transform: scale(1.07); }
 .sp-card .tpc-go{ opacity: .96; }
 .sp-card .tpc-price{ transition: color .25s; }
 .sp-card:hover .tpc-price{ color: var(--sp-accent-text); }
@@ -988,7 +988,7 @@ html{ scroll-behavior: smooth; }
   .sp-card{ flex-direction: row; align-items: stretch; width: 100%; max-width: none; min-width: 0; border-radius: 18px; }
   .sp-card:hover{ transform: none; }
   .sp-card .tpc-media{ flex: none; align-self: flex-start; width: clamp(104px, 28vw, 168px); aspect-ratio: 1 / 1; min-height: 0; margin: 8px; border-radius: 13px; }
-  .sp-card .tpc-media img{ width: 100%; height: 100%; object-fit: cover; }
+  .sp-card .tpc-media img:not(.tpc-campaign){ width: 100%; height: 100%; object-fit: cover; }
   .sp-card .tpc-quick{ display: none; }
   .sp-card-badge{ top: 6px; left: 6px; font-size: 10px; padding: 3px 8px; }
   .sp-card .tpc-body{ flex: 1; min-width: 0; align-self: stretch; padding: 14px 16px 14px 6px; gap: 5px; justify-content: center; }
@@ -1214,7 +1214,7 @@ html{ scroll-behavior: smooth; }
 .spd-rel{ display: flex; flex-direction: column; gap: 6px; padding: 12px; border: 1px solid var(--sp-line); border-radius: 14px; background: var(--sp-card); color: var(--sp-ink); text-decoration: none; box-shadow: var(--sp-shadow-sm); transition: border-color .2s, box-shadow .3s var(--sp-ease), transform .3s var(--sp-ease); }
 .spd-rel:hover{ border-color: color-mix(in srgb, var(--store-accent) 45%, var(--sp-line)); box-shadow: var(--sp-shadow-md); transform: translateY(-3px); }
 .spd-rel .tpc-media{ display: grid; place-items: center; aspect-ratio: 1 / 1; border-radius: 10px; background: var(--sp-soft); color: var(--sp-accent-text); overflow: hidden; }
-.spd-rel .tpc-media img{ width: 100%; height: 100%; object-fit: contain; display: block; }
+.spd-rel .tpc-media img:not(.tpc-campaign){ width: 100%; height: 100%; object-fit: contain; display: block; }
 .spd-rel .tpc-name{ font-size: 13.5px; font-weight: 600; line-height: 1.35; color: var(--sp-ink-2); display: -webkit-box; -webkit-line-clamp: 2; line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
 .spd-rel .tpc-price{ margin-top: auto; font-size: 16px; font-weight: 750; letter-spacing: -.02em; }
 
@@ -2460,7 +2460,7 @@ html{ scroll-behavior: smooth; }
 
 /* --- Móvil: tarjetas de catálogo en columna, imágenes sin estirarse (todas las plantillas) --- */
 .store-page .sp-card .tpc-media{ position: relative; overflow: hidden; min-height: 0; }
-.store-page .sp-card .tpc-media > img{ position: absolute; inset: 0; width: 100%; height: 100%; max-width: none; object-fit: cover; display: block; }
+.store-page .sp-card .tpc-media > img:not(.tpc-campaign){ position: absolute; inset: 0; width: 100%; height: 100%; max-width: none; object-fit: cover; display: block; }
 @media (max-width: 760px){
   .store-page[data-store-template] .sp-grid{ grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
   .store-page[data-store-template] .sp-grid .sp-card{ flex-direction: column; align-items: stretch; width: 100%; min-width: 0; max-width: none; }
@@ -2544,11 +2544,11 @@ html{ scroll-behavior: smooth; }
   background-size: 220% 100%;
   animation: sp-skel 1.6s linear infinite;
 }
-.sp-card .tpc-media img, .sp-gallery-item img{ position: relative; background: var(--sp-soft); }
+.sp-card .tpc-media img:not(.tpc-campaign), .sp-gallery-item img{ position: relative; background: var(--sp-soft); }
 .sp-hero-band.has-cover .sp-hero-inner::before{ content: ''; position: absolute; inset: 0; z-index: -1; background: linear-gradient(180deg, rgba(0, 0, 0, .28), rgba(0, 0, 0, .12) 45%, rgba(0, 0, 0, .34)); pointer-events: none; }
 .sp-services, .sp-testimonials{ padding-bottom: 72px; }
 .sp-services, .sp-faq{ background: linear-gradient(180deg, transparent, color-mix(in srgb, var(--store-accent) 4%, transparent) 40%, transparent); }
-.sp-card:hover .tpc-media img, .sp-gallery-item:hover img{ transform: scale(1.06); }
+.sp-card:hover .tpc-media img:not(.tpc-campaign), .sp-gallery-item:hover img{ transform: scale(1.06); }
 @media (prefers-reduced-motion: reduce){
   .sp-card .tpc-media, .sp-gallery-item{ animation: none; }
 }
@@ -3700,16 +3700,16 @@ html{ scroll-behavior: smooth; }
    Solo cuando el diseño lo declara en `capabilities`: el Studio filtra la
    oferta y el atributo data-st-img viaja en el tema. 'none' no emite el
    atributo (la web queda como siempre). */
-.store-page[data-st-img] :is(.sp-hero-cover img, .tpc-media img, .sp-gallery-item img, .spd-gallery img){
+.store-page[data-st-img] :is(.sp-hero-cover img, .tpc-media img:not(.tpc-campaign), .sp-gallery-item img, .spd-gallery img){
   transition: filter var(--st-motion-dur, .3s) ease;
 }
-.store-page[data-st-img='soft'] :is(.sp-hero-cover img, .tpc-media img, .sp-gallery-item img, .spd-gallery img){
+.store-page[data-st-img='soft'] :is(.sp-hero-cover img, .tpc-media img:not(.tpc-campaign), .sp-gallery-item img, .spd-gallery img){
   filter: saturate(.88) contrast(.97) brightness(1.03);
 }
-.store-page[data-st-img='grayscale'] :is(.sp-hero-cover img, .tpc-media img, .sp-gallery-item img, .spd-gallery img){
+.store-page[data-st-img='grayscale'] :is(.sp-hero-cover img, .tpc-media img:not(.tpc-campaign), .sp-gallery-item img, .spd-gallery img){
   filter: grayscale(1) contrast(1.04);
 }
-.store-page[data-st-img='duotone'] :is(.sp-hero-cover img, .tpc-media img, .sp-gallery-item img, .spd-gallery img){
+.store-page[data-st-img='duotone'] :is(.sp-hero-cover img, .tpc-media img:not(.tpc-campaign), .sp-gallery-item img, .spd-gallery img){
   filter: grayscale(1) sepia(.55) hue-rotate(-12deg) contrast(1.05) brightness(.94) saturate(1.4);
 }
 

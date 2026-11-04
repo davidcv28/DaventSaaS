@@ -1411,7 +1411,7 @@
 :is(.store-page[data-template='impacto'], .store-page.mi-skin) .tpc-media img { border-radius: 0; }
 :is(.store-page[data-template='impacto'], .store-page.mi-skin) .tpc-media::after { display: none; }
 :is(.store-page[data-template='impacto'], .store-page.mi-skin) .tpc-media img { transition: transform 900ms var(--mi-ease); }
-:is(.store-page[data-template='impacto'], .store-page.mi-skin) .tpc:hover .tpc-media img { transform: var(--tpc-img-hover); }
+:is(.store-page[data-template='impacto'], .store-page.mi-skin) .tpc:hover .tpc-media img:not(.tpc-campaign) { transform: var(--tpc-img-hover); }
 :is(.store-page[data-template='impacto'], .store-page.mi-skin) .tpc-body {
   display: flex;
   flex-direction: column;
