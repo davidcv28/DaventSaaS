@@ -291,6 +291,7 @@ const tabGroups = computed(() => {
   const web = [{ id: 'store', label: 'Mi dirección web', icon: 'share-2', hint: 'Link para compartir' }]
   if (hasAccess && b.has_customization) {
     web.push(
+      { id: 'photos', label: 'Mis fotos', icon: 'images', hint: 'Logo, portada y galería' },
       { id: 'design', label: 'Diseño', icon: 'palette', hint: 'Cómo se ve tu página' },
       { id: 'company', label: 'Sobre mi negocio', icon: 'building-2', hint: 'Servicios, horarios y más' }
     )
@@ -495,7 +496,7 @@ const searchCommands = computed(() => {
     cmds.push({ id: 'share-wa', label: 'Compartir por WhatsApp', hint: 'Mandá tu link a tus contactos', icon: 'phone', kw: 'whatsapp compartir enviar link clientes mensaje', run: () => shareWhatsApp(), group: 'Acciones' })
   }
   cmds.push({ id: 'new-product', label: 'Cargar un producto', hint: 'Foto, precio y categoría', icon: 'plus', kw: 'nuevo producto agregar cargar subir crear', run: go('catalogs'), group: 'Acciones', locked: navLocks.value.catalogs })
-  cmds.push({ id: 'change-logo', label: 'Cambiar mi logo', hint: 'En Diseño → Logo y colores', icon: 'image', kw: 'logo cambiar subir imagen marca foto perfil', run: go('design'), group: 'Acciones', locked: navLocks.value.catalogs })
+  cmds.push({ id: 'change-logo', label: 'Cambiar mi logo', hint: 'En Mis fotos', icon: 'image', kw: 'logo cambiar subir imagen marca foto perfil', run: go('photos'), group: 'Acciones', locked: navLocks.value.catalogs })
   cmds.push({ id: 'theme', label: theme.isDark ? 'Modo claro' : 'Modo oscuro', hint: 'Cambiar la apariencia del panel', icon: theme.isDark ? 'sun' : 'moon', kw: 'tema oscuro claro modo nocturno dark light apariencia color', run: () => theme.toggleTheme(), group: 'Acciones' })
   cmds.push({ id: 'coupon', label: 'Canjear un cupón', hint: 'Código promocional o de regalo', icon: 'gift', kw: 'cupon codigo promo promocional descuento regalo canjear', run: go('plans'), group: 'Acciones' })
   cmds.push({ id: 'password', label: 'Cambiar contraseña', hint: 'Seguridad de tu cuenta', icon: 'key', kw: 'contrasena password clave seguridad cambiar', run: go('settings'), group: 'Acciones' })
@@ -2243,7 +2244,7 @@ const designCatalogOn = computed(() => designForm.show_catalog !== false)
 async function onCarouselPicked(event) {
   const file = event.target.files?.[0]
   event.target.value = ''
-  if (!file || !canDesignAdvanced.value) return
+  if (!file || !canCustomize.value) return
   carouselErr.value = validateImageFile(file)
   if (carouselErr.value) return
   carouselBusy.value = true
@@ -2253,7 +2254,7 @@ async function onCarouselPicked(event) {
 }
 
 async function onRemoveCarousel(imageId) {
-  if (carouselBusy.value || !canDesignAdvanced.value) return
+  if (carouselBusy.value || !canCustomize.value) return
   carouselErr.value = ''
   carouselBusy.value = true
   const ok = await store.removeCarouselImage(imageId)
@@ -2262,7 +2263,7 @@ async function onRemoveCarousel(imageId) {
 }
 
 async function onMoveCarousel(imageId, direction) {
-  if (carouselBusy.value || !canDesignAdvanced.value) return
+  if (carouselBusy.value || !canCustomize.value) return
   carouselErr.value = ''
   carouselBusy.value = true
   const ok = await store.moveCarouselImage(imageId, direction)
@@ -2369,7 +2370,7 @@ async function onRemoveLogo() {
 async function onCoverPicked(event) {
   const file = event.target.files?.[0]
   event.target.value = ''
-  if (!file || !canDesignAdvanced.value) return
+  if (!file || !canCustomize.value) return
   coverErr.value = validateImageFile(file)
   if (coverErr.value) return
   coverBusy.value = true
@@ -2379,7 +2380,7 @@ async function onCoverPicked(event) {
 }
 
 async function onRemoveCover() {
-  if (coverBusy.value || !canDesignAdvanced.value) return
+  if (coverBusy.value || !canCustomize.value) return
   coverErr.value = ''
   coverBusy.value = true
   const ok = await store.removeCover()
@@ -3804,32 +3805,7 @@ async function changePassword() {
               </div>
               <p class="hint">{{ siteTemplatesHint }} Se guarda al instante — también podés administrarlas desde «Diseño» en Mi página.</p>
             </div>
-            <div v-if="canDesignAdvanced" class="field">
-              <label id="catalog-carousel-label">Carrusel de portada</label>
-              <div class="carousel-box">
-                <div v-for="(img, i) in carouselImages" :key="img.id" class="carousel-thumb">
-                  <img :src="img.url" :alt="`Imagen ${i + 1} del carrusel`" />
-                  <div class="carousel-thumb-actions">
-                    <button type="button" class="icon-btn" aria-label="Mover a la izquierda" :disabled="i === 0 || carouselBusy" @click="onMoveCarousel(img.id, -1)"><AppIcon name="chevron-left" :size="13" /></button>
-                    <button type="button" class="icon-btn" aria-label="Mover a la derecha" :disabled="i === carouselImages.length - 1 || carouselBusy" @click="onMoveCarousel(img.id, 1)"><AppIcon name="chevron-right" :size="13" /></button>
-                    <button type="button" class="icon-btn danger" aria-label="Eliminar imagen" :disabled="carouselBusy" @click="onRemoveCarousel(img.id)"><AppIcon name="trash" :size="13" /></button>
-                  </div>
-                </div>
-                <button
-                  v-if="carouselImages.length < CAROUSEL_MAX_IMAGES"
-                  type="button" class="carousel-add" :disabled="carouselBusy"
-                  @click="carouselInput?.click()"
-                >
-                  <span v-if="carouselBusy" class="spinner" aria-hidden="true"></span>
-                  <AppIcon v-else name="images" :size="20" />
-                  Agregar
-                </button>
-              </div>
-              <input ref="carouselInput" type="file" class="sr-only" :accept="LOGO_ACCEPT_TYPES" aria-labelledby="catalog-carousel-label" @change="onCarouselPicked" />
-              <p class="hint">Hasta {{ CAROUSEL_MAX_IMAGES }} imágenes de 4 MB. Se muestran como banners sobre tu catálogo.</p>
-              <p v-if="carouselErr" class="field-error" role="alert">{{ carouselErr }}</p>
-            </div>
-            <p v-else class="hint">El carrusel de portada del catálogo se habilita con el Plan premium.</p>
+            <p class="hint">El carrusel de banners se administra desde «Mis fotos» en Mi página.</p>
           </details>
         </template>
       </template>
@@ -4953,6 +4929,137 @@ async function changePassword() {
         <span class="empty-icon"><AppIcon name="lock" :size="28" /></span>
         <h3>El contenido de tu empresa viene con tu plan</h3>
         <p>Activá una suscripción para completar las secciones de marketing de tu página pública.</p>
+        <button class="btn btn-auto" @click="section = 'plans'">Ver planes</button>
+      </div>
+    </div>
+    <!-- ================= MIS FOTOS ================= -->
+    <div v-if="seen.photos" v-show="section === 'photos'" :class="{ 'sec-on': section === 'photos' }">
+      <div class="page-head">
+        <div>
+          <h1>Mis fotos</h1>
+          <p>El logo, la portada y las imágenes que se ven en tu página.</p>
+        </div>
+        <button class="btn ghost btn-auto" @click="openStore"><AppIcon name="external-link" :size="16" /> Ver mi página</button>
+      </div>
+      <SectionTabs :tabs="tabGroups.web" active="photos" @select="section = $event" />
+
+      <AlertMessage v-if="store.notice" kind="success" :message="store.notice" />
+      <AlertMessage v-if="store.lastError" kind="error" :message="store.lastError" />
+
+      <template v-if="canCustomize">
+        <div class="card">
+          <h3><AppIcon name="store" :size="18" /> Logo</h3>
+          <div class="logo-box">
+            <span class="logo-thumb">
+              <img v-if="currentLogo" :src="currentLogo" alt="Logo de tu negocio" />
+              <AppIcon v-else name="image" :size="22" />
+            </span>
+            <div class="logo-actions">
+              <AppButton type="button" class="btn-auto" :loading="logoBusy" @click="logoInput?.click()"><AppIcon name="upload" :size="15" /> {{ currentLogo ? 'Cambiar' : 'Subir logo' }}</AppButton>
+              <button v-if="currentLogo" type="button" class="btn ghost btn-auto" :disabled="logoBusy" @click="onRemoveLogo"><AppIcon name="trash" :size="15" /> Quitar</button>
+            </div>
+          </div>
+          <input ref="logoInput" type="file" class="sr-only" :accept="LOGO_ACCEPT_TYPES" aria-label="Subir logo" @change="onLogoPicked" />
+          <p class="hint">Aparece arriba de todo en tu web. PNG o JPG de hasta 4 MB.</p>
+          <p v-if="logoErr" class="field-error" role="alert">{{ logoErr }}</p>
+        </div>
+
+        <div class="card">
+          <h3><AppIcon name="image" :size="18" /> Foto de portada</h3>
+          <div class="cover-box">
+            <span class="cover-thumb" :class="{ empty: !currentCover }">
+              <img v-if="currentCover" :src="currentCover" alt="Foto de portada" />
+              <AppIcon v-else name="image" :size="22" />
+            </span>
+            <div class="logo-actions">
+              <AppButton type="button" class="btn-auto" :loading="coverBusy" @click="coverInput?.click()"><AppIcon name="upload" :size="15" /> {{ currentCover ? 'Cambiar' : 'Subir portada' }}</AppButton>
+              <button v-if="currentCover" type="button" class="btn ghost btn-auto" :disabled="coverBusy" @click="onRemoveCover"><AppIcon name="trash" :size="15" /> Quitar</button>
+            </div>
+          </div>
+          <input ref="coverInput" type="file" class="sr-only" :accept="LOGO_ACCEPT_TYPES" aria-label="Subir foto de portada" @change="onCoverPicked" />
+          <p class="hint">La foto grande que se ve al entrar a tu web. Imagen horizontal de hasta 4 MB.</p>
+          <p v-if="coverErr" class="field-error" role="alert">{{ coverErr }}</p>
+        </div>
+
+        <div class="card">
+          <h3><AppIcon name="images" :size="18" /> Carrusel de portada</h3>
+          <div class="carousel-box">
+            <div v-for="(img, i) in carouselImages" :key="img.id" class="carousel-thumb">
+              <img :src="img.url" :alt="`Imagen ${i + 1} del carrusel`" />
+              <div class="carousel-thumb-actions">
+                <button type="button" class="icon-btn" aria-label="Mover a la izquierda" :disabled="i === 0 || carouselBusy" @click="onMoveCarousel(img.id, -1)"><AppIcon name="chevron-left" :size="13" /></button>
+                <button type="button" class="icon-btn" aria-label="Mover a la derecha" :disabled="i === carouselImages.length - 1 || carouselBusy" @click="onMoveCarousel(img.id, 1)"><AppIcon name="chevron-right" :size="13" /></button>
+                <button type="button" class="icon-btn danger" aria-label="Eliminar imagen" :disabled="carouselBusy" @click="onRemoveCarousel(img.id)"><AppIcon name="trash" :size="13" /></button>
+              </div>
+            </div>
+            <button
+              v-if="carouselImages.length < CAROUSEL_MAX_IMAGES"
+              type="button" class="carousel-add" :disabled="carouselBusy"
+              @click="carouselInput?.click()"
+            >
+              <span v-if="carouselBusy" class="spinner" aria-hidden="true"></span>
+              <AppIcon v-else name="images" :size="20" />
+              Agregar
+            </button>
+          </div>
+          <input ref="carouselInput" type="file" class="sr-only" :accept="LOGO_ACCEPT_TYPES" aria-label="Agregar imagen al carrusel" @change="onCarouselPicked" />
+          <p class="hint">Hasta {{ CAROUSEL_MAX_IMAGES }} imágenes de 4 MB. Rotan como banners en tu portada.</p>
+          <p v-if="carouselErr" class="field-error" role="alert">{{ carouselErr }}</p>
+        </div>
+
+        <div class="card">
+          <h3><AppIcon name="layout-grid" :size="18" /> Galería</h3>
+          <div class="carousel-box">
+            <div v-for="(img, i) in galleryImages" :key="img.id" class="carousel-thumb">
+              <img :src="img.url" :alt="`Imagen ${i + 1} de la galería`" />
+              <div class="carousel-thumb-actions">
+                <button type="button" class="icon-btn" aria-label="Mover a la izquierda" :disabled="i === 0 || galleryBusy" @click="onMoveGallery(img.id, -1)"><AppIcon name="chevron-left" :size="13" /></button>
+                <button type="button" class="icon-btn" aria-label="Mover a la derecha" :disabled="i === galleryImages.length - 1 || galleryBusy" @click="onMoveGallery(img.id, 1)"><AppIcon name="chevron-right" :size="13" /></button>
+                <button type="button" class="icon-btn danger" aria-label="Eliminar imagen" :disabled="galleryBusy" @click="onRemoveGallery(img.id)"><AppIcon name="trash" :size="13" /></button>
+              </div>
+            </div>
+            <button
+              v-if="canAddGallery"
+              type="button" class="carousel-add" :disabled="galleryBusy"
+              @click="galleryInput?.click()"
+            >
+              <span v-if="galleryBusy" class="spinner" aria-hidden="true"></span>
+              <AppIcon v-else name="images" :size="20" />
+              Agregar
+            </button>
+          </div>
+          <input ref="galleryInput" type="file" class="sr-only" :accept="LOGO_ACCEPT_TYPES" aria-label="Agregar imagen a la galería" @change="onGalleryPicked" />
+          <p class="hint">{{ galleryHint }}</p>
+          <p v-if="galleryErr" class="field-error" role="alert">{{ galleryErr }}</p>
+        </div>
+
+        <div v-if="canDesignAdvanced || decorImages.length" class="card">
+          <h3><AppIcon name="sparkles" :size="18" /> Fotos decorativas</h3>
+          <div class="carousel-box">
+            <div v-for="(img, i) in decorImages" :key="img.id" class="carousel-thumb">
+              <img :src="img.url" :alt="`Imagen decorativa ${i + 1}`" />
+              <div class="carousel-thumb-actions">
+                <button type="button" class="icon-btn danger" aria-label="Eliminar imagen" :disabled="galleryBusy" @click="onRemoveGallery(img.id)"><AppIcon name="trash" :size="13" /></button>
+              </div>
+            </div>
+            <button
+              v-if="canAddDecor"
+              type="button" class="carousel-add" :disabled="galleryBusy"
+              @click="decorInput?.click()"
+            >
+              <span v-if="galleryBusy" class="spinner" aria-hidden="true"></span>
+              <AppIcon v-else name="images" :size="20" />
+              Agregar
+            </button>
+          </div>
+          <input ref="decorInput" type="file" class="sr-only" :accept="LOGO_ACCEPT_TYPES" aria-label="Agregar imagen decorativa" @change="onDecorPicked" />
+          <p class="hint">Hasta {{ DECOR_MAX_IMAGES }} fotos que ilustran tu portada. Comparten el cupo de la galería. <span v-if="!canDesignAdvanced" class="lock-badge"><AppIcon name="lock" :size="11" :stroke="2" /> Premium</span></p>
+        </div>
+      </template>
+      <div v-else class="empty">
+        <span class="empty-icon"><AppIcon name="lock" :size="28" /></span>
+        <h3>Las fotos de tu web vienen con tu plan</h3>
+        <p>Activá una suscripción para subir el logo, la portada y tu galería.</p>
         <button class="btn btn-auto" @click="section = 'plans'">Ver planes</button>
       </div>
     </div>

@@ -78,11 +78,11 @@ import { isHex, deriveAccent, bandPalette } from '../utils/colorTools.js'
 //                                        -> 403 si falta has_customization; 400 si excede max_storage_mb
 // POST   /api/stores/customization/cover/ Bearer multipart {cover: archivo} -> {Exito, customization, storage}
 // DELETE /api/stores/customization/cover/ Bearer   -> quita la portada y libera la cuota
-//                                        -> 403 sin has_design_advanced (solo premium); el backend normaliza a WebP
+//                                        -> 403 sin has_customization; el backend normaliza a WebP
 // POST   /api/stores/customization/carousel/       Bearer multipart {image} -> {Exito, image, storage}
 // DELETE /api/stores/customization/carousel/<id>/  Bearer -> {Exito, storage}
 // PATCH  /api/stores/customization/carousel/order/ Bearer {order:[ids]} -> {Exito}
-//                                        -> 403 en las 3 si falta has_design_advanced
+//                                        -> 403 en las 3 si falta has_customization
 // POST   /api/stores/customization/gallery/        Bearer multipart {image, kind?: 'gallery'|'decor'} -> {Exito, image, storage}
 //                                           kind=decor: hasta 3 imágenes ilustrativas de la portada (solo premium),
 //                                           gastan cupo de la galería. El backend normaliza la imagen (WebP, tamaño, proporción).

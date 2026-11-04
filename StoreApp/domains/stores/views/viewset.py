@@ -1494,14 +1494,14 @@ class StoreViewSet(StoreBaseViewSet):
             status = status.HTTP_200_OK,
         )
     #=========================================
-    # COVER (imagen de portada de la web, premium, multipart)
+    # COVER (imagen de portada de la web, multipart)
     #=========================================
     @action(detail = False, methods = ['post', 'delete'], url_path = 'customization/cover')
     def customization_cover(self, request):
         store           =   get_object_or_404(Store, user__user = request.user)
-        if not profile_has_benefit(store.user, 'has_design_advanced'):
+        if not profile_has_benefit(store.user, 'has_customization'):
             return Response(
-                {'detail': 'La imagen de portada está disponible en el Plan premium.'},
+                {'detail': 'La imagen de portada requiere una suscripción activa.'},
                 status = status.HTTP_403_FORBIDDEN,
             )
         customization, _    =   StoreCustomization.objects.get_or_create(store = store)
@@ -1526,14 +1526,14 @@ class StoreViewSet(StoreBaseViewSet):
             status = status.HTTP_200_OK,
         )
     #=========================================
-    # CAROUSEL (banners de la web, premium, multipart)
+    # CAROUSEL (banners de la web, multipart)
     #=========================================
     @action(detail = False, methods = ['post'], url_path = 'customization/carousel')
     def carousel_add(self, request):
         store           =   get_object_or_404(Store, user__user = request.user)
-        if not profile_has_benefit(store.user, 'has_design_advanced'):
+        if not profile_has_benefit(store.user, 'has_customization'):
             return Response(
-                {'detail': 'El carrusel de imágenes está disponible en el Plan premium.'},
+                {'detail': 'El carrusel de imágenes requiere una suscripción activa.'},
                 status = status.HTTP_403_FORBIDDEN,
             )
         upload          =   request.FILES.get('image')
@@ -1555,9 +1555,9 @@ class StoreViewSet(StoreBaseViewSet):
     @action(detail = False, methods = ['delete'], url_path = r'customization/carousel/(?P<image_id>\d+)')
     def carousel_remove(self, request, image_id = None):
         store           =   get_object_or_404(Store, user__user = request.user)
-        if not profile_has_benefit(store.user, 'has_design_advanced'):
+        if not profile_has_benefit(store.user, 'has_customization'):
             return Response(
-                {'detail': 'El carrusel de imágenes está disponible en el Plan premium.'},
+                {'detail': 'El carrusel de imágenes requiere una suscripción activa.'},
                 status = status.HTTP_403_FORBIDDEN,
             )
         image           =   get_object_or_404(StoreCarouselImage, pk = image_id, store = store)
@@ -1573,9 +1573,9 @@ class StoreViewSet(StoreBaseViewSet):
     @action(detail = False, methods = ['patch'], url_path = 'customization/carousel/order')
     def carousel_order(self, request):
         store           =   get_object_or_404(Store, user__user = request.user)
-        if not profile_has_benefit(store.user, 'has_design_advanced'):
+        if not profile_has_benefit(store.user, 'has_customization'):
             return Response(
-                {'detail': 'El carrusel de imágenes está disponible en el Plan premium.'},
+                {'detail': 'El carrusel de imágenes requiere una suscripción activa.'},
                 status = status.HTTP_403_FORBIDDEN,
             )
         order           =   request.data.get('order')

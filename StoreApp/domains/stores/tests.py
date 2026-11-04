@@ -319,7 +319,7 @@ class ImageNormalizationTests(TestCase):
 
 
 class StoreCoverGatingTests(TestCase):
-    """Imagen de portada: solo con has_design_advanced (Plan premium)."""
+    """Imagen de portada: con has_customization (cualquier plan vigente)."""
 
     def _client(self, premium = False, plus = False):
         _, profile      =   _make_user(verified = True)
@@ -343,13 +343,13 @@ class StoreCoverGatingTests(TestCase):
         client.force_authenticate(user = profile.user)
         return client
 
-    def test_cover_upload_forbidden_without_premium(self):
+    def test_cover_upload_allowed_without_premium(self):
         response    =   self._client(premium = False).post(f'{STORES_URL}customization/cover/', {}, format = 'multipart')
-        self.assertEqual(response.status_code, 403)
+        self.assertEqual(response.status_code, 400)
 
-    def test_cover_delete_forbidden_without_premium(self):
+    def test_cover_delete_allowed_without_premium(self):
         response    =   self._client(premium = False).delete(f'{STORES_URL}customization/cover/')
-        self.assertEqual(response.status_code, 403)
+        self.assertEqual(response.status_code, 200)
 
     def test_cover_upload_requires_file_with_premium(self):
         response    =   self._client(premium = True).post(f'{STORES_URL}customization/cover/', {}, format = 'multipart')
@@ -1041,8 +1041,8 @@ class ImageOrderTests(TestCase):
 
     def _setup(self, model, count = 3):
         user, profile   =   _make_user(verified = True)
-        #Carrusel pide has_design_advanced; galería, has_customization.
-        _grant(profile, has_customization = True, has_design_advanced = True)
+        #Carrusel y galería piden has_customization.
+        _grant(profile, has_customization = True)
         store           =   Store.objects.create(user = profile, slug = 'mi-tienda')
         images          =   [model.objects.create(store = store, image_key = f'k{i}', position = i) for i in range(count)]
         client          =   APIClient()
