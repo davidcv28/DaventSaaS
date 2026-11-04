@@ -5,13 +5,12 @@ from django.db.models import Count, OuterRef, Q, Subquery
 from django.utils import timezone
 
 from AdminApp.domains.chat.models import ChatMessage, ChatPresence, ChatThread
-from StoreApp.domains.stores.services import profile_has_benefit
 
 """
 Queries/servicios del chat de soporte.
 
-- Gate: el cliente exige el flag `has_support_chat` (Premium + prueba);
-  el staff siempre puede responder.
+- Gate: el cliente exige suscripción vigente NO trial (básico,
+  estándar o premium — usuarios que pagan); el staff siempre responde.
 - Un cliente = un hilo (OneToOne). El staff ve todos los hilos.
 - Presencia: heartbeat con ventana ONLINE_SECONDS — sin heartbeat fresco
   el usuario aparece desconectado (no hay booleano eterno).
@@ -28,11 +27,16 @@ MESSAGES_PAGE_SIZE  =   50
 # GATING
 #=========================================
 def chat_enabled(user : User) -> bool:
-    #Staff siempre (es el lado que responde); cliente exige el beneficio.
+    #Staff siempre (es el lado que responde); el cliente exige plan pago
+    #vigente: suscripción activa y no-trial (el asistente es de pagos).
     if user.is_staff:
         return True
-    profile     =   getattr(user, 'profile', None)
-    return bool(profile and profile_has_benefit(profile, 'has_support_chat'))
+    suscription =   getattr(getattr(user, 'profile', None), 'suscription', None)
+    return bool(
+        suscription
+        and suscription.grants_access()
+        and not suscription.plan_suscription.is_trial
+    )
 
 
 #=========================================

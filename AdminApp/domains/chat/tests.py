@@ -66,7 +66,7 @@ def _client(user):
 
 
 class ChatGateTests(TestCase):
-    """Gate de acceso: autenticación + flag has_support_chat (premium)."""
+    """Gate de acceso: autenticación + plan pago vigente (no-trial)."""
 
     def setUp(self):
         cache.clear()
@@ -77,13 +77,13 @@ class ChatGateTests(TestCase):
         for url in (CHAT_SEND_URL, CHAT_HEARTBEAT_URL):
             self.assertEqual(APIClient().post(url, {}, format = 'json').status_code, 401)
 
-    def test_user_without_benefit_gets_403(self):
+    def test_paid_plan_without_flag_still_accesses(self):
+        #El flag has_support_chat ya no gatea: con plan pago vigente el
+        #asistente responde igual (básico/estándar/premium).
         user, _     =   _make_user('freeuser')
         _grant_chat(UserProfile.objects.get(user = user), enabled = False)
         response    =   _client(user).get(CHAT_URL)
-        self.assertEqual(response.status_code, 403)
-        response    =   _client(user).post(CHAT_SEND_URL, {'body': 'hola'}, format = 'json')
-        self.assertEqual(response.status_code, 403)
+        self.assertEqual(response.status_code, 200)
 
     def test_user_without_subscription_gets_403(self):
         user, _     =   _make_user('nosub')
@@ -99,6 +99,25 @@ class ChatGateTests(TestCase):
         self.assertIsNotNone(response.data['thread'])
         self.assertEqual(len(response.data['messages']), 1)
         self.assertTrue(response.data['messages'][0]['from_staff'])
+
+    def test_trial_plan_gets_403_even_with_flag(self):
+        #El asistente es solo para quienes pagan: el trial queda fuera
+        #aunque el plan traiga el flag has_support_chat.
+        user, profile   =   _make_user('trialuser')
+        plan            =   SuscriptionPlan.objects.create(name = 'Trial chat', is_trial = True)
+        benefit         =   Benefit.objects.get_or_create(
+            code        =   'has_support_chat',
+            defaults    =   {'label': 'Chat', 'kind': Benefit.FLAG},
+        )[0]
+        PlanBenefit.objects.create(plan = plan, benefit = benefit, enabled = True)
+        Suscription.objects.create(
+            user                =   profile,
+            plan_suscription    =   plan,
+            end_date            =   timezone.now() + timedelta(days = 1),
+            status              =   Suscription.STATUS_ACTIVE,
+        )
+        response    =   _client(user).get(CHAT_URL)
+        self.assertEqual(response.status_code, 403)
 
     def test_staff_always_allowed_without_benefit(self):
         staff, _    =   _make_user('staffer', staff = True)

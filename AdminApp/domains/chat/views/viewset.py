@@ -75,7 +75,7 @@ class SupportChatViewSet(viewsets.GenericViewSet):
         #Fail-closed: sin beneficio el cliente recibe 403 (el frontend
         #oculta la seccion, pero el gate es este).
         if not chat_enabled(request.user):
-            raise PermissionDenied('El asistente de diseño está disponible en el plan Premium.')
+            raise PermissionDenied('El asistente está disponible con un plan pago (básico, estándar o premium).')
 
     #=========================================
     # LIST — GET /api/chat/ (role-aware)
