@@ -3,7 +3,7 @@ import { ref, reactive, computed, watch, onMounted, onUnmounted } from 'vue'
 import { useStoreStore } from '../stores/store.store.js'
 import { validateImageFile, LOGO_ACCEPT, ensureStoreFont, STORE_FONTS } from '../api/stores.api.js'
 import { catalogApi } from '../api/catalog.api.js'
-import { FLYER_SIZES, sizeById, isDigitalSize, imposition, pngSizeOf, flyerProduct, flyerVars, flyerFontSlug, exportFlyerPng, downloadBlob } from '../utils/flyer.js'
+import { FLYER_SIZES, FLYER_SHEETS, sizeById, sheetById, isDigitalSize, imposition, pngSizeOf, flyerProduct, flyerVars, flyerFontSlug, exportFlyerPng, downloadBlob } from '../utils/flyer.js'
 import { EL_FONT_GROUPS, EL_SHAPES, EL_ICONS, EL_TOOLS, EL_SWATCHES, EL_TYPE_LABELS, makeElement, loadEditorDoc, saveEditorDoc, clearEditorDoc, fillOf, fontSlugOf, ensureElFont, ensureElFontCatalog } from '../utils/flyerEditor.js'
 import AppIcon from './AppIcon.vue'
 import AlertMessage from './AlertMessage.vue'
@@ -42,11 +42,31 @@ const gallery = computed(() => store.customization.gallery || [])
 const themeVars = computed(() => flyerVars(store.customization))
 const sizeInfo = computed(() => sizeById(doc.size))
 const digital = computed(() => isDigitalSize(doc.size))
-const imp = computed(() => imposition(doc.size, doc.sheet))
+const imp = computed(() => imposition(doc.size, doc.sheet, { gap: doc.sheetGap, fill: doc.sheetFill !== 'real', orientation: doc.sheetOrient }))
 const pngSize = computed(() => pngSizeOf(doc.size))
 const printSizes = computed(() => FLYER_SIZES.filter((s) => s.group === 'print'))
 const digitalSizes = computed(() => FLYER_SIZES.filter((s) => s.group === 'digital'))
-const canImpose = computed(() => !digital.value && doc.size !== 'a4' && doc.size !== 'carta')
+const sheetInfo = computed(() => (doc.sheet === 'own' ? null : sheetById(doc.sheet)))
+const totalPieces = computed(() => imp.value.count * Math.max(1, doc.copies || 1))
+const sheetNote = computed(() => {
+  if (doc.sheet === 'own') return `Una copia en hoja de ${sizeInfo.value.w}×${sizeInfo.value.h} mm`
+  const s = sheetInfo.value
+  return `${imp.value.count} ${imp.value.count === 1 ? 'copia' : 'copias'} por hoja ${s.label}${imp.value.landscape ? ' apaisada' : ' vertical'} · ${Math.round(imp.value.fw)}×${Math.round(imp.value.fh)} mm cada una`
+})
+// Estilo de la mini-hoja: las pistas descuentan las separaciones para que
+// la grilla nunca se desborde del rectángulo de la hoja.
+const impPreviewStyle = computed(() => {
+  const i = imp.value
+  const contentW = Math.max(1, i.pageW - (i.cols - 1) * i.gap)
+  const contentH = Math.max(1, i.pageH - (i.rows - 1) * i.gap)
+  return {
+    aspectRatio: `${i.pageW} / ${i.pageH}`,
+    gridTemplateColumns: `repeat(${i.cols}, ${(i.fw / contentW) * 100}%)`,
+    gridTemplateRows: `repeat(${i.rows}, ${(i.fh / contentH) * 100}%)`,
+    columnGap: `${(i.gap / i.pageW) * 100}%`,
+    rowGap: `${(i.gap / i.pageH) * 100}%`
+  }
+})
 const stageWidth = computed(() => `${Math.min(100, 46 * zoom.value * (doc.size === 'banner' ? 1.9 : 1))}%`)
 
 const products = ref([])
@@ -68,6 +88,11 @@ function restore(json) {
   const data = JSON.parse(json)
   doc.size = data.size
   doc.sheet = data.sheet
+  doc.sheetOrient = data.sheetOrient || 'auto'
+  doc.sheetFill = data.sheetFill === 'real' ? 'real' : 'fill'
+  doc.sheetGap = Number.isFinite(Number(data.sheetGap)) ? Number(data.sheetGap) : 4
+  doc.sheetMarks = data.sheetMarks !== false
+  doc.copies = Math.max(1, Math.min(20, Math.round(Number(data.copies) || 1)))
   doc.bg = data.bg
   doc.elements.splice(0, doc.elements.length, ...data.elements)
   if (sel.value && !doc.elements.some((e) => e.id === sel.value)) sel.value = null
@@ -112,6 +137,38 @@ function moveLayer(id, dir) {
   if (i < 0 || j < 0 || j >= doc.elements.length) return
   snap()
   doc.elements.splice(j, 0, doc.elements.splice(i, 1)[0])
+}
+function toFront(id) {
+  const i = doc.elements.findIndex((e) => e.id === id)
+  if (i < 0 || i === doc.elements.length - 1) return
+  snap()
+  doc.elements.push(doc.elements.splice(i, 1)[0])
+}
+function toBack(id) {
+  const i = doc.elements.findIndex((e) => e.id === id)
+  if (i <= 0) return
+  snap()
+  doc.elements.unshift(doc.elements.splice(i, 1)[0])
+}
+// Copiar / pegar con el teclado: el portapapeles vive en la sesión del
+// editor (no toca el del sistema) y pega un clon desplazado.
+let clip = ''
+function copyEl() {
+  if (!element.value) return
+  clip = JSON.stringify(element.value)
+  say('success', 'Elemento copiado. Ctrl+V lo pega en el lienzo.')
+}
+function pasteEl() {
+  if (!clip) return
+  snap()
+  const copy = JSON.parse(clip)
+  copy.id = `e${Date.now().toString(36)}x${doc.elements.length}`
+  copy.x = Math.min(96, (Number(copy.x) || 0) + 2)
+  copy.y = Math.min(96, (Number(copy.y) || 0) + 2)
+  copy.locked = false
+  doc.elements.push(copy)
+  sel.value = copy.id
+  panel.value = 'element'
 }
 function selectEl(id) {
   sel.value = id
@@ -177,14 +234,15 @@ async function exportPng() {
   exporting.value = false
 }
 
+function clampCopies() {
+  doc.copies = Math.max(1, Math.min(20, Math.round(Number(doc.copies) || 1)))
+  snap()
+}
+
 function reset() {
   clearEditorDoc(props.slug)
   snap()
-  const fresh = loadEditorDoc(props.slug)
-  doc.size = fresh.size
-  doc.sheet = fresh.sheet
-  doc.bg = fresh.bg
-  doc.elements.splice(0, doc.elements.length, ...fresh.elements)
+  Object.assign(doc, loadEditorDoc(props.slug))
   sel.value = null
   panel.value = 'page'
 }
@@ -197,6 +255,8 @@ function onKey(e) {
   if (mod && e.key.toLowerCase() === 'z') { e.preventDefault(); e.shiftKey ? redo() : undo(); return }
   if (mod && e.key.toLowerCase() === 'y') { e.preventDefault(); redo(); return }
   if (!element.value) return
+  if (mod && e.key.toLowerCase() === 'c') { e.preventDefault(); copyEl(); return }
+  if (mod && e.key.toLowerCase() === 'v') { e.preventDefault(); pasteEl(); return }
   if (mod && e.key.toLowerCase() === 'd') { e.preventDefault(); duplicate(sel.value); return }
   if (e.key === 'Delete' || e.key === 'Backspace') { e.preventDefault(); remove(sel.value); return }
   const step = e.shiftKey ? 5 : 1
@@ -250,7 +310,7 @@ const zoomReset = () => { zoom.value = 1 }
       <div class="fed-bar-title">
         <AppIcon name="pen-tool" :size="17" />
         <strong>Editor libre</strong>
-        <select v-model="doc.size" class="input fed-size" aria-label="Formato del folleto">
+        <select v-model="doc.size" class="input fed-size" aria-label="Formato del folleto" @change="snap()">
           <optgroup label="Para imprimir"><option v-for="s in printSizes" :key="s.id" :value="s.id">{{ s.label }} · {{ s.w }}×{{ s.h }} mm</option></optgroup>
           <optgroup label="Para redes y pantallas"><option v-for="s in digitalSizes" :key="s.id" :value="s.id">{{ s.label }} · {{ s.w }}×{{ s.h }} px</option></optgroup>
         </select>
@@ -287,7 +347,7 @@ const zoomReset = () => { zoom.value = 1 }
         <div class="fed-stage" :style="{ width: stageWidth }">
           <FlyerBoard ref="boardEl" :doc="doc" :qr="qr" :logo="logo" :shop-name="shopName" :url="url" :products="products" :selected="sel" interactive @select="selectEl" @mutate="snap" @commit="commit" />
         </div>
-        <p class="fed-stage-hint">{{ digital ? `${sizeInfo.label} digital: el PNG sale en ${pngSize.w}×${pngSize.h} px` : `${sizeInfo.label} (${sizeInfo.w}×${sizeInfo.h} mm): ${imp.count === 1 ? 'sale 1 por hoja' : `salen ${imp.count} por hoja A4${imp.landscape ? ' apaisada' : ''}`}` }}. Arrastrá, estirá de las esquinas y girá con el punto superior. Ctrl+Z deshace.</p>
+        <p class="fed-stage-hint">{{ digital ? `${sizeInfo.label} digital: el PNG sale en ${pngSize.w}×${pngSize.h} px` : `${sizeInfo.label} (${sizeInfo.w}×${sizeInfo.h} mm) · ${sheetNote}` }}. Arrastrá, estirá de las esquinas y girá con el punto superior. Ctrl+Z deshace.</p>
       </div>
 
       <!-- ===== Inspector ===== -->
@@ -301,12 +361,64 @@ const zoomReset = () => { zoom.value = 1 }
         <!-- ---- Página ---- -->
         <div v-if="panel === 'page'" class="fed-panel">
           <div class="field">
-            <label><AppIcon name="ruler" :size="14" class="label-icon" />Formato</label>
-            <select v-model="doc.size" class="input">
+            <label><AppIcon name="ruler" :size="14" class="label-icon" />Formato del folleto</label>
+            <select v-model="doc.size" class="input" @change="snap()">
               <optgroup label="Para imprimir"><option v-for="s in printSizes" :key="s.id" :value="s.id">{{ s.label }} · {{ s.w }}×{{ s.h }} mm — {{ s.note }}</option></optgroup>
               <optgroup label="Para redes y pantallas"><option v-for="s in digitalSizes" :key="s.id" :value="s.id">{{ s.label }} · {{ s.w }}×{{ s.h }} px — {{ s.note }}</option></optgroup>
             </select>
+            <p class="hint">{{ sizeInfo.label }}: {{ digital ? `pieza digital, el PNG sale en ${pngSize.w}×${pngSize.h} px` : `${sizeInfo.w}×${sizeInfo.h} mm` }}.</p>
           </div>
+          <div class="field">
+            <label><AppIcon name="layout-grid" :size="14" class="label-icon" />Tamaño de hoja al imprimir</label>
+            <select v-model="doc.sheet" class="input" @change="snap()">
+              <option value="own">Tamaño del folleto · una por hoja</option>
+              <optgroup label="Hojas de impresión">
+                <option v-for="s in FLYER_SHEETS" :key="s.id" :value="s.id">{{ s.label }} · {{ s.w }}×{{ s.h }} mm — {{ s.note }}</option>
+              </optgroup>
+            </select>
+          </div>
+          <template v-if="doc.sheet !== 'own'">
+            <div class="field">
+              <label>Orientación de la hoja</label>
+              <div class="fed-seg">
+                <button type="button" :class="{ on: doc.sheetOrient === 'auto' }" @click="mutate(() => doc.sheetOrient = 'auto')">Automática</button>
+                <button type="button" :class="{ on: doc.sheetOrient === 'portrait' }" @click="mutate(() => doc.sheetOrient = 'portrait')">Vertical</button>
+                <button type="button" :class="{ on: doc.sheetOrient === 'landscape' }" @click="mutate(() => doc.sheetOrient = 'landscape')">Apaisada</button>
+              </div>
+            </div>
+            <div class="field">
+              <label>Aprovechar la hoja</label>
+              <div class="check-list">
+                <label class="check-item"><input v-model="doc.sheetFill" type="radio" name="fed-fill" value="fill" @change="snap()" /><span class="check-text"><strong>Llenar la hoja</strong><small>Las copias se agrandan o achican lo justo para ocupar toda la hoja, sin recortar nada.</small></span></label>
+                <label class="check-item"><input v-model="doc.sheetFill" type="radio" name="fed-fill" value="real" @change="snap()" /><span class="check-text"><strong>Tamaño real</strong><small>Cada copia mide exactamente {{ sizeInfo.w }}×{{ sizeInfo.h }} mm; puede quedar margen.</small></span></label>
+              </div>
+            </div>
+            <div class="fed-row">
+              <div class="field">
+                <label>Separación <span class="counter">{{ doc.sheetGap }} mm</span></label>
+                <input v-model.number="doc.sheetGap" type="range" min="0" max="20" step="1" class="fed-range" @change="snap()" />
+              </div>
+              <div class="field">
+                <label>Hojas a imprimir</label>
+                <input v-model.number="doc.copies" type="number" class="input" min="1" max="20" step="1" @change="clampCopies" />
+              </div>
+            </div>
+            <div class="check-list">
+              <label class="check-item"><input v-model="doc.sheetMarks" type="checkbox" @change="snap()" /><span class="check-text"><strong>Marcas de corte</strong><small>Línea punteada alrededor de cada copia, para recortar derecho.</small></span></label>
+            </div>
+            <div class="fed-imp">
+              <div
+                class="fed-imp-page"
+                :style="impPreviewStyle"
+                role="img"
+                :aria-label="`Vista de la hoja: ${sheetNote}`"
+              >
+                <i v-for="n in Math.min(imp.count, 48)" :key="n" :class="{ marks: doc.sheetMarks }"></i>
+              </div>
+              <p class="fed-imp-note">{{ sheetNote }}.<br><b>{{ totalPieces }}</b> {{ totalPieces === 1 ? 'folleto' : 'folletos' }} en {{ doc.copies }} {{ doc.copies === 1 ? 'hoja' : 'hojas' }}.</p>
+            </div>
+          </template>
+          <p v-else class="hint">Sale una copia por hoja de {{ sizeInfo.w }}×{{ sizeInfo.h }} mm, sin repetir.</p>
           <div class="field">
             <label><AppIcon name="palette" :size="14" class="label-icon" />Fondo del folleto</label>
             <div class="fed-swatches">
@@ -314,14 +426,7 @@ const zoomReset = () => { zoom.value = 1 }
               <label class="fed-sw fed-sw-custom" :class="{ on: !EL_SWATCHES.some((s) => s.id === doc.bg) }" title="Color a medida"><input v-model="doc.bg" type="color" @change="snap()" /><AppIcon name="pipette" :size="13" /></label>
             </div>
           </div>
-          <div v-if="canImpose" class="field">
-            <label><AppIcon name="layout-grid" :size="14" class="label-icon" />Al imprimir en A4</label>
-            <div class="check-list">
-              <label class="check-item"><input v-model="doc.sheet" type="radio" name="fed-sheet" value="a4" /><span class="check-text"><strong>Llenar la hoja A4</strong><small>{{ imp.count }} copias por hoja ({{ imp.cols }}×{{ imp.rows }}{{ imp.landscape ? ', apaisada' : '' }}), listas para cortar.</small></span></label>
-              <label class="check-item"><input v-model="doc.sheet" type="radio" name="fed-sheet" value="own" /><span class="check-text"><strong>Una por hoja</strong><small>Una copia en hoja de {{ sizeInfo.w }}×{{ sizeInfo.h }} mm.</small></span></label>
-            </div>
-          </div>
-          <p class="hint">Tip: hacé doble clic sobre la lista de capas para seleccionar un elemento tapado por otro.</p>
+          <p class="hint">Tip: Ctrl+C copia el elemento elegido y Ctrl+V lo pega. En Capas podés ocultar, bloquear y reordenar.</p>
           <button type="button" class="btn ghost btn-auto fed-reset" @click="reset"><AppIcon name="refresh" :size="14" /> Empezar de cero</button>
         </div>
 
@@ -550,8 +655,11 @@ const zoomReset = () => { zoom.value = 1 }
             </div>
           </div>
           <div class="fed-el-acts">
+            <button type="button" class="btn ghost btn-auto" @click="toFront(element.id)"><AppIcon name="layers" :size="14" /> Al frente</button>
+            <button type="button" class="btn ghost btn-auto" @click="toBack(element.id)"><AppIcon name="layers" :size="14" /> Al fondo</button>
             <button type="button" class="btn ghost btn-auto" @click="moveLayer(element.id, 1)"><AppIcon name="chevron-up" :size="14" /> Subir</button>
             <button type="button" class="btn ghost btn-auto" @click="moveLayer(element.id, -1)"><AppIcon name="chevron-down" :size="14" /> Bajar</button>
+            <button type="button" class="btn ghost btn-auto" @click="mutate(() => element.locked = !element.locked)"><AppIcon name="lock" :size="14" /> {{ element.locked ? 'Desbloquear' : 'Bloquear' }}</button>
             <button type="button" class="btn ghost btn-auto" @click="duplicate(element.id)"><AppIcon name="copy" :size="14" /> Duplicar</button>
             <button type="button" class="btn ghost btn-auto danger" @click="remove(element.id)"><AppIcon name="trash" :size="14" /> Borrar</button>
           </div>
@@ -638,6 +746,12 @@ const zoomReset = () => { zoom.value = 1 }
 .fed-layer-acts button:hover:not(:disabled) { background: var(--surface); color: var(--brand-ink); }
 .fed-layer-acts button:disabled { opacity: .3; }
 .fed-reset { justify-content: center; }
+.fed-imp { display: grid; gap: 8px; padding: 10px; border: 1px dashed var(--line); border-radius: 12px; background: var(--surface); }
+.fed-imp-page { width: 100%; display: grid; justify-content: center; align-content: center; background: #fff; border: 1px solid var(--line); border-radius: 4px; overflow: hidden; box-shadow: 0 8px 18px -12px rgba(15, 23, 42, .45); }
+.fed-imp-page i { display: block; min-width: 0; min-height: 0; background: color-mix(in srgb, var(--brand-500) 14%, #fff); border: 1px solid color-mix(in srgb, var(--brand-500) 40%, transparent); border-radius: 2px; }
+.fed-imp-page i.marks { outline: 1px dashed color-mix(in srgb, var(--brand-500) 55%, transparent); outline-offset: -1px; }
+.fed-imp-note { margin: 0; font-size: 11.5px; line-height: 1.45; color: var(--muted); }
+.fed-imp-note b { color: var(--text); }
 .fed-export { position: fixed; left: -100vw; top: 0; width: 600px; pointer-events: none; }
 .label-icon { vertical-align: -2px; margin-right: 4px; }
 

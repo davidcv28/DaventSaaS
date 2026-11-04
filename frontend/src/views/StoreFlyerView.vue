@@ -13,7 +13,7 @@ import FlyerBoard from '../components/FlyerBoard.vue'
 import { loadEditorDoc } from '../utils/flyerEditor.js'
 import { catalogApi } from '../api/catalog.api.js'
 import { servicesApi } from '../api/services.api.js'
-import { loadFlyerDraft, imposition, sizeById, layoutById, flyerProduct, flyerService, flyerLegacyService, resolveFlyerItems, flyerVars, flyerFontSlug } from '../utils/flyer.js'
+import { loadFlyerDraft, imposition, sizeById, sheetById, layoutById, flyerProduct, flyerService, flyerLegacyService, resolveFlyerItems, flyerVars, flyerFontSlug } from '../utils/flyer.js'
 
 // Panfletito A6 de la tienda, mismo diseño que el folleto promocional de
 // DAVENT: banda de marca arriba, beneficios, destacados y pie con QR.
@@ -30,22 +30,28 @@ const chosenProducts = ref([])
 let pageStyle = null
 const imp = computed(() => {
   const d = isFree ? freeDoc.value : draft.value
-  return d ? imposition(d.size, d.sheet) : null
+  if (!d) return null
+  return imposition(d.size, d.sheet, isFree
+    ? { gap: d.sheetGap, fill: d.sheetFill !== 'real', orientation: d.sheetOrient }
+    : {})
 })
+const freeCopies = computed(() => Math.max(1, Math.min(20, Math.round(Number(freeDoc.value?.copies) || 1))))
 const sheetVars = computed(() => imp.value && ({
   '--fw': `${imp.value.fw}mm`, '--fh': `${imp.value.fh}mm`,
   '--cols': imp.value.cols, '--rows': imp.value.rows,
-  '--pw': `${imp.value.pageW}mm`, '--ph': `${imp.value.pageH}mm`
+  '--pw': `${imp.value.pageW}mm`, '--ph': `${imp.value.pageH}mm`,
+  '--gap': `${imp.value.gap}mm`
 }))
 const customLabel = computed(() => {
   if (!imp.value) return ''
   const d = isFree ? freeDoc.value : draft.value
   const s = sizeById(d.size).label
   const prefix = isFree ? 'Folleto del editor libre' : 'Folleto a medida'
-  if (imp.value.digital) return `${prefix} ${s} · formato digital, sale ajustado en A4`
-  return imp.value.count === 1
-    ? `${prefix} ${s} · sale 1 por hoja, a color`
-    : `${prefix} ${s} · salen ${imp.value.count} por hoja A4${imp.value.landscape ? ' apaisada' : ''}, a color`
+  if (imp.value.digital) return `${prefix} ${s} · formato digital, sale ajustado en ${imp.value.sheetId === 'own' ? 'su hoja' : `hoja ${sheetById(imp.value.sheetId).label}`}`
+  if (imp.value.own) return `${prefix} ${s} · una copia por hoja de ${imp.value.pageW}×${imp.value.pageH} mm`
+  const sheet = sheetById(imp.value.sheetId)
+  const pages = isFree ? freeCopies.value : 1
+  return `${prefix} ${s} · ${imp.value.count} por hoja ${sheet.label}${imp.value.landscape ? ' apaisada' : ' vertical'}${pages > 1 ? ` · ${pages} hojas (${imp.value.count * pages} folletos)` : ''}, a color`
 })
 const store = ref(null)
 const place = ref(null) // datos públicos: city_name/province_name
@@ -136,7 +142,7 @@ onMounted(async () => {
         const prods = await catalogApi.listProducts().catch(() => [])
         freeProducts.value = prods.filter((p) => p.is_active !== false).map(flyerProduct)
       }
-      const o = imposition(freeDoc.value.size, freeDoc.value.sheet)
+      const o = imposition(freeDoc.value.size, freeDoc.value.sheet, { gap: freeDoc.value.sheetGap, fill: freeDoc.value.sheetFill !== 'real', orientation: freeDoc.value.sheetOrient })
       pageStyle = document.createElement('style')
       pageStyle.textContent = `@page { size: ${o.pageW}mm ${o.pageH}mm; margin: 0 }`
       document.head.appendChild(pageStyle)
@@ -215,16 +221,20 @@ function closeTab() {
 .sf-davent { display: flex; align-items: center; justify-content: center; gap: 6px; padding: 6px; font-size: 8.5px; font-weight: 700; letter-spacing: .04em; color: #777; border-top: 1px solid #eee; }
 .sf-davent :deep(.brand-logo) { display: block; }
 
-.cf-sheet { display: grid; justify-items: center; width: 100%; }
-.cf-sheet .cf-card { width: min(100%, var(--fw)); box-shadow: var(--shadow); }
-.cf-sheet .cf-card + .cf-card { display: none; }
+.cf-pages { display: grid; gap: 18px; justify-items: center; width: 100%; overflow-x: auto; }
+.cf-sheet { display: grid; grid-template-columns: repeat(var(--cols), var(--fw)); grid-template-rows: repeat(var(--rows), var(--fh)); gap: var(--gap, 0mm); justify-content: center; align-content: center; width: var(--pw); height: var(--ph); overflow: hidden; background: #fff; flex: none; }
+.cf-sheet .cf-card { width: var(--fw); height: var(--fh); box-shadow: var(--shadow); }
+.cf-sheet.marks .cf-card { outline: 1px dashed #bbb; outline-offset: -1px; }
 
 @page { size: A4; margin: 0; }
 @media print {
-  /* Cada celda mide exactamente el folleto: la grilla nunca supera la hoja, así que las copias no se pisan. */
-  .cf-sheet { display: grid; grid-template-columns: repeat(var(--cols), var(--fw)); grid-template-rows: repeat(var(--rows), var(--fh)); justify-content: center; align-content: center; width: var(--pw); height: var(--ph); overflow: hidden; break-inside: avoid; justify-items: stretch; }
-  .cf-sheet .cf-card + .cf-card { display: flex; }
-  .cf-sheet .cf-card { width: var(--fw); height: var(--fh); box-shadow: none; outline: 1px dashed #bbb; outline-offset: -1px; box-sizing: border-box; }
+  /* Cada hoja es una página: la grilla ocupa la hoja elegida y las copias
+     nunca se salen (el ancho/alto de celda ya viene ajustado a la hoja). */
+  .cf-pages { display: block; gap: 0; overflow: visible; }
+  .cf-sheet { display: grid; grid-template-columns: repeat(var(--cols), var(--fw)); grid-template-rows: repeat(var(--rows), var(--fh)); gap: var(--gap, 0mm); justify-content: center; align-content: center; width: var(--pw); height: var(--ph); overflow: hidden; break-inside: avoid; break-after: page; page-break-after: always; box-shadow: none; }
+  .cf-sheet:last-child { break-after: auto; page-break-after: auto; }
+  .cf-sheet .cf-card { width: var(--fw); height: var(--fh); box-shadow: none; border-radius: 0; box-sizing: border-box; }
+  .cf-sheet.marks .cf-card { outline: 1px dashed #bbb; outline-offset: -1px; }
   .print-page { background: #fff; padding: 0; min-height: 0; display: block; }
   .print-bar, .print-status { display: none; }
   /* Imposición: la hoja A4 sale con las 4 copias A6 listas para cortar. */
@@ -254,18 +264,25 @@ function closeTab() {
       <p>{{ error }}</p>
     </div>
 
-    <div v-else-if="isFree && freeDoc" class="cf-sheet" :style="sheetVars">
-      <FlyerBoard
-        v-for="n in imp.count" :key="n" class="cf-card" :aria-hidden="n > 1 || undefined"
-        :doc="freeDoc" :shop-name="shopName" :logo="custom.logo" :qr="qrDataUrl" :url="publicUrl" :products="freeProducts"
-      />
+    <div v-else-if="isFree && freeDoc" class="cf-pages">
+      <div
+        v-for="page in freeCopies" :key="`page-${page}`" class="cf-sheet"
+        :class="{ marks: freeDoc.sheetMarks }" :style="sheetVars"
+      >
+        <FlyerBoard
+          v-for="n in imp.count" :key="`${page}-${n}`" class="cf-card" :aria-hidden="page > 1 || n > 1 || undefined"
+          :doc="freeDoc" :shop-name="shopName" :logo="custom.logo" :qr="qrDataUrl" :url="publicUrl" :products="freeProducts"
+        />
+      </div>
     </div>
 
-    <div v-else-if="isCustom && draft" class="cf-sheet" :style="sheetVars">
-      <FlyerCanvas
-        v-for="n in imp.count" :key="n" class="cf-card" :aria-hidden="n > 1 || undefined"
-        :design="draft" :items="chosenProducts" :shop-name="shopName" :logo="custom.logo" :qr="qrDataUrl" :url="publicUrl" :suggest="suggest"
-      />
+    <div v-else-if="isCustom && draft" class="cf-pages">
+      <div class="cf-sheet" :style="sheetVars">
+        <FlyerCanvas
+          v-for="n in imp.count" :key="n" class="cf-card" :aria-hidden="n > 1 || undefined"
+          :design="draft" :items="chosenProducts" :shop-name="shopName" :logo="custom.logo" :qr="qrDataUrl" :url="publicUrl" :suggest="suggest"
+        />
+      </div>
     </div>
 
     <div v-else class="sf-sheet">

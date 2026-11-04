@@ -38,8 +38,34 @@ const elStyle = (el) => ({
   transform: `rotate(${el.rot || 0}deg)`, opacity: el.opacity ?? 1
 })
 
-// Guías de alineación al centro del lienzo (solo mientras se arrastra).
-const guides = ref({ x: false, y: false })
+// Guías de alineación mientras se arrastra: centro del lienzo, bordes y
+// bordes/centros de los demás elementos. El imán se apaga con Alt.
+const guides = ref({ x: null, y: null })
+const SNAP = 1.1
+
+function snapAxis(value, size, others, axis) {
+  const cross = axis === 'x' ? 'w' : 'h'
+  const candidates = [
+    { pos: 0, line: 0 },
+    { pos: (100 - size) / 2, line: 50 },
+    { pos: 100 - size, line: 100 }
+  ]
+  for (const o of others) {
+    const start = o[axis]
+    const end = start + o[cross]
+    candidates.push(
+      { pos: start, line: start },
+      { pos: start + (o[cross] - size) / 2, line: start + o[cross] / 2 },
+      { pos: end - size, line: end }
+    )
+  }
+  let best = null
+  for (const c of candidates) {
+    const d = Math.abs(value - c.pos)
+    if (d <= SNAP && (!best || d < best.d)) best = { ...c, d }
+  }
+  return best ? { value: best.pos, line: best.line } : { value, line: null }
+}
 
 const rad = (d) => (d * Math.PI) / 180
 const rotVec = (x, y, deg) => {
@@ -61,19 +87,23 @@ function pick(el, ev) {
     let ny = orig.y + ((e.clientY - start.y) / rect.height) * 100
     nx = Math.min(100 - 2, Math.max(2 - el.w, nx))
     ny = Math.min(100 - 2, Math.max(2 - el.h, ny))
-    // Snap al centro del lienzo con guías.
-    const cx = nx + el.w / 2
-    const cy = ny + el.h / 2
-    if (!e.altKey && Math.abs(cx - 50) < 1) nx = 50 - el.w / 2
-    if (!e.altKey && Math.abs(cy - 50) < 1) ny = 50 - el.h / 2
-    guides.value = { x: Math.abs(nx + el.w / 2 - 50) < 0.05, y: Math.abs(ny + el.h / 2 - 50) < 0.05 }
+    const others = els.value.filter((o) => o.id !== el.id)
+    if (!e.altKey) {
+      const sx = snapAxis(nx, el.w, others, 'x')
+      const sy = snapAxis(ny, el.h, others, 'y')
+      nx = sx.value
+      ny = sy.value
+      guides.value = { x: sx.line, y: sy.line }
+    } else {
+      guides.value = { x: null, y: null }
+    }
     el.x = Math.round(nx * 10) / 10
     el.y = Math.round(ny * 10) / 10
   }
   const up = () => {
     window.removeEventListener('pointermove', move)
     window.removeEventListener('pointerup', up)
-    guides.value = { x: false, y: false }
+    guides.value = { x: null, y: null }
     if (moved) emit('commit')
   }
   window.addEventListener('pointermove', move)
@@ -150,8 +180,8 @@ function startRotate(el, ev) {
     </div>
 
     <template v-if="interactive">
-      <i v-if="guides.x" class="fb-guide v" aria-hidden="true"></i>
-      <i v-if="guides.y" class="fb-guide h" aria-hidden="true"></i>
+      <i v-if="guides.x !== null" class="fb-guide v" :style="{ left: `${guides.x}%` }" aria-hidden="true"></i>
+      <i v-if="guides.y !== null" class="fb-guide h" :style="{ top: `${guides.y}%` }" aria-hidden="true"></i>
       <div v-if="sel" class="fb-sel" :style="elStyle(sel)" aria-hidden="true">
         <button v-for="c in ['nw', 'ne', 'sw', 'se']" :key="c" type="button" class="fb-h" :class="`fb-h-${c}`" @pointerdown="startResize(sel, c, $event)"></button>
         <button v-if="!sel.locked" type="button" class="fb-rot" @pointerdown="startRotate(sel, $event)"><AppIcon name="rotate-cw" :size="'1em'" /></button>

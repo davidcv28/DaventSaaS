@@ -2,7 +2,7 @@
 // posicionados en % del formato elegido (x/y/ancho/alto de 0 a 100), con
 // rotación y orden de capas. El borrador vive en localStorage por tienda y
 // la vista de impresión (/folleto?custom=2) lo lee, igual que el diseñador.
-import { sizeById } from './flyer.js'
+import { sizeById, isSheetId } from './flyer.js'
 
 let seq = 0
 const uid = () => `e${Date.now().toString(36)}${(seq++).toString(36)}`
@@ -144,6 +144,11 @@ export function defaultEditorDoc() {
   return {
     size: 'a5',
     sheet: 'a4',
+    sheetOrient: 'auto',
+    sheetFill: 'fill',
+    sheetGap: 4,
+    sheetMarks: true,
+    copies: 1,
     bg: 'paper',
     elements: [
       makeElement('shape', { x: 0, y: 0, w: 100, h: 22, shape: 'rect', fill: 'accent' }),
@@ -190,7 +195,12 @@ export function loadEditorDoc(slug) {
     if (!raw || typeof raw !== 'object') return base
     const doc = {
       size: sizeById(raw.size).id,
-      sheet: raw.sheet === 'own' ? 'own' : 'a4',
+      sheet: raw.sheet === 'own' ? 'own' : isSheetId(raw.sheet) ? raw.sheet : 'a4',
+      sheetOrient: ['portrait', 'landscape'].includes(raw.sheetOrient) ? raw.sheetOrient : 'auto',
+      sheetFill: raw.sheetFill === 'real' ? 'real' : 'fill',
+      sheetGap: num(raw.sheetGap, 4, 0, 30),
+      sheetMarks: raw.sheetMarks !== false,
+      copies: Math.round(num(raw.copies, 1, 1, 20)),
       bg: String(raw.bg || 'paper'),
       elements: (Array.isArray(raw.elements) ? raw.elements : [])
         .map(cleanElement).filter(Boolean).slice(0, 60)

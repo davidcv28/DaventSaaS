@@ -118,40 +118,92 @@ export function pngSizeOf(sizeId) {
   return { w: Math.round(s.w * k), h: Math.round(s.h * k) }
 }
 
-// Imposición: cuántas copias entran en la hoja y cómo se acomodan. Cada
-// celda mide exactamente el tamaño del folleto, así que nunca se pisan
-// entre sí: se prueba hoja A4 vertical y apaisada y se elige la que entra
-// más copias. Las piezas digitales y la hoja Carta (más ancha que A4) van
-// una por página ajustadas a la hoja disponible.
-export function imposition(sizeId, sheet) {
+// Hojas de impresión admitidas por el editor libre. El folleto se impone
+// sobre la elegida; 'own' es la hoja del tamaño del propio folleto.
+export const FLYER_SHEETS = [
+  { id: 'a4', label: 'A4', w: 210, h: 297, note: 'La más común' },
+  { id: 'a3', label: 'A3', w: 297, h: 420, note: 'Doble A4' },
+  { id: 'carta', label: 'Carta', w: 216, h: 279, note: 'Hoja americana' },
+  { id: 'oficio', label: 'Oficio', w: 216, h: 356, note: 'Legal · alargada' },
+  { id: 'a5', label: 'A5', w: 148, h: 210, note: 'Media A4' }
+]
+export const sheetById = (id) => FLYER_SHEETS.find((s) => s.id === id) || FLYER_SHEETS[0]
+export const isSheetId = (id) => FLYER_SHEETS.some((s) => s.id === id)
+
+// Imposición: cuántas copias entran en la hoja elegida y cómo se acomodan.
+// - `gap`: separación entre copias en mm (para cortar sin pisar el arte).
+// - `fill`: escala todas las copias para ocupar la hoja sin recortarlas; el
+//   factor sale del eje más ajustado, así nunca se sale de la hoja.
+// - `orientation`: 'auto' prueba vertical y apaisada y se queda con la que
+//   entra más copias (empate: la copia más grande y después vertical).
+// Las piezas digitales y las que no entran se ajustan centradas a la hoja.
+export function imposition(sizeId, sheet, opts = {}) {
   const s = sizeById(sizeId)
-  if (s.unit === 'px') return { ...fitSheet(s), cols: 1, rows: 1, count: 1, own: true, digital: true }
-  if (sheet !== 'a4' || s.id === 'a4') {
-    return { cols: 1, rows: 1, count: 1, pageW: s.w, pageH: s.h, landscape: false, fw: s.w, fh: s.h, own: true }
+  const gap = Math.max(0, Math.min(30, Number(opts.gap) || 0))
+  const fill = opts.fill !== false
+  const orient = opts.orientation === 'portrait' || opts.orientation === 'landscape' ? opts.orientation : 'auto'
+  const own = sheet === 'own'
+  const sheetInfo = own ? null : (isSheetId(sheet) ? sheetById(sheet) : sheetById('a4'))
+
+  if (own) {
+    return {
+      cols: 1, rows: 1, count: 1, pageW: s.w, pageH: s.h, landscape: false,
+      fw: s.w, fh: s.h, gap: 0, own: true, digital: s.unit === 'px', fill,
+      scale: 1, sheetId: 'own', sheetW: s.w, sheetH: s.h, pieceW: s.w, pieceH: s.h
+    }
   }
-  const best = [false, true]
-    .map((landscape) => {
-      const pageW = landscape ? 297 : 210
-      const pageH = landscape ? 210 : 297
-      const cols = Math.floor(pageW / s.w)
-      const rows = Math.floor(pageH / s.h)
-      return { cols, rows, count: cols * rows, pageW, pageH, landscape, fw: s.w, fh: s.h, own: false }
-    })
-    .sort((a, b) => b.count - a.count || Number(a.landscape) - Number(b.landscape))[0]
-  if (!best.count) return { cols: 1, rows: 1, count: 1, pageW: s.w, pageH: s.h, landscape: false, fw: s.w, fh: s.h, own: true }
-  return best
+  if (s.unit === 'px') {
+    const fitted = fitSheet(s, sheetInfo, orient)
+    return {
+      ...fitted, cols: 1, rows: 1, count: 1, own: false, digital: true, gap: 0, fill,
+      sheetId: sheetInfo.id, sheetW: sheetInfo.w, sheetH: sheetInfo.h, pieceW: s.w, pieceH: s.h
+    }
+  }
+
+  const round = (n) => Math.floor(n * 10) / 10
+  const attempt = (landscape) => {
+    const pageW = landscape ? sheetInfo.h : sheetInfo.w
+    const pageH = landscape ? sheetInfo.w : sheetInfo.h
+    const cols = Math.floor((pageW + gap) / (s.w + gap))
+    const rows = Math.floor((pageH + gap) / (s.h + gap))
+    const count = cols * rows
+    if (!count) return null
+    const k = fill
+      ? Math.min(pageW / (cols * s.w + (cols - 1) * gap), pageH / (rows * s.h + (rows - 1) * gap))
+      : 1
+    return {
+      cols, rows, count, pageW, pageH, landscape,
+      fw: round(s.w * k), fh: round(s.h * k), gap: round(gap * k),
+      own: false, digital: false, fill, scale: Math.round(k * 1000) / 1000,
+      sheetId: sheetInfo.id, sheetW: sheetInfo.w, sheetH: sheetInfo.h, pieceW: s.w, pieceH: s.h
+    }
+  }
+  const candidates = (orient === 'auto' ? [false, true] : [orient === 'landscape'])
+    .map(attempt).filter(Boolean)
+  if (candidates.length) {
+    return candidates.sort((a, b) => b.count - a.count || b.scale - a.scale || Number(a.landscape) - Number(b.landscape))[0]
+  }
+  // La pieza es más grande que la hoja: una copia ajustada y centrada.
+  const fitted = fitSheet(s, sheetInfo, orient)
+  return {
+    ...fitted, cols: 1, rows: 1, count: 1, own: false, digital: false, gap: 0, fill,
+    sheetId: sheetInfo.id, sheetW: sheetInfo.w, sheetH: sheetInfo.h, pieceW: s.w, pieceH: s.h
+  }
 }
 
-// Pieza digital ajustada a una hoja A4 para imprimir de todos modos (una
-// por página, centrada y sin recortes).
-function fitSheet(s) {
-  const r = s.w / s.h
-  const box = r >= 1 ? { w: 270, h: 180 } : { w: 180, h: 270 }
-  let fw = box.w
-  let fh = fw / r
-  if (fh > box.h) { fh = box.h; fw = fh * r }
-  const landscape = r >= 1
-  return { pageW: landscape ? 297 : 210, pageH: landscape ? 210 : 297, landscape, fw: Math.round(fw), fh: Math.round(fh) }
+// Una copia ajustada dentro de la hoja (centrada, con margen de 10 mm).
+function fitSheet(s, sheetInfo, orient = 'auto') {
+  const margin = 10
+  const landscape = orient === 'portrait' ? false : orient === 'landscape' ? true : s.w > s.h
+  const pageW = landscape ? sheetInfo.h : sheetInfo.w
+  const pageH = landscape ? sheetInfo.w : sheetInfo.h
+  const k = Math.min((pageW - margin * 2) / s.w, (pageH - margin * 2) / s.h)
+  return {
+    pageW, pageH, landscape,
+    fw: Math.floor(s.w * k * 10) / 10,
+    fh: Math.floor(s.h * k * 10) / 10,
+    scale: Math.round(k * 1000) / 1000
+  }
 }
 
 export const FLYER_LIMITS = { title: 42, subtitle: 110, badge: 14, cta: 60, bullet: 46, contact: 40 }
