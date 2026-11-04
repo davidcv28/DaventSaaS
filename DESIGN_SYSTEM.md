@@ -528,3 +528,46 @@ no de una grilla de tarjetas.
   fuente: `manage.py seed_design_catalog --patterns-only` y
   `manage.py sync_design_neon --slug calzado` (arrastra `calzado-noche` por la
   FK `DesignStyle.pattern`).
+
+## 15. Viajero — lenguaje "diario de viaje" (`viajero`, plus)
+
+Vive en `StoreApp/domains/design/sources/viajero.html` (patrón `viajero`,
+estilos `viajero` y `viajero-noche`). Papel arena `#F5EFE3`, tinta náutica
+`#0D1A22`, coral de señalización `#E0522B` y verde mar `#1C5D57`; Fraunces
+(titulares, ejes SOFT/WONK), Instrument Sans (lectura) y JetBrains Mono
+(datos). La identidad sale del cuaderno de viaje impreso, no de una grilla
+genérica de tarjetas.
+
+- **Portada**: foto a sangre con velo en dos direcciones, riel vertical de
+  temporada, ruta punteada animada con plano, pase de abordar con los años de
+  ruta (dato real) y **ficha de agencia tipo ticket** (base / atención /
+  contacto + reservar) con muescas y marea de papel.
+- **Estructura editorial**: cada sección abre con índice `01…` en mono
+  (contador CSS), eyebrow, titular clamp y nota con filete. Cinta de destinos
+  en banda de tinta, índice numerado de categorías que se invierte al hover,
+  itinerarios con tabs reales y número de pliego en la esquina, postal de
+  bitácora con sello giratorio, cifras con filetes, garantías numeradas,
+  membresías tipo ticket, bitácora de viajeros, FAQ y CTA con marquesina.
+- **Movimiento**: marquesinas con pista duplicada (pausa en hover), reveal
+  con stagger por `--d`, progreso de lectura desde `davent:ds-frame`, hover
+  de tarjeta `translateY(-4px)` + zoom interno de foto, `prefers-reduced-motion`
+  apaga todo. Nunca se anima el alto de la portada.
+- **Trampas resueltas**: (1) **zoom infinito** — `.head-inner` tomaba su
+  mínimo de `--head-h` mientras `syncHead()` medía `head.offsetHeight`: cada
+  medición sumaba el padding y la cabecera crecía sin fin dentro del iframe
+  estirado; el mínimo ahora es `--head-base` y el token medido solo se
+  reescribe si cambió; (2) en oscuro `--band`/`--band-ink` mantienen cintas,
+  footer, hojas, tarjetas de tinta y ofertas en grafito con texto claro (usar
+  `--ink` como fondo lo invertía a bloque claro); (3) el puente inyecta el
+  toggle de tema en `.top-inner`, así que el header expone esa clase y el
+  botón se integra al final del chrome; (4) el puente arma `button.f-cat`
+  (no `.f-item`): hay que pintar ambos o el riel de filtros sale con el
+  estilo del navegador; (5) con tarjetas `.ds-offer` la lista numerada
+  repetiría el mismo contenido — se apaga con `:has`; (6) el formulario de
+  opiniones (`.ds-rev-*`) lo arma el puente y se viste en la hoja; (7) fuera
+  de la portada el header recupera papel (`html:not([data-surface="landing"])`)
+  porque el chrome blanco quedaba ilegible sobre la crema.
+- **QA**: `http://localhost:5173/viajero-qa` (tienda local, plan premium;
+  landing, catálogo, ficha y experiencias, claro/oscuro, 390 y 1280). Tras
+  editar la fuente: `manage.py seed_design_catalog` y
+  `manage.py sync_design_neon --slug viajero` (arrastra `viajero-noche`).

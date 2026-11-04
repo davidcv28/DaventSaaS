@@ -146,7 +146,7 @@ em{font-style:italic;font-variation-settings:"WONK" 1}
 }
 .btn svg{width:16px;height:16px;flex:none;transition:transform .25s var(--ease)}
 .btn:hover svg{transform:translateX(4px)}
-.btn:active{transform:scale(.985)}
+.btn:active{transform:scale(.98)}
 .btn-accent{background:var(--accent);color:var(--on-accent);border-color:var(--accent);box-shadow:0 16px 32px -18px var(--accent)}
 .btn-accent::before{content:"";position:absolute;inset:0;z-index:-1;background:var(--accent-deep);transform:translateY(101%);transition:transform .35s var(--ease)}
 .btn-accent:hover::before{transform:none}
@@ -169,6 +169,7 @@ em{font-style:italic;font-variation-settings:"WONK" 1}
 .ribbon-track>*{display:inline-flex;align-items:center;gap:10px;padding-inline:22px;position:relative}
 .ribbon-track>*+*::before{content:"";position:absolute;left:0;top:50%;width:5px;height:5px;margin-top:-2.5px;border-radius:50%;background:var(--accent)}
 @keyframes marq{to{transform:translateX(-50%)}}
+.ribbon:hover .ribbon-track,.ticker:hover .ticker-track,.cta-band:hover .cta-marquee{animation-play-state:paused}
 
 /* ---------- Header ---------- */
 .head{
@@ -178,11 +179,11 @@ em{font-style:italic;font-variation-settings:"WONK" 1}
 /* OJO: el mínimo NO puede leer --head-h (se mide desde este alto y cada
    medición sumaría el padding → cabecera creciendo sin fin). */
 .head-inner{display:flex;align-items:center;gap:28px;min-height:var(--head-base);padding-block:14px}
-.head.is-scrolled{background:color-mix(in srgb,var(--paper) 90%,transparent);backdrop-filter:blur(16px);box-shadow:0 1px 0 var(--line)}
+.head.is-scrolled{background:color-mix(in srgb,var(--paper) 96%,transparent);box-shadow:0 1px 0 var(--line)}
 .head:not(.is-scrolled){color:#fff}
 /* Fuera de la portada no hay foto detrás: el chrome vuelve a papel para que
    la marca y el menú sigan legibles sobre la crema. */
-html:not([data-ds-surface="landing"]) .head:not(.is-scrolled){color:var(--ink);background:color-mix(in srgb,var(--paper) 92%,transparent);backdrop-filter:blur(16px);box-shadow:0 1px 0 var(--line)}
+html:not([data-ds-surface="landing"]) .head:not(.is-scrolled){color:var(--ink);background:color-mix(in srgb,var(--paper) 96%,transparent);box-shadow:0 1px 0 var(--line)}
 .head-progress{position:absolute;left:0;right:0;bottom:0;height:2px;pointer-events:none;background:transparent}
 .head-progress i{display:block;height:100%;width:0;background:var(--accent);transition:width .12s linear}
 .brand{display:inline-flex;align-items:center;gap:13px;min-width:0}
@@ -426,7 +427,7 @@ html[data-ds-theme="dark"] .dest-grid .ds-cat::before{color:var(--accent)}
   font:500 10px/1 var(--mono);letter-spacing:.12em;color:#fff;
   padding:6px 8px;border-radius:6px;background:rgba(9,20,27,.42);backdrop-filter:blur(6px);
 }
-.grid-products .ds-product-link:hover{transform:translateY(-6px);box-shadow:var(--shadow-soft);border-color:color-mix(in srgb,var(--accent) 45%,var(--line))}
+.grid-products .ds-product-link:hover{transform:translateY(-4px);box-shadow:var(--shadow-soft);border-color:color-mix(in srgb,var(--accent) 45%,var(--line))}
 .grid-products .ds-product-img{
   grid-area:img;width:100%;aspect-ratio:4/3.4;object-fit:cover;background:var(--surface-2);
   transition:transform .7s var(--ease),filter .5s;
@@ -452,6 +453,7 @@ html[data-ds-theme="dark"] .grid-products .ds-product-cat{color:var(--accent)}
 .grid-products .ds-stock i{width:6px;height:6px;border-radius:50%;background:var(--ok)}
 .grid-products .ds-stock{display:none}
 .grid-products .ds-product-price{
+  font-variant-numeric:tabular-nums;
   grid-area:price;margin:0 18px;padding:12px 0 15px;border-top:1px solid var(--line);
   display:flex;align-items:baseline;flex-wrap:wrap;gap:4px 8px;
   font:600 15.5px/1.15 var(--display);position:relative;
@@ -538,7 +540,7 @@ html[data-ds-theme="dark"] .mission span{color:var(--accent)}
 }
 .stats .ds-stat:last-child{border-right:0}
 .stats .ds-stat::before{content:"";position:absolute;top:-1px;left:0;width:26px;height:1px;background:var(--accent)}
-.stats .ds-stat-value{font:500 clamp(34px,3.6vw,48px)/.95 var(--display);color:var(--ink);letter-spacing:-.03em}
+.stats .ds-stat-value{font-variant-numeric:tabular-nums;font:500 clamp(34px,3.6vw,48px)/.95 var(--display);color:var(--ink);letter-spacing:-.03em}
 .stats .ds-stat-label{font:600 9px/1.6 var(--mono);letter-spacing:.2em;text-transform:uppercase;color:var(--muted)}
 
 /* ---------- Garantías ---------- */
@@ -580,7 +582,7 @@ html[data-ds-theme="dark"] .guars .ds-guar-icon{color:var(--accent)}
 .plans .ds-plan.is-featured .ds-plan-feats{color:color-mix(in srgb,var(--band-ink) 84%,transparent)}
 .plans .ds-plan.is-featured .ds-plan-price{color:var(--accent)}
 .plans .ds-plan-name{font:600 24px/1.15 var(--display);letter-spacing:-.01em}
-.plans .ds-plan-price{font:500 32px/1 var(--display);color:var(--accent-deep);letter-spacing:-.02em}
+.plans .ds-plan-price{font-variant-numeric:tabular-nums;font:500 32px/1 var(--display);color:var(--accent-deep);letter-spacing:-.02em}
 html[data-ds-theme="dark"] .plans .ds-plan-price{color:var(--accent)}
 .plans .ds-plan-note{font:400 13px/1.62 var(--sans);color:var(--muted)}
 .plans .ds-plan-feats{display:flex;flex-direction:column;gap:10px;font:400 13.5px/1.5 var(--sans);color:var(--ink-2)}
@@ -819,7 +821,7 @@ html[data-ds-theme="dark"] .pdp-cat{color:var(--accent)}
 .pdp-info h1{margin-top:14px;font:600 clamp(30px,4vw,48px)/1.12 var(--display)}
 .pdp-ref{margin-top:10px;font:500 11px/1 var(--mono);letter-spacing:.14em;text-transform:uppercase;color:var(--muted)}
 .pdp-price{display:flex;align-items:baseline;gap:16px;margin-top:24px}
-.pdp-price b{font:700 clamp(30px,3.4vw,44px)/1 var(--sans)}
+.pdp-price b{font-variant-numeric:tabular-nums;font:700 clamp(30px,3.4vw,44px)/1 var(--sans)}
 .pdp-price s{font:400 16px/1 var(--sans);color:var(--muted)}
 .pdp-score{display:flex;align-items:baseline;gap:10px;margin-top:12px;font:400 12.5px/1 var(--sans);color:var(--muted)}
 .pdp-score b{font:700 15px/1 var(--sans);color:var(--accent-deep)}
@@ -1045,6 +1047,11 @@ html[data-ds-theme="dark"] .services-list .ds-service::before{color:var(--accent
 }
 @media (max-width:420px){
   .grid-products{grid-template-columns:1fr}
+}
+@media (hover:none){
+  .dest-grid .ds-cat:hover,.grid-products .ds-product-link:hover,.guars .ds-guar:hover,.quotes .ds-quote:hover,.offerings .ds-offer:hover,.contact-social a:hover,.foot-social a:hover{transform:none}
+  .grid-products .ds-product-link:hover .ds-product-img{transform:none}
+  .ribbon:hover .ribbon-track,.ticker:hover .ticker-track,.cta-band:hover .cta-marquee{animation-play-state:running}
 }
 @media (prefers-reduced-motion:reduce){
   *,*::before,*::after{animation-duration:.001s!important;transition-duration:.001s!important}
