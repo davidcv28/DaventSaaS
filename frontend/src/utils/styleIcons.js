@@ -147,7 +147,10 @@ export const STYLE_FAMILY = {
   'suizo-editorial': 'mono',
   'cobalto-nocturno': 'glass',
   'daven-indumentaria': 'editorial',
-  'esencial-premium': 'luxury'
+  'esencial-premium': 'luxury',
+  'movimiento': 'editorial',
+  'movimiento-noche': 'editorial',
+  'movimiento-pista': 'brutal'
 }
 
 // Plantilla -> familia por defecto (tienda sin estilo elegido).
@@ -156,6 +159,7 @@ export const TEMPLATE_FAMILY = {
   sastreria: 'editorial',
   mercado: 'editorial',
   gimnasio: 'brutal',
+  movimiento: 'editorial',
   moderntec: 'tech'
 }
 
@@ -192,7 +196,8 @@ export const STYLE_ICON_OVERRIDES = {
 export const TEMPLATE_ICON_OVERRIDES = {
   sastreria: { store: 'scissors', tag: 'percent' },
   moderntec: { store: 'terminal', sparkles: 'zap' },
-  gimnasio: { store: 'dumbbell', sparkles: 'zap', tag: 'percent' }
+  gimnasio: { store: 'dumbbell', sparkles: 'zap', tag: 'percent' },
+  movimiento: { store: 'dumbbell', sparkles: 'zap', tag: 'percent' }
 }
 
 export function familyOf({ styleId = '', template = '' } = {}) {

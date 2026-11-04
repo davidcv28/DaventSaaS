@@ -81,7 +81,7 @@ const patternDoc = ref(null)
 // la Template Definition y en la hoja store-<id>.css. El layout y el tema del
 // patrón base (esencial/raiz) NO se les aplica: les pisaba variantes firma
 // (hero 'centered') y el acento de la tienda con la paleta neutra del estilo.
-const SKIN_TEMPLATES = new Set(['mercado', 'gimnasio', 'sastreria', 'moderntec', 'indumentaria'])
+const SKIN_TEMPLATES = new Set(['mercado', 'gimnasio', 'movimiento', 'sastreria', 'moderntec', 'indumentaria'])
 //Superficie que el documento del patrón debe pintar en esta ruta. Si el
 //diseño no la declara (`surfaces`), esa ruta sigue con la plantilla Vue.
 const patternSurface = computed(() => (
@@ -278,6 +278,7 @@ const TEMPLATE_CSS = {
   raiz:      () => import('../assets/store-raiz.css'),
   mercado:   () => import('../assets/store-mercado.css'),
   gimnasio:  () => import('../assets/store-gimnasio.css'),
+  movimiento: () => import('../assets/store-movimiento.css'),
   sastreria: () => import('../assets/store-sastreria.css'),
   moderntec: () => import('../assets/store-moderntec.css'),
   indumentaria: () => import('../assets/store-indumentaria.css')
@@ -911,6 +912,16 @@ onBeforeUnmount(() => {
     <!-- ===== Barra superior ===== -->
     <header class="sp-top" :class="{ scrolled }">
       <span class="sp-progress" aria-hidden="true" :style="{ transform: `scaleX(${progress})` }"></span>
+      <!-- Movimiento: fila utilitaria fina sobre la barra principal —
+           contacto/horarios en mono (el header partido en dos filas es la
+           firma de menú del diseño). -->
+      <div v-if="pageTemplate === 'movimiento' && status === 'success'" class="sp-top-utility">
+        <div class="sp-container sp-top-utility-inner">
+          <span class="sp-top-utility-item"><AppIcon name="map-pin" :size="11" aria-hidden="true" /> {{ location || 'Estudio de entrenamiento' }}</span>
+          <span v-if="custom.hours?.[0]?.value" class="sp-top-utility-item"><AppIcon name="clock" :size="11" aria-hidden="true" /> {{ custom.hours[0].label }} · {{ custom.hours[0].value }}</span>
+          <span class="sp-top-utility-item is-right">Entrenamiento personalizado</span>
+        </div>
+      </div>
       <div class="sp-container sp-top-inner">
         <button
           v-if="hasNavMenu"

@@ -757,6 +757,7 @@ export const STORE_TEMPLATES = {
   esencial:    { label: 'Esencial',    rubro: 'general',      tier: 'base',     defaultAccent: '#0F766E', desc: 'Esencial: papel claro, tinta verde bosque y acento teal — generalista para cualquier rubro.' },
   mercado:     { label: 'Bazar',       rubro: 'bazar',        tier: 'plus',     defaultAccent: '#FFE600', desc: 'Bazar: marketplace con masthead amarillo, buscador y grilla densa de productos.' },
   gimnasio:    { label: 'Gimnasio',    rubro: 'gimnasio',     tier: 'plus',     defaultAccent: '#F97316', desc: 'Gimnasio: energía deportiva, planes y sedes.' },
+  movimiento:  { label: 'Movimiento',  rubro: 'gimnasio',     tier: 'advanced', defaultAccent: '#E4572E', desc: 'Movimiento: editorial luminoso — papel, tinta y acento señal, numeración 01/02/03 y membresías.' },
   sastreria:   { label: 'Sastrería',   rubro: 'indumentaria', tier: 'plus',     defaultAccent: '#6E4A2F', desc: 'Sastrería editorial: papel hueso, tinta y cuero, índice numerado y filas de prendas tipo fichero.' },
   moderntec:   { label: 'ModernTec',   rubro: 'tecnologia',   tier: 'plus',     defaultAccent: '#3dd6ff', desc: 'ModernTec: oscuro tecnológico, acento cyan/violeta — tiendas de tecnología, electrónica y gaming.' },
   indumentaria: { label: 'Indumentaria', rubro: 'indumentaria', tier: 'plus',   defaultAccent: '#B4442A', desc: 'Indumentaria: lookbook editorial — crudo tela, acento de temporada, rail COLECCIÓN, etiquetas colgantes y cinta marquee.' },
@@ -768,7 +769,7 @@ export const STORE_TEMPLATES = {
 export const STORE_TEMPLATE_FAMILIES = [
   { key: 'general',      label: 'Generalista',  caption: 'Retail y servicios',      templates: ['raiz'] },
   { key: 'mercado',      label: 'Generalista',  caption: 'Marketplace y retail',     templates: ['mercado'] },
-  { key: 'deporte',      label: 'Deporte',      caption: 'Gimnasios y fitness',     templates: ['gimnasio'] },
+  { key: 'deporte',      label: 'Deporte',      caption: 'Gimnasios y fitness',     templates: ['gimnasio', 'movimiento'] },
   { key: 'sastreria',    label: 'Indumentaria', caption: 'Sastrería de autor',      templates: ['sastreria'] },
   { key: 'indumentaria', label: 'Indumentaria', caption: 'Moda y lookbook',         templates: ['indumentaria'] },
   { key: 'tecnologia',   label: 'Tecnología',   caption: 'Electrónica y gaming',    templates: ['moderntec'] },
@@ -781,7 +782,7 @@ export const FAMILY_TEMPLATE_KEYS = STORE_TEMPLATE_FAMILIES.flatMap((f) => f.tem
 // :data-skin="storeSkinOf(pageTemplate)" en .store-page y resuelve la hoja
 // desde TEMPLATE_CSS con esta misma clave.
 export const STORE_TEMPLATE_SKIN = {
-  raiz: 'raiz', mercado: 'mercado', gimnasio: 'gimnasio',
+  raiz: 'raiz', mercado: 'mercado', gimnasio: 'gimnasio', movimiento: 'movimiento',
   sastreria: 'sastreria',
   moderntec: 'moderntec',
   indumentaria: 'indumentaria',

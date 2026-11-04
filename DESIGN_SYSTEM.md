@@ -282,3 +282,57 @@ Aplica a `views/store/gimnasio/` (`GyHero`, `GyStats`, `GyPlans`, `GyTeam`,
   tier `plus` (Estándar y Premium). Catálogo/ficha/servicios siguen en Raíz
   bajo `.gy-skin`. Migración del catálogo: `manage.py sync_design_neon
   --slug gimnasio` (upsert del patrón + estilos `gimnasio`/`gimnasio-dia`).
+
+## 12. Movimiento — editorial luminoso de entrenamiento (`movimiento`, advanced)
+
+Aplica a `views/store/movimiento/` (`MvHero`, `MvMarquee`, `MvMethod`,
+`MvServices`, `MvPlans`, `MvTeam`, `MvFeatured`), `assets/store-movimiento.css`
+y a los subárboles Raíz bajo `.mv-skin` (catálogo, ficha y servicios).
+
+- **Identidad**: editorial LUMINOSO (contraste directo con `gimnasio`,
+  que es la sala oscura): papel hueso `#F5F2EA`, tinta casi negra
+  `#16150F` y UN acento señal (`#E4572E` base) reservado a CTA y datos.
+- **Tipografía**: Bricolage Grotesque 700 en titulares condensados en
+  mayúsculas (`line-height .88–.94`), Instrument Sans en cuerpo y
+  JetBrains Mono en índices, datos y CTAs. `text-wrap:balance`.
+- **Portada**: composición PARTIDA (no la grilla de `GyHero`) — mitad
+  titular gigante con la última palabra en acento + chips de disciplinas,
+  mitad ficha de imagen con índice `01`, código `MV/26` y medidor de
+  datos reales (años, disciplinas, membresías en barras). Debajo corre el
+  manifiesto (`about_mission` o la línea editorial) y la marquesina
+  tipográfica `MvMarquee` (palabras del rubro, pista ×4 al 50%, pausa al
+  hover, `prefers-reduced-motion` la apaga).
+- **Secciones firma**: `MvMethod` (timeline → 3 pasos numerados 01/02/03),
+  `MvServices` (lista editorial numerada, no cards: índice, icono circular,
+  nombre condensado y flecha), `MvPlans` (membresías — precio grande,
+  nota de sesiones, bullets, CTA "Elegir" por WhatsApp; destacada con
+  borde de acento, en `pista` va en placa llena de acento), `MvTeam`
+  (fila editorial con iniciales en contorno) y `MvFeatured` (vitrina
+  revista: lead 2×2, índices, badge de ahorro, precio tachado).
+- **Menú propio**: header partido en dos filas — `.sp-top-utility` fina
+  en mono (ubicación + horarios) sobre la fila principal con marca
+  izquierda, links centrados y CTA sólido; en móvil, hamburguesa + menú
+  a pantalla completa con índice numerado por CSS counter (ni tab bar
+  de `sastreria` ni drawer de `gimnasio`). La fila utilitaria se apaga
+  ≤1024px.
+- **Estilos** (3, identidad propia): `movimiento` (claro, papel + naranja
+  señal), `movimiento-noche` (grafito cálido + acento aclarado, sin
+  `filter:invert`) y `movimiento-pista` (azul pista, palabra del titular
+  en outline `-webkit-text-stroke`, índices gigantes y plan destacado en
+  placa de acento — reglas `[data-style='movimiento-pista']`). El modo
+  noche real viaja por `[data-store-theme='dark']` y remapea las
+  `--mv-*`; el subárbol `.mv-skin` hereda las mismas vars, así que se
+  invierte solo.
+- **Trampas resueltas**: (1) el icono `activity` no existe en `AppIcon`
+  — fallback `zap`; (2) `mv-media-meter` usa `transform:translateY(100%)`
+  para colgar del marco de la ficha — en móvil vuelve a flujo
+  (`position:static`); (3) el header de dos filas necesita el div
+  `.sp-top-utility` condicional en `StorePublicLayout` (solo
+  `pageTemplate==='movimiento'`), el resto es CSS.
+- **Registro**: `fonts: ['bricolage-grotesque','instrument-sans','jetbrains-mono']`,
+  `blocks.landing` suma `about/services/timeline/plans/team`,
+  `surfaces.services`, `TEMPLATE_CSS` → `store-movimiento.css`,
+  `SKIN_TEMPLATES`, tier `advanced` (`TEMPLATE_ADVANCED` +
+  `has_design_advanced`, Premium), familia `deporte` suma `movimiento`.
+  Patrón `movimiento` + 3 estilos en `seed_data.json`; migración
+  `stores.0073`; sync: `manage.py sync_design_neon --slug movimiento`.

@@ -3746,6 +3746,280 @@
       },
       "concept": "Crema nude y rosa polvo: la vitrina de la boutique."
     }
+,
+    {
+      "slug": "movimiento",
+      "nombre": "Movimiento",
+      "categoria": "Deporte claro",
+      "style": "Deporte claro",
+      "concept": "Papel + acento señal, titulares condensados y numeración editorial.",
+      "descripcion": "Editorial luminoso de entrenamiento: papel hueso, tinta casi negra y naranja señal. Portada partida con medidor, método en pasos 01/02/03 y membresías en tarjetas.",
+      "tier": "advanced",
+      "template": "movimiento",
+      "layout": {},
+      "layout_spec": {},
+      "page_theme": "light",
+      "tokens": {
+        "palette": {
+          "accent": "#E4572E",
+          "bg": "#F5F2EA",
+          "surface": "#FCFAF4",
+          "text": "#16150F",
+          "muted": "#77736A",
+          "border": "#DCD7C8",
+          "primary": "#16150F",
+          "secondary": "#77736A",
+          "success": "#1E9E5A",
+          "danger": "#C2402E"
+        },
+        "typography": {
+          "heading": "bricolage-grotesque",
+          "subheading": "bricolage-grotesque",
+          "body": "instrument-sans",
+          "weightHeading": 700,
+          "scale": "impact",
+          "letterSpacing": "-0.01em"
+        },
+        "buttons": {
+          "shape": "square",
+          "size": "lg",
+          "style": "solid"
+        },
+        "containers": {
+          "border": "thin",
+          "density": "comfortable",
+          "radius": "sm",
+          "shadow": "none",
+          "surface": "flat"
+        },
+        "icons": {
+          "corners": "round",
+          "size": "20",
+          "stroke": "1.8",
+          "style": "line"
+        },
+        "mobile": {
+          "cardStyle": "standard",
+          "heroHeight": "tall"
+        },
+        "motion": {
+          "hover": "card-lift",
+          "intensity": "media",
+          "reveal": "fade-up"
+        },
+        "background": {
+          "overlay": "none",
+          "type": "solid",
+          "value": null
+        },
+        "preview": ""
+      },
+      "tags": [
+        "deporte",
+        "movimiento",
+        "entrenamiento",
+        "personal-trainer",
+        "funcional",
+        "pilates",
+        "fitness"
+      ],
+      "preview": "",
+      "anim": {
+        "hero": "fade-up",
+        "reveal": "fade-up",
+        "hover": "card-lift",
+        "button": "solid-press"
+      },
+      "duration": "380ms",
+      "easing": "cubic-bezier(.2,.8,.2,1)",
+      "icons": {
+        "style": "line",
+        "stroke": "1.8",
+        "size": "20",
+        "corners": "round"
+      }
+    },
+    {
+      "slug": "movimiento-noche",
+      "nombre": "Movimiento Noche",
+      "categoria": "Deporte oscuro",
+      "style": "Deporte oscuro",
+      "concept": "Grafito cálido + acento, mismo esqueleto editorial.",
+      "descripcion": "La versión nocturna del estudio: grafito cálido, tinta hueso y el acento señal aclarado para mantener contraste AA.",
+      "tier": "advanced",
+      "template": "movimiento",
+      "layout": {},
+      "layout_spec": {},
+      "page_theme": "dark",
+      "tokens": {
+        "palette": {
+          "accent": "#F26B3F",
+          "bg": "#1B1915",
+          "surface": "#23201A",
+          "text": "#F2EFE5",
+          "muted": "#9B9689",
+          "border": "#37332A",
+          "primary": "#F2EFE5",
+          "secondary": "#9B9689",
+          "success": "#F26B3F",
+          "danger": "#F45B4C"
+        },
+        "typography": {
+          "heading": "bricolage-grotesque",
+          "subheading": "bricolage-grotesque",
+          "body": "instrument-sans",
+          "weightHeading": 700,
+          "scale": "impact",
+          "letterSpacing": "-0.01em"
+        },
+        "buttons": {
+          "shape": "square",
+          "size": "lg",
+          "style": "solid"
+        },
+        "containers": {
+          "border": "thin",
+          "density": "comfortable",
+          "radius": "sm",
+          "shadow": "none",
+          "surface": "flat"
+        },
+        "icons": {
+          "corners": "round",
+          "size": "20",
+          "stroke": "1.8",
+          "style": "line"
+        },
+        "mobile": {
+          "cardStyle": "standard",
+          "heroHeight": "tall"
+        },
+        "motion": {
+          "hover": "card-lift",
+          "intensity": "media",
+          "reveal": "fade-up"
+        },
+        "background": {
+          "overlay": "none",
+          "type": "solid",
+          "value": null
+        },
+        "preview": ""
+      },
+      "tags": [
+        "deporte",
+        "movimiento",
+        "entrenamiento",
+        "funcional",
+        "fitness"
+      ],
+      "preview": "",
+      "anim": {
+        "hero": "fade-up",
+        "reveal": "fade-up",
+        "hover": "card-lift",
+        "button": "solid-press"
+      },
+      "duration": "380ms",
+      "easing": "cubic-bezier(.2,.8,.2,1)",
+      "icons": {
+        "style": "line",
+        "stroke": "1.8",
+        "size": "20",
+        "corners": "round"
+      }
+    },
+    {
+      "slug": "movimiento-pista",
+      "nombre": "Movimiento Pista",
+      "categoria": "Deporte intenso",
+      "style": "Deporte intenso",
+      "concept": "Bloques de acento grandes y numeración gigante de fondo.",
+      "descripcion": "La cara intensa: azul pista en bloques grandes, palabra del titular en outline y numeración gigante detrás de cada sección.",
+      "tier": "advanced",
+      "template": "movimiento",
+      "layout": {},
+      "layout_spec": {},
+      "page_theme": "light",
+      "tokens": {
+        "palette": {
+          "accent": "#0F5BD8",
+          "bg": "#F2F4F8",
+          "surface": "#FAFBFD",
+          "text": "#0E1524",
+          "muted": "#5E6472",
+          "border": "#C9CFDC",
+          "primary": "#0E1524",
+          "secondary": "#5E6472",
+          "success": "#0F5BD8",
+          "danger": "#D92D20"
+        },
+        "typography": {
+          "heading": "bricolage-grotesque",
+          "subheading": "bricolage-grotesque",
+          "body": "instrument-sans",
+          "weightHeading": 700,
+          "scale": "impact",
+          "letterSpacing": "-0.01em"
+        },
+        "buttons": {
+          "shape": "square",
+          "size": "lg",
+          "style": "solid"
+        },
+        "containers": {
+          "border": "thin",
+          "density": "comfortable",
+          "radius": "sm",
+          "shadow": "none",
+          "surface": "flat"
+        },
+        "icons": {
+          "corners": "round",
+          "size": "20",
+          "stroke": "1.8",
+          "style": "line"
+        },
+        "mobile": {
+          "cardStyle": "standard",
+          "heroHeight": "tall"
+        },
+        "motion": {
+          "hover": "card-lift",
+          "intensity": "media",
+          "reveal": "fade-up"
+        },
+        "background": {
+          "overlay": "none",
+          "type": "solid",
+          "value": null
+        },
+        "preview": ""
+      },
+      "tags": [
+        "deporte",
+        "movimiento",
+        "entrenamiento",
+        "crossfit",
+        "running",
+        "fitness"
+      ],
+      "preview": "",
+      "anim": {
+        "hero": "fade-up",
+        "reveal": "fade-up",
+        "hover": "card-lift",
+        "button": "solid-press"
+      },
+      "duration": "380ms",
+      "easing": "cubic-bezier(.2,.8,.2,1)",
+      "icons": {
+        "style": "line",
+        "stroke": "1.8",
+        "size": "20",
+        "corners": "round"
+      }
+    }
   ],
   "patterns": [
     {
@@ -5210,6 +5484,218 @@
       "variables": {},
       "supports_dark_mode": true,
       "style": "indumentaria"
+    },
+    {
+      "slug": "movimiento",
+      "nombre": "Movimiento",
+      "categoria": "deporte",
+      "descripcion": "Estudio de movimiento y entrenamiento personalizado: editorial luminoso con composición partida, chips de disciplinas, manifiesto, método numerado, lista editorial de servicios y membresías en tarjetas de precio.",
+      "tier": "advanced",
+      "template": "movimiento",
+      "layout": {
+        "landing": [
+          {
+            "id": "announcements",
+            "variant": "static",
+            "enabled": true,
+            "order": 0
+          },
+          {
+            "id": "hero",
+            "enabled": true,
+            "order": 1
+          },
+          {
+            "id": "categories",
+            "variant": "row",
+            "enabled": true,
+            "order": 2
+          },
+          {
+            "id": "featured",
+            "variant": "grid",
+            "enabled": true,
+            "order": 3
+          },
+          {
+            "id": "about",
+            "enabled": true,
+            "order": 4
+          },
+          {
+            "id": "services",
+            "enabled": true,
+            "order": 5
+          },
+          {
+            "id": "timeline",
+            "enabled": true,
+            "order": 6
+          },
+          {
+            "id": "plans",
+            "variant": "cards",
+            "enabled": true,
+            "order": 7
+          },
+          {
+            "id": "benefits",
+            "enabled": true,
+            "order": 8
+          },
+          {
+            "id": "stats",
+            "variant": "band",
+            "enabled": true,
+            "order": 9
+          },
+          {
+            "id": "gallery",
+            "variant": "grid",
+            "enabled": true,
+            "order": 10
+          },
+          {
+            "id": "testimonials",
+            "variant": "cards",
+            "enabled": true,
+            "order": 11
+          },
+          {
+            "id": "team",
+            "enabled": true,
+            "order": 12
+          },
+          {
+            "id": "faq",
+            "variant": "accordion",
+            "enabled": true,
+            "order": 13
+          },
+          {
+            "id": "cta",
+            "variant": "band",
+            "enabled": true,
+            "order": 14
+          },
+          {
+            "id": "contact",
+            "variant": "card",
+            "enabled": true,
+            "order": 15
+          }
+        ],
+        "catalog": [
+          {
+            "id": "note",
+            "enabled": true,
+            "order": 0
+          },
+          {
+            "id": "promo",
+            "enabled": true,
+            "order": 1
+          },
+          {
+            "id": "filters",
+            "enabled": true,
+            "order": 2
+          },
+          {
+            "id": "sort",
+            "enabled": true,
+            "order": 3
+          },
+          {
+            "id": "grid",
+            "enabled": true,
+            "order": 4
+          }
+        ],
+        "services": [
+          {
+            "id": "hero",
+            "enabled": true,
+            "order": 0
+          },
+          {
+            "id": "band",
+            "enabled": true,
+            "order": 1
+          },
+          {
+            "id": "picker",
+            "enabled": true,
+            "order": 2
+          },
+          {
+            "id": "steps",
+            "enabled": true,
+            "order": 3
+          },
+          {
+            "id": "form",
+            "enabled": true,
+            "order": 4
+          },
+          {
+            "id": "faq",
+            "enabled": true,
+            "order": 5
+          }
+        ],
+        "decorations": [
+          "extras"
+        ]
+      },
+      "tokens": {
+        "accent": "#E4572E",
+        "palette": {
+          "accent": "#E4572E",
+          "primary": "#16150F",
+          "secondary": "#77736A",
+          "bg": "#F5F2EA",
+          "surface": "#FCFAF4",
+          "text": "#16150F",
+          "muted": "#77736A",
+          "border": "#DCD7C8",
+          "success": "#1E9E5A",
+          "danger": "#C2402E"
+        },
+        "fonts": [
+          "bricolage-grotesque",
+          "instrument-sans"
+        ],
+        "radius": "4px",
+        "anim": {
+          "hero": "fade-up",
+          "reveal": "fade-up",
+          "hover": "card-lift",
+          "button": "solid-press"
+        },
+        "easing": "cubic-bezier(.2,.8,.2,1)",
+        "duration": "380ms",
+        "icons": {
+          "style": "line",
+          "stroke": "1.8",
+          "size": "20",
+          "corners": "round"
+        }
+      },
+      "tags": [
+        "deporte",
+        "movimiento",
+        "entrenamiento",
+        "personal-trainer",
+        "funcional",
+        "pilates",
+        "crossfit",
+        "fitness"
+      ],
+      "preview": "",
+      "variables": {},
+      "supports_dark_mode": true,
+      "style": "movimiento"
     }
   ]
 }

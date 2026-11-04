@@ -22,6 +22,7 @@ import { STORE_TEMPLATE_RETIRED_MAP, STORE_TEMPLATES, SITE_TEMPLATE_KEYS } from 
 import raiz         from './raiz/index.js'
 import mercado      from './mercado/index.js'
 import gimnasio     from './gimnasio/index.js'
+import movimiento   from './movimiento/index.js'
 import sastreria    from './sastreria/index.js'
 import moderntec    from './moderntec/index.js'
 import indumentaria from './indumentaria/index.js'
@@ -30,7 +31,7 @@ import indumentaria from './indumentaria/index.js'
 // empresa — no ofrece Catálogo ni Suscripciones (site_templates recortado).
 const ruta = { ...raiz, pages: ['landing', 'services'] }
 
-export const TEMPLATE_DEFS = { raiz, mercado, gimnasio, sastreria, moderntec, indumentaria, ruta }
+export const TEMPLATE_DEFS = { raiz, mercado, gimnasio, movimiento, sastreria, moderntec, indumentaria, ruta }
 
 export const DEFAULT_TEMPLATE = 'raiz'
 
