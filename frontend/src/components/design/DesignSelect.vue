@@ -8,7 +8,7 @@ import AppIcon from '../AppIcon.vue'
 
 const props = defineProps({
   modelValue: { type: [String, Number], default: '' },
-  // [{ value, label, swatch?, icon?, disabled? }] o { groups: [{ label, options }] }
+  // [{ value, label, swatch?, icon?, img?, imgW?, imgH?, imgAlt?, badge?, badgeTone?, disabled? }] o { groups: [{ label, options }] }
   options: { type: Array, default: () => [] },
   groups: { type: Array, default: () => [] },
   placeholder: { type: String, default: 'Elegí una opción…' },
@@ -99,7 +99,8 @@ onBeforeUnmount(() => {
       aria-haspopup="listbox" :aria-expanded="open" :disabled="disabled" @click="toggle"
     >
       <AppIcon v-if="icon" :name="icon" :size="15" class="ds-icon" aria-hidden="true" />
-      <span v-if="selected?.swatch" class="ds-swatch" :style="{ background: selected.swatch }" aria-hidden="true"></span>
+      <img v-if="selected?.img" :src="selected.img" :alt="selected.imgAlt || ''" :width="selected.imgW || undefined" :height="selected.imgH || undefined" class="ds-thumb" aria-hidden="true" />
+      <span v-else-if="selected?.swatch" class="ds-swatch" :style="{ background: selected.swatch }" aria-hidden="true"></span>
       <AppIcon v-else-if="selected?.icon" :name="selected.icon" :size="15" class="ds-opt-icon" aria-hidden="true" />
       <span class="ds-label" :class="{ 'is-empty': !selected }" :style="selected?.style">{{ selected?.label || placeholder }}</span>
       <AppIcon name="chevron-down" :size="15" class="ds-chev" aria-hidden="true" />
@@ -117,7 +118,8 @@ onBeforeUnmount(() => {
           role="option" :aria-selected="String(o.value) === String(modelValue)" :disabled="o.disabled"
           @click="pick(o)"
         >
-          <span v-if="o.swatch" class="ds-swatch" :style="{ background: o.swatch }" aria-hidden="true"></span>
+          <img v-if="o.img" :src="o.img" :alt="o.imgAlt || ''" :width="o.imgW || undefined" :height="o.imgH || undefined" class="ds-thumb" loading="lazy" aria-hidden="true" />
+          <span v-else-if="o.swatch" class="ds-swatch" :style="{ background: o.swatch }" aria-hidden="true"></span>
           <AppIcon v-else-if="o.icon" :name="o.icon" :size="15" class="ds-opt-icon" aria-hidden="true" />
           <span class="ds-option-label">
             <span class="ds-option-text" :style="o.style">{{ o.label }}</span>
@@ -156,6 +158,8 @@ onBeforeUnmount(() => {
   border: 1px solid rgba(15, 23, 42, .18); box-shadow: inset 0 0 0 2px rgba(255, 255, 255, .65);
 }
 .ds-opt-icon { flex: none; color: var(--ink-2, #334155); }
+.ds-thumb { flex: none; height: 24px; width: auto; max-width: 96px; object-fit: contain; display: block; }
+.ds-option .ds-thumb { height: 30px; max-width: 120px; }
 .ds-menu {
   position: absolute; z-index: 30; top: calc(100% + 6px); left: 0; right: 0;
   max-height: min(300px, 50vh); overflow-y: auto; padding: 6px;
