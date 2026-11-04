@@ -415,3 +415,66 @@ JetBrains Mono. Reglas de 2px, retícula visible y numeración de pliego.
   `impacto`/`impacto-noche`/`impacto-arena`/`impacto-blanco` en
   `seed_data.json`. QA: `/mi-qa` (papel) y `/mi-qa-noche` (grafito); sync del
   catálogo: `manage.py sync_design_neon --slug impacto`.
+
+## 14. Moda — lenguaje "fashion club editorial" (`moda`, plus)
+
+Aplica a `StoreApp/domains/design/sources/moda.html` (patrón `moda`) y a los
+estilos `moda` / `moda-noche` de `seed_data.json`. Es un documento de patrón
+completo: landing, catálogo, ficha y servicios salen del mismo HTML/CSS/JS.
+
+- **Dirección**: revista de moda de quiosco, no e-commerce genérico. Papel
+  hueso (`#F2EDE3`), tinta (`#171410`) y **un solo acento de temporada**
+  (`#C93218`; noche `#FF8A3C` sobre grafito `#121110`). DM Serif Display para
+  la voz de marca (titulares, wordmark, precios de ficha), Instrument Sans para
+  lectura y JetBrains Mono para datos, etiquetas, precios y numeración. El
+  acento puro se reserva a display, fondos y filetes; el texto chico usa
+  `--accent-text` (acento mezclado con la tinta) y sobre bandas de tinta
+  `--accent-on-ink`, para no romper AA con el acento de temporada.
+- **Firma visual**: retícula con filetes de 1px, numeración de edición
+  `01 / Líneas`…, cinta de anuncios en loop, cinta de categorías, sello
+  circular giratorio con el nombre real, cinta vertical "Colección {año}",
+  marcas de corte en la portada, fondo de trama de puntos, índice de líneas
+  numerado, fichas de producto con badge de ahorro real y lookbook con
+  contador. Nada de tiles de "Sale hasta 75%" ni marcas inventadas: las
+  ofertas salen de `data-off` del descuento vigente y las líneas de
+  `{{categories}}`.
+- **Secciones**: portada editorial → cinta de líneas → índice → vitrina con
+  tabs por categoría real → atelier (años, relato, misión, especialidades,
+  cifras y lookbook) → garantías → membresías → testimonios → FAQ → CTA en
+  banda de tinta → contacto con formulario del puente → pie. Cada bloque
+  dinámico vive en `data-flag` y se apaga solo si su fragmento viene vacío
+  (`data-hide-if-empty`, `:has()`, `.ds-zone`).
+- **Catálogo**: masthead "Catálogo {tienda}" con `ARCHIVO` en contorno, buscador
+  con sugerencias, riel de filtros (líneas, marcas, precio, ofertas), contador
+  del puente, vista grilla/lista y orden. En móvil el riel es hoja lateral
+  (`data-ds-filters-panel` + `is-open`); no usar `position:fixed` para nada que
+  no sea chrome declarado con `data-ds-pin`.
+- **Ficha**: media 1/1 (la imagen de origen es cuadrada), ficha `Nº`, precio
+  mono, ficha técnica real, vendedor, opiniones con formulario del puente y
+  relacionados. Si no hay opiniones, el estado vacío lo escribe la hoja
+  (`.ds-rev-list:empty::before`), nunca un bloque inventado.
+- **Movimiento**: entrada de portada por líneas + `clip-path`, revelado por
+  scroll alimentado por `davent:ds-frame` (el iframe va estirado y el scroll es
+  del host), parallax de portada con puntero, marquesinas con pista duplicada
+  al 50% (pausa al hover), sello giratorio, contadores de cifras y barra de
+  progreso de lectura. Solo `transform`/`opacity`; `prefers-reduced-motion`
+  apaga todo y deja la página completa.
+- **Trampas resueltas**: (1) el CSP del documento solo permite
+  `style-src 'unsafe-inline'`, así que un `<link>` a Google Fonts se bloquea:
+  las familias viajan como `@font-face` desde `fonts.gstatic.com` (`font-src
+  https:`); (2) `DesignPattern.render` interpola **solo el HTML**, no el CSS:
+  nunca poner `{{variable}}` en una hoja — el monograma del hero es un
+  `.hero-ghost` real detrás de la imagen; (3) en oscuro las superficies se
+  fijan a la piel noche porque `--ds-bg` conserva la paleta clara publicada
+  (el acento sí viaja desde `--ds-accent`); (4) un `.ds-zone` vacío dentro de
+  una página hace que el puente oculte el `[data-flag]` completo — no marcar
+  `.offerings` como `.ds-zone` o la página Servicios desaparece; (5) el
+  `theme_toggle` lo inyecta el puente en `.top-inner`: el orden móvil se
+  resuelve con `order` (tema antes que hamburguesa); (6) los enlaces con
+  `href=""` se apagan con `a[href=""]{display:none}` para no dejar iconos
+  huérfanos cuando la tienda no cargó ese canal.
+- **QA**: `http://localhost:5173/moda-qa` (tienda local de prueba; landing,
+  catálogo, ficha, servicios y modo noche). Tras editar la fuente:
+  `manage.py seed_design_catalog --patterns-only` y
+  `manage.py sync_design_neon --slug moda` (el comando arrastra también el
+  estilo `moda-noche` por la FK `DesignStyle.pattern`).

@@ -4553,7 +4553,7 @@
       "pattern": "moda",
       "tokens": {
         "palette": {
-          "accent": "#D8381B",
+          "accent": "#C93218",
           "primary": "#171410",
           "secondary": "#3A342B",
           "bg": "#F2EDE3",
@@ -6543,9 +6543,9 @@
         ]
       },
       "tokens": {
-        "accent": "#D8381B",
+        "accent": "#C93218",
         "palette": {
-          "accent": "#D8381B",
+          "accent": "#C93218",
           "primary": "#171410",
           "secondary": "#3A342B",
           "bg": "#F2EDE3",
