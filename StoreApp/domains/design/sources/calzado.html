@@ -121,18 +121,37 @@ html.m-lock,html.m-lock body{overflow:hidden}
 
 /* ── hero billboard ── */
 .hero{position:relative;min-height:max(560px,92vh);display:flex;align-items:center;justify-content:center;color:#fff;overflow:hidden}
-.hero-img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+.hero-img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;animation:kenburns 22s var(--ease-soft, ease-in-out) infinite alternate;will-change:transform}
+@keyframes kenburns{from{transform:scale(1)}to{transform:scale(1.08)}}
 .hero::after{content:"";position:absolute;inset:0;background:linear-gradient(180deg,rgba(0,0,0,.28),rgba(0,0,0,.12) 45%,rgba(0,0,0,.5))}
 .hero-in{position:relative;z-index:2;text-align:center;padding:90px 20px 110px;max-width:900px}
 .hero h1{font-size:clamp(52px,9vw,110px);font-weight:200;letter-spacing:.02em;color:#fff;text-shadow:0 2px 30px rgba(0,0,0,.35)}
 .hero-sub{margin-top:14px;font-family:var(--font-display);font-size:clamp(10px,1.4vw,13px);font-weight:400;letter-spacing:.34em;text-transform:uppercase;color:rgba(255,255,255,.85)}
 .hero-social{display:flex;justify-content:center;gap:10px;margin-top:30px}
-.hero-social a{display:grid;place-items:center;width:34px;height:34px;border:1px solid rgba(255,255,255,.5);border-radius:50%;color:#fff;font-size:12px}
-.hero-social a:hover{background:var(--accent);border-color:var(--accent)}
+.hero-social a{display:grid;place-items:center;width:34px;height:34px;border:1px solid rgba(255,255,255,.5);border-radius:50%;color:#fff;font-size:12px;transition:background .2s,border-color .2s,transform .2s}
+.hero-social a:hover{background:var(--accent);border-color:var(--accent);transform:translateY(-2px)}
 .hero-social a[href=""]{display:none}
 .hero-dots{position:absolute;left:0;right:0;bottom:34px;z-index:2;display:flex;justify-content:center;gap:9px}
 .hero-dots i{width:9px;height:9px;border-radius:50%;border:1.5px solid #fff}
 .hero-dots i:first-child{background:var(--accent);border-color:var(--accent)}
+.hero-dots i{animation:dotpulse 4.5s ease-in-out infinite}
+.hero-dots i:nth-child(2){animation-delay:.9s}
+.hero-dots i:nth-child(3){animation-delay:1.8s}
+.hero-dots i:nth-child(4){animation-delay:2.7s}
+.hero-dots i:nth-child(5){animation-delay:3.6s}
+@keyframes dotpulse{0%,20%,100%{transform:scale(1);opacity:.65}10%{transform:scale(1.35);opacity:1}}
+.hero-cue{position:absolute;left:50%;bottom:64px;z-index:2;transform:translateX(-50%);color:rgba(255,255,255,.8);animation:cuefloat 2.2s ease-in-out infinite}
+.hero-cue svg{width:22px;height:22px}
+@keyframes cuefloat{0%,100%{transform:translate(-50%,0)}50%{transform:translate(-50%,8px)}}
+
+/* ── cinta marquee (loop) con datos de la tienda ── */
+.ribbon{background:#111;color:#fff;overflow:hidden;padding:11px 0;border-top:1px solid rgba(255,255,255,.12)}
+.ribbon-track{display:flex;gap:0;white-space:nowrap;width:max-content;animation:ribbon 26s linear infinite}
+.ribbon-track span{display:inline-flex;align-items:center;gap:26px;padding-right:26px;
+  font-family:var(--font-display);font-size:11px;font-weight:600;letter-spacing:.24em;text-transform:uppercase}
+.ribbon-track b{color:var(--accent);font-weight:600}
+@keyframes ribbon{to{transform:translateX(-50%)}}
+html[data-ds-theme="dark"] .ribbon,html[data-ds-style="calzado-noche"] .ribbon{background:#0E0E0E}
 
 /* ── collage mosaico ── */
 .mosaic{display:grid;grid-template-columns:repeat(4,1fr);grid-auto-rows:220px;gap:0}
@@ -156,11 +175,13 @@ html.m-lock,html.m-lock body{overflow:hidden}
 .panel .shop:hover{filter:brightness(1.15)}
 @media(max-width:860px){
   .mosaic{grid-template-columns:repeat(2,1fr);grid-auto-rows:190px}
-  .tile.big,.mosaic .ds-shot:first-of-type{grid-column:span 2;grid-row:span 1}
+  .tile.big{grid-column:span 2;grid-row:span 1}
+  .mosaic .ds-shot:first-of-type{grid-column:auto;grid-row:auto}
 }
 @media(max-width:520px){
-  .mosaic{grid-template-columns:1fr;grid-auto-rows:230px}
-  .tile.big,.mosaic .ds-shot:first-of-type{grid-column:auto;grid-row:auto}
+  .mosaic{grid-template-columns:repeat(2,1fr);grid-auto-rows:160px}
+  .tile.big{grid-column:span 2}
+  .panel{grid-column:span 2;min-height:0;padding:22px}
 }
 
 /* ── secciones ── */
@@ -400,6 +421,11 @@ html[data-ds-theme="dark"] .ds-plan:nth-child(even) .ds-plan-price,html[data-ds-
 .promo::after{content:"";position:absolute;inset:0;background:linear-gradient(90deg,rgba(0,0,0,.55),transparent 70%)}
 .promo span{position:absolute;z-index:2;left:18px;top:50%;transform:translateY(-50%);color:#fff;
   font-family:var(--font-display);font-size:22px;font-weight:600;text-shadow:0 1px 10px rgba(0,0,0,.4)}
+.promo.solid{background:#111}
+.promo.solid::after{display:none}
+.promo.solid span{position:static;transform:none;display:grid;place-items:center;min-height:120px;
+  font-size:clamp(20px,3vw,30px);font-weight:200;letter-spacing:.06em;text-transform:uppercase;text-shadow:none}
+.promo.solid span::after{content:"";display:block;width:44px;height:2px;background:var(--accent);margin-top:8px}
 .cat-bar{display:flex;justify-content:space-between;align-items:center;gap:14px;flex-wrap:wrap;
   border:1px solid var(--line);background:var(--surface);padding:10px 14px;margin-bottom:16px}
 .cat-count{font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--muted)}
@@ -427,6 +453,10 @@ html[data-ds-theme="dark"] .pdp-gallery,html[data-ds-style="calzado-noche"] .pdp
 .pdp-thumbs span{border:1px solid var(--line);background:#fff;aspect-ratio:1/1;display:grid;place-items:center;overflow:hidden}
 html[data-ds-theme="dark"] .pdp-thumbs span,html[data-ds-style="calzado-noche"] .pdp-thumbs span{background:#262626}
 .pdp-thumbs img{width:100%;height:100%;object-fit:cover}
+/* La tienda trae una sola foto: cada miniatura la recorta distinto para
+   simular las vistas alternas del diseño original. */
+.pdp-thumbs span:nth-child(2) img{object-position:center 20%;transform:scale(1.35)}
+.pdp-thumbs span:nth-child(3) img{object-position:center 85%;transform:scale(1.35)}
 .pdp-info .pdp-name{font-family:var(--font-display);font-size:clamp(20px,2.6vw,28px);font-weight:600;color:var(--accent)}
 .pdp-price{display:flex;align-items:baseline;gap:12px;margin-top:10px}
 .pdp-price b{font-family:var(--font-display);font-size:24px;font-weight:700}
@@ -556,7 +586,15 @@ html[data-ds-theme="dark"] .pdp-thumbs span,html[data-ds-style="calzado-noche"] 
       </div>
     </div>
     <div class="hero-dots" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i></div>
+    <span class="hero-cue" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><path d="M12 5v14M6 13l6 6 6-6"/></svg></span>
   </section>
+
+  <div class="ribbon" aria-hidden="true">
+    <div class="ribbon-track">
+      <span>{{store_name}} <b>✦</b> {{store_tagline}} <b>✦</b> {{store_location}} <b>✦</b> {{store_hours}} <b>✦</b></span>
+      <span>{{store_name}} <b>✦</b> {{store_tagline}} <b>✦</b> {{store_location}} <b>✦</b> {{store_hours}} <b>✦</b></span>
+    </div>
+  </div>
 
   <section id="destacados" data-flag="catalog">
     <div class="mosaic reveal">
@@ -796,8 +834,8 @@ html[data-ds-theme="dark"] .pdp-thumbs span,html[data-ds-style="calzado-noche"] 
 
       <div class="cat-results">
         <div class="cat-promo">
-          <figure class="promo"><img src="{{store_cover}}" alt=""><span>40% off</span></figure>
-          <figure class="promo"><img src="{{store_logo}}" alt=""><span>Nuevos ingresos</span></figure>
+          <figure class="promo"><img src="{{store_cover}}" alt=""><span>{{store_tagline}}</span></figure>
+          <figure class="promo solid"><span>{{store_name}}</span></figure>
         </div>
         <div class="cat-bar">
           <p class="cat-count" data-ds-count aria-live="polite"></p>
