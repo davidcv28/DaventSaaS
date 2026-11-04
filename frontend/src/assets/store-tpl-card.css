@@ -71,6 +71,24 @@
   place-items: center;
   color: var(--tpc-ph-ink, var(--sp-muted, #94a3b8));
 }
+/* Etiqueta de la campaña que firma la oferta (Hot Sale, Navidad…):
+   esquina inferior de la media, sin tapar precio ni nombre y sin CLS
+   (width/height viajan en el markup). */
+.tpc-media img.tpc-campaign {
+  position: absolute;
+  inset-inline-start: 10px;
+  bottom: 10px;
+  z-index: 2;
+  height: 22px;
+  width: auto;
+  max-width: 45%;
+  object-fit: contain;
+  opacity: 1;
+  border-radius: 3px;
+  pointer-events: none;
+}
+.tpc-campaign ~ .tpc-idx,
+.tpc-idx ~ .tpc-campaign { bottom: 34px; }
 .tpc-idx {
   position: absolute;
   inset-inline-start: 10px;

@@ -7,4 +7,5 @@ from .serializers import (
     ProductPublicSerializer,
     ProductSerializer,
     ProductSerializerList,
+    SpecialOfferCampaignSerializer,
 )

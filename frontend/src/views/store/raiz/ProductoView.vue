@@ -182,6 +182,14 @@ onMounted(() => {
                     Promo {{ productDiscount(product).name }}<span v-if="offerEndsLabel(productDiscount(product))" class="rz-pdp-promo-ends"> · {{ offerEndsLabel(productDiscount(product)) }}</span>
                   </span>
                 </p>
+                <img
+                  v-if="productDiscount(product)?.campaign?.label_url" class="rz-pdp-campaign"
+                  :src="productDiscount(product).campaign.label_url"
+                  :alt="productDiscount(product).campaign.label_alt || productDiscount(product).campaign.name"
+                  :width="productDiscount(product).campaign.label_width || undefined"
+                  :height="productDiscount(product).campaign.label_height || undefined"
+                  loading="lazy" decoding="async"
+                />
                 <p class="rz-pdp-pay">
                   <AppIcon name="credit-card" :size="15" aria-hidden="true" />
                   Medios de pago, cuotas y envío se coordinan con el vendedor

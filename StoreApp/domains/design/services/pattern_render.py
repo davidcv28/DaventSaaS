@@ -267,19 +267,40 @@ def _product_fragment(store, products = None, flags = None):
             .select_related('category', 'brand')
             .order_by('-created_at')[:FRAGMENT_LIMIT]
         )
+    from StoreApp.domains.catalog.services.services import (
+        effective_pricing_of,
+        running_discounts_of,
+    )
+    discounts = running_discounts_of(store)
     cards = []
     for product in products:
         image = object_url(product.image_key)
-        amount = product.offer_price if product.offer_price is not None else product.price
+        effective_offer, effective_discount = effective_pricing_of(product, discounts)
+        amount = effective_offer if effective_offer is not None else product.price
         #Sin precio cargado la tarjeta no inventa un $0: manda a consultar.
         price = _money(amount) if _amount(amount) else 'Consultar'
         old = ''
         off = ''
-        if product.offer_price is not None and _amount(product.price):
+        if effective_offer is not None and _amount(product.price):
             old = f'<s class="ds-product-old">{_money(product.price)}</s>'
             #Porcentaje de ahorro para el badge del marketplace: solo el
             #número, la etiqueta la dibuja la hoja del diseño.
             off = str(max(1, min(99, int(round((1 - _amount(amount) / _amount(product.price)) * 100)))))
+        #Etiqueta de campaña del descuento que firma la oferta (máx. 1 por
+        #tarjeta): la URL y el alt viajan en data-attrs para que el documento
+        #la pinte sin pedir nada — el <img> ya trae width/height (sin CLS).
+        campaign = getattr(effective_discount, 'campaign', None)
+        campaign_attr = ''
+        campaign_img = ''
+        if campaign is not None:
+            label_url = object_url(campaign.label_key, private = True)
+            if label_url:
+                campaign_attr = f' data-campaign-label="{_attr(label_url)}"'
+                campaign_img = (
+                    f'<img class="ds-campaign-label" src="{_attr(label_url)}"'
+                    f' width="{campaign.label_width or 90}" height="{campaign.label_height or 24}"'
+                    f' alt="{_attr(campaign.label_alt or campaign.name)}" loading="lazy" decoding="async">'
+                )
         media = (
             f'<img class="ds-product-img" src="{_attr(image)}" alt="{_attr(product.name)}" loading="lazy" decoding="async">'
             if image else '<span class="ds-product-img is-empty" aria-hidden="true"></span>'
@@ -302,8 +323,8 @@ def _product_fragment(store, products = None, flags = None):
             f'<small class="ds-product-desc">{escape(_text(product.description, 110))}</small>'
             '</span>'
             f'<span class="ds-product-cat">{escape(category)}</span>'
-            f'<span class="ds-product-price"{off_attr}>'
-            f'<span class="ds-product-amount">{price}</span>{old}</span>'
+            f'<span class="ds-product-price"{off_attr}{campaign_attr}>'
+            f'{campaign_img}<span class="ds-product-amount">{price}</span>{old}</span>'
             '</a></article>'
         )
     if not cards:

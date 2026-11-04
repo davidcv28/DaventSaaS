@@ -7,7 +7,7 @@ cupos del plan se rechequean bajo lock en el create.
 """
 import secrets
 import time
-from datetime import timedelta
+from datetime import timedelta, timezone as dt_timezone
 
 from django.contrib.auth.models import User
 from django.core import signing
@@ -25,6 +25,7 @@ from StoreApp.domains.catalog.models import (
     Discount,
     Product,
     ProductReview,
+    SpecialOfferCampaign,
 )
 from StoreApp.domains.stores.models import Store, StoreCustomization
 from StoreApp.domains.stores.services.contact import CAPTCHA_SALT, _answer_hash
@@ -34,6 +35,7 @@ CATEGORIES_URL    =   '/api/categories/'
 BRANDS_URL        =   '/api/brands/'
 PRODUCTS_URL      =   '/api/products/'
 DISCOUNTS_URL     =   '/api/discounts/'
+OFFERS_URL        =   '/api/offers/'
 REVIEWS_URL       =   '/api/reviews/'
 PUBLIC_CATALOG    =   '/api/stores/public/{slug}/catalog/'
 PUBLIC_STORE      =   '/api/stores/public/{slug}/'
@@ -469,7 +471,7 @@ class DiscountPublicTests(TestCase):
         #El producto expone qué promo firma su oferta (nombre, %, fin) y la
         #lista de promos vigentes viaja a nivel catálogo para el banner.
         calza           =   next(p for p in products if p['name'] == 'Calza')
-        self.assertEqual(calza['discount'], {'name': 'Promo', 'percent': 25, 'ends_at': None})
+        self.assertEqual(calza['discount'], {'name': 'Promo', 'percent': 25, 'ends_at': None, 'campaign': None})
         self.assertEqual([p['name'] for p in response.data['promotions']], ['Promo'])
 
     def test_winning_discount_is_none_when_manual_offer_wins(self):
@@ -1074,3 +1076,146 @@ class PriceUpdateTests(TestCase):
         response        =   client.get(EXPORT_PRICES_URL)
         self.assertEqual(response.status_code, 200)
         self.assertIn('Calza', response.content.decode('utf-8-sig'))
+
+
+class SpecialOfferCampaignTests(TestCase):
+    """
+    Campañas de ofertas (calendario del sistema): el descuento etiquetado
+    solo descuenta mientras la campaña está vigente (su ventana anual
+    recurrente, además de la propia). El listado /api/offers/ es público
+    y la escritura es solo staff; la campaña no pertenece a ninguna
+    tienda (aislamiento intacto: sigue sin viajar store_id).
+    """
+
+    def setUp(self):
+        cache.clear()
+
+    def _store(self, premium = True):
+        _, profile      =   _make_user('duenio')
+        _grant(profile, has_public_link = True, has_discounts = premium)
+        return Store.objects.create(user = profile, slug = 'mi-tienda', is_published = True)
+
+    def _campaign(self, running = True):
+        now             =   timezone.now()
+        if running:
+            month, day  =   (now - timedelta(days = 1)).month, (now - timedelta(days = 1)).day
+        else:
+            other       =   now + timedelta(days = 180)
+            month, day  =   other.month, other.day
+        return SpecialOfferCampaign.objects.create(
+            slug = f'camp-{running}', name = f'Camp {running}', accent = '#E64415',
+            month = month, day = day, duration_days = 3,
+        )
+
+    def _discount(self, store, campaign = None):
+        return Discount.objects.create(
+            store = store, name = 'Promo', percent = 25, scope = 'all',
+            campaign = campaign,
+            starts_at = timezone.now() - timedelta(hours = 1),
+        )
+
+    def _calza(self, response):
+        return next(p for p in response.data['products'] if p['name'] == 'Calza')
+
+    def _catalog(self):
+        return APIClient().get(PUBLIC_CATALOG.format(slug = 'mi-tienda'))
+
+    def test_campaign_outside_window_does_not_discount(self):
+        #Campaña que arranca en ~6 meses: el descuento queda guardado pero
+        #no aplica — una promo "Black Friday" no puede correr en marzo.
+        store           =   self._store()
+        Product.objects.create(store = store, name = 'Calza', price = 100)
+        self._discount(store, self._campaign(running = False))
+        calza           =   self._calza(self._catalog())
+        self.assertIsNone(calza['offer_price'])
+        self.assertIsNone(calza['discount'])
+
+    def test_running_campaign_discount_applies_and_exposes_payload(self):
+        #Dentro de la ventana anual, el descuento firma la oferta y viaja
+        #la campaña (aditivo) con su acento y etiqueta.
+        store           =   self._store()
+        Product.objects.create(store = store, name = 'Calza', price = 100)
+        campaign        =   self._campaign(running = True)
+        self._discount(store, campaign)
+        response        =   self._catalog()
+        calza           =   self._calza(response)
+        self.assertEqual(float(calza['offer_price']), 75.0)
+        payload         =   calza['discount']['campaign']
+        self.assertEqual(payload['slug'], campaign.slug)
+        self.assertEqual(payload['accent'], campaign.accent)
+        self.assertIn('label_url', payload)
+        self.assertEqual(response.data['promotions'][0]['campaign']['slug'], campaign.slug)
+
+    def test_discount_without_campaign_behaves_as_before(self):
+        #Compat: un descuento sin campaña aplica igual que siempre (la
+        #única fuente de verdad sigue siendo su propia ventana).
+        store           =   self._store()
+        Product.objects.create(store = store, name = 'Calza', price = 100)
+        self._discount(store)
+        calza           =   self._calza(self._catalog())
+        self.assertEqual(float(calza['offer_price']), 75.0)
+        self.assertIsNone(calza['discount']['campaign'])
+
+    def test_campaign_gate_still_requires_has_discounts(self):
+        #Sin el flag premium ni la campaña salva: la lista sale vacía.
+        store           =   self._store(premium = False)
+        Product.objects.create(store = store, name = 'Calza', price = 100)
+        self._discount(store, self._campaign(running = True))
+        calza           =   self._calza(self._catalog())
+        self.assertIsNone(calza['offer_price'])
+        self.assertIsNone(calza['discount'])
+
+    def test_campaign_crossing_year_end(self):
+        #Año Nuevo arranca en diciembre y corre en enero: la ventana del
+        #año anterior se evalúa aunque la del año nuevo no llegó.
+        campaign        =   SpecialOfferCampaign(
+            slug = 'ano-nuevo', name = 'Año Nuevo', accent = '#0E7C7B',
+            month = 12, day = 28, duration_days = 6,
+        )
+        self.assertTrue(campaign.is_running(timezone.datetime(2030, 1, 1, 12, 0, tzinfo = dt_timezone.utc)))
+        self.assertTrue(campaign.is_running(timezone.datetime(2030, 12, 30, 12, 0, tzinfo = dt_timezone.utc)))
+        self.assertFalse(campaign.is_running(timezone.datetime(2030, 1, 10, 12, 0, tzinfo = dt_timezone.utc)))
+
+    def test_owner_can_tag_discount_with_active_campaign(self):
+        #El dueño etiqueta su descuento por id de campaña; el listado le
+        #devuelve el bloque de campaña y el estado real (scheduled fuera
+        #de ventana de campaña).
+        store           =   self._store()
+        campaign        =   self._campaign(running = False)
+        client          =   APIClient()
+        client.force_authenticate(user = store.user.user)
+        response        =   client.post(DISCOUNTS_URL, {
+            'name': 'Promo', 'percent': 25, 'scope': 'all',
+            'campaign': campaign.pk,
+            'starts_at': (timezone.now() - timedelta(hours = 1)).isoformat(),
+        }, format = 'json')
+        self.assertEqual(response.status_code, 201)
+        self.assertEqual(response.data['item']['campaign']['slug'], campaign.slug)
+        self.assertEqual(response.data['item']['status'], 'scheduled')
+
+    def test_offers_list_is_public_and_write_is_staff_only(self):
+        self._campaign(running = True)
+        response        =   APIClient().get(OFFERS_URL)
+        self.assertEqual(response.status_code, 200)
+        items           =   response.data['results'] if isinstance(response.data, dict) else response.data
+        self.assertEqual(items[0]['slug'], 'camp-True')
+        self.assertIn('is_running', items[0])
+        #Anónimo y dueño no-staff no escriben el calendario.
+        self.assertIn(APIClient().post(OFFERS_URL, {}, format = 'json').status_code, (401, 403))
+        user, _         =   _make_user('duenio2')
+        client          =   APIClient()
+        client.force_authenticate(user = user)
+        self.assertEqual(client.post(OFFERS_URL, {}, format = 'json').status_code, 403)
+
+    def test_offer_label_404_without_label_key(self):
+        campaign        =   self._campaign(running = True)
+        response        =   APIClient().get(f'{OFFERS_URL}{campaign.slug}/label/')
+        #Sin label_key (o sin R2 configurado en tests) no hay nada que servir.
+        self.assertEqual(response.status_code, 404)
+
+    def test_seed_command_is_idempotent(self):
+        from django.core.management import call_command
+        call_command('seed_special_offers')
+        self.assertEqual(SpecialOfferCampaign.objects.count(), 15)
+        call_command('seed_special_offers', '--only', 'hot-sale')
+        self.assertEqual(SpecialOfferCampaign.objects.count(), 15)

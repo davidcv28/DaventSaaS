@@ -3,9 +3,11 @@ import io
 from decimal import Decimal
 
 from django.db import transaction
-from django.http import HttpResponse
-from rest_framework import status
+from django.http import Http404, HttpResponse, HttpResponseRedirect
+from django.shortcuts import get_object_or_404
+from rest_framework import mixins, status, viewsets
 from rest_framework.decorators import action
+from rest_framework.permissions import SAFE_METHODS, AllowAny, IsAdminUser
 from rest_framework.response import Response
 from rest_framework.throttling import UserRateThrottle
 
@@ -129,6 +131,48 @@ class DiscountViewSet(CatalogGateMixin, CatalogBaseViewSet):
         if discount is not None:
             response.data['item']   =   DiscountSerializerList(discount).data
         return response
+#=========================================
+# SPECIAL OFFER CAMPAIGN VIEWSET (calendario de ofertas: lectura pública,
+# alta/edición solo staff — las etiquetas son assets del sistema en R2)
+#=========================================
+class SpecialOfferCampaignViewSet(
+    mixins.ListModelMixin,
+    mixins.CreateModelMixin,
+    mixins.UpdateModelMixin,
+    mixins.DestroyModelMixin,
+    viewsets.GenericViewSet,
+):
+    """
+    GET /api/offers/          → público: campañas activas ordenadas (con
+                                is_running y la ventana del año en curso).
+    GET /api/offers/<slug>/label/ → redirige a la etiqueta servida desde R2.
+    Escritura                 → IsAdminUser (el calendario es del sistema).
+    """
+    lookup_field        =   'slug'
+    def get_queryset(self):
+        from StoreApp.domains.catalog.models import SpecialOfferCampaign
+        if self.request.method in SAFE_METHODS:
+            return SpecialOfferCampaign.objects.filter(is_active = True)
+        return SpecialOfferCampaign.objects.all()
+    def get_serializer_class(self):
+        from StoreApp.domains.catalog.serializers.serializers import (
+            SpecialOfferCampaignSerializer,
+        )
+        return SpecialOfferCampaignSerializer
+    def get_permissions(self):
+        if self.request.method in SAFE_METHODS:
+            return [AllowAny()]
+        return [IsAdminUser()]
+    @action(detail = True, methods = ['get'], url_path = 'label')
+    def label(self, request, slug = None):
+        from StoreApp.domains.stores.services.storage import object_url
+        campaign    =   get_object_or_404(self.get_queryset(), slug = slug)
+        #La etiqueta es un asset público del sistema, pero la URL pública del
+        #bucket puede no estar habilitada: se redirige a la firmada (7 días).
+        url         =   object_url(campaign.label_key, private = True)
+        if not url:
+            raise Http404
+        return HttpResponseRedirect(url)
 #=========================================
 # REVIEW VIEWSET (moderación del dueño: lista y borra opiniones de su
 # tienda; el alta vive en la web pública, nunca en este endpoint)

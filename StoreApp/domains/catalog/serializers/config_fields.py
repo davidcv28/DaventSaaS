@@ -132,6 +132,7 @@ DiscountFields              =   {
     'is_active'             :   {'required': False},
     'category'              :   {'required': False, 'allow_null': True},
     'brand'                 :   {'required': False, 'allow_null': True},
+    'campaign'              :   {'required': False, 'allow_null': True},
 }
 #=========================================
 # REVIEW FIELDS (opiniones de visitantes, formulario público)

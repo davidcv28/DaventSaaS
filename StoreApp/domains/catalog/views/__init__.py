@@ -4,4 +4,5 @@ from .viewset import (
     DiscountViewSet,
     ProductViewSet,
     ReviewViewSet,
+    SpecialOfferCampaignViewSet,
 )

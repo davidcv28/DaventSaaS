@@ -515,7 +515,7 @@
   font-weight: 650;
   line-height: 1.45;
   color: var(--rz-accent-text);
-}.store-page[data-template='raiz'] .rz-pdp-promo svg{ flex: none; margin-top: 2px; }.store-page[data-template='raiz'] .rz-pdp-promo-ends{ color: var(--rz-muted); font-weight: 500; }.store-page[data-template='raiz'] .rz-pdp-pay{
+}.store-page[data-template='raiz'] .rz-pdp-promo svg{ flex: none; margin-top: 2px; }.store-page[data-template='raiz'] .rz-pdp-promo-ends{ color: var(--rz-muted); font-weight: 500; }.store-page[data-template='raiz'] .rz-pdp-campaign{ display: block; height: 30px; width: auto; max-width: 100%; object-fit: contain; margin-top: 8px; border-radius: 4px; }.store-page[data-template='raiz'] .rz-pdp-pay{
   display: flex;
   align-items: flex-start;
   gap: 8px;

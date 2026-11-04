@@ -64,6 +64,7 @@ import CountUp from '../components/CountUp.vue'
 import FlyerStudio from '../components/FlyerStudio.vue'
 import AiAssistModal from '../components/assist/AiAssistModal.vue'
 import PriceUpdateModal from '../components/PriceUpdateModal.vue'
+import CampaignPicker from '../components/dashboard/catalog/CampaignPicker.vue'
 import ChatDock from '../components/ChatDock.vue'
 import GlobalSearch from '../components/GlobalSearch.vue'
 import TourGuide from '../components/TourGuide.vue'
@@ -986,7 +987,7 @@ const localDateInput = (d) => `${d.getFullYear()}-${pad2(d.getMonth() + 1)}-${pa
 
 const discountForm = reactive({
   name: '', percent: '', scope: 'all', category: '', brand: '',
-  product_ids: [],
+  product_ids: [], campaign: '',
   start_date: localDateInput(new Date()), start_time: '00:00',
   end_none: false, end_date: '', end_time: '23:59',
   is_active: true
@@ -1056,7 +1057,7 @@ function discountPreset(kind) {
 function resetDiscountForm() {
   Object.assign(discountForm, {
     name: '', percent: '', scope: 'all', category: '', brand: '',
-    product_ids: [],
+    product_ids: [], campaign: '',
     start_date: localDateInput(new Date()), start_time: '00:00',
     end_none: false, end_date: '', end_time: '23:59',
     is_active: true
@@ -1072,6 +1073,7 @@ function editDiscount(d) {
   Object.assign(discountForm, {
     name: d.name, percent: d.percent, scope: d.scope,
     category: d.category || '', brand: d.brand || '', product_ids: [...(d.products || [])],
+    campaign: d.campaign?.id || '',
     start_date: start.slice(0, 10), start_time: start.slice(11, 16) || '00:00',
     end_none: !end, end_date: end.slice(0, 10), end_time: end.slice(11, 16) || '23:59',
     is_active: d.is_active
@@ -1092,6 +1094,7 @@ async function saveDiscount() {
     category: discountForm.scope === 'category' ? discountForm.category : null,
     brand: discountForm.scope === 'brand' ? discountForm.brand : null,
     products: discountForm.scope === 'products' ? discountForm.product_ids : [],
+    campaign: discountForm.campaign || null,
     starts_at: localInputToIso(discountStartLocal.value),
     ends_at: discountForm.end_none ? null : localInputToIso(discountEndLocal.value),
     is_active: discountForm.is_active
@@ -3650,6 +3653,8 @@ async function changePassword() {
                 </div>
               </div>
 
+              <CampaignPicker v-model="discountForm.campaign" />
+
               <div class="check-list">
                 <label class="check-item">
                   <input type="checkbox" v-model="discountForm.is_active" />
@@ -3672,6 +3677,7 @@ async function changePassword() {
                     <strong class="disc-name">{{ d.name }}</strong>
                     <small class="disc-meta"><AppIcon name="tag" :size="12" aria-hidden="true" /> {{ discountScopeLabel(d) }}</small>
                     <small class="disc-range"><AppIcon name="calendar" :size="12" aria-hidden="true" /> {{ discountWindowLabel(d) }}</small>
+                    <small v-if="d.campaign" class="disc-meta"><img v-if="d.campaign.label_url" :src="d.campaign.label_url" :alt="d.campaign.label_alt || d.campaign.name" :width="d.campaign.label_width || undefined" :height="d.campaign.label_height || undefined" loading="lazy" class="disc-camp-label" /><AppIcon v-else name="tag" :size="12" aria-hidden="true" /> {{ d.campaign.name }}</small>
                   </span>
                   <span class="disc-actions">
                     <span class="pill" :class="discountStatusMeta(d).pill">{{ discountStatusMeta(d).label }}</span>

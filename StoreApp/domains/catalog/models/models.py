@@ -92,6 +92,81 @@ class Product(models.Model):
     def __str__(self):
         return f'{self.name} ({self.store.slug})'
 #=========================================
+# SPECIAL OFFER CAMPAIGN MODEL (calendario de ofertas especiales: sistema,
+# no pertenece a ninguna tienda — Hot Sale, Black Friday, Navidad, etc.)
+#=========================================
+class SpecialOfferCampaign(models.Model):
+    """
+    Campaña comercial del calendario (datos del sistema, cargados por
+    seed_special_offers). El descuento del dueño puede etiquetarse con una
+    campaña: si la campaña no está vigente, el descuento no se aplica
+    (regla en running_discounts_of) — así una promo "Black Friday" no
+    puede quedar corriendo en marzo.
+    month/day marcan el inicio recurrente anual; duration_days la ventana
+    (soporta cruzar fin de año: Año Nuevo arranca en diciembre y termina
+    en enero). La etiqueta (label_key) vive en R2 bajo system/offers/ —
+    arte propio, no consume cuota de ninguna tienda.
+    """
+    slug                        =   models.SlugField(max_length = 40, unique = True)
+    name                        =   models.CharField(max_length = 80, verbose_name = 'Nombre')
+    description                 =   models.CharField(max_length = 200, blank = True, verbose_name = 'Descripción')
+    accent                      =   models.CharField(max_length = 7, default = '#E64415', verbose_name = 'Color de acento')
+    label_key                   =   models.CharField(max_length = 200, blank = True, verbose_name = 'Etiqueta (key en R2)')
+    label_alt                   =   models.CharField(max_length = 120, blank = True, verbose_name = 'Texto alternativo')
+    label_width                 =   models.PositiveSmallIntegerField(default = 0)
+    label_height                =   models.PositiveSmallIntegerField(default = 0)
+    month                       =   models.PositiveSmallIntegerField(verbose_name = 'Mes de inicio')
+    day                         =   models.PositiveSmallIntegerField(verbose_name = 'Día de inicio')
+    duration_days               =   models.PositiveSmallIntegerField(default = 4, verbose_name = 'Duración (días)')
+    is_recurring                =   models.BooleanField(default = True, verbose_name = 'Se repite cada año')
+    is_active                   =   models.BooleanField(default = True, verbose_name = 'Activa')
+    position                    =   models.PositiveIntegerField(default = 0, verbose_name = 'Orden')
+    created_at                  =   models.DateTimeField(auto_now_add = True)
+    class Meta:
+        app_label               =   'catalog'
+        verbose_name            =   'Campaña de ofertas'
+        verbose_name_plural     =   'Campañas de ofertas'
+        ordering                =   ['position', 'id']
+    def __str__(self):
+        return self.name
+    def starts_at(self, moment = None):
+        """Inicio de la ocurrencia anual vigente o próxima (aware)."""
+        moment  =   moment or timezone.now()
+        return timezone.datetime(moment.year, self.month, self.day, tzinfo = moment.tzinfo)
+    def ends_at(self, moment = None):
+        start   =   self.starts_at(moment)
+        return start + timezone.timedelta(days = self.duration_days)
+    def is_running(self, moment = None):
+        """
+        Vigente en `moment` (ahora por defecto). Se evalúa la ocurrencia del
+        año en curso y la del anterior: una campaña que arranca en diciembre
+        y cruza a enero (Año Nuevo) sigue corriendo en enero aunque el
+        starts_at del año nuevo todavía no llegó.
+        """
+        if not self.is_active:
+            return False
+        moment      =   moment or timezone.now()
+        duration    =   timezone.timedelta(days = self.duration_days)
+        for year in (moment.year, moment.year - 1):
+            try:
+                start   =   timezone.datetime(year, self.month, self.day, tzinfo = moment.tzinfo)
+            except ValueError:
+                #29 de febrero en año no bisiesto: ese año no corre.
+                continue
+            if start <= moment < start + duration:
+                return True
+        return False
+    def next_starts_at(self, moment = None):
+        """Próximo inicio (el del año en curso si no pasó; si no, el siguiente)."""
+        moment  =   moment or timezone.now()
+        try:
+            start   =   timezone.datetime(moment.year, self.month, self.day, tzinfo = moment.tzinfo)
+        except ValueError:
+            start   =   None
+        if start is None or start <= moment:
+            start   =   timezone.datetime(moment.year + 1, self.month, self.day, tzinfo = moment.tzinfo)
+        return start
+#=========================================
 # DISCOUNT MODEL (descuento programado: se activa/vence solo por fecha)
 #=========================================
 class Discount(models.Model):
@@ -113,6 +188,14 @@ class Discount(models.Model):
     category                    =   models.ForeignKey(Category, on_delete = models.SET_NULL, related_name = 'discounts', null = True, blank = True, db_index = False)
     brand                       =   models.ForeignKey(Brand, on_delete = models.SET_NULL, related_name = 'discounts', null = True, blank = True, db_index = False)
     products                    =   models.ManyToManyField(Product, related_name = 'discounts', blank = True)
+    campaign                    =   models.ForeignKey(
+        SpecialOfferCampaign,
+        on_delete       =   models.SET_NULL,
+        related_name    =   'discounts',
+        null            =   True,
+        blank           =   True,
+        verbose_name    =   'Campaña',
+    )
     starts_at                   =   models.DateTimeField(verbose_name = 'Empieza')
     ends_at                     =   models.DateTimeField(null = True, blank = True, verbose_name = 'Termina')
     is_active                   =   models.BooleanField(default = True, verbose_name = 'Activo')
@@ -187,3 +270,11 @@ for _model in (Category, Brand, Product, Discount, ProductReview):
     post_save.connect(_bust_public_catalog, sender = _model)
     post_delete.connect(_bust_public_catalog, sender = _model)
 del _model
+
+
+def _bust_public_campaigns(sender, instance, **kwargs):
+    #La campaña es global: toca el payload de TODAS las tiendas a la vez.
+    from StoreApp.domains.stores.public_cache import bump_public_epoch
+    bump_public_epoch()
+post_save.connect(_bust_public_campaigns, sender = SpecialOfferCampaign)
+post_delete.connect(_bust_public_campaigns, sender = SpecialOfferCampaign)

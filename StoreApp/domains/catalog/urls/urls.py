@@ -6,6 +6,7 @@ from StoreApp.domains.catalog.views import (
     DiscountViewSet,
     ProductViewSet,
     ReviewViewSet,
+    SpecialOfferCampaignViewSet,
 )
 
 router  =   routers.DefaultRouter()
@@ -16,6 +17,8 @@ router.register(r'brands',     BrandViewSet,    basename = 'Brands')
 router.register(r'products',   ProductViewSet,  basename = 'Products')
 router.register(r'discounts',  DiscountViewSet, basename = 'Discounts')
 router.register(r'reviews',    ReviewViewSet,   basename = 'Reviews')
+#OFFERS (calendario de campañas: lectura pública, escritura staff)
+router.register(r'offers',     SpecialOfferCampaignViewSet, basename = 'Offers')
 
 
 #PATTERNS

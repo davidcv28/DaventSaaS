@@ -7,6 +7,7 @@ from StoreApp.domains.catalog.models import (
     Discount,
     Product,
     ProductReview,
+    SpecialOfferCampaign,
 )
 from StoreApp.domains.catalog.services.services import (
     discount_covers,
@@ -31,6 +32,22 @@ Los serializers de escritura reciben context['store'] desde el viewset
 unicidad por tienda.
 
 """
+def _campaign_payload(campaign):
+    """Bloque aditivo {slug,name,accent,label_url,...} o None sin campaña."""
+    if campaign is None:
+        return None
+    return {
+        'id'            :   campaign.pk,
+        'slug'          :   campaign.slug,
+        'name'          :   campaign.name,
+        'accent'        :   campaign.accent,
+        #La etiqueta sale firmada (private=True): la URL pública del bucket
+        #puede no estar habilitada — igual que /api/offers/<slug>/label/.
+        'label_url'     :   object_url(campaign.label_key, private = True),
+        'label_alt'     :   campaign.label_alt,
+        'label_width'   :   campaign.label_width,
+        'label_height'  :   campaign.label_height,
+    }
 #=========================================
 # CATEGORY SERIALIZER
 #=========================================
@@ -50,6 +67,30 @@ class BrandSerializer(TaxonomyMixinValidator, serializers.ModelSerializer):
     class Meta:
         model                   =   Brand
         fields                  =   ['id', 'name', 'position', 'products_count']
+#=========================================
+# SPECIAL OFFER CAMPAIGN SERIALIZER (lectura pública + CRUD staff)
+#=========================================
+class SpecialOfferCampaignSerializer(serializers.ModelSerializer):
+    label_url                   =   serializers.SerializerMethodField()
+    starts_at                   =   serializers.SerializerMethodField()
+    ends_at                     =   serializers.SerializerMethodField()
+    is_running                  =   serializers.SerializerMethodField()
+    class Meta:
+        model                   =   SpecialOfferCampaign
+        fields                  =   [
+            'id', 'slug', 'name', 'description', 'accent', 'label_url', 'label_alt',
+            'label_width', 'label_height', 'month', 'day', 'duration_days',
+            'is_recurring', 'is_active', 'position', 'starts_at', 'ends_at', 'is_running',
+        ]
+        read_only_fields        =   ['label_url', 'label_alt', 'label_width', 'label_height']
+    def get_label_url(self, campaign):
+        return object_url(campaign.label_key, private = True)
+    def get_starts_at(self, campaign):
+        return campaign.next_starts_at()
+    def get_ends_at(self, campaign):
+        return campaign.ends_at()
+    def get_is_running(self, campaign):
+        return campaign.is_running()
 #=========================================
 # PRODUCT SERIALIZER (escritura del dueño)
 #=========================================
@@ -128,6 +169,7 @@ class ProductPublicSerializer(serializers.ModelSerializer):
             'name'      :   discount.name,
             'percent'   :   discount.percent,
             'ends_at'   :   discount.ends_at,
+            'campaign'  :   _campaign_payload(discount.campaign),
         }
     def get_rating_avg(self, product):
         #public_catalog anota el promedio solo si la tienda habilitó
@@ -197,9 +239,12 @@ class ReviewCreateSerializer(serializers.ModelSerializer):
 class DiscountPublicSerializer(serializers.ModelSerializer):
     category_name               =   serializers.CharField(source = 'category.name', read_only = True)
     brand_name                  =   serializers.CharField(source = 'brand.name', read_only = True)
+    campaign                    =   serializers.SerializerMethodField()
     class Meta:
         model                   =   Discount
-        fields                  =   ['name', 'percent', 'scope', 'category', 'category_name', 'brand', 'brand_name', 'ends_at']
+        fields                  =   ['name', 'percent', 'scope', 'category', 'category_name', 'brand', 'brand_name', 'ends_at', 'campaign']
+    def get_campaign(self, discount):
+        return _campaign_payload(discount.campaign)
 #=========================================
 # DISCOUNT SERIALIZER (escritura del dueño)
 #=========================================
@@ -212,9 +257,13 @@ class DiscountSerializer(DiscountMixinValidator, serializers.ModelSerializer):
     starts_at                   =   serializers.DateTimeField(**DiscountFields['starts_at'])
     ends_at                     =   serializers.DateTimeField(**DiscountFields['ends_at'])
     is_active                   =   serializers.BooleanField(**DiscountFields['is_active'])
+    campaign                    =   serializers.PrimaryKeyRelatedField(
+        queryset    =   SpecialOfferCampaign.objects.filter(is_active = True),
+        **DiscountFields['campaign'],
+    )
     class Meta:
         model                   =   Discount
-        fields                  =   ['id', 'name', 'percent', 'scope', 'category', 'brand', 'products', 'starts_at', 'ends_at', 'is_active']
+        fields                  =   ['id', 'name', 'percent', 'scope', 'category', 'brand', 'products', 'campaign', 'starts_at', 'ends_at', 'is_active']
     def _clean_scope(self, validated, instance = None):
         """Los campos fuera del alcance elegido se limpian (nunca quedan restos)."""
         scope           =   validated.get('scope', getattr(instance, 'scope', Discount.Scope.ALL))
@@ -250,11 +299,12 @@ class DiscountSerializerList(serializers.ModelSerializer):
     products                    =   serializers.PrimaryKeyRelatedField(many = True, read_only = True)
     status                      =   serializers.SerializerMethodField()
     products_count              =   serializers.SerializerMethodField()
+    campaign                    =   serializers.SerializerMethodField()
     class Meta:
         model                   =   Discount
         fields                  =   [
             'id', 'name', 'percent', 'scope', 'category', 'category_name', 'brand', 'brand_name',
-            'products', 'products_count', 'starts_at', 'ends_at', 'is_active', 'status', 'created_at',
+            'products', 'products_count', 'campaign', 'starts_at', 'ends_at', 'is_active', 'status', 'created_at',
         ]
     def get_status(self, discount):
         #Estado vigente derivado de la ventana (la automatización vive acá:
@@ -266,7 +316,12 @@ class DiscountSerializerList(serializers.ModelSerializer):
             return 'ended'
         if discount.starts_at > now:
             return 'scheduled'
+        #Dentro de la ventana propia pero fuera de la campaña: no descuenta.
+        if discount.campaign_id is not None and not discount.campaign.is_running(now):
+            return 'scheduled'
         return 'active'
+    def get_campaign(self, discount):
+        return _campaign_payload(discount.campaign)
     def get_products_count(self, discount):
         #Anotado en el queryset (Count('products')); el fallback cubre el
         #detalle/creación, donde no hace falta la anotación.

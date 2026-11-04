@@ -46,17 +46,24 @@ def running_discounts_of(store, moment = None):
     Los descuentos son premium ('has_discounts'): sin el flag la lista
     sale vacía — la tienda que baja de plan deja de descontar en la web
     pública y en el panel aunque el descuento quede guardado.
+    Un descuento atado a una campaña solo descuenta mientras la campaña
+    esté vigente (su ventana anual recurrente), además de la propia del
+    descuento.
     """
     from StoreApp.domains.catalog.models import Discount
     if not plan_benefits_of(store.user).get('has_discounts'):
         return []
     moment      =   moment or timezone.now()
-    return list(
-        Discount.objects.filter(store = store, is_active = True, starts_at__lte = moment)
-        .filter(Q(ends_at__isnull = True) | Q(ends_at__gt = moment))
-        .select_related('category', 'brand')
-        .prefetch_related('products')
-    )
+    return [
+        discount
+        for discount in (
+            Discount.objects.filter(store = store, is_active = True, starts_at__lte = moment)
+            .filter(Q(ends_at__isnull = True) | Q(ends_at__gt = moment))
+            .select_related('category', 'brand', 'campaign')
+            .prefetch_related('products')
+        )
+        if discount.campaign_id is None or discount.campaign.is_running(moment)
+    ]
 def discount_covers(discount, product):
     """True si el producto entra en el alcance del descuento."""
     from StoreApp.domains.catalog.models import Discount

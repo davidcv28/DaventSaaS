@@ -16,7 +16,7 @@ import { computed, onMounted, ref } from 'vue'
 import AppIcon from '../AppIcon.vue'
 import OfferSeal from './OfferSeal.vue'
 import ProductStars from '../ProductStars.vue'
-import { productOffer, effectivePrice, offerPct, isNewProduct } from '../../api/catalog.api.js'
+import { productOffer, effectivePrice, offerPct, isNewProduct, productDiscount } from '../../api/catalog.api.js'
 import { formatARS as formatPrice } from '../../api/billing.api.js'
 
 const props = defineProps({
@@ -45,6 +45,7 @@ const props = defineProps({
 const emit = defineEmits(['open'])
 
 const offer = computed(() => productOffer(props.p))
+const campaign = computed(() => productDiscount(props.p)?.campaign || null)
 const pct = computed(() => offerPct(props.p))
 const isNew = computed(() => isNewProduct(props.p))
 const price = computed(() => formatPrice(effectivePrice(props.p)))
@@ -80,6 +81,9 @@ onMounted(() => {
         <span v-if="isNew && !(offerNew && offer != null)" class="tpc-flag">{{ newLabel }}</span>
       </span>
       <OfferSeal v-if="sealShape && offer != null" :pct="pct" :shape="sealShape" />
+      <img v-if="campaign?.label_url" class="tpc-campaign" :src="campaign.label_url"
+        :alt="campaign.label_alt || campaign.name" :width="campaign.label_width || undefined"
+        :height="campaign.label_height || undefined" loading="lazy" decoding="async" />
       <span v-if="index != null && index !== ''" class="tpc-idx" aria-hidden="true">{{ index }}</span>
       <span v-if="quick" class="tpc-quick" aria-hidden="true"><AppIcon name="eye" :size="14" /> {{ quick }}</span>
       <slot name="media-extra" :p="p" />

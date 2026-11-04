@@ -34,7 +34,7 @@ def _own_products(view):
 def _own_discounts(view):
     #products_count se anota acá: el serializer del listado hacía un COUNT
     #por descuento (N+1 clásico en GET /api/discounts/).
-    return Discount.objects.filter(store = view.my_store()).select_related('category', 'brand').annotate(
+    return Discount.objects.filter(store = view.my_store()).select_related('category', 'brand', 'campaign').annotate(
         products_count = Count('products'),
     )
 def _own_reviews(view):
