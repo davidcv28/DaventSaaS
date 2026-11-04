@@ -31,7 +31,7 @@ dict_benefits = {
     'has_services_site' :   {'label': 'Página de servicios con pedidos por WhatsApp', 'kind': 'flag'},
     'max_site_templates':   {'label': 'Páginas de la web (portada, servicios, catálogo, suscripciones)', 'kind': 'limit'},
     'has_ai_design'     :   {'label': 'Diseño web automático con IA propia', 'kind': 'flag'},
-#}
+}
 
 dict_plan_benefits = {
     #Plan de prueba (is_trial): se otorga solo en el registro, dura
