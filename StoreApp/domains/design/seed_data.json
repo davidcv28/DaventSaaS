@@ -3561,6 +3561,190 @@
         "corners": "square"
       },
       "concept": "Archivo Black y safety-orange: drop de streetwear."
+    },
+    {
+      "slug": "indumentaria-denim",
+      "nombre": "Indumentaria Denim",
+      "categoria": "Workwear",
+      "descripcion": "Workwear de denim: índigo lavado sobre crudo, Barlow Condensed de cartel y costuras de mono. Grilla utilitaria, aire de taller.",
+      "tier": "plus",
+      "template": "indumentaria",
+      "pattern": "indumentaria",
+      "page_theme": "light",
+      "tokens": {
+        "palette": {
+          "accent": "#B4562E",
+          "primary": "#1F3A5F",
+          "secondary": "#3D5A80",
+          "bg": "#F1EDE4",
+          "surface": "#FAF7F0",
+          "text": "#1B2430",
+          "muted": "#6E7580",
+          "border": "#C9C2B2",
+          "success": "#4F7355",
+          "danger": "#A03428"
+        },
+        "containers": {
+          "radius": "sm",
+          "shadow": "none",
+          "border": "thin",
+          "density": "comfortable",
+          "surface": "flat"
+        },
+        "typography": {
+          "heading": "barlow-condensed",
+          "subheading": "jetbrains-mono",
+          "body": "work-sans",
+          "scale": "balanced",
+          "weightHeading": 600,
+          "letterSpacing": "-0.01em"
+        },
+        "buttons": {
+          "shape": "square",
+          "style": "outline",
+          "size": "md"
+        },
+        "background": {
+          "type": "solid",
+          "value": null,
+          "overlay": "none"
+        },
+        "motion": {
+          "reveal": "stagger",
+          "hover": "lift",
+          "intensity": "subtle"
+        },
+        "mobile": {
+          "cardStyle": "standard",
+          "heroHeight": "tall"
+        },
+        "preview": "",
+        "icons": {
+          "style": "line",
+          "stroke": "1.8",
+          "size": "20",
+          "corners": "square"
+        }
+      },
+      "layout": {},
+      "layout_spec": {},
+      "tags": [
+        "indumentaria",
+        "ropa",
+        "denim",
+        "jean",
+        "workwear",
+        "taller"
+      ],
+      "preview": "",
+      "style": "Workwear",
+      "anim": {
+        "hero": "fade-up",
+        "reveal": "stagger",
+        "hover": "lift",
+        "button": "ink-fill"
+      },
+      "easing": "cubic-bezier(.2,.7,.2,1)",
+      "duration": "480ms",
+      "icons": {
+        "style": "line",
+        "stroke": "1.8",
+        "size": "20",
+        "corners": "square"
+      },
+      "concept": "Índigo denim y cobre de remache: catálogo de taller."
+    },
+    {
+      "slug": "indumentaria-boutique",
+      "nombre": "Indumentaria Boutique",
+      "categoria": "Boutique chic",
+      "descripcion": "Boutique chic: crema nude y rosa empolvado con DM Serif Display. Superficies suaves y aire de vitrina curada.",
+      "tier": "plus",
+      "template": "indumentaria",
+      "pattern": "indumentaria",
+      "page_theme": "light",
+      "tokens": {
+        "palette": {
+          "accent": "#B4654A",
+          "primary": "#4A3B36",
+          "secondary": "#8A6A5E",
+          "bg": "#F6F0EB",
+          "surface": "#FCF8F4",
+          "text": "#332A26",
+          "muted": "#96837A",
+          "border": "#E2D5CA",
+          "success": "#6E7F68",
+          "danger": "#B04A40"
+        },
+        "containers": {
+          "radius": "lg",
+          "shadow": "medium",
+          "border": "thin",
+          "density": "spacious",
+          "surface": "elevated"
+        },
+        "typography": {
+          "heading": "dm-serif-display",
+          "subheading": "instrument-sans",
+          "body": "instrument-sans",
+          "scale": "editorial",
+          "weightHeading": 400,
+          "letterSpacing": "-0.015em"
+        },
+        "buttons": {
+          "shape": "pill",
+          "style": "solid",
+          "size": "md"
+        },
+        "background": {
+          "type": "solid",
+          "value": null,
+          "overlay": "none"
+        },
+        "motion": {
+          "reveal": "fade",
+          "hover": "lift",
+          "intensity": "subtle"
+        },
+        "mobile": {
+          "cardStyle": "standard",
+          "heroHeight": "tall"
+        },
+        "preview": "",
+        "icons": {
+          "style": "line",
+          "stroke": "1.4",
+          "size": "20",
+          "corners": "round"
+        }
+      },
+      "layout": {},
+      "layout_spec": {},
+      "tags": [
+        "indumentaria",
+        "ropa",
+        "boutique",
+        "femenino",
+        "chic",
+        "vitrina"
+      ],
+      "preview": "",
+      "style": "Boutique chic",
+      "anim": {
+        "hero": "fade",
+        "reveal": "fade",
+        "hover": "lift",
+        "button": "soft-fill"
+      },
+      "easing": "cubic-bezier(.4,0,.2,1)",
+      "duration": "520ms",
+      "icons": {
+        "style": "line",
+        "stroke": "1.4",
+        "size": "20",
+        "corners": "round"
+      },
+      "concept": "Crema nude y rosa polvo: la vitrina de la boutique."
     }
   ],
   "patterns": [
