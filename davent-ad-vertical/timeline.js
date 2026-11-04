@@ -3,7 +3,7 @@
 //   s1 "Vender solo por redes no alcanza…"            0.000 –  8.811
 //   s2 "DAVENT te da tu web propia…"                  8.811 – 17.422
 //   s3 "Y no es solo para tiendas…"                  17.422 – 25.873
-//   s4 "Sin programar… davent.com. Tu marca…"        25.873 – 35.364
+//   s4 "Sin programar… davent.com.ar… código PROMO"   25.873 – 36.164
 // Imagen: 8 tomas reales del sistema (capturas móviles) + placa final.
 
 export const BPM = 96;
@@ -11,13 +11,13 @@ export const BEAT = 60 / BPM;
 export const BAR = BEAT * 4;
 export const b = n => n * BEAT;
 
-export const DUR = 36;
+export const DUR = 37.5;
 
 export const NAR = {
   s1: [0.0, 8.811],
   s2: [8.811, 17.422],
   s3: [17.422, 25.873],
-  s4: [25.873, 35.364],
+  s4: [25.873, 36.164],
 };
 
 export const END_T = 29.6;
@@ -51,5 +51,5 @@ export const CUES = [
   { t: LOGO_HIT, sfx: 'impact' },
 ];
 
-export const HOLDS = [[32.4, DUR]];
+export const HOLDS = [[33.4, DUR]];
 export const DROPS = [LOGO_HIT];

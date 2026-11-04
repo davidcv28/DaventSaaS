@@ -4,7 +4,7 @@
     "type": "user-script",
     "provenance": "user-provided",
     "file": "user-script.txt",
-    "sha256": "b3e750195cc5343cef961a626ecaddc4ac10ea2cac22dc0fbf239aad9e4cd8d3"
+    "sha256": "b21e621569dba88f52b6d403af4dbfc847d5e8ccecf6f0ac076d61b0a2c746d9"
   },
   "provider": {
     "id": "gemini",
@@ -12,9 +12,9 @@
     "voice": "Kore"
   },
   "alignment": "tts-segments",
-  "duration": 35.363833,
+  "duration": 36.163833,
   "file": "audio/narration.wav",
-  "audioSha256": "353bc049512c8bc6820f1e5a577c83502ec955ef9af01875b8c859567e1f9dea",
+  "audioSha256": "711b4fe7dd2209548bdb2202c064c184d380190dc4464ed121ff72ebc86e79b0",
   "segments": [
     {
       "id": "n0001",
@@ -39,10 +39,10 @@
     },
     {
       "id": "n0004",
-      "text": "Sin programar y sin saber diseñar. Empezá hoy con la prueba gratis en davent.com. Tu marca, tu web, tus reglas.",
+      "text": "Sin programar y sin saber diseñar. Empezá hoy con la prueba gratis en davent punto com punto ar. Con el código PROMO tenés treinta días de Premium.",
       "start": 25.872874,
-      "end": 35.363832,
-      "file": "audio/narration-cache/3993f379e363549856516e8113f55eb3eb77d422df8c70ffa52014dd206ac18c.wav"
+      "end": 36.163832,
+      "file": "audio/narration-cache/319c27f64c1fb58601fe7ada5c09b70e3d02148f2a721146e4d971dc18ab0fa2.wav"
     }
   ],
   "missing": []

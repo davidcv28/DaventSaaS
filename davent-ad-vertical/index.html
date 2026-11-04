@@ -191,7 +191,7 @@ function endCard(t) {
   const scale = lerp(1.14, 1, ease.outCubic(hit)) * lerp(1, 1.015, clamp((t - LOGO_HIT) / 5));
   ctx.save();
   ctx.globalAlpha = ease.outCubic(hit);
-  ctx.translate(W / 2, 880 * U);
+  ctx.translate(W / 2, 812 * U);
   ctx.scale(scale, scale);
   ctx.textAlign = 'center';
   ctx.fillStyle = C.ink;
@@ -209,7 +209,7 @@ function endCard(t) {
     ctx.textAlign = 'center';
     ctx.fillStyle = C.ink2;
     ctx.font = F(46 * U, 600);
-    ctx.fillText('Tu marca, tu web, tus reglas.', W / 2, 992 * U + (1 - tg) * 26 * U);
+    ctx.fillText('Tu marca, tu web, tus reglas.', W / 2, 924 * U + (1 - tg) * 26 * U);
     ctx.restore();
   }
 
@@ -218,7 +218,7 @@ function endCard(t) {
   if (uk > 0) {
     ctx.save();
     ctx.globalAlpha = uk;
-    const pw = 520 * U, ph = 108 * U, px = (W - pw) / 2, py = 1112 * U + (1 - uk) * 26 * U;
+    const pw = 560 * U, ph = 108 * U, px = (W - pw) / 2, py = 1036 * U + (1 - uk) * 26 * U;
     ctx.fillStyle = 'rgba(255,255,255,0.07)';
     ctx.strokeStyle = 'rgba(255,255,255,0.22)';
     ctx.lineWidth = 2 * U;
@@ -230,17 +230,56 @@ function endCard(t) {
     ctx.font = F(48 * U, 700);
     ctx.textAlign = 'center';
     setLS('0.02em');
-    ctx.fillText('davent.com', W / 2, py + ph * 0.66);
+    ctx.fillText('davent.com.ar', W / 2, py + ph * 0.66);
+    setLS('0px');
+    ctx.restore();
+  }
+
+  // código promocional
+  const pk = ease.outCubic(seg(t, LOGO_HIT + 1.15, LOGO_HIT + 1.7));
+  if (pk > 0) {
+    ctx.save();
+    ctx.globalAlpha = pk;
+    const ph = 96 * U, py = 1186 * U + (1 - pk) * 24 * U;
+    const parts = [
+      { txt: 'CÓDIGO', font: F(26 * U, 700), ls: '0.12em', color: C.ink2 },
+      { txt: 'PROMO', font: F(40 * U, 800), ls: '0.16em', color: C.accent },
+      { txt: '30 DÍAS PREMIUM', font: F(27 * U, 700), ls: '0.08em', color: C.ink },
+    ];
+    const gap = 22 * U;
+    const widths = parts.map(pt => { ctx.font = pt.font; setLS(pt.ls); return ctx.measureText(pt.txt).width; });
+    const inner = widths.reduce((a, w) => a + w, 0) + gap * (parts.length - 1);
+    const pw = inner + 84 * U, px = (W - pw) / 2;
+    ctx.fillStyle = 'rgba(139,123,255,0.16)';
+    ctx.strokeStyle = rgba(C.accent, 0.75);
+    ctx.lineWidth = 2 * U;
+    ctx.setLineDash([12 * U, 9 * U]);
+    ctx.beginPath();
+    ctx.roundRect(px, py, pw, ph, 18 * U);
+    ctx.fill();
+    ctx.stroke();
+    ctx.setLineDash([]);
+    ctx.textAlign = 'left';
+    ctx.textBaseline = 'middle';
+    const cy = py + ph / 2;
+    let x = W / 2 - inner / 2;
+    parts.forEach((pt, i) => {
+      ctx.font = pt.font;
+      setLS(pt.ls);
+      ctx.fillStyle = pt.color;
+      ctx.fillText(pt.txt, x, cy + 1 * U);
+      x += widths[i] + gap;
+    });
     setLS('0px');
     ctx.restore();
   }
 
   // cta
-  const ck = ease.outCubic(seg(t, LOGO_HIT + 1.2, LOGO_HIT + 1.75));
+  const ck = ease.outCubic(seg(t, LOGO_HIT + 1.55, LOGO_HIT + 2.1));
   if (ck > 0) {
     ctx.save();
     ctx.globalAlpha = ck;
-    const pw = 620 * U, ph = 128 * U, px = (W - pw) / 2, py = 1272 * U + (1 - ck) * 26 * U;
+    const pw = 640 * U, ph = 128 * U, px = (W - pw) / 2, py = 1338 * U + (1 - ck) * 26 * U;
     const bg = ctx.createLinearGradient(px, py, px + pw, py + ph);
     bg.addColorStop(0, C.accent);
     bg.addColorStop(1, '#6C5CE7');
@@ -258,7 +297,7 @@ function endCard(t) {
   }
 
   // pie
-  const fk = ease.outCubic(seg(t, LOGO_HIT + 1.7, LOGO_HIT + 2.2));
+  const fk = ease.outCubic(seg(t, LOGO_HIT + 2.0, LOGO_HIT + 2.5));
   if (fk > 0) {
     ctx.save();
     ctx.globalAlpha = fk * 0.75;
@@ -266,7 +305,7 @@ function endCard(t) {
     ctx.fillStyle = C.ink2;
     setLS('0.22em');
     ctx.font = F(24 * U, 600);
-    ctx.fillText('TIENDAS · SERVICIOS · GIMNASIOS · ESTUDIOS', W / 2, 1492 * U);
+    ctx.fillText('TIENDAS · SERVICIOS · GIMNASIOS · ESTUDIOS', W / 2, 1568 * U);
     setLS('0px');
     ctx.restore();
   }

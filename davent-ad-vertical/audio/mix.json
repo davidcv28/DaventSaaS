@@ -1,28 +1,28 @@
 {
   "version": 1,
-  "duration": 36,
+  "duration": 37.5,
   "file": "audio/final.wav",
-  "audioSha256": "29b10c7bf20b7423970c23c688dab34f67477fef716a8d90ae0b7ea20fc412d7",
+  "audioSha256": "da530d7baa2dcd87cf1e259453ffe644e56160f0926f7cb4741d203fef432f01",
   "narration": "enabled",
   "sources": [
     {
       "role": "voice",
       "source": "ai-from-user-script",
       "file": "audio/narration.wav",
-      "sha256": "353bc049512c8bc6820f1e5a577c83502ec955ef9af01875b8c859567e1f9dea"
+      "sha256": "711b4fe7dd2209548bdb2202c064c184d380190dc4464ed121ff72ebc86e79b0"
     },
     {
       "role": "bgm",
       "source": "ai",
       "file": "audio/music.wav",
-      "sha256": "106861d4035348280a523eab02486c1d6885d6d9d67c329e3a83a8127fc92c8b"
+      "sha256": "bf1708a42043a739fddb9df28e5c6bf32994881648dfce32adc846a8857594f7"
     }
   ],
   "duckDb": -15,
   "intervals": [
     {
       "start": 0,
-      "end": 35.513832
+      "end": 36.313832
     }
   ]
 }
