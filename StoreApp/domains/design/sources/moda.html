@@ -485,7 +485,7 @@ body.m-open .m-sheet{transform:none}
 .ds-plan-feats li::before{content:"—";position:absolute;left:0;color:var(--accent)}
 
 /* ---------- Testimonios ---------- */
-.quotes{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:1px;background:var(--line);border:1px solid var(--line)}
+.quotes{display:grid;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));gap:1px;background:var(--line);border:1px solid var(--line)}
 .ds-quote{position:relative;display:grid;align-content:start;gap:16px;padding:clamp(24px,3vw,38px);background:var(--paper)}
 .ds-quote:nth-child(3n+1){background:var(--ink);color:var(--paper)}
 .ds-quote:nth-child(3n+1) .ds-quote-name{color:var(--accent-on-ink)}
@@ -868,6 +868,7 @@ body.m-open .m-sheet{transform:none}
   .atelier-side{grid-template-columns:auto 1fr;align-items:end;gap:24px}
   .years{padding-bottom:0;border-bottom:0}
   .contact-grid{grid-template-columns:1fr}
+  .quotes{grid-template-columns:1fr}
   .ds-reviews{grid-template-columns:1fr}
   .cat-layout{grid-template-columns:1fr;gap:0}
   .cat-filters-toggle{display:inline-flex}
