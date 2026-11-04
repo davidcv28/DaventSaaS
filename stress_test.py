@@ -39,7 +39,7 @@ def run_stage(host, slugs, users, spawn, duration):
 
 def main():
     p = argparse.ArgumentParser()
-    p.add_argument('--host', default='https://davent.com')
+    p.add_argument('--host', default='https://www.davent.com.ar')
     p.add_argument('--slugs', default='')
     p.add_argument('--start', type=int, default=10)
     p.add_argument('--max', type=int, default=2000)
