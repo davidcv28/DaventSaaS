@@ -33,7 +33,7 @@ HISTORY_LIMIT   =   16
 
 #Preguntas de la entrevista (orden fijo; el fallback avanza una por turno).
 QUESTIONS   =   [
-    ('rubro',       '¡Hola! Soy el asistente de diseño de DAVENT. Te voy a hacer unas preguntas para armar la web de tu negocio. Para empezar, ¿qué vendés o qué servicio ofrecés?'),
+    ('rubro',       '¡Hola! Soy el asistente de DAVENT. Puedo ayudarte con tu cuenta (plan, tienda, productos, visitas, pagos, facturas) y con el diseño de tu web. ¿Qué necesitás?'),
     ('objetivo',    '¿Cuál es el objetivo principal de tu web: vender online, mostrar el catálogo, que te contacten o reservar turnos?'),
     ('publico',     '¿A quién le hablás? Contame el perfil de tu cliente ideal (edad, zona, estilo de vida).'),
     ('estilo',      '¿Qué sensación querés transmitir: premium y elegante, moderno y tecnológico, cálido y artesanal, o divertido y colorido?'),
@@ -99,18 +99,19 @@ def _system_prompt() -> str:
     catalog =   catalog_summary(limit = 50)
     lines   =   '\n'.join(f"- {s['slug']} · {s['nombre']} · {s['categoria']} · {', '.join(s['tags'])}" for s in catalog)
     return (
-        'Sos el asistente de diseño de DAVENT. Entrevistás al dueño de un negocio '
-        'para armar la web de su tienda, en español rioplatense, cercano y breve.\n'
+        'Sos el asistente de cuenta de DAVENT. Respondés dudas del dueño sobre SU '
+        'cuenta (plan, tienda, productos, visitas, pagos, facturas, perfil) usando '
+        'solo el bloque "Datos del cliente en sesión", y lo ayudás con el diseño '
+        'de su web cuando lo pide. Español rioplatense, cercano y breve.\n'
         'Reglas:\n'
-        '- Hacé UNA sola pregunta por mensaje.\n'
-        '- Cubrí en orden: rubro, objetivo, público, estilo, colores, secciones, fotos, contacto y dominio.\n'
-        '- Cuando tengas rubro + objetivo + estilo, recomendá UN estilo del catálogo por su slug y explicá en una frase por qué.\n'
+        '- Si preguntan por su cuenta, respondé directo con los datos del bloque. '
+        'Si el dato pedido no está, decilo y sugerí dónde verlo en el panel. '
+        'Nunca inventes números ni hables de otros clientes.\n'
+        '- Si piden ayuda de diseño, hacé UNA sola pregunta por mensaje (rubro, '
+        'objetivo, público, estilo, colores, secciones, fotos, contacto, dominio) '
+        'y recomendá UN estilo del catálogo por su slug cuando tengas contexto.\n'
         '- Respondé en 2 o 3 frases máximo. No uses markdown ni listas largas.\n'
-        f'- Catálogo de estilos disponibles:\n{lines}\n'
-        '- Si el cliente se desvía, respondé su duda y retomá la próxima pregunta.\n'
-        '- Si te preguntan por SU negocio (plan, tienda, productos), respondé solo '
-        'con los datos del bloque "Datos del cliente en sesión". Nunca inventes '
-        'datos ni hables de otros clientes.'
+        f'- Catálogo de estilos disponibles (solo si piden diseño):\n{lines}'
     )
 
 
@@ -142,7 +143,21 @@ def _business_context(user) -> str:
 #=========================================
 # FALLBACK DETERMINISTA
 #=========================================
+DATA_KEYWORDS   =   (
+    'plan', 'suscrip', 'pago', 'pagos', 'factura', 'producto', 'tienda',
+    'visita', 'estadist', 'cuenta', 'perfil', 'email', 'vence', 'precio',
+    'marca', 'categoria', 'slug', 'web',
+)
+
+
 def _fallback_reply(thread, latest : str) -> str:
+    #Consulta de cuenta: responder con el snapshot real del usuario en
+    #sesión (mismo gate mcp_user_access) en vez del guion de diseño.
+    lowered =   (latest or '').lower()
+    if any(key in lowered for key in DATA_KEYWORDS):
+        snapshot    =   assistant_snapshot(thread.customer, query = latest)
+        if snapshot:
+            return f'Mirá, con tus datos actuales: {snapshot} ¿Querés que veamos algo más?'
     #asked = preguntas que el bot ya hizo; la próxima es la siguiente del guion.
     asked   =   thread.messages.filter(from_staff = True).count()
     if asked < len(QUESTIONS):

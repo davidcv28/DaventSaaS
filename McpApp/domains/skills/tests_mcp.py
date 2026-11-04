@@ -221,3 +221,64 @@ class McpUserToolsTests(TestCase):
         response    =   self._rpc_http(self.client_a, 'tools/call', {'name': 'my_plan_summary'})
         data        =   json.loads(response.data['result']['content'][0]['text'])
         self.assertEqual(data['plan']['name'], 'Plan ana')
+
+    #=========================================
+    # TOOLS POR DOMINIO (mcp.py de cada app)
+    #=========================================
+    def test_domain_tools_are_listed_for_paid_user(self):
+        response    =   self._rpc_http(self.client_a, 'tools/list')
+        names       =   {t['name'] for t in response.data['result']['tools']}
+        self.assertTrue({
+            'my_profile', 'my_plan_summary', 'my_payments', 'my_invoices',
+            'my_store_summary', 'my_store_visits',
+            'search_my_products', 'list_my_categories', 'list_my_brands',
+        }.issubset(names))
+
+    def test_my_profile_is_scoped_to_session(self):
+        response    =   self._rpc_http(self.client_a, 'tools/call', {'name': 'my_profile'})
+        profile     =   json.loads(response.data['result']['content'][0]['text'])['profile']
+        self.assertEqual(profile['business_name'], 'Negocio ana')
+        self.assertEqual(profile['username'], 'ana')
+
+    def test_my_payments_and_invoices_are_scoped(self):
+        from AdminApp.domains.invoices.models import Invoice
+        from AdminApp.domains.payments.models import Payment
+        for user, store, amount in ((self.user_a, self.store_a, 100), (self.user_b, self.store_b, 999)):
+            payment =   Payment.objects.create(
+                user            =   user.profile,
+                suscription     =   user.profile.suscription,
+                amount          =   amount,
+                status          =   Payment.Status.APPROVED,
+            )
+            Invoice.objects.create(
+                user        =   user.profile,
+                payment     =   payment,
+                type        =   'B',
+                number      =   int(amount),
+                total       =   amount,
+                issued_at   =   timezone.now().date(),
+            )
+        payments    =   json.loads(self._rpc_http(
+            self.client_a, 'tools/call', {'name': 'my_payments'},
+        ).data['result']['content'][0]['text'])['payments']
+        self.assertEqual([p['amount'] for p in payments], ['100.00'])
+        invoices    =   json.loads(self._rpc_http(
+            self.client_a, 'tools/call', {'name': 'my_invoices'},
+        ).data['result']['content'][0]['text'])['invoices']
+        self.assertEqual([i['number'] for i in invoices], [100])
+
+    def test_categories_brands_and_visits_are_scoped(self):
+        from StoreApp.domains.catalog.models import Category
+        from StoreApp.domains.stores.models import StoreDailyVisit
+        Category.objects.create(store = self.store_a, name = 'Calzado')
+        Category.objects.create(store = self.store_b, name = 'Ajena')
+        StoreDailyVisit.objects.create(store = self.store_a, date = timezone.now().date(), count = 7)
+        StoreDailyVisit.objects.create(store = self.store_b, date = timezone.now().date(), count = 99)
+        categories  =   json.loads(self._rpc_http(
+            self.client_a, 'tools/call', {'name': 'list_my_categories'},
+        ).data['result']['content'][0]['text'])['categories']
+        self.assertEqual([c['name'] for c in categories], ['Calzado'])
+        visits      =   json.loads(self._rpc_http(
+            self.client_a, 'tools/call', {'name': 'my_store_visits', 'arguments': {'days': 7}},
+        ).data['result']['content'][0]['text'])['visits']
+        self.assertEqual(visits['total'], 7)

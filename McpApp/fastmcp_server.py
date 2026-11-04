@@ -103,9 +103,39 @@ def get_design_style(slug : str) -> dict:
 # USUARIO EN SESIÓN (ciego al resto de la DB)
 #=========================================
 @mcp.tool()
+def my_profile(ctx : Context) -> dict:
+    """TU perfil de cuenta: email, negocio, condición fiscal, ubicación y verificaciones."""
+    return call_tool('my_profile', {}, user = _require_user(ctx))
+
+
+@mcp.tool()
+def my_plan_summary(ctx : Context) -> dict:
+    """TU plan vigente: nombre, precio, estado y vencimiento."""
+    return call_tool('my_plan_summary', {}, user = _require_user(ctx))
+
+
+@mcp.tool()
+def my_payments(ctx : Context, limit : int = 10) -> dict:
+    """TUS últimos pagos: monto, estado y fecha."""
+    return call_tool('my_payments', {'limit': limit}, user = _require_user(ctx))
+
+
+@mcp.tool()
+def my_invoices(ctx : Context, limit : int = 10) -> dict:
+    """TUS últimas facturas: tipo, número, total y estado ARCA."""
+    return call_tool('my_invoices', {'limit': limit}, user = _require_user(ctx))
+
+
+@mcp.tool()
 def my_store_summary(ctx : Context) -> dict:
-    """Resumen de TU tienda: slug, publicación y conteos de productos/categorías/marcas."""
+    """Resumen de TU tienda: slug, publicación y conteos."""
     return call_tool('my_store_summary', {}, user = _require_user(ctx))
+
+
+@mcp.tool()
+def my_store_visits(ctx : Context, days : int = 30) -> dict:
+    """Visitas de TU web pública en los últimos N días (máx 90)."""
+    return call_tool('my_store_visits', {'days': days}, user = _require_user(ctx))
 
 
 @mcp.tool()
@@ -115,9 +145,15 @@ def search_my_products(ctx : Context, query : str = '', limit : int = 10) -> dic
 
 
 @mcp.tool()
-def my_plan_summary(ctx : Context) -> dict:
-    """TU plan vigente: nombre, precio, estado y vencimiento."""
-    return call_tool('my_plan_summary', {}, user = _require_user(ctx))
+def list_my_categories(ctx : Context) -> dict:
+    """TUS categorías con cantidad de productos."""
+    return call_tool('list_my_categories', {}, user = _require_user(ctx))
+
+
+@mcp.tool()
+def list_my_brands(ctx : Context) -> dict:
+    """TUS marcas con cantidad de productos."""
+    return call_tool('list_my_brands', {}, user = _require_user(ctx))
 
 
 if __name__ == '__main__':

@@ -21,19 +21,20 @@ el handler que lo ejecuta. Lo consumen:
 """
 
 from McpApp.domains.skills.services.user_tools import (
+    call_user_tool,
     mcp_user_access,
-    my_plan_summary,
-    my_store_summary,
-    search_my_products,
+    user_tool_names,
+    user_tool_schemas,
 )
 
 SERVER_NAME     =   'davent-skills'
 SERVER_VERSION  =   '1.0.0'
 
-#Tools de usuario: solo se ejecutan con un `user` inyectado por el
-#transporte y suscripción vigente no-trial (mcp_user_access). Nunca
-#leen datos ajenos ni aceptan ids de otros usuarios.
-USER_TOOLS  =   {'my_store_summary', 'search_my_products', 'my_plan_summary'}
+#Tools de usuario: las declara cada dominio en <dominio>/mcp.py y las
+#agrega user_tools. Solo corren con `user` inyectado por el transporte y
+#suscripción vigente no-trial (mcp_user_access); nunca leen datos ajenos.
+def _user_tools() -> set:
+    return user_tool_names()
 
 #=========================================
 # TOOL SCHEMAS
@@ -106,27 +107,6 @@ TOOLS   =   [
         },
     },
     {
-        'name'          :   'my_store_summary',
-        'description'   :   'Resumen de la tienda del usuario en sesión: slug, publicación y conteos de productos/categorías/marcas.',
-        'inputSchema'   :   {'type': 'object', 'properties': {}},
-    },
-    {
-        'name'          :   'search_my_products',
-        'description'   :   'Busca productos SOLO dentro del catálogo del usuario en sesión (nombre/descripción).',
-        'inputSchema'   :   {
-            'type'      :   'object',
-            'properties':   {
-                'query' :   {'type': 'string', 'description': 'Texto a buscar en nombre/descripción.'},
-                'limit' :   {'type': 'integer', 'minimum': 1, 'maximum': 50, 'default': 10},
-            },
-        },
-    },
-    {
-        'name'          :   'my_plan_summary',
-        'description'   :   'Plan de suscripción vigente del usuario en sesión: nombre, precio, estado y vencimiento.',
-        'inputSchema'   :   {'type': 'object', 'properties': {}},
-    },
-    {
         'name'          :   'get_design_pattern',
         'description'   :   'Devuelve un patrón completo por slug: layout por superficie, tokens del contrato y estilo asociado.',
         'inputSchema'   :   {
@@ -143,16 +123,11 @@ TOOLS   =   [
 #=========================================
 def call_tool(name : str, arguments : dict | None = None, user = None) -> dict:
     args    =   arguments or {}
-    if name in USER_TOOLS:
+    if name in _user_tools():
         #Fail-closed: sin sesión con plan pago vigente la tool no corre.
         if not mcp_user_access(user):
             raise ValueError('Esta herramienta requiere sesión con un plan vigente (básico, estándar o premium).')
-        if name == 'my_store_summary':
-            return my_store_summary(user)
-        if name == 'search_my_products':
-            return search_my_products(user, query = args.get('query', ''), limit = args.get('limit', 10))
-        if name == 'my_plan_summary':
-            return my_plan_summary(user)
+        return call_user_tool(name, args, user)
     if name == 'list_design_styles':
         rows    =   list_design_styles(categoria = args.get('categoria', ''), limit = args.get('limit', 10))
         return {'styles': [design_payload(s, full = False) for s in rows]}
@@ -196,5 +171,5 @@ def tools_list(user = None) -> list[dict]:
     #Sin acceso de usuario las tools personales ni se anuncian: un agente
     #ajeno no puede ni descubrir su contrato.
     if not mcp_user_access(user):
-        return [tool for tool in TOOLS if tool['name'] not in USER_TOOLS]
-    return TOOLS
+        return TOOLS
+    return TOOLS + user_tool_schemas()
