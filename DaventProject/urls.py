@@ -20,7 +20,8 @@ from decouple import config
 from django.conf import settings
 from django.conf.urls.static import static
 from django.contrib import admin
-from django.http import FileResponse, Http404, JsonResponse
+from django.contrib.sitemaps.views import sitemap
+from django.http import FileResponse, Http404, HttpResponse, JsonResponse
 from django.urls import include, path, re_path
 
 
@@ -28,12 +29,30 @@ def healthz(request):
     # Healthcheck de contenedores (Docker/compose) y monitores: 200 si el
     # proceso WSGI responde. No toca la DB a propósito.
     return JsonResponse({'status': 'ok'})
+
+
+def robots_txt(request):
+    # robots.txt de crawlers. El admin va ofuscado por env y NUNCA se
+    # declara acá: un Disallow visible delataría el path secreto (igual
+    # ya sirve X-Robots-Tag: noindex en middleware). /api/ y el dashboard
+    # tampoco se indexan — mismos headers.
+    lines = [
+        'User-agent: *',
+        'Disallow: /api/',
+        'Disallow: /dashboard',
+        '',
+        f'Sitemap: {request.build_absolute_uri("/sitemap.xml")}',
+        '',
+    ]
+    return HttpResponse('\n'.join(lines), content_type='text/plain')
 from drf_spectacular.views import (
     SpectacularAPIView,
     SpectacularRedocView,
     SpectacularSwaggerView,
 )
 from rest_framework_simplejwt.views import TokenVerifyView
+
+from DaventProject.sitemaps import StaticSitemap, StoreSitemap
 
 from AdminApp.domains.users.views.auth_views import (
     CookieTokenRefreshView,
@@ -49,6 +68,12 @@ from AdminApp.domains.users.views.auth_views import (
 
 urlpatterns = [
     path('healthz/', healthz, name='healthz'),
+    # SEO: robots.txt + sitemap.xml en la raíz del dominio (antes del
+    # catch-all del SPA, que igual los excluye por la regla de "con punto").
+    path('robots.txt', robots_txt, name='robots_txt'),
+    path('sitemap.xml', sitemap, {
+        'sitemaps': {'static': StaticSitemap(), 'stores': StoreSitemap()},
+    }, name='sitemap'),
     #ADMIN_URL por env: en prod un path no obvio reduce el ruido de bots que
     #escanean /admin/ (su login no tiene rate-limit propio). Default 'admin/'.
     path(settings.ADMIN_URL, admin.site.urls),
