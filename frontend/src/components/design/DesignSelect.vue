@@ -3,7 +3,7 @@
 // mostrar iconos y muestras de color en cada opción (el nativo no lo permite).
 // Mantiene la semántica de listbox y el teclado básico (Escape, flechas,
 // Enter) y emite el valor, no el evento.
-import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
+import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import AppIcon from '../AppIcon.vue'
 
 const props = defineProps({
@@ -20,6 +20,7 @@ const emit = defineEmits(['update:modelValue', 'change'])
 
 const open = ref(false)
 const root = ref(null)
+const trigger = ref(null)
 const active = ref(-1)
 
 const flat = computed(() => {
@@ -36,6 +37,7 @@ function toggle() {
   if (open.value) {
     const i = flat.value.findIndex((o) => String(o.value) === String(props.modelValue))
     active.value = i >= 0 ? i : 0
+    if (!isMobile.value) positionMenu()
   }
 }
 function pick(option) {
@@ -67,14 +69,59 @@ function onKey(e) {
     pick(flat.value[active.value])
   }
 }
-// En pantallas chicas el menú deja de ser un dropdown absoluto dentro del
-// card (el contenedor lo recortaba por overflow y por ancho) y pasa a ser
-// una hoja inferior fija, teletransportada a <body>, con scrim y scroll
-// propio — el patrón de picker nativo en touch.
+// El menú SIEMPRE se teletransporta a <body>: un dropdown absoluto queda
+// recortado por cualquier ancestro con overflow (cards, paneles con scroll)
+// y no puede escapar del stacking context del contenedor. En desktop se
+// posiciona con `position: fixed` a partir del rect del trigger (abre hacia
+// arriba si abajo no entra) y se recalcula al scrollear/redimensionar; en
+// móvil pasa a ser una hoja inferior con scrim, el patrón de picker nativo.
 const mobileQuery = typeof window !== 'undefined' ? window.matchMedia('(max-width: 640px)') : null
 const isMobile = ref(Boolean(mobileQuery?.matches))
 const onMobileQuery = (e) => { isMobile.value = e.matches }
-watch(open, (v) => { document.body.style.overflow = v && isMobile.value ? 'hidden' : '' })
+
+const menuStyle = ref({})
+const placement = ref('bottom')
+const MENU_GAP = 8
+const VIEWPORT_MARGIN = 12
+
+function positionMenu() {
+  const el = trigger.value
+  if (!el) return
+  const r = el.getBoundingClientRect()
+  const vw = window.innerWidth
+  const vh = window.innerHeight
+  const below = vh - r.bottom - MENU_GAP - VIEWPORT_MARGIN
+  const above = r.top - MENU_GAP - VIEWPORT_MARGIN
+  const up = below < Math.min(360, above) && above > below
+  const width = Math.min(Math.max(r.width, 240), vw - VIEWPORT_MARGIN * 2)
+  const left = Math.min(Math.max(VIEWPORT_MARGIN, r.left), Math.max(VIEWPORT_MARGIN, vw - width - VIEWPORT_MARGIN))
+  menuStyle.value = {
+    width: `${Math.round(width)}px`,
+    left: `${Math.round(left)}px`,
+    maxHeight: `${Math.max(160, Math.min(520, up ? above : below))}px`,
+    top: up ? 'auto' : `${Math.round(r.bottom + MENU_GAP)}px`,
+    bottom: up ? `${Math.round(vh - r.top + MENU_GAP)}px` : 'auto'
+  }
+  placement.value = up ? 'top' : 'bottom'
+}
+
+function onViewportChange() {
+  if (!open.value) return
+  if (isMobile.value) return
+  // Si el trigger salió de pantalla, el menú flotante ya no tiene ancla.
+  const r = trigger.value?.getBoundingClientRect()
+  if (!r || r.bottom < 0 || r.top > window.innerHeight) { open.value = false; return }
+  positionMenu()
+}
+
+watch(open, async (v) => {
+  document.body.style.overflow = v && isMobile.value ? 'hidden' : ''
+  if (v && !isMobile.value) {
+    await nextTick()
+    positionMenu()
+  }
+})
+watch(isMobile, () => { if (open.value) open.value = false })
 
 function onDocClick(e) {
   // El menú teletransportado vive fuera de `root`: no cerrar si el toque
@@ -84,10 +131,14 @@ function onDocClick(e) {
 onMounted(() => {
   document.addEventListener('pointerdown', onDocClick)
   mobileQuery?.addEventListener('change', onMobileQuery)
+  window.addEventListener('resize', onViewportChange)
+  window.addEventListener('scroll', onViewportChange, true)
 })
 onBeforeUnmount(() => {
   document.removeEventListener('pointerdown', onDocClick)
   mobileQuery?.removeEventListener('change', onMobileQuery)
+  window.removeEventListener('resize', onViewportChange)
+  window.removeEventListener('scroll', onViewportChange, true)
   if (open.value && isMobile.value) document.body.style.overflow = ''
 })
 </script>
@@ -95,6 +146,7 @@ onBeforeUnmount(() => {
 <template>
   <div ref="root" class="ds" :class="{ open, disabled }" @keydown="onKey">
     <button
+      ref="trigger"
       type="button" class="ds-trigger" :aria-label="ariaLabel || placeholder"
       aria-haspopup="listbox" :aria-expanded="open" :disabled="disabled" @click="toggle"
     >
@@ -106,9 +158,14 @@ onBeforeUnmount(() => {
       <AppIcon name="chevron-down" :size="15" class="ds-chev" aria-hidden="true" />
     </button>
 
-    <Teleport to="body" :disabled="!isMobile">
+    <Teleport to="body">
       <div v-if="open && isMobile" class="ds-scrim" aria-hidden="true" @click="open = false"></div>
-      <div v-if="open" class="ds-menu" :class="{ 'ds-sheet': isMobile }" role="listbox" :aria-label="ariaLabel || placeholder">
+      <div
+        v-if="open" class="ds-menu"
+        :class="{ 'ds-sheet': isMobile, 'ds-up': !isMobile && placement === 'top' }"
+        :style="isMobile ? null : menuStyle"
+        role="listbox" :aria-label="ariaLabel || placeholder"
+      >
       <template v-for="g in (groups.length ? groups : [{ label: '', options }])" :key="g.label">
         <p v-if="g.label" class="ds-group">{{ g.label }}</p>
         <button
@@ -161,11 +218,16 @@ onBeforeUnmount(() => {
 .ds-thumb { flex: none; height: 24px; width: auto; max-width: 96px; object-fit: contain; display: block; }
 .ds-option .ds-thumb { height: 30px; max-width: 120px; }
 .ds-menu {
-  position: absolute; z-index: 30; top: calc(100% + 6px); left: 0; right: 0;
-  max-height: min(300px, 50vh); overflow-y: auto; padding: 6px;
+  position: fixed; z-index: 1300; top: 0; left: 0;
+  overflow-y: auto; overscroll-behavior: contain; padding: 6px;
   border: 1px solid var(--line, #e5e7eb); border-radius: 12px;
-  background: var(--card, #fff); box-shadow: 0 18px 40px -18px rgba(15, 23, 42, .35);
+  background: var(--card, #fff); box-shadow: 0 22px 50px -18px rgba(15, 23, 42, .42);
+  animation: ds-menu-in .14s ease-out;
 }
+.ds-menu.ds-up { transform-origin: bottom center; }
+@keyframes ds-menu-in { from { opacity: 0; transform: translateY(-4px); } }
+.ds-menu.ds-up { animation-name: ds-menu-in-up; }
+@keyframes ds-menu-in-up { from { opacity: 0; transform: translateY(4px); } }
 /* Móvil: hoja inferior fija teletransportada a <body> — ningún ancestro
    con overflow la recorta y usa todo el ancho del viewport. */
 .ds-scrim {

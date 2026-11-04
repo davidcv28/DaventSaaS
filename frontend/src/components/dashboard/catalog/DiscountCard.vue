@@ -64,7 +64,7 @@ const progress = computed(() => {
   transition: border-color .15s, box-shadow .15s;
 }
 .dcard:hover { border-color: var(--brand-400); box-shadow: var(--shadow-md); }
-.dcard-info { flex: 1; min-width: 0; display: grid; gap: 3px; }
+.dcard-info { flex: 1 1 190px; min-width: 0; display: grid; gap: 3px; }
 .dcard-top { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
 .dcard-name { font-size: 14.5px; font-weight: 600; color: var(--ink); overflow-wrap: anywhere; }
 .dcard-meta { display: inline-flex; align-items: center; gap: 5px; color: var(--muted); font-size: 12px; }
@@ -76,6 +76,7 @@ const progress = computed(() => {
 .dcard-actions .icon-btn:focus-visible { outline: 2px solid var(--brand-500); outline-offset: 2px; }
 @media (max-width: 640px) {
   .dcard { flex-wrap: wrap; }
-  .dcard-actions { margin-left: auto; }
+  .dcard-info { flex-basis: calc(100% - 72px); }
+  .dcard-actions { width: 100%; justify-content: flex-end; }
 }
 </style>

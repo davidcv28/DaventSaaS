@@ -1287,7 +1287,9 @@ function downloadQr() {
   a.click()
 }
 
-const discountPreviewPct = computed(() => Math.min(99, Math.max(0, Math.round(Number(discountForm.percent)) || 0)))
+// El preview arranca con un 25% de muestra: un "-0%" se lee como error y el
+// ejemplo explica mejor qué va a ver el cliente.
+const discountPreviewPct = computed(() => Math.min(99, Math.max(1, Math.round(Number(discountForm.percent)) || 25)))
 const toolsTab = ref('ready')
 watch([section, canFlyers], () => { if (!canFlyers.value && toolsTab.value === 'studio') toolsTab.value = 'ready' })
 
@@ -3687,8 +3689,20 @@ async function changePassword() {
             </div>
 
             <div class="card disc-card">
-              <h3><AppIcon name="percent" :size="18" /> Tus descuentos</h3>
-              <div v-if="!catalog.discounts.length" class="empty-mini"><AppIcon name="percent" :size="22" /><p>Todavía no programaste descuentos. Crean ofertas que se encienden y se apagan solas.</p></div>
+              <div class="disc-head">
+                <h3><AppIcon name="percent" :size="18" /> Tus descuentos</h3>
+                <span v-if="catalog.discounts.length" class="pill muted">{{ catalog.discounts.length }} {{ catalog.discounts.length === 1 ? 'programado' : 'programados' }}</span>
+              </div>
+              <div v-if="!catalog.discounts.length" class="disc-empty">
+                <span class="disc-empty-icon"><AppIcon name="percent" :size="22" /></span>
+                <strong>Todavía no programaste descuentos</strong>
+                <p>Creá una oferta y se enciende y se apaga sola en las fechas que elijas.</p>
+                <ul class="disc-empty-tips">
+                  <li><AppIcon name="zap" :size="13" /> Se activa sola</li>
+                  <li><AppIcon name="clock" :size="13" /> Se apaga sola</li>
+                  <li><AppIcon name="eye" :size="13" /> Se ve en tu web</li>
+                </ul>
+              </div>
               <div v-else class="disc-cards">
                 <DiscountCard
                   v-for="d in catalog.discounts" :key="d.id" :d="d" :busy="discountBusy"

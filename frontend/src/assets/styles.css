@@ -816,7 +816,7 @@ body{ transition: background-color .2s ease, color .2s ease; }
 
 /* ===== Catálogo del dashboard (productos, categorías, marcas) ===== */
 .tabs{ display: flex; gap: 6px; margin-bottom: 18px; border-bottom: 1px solid var(--line); overflow-x: auto; scrollbar-width: thin; }
-.tab{ display: inline-flex; align-items: center; gap: 8px; padding: 10px 16px; border: none; border-bottom: 2px solid transparent; background: transparent; color: var(--muted); font: inherit; font-size: 14px; font-weight: 600; cursor: pointer; transition: color .15s, border-color .15s; }
+.tab{ display: inline-flex; align-items: center; gap: 8px; padding: 10px 16px; border: none; border-bottom: 2px solid transparent; background: transparent; color: var(--muted); font: inherit; font-size: 14px; font-weight: 600; white-space: nowrap; cursor: pointer; transition: color .15s, border-color .15s; }
 .tab:hover{ color: var(--ink); }
 .tab.active{ color: var(--brand-ink); border-bottom-color: var(--brand-500); }
 .tax-add{ display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 12px; align-items: end; margin-bottom: 16px; }
@@ -845,7 +845,7 @@ body{ transition: background-color .2s ease, color .2s ease; }
 .disc-pct-input{ max-width: 92px; text-align: center; }
 .disc-pct-sign{ font-weight: 700; color: var(--ink-2); flex: none; }
 .disc-pct-slider{ flex: 1; height: 40px; accent-color: var(--brand-500); cursor: pointer; min-width: 0; }
-.disc-scope{ display: grid; grid-template-columns: repeat(auto-fit, minmax(118px, 1fr)); gap: 8px; }
+.disc-scope{ display: grid; grid-template-columns: repeat(auto-fit, minmax(112px, 1fr)); gap: 8px; }
 .disc-scope-card{ display: flex; flex-direction: column; align-items: center; gap: 6px; padding: 12px 8px; border: 1px solid var(--line); border-radius: var(--radius-sm); background: var(--card); color: var(--ink-2); font-size: 12.5px; font-weight: 600; text-align: center; cursor: pointer; transition: border-color .15s, background .15s, color .15s, box-shadow .15s; }
 .disc-scope-card svg{ color: var(--muted); transition: color .15s; }
 .disc-scope-card:hover{ border-color: var(--line-strong); }
@@ -855,24 +855,40 @@ body{ transition: background-color .2s ease, color .2s ease; }
 .disc-presets{ display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 10px; }
 .disc-preset{ padding: 5px 12px; border: 1px solid var(--line); border-radius: 99px; background: var(--card); font-size: 12px; font-weight: 600; color: var(--ink-2); cursor: pointer; transition: border-color .15s, color .15s, background .15s; }
 .disc-preset:hover{ border-color: var(--brand-500); color: var(--brand-ink); background: var(--brand-soft); }
-.disc-window{ display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 12px; padding: 14px; border: 1px solid var(--line); border-radius: var(--radius-sm); background: var(--surface); }
+.disc-window{ display: grid; grid-template-columns: minmax(0, 1fr); gap: 12px; padding: 14px; border: 1px solid var(--line); border-radius: var(--radius-sm); background: var(--surface); }
 .disc-when{ display: grid; gap: 8px; align-content: start; }
 .disc-when-label{ display: inline-flex; align-items: center; gap: 5px; font-size: 12px; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: .04em; }
 .disc-when-label svg{ color: var(--brand-500); }
-.disc-when-fields{ display: flex; gap: 8px; }
-.disc-when-fields .input[type='date']{ flex: 1.5; min-width: 0; }
-.disc-when-fields .input[type='time']{ flex: 1; min-width: 0; }
-.disc-none{ display: inline-flex; align-items: center; gap: 7px; font-size: 13px; font-weight: 600; color: var(--ink-2); cursor: pointer; }
+.disc-when-fields{ display: flex; flex-wrap: wrap; gap: 8px; }
+.disc-when-fields .input[type='date']{ flex: 1 1 130px; min-width: 0; }
+.disc-when-fields .input[type='time']{ flex: 1 1 86px; min-width: 0; }
+.disc-none{ display: inline-flex; align-items: center; gap: 7px; min-width: 0; font-size: 13px; font-weight: 600; color: var(--ink-2); cursor: pointer; }
+.disc-none span{ min-width: 0; }
 .disc-none input[type='checkbox']{ width: 16px; height: 16px; accent-color: var(--brand-600); cursor: pointer; }
 @media (max-width: 560px){
-  .disc-window{ grid-template-columns: minmax(0, 1fr); }
   .disc-pct-slider{ display: none; }
 }
 
-/* Pestaña Descuentos — acabado premium */
-.disc-card{ position: relative; overflow: hidden; }
-.disc-card::before{ content: ''; position: absolute; inset: 0 0 auto 0; height: 2px; background: linear-gradient(90deg, var(--brand-500), var(--accent), transparent); opacity: .85; }
+/* Pestaña Descuentos — acabado premium. Sin `overflow:hidden`: recortaba
+   el dropdown de campaña y los anillos de foco. La barra superior se
+   redondea sola para no salirse del radio del card. */
+.disc-card{ position: relative; }
+.disc-card::before{ content: ''; position: absolute; inset: 0 0 auto 0; height: 2px; border-radius: var(--radius) var(--radius) 0 0; background: linear-gradient(90deg, var(--brand-500), var(--accent), transparent); opacity: .85; }
+.disc-wrap{ align-items: start; }
+.disc-wrap > .disc-card{ align-self: start; }
+@media (max-width: 1180px){
+  .disc-wrap{ grid-template-columns: minmax(0, 1fr); }
+}
 .disc-card h3{ letter-spacing: -.01em; }
+.disc-head{ display: flex; align-items: center; justify-content: space-between; gap: 10px; flex-wrap: wrap; }
+.disc-head h3{ margin-bottom: 0; }
+.disc-empty{ display: grid; justify-items: center; gap: 6px; margin-top: 16px; padding: 26px 18px; border: 1.5px dashed var(--line-strong); border-radius: 14px; text-align: center; background: linear-gradient(180deg, var(--brand-soft), transparent 75%); }
+.disc-empty-icon{ display: grid; place-items: center; width: 46px; height: 46px; margin-bottom: 2px; border-radius: 13px; background: var(--card); border: 1px solid var(--brand-soft-line); color: var(--brand-ink); box-shadow: var(--shadow-sm); }
+.disc-empty strong{ font-size: 14.5px; color: var(--ink); }
+.disc-empty p{ margin: 0; max-width: 34ch; font-size: 13px; color: var(--muted); line-height: 1.45; }
+.disc-empty-tips{ display: flex; flex-wrap: wrap; justify-content: center; gap: 6px; list-style: none; margin: 8px 0 0; padding: 0; }
+.disc-empty-tips li{ display: inline-flex; align-items: center; gap: 5px; padding: 4px 10px; border: 1px solid var(--line); border-radius: 99px; background: var(--card); font-size: 11.5px; font-weight: 600; color: var(--ink-2); }
+.disc-empty-tips svg{ color: var(--brand-ink); }
 .disc-wrap .field > label, .disc-wrap .field > .input-label{ font-size: 12px; font-weight: 700; letter-spacing: .05em; text-transform: uppercase; color: var(--muted); }
 .disc-pct-input{ font-size: 18px; font-weight: 800; color: var(--brand-ink); }
 .disc-pct-sign{ font-size: 16px; color: var(--brand-ink); }
