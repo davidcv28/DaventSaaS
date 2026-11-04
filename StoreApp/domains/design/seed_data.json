@@ -4546,23 +4546,23 @@
       "slug": "moda",
       "nombre": "Moda",
       "categoria": "Tienda de moda",
-      "descripcion": "Fashion club clásico: barra superior con datos, marca en mayúsculas, tiles de sale a todo color y grilla de productos con Montserrat + Lato.",
+      "descripcion": "Fashion club editorial: papel hueso, tinta de imprenta y un acento de temporada. DM Serif Display para la marca, Instrument Sans en lectura y JetBrains Mono en datos; cintas en loop, sello giratorio, retícula numerada y fichas tipo revista.",
       "tier": "plus",
       "template": "moda",
       "page_theme": "light",
       "pattern": "moda",
       "tokens": {
         "palette": {
-          "accent": "#F2711C",
-          "primary": "#1F1F1F",
-          "secondary": "#3D3D3D",
-          "bg": "#FFFFFF",
-          "surface": "#F7F7F5",
-          "text": "#1F1F1F",
-          "muted": "#8A8A8A",
-          "border": "#E9E9E6",
-          "success": "#2FA36B",
-          "danger": "#D64545"
+          "accent": "#D8381B",
+          "primary": "#171410",
+          "secondary": "#3A342B",
+          "bg": "#F2EDE3",
+          "surface": "#E9E2D4",
+          "text": "#171410",
+          "muted": "#6F675B",
+          "border": "#D5CBB8",
+          "success": "#2F6B4F",
+          "danger": "#B3261E"
         },
         "containers": {
           "radius": "sm",
@@ -4572,12 +4572,12 @@
           "surface": "flat"
         },
         "typography": {
-          "heading": "montserrat",
-          "subheading": "lato",
-          "body": "lato",
-          "scale": "balanced",
-          "weightHeading": 800,
-          "letterSpacing": "0.01em"
+          "heading": "dm-serif-display",
+          "subheading": "instrument-sans",
+          "body": "instrument-sans",
+          "scale": "editorial",
+          "weightHeading": 400,
+          "letterSpacing": "-0.02em"
         },
         "buttons": {
           "shape": "square",
@@ -4633,13 +4633,13 @@
         "size": "20",
         "corners": "rounded"
       },
-      "concept": "Blanco, negro y naranja de retail: Montserrat en mayúsculas y Lato en lectura."
+      "concept": "Papel hueso, tinta y bermellón: DM Serif Display, retícula de revista y cintas de temporada."
     },
     {
       "slug": "moda-noche",
       "nombre": "Moda Noche",
       "categoria": "Tienda de moda nocturna",
-      "descripcion": "Carbón y naranja señal: la versión nocturna del fashion club, con tiles de sale que brillan sobre fondo tinta.",
+      "descripcion": "Grafito y ámbar: la edición nocturna del fashion club, con el mismo aparato editorial en clave de club después de hora.",
       "tier": "plus",
       "template": "moda",
       "page_theme": "dark",
@@ -4649,11 +4649,11 @@
           "accent": "#FF8A3C",
           "primary": "#FF8A3C",
           "secondary": "#B05E22",
-          "bg": "#161617",
-          "surface": "#1F1F21",
-          "text": "#F2F2F0",
-          "muted": "#9C9C97",
-          "border": "#2E2E31",
+          "bg": "#121110",
+          "surface": "#1C1A17",
+          "text": "#F4EFE6",
+          "muted": "#9A9387",
+          "border": "#2E2A24",
           "success": "#4CC38A",
           "danger": "#E56464"
         },
@@ -4665,12 +4665,12 @@
           "surface": "elevated"
         },
         "typography": {
-          "heading": "montserrat",
-          "subheading": "lato",
-          "body": "lato",
-          "scale": "balanced",
-          "weightHeading": 800,
-          "letterSpacing": "0.01em"
+          "heading": "dm-serif-display",
+          "subheading": "instrument-sans",
+          "body": "instrument-sans",
+          "scale": "editorial",
+          "weightHeading": 400,
+          "letterSpacing": "-0.02em"
         },
         "buttons": {
           "shape": "square",
@@ -4725,7 +4725,7 @@
         "size": "20",
         "corners": "rounded"
       },
-      "concept": "Carbón + naranja señal: el fashion club de noche."
+      "concept": "Grafito + ámbar: el fashion club después de hora."
     }
   ],
   "patterns": [
@@ -6457,7 +6457,7 @@
       "slug": "moda",
       "nombre": "Moda",
       "categoria": "indumentaria",
-      "descripcion": "Fashion club: barra superior con datos del negocio, marca en mayúsculas Montserrat, franja de sale tiles a todo color, productos con tabs por categoría, servicios, testimonios, marcas y banda de newsletter.",
+      "descripcion": "Fashion club editorial: portada de revista con sello y cinta, índice de líneas, vitrina con tabs reales, atelier con cifras y lookbook, garantías, membresías, testimonios, FAQ, CTA y contacto. Solo datos de la tienda; sin ofertas inventadas.",
       "tier": "plus",
       "template": "moda",
       "layout": {
@@ -6469,7 +6469,7 @@
             "order": 0
           },
           {
-            "id": "offers",
+            "id": "categories",
             "enabled": true,
             "order": 1
           },
@@ -6479,27 +6479,42 @@
             "order": 2
           },
           {
-            "id": "benefits",
-            "variant": "cards",
+            "id": "about",
             "enabled": true,
             "order": 3
           },
           {
-            "id": "testimonials",
+            "id": "benefits",
             "variant": "cards",
             "enabled": true,
             "order": 4
           },
           {
-            "id": "brands",
+            "id": "plans",
             "enabled": true,
             "order": 5
+          },
+          {
+            "id": "testimonials",
+            "variant": "cards",
+            "enabled": true,
+            "order": 6
+          },
+          {
+            "id": "faq",
+            "enabled": true,
+            "order": 7
           },
           {
             "id": "cta",
             "variant": "band",
             "enabled": true,
-            "order": 6
+            "order": 8
+          },
+          {
+            "id": "contact",
+            "enabled": true,
+            "order": 9
           }
         ],
         "catalog": [
@@ -6528,22 +6543,22 @@
         ]
       },
       "tokens": {
-        "accent": "#F2711C",
+        "accent": "#D8381B",
         "palette": {
-          "accent": "#F2711C",
-          "primary": "#1F1F1F",
-          "secondary": "#3D3D3D",
-          "bg": "#FFFFFF",
-          "surface": "#F7F7F5",
-          "text": "#1F1F1F",
-          "muted": "#8A8A8A",
-          "border": "#E9E9E6",
-          "success": "#2FA36B",
-          "danger": "#D64545"
+          "accent": "#D8381B",
+          "primary": "#171410",
+          "secondary": "#3A342B",
+          "bg": "#F2EDE3",
+          "surface": "#E9E2D4",
+          "text": "#171410",
+          "muted": "#6F675B",
+          "border": "#D5CBB8",
+          "success": "#2F6B4F",
+          "danger": "#B3261E"
         },
         "fonts": [
-          "montserrat",
-          "lato"
+          "dm-serif-display",
+          "instrument-sans"
         ],
         "radius": "3px",
         "anim": {
