@@ -400,10 +400,18 @@ JetBrains Mono. Reglas de 2px, retícula visible y numeración de pliego.
   elemento (no pelean con selectores); (7) el reset `[data-template] a`
   (0,2,1) gana a una clase sola: los estados de tinta de celdas-enlace
   (`.mi-dept`, `.mi-dept-all`, `.mi-featured-all`) llevan el prefijo del
-  diseño.
+  diseño; (8) el motor publica `--st-bg`/`--sp-bg` **inline** y pinta el
+  lienzo con `[data-st-bgrole][data-store-template]` (0,3,0): la piel declara
+  `background: var(--mi-paper)` con la misma especificidad o los estilos
+  claros se quedan con el papel base.
+- **Estilos** (4): `impacto` (papel crudo + naranja señal), `impacto-noche`
+  (grafito + ácido), `impacto-arena` (lino cálido + cobalto, reglas de 1px y
+  sello cuadrado) e `impacto-blanco` (galería + magenta, cinta principal en
+  acento y sombra rosada). El sub-árbol `.mi-skin` ya **no redeclara**
+  `--mi-*`: hereda la paleta del estilo activo (incluida la noche).
 - **Registro**: `tier: 'plus'` (Estándar y superiores), `TEMPLATE_PLUS`,
   `TEMPLATE_CSS` → `store-impacto.css`, `SKIN_TEMPLATES`, `fonts:
   ['anton','space-grotesk','jetbrains-mono']`, patrón `impacto` + estilos
-  `impacto`/`impacto-noche` en `seed_data.json`. QA: `/mi-qa` (papel) y
-  `/mi-qa-noche` (grafito); sync del catálogo:
-  `manage.py sync_design_neon --slug impacto`.
+  `impacto`/`impacto-noche`/`impacto-arena`/`impacto-blanco` en
+  `seed_data.json`. QA: `/mi-qa` (papel) y `/mi-qa-noche` (grafito); sync del
+  catálogo: `manage.py sync_design_neon --slug impacto`.

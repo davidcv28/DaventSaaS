@@ -89,6 +89,12 @@
     var(--mi-hatch-a) 0, var(--mi-hatch-a) 2px,
     var(--mi-hatch-b) 2px, var(--mi-hatch-b) 14px);
 
+  /* El tema publicado deja `--sp-bg` inline y una regla
+     `[data-st-bgtype][data-store-template]` pinta el fondo con más
+     especificidad: se reescribe el token en la raíz para que los estilos
+     claros y la noche tiñan también el lienzo. */
+  --sp-bg: var(--mi-paper);
+
   font-family: var(--mi-body);
   background: var(--mi-paper);
   color: var(--mi-ink);
@@ -96,6 +102,13 @@
   line-height: 1.62;
   overflow-x: clip;
   -webkit-font-smoothing: antialiased;
+}
+/* El motor del tema deja `--sp-bg`/`--st-bg` inline y pinta el lienzo con
+   `[data-st-bgrole][data-store-template]` (0,3,0). Se declara el fondo con la
+   misma especificidad y el papel del estilo gana sin `!important`. */
+.store-page[data-template='impacto'][data-st-bgrole][data-store-template],
+.store-page[data-template='impacto'][data-st-bgtype][data-store-template] {
+  background: var(--mi-paper);
 }
 
 /* --- Tema NOCHE: grafito, tinta cruda y acento ácido --- */
@@ -2242,26 +2255,10 @@
 /* ==========================================================================
    9. SUB-ÁRBOL RAÍZ (.mi-skin) — catálogo, ficha y servicios
    ========================================================================== */
+/* El sub-árbol Raíz es un `.store-page` anidado: NO redeclara `--mi-*` para
+   que herede la paleta del estilo activo (incluidos los claros nuevos y la
+   edición noche). Solo traduce los tokens al contrato de Raíz. */
 .store-page.mi-skin {
-  --mi-paper: #EDEBE4;
-  --mi-paper-2: #E4E1D8;
-  --mi-card: #F4F2EC;
-  --mi-hatch-a: #D9D6CC;
-  --mi-hatch-b: #E4E1D8;
-  --mi-ink: #111111;
-  --mi-ink-2: #2B2A26;
-  --mi-muted: #5C5A52;
-  --mi-rule: #111111;
-  --mi-line: #C9C5B8;
-  --mi-line-2: #A9A497;
-  --mi-accent: var(--st-accent, var(--store-accent, #FF4B1F));
-  --mi-accent-ink: var(--st-accent-ink, #111111);
-  --mi-accent-text: color-mix(in srgb, var(--mi-accent) 70%, var(--mi-ink));
-  --mi-accent-display: color-mix(in srgb, var(--mi-accent) 86%, var(--mi-ink));
-  --mi-on-accent: var(--st-on-accent, #FFFDF6);
-  --mi-stripe: repeating-linear-gradient(135deg,
-    var(--mi-hatch-a) 0, var(--mi-hatch-a) 2px,
-    var(--mi-hatch-b) 2px, var(--mi-hatch-b) 14px);
   --sp-bg: var(--mi-paper);
   --sp-card: var(--mi-card);
   --sp-card-solid: var(--mi-card);
@@ -2288,38 +2285,80 @@
 .store-page.mi-skin::before,
 .store-page.mi-skin::after { display: none; }
 
-/* El sub-árbol Raíz es un `.store-page` anidado y no hereda el atributo de
-   tema: sin este remapeo el catálogo, la ficha y servicios quedaban en papel
-   claro dentro de la edición noche. */
-.store-page[data-template='impacto'][data-store-theme='dark'] .mi-skin {
-  --mi-paper: #131311;
-  --mi-paper-2: #191917;
-  --mi-card: #1B1B18;
-  --mi-hatch-a: #232320;
-  --mi-hatch-b: #2B2B27;
-  --mi-ink: #EDEBE4;
-  --mi-ink-2: #D6D3C9;
-  --mi-muted: #9A968A;
-  --mi-rule: #EDEBE4;
-  --mi-line: #35352F;
-  --mi-line-2: #4B4B43;
-  --mi-accent-soft: color-mix(in srgb, var(--mi-accent) 20%, #131311);
-  --sp-bg: var(--mi-paper);
-  --sp-card: var(--mi-card);
-  --sp-card-solid: var(--mi-card);
-  --sp-surface: var(--mi-paper-2);
-  --sp-ink: var(--mi-ink);
-  --sp-ink-2: var(--mi-ink-2);
-  --sp-muted: var(--mi-muted);
-  --sp-line: var(--mi-line);
-  --rz-ink: var(--mi-ink);
-  --rz-ink-2: var(--mi-ink-2);
-  --rz-muted: var(--mi-muted);
-  --rz-line: var(--mi-line-2);
-  --rz-bg: var(--mi-paper);
-  --rz-card: var(--mi-card);
-  background: var(--mi-paper);
-  color: var(--mi-ink);
+/* ==========================================================================
+   9.1 ESTILOS CLAROS — Arena y Blanco (data-style = slug del DesignStyle)
+   La paleta se declara en la raíz y el sub-árbol Raíz la hereda.
+   ========================================================================== */
+/* ARENA — papel de lino cálido y azul cobalto de temporada. Reglas de 1px y
+   sello cuadrado: la edición de verano, más seca y luminosa. */
+.store-page[data-template='impacto'][data-style='impacto-arena'] {
+  --mi-paper: #F1E6D1;
+  --mi-paper-2: #E7D9BF;
+  --mi-card: #F6EDDB;
+  --mi-hatch-a: #D8C7A8;
+  --mi-hatch-b: #E7D9BF;
+  --mi-ink: #1A1611;
+  --mi-ink-2: #3A3227;
+  --mi-muted: #6A5F4E;
+  --mi-rule: #1A1611;
+  --mi-line: #CDBB9B;
+  --mi-line-2: #AE9977;
+  --mi-accent: #1D4ED8;
+  --mi-accent-ink: #FFFFFF;
+  --mi-on-accent: #FFFFFF;
+  --mi-accent-soft: color-mix(in srgb, var(--mi-accent) 14%, var(--mi-paper));
+  /* Los componentes compartidos leen `--store-accent`: se alinea al estilo. */
+  --store-accent: #1D4ED8;
+  --store-accent-ink: #FFFFFF;
+  --store-accent-soft: color-mix(in srgb, #1D4ED8 14%, #F1E6D1);
+  --mi-scrim: rgba(26, 22, 17, .62);
+  --mi-rule-w: 1px;
+  --mi-theme-color: #F1E6D1;
+}
+.store-page[data-template='impacto'][data-style='impacto-arena'] .mi-stamp {
+  border-radius: 0;
+  transform: rotate(-4deg);
+}
+.store-page[data-template='impacto'][data-style='impacto-arena'] .mi-stamp::before { border-radius: 0; }
+.store-page[data-template='impacto'][data-style='impacto-arena'] .mi-stamp:hover {
+  transform: rotate(0deg) scale(1.04);
+}
+.store-page[data-template='impacto'][data-style='impacto-arena'] .mi-dossier { box-shadow: 9px 9px 0 color-mix(in srgb, var(--mi-ink) 8%, transparent); }
+
+/* BLANCO — papel de galería y magenta de portada. La cinta principal pasa al
+   acento y el dossier proyecta una sombra de tinta rosada: edición luminosa. */
+.store-page[data-template='impacto'][data-style='impacto-blanco'] {
+  --mi-paper: #F7F6F2;
+  --mi-paper-2: #EFEDE7;
+  --mi-card: #FFFFFF;
+  --mi-hatch-a: #E2E0D8;
+  --mi-hatch-b: #EFEDE7;
+  --mi-ink: #0E0E0C;
+  --mi-ink-2: #2A2A26;
+  --mi-muted: #5E5E57;
+  --mi-rule: #0E0E0C;
+  --mi-line: #D3D1C7;
+  --mi-line-2: #B4B2A7;
+  --mi-accent: #D6006E;
+  --mi-accent-ink: #FFFFFF;
+  --mi-on-accent: #FFFFFF;
+  --mi-accent-soft: color-mix(in srgb, var(--mi-accent) 12%, var(--mi-paper));
+  /* Los componentes compartidos leen `--store-accent`: se alinea al estilo. */
+  --store-accent: #D6006E;
+  --store-accent-ink: #FFFFFF;
+  --store-accent-soft: color-mix(in srgb, #D6006E 12%, #F7F6F2);
+  --mi-scrim: rgba(14, 14, 12, .62);
+  --mi-ribbon-bg: var(--mi-accent);
+  --mi-ribbon-ink: #FFFFFF;
+  --mi-ribbon-alt-bg: var(--mi-ink);
+  --mi-ribbon-alt-ink: var(--mi-paper);
+  --mi-theme-color: #F7F6F2;
+}
+.store-page[data-template='impacto'][data-style='impacto-blanco'] .mi-dossier {
+  box-shadow: 9px 9px 0 color-mix(in srgb, var(--mi-accent) 22%, transparent);
+}
+.store-page[data-template='impacto'][data-style='impacto-blanco'] .mi-hero-look {
+  box-shadow: 7px 7px 0 color-mix(in srgb, var(--mi-accent) 24%, transparent);
 }
 
 .store-page.mi-skin :is(.rz-btn) {

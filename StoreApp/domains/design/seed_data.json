@@ -3931,6 +3931,194 @@
         "corners": "square"
       },
       "concept": "Grafito y acento ácido: edición nocturna de la tapa, misma retícula y numeración de pliego."
+    },
+    {
+      "slug": "impacto-arena",
+      "nombre": "Indumentaria ModernImpact Arena",
+      "categoria": "Revista de moda",
+      "descripcion": "Papel de lino cálido y azul cobalto de temporada: la edición de verano de ModernImpact, con reglas de 1px, sello cuadrado y la misma retícula de pliego.",
+      "tier": "plus",
+      "template": "impacto",
+      "pattern": "impacto",
+      "page_theme": "light",
+      "tokens": {
+        "palette": {
+          "accent": "#1D4ED8",
+          "primary": "#1A1611",
+          "secondary": "#3A3227",
+          "bg": "#F1E6D1",
+          "surface": "#F6EDDB",
+          "text": "#1A1611",
+          "muted": "#6A5F4E",
+          "border": "#CDBB9B",
+          "success": "#4F6B47",
+          "danger": "#B3261E"
+        },
+        "containers": {
+          "radius": "none",
+          "shadow": "none",
+          "border": "bold",
+          "density": "spacious",
+          "surface": "flat"
+        },
+        "typography": {
+          "heading": "anton",
+          "subheading": "anton",
+          "body": "space-grotesk",
+          "scale": "editorial",
+          "weightHeading": 400,
+          "letterSpacing": "-0.01em"
+        },
+        "buttons": {
+          "shape": "square",
+          "style": "solid",
+          "size": "md"
+        },
+        "background": {
+          "type": "solid",
+          "value": null,
+          "overlay": "none"
+        },
+        "motion": {
+          "reveal": "stagger",
+          "hover": "lift",
+          "intensity": "medium"
+        },
+        "mobile": {
+          "cardStyle": "standard",
+          "heroHeight": "tall"
+        },
+        "preview": "",
+        "icons": {
+          "style": "line",
+          "stroke": "1.5",
+          "size": "20",
+          "corners": "square"
+        }
+      },
+      "layout": {},
+      "layout_spec": {},
+      "tags": [
+        "indumentaria",
+        "ropa",
+        "moda",
+        "revista",
+        "editorial",
+        "arena",
+        "verano",
+        "resort"
+      ],
+      "preview": "",
+      "style": "Revista de moda",
+      "anim": {
+        "hero": "line-up",
+        "reveal": "stagger",
+        "hover": "wipe",
+        "button": "ink-fill"
+      },
+      "easing": "cubic-bezier(.16,1,.3,1)",
+      "duration": "620ms",
+      "icons": {
+        "style": "line",
+        "stroke": "1.5",
+        "size": "20",
+        "corners": "square"
+      },
+      "concept": "Arena cálida y cobalto: papel de lino, reglas finas y sello cuadrado para la edición de verano."
+    },
+    {
+      "slug": "impacto-blanco",
+      "nombre": "Indumentaria ModernImpact Blanco",
+      "categoria": "Revista de moda",
+      "descripcion": "Papel de galería y magenta de portada: la edición blanca de ModernImpact, más limpia y luminosa, con cinta principal en acento y dossier de sombra rosada.",
+      "tier": "plus",
+      "template": "impacto",
+      "pattern": "impacto",
+      "page_theme": "light",
+      "tokens": {
+        "palette": {
+          "accent": "#D6006E",
+          "primary": "#0E0E0C",
+          "secondary": "#2A2A26",
+          "bg": "#F7F6F2",
+          "surface": "#FFFFFF",
+          "text": "#0E0E0C",
+          "muted": "#5E5E57",
+          "border": "#D3D1C7",
+          "success": "#2E7D5B",
+          "danger": "#B3261E"
+        },
+        "containers": {
+          "radius": "none",
+          "shadow": "none",
+          "border": "bold",
+          "density": "spacious",
+          "surface": "flat"
+        },
+        "typography": {
+          "heading": "anton",
+          "subheading": "anton",
+          "body": "space-grotesk",
+          "scale": "editorial",
+          "weightHeading": 400,
+          "letterSpacing": "-0.01em"
+        },
+        "buttons": {
+          "shape": "square",
+          "style": "solid",
+          "size": "md"
+        },
+        "background": {
+          "type": "solid",
+          "value": null,
+          "overlay": "none"
+        },
+        "motion": {
+          "reveal": "stagger",
+          "hover": "lift",
+          "intensity": "medium"
+        },
+        "mobile": {
+          "cardStyle": "standard",
+          "heroHeight": "tall"
+        },
+        "preview": "",
+        "icons": {
+          "style": "line",
+          "stroke": "1.5",
+          "size": "20",
+          "corners": "square"
+        }
+      },
+      "layout": {},
+      "layout_spec": {},
+      "tags": [
+        "indumentaria",
+        "ropa",
+        "moda",
+        "revista",
+        "editorial",
+        "blanco",
+        "galeria",
+        "luminoso"
+      ],
+      "preview": "",
+      "style": "Revista de moda",
+      "anim": {
+        "hero": "line-up",
+        "reveal": "stagger",
+        "hover": "wipe",
+        "button": "ink-fill"
+      },
+      "easing": "cubic-bezier(.16,1,.3,1)",
+      "duration": "620ms",
+      "icons": {
+        "style": "line",
+        "stroke": "1.5",
+        "size": "20",
+        "corners": "square"
+      },
+      "concept": "Galería blanca y magenta: cinta en acento, sombra rosada y la misma tapa de revista."
     }
   ],
   "patterns": [
