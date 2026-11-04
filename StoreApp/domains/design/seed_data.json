@@ -3076,6 +3076,216 @@
       ],
       "is_default": false,
       "is_active": true
+    },
+    {
+      "slug": "brigada",
+      "nombre": "Brigada",
+      "categoria": "Seguridad contra incendios",
+      "descripcion": "Amarillo de alta visibilidad sobre tinta de cuartel: franjas de riesgo, placas de verificación y tipografía técnica en mayúsculas.",
+      "tier": "plus",
+      "template": "raiz",
+      "page_theme": "light",
+      "pattern": "brigada",
+      "tokens": {
+        "palette": {
+          "primary": "#B02A1E",
+          "secondary": "#8A1F16",
+          "accent": "#F5B800",
+          "bg": "#F2EFE6",
+          "surface": "#FBF9F2",
+          "text": "#191813",
+          "muted": "#6E6A5C",
+          "border": "#D8D2C0",
+          "success": "#2F7D4F",
+          "danger": "#C02A1E"
+        },
+        "containers": {
+          "radius": "sm",
+          "shadow": "none",
+          "border": "thin",
+          "density": "comfortable",
+          "surface": "flat"
+        },
+        "typography": {
+          "heading": "bricolage-grotesque",
+          "subheading": "jetbrains-mono",
+          "body": "instrument-sans",
+          "scale": "balanced",
+          "weightHeading": 800,
+          "letterSpacing": "-0.02em"
+        },
+        "buttons": {
+          "shape": "square",
+          "style": "solid",
+          "size": "md"
+        },
+        "background": {
+          "type": "solid",
+          "overlay": "none"
+        },
+        "motion": {
+          "reveal": "rise",
+          "hover": "lift",
+          "intensity": "subtle"
+        },
+        "mobile": {
+          "gridCols": 1,
+          "cardStyle": "standard",
+          "heroHeight": "tall"
+        }
+      },
+      "tags": [
+        "seguridad",
+        "bomberos",
+        "matafuegos",
+        "extintores",
+        "incendios",
+        "emergencia",
+        "amarillo",
+        "industrial"
+      ],
+      "preview": "",
+      "concept": "Amarillo de señalización + negro de cuartel: brigada industrial."
+    },
+    {
+      "slug": "brigada-azul",
+      "nombre": "Brigada Azul",
+      "categoria": "Seguridad contra incendios",
+      "descripcion": "Azul institucional de servicios de emergencia: mismo cuartel, placa fría y acento cobalto.",
+      "tier": "plus",
+      "template": "raiz",
+      "page_theme": "light",
+      "pattern": "brigada",
+      "tokens": {
+        "palette": {
+          "primary": "#0F3D7A",
+          "secondary": "#0A2C59",
+          "accent": "#1D6AE0",
+          "bg": "#EDF1F6",
+          "surface": "#F8FAFD",
+          "text": "#131A24",
+          "muted": "#5D6B7E",
+          "border": "#CBD6E2",
+          "success": "#1E7A55",
+          "danger": "#C02A1E"
+        },
+        "containers": {
+          "radius": "sm",
+          "shadow": "none",
+          "border": "thin",
+          "density": "comfortable",
+          "surface": "flat"
+        },
+        "typography": {
+          "heading": "bricolage-grotesque",
+          "subheading": "jetbrains-mono",
+          "body": "instrument-sans",
+          "scale": "balanced",
+          "weightHeading": 800,
+          "letterSpacing": "-0.02em"
+        },
+        "buttons": {
+          "shape": "square",
+          "style": "solid",
+          "size": "md"
+        },
+        "background": {
+          "type": "solid",
+          "overlay": "none"
+        },
+        "motion": {
+          "reveal": "rise",
+          "hover": "lift",
+          "intensity": "subtle"
+        },
+        "mobile": {
+          "gridCols": 1,
+          "cardStyle": "standard",
+          "heroHeight": "tall"
+        }
+      },
+      "tags": [
+        "seguridad",
+        "bomberos",
+        "matafuegos",
+        "extintores",
+        "incendios",
+        "emergencia",
+        "azul",
+        "institucional"
+      ],
+      "preview": "",
+      "concept": "Cobalto de emergencia sobre acero: brigada institucional."
+    },
+    {
+      "slug": "brigada-rojo",
+      "nombre": "Brigada Rojo",
+      "categoria": "Seguridad contra incendios",
+      "descripcion": "Rojo fuego de alarma: la franja de riesgo se vuelve carmín sobre papel cálido.",
+      "tier": "plus",
+      "template": "raiz",
+      "page_theme": "light",
+      "pattern": "brigada",
+      "tokens": {
+        "palette": {
+          "primary": "#1D1B15",
+          "secondary": "#3A3630",
+          "accent": "#D42B1E",
+          "bg": "#F6F0E9",
+          "surface": "#FCFAF5",
+          "text": "#1B1512",
+          "muted": "#73685E",
+          "border": "#E0D5C8",
+          "success": "#2F7D4F",
+          "danger": "#B02A1E"
+        },
+        "containers": {
+          "radius": "sm",
+          "shadow": "none",
+          "border": "thin",
+          "density": "comfortable",
+          "surface": "flat"
+        },
+        "typography": {
+          "heading": "bricolage-grotesque",
+          "subheading": "jetbrains-mono",
+          "body": "instrument-sans",
+          "scale": "balanced",
+          "weightHeading": 800,
+          "letterSpacing": "-0.02em"
+        },
+        "buttons": {
+          "shape": "square",
+          "style": "solid",
+          "size": "md"
+        },
+        "background": {
+          "type": "solid",
+          "overlay": "none"
+        },
+        "motion": {
+          "reveal": "rise",
+          "hover": "lift",
+          "intensity": "subtle"
+        },
+        "mobile": {
+          "gridCols": 1,
+          "cardStyle": "standard",
+          "heroHeight": "tall"
+        }
+      },
+      "tags": [
+        "seguridad",
+        "bomberos",
+        "matafuegos",
+        "extintores",
+        "incendios",
+        "emergencia",
+        "rojo",
+        "alarma"
+      ],
+      "preview": "",
+      "concept": "Carmín de alarma sobre papel cálido: brigada de fuego."
     }
   ],
   "patterns": [
@@ -4189,6 +4399,175 @@
         "todos"
       ],
       "preview": ""
+    },
+    {
+      "slug": "brigada",
+      "nombre": "Brigada",
+      "categoria": "seguridad",
+      "descripcion": "Cuartel contra incendios: franjas de riesgo, placa de verificación, código de barras y Bricolage condensada. Tres temas: amarillo, azul y rojo.",
+      "tier": "plus",
+      "template": "raiz",
+      "layout": {
+        "landing": [
+          {
+            "id": "hero",
+            "enabled": true,
+            "order": 0
+          },
+          {
+            "id": "announcements",
+            "enabled": true,
+            "order": 1
+          },
+          {
+            "id": "categories",
+            "enabled": true,
+            "order": 2
+          },
+          {
+            "id": "featured",
+            "enabled": true,
+            "order": 3
+          },
+          {
+            "id": "services",
+            "enabled": true,
+            "order": 4
+          },
+          {
+            "id": "about",
+            "enabled": true,
+            "order": 5
+          },
+          {
+            "id": "stats",
+            "enabled": true,
+            "order": 6
+          },
+          {
+            "id": "benefits",
+            "enabled": true,
+            "order": 7
+          },
+          {
+            "id": "gallery",
+            "enabled": true,
+            "order": 8
+          },
+          {
+            "id": "timeline",
+            "enabled": true,
+            "order": 9
+          },
+          {
+            "id": "team",
+            "enabled": true,
+            "order": 10
+          },
+          {
+            "id": "plans",
+            "enabled": true,
+            "order": 11
+          },
+          {
+            "id": "testimonials",
+            "enabled": true,
+            "order": 12
+          },
+          {
+            "id": "faq",
+            "enabled": true,
+            "order": 13
+          },
+          {
+            "id": "video",
+            "enabled": true,
+            "order": 14
+          },
+          {
+            "id": "cta",
+            "enabled": true,
+            "order": 15
+          },
+          {
+            "id": "contact",
+            "enabled": true,
+            "order": 16
+          }
+        ],
+        "catalog": [
+          {
+            "id": "filters",
+            "enabled": true,
+            "order": 0
+          },
+          {
+            "id": "sort",
+            "enabled": true,
+            "order": 1
+          },
+          {
+            "id": "grid",
+            "enabled": true,
+            "order": 2
+          }
+        ],
+        "services": [
+          {
+            "id": "hero",
+            "enabled": true,
+            "order": 0
+          },
+          {
+            "id": "list",
+            "enabled": true,
+            "order": 1
+          }
+        ]
+      },
+      "tokens": {
+        "accent": "#F5B800",
+        "palette": {
+          "primary": "#B02A1E",
+          "secondary": "#8A1F16",
+          "accent": "#F5B800",
+          "bg": "#F2EFE6",
+          "surface": "#FBF9F2",
+          "text": "#191813",
+          "muted": "#6E6A5C",
+          "border": "#D8D2C0",
+          "success": "#2F7D4F",
+          "danger": "#C02A1E"
+        },
+        "fonts": [
+          "bricolage-grotesque",
+          "instrument-sans",
+          "jetbrains-mono"
+        ],
+        "radius": "4px",
+        "anim": {
+          "hero": "rise",
+          "reveal": "rise",
+          "hover": "lift",
+          "button": "hard-press"
+        },
+        "easing": "cubic-bezier(.22,1,.36,1)",
+        "duration": "560ms"
+      },
+      "tags": [
+        "seguridad",
+        "bomberos",
+        "matafuegos",
+        "extintores",
+        "incendios",
+        "emergencia",
+        "indumentaria",
+        "industrial",
+        "seguridad"
+      ],
+      "preview": "",
+      "supports_dark_mode": true,
+      "style": "brigada"
     }
   ]
 }
