@@ -100,10 +100,10 @@ class McpEndpointView(APIView):
                 'serverInfo'        :   {'name': SERVER_NAME, 'version': SERVER_VERSION},
             }
         elif method == 'tools/list':
-            result  =   {'tools': tools_list()}
+            result  =   {'tools': tools_list(user = request.user)}
         elif method == 'tools/call':
             try:
-                result  =   call_tool(params.get('name', ''), params.get('arguments') or {})
+                result  =   call_tool(params.get('name', ''), params.get('arguments') or {}, user = request.user)
             except ValueError as exc:
                 return Response({
                     'jsonrpc': '2.0', 'id': msg_id,

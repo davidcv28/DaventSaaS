@@ -6,6 +6,7 @@ from django.contrib.auth.models import User
 from AdminApp.domains.chat.models import ChatMessage, ChatThread
 from McpApp.domains.skills.services import (
     ask_llm,
+    assistant_snapshot,
     catalog_summary,
     llm_enabled,
     search_design_styles,
@@ -106,7 +107,10 @@ def _system_prompt() -> str:
         '- Cuando tengas rubro + objetivo + estilo, recomendá UN estilo del catálogo por su slug y explicá en una frase por qué.\n'
         '- Respondé en 2 o 3 frases máximo. No uses markdown ni listas largas.\n'
         f'- Catálogo de estilos disponibles:\n{lines}\n'
-        '- Si el cliente se desvía, respondé su duda y retomá la próxima pregunta.'
+        '- Si el cliente se desvía, respondé su duda y retomá la próxima pregunta.\n'
+        '- Si te preguntan por SU negocio (plan, tienda, productos), respondé solo '
+        'con los datos del bloque "Datos del cliente en sesión". Nunca inventes '
+        'datos ni hables de otros clientes.'
     )
 
 
@@ -172,6 +176,11 @@ def design_reply(thread, latest : str = '') -> str:
         history =   _history(thread)
         context =   _business_context(thread.customer)
         system  =   _system_prompt() + (f'\nDatos ya cargados del negocio: {context}' if context else '')
+        #Snapshot MCP del cliente en sesión (user_tools): el bot puede
+        #responder con sus datos reales sin abrir la DB al modelo.
+        snapshot    =   assistant_snapshot(thread.customer, query = latest)
+        if snapshot:
+            system  +=  f'\nDatos del cliente en sesión:\n{snapshot}'
         text    =   ask_llm(system, history)
         if text:
             return text
