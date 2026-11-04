@@ -29,7 +29,6 @@
     --bg:var(--ds-bg,#F2EFE6);
     --surface:var(--ds-surface,#FBF9F2);
     --surface-2:color-mix(in srgb,var(--surface) 88%,var(--bg));
-    --surface-3:color-mix(in srgb,var(--surface) 70%,var(--bg));
     --ink:var(--ds-text,#191813);
     --ink-2:color-mix(in srgb,var(--ink) 78%,var(--surface));
     --muted:var(--ds-muted,#6E6A5C);
@@ -44,7 +43,6 @@
     --primary:var(--ds-primary,#B02A1E);
     --primary-deep:var(--ds-secondary,#8A1F16);
     --on-primary:var(--ds-primary-ink,#FFF8F0);
-    --primary-soft:color-mix(in srgb,var(--primary) 10%,var(--surface));
     --success:var(--ds-success,#2F7D4F);
     --danger:var(--ds-danger,#C02A1E);
     /* Banda oscura institucional (header, CTA, footer). */
@@ -54,7 +52,6 @@
     --band-line:color-mix(in srgb,var(--band-ink) 16%,transparent);
     --radius:var(--ds-radius,10px);
     --radius-btn:var(--ds-radius-btn,6px);
-    --shadow:0 22px 44px -26px color-mix(in srgb,var(--ink) 55%,transparent);
     --frame:var(--band);
     --hard:var(--band);
     --veil:color-mix(in srgb,var(--hazard) 7%,transparent);
@@ -111,7 +108,6 @@
     --bg:#141310;
     --surface:#1D1B16;
     --surface-2:#232019;
-    --surface-3:#2A261E;
     --ink:#F2EEE0;
     --ink-2:#D8D2BE;
     --muted:#A39C86;
@@ -124,12 +120,10 @@
     --primary:color-mix(in srgb,var(--ds-primary,#E0452F) 88%,#FFF);
     --primary-deep:var(--primary);
     --on-primary:#1C1108;
-    --primary-soft:color-mix(in srgb,var(--primary) 12%,var(--surface));
     --band:#0E0D0A;
     --band-ink:#F2EEE0;
     --band-muted:#9A937E;
     --band-line:#322E24;
-    --shadow:0 26px 50px -28px rgba(0,0,0,.8);
     --frame:color-mix(in srgb,var(--band-ink) 20%,var(--band));
     --hard:color-mix(in srgb,var(--hazard) 30%,#000);
     --veil:color-mix(in srgb,var(--hazard) 5%,transparent);
@@ -174,10 +168,6 @@
 
   /* Franja de riesgo: el motivo propio del diseño. Se usa como borde,
      cinta y subrayado — nunca como fondo de texto. */
-  .tape{height:12px;background:repeating-linear-gradient(-45deg,var(--hazard) 0 14px,var(--band) 14px 28px)}
-  .tape-thin{height:6px;background:repeating-linear-gradient(-45deg,var(--hazard) 0 10px,var(--band) 10px 20px)}
-  .tape-soft{background:repeating-linear-gradient(-45deg,var(--hazard) 0 12px,transparent 12px 24px)}
-
   /* ===== Header cuartel ===== */
   .top{position:sticky;top:0;z-index:40;background:var(--band);color:var(--band-ink);transition:box-shadow .3s var(--ease)}
   .top[data-scrolled]{box-shadow:0 14px 30px -22px rgba(0,0,0,.85)}
@@ -235,8 +225,6 @@
   @keyframes pulse{0%,100%{transform:scale(1);opacity:1}50%{transform:scale(.55);opacity:.55}}
   .hero h1{position:relative;isolation:isolate;margin:22px 0 0;font:800 clamp(42px,6.4vw,78px)/.96 var(--font-d);letter-spacing:-.035em;text-transform:uppercase;text-wrap:pretty;overflow-wrap:anywhere}
   .hero h1 em{font-style:normal;color:var(--primary)}
-  .hero h1 .uline{position:relative;white-space:nowrap}
-  .hero h1 .uline::after{content:"";position:absolute;left:-2px;right:-2px;bottom:.05em;height:.19em;background:repeating-linear-gradient(-45deg,var(--hazard) 0 10px,transparent 10px 20px);z-index:-1}
   .hero-lede{margin:22px 0 0;font-size:17px;line-height:1.6;color:var(--muted);max-width:52ch}
   .hero-actions{display:flex;flex-wrap:wrap;gap:14px;margin-top:32px}
   .hero-facts{display:flex;flex-wrap:wrap;gap:0;margin:40px 0 0;padding:0;border:1px solid var(--line);background:var(--surface);position:relative}
@@ -964,7 +952,7 @@
       </div>
     </div>
 
-    <section class="sec reveal" data-flag="catalog">
+    <section class="sec reveal" data-flag="categories">
       <div class="sec-head">
         <span class="idx" aria-hidden="true"></span>
         <h2>Dotación</h2>
@@ -974,7 +962,7 @@
       <div class="cats-grid ds-zone">{{categories}}</div>
     </section>
 
-    <section class="sec reveal" data-flag="catalog">
+    <section class="sec reveal" data-flag="featured">
       <div class="sec-head">
         <span class="idx" aria-hidden="true"></span>
         <h2>Equipamiento</h2>
