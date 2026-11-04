@@ -61,6 +61,43 @@
     --header-h:70px;
     color-scheme:light;
   }
+  /* Temas del diseño: el documento recibe el slug del estilo elegido en
+     `data-ds-style` y cada bloque repinta la misma planta. Los --ds-* del
+     tema del panel siempre ganan cuando existen (son el fallback). */
+  html[data-ds-style="brigada-azul"]{
+    --bg:var(--ds-bg,#EDF1F6);
+    --surface:var(--ds-surface,#F8FAFD);
+    --ink:var(--ds-text,#131A24);
+    --muted:var(--ds-muted,#5D6B7E);
+    --line:var(--ds-border,#CBD6E2);
+    --hazard:var(--ds-accent,#1D6AE0);
+    --hazard-ink:var(--ds-accent-ink,#FFFFFF);
+    --primary:var(--ds-primary,#0F3D7A);
+    --primary-deep:var(--ds-secondary,#0A2C59);
+    --on-primary:var(--ds-primary-ink,#FFFFFF);
+    --success:var(--ds-success,#1E7A55);
+    --danger:var(--ds-danger,#C02A1E);
+    --band:#0F1E33;
+    --band-ink:#EAF0F9;
+    color-scheme:light;
+  }
+  html[data-ds-style="brigada-rojo"]{
+    --bg:var(--ds-bg,#F6F0E9);
+    --surface:var(--ds-surface,#FCFAF5);
+    --ink:var(--ds-text,#1B1512);
+    --muted:var(--ds-muted,#73685E);
+    --line:var(--ds-border,#E0D5C8);
+    --hazard:var(--ds-accent,#D42B1E);
+    --hazard-ink:var(--ds-accent-ink,#FFF8F4);
+    --primary:var(--ds-primary,#1D1B15);
+    --primary-deep:var(--ds-secondary,#3A3630);
+    --on-primary:var(--ds-primary-ink,#F4F1E4);
+    --success:var(--ds-success,#2F7D4F);
+    --danger:var(--ds-danger,#B02A1E);
+    --band:#211410;
+    --band-ink:#F6EEE4;
+    color-scheme:light;
+  }
   /* Noche: el interruptor del diseño invierte la planta (el acento sigue
      siendo el de señalización, ahora sobre negro de cuartel). */
   html[data-ds-theme="dark"]{
@@ -86,6 +123,22 @@
     --shadow:0 26px 50px -28px rgba(0,0,0,.8);
     --shadow-hard:6px 6px 0 0 color-mix(in srgb,var(--hazard) 34%,#000);
     color-scheme:dark;
+  }
+  /* Noche por tema: sin --ds-* (preview / web sin paleta guardada) el
+     acento del estilo también se aclara sobre negro. */
+  html[data-ds-theme="dark"][data-ds-style="brigada-azul"]{
+    --hazard:color-mix(in srgb,var(--ds-accent,#1D6AE0) 80%,#FFF);
+    --hazard-ink:#0B1526;
+    --primary:color-mix(in srgb,var(--ds-primary,#5B9BFF) 85%,#FFF);
+    --primary-deep:var(--primary);
+    --on-primary:#0A1526;
+  }
+  html[data-ds-theme="dark"][data-ds-style="brigada-rojo"]{
+    --hazard:color-mix(in srgb,var(--ds-accent,#D42B1E) 84%,#FFF);
+    --hazard-ink:#1C0D08;
+    --primary:color-mix(in srgb,var(--ds-primary,#E8E0D4) 85%,#FFF);
+    --primary-deep:var(--primary);
+    --on-primary:#241410;
   }
 
   *{box-sizing:border-box}
@@ -203,7 +256,7 @@
   /* ===== Secciones ===== */
   .sec{max-width:1240px;margin:0 auto;padding:74px 24px 30px}
   .sec-head{display:flex;align-items:baseline;gap:18px;margin-bottom:30px;flex-wrap:wrap}
-  .sec-head .idx{position:relative;display:inline-flex;align-items:center;gap:9px;font:800 11px/1 var(--font-m);letter-spacing:.2em;text-transform:uppercase;color:var(--primary);counter-increment:sec}
+  .sec-head .idx{position:relative;display:inline-flex;align-items:center;gap:9px;font:800 11px/1 var(--font-m);letter-spacing:.2em;text-transform:uppercase;color:var(--primary)}
   .sec-head .idx::before{content:counter(sec,decimal-leading-zero);display:grid;place-items:center;width:30px;height:30px;background:var(--band);color:var(--hazard);font:800 11px/1 var(--font-m)}
   .sec{counter-increment:sec}
   .sec-head h2{margin:0;font:800 clamp(26px,3.6vw,42px)/1.02 var(--font-d);letter-spacing:-.02em;text-transform:uppercase}
