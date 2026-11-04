@@ -29,7 +29,7 @@ function startsLabel(c) {
 
 <template>
   <div class="field camp-field">
-    <label id="disc-campaign-label"><AppIcon name="tag" :size="14" class="label-icon" aria-hidden="true" />Etiqueta de campaña <small class="label-hint">(opcional)</small></label>
+    <label id="disc-campaign-label"><AppIcon name="tag" :size="14" class="label-icon" aria-hidden="true" />Elegí la campaña</label>
     <div class="camp-chips" role="radiogroup" aria-labelledby="disc-campaign-label">
       <button type="button" class="camp-chip" :class="{ on: modelValue === '' || modelValue === null }" role="radio" :aria-checked="modelValue === '' || modelValue === null" @click="emit('update:modelValue', '')">
         Sin campaña

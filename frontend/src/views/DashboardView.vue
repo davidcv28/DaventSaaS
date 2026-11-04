@@ -28,7 +28,7 @@ import {
 import {
   validateTaxonomyName, validateProductName, validateProductPrice, validateProductDescription,
   catalogApi, FEATURE_LIMITS, parseFeatureSchema, validateFeatureSchema, validateProductFeatures,
-  DISCOUNT_SCOPES, discountStatusMeta, discountScopeLabel, discountWindowLabel,
+  DISCOUNT_SCOPES,
   validateDiscountName, validateDiscountPercent, validateDiscountWindow,
   isoToLocalInput, localInputToIso, productListOffer, isDiscountedProduct
 } from '../api/catalog.api.js'
@@ -65,6 +65,10 @@ import FlyerStudio from '../components/FlyerStudio.vue'
 import AiAssistModal from '../components/assist/AiAssistModal.vue'
 import PriceUpdateModal from '../components/PriceUpdateModal.vue'
 import CampaignPicker from '../components/dashboard/catalog/CampaignPicker.vue'
+import CatalogToolbar from '../components/dashboard/catalog/CatalogToolbar.vue'
+import ProductCard from '../components/dashboard/catalog/ProductCard.vue'
+import ProductForm from '../components/dashboard/catalog/ProductForm.vue'
+import DiscountCard from '../components/dashboard/catalog/DiscountCard.vue'
 import ChatDock from '../components/ChatDock.vue'
 import GlobalSearch from '../components/GlobalSearch.vue'
 import TourGuide from '../components/TourGuide.vue'
@@ -736,7 +740,6 @@ const productBusy = ref(false)
 const productEditing = ref(null)
 const productImage = ref(null)
 const productImagePreview = ref('')
-const productImageInput = ref(null)
 const productImageCleared = ref(false)
 const productImageErr = ref('')
 
@@ -826,13 +829,66 @@ watch(
 
 // Buscador del listado: filtra por nombre, categoría o marca (sin tildes).
 const productQuery = ref('')
+// Toolbar del listado: filtros por categoría/marca, "solo en oferta",
+// orden y vista grilla/lista (persistida en localStorage).
+const PRODUCT_VIEW_KEY = 'davent.catalog.view'
+const productView = ref(localStorage.getItem(PRODUCT_VIEW_KEY) === 'list' ? 'list' : 'grid')
+watch(productView, (v) => { try { localStorage.setItem(PRODUCT_VIEW_KEY, v) } catch {} })
+const prodFilterCategory = ref('')
+const prodFilterBrand = ref('')
+const prodOnlyOffers = ref(false)
+const prodSort = ref('newest')
+
 const filteredProducts = computed(() => {
-  const q = productQuery.value.trim().toLowerCase().normalize('NFD').replace(/\p{Diacritic}/gu, '')
-  if (!q) return catalog.products
-  return catalog.products.filter((p) =>
-    [p.name, p.category_name, p.brand_name]
-      .some((v) => (v || '').toLowerCase().normalize('NFD').replace(/\p{Diacritic}/gu, '').includes(q))
-  )
+  const strip = (v) => (v || '').toLowerCase().normalize('NFD').replace(/\p{Diacritic}/gu, '')
+  const q = strip(productQuery.value.trim())
+  let list = catalog.products.filter((p) => {
+    if (q && ![p.name, p.category_name, p.brand_name].some((v) => strip(v).includes(q))) return false
+    if (prodFilterCategory.value && p.category !== Number(prodFilterCategory.value)) return false
+    if (prodFilterBrand.value && p.brand !== Number(prodFilterBrand.value)) return false
+    if (prodOnlyOffers.value && productListOffer(p) == null) return false
+    return true
+  })
+  const effective = (p) => productListOffer(p) ?? (Number(p.price) || 0)
+  const pctOff = (p) => {
+    const o = productListOffer(p)
+    return o === null || !Number(p.price) ? 0 : (1 - o / Number(p.price))
+  }
+  if (prodSort.value === 'name') list = [...list].sort((a, b) => a.name.localeCompare(b.name, 'es'))
+  else if (prodSort.value === 'price') list = [...list].sort((a, b) => effective(a) - effective(b))
+  else if (prodSort.value === 'discount') list = [...list].sort((a, b) => pctOff(b) - pctOff(a))
+  else list = [...list].sort((a, b) => Date.parse(b.created_at || 0) - Date.parse(a.created_at || 0))
+  return list
+})
+
+// Chips de estado de la cabecera: escaneo rápido del catálogo.
+const productStats = computed(() => {
+  const list = catalog.products
+  return {
+    visible: list.filter((p) => p.is_active).length,
+    offers: list.filter((p) => productListOffer(p) != null).length,
+    noImage: list.filter((p) => !p.image).length,
+    discounted: list.filter((p) => isDiscountedProduct(p)).length
+  }
+})
+
+// Etiqueta de campaña por producto: entre los descuentos que lo cubren con
+// campaña propia gana el que vence antes (máx. 1 etiqueta por tarjeta).
+const productCampaign = computed(() => {
+  const byName = new Map()
+  for (const d of catalog.discounts) {
+    if (d.campaign) byName.set(d.name, { campaign: d.campaign, ends_at: d.ends_at || '9999' })
+  }
+  const map = new Map()
+  for (const p of catalog.products) {
+    let best = null
+    for (const n of p.discount_names || []) {
+      const hit = byName.get(n)
+      if (hit && (!best || hit.ends_at < best.ends_at)) best = hit
+    }
+    if (best) map.set(p.id, best.campaign)
+  }
+  return map
 })
 
 const productLimit = computed(() => plan.value?.benefits?.max_products)
@@ -974,6 +1030,37 @@ async function removeProduct(p) {
   productBusy.value = false
   if (res?.storage) store.storage = res.storage
   if (productEditing.value === p.id) resetProductForm()
+}
+
+// Duplicar: precarga el form como alta nueva con los datos del producto
+// (sin imagen — cada producto lleva la suya). Enfoca el nombre al final.
+async function duplicateProduct(p) {
+  resetProductForm()
+  Object.assign(productForm, {
+    name: `${p.name} (copia)`, price: p.price, category: p.category || '', brand: p.brand || '',
+    description: p.description || '', is_active: p.is_active
+  })
+  productFeatures.value = Object.entries(p.features || {}).map(([name, value]) => ({ name, value }))
+  catalog.notice = ''
+  catalog.lastError = ''
+  await nextTick()
+  document.querySelector('input[name="prod_name"]')?.focus()
+}
+
+// Activar/desactivar sin abrir el form: PATCH parcial de is_active.
+async function toggleProductActive(p) {
+  if (productBusy.value) return
+  productBusy.value = true
+  const res = await catalog.saveProduct(p.id, { fields: { is_active: !p.is_active }, image: null, imageClear: false })
+  productBusy.value = false
+  if (res?.ok) pushToast(p.is_active ? 'Producto oculto' : 'Producto visible en tu web')
+}
+
+// CTA "Cargar producto": va a la pestaña y enfoca el nombre.
+async function focusProductForm() {
+  catalogTab.value = 'products'
+  await nextTick()
+  document.querySelector('input[name="prod_name"]')?.focus()
 }
 
 // --- Descuentos programados: se activan y vencen solos por la ventana ---
@@ -3318,8 +3405,17 @@ async function changePassword() {
         <div>
           <h1>Mis productos</h1>
           <p>Acá cargás lo que vendés: aparece solo en tu página web. {{ billing.hasSubscription ? productsCountText : catalogLimit }}</p>
+          <div v-if="billing.hasSubscription && catalog.products.length" class="cat-stats">
+            <span class="cat-stat"><AppIcon name="eye" :size="13" aria-hidden="true" /> {{ productStats.visible }} visibles</span>
+            <span class="cat-stat"><AppIcon name="percent" :size="13" aria-hidden="true" /> {{ productStats.offers }} en oferta</span>
+            <span class="cat-stat"><AppIcon name="image" :size="13" aria-hidden="true" /> {{ productStats.noImage }} sin foto</span>
+            <span class="cat-stat"><AppIcon name="tag" :size="13" aria-hidden="true" /> {{ productStats.discounted }} con descuento</span>
+          </div>
         </div>
-        <button class="btn ghost btn-auto" @click="catalog.loadAll()"><AppIcon name="refresh" :size="16" /> Recargar</button>
+        <div class="page-head-actions">
+          <button class="btn ghost btn-auto" @click="catalog.loadAll()"><AppIcon name="refresh" :size="16" /> Recargar</button>
+          <button v-if="billing.hasSubscription && !catalog.denied" class="btn btn-auto" @click="focusProductForm"><AppIcon name="plus" :size="16" /> Cargar producto</button>
+        </div>
       </div>
 
       <AlertMessage v-if="catalog.notice" kind="success" :message="catalog.notice" />
@@ -3355,105 +3451,22 @@ async function changePassword() {
         <template v-else>
           <!-- -------- Productos -------- -->
           <div v-show="catalogTab === 'products'" class="grid-2">
-            <div class="card">
-              <h3><AppIcon :name="productEditing ? 'pencil' : 'plus'" :size="18" /> {{ productEditing ? 'Editar producto' : 'Agregar un producto' }}</h3>
-              <p class="lead">Completá lo básico y tocá «Publicar». Después lo podés cambiar cuando quieras.</p>
-              <div class="form-step"><span class="form-step-num">1</span> ¿Qué vendés?</div>
-              <AppInput v-model="productForm.name" label="Nombre" name="prod_name" placeholder="Ej. Remera oversize" :error="productFieldErr('name')" @blur="productTouched.name = true" />
-              <div class="grid-2">
-                <AppInput v-model="productForm.price" label="Precio" name="prod_price" type="number" min="0" step="0.01" placeholder="0.00" :error="productFieldErr('price')" @blur="productTouched.price = true" />
-              </div>
-              <div v-if="legacyOffer && !offerCleared" class="legacy-offer">
-                <AppIcon name="tag" :size="14" aria-hidden="true" />
-                <span>Este producto tiene una oferta manual: <strong>{{ formatARS(legacyOffer) }}</strong>. Las ofertas ahora se programan en «Descuentos».</span>
-                <button type="button" class="legacy-offer-btn" @click="offerCleared = true">Quitar</button>
-              </div>
-              <p v-else class="hint">¿Oferta? Programala en la pestaña «Descuentos»: se activa y vence sola.</p>
-              <div class="form-step"><span class="form-step-num">2</span> Sumá una foto</div>
-              <div class="field">
-                <label id="prod-image-label">Imagen</label>
-                <div class="logo-box">
-                  <span class="logo-thumb">
-                    <img v-if="productImagePreview" :src="productImagePreview" alt="Imagen del producto" />
-                    <AppIcon v-else name="image" :size="20" aria-hidden="true" />
-                  </span>
-                  <div class="logo-actions">
-                    <input ref="productImageInput" type="file" class="sr-only" :accept="LOGO_ACCEPT_TYPES" aria-labelledby="prod-image-label" @change="onProductImagePicked" />
-                    <button type="button" class="btn ghost btn-auto" @click="productImageInput?.click()">
-                      <AppIcon name="upload" :size="16" /> {{ productImagePreview ? 'Cambiar' : 'Subir imagen' }}
-                    </button>
-                    <button v-if="productImage && !productOriginal" type="button" class="btn ghost btn-auto" :disabled="productBgBusy" @click="removeProductBg">
-                      <span v-if="productBgBusy" class="spinner" aria-hidden="true"></span><AppIcon v-else name="sparkles" :size="16" /> {{ productBgBusy ? 'Procesando…' : 'Quitar fondo' }}
-                    </button>
-                    <button v-if="productOriginal" type="button" class="btn ghost btn-auto" @click="restoreProductOriginal">Volver al original</button>
-                    <button v-if="productImagePreview" type="button" class="btn ghost btn-auto" @click="productImage = null; productOriginal = null; productImagePreview = ''; productImageCleared = true">Quitar</button>
-                  </div>
-                </div>
-                <p class="hint">Una foto clara vende más. Si el fondo molesta, usá «Quitar fondo». Máximo 4 MB. Usá solo fotos propias o con permiso.</p>
-                <p v-if="productImageErr" class="field-error" role="alert">{{ productImageErr }}</p>
-              </div>
-              <details class="more-opts" :open="productEditing">
-                <summary><span class="form-step-num">3</span> Más detalles <small>(opcional: categoría, descripción, características)</small></summary>
-              <div class="grid-2">
-                <div class="field">
-                  <label for="prod-active">Visibilidad</label>
-                  <select id="prod-active" v-model="productForm.is_active" class="select">
-                    <option :value="true">Visible en mi web</option>
-                    <option :value="false">Oculto</option>
-                  </select>
-                </div>
-              </div>
-              <div class="grid-2">
-                <div class="field">
-                  <label for="prod-category">Categoría</label>
-                  <select id="prod-category" v-model="productForm.category" class="select">
-                    <option value="">Sin categoría</option>
-                    <option v-for="c in catalog.categories" :key="c.id" :value="c.id">{{ c.name }}</option>
-                  </select>
-                  <p class="hint">Se cargan en la pestaña Categorías.</p>
-                </div>
-                <div class="field">
-                  <label for="prod-brand">Marca</label>
-                  <select id="prod-brand" v-model="productForm.brand" class="select">
-                    <option value="">Sin marca</option>
-                    <option v-for="b in catalog.brands" :key="b.id" :value="b.id">{{ b.name }}</option>
-                  </select>
-                </div>
-              </div>
-              <div class="field">
-                <label for="prod-description">Descripción</label>
-                <textarea
-                  id="prod-description"
-                  v-model="productForm.description"
-                  class="textarea"
-                  :class="{ invalid: productFieldErr('description') }"
-                  placeholder="Detalles del producto (opcional)"
-                  maxlength="600"
-                  rows="3"
-                  @blur="productTouched.description = true"
-                ></textarea>
-                <p class="hint">{{ productForm.description.length }}/600</p>
-                <p v-if="productFieldErr('description')" class="field-error" role="alert">{{ productFieldErr('description') }}</p>
-              </div>
-              <div class="field">
-                <label id="prod-features-label">Características</label>
-                <ul v-if="productFeatures.length" class="feat-rows" aria-labelledby="prod-features-label">
-                  <li v-for="(row, i) in productFeatures" :key="i" class="feat-row">
-                    <input v-model="row.name" class="input" type="text" maxlength="40" placeholder="Atributo (ej. Talle)" :aria-label="`Nombre de la característica ${i + 1}`" />
-                    <input v-model="row.value" class="input" type="text" maxlength="120" placeholder="Valor (ej. M)" :aria-label="`Valor de la característica ${i + 1}`" />
-                    <button type="button" class="icon-btn danger" aria-label="Quitar característica" @click="removeFeatureRow(i)"><AppIcon name="trash" :size="15" /></button>
-                  </li>
-                </ul>
-                <button type="button" class="btn ghost btn-auto" :disabled="productFeatures.length >= FEATURE_LIMITS.entriesMax" @click="addFeatureRow"><AppIcon name="plus" :size="15" /> Agregar característica</button>
-                <p class="hint">La categoría sugiere atributos (se cargan desde la pestaña Categorías); podés sumar otros propios.</p>
-                <p v-if="productTouched.features && featuresErr" class="field-error" role="alert">{{ featuresErr }}</p>
-              </div>
-              </details>
-              <div class="btn-row">
-                <AppButton :loading="productBusy" @click="saveProduct">{{ productEditing ? 'Guardar cambios' : 'Publicar producto' }}</AppButton>
-                <button v-if="productEditing" type="button" class="btn ghost btn-auto" @click="resetProductForm">Cancelar</button>
-              </div>
-            </div>
+            <ProductForm
+              :form="productForm" :touched="productTouched" :features="productFeatures"
+              :categories="catalog.categories" :brands="catalog.brands"
+              :editing="Boolean(productEditing)" :busy="productBusy"
+              :legacy-offer="legacyOffer" :offer-cleared="offerCleared"
+              :image-preview="productImagePreview" :image-err="productImageErr"
+              :has-image="Boolean(productImage)" :has-original="Boolean(productOriginal)" :bg-busy="productBgBusy"
+              :accept="LOGO_ACCEPT_TYPES" :feature-limit="FEATURE_LIMITS.entriesMax"
+              :features-err="featuresErr" :field-err="productFieldErr"
+              @save="saveProduct" @cancel="resetProductForm"
+              @pick-image="onProductImagePicked" @remove-bg="removeProductBg"
+              @restore-original="restoreProductOriginal"
+              @clear-image="productImage = null; productOriginal = null; productImagePreview = ''; productImageCleared = true"
+              @clear-offer="offerCleared = true"
+              @add-feature="addFeatureRow" @remove-feature="removeFeatureRow"
+            />
 
             <div class="card">
               <div class="prod-head">
@@ -3466,26 +3479,27 @@ async function changePassword() {
                 <div><p>Todavía no cargaste productos. El primero tarda un minuto: nombre, precio y una foto.</p><button type="button" class="empty-mini-cta" @click="focusField('prod_name')">Cargar el primero</button></div>
               </div>
               <template v-else>
-                <label class="prod-search">
-                  <AppIcon name="search" :size="16" aria-hidden="true" />
-                  <input v-model="productQuery" type="search" placeholder="Buscar por nombre, categoría o marca" aria-label="Buscar productos" />
-                </label>
-                <p v-if="!filteredProducts.length" class="hint">No hay productos que coincidan con tu búsqueda.</p>
-                <ul v-else class="prod-list">
-                  <li v-for="p in filteredProducts" :key="p.id" class="prod-item">
-                  <span class="prod-thumb">
-                    <img v-if="p.image" :src="p.image" :alt="p.name" />
-                    <AppIcon v-else name="package" :size="16" aria-hidden="true" />
-                  </span>
-                  <div class="prod-info">
-                    <strong>{{ p.name }}</strong>
-                    <small><template v-if="productListOffer(p) != null"><s class="prod-old">{{ formatARS(p.price) }}</s> {{ formatARS(productListOffer(p)) }}</template><template v-else>{{ formatARS(p.price) }}</template><template v-if="p.category_name"> · {{ p.category_name }}</template><template v-if="p.brand_name"> · {{ p.brand_name }}</template></small>
+                <CatalogToolbar
+                  v-model:query="productQuery" v-model:category="prodFilterCategory" v-model:brand="prodFilterBrand"
+                  v-model:only-offers="prodOnlyOffers" v-model:sort="prodSort" v-model:view="productView"
+                  :categories="catalog.categories" :brands="catalog.brands"
+                  :shown="filteredProducts.length" :total="catalog.products.length"
+                  @new="focusProductForm"
+                />
+                <div v-if="!filteredProducts.length" class="empty-mini">
+                  <AppIcon name="search" :size="22" />
+                  <div>
+                    <p>No hay productos que coincidan con los filtros.</p>
+                    <button type="button" class="empty-mini-cta" @click="productQuery = ''; prodFilterCategory = ''; prodFilterBrand = ''; prodOnlyOffers = false">Limpiar filtros</button>
                   </div>
-                  <span v-if="isDiscountedProduct(p)" class="pill ok" :title="(p.discount_names || []).join(' · ')">Promo</span>
-                  <span v-else-if="productListOffer(p) != null" class="pill ok">Oferta</span>
-                  <span v-if="!p.is_active" class="pill muted">Oculto</span>
-                  <button type="button" class="icon-btn" aria-label="Editar producto" @click="editProduct(p)"><AppIcon name="pencil" :size="15" /></button>
-                  <button type="button" class="icon-btn danger" aria-label="Eliminar producto" @click="removeProduct(p)"><AppIcon name="trash" :size="15" /></button>
+                </div>
+                <ul v-else class="prod-grid" :class="{ 'prod-grid-list': productView === 'list' }">
+                  <li v-for="p in filteredProducts" :key="p.id">
+                    <ProductCard
+                      :p="p" :view="productView" :campaign="productCampaign.get(p.id) || null"
+                      @edit="editProduct" @duplicate="duplicateProduct"
+                      @toggle="toggleProductActive" @remove="removeProduct"
+                    />
                   </li>
                 </ul>
               </template>
@@ -3560,18 +3574,9 @@ async function changePassword() {
               </div>
               <AppInput v-model="discountForm.name" label="Nombre" name="disc_name" icon="tag" placeholder="Ej. Semana de ofertas" :error="discountFieldErr('name')" @blur="discountTouched.name = true" />
 
+              <div class="form-step"><span class="form-step-num">1</span> ¿A qué aplica?</div>
               <div class="field">
-                <label for="disc-percent"><AppIcon name="percent" :size="14" class="label-icon" aria-hidden="true" />Descuento</label>
-                <div class="disc-pct-row">
-                  <input id="disc-percent" v-model="discountForm.percent" type="number" min="1" max="99" step="1" class="input disc-pct-input" :class="{ invalid: discountFieldErr('percent') }" placeholder="25" aria-label="Porcentaje de descuento" @blur="discountTouched.percent = true" />
-                  <span class="disc-pct-sign" aria-hidden="true">%</span>
-                  <input v-model="discountForm.percent" type="range" min="1" max="99" step="1" class="disc-pct-slider" aria-label="Descuento en porcentaje" />
-                </div>
-                <p v-if="discountFieldErr('percent')" class="field-error" role="alert">{{ discountFieldErr('percent') }}</p>
-              </div>
-
-              <div class="field">
-                <label id="disc-scope-label"><AppIcon name="layout-grid" :size="14" class="label-icon" aria-hidden="true" />¿A qué aplica?</label>
+                <label id="disc-scope-label" class="sr-only"><AppIcon name="layout-grid" :size="14" class="label-icon" aria-hidden="true" />¿A qué aplica?</label>
                 <div class="disc-scope" role="radiogroup" aria-labelledby="disc-scope-label">
                   <label v-for="s in DISCOUNT_SCOPES" :key="s.value" class="disc-scope-card" :class="{ on: discountForm.scope === s.value }">
                     <input v-model="discountForm.scope" type="radio" :value="s.value" class="sr-only" />
@@ -3620,8 +3625,20 @@ async function changePassword() {
                 <p v-if="discountFieldErr('products')" class="field-error" role="alert">{{ discountFieldErr('products') }}</p>
               </div>
 
+              <div class="form-step"><span class="form-step-num">2</span> ¿Cuánto descuenta?</div>
               <div class="field">
-                <label id="disc-window-label"><AppIcon name="calendar" :size="14" class="label-icon" aria-hidden="true" />¿Cuándo aplica?</label>
+                <label for="disc-percent" class="sr-only"><AppIcon name="percent" :size="14" class="label-icon" aria-hidden="true" />Descuento</label>
+                <div class="disc-pct-row">
+                  <input id="disc-percent" v-model="discountForm.percent" type="number" min="1" max="99" step="1" class="input disc-pct-input" :class="{ invalid: discountFieldErr('percent') }" placeholder="25" aria-label="Porcentaje de descuento" @blur="discountTouched.percent = true" />
+                  <span class="disc-pct-sign" aria-hidden="true">%</span>
+                  <input v-model="discountForm.percent" type="range" min="1" max="99" step="1" class="disc-pct-slider" aria-label="Descuento en porcentaje" />
+                </div>
+                <p v-if="discountFieldErr('percent')" class="field-error" role="alert">{{ discountFieldErr('percent') }}</p>
+              </div>
+
+              <div class="form-step"><span class="form-step-num">3</span> ¿Cuándo aplica?</div>
+              <div class="field">
+                <label id="disc-window-label" class="sr-only"><AppIcon name="calendar" :size="14" class="label-icon" aria-hidden="true" />¿Cuándo aplica?</label>
                 <div class="disc-presets" role="group" aria-label="Duraciones rápidas">
                   <button type="button" class="disc-preset" @click="discountPreset('today')">Solo hoy</button>
                   <button type="button" class="disc-preset" @click="discountPreset('week')">Esta semana</button>
@@ -3653,6 +3670,7 @@ async function changePassword() {
                 </div>
               </div>
 
+              <div class="form-step"><span class="form-step-num">4</span> Etiqueta de campaña <small class="tab-sub">(opcional)</small></div>
               <CampaignPicker v-model="discountForm.campaign" />
 
               <div class="check-list">
@@ -3670,23 +3688,12 @@ async function changePassword() {
             <div class="card disc-card">
               <h3><AppIcon name="percent" :size="18" /> Tus descuentos</h3>
               <div v-if="!catalog.discounts.length" class="empty-mini"><AppIcon name="percent" :size="22" /><p>Todavía no programaste descuentos. Crean ofertas que se encienden y se apagan solas.</p></div>
-              <ul v-else class="disc-list">
-                <li v-for="d in catalog.discounts" :key="d.id" class="disc-item">
-                  <span class="disc-badge" aria-hidden="true"><b>-{{ d.percent }}</b><i>%</i></span>
-                  <span class="disc-info">
-                    <strong class="disc-name">{{ d.name }}</strong>
-                    <small class="disc-meta"><AppIcon name="tag" :size="12" aria-hidden="true" /> {{ discountScopeLabel(d) }}</small>
-                    <small class="disc-range"><AppIcon name="calendar" :size="12" aria-hidden="true" /> {{ discountWindowLabel(d) }}</small>
-                    <small v-if="d.campaign" class="disc-meta"><img v-if="d.campaign.label_url" :src="d.campaign.label_url" :alt="d.campaign.label_alt || d.campaign.name" :width="d.campaign.label_width || undefined" :height="d.campaign.label_height || undefined" loading="lazy" class="disc-camp-label" /><AppIcon v-else name="tag" :size="12" aria-hidden="true" /> {{ d.campaign.name }}</small>
-                  </span>
-                  <span class="disc-actions">
-                    <span class="pill" :class="discountStatusMeta(d).pill">{{ discountStatusMeta(d).label }}</span>
-                    <button type="button" class="icon-btn" :aria-label="d.is_active ? 'Pausar descuento' : 'Reactivar descuento'" :title="d.is_active ? 'Pausar' : 'Reactivar'" @click="toggleDiscount(d)"><AppIcon :name="d.is_active ? 'pause' : 'play'" :size="15" /></button>
-                    <button type="button" class="icon-btn" aria-label="Editar descuento" @click="editDiscount(d)"><AppIcon name="pencil" :size="15" /></button>
-                    <button type="button" class="icon-btn danger" aria-label="Eliminar descuento" @click="removeDiscount(d)"><AppIcon name="trash" :size="15" /></button>
-                  </span>
-                </li>
-              </ul>
+              <div v-else class="disc-cards">
+                <DiscountCard
+                  v-for="d in catalog.discounts" :key="d.id" :d="d" :busy="discountBusy"
+                  @toggle="toggleDiscount" @edit="editDiscount" @remove="removeDiscount"
+                />
+              </div>
             </div>
           </div>
           </div>

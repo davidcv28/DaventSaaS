@@ -1040,6 +1040,17 @@ body{ transition: background-color .2s ease, color .2s ease; }
 .prod-search input:focus{ outline: none; }
 .prod-search input::placeholder{ color: #94a3b8; }
 .prod-search input::-webkit-search-cancel-button{ -webkit-appearance: none; }
+/* Cabecera de Mis productos: chips de estado + acciones de la cabecera. */
+.cat-stats{ display: flex; flex-wrap: wrap; gap: 6px; margin-top: 10px; }
+.cat-stat{ display: inline-flex; align-items: center; gap: 5px; padding: 4px 11px; border: 1px solid var(--line); border-radius: 999px; background: var(--card); font-size: 12px; font-weight: 600; color: var(--ink-2); }
+.cat-stat svg{ color: var(--brand-500); }
+.page-head-actions{ display: flex; gap: 8px; flex-wrap: wrap; }
+/* Listado de productos: grilla de tarjetas o filas (ProductCard.vue). */
+.prod-grid{ list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 10px; }
+.prod-grid.prod-grid-list{ grid-template-columns: minmax(0, 1fr); }
+@media (max-width: 640px){ .prod-grid{ grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); } }
+/* Tarjetas de descuento (DiscountCard.vue). */
+.disc-cards{ display: grid; gap: 10px; }
 .prod-list{ list-style: none; margin: 0; padding: 0; display: grid; gap: 6px; }
 .prod-item{ display: flex; align-items: center; gap: 12px; padding: 9px 12px; border: 1px solid var(--line); border-radius: var(--radius-sm); background: var(--card); flex-wrap: wrap; }
 .prod-thumb{ width: 42px; height: 42px; border-radius: 9px; border: 1px solid var(--line); background: var(--surface); color: var(--muted); display: grid; place-items: center; overflow: hidden; flex: none; }
