@@ -45,9 +45,10 @@ services:
       - key: CSRF_TRUSTED_ORIGINS
         value: https://daventsaas.onrender.com,https://davent.com.ar,https://www.davent.com.ar
       - key: FRONTEND_URL
-        value: https://www.davent.com.ar
+        value: https://davent.com.ar              # apex = canónico SEO;
+                                        # www.davent.com.ar redirige 301 acá
       - key: BACKEND_URL
-        value: https://www.davent.com.ar          # mismo servicio sirve API+SPA;
+        value: https://davent.com.ar              # mismo servicio sirve API+SPA;
                                         # alimenta los links de los mails
                                         # (verify-email / password-reset)
 

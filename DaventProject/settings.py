@@ -203,6 +203,9 @@ MIDDLEWARE = [
     #Correlación (X-Request-ID), Retry-After en 429, noindex de /api/ y cap
     #de body: va primero para envolver a todos los demás.
     'DaventProject.middleware.RequestIdMiddleware',
+    #Canonicalización de host (www -> apex, 301): antes que todo lo demás —
+    #el redirect tiene que salir aunque falle cualquier capa posterior.
+    'DaventProject.middleware.CanonicalHostMiddleware',
     'corsheaders.middleware.CorsMiddleware',
     'django.middleware.security.SecurityMiddleware',
     #Compresión de respuestas dinámicas (documento del diseño, JSON de la

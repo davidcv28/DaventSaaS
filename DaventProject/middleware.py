@@ -5,7 +5,7 @@ import time
 import uuid
 
 from django.conf import settings
-from django.http import HttpResponse
+from django.http import HttpResponse, HttpResponsePermanentRedirect
 
 from DaventProject.cache_utils import (
     CacheUnavailable,
@@ -235,4 +235,30 @@ class AdminLoginRateLimitMiddleware:
                     response    =   HttpResponse('Demasiados intentos. Probá más tarde.', status = 429)
                     response['Retry-After'] =   str(self.WINDOW_SECONDS)
                     return response
+        return self.get_response(request)
+
+
+class CanonicalHostMiddleware:
+    """
+    Un solo host canónico por dominio de plataforma: www.<PUBLIC_DOMAIN>
+    redirige 301 a <PUBLIC_DOMAIN> (o al revés si PUBLIC_DOMAIN trajera el
+    www). Sin esto Google ve www y apex como dos sitios duplicados y
+    reparte el ranking entre ambos. Solo toca el dominio de plataforma —
+    subdominios de tienda (<slug>.<dominio>) y dominios propios no se
+    tocan: `www.` solo se quita cuando el resto del host ES el canónico.
+    """
+    def __init__(self, get_response):
+        self.get_response   =   get_response
+        canonical           =   (settings.PUBLIC_DOMAIN or '').strip().lower()
+        if canonical.startswith('www.'):
+            self.canonical  =   canonical
+            self.alias      =   canonical[4:]
+        else:
+            self.canonical  =   canonical
+            self.alias      =   f'www.{canonical}' if canonical else ''
+
+    def __call__(self, request):
+        if self.alias and request.get_host() == self.alias:
+            return HttpResponsePermanentRedirect(
+                f'https://{self.canonical}{request.get_full_path()}')
         return self.get_response(request)
