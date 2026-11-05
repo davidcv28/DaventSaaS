@@ -208,6 +208,24 @@ tbody tr:hover{background:var(--hover)}
 .modal p{font-size:13px;color:var(--ink-2);margin:8px 0 18px;line-height:1.55}
 .modal .btns{display:flex;gap:10px;justify-content:center}
 
+/* Propuesta de orden */
+.ord-sw{display:flex;gap:2px;margin:2px 20px 10px;background:var(--accent-soft);border-radius:8px;padding:3px}
+.ord-sw button{flex:1;font-size:11.5px;font-weight:600;color:var(--ink-3);padding:5px 4px;border-radius:6px;transition:all .12s}
+.ord-sw button.on{background:var(--surface);color:var(--ink);box-shadow:0 1px 3px rgba(0,0,0,.14)}
+.chips{display:flex;gap:8px;flex-wrap:wrap}
+.chip{font-size:12px;font-weight:550;color:var(--ink-2);border:1px solid var(--line);border-radius:20px;padding:5px 12px;background:var(--surface)}
+.chip b{color:var(--ink);font-weight:650}
+.swrow{display:flex;align-items:center;justify-content:space-between;gap:14px;padding:11px 0;border-bottom:1px solid var(--line)}
+.swrow:last-child{border-bottom:0}
+.swrow .st{font-size:13px;font-weight:550}
+.swrow .ss{font-size:12px;color:var(--ink-3);margin-top:1px}
+.switch{width:36px;height:20px;border-radius:20px;background:var(--line-2);position:relative;flex:none;transition:background .15s;padding:0}
+.switch::after{content:"";position:absolute;top:2px;left:2px;width:16px;height:16px;border-radius:50%;background:#fff;transition:transform .15s;box-shadow:0 1px 3px rgba(0,0,0,.25)}
+.switch.on{background:var(--accent)}
+.switch.on::after{transform:translateX(16px)}
+.meter{height:6px;background:var(--accent-soft);border-radius:4px;overflow:hidden}
+.meter i{display:block;height:100%;background:var(--accent);border-radius:4px}
+
 /* Mobile */
 .mbar{display:none}
 .mtop{display:none}
@@ -249,6 +267,10 @@ tbody tr:hover{background:var(--hover)}
   <!-- SIDEBAR -->
   <aside class="side">
     <div class="brand"><span class="dot"></span>DAVENT</div>
+    <div class="ord-sw" id="ordSw">
+      <button data-ord="actual">Orden actual</button>
+      <button data-ord="propuesto" class="on">Propuesto</button>
+    </div>
     <nav class="nav" id="sideNav"></nav>
     <div class="side-foot">
       <button class="user">
@@ -328,6 +350,29 @@ tbody tr:hover{background:var(--hover)}
             <div class="todo"><span class="ic"><svg viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg></span><div><div class="tt">Activá tu asistente virtual</div><div class="ts">Responde clientes 24/7 en tu web</div></div><span class="go">Activar →</span></div>
           </div>
         </div>
+
+        <div class="grid g2" style="margin-top:16px">
+          <div class="card">
+            <div class="card-h"><h3>Actividad reciente</h3><span class="act">Ver todo</span></div>
+            <div class="todo"><span class="ic"><svg viewBox="0 0 24 24"><path d="m12 3 2.7 5.8 6.3.8-4.6 4.3 1.2 6.1L12 17l-5.6 3 1.2-6.1L3 9.6l6.3-.8z"/></svg></span><div><div class="tt">Nueva opinión de Martina G.</div><div class="ts">★★★★★ · hace 2 días</div></div><span class="go">Responder →</span></div>
+            <div class="todo"><span class="ic"><svg viewBox="0 0 24 24"><path d="M3 3v18h18"/><path d="m7 14 4-4 4 3 5-6"/></svg></span><div><div class="tt">12 visitas nuevas hoy</div><div class="ts">Tu mejor día de la semana</div></div><span class="go">Ver →</span></div>
+            <div class="todo"><span class="ic"><svg viewBox="0 0 24 24"><path d="M21 8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/></svg></span><div><div class="tt">Se publicó «Jean recto azul»</div><div class="ts">Ya está visible en tu web</div></div><span class="go">Ver →</span></div>
+            <div class="todo"><span class="ic"><svg viewBox="0 0 24 24"><rect x="2" y="5" width="20" height="14" rx="2"/><path d="M2 10h20"/></svg></span><div><div class="tt">Tu plan vence en 7 días</div><div class="ts">Renová para no perder la web</div></div><span class="go">Renovar →</span></div>
+          </div>
+          <div class="card">
+            <div class="card-h"><h3>Tu página</h3><span class="act">Editar diseño</span></div>
+            <div class="card-b">
+              <div class="fld"><label>Link público</label>
+                <div style="display:flex;gap:8px"><input value="https://davent.app/mi-negocio" readonly style="flex:1"><button class="btn sm">Copiar</button></div></div>
+              <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-top:16px">
+                <div><div style="font-size:19px;font-weight:650;font-variant-numeric:tabular-nums">148</div><div style="font-size:11.5px;color:var(--ink-3)">visitas · 7 días</div></div>
+                <div><div style="font-size:19px;font-weight:650;font-variant-numeric:tabular-nums">23</div><div style="font-size:11.5px;color:var(--ink-3)">clics a WhatsApp</div></div>
+                <div><div style="font-size:19px;font-weight:650;font-variant-numeric:tabular-nums">4.8</div><div style="font-size:11.5px;color:var(--ink-3)">valoración</div></div>
+              </div>
+              <div style="margin-top:16px"><button class="btn sm">Ver mi web ↗</button> <button class="btn ghost sm">Compartir</button></div>
+            </div>
+          </div>
+        </div>
       </section>
 
       <!-- ============ PRODUCTOS ============ -->
@@ -337,6 +382,9 @@ tbody tr:hover{background:var(--hover)}
         <div class="card" style="margin-bottom:12px;padding:10px 14px;display:flex;gap:10px;align-items:center">
           <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" style="color:var(--ink-3)"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
           <input placeholder="Buscar por nombre o categoría…" style="border:0;outline:none;font-size:13.5px;width:100%;background:none">
+        </div>
+        <div class="chips" style="margin-bottom:12px">
+          <span class="chip"><b>14</b> activos</span><span class="chip"><b>2</b> sin stock</span><span class="chip"><b>3</b> borradores</span><span class="chip"><b>4</b> categorías</span>
         </div>
         <div class="card"><table>
           <thead><tr><th>Producto</th><th>Categoría</th><th>Precio</th><th>Stock</th><th>Estado</th><th></th></tr></thead>
@@ -353,6 +401,9 @@ tbody tr:hover{background:var(--hover)}
       <section class="page" data-page="services">
         <div class="ph"><div><h1>Mis servicios</h1><div class="sub">Lo que ofrecés hacer, con duración y precio</div></div>
           <button class="btn pri sm">+ Nuevo servicio</button></div>
+        <div class="chips" style="margin-bottom:14px">
+          <span class="chip"><b>3</b> servicios</span><span class="chip">Duración media <b>75 min</b></span><span class="chip">Desde <b>$18.000</b></span><span class="chip">Reserva por <b>WhatsApp</b></span>
+        </div>
         <div class="card">
           <div class="todo"><span class="ic"><svg viewBox="0 0 24 24"><path d="M14.7 6.3a4.5 4.5 0 0 0-6 6L3 18l3 3 5.7-5.7a4.5 4.5 0 0 0 6-6L14 13l-3-3z"/></svg></span>
             <div><div class="tt">Corte y peinado</div><div class="ts">45 min · $18.000</div></div>
@@ -374,7 +425,12 @@ tbody tr:hover{background:var(--hover)}
             <span class="tag warn">Próximamente</span>
             <h2 style="margin-top:10px">Punto de venta</h2>
             <p>Vas a poder armar el carrito con tus productos, cobrar en efectivo, transferencia o QR y registrar cada venta sin salir del panel.</p>
-            <div style="margin-top:14px"><button class="btn pri sm" disabled style="opacity:.45">Avisame cuando llegue</button></div>
+            <div style="margin-top:14px;display:grid;gap:8px;font-size:13px;color:var(--ink-2);max-width:380px">
+              <div style="display:flex;gap:9px;align-items:center"><span style="color:var(--ok);font-weight:700">✓</span> Carrito con tu catálogo real y precios</div>
+              <div style="display:flex;gap:9px;align-items:center"><span style="color:var(--ok);font-weight:700">✓</span> Efectivo, transferencia y QR de Mercado Pago</div>
+              <div style="display:flex;gap:9px;align-items:center"><span style="color:var(--ok);font-weight:700">✓</span> Historial de ventas y caja del día</div>
+            </div>
+            <div style="margin-top:16px"><button class="btn pri sm" disabled style="opacity:.45">Avisame cuando llegue</button></div>
           </div>
           <svg width="120" height="120" viewBox="0 0 24 24" fill="none" stroke="var(--line-2)" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="4" width="20" height="13" rx="2"/><path d="M8 21h8M12 17v4"/><path d="M7 10h4M7 13h7"/></svg>
         </div>
@@ -398,6 +454,11 @@ tbody tr:hover{background:var(--hover)}
                 <div style="display:flex;gap:8px"><input value="https://davent.app/mi-negocio" readonly style="flex:1"><button class="btn sm">Copiar</button></div></div>
               <div style="margin-top:14px;display:flex;gap:10px;align-items:center">
                 <span class="tag ok">● Publicada</span><span class="tag">Actualizada hace 2 h</span></div>
+              <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-top:16px">
+                <div><div style="font-size:18px;font-weight:650;font-variant-numeric:tabular-nums">148</div><div style="font-size:11.5px;color:var(--ink-3)">visitas · 7 días</div></div>
+                <div><div style="font-size:18px;font-weight:650;font-variant-numeric:tabular-nums">23</div><div style="font-size:11.5px;color:var(--ink-3)">clics a WhatsApp</div></div>
+                <div><div style="font-size:18px;font-weight:650;font-variant-numeric:tabular-nums">1:42</div><div style="font-size:11.5px;color:var(--ink-3)">tiempo promedio</div></div>
+              </div>
               <div style="margin-top:16px;display:flex;gap:8px;flex-wrap:wrap">
                 <button class="btn sm">Compartir por WhatsApp</button><button class="btn sm">Compartir por email</button></div>
             </div></div>
@@ -420,6 +481,11 @@ tbody tr:hover{background:var(--hover)}
                 <div style="aspect-ratio:1;background:var(--accent-soft);border-radius:7px;display:grid;place-items:center;color:var(--ink-3);font-size:11px">+9</div>
               </div></div>
           </div>
+          <div class="card" style="grid-column:1/-1;margin-top:12px"><div class="card-b" style="display:flex;align-items:center;gap:16px">
+            <div style="flex:1;min-width:0"><div style="display:flex;justify-content:space-between;font-size:12.5px;margin-bottom:7px"><span style="font-weight:550">Almacenamiento</span><span style="color:var(--ink-3)">48 / 200 MB</span></div>
+              <div class="meter"><i style="width:24%"></i></div></div>
+            <button class="btn sm">Ver archivos</button>
+          </div></div>
         </div>
 
         <div class="subpage" data-sub="design" style="display:none">
@@ -437,6 +503,13 @@ tbody tr:hover{background:var(--hover)}
             </div>
             <div style="margin-top:16px;display:flex;gap:10px"><button class="btn sm">Guardar borrador</button><button class="btn pri sm">Publicar cambios</button></div>
           </div></div>
+          <div class="card"><div class="card-h"><h3>Tema</h3><span class="act">Cada diseño trae los suyos</span></div><div class="card-b">
+            <div class="grid g3">
+              <div class="tcard on"><div class="pv" style="background:linear-gradient(135deg,#F2EDE3,#C93218)"></div><div class="nm">Mercado</div><div class="ds">Claro · bermellón</div></div>
+              <div class="tcard"><div class="pv" style="background:linear-gradient(135deg,#121110,#FF8A3C)"></div><div class="nm">Mercado noche</div><div class="ds">Oscuro · ámbar</div></div>
+              <div class="tcard"><div class="pv" style="background:linear-gradient(135deg,#EDEBE4,#FF4B1F)"></div><div class="nm">Mercado oferta</div><div class="ds">Papel · señal</div></div>
+            </div>
+          </div></div>
         </div>
 
         <div class="subpage" data-sub="company" style="display:none">
@@ -451,6 +524,11 @@ tbody tr:hover{background:var(--hover)}
               <div class="fld"><label>Horario</label><input value="Lun–Sáb 10–19 h"></div>
             </div>
             <div style="margin-top:16px"><button class="btn pri sm">Guardar cambios</button></div>
+          </div></div>
+          <div class="card"><div class="card-h"><h3>Qué se muestra en tu web</h3></div><div class="card-b" style="padding-top:4px;padding-bottom:4px">
+            <div class="swrow"><div><div class="st">Botón de WhatsApp</div><div class="ss">Flotante en todas las páginas</div></div><button class="switch on"></button></div>
+            <div class="swrow"><div><div class="st">Mapa de ubicación</div><div class="ss">En la sección de contacto</div></div><button class="switch on"></button></div>
+            <div class="swrow"><div><div class="st">Horarios visibles</div><div class="ss">Debajo del botón de consulta</div></div><button class="switch"></button></div>
           </div></div>
         </div>
       </section>
@@ -471,11 +549,14 @@ tbody tr:hover{background:var(--hover)}
         </div>
         <div class="card">
           <div class="rev"><div style="display:flex;justify-content:space-between"><div><span class="who">Martina G.</span> <span class="stars">★★★★★</span></div><span class="when">hace 2 días</span></div>
-            <p>Atención impecable y el producto llegó antes de lo esperado. Volveré a comprar seguro.</p></div>
+            <p>Atención impecable y el producto llegó antes de lo esperado. Volveré a comprar seguro.</p>
+            <div style="margin-top:9px;display:flex;gap:8px"><button class="btn ghost sm">Responder</button><button class="btn ghost sm">Ocultar</button></div></div>
           <div class="rev"><div style="display:flex;justify-content:space-between"><div><span class="who">Julián P.</span> <span class="stars">★★★★☆</span></div><span class="when">hace 5 días</span></div>
-            <p>Muy buena calidad. El talle vino un poco grande, pero el cambio fue rapidísimo.</p></div>
+            <p>Muy buena calidad. El talle vino un poco grande, pero el cambio fue rapidísimo.</p>
+            <div style="margin-top:9px;display:flex;gap:8px"><button class="btn ghost sm">Responder</button><button class="btn ghost sm">Ocultar</button></div></div>
           <div class="rev"><div style="display:flex;justify-content:space-between"><div><span class="who">Carla R.</span> <span class="stars">★★★★★</span></div><span class="when">hace 1 semana</span></div>
-            <p>Compré para regalo y quedó perfecto. El empaque es hermoso.</p></div>
+            <p>Compré para regalo y quedó perfecto. El empaque es hermoso.</p>
+            <div style="margin-top:9px;display:flex;gap:8px"><button class="btn ghost sm">Responder</button><button class="btn ghost sm">Ocultar</button></div></div>
         </div>
       </section>
 
@@ -488,7 +569,7 @@ tbody tr:hover{background:var(--hover)}
         </div>
 
         <div class="subpage on" data-sub="tools">
-          <div class="grid g3">
+          <div class="grid g4">
             <div class="card"><div class="card-h"><h3>Código QR</h3><span class="act">Descargar</span></div>
               <div style="padding:22px;display:grid;place-items:center"><div class="qrbox"></div>
               <p style="font-size:12px;color:var(--ink-3);margin-top:10px">Listo para imprimir</p></div></div>
@@ -496,6 +577,8 @@ tbody tr:hover{background:var(--hover)}
               <div style="padding:18px"><div style="aspect-ratio:1/1.4;background:var(--accent-soft);border-radius:7px;display:grid;place-items:center;color:var(--ink-3);font-size:12px">Vista previa</div></div></div>
             <div class="card"><div class="card-h"><h3>Folleto A4</h3><span class="act">Personalizar</span></div>
               <div style="padding:18px"><div style="aspect-ratio:1/1.3;background:var(--accent-soft);border-radius:7px;display:grid;place-items:center;color:var(--ink-3);font-size:12px">Vista previa</div></div></div>
+            <div class="card"><div class="card-h"><h3>Editor de folletos</h3><span class="tag">Premium</span></div>
+              <div style="padding:18px"><div style="aspect-ratio:4/3;background:var(--accent-soft);border-radius:7px;display:grid;place-items:center;color:var(--ink-3);font-size:12px">Lienzo libre</div></div></div>
           </div>
         </div>
 
@@ -513,6 +596,13 @@ tbody tr:hover{background:var(--hover)}
               <tr><td>WhatsApp</td><td class="num">310</td><td class="num">13%</td></tr>
               <tr><td>Buscadores</td><td class="num">142</td><td class="num">6%</td></tr>
             </tbody></table></div>
+          <div class="card" style="margin-top:12px"><div class="card-h"><h3>Dispositivos</h3></div><table>
+            <thead><tr><th>Dispositivo</th><th>Visitas</th><th class="num" style="text-align:right">%</th></tr></thead>
+            <tbody>
+              <tr><td>Celular</td><td class="num">1.680</td><td class="num" style="text-align:right">71%</td></tr>
+              <tr><td>Desktop</td><td class="num">540</td><td class="num" style="text-align:right">23%</td></tr>
+              <tr><td>Tablet</td><td class="num">142</td><td class="num" style="text-align:right">6%</td></tr>
+            </tbody></table></div>
         </div>
       </section>
 
@@ -520,7 +610,10 @@ tbody tr:hover{background:var(--hover)}
       <section class="page" data-page="support">
         <div class="ph"><div><h1>Ayuda</h1><div class="sub">Tu asistente de cuenta, disponible 24/7</div></div></div>
         <div class="card" style="max-width:640px;margin:0 auto">
-          <div class="card-b" style="display:flex;flex-direction:column;gap:14px;min-height:320px">
+          <div class="card-b" style="display:flex;flex-wrap:wrap;gap:8px;padding-bottom:8px">
+            <button class="chip">Facturación</button><button class="chip">Mi web</button><button class="chip">Productos</button><button class="chip">Mi plan</button><button class="chip">Pagos</button>
+          </div>
+          <div class="card-b" style="display:flex;flex-direction:column;gap:14px;min-height:300px;padding-top:0">
             <div style="display:flex;gap:10px"><span class="avatar" style="width:28px;height:28px;font-size:11px">D</span>
               <div style="background:var(--accent-soft);border-radius:2px 12px 12px 12px;padding:10px 14px;font-size:13.5px;max-width:80%">¡Hola David! Soy tu asistente. ¿En qué te ayudo hoy?</div></div>
             <div style="display:flex;gap:10px;flex-direction:row-reverse"><span class="avatar" style="width:28px;height:28px;font-size:11px;background:var(--ink-2)">D</span>
@@ -547,6 +640,18 @@ tbody tr:hover{background:var(--hover)}
           </div>
           <svg width="110" height="110" viewBox="0 0 24 24" fill="none" stroke="var(--line-2)" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="8" width="16" height="12" rx="3"/><path d="M12 8V4M9 4h6"/><circle cx="9" cy="14" r="1" fill="var(--line-2)"/><circle cx="15" cy="14" r="1" fill="var(--line-2)"/><path d="M9 18h6"/></svg>
         </div>
+        <div class="grid g2" style="margin-top:16px">
+          <div class="card"><div class="card-h"><h3>Qué responde</h3></div><div class="card-b" style="padding-top:4px;padding-bottom:4px">
+            <div class="swrow"><div><div class="st">Preguntas frecuentes</div><div class="ss">Horarios, precios, envíos y cambios</div></div><button class="switch on"></button></div>
+            <div class="swrow"><div><div class="st">Solo en horario comercial</div><div class="ss">Fuera de horario deriva a WhatsApp</div></div><button class="switch"></button></div>
+            <div class="swrow"><div><div class="st">Derivar a WhatsApp</div><div class="ss">Si no sabe la respuesta, pasa la consulta</div></div><button class="switch on"></button></div>
+          </div></div>
+          <div class="card"><div class="card-h"><h3>Conversaciones recientes</h3><span class="act">Ver todas</span></div>
+            <div class="todo"><span class="ic"><svg viewBox="0 0 24 24"><rect x="4" y="8" width="16" height="12" rx="3"/><path d="M12 8V4M9 4h6"/><circle cx="9" cy="14" r="1"/><circle cx="15" cy="14" r="1"/><path d="M9 18h6"/></svg></span><div><div class="tt">Cliente preguntó por envíos</div><div class="ts">Resuelto solo · hace 1 h</div></div><span class="go">Ver →</span></div>
+            <div class="todo"><span class="ic"><svg viewBox="0 0 24 24"><rect x="4" y="8" width="16" height="12" rx="3"/><path d="M12 8V4M9 4h6"/><circle cx="9" cy="14" r="1"/><circle cx="15" cy="14" r="1"/><path d="M9 18h6"/></svg></span><div><div class="tt">Pidió precio de un producto</div><div class="ts">Derivado a WhatsApp · hace 3 h</div></div><span class="go">Ver →</span></div>
+            <div class="todo"><span class="ic"><svg viewBox="0 0 24 24"><rect x="4" y="8" width="16" height="12" rx="3"/><path d="M12 8V4M9 4h6"/><circle cx="9" cy="14" r="1"/><circle cx="15" cy="14" r="1"/><path d="M9 18h6"/></svg></span><div><div class="tt">Consulta fuera de horario</div><div class="ts">Respondió el FAQ · ayer</div></div><span class="go">Ver →</span></div>
+          </div>
+        </div>
       </section>
 
       <!-- ============ PLAN Y PAGOS (grupo) ============ -->
@@ -566,14 +671,20 @@ tbody tr:hover{background:var(--hover)}
             <div style="margin-left:auto;display:flex;gap:8px"><button class="btn sm">Renovar</button><button class="btn ghost sm">Cambiar de plan</button></div>
           </div>
           <div class="grid g3">
-            <div class="tcard"><div class="nm">Básico</div><div class="ds">$4.900/mes · página + catálogo</div></div>
-            <div class="tcard on"><div class="nm">Estándar ✓</div><div class="ds">$9.900/mes · diseño, servicios, QR</div></div>
-            <div class="tcard"><div class="nm">Premium</div><div class="ds">$16.900/mes · Studio, POS, bot</div></div>
+            <div class="tcard"><div style="display:flex;justify-content:space-between;align-items:baseline"><div class="nm">Básico</div><div style="font-size:15px;font-weight:650">$4.900</div></div>
+              <div class="ds" style="margin:3px 0 10px">/mes · página + catálogo</div>
+              <div style="font-size:12.5px;color:var(--ink-2);display:grid;gap:6px"><div>✓ Página web publicada</div><div>✓ Catálogo de productos</div><div>✓ QR para compartir</div><div style="color:var(--ink-3)">— Diseño avanzado, servicios, estadísticas</div></div></div>
+            <div class="tcard on"><div style="display:flex;justify-content:space-between;align-items:baseline"><div class="nm">Estándar ✓</div><div style="font-size:15px;font-weight:650">$9.900</div></div>
+              <div class="ds" style="margin:3px 0 10px">/mes · todo lo de Básico +</div>
+              <div style="font-size:12.5px;color:var(--ink-2);display:grid;gap:6px"><div>✓ Diseño y temas completos</div><div>✓ Página de servicios</div><div>✓ Opiniones de clientes</div><div>✓ QR, folletos y estadísticas</div></div></div>
+            <div class="tcard"><div style="display:flex;justify-content:space-between;align-items:baseline"><div class="nm">Premium</div><div style="font-size:15px;font-weight:650">$16.900</div></div>
+              <div class="ds" style="margin:3px 0 10px">/mes · todo lo de Estándar +</div>
+              <div style="font-size:12.5px;color:var(--ink-2);display:grid;gap:6px"><div>✓ Studio de diseño</div><div>✓ Punto de venta</div><div>✓ Asistente virtual y bot</div><div>✓ Editor de folletos</div></div></div>
           </div>
         </div>
 
         <div class="subpage" data-sub="payments" style="display:none">
-          <div class="card"><table>
+          <div class="card"><div class="card-h"><h3>Historial de pagos</h3><button class="btn ghost sm">Exportar</button></div><table>
             <thead><tr><th>Fecha</th><th>Concepto</th><th>Método</th><th>Estado</th><th class="num" style="text-align:right">Monto</th></tr></thead>
             <tbody>
               <tr><td>12 oct 2025</td><td>Plan Estándar</td><td>Tarjeta ···· 4242</td><td><span class="tag ok">Pagado</span></td><td class="num" style="text-align:right">$9.900</td></tr>
@@ -584,7 +695,7 @@ tbody tr:hover{background:var(--hover)}
         </div>
 
         <div class="subpage" data-sub="invoices" style="display:none">
-          <div class="card"><table>
+          <div class="card"><div class="card-h"><h3>Comprobantes</h3><span class="act">Todos en PDF</span></div><table>
             <thead><tr><th>Factura</th><th>Fecha</th><th>Período</th><th class="num" style="text-align:right">Total</th><th></th></tr></thead>
             <tbody>
               <tr><td>FC-A-000128</td><td>12 oct 2025</td><td>Octubre</td><td class="num" style="text-align:right">$9.900</td><td><button class="btn ghost sm">PDF</button></td></tr>
@@ -622,6 +733,18 @@ tbody tr:hover{background:var(--hover)}
               <button class="btn sm danger">Eliminar</button></div></div>
           </div>
         </div>
+        <div class="card" style="margin-top:16px"><div class="card-h"><h3>Preferencias</h3></div><div class="card-b">
+          <div class="grid g3">
+            <div class="fld"><label>Apariencia</label><select id="themeSel"><option value="light">Claro</option><option value="dark">Oscuro</option></select></div>
+            <div class="fld"><label>Idioma</label><select><option>Español</option><option>English</option></select></div>
+            <div class="fld"><label>Zona horaria</label><select><option>Argentina (GMT-3)</option></select></div>
+          </div>
+          <div style="margin-top:6px">
+            <div class="swrow"><div><div class="st">Avisos por email</div><div class="ss">Pagos, vencimientos y novedades</div></div><button class="switch on"></button></div>
+            <div class="swrow"><div><div class="st">Resumen semanal</div><div class="ss">Tu actividad cada lunes por la mañana</div></div><button class="switch on"></button></div>
+            <div class="swrow"><div><div class="st">Novedades del producto</div><div class="ss">Lanzamientos y mejoras</div></div><button class="switch"></button></div>
+          </div>
+        </div></div>
       </section>
 
     </main>
@@ -671,7 +794,7 @@ const I = {
   receipt:'<svg viewBox="0 0 24 24"><path d="M4 2v20l3-2 3 2 3-2 3 2 3-2 1-18-3 2-3-2-3 2-3-2-3 2z"/><path d="M8 8h8M8 12h8M8 16h5"/></svg>'
 };
 
-const NAV = [
+const NAV_ACTUAL = [
   {id:'overview',label:'Inicio',icon:'home',hint:'Tu negocio hoy'},
   {id:'catalogs',label:'Mis productos',icon:'box',hint:'Fotos, precios y categorías',badge:'14'},
   {id:'services',label:'Mis servicios',icon:'wrench',hint:'Lo que ofrecés hacer'},
@@ -685,6 +808,24 @@ const NAV = [
   {id:'plans',label:'Plan y pagos',icon:'card',hint:'Suscripción, pagos y facturas'},
   {id:'settings',label:'Mi cuenta',icon:'user',hint:'Datos y contraseña'}
 ];
+// Propuesta: el núcleo (web + catálogo) primero, engagement después,
+// extras y ayuda al final, cuenta/facturación siempre últimos.
+const NAV_PROPOSED = [
+  {id:'overview',label:'Inicio',icon:'home',hint:'Tu negocio hoy'},
+  {id:'web',label:'Mi página',icon:'store',hint:'Diseño, secciones y dirección'},
+  {id:'catalogs',label:'Mis productos',icon:'box',hint:'Fotos, precios y categorías',badge:'14'},
+  {id:'services',label:'Mis servicios',icon:'wrench',hint:'Lo que ofrecés hacer'},
+  {id:'reviews',label:'Opiniones',icon:'star',hint:'Lo que dicen de vos'},
+  {id:'tools',label:'Promocionar',icon:'megaphone',hint:'QR, folletos y visitas'},
+  {id:'pos',label:'Vender en persona',icon:'monitor',hint:'Cobrar en tu local'},
+  {id:'bot',label:'Asistente virtual',icon:'bot',hint:'Responde por vos en tu web'},
+  {id:'support',label:'Ayuda',icon:'msg',hint:'Te ayuda con tu cuenta'},
+  {sep:true},
+  {id:'plans',label:'Plan y pagos',icon:'card',hint:'Suscripción, pagos y facturas'},
+  {id:'settings',label:'Mi cuenta',icon:'user',hint:'Datos y contraseña'}
+];
+let ord='propuesto';
+const NAV=()=>ord==='propuesto'?NAV_PROPOSED:NAV_ACTUAL;
 
 const GROUPS = {
   web:[['store','Mi dirección web'],['photos','Mis fotos'],['design','Diseño'],['company','Sobre mi negocio']],
@@ -702,7 +843,7 @@ const isMobile=()=>matchMedia('(max-width:860px)').matches;
 
 function renderSide(){
   const el=document.getElementById('sideNav');el.innerHTML='';
-  NAV.forEach(n=>{
+  NAV().forEach(n=>{
     if(n.sep){el.insertAdjacentHTML('beforeend','<div class="sep"></div>');return}
     const on=n.id===section||navParent()===n.id;
     el.insertAdjacentHTML('beforeend',
@@ -717,7 +858,7 @@ function navParent(){for(const g in GROUPS){if(GROUPS[g].some(t=>t[0]===section)
 function renderMobileSheet(){
   const el=document.getElementById('msheetNav');el.innerHTML='';
   el.insertAdjacentHTML('beforeend','<div class="mnav-sec">Menú</div>');
-  NAV.forEach(n=>{
+  NAV().forEach(n=>{
     if(n.sep)return;
     const grp=n.id==='web'||n.id==='tools'||n.id==='plans'&&false;
     const on=section===n.id||navParent()===n.id;
@@ -796,6 +937,14 @@ function closeSheet(){document.getElementById('msheet').classList.remove('on')}
 })();
 
 renderSide();renderMobileSheet();
+document.querySelectorAll('#ordSw button').forEach(b=>b.onclick=()=>{
+  ord=b.dataset.ord;
+  document.querySelectorAll('#ordSw button').forEach(x=>x.classList.toggle('on',x===b));
+  renderSide();renderMobileSheet();
+});
+document.querySelectorAll('.switch').forEach(s=>s.onclick=()=>s.classList.toggle('on'));
+const themeSel=document.getElementById('themeSel');
+if(themeSel){themeSel.value=_root.dataset.theme;themeSel.onchange=()=>{_root.dataset.theme=themeSel.value;localStorage.setItem('dash-theme',themeSel.value)}}
 // init bottom active
 setTimeout(()=>document.querySelectorAll('.mbi').forEach(b=>b.classList.toggle('on',b.dataset.id==='overview')),0);
 </script>
