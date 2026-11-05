@@ -308,7 +308,7 @@ header.top.menu-open{
   background:var(--accent);color:var(--on-accent);padding:14px 0;overflow:hidden;
   border-top:1px solid color-mix(in srgb,var(--accent) 70%,#000);
 }
-.marquee:empty{display:none}
+.marquee:empty,.marquee:not(:has(.ds-note)){display:none}
 .marquee-track{display:flex;gap:44px;white-space:nowrap;width:max-content;animation:mq 30s linear infinite;will-change:transform}
 .marquee:hover .marquee-track{animation-play-state:paused}
 .marquee .ds-note{
