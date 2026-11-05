@@ -1,0 +1,42 @@
+{
+  "version": 1,
+  "source": {
+    "type": "user-script",
+    "provenance": "user-provided",
+    "file": "user-script.txt",
+    "sha256": "a2e60e7567883cd5953fa2c04f2d2735b3e4b6725cab013eae060515c2a022f9"
+  },
+  "provider": {
+    "id": "gemini",
+    "model": "gemini-2.5-flash-preview-tts",
+    "voice": "Charon"
+  },
+  "alignment": "tts-segments",
+  "duration": 35.232875,
+  "file": "audio/narration.wav",
+  "audioSha256": "644d0960848a62f82d0a3ce456979c99a48cdbb45d0590a38131f7d705117cf9",
+  "segments": [
+    {
+      "id": "n0001",
+      "text": "¿Todavía mostrás tu negocio solo por WhatsApp y redes?",
+      "start": 0,
+      "end": 3.770958,
+      "file": "audio/narration-cache/444a19b813edb23c066a63c8c8bc525bcd099c746ad8aaf1a5373bbe07eba87d.wav"
+    },
+    {
+      "id": "n0002",
+      "text": "Con DAVENT creás la web de tu negocio en minutos, sin programar. Catálogo de productos, página de servicios, suscripciones y herramientas de marketing — todo en un solo lugar. Tus clientes ven lo que ofrecés y te contactan directo por tus redes.",
+      "start": 3.770958,
+      "end": 20.341916,
+      "file": "audio/narration-cache/214d8b67a32469bb45052cc7f91775bbea363b86228691af3d86694d8c327265.wav"
+    },
+    {
+      "id": "n0003",
+      "text": "Y con el código de cupón PROMO, tenés 30 días gratis del plan Premium. Todo incluido, sin pagar nada. Entrá a DAVENT, armá tu web y hacé crecer tu negocio. Cupón PROMO: treinta días de Premium, gratis.",
+      "start": 20.341916,
+      "end": 35.232874,
+      "file": "audio/narration-cache/c8d1d34f939ed4c467c04ecbfb0759f18c3d22785f7600141069cd9035bb66e6.wav"
+    }
+  ],
+  "missing": []
+}
