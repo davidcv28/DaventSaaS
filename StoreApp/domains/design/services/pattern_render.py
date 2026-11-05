@@ -681,13 +681,20 @@ def _reviews_fragment(store, product, customization):
             f'<p class="ds-rev-text">{escape(_text(review.text, 600))}</p>'
             if can_comment and review.text else ''
         )
+        #Respuesta pública del dueño: la escribe desde su panel (PATCH
+        #/api/reviews/<pk>/reply/) y se muestra bajo la opinión.
+        reply = (
+            f'<p class="ds-rev-reply"><strong>Respuesta del comercio</strong>'
+            f'<span>{escape(_text(review.owner_reply, 600))}</span></p>'
+            if review.owner_reply else ''
+        )
         date = review.created_at.date()
         items.append(
             '<li class="ds-rev-item">'
             f'<strong class="ds-rev-name">{escape(_text(review.name, 60))} {escape(initial)}</strong>'
             f'<time class="ds-rev-date" datetime="{date.isoformat()}">'
             f'{date.day} de {MONTHS_ES[date.month]} de {date.year}</time>'
-            f'{vote}{text}</li>'
+            f'{vote}{text}{reply}</li>'
         )
     return (
         f'<div class="ds-reviews" data-rev-url="/api/stores/public/{store.slug}/products/{product.pk}/reviews/"'

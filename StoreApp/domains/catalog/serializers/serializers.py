@@ -16,7 +16,7 @@ from StoreApp.domains.catalog.services.services import (
 )
 from StoreApp.domains.stores.services.storage import object_url
 
-from .config_fields import DiscountFields, ProductFields, ReviewFields, TaxonomyFields
+from .config_fields import DiscountFields, ProductFields, ReviewFields, ReviewLimits, TaxonomyFields
 from .mixins import (
     CategorySchemaMixinValidator,
     DiscountMixinValidator,
@@ -186,7 +186,30 @@ class ReviewSerializerList(serializers.ModelSerializer):
     product_name                =   serializers.CharField(source = 'product.name', read_only = True)
     class Meta:
         model                   =   ProductReview
-        fields                  =   ['id', 'product', 'product_name', 'is_positive', 'text', 'name', 'surname', 'email', 'created_at']
+        fields                  =   ['id', 'product', 'product_name', 'is_positive', 'text', 'name', 'surname', 'email', 'owner_reply', 'replied_at', 'created_at']
+#=========================================
+# REVIEW REPLY SERIALIZER (respuesta del dueño: el único campo editable
+# de una opinión — el visitante nunca la toca y el dueño no edita la
+# opinión ajena, solo puede borrarla)
+#=========================================
+class ReviewReplySerializer(serializers.ModelSerializer):
+    owner_reply                 =   serializers.CharField(
+        max_length    =   ReviewLimits['text_max'],
+        allow_blank   =   True,
+        trim_whitespace = True,
+        required      =   False,
+    )
+    class Meta:
+        model                   =   ProductReview
+        fields                  =   ['owner_reply']
+    def update(self, instance, validated_data):
+        reply                   =   (validated_data.get('owner_reply') or '').strip()
+        instance.owner_reply    =   reply
+        #La fecha marca cuándo respondió el comercio; vaciar la respuesta
+        #la quita de la web pública y limpia el sello.
+        instance.replied_at     =   timezone.now() if reply else None
+        instance.save(update_fields = ['owner_reply', 'replied_at'])
+        return instance
 #=========================================
 # REVIEW PUBLIC SERIALIZER (ficha pública: jamás expone el email y el
 # apellido viaja reducido a su inicial — "María P.")
@@ -195,7 +218,7 @@ class ReviewPublicSerializer(serializers.ModelSerializer):
     surname_initial             =   serializers.SerializerMethodField()
     class Meta:
         model                   =   ProductReview
-        fields                  =   ['is_positive', 'text', 'name', 'surname_initial', 'created_at']
+        fields                  =   ['is_positive', 'text', 'name', 'surname_initial', 'owner_reply', 'replied_at', 'created_at']
     def get_surname_initial(self, review):
         surname =   (review.surname or '').strip()
         return f'{surname[0]}.' if surname else ''

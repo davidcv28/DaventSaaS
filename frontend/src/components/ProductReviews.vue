@@ -130,6 +130,10 @@ onMounted(() => {
           </span>
         </div>
         <p v-if="r.text" class="spd-rev-text">{{ r.text }}</p>
+        <div v-if="r.owner_reply" class="spd-rev-reply">
+          <strong>Respuesta del comercio</strong>
+          <p>{{ r.owner_reply }}</p>
+        </div>
       </li>
     </ul>
 

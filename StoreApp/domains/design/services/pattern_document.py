@@ -158,6 +158,11 @@ section:has(.ds-plans:empty){display:none!important}
 .ds-rev-hp{position:absolute!important;left:-9999px;width:1px;height:1px;overflow:hidden}
 .ds-rev-vote{display:inline-block;vertical-align:-1px}
 .ds-rev-vote svg{display:block}
+/* Respuesta del dueño bajo la opinión: filete de acento + etiqueta en
+   versalitas; las variables caen a neutros en diseños sin tokens. */
+.ds-rev-reply{margin-top:8px;padding:8px 10px;border-left:2px solid var(--ds-accent,var(--line,#bbb));background:color-mix(in srgb,var(--ds-accent,#888) 7%,transparent);border-radius:0 var(--ds-radius,4px) var(--ds-radius,4px) 0;font-size:12px;line-height:1.55;color:var(--ink-2,var(--ink,currentColor))}
+.ds-rev-reply strong{display:block;margin-bottom:2px;font-size:9px;letter-spacing:.12em;text-transform:uppercase;color:var(--ds-accent,var(--ink,currentColor))}
+.ds-rev-reply span{display:block;white-space:pre-wrap;overflow-wrap:anywhere}
 """
 
 #El puente vive junto a este módulo y se sirve desde la misma URL del

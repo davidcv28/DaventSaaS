@@ -179,7 +179,7 @@ class SpecialOfferCampaignViewSet(
 #=========================================
 class ReviewViewSet(CatalogGateMixin, CatalogBaseViewSet):
     viewset_config  =   ReviewConfigs
-    http_method_names   =   ['get', 'delete', 'head', 'options']
+    http_method_names   =   ['get', 'patch', 'delete', 'head', 'options']
     def _deny_without_reviews(self):
         #Las opiniones son premium ('has_product_comments'): sin el flag
         #tampoco se moderan desde el panel (la web pública ya las cierra).
@@ -197,6 +197,40 @@ class ReviewViewSet(CatalogGateMixin, CatalogBaseViewSet):
         denied  =   self._deny_without_reviews()
         if denied: return denied
         return super().destroy(request, pk)
+    def update(self, request, pk = None):
+        #La opinión ajena no se edita: PATCH /reviews/<pk>/ queda cerrado
+        #— la respuesta del dueño vive en la acción `reply` de abajo.
+        return Response(status = status.HTTP_405_METHOD_NOT_ALLOWED)
+    def partial_update(self, request, pk = None):
+        return self.update(request, pk)
+    #=========================================
+    # REPLY (respuesta pública del dueño a una opinión)
+    #=========================================
+    @action(detail = True, methods = ['patch'], url_path = 'reply')
+    def reply(self, request, pk = None):
+        """
+        PATCH /api/reviews/<pk>/reply/ {owner_reply} — función exclusiva del
+        dueño: la opinión ajena no se edita (solo se borra) y el visitante
+        nunca llega a este endpoint (IsAuthenticated + queryset de su
+        tienda). Texto vacío = quitar la respuesta de la web.
+        """
+        denied  =   self._deny_without_reviews()
+        if denied: return denied
+        from StoreApp.domains.catalog.serializers.serializers import (
+            ReviewReplySerializer,
+            ReviewSerializerList,
+        )
+        review      =   self.get_object()
+        serializer  =   ReviewReplySerializer(review, data = request.data, partial = True)
+        serializer.is_valid(raise_exception = True)
+        serializer.save()
+        review.refresh_from_db()
+        return Response(
+            {
+                'Exito' : 'La respuesta se publicó en tu web.' if review.owner_reply else 'La respuesta se quitó de tu web.',
+                'item'  : ReviewSerializerList(review).data,
+            }
+        )
 #=========================================
 # BACKGROUND REMOVAL THROTTLE (inferencia en CPU: acotada por usuario)
 #=========================================

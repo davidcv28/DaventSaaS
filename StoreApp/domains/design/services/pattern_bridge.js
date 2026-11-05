@@ -1099,7 +1099,8 @@
       if (!isNaN(d.getTime())) date = d.toLocaleDateString('es-AR', { day: 'numeric', month: 'long', year: 'numeric' })
       li.innerHTML = '<strong class="ds-rev-name">' + esc(r.name) + ' ' + esc(r.surname_initial || '') + '</strong>' +
         '<time class="ds-rev-date">' + esc(date) + '</time>' + voteHtml +
-        (canComment && r.text ? '<p class="ds-rev-text">' + esc(r.text) + '</p>' : '')
+        (canComment && r.text ? '<p class="ds-rev-text">' + esc(r.text) + '</p>' : '') +
+        (r.owner_reply ? '<p class="ds-rev-reply"><strong>Respuesta del comercio</strong><span>' + esc(r.owner_reply) + '</span></p>' : '')
       return li
     }
     function refreshList() {

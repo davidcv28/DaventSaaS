@@ -35,10 +35,12 @@ import { http } from './http.js'
 // set = precio nuevo; scope = all|category|brand|products; rounding =
 // none|unit|ten|hundred. El CSV matchea por id o nombre.
 //
-// GET    /api/reviews/                    Bearer -> [{id,product,product_name,is_positive,text,name,surname,email,created_at}]
+// GET    /api/reviews/                    Bearer -> [{id,product,product_name,is_positive,text,name,surname,email,owner_reply,replied_at,created_at}]
+// PATCH  /api/reviews/<pk>/reply/         Bearer {owner_reply} -> {Exito,item}  (respuesta pública del dueño; "" la quita)
 // DELETE /api/reviews/<pk>/               Bearer -> {Exito}
 // Opiniones de visitantes (valoraciones 1-5 y/o comentarios): se crean en
-// la web pública con captcha; acá el dueño solo las lista y las borra.
+// la web pública con captcha; acá el dueño las lista, responde y borra.
+// La opinión ajena no se edita: PATCH /api/reviews/<pk>/ responde 405.
 
 function unwrap(data) {
   if (Array.isArray(data)) return data
@@ -170,6 +172,11 @@ export const catalogApi = {
   },
   async deleteReview(pk) {
     const { data } = await http.delete(`/reviews/${pk}/`)
+    return data
+  },
+  // Respuesta del dueño a una opinión: texto vacío = quitarla de la web.
+  async replyReview(pk, ownerReply) {
+    const { data } = await http.patch(`/reviews/${pk}/reply/`, { owner_reply: ownerReply })
     return data
   }
 }

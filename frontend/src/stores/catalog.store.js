@@ -193,13 +193,21 @@ export const useCatalogStore = defineStore('catalog', () => {
     return res.ok
   }
 
-  // ----- Opiniones de visitantes (moderación: solo listar y borrar) -----
+  // ----- Opiniones de visitantes (moderación: listar, responder y borrar) -----
   async function loadReviews() {
     try {
       reviews.value = await catalogApi.listReviews()
     } catch (e) {
       setApiError(e)
     }
+  }
+  async function replyReview(pk, ownerReply) {
+    const res = await run(() => catalogApi.replyReview(pk, ownerReply), 'La respuesta se publicó en tu web.')
+    if (res.ok && res.data?.item) {
+      const i = reviews.value.findIndex((r) => r.id === pk)
+      if (i !== -1) reviews.value[i] = res.data.item
+    }
+    return res.ok
   }
   async function removeReview(pk) {
     const res = await run(() => catalogApi.deleteReview(pk), 'La opinión se eliminó.')
@@ -228,6 +236,6 @@ export const useCatalogStore = defineStore('catalog', () => {
     loadAll, saveCategory, removeCategory, saveBrand, removeBrand,
     saveProduct, removeProduct, applyBulkPrices, importPrices,
     saveDiscount, toggleDiscount, removeDiscount,
-    loadReviews, removeReview, reset
+    loadReviews, replyReview, removeReview, reset
   }
 })

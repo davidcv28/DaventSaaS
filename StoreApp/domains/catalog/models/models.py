@@ -233,6 +233,10 @@ class ProductReview(models.Model):
     product                     =   models.ForeignKey(Product, on_delete = models.CASCADE, related_name = 'reviews', db_index = False)
     is_positive                 =   models.BooleanField(null = True, blank = True, verbose_name = 'Le gustó')
     text                        =   models.CharField(max_length = 600, blank = True, verbose_name = 'Comentario')
+    #Respuesta pública del dueño (se escribe desde su panel, nunca el
+    #visitante): viaja en la API pública de la ficha junto a la opinión.
+    owner_reply                 =   models.CharField(max_length = 600, blank = True, verbose_name = 'Respuesta del comercio')
+    replied_at                  =   models.DateTimeField(null = True, blank = True, verbose_name = 'Respondida el')
     name                        =   models.CharField(max_length = 80, verbose_name = 'Nombre')
     surname                     =   models.CharField(max_length = 80, verbose_name = 'Apellido')
     email                       =   models.EmailField(verbose_name = 'Email')

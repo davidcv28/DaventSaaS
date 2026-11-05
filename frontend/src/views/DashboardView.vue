@@ -2226,6 +2226,27 @@ async function onDeleteReview(r) {
   await catalog.removeReview(r.id)
   reviewDeleting.value = null
 }
+// Respuesta del dueño a una opinión: se publica bajo la opinión en la
+// ficha del producto (PATCH /api/reviews/<pk>/reply/ — función exclusiva
+// del comercio; el visitante nunca puede responder).
+const reviewReplying = ref(null)
+const reviewReplyText = ref('')
+const reviewReplyBusy = ref(false)
+function startReviewReply(r) {
+  reviewReplying.value = r.id
+  reviewReplyText.value = r.owner_reply || ''
+}
+function cancelReviewReply() {
+  reviewReplying.value = null
+  reviewReplyText.value = ''
+}
+async function saveReviewReply(r) {
+  if (reviewReplyBusy.value) return
+  reviewReplyBusy.value = true
+  const ok = await catalog.replyReview(r.id, reviewReplyText.value.trim())
+  reviewReplyBusy.value = false
+  if (ok) cancelReviewReply()
+}
 
 // Carrusel de banners de la web pública (premium, has_design_advanced). Misma
 // cuota que el logo. La vista previa rota las imágenes cada 3s como en la web real.
@@ -4082,7 +4103,32 @@ async function changePassword() {
                 <button type="button" class="rev-prod-link" @click="goToReviewProduct(r)">{{ r.product_name }}</button>
               </span>
               <p v-if="r.text" class="rev-text">{{ r.text }}</p>
+              <div v-if="r.owner_reply && reviewReplying !== r.id" class="rev-reply">
+                <strong><AppIcon name="store" :size="12" /> Tu respuesta</strong>
+                <p>{{ r.owner_reply }}</p>
+              </div>
+              <div v-if="reviewReplying === r.id" class="rev-reply-form">
+                <label :for="`rev-reply-${r.id}`">Tu respuesta <small>se muestra en la web, bajo la opinión</small></label>
+                <textarea
+                  :id="`rev-reply-${r.id}`" v-model="reviewReplyText" class="textarea" rows="3"
+                  maxlength="600" placeholder="Gracias por tu opinión. Si tenés alguna duda, escribinos."
+                ></textarea>
+                <div class="rev-reply-actions">
+                  <button type="button" class="btn ghost" :disabled="reviewReplyBusy" @click="cancelReviewReply">Cancelar</button>
+                  <button type="button" class="btn btn-auto" :disabled="reviewReplyBusy" @click="saveReviewReply(r)">
+                    <span v-if="reviewReplyBusy" class="spinner spinner-brand" aria-hidden="true"></span>
+                    {{ reviewReplyText.trim() ? 'Guardar respuesta' : 'Quitar respuesta' }}
+                  </button>
+                </div>
+              </div>
               <div class="rev-foot">
+                <button
+                  type="button" class="icon-btn" :disabled="reviewReplyBusy"
+                  :aria-label="r.owner_reply ? `Editar tu respuesta a ${r.name}` : `Responder la opinión de ${r.name}`"
+                  :title="r.owner_reply ? 'Editar respuesta' : 'Responder'" @click="startReviewReply(r)"
+                >
+                  <AppIcon name="message-circle" :size="15" />
+                </button>
                 <button
                   type="button" class="icon-btn danger" :disabled="reviewDeleting === r.id"
                   :aria-label="`Eliminar la opinión de ${r.name}`" @click="onDeleteReview(r)"

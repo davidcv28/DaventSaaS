@@ -988,6 +988,13 @@ body{ transition: background-color .2s ease, color .2s ease; }
 .rev-mail{ min-width: 0; overflow-wrap: anywhere; }
 .rev-date{ margin-left: auto; flex: none; }
 .rev-text{ margin: 8px 0 0; font-size: 14px; color: var(--ink-2); line-height: 1.5; white-space: pre-wrap; overflow-wrap: anywhere; }
+.rev-reply{ margin-top: 8px; padding: 9px 12px; border-left: 3px solid var(--brand-500); border-radius: 0 10px 10px 0; background: var(--surface); font-size: 13px; color: var(--ink-2); }
+.rev-reply strong{ display: inline-flex; align-items: center; gap: 5px; font-size: 11px; letter-spacing: .06em; text-transform: uppercase; color: var(--brand-ink); }
+.rev-reply p{ margin: 4px 0 0; white-space: pre-wrap; overflow-wrap: anywhere; }
+.rev-reply-form{ margin-top: 8px; padding: 10px 12px; border: 1px dashed var(--line-strong); border-radius: 10px; display: grid; gap: 8px; }
+.rev-reply-form label{ font-size: 12.5px; font-weight: 600; color: var(--ink-2); }
+.rev-reply-form label small{ font-weight: 400; color: var(--muted); }
+.rev-reply-actions{ display: flex; justify-content: flex-end; gap: 8px; }
 .rev-foot{ display: flex; align-items: center; justify-content: flex-end; gap: 8px; margin-top: 10px; flex-wrap: wrap; }
 .rev-prod{ display: inline-flex; align-items: center; gap: 5px; margin-top: 6px; font-size: 12px; color: var(--muted); min-width: 0; }
 .rev-prod svg{ color: var(--brand-ink); flex: none; }

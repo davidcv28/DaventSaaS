@@ -1208,6 +1208,9 @@ html:has(.store-page[data-store-theme='dark'])::-webkit-scrollbar-thumb{ backgro
 .spd-rev-who strong{ font-size: 13.5px; }
 .spd-rev-who time{ font-size: 11.5px; color: var(--sp-muted); }
 .spd-rev-text{ margin: 10px 0 0 44px; font-size: 14px; line-height: 1.6; color: var(--sp-ink-2); overflow-wrap: anywhere; }
+.spd-rev-reply{ margin: 10px 0 0 44px; padding: 9px 12px; border-left: 3px solid var(--store-accent); border-radius: 0 10px 10px 0; background: color-mix(in srgb, var(--store-accent) 8%, transparent); font-size: 13px; line-height: 1.55; color: var(--sp-ink-2); overflow-wrap: anywhere; }
+.spd-rev-reply strong{ display: block; margin-bottom: 2px; font-size: 10.5px; letter-spacing: .08em; text-transform: uppercase; color: var(--sp-accent-text); }
+.spd-rev-reply p{ margin: 0; white-space: pre-wrap; }
 .spd-rev-form{ margin-top: 4px; box-shadow: var(--sp-shadow-sm); }
 .spd-rev-form-head{ display: flex; align-items: center; gap: 12px; }
 .spd-rev-form-head strong{ display: block; font-size: 15px; }
