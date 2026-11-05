@@ -527,11 +527,13 @@ html[data-ds-theme="dark"] .grid-products .ds-product-cat,html[data-ds-style="ol
 }
 .grid-products .ds-product-price .ds-product-amount{font:400 16px/1.15 var(--display)}
 .grid-products .ds-product-old{font:400 11.5px/1 var(--sans);color:var(--muted)}
-.grid-products .ds-campaign-label{position:absolute;right:0;top:-2px;width:auto;height:20px;object-fit:contain}
+/* La etiqueta de campaña viaja EN FLUJO (order:4 + margin-left:auto): como
+   absoluta se montaba sobre el importe y pisaba la pill de descuento. */
+.grid-products .ds-campaign-label{order:4;margin-left:auto;align-self:center;height:20px;width:auto;object-fit:contain}
 .grid-products .ds-product-price[data-off]::before{
-  content:"-" attr(data-off);margin-left:auto;order:3;
-  font:700 9px/1 var(--mono);letter-spacing:.06em;color:var(--on-accent);
-  background:var(--honey);color:#241A05;padding:4px 8px;border-radius:999px;
+  content:"-" attr(data-off) "%";order:3;flex:none;
+  font:700 9px/1 var(--mono);letter-spacing:.06em;color:#241A05;
+  background:var(--honey);padding:4px 8px;border-radius:999px;
 }
 
 /* Tabs vitrina */
