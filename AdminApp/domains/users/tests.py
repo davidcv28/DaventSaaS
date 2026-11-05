@@ -20,7 +20,7 @@ from rest_framework.test import APIClient
 from rest_framework_simplejwt.tokens import RefreshToken
 
 from AdminApp.domains.locations.models import City, Province, ZipCode
-from AdminApp.domains.suscriptions.models import Suscription, SuscriptionPlan
+from AdminApp.domains.suscriptions.models import Coupon, Suscription, SuscriptionPlan
 from AdminApp.domains.users.models import UserProfile
 from AdminApp.domains.users.services.services import email_verification_token
 
@@ -369,6 +369,29 @@ class RegisterSecurityTests(TestCase):
         self.assertEqual(suscription.plan_suscription, trial)
         self.assertTrue(suscription.grants_access())
         self.assertLess((suscription.end_date - suscription.start_date).days, 2)
+
+    def test_register_with_coupon_overrides_trial(self):
+        #QR/folletos: el alta acepta `coupon` y canjea el plan del cupón por
+        #sus días en vez de la trial de 1 día. La respuesta lo confirma.
+        trial           =   SuscriptionPlan.objects.create(name = 'Plan de prueba', price = 0, is_trial = True)
+        premium         =   SuscriptionPlan.objects.create(name = 'Plan premium', price = 40000)
+        Coupon.objects.create(code = 'PROMO30', plan = premium, days = 30)
+        response        =   self.client.post(REGISTER_URL, self._payload(coupon = 'promo30'), format = 'json')
+        self.assertEqual(response.status_code, 201, response.json())
+        self.assertEqual(response.json()['coupon']['plan_name'], 'Plan premium')
+        self.assertEqual(response.json()['coupon']['days'], 30)
+        suscription     =   Suscription.objects.get(user__user__username = 'nuevo.cliente')
+        self.assertEqual(suscription.plan_suscription, premium)
+        self.assertGreater((suscription.end_date - suscription.start_date).days, 20)
+
+    def test_register_with_invalid_coupon_is_400(self):
+        #Un código inválido no crea la cuenta: el error vuelve por campo y el
+        #usuario corrige o lo quita y reintenta.
+        SuscriptionPlan.objects.create(name = 'Plan de prueba', price = 0, is_trial = True)
+        response        =   self.client.post(REGISTER_URL, self._payload(coupon = 'NOPE'), format = 'json')
+        self.assertEqual(response.status_code, 400)
+        self.assertIn('coupon', response.json())
+        self.assertFalse(User.objects.filter(username = 'nuevo.cliente').exists())
 
 
 class DeferredBillingDataTests(TestCase):

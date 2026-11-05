@@ -149,6 +149,24 @@ class RegisterUserSerializer(UsersValidatorsMixins,UserProfileValidatorsMixins, 
     confirm_password    =   serializers.CharField(**UserFieldsConfig['confirm_password'])
     phone               =   serializers.CharField(**UserProfileFieldsConfig['phone'])
     accept_terms        =   serializers.BooleanField(**UserFieldsConfig['accept_terms'])
+    #Cupón promocional opcional (folletos/QR): se canjea dentro del alta y
+    #pisa la trial de 1 día por los días del cupón. Inválido = 400 con error
+    #de campo, así el usuario corrige o lo saca y reintenta.
+    coupon              =   serializers.CharField(required = False, allow_blank = True, max_length = 40, write_only = True)
     class Meta:
         model           =   User
-        fields          =   ['username','email', 'password', 'confirm_password', 'phone', 'accept_terms']
+        fields          =   ['username','email', 'password', 'confirm_password', 'phone', 'accept_terms', 'coupon']
+    def validate_coupon(self, value):
+        from django.utils import timezone
+        from AdminApp.domains.suscriptions.models import Coupon
+        code        =   (value or '').strip()
+        if not code:
+            return ''
+        coupon      =   Coupon.objects.filter(code__iexact = code).first()
+        if coupon is None or not coupon.is_active:
+            raise serializers.ValidationError('El código promocional no es válido.')
+        if coupon.expires_at and coupon.expires_at <= timezone.now():
+            raise serializers.ValidationError('El código promocional venció.')
+        if coupon.max_uses is not None and coupon.redemptions.count() >= coupon.max_uses:
+            raise serializers.ValidationError('El código promocional llegó a su límite de usos.')
+        return code

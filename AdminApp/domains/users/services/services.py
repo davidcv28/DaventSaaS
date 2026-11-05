@@ -114,7 +114,7 @@ def BillingMissingFieldsQuery(profile) -> list:
 # USER REGISTER QUERYS
 #=================================
 
-def RegisterUserQuery(validated_data : dict) -> User:
+def RegisterUserQuery(validated_data : dict) -> tuple:
     try:
         with transaction.atomic():
             data                =   validated_data.copy()
@@ -122,6 +122,10 @@ def RegisterUserQuery(validated_data : dict) -> User:
             email               =   data.pop('email')
             password            =   data.pop('password')
             accept_terms        =   data.pop('accept_terms', False)
+            #Cupón promocional del alta (QR/folletos): no es campo del perfil,
+            #se canjea después de crear la trial — si falla la cuenta igual
+            #queda creada con el plan de prueba.
+            coupon_code         =   (data.pop('coupon', '') or '').strip()
             #USER REGISTER
             new_user = User.objects.create_user(
                 username        =   username,
@@ -149,12 +153,29 @@ def RegisterUserQuery(validated_data : dict) -> User:
                     start_date          =   now,
                     end_date            =   now + timedelta(days = SuscriptionPlan.TRIAL_DAYS),
                 )
+            #CANJE DE CUPÓN: pisa la trial por los días del cupón. La
+            #validación del serializer ya filtró los códigos inválidos; acá
+            #solo puede fallar una carrera (max_uses, plan vigente) y en ese
+            #caso el alta sigue con la trial — nunca se pierde la cuenta.
+            coupon_result   =   None
+            if coupon_code:
+                from AdminApp.domains.suscriptions.services import RedeemCouponQuery
+                try:
+                    _, coupon   =   RedeemCouponQuery(profile, coupon_code)
+                    coupon_result   =   {
+                        'code'          :   coupon.code,
+                        'plan_name'     :   coupon.plan.name,
+                        'days'          :   coupon.days,
+                    }
+                except serializers.ValidationError as exc:
+                    logger.info('Cupón de registro no canjeado: user=%s detail=%s', new_user.pk, exc.detail)
+                    coupon_result   =   {'error': 'El cupón no pudo canjearse; tu cuenta quedó con el plan de prueba.'}
             #VERIFICACIÓN DE EMAIL: se agenda post-commit — si la transacción
             #rollbackea el alta no existió y el mail no debe salir igual.
             #El envío va a Celery: el alta no espera al SMTP.
             from AdminApp.domains.users.tasks import send_verification_email
             transaction.on_commit(lambda : send_verification_email.delay(new_user.pk))
-            return new_user
+            return new_user, coupon_result
     except IntegrityError:
         #La validación ya revisa duplicados, pero dos requests concurrentes
         #pueden ganarle la carrera al pre-check: en vez de un 500, devolvemos

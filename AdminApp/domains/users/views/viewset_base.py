@@ -177,8 +177,12 @@ class RegisterUserBaseViewSet(viewsets.GenericViewSet, mixins.CreateModelMixin):
         serializer  =   self.get_serializer(data = request.data)
         serializer.is_valid(raise_exception = True)
         serializer.save()
-        return Response(
-            {
-                'Exito' : message
-            }, status = status.HTTP_201_CREATED
-        )
+        response    =   {
+            'Exito' : message
+        }
+        #Canje de cupón en el alta (si vino código): {code, plan_name, days}
+        #o {error} si la carrera lo rechazó post-validación.
+        coupon_result   =   getattr(serializer, 'coupon_result', None)
+        if coupon_result:
+            response['coupon']  =   coupon_result
+        return Response(response, status = status.HTTP_201_CREATED)

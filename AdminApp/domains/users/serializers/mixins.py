@@ -216,4 +216,9 @@ class UserRegisterValidate:
 #=================================
 class UserRegisterCreateMethod:
     def create(self, validated_data):
-        return RegisterUserQuery(validated_data)
+        #Devuelve (user, coupon_result): el viewset suma 'coupon' a la
+        #respuesta para que el frontend confirme el canje del alta.
+        user, coupon_result   =   RegisterUserQuery(validated_data)
+        if coupon_result:
+            self.coupon_result  =   coupon_result
+        return user

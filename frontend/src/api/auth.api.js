@@ -169,6 +169,9 @@ export function buildRegisterPayload(form) {
     password: form.password,
     confirm_password: form.confirm_password,
     phone: form.phone?.trim() || null,
-    accept_terms: form.accept_terms === true
+    accept_terms: form.accept_terms === true,
+    //Cupón promocional opcional (QR/folletos): el backend lo canjea en el
+    //alta y pisa la trial de 1 día por los días del cupón.
+    coupon: form.coupon?.trim() || ''
   }
 }

@@ -92,7 +92,7 @@ export const useAuthStore = defineStore('auth', () => {
       const payload = buildRegisterPayload(form)
       const data = await authApi.register(payload)
       status.value = 'success'
-      return { ok: true, message: data?.Exito || 'Usuario creado correctamente' }
+      return { ok: true, message: data?.Exito || 'Usuario creado correctamente', coupon: data?.coupon || null }
     } catch (err) {
       status.value = 'error'
       const parsed = setApiError(err)

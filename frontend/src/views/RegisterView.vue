@@ -1,6 +1,6 @@
 <script setup>
 import { ref, reactive, computed } from 'vue'
-import { useRouter } from 'vue-router'
+import { useRouter, useRoute } from 'vue-router'
 import { useAuthStore } from '../stores/auth.store.js'
 import AuthLayout from '../components/AuthLayout.vue'
 import AppInput from '../components/AppInput.vue'
@@ -14,6 +14,7 @@ import {
 } from '../validators/auth.validators.js'
 
 const router = useRouter()
+const route = useRoute()
 const auth = useAuthStore()
 const successMsg = ref('')
 const socialError = ref('')
@@ -29,7 +30,10 @@ function onSocialDone() {
 // Los datos fiscales/de facturación se piden recién al contratar un plan.
 const form = reactive({
   username: '', email: '', password: '', confirm_password: '',
-  phone: '', accept_terms: false
+  phone: '', accept_terms: false,
+  //Cupón promocional: llega por ?coupon=CODE (o ?code=) desde el QR del
+  //folleto; también se puede tipear a mano. Vacío = alta normal con trial.
+  coupon: String(route.query.coupon || route.query.code || '').trim()
 })
 const touched = reactive({})
 
@@ -60,7 +64,10 @@ async function onSubmit() {
   if (Object.keys(validateForm()).length) return
   const res = await auth.register(form)
   if (res.ok) {
-    successMsg.value = res.message
+    const couponMsg = res.coupon?.plan_name
+      ? ` Cupón aplicado: ${res.coupon.days} días de ${res.coupon.plan_name}.`
+      : ''
+    successMsg.value = `${res.message}${couponMsg}`
     setTimeout(() => router.push({ name: 'login', query: { registered: '1' } }), 1400)
   }
 }
@@ -81,6 +88,7 @@ const formErrors = computed(() => validateForm())
       <PasswordStrength :value="form.password" />
       <AppInput v-model="form.confirm_password" label="Confirmar contraseña" name="confirm_password" type="password" placeholder="Repetir contraseña" required :error="err('confirm_password', formErrors.confirm_password)" @blur="touched.confirm_password = true" />
       <AppInput v-model="form.phone" label="Número de celular" name="phone" placeholder="+5493871551234" hint="Formato internacional. Ej. +5493871551234" required :error="err('phone', formErrors.phone)" @blur="touched.phone = true" />
+      <AppInput v-model="form.coupon" label="Código promocional" name="coupon" placeholder="Opcional — ej. PROMO30" hint="Si tenés un código del folleto o de una promo, cargalo acá." :error="err('coupon')" @blur="touched.coupon = true" />
       <div class="field">
         <label class="check">
           <input
