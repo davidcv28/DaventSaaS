@@ -1095,6 +1095,32 @@ body{ transition: background-color .2s ease, color .2s ease; }
 .prod-grid{ list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 10px; }
 .prod-grid.prod-grid-list{ grid-template-columns: minmax(0, 1fr); }
 @media (max-width: 640px){ .prod-grid{ grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); } }
+/* Selección múltiple + paginado del inventario (vista tabla). */
+.prod-bulkbar{ display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin: 0 -6px 10px; padding: 9px 12px; border: 1px solid var(--brand-soft-line); border-radius: var(--radius-sm); background: var(--brand-soft); color: var(--brand-ink); font-size: 13px; font-weight: 600; }
+.prod-bulkbar > span{ margin-right: 2px; }
+.prod-bulkbar button{ display: inline-flex; align-items: center; gap: 5px; padding: 5px 11px; border: 1px solid var(--brand-soft-line); border-radius: 8px; background: var(--card); color: var(--brand-ink); font: inherit; font-size: 12.5px; font-weight: 600; cursor: pointer; }
+.prod-bulkbar button:hover:not(:disabled){ border-color: var(--brand-500); }
+.prod-bulkbar button.danger{ color: var(--danger); border-color: var(--danger-line, #fecaca); }
+.prod-bulkbar button:disabled{ opacity: .5; cursor: default; }
+.prod-bulkbar-x{ margin-left: auto !important; padding: 5px 8px !important; }
+.prod-pager{ display: flex; align-items: center; justify-content: space-between; gap: 10px; flex-wrap: wrap; margin-top: 12px; padding-top: 12px; border-top: 1px solid var(--line-soft); font-size: 12.5px; color: var(--muted); }
+.prod-pager-btns{ display: flex; gap: 6px; }
+.prod-pager-btns .btn{ min-height: 32px; padding: 0 12px; font-size: 12.5px; }
+/* Drawer lateral del formulario de producto. */
+.pf-overlay{ position: fixed; inset: 0; z-index: 120; background: rgba(10, 12, 18, .45); backdrop-filter: blur(2px); }
+.pf-drawer{ position: absolute; top: 0; right: 0; bottom: 0; width: min(480px, 100%); display: flex; flex-direction: column; background: var(--card); box-shadow: -18px 0 50px rgba(15, 23, 42, .18); }
+.pf-drawer-head{ display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 16px 20px; border-bottom: 1px solid var(--line); }
+.pf-drawer-head h3{ display: flex; align-items: center; gap: 8px; margin: 0; font-size: 16px; }
+.pf-drawer-head h3 svg{ color: var(--brand-500); }
+.pf-drawer-body{ flex: 1; overflow-y: auto; padding: 4px 20px 20px; }
+.pf-drawer-body .pform{ border: none; border-radius: 0; box-shadow: none; padding: 8px 0 0; height: auto; }
+.pf-drawer-body .pform .btn-row{ position: sticky; bottom: 0; margin-top: 16px; padding: 12px 0; background: var(--card); border-top: 1px solid var(--line); }
+.pf-enter-active, .pf-leave-active{ transition: opacity .2s ease; }
+.pf-enter-active .pf-drawer, .pf-leave-active .pf-drawer{ transition: transform .26s cubic-bezier(.32,.72,0,1); }
+.pf-enter-from, .pf-leave-to{ opacity: 0; }
+.pf-enter-from .pf-drawer, .pf-leave-to .pf-drawer{ transform: translateX(48px); }
+@media (max-width: 640px){ .pf-drawer{ width: 100%; } }
+@media (prefers-reduced-motion: reduce){ .pf-enter-active, .pf-leave-active, .pf-enter-active .pf-drawer, .pf-leave-active .pf-drawer{ transition: none; } }
 /* Tarjetas de descuento (DiscountCard.vue). */
 .disc-cards{ display: grid; gap: 10px; }
 .prod-list{ list-style: none; margin: 0; padding: 0; display: grid; gap: 6px; }

@@ -10,7 +10,7 @@ const props = defineProps({
   brand: { type: [Number, String], default: '' },
   onlyOffers: { type: Boolean, default: false },
   sort: { type: String, default: 'newest' },
-  view: { type: String, default: 'grid' },
+  view: { type: String, default: 'table' },
   categories: { type: Array, default: () => [] },
   brands: { type: Array, default: () => [] },
   shown: { type: Number, default: 0 },
@@ -76,8 +76,8 @@ const SORTS = [
           :aria-pressed="view === 'grid'" title="Vista en grilla" @click="emit('update:view', 'grid')"
         ><AppIcon name="layout-grid" :size="16" /></button>
         <button
-          type="button" class="ctoolbar-view" :class="{ on: view === 'list' }"
-          :aria-pressed="view === 'list'" title="Vista en lista" @click="emit('update:view', 'list')"
+          type="button" class="ctoolbar-view" :class="{ on: view === 'table' }"
+          :aria-pressed="view === 'table'" title="Vista tabla" @click="emit('update:view', 'table')"
         ><AppIcon name="rows-3" :size="16" /></button>
       </span>
       <button type="button" class="ctoolbar-new" @click="emit('new')">
