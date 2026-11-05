@@ -226,12 +226,50 @@ tbody tr:hover{background:var(--hover)}
 .meter{height:6px;background:var(--accent-soft);border-radius:4px;overflow:hidden}
 .meter i{display:block;height:100%;background:var(--accent);border-radius:4px}
 
+/* ============ KIT UI / MODALES / TOASTS ============ */
+.fab{position:fixed;right:22px;bottom:22px;z-index:55;background:var(--ink);color:var(--bg);border-radius:24px;
+  padding:10px 16px;font-size:12.5px;font-weight:650;display:flex;gap:8px;align-items:center;box-shadow:0 10px 30px rgba(0,0,0,.28);transition:transform .15s}
+.fab:hover{transform:translateY(-2px)}
+html[data-theme="dark"] .fab{background:linear-gradient(135deg,#6366f1,#4f46e5);color:#fff}
+.kit{position:fixed;inset:0;z-index:56;background:var(--bg);overflow-y:auto;display:none}
+.kit.on{display:block}
+.kit-in{max-width:920px;margin:0 auto;padding:44px 24px 90px}
+.kit-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px}
+.kit-top h1{font-size:22px;font-weight:650;letter-spacing:-.02em}
+.kit h2{font-size:13px;font-weight:650;letter-spacing:.08em;text-transform:uppercase;color:var(--ink-3);margin:30px 0 14px}
+.krow{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+.kdemo{border:1px dashed var(--line-2);border-radius:var(--r);padding:18px;background:var(--surface)}
+.empty{padding:42px 18px;text-align:center;color:var(--ink-3)}
+.empty .e-ic{width:38px;height:38px;border-radius:10px;background:var(--accent-soft);display:grid;place-items:center;margin:0 auto 10px}
+.empty .e-ic svg{width:18px;height:18px;stroke:var(--ink-2);fill:none;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}
+.empty b{display:block;color:var(--ink);font-size:13.5px;margin-bottom:3px}
+.empty span{font-size:12.5px}
+.sk{height:12px;border-radius:6px;background:linear-gradient(90deg,var(--accent-soft) 25%,var(--hover) 50%,var(--accent-soft) 75%);background-size:200% 100%;animation:sk 1.3s linear infinite}
+@keyframes sk{to{background-position:-200% 0}}
+.spnr{width:18px;height:18px;border-radius:50%;border:2px solid var(--line-2);border-top-color:var(--accent);animation:rot .7s linear infinite;display:inline-block}
+@keyframes rot{to{transform:rotate(360deg)}}
+.toast{position:fixed;left:50%;bottom:26px;transform:translateX(-50%) translateY(16px);background:var(--ink);color:var(--bg);
+  padding:10px 18px;border-radius:10px;font-size:13px;font-weight:550;opacity:0;pointer-events:none;transition:all .25s;z-index:70;white-space:nowrap}
+html[data-theme="dark"] .toast{background:#E7E9F5;color:#0A0E1C}
+.toast.on{opacity:1;transform:translateX(-50%) translateY(0)}
+.modal.wide{max-width:480px;text-align:left}
+.modal.wide h3{text-align:left}
+.modal .mf{margin-bottom:12px}
+.modal .mf label{display:block;font-size:12px;font-weight:550;color:var(--ink-2);margin-bottom:5px}
+.modal .mf input,.modal .mf select,.modal .mf textarea{width:100%;border:1px solid var(--line-2);border-radius:8px;padding:8px 11px;font-size:13.5px;background:var(--bg);color:var(--ink);outline:none;font-family:inherit}
+.modal .mf input:focus,.modal .mf select:focus,.modal .mf textarea:focus{border-color:var(--accent)}
+.modal .mfoot{display:flex;justify-content:flex-end;gap:10px;margin-top:18px}
+.upzone{border:1.5px dashed var(--line-2);border-radius:10px;padding:20px;text-align:center;color:var(--ink-3);font-size:12.5px}
+.upzone:hover{border-color:var(--accent);color:var(--ink-2)}
+
 /* Mobile */
 .mbar{display:none}
 .mtop{display:none}
 
 /* ============ RESPONSIVE ============ */
 @media (max-width:860px){
+  .fab{bottom:78px;right:16px;padding:9px 13px}
+  .kit-in{padding:30px 16px 80px}
   .side{display:none}
   .search{display:none}
   .topbar{padding:12px 16px}
@@ -378,7 +416,7 @@ tbody tr:hover{background:var(--hover)}
       <!-- ============ PRODUCTOS ============ -->
       <section class="page" data-page="catalogs">
         <div class="ph"><div><h1>Mis productos</h1><div class="sub">Lo que vendés, publicado en tu web</div></div>
-          <div style="display:flex;gap:8px"><button class="btn sm">Importar</button><button class="btn pri sm">+ Nuevo producto</button></div></div>
+          <div style="display:flex;gap:8px"><button class="btn sm">Importar</button><button class="btn pri sm" onclick="openForm('producto')">+ Nuevo producto</button></div></div>
         <div class="card" style="margin-bottom:12px;padding:10px 14px;display:flex;gap:10px;align-items:center">
           <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" style="color:var(--ink-3)"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
           <input placeholder="Buscar por nombre o categoría…" style="border:0;outline:none;font-size:13.5px;width:100%;background:none">
@@ -400,7 +438,7 @@ tbody tr:hover{background:var(--hover)}
       <!-- ============ SERVICIOS ============ -->
       <section class="page" data-page="services">
         <div class="ph"><div><h1>Mis servicios</h1><div class="sub">Lo que ofrecés hacer, con duración y precio</div></div>
-          <button class="btn pri sm">+ Nuevo servicio</button></div>
+          <button class="btn pri sm" onclick="openForm('servicio')">+ Nuevo servicio</button></div>
         <div class="chips" style="margin-bottom:14px">
           <span class="chip"><b>3</b> servicios</span><span class="chip">Duración media <b>75 min</b></span><span class="chip">Desde <b>$18.000</b></span><span class="chip">Reserva por <b>WhatsApp</b></span>
         </div>
@@ -550,13 +588,13 @@ tbody tr:hover{background:var(--hover)}
         <div class="card">
           <div class="rev"><div style="display:flex;justify-content:space-between"><div><span class="who">Martina G.</span> <span class="stars">★★★★★</span></div><span class="when">hace 2 días</span></div>
             <p>Atención impecable y el producto llegó antes de lo esperado. Volveré a comprar seguro.</p>
-            <div style="margin-top:9px;display:flex;gap:8px"><button class="btn ghost sm">Responder</button><button class="btn ghost sm">Ocultar</button></div></div>
+            <div style="margin-top:9px;display:flex;gap:8px"><button class="btn ghost sm" onclick="openForm('respuesta')">Responder</button><button class="btn ghost sm" onclick="openConfirm('Ocultar opinión','La opinión dejará de mostrarse en tu web.','')">Ocultar</button></div></div>
           <div class="rev"><div style="display:flex;justify-content:space-between"><div><span class="who">Julián P.</span> <span class="stars">★★★★☆</span></div><span class="when">hace 5 días</span></div>
             <p>Muy buena calidad. El talle vino un poco grande, pero el cambio fue rapidísimo.</p>
-            <div style="margin-top:9px;display:flex;gap:8px"><button class="btn ghost sm">Responder</button><button class="btn ghost sm">Ocultar</button></div></div>
+            <div style="margin-top:9px;display:flex;gap:8px"><button class="btn ghost sm" onclick="openForm('respuesta')">Responder</button><button class="btn ghost sm" onclick="openConfirm('Ocultar opinión','La opinión dejará de mostrarse en tu web.','')">Ocultar</button></div></div>
           <div class="rev"><div style="display:flex;justify-content:space-between"><div><span class="who">Carla R.</span> <span class="stars">★★★★★</span></div><span class="when">hace 1 semana</span></div>
             <p>Compré para regalo y quedó perfecto. El empaque es hermoso.</p>
-            <div style="margin-top:9px;display:flex;gap:8px"><button class="btn ghost sm">Responder</button><button class="btn ghost sm">Ocultar</button></div></div>
+            <div style="margin-top:9px;display:flex;gap:8px"><button class="btn ghost sm" onclick="openForm('respuesta')">Responder</button><button class="btn ghost sm" onclick="openConfirm('Ocultar opinión','La opinión dejará de mostrarse en tu web.','')">Ocultar</button></div></div>
         </div>
       </section>
 
@@ -770,6 +808,99 @@ tbody tr:hover{background:var(--hover)}
   </div>
 </div>
 
+<!-- FORM MODAL (dinámico) -->
+<div class="modal-bg" id="formModal">
+  <div class="modal wide">
+    <h3 id="formTitle">Nuevo producto</h3>
+    <div id="formBody" style="margin-top:14px"></div>
+    <div class="mfoot">
+      <button class="btn ghost" onclick="closeForm()">Cancelar</button>
+      <button class="btn pri" id="formSave" onclick="submitForm()">Guardar</button>
+    </div>
+  </div>
+</div>
+
+<!-- CONFIRM MODAL -->
+<div class="modal-bg" id="confirmModal">
+  <div class="modal">
+    <div class="mi"><svg viewBox="0 0 24 24"><path d="M12 9v4M12 17h.01"/><path d="M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0z"/></svg></div>
+    <h3 id="confirmTitle">¿Confirmar?</h3>
+    <p id="confirmText"></p>
+    <div class="btns"><button class="btn ghost" onclick="closeConfirm()">Cancelar</button><button class="btn pri" id="confirmOk" onclick="confirmOk()">Confirmar</button></div>
+  </div>
+</div>
+
+<!-- TOAST -->
+<div class="toast" id="toast"></div>
+
+<!-- KIT UI -->
+<button class="fab" onclick="toggleKit()">▦ Kit UI</button>
+<div class="kit" id="kit">
+  <div class="kit-in">
+    <div class="kit-top"><h1>Kit de componentes</h1><button class="btn sm" onclick="toggleKit()">Cerrar ✕</button></div>
+
+    <h2>Botones</h2>
+    <div class="kdemo"><div class="krow">
+      <button class="btn pri">Primario</button><button class="btn">Secundario</button>
+      <button class="btn ghost">Ghost</button><button class="btn sm">Chico</button>
+      <button class="btn pri sm">Primario chico</button><button class="btn danger">Eliminar</button>
+      <button class="btn" disabled style="opacity:.45">Deshabilitado</button>
+    </div></div>
+
+    <h2>Formularios</h2>
+    <div class="kdemo"><div class="grid g2">
+      <div class="fld"><label>Nombre</label><input placeholder="Nombre del producto"></div>
+      <div class="fld"><label>Categoría</label><select><option>Indumentaria</option><option>Calzado</option><option>Accesorios</option></select></div>
+      <div class="fld"><label>Precio</label><input placeholder="$ 0,00"></div>
+      <div class="fld"><label>Stock</label><input placeholder="0"></div>
+      <div class="fld" style="grid-column:1/-1"><label>Descripción</label><textarea rows="2" placeholder="Contá qué lo hace especial…"></textarea></div>
+    </div></div>
+
+    <h2>Controles</h2>
+    <div class="kdemo">
+      <div class="swrow"><div><div class="st">Botón de WhatsApp</div><div class="ss">Flotante en la web</div></div><button class="switch on"></button></div>
+      <div class="swrow"><div><div class="st">Mostrar mapa</div><div class="ss">En la sección contacto</div></div><button class="switch"></button></div>
+      <div class="swrow"><div><div class="st">Horario visible</div><div class="ss">Debajo del botón</div></div><button class="switch on"></button></div>
+      <div style="margin-top:14px" class="krow">
+        <span class="tag">Borrador</span><span class="tag ok">Publicado</span><span class="tag warn">Sin stock</span>
+        <span class="chip"><b>14</b> activos</span><span class="chip">Desde <b>$18.000</b></span>
+      </div>
+    </div>
+
+    <h2>Tabs y tablas</h2>
+    <div class="kdemo">
+      <div class="stabs" style="margin-bottom:14px;border-bottom:1px solid var(--line)">
+        <button class="stab on">Mi plan</button><button class="stab">Pagos</button><button class="stab">Facturas</button>
+      </div>
+      <table><thead><tr><th>Producto</th><th>Precio</th><th>Estado</th></tr></thead>
+        <tbody>
+          <tr><td>Campera de cuero</td><td class="num">$84.900</td><td><span class="tag ok">Publicado</span></td></tr>
+          <tr><td>Jean recto azul</td><td class="num">$62.000</td><td><span class="tag ok">Publicado</span></td></tr>
+        </tbody></table>
+    </div>
+
+    <h2>Estados</h2>
+    <div class="grid g2">
+      <div class="kdemo"><div class="empty"><div class="e-ic"><svg viewBox="0 0 24 24"><path d="M21 8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><path d="m3.3 7 8.7 5 8.7-5M12 22V12"/></svg></div>
+        <b>Sin productos todavía</b><span>Cargá el primero y se publica solo en tu web</span><div style="margin-top:12px"><button class="btn pri sm">+ Nuevo producto</button></div></div></div>
+      <div class="kdemo" style="display:grid;gap:10px">
+        <div class="sk" style="width:40%"></div><div class="sk"></div><div class="sk" style="width:80%"></div><div class="sk" style="width:60%"></div>
+        <div class="krow" style="margin-top:6px"><span class="spnr"></span><span style="font-size:12.5px;color:var(--ink-3)">Cargando…</span></div>
+      </div>
+    </div>
+
+    <h2>Modales y avisos</h2>
+    <div class="kdemo"><div class="krow">
+      <button class="btn" onclick="openForm('producto')">Modal · formulario</button>
+      <button class="btn" onclick="openForm('servicio')">Modal · servicio</button>
+      <button class="btn" onclick="openForm('respuesta')">Modal · respuesta</button>
+      <button class="btn" onclick="openConfirm()">Modal · confirmación</button>
+      <button class="btn" onclick="openLock('stats')">Modal · bloqueo</button>
+      <button class="btn" onclick="toast('Cambios guardados')">Toast</button>
+    </div></div>
+  </div>
+</div>
+
 <script>
 const I = {
   home:'<svg viewBox="0 0 24 24"><path d="m3 10 9-7 9 7v10a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><path d="M9 22V12h6v10"/></svg>',
@@ -832,6 +963,45 @@ const GROUPS = {
   tools:[['tools','QR y folletos'],['stats','Mis visitas']],
   plans:[['plans','Mi plan'],['payments','Pagos'],['invoices','Facturas']]
 };
+
+// ---------- Kit UI / modales / toasts ----------
+let toastT=null;
+function toast(msg){const t=document.getElementById('toast');t.textContent=msg;t.classList.add('on');clearTimeout(toastT);toastT=setTimeout(()=>t.classList.remove('on'),2200)}
+function toggleKit(){document.getElementById('kit').classList.toggle('on')}
+document.addEventListener('keydown',e=>{if(e.key==='Escape'){closeForm();closeConfirm();closeLock();document.getElementById('kit').classList.remove('on')}});
+
+const FORMS={
+  producto:{title:'Nuevo producto',save:'Guardar producto',body:`
+    <div class="mf"><label>Nombre</label><input placeholder="Ej: Campera de cuero"></div>
+    <div class="mf"><label>Categoría</label><select><option>Indumentaria</option><option>Calzado</option><option>Accesorios</option></select></div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+      <div class="mf"><label>Precio</label><input placeholder="$ 0,00"></div>
+      <div class="mf"><label>Stock</label><input placeholder="0"></div>
+    </div>
+    <div class="mf"><label>Fotos</label><div class="upzone">Arrastrá imágenes o hacé clic para subir</div></div>
+    <div class="mf"><label>Descripción</label><textarea rows="2" placeholder="Opcional"></textarea></div>`},
+  servicio:{title:'Nuevo servicio',save:'Guardar servicio',body:`
+    <div class="mf"><label>Nombre</label><input placeholder="Ej: Corte y peinado"></div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+      <div class="mf"><label>Duración</label><select><option>30 min</option><option>45 min</option><option>60 min</option><option>90 min</option></select></div>
+      <div class="mf"><label>Precio</label><input placeholder="$ 0,00"></div>
+    </div>
+    <div class="mf"><label>Descripción</label><textarea rows="2" placeholder="Qué incluye…"></textarea></div>`},
+  respuesta:{title:'Responder opinión',save:'Publicar respuesta',body:`
+    <div class="mf"><label>Opinión de Martina G. · ★★★★★</label><p style="font-size:13px;color:var(--ink-2);background:var(--accent-soft);border-radius:8px;padding:10px 12px">«Atención impecable y el producto llegó antes de lo esperado.»</p></div>
+    <div class="mf"><label>Tu respuesta <small style="color:var(--ink-3);font-weight:400">se muestra en la web, bajo la opinión</small></label><textarea rows="3" placeholder="Gracias por tu opinión…"></textarea></div>`}
+};
+let formKind=null;
+function openForm(kind){formKind=kind;const f=FORMS[kind];document.getElementById('formTitle').textContent=f.title;document.getElementById('formBody').innerHTML=f.body;document.getElementById('formSave').textContent=f.save;document.getElementById('formModal').classList.add('on')}
+function closeForm(){document.getElementById('formModal').classList.remove('on')}
+function submitForm(){closeForm();toast(formKind==='respuesta'?'Respuesta publicada':(FORMS[formKind]?.save||'Guardado')+' ✓')}
+document.getElementById('formModal').onclick=e=>{if(e.target.id==='formModal')closeForm()};
+
+let confirmCb=null;
+function openConfirm(title,text,cb){document.getElementById('confirmTitle').textContent=title||'¿Confirmar?';document.getElementById('confirmText').textContent=text||'';confirmCb=cb||null;document.getElementById('confirmModal').classList.add('on')}
+function closeConfirm(){document.getElementById('confirmModal').classList.remove('on')}
+function confirmOk(){closeConfirm();if(confirmCb)confirmCb();toast('Acción confirmada')}
+document.getElementById('confirmModal').onclick=e=>{if(e.target.id==='confirmModal')closeConfirm()};
 
 const _root=document.documentElement;
 _root.dataset.theme=localStorage.getItem('dash-theme')||'dark';
