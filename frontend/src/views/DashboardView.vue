@@ -42,6 +42,7 @@ import { paymentStatusMeta, formatDateTime, MONTH_NAMES } from '../api/payments.
 import { locationsApi } from '../api/locations.api.js'
 import { authApi } from '../api/auth.api.js'
 import { fetchChat, fetchChatMessages, sendChatMessage, chatHeartbeat } from '../api/chat.api.js'
+import { fetchNotifications, markNotificationRead, markReviewsSeen, fetchChangelog } from '../api/notifications.api.js'
 import { fetchAssistant, sendAssistant } from '../api/assistant.api.js'
 import { extractApiError } from '../api/http.js'
 import { env } from '../config/env.js'
@@ -361,13 +362,15 @@ const navItems = computed(() => {
     { id: 'services', label: 'Mis servicios', icon: 'wrench', hint: 'Lo que ofrecés hacer', locked: L.services },
     { id: 'pos', label: 'Vender en persona', icon: 'monitor', hint: 'Cobrar en tu local', locked: L.pos },
     { id: 'web', label: 'Mi página', icon: 'store', hint: 'Diseño, secciones y dirección' },
-    { id: 'reviews', label: 'Opiniones', icon: 'star', hint: 'Lo que dicen de vos', locked: L.reviews },
+    { id: 'reviews', label: 'Opiniones', icon: 'star', hint: 'Lo que dicen de vos', locked: L.reviews, badge: unreadReviewsCount.value || null },
     { id: 'tools', label: 'Promocionar', icon: 'megaphone', hint: 'QR, folletos y visitas', locked: L.tools },
     { id: 'support', label: 'Ayuda', icon: 'message-circle', hint: 'Te ayuda con tu cuenta', locked: L.support },
     { id: 'bot', label: 'Asistente virtual', icon: 'bot', hint: 'Responde por vos en tu web', locked: L.bot },
     { sep: true },
     { id: 'plans', label: 'Plan y pagos', icon: 'credit-card', hint: 'Suscripción, pagos y facturas' },
-    { id: 'settings', label: 'Mi cuenta', icon: 'user', hint: 'Datos y contraseña' }
+    { id: 'settings', label: 'Mi cuenta', icon: 'user', hint: 'Datos y contraseña' },
+    //Discreto a propósito: el changelog no compite con las secciones de trabajo.
+    { id: 'changelog', label: 'Novedades', icon: 'history', hint: 'Lo nuevo en DAVENT' }
   ]
 })
 
@@ -479,7 +482,8 @@ const searchCommands = computed(() => {
     bot: 'asistente chatbot automatico responder preguntas robot virtual',
     tools: 'qr codigo folleto volante imprimir promocionar vidriera flyer repartir visitas estadisticas cuanta gente analytics numeros',
     plans: 'plan suscripcion pagos facturas comprobantes precio renovar debito automatico mercado pago cupon descuento vencimiento abonar',
-    settings: 'cuenta datos contrasena email correo perfil fiscal cuit dni provincia ciudad celular nombre apellido seguridad'
+    settings: 'cuenta datos contrasena email correo perfil fiscal cuit dni provincia ciudad celular nombre apellido seguridad',
+    changelog: 'novedades cambios nuevo nuevo en davent actualizaciones changelog historial mejoras'
   }
   for (const i of navItems.value.filter((x) => x.id)) {
     cmds.push({ id: i.id, label: i.label, hint: i.hint || '', icon: i.icon, kw: KW[i.id] || '', locked: i.locked, run: go(i.id), group: 'Secciones' })
@@ -510,14 +514,6 @@ function shareWhatsApp() {
   if (!publicUrl.value) return
   const text = `Mirá mi tienda online: ${publicUrl.value}`
   window.open(`https://wa.me/?text=${encodeURIComponent(text)}`, '_blank', 'noopener')
-}
-// Atajo de Inicio: ir al formulario de alta de producto y enfocarlo.
-async function goAddProduct() {
-  if (navLocks.value.catalogs) { openLocked('catalogs'); return }
-  catalogTab.value = 'products'
-  sectionInner.value = 'catalogs'
-  await nextTick()
-  document.querySelector('input[name="prod_name"]')?.focus({ preventScroll: true })
 }
 const business = computed(() => auth.user?.profile?.business_name || '')
 
@@ -554,38 +550,14 @@ const planProgress = computed(() => {
 })
 
 const nextSteps = computed(() => [
-  { title: 'Reservá tu link público', doneTitle: 'Link público reservado', text: 'Es la dirección de tu tienda, gratis.', done: store.hasStore, target: 'store', cta: 'Reservar mi link' },
-  { title: 'Elegí un plan', doneTitle: 'Plan elegido', text: 'Definí el tamaño de tu catálogo.', done: billing.hasSubscription, target: 'plans', cta: 'Elegir plan' },
-  { title: 'Cargá tus productos', doneTitle: 'Productos cargados', text: 'Sumá fotos, precios y descripciones.', done: catalog.products.length > 0, target: 'catalogs', cta: 'Cargar producto' },
-  { title: 'Compartí tu link público', text: 'Mandáselo a tus clientes por WhatsApp.', done: false, target: 'store', cta: 'Copiar mi link', run: copyLink }
+  { title: 'Reservá tu link público', doneTitle: 'Link público reservado', text: 'Es la dirección de tu tienda, gratis.', done: store.hasStore, target: 'store', cta: 'Reservar', icon: 'globe' },
+  { title: 'Elegí un plan', doneTitle: 'Plan elegido', text: 'Definí el tamaño de tu catálogo.', done: billing.hasSubscription, target: 'plans', cta: 'Elegir', icon: 'crown' },
+  { title: 'Cargá tu primer producto', doneTitle: 'Productos cargados', text: 'Se publica solo en tu web.', done: catalog.products.length > 0, target: 'catalogs', cta: 'Cargar', icon: 'package' },
+  { title: 'Subí la foto de portada', doneTitle: 'Portada cargada', text: 'Tu página se ve mejor con imagen.', done: Boolean(store.customization.cover), target: 'photos', cta: 'Subir', icon: 'image' },
+  { title: 'Compartí tu link público', text: 'Mandáselo a tus clientes por WhatsApp.', done: false, target: 'store', cta: 'Copiar', icon: 'send', run: copyLink }
 ])
 const stepsDone = computed(() => nextSteps.value.filter((s) => s.done).length)
-const stepsPct = computed(() => Math.round((stepsDone.value / nextSteps.value.length) * 100))
-const nextStepIdx = computed(() => nextSteps.value.findIndex((s) => !s.done))
-const nextStep = computed(() => (nextStepIdx.value >= 0 ? nextSteps.value[nextStepIdx.value] : null))
 const pendingSteps = computed(() => nextSteps.value.filter((s) => !s.done))
-
-// Primera vez en el panel (todavía sin link público).
-const firstRun = computed(() => !store.hasStore)
-
-// Héroe de Inicio: una frase con el estado de la tienda + UN solo CTA.
-const statusInfo = computed(() => {
-  const go = (id) => () => { section.value = id }
-  if (plan.value && !plan.value.isCurrent && plan.value.status !== 'Pendiente de pago') {
-    return { kind: 'bad', title: 'Tu tienda está pausada', sub: 'Tu plan venció y la web pública se desactivó. La renovás en un minuto.', cta: 'Renovar mi plan', run: go('plans') }
-  }
-  if (nextStep.value) {
-    const n = pendingSteps.value.length
-    return { kind: 'warn', title: n === 1 ? 'Falta 1 paso para publicar' : `Faltan ${n} pasos para publicar`, sub: `${nextStep.value.title}: ${nextStep.value.text}`, cta: nextStep.value.cta, run: nextStep.value.run || go(nextStep.value.target) }
-  }
-  return { kind: 'ok', title: 'Tu tienda está en línea', sub: 'Todo listo. Compartí el link para sumar visitas y clientes.', cta: 'Compartir por WhatsApp', run: shareWhatsApp }
-})
-const planLine = computed(() => {
-  const p = plan.value
-  if (!p) return ''
-  if (!p.isCurrent) return `Tu plan está ${p.status.toLowerCase()}.`
-  return p.autoRenew ? `Tu plan se renueva solo el ${fmtDate(p.end)}.` : `A tu plan le quedan ${p.remaining} ${p.remaining === 1 ? 'día' : 'días'} (vence el ${fmtDate(p.end)}).`
-})
 
 // --- "Tu negocio hoy": alertas, números con contexto y actividad -----------
 
@@ -608,7 +580,7 @@ const topAlert = computed(() => alertQueue.value[0] || null)
 const extraAlerts = computed(() => alertQueue.value.slice(1))
 const alertIcon = (kind) => ({ danger: 'circle-alert', warn: 'triangle-alert', info: 'info' }[kind] || 'bell')
 
-// Visitas con contexto: semana actual vs. anterior + sparkline SVG de 30 días.
+// Visitas con contexto: semana actual vs. anterior.
 const visitWeek = computed(() => {
   const days = store.visitStats?.days || []
   const now = days.slice(-7).reduce((a, d) => a + d.count, 0)
@@ -617,14 +589,6 @@ const visitWeek = computed(() => {
   return { now, prev, delta }
 })
 const yesterdayVisits = computed(() => store.visitStats?.days?.slice(-2, -1)[0]?.count ?? 0)
-const sparkline = computed(() => {
-  const days = store.visitStats?.days || []
-  if (!days.length) return null
-  const max = Math.max(1, ...days.map((d) => d.count))
-  const step = days.length > 1 ? 100 / (days.length - 1) : 0
-  const pts = days.map((d, i) => `${(i * step).toFixed(1)},${(26 - (d.count / max) * 22).toFixed(1)}`)
-  return { line: pts.join(' '), area: `0,28 ${pts.join(' ')} 100,28` }
-})
 const storagePct = computed(() => {
   const s = store.storage
   if (!s?.max_mb) return 0
@@ -643,6 +607,42 @@ const activityFeed = computed(() => {
   const last = payments.payments[0]
   if (last) items.push({ icon: 'receipt', title: 'Último pago registrado', text: `${formatARS(last.amount)} · ${formatDateTime(last.paid_at || last.created_at)}`, cta: 'Ver pagos', run: () => { section.value = 'payments' } })
   return items.slice(0, 4)
+})
+
+// --- Inicio bento: tarjetas de números, gráfico y panel "Tu página" ---
+const ownerName = computed(() => business.value || displayName.value)
+const todayDelta = computed(() => {
+  const today = store.visitStats?.today ?? 0
+  const y = yesterdayVisits.value
+  if (!y) return today > 0 ? 100 : null
+  return Math.round(((today - y) / y) * 100)
+})
+const reviewStats = computed(() => {
+  const list = catalog.reviews
+  const pos = list.filter((r) => r.is_positive).length
+  return { total: list.length, pct: list.length ? Math.round((pos / list.length) * 100) : null }
+})
+const WEEK_LETTERS = ['D', 'L', 'M', 'M', 'J', 'V', 'S']
+const visitBars = computed(() => {
+  const days = (store.visitStats?.days || []).slice(-14)
+  if (!days.length) return []
+  const max = Math.max(1, ...days.map((d) => d.count))
+  return days.map((d) => ({
+    h: Math.max(4, Math.round((d.count / max) * 100)),
+    label: WEEK_LETTERS[new Date(`${d.date}T12:00:00`).getDay()],
+    count: d.count,
+    date: d.date
+  }))
+})
+const heroSub = computed(() => {
+  if (plan.value && !plan.value.isCurrent && plan.value.status !== 'Pendiente de pago') return 'Tu plan venció y la web pública está pausada. La renovás en un minuto.'
+  if (!store.hasStore) return 'Reservá tu link público y empezá a vender hoy.'
+  if (canStats.value && visitWeek.value.now) {
+    const d = visitWeek.value.delta
+    const cmp = d === null ? '' : d >= 0 ? `, un ${d}% más que la anterior` : `, un ${Math.abs(d)}% menos que la anterior`
+    return `Tu web está publicada y recibiste ${visitWeek.value.now} visitas esta semana${cmp}.`
+  }
+  return 'Tu web está publicada. Compartí el link para sumar visitas y clientes.'
 })
 
 // (La vista previa viva de la web salió de Inicio en el rediseño: la portada
@@ -2209,9 +2209,17 @@ async function toggleShowComments() {
 const reviewsLoaded = ref(false)
 const reviewDeleting = ref(null)
 watch(section, (s) => {
-  if (s === 'reviews' && canProductComments.value && !reviewsLoaded.value) {
-    reviewsLoaded.value = true
-    catalog.loadReviews()
+  if (s === 'reviews' && canProductComments.value) {
+    if (!reviewsLoaded.value) { reviewsLoaded.value = true; catalog.loadReviews() }
+    //Abrir la sección marca las opiniones como vistas (badge del menú).
+    if (unreadReviewsCount.value) {
+      unreadReviewsCount.value = 0
+      markReviewsSeen().then((d) => { unreadReviewsCount.value = d?.unread_reviews || 0 }).catch(() => {})
+    }
+  }
+  if (s === 'changelog' && !changelogLoaded.value) {
+    changelogLoaded.value = true
+    fetchChangelog().then((rows) => { changelogEntries.value = Array.isArray(rows) ? rows : [] }).catch(() => {})
   }
 })
 async function goToReviewProduct(r) {
@@ -2468,6 +2476,87 @@ watch(() => carouselImages.value.length, (total) => {
     previewTimer = setInterval(() => { previewSlide.value = (previewSlide.value + 1) % carouselImages.value.length }, 3000)
   }
 })
+
+// --- Notificaciones del sistema (avisos, NO chat): el click marca leído y
+// navega a la sección destino (`target`); nunca abre la conversación ---
+const notifs = ref([])
+const notifsUnread = ref(0)
+//Opiniones sin leer: badge del ítem "Opiniones" del menú (viene en el
+//mismo poll que las notificaciones).
+const unreadReviewsCount = ref(0)
+//Timestamp del último "visto" de opiniones: las creadas después se
+//marcan "Sin leer" en la lista (null = nunca se abrió la sección).
+const reviewsSeenAt = ref(null)
+const notifsOpen = ref(false)
+const changelogEntries = ref([])
+const changelogLoaded = ref(false)
+
+const NOTIF_ICONS = { review: 'star', admin_message: 'message-circle', subscription: 'credit-card', changelog: 'sparkles', system: 'info' }
+const notifIcon = (kind) => NOTIF_ICONS[kind] || 'info'
+
+async function loadNotifications() {
+  try {
+    const data = await fetchNotifications()
+    notifs.value = data.notifications || []
+    notifsUnread.value = data.unread || 0
+    unreadReviewsCount.value = data.unread_reviews || 0
+    reviewsSeenAt.value = data.reviews_seen_at || null
+  } catch { /* silencioso: reintenta el próximo tick */ }
+}
+
+//Opinión creada después del último visto del dueño (o todas si nunca
+//abrió la sección — reviews_seen_at null).
+function isReviewUnread(r) {
+  if (!reviewsSeenAt.value) return true
+  const seen = new Date(reviewsSeenAt.value).getTime()
+  const created = new Date(r.created_at).getTime()
+  return Number.isFinite(created) && created > seen
+}
+
+function toggleNotifs() {
+  notifsOpen.value = !notifsOpen.value
+  if (notifsOpen.value) loadNotifications()
+}
+
+//Cierre por click afuera (sin backdrop fijo: el topbar usa backdrop-filter
+//y este atraparía un position:fixed dentro del header).
+function onDocClick(e) {
+  if (notifsOpen.value && !e.target.closest?.('.notif-wrap')) notifsOpen.value = false
+}
+
+async function onNotifClick(n) {
+  notifsOpen.value = false
+  if (!n.read_at) {
+    n.read_at = new Date().toISOString()
+    notifsUnread.value = Math.max(0, notifsUnread.value - 1)
+    markNotificationRead(n.id).catch(() => {})
+  }
+  //Solo secciones válidas del dashboard; '' = aviso puramente informativo
+  //(ej. mensaje del staff: el click NO abre el chat).
+  if (n.target && validIds.value.has(n.target)) section.value = n.target
+}
+
+async function markAllNotifsRead() {
+  const fresh = notifs.value.filter((n) => !n.read_at)
+  if (!fresh.length) return
+  fresh.forEach((n) => { n.read_at = new Date().toISOString() })
+  notifsUnread.value = 0
+  markNotificationRead().catch(() => loadNotifications())
+}
+
+// Poll propio (~60s): las notificaciones también llegan a cuentas trial,
+// que no tienen chat habilitado (el heartbeat de chat ni siquiera corre).
+const NOTIF_POLL_MS = 60000
+let notifTimer = null
+function startNotifs() {
+  stopNotifs()
+  loadNotifications()
+  notifTimer = setInterval(loadNotifications, NOTIF_POLL_MS)
+}
+function stopNotifs() {
+  clearInterval(notifTimer)
+  notifTimer = null
+}
 
 // --- Ayuda: chat de soporte con el equipo (premium — polling + heartbeat) ---
 const chatMessages = ref([])
@@ -2897,9 +2986,12 @@ watch(canChat, (on) => {
 // Al volver al tab: tick inmediato (los intervals no corrían con la pestaña
 // oculta) — el usuario ve los mensajes nuevos sin esperar al próximo ciclo.
 function onChatVisible() {
-  if (document.visibilityState === 'visible' && canChat.value) {
-    pollChat()
-    beatChat()
+  if (document.visibilityState === 'visible') {
+    loadNotifications()
+    if (canChat.value) {
+      pollChat()
+      beatChat()
+    }
   }
 }
 
@@ -2909,17 +3001,21 @@ function onChatSessionExpired() { stopChat() }
 
 onMounted(() => {
   document.addEventListener('visibilitychange', onChatVisible)
+  document.addEventListener('click', onDocClick)
   window.addEventListener('davent:session-expired', onChatSessionExpired)
+  startNotifs()
 })
 
 onUnmounted(() => {
   stopCheckoutWatch()
   stopChat()
+  stopNotifs()
   closeChat()
   window.removeEventListener('davent:session-expired', onChatSessionExpired)
   clearInterval(previewTimer)
   window.removeEventListener('storage', onPaymentBroadcast)
   document.removeEventListener('visibilitychange', onChatVisible)
+  document.removeEventListener('click', onDocClick)
 })
 
 // La pestaña del checkout avisa por acá cuando vuelve de Mercado Pago.
@@ -3309,21 +3405,44 @@ async function changePassword() {
     @logout="logout"
   >
     <template #topbar-actions>
-      <!-- Campana de mensajería: punto verde = equipo en línea, badge = no
-           leídos. Abre la conversación directa (o el asistente si el plan
-           no habilita el chat con el staff). -->
-      <button
-        type="button"
-        class="top-bell"
-        :aria-label="chatOpen ? 'Cerrar mensajes' : 'Abrir mensajes'"
-        title="Mensajes"
-        :aria-expanded="chatOpen"
-        @click="onBellClick"
-      >
-        <AppIcon name="bell" :size="19" />
-        <span class="bell-status" :class="{ on: chatStaffOnline }" aria-hidden="true"></span>
-        <span v-if="chatUnread" class="chat-badge bell-badge">{{ chatUnread > 99 ? '99+' : chatUnread }}</span>
-      </button>
+      <!-- Campana de notificaciones del sistema (avisos, NO chat): lista
+           las novedades/avisos del panel; el click marca leído y navega a
+           la sección destino sin abrir la conversación. -->
+      <div class="notif-wrap">
+        <button
+          type="button"
+          class="top-bell"
+          :aria-label="notifsOpen ? 'Cerrar notificaciones' : 'Abrir notificaciones'"
+          title="Notificaciones"
+          :aria-expanded="notifsOpen"
+          @click="toggleNotifs"
+        >
+          <AppIcon name="inbox" :size="19" />
+          <span v-if="notifsUnread" class="chat-badge bell-badge">{{ notifsUnread > 99 ? '99+' : notifsUnread }}</span>
+        </button>
+        <div v-if="notifsOpen" class="notif-panel" role="dialog" aria-label="Notificaciones">
+          <header class="notif-head">
+            <strong>Notificaciones</strong>
+            <button v-if="notifsUnread" type="button" class="notif-readall" @click="markAllNotifsRead">Marcar leídas</button>
+          </header>
+          <ul class="notif-list">
+            <li
+              v-for="n in notifs" :key="n.id"
+              class="notif-item" :class="{ unread: !n.read_at }"
+              @click="onNotifClick(n)"
+            >
+              <span class="notif-ico"><AppIcon :name="notifIcon(n.kind)" :size="15" /></span>
+              <span class="notif-body">
+                <strong>{{ n.title }}</strong>
+                <span v-if="n.body" class="notif-text">{{ n.body }}</span>
+                <small>{{ formatDateTime(n.created_at) }}</small>
+              </span>
+              <span v-if="!n.read_at" class="notif-dot" aria-hidden="true"></span>
+            </li>
+            <li v-if="!notifs.length" class="notif-empty">No tenés notificaciones.</li>
+          </ul>
+        </div>
+      </div>
     </template>
 
     <!-- Banner global: correo sin verificar (bloquea crear la web pública) -->
@@ -3341,32 +3460,25 @@ async function changePassword() {
 
     <!-- ================= RESUMEN ================= -->
     <div v-show="section === 'overview'" :class="{ 'sec-on': section === 'overview' }">
-      <!-- 1. Héroe: saludo + estado de la tienda en una frase + UN solo CTA -->
-      <div class="oh-hero">
-        <div class="oh-hero-main">
-          <p class="oh-hi"><AppIcon name="sparkles" :size="12" class="oh-hi-icon" aria-hidden="true" />{{ greeting }}<template v-if="business">, <span class="ov-name">{{ business }}</span></template></p>
-          <h1 class="oh-title">
-            <span class="oh-dot" :class="statusInfo.kind" aria-hidden="true"></span>{{ statusInfo.title }}
-          </h1>
-          <p class="oh-sub">{{ statusInfo.sub }}</p>
-          <button type="button" class="btn btn-auto oh-cta" @click="statusInfo.run">{{ statusInfo.cta }} <AppIcon name="arrow-right" :size="18" /></button>
-          <a v-if="store.hasStore" class="oh-visit" :href="publicUrl" target="_blank" rel="noopener"><AppIcon name="external-link" :size="15" /> Ver mi tienda como la ven mis clientes</a>
+      <!-- 1. Héroe: saludo + frase de estado + acciones principales + portada -->
+      <section class="ovh ovh-hero">
+        <div class="ovh-hero-main">
+          <span v-if="plan" class="ovh-pill">
+            <span class="ovh-pill-dot" :class="{ ok: plan.isCurrent, warn: plan.status === 'Pendiente de pago', bad: !plan.isCurrent && plan.status !== 'Pendiente de pago' }" aria-hidden="true"></span>
+            {{ plan.name }}<template v-if="plan.isCurrent"> · vigente hasta {{ fmtDate(plan.end) }}</template><template v-else> · {{ plan.status }}</template>
+          </span>
+          <h1 class="ovh-title">{{ greeting }}, {{ ownerName }}</h1>
+          <p class="ovh-sub">{{ heroSub }}</p>
+          <div class="ovh-hero-actions">
+            <a v-if="store.hasStore" class="btn btn-auto" :href="publicUrl" target="_blank" rel="noopener"><AppIcon name="external-link" :size="15" /> Ver mi página</a>
+            <button type="button" class="btn ghost btn-auto" :disabled="!store.hasStore" @click="copyLink"><AppIcon name="copy" :size="15" /> Compartir link</button>
+          </div>
         </div>
-        <dl v-if="plan" class="oh-hero-facts" aria-label="Tu tienda de un vistazo">
-          <div v-if="canStats">
-            <dt><AppIcon name="eye" :size="14" /> Visitas hoy</dt>
-            <dd>{{ store.visitStats?.today ?? 0 }}</dd>
-          </div>
-          <div>
-            <dt><AppIcon name="package" :size="14" /> Productos</dt>
-            <dd>{{ billing.hasSubscription ? catalog.products.length : 0 }}</dd>
-          </div>
-          <div>
-            <dt><AppIcon :name="plan.isTrial ? 'clock' : 'crown'" :size="14" /> {{ plan.isTrial ? 'Días de prueba' : 'Días de plan' }}</dt>
-            <dd>{{ plan.isCurrent ? plan.remaining : '—' }}</dd>
-          </div>
-        </dl>
-      </div>
+        <div class="ovh-hero-media" aria-hidden="true">
+          <img v-if="currentCover" :src="currentCover" alt="" />
+          <span v-else><AppIcon name="image" :size="24" /></span>
+        </div>
+      </section>
 
       <!-- 2. Alertas: solo lo urgente, en una franja -->
       <div v-if="topAlert" class="aq" :class="`a-${topAlert.kind}`">
@@ -3398,74 +3510,111 @@ async function changePassword() {
       <AlertMessage v-if="payments.notice" kind="success" :message="payments.notice" />
       <AlertMessage v-if="payments.lastError" kind="error" :message="payments.lastError" />
 
-      <!-- 3. Checklist de puesta en marcha: lo hecho con tilde, lo que falta con botón -->
-      <div class="card oh-steps" :class="{ complete: !pendingSteps.length }">
-        <h3><AppIcon name="checklist" :size="18" /> {{ pendingSteps.length ? 'Para que tu tienda quede lista' : 'Tu tienda está lista' }} <span class="steps-count">{{ stepsDone }} de {{ nextSteps.length }}</span></h3>
-        <div class="steps-bar" role="progressbar" aria-label="Pasos completados" aria-valuemin="0" aria-valuemax="100" :aria-valuenow="stepsPct"><span :style="{ transform: `scaleX(${stepsPct / 100})` }"></span></div>
-        <ol class="oh-steps-list">
-          <li v-for="(s, i) in nextSteps" :key="s.title" :class="{ done: s.done, next: !s.done && i === nextStepIdx }">
-            <span class="oh-steps-mark" aria-hidden="true"><AppIcon v-if="s.done" name="check" :size="15" /><template v-else>{{ i + 1 }}</template></span>
-            <div class="oh-steps-txt"><strong>{{ s.done ? s.doneTitle || s.title : s.title }}</strong><small>{{ s.text }}</small></div>
-            <button v-if="!s.done" type="button" class="oh-steps-go" @click="s.run ? s.run() : (section = s.target)">{{ s.cta }}</button>
-          </li>
-        </ol>
-      </div>
-
-      <!-- 4. Accesos rápidos: 4 tarjetas grandes, icono + título + una línea -->
-      <div class="oh-quick" role="group" aria-label="Acciones rápidas">
-        <button type="button" class="oh-quick-card" @click="goAddProduct">
-          <span class="oh-quick-icon"><AppIcon name="plus" :size="22" /></span>
-          <strong>Cargar un producto</strong>
-          <small>Sumá algo para vender</small>
-        </button>
-        <button type="button" class="oh-quick-card" @click="section = 'company'">
-          <span class="oh-quick-icon"><AppIcon name="palette" :size="22" /></span>
-          <strong>Editar mi web</strong>
-          <small>Colores, fotos y textos</small>
-        </button>
-        <button type="button" class="oh-quick-card" :disabled="!store.hasStore" @click="shareWhatsApp">
-          <span class="oh-quick-icon"><AppIcon name="phone" :size="22" /></span>
-          <strong>Compartir mi tienda</strong>
-          <small>Mandá el link por WhatsApp</small>
-        </button>
-        <button type="button" class="oh-quick-card" :disabled="!store.hasStore" @click="section = 'tools'">
-          <span class="oh-quick-icon"><AppIcon name="qr-code" :size="22" /></span>
-          <strong>Mi código QR</strong>
-          <small>Para tu vidriera o tus bolsas</small>
-        </button>
-      </div>
-
-      <!-- 5. Resumen colapsable: números y plan en lenguaje llano -->
-      <details v-if="!firstRun" class="card oh-more">
-        <summary>
-          <AppIcon name="eye" :size="18" /> Cómo va tu tienda hoy
-          <AppIcon class="oh-more-chev" name="chevron-down" :size="16" />
-        </summary>
-        <div class="oh-more-body">
-          <ul class="oh-plain">
-            <li v-if="canStats"><AppIcon name="eye" :size="16" /> Hoy entraron <strong>{{ store.visitStats?.today ?? 0 }}</strong> {{ (store.visitStats?.today ?? 0) === 1 ? 'persona' : 'personas' }} a tu tienda (ayer: {{ yesterdayVisits }}).</li>
-            <li v-if="canStats"><AppIcon name="trending-up" :size="16" /> Esta semana tuviste <strong>{{ visitWeek.now }}</strong> visitas<template v-if="visitWeek.delta !== null"> — {{ visitWeek.delta >= 0 ? `${visitWeek.delta}% más` : `${Math.abs(visitWeek.delta)}% menos` }} que la anterior</template>.</li>
-            <li v-if="!canStats"><AppIcon name="trending-up" :size="16" /> Con un plan superior vas a ver cuánta gente entra a tu tienda. <button type="button" class="oh-link" @click="section = 'plans'">Ver planes</button></li>
-            <li><AppIcon name="package" :size="16" /> Tenés <strong>{{ billing.hasSubscription ? catalog.products.length : 0 }}</strong> productos en tu web.</li>
-            <li v-if="plan"><AppIcon name="clock" :size="16" /> {{ planLine }}</li>
-          </ul>
-          <svg v-if="canStats && sparkline" class="stat-spark oh-spark" viewBox="0 0 100 28" preserveAspectRatio="none" aria-hidden="true">
-            <polygon class="spk-area" :points="sparkline.area" /><polyline class="spk-line" :points="sparkline.line" fill="none" />
-          </svg>
-          <div v-if="activityFeed.length" class="oh-feed">
-            <h4>Últimas novedades</h4>
-            <ul class="feed-list">
-              <li v-for="(a, i) in activityFeed" :key="i">
-                <span class="feed-icon"><AppIcon :name="a.icon" :size="15" /></span>
-                <div class="feed-body"><strong>{{ a.title }}</strong><small v-if="a.text">{{ a.text }}</small></div>
-                <button type="button" class="feed-cta" @click="a.run">{{ a.cta }}</button>
-              </li>
-            </ul>
-          </div>
-          <div v-if="store.hasStore" class="feed-storage"><StorageMeter /></div>
-          <button type="button" class="oh-link" @click="section = 'stats'">Ver todos los números</button>
+      <!-- 3. Tarjetas de números: visitas, productos, opiniones y próximo cobro -->
+      <div class="ovh-stats">
+        <div class="ovh ovh-stat">
+          <span class="ovh-label">Visitas hoy</span>
+          <strong class="ovh-num">{{ canStats ? (store.visitStats?.today ?? 0) : '—' }}</strong>
+          <small class="ovh-meta" :class="{ up: (todayDelta ?? 0) > 0, down: (todayDelta ?? 0) < 0 }">
+            <template v-if="canStats && todayDelta !== null"><AppIcon :name="todayDelta >= 0 ? 'trending-up' : 'trending-down'" :size="12" /> {{ Math.abs(todayDelta) }}% vs ayer</template>
+            <template v-else-if="canStats">igual que ayer</template>
+            <template v-else><button type="button" class="ovh-link" @click="section = 'plans'">con un plan superior</button></template>
+          </small>
         </div>
-      </details>
+        <div class="ovh ovh-stat">
+          <span class="ovh-label">Productos activos</span>
+          <strong class="ovh-num">{{ billing.hasSubscription ? productStats.visible : 0 }}</strong>
+          <small class="ovh-meta">{{ productStats.noImage ? `${productStats.noImage} sin foto` : 'todos con foto' }}</small>
+        </div>
+        <div class="ovh ovh-stat">
+          <span class="ovh-label">Opiniones</span>
+          <strong class="ovh-num">{{ reviewStats.total }}</strong>
+          <small class="ovh-meta">{{ reviewStats.pct !== null ? `${reviewStats.pct}% positivas` : 'todavía sin reseñas' }}</small>
+        </div>
+        <div class="ovh ovh-stat">
+          <span class="ovh-label">Próximo cobro</span>
+          <strong class="ovh-num">{{ plan && plan.isCurrent ? formatARS(plan.price) : '—' }}</strong>
+          <small class="ovh-meta">{{ plan && plan.isCurrent ? `${fmtDate(plan.end)} · ${plan.name}` : 'sin plan vigente' }}</small>
+        </div>
+      </div>
+
+      <!-- 4. Fila: gráfico de visitas + checklist de puesta en marcha -->
+      <div class="ovh-row">
+        <section class="ovh ovh-card">
+          <header class="ovh-card-head">
+            <h3>Visitas — últimos 14 días</h3>
+            <button v-if="canStats" type="button" class="ovh-link" @click="section = 'stats'">Ver estadísticas</button>
+          </header>
+          <div v-if="visitBars.length" class="ovh-bars" role="img" :aria-label="`Visitas de los últimos ${visitBars.length} días`">
+            <div v-for="(b, i) in visitBars" :key="i" class="ovh-bar" :title="`${b.count} ${b.count === 1 ? 'visita' : 'visitas'} · ${fmtDate(b.date)}`">
+              <span class="ovh-bar-track"><span class="ovh-bar-fill" :class="{ today: i === visitBars.length - 1 }" :style="{ height: `${b.h}%` }"></span></span>
+              <small>{{ b.label }}</small>
+            </div>
+          </div>
+          <p v-else class="ovh-empty">{{ canStats ? 'Todavía no hay visitas registradas.' : 'Las estadísticas de visitas están disponibles en planes superiores.' }}</p>
+        </section>
+
+        <section class="ovh ovh-card">
+          <header class="ovh-card-head">
+            <h3>Para empezar</h3>
+            <span class="ovh-count">{{ stepsDone }} de {{ nextSteps.length }}</span>
+          </header>
+          <ol v-if="pendingSteps.length" class="ovh-list">
+            <li v-for="s in pendingSteps" :key="s.title">
+              <span class="ovh-item-icon" aria-hidden="true"><AppIcon :name="s.icon" :size="15" /></span>
+              <div class="ovh-item-body"><strong>{{ s.title }}</strong><small>{{ s.text }}</small></div>
+              <button type="button" class="ovh-link" @click="s.run ? s.run() : (section = s.target)">{{ s.cta }} <AppIcon name="arrow-right" :size="13" /></button>
+            </li>
+          </ol>
+          <p v-else class="ovh-done"><AppIcon name="circle-check" :size="16" /> Tu tienda está lista para vender.</p>
+        </section>
+      </div>
+
+      <!-- 5. Fila: actividad reciente + tu página -->
+      <div class="ovh-row">
+        <section class="ovh ovh-card">
+          <header class="ovh-card-head">
+            <h3>Actividad reciente</h3>
+            <button type="button" class="ovh-link" @click="section = 'stats'">Ver todo</button>
+          </header>
+          <ol v-if="activityFeed.length" class="ovh-list">
+            <li v-for="(a, i) in activityFeed" :key="i">
+              <span class="ovh-item-icon" aria-hidden="true"><AppIcon :name="a.icon" :size="15" /></span>
+              <div class="ovh-item-body"><strong>{{ a.title }}</strong><small v-if="a.text">{{ a.text }}</small></div>
+              <button type="button" class="ovh-link" @click="a.run">{{ a.cta }} <AppIcon name="arrow-right" :size="13" /></button>
+            </li>
+          </ol>
+          <p v-else class="ovh-empty">Todavía no hay novedades.</p>
+          <div v-if="store.hasStore" class="ovh-storage"><StorageMeter /></div>
+        </section>
+
+        <section class="ovh ovh-card">
+          <header class="ovh-card-head">
+            <h3>Tu página</h3>
+            <button type="button" class="ovh-link" @click="section = 'design'">Editar diseño</button>
+          </header>
+          <template v-if="store.hasStore">
+            <label class="ovh-label" for="ovh-link">Link público</label>
+            <div class="ovh-link-row">
+              <input id="ovh-link" class="ovh-input" type="text" readonly :value="publicUrl" @focus="$event.target.select()" />
+              <button type="button" class="btn ghost btn-auto" @click="copyLink"><AppIcon name="copy" :size="14" /> Copiar</button>
+            </div>
+            <dl class="ovh-page-stats">
+              <div><dt>{{ visitWeek.now }}</dt><dd>visitas · 7 días</dd></div>
+              <div><dt>{{ productStats.visible }}</dt><dd>productos</dd></div>
+              <div><dt>{{ reviewStats.total }}</dt><dd>opiniones</dd></div>
+            </dl>
+            <div class="ovh-page-actions">
+              <a class="btn ghost btn-auto" :href="publicUrl" target="_blank" rel="noopener">Ver mi web <AppIcon name="external-link" :size="14" /></a>
+              <button type="button" class="btn ghost btn-auto" @click="shareWhatsApp"><AppIcon name="phone" :size="14" /> Compartir</button>
+            </div>
+          </template>
+          <template v-else>
+            <p class="ovh-empty">Todavía no reservaste tu link público.</p>
+            <button type="button" class="btn btn-auto" @click="section = 'store'">Reservar mi link</button>
+          </template>
+        </section>
+      </div>
 
       <!-- Franja de plan compacta + confirmación de cancelar débito -->
       <div v-if="plan" class="plan-strip">
@@ -4090,12 +4239,13 @@ async function changePassword() {
             <div><p>Todavía no recibiste opiniones. Compartí tu link y pediles a tus clientes que te dejen una valoración.</p><button type="button" class="empty-mini-cta" @click="copyLink">Copiar mi link</button></div>
           </div>
           <ul v-else class="rev-list">
-            <li v-for="r in catalog.reviews" :key="r.id" class="rev-item">
+            <li v-for="r in catalog.reviews" :key="r.id" class="rev-item" :class="{ 'rev-unread': isReviewUnread(r) }">
               <div class="rev-head">
                 <span v-if="r.is_positive != null" class="rev-vote" :class="{ down: !r.is_positive }" :title="r.is_positive ? 'Le gustó' : 'No le gustó'">
                   <AppIcon :name="r.is_positive ? 'thumbs-up' : 'thumbs-down'" :size="14" />
                 </span>
                 <strong>{{ r.name }} {{ r.surname }}</strong>
+                <span v-if="isReviewUnread(r)" class="rev-new">Sin leer</span>
                 <span class="rev-mail">{{ r.email }}</span>
                 <span class="rev-date">{{ fmtDate(r.created_at) }}</span>
               </div>
@@ -5700,6 +5850,32 @@ async function changePassword() {
       </div>
     </div>
     <!-- ================= CUENTA ================= -->
+    <!-- ================= NOVEDADES (changelog — discreto, sin candados) ====
+         -->
+    <div v-if="seen.changelog" v-show="section === 'changelog'" :class="{ 'sec-on': section === 'changelog' }">
+      <div class="page-head">
+        <div>
+          <h1>Novedades</h1>
+          <p>Los cambios y mejoras que fuimos sumando a DAVENT.</p>
+        </div>
+      </div>
+      <div class="card">
+        <div v-if="!changelogEntries.length" class="empty-mini">
+          <AppIcon name="history" :size="22" />
+          <div><p>Todavía no hay novedades publicadas.</p></div>
+        </div>
+        <ul v-else class="changelog-list">
+          <li v-for="c in changelogEntries" :key="c.id" class="changelog-item">
+            <span class="changelog-date">{{ fmtDate(c.published_at || c.created_at) }}</span>
+            <div class="changelog-text">
+              <strong>{{ c.title }}</strong>
+              <p class="changelog-body">{{ c.body }}</p>
+            </div>
+          </li>
+        </ul>
+      </div>
+    </div>
+
     <div v-if="seen.settings" v-show="section === 'settings'" :class="{ 'sec-on': section === 'settings' }">
       <div class="page-head">
         <div>

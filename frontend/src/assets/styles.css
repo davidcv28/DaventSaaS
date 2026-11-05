@@ -980,6 +980,8 @@ body{ transition: background-color .2s ease, color .2s ease; }
 .rev-list{ list-style: none; margin: 0; padding: 0; display: grid; gap: 10px; }
 .rev-item{ padding: 14px; border: 1px solid var(--line); border-radius: 14px; background: var(--card); transition: border-color .15s; }
 .rev-item:hover{ border-color: var(--brand-400); }
+.rev-item.rev-unread{ border-color: var(--brand-500); box-shadow: 0 0 0 1px var(--brand-soft-line, var(--brand-500)); }
+.rev-new{ flex: none; padding: 2px 8px; border-radius: 99px; background: var(--brand-500); color: #fff; font-size: 10.5px; font-weight: 800; letter-spacing: .05em; text-transform: uppercase; }
 .rev-head{ display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
 .rev-head strong{ font-size: 14px; color: var(--ink); }
 .rev-vote{ display: inline-flex; align-items: center; color: #16a34a; }

@@ -112,6 +112,8 @@ REST_FRAMEWORK = {
         'chat': '5000/hour',
         #Envío de mensajes del chat: mucho más estricto que la lectura.
         'chat_send': '120/hour',
+        #Notificaciones del panel (polling cada ~60s + lecturas del usuario).
+        'notifications': '5000/hour',
         #Diseño automático (motor propio, por usuario): cada generación
         #recorre catálogo/galería y arma 2-3 propuestas — 20/h alcanza para
         #probar variantes sin que sirva para martillar el endpoint.
@@ -193,6 +195,7 @@ INSTALLED_APPS = [
     'AdminApp.domains.invoices.apps.apps.InvoicesAppConfig',
     'AdminApp.domains.legal.apps.apps.LegalAppConfig',
     'AdminApp.domains.chat.apps.apps.ChatAppConfig',
+    'AdminApp.domains.notifications.apps.apps.NotificationsAppConfig',
     #SUSCRIPTION APP (beneficios de los planes; mismo patrón: solo los dominios hijos)
     'SuscriptionApp.domains.benefits.apps.apps.BenefitsAppConfig',
     #STORE APP (web del cliente: link público, catálogo, personalización, servicios)

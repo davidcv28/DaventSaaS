@@ -108,6 +108,11 @@ def send_message(sender : User, body : str, thread : ChatThread, image_key : str
         image_key   =   image_key or '',
     )
     ChatThread.objects.filter(pk = thread.pk).update(updated_at = message.created_at)
+    if message.from_staff:
+        #Aviso del sistema al cliente (notificación informativa — el click
+        #no abre el chat, solo marca leído).
+        from AdminApp.domains.notifications.services import notify_staff_message
+        notify_staff_message(thread)
     return message
 
 

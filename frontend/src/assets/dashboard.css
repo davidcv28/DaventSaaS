@@ -639,6 +639,37 @@
 .bell-status.on { background: var(--ok, #10b981); box-shadow: 0 0 0 3px rgba(16, 185, 129, .18); }
 .bell-badge { position: absolute; top: -6px; right: -6px; }
 
+/* Panel de notificaciones del sistema (campana inbox): avisos del panel,
+   no mensajes de chat. Se abre bajo la campana con backdrop transparente. */
+.notif-wrap { position: relative; }
+.notif-panel { position: absolute; top: calc(100% + 10px); right: 0; z-index: 61; width: min(360px, calc(100vw - 32px)); max-height: min(480px, 70dvh); display: flex; flex-direction: column; border: 1px solid var(--line); border-radius: 16px; background: var(--card); box-shadow: 0 24px 60px -18px rgba(9, 12, 24, .55), 0 4px 14px -6px rgba(9, 12, 24, .2); overflow: hidden; }
+.notif-head { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 12px 14px; border-bottom: 1px solid var(--line); font-size: 14px; }
+.notif-readall { border: 0; background: none; padding: 0; color: var(--brand-ink); font: inherit; font-size: 12.5px; font-weight: 600; cursor: pointer; }
+.notif-readall:hover { text-decoration: underline; }
+.notif-list { list-style: none; margin: 0; padding: 6px; overflow-y: auto; }
+.notif-item { position: relative; display: flex; align-items: flex-start; gap: 10px; padding: 10px 12px; border-radius: 12px; cursor: pointer; transition: background .12s; }
+.notif-item:hover { background: var(--surface); }
+.notif-item.unread { background: var(--brand-soft); }
+.notif-item.unread:hover { background: var(--brand-soft); filter: brightness(.97); }
+.notif-ico { flex: none; display: grid; place-items: center; width: 30px; height: 30px; margin-top: 1px; border-radius: 9px; background: var(--surface); border: 1px solid var(--line); color: var(--brand-ink); }
+.notif-item.unread .notif-ico { background: var(--card); }
+.notif-body { flex: 1; min-width: 0; display: grid; gap: 2px; }
+.notif-body strong { font-size: 13.5px; font-weight: 650; color: var(--ink); }
+.notif-text { font-size: 13px; color: var(--ink-2); overflow-wrap: anywhere; }
+.notif-body small { font-size: 11.5px; color: var(--muted); }
+.notif-dot { flex: none; width: 8px; height: 8px; margin-top: 6px; border-radius: 50%; background: var(--brand-500); }
+.notif-empty { padding: 22px 14px; text-align: center; font-size: 13.5px; color: var(--muted); }
+
+/* Novedades (changelog): lista cronológica sobria dentro de una card. */
+.changelog-list { list-style: none; margin: 0; padding: 0; display: grid; gap: 0; }
+.changelog-item { display: flex; gap: 14px; padding: 14px 4px; border-bottom: 1px solid var(--line-soft); }
+.changelog-item:last-child { border-bottom: 0; }
+.changelog-date { flex: none; width: 84px; padding-top: 2px; font-size: 12px; font-weight: 600; color: var(--muted); font-variant-numeric: tabular-nums; }
+.changelog-text { flex: 1; min-width: 0; display: grid; gap: 4px; }
+.changelog-text strong { font-size: 14px; font-weight: 650; color: var(--ink); }
+.changelog-body { margin: 0; font-size: 13.5px; line-height: 1.55; color: var(--ink-2); white-space: pre-line; overflow-wrap: anywhere; }
+@media (max-width: 640px) { .changelog-item { flex-direction: column; gap: 4px; } .changelog-date { width: auto; } }
+
 /* Asistente automático como contacto del equipo: avatar con gradiente de
    marca y sugerencias clickeables dentro de la conversación. */
 .support-avatar.bot, .chat-avatar.bot { background: linear-gradient(135deg, var(--brand-500), var(--accent)); color: #fff; }

@@ -1110,7 +1110,7 @@ class StoreViewSet(StoreBaseViewSet):
                 {'captcha_answer': 'El captcha venció o la respuesta no es correcta. Probá de nuevo.'},
                 status = status.HTTP_400_BAD_REQUEST,
             )
-        ProductReview.objects.create(
+        review  =   ProductReview.objects.create(
             store       =   store,
             product     =   product,
             is_positive =   data.get('is_positive') if can_rate else None,
@@ -1119,6 +1119,9 @@ class StoreViewSet(StoreBaseViewSet):
             surname     =   data['surname'],
             email       =   data['email'],
         )
+        #Aviso del sistema al dueño (notificación deduplicada, no chat).
+        from AdminApp.domains.notifications.services import notify_product_review
+        notify_product_review(store, product_name = product.name)
         return Response({'Exito': 'Tu opinión fue publicada. ¡Gracias!'}, status = status.HTTP_201_CREATED)
     #=========================================
     # CUSTOMIZATION (diseño de la web pública, gated por el plan)

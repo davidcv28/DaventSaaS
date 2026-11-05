@@ -25,6 +25,10 @@ class Store(models.Model):
     blocked_reason              =   models.CharField(max_length = 200, blank = True, verbose_name = 'Motivo del bloqueo')
     blocked_at                  =   models.DateTimeField(null = True, blank = True, verbose_name = 'Fecha del bloqueo')
     storage_used_bytes          =   models.BigIntegerField(default = 0, verbose_name = 'Almacenamiento usado (bytes)')
+    #Opiniones vistas por el dueño: las creadas después de este timestamp
+    #cuentan como "sin leer" en el badge del menú (null = tienda nueva,
+    #cuentan todas). Lo actualiza POST /api/notifications/reviews-seen/.
+    reviews_seen_at             =   models.DateTimeField(null = True, blank = True, verbose_name = 'Opiniones vistas hasta')
     created_at                  =   models.DateTimeField(auto_now_add = True)
     class Meta:
         app_label               =   'stores'
