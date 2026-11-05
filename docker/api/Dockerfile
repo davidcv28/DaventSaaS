@@ -81,6 +81,6 @@ EXPOSE 8000
 # Los compose declaran su propio healthcheck; este cubre Render y cualquier
 # `docker run` suelto (sin HEALTHCHECK, orquestadores externos no ven estado).
 HEALTHCHECK --interval=30s --timeout=5s --start-period=40s --retries=3 \
-    CMD python -c "import urllib.request;urllib.request.urlopen('http://127.0.0.1:8000/healthz/',timeout=4)"
+    CMD python -c "import os,urllib.request;urllib.request.urlopen('http://127.0.0.1:'+os.getenv('PORT','8000')+'/healthz/',timeout=4)"
 ENTRYPOINT ["/entrypoint.sh"]
 CMD ["gunicorn", "-c", "docker/api/gunicorn.conf.py", "DaventProject.wsgi:application"]

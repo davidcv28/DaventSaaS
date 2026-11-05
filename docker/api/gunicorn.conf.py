@@ -4,7 +4,7 @@ Se puede tunear por env: GUNICORN_WORKERS / GUNICORN_THREADS.
 """
 import os
 
-bind         = "0.0.0.0:8000"
+bind         = "0.0.0.0:" + os.getenv("PORT", "8000")
 # Solo nginx llega a este puerto (red interna de compose); confiar en los
 # headers X-Forwarded-* que inyecta.
 forwarded_allow_ips = "*"

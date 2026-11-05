@@ -34,9 +34,9 @@ if [ "$1" = "gunicorn" ]; then
     fi
     # Seeds idempotentes: solo cuando AUTO_SEED=1 (deploys sin shell, ej. Render free).
     if [ "$AUTO_SEED" = "1" ]; then
-        python manage.py seed_locations
-        python manage.py suscriptions
-        python manage.py seed_benefits
+        (python manage.py seed_locations \
+         && python manage.py suscriptions \
+         && python manage.py seed_benefits) &
     fi
     # Superuser inicial en plataformas sin shell: se setea por env y falla
     # silencioso si el usuario ya existe (restarts del servicio).
