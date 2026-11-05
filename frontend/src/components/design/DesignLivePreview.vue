@@ -120,17 +120,12 @@ function onMessage(event) {
 }
 
 // Deep watch: patrón, estilo, tema, layout, identidad, fotos y cualquier
-// otro campo del formulario empujan el estado a la vista previa.
+// otro campo del formulario empujan el estado a la vista previa. Un solo
+// watch con debounce: antes había otro watch sobre template/layout/theme
+// que posteaba inmediato y duplicaba el postMessage + el clone por cambio.
 watch(
   () => [props.form, store.customization],
   queueUpdate,
-  { deep: true }
-)
-// Patrón (template + layout) y estilo (site_theme) son la razón de ser de la
-// vista previa: se empujan al iframe sin esperar al debounce del resto.
-watch(
-  () => [props.form.template, props.form.layout_config, props.form.site_theme, props.form.theme],
-  () => postNow(),
   { deep: true }
 )
 watch(() => props.form.name_font, (font) => { if (font) ensureStoreFont(font) })

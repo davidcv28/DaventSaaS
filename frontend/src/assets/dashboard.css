@@ -1379,6 +1379,10 @@
 .oh-steps-go { flex: none; min-height: 44px; padding: 8px 14px; border: none; border-radius: 12px; background: var(--brand-500); color: #fff; font: inherit; font-size: 14px; font-weight: 650; cursor: pointer; }
 .oh-steps-go:hover { filter: brightness(1.06); }
 .oh-steps-go:active { transform: scale(.98); }
+@media (max-width: 560px) {
+  .oh-steps-list li:not(.done) { flex-wrap: wrap; }
+  .oh-steps-list li:not(.done) .oh-steps-go { width: 100%; margin-left: 42px; }
+}
 
 /* 3. Accesos rápidos: 4 tarjetas grandes con icono + título + ayuda. */
 .oh-quick { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 12px; margin-bottom: 18px; }
