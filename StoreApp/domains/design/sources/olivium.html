@@ -909,11 +909,10 @@ html[data-ds-theme="dark"] .pdp-crumbs a,html[data-ds-style="olivium-noche"] .pd
   padding:10px 15px;border-radius:999px;box-shadow:0 10px 22px -12px rgba(0,0,0,.5);
 }
 .pdp-off:empty{display:none}
-/* Sticker de la campaña vigente: esquina opuesta al -% y al chip de ficha. */
-.pdp-media .ds-campaign-label{
-  position:absolute;top:18px;right:18px;z-index:2;
-  height:26px;width:auto;max-width:46%;object-fit:contain;
-  border-radius:6px;box-shadow:0 12px 24px -12px rgba(0,0,0,.55);
+/* Sticker de la campaña vigente: línea propia debajo del precio. */
+.pdp-price .ds-campaign-label{
+  flex-basis:100%;height:26px;width:auto;object-fit:contain;object-position:left;
+  border-radius:6px;
 }
 .pdp-ref-chip{
   position:absolute;bottom:18px;left:18px;
@@ -1578,7 +1577,6 @@ html[data-ds-theme="dark"] .services-list .ds-service::before,html[data-ds-style
     <div class="pdp-grid">
       <figure class="pdp-media">
         <span class="pdp-off">{{product_offer_pct}}</span>
-        {{product_campaign_label}}
         <img src="{{product_image}}" alt="{{product_name}}" fetchpriority="high" decoding="async">
         <span class="pdp-ref-chip">Ficha {{product_ref}}</span>
       </figure>
@@ -1586,7 +1584,7 @@ html[data-ds-theme="dark"] .services-list .ds-service::before,html[data-ds-style
         <p class="pdp-cat">{{product_category}}<span>{{product_brand}}</span></p>
         <h1>{{product_name}}</h1>
         <p class="pdp-ref">Ref. {{product_ref}} · {{store_name}}</p>
-        <div class="pdp-price"><b>{{product_price}}</b><s>{{product_old_price}}</s><span class="pdp-save">{{product_save}}</span></div>
+        <div class="pdp-price"><b>{{product_price}}</b><s>{{product_old_price}}</s><span class="pdp-save">{{product_save}}</span>{{product_campaign_label}}</div>
         <p class="pdp-score"><b>{{product_rating_avg}}</b><span>promedio · {{product_rating_count}} valoraciones</span></p>        <p class="pdp-desc">{{product_description}}</p>
         <div class="pdp-buy">
           <a class="btn btn-accent" href="{{product_whatsapp_url}}">Consultar por WhatsApp
