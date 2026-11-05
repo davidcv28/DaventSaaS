@@ -357,21 +357,17 @@ const navItems = computed(() => {
   const L = navLocks.value
   return [
     { id: 'overview', label: 'Inicio', icon: 'dashboard', hint: 'Tu negocio hoy' },
-    { heading: 'Vender' },
     { id: 'catalogs', label: 'Mis productos', icon: 'package', hint: 'Fotos, precios y categorías', locked: L.catalogs, badge: catalog.products.length || null },
     { id: 'services', label: 'Mis servicios', icon: 'wrench', hint: 'Lo que ofrecés hacer', locked: L.services },
     { id: 'pos', label: 'Vender en persona', icon: 'monitor', hint: 'Cobrar en tu local', locked: L.pos },
-    { heading: 'Mi web' },
     { id: 'web', label: 'Mi página', icon: 'store', hint: 'Diseño, secciones y dirección' },
-    { heading: 'Clientes' },
     { id: 'reviews', label: 'Opiniones', icon: 'star', hint: 'Lo que dicen de vos', locked: L.reviews },
-    { id: 'support', label: 'Tu Asistente', icon: 'message-circle', hint: 'Te ayuda a armar tu web', locked: L.support },
-    { id: 'bot', label: 'Asistente virtual', icon: 'bot', hint: 'Responde por vos en tu web', locked: L.bot },
-    { heading: 'Crecer' },
     { id: 'tools', label: 'Promocionar', icon: 'megaphone', hint: 'QR, folletos y visitas', locked: L.tools },
-    { heading: 'Mi cuenta' },
+    { id: 'support', label: 'Ayuda', icon: 'message-circle', hint: 'Te ayuda con tu cuenta', locked: L.support },
+    { id: 'bot', label: 'Asistente virtual', icon: 'bot', hint: 'Responde por vos en tu web', locked: L.bot },
+    { sep: true },
     { id: 'plans', label: 'Plan y pagos', icon: 'credit-card', hint: 'Suscripción, pagos y facturas' },
-    { id: 'settings', label: 'Mis datos', icon: 'user', hint: 'Cuenta y contraseña' }
+    { id: 'settings', label: 'Mi cuenta', icon: 'user', hint: 'Datos y contraseña' }
   ]
 })
 

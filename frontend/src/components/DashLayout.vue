@@ -202,6 +202,7 @@ onBeforeUnmount(() => {
           ></span>
           <template v-for="(i, idx) in items" :key="i.id || i.heading || idx">
             <p v-if="i.heading" class="nav-heading" aria-hidden="true">{{ i.heading }}</p>
+            <div v-else-if="i.sep" class="nav-sep" aria-hidden="true"></div>
             <button
               v-else
               :ref="setBtn(i.id)"
@@ -308,6 +309,7 @@ onBeforeUnmount(() => {
         <nav class="sheet-nav" aria-label="Todas las secciones">
           <template v-for="(i, idx) in items" :key="i.id || i.heading || idx">
             <p v-if="i.heading" class="nav-heading" aria-hidden="true">{{ i.heading }}</p>
+            <div v-else-if="i.sep" class="nav-sep" aria-hidden="true"></div>
             <button
               v-else
               :class="{ active: active === i.id, locked: i.locked }"
