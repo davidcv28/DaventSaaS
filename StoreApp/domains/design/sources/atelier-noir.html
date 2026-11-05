@@ -348,13 +348,13 @@ body.m-open .m-sheet{transform:none}
 }
 .ds-product-old{font:400 11px/1 var(--mono);color:color-mix(in srgb,var(--band-ink) 60%,transparent);text-decoration:line-through}
 .ds-product-price[data-off]::before{
-  content:"−" attr(data-off) "%";flex:none;align-self:center;
+  content:"−" attr(data-off) "%";position:absolute;right:0;bottom:calc(100% + 6px);z-index:3;
   padding:5px 8px;background:var(--accent);color:var(--on-accent);
   font:600 9px/1 var(--mono);letter-spacing:.18em;text-transform:uppercase;
 }
 .ds-product-price .ds-campaign-label{
-  position:static;flex:none;align-self:center;height:13px;width:auto;max-width:52px;
-  border-radius:1px;box-shadow:none;margin-right:2px;
+  position:absolute;right:0;bottom:calc(100% + 28px);z-index:3;height:15px;width:auto;max-width:96px;
+  border-radius:1px;box-shadow:0 6px 14px -8px rgba(0,0,0,.6);
 }
 .ds-stock{display:none}
 .ds-empty{
@@ -696,6 +696,8 @@ body.m-open .m-sheet{transform:none}
 .grid-products[data-ds-view-mode="list"] .ds-product-name{font:400 24px/1.1 var(--display);white-space:normal;text-overflow:clip}
 .grid-products[data-ds-view-mode="list"] .ds-product-price{grid-area:price;position:static;right:auto;bottom:auto;margin:0;padding:0;border:0;justify-content:flex-end;min-width:110px;order:0}
 .grid-products[data-ds-view-mode="list"] .ds-product-price::after{display:none}
+.grid-products[data-ds-view-mode="list"] .ds-product-price[data-off]::before{position:static;right:auto;bottom:auto;margin-right:6px}
+.grid-products[data-ds-view-mode="list"] .ds-product-price .ds-campaign-label{position:static;right:auto;bottom:auto;height:13px;max-width:52px;box-shadow:none;margin-right:2px}
 .cat-scrim{display:none}
 
 /* ---------- Ficha ---------- */
