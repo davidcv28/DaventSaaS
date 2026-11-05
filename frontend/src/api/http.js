@@ -196,8 +196,22 @@ http.interceptors.response.use(
       url.includes('/token/refresh/') ||
       url.includes('/token/verify/') ||
       url.includes('/token/logout/')
-    if (status === 401 && !original._retried && !isAuthEndpoint && hasSessionCookie()) {
+    if (status === 401 && !original._retried && !isAuthEndpoint) {
       original._retried = true
+      if (!hasSessionCookie()) {
+        // sessionEnded = logout explícito en este tab: no es "expirada",
+        // no disparar el redirect a /login?expired=1.
+        if (sessionEnded) return Promise.reject(error)
+        // Sin cookie de sesión no hay refresh posible: la sesión ya murió
+        // (pestaña vieja en otro dominio, cookie borrada, logout en otro
+        // tab). Sin este aviso el heartbeat/polling seguiría pegando 401
+        // cada ~45s para siempre — mismo evento que el refresh fallido.
+        if (!expiredNotified) {
+          expiredNotified = true
+          window.dispatchEvent(new CustomEvent('davent:session-expired'))
+        }
+        return Promise.reject(error)
+      }
       try {
         const access = await tryRefresh()
         original.headers = { ...(original.headers || {}), Authorization: `Bearer ${access}` }
