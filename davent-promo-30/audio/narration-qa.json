@@ -1,13 +1,13 @@
 {
   "version": 1,
   "pass": true,
-  "duration": 35.232875,
+  "duration": 23.890958,
   "alignment": "tts-segments",
   "checks": [
     {
       "name": "duration",
       "pass": true,
-      "detail": "recorded 35.232875s; maximum 1200s"
+      "detail": "recorded 23.890958s; maximum 1200s"
     },
     {
       "name": "source",
@@ -22,12 +22,12 @@
     {
       "name": "segments",
       "pass": true,
-      "detail": "3 ordered text segments within the audio"
+      "detail": "2 ordered text segments within the audio"
     },
     {
       "name": "audio-duration",
       "pass": true,
-      "detail": "actual 35.232875s, recorded 35.232875s"
+      "detail": "actual 23.890958s, recorded 23.890958s"
     },
     {
       "name": "audio-hash",
@@ -42,7 +42,7 @@
     {
       "name": "final-audio-duration",
       "pass": true,
-      "detail": "final 45s, target 45s"
+      "detail": "final 25s, target 25s"
     },
     {
       "name": "mixed-voice",

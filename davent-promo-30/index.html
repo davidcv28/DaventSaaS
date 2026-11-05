@@ -12,13 +12,14 @@
 <canvas id="c"></canvas>
 <script type="module" src="./preview.js"></script>
 <script type="module">
-import { DUR, CUES, SHOTS, SEG, BUBBLES, CHIPS, DESIGNS } from './timeline.js';
+import { DUR, CUES, SHOTS, SEG, BUBBLES, CHIPS } from './timeline.js';
 import { seg, lerp, ease, glide, snap, whip, spring, springTo, stagger, pulse, shake, win, stageSize, setupCanvas, camera, loadFonts, loadImage, tween, mix, rgba, noise1 } from './motion.js';
 
 const { W, H } = stageSize();
 const ctx = setupCanvas(document.getElementById('c'), W, H);
 const U = W / 1080;                                  // 1080x1920 vertical
 const shot = id => SHOTS.find(s => s.id === id);
+const T = Object.fromEntries(SHOTS.map(s => [s.id, s.t0]));
 
 const IMG = {};
 for (const n of ['register', 'dashboard', 'gym', 'moda', 'impacto', 'moderntec', 'viajero', 'landing-prod'])
@@ -99,7 +100,7 @@ function sceneRegister(t) {
   stage(W * .5 + Math.sin(t * 0.5) * 70 * U, H * .4 + Math.cos(t * 0.4) * 40 * U, .3);
   ctx.save(); ctx.translate(0, (1 - k) * H * .55); ctx.globalAlpha = Math.min(1, k * 1.6);
   stepLabel('PASO 01 · CREÁ TU CUENTA');
-  const scr = lerp(60, 240, ease.inOutCubic(seg(t, 4.5, 7.8)));
+  const scr = lerp(60, 240, ease.inOutCubic(seg(t, 4.1, 5.8)));
   phone(IMG.register, W * .5 - 300 * U, H * .2, 600 * U, 1060 * U, scr);
   cap('en minutos,', W * .5, H * .79, 88 * U, BONE, COND);
   cap('SIN PROGRAMAR', W * .5, H * .79 + 105 * U, 88 * U, VIOLET_L, COND);
@@ -107,11 +108,11 @@ function sceneRegister(t) {
 }
 
 function sceneDashboard(t) {
-  const k = slideIn(t, 8.0);
+  const k = slideIn(t, 5.9);
   stage(W * .5 + Math.sin(t * 0.45 + 2) * 80 * U, H * .42, .3);
   ctx.save(); ctx.translate(0, (1 - k) * H * .55); ctx.globalAlpha = Math.min(1, k * 1.6);
   stepLabel('PASO 02 · TU PANEL');
-  const scr = lerp(0, 110, ease.inOutCubic(seg(t, 8.6, 11.3)));
+  const scr = lerp(0, 110, ease.inOutCubic(seg(t, 6.2, 7.5)));
   phone(IMG.dashboard, W * .5 - 310 * U, H * .19, 620 * U, 1100 * U, scr);
   const chips = ['Catálogo', 'Servicios', 'Suscripciones', 'Marketing'];
   chips.forEach((c, i) => {
@@ -128,73 +129,36 @@ function sceneDashboard(t) {
   ctx.restore(); ctx.globalAlpha = 1;
 }
 
-// Montaje de plantillas: el teléfono recorre diseños y se queda en GIMNASIO publicado
-function sceneDesigns(t) {
-  const k = slideIn(t, 11.5);
+// Escena corta: la web del gimnasio publicada, completa dentro del teléfono
+function sceneGym(t) {
+  const k = spring(t - 7.7, { freq: 4.2, damp: 0.85 });
   stage(W * .5 + Math.sin(t * 0.4 + 4) * 80 * U, H * .42, .3);
   ctx.save(); ctx.translate(0, (1 - k) * H * .55); ctx.globalAlpha = Math.min(1, k * 1.6);
-  stepLabel('PASO 03 · ELEGÍ TU DISEÑO');
-  const px = W * .5 - 310 * U, py = H * .19, pw = 620 * U, ph = 1120 * U;
-  const bezel = 10 * U, iw = pw - 2 * bezel, ih = ph - 2 * bezel;
-  // current design index
-  let idx = 0;
-  DESIGNS.forEach((d, i) => { if (t >= d.t0) idx = i; });
-  const prev = idx > 0 ? DESIGNS[idx - 1] : null;
-  const cur = DESIGNS[idx];
-  const fk = spring(t - cur.t0, { freq: 3, damp: 0.85 });          // swap spring
-  const scr = (img) => lerp(0, Math.min(700, img.height - ih * (img.width / iw)), ease.inOutCubic(seg(t, cur.t0 + 0.3, (idx === DESIGNS.length - 1 ? 20.2 : cur.t0 + 1.7))));
-  shadow(() => { rr(px, py, pw, ph, 54 * U); ctx.fillStyle = '#0c0c10'; ctx.fill(); }, 70 * U, 'rgba(0,0,0,.55)', 26 * U);
-  ctx.save(); rr(px + bezel, py + bezel, iw, ih, 44 * U); ctx.clip();
-  if (prev && fk < 1) {
-    const img = IMG[prev.id], srcH = Math.min(img.width * (ih / iw), img.height);
-    ctx.globalAlpha = 1 - fk;
-    ctx.drawImage(img, 0, 0, img.width, srcH, px + bezel - (1 - fk) * 80 * U, py + bezel, iw, ih);
-    ctx.globalAlpha = 1;
-  }
-  {
-    const img = IMG[cur.id], srcH = Math.min(img.width * (ih / iw), img.height - scr(img));
-    ctx.globalAlpha = fk;
-    ctx.drawImage(img, 0, scr(img), img.width, srcH, px + bezel + (1 - fk) * 80 * U, py + bezel, iw, ih);
-    ctx.globalAlpha = 1;
-  }
-  ctx.restore();
-  ctx.strokeStyle = 'rgba(255,255,255,.16)'; ctx.lineWidth = 2 * U; rr(px, py, pw, ph, 54 * U); ctx.stroke();
-  // design name chip
-  const nk = spring(t - cur.t0, { freq: 3.4, damp: 0.5 });
-  ctx.save(); ctx.translate(W * .5, py + ph - 40 * U); ctx.scale(nk, nk);
-  rr(-170 * U, -36 * U, 340 * U, 72 * U, 36 * U); ctx.fillStyle = rgba('#10121a', .9); ctx.fill();
-  ctx.strokeStyle = rgba(VIOLET_L, .7); ctx.lineWidth = 2 * U; rr(-170 * U, -36 * U, 340 * U, 72 * U, 36 * U); ctx.stroke();
-  label(cur.name, 0, 2 * U, 38 * U, BONE);
-  ctx.restore();
-  // dots progress
-  DESIGNS.forEach((d, i) => {
-    ctx.beginPath(); ctx.arc(W * .5 + (i - 2) * 44 * U, py + ph + 46 * U, i === idx ? 10 * U : 6 * U, 0, 7);
-    ctx.fillStyle = i === idx ? VIOLET_L : 'rgba(255,255,255,.25)'; ctx.fill();
-  });
-  // badge de publicada cuando se queda el diseño final (gimnasio)
-  const isFinal = idx === DESIGNS.length - 1;
-  const bK = spring(t - (DESIGNS[DESIGNS.length - 1].t0 + 0.4), { freq: 3, damp: 0.6 });
-  if (isFinal && bK > 0) {
-    ctx.save(); ctx.translate(W * .5, py + 60 * U); ctx.scale(bK, bK);
-    rr(-240 * U, -32 * U, 480 * U, 64 * U, 32 * U); ctx.fillStyle = rgba('#10121a', .9); ctx.fill();
-    ctx.strokeStyle = rgba(LIME, .85); ctx.lineWidth = 2 * U; rr(-240 * U, -32 * U, 480 * U, 64 * U, 32 * U); ctx.stroke();
-    ctx.fillStyle = LIME; ctx.beginPath(); ctx.arc(-188 * U, 0, 9 * U, 0, 7); ctx.fill();
-    label('TU WEB · PUBLICADA', -164 * U, 2 * U, 32 * U, BONE);
+  stepLabel('TU WEB · PUBLICADA');
+  const scr = lerp(0, 420, ease.inOutCubic(seg(t, 7.9, 8.9)));
+  phone(IMG.gym, W * .5 - 300 * U, H * .2, 600 * U, 1080 * U, scr);
+  const bK = spring(t - 8.25, { freq: 4, damp: 0.6 });
+  if (bK > 0) {
+    ctx.save(); ctx.translate(W * .5, H * .78); ctx.scale(bK, bK);
+    rr(-260 * U, -34 * U, 520 * U, 68 * U, 34 * U); ctx.fillStyle = rgba('#10121a', .9); ctx.fill();
+    ctx.strokeStyle = rgba(LIME, .85); ctx.lineWidth = 2 * U; rr(-260 * U, -34 * U, 520 * U, 68 * U, 34 * U); ctx.stroke();
+    ctx.fillStyle = LIME; ctx.beginPath(); ctx.arc(-214 * U, 0, 9 * U, 0, 7); ctx.fill();
+    label('DISEÑO GIMNASIO', -188 * U, 2 * U, 34 * U, BONE);
     ctx.restore();
   }
-  cap(isFinal ? 'Tus clientes te contactan directo' : 'un diseño para cada negocio', W * .5, H * .845, 50 * U, isFinal ? LIME : 'rgba(255,255,255,.85)');
+  cap('lista en minutos', W * .5, H * .85, 50 * U, 'rgba(255,255,255,.85)');
   ctx.restore(); ctx.globalAlpha = 1;
 }
 
 // ── SCENE 3 · promo — starburst + davent.com.ar + cupón ──
 function scenePromo(t) {
   ctx.fillStyle = INK; ctx.fillRect(0, 0, W, H);
-  const fl = pulse(t, 20.34, 0.3);
+  const fl = pulse(t, T.promo, 0.3);
   if (fl > 0.02) { ctx.fillStyle = rgba(VIOLET, .35 * fl); ctx.fillRect(0, 0, W, H); }
   const rg = ctx.createRadialGradient(W * .5, H * .4, 0, W * .5, H * .4, W * .9);
   rg.addColorStop(0, rgba(VIOLET, .4)); rg.addColorStop(1, 'rgba(0,0,0,0)');
   ctx.fillStyle = rg; ctx.fillRect(0, 0, W, H);
-  const k = spring(t - 20.34, { freq: 3.4, damp: 0.42 });
+  const k = spring(t - T.promo, { freq: 3.4, damp: 0.42 });
   const breathe = 1 + Math.sin(t * 2.2) * 0.015;
   ctx.save(); ctx.translate(W * .5, H * .4); ctx.rotate(0.12 - 0.3 * (1 - k) + Math.sin(t * 0.9) * 0.02); ctx.scale(Math.max(.01, k) * breathe, Math.max(.01, k) * breathe);
   ctx.fillStyle = LIME; ctx.beginPath();
@@ -205,16 +169,16 @@ function scenePromo(t) {
   ctx.restore();
   cap('30 días', W * .5, H * .68, 120 * U, BONE, COND);
   cap('PREMIUM GRATIS', W * .5, H * .68 + 130 * U, 84 * U, LIME, COND);
-  const out = spring(t - 26.0, { freq: 2.4, damp: 1 });
+  const out = spring(t - T.site, { freq: 2.4, damp: 1 });
   if (out > 0) { ctx.save(); ctx.globalCompositeOperation = 'destination-in'; ctx.fillStyle = `rgba(0,0,0,${1 - out})`; ctx.fillRect(0, 0, W, H); ctx.restore(); }
 }
 
 function sceneSite(t) {
   stage(W * .5 + Math.sin(t * 0.35) * 90 * U, H * .4, .34);
-  const k = slideIn(t, 26.0);
+  const k = slideIn(t, T.site);
   ctx.save(); ctx.translate(0, (1 - k) * H * .55); ctx.globalAlpha = Math.min(1, k * 1.6);
   stepLabel('TU WEB EN INTERNET');
-  const scr = lerp(0, 1500, ease.inOutCubic(seg(t, 27, 35.6)));
+  const scr = lerp(0, 1500, ease.inOutCubic(seg(t, 13.2, 16.8)));
   phone(IMG['landing-prod'], W * .5 - 310 * U, H * .23, 620 * U, 1100 * U, scr);
   cap('todo incluido, sin pagar nada', W * .5, H * .84, 52 * U, 'rgba(255,255,255,.85)');
   ctx.restore(); ctx.globalAlpha = 1;
@@ -225,7 +189,7 @@ function sceneEndcard(t) {
   const rg = ctx.createRadialGradient(W * .5, H * .5 + Math.sin(t * 0.5) * 60 * U, 0, W * .5, H * .5, W);
   rg.addColorStop(0, rgba(VIOLET, .3)); rg.addColorStop(1, 'rgba(0,0,0,0)');
   ctx.fillStyle = rg; ctx.fillRect(0, 0, W, H);
-  const k = spring(t - 36.0, { freq: 2.6, damp: 0.8 });
+  const k = spring(t - T.endcard, { freq: 2.6, damp: 0.8 });
   ctx.globalAlpha = Math.min(1, k * 1.5);
   const breathe = 1 + Math.sin(t * 1.6) * 0.008;
   ctx.save(); ctx.translate(W * .5, H * .51); ctx.scale(breathe, breathe); ctx.translate(-W * .5, -H * .51);
@@ -237,12 +201,12 @@ function sceneEndcard(t) {
   ctx.strokeStyle = 'rgba(255,255,255,.12)'; ctx.lineWidth = 1;
   ctx.beginPath(); ctx.moveTo(cx + 60 * U, cy + 250 * U); ctx.lineTo(cx + cw - 60 * U, cy + 250 * U); ctx.stroke();
   label('CUPÓN', W * .5, cy + 300 * U, 34 * U, 'rgba(255,255,255,.5)');
-  const pk = 1 + pulse(t, 36.6, 0.4) * 0.06 + Math.sin(t * 1.8) * 0.012;
+  const pk = 1 + pulse(t, T.endcard + 0.6, 0.4) * 0.06 + Math.sin(t * 1.8) * 0.012;
   ctx.save(); ctx.translate(W * .5, cy + 380 * U); ctx.scale(pk, pk);
   cap('PROMO', 0, 0, 96 * U, LIME, COND);
   ctx.restore();
   cap('30 días Premium gratis', W * .5, cy + 470 * U, 40 * U, BONE);
-  const uK = spring(t - 36.8, { freq: 3, damp: 0.6 });
+  const uK = spring(t - T.endcard + 0.8, { freq: 3, damp: 0.6 });
   ctx.save(); ctx.translate(W * .5, cy + 560 * U); ctx.scale(uK, uK);
   rr(-250 * U, -34 * U, 500 * U, 68 * U, 34 * U); ctx.fillStyle = '#0d0d14'; ctx.fill();
   ctx.strokeStyle = rgba(VIOLET_L, .7); ctx.lineWidth = 2 * U; rr(-250 * U, -34 * U, 500 * U, 68 * U, 34 * U); ctx.stroke();
@@ -256,14 +220,14 @@ function sceneEndcard(t) {
 window.DUR = DUR;
 window.render = t => {
   ctx.fillStyle = INK; ctx.fillRect(0, 0, W, H);
-  const [sx, sy] = shake(t, [20.34], 14 * U, 0.25);
+  const [sx, sy] = shake(t, [T.promo], 14 * U, 0.25);
   ctx.save(); ctx.translate(sx, sy);
-  if (t < 3.77) sceneHook(t);
-  else if (t < 8.0) sceneRegister(t);
-  else if (t < 11.5) sceneDashboard(t);
-  else if (t < 20.34) sceneDesigns(t);
-  else if (t < 26.0) scenePromo(t);
-  else if (t < 36.0) sceneSite(t);
+  if (t < T.register) sceneHook(t);
+  else if (t < T.dashboard) sceneRegister(t);
+  else if (t < T.gym) sceneDashboard(t);
+  else if (t < T.promo) sceneGym(t);
+  else if (t < T.site) scenePromo(t);
+  else if (t < T.endcard) sceneSite(t);
   else sceneEndcard(t);
   ctx.restore();
 };
