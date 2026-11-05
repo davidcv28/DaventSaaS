@@ -353,6 +353,11 @@ const navLocks = computed(() => {
   return map
 })
 
+//Opiniones sin leer: badge del ítem "Opiniones" del menú (viene en el
+//mismo poll que las notificaciones). Declarado acá arriba porque navItems
+//se evalúa durante setup (validIds) — después del ref era un TDZ fatal.
+const unreadReviewsCount = ref(0)
+
 // Menú por intención: lo que el dueño quiere hacer, no el módulo técnico.
 const navItems = computed(() => {
   const L = navLocks.value
@@ -2481,9 +2486,6 @@ watch(() => carouselImages.value.length, (total) => {
 // navega a la sección destino (`target`); nunca abre la conversación ---
 const notifs = ref([])
 const notifsUnread = ref(0)
-//Opiniones sin leer: badge del ítem "Opiniones" del menú (viene en el
-//mismo poll que las notificaciones).
-const unreadReviewsCount = ref(0)
 //Timestamp del último "visto" de opiniones: las creadas después se
 //marcan "Sin leer" en la lista (null = nunca se abrió la sección).
 const reviewsSeenAt = ref(null)
