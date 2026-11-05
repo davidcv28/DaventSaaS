@@ -4181,28 +4181,35 @@ async function changePassword() {
             <button class="btn secondary btn-auto" @click="section = 'plans'">Ver planes <AppIcon name="arrow-right" :size="16" /></button>
           </template>
           <template v-else>
-            <p>Tu web también responde en un dominio tuyo: lo comprás en cualquier registrador y lo apuntás a DAVENT.</p>
+            <p>¿Querés que tu web tenga nombre propio, como <code class="mono">mitienda.com</code>? Comprá el dominio y conectalo acá — te guiamos paso a paso.</p>
             <AlertMessage v-if="domainErr" kind="error" :message="domainErr" />
             <div v-if="domainInfo?.status === 'verified'" class="link-bar">
               <code class="mono link-url">{{ domainUrl }}</code>
               <span class="pill ok">Verificado</span>
             </div>
-            <div v-else class="field">
-              <label for="custom-domain">Dominio</label>
-              <input
-                id="custom-domain"
-                name="custom-domain"
-                type="text"
-                class="input"
-                v-model="domainInput"
-                placeholder="mitienda.com"
-                maxlength="253"
-                autocomplete="off"
-                @keyup.enter="saveDomainLink"
-              />
-            </div>
+            <template v-else>
+              <ol v-if="!domainInfo" class="domain-mini-steps">
+                <li><span>1</span> Comprá tu dominio</li>
+                <li><span>2</span> Pegalo en el campo de abajo</li>
+                <li><span>3</span> Copiá 2 datos en tu registrador</li>
+              </ol>
+              <div class="field">
+                <label for="custom-domain">Tu dominio</label>
+                <input
+                  id="custom-domain"
+                  name="custom-domain"
+                  type="text"
+                  class="input"
+                  v-model="domainInput"
+                  placeholder="mitienda.com"
+                  maxlength="253"
+                  autocomplete="off"
+                  @keyup.enter="saveDomainLink"
+                />
+              </div>
+            </template>
             <div v-if="domainInfo && domainInfo.status !== 'verified'" class="domain-dns">
-              <p class="hint">Creá estos registros en el panel DNS de tu dominio y después verificá:</p>
+              <p class="hint">Copiá estos dos datos en tu registrador (buscá «DNS» o «Registros» en su menú) y después verificá:</p>
               <div class="dns-row">
                 <span class="pill muted">CNAME</span>
                 <code class="mono">{{ domainInfo.domain }}</code>
@@ -4215,7 +4222,7 @@ async function changePassword() {
                 <span>→</span>
                 <code class="mono dns-txt">{{ domainInfo.txt_value }}</code>
               </div>
-              <p class="hint">Los cambios de DNS pueden tardar un rato en propagarse.</p>
+              <p class="hint">Los cambios pueden tardar hasta 48 h en verse.</p>
               <p v-if="domainStatus" class="slug-check" role="status">
                 <span class="pill" :class="domainStatus.kind">{{ domainStatus.text }}</span>
               </p>
@@ -4223,19 +4230,20 @@ async function changePassword() {
             <div class="btn-row link-actions">
               <button v-if="domainInfo?.status === 'verified'" class="btn btn-auto" @click="openDomain"><AppIcon name="external-link" :size="16" /> Abrir {{ domainInfo.domain }}</button>
               <button v-else class="btn btn-auto" :disabled="domainBusy || !domainInput.trim()" @click="saveDomainLink">
-                <span v-if="domainBusy" class="spinner" aria-hidden="true"></span>{{ domainInfo ? 'Guardar dominio' : 'Vincular dominio' }}
+                <span v-if="domainBusy" class="spinner" aria-hidden="true"></span>{{ domainInfo ? 'Guardar cambios' : 'Conectar mi dominio' }}
               </button>
-              <button v-if="domainInfo && domainInfo.status !== 'verified'" class="btn secondary btn-auto" :disabled="domainBusy" @click="checkDomainNow">Verificar DNS</button>
+              <button v-if="domainInfo && domainInfo.status !== 'verified'" class="btn secondary btn-auto" :disabled="domainBusy" @click="checkDomainNow">Ya lo configuré, verificar</button>
               <button v-if="domainInfo" class="btn ghost btn-auto" :disabled="domainBusy" @click="removeDomain">Quitar dominio</button>
             </div>
-            <details class="domain-guide">
-              <summary><AppIcon name="circle-help" :size="15" /> ¿Cómo consigo mi dominio?</summary>
+            <details class="domain-guide" :open="!domainInfo">
+              <summary><AppIcon name="circle-help" :size="15" /> Guía paso a paso</summary>
               <ol>
-                <li><strong>Compralo</strong> en un registrador como NIC Argentina, GoDaddy o Cloudflare. Sale muy poco al año.</li>
-                <li><strong>Escribilo acá arriba</strong> y copiá los dos registros que te mostramos.</li>
-                <li><strong>Creá esos registros</strong> en el panel DNS de tu registrador.</li>
-                <li><strong>Verificá</strong> con el botón de arriba. Los cambios pueden tardar hasta 48 h.</li>
+                <li><strong>Comprá tu dominio</strong> en NIC Argentina, GoDaddy o Cloudflare. Sale muy poco al año.</li>
+                <li><strong>Pegalo en el campo de arriba</strong> y tocá «Conectar mi dominio».</li>
+                <li><strong>Copiá los 2 datos</strong> que te mostramos y pegalos en tu registrador (sección «DNS» o «Registros DNS»).</li>
+                <li><strong>Tocá «Ya lo configuré, verificar»</strong>. Puede tardar hasta 48 h.</li>
               </ol>
+              <button type="button" class="btn ghost btn-auto domain-guide-help" @click="section = 'support'">¿Dudas? Pedile ayuda a tu asistente</button>
             </details>
           </template>
         </div>
