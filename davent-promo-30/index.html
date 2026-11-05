@@ -213,17 +213,9 @@ function sceneSite(t) {
   stage(W * .5 + Math.sin(t * 0.35) * 90 * U, H * .4, .34);
   const k = slideIn(t, 26.0);
   ctx.save(); ctx.translate(0, (1 - k) * H * .55); ctx.globalAlpha = Math.min(1, k * 1.6);
-  stepLabel('ENTRÁ A');
-  // URL bar chip
-  const uK = spring(t - 26.4, { freq: 3, damp: 0.6 });
-  ctx.save(); ctx.translate(W * .5, H * .2); ctx.scale(uK, uK);
-  rr(-290 * U, -34 * U, 580 * U, 68 * U, 34 * U); ctx.fillStyle = '#14141f'; ctx.fill();
-  ctx.strokeStyle = rgba(VIOLET_L, .6); ctx.lineWidth = 2 * U; rr(-290 * U, -34 * U, 580 * U, 68 * U, 34 * U); ctx.stroke();
-  ctx.fillStyle = '#4CC38A'; ctx.beginPath(); ctx.arc(-246 * U, 0, 9 * U, 0, 7); ctx.fill();
-  label('davent.com.ar', -210 * U, 2 * U, 34 * U, BONE);
-  ctx.restore();
+  stepLabel('TU WEB EN INTERNET');
   const scr = lerp(0, 1500, ease.inOutCubic(seg(t, 27, 35.6)));
-  phone(IMG['landing-prod'], W * .5 - 310 * U, H * .25, 620 * U, 1080 * U, scr);
+  phone(IMG['landing-prod'], W * .5 - 310 * U, H * .23, 620 * U, 1100 * U, scr);
   cap('todo incluido, sin pagar nada', W * .5, H * .84, 52 * U, 'rgba(255,255,255,.85)');
   ctx.restore(); ctx.globalAlpha = 1;
 }
@@ -250,6 +242,13 @@ function sceneEndcard(t) {
   cap('PROMO', 0, 0, 96 * U, LIME, COND);
   ctx.restore();
   cap('30 días Premium gratis', W * .5, cy + 470 * U, 40 * U, BONE);
+  const uK = spring(t - 36.8, { freq: 3, damp: 0.6 });
+  ctx.save(); ctx.translate(W * .5, cy + 560 * U); ctx.scale(uK, uK);
+  rr(-250 * U, -34 * U, 500 * U, 68 * U, 34 * U); ctx.fillStyle = '#0d0d14'; ctx.fill();
+  ctx.strokeStyle = rgba(VIOLET_L, .7); ctx.lineWidth = 2 * U; rr(-250 * U, -34 * U, 500 * U, 68 * U, 34 * U); ctx.stroke();
+  ctx.fillStyle = '#4CC38A'; ctx.beginPath(); ctx.arc(-204 * U, 0, 9 * U, 0, 7); ctx.fill();
+  label('davent.com.ar', 18 * U, 2 * U, 40 * U, BONE);
+  ctx.restore();
   ctx.restore();
   ctx.globalAlpha = 1;
 }
