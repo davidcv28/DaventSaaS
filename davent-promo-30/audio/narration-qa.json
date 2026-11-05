@@ -42,7 +42,7 @@
     {
       "name": "final-audio-duration",
       "pass": true,
-      "detail": "final 36s, target 36s"
+      "detail": "final 45s, target 45s"
     },
     {
       "name": "mixed-voice",

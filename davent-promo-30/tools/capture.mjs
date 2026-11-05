@@ -8,14 +8,21 @@ mkdirSync(OUT, { recursive: true });
 
 const REFRESH = null;
 
-const PUBLIC = process.env.ONLY ? [] : [
+const ALL = [
   { name: 'landing', url: 'http://localhost:5173/', scrolls: [900, 1800] },
+  { name: 'landing-prod', url: 'https://davent.com.ar/', scrolls: [900, 1800] },
   { name: 'register', url: 'http://localhost:5173/register', scrolls: [] },
   { name: 'gym', url: 'http://localhost:5173/gym-qa', scrolls: [900, 1800] },
   { name: 'gym-catalogo', url: 'http://localhost:5173/gym-qa/catalogo', scrolls: [700] },
   { name: 'gym-servicios', url: 'http://localhost:5173/gym-qa/servicios', scrolls: [700] },
+  { name: 'moda', url: 'http://localhost:5173/moda-qa', scrolls: [900] },
+  { name: 'impacto', url: 'http://localhost:5173/mi-qa', scrolls: [900] },
+  { name: 'moderntec', url: 'http://localhost:5173/mt-qa', scrolls: [900] },
+  { name: 'viajero', url: 'http://localhost:5173/viajero-qa', scrolls: [900] },
 ];
-const PRIVATE = [
+const ONLY = process.env.ONLY ? process.env.ONLY.split(',') : null;
+const PUBLIC = ALL.filter(t => !ONLY || ONLY.includes(t.name));
+const PRIVATE = (ONLY && !ONLY.includes('dashboard')) ? [] : [
   { name: 'dashboard', url: 'http://localhost:5173/dashboard', scrolls: [700], skipTour: true },
 ];
 

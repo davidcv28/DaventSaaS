@@ -1,8 +1,8 @@
 {
   "version": 1,
-  "duration": 36,
+  "duration": 45,
   "file": "audio/final.wav",
-  "audioSha256": "3b616cbcf398251220fe7b912773378f07e8b5ca3381b0faa240c73e97c15ea4",
+  "audioSha256": "af76ee79fc5dd4fb8d580fa1554081a4ef9c6cbe12b001e526d2ebe8c753c8fd",
   "narration": "enabled",
   "sources": [
     {
@@ -15,7 +15,7 @@
       "role": "bgm",
       "source": "ai",
       "file": "audio/music.wav",
-      "sha256": "7940de5cce4f180bed1c5edce26413da9d8e0d55bd8b28160954d5ca143f05c0"
+      "sha256": "36e148e1e00a6fe06f074070762fb9c951245aafddb6d94d571e3e7273a47078"
     }
   ],
   "duckDb": -16,

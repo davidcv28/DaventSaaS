@@ -12,17 +12,16 @@
 <canvas id="c"></canvas>
 <script type="module" src="./preview.js"></script>
 <script type="module">
-import { DUR, CUES, SHOTS, SEG, BUBBLES, CHIPS } from './timeline.js';
+import { DUR, CUES, SHOTS, SEG, BUBBLES, CHIPS, DESIGNS } from './timeline.js';
 import { seg, lerp, ease, glide, snap, whip, spring, springTo, stagger, pulse, shake, win, stageSize, setupCanvas, camera, loadFonts, loadImage, tween, mix, rgba, noise1 } from './motion.js';
 
 const { W, H } = stageSize();
 const ctx = setupCanvas(document.getElementById('c'), W, H);
 const U = W / 1080;                                  // 1080x1920 vertical
 const shot = id => SHOTS.find(s => s.id === id);
-const inShot = (t, id) => t >= shot(id).t0 && t < shot(id).t1;
 
 const IMG = {};
-for (const n of ['register', 'dashboard', 'gym', 'gym-catalogo', 'landing'])
+for (const n of ['register', 'dashboard', 'gym', 'moda', 'impacto', 'moderntec', 'viajero', 'landing-prod'])
   IMG[n] = await loadImage(`assets/${n}.png`);
 
 const SANS = (s, w = 700) => `${w} ${s}px "Segoe UI", "Helvetica Neue", Arial, sans-serif`;
@@ -40,21 +39,13 @@ function cap(text, x, y, size, color, font = SANS, align = 'center', baseline = 
   ctx.font = font(size); ctx.fillStyle = color; ctx.textAlign = align; ctx.textBaseline = baseline;
   ctx.fillText(text, x, y);
 }
-function label(text, x, y, size, color) {
-  cap(text, x, y, size, color, MONO);
-}
-// full-bleed cover of an image region (keeps aspect, fills dw×dh)
-function cover(img, sx, sy, sw, sh, dx, dy, dw, dh) {
-  const s = Math.max(dw / sw, dh / sh), cw = dw / s, ch = dh / s;
-  imgCrop(img, sx + (sw - cw) / 2, sy + (sh - ch) / 2, cw, ch, dx, dy, dw, dh);
-}
-// phone device with a screenshot; srcY = scroll offset in source px
+function label(text, x, y, size, color) { cap(text, x, y, size, color, MONO); }
+// phone device with a screenshot, full width visible (sin zoom); srcY = scroll en px de la captura
 function phone(img, x, y, w, h, srcY = 0) {
   const r = 54 * U, bezel = 10 * U;
   shadow(() => { rr(x, y, w, h, r); ctx.fillStyle = '#0c0c10'; ctx.fill(); }, 70 * U, 'rgba(0,0,0,.55)', 26 * U);
-  const ih = h - 2 * bezel, iw = w - 2 * bezel, sh = iw / img.width * ih / iw * img.width; // source height for the visible rect
-  const srcH = img.width * (ih / iw);
-  imgCrop(img, 0, srcY, img.width, Math.min(srcH, img.height - srcY), x + bezel, y + bezel, iw, ih, (r - bezel) * 0.8);
+  const iw = w - 2 * bezel, ih = h - 2 * bezel, srcH = Math.min(img.width * (ih / iw), img.height - srcY);
+  imgCrop(img, 0, srcY, img.width, srcH, x + bezel, y + bezel, iw, ih, (r - bezel) * 0.8);
   ctx.strokeStyle = 'rgba(255,255,255,.16)'; ctx.lineWidth = 2 * U; rr(x, y, w, h, r); ctx.stroke();
 }
 // stage background: near-black + violet glow + faint horizon grid
@@ -66,41 +57,35 @@ function stage(gx = W * .5, gy = H * .42, glow = .3) {
   ctx.strokeStyle = 'rgba(255,255,255,.045)'; ctx.lineWidth = 1;
   for (let i = 0; i < 10; i++) { const y = H * .64 + i * 95 * U; ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(W, y); ctx.stroke(); }
 }
-// wipe: incoming scene slides up over the previous (used between journey shots)
-function slideIn(t, t0, dur = 0.55) { return spring(t - t0, { freq: 2.6, damp: 0.9 }); }
+function slideIn(t, t0) { return spring(t - t0, { freq: 2.6, damp: 0.9 }); }
+function stepLabel(text, y = H * .15) {
+  label(text, W * .5, y, 34 * U, 'rgba(255,255,255,.55)');
+  ctx.fillStyle = VIOLET; ctx.fillRect(W * .5 - 40 * U, y + 26 * U, 80 * U, 4 * U);
+}
 
 // ── SCENE 1 · hook — client questions piling up in a chat ──
 function sceneHook(t) {
   stage(W * .5, H * .34, .26);
-  const msgs = [
-    { txt: '¿Cuánto sale el plan?', r: false },
-    { txt: '¿Tenés turnos para mañana?', r: false },
-    { txt: '¿Hacés envíos?', r: false },
-    { txt: '¿Me pasás precios? 😅', r: false },
-  ];
-  // chat panel
+  const msgs = ['¿Cuánto sale el plan?', '¿Tenés turnos para mañana?', '¿Hacés envíos?', '¿Me pasás precios? 😅'];
   const px = W * .09, pw = W * .82, py = H * .2, ph = H * .56;
   shadow(() => { rr(px, py, pw, ph, 34 * U); ctx.fillStyle = '#12121a'; ctx.fill(); }, 60 * U, 'rgba(0,0,0,.5)', 20 * U);
   ctx.save(); rr(px, py, pw, ph, 34 * U); ctx.clip();
-  // header
   ctx.fillStyle = '#171722'; ctx.fillRect(px, py, pw, 88 * U);
   ctx.fillStyle = VIOLET; ctx.beginPath(); ctx.arc(px + 52 * U, py + 44 * U, 22 * U, 0, 7); ctx.fill();
   cap('Clientes', px + 92 * U, py + 32 * U, 36 * U, BONE, SANS, 'left');
-  label('HOY · SIN WEB', px + 92 * U, py + 66 * U, 17 * U, 'rgba(255,255,255,.4)');
-  // bubbles stack upward from the panel bottom as they arrive
+  label('HOY · SIN WEB', px + 92 * U, py + 66 * U, 21 * U, 'rgba(255,255,255,.45)');
   msgs.forEach((m, i) => {
-    const bt = BUBBLES[i], k = spring(t - bt, { freq: 3.2, damp: 0.55 });
+    const k = spring(t - BUBBLES[i], { freq: 3.2, damp: 0.55 });
     if (k <= 0) return;
     ctx.font = SANS(34 * U);
-    const tw = ctx.measureText(m.txt).width + 56 * U;
+    const tw = ctx.measureText(m).width + 56 * U;
     const bx = px + 34 * U, by = py + ph - (i + 1) * 112 * U - 26 * U + (1 - k) * 90 * U;
     ctx.globalAlpha = Math.min(1, k * 1.4);
     rr(bx, by, tw, 76 * U, 26 * U); ctx.fillStyle = '#232336'; ctx.fill();
-    cap(m.txt, bx + 28 * U, by + 39 * U, 34 * U, BONE, SANS, 'left');
+    cap(m, bx + 28 * U, by + 39 * U, 34 * U, BONE, SANS, 'left');
     ctx.globalAlpha = 1;
   });
   ctx.restore();
-  // caption under the panel
   const cK = spring(t - 0.3, { freq: 2.2, damp: 0.8 });
   ctx.globalAlpha = cK;
   cap('¿Todavía mostrás tu negocio', W * .5, H * .8, 58 * U, BONE);
@@ -108,29 +93,26 @@ function sceneHook(t) {
   ctx.globalAlpha = 1;
 }
 
-// ── SCENE 2 · journey — real screens: registro → panel → web publicada ──
+// ── SCENE 2 · journey — registro → panel → plantillas → web publicada ──
 function sceneRegister(t) {
   const k = slideIn(t, 3.77);
   stage(W * .5 + Math.sin(t * 0.5) * 70 * U, H * .4 + Math.cos(t * 0.4) * 40 * U, .3);
   ctx.save(); ctx.translate(0, (1 - k) * H * .55); ctx.globalAlpha = Math.min(1, k * 1.6);
-  label('PASO 01 · CREÁ TU CUENTA', W * .5, H * .15, 34 * U, 'rgba(255,255,255,.55)');
-  ctx.fillStyle = VIOLET; ctx.fillRect(W * .5 - 40 * U, H * .168, 80 * U, 4 * U);
-  const scr = lerp(60, 240, ease.inOutCubic(seg(t, 4.6, 8.0)));       // slow scroll inside the phone
-  phone(IMG.register, W * .5 - 300 * U, H * .18, 600 * U, 1060 * U, scr);
-  cap('en minutos,', W * .5, H * .78, 88 * U, BONE, COND);
-  cap('SIN PROGRAMAR', W * .5, H * .78 + 105 * U, 88 * U, VIOLET_L, COND);
+  stepLabel('PASO 01 · CREÁ TU CUENTA');
+  const scr = lerp(60, 240, ease.inOutCubic(seg(t, 4.5, 7.8)));
+  phone(IMG.register, W * .5 - 300 * U, H * .2, 600 * U, 1060 * U, scr);
+  cap('en minutos,', W * .5, H * .79, 88 * U, BONE, COND);
+  cap('SIN PROGRAMAR', W * .5, H * .79 + 105 * U, 88 * U, VIOLET_L, COND);
   ctx.restore(); ctx.globalAlpha = 1;
 }
 
 function sceneDashboard(t) {
-  const k = slideIn(t, 8.4);
+  const k = slideIn(t, 8.0);
   stage(W * .5 + Math.sin(t * 0.45 + 2) * 80 * U, H * .42, .3);
   ctx.save(); ctx.translate(0, (1 - k) * H * .55); ctx.globalAlpha = Math.min(1, k * 1.6);
-  label('PASO 02 · TU PANEL', W * .5, H * .15, 34 * U, 'rgba(255,255,255,.55)');
-  ctx.fillStyle = VIOLET; ctx.fillRect(W * .5 - 40 * U, H * .168, 80 * U, 4 * U);
-  const scr = lerp(0, 130, ease.inOutCubic(seg(t, 9, 13.6)));
-  phone(IMG.dashboard, W * .5 - 310 * U, H * .185, 620 * U, 1150 * U, scr);
-  // feature chips pop with the voice list
+  stepLabel('PASO 02 · TU PANEL');
+  const scr = lerp(0, 110, ease.inOutCubic(seg(t, 8.6, 11.3)));
+  phone(IMG.dashboard, W * .5 - 310 * U, H * .19, 620 * U, 1100 * U, scr);
   const chips = ['Catálogo', 'Servicios', 'Suscripciones', 'Marketing'];
   chips.forEach((c, i) => {
     const ck = spring(t - CHIPS[i], { freq: 3.4, damp: 0.5 });
@@ -142,49 +124,76 @@ function sceneDashboard(t) {
     cap(c, cx, cy + 2 * U, 34 * U, BONE);
     ctx.restore();
   });
-  cap('todo en un solo lugar', W * .5, H * .855, 52 * U, 'rgba(255,255,255,.85)');
+  cap('todo en un solo lugar', W * .5, H * .845, 52 * U, 'rgba(255,255,255,.85)');
   ctx.restore(); ctx.globalAlpha = 1;
 }
 
-function sceneGym(t) {
-  const k = slideIn(t, 14.2, 0.7);
-  // full-bleed published store — dark hero of the gimnasio design
-  ctx.fillStyle = INK; ctx.fillRect(0, 0, W, H);
-  ctx.globalAlpha = Math.min(1, k * 1.6);
-  const pan = ease.inOutCubic(seg(t, 14.6, 20.2));
-  const zoom = lerp(1.06, 1.0, k);
-  ctx.save(); ctx.translate(W / 2, H / 2); ctx.scale(zoom, zoom); ctx.translate(-W / 2, -H / 2);
-  cover(IMG.gym, 0, lerp(0, 620, pan), IMG.gym.width, 1560, 0, 0, W, H);
+// Montaje de plantillas: el teléfono recorre diseños y se queda en GIMNASIO publicado
+function sceneDesigns(t) {
+  const k = slideIn(t, 11.5);
+  stage(W * .5 + Math.sin(t * 0.4 + 4) * 80 * U, H * .42, .3);
+  ctx.save(); ctx.translate(0, (1 - k) * H * .55); ctx.globalAlpha = Math.min(1, k * 1.6);
+  stepLabel('PASO 03 · ELEGÍ TU DISEÑO');
+  const px = W * .5 - 310 * U, py = H * .19, pw = 620 * U, ph = 1120 * U;
+  const bezel = 10 * U, iw = pw - 2 * bezel, ih = ph - 2 * bezel;
+  // current design index
+  let idx = 0;
+  DESIGNS.forEach((d, i) => { if (t >= d.t0) idx = i; });
+  const prev = idx > 0 ? DESIGNS[idx - 1] : null;
+  const cur = DESIGNS[idx];
+  const fk = spring(t - cur.t0, { freq: 3, damp: 0.85 });          // swap spring
+  const scr = (img) => lerp(0, Math.min(700, img.height - ih * (img.width / iw)), ease.inOutCubic(seg(t, cur.t0 + 0.3, (idx === DESIGNS.length - 1 ? 20.2 : cur.t0 + 1.7))));
+  shadow(() => { rr(px, py, pw, ph, 54 * U); ctx.fillStyle = '#0c0c10'; ctx.fill(); }, 70 * U, 'rgba(0,0,0,.55)', 26 * U);
+  ctx.save(); rr(px + bezel, py + bezel, iw, ih, 44 * U); ctx.clip();
+  if (prev && fk < 1) {
+    const img = IMG[prev.id], srcH = Math.min(img.width * (ih / iw), img.height);
+    ctx.globalAlpha = 1 - fk;
+    ctx.drawImage(img, 0, 0, img.width, srcH, px + bezel - (1 - fk) * 80 * U, py + bezel, iw, ih);
+    ctx.globalAlpha = 1;
+  }
+  {
+    const img = IMG[cur.id], srcH = Math.min(img.width * (ih / iw), img.height - scr(img));
+    ctx.globalAlpha = fk;
+    ctx.drawImage(img, 0, scr(img), img.width, srcH, px + bezel + (1 - fk) * 80 * U, py + bezel, iw, ih);
+    ctx.globalAlpha = 1;
+  }
   ctx.restore();
-  // vignette + published badge
-  const vg = ctx.createLinearGradient(0, 0, 0, H * .3);
-  vg.addColorStop(0, 'rgba(6,6,10,.75)'); vg.addColorStop(1, 'rgba(6,6,10,0)');
-  ctx.fillStyle = vg; ctx.fillRect(0, 0, W, H * .3);
-  const vg2 = ctx.createLinearGradient(0, H, 0, H * .6);
-  vg2.addColorStop(0, 'rgba(6,6,10,.96)'); vg2.addColorStop(.6, 'rgba(6,6,10,.6)'); vg2.addColorStop(1, 'rgba(6,6,10,0)');
-  ctx.fillStyle = vg2; ctx.fillRect(0, H * .6, W, H * .4);
-  const bK = spring(t - 15.2, { freq: 3, damp: 0.6 });
-  ctx.save(); ctx.translate(W * .5, H * .135); ctx.scale(bK, bK);
-  rr(-250 * U, -34 * U, 500 * U, 68 * U, 34 * U); ctx.fillStyle = rgba('#10121a', .85); ctx.fill();
-  ctx.strokeStyle = rgba(LIME, .8); ctx.lineWidth = 2 * U; rr(-250 * U, -34 * U, 500 * U, 68 * U, 34 * U); ctx.stroke();
-  ctx.fillStyle = LIME; ctx.beginPath(); ctx.arc(-196 * U, 0, 9 * U, 0, 7); ctx.fill();
-  label('TU WEB · PUBLICADA', -190 * U, 2 * U, 34 * U, BONE);
+  ctx.strokeStyle = 'rgba(255,255,255,.16)'; ctx.lineWidth = 2 * U; rr(px, py, pw, ph, 54 * U); ctx.stroke();
+  // design name chip
+  const nk = spring(t - cur.t0, { freq: 3.4, damp: 0.5 });
+  ctx.save(); ctx.translate(W * .5, py + ph - 40 * U); ctx.scale(nk, nk);
+  rr(-170 * U, -36 * U, 340 * U, 72 * U, 36 * U); ctx.fillStyle = rgba('#10121a', .9); ctx.fill();
+  ctx.strokeStyle = rgba(VIOLET_L, .7); ctx.lineWidth = 2 * U; rr(-170 * U, -36 * U, 340 * U, 72 * U, 36 * U); ctx.stroke();
+  label(cur.name, 0, 2 * U, 38 * U, BONE);
   ctx.restore();
-  cap('Tus clientes ven lo que ofrecés', W * .5, H * .8, 50 * U, BONE);
-  cap('y te contactan directo', W * .5, H * .8 + 66 * U, 50 * U, LIME);
-  ctx.globalAlpha = 1;
+  // dots progress
+  DESIGNS.forEach((d, i) => {
+    ctx.beginPath(); ctx.arc(W * .5 + (i - 2) * 44 * U, py + ph + 46 * U, i === idx ? 10 * U : 6 * U, 0, 7);
+    ctx.fillStyle = i === idx ? VIOLET_L : 'rgba(255,255,255,.25)'; ctx.fill();
+  });
+  // badge de publicada cuando se queda el diseño final (gimnasio)
+  const isFinal = idx === DESIGNS.length - 1;
+  const bK = spring(t - (DESIGNS[DESIGNS.length - 1].t0 + 0.4), { freq: 3, damp: 0.6 });
+  if (isFinal && bK > 0) {
+    ctx.save(); ctx.translate(W * .5, py + 60 * U); ctx.scale(bK, bK);
+    rr(-240 * U, -32 * U, 480 * U, 64 * U, 32 * U); ctx.fillStyle = rgba('#10121a', .9); ctx.fill();
+    ctx.strokeStyle = rgba(LIME, .85); ctx.lineWidth = 2 * U; rr(-240 * U, -32 * U, 480 * U, 64 * U, 32 * U); ctx.stroke();
+    ctx.fillStyle = LIME; ctx.beginPath(); ctx.arc(-188 * U, 0, 9 * U, 0, 7); ctx.fill();
+    label('TU WEB · PUBLICADA', -164 * U, 2 * U, 32 * U, BONE);
+    ctx.restore();
+  }
+  cap(isFinal ? 'Tus clientes te contactan directo' : 'un diseño para cada negocio', W * .5, H * .845, 50 * U, isFinal ? LIME : 'rgba(255,255,255,.85)');
+  ctx.restore(); ctx.globalAlpha = 1;
 }
 
-// ── SCENE 3 · promo — starburst + brand + cupón ──
+// ── SCENE 3 · promo — starburst + davent.com.ar + cupón ──
 function scenePromo(t) {
   ctx.fillStyle = INK; ctx.fillRect(0, 0, W, H);
-  // flash on impact
   const fl = pulse(t, 20.34, 0.3);
   if (fl > 0.02) { ctx.fillStyle = rgba(VIOLET, .35 * fl); ctx.fillRect(0, 0, W, H); }
   const rg = ctx.createRadialGradient(W * .5, H * .4, 0, W * .5, H * .4, W * .9);
   rg.addColorStop(0, rgba(VIOLET, .4)); rg.addColorStop(1, 'rgba(0,0,0,0)');
   ctx.fillStyle = rg; ctx.fillRect(0, 0, W, H);
-  // starburst sticker, springs in on the impact, then keeps breathing
   const k = spring(t - 20.34, { freq: 3.4, damp: 0.42 });
   const breathe = 1 + Math.sin(t * 2.2) * 0.015;
   ctx.save(); ctx.translate(W * .5, H * .4); ctx.rotate(0.12 - 0.3 * (1 - k) + Math.sin(t * 0.9) * 0.02); ctx.scale(Math.max(.01, k) * breathe, Math.max(.01, k) * breathe);
@@ -196,50 +205,38 @@ function scenePromo(t) {
   ctx.restore();
   cap('30 días', W * .5, H * .68, 120 * U, BONE, COND);
   cap('PREMIUM GRATIS', W * .5, H * .68 + 130 * U, 84 * U, LIME, COND);
-  // exit upwards for brand scene
-  const out = spring(t - 24.5, { freq: 2.4, damp: 1 });
+  const out = spring(t - 26.0, { freq: 2.4, damp: 1 });
   if (out > 0) { ctx.save(); ctx.globalCompositeOperation = 'destination-in'; ctx.fillStyle = `rgba(0,0,0,${1 - out})`; ctx.fillRect(0, 0, W, H); ctx.restore(); }
 }
 
-function sceneBrand(t) {
+function sceneSite(t) {
   stage(W * .5 + Math.sin(t * 0.35) * 90 * U, H * .4, .34);
-  const z = lerp(1.0, 1.05, ease.inOutCubic(seg(t, 24.5, 31.5)));
-  ctx.save(); ctx.translate(W / 2, H * .45); ctx.scale(z, z); ctx.translate(-W / 2, -H * .45);
-  const k = spring(t - 24.5, { freq: 2.2, damp: 0.85 });
-  ctx.globalAlpha = Math.min(1, k * 1.5);
-  // DAVENT wordmark, letters track in
-  const word = 'DAVENT';
-  ctx.font = COND(190 * U); ctx.textBaseline = 'middle';
-  const widths = [...word].map(ch => ctx.measureText(ch).width), total = widths.reduce((a, v) => a + v, 0);
-  let x = W / 2 - total / 2;
-  [...word].forEach((ch, i) => {
-    const ck = spring(t - 24.7 - i * 0.09, { freq: 2.8, damp: 0.65 });
-    ctx.save(); ctx.beginPath(); ctx.rect(x - 4 * U, H * .4 - 130 * U, widths[i] + 8 * U, 160 * U); ctx.clip();
-    ctx.fillStyle = i === 0 ? VIOLET_L : BONE; ctx.textAlign = 'left';
-    ctx.fillText(ch, x, H * .4 + (1 - ck) * 260 * U);
-    ctx.restore(); x += widths[i];
-  });
-  const tK = spring(t - 26.2, { freq: 2.4, damp: 0.8 });
-  ctx.globalAlpha = Math.min(1, tK);
-  cap('La web de tu negocio en minutos', W * .5, H * .52, 52 * U, 'rgba(255,255,255,.85)');
-  ctx.globalAlpha = 1;
-  // small promo chip reminder
-  const cK = spring(t - 27.4, { freq: 3, damp: 0.6 });
-  ctx.save(); ctx.translate(W * .5, H * .62); ctx.scale(Math.max(.01, cK), Math.max(.01, cK));
-  rr(-220 * U, -40 * U, 440 * U, 80 * U, 40 * U); ctx.fillStyle = LIME; ctx.fill();
-  cap('CUPÓN · PROMO', 0, 3 * U, 36 * U, '#101208', MONO);
+  const k = slideIn(t, 26.0);
+  ctx.save(); ctx.translate(0, (1 - k) * H * .55); ctx.globalAlpha = Math.min(1, k * 1.6);
+  stepLabel('ENTRÁ A');
+  // URL bar chip
+  const uK = spring(t - 26.4, { freq: 3, damp: 0.6 });
+  ctx.save(); ctx.translate(W * .5, H * .2); ctx.scale(uK, uK);
+  rr(-290 * U, -34 * U, 580 * U, 68 * U, 34 * U); ctx.fillStyle = '#14141f'; ctx.fill();
+  ctx.strokeStyle = rgba(VIOLET_L, .6); ctx.lineWidth = 2 * U; rr(-290 * U, -34 * U, 580 * U, 68 * U, 34 * U); ctx.stroke();
+  ctx.fillStyle = '#4CC38A'; ctx.beginPath(); ctx.arc(-246 * U, 0, 9 * U, 0, 7); ctx.fill();
+  label('davent.com.ar', -210 * U, 2 * U, 34 * U, BONE);
   ctx.restore();
-  ctx.restore();
+  const scr = lerp(0, 1500, ease.inOutCubic(seg(t, 27, 35.6)));
+  phone(IMG['landing-prod'], W * .5 - 310 * U, H * .25, 620 * U, 1080 * U, scr);
+  cap('todo incluido, sin pagar nada', W * .5, H * .84, 52 * U, 'rgba(255,255,255,.85)');
+  ctx.restore(); ctx.globalAlpha = 1;
 }
 
 function sceneEndcard(t) {
   ctx.fillStyle = '#07070c'; ctx.fillRect(0, 0, W, H);
-  const rg = ctx.createRadialGradient(W * .5, H * .5, 0, W * .5, H * .5, W);
+  const rg = ctx.createRadialGradient(W * .5, H * .5 + Math.sin(t * 0.5) * 60 * U, 0, W * .5, H * .5, W);
   rg.addColorStop(0, rgba(VIOLET, .3)); rg.addColorStop(1, 'rgba(0,0,0,0)');
   ctx.fillStyle = rg; ctx.fillRect(0, 0, W, H);
-  const k = spring(t - 31.5, { freq: 2.6, damp: 0.8 });
+  const k = spring(t - 36.0, { freq: 2.6, damp: 0.8 });
   ctx.globalAlpha = Math.min(1, k * 1.5);
-  // card
+  const breathe = 1 + Math.sin(t * 1.6) * 0.008;
+  ctx.save(); ctx.translate(W * .5, H * .51); ctx.scale(breathe, breathe); ctx.translate(-W * .5, -H * .51);
   const cw = W * .8, cx = W * .5 - cw / 2, cy = H * .3, chh = H * .42;
   shadow(() => { rr(cx, cy, cw, chh, 40 * U); ctx.fillStyle = '#14141f'; ctx.fill(); }, 80 * U, 'rgba(0,0,0,.6)', 30 * U);
   ctx.strokeStyle = rgba(VIOLET_L, .5); ctx.lineWidth = 2 * U; rr(cx, cy, cw, chh, 40 * U); ctx.stroke();
@@ -248,8 +245,12 @@ function sceneEndcard(t) {
   ctx.strokeStyle = 'rgba(255,255,255,.12)'; ctx.lineWidth = 1;
   ctx.beginPath(); ctx.moveTo(cx + 60 * U, cy + 250 * U); ctx.lineTo(cx + cw - 60 * U, cy + 250 * U); ctx.stroke();
   label('CUPÓN', W * .5, cy + 300 * U, 34 * U, 'rgba(255,255,255,.5)');
-  cap('PROMO', W * .5, cy + 380 * U, 96 * U, LIME, COND);
+  const pk = 1 + pulse(t, 36.6, 0.4) * 0.06 + Math.sin(t * 1.8) * 0.012;
+  ctx.save(); ctx.translate(W * .5, cy + 380 * U); ctx.scale(pk, pk);
+  cap('PROMO', 0, 0, 96 * U, LIME, COND);
+  ctx.restore();
   cap('30 días Premium gratis', W * .5, cy + 470 * U, 40 * U, BONE);
+  ctx.restore();
   ctx.globalAlpha = 1;
 }
 
@@ -259,11 +260,11 @@ window.render = t => {
   const [sx, sy] = shake(t, [20.34], 14 * U, 0.25);
   ctx.save(); ctx.translate(sx, sy);
   if (t < 3.77) sceneHook(t);
-  else if (t < 8.4) sceneRegister(t);
-  else if (t < 14.2) sceneDashboard(t);
-  else if (t < 20.34) sceneGym(t);
-  else if (t < 24.5) scenePromo(t);
-  else if (t < 31.5) sceneBrand(t);
+  else if (t < 8.0) sceneRegister(t);
+  else if (t < 11.5) sceneDashboard(t);
+  else if (t < 20.34) sceneDesigns(t);
+  else if (t < 26.0) scenePromo(t);
+  else if (t < 36.0) sceneSite(t);
   else sceneEndcard(t);
   ctx.restore();
 };
