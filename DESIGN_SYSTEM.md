@@ -633,3 +633,61 @@ landing, catálogo, ficha y servicios salen del mismo HTML/CSS/JS.
   390/1440). Tras editar la fuente: `manage.py seed_design_catalog` y
   `manage.py sync_design_neon --slug atelier-noir` (arrastra los cuatro
   estilos por la FK `DesignStyle.pattern`).
+
+## 17. Guardia — "consola de seguridad" (`guardia`, plus)
+
+Vive en `StoreApp/domains/design/sources/guardia.html` (patrón `guardia` con
+los estilos `guardia` y `guardia-claro`). Grafito `#0C1016`, panel `#151D28`,
+tinta `#E8EDF4` y rojo fuego (`--ds-accent`, fallback `#E8481F`); el claro es
+la misma consola en concreto (`#E9E7E0` / `#F5F3EC`). Archivo 900 estirada al
+112 % en titulares y JetBrains Mono en todos los datos.
+
+- **Firmas**: franjas de riesgo (`repeating-linear-gradient -45°`) bajo el
+  hero, en la banda de números y sobre el pie; esquinas marcadas
+  (`.framed::before/::after`) en la ficha de portada, la media de la ficha y
+  el formulario; registro numerado con contadores CSS (categorías, servicios,
+  garantías, FAQ); línea de escaneo que barre el hero; sello con anillo
+  punteado girando (el monograma queda quieto); cinta de anuncios y ribbon
+  del nombre al pie, ambas con pista duplicada al 50 % y pausa al hover.
+- **Navegación**: `header.top` transparente sobre el hero usa tokens propios
+  (`--hdr-ink/--hdr-mut` claros) y pasa a `--bg` sólido al scrollear **o** en
+  cuanto la superficie no es `landing` (`html:not([data-ds-surface="landing"])`).
+  Sin eso, en tema claro la nav quedaba tinta sobre tinta y desaparecía.
+  El toggle de tema se monta en `.top-inner` (si no existe, el puente lo
+  cuelga del header y flota fuera de la fila); en móvil va antes del burger
+  con `order`.
+- **Portada**: kicker con punto vivo + Nº de año, titular con el nombre en
+  contorno y la tagline en acento (line-clamp 3: la tagline puede caer en la
+  descripción completa), y ficha de guardia con filas reales (base, horario,
+  canal, catálogo) que se apagan solas cuando el dato falta.
+- **Tarjetas**: la imagen **es** `.ds-product-img` (no un contenedor): lleva
+  `width:100%`, `aspect-ratio:4/5` y `object-fit:cover` directo. El enlace es
+  un grid con áreas `img / cat / copy / stock+price`, así el precio nunca
+  pisa el nombre. Etiquetas: sticker de campaña arriba a la izquierda,
+  bandera `OFERTA` arriba a la derecha (solo con `:has([data-off])`) y chip
+  `−N %` inline con el precio viejo en el pie de la tarjeta.
+- **Estados vacíos**: las secciones de la landing se apagan con
+  `[data-surface="landing"] section:has(.grid|.clients|.extra-grid|.quotes|
+  .faqs|.shots|.service-list|.cats:empty)`; **nunca** aplicar esa regla a la
+  página de servicios (se comía el estado vacío y el CTA). En la ficha, el
+  bloque de opiniones se apaga sin `.ds-reviews` y los relacionados con
+  `.grid:empty`.
+- **Formularios del puente**: `.ds-contact-fields` y `.ds-rev-fields` son
+  grids; el captcha usa `grid-template-columns:1fr 44px` con la pregunta en
+  su propia fila (`grid-column:1/-1`) — con flex la pregunta se aplastaba
+  contra el input. Las opiniones usan `.ds-rev-item/.ds-rev-list` (no
+  `.ds-rev`), y la lista vacía escribe su estado con `:empty::before`.
+- **Trampas resueltas**: (1) `padding` shorthand en `.hero-inner` pisaba el
+  `padding-inline` de `.wrap` (usar `padding-block`); (2) el bloque
+  responsive apuntaba a `.cat`/`.prod`, clases que no existen — son
+  `.ds-cat`/`.ds-product`; (3) `form{display:flex;flex-direction:column}` en
+  la hoja rompía el buscador del catálogo (`.cat-search` necesita `row`);
+  (4) `.rv` se revela con `davent:ds-frame` comparando contra `-frame.top`
+  (el rect del iframe es negativo al scrollear); (5) `public_cache_stamp`
+  cachea el documento 120 s en locmem: tras `seed_design_catalog` hay que
+  esperar el TTL o reiniciar el server antes de mirar el render.
+- **QA**: `http://localhost:5173/qa-tpl-seguridad` (tienda local de seguridad
+  con `customization.template='guardia'`; landing, catálogo con
+  buscador/filtros, ficha y servicios; claro/oscuro; 390/768/1360).
+  Migración: `manage.py seed_design_catalog --patterns-only` y
+  `manage.py sync_design_neon --slug guardia` (arrastra `guardia-claro`).
