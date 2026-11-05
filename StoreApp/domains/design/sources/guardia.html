@@ -3,870 +3,845 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>{{store_name}} — Security Design</title>
+<title>{{store_name}} · Security Design</title>
 <style>
-  /* Tipografías inline (origen opaco + CSP font-src https:). */
-  @font-face{font-family:"Montserrat";font-style:normal;font-weight:400;font-display:swap;
-    src:url(https://fonts.gstatic.com/s/montserrat/v31/JTUHjIg1_i6t8kCHKm4532VJOt5-QNFgpCvr6Ew-.ttf) format("truetype")}
-  @font-face{font-family:"Montserrat";font-style:normal;font-weight:500;font-display:swap;
-    src:url(https://fonts.gstatic.com/s/montserrat/v31/JTUHjIg1_i6t8kCHKm4532VJOt5-QNFgpCs16Ew-.ttf) format("truetype")}
-  @font-face{font-family:"Montserrat";font-style:normal;font-weight:700;font-display:swap;
-    src:url(https://fonts.gstatic.com/s/montserrat/v31/JTUHjIg1_i6t8kCHKm4532VJOt5-QNFgpCtr6Ew-.ttf) format("truetype")}
-  @font-face{font-family:"Montserrat";font-style:normal;font-weight:800;font-display:swap;
-    src:url(https://fonts.gstatic.com/s/montserrat/v31/JTUHjIg1_i6t8kCHKm4532VJOt5-QNFgpCu170w-.ttf) format("truetype")}
-  @font-face{font-family:"Montserrat";font-style:normal;font-weight:900;font-display:swap;
-    src:url(https://fonts.gstatic.com/s/montserrat/v31/JTUHjIg1_i6t8kCHKm4532VJOt5-QNFgpCuM70w-.ttf) format("truetype")}
-  @font-face{font-family:"JetBrains Mono";font-style:normal;font-weight:400 700;font-display:swap;
-    src:url(https://fonts.gstatic.com/s/jetbrainsmono/v24/tDbv2o-flEEny0FZhsfKu5WU4zr3E_BX0PnT8RD8yKwBNntkaToggR7BYRbKPxDcwg.woff2) format("woff2");
-    unicode-range:U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+0304,U+0308,U+0329,U+2000-206F,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD}
-  @font-face{font-family:"JetBrains Mono";font-style:normal;font-weight:400 700;font-display:swap;
-    src:url(https://fonts.gstatic.com/s/jetbrainsmono/v24/tDbv2o-flEEny0FZhsfKu5WU4zr3E_BX0PnT8RD8yKwBNntkaToggR7BYRbKPxDcwg.woff2) format("woff2");
-    unicode-range:U+0100-02BA,U+02BD-02C5,U+02C7-02CC,U+02CE-02D7,U+02DD-02FF,U+0304,U+0308,U+0329,U+1D00-1DBF,U+1E00-1E9F,U+1EF2-1EFF,U+2020,U+20A0-20AB,U+20AD-20C4,U+2113,U+2C60-2C7F,U+A720-A7FF}
+/* ==========================================================================
+   GUARDIA — port 1:1 del boceto JML (indumentaria bomberil / seguridad)
+   Grafito + señal rojo fuego, Archivo estirada al 125%, JetBrains Mono en
+   datos. Tema oscuro = el boceto tal cual; el claro es la misma consola en
+   "concreto". Roles desde el tema del panel (--ds-*); sin tema, piel propia.
+   ========================================================================== */
 
-  :root{
-    /* Piel "concreto" (claro) por defecto; la noche la pisa el tema. */
-    --bg:var(--ds-bg,#E8E6DF);
-    --card:var(--ds-surface,#F3F1EA);
-    --ink:var(--ds-text,#16181D);
-    --ink-2:color-mix(in srgb,var(--ink) 80%,var(--bg));
-    --muted:var(--ds-muted,#666C75);
-    --line:var(--ds-border,#C9C5B9);
-    --line-strong:color-mix(in srgb,var(--line) 60%,var(--ink));
-    --acc:var(--ds-accent,#D9361B);
-    --on-acc:var(--ds-accent-ink,#FFF7F2);
-    --ok:var(--ds-success,#2F7D4F);
-    --danger:var(--ds-danger,#C02A1E);
-    /* La banda hero es siempre "de guardia": noche fija en ambos temas. */
-    --night:#0B0E13;
-    --night-2:#141A23;
-    --night-line:rgba(233,237,243,.14);
-    --night-ink:#E8ECF2;
-    --night-mut:#8A94A3;
-    --night-acc:#FF5A26;
-    --disp:'Montserrat','Helvetica Neue',Arial,sans-serif;
-    --body:'Montserrat','Helvetica Neue',Arial,sans-serif;
-    --mono:'JetBrains Mono',ui-monospace,SFMono-Regular,monospace;
-    --radius:var(--ds-radius,2px);
-    --dur:520ms;
-    --ease:cubic-bezier(.2,.7,.2,1);
-    color-scheme:light;
-  }
-  *{box-sizing:border-box}
-  html,body{margin:0}
-  body{background:var(--bg);color:var(--ink);font:15px/1.6 var(--body);-webkit-font-smoothing:antialiased;overflow-x:hidden}
-  img{max-width:100%}
-  img[src=""]{display:none}
-  a{color:inherit;text-decoration:none}
-  .shell{max-width:1220px;margin:0 auto;padding:0 32px}
+/* Tipografías del diseño (CSP font-src https:): sin <link> externo. */
+@font-face{font-family:"Archivo";font-style:normal;font-weight:100 900;font-stretch:62% 125%;font-display:swap;
+  src:url(https://fonts.gstatic.com/s/archivo/v25/k3kQo8UDI-1M0wlSfdnoLg.woff2) format("woff2");
+  unicode-range:U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+0304,U+0308,U+0329,U+2000-206F,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD}
+@font-face{font-family:"Archivo";font-style:normal;font-weight:100 900;font-stretch:62% 125%;font-display:swap;
+  src:url(https://fonts.gstatic.com/s/archivo/v25/k3kQo8UDI-1M0wlSfdfoLnnA.woff2) format("woff2");
+  unicode-range:U+0100-02BA,U+02BD-02C5,U+02C7-02CC,U+02CE-02D7,U+02DD-02FF,U+0304,U+0308,U+0329,U+1D00-1DBF,U+1E00-1E9F,U+1EF2-1EFF,U+2020,U+20A0-20AB,U+20AD-20C4,U+2113,U+2C60-2C7F,U+A720-A7FF}
+@font-face{font-family:"Archivo";font-style:normal;font-weight:100 900;font-stretch:62% 125%;font-display:swap;
+  src:url(https://fonts.gstatic.com/s/archivo/v25/k3kQo8UDI-1M0wlSfdboLnnA.woff2) format("woff2");
+  unicode-range:U+0102-0103,U+0110-0111,U+0128-0129,U+0168-0169,U+01A0-01A1,U+01AF-01B0,U+0300-0301,U+0303-0304,U+0308-0309,U+0323,U+0329,U+1EA0-1EF9,U+20AB}
+@font-face{font-family:"JetBrains Mono";font-style:normal;font-weight:400 700;font-display:swap;
+  src:url(https://fonts.gstatic.com/s/jetbrainsmono/v24/tDbv2o-flEEny0FZhsfKu5WU4zr3E_BX0PnT8RD8yKwBNntkaToggR7BYRbKPxDcwg.woff2) format("woff2");
+  unicode-range:U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+0304,U+0308,U+0329,U+2000-206F,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD}
 
-  /* Retícula técnica de fondo: cuadrícula fina + viñeta de acento. */
-  .backdrop{position:fixed;inset:0;z-index:0;pointer-events:none;
-    background:
-      radial-gradient(55% 42% at 88% -6%,color-mix(in srgb,var(--acc) 8%,transparent),transparent 70%),
-      repeating-linear-gradient(0deg,transparent 0 79px,color-mix(in srgb,var(--line) 55%,transparent) 79px 80px),
-      repeating-linear-gradient(90deg,transparent 0 79px,color-mix(in srgb,var(--line) 55%,transparent) 79px 80px);}
-  header,main,[data-surface],footer{position:relative;z-index:1}
+:root{
+  /* Tema oscuro = el boceto JML tal cual. */
+  --bg:#0D1117;
+  --bg-2:#141A22;
+  --panel:#1A2230;
+  --line:rgba(226,232,240,.1);
+  --ink:#E8EDF4;
+  --mut:#8B96A8;
+  --steel:#9FB3C8;
+  --accent:var(--ds-accent,#E8481F);
+  --accent-2:#FF7A3C;
+  --on-accent:#FFF7F2;
+  --disp:"Archivo","Arial Narrow",sans-serif;
+  --mono:"JetBrains Mono",ui-monospace,SFMono-Regular,monospace;
+  color-scheme:dark;
+}
+html[data-ds-theme="light"]{
+  /* Misma consola en "concreto": el hero sigue siendo de guardia (noche). */
+  --bg:#E9E7E0;
+  --bg-2:#DFDCD1;
+  --panel:#F4F2EA;
+  --line:rgba(20,25,33,.13);
+  --ink:#151A22;
+  --mut:#5C6470;
+  --steel:#3E4756;
+  --accent:var(--ds-accent,#D63A17);
+  --accent-2:#A82E10;
+  --on-accent:#FFF6F0;
+  color-scheme:light;
+}
+*{margin:0;padding:0;box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{
+  background:var(--bg);color:var(--ink);
+  font-family:var(--disp);font-weight:400;line-height:1.55;
+  -webkit-font-smoothing:antialiased;text-rendering:optimizeLegibility;
+  overflow-x:hidden;
+}
+::selection{background:var(--accent);color:#fff}
+a{color:inherit;text-decoration:none}
+img{display:block;max-width:100%}
+img[src=""]{display:none}
+[hidden]{display:none!important}
+.wrap{max-width:1360px;margin:0 auto;padding:0 clamp(20px,4vw,56px)}
+.mono{font-family:var(--mono);font-size:11px;letter-spacing:.18em;text-transform:uppercase}
 
-  .mono{font-family:var(--mono)}
-  .kicker{display:flex;align-items:center;gap:12px;margin:0 0 20px;font:500 10px var(--mono);letter-spacing:.24em;text-transform:uppercase;color:var(--acc)}
-  .kicker::after{content:"";flex:1 1 auto;height:1px;background:var(--line-strong);max-width:120px}
-  .sec-label{font:500 10px var(--mono);letter-spacing:.24em;text-transform:uppercase;color:var(--acc);margin-bottom:12px}
-  .sec-title{margin:0;font:800 clamp(30px,4.4vw,54px)/1 var(--disp);letter-spacing:-.025em;text-transform:uppercase}
-  .sec-title em{font-style:normal;color:var(--acc)}
+/* ---------- header ---------- */
+header.top{
+  position:fixed;inset:0 0 auto;z-index:50;
+  border-bottom:1px solid transparent;transition:all .4s;
+}
+header.top.solid{background:color-mix(in srgb,var(--bg) 88%,transparent);backdrop-filter:blur(14px);border-color:var(--line)}
+.nav{display:flex;align-items:center;justify-content:space-between;height:72px;gap:16px}
+.brand{display:flex;align-items:center;gap:12px;font-weight:900;font-size:22px;letter-spacing:.04em;text-transform:uppercase;min-width:0}
+.brand .badge{
+  flex:none;width:34px;height:34px;background:var(--accent);display:grid;place-items:center;
+  color:#fff;font-size:14px;font-weight:900;
+}
+.brand .brand-txt{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:34vw}
+.nav-links{display:flex;gap:32px;align-items:center}
+.nav-links a{font-family:var(--mono);font-size:11px;letter-spacing:.2em;text-transform:uppercase;color:var(--mut);transition:color .3s}
+.nav-links a:hover{color:var(--accent-2)}
+.nav-links a.is-on{color:var(--accent-2)}
+.nav-cta{border:1px solid var(--accent);color:var(--accent-2)!important;padding:10px 18px;transition:all .3s}
+.nav-cta:hover{background:var(--accent);color:#fff!important}
+.burger{display:none;background:none;border:0;color:var(--ink);cursor:pointer;font-size:22px;padding:6px}
+.m-menu{display:none}
+@media(max-width:960px){
+  .nav-links{display:none}
+  .burger{display:block}
+  .m-menu.open{display:block;position:fixed;top:72px;left:0;right:0;z-index:49;
+    background:color-mix(in srgb,var(--bg) 96%,transparent);backdrop-filter:blur(14px);
+    border-bottom:1px solid var(--line);padding:10px clamp(20px,4vw,56px) 22px}
+  .m-menu a{display:block;padding:14px 0;font-family:var(--mono);font-size:12px;letter-spacing:.2em;text-transform:uppercase;color:var(--steel);border-bottom:1px solid var(--line)}
+  .m-menu a:last-child{border-bottom:0}
+}
 
-  /* Franja de riesgo (cinta diagonal de señalización). */
-  .hazard{height:8px;background:repeating-linear-gradient(-45deg,var(--acc) 0 12px,var(--night) 12px 24px)}
-  .hazard.thin{height:4px}
+/* ---------- hero (siempre de guardia: noche fija) ---------- */
+.hero{position:relative;min-height:100svh;display:flex;flex-direction:column;justify-content:flex-end;overflow:hidden;background:#141A22;color:#E8EDF4}
+.hero-bg{position:absolute;inset:0}
+.hero-bg img{width:100%;height:100%;object-fit:cover;filter:grayscale(60%) contrast(1.1) brightness(.5)}
+.hero-bg::after{content:'';position:absolute;inset:0;background:linear-gradient(180deg,rgba(13,17,23,.7) 0%,rgba(13,17,23,.15) 45%,rgba(13,17,23,.95) 100%),linear-gradient(90deg,rgba(232,72,31,.12),transparent 55%)}
+.hero-bg:has(img[src=""]){background:
+  radial-gradient(60% 55% at 82% 8%,rgba(232,72,31,.2),transparent 62%),
+  repeating-linear-gradient(0deg,transparent 0 47px,rgba(226,232,240,.05) 47px 48px),
+  repeating-linear-gradient(90deg,transparent 0 47px,rgba(226,232,240,.05) 47px 48px),#141A22}
+.hero-inner{position:relative;z-index:2;padding:140px 0 56px}
+.hero-kicker{display:flex;justify-content:space-between;align-items:center;color:#9FB3C8;margin-bottom:28px;gap:16px;flex-wrap:wrap}
+.hero-kicker .dot{display:inline-block;width:8px;height:8px;background:var(--accent);margin-right:10px;vertical-align:1px;animation:blink 1.6s infinite}
+@keyframes blink{50%{opacity:.25}}
+.hero-title{font-stretch:125%;font-weight:900;font-size:clamp(56px,11vw,168px);line-height:.94;text-transform:uppercase;letter-spacing:-.01em}
+.hero-title .ln{display:block}
+.hero-title .out{color:transparent;-webkit-text-stroke:1.5px rgba(232,237,244,.8)}
+.hero-title .fire{color:var(--accent)}
+.hero-title .fire:empty,.hero-title .out:empty{display:none}
+.hero-sub{display:flex;justify-content:space-between;align-items:flex-end;gap:32px;margin-top:40px;flex-wrap:wrap}
+.hero-desc{max-width:420px;color:#9FB3C8;font-size:15px}
+.hero-cta{display:flex;gap:14px;flex-wrap:wrap}
+.btn{
+  display:inline-flex;align-items:center;gap:12px;padding:16px 28px;
+  font-family:var(--mono);font-size:11px;letter-spacing:.2em;text-transform:uppercase;
+  border:1px solid rgba(226,232,240,.18);color:#E8EDF4;transition:all .3s;
+  cursor:pointer;background:none;
+}
+.btn:hover{border-color:var(--accent-2);color:#FF7A3C}
+.btn.solid{background:var(--accent);border-color:var(--accent);color:#fff}
+.btn.solid:hover{background:#FF7A3C;border-color:#FF7A3C;color:#0D1117}
+.btn:disabled{opacity:.45;cursor:not-allowed}
 
-  /* Botones de ficha técnica: esquinas vivas, mono mayúsculas. */
-  .btn{display:inline-flex;align-items:center;justify-content:center;gap:9px;min-height:46px;padding:0 24px;border:1px solid var(--ink);border-radius:var(--radius);font:700 10.5px var(--mono);letter-spacing:.18em;text-transform:uppercase;transition:background .2s,color .2s,border-color .2s,transform .2s;cursor:pointer;background:none}
-  .btn-primary{background:var(--ink);color:var(--bg)}
-  .btn-primary:hover{background:var(--acc);border-color:var(--acc);color:var(--on-acc);transform:translateY(-1px)}
-  .btn-ghost{color:var(--ink)}
-  .btn-ghost:hover{border-color:var(--acc);color:var(--acc)}
-  .btn-signal{background:var(--acc);border-color:var(--acc);color:var(--on-acc)}
-  .btn-signal:hover{background:var(--night-acc);border-color:var(--night-acc);color:var(--night)}
+/* ---------- marquee ---------- */
+.marquee{background:var(--accent);color:#0D1117;padding:16px 0;overflow:hidden}
+.marquee-track{display:flex;gap:48px;white-space:nowrap;animation:mq 26s linear infinite;width:max-content}
+.marquee-track span{font-weight:900;font-stretch:125%;font-size:20px;text-transform:uppercase;display:flex;gap:48px;align-items:center}
+.marquee-track i{font-style:normal;font-family:var(--mono);font-size:11px}
+.marquee .ds-note{display:inline-flex;align-items:center;gap:14px;font-weight:900;font-stretch:125%;font-size:20px;text-transform:uppercase;white-space:nowrap}
+.marquee .ds-note svg{width:15px;height:15px;flex:none}
+.marquee .ds-note::after{content:"◆";margin-left:34px;font-family:var(--mono);font-size:11px;font-weight:400}
+@keyframes mq{to{transform:translateX(-50%)}}
 
-  /* ---------- Cabecera tipo consola ---------- */
-  .top{background:color-mix(in srgb,var(--bg) 90%,transparent);backdrop-filter:blur(10px);border-bottom:1px solid var(--line)}
-  .top-in{display:flex;align-items:center;gap:22px;min-height:72px}
-  .brand{display:flex;align-items:center;gap:12px;min-width:0}
-  .brand .mark{position:relative;display:grid;place-items:center;flex:none;width:40px;height:40px;background:var(--night);color:var(--night-acc);font:800 15px var(--disp);letter-spacing:.02em;overflow:hidden}
-  .brand .mark::after{content:"";position:absolute;left:0;right:0;bottom:0;height:5px;background:repeating-linear-gradient(-45deg,var(--night-acc) 0 6px,transparent 6px 12px);opacity:.85}
-  .brand .mark img{position:absolute;inset:0;width:100%;height:100%;object-fit:contain;background:var(--night);z-index:1}
-  .brand-copy{display:grid;min-width:0;line-height:1.15}
-  .brand-copy strong{font:800 17px/1.1 var(--disp);letter-spacing:.01em;text-transform:uppercase;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-  .brand-copy small{font:500 9px var(--mono);letter-spacing:.2em;text-transform:uppercase;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-  .top-nav{display:flex;align-items:stretch;gap:0;margin-left:auto;border-left:1px solid var(--line)}
-  .top-nav a{display:flex;align-items:baseline;gap:7px;padding:0 18px;min-height:72px;border-right:1px solid var(--line);font:600 11px var(--mono);letter-spacing:.14em;text-transform:uppercase;color:var(--ink-2);transition:background .2s,color .2s}
-  .top-nav a i{font-style:normal;font-size:9px;color:var(--muted)}
-  .top-nav a:hover{background:var(--card);color:var(--ink)}
-  html[data-ds-surface="landing"] .top-nav a[data-ds-route="home"],
-  html[data-ds-surface="catalog"] .top-nav a[data-ds-route="catalog"],
-  html[data-ds-surface="services"] .top-nav a[data-ds-route="services"]{background:var(--ink);color:var(--bg)}
-  html[data-ds-surface="landing"] .top-nav a[data-ds-route="home"] i,
-  html[data-ds-surface="catalog"] .top-nav a[data-ds-route="catalog"] i,
-  html[data-ds-surface="services"] .top-nav a[data-ds-route="services"] i{color:color-mix(in srgb,var(--bg) 60%,transparent)}
-  .top-meta{font:500 10px var(--mono);letter-spacing:.14em;text-transform:uppercase;color:var(--muted);white-space:nowrap}
-  .top-meta:empty{display:none}
-  .status{display:inline-flex;align-items:center;gap:8px;font:500 9.5px var(--mono);letter-spacing:.18em;text-transform:uppercase;color:var(--ok);white-space:nowrap}
-  .status i{width:7px;height:7px;border-radius:50%;background:var(--ok);animation:pulse 2.4s ease-out infinite}
-  @keyframes pulse{0%{box-shadow:0 0 0 0 color-mix(in srgb,var(--ok) 55%,transparent)}70%{box-shadow:0 0 0 9px transparent}100%{box-shadow:0 0 0 0 transparent}}
+/* ---------- sections ---------- */
+.section{padding:clamp(72px,9vw,120px) 0}
+.sec-head{display:flex;justify-content:space-between;align-items:baseline;gap:24px;margin-bottom:clamp(36px,5vw,64px);flex-wrap:wrap}
+.sec-label{font-family:var(--mono);font-size:11px;letter-spacing:.2em;text-transform:uppercase;color:var(--accent);margin-bottom:14px}
+.sec-title{font-stretch:125%;font-weight:900;font-size:clamp(38px,6.5vw,88px);line-height:1;text-transform:uppercase}
+.sec-link{font-family:var(--mono);font-size:11px;letter-spacing:.2em;text-transform:uppercase;color:var(--mut);border-bottom:1px solid var(--line);padding-bottom:4px;transition:color .3s}
+.sec-link:hover{color:var(--accent-2)}
 
-  /* ---------- Hero: panel de guardia ---------- */
-  .hero{background:var(--night);color:var(--night-ink);position:relative;overflow:hidden}
-  .hero::before{content:"";position:absolute;inset:0;
-    background:
-      radial-gradient(50% 60% at 85% 110%,color-mix(in srgb,var(--night-acc) 16%,transparent),transparent 65%),
-      repeating-linear-gradient(0deg,transparent 0 59px,rgba(233,237,243,.05) 59px 60px),
-      repeating-linear-gradient(90deg,transparent 0 59px,rgba(233,237,243,.05) 59px 60px);}
-  .hero-grid{position:relative;display:grid;grid-template-columns:minmax(0,1.05fr) minmax(0,.95fr);gap:56px;align-items:stretch;padding:88px 0 0}
-  .hero-copy{display:flex;flex-direction:column;justify-content:center;padding-bottom:64px}
-  .hero-kicker{display:flex;align-items:center;gap:12px;margin:0 0 24px;font:500 10px var(--mono);letter-spacing:.26em;text-transform:uppercase;color:var(--night-acc)}
-  .hero-kicker::after{content:"";flex:1 1 auto;height:1px;background:var(--night-line);max-width:140px}
-  .hero h1{margin:0;font:900 clamp(44px,7.2vw,104px)/.94 var(--disp);letter-spacing:-.03em;text-transform:uppercase;color:var(--night-ink)}
-  .hero h1:empty{display:none}
-  .hero h1 em{font-style:normal;color:var(--night-acc)}
-  .hero .lead{max-width:46ch;margin:22px 0 0;font-size:15.5px;color:var(--night-mut)}
-  .hero .lead:empty{display:none}
-  .actions{display:flex;flex-wrap:wrap;gap:10px;margin-top:30px}
-  .btn-hero{border-color:var(--night-ink);color:var(--night-ink)}
-  .btn-hero:hover{background:var(--night-acc);border-color:var(--night-acc);color:var(--night)}
-  .btn-hero-solid{background:var(--night-acc);border-color:var(--night-acc);color:var(--night)}
-  .btn-hero-solid:hover{background:var(--night-ink);border-color:var(--night-ink);color:var(--night)}
-  .specs{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:0;margin:38px 0 0;border-top:1px solid var(--night-line)}
-  .specs div{padding:14px 14px 0 0;min-width:0}
-  .specs div + div{padding-left:14px;border-left:1px solid var(--night-line)}
-  .specs dt{font:500 9px var(--mono);letter-spacing:.18em;text-transform:uppercase;color:var(--night-mut)}
-  .specs dd{margin:4px 0 0;font-size:13px;color:var(--night-ink);overflow-wrap:anywhere}
-  .specs dd:empty{display:none}
-  .specs a{color:var(--night-acc)}
-  .hero-media{position:relative;margin:0;min-height:460px;background:var(--night-2);border-left:1px solid var(--night-line)}
-  .hero-media img{width:100%;height:100%;min-height:460px;object-fit:cover;display:block;filter:saturate(.9) contrast(1.04)}
-  .hero-media:not(:has(img))::before{content:"{{store_initial}}";position:absolute;inset:0;display:grid;place-items:center;font:900 180px/1 var(--disp);color:rgba(233,237,243,.07);text-transform:uppercase}
-  .hero-tag{position:absolute;top:18px;left:18px;display:inline-flex;align-items:center;gap:8px;padding:8px 12px;background:var(--night-acc);color:var(--night);font:700 9.5px var(--mono);letter-spacing:.18em;text-transform:uppercase}
-  .hero-tag::before{content:"";width:7px;height:7px;background:var(--night)}
-  .hero-tag:empty{display:none}
-  .hero-index{position:absolute;right:0;bottom:0;display:grid;place-items:center;min-width:76px;height:76px;padding:0 14px;background:var(--night-acc);color:var(--night);font:800 15px var(--mono);letter-spacing:.1em}
-  .hero-note{position:absolute;left:18px;bottom:18px;right:94px;display:grid;gap:3px;padding:16px 18px;background:color-mix(in srgb,var(--night) 88%,transparent);backdrop-filter:blur(6px);border:1px solid var(--night-line)}
-  .hero-note .tag{font:500 9px var(--mono);letter-spacing:.2em;text-transform:uppercase;color:var(--night-acc)}
-  .hero-note strong{font:800 15px var(--disp);text-transform:uppercase;letter-spacing:.02em}
-  .hero-note span{font-size:12px;color:var(--night-mut)}
-  .hero-note span:empty{display:none}
-  .hero-note a{font:700 9.5px var(--mono);letter-spacing:.16em;text-transform:uppercase;color:var(--night-acc)}
-  .hero-note a:empty{display:none}
+/* ---------- categorías ---------- */
+.grid{display:grid;grid-template-columns:repeat(12,1fr);gap:clamp(12px,1.6vw,22px)}
+.grid .ds-cat{
+  grid-column:span 4;position:relative;overflow:hidden;
+  background:var(--panel);border:1px solid var(--line);
+  min-height:280px;display:flex;flex-direction:column;justify-content:flex-end;
+  padding:26px;transition:border-color .3s,transform .3s;
+}
+.grid .ds-cat:hover{border-color:color-mix(in srgb,var(--accent) 55%,var(--line));transform:translateY(-3px)}
+.grid .ds-cat::before{
+  counter-increment:cat;content:"CAT. 0" counter(cat);
+  position:absolute;top:20px;left:22px;
+  font-family:var(--mono);font-size:11px;color:var(--accent-2);letter-spacing:.2em;
+}
+.grid .ds-cat::after{
+  content:'';position:absolute;inset:0;pointer-events:none;
+  background:
+    radial-gradient(90% 60% at 100% 0%,color-mix(in srgb,var(--accent) 12%,transparent),transparent 60%),
+    repeating-linear-gradient(0deg,transparent 0 23px,color-mix(in srgb,var(--ink) 4%,transparent) 23px 24px);
+}
+.grid .ds-cat > span{
+  position:relative;z-index:1;
+  font-weight:900;font-stretch:125%;font-size:clamp(26px,3vw,38px);line-height:1;text-transform:uppercase;
+}
+.grid .ds-cat > span::after{content:" →";color:var(--accent)}
+.cats-head{counter-reset:cat}
 
-  /* ---------- Cinta de anuncios ---------- */
-  .tape{background:var(--acc);color:var(--on-acc);overflow:hidden;border-bottom:1px solid var(--line)}
-  .tape-track{display:flex;gap:0;white-space:nowrap;animation:tape 30s linear infinite;width:max-content}
-  .tape-track .ds-note{display:inline-flex;align-items:center;gap:10px;padding:11px 26px;font:700 10.5px var(--mono);letter-spacing:.16em;text-transform:uppercase}
-  .tape-track .ds-note svg{flex:none}
-  .tape-track .ds-note + .ds-note{border-left:1px solid color-mix(in srgb,var(--on-acc) 30%,transparent)}
-  @keyframes tape{to{transform:translateX(-50%)}}
-  .tape:has(.tape-track:empty){display:none}
-  .tape:has(.ds-note:empty){display:none}
+/* ---------- productos ---------- */
+.prod,.cat-grid .ds-product,.pdp-rel .ds-product{
+  grid-column:span 3;position:relative;
+  background:var(--panel);border:1px solid var(--line);
+}
+.ds-product-link{display:block;height:100%}
+.ds-product-img{
+  aspect-ratio:4/5;overflow:hidden;position:relative;background:var(--bg-2);
+}
+.ds-product-img img{
+  width:100%;height:100%;object-fit:cover;
+  filter:grayscale(30%) brightness(.8);transition:all .6s;
+}
+.ds-product:hover .ds-product-img img{filter:grayscale(0%) brightness(1);transform:scale(1.04)}
+.ds-product-img.is-empty{
+  display:grid;place-items:center;
+  background:
+    radial-gradient(120% 100% at 18% 0%,color-mix(in srgb,var(--accent) 14%,transparent),transparent 62%),
+    repeating-linear-gradient(0deg,transparent 0 23px,color-mix(in srgb,var(--ink) 5%,transparent) 23px 24px),
+    var(--bg-2);
+}
+.ds-product-img.is-empty::after{
+  content:attr(data-initial);font:900 64px/1 var(--disp);font-stretch:125%;
+  color:color-mix(in srgb,var(--ink) 10%,transparent);text-transform:uppercase;
+}
+.ds-campaign-label{
+  position:absolute;top:14px;left:14px;height:auto;width:auto;max-width:62%;
+  border-radius:0;box-shadow:none;
+}
+.ds-product-price{
+  position:absolute;top:14px;right:14px;z-index:2;
+  font-family:var(--mono);font-size:14px;color:var(--accent-2);white-space:nowrap;
+}
+.ds-product-old{display:block;font-size:11px;color:var(--mut);text-decoration:line-through;margin-top:2px}
+.ds-product-copy{padding:18px 18px 20px;display:flex;justify-content:space-between;align-items:flex-start;gap:12px}
+.ds-product-name{font-weight:700;font-size:16px;line-height:1.3;text-transform:uppercase}
+.ds-product-desc{display:none}
+.ds-product-cat{font-family:var(--mono);font-size:10px;color:var(--mut);letter-spacing:.16em;text-transform:uppercase;margin-top:4px}
+.ds-stock{position:absolute;top:14px;left:14px;z-index:2;background:rgba(20,26,34,.85);border:1px solid var(--line);color:var(--steel);font-family:var(--mono);font-size:10px;letter-spacing:.14em;padding:6px 10px;text-transform:uppercase;display:inline-flex;align-items:center;gap:6px}
+.ds-stock i{width:6px;height:6px;border-radius:50%;background:var(--accent-2);flex:none}
 
-  /* ---------- Bandas ---------- */
-  .band{padding:64px 0}
-  .band + .band{padding-top:0}
-  .band-head{display:flex;align-items:flex-end;justify-content:space-between;gap:16px;padding-bottom:16px;border-bottom:1px solid var(--line-strong)}
-  .band-head h2{margin:0;font:800 clamp(26px,3.4vw,42px)/1 var(--disp);letter-spacing:-.02em;text-transform:uppercase}
-  .band-head .meta{font:500 10px var(--mono);letter-spacing:.16em;text-transform:uppercase;color:var(--muted)}
-  .band-head a{font:700 10px var(--mono);letter-spacing:.16em;text-transform:uppercase;color:var(--acc)}
-  .band-head a:hover{text-decoration:underline;text-underline-offset:4px}
+/* ---------- servicios (split) ---------- */
+.split{display:grid;grid-template-columns:1fr 1fr;gap:clamp(24px,4vw,64px);align-items:center}
+.split-img{
+  aspect-ratio:4/3;overflow:hidden;border:1px solid var(--line);position:relative;
+  background:
+    radial-gradient(120% 100% at 18% 0%,color-mix(in srgb,var(--accent) 14%,transparent),transparent 62%),
+    repeating-linear-gradient(0deg,transparent 0 23px,color-mix(in srgb,var(--ink) 5%,transparent) 23px 24px),
+    var(--bg-2);
+}
+.split-img img{width:100%;height:100%;object-fit:cover;filter:grayscale(40%) contrast(1.05) brightness(.6)}
+.split-img::after{content:'';position:absolute;inset:0;background:linear-gradient(135deg,color-mix(in srgb,var(--accent) 18%,transparent),transparent 50%)}
+.service-list{display:flex;flex-direction:column;counter-reset:svc}
+.ds-services-list{display:flex;flex-direction:column}
+.ds-services-list .ds-service{
+  counter-increment:svc;display:flex;gap:22px;padding:26px 0;
+  border-bottom:1px solid var(--line);align-items:baseline;
+}
+.ds-services-list .ds-service:first-child{border-top:1px solid var(--line)}
+.ds-services-list .ds-service::before{
+  content:"0" counter(svc);font-family:var(--mono);font-size:11px;color:var(--accent);letter-spacing:.2em;flex:none;
+}
+.ds-service-name{display:block;font-weight:800;font-stretch:120%;font-size:clamp(20px,2.4vw,30px);line-height:1.1;text-transform:uppercase;margin-bottom:6px}
+.ds-service-desc{color:var(--steel);font-size:14px;max-width:420px;display:block}
 
-  /* Índice de categorías: celdas de panel con esquina de acento. */
-  .cats{display:grid;grid-template-columns:repeat(auto-fill,minmax(190px,1fr));gap:1px;margin-top:22px;background:var(--line);border:1px solid var(--line)}
-  .cats .ds-cat{position:relative;display:flex;align-items:center;justify-content:space-between;gap:10px;padding:18px 16px;background:var(--card);font:600 11px var(--mono);letter-spacing:.12em;text-transform:uppercase;color:var(--ink-2);transition:background .2s,color .2s}
-  .cats .ds-cat::after{content:"→";color:var(--muted);transition:color .2s,transform .2s}
-  .cats .ds-cat:hover{background:var(--night);color:var(--night-ink)}
-  .cats .ds-cat:hover::after{color:var(--night-acc);transform:translateX(3px)}
-  .cats:not(:has(.ds-cat)){display:none}
+/* ---------- banda de números (clientes) ---------- */
+.band{background:var(--panel);border-top:1px solid var(--line);border-bottom:1px solid var(--line)}
+.clients{display:grid;grid-template-columns:repeat(4,1fr);gap:1px;background:var(--line)}
+.ds-stat{
+  background:var(--panel);padding:36px 28px;display:flex;flex-direction:column;gap:8px;justify-content:center;min-height:140px;
+}
+.ds-stat-value{font-weight:800;font-stretch:120%;font-size:clamp(30px,3.4vw,44px);line-height:1;color:var(--accent-2)}
+.ds-stat-label{font-family:var(--mono);font-size:10px;letter-spacing:.16em;text-transform:uppercase;color:var(--mut)}
 
-  /* Vitrina de productos: tarjetas de inventario con esquina viva. */
-  .lookbook{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:18px;margin-top:22px}
-  .ds-product{position:relative;min-width:0;background:var(--card);border:1px solid var(--line);transition:border-color .25s,transform .25s}
-  .ds-product::before{content:"";position:absolute;top:-1px;left:-1px;width:14px;height:14px;border-top:2px solid var(--acc);border-left:2px solid var(--acc);pointer-events:none;opacity:0;transition:opacity .25s}
-  .ds-product::after{content:"";position:absolute;bottom:-1px;right:-1px;width:14px;height:14px;border-bottom:2px solid var(--acc);border-right:2px solid var(--acc);pointer-events:none;opacity:0;transition:opacity .25s}
-  .ds-product:hover{border-color:var(--line-strong);transform:translateY(-3px)}
-  .ds-product:hover::before,.ds-product:hover::after{opacity:1}
-  .ds-product-link{display:grid;grid-template-columns:1fr;grid-template-areas:"media" "copy" "cat" "stock" "price";height:100%}
-  .ds-product-img{grid-area:media;width:100%;aspect-ratio:4/3;object-fit:cover;display:block;background:var(--bg);border-bottom:1px solid var(--line);filter:saturate(.85)}
-  .ds-product-img.is-empty{display:grid;place-items:center;font-size:34px;color:color-mix(in srgb,var(--ink) 18%,transparent)}
-  .ds-product-copy{grid-area:copy;display:grid;gap:5px;padding:14px 14px 0;min-width:0}
-  .ds-product-name{margin:0;font:800 14.5px/1.25 var(--disp);letter-spacing:.01em;text-transform:uppercase;overflow-wrap:anywhere}
-  .ds-product-desc{font-size:12px;color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-  .ds-product-desc:empty{display:none}
-  .ds-product-cat{grid-area:cat;padding:10px 14px 0;font:500 9px var(--mono);letter-spacing:.18em;text-transform:uppercase;color:var(--muted)}
-  .ds-stock{grid-area:stock;padding:8px 14px 0}
-  .ds-product-price{grid-area:price;display:flex;flex-wrap:wrap;align-items:baseline;gap:4px 8px;padding:8px 14px 14px;font:800 17px var(--disp);letter-spacing:-.01em}
-  .ds-product-price .ds-product-amount{color:var(--acc)}
-  .ds-product-old{font:500 11px var(--mono);color:var(--muted);text-decoration:line-through}
-  .ds-product:hover .ds-product-name{color:var(--acc)}
-  .ds-empty{grid-column:1/-1;padding:26px;border:1px dashed var(--line);color:var(--muted);font-size:13px}
-  .lookbook:has(.ds-empty:only-child){grid-template-columns:1fr}
+/* ---------- garantías / galería / testimonios / faq / planes ---------- */
+.extra-grid{display:grid;grid-template-columns:repeat(12,1fr);gap:clamp(12px,1.6vw,22px)}
+.guars .ds-guar,.plans .ds-plan{
+  grid-column:span 4;background:var(--panel);border:1px solid var(--line);padding:26px;
+}
+.ds-guar{display:flex;flex-direction:column;gap:14px}
+.ds-guar-icon svg,.ds-offer-icon svg{width:22px;height:22px;color:var(--accent-2)}
+.ds-guar-copy b{display:block;font-weight:800;font-stretch:120%;font-size:20px;text-transform:uppercase;margin-bottom:6px}
+.ds-guar-copy span{color:var(--steel);font-size:14px}
+.shots{display:grid;grid-template-columns:repeat(4,1fr);gap:clamp(12px,1.6vw,22px)}
+.shots .ds-shot{aspect-ratio:4/3;overflow:hidden;border:1px solid var(--line);background:var(--bg-2)}
+.shots .ds-shot img{width:100%;height:100%;object-fit:cover;filter:grayscale(45%) contrast(1.05) brightness(.6);transition:all .6s}
+.shots .ds-shot:hover img{filter:grayscale(0%) brightness(.9);transform:scale(1.04)}
+.quotes{display:grid;grid-template-columns:repeat(3,1fr);gap:clamp(12px,1.6vw,22px)}
+.quotes .ds-quote{background:var(--panel);border:1px solid var(--line);padding:28px;display:flex;flex-direction:column;gap:18px}
+.ds-quote-text{font-size:17px;line-height:1.5;color:var(--ink)}
+.ds-quote-text::before{content:"“";color:var(--accent);font-weight:900}
+.ds-quote-name{font-family:var(--mono);font-size:11px;letter-spacing:.18em;text-transform:uppercase;color:var(--mut)}
+.faqs .ds-faq{border-bottom:1px solid var(--line)}
+.faqs .ds-faq:first-child{border-top:1px solid var(--line)}
+.faqs .ds-faq-q{
+  list-style:none;cursor:pointer;padding:22px 0;display:flex;justify-content:space-between;align-items:center;gap:18px;
+  font-weight:800;font-stretch:120%;font-size:clamp(18px,2vw,26px);text-transform:uppercase;
+}
+.faqs .ds-faq-q::-webkit-details-marker{display:none}
+.faqs .ds-faq-q::after{content:"+";font-family:var(--mono);font-size:20px;color:var(--accent);flex:none;transition:transform .3s}
+.faqs .ds-faq[open] .ds-faq-q::after{transform:rotate(45deg)}
+.faqs .ds-faq-a{padding:0 0 24px;color:var(--steel);font-size:15px;max-width:720px}
+.plans .ds-plan{display:flex;flex-direction:column;gap:12px}
+.ds-plan-name{font-weight:900;font-stretch:125%;font-size:24px;text-transform:uppercase}
+.ds-plan-price{font-family:var(--mono);font-size:22px;color:var(--accent-2)}
+.ds-plan-note{color:var(--mut);font-size:13px}
+.ds-plan-feats{list-style:none;display:flex;flex-direction:column;gap:8px;margin-top:6px}
+.ds-plan-feats li{font-size:14px;color:var(--steel);padding-left:18px;position:relative}
+.ds-plan-feats li::before{content:"—";position:absolute;left:0;color:var(--accent)}
 
-  /* Qué ofrecemos / servicios del catálogo. */
-  .offers{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:1px;margin-top:22px;background:var(--line);border:1px solid var(--line)}
-  .ds-offer{display:grid;gap:10px;padding:24px 22px;background:var(--card);min-width:0}
-  .ds-offer-icon{color:var(--acc);display:block}
-  .ds-offer-name{margin:0;font:800 16px/1.2 var(--disp);text-transform:uppercase;letter-spacing:.01em}
-  .ds-offer-text{margin:0;font-size:12.5px;color:var(--muted)}
-  .offers:not(:has(.ds-offer)){display:none}
+/* ---------- CTA de alarma ---------- */
+.cta-band{background:var(--accent);color:#0D1117;padding:clamp(56px,7vw,90px) 0;position:relative;overflow:hidden}
+.cta-band::before{content:'';position:absolute;inset:0;background:repeating-linear-gradient(-45deg,rgba(13,17,23,.08) 0 14px,transparent 14px 28px)}
+.cta-in{position:relative;display:flex;justify-content:space-between;align-items:center;gap:32px;flex-wrap:wrap}
+.cta-title{font-stretch:125%;font-weight:900;font-size:clamp(38px,6vw,80px);line-height:.98;text-transform:uppercase}
+.cta-text{color:rgba(13,17,23,.72);max-width:440px;margin-top:16px}
+.cta-link{border-color:#0D1117;color:#0D1117!important}
+.cta-link:hover{background:#0D1117;color:#fff!important}
 
-  /* Lista de servicios (también en la superficie services). */
-  .svc-list{display:grid;gap:0;margin:22px 0 0;padding:0;list-style:none;border-top:1px solid var(--line)}
-  .svc-list .ds-service{display:grid;grid-template-columns:56px minmax(0,1fr);gap:18px;padding:22px 0;border-bottom:1px solid var(--line)}
-  .svc-list .ds-service::before{counter-increment:svc;content:"0" counter(svc);font:700 11px var(--mono);color:var(--acc);letter-spacing:.1em;padding-top:4px}
-  .svc-list{counter-reset:svc}
-  .svc-list .ds-service-name{display:block;font:800 18px/1.2 var(--disp);text-transform:uppercase;letter-spacing:.01em}
-  .svc-list .ds-service-desc{display:block;margin-top:5px;font-size:12.5px;color:var(--muted)}
-  .svc-list .ds-service-desc:empty{display:none}
+/* ---------- contacto ---------- */
+.contact{display:grid;grid-template-columns:1.1fr .9fr;gap:clamp(32px,5vw,80px)}
+.contact-title{font-stretch:125%;font-weight:900;font-size:clamp(40px,6vw,80px);line-height:.98;text-transform:uppercase;margin-bottom:24px}
+.contact-title .fire{color:var(--accent)}
+.contact p.lead{color:var(--steel);max-width:440px;margin-bottom:32px}
+.info-row{display:flex;gap:16px;padding:14px 0;border-bottom:1px solid var(--line);font-size:14px;align-items:baseline}
+.info-row .mono{color:var(--accent-2);min-width:90px;flex:none}
+.info-row a{border-bottom:1px solid var(--line);transition:color .3s}
+.info-row a:hover{color:var(--accent-2)}
+form,.ds-contact-fields{
+  background:var(--panel);border:1px solid var(--line);padding:28px;
+  display:flex;flex-direction:column;gap:14px;
+}
+.ds-contact-fields{display:grid;gap:14px}
+.ds-contact-row{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.ds-contact-input{
+  background:var(--bg);border:1px solid var(--line);color:var(--ink);
+  font-family:var(--disp);font-size:14px;padding:14px 16px;width:100%;outline:none;transition:border-color .3s;
+}
+.ds-contact-input:focus{border-color:var(--accent)}
+.ds-contact-area{min-height:110px;resize:vertical}
+.ds-contact-cap{display:flex;gap:10px;align-items:center}
+.ds-contact-q{font-family:var(--mono);font-size:12px;color:var(--mut);flex:1}
+.ds-contact-reload{
+  width:40px;height:40px;flex:none;background:var(--bg);border:1px solid var(--line);color:var(--ink);
+  cursor:pointer;font-size:16px;transition:border-color .3s;
+}
+.ds-contact-reload:hover{border-color:var(--accent)}
+.ds-contact-status{font-family:var(--mono);font-size:11px;letter-spacing:.12em;color:var(--mut);min-height:14px}
+.ds-contact-send{
+  display:inline-flex;align-items:center;justify-content:center;gap:12px;
+  padding:16px 28px;font-family:var(--mono);font-size:11px;letter-spacing:.2em;text-transform:uppercase;
+  background:var(--accent);border:1px solid var(--accent);color:#fff;cursor:pointer;transition:background .3s;
+}
+.ds-contact-send:hover{background:var(--accent-2);border-color:var(--accent-2);color:#0D1117}
 
-  /* Números del negocio: fila de telemetría. */
-  .stats{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:1px;margin-top:22px;background:var(--line);border:1px solid var(--line)}
-  .ds-stat{display:grid;gap:6px;padding:24px 22px;background:var(--night);color:var(--night-ink);min-width:0}
-  .ds-stat-value{font:900 clamp(30px,3.6vw,46px)/1 var(--disp);letter-spacing:-.02em;color:var(--night-acc)}
-  .ds-stat-label{font:500 9.5px var(--mono);letter-spacing:.18em;text-transform:uppercase;color:var(--night-mut)}
-  .stats:not(:has(.ds-stat)){display:none}
+/* ---------- footer ---------- */
+footer{border-top:1px solid var(--line);padding:40px 0 32px}
+.foot{display:flex;justify-content:space-between;gap:24px;flex-wrap:wrap;align-items:center}
+.foot-links{display:flex;gap:24px;flex-wrap:wrap}
+.foot-links a{font-family:var(--mono);font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:var(--mut)}
+.foot-links a:hover{color:var(--accent-2)}
+.foot-copy{font-family:var(--mono);font-size:10px;letter-spacing:.14em;color:var(--mut);text-transform:uppercase}
 
-  /* Dossier del negocio. */
-  .dossier{display:grid;grid-template-columns:minmax(0,.9fr) minmax(0,1.1fr);gap:56px;align-items:start;padding:56px 0;border-top:1px solid var(--line);border-bottom:1px solid var(--line)}
-  .dossier .num{font:900 88px/1 var(--disp);color:transparent;-webkit-text-stroke:1px var(--line-strong)}
-  .dossier h2{margin:0 0 16px;font:800 clamp(26px,3vw,38px)/1.05 var(--disp);text-transform:uppercase;letter-spacing:-.02em}
-  .dossier .about-title{display:block;font:700 10px var(--mono);letter-spacing:.2em;text-transform:uppercase;color:var(--acc);margin-bottom:10px}
-  .dossier .about-title:empty{display:none}
-  .dossier p{margin:0;max-width:54ch;color:var(--ink-2)}
-  .dossier ul{margin:22px 0 0;padding:0;list-style:none;display:grid;gap:10px}
-  .dossier li{display:flex;gap:12px;font-size:13.5px;color:var(--ink-2)}
-  .dossier li::before{content:"■";color:var(--acc);font-size:9px;padding-top:5px}
+/* ---------- catálogo ---------- */
+.cat-surface{padding:clamp(48px,6vw,80px) 0;background:var(--bg-2);border-top:1px solid var(--line);border-bottom:1px solid var(--line)}
+.cat-hero{padding-bottom:clamp(28px,4vw,48px);border-bottom:1px solid var(--line);margin-bottom:clamp(20px,3vw,36px)}
+.cat-hero h1{font-stretch:125%;font-weight:900;font-size:clamp(40px,6vw,80px);line-height:.98;text-transform:uppercase}
+.cat-hero h1 em{font-style:normal;color:var(--accent)}
+.cat-hero p{color:var(--steel);max-width:520px;margin-top:16px}
+.cat-tools{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:center;gap:14px;margin-bottom:26px}
+.cat-filters-toggle{
+  font-family:var(--mono);font-size:11px;letter-spacing:.2em;text-transform:uppercase;
+  border:1px solid var(--line);background:var(--panel);color:var(--ink);padding:12px 20px;cursor:pointer;
+}
+.cat-filters-toggle[aria-expanded="true"]{border-color:var(--accent);color:var(--accent-2)}
+.cat-filters-panel{
+  display:none;width:100%;background:var(--panel);border:1px solid var(--line);padding:20px;margin-bottom:8px;
+}
+.cat-filters-panel[data-open]{display:block}
+.cat-filters{display:flex;flex-wrap:wrap;gap:8px 14px;margin-bottom:16px}
+.cat-filters .ds-cat{
+  font-family:var(--mono);font-size:11px;letter-spacing:.14em;text-transform:uppercase;
+  border:1px solid var(--line);padding:8px 14px;color:var(--mut);background:none;cursor:pointer;
+}
+.cat-filters .ds-cat[aria-pressed="true"]{border-color:var(--accent);color:var(--accent-2)}
+.cat-price{display:flex;align-items:center;gap:10px;font-family:var(--mono);font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--mut);margin-bottom:14px;flex-wrap:wrap}
+.cat-price input{
+  background:var(--bg);border:1px solid var(--line);color:var(--ink);
+  font-family:var(--mono);font-size:13px;padding:10px 12px;width:110px;outline:none;
+}
+.cat-price input:focus{border-color:var(--accent)}
+.cat-offers{display:inline-flex;align-items:center;gap:8px;font-family:var(--mono);font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--mut);cursor:pointer}
+.cat-clear{
+  font-family:var(--mono);font-size:11px;letter-spacing:.18em;text-transform:uppercase;
+  background:none;border:1px solid var(--line);color:var(--mut);padding:10px 16px;cursor:pointer;
+}
+.cat-clear:hover{border-color:var(--accent);color:var(--accent-2)}
+.cat-sort{display:inline-flex;align-items:center;gap:10px;font-family:var(--mono);font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:var(--mut)}
+.cat-sort select{
+  font-family:var(--mono);font-size:12px;letter-spacing:0;text-transform:none;
+  padding:10px 12px;border:1px solid var(--line);background:var(--panel);color:var(--ink);cursor:pointer;
+}
+.cat-count{font-family:var(--mono);font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:var(--mut)}
+.ds-empty{font-family:var(--mono);font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:var(--mut);text-align:center;padding:60px 0}
+.cat-grid{align-items:start}
 
-  /* Garantías / beneficios. */
-  .guars{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:1px;margin-top:22px;background:var(--line);border:1px solid var(--line)}
-  .ds-guar{display:grid;grid-template-columns:auto 1fr;gap:14px;padding:22px;background:var(--card);min-width:0;align-items:start}
-  .ds-guar-icon{color:var(--acc);padding-top:2px}
-  .ds-guar-copy b{display:block;font:800 13px/1.3 var(--disp);text-transform:uppercase;letter-spacing:.02em}
-  .ds-guar-copy span{display:block;margin-top:5px;font-size:12px;color:var(--muted)}
-  .guars:not(:has(.ds-guar)){display:none}
+/* ---------- ficha de producto ---------- */
+.pdp-surface{padding:clamp(48px,6vw,80px) 0}
+.pdp-crumb{display:flex;gap:10px;flex-wrap:wrap;font-family:var(--mono);font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:var(--mut);margin-bottom:34px}
+.pdp-crumb a:hover{color:var(--accent-2)}
+.pdp-crumb .sep{opacity:.5}
+.pdp-grid{display:grid;grid-template-columns:1fr 1fr;gap:clamp(28px,4vw,64px);align-items:start}
+.pdp-media{position:relative;border:1px solid var(--line);background:var(--panel);overflow:hidden}
+.pdp-media img{width:100%;aspect-ratio:4/5;object-fit:cover;filter:grayscale(35%) contrast(1.05) brightness(.85)}
+.pdp-media-tag{
+  position:absolute;top:14px;left:14px;background:var(--accent);color:#fff;
+  font-family:var(--mono);font-size:10px;letter-spacing:.18em;padding:6px 10px;text-transform:uppercase;
+}
+.pdp-media-tag:empty{display:none}
+.pdp-kicker{font-family:var(--mono);font-size:11px;letter-spacing:.2em;text-transform:uppercase;color:var(--accent);margin-bottom:14px}
+.pdp-info h1{font-stretch:125%;font-weight:900;font-size:clamp(34px,4.5vw,60px);line-height:1;text-transform:uppercase;margin-bottom:10px}
+.pdp-ref{font-family:var(--mono);font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:var(--mut);margin-bottom:22px}
+.pdp-price{display:flex;align-items:baseline;gap:14px;margin-bottom:22px;flex-wrap:wrap}
+.pdp-price b{font-family:var(--mono);font-size:clamp(26px,3vw,40px);color:var(--accent-2)}
+.pdp-price s{font-family:var(--mono);font-size:15px;color:var(--mut)}
+.pdp-price em{font-style:normal;font-family:var(--mono);font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--accent);border:1px solid var(--accent);padding:4px 8px}
+.pdp-price em:empty{display:none}
+.pdp-desc{color:var(--steel);font-size:16px;max-width:520px;margin-bottom:28px}
+.pdp-ctas{display:flex;gap:14px;flex-wrap:wrap;margin-bottom:30px}
+.pdp-specs{width:100%;border-collapse:collapse}
+.pdp-specs td{padding:12px 0;border-bottom:1px solid var(--line);font-size:14px}
+.pdp-specs td:first-child{font-family:var(--mono);font-size:10px;letter-spacing:.16em;text-transform:uppercase;color:var(--mut);width:38%;vertical-align:top}
+.pdp-rev{margin-top:clamp(48px,6vw,80px)}
+.pdp-rev-head{display:flex;justify-content:space-between;align-items:baseline;gap:18px;margin-bottom:26px;flex-wrap:wrap}
+.pdp-rev-head h2,.pdp-rel h2{font-stretch:125%;font-weight:900;font-size:clamp(28px,4vw,48px);line-height:1;text-transform:uppercase}
+.pdp-score{display:flex;align-items:baseline;gap:10px;font-family:var(--mono);font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--mut)}
+.pdp-score b{font-size:20px;color:var(--accent-2)}
+.pdp-rel{margin-top:clamp(48px,6vw,80px)}
+.ds-rev{border:1px solid var(--line);background:var(--panel);padding:22px;margin-bottom:14px}
+.ds-rev-head{display:flex;justify-content:space-between;gap:14px;flex-wrap:wrap;margin-bottom:10px}
+.ds-rev-name{font-weight:800;font-size:15px;text-transform:uppercase}
+.ds-rev-meta{font-family:var(--mono);font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:var(--mut)}
+.ds-rev-text{color:var(--steel);font-size:14px}
+.ds-rev-form{border:1px solid var(--line);background:var(--bg-2);padding:20px;margin-top:18px}
+.ds-rev-input,.ds-rev-textarea{
+  width:100%;background:var(--bg);border:1px solid var(--line);color:var(--ink);
+  font-family:var(--disp);font-size:14px;padding:12px 14px;margin-bottom:10px;outline:none;
+}
+.ds-rev-input:focus,.ds-rev-textarea:focus{border-color:var(--accent)}
+.ds-rev-textarea{min-height:90px;resize:vertical}
+.ds-rev-send{
+  font-family:var(--mono);font-size:11px;letter-spacing:.18em;text-transform:uppercase;
+  background:var(--ink);border:1px solid var(--ink);color:var(--bg);padding:12px 22px;cursor:pointer;
+}
+.ds-rev-send:hover{background:var(--accent);border-color:var(--accent);color:#fff}
+.ds-rev-status{font-family:var(--mono);font-size:11px;color:var(--mut);margin-top:8px;min-height:14px}
 
-  /* Galería: cinta de fotos con marco técnico. */
-  .shots{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:14px;margin-top:22px}
-  .ds-shot{margin:0;position:relative;overflow:hidden;border:1px solid var(--line);background:var(--card)}
-  .ds-shot img{width:100%;aspect-ratio:4/3;object-fit:cover;display:block;filter:saturate(.85);transition:transform .6s var(--ease),filter .6s}
-  .ds-shot:hover img{transform:scale(1.04);filter:saturate(1)}
-  .shots:not(:has(.ds-shot)){display:none}
+/* ---------- servicios (página) ---------- */
+.svc-surface{padding:clamp(48px,6vw,80px) 0}
+.svc-head h1{font-stretch:125%;font-weight:900;font-size:clamp(40px,6vw,80px);line-height:.98;text-transform:uppercase;margin-bottom:14px}
+.svc-head p{color:var(--steel);max-width:560px}
+.offerings{display:grid;grid-template-columns:repeat(3,1fr);gap:clamp(12px,1.6vw,22px);margin:clamp(28px,4vw,48px) 0}
+.ds-offer{background:var(--panel);border:1px solid var(--line);padding:26px;display:flex;flex-direction:column;gap:12px}
+.ds-offer-name{font-weight:800;font-stretch:120%;font-size:20px;text-transform:uppercase}
+.ds-offer-text{color:var(--steel);font-size:14px}
+.services-list{margin-top:clamp(28px,4vw,48px)}
+.services-title{font-family:var(--mono);font-size:11px;letter-spacing:.2em;text-transform:uppercase;color:var(--accent);margin-bottom:18px}
+.svc-cta{
+  display:inline-flex;align-items:center;gap:12px;margin-top:34px;
+  padding:16px 28px;font-family:var(--mono);font-size:11px;letter-spacing:.2em;text-transform:uppercase;
+  background:var(--accent);border:1px solid var(--accent);color:#fff;transition:background .3s;
+}
+.svc-cta:hover{background:var(--accent-2);border-color:var(--accent-2);color:#0D1117}
+.svc-empty{font-family:var(--mono);font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:var(--mut);padding:40px 0}
 
-  /* Testimonios: citas en placa. */
-  .quotes{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px;margin-top:22px}
-  .ds-quote{position:relative;margin:0;padding:24px 22px 20px;background:var(--card);border:1px solid var(--line)}
-  .ds-quote::before{content:"“";position:absolute;right:16px;top:6px;font:900 64px/1 var(--disp);color:color-mix(in srgb,var(--acc) 30%,transparent)}
-  .ds-quote-text{margin:0 0 16px;padding-top:14px;font:600 15px/1.5 var(--disp);letter-spacing:-.01em}
-  .ds-quote-name{font:700 10px var(--mono);letter-spacing:.18em;text-transform:uppercase;color:var(--muted)}
-  .quotes:not(:has(.ds-quote)){display:none}
-
-  /* FAQ: acordeón técnico. */
-  .faqs{margin-top:22px;border-top:1px solid var(--line)}
-  .ds-faq{border-bottom:1px solid var(--line)}
-  .ds-faq-q{display:flex;align-items:center;justify-content:space-between;gap:16px;padding:18px 4px;font:700 14px var(--disp);text-transform:uppercase;letter-spacing:.01em;cursor:pointer;list-style:none}
-  .ds-faq-q::-webkit-details-marker{display:none}
-  .ds-faq-q::after{content:"+";flex:none;font:400 22px/1 var(--mono);color:var(--acc);transition:transform .25s}
-  .ds-faq[open] .ds-faq-q::after{transform:rotate(45deg)}
-  .ds-faq-a{margin:0;padding:0 4px 18px;max-width:64ch;font-size:13.5px;color:var(--ink-2)}
-  .faqs:not(:has(.ds-faq)){display:none}
-
-  /* Planes / membresías. */
-  .plans{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:14px;margin-top:22px}
-  .ds-plan{position:relative;padding:24px 22px;background:var(--card);border:1px solid var(--line)}
-  .ds-plan::before{content:"";position:absolute;top:0;left:0;right:0;height:4px;background:repeating-linear-gradient(-45deg,var(--acc) 0 10px,transparent 10px 20px)}
-  .ds-plan-name{margin:0;font:800 17px/1.2 var(--disp);text-transform:uppercase}
-  .ds-plan-price{display:block;margin-top:8px;font:800 22px var(--disp);color:var(--acc)}
-  .ds-plan-price:empty{display:none}
-  .ds-plan-note{margin:6px 0 0;font-size:12px;color:var(--muted)}
-  .ds-plan-note:empty{display:none}
-  .ds-plan-feats{margin:14px 0 0;padding:0;list-style:none;display:grid;gap:7px}
-  .ds-plan-feats li{font-size:12.5px;color:var(--ink-2);padding-left:16px;position:relative}
-  .ds-plan-feats li::before{content:"✓";position:absolute;left:0;color:var(--acc);font-weight:700}
-  .plans:not(:has(.ds-plan)){display:none}
-
-  /* CTA final: panel de alarma. */
-  .cta-band{background:var(--night);color:var(--night-ink);padding:64px 0;position:relative;overflow:hidden}
-  .cta-band::before{content:"";position:absolute;inset:0;
-    background:repeating-linear-gradient(-45deg,transparent 0 46px,color-mix(in srgb,var(--night-acc) 7%,transparent) 46px 48px)}
-  .cta-band .shell{position:relative;display:flex;align-items:center;justify-content:space-between;gap:32px;flex-wrap:wrap}
-  .cta-band h2{margin:0;font:900 clamp(30px,4.6vw,56px)/1 var(--disp);text-transform:uppercase;letter-spacing:-.025em;max-width:18ch}
-  .cta-band h2 .fire{color:var(--night-acc)}
-  .cta-band p{margin:14px 0 0;max-width:44ch;color:var(--night-mut);font-size:14.5px}
-  .cta-band p:empty{display:none}
-  .cta-band .btn-hero-solid{flex:none}
-
-  /* ---------- Contacto ---------- */
-  .contact{padding:64px 0}
-  .contact-grid{display:grid;grid-template-columns:minmax(0,.9fr) minmax(0,1.1fr);gap:48px;align-items:start;margin-top:26px}
-  .info-row{display:flex;gap:16px;padding:15px 0;border-bottom:1px solid var(--line);font-size:14px;align-items:baseline}
-  .info-row .mono{color:var(--acc);min-width:96px;flex:none}
-  .info-row a{color:var(--ink)}
-  .info-row a:hover{color:var(--acc)}
-  .contact-form{border:1px solid var(--line);background:var(--card);padding:8px}
-  .contact-form .ds-contact{padding:20px}
-  .contact-form:empty{display:none}
-
-  /* ---------- Superficies: catálogo / servicios / ficha ---------- */
-  .cat-surface,.svc-surface,.pdp-surface{padding:56px 0 80px}
-  .cat-head{display:flex;align-items:flex-end;justify-content:space-between;gap:16px;padding-bottom:16px;border-bottom:1px solid var(--line-strong)}
-  .cat-head h1,.svc-head h1{margin:0;font:900 clamp(32px,4.6vw,58px)/1 var(--disp);text-transform:uppercase;letter-spacing:-.025em}
-  .cat-head .mono,.svc-head .mono{font:500 10px var(--mono);letter-spacing:.18em;text-transform:uppercase;color:var(--muted)}
-  .cat-tools{display:flex;flex-wrap:wrap;align-items:flex-start;justify-content:space-between;gap:14px 22px;padding:18px 0 22px}
-  .cat-filters-panel{display:flex;flex-wrap:wrap;align-items:center;gap:12px 18px;flex:1 1 560px;min-width:0}
-  .cat-filters{display:flex;flex-wrap:wrap;gap:8px;max-height:220px;overflow-y:auto}
-  .cat-filters .ds-cat{padding:9px 14px;border:1px solid var(--line);border-radius:var(--radius);background:var(--card);font:600 10px var(--mono);letter-spacing:.12em;text-transform:uppercase;color:var(--ink-2);cursor:pointer;transition:border-color .2s,color .2s}
-  .cat-filters .ds-cat:hover{border-color:var(--acc);color:var(--acc)}
-  .cat-filters .ds-cat[aria-pressed="true"]{background:var(--ink);border-color:var(--ink);color:var(--bg)}
-  .cat-price{display:flex;flex-wrap:wrap;align-items:center;gap:8px;font:500 10px var(--mono);letter-spacing:.12em;text-transform:uppercase;color:var(--muted)}
-  .cat-price input{width:92px;min-height:40px;padding:8px 10px;border:1px solid var(--line);border-radius:var(--radius);background:var(--card);color:var(--ink);font:400 13px var(--body)}
-  .cat-offers{display:inline-flex;align-items:center;gap:8px;min-height:40px;font-size:12.5px;color:var(--ink-2);cursor:pointer}
-  .cat-offers input{width:17px;height:17px;accent-color:var(--acc)}
-  .cat-clear{min-height:40px;padding:0 4px;border:0;background:transparent;color:var(--acc);font:700 10px var(--mono);letter-spacing:.12em;text-transform:uppercase;cursor:pointer;text-decoration:underline;text-underline-offset:4px}
-  .cat-sort{display:inline-flex;align-items:center;gap:9px;margin-left:auto;font:500 10px var(--mono);letter-spacing:.12em;text-transform:uppercase;color:var(--muted)}
-  .cat-sort select{font:400 12.5px var(--body);letter-spacing:0;text-transform:none;padding:8px 10px;border:1px solid var(--line);border-radius:var(--radius);background:var(--card);color:var(--ink)}
-  .cat-filters-toggle{display:none;align-items:center;justify-content:center;min-height:42px;padding:0 16px;border:1px solid var(--line);border-radius:var(--radius);background:var(--card);color:var(--ink);font:700 10px var(--mono);letter-spacing:.12em;text-transform:uppercase;cursor:pointer}
-  .cat-filters-toggle[aria-expanded="true"]{border-color:var(--acc);color:var(--acc)}
-  .cat-surface .lookbook{grid-template-columns:repeat(3,minmax(0,1fr))}
-  .ds-empty{padding:26px;border:1px dashed var(--line);color:var(--muted);font-size:13px}
-
-  .svc-head{padding-bottom:16px;border-bottom:1px solid var(--line-strong)}
-  .svc-head p{margin:12px 0 0;max-width:56ch;font-size:13.5px;color:var(--muted)}
-  .svc-head p:empty{display:none}
-  .svc-body{display:grid;grid-template-columns:minmax(0,1fr) 320px;gap:40px;align-items:start;margin-top:26px}
-  .svc-body:empty::before{content:"Todavía no cargaste servicios: agregalos desde el panel y aparecen acá.";padding:22px;border:1px dashed var(--line);color:var(--muted);font-size:13.5px}
-  .svc-cta{position:sticky;top:24px;display:grid;gap:10px;padding:26px;background:var(--night);color:var(--night-ink);border:1px solid var(--night-line);font:700 10px/1.5 var(--mono);letter-spacing:.16em;text-transform:uppercase}
-  .svc-cta::before{content:"Pedido a medida";font:500 9.5px var(--mono);letter-spacing:.2em;text-transform:uppercase;color:var(--night-acc)}
-  .svc-cta::after{content:"Escribinos por WhatsApp y coordinamos una primera consulta sin cargo.";font:400 12.5px/1.5 var(--body);letter-spacing:0;text-transform:none;color:var(--night-mut)}
-  .svc-cta:hover{background:var(--night-acc);color:var(--night)}
-  .svc-cta:hover::before,.svc-cta:hover::after{color:var(--night)}
-
-  .pdp-crumb{display:flex;align-items:center;gap:10px;padding-bottom:14px;border-bottom:1px solid var(--line-strong);font:500 10px var(--mono);letter-spacing:.16em;text-transform:uppercase;color:var(--muted)}
-  .pdp-crumb a{color:var(--acc)}
-  .pdp-crumb a:hover{text-decoration:underline;text-underline-offset:4px}
-  .pdp-crumb .sep{opacity:.55}
-  .pdp-grid{display:grid;grid-template-columns:minmax(0,.95fr) minmax(0,1.05fr);gap:52px;margin-top:34px;align-items:start}
-  .pdp-media{position:relative;margin:0;background:var(--card);border:1px solid var(--line)}
-  .pdp-media:not(:has(img))::before{content:"▣";position:absolute;inset:0;display:grid;place-items:center;font-size:88px;color:color-mix(in srgb,var(--ink) 12%,transparent)}
-  .pdp-media img{width:100%;aspect-ratio:4/5;object-fit:cover;display:block}
-  .pdp-media-tag{position:absolute;top:14px;left:14px;display:grid;place-items:center;min-width:60px;height:60px;padding:0 12px;background:var(--acc);color:var(--on-acc);font:800 11px var(--mono);letter-spacing:.08em}
-  .pdp-media-tag:empty{display:none}
-  .pdp-media figcaption{display:flex;justify-content:space-between;gap:10px;padding:12px 14px;border-top:1px solid var(--line);font:500 9px var(--mono);letter-spacing:.18em;text-transform:uppercase;color:var(--muted)}
-  .pdp-media figcaption span:empty{display:none}
-  .pdp-kicker{display:flex;align-items:center;gap:12px;font:500 10px var(--mono);letter-spacing:.24em;text-transform:uppercase;color:var(--acc)}
-  .pdp-kicker::after{content:"";flex:1 1 auto;height:1px;background:var(--line-strong);max-width:110px}
-  .pdp-info h1{margin:16px 0 0;font:900 clamp(28px,3.8vw,46px)/1.02 var(--disp);text-transform:uppercase;letter-spacing:-.025em;text-wrap:balance}
-  .pdp-ref{margin-top:10px;font:500 9.5px var(--mono);letter-spacing:.18em;text-transform:uppercase;color:var(--muted)}
-  .pdp-ref:empty{display:none}
-  .pdp-price{display:flex;flex-wrap:wrap;align-items:baseline;gap:8px 14px;margin-top:20px;padding:16px 0;border-top:1px solid var(--line);border-bottom:1px solid var(--line)}
-  .pdp-price b{font:900 32px var(--disp);letter-spacing:-.02em}
-  .pdp-price s{font:500 13px var(--mono);color:var(--muted)}
-  .pdp-price em{font:800 10px var(--mono);font-style:normal;letter-spacing:.1em;text-transform:uppercase;color:var(--on-acc);background:var(--acc);padding:5px 9px}
-  .pdp-price s:empty,.pdp-price em:empty{display:none}
-  .pdp-desc{margin:18px 0 0;max-width:54ch;font-size:14.5px;color:var(--ink-2)}
-  .pdp-desc:empty{display:none}
-  .pdp-ctas{display:flex;flex-wrap:wrap;gap:10px;margin-top:24px}
-  .pdp-ctas .btn[href=""]{display:none}
-  .pdp-specs{width:100%;border-collapse:collapse;margin-top:30px;font-size:13px}
-  .pdp-specs th,.pdp-specs td{padding:11px 12px 11px 0;border-bottom:1px solid var(--line);text-align:left;vertical-align:top;font-weight:400}
-  .pdp-specs th{width:34%;font:700 9.5px var(--mono);letter-spacing:.16em;text-transform:uppercase;color:var(--muted)}
-  .pdp-rel{margin-top:52px;padding-top:22px;border-top:1px solid var(--line-strong)}
-  .pdp-rel h2,.pdp-rev h2{margin:0;font:800 clamp(24px,3vw,36px)/1 var(--disp);text-transform:uppercase;letter-spacing:-.02em}
-  .pdp-rev{margin-top:52px;padding-top:22px;border-top:1px solid var(--line-strong)}
-  .pdp-rev:not(:has(.ds-reviews)){display:none}
-  .pdp-rev-head{display:flex;flex-wrap:wrap;align-items:baseline;gap:10px 16px;margin-bottom:16px}
-  .pdp-score{display:inline-flex;align-items:baseline;gap:7px;font:500 10px var(--mono);letter-spacing:.12em;text-transform:uppercase;color:var(--muted)}
-  .pdp-score b{font:800 24px var(--disp);color:var(--acc)}
-  .pdp-score:has(b:empty){display:none}
-  .ds-rev-list{list-style:none;margin:0;padding:0;display:grid;gap:0}
-  .ds-rev-item{display:grid;grid-template-columns:auto 1fr;gap:4px 16px;padding:14px 0;border-bottom:1px solid var(--line);font-size:13.5px}
-  .ds-rev-item .ds-rev-name{font:700 12.5px var(--body);color:var(--ink)}
-  .ds-rev-item .ds-rev-date{grid-row:2;font:500 9px var(--mono);letter-spacing:.16em;text-transform:uppercase;color:var(--muted)}
-  .ds-rev-item .ds-rev-vote{grid-column:2;grid-row:1;justify-self:start;color:var(--acc)}
-  .ds-rev-item .ds-rev-vote.ds-rev-down{color:var(--muted)}
-  .ds-rev-text{grid-column:2;margin:4px 0 0;color:var(--ink-2)}
-  .ds-rev-form{margin-top:22px;padding-top:18px;border-top:1px solid var(--line)}
-  .ds-rev-fields{display:grid;gap:12px;font-size:13px}
-  .ds-rev-votes{display:flex;gap:10px}
-  .ds-rev-pick{display:inline-flex;align-items:center;gap:8px;padding:9px 14px;border:1px solid var(--line);background:transparent;color:var(--ink);font:700 9.5px var(--mono);letter-spacing:.16em;text-transform:uppercase;cursor:pointer}
-  .ds-rev-pick.is-on{border-color:var(--acc);color:var(--acc)}
-  .ds-rev-row{display:grid;grid-template-columns:1fr 1fr;gap:12px}
-  .ds-rev-input{width:100%;font:400 13px var(--body);padding:10px 12px;border:1px solid var(--line);background:var(--card);color:var(--ink);box-sizing:border-box}
-  .ds-rev-input:focus{outline:1px solid var(--acc);outline-offset:1px}
-  .ds-rev-cap{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
-  .ds-rev-q{font:500 10px var(--mono);letter-spacing:.1em;text-transform:uppercase;color:var(--muted)}
-  .ds-rev-cap .ds-rev-input{max-width:130px}
-  .ds-rev-reload{font:inherit;cursor:pointer;border:1px solid var(--line);background:transparent;color:var(--ink);padding:7px 10px;line-height:1}
-  .ds-rev-status{margin:0;font:500 10.5px var(--mono);letter-spacing:.08em;color:var(--danger)}
-  .ds-rev-status[data-ok="1"]{color:var(--ok)}
-  .ds-rev-status:empty{display:none}
-  .ds-rev-send{justify-self:start;font:700 10px var(--mono);letter-spacing:.18em;text-transform:uppercase;padding:12px 22px;border:0;background:var(--ink);color:var(--bg);cursor:pointer}
-  .ds-rev-send:hover{background:var(--acc);color:var(--on-acc)}
-  .pdp-rel .lookbook{grid-template-columns:repeat(4,minmax(0,1fr))}
-
-  /* ---------- Footer / contacto ---------- */
-  .foot{border-top:1px solid var(--line);padding:44px 0 34px;background:var(--card)}
-  .foot-name{margin:0 0 24px;font:900 clamp(30px,4vw,48px)/1 var(--disp);text-transform:uppercase;letter-spacing:-.02em}
-  .foot-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:22px;font-size:12.5px;line-height:1.7;color:var(--muted)}
-  .foot-h{margin:0 0 8px;font:700 9.5px var(--mono);letter-spacing:.16em;text-transform:uppercase;color:var(--ink)}
-  .foot-grid span{display:block}
-  .foot-grid span:empty{display:none}
-  .foot-grid a{color:var(--ink)}
-  .foot-grid a:hover{color:var(--acc)}
-  a.wa-link[href=""]{display:none}
-  .foot-legal{margin-top:26px;padding-top:16px;border-top:1px solid var(--line);font:500 9.5px var(--mono);letter-spacing:.12em;text-transform:uppercase;color:var(--muted)}
-  .foot-legal:empty{display:none}
-
-  .reveal{opacity:0;transform:translateY(16px);transition:opacity var(--dur) var(--ease),transform var(--dur) var(--ease)}
-  .reveal.on{opacity:1;transform:none}
-
-  /* ==========================================================================
-     MENÚ MÓVIL (burger + hoja). Mismo comportamiento en todos los estilos.
-     ========================================================================== */
-  .m-burger,.m-scrim,.m-sheet{display:none}
-  .m-burger{place-items:center;width:44px;height:44px;padding:0;border:1px solid var(--line);border-radius:var(--radius);background:var(--card);color:var(--ink);cursor:pointer}
-  .m-burger-lines,.m-burger-lines::before,.m-burger-lines::after{display:block;width:18px;height:1.5px;background:currentColor;content:""}
-  .m-burger-lines{position:relative}
-  .m-burger-lines::before{position:absolute;top:-5px;left:0}
-  .m-burger-lines::after{position:absolute;top:5px;left:0}
-
-  @media(max-width:680px){
-    html[data-ds-style] .top-nav{display:none}
-    html[data-ds-style] .top-in{flex-wrap:nowrap}
-    html[data-ds-style] .top-in .ds-theme-toggle{order:2;margin-inline-start:auto}
-    html[data-ds-style] .top-meta,.html[data-ds-style] .status{display:none}
-    html[data-ds-style] .m-burger{display:grid;order:3}
-
-    html[data-ds-style] .top{position:fixed;top:0;left:0;right:0;z-index:60}
-    html[data-ds-style] body{padding-top:72px}
-    html[data-ds-style] .m-sheet{
-      display:flex;flex-direction:column;visibility:hidden;position:fixed;z-index:70;
-      left:0;right:0;bottom:0;max-height:min(78dvh,560px);
-      background:var(--night);color:var(--night-ink);border-top:1px solid var(--night-line);
-      transform:translateY(102%);transition:transform .3s var(--ease),visibility .3s;
-      box-shadow:0 -18px 50px -18px rgba(0,0,0,.55);
-    }
-    html[data-ds-style] .m-sheet.open{visibility:visible;transform:none}
-    html[data-ds-style] .m-sheet-head{position:relative;display:grid;gap:6px;padding:12px 16px 10px;border-bottom:1px solid var(--night-line)}
-    html[data-ds-style] .m-grab{justify-self:center;width:38px;height:4px;border-radius:4px;background:var(--night-line)}
-    html[data-ds-style] .m-sheet-brand{display:flex;align-items:center;gap:10px;min-width:0;padding-right:44px}
-    html[data-ds-style] .m-sheet-brand .mark.sm{display:grid;place-items:center;width:30px;height:30px;background:var(--night-acc);color:var(--night);font:800 12px var(--disp)}
-    html[data-ds-style] .m-sheet-brand strong{font:800 15px var(--disp);text-transform:uppercase;letter-spacing:.02em;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-    html[data-ds-style] .m-close{position:absolute;top:12px;right:12px;display:grid;place-items:center;width:40px;height:40px;border:1px solid var(--night-line);border-radius:var(--radius);background:transparent;color:var(--night-ink);font-size:20px;line-height:1;cursor:pointer}
-    html[data-ds-style] .m-sheet-nav{display:grid;gap:0;padding:8px 12px calc(12px + env(safe-area-inset-bottom));overflow-y:auto}
-    html[data-ds-style] .m-sheet-nav a{display:flex;align-items:center;justify-content:space-between;gap:12px;min-height:48px;padding:8px 12px;border-bottom:1px solid var(--night-line);font:700 12px var(--mono);letter-spacing:.14em;text-transform:uppercase;color:var(--night-ink)}
-    html[data-ds-style] .m-sheet-nav a span:last-child{font-size:9.5px;color:var(--night-mut)}
-    html[data-ds-style] .m-sheet-nav a:hover{color:var(--night-acc)}
-    html[data-ds-style] .m-scrim.open{display:block;position:fixed;inset:0;z-index:69;background:rgba(5,7,10,.6)}
-    html[data-ds-style].m-lock,html[data-ds-style].m-lock body{overflow:hidden}
-  }
-  @media (prefers-reduced-motion:reduce){
-    html[data-ds-style] .m-sheet{transition:none}
-    .tape-track{animation:none}
-  }
-
-  /* Modo noche real (toggle del puente y estilo *-noche con page_theme dark). */
-  html[data-ds-theme="dark"]{
-    color-scheme:dark;
-    --bg:#0B0E13;--card:#131922;--ink:#E8ECF2;--ink-2:#C3CAD6;--muted:#8A94A3;
-    --line:#242C3A;--line-strong:#3A4657;
-    --acc:#FF5A26;--on-acc:#14100D;
-    --ok:#4CC38A;--danger:#E56464;
-  }
-  html[data-ds-theme="dark"] .top{background:color-mix(in srgb,var(--bg) 88%,transparent)}
-  html[data-ds-theme="dark"] .ds-product-img{filter:saturate(.8)}
-  html[data-ds-theme="dark"] .cat-sort select{color-scheme:dark}
-  html[data-ds-theme="dark"] .cat-price input{color-scheme:dark}
-
-  @media(max-width:1024px){
-    .hero-grid{gap:36px}
-    .hero-media,.hero-media img{min-height:400px}
-    .lookbook,.cat-surface .lookbook{grid-template-columns:repeat(3,minmax(0,1fr))}
-    .pdp-rel .lookbook{grid-template-columns:repeat(3,minmax(0,1fr))}
-    .offers{grid-template-columns:repeat(2,minmax(0,1fr))}
-    .shots,.guars,.quotes,.stats,.plans{grid-template-columns:repeat(2,minmax(0,1fr))}
-    .svc-body{grid-template-columns:1fr}
-    .svc-cta{position:static}
-    .contact-grid{grid-template-columns:1fr}
-  }
-  @media(max-width:860px){
-    .hero-grid,.pdp-grid,.dossier,.contact-grid{grid-template-columns:1fr}
-    .hero-copy{padding-bottom:40px}
-    .hero-media{border-left:0;border-top:1px solid var(--night-line)}
-    .hero-media,.hero-media img{min-height:320px}
-    .lookbook,.cat-surface .lookbook,.pdp-rel .lookbook{grid-template-columns:repeat(2,minmax(0,1fr))}
-    .specs{grid-template-columns:1fr;gap:0}
-    .specs div{padding:12px 0;border-bottom:1px solid var(--night-line)}
-    .specs div + div{padding-left:0;border-left:0}
-    .ds-rev-row{grid-template-columns:1fr}
-  }
-  @media(max-width:680px){
-    .shell{padding:0 18px}
-    .top-in{min-height:64px;gap:12px;padding:10px 0}
-    .brand-copy small{display:none}
-    .hero h1{font-size:clamp(36px,11vw,52px)}
-    .lookbook,.cat-surface .lookbook,.pdp-rel .lookbook{grid-template-columns:minmax(0,1fr)}
-    .offers,.shots,.guars,.quotes,.stats,.plans,.foot-grid{grid-template-columns:1fr}
-    .guars .ds-guar,.foot-grid>div + div{border-top:1px solid var(--line)}
-    .band{padding:44px 0}
-    .cat-surface,.svc-surface,.pdp-surface,.contact{padding:40px 0 60px}
-    .cat-tools{gap:10px}
-    .cat-filters-toggle{display:inline-flex;order:1}
-    .cat-sort{order:2;margin-left:auto}
-    .cat-filters-panel{display:none;flex:1 1 100%;order:3}
-    .cat-filters-panel[data-open]{display:grid;gap:12px;padding:14px;border:1px solid var(--line);background:var(--card)}
-    .cat-price{width:100%}
-    .cat-price input{flex:1 1 110px;width:100%}
-    .ds-service{grid-template-columns:34px minmax(0,1fr)}
-    .hero-note{left:12px;right:80px}
-    .hero-tag{left:12px}
-    .cat-filters .ds-cat,.cat-sort select,.cat-filters-toggle,.cat-price input,.cat-clear,.ds-rev-input,.ds-rev-pick,.ds-rev-send{min-height:44px}
-  }
-  @media (prefers-reduced-motion:reduce){
-    *{transition:none!important;animation:none!important}
-    .reveal{opacity:1;transform:none}
-  }
-  a:focus-visible,button:focus-visible,select:focus-visible,input:focus-visible,summary:focus-visible{outline:2px solid var(--acc);outline-offset:3px}
+/* ---------- responsive ---------- */
+@media(max-width:960px){
+  .cat,.prod,.ds-product,.guars .ds-guar,.plans .ds-plan{grid-column:span 6}
+  .clients{grid-template-columns:repeat(2,1fr)}
+  .split,.contact,.pdp-grid{grid-template-columns:1fr}
+  .shots{grid-template-columns:repeat(2,1fr)}
+  .quotes{grid-template-columns:1fr}
+  .offerings{grid-template-columns:1fr}
+  .ds-contact-row{grid-template-columns:1fr}
+}
+@media(max-width:560px){
+  .cat,.prod,.ds-product,.guars .ds-guar,.plans .ds-plan{grid-column:span 12}
+  .clients{grid-template-columns:1fr}
+  .shots{grid-template-columns:1fr}
+  .hero-kicker .hide-m{display:none}
+  .hero-inner{padding-top:110px}
+}
 </style>
 </head>
 <body>
-<div class="backdrop" aria-hidden="true"></div>
-<span class="hazard" aria-hidden="true"></span>
 
-<header class="top">
-  <div class="shell top-in">
+<header class="top" id="hdr" data-ds-pin="top" data-ds-offset="72">
+  <div class="wrap nav">
     <a class="brand" href="#inicio" data-ds-route="home">
-      <span class="mark">{{store_initial}}<img src="{{store_logo}}" alt=""></span>
-      <span class="brand-copy"><strong>{{store_name}}</strong><small>{{store_location}}</small></span>
+      <span class="badge">{{store_initial}}</span><span class="brand-txt">{{store_name}}</span>
     </a>
-    <button class="m-burger" type="button" aria-label="Abrir menú" aria-expanded="false" aria-controls="m-sheet" data-m-open>
-      <span class="m-burger-lines" aria-hidden="true"></span>
-    </button>
-    <nav class="top-nav" aria-label="Secciones">
-      <a href="#inicio" data-ds-route="home"><i>01</i> Inicio</a>
-      <a href="#catalogo" data-ds-route="catalog" data-flag="catalog"><i>02</i> Catálogo</a>
-      <a href="#servicios" data-ds-route="services" data-flag="services"><i>03</i> Servicios</a>
+    <nav class="nav-links" aria-label="Secciones">
+      <a href="#categorias" data-ds-anchor data-ds-route="home">Categorías</a>
+      <a href="#productos" data-ds-anchor data-ds-route="home">Productos</a>
+      <a href="#servicios" data-ds-route="services" data-flag="services">Servicios</a>
+      <a href="#contacto" data-ds-anchor data-ds-route="home" data-flag="contact">Contacto</a>
+      <a class="nav-cta" href="{{store_whatsapp_url}}">Consultar</a>
     </nav>
-    <span class="status"><i aria-hidden="true"></i>En servicio</span>
-    <div class="top-meta">{{store_hours}}</div>
+    <button class="burger" type="button" data-m-open aria-expanded="false" aria-label="Abrir menú">☰</button>
   </div>
 </header>
-
-<nav class="m-sheet" id="m-sheet" role="dialog" aria-modal="true" aria-label="Todas las secciones">
-  <div class="m-sheet-head">
-    <span class="m-grab" aria-hidden="true"></span>
-    <div class="m-sheet-brand">
-      <span class="mark sm">{{store_initial}}</span>
-      <strong>{{store_name}}</strong>
-    </div>
-    <button class="m-close" type="button" aria-label="Cerrar menú" data-m-close>×</button>
-  </div>
-  <nav class="m-sheet-nav" aria-label="Todas las secciones">
-    <a href="#inicio" data-ds-route="home" data-m-close><span>Inicio</span><span aria-hidden="true">01</span></a>
-    <a href="#catalogo" data-ds-route="catalog" data-m-close data-flag="catalog"><span>Catálogo</span><span aria-hidden="true">02</span></a>
-    <a href="#servicios" data-ds-route="services" data-m-close data-flag="services"><span>Servicios</span><span aria-hidden="true">03</span></a>
-    <a href="#contacto" data-m-close data-flag="contact"><span>Contacto</span><span aria-hidden="true">04</span></a>
-    <a href="{{store_whatsapp_url}}" data-m-close><span>WhatsApp</span><span aria-hidden="true">↗</span></a>
-  </nav>
+<nav class="m-menu" aria-label="Menú">
+  <a href="#categorias" data-ds-anchor data-ds-route="home" data-m-close>Categorías</a>
+  <a href="#productos" data-ds-anchor data-ds-route="home" data-m-close>Productos</a>
+  <a href="#servicios" data-ds-route="services" data-m-close data-flag="services">Servicios</a>
+  <a href="#contacto" data-ds-anchor data-ds-route="home" data-m-close data-flag="contact">Contacto</a>
+  <a href="{{store_whatsapp_url}}" data-m-close>Consultar por WhatsApp</a>
 </nav>
-<div class="m-scrim" data-m-close aria-hidden="true"></div>
 
 <div data-surface="landing">
+
+  <!-- ============================ HERO ============================ -->
   <section class="hero" id="inicio">
-    <div class="shell hero-grid">
-      <div class="hero-copy reveal">
-        <p class="hero-kicker"><span class="status" style="color:var(--night-acc)"><i aria-hidden="true"></i>Operativo</span> · Seguridad y protección</p>
-        <h1>{{store_tagline}}</h1>
-        <p class="lead">{{store_description}}</p>
-        <div class="actions">
-          <a class="btn btn-hero-solid" href="#catalogo" data-ds-route="catalog" data-flag="catalog">Ver catálogo</a>
-          <a class="btn btn-hero" href="{{store_whatsapp_url}}">Consultar por WhatsApp</a>
-        </div>
-        <dl class="specs">
-          <div><dt>Ubicación</dt><dd>{{store_location}}</dd></div>
-          <div data-flag="hours"><dt>Horarios</dt><dd>{{store_hours}}</dd></div>
-          <div><dt>Contacto</dt><dd><a href="{{store_whatsapp_url}}">WhatsApp</a></dd></div>
-        </dl>
+    <div class="hero-bg"><img src="{{store_cover}}" alt="{{store_name}}"></div>
+    <div class="wrap hero-inner">
+      <div class="hero-kicker">
+        <span data-flag="location"><span class="dot"></span>{{store_location}}</span>
+        <span class="mono hide-m" data-flag="hours">{{store_hours}}</span>
       </div>
-      <figure class="hero-media reveal">
-        <img src="{{store_cover}}" alt="{{store_name}}" loading="eager">
-        <span class="hero-tag">Stock real · Entrega rápida</span>
-        <span class="hero-index" aria-hidden="true">SEC·{{store_initial}}</span>
-        <figcaption class="hero-note">
-          <span class="tag">Ficha del negocio</span>
-          <strong>{{store_name}}</strong>
-          <span>{{store_address}}</span>
-          <a href="{{store_whatsapp_url}}">Pedir cotización</a>
-        </figcaption>
-      </figure>
+      <h1 class="hero-title">
+        <span class="ln out">{{store_name}}</span>
+        <span class="ln fire">{{store_tagline}}</span>
+      </h1>
+      <div class="hero-sub">
+        <p class="hero-desc">{{store_description}}</p>
+        <div class="hero-cta">
+          <a class="btn solid" href="#catalogo" data-ds-route="catalog" data-flag="catalog">Ver catálogo</a>
+          <a class="btn" href="{{store_whatsapp_url}}">Consultar</a>
+        </div>
+      </div>
     </div>
   </section>
 
-  <div class="tape" data-flag="announcements">
-    <div class="tape-track">
-      {{announcements}}
-      {{announcements}}
-    </div>
+  <!-- ============================ MARQUEE ============================ -->
+  <div class="marquee" data-flag="announcements" data-marquee-wrap>
+    <div class="marquee-track" data-marquee>{{announcements}}</div>
   </div>
 
-  <section class="band">
-    <div class="shell">
-      <div class="band-head reveal"><h2>Departamentos</h2><span class="meta">Catálogo completo</span></div>
-      <div class="cats" data-flag="categories">{{categories}}</div>
+  <!-- ============================ CATEGORÍAS ============================ -->
+  <section class="section" id="categorias" data-flag="categories" data-hide-if-empty=".ds-cat">
+    <div class="wrap">
+      <div class="sec-head">
+        <div>
+          <div class="sec-label">01 — Qué vendemos</div>
+          <h2 class="sec-title">Categorías</h2>
+        </div>
+        <a class="sec-link" href="#catalogo" data-ds-route="catalog" data-flag="catalog">Todo el catálogo →</a>
+      </div>
+      <div class="grid cats-head">{{categories}}</div>
     </div>
   </section>
 
-  <section class="band" id="coleccion" data-flag="featured">
-    <div class="shell">
-      <div class="band-head reveal"><h2>Inventario destacado</h2><a href="#catalogo" data-ds-route="catalog">Ver todo →</a></div>
-      <div class="lookbook">{{products}}</div>
+  <!-- ============================ PRODUCTOS ============================ -->
+  <section class="section" id="productos" style="background:var(--bg-2);border-top:1px solid var(--line);border-bottom:1px solid var(--line)" data-flag="featured" data-hide-if-empty=".ds-product">
+    <div class="wrap">
+      <div class="sec-head">
+        <div>
+          <div class="sec-label">02 — Destacados</div>
+          <h2 class="sec-title">Más vendidos</h2>
+        </div>
+        <a class="sec-link" href="#catalogo" data-ds-route="catalog" data-flag="catalog">Ver todos →</a>
+      </div>
+      <div class="grid">{{products}}</div>
     </div>
   </section>
 
-  <section class="band" data-flag="services">
-    <div class="shell">
-      <div class="band-head reveal"><h2>{{offerings_title}}</h2><a href="#servicios" data-ds-route="services">Servicios →</a></div>
-      <div class="offers">{{offerings}}</div>
-      <ul class="svc-list">{{services}}</ul>
-    </div>
-  </section>
-
-  <section class="band" data-flag="stats">
-    <div class="shell">
-      <div class="band-head reveal"><h2>Trayectoria</h2><span class="meta">En números</span></div>
-      <div class="stats">{{stats}}</div>
-    </div>
-  </section>
-
-  <section class="band" data-flag="about">
-    <div class="shell dossier reveal">
-      <div aria-hidden="true"><span class="num">SEC</span></div>
+  <!-- ============================ SERVICIOS ============================ -->
+  <section class="section" id="servicios" data-flag="services" data-hide-if-empty=".ds-service">
+    <div class="wrap split">
+      <div class="split-img"><img src="{{store_cover}}" alt="{{store_name}}"></div>
       <div>
-        <span class="about-title">{{store_about_title}}</span>
-        <h2>Sobre el negocio</h2>
-        <p>{{store_about}}</p>
-        <ul>
-          <li>{{store_about_years}}</li>
-          <li>{{store_about_mission}}</li>
-          <li>{{store_about_specialties}}</li>
-        </ul>
+        <div class="sec-label">03 — Servicio técnico</div>
+        <h2 class="sec-title" style="margin-bottom:36px">{{offerings_title}}</h2>
+        <div class="service-list">{{services}}</div>
       </div>
     </div>
   </section>
 
-  <section class="band" data-flag="benefits">
-    <div class="shell">
-      <div class="band-head reveal"><h2>Garantías</h2><span class="meta">Cobertura total</span></div>
-      <div class="guars">{{benefits}}</div>
+  <!-- ============================ NÚMEROS ============================ -->
+  <section class="band" id="numeros" data-flag="stats" data-hide-if-empty=".ds-stat">
+    <div class="wrap" style="padding-top:clamp(56px,7vw,90px);padding-bottom:clamp(56px,7vw,90px)">
+      <div class="sec-head">
+        <div>
+          <div class="sec-label">04 — Los números</div>
+          <h2 class="sec-title">La operación</h2>
+        </div>
+      </div>
+      <div class="clients">{{stats}}</div>
     </div>
   </section>
 
-  <section class="band" data-flag="gallery">
-    <div class="shell">
-      <div class="band-head reveal"><h2>Galería</h2><span class="meta">Trabajo real</span></div>
+  <!-- ============================ GARANTÍAS ============================ -->
+  <section class="section" data-flag="benefits" data-hide-if-empty=".ds-guar">
+    <div class="wrap">
+      <div class="sec-head">
+        <div>
+          <div class="sec-label">05 — Respaldo</div>
+          <h2 class="sec-title">Garantías</h2>
+        </div>
+      </div>
+      <div class="extra-grid guars">{{benefits}}</div>
+    </div>
+  </section>
+
+  <!-- ============================ GALERÍA ============================ -->
+  <section class="section" style="background:var(--bg-2);border-top:1px solid var(--line);border-bottom:1px solid var(--line)" data-flag="gallery" data-hide-if-empty=".ds-shot">
+    <div class="wrap">
+      <div class="sec-head">
+        <div>
+          <div class="sec-label">06 — En imágenes</div>
+          <h2 class="sec-title">Galería</h2>
+        </div>
+      </div>
       <div class="shots">{{gallery}}</div>
     </div>
   </section>
 
-  <section class="band" data-flag="testimonials">
-    <div class="shell">
-      <div class="band-head reveal"><h2>{{testimonials_title}}</h2><span class="meta">Clientes</span></div>
+  <!-- ============================ TESTIMONIOS ============================ -->
+  <section class="section" data-flag="testimonials" data-hide-if-empty=".ds-quote">
+    <div class="wrap">
+      <div class="sec-head">
+        <div>
+          <div class="sec-label">07 — Quién confía</div>
+          <h2 class="sec-title">{{testimonials_title}}</h2>
+        </div>
+      </div>
       <div class="quotes">{{testimonials}}</div>
     </div>
   </section>
 
-  <section class="band" data-flag="faq">
-    <div class="shell">
-      <div class="band-head reveal"><h2>{{faqs_title}}</h2><span class="meta">Dudas frecuentes</span></div>
+  <!-- ============================ FAQ ============================ -->
+  <section class="section" style="background:var(--bg-2);border-top:1px solid var(--line);border-bottom:1px solid var(--line)" data-flag="faq" data-hide-if-empty=".ds-faq">
+    <div class="wrap">
+      <div class="sec-head">
+        <div>
+          <div class="sec-label">08 — Dudas</div>
+          <h2 class="sec-title">{{faqs_title}}</h2>
+        </div>
+      </div>
       <div class="faqs">{{faqs}}</div>
     </div>
   </section>
 
-  <section class="band" data-flag="plans">
-    <div class="shell">
-      <div class="band-head reveal"><h2>{{plans_title}}</h2><span class="meta">Membresías</span></div>
-      <div class="plans">{{plans}}</div>
-    </div>
-  </section>
-
-  <section class="cta-band" data-flag="cta">
-    <div class="shell reveal">
-      <div>
-        <h2>{{cta_title}} <span class="fire">→</span></h2>
-        <p>{{cta_text}}</p>
-      </div>
-      <a class="btn btn-hero-solid" href="{{store_whatsapp_url}}">{{cta_label}}</a>
-    </div>
-  </section>
-
-  <section class="contact" id="contacto" data-flag="contact">
-    <div class="shell">
-      <div class="band-head reveal" style="border-bottom-color:var(--line-strong)"><h2>Contacto</h2><span class="meta">{{store_location}}</span></div>
-      <div class="contact-grid">
-        <div class="reveal">
-          <div class="info-row"><span class="mono">Dirección</span><span>{{store_address}}</span></div>
-          <div class="info-row"><span class="mono">Ubicación</span><span>{{store_location}}</span></div>
-          <div class="info-row" data-flag="hours"><span class="mono">Horarios</span><span>{{store_hours}}</span></div>
-          <div class="info-row"><span class="mono">WhatsApp</span><a class="wa-link" href="{{store_whatsapp_url}}">Escribinos</a></div>
-          <div class="info-row"><span class="mono">Instagram</span><a class="wa-link" href="{{store_instagram_url}}">@{{store_name}}</a></div>
-          <div class="info-row"><span class="mono">Mapa</span><a class="wa-link" href="{{store_maps_url}}">Cómo llegar</a></div>
+  <!-- ============================ PLANES ============================ -->
+  <section class="section" data-flag="plans" data-hide-if-empty=".ds-plan">
+    <div class="wrap">
+      <div class="sec-head">
+        <div>
+          <div class="sec-label">09 — Membresías</div>
+          <h2 class="sec-title">{{plans_title}}</h2>
         </div>
-        <div class="contact-form reveal">{{contact_form}}</div>
       </div>
+      <div class="extra-grid plans">{{plans}}</div>
     </div>
   </section>
+
+  <!-- ============================ CTA ============================ -->
+  <section class="cta-band" data-flag="cta" data-hide-if-empty=".cta-title|.cta-text|.cta-label">
+    <div class="wrap cta-in">
+      <div>
+        <h2 class="cta-title">{{cta_title}}</h2>
+        <p class="cta-text">{{cta_text}}</p>
+      </div>
+      <a class="btn cta-link" href="{{store_whatsapp_url}}">{{cta_label}}</a>
+    </div>
+  </section>
+
+  <!-- ============================ CONTACTO ============================ -->
+  <section class="section" id="contacto" data-flag="contact">
+    <div class="wrap contact">
+      <div>
+        <div class="sec-label">10 — Contacto</div>
+        <h2 class="contact-title">Hablá<br>con <span class="fire">{{store_name}}</span></h2>
+        <p class="lead">Pedidos por mayor, consultas de stock o servicio a domicilio: respondemos en el día hábil. También atendemos por WhatsApp.</p>
+        <div>
+          <div class="info-row" data-flag="location"><span class="mono">Dirección</span><span>{{store_address}} · {{store_location}}</span></div>
+          <div class="info-row" data-flag="hours"><span class="mono">Horario</span><span>{{store_hours}}</span></div>
+          <div class="info-row"><span class="mono">WhatsApp</span><a href="{{store_whatsapp_url}}">Escribinos</a></div>
+          <div class="info-row"><span class="mono">Instagram</span><a href="{{store_instagram_url}}">@{{store_name}}</a></div>
+          <div class="info-row"><span class="mono">Mapa</span><a href="{{store_maps_url}}">Cómo llegar</a></div>
+        </div>
+      </div>
+      <div class="contact-form">{{contact_form}}</div>
+    </div>
+  </section>
+
 </div>
 
+<!-- ============================ CATÁLOGO ============================ -->
 <section class="cat-surface" data-surface="catalog" id="catalogo" data-flag="catalog">
-  <div class="shell">
-    <div class="cat-head reveal"><h1>Catálogo</h1><span data-ds-count></span></div>
+  <div class="wrap">
+    <div class="cat-hero">
+      <h1>Catálogo <em>{{store_name}}</em></h1>
+      <p>{{store_tagline}}</p>
+    </div>
     <div class="cat-tools">
-      <button class="cat-filters-toggle" type="button" data-ds-filters-toggle aria-expanded="false" aria-controls="ds-catalog-filters">Filtros</button>
-      <div class="cat-filters-panel" id="ds-catalog-filters" data-ds-filters-panel>
+      <button class="cat-filters-toggle" type="button" data-ds-filters-toggle aria-expanded="false" aria-controls="guardia-filters">Filtros</button>
+      <div class="cat-filters-panel" id="guardia-filters" data-ds-filters-panel>
         <div class="cat-filters" data-ds-filters role="group" aria-label="Categorías"></div>
         <div class="cat-price" role="group" aria-label="Rango de precio">
           <span>Precio</span>
-          <input type="number" inputmode="numeric" min="0" step="1" placeholder="Mín." aria-label="Precio mínimo" data-ds-price-min>
+          <input type="number" inputmode="numeric" min="0" step="1" placeholder="Desde" aria-label="Precio mínimo" data-ds-price-min>
           <span aria-hidden="true">—</span>
-          <input type="number" inputmode="numeric" min="0" step="1" placeholder="Máx." aria-label="Precio máximo" data-ds-price-max>
+          <input type="number" inputmode="numeric" min="0" step="1" placeholder="Hasta" aria-label="Precio máximo" data-ds-price-max>
+          <button class="cat-clear" type="button" data-ds-price-apply>Aplicar</button>
         </div>
-        <label class="cat-offers"><input type="checkbox" data-ds-offers> Solo ofertas</label>
-        <button class="cat-clear" type="button" data-ds-clear>Limpiar</button>
+        <label class="cat-offers"><input type="checkbox" data-ds-offers> Solo con descuento</label>
+        <button class="cat-clear" type="button" data-ds-clear>Limpiar filtros</button>
       </div>
-      <label class="cat-sort">Ordenar
-        <select data-ds-sort>
-          <option value="relevance">Sugerido</option>
-          <option value="price-asc">Menor precio</option>
-          <option value="price-desc">Mayor precio</option>
-          <option value="name">Nombre</option>
-        </select>
-      </label>
+      <div style="display:flex;align-items:center;gap:18px;flex-wrap:wrap">
+        <p class="cat-count" data-ds-count aria-live="polite"></p>
+        <label class="cat-sort"><span>Orden</span>
+          <select data-ds-sort>
+            <option value="relevance">Sugerido</option>
+            <option value="price-asc">Menor precio</option>
+            <option value="price-desc">Mayor precio</option>
+            <option value="recent">Más nuevos</option>
+            <option value="name">Nombre</option>
+          </select>
+        </label>
+      </div>
     </div>
-    <div class="lookbook" data-ds-products>{{products}}</div>
-    <p class="ds-empty" data-ds-noresults hidden>No hay productos con esos filtros.</p>
+    <div class="grid cat-grid" data-ds-products>{{products}}</div>
+    <p class="ds-empty" data-ds-noresults hidden>No hay productos con esos filtros. Probá con otra búsqueda o limpiá los filtros.</p>
   </div>
 </section>
 
-<section class="svc-surface" data-surface="services" id="servicios" data-flag="services">
-  <div class="shell">
-    <div class="svc-head reveal"><h1>Servicios</h1><p>{{store_about}}</p></div>
-    <div class="svc-body">
-      {{services}}
-      <a class="svc-cta" href="{{store_whatsapp_url}}">Pedir presupuesto</a>
-    </div>
-  </div>
-</section>
-
+<!-- ============================ PRODUCTO ============================ -->
 <section class="pdp-surface" data-surface="product" data-flag="catalog">
-  <div class="shell">
+  <div class="wrap">
     <nav class="pdp-crumb" aria-label="Ruta">
-      <a href="#inicio" data-ds-route="home">Inicio</a>
-      <span class="sep" aria-hidden="true">/</span>
-      <a href="#catalogo" data-ds-route="catalog">Catálogo</a>
-      <span class="sep" aria-hidden="true">/</span>
+      <a href="#inicio" data-ds-route="home">Inicio</a><span class="sep" aria-hidden="true">/</span>
+      <a href="#catalogo" data-ds-route="catalog">Catálogo</a><span class="sep" aria-hidden="true">/</span>
       <span aria-current="page">{{product_name}}</span>
     </nav>
     <div class="pdp-grid">
-      <figure class="pdp-media reveal">
-        <img src="{{product_image}}" alt="{{product_name}}" loading="eager">
+      <figure class="pdp-media">
+        <img src="{{product_image}}" alt="{{product_name}}" fetchpriority="high" decoding="async">
         <span class="pdp-media-tag">{{product_offer_pct}}</span>
-        <figcaption><span>{{product_category}}</span><span>{{product_brand}}</span><span>N° {{product_ref}}</span></figcaption>
       </figure>
-      <div class="pdp-info reveal">
-        <p class="pdp-kicker">Ficha — {{product_category}}</p>
+      <div class="pdp-info">
+        <p class="pdp-kicker">{{product_category}}<span data-flag="location"> · {{store_location}}</span></p>
         <h1>{{product_name}}</h1>
-        <p class="pdp-ref">Ref. {{product_ref}}</p>
+        <p class="pdp-ref">Ref. {{product_ref}} · {{store_name}}</p>
         <div class="pdp-price"><b>{{product_price}}</b><em>{{product_offer_pct}}</em><s>{{product_old_price}}</s></div>
+        <p class="pdp-score" style="font-family:var(--mono);font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--mut);margin-bottom:18px"><b style="font-size:18px;color:var(--accent-2)">{{product_rating_avg}}</b> promedio · {{product_rating_count}} valoraciones</p>
         <p class="pdp-desc">{{product_description}}</p>
         <div class="pdp-ctas">
-          <a class="btn btn-primary" href="{{product_whatsapp_url}}">Consultar por WhatsApp</a>
-          <a class="btn btn-ghost" href="#catalogo" data-ds-route="catalog">Volver al catálogo</a>
+          <a class="btn solid" href="{{product_whatsapp_url}}">Consultar por WhatsApp</a>
+          <a class="btn" href="#catalogo" data-ds-route="catalog">Seguir mirando</a>
         </div>
         <table class="pdp-specs"><tbody>{{product_features}}</tbody></table>
+        <p class="mono" style="margin-top:20px;color:var(--mut)">Vendido por {{store_name}} · {{store_hours}}</p>
       </div>
     </div>
-    <section class="pdp-rev" aria-label="Opiniones">
+    <div class="pdp-rev">
       <div class="pdp-rev-head">
         <h2>Opiniones</h2>
         <p class="pdp-score"><b>{{product_rating_avg}}</b><span>nota media · {{product_rating_count}} opiniones</span></p>
       </div>
       {{product_reviews}}
-    </section>
-    <section class="pdp-rel" aria-label="También te puede interesar">
-      <h2>Relacionados</h2>
-      <div class="lookbook">{{product_related}}</div>
-    </section>
+    </div>
+    <div class="pdp-rel" data-hide-if-empty=".ds-product">
+      <h2 style="margin-bottom:26px">También te puede gustar</h2>
+      <div class="grid">{{product_related}}</div>
+    </div>
   </div>
 </section>
 
-<footer class="foot">
-  <div class="shell">
-    <p class="foot-name">{{store_name}}</p>
-    <div class="foot-grid">
-      <div><p class="foot-h">El negocio</p><span>{{store_tagline}}</span><span>{{store_about_years}}</span></div>
-      <div><p class="foot-h">Ubicación</p><span>{{store_address}}</span><span>{{store_location}}</span><a class="wa-link" href="{{store_maps_url}}">Cómo llegar</a></div>
-      <div data-flag="contact"><p class="foot-h">Contacto</p><span data-flag="hours">{{store_hours}}</span><a class="wa-link" href="{{store_whatsapp_url}}">WhatsApp</a><a class="wa-link" href="{{store_email}}">{{store_email}}</a></div>
-      <div><p class="foot-h">Redes</p><a class="wa-link" href="{{store_instagram_url}}">Instagram</a><a class="wa-link" href="{{store_facebook_url}}">Facebook</a><a class="wa-link" href="{{store_tiktok_url}}">TikTok</a></div>
+<!-- ============================ SERVICIOS (página) ============================ -->
+<section class="svc-surface" data-surface="services" id="servicios-pagina" data-flag="services">
+  <div class="wrap">
+    <div class="svc-head">
+      <h1>{{offerings_title}}</h1>
+      <p>{{store_tagline}}</p>
     </div>
-    <p class="foot-legal">© {{year}} {{store_name}} · {{footer_text}}</p>
+    <div class="offerings" data-hide-if-empty=".ds-offer">{{offerings}}</div>
+    <div class="services-list" data-hide-if-empty=".ds-service">
+      <h2 class="services-title">Servicios</h2>
+      {{services}}
+    </div>
+    <p class="svc-empty">La tienda todavía no publicó servicios. Escribinos por WhatsApp y te contamos qué podemos hacer por vos.</p>
+    <a class="svc-cta" href="{{store_whatsapp_url}}">Pedir presupuesto →</a>
+  </div>
+</section>
+
+<!-- ============================ FOOTER ============================ -->
+<footer>
+  <div class="wrap foot">
+    <a class="brand" href="#inicio" data-ds-route="home">
+      <span class="badge">{{store_initial}}</span><span class="brand-txt">{{store_name}}</span>
+    </a>
+    <nav class="foot-links" aria-label="Pie">
+      <a href="#categorias" data-ds-anchor data-ds-route="home">Categorías</a>
+      <a href="#productos" data-ds-anchor data-ds-route="home">Productos</a>
+      <a href="#servicios" data-ds-route="services" data-flag="services">Servicios</a>
+      <a href="#contacto" data-ds-anchor data-ds-route="home" data-flag="contact">Contacto</a>
+    </nav>
+    <span class="foot-copy">© {{year}} {{store_name}} · {{footer_text}}</span>
   </div>
 </footer>
 
-<span class="hazard thin" aria-hidden="true"></span>
-
 <script>
-  (function () {
-    var sheet = document.getElementById('m-sheet')
-    if (sheet) {
-      var scrim = document.querySelector('.m-scrim')
-      var openers = [].slice.call(document.querySelectorAll('[data-m-open]'))
-      var closers = [].slice.call(document.querySelectorAll('[data-m-close]'))
-      function setOpen(open) {
-        sheet.classList.toggle('open', open)
-        if (scrim) scrim.classList.toggle('open', open)
-        openers.forEach(function (b) { b.setAttribute('aria-expanded', open ? 'true' : 'false') })
-        document.documentElement.classList.toggle('m-lock', open)
-      }
-      openers.forEach(function (b) {
-        b.addEventListener('click', function () { setOpen(!sheet.classList.contains('open')) })
-      })
-      closers.forEach(function (el) { el.addEventListener('click', function () { setOpen(false) }) })
-      document.addEventListener('keydown', function (e) { if (e.key === 'Escape') setOpen(false) })
-    }
+(function () {
+  var reduce = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches
+  var hdr = document.getElementById('hdr')
+  var frame = null
 
-    // Pestaña activa de la barra móvil (el host cambia data-ds-surface).
-    function paintTabs() {
-      var surface = document.documentElement.getAttribute('data-ds-surface') || 'landing'
-      ;[].forEach.call(document.querySelectorAll('.m-tab[data-ds-route]'), function (tab) {
-        var route = tab.getAttribute('data-ds-route')
-        var on = (surface === 'landing' && route === 'home') || (surface === 'catalog' && route === 'catalog') || (surface === 'services' && route === 'services')
-        tab.classList.toggle('is-on', on)
-        if (on) tab.setAttribute('aria-current', 'page')
-        else tab.removeAttribute('aria-current')
-      })
+  /* Cabecera sólida: el iframe va estirado — el scroll real llega por
+     `davent:ds-frame` desde el host. */
+  function paintHead() {
+    if (!hdr) return
+    var top = frame ? Math.max(0, -frame.top) : (window.scrollY || 0)
+    hdr.classList.toggle('solid', top > 40)
+  }
+  window.addEventListener('message', function (e) {
+    var d = e.data || {}
+    if (d.type === 'davent:ds-frame') {
+      frame = { top: Number(d.top) || 0, vh: Number(d.vh) || window.innerHeight }
+      paintHead()
     }
-    paintTabs()
-    new MutationObserver(paintTabs).observe(document.documentElement, { attributes: true, attributeFilter: ['data-ds-surface'] })
+    if (d.type === 'davent:ds-surface') setTimeout(paintHead, 60)
+  })
 
-    var nodes = document.querySelectorAll('.reveal')
-    if (!nodes.length || !('IntersectionObserver' in window)) return
-    var reduce = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches
-    if (reduce) {
-      for (var i = 0; i < nodes.length; i++) nodes[i].classList.add('on')
-      return
-    }
-    var io = new IntersectionObserver(function (entries) {
-      entries.forEach(function (entry) {
-        if (!entry.isIntersecting) return
-        entry.target.classList.add('on')
-        io.unobserve(entry.target)
-      })
-    }, { rootMargin: '0px 0px -8% 0px', threshold: 0.08 })
-    for (var j = 0; j < nodes.length; j++) io.observe(nodes[j])
-  })()
+  /* Menú móvil */
+  var menu = document.querySelector('.m-menu')
+  function setMenu(open) {
+    if (!menu) return
+    menu.classList.toggle('open', open)
+    var btn = document.querySelector('[data-m-open]')
+    if (btn) btn.setAttribute('aria-expanded', open ? 'true' : 'false')
+    document.documentElement.style.overflow = open ? 'hidden' : ''
+  }
+  document.addEventListener('click', function (e) {
+    var t = e.target
+    if (!t || !t.closest) return
+    if (t.closest('[data-m-open]')) { setMenu(!menu || !menu.classList.contains('open')); return }
+    if (t.closest('[data-m-close]')) setMenu(false)
+  })
+  document.addEventListener('keydown', function (e) { if (e.key === 'Escape') setMenu(false) })
+  window.addEventListener('resize', function () { if (window.innerWidth > 960) setMenu(false) })
+
+  /* Cintas en loop: la pista se duplica para el translateX(-50%). */
+  ;[].forEach.call(document.querySelectorAll('[data-marquee]'), function (track) {
+    var html = (track.innerHTML || '').trim()
+    if (!html) return
+    track.setAttribute('data-loop', '1')
+    track.innerHTML = html + html
+  })
+
+  paintHead()
+})()
 </script>
 </body>
 </html>
