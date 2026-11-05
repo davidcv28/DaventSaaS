@@ -317,10 +317,10 @@ h1, h2, h3{ letter-spacing: -.02em; }
 .sidebar nav button:hover{ background: rgba(255, 255, 255, .06); color: var(--rail-ink-hi, #fff); }
 .sidebar nav button.active{ background: rgba(99, 102, 241, .22); color: #fff; box-shadow: inset 2px 0 0 var(--brand-400); }
 .sidebar nav button.active .icon{ color: var(--brand-200); }
-.side-foot{ margin-top: auto; flex-shrink: 0; display: grid; gap: 3px; font-size: 12.5px; border-top: 1px solid rgba(255, 255, 255, .08); padding-top: 10px; }
+.side-foot{ margin-top: auto; flex-shrink: 0; display: grid; gap: 3px; font-size: 13px; border-top: 1px solid rgba(255, 255, 255, .08); padding-top: 10px; }
 .side-foot .who{ display: flex; align-items: center; gap: 10px; padding: 0 6px; overflow: hidden; }
 .side-foot .who-name{ overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: #e2e8f0; font-weight: 500; }
-.side-foot .link{ display: flex; align-items: center; gap: 8px; background: none; border: none; color: #94a3b8; cursor: pointer; text-align: left; padding: 5px 6px; font: inherit; font-size: 12.5px; border-radius: 8px; transition: color .15s, background .15s; }
+.side-foot .link{ display: flex; align-items: center; gap: 8px; background: none; border: none; color: #94a3b8; cursor: pointer; text-align: left; padding: 6px; font: inherit; font-size: 13px; border-radius: 8px; transition: color .15s, background .15s; }
 .side-foot .link:hover{ color: #fca5a5; background: rgba(255, 255, 255, .05); }
 .main{ padding: 32px 36px 60px; max-width: 1400px; width: 100%; min-width: 0; }
 .page-head{ display: flex; justify-content: space-between; align-items: flex-start; gap: 14px; margin-bottom: 22px; flex-wrap: wrap; }

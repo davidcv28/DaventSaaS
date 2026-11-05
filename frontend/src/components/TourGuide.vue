@@ -63,13 +63,42 @@ function place() {
     }
     const r = el.getBoundingClientRect()
     spot.value = { x: r.left - pad, y: r.top - pad, w: r.width + pad * 2, h: r.height + pad * 2 }
-    const mobile = window.innerWidth <= 860
-    // Tooltip: a la derecha del sidebar en desktop, sobre la tab bar en móvil.
-    if (mobile) {
-      tipPos.value = { x: Math.min(Math.max(16, r.left + r.width / 2 - 140), window.innerWidth - 296), y: Math.max(12, r.top - 190), below: false }
+
+    // Medir la card real: su alto depende del texto del paso.
+    const card = document.querySelector('.tour-card')
+    const cw = card?.offsetWidth || 300
+    const ch = card?.offsetHeight || 190
+    const vw = window.innerWidth
+    const vh = window.innerHeight
+    const M = 12 // margen mínimo al borde de la pantalla
+    const clampX = (x) => Math.min(Math.max(M, x), Math.max(M, vw - cw - M))
+    const clampY = (y) => Math.min(Math.max(M, y), Math.max(M, vh - ch - M))
+    const fits = (x, y) => x >= M && y >= M && x + cw <= vw - M && y + ch <= vh - M
+
+    let x, y
+    if (vw <= 860) {
+      // Móvil: probar abajo, arriba, derecha e izquierda del target; gana la
+      // primera que entra completa en pantalla. Si ninguna entra (target
+      // gigante), se usa la de abajo ya clampeada.
+      const cx = r.left + r.width / 2 - cw / 2
+      const candidates = [
+        [cx, r.bottom + 12],
+        [cx, r.top - ch - 12],
+        [r.right + 12, r.top + r.height / 2 - ch / 2],
+        [r.left - cw - 12, r.top + r.height / 2 - ch / 2]
+      ]
+      const hit = candidates.find(([px, py]) => fits(px, py))
+      if (hit) { x = hit[0]; y = hit[1] }
+      else { x = clampX(cx); y = clampY(r.bottom + 12) }
     } else {
-      tipPos.value = { x: Math.min(r.right + 18, window.innerWidth - 300), y: Math.max(12, r.top - 8), below: true }
+      // Desktop: a la derecha del sidebar; si no entra, a la izquierda; si
+      // tampoco, debajo del target centrado.
+      const sideY = r.top - 8
+      if (fits(r.right + 18, sideY)) { x = r.right + 18; y = sideY }
+      else if (fits(r.left - cw - 18, sideY)) { x = r.left - cw - 18; y = sideY }
+      else { x = clampX(vw / 2 - cw / 2); y = clampY(r.bottom + 12) }
     }
+    tipPos.value = { x, y, below: false }
   })
 }
 

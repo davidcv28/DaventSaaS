@@ -125,9 +125,9 @@
 
 .app .sidebar nav { gap: 1px; }
 .app .sidebar nav button {
-  padding: 6px 10px;
+  padding: 7px 10px;
   border-radius: 10px;
-  font-size: 13px;
+  font-size: 14px;
   letter-spacing: -.005em;
 }
 .app .sidebar nav button > .icon:first-child {
@@ -162,14 +162,14 @@
 .app .nav-heading {
   margin: 10px 10px 2px;
   font-family: var(--dv-mono);
-  font-size: 9.5px;
+  font-size: 10px;
   font-weight: 600;
   letter-spacing: .16em;
   color: #7c8ab4;
 }
 .app .nav-heading::after { display: none; }
 .app .side-foot { border-top: 1px solid rgba(255, 255, 255, .09); }
-.app .side-foot .link { border-radius: 8px; padding: 5px 6px; font-size: 12.5px; }
+.app .side-foot .link { border-radius: 8px; padding: 6px; font-size: 13px; }
 .app .side-foot .who { padding: 2px 6px; }
 .app .side-foot .link:hover { background: rgba(255, 255, 255, .07); color: #fff; }
 
