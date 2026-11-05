@@ -571,3 +571,65 @@ genérica de tarjetas.
   landing, catálogo, ficha y experiencias, claro/oscuro, 390 y 1280). Tras
   editar la fuente: `manage.py seed_design_catalog` y
   `manage.py sync_design_neon --slug viajero` (arrastra `viajero-noche`).
+
+## 16. Atelier Noir — lenguaje "atelier de costura" (`atelier-noir`, plus)
+
+Vive en `StoreApp/domains/design/sources/atelier-noir.html` (patrón
+`atelier-noir`) y en los estilos `atelier-noir`, `atelier-noir-noche`,
+`atelier-noir-ocre` y `atelier-noir-oliva`. Es un documento completo:
+landing, catálogo, ficha y servicios salen del mismo HTML/CSS/JS.
+
+- **Dirección**: taller de costura editorial, no e-commerce genérico.
+  Papel hueso `#F5F0E7`, tinta `#14110E`, superficie `#EBE3D6` y un solo
+  acento teja `#B0502F` (noche: grafito `#12100D` + arcilla `#D98A63`).
+  Fraunces para la voz de marca, Instrument Sans para lectura y JetBrains
+  Mono para índices, precios, etiquetas y datos.
+- **Contraste**: `--muted` (`#6E6455`) y `--accent-text` (acento mezclado
+  con tinta) son los únicos tonos para texto chico; el acento puro queda
+  para display (≥24px), fondos y filetes. Sobre banda de tinta se usa
+  `--band-ink`/`--accent-on-ink`. Los estilos claros no bajan de 4.5:1.
+- **Firma**: cinta métrica (`repeating-linear-gradient` de 1px) al pie de
+  la portada y del footer, hilván punteado en los encabezados de sección,
+  fichas `Nº 01`, sello circular giratorio, riel vertical "Colección
+  {año}", marcas de corte en la portada, pliegos numerados en el lookbook
+  y maniquí de línea como marca de agua del dossier.
+- **Portada partida**: columna editorial sobre tinta (índice `01`, kicker
+  con punto vivo, titular gigante en Fraunces, filete de acento, tagline
+  itálica, datos reales de sede/horario/Instagram) + ficha de portada
+  4/5 con esquinas de acento, sello y caption. Sin foto, el monograma
+  gigante (`--accent` al 24%) resuelve el marco; nunca queda un hueco.
+- **Secciones**: cinta de líneas en banda de tinta → índice numerado que
+  se invierte al hover → vitrina de 8 piezas desalineadas (tabs reales) →
+  dossier (años en contorno, especialidades, relato, misión, cifras) →
+  lookbook en tira oscura con `scroll-snap` y pliegos → garantías
+  numeradas → membresías → voces → FAQ con índice → CTA con marquesina
+  de contorno y sello → contacto tipo ficha de taller.
+- **Catálogo**: masthead de tinta con "ARCHIVO" en contorno, chips de
+  datos reales, riel de filtros, buscador con sugerencias, contador,
+  vista grilla/lista y orden. En móvil el riel es hoja lateral y la barra
+  se reordena en grid (buscador full width; conteo, vista y orden en una
+  fila). La ficha mantiene media 1/1 con esquinas, precio mono, ficha
+  técnica, vendedor, opiniones del puente y relacionados.
+- **Movimiento**: entrada de portada por capas (`rise` + `wipe`), sello y
+  anillos girando, parallax de portada con puntero, cintas con pista
+  duplicada al 50% (pausa al hover), reveals con stagger por `--d`,
+  contadores de cifras y progreso de lectura desde `davent:ds-frame`.
+  Solo `transform/opacity`; `prefers-reduced-motion` apaga todo y
+  `hover:none` elimina los lifts y la pista de "Ver pieza".
+- **Trampas resueltas**: (1) `padding` shorthand en `.hero-grid` pisaba el
+  `padding-inline` de `.wrap` y la portada se pegaba al borde — usar
+  `padding-block`; (2) el badge de ahorro vive en `.ds-product-price`
+  (no en la tarjeta): va inline con `order:-1`, nunca absoluto sobre el
+  nombre; (3) el desalineado de la vitrina no depende de
+  `data-ds-view-mode` (la landing no lo lleva) y se corta en 8 piezas
+  salvo que un tab active `data-filtered`; (4) el toggle de tema lo
+  inyecta el puente con `margin-inline-start:auto` — se anula con
+  `!important` para que quede junto al CTA; (5) `--head-h` se mide y solo
+  se reescribe si cambió (sin lazos); (6) `.ds-zone` vacío apaga el
+  `[data-flag]` completo — no marcar `.offerings`; (7) `a[href=""]` se
+  apaga para no dejar iconos huérfanos sin canal.
+- **QA**: `http://localhost:5173/moda-qa` (tienda local, plan premium:
+  landing, catálogo grilla/lista, ficha y servicios; claro/oscuro;
+  390/1440). Tras editar la fuente: `manage.py seed_design_catalog` y
+  `manage.py sync_design_neon --slug atelier-noir` (arrastra los cuatro
+  estilos por la FK `DesignStyle.pattern`).
