@@ -162,7 +162,7 @@ html[data-ds-theme="dark"] .eyebrow::after,html[data-ds-style="olivium-noche"] .
 }
 em{font-style:italic}
 /* Titulares: DM Serif Display — la voz de la etiqueta de aceite. */
-.hero-title,.sec-title,.cta-title,.about-copy h3,.form-title,.cat-hero h1,.pdp-info h1,.reviews-head h2,.pdp-related h2,.services-title,.foot-word,.mmenu nav a,.plans .ds-plan-name,.quotes .ds-quote-text,.grid-products .ds-product-name,.guars .ds-guar-copy b,.dest-grid .ds-cat span,.contact-lead,.about-copy .mission p{
+.hero-title,.sec-title,.cta-title,.about-copy h3,.form-title,.cat-hero h1,.pdp-info h1,.reviews-head h2,.pdp-related h2,.services-title,.foot-word,.plans .ds-plan-name,.quotes .ds-quote-text,.grid-products .ds-product-name,.guars .ds-guar-copy b,.dest-grid .ds-cat span,.contact-lead,.about-copy .mission p{
   font-optical-sizing:auto;
 }
 
@@ -247,36 +247,38 @@ html[data-ds-surface="services"] .nav a[data-ds-route="services"]::after{transfo
 .head .btn{min-height:42px;padding-inline:18px;margin-left:6px}
 /* El puente inyecta el toggle de tema dentro de .top-inner: se integra al
    final del chrome sin abrir una fila nueva debajo del header. */
+/* ---------- Barra inferior móvil ---------- */
 .head-inner .ds-theme-toggle{margin-inline-start:0;width:42px;height:42px;flex:none}
-.m-open-btn{
-  display:none;margin-left:auto;width:46px;height:46px;border:1px solid currentColor;border-radius:50%;
-  background:transparent;align-items:center;justify-content:center;cursor:pointer;
+/* El puente fija los `position:fixed` al viewport del host
+   (`data-ds-pin="bottom"`): dentro del iframe estirado un fixed anclado
+   abajo quedaría al final del documento sin esa compensación. */
+.tabbar{
+  display:none;position:fixed;left:0;right:0;bottom:0;z-index:70;
+  align-items:stretch;
+  background:color-mix(in srgb,var(--paper) 94%,transparent);
+  -webkit-backdrop-filter:blur(14px);backdrop-filter:blur(14px);
+  border-top:1px solid var(--line);
+  padding-bottom:env(safe-area-inset-bottom,0px);
 }
-.m-open-btn svg{width:20px;height:20px}
-
-/* ---------- Menú móvil ---------- */
-.mmenu{
-  position:fixed;inset:0;z-index:80;display:flex;flex-direction:column;
-  background:var(--band);color:var(--band-ink);
-  padding:26px clamp(20px,6vw,44px);transform:translateY(-102%);
-  transition:transform .45s var(--ease);visibility:hidden;
+.tabbar a{
+  flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;
+  min-height:60px;padding:8px 4px;
+  font:600 9px/1 var(--sans);letter-spacing:.1em;text-transform:uppercase;color:var(--muted);
+  transition:color .2s;
 }
-body.m-open .mmenu{transform:none;visibility:visible}
-.mmenu-top{display:flex;align-items:center;justify-content:space-between}
-.mmenu-brand{display:flex;align-items:center;gap:12px}
-.mmenu-close{width:46px;height:46px;border:1px solid color-mix(in srgb,var(--band-ink) 30%,transparent);border-radius:50%;background:transparent;color:inherit;cursor:pointer;display:grid;place-items:center}
-.mmenu-close svg{width:18px;height:18px}
-.mmenu nav{display:flex;flex-direction:column;gap:2px;margin-top:44px}
-.mmenu nav a{
-  display:flex;align-items:baseline;justify-content:space-between;gap:14px;
-  padding:15px 0;border-bottom:1px solid color-mix(in srgb,var(--band-ink) 14%,transparent);
-  font:400 clamp(27px,7vw,42px)/1.1 var(--display);
-  transition:color .2s,padding-left .25s var(--ease);
-}
-.mmenu nav a:hover{color:var(--accent);padding-left:8px}
-.mmenu nav a span:last-child{font:500 11px/1 var(--mono);letter-spacing:.2em;color:var(--honey)}
-.mmenu .btn{margin-top:32px;align-self:flex-start}
-.mmenu-foot{margin-top:auto;padding-top:24px;font:500 10px/1.7 var(--mono);letter-spacing:.18em;text-transform:uppercase;opacity:.5}
+.tabbar a svg{width:19px;height:19px;transition:transform .25s var(--ease)}
+.tabbar a:hover{color:var(--ink)}
+.tabbar a:hover svg{transform:translateY(-2px)}
+.tabbar a.tab-wa{color:var(--accent)}
+.tabbar a.tab-wa svg{color:var(--honey)}
+html[data-ds-surface="landing"] .tabbar a[data-ds-route="home"],
+html[data-ds-surface="catalog"] .tabbar a[data-ds-route="catalog"],
+html[data-ds-surface="product"] .tabbar a[data-ds-route="catalog"],
+html[data-ds-surface="services"] .tabbar a[data-ds-route="services"]{color:var(--accent)}
+html[data-ds-surface="landing"] .tabbar a[data-ds-route="home"] svg,
+html[data-ds-surface="catalog"] .tabbar a[data-ds-route="catalog"] svg,
+html[data-ds-surface="product"] .tabbar a[data-ds-route="catalog"] svg,
+html[data-ds-surface="services"] .tabbar a[data-ds-route="services"] svg{color:var(--accent)}
 
 /* ---------- Héroe ---------- */
 /* El alto llega en --hero-h desde el host (frame.vh): dentro del iframe
@@ -1081,7 +1083,9 @@ html[data-ds-theme="dark"] .services-list .ds-service::before,html[data-ds-style
 }
 @media (max-width:920px){
   .nav,.head .btn{display:none}
-  .m-open-btn{display:inline-flex}
+  .head-inner .ds-theme-toggle{margin-left:auto}
+  .tabbar{display:flex}
+  body{padding-bottom:calc(62px + env(safe-area-inset-bottom,0px))}
   .booking{position:relative;left:auto;bottom:auto;transform:none;padding-inline:clamp(18px,4vw,56px);margin-top:-36px}
   .ticker{margin-top:32px}
   .booking-card{grid-template-columns:1fr 1fr;border-radius:16px}
@@ -1171,37 +1175,18 @@ html[data-ds-theme="dark"] .services-list .ds-service::before,html[data-ds-style
       Consultar
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
     </a>
-    <button class="m-open-btn" type="button" data-m-open aria-label="Abrir menú" aria-expanded="false">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h10"/></svg>
-    </button>
   </div>
   <div class="head-progress" aria-hidden="true"><i data-scroll-progress></i></div>
 </header>
 
-<!-- Menú móvil -->
-<div class="mmenu" aria-label="Menú">
-  <div class="mmenu-top">
-    <span class="mmenu-brand">
-      <span class="brand-mark">{{store_initial}}</span>
-      <strong class="brand-word">{{store_name}}</strong>
-    </span>
-    <button class="mmenu-close" type="button" data-m-close aria-label="Cerrar menú">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18"/></svg>
-    </button>
-  </div>
-  <nav>
-    <a href="#inicio" data-ds-route="home" data-m-close><span>Inicio</span><span aria-hidden="true">01</span></a>
-    <a href="#catalogo" data-ds-route="catalog" data-m-close data-flag="catalog"><span>Productos</span><span aria-hidden="true">02</span></a>
-    <a href="#servicios" data-ds-route="services" data-m-close data-flag="services"><span>Servicios</span><span aria-hidden="true">03</span></a>
-    <a href="#nosotros" data-ds-anchor data-ds-route="home" data-m-close data-flag="about"><span>Nosotros</span><span aria-hidden="true">04</span></a>
-    <a href="#contacto" data-ds-anchor data-ds-route="home" data-m-close data-flag="contact"><span>Contacto</span><span aria-hidden="true">05</span></a>
-    <a href="{{store_whatsapp_url}}" data-m-close><span>WhatsApp</span><span aria-hidden="true">→</span></a>
-  </nav>
-  <a class="btn btn-accent" href="#catalogo" data-ds-route="catalog" data-m-close data-flag="catalog">Ver productos
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
-  </a>
-  <p class="mmenu-foot">{{store_name}} · Del olivar a tu mesa<br>{{store_location}} · {{year}}</p>
-</div>
+<!-- Barra inferior móvil: el puente la fija al viewport (data-ds-pin). -->
+<nav class="tabbar" data-ds-pin="bottom" aria-label="Navegación rápida">
+  <a href="#inicio" data-ds-route="home"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 11.5 12 4l9 7.5"/><path d="M5.5 10.5V20h13v-9.5"/></svg>Inicio</a>
+  <a href="#catalogo" data-ds-route="catalog" data-flag="catalog"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 21v-9"/><path d="M12 12c0-4.5 3.5-8 9-8 0 4.5-3.5 8-9 8Z"/><path d="M12 12c0-4.5-3.5-8-9-8 0 4.5 3.5 8 9 8Z"/></svg>Productos</a>
+  <a href="#servicios" data-ds-route="services" data-flag="services"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 7h9M17 7h3M4 17h3M11 17h9"/><circle cx="15" cy="7" r="2"/><circle cx="9" cy="17" r="2"/></svg>Servicios</a>
+  <a href="#contacto" data-ds-anchor data-ds-route="home" data-flag="contact"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="m3 7 9 6 9-6"/></svg>Contacto</a>
+  <a class="tab-wa" href="{{store_whatsapp_url}}" aria-label="WhatsApp"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 11.5a8.4 8.4 0 0 1-8.5 8.4 8.6 8.6 0 0 1-3.8-.9L3 21l2-5.3a8.3 8.3 0 0 1-1-4A8.4 8.4 0 0 1 12.5 3.2 8.4 8.4 0 0 1 21 11.5Z"/></svg>WhatsApp</a>
+</nav>
 
 <main class="site">
 
@@ -1703,26 +1688,17 @@ html[data-ds-theme="dark"] .services-list .ds-service::before,html[data-ds-style
     }
   }
 
-  /* ---------- Menú móvil ---------- */
-  function setMenu(open) {
-    body.classList.toggle('m-open', open)
-    var btn = document.querySelector('[data-m-open]')
-    if (btn) btn.setAttribute('aria-expanded', open ? 'true' : 'false')
-    document.documentElement.style.overflow = open ? 'hidden' : ''
-  }
   document.addEventListener('click', function (e) {
     var t = e.target
     if (!t || !t.closest) return
-    if (t.closest('[data-m-open]')) { setMenu(true); return }
-    if (t.closest('[data-m-close]')) setMenu(false)
     if (t.closest('[data-ds-filters-toggle]')) { body.classList.add('f-open'); return }
     if (t.closest('[data-ds-filters-close]')) body.classList.remove('f-open')
   })
   document.addEventListener('keydown', function (e) {
-    if (e.key === 'Escape') { setMenu(false); body.classList.remove('f-open') }
+    if (e.key === 'Escape') body.classList.remove('f-open')
   })
   window.addEventListener('resize', function () {
-    if (window.innerWidth > 920) { setMenu(false); body.classList.remove('f-open') }
+    body.classList.remove('f-open')
     syncHead()
     paint()
   })
