@@ -2399,6 +2399,24 @@ class StoreDomainTests(TestCase):
         response        =   APIClient().get(f'{STORES_URL}domain/resolve/', {'domain': 'mitienda.com'})
         self.assertEqual(response.status_code, 404)
 
+    def test_tls_ask_allows_only_verified_domains(self):
+        client, _       =   self._make()
+        anon            =   APIClient()
+        #Sin dominio cargado ni verificado -> 403 (Caddy aborta el handshake).
+        response        =   anon.get(f'{STORES_URL}domain/tls-ask/', {'domain': 'mitienda.com'})
+        self.assertEqual(response.status_code, 403)
+        client.post(f'{STORES_URL}domain/', {'domain': 'mitienda.com'}, format = 'json')
+        #Pending (DNS sin configurar) todavía no habilita cert.
+        response        =   anon.get(f'{STORES_URL}domain/tls-ask/', {'domain': 'mitienda.com'})
+        self.assertEqual(response.status_code, 403)
+        with patch('StoreApp.domains.stores.services.domains.check_domain', return_value = True):
+            client.post(f'{STORES_URL}domain/verify/')
+        response        =   anon.get(f'{STORES_URL}domain/tls-ask/', {'domain': 'mitienda.com'})
+        self.assertEqual(response.status_code, 200)
+        #Dominio inventado nunca pasa.
+        response        =   anon.get(f'{STORES_URL}domain/tls-ask/', {'domain': 'otro-dominio.com'})
+        self.assertEqual(response.status_code, 403)
+
     def test_delete_unlinks_domain(self):
         client, _       =   self._make()
         client.post(f'{STORES_URL}domain/', {'domain': 'mitienda.com'}, format = 'json')

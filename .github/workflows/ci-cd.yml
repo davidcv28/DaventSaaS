@@ -43,6 +43,7 @@ permissions:
 env:
   API_IMAGE: ghcr.io/${{ github.repository_owner }}/daventsaas-api
   WEB_IMAGE: ghcr.io/${{ github.repository_owner }}/daventsaas-web
+  CADDY_IMAGE: ghcr.io/${{ github.repository_owner }}/daventsaas-caddy
 
 jobs:
 
@@ -326,6 +327,27 @@ jobs:
           cache-from: type=gha,scope=web
           cache-to: type=gha,mode=max,scope=web
 
+      - name: Tags imagen CADDY (edge TLS + wildcard DNS-01)
+        id: meta-caddy
+        uses: docker/metadata-action@v6
+        with:
+          images: ${{ env.CADDY_IMAGE }}
+          tags: |
+            type=sha,prefix=sha-,format=long
+            type=raw,value=latest,enable=${{ github.ref == 'refs/heads/main' }}
+
+      - name: Build CADDY -> GHCR
+        uses: docker/build-push-action@v7
+        with:
+          context: .
+          file: docker/caddy/Dockerfile
+          push: ${{ github.event_name != 'pull_request' }}
+          tags: ${{ steps.meta-caddy.outputs.tags }}
+          sbom: true
+          provenance: true
+          cache-from: type=gha,scope=caddy
+          cache-to: type=gha,mode=max,scope=caddy
+
       - name: Instalar cosign
         if: github.event_name != 'pull_request'
         uses: sigstore/cosign-installer@v3
@@ -335,6 +357,7 @@ jobs:
         run: |
           cosign sign --yes "${{ env.API_IMAGE }}:sha-${{ github.sha }}"
           cosign sign --yes "${{ env.WEB_IMAGE }}:sha-${{ github.sha }}"
+          cosign sign --yes "${{ env.CADDY_IMAGE }}:sha-${{ github.sha }}"
 
       - name: Trivy — scan de la imagen API publicada
         if: github.event_name != 'pull_request'
@@ -352,6 +375,16 @@ jobs:
         with:
           scan-type: image
           image-ref: ${{ env.WEB_IMAGE }}:sha-${{ github.sha }}
+          severity: CRITICAL,HIGH
+          ignore-unfixed: true
+          exit-code: "1"
+
+      - name: Trivy — scan de la imagen CADDY publicada
+        if: github.event_name != 'pull_request'
+        uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25  # v0.36.0
+        with:
+          scan-type: image
+          image-ref: ${{ env.CADDY_IMAGE }}:sha-${{ github.sha }}
           severity: CRITICAL,HIGH
           ignore-unfixed: true
           exit-code: "1"
@@ -455,6 +488,11 @@ jobs:
             # El keyring no lo inyecta CI (se rota a mano): solo se valida.
             grep -q '^SECRETS_MASTER_KEYS=.\{20,\}' .env || { echo "FATAL: SECRETS_MASTER_KEYS ausente — la PII se cifraría con la llave derivada y quedaría ilegible al definir el keyring"; exit 1; }
             grep -q '^SECRETS_HASH_KEY=.\{20,\}' .env    || { echo "FATAL: SECRETS_HASH_KEY ausente (huellas de documento/celular)"; exit 1; }
+            # Edge TLS (Caddy): sin CF_API_TOKEN no emite el wildcard
+            # *.dominio y las tiendas-subdominio quedan sin HTTPS; sin "api"
+            # en ALLOWED_HOSTS el ask de on-demand TLS recibe 400 de Django.
+            grep -q '^CF_API_TOKEN=.\{10,\}' .env || { echo "FATAL: CF_API_TOKEN ausente — Caddy no emitirá el wildcard *.dominio"; exit 1; }
+            grep '^ALLOWED_HOSTS=' .env | grep -qE '(^|[,[:space:]])api([,[:space:]]|$)' || { echo "FATAL: ALLOWED_HOSTS sin 'api' — el ask de TLS on-demand fallaría con DisallowedHost"; exit 1; }
 
             # 2d. Tags previos ANTES de tocar nada: si el healthcheck falla,
             #     el rollback vuelve a estas imágenes (nunca a :latest).
@@ -466,6 +504,7 @@ jobs:
             git pull --ff-only
             export API_IMAGE=${{ env.API_IMAGE }}:sha-${{ github.sha }}
             export WEB_IMAGE=${{ env.WEB_IMAGE }}:sha-${{ github.sha }}
+            export CADDY_IMAGE=${{ env.CADDY_IMAGE }}:sha-${{ github.sha }}
             docker compose pull
 
             # 3b. Backup de Postgres a R2 ANTES de migrar (fail-closed): una

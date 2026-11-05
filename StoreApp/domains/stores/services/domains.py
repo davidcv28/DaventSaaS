@@ -106,6 +106,11 @@ def refresh_status(store_domain):
         store_domain.status         =   store_domain.STATUS_PENDING
         store_domain.verified_at    =   None
     store_domain.save(update_fields = ['status', 'verified_at', 'last_checked_at'])
+    #El Host header del dominio propio se valida contra esta tabla (con
+    #caché): sin invalidar, un dominio recién verified tardaría hasta 2 min
+    #en aceptar requests de la API.
+    from DaventProject.custom_hosts import invalidate_domain_host
+    invalidate_domain_host(store_domain.domain)
     return store_domain
 def serialize_domain(store_domain):
     """Payload de la sección "Mi dirección web" (panel del dueño)."""

@@ -1,0 +1,58 @@
+# =============================================================================
+# Edge TLS de DAVENT — Caddy termina HTTPS y proxya a nginx.
+#
+#   Plataforma (apex/www/*.dominio): certs propios; el wildcard *.dominio va
+#     por DNS-01 con el plugin de Cloudflare (CF_API_TOKEN, mismo permiso
+#     Zone.DNS que el certbot). Upstream: nginx :8443 (conserva sus certs).
+#
+#   Dominios propios de tiendas: `https://` catch-all con TLS on-demand. El
+#     `ask` consulta a la API (StoreDomain verified) ANTES de emitir el cert —
+#     un dominio no verificado nunca obtiene certificado. Upstream: nginx
+#     :8081 (HTTP plano, solo edge_net).
+#
+#   :80 -> ACME HTTP-01 (lo intercepta Caddy) + redirect a HTTPS para
+#   cualquier Host, incluidos los dominios propios.
+# =============================================================================
+{
+	email {env.ACME_EMAIL}
+
+	on_demand_tls {
+		ask http://api:8000/api/stores/domain/tls-ask/
+	}
+}
+
+# ---------- Plataforma: apex + www ----------
+{env.PLATFORM_DOMAIN}, www.{env.PLATFORM_DOMAIN} {
+	reverse_proxy https://web:8443 {
+		transport http {
+			tls_server_name {env.PLATFORM_DOMAIN}
+		}
+	}
+}
+
+# ---------- Plataforma: subdominios de tienda (<slug>.dominio) ----------
+# Un solo cert wildcard para todos: sin esto cada subdominio pediría su
+# propio cert y Let's Encrypt cortaría por rate limit.
+*.{env.PLATFORM_DOMAIN} {
+	tls {
+		dns cloudflare {env.CF_API_TOKEN}
+	}
+	reverse_proxy https://web:8443 {
+		transport http {
+			tls_server_name {env.PLATFORM_DOMAIN}
+		}
+	}
+}
+
+# ---------- Dominios propios (TLS on-demand) ----------
+https:// {
+	tls {
+		on_demand
+	}
+	reverse_proxy http://web:8081
+}
+
+# ---------- HTTP: ACME + redirect a HTTPS (cualquier Host) ----------
+http:// {
+	redir https://{host}{uri} permanent
+}

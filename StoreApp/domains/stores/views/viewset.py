@@ -47,21 +47,21 @@ from StoreApp.domains.stores.serializers.validators import (
 from StoreApp.domains.stores.services import (
     allowed_templates_of,
     contact_redirect_url,
-    is_platform_domain,
-    new_verify_token,
-    normalize_domain,
-    refresh_status,
-    resolve_slug,
-    serialize_domain,
     contact_target,
     delete_carousel_image,
     delete_cover,
     delete_gallery_image,
     delete_logo,
+    is_platform_domain,
     issue_captcha,
+    new_verify_token,
+    normalize_domain,
     profile_has_benefit,
     record_store_visit,
+    refresh_status,
+    resolve_slug,
     send_contact_message,
+    serialize_domain,
     storage_payload,
     upload_carousel_image,
     upload_cover,
@@ -344,7 +344,7 @@ class AiDesignImageThrottle(UserRateThrottle):
 class StoreViewSet(StoreBaseViewSet):
     viewset_config  =   StoreConfigs
     #Acciones que atienden visitantes anónimos (web pública, contacto, reseñas).
-    PUBLIC_ACTIONS  =   ('public', 'public_catalog', 'public_pattern', 'public_pattern_document', 'public_pattern_bridge', 'public_pattern_script', 'public_contact', 'public_resolve', 'contact_captcha', 'contact', 'review_captcha', 'product_reviews')
+    PUBLIC_ACTIONS  =   ('public', 'public_catalog', 'public_pattern', 'public_pattern_document', 'public_pattern_bridge', 'public_pattern_script', 'public_contact', 'public_resolve', 'tls_ask', 'contact_captcha', 'contact', 'review_captcha', 'product_reviews')
 
     def initialize_request(self, request, *args, **kwargs):
         #get_authenticators() corre dentro de super().initialize_request(),
@@ -424,7 +424,11 @@ class StoreViewSet(StoreBaseViewSet):
         if not profile_has_benefit(store.user, 'has_custom_domain'):
             return Response({'detail': 'Tu plan actual no incluye dominio propio.'}, status = status.HTTP_403_FORBIDDEN)
         if request.method == 'DELETE':
+            prev_domain  =   getattr(store.domain, 'domain', None) if hasattr(store, 'domain') else None
             StoreDomain.objects.filter(store = store).delete()
+            if prev_domain:
+                from DaventProject.custom_hosts import invalidate_domain_host
+                invalidate_domain_host(prev_domain)
             return Response({'Exito': 'El dominio se desvinculó de tu web', 'domain': None}, status = status.HTTP_200_OK)
         #POST: alta o reemplazo. Cambiar de dominio resetea la verificación:
         #un token verificado del dominio viejo no valida el nuevo.
@@ -437,6 +441,7 @@ class StoreViewSet(StoreBaseViewSet):
         if clash:
             return Response({'domain': ['Ese dominio ya está vinculado a otra web.']}, status = status.HTTP_400_BAD_REQUEST)
         store_domain    =   getattr(store, 'domain', None)
+        prev_domain     =   store_domain.domain if store_domain else None
         if store_domain is None:
             store_domain    =   StoreDomain(store = store, domain = domain, verify_token = new_verify_token())
         else:
@@ -445,6 +450,10 @@ class StoreViewSet(StoreBaseViewSet):
             store_domain.verified_at    =   None
         store_domain.last_checked_at    =   None
         store_domain.save()
+        from DaventProject.custom_hosts import invalidate_domain_host
+        invalidate_domain_host(domain)
+        if prev_domain and prev_domain != domain:
+            invalidate_domain_host(prev_domain)
         return Response(
             {'Exito': 'Dominio guardado. Ahora configurá el DNS y verificalo.', 'domain': self._domain_payload(store)},
             status = status.HTTP_200_OK,
@@ -469,6 +478,19 @@ class StoreViewSet(StoreBaseViewSet):
         if not slug:
             raise Http404
         return Response({'slug': slug}, status = status.HTTP_200_OK)
+    #=========================================
+    # TLS ASK (Caddy on-demand TLS: 200 solo si el dominio está verified)
+    #=========================================
+    @action(detail = False, methods = ['get'], url_path = 'domain/tls-ask', throttle_classes = [PublicReadThrottle])
+    def tls_ask(self, request):
+        #Caddy consulta ?domain= antes de emitir el cert: solo dominios
+        #verified en StoreDomain pasan. Sin payload — el edge solo mira el
+        #status code (2xx = emitir, otro = abortar el handshake TLS).
+        domain  =   normalize_domain(request.query_params.get('domain'))
+        ok      =   bool(domain) and StoreDomain.objects.filter(
+            domain = domain, status = StoreDomain.STATUS_VERIFIED
+        ).exists()
+        return Response(status = status.HTTP_200_OK if ok else status.HTTP_403_FORBIDDEN)
     #=========================================
     # BLOCK / UNBLOCK (moderación staff: la web pública pasa a 404)
     #=========================================

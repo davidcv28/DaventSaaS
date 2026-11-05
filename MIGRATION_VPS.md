@@ -159,11 +159,18 @@ nic.ar solo **registra** — los registros DNS se administran en Cloudflare:
 
 4. Token API para certbot: *My Profile → API Tokens → Create* → template
    "Edit zone DNS" → zona `davent.com.ar` → guardar el token en
-   `docker/certbot/cloudflare.ini` (en el VPS, `chmod 600`):
+   `docker/certbot/cloudflare.ini` (en el VPS, `chmod 600`) **y** como
+   `CF_API_TOKEN=` en el `.env` (lo usa Caddy para el wildcard `*.dominio`
+   y el TLS on-demand de dominios propios — sin él el deploy aborta):
 
    ```ini
    dns_cloudflare_api_token = <token>
    ```
+
+   > **Edge TLS**: Caddy (`docker/caddy/`) es el único servicio publicado
+   > (80/443); nginx ya no expone puertos. En el `.env` también va
+   > `ACME_EMAIL=` (contacto ACME) y `api` dentro de `ALLOWED_HOSTS` (lo
+   > exige el deploy — el `ask` de TLS on-demand pega a `api:8000`).
 
 ---
 

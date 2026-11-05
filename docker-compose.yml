@@ -297,9 +297,9 @@ services:
     restart: unless-stopped
     environment:
       PLATFORM_DOMAIN: ${PLATFORM_DOMAIN}   # envsubst del template de vhost
-    ports:
-      - "80:8080"                          # único servicio expuesto al host
-      - "443:8443"                         # nginx corre SIN privilegios
+    # Sin puertos publicados: el edge es Caddy (80/443). nginx queda solo en
+    # edge_net — 8080 (healthcheck/ACME legado), 8443 (TLS plataforma, certs
+    # propios) y 8081 (dominios propios, tras el TLS on-demand de Caddy).
     networks: [edge_net]
     volumes:
       - static_data:/srv/static:ro
@@ -330,6 +330,35 @@ services:
     deploy:
       resources:
         limits: {cpus: "0.5", memory: 128M}
+    logging: *logging
+
+  # ---------------------------------------------------------------------------
+  # Edge TLS: único servicio expuesto al host (80/443). Termina HTTPS para la
+  # plataforma (*.dominio con wildcard DNS-01 vía plugin Cloudflare) y para
+  # los dominios propios de tiendas (TLS on-demand: pide permiso a la API en
+  # /api/stores/domain/tls-ask/ antes de emitir el cert). Ver docker/caddy/.
+  # CF_API_TOKEN: token de Cloudflare con Zone.DNS (el mismo del certbot);
+  # ACME_EMAIL: contacto de las cuentas ACME.
+  caddy:
+    image: ${CADDY_IMAGE:-ghcr.io/davidcv28/daventsaas-caddy:latest}
+    build:
+      context: .
+      dockerfile: docker/caddy/Dockerfile
+    restart: unless-stopped
+    environment:
+      PLATFORM_DOMAIN: ${PLATFORM_DOMAIN}
+      ACME_EMAIL:       ${ACME_EMAIL:-admin@localhost}
+      CF_API_TOKEN:     ${CF_API_TOKEN:-}
+    ports:
+      - "80:80"
+      - "443:443"
+    networks: [edge_net]
+    volumes:
+      - caddy_data:/data
+      - caddy_config:/config
+    depends_on:
+      web: {condition: service_healthy}
+      api: {condition: service_healthy}
     logging: *logging
 
   # ---------------------------------------------------------------------------
@@ -370,3 +399,5 @@ volumes:
   media_data:
   letsencrypt:
   certbot_www:
+  caddy_data:
+  caddy_config:

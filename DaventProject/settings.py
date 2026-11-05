@@ -35,6 +35,11 @@ ALLOWED_HOSTS = config('ALLOWED_HOSTS', cast=lambda v: [s.strip() for s in v.spl
 # CNAME a este host (o un TXT '_davent-verify.<dominio>' con su token).
 PUBLIC_DOMAIN = config('PUBLIC_DOMAIN', default = 'davent.com.ar')
 
+# Dominios propios verificados (StoreDomain): valida el Host header contra la
+# base con caché corta — ALLOWED_HOSTS no puede listar dominios arbitrarios
+# ni admitir '*' (envguard E009). Debe importarse después de apps cargadas.
+from DaventProject.custom_hosts import *  # noqa: E402,F401,F403 — side-effect: patch validate_host
+
 # Cabeceras de seguridad. Default SEGURO atado a DEBUG: en producción
 # (DEBUG=False) quedan activas aunque el .env no las declare — un env
 # incompleto ya no baja la guardia. En dev (DEBUG=True, runserver por http)
