@@ -5730,7 +5730,286 @@
       "tags": ["seguridad", "proteccion", "industrial", "claro", "bomberos", "extintores", "vigilancia"],
       "preview": "",
       "concept": "Concreto cálido + rojo fuego: la misma consola de guardia en versión diurna."
-    }
+    },
+{
+            "slug": "expediente",
+            "nombre": "Expediente",
+            "categoria": "Servicios profesionales",
+            "descripcion": "Carpeta manila con tinta de imprenta y sello rojo: Bricolage Grotesque en titulares, Source Serif 4 itálica en manifiesto y testimonios, JetBrains Mono en cuerpo y datos. Pestaña skewed, sello CONFIDENCIAL giratorio, barras de redacción y ledger de registro.",
+            "tier": "plus",
+            "template": "expediente",
+            "page_theme": "light",
+            "pattern": "expediente",
+            "tokens": {
+                "palette": {
+                    "accent": "#B3352C",
+                    "primary": "#1D1A12",
+                    "secondary": "#2F5D50",
+                    "bg": "#E9E1CB",
+                    "surface": "#F2ECDA",
+                    "text": "#1D1A12",
+                    "muted": "#7D7460",
+                    "border": "#C9BFA1",
+                    "success": "#2F5D50",
+                    "danger": "#B3261E"
+                },
+                "containers": {
+                    "radius": "none",
+                    "shadow": "none",
+                    "border": "thin",
+                    "density": "comfortable",
+                    "surface": "flat"
+                },
+                "typography": {
+                    "heading": "bricolage-grotesque",
+                    "subheading": "source-serif-4",
+                    "body": "jetbrains-mono",
+                    "scale": "editorial",
+                    "weightHeading": 600,
+                    "letterSpacing": "0.01em"
+                },
+                "buttons": {
+                    "shape": "square",
+                    "style": "solid",
+                    "size": "md"
+                },
+                "background": {
+                    "type": "solid",
+                    "value": null,
+                    "overlay": "none"
+                },
+                "motion": {
+                    "reveal": "fade-up",
+                    "hover": "lift",
+                    "intensity": "subtle"
+                },
+                "mobile": {
+                    "cardStyle": "standard",
+                    "heroHeight": "standard"
+                },
+                "preview": "",
+                "icons": {
+                    "style": "line",
+                    "stroke": "1.8",
+                    "size": "20",
+                    "corners": "square"
+                }
+            },
+            "layout": {},
+            "layout_spec": {},
+            "tags": [
+                "servicios",
+                "estudio",
+                "legal",
+                "contable",
+                "consultoria",
+                "profesionales",
+                "b2b"
+            ],
+            "preview": "",
+            "style": "Servicios profesionales",
+            "anim": {
+                "hero": "fade-up",
+                "reveal": "fade-up",
+                "hover": "lift",
+                "button": "solid-press"
+            },
+            "easing": "cubic-bezier(.2,.7,.2,1)",
+            "duration": "420ms",
+            "icons": {
+                "style": "line",
+                "stroke": "1.8",
+                "size": "20",
+                "corners": "square"
+            },
+            "concept": "Manila + tinta + sello: el expediente de la firma."
+        },
+{
+            "slug": "expediente-noche",
+            "nombre": "Expediente Noche",
+            "categoria": "Servicios profesionales nocturnos",
+            "descripcion": "La misma carpeta después del horario: grafito profundo, sello encendido y papel tibio. Bricolage Grotesque, Source Serif 4 itálica y JetBrains Mono.",
+            "tier": "plus",
+            "template": "expediente",
+            "page_theme": "dark",
+            "pattern": "expediente",
+            "tokens": {
+                "palette": {
+                    "accent": "#D05540",
+                    "primary": "#0B0906",
+                    "secondary": "#4F8A78",
+                    "bg": "#12100C",
+                    "surface": "#1C1813",
+                    "text": "#E8E0CB",
+                    "muted": "#948A72",
+                    "border": "#3D362A",
+                    "success": "#6FAE97",
+                    "danger": "#E56464"
+                },
+                "containers": {
+                    "radius": "none",
+                    "shadow": "none",
+                    "border": "thin",
+                    "density": "comfortable",
+                    "surface": "flat"
+                },
+                "typography": {
+                    "heading": "bricolage-grotesque",
+                    "subheading": "source-serif-4",
+                    "body": "jetbrains-mono",
+                    "scale": "editorial",
+                    "weightHeading": 600,
+                    "letterSpacing": "0.01em"
+                },
+                "buttons": {
+                    "shape": "square",
+                    "style": "solid",
+                    "size": "md"
+                },
+                "background": {
+                    "type": "solid",
+                    "value": null,
+                    "overlay": "none"
+                },
+                "motion": {
+                    "reveal": "fade-up",
+                    "hover": "lift",
+                    "intensity": "subtle"
+                },
+                "mobile": {
+                    "cardStyle": "standard",
+                    "heroHeight": "standard"
+                },
+                "preview": "",
+                "icons": {
+                    "style": "line",
+                    "stroke": "1.8",
+                    "size": "20",
+                    "corners": "square"
+                }
+            },
+            "layout": {},
+            "layout_spec": {},
+            "tags": [
+                "servicios",
+                "estudio",
+                "legal",
+                "contable",
+                "consultoria",
+                "profesionales",
+                "b2b"
+            ],
+            "preview": "",
+            "style": "Servicios profesionales nocturnos",
+            "anim": {
+                "hero": "fade-up",
+                "reveal": "fade-up",
+                "hover": "lift",
+                "button": "solid-press"
+            },
+            "easing": "cubic-bezier(.2,.7,.2,1)",
+            "duration": "420ms",
+            "icons": {
+                "style": "line",
+                "stroke": "1.8",
+                "size": "20",
+                "corners": "square"
+            },
+            "concept": "Grafito + sello encendido: la consulta de noche."
+        },
+{
+            "slug": "expediente-cruda",
+            "nombre": "Expediente Cruda",
+            "categoria": "Servicios profesionales archivo",
+            "descripcion": "Variante de archivo: mismo manila y tinta, sello en azul expediente y acentos en rojo archivo. Para firmas que llevan el color de la institución.",
+            "tier": "plus",
+            "template": "expediente",
+            "page_theme": "light",
+            "pattern": "expediente",
+            "tokens": {
+                "palette": {
+                    "accent": "#27548C",
+                    "primary": "#1D1A12",
+                    "secondary": "#B3352C",
+                    "bg": "#E7DFCC",
+                    "surface": "#F0E9D6",
+                    "text": "#1D1A12",
+                    "muted": "#77694F",
+                    "border": "#C2B694",
+                    "success": "#3E6B4F",
+                    "danger": "#B3261E"
+                },
+                "containers": {
+                    "radius": "none",
+                    "shadow": "none",
+                    "border": "thin",
+                    "density": "comfortable",
+                    "surface": "flat"
+                },
+                "typography": {
+                    "heading": "bricolage-grotesque",
+                    "subheading": "source-serif-4",
+                    "body": "jetbrains-mono",
+                    "scale": "editorial",
+                    "weightHeading": 600,
+                    "letterSpacing": "0.01em"
+                },
+                "buttons": {
+                    "shape": "square",
+                    "style": "solid",
+                    "size": "md"
+                },
+                "background": {
+                    "type": "solid",
+                    "value": null,
+                    "overlay": "none"
+                },
+                "motion": {
+                    "reveal": "fade-up",
+                    "hover": "lift",
+                    "intensity": "subtle"
+                },
+                "mobile": {
+                    "cardStyle": "standard",
+                    "heroHeight": "standard"
+                },
+                "preview": "",
+                "icons": {
+                    "style": "line",
+                    "stroke": "1.8",
+                    "size": "20",
+                    "corners": "square"
+                }
+            },
+            "layout": {},
+            "layout_spec": {},
+            "tags": [
+                "servicios",
+                "estudio",
+                "legal",
+                "contable",
+                "consultoria",
+                "profesionales",
+                "b2b"
+            ],
+            "preview": "",
+            "style": "Servicios profesionales archivo",
+            "anim": {
+                "hero": "fade-up",
+                "reveal": "fade-up",
+                "hover": "lift",
+                "button": "solid-press"
+            },
+            "easing": "cubic-bezier(.2,.7,.2,1)",
+            "duration": "420ms",
+            "icons": {
+                "style": "line",
+                "stroke": "1.8",
+                "size": "20",
+                "corners": "square"
+            },
+            "concept": "Manila cruda + azul archivo: la carpeta institucional."
+        }
   ],
   "patterns": [
     {
@@ -8194,6 +8473,181 @@
       "variables": {},
       "supports_dark_mode": true,
       "style": "guardia"
-    }
+    },
+{
+            "slug": "expediente",
+            "nombre": "Expediente",
+            "categoria": "servicios",
+            "descripcion": "Servicios profesionales en carpeta manila: portada con pestaña de expediente y sello CONFIDENCIAL, manifiesto con barras de redacción, fichas F-1xx, registro de cifras, anexos, garantías, membresías, declaraciones, FAQ, CTA de tinta y solicitud de consulta. Catálogo como índice de fichas con buscador y filtros, ficha de producto como documento instructivo y servicios como ledger numerado. Solo datos reales de la firma.",
+            "tier": "plus",
+            "template": "expediente",
+            "layout": {
+                "landing": [
+                    {
+                        "id": "hero",
+                        "variant": "band",
+                        "enabled": true,
+                        "order": 0
+                    },
+                    {
+                        "id": "announcements",
+                        "enabled": true,
+                        "order": 1
+                    },
+                    {
+                        "id": "manifesto",
+                        "enabled": true,
+                        "order": 2
+                    },
+                    {
+                        "id": "featured",
+                        "enabled": true,
+                        "order": 3
+                    },
+                    {
+                        "id": "stats",
+                        "enabled": true,
+                        "order": 4
+                    },
+                    {
+                        "id": "about",
+                        "enabled": true,
+                        "order": 5
+                    },
+                    {
+                        "id": "timeline",
+                        "enabled": true,
+                        "order": 6
+                    },
+                    {
+                        "id": "categories",
+                        "enabled": true,
+                        "order": 7
+                    },
+                    {
+                        "id": "gallery",
+                        "enabled": true,
+                        "order": 8
+                    },
+                    {
+                        "id": "benefits",
+                        "enabled": true,
+                        "order": 9
+                    },
+                    {
+                        "id": "plans",
+                        "enabled": true,
+                        "order": 10
+                    },
+                    {
+                        "id": "testimonials",
+                        "enabled": true,
+                        "order": 11
+                    },
+                    {
+                        "id": "faq",
+                        "enabled": true,
+                        "order": 12
+                    },
+                    {
+                        "id": "cta",
+                        "variant": "band",
+                        "enabled": true,
+                        "order": 13
+                    },
+                    {
+                        "id": "contact",
+                        "enabled": true,
+                        "order": 14
+                    }
+                ],
+                "catalog": [
+                    {
+                        "id": "hero",
+                        "enabled": true,
+                        "order": 0
+                    },
+                    {
+                        "id": "filters",
+                        "enabled": true,
+                        "order": 1
+                    },
+                    {
+                        "id": "grid",
+                        "enabled": true,
+                        "order": 2
+                    }
+                ],
+                "services": [
+                    {
+                        "id": "hero",
+                        "enabled": true,
+                        "order": 0
+                    },
+                    {
+                        "id": "offerings",
+                        "enabled": true,
+                        "order": 1
+                    },
+                    {
+                        "id": "list",
+                        "enabled": true,
+                        "order": 2
+                    },
+                    {
+                        "id": "steps",
+                        "enabled": true,
+                        "order": 3
+                    }
+                ]
+            },
+            "tokens": {
+                "accent": "#B3352C",
+                "palette": {
+                    "accent": "#B3352C",
+                    "primary": "#1D1A12",
+                    "secondary": "#2F5D50",
+                    "bg": "#E9E1CB",
+                    "surface": "#F2ECDA",
+                    "text": "#1D1A12",
+                    "muted": "#7D7460",
+                    "border": "#C9BFA1",
+                    "success": "#2F5D50",
+                    "danger": "#B3261E"
+                },
+                "fonts": [
+                    "bricolage-grotesque",
+                    "source-serif-4"
+                ],
+                "radius": "0px",
+                "anim": {
+                    "hero": "fade-up",
+                    "reveal": "fade-up",
+                    "hover": "lift",
+                    "button": "solid-press"
+                },
+                "easing": "cubic-bezier(.2,.7,.2,1)",
+                "duration": "420ms",
+                "icons": {
+                    "style": "line",
+                    "stroke": "1.8",
+                    "size": "20",
+                    "corners": "square"
+                }
+            },
+            "tags": [
+                "servicios",
+                "estudio",
+                "legal",
+                "contable",
+                "consultoria",
+                "profesionales",
+                "b2b"
+            ],
+            "preview": "",
+            "variables": {},
+            "supports_dark_mode": true,
+            "style": "expediente"
+        }
   ]
 }

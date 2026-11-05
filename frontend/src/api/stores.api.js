@@ -932,6 +932,7 @@ export const STORE_FONTS = {
   'cormorant-garamond': { label: 'Cormorant Garamond', family: "'Cormorant Garamond', Georgia, serif", google: 'Cormorant+Garamond:ital,wght@0,400;0,500;0,600;0,700;1,400' },
   'dm-serif-display': { label: 'DM Serif Display', family: "'DM Serif Display', Georgia, serif",   google: 'DM+Serif+Display' },
   'libre-baskerville':{ label: 'Libre Baskerville', family: "'Libre Baskerville', Georgia, serif",  google: 'Libre+Baskerville:ital,wght@0,400;0,700;1,400' },
+  'source-serif-4':   { label: 'Source Serif 4',   family: "'Source Serif 4', Georgia, serif",      google: 'Source+Serif+4:ital,opsz,wght@0,8..60,400..700;1,8..60,400..700' },
   'outfit':           { label: 'Outfit',           family: "'Outfit', system-ui, sans-serif",      google: 'Outfit:wght@300..900' },
   'plus-jakarta-sans':{ label: 'Plus Jakarta Sans', family: "'Plus Jakarta Sans', system-ui, sans-serif", google: 'Plus+Jakarta+Sans:wght@300..800' },
   // Fuentes propias de los diseños nuevos (trama/boutique/alimentos/seguridad):
