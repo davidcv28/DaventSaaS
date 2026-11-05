@@ -3765,10 +3765,10 @@ async function changePassword() {
           <h1>Mis productos</h1>
           <p>Acá cargás lo que vendés: aparece solo en tu página web. {{ billing.hasSubscription ? productsCountText : catalogLimit }}</p>
           <div v-if="billing.hasSubscription && catalog.products.length" class="cat-stats">
-            <span class="cat-stat"><AppIcon name="eye" :size="13" aria-hidden="true" /> {{ productStats.visible }} visibles</span>
-            <span class="cat-stat"><AppIcon name="percent" :size="13" aria-hidden="true" /> {{ productStats.offers }} en oferta</span>
-            <span class="cat-stat"><AppIcon name="image" :size="13" aria-hidden="true" /> {{ productStats.noImage }} sin foto</span>
-            <span class="cat-stat"><AppIcon name="tag" :size="13" aria-hidden="true" /> {{ productStats.discounted }} con descuento</span>
+            <span class="cat-stat tone-info"><AppIcon name="eye" :size="13" aria-hidden="true" /> {{ productStats.visible }} visibles</span>
+            <span class="cat-stat tone-warn"><AppIcon name="percent" :size="13" aria-hidden="true" /> {{ productStats.offers }} en oferta</span>
+            <span class="cat-stat tone-ok"><AppIcon name="image" :size="13" aria-hidden="true" /> {{ productStats.noImage }} sin foto</span>
+            <span class="cat-stat tone-brand"><AppIcon name="tag" :size="13" aria-hidden="true" /> {{ productStats.discounted }} con descuento</span>
           </div>
         </div>
         <div class="page-head-actions">
@@ -6273,7 +6273,10 @@ async function changePassword() {
         <div v-if="productFormOpen" class="pf-overlay" @click.self="closeProductForm">
           <div class="pf-drawer" role="dialog" aria-modal="true" :aria-label="productEditing ? 'Editar producto' : 'Agregar un producto'">
             <header class="pf-drawer-head">
-              <h3><AppIcon :name="productEditing ? 'pencil' : 'plus'" :size="17" /> {{ productEditing ? 'Editar producto' : 'Agregar un producto' }}</h3>
+              <div class="pf-drawer-title">
+                <span class="pf-drawer-ico"><AppIcon :name="productEditing ? 'pencil' : 'plus'" :size="17" /></span>
+                <h3>{{ productEditing ? 'Editar producto' : 'Agregar un producto' }}</h3>
+              </div>
               <button type="button" class="icon-btn" aria-label="Cerrar" @click="closeProductForm"><AppIcon name="x" :size="16" /></button>
             </header>
             <div class="pf-drawer-body">

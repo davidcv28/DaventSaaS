@@ -41,6 +41,13 @@ function addedLabel(iso) {
   const d = Math.floor((Date.now() - t) / 86400000)
   return d <= 0 ? 'hoy' : d === 1 ? 'ayer' : `hace ${d} días`
 }
+// Tono estable por texto: la misma categoría/marca siempre lleva el mismo
+// color, y la miniatura sin foto toma un degradado propio del producto.
+function hueOf(str) {
+  let h = 0
+  for (const ch of String(str || '?')) h = (h * 31 + ch.codePointAt(0)) % 360
+  return h
+}
 </script>
 
 <template>
@@ -68,9 +75,10 @@ function addedLabel(iso) {
             <input type="checkbox" :checked="selectedSet.has(p.id)" :aria-label="`Seleccionar ${p.name}`" @change="toggleOne(p.id)" />
           </td>
           <td class="pt-prod">
-            <span class="pt-thumb">
+            <span class="pt-thumb" :style="p.image ? null : { '--h': hueOf(p.name) }">
               <img v-if="p.image" :src="p.image" :alt="p.name" loading="lazy" />
               <AppIcon v-else name="package" :size="18" aria-hidden="true" />
+              <span v-if="!p.image" class="pt-noimg" aria-hidden="true"><AppIcon name="image" :size="11" /></span>
               <span class="pt-badges">
                 <img
                   v-if="campaignOf(p.id)?.label_url" class="pt-camp" :src="campaignOf(p.id).label_url"
@@ -85,14 +93,25 @@ function addedLabel(iso) {
               <small>{{ addedLabel(p.created_at) }}<template v-if="!p.image"> · sin foto</template></small>
             </span>
           </td>
-          <td class="pt-cell">{{ p.category_name || '—' }}</td>
-          <td class="pt-cell">{{ p.brand_name || '—' }}</td>
+          <td class="pt-cell">
+            <span v-if="p.category_name" class="pt-chip" :style="{ '--h': hueOf(p.category_name) }">{{ p.category_name }}</span>
+            <template v-else>—</template>
+          </td>
+          <td class="pt-cell">
+            <span v-if="p.brand_name" class="pt-chip pt-chip-brand" :style="{ '--h': hueOf(p.brand_name) }">{{ p.brand_name }}</span>
+            <template v-else>—</template>
+          </td>
           <td class="pt-num pt-price">
-            <template v-if="offerOf(p) != null"><s>{{ formatARS(p.price) }}</s> <b>{{ formatARS(offerOf(p)) }}</b></template>
+            <template v-if="offerOf(p) != null"><s>{{ formatARS(p.price) }}</s> <b class="pt-deal">{{ formatARS(offerOf(p)) }}</b></template>
             <template v-else><b>{{ formatARS(p.price) }}</b></template>
           </td>
           <td class="pt-num">
-            <span class="pill" :class="p.is_active ? 'ok' : 'muted'">{{ p.is_active ? 'Visible' : 'Oculto' }}</span>
+            <span class="pt-status">
+              <span class="pill" :class="p.is_active ? 'ok' : 'muted'">
+                <AppIcon :name="p.is_active ? 'eye' : 'eye-off'" :size="11" aria-hidden="true" />{{ p.is_active ? 'Visible' : 'Oculto' }}
+              </span>
+              <span v-if="offerOf(p) != null" class="pill warn">-{{ pctOf(p) }}%</span>
+            </span>
           </td>
           <td class="pt-actions">
             <button type="button" class="icon-btn" title="Editar" aria-label="Editar producto" @click="emit('edit', p)"><AppIcon name="pencil" :size="15" /></button>
@@ -128,10 +147,23 @@ function addedLabel(iso) {
 .pt-prod { display: flex; align-items: center; gap: 12px; min-width: 0; }
 .pt-thumb {
   position: relative; flex: none; width: 46px; height: 46px; border-radius: 10px;
-  border: 1px solid var(--line); background: var(--surface); color: var(--muted);
+  border: 1px solid var(--line); color: var(--muted);
   display: grid; place-items: center; overflow: hidden;
 }
 .pt-thumb img { width: 100%; height: 100%; object-fit: cover; display: block; }
+/* Sin foto: degradado estable por producto (el tono sale del nombre). */
+.pt-thumb[style*='--h'] {
+  background: linear-gradient(135deg,
+    color-mix(in srgb, hsl(var(--h) 85% 62%) 30%, var(--surface)),
+    color-mix(in srgb, hsl(var(--h) 80% 55%) 16%, var(--surface)));
+  color: hsl(var(--h) 70% 42%);
+}
+[data-theme='dark'] .pt-thumb[style*='--h'] { color: hsl(var(--h) 90% 72%); }
+.pt-noimg {
+  position: absolute; right: 3px; bottom: 3px; display: grid; place-items: center;
+  width: 15px; height: 15px; border-radius: 5px;
+  background: color-mix(in srgb, var(--card) 82%, transparent); color: var(--muted);
+}
 .pt-badges { position: absolute; top: 3px; left: 3px; display: flex; gap: 3px; pointer-events: none; }
 .pt-camp { height: 16px; width: auto; max-width: 34px; object-fit: contain; display: block; filter: drop-shadow(0 1px 2px rgba(0,0,0,.35)); }
 .pt-camp-txt { font-size: 9.5px; padding: 1px 6px; max-width: 44px; overflow: hidden; text-overflow: ellipsis; }
@@ -143,6 +175,21 @@ function addedLabel(iso) {
 .pt-name strong { font-size: 13.5px; font-weight: 600; color: var(--ink); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .pt-name small { font-size: 11.5px; color: var(--muted); }
 .pt-cell { color: var(--ink-2); font-size: 13px; white-space: nowrap; }
+/* Chips de categoría/marca: mismo texto = mismo color, en toda la tabla. */
+.pt-chip {
+  display: inline-flex; align-items: center; padding: 3px 10px; border-radius: 999px;
+  font-size: 12px; font-weight: 600; white-space: nowrap;
+  color: hsl(var(--h) 62% 34%);
+  background: color-mix(in srgb, hsl(var(--h) 85% 60%) 13%, var(--card));
+  border: 1px solid color-mix(in srgb, hsl(var(--h) 85% 60%) 32%, transparent);
+}
+.pt-chip-brand { color: hsl(var(--h) 55% 38%); }
+[data-theme='dark'] .pt-chip { color: hsl(var(--h) 90% 74%); }
+[data-theme='dark'] .pt-chip-brand { color: hsl(var(--h) 85% 78%); }
+.pt-status { display: inline-flex; flex-direction: column; align-items: flex-end; gap: 4px; }
+.pt-status .pill { display: inline-flex; align-items: center; gap: 4px; }
+.pt-status .pill svg { flex: none; }
+.pt-deal { color: var(--brand-ink); }
 .pt-num { text-align: right; font-variant-numeric: var(--num); white-space: nowrap; }
 .pt-price b { font-weight: 700; }
 .pt-price s { color: var(--muted); font-weight: 400; margin-right: 4px; font-size: 12px; }

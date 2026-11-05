@@ -123,10 +123,13 @@ const SORTS = [
 .ctoolbar-view:focus-visible, .ctoolbar-toggle:focus-visible, .ctoolbar-new:focus-visible { outline: 2px solid var(--brand-500); outline-offset: 2px; }
 .ctoolbar-new {
   display: inline-flex; align-items: center; gap: 6px; min-height: 40px; padding: 8px 16px;
-  border: none; border-radius: 10px; background: var(--brand-600); color: #fff;
-  font: inherit; font-size: 13.5px; font-weight: 600; cursor: pointer;
+  border: none; border-radius: 10px;
+  background: linear-gradient(135deg, var(--brand-500), #8b5cf6 65%, #d946ef);
+  color: #fff; font: inherit; font-size: 13.5px; font-weight: 600; cursor: pointer;
+  box-shadow: 0 6px 14px rgba(99, 102, 241, .3);
+  transition: transform .12s, box-shadow .15s, filter .15s;
 }
-.ctoolbar-new:hover { background: var(--brand-700); }
+.ctoolbar-new:hover { transform: translateY(-1px); filter: brightness(1.05); box-shadow: 0 9px 18px rgba(99, 102, 241, .42); }
 @media (max-width: 640px) {
   .ctoolbar-row-end { flex-wrap: wrap; }
   .ctoolbar-new { flex: 1 1 100%; justify-content: center; }

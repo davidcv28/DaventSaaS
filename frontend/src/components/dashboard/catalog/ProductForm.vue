@@ -154,4 +154,9 @@ const emit = defineEmits([
   color: var(--muted);
 }
 .pf-title svg { color: var(--brand-500); }
+/* Cada bloque lleva su propio tono: azul básicos, verde precio, violeta foto,
+   ámbar organización — el ojo encuentra la sección sin leer el título. */
+section.pf-block:nth-of-type(2) .pf-title svg { color: #059669; }
+section.pf-block:nth-of-type(3) .pf-title svg { color: #8b5cf6; }
+.more-opts > summary svg { color: #d97706; }
 </style>
