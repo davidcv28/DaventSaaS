@@ -69,6 +69,7 @@ import PriceUpdateModal from '../components/PriceUpdateModal.vue'
 import CampaignPicker from '../components/dashboard/catalog/CampaignPicker.vue'
 import CatalogToolbar from '../components/dashboard/catalog/CatalogToolbar.vue'
 import ProductCard from '../components/dashboard/catalog/ProductCard.vue'
+import ProductTable from '../components/dashboard/catalog/ProductTable.vue'
 import ProductForm from '../components/dashboard/catalog/ProductForm.vue'
 import DiscountCard from '../components/dashboard/catalog/DiscountCard.vue'
 import ChatDock from '../components/ChatDock.vue'
@@ -529,10 +530,6 @@ const business = computed(() => auth.user?.profile?.business_name || '')
 const seen = reactive({ overview: true })
 watch(section, (s) => { seen[s] = true }, { flush: 'sync', immediate: true })
 
-const greeting = computed(() => {
-  const h = new Date().getHours()
-  return h < 6 ? 'Buenas noches' : h < 13 ? 'Buen día' : h < 20 ? 'Buenas tardes' : 'Buenas noches'
-})
 const RING_R = 44
 const RING_C = 2 * Math.PI * RING_R
 const ringOffset = computed(() => RING_C * (1 - planProgress.value / 100))
@@ -561,6 +558,7 @@ const nextSteps = computed(() => [
   { title: 'Elegí un plan', doneTitle: 'Plan elegido', text: 'Definí el tamaño de tu catálogo.', done: billing.hasSubscription, target: 'plans', cta: 'Elegir', icon: 'crown' },
   { title: 'Cargá tu primer producto', doneTitle: 'Productos cargados', text: 'Se publica solo en tu web.', done: catalog.products.length > 0, target: 'catalogs', cta: 'Cargar', icon: 'package' },
   { title: 'Subí la foto de portada', doneTitle: 'Portada cargada', text: 'Tu página se ve mejor con imagen.', done: Boolean(store.customization.cover), target: 'photos', cta: 'Subir', icon: 'image' },
+  { title: 'Activá el asistente virtual', doneTitle: 'Asistente activo', text: 'Responde clientes 24/7 en tu web.', done: !canChatbot.value || Boolean(store.chatbot?.is_enabled), target: 'bot', cta: 'Activar', icon: 'bot' },
   { title: 'Compartí tu link público', text: 'Mandáselo a tus clientes por WhatsApp.', done: false, target: 'store', cta: 'Copiar', icon: 'send', run: copyLink }
 ])
 const stepsDone = computed(() => nextSteps.value.filter((s) => s.done).length)
@@ -603,21 +601,32 @@ const storagePct = computed(() => {
 })
 
 // Feed "Actividad reciente": cada entrada es accionable.
+function relDays(iso) {
+  const t = Date.parse(iso || '')
+  if (!Number.isFinite(t)) return ''
+  const d = Math.floor((Date.now() - t) / 86400000)
+  return d <= 0 ? 'hoy' : d === 1 ? 'ayer' : `hace ${d} días`
+}
 const activityFeed = computed(() => {
+  const go = (id) => () => { section.value = id }
   const items = []
   if (chatUnread.value) items.push({ icon: 'message-circle', title: chatUnread.value === 1 ? 'Un mensaje nuevo de soporte' : `${chatUnread.value} mensajes nuevos de soporte`, text: 'Abrí la conversación para responder.', cta: 'Responder', run: onBellClick })
+  if (plan.value?.isCurrent && !plan.value.autoRenew && plan.value.remaining !== null && plan.value.remaining <= 7) items.push({ icon: 'clock', title: `Tu plan vence en ${plan.value.remaining} ${plan.value.remaining === 1 ? 'día' : 'días'}`, text: 'Renová para no perder tu web.', cta: 'Renovar', run: go('plans') })
   const rev = catalog.reviews[0]
-  if (rev) items.push({ icon: rev.is_positive ? 'thumbs-up' : 'thumbs-down', title: `${rev.is_positive ? 'Opinión positiva' : 'Opinión'} de ${[rev.name, rev.surname].filter(Boolean).join(' ') || 'un cliente'}`, text: rev.text ? `“${rev.text.slice(0, 90)}${rev.text.length > 90 ? '…' : ''}”` : rev.product_name ? `Sobre ${rev.product_name}` : '', cta: 'Ver', run: () => { section.value = 'reviews' } })
+  if (rev) items.push({ icon: 'star', title: `Nueva opinión de ${[rev.name, rev.surname_initial || rev.surname].filter(Boolean).join(' ') || 'un cliente'}`, text: [rev.is_positive ? 'Le gustó' : rev.is_positive === false ? 'No le gustó' : '', relDays(rev.created_at)].filter(Boolean).join(' · '), cta: 'Responder', run: go('reviews') })
+  const today = store.visitStats?.today ?? 0
   const days = store.visitStats?.days || []
   const peak = days.reduce((m, d) => (d.count > (m?.count ?? -1) ? d : m), null)
-  if (peak?.count) items.push({ icon: 'trending-up', title: `Tu mejor día: ${peak.count} ${peak.count === 1 ? 'visita' : 'visitas'}`, text: `Fue el ${fmtDate(peak.date)}.`, cta: 'Ver visitas', run: () => { section.value = 'stats' } })
+  if (canStats.value && today) items.push({ icon: 'trending-up', title: `${today} ${today === 1 ? 'visita nueva' : 'visitas nuevas'} hoy`, text: peak?.count ? `Tu mejor día: ${peak.count} el ${fmtDate(peak.date)}.` : '', cta: 'Ver', run: go('stats') })
+  const lastProduct = catalog.products.reduce((m, p) => (Date.parse(p.created_at || '') > Date.parse(m?.created_at || 0) ? p : m), null)
+  if (lastProduct?.created_at) items.push({ icon: 'package', title: `Se publicó «${lastProduct.name}»`, text: `Ya está visible en tu web · ${relDays(lastProduct.created_at)}`, cta: 'Ver', run: go('catalogs') })
   const last = payments.payments[0]
-  if (last) items.push({ icon: 'receipt', title: 'Último pago registrado', text: `${formatARS(last.amount)} · ${formatDateTime(last.paid_at || last.created_at)}`, cta: 'Ver pagos', run: () => { section.value = 'payments' } })
-  return items.slice(0, 4)
+  if (last) items.push({ icon: 'receipt', title: 'Último pago registrado', text: `${formatARS(last.amount)} · ${formatDateTime(last.paid_at || last.created_at)}`, cta: 'Ver pagos', run: go('payments') })
+  return items.slice(0, 5)
 })
 
 // --- Inicio bento: tarjetas de números, gráfico y panel "Tu página" ---
-const ownerName = computed(() => business.value || displayName.value)
+const ownerName = computed(() => auth.user?.profile?.first_name || auth.user?.username || business.value || displayName.value)
 const todayDelta = computed(() => {
   const today = store.visitStats?.today ?? 0
   const y = yesterdayVisits.value
@@ -651,6 +660,19 @@ const heroSub = computed(() => {
   }
   return 'Tu web está publicada. Compartí el link para sumar visitas y clientes.'
 })
+const designTarget = computed(() => {
+  const b = plan.value?.benefits || {}
+  return plan.value?.isCurrent && b.has_customization ? 'design' : 'web'
+})
+const stepsPct = computed(() => (nextSteps.value.length ? Math.round((stepsDone.value / nextSteps.value.length) * 100) : 0))
+const quickLinks = [
+  { id: 'catalogs', label: 'Productos', hint: 'Cargar y editar', icon: 'package' },
+  { id: 'web', label: 'Mi página', hint: 'Diseño y dirección', icon: 'store' },
+  { id: 'tools', label: 'Promocionar', hint: 'QR, folletos y visitas', icon: 'megaphone' },
+  { id: 'stats', label: 'Visitas', hint: 'Tus números del mes', icon: 'trending-up' },
+  { id: 'reviews', label: 'Opiniones', hint: 'Lo que dicen de vos', icon: 'star' },
+  { id: 'bot', label: 'Asistente', hint: 'Responde 24/7', icon: 'bot' }
+]
 
 // (La vista previa viva de la web salió de Inicio en el rediseño: la portada
 // muestra una sola acción principal; editar/ver la web quedan en accesos
@@ -912,8 +934,11 @@ watch(
 const productQuery = ref('')
 // Toolbar del listado: filtros por categoría/marca, "solo en oferta",
 // orden y vista grilla/lista (persistida en localStorage).
+// Vista del listado: 'table' (densa, default) | 'grid' (tarjetas). El viejo
+// valor 'list' migra a 'table'.
 const PRODUCT_VIEW_KEY = 'davent.catalog.view'
-const productView = ref(localStorage.getItem(PRODUCT_VIEW_KEY) === 'list' ? 'list' : 'grid')
+const savedProductView = localStorage.getItem(PRODUCT_VIEW_KEY)
+const productView = ref(savedProductView === 'grid' ? 'grid' : 'table')
 watch(productView, (v) => { try { localStorage.setItem(PRODUCT_VIEW_KEY, v) } catch {} })
 const prodFilterCategory = ref('')
 const prodFilterBrand = ref('')
@@ -941,6 +966,48 @@ const filteredProducts = computed(() => {
   else list = [...list].sort((a, b) => Date.parse(b.created_at || 0) - Date.parse(a.created_at || 0))
   return list
 })
+
+// Paginado cliente del listado (la API devuelve el catálogo completo).
+const PROD_PAGE_SIZE = 15
+const prodPage = ref(1)
+const pagedProducts = computed(() => {
+  const start = (prodPage.value - 1) * PROD_PAGE_SIZE
+  return filteredProducts.value.slice(start, start + PROD_PAGE_SIZE)
+})
+const prodPageInfo = computed(() => {
+  const total = filteredProducts.value.length
+  if (!total) return { from: 0, to: 0, total: 0, pages: 0 }
+  const from = (prodPage.value - 1) * PROD_PAGE_SIZE + 1
+  return { from, to: Math.min(prodPage.value * PROD_PAGE_SIZE, total), total, pages: Math.ceil(total / PROD_PAGE_SIZE) }
+})
+watch([productQuery, prodFilterCategory, prodFilterBrand, prodOnlyOffers, prodSort, () => catalog.products.length], () => { prodPage.value = 1; selectedIds.value = [] })
+
+// Selección múltiple de la vista tabla + acciones en lote (bucles sobre los
+// endpoints unitarios: el backend no expone bulk de productos).
+const selectedIds = ref([])
+const bulkBusy = ref(false)
+async function bulkSetActive(active) {
+  if (bulkBusy.value || !selectedIds.value.length) return
+  bulkBusy.value = true
+  const ids = [...selectedIds.value]
+  for (const id of ids) {
+    const p = catalog.products.find((x) => x.id === id)
+    if (p && p.is_active !== active) await catalog.saveProduct(id, { fields: { is_active: active }, image: null, imageClear: false })
+  }
+  bulkBusy.value = false
+  selectedIds.value = []
+  pushToast(active ? 'Productos visibles en tu web' : 'Productos ocultos')
+}
+async function bulkRemove() {
+  if (bulkBusy.value || !selectedIds.value.length) return
+  bulkBusy.value = true
+  const ids = [...selectedIds.value]
+  for (const id of ids) await catalog.removeProduct(id)
+  bulkBusy.value = false
+  if (productEditing.value && ids.includes(productEditing.value)) closeProductForm()
+  selectedIds.value = []
+  pushToast(ids.length === 1 ? 'Producto eliminado' : `${ids.length} productos eliminados`)
+}
 
 // Chips de estado de la cabecera: escaneo rápido del catálogo.
 const productStats = computed(() => {
@@ -1100,7 +1167,7 @@ async function saveProduct() {
     if (res.storage) store.storage = res.storage
     if (res.imageError) catalog.notice = `${res.imageError} (el producto se guardó sin imagen nueva).`
     pushToast(productEditing.value ? 'Cambios guardados ✓' : 'Producto publicado ✓')
-    resetProductForm()
+    closeProductForm()
   }
 }
 
@@ -1110,7 +1177,7 @@ async function removeProduct(p) {
   const res = await catalog.removeProduct(p.id)
   productBusy.value = false
   if (res?.storage) store.storage = res.storage
-  if (productEditing.value === p.id) resetProductForm()
+  if (productEditing.value === p.id) closeProductForm()
 }
 
 // Duplicar: precarga el form como alta nueva con los datos del producto
@@ -1124,8 +1191,7 @@ async function duplicateProduct(p) {
   productFeatures.value = Object.entries(p.features || {}).map(([name, value]) => ({ name, value }))
   catalog.notice = ''
   catalog.lastError = ''
-  await nextTick()
-  document.querySelector('input[name="prod_name"]')?.focus()
+  productFormOpen.value = true
 }
 
 // Activar/desactivar sin abrir el form: PATCH parcial de is_active.
@@ -1137,11 +1203,29 @@ async function toggleProductActive(p) {
   if (res?.ok) pushToast(p.is_active ? 'Producto oculto' : 'Producto visible en tu web')
 }
 
-// CTA "Cargar producto": va a la pestaña y enfoca el nombre.
-async function focusProductForm() {
+// El formulario vive en un drawer lateral: el inventario queda a ancho
+// completo y el alta/edición no roba espacio permanente a la lista.
+const productFormOpen = ref(false)
+function openProductForm() {
   catalogTab.value = 'products'
-  await nextTick()
-  document.querySelector('input[name="prod_name"]')?.focus()
+  productFormOpen.value = true
+}
+function closeProductForm() {
+  productFormOpen.value = false
+  resetProductForm()
+}
+function onProductFormKey(e) {
+  if (e.key === 'Escape' && productFormOpen.value) closeProductForm()
+}
+watch(productFormOpen, (open) => {
+  if (open) document.addEventListener('keydown', onProductFormKey)
+  else document.removeEventListener('keydown', onProductFormKey)
+})
+
+// CTA "Cargar producto": abre el drawer en modo alta.
+async function focusProductForm() {
+  resetProductForm()
+  openProductForm()
 }
 
 // --- Descuentos programados: se activan y vencen solos por la ventana ---
@@ -2443,6 +2527,8 @@ onMounted(async () => {
     ensureCatalog()
     // La última opinión alimenta el feed de actividad del Inicio.
     if (canProductComments.value && !reviewsLoaded.value) { reviewsLoaded.value = true; catalog.loadReviews() }
+    // El paso "Activá el asistente" del checklist necesita el flag del bot.
+    if (canChatbot.value && store.hasStore && !botLoaded.value) { botLoaded.value = true; store.loadChatbot() }
     // Retorno del checkout (trae payment_id en la URL): es la vía instantánea.
     await handlePaymentReturn()
   })
@@ -3463,23 +3549,49 @@ async function changePassword() {
 
     <!-- ================= RESUMEN ================= -->
     <div v-show="section === 'overview'" :class="{ 'sec-on': section === 'overview' }">
-      <!-- 1. Héroe: saludo + frase de estado + acciones principales + portada -->
+      <!-- 1. Héroe: saludo + acciones + mini tarjeta de tu página -->
       <section class="ovh ovh-hero">
         <div class="ovh-hero-main">
           <span v-if="plan" class="ovh-pill">
             <span class="ovh-pill-dot" :class="{ ok: plan.isCurrent, warn: plan.status === 'Pendiente de pago', bad: !plan.isCurrent && plan.status !== 'Pendiente de pago' }" aria-hidden="true"></span>
             {{ plan.name }}<template v-if="plan.isCurrent"> · vigente hasta {{ fmtDate(plan.end) }}</template><template v-else> · {{ plan.status }}</template>
           </span>
-          <h1 class="ovh-title">{{ greeting }}, {{ ownerName }}</h1>
+          <h1 class="ovh-title">Hola, {{ ownerName }}</h1>
           <p class="ovh-sub">{{ heroSub }}</p>
           <div class="ovh-hero-actions">
             <a v-if="store.hasStore" class="btn btn-auto" :href="publicUrl" target="_blank" rel="noopener"><AppIcon name="external-link" :size="15" /> Ver mi página</a>
-            <button type="button" class="btn ghost btn-auto" :disabled="!store.hasStore" @click="copyLink"><AppIcon name="copy" :size="15" /> Compartir link</button>
+            <button v-else type="button" class="btn btn-auto" @click="section = 'store'"><AppIcon name="store" :size="15" /> Reservar mi link</button>
+            <button type="button" class="btn ghost btn-auto" :disabled="!store.hasStore" @click="shareWhatsApp"><AppIcon name="whatsapp" :size="15" /> Compartir</button>
           </div>
         </div>
-        <div class="ovh-hero-media" aria-hidden="true">
-          <img v-if="currentCover" :src="currentCover" alt="" />
-          <span v-else><AppIcon name="image" :size="24" /></span>
+        <div class="ovh-site">
+          <template v-if="store.hasStore">
+            <a class="ovh-site-cover" :href="publicUrl" target="_blank" rel="noopener" :aria-label="`Abrir ${publicUrl}`">
+              <img v-if="currentCover" :src="currentCover" alt="" />
+              <span v-else class="ovh-site-cover-empty"><AppIcon name="image" :size="22" /></span>
+              <span class="ovh-site-cover-cta"><AppIcon name="external-link" :size="13" /> Abrir</span>
+            </a>
+            <div class="ovh-site-info">
+              <div class="ovh-site-urlrow">
+                <span class="ovh-site-url" :title="publicUrl">{{ publicUrl }}</span>
+                <button type="button" class="ovh-icon-btn" aria-label="Copiar link" title="Copiar link" @click="copyLink"><AppIcon name="copy" :size="14" /></button>
+              </div>
+              <dl class="ovh-site-stats">
+                <div><dt>{{ visitWeek.now }}</dt><dd>visitas · 7 días</dd></div>
+                <div><dt>{{ productStats.visible }}</dt><dd>productos</dd></div>
+                <div><dt>{{ reviewStats.total }}</dt><dd>opiniones</dd></div>
+              </dl>
+              <button type="button" class="ovh-link ovh-site-edit" @click="section = designTarget">Editar diseño <AppIcon name="arrow-right" :size="13" /></button>
+            </div>
+          </template>
+          <div v-else class="ovh-site-empty">
+            <span class="ovh-site-empty-icon"><AppIcon name="store" :size="20" /></span>
+            <div class="ovh-site-empty-txt">
+              <strong>Tu página todavía no existe</strong>
+              <small>Reservá tu link público y empezá a vender hoy.</small>
+            </div>
+            <button type="button" class="btn btn-auto" @click="section = 'store'">Reservar link</button>
+          </div>
         </div>
       </section>
 
@@ -3513,9 +3625,9 @@ async function changePassword() {
       <AlertMessage v-if="payments.notice" kind="success" :message="payments.notice" />
       <AlertMessage v-if="payments.lastError" kind="error" :message="payments.lastError" />
 
-      <!-- 3. Tarjetas de números: visitas, productos, opiniones y próximo cobro -->
-      <div class="ovh-stats">
-        <div class="ovh ovh-stat">
+      <!-- 3. Números del día: una sola banda con divisores, no cuatro tarjetas -->
+      <section class="ovh ovh-metrics" aria-label="Resumen de tu negocio">
+        <div class="ovh-metric">
           <span class="ovh-label">Visitas hoy</span>
           <strong class="ovh-num">{{ canStats ? (store.visitStats?.today ?? 0) : '—' }}</strong>
           <small class="ovh-meta" :class="{ up: (todayDelta ?? 0) > 0, down: (todayDelta ?? 0) < 0 }">
@@ -3524,22 +3636,22 @@ async function changePassword() {
             <template v-else><button type="button" class="ovh-link" @click="section = 'plans'">con un plan superior</button></template>
           </small>
         </div>
-        <div class="ovh ovh-stat">
+        <div class="ovh-metric">
           <span class="ovh-label">Productos activos</span>
           <strong class="ovh-num">{{ billing.hasSubscription ? productStats.visible : 0 }}</strong>
           <small class="ovh-meta">{{ productStats.noImage ? `${productStats.noImage} sin foto` : 'todos con foto' }}</small>
         </div>
-        <div class="ovh ovh-stat">
+        <div class="ovh-metric">
           <span class="ovh-label">Opiniones</span>
           <strong class="ovh-num">{{ reviewStats.total }}</strong>
           <small class="ovh-meta">{{ reviewStats.pct !== null ? `${reviewStats.pct}% positivas` : 'todavía sin reseñas' }}</small>
         </div>
-        <div class="ovh ovh-stat">
+        <div class="ovh-metric">
           <span class="ovh-label">Próximo cobro</span>
           <strong class="ovh-num">{{ plan && plan.isCurrent ? formatARS(plan.price) : '—' }}</strong>
           <small class="ovh-meta">{{ plan && plan.isCurrent ? `${fmtDate(plan.end)} · ${plan.name}` : 'sin plan vigente' }}</small>
         </div>
-      </div>
+      </section>
 
       <!-- 4. Fila: gráfico de visitas + checklist de puesta en marcha -->
       <div class="ovh-row">
@@ -3562,6 +3674,7 @@ async function changePassword() {
             <h3>Para empezar</h3>
             <span class="ovh-count">{{ stepsDone }} de {{ nextSteps.length }}</span>
           </header>
+          <div class="ovh-prog" role="progressbar" aria-label="Avance de puesta en marcha" aria-valuemin="0" aria-valuemax="100" :aria-valuenow="stepsPct"><span :style="{ transform: `scaleX(${stepsPct / 100})` }"></span></div>
           <ol v-if="pendingSteps.length" class="ovh-list">
             <li v-for="s in pendingSteps" :key="s.title">
               <span class="ovh-item-icon" aria-hidden="true"><AppIcon :name="s.icon" :size="15" /></span>
@@ -3593,29 +3706,15 @@ async function changePassword() {
 
         <section class="ovh ovh-card">
           <header class="ovh-card-head">
-            <h3>Tu página</h3>
-            <button type="button" class="ovh-link" @click="section = 'design'">Editar diseño</button>
+            <h3>Ir directo a</h3>
           </header>
-          <template v-if="store.hasStore">
-            <label class="ovh-label" for="ovh-link">Link público</label>
-            <div class="ovh-link-row">
-              <input id="ovh-link" class="ovh-input" type="text" readonly :value="publicUrl" @focus="$event.target.select()" />
-              <button type="button" class="btn ghost btn-auto" @click="copyLink"><AppIcon name="copy" :size="14" /> Copiar</button>
-            </div>
-            <dl class="ovh-page-stats">
-              <div><dt>{{ visitWeek.now }}</dt><dd>visitas · 7 días</dd></div>
-              <div><dt>{{ productStats.visible }}</dt><dd>productos</dd></div>
-              <div><dt>{{ reviewStats.total }}</dt><dd>opiniones</dd></div>
-            </dl>
-            <div class="ovh-page-actions">
-              <a class="btn ghost btn-auto" :href="publicUrl" target="_blank" rel="noopener">Ver mi web <AppIcon name="external-link" :size="14" /></a>
-              <button type="button" class="btn ghost btn-auto" @click="shareWhatsApp"><AppIcon name="phone" :size="14" /> Compartir</button>
-            </div>
-          </template>
-          <template v-else>
-            <p class="ovh-empty">Todavía no reservaste tu link público.</p>
-            <button type="button" class="btn btn-auto" @click="section = 'store'">Reservar mi link</button>
-          </template>
+          <div class="ovh-quick">
+            <button v-for="q in quickLinks" :key="q.id" type="button" class="ovh-quick-item" :class="{ locked: navLocks[q.id] }" @click="section = q.id">
+              <span class="ovh-item-icon" aria-hidden="true"><AppIcon :name="q.icon" :size="15" /></span>
+              <span class="ovh-quick-txt"><strong>{{ q.label }}</strong><small>{{ q.hint }}</small></span>
+              <AppIcon :name="navLocks[q.id] ? 'lock' : 'arrow-right'" :size="13" class="ovh-quick-go" />
+            </button>
+          </div>
         </section>
       </div>
 
@@ -3709,25 +3808,9 @@ async function changePassword() {
         <div v-if="catalog.status === 'loading'" class="card card-loading"><span class="spinner spinner-brand"></span><p>Cargando tu catálogo…</p></div>
 
         <template v-else>
-          <!-- -------- Productos -------- -->
-          <div v-show="catalogTab === 'products'" class="grid-2">
-            <ProductForm
-              :form="productForm" :touched="productTouched" :features="productFeatures"
-              :categories="catalog.categories" :brands="catalog.brands"
-              :editing="Boolean(productEditing)" :busy="productBusy"
-              :legacy-offer="legacyOffer" :offer-cleared="offerCleared"
-              :image-preview="productImagePreview" :image-err="productImageErr"
-              :has-image="Boolean(productImage)" :has-original="Boolean(productOriginal)" :bg-busy="productBgBusy"
-              :accept="LOGO_ACCEPT_TYPES" :feature-limit="FEATURE_LIMITS.entriesMax"
-              :features-err="featuresErr" :field-err="productFieldErr"
-              @save="saveProduct" @cancel="resetProductForm"
-              @pick-image="onProductImagePicked" @remove-bg="removeProductBg"
-              @restore-original="restoreProductOriginal"
-              @clear-image="productImage = null; productOriginal = null; productImagePreview = ''; productImageCleared = true"
-              @clear-offer="offerCleared = true"
-              @add-feature="addFeatureRow" @remove-feature="removeFeatureRow"
-            />
-
+          <!-- -------- Productos: inventario a ancho completo; el formulario
+               vive en el drawer lateral (Teleport al final del layout). -------- -->
+          <div v-show="catalogTab === 'products'">
             <div class="card">
               <div class="prod-head">
                 <h3><AppIcon name="package" :size="18" /> Tus productos</h3>
@@ -3736,7 +3819,7 @@ async function changePassword() {
               <StorageMeter />
               <div v-if="!catalog.products.length" class="empty-mini">
                 <AppIcon name="package" :size="22" />
-                <div><p>Todavía no cargaste productos. El primero tarda un minuto: nombre, precio y una foto.</p><button type="button" class="empty-mini-cta" @click="focusField('prod_name')">Cargar el primero</button></div>
+                <div><p>Todavía no cargaste productos. El primero tarda un minuto: nombre, precio y una foto.</p><button type="button" class="empty-mini-cta" @click="focusProductForm">Cargar el primero</button></div>
               </div>
               <template v-else>
                 <CatalogToolbar
@@ -3753,15 +3836,39 @@ async function changePassword() {
                     <button type="button" class="empty-mini-cta" @click="productQuery = ''; prodFilterCategory = ''; prodFilterBrand = ''; prodOnlyOffers = false">Limpiar filtros</button>
                   </div>
                 </div>
-                <ul v-else class="prod-grid" :class="{ 'prod-grid-list': productView === 'list' }">
-                  <li v-for="p in filteredProducts" :key="p.id">
-                    <ProductCard
-                      :p="p" :view="productView" :campaign="productCampaign.get(p.id) || null"
-                      @edit="editProduct" @duplicate="duplicateProduct"
-                      @toggle="toggleProductActive" @remove="removeProduct"
-                    />
-                  </li>
-                </ul>
+                <template v-else>
+                  <div v-if="selectedIds.length" class="prod-bulkbar">
+                    <AppIcon name="check" :size="15" />
+                    <span>{{ selectedIds.length }} seleccionado{{ selectedIds.length === 1 ? '' : 's' }}</span>
+                    <button type="button" @click="bulkSetActive(true)" :disabled="bulkBusy"><AppIcon name="eye" :size="13" /> Mostrar</button>
+                    <button type="button" @click="bulkSetActive(false)" :disabled="bulkBusy"><AppIcon name="eye-off" :size="13" /> Ocultar</button>
+                    <button type="button" class="danger" @click="bulkRemove" :disabled="bulkBusy"><AppIcon name="trash" :size="13" /> Eliminar</button>
+                    <button type="button" class="prod-bulkbar-x" aria-label="Limpiar selección" @click="selectedIds = []"><AppIcon name="x" :size="14" /></button>
+                  </div>
+                  <ProductTable
+                    v-if="productView === 'table'"
+                    :products="pagedProducts" v-model:selected-ids="selectedIds"
+                    :campaign-of="(id) => productCampaign.get(id) || null"
+                    @edit="editProduct" @duplicate="duplicateProduct"
+                    @toggle="toggleProductActive" @remove="removeProduct"
+                  />
+                  <ul v-else class="prod-grid">
+                    <li v-for="p in pagedProducts" :key="p.id">
+                      <ProductCard
+                        :p="p" :campaign="productCampaign.get(p.id) || null"
+                        @edit="editProduct" @duplicate="duplicateProduct"
+                        @toggle="toggleProductActive" @remove="removeProduct"
+                      />
+                    </li>
+                  </ul>
+                  <div v-if="prodPageInfo.pages > 1" class="prod-pager">
+                    <span>Mostrando {{ prodPageInfo.from }}–{{ prodPageInfo.to }} de {{ prodPageInfo.total }}</span>
+                    <span class="prod-pager-btns">
+                      <button type="button" class="btn ghost btn-auto" :disabled="prodPage <= 1" @click="prodPage--">← Anterior</button>
+                      <button type="button" class="btn ghost btn-auto" :disabled="prodPage >= prodPageInfo.pages" @click="prodPage++">Siguiente →</button>
+                    </span>
+                  </div>
+                </template>
               </template>
             </div>
           </div>
@@ -6159,6 +6266,37 @@ async function changePassword() {
         @navigate="assistOpen = false; section = $event"
       />
       <PriceUpdateModal v-if="showPriceUpdate" @close="showPriceUpdate = false" />
+
+      <!-- Drawer del formulario de producto: se abre desde "Cargar producto",
+           editar o duplicar; el inventario queda siempre a ancho completo. -->
+      <Transition name="pf">
+        <div v-if="productFormOpen" class="pf-overlay" @click.self="closeProductForm">
+          <div class="pf-drawer" role="dialog" aria-modal="true" :aria-label="productEditing ? 'Editar producto' : 'Agregar un producto'">
+            <header class="pf-drawer-head">
+              <h3><AppIcon :name="productEditing ? 'pencil' : 'plus'" :size="17" /> {{ productEditing ? 'Editar producto' : 'Agregar un producto' }}</h3>
+              <button type="button" class="icon-btn" aria-label="Cerrar" @click="closeProductForm"><AppIcon name="x" :size="16" /></button>
+            </header>
+            <div class="pf-drawer-body">
+              <ProductForm
+                :form="productForm" :touched="productTouched" :features="productFeatures"
+                :categories="catalog.categories" :brands="catalog.brands"
+                :editing="Boolean(productEditing)" :busy="productBusy"
+                :legacy-offer="legacyOffer" :offer-cleared="offerCleared"
+                :image-preview="productImagePreview" :image-err="productImageErr"
+                :has-image="Boolean(productImage)" :has-original="Boolean(productOriginal)" :bg-busy="productBgBusy"
+                :accept="LOGO_ACCEPT_TYPES" :feature-limit="FEATURE_LIMITS.entriesMax"
+                :features-err="featuresErr" :field-err="productFieldErr"
+                @save="saveProduct" @cancel="closeProductForm"
+                @pick-image="onProductImagePicked" @remove-bg="removeProductBg"
+                @restore-original="restoreProductOriginal"
+                @clear-image="productImage = null; productOriginal = null; productImagePreview = ''; productImageCleared = true"
+                @clear-offer="offerCleared = true"
+                @add-feature="addFeatureRow" @remove-feature="removeFeatureRow"
+              />
+            </div>
+          </div>
+        </div>
+      </Transition>
     </Teleport>
 
     <!-- Toast "Guardado ✓" con deshacer donde la acción es reversible -->

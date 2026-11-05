@@ -351,7 +351,7 @@
 .app .pay-table tbody tr { transition: background-color .18s ease; }
 .app .pay-table tbody tr:hover { background: color-mix(in srgb, var(--brand-500) 5%, transparent); }
 
-/* ---------- Inicio: bento (héroe, stats, tarjetas) ---------- */
+/* ---------- Inicio: briefing (héroe + sitio, banda de métricas, accesos) ---------- */
 .app .ovh {
   border: 1px solid var(--dv-hair);
   border-radius: 18px;
@@ -359,10 +359,10 @@
   box-shadow: var(--dv-elev-1);
 }
 .app .ovh-hero {
-  display: flex;
+  display: grid;
+  grid-template-columns: minmax(0, 1.55fr) minmax(0, 1fr);
   align-items: stretch;
-  justify-content: space-between;
-  gap: 24px;
+  gap: 22px;
   padding: 26px 24px;
   margin-bottom: 14px;
   background:
@@ -390,22 +390,131 @@
 .app .ovh-title { font-size: 26px; font-weight: 800; letter-spacing: -.035em; line-height: 1.15; }
 .app .ovh-sub { font-size: 14.5px; max-width: 52ch; }
 .app .ovh-hero-actions { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 4px; }
-.app .ovh-hero-media {
+
+/* Mini tarjeta "tu página" dentro del héroe: portada + link + cifras. */
+.app .ovh-site {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  min-width: 0;
+  padding: 10px;
+  border: 1px solid var(--dv-hair-2);
+  border-radius: 14px;
+  background: var(--sunk);
+}
+.app .ovh-site-cover {
+  position: relative;
+  display: block;
+  height: 104px;
+  border: 1px solid var(--dv-hair-2);
+  border-radius: 10px;
+  overflow: hidden;
+  background: color-mix(in srgb, var(--ink) 5%, var(--card));
+}
+.app .ovh-site-cover img { display: block; width: 100%; height: 100%; object-fit: cover; }
+.app .ovh-site-cover-empty {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  color: var(--muted);
+}
+.app .ovh-site-cover-cta {
+  position: absolute;
+  right: 8px;
+  bottom: 8px;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 4px 11px;
+  border-radius: 99px;
+  background: rgba(9, 11, 20, .78);
+  color: #fff;
+  font-size: 11px;
+  font-weight: 650;
+  letter-spacing: .01em;
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+  opacity: 0;
+  transform: translateY(4px);
+  transition: opacity .2s ease, transform .22s var(--ease-out);
+}
+.app .ovh-site-cover:hover .ovh-site-cover-cta,
+.app .ovh-site-cover:focus-visible .ovh-site-cover-cta { opacity: 1; transform: none; }
+.app .ovh-site-info { display: flex; flex-direction: column; gap: 2px; padding: 0 4px 2px; }
+.app .ovh-site-urlrow { display: flex; align-items: center; gap: 8px; }
+.app .ovh-site-url {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-family: var(--dv-mono);
+  font-size: 11.5px;
+  color: var(--muted);
+}
+.app .ovh-icon-btn {
   flex: none;
   display: grid;
   place-items: center;
-  width: 128px;
-  min-height: 110px;
+  width: 30px;
+  height: 30px;
   border: 1px solid var(--dv-hair);
-  border-radius: 14px;
-  overflow: hidden;
-  background: color-mix(in srgb, var(--ink) 4%, var(--card));
-  color: var(--muted);
+  border-radius: 8px;
+  background: var(--card);
+  color: var(--ink-2);
+  cursor: pointer;
+  transition: border-color .18s ease, color .18s ease, transform .18s ease;
 }
-.app .ovh-hero-media img { width: 100%; height: 100%; object-fit: cover; }
+.app .ovh-icon-btn:hover { border-color: color-mix(in srgb, var(--brand-500) 40%, var(--line)); color: var(--brand-ink); }
+.app .ovh-icon-btn:active { transform: scale(.94); }
+.app .ovh-site-stats {
+  display: flex;
+  gap: 16px;
+  margin: 8px 0 4px;
+  padding: 9px 0;
+  border-top: 1px solid var(--dv-hair-2);
+  border-bottom: 1px solid var(--dv-hair-2);
+}
+.app .ovh-site-stats > div { display: flex; flex-direction: column; min-width: 0; }
+.app .ovh-site-stats dt { font-size: 16px; font-weight: 750; letter-spacing: -.02em; font-variant-numeric: tabular-nums; }
+.app .ovh-site-stats dd { margin: 0; font-size: 10.5px; color: var(--muted); white-space: nowrap; }
+.app .ovh-site-edit { align-self: flex-start; margin-top: 2px; }
+.app .ovh-site-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 14px 12px;
+}
+.app .ovh-site-empty-icon {
+  display: grid;
+  place-items: center;
+  width: 38px;
+  height: 38px;
+  border-radius: 11px;
+  background: var(--brand-soft);
+  color: var(--brand-ink);
+}
+.app .ovh-site-empty-txt { display: flex; flex-direction: column; gap: 2px; margin-bottom: 2px; }
+.app .ovh-site-empty-txt strong { font-size: 13.5px; letter-spacing: -.01em; }
+.app .ovh-site-empty-txt small { font-size: 12px; color: var(--muted); }
 
-.app .ovh-stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-bottom: 14px; }
-.app .ovh-stat { display: flex; flex-direction: column; gap: 4px; padding: 16px 18px; }
+/* Banda de métricas: una superficie, divisores finos en vez de 4 tarjetas. */
+.app .ovh-metrics {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  padding: 4px 0;
+  margin-bottom: 14px;
+}
+.app .ovh-metric {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  min-width: 0;
+  padding: 13px 18px;
+}
+.app .ovh-metric + .ovh-metric { border-left: 1px solid var(--dv-hair-2); }
 .app .ovh-label { font-size: 11.5px; font-weight: 600; letter-spacing: .02em; color: var(--muted); }
 .app .ovh-num { font-size: 24px; font-weight: 800; letter-spacing: -.04em; line-height: 1.1; font-variant-numeric: tabular-nums; }
 .app .ovh-meta { display: inline-flex; align-items: center; gap: 4px; font-size: 11.5px; color: var(--muted); }
@@ -433,6 +542,21 @@
   cursor: pointer;
 }
 .app .ovh-link:hover { text-decoration: underline; }
+.app .ovh-prog {
+  height: 5px;
+  margin: -4px 0 13px;
+  border-radius: 99px;
+  background: color-mix(in srgb, var(--brand-500) 12%, var(--line-soft));
+  overflow: hidden;
+}
+.app .ovh-prog span {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: linear-gradient(90deg, var(--brand-500), var(--accent));
+  transform-origin: left center;
+  transition: transform .8s var(--ease-out) .2s;
+}
 
 .app .ovh-bars { display: flex; align-items: stretch; gap: 8px; height: 132px; margin-top: auto; }
 .app .ovh-bar { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 6px; }
@@ -465,25 +589,42 @@
 .app .ovh-done { display: flex; align-items: center; gap: 8px; margin: auto 0; font-size: 13.5px; color: var(--ok); }
 .app .ovh-storage { margin-top: 14px; padding-top: 12px; border-top: 1px solid var(--line-soft); }
 
-.app .ovh-link-row { display: flex; gap: 8px; margin: 6px 0 16px; }
-.app .ovh-input {
-  flex: 1;
+/* Accesos rápidos: mosaico de destinos, con candado si el plan no llega. */
+.app .ovh-quick { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
+.app .ovh-quick-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
   min-width: 0;
-  height: 38px;
-  padding: 0 12px;
+  padding: 10px 12px;
   border: 1px solid var(--dv-hair);
-  border-radius: 10px;
-  background: color-mix(in srgb, var(--ink) 4%, var(--card));
-  color: var(--ink-2);
-  font-family: var(--dv-mono);
-  font-size: 12px;
+  border-radius: 12px;
+  background: var(--card);
+  color: var(--ink);
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+  transition: border-color .18s ease, transform .2s var(--ease-out), box-shadow .2s var(--ease-out);
 }
-.app .ovh-page-stats { display: flex; gap: 22px; margin: 0 0 16px; padding: 0; }
-.app .ovh-page-stats > div { display: flex; flex-direction: column; }
-.app .ovh-page-stats dt { font-size: 18px; font-weight: 800; letter-spacing: -.03em; font-variant-numeric: tabular-nums; }
-.app .ovh-page-stats dd { margin: 0; font-size: 11px; color: var(--muted); }
-.app .ovh-page-actions { display: flex; gap: 8px; margin-top: auto; }
-.app .ovh-page-actions .btn { flex: 1; justify-content: center; }
+.app .ovh-quick-item:hover {
+  border-color: color-mix(in srgb, var(--brand-500) 32%, var(--line));
+  transform: translateY(-1px);
+  box-shadow: var(--dv-elev-1);
+}
+.app .ovh-quick-item:active { transform: translateY(0) scale(.985); }
+.app .ovh-quick-item.locked { opacity: .72; }
+.app .ovh-quick-item.locked .ovh-item-icon { background: var(--sunk); color: var(--muted); box-shadow: none; }
+.app .ovh-quick-txt { flex: 1; min-width: 0; display: flex; flex-direction: column; }
+.app .ovh-quick-txt strong { font-size: 13px; font-weight: 650; letter-spacing: -.01em; }
+.app .ovh-quick-txt small {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 11.5px;
+  color: var(--muted);
+}
+.app .ovh-quick-go { flex: none; color: var(--muted); transition: color .18s ease, transform .18s var(--ease-out); }
+.app .ovh-quick-item:hover .ovh-quick-go { color: var(--brand-ink); transform: translateX(2px); }
 
 /* ---------- Inicio: alertas y franja de plan ---------- */
 .app .aq { position: relative; overflow: hidden; border-radius: 14px; }
@@ -613,7 +754,12 @@
 
 /* ---------- Responsive ---------- */
 @media (max-width: 1023px) {
-  .app .ovh-stats { grid-template-columns: repeat(2, 1fr); }
+  .app .ovh-hero { grid-template-columns: 1fr; }
+  .app .ovh-metrics { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .app .ovh-metric + .ovh-metric { border-left: none; }
+  .app .ovh-metric:nth-child(even) { border-left: 1px solid var(--dv-hair-2); }
+  .app .ovh-metric:nth-child(n+3) { border-top: 1px solid var(--dv-hair-2); }
+  .app .ovh-metric { padding: 12px 14px; }
   .app .ovh-row { grid-template-columns: 1fr; }
 }
 @media (max-width: 860px) {
@@ -635,8 +781,8 @@
   .app .topbar::after { display: none; }
   .app .page-head h1 { font-size: 22px; letter-spacing: -.03em; }
   .app .page-head h1::before { width: 26px; height: 2.5px; margin-bottom: 9px; }
-  .app .ovh-hero { padding: 20px 18px; }
-  .app .ovh-hero-media { display: none; }
+  .app .ovh-hero { padding: 20px 18px; gap: 16px; }
+  .app .ovh-site-cover { height: 128px; }
   .app .ovh-title { font-size: 22px; }
   .app .stat-body strong { font-size: 23px; }
 }
@@ -653,6 +799,9 @@
   .app .ovh-num { font-size: 20px; }
   .app .ovh-bars { height: 104px; gap: 5px; }
   .app .ovh-hero-actions .btn { flex: 1; justify-content: center; }
+  .app .ovh-quick { grid-template-columns: 1fr; }
+  .app .ovh-site-empty { align-items: stretch; text-align: left; }
+  .app .ovh-site-empty .btn { justify-content: center; }
 }
 
 /* ---------- Movimiento reducido ---------- */
@@ -661,5 +810,9 @@
   .app .stats-bar,
   .app .brand-ping { animation: none !important; }
   .app .card,
-  .app .stat { transition: none !important; }
+  .app .stat,
+  .app .ovh-prog span,
+  .app .ovh-quick-item,
+  .app .ovh-site-cover-cta,
+  .app .ovh-icon-btn { transition: none !important; }
 }
