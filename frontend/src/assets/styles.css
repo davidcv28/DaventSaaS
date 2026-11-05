@@ -1002,7 +1002,27 @@ body{ transition: background-color .2s ease, color .2s ease; }
 .rev-prod svg{ color: var(--brand-ink); flex: none; }
 .rev-prod-link{ background: none; border: none; padding: 0; font: inherit; color: var(--brand-ink); cursor: pointer; text-decoration: underline; text-underline-offset: 2px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .rev-prod-link:hover{ color: var(--brand-600, var(--brand-ink)); }
+.rev-prod{ max-width: 100%; }
+.rev-prod-link{ min-width: 0; }
+@media (max-width: 640px){
+  /* La cabecera apila nombre/email/fecha sin desbordar. */
+  .rev-head strong{ flex: 1 1 100%; min-width: 0; overflow-wrap: anywhere; }
+  .rev-mail{ flex: 1 1 auto; }
+  /* .btn lleva width:100%: en fila el "Cancelar" quedaba como una hebra.
+     Apilados, ambos ocupan el ancho completo y se leen bien. */
+  .rev-reply-actions{ flex-direction: column; }
+  .rev-reply-actions .btn{ width: 100%; }
+}
 .empty-mini{ padding: 22px; border: 1px dashed var(--line); border-radius: 12px; text-align: center; font-size: 13.5px; color: var(--muted); }
+/* Icono del estado vacío en pastilla con degradado de marca. */
+.empty-mini > svg:first-child{
+  padding: 9px; border-radius: 12px; box-sizing: content-box;
+  color: #fff;
+  background: linear-gradient(135deg, var(--brand-500), #8b5cf6 60%, #d946ef);
+  box-shadow: 0 8px 18px rgba(99, 102, 241, .3);
+}
+.empty-mini-cta{ display: inline-flex; align-items: center; gap: 6px; margin-top: 10px; padding: 8px 16px; border: none; border-radius: 10px; background: var(--brand-600); color: #fff; font: inherit; font-size: 13px; font-weight: 600; cursor: pointer; }
+.empty-mini-cta:hover{ background: var(--brand-700); }
 .feat-rows{ list-style: none; margin: 0 0 10px; padding: 0; display: grid; gap: 8px; }
 .feat-row{ display: grid; grid-template-columns: minmax(0, 2fr) minmax(0, 3fr) auto; gap: 8px; align-items: center; }
 .feat-row .input{ padding: 9px 12px; min-width: 0; }
@@ -1090,6 +1110,12 @@ body{ transition: background-color .2s ease, color .2s ease; }
 .cat-stats{ display: flex; flex-wrap: wrap; gap: 6px; margin-top: 10px; }
 .cat-stat{ display: inline-flex; align-items: center; gap: 5px; padding: 4px 11px; border: 1px solid var(--line); border-radius: 999px; background: var(--card); font-size: 12px; font-weight: 600; color: var(--ink-2); }
 .cat-stat svg{ color: var(--brand-500); }
+/* Tono por métrica: cada chip lleva el color de lo que cuenta. */
+.cat-stat.tone-info svg{ color: #0284c7; }
+.cat-stat.tone-warn svg{ color: var(--warn); }
+.cat-stat.tone-ok svg{ color: var(--ok); }
+.cat-stat.tone-brand svg{ color: #8b5cf6; }
+[data-theme='dark'] .cat-stat.tone-info svg{ color: #38bdf8; }
 .page-head-actions{ display: flex; gap: 8px; flex-wrap: wrap; }
 /* Listado de productos: grilla de tarjetas o filas (ProductCard.vue). */
 .prod-grid{ list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 10px; }
@@ -1110,8 +1136,14 @@ body{ transition: background-color .2s ease, color .2s ease; }
 .pf-overlay{ position: fixed; inset: 0; z-index: 120; background: rgba(10, 12, 18, .45); backdrop-filter: blur(2px); }
 .pf-drawer{ position: absolute; top: 0; right: 0; bottom: 0; width: min(480px, 100%); display: flex; flex-direction: column; background: var(--card); box-shadow: -18px 0 50px rgba(15, 23, 42, .18); }
 .pf-drawer-head{ display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 16px 20px; border-bottom: 1px solid var(--line); }
-.pf-drawer-head h3{ display: flex; align-items: center; gap: 8px; margin: 0; font-size: 16px; }
-.pf-drawer-head h3 svg{ color: var(--brand-500); }
+.pf-drawer-head h3{ margin: 0; font-size: 16px; }
+.pf-drawer-title{ display: flex; align-items: center; gap: 11px; min-width: 0; }
+.pf-drawer-ico{
+  flex: none; width: 36px; height: 36px; display: grid; place-items: center;
+  border-radius: 11px; color: #fff;
+  background: linear-gradient(135deg, var(--brand-500), #8b5cf6 60%, #d946ef);
+  box-shadow: 0 8px 18px rgba(99, 102, 241, .32), inset 0 1px 0 rgba(255, 255, 255, .22);
+}
 .pf-drawer-body{ flex: 1; overflow-y: auto; padding: 4px 20px 20px; }
 .pf-drawer-body .pform{ border: none; border-radius: 0; box-shadow: none; padding: 8px 0 0; height: auto; }
 .pf-drawer-body .pform .btn-row{ position: sticky; bottom: 0; margin-top: 16px; padding: 12px 0; background: var(--card); border-top: 1px solid var(--line); }
