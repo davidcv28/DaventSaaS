@@ -2220,6 +2220,12 @@ watch(section, (s) => {
     catalog.loadReviews()
   }
 })
+async function goToReviewProduct(r) {
+  await ensureCatalog()
+  section.value = 'catalogs'
+  const p = catalog.products.find((x) => x.id === r.product)
+  if (p) editProduct(p)
+}
 async function onDeleteReview(r) {
   if (reviewDeleting.value === r.id) return
   reviewDeleting.value = r.id
@@ -4070,9 +4076,11 @@ async function changePassword() {
                 <span class="rev-mail">{{ r.email }}</span>
                 <span class="rev-date">{{ fmtDate(r.created_at) }}</span>
               </div>
+              <span class="rev-prod"><AppIcon name="package" :size="12" /> Sobre
+                <button type="button" class="rev-prod-link" @click="goToReviewProduct(r)">{{ r.product_name }}</button>
+              </span>
               <p v-if="r.text" class="rev-text">{{ r.text }}</p>
               <div class="rev-foot">
-                <span class="rev-prod"><AppIcon name="package" :size="12" /> {{ r.product_name }}</span>
                 <button
                   type="button" class="icon-btn danger" :disabled="reviewDeleting === r.id"
                   :aria-label="`Eliminar la opinión de ${r.name}`" @click="onDeleteReview(r)"
