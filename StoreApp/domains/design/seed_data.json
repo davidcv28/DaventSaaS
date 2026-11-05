@@ -5098,6 +5098,192 @@
         "corners": "rounded"
       },
       "concept": "Navy profundo + coral: la agencia despues del atardecer."
+    },
+    {
+      "slug": "olivium",
+      "nombre": "Olivium",
+      "categoria": "gastronomia",
+      "descripcion": "Almazara y tienda de aceitunas, aceite y pasta de aceituna: papel hueso de aceituna, tinta verde profundo y acento oliva con destellos de ambar de cosecha. DM Serif Display como voz de etiqueta, Instrument Sans para lectura y JetBrains Mono en datos.",
+      "tier": "plus",
+      "template": "olivium",
+      "page_theme": "light",
+      "pattern": "olivium",
+      "tokens": {
+        "palette": {
+          "accent": "#5C6B22",
+          "primary": "#202A12",
+          "secondary": "#3E4A17",
+          "bg": "#F3EFE0",
+          "surface": "#FBF7E9",
+          "text": "#202A12",
+          "muted": "#6C744C",
+          "border": "#DCD1AE",
+          "success": "#3E6B3A",
+          "danger": "#B3261E"
+        },
+        "containers": {
+          "radius": "sm",
+          "shadow": "soft",
+          "border": "thin",
+          "density": "comfortable",
+          "surface": "flat"
+        },
+        "typography": {
+          "heading": "dm-serif-display",
+          "subheading": "instrument-sans",
+          "body": "instrument-sans",
+          "scale": "editorial",
+          "weightHeading": 400,
+          "letterSpacing": "-0.01em"
+        },
+        "buttons": {
+          "shape": "square",
+          "style": "solid",
+          "size": "md"
+        },
+        "background": {
+          "type": "solid",
+          "value": null,
+          "overlay": "none"
+        },
+        "motion": {
+          "reveal": "fade-up",
+          "hover": "lift",
+          "intensity": "subtle"
+        },
+        "mobile": {
+          "cardStyle": "standard",
+          "heroHeight": "standard"
+        },
+        "preview": "",
+        "icons": {
+          "style": "line",
+          "stroke": "1.8",
+          "size": "20",
+          "corners": "rounded"
+        }
+      },
+      "layout": {},
+      "layout_spec": {},
+      "tags": [
+        "aceitunas",
+        "aceite",
+        "oliva",
+        "gastronomia",
+        "comida",
+        "tienda",
+        "retail"
+      ],
+      "preview": "",
+      "style": "Tienda gourmet",
+      "anim": {
+        "hero": "fade-up",
+        "reveal": "fade-up",
+        "hover": "lift",
+        "button": "solid-press"
+      },
+      "easing": "cubic-bezier(.4,0,.2,1)",
+      "duration": "420ms",
+      "icons": {
+        "style": "line",
+        "stroke": "1.8",
+        "size": "20",
+        "corners": "rounded"
+      },
+      "concept": "Papel hueso + verde olivo: la etiqueta de la almazara."
+    },
+    {
+      "slug": "olivium-noche",
+      "nombre": "Olivium Noche",
+      "categoria": "gastronomia nocturna",
+      "descripcion": "Noche de almazara: verde profundo casi negro, acento oliva encendido y la misma reticula editorial de Olivium, con DM Serif Display e Instrument Sans.",
+      "tier": "plus",
+      "template": "olivium",
+      "page_theme": "dark",
+      "pattern": "olivium",
+      "tokens": {
+        "palette": {
+          "accent": "#C9D97E",
+          "primary": "#14170A",
+          "secondary": "#3E4A17",
+          "bg": "#14170A",
+          "surface": "#1C2112",
+          "text": "#F0EBD3",
+          "muted": "#A6AC86",
+          "border": "#333B1C",
+          "success": "#9CCB8E",
+          "danger": "#E56464"
+        },
+        "containers": {
+          "radius": "sm",
+          "shadow": "medium",
+          "border": "thin",
+          "density": "comfortable",
+          "surface": "elevated"
+        },
+        "typography": {
+          "heading": "dm-serif-display",
+          "subheading": "instrument-sans",
+          "body": "instrument-sans",
+          "scale": "editorial",
+          "weightHeading": 400,
+          "letterSpacing": "-0.01em"
+        },
+        "buttons": {
+          "shape": "square",
+          "style": "solid",
+          "size": "md"
+        },
+        "background": {
+          "type": "solid",
+          "value": null,
+          "overlay": "none"
+        },
+        "motion": {
+          "reveal": "fade-up",
+          "hover": "glow",
+          "intensity": "subtle"
+        },
+        "mobile": {
+          "cardStyle": "standard",
+          "heroHeight": "standard"
+        },
+        "preview": "",
+        "icons": {
+          "style": "line",
+          "stroke": "1.8",
+          "size": "20",
+          "corners": "rounded"
+        }
+      },
+      "layout": {},
+      "layout_spec": {},
+      "tags": [
+        "aceitunas",
+        "aceite",
+        "oliva",
+        "gastronomia",
+        "noche",
+        "tienda",
+        "premium"
+      ],
+      "preview": "",
+      "style": "Tienda gourmet nocturna",
+      "anim": {
+        "hero": "fade",
+        "reveal": "fade",
+        "hover": "glow",
+        "button": "solid-press"
+      },
+      "easing": "cubic-bezier(.4,0,.2,1)",
+      "duration": "420ms",
+      "icons": {
+        "style": "line",
+        "stroke": "1.8",
+        "size": "20",
+        "corners": "rounded"
+      },
+      "concept": "Verde noche + oliva encendido: la almazara despues del atardecer."
     }
   ],
   "patterns": [
@@ -7241,6 +7427,143 @@
       "variables": {},
       "supports_dark_mode": true,
       "style": "viajero"
+    },
+    {
+      "slug": "olivium",
+      "nombre": "Olivium",
+      "categoria": "gastronomia",
+      "descripcion": "Almazara y tienda de aceitunas, aceite de oliva y pasta de aceituna: hero a sangre con ficha de almazara tipo etiqueta, cintas de la coleccion y de anuncios en loop, indice de categorias numerado, destacados de la almazara, bitacora del olivar, garantias, membresias, testimonios, FAQ, CTA verde profundo y contacto. Solo datos reales de la tienda.",
+      "tier": "plus",
+      "template": "olivium",
+      "layout": {
+        "landing": [
+          {
+            "id": "hero",
+            "variant": "split",
+            "enabled": true,
+            "order": 0
+          },
+          {
+            "id": "categories",
+            "enabled": true,
+            "order": 1
+          },
+          {
+            "id": "featured",
+            "enabled": true,
+            "order": 2
+          },
+          {
+            "id": "about",
+            "enabled": true,
+            "order": 3
+          },
+          {
+            "id": "benefits",
+            "variant": "cards",
+            "enabled": true,
+            "order": 4
+          },
+          {
+            "id": "plans",
+            "enabled": true,
+            "order": 5
+          },
+          {
+            "id": "testimonials",
+            "variant": "cards",
+            "enabled": true,
+            "order": 6
+          },
+          {
+            "id": "faq",
+            "enabled": true,
+            "order": 7
+          },
+          {
+            "id": "cta",
+            "variant": "band",
+            "enabled": true,
+            "order": 8
+          },
+          {
+            "id": "contact",
+            "enabled": true,
+            "order": 9
+          }
+        ],
+        "catalog": [
+          {
+            "id": "hero",
+            "enabled": true,
+            "order": 0
+          },
+          {
+            "id": "grid",
+            "enabled": true,
+            "order": 1
+          }
+        ],
+        "services": [
+          {
+            "id": "hero",
+            "enabled": true,
+            "order": 0
+          },
+          {
+            "id": "list",
+            "enabled": true,
+            "order": 1
+          }
+        ]
+      },
+      "tokens": {
+        "accent": "#5C6B22",
+        "palette": {
+          "accent": "#5C6B22",
+          "primary": "#202A12",
+          "secondary": "#3E4A17",
+          "bg": "#F3EFE0",
+          "surface": "#FBF7E9",
+          "text": "#202A12",
+          "muted": "#6C744C",
+          "border": "#DCD1AE",
+          "success": "#3E6B3A",
+          "danger": "#B3261E"
+        },
+        "fonts": [
+          "dm-serif-display",
+          "instrument-sans"
+        ],
+        "radius": "14px",
+        "anim": {
+          "hero": "fade-up",
+          "reveal": "fade-up",
+          "hover": "lift",
+          "button": "solid-press"
+        },
+        "easing": "cubic-bezier(.4,0,.2,1)",
+        "duration": "420ms",
+        "icons": {
+          "style": "line",
+          "stroke": "1.8",
+          "size": "20",
+          "corners": "rounded"
+        }
+      },
+      "tags": [
+        "aceitunas",
+        "aceite",
+        "oliva",
+        "gastronomia",
+        "comida",
+        "tienda",
+        "retail"
+      ],
+      "preview": "",
+      "variables": {},
+      "supports_dark_mode": true,
+      "style": "olivium"
     }
   ]
 }
