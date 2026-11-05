@@ -4228,6 +4228,15 @@ async function changePassword() {
               <button v-if="domainInfo && domainInfo.status !== 'verified'" class="btn secondary btn-auto" :disabled="domainBusy" @click="checkDomainNow">Verificar DNS</button>
               <button v-if="domainInfo" class="btn ghost btn-auto" :disabled="domainBusy" @click="removeDomain">Quitar dominio</button>
             </div>
+            <details class="domain-guide">
+              <summary><AppIcon name="circle-help" :size="15" /> ¿Cómo consigo mi dominio?</summary>
+              <ol>
+                <li><strong>Compralo</strong> en un registrador como NIC Argentina, GoDaddy o Cloudflare. Sale muy poco al año.</li>
+                <li><strong>Escribilo acá arriba</strong> y copiá los dos registros que te mostramos.</li>
+                <li><strong>Creá esos registros</strong> en el panel DNS de tu registrador.</li>
+                <li><strong>Verificá</strong> con el botón de arriba. Los cambios pueden tardar hasta 48 h.</li>
+              </ol>
+            </details>
           </template>
         </div>
 

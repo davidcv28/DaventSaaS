@@ -705,6 +705,15 @@ body{ transition: background-color .2s ease, color .2s ease; }
 .link-actions{ margin-top: 0; }
 /* Dominio propio: instrucciones DNS */
 .domain-dns{ margin: 4px 0 14px; }
+/* Guía de dominio propio: desplegable con los pasos en lenguaje simple. */
+.domain-guide{ margin-top: 14px; border-top: 1px dashed var(--line); padding-top: 10px; }
+.domain-guide > summary{ display: inline-flex; align-items: center; gap: 7px; cursor: pointer; font-size: 13.5px; font-weight: 600; color: var(--brand-ink); list-style: none; }
+.domain-guide > summary::-webkit-details-marker{ display: none; }
+.domain-guide > summary::after{ content:''; width: 7px; height: 7px; border-right: 2px solid currentColor; border-bottom: 2px solid currentColor; transform: rotate(45deg); transition: transform .16s var(--ease-out, ease); }
+.domain-guide[open] > summary::after{ transform: rotate(-135deg); }
+.domain-guide ol{ margin: 10px 0 2px; padding-left: 20px; display: grid; gap: 7px; font-size: 13.5px; color: var(--ink-2); }
+.domain-guide li::marker{ color: var(--brand-500); font-weight: 700; }
+.domain-guide li strong{ color: var(--ink); }
 .dns-row{ display: flex; align-items: center; gap: 10px; flex-wrap: wrap; padding: 8px 0; border-top: 1px dashed var(--line); font-size: 13.5px; }
 .dns-row .mono{ font-size: 12.5px; word-break: break-all; }
 .dns-txt{ user-select: all; }
