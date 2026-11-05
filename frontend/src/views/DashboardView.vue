@@ -4091,7 +4091,7 @@ async function changePassword() {
       <div class="page-head">
         <div>
           <h1>Mi página</h1>
-          <p>Todo lo que tus clientes ven en internet. Elegí un apartado para empezar.</p>
+          <p>Lo que ven tus clientes en internet. Elegí un apartado para empezar.</p>
         </div>
       </div>
       <SectionTabs :tabs="tabGroups.web" :active="''" @select="section = $event" />
@@ -4112,7 +4112,7 @@ async function changePassword() {
       <div class="page-head">
         <div>
           <h1>Mi página web</h1>
-          <p>Esta es la dirección de tu negocio en internet. Compartila por WhatsApp, Instagram o donde quieras.</p>
+          <p>Tu dirección en internet. Compartila el link por WhatsApp o donde quieras.</p>
         </div>
       </div>
       <SectionTabs :tabs="tabGroups.web" active="store" @select="section = $event" />
@@ -4138,7 +4138,7 @@ async function changePassword() {
             <button class="btn secondary btn-auto" @click="openStore"><AppIcon name="external-link" :size="16" /> Ver mi página</button>
             <button class="btn ghost btn-auto" :disabled="storeBusy" @click="togglePublished">{{ store.store.is_published ? 'Pausar mi página' : 'Volver a publicarla' }}</button>
           </div>
-          <p class="hint">Si la pausás, tus clientes ven un cartel de “tienda no disponible” hasta que la vuelvas a publicar.</p>
+          <p class="hint">Si la pausás, tus clientes ven un aviso hasta que la vuelvas a publicar.</p>
         </div>
 
         <details class="card more-card">
@@ -4248,7 +4248,7 @@ async function changePassword() {
       <div class="page-head">
         <div>
           <h1>Diseño</h1>
-          <p>Acá vas a poder elegir cómo se ve tu página.</p>
+          <p>Elegí el diseño y los colores de tu página.</p>
         </div>
       </div>
       <SectionTabs :tabs="tabGroups.web" active="design" @select="section = $event" />
@@ -4282,7 +4282,7 @@ async function changePassword() {
       <div class="page-head">
         <div>
           <h1>Sobre mi negocio</h1>
-          <p>Elegí qué querés contar en tu página. Tocá una tarjeta, completá el formulario y listo — lo que dejes vacío no se muestra.</p>
+          <p>Tocá una tarjeta, completá el formulario y listo. Lo que dejes vacío no aparece en tu web.</p>
         </div>
         <button class="btn ghost btn-auto" @click="openStore"><AppIcon name="external-link" :size="16" /> Ver mi página</button>
       </div>
@@ -4316,7 +4316,7 @@ async function changePassword() {
             </span>
           </button>
         </nav>
-        <p class="hint mk-launch-hint">Tocá una tarjeta para abrir su formulario. Todo lo que dejes vacío simplemente no aparece en tu página.</p>
+        <p class="hint mk-launch-hint">Tocá una tarjeta para editarla.</p>
 
         <!-- ===== Modal de edición: un bloque a la vez ===== -->
         <div v-if="mkOpen" class="mk-overlay" @click.self="mkOpen = null">
@@ -4947,6 +4947,7 @@ async function changePassword() {
       <AlertMessage v-if="store.lastError" kind="error" :message="store.lastError" />
 
       <template v-if="canCustomize">
+        <div class="photos-grid">
         <div class="card">
           <h3><AppIcon name="store" :size="18" /> Logo</h3>
           <div class="logo-box">
@@ -4977,7 +4978,7 @@ async function changePassword() {
             </div>
           </div>
           <input ref="coverInput" type="file" class="sr-only" :accept="LOGO_ACCEPT_TYPES" aria-label="Subir foto de portada" @change="onCoverPicked" />
-          <p class="hint">La foto grande que se ve al entrar a tu web. Imagen horizontal de hasta 4 MB.</p>
+          <p class="hint">La foto grande al entrar a tu web. Horizontal, hasta 4 MB.</p>
           <p v-if="coverErr" class="field-error" role="alert">{{ coverErr }}</p>
         </div>
 
@@ -5054,6 +5055,7 @@ async function changePassword() {
           </div>
           <input ref="decorInput" type="file" class="sr-only" :accept="LOGO_ACCEPT_TYPES" aria-label="Agregar imagen decorativa" @change="onDecorPicked" />
           <p class="hint">Hasta {{ DECOR_MAX_IMAGES }} fotos que ilustran tu portada. Comparten el cupo de la galería. <span v-if="!canDesignAdvanced" class="lock-badge"><AppIcon name="lock" :size="11" :stroke="2" /> Premium</span></p>
+        </div>
         </div>
       </template>
       <div v-else class="empty">

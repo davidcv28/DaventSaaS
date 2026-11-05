@@ -1108,6 +1108,15 @@ body{ transition: background-color .2s ease, color .2s ease; }
 .mk-done{ display: inline-flex; align-items: center; gap: 5px; padding: 4px 10px; border-radius: 999px; background: var(--ok-bg); border: 1px solid var(--ok-line); color: var(--ok-ink); font-size: 11px; font-weight: 650; white-space: nowrap; }
 .mk-launcher-go{ display: grid; place-items: center; width: 30px; height: 30px; border: 1px solid var(--line); border-radius: 999px; color: var(--muted); transition: background .16s, color .16s, border-color .16s, transform .16s; }
 .mk-launch-hint{ margin: 8px 0 18px; }
+/* Escritorio: los bloques de "Sobre mi negocio" pasan a grilla de tarjetas
+   compactas (ícono + título + estado). La descripción solo se muestra en la
+   lista apilada de móvil/estrecho para no llenar la pantalla de texto. */
+@media (min-width: 900px) {
+  .mk-launch{ display: grid; grid-template-columns: repeat(auto-fill, minmax(230px, 1fr)); gap: 10px; margin-bottom: 4px; }
+  .mk-launcher{ flex-direction: column; align-items: flex-start; gap: 10px; padding: 14px 16px; min-height: 118px; }
+  .mk-launcher-txt small{ display: none; }
+  .mk-launcher-side{ width: 100%; margin-top: auto; justify-content: space-between; }
+}
 /* Un color por sección: ícono teñido sobre fondo translúcido del mismo
    tono (funciona igual en tema claro y oscuro). */
 .hue-about{ color: #6366f1; background: #6366f11f; }
@@ -1173,6 +1182,14 @@ body{ transition: background-color .2s ease, color .2s ease; }
 .size-slider{ display: flex; align-items: center; gap: 12px; }
 .size-slider input[type='range']{ flex: 1; min-width: 0; height: 40px; accent-color: var(--brand-500); cursor: pointer; }
 .size-value{ flex: none; min-width: 56px; padding: 7px 8px; border: 1px solid var(--line); border-radius: var(--radius-sm); background: var(--surface); color: var(--ink-2); font-size: 13px; font-weight: 700; text-align: center; }
+/* Mis fotos: logo y portada comparten fila en escritorio; carrusel,
+   galería y decorativas ocupan todo el ancho (sus miniaturas lo piden). */
+.photos-grid{ display: grid; grid-template-columns: minmax(0, 1fr); gap: 14px; margin-bottom: 4px; }
+.photos-grid > .card{ margin-bottom: 0; }
+@media (min-width: 900px) {
+  .photos-grid{ grid-template-columns: repeat(auto-fit, minmax(360px, 1fr)); }
+  .photos-grid > .card:nth-child(n+3){ grid-column: 1 / -1; }
+}
 .carousel-box{ display: flex; gap: 10px; flex-wrap: wrap; }
 .carousel-thumb{ position: relative; width: 108px; height: 72px; border-radius: 10px; border: 1px solid var(--line); overflow: hidden; }
 .carousel-thumb img{ width: 100%; height: 100%; object-fit: cover; display: block; }
