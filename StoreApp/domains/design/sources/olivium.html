@@ -282,7 +282,7 @@ body.m-open .mmenu{transform:none;visibility:visible}
 /* El alto llega en --hero-h desde el host (frame.vh): dentro del iframe
    auto-dimensionado 100svh = alto del documento y realimenta el resize. */
 .hero{
-  position:relative;min-height:var(--hero-h,640px);display:grid;align-content:end;align-items:end;
+  position:relative;min-height:var(--hero-h,560px);display:grid;align-content:end;align-items:end;
   color:#fff;padding-top:var(--head-h);isolation:isolate;overflow:hidden;
 }
 .hero-media{position:absolute;inset:0;overflow:hidden;background:var(--ink)}
@@ -1666,8 +1666,8 @@ html[data-ds-theme="dark"] .services-list .ds-service::before,html[data-ds-style
     if (!hero) return
     var vh = frame ? frame.vh : (window.parent === window ? window.innerHeight : 0)
     if (vh) {
-      var h = Math.round(vh * 0.82)
-      document.documentElement.style.setProperty('--hero-h', Math.max(480, Math.min(h, 780)) + 'px')
+      var h = Math.round(vh * 0.62)
+      document.documentElement.style.setProperty('--hero-h', Math.max(440, Math.min(h, 640)) + 'px')
     }
   }
 
@@ -1866,7 +1866,7 @@ html[data-ds-theme="dark"] .services-list .ds-service::before,html[data-ds-style
     if (!frame) {
       qsa('.reveal').forEach(function (el) { el.classList.add('is-in') })
       qsa('.ds-stat-value').forEach(animateStat)
-      document.documentElement.style.setProperty('--hero-h', Math.max(480, Math.min(Math.round(window.innerHeight * 0.82), 780)) + 'px')
+      document.documentElement.style.setProperty('--hero-h', Math.max(440, Math.min(Math.round(window.innerHeight * 0.62), 640)) + 'px')
     }
     paint()
     syncHead()
