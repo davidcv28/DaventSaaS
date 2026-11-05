@@ -5658,14 +5658,14 @@
       "concept": "Oliva profundo y oro viejo: la casa de moda en clave terrosa nocturna."
     },
     {
-      "slug": "securitydesing",
+      "slug": "guardia",
       "nombre": "Security Design",
       "categoria": "Seguridad y protección",
       "descripcion": "Consola industrial sobre concreto: panel de guardia siempre oscuro, señal rojo fuego, Montserrat 900 en mayúsculas y JetBrains Mono en datos. Indumentaria de seguridad, extintores, vigilancia y rubros B2B.",
       "tier": "plus",
       "template": "raiz",
       "page_theme": "light",
-      "pattern": "securitydesing",
+      "pattern": "guardia",
       "tokens": {
         "palette": {
           "primary": "#16181D",
@@ -5695,14 +5695,14 @@
       "concept": "Grafito + señal rojo fuego: consola de seguridad industrial con banda hero siempre nocturna."
     },
     {
-      "slug": "securitydesing-noche",
+      "slug": "guardia-noche",
       "nombre": "Security Design Noche",
       "categoria": "Seguridad y protección nocturna",
       "descripcion": "La misma consola en clave guardia: grafito profundo, acento naranja señal y paneles de telemetría oscuros en toda la página.",
       "tier": "plus",
       "template": "raiz",
       "page_theme": "dark",
-      "pattern": "securitydesing",
+      "pattern": "guardia",
       "tokens": {
         "palette": {
           "primary": "#FF5A26",
@@ -8148,7 +8148,7 @@
       "style": "atelier-noir"
     },
     {
-      "slug": "securitydesing",
+      "slug": "guardia",
       "nombre": "Security Design",
       "categoria": "seguridad",
       "descripcion": "Consola industrial de seguridad: banda hero siempre oscura con retícula técnica, cinta de anuncios en señal, departamentos como celdas de panel, inventario con esquinas vivas, telemetría en números, dossier, garantías, galería, testimonios, FAQ, CTA de alarma, contacto con formulario del puente y catálogo/ficha con filtros completos. Dos temas: concreto (claro) y guardia (oscuro).",
@@ -8194,7 +8194,7 @@
       "preview": "",
       "variables": {},
       "supports_dark_mode": true,
-      "style": "securitydesing"
+      "style": "guardia"
     }
   ]
 }
