@@ -4240,16 +4240,6 @@ async function changePassword() {
           </template>
         </div>
 
-        <div v-if="canCustomize" class="next-card">
-          <span class="next-icon"><AppIcon name="palette" :size="22" /></span>
-          <div><strong>Dale tu estilo a tu página</strong><small>Poné tu logo, tus colores y contá qué hacés.</small></div>
-          <button class="btn btn-auto" @click="section = 'company'">Personalizar <AppIcon name="arrow-right" :size="16" /></button>
-        </div>
-        <div class="next-card">
-          <span class="next-icon"><AppIcon name="package" :size="22" /></span>
-          <div><strong>Cargá tus productos</strong><small>Es lo primero que ven tus clientes al entrar.</small></div>
-          <button class="btn secondary btn-auto" @click="section = 'catalogs'">Ir a mis productos <AppIcon name="arrow-right" :size="16" /></button>
-        </div>
       </template>
     </div>
     <!-- ================= DISEÑO ================= -->
