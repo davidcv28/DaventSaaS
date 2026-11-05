@@ -274,6 +274,7 @@ Los certs quedan en el volumen `letsencrypt` (montado ro en `web`; el vhost
 ```cron
 0 4 * * 1 cd /opt/davent && docker compose --profile certbot run --rm certbot renew --quiet && docker compose exec web nginx -s reload
 0 5 * * *  cd /opt/davent && docker compose exec -T api python manage.py backup_db
+30 8 * * * cd /opt/davent && docker compose exec -T api python manage.py subscription_notices
 ```
 
 ---

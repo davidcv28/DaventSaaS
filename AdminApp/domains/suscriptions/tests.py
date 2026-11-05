@@ -6,6 +6,7 @@ el plan de prueba no es elegible ni reactivable, y el cambio de plan de
 una suscripción vigente queda pendiente hasta acreditar el pago.
 """
 from datetime import timedelta
+from unittest.mock import patch
 
 from django.contrib.auth.models import User
 from django.core.cache import cache
@@ -17,9 +18,11 @@ from AdminApp.domains.locations.models import City, Province, ZipCode
 from AdminApp.domains.suscriptions.models import (
     Coupon,
     CouponRedemption,
+    SubscriptionNotice,
     Suscription,
     SuscriptionPlan,
 )
+from AdminApp.domains.suscriptions.services import SendSubscriptionNoticesQuery
 from AdminApp.domains.users.models import UserProfile
 
 SUSCRIPTIONS_URL  =   '/api/suscriptions/'
@@ -524,3 +527,71 @@ class CouponAdminTests(TestCase):
         rows            =   response.data['results'] if isinstance(response.data, dict) else response.data
         self.assertEqual(rows[0]['uses'], 1)
         self.assertEqual(rows[0]['redemptions'][0]['user_name'], 'cliente')
+
+
+class SubscriptionNoticeTests(TestCase):
+    """Mails de estado de cuenta: una vez por período, sin tocar débito MP."""
+
+    SEND_PATH    =   'AdminApp.domains.suscriptions.services.notices._send_branded_mail'
+
+    def _suscription(self, **kwargs):
+        _, profile      =   _make_user('cliente')
+        defaults        =   {
+            'user'              :   profile,
+            'plan_suscription'  :   _plan(),
+            'status'            :   Suscription.STATUS_ACTIVE,
+            'start_date'        :   timezone.now() - timedelta(days = 27),
+            'end_date'          :   timezone.now() + timedelta(days = 3),
+            'auto_renew'        :   False,
+        }
+        defaults.update(kwargs)
+        return Suscription.objects.create(**defaults)
+
+    @patch(SEND_PATH)
+    def test_ending_notice_sent_once_per_period(self, mock_send):
+        self._suscription()
+        SendSubscriptionNoticesQuery()
+        SendSubscriptionNoticesQuery()
+        self.assertEqual(mock_send.call_count, 1)
+        self.assertEqual(SubscriptionNotice.objects.count(), 1)
+
+    @patch(SEND_PATH)
+    def test_new_end_date_notifies_again(self, mock_send):
+        suscription     =   self._suscription()
+        SendSubscriptionNoticesQuery()
+        #Renovación/canje corre end_date -> período nuevo, aviso nuevo.
+        suscription.end_date    =   timezone.now() + timedelta(days = 25)
+        suscription.save()
+        #El nuevo período vence otro día -> key distinta -> aviso nuevo.
+        suscription.end_date    =   timezone.now() + timedelta(days = 2)
+        suscription.save()
+        SendSubscriptionNoticesQuery()
+        self.assertEqual(mock_send.call_count, 2)
+
+    @patch(SEND_PATH)
+    def test_auto_renew_alive_is_skipped(self, mock_send):
+        self._suscription(auto_renew = True)
+        SendSubscriptionNoticesQuery()
+        mock_send.assert_not_called()
+
+    @patch(SEND_PATH)
+    def test_expired_notice_after_cutoff(self, mock_send):
+        self._suscription(end_date = timezone.now() - timedelta(days = 1))
+        SendSubscriptionNoticesQuery()
+        self.assertEqual(mock_send.call_count, 1)
+        args, kwargs   =   mock_send.call_args
+        self.assertIn('terminó', kwargs['subject'])
+
+    @patch(SEND_PATH)
+    def test_long_expired_is_not_spammed(self, mock_send):
+        self._suscription(end_date = timezone.now() - timedelta(days = 30))
+        SendSubscriptionNoticesQuery()
+        mock_send.assert_not_called()
+
+    @patch(SEND_PATH)
+    def test_dry_run_sends_nothing_and_marks_nothing(self, mock_send):
+        self._suscription()
+        result  =   SendSubscriptionNoticesQuery(dry_run = True)
+        self.assertEqual(result['sent']['ending'], 1)
+        mock_send.assert_not_called()
+        self.assertEqual(SubscriptionNotice.objects.count(), 0)

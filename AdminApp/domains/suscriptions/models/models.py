@@ -153,4 +153,24 @@ class CouponRedemption(models.Model):
             )
         ]
 #=============================================
+#SUBSCRIPTION NOTICE MODEL (idempotencia de los mails de estado de cuenta)
+#=============================================
+class SubscriptionNotice(models.Model):
+    #Un registro por aviso enviado: la key incluye la fecha de fin de acceso,
+    #así una renovación/canje que corre end_date genera avisos nuevos sin
+    #reenviar los del período anterior.
+    suscription                 =   models.ForeignKey(Suscription, on_delete = models.CASCADE, related_name = 'notices', verbose_name = 'Suscripción')
+    key                         =   models.CharField(max_length = 60, verbose_name = 'Clave del aviso')
+    sent_at                     =   models.DateTimeField(auto_now_add = True, verbose_name = 'Fecha de envío')
+    class Meta:
+        app_label               =   'suscriptions'
+        verbose_name            =   'Aviso de suscripción'
+        verbose_name_plural     =   'Avisos de suscripción'
+        constraints             =   [
+            models.UniqueConstraint(
+                fields          =   ['suscription', 'key'],
+                name            =   'UniqueSubscriptionNoticeConstraint',
+            )
+        ]
+#=============================================
 

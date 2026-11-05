@@ -2421,6 +2421,14 @@ onMounted(async () => {
     fastLane.then(() => openLocked(String(locked)))
     router.replace({ query: rest })
   }
+  // Deep link ?s=<seccion> (mails de estado de cuenta, etc.): abre la
+  // sección directo si es válida para el plan del usuario.
+  const deepSection = route.query.s
+  if (deepSection && validIds.value.has(String(deepSection))) {
+    //Por el setter (no sectionInner) para que una sección bloqueada abra
+    //la preview del beneficio en vez de mostrar el contenido crudo.
+    section.value = String(deepSection)
+  }
   // Red de seguridad en segundo plano (registra pagos ya acreditados en MP
   // que aún no estén en el sistema): el barrido contra la API de MP tarda
   // ~1s, así que ya no se espera — el backend además lo acota a uno cada

@@ -1,1 +1,1 @@
-from .models import Coupon, CouponRedemption, Suscription, SuscriptionPlan
+from .models import Coupon, CouponRedemption, SubscriptionNotice, Suscription, SuscriptionPlan
