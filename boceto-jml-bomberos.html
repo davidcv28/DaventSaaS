@@ -1,0 +1,321 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Boceto — JML (indumentaria bomberil y seguridad, Salta)</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,100..900&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#0d1117;
+  --bg-2:#141a22;
+  --panel:#1a2230;
+  --line:rgba(226,232,240,.1);
+  --ink:#e8edf4;
+  --mut:#8b96a8;
+  --accent:#e8481f;
+  --accent-2:#ff7a3c;
+  --steel:#9fb3c8;
+  --disp:'Archivo',sans-serif;
+  --mono:'JetBrains Mono',monospace;
+}
+*{margin:0;padding:0;box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{background:var(--bg);color:var(--ink);font-family:var(--disp);font-weight:400;line-height:1.55;-webkit-font-smoothing:antialiased}
+::selection{background:var(--accent);color:#fff}
+a{color:inherit;text-decoration:none}
+img{display:block;max-width:100%}
+.wrap{max-width:1360px;margin:0 auto;padding:0 clamp(20px,4vw,56px)}
+.mono{font-family:var(--mono);font-size:11px;letter-spacing:.18em;text-transform:uppercase}
+/* ---------- header ---------- */
+header{position:fixed;inset:0 0 auto;z-index:50;border-bottom:1px solid transparent;transition:all .4s}
+header.solid{background:rgba(13,17,23,.88);backdrop-filter:blur(14px);border-color:var(--line)}
+.nav{display:flex;align-items:center;justify-content:space-between;height:72px}
+.brand{display:flex;align-items:center;gap:12px;font-weight:900;font-size:22px;letter-spacing:.04em;text-transform:uppercase}
+.brand .badge{width:34px;height:34px;background:var(--accent);display:grid;place-items:center;color:#fff;font-size:14px;font-weight:900}
+.nav-links{display:flex;gap:32px;align-items:center}
+.nav-links a{font-family:var(--mono);font-size:11px;letter-spacing:.2em;text-transform:uppercase;color:var(--mut);transition:color .3s}
+.nav-links a:hover{color:var(--accent-2)}
+.nav-cta{border:1px solid var(--accent);color:var(--accent-2)!important;padding:10px 18px;transition:all .3s}
+.nav-cta:hover{background:var(--accent);color:#fff!important}
+.burger{display:none;background:none;border:0;color:var(--ink);cursor:pointer;font-size:22px}
+/* ---------- hero ---------- */
+.hero{position:relative;min-height:100svh;display:flex;flex-direction:column;justify-content:flex-end;overflow:hidden;background:var(--bg-2)}
+.hero-bg{position:absolute;inset:0}
+.hero-bg img{width:100%;height:100%;object-fit:cover;filter:grayscale(60%) contrast(1.1) brightness(.5)}
+.hero-bg::after{content:'';position:absolute;inset:0;background:linear-gradient(180deg,rgba(13,17,23,.7) 0%,rgba(13,17,23,.15) 45%,rgba(13,17,23,.95) 100%),linear-gradient(90deg,rgba(232,72,31,.12),transparent 55%)}
+.hero-inner{position:relative;z-index:2;padding:140px 0 56px}
+.hero-kicker{display:flex;justify-content:space-between;align-items:center;color:var(--steel);margin-bottom:28px}
+.hero-kicker .dot{display:inline-block;width:8px;height:8px;background:var(--accent);margin-right:10px;vertical-align:1px;animation:blink 1.6s infinite}
+@keyframes blink{50%{opacity:.25}}
+.hero-title{font-stretch:125%;font-weight:900;font-size:clamp(56px,11vw,168px);line-height:.94;text-transform:uppercase;letter-spacing:-.01em}
+.hero-title .fire{color:var(--accent)}
+.hero-title .out{color:transparent;-webkit-text-stroke:1.5px rgba(232,237,244,.8)}
+.hero-sub{display:flex;justify-content:space-between;align-items:flex-end;gap:32px;margin-top:40px;flex-wrap:wrap}
+.hero-desc{max-width:420px;color:var(--steel);font-size:15px}
+.hero-cta{display:flex;gap:14px;flex-wrap:wrap}
+.btn{display:inline-flex;align-items:center;gap:12px;padding:16px 28px;font-family:var(--mono);font-size:11px;letter-spacing:.2em;text-transform:uppercase;border:1px solid var(--line);color:var(--ink);transition:all .3s;cursor:pointer;background:none}
+.btn:hover{border-color:var(--accent-2);color:var(--accent-2)}
+.btn.solid{background:var(--accent);border-color:var(--accent);color:#fff}
+.btn.solid:hover{background:var(--accent-2);border-color:var(--accent-2);color:#0d1117}
+/* ---------- marquee ---------- */
+.marquee{background:var(--accent);color:#0d1117;padding:16px 0;overflow:hidden}
+.marquee-track{display:flex;gap:48px;white-space:nowrap;animation:mq 26s linear infinite;width:max-content}
+.marquee-track span{font-weight:900;font-stretch:125%;font-size:20px;text-transform:uppercase;display:flex;gap:48px;align-items:center}
+.marquee-track i{font-style:normal;font-family:var(--mono);font-size:11px}
+@keyframes mq{to{transform:translateX(-50%)}}
+/* ---------- sections ---------- */
+.section{padding:clamp(72px,9vw,120px) 0}
+.sec-head{display:flex;justify-content:space-between;align-items:baseline;gap:24px;margin-bottom:clamp(36px,5vw,64px)}
+.sec-label{font-family:var(--mono);font-size:11px;letter-spacing:.2em;text-transform:uppercase;color:var(--accent);margin-bottom:14px}
+.sec-title{font-stretch:125%;font-weight:900;font-size:clamp(38px,6.5vw,88px);line-height:1;text-transform:uppercase}
+.sec-link{font-family:var(--mono);font-size:11px;letter-spacing:.2em;text-transform:uppercase;color:var(--mut);border-bottom:1px solid var(--line);padding-bottom:4px;transition:color .3s}
+.sec-link:hover{color:var(--accent-2)}
+/* ---------- categories ---------- */
+.grid{display:grid;grid-template-columns:repeat(12,1fr);gap:clamp(12px,1.6vw,22px)}
+.cat{grid-column:span 4;position:relative;overflow:hidden;background:var(--panel);border:1px solid var(--line);min-height:340px;display:flex;flex-direction:column;justify-content:flex-end}
+.cat:nth-child(2){grid-column:span 4}
+.cat:nth-child(3){grid-column:span 4}
+.cat:nth-child(4){grid-column:span 4}
+.cat:nth-child(5){grid-column:span 4}
+.cat:nth-child(6){grid-column:span 4}
+.cat-img{position:absolute;inset:0}
+.cat-img img{width:100%;height:100%;object-fit:cover;filter:grayscale(40%) contrast(1.05) brightness(.55);transition:transform .8s,filter .8s}
+.cat:hover .cat-img img{transform:scale(1.05);filter:grayscale(10%) contrast(1.05) brightness(.75)}
+.cat::after{content:'';position:absolute;inset:0;background:linear-gradient(180deg,transparent 30%,rgba(13,17,23,.92))}
+.cat-body{position:relative;z-index:2;padding:26px}
+.cat-num{font-family:var(--mono);font-size:11px;color:var(--accent-2);letter-spacing:.2em}
+.cat-name{font-weight:900;font-stretch:125%;font-size:clamp(26px,3vw,38px);text-transform:uppercase;margin:6px 0 4px}
+.cat-meta{font-family:var(--mono);font-size:11px;color:var(--steel);letter-spacing:.14em;text-transform:uppercase}
+/* ---------- products ---------- */
+.prod{grid-column:span 3;position:relative;background:var(--panel);border:1px solid var(--line)}
+.prod-img{aspect-ratio:4/5;overflow:hidden;position:relative}
+.prod-img img{width:100%;height:100%;object-fit:cover;filter:grayscale(30%) brightness(.8);transition:all .6s}
+.prod:hover .prod-img img{filter:grayscale(0%) brightness(1);transform:scale(1.04)}
+.prod-tag{position:absolute;top:14px;left:14px;background:var(--accent);color:#fff;font-family:var(--mono);font-size:10px;letter-spacing:.18em;padding:6px 10px;text-transform:uppercase}
+.prod-tag.gray{background:rgba(20,26,34,.8);color:var(--steel);border:1px solid var(--line)}
+.prod-body{padding:18px 18px 20px;display:flex;justify-content:space-between;align-items:flex-start;gap:12px}
+.prod-name{font-weight:700;font-size:16px;line-height:1.3;text-transform:uppercase}
+.prod-cat{font-family:var(--mono);font-size:10px;color:var(--mut);letter-spacing:.16em;text-transform:uppercase;margin-top:4px}
+.prod-price{font-family:var(--mono);font-size:14px;color:var(--accent-2);white-space:nowrap}
+/* ---------- services split ---------- */
+.split{display:grid;grid-template-columns:1fr 1fr;gap:clamp(24px,4vw,64px);align-items:center}
+.split-img{aspect-ratio:4/3;overflow:hidden;border:1px solid var(--line);position:relative}
+.split-img img{width:100%;height:100%;object-fit:cover;filter:grayscale(40%) contrast(1.05) brightness(.6)}
+.split-img::after{content:'';position:absolute;inset:0;background:linear-gradient(135deg,rgba(232,72,31,.18),transparent 50%)}
+.service-list{display:flex;flex-direction:column}
+.service{display:flex;gap:22px;padding:26px 0;border-bottom:1px solid var(--line);align-items:baseline}
+.service:first-child{border-top:1px solid var(--line)}
+.service .snum{font-family:var(--mono);font-size:11px;color:var(--accent);letter-spacing:.2em}
+.service h3{font-weight:800;font-stretch:120%;font-size:clamp(20px,2.4vw,30px);text-transform:uppercase;margin-bottom:6px}
+.service p{color:var(--steel);font-size:14px;max-width:420px}
+/* ---------- clients band ---------- */
+.band{background:var(--panel);border-top:1px solid var(--line);border-bottom:1px solid var(--line)}
+.clients{display:grid;grid-template-columns:repeat(4,1fr);gap:1px;background:var(--line)}
+.client{background:var(--panel);padding:36px 28px;display:flex;flex-direction:column;gap:8px;justify-content:center;min-height:140px}
+.client .cname{font-weight:800;font-stretch:120%;font-size:20px;text-transform:uppercase}
+.client .ctype{font-family:var(--mono);font-size:10px;letter-spacing:.16em;text-transform:uppercase;color:var(--mut)}
+/* ---------- contact ---------- */
+.contact{display:grid;grid-template-columns:1.1fr .9fr;gap:clamp(32px,5vw,80px)}
+.contact-title{font-stretch:125%;font-weight:900;font-size:clamp(40px,6vw,80px);line-height:.98;text-transform:uppercase;margin-bottom:24px}
+.contact-title .fire{color:var(--accent)}
+.contact p{color:var(--steel);max-width:440px;margin-bottom:32px}
+.info-row{display:flex;gap:16px;padding:14px 0;border-bottom:1px solid var(--line);font-size:14px}
+.info-row .mono{color:var(--accent-2);min-width:90px}
+form{background:var(--panel);border:1px solid var(--line);padding:28px;display:flex;flex-direction:column;gap:14px}
+form input,form textarea,form select{background:var(--bg);border:1px solid var(--line);color:var(--ink);font-family:var(--body);font-size:14px;padding:14px 16px;width:100%;outline:none;transition:border-color .3s}
+form input:focus,form textarea:focus,form select:focus{border-color:var(--accent)}
+form textarea{min-height:110px;resize:vertical}
+/* ---------- footer ---------- */
+footer{border-top:1px solid var(--line);padding:40px 0 32px}
+.foot{display:flex;justify-content:space-between;gap:24px;flex-wrap:wrap;align-items:center}
+.foot-links{display:flex;gap:24px}
+.foot-links a{font-family:var(--mono);font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:var(--mut)}
+.foot-links a:hover{color:var(--accent-2)}
+.foot-copy{font-family:var(--mono);font-size:10px;letter-spacing:.14em;color:var(--mut);text-transform:uppercase}
+/* ---------- responsive ---------- */
+@media(max-width:960px){
+  .nav-links{display:none}
+  .burger{display:block}
+  .cat,.prod{grid-column:span 6}
+  .clients{grid-template-columns:repeat(2,1fr)}
+  .split,.contact{grid-template-columns:1fr}
+}
+@media(max-width:560px){
+  .cat,.prod{grid-column:span 12}
+  .clients{grid-template-columns:1fr}
+  .hero-kicker .hide-m{display:none}
+}
+</style>
+</head>
+<body>
+
+<header id="hdr">
+  <div class="wrap nav">
+    <a class="brand" href="#"><span class="badge">J</span>JML</a>
+    <nav class="nav-links">
+      <a href="#categorias">Categorías</a>
+      <a href="#productos">Productos</a>
+      <a href="#servicios">Servicios</a>
+      <a href="#clientes">Clientes</a>
+      <a class="nav-cta" href="#contacto">Consultar</a>
+    </nav>
+    <button class="burger">☰</button>
+  </div>
+</header>
+
+<section class="hero">
+  <div class="hero-bg"><img src="https://picsum.photos/seed/jml-hero/1600/900" alt=""></div>
+  <div class="wrap hero-inner">
+    <div class="hero-kicker">
+      <span><span class="dot"></span>Indumentaria bomberil · Extintores · Salta Capital</span>
+      <span class="mono hide-m">Est. 1998 — Ruta 9 Km 12</span>
+    </div>
+    <h1 class="hero-title">
+      JML<br>
+      <span class="out">Protección</span><br>
+      <span class="fire">Total</span>
+    </h1>
+    <div class="hero-sub">
+      <p class="hero-desc">Todo lo que un bombero necesita para trabajar. Indumentaria certificada, extintores recargados y señalización para empresas, municipios y voluntarios de toda la provincia.</p>
+      <div class="hero-cta">
+        <a class="btn solid" href="#productos">Ver catálogo</a>
+        <a class="btn" href="#servicios">Recarga y service</a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<div class="marquee">
+  <div class="marquee-track">
+    <span>Bata ignífuga <i>◆</i> Extintores ABC 5kg <i>◆</i> Casco ECE <i>◆</i> Botas bomberil <i>◆</i> Hidrantes y conexiones <i>◆</i> Cartelería reflectiva <i>◆</i> Arneses y cinturones <i>◆</i></span>
+    <span>Bata ignífuga <i>◆</i> Extintores ABC 5kg <i>◆</i> Casco ECE <i>◆</i> Botas bomberil <i>◆</i> Hidrantes y conexiones <i>◆</i> Cartelería reflectiva <i>◆</i> Arneses y cinturones <i>◆</i></span>
+  </div>
+</div>
+
+<section class="section" id="categorias">
+  <div class="wrap">
+    <div class="sec-head">
+      <div>
+        <div class="sec-label">01 — Qué vendemos</div>
+        <h2 class="sec-title">Categorías</h2>
+      </div>
+      <a class="sec-link" href="#">Todo el catálogo →</a>
+    </div>
+    <div class="grid">
+      <a class="cat" href="#"><div class="cat-img"><img src="https://picsum.photos/seed/jml-ind/800/1000" alt=""></div><div class="cat-body"><div class="cat-num">CAT. 01</div><div class="cat-name">Indumentaria</div><div class="cat-meta">Batas · Casco · Botas · Guantes · Hoods</div></div></a>
+      <a class="cat" href="#"><div class="cat-img"><img src="https://picsum.photos/seed/jml-ext/800/1000" alt=""></div><div class="cat-body"><div class="cat-num">CAT. 02</div><div class="cat-name">Extintores</div><div class="cat-meta">ABC · CO2 · Agua · Recarga certificada</div></div></a>
+      <a class="cat" href="#"><div class="cat-img"><img src="https://picsum.photos/seed/jml-hid/800/1000" alt=""></div><div class="cat-body"><div class="cat-num">CAT. 03</div><div class="cat-name">Hidrantes &amp; Agua</div><div class="cat-meta">Bocas de piso · Mangueras · Conexiones Storz</div></div></a>
+      <a class="cat" href="#"><div class="cat-img"><img src="https://picsum.photos/seed/jml-sen/800/1000" alt=""></div><div class="cat-body"><div class="cat-num">CAT. 04</div><div class="cat-name">Señalización</div><div class="cat-meta">Carteles · Rutas de escape · Extintores</div></div></a>
+      <a class="cat" href="#"><div class="cat-img"><img src="https://picsum.photos/seed/jml-acc/800/1000" alt=""></div><div class="cat-body"><div class="cat-num">CAT. 05</div><div class="cat-name">Accesorios</div><div class="cat-meta">Arneses · Linternas · Radios · Mochilas</div></div></a>
+      <a class="cat" href="#"><div class="cat-img"><img src="https://picsum.photos/seed/jml-serv/800/1000" alt=""></div><div class="cat-body"><div class="cat-num">CAT. 06</div><div class="cat-name">Servicio técnico</div><div class="cat-meta">Mantenimiento · Habilitación · Inspección</div></div></a>
+    </div>
+  </div>
+</section>
+
+<section class="section" id="productos" style="background:var(--bg-2);border-top:1px solid var(--line);border-bottom:1px solid var(--line)">
+  <div class="wrap">
+    <div class="sec-head">
+      <div>
+        <div class="sec-label">02 — Destacados</div>
+        <h2 class="sec-title">Más vendidos</h2>
+      </div>
+      <a class="sec-link" href="#">Ver todos →</a>
+    </div>
+    <div class="grid">
+      <div class="prod">
+        <div class="prod-img"><img src="https://picsum.photos/seed/jml-p1/600/750" alt=""><span class="prod-tag">Nuevo</span></div>
+        <div class="prod-body"><div><div class="prod-name">Bata ignífuga Pro 3000</div><div class="prod-cat">Indumentaria · Talla M–XXL</div></div><div class="prod-price">$289.000</div></div>
+      </div>
+      <div class="prod">
+        <div class="prod-img"><img src="https://picsum.photos/seed/jml-p2/600/750" alt=""><span class="prod-tag gray">Certificado</span></div>
+        <div class="prod-body"><div><div class="prod-name">Extintor ABC 5kg + recarga</div><div class="prod-cat">Extintores · Validez 1 año</div></div><div class="prod-price">$185.000</div></div>
+      </div>
+      <div class="prod">
+        <div class="prod-img"><img src="https://picsum.photos/seed/jml-p3/600/750" alt=""><span class="prod-tag">Oferta</span></div>
+        <div class="prod-body"><div><div class="prod-name">Casco ECE con visor</div><div class="prod-cat">Indumentaria · Incluye adaptador</div></div><div class="prod-price">$320.000</div></div>
+      </div>
+      <div class="prod">
+        <div class="prod-img"><img src="https://picsum.photos/seed/jml-p4/600/750" alt=""></div>
+        <div class="prod-body"><div><div class="prod-name">Manguera 40mm + lanza</div><div class="prod-cat">Hidrantes · Conexión Storz</div></div><div class="prod-price">$145.000</div></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="section" id="servicios">
+  <div class="wrap split">
+    <div class="split-img"><img src="https://picsum.photos/seed/jml-servimg/1000/750" alt=""></div>
+    <div>
+      <div class="sec-label">03 — Servicio técnico</div>
+      <h2 class="sec-title" style="margin-bottom:36px">Más que venta</h2>
+      <div class="service-list">
+        <div class="service"><span class="snum">01</span><div><h3>Recarga y service</h3><p>Extintores recargados con habilitación y precinto nuevo. Retiramos y devolvemos en tu puerta.</p></div></div>
+        <div class="service"><span class="snum">02</span><div><h3>Inspección anual</h3><p>Revisión completa de hidrantes, mangueras y tableros según normativa. Informe firmado.</p></div></div>
+        <div class="service"><span class="snum">03</span><div><h3>Proveedores de cuerpos</h3><p>Convenios con cuarteles y bomberos voluntarios: precios por volumen y stock permanente.</p></div></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="band" id="clientes">
+  <div class="wrap" style="padding-top:clamp(56px,7vw,90px);padding-bottom:clamp(56px,7vw,90px)">
+    <div class="sec-head">
+      <div>
+        <div class="sec-label">04 — Quién confía</div>
+        <h2 class="sec-title">Clientes</h2>
+      </div>
+    </div>
+    <div class="clients">
+      <div class="client"><span class="cname">Bomberos Voluntarios</span><span class="ctype">Cuerpos de toda la provincia</span></div>
+      <div class="client"><span class="cname">Industria &amp; Agro</span><span class="ctype">Plantas, acopios, depósitos</span></div>
+      <div class="client"><span class="cname">Municipios</span><span class="ctype">Obras públicas y eventos</span></div>
+      <div class="client"><span class="cname">Hoteles &amp; Gastronomía</span><span class="ctype">Cumplimiento normativo</span></div>
+    </div>
+  </div>
+</section>
+
+<section class="section" id="contacto">
+  <div class="wrap contact">
+    <div>
+      <div class="sec-label">05 — Contacto</div>
+      <h2 class="contact-title">Hablá<br>con <span class="fire">JML</span></h2>
+      <p>Pedidos por mayor, consultas de stock o recarga a domicilio: respondemos en el día hábil. También atendemos por WhatsApp.</p>
+      <div>
+        <div class="info-row"><span class="mono">Dirección</span><span>Ruta 9 Km 12, Salta Capital</span></div>
+        <div class="info-row"><span class="mono">Horario</span><span>Lun a Vie 8–18 h · Sáb 8–13 h</span></div>
+        <div class="info-row"><span class="mono">WhatsApp</span><span>+54 9 387 000 0000</span></div>
+        <div class="info-row"><span class="mono">Email</span><span>ventas@jml.com.ar</span></div>
+      </div>
+    </div>
+    <form onsubmit="return false">
+      <input type="text" placeholder="Nombre y apellido">
+      <input type="text" placeholder="Empresa / cuerpo (opcional)">
+      <select><option>¿Qué necesitás?</option><option>Indumentaria</option><option>Extintores y recarga</option><option>Hidrantes y mangueras</option><option>Señalización</option><option>Otro</option></select>
+      <textarea placeholder="Contanos qué buscás…"></textarea>
+      <button class="btn solid" type="submit" style="justify-content:center">Enviar consulta</button>
+    </form>
+  </div>
+</section>
+
+<footer>
+  <div class="wrap foot">
+    <a class="brand" href="#"><span class="badge">J</span>JML</a>
+    <nav class="foot-links">
+      <a href="#categorias">Categorías</a>
+      <a href="#productos">Productos</a>
+      <a href="#servicios">Servicios</a>
+      <a href="#contacto">Contacto</a>
+    </nav>
+    <span class="foot-copy">© 2026 JML — Indumentaria y seguridad contra incendios · Salta, Argentina</span>
+  </div>
+</footer>
+
+<script>
+const hdr=document.getElementById('hdr');
+addEventListener('scroll',()=>hdr.classList.toggle('solid',scrollY>40));
+</script>
+</body>
+</html>
