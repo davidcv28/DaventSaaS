@@ -4141,7 +4141,7 @@ async function changePassword() {
             <span :style="{ width: serviceUsage + '%' }"></span>
           </div>
           <div class="grid-2">
-            <div class="card">
+            <div class="card svc-form">
               <h3><AppIcon :name="serviceEditing ? 'pencil' : 'plus'" :size="18" /> {{ serviceEditing ? 'Editar servicio' : 'Agregar un servicio' }}</h3>
               <div class="svc-preview" :style="{ '--h': serviceHue(serviceForm.icon) }" aria-hidden="true">
                 <span class="svc-ico"><AppIcon :name="serviceIcon(serviceForm.icon)" :size="22" /></span>
