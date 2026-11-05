@@ -212,7 +212,7 @@ body.m-open .m-sheet{transform:none}
 .m-foot .btn-line:hover{color:var(--on-accent)}
 
 /* ---------- Portada ---------- */
-.hero{position:relative;height:100svh;min-height:640px;overflow:hidden;background:var(--band);color:var(--band-ink)}
+.hero{position:relative;height:clamp(640px,100svh,900px);min-height:640px;overflow:hidden;background:var(--band);color:var(--band-ink)}
 .hero-media{position:absolute;inset:0;z-index:0}
 .hero-media img{
   width:100%;height:100%;object-fit:cover;
@@ -849,6 +849,7 @@ body.m-open .m-sheet{transform:none}
   .top-inner{min-height:62px;gap:10px}
   .brand-word{font-size:19px;max-width:48vw}
   .nav-wa{display:none}
+  .hero{height:clamp(560px,100svh,780px);min-height:560px}
   .hero-inner{padding-top:calc(var(--head-h,88px) + 30px)}
   .hero-title{font-size:clamp(2.4rem,11.4vw,4rem)}
   .hero-title em{font-size:.5em}
@@ -894,6 +895,7 @@ body.m-open .m-sheet{transform:none}
 }
 @media (max-width:460px){
   .brand-word{max-width:42vw;font-size:17px}
+  .hero{height:clamp(520px,100svh,720px);min-height:520px}
   .hero-title{font-size:clamp(2.2rem,12.4vw,3.2rem)}
   .hero-title em{font-size:.55em}
   .sec-title{font-size:clamp(1.8rem,8.4vw,2.3rem)}
