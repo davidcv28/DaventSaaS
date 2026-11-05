@@ -60,6 +60,8 @@ header{position:sticky;top:0;z-index:50;background:var(--ink);color:var(--paper)
 .stamp-big{align-self:flex-start;border:3px solid var(--stamp);color:var(--stamp);font-family:var(--disp);font-weight:600;font-size:clamp(22px,2.6vw,34px);letter-spacing:.2em;text-transform:uppercase;padding:14px 26px;transform:rotate(-6deg);opacity:.9;line-height:1.15;text-align:center;mask-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120'%3E%3Cfilter id='n'%3E%3CfeTurbulence baseFrequency='.9' numOctaves='2'/%3E%3CfeColorMatrix values='0 0 0 0 1 0 0 0 0 1 0 0 0 0 1 0 0 0 .92 0'/%3E%3C/filter%3E%3Crect width='120' height='120' filter='url(%23n)' opacity='.5'/%3E%3C/svg%3E");}
 .hero-side .note{font-size:12px;color:rgba(233,225,203,.6);line-height:1.7}
 .hero-cta{margin-top:clamp(30px,4vw,46px);display:flex;gap:14px;flex-wrap:wrap}
+.stamp-in{animation:stampIn .55s cubic-bezier(.2,1.4,.3,1) .9s both}
+@keyframes stampIn{0%{opacity:0;transform:rotate(-6deg) scale(2.2)}60%{opacity:1;transform:rotate(-6deg) scale(.94)}100%{opacity:.9;transform:rotate(-6deg) scale(1)}}
 .btn{display:inline-flex;align-items:center;gap:12px;padding:14px 26px;border:1.5px solid currentColor;font-family:var(--mono);font-size:11px;letter-spacing:.18em;text-transform:uppercase;transition:all .25s;cursor:pointer;background:none;color:var(--paper)}
 .btn:hover{background:var(--paper);color:var(--ink)}
 .btn.solid{background:var(--stamp);border-color:var(--stamp);color:var(--card)}
@@ -85,7 +87,7 @@ section{padding:clamp(64px,8vw,120px) 0}
 /* ---------- servicios: fichas ---------- */
 .svc-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:clamp(14px,1.8vw,26px)}
 .ficha{background:var(--card);border:1px solid var(--line);border-top:6px solid var(--tc,var(--stamp));padding:clamp(22px,2.6vw,34px);position:relative;transition:transform .35s cubic-bezier(.2,.7,.2,1),box-shadow .35s;display:flex;flex-direction:column;min-height:300px}
-.ficha:hover{transform:translateY(-6px);box-shadow:0 24px 50px -30px rgba(29,26,18,.5)}
+.ficha:hover{transform:translateY(-6px) rotate(-.6deg);box-shadow:0 24px 50px -30px rgba(29,26,18,.5)}
 .ficha .case{font-size:10px;letter-spacing:.18em;color:var(--mut);margin-bottom:20px}
 .ficha h3{font-family:var(--disp);font-weight:500;font-size:clamp(22px,2.2vw,30px);text-transform:uppercase;line-height:1.05;margin-bottom:12px}
 .ficha p{font-size:12.5px;color:var(--ink-soft);flex:1}
@@ -130,6 +132,26 @@ form{display:grid;gap:18px}
 .field textarea{resize:vertical;min-height:110px}
 .btn.ink{background:var(--ink);border-color:var(--ink);color:var(--paper)}
 .btn.ink:hover{background:var(--stamp);border-color:var(--stamp)}
+/* ---------- side index ---------- */
+.side-idx{position:fixed;left:18px;top:50%;transform:translateY(-50%);z-index:40;display:flex;flex-direction:column;gap:10px}
+.side-idx a{display:flex;align-items:center;gap:8px;font-family:var(--mono);font-size:9px;letter-spacing:.18em;text-transform:uppercase;color:var(--mut);writing-mode:vertical-rl;transition:color .3s;padding:6px 0}
+.side-idx a::before{content:'';width:1px;height:26px;background:var(--line);transition:all .3s}
+.side-idx a.on{color:var(--stamp)}
+.side-idx a.on::before{background:var(--stamp);height:40px}
+/* ---------- sectores ---------- */
+.sect-rows{border-top:3px double var(--ink)}
+.srow{display:grid;grid-template-columns:80px 1fr auto;gap:clamp(14px,3vw,44px);align-items:baseline;padding:clamp(18px,2.4vw,30px) 0;border-bottom:1px solid var(--line);transition:background .3s,padding-left .3s}
+.srow:hover{background:rgba(179,53,44,.05);padding-left:14px}
+.srow .n{font-size:11px;letter-spacing:.18em;color:var(--stamp)}
+.srow h4{font-family:var(--disp);font-weight:500;font-size:clamp(20px,2.6vw,34px);text-transform:uppercase;line-height:1.1}
+.srow .tag{font-size:10px;letter-spacing:.16em;text-transform:uppercase;color:var(--mut);text-align:right}
+/* ---------- testimonio ---------- */
+.affidavit{background:var(--card);border:1px solid var(--line);border-left:6px solid var(--stamp);padding:clamp(28px,4vw,56px);position:relative;max-width:860px;margin:0 auto}
+.affidavit::before{content:'DECLARACIÓN JURADA — TEST. 007';position:absolute;top:-11px;left:28px;background:var(--ink);color:var(--paper);font-family:var(--mono);font-size:9.5px;letter-spacing:.2em;text-transform:uppercase;padding:5px 14px}
+.affidavit .q{font-family:var(--serif);font-size:clamp(19px,2.4vw,28px);line-height:1.45;font-style:italic}
+.affidavit .sig{margin-top:34px;display:flex;align-items:flex-end;justify-content:space-between;gap:24px;flex-wrap:wrap}
+.affidavit .sig .line{border-top:1px solid var(--ink);padding-top:10px;font-size:10px;letter-spacing:.18em;text-transform:uppercase;color:var(--mut)}
+.affidavit .stamp-mini{font-size:10px;padding:6px 12px}
 /* ---------- footer ---------- */
 footer{background:var(--ink);color:rgba(233,225,203,.55);padding:clamp(50px,7vw,90px) 0 34px}
 .foot-grid{display:flex;justify-content:space-between;gap:40px;flex-wrap:wrap;margin-bottom:48px}
@@ -140,7 +162,12 @@ footer{background:var(--ink);color:rgba(233,225,203,.55);padding:clamp(50px,7vw,
 /* ---------- reveal ---------- */
 .rv{opacity:0;transform:translateY(26px);transition:opacity .8s cubic-bezier(.2,.7,.2,1),transform .8s cubic-bezier(.2,.7,.2,1)}
 .rv.on{opacity:1;transform:none}
+@media(max-width:1300px){
+  .side-idx{display:none}
+}
 @media(max-width:960px){
+  .srow{grid-template-columns:50px 1fr;gap:8px 16px}
+  .srow .tag{display:none}
   .hero-grid{grid-template-columns:1fr}
   .hero-side{border-left:0;border-top:1px solid rgba(233,225,203,.2);padding-left:0;padding-top:30px;flex-direction:row;flex-wrap:wrap;align-items:flex-end}
   .stamp-big{order:2}
@@ -184,6 +211,14 @@ footer{background:var(--ink);color:rgba(233,225,203,.55);padding:clamp(50px,7vw,
   </div>
 </header>
 
+<nav class="side-idx" aria-label="Índice del expediente">
+  <a href="#servicios" data-spy="servicios">Servicios</a>
+  <a href="#registro" data-spy="registro">Registro</a>
+  <a href="#sectores" data-spy="sectores">Sectores</a>
+  <a href="#proceso" data-spy="proceso">Proceso</a>
+  <a href="#contacto" data-spy="contacto">Contacto</a>
+</nav>
+
 <section class="hero">
   <div class="folder-tab"><span>EXPEDIENTE 001 — ASESORAMIENTO INTEGRAL</span></div>
   <div class="wrap hero-grid">
@@ -199,7 +234,7 @@ footer{background:var(--ink);color:rgba(233,225,203,.55);padding:clamp(50px,7vw,
       </div>
     </div>
     <aside class="hero-side">
-      <div class="stamp-big">Confidencial<br>·<br>Privilegio<br>profesional</div>
+      <div class="stamp-big stamp-in">Confidencial<br>·<br>Privilegio<br>profesional</div>
       <p class="note">Todo lo que usted nos cuente está protegido por el secreto profesional. Nada sale de esta carpeta sin su firma.</p>
     </aside>
   </div>
@@ -289,6 +324,23 @@ footer{background:var(--ink);color:rgba(233,225,203,.55);padding:clamp(50px,7vw,
   </div>
 </section>
 
+<section id="sectores">
+  <div class="wrap">
+    <div class="sec-head">
+      <span class="file-no">DOC. 03b</span>
+      <h2>Sectores atendidos</h2>
+      <span class="right">Anexos del expediente</span>
+    </div>
+    <div class="sect-rows">
+      <a class="srow rv" href="#contacto"><span class="n">A-01</span><h4>Empresas familiares</h4><span class="tag">Sucesiones · Gobierno</span></a>
+      <a class="srow rv" href="#contacto"><span class="n">A-02</span><h4>Startups &amp; tecnología</h4><span class="tag">Cap table · DD · Términos</span></a>
+      <a class="srow rv" href="#contacto"><span class="n">A-03</span><h4>Comercio exterior</h4><span class="tag">Incoterms · Aduanas</span></a>
+      <a class="srow rv" href="#contacto"><span class="n">A-04</span><h4>Salud &amp; educación</h4><span class="tag">Regulación · Habilitaciones</span></a>
+      <a class="srow rv" href="#contacto"><span class="n">A-05</span><h4>ONG &amp; cooperativas</h4><span class="tag">Estatutos · Personería</span></a>
+    </div>
+  </div>
+</section>
+
 <section id="proceso">
   <div class="wrap">
     <div class="sec-head">
@@ -316,6 +368,25 @@ footer{background:var(--ink);color:rgba(233,225,203,.55);padding:clamp(50px,7vw,
           <p>Acompañamiento continuo con reportes mensuales y cierre documentado de cada asunto.</p>
           <span class="stamp-mini">Cierre certificado</span>
         </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="manifesto" style="background:var(--paper-2)">
+  <div class="wrap" style="text-align:center">
+    <div class="sec-head" style="justify-content:center">
+      <span class="file-no">DOC. 04b</span>
+      <h2>Testimonio</h2>
+    </div>
+    <div class="affidavit rv" style="margin-top:0">
+      <p class="q">"Nos explicaron en una hora lo que otro estudio tardó tres semanas en formular. Desde entonces, todas nuestras decisiones pasan por Meridiano."</p>
+      <div class="sig">
+        <div>
+          <div class="line">Martina Ferraro</div>
+          <div class="line" style="border-top:0;padding-top:4px">COO · Grupo Andino</div>
+        </div>
+        <span class="stamp-mini">Test. 007 · Verificado</span>
       </div>
     </div>
   </div>
@@ -381,6 +452,14 @@ footer{background:var(--ink);color:rgba(233,225,203,.55);padding:clamp(50px,7vw,
 <script>
 const io=new IntersectionObserver(es=>es.forEach(e=>{if(e.isIntersecting){e.target.classList.add('on');io.unobserve(e.target)}}),{threshold:.1});
 document.querySelectorAll('.rv').forEach(el=>io.observe(el));
+const spyLinks=[...document.querySelectorAll('.side-idx a')];
+const spySecs=spyLinks.map(a=>document.getElementById(a.dataset.spy));
+const spyIO=new IntersectionObserver(es=>es.forEach(e=>{
+  if(e.isIntersecting){
+    spyLinks.forEach(a=>a.classList.toggle('on',a.dataset.spy===e.target.id));
+  }
+}),{rootMargin:'-40% 0px -55% 0px'});
+spySecs.forEach(s=>s&&spyIO.observe(s));
 </script>
 </body>
 </html>
