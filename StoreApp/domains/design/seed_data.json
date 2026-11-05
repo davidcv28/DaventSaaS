@@ -5469,6 +5469,193 @@
         "corners": "rounded"
       },
       "concept": "Grafito, hueso y arcilla: la misma casa de moda en clave de club nocturno."
+    },
+    {
+      "slug": "atelier-noir-ocre",
+      "nombre": "Atelier Noir Ocre",
+      "categoria": "Tienda de moda de autor",
+      "descripcion": "Variante cruda y cálida del atelier: papel ocre, tinta profunda y acento terracota. La misma estructura editorial con otra temperatura.",
+      "tier": "base",
+      "template": "atelier-noir",
+      "page_theme": "light",
+      "pattern": "atelier-noir",
+      "tokens": {
+        "palette": {
+          "accent": "#A85B23",
+          "primary": "#241F18",
+          "secondary": "#4A4238",
+          "bg": "#F0E7D3",
+          "surface": "#E6DAC2",
+          "text": "#241F18",
+          "muted": "#8C7F6A",
+          "border": "#D8C9AC",
+          "success": "#3E6B3A",
+          "danger": "#B3261E"
+        },
+        "containers": {
+          "radius": "sm",
+          "shadow": "soft",
+          "border": "thin",
+          "density": "comfortable",
+          "surface": "flat"
+        },
+        "typography": {
+          "heading": "fraunces",
+          "subheading": "instrument-sans",
+          "body": "instrument-sans",
+          "scale": "editorial",
+          "weightHeading": 400,
+          "letterSpacing": "-0.01em"
+        },
+        "buttons": {
+          "shape": "square",
+          "style": "solid",
+          "size": "md"
+        },
+        "background": {
+          "type": "solid",
+          "value": null,
+          "overlay": "none"
+        },
+        "motion": {
+          "reveal": "fade-up",
+          "hover": "lift",
+          "intensity": "subtle"
+        },
+        "mobile": {
+          "cardStyle": "standard",
+          "heroHeight": "standard"
+        },
+        "preview": "",
+        "icons": {
+          "style": "line",
+          "stroke": "1.8",
+          "size": "20",
+          "corners": "rounded"
+        }
+      },
+      "layout": {},
+      "layout_spec": {},
+      "tags": [
+        "indumentaria",
+        "moda",
+        "fashion",
+        "autor",
+        "ecommerce",
+        "tienda",
+        "ocre"
+      ],
+      "preview": "",
+      "style": "Tienda de moda de autor",
+      "anim": {
+        "hero": "fade-up",
+        "reveal": "fade-up",
+        "hover": "lift",
+        "button": "solid-press"
+      },
+      "easing": "cubic-bezier(.4,0,.2,1)",
+      "duration": "420ms",
+      "icons": {
+        "style": "line",
+        "stroke": "1.8",
+        "size": "20",
+        "corners": "rounded"
+      },
+      "concept": "Ocre y terracota: la casa de moda en clave de lino crudo."
+    },
+    {
+      "slug": "atelier-noir-oliva",
+      "nombre": "Atelier Noir Oliva",
+      "categoria": "Tienda de moda de autor nocturna",
+      "descripcion": "Segunda clave nocturna: verde oliva profundo, hueso y acento oro viejo. Elegante y terrosa.",
+      "tier": "base",
+      "template": "atelier-noir",
+      "page_theme": "dark",
+      "pattern": "atelier-noir",
+      "tokens": {
+        "palette": {
+          "accent": "#C9B458",
+          "primary": "#C9B458",
+          "secondary": "#8B8F6A",
+          "bg": "#14150E",
+          "surface": "#1E2013",
+          "text": "#F2EEDF",
+          "muted": "#9A9C86",
+          "border": "#33351F",
+          "success": "#7FB069",
+          "danger": "#E56464"
+        },
+        "containers": {
+          "radius": "sm",
+          "shadow": "medium",
+          "border": "thin",
+          "density": "comfortable",
+          "surface": "elevated"
+        },
+        "typography": {
+          "heading": "fraunces",
+          "subheading": "instrument-sans",
+          "body": "instrument-sans",
+          "scale": "editorial",
+          "weightHeading": 400,
+          "letterSpacing": "-0.01em"
+        },
+        "buttons": {
+          "shape": "square",
+          "style": "solid",
+          "size": "md"
+        },
+        "background": {
+          "type": "solid",
+          "value": null,
+          "overlay": "none"
+        },
+        "motion": {
+          "reveal": "fade-up",
+          "hover": "glow",
+          "intensity": "subtle"
+        },
+        "mobile": {
+          "cardStyle": "standard",
+          "heroHeight": "standard"
+        },
+        "preview": "",
+        "icons": {
+          "style": "line",
+          "stroke": "1.8",
+          "size": "20",
+          "corners": "rounded"
+        }
+      },
+      "layout": {},
+      "layout_spec": {},
+      "tags": [
+        "indumentaria",
+        "moda",
+        "fashion",
+        "autor",
+        "ecommerce",
+        "tienda",
+        "noche",
+        "oliva"
+      ],
+      "preview": "",
+      "style": "Tienda de moda de autor nocturna",
+      "anim": {
+        "hero": "fade-up",
+        "reveal": "fade-up",
+        "hover": "glow",
+        "button": "solid-press"
+      },
+      "easing": "cubic-bezier(.4,0,.2,1)",
+      "duration": "420ms",
+      "icons": {
+        "style": "line",
+        "stroke": "1.8",
+        "size": "20",
+        "corners": "rounded"
+      },
+      "concept": "Oliva profundo y oro viejo: la casa de moda en clave terrosa nocturna."
     }
   ],
   "patterns": [
