@@ -282,7 +282,7 @@ body.m-open .mmenu{transform:none;visibility:visible}
 /* El alto llega en --hero-h desde el host (frame.vh): dentro del iframe
    auto-dimensionado 100svh = alto del documento y realimenta el resize. */
 .hero{
-  position:relative;min-height:var(--hero-h,560px);display:grid;align-content:end;align-items:end;
+  position:relative;min-height:var(--hero-h,500px);display:grid;align-content:end;align-items:end;
   color:#fff;padding-top:var(--head-h);isolation:isolate;overflow:hidden;
 }
 .hero-media{position:absolute;inset:0;overflow:hidden;background:var(--ink)}
@@ -293,7 +293,7 @@ body.m-open .mmenu{transform:none;visibility:visible}
     linear-gradient(180deg,rgba(20,26,10,.66) 0%,rgba(20,26,10,.18) 34%,rgba(20,26,10,.36) 62%,rgba(20,26,10,.9) 100%),
     linear-gradient(90deg,rgba(20,26,10,.6) 0%,rgba(20,26,10,0) 64%);
 }
-.hero-inner{position:relative;z-index:2;width:100%;padding-bottom:146px}
+.hero-inner{position:relative;z-index:2;width:100%;padding-bottom:118px}
 .hero-kicker{
   display:inline-flex;align-items:center;gap:11px;
   font:600 10.5px/1 var(--mono);letter-spacing:.24em;text-transform:uppercase;
@@ -303,13 +303,13 @@ body.m-open .mmenu{transform:none;visibility:visible}
 .hero-kicker .live{width:6px;height:6px;border-radius:50%;background:var(--honey);animation:pulse 2.4s infinite}
 @keyframes pulse{0%,100%{box-shadow:0 0 0 0 color-mix(in srgb,var(--honey) 45%,transparent)}50%{box-shadow:0 0 0 7px transparent}}
 .hero-title{
-  max-width:15ch;margin-top:24px;text-wrap:balance;
-  font:400 clamp(44px,7.4vw,98px)/.96 var(--display);letter-spacing:-.015em;
+  max-width:16ch;margin-top:18px;text-wrap:balance;
+  font:400 clamp(36px,5.6vw,72px)/.98 var(--display);letter-spacing:-.015em;
 }
 .hero-title em{color:var(--honey);font-style:italic}
-.hero-desc{max-width:46ch;margin-top:22px;font:400 clamp(15px,1.5vw,17px)/1.65 var(--sans);color:rgba(255,255,255,.84)}
-.hero-cta{display:flex;flex-wrap:wrap;gap:12px;margin-top:30px}
-.hero-meta{display:flex;flex-wrap:wrap;align-items:center;gap:0;margin-top:32px}
+.hero-desc{max-width:46ch;margin-top:16px;font:400 clamp(14.5px,1.4vw,16px)/1.6 var(--sans);color:rgba(255,255,255,.84)}
+.hero-cta{display:flex;flex-wrap:wrap;gap:12px;margin-top:24px}
+.hero-meta{display:flex;flex-wrap:wrap;align-items:center;gap:0;margin-top:24px}
 .hero-meta li{
   display:inline-flex;align-items:center;gap:8px;
   font:500 10.5px/1 var(--mono);letter-spacing:.14em;text-transform:uppercase;
@@ -359,6 +359,22 @@ body.m-open .mmenu{transform:none;visibility:visible}
   animation:scroll-cue 1.9s var(--ease-soft) infinite;
 }
 @keyframes scroll-cue{0%{transform:scaleY(.3);transform-origin:top;opacity:0}35%{transform:scaleY(1);opacity:1}100%{transform:scaleY(1) translateY(10px);opacity:0}}
+
+/* Ficha de años de oficio: vidrio oscuro con filete de etiqueta, flotando
+   sobre el héroe a la derecha (encima de la reserva del booking-card). */
+.hero-card{
+  position:absolute;right:clamp(18px,4vw,56px);bottom:172px;z-index:3;
+  width:264px;padding:20px 22px;border-radius:var(--r);
+  background:rgba(20,26,10,.46);border:1px solid rgba(255,255,255,.24);
+  -webkit-backdrop-filter:blur(16px);backdrop-filter:blur(16px);
+  display:flex;flex-direction:column;gap:10px;
+  box-shadow:0 26px 60px -34px rgba(0,0,0,.7);
+}
+.hero-card::after{content:"";height:1px;background:repeating-linear-gradient(90deg,rgba(255,255,255,.38) 0 6px,transparent 6px 12px)}
+.hero-card .score{display:flex;align-items:baseline;gap:9px;font:600 34px/1 var(--display)}
+.hero-card .score svg{width:17px;height:17px;color:var(--honey);align-self:center}
+.hero-card .score span{font:500 9px/1.3 var(--mono);letter-spacing:.2em;text-transform:uppercase;color:rgba(255,255,255,.7);max-width:9ch}
+.hero-card p{font:400 12px/1.55 var(--sans);color:rgba(255,255,255,.76)}
 
 /* Etiqueta de almazara: la ficha del hero — datos reales con filetes
    punteados de etiqueta de botella. */
@@ -1666,8 +1682,8 @@ html[data-ds-theme="dark"] .services-list .ds-service::before,html[data-ds-style
     if (!hero) return
     var vh = frame ? frame.vh : (window.parent === window ? window.innerHeight : 0)
     if (vh) {
-      var h = Math.round(vh * 0.62)
-      document.documentElement.style.setProperty('--hero-h', Math.max(440, Math.min(h, 640)) + 'px')
+      var h = Math.round(vh * 0.5)
+      document.documentElement.style.setProperty('--hero-h', Math.max(400, Math.min(h, 540)) + 'px')
     }
   }
 
@@ -1866,7 +1882,7 @@ html[data-ds-theme="dark"] .services-list .ds-service::before,html[data-ds-style
     if (!frame) {
       qsa('.reveal').forEach(function (el) { el.classList.add('is-in') })
       qsa('.ds-stat-value').forEach(animateStat)
-      document.documentElement.style.setProperty('--hero-h', Math.max(440, Math.min(Math.round(window.innerHeight * 0.62), 640)) + 'px')
+      document.documentElement.style.setProperty('--hero-h', Math.max(400, Math.min(Math.round(window.innerHeight * 0.5), 540)) + 'px')
     }
     paint()
     syncHead()
