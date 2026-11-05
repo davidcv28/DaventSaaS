@@ -13,10 +13,23 @@
   --font:"Inter",-apple-system,"Segoe UI",Roboto,sans-serif;
 }
 html[data-theme="dark"]{
-  --bg:#141310; --surface:#1D1C19; --ink:#EDEAE2; --ink-2:#B3ADA1; --ink-3:#79746A;
-  --line:#2B2924; --line-2:#3D3A33; --accent:#EDEAE2; --accent-soft:#26241F;
-  --hover:#24221D; --ok:#74C08E; --warn:#D9A05B;
+  --bg:#0A0E1C; --surface:#131A38; --ink:#E7E9F5; --ink-2:#AEB3D6; --ink-3:#8288B3;
+  --line:rgba(255,255,255,.09); --line-2:rgba(255,255,255,.17); --accent:#818CF8; --accent-soft:rgba(129,140,248,.14);
+  --hover:rgba(255,255,255,.05); --ok:#34D399; --warn:#FBBF24;
 }
+/* Acentos de marca de la landing (indigo) sobre el tema oscuro */
+html[data-theme="dark"] body{background:radial-gradient(1100px 720px at 82% -12%,#241C5C 0%,#171446 42%,#0A0E1C 78%) fixed}
+html[data-theme="dark"] .btn.pri{background:linear-gradient(135deg,#6366f1,#4f46e5);border-color:transparent;color:#fff}
+html[data-theme="dark"] .ni.on{background:linear-gradient(135deg,#6366f1,#4f46e5);color:#fff}
+html[data-theme="dark"] .avatar{background:linear-gradient(135deg,#6366f1,#4338ca)}
+html[data-theme="dark"] .brand .dot{background:linear-gradient(135deg,#6366f1,#4338ca)}
+html[data-theme="dark"] .bars .b.hot{background:#818CF8}
+html[data-theme="dark"] .fld input:focus,html[data-theme="dark"] .fld select:focus,html[data-theme="dark"] .fld textarea:focus{border-color:#818CF8;box-shadow:0 0 0 3px rgba(129,140,248,.16)}
+html[data-theme="dark"] .stabs .stab.on{border-bottom-color:#818CF8}
+html[data-theme="dark"] .mbi.on{color:#A5B4FC}
+html[data-theme="dark"] .todo .ic,html[data-theme="dark"] .modal .mi{background:rgba(129,140,248,.12)}
+html[data-theme="dark"] .thumb{background:rgba(129,140,248,.12);color:#A5B4FC}
+html[data-theme="dark"] .ni .bdg{background:rgba(129,140,248,.16)}
 *{box-sizing:border-box;margin:0;padding:0}
 html{font-family:var(--font);color:var(--ink);background:var(--bg);font-size:14px;-webkit-font-smoothing:antialiased}
 button{font:inherit;color:inherit;background:none;border:0;cursor:pointer;text-align:left}
@@ -511,7 +524,7 @@ tbody tr:hover{background:var(--hover)}
             <div style="display:flex;gap:10px"><span class="avatar" style="width:28px;height:28px;font-size:11px">D</span>
               <div style="background:var(--accent-soft);border-radius:2px 12px 12px 12px;padding:10px 14px;font-size:13.5px;max-width:80%">¡Hola David! Soy tu asistente. ¿En qué te ayudo hoy?</div></div>
             <div style="display:flex;gap:10px;flex-direction:row-reverse"><span class="avatar" style="width:28px;height:28px;font-size:11px;background:var(--ink-2)">D</span>
-              <div style="background:var(--ink);color:var(--bg);border-radius:12px 2px 12px 12px;padding:10px 14px;font-size:13.5px;max-width:80%">¿Cuándo vence mi plan?</div></div>
+              <div style="background:#5046E5;color:#fff;border-radius:12px 2px 12px 12px;padding:10px 14px;font-size:13.5px;max-width:80%">¿Cuándo vence mi plan?</div></div>
             <div style="display:flex;gap:10px"><span class="avatar" style="width:28px;height:28px;font-size:11px">D</span>
               <div style="background:var(--accent-soft);border-radius:2px 12px 12px 12px;padding:10px 14px;font-size:13.5px;max-width:80%">Tu plan Estándar vence el <b>12 de noviembre</b>. Podés renovarlo desde “Plan y pagos”.</div></div>
           </div>
