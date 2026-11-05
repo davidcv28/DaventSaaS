@@ -77,6 +77,10 @@ const patternLayout = computed(() => normalizeLayoutConfig(defaultPattern.value?
 // declara su contrato de datos (`ready`); en el Studio se sigue editando
 // con la plantilla Vue, que es la que responde a los cambios en vivo.
 const patternDoc = ref(null)
+// El iframe del documento avisa cuando pintó: mientras tanto se muestra el
+// skeleton en vez de la plantilla Vue (el fallback pintaba el diseño viejo
+// un instante en cada carga).
+const patternFrameReady = ref(false)
 // Diseños con identidad propia: su composición canónica y su paleta viven en
 // la Template Definition y en la hoja store-<id>.css. El layout y el tema del
 // patrón base (esencial/raiz) NO se les aplica: les pisaba variantes firma
@@ -848,13 +852,18 @@ onMounted(async () => {
   // payload público de la tienda (service_items).
   // El documento del diseño viaja en paralelo con la ficha: si el patrón
   // todavía no tiene contrato de datos vuelve `{}` y se usa la plantilla Vue.
+  let patternReq = Promise.resolve()
   if (isHome.value || isCatalog.value || isServices.value || isProduct.value) {
-    storesApi.publicPattern(slug.value, { preview: previewToken.value, meta: true })
+    patternReq = storesApi.publicPattern(slug.value, { preview: previewToken.value, meta: true })
       .then((doc) => { patternDoc.value = doc && (doc.has_html || doc.html) ? doc : null })
       .catch(() => { patternDoc.value = null })
   }
   try {
     store.value = await storesApi.publicStore(slug.value, { preview: previewToken.value })
+    // Sin esperar el meta, status='success' montaba la plantilla Vue con el
+    // template de fallback ('raiz') y el diseño real recién llegaba con el
+    // documento del patrón: flash del diseño viejo en cada carga.
+    await patternReq
     status.value = 'success'
     ensureStoreFont(custom.value.name_font)
     // Fuentes propias de la plantilla (titulares): las declara la Template
@@ -920,7 +929,22 @@ onBeforeUnmount(() => {
       :title="shopName"
       @navigate="onPatternNavigate"
       @toggle-theme="togglePageTheme"
+      @load="patternFrameReady = true"
     />
+    <!-- Mientras el documento del diseño baja y pinta, skeleton: la página
+         Vue ya no está montada (usePattern) y sin esto quedaba un hueco. -->
+    <div v-if="usePattern && !patternFrameReady" class="sp-boot" role="status" aria-live="polite" aria-busy="true">
+      <span class="sp-sr-only">Cargando la tienda…</span>
+      <div class="sp-boot-hero" aria-hidden="true">
+        <span class="sp-sk-line sp-boot-badge"></span>
+        <span class="sp-sk-line sp-boot-title"></span>
+        <span class="sp-sk-line sp-boot-sub"></span>
+        <span class="sp-boot-ctas"><span class="sp-sk-line"></span><span class="sp-sk-line"></span></span>
+      </div>
+      <div class="sp-container sp-boot-grid" aria-hidden="true">
+        <div v-for="n in 4" :key="n" class="sp-boot-card"><span class="sp-sk-line sp-boot-img"></span><span class="sp-sk-line"></span><span class="sp-sk-line short"></span></div>
+      </div>
+    </div>
     <div v-if="!usePattern" class="sp-vue-page">
     <!-- ===== Barra superior ===== -->
     <header class="sp-top" :class="{ scrolled }">

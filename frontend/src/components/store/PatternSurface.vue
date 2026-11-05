@@ -56,7 +56,7 @@ const src = computed(() => {
   return `/api/stores/public/${encodeURIComponent(props.slug)}/pattern/document/?${params}`
 })
 
-const emit = defineEmits(['navigate', 'toggle-theme'])
+const emit = defineEmits(['navigate', 'toggle-theme', 'load'])
 
 //El iframe va sin `allow-same-origin` (origen opaco): el JS del diseño no
 //puede tocar el DOM ni las cookies de la app. Los datos que necesita de la
@@ -155,6 +155,7 @@ function syncTheme() {
 
 function onLoad() {
   height.value = 0
+  emit('load')
   post('davent:ds-surface', { surface: props.surface })
   syncTheme()
   postFrame()
