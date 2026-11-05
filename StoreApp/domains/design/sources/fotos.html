@@ -1,0 +1,400 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>{{store_name}} · Fotografía</title>
+<style>
+  /* BOCETO wireframe: grises, bordes punteados, placeholders con trama.
+     Sirve para validar estructura y contenido; la dirección visual va después. */
+  :root{
+    --paper:#F4F4F2;
+    --card:#FFFFFF;
+    --ink:#22241F;
+    --muted:#6E7168;
+    --line:#C9CBC2;
+    --dash:#9AA08F;
+    --accent:#3E5C50;
+    --radius:4px;
+    color-scheme:light;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0}
+  body{background:var(--paper);color:var(--ink);font:14px/1.55 system-ui,-apple-system,'Segoe UI',sans-serif;-webkit-font-smoothing:antialiased}
+  img{max-width:100%}
+  img[src=""]{display:none}
+  a{color:inherit;text-decoration:none}
+  .shell{max-width:1120px;margin:0 auto;padding:0 24px}
+  .mono{font:600 10px/1 ui-monospace,SFMono-Regular,Menlo,monospace;letter-spacing:.18em;text-transform:uppercase}
+  .tag{display:inline-block;padding:2px 8px;border:1px dashed var(--dash);border-radius:999px;color:var(--muted);background:var(--card)}
+
+  /* Trama de placeholder para zonas de imagen */
+  .ph{position:relative;display:grid;place-items:center;background:
+    repeating-linear-gradient(45deg,transparent 0 10px,color-mix(in srgb,var(--line) 45%,transparent) 10px 11px),
+    var(--card);
+    border:1px dashed var(--dash);overflow:hidden;min-height:220px}
+  .ph::after{content:attr(data-ph);font:600 10px ui-monospace,SFMono-Regular,Menlo,monospace;letter-spacing:.22em;text-transform:uppercase;color:var(--muted)}
+  .ph img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;min-height:inherit}
+  .ph img[src=""]{display:none}
+
+  /* Cabecera */
+  .top{border-bottom:1px solid var(--line);background:var(--card)}
+  .top-in{display:flex;align-items:center;gap:20px;min-height:64px}
+  .brand{display:flex;align-items:center;gap:10px;min-width:0}
+  .brand .mark{flex:none;width:36px;height:36px;border:1px solid var(--ink);border-radius:50%;display:grid;place-items:center;font:700 13px system-ui}
+  .brand .mark img{width:100%;height:100%;object-fit:contain;border-radius:50%}
+  .brand strong{display:block;font-size:15px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .brand small{display:block;font:500 9px ui-monospace,monospace;letter-spacing:.18em;text-transform:uppercase;color:var(--muted)}
+  .top-nav{display:flex;margin-left:auto;border-left:1px solid var(--line)}
+  .top-nav a{display:flex;align-items:center;padding:0 18px;min-height:64px;font-size:13px;color:var(--muted);border-right:1px solid var(--line)}
+  .top-nav a:hover{color:var(--ink);background:var(--paper)}
+  html[data-ds-surface="landing"] .top-nav a[data-ds-route="home"],
+  html[data-ds-surface="catalog"] .top-nav a[data-ds-route="catalog"],
+  html[data-ds-surface="services"] .top-nav a[data-ds-route="services"]{color:var(--ink);background:var(--paper);box-shadow:inset 0 -2px 0 var(--accent)}
+  .top-wa{margin-left:14px;display:inline-flex;align-items:center;min-height:38px;padding:0 16px;border:1px solid var(--ink);border-radius:var(--radius);font:600 11px ui-monospace,monospace;letter-spacing:.12em;text-transform:uppercase;background:var(--ink);color:#fff}
+  .top-wa:hover{background:var(--accent);border-color:var(--accent)}
+
+  /* Solo una superficie visible a la vez */
+  [data-surface]{display:none}
+  html[data-ds-surface="landing"] [data-surface="landing"],
+  html[data-ds-surface="catalog"] [data-surface="catalog"],
+  html[data-ds-surface="services"] [data-surface="services"],
+  html[data-ds-surface="product"] [data-surface="product"]{display:block}
+
+  .band{padding:56px 0}
+  .band + .band{padding-top:0}
+  .sec-label{display:flex;align-items:center;gap:12px;margin:0 0 10px}
+  .sec-label::after{content:"";flex:1;height:1px;background:var(--line)}
+  .sec-label b{font:600 10px ui-monospace,monospace;letter-spacing:.22em;text-transform:uppercase;color:var(--accent)}
+  .sec-label span{font-size:12px;color:var(--muted)}
+  h1,h2{margin:0;font-weight:700;letter-spacing:-.02em}
+  h1{font-size:clamp(30px,4.5vw,52px);line-height:1.05}
+  h2{font-size:clamp(22px,3vw,32px);line-height:1.1}
+  .lead{max-width:52ch;margin:16px 0 0;font-size:15px;color:var(--muted)}
+  .lead:empty{display:none}
+
+  /* LANDING */
+  .hero{padding:64px 0 48px}
+  .hero-grid{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:48px;align-items:center}
+  .hero-meta{display:flex;flex-wrap:wrap;gap:8px;margin-top:22px}
+  .btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:44px;padding:0 22px;border:1px solid var(--ink);border-radius:var(--radius);font:600 11px ui-monospace,monospace;letter-spacing:.14em;text-transform:uppercase;transition:background .15s,color .15s}
+  .btn-primary{background:var(--ink);color:#fff}
+  .btn-primary:hover{background:var(--accent);border-color:var(--accent)}
+  .btn-ghost{background:transparent}
+  .btn-ghost:hover{background:var(--card)}
+  .actions{display:flex;flex-wrap:wrap;gap:10px;margin-top:28px}
+  .hero-media{min-height:420px}
+
+  .strip{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:1px;background:var(--line);border:1px solid var(--line);margin-top:8px}
+  .strip div{background:var(--card);padding:18px}
+  .strip b{display:block;font-size:14px}
+  .strip span{font-size:12px;color:var(--muted)}
+
+  /* Vitrina: grilla de fotos (el corazón del rubro) */
+  .gallery{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:20px}
+  .ds-product{min-width:0}
+  .ds-product-link{display:block}
+  .ds-product .ph{aspect-ratio:4/3;min-height:0}
+  .ds-product:hover .ph{border-color:var(--accent)}
+  .ds-product-copy{display:flex;align-items:baseline;justify-content:space-between;gap:10px;padding:10px 2px 0}
+  .ds-product-name{margin:0;font-size:14px;font-weight:600;overflow-wrap:anywhere}
+  .ds-product-cat{font:500 9px ui-monospace,monospace;letter-spacing:.14em;text-transform:uppercase;color:var(--muted)}
+  .ds-product-price{font-weight:700;white-space:nowrap}
+  .ds-product-old{font-size:11px;color:var(--muted);text-decoration:line-through;margin-left:6px;font-weight:400}
+  .ds-product-desc{display:none}
+
+  .cats{display:flex;flex-wrap:wrap;gap:8px}
+  .ds-cat{display:inline-flex;align-items:center;min-height:36px;padding:0 14px;border:1px solid var(--line);border-radius:999px;font-size:12px;background:var(--card)}
+  .ds-cat:hover{border-color:var(--accent)}
+
+  .about{display:grid;grid-template-columns:minmax(0,5fr) minmax(0,7fr);gap:48px;align-items:center}
+  .about .ph{min-height:320px}
+  .about ul{margin:14px 0 0;padding-left:18px;color:var(--muted);font-size:13.5px}
+  .about li{margin:6px 0}
+
+  .trust{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:1px;background:var(--line);border:1px solid var(--line)}
+  .trust-item{background:var(--card);padding:18px}
+  .trust-item b{display:block;font:600 10px ui-monospace,monospace;letter-spacing:.18em;color:var(--accent);margin-bottom:6px}
+  .trust-item strong{display:block;font-size:14px}
+  .trust-item span{font-size:12px;color:var(--muted)}
+
+  /* CATÁLOGO */
+  .cat-head{display:flex;align-items:baseline;justify-content:space-between;gap:16px;padding-bottom:16px;border-bottom:1px solid var(--line)}
+  .cat-head span{font-size:12px;color:var(--muted)}
+  .cat-tools{display:flex;flex-wrap:wrap;align-items:center;gap:10px;padding:16px 0;border-bottom:1px solid var(--line)}
+  .cat-filters{display:flex;flex-wrap:wrap;gap:6px}
+  .cat-filters:empty{display:none}
+  .cat-filters .ds-cat{min-height:32px;font-size:11px}
+  .cat-price{display:flex;align-items:center;gap:8px;font-size:12px;color:var(--muted)}
+  .cat-price input{width:88px;min-height:36px;padding:0 10px;border:1px solid var(--line);border-radius:var(--radius);background:var(--card);font:inherit}
+  .cat-offers{display:inline-flex;align-items:center;gap:6px;font-size:12px;color:var(--muted)}
+  .cat-clear{border:0;background:none;font:600 10px ui-monospace,monospace;letter-spacing:.14em;text-transform:uppercase;color:var(--accent);cursor:pointer;padding:8px 0}
+  .cat-sort{margin-left:auto;display:flex;align-items:center;gap:8px;font-size:12px;color:var(--muted)}
+  .cat-sort select{min-height:36px;padding:0 8px;border:1px solid var(--line);border-radius:var(--radius);background:var(--card);font:inherit;color:var(--ink)}
+  .cat-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:24px;padding-top:24px}
+  .ds-empty{margin:24px 0 0;font-size:13px;color:var(--muted)}
+
+  /* SERVICIOS */
+  .svc-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:24px}
+  .ds-services-list{display:grid;gap:0;margin:0;padding:0;list-style:none;border-top:1px solid var(--line)}
+  .ds-service{display:grid;grid-template-columns:40px minmax(0,1fr);gap:14px;padding:18px 0;border-bottom:1px solid var(--line)}
+  .ds-service::before{counter-increment:svc;content:"0" counter(svc);font:600 11px ui-monospace,monospace;color:var(--accent);padding-top:3px}
+  .ds-services-list{counter-reset:svc}
+  .ds-service-name{font-size:16px;font-weight:600}
+  .ds-service-desc{grid-column:2;font-size:13px;color:var(--muted)}
+  .ds-service-desc:empty{display:none}
+  .svc-side{display:grid;gap:16px;align-content:start}
+  .svc-cta{display:flex;align-items:center;justify-content:center;min-height:48px;border:1px solid var(--ink);border-radius:var(--radius);background:var(--ink);color:#fff;font:600 11px ui-monospace,monospace;letter-spacing:.14em;text-transform:uppercase}
+  .svc-cta:hover{background:var(--accent);border-color:var(--accent)}
+  .svc-note{border:1px dashed var(--dash);border-radius:var(--radius);background:var(--card);padding:16px;font-size:12.5px;color:var(--muted)}
+
+  /* FICHA DE PRODUCTO */
+  .pdp-grid{display:grid;grid-template-columns:minmax(0,7fr) minmax(0,5fr);gap:48px;align-items:start}
+  .pdp-media{margin:0;min-height:480px}
+  .pdp-crumb{display:flex;flex-wrap:wrap;gap:8px;font-size:12px;color:var(--muted);margin-bottom:24px}
+  .pdp-crumb a:hover{color:var(--ink)}
+  .pdp-crumb .sep{opacity:.5}
+  .pdp-kicker{margin:0 0 8px}
+  .pdp-kicker:empty{display:none}
+  .pdp-title{margin:0;font-size:clamp(24px,3vw,36px);line-height:1.08}
+  .pdp-ref{margin:8px 0 0;font:500 10px ui-monospace,monospace;letter-spacing:.16em;text-transform:uppercase;color:var(--muted)}
+  .pdp-price{display:flex;align-items:baseline;gap:10px;margin:18px 0;font-size:22px;font-weight:700}
+  .pdp-price em{font:600 10px ui-monospace,monospace;font-style:normal;letter-spacing:.12em;text-transform:uppercase;color:var(--accent)}
+  .pdp-price s{font-size:14px;color:var(--muted);font-weight:400}
+  .pdp-desc{margin:18px 0 0;font-size:14px;color:var(--muted);max-width:56ch}
+  .pdp-desc:empty{display:none}
+  .pdp-ctas{display:flex;flex-wrap:wrap;gap:10px;margin-top:26px}
+  .pdp-specs{width:100%;border-collapse:collapse;margin-top:28px;font-size:13px}
+  .pdp-specs td{padding:10px 0;border-bottom:1px solid var(--line);vertical-align:top}
+  .pdp-specs td:first-child{width:38%;color:var(--muted);font-size:12px}
+  .pdp-rev{margin-top:56px;border-top:1px solid var(--line);padding-top:32px}
+  .pdp-rev-head{display:flex;align-items:baseline;justify-content:space-between;gap:16px;margin-bottom:16px}
+  .pdp-score b{font-size:20px}
+  .pdp-score span{font-size:12px;color:var(--muted);margin-left:6px}
+  .pdp-rel{margin-top:56px}
+
+  /* PIE */
+  .foot{border-top:1px solid var(--line);background:var(--card);margin-top:64px}
+  .foot-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:32px;padding:40px 0}
+  .foot-h{margin:0 0 10px}
+  .foot-grid span,.foot-grid a{display:block;font-size:13px;color:var(--muted);margin:4px 0}
+  .foot-legal{border-top:1px solid var(--line);padding:16px 0;font-size:11.5px;color:var(--muted)}
+
+  @media (max-width:900px){
+    .hero-grid,.about,.pdp-grid{grid-template-columns:1fr;gap:32px}
+    .hero-media,.pdp-media{min-height:300px}
+    .gallery,.cat-grid,.svc-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
+    .strip,.trust,.foot-grid{grid-template-columns:1fr 1fr}
+    .top-nav{display:none}
+    .top-wa{margin-left:auto}
+  }
+  @media (max-width:560px){
+    .gallery,.cat-grid,.svc-grid,.strip,.trust,.foot-grid{grid-template-columns:1fr}
+    .cat-sort{margin-left:0;width:100%}
+    .cat-sort select{flex:1}
+  }
+</style>
+</head>
+<body>
+
+<header class="top">
+  <div class="shell top-in">
+    <a class="brand" href="#inicio" data-ds-route="home">
+      <span class="mark"><img src="{{store_logo}}" alt="" onerror="this.remove()"><span>{{store_initial}}</span></span>
+      <span><strong>{{store_name}}</strong><small>{{store_tagline}}</small></span>
+    </a>
+    <nav class="top-nav" aria-label="Secciones">
+      <a href="#inicio" data-ds-route="home">Inicio</a>
+      <a href="#catalogo" data-ds-route="catalog">Catálogo</a>
+      <a href="#servicios" data-ds-route="services">Servicios</a>
+      <a href="#contacto">Contacto</a>
+    </nav>
+    <a class="top-wa" href="{{store_whatsapp_url}}">WhatsApp</a>
+  </div>
+</header>
+
+<!-- ============ LANDING ============ -->
+<div data-surface="landing">
+  <section class="hero" id="inicio">
+    <div class="shell hero-grid">
+      <div>
+        <p class="sec-label"><b>01 · Portada</b><span>Hero a dos columnas</span></p>
+        <h1>{{store_name}}</h1>
+        <p class="lead">{{store_tagline}}</p>
+        <p class="lead">{{store_description}}</p>
+        <div class="hero-meta"><span class="tag">{{store_location}}</span><span class="tag">{{store_hours}}</span></div>
+        <div class="actions">
+          <a class="btn btn-primary" href="#catalogo" data-ds-route="catalog">Ver trabajos</a>
+          <a class="btn btn-ghost" href="{{store_whatsapp_url}}">Pedir presupuesto</a>
+        </div>
+      </div>
+      <figure class="ph hero-media" data-ph="Foto de portada">
+        <img src="{{store_cover}}" alt="{{store_name}}">
+      </figure>
+    </div>
+  </section>
+
+  <section class="band" data-flag="services">
+    <div class="shell">
+      <p class="sec-label"><b>02 · Servicios</b><span>Tira de 3 datos clave</span></p>
+      <div class="strip">
+        <div><b>Sesiones a medida</b><span>Retratos, eventos y producto</span></div>
+        <div><b>Edición incluida</b><span>Entregas retocadas y listas</span></div>
+        <div><b>Impresión opcional</b><span>Lienzos, copias y fotolibros</span></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="band" data-flag="categories">
+    <div class="shell">
+      <p class="sec-label"><b>03 · Categorías</b><span>Filtros rápidos</span></p>
+      <div class="cats">{{categories}}</div>
+    </div>
+  </section>
+
+  <section class="band" data-flag="featured">
+    <div class="shell">
+      <p class="sec-label"><b>04 · Vitrina</b><span>Trabajos destacados</span></p>
+      <div class="gallery">{{products}}</div>
+    </div>
+  </section>
+
+  <section class="band">
+    <div class="shell about">
+      <figure class="ph" data-ph="Foto del estudio">
+        <img src="{{store_cover}}" alt="">
+      </figure>
+      <div>
+        <p class="sec-label"><b>05 · El estudio</b><span>Quién está detrás</span></p>
+        <h2>Sobre {{store_name}}</h2>
+        <p class="lead">{{store_about}}</p>
+        <ul>
+          <li>Sesiones coordinadas por WhatsApp, con confirmación de fecha y lugar.</li>
+          <li>Galería privada para revisar y descargar tus fotos.</li>
+          <li>Impresiones y entregables con producción local.</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <section class="band">
+    <div class="shell">
+      <p class="sec-label"><b>06 · Confianza</b><span>Por qué elegirnos</span></p>
+      <div class="trust">
+        <div class="trust-item"><b>01</b><strong>Agenda flexible</strong><span>Sábados y feriados con turno previo.</span></div>
+        <div class="trust-item"><b>02</b><strong>Edición profesional</strong><span>Color, luz y acabado de estudio.</span></div>
+        <div class="trust-item"><b>03</b><strong>Entrega digital</strong><span>Galería web y descarga en alta resolución.</span></div>
+        <div class="trust-item"><b>04</b><strong>Presupuesto claro</strong><span>Precio cerrado antes de la sesión.</span></div>
+      </div>
+    </div>
+  </section>
+</div>
+
+<!-- ============ CATÁLOGO ============ -->
+<section class="band" data-surface="catalog" id="catalogo" data-flag="catalog">
+  <div class="shell">
+    <div class="cat-head">
+      <div><p class="sec-label"><b>Catálogo</b><span>Trabajos y productos</span></p><h1>Catálogo</h1></div>
+      <span data-ds-count></span>
+    </div>
+    <div class="cat-tools">
+      <div class="cat-filters" data-ds-filters role="group" aria-label="Categorías"></div>
+      <div class="cat-price" role="group" aria-label="Rango de precio">
+        <span>Precio</span>
+        <input type="number" inputmode="numeric" min="0" step="1" placeholder="Mín." aria-label="Precio mínimo" data-ds-price-min>
+        <span aria-hidden="true">—</span>
+        <input type="number" inputmode="numeric" min="0" step="1" placeholder="Máx." aria-label="Precio máximo" data-ds-price-max>
+      </div>
+      <label class="cat-offers"><input type="checkbox" data-ds-offers> Solo ofertas</label>
+      <button class="cat-clear" type="button" data-ds-clear>Limpiar</button>
+      <label class="cat-sort">Ordenar
+        <select data-ds-sort>
+          <option value="relevance">Sugerido</option>
+          <option value="price-asc">Menor precio</option>
+          <option value="price-desc">Mayor precio</option>
+          <option value="name">Nombre</option>
+        </select>
+      </label>
+    </div>
+    <div class="cat-grid" data-ds-products>{{products}}</div>
+    <p class="ds-empty" data-ds-noresults hidden>No hay trabajos con esos filtros.</p>
+  </div>
+</section>
+
+<!-- ============ SERVICIOS ============ -->
+<section class="band" data-surface="services" id="servicios" data-flag="services">
+  <div class="shell">
+    <div class="svc-grid">
+      <div>
+        <p class="sec-label"><b>Servicios</b><span>Qué ofrecemos</span></p>
+        <h1 style="margin-bottom:24px">Servicios</h1>
+        {{services}}
+      </div>
+      <aside class="svc-side">
+        <div class="ph" data-ph="Foto del servicio" style="min-height:220px">
+          <img src="{{store_cover}}" alt="">
+        </div>
+        <a class="svc-cta" href="{{store_whatsapp_url}}">Pedir presupuesto</a>
+        <div class="svc-note">
+          <strong class="mono" style="display:block;margin-bottom:8px">Antes de reservar</strong>
+          Contanos qué buscás: tipo de sesión, cantidad de personas y lugar. Respondemos con disponibilidad y precio cerrado.
+        </div>
+      </aside>
+    </div>
+  </div>
+</section>
+
+<!-- ============ FICHA DE PRODUCTO ============ -->
+<section class="band" data-surface="product" data-flag="catalog">
+  <div class="shell">
+    <nav class="pdp-crumb" aria-label="Ruta">
+      <a href="#inicio" data-ds-route="home">Inicio</a>
+      <span class="sep" aria-hidden="true">/</span>
+      <a href="#catalogo" data-ds-route="catalog">Catálogo</a>
+      <span class="sep" aria-hidden="true">/</span>
+      <span aria-current="page">{{product_name}}</span>
+    </nav>
+    <div class="pdp-grid">
+      <figure class="ph pdp-media" data-ph="Foto del trabajo">
+        <img src="{{product_image}}" alt="{{product_name}}" loading="eager">
+      </figure>
+      <div>
+        <p class="pdp-kicker mono">{{product_category}} · {{product_brand}}</p>
+        <h1 class="pdp-title">{{product_name}}</h1>
+        <p class="pdp-ref">Ref. {{product_ref}} · N° {{product_rating_count}} reseñas</p>
+        <div class="pdp-price"><b>{{product_price}}</b><em>{{product_offer_pct}}</em><s>{{product_old_price}}</s></div>
+        <p class="pdp-desc">{{product_description}}</p>
+        <div class="pdp-ctas">
+          <a class="btn btn-primary" href="{{product_whatsapp_url}}">Consultar por WhatsApp</a>
+          <a class="btn btn-ghost" href="#catalogo" data-ds-route="catalog">Volver al catálogo</a>
+        </div>
+        <table class="pdp-specs"><tbody>{{product_features}}</tbody></table>
+      </div>
+    </div>
+    <section class="pdp-rev" aria-label="Opiniones">
+      <div class="pdp-rev-head">
+        <h2>Opiniones</h2>
+        <p class="pdp-score"><b>{{product_rating_avg}}</b><span>nota media</span></p>
+      </div>
+      {{product_reviews}}
+    </section>
+    <section class="pdp-rel" aria-label="También te puede interesar">
+      <h2>También te puede interesar</h2>
+      <div class="gallery" style="margin-top:24px">{{product_related}}</div>
+    </section>
+  </div>
+</section>
+
+<footer class="foot" id="contacto">
+  <div class="shell">
+    <div class="foot-grid">
+      <div><p class="foot-h mono">El estudio</p><span>{{store_name}}</span><span>{{store_address}}</span><span>{{store_location}}</span></div>
+      <div data-flag="contact"><p class="foot-h mono">Contacto</p><span>{{store_hours}}</span><a href="{{store_whatsapp_url}}">WhatsApp</a></div>
+      <div><p class="foot-h mono">El negocio</p><span>{{store_tagline}}</span></div>
+    </div>
+    <p class="foot-legal">© {{year}} {{store_name}}</p>
+  </div>
+</footer>
+
+</body>
+</html>
