@@ -37,6 +37,13 @@ const webCards = [
   { icon: I.chart, title: 'Estadísticas', text: 'Mirá cuántas personas visitan tu web, día por día.' }
 ]
 
+const audience = [
+  { icon: I.store, title: 'Comercios con local', text: 'Vidriera digital con catálogo, mapa y horarios para tu local físico.' },
+  { icon: I.wrench, title: 'Servicios a domicilio', text: 'Tus clientes arman el presupuesto y te llega el pedido por WhatsApp.' },
+  { icon: I.chat, title: 'Profesionales y oficios', text: 'Peluquerías, talleres y consultorios: mostrá tu trabajo y que te escriban.' },
+  { icon: I.link, title: 'Emprendimientos online', text: 'Un link único para Instagram, WhatsApp y tu bio, desde el primer día.' }
+]
+
 const steps = [
   { n: 1, title: 'Creá tu cuenta', text: 'Es gratis y no hace falta saber de tecnología. Verificás tu correo y tu celular.' },
   { n: 2, title: 'Elegí tu link y cargá tus datos', text: 'Sumá tu logo, tus colores y, si querés, tus productos.' },
@@ -52,6 +59,12 @@ const strip = [
 const tagline = 'Tu comercio no cierra nunca. Mientras atendés el local, tu web muestra tus productos y te acerca clientes por WhatsApp.'
 const tagWords = computed(() => tagline.split(' '))
 const tagHl = (w) => w === 'nunca.' || w === 'WhatsApp.'
+
+// Titular del hero palabra por palabra: las dos últimas van en serif itálica.
+const heroPhrase = 'Tu comercio en internet, sin complicarte.'
+const heroWords = computed(() =>
+  heroPhrase.split(' ').map((t, i, a) => ({ t, hl: i >= a.length - 2 }))
+)
 const tagEl = ref(null)
 const lit = ref(0)
 
@@ -129,8 +142,31 @@ const tilt = (e) => {
 }
 const untilt = () => { visual.value?.style.setProperty('--rx', 0); visual.value?.style.setProperty('--ry', 0) }
 
+// Typewriter del link del mock: escribe, pausa y pasa al siguiente dominio.
+const urlPool = ['tutienda.davent', 'tucafe.davent', 'tu-negocio.davent']
+const urlText = ref('')
+let typeTimer = null
+function startTypewriter() {
+  let ti = 0, ci = 0, del = false
+  const step = () => {
+    const full = urlPool[ti]
+    ci += del ? -1 : 1
+    urlText.value = full.slice(0, ci)
+    let wait = del ? 34 : 80
+    if (!del && ci === full.length) { del = true; wait = 2400 }
+    else if (del && ci === 0) { del = false; ti = (ti + 1) % urlPool.length; wait = 450 }
+    typeTimer = setTimeout(step, wait)
+  }
+  typeTimer = setTimeout(step, 900)
+}
+
+// Chip de actividad en el mock del teléfono: aparece y se va en loop.
+const noteOn = ref(false)
+let noteTimer = null, noteHide = null
+
 const bar = ref(null)
 const scrolled = ref(false)
+const heroSec = ref(null)
 let raf = 0
 const onScroll = () => {
   if (raf) return
@@ -139,6 +175,12 @@ const onScroll = () => {
     const h = document.documentElement
     bar.value?.style.setProperty('--p', (h.scrollTop / Math.max(1, h.scrollHeight - h.clientHeight)).toFixed(4))
     scrolled.value = h.scrollTop > 24
+    // Parallax del hero: a medida que sale de pantalla se eleva y se apaga.
+    if (heroSec.value) {
+      const r = heroSec.value.getBoundingClientRect()
+      const hp = Math.min(1, Math.max(0, -r.top / Math.max(1, r.height)))
+      heroSec.value.style.setProperty('--hp', hp.toFixed(3))
+    }
     // Revelado palabra por palabra del tagline: el progreso de scroll sobre
     // la sección enciende cada palabra en orden de lectura.
     if (tagEl.value) {
@@ -155,12 +197,19 @@ onMounted(() => {
   window.addEventListener('resize', onResize, { passive: true })
   onScroll()
   loadPlans()
+  startTypewriter()
+  noteTimer = setInterval(() => {
+    noteOn.value = true
+    clearTimeout(noteHide)
+    noteHide = setTimeout(() => { noteOn.value = false }, 4600)
+  }, 9000)
 })
 onBeforeUnmount(() => {
   window.removeEventListener('scroll', onScroll)
   window.removeEventListener('resize', onResize)
   cancelAnimationFrame(raf)
   io?.disconnect(); io = null
+  clearTimeout(typeTimer); clearInterval(noteTimer); clearTimeout(noteHide)
   document.documentElement.style.overflow = ''
 })
 
@@ -188,7 +237,7 @@ watch(menu, (v) => { document.documentElement.style.overflow = v ? 'hidden' : ''
       <small class="lp-menu-foot">DAVENT · Hecho en Argentina</small>
     </div>
 
-    <section id="top" class="lp-hero-wrap">
+    <section id="top" ref="heroSec" class="lp-hero-wrap">
       <header class="lp-nav" :class="{ 'is-scrolled': scrolled, 'is-open': menu }">
         <a class="lp-brand" href="#top" aria-label="DAVENT, ir al inicio" @click="menu = false">
           <span class="lp-logo">
@@ -212,7 +261,7 @@ watch(menu, (v) => { document.documentElement.style.overflow = v ? 'hidden' : ''
       <div class="lp-hero" @pointermove="tilt" @pointerleave="untilt">
         <div class="lp-hero-copy">
           <span class="lp-pill">Plataforma para comercios</span>
-          <h1>Tu comercio en internet, <em>sin complicarte.</em></h1>
+          <h1 class="lp-h1"><span v-for="(w, i) in heroWords" :key="i" class="lp-hw" :class="{ hl: w.hl }" :style="{ '--wd': `${380 + i * 80}ms` }">{{ w.t }}&nbsp;</span></h1>
           <p>
             Conseguí tu propia web con un link único para compartir con tus clientes desde el primer día.
             Cargás tus datos y tus productos, y tu web se actualiza sola.
@@ -236,7 +285,7 @@ watch(menu, (v) => { document.documentElement.style.overflow = v ? 'hidden' : ''
           <div class="lp-phone">
             <div class="lp-url">
               <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect width="18" height="11" x="3" y="11" rx="2" /><path d="M7 11V7a5 5 0 0 1 10 0v4" /></svg>
-              tu-link-unico
+              <span class="lp-url-text">{{ urlText }}<i class="lp-caret" aria-hidden="true" /></span>
             </div>
             <div class="lp-shop">
               <span class="lp-avatar">T</span>
@@ -270,6 +319,10 @@ watch(menu, (v) => { document.documentElement.style.overflow = v ? 'hidden' : ''
           <div class="lp-chip c-qr">
             <span class="qr" />
             <b>QR para tu local</b>
+          </div>
+          <div class="lp-chip c-note" :class="{ show: noteOn }">
+            <span class="lp-note-dot" aria-hidden="true" />
+            <div><strong>Nuevo pedido por WhatsApp</strong><small>hace 2 min · $ 12.500</small></div>
           </div>
         </div>
       </div>
@@ -327,6 +380,21 @@ watch(menu, (v) => { document.documentElement.style.overflow = v ? 'hidden' : ''
             <ul class="lp-list">
               <li v-for="s in showcase" :key="s">{{ s }}</li>
             </ul>
+          </article>
+        </div>
+      </section>
+
+      <section class="lp-section lp-audience">
+        <span v-lp-reveal class="lp-eyebrow">Para quién es</span>
+        <h2 v-lp-reveal="80">Hecha para cualquier comercio.</h2>
+        <p v-lp-reveal="140" class="lp-lead">No importa qué vendas ni dónde: tu web se adapta a tu rubro y a tu forma de trabajar.</p>
+        <div class="lp-aud">
+          <article v-for="(a, i) in audience" :key="a.title" v-lp-reveal="i * 90" class="lp-card" @pointermove="spot">
+            <span class="lp-ico">
+              <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path :d="a.icon" /></svg>
+            </span>
+            <h3>{{ a.title }}</h3>
+            <p>{{ a.text }}</p>
           </article>
         </div>
       </section>
@@ -485,8 +553,10 @@ watch(menu, (v) => { document.documentElement.style.overflow = v ? 'hidden' : ''
 .lp-logo.sm { width: 28px; height: 28px; border-radius: 9px; box-shadow: none; }
 .lp-brand-name { font-weight: 800; font-size: 19px; letter-spacing: .18em; }
 .lp-links { display: flex; flex: 1; justify-content: center; gap: 30px; white-space: nowrap; font-size: 14.5px; font-weight: 500; color: #b7bcdb; }
-.lp-links a { transition: color .15s; }
+.lp-links a { position: relative; transition: color .15s; }
+.lp-links a::after { content: ''; position: absolute; left: 0; right: 100%; bottom: -5px; height: 2px; border-radius: 2px; background: linear-gradient(90deg, #818cf8, #38bdf8); transition: right .35s var(--ease); }
 .lp-links a:hover { color: #fff; }
+.lp-links a:hover::after { right: 0; }
 .lp-nav-cta { display: flex; flex: none; align-items: center; gap: 10px; }
 .lp-burger { display: none; }
 /* Botón "Ingresar" compacto: solo en la barra mobile (≤900px). */
@@ -497,6 +567,7 @@ watch(menu, (v) => { document.documentElement.style.overflow = v ? 'hidden' : ''
 
 .lp-btn { display: inline-flex; align-items: center; justify-content: center; gap: 10px; min-height: 44px; padding: 0 18px; border-radius: 12px; white-space: nowrap; font-weight: 600; font-size: 15px; border: 1px solid var(--line); cursor: pointer; transition: transform .15s, filter .15s, background .15s, border-color .15s; }
 .lp-btn:hover { transform: translateY(-1px); }
+.lp-btn:active { transform: translateY(0) scale(.97); transition-duration: .08s; }
 .lp-btn.primary { background: var(--brand); border-color: var(--brand); color: #fff; }
 .lp-btn.primary:hover { filter: brightness(1.12); }
 .lp-btn.ghost { border-color: rgba(255, 255, 255, .22); color: #fff; }
@@ -512,7 +583,10 @@ watch(menu, (v) => { document.documentElement.style.overflow = v ? 'hidden' : ''
 .lp-hero-copy { flex: 1 1 480px; min-width: 0; }
 .lp-pill { display: inline-flex; padding: 8px 14px; border: 1px solid rgba(255, 255, 255, .2); border-radius: 999px; background: rgba(255, 255, 255, .07); font-size: 12px; font-weight: 700; letter-spacing: .14em; text-transform: uppercase; color: #c7cbf5; }
 .lp-hero h1 { margin: 24px 0 0; font-size: clamp(40px, 6vw, 68px); line-height: 1.04; font-weight: 800; letter-spacing: -.03em; color: transparent; background: linear-gradient(110deg, #fff 35%, #aab0dc 95%); -webkit-background-clip: text; background-clip: text; text-wrap: balance; }
-.lp-hero h1 em { font-style: normal; color: var(--brand-soft); }
+/* El titular entra palabra por palabra (el bloque no usa lp-up para no duplicar el movimiento). */
+.lp-hero-copy > h1.lp-h1 { animation: none; }
+.lp-hw { display: inline-block; color: transparent; background: linear-gradient(110deg, #fff 35%, #aab0dc 95%); -webkit-background-clip: text; background-clip: text; animation: lp-word .9s cubic-bezier(.2, .7, .2, 1) var(--wd, 0ms) both; }
+.lp-hw.hl { font-family: 'Instrument Serif', Georgia, serif; font-style: italic; font-weight: 400; font-size: 1.07em; letter-spacing: -.01em; background: linear-gradient(100deg, #a5b4fc 20%, #e0e7ff 45%, #a5b4fc 70%) 0 0 / 220% 100%; -webkit-background-clip: text; background-clip: text; animation: lp-word .9s cubic-bezier(.2, .7, .2, 1) var(--wd, 0ms) both, lp-shine 6s ease-in-out 2.6s infinite; }
 .lp-hero-copy > p { margin: 24px 0 0; max-width: 540px; font-size: 19px; line-height: 1.6; color: var(--soft); }
 .lp-actions { display: flex; flex-wrap: wrap; gap: 14px; margin-top: 36px; }
 .lp-actions.center { justify-content: center; }
@@ -522,6 +596,9 @@ watch(menu, (v) => { document.documentElement.style.overflow = v ? 'hidden' : ''
 .lp-hero-visual { position: relative; flex: 1 1 380px; min-width: 0; display: grid; place-items: center; min-height: 560px; }
 .lp-phone { width: min(300px, 100%); padding: 14px; border-radius: 40px; background: #0a0828; border: 3px solid #2f2a7c; box-shadow: 0 30px 80px rgba(0, 0, 0, .55), 0 0 90px rgba(91, 77, 240, .3); }
 .lp-url { display: flex; align-items: center; gap: 6px; background: #fff; border-radius: 999px; padding: 8px 14px; font-size: 12px; color: #5d6180; margin-bottom: 12px; }
+.lp-url-text { white-space: nowrap; }
+.lp-caret { display: inline-block; width: 2px; height: 12px; margin-left: 2px; vertical-align: -1px; border-radius: 1px; background: #6366f1; animation: lp-blink 1.05s steps(1) infinite; }
+@keyframes lp-blink { 50% { opacity: 0; } }
 .lp-shop { display: flex; align-items: center; gap: 10px; background: #f5f6fb; padding: 12px; border-radius: 16px 16px 0 0; color: #1a1d3a; }
 .lp-shop div { display: flex; flex-direction: column; font-size: 13.5px; }
 .lp-shop small { color: #6b6f8f; font-size: 11px; }
@@ -544,6 +621,12 @@ watch(menu, (v) => { document.documentElement.style.overflow = v ? 'hidden' : ''
 .c-link { top: 14px; left: -24px; }
 .c-toggle { bottom: 80px; left: 6px; animation-delay: -2s; }
 .c-qr { right: -6px; bottom: 120px; flex-direction: column; gap: 8px; padding: 12px; background: #fff; color: #14172e; font-size: 11.5px; animation-duration: 6s; animation-delay: -3s; }
+.lp-chip.c-note { top: 74px; right: -30px; flex-direction: row; align-items: center; gap: 10px; padding: 10px 14px; opacity: 0; visibility: hidden; translate: calc(var(--rx, 0) * 18px) calc(var(--ry, 0) * 12px + 16px); transition: opacity .5s var(--ease), translate .5s var(--ease), visibility 0s .5s; }
+.lp-chip.c-note.show { opacity: 1; visibility: visible; translate: calc(var(--rx, 0) * 18px) calc(var(--ry, 0) * 12px); transition-delay: 0s; }
+.c-note strong { display: block; font-size: 12.5px; }
+.c-note small { font-size: 11px; }
+.lp-note-dot { flex: none; width: 10px; height: 10px; border-radius: 50%; background: #34d399; box-shadow: 0 0 0 0 rgba(52, 211, 153, .55); animation: lp-ping-dot 1.8s ease-out infinite; }
+@keyframes lp-ping-dot { 70%, 100% { box-shadow: 0 0 0 9px rgba(52, 211, 153, 0); } }
 .sw { width: 36px; height: 20px; border-radius: 999px; background: #34d399; position: relative; }
 .sw::after { content: ''; position: absolute; right: 3px; top: 3px; width: 14px; height: 14px; border-radius: 50%; background: #fff; }
 .qr { width: 68px; height: 68px; background: conic-gradient(#14172e 25%, #fff 0 50%, #14172e 0 75%, #fff 0) 0 0 / 14px 14px; border: 4px solid #14172e; }
@@ -567,14 +650,22 @@ watch(menu, (v) => { document.documentElement.style.overflow = v ? 'hidden' : ''
 .lp-tag-sub { margin: 18px 0 0; max-width: 540px; font-size: 16px; line-height: 1.6; color: var(--muted); }
 .lp-tw { color: rgba(196, 201, 234, .16); transition: color .55s var(--ease); }
 .lp-tw.on { color: #f2f3ff; }
+.lp-tw.hl { font-family: 'Instrument Serif', Georgia, serif; font-style: italic; font-weight: 400; }
 .lp-tw.on.hl { color: var(--brand-soft); }
 
 .lp-section { max-width: 1160px; margin: 0 auto; padding: 88px 20px 40px; scroll-margin-top: 96px; }
 .lp-eyebrow { display: block; color: var(--brand-soft); font-size: 12px; font-weight: 700; letter-spacing: .16em; text-transform: uppercase; }
+.lp-eyebrow::before { content: ''; display: inline-block; width: 22px; height: 2px; margin-right: 10px; border-radius: 2px; background: linear-gradient(90deg, #818cf8, #38bdf8); vertical-align: middle; }
 .lp-section h2 { margin: 14px 0 0; max-width: 720px; font-size: clamp(30px, 4vw, 44px); line-height: 1.1; font-weight: 800; letter-spacing: -.025em; color: #fff; }
 .lp-lead { margin: 18px 0 0; max-width: 560px; font-size: 18px; line-height: 1.6; color: var(--muted); }
 
 .lp-features, .lp-steps, .lp-bento { margin-top: 48px; display: grid; gap: 20px; list-style: none; padding: 0; }
+.lp-aud { margin-top: 48px; display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; max-width: 1080px; }
+.lp-audience .lp-card { padding: 24px 22px; border-radius: 18px; }
+.lp-audience .lp-ico { width: 42px; height: 42px; border-radius: 12px; }
+.lp-audience .lp-ico svg { width: 20px; height: 20px; }
+.lp-audience .lp-card h3 { margin-top: 18px; font-size: 18px; min-height: 2.6em; }
+.lp-audience .lp-card p { font-size: 14px; }
 .lp-features { grid-template-columns: repeat(4, 1fr); gap: 16px; max-width: 1080px; }
 /* Tarjetas de features compactas: mismo ancho, contenido alineado. */
 .lp-features .lp-card { padding: 24px 22px; border-radius: 18px; }
@@ -588,8 +679,8 @@ watch(menu, (v) => { document.documentElement.style.overflow = v ? 'hidden' : ''
 .lp-bento { grid-template-columns: repeat(6, 1fr); }
 .lp-bento > .lp-card { grid-column: span 2; }
 .lp-bento > .wide { grid-column: span 3; }
-.lp-card { padding: 28px; border-radius: 24px; background: rgba(255, 255, 255, .05); border: 1px solid var(--line); transition: border-color .2s, transform .2s; }
-.lp-card:hover { border-color: rgba(165, 180, 252, .5); transform: translateY(-2px); }
+.lp-card { padding: 28px; border-radius: 24px; background: rgba(255, 255, 255, .05); border: 1px solid var(--line); transition: border-color .2s, transform .2s, box-shadow .3s var(--ease); }
+.lp-card:hover { border-color: rgba(165, 180, 252, .5); transform: translateY(-2px); box-shadow: 0 20px 48px -20px rgba(79, 70, 229, .4); }
 .lp-card h3 { margin: 22px 0 0; font-size: 20px; font-weight: 800; color: #fff; }
 .lp-card p { margin: 8px 0 0; font-size: 15px; line-height: 1.65; color: var(--muted); }
 .lp-ico { display: grid; place-items: center; width: 46px; height: 46px; border-radius: 14px; background: rgba(99, 102, 241, .22); color: #c7d2fe; }
@@ -669,6 +760,7 @@ watch(menu, (v) => { document.documentElement.style.overflow = v ? 'hidden' : ''
 @media (max-width: 960px) {
   .lp-features { grid-template-columns: repeat(2, 1fr); }
   .lp-steps { grid-template-columns: 1fr 1fr; }
+  .lp-aud { grid-template-columns: repeat(2, 1fr); }
   .lp-bento > .lp-card, .lp-bento > .wide { grid-column: span 3; }
   .lp-bento > .lp-design { grid-template-columns: 1fr; }
   .lp-design .lp-list { grid-column: 1; grid-row: auto; margin-top: 18px; }
@@ -734,7 +826,7 @@ watch(menu, (v) => { document.documentElement.style.overflow = v ? 'hidden' : ''
   .lp-hero-visual { min-height: 520px; }
 }
 @media (max-width: 560px) {
-  .lp-features, .lp-steps { grid-template-columns: 1fr; }
+  .lp-features, .lp-steps, .lp-aud { grid-template-columns: 1fr; }
   .lp-bento { grid-template-columns: 1fr; }
   .lp-bento > .lp-card, .lp-bento > .wide, .lp-bento > .lp-design { grid-column: auto; }
   .lp-list { grid-template-columns: 1fr; }
@@ -762,7 +854,7 @@ watch(menu, (v) => { document.documentElement.style.overflow = v ? 'hidden' : ''
 .lp-hero-copy > :nth-child(3) { animation-delay: .32s; }
 .lp-hero-copy > :nth-child(4) { animation-delay: .44s; }
 .lp-hero-copy > :nth-child(5) { animation-delay: .56s; }
-.lp-hero h1 em { background: linear-gradient(100deg, #a5b4fc 20%, #e0e7ff 45%, #a5b4fc 70%) 0 0 / 220% 100%; -webkit-background-clip: text; background-clip: text; color: transparent; animation: lp-shine 6s ease-in-out 1.2s infinite; }
+@keyframes lp-word { from { opacity: 0; transform: translateY(.55em) rotate(2.5deg); } to { opacity: 1; transform: none; } }
 @keyframes lp-shine { 0%, 100% { background-position: 100% 0; } 50% { background-position: 0 0; } }
 
 .lp-hero-visual { --rx: 0; --ry: 0; animation: lp-pop 1s cubic-bezier(.2, .7, .2, 1) .35s both; }
@@ -811,5 +903,10 @@ watch(menu, (v) => { document.documentElement.style.overflow = v ? 'hidden' : ''
   .lp *, .lp *::before, .lp *::after, .lp-hero-wrap::before, .lp-hero-wrap::after { animation: none !important; transition: none !important; }
   .lp-rv { opacity: 1; transform: none; }
   .lp-phone, .lp-chip { transform: none; translate: none; }
+}
+@media (prefers-reduced-motion: no-preference) {
+  .lp { scroll-behavior: smooth; }
+  /* Parallax del hero: se eleva y se apaga a medida que sale del viewport (--hp lo escribe onScroll). */
+  .lp-hero { opacity: calc(1 - var(--hp, 0) * .85); translate: 0 calc(var(--hp, 0) * -90px); }
 }
 </style>
