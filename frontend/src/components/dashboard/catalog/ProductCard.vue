@@ -24,9 +24,9 @@ const discountTitle = computed(() => (props.p.discount_names || []).join(' · ')
 
 <template>
   <article class="pcard" :class="{ 'pcard-list': view === 'list', 'pcard-off': !p.is_active }">
-    <span class="pcard-thumb">
+    <span class="pcard-thumb" :class="{ 'pcard-noimg': !p.image }">
       <img v-if="p.image" :src="p.image" :alt="p.name" loading="lazy" />
-      <AppIcon v-else name="package" :size="20" aria-hidden="true" />
+      <AppIcon v-else name="package" :size="22" aria-hidden="true" />
       <span class="pcard-badges">
         <img
           v-if="campaign?.label_url" class="pcard-camp" :src="campaign.label_url"
@@ -76,14 +76,21 @@ const discountTitle = computed(() => (props.p.discount_names || []).join(' · ')
   border: 1px solid var(--line); background: var(--surface); color: var(--muted);
 }
 .pcard-thumb img { width: 100%; height: 100%; object-fit: cover; display: block; }
+/* Sin foto: degradado de marca en vez del gris plano — se ve invitando a
+   cargar una imagen en vez de "roto". */
+.pcard-noimg {
+  background: linear-gradient(135deg, var(--brand-50), var(--brand-100) 70%, var(--brand-soft-line));
+  color: var(--brand-500);
+}
+[data-theme='dark'] .pcard-noimg { color: var(--brand-400); }
 .pcard-badges { position: absolute; top: 6px; left: 6px; right: 6px; display: flex; gap: 4px; flex-wrap: wrap; align-items: flex-start; pointer-events: none; }
 .pcard-camp { height: 22px; width: auto; max-width: 60%; object-fit: contain; display: block; filter: drop-shadow(0 1px 2px rgba(0,0,0,.35)); }
 .pcard-camp-txt { max-width: 60%; overflow: hidden; text-overflow: ellipsis; }
 .pcard-info { display: grid; gap: 2px; min-width: 0; }
-.pcard-name { font-size: 14px; font-weight: 600; color: var(--ink); overflow-wrap: anywhere; }
+.pcard-name { font-size: 14px; font-weight: 600; color: var(--ink); overflow-wrap: anywhere; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; min-height: 2.4em; }
 .pcard-meta { color: var(--muted); font-size: 12px; min-height: 1em; }
-.pcard-price { font-size: 13.5px; color: var(--ink); }
-.pcard-price b { font-weight: 700; }
+.pcard-price { font-size: 14.5px; color: var(--ink); margin-top: 2px; }
+.pcard-price b { font-weight: 800; letter-spacing: -.01em; }
 .pcard-old { color: var(--muted); font-weight: 400; margin-right: 4px; }
 .pcard-actions { display: flex; gap: 6px; margin-top: auto; }
 .pcard-actions .icon-btn { width: 40px; height: 40px; border-radius: 10px; }

@@ -1117,7 +1117,7 @@ body{ transition: background-color .2s ease, color .2s ease; }
 [data-theme='dark'] .cat-stat.tone-info svg{ color: #38bdf8; }
 .page-head-actions{ display: flex; gap: 8px; flex-wrap: wrap; }
 /* Listado de productos: grilla de tarjetas o filas (ProductCard.vue). */
-.prod-grid{ list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 10px; }
+.prod-grid{ list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(auto-fill, minmax(190px, 1fr)); gap: 12px; }
 .prod-grid.prod-grid-list{ grid-template-columns: minmax(0, 1fr); }
 @media (max-width: 640px){ .prod-grid{ grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); } }
 /* Selección múltiple + paginado del inventario (vista tabla). */

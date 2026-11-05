@@ -934,11 +934,11 @@ watch(
 const productQuery = ref('')
 // Toolbar del listado: filtros por categoría/marca, "solo en oferta",
 // orden y vista grilla/lista (persistida en localStorage).
-// Vista del listado: 'table' (densa, default) | 'grid' (tarjetas). El viejo
-// valor 'list' migra a 'table'.
+// Vista del listado: 'grid' (tarjetas, default y más amigable) | 'table'
+// (densa, para catálogos grandes). El viejo 'list' cae en la grilla.
 const PRODUCT_VIEW_KEY = 'davent.catalog.view'
 const savedProductView = localStorage.getItem(PRODUCT_VIEW_KEY)
-const productView = ref(savedProductView === 'grid' ? 'grid' : 'table')
+const productView = ref(savedProductView === 'table' ? 'table' : 'grid')
 watch(productView, (v) => { try { localStorage.setItem(PRODUCT_VIEW_KEY, v) } catch {} })
 const prodFilterCategory = ref('')
 const prodFilterBrand = ref('')
