@@ -527,9 +527,14 @@ html[data-ds-theme="dark"] .grid-products .ds-product-cat,html[data-ds-style="ol
 }
 .grid-products .ds-product-price .ds-product-amount{font:400 16px/1.15 var(--display)}
 .grid-products .ds-product-old{font:400 11.5px/1 var(--sans);color:var(--muted)}
-/* La etiqueta de campaña viaja EN FLUJO (order:4 + margin-left:auto): como
-   absoluta se montaba sobre el importe y pisaba la pill de descuento. */
-.grid-products .ds-campaign-label{order:4;margin-left:auto;align-self:center;height:20px;width:auto;object-fit:contain}
+/* La etiqueta de campaña firma la oferta: sticker sobre la foto, esquina
+   superior izquierda (el contador numerado ocupa la derecha). En flujo se
+   montaba entre el importe y la pill de descuento y rompía la fila. */
+.grid-products .ds-campaign-label{
+  position:absolute;top:12px;left:12px;z-index:3;
+  height:22px;width:auto;max-width:56%;object-fit:contain;
+  border-radius:6px;box-shadow:0 10px 20px -12px rgba(0,0,0,.55);
+}
 .grid-products .ds-product-price[data-off]::before{
   content:"-" attr(data-off) "%";order:3;flex:none;
   font:700 9px/1 var(--mono);letter-spacing:.06em;color:#241A05;
@@ -891,13 +896,26 @@ html[data-ds-theme="dark"] .cat-chips .chip,html[data-ds-style="olivium-noche"] 
 html[data-ds-theme="dark"] .pdp-crumbs a,html[data-ds-style="olivium-noche"] .pdp-crumbs a{color:var(--accent)}
 .pdp-grid{display:grid;grid-template-columns:1.05fr .95fr;gap:clamp(28px,4.5vw,64px);align-items:start}
 .pdp-media{position:relative;border-radius:calc(var(--r) + 8px);overflow:hidden;background:var(--surface-2);aspect-ratio:1/1.08}
+/* Marco de etiqueta de almazara: la regla punteada interior repite la
+   firma del about y le da aire de ficha a la foto. */
+.pdp-media::after{
+  content:"";position:absolute;inset:14px;z-index:1;pointer-events:none;
+  border:1px dashed color-mix(in srgb,var(--ink) 20%,transparent);border-radius:calc(var(--r) + 2px);
+}
 .pdp-media img{width:100%;height:100%;object-fit:cover}
 .pdp-off{
-  position:absolute;top:18px;left:18px;z-index:1;
-  font:700 11px/1 var(--mono);letter-spacing:.12em;background:var(--honey);color:#241A05;
-  padding:9px 14px;border-radius:999px;
+  position:absolute;top:18px;left:18px;z-index:2;
+  font:700 12px/1 var(--mono);letter-spacing:.12em;background:var(--honey);color:#241A05;
+  padding:10px 15px;border-radius:999px;box-shadow:0 10px 22px -12px rgba(0,0,0,.5);
 }
 .pdp-off:empty{display:none}
+/* Sticker de la campaña vigente: esquina opuesta al -% y al chip de ficha. */
+.pdp-media .ds-campaign-label{
+  position:absolute;top:18px;right:18px;z-index:2;
+  height:26px;width:auto;max-width:46%;object-fit:contain;
+  border-radius:6px;box-shadow:0 12px 24px -12px rgba(0,0,0,.55);
+}
+.pdp-media .ds-campaign-label:empty{display:none}
 .pdp-ref-chip{
   position:absolute;bottom:18px;left:18px;
   font:600 10px/1 var(--mono);letter-spacing:.16em;text-transform:uppercase;
@@ -907,21 +925,41 @@ html[data-ds-theme="dark"] .pdp-crumbs a,html[data-ds-style="olivium-noche"] .pd
 .pdp-cat{font:600 11px/1 var(--mono);letter-spacing:.2em;text-transform:uppercase;color:var(--accent-deep);display:flex;gap:14px}
 html[data-ds-theme="dark"] .pdp-cat,html[data-ds-style="olivium-noche"] .pdp-cat{color:var(--accent)}
 .pdp-cat span{color:var(--muted)}
-.pdp-info h1{margin-top:14px;font:400 clamp(30px,4vw,48px)/1.12 var(--display)}
+.pdp-info h1{margin-top:14px;font:400 clamp(30px,4vw,48px)/1.12 var(--display);text-wrap:balance}
 .pdp-ref{margin-top:10px;font:500 11px/1 var(--mono);letter-spacing:.14em;text-transform:uppercase;color:var(--muted)}
-.pdp-price{display:flex;align-items:baseline;gap:16px;margin-top:24px}
+/* Precio como panel de etiqueta: el importe manda, el precio de lista se
+   tacha y el ahorro viaja en la misma pill miel del -% de la foto. */
+.pdp-price{
+  display:flex;align-items:baseline;gap:14px;flex-wrap:wrap;margin-top:26px;
+  padding:18px 22px;border:1px dashed var(--line);border-radius:var(--r);background:var(--surface);
+}
 .pdp-price b{font-variant-numeric:tabular-nums;font:400 clamp(32px,3.6vw,46px)/1 var(--display)}
-.pdp-price s{font:400 16px/1 var(--sans);color:var(--muted)}
+.pdp-price s{font:400 16px/1 var(--sans);color:var(--muted);text-decoration:line-through}
+.pdp-price s:empty{display:none}
+.pdp-save{
+  margin-left:auto;align-self:center;font:700 10px/1 var(--mono);letter-spacing:.08em;text-transform:uppercase;
+  background:var(--honey);color:#241A05;padding:7px 12px;border-radius:999px;
+}
+.pdp-save:not(:empty)::before{content:"Ahorrás "}
+.pdp-save:empty{display:none}
 .pdp-score{display:flex;align-items:baseline;gap:10px;margin-top:12px;font:400 12.5px/1 var(--sans);color:var(--muted)}
 .pdp-score b{font:700 15px/1 var(--sans);color:var(--accent-deep)}
 html[data-ds-theme="dark"] .pdp-score b,html[data-ds-style="olivium-noche"] .pdp-score b{color:var(--accent)}
 .pdp-desc{margin-top:20px;font:400 14.5px/1.7 var(--sans);color:var(--ink-2)}
 .pdp-buy{display:flex;gap:12px;flex-wrap:wrap;margin-top:28px}
-.pdp-specs{width:100%;margin-top:30px;border-collapse:collapse;font:400 13.5px/1.5 var(--sans)}
-.pdp-specs td{padding:11px 0;border-bottom:1px dashed var(--line);vertical-align:top}
+/* Ficha técnica como tarjeta de papel: mismo lenguaje que la grilla. */
+.pdp-specs{
+  width:100%;margin-top:30px;border-collapse:separate;border-spacing:0;
+  border:1px solid var(--line);border-radius:var(--r);background:var(--surface);
+  font:400 13.5px/1.5 var(--sans);overflow:hidden;
+}
+.pdp-specs td{padding:12px 20px;border-bottom:1px dashed var(--line);vertical-align:top}
+.pdp-specs tr:last-child td{border-bottom:0}
 .pdp-specs td:first-child{font:600 10.5px/1.6 var(--mono);letter-spacing:.14em;text-transform:uppercase;color:var(--muted);width:38%}
+.pdp-specs:has(tbody:empty){display:none}
 .pdp-seller{
-  margin-top:26px;display:flex;flex-wrap:wrap;gap:8px 22px;
+  margin-top:26px;padding-top:20px;border-top:1px solid var(--line);
+  display:flex;flex-wrap:wrap;gap:8px 22px;
   font:500 12.5px/1.4 var(--sans);color:var(--muted);
 }
 .pdp-seller b{color:var(--ink)}
@@ -1541,6 +1579,7 @@ html[data-ds-theme="dark"] .services-list .ds-service::before,html[data-ds-style
     <div class="pdp-grid">
       <figure class="pdp-media">
         <span class="pdp-off">{{product_offer_pct}}</span>
+        {{product_campaign_label}}
         <img src="{{product_image}}" alt="{{product_name}}" fetchpriority="high" decoding="async">
         <span class="pdp-ref-chip">Ficha {{product_ref}}</span>
       </figure>
@@ -1548,7 +1587,7 @@ html[data-ds-theme="dark"] .services-list .ds-service::before,html[data-ds-style
         <p class="pdp-cat">{{product_category}}<span>{{product_brand}}</span></p>
         <h1>{{product_name}}</h1>
         <p class="pdp-ref">Ref. {{product_ref}} · {{store_name}}</p>
-        <div class="pdp-price"><b>{{product_price}}</b><s>{{product_old_price}}</s></div>
+        <div class="pdp-price"><b>{{product_price}}</b><s>{{product_old_price}}</s><span class="pdp-save">{{product_save}}</span></div>
         <p class="pdp-score"><b>{{product_rating_avg}}</b><span>promedio · {{product_rating_count}} valoraciones</span></p>        <p class="pdp-desc">{{product_description}}</p>
         <div class="pdp-buy">
           <a class="btn btn-accent" href="{{product_whatsapp_url}}">Consultar por WhatsApp

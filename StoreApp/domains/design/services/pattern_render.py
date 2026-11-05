@@ -63,6 +63,8 @@ PATTERN_VARIABLES = {
     'product_price':     {'type': 'text',  'label': 'Producto: precio'},
     'product_old_price': {'type': 'text',  'label': 'Producto: precio antes de la oferta'},
     'product_offer_pct': {'type': 'text',  'label': 'Producto: % de ahorro'},
+    'product_save':      {'type': 'text',  'label': 'Producto: ahorro'},
+    'product_campaign_label': {'type': 'list', 'label': 'Producto: etiqueta de campaña'},
     'product_image':     {'type': 'image', 'label': 'Producto: imagen'},
     'product_category':  {'type': 'text',  'label': 'Producto: categoría'},
     'product_brand':     {'type': 'text',  'label': 'Producto: marca'},
@@ -741,10 +743,11 @@ def _related_fragment(store, product):
         picked += list(base.exclude(pk__in = [p.pk for p in picked]).order_by('-created_at')[:4 - len(picked)])
     return _product_fragment(store, picked)
 
-def _product_whatsapp_url(store, customization, product, store_name):
+def _product_whatsapp_url(store, customization, product, store_name, amount = None):
     if not str(getattr(customization, 'whatsapp', '') or '').strip():
         return ''
-    amount = product.offer_price if product.offer_price is not None else product.price
+    if amount is None:
+        amount = product.offer_price if product.offer_price is not None else product.price
     price = _money(amount) if _amount(amount) else ''
     text = f'Hola {store_name}, me interesa "{_text(product.name, 80)}"'
     if price:
@@ -759,15 +762,38 @@ def _product_values(store, product, customization, store_name, flags = None):
     if product is None:
         return {name: '' for name in (
             'product_name', 'product_description', 'product_price', 'product_old_price',
-            'product_offer_pct', 'product_image', 'product_category', 'product_brand',
-            'product_ref', 'product_whatsapp_url', 'product_rating_avg', 'product_rating_count',
-        )}, {'product_features': '', 'product_related': '', 'product_reviews': ''}
-    amount = product.offer_price if product.offer_price is not None else product.price
+            'product_offer_pct', 'product_save', 'product_image', 'product_category',
+            'product_brand', 'product_ref', 'product_whatsapp_url', 'product_rating_avg',
+            'product_rating_count',
+        )}, {'product_features': '', 'product_related': '', 'product_reviews': '', 'product_campaign_label': ''}
+    from StoreApp.domains.catalog.services.services import (
+        effective_pricing_of,
+        running_discounts_of,
+    )
+    #La ficha resuelve el mismo precio que la tarjeta: oferta manual o el
+    #mejor descuento vigente (incluidas las campañas), el que quede más bajo.
+    discounts = running_discounts_of(store)
+    effective_offer, effective_discount = effective_pricing_of(product, discounts)
+    amount = effective_offer if effective_offer is not None else product.price
     old = ''
     pct = ''
-    if product.offer_price is not None and _amount(product.price):
+    save = ''
+    if effective_offer is not None and _amount(product.price):
         old = _money(product.price)
         pct = f'-{max(1, min(99, int(round((1 - _amount(amount) / _amount(product.price)) * 100))))}%'
+        save = _money(_amount(product.price) - _amount(amount))
+    #Sticker de la campaña que firma la oferta: fragmento raw como el de la
+    #tarjeta, para que el diseño lo ancle donde quiera (o lo ignore).
+    campaign_label = ''
+    campaign = getattr(effective_discount, 'campaign', None)
+    if campaign is not None:
+        label_url = object_url(campaign.label_key, private = True)
+        if label_url:
+            campaign_label = (
+                f'<img class="ds-campaign-label" src="{_attr(label_url)}"'
+                f' width="{campaign.label_width or 90}" height="{campaign.label_height or 24}"'
+                f' alt="{_attr(campaign.label_alt or campaign.name)}" loading="lazy" decoding="async">'
+            )
     rating_avg, rating_count = _rating_values(store, product, customization)
     context = {
         'product_name':         _text(product.name, 120),
@@ -775,11 +801,12 @@ def _product_values(store, product, customization, store_name, flags = None):
         'product_price':        _money(amount) if _amount(amount) else 'Consultar',
         'product_old_price':    old,
         'product_offer_pct':    pct,
+        'product_save':         save,
         'product_image':        object_url(product.image_key) or '',
         'product_category':     _text(getattr(product.category, 'name', ''), 60),
         'product_brand':        _text(getattr(product.brand, 'name', ''), 60),
         'product_ref':          str(product.pk),
-        'product_whatsapp_url': _product_whatsapp_url(store, customization, product, store_name),
+        'product_whatsapp_url': _product_whatsapp_url(store, customization, product, store_name, amount),
         'product_rating_avg':   rating_avg,
         'product_rating_count': rating_count,
     }
@@ -787,6 +814,7 @@ def _product_values(store, product, customization, store_name, flags = None):
         'product_features': _features_fragment(product),
         'product_related':  _related_fragment(store, product) if flags is None or flags.get('catalog', True) else '',
         'product_reviews':  _reviews_fragment(store, product, customization),
+        'product_campaign_label': campaign_label,
     }
     return context, raw
 
