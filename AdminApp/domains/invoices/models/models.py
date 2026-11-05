@@ -37,6 +37,14 @@ class Invoice(models.Model):
     pos         =   models.PositiveSmallIntegerField(default = 1, verbose_name = 'Punto de venta')
     number      =   models.PositiveIntegerField(verbose_name = 'Número de comprobante')
     total       =   models.DecimalField(max_digits = 12, decimal_places = 2, verbose_name = 'Total')
+    #SNAPSHOT INMUTABLE al emitir: precio/moneda, discriminación de IVA y plan
+    #pagado quedan copiados en la factura — un cambio posterior del plan, del
+    #precio o del perfil del cliente no reescribe comprobantes ya emitidos.
+    #null/'' = factura vieja (pre-snapshot): los serializers caen a la relación.
+    currency        =   models.CharField(max_length = 3, default = 'ARS', verbose_name = 'Moneda')
+    plan_name       =   models.CharField(max_length = 60, blank = True, default = '', verbose_name = 'Plan facturado')
+    net_amount      =   models.DecimalField(max_digits = 12, decimal_places = 2, null = True, blank = True, verbose_name = 'Neto')
+    iva_amount      =   models.DecimalField(max_digits = 12, decimal_places = 2, null = True, blank = True, verbose_name = 'IVA')
     issued_at   =   models.DateField(verbose_name = 'Fecha de emisión')
     #ARCA (ex-AFIP): fiscal_number es el CbteDesde que otorga WSFE — puede
     #diferir del interno `number` cuando una factura se emite con ARCA caído

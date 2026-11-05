@@ -6,7 +6,7 @@ Al emitirse se envía al correo de la cuenta del cliente (post-commit: el mail
 solo sale si el cobro quedó registrado; un fallo de mail no rompe la acreditación).
 """
 import logging
-from decimal import Decimal
+from decimal import ROUND_HALF_UP, Decimal
 
 from decouple import config
 from django.conf import settings
@@ -19,6 +19,8 @@ from rest_framework import serializers
 from AdminApp.domains.invoices.models import Invoice, TypeInvoice
 from AdminApp.domains.invoices.services import afip
 from AdminApp.domains.payments.models import Payment
+from AdminApp.domains.suscriptions.models import Suscription
+from AdminApp.domains.users.models import UserProfile
 
 logger          =   logging.getLogger(__name__)
 FRONTEND_URL    =   config('FRONTEND_URL', default = 'http://localhost:5173')
@@ -35,47 +37,73 @@ def DeriveInvoiceTypeQuery(tax_condition : str, issuer_condition : str = None) -
         return TypeInvoice.A if tax_condition == 'RI' else TypeInvoice.B
     return TypeInvoice.C
 
+#SNAPSHOT DE IMPORTES (discriminación de IVA al emitir; misma cuenta que
+#afip._build_det y el serializer: C no discrimina — neto = total; A/B traen
+#IVA 21% incluido)
+def _invoice_amounts(invoice_type : str, total) -> tuple:
+    total   =   Decimal(total)
+    if invoice_type == TypeInvoice.C:
+        return total, Decimal('0.00')
+    net     =   (total / Decimal('1.21')).quantize(Decimal('0.01'), rounding = ROUND_HALF_UP)
+    return net, total - net
+
 #=================================
 # INVOICE MODEL QUERYS
 #=================================
 
 #ISSUE INVOICE QUERY (emite la factura de un pago aprobado; idempotente)
 def IssueInvoiceQuery(payment, pos : int = 1) -> Invoice:
-    if payment.status != Payment.Status.APPROVED:
-        raise serializers.ValidationError({'payment': 'Solo se pueden emitir facturas para pagos aprobados.'})
-    existing            =   Invoice.objects.filter(payment = payment).first()
-    if existing:
-        return existing
-    invoice_type        =   DeriveInvoiceTypeQuery(payment.user.tax_condition)
-    for attempt in range(3):
-        try:
-            with transaction.atomic():
-                last_invoice    =   Invoice.objects.select_for_update().filter(type = invoice_type, pos = pos).order_by('-number').first()
-                number          =   last_invoice.number + 1 if last_invoice else 1
-                invoice         =   Invoice.objects.create(
-                    user            =   payment.user,
-                    payment         =   payment,
-                    type            =   invoice_type,
-                    pos             =   pos,
-                    number          =   number,
-                    total           =   payment.amount,
-                    issued_at       =   timezone.localdate(),
-                    #PENDING: el hook post-commit decide (CAE si AFIP está
-                    #habilitado, DISABLED si no). Filas viejas quedan DISABLED.
-                    afip_status     =   Invoice.AfipStatus.PENDING,
-                )
-                #POST-COMMIT: pedido de CAE en ARCA + email — nunca dentro de la
-                #transacción (un rollback no debe haber facturado ni notificado).
-                transaction.on_commit(lambda : FinalizeInvoiceQuery(invoice.pk))
-                return invoice
-        except IntegrityError:
-            #CARRERA: si otro proceso emitió para este pago, se devuelve la existente;
-            #si fue colisión de número (type, pos), se recalcula en el próximo intento
-            existing            =   Invoice.objects.filter(payment = payment).first()
-            if existing:
-                return existing
-            if attempt == 2:
-                raise serializers.ValidationError({'invoice': 'Error al emitir la factura.'})
+    #AISLAMIENTO: chequeo + emisión bajo locks pesimistas en una sola
+    #transacción (los callers ya están dentro de atomic; acá se anida como
+    #savepoint). Orden de locks suscripción -> pago -> perfil, el mismo que
+    #ApplyPendingPlanQuery + el resto del flujo de cobro: dos acreditaciones
+    #del mismo usuario se serializan y la segunda ve el estado commiteado
+    #por la primera — sin condiciones de carrera en estado, monto ni plan.
+    with transaction.atomic():
+        suscription     =   Suscription.objects.select_for_update().get(pk = payment.suscription_id)
+        payment         =   Payment.objects.select_for_update(of = ('self',)).get(pk = payment.pk)
+        profile         =   UserProfile.objects.select_for_update().get(pk = payment.user_id)
+        if payment.status != Payment.Status.APPROVED:
+            raise serializers.ValidationError({'payment': 'Solo se pueden emitir facturas para pagos aprobados.'})
+        existing        =   Invoice.objects.filter(payment = payment).first()
+        if existing:
+            return existing
+        invoice_type    =   DeriveInvoiceTypeQuery(profile.tax_condition)
+        plan_name       =   suscription.plan_suscription.name
+        net_amount, iva_amount  =   _invoice_amounts(invoice_type, payment.amount)
+        for attempt in range(3):
+            try:
+                with transaction.atomic():
+                    last_invoice    =   Invoice.objects.select_for_update().filter(type = invoice_type, pos = pos).order_by('-number').first()
+                    number          =   last_invoice.number + 1 if last_invoice else 1
+                    invoice         =   Invoice.objects.create(
+                        user            =   profile,
+                        payment         =   payment,
+                        type            =   invoice_type,
+                        pos             =   pos,
+                        number          =   number,
+                        total           =   payment.amount,
+                        currency        =   payment.currency,
+                        plan_name       =   plan_name,
+                        net_amount      =   net_amount,
+                        iva_amount      =   iva_amount,
+                        issued_at       =   timezone.localdate(),
+                        #PENDING: el hook post-commit decide (CAE si AFIP está
+                        #habilitado, DISABLED si no). Filas viejas quedan DISABLED.
+                        afip_status     =   Invoice.AfipStatus.PENDING,
+                    )
+                    #POST-COMMIT: pedido de CAE en ARCA + email — nunca dentro de la
+                    #transacción (un rollback no debe haber facturado ni notificado).
+                    transaction.on_commit(lambda : FinalizeInvoiceQuery(invoice.pk))
+                    return invoice
+            except IntegrityError:
+                #CARRERA: si otro proceso emitió para este pago, se devuelve la existente;
+                #si fue colisión de número (type, pos), se recalcula en el próximo intento
+                existing            =   Invoice.objects.filter(payment = payment).first()
+                if existing:
+                    return existing
+                if attempt == 2:
+                    raise serializers.ValidationError({'invoice': 'Error al emitir la factura.'})
 
 #FINALIZE INVOICE QUERY (post-commit: CAE primero para que el mail salga con el
 #número fiscal si ARCA respondió; el mail sale igual aunque ARCA falle)
@@ -111,7 +139,7 @@ def SendInvoiceEmailQuery(invoice : Invoice) -> None:
     #el correlativo interno provisorio.
     comprobante     =   f'{invoice.pos:04d}-{(invoice.fiscal_number or invoice.number):08d}'
     type_label      =   invoice.get_type_display()
-    plan_name       =   invoice.payment.suscription.plan_suscription.name
+    plan_name       =   invoice.plan_name or invoice.payment.suscription.plan_suscription.name
     customer        =   invoice.user.business_name or ' '.join(filter(None, [invoice.user.first_name, invoice.user.last_name])) or recipient
     total           =   _format_ars(invoice.total)
     issued          =   invoice.issued_at.strftime('%d/%m/%Y')

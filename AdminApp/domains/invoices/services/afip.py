@@ -283,9 +283,10 @@ def _build_det(invoice : Invoice, number : int, cbte_type : int) -> str:
         #Factura C (monotributo): no discrimina IVA — neto = total.
         det     +=  f'<ImpNeto>{total}</ImpNeto><ImpIVA>0</ImpIVA>'
     else:
-        #A/B: los precios traen IVA 21% incluido (misma cuenta del serializer).
-        net     =   (invoice.total / Decimal('1.21')).quantize(Decimal('0.01'), rounding = ROUND_HALF_UP)
-        iva     =   invoice.total - net
+        #A/B: neto/IVA del snapshot inmutable; fallback al cálculo histórico
+        #para facturas emitidas antes del snapshot.
+        net     =   invoice.net_amount if invoice.net_amount is not None else (invoice.total / Decimal('1.21')).quantize(Decimal('0.01'), rounding = ROUND_HALF_UP)
+        iva     =   invoice.iva_amount if invoice.iva_amount is not None else invoice.total - net
         det     +=  (
             f'<ImpNeto>{net:.2f}</ImpNeto><ImpIVA>{iva:.2f}</ImpIVA>'
             f'<Iva><AlicIva><Id>5</Id><BaseImp>{net:.2f}</BaseImp><Importe>{iva:.2f}</Importe></AlicIva></Iva>'

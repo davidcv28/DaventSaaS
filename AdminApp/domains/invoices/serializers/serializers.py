@@ -17,9 +17,11 @@ class InvoiceSerializer(serializers.ModelSerializer):
     # Campos derivados (solo lectura) que necesita el comprobante imprimible.
     comprobante             = serializers.SerializerMethodField()
     type_display            = serializers.CharField(source = 'get_type_display', read_only = True)
-    plan_name               = serializers.CharField(source = 'payment.suscription.plan_suscription.name', read_only = True)
+    #Snapshot inmutable (plan_name/net_amount/iva_amount/currency) copiado al
+    #emitir; el fallback a la relación cubre facturas anteriores al snapshot.
+    plan_name               = serializers.SerializerMethodField()
     paid_at                 = serializers.DateTimeField(source = 'payment.paid_at', read_only = True)
-    currency                = serializers.CharField(source = 'payment.currency', read_only = True)
+    currency                = serializers.SerializerMethodField()
     customer_name           = serializers.SerializerMethodField()
     document                = serializers.CharField(source = 'user.document', read_only = True)
     type_document           = serializers.CharField(source = 'user.type_document', read_only = True)
@@ -38,10 +40,22 @@ class InvoiceSerializer(serializers.ModelSerializer):
         #correlativo interno si el CAE se pidió en un reintento).
         return f'{obj.pos:04d}-{(obj.fiscal_number or obj.number):08d}'
 
+    def get_plan_name(self, obj):
+        if obj.plan_name:
+            return obj.plan_name
+        return obj.payment.suscription.plan_suscription.name
+
+    def get_currency(self, obj):
+        return obj.currency or obj.payment.currency
+
     def get_net_amount(self, obj):
+        if obj.net_amount is not None:
+            return obj.net_amount
         return (obj.total / _IVA_DIVISOR).quantize(_CENTS, rounding = ROUND_HALF_UP)
 
     def get_iva_amount(self, obj):
+        if obj.iva_amount is not None:
+            return obj.iva_amount
         return obj.total - self.get_net_amount(obj)
 
     def get_issuer(self, obj):
