@@ -287,11 +287,12 @@ onBeforeUnmount(() => {
     <!-- Sheet "Más": menú completo en móvil -->
     <template v-if="hasTabs">
       <div v-if="open" class="sheet-scrim" @click="close" aria-hidden="true"></div>
+      <Transition name="msheet">
       <div
+        v-if="open"
         id="more-sheet"
         ref="sheetEl"
         class="more-sheet"
-        :class="{ open }"
         role="dialog"
         aria-modal="true"
         aria-label="Todas las secciones"
@@ -331,6 +332,7 @@ onBeforeUnmount(() => {
           <button class="link" @click="close(); emit('logout')"><AppIcon name="logout" :size="16" /> <span>Cerrar sesión</span></button>
         </div>
       </div>
+      </Transition>
     </template>
   </div>
 </template>

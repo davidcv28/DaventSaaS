@@ -1072,8 +1072,9 @@ onBeforeUnmount(() => {
     <!-- Sheet "Más": el resto del menú, contacto y tema -->
     <template v-if="showTabbar">
       <div v-if="ui.moreOpen" class="sp-more-scrim" aria-hidden="true" @click="ui.moreOpen = false"></div>
+      <Transition name="sp-msheet">
       <div
-        id="sp-more-sheet" ref="moreSheet" class="sp-more-sheet" :class="{ open: ui.moreOpen }"
+        v-if="ui.moreOpen" id="sp-more-sheet" ref="moreSheet" class="sp-more-sheet"
         role="dialog" aria-modal="true" aria-label="Todas las secciones"
       >
         <div class="sp-more-head">
@@ -1112,6 +1113,7 @@ onBeforeUnmount(() => {
           </button>
         </div>
       </div>
+      </Transition>
     </template>
 
     <span id="sp-main" ref="mainAnchor" tabindex="-1" class="sp-main-anchor"></span>
