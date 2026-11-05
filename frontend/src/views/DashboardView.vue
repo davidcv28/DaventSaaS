@@ -357,6 +357,8 @@ const navLocks = computed(() => {
 //mismo poll que las notificaciones). Declarado acá arriba porque navItems
 //se evalúa durante setup (validIds) — después del ref era un TDZ fatal.
 const unreadReviewsCount = ref(0)
+// Mismo motivo: badge de "Mensajes" en navItems (TDZ si queda más abajo).
+const chatUnread = ref(0)
 
 // Menú por intención: lo que el dueño quiere hacer, no el módulo técnico.
 const navItems = computed(() => {
@@ -2572,7 +2574,6 @@ const chatInputEl = ref(null)
 const chatStaff = ref([])
 const chatOpen = ref(false)
 const chatMin = ref(false)
-const chatUnread = ref(0)
 const chatTarget = ref(null)
 // Adjuntos en cola: [{file, url}] — el url es un objectURL local (vista
 // previa optimista); el archivo nunca toca la DB, viaja al bucket/disco.
