@@ -368,8 +368,7 @@ const navItems = computed(() => {
     { id: 'support', label: 'Tu Asistente', icon: 'message-circle', hint: 'Te ayuda a armar tu web', locked: L.support },
     { id: 'bot', label: 'Asistente virtual', icon: 'bot', hint: 'Responde por vos en tu web', locked: L.bot },
     { heading: 'Crecer' },
-    { id: 'tools', label: 'Promocionar', icon: 'megaphone', hint: 'QR y folletos para imprimir', locked: L.tools },
-    { id: 'stats', label: 'Mis visitas', icon: 'trending-up', hint: 'Quién entra a tu página', locked: L.stats },
+    { id: 'tools', label: 'Promocionar', icon: 'megaphone', hint: 'QR, folletos y visitas', locked: L.tools },
     { heading: 'Mi cuenta' },
     { id: 'plans', label: 'Plan y pagos', icon: 'credit-card', hint: 'Suscripción, pagos y facturas' },
     { id: 'settings', label: 'Mis datos', icon: 'user', hint: 'Cuenta y contraseña' }
@@ -482,8 +481,7 @@ const searchCommands = computed(() => {
     reviews: 'opiniones comentarios valoraciones estrellas clientes review reputacion',
     support: 'ayuda soporte chat mensaje consulta hablar equipo problema duda',
     bot: 'asistente chatbot automatico responder preguntas robot virtual',
-    tools: 'qr codigo folleto volante imprimir promocionar vidriera flyer repartir',
-    stats: 'estadisticas visitas metricas cuanta gente analytics numeros',
+    tools: 'qr codigo folleto volante imprimir promocionar vidriera flyer repartir visitas estadisticas cuanta gente analytics numeros',
     plans: 'plan suscripcion pagos facturas comprobantes precio renovar debito automatico mercado pago cupon descuento vencimiento abonar',
     settings: 'cuenta datos contrasena email correo perfil fiscal cuit dni provincia ciudad celular nombre apellido seguridad'
   }
