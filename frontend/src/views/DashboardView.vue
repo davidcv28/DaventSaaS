@@ -3858,7 +3858,7 @@ async function changePassword() {
               <template v-else>
                 <div class="inv-head">
                   <h3><AppIcon name="package" :size="17" /> Inventario <small>· {{ filteredProducts.length }} de {{ catalog.products.length }}</small></h3>
-                  <button type="button" class="btn inv-add" aria-label="Cargar producto" @click="focusProductForm"><AppIcon name="plus" :size="15" /> Cargar</button>
+                  <button type="button" class="btn inv-add" @click="focusProductForm"><AppIcon name="plus" :size="15" /> Registrar nuevo producto</button>
                 </div>
                 <CatalogToolbar
                   v-model:query="productQuery" v-model:category="prodFilterCategory" v-model:brand="prodFilterBrand"
