@@ -90,7 +90,7 @@ class NotificationServiceTests(TestCase):
         self.store              =   Store.objects.create(user = self.profile, slug = 'mi-tienda')
 
     def test_review_notification_is_single_and_updates(self):
-        product     =   Product.objects.create(store = self.store, name = 'Calza', price = 10)
+        Product.objects.create(store = self.store, name = 'Calza', price = 10)
         notify_product_review(self.store, product_name = 'Calza')
         notify_product_review(self.store, product_name = 'Remera')
         qs          =   self.user.notifications.filter(kind = Notification.KIND_REVIEW)
@@ -231,7 +231,7 @@ class NotificationApiTests(TestCase):
         suscription   =   self.profile.suscription
         suscription.end_date    =   timezone.now() + timedelta(days = 2)
         suscription.save(update_fields = ['end_date'])
-        data    =   _client(self.user).get(NOTIFICATIONS_URL).data
+        _client(self.user).get(NOTIFICATIONS_URL)
         notif   =   self.user.notifications.get(kind = Notification.KIND_SUBSCRIPTION)
         self.assertEqual(notif.target, 'plans')
         self.assertIn('por vencer', notif.title)

@@ -5,7 +5,6 @@ login, admin) quedan fuera — robots.txt las desalienta y los headers
 X-Robots-Tag las desindexan si igual se filtran.
 """
 from django.contrib.sitemaps import Sitemap
-from django.urls import reverse
 
 from StoreApp.domains.stores.models.models import Store
 

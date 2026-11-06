@@ -883,7 +883,10 @@ def build_store_context(store, product = None, flags = None, raw_keys = None):
     about = _text(getattr(customization, 'about_text', ''), 400)
     from django.utils import timezone
 
-    from StoreApp.domains.stores.services import contact_redirect_path, profile_has_benefit
+    from StoreApp.domains.stores.services import (
+        contact_redirect_path,
+        profile_has_benefit,
+    )
 
     #El stream en vivo es Premium (has_live_stream): sin el flag la URL no
     #viaja al documento (queda guardada para cuando vuelva el plan).

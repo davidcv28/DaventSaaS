@@ -1113,7 +1113,7 @@ class StoreViewSet(StoreBaseViewSet):
                 {'captcha_answer': 'El captcha venció o la respuesta no es correcta. Probá de nuevo.'},
                 status = status.HTTP_400_BAD_REQUEST,
             )
-        review  =   ProductReview.objects.create(
+        ProductReview.objects.create(
             store       =   store,
             product     =   product,
             is_positive =   data.get('is_positive') if can_rate else None,

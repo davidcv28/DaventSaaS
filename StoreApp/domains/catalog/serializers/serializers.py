@@ -17,7 +17,13 @@ from StoreApp.domains.catalog.services.services import (
 )
 from StoreApp.domains.stores.services.storage import object_url
 
-from .config_fields import DiscountFields, ProductFields, ReviewFields, ReviewLimits, TaxonomyFields
+from .config_fields import (
+    DiscountFields,
+    ProductFields,
+    ReviewFields,
+    ReviewLimits,
+    TaxonomyFields,
+)
 from .mixins import (
     CategorySchemaMixinValidator,
     DiscountMixinValidator,

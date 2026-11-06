@@ -158,6 +158,7 @@ class RegisterUserSerializer(UsersValidatorsMixins,UserProfileValidatorsMixins, 
         fields          =   ['username','email', 'password', 'confirm_password', 'phone', 'accept_terms', 'coupon']
     def validate_coupon(self, value):
         from django.utils import timezone
+
         from AdminApp.domains.suscriptions.models import Coupon
         code        =   (value or '').strip()
         if not code:

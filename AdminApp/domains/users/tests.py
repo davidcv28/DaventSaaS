@@ -373,7 +373,7 @@ class RegisterSecurityTests(TestCase):
     def test_register_with_coupon_overrides_trial(self):
         #QR/folletos: el alta acepta `coupon` y canjea el plan del cupón por
         #sus días en vez de la trial de 1 día. La respuesta lo confirma.
-        trial           =   SuscriptionPlan.objects.create(name = 'Plan de prueba', price = 0, is_trial = True)
+        SuscriptionPlan.objects.create(name = 'Plan de prueba', price = 0, is_trial = True)
         premium         =   SuscriptionPlan.objects.create(name = 'Plan premium', price = 40000)
         Coupon.objects.create(code = 'PROMO30', plan = premium, days = 30)
         response        =   self.client.post(REGISTER_URL, self._payload(coupon = 'promo30'), format = 'json')

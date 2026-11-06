@@ -52,8 +52,6 @@ from drf_spectacular.views import (
 )
 from rest_framework_simplejwt.views import TokenVerifyView
 
-from DaventProject.sitemaps import StaticSitemap, StoreSitemap
-
 from AdminApp.domains.users.views.auth_views import (
     CookieTokenRefreshView,
     CustomTokenObtainPairView,
@@ -65,6 +63,7 @@ from AdminApp.domains.users.views.auth_views import (
     VerifyEmailResendView,
     VerifyEmailView,
 )
+from DaventProject.sitemaps import StaticSitemap, StoreSitemap
 
 urlpatterns = [
     path('healthz/', healthz, name='healthz'),
