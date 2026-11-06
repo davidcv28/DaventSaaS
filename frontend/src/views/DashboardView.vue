@@ -1398,6 +1398,14 @@ const discountWhen = computed({
       return
     }
     discountForm.campaign = ''
+    if (v === 'custom') {
+      // Venir de un evento no debe arrastrar sus fechas: arrancan limpias.
+      discountForm.end_none = false
+      discountForm.start_date = localDateInput(new Date()); discountForm.start_time = '00:00'
+      discountForm.end_date = ''; discountForm.end_time = '23:59'
+      discountWindowPreset.value = 'custom'
+      return
+    }
     discountPreset(v)
   }
 })
