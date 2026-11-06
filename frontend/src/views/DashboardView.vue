@@ -4178,7 +4178,7 @@ async function changePassword() {
               <div class="form-step"><span class="form-step-num">3</span> ¿Cuándo aplica?</div>
               <div class="field">
                 <label id="disc-window-label" for="disc-when"><AppIcon name="calendar" :size="14" class="label-icon" aria-hidden="true" />Vigencia</label>
-                <select id="disc-when" v-model="discountWhen" class="select">
+                <select id="disc-when" v-model="discountWhen" class="select" :disabled="!!selectedCampaign">
                   <option value="none">Sin fin — queda activo siempre</option>
                   <option value="today">Solo hoy</option>
                   <option value="week">Esta semana</option>
@@ -4192,6 +4192,7 @@ async function changePassword() {
                 <div v-if="selectedCampaign" class="disc-event-lock">
                   <AppIcon name="lock" :size="14" aria-hidden="true" />
                   <span><strong>{{ selectedCampaign.name }}</strong> · {{ campaignWindowLabel(selectedCampaign) }}<small>Fechas fijas del evento: se enciende y se apaga solo.</small></span>
+                  <button type="button" class="disc-event-unlock" title="Usar otra vigencia" @click="discountForm.campaign = ''; discountWindowPreset = 'none'"><AppIcon name="x" :size="13" /></button>
                 </div>
                 <div v-if="discountWindowPreset === 'custom'" class="disc-window">
                   <div class="disc-when">
