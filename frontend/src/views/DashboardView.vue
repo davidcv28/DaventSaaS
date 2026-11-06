@@ -4073,24 +4073,6 @@ async function changePassword() {
           </div>
           </div>
 
-          <!-- -------- Opciones avanzadas -------- -->
-          <details class="card more-card">
-            <summary><AppIcon name="store" :size="18" /> Opciones avanzadas de tu catálogo <small>Páginas de la web y carrusel de portada</small></summary>
-            <div class="field">
-              <label id="site-templates-label-cat">Páginas de tu web</label>
-              <div class="check-list" role="group" aria-labelledby="site-templates-label-cat">
-                <label v-for="key in siteTemplateKeys" :key="key" class="check-item" :class="{ disabled: !allowedSiteTemplates.includes(key) || !canToggleSiteTemplate(key) }">
-                  <input type="checkbox" :checked="designSiteTemplates.includes(key)" :disabled="!canToggleSiteTemplate(key)" @change="toggleSiteTemplate(key)" />
-                  <span class="check-text">
-                    <strong>{{ siteTemplates[key].label }} <span v-if="siteTemplateLock(key)" class="lock-badge"><AppIcon name="lock" :size="11" :stroke="2" /> {{ siteTemplateLock(key) }}</span> <span v-if="siteTemplatesBusy" class="spinner spinner-brand" aria-hidden="true"></span></strong>
-                    <small>{{ siteTemplates[key].desc }}</small>
-                  </span>
-                </label>
-              </div>
-              <p class="hint">{{ siteTemplatesHint }} Se guarda al instante — también podés administrarlas desde «Diseño» en Mi página.</p>
-            </div>
-            <p class="hint">El carrusel de banners se administra desde «Mis fotos» en Mi página.</p>
-          </details>
         </template>
       </template>
     </div>
