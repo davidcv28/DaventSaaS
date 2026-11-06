@@ -29,12 +29,15 @@ const capConfigText = readFileSync(CAP_CONFIG, 'utf8')
 const capConfig = JSON.parse(capConfigText)
 const domain = (domainArg || capConfig.server?.hostname || 'davent.com').toLowerCase()
 
-// Con --domain distinto, parcheo el hostname solo durante el build — el
-// archivo commiteado conserva el dominio de producción.
+// Con --domain distinto, parcheo hostname + server.url solo durante el build —
+// el archivo commiteado conserva el dominio de producción. server.url es lo que
+// hace que el WebView cargue el sitio real (sin él, el asset loader local
+// intercepta el hostname y se come /api devolviendo index.html).
+const targetUrl = `https://${domain}`
 let capConfigBackup = null
-if (capConfig.server?.hostname !== domain) {
+if (capConfig.server?.hostname !== domain || capConfig.server?.url !== targetUrl) {
   capConfigBackup = capConfigText
-  capConfig.server = { ...(capConfig.server || {}), hostname: domain }
+  capConfig.server = { ...(capConfig.server || {}), hostname: domain, url: targetUrl }
   writeFileSync(CAP_CONFIG, JSON.stringify(capConfig, null, 2) + '\n')
 }
 

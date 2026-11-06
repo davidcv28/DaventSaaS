@@ -4,7 +4,8 @@
   "webDir": "dist",
   "server": {
     "androidScheme": "https",
-    "hostname": "davent.com"
+    "hostname": "davent.com",
+    "url": "https://davent.com"
   },
   "plugins": {
     "SplashScreen": {

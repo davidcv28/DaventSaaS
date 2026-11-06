@@ -19,14 +19,22 @@ import { http } from './http.js'
 // POST /api/verify-email/resend/ (Bearer) -> 200
 
 // Diagnóstico APK: dentro del WebView de Capacitor una request a /api/* que no
-// sale a la red puede devolver el index.html del fallback SPA (la API vive en
-// otro origen real). Se detecta: una respuesta no-objeto muestra la causa en
-// pantalla en vez de fallar en silencio. Y un timeout propio cubre el caso en
-// que la capa nativa (CapacitorHttp) ignora el timeout de axios.
-function expectJson(data, op) {
+// sale a la red puede devolver el index.html del servidor local de assets
+// (sin server.url el WebView intercepta el hostname). Se distingue ese caso de
+// un 5xx real y se muestran URL efectiva y Content-Type — nunca el HTML crudo.
+// Y un timeout propio cubre el caso en que la capa nativa (CapacitorHttp)
+// ignora el timeout de axios.
+function expectJson(res, op) {
+  const data = res?.data
   if (!data || typeof data !== 'object') {
+    const contentType = String(res?.headers?.['content-type'] || 'desconocido')
+    const url = res?.config ? `${res.config.baseURL || ''}${res.config.url || ''}` : 'desconocida'
+    const isHtml = contentType.includes('text/html') || (typeof data === 'string' && /<(!doctype|html)[\s>]/i.test(data))
+    const detail = isHtml
+      ? `Diagnóstico: respuesta HTML del servidor local de la app en vez de JSON (${op}). URL: ${url} · Content-Type: ${contentType}. Reportá este mensaje.`
+      : `Diagnóstico: el servidor devolvió una respuesta no-JSON (${op}). URL: ${url} · Content-Type: ${contentType}. Reportá este mensaje.`
     const err = new Error('non-json response')
-    err.response = { status: 500, data: { detail: `Diagnóstico: el servidor devolvió HTML en vez de JSON (${op}). Reportá este mensaje.` } }
+    err.response = { status: res?.status || 500, data: { detail } }
     throw err
   }
   return data
@@ -45,8 +53,7 @@ export const authApi = {
   async login({ username, password, remember = false }) {
     // remember=true -> refresh de 30 días + cookie persistente ("mantener
     // sesión iniciada"); false -> cookie de sesión del navegador.
-    const { data } = await withDiag(http.post('/token/', { username, password, remember }), 'token')
-    return expectJson(data, 'token')
+    return expectJson(await withDiag(http.post('/token/', { username, password, remember }), 'token'), 'token')
   },
 
   // El refresh real viaja por cookie y lo ejecuta http.js (tryRefresh);
@@ -153,8 +160,7 @@ export const authApi = {
   // El celular no viaja en los datos del provider: si falta, la respuesta trae
   // requires_phone y el router fuerza /completar-celular antes del panel.
   async googleLogin(credential, remember = true) {
-    const { data } = await withDiag(http.post('/auth/google/', { credential, remember }), 'google')
-    return expectJson(data, 'google')
+    return expectJson(await withDiag(http.post('/auth/google/', { credential, remember }), 'google'), 'google')
   }
 }
 
