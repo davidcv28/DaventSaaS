@@ -6094,10 +6094,12 @@ async function changePassword() {
                 <img v-if="newsModal.image" :src="newsModal.image" alt="" />
                 <span v-else class="news-modal-ico"><AppIcon :name="newsModal.icon" :size="30" /></span>
                 <button type="button" class="news-modal-close" aria-label="Cerrar" @click="newsModal = null"><AppIcon name="x" :size="16" /></button>
+                <div class="news-modal-hero-txt">
+                  <span class="news-modal-chip">{{ newsModal.date || 'Próximamente' }}</span>
+                  <h3 class="news-modal-title">{{ newsModal.title }}</h3>
+                </div>
               </div>
               <div class="news-modal-body">
-                <span class="news-modal-chip">{{ newsModal.date || 'Próximamente' }}</span>
-                <h3 class="news-modal-title">{{ newsModal.title }}</h3>
                 <p class="news-modal-desc">{{ newsModal.desc }}</p>
                 <div v-if="newsModal.feats?.length" class="news-modal-includes">
                   <h4>Qué incluye</h4>
