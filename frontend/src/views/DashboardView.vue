@@ -3812,10 +3812,6 @@ async function changePassword() {
                vive en el drawer lateral (Teleport al final del layout). -------- -->
           <div v-show="catalogTab === 'products'">
             <div class="card">
-              <div class="prod-head">
-                <h3><AppIcon name="package" :size="18" /> Tus productos</h3>
-                <button v-if="catalog.products.length" type="button" class="prod-price-btn" @click="showPriceUpdate = true"><AppIcon name="tag" :size="15" /> Actualizar precios</button>
-              </div>
               <StorageMeter />
               <div v-if="!catalog.products.length" class="empty-mini">
                 <AppIcon name="package" :size="22" />
@@ -3827,7 +3823,7 @@ async function changePassword() {
                   v-model:only-offers="prodOnlyOffers" v-model:sort="prodSort" v-model:view="productView"
                   :categories="catalog.categories" :brands="catalog.brands"
                   :shown="filteredProducts.length" :total="catalog.products.length"
-                  @new="focusProductForm"
+                  @new="focusProductForm" @price-update="showPriceUpdate = true"
                 />
                 <div v-if="!filteredProducts.length" class="empty-mini">
                   <AppIcon name="search" :size="22" />

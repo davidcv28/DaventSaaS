@@ -62,8 +62,7 @@ function hueOf(str) {
             />
           </th>
           <th scope="col">Producto</th>
-          <th scope="col">Categoría</th>
-          <th scope="col">Marca</th>
+          <th scope="col">Categoría / marca</th>
           <th scope="col" class="pt-num">Precio</th>
           <th scope="col" class="pt-num">Estado</th>
           <th scope="col" class="pt-actions-col"><span class="sr-only">Acciones</span></th>
@@ -93,12 +92,11 @@ function hueOf(str) {
               <small>{{ addedLabel(p.created_at) }}<template v-if="!p.image"> · sin foto</template></small>
             </span>
           </td>
-          <td class="pt-cell">
-            <span v-if="p.category_name" class="pt-chip" :style="{ '--h': hueOf(p.category_name) }">{{ p.category_name }}</span>
-            <template v-else>—</template>
-          </td>
-          <td class="pt-cell">
-            <span v-if="p.brand_name" class="pt-chip pt-chip-brand" :style="{ '--h': hueOf(p.brand_name) }">{{ p.brand_name }}</span>
+          <td class="pt-cell pt-org">
+            <template v-if="p.category_name || p.brand_name">
+              <span v-if="p.category_name" class="pt-chip" :style="{ '--h': hueOf(p.category_name) }">{{ p.category_name }}</span>
+              <span v-if="p.brand_name" class="pt-chip pt-chip-brand" :style="{ '--h': hueOf(p.brand_name) }">{{ p.brand_name }}</span>
+            </template>
             <template v-else>—</template>
           </td>
           <td class="pt-num pt-price">
@@ -130,14 +128,14 @@ function hueOf(str) {
 
 <style scoped>
 .prod-table-wrap { overflow-x: auto; }
-.prod-table { width: 100%; min-width: 680px; border-collapse: collapse; font-size: 13.5px; }
+.prod-table { width: 100%; min-width: 540px; border-collapse: collapse; font-size: 13px; }
 .prod-table th {
-  padding: 9px 12px; text-align: left; font-size: 11px; font-weight: 700;
+  padding: 8px 10px; text-align: left; font-size: 10.5px; font-weight: 700;
   letter-spacing: .05em; text-transform: uppercase; color: var(--muted);
   border-bottom: 1px solid var(--line); white-space: nowrap;
   background: var(--surface); position: sticky; top: 0; z-index: 1;
 }
-.prod-table td { padding: 8px 12px; border-bottom: 1px solid var(--line-soft); vertical-align: middle; }
+.prod-table td { padding: 6px 10px; border-bottom: 1px solid var(--line-soft); vertical-align: middle; }
 .prod-table tbody tr:last-child td { border-bottom: none; }
 .prod-table tbody tr { transition: background .12s; }
 .prod-table tbody tr:hover { background: var(--surface); }
@@ -148,9 +146,9 @@ function hueOf(str) {
 .pt-check input { width: 16px; height: 16px; accent-color: var(--brand-600); cursor: pointer; }
 .prod-table td.pt-prod { min-width: 190px; }
 .pt-actions-col { width: 150px; }
-.pt-prod { display: flex; align-items: center; gap: 12px; min-width: 0; }
+.pt-prod { display: flex; align-items: center; gap: 10px; min-width: 0; }
 .pt-thumb {
-  position: relative; flex: none; width: 46px; height: 46px; border-radius: 10px;
+  position: relative; flex: none; width: 40px; height: 40px; border-radius: 9px;
   border: 1px solid var(--line); color: var(--muted);
   display: grid; place-items: center; overflow: hidden;
 }
@@ -178,7 +176,9 @@ function hueOf(str) {
 .pt-name { min-width: 0; display: grid; gap: 1px; }
 .pt-name strong { font-size: 13.5px; font-weight: 600; color: var(--ink); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .pt-name small { font-size: 11.5px; color: var(--muted); }
-.pt-cell { color: var(--ink-2); font-size: 13px; white-space: nowrap; }
+.pt-org { white-space: normal; }
+.pt-org .pt-chip + .pt-chip { margin-left: 5px; }
+.pt-cell { color: var(--ink-2); font-size: 12.5px; white-space: nowrap; }
 /* Chips de categoría/marca: mismo texto = mismo color, en toda la tabla. */
 .pt-chip {
   display: inline-flex; align-items: center; padding: 3px 10px; border-radius: 999px;
@@ -201,13 +201,11 @@ function hueOf(str) {
 .prod-table tbody tr:hover .pt-actions,
 .prod-table tbody tr:focus-within .pt-actions,
 .prod-table tbody tr.sel .pt-actions { opacity: 1; }
-.pt-actions .icon-btn { width: 30px; height: 30px; border-radius: 8px; margin-left: 2px; }
+.pt-actions .icon-btn { width: 28px; height: 28px; border-radius: 7px; margin-left: 2px; }
 @media (hover: none) {
   .pt-actions { opacity: 1; }
 }
 @media (max-width: 720px) {
-  .prod-table th:nth-child(3), .prod-table th:nth-child(4),
-  .prod-table td.pt-cell { display: none; }
-  .pt-thumb { width: 40px; height: 40px; }
+  .prod-table th:nth-child(3), .prod-table td.pt-org { display: none; }
 }
 </style>

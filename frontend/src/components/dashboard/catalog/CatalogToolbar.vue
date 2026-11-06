@@ -21,7 +21,7 @@ const props = defineProps({
 })
 const emit = defineEmits([
   'update:query', 'update:category', 'update:brand',
-  'update:onlyOffers', 'update:sort', 'update:view', 'new'
+  'update:onlyOffers', 'update:sort', 'update:view', 'new', 'price-update'
 ])
 
 const SORTS = [
@@ -71,6 +71,13 @@ const activeFilters = computed(() =>
           :aria-pressed="view === 'table'" title="Vista tabla" @click="emit('update:view', 'table')"
         ><AppIcon name="rows-3" :size="16" /></button>
       </span>
+      <button
+        v-if="total" type="button" class="ctoolbar-price"
+        title="Actualizar precios en lote o importar CSV" @click="emit('price-update')"
+      ><AppIcon name="tag" :size="13" aria-hidden="true" /> Precios</button>
+      <button type="button" class="ctoolbar-new" @click="emit('new')">
+        <AppIcon name="plus" :size="15" aria-hidden="true" /> Nuevo
+      </button>
     </div>
     <div v-if="filtersOpen" class="ctoolbar-row ctoolbar-frow">
       <select
@@ -137,6 +144,23 @@ const activeFilters = computed(() =>
 .ctoolbar-view + .ctoolbar-view { border-left: 1px solid var(--line); }
 .ctoolbar-view.on { background: var(--brand-soft); color: var(--brand-ink); }
 .ctoolbar-view:focus-visible, .ctoolbar-toggle:focus-visible { outline: 2px solid var(--brand-500); outline-offset: 2px; }
+.ctoolbar-price {
+  display: inline-flex; align-items: center; gap: 6px; min-height: 40px; padding: 8px 13px;
+  border: 1px solid var(--line); border-radius: 10px; background: var(--card);
+  font: inherit; font-size: 13px; font-weight: 600; color: var(--ink-2); cursor: pointer;
+  white-space: nowrap;
+}
+.ctoolbar-price:hover { border-color: var(--brand-500); color: var(--brand-ink); }
+.ctoolbar-new {
+  display: inline-flex; align-items: center; gap: 6px; min-height: 40px; padding: 8px 15px;
+  border: none; border-radius: 10px; cursor: pointer; white-space: nowrap;
+  background: linear-gradient(135deg, var(--brand-500), #8b5cf6); color: #fff;
+  font: inherit; font-size: 13px; font-weight: 700;
+  box-shadow: 0 6px 14px rgba(99, 102, 241, .3); transition: transform .12s, filter .15s;
+}
+.ctoolbar-new:hover { transform: translateY(-1px); filter: brightness(1.05); }
+.ctoolbar-new:active { transform: translateY(0); }
+.ctoolbar-price:focus-visible, .ctoolbar-new:focus-visible { outline: 2px solid var(--brand-500); outline-offset: 2px; }
 @media (max-width: 640px) {
   .ctoolbar-row { flex-wrap: wrap; }
   .ctoolbar-count { margin-left: 0; }

@@ -10,7 +10,6 @@ import { productListOffer, isDiscountedProduct, offerPct } from '../../../api/ca
 // el objeto discount por producto, solo discount_offer/discount_names).
 const props = defineProps({
   p: { type: Object, required: true },
-  view: { type: String, default: 'grid' }, // 'grid' | 'list'
   campaign: { type: Object, default: null }
 })
 const emit = defineEmits(['edit', 'duplicate', 'toggle', 'remove'])
@@ -23,7 +22,7 @@ const discountTitle = computed(() => (props.p.discount_names || []).join(' · ')
 </script>
 
 <template>
-  <article class="pcard" :class="{ 'pcard-list': view === 'list', 'pcard-off': !p.is_active }">
+  <article class="pcard" :class="{ 'pcard-off': !p.is_active }">
     <span class="pcard-thumb" :class="{ 'pcard-noimg': !p.image }">
       <img v-if="p.image" :src="p.image" :alt="p.name" loading="lazy" />
       <AppIcon v-else name="package" :size="22" aria-hidden="true" />
@@ -64,8 +63,8 @@ const discountTitle = computed(() => (props.p.discount_names || []).join(' · ')
 
 <style scoped>
 .pcard {
-  position: relative; display: flex; flex-direction: column; gap: 10px;
-  padding: 12px; border: 1px solid var(--line); border-radius: 14px;
+  position: relative; display: flex; flex-direction: column; gap: 8px;
+  padding: 10px; border: 1px solid var(--line); border-radius: 12px;
   background: var(--card); transition: border-color .15s, box-shadow .15s;
 }
 .pcard:hover { border-color: var(--line-strong); box-shadow: var(--shadow-md); }
@@ -87,23 +86,22 @@ const discountTitle = computed(() => (props.p.discount_names || []).join(' · ')
 .pcard-camp { height: 22px; width: auto; max-width: 60%; object-fit: contain; display: block; filter: drop-shadow(0 1px 2px rgba(0,0,0,.35)); }
 .pcard-camp-txt { max-width: 60%; overflow: hidden; text-overflow: ellipsis; }
 .pcard-info { display: grid; gap: 2px; min-width: 0; }
-.pcard-name { font-size: 14px; font-weight: 600; color: var(--ink); overflow-wrap: anywhere; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; min-height: 2.4em; }
-.pcard-meta { color: var(--muted); font-size: 12px; min-height: 1em; }
-.pcard-price { font-size: 14.5px; color: var(--ink); margin-top: 2px; }
+.pcard-name { font-size: 13px; font-weight: 600; color: var(--ink); overflow-wrap: anywhere; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+.pcard-meta { color: var(--muted); font-size: 11.5px; min-height: 1em; }
+.pcard-price { font-size: 13.5px; color: var(--ink); margin-top: 1px; }
 .pcard-price b { font-weight: 800; letter-spacing: -.01em; }
 .pcard-old { color: var(--muted); font-weight: 400; margin-right: 4px; }
-.pcard-actions { display: flex; gap: 6px; margin-top: auto; }
-.pcard-actions .icon-btn { width: 40px; height: 40px; border-radius: 10px; }
+/* Acciones al hover/focus: la tarjeta queda limpia de iconos; en táctil
+   (sin hover) siempre visibles. */
+.pcard-actions {
+  display: flex; gap: 4px; margin-top: auto;
+  opacity: 0; transition: opacity .15s;
+}
+.pcard:hover .pcard-actions, .pcard:focus-within .pcard-actions { opacity: 1; }
+.pcard-actions .icon-btn { width: 32px; height: 32px; border-radius: 8px; }
 .pcard-actions .icon-btn:focus-visible { outline: 2px solid var(--brand-500); outline-offset: 2px; }
-
-.pcard-list { flex-direction: row; align-items: center; }
-.pcard-list .pcard-thumb { width: 56px; height: 56px; aspect-ratio: auto; flex: none; }
-.pcard-list .pcard-badges { position: static; order: 3; }
-.pcard-list .pcard-camp { height: 18px; }
-.pcard-list .pcard-info { flex: 1; }
-@media (max-width: 640px) {
-  .pcard-list { flex-wrap: wrap; }
-  .pcard-list .pcard-actions { margin-left: auto; }
+@media (hover: none) {
+  .pcard-actions { opacity: 1; }
 }
 @media (prefers-reduced-motion: no-preference) {
   .pcard { transition: border-color .15s, box-shadow .15s, transform .15s; }
