@@ -91,19 +91,20 @@ body{
   -webkit-font-smoothing:antialiased;text-rendering:optimizeLegibility;
   overflow-x:hidden;
 }
-/* Plano de circuito impreso de fondo: trazas ortogonales con pads y vías,
-   una o dos en volt como "vía de alimentación". Solo atmósfera. */
-body::before{
-  content:"";position:fixed;inset:0;z-index:-1;pointer-events:none;opacity:.34;
-  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='640' height='640' viewBox='0 0 640 640'%3E%3Cg fill='none' stroke='%2314171C' stroke-width='1.5' stroke-opacity='.5'%3E%3Cpath d='M20 120H140V80H280V170H480'/%3E%3Cpath d='M620 260H520V200H420V260H300'/%3E%3Cpath d='M80 640V470H160V420H300'/%3E%3Cpath d='M620 470H540V410H420V460H340'/%3E%3Cpath d='M300 0V110H240V180'/%3E%3Cpath d='M0 380H110V330H200V430H260'/%3E%3Cpath d='M640 560H560V520H460V580'/%3E%3Cpath d='M140 300H60V360'/%3E%3C/g%3E%3Cg fill='%2314171C' fill-opacity='.5'%3E%3Ccircle cx='480' cy='170' r='3.2'/%3E%3Ccircle cx='300' cy='260' r='3.2'/%3E%3Ccircle cx='300' cy='640' r='3.2'/%3E%3Ccircle cx='340' cy='460' r='3.2'/%3E%3Ccircle cx='240' cy='180' r='3.2'/%3E%3Ccircle cx='260' cy='430' r='3.2'/%3E%3Ccircle cx='460' cy='580' r='3.2'/%3E%3Ccircle cx='60' cy='360' r='3.2'/%3E%3Crect x='16' y='116' width='8' height='8'/%3E%3Crect x='472' y='166' width='8' height='8'/%3E%3Crect x='296' y='256' width='8' height='8'/%3E%3Crect x='76' y='632' width='8' height='8'/%3E%3Crect x='612' y='462' width='8' height='8'/%3E%3Crect x='236' y='176' width='8' height='8'/%3E%3Crect x='256' y='426' width='8' height='8'/%3E%3Crect x='456' y='576' width='8' height='8'/%3E%3Crect x='56' y='356' width='8' height='8'/%3E%3C/g%3E%3Cg fill='none' stroke='%234F6B00' stroke-width='1.5' stroke-opacity='.55'%3E%3Cpath d='M480 320H560V380H640'/%3E%3Cpath d='M0 90H40V150H0'/%3E%3C/g%3E%3Ccircle cx='640' cy='380' r='4' fill='%234F6B00' fill-opacity='.55'/%3E%3Ccircle cx='0' cy='150' r='4' fill='%234F6B00' fill-opacity='.55'/%3E%3C/svg%3E");
-  background-size:640px 640px;
+/* Plano de circuito vivo: el SVG inline `.pcb-bg` (pattern de 640px) lleva
+   las trazas, las vías y los pulsos que las recorren (SMIL). Colores por
+   variables del tema: tinta al 16% + acento en las pistas de alimentación. */
+.pcb-bg{
+  position:fixed;inset:0;z-index:-1;pointer-events:none;opacity:.42;
   mask-image:radial-gradient(1150px 780px at 50% -6%,#000 22%,transparent 76%);
   -webkit-mask-image:radial-gradient(1150px 780px at 50% -6%,#000 22%,transparent 76%);
 }
-html[data-ds-theme="dark"] body::before{
-  opacity:.3;
-  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='640' height='640' viewBox='0 0 640 640'%3E%3Cg fill='none' stroke='%23E9EEF4' stroke-width='1.5' stroke-opacity='.4'%3E%3Cpath d='M20 120H140V80H280V170H480'/%3E%3Cpath d='M620 260H520V200H420V260H300'/%3E%3Cpath d='M80 640V470H160V420H300'/%3E%3Cpath d='M620 470H540V410H420V460H340'/%3E%3Cpath d='M300 0V110H240V180'/%3E%3Cpath d='M0 380H110V330H200V430H260'/%3E%3Cpath d='M640 560H560V520H460V580'/%3E%3Cpath d='M140 300H60V360'/%3E%3C/g%3E%3Cg fill='%23E9EEF4' fill-opacity='.4'%3E%3Ccircle cx='480' cy='170' r='3.2'/%3E%3Ccircle cx='300' cy='260' r='3.2'/%3E%3Ccircle cx='300' cy='640' r='3.2'/%3E%3Ccircle cx='340' cy='460' r='3.2'/%3E%3Ccircle cx='240' cy='180' r='3.2'/%3E%3Ccircle cx='260' cy='430' r='3.2'/%3E%3Ccircle cx='460' cy='580' r='3.2'/%3E%3Ccircle cx='60' cy='360' r='3.2'/%3E%3Crect x='16' y='116' width='8' height='8'/%3E%3Crect x='472' y='166' width='8' height='8'/%3E%3Crect x='296' y='256' width='8' height='8'/%3E%3Crect x='76' y='632' width='8' height='8'/%3E%3Crect x='612' y='462' width='8' height='8'/%3E%3Crect x='236' y='176' width='8' height='8'/%3E%3Crect x='256' y='426' width='8' height='8'/%3E%3Crect x='456' y='576' width='8' height='8'/%3E%3Crect x='56' y='356' width='8' height='8'/%3E%3C/g%3E%3Cg fill='none' stroke='%23C8FF3D' stroke-width='1.5' stroke-opacity='.6'%3E%3Cpath d='M480 320H560V380H640'/%3E%3Cpath d='M0 90H40V150H0'/%3E%3C/g%3E%3Ccircle cx='640' cy='380' r='4' fill='%23C8FF3D' fill-opacity='.6'/%3E%3Ccircle cx='0' cy='150' r='4' fill='%23C8FF3D' fill-opacity='.6'/%3E%3C/svg%3E");
-}
+html[data-ds-theme="dark"] .pcb-bg{opacity:.32}
+.pcb-bg .pcb-t{fill:none;stroke:color-mix(in srgb,var(--ink) 16%,transparent);stroke-width:1.5}
+.pcb-bg .pcb-v{fill:color-mix(in srgb,var(--ink) 30%,transparent)}
+.pcb-bg .pcb-p{fill:none;stroke:var(--accent);stroke-width:1.5;opacity:.5}
+.pcb-bg .pcb-dot{fill:var(--accent);opacity:.9}
+@media(prefers-reduced-motion:reduce){.pcb-bg .pcb-dot{display:none}}
 body::after{
   content:"";position:fixed;inset:0;z-index:60;pointer-events:none;opacity:.05;
   background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='140' height='140' filter='url(%23n)' opacity='.55'/%3E%3C/svg%3E");
@@ -133,18 +134,28 @@ html[data-ds-theme="dark"] .eyebrow::after{background:var(--volt)}
 
 /* ---------- Botones ---------- */
 .btn{
-  display:inline-flex;align-items:center;gap:10px;justify-content:center;
-  padding:13px 22px;border-radius:var(--r-btn);border:1px solid transparent;
-  font:600 14px/1 var(--sans);letter-spacing:.01em;cursor:pointer;
-  transition:transform .16s var(--ease),box-shadow .2s var(--ease),background .2s,border-color .2s;
+  position:relative;display:inline-flex;align-items:center;gap:10px;justify-content:center;
+  padding:14px 26px;border:1px solid transparent;cursor:pointer;
+  clip-path:polygon(0 0,calc(100% - 12px) 0,100% 12px,100% 100%,0 100%);
+  font:600 12px/1 var(--mono);letter-spacing:.18em;text-transform:uppercase;
+  transition:transform .18s var(--ease),box-shadow .25s var(--ease),background .2s,border-color .2s,color .2s;
 }
+.btn::before{
+  content:"";position:absolute;inset:0;pointer-events:none;
+  background:linear-gradient(100deg,transparent 32%,color-mix(in srgb,currentColor 22%,transparent) 50%,transparent 68%);
+  transform:translateX(-130%);transition:transform .55s var(--ease);
+}
+.btn:hover::before{transform:translateX(130%)}
+.btn svg{transition:transform .2s var(--ease)}
+.btn:hover svg{transform:translateX(3px)}
 .btn:active{transform:translateY(1px)}
-.btn-accent{background:var(--accent);color:var(--on-accent);box-shadow:0 10px 30px -14px color-mix(in srgb,var(--accent) 80%,transparent)}
+.btn-accent{background:var(--accent);color:var(--on-accent);box-shadow:0 12px 30px -16px color-mix(in srgb,var(--accent) 85%,transparent)}
 .btn-accent:hover{transform:translateY(-2px)}
 .btn-ghost{background:transparent;color:var(--ink);border-color:var(--line)}
-.btn-ghost:hover{border-color:var(--accent);color:var(--accent-deep)}
-html[data-ds-theme="dark"] .btn-ghost:hover{color:var(--volt)}
-.btn-big{padding:16px 30px;font-size:15px}
+.btn-ghost:hover{border-color:var(--accent);color:var(--accent-deep);background:var(--accent-soft)}
+html[data-ds-theme="dark"] .btn-ghost:hover{border-color:var(--volt);color:var(--volt)}
+.btn-big{padding:17px 32px;font-size:13px}
+.btn:focus-visible{outline-offset:-4px}
 
 /* ==========================================================================
    HEADER — riel de instrumento: marca, nav mono y CTA.
@@ -226,6 +237,22 @@ body.m-open .mmenu{transform:none}
   font:400 clamp(46px,7.2vw,104px)/.94 var(--display);letter-spacing:.005em;
   text-transform:uppercase;
 }
+/* Vida del titular: cada palabra entra escalonada (spans .ht-w que arma el
+   JS) y un cursor de bloque parpadea al final como en una terminal. */
+.hero-title .ht-w{
+  display:inline-block;opacity:0;
+  transform:translateY(.55em) rotate(2.5deg);
+  animation:htIn .85s var(--ease) forwards;
+  animation-delay:calc(var(--i,0) * 75ms + .1s);
+}
+@keyframes htIn{to{opacity:1;transform:none}}
+.hero-title::after{
+  content:"";display:inline-block;width:.4em;height:.74em;margin-left:.16em;
+  vertical-align:.04em;background:var(--accent);opacity:.9;
+  animation:htCaret 1.2s steps(1,end) infinite;
+}
+html[data-ds-theme="dark"] .hero-title::after{background:var(--volt)}
+@keyframes htCaret{0%,52%{opacity:.95}53%,100%{opacity:0}}
 .hero-title .hl{color:var(--accent-deep)}
 html[data-ds-theme="dark"] .hero-title .hl{color:var(--volt)}
 .hero-desc{margin:24px 0 0;max-width:52ch;color:var(--ink-2);font-size:17px}
@@ -271,6 +298,9 @@ html[data-ds-theme="dark"] .deck-foot::before,html[data-ds-theme="dark"] .deck-f
 }
 .deck-slide.is-on{opacity:1;transform:scale(1);pointer-events:auto}
 .deck-slide img{width:100%;height:100%;object-fit:cover}
+/* Ken burns lento sobre el slide activo: la foto "respira" mientras está en pantalla. */
+.deck-slide.is-on img{animation:deckKen 7s var(--ease) forwards}
+@keyframes deckKen{from{transform:scale(1)}to{transform:scale(1.07)}}
 .deck-slide::after{
   content:"";position:absolute;inset:0;
   background:linear-gradient(180deg,transparent 55%,color-mix(in srgb,var(--paper) 55%,transparent));
@@ -395,36 +425,51 @@ html[data-ds-theme="dark"] .rail-btn:hover:not(:disabled){color:var(--volt)}
 /* ==========================================================================
    Tarjeta de producto (fragmento {{products}})
    ========================================================================== */
-.ds-product{border:1px solid var(--line);background:var(--surface);display:flex;flex-direction:column;min-width:0}
-.ds-product-link{display:flex;flex-direction:column;height:100%;color:inherit}
-.ds-product-img{
-  position:relative;aspect-ratio:4/3;overflow:hidden;background:var(--surface-2);
-  display:grid;place-items:center;
+/* El fragmento {{products}} emite: <img|span.ds-product-img> +
+   <span.ds-product-copy> (h3+small) + <span.ds-product-cat> +
+   <span.ds-stock> + <span.ds-product-price data-off data-campaign-label>.
+   Las "etiquetas" (categoría y stock) van como chips sobre la foto. */
+.ds-product{
+  position:relative;border:1px solid var(--line);background:var(--surface);
+  display:flex;flex-direction:column;min-width:0;overflow:hidden;
 }
-.ds-product-img img{width:100%;height:100%;object-fit:cover;transition:transform .6s var(--ease)}
+.ds-product-link{position:relative;display:flex;flex-direction:column;height:100%;color:inherit}
+.ds-product-img{
+  display:block;width:100%;aspect-ratio:4/3;object-fit:cover;
+  background:var(--surface-2);transition:transform .7s var(--ease),filter .5s var(--ease);
+}
+.ds-product-img.is-empty{display:grid;place-items:center}
 .ds-product-img.is-empty::after{
   content:"";width:44%;aspect-ratio:1;border:1px solid var(--line);
   background:linear-gradient(135deg,var(--surface),var(--surface-2));
 }
-.ds-product-link:hover .ds-product-img img{transform:scale(1.045)}
+.ds-product-link:hover .ds-product-img{transform:scale(1.05);filter:saturate(1.12)}
 .ds-product-link:hover .ds-product-name{color:var(--accent-deep)}
 html[data-ds-theme="dark"] .ds-product-link:hover .ds-product-name{color:var(--volt)}
-.ds-product-copy{padding:16px 16px 0;display:flex;flex-direction:column;gap:6px;flex:1}
+.ds-product-copy{padding:14px 16px 2px;display:flex;flex-direction:column;gap:6px;flex:1;min-width:0}
 .ds-product-cat{
-  font:600 9.5px/1 var(--mono);letter-spacing:.2em;text-transform:uppercase;color:var(--muted);
+  position:absolute;top:10px;left:10px;z-index:2;max-width:calc(100% - 20px);
+  overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
+  font:600 9px/1 var(--mono);letter-spacing:.18em;text-transform:uppercase;
+  color:var(--ink);background:color-mix(in srgb,var(--surface) 86%,transparent);
+  padding:6px 8px;backdrop-filter:blur(4px);-webkit-backdrop-filter:blur(4px);
 }
+.ds-product-cat:empty{display:none}
 .ds-product-name{font:500 16px/1.3 var(--sans);letter-spacing:-.01em;transition:color .18s}
 .ds-product-desc{
   font-size:12.5px;line-height:1.5;color:var(--muted);
   display:-webkit-box;-webkit-line-clamp:2;line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;
 }
 .ds-stock{
-  display:inline-flex;align-items:center;gap:7px;margin-top:10px;
-  font:600 9.5px/1 var(--mono);letter-spacing:.16em;text-transform:uppercase;color:var(--ok);
+  position:absolute;top:10px;right:10px;z-index:2;
+  display:inline-flex;align-items:center;gap:6px;
+  font:600 9px/1 var(--mono);letter-spacing:.16em;text-transform:uppercase;
+  color:var(--band-ink);background:color-mix(in srgb,#0A0D12 74%,transparent);
+  padding:6px 8px;backdrop-filter:blur(4px);-webkit-backdrop-filter:blur(4px);
 }
-.ds-stock i{width:6px;height:6px;border-radius:50%;background:var(--ok);flex:none}
+.ds-stock i{width:5px;height:5px;border-radius:50%;background:var(--volt);flex:none}
 .ds-product-price{
-  display:flex;align-items:baseline;gap:10px;flex-wrap:wrap;
+  display:flex;align-items:center;gap:10px;flex-wrap:wrap;
   margin-top:auto;padding:14px 16px 16px;
   font:600 17px/1 var(--display);letter-spacing:.01em;
 }
@@ -446,11 +491,29 @@ html[data-ds-theme="dark"] .ds-product-price[data-off]::before{background:var(--
 @media(max-width:1100px){.grid-products{grid-template-columns:repeat(3,1fr)}}
 @media(max-width:820px){.grid-products{grid-template-columns:repeat(2,1fr)}}
 @media(max-width:520px){.grid-products{grid-template-columns:1fr}}
+/* Vista lista: la tarjeta se vuelve fila — foto | texto | precio. Los chips
+   de foto pasan a filas de texto bajo el nombre. */
 .grid-products[data-ds-view-mode="list"]{grid-template-columns:1fr;gap:12px}
-.grid-products[data-ds-view-mode="list"] .ds-product{flex-direction:row}
-.grid-products[data-ds-view-mode="list"] .ds-product-img{width:150px;flex:none;aspect-ratio:auto;min-height:120px}
-.grid-products[data-ds-view-mode="list"] .ds-product-copy{padding:14px 0 0 14px}
-.grid-products[data-ds-view-mode="list"] .ds-product-price{padding:0 16px 0 0;align-self:center}
+.grid-products[data-ds-view-mode="list"] .ds-product-link{
+  display:grid;grid-template-columns:150px minmax(0,1fr) auto;
+  grid-template-rows:auto auto auto;column-gap:18px;align-items:center;
+}
+.grid-products[data-ds-view-mode="list"] .ds-product-img{
+  grid-row:1/4;width:150px;height:100%;min-height:128px;aspect-ratio:auto;
+}
+.grid-products[data-ds-view-mode="list"] .ds-product-copy{grid-column:2;grid-row:1;padding:0}
+.grid-products[data-ds-view-mode="list"] .ds-product-cat{
+  position:static;grid-column:2;grid-row:2;max-width:none;padding:0;
+  background:none;backdrop-filter:none;color:var(--muted);
+}
+.grid-products[data-ds-view-mode="list"] .ds-stock{
+  position:static;grid-column:2;grid-row:3;padding:0;background:none;backdrop-filter:none;
+  color:var(--ok);gap:7px;
+}
+.grid-products[data-ds-view-mode="list"] .ds-product-price{
+  grid-column:3;grid-row:1/4;justify-self:end;align-items:flex-end;flex-direction:column;
+  gap:4px;padding:0;margin:0;
+}
 
 /* ==========================================================================
    El taller (about) + stats + beneficios
@@ -462,7 +525,8 @@ html[data-ds-theme="dark"] .ds-product-price[data-off]::before{background:var(--
   position:relative;border:1px solid var(--line);overflow:hidden;
   aspect-ratio:4/3.4;background:var(--surface-2);box-shadow:var(--shadow-soft);
 }
-.about-frame img{width:100%;height:100%;object-fit:cover;filter:saturate(.85)}
+.about-frame img{width:100%;height:100%;object-fit:cover;filter:saturate(.85);transition:transform .9s var(--ease),filter .6s var(--ease)}
+.about-frame:hover img{transform:scale(1.045);filter:saturate(1.05)}
 .about-frame::before,.about-frame::after{
   content:"";position:absolute;width:22px;height:22px;z-index:2;pointer-events:none;
   border:2px solid var(--accent);
@@ -630,10 +694,11 @@ html[data-ds-theme="dark"] .cat-hero h1 em{color:var(--volt)}
   border:1px solid var(--line);background:var(--surface);padding:20px;
   max-height:calc(100vh - var(--head-h) - 32px);overflow:auto;
 }
+.cat-scrim{display:none}
 @media(max-width:980px){
   .cat-aside{position:fixed;inset:0;z-index:80;max-height:none;border:0;transform:translateX(-102%);transition:transform .32s var(--ease)}
   body.f-open .cat-aside{transform:none}
-  .cat-scrim{position:fixed;inset:0;z-index:75;background:rgba(5,8,12,.6);opacity:0;pointer-events:none;transition:opacity .3s}
+  .cat-scrim{display:block;position:fixed;inset:0;z-index:75;background:rgba(5,8,12,.6);opacity:0;pointer-events:none;transition:opacity .3s}
   body.f-open .cat-scrim{opacity:1;pointer-events:auto}
 }
 .cat-aside-head{display:none;align-items:center;justify-content:space-between;margin-bottom:14px}
@@ -748,7 +813,8 @@ html[data-ds-theme="dark"] .pdp-crumbs a{color:var(--volt)}
 .pdp-grid{display:grid;grid-template-columns:minmax(0,1.05fr) minmax(0,.95fr);gap:clamp(28px,5vw,64px);align-items:start}
 @media(max-width:920px){.pdp-grid{grid-template-columns:1fr}}
 .pdp-media{position:relative;border:1px solid var(--line);background:var(--surface-2);aspect-ratio:4/3.4;overflow:hidden}
-.pdp-media img{width:100%;height:100%;object-fit:cover}
+.pdp-media img{width:100%;height:100%;object-fit:cover;transition:transform .9s var(--ease)}
+.pdp-media:hover img{transform:scale(1.04)}
 .pdp-media::before,.pdp-media::after{
   content:"";position:absolute;width:20px;height:20px;z-index:2;pointer-events:none;border:2px solid var(--accent);
 }
@@ -936,15 +1002,69 @@ html[data-ds-theme="dark"] .foot-col a:hover{color:var(--volt)}
   .hero-cta .btn{flex:1 1 100%}
 }
 @media(hover:none){
-  .sys-grid .ds-cat:hover,.ds-product-link:hover .ds-product-img img,.about-frame img,.ds-shot img{transform:none}
+  .sys-grid .ds-cat:hover,.ds-product-link:hover .ds-product-img,.about-frame:hover img,.pdp-media:hover img,.ds-shot:hover img{transform:none;filter:none}
 }
 @media(prefers-reduced-motion:reduce){
   *,*::before,*::after{animation-duration:.001s!important;transition-duration:.001s!important;scroll-behavior:auto!important}
   .reveal{opacity:1;transform:none}
+  .deck-slide.is-on img{animation:none}
+  .hero-title .ht-w{opacity:1;transform:none;animation:none}
+  .hero-title::after{animation:none;opacity:.9}
 }
 </style>
 </head>
 <body>
+
+<!-- Plano de circuito vivo: pattern de 640px con trazas, vías, pads y pulsos
+     (animateMotion) que recorren cada pista. Una sola definición para ambos
+     temas: los colores salen de las variables CSS del documento. -->
+<svg class="pcb-bg" aria-hidden="true" focusable="false">
+  <defs>
+    <pattern id="pcb-tile" width="640" height="640" patternUnits="userSpaceOnUse">
+      <g class="pcb-t">
+        <path d="M20 120H140V80H280V170H480"/>
+        <path d="M620 260H520V200H420V260H300"/>
+        <path d="M80 640V470H160V420H300"/>
+        <path d="M620 470H540V410H420V460H340"/>
+        <path d="M300 0V110H240V180"/>
+        <path d="M0 380H110V330H200V430H260"/>
+        <path d="M640 560H560V520H460V580"/>
+        <path d="M140 300H60V360"/>
+      </g>
+      <g class="pcb-p">
+        <path d="M480 320H560V380H640"/>
+        <path d="M0 90H40V150H0"/>
+      </g>
+      <g class="pcb-v">
+        <circle cx="480" cy="170" r="3.2"/><rect x="476" y="166" width="8" height="8"/>
+        <circle cx="300" cy="260" r="3.2"/><rect x="296" y="256" width="8" height="8"/>
+        <circle cx="340" cy="460" r="3.2"/><rect x="336" y="456" width="8" height="8"/>
+        <circle cx="240" cy="180" r="3.2"/><rect x="236" y="176" width="8" height="8"/>
+        <circle cx="260" cy="430" r="3.2"/><rect x="256" y="426" width="8" height="8"/>
+        <circle cx="460" cy="580" r="3.2"/><rect x="456" y="576" width="8" height="8"/>
+        <circle cx="60" cy="360" r="3.2"/><rect x="56" y="356" width="8" height="8"/>
+        <circle cx="300" cy="636" r="3.2"/>
+        <circle cx="620" cy="470" r="3.2"/><rect x="616" y="466" width="8" height="8"/>
+        <circle cx="640" cy="380" r="4" fill="var(--accent)" opacity=".8"/>
+        <circle cx="0" cy="150" r="4" fill="var(--accent)" opacity=".8"/>
+      </g>
+      <g class="pcb-dots">
+        <circle class="pcb-dot" r="2.6"><animateMotion dur="16s" begin="-2s" repeatCount="indefinite" path="M20 120H140V80H280V170H480"/></circle>
+        <circle class="pcb-dot" r="2.6"><animateMotion dur="16s" begin="-9.5s" repeatCount="indefinite" path="M20 120H140V80H280V170H480"/></circle>
+        <circle class="pcb-dot" r="2.4"><animateMotion dur="13s" begin="-7s" repeatCount="indefinite" path="M620 260H520V200H420V260H300"/></circle>
+        <circle class="pcb-dot" r="2.4"><animateMotion dur="15s" begin="-11s" repeatCount="indefinite" path="M80 640V470H160V420H300"/></circle>
+        <circle class="pcb-dot" r="2.4"><animateMotion dur="12s" begin="-4s" repeatCount="indefinite" path="M620 470H540V410H420V460H340"/></circle>
+        <circle class="pcb-dot" r="2.2"><animateMotion dur="10s" begin="-8s" repeatCount="indefinite" path="M300 0V110H240V180"/></circle>
+        <circle class="pcb-dot" r="2.4"><animateMotion dur="14s" begin="-1s" repeatCount="indefinite" path="M0 380H110V330H200V430H260"/></circle>
+        <circle class="pcb-dot" r="2.2"><animateMotion dur="11s" begin="-6s" repeatCount="indefinite" path="M640 560H560V520H460V580"/></circle>
+        <circle class="pcb-dot" r="2.2"><animateMotion dur="9s" begin="-3s" repeatCount="indefinite" path="M140 300H60V360"/></circle>
+        <circle class="pcb-dot" r="2.8"><animateMotion dur="8s" begin="-5s" repeatCount="indefinite" path="M480 320H560V380H640"/></circle>
+        <circle class="pcb-dot" r="2.8"><animateMotion dur="8s" begin="-1.5s" repeatCount="indefinite" path="M0 90H40V150H0"/></circle>
+      </g>
+    </pattern>
+  </defs>
+  <rect width="100%" height="100%" fill="url(#pcb-tile)"/>
+</svg>
 
 <!-- ============================ HEADER ============================ -->
 <header class="top" data-ds-pin="top" data-ds-offset="140">
@@ -1533,6 +1653,13 @@ html[data-ds-theme="dark"] .foot-col a:hover{color:var(--volt)}
   function setupDeck() {
     var deck = document.querySelector('[data-deck]')
     if (!deck) return
+    /* El puente reenvía davent:ds-surface sin recargar: el deck se arma una
+       sola vez; al volver a la portada solo se reinicia el autoplay. */
+    if (deck.getAttribute('data-ready')) {
+      if (deck._restart && deck.offsetParent) deck._restart()
+      return
+    }
+    deck.setAttribute('data-ready', '1')
     var track = deck.querySelector('[data-deck-track]')
     var dotsBox = deck.querySelector('[data-deck-dots]')
     var cur = deck.querySelector('[data-deck-cur]')
@@ -1543,14 +1670,16 @@ html[data-ds-theme="dark"] .foot-col a:hover{color:var(--volt)}
     var gallery = deck.querySelector('[data-deck-gallery]')
 
     var slides = []
+    var seen = {}
     function pushSlide(src, alt) {
-      if (!src) return
+      if (!src || seen[src] || slides.length >= 14) return
+      seen[src] = 1
       var s = document.createElement('div')
       s.className = 'deck-slide'
       var img = document.createElement('img')
       img.src = src
       img.alt = alt || ''
-      img.loading = 'lazy'
+      img.loading = slides.length ? 'lazy' : 'eager'
       img.decoding = 'async'
       s.appendChild(img)
       track.appendChild(s)
@@ -1561,9 +1690,24 @@ html[data-ds-theme="dark"] .foot-col a:hover{color:var(--volt)}
       var src = img.getAttribute('src')
       if (src) pushSlide(src, img.getAttribute('alt'))
     })
+    /* Si la tienda no cargó galería, el visor igual vive: suma las fotos de
+       producto que el usuario subió (portada + galería + catálogo, máx. 14). */
+    qsa('.rail-track img.ds-product-img, .grid-products img.ds-product-img').forEach(function (img) {
+      var src = img.getAttribute('src')
+      if (src) pushSlide(src, img.getAttribute('alt'))
+    })
     gallery.hidden = true
 
     if (!slides.length) { deck.hidden = true; return }
+    /* Con un solo slide no hay carrusel que mover: se muestra estático. */
+    if (slides.length === 1) {
+      slides[0].classList.add('is-on')
+      if (cur) cur.textContent = '01'
+      if (total) total.textContent = '01'
+      qsa('.deck-btn, .deck-dots', deck).forEach(function (el) { el.style.display = 'none' })
+      measure()
+      return
+    }
     var i = 0, timer = 0
 
     function go(n) {
@@ -1589,7 +1733,9 @@ html[data-ds-theme="dark"] .foot-col a:hover{color:var(--volt)}
     }
     function restart() {
       if (timer) clearInterval(timer)
-      if (slides.length > 1 && !reduce) {
+      /* offsetParent null = superficie oculta (catálogo/servicios): no gastar
+         timers en un deck que nadie ve. Al volver, ds-surface lo reinicia. */
+      if (slides.length > 1 && !reduce && deck.offsetParent) {
         timer = setInterval(function () { go(i + 1) }, 6000)
       }
     }
@@ -1605,6 +1751,7 @@ html[data-ds-theme="dark"] .foot-col a:hover{color:var(--volt)}
     buildDots()
     go(0)
     restart()
+    deck._restart = restart
     measure()
   }
 
@@ -1613,6 +1760,8 @@ html[data-ds-theme="dark"] .foot-col a:hover{color:var(--volt)}
      ========================================================================== */
   function setupRails() {
     qsa('[data-rail]').forEach(function (rail) {
+      if (rail.getAttribute('data-rr')) return
+      rail.setAttribute('data-rr', '1')
       var track = rail.querySelector('.rail-track')
       var cur = rail.querySelector('[data-rail-cur]')
       var total = rail.querySelector('[data-rail-total]')
@@ -1641,6 +1790,25 @@ html[data-ds-theme="dark"] .foot-col a:hover{color:var(--volt)}
       track.addEventListener('scroll', paintRail, { passive: true })
       window.addEventListener('resize', paintRail)
       paintRail()
+    })
+  }
+
+  /* ---------- Titular del hero: palabras escalonadas (.ht-w) ---------- */
+  function setupTitles() {
+    qsa('.hero-title').forEach(function (h) {
+      if (h.getAttribute('data-split')) return
+      h.setAttribute('data-split', '1')
+      var words = (h.textContent || '').trim().split(/\s+/).filter(Boolean)
+      if (!words.length) return
+      h.textContent = ''
+      words.forEach(function (w, i) {
+        var s = document.createElement('span')
+        s.className = 'ht-w'
+        s.style.setProperty('--i', i)
+        s.textContent = w
+        h.appendChild(s)
+        if (i < words.length - 1) h.appendChild(document.createTextNode(' '))
+      })
     })
   }
 
@@ -1700,12 +1868,13 @@ html[data-ds-theme="dark"] .foot-col a:hover{color:var(--volt)}
       return
     }
     if (d.type === 'davent:ds-surface') {
-      setTimeout(function () { hideEmpty(); setupDeck(); setupRails(); initReveal(); paint(); measure() }, 80)
+      setTimeout(function () { hideEmpty(); setupTitles(); setupDeck(); setupRails(); initReveal(); paint(); measure() }, 80)
     }
   })
 
   /* ---------- Arranque ---------- */
   hideEmpty()
+  setupTitles()
   setupDeck()
   setupRails()
   initReveal()
