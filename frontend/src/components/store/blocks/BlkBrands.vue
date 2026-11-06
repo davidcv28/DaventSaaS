@@ -28,7 +28,8 @@ const loop = computed(() => [...brands.value, ...brands.value, ...brands.value])
     <div v-if="variant === 'logos'" class="sp-container">
       <ul class="sp-brands-logos">
         <li v-for="(b, i) in brands" :key="b.id || i" v-reveal="(i % 4) * 60" class="sp-brands-logo">
-          <span class="sp-brands-logo-initial" aria-hidden="true">{{ b.name.slice(0, 1) }}</span>
+          <img v-if="b.image" class="sp-brands-logo-img" :src="b.image" alt="" loading="lazy" decoding="async" />
+          <span v-else class="sp-brands-logo-initial" aria-hidden="true">{{ b.name.slice(0, 1) }}</span>
           <strong>{{ b.name }}</strong>
         </li>
       </ul>

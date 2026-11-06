@@ -3332,6 +3332,7 @@ Reels— van angostas, las 16:9 anchas). El botón de vivo es Premium. */
 .sp-brands-logo{ display: flex; align-items: center; gap: 10px; min-width: 0; padding: 14px 16px; border: 1px solid var(--st-border, var(--sp-line)); border-radius: var(--st-radius, var(--sp-radius)); background: var(--st-surface, var(--sp-card)); box-shadow: var(--st-shadow, var(--sp-shadow-sm)); }
 .sp-brands-logo strong{ min-width: 0; font-size: 14px; font-weight: 700; color: var(--st-text, var(--sp-ink)); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .sp-brands-logo-initial{ display: grid; place-items: center; flex: none; width: 34px; height: 34px; border-radius: 50%; background: color-mix(in srgb, var(--st-accent, var(--store-accent)) 13%, transparent); color: var(--st-accent, var(--sp-accent-text)); font-size: 15px; font-weight: 800; }
+.sp-brands-logo-img{ flex: none; width: 34px; height: 34px; object-fit: contain; }
 
 /* ---------- Galería: masonry y riel ---------- */
 .sp-gallery.is-masonry .sp-gallery-grid{ display: block; column-width: 230px; column-gap: 14px; }

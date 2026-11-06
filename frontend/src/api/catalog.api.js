@@ -8,7 +8,9 @@ import { http } from './http.js'
 // POST   /api/categories/                 Bearer {name, feature_schema?[]} -> {Exito,item}
 // PATCH  /api/categories/<pk>/            Bearer {name?, feature_schema?[]} -> {Exito,item}
 // DELETE /api/categories/<pk>/            Bearer -> {Exito}  (productos quedan sin categoría)
-// Ídem   /api/brands/  (sin feature_schema)
+// Ídem   /api/brands/  (sin feature_schema; image = logo WebP con transparencia)
+// POST   /api/brands/<pk>/image/          Bearer multipart {image} -> {Exito,item,storage}
+// DELETE /api/brands/<pk>/image/          Bearer -> {Exito,item,storage}  (libera la cuota)
 // GET    /api/products/                   Bearer -> [{id,name,description,price,offer_price,category,category_name,brand,brand_name,is_active,features,image,created_at}]
 // POST   /api/products/                   Bearer multipart {name,price,offer_price?,category?,brand?,description?,is_active?,features?{},image?} -> {Exito,item,storage,image_error?}
 // PATCH  /api/products/<pk>/              Bearer idem parcial (+image_clear=true) -> {Exito,item,storage,image_error?}
@@ -93,6 +95,18 @@ export const catalogApi = {
   },
   async deleteBrand(pk) {
     const { data } = await http.delete(`/brands/${pk}/`)
+    return data
+  },
+  async uploadBrandImage(pk, file) {
+    const form = new FormData()
+    form.append('image', file)
+    const { data } = await http.post(`/brands/${pk}/image/`, form, {
+      headers: { 'Content-Type': 'multipart/form-data' }
+    })
+    return data
+  },
+  async deleteBrandImage(pk) {
+    const { data } = await http.delete(`/brands/${pk}/image/`)
     return data
   },
 

@@ -33,7 +33,10 @@ const title = computed(() => props.block?.props?.title?.trim() || 'Con las que t
 
       <ul class="rh-brands-row">
         <li v-for="(b, i) in brands" :key="b.id || i" v-reveal="60 * (i % 4)" class="rh-brand">
-          <RouterLink class="rh-brand-link" :to="catalogTo">{{ b.name }}</RouterLink>
+          <RouterLink class="rh-brand-link" :to="catalogTo">
+            <img v-if="b.image" class="rh-brand-img" :src="b.image" :alt="''" loading="lazy" decoding="async" />
+            <span>{{ b.name }}</span>
+          </RouterLink>
         </li>
       </ul>
     </div>

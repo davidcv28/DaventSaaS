@@ -118,6 +118,24 @@ export const useCatalogStore = defineStore('catalog', () => {
     }
     return res.ok
   }
+  // La imagen de marca se gestiona aparte del nombre: mismo endpoint para
+  // subir/reemplazar y para quitar (la web pública recibe WebP con alfa).
+  async function saveBrandImage(pk, file) {
+    const res = await run(() => catalogApi.uploadBrandImage(pk, file), 'La imagen de la marca se actualizó.')
+    if (res.ok) {
+      brands.value = await catalogApi.listBrands()
+      return { ok: true, storage: res.data?.storage || null }
+    }
+    return { ok: false, storage: null }
+  }
+  async function removeBrandImage(pk) {
+    const res = await run(() => catalogApi.deleteBrandImage(pk), 'La imagen de la marca se eliminó.')
+    if (res.ok) {
+      brands.value = await catalogApi.listBrands()
+      return { ok: true, storage: res.data?.storage || null }
+    }
+    return { ok: false, storage: null }
+  }
 
   // ----- Productos -----
   // Devuelve {ok, imageError}: la imagen puede fallar por cuota aunque el producto se guarde.
@@ -233,7 +251,7 @@ export const useCatalogStore = defineStore('catalog', () => {
   return {
     categories, brands, products, discounts, reviews, status, lastError, notice, fieldErrors, denied,
     productLimitReached,
-    loadAll, saveCategory, removeCategory, saveBrand, removeBrand,
+    loadAll, saveCategory, removeCategory, saveBrand, removeBrand, saveBrandImage, removeBrandImage,
     saveProduct, removeProduct, applyBulkPrices, importPrices,
     saveDiscount, toggleDiscount, removeDiscount,
     loadReviews, replyReview, removeReview, reset

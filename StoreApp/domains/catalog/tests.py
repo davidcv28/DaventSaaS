@@ -8,10 +8,12 @@ cupos del plan se rechequean bajo lock en el create.
 import secrets
 import time
 from datetime import UTC, timedelta
+from unittest.mock import patch
 
 from django.contrib.auth.models import User
 from django.core import signing
 from django.core.cache import cache
+from django.core.files.uploadedfile import SimpleUploadedFile
 from django.test import TestCase
 from django.utils import timezone
 from rest_framework.test import APIClient
@@ -28,6 +30,7 @@ from StoreApp.domains.catalog.models import (
     SpecialOfferCampaign,
 )
 from StoreApp.domains.stores.models import Store, StoreCustomization
+from StoreApp.domains.stores.services import storage as storage_service
 from StoreApp.domains.stores.services.contact import CAPTCHA_SALT, _answer_hash
 from SuscriptionApp.domains.benefits.models import Benefit, PlanBenefit
 
@@ -188,6 +191,104 @@ class TaxonomyValidationTests(TestCase):
         client.post(BRANDS_URL, {'name': 'Nike'}, format = 'json')
         response        =   client.post(BRANDS_URL, {'name': 'nike'}, format = 'json')
         self.assertEqual(response.status_code, 400)
+
+
+class BrandImageTests(TestCase):
+    """Logo de marca: upload multipart -> WebP con alfa, cuota y borrado."""
+
+    def _client(self, **benefits):
+        user, profile   =   _make_user('duenio')
+        benefits.setdefault('max_images', None)
+        benefits.setdefault('max_storage_mb', None)
+        _grant(profile, has_public_link = True, **benefits)
+        store           =   Store.objects.create(user = profile, slug = 'mi-tienda', is_published = True)
+        client          =   APIClient()
+        client.force_authenticate(user = user)
+        return client, store
+
+    def _upload(self):
+        return SimpleUploadedFile('logo.png', b'\x89PNG\r\n\x1a\nfake', content_type = 'image/png')
+
+    def _storage_patches(self, key = 'stores/1/brands/logo.webp', body = b'webp-bytes'):
+        return (
+            patch.object(storage_service, 'storage_configured', return_value = True),
+            patch.object(storage_service, 'validate_logo_file', return_value = ''),
+            patch.object(storage_service, 'normalize_image', return_value = (body, 'webp', 'image/webp')),
+            patch.object(storage_service, '_put_object', return_value = key),
+            patch.object(storage_service, '_delete_object', return_value = None),
+            patch('StoreApp.domains.catalog.serializers.serializers.object_url', side_effect = lambda k: f'https://cdn.test/{k}' if k else None),
+        )
+
+    def test_brand_image_upload_uses_logo_pipeline_and_serializes_url(self):
+        client, store   =   self._client()
+        brand           =   Brand.objects.create(store = store, name = 'Nike')
+        cfg, val, norm, put, delete, urls   =   self._storage_patches()
+        with cfg, val, norm as normalize, put as put_mock, delete, urls:
+            response    =   client.post(f'{BRANDS_URL}{brand.pk}/image/', {'image': self._upload()}, format = 'multipart')
+        self.assertEqual(response.status_code, 200, response.data)
+        brand.refresh_from_db()
+        store.refresh_from_db()
+        self.assertEqual(brand.image_key, 'stores/1/brands/logo.webp')
+        self.assertEqual(brand.image_size, len(b'webp-bytes'))
+        self.assertEqual(store.storage_used_bytes, len(b'webp-bytes'))
+        #El pipeline de logo conserva el alfa y achica el archivo antes de R2.
+        self.assertEqual(normalize.call_args[0][1], 'logo')
+        self.assertEqual(put_mock.call_args[0][1], 'brands')
+        self.assertEqual(response.data['item']['image'], 'https://cdn.test/stores/1/brands/logo.webp')
+        self.assertEqual(response.data['storage']['used_bytes'], len(b'webp-bytes'))
+
+    def test_brand_image_delete_frees_quota_and_object(self):
+        client, store   =   self._client()
+        brand           =   Brand.objects.create(store = store, name = 'Nike', image_key = 'stores/1/brands/old.webp', image_size = 50)
+        store.storage_used_bytes    =   50
+        store.save(update_fields = ['storage_used_bytes'])
+        cfg, val, norm, put, delete, urls   =   self._storage_patches()
+        with delete as delete_mock:
+            response    =   client.delete(f'{BRANDS_URL}{brand.pk}/image/')
+        self.assertEqual(response.status_code, 200, response.data)
+        brand.refresh_from_db()
+        store.refresh_from_db()
+        self.assertEqual(brand.image_key, '')
+        self.assertEqual(brand.image_size, 0)
+        self.assertEqual(store.storage_used_bytes, 0)
+        delete_mock.assert_called_once_with('stores/1/brands/old.webp')
+
+    def test_brand_destroy_deletes_image_and_frees_quota(self):
+        client, store   =   self._client()
+        brand           =   Brand.objects.create(store = store, name = 'Nike', image_key = 'stores/1/brands/old.webp', image_size = 40)
+        store.storage_used_bytes    =   40
+        store.save(update_fields = ['storage_used_bytes'])
+        cfg, val, norm, put, delete, urls   =   self._storage_patches()
+        with delete as delete_mock:
+            response    =   client.delete(f'{BRANDS_URL}{brand.pk}/')
+        self.assertEqual(response.status_code, 200, response.data)
+        self.assertFalse(Brand.objects.filter(pk = brand.pk).exists())
+        store.refresh_from_db()
+        self.assertEqual(store.storage_used_bytes, 0)
+        delete_mock.assert_called_once_with('stores/1/brands/old.webp')
+
+    def test_brand_image_requires_own_brand(self):
+        client, _       =   self._client()
+        _, profile      =   _make_user('otro')
+        _grant(profile, has_public_link = True)
+        other           =   Store.objects.create(user = profile, slug = 'otra-tienda')
+        foreign         =   Brand.objects.create(store = other, name = 'Ajena')
+        response        =   client.post(f'{BRANDS_URL}{foreign.pk}/image/', {'image': self._upload()}, format = 'multipart')
+        self.assertEqual(response.status_code, 404)
+        foreign.refresh_from_db()
+        self.assertEqual(foreign.image_key, '')
+
+    def test_public_catalog_exposes_brand_image(self):
+        _, profile      =   _make_user('duenio')
+        _grant(profile, has_public_link = True)
+        store           =   Store.objects.create(user = profile, slug = 'mi-tienda', is_published = True)
+        Brand.objects.create(store = store, name = 'Nike', image_key = 'stores/1/brands/logo.webp')
+        cfg, val, norm, put, delete, urls   =   self._storage_patches()
+        with urls:
+            response    =   APIClient().get(PUBLIC_CATALOG.format(slug = 'mi-tienda'))
+        self.assertEqual(response.status_code, 200, response.data)
+        brand           =   next(b for b in response.data['brands'] if b['name'] == 'Nike')
+        self.assertEqual(brand['image'], 'https://cdn.test/stores/1/brands/logo.webp')
 
 
 class ProductValidationTests(TestCase):

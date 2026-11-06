@@ -25,7 +25,10 @@ def _store_list_queryset(view):
         Store.objects
         .select_related('customization', 'user__user', 'user__suscription__plan_suscription')
         .prefetch_related('carousel_images', 'gallery_images')
-        .annotate(_n_product_images = Count('products', filter = ~Q(products__image_key = '')))
+        .annotate(
+            _n_product_images = Count('products', filter = ~Q(products__image_key = '')),
+            _n_brand_images   = Count('brands', filter = ~Q(brands__image_key = '')),
+        )
         .order_by('-created_at')
     )
     #El listado staff suma dueño, plan y acceso vigente (panel admin).

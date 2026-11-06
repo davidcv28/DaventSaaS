@@ -8,7 +8,7 @@ from StoreApp.domains.stores.models import Store
 Catálogo de la web del cliente: cuelga de Store (una tienda = un
 catálogo). Category y Brand agrupan los productos en el menú lateral de
 la página pública; Product es la unidad vendible con imagen en
-Cloudinary (misma cuota max_storage_mb que logo/carrusel).
+R2 (misma cuota max_storage_mb que logo/carrusel).
 
 """
 #=========================================
@@ -39,6 +39,8 @@ class Category(models.Model):
 class Brand(models.Model):
     store                       =   models.ForeignKey(Store, on_delete = models.CASCADE, related_name = 'brands', db_index = False)
     name                        =   models.CharField(max_length = 60, verbose_name = 'Nombre')
+    image_key                   =   models.CharField(max_length = 200, blank = True, verbose_name = 'Imagen (key en R2)')
+    image_size                  =   models.PositiveIntegerField(default = 0, verbose_name = 'Tamaño de imagen (bytes)')
     position                    =   models.PositiveIntegerField(default = 0, verbose_name = 'Orden')
     created_at                  =   models.DateTimeField(auto_now_add = True)
     class Meta:

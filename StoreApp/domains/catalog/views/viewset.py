@@ -11,7 +11,10 @@ from rest_framework.permissions import SAFE_METHODS, AllowAny, IsAdminUser
 from rest_framework.response import Response
 from rest_framework.throttling import UserRateThrottle
 
-from StoreApp.domains.catalog.serializers.serializers import ProductSerializerList
+from StoreApp.domains.catalog.serializers.serializers import (
+    BrandSerializer,
+    ProductSerializerList,
+)
 from StoreApp.domains.catalog.services.price_updates import (
     BULK_FIELDS,
     BULK_MODES,
@@ -28,10 +31,12 @@ from StoreApp.domains.catalog.services.services import (
     products_limit,
 )
 from StoreApp.domains.stores.services import (
+    delete_brand_image,
     delete_product_image,
     profile_has_benefit,
     remove_background,
     storage_payload,
+    upload_brand_image,
     upload_product_image,
     validate_image_file,
 )
@@ -83,6 +88,40 @@ class CategoryViewSet(CatalogGateMixin, CatalogBaseViewSet):
 #=========================================
 class BrandViewSet(CatalogGateMixin, CatalogBaseViewSet):
     viewset_config  =   BrandConfigs
+    #=========================================
+    # BRAND IMAGE (logo PNG -> WebP con transparencia, multipart)
+    #=========================================
+    @action(detail = True, methods = ['post', 'delete'], url_path = 'image')
+    def image(self, request, pk = None):
+        denied  =   self._deny_without_catalog()
+        if denied: return denied
+        brand   =   self.get_object()
+        store   =   brand.store
+        if request.method == 'DELETE':
+            delete_brand_image(brand)
+            message =   'La imagen de la marca se eliminó.'
+        else:
+            upload  =   request.FILES.get('image')
+            if upload is None:
+                return Response({'image': 'Tenés que adjuntar una imagen.'}, status = status.HTTP_400_BAD_REQUEST)
+            try:
+                upload_brand_image(brand, upload)
+            except ValueError as error:
+                return Response({'image': str(error)}, status = status.HTTP_400_BAD_REQUEST)
+            message =   'La imagen de la marca se actualizó.'
+        return Response(
+            {
+                'Exito'     :   message,
+                'item'      :   BrandSerializer(brand).data,
+                'storage'   :   storage_payload(store, store.user),
+            },
+            status = status.HTTP_200_OK,
+        )
+    def perform_destroy(self, instance):
+        # Libera la imagen (R2 + cuota) antes de borrar la marca.
+        if instance.image_key:
+            delete_brand_image(instance)
+        instance.delete()
 #=========================================
 # DISCOUNT VIEWSET (descuentos programados de la tienda)
 #=========================================
