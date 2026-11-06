@@ -1,5 +1,5 @@
 <script setup>
-import { computed } from 'vue'
+import { computed, ref } from 'vue'
 import AppIcon from '../../AppIcon.vue'
 import { formatARS } from '../../../api/billing.api.js'
 import { productListOffer, isDiscountedProduct, offerPct } from '../../../api/catalog.api.js'
@@ -13,7 +13,16 @@ const props = defineProps({
   selectedIds: { type: Array, default: () => [] },
   campaignOf: { type: Function, default: () => null }
 })
-const emit = defineEmits(['edit', 'update:selectedIds'])
+const emit = defineEmits(['edit', 'update:selectedIds', 'duplicate', 'toggle-active', 'remove'])
+
+const allSelected = computed(() => props.products.length > 0 && props.products.every((p) => selectedSet.value.has(p.id)))
+function toggleAll() {
+  emit('update:selectedIds', allSelected.value ? [] : props.products.map((p) => p.id))
+}
+
+// Menú ⋮ de cada fila: uno abierto a la vez, click fuera lo cierra.
+const openMenu = ref(null)
+function toggleMenu(id) { openMenu.value = openMenu.value === id ? null : id }
 
 const selectedSet = computed(() => new Set(props.selectedIds))
 
@@ -48,6 +57,19 @@ function skuOf(p) { return `DAV-${String(p.id).padStart(4, '0')}` }
 <template>
   <div class="prod-table-wrap">
     <table class="prod-table">
+      <thead>
+        <tr>
+          <th class="pt-check">
+            <input type="checkbox" :checked="allSelected" aria-label="Seleccionar todos" @change="toggleAll" />
+          </th>
+          <th class="pt-img-col">Foto</th>
+          <th>Producto</th>
+          <th class="pt-org-col">Categoría</th>
+          <th class="pt-num">Precio</th>
+          <th class="pt-num">Estado</th>
+          <th class="pt-acts-col"><span class="sr-only">Acciones</span></th>
+        </tr>
+      </thead>
       <tbody>
         <tr
           v-for="p in products" :key="p.id" :class="{ off: !p.is_active, sel: selectedSet.has(p.id) }"
@@ -56,7 +78,7 @@ function skuOf(p) { return `DAV-${String(p.id).padStart(4, '0')}` }
           <td class="pt-check" @click.stop>
             <input type="checkbox" :checked="selectedSet.has(p.id)" :aria-label="`Seleccionar ${p.name}`" @change="toggleOne(p.id)" />
           </td>
-          <td class="pt-prod">
+          <td class="pt-img">
             <span class="pt-thumb" :style="p.image ? null : { '--h': hueOf(p.name) }">
               <img v-if="p.image" :src="p.image" :alt="p.name" loading="lazy" />
               <AppIcon v-else name="package" :size="18" aria-hidden="true" />
@@ -70,6 +92,8 @@ function skuOf(p) { return `DAV-${String(p.id).padStart(4, '0')}` }
                 <span v-if="isDiscountedProduct(p)" class="pt-off">-{{ pctOf(p) }}%</span>
               </span>
             </span>
+          </td>
+          <td class="pt-prod">
             <span class="pt-name">
               <strong class="pt-edit" :title="`Editar ${p.name}`" @click.stop="emit('edit', p)">{{ p.name }}</strong>
               <small>SKU {{ skuOf(p) }}<template v-if="addedLabel(p.created_at)"> · {{ addedLabel(p.created_at) }}</template><template v-if="!p.image"> · sin foto</template></small>
@@ -83,8 +107,8 @@ function skuOf(p) { return `DAV-${String(p.id).padStart(4, '0')}` }
             <template v-else>—</template>
           </td>
           <td class="pt-num pt-price">
-            <template v-if="offerOf(p) != null"><s>{{ formatARS(p.price) }}</s> <b class="pt-deal">{{ formatARS(offerOf(p)) }}</b></template>
-            <template v-else><b>{{ formatARS(p.price) }}</b></template>
+            <template v-if="offerOf(p) != null"><b class="pt-deal">{{ formatARS(offerOf(p)) }}</b><small><s>{{ formatARS(p.price) }}</s> · en oferta</small></template>
+            <template v-else><b>{{ formatARS(p.price) }}</b><small>precio final</small></template>
           </td>
           <td class="pt-num">
             <span class="pt-status">
@@ -93,6 +117,21 @@ function skuOf(p) { return `DAV-${String(p.id).padStart(4, '0')}` }
                 <AppIcon :name="p.is_active ? 'eye' : 'eye-off'" :size="11" aria-hidden="true" />{{ p.is_active ? 'Visible' : 'Oculto' }}
               </span>
             </span>
+          </td>
+          <td class="pt-acts" @click.stop>
+            <button type="button" class="pt-act" :title="`Editar ${p.name}`" @click="emit('edit', p)"><AppIcon name="pencil" :size="14" /></button>
+            <div class="pt-menu">
+              <button
+                type="button" class="pt-act" :aria-expanded="openMenu === p.id" aria-haspopup="menu"
+                :title="`Más acciones de ${p.name}`" @click="toggleMenu(p.id)"
+              ><AppIcon name="more-vertical" :size="14" /></button>
+              <span v-if="openMenu === p.id" class="pt-menu-overlay" aria-hidden="true" @click="openMenu = null"></span>
+              <div v-if="openMenu === p.id" class="pt-dropdown" role="menu">
+                <button type="button" role="menuitem" @click="emit('duplicate', p); openMenu = null"><AppIcon name="copy" :size="13" /> Duplicar</button>
+                <button type="button" role="menuitem" @click="emit('toggle-active', p); openMenu = null"><AppIcon :name="p.is_active ? 'eye-off' : 'eye'" :size="13" /> {{ p.is_active ? 'Ocultar' : 'Mostrar' }}</button>
+                <button type="button" role="menuitem" class="danger" @click="emit('remove', p); openMenu = null"><AppIcon name="trash" :size="13" /> Eliminar</button>
+              </div>
+            </div>
           </td>
         </tr>
       </tbody>
@@ -103,6 +142,13 @@ function skuOf(p) { return `DAV-${String(p.id).padStart(4, '0')}` }
 <style scoped>
 .prod-table-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; margin: 0 -2px; padding: 0 2px; }
 .prod-table { width: 100%; min-width: 560px; border-collapse: collapse; font-size: 13px; }
+.prod-table th {
+  padding: 0 12px 9px; border-bottom: 1px solid var(--line);
+  font-size: 11.5px; font-weight: 700; letter-spacing: .03em;
+  color: var(--muted); text-align: left; white-space: nowrap;
+}
+.prod-table th.pt-check { padding-right: 4px; }
+.prod-table th.pt-num { text-align: right; }
 .prod-table td { padding: 11px 12px; border-bottom: 1px solid var(--line-soft); vertical-align: middle; }
 .prod-table tbody tr:last-child td { border-bottom: none; }
 .prod-table tbody tr { transition: background .12s, box-shadow .12s; cursor: pointer; }
@@ -112,8 +158,9 @@ function skuOf(p) { return `DAV-${String(p.id).padStart(4, '0')}` }
 .prod-table tbody tr.sel:hover { background: var(--brand-soft); }
 .pt-check { width: 36px; padding-right: 4px; }
 .pt-check input { width: 15px; height: 15px; accent-color: var(--brand-600); cursor: pointer; }
-.prod-table td.pt-prod { min-width: 200px; }
-.pt-prod { display: flex; align-items: center; gap: 11px; min-width: 0; }
+.prod-table td.pt-img { width: 58px; padding-right: 0; }
+.prod-table td.pt-prod { min-width: 170px; }
+.pt-img { vertical-align: middle; }
 .pt-thumb {
   position: relative; flex: none; width: 46px; height: 46px; border-radius: 12px;
   border: 1px solid var(--line); color: var(--muted); background: var(--surface);
@@ -159,10 +206,34 @@ function skuOf(p) { return `DAV-${String(p.id).padStart(4, '0')}` }
 .pt-status .pill svg { flex: none; }
 .pt-deal { color: var(--brand-ink); }
 .pt-num { text-align: right; font-variant-numeric: var(--num); white-space: nowrap; }
-.pt-price b { font-weight: 700; }
-.pt-price s { color: var(--muted); font-weight: 400; margin-right: 4px; font-size: 12px; }
+.pt-price b { font-weight: 700; font-size: 14.5px; color: var(--ink); }
+.pt-price small { display: block; font-size: 11px; font-weight: 400; color: var(--muted); }
+.pt-price s { color: var(--muted); font-weight: 400; font-size: 12px; }
+/* Acciones de fila: lápiz + menú ⋮, reservan su ancho para que la fila no salte. */
+.pt-acts { text-align: right; white-space: nowrap; width: 76px; }
+.pt-act {
+  display: inline-grid; place-items: center; width: 30px; height: 30px;
+  border: none; border-radius: 8px; background: transparent; color: var(--muted);
+  cursor: pointer; transition: color .12s, background .12s;
+}
+.pt-act:hover { color: var(--brand-ink); background: var(--brand-soft); }
+.pt-menu { position: relative; display: inline-block; }
+.pt-menu-overlay { position: fixed; inset: 0; z-index: 20; cursor: default; }
+.pt-dropdown {
+  position: absolute; right: 0; top: calc(100% + 4px); z-index: 21; min-width: 140px;
+  display: grid; padding: 5px; border: 1px solid var(--line); border-radius: 10px;
+  background: var(--card); box-shadow: 0 10px 28px rgba(15, 12, 40, .16);
+}
+.pt-dropdown button {
+  display: flex; align-items: center; gap: 8px; padding: 8px 10px;
+  border: none; border-radius: 7px; background: transparent; cursor: pointer;
+  font: inherit; font-size: 12.5px; font-weight: 550; color: var(--ink-2); text-align: left;
+}
+.pt-dropdown button:hover { background: var(--surface); color: var(--ink); }
+.pt-dropdown button.danger { color: var(--danger); }
+.pt-dropdown button.danger:hover { background: color-mix(in srgb, var(--danger) 10%, transparent); }
 @media (max-width: 860px) {
-  .prod-table td.pt-org { display: none; }
+  .prod-table td.pt-org, .prod-table th.pt-org-col { display: none; }
   .prod-table { min-width: 440px; }
 }
 @media (max-width: 520px) {

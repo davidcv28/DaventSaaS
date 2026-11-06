@@ -1051,6 +1051,27 @@ async function bulkDuplicate() {
   pushToast(n === 1 ? 'Producto duplicado' : `${n} productos duplicados`)
 }
 
+// Acciones de fila (menú ⋮): mismas operaciones que la barra de selección.
+async function toggleProductActive(p) {
+  await catalog.saveProduct(p.id, { fields: { is_active: !p.is_active }, image: null, imageClear: false })
+  pushToast(p.is_active ? 'Producto oculto' : 'Producto visible en tu web')
+}
+async function removeProduct(p) {
+  await catalog.removeProduct(p.id)
+  if (productEditing.value === p.id) closeProductForm()
+  pushToast('Producto eliminado')
+}
+async function duplicateProduct(p) {
+  const res = await catalog.saveProduct(null, {
+    fields: {
+      name: `${p.name} (copia)`, price: p.price, category: p.category || '', brand: p.brand || '',
+      description: p.description || '', is_active: p.is_active, features: p.features || {}
+    },
+    image: null, imageClear: false
+  })
+  if (res?.ok) pushToast('Producto duplicado')
+}
+
 // Chips de estado de la cabecera: escaneo rápido del catálogo.
 const productStats = computed(() => {
   const list = catalog.products
@@ -3837,12 +3858,12 @@ async function changePassword() {
               <template v-else>
                 <div class="inv-head">
                   <h3><AppIcon name="package" :size="17" /> Inventario <small>· {{ filteredProducts.length }} de {{ catalog.products.length }}</small></h3>
-                  <button type="button" class="btn ghost btn-auto" @click="showPriceUpdate = true"><AppIcon name="tag" :size="14" /> Actualizar precios</button>
                 </div>
                 <CatalogToolbar
                   v-model:query="productQuery" v-model:category="prodFilterCategory" v-model:brand="prodFilterBrand"
                   v-model:only-offers="prodOnlyOffers" v-model:sort="prodSort"
                   :categories="catalog.categories" :brands="catalog.brands"
+                  @prices="showPriceUpdate = true"
                 />
                 <div v-if="!filteredProducts.length" class="empty-mini">
                   <AppIcon name="search" :size="22" />
@@ -3865,7 +3886,8 @@ async function changePassword() {
                   <ProductTable
                     :products="pagedProducts" v-model:selected-ids="selectedIds"
                     :campaign-of="(id) => productCampaign.get(id) || null"
-                    @edit="editProduct"
+                    @edit="editProduct" @duplicate="duplicateProduct"
+                    @toggle-active="toggleProductActive" @remove="removeProduct"
                   />
                   <div v-if="prodPageInfo.pages > 1" class="prod-pager">
                     <span>Mostrando {{ prodPageInfo.from }}–{{ prodPageInfo.to }} de {{ prodPageInfo.total }}</span>

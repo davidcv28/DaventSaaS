@@ -16,7 +16,7 @@ defineProps({
 })
 const emit = defineEmits([
   'update:query', 'update:category', 'update:brand',
-  'update:onlyOffers', 'update:sort'
+  'update:onlyOffers', 'update:sort', 'prices'
 ])
 
 const SORTS = [
@@ -64,6 +64,9 @@ const SORTS = [
       >
         <AppIcon name="percent" :size="14" aria-hidden="true" />
       </button>
+      <button type="button" class="ctoolbar-prices" @click="emit('prices')">
+        <AppIcon name="tag" :size="14" aria-hidden="true" /> Actualizar precios
+      </button>
     </div>
   </div>
 </template>
@@ -97,6 +100,14 @@ const SORTS = [
 .ctoolbar-toggle:hover { color: var(--ink-2); }
 .ctoolbar-toggle.on { border-color: var(--brand-500); background: var(--brand-soft); color: var(--brand-ink); }
 .ctoolbar-toggle:focus-visible { outline: 2px solid var(--brand-500); outline-offset: 2px; }
+.ctoolbar-prices {
+  display: inline-flex; align-items: center; gap: 7px; flex: none; height: 38px;
+  padding: 0 14px; border: 1px solid var(--line); border-radius: var(--radius-sm);
+  background: var(--surface); color: var(--ink-2); font: inherit; font-size: 13px;
+  font-weight: 600; cursor: pointer; white-space: nowrap;
+  transition: color .15s, border-color .15s, background .15s;
+}
+.ctoolbar-prices:hover { border-color: var(--brand-500); background: var(--brand-soft); color: var(--brand-ink); }
 @media (max-width: 720px) {
   .ctoolbar-search { flex: 1 1 100%; }
   .ctoolbar-sel, .ctoolbar-sort { flex: 1 1 calc(50% - 4px); min-width: 0; }
