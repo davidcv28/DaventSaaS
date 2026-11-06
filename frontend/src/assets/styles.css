@@ -842,20 +842,30 @@ body{ transition: background-color .2s ease, color .2s ease; }
 .tab{ display: inline-flex; align-items: center; gap: 8px; padding: 10px 16px; border: none; border-bottom: 2px solid transparent; background: transparent; color: var(--muted); font: inherit; font-size: 14px; font-weight: 600; white-space: nowrap; cursor: pointer; transition: color .15s, border-color .15s; }
 .tab:hover{ color: var(--ink); }
 .tab.active{ color: var(--brand-ink); border-bottom-color: var(--brand-500); }
-/* Pestañas del catálogo: segmented control. La barra es una sola cápsula
-   surface; la activa flota como card con sombra e ícono de marca. */
+/* Pestañas del catálogo: segmented control con color por sección. Cada
+   ícono lleva el tono de su sección; la activa muestra fondo tintado +
+   texto del mismo tono para que la navegación no pase desapercibida. */
 .tab.t-prod,.tab.t-cat,.tab.t-brand,.tab.t-disc{
-  padding: 8px 14px; border: none; border-radius: 9px;
-  background: transparent; color: var(--ink-2);
+  --tone: var(--brand-500);
+  padding: 10px 18px; border: none; border-radius: 9px;
+  background: transparent; color: var(--ink); font-size: 14.5px;
   transition: background .15s, color .15s, box-shadow .15s;
 }
-.tab.t-prod svg,.tab.t-cat svg,.tab.t-brand svg,.tab.t-disc svg{ color: var(--muted); }
+.tab.t-prod svg,.tab.t-cat svg,.tab.t-brand svg,.tab.t-disc svg{ color: var(--tone); }
 .tab.t-prod .tab-sub,.tab.t-cat .tab-sub,.tab.t-brand .tab-sub,.tab.t-disc .tab-sub{ color: var(--muted); }
-.tab.t-prod:hover,.tab.t-cat:hover,.tab.t-brand:hover,.tab.t-disc:hover{ color: var(--ink); }
-.tab.t-prod.active,.tab.t-cat.active,.tab.t-brand.active,.tab.t-disc.active{
-  background: var(--card); color: var(--ink); box-shadow: var(--shadow-sm);
+.tab.t-prod:hover,.tab.t-cat:hover,.tab.t-brand:hover,.tab.t-disc:hover{
+  background: color-mix(in srgb, var(--tone) 9%, transparent);
 }
-.tab.t-prod.active svg,.tab.t-cat.active svg,.tab.t-brand.active svg,.tab.t-disc.active svg{ color: var(--brand-500); }
+.tab.t-prod.active,.tab.t-cat.active,.tab.t-brand.active,.tab.t-disc.active{
+  background: color-mix(in srgb, var(--tone) 16%, var(--card));
+  color: var(--ink); box-shadow: var(--shadow-sm), inset 0 0 0 1px color-mix(in srgb, var(--tone) 45%, transparent);
+}
+.tab.t-cat{ --tone: #0284c7; }
+.tab.t-brand{ --tone: #ea580c; }
+.tab.t-disc{ --tone: #e11d48; }
+[data-theme='dark'] .tab.t-cat{ --tone: #38bdf8; }
+[data-theme='dark'] .tab.t-brand{ --tone: #fb923c; }
+[data-theme='dark'] .tab.t-disc{ --tone: #fb7185; }
 .tax-add{ display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 12px; align-items: end; margin-bottom: 16px; }
 .tax-add .field, .tax-add .input-wrap{ margin-bottom: 0; }
 .tax-fields{ display: grid; gap: 12px; }
