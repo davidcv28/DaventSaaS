@@ -844,9 +844,10 @@ body{ transition: background-color .2s ease, color .2s ease; }
 .tab.t-prod,.tab.t-cat,.tab.t-brand,.tab.t-disc{
   --tone: var(--brand-500);
   padding: 8px 14px; border: 1.5px solid var(--line); border-radius: 10px;
-  background: #fff; color: var(--tone);
+  background: #fff; color: var(--ink);
   transition: border-color .15s, background .15s, color .15s, box-shadow .15s;
 }
+.tab.t-prod .tab-sub,.tab.t-cat .tab-sub,.tab.t-brand .tab-sub,.tab.t-disc .tab-sub{ color: var(--muted); }
 .tab.t-prod svg,.tab.t-cat svg,.tab.t-brand svg,.tab.t-disc svg{ color: var(--tone); }
 .tab.t-prod:hover,.tab.t-cat:hover,.tab.t-brand:hover,.tab.t-disc:hover{
   border-color: var(--tone);
