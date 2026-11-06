@@ -834,40 +834,7 @@ body{ transition: background-color .2s ease, color .2s ease; }
    el mensaje en placa de vidrio con borde de luz. */
 
 /* ===== Catálogo del dashboard (productos, categorías, marcas) ===== */
-.tabs{ display: flex; margin-bottom: 18px; overflow-x: auto; scrollbar-width: thin; border-bottom: 1px solid var(--line); }
-.tab{ display: inline-flex; align-items: center; gap: 8px; padding: 10px 16px; border: none; border-bottom: 2px solid transparent; background: transparent; color: var(--muted); font: inherit; font-size: 14px; font-weight: 600; white-space: nowrap; cursor: pointer; transition: color .15s, border-color .15s; }
-.tab:hover{ color: var(--ink); }
-.tab.active{ color: var(--brand-ink); border-bottom-color: var(--brand-500); }
-/* Pestañas del catálogo como barra de secciones a ancho completo: cada
-   tab ocupa el mismo ancho, centrado, con indicador inferior en el color
-   propio de la sección (tenue inactiva, pleno activa). */
-.tab.t-prod,.tab.t-cat,.tab.t-brand,.tab.t-disc{
-  --tone: var(--brand-500);
-  flex: 1 1 0; justify-content: center; min-width: max-content;
-  padding: 12px 14px 11px; border: none; border-bottom: 3px solid transparent;
-  background: transparent; color: var(--ink-2); font-size: 14px;
-  transition: background .15s, color .15s, border-color .15s;
-}
-.tab.t-prod svg,.tab.t-cat svg,.tab.t-brand svg,.tab.t-disc svg{ color: var(--tone); }
-.tab-txt{ display: inline-flex; align-items: baseline; gap: 6px; }
-.tab.t-prod .tab-sub,.tab.t-cat .tab-sub,.tab.t-brand .tab-sub,.tab.t-disc .tab-sub{
-  font-size: 11px; font-weight: 500; color: var(--muted);
-}
-.tab.t-prod:hover,.tab.t-cat:hover,.tab.t-brand:hover,.tab.t-disc:hover{
-  background: color-mix(in srgb, var(--tone) 7%, transparent); color: var(--ink);
-}
-.tab.t-prod.active,.tab.t-cat.active,.tab.t-brand.active,.tab.t-disc.active{
-  border-bottom-color: var(--tone);
-  background: color-mix(in srgb, var(--tone) 9%, transparent);
-  color: var(--ink);
-}
-.tab.t-prod.active .tab-sub,.tab.t-cat.active .tab-sub,.tab.t-brand.active .tab-sub,.tab.t-disc.active .tab-sub{ color: var(--ink-2); }
-.tab.t-cat{ --tone: #0284c7; }
-.tab.t-brand{ --tone: #ea580c; }
-.tab.t-disc{ --tone: #e11d48; }
-[data-theme='dark'] .tab.t-cat{ --tone: #38bdf8; }
-[data-theme='dark'] .tab.t-brand{ --tone: #fb923c; }
-[data-theme='dark'] .tab.t-disc{ --tone: #fb7185; }
+.tab-sub{ font-size: 11px; font-weight: 500; color: var(--muted); }
 .tax-add{ display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 12px; align-items: end; margin-bottom: 16px; }
 .tax-add .field, .tax-add .input-wrap{ margin-bottom: 0; }
 .tax-fields{ display: grid; gap: 12px; }
@@ -1498,7 +1465,6 @@ body{ transition: background-color .2s ease, color .2s ease; }
   .sp-grid{ grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 10px; }
   .tax-add{ grid-template-columns: minmax(0, 1fr); }
   .tax-actions{ flex-wrap: wrap; }
-  .tabs{ overflow-x: auto; }
   .pos-body{ grid-template-columns: minmax(0, 1fr); }
   .pos-cart{ border-left: 0; border-top: 1px solid var(--pos-line); }
   .pos-date{ display: none; }

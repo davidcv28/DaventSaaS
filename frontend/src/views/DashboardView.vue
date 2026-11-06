@@ -822,6 +822,12 @@ async function removeDomain() {
 // --- Mis catálogos: productos, categorías y marcas de la tienda ---
 // El catálogo se habilita con suscripción activa (el backend devuelve 403 sin plan).
 const catalogTab = ref('products') // products | categories | brands | discounts
+const catalogSectionTabs = computed(() => [
+  { id: 'products', label: 'Mis productos', icon: 'package', hint: 'Tu catálogo' },
+  { id: 'categories', label: 'Categorías', icon: 'layout-grid', hint: 'Para ordenarlos' },
+  { id: 'brands', label: 'Marcas', icon: 'tag', hint: 'De tus productos' },
+  { id: 'discounts', label: 'Descuentos', icon: 'percent', hint: canDiscounts.value ? 'Se activan solos' : 'Premium' }
+])
 const showPriceUpdate = ref(false) // modal "Actualizar precios" (bulk + import CSV)
 const catalogLoaded = ref(false)
 
@@ -3787,20 +3793,7 @@ async function changePassword() {
       </template>
 
       <template v-else>
-        <div class="tabs">
-          <button type="button" class="tab t-prod" :class="{ active: catalogTab === 'products' }" @click="catalogTab = 'products'">
-            <AppIcon name="package" :size="17" /> <span class="tab-txt">Mis productos<small class="tab-sub">tu catálogo</small></span>
-          </button>
-          <button type="button" class="tab t-cat" :class="{ active: catalogTab === 'categories' }" @click="catalogTab = 'categories'">
-            <AppIcon name="layout-grid" :size="17" /> <span class="tab-txt">Categorías<small class="tab-sub">para ordenarlos</small></span>
-          </button>
-          <button type="button" class="tab t-brand" :class="{ active: catalogTab === 'brands' }" @click="catalogTab = 'brands'">
-            <AppIcon name="tag" :size="17" /> <span class="tab-txt">Marcas<small class="tab-sub">de tus productos</small></span>
-          </button>
-          <button type="button" class="tab t-disc" :class="{ active: catalogTab === 'discounts' }" @click="catalogTab = 'discounts'">
-            <AppIcon name="percent" :size="17" /> <span class="tab-txt">Descuentos<small class="tab-sub">{{ canDiscounts ? 'se activan solos' : 'Premium' }}</small></span>
-          </button>
-        </div>
+        <SectionTabs :tabs="catalogSectionTabs" :active="catalogTab" @select="catalogTab = $event" />
 
         <div v-if="catalog.status === 'loading'" class="card card-loading"><span class="spinner spinner-brand"></span><p>Cargando tu catálogo…</p></div>
 
