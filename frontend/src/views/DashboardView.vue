@@ -1350,6 +1350,13 @@ const availableCampaigns = computed(() => {
   })
 })
 const selectedCampaign = computed(() => offers.campaigns.value.find((c) => c.id === Number(discountForm.campaign)) || null)
+// Opciones del select: eventos en ventana + el ya elegido aunque haya vencido
+// (así al editar un descuento viejo el select no queda en blanco).
+const campaignOptions = computed(() => {
+  const list = [...availableCampaigns.value]
+  if (selectedCampaign.value && !list.some((c) => c.id === selectedCampaign.value.id)) list.push(selectedCampaign.value)
+  return list
+})
 
 // Aviso "se aproxima un evento": campañas en ventana de configuración que
 // todavía no tienen un descuento programado (vigente o futuro).
@@ -1466,8 +1473,11 @@ async function saveDiscount() {
     brand: discountForm.scope === 'brand' ? discountForm.brand : null,
     products: discountForm.scope === 'products' ? discountForm.product_ids : [],
     campaign: discountForm.campaign || null,
-    starts_at: localInputToIso(discountStartLocal.value),
-    ends_at: discountForm.end_none ? null : localInputToIso(discountEndLocal.value),
+    // Con evento las fechas quedan congeladas a la ventana de la campaña.
+    starts_at: localInputToIso(selectedCampaign.value ? isoToLocalInput(selectedCampaign.value.starts_at) : discountStartLocal.value),
+    ends_at: selectedCampaign.value
+      ? localInputToIso(isoToLocalInput(selectedCampaign.value.ends_at))
+      : (discountForm.end_none ? null : localInputToIso(discountEndLocal.value)),
     is_active: discountForm.is_active
   })
   discountBusy.value = false
@@ -4175,8 +4185,8 @@ async function changePassword() {
                   <option value="fortnight">Próximos 15 días</option>
                   <option value="month">Hasta fin de mes</option>
                   <option value="custom">Otras fechas…</option>
-                  <optgroup v-if="availableCampaigns.length" label="Eventos especiales">
-                    <option v-for="c in availableCampaigns" :key="c.id" :value="`camp:${c.id}`">{{ c.name }} · {{ campaignWindowLabel(c) }}</option>
+                  <optgroup v-if="campaignOptions.length" label="Eventos especiales">
+                    <option v-for="c in campaignOptions" :key="c.id" :value="`camp:${c.id}`">{{ c.name }} · {{ campaignWindowLabel(c) }}</option>
                   </optgroup>
                 </select>
                 <div v-if="selectedCampaign" class="disc-event-lock">
