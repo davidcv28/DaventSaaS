@@ -902,6 +902,16 @@ body{ transition: background-color .2s ease, color .2s ease; }
 .disc-presets{ display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 10px; }
 .disc-preset{ padding: 5px 12px; border: 1px solid var(--line); border-radius: 99px; background: var(--card); font-size: 12px; font-weight: 600; color: var(--ink-2); cursor: pointer; transition: border-color .15s, color .15s, background .15s; }
 .disc-preset:hover{ border-color: var(--brand-500); color: var(--brand-ink); background: var(--brand-soft); }
+.disc-preset.on{ border-color: var(--brand-500); background: var(--brand-soft); color: var(--brand-ink); box-shadow: 0 0 0 1px var(--brand-500) inset; }
+/* "Opciones avanzadas": lo secundario queda plegado para no abrumar. */
+.disc-adv{ margin-top: 14px; border: 1px dashed var(--line); border-radius: var(--radius-sm); background: var(--surface); }
+.disc-adv > summary{ display: flex; align-items: center; gap: 6px; padding: 11px 14px; cursor: pointer; list-style: none; font-size: 13px; font-weight: 650; color: var(--ink-2); }
+.disc-adv > summary::-webkit-details-marker{ display: none; }
+.disc-adv > summary::before{ content: '+'; display: inline-grid; place-items: center; width: 18px; height: 18px; border-radius: 6px; background: var(--brand-soft); color: var(--brand-ink); font-weight: 700; }
+.disc-adv[open] > summary::before{ content: '−'; }
+.disc-adv > summary:hover{ color: var(--ink); }
+.disc-adv[open]{ border-style: solid; }
+.disc-adv > *:not(summary){ padding: 0 14px 14px; }
 .disc-window{ display: grid; grid-template-columns: minmax(0, 1fr); gap: 12px; padding: 14px; border: 1px solid var(--line); border-radius: var(--radius-sm); background: var(--surface); }
 .disc-when{ display: grid; gap: 8px; align-content: start; }
 .disc-when-label{ display: inline-flex; align-items: center; gap: 5px; font-size: 12px; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: .04em; }

@@ -1324,7 +1324,12 @@ function discountFieldErr(name) {
 
 // Atajos de duración: completan inicio/fin de un toque (siempre se puede
 // ajustar a mano después — son presets, no modos).
+// Ventana del descuento: por defecto "Sin fin" (lo más simple); solo con
+// "Personalizado" se despliegan los campos de fecha/hora.
+const discountWindowPreset = ref('none')
 function discountPreset(kind) {
+  discountWindowPreset.value = kind
+  if (kind === 'custom') { discountForm.end_none = false; return }
   const start = new Date()
   const end = new Date(start)
   discountForm.end_none = kind === 'none'
@@ -1343,11 +1348,12 @@ function resetDiscountForm() {
     name: '', percent: String(DISCOUNT_DEFAULT_PERCENT), scope: 'all', category: '', brand: '',
     product_ids: [], campaign: '',
     start_date: localDateInput(new Date()), start_time: '00:00',
-    end_none: false, end_date: '', end_time: '23:59',
+    end_none: true, end_date: '', end_time: '23:59',
     is_active: true
   })
   Object.keys(discountTouched).forEach((k) => { discountTouched[k] = false })
   discountEditing.value = null
+  discountWindowPreset.value = 'none'
 }
 
 // El alta/edición abre el drawer (mismo patrón que el form de producto).
@@ -1373,6 +1379,7 @@ function editDiscount(d) {
     end_none: !end, end_date: end.slice(0, 10), end_time: end.slice(11, 16) || '23:59',
     is_active: d.is_active
   })
+  discountWindowPreset.value = d.ends_at ? 'custom' : 'none'
   catalog.notice = ''
   catalog.lastError = ''
   openDiscountForm()
@@ -4088,13 +4095,14 @@ async function changePassword() {
               <div class="field">
                 <label id="disc-window-label" class="sr-only"><AppIcon name="calendar" :size="14" class="label-icon" aria-hidden="true" />¿Cuándo aplica?</label>
                 <div class="disc-presets" role="group" aria-label="Duraciones rápidas">
-                  <button type="button" class="disc-preset" @click="discountPreset('today')">Solo hoy</button>
-                  <button type="button" class="disc-preset" @click="discountPreset('week')">Esta semana</button>
-                  <button type="button" class="disc-preset" @click="discountPreset('fortnight')">15 días</button>
-                  <button type="button" class="disc-preset" @click="discountPreset('month')">Este mes</button>
-                  <button type="button" class="disc-preset" @click="discountPreset('none')">Sin fin</button>
+                  <button type="button" class="disc-preset" :class="{ on: discountWindowPreset === 'none' }" @click="discountPreset('none')">Sin fin</button>
+                  <button type="button" class="disc-preset" :class="{ on: discountWindowPreset === 'today' }" @click="discountPreset('today')">Solo hoy</button>
+                  <button type="button" class="disc-preset" :class="{ on: discountWindowPreset === 'week' }" @click="discountPreset('week')">Esta semana</button>
+                  <button type="button" class="disc-preset" :class="{ on: discountWindowPreset === 'fortnight' }" @click="discountPreset('fortnight')">15 días</button>
+                  <button type="button" class="disc-preset" :class="{ on: discountWindowPreset === 'month' }" @click="discountPreset('month')">Este mes</button>
+                  <button type="button" class="disc-preset" :class="{ on: discountWindowPreset === 'custom' }" @click="discountPreset('custom')">Personalizado</button>
                 </div>
-                <div class="disc-window">
+                <div v-if="discountWindowPreset === 'custom'" class="disc-window">
                   <div class="disc-when">
                     <span class="disc-when-label"><AppIcon name="calendar" :size="13" aria-hidden="true" /> Empieza</span>
                     <div class="disc-when-fields">
@@ -4118,8 +4126,10 @@ async function changePassword() {
                 </div>
               </div>
 
-              <div class="form-step"><span class="form-step-num">4</span> Etiqueta de campaña <small class="tab-sub">(opcional)</small></div>
-              <CampaignPicker v-model="discountForm.campaign" />
+              <details class="disc-adv">
+                <summary>Opciones avanzadas <small class="tab-sub">· etiqueta de campaña</small></summary>
+                <CampaignPicker v-model="discountForm.campaign" />
+              </details>
 
               <div class="check-list">
                 <label class="check-item">
