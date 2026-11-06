@@ -1154,6 +1154,13 @@ body{ transition: background-color .2s ease, color .2s ease; }
 .inv-head h3 svg{ color: var(--brand-500); }
 .inv-head h3 small{ font-size: 12.5px; font-weight: 500; color: var(--muted); }
 .inv-head .btn{ min-height: 34px; padding: 0 13px; font-size: 12.5px; gap: 6px; }
+/* Móvil: el "Cargar producto" del encabezado de página empujaba todo hacia
+   abajo — se reemplaza por este compacto dentro de la card. */
+.inv-add{ display: none; }
+@media (max-width: 640px){
+  .cat-actions{ display: none; }
+  .inv-add{ display: inline-flex; width: auto; min-height: 34px; padding: 0 13px; font-size: 12.5px; gap: 5px; }
+}
 .prod-bulkbar-hint{ margin-left: auto; font-size: 12px; font-weight: 500; color: var(--muted); }
 @media (max-width: 640px){ .prod-bulkbar-hint{ display: none; } }
 .prod-bulkbar{ display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin: 0 -6px 10px; padding: 9px 12px; border: 1px solid var(--brand-soft-line); border-radius: var(--radius-sm); background: var(--brand-soft); color: var(--brand-ink); font-size: 13px; font-weight: 600; }

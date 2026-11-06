@@ -3822,7 +3822,7 @@ async function changePassword() {
             <span class="cat-stat tone-brand"><AppIcon name="tag" :size="13" aria-hidden="true" /> {{ productStats.discounted }} con descuento</span>
           </div>
         </div>
-        <div class="page-head-actions">
+        <div class="page-head-actions cat-actions">
           <button class="btn ghost btn-auto" @click="catalog.loadAll()"><AppIcon name="refresh" :size="16" /> Recargar</button>
           <button v-if="billing.hasSubscription && !catalog.denied" class="btn btn-auto" @click="focusProductForm"><AppIcon name="plus" :size="16" /> Cargar producto</button>
         </div>
@@ -3858,6 +3858,7 @@ async function changePassword() {
               <template v-else>
                 <div class="inv-head">
                   <h3><AppIcon name="package" :size="17" /> Inventario <small>· {{ filteredProducts.length }} de {{ catalog.products.length }}</small></h3>
+                  <button type="button" class="btn inv-add" aria-label="Cargar producto" @click="focusProductForm"><AppIcon name="plus" :size="15" /> Cargar</button>
                 </div>
                 <CatalogToolbar
                   v-model:query="productQuery" v-model:category="prodFilterCategory" v-model:brand="prodFilterBrand"

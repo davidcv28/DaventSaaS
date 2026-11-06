@@ -273,6 +273,16 @@
 @media (max-width: 1100px) {
   .tab-sub { display: none; }
 }
+/* Menos de 900px: las pestañas pasan de lista apilada a riel horizontal de
+   pills con scroll — no empujan el contenido hacia abajo. */
+@media (max-width: 899px) {
+  .sec-tabs { flex-direction: row; overflow-x: auto; gap: 8px; margin-bottom: 14px; padding-bottom: 2px; scrollbar-width: none; }
+  .sec-tabs::-webkit-scrollbar { display: none; }
+  .sec-tab { flex: none; align-items: center; gap: 8px; padding: 8px 13px; border-radius: 999px; min-height: 40px; }
+  .sec-tab .icon { width: 26px; height: 26px; padding: 5px; border-radius: 8px; }
+  .sec-tab small { display: none; }
+  .sec-tab strong { font-size: 13px; white-space: nowrap; }
+}
 @media (max-width: 640px) {
   .sec-tabs { gap: 8px; }
   .next-card { flex-wrap: wrap; }
