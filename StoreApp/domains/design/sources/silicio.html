@@ -1116,18 +1116,18 @@ html[data-ds-theme="dark"] .ds-service.is-sel .svc-check{background:var(--volt);
   .svc-price{order:3;width:100%;flex-direction:row;align-items:baseline;gap:10px}
   .svc-check{order:2;margin-left:auto}
 }
-/* Barra de presupuesto fija al pie del viewport del documento: el total de
-   lo marcado se ve siempre, sin importar el scroll de la lista. */
+/* Resumen del pedido: va en flujo justo debajo de los tickets — el iframe
+   del patrón va estirado a todo el documento, así que fixed/sticky los
+   mandaría al fondo de la página entera. Acá el total se lee al terminar
+   de recorrer los servicios, antes del CTA de WhatsApp. */
 .wo-bar{
-  position:fixed;left:0;right:0;bottom:0;z-index:70;
   display:flex;align-items:center;gap:14px;flex-wrap:wrap;
-  padding:14px clamp(16px,4vw,48px);border-top:1px solid var(--accent);
-  border-left:0;border-right:0;border-bottom:0;background:var(--surface);
-  box-shadow:0 -16px 44px -20px color-mix(in srgb,var(--accent) 55%,transparent);
+  margin-top:16px;padding:16px 20px;border:1px solid var(--accent);background:var(--surface);
+  box-shadow:0 16px 38px -20px color-mix(in srgb,var(--accent) 55%,transparent);
 }
 html[data-ds-theme="dark"] .wo-bar{
-  border-top-color:var(--volt);
-  box-shadow:0 -16px 44px -20px color-mix(in srgb,var(--volt) 40%,transparent);
+  border-color:color-mix(in srgb,var(--volt) 55%,var(--line));
+  box-shadow:0 16px 38px -20px color-mix(in srgb,var(--volt) 35%,transparent);
 }
 .wo-bar[hidden]{display:none}
 .wo-count{font:600 11px/1 var(--mono);letter-spacing:.16em;text-transform:uppercase;color:var(--muted)}
@@ -2135,12 +2135,9 @@ html[data-ds-theme="dark"] .foot-col a:hover{color:var(--volt)}
       var sel = items.filter(function (i) { return i.li.classList.contains('is-sel') })
       if (!sel.length) {
         bar.hidden = true
-        document.body.style.paddingBottom = ''
         return
       }
       bar.hidden = false
-      /* La barra es fixed: reservar su alto para que no tape el CTA final. */
-      document.body.style.paddingBottom = (bar.offsetHeight + 8) + 'px'
       count.textContent = sel.length + (sel.length === 1 ? ' servicio' : ' servicios')
       var sum = sel.reduce(function (s, i) { return s + i.price }, 0)
       var pending = sel.filter(function (i) { return !i.hasPrice }).length
