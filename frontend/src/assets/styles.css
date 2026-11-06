@@ -834,33 +834,28 @@ body{ transition: background-color .2s ease, color .2s ease; }
    el mensaje en placa de vidrio con borde de luz. */
 
 /* ===== Catálogo del dashboard (productos, categorías, marcas) ===== */
-.tabs{ display: flex; gap: 8px; margin-bottom: 18px; overflow-x: auto; scrollbar-width: thin; padding: 2px; }
+.tabs{
+  display: flex; gap: 2px; margin-bottom: 18px; padding: 4px;
+  width: fit-content; max-width: 100%; overflow-x: auto; scrollbar-width: thin;
+  background: var(--surface); border: 1px solid var(--line); border-radius: 12px;
+}
 .tab{ display: inline-flex; align-items: center; gap: 8px; padding: 10px 16px; border: none; border-bottom: 2px solid transparent; background: transparent; color: var(--muted); font: inherit; font-size: 14px; font-weight: 600; white-space: nowrap; cursor: pointer; transition: color .15s, border-color .15s; }
 .tab:hover{ color: var(--ink); }
 .tab.active{ color: var(--brand-ink); border-bottom-color: var(--brand-500); }
-/* Pestañas del catálogo con color propio por sección (Mis productos,
-   Categorías, Marcas, Descuentos): pastilla tintada, ícono del tono y
-   estado activo con borde + fondo del mismo color. */
+/* Pestañas del catálogo: segmented control. La barra es una sola cápsula
+   surface; la activa flota como card con sombra e ícono de marca. */
 .tab.t-prod,.tab.t-cat,.tab.t-brand,.tab.t-disc{
-  --tone: var(--brand-500);
-  padding: 8px 14px; border: 1.5px solid var(--line); border-radius: 10px;
-  background: var(--card); color: var(--ink);
-  transition: border-color .15s, background .15s, color .15s, box-shadow .15s;
+  padding: 8px 14px; border: none; border-radius: 9px;
+  background: transparent; color: var(--ink-2);
+  transition: background .15s, color .15s, box-shadow .15s;
 }
+.tab.t-prod svg,.tab.t-cat svg,.tab.t-brand svg,.tab.t-disc svg{ color: var(--muted); }
 .tab.t-prod .tab-sub,.tab.t-cat .tab-sub,.tab.t-brand .tab-sub,.tab.t-disc .tab-sub{ color: var(--muted); }
-.tab.t-prod svg,.tab.t-cat svg,.tab.t-brand svg,.tab.t-disc svg{ color: var(--tone); }
-.tab.t-prod:hover,.tab.t-cat:hover,.tab.t-brand:hover,.tab.t-disc:hover{
-  border-color: var(--tone);
-}
+.tab.t-prod:hover,.tab.t-cat:hover,.tab.t-brand:hover,.tab.t-disc:hover{ color: var(--ink); }
 .tab.t-prod.active,.tab.t-cat.active,.tab.t-brand.active,.tab.t-disc.active{
-  border-color: var(--tone); background: var(--tone); color: #fff;
-  box-shadow: 0 4px 14px color-mix(in srgb, var(--tone) 38%, transparent);
+  background: var(--card); color: var(--ink); box-shadow: var(--shadow-sm);
 }
-.tab.t-prod.active svg,.tab.t-cat.active svg,.tab.t-brand.active svg,.tab.t-disc.active svg{ color: #fff; }
-.tab.t-prod.active .tab-sub,.tab.t-cat.active .tab-sub,.tab.t-brand.active .tab-sub,.tab.t-disc.active .tab-sub{ color: rgba(255,255,255,.75); }
-.tab.t-cat{ --tone: #0ea5e9; }
-.tab.t-brand{ --tone: #f97316; }
-.tab.t-disc{ --tone: #e11d48; }
+.tab.t-prod.active svg,.tab.t-cat.active svg,.tab.t-brand.active svg,.tab.t-disc.active svg{ color: var(--brand-500); }
 .tax-add{ display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 12px; align-items: end; margin-bottom: 16px; }
 .tax-add .field, .tax-add .input-wrap{ margin-bottom: 0; }
 .tax-fields{ display: grid; gap: 12px; }
@@ -1133,11 +1128,15 @@ body{ transition: background-color .2s ease, color .2s ease; }
 .cat-stat{ display: inline-flex; align-items: center; gap: 5px; padding: 4px 11px; border: 1px solid var(--line); border-radius: 999px; background: var(--card); font-size: 12px; font-weight: 600; color: var(--ink-2); }
 .cat-stat svg{ color: var(--brand-500); }
 /* Tono por métrica: cada chip lleva el color de lo que cuenta. */
-.cat-stat.tone-info{ color: #fff; background: #0284c7; border-color: #0284c7; }
-.cat-stat.tone-warn{ color: #fff; background: #d97706; border-color: #d97706; }
-.cat-stat.tone-ok{ color: #fff; background: #059669; border-color: #059669; }
-.cat-stat.tone-brand{ color: #fff; background: #8b5cf6; border-color: #8b5cf6; }
-.cat-stat.tone-info svg,.cat-stat.tone-warn svg,.cat-stat.tone-ok svg,.cat-stat.tone-brand svg{ color: #fff; }
+.cat-stat{ background: var(--surface); }
+.cat-stat.tone-info svg{ color: #0284c7; }
+.cat-stat.tone-warn svg{ color: var(--warn); }
+.cat-stat.tone-ok svg{ color: var(--ok); }
+.cat-stat.tone-brand svg{ color: #8b5cf6; }
+[data-theme='dark'] .cat-stat.tone-info svg{ color: #38bdf8; }
+[data-theme='dark'] .cat-stat.tone-warn svg{ color: #fbbf24; }
+[data-theme='dark'] .cat-stat.tone-ok svg{ color: #34d399; }
+[data-theme='dark'] .cat-stat.tone-brand svg{ color: #a78bfa; }
 .page-head-actions{ display: flex; gap: 8px; flex-wrap: wrap; }
 /* Selección múltiple + paginado del inventario (vista tabla). */
 .inv-head{ display: flex; align-items: center; justify-content: space-between; gap: 10px; flex-wrap: wrap; margin-bottom: 12px; padding-bottom: 12px; border-bottom: 1px solid var(--line-soft); }
