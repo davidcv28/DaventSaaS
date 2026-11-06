@@ -5,15 +5,15 @@ import { formatARS } from '../../../api/billing.api.js'
 import { productListOffer, isDiscountedProduct, offerPct } from '../../../api/catalog.api.js'
 
 // Tabla densa del inventario: checkbox de selección múltiple, miniatura con
-// badges de oferta/campaña, categoría/marca en columnas, precio efectivo,
-// estado de visibilidad y acciones que aparecen al hover (siempre visibles
-// en táctil). La grilla de tarjetas sigue disponible como vista alternativa.
+// badges de oferta/campaña, categoría/marca en dos líneas, precio efectivo
+// y estado. Sin columna de acciones: la fila entera abre la edición y las
+// acciones en lote viven en la barra de selección.
 const props = defineProps({
   products: { type: Array, required: true },
   selectedIds: { type: Array, default: () => [] },
   campaignOf: { type: Function, default: () => null }
 })
-const emit = defineEmits(['edit', 'duplicate', 'toggle', 'remove', 'update:selectedIds'])
+const emit = defineEmits(['edit', 'update:selectedIds'])
 
 const selectedSet = computed(() => new Set(props.selectedIds))
 
@@ -49,8 +49,11 @@ function skuOf(p) { return `DAV-${String(p.id).padStart(4, '0')}` }
   <div class="prod-table-wrap">
     <table class="prod-table">
       <tbody>
-        <tr v-for="p in products" :key="p.id" :class="{ off: !p.is_active, sel: selectedSet.has(p.id) }">
-          <td class="pt-check">
+        <tr
+          v-for="p in products" :key="p.id" :class="{ off: !p.is_active, sel: selectedSet.has(p.id) }"
+          :title="`Editar ${p.name}`" @click="emit('edit', p)"
+        >
+          <td class="pt-check" @click.stop>
             <input type="checkbox" :checked="selectedSet.has(p.id)" :aria-label="`Seleccionar ${p.name}`" @change="toggleOne(p.id)" />
           </td>
           <td class="pt-prod">
@@ -91,15 +94,6 @@ function skuOf(p) { return `DAV-${String(p.id).padStart(4, '0')}` }
               </span>
             </span>
           </td>
-          <td class="pt-actions">
-            <button type="button" class="icon-btn" title="Editar" aria-label="Editar producto" @click="emit('edit', p)"><AppIcon name="pencil" :size="15" /></button>
-            <button type="button" class="icon-btn" title="Duplicar" aria-label="Duplicar producto" @click="emit('duplicate', p)"><AppIcon name="copy" :size="15" /></button>
-            <button
-              type="button" class="icon-btn" :title="p.is_active ? 'Ocultar' : 'Mostrar'"
-              :aria-label="p.is_active ? 'Ocultar producto' : 'Mostrar producto'" @click="emit('toggle', p)"
-            ><AppIcon :name="p.is_active ? 'eye-off' : 'eye'" :size="15" /></button>
-            <button type="button" class="icon-btn danger" title="Eliminar" aria-label="Eliminar producto" @click="emit('remove', p)"><AppIcon name="trash" :size="15" /></button>
-          </td>
         </tr>
       </tbody>
     </table>
@@ -111,7 +105,7 @@ function skuOf(p) { return `DAV-${String(p.id).padStart(4, '0')}` }
 .prod-table { width: 100%; min-width: 560px; border-collapse: collapse; font-size: 13px; }
 .prod-table td { padding: 11px 12px; border-bottom: 1px solid var(--line-soft); vertical-align: middle; }
 .prod-table tbody tr:last-child td { border-bottom: none; }
-.prod-table tbody tr { transition: background .12s; }
+.prod-table tbody tr { transition: background .12s; cursor: pointer; }
 .prod-table tbody tr:hover { background: var(--surface); }
 .prod-table tbody tr.off { opacity: .55; }
 .prod-table tbody tr.sel { background: var(--brand-soft); }
@@ -119,7 +113,6 @@ function skuOf(p) { return `DAV-${String(p.id).padStart(4, '0')}` }
 .pt-check { width: 36px; padding-right: 4px; }
 .pt-check input { width: 15px; height: 15px; accent-color: var(--brand-600); cursor: pointer; }
 .prod-table td.pt-prod { min-width: 200px; }
-.pt-actions-col { width: 130px; }
 .pt-prod { display: flex; align-items: center; gap: 11px; min-width: 0; }
 .pt-thumb {
   position: relative; flex: none; width: 46px; height: 46px; border-radius: 12px;
@@ -162,14 +155,6 @@ function skuOf(p) { return `DAV-${String(p.id).padStart(4, '0')}` }
 .pt-num { text-align: right; font-variant-numeric: var(--num); white-space: nowrap; }
 .pt-price b { font-weight: 700; }
 .pt-price s { color: var(--muted); font-weight: 400; margin-right: 4px; font-size: 12px; }
-.pt-actions { text-align: right; white-space: nowrap; opacity: 0; transition: opacity .12s; }
-.prod-table tbody tr:hover .pt-actions,
-.prod-table tbody tr:focus-within .pt-actions,
-.prod-table tbody tr.sel .pt-actions { opacity: 1; }
-.pt-actions .icon-btn { width: 28px; height: 28px; border-radius: 7px; margin-left: 2px; }
-@media (hover: none) {
-  .pt-actions { opacity: 1; }
-}
 @media (max-width: 860px) {
   .prod-table td.pt-org { display: none; }
   .prod-table { min-width: 440px; }

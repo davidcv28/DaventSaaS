@@ -1185,38 +1185,6 @@ async function saveProduct() {
   }
 }
 
-async function removeProduct(p) {
-  if (productBusy.value) return
-  productBusy.value = true
-  const res = await catalog.removeProduct(p.id)
-  productBusy.value = false
-  if (res?.storage) store.storage = res.storage
-  if (productEditing.value === p.id) closeProductForm()
-}
-
-// Duplicar: precarga el form como alta nueva con los datos del producto
-// (sin imagen — cada producto lleva la suya). Enfoca el nombre al final.
-async function duplicateProduct(p) {
-  resetProductForm()
-  Object.assign(productForm, {
-    name: `${p.name} (copia)`, price: p.price, category: p.category || '', brand: p.brand || '',
-    description: p.description || '', is_active: p.is_active
-  })
-  productFeatures.value = Object.entries(p.features || {}).map(([name, value]) => ({ name, value }))
-  catalog.notice = ''
-  catalog.lastError = ''
-  productFormOpen.value = true
-}
-
-// Activar/desactivar sin abrir el form: PATCH parcial de is_active.
-async function toggleProductActive(p) {
-  if (productBusy.value) return
-  productBusy.value = true
-  const res = await catalog.saveProduct(p.id, { fields: { is_active: !p.is_active }, image: null, imageClear: false })
-  productBusy.value = false
-  if (res?.ok) pushToast(p.is_active ? 'Producto oculto' : 'Producto visible en tu web')
-}
-
 // El formulario vive en un drawer lateral: el inventario queda a ancho
 // completo y el alta/edición no roba espacio permanente a la lista.
 const productFormOpen = ref(false)
@@ -3877,8 +3845,7 @@ async function changePassword() {
                   <ProductTable
                     :products="pagedProducts" v-model:selected-ids="selectedIds"
                     :campaign-of="(id) => productCampaign.get(id) || null"
-                    @edit="editProduct" @duplicate="duplicateProduct"
-                    @toggle="toggleProductActive" @remove="removeProduct"
+                    @edit="editProduct"
                   />
                   <div v-if="prodPageInfo.pages > 1" class="prod-pager">
                     <span>Mostrando {{ prodPageInfo.from }}–{{ prodPageInfo.to }} de {{ prodPageInfo.total }}</span>
