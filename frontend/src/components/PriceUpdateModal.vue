@@ -346,4 +346,22 @@ async function runImport(dryRun) {
 .pu-report-skip li { flex-direction: column; align-items: flex-start; gap: 1px; }
 .pu-report-skip span { display: inline-flex; align-items: center; gap: 5px; color: #b45309; font-weight: 600; }
 .pu-report-skip small { color: var(--muted); padding-left: 17px; }
+
+/* Móvil: hoja inferior a ancho completo; las 3 tarjetas de modo pasan a
+   filas (icono + título + ayuda) en vez de columnas apretadas. */
+@media (max-width: 560px) {
+  .pu-overlay { display: flex; align-items: flex-end; padding: 0; }
+  .pu-modal { width: 100%; max-height: 92vh; border-radius: 18px 18px 0 0; padding: 14px 14px calc(16px + env(safe-area-inset-bottom)); }
+  .pu-head { gap: 10px; margin-bottom: 12px; }
+  .pu-head-icon { width: 38px; height: 38px; border-radius: 11px; }
+  .pu-tabs { margin-bottom: 12px; }
+  .pu-tab { gap: 6px; padding: 8px 6px; font-size: .8rem; }
+  .pu-modes { grid-template-columns: 1fr; gap: 7px; }
+  .pu-mode { display: grid; grid-template-columns: auto 1fr; column-gap: 10px; align-items: center; row-gap: 1px; padding: 9px 12px; }
+  .pu-mode-icon { grid-row: span 2; margin-bottom: 0; width: 32px; height: 32px; }
+  .pu-mode:hover { transform: none; }
+  .pu-mode small { font-size: .72rem; }
+  .pu-scopes { gap: 6px; }
+  .pu-scope { padding: 7px 11px; font-size: .78rem; }
+}
 </style>
