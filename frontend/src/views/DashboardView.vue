@@ -3867,10 +3867,10 @@ async function changePassword() {
                   <div v-if="selectedIds.length" class="prod-bulkbar">
                     <AppIcon name="check" :size="15" />
                     <span>{{ selectedIds.length }} seleccionado{{ selectedIds.length === 1 ? '' : 's' }}</span>
-                    <button type="button" @click="bulkDuplicate" :disabled="bulkBusy"><AppIcon name="copy" :size="13" /> Duplicar</button>
-                    <button type="button" @click="bulkSetActive(true)" :disabled="bulkBusy"><AppIcon name="eye" :size="13" /> Mostrar</button>
-                    <button type="button" @click="bulkSetActive(false)" :disabled="bulkBusy"><AppIcon name="eye-off" :size="13" /> Ocultar</button>
-                    <button type="button" class="danger" @click="bulkRemove" :disabled="bulkBusy"><AppIcon name="trash" :size="13" /> Eliminar</button>
+                    <button type="button" @click="bulkDuplicate" :disabled="bulkBusy">Duplicar</button>
+                    <button type="button" @click="bulkSetActive(true)" :disabled="bulkBusy">Mostrar</button>
+                    <button type="button" @click="bulkSetActive(false)" :disabled="bulkBusy">Ocultar</button>
+                    <button type="button" class="danger" @click="bulkRemove" :disabled="bulkBusy">Eliminar</button>
                     <span class="prod-bulkbar-hint">Seleccioná con la casilla de cada fila</span>
                     <button type="button" class="prod-bulkbar-x" aria-label="Limpiar selección" @click="selectedIds = []"><AppIcon name="x" :size="14" /></button>
                   </div>

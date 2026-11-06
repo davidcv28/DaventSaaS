@@ -16,18 +16,12 @@ const props = defineProps({
 const emit = defineEmits(['edit', 'duplicate', 'toggle', 'remove', 'update:selectedIds'])
 
 const selectedSet = computed(() => new Set(props.selectedIds))
-const allChecked = computed(() => props.products.length > 0 && props.products.every((p) => selectedSet.value.has(p.id)))
-const someChecked = computed(() => props.products.some((p) => selectedSet.value.has(p.id)))
 
 function toggleOne(id) {
   const next = new Set(selectedSet.value)
   if (next.has(id)) next.delete(id)
   else next.add(id)
   emit('update:selectedIds', [...next])
-}
-function toggleAll() {
-  if (allChecked.value) emit('update:selectedIds', props.selectedIds.filter((id) => !props.products.some((p) => p.id === id)))
-  else emit('update:selectedIds', [...new Set([...props.selectedIds, ...props.products.map((p) => p.id)])])
 }
 
 function offerOf(p) { return productListOffer(p) }
@@ -54,21 +48,6 @@ function skuOf(p) { return `DAV-${String(p.id).padStart(4, '0')}` }
 <template>
   <div class="prod-table-wrap">
     <table class="prod-table">
-      <thead>
-        <tr>
-          <th class="pt-check" scope="col">
-            <input
-              type="checkbox" :checked="allChecked" :indeterminate="!allChecked && someChecked"
-              aria-label="Seleccionar todos los productos visibles" @change="toggleAll"
-            />
-          </th>
-          <th scope="col">Producto</th>
-          <th scope="col">Categoría / marca</th>
-          <th scope="col" class="pt-num">Precio</th>
-          <th scope="col" class="pt-num">Estado</th>
-          <th scope="col" class="pt-actions-col"><span class="sr-only">Acciones</span></th>
-        </tr>
-      </thead>
       <tbody>
         <tr v-for="p in products" :key="p.id" :class="{ off: !p.is_active, sel: selectedSet.has(p.id) }">
           <td class="pt-check">
@@ -130,12 +109,7 @@ function skuOf(p) { return `DAV-${String(p.id).padStart(4, '0')}` }
 <style scoped>
 .prod-table-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; margin: 0 -2px; padding: 0 2px; }
 .prod-table { width: 100%; min-width: 560px; border-collapse: collapse; font-size: 13px; }
-.prod-table th {
-  padding: 6px 12px 8px; text-align: left; font-size: 10.5px; font-weight: 700;
-  letter-spacing: .06em; text-transform: uppercase; color: var(--muted);
-  border-bottom: 1px solid var(--line); white-space: nowrap;
-}
-.prod-table td { padding: 9px 12px; border-bottom: 1px solid var(--line-soft); vertical-align: middle; }
+.prod-table td { padding: 11px 12px; border-bottom: 1px solid var(--line-soft); vertical-align: middle; }
 .prod-table tbody tr:last-child td { border-bottom: none; }
 .prod-table tbody tr { transition: background .12s; }
 .prod-table tbody tr:hover { background: var(--surface); }
@@ -148,7 +122,7 @@ function skuOf(p) { return `DAV-${String(p.id).padStart(4, '0')}` }
 .pt-actions-col { width: 130px; }
 .pt-prod { display: flex; align-items: center; gap: 11px; min-width: 0; }
 .pt-thumb {
-  position: relative; flex: none; width: 42px; height: 42px; border-radius: 10px;
+  position: relative; flex: none; width: 46px; height: 46px; border-radius: 12px;
   border: 1px solid var(--line); color: var(--muted); background: var(--surface);
   display: grid; place-items: center; overflow: hidden;
 }
@@ -197,11 +171,11 @@ function skuOf(p) { return `DAV-${String(p.id).padStart(4, '0')}` }
   .pt-actions { opacity: 1; }
 }
 @media (max-width: 860px) {
-  .prod-table th:nth-child(3), .prod-table td.pt-org { display: none; }
+  .prod-table td.pt-org { display: none; }
   .prod-table { min-width: 440px; }
 }
 @media (max-width: 520px) {
-  .prod-table td, .prod-table th { padding-left: 8px; padding-right: 8px; }
+  .prod-table td { padding-left: 8px; padding-right: 8px; }
   .pt-thumb { width: 36px; height: 36px; }
 }
 </style>

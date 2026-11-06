@@ -1126,9 +1126,11 @@ body{ transition: background-color .2s ease, color .2s ease; }
 @media (max-width: 640px){ .prod-bulkbar-hint{ display: none; } }
 .prod-bulkbar{ display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin: 0 -6px 10px; padding: 9px 12px; border: 1px solid var(--brand-soft-line); border-radius: var(--radius-sm); background: var(--brand-soft); color: var(--brand-ink); font-size: 13px; font-weight: 600; }
 .prod-bulkbar > span{ margin-right: 2px; }
-.prod-bulkbar button{ display: inline-flex; align-items: center; gap: 5px; padding: 5px 11px; border: 1px solid var(--brand-soft-line); border-radius: 8px; background: var(--card); color: var(--brand-ink); font: inherit; font-size: 12.5px; font-weight: 600; cursor: pointer; }
-.prod-bulkbar button:hover:not(:disabled){ border-color: var(--brand-500); }
-.prod-bulkbar button.danger{ color: var(--danger); border-color: var(--danger-line, #fecaca); }
+.prod-bulkbar button{ display: inline-flex; align-items: center; gap: 5px; padding: 4px 2px; border: none; background: none; color: var(--ink); font: inherit; font-size: 13px; font-weight: 600; cursor: pointer; }
+.prod-bulkbar button:hover:not(:disabled){ color: var(--brand-ink); text-decoration: underline; }
+.prod-bulkbar button.danger{ color: var(--danger); }
+.prod-bulkbar button + button::before{ content: "·"; margin-right: 8px; color: var(--muted); }
+.prod-bulkbar button + button.prod-bulkbar-x::before{ content: none; }
 .prod-bulkbar button:disabled{ opacity: .5; cursor: default; }
 .prod-bulkbar-x{ margin-left: auto !important; padding: 5px 8px !important; }
 .prod-pager{ display: flex; align-items: center; justify-content: space-between; gap: 10px; flex-wrap: wrap; margin-top: 12px; padding-top: 12px; border-top: 1px solid var(--line-soft); font-size: 12.5px; color: var(--muted); }
