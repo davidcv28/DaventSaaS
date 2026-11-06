@@ -27,7 +27,7 @@ import {
 } from '../api/stores.api.js'
 import {
   validateTaxonomyName, validateProductName, validateProductPrice, validateProductDescription,
-  catalogApi, FEATURE_LIMITS, parseFeatureSchema, validateFeatureSchema, validateProductFeatures,
+  catalogApi, FEATURE_LIMITS, validateFeatureSchema, validateProductFeatures,
   DISCOUNT_SCOPES, DISCOUNT_DEFAULT_PERCENT, DISCOUNT_LIMITS,
   validateDiscountName, validateDiscountPercent, validateDiscountWindow,
   isoToLocalInput, localInputToIso, productListOffer, isDiscountedProduct
@@ -858,7 +858,22 @@ function taxonomyHue(str) {
   for (const ch of String(str || '?')) h = (h * 31 + ch.codePointAt(0)) % 360
   return h
 }
-const taxonomyForm = reactive({ category: '', categoryFeatures: '', brand: '' })
+const taxonomyForm = reactive({ category: '', brand: '' })
+// Características de la categoría: chips que se agregan de a una
+// (reemplaza el input separado por comas).
+const taxonomyFeatures = ref([])
+const taxonomyFeatureInput = ref('')
+function addTaxonomyFeature() {
+  const v = taxonomyFeatureInput.value.trim()
+  if (!v) return
+  if (taxonomyFeatures.value.some((f) => f.toLowerCase() === v.toLowerCase())) { taxonomyFeatureInput.value = ''; return }
+  const next = [...taxonomyFeatures.value, v]
+  const err = validateFeatureSchema(next)
+  if (err) { taxonomyErr.category = err; return }
+  taxonomyErr.category = ''
+  taxonomyFeatures.value = next
+  taxonomyFeatureInput.value = ''
+}
 const taxonomyBusy = reactive({ category: false, brand: false })
 const taxonomyErr = reactive({ category: '', brand: '' })
 // Edición de categoría: el mismo form agrega o guarda según haya id cargado.
@@ -1371,7 +1386,10 @@ async function addTaxonomy(kind) {
   if (taxonomyErr[kind]) return
   const payload = { name }
   if (kind === 'category') {
-    const schema = parseFeatureSchema(taxonomyForm.categoryFeatures)
+    // Lo que quedó tipeado sin tocar "Agregar" entra como última característica.
+    const schema = taxonomyFeatureInput.value.trim() && !taxonomyFeatures.value.some((f) => f.toLowerCase() === taxonomyFeatureInput.value.trim().toLowerCase())
+      ? [...taxonomyFeatures.value, taxonomyFeatureInput.value.trim()]
+      : [...taxonomyFeatures.value]
     const schemaErr = validateFeatureSchema(schema)
     if (schemaErr) { taxonomyErr.category = schemaErr; return }
     payload.feature_schema = schema
@@ -1392,14 +1410,16 @@ async function addTaxonomy(kind) {
 function editCategory(c) {
   taxonomyEditing.value = c.id
   taxonomyForm.category = c.name
-  taxonomyForm.categoryFeatures = (c.feature_schema || []).join(', ')
+  taxonomyFeatures.value = [...(c.feature_schema || [])]
+  taxonomyFeatureInput.value = ''
   taxonomyErr.category = ''
 }
 
 function cancelCategoryEdit() {
   taxonomyEditing.value = null
   taxonomyForm.category = ''
-  taxonomyForm.categoryFeatures = ''
+  taxonomyFeatures.value = []
+  taxonomyFeatureInput.value = ''
   taxonomyErr.category = ''
 }
 
@@ -3868,7 +3888,23 @@ async function changePassword() {
             <div class="tax-add">
               <div class="tax-fields">
                 <AppInput v-model="taxonomyForm.category" :label="taxonomyEditing ? 'Editar categoría' : 'Nueva categoría'" name="cat_name" placeholder="Ej. Indumentaria" :error="taxonomyErr.category" />
-                <AppInput v-model="taxonomyForm.categoryFeatures" label="Características (opcional)" name="cat_features" placeholder="Ej. Talle, Color, Material" hint="Separalas con comas: se sugieren al cargar productos de esta categoría." />
+                <div class="field">
+                  <label for="cat_feature">Características <small class="tab-sub">(opcional)</small></label>
+                  <div class="feat-add">
+                    <input
+                      id="cat_feature" v-model="taxonomyFeatureInput" class="input" type="text"
+                      placeholder="Ej. Talle" @keydown.enter.prevent="addTaxonomyFeature"
+                    />
+                    <button type="button" class="btn ghost btn-auto" :disabled="!taxonomyFeatureInput.trim()" @click="addTaxonomyFeature"><AppIcon name="plus" :size="14" /> Agregar</button>
+                  </div>
+                  <div v-if="taxonomyFeatures.length" class="feat-chips">
+                    <span v-for="(f, i) in taxonomyFeatures" :key="f" class="feat-chip">
+                      {{ f }}
+                      <button type="button" :aria-label="`Quitar ${f}`" @click="taxonomyFeatures.splice(i, 1)"><AppIcon name="x" :size="11" /></button>
+                    </span>
+                  </div>
+                  <p class="hint">Se sugieren al cargar productos de esta categoría.</p>
+                </div>
               </div>
               <div class="tax-actions">
                 <AppButton :loading="taxonomyBusy.category" @click="addTaxonomy('category')">{{ taxonomyEditing ? 'Guardar' : 'Agregar' }}</AppButton>

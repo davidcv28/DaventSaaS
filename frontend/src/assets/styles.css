@@ -846,6 +846,23 @@ body{ transition: background-color .2s ease, color .2s ease; }
 .tax-add .field, .tax-add .input-wrap{ margin-bottom: 0; }
 .tax-fields{ display: grid; gap: 12px; }
 .tax-actions{ display: flex; gap: 8px; align-items: center; }
+/* Características de categoría: input + botón "Agregar" y chips removibles. */
+.feat-add{ display: flex; gap: 8px; }
+.feat-add .input{ flex: 1; min-width: 0; }
+.feat-add .btn{ flex: none; min-height: 38px; padding: 0 14px; font-size: 13px; gap: 5px; }
+.feat-chips{ display: flex; flex-wrap: wrap; gap: 6px; margin-top: 10px; }
+.feat-chip{
+  display: inline-flex; align-items: center; gap: 6px; padding: 5px 6px 5px 11px;
+  border: 1px solid var(--brand-soft-line); border-radius: 999px;
+  background: var(--brand-soft); color: var(--brand-ink);
+  font-size: 12.5px; font-weight: 600;
+}
+.feat-chip button{
+  display: grid; place-items: center; width: 18px; height: 18px; border: none;
+  border-radius: 50%; background: transparent; color: var(--brand-ink);
+  cursor: pointer; opacity: .7; transition: opacity .12s, background .12s;
+}
+.feat-chip button:hover{ opacity: 1; background: color-mix(in srgb, var(--brand-500) 18%, transparent); }
 .tax-list{ list-style: none; margin: 0; padding: 0; border-top: 1px solid var(--line-soft); }
 .tax-list li{ display: flex; align-items: center; gap: 12px; padding: 10px 4px; border-bottom: 1px solid var(--line-soft); }
 .tax-list li:hover{ background: var(--surface); }
