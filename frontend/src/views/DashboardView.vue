@@ -367,7 +367,8 @@ const navItems = computed(() => {
     { id: 'overview', label: 'Inicio', icon: 'dashboard', hint: 'Tu negocio hoy' },
     { id: 'catalogs', label: 'Mis productos', icon: 'package', hint: 'Fotos, precios y categorías', locked: L.catalogs, badge: catalog.products.length || null },
     { id: 'services', label: 'Mis servicios', icon: 'wrench', hint: 'Lo que ofrecés hacer', locked: L.services },
-    { id: 'pos', label: 'Vender en persona', icon: 'monitor', hint: 'Cobrar en tu local', locked: L.pos },
+    // "Vender en persona" se comunica como novedad (roadmap), no como sección.
+
     { id: 'web', label: 'Mi página', icon: 'store', hint: 'Diseño, secciones y dirección' },
     { id: 'reviews', label: 'Opiniones', icon: 'star', hint: 'Lo que dicen de vos', locked: L.reviews, badge: unreadReviewsCount.value || null },
     { id: 'tools', label: 'Promocionar', icon: 'megaphone', hint: 'QR, folletos y visitas', locked: L.tools },
@@ -925,7 +926,7 @@ async function ensureCatalog() {
   }
 }
 watch(section, (s) => {
-  if (s === 'catalogs' || s === 'pos') ensureCatalog()
+  if (s === 'catalogs') ensureCatalog()
   // Al entrar a Diseño: la fuente elegida ya tiene que estar; el resto del
   // picker (las populares) se trae en un único <link> para que las flechas
   // y la vista previa muestren cada tipografía real al instante.
@@ -1602,28 +1603,6 @@ function openFlyer(custom = false) {
   const href = router.resolve({ name: 'store-flyer', query: custom ? { custom: custom === true ? '1' : String(custom) } : {} }).href
   window.open(href, '_blank', 'noopener')
 }
-
-// --- Venta en local (POS de escritorio, próximamente) ---
-// El mockup estático se dibuja con el logo, el nombre y el acento reales de
-// la tienda (storeThemeVars), y con los primeros productos del catálogo
-// cuando ya están cargados (placeholders si todavía no hay ninguno).
-const POS_SAMPLE_PRODUCTS = ['Producto 1', 'Producto 2', 'Producto 3', 'Producto 4', 'Producto 5', 'Producto 6']
-  .map((name) => ({ name }))
-const POS_CART_QTY = [2, 1, 1]
-const posCartQty = POS_CART_QTY
-const posToday = new Date().toLocaleDateString('es-AR', { day: '2-digit', month: '2-digit', year: 'numeric' })
-const posVars = computed(() => storeThemeVars(store.customization))
-const posProducts = computed(() => (catalog.products.length ? catalog.products.slice(0, 6) : POS_SAMPLE_PRODUCTS))
-const posCartItems = computed(() => posProducts.value.slice(0, POS_CART_QTY.length))
-const posSubtotal = computed(() => posCartItems.value.reduce((acc, p, i) => acc + (Number(p.price) || 0) * POS_CART_QTY[i], 0))
-const posHasPrices = computed(() => posSubtotal.value > 0)
-const posIva = computed(() => (posHasPrices.value ? formatARS(posSubtotal.value * 0.21) : '—'))
-const posInvoiceTotal = computed(() => (posHasPrices.value ? formatARS(posSubtotal.value * 1.21) : '—'))
-const posCityName = computed(() => {
-  const found = cities.value.find((c) => Number(c.id) === Number(accountForm.city))
-  return found?.name || ''
-})
-const posAddress = computed(() => [accountForm.address, posCityName.value].filter(Boolean).join(', '))
 
 // --- Chatbot (solo Premium, beneficio has_chatbot): el asistente de la web
 // pública responde a las visitas con los pares pregunta/respuesta que el
@@ -5711,112 +5690,6 @@ async function changePassword() {
     </div>
 
     <!-- ================= VENTA EN LOCAL (próximamente) ================= -->
-    <div v-if="seen.pos" v-show="section === 'pos'" :class="{ 'sec-on': section === 'pos' }">
-      <div class="page-head">
-        <div>
-          <h1>Venta en persona</h1>
-          <p>Un programa para cobrar en tu local, con tus productos ya cargados.</p>
-        </div>
-        <span class="pill warn"><AppIcon name="clock" :size="14" /> Próximamente</span>
-      </div>
-
-      <div class="pos-layout">
-        <div>
-          <div class="card">
-            <h3><AppIcon name="monitor" :size="18" /> DAVENT Ventas</h3>
-            <p>Estoy desarrollando un programa de venta para tu computadora. Cobrás en persona con el mismo catálogo que ya publicás en tu web, emitís el comprobante con tus datos y cerrás el día con el resumen de tus ventas.</p>
-            <ul class="pos-feats">
-              <li><AppIcon name="package" :size="16" /> <span>Productos, fotos y precios sincronizados con tu catálogo web.</span></li>
-              <li><AppIcon name="receipt" :size="16" /> <span>Facturación integrada: tickets y facturas con tus datos.</span></li>
-              <li><AppIcon name="printer" :size="16" /> <span>Comprobante imprimible al momento de cobrar.</span></li>
-              <li><AppIcon name="trending-up" :size="16" /> <span>Resumen de ventas del día al cierre.</span></li>
-              <li><AppIcon name="circle-check" :size="16" /> <span>Funciona sin internet: si se corta seguís vendiendo y sincroniza después.</span></li>
-            </ul>
-          </div>
-          <AlertMessage kind="info" message="Todavía está en desarrollo. Cuando salga, vas a poder sumarlo a tu suscripción desde esta misma sección." />
-        </div>
-
-        <div class="card">
-          <h3><AppIcon name="eye" :size="18" /> Así se va a ver</h3>
-          <p class="pos-note">Vista de ejemplo: el programa sale con tu logo y el nombre de tu web.</p>
-          <div class="pos-window" :style="posVars">
-            <div class="pos-titlebar">
-              <span class="pos-dots"><i></i><i></i><i></i></span>
-              <span class="pos-title">DAVENT Ventas</span>
-            </div>
-            <div class="pos-topbar">
-              <img v-if="currentLogo" class="pos-logo" :src="currentLogo" alt="" />
-              <span v-else class="pos-mono">{{ businessInitial }}</span>
-              <strong class="pos-shop">{{ designShopName }}</strong>
-              <span class="pos-date"><AppIcon name="calendar" :size="12" /> {{ posToday }}</span>
-            </div>
-
-            <div class="pos-body">
-              <div class="pos-bill-form">
-                <div class="pos-bill-head">
-                  <strong>Nueva factura</strong>
-                  <span class="pos-inv-num">N° 0001-00000042</span>
-                </div>
-                <span class="pos-group-label">Comprobante</span>
-                <div class="pos-field">
-                  <span class="pos-field-label">Tipo</span>
-                  <div class="pos-chips">
-                    <span class="pos-chip">Ticket</span>
-                    <span class="pos-chip active">Factura B</span>
-                    <span class="pos-chip">Factura C</span>
-                  </div>
-                </div>
-                <span class="pos-group-label">Comprador</span>
-                <div class="pos-field">
-                  <span class="pos-field-label">Nombre</span>
-                  <span class="pos-input"><AppIcon name="user" :size="12" /> Consumidor final</span>
-                </div>
-                <div class="pos-field-row">
-                  <div class="pos-field">
-                    <span class="pos-field-label">Documento</span>
-                    <span class="pos-input muted"><AppIcon name="search" :size="12" /> Opcional</span>
-                  </div>
-                  <div class="pos-field">
-                    <span class="pos-field-label">Condición fiscal</span>
-                    <span class="pos-input select-look">Consumidor final <AppIcon name="chevron-down" :size="12" /></span>
-                  </div>
-                </div>
-                <div class="pos-field">
-                  <span class="pos-field-label">Domicilio</span>
-                  <span class="pos-input"><AppIcon name="map-pin" :size="12" /> {{ posAddress || '—' }}</span>
-                </div>
-                <span class="pos-group-label">Pago</span>
-                <div class="pos-field">
-                  <span class="pos-field-label">Medio de pago</span>
-                  <div class="pos-chips">
-                    <span class="pos-chip active">Efectivo</span>
-                    <span class="pos-chip">Tarjeta</span>
-                    <span class="pos-chip">Transferencia</span>
-                    <span class="pos-chip">QR</span>
-                  </div>
-                </div>
-              </div>
-              <div class="pos-cart">
-                <span class="pos-cart-head">Ítems de la venta</span>
-                <div v-for="(p, i) in posCartItems" :key="`inv-${p.id || i}`" class="pos-cart-item">
-                  <span class="pos-cart-qty">{{ posCartQty[i] }}</span>
-                  <span class="pos-cart-name">{{ p.name }}</span>
-                  <span class="pos-cart-price">{{ Number(p.price) ? formatARS(Number(p.price) * posCartQty[i]) : '—' }}</span>
-                </div>
-                <div class="pos-inv-totals">
-                  <div><span>Subtotal</span><span>{{ posHasPrices ? formatARS(posSubtotal) : '—' }}</span></div>
-                  <div><span>IVA 21%</span><span>{{ posIva }}</span></div>
-                  <div class="pos-inv-grand"><span>Total</span><strong>{{ posInvoiceTotal }}</strong></div>
-                </div>
-                <span class="pos-pay">Emitir factura</span>
-              </div>
-            </div>
-            <div class="pos-status"><span class="pos-dot"></span> Caja abierta · {{ displayName }}</div>
-          </div>
-          <p class="hint">Imagen de referencia. El producto final puede variar.</p>
-        </div>
-      </div>
-    </div>
     <!-- ================= CHATBOT (solo Premium) ================= -->
     <div v-if="seen.bot" v-show="section === 'bot'" :class="{ 'sec-on': section === 'bot' }">
       <div class="page-head">
@@ -6184,20 +6057,38 @@ async function changePassword() {
         <p class="roadmap-sub">En lo que estamos trabajando para tu tienda.</p>
         <ul class="roadmap-list">
           <li class="roadmap-item">
-            <AppIcon name="download" :size="16" />
-            <div><strong>Respaldo de tu tienda</strong><p>Descargá todos tus datos (productos, imágenes y configuración) y una papelera que te permite recuperar la tienda si la borraste por error.</p></div>
+            <div class="roadmap-item-head"><AppIcon name="download" :size="16" /><strong>Respaldo de tu tienda</strong></div>
+            <p>Descargá todos tus datos y una papelera para recuperar la tienda si la borraste por error.</p>
+            <ul class="roadmap-feats">
+              <li>Exportación de productos, imágenes y configuración</li>
+              <li>Papelera para restaurar la tienda borrada</li>
+            </ul>
           </li>
           <li class="roadmap-item">
-            <AppIcon name="calendar" :size="16" />
-            <div><strong>Turnos y reservas</strong><p>Agenda online para rubros de servicios: tus clientes reservan directo desde tu web.</p></div>
+            <div class="roadmap-item-head"><AppIcon name="calendar" :size="16" /><strong>Turnos y reservas</strong></div>
+            <p>Agenda online para rubros de servicios.</p>
+            <ul class="roadmap-feats">
+              <li>Tus clientes reservan directo desde tu web</li>
+              <li>Horarios y disponibilidad configurables</li>
+            </ul>
           </li>
           <li class="roadmap-item">
-            <AppIcon name="credit-card" :size="16" />
-            <div><strong>Credenciales de acceso</strong><p>Diseñá y emití tarjetas de membresía con vencimiento para gimnasios, clubes y coworkings.</p></div>
+            <div class="roadmap-item-head"><AppIcon name="credit-card" :size="16" /><strong>Credenciales de acceso</strong></div>
+            <p>Tarjetas de membresía para gimnasios, clubes y coworkings.</p>
+            <ul class="roadmap-feats">
+              <li>Diseño de la credencial con tu marca</li>
+              <li>Emisión con fecha de vencimiento</li>
+            </ul>
           </li>
           <li class="roadmap-item">
-            <AppIcon name="shopping-bag" :size="16" />
-            <div><strong>Venta en local (POS)</strong><p>Usá DAVENT como caja de tu local: ventas presenciales, comprobantes y control de stock sobre tu catálogo.</p></div>
+            <div class="roadmap-item-head"><AppIcon name="shopping-bag" :size="16" /><strong>Venta en local (POS)</strong></div>
+            <p>DAVENT Ventas: un programa para cobrar en tu local con el mismo catálogo de tu web.</p>
+            <ul class="roadmap-feats">
+              <li>Productos, fotos y precios sincronizados con tu catálogo</li>
+              <li>Tickets y facturas con tus datos, imprimibles al cobrar</li>
+              <li>Resumen de ventas del día al cierre</li>
+              <li>Funciona sin internet y sincroniza después</li>
+            </ul>
           </li>
         </ul>
       </div>
