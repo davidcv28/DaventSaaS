@@ -851,6 +851,13 @@ const productImagePreview = ref('')
 const productImageCleared = ref(false)
 const productImageErr = ref('')
 
+// Tono estable por nombre: la misma categoría/marca lleva el mismo color
+// en el punto de la fila (idéntico al de los productos).
+function taxonomyHue(str) {
+  let h = 0
+  for (const ch of String(str || '?')) h = (h * 31 + ch.codePointAt(0)) % 360
+  return h
+}
 const taxonomyForm = reactive({ category: '', categoryFeatures: '', brand: '' })
 const taxonomyBusy = reactive({ category: false, brand: false })
 const taxonomyErr = reactive({ category: '', brand: '' })
@@ -3854,8 +3861,10 @@ async function changePassword() {
 
           <!-- -------- Categorías -------- -->
           <div v-show="catalogTab === 'categories'" class="card">
-            <h3><AppIcon name="layout-grid" :size="18" /> Categorías</h3>
-            <p>Agrupan tus productos en el menú de tu página pública.</p>
+            <div class="inv-head">
+              <h3><AppIcon name="layout-grid" :size="17" /> Categorías <small>· {{ catalog.categories.length }}</small></h3>
+              <small class="inv-head-note">Agrupan tus productos en el menú de tu página</small>
+            </div>
             <div class="tax-add">
               <div class="tax-fields">
                 <AppInput v-model="taxonomyForm.category" :label="taxonomyEditing ? 'Editar categoría' : 'Nueva categoría'" name="cat_name" placeholder="Ej. Indumentaria" :error="taxonomyErr.category" />
@@ -3868,9 +3877,10 @@ async function changePassword() {
             </div>
             <ul v-if="catalog.categories.length" class="tax-list">
               <li v-for="c in catalog.categories" :key="c.id">
-                <span>{{ c.name }}
-                  <small class="hint-inline">{{ c.products_count || 0 }} productos</small>
-                  <small v-if="c.feature_schema?.length" class="tax-schema">{{ c.feature_schema.join(' · ') }}</small>
+                <span class="tax-dot" :style="{ '--h': taxonomyHue(c.name) }" aria-hidden="true"></span>
+                <span class="tax-name">
+                  <strong>{{ c.name }}</strong>
+                  <small>{{ c.products_count || 0 }} productos<template v-if="c.feature_schema?.length"> · {{ c.feature_schema.join(' · ') }}</template></small>
                 </span>
                 <span class="tax-item-actions">
                   <button type="button" class="icon-btn" aria-label="Editar categoría" @click="editCategory(c)"><AppIcon name="pencil" :size="15" /></button>
@@ -3883,16 +3893,24 @@ async function changePassword() {
 
           <!-- -------- Marcas -------- -->
           <div v-show="catalogTab === 'brands'" class="card">
-            <h3><AppIcon name="tag" :size="18" /> Marcas</h3>
-            <p>Filtran tus productos por marca en el menú de tu página pública.</p>
+            <div class="inv-head">
+              <h3><AppIcon name="tag" :size="17" /> Marcas <small>· {{ catalog.brands.length }}</small></h3>
+              <small class="inv-head-note">Filtran tus productos por marca en el menú de tu página</small>
+            </div>
             <div class="tax-add">
               <AppInput v-model="taxonomyForm.brand" label="Nueva marca" name="brand_name" placeholder="Ej. Nike" :error="taxonomyErr.brand" />
               <AppButton :loading="taxonomyBusy.brand" @click="addTaxonomy('brand')">Agregar</AppButton>
             </div>
             <ul v-if="catalog.brands.length" class="tax-list">
               <li v-for="b in catalog.brands" :key="b.id">
-                <span>{{ b.name }} <small class="hint-inline">{{ b.products_count || 0 }} productos</small></span>
-                <button type="button" class="icon-btn danger" aria-label="Eliminar marca" @click="removeTaxonomy('brand', b)"><AppIcon name="trash" :size="15" /></button>
+                <span class="tax-dot" :style="{ '--h': taxonomyHue(b.name) }" aria-hidden="true"></span>
+                <span class="tax-name">
+                  <strong>{{ b.name }}</strong>
+                  <small>{{ b.products_count || 0 }} productos</small>
+                </span>
+                <span class="tax-item-actions">
+                  <button type="button" class="icon-btn danger" aria-label="Eliminar marca" @click="removeTaxonomy('brand', b)"><AppIcon name="trash" :size="15" /></button>
+                </span>
               </li>
             </ul>
             <p v-else class="hint">Sin marcas todavía.</p>
