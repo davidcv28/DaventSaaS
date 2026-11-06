@@ -313,6 +313,19 @@ CustomizationFields           =   {
         'max_length'        :   80,
         'error_messages'    :   {'max_length': 'El título admite hasta 80 caracteres'},
     },
+    'videos'                :   {
+        'label'             :   'Videos de redes',
+        'required'          :   False,
+    },
+    'live_stream_url'       :   {
+        'label'             :   'Transmisión en vivo',
+        'style'             :   {'placeholder': 'Link del stream (YouTube, Facebook o Twitch)'},
+        'required'          :   False,
+        'allow_blank'       :   True,
+        'trim_whitespace'   :   True,
+        'max_length'        :   300,
+        'error_messages'    :   {'max_length': 'El link del stream admite hasta 300 caracteres'},
+    },
     'catalog_note'          :   {
         'label'             :   'Aviso en el catálogo',
         'style'             :   {'placeholder': 'Ej. Envíos gratis superando $80.000'},

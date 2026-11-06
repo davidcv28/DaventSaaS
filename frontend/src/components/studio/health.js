@@ -43,7 +43,7 @@ const LANDING_SOURCES = {
   gallery:       { label: 'Galería',                has: (c) => hasRows(c.gallery) },
   testimonials:  { label: 'Testimonios',            has: (c) => hasRows(c.form.testimonials) },
   faq:           { label: 'Preguntas frecuentes',   has: (c) => hasRows(c.form.faqs) },
-  video:         { label: 'Video',                  has: (c) => Boolean(rowText(c.form.video_url)) },
+  video:         { label: 'Video',                  has: (c) => Boolean(rowText(c.form.video_url)) || (Array.isArray(c.form.videos) && c.form.videos.some((u) => rowText(u))) || Boolean(rowText(c.form.live_stream_url)) },
   featured:      { label: 'Vitrina de productos',   has: (c) => !c.catalogLoaded || c.products.length > 0, nav: 'catalogs' },
   categories:    { label: 'Departamentos',          has: (c) => !c.catalogLoaded || c.categories.length > 0, nav: 'catalogs' },
   cta:           { label: 'Llamado a la acción',    has: (c) => hasContact(c), nav: 'company' },

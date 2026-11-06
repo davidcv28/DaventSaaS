@@ -497,6 +497,10 @@ export const CUSTOMIZATION_DEFAULTS = {
   video_url: '',
   video_title: '',
   show_video: true,
+  // Lista de embeds de redes (el backend normaliza cada link y recorta al
+  // tope max_videos del plan) + stream en vivo Premium (has_live_stream).
+  videos: [],
+  live_stream_url: '',
   catalog_note: '',
   footer_text: '',
   // Bloques del rediseño de portada (espejo del modelo): garantías, hitos y
@@ -727,7 +731,8 @@ export const SECTION_ORDER_KEYS = ['about', 'services', 'stats', 'benefits', 'of
 export const AUTO_SECTION_KEYS = ['offers', 'brands', 'countdown']
 
 // Video de la portada: el backend normaliza a la URL de embed oficial
-// (youtube-nocookie / player.vimeo) — el iframe usa video_url tal cual.
+// (youtube-nocookie / player.vimeo / tiktok embed / instagram embed /
+// facebook plugins) — el iframe usa la URL tal cual.
 // Acá solo se valida el formato para avisar antes de guardar.
 export function validateVideoUrl(value) {
   const v = String(value || '').trim()
@@ -736,7 +741,34 @@ export function validateVideoUrl(value) {
   if (/^(https?:\/\/)?(www\.|m\.|music\.)?youtube\.com\/(watch\?.*v=|embed\/|shorts\/|live\/)[\w-]{6,20}/i.test(v)) return ''
   if (/^(https?:\/\/)?(www\.)?youtu\.be\/[\w-]{6,20}/i.test(v)) return ''
   if (/^(https?:\/\/)?(www\.|player\.)?vimeo\.com\/(video\/)?\d{5,}/i.test(v)) return ''
-  return 'Solo se admiten videos de YouTube o Vimeo. Pegá el link completo del video.'
+  if (/^(https?:\/\/)?(www\.|m\.)?tiktok\.com\/@[\w.]+\/video\/\d{8,25}/i.test(v)) return ''
+  if (/^https?:\/\/(www\.)?tiktok\.com\/embed\/v2\/\d{8,25}/i.test(v)) return ''
+  if (/^(https?:\/\/)?(www\.)?instagram\.com\/(p|reel|tv)\/[\w-]{5,30}/i.test(v)) return ''
+  if (/^https?:\/\/(www\.|m\.)?facebook\.com\//i.test(v)
+    && (/\/videos\/\d+/.test(v) || /\/watch\?v=\d+/.test(v) || /\/reel\/[\w-]+/.test(v) || /\/plugins\/video\.php\?/.test(v))) return ''
+  if (/^https?:\/\/(www\.)?youtube-nocookie\.com\/embed\/[\w-]{6,20}/i.test(v)) return ''
+  return 'Solo se admiten videos de YouTube, Vimeo, TikTok, Instagram o Facebook. Pegá el link completo del video.'
+}
+
+// Transmisión en vivo (Premium): YouTube y Facebook reusan el embed de
+// video; Twitch guarda la URL del canal y la web arma el player con
+// ?parent=<host>. Mismo criterio que validate_live_stream_url del backend.
+export function validateLiveStreamUrl(value) {
+  const v = String(value || '').trim()
+  if (!v) return ''
+  if (v.length > 300) return 'El link del stream admite hasta 300 caracteres'
+  if (/^https?:\/\/(www\.|m\.)?twitch\.tv\/[A-Za-z0-9_]{3,25}\/?$/i.test(v)) return ''
+  if (/^https?:\/\/(www\.)?player\.twitch\.tv\/\?[^ ]*channel=[A-Za-z0-9_]{3,25}/i.test(v)) return ''
+  if (/(^https?:\/\/)?(www\.|m\.|music\.)?youtube\.com\/|youtu\.be\/|youtube-nocookie\.com\/embed\/|^https?:\/\/(www\.|m\.)?facebook\.com\//i.test(v)
+    && validateVideoUrl(v) === '') return ''
+  return 'Para el vivo admitimos YouTube, Facebook y Twitch. Pegá el link completo del stream o de tu canal.'
+}
+
+// Tope de videos de la sección según el plan (beneficio max_videos:
+// Básico 3, Estándar 10, Premium 15). Ausente o ilimitado -> techo duro 15.
+export function videosLimit(benefits = {}) {
+  const v = benefits.max_videos
+  return v == null ? 15 : Math.min(Number(v) || 0, 15)
 }
 
 export function validateSectionTitle(value) {

@@ -91,6 +91,8 @@ PATTERN_VARIABLES = {
     'announcements':     {'type': 'list',  'label': 'Cinta de anuncios'},
     'video_url':         {'type': 'text',  'label': 'Video (URL)'},
     'video_title':       {'type': 'text',  'label': 'Título de la sección Video'},
+    'videos':            {'type': 'list',  'label': 'Videos de redes'},
+    'live_stream_url':   {'type': 'text',  'label': 'Transmisión en vivo (URL)'},
     'cta_title':         {'type': 'text',  'label': 'Título del llamado a la acción'},
     'cta_text':          {'type': 'text',  'label': 'Texto del llamado a la acción'},
     'cta_label':         {'type': 'text',  'label': 'Botón del llamado a la acción'},
@@ -825,6 +827,35 @@ def _product_values(store, product, customization, store_name, flags = None):
     }
     return context, raw
 
+def _videos_fragment(customization, flags):
+    """
+    Grilla de embeds de redes (videos[] ya normalizados a embed oficial
+    por el serializer). Se recorta al tope max_videos del plan vigente —
+    igual que la web Vue— y sin filas cae al video_url legado. Apagada
+    con el flag 'video' (show_video / bloque de "Qué mostrar").
+    """
+    if customization is None or not flags.get('video'):
+        return ''
+    videos = [v for v in (customization.videos or []) if isinstance(v, str) and v.strip()]
+    if not videos:
+        legacy = _text(getattr(customization, 'video_url', ''), 400)
+        videos = [legacy] if legacy else []
+    if not videos:
+        return ''
+    from StoreApp.domains.stores.models import StoreCustomization
+    from StoreApp.domains.stores.services import plan_benefits_of
+
+    limit = plan_benefits_of(customization.store.user).get('max_videos')
+    cap = StoreCustomization.VIDEOS_MAX if limit is None else min(int(limit), StoreCustomization.VIDEOS_MAX)
+    cards = ''.join(
+        '<figure style="margin:0"><div style="position:relative;aspect-ratio:16/9;overflow:hidden;border-radius:12px;background:#000">'
+        f'<iframe src="{_attr(url)}" style="position:absolute;inset:0;width:100%;height:100%;border:0" '
+        'loading="lazy" allowfullscreen referrerpolicy="strict-origin-when-cross-origin"></iframe></div></figure>'
+        for url in videos[:cap]
+    )
+    return f'<div class="ds-videos" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:16px">{cards}</div>'
+
+
 #=========================================
 # CONTEXTO DE LA TIENDA
 #=========================================
@@ -852,7 +883,11 @@ def build_store_context(store, product = None, flags = None, raw_keys = None):
     about = _text(getattr(customization, 'about_text', ''), 400)
     from django.utils import timezone
 
-    from StoreApp.domains.stores.services import contact_redirect_path
+    from StoreApp.domains.stores.services import contact_redirect_path, profile_has_benefit
+
+    #El stream en vivo es Premium (has_live_stream): sin el flag la URL no
+    #viaja al documento (queda guardada para cuando vuelva el plan).
+    live_ok = bool(flags.get('video')) and profile_has_benefit(store.user, 'has_live_stream')
 
     context = {
         'store_name': name,
@@ -885,6 +920,7 @@ def build_store_context(store, product = None, flags = None, raw_keys = None):
         'faqs_title': _text(getattr(customization, 'faqs_title', ''), 80) or 'Preguntas frecuentes',
         'video_url': _text(getattr(customization, 'video_url', ''), 400) if flags.get('video') else '',
         'video_title': _text(getattr(customization, 'video_title', ''), 80),
+        'live_stream_url': _text(getattr(customization, 'live_stream_url', ''), 400) if live_ok else '',
         'cta_title': _text(getattr(customization, 'cta_title', ''), 120),
         'cta_text': _text(getattr(customization, 'cta_text', ''), 280),
         'cta_label': _text(getattr(customization, 'cta_label', ''), 40),
@@ -910,6 +946,7 @@ def build_store_context(store, product = None, flags = None, raw_keys = None):
         'timeline': lambda: _timeline_fragment(customization, flags),
         'team': lambda: _team_fragment(customization, flags),
         'announcements': lambda: _announcements_fragment(customization, flags),
+        'videos': lambda: _videos_fragment(customization, flags),
         'contact_form': lambda: _contact_fragment(store, flags),
         'gallery': lambda: _gallery_fragment(store, customization),
     }

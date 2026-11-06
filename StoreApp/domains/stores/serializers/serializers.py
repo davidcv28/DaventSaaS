@@ -1,5 +1,5 @@
 import re
-from urllib.parse import parse_qs, urlparse
+from urllib.parse import parse_qs, quote, urlparse
 
 from django.db import IntegrityError
 from rest_framework import serializers
@@ -23,6 +23,7 @@ from StoreApp.domains.stores.models import (
 )
 from StoreApp.domains.stores.services import (
     allowed_templates_of,
+    plan_benefits_of,
     profile_has_benefit,
     storage_payload,
 )
@@ -149,6 +150,8 @@ class StoreCustomizationSerializer(serializers.ModelSerializer):
     announcements               =   serializers.JSONField(**CustomizationFields['announcements'])
     video_url                   =   serializers.CharField(**CustomizationFields['video_url'])
     video_title                 =   serializers.CharField(**CustomizationFields['video_title'])
+    videos                      =   serializers.JSONField(**CustomizationFields['videos'])
+    live_stream_url             =   serializers.CharField(**CustomizationFields['live_stream_url'])
     catalog_note                =   serializers.CharField(**CustomizationFields['catalog_note'])
     footer_text                 =   serializers.CharField(**CustomizationFields['footer_text'])
     site_templates              =   serializers.JSONField(**CustomizationFields['site_templates'])
@@ -188,6 +191,7 @@ class StoreCustomizationSerializer(serializers.ModelSerializer):
             'cta_title', 'cta_text', 'cta_label', 'show_cta', 'section_order', 'layout_config',
             'layout_config_draft', 'site_theme', 'site_theme_draft', 'has_unpublished',
             'announcements', 'show_announcements', 'video_url', 'video_title', 'show_video',
+            'videos', 'live_stream_url',
             'catalog_note', 'footer_text',
             'benefits', 'show_benefits', 'timeline', 'show_timeline', 'team', 'show_team',
             'plans', 'plans_title', 'show_plans',
@@ -458,36 +462,136 @@ class StoreCustomizationSerializer(serializers.ModelSerializer):
                 clean.append({'icon': icon if icon in StoreCustomization.SERVICE_ICONS else 'megaphone', 'text': text})
         return clean
 
-    #Video de la portada: solo embeds de YouTube o Vimeo. El link que pega
-    #el dueño (watch, youtu.be, shorts, player, embed) se normaliza a la URL
-    #de embed oficial — así el iframe público jamás apunta a un host ajeno.
+    #Videos de la portada: embeds de YouTube, Vimeo, TikTok, Instagram y
+    #Facebook. El link que pega el dueño se normaliza a la URL de embed
+    #oficial de cada red — el iframe público jamás apunta a un host ajeno.
     _YT_HOSTS                   =   {'youtube.com', 'www.youtube.com', 'm.youtube.com', 'music.youtube.com', 'youtu.be'}
     _VIMEO_HOSTS                =   {'vimeo.com', 'www.vimeo.com', 'player.vimeo.com'}
+    _TIKTOK_HOSTS               =   {'tiktok.com', 'www.tiktok.com', 'm.tiktok.com'}
+    _IG_HOSTS                   =   {'instagram.com', 'www.instagram.com'}
+    _FB_HOSTS                   =   {'facebook.com', 'www.facebook.com', 'm.facebook.com'}
+    _TWITCH_HOSTS               =   {'twitch.tv', 'www.twitch.tv', 'm.twitch.tv'}
     _YT_ID                      =   re.compile(r'^[A-Za-z0-9_-]{6,20}$')
-    def validate_video_url(self, value):
-        value                   =   (value or '').strip()
-        if not value:
-            return ''
+    _IG_CODE                    =   re.compile(r'^[A-Za-z0-9_-]{5,30}$')
+    _TIKTOK_ID                  =   re.compile(r'^\d{8,25}$')
+    _TWITCH_CHAN                =   re.compile(r'^[A-Za-z0-9_]{3,25}$')
+    @staticmethod
+    def _parsed_video_url(value):
         parsed                  =   urlparse(value if '://' in value else f'https://{value}')
         host                    =   (parsed.hostname or '').lower()
         parts                   =   [p for p in parsed.path.split('/') if p]
-        video_id                =   None
+        return parsed, host, parts
+    def _youtube_embed(self, host, parts, parsed):
+        if host == 'youtu.be':
+            video_id            =   parts[0] if parts else None
+        elif parts and parts[0] in ('embed', 'shorts', 'live') and len(parts) > 1:
+            video_id            =   parts[1]
+        elif parts and parts[0] == 'watch':
+            video_id            =   (parse_qs(parsed.query).get('v') or [None])[0]
+        else:
+            video_id            =   None
+        if not (video_id and self._YT_ID.match(video_id)):
+            raise serializers.ValidationError('Pegá el link completo del video de YouTube.')
+        return f'https://www.youtube-nocookie.com/embed/{video_id}'
+    def _facebook_embed(self, parsed, parts):
+        #Post canónico -> embed oficial plugins/video.php?href=…
+        canonical                =   None
+        if 'watch' in parts:
+            vid                   =   (parse_qs(parsed.query).get('v') or [None])[0]
+            if vid and vid.isdigit():
+                canonical         =   f'https://www.facebook.com/watch/?v={vid}'
+        elif parts and parts[0] == 'reel' and len(parts) > 1:
+            canonical             =   f'https://www.facebook.com/reel/{parts[1]}'
+        elif 'videos' in parts:
+            i                     =   parts.index('videos')
+            if i + 1 < len(parts) and parts[i + 1].isdigit():
+                canonical         =   'https://www.facebook.com/' + '/'.join(parts[:i + 2])
+        if not canonical:
+            raise serializers.ValidationError('Pegá el link completo del video de Facebook (…/videos/…, /reel/… o /watch/?v=…).')
+        return f'https://www.facebook.com/plugins/video.php?href={quote(canonical, safe="")}&show_text=false'
+    def _video_embed(self, value):
+        """Normaliza un link de video al embed oficial de su red."""
+        value                   =   (value or '').strip()
+        if not value:
+            return ''
+        parsed, host, parts     =   self._parsed_video_url(value)
+        #URLs ya normalizadas (se reenvían al editar la lista): se aceptan
+        #tal cual si apuntan al embed oficial del host permitido.
+        if host in ('youtube-nocookie.com', 'www.youtube-nocookie.com') and len(parts) >= 2 and parts[0] == 'embed' and self._YT_ID.match(parts[1]):
+            return f'https://www.youtube-nocookie.com/embed/{parts[1]}'
         if host in self._YT_HOSTS:
-            if host == 'youtu.be':
-                video_id        =   parts[0] if parts else None
-            elif parts and parts[0] in ('embed', 'shorts', 'live') and len(parts) > 1:
-                video_id        =   parts[1]
-            elif parts and parts[0] == 'watch':
-                video_id        =   (parse_qs(parsed.query).get('v') or [None])[0]
-            if not (video_id and self._YT_ID.match(video_id)):
-                raise serializers.ValidationError('Pegá el link completo del video de YouTube.')
-            return f'https://www.youtube-nocookie.com/embed/{video_id}'
+            return self._youtube_embed(host, parts, parsed)
         if host in self._VIMEO_HOSTS:
             video_id            =   parts[-1] if parts else None
             if video_id and video_id.isdigit():
                 return f'https://player.vimeo.com/video/{video_id}'
             raise serializers.ValidationError('Pegá el link completo del video de Vimeo.')
-        raise serializers.ValidationError('Solo se admiten videos de YouTube o Vimeo.')
+        if host in self._TIKTOK_HOSTS:
+            #/@usuario/video/7312345678901234567 -> embed oficial v2
+            video_id            =   parts[2] if len(parts) >= 3 and parts[1] == 'video' else None
+            if video_id is None and len(parts) >= 3 and parts[0] == 'embed' and parts[1] == 'v2':
+                video_id        =   parts[2]
+            if video_id and self._TIKTOK_ID.match(video_id):
+                return f'https://www.tiktok.com/embed/v2/{video_id}'
+            raise serializers.ValidationError('Pegá el link completo del video de TikTok (…/@usuario/video/…).')
+        if host in self._IG_HOSTS:
+            #/p/, /reel/ o /tv/ + shortcode -> embed oficial
+            if len(parts) >= 2 and parts[0] in ('p', 'reel', 'tv') and self._IG_CODE.match(parts[1]):
+                return f'https://www.instagram.com/{parts[0]}/{parts[1]}/embed/'
+            raise serializers.ValidationError('Pegá el link completo del video de Instagram (…/reel/…, /p/… o /tv/…).')
+        if host in self._FB_HOSTS:
+            if parts[:2] == ['plugins', 'video.php']:
+                #Embed ya normalizado: se conserva solo el href canónico.
+                href            =   (parse_qs(parsed.query).get('href') or [None])[0]
+                if href:
+                    return f'https://www.facebook.com/plugins/video.php?href={quote(href, safe="")}&show_text=false'
+            return self._facebook_embed(parsed, parts)
+        raise serializers.ValidationError('Solo se admiten videos de YouTube, Vimeo, TikTok, Instagram o Facebook.')
+    def validate_video_url(self, value):
+        return self._video_embed(value)
+    def validate_videos(self, value):
+        #Lista de embeds de redes: cada link se normaliza como video_url y
+        #el total se recorta al tope max_videos del plan vigente (Básico 3,
+        #Estándar 10, Premium 15; sin el beneficio en el plan, el techo
+        #duro VIDEOS_MAX). Filas repetidas se descartan.
+        if value in (None, ''):
+            return []
+        if not isinstance(value, list):
+            raise serializers.ValidationError('Debe ser una lista de links de video.')
+        store                   =   getattr(self.instance, 'store', None)
+        benefits                =   plan_benefits_of(store.user) if store is not None else {}
+        limit                   =   benefits.get('max_videos')
+        cap                     =   StoreCustomization.VIDEOS_MAX if limit is None else min(int(limit), StoreCustomization.VIDEOS_MAX)
+        clean                   =   []
+        for item in value[:cap]:
+            raw                 =   item.get('url') if isinstance(item, dict) else item
+            embed               =   self._video_embed(raw)
+            if embed and embed not in clean:
+                clean.append(embed)
+        return clean
+    def validate_live_stream_url(self, value):
+        #Transmisión en vivo (Premium, has_live_stream): YouTube y Facebook
+        #reusan el embed de video; Twitch guarda la URL del canal y el
+        #front arma player.twitch.tv con ?parent=<host de la tienda>.
+        value                   =   (value or '').strip()
+        if not value:
+            return ''
+        parsed, host, parts     =   self._parsed_video_url(value)
+        if host == 'player.twitch.tv':
+            #URL de player ya normalizada (se reenvía al editar): conservar
+            #solo el canal válido.
+            channel             =   (parse_qs(parsed.query).get('channel') or [''])[0]
+            if channel and self._TWITCH_CHAN.match(channel):
+                return f'https://player.twitch.tv/?channel={channel}'
+            raise serializers.ValidationError('Pegá el link de tu canal de Twitch (twitch.tv/tu-canal).')
+        if host in self._TWITCH_HOSTS:
+            channel             =   (parts[0] if parts else '').strip('/')
+            if channel and self._TWITCH_CHAN.match(channel):
+                return f'https://player.twitch.tv/?channel={channel}'
+            raise serializers.ValidationError('Pegá el link de tu canal de Twitch (twitch.tv/tu-canal).')
+        if host in self._YT_HOSTS or host in self._FB_HOSTS or host in ('youtube-nocookie.com', 'www.youtube-nocookie.com'):
+            return self._video_embed(value)
+        raise serializers.ValidationError('Para el vivo admitimos YouTube, Facebook y Twitch.')
 
     def validate(self, attrs):
         #site_templates manda sobre show_catalog: se derivan siempre
@@ -593,6 +697,16 @@ class StoreCustomizationPublicSerializer(StoreCustomizationSerializer):
         if not profile_has_benefit(customization.store.user, 'has_design_advanced'):
             data.update(accent_custom = '', logo_scale = 'm', logo_mode = 'logo_name', mono_style = 'accent',
                         cover_overlay = 0, cover_focus_x = 50, cover_focus_y = 50)
+        #Los videos se sirven hasta el tope del plan vigente (una baja de
+        #plan muestra solo los primeros N, como el resto de los límites) y
+        #el stream en vivo es Premium (has_live_stream): sin el flag la URL
+        #no viaja — el valor queda guardado para cuando vuelva el plan.
+        if 'videos' in data:
+            limit               =   plan_benefits_of(customization.store.user).get('max_videos')
+            cap                 =   StoreCustomization.VIDEOS_MAX if limit is None else min(int(limit), StoreCustomization.VIDEOS_MAX)
+            data['videos']      =   (data.get('videos') or [])[:cap]
+        if not profile_has_benefit(customization.store.user, 'has_live_stream'):
+            data['live_stream_url'] =   ''
         #El tema del Studio viaja EFECTIVO según el plan: con has_design_plus
         #el subconjunto básico (radius/density) + el estilo; el plan Básico
         #solo el estilo y su juego de colores; sin beneficios, {} — una

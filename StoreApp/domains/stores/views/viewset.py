@@ -112,6 +112,9 @@ LOCATION_FIELDS         =   ('show_location',)
 #Las opiniones de producto (valoraciones + comentarios) son premium
 #(has_product_comments): sin el flag ambos toggles se descartan del PATCH.
 REVIEW_FIELDS           =   ('show_reviews', 'show_comments')
+#La transmisión en vivo es Premium (has_live_stream): sin el flag el link
+#se descarta del PATCH como los campos premium y lo guardado queda intacto.
+LIVE_STREAM_FIELDS      =   ('live_stream_url',)
 #El tema del Studio exige algún beneficio de diseño (has_design_plus da el
 #subconjunto básico radius/density; has_design_advanced, el tema completo).
 #El plan Básico (has_customization) conserva el campo pero solo persiste el
@@ -1145,6 +1148,8 @@ class StoreViewSet(StoreBaseViewSet):
             discard.extend(LOCATION_FIELDS)
         if not profile_has_benefit(store.user, 'has_product_comments'):
             discard.extend(REVIEW_FIELDS)
+        if not profile_has_benefit(store.user, 'has_live_stream'):
+            discard.extend(LIVE_STREAM_FIELDS)
         if not profile_has_benefit(store.user, 'has_design_plus') and not profile_has_benefit(store.user, 'has_design_advanced') and not profile_has_benefit(store.user, 'has_customization'):
             discard.extend(SITE_THEME_FIELDS)
         if discard:

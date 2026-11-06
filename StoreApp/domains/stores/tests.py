@@ -714,6 +714,82 @@ class MarketingFieldsTests(TestCase):
             response    =   client.patch(f'{STORES_URL}customization/', {'video_url': raw}, format = 'json')
             self.assertEqual(response.status_code, 400, raw)
 
+    def test_videos_normalize_social_links(self):
+        client      =   self._client()
+        payload     =   [
+            'https://www.tiktok.com/@tienda/video/7312345678901234567',
+            'https://www.instagram.com/reel/CxYz123_-aB/',
+            'https://www.facebook.com/mi.pagina/videos/123456789012345',
+            'https://www.youtube.com/watch?v=abcDEF123_-',
+            'https://vimeo.com/123456789',
+        ]
+        response    =   client.patch(f'{STORES_URL}customization/', {'videos': payload}, format = 'json')
+        videos      =   response.data['customization']['videos']
+        self.assertEqual(videos[0], 'https://www.tiktok.com/embed/v2/7312345678901234567')
+        self.assertEqual(videos[1], 'https://www.instagram.com/reel/CxYz123_-aB/embed/')
+        self.assertTrue(videos[2].startswith('https://www.facebook.com/plugins/video.php?href='))
+        self.assertEqual(videos[3], 'https://www.youtube-nocookie.com/embed/abcDEF123_-')
+        self.assertEqual(videos[4], 'https://player.vimeo.com/video/123456789')
+        #Reenviar las URLs ya normalizadas (edición) no debe fallar.
+        again       =   client.patch(f'{STORES_URL}customization/', {'videos': videos}, format = 'json')
+        self.assertEqual(again.status_code, 200)
+        self.assertEqual(again.data['customization']['videos'], videos)
+
+    def test_videos_reject_bad_links_and_dedupe(self):
+        client      =   self._client()
+        bad         =   client.patch(f'{STORES_URL}customization/', {'videos': ['https://evil.example.com/x']}, format = 'json')
+        self.assertEqual(bad.status_code, 400)
+        ok          =   client.patch(
+            f'{STORES_URL}customization/',
+            {'videos': ['https://www.tiktok.com/@u/video/7312345678901234567', 'https://www.tiktok.com/@u/video/7312345678901234567']},
+            format = 'json',
+        )
+        self.assertEqual(len(ok.data['customization']['videos']), 1)
+
+    def test_videos_respect_plan_limit(self):
+        _, profile  =   _make_user(verified = True)
+        _grant(profile, has_customization = True, has_public_link = True, max_videos = 2)
+        Store.objects.create(user = profile, slug = 'mi-tienda')
+        client      =   APIClient()
+        client.force_authenticate(user = profile.user)
+        payload     =   [f'https://www.tiktok.com/@u/video/7312345678901234{i:02d}' for i in range(4)]
+        response    =   client.patch(f'{STORES_URL}customization/', {'videos': payload}, format = 'json')
+        self.assertEqual(len(response.data['customization']['videos']), 2)
+
+    def test_live_stream_discarded_without_flag(self):
+        #Sin has_live_stream el PATCH descarta el campo: responde 200 pero
+        #no guarda nada (mismo criterio que los campos premium).
+        client      =   self._client()
+        response    =   client.patch(f'{STORES_URL}customization/', {'live_stream_url': 'https://www.twitch.tv/mitienda'}, format = 'json')
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.data['customization']['live_stream_url'], '')
+
+    def test_live_stream_normalizes_with_flag(self):
+        _, profile  =   _make_user(verified = True)
+        _grant(profile, has_customization = True, has_public_link = True, has_live_stream = True)
+        Store.objects.create(user = profile, slug = 'mi-tienda')
+        client      =   APIClient()
+        client.force_authenticate(user = profile.user)
+        response    =   client.patch(f'{STORES_URL}customization/', {'live_stream_url': 'https://www.twitch.tv/mitienda'}, format = 'json')
+        self.assertEqual(response.data['customization']['live_stream_url'], 'https://player.twitch.tv/?channel=mitienda')
+        yt          =   client.patch(f'{STORES_URL}customization/', {'live_stream_url': 'https://youtu.be/abcDEF123_-'}, format = 'json')
+        self.assertEqual(yt.data['customization']['live_stream_url'], 'https://www.youtube-nocookie.com/embed/abcDEF123_-')
+        #Reenviar la URL de player ya guardada (edición) no debe fallar.
+        again       =   client.patch(f'{STORES_URL}customization/', {'live_stream_url': 'https://player.twitch.tv/?channel=mitienda'}, format = 'json')
+        self.assertEqual(again.status_code, 200)
+        self.assertEqual(again.data['customization']['live_stream_url'], 'https://player.twitch.tv/?channel=mitienda')
+        bad         =   client.patch(f'{STORES_URL}customization/', {'live_stream_url': 'https://www.tiktok.com/@u/live'}, format = 'json')
+        self.assertEqual(bad.status_code, 400)
+
+    def test_public_hides_live_stream_without_flag(self):
+        client      =   self._client()
+        store       =   Store.objects.get(slug = 'mi-tienda')
+        cust, _     =   StoreCustomization.objects.get_or_create(store = store)
+        cust.live_stream_url    =   'https://player.twitch.tv/?channel=mitienda'
+        cust.save(update_fields = ['live_stream_url'])
+        public      =   APIClient().get(f'{STORES_URL}public/mi-tienda/')
+        self.assertEqual(public.data['customization']['live_stream_url'], '')
+
     def test_extras_are_stored_and_bounded(self):
         client      =   self._client()
         response    =   client.patch(

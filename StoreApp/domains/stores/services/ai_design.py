@@ -160,7 +160,7 @@ def _facts(store, customization):
         'team'          :   bool(customization.team) and customization.show_team,
         'testimonials'  :   bool(customization.testimonials) and customization.show_testimonials,
         'faqs'          :   bool(customization.faqs) and customization.show_faq,
-        'video'         :   bool(customization.video_url) and customization.show_video,
+        'video'         :   bool(customization.video_url or customization.videos or customization.live_stream_url) and customization.show_video,
         'steps'         :   bool(customization.service_steps or customization.services),
         'service_form'  :   bool(customization.service_days or customization.service_slots),
         'compare'       :   stats['products'] >= 4,

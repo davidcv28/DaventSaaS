@@ -42,6 +42,7 @@ const perks = computed(() => {
   const add = (key, icon, text) => list.push({ icon, text, up: improves(key, v[key]) })
   if ('max_products' in v) add('max_products', 'package', v.max_products == null ? 'Productos ilimitados' : `Hasta ${v.max_products} productos`)
   if (v.max_gallery_images) add('max_gallery_images', 'images', `${v.max_gallery_images} fotos`)
+  if (v.max_videos) add('max_videos', 'play', `${v.max_videos} videos`)
   if (v.has_design_advanced) add('has_design_advanced', 'palette', 'Diseños premium')
   else if (v.has_design_plus) add('has_design_plus', 'layout-grid', 'Diseños extra')
   if (v.has_discounts) add('has_discounts', 'percent', 'Descuentos')

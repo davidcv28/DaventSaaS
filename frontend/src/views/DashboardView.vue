@@ -23,7 +23,7 @@ import {
   validateImageFile, validateLogoFile, LOGO_ACCEPT, CAROUSEL_MAX_IMAGES, DECOR_MAX_IMAGES,
   CHATBOT_DEFAULTS, CHATBOT_QA_MAX,
   MARKETING_LIMITS, SERVICE_ICONS, serviceHue,
-  validateSectionTitle, validateCtaTitle, validateCtaText, validateCtaLabel, validateVideoUrl
+  validateSectionTitle, validateCtaTitle, validateCtaText, validateCtaLabel, validateVideoUrl, validateLiveStreamUrl, videosLimit
 } from '../api/stores.api.js'
 import {
   validateTaxonomyName, validateProductName, validateProductPrice, validateProductDescription,
@@ -934,11 +934,11 @@ watch(
 const productQuery = ref('')
 // Toolbar del listado: filtros por categoría/marca, "solo en oferta",
 // orden y vista grilla/lista (persistida en localStorage).
-// Vista del listado: 'grid' (tarjetas, default y más amigable) | 'table'
-// (densa, para catálogos grandes). El viejo 'list' cae en la grilla.
+// Vista del listado: 'list' (filas, default y más amigable) | 'table'
+// (densa, para catálogos grandes). El viejo 'grid' cae en la lista.
 const PRODUCT_VIEW_KEY = 'davent.catalog.view'
 const savedProductView = localStorage.getItem(PRODUCT_VIEW_KEY)
-const productView = ref(savedProductView === 'table' ? 'table' : 'grid')
+const productView = ref(savedProductView === 'table' ? 'table' : 'list')
 watch(productView, (v) => { try { localStorage.setItem(PRODUCT_VIEW_KEY, v) } catch {} })
 const prodFilterCategory = ref('')
 const prodFilterBrand = ref('')
@@ -1566,6 +1566,8 @@ function onAssistApplied() {
   pushToast('Listo ✓')
 }
 const canLocationMap = computed(() => Boolean(plan.value?.benefits?.has_location_map))
+const canLiveStream = computed(() => Boolean(plan.value?.benefits?.has_live_stream))
+const videosCap = computed(() => videosLimit(plan.value?.benefits || {}))
 const canProductComments = computed(() => Boolean(plan.value?.benefits?.has_product_comments))
 const canDiscounts = computed(() => Boolean(plan.value?.benefits?.has_discounts))
 const businessInitial = computed(() => (business.value || 'T').slice(0, 1).toUpperCase())
@@ -1704,7 +1706,7 @@ const mkNav = [
   { key: 'hours', label: 'Horarios', icon: 'clock', desc: 'Cuándo atendés al público' },
   { key: 'cta', label: 'Llamado a la acción', icon: 'zap', desc: 'El botón final que invita a escribirte' },
   { key: 'ann', label: 'Anuncios', icon: 'megaphone', desc: 'Novedades que corren bajo la portada' },
-  { key: 'video', label: 'Video', icon: 'eye', desc: 'Un video de YouTube o Vimeo' },
+  { key: 'video', label: 'Videos', icon: 'play', desc: 'Videos de tus redes y stream en vivo' },
   { key: 'extras', label: 'Extras', icon: 'plus', desc: 'Aviso del catálogo y frase del pie' }
 ]
 const mkOpenMeta = computed(() => mkNav.find((m) => m.key === mkOpen.value) || null)
@@ -1726,12 +1728,22 @@ function mkSummary(key) {
     case 'hours': return n(f.hours) ? `${n(f.hours)} cargado${n(f.hours) === 1 ? '' : 's'}` : ''
     case 'cta': return (f.cta_title || f.cta_text || f.cta_label) ? 'Con contenido' : ''
     case 'ann': return n(f.announcements) ? `${n(f.announcements)} cargado${n(f.announcements) === 1 ? '' : 's'}` : ''
-    case 'video': return f.video_url ? 'Con video' : ''
+    case 'video': {
+      const nv = n(f.videos) + (f.video_url ? 1 : 0)
+      return (nv || f.live_stream_url) ? `${nv ? `${nv} video${nv === 1 ? '' : 's'}` : ''}${nv && f.live_stream_url ? ' + ' : ''}${f.live_stream_url ? 'en vivo' : ''}` : ''
+    }
     case 'extras': return (f.catalog_note || f.footer_text) ? 'Con contenido' : ''
     default: return ''
   }
 }
-watch(mkOpen, (on) => { document.body.style.overflow = on ? 'hidden' : '' })
+watch(mkOpen, (on) => {
+  document.body.style.overflow = on ? 'hidden' : ''
+  //Video legado (video_url suelto): se migra a la lista la primera vez que
+  //se abre el editor para que el dueño lo vea y pueda ampliarlo.
+  if (on === 'video' && !(designForm.videos || []).length && designForm.video_url) {
+    designForm.videos = [designForm.video_url]
+  }
+})
 function onMkKey(e) { if (e.key === 'Escape' && mkOpen.value) mkOpen.value = null }
 onMounted(() => window.addEventListener('keydown', onMkKey))
 onUnmounted(() => {
@@ -1929,14 +1941,17 @@ async function saveAnnouncements() {
 
 async function saveVideo() {
   companyErrs.video = ''
-  const err = validateVideoUrl(designForm.video_url.trim())
+  const bad = (designForm.videos || []).find((u) => validateVideoUrl(String(u || '').trim()))
+  const err = (bad ? validateVideoUrl(String(bad || '').trim()) : '')
+    || validateLiveStreamUrl(designForm.live_stream_url.trim())
     || validateSectionTitle(designForm.video_title.trim())
   if (err) { companyErrs.video = err; return }
   companyBusy.value = true
   await store.saveCustomization({
     show_video: Boolean(designForm.show_video),
-    video_url: designForm.video_url.trim(),
-    video_title: designForm.video_title.trim()
+    video_title: designForm.video_title.trim(),
+    videos: (designForm.videos || []).map((u) => String(u || '').trim()).filter(Boolean),
+    live_stream_url: designForm.live_stream_url.trim()
   })
   companyBusy.value = false
 }
@@ -5188,21 +5203,43 @@ async function changePassword() {
           </div>
         </div>
 
-        <!-- ===== Video (embed YouTube/Vimeo) ===== -->
+        <!-- ===== Videos (embeds de redes + stream en vivo Premium) ===== -->
         <div v-show="mkOpen === 'video'" class="card mk-card">
-          <h3><AppIcon name="eye" :size="18" /> Video</h3>
-          <p class="mk-tip"><AppIcon name="info" :size="15" /><span>Pegá el link completo de un video de YouTube o Vimeo y se muestra dentro de tu página.</span></p>
+          <h3><AppIcon name="play" :size="18" /> Videos</h3>
+          <p class="mk-tip"><AppIcon name="info" :size="15" /><span>Pegá el link completo de cada video de TikTok, Instagram, YouTube, Facebook o Vimeo: se muestran como tarjetas en tu página.</span></p>
           <div class="check-list">
             <label class="check-item">
               <input v-model="designForm.show_video" type="checkbox" />
               <span class="check-text">
                 <strong>Mostrar en tu web</strong>
-                <small>Sección con un video de YouTube o Vimeo: ideal para mostrar el local, un producto o cómo comprar.</small>
+                <small>Sección con tus videos y, si cargás un stream, el botón "Transmitiendo en vivo".</small>
               </span>
             </label>
           </div>
-          <AppInput v-model="designForm.video_url" label="Link del video" name="company_video_url" placeholder="https://www.youtube.com/watch?v=…" hint="Pegá el link completo de YouTube o Vimeo. Vacío: la sección no se muestra." maxlength="300" />
-          <AppInput v-model="designForm.video_title" label="Título de la sección" name="company_video_title" placeholder="Mirá nuestro local en video" hint="Vacío: se muestra 'Mirá nuestro video'." maxlength="80" />
+          <div class="field">
+            <label>Links de videos <span class="hint-inline">({{ (designForm.videos || []).length }}/{{ videosCap }})</span></label>
+            <div v-if="(designForm.videos || []).length" class="qa-list">
+              <div v-for="(u, i) in designForm.videos" :key="i" class="qa-item">
+                <div class="qa-fields">
+                  <span class="qa-num">Video {{ i + 1 }}</span>
+                  <input v-model="designForm.videos[i]" class="input" type="url" maxlength="300" placeholder="https://www.tiktok.com/@tunegocio/video/…" :aria-label="`Link del video ${i + 1}`" />
+                </div>
+                <div class="qa-actions">
+                  <button type="button" class="icon-btn" :disabled="i === 0" :aria-label="`Subir el video ${i + 1}`" @click="moveRow(designForm.videos, i, -1)"><AppIcon name="chevron-up" :size="14" /></button>
+                  <button type="button" class="icon-btn" :disabled="i === designForm.videos.length - 1" :aria-label="`Bajar el video ${i + 1}`" @click="moveRow(designForm.videos, i, 1)"><AppIcon name="chevron-down" :size="14" /></button>
+                  <button type="button" class="icon-btn danger" :aria-label="`Borrar el video ${i + 1}`" @click="designForm.videos.splice(i, 1)"><AppIcon name="trash" :size="15" /></button>
+                </div>
+              </div>
+            </div>
+            <button type="button" class="btn ghost btn-auto mk-add" :disabled="(designForm.videos || []).length >= videosCap" @click="addRow(designForm.videos, videosCap, '')">
+              <AppIcon name="plus" :size="15" /> Agregar video
+            </button>
+            <p class="hint">YouTube, Vimeo, TikTok, Instagram o Facebook. Tu plan admite hasta {{ videosCap }} videos.</p>
+          </div>
+          <div class="field" :class="{ locked: !canLiveStream }">
+            <AppInput v-model="designForm.live_stream_url" label="Link del stream en vivo" name="company_live_stream_url" placeholder="Link del stream (YouTube, Facebook) o de tu canal de Twitch" hint="Con un link cargado aparece el botón «Transmitiendo en vivo» en tu portada: al tocarlo se abre el stream en un modal. Disponible en el plan Premium." maxlength="300" />
+          </div>
+          <AppInput v-model="designForm.video_title" label="Título de la sección" name="company_video_title" placeholder="Mirá nuestro video" hint="Vacío: se muestra 'Mirá nuestro video'." maxlength="80" />
           <p class="hint">Aparece en un orden fijo entre las secciones de tu página.</p>
           <p v-if="companyErrs.video" class="field-error" role="alert">{{ companyErrs.video }}</p>
           <div class="btn-row">

@@ -413,6 +413,18 @@ class StoreCustomization(models.Model):
     video_url                   =   models.CharField(max_length = VIDEO_URL_MAX, blank = True, verbose_name = 'Video (URL de embed)')
     video_title                 =   models.CharField(max_length = VIDEO_TITLE_MAX, blank = True, verbose_name = 'Título de la sección Video')
     show_video                  =   models.BooleanField(default = True, verbose_name = 'Mostrar sección Video')
+    #Sección "Videos": lista de embeds de redes sociales (YouTube, Vimeo,
+    #TikTok, Instagram, Facebook). Cada fila es la URL de embed ya
+    #normalizada por el serializer; el tope efectivo lo fija el beneficio
+    #'max_videos' del plan (Básico 3, Estándar 10, Premium 15, techo duro
+    #VIDEOS_MAX). Sin filas la web cae al video_url legado de arriba.
+    VIDEOS_MAX                  =   15
+    videos                      =   models.JSONField(default = list, blank = True, verbose_name = 'Videos de redes (embeds)')
+    #Transmisión en vivo (solo Premium: flag 'has_live_stream'): link del
+    #stream que el serializer normaliza a embed (YouTube/Facebook) o a la
+    #URL de canal de Twitch — la web muestra el botón "Transmitiendo en
+    #vivo" y abre el stream en un modal. Vacío = sin botón.
+    live_stream_url             =   models.CharField(max_length = VIDEO_URL_MAX, blank = True, verbose_name = 'Transmisión en vivo (URL)')
     #===== Bloques del rediseño de portada =====
     #Garantías/beneficios del negocio: filas {icon, title, text} en tira
     #compacta (envíos, garantía, pagos, devoluciones...).
