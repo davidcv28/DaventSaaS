@@ -336,6 +336,7 @@ export const DISCOUNT_SCOPES = [
   { value: 'products', label: 'Productos elegidos' }
 ]
 export const DISCOUNT_LIMITS = { percentMin: 1, percentMax: 99, productsMax: 500 }
+export const DISCOUNT_DEFAULT_PERCENT = 25
 
 // Estado derivado de la ventana (lo calcula el backend en status):
 // scheduled = aún no llega starts_at | active = vigente | ended = pasó ends_at | paused = apagado a mano.

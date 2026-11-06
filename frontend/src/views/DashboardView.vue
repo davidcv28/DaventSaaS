@@ -28,7 +28,7 @@ import {
 import {
   validateTaxonomyName, validateProductName, validateProductPrice, validateProductDescription,
   catalogApi, FEATURE_LIMITS, parseFeatureSchema, validateFeatureSchema, validateProductFeatures,
-  DISCOUNT_SCOPES,
+  DISCOUNT_SCOPES, DISCOUNT_DEFAULT_PERCENT, DISCOUNT_LIMITS,
   validateDiscountName, validateDiscountPercent, validateDiscountWindow,
   isoToLocalInput, localInputToIso, productListOffer, isDiscountedProduct
 } from '../api/catalog.api.js'
@@ -1308,7 +1308,7 @@ function discountPreset(kind) {
 
 function resetDiscountForm() {
   Object.assign(discountForm, {
-    name: '', percent: '', scope: 'all', category: '', brand: '',
+    name: '', percent: String(DISCOUNT_DEFAULT_PERCENT), scope: 'all', category: '', brand: '',
     product_ids: [], campaign: '',
     start_date: localDateInput(new Date()), start_time: '00:00',
     end_none: false, end_date: '', end_time: '23:59',
@@ -1454,7 +1454,7 @@ function downloadQr() {
 
 // El preview arranca con un 25% de muestra: un "-0%" se lee como error y el
 // ejemplo explica mejor qué va a ver el cliente.
-const discountPreviewPct = computed(() => Math.min(99, Math.max(1, Math.round(Number(discountForm.percent)) || 25)))
+const discountPreviewPct = computed(() => Math.min(DISCOUNT_LIMITS.percentMax, Math.max(DISCOUNT_LIMITS.percentMin, Math.round(Number(discountForm.percent)) || DISCOUNT_DEFAULT_PERCENT)))
 const toolsTab = ref('ready')
 watch([section, canFlyers, canFlyerEditor], () => {
   if (!canFlyers.value && toolsTab.value === 'studio') toolsTab.value = 'ready'
