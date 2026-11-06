@@ -171,13 +171,17 @@ def gallery_limit(profile):
         return 0
     return benefits['max_gallery_images']
 def image_count(store):
-    """Cantidad de imágenes que ocupan cuota: logo + carrusel + galería + productos."""
-    #_n_product_images viene anotado en el queryset del listado y los count()
-    #de carrusel/galería usan el prefetch: sin eso sumaban 3 queries por tienda.
+    """Cantidad de imágenes que ocupan cuota: logo + portada + carrusel + galería + productos + marcas."""
+    #_n_product_images/_n_brand_images vienen anotados en el queryset del
+    #listado y los count() de carrusel/galería usan el prefetch: sin eso
+    #sumaban queries extra por tienda.
     products    =   getattr(store, '_n_product_images', None)
     if products is None:
         products    =   store.products.exclude(image_key = '').count()
-    count           =   store.carousel_images.count() + store.gallery_images.count() + products
+    brands      =   getattr(store, '_n_brand_images', None)
+    if brands is None:
+        brands      =   store.brands.exclude(image_key = '').count()
+    count           =   store.carousel_images.count() + store.gallery_images.count() + products + brands
     customization   =   getattr(store, 'customization', None)
     if customization and customization.logo_key:
         count       +=  1
@@ -572,3 +576,66 @@ def delete_product_image(product):
     product.image_size              =   0
     store.storage_used_bytes        =   locked.storage_used_bytes
     return product
+#=========================================
+# BRAND IMAGE UPLOAD / DELETE (catálogo)
+#=========================================
+def upload_brand_image(brand, upload):
+    """
+    Sube/reemplaza el logo de una marca y ajusta la cuota de la tienda.
+    Se normaliza como logo: WebP con transparencia conservada y tamaño
+    acotado, así llega a la web con fondo invisible. Lanza ValueError.
+    """
+    if not storage_configured():
+        raise ValueError('El almacenamiento de imágenes no está configurado. Avisale a soporte.')
+    error       =   validate_logo_file(upload)
+    if error:
+        raise ValueError(error)
+    store       =   brand.store
+    processed   =   normalize_image(upload, 'logo')
+    size        =   len(processed[0])
+    #Fast path: evita subir el objeto cuando el cupo claramente no da.
+    _check_image_slot(store, is_new = not brand.image_key)
+    _check_quota(store, size, replacing_bytes = brand.image_size)
+    key         =   _put_object(store, 'brands', upload, processed)
+    try:
+        with transaction.atomic():
+            locked      =   Store.objects.select_for_update().get(pk = store.pk)
+            locked_brand=   locked.brands.filter(pk = brand.pk).first()
+            if locked_brand is None:
+                raise ValueError('La marca ya no existe.')
+            _check_image_slot(locked, is_new = not locked_brand.image_key)
+            new_used    =   _check_quota(locked, size, replacing_bytes = locked_brand.image_size)
+            old_key     =   locked_brand.image_key
+            locked_brand.image_key     =   key
+            locked_brand.image_size    =   size
+            locked_brand.save(update_fields = ['image_key', 'image_size'])
+            _consume_quota(locked, new_used)
+    except ValueError:
+        _delete_object(key)
+        raise
+    brand.image_key                 =   key
+    brand.image_size                =   size
+    store.storage_used_bytes        =   locked.storage_used_bytes
+    if old_key:
+        _delete_object(old_key)
+    return brand
+def delete_brand_image(brand):
+    """Borra la imagen de la marca en R2 y libera la cuota."""
+    store       =   brand.store
+    with transaction.atomic():
+        locked      =   Store.objects.select_for_update().get(pk = store.pk)
+        locked_brand=   locked.brands.filter(pk = brand.pk).first()
+        if locked_brand is None:
+            return
+        old_key     =   locked_brand.image_key
+        freed       =   locked_brand.image_size
+        locked_brand.image_key     =   ''
+        locked_brand.image_size    =   0
+        locked_brand.save(update_fields = ['image_key', 'image_size'])
+        _consume_quota(locked, locked.storage_used_bytes - freed)
+    if old_key:
+        _delete_object(old_key)
+    brand.image_key                 =   ''
+    brand.image_size                =   0
+    store.storage_used_bytes        =   locked.storage_used_bytes
+    return brand

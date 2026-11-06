@@ -76,10 +76,13 @@ class CategorySerializer(TaxonomyMixinValidator, CategorySchemaMixinValidator, s
 #=========================================
 class BrandSerializer(TaxonomyMixinValidator, serializers.ModelSerializer):
     name                        =   serializers.CharField(**TaxonomyFields['name'])
+    image                       =   serializers.SerializerMethodField()
     products_count              =   serializers.IntegerField(read_only = True)
     class Meta:
         model                   =   Brand
-        fields                  =   ['id', 'name', 'position', 'products_count']
+        fields                  =   ['id', 'name', 'image', 'position', 'products_count']
+    def get_image(self, brand):
+        return object_url(brand.image_key)
 #=========================================
 # SPECIAL OFFER CAMPAIGN SERIALIZER (lectura pública + CRUD staff)
 #=========================================

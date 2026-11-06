@@ -877,6 +877,12 @@ function addTaxonomyFeature() {
 }
 const taxonomyBusy = reactive({ category: false, brand: false })
 const taxonomyErr = reactive({ category: '', brand: '' })
+// Imagen de marca: un solo input oculto; el botón de cada fila deja la
+// marca objetivo y dispara el picker (PNG/JPG/WebP -> WebP con alfa).
+const brandImageInput = ref(null)
+const brandImageTarget = ref(null)
+const brandImageBusy = ref(null)
+const brandImageErr = ref('')
 // Edición de categoría: el mismo form agrega o guarda según haya id cargado.
 const taxonomyEditing = ref(null)
 
@@ -1550,6 +1556,33 @@ async function removeTaxonomy(kind, item) {
   const ok = kind === 'category' ? await catalog.removeCategory(item.id) : await catalog.removeBrand(item.id)
   if (!ok) taxonomyErr[kind] = catalog.lastError
   else if (kind === 'category' && taxonomyEditing.value === item.id) cancelCategoryEdit()
+}
+
+function pickBrandImage(brand) {
+  brandImageTarget.value = brand
+  brandImageErr.value = ''
+  brandImageInput.value?.click()
+}
+async function onBrandImagePicked(event) {
+  const file = event.target.files?.[0]
+  event.target.value = ''
+  const brand = brandImageTarget.value
+  brandImageTarget.value = null
+  if (!file || !brand) return
+  brandImageErr.value = validateLogoFile(file)
+  if (brandImageErr.value) return
+  brandImageBusy.value = brand.id
+  const res = await catalog.saveBrandImage(brand.id, file)
+  brandImageBusy.value = null
+  if (!res.ok) brandImageErr.value = catalog.lastError
+}
+async function removeBrandImage(brand) {
+  if (brandImageBusy.value) return
+  brandImageBusy.value = brand.id
+  brandImageErr.value = ''
+  const res = await catalog.removeBrandImage(brand.id)
+  brandImageBusy.value = null
+  if (!res.ok) brandImageErr.value = catalog.lastError
 }
 
 // --- QR y folletos (premium): QR del link público + folleto imprimible ---
@@ -4048,19 +4081,25 @@ async function changePassword() {
               <AppInput v-model="taxonomyForm.brand" label="Nueva marca" name="brand_name" placeholder="Ej. Nike" :error="taxonomyErr.brand" />
               <AppButton :loading="taxonomyBusy.brand" @click="addTaxonomy('brand')">Agregar</AppButton>
             </div>
+            <p class="hint">Logo opcional por marca: PNG, JPG, WebP o GIF de hasta 2 MB. Se convierte a WebP con fondo transparente.</p>
             <ul v-if="catalog.brands.length" class="tax-list">
               <li v-for="b in catalog.brands" :key="b.id">
-                <span class="tax-dot" :style="{ '--h': taxonomyHue(b.name) }" aria-hidden="true"></span>
+                <img v-if="b.image" class="tax-thumb" :src="b.image" :alt="`Logo de ${b.name}`" loading="lazy" decoding="async" />
+                <span v-else class="tax-dot" :style="{ '--h': taxonomyHue(b.name) }" aria-hidden="true"></span>
                 <span class="tax-name">
                   <strong>{{ b.name }}</strong>
                   <small>{{ b.products_count || 0 }} productos</small>
                 </span>
                 <span class="tax-item-actions">
+                  <button type="button" class="icon-btn" :disabled="brandImageBusy === b.id" :aria-label="b.image ? `Cambiar imagen de ${b.name}` : `Subir imagen de ${b.name}`" @click="pickBrandImage(b)"><AppIcon name="image" :size="15" /></button>
+                  <button v-if="b.image" type="button" class="icon-btn danger" :disabled="brandImageBusy === b.id" :aria-label="`Quitar imagen de ${b.name}`" @click="removeBrandImage(b)"><AppIcon name="x" :size="15" /></button>
                   <button type="button" class="icon-btn danger" aria-label="Eliminar marca" @click="removeTaxonomy('brand', b)"><AppIcon name="trash" :size="15" /></button>
                 </span>
               </li>
             </ul>
-            <p v-else class="hint">Sin marcas todavía.</p>
+            <input ref="brandImageInput" type="file" class="sr-only" :accept="LOGO_ACCEPT_TYPES" aria-label="Subir imagen de marca" @change="onBrandImagePicked" />
+            <p v-if="brandImageErr" class="field-error" role="alert">{{ brandImageErr }}</p>
+            <p v-if="!catalog.brands.length" class="hint">Sin marcas todavía.</p>
           </div>
 
           <!-- -------- Descuentos programados (premium) -------- -->

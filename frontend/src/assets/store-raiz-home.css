@@ -776,6 +776,9 @@
   list-style: none;
 }
 .rz-home .rh-brand-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
   color: var(--rz-muted);
   font-family: var(--rz-display, inherit);
   font-size: clamp(1.05rem, 1.6vw, 1.35rem);
@@ -784,6 +787,7 @@
   text-decoration: none;
   transition: color var(--rz-dur-2, 200ms) var(--rz-ease-out, ease);
 }
+.rz-home .rh-brand-img { width: 26px; height: 26px; object-fit: contain; }
 .rz-home .rh-brand-link:hover,
 .rz-home .rh-brand-link:focus-visible { color: var(--rz-accent-text); }
 
