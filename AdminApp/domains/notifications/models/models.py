@@ -70,10 +70,29 @@ class ChangelogEntry(models.Model):
     Novedad publicada por el staff (se escribe desde el admin o el panel
     staff). Al pasar a is_published se avisa a todos los usuarios activos
     con una Notification 'changelog' que apunta a la sección Novedades.
+
+    kind='roadmap' son los items de "Próximamente" (sección Novedades):
+    se muestran en la lista con título + summary y abren un modal con el
+    detalle completo (body + features + imagen). No notifican.
     """
+    KIND_RELEASE        =   'release'
+    KIND_ROADMAP        =   'roadmap'
+    KIND_CHOICES        =   (
+        (KIND_RELEASE, 'Novedad publicada'),
+        (KIND_ROADMAP, 'Próximamente'),
+    )
+    kind                =   models.CharField(max_length = 16, choices = KIND_CHOICES, default = KIND_RELEASE, verbose_name = 'Tipo')
     title               =   models.CharField(max_length = 200, verbose_name = 'Título')
-    #Texto plano; el frontend respeta saltos de línea (pre-line).
+    #Descripción corta que se ve en la fila de la lista (una línea).
+    summary             =   models.CharField(max_length = 280, blank = True, verbose_name = 'Descripción breve')
+    #Texto plano; el frontend respeta saltos de línea (pre-line). Es la
+    #descripción detallada que se muestra en el modal.
     body                =   models.TextField(verbose_name = 'Contenido')
+    #Bullets del modal ("todo lo que incluye"), lista de strings.
+    features            =   models.JSONField(default = list, blank = True, verbose_name = 'Puntos del detalle')
+    icon                =   models.CharField(max_length = 40, blank = True, verbose_name = 'Ícono')
+    image_key           =   models.CharField(max_length = 200, blank = True, verbose_name = 'Imagen (key en R2)')
+    position            =   models.PositiveIntegerField(default = 0, verbose_name = 'Orden')
     is_published        =   models.BooleanField(default = False, verbose_name = 'Publicada')
     #Se fija una sola vez, en la primera publicación (no se re-notifica
     #al despublicar/ republicar: la novedad ya quedó contada).
@@ -87,7 +106,8 @@ class ChangelogEntry(models.Model):
         ordering            =   ['-published_at', '-created_at']
 
     def save(self, *args, **kwargs):
-        publish_now     =   self.is_published and not self.published_at
+        #Solo las novedades publicadas notifican; las del roadmap no.
+        publish_now     =   self.is_published and not self.published_at and self.kind == self.KIND_RELEASE
         if publish_now:
             self.published_at   =   timezone.now()
         super().save(*args, **kwargs)

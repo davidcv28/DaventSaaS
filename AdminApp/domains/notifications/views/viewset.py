@@ -1,3 +1,6 @@
+import uuid
+
+from django.db.models import Q
 from django.utils import timezone
 from rest_framework import status, viewsets
 from rest_framework.decorators import action
@@ -90,8 +93,13 @@ class ChangelogViewSet(viewsets.GenericViewSet):
     def get_queryset(self):
         qs  =   ChangelogEntry.objects.all()
         if not self.request.user.is_staff:
-            qs  =   qs.filter(is_published = True)
-        return qs.order_by('-published_at', '-created_at')
+            #Novedades publicadas + todo el roadmap (los items de
+            #"Próximamente" siempre son visibles, no usan is_published).
+            qs  =   qs.filter(
+                Q(is_published = True, kind = ChangelogEntry.KIND_RELEASE)
+                | Q(kind = ChangelogEntry.KIND_ROADMAP)
+            )
+        return qs.order_by('position', '-published_at', '-created_at')
 
     def get_permissions(self):
         if self.request.method in SAFE_METHODS:
@@ -111,3 +119,37 @@ class ChangelogViewSet(viewsets.GenericViewSet):
         serializer.is_valid(raise_exception = True)
         serializer.save()
         return Response(serializer.data, status = status.HTTP_201_CREATED)
+
+    @action(detail = True, methods = ['post', 'delete'], url_path = 'image')
+    def image(self, request, pk = None):
+        """
+        POST   /api/changelog/<id>/image/  → staff: sube la foto de la
+                                             novedad a R2 (multipart
+                                             'image'). Reemplaza la anterior.
+        DELETE /api/changelog/<id>/image/  → staff: quita la foto.
+        """
+        from StoreApp.domains.stores.services.storage import (
+            _delete_object,
+            object_url,
+            put_object,
+            validate_image_file,
+        )
+        entry   =   self.get_object()
+        if request.method == 'DELETE':
+            if entry.image_key:
+                _delete_object(entry.image_key)
+                entry.image_key   =   ''
+                entry.save(update_fields = ['image_key', 'updated_at'])
+            return Response({'ok': True, 'image_url': None})
+        upload      =   request.FILES.get('image')
+        if upload is None:
+            return Response({'detail': 'Falta el archivo image.'}, status = status.HTTP_400_BAD_REQUEST)
+        error       =   validate_image_file(upload)
+        if error:
+            return Response({'detail': error}, status = status.HTTP_400_BAD_REQUEST)
+        ext         =   upload.name.rsplit('.', 1)[-1].lower() if '.' in upload.name else 'jpg'
+        old         =   entry.image_key
+        entry.image_key =   put_object(f'changelog/{uuid.uuid4()}.{ext}', upload.read(), upload.content_type)
+        entry.save(update_fields = ['image_key', 'updated_at'])
+        _delete_object(old)
+        return Response({'ok': True, 'image_url': object_url(entry.image_key)})

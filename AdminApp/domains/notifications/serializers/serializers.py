@@ -20,7 +20,19 @@ class NotificationSerializer(serializers.ModelSerializer):
 # CHANGELOG SERIALIZER
 #=========================================
 class ChangelogEntrySerializer(serializers.ModelSerializer):
+    image_url   =   serializers.SerializerMethodField()
+
     class Meta:
         model   =   ChangelogEntry
-        fields  =   ['id', 'title', 'body', 'is_published', 'published_at', 'created_at']
-        read_only_fields =   ['published_at', 'created_at']
+        fields  =   [
+            'id', 'kind', 'title', 'summary', 'body', 'features', 'icon',
+            'image_key', 'image_url', 'position',
+            'is_published', 'published_at', 'created_at',
+        ]
+        read_only_fields =   ['image_key', 'published_at', 'created_at']
+
+    def get_image_url(self, obj):
+        if not obj.image_key:
+            return None
+        from StoreApp.domains.stores.services.storage import object_url
+        return object_url(obj.image_key)

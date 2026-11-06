@@ -11,10 +11,11 @@ sistema, no se editan a mano.
 
 @admin.register(ChangelogEntry)
 class ChangelogEntryAdmin(admin.ModelAdmin):
-    list_display        =   ('title', 'is_published', 'published_at', 'created_at')
-    list_filter         =   ('is_published',)
+    list_display        =   ('title', 'kind', 'position', 'is_published', 'published_at', 'created_at')
+    list_filter         =   ('kind', 'is_published')
     search_fields       =   ('title', 'body')
-    ordering            =   ('-published_at', '-created_at')
+    ordering            =   ('position', '-published_at', '-created_at')
+    #La foto se sube vía POST /api/changelog/<id>/image/ (va a R2, no a MEDIA).
 
 
 @admin.register(Notification)

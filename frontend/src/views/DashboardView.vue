@@ -2441,7 +2441,11 @@ watch(section, (s) => {
   }
   if (s === 'changelog' && !changelogLoaded.value) {
     changelogLoaded.value = true
-    fetchChangelog().then((rows) => { changelogEntries.value = Array.isArray(rows) ? rows : [] }).catch(() => {})
+    fetchChangelog().then((rows) => {
+      rows = Array.isArray(rows) ? rows : []
+      changelogEntries.value = rows.filter(r => r.kind !== 'roadmap')
+      roadmapItems.value = rows.filter(r => r.kind === 'roadmap').sort((a, b) => a.position - b.position)
+    }).catch(() => {})
   }
 })
 async function goToReviewProduct(r) {
@@ -2713,12 +2717,8 @@ const changelogEntries = ref([])
 const changelogLoaded = ref(false)
 // Detalle de una novedad (changelog publicado o item del roadmap) en modal.
 const newsModal = ref(null)
-const ROADMAP_ITEMS = [
-  { icon: 'download', title: 'Respaldo de tu tienda', desc: 'Descargá todos tus datos y recuperá la tienda si la borraste por error.', feats: ['Exportación de productos, imágenes y configuración', 'Papelera para restaurar la tienda borrada'] },
-  { icon: 'calendar', title: 'Turnos y reservas', desc: 'Agenda online para rubros de servicios.', feats: ['Tus clientes reservan directo desde tu web', 'Horarios y disponibilidad configurables'] },
-  { icon: 'credit-card', title: 'Credenciales de acceso', desc: 'Tarjetas de membresía para gimnasios, clubes y coworkings.', feats: ['Diseño de la credencial con tu marca', 'Emisión con fecha de vencimiento'] },
-  { icon: 'shopping-bag', title: 'Venta en local (POS)', desc: 'DAVENT Ventas: un programa para cobrar en tu local con el mismo catálogo de tu web.', feats: ['Productos, fotos y precios sincronizados con tu catálogo', 'Tickets y facturas con tus datos, imprimibles al cobrar', 'Resumen de ventas del día al cierre', 'Funciona sin internet y sincroniza después'] }
-]
+// Items de "Próximamente": vienen del backend (kind='roadmap').
+const roadmapItems = ref([])
 
 const NOTIF_ICONS = { review: 'star', admin_message: 'message-circle', subscription: 'credit-card', changelog: 'sparkles', system: 'info' }
 const notifIcon = (kind) => NOTIF_ICONS[kind] || 'info'
@@ -6052,13 +6052,14 @@ async function changePassword() {
         <ul v-else class="changelog-list">
           <li
             v-for="c in changelogEntries" :key="c.id" class="changelog-item" role="button" tabindex="0"
-            @click="newsModal = { icon: 'sparkles', title: c.title, desc: c.body, date: fmtDate(c.published_at || c.created_at) }"
-            @keydown.enter="newsModal = { icon: 'sparkles', title: c.title, desc: c.body, date: fmtDate(c.published_at || c.created_at) }"
+            @click="newsModal = { icon: c.icon || 'sparkles', title: c.title, desc: c.body, feats: c.features, image: c.image_url, date: fmtDate(c.published_at || c.created_at) }"
+            @keydown.enter="newsModal = { icon: c.icon || 'sparkles', title: c.title, desc: c.body, feats: c.features, image: c.image_url, date: fmtDate(c.published_at || c.created_at) }"
           >
+            <img v-if="c.image_url" class="changelog-thumb" :src="c.image_url" alt="" />
             <span class="changelog-date">{{ fmtDate(c.published_at || c.created_at) }}</span>
             <div class="changelog-text">
               <strong>{{ c.title }}</strong>
-              <p class="changelog-body">{{ c.body }}</p>
+              <p class="changelog-body">{{ c.summary || c.body }}</p>
             </div>
             <AppIcon name="chevron-right" :size="14" class="roadmap-arrow" />
           </li>
@@ -6070,11 +6071,13 @@ async function changePassword() {
         <p class="roadmap-sub">En lo que estamos trabajando para tu tienda.</p>
         <ul class="roadmap-list">
           <li
-            v-for="r in ROADMAP_ITEMS" :key="r.title" class="roadmap-item" role="button" tabindex="0"
-            @click="newsModal = r" @keydown.enter="newsModal = r"
+            v-for="r in roadmapItems" :key="r.id" class="roadmap-item" role="button" tabindex="0"
+            @click="newsModal = { icon: r.icon || 'sparkles', title: r.title, desc: r.body, feats: r.features, image: r.image_url }"
+            @keydown.enter="newsModal = { icon: r.icon || 'sparkles', title: r.title, desc: r.body, feats: r.features, image: r.image_url }"
           >
-            <span class="roadmap-ico"><AppIcon :name="r.icon" :size="15" /></span>
-            <span class="roadmap-item-txt"><strong>{{ r.title }}</strong><small>{{ r.desc }}</small></span>
+            <img v-if="r.image_url" class="roadmap-thumb" :src="r.image_url" alt="" />
+            <span v-else class="roadmap-ico"><AppIcon :name="r.icon || 'sparkles'" :size="15" /></span>
+            <span class="roadmap-item-txt"><strong>{{ r.title }}</strong><small>{{ r.summary || r.body }}</small></span>
             <AppIcon name="chevron-right" :size="14" class="roadmap-arrow" />
           </li>
         </ul>
@@ -6091,6 +6094,7 @@ async function changePassword() {
                 <h3>{{ newsModal.title }}</h3>
                 <button type="button" class="icon-btn" aria-label="Cerrar" @click="newsModal = null"><AppIcon name="x" :size="16" /></button>
               </header>
+              <img v-if="newsModal.image" class="news-modal-img" :src="newsModal.image" alt="" />
               <p v-if="newsModal.date" class="news-modal-date">{{ newsModal.date }}</p>
               <p class="news-modal-desc">{{ newsModal.desc }}</p>
               <ul v-if="newsModal.feats?.length" class="roadmap-feats">
