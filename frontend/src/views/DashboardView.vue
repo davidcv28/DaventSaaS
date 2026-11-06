@@ -4146,7 +4146,10 @@ async function changePassword() {
                     <option v-for="c in availableCampaigns" :key="c.id" :value="`camp:${c.id}`">{{ c.name }} · {{ campaignWindowLabel(c) }}</option>
                   </optgroup>
                 </select>
-                <p v-if="selectedCampaign" class="hint"><AppIcon name="zap" :size="13" class="label-icon" aria-hidden="true" />Se enciende solo durante {{ selectedCampaign.name }} ({{ campaignWindowLabel(selectedCampaign) }}) y se apaga cuando termina el evento.</p>
+                <div v-if="selectedCampaign" class="disc-event-lock">
+                  <AppIcon name="lock" :size="14" aria-hidden="true" />
+                  <span><strong>{{ selectedCampaign.name }}</strong> · {{ campaignWindowLabel(selectedCampaign) }}<small>Fechas fijas del evento: se enciende y se apaga solo.</small></span>
+                </div>
                 <div v-if="discountWindowPreset === 'custom'" class="disc-window">
                   <div class="disc-when">
                     <span class="disc-when-label"><AppIcon name="calendar" :size="13" aria-hidden="true" /> Empieza</span>
@@ -4171,9 +4174,9 @@ async function changePassword() {
                 </div>
               </div>
 
-              <details v-if="selectedCampaign" class="disc-adv" open>
-                <summary>Evento elegido</summary>
-                <p class="hint">El descuento usa la etiqueta y las fechas de <strong>{{ selectedCampaign.name }}</strong>. Para usar fechas propias, cambiá la vigencia arriba.</p>
+              <details v-if="selectedCampaign" class="disc-adv">
+                <summary>Sobre el evento</summary>
+                <p class="hint">Las fechas de <strong>{{ selectedCampaign.name }}</strong> son fijas y no se pueden editar. Para usar fechas propias, elegí otra vigencia arriba.</p>
               </details>
 
               <div class="check-list">
