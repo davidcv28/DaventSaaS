@@ -6009,6 +6009,191 @@
                 "corners": "square"
             },
             "concept": "Manila cruda + azul archivo: la carpeta institucional."
+        },
+        {
+            "slug": "silicio",
+            "nombre": "Silicio",
+            "categoria": "Componentes de PC",
+            "descripcion": "Laboratorio de hardware premium: grafito, plano azul y volt como señal. Anton en titulares de catálogo, Space Grotesk en lectura y JetBrains Mono en specs. Visor carrusel en la portada, vitrina y testimonios en riel, catálogo con filtros de banco de trabajo.",
+            "tier": "plus",
+            "template": "silicio",
+            "page_theme": "dark",
+            "pattern": "silicio",
+            "tokens": {
+                "palette": {
+                    "accent": "#C8FF3D",
+                    "primary": "#C8FF3D",
+                    "secondary": "#7FA8E8",
+                    "bg": "#0A0D12",
+                    "surface": "#10141C",
+                    "text": "#E9EEF4",
+                    "muted": "#8B96A6",
+                    "border": "#232B38",
+                    "success": "#5BC49A",
+                    "danger": "#E56464"
+                },
+                "containers": {
+                    "radius": "sm",
+                    "shadow": "medium",
+                    "border": "thin",
+                    "density": "comfortable",
+                    "surface": "elevated"
+                },
+                "typography": {
+                    "heading": "anton",
+                    "subheading": "space-grotesk",
+                    "body": "space-grotesk",
+                    "scale": "bold",
+                    "weightHeading": 400,
+                    "letterSpacing": "0.01em"
+                },
+                "buttons": {
+                    "shape": "square",
+                    "style": "solid",
+                    "size": "md"
+                },
+                "background": {
+                    "type": "solid",
+                    "value": null,
+                    "overlay": "none"
+                },
+                "motion": {
+                    "reveal": "fade-up",
+                    "hover": "lift",
+                    "intensity": "subtle"
+                },
+                "mobile": {
+                    "cardStyle": "standard",
+                    "heroHeight": "standard"
+                },
+                "preview": "",
+                "icons": {
+                    "style": "line",
+                    "stroke": "1.8",
+                    "size": "20",
+                    "corners": "square"
+                }
+            },
+            "layout": {},
+            "layout_spec": {},
+            "tags": [
+                "computacion",
+                "pc",
+                "hardware",
+                "componentes",
+                "gaming",
+                "tienda",
+                "premium"
+            ],
+            "preview": "",
+            "style": "Componentes de PC",
+            "anim": {
+                "hero": "fade-up",
+                "reveal": "fade-up",
+                "hover": "lift",
+                "button": "solid-press"
+            },
+            "easing": "cubic-bezier(.22,1,.36,1)",
+            "duration": "420ms",
+            "icons": {
+                "style": "line",
+                "stroke": "1.8",
+                "size": "20",
+                "corners": "square"
+            },
+            "concept": "Grafito + volt: el banco de trabajo de componentes de PC."
+        },
+        {
+            "slug": "silicio-claro",
+            "nombre": "Silicio Plano",
+            "categoria": "Componentes de PC",
+            "descripcion": "Variante de plano técnico: papel de ingeniería, tinta grafito y acento oliva. Mismo aparato de laboratorio en clave clara para talleres que trabajan de día.",
+            "tier": "plus",
+            "template": "silicio",
+            "page_theme": "light",
+            "pattern": "silicio",
+            "tokens": {
+                "palette": {
+                    "accent": "#4F6B00",
+                    "primary": "#14171C",
+                    "secondary": "#3E6FB0",
+                    "bg": "#F2F3EE",
+                    "surface": "#FBFCF8",
+                    "text": "#14171C",
+                    "muted": "#5C6570",
+                    "border": "#D8DCD0",
+                    "success": "#2E7D4F",
+                    "danger": "#B3261E"
+                },
+                "containers": {
+                    "radius": "sm",
+                    "shadow": "soft",
+                    "border": "thin",
+                    "density": "comfortable",
+                    "surface": "flat"
+                },
+                "typography": {
+                    "heading": "anton",
+                    "subheading": "space-grotesk",
+                    "body": "space-grotesk",
+                    "scale": "bold",
+                    "weightHeading": 400,
+                    "letterSpacing": "0.01em"
+                },
+                "buttons": {
+                    "shape": "square",
+                    "style": "solid",
+                    "size": "md"
+                },
+                "background": {
+                    "type": "solid",
+                    "value": null,
+                    "overlay": "none"
+                },
+                "motion": {
+                    "reveal": "fade-up",
+                    "hover": "lift",
+                    "intensity": "subtle"
+                },
+                "mobile": {
+                    "cardStyle": "standard",
+                    "heroHeight": "standard"
+                },
+                "preview": "",
+                "icons": {
+                    "style": "line",
+                    "stroke": "1.8",
+                    "size": "20",
+                    "corners": "square"
+                }
+            },
+            "layout": {},
+            "layout_spec": {},
+            "tags": [
+                "computacion",
+                "pc",
+                "hardware",
+                "componentes",
+                "claro",
+                "tienda"
+            ],
+            "preview": "",
+            "style": "Componentes de PC",
+            "anim": {
+                "hero": "fade-up",
+                "reveal": "fade-up",
+                "hover": "lift",
+                "button": "solid-press"
+            },
+            "easing": "cubic-bezier(.22,1,.36,1)",
+            "duration": "420ms",
+            "icons": {
+                "style": "line",
+                "stroke": "1.8",
+                "size": "20",
+                "corners": "square"
+            },
+            "concept": "Plano de papel + oliva: el laboratorio en versión diurna."
         }
   ],
   "patterns": [
@@ -8648,6 +8833,86 @@
             "variables": {},
             "supports_dark_mode": true,
             "style": "expediente"
+        },
+        {
+            "slug": "silicio",
+            "nombre": "Silicio",
+            "categoria": "computacion",
+            "descripcion": "Tienda premium de componentes de PC: visor carrusel con la portada y la galería, vitrina y testimonios en riel, sistema por sistema, el taller con stats, garantías, membresías, FAQ, CTA y contacto. Catálogo con filtros de banco de trabajo, ficha de producto como orden de servicio y servicios como ledger del taller. Solo datos reales de la tienda.",
+            "tier": "plus",
+            "template": "silicio",
+            "layout": {
+                "landing": [
+                    {"id": "hero", "variant": "split", "enabled": true, "order": 0},
+                    {"id": "announcements", "enabled": true, "order": 1},
+                    {"id": "categories", "enabled": true, "order": 2},
+                    {"id": "featured", "enabled": true, "order": 3},
+                    {"id": "about", "enabled": true, "order": 4},
+                    {"id": "stats", "enabled": true, "order": 5},
+                    {"id": "benefits", "enabled": true, "order": 6},
+                    {"id": "plans", "enabled": true, "order": 7},
+                    {"id": "testimonials", "enabled": true, "order": 8},
+                    {"id": "faq", "enabled": true, "order": 9},
+                    {"id": "cta", "variant": "band", "enabled": true, "order": 10},
+                    {"id": "contact", "enabled": true, "order": 11}
+                ],
+                "catalog": [
+                    {"id": "hero", "enabled": true, "order": 0},
+                    {"id": "filters", "enabled": true, "order": 1},
+                    {"id": "grid", "enabled": true, "order": 2}
+                ],
+                "services": [
+                    {"id": "hero", "enabled": true, "order": 0},
+                    {"id": "offerings", "enabled": true, "order": 1},
+                    {"id": "list", "enabled": true, "order": 2}
+                ]
+            },
+            "tokens": {
+                "accent": "#C8FF3D",
+                "palette": {
+                    "accent": "#C8FF3D",
+                    "primary": "#C8FF3D",
+                    "secondary": "#7FA8E8",
+                    "bg": "#0A0D12",
+                    "surface": "#10141C",
+                    "text": "#E9EEF4",
+                    "muted": "#8B96A6",
+                    "border": "#232B38",
+                    "success": "#5BC49A",
+                    "danger": "#E56464"
+                },
+                "fonts": ["anton", "space-grotesk", "jetbrains-mono"],
+                "radius": "sm",
+                "anim": {
+                    "hero": "fade-up",
+                    "reveal": "fade-up",
+                    "hover": "lift",
+                    "button": "solid-press"
+                },
+                "easing": "cubic-bezier(.22,1,.36,1)",
+                "duration": "420ms",
+                "icons": {
+                    "style": "line",
+                    "stroke": "1.8",
+                    "size": "20",
+                    "corners": "square"
+                }
+            },
+            "tags": [
+                "computacion",
+                "pc",
+                "hardware",
+                "componentes",
+                "gaming",
+                "tienda",
+                "ofertas",
+                "ecommerce",
+                "premium"
+            ],
+            "preview": "",
+            "variables": {},
+            "supports_dark_mode": true,
+            "style": "silicio"
         }
   ]
 }
