@@ -3905,10 +3905,10 @@ async function changePassword() {
                   </div>
                   <p class="hint">Se sugieren al cargar productos de esta categoría.</p>
                 </div>
-              </div>
-              <div class="tax-actions">
-                <AppButton :loading="taxonomyBusy.category" @click="addTaxonomy('category')">{{ taxonomyEditing ? 'Guardar' : 'Agregar' }}</AppButton>
-                <button v-if="taxonomyEditing" type="button" class="btn ghost btn-auto" @click="cancelCategoryEdit">Cancelar</button>
+                <div class="tax-actions">
+                  <button v-if="taxonomyEditing" type="button" class="btn ghost btn-auto" @click="cancelCategoryEdit">Cancelar</button>
+                  <AppButton :loading="taxonomyBusy.category" class="btn-auto" @click="addTaxonomy('category')">{{ taxonomyEditing ? 'Guardar' : 'Agregar categoría' }}</AppButton>
+                </div>
               </div>
             </div>
             <ul v-if="catalog.categories.length" class="tax-list">

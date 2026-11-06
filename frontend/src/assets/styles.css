@@ -838,7 +838,7 @@ body{ transition: background-color .2s ease, color .2s ease; }
 /* Alta/edición de categorías y marcas: panel destacado sobre surface con
    borde y acento de marca, para que no se confunda con el listado. */
 .tax-add{
-  display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 12px; align-items: end;
+  display: grid; grid-template-columns: minmax(0, 1fr); gap: 12px;
   margin-bottom: 18px; padding: 14px 14px 14px 16px;
   border: 1px solid var(--brand-soft-line); border-left: 3px solid var(--brand-500);
   border-radius: 12px; background: var(--surface);
