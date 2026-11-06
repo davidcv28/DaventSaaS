@@ -12,6 +12,12 @@ const ForgotPasswordView = () => import('../views/ForgotPasswordView.vue')
 const ResetPasswordView = () => import('../views/ResetPasswordView.vue')
 const VerifyEmailView = () => import('../views/VerifyEmailView.vue')
 const DashboardView = () => import('../views/DashboardView.vue')
+const AppShell = () => import('../views/app/AppShell.vue')
+const AppProducts = () => import('../views/app/AppProducts.vue')
+const AppVisits = () => import('../views/app/AppVisits.vue')
+const AppReviews = () => import('../views/app/AppReviews.vue')
+const AppBusiness = () => import('../views/app/AppBusiness.vue')
+const AppDesign = () => import('../views/app/AppDesign.vue')
 const DesignStudioView = () => import('../views/design/DesignStudioView.vue')
 const AdminView = () => import('../views/AdminView.vue')
 const TermsView = () => import('../views/TermsView.vue')
@@ -111,6 +117,21 @@ const routes = [
     name: 'dashboard',
     component: DashboardView,
     meta: { requiresAuth: true, customerOnly: true, title: 'Panel' }
+  },
+  // Interfaz propia de la APK: solo administración de la tienda (productos,
+  // visitas, opiniones, negocio, diseño). La web completa sigue en /dashboard.
+  {
+    path: '/app',
+    component: AppShell,
+    meta: { requiresAuth: true, customerOnly: true },
+    children: [
+      { path: '', name: 'app', redirect: { name: 'app-products' } },
+      { path: 'productos', name: 'app-products', component: AppProducts, meta: { title: 'Productos' } },
+      { path: 'visitas', name: 'app-visits', component: AppVisits, meta: { title: 'Visitas' } },
+      { path: 'opiniones', name: 'app-reviews', component: AppReviews, meta: { title: 'Opiniones' } },
+      { path: 'negocio', name: 'app-business', component: AppBusiness, meta: { title: 'Mi negocio' } },
+      { path: 'diseno', name: 'app-design', component: AppDesign, meta: { title: 'Diseño' } }
+    ]
   },
   // Studio de diseño a pantalla completa (premium, has_design_advanced):
   // la guarda redirige al panel con aviso si el plan no lo incluye.
@@ -249,8 +270,12 @@ export const router = createRouter({
 
 router.beforeEach(async (to) => {
   // En la APK la landing no aplica (es marketing de la web): la raíz va
-  // directo al login, que ya resuelve sesión/onboarding según corresponda.
-  if (Capacitor.isNativePlatform() && to.path === '/') return { name: 'login' }
+  // directo al login, y el panel web completo se reemplaza por la interfaz
+  // propia de administración de la tienda (/app).
+  if (Capacitor.isNativePlatform()) {
+    if (to.path === '/') return { name: 'login' }
+    if (to.name === 'dashboard') return { name: 'app' }
+  }
   // En un host de tienda (subdominio o dominio propio) solo existe la web
   // pública: cualquier ruta de plataforma (login, panel, legales) se
   // resuelve en el dominio principal.
