@@ -670,6 +670,16 @@
 .changelog-body { margin: 0; font-size: 13.5px; line-height: 1.55; color: var(--ink-2); white-space: pre-line; overflow-wrap: anywhere; }
 @media (max-width: 640px) { .changelog-item { flex-direction: column; gap: 4px; } .changelog-date { width: auto; } }
 
+/* Próximamente (roadmap): mismo lenguaje que el changelog, en card aparte. */
+.roadmap-title { margin: 0; font-size: 16px; font-weight: 700; color: var(--ink); }
+.roadmap-sub { margin: 4px 0 0; font-size: 13px; color: var(--muted); }
+.roadmap-list { list-style: none; margin: 14px 0 0; padding: 0; display: grid; }
+.roadmap-item { display: flex; gap: 12px; padding: 12px 4px; border-bottom: 1px solid var(--line-soft); align-items: flex-start; }
+.roadmap-item:last-child { border-bottom: 0; }
+.roadmap-item > svg { flex: none; margin-top: 2px; color: var(--accent, var(--ink-2)); }
+.roadmap-item strong { display: block; font-size: 14px; font-weight: 650; color: var(--ink); }
+.roadmap-item p { margin: 2px 0 0; font-size: 13.5px; line-height: 1.5; color: var(--ink-2); }
+
 /* Asistente automático como contacto del equipo: avatar con gradiente de
    marca y sugerencias clickeables dentro de la conversación. */
 .support-avatar.bot, .chat-avatar.bot { background: linear-gradient(135deg, var(--brand-500), var(--accent)); color: #fff; }

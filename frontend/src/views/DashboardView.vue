@@ -5999,6 +5999,29 @@ async function changePassword() {
           </li>
         </ul>
       </div>
+
+      <div class="card">
+        <h2 class="roadmap-title">Próximamente</h2>
+        <p class="roadmap-sub">En lo que estamos trabajando para tu tienda.</p>
+        <ul class="roadmap-list">
+          <li class="roadmap-item">
+            <AppIcon name="download" :size="16" />
+            <div><strong>Respaldo de tu tienda</strong><p>Descargá todos tus datos (productos, imágenes y configuración) y una papelera que te permite recuperar la tienda si la borraste por error.</p></div>
+          </li>
+          <li class="roadmap-item">
+            <AppIcon name="calendar" :size="16" />
+            <div><strong>Turnos y reservas</strong><p>Agenda online para rubros de servicios: tus clientes reservan directo desde tu web.</p></div>
+          </li>
+          <li class="roadmap-item">
+            <AppIcon name="credit-card" :size="16" />
+            <div><strong>Credenciales de acceso</strong><p>Diseñá y emití tarjetas de membresía con vencimiento para gimnasios, clubes y coworkings.</p></div>
+          </li>
+          <li class="roadmap-item">
+            <AppIcon name="shopping-bag" :size="16" />
+            <div><strong>Venta en local (POS)</strong><p>Usá DAVENT como caja de tu local: ventas presenciales, comprobantes y control de stock sobre tu catálogo.</p></div>
+          </li>
+        </ul>
+      </div>
     </div>
 
     <div v-if="seen.settings" v-show="section === 'settings'" :class="{ 'sec-on': section === 'settings' }">
