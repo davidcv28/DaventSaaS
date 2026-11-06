@@ -1350,6 +1350,17 @@ function resetDiscountForm() {
   discountEditing.value = null
 }
 
+// El alta/edición abre el drawer (mismo patrón que el form de producto).
+const discountFormOpen = ref(false)
+function openDiscountForm() { discountFormOpen.value = true }
+function closeDiscountForm() { discountFormOpen.value = false; resetDiscountForm() }
+function newDiscount() { resetDiscountForm(); openDiscountForm() }
+function onDiscountFormKey(e) { if (e.key === 'Escape' && discountFormOpen.value) closeDiscountForm() }
+watch(discountFormOpen, (open) => {
+  if (open) document.addEventListener('keydown', onDiscountFormKey)
+  else document.removeEventListener('keydown', onDiscountFormKey)
+})
+
 function editDiscount(d) {
   discountEditing.value = d.id
   const start = isoToLocalInput(d.starts_at)
@@ -1364,6 +1375,7 @@ function editDiscount(d) {
   })
   catalog.notice = ''
   catalog.lastError = ''
+  openDiscountForm()
 }
 
 async function saveDiscount() {
@@ -1384,7 +1396,7 @@ async function saveDiscount() {
     is_active: discountForm.is_active
   })
   discountBusy.value = false
-  if (ok) resetDiscountForm()
+  if (ok) closeDiscountForm()
 }
 
 async function toggleDiscount(d) {
@@ -1399,7 +1411,7 @@ async function removeDiscount(d) {
   discountBusy.value = true
   await catalog.removeDiscount(d.id)
   discountBusy.value = false
-  if (discountEditing.value === d.id) resetDiscountForm()
+  if (discountEditing.value === d.id) closeDiscountForm()
 }
 
 async function addTaxonomy(kind) {
@@ -3984,9 +3996,21 @@ async function changePassword() {
             <p>Con el Plan premium creás ofertas que se activan y se apagan solas en las fechas que elijas, sin tocar los precios a mano.</p>
             <button class="btn btn-auto" @click="section = 'plans'">Ver planes</button>
           </div>
-          <div v-else class="grid-2 disc-wrap">
-            <div class="card disc-card">
-              <h3><AppIcon :name="discountEditing ? 'pencil' : 'percent'" :size="18" /> {{ discountEditing ? 'Editar descuento' : 'Nuevo descuento' }}</h3>
+          <div v-else class="disc-wrap">
+          <!-- El formulario vive en un drawer como el de productos: la lista
+               queda limpia y sin competir con los pasos del alta. -->
+          <Teleport to="body">
+            <Transition name="pf">
+              <div v-if="discountFormOpen" class="pf-overlay" @click.self="closeDiscountForm">
+                <div class="pf-drawer" role="dialog" aria-modal="true" :aria-label="discountEditing ? 'Editar descuento' : 'Nuevo descuento'">
+                  <header class="pf-drawer-head">
+                    <div class="pf-drawer-title">
+                      <span class="pf-drawer-ico"><AppIcon :name="discountEditing ? 'pencil' : 'percent'" :size="17" /></span>
+                      <h3>{{ discountEditing ? 'Editar descuento' : 'Nuevo descuento' }}</h3>
+                    </div>
+                    <button type="button" class="icon-btn" aria-label="Cerrar" @click="closeDiscountForm"><AppIcon name="x" :size="16" /></button>
+                  </header>
+                  <div class="pf-drawer-body">
               <p class="lead">Programá una oferta: se activa y se apaga sola en las fechas que elijas, sin que tengas que tocar los precios.</p>
               <div class="disc-preview" aria-hidden="true">
                 <span class="disc-preview-badge"><b>-{{ discountPreviewPct }}</b><i>%</i></span>
@@ -4105,14 +4129,18 @@ async function changePassword() {
               </div>
               <div class="btn-row">
                 <AppButton :loading="discountBusy" @click="saveDiscount"><AppIcon name="check" :size="16" /> {{ discountEditing ? 'Guardar cambios' : 'Crear descuento' }}</AppButton>
-                <button v-if="discountEditing" type="button" class="btn ghost btn-auto" @click="resetDiscountForm">Cancelar</button>
+                <button type="button" class="btn ghost btn-auto" @click="closeDiscountForm">Cancelar</button>
               </div>
-            </div>
+                  </div>
+                </div>
+              </div>
+            </Transition>
+          </Teleport>
 
             <div class="card disc-card">
-              <div class="disc-head">
-                <h3><AppIcon name="percent" :size="18" /> Tus descuentos</h3>
-                <span v-if="catalog.discounts.length" class="pill muted">{{ catalog.discounts.length }} {{ catalog.discounts.length === 1 ? 'programado' : 'programados' }}</span>
+              <div class="inv-head">
+                <h3><AppIcon name="percent" :size="17" /> Descuentos <small>· {{ catalog.discounts.length }}</small></h3>
+                <button type="button" class="btn btn-auto" @click="newDiscount"><AppIcon name="plus" :size="15" /> Nuevo descuento</button>
               </div>
               <div v-if="!catalog.discounts.length" class="disc-empty">
                 <span class="disc-empty-icon"><AppIcon name="percent" :size="22" /></span>
