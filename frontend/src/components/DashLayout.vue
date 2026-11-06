@@ -208,6 +208,7 @@ onBeforeUnmount(() => {
               :ref="setBtn(i.id)"
               :class="{ active: active === i.id, locked: i.locked }"
               :style="{ '--i': idx }"
+              :title="i.label"
               :aria-current="active === i.id ? 'page' : undefined"
               :data-tour="`nav-${i.id}`"
               @click="go(i)"
@@ -220,12 +221,12 @@ onBeforeUnmount(() => {
           </template>
         </nav>
         <div class="side-foot">
-          <RouterLink class="link" to="/terminos" @click="close"><AppIcon name="file-text" :size="16" /> <span>Términos y condiciones</span></RouterLink>
-          <RouterLink class="link" to="/denuncias" @click="close"><AppIcon name="flag" :size="16" /> <span>Denunciar contenido</span></RouterLink>
-          <button class="link" @click="close(); emit('tour')"><AppIcon name="graduation-cap" :size="16" /> <span>Repetir la guía</span></button>
-          <button v-if="!forceTheme" class="link" @click="theme.toggleTheme()"><AppIcon :name="theme.isDark ? 'sun' : 'moon'" :size="16" /> <span>{{ theme.isDark ? 'Modo claro' : 'Modo oscuro' }}</span></button>
+          <RouterLink class="link" to="/terminos" title="Términos y condiciones" @click="close"><AppIcon name="file-text" :size="16" /> <span>Términos y condiciones</span></RouterLink>
+          <RouterLink class="link" to="/denuncias" title="Denunciar contenido" @click="close"><AppIcon name="flag" :size="16" /> <span>Denunciar contenido</span></RouterLink>
+          <button class="link" title="Repetir la guía" @click="close(); emit('tour')"><AppIcon name="graduation-cap" :size="16" /> <span>Repetir la guía</span></button>
+          <button v-if="!forceTheme" class="link" :title="theme.isDark ? 'Modo claro' : 'Modo oscuro'" @click="theme.toggleTheme()"><AppIcon :name="theme.isDark ? 'sun' : 'moon'" :size="16" /> <span>{{ theme.isDark ? 'Modo claro' : 'Modo oscuro' }}</span></button>
           <div class="who"><span class="avatar sm">{{ initial }}</span> <span class="who-name">{{ userName }}</span></div>
-          <button class="link" @click="close(); emit('logout')"><AppIcon name="logout" :size="16" /> <span>Cerrar sesión</span></button>
+          <button class="link" title="Cerrar sesión" @click="close(); emit('logout')"><AppIcon name="logout" :size="16" /> <span>Cerrar sesión</span></button>
         </div>
       </div>
     </aside>

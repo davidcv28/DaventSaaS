@@ -804,20 +804,27 @@ async function checkDomainNow() {
   }
 }
 
-async function removeDomain() {
-  if (domainBusy.value) return
-  domainBusy.value = true
-  domainErr.value = ''
-  try {
-    await storesApi.deleteDomain()
-    domainInfo.value = null
-    domainInput.value = ''
-    pushToast('Dominio desvinculado')
-  } catch (e) {
-    domainErr.value = extractApiError(e).nonField || 'No se pudo quitar el dominio.'
-  } finally {
-    domainBusy.value = false
-  }
+function removeDomain() {
+  askConfirm({
+    title: 'Desvincular el dominio',
+    desc: 'Tu web deja de responder en ese dominio personalizado. Podés volver a vincularlo cuando quieras.',
+    confirmLabel: 'Desvincular',
+    action: async () => {
+      if (domainBusy.value) return
+      domainBusy.value = true
+      domainErr.value = ''
+      try {
+        await storesApi.deleteDomain()
+        domainInfo.value = null
+        domainInput.value = ''
+        pushToast('Dominio desvinculado')
+      } catch (e) {
+        domainErr.value = extractApiError(e).nonField || 'No se pudo quitar el dominio.'
+      } finally {
+        domainBusy.value = false
+      }
+    }
+  })
 }
 
 // --- Mis catálogos: productos, categorías y marcas de la tienda ---
@@ -1028,13 +1035,20 @@ async function bulkSetActive(active) {
 }
 async function bulkRemove() {
   if (bulkBusy.value || !selectedIds.value.length) return
-  bulkBusy.value = true
   const ids = [...selectedIds.value]
-  for (const id of ids) await catalog.removeProduct(id)
-  bulkBusy.value = false
-  if (productEditing.value && ids.includes(productEditing.value)) closeProductForm()
-  selectedIds.value = []
-  pushToast(ids.length === 1 ? 'Producto eliminado' : `${ids.length} productos eliminados`)
+  const n = ids.length
+  askConfirm({
+    title: n === 1 ? 'Eliminar 1 producto' : `Eliminar ${n} productos`,
+    desc: 'Se borran del catálogo y de tu web. No se puede deshacer.',
+    action: async () => {
+      bulkBusy.value = true
+      for (const id of ids) await catalog.removeProduct(id)
+      bulkBusy.value = false
+      if (productEditing.value && ids.includes(productEditing.value)) closeProductForm()
+      selectedIds.value = []
+      pushToast(n === 1 ? 'Producto eliminado' : `${n} productos eliminados`)
+    }
+  })
 }
 async function bulkDuplicate() {
   if (bulkBusy.value || !selectedIds.value.length) return
@@ -1063,10 +1077,16 @@ async function toggleProductActive(p) {
   await catalog.saveProduct(p.id, { fields: { is_active: !p.is_active }, image: null, imageClear: false })
   pushToast(p.is_active ? 'Producto oculto' : 'Producto visible en tu web')
 }
-async function removeProduct(p) {
-  await catalog.removeProduct(p.id)
-  if (productEditing.value === p.id) closeProductForm()
-  pushToast('Producto eliminado')
+function removeProduct(p) {
+  askConfirm({
+    title: `Eliminar «${p.name}»`,
+    desc: 'El producto se borra del catálogo y de tu web. No se puede deshacer.',
+    action: async () => {
+      await catalog.removeProduct(p.id)
+      if (productEditing.value === p.id) closeProductForm()
+      pushToast('Producto eliminado')
+    }
+  })
 }
 async function duplicateProduct(p) {
   const res = await catalog.saveProduct(null, {
@@ -1501,12 +1521,18 @@ async function toggleDiscount(d) {
   discountBusy.value = false
 }
 
-async function removeDiscount(d) {
-  if (discountBusy.value) return
-  discountBusy.value = true
-  await catalog.removeDiscount(d.id)
-  discountBusy.value = false
-  if (discountEditing.value === d.id) closeDiscountForm()
+function removeDiscount(d) {
+  askConfirm({
+    title: 'Eliminar la oferta',
+    desc: 'La promoción deja de aplicarse en tu catálogo y en tu web.',
+    action: async () => {
+      if (discountBusy.value) return
+      discountBusy.value = true
+      await catalog.removeDiscount(d.id)
+      discountBusy.value = false
+      if (discountEditing.value === d.id) closeDiscountForm()
+    }
+  })
 }
 
 async function addTaxonomy(kind) {
@@ -1552,10 +1578,17 @@ function cancelCategoryEdit() {
   taxonomyErr.category = ''
 }
 
-async function removeTaxonomy(kind, item) {
-  const ok = kind === 'category' ? await catalog.removeCategory(item.id) : await catalog.removeBrand(item.id)
-  if (!ok) taxonomyErr[kind] = catalog.lastError
-  else if (kind === 'category' && taxonomyEditing.value === item.id) cancelCategoryEdit()
+function removeTaxonomy(kind, item) {
+  const label = kind === 'category' ? 'categoría' : 'marca'
+  askConfirm({
+    title: `Eliminar la ${label} «${item.name}»`,
+    desc: `La ${label} se quita de tu catálogo. Los productos que la tengan asignada quedan sin ${label === 'categoría' ? 'categoría' : 'marca'}.`,
+    action: async () => {
+      const ok = kind === 'category' ? await catalog.removeCategory(item.id) : await catalog.removeBrand(item.id)
+      if (!ok) taxonomyErr[kind] = catalog.lastError
+      else if (kind === 'category' && taxonomyEditing.value === item.id) cancelCategoryEdit()
+    }
+  })
 }
 
 function pickBrandImage(brand) {
@@ -1576,13 +1609,19 @@ async function onBrandImagePicked(event) {
   brandImageBusy.value = null
   if (!res.ok) brandImageErr.value = catalog.lastError
 }
-async function removeBrandImage(brand) {
-  if (brandImageBusy.value) return
-  brandImageBusy.value = brand.id
-  brandImageErr.value = ''
-  const res = await catalog.removeBrandImage(brand.id)
-  brandImageBusy.value = null
-  if (!res.ok) brandImageErr.value = catalog.lastError
+function removeBrandImage(brand) {
+  askConfirm({
+    title: `Quitar la imagen de ${brand.name}`,
+    desc: 'La marca queda solo con su nombre en tu catálogo.',
+    action: async () => {
+      if (brandImageBusy.value) return
+      brandImageBusy.value = brand.id
+      brandImageErr.value = ''
+      const res = await catalog.removeBrandImage(brand.id)
+      brandImageBusy.value = null
+      if (!res.ok) brandImageErr.value = catalog.lastError
+    }
+  })
 }
 
 // --- QR y folletos (premium): QR del link público + folleto imprimible ---
@@ -2148,6 +2187,20 @@ const {
 const leaveStay = ref(null)
 const leaveGuard = reactive({ open: false, target: null, route: null })
 watch(() => leaveGuard.open, (on) => { if (on) nextTick(() => leaveStay.value?.focus()) })
+
+// Confirmación genérica para acciones destructivas (borrar, desvincular).
+const confirmStay = ref(null)
+const confirmDlg = reactive({ open: false, title: '', desc: '', confirmLabel: 'Eliminar', danger: true, action: null })
+watch(() => confirmDlg.open, (on) => { if (on) nextTick(() => confirmStay.value?.focus()) })
+function askConfirm(opts) {
+  Object.assign(confirmDlg, { desc: '', confirmLabel: 'Eliminar', danger: true, action: null }, opts, { open: true })
+}
+function resolveConfirm(ok) {
+  const fn = confirmDlg.action
+  confirmDlg.open = false
+  confirmDlg.action = null
+  if (ok && typeof fn === 'function') fn()
+}
 function onBeforeUnload(e) {
   if (designDirtyAll.value) { e.preventDefault(); e.returnValue = '' }
 }
@@ -2355,9 +2408,14 @@ async function saveService() {
     resetServiceForm()
   }
 }
-async function removeService(s) {
-  await services.removeService(s.id)
-  if (serviceEditing.value?.id === s.id) resetServiceForm()
+function removeService(s) {
+  askConfirm({
+    title: `Eliminar «${s.name || s.title || 'el servicio'}»`,
+    desc: 'El servicio se borra de tu web. No se puede deshacer.',
+    action: () => services.removeService(s.id).then(() => {
+      if (serviceEditing.value?.id === s.id) resetServiceForm()
+    })
+  })
 }
 async function moveService(s, dir) {
   services.moveItem(s.id, dir)
@@ -2487,11 +2545,17 @@ async function goToReviewProduct(r) {
   const p = catalog.products.find((x) => x.id === r.product)
   if (p) editProduct(p)
 }
-async function onDeleteReview(r) {
+function onDeleteReview(r) {
   if (reviewDeleting.value === r.id) return
-  reviewDeleting.value = r.id
-  await catalog.removeReview(r.id)
-  reviewDeleting.value = null
+  askConfirm({
+    title: 'Eliminar la opinión',
+    desc: `Se borra la reseña de ${r.name || 'este cliente'} y deja de verse en tu web.`,
+    action: async () => {
+      reviewDeleting.value = r.id
+      await catalog.removeReview(r.id)
+      reviewDeleting.value = null
+    }
+  })
 }
 // Respuesta del dueño a una opinión: se publica bajo la opinión en la
 // ficha del producto (PATCH /api/reviews/<pk>/reply/ — función exclusiva
@@ -5925,7 +5989,7 @@ async function changePassword() {
             </div>
           </div>
           <AppInput v-model="accountForm.address" label="Domicilio" name="bill_address" autocomplete="street-address" placeholder="Escribe tu domicilio" :error="accountFieldErr('address')" @blur="accountTouched.address = true" />
-          <AppInput v-model="accountForm.phone" label="Número de celular" name="bill_phone" placeholder="+5493871551234" hint="Formato internacional. Ej. +5493871551234" required :error="accountFieldErr('phone')" @blur="accountTouched.phone = true" />
+          <AppInput v-model="accountForm.phone" label="Número de celular" name="bill_phone" type="tel" placeholder="+5493871551234" hint="Formato internacional. Ej. +5493871551234" required :error="accountFieldErr('phone')" @blur="accountTouched.phone = true" />
           <div class="btn-row">
             <AppButton variant="ghost" type="button" @click="closeBilling">Cancelar</AppButton>
             <AppButton type="submit" :loading="billingBusy">Guardar y continuar al pago</AppButton>
@@ -6201,7 +6265,7 @@ async function changePassword() {
               </div>
             </div>
             <AppInput v-model="accountForm.address" label="Domicilio" name="acc_address" autocomplete="street-address" placeholder="Escribe tu domicilio" :error="accountFieldErr('address')" @blur="accountTouched.address = true" />
-            <AppInput v-model="accountForm.phone" label="Número de celular" name="acc_phone" placeholder="+5493871551234" hint="Formato internacional. Ej. +5493871551234" required :error="accountFieldErr('phone')" @blur="accountTouched.phone = true" />
+            <AppInput v-model="accountForm.phone" label="Número de celular" name="acc_phone" type="tel" placeholder="+5493871551234" hint="Formato internacional. Ej. +5493871551234" required :error="accountFieldErr('phone')" @blur="accountTouched.phone = true" />
             <AppButton :loading="accountBusy">Guardar cambios</AppButton>
           </form>
         </div>
@@ -6415,6 +6479,18 @@ async function changePassword() {
         <div class="dsg-confirm-actions">
           <button type="button" class="btn ghost btn-auto" ref="leaveStay" @click="confirmLeave(false)">Seguir editando</button>
           <button type="button" class="btn btn-auto" @click="confirmLeave(true)">Salir sin guardar</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Confirmación de acciones destructivas -->
+    <div v-if="confirmDlg.open" class="dsg-confirm" role="presentation" @keydown.esc="resolveConfirm(false)">
+      <div class="dsg-confirm-box" role="alertdialog" aria-modal="true" :aria-label="confirmDlg.title">
+        <h3>{{ confirmDlg.title }}</h3>
+        <p v-if="confirmDlg.desc">{{ confirmDlg.desc }}</p>
+        <div class="dsg-confirm-actions">
+          <button type="button" class="btn ghost btn-auto" ref="confirmStay" @click="resolveConfirm(false)">Cancelar</button>
+          <button type="button" class="btn btn-auto" :class="{ danger: confirmDlg.danger }" @click="resolveConfirm(true)">{{ confirmDlg.confirmLabel }}</button>
         </div>
       </div>
     </div>
