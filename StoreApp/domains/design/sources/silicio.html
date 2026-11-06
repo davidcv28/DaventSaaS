@@ -129,8 +129,11 @@ ul,ol{margin:0;padding:0;list-style:none}
 }
 html[data-ds-theme="dark"] .eyebrow{color:var(--volt)}
 .eyebrow::before{content:"";flex:none;width:26px;height:1px;background:currentColor;opacity:.6}
-.eyebrow::after{content:"";flex:none;width:6px;height:6px;background:var(--accent)}
+.eyebrow::after{content:"";flex:none;width:6px;height:6px;background:var(--accent);animation:eybPulse 2.6s ease-in-out infinite}
 html[data-ds-theme="dark"] .eyebrow::after{background:var(--volt)}
+@keyframes eybPulse{0%,100%{opacity:1;box-shadow:0 0 0 0 color-mix(in srgb,var(--accent) 55%,transparent)}50%{opacity:.55;box-shadow:0 0 10px 1px color-mix(in srgb,var(--accent) 45%,transparent)}}
+html[data-ds-theme="dark"] .eyebrow::after{animation-name:eybPulseV}
+@keyframes eybPulseV{0%,100%{opacity:1;box-shadow:0 0 0 0 color-mix(in srgb,var(--volt) 55%,transparent)}50%{opacity:.55;box-shadow:0 0 10px 1px color-mix(in srgb,var(--volt) 45%,transparent)}}
 
 /* ---------- Botones ---------- */
 .btn{
@@ -149,10 +152,34 @@ html[data-ds-theme="dark"] .eyebrow::after{background:var(--volt)}
 .btn svg{transition:transform .2s var(--ease)}
 .btn:hover svg{transform:translateX(3px)}
 .btn:active{transform:translateY(1px)}
-.btn-accent{background:var(--accent);color:var(--on-accent);box-shadow:0 12px 30px -16px color-mix(in srgb,var(--accent) 85%,transparent)}
+/* Acento: gradiente interno + halo que "respira" (loop de box-shadow). */
+.btn-accent{
+  background:
+    linear-gradient(180deg,rgba(255,255,255,.15),transparent 55%),
+    linear-gradient(135deg,var(--accent) 0%,color-mix(in srgb,var(--accent) 70%,#000) 100%);
+  color:var(--on-accent);
+  animation:btnBreath 3.4s ease-in-out infinite;
+}
+@keyframes btnBreath{
+  0%,100%{
+    box-shadow:
+      0 0 0 1px color-mix(in srgb,var(--accent) 45%,transparent),
+      0 14px 34px -16px color-mix(in srgb,var(--accent) 65%,transparent),
+      0 0 22px -10px color-mix(in srgb,var(--accent) 45%,transparent);
+  }
+  50%{
+    box-shadow:
+      0 0 0 1px color-mix(in srgb,var(--accent) 75%,transparent),
+      0 20px 44px -14px color-mix(in srgb,var(--accent) 85%,transparent),
+      0 0 36px -6px color-mix(in srgb,var(--accent) 70%,transparent);
+  }
+}
 .btn-accent:hover{transform:translateY(-2px)}
 .btn-ghost{background:transparent;color:var(--ink);border-color:var(--line)}
-.btn-ghost:hover{border-color:var(--accent);color:var(--accent-deep);background:var(--accent-soft)}
+.btn-ghost:hover{
+  border-color:var(--accent);color:var(--accent-deep);background:var(--accent-soft);
+  box-shadow:0 0 24px -10px color-mix(in srgb,var(--accent) 70%,transparent);
+}
 html[data-ds-theme="dark"] .btn-ghost:hover{border-color:var(--volt);color:var(--volt)}
 .btn-big{padding:17px 32px;font-size:13px}
 .btn:focus-visible{outline-offset:-4px}
@@ -249,9 +276,13 @@ body.m-open .mmenu{transform:none}
 .hero-title::after{
   content:"";display:inline-block;width:.4em;height:.74em;margin-left:.16em;
   vertical-align:.04em;background:var(--accent);opacity:.9;
+  box-shadow:0 0 16px -2px color-mix(in srgb,var(--accent) 80%,transparent);
   animation:htCaret 1.2s steps(1,end) infinite;
 }
-html[data-ds-theme="dark"] .hero-title::after{background:var(--volt)}
+html[data-ds-theme="dark"] .hero-title::after{
+  background:var(--volt);
+  box-shadow:0 0 18px -2px color-mix(in srgb,var(--volt) 85%,transparent);
+}
 @keyframes htCaret{0%,52%{opacity:.95}53%,100%{opacity:0}}
 .hero-title .hl{color:var(--accent-deep)}
 html[data-ds-theme="dark"] .hero-title .hl{color:var(--volt)}
@@ -321,8 +352,8 @@ html[data-ds-theme="light"] .deck-tag{color:var(--accent-deep);background:color-
   border:1px solid var(--line);background:transparent;color:var(--ink);
   transition:border-color .18s,color .18s,transform .16s var(--ease);
 }
-.deck-btn:hover{border-color:var(--accent);color:var(--accent-deep)}
-html[data-ds-theme="dark"] .deck-btn:hover{color:var(--volt)}
+.deck-btn:hover{border-color:var(--accent);color:var(--accent-deep);box-shadow:0 0 18px -6px color-mix(in srgb,var(--accent) 70%,transparent)}
+html[data-ds-theme="dark"] .deck-btn:hover{color:var(--volt);box-shadow:0 0 18px -6px color-mix(in srgb,var(--volt) 65%,transparent)}
 .deck-btn:active{transform:translateY(1px)}
 .deck-btn svg{width:16px;height:16px;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
 .deck-dots{display:flex;gap:7px;flex:1;justify-content:center;min-width:0;overflow:hidden}
@@ -333,7 +364,7 @@ html[data-ds-theme="dark"] .deck-btn:hover{color:var(--volt)}
 .deck-dot.is-on{background:var(--accent)}
 html[data-ds-theme="dark"] .deck-dot.is-on{background:var(--volt)}
 .deck-count{font:500 11px/1 var(--mono);letter-spacing:.18em;color:var(--muted);flex:none}
-.deck-count b{color:var(--ink);font-weight:600}
+.deck-count b{color:var(--steel);font-weight:600}
 .spec-strip{
   display:grid;grid-template-columns:repeat(3,1fr);gap:1px;margin-top:14px;
   border:1px solid var(--line);background:var(--line);
@@ -410,15 +441,15 @@ html[data-ds-theme="dark"] .sec-link:hover{color:var(--volt)}
 .rail-track>*{flex:0 0 clamp(240px,26vw,320px);scroll-snap-align:start}
 .rail-ui{display:flex;align-items:center;gap:14px;margin-top:6px}
 .rail-count{font:500 11px/1 var(--mono);letter-spacing:.2em;color:var(--muted)}
-.rail-count b{color:var(--ink);font-weight:600}
+.rail-count b{color:var(--steel);font-weight:600}
 .rail-btns{margin-left:auto;display:flex;gap:10px}
 .rail-btn{
   width:44px;height:44px;display:grid;place-items:center;cursor:pointer;
   border:1px solid var(--line);background:var(--surface);color:var(--ink);
   transition:border-color .18s,color .18s,transform .16s var(--ease);
 }
-.rail-btn:hover:not(:disabled){border-color:var(--accent);color:var(--accent-deep)}
-html[data-ds-theme="dark"] .rail-btn:hover:not(:disabled){color:var(--volt)}
+.rail-btn:hover:not(:disabled){border-color:var(--accent);color:var(--accent-deep);box-shadow:0 0 18px -6px color-mix(in srgb,var(--accent) 70%,transparent)}
+html[data-ds-theme="dark"] .rail-btn:hover:not(:disabled){color:var(--volt);box-shadow:0 0 18px -6px color-mix(in srgb,var(--volt) 65%,transparent)}
 .rail-btn:disabled{opacity:.35;cursor:default}
 .rail-btn svg{width:16px;height:16px;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
 
@@ -779,7 +810,7 @@ html[data-ds-theme="dark"] .cat-filters-badge{background:var(--volt);color:#0A0D
   position:absolute;top:calc(100% + 6px);left:0;right:0;z-index:20;
   background:var(--surface);border:1px solid var(--line);box-shadow:var(--shadow-soft);max-height:280px;overflow:auto;
 }
-.cat-count{font:500 11px/1 var(--mono);letter-spacing:.14em;text-transform:uppercase;color:var(--muted);margin-left:auto}
+.cat-count{font:500 11px/1 var(--mono);letter-spacing:.14em;text-transform:uppercase;color:var(--steel);margin-left:auto}
 .cat-view{display:flex;border:1px solid var(--line)}
 .cat-view button{
   width:38px;height:38px;display:grid;place-items:center;background:var(--surface);
@@ -1049,17 +1080,17 @@ html[data-ds-theme="dark"] .foot-col a:hover{color:var(--volt)}
         <circle cx="0" cy="150" r="4" fill="var(--accent)" opacity=".8"/>
       </g>
       <g class="pcb-dots">
-        <circle class="pcb-dot" r="2.6"><animateMotion dur="16s" begin="-2s" repeatCount="indefinite" path="M20 120H140V80H280V170H480"/></circle>
-        <circle class="pcb-dot" r="2.6"><animateMotion dur="16s" begin="-9.5s" repeatCount="indefinite" path="M20 120H140V80H280V170H480"/></circle>
-        <circle class="pcb-dot" r="2.4"><animateMotion dur="13s" begin="-7s" repeatCount="indefinite" path="M620 260H520V200H420V260H300"/></circle>
-        <circle class="pcb-dot" r="2.4"><animateMotion dur="15s" begin="-11s" repeatCount="indefinite" path="M80 640V470H160V420H300"/></circle>
-        <circle class="pcb-dot" r="2.4"><animateMotion dur="12s" begin="-4s" repeatCount="indefinite" path="M620 470H540V410H420V460H340"/></circle>
-        <circle class="pcb-dot" r="2.2"><animateMotion dur="10s" begin="-8s" repeatCount="indefinite" path="M300 0V110H240V180"/></circle>
-        <circle class="pcb-dot" r="2.4"><animateMotion dur="14s" begin="-1s" repeatCount="indefinite" path="M0 380H110V330H200V430H260"/></circle>
-        <circle class="pcb-dot" r="2.2"><animateMotion dur="11s" begin="-6s" repeatCount="indefinite" path="M640 560H560V520H460V580"/></circle>
-        <circle class="pcb-dot" r="2.2"><animateMotion dur="9s" begin="-3s" repeatCount="indefinite" path="M140 300H60V360"/></circle>
-        <circle class="pcb-dot" r="2.8"><animateMotion dur="8s" begin="-5s" repeatCount="indefinite" path="M480 320H560V380H640"/></circle>
-        <circle class="pcb-dot" r="2.8"><animateMotion dur="8s" begin="-1.5s" repeatCount="indefinite" path="M0 90H40V150H0"/></circle>
+        <circle class="pcb-dot" r="2.6"><animateMotion dur="16s" begin="-2s" repeatCount="indefinite" path="M20 120H140V80H280V170H480"/><animate attributeName="opacity" values=".9;.3;.9" dur="3.1s" begin="-1.2s" repeatCount="indefinite"/></circle>
+        <circle class="pcb-dot" r="2.6"><animateMotion dur="16s" begin="-9.5s" repeatCount="indefinite" path="M20 120H140V80H280V170H480"/><animate attributeName="opacity" values=".9;.3;.9" dur="2.6s" begin="-2s" repeatCount="indefinite"/></circle>
+        <circle class="pcb-dot" r="2.4"><animateMotion dur="13s" begin="-7s" repeatCount="indefinite" path="M620 260H520V200H420V260H300"/><animate attributeName="opacity" values=".9;.3;.9" dur="2.9s" begin="-.6s" repeatCount="indefinite"/></circle>
+        <circle class="pcb-dot" r="2.4"><animateMotion dur="15s" begin="-11s" repeatCount="indefinite" path="M80 640V470H160V420H300"/><animate attributeName="opacity" values=".9;.3;.9" dur="3.4s" begin="-1.8s" repeatCount="indefinite"/></circle>
+        <circle class="pcb-dot" r="2.4"><animateMotion dur="12s" begin="-4s" repeatCount="indefinite" path="M620 470H540V410H420V460H340"/><animate attributeName="opacity" values=".9;.3;.9" dur="2.4s" begin="-.9s" repeatCount="indefinite"/></circle>
+        <circle class="pcb-dot" r="2.2"><animateMotion dur="10s" begin="-8s" repeatCount="indefinite" path="M300 0V110H240V180"/><animate attributeName="opacity" values=".9;.3;.9" dur="3s" begin="-2.4s" repeatCount="indefinite"/></circle>
+        <circle class="pcb-dot" r="2.4"><animateMotion dur="14s" begin="-1s" repeatCount="indefinite" path="M0 380H110V330H200V430H260"/><animate attributeName="opacity" values=".9;.3;.9" dur="2.7s" begin="-.3s" repeatCount="indefinite"/></circle>
+        <circle class="pcb-dot" r="2.2"><animateMotion dur="11s" begin="-6s" repeatCount="indefinite" path="M640 560H560V520H460V580"/><animate attributeName="opacity" values=".9;.3;.9" dur="3.2s" begin="-1.5s" repeatCount="indefinite"/></circle>
+        <circle class="pcb-dot" r="2.2"><animateMotion dur="9s" begin="-3s" repeatCount="indefinite" path="M140 300H60V360"/><animate attributeName="opacity" values=".9;.3;.9" dur="2.5s" begin="-2.1s" repeatCount="indefinite"/></circle>
+        <circle class="pcb-dot" r="2.8"><animateMotion dur="8s" begin="-5s" repeatCount="indefinite" path="M480 320H560V380H640"/><animate attributeName="opacity" values=".9;.3;.9" dur="2.3s" begin="-.7s" repeatCount="indefinite"/></circle>
+        <circle class="pcb-dot" r="2.8"><animateMotion dur="8s" begin="-1.5s" repeatCount="indefinite" path="M0 90H40V150H0"/><animate attributeName="opacity" values=".9;.3;.9" dur="3s" begin="-1.9s" repeatCount="indefinite"/></circle>
       </g>
     </pattern>
   </defs>
