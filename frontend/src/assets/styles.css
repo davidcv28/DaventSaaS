@@ -306,7 +306,7 @@ h1, h2, h3{ letter-spacing: -.02em; }
 
 /* ===== Dashboard app ===== */
 .app{ min-height: 100vh; min-height: 100dvh; display: grid; grid-template-columns: 264px minmax(0, 1fr); }
-.sidebar{ background: var(--rail, #0f1130); color: var(--rail-ink-hi, #fff); padding: 16px 12px; display: flex; flex-direction: column; gap: 12px; position: sticky; top: 0; height: 100vh; height: 100dvh; border-right: 1px solid var(--rail-line, rgba(255, 255, 255, .06)); }
+.sidebar{ position: fixed; top: 0; left: 0; bottom: 0; z-index: 30; width: 264px; background: var(--rail, #0f1130); color: var(--rail-ink-hi, #fff); padding: 16px 12px; display: flex; flex-direction: column; gap: 12px; border-right: 1px solid var(--rail-line, rgba(255, 255, 255, .06)); }
 .sidebar .brand{ display: flex; align-items: center; gap: 10px; font-weight: 800; letter-spacing: .14em; font-size: 17px; padding: 0 8px; }
 .plan-badge{ display: flex; align-items: center; justify-content: center; gap: 6px; background: rgba(129, 140, 248, .14); border: 1px solid rgba(129, 140, 248, .35); color: var(--brand-200); font-size: 12px; font-weight: 600; border-radius: 99px; padding: 6px 12px; }
 .plan-badge .icon{ color: #34d399; }
@@ -1377,7 +1377,7 @@ body{ transition: background-color .2s ease, color .2s ease; }
   .app{ grid-template-columns: 1fr; }
   .alert{ scroll-margin-top: calc(var(--header-h, 64px) + 12px); }
   .sidebar{
-    position: fixed; top: 0; left: 0; right: 0; z-index: 50; height: auto;
+    position: fixed; top: 0; left: 0; right: 0; bottom: auto; z-index: 50; width: auto; height: auto;
     flex-direction: row; flex-wrap: wrap; align-items: center;
     gap: 8px 10px;
     padding: calc(10px + env(safe-area-inset-top)) calc(16px + env(safe-area-inset-right)) 8px calc(16px + env(safe-area-inset-left));
