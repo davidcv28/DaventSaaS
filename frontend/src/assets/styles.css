@@ -844,7 +844,7 @@ body{ transition: background-color .2s ease, color .2s ease; }
 .tab.t-prod,.tab.t-cat,.tab.t-brand,.tab.t-disc{
   --tone: var(--brand-500);
   padding: 8px 14px; border: 1.5px solid var(--line); border-radius: 10px;
-  background: #fff; color: var(--ink);
+  background: var(--card); color: var(--ink);
   transition: border-color .15s, background .15s, color .15s, box-shadow .15s;
 }
 .tab.t-prod .tab-sub,.tab.t-cat .tab-sub,.tab.t-brand .tab-sub,.tab.t-disc .tab-sub{ color: var(--muted); }
@@ -853,7 +853,7 @@ body{ transition: background-color .2s ease, color .2s ease; }
   border-color: var(--tone);
 }
 .tab.t-prod.active,.tab.t-cat.active,.tab.t-brand.active,.tab.t-disc.active{
-  border-color: var(--tone); background: #fff;
+  border-color: var(--tone); background: var(--card);
   box-shadow: 0 2px 10px color-mix(in srgb, var(--tone) 22%, transparent);
 }
 .tab.t-cat{ --tone: #0ea5e9; }
@@ -1139,11 +1139,14 @@ body{ transition: background-color .2s ease, color .2s ease; }
 .cat-stat.tone-warn svg{ color: var(--warn); }
 .cat-stat.tone-ok svg{ color: var(--ok); }
 .cat-stat.tone-brand svg{ color: #8b5cf6; }
-[data-theme='dark'] .cat-stat.tone-info{ color: #7dd3fc; }
-[data-theme='dark'] .cat-stat.tone-warn{ color: #fcd34d; }
-[data-theme='dark'] .cat-stat.tone-ok{ color: #6ee7b7; }
-[data-theme='dark'] .cat-stat.tone-brand{ color: #c4b5fd; }
+[data-theme='dark'] .cat-stat.tone-info,
+[data-theme='dark'] .cat-stat.tone-warn,
+[data-theme='dark'] .cat-stat.tone-ok,
+[data-theme='dark'] .cat-stat.tone-brand{ color: #fff; }
 [data-theme='dark'] .cat-stat.tone-info svg{ color: #38bdf8; }
+[data-theme='dark'] .cat-stat.tone-warn svg{ color: #fbbf24; }
+[data-theme='dark'] .cat-stat.tone-ok svg{ color: #34d399; }
+[data-theme='dark'] .cat-stat.tone-brand svg{ color: #a78bfa; }
 .page-head-actions{ display: flex; gap: 8px; flex-wrap: wrap; }
 /* Selección múltiple + paginado del inventario (vista tabla). */
 .inv-head{ display: flex; align-items: center; justify-content: space-between; gap: 10px; flex-wrap: wrap; margin-bottom: 12px; padding-bottom: 12px; border-bottom: 1px solid var(--line-soft); }
