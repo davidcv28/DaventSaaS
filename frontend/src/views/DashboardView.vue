@@ -938,7 +938,7 @@ const productQuery = ref('')
 // (densa, para catálogos grandes). El viejo 'grid' cae en la lista.
 const PRODUCT_VIEW_KEY = 'davent.catalog.view'
 const savedProductView = localStorage.getItem(PRODUCT_VIEW_KEY)
-const productView = ref(savedProductView === 'table' ? 'table' : 'list')
+const productView = ref(savedProductView === 'list' ? 'list' : 'table')
 watch(productView, (v) => { try { localStorage.setItem(PRODUCT_VIEW_KEY, v) } catch {} })
 const prodFilterCategory = ref('')
 const prodFilterBrand = ref('')
@@ -1007,6 +1007,27 @@ async function bulkRemove() {
   if (productEditing.value && ids.includes(productEditing.value)) closeProductForm()
   selectedIds.value = []
   pushToast(ids.length === 1 ? 'Producto eliminado' : `${ids.length} productos eliminados`)
+}
+async function bulkDuplicate() {
+  if (bulkBusy.value || !selectedIds.value.length) return
+  bulkBusy.value = true
+  const ids = [...selectedIds.value]
+  let n = 0
+  for (const id of ids) {
+    const p = catalog.products.find((x) => x.id === id)
+    if (!p) continue
+    const res = await catalog.saveProduct(null, {
+      fields: {
+        name: `${p.name} (copia)`, price: p.price, category: p.category || '', brand: p.brand || '',
+        description: p.description || '', is_active: p.is_active, features: p.features || {}
+      },
+      image: null, imageClear: false
+    })
+    if (res?.ok) n++
+  }
+  bulkBusy.value = false
+  selectedIds.value = []
+  pushToast(n === 1 ? 'Producto duplicado' : `${n} productos duplicados`)
 }
 
 // Chips de estado de la cabecera: escaneo rápido del catálogo.
@@ -3833,12 +3854,14 @@ async function changePassword() {
                 <div><p>Todavía no cargaste productos. El primero tarda un minuto: nombre, precio y una foto.</p><button type="button" class="empty-mini-cta" @click="focusProductForm">Cargar el primero</button></div>
               </div>
               <template v-else>
+                <div class="inv-head">
+                  <h3><AppIcon name="package" :size="17" /> Inventario <small>· {{ filteredProducts.length }} de {{ catalog.products.length }}</small></h3>
+                  <button type="button" class="btn ghost btn-auto" @click="showPriceUpdate = true"><AppIcon name="tag" :size="14" /> Actualizar precios</button>
+                </div>
                 <CatalogToolbar
                   v-model:query="productQuery" v-model:category="prodFilterCategory" v-model:brand="prodFilterBrand"
                   v-model:only-offers="prodOnlyOffers" v-model:sort="prodSort" v-model:view="productView"
                   :categories="catalog.categories" :brands="catalog.brands"
-                  :shown="filteredProducts.length" :total="catalog.products.length"
-                  @new="focusProductForm" @price-update="showPriceUpdate = true"
                 />
                 <div v-if="!filteredProducts.length" class="empty-mini">
                   <AppIcon name="search" :size="22" />
@@ -3851,9 +3874,11 @@ async function changePassword() {
                   <div v-if="selectedIds.length" class="prod-bulkbar">
                     <AppIcon name="check" :size="15" />
                     <span>{{ selectedIds.length }} seleccionado{{ selectedIds.length === 1 ? '' : 's' }}</span>
+                    <button type="button" @click="bulkDuplicate" :disabled="bulkBusy"><AppIcon name="copy" :size="13" /> Duplicar</button>
                     <button type="button" @click="bulkSetActive(true)" :disabled="bulkBusy"><AppIcon name="eye" :size="13" /> Mostrar</button>
                     <button type="button" @click="bulkSetActive(false)" :disabled="bulkBusy"><AppIcon name="eye-off" :size="13" /> Ocultar</button>
                     <button type="button" class="danger" @click="bulkRemove" :disabled="bulkBusy"><AppIcon name="trash" :size="13" /> Eliminar</button>
+                    <span class="prod-bulkbar-hint">Seleccioná con la casilla de cada fila</span>
                     <button type="button" class="prod-bulkbar-x" aria-label="Limpiar selección" @click="selectedIds = []"><AppIcon name="x" :size="14" /></button>
                   </div>
                   <ProductTable

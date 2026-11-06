@@ -48,6 +48,7 @@ function hueOf(str) {
   for (const ch of String(str || '?')) h = (h * 31 + ch.codePointAt(0)) % 360
   return h
 }
+function skuOf(p) { return `DAV-${String(p.id).padStart(4, '0')}` }
 </script>
 
 <template>
@@ -89,13 +90,13 @@ function hueOf(str) {
             </span>
             <span class="pt-name">
               <strong>{{ p.name }}</strong>
-              <small>{{ addedLabel(p.created_at) }}<template v-if="!p.image"> · sin foto</template></small>
+              <small>SKU {{ skuOf(p) }}<template v-if="addedLabel(p.created_at)"> · {{ addedLabel(p.created_at) }}</template><template v-if="!p.image"> · sin foto</template></small>
             </span>
           </td>
           <td class="pt-cell pt-org">
             <template v-if="p.category_name || p.brand_name">
-              <span v-if="p.category_name" class="pt-chip" :style="{ '--h': hueOf(p.category_name) }">{{ p.category_name }}</span>
-              <span v-if="p.brand_name" class="pt-chip pt-chip-brand" :style="{ '--h': hueOf(p.brand_name) }">{{ p.brand_name }}</span>
+              <span v-if="p.category_name" class="pt-cat">{{ p.category_name }}</span>
+              <small v-if="p.brand_name" class="pt-sub">{{ p.brand_name }}</small>
             </template>
             <template v-else>—</template>
           </td>
@@ -105,10 +106,10 @@ function hueOf(str) {
           </td>
           <td class="pt-num">
             <span class="pt-status">
-              <span class="pill" :class="p.is_active ? 'ok' : 'muted'">
+              <span v-if="offerOf(p) != null" class="pill warn"><AppIcon name="percent" :size="11" aria-hidden="true" />Oferta</span>
+              <span v-else class="pill" :class="p.is_active ? 'ok' : 'muted'">
                 <AppIcon :name="p.is_active ? 'eye' : 'eye-off'" :size="11" aria-hidden="true" />{{ p.is_active ? 'Visible' : 'Oculto' }}
               </span>
-              <span v-if="offerOf(p) != null" class="pill warn">-{{ pctOf(p) }}%</span>
             </span>
           </td>
           <td class="pt-actions">
@@ -177,19 +178,10 @@ function hueOf(str) {
 .pt-name strong { font-size: 13.5px; font-weight: 600; color: var(--ink); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .pt-name small { font-size: 11.5px; color: var(--muted); }
 .pt-org { white-space: normal; }
-.pt-org .pt-chip + .pt-chip { margin-left: 5px; }
 .pt-cell { color: var(--ink-2); font-size: 12.5px; white-space: nowrap; }
-/* Chips de categoría/marca: mismo texto = mismo color, en toda la tabla. */
-.pt-chip {
-  display: inline-flex; align-items: center; padding: 3px 10px; border-radius: 999px;
-  font-size: 12px; font-weight: 600; white-space: nowrap;
-  color: hsl(var(--h) 62% 34%);
-  background: color-mix(in srgb, hsl(var(--h) 85% 60%) 13%, var(--card));
-  border: 1px solid color-mix(in srgb, hsl(var(--h) 85% 60%) 32%, transparent);
-}
-.pt-chip-brand { color: hsl(var(--h) 55% 38%); }
-[data-theme='dark'] .pt-chip { color: hsl(var(--h) 90% 74%); }
-[data-theme='dark'] .pt-chip-brand { color: hsl(var(--h) 85% 78%); }
+/* Categoría/marca en dos líneas: categoría arriba, marca debajo en muted. */
+.pt-cat { display: block; font-size: 13px; font-weight: 600; color: var(--ink-2); }
+.pt-sub { display: block; margin-top: 1px; font-size: 11.5px; font-weight: 400; color: var(--muted); }
 .pt-status { display: inline-flex; flex-wrap: wrap; align-items: center; justify-content: flex-end; gap: 4px; }
 .pt-status .pill { display: inline-flex; align-items: center; gap: 4px; }
 .pt-status .pill svg { flex: none; }
