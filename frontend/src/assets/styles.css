@@ -844,16 +844,16 @@ body{ transition: background-color .2s ease, color .2s ease; }
 .tab.t-prod,.tab.t-cat,.tab.t-brand,.tab.t-disc{
   --tone: var(--brand-500);
   padding: 8px 14px; border: 1.5px solid var(--line); border-radius: 10px;
-  background: #fff; color: var(--ink-2);
+  background: #fff; color: var(--tone);
   transition: border-color .15s, background .15s, color .15s, box-shadow .15s;
 }
 .tab.t-prod svg,.tab.t-cat svg,.tab.t-brand svg,.tab.t-disc svg{ color: var(--tone); }
 .tab.t-prod:hover,.tab.t-cat:hover,.tab.t-brand:hover,.tab.t-disc:hover{
-  border-color: var(--tone); color: var(--ink);
+  border-color: var(--tone);
 }
 .tab.t-prod.active,.tab.t-cat.active,.tab.t-brand.active,.tab.t-disc.active{
   border-color: var(--tone); background: #fff;
-  color: var(--ink); box-shadow: 0 2px 10px color-mix(in srgb, var(--tone) 22%, transparent);
+  box-shadow: 0 2px 10px color-mix(in srgb, var(--tone) 22%, transparent);
 }
 .tab.t-cat{ --tone: #0ea5e9; }
 .tab.t-brand{ --tone: #f97316; }
