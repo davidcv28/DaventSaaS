@@ -843,20 +843,17 @@ body{ transition: background-color .2s ease, color .2s ease; }
    estado activo con borde + fondo del mismo color. */
 .tab.t-prod,.tab.t-cat,.tab.t-brand,.tab.t-disc{
   --tone: var(--brand-500);
-  padding: 8px 14px; border: 1px solid var(--line); border-radius: 10px;
-  background: var(--card); color: var(--ink-2);
+  padding: 8px 14px; border: 1.5px solid var(--line); border-radius: 10px;
+  background: #fff; color: var(--ink-2);
   transition: border-color .15s, background .15s, color .15s, box-shadow .15s;
 }
 .tab.t-prod svg,.tab.t-cat svg,.tab.t-brand svg,.tab.t-disc svg{ color: var(--tone); }
 .tab.t-prod:hover,.tab.t-cat:hover,.tab.t-brand:hover,.tab.t-disc:hover{
-  border-color: color-mix(in srgb, var(--tone) 45%, transparent);
-  background: color-mix(in srgb, var(--tone) 8%, var(--card));
-  color: var(--ink);
+  border-color: var(--tone); color: var(--ink);
 }
 .tab.t-prod.active,.tab.t-cat.active,.tab.t-brand.active,.tab.t-disc.active{
-  border-color: color-mix(in srgb, var(--tone) 55%, transparent);
-  background: color-mix(in srgb, var(--tone) 13%, var(--card));
-  color: var(--ink); box-shadow: 0 2px 8px color-mix(in srgb, var(--tone) 18%, transparent);
+  border-color: var(--tone); background: #fff;
+  color: var(--ink); box-shadow: 0 2px 10px color-mix(in srgb, var(--tone) 22%, transparent);
 }
 .tab.t-cat{ --tone: #0ea5e9; }
 .tab.t-brand{ --tone: #f97316; }
