@@ -3788,16 +3788,16 @@ async function changePassword() {
 
       <template v-else>
         <div class="tabs">
-          <button type="button" class="tab" :class="{ active: catalogTab === 'products' }" @click="catalogTab = 'products'">
+          <button type="button" class="tab t-prod" :class="{ active: catalogTab === 'products' }" @click="catalogTab = 'products'">
             <AppIcon name="package" :size="16" /> Mis productos
           </button>
-          <button type="button" class="tab" :class="{ active: catalogTab === 'categories' }" @click="catalogTab = 'categories'">
+          <button type="button" class="tab t-cat" :class="{ active: catalogTab === 'categories' }" @click="catalogTab = 'categories'">
             <AppIcon name="layout-grid" :size="16" /> Categorías <small class="tab-sub">para ordenarlos</small>
           </button>
-          <button type="button" class="tab" :class="{ active: catalogTab === 'brands' }" @click="catalogTab = 'brands'">
+          <button type="button" class="tab t-brand" :class="{ active: catalogTab === 'brands' }" @click="catalogTab = 'brands'">
             <AppIcon name="tag" :size="16" /> Marcas
           </button>
-          <button type="button" class="tab" :class="{ active: catalogTab === 'discounts' }" @click="catalogTab = 'discounts'">
+          <button type="button" class="tab t-disc" :class="{ active: catalogTab === 'discounts' }" @click="catalogTab = 'discounts'">
             <AppIcon name="percent" :size="16" /> Descuentos <small class="tab-sub">{{ canDiscounts ? 'se activan solos' : 'Premium' }}</small>
           </button>
         </div>
