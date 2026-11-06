@@ -1527,7 +1527,7 @@
     background: var(--rz-surface);
     color: var(--rz-ink-2);
     cursor: pointer;
-  }.store-page[data-template='raiz'] .rz-cat-rail-head{ border-bottom: 1px solid var(--rz-line); }.store-page[data-template='raiz'] .rz-cat-apply{ display: inline-flex; }.store-page[data-template='raiz'] .rz-cat-products{ grid-template-columns: repeat(2, minmax(0, 1fr)); }/* Ficha: panel debajo de la galería */
+  }.store-page[data-template='raiz'] .rz-cat-rail-head{ border-bottom: 1px solid var(--rz-line); }.store-page[data-template='raiz'] .rz-cat-apply{ display: inline-flex; }.store-page[data-template='raiz'] .rz-cat-products{ grid-template-columns: repeat(auto-fill, minmax(min(100%, 240px), 1fr)); }/* Ficha: panel debajo de la galería */
 .store-page[data-template='raiz'] .rz-pdp-top{ grid-template-columns: minmax(0, 1fr); gap: 32px; }.store-page[data-template='raiz'] .rz-pdp-buy{ position: static; }.store-page[data-template='raiz'] .rz-pdp-frame{ aspect-ratio: 4 / 3; }.store-page[data-template='raiz'] .rz-pdp-rel-grid{ grid-template-columns: repeat(3, minmax(0, 1fr)); }/* Servicios: presupuesto debajo de la lista */
 .store-page[data-template='raiz'] .rz-sv-picker{ grid-template-columns: minmax(0, 1fr); }.store-page[data-template='raiz'] .rz-sv-quote{ position: static; }.store-page[data-template='raiz'] .rz-sv-steps{ grid-template-columns: repeat(2, minmax(0, 1fr)); }.store-page[data-template='raiz'] .rz-sv-book{ grid-template-columns: minmax(0, 1fr); gap: 28px; }.store-page[data-template='raiz'] .rz-sv-faq-wrap{ grid-template-columns: minmax(0, 1fr); }.store-page[data-template='raiz'] .rz-sv-faq-head{ position: static; }.store-page[data-template='raiz'] .rz-sv-zone{ grid-template-columns: minmax(0, 1fr); }
 }
