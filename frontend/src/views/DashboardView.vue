@@ -2447,7 +2447,7 @@ watch(section, (s) => {
       roadmapItems.value = rows.filter(r => r.kind === 'roadmap').sort((a, b) => a.position - b.position)
     }).catch(() => {})
   }
-})
+}, { immediate: true })
 async function goToReviewProduct(r) {
   await ensureCatalog()
   section.value = 'catalogs'
