@@ -111,5 +111,6 @@ const SORTS = [
 @media (max-width: 720px) {
   .ctoolbar-search { flex: 1 1 100%; }
   .ctoolbar-sel, .ctoolbar-sort { flex: 1 1 calc(50% - 4px); min-width: 0; }
+  .ctoolbar-prices { flex: 1 1 auto; justify-content: center; }
 }
 </style>

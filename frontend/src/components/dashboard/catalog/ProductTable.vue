@@ -236,8 +236,21 @@ function skuOf(p) { return `DAV-${String(p.id).padStart(4, '0')}` }
   .prod-table td.pt-org, .prod-table th.pt-org-col { display: none; }
   .prod-table { min-width: 440px; }
 }
-@media (max-width: 520px) {
+@media (max-width: 640px) {
+  .prod-table { min-width: 0; }
   .prod-table td { padding-left: 8px; padding-right: 8px; }
-  .pt-thumb { width: 36px; height: 36px; }
+  .prod-table th { padding-left: 8px; padding-right: 8px; }
+  .prod-table td.pt-img { width: 44px; }
+  .pt-thumb { width: 36px; height: 36px; border-radius: 9px; }
+  /* Estado queda como ícono redondo; el lápiz se oculta (el nombre ya abre edición). */
+  .pt-acts { width: 44px; }
+  .pt-acts > .pt-act { display: none; }
+  .pt-status .pill { width: 26px; height: 26px; padding: 0; justify-content: center; font-size: 0; gap: 0; border-radius: 50%; }
+  .pt-price b { font-size: 13px; }
+  .pt-price small { display: none; }
+}
+@media (max-width: 480px) {
+  /* En pantallas muy chicas la foto cede la columna al nombre. */
+  .prod-table td.pt-img, .prod-table th.pt-img-col { display: none; }
 }
 </style>
