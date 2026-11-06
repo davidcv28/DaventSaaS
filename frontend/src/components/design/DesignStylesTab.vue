@@ -42,21 +42,28 @@ const { patterns, styles, status, load } = useDesignCatalog()
 // Cada elección de diseño/estilo recarga la vista previa (el iframe hace un
 // refresh real, no solo postMessage): contador que DesignLivePreview mira.
 const previewReload = ref(0)
-// Panel embebido solo existe en escritorio (>=1100px, donde .dmenu-live se
-// ve). En pantallas chicas el aside queda display:none pero el componente
-// se montaba igual: pedía el token, cargaba un iframe completo de la web y
-// escuchaba postMessage sin mostrarse nunca.
-const liveVisible = ref(typeof window !== 'undefined' && window.matchMedia('(min-width: 1100px)').matches)
-const liveQuery = typeof window !== 'undefined' ? window.matchMedia('(min-width: 1100px)') : null
-const onLiveQuery = (e) => { liveVisible.value = e.matches }
+// Panel embebido solo existe cuando .dmenu entra en dos columnas (>= 840px de
+// contenedor, no de viewport: el sidebar come ~336px). Se mide con
+// ResizeObserver porque el breakpoint útil depende del layout, no del ancho
+// de ventana. En pantallas chicas el aside queda sin iframe pero conserva
+// los botones de Guardar/Ver web.
+const dmenuEl = ref(null)
+const LIVE_MIN_PX = 840
+const liveVisible = ref(false)
+let liveRO = null
+const syncLive = () => { liveVisible.value = (dmenuEl.value?.clientWidth ?? 0) >= LIVE_MIN_PX }
 // Revalidar contra la base al entrar: los diseños/estilos nuevos se ven sin
 // recargar la página.
 onMounted(() => {
   load(true)
   ensureStoreFontPicker()
-  liveQuery?.addEventListener('change', onLiveQuery)
+  syncLive()
+  if (typeof ResizeObserver !== 'undefined' && dmenuEl.value) {
+    liveRO = new ResizeObserver(syncLive)
+    liveRO.observe(dmenuEl.value)
+  }
 })
-onBeforeUnmount(() => liveQuery?.removeEventListener('change', onLiveQuery))
+onBeforeUnmount(() => liveRO?.disconnect())
 
 // "Patrones de diseño" se alimenta directo del modelo DesignPattern
 // (/api/design/patterns/), no del catálogo resumido: así aparece todo lo
@@ -401,9 +408,12 @@ function onMobilePreviewKey(e) {
   if (e.key === 'Escape' && props.previewOpen) closeMobilePreview()
   else if (e.key === 'Escape' && showOpen.value) closeShow()
 }
-// Si el viewport crece a escritorio, la hoja se cierra (ahí ya está el panel).
+// Si el contenedor crece a dos columnas, la hoja se cierra (ahí ya está el panel).
 function onViewport() {
-  if (props.previewOpen && window.matchMedia('(min-width: 1100px)').matches) closeMobilePreview()
+  if (!props.previewOpen) return
+  requestAnimationFrame(() => {
+    if ((dmenuEl.value?.clientWidth ?? 0) >= LIVE_MIN_PX) closeMobilePreview()
+  })
 }
 onMounted(() => {
   window.addEventListener('keydown', onMobilePreviewKey)
@@ -419,7 +429,7 @@ onBeforeUnmount(() => {
 </script>
 
 <template>
-  <div class="dmenu">
+  <div ref="dmenuEl" class="dmenu" :class="{ 'dmenu-nolive': !liveVisible }">
     <div class="dmenu-grid">
       <div class="dmenu-main">
         <div class="card dmenu-card">
@@ -600,7 +610,7 @@ onBeforeUnmount(() => {
 </template>
 
 <style scoped>
-.dmenu { display: flex; flex-direction: column; gap: 18px; min-width: 0; }
+.dmenu { display: flex; flex-direction: column; gap: 18px; min-width: 0; container-type: inline-size; }
 .dmenu-grid { display: grid; grid-template-columns: minmax(0, 1fr); gap: 18px; min-width: 0; }
 .dmenu-main { display: flex; flex-direction: column; gap: 14px; min-width: 0; }
 .dmenu-live { min-width: 0; display: flex; flex-direction: column; gap: 12px; }
@@ -618,10 +628,11 @@ onBeforeUnmount(() => {
 .dmenu-head-txt { display: flex; flex-direction: column; gap: 3px; min-width: 0; }
 .dmenu-head-actions { flex: none; display: flex; align-items: center; gap: 8px; flex-wrap: wrap; justify-content: flex-end; }
 .dmenu-show-btn { flex: none; }
-/* Acceso siempre visible a la vista previa en pantallas sin panel embebido
-   (el FAB se auto-oculta al scrollear: no puede ser el único acceso). */
+/* Acceso siempre visible a la vista previa cuando no hay panel embebido
+   (el FAB se auto-oculta al scrollear: no puede ser el único acceso). La
+   clase la pone el mismo liveVisible que monta el iframe. */
 .dmenu-preview-btn { display: none; }
-@media (max-width: 1099px) { .dmenu-preview-btn { display: inline-flex; } }
+.dmenu-nolive .dmenu-preview-btn { display: inline-flex; }
 @media (max-width: 560px) {
   .dmenu-head-row { flex-direction: column; }
   .dmenu-head-actions { width: 100%; justify-content: stretch; }
@@ -647,13 +658,11 @@ onBeforeUnmount(() => {
 [data-theme='dark'] .dmenu-badge.purple { background: rgba(139, 92, 246, .16); border-color: rgba(167, 139, 250, .4); color: #c4b5fd; }
 .dmenu-alert { display: flex; align-items: center; flex-wrap: wrap; gap: 10px; margin: 0; font-size: 12px; color: var(--danger, #b91c1c); }
 .dmenu-alert code { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; }
-@media (min-width: 1100px) {
-  .dmenu-grid { grid-template-columns: minmax(0, 1fr) minmax(440px, 620px); align-items: start; }
+/* Dos columnas solo cuando el contenedor da lugar: por debajo la preview
+   vive en la hoja a pantalla completa y las acciones quedan bajo los campos. */
+@container (min-width: 840px) {
+  .dmenu-grid { grid-template-columns: minmax(0, 1.15fr) minmax(0, 0.85fr); align-items: start; }
   .dmenu-live { position: sticky; top: 12px; }
-}
-@media (max-width: 1099px) {
-  /* Sin panel embebido: la vista previa vive en la hoja a pantalla completa. */
-  .dmenu-live { display: none; }
 }
 /* Hoja de vista previa a pantalla completa (móvil/tablet). */
 .dmenu-pv {
