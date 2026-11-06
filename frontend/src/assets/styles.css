@@ -912,6 +912,25 @@ body{ transition: background-color .2s ease, color .2s ease; }
 .disc-event-lock svg{ flex: none; margin-top: 2px; }
 .disc-event-lock span{ display: grid; gap: 2px; font-size: 13px; font-weight: 600; }
 .disc-event-lock small{ font-size: 11.5px; font-weight: 400; color: var(--muted); }
+/* Aviso de evento próximo en Descuentos. */
+.disc-alert{
+  display: flex; align-items: center; gap: 12px; margin-bottom: 14px; padding: 12px 14px;
+  border: 1px solid var(--brand-soft-line); border-left: 3px solid var(--brand-500);
+  border-radius: 12px; background: var(--card); box-shadow: var(--shadow-sm);
+}
+.disc-alert-ico{
+  flex: none; display: grid; place-items: center; width: 34px; height: 34px;
+  border-radius: 10px; background: var(--brand-500); color: #fff;
+}
+.disc-alert-txt{ flex: 1; min-width: 0; display: grid; gap: 2px; }
+.disc-alert-txt strong{ font-size: 13.5px; color: var(--ink); }
+.disc-alert-when{ color: var(--brand-ink); font-weight: 600; }
+.disc-alert-txt small{ font-size: 12px; color: var(--muted); }
+.disc-alert-cta{ flex: none; min-height: 34px; padding: 0 14px; font-size: 12.5px; }
+@media (max-width: 560px){
+  .disc-alert{ flex-wrap: wrap; }
+  .disc-alert-cta{ width: 100%; }
+}
 /* "Opciones avanzadas": lo secundario queda plegado para no abrumar. */
 .disc-adv{ margin-top: 14px; border: 1px dashed var(--line); border-radius: var(--radius-sm); background: var(--surface); }
 .disc-adv > summary{ display: flex; align-items: center; gap: 6px; padding: 11px 14px; cursor: pointer; list-style: none; font-size: 13px; font-weight: 650; color: var(--ink-2); }

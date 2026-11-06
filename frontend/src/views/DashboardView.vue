@@ -1351,6 +1351,29 @@ const availableCampaigns = computed(() => {
 })
 const selectedCampaign = computed(() => offers.campaigns.value.find((c) => c.id === Number(discountForm.campaign)) || null)
 
+// Aviso "se aproxima un evento": campañas en ventana de configuración que
+// todavía no tienen un descuento programado (vigente o futuro).
+const upcomingCampaigns = computed(() => {
+  const used = new Set(
+    catalog.discounts.filter((d) => d.campaign && d.status !== 'ended').map((d) => d.campaign.id)
+  )
+  return availableCampaigns.value.filter((c) => !used.has(c.id))
+})
+watch(catalogTab, (t) => { if (t === 'discounts') offers.load() })
+// Abre el drawer con el evento ya elegido: fechas fijas, solo falta nombre y %.
+function newCampaignDiscount(c) {
+  resetDiscountForm()
+  discountForm.campaign = c.id
+  discountWindowPreset.value = 'campaign'
+  const s = isoToLocalInput(c.starts_at)
+  const e = isoToLocalInput(c.ends_at)
+  discountForm.end_none = false
+  discountForm.start_date = s.slice(0, 10); discountForm.start_time = s.slice(11, 16) || '00:00'
+  discountForm.end_date = e.slice(0, 10); discountForm.end_time = e.slice(11, 16) || '23:59'
+  offers.load()
+  openDiscountForm()
+}
+
 // El select "¿Cuándo?": 'camp:<id>' para eventos, presets para lo demás.
 const discountWhen = computed({
   get: () => (discountForm.campaign ? `camp:${discountForm.campaign}` : discountWindowPreset.value),
@@ -4049,6 +4072,16 @@ async function changePassword() {
             <button class="btn btn-auto" @click="section = 'plans'">Ver planes</button>
           </div>
           <div v-else class="disc-wrap">
+          <!-- Aviso de evento próximo: solo aparece cuando una campaña entró
+               en su ventana de configuración y no tiene descuento armado. -->
+          <div v-for="c in upcomingCampaigns" :key="c.id" class="disc-alert">
+            <span class="disc-alert-ico" :style="c.accent ? { background: c.accent } : null"><AppIcon name="percent" :size="16" /></span>
+            <div class="disc-alert-txt">
+              <strong>Se acerca {{ c.name }} <span class="disc-alert-when">· {{ campaignWindowLabel(c) }}</span></strong>
+              <small>Programá un descuento ahora: se enciende y se apaga solo durante el evento.</small>
+            </div>
+            <button type="button" class="btn btn-auto disc-alert-cta" @click="newCampaignDiscount(c)">Programar oferta</button>
+          </div>
           <!-- El formulario vive en un drawer como el de productos: la lista
                queda limpia y sin competir con los pasos del alta. -->
           <Teleport to="body">
