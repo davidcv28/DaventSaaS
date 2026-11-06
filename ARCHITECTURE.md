@@ -663,3 +663,15 @@ Convención de indexación (obligatoria al agregar relaciones):
 - Los viewsets usan un diccionario de configuración por acción en `viewset_config.py`.
 - Los queryset dinámicos se pasan como `lambda view: ...` y se ejecutan en `get_queryset`.
 - Los índices de base de datos se declaran explícitos con la nomenclatura `idx_<modelo>_<campo>` (ver "Base de datos e índices").
+
+---
+
+## Roadmap (pendientes acordados)
+
+- **Sistema de turnos / reservas** (diferido): agenda por tienda para rubros de servicios; candidato a beneficio gateado (`has_booking`) igual que `design_studio`.
+- **Credenciales / tarjetas de acceso** (idea evaluada, implementar si el producto valida): el dueño de tienda diseña su propia tarjeta (frente/dorso, logo, paleta, tipografía) y emite credenciales con caducidad (mensual) para membresías — gimnasios, clubes, coworkings. **No son medios de pago**. Diseño previsto:
+  - Reuso del dominio `design`: una credencial es un "patrón" con superficie fija (~85×54 mm) y tokens propios.
+  - Modelos: `CardTemplate` (por tienda: diseño + campos visibles) e `IssuedCard` (titular, `code` único, `valid_until`, estado activa/vencida/revocada).
+  - Validación por QR/código → endpoint público tipo `/api/cards/<code>/status/`; verificación con el mismo enfoque del `pattern_bridge` (whitelist de API por tienda).
+  - Vencimiento: comando cron idempotente siguiendo el patrón de `subscription_notices`/`prune_visits`.
+  - Beneficio `has_cards` en `SECTION_BENEFITS` (plus/advanced).
