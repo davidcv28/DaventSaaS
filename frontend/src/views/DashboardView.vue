@@ -30,7 +30,7 @@ import {
   catalogApi, FEATURE_LIMITS, validateFeatureSchema, validateProductFeatures,
   DISCOUNT_SCOPES, DISCOUNT_DEFAULT_PERCENT, DISCOUNT_LIMITS,
   validateDiscountName, validateDiscountPercent, validateDiscountWindow,
-  isoToLocalInput, localInputToIso, productListOffer, isDiscountedProduct
+  isoToLocalInput, localInputToIso, productListOffer, isDiscountedProduct, campaignWindowLabel
 } from '../api/catalog.api.js'
 import {
   SERVICE_LIMITS, SERVICE_PAGE_LIMITS, servicePriceLabel, servicePayload,
@@ -66,7 +66,7 @@ import FlyerStudio from '../components/FlyerStudio.vue'
 import FlyerEditor from '../components/FlyerEditor.vue'
 import AiAssistModal from '../components/assist/AiAssistModal.vue'
 import PriceUpdateModal from '../components/PriceUpdateModal.vue'
-import CampaignPicker from '../components/dashboard/catalog/CampaignPicker.vue'
+import { useOffers } from '../composables/useOffers.js'
 import CatalogToolbar from '../components/dashboard/catalog/CatalogToolbar.vue'
 import ProductTable from '../components/dashboard/catalog/ProductTable.vue'
 import ProductForm from '../components/dashboard/catalog/ProductForm.vue'
@@ -1265,7 +1265,6 @@ async function focusProductForm() {
 // offer_price): acá solo se programa nombre, %, alcance y fechas. La ventana
 // se edita como fecha + hora separadas (el datetime-local nativo mezclaba
 // ambos en una caja críptica); "Sin fin" deja ends_at en null.
-const SCOPE_ICONS = { all: 'layout-grid', category: 'checklist', brand: 'tag', products: 'package' }
 const pad2 = (n) => String(n).padStart(2, '0')
 const localDateInput = (d) => `${d.getFullYear()}-${pad2(d.getMonth() + 1)}-${pad2(d.getDate())}`
 
@@ -1324,9 +1323,54 @@ function discountFieldErr(name) {
 
 // Atajos de duración: completan inicio/fin de un toque (siempre se puede
 // ajustar a mano después — son presets, no modos).
-// Ventana del descuento: por defecto "Sin fin" (lo más simple); solo con
-// "Personalizado" se despliegan los campos de fecha/hora.
+// Ventana del descuento: por defecto "Sin fin" (lo más simple); con
+// "Personalizado" se despliegan las fechas, y si hay un evento especial
+// en su ventana de configuración el descuento toma sus fechas solo.
 const discountWindowPreset = ref('none')
+const offers = useOffers()
+
+// Ventana de configuración de cada campaña: los eventos cortos (2-3 días)
+// se habilitan 3 días antes para dar tiempo de armarlos; los largos,
+// desde el 1° del mes de inicio (p. ej. Navidad disponible todo diciembre).
+function campaignConfigWindow(c) {
+  const start = new Date(c?.starts_at || '')
+  const end = new Date(c?.ends_at || '')
+  if (Number.isNaN(start.getTime()) || Number.isNaN(end.getTime())) return null
+  const days = Math.max(1, Math.round((end - start) / 86400000))
+  const open = days <= 3
+    ? new Date(start.getTime() - 3 * 86400000)
+    : new Date(start.getFullYear(), start.getMonth(), 1)
+  return { open, close: end }
+}
+const availableCampaigns = computed(() => {
+  const now = Date.now()
+  return offers.campaigns.value.filter((c) => {
+    const w = campaignConfigWindow(c)
+    return w && now >= w.open.getTime() && now <= w.close.getTime()
+  })
+})
+const selectedCampaign = computed(() => offers.campaigns.value.find((c) => c.id === Number(discountForm.campaign)) || null)
+
+// El select "¿Cuándo?": 'camp:<id>' para eventos, presets para lo demás.
+const discountWhen = computed({
+  get: () => (discountForm.campaign ? `camp:${discountForm.campaign}` : discountWindowPreset.value),
+  set: (v) => {
+    if (String(v).startsWith('camp:')) {
+      const c = offers.campaigns.value.find((x) => x.id === Number(String(v).slice(5)))
+      if (!c) return
+      discountForm.campaign = c.id
+      discountWindowPreset.value = 'campaign'
+      const s = isoToLocalInput(c.starts_at)
+      const e = isoToLocalInput(c.ends_at)
+      discountForm.end_none = false
+      discountForm.start_date = s.slice(0, 10); discountForm.start_time = s.slice(11, 16) || '00:00'
+      discountForm.end_date = e.slice(0, 10); discountForm.end_time = e.slice(11, 16) || '23:59'
+      return
+    }
+    discountForm.campaign = ''
+    discountPreset(v)
+  }
+})
 function discountPreset(kind) {
   discountWindowPreset.value = kind
   if (kind === 'custom') { discountForm.end_none = false; return }
@@ -1360,7 +1404,7 @@ function resetDiscountForm() {
 const discountFormOpen = ref(false)
 function openDiscountForm() { discountFormOpen.value = true }
 function closeDiscountForm() { discountFormOpen.value = false; resetDiscountForm() }
-function newDiscount() { resetDiscountForm(); openDiscountForm() }
+function newDiscount() { resetDiscountForm(); offers.load(); openDiscountForm() }
 function onDiscountFormKey(e) { if (e.key === 'Escape' && discountFormOpen.value) closeDiscountForm() }
 watch(discountFormOpen, (open) => {
   if (open) document.addEventListener('keydown', onDiscountFormKey)
@@ -1379,9 +1423,10 @@ function editDiscount(d) {
     end_none: !end, end_date: end.slice(0, 10), end_time: end.slice(11, 16) || '23:59',
     is_active: d.is_active
   })
-  discountWindowPreset.value = d.ends_at ? 'custom' : 'none'
+  discountWindowPreset.value = d.campaign ? 'campaign' : (d.ends_at ? 'custom' : 'none')
   catalog.notice = ''
   catalog.lastError = ''
+  offers.load()
   openDiscountForm()
 }
 
@@ -4031,14 +4076,10 @@ async function changePassword() {
 
               <div class="form-step"><span class="form-step-num">1</span> ¿A qué aplica?</div>
               <div class="field">
-                <label id="disc-scope-label" class="sr-only"><AppIcon name="layout-grid" :size="14" class="label-icon" aria-hidden="true" />¿A qué aplica?</label>
-                <div class="disc-scope" role="radiogroup" aria-labelledby="disc-scope-label">
-                  <label v-for="s in DISCOUNT_SCOPES" :key="s.value" class="disc-scope-card" :class="{ on: discountForm.scope === s.value }">
-                    <input v-model="discountForm.scope" type="radio" :value="s.value" class="sr-only" />
-                    <AppIcon :name="SCOPE_ICONS[s.value]" :size="17" aria-hidden="true" />
-                    <span>{{ s.label }}</span>
-                  </label>
-                </div>
+                <label id="disc-scope-label" for="disc-scope"><AppIcon name="layout-grid" :size="14" class="label-icon" aria-hidden="true" />Alcance</label>
+                <select id="disc-scope" v-model="discountForm.scope" class="select">
+                  <option v-for="s in DISCOUNT_SCOPES" :key="s.value" :value="s.value">{{ s.label }}</option>
+                </select>
               </div>
 
               <div v-if="discountForm.scope === 'category'" class="field">
@@ -4093,15 +4134,19 @@ async function changePassword() {
 
               <div class="form-step"><span class="form-step-num">3</span> ¿Cuándo aplica?</div>
               <div class="field">
-                <label id="disc-window-label" class="sr-only"><AppIcon name="calendar" :size="14" class="label-icon" aria-hidden="true" />¿Cuándo aplica?</label>
-                <div class="disc-presets" role="group" aria-label="Duraciones rápidas">
-                  <button type="button" class="disc-preset" :class="{ on: discountWindowPreset === 'none' }" @click="discountPreset('none')">Sin fin</button>
-                  <button type="button" class="disc-preset" :class="{ on: discountWindowPreset === 'today' }" @click="discountPreset('today')">Solo hoy</button>
-                  <button type="button" class="disc-preset" :class="{ on: discountWindowPreset === 'week' }" @click="discountPreset('week')">Esta semana</button>
-                  <button type="button" class="disc-preset" :class="{ on: discountWindowPreset === 'fortnight' }" @click="discountPreset('fortnight')">15 días</button>
-                  <button type="button" class="disc-preset" :class="{ on: discountWindowPreset === 'month' }" @click="discountPreset('month')">Este mes</button>
-                  <button type="button" class="disc-preset" :class="{ on: discountWindowPreset === 'custom' }" @click="discountPreset('custom')">Personalizado</button>
-                </div>
+                <label id="disc-window-label" for="disc-when"><AppIcon name="calendar" :size="14" class="label-icon" aria-hidden="true" />Vigencia</label>
+                <select id="disc-when" v-model="discountWhen" class="select">
+                  <option value="none">Sin fin — queda activo siempre</option>
+                  <option value="today">Solo hoy</option>
+                  <option value="week">Esta semana</option>
+                  <option value="fortnight">Próximos 15 días</option>
+                  <option value="month">Hasta fin de mes</option>
+                  <option value="custom">Otras fechas…</option>
+                  <optgroup v-if="availableCampaigns.length" label="Eventos especiales">
+                    <option v-for="c in availableCampaigns" :key="c.id" :value="`camp:${c.id}`">{{ c.name }} · {{ campaignWindowLabel(c) }}</option>
+                  </optgroup>
+                </select>
+                <p v-if="selectedCampaign" class="hint"><AppIcon name="zap" :size="13" class="label-icon" aria-hidden="true" />Se enciende solo durante {{ selectedCampaign.name }} ({{ campaignWindowLabel(selectedCampaign) }}) y se apaga cuando termina el evento.</p>
                 <div v-if="discountWindowPreset === 'custom'" class="disc-window">
                   <div class="disc-when">
                     <span class="disc-when-label"><AppIcon name="calendar" :size="13" aria-hidden="true" /> Empieza</span>
@@ -4126,9 +4171,9 @@ async function changePassword() {
                 </div>
               </div>
 
-              <details class="disc-adv">
-                <summary>Opciones avanzadas <small class="tab-sub">· etiqueta de campaña</small></summary>
-                <CampaignPicker v-model="discountForm.campaign" />
+              <details v-if="selectedCampaign" class="disc-adv" open>
+                <summary>Evento elegido</summary>
+                <p class="hint">El descuento usa la etiqueta y las fechas de <strong>{{ selectedCampaign.name }}</strong>. Para usar fechas propias, cambiá la vigencia arriba.</p>
               </details>
 
               <div class="check-list">
