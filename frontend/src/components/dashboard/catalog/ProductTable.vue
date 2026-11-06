@@ -142,6 +142,9 @@ function skuOf(p) { return `DAV-${String(p.id).padStart(4, '0')}` }
 <style scoped>
 .prod-table-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; margin: 0 -2px; padding: 0 2px; }
 .prod-table { width: 100%; min-width: 560px; border-collapse: collapse; font-size: 13px; }
+/* Fondo un toque más claro que la card para levantar la tabla. */
+.prod-table tbody { background: var(--surface); }
+.prod-table th { background: var(--card); }
 .prod-table th {
   padding: 0 12px 9px; border-bottom: 1px solid var(--line);
   font-size: 11.5px; font-weight: 700; letter-spacing: .03em;

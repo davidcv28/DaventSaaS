@@ -9,7 +9,7 @@
   --brand-700: #4338ca;
   --brand-900: #1e1b4b;
   --accent: #8b5cf6;
-  --bg: #f9fafd;
+  --bg: #f6f7fb;
   --card: #ffffff;
   --ink: #0f172a;
   --ink-2: #334155;
@@ -49,7 +49,7 @@
 }
 /* ===== Tema oscuro (data-theme en <html>, lo maneja theme.store.js) ===== */
 [data-theme='dark']{
-  --bg: #111830;
+  --bg: #0d1220;
   --card: #151b2e;
   --surface: #1c2340;
   --ink: #e8ecf7;
