@@ -1201,6 +1201,7 @@ function editProduct(p) {
   productImageErr.value = ''
   catalog.notice = ''
   catalog.lastError = ''
+  openProductForm()
 }
 
 async function saveProduct() {
