@@ -77,7 +77,7 @@ function skuOf(p) { return `DAV-${String(p.id).padStart(4, '0')}` }
           </td>
           <td class="pt-cell pt-org">
             <template v-if="p.category_name || p.brand_name">
-              <span v-if="p.category_name" class="pt-cat">{{ p.category_name }}</span>
+              <span v-if="p.category_name" class="pt-cat" :style="{ '--h': hueOf(p.category_name) }">{{ p.category_name }}</span>
               <small v-if="p.brand_name" class="pt-sub">{{ p.brand_name }}</small>
             </template>
             <template v-else>—</template>
@@ -105,10 +105,10 @@ function skuOf(p) { return `DAV-${String(p.id).padStart(4, '0')}` }
 .prod-table { width: 100%; min-width: 560px; border-collapse: collapse; font-size: 13px; }
 .prod-table td { padding: 11px 12px; border-bottom: 1px solid var(--line-soft); vertical-align: middle; }
 .prod-table tbody tr:last-child td { border-bottom: none; }
-.prod-table tbody tr { transition: background .12s; cursor: pointer; }
-.prod-table tbody tr:hover { background: var(--surface); }
+.prod-table tbody tr { transition: background .12s, box-shadow .12s; cursor: pointer; }
+.prod-table tbody tr:hover { background: color-mix(in srgb, var(--brand-soft) 55%, var(--surface)); }
 .prod-table tbody tr.off { opacity: .55; }
-.prod-table tbody tr.sel { background: var(--brand-soft); }
+.prod-table tbody tr.sel { background: var(--brand-soft); box-shadow: inset 3px 0 0 var(--brand-500); }
 .prod-table tbody tr.sel:hover { background: var(--brand-soft); }
 .pt-check { width: 36px; padding-right: 4px; }
 .pt-check input { width: 15px; height: 15px; accent-color: var(--brand-600); cursor: pointer; }
@@ -147,8 +147,12 @@ function skuOf(p) { return `DAV-${String(p.id).padStart(4, '0')}` }
 .pt-name small { font-size: 11.5px; color: var(--muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .pt-org { white-space: normal; }
 .pt-cell { color: var(--ink-2); font-size: 12.5px; white-space: nowrap; }
-/* Categoría/marca en dos líneas: categoría arriba, marca debajo en muted. */
-.pt-cat { display: block; font-size: 13px; font-weight: 600; color: var(--ink-2); }
+/* Categoría/marca en dos líneas: categoría con punto de color propio. */
+.pt-cat { display: inline-flex; align-items: center; gap: 7px; font-size: 13px; font-weight: 600; color: var(--ink-2); }
+.pt-cat::before {
+  content: ""; flex: none; width: 8px; height: 8px; border-radius: 50%;
+  background: hsl(var(--h) 75% 55%);
+}
 .pt-sub { display: block; margin-top: 1px; font-size: 11.5px; font-weight: 400; color: var(--muted); }
 .pt-status { display: inline-flex; flex-wrap: wrap; align-items: center; justify-content: flex-end; gap: 4px; }
 .pt-status .pill { display: inline-flex; align-items: center; gap: 4px; }
