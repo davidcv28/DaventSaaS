@@ -12,6 +12,7 @@ from StoreApp.domains.catalog.models import (
 from StoreApp.domains.catalog.services.services import (
     discount_covers,
     discount_price_of,
+    manual_offer_of,
     running_discounts_of,
 )
 from StoreApp.domains.stores.services.storage import object_url
@@ -137,6 +138,10 @@ class ProductSerializerList(serializers.ModelSerializer):
         #ninguno lo cubre). El precio de lista/offer_price manuales no se tocan.
         return discount_price_of(product, self._discounts())
     def get_discount_names(self, product):
+        #Con oferta manual el descuento programado no aplica (se salta):
+        #tampoco se anuncian sus nombres en el panel.
+        if manual_offer_of(product) is not None:
+            return []
         return [discount.name for discount in self._discounts() if discount_covers(discount, product)]
 #=========================================
 # PRODUCT PUBLIC SERIALIZER (visitante de la web)

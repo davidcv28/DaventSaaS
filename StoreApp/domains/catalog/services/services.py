@@ -75,14 +75,29 @@ def discount_covers(discount, product):
     if scope == Discount.Scope.BRAND:
         return discount.brand_id is not None and product.brand_id == discount.brand_id
     return any(item.id == product.id for item in discount.products.all())
+def manual_offer_of(product):
+    """
+    Oferta manual vigente del producto: offer_price cargado y por debajo
+    del precio de lista (misma regla que effective_pricing_of). None si
+    no hay o el precio no está cargado.
+    """
+    offer   =   product.offer_price
+    if offer is None or product.price is None:
+        return None
+    return offer if offer < product.price else None
 def winning_discount_of(product, discounts):
     """
     (precio, descuento) del descuento vigente que más baja el producto.
-    (None, None) si ninguno lo cubre o el precio de lista es 0 (un 0%
-    real no es oferta).
+    (None, None) si ninguno lo cubre, el precio de lista es 0 (un 0%
+    real no es oferta) o el producto ya tiene oferta manual: un descuento
+    programado nunca se monta encima de un precio ya bajado a mano —
+    en un alcance amplio (categoría, marca, todo el catálogo) el producto
+    con oferta simplemente se salta.
     """
     best_price, best_discount   =   None, None
     if product.price is None or product.price <= 0:
+        return best_price, best_discount
+    if manual_offer_of(product) is not None:
         return best_price, best_discount
     for discount in discounts:
         if not discount_covers(discount, product):

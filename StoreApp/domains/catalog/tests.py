@@ -531,6 +531,27 @@ class DiscountPublicTests(TestCase):
         products        =   self._catalog().data['products']
         self.assertEqual(float(self._offer_of(products, 'Calza')), 60.0)
 
+    def test_scheduled_discount_skips_product_with_manual_offer(self):
+        #Un producto con oferta manual no recibe el descuento programado
+        #aunque el descuento bajaría más: se salta y conserva su oferta.
+        store           =   self._setup()
+        Product.objects.create(store = store, name = 'Calza', price = 100, offer_price = 60)
+        Discount.objects.create(
+            store = store, name = 'Promo', percent = 50, scope = 'all',
+            starts_at = timezone.now() - timedelta(hours = 1),
+        )
+        products        =   self._catalog().data['products']
+        calza           =   next(p for p in products if p['name'] == 'Calza')
+        self.assertEqual(float(calza['offer_price']), 60.0)
+        self.assertIsNone(calza['discount'])
+        #El panel del dueño tampoco anuncia el descuento sobre ese producto.
+        user            =   store.user.user
+        client          =   APIClient()
+        client.force_authenticate(user = user)
+        item            =   next(p for p in client.get(PRODUCTS_URL).data if p['name'] == 'Calza')
+        self.assertIsNone(item['discount_offer'])
+        self.assertEqual(item['discount_names'], [])
+
     def test_category_scope_only_covers_that_category(self):
         store           =   self._setup()
         category        =   Category.objects.create(store = store, name = 'Calzas')

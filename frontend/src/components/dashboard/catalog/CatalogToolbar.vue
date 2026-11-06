@@ -13,7 +13,7 @@ const props = defineProps({
   brand: { type: [Number, String], default: '' },
   onlyOffers: { type: Boolean, default: false },
   sort: { type: String, default: 'newest' },
-  view: { type: String, default: 'grid' },
+  view: { type: String, default: 'list' },
   categories: { type: Array, default: () => [] },
   brands: { type: Array, default: () => [] },
   shown: { type: Number, default: 0 },
@@ -63,9 +63,9 @@ const activeFilters = computed(() =>
       <span class="ctoolbar-count" aria-live="polite">{{ shown }} de {{ total }}</span>
       <span class="ctoolbar-views" role="group" aria-label="Cambiar vista">
         <button
-          type="button" class="ctoolbar-view" :class="{ on: view === 'grid' }"
-          :aria-pressed="view === 'grid'" title="Vista en grilla" @click="emit('update:view', 'grid')"
-        ><AppIcon name="layout-grid" :size="16" /></button>
+          type="button" class="ctoolbar-view" :class="{ on: view === 'list' }"
+          :aria-pressed="view === 'list'" title="Vista lista" @click="emit('update:view', 'list')"
+        ><AppIcon name="list" :size="16" /></button>
         <button
           type="button" class="ctoolbar-view" :class="{ on: view === 'table' }"
           :aria-pressed="view === 'table'" title="Vista tabla" @click="emit('update:view', 'table')"

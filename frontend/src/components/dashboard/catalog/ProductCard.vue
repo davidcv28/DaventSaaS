@@ -4,8 +4,11 @@ import AppIcon from '../../AppIcon.vue'
 import { formatARS } from '../../../api/billing.api.js'
 import { productListOffer, isDiscountedProduct, offerPct } from '../../../api/catalog.api.js'
 
-// Tarjeta/fila de producto del panel: precio efectivo, badge de promo y
-// etiqueta de campaña salen del mismo cálculo que la web pública.
+// Fila de producto del panel: miniatura, nombre + metadatos, precio
+// efectivo con tachado y el tipo de descuento que lo produce — "Especial"
+// cuando lo firma un descuento programado (con su nombre en el tooltip) u
+// "Oferta" cuando es la oferta manual (offer_price). Las dos nunca se
+// montan: el backend saltea el programado sobre productos con oferta.
 // `campaign` llega resuelta desde el padre (el listado del dueño no trae
 // el objeto discount por producto, solo discount_offer/discount_names).
 const props = defineProps({
@@ -15,7 +18,7 @@ const props = defineProps({
 const emit = defineEmits(['edit', 'duplicate', 'toggle', 'remove'])
 
 const offer = computed(() => productListOffer(props.p))
-const discounted = computed(() => isDiscountedProduct(props.p))
+const scheduled = computed(() => isDiscountedProduct(props.p))
 const pct = computed(() => offerPct({ ...props.p, offer_price: offer.value }))
 const campaign = computed(() => props.campaign)
 const discountTitle = computed(() => (props.p.discount_names || []).join(' · '))
@@ -33,21 +36,25 @@ const discountTitle = computed(() => (props.p.discount_names || []).join(' · ')
           :height="campaign.label_height || undefined" loading="lazy"
         />
         <span v-else-if="campaign" class="pill warn pcard-camp-txt" :style="{ borderColor: campaign.accent || undefined }">{{ campaign.name }}</span>
-        <span v-if="discounted" class="pill ok" :title="discountTitle || 'Promo'">-{{ pct }}%</span>
-        <span v-else-if="offer != null" class="pill ok">Oferta</span>
       </span>
     </span>
     <div class="pcard-info">
-      <strong class="pcard-name">{{ p.name }}</strong>
+      <div class="pcard-head">
+        <strong class="pcard-name">{{ p.name }}</strong>
+        <span class="pcard-price">
+          <template v-if="offer != null"><s class="pcard-old">{{ formatARS(p.price) }}</s> <b>{{ formatARS(offer) }}</b></template>
+          <template v-else><b>{{ formatARS(p.price) }}</b></template>
+        </span>
+      </div>
       <small class="pcard-meta">
         <template v-if="p.category_name">{{ p.category_name }}</template>
         <template v-if="p.brand_name">{{ p.category_name ? ' · ' : '' }}{{ p.brand_name }}</template>
       </small>
-      <span class="pcard-price">
-        <template v-if="offer != null"><s class="pcard-old">{{ formatARS(p.price) }}</s> <b>{{ formatARS(offer) }}</b></template>
-        <template v-else><b>{{ formatARS(p.price) }}</b></template>
-      </span>
-      <span v-if="!p.is_active" class="pill muted">Oculto</span>
+      <div class="pcard-tags">
+        <span v-if="scheduled" class="pill ok" :title="discountTitle || 'Descuento programado'">Especial · -{{ pct }}%</span>
+        <span v-else-if="offer != null" class="pill warn">Oferta · -{{ pct }}%</span>
+        <span v-if="!p.is_active" class="pill muted">Oculto</span>
+      </div>
     </div>
     <div class="pcard-actions">
       <button type="button" class="icon-btn" title="Editar" aria-label="Editar producto" @click="emit('edit', p)"><AppIcon name="pencil" :size="15" /></button>
@@ -63,15 +70,15 @@ const discountTitle = computed(() => (props.p.discount_names || []).join(' · ')
 
 <style scoped>
 .pcard {
-  position: relative; display: flex; flex-direction: column; gap: 8px;
-  padding: 10px; border: 1px solid var(--line); border-radius: 12px;
+  position: relative; display: flex; align-items: center; gap: 12px;
+  padding: 10px 12px; border: 1px solid var(--line); border-radius: 12px;
   background: var(--card); transition: border-color .15s, box-shadow .15s;
 }
 .pcard:hover { border-color: var(--line-strong); box-shadow: var(--shadow-md); }
 .pcard-off { opacity: .65; }
 .pcard-thumb {
-  position: relative; display: grid; place-items: center;
-  aspect-ratio: 1 / 1; border-radius: 10px; overflow: hidden;
+  position: relative; flex: none; display: grid; place-items: center;
+  width: 64px; height: 64px; border-radius: 10px; overflow: hidden;
   border: 1px solid var(--line); background: var(--surface); color: var(--muted);
 }
 .pcard-thumb img { width: 100%; height: 100%; object-fit: cover; display: block; }
@@ -82,19 +89,21 @@ const discountTitle = computed(() => (props.p.discount_names || []).join(' · ')
   color: var(--brand-500);
 }
 [data-theme='dark'] .pcard-noimg { color: var(--brand-400); }
-.pcard-badges { position: absolute; top: 6px; left: 6px; right: 6px; display: flex; gap: 4px; flex-wrap: wrap; align-items: flex-start; pointer-events: none; }
-.pcard-camp { height: 22px; width: auto; max-width: 60%; object-fit: contain; display: block; filter: drop-shadow(0 1px 2px rgba(0,0,0,.35)); }
+.pcard-badges { position: absolute; top: 4px; left: 4px; display: flex; gap: 3px; flex-wrap: wrap; align-items: flex-start; pointer-events: none; }
+.pcard-camp { height: 18px; width: auto; max-width: 46px; object-fit: contain; display: block; filter: drop-shadow(0 1px 2px rgba(0,0,0,.35)); }
 .pcard-camp-txt { max-width: 60%; overflow: hidden; text-overflow: ellipsis; }
-.pcard-info { display: grid; gap: 2px; min-width: 0; }
-.pcard-name { font-size: 13px; font-weight: 600; color: var(--ink); overflow-wrap: anywhere; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
-.pcard-meta { color: var(--muted); font-size: 11.5px; min-height: 1em; }
-.pcard-price { font-size: 13.5px; color: var(--ink); margin-top: 1px; }
+.pcard-info { flex: 1; min-width: 0; display: grid; gap: 2px; }
+.pcard-head { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; min-width: 0; }
+.pcard-name { font-size: 14px; font-weight: 600; color: var(--ink); overflow-wrap: anywhere; }
+.pcard-meta { color: var(--muted); font-size: 12px; }
+.pcard-price { flex: none; font-size: 14.5px; color: var(--ink); white-space: nowrap; font-variant-numeric: var(--num); }
 .pcard-price b { font-weight: 800; letter-spacing: -.01em; }
-.pcard-old { color: var(--muted); font-weight: 400; margin-right: 4px; }
-/* Acciones al hover/focus: la tarjeta queda limpia de iconos; en táctil
+.pcard-old { color: var(--muted); font-weight: 400; margin-right: 5px; font-size: 12.5px; }
+.pcard-tags { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; margin-top: 3px; }
+/* Acciones al hover/focus: la fila queda limpia de iconos; en táctil
    (sin hover) siempre visibles. */
 .pcard-actions {
-  display: flex; gap: 4px; margin-top: auto;
+  flex: none; display: flex; gap: 4px;
   opacity: 0; transition: opacity .15s;
 }
 .pcard:hover .pcard-actions, .pcard:focus-within .pcard-actions { opacity: 1; }
@@ -102,6 +111,11 @@ const discountTitle = computed(() => (props.p.discount_names || []).join(' · ')
 .pcard-actions .icon-btn:focus-visible { outline: 2px solid var(--brand-500); outline-offset: 2px; }
 @media (hover: none) {
   .pcard-actions { opacity: 1; }
+}
+@media (max-width: 640px) {
+  .pcard { flex-wrap: wrap; }
+  .pcard-head { flex-wrap: wrap; gap: 4px 12px; }
+  .pcard-price { margin-left: auto; }
 }
 @media (prefers-reduced-motion: no-preference) {
   .pcard { transition: border-color .15s, box-shadow .15s, transform .15s; }
