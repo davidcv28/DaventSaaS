@@ -1127,6 +1127,8 @@ html[data-ds-theme="dark"] .wo-bar{
   box-shadow:0 18px 44px -18px color-mix(in srgb,var(--volt) 40%,transparent);
 }
 .wo-count{font:600 11px/1 var(--mono);letter-spacing:.16em;text-transform:uppercase;color:var(--muted)}
+.wo-total-wrap{display:flex;flex-direction:column;gap:3px}
+.wo-total-label{font:600 9px/1 var(--mono);letter-spacing:.2em;text-transform:uppercase;color:var(--muted)}
 .wo-total{font:400 clamp(20px,2.4vw,28px)/1 var(--display);letter-spacing:.02em}
 .wo-note{font:500 10px/1.4 var(--mono);letter-spacing:.1em;text-transform:uppercase;color:var(--muted)}
 .wo-bar .btn{margin-left:auto}
@@ -1768,8 +1770,8 @@ html[data-ds-theme="dark"] .foot-col a:hover{color:var(--volt)}
       {{services}}
       <div class="wo-bar" data-wo-bar hidden>
         <span class="wo-count" data-wo-count>0 servicios</span>
-        <span class="wo-total" data-wo-total></span>
-        <span class="wo-note" data-wo-note hidden>incluye ítems a convenir</span>
+        <span class="wo-total-wrap"><small class="wo-total-label">Total estimado</small><span class="wo-total" data-wo-total></span></span>
+        <span class="wo-note" data-wo-note hidden></span>
         <a class="btn btn-accent" data-wo-send href="#">Armar pedido
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
         </a>
@@ -2131,8 +2133,10 @@ html[data-ds-theme="dark"] .foot-col a:hover{color:var(--volt)}
       bar.hidden = false
       count.textContent = sel.length + (sel.length === 1 ? ' servicio' : ' servicios')
       var sum = sel.reduce(function (s, i) { return s + i.price }, 0)
+      var pending = sel.filter(function (i) { return !i.hasPrice }).length
       total.textContent = sum > 0 ? money(sum) : 'A convenir'
-      note.hidden = !sel.some(function (i) { return !i.hasPrice })
+      note.textContent = pending ? pending + (pending === 1 ? ' ítem a convenir' : ' ítems a convenir') : ''
+      note.hidden = !pending
       if (!wa || !send) return
       /* El pedido viaja como lista: un servicio por línea con su precio. */
       var lines = sel.map(function (i) {
