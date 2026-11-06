@@ -680,3 +680,7 @@ Convención de indexación (obligatoria al agregar relaciones):
   - Numeración de comprobantes propia (ticket/factura interna); ojo con no mezclar con `invoices` (que hoy factura la suscripción SaaS — son dos circuitos distintos: Davent→tienda vs tienda→cliente final).
   - Reuso: catálogo y precios ya existen; la UI de caja puede ser una pestaña más del dashboard (modo táctil).
   - Beneficio `has_pos` en `SECTION_BENEFITS`.
+- **Export de datos por tenant** (idea evaluada): distinto del `backup_db` global (pg_dump → R2, disaster recovery de la plataforma — mezcla tenants y no es restaurable por usuario). El usuario descarga **sus** datos:
+  - MVP: `GET /api/stores/me/export/` → JSON o ZIP con CSV por dominio (productos, categorías, ventas POS, turnos, credenciales), detrás del JWT + rate limit. Nunca `.sql` (contiene otros tenants).
+  - Automático (vuelta 2): export programado — periodicidad elegida por el usuario (semanal/mensual), job tipo `subscription_notices` que genera el archivo, lo sube a R2 bajo `exports/<store>/` y manda link firmado de corta duración por mail; destino externo del cliente (su propio S3/Drive) queda como opción futura.
+  - Si el archivo crece, el export on-demand pasa a generarse async a R2 + URL firmada en vez de streaming inline.
