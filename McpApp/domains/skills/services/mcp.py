@@ -1,3 +1,4 @@
+from McpApp.domains.skills.services.dashboard_map import DASHBOARD_MAP
 from McpApp.domains.skills.services.services import (
     apply_style,
     catalog_summary,
@@ -96,6 +97,11 @@ TOOLS   =   [
         },
     },
     {
+        'name'          :   'dashboard_guide',
+        'description'   :   'Mapa del dashboard de DAVENT: secciones del menú lateral, pestañas internas y deep links. Solo orientación de UI — no devuelve datos de ninguna cuenta.',
+        'inputSchema'   :   {'type': 'object', 'properties': {}},
+    },
+    {
         'name'          :   'list_design_patterns',
         'description'   :   'Lista los patrones de diseño reales del producto (DesignPattern activos): plantilla, tier, tags y si tienen markup propio.',
         'inputSchema'   :   {
@@ -153,6 +159,8 @@ def call_tool(name : str, arguments : dict | None = None, user = None) -> dict:
         return {'categories': list_categories()}
     if name == 'design_catalog_summary':
         return {'catalog': catalog_summary(limit = args.get('limit', 50))}
+    if name == 'dashboard_guide':
+        return {'guide': DASHBOARD_MAP}
     if name == 'list_design_patterns':
         return {'patterns': [
             pattern_payload(p) for p in list_design_patterns(

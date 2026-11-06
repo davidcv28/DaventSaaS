@@ -10,6 +10,7 @@ from .services import (
     list_design_styles,
     search_design_styles,
 )
+from .dashboard_map import DASHBOARD_MAP
 from .user_tools import assistant_snapshot, mcp_user_access
 
 __all__ = [
@@ -30,4 +31,5 @@ __all__ = [
     'llm_enabled',
     'assistant_snapshot',
     'mcp_user_access',
+    'DASHBOARD_MAP',
 ]

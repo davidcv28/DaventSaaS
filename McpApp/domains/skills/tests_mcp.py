@@ -46,7 +46,7 @@ class McpProtocolTests(TestCase):
         self.assertEqual(names, {
             'list_design_styles', 'search_design_styles', 'get_design_style',
             'apply_design_style', 'list_design_categories', 'design_catalog_summary',
-            'list_design_patterns', 'get_design_pattern',
+            'list_design_patterns', 'get_design_pattern', 'dashboard_guide',
         })
         for tool in tools:
             self.assertEqual(tool['inputSchema']['type'], 'object')

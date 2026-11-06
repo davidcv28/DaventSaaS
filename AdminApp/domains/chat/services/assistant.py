@@ -3,7 +3,7 @@ import logging
 from django.contrib.auth.models import User
 
 from AdminApp.domains.chat.models import AssistantMessage
-from McpApp.domains.skills.services import ask_llm, assistant_snapshot, llm_enabled
+from McpApp.domains.skills.services import DASHBOARD_MAP, ask_llm, assistant_snapshot, llm_enabled
 
 """
 "Tu Asistente": bot automático por usuario, hilo APARTE del soporte.
@@ -24,9 +24,12 @@ BOT_NAME        =   'Tu Asistente'
 HISTORY_LIMIT   =   16
 GREETING        =   (
     'Hola, soy Tu Asistente. Puedo contarte sobre tu cuenta: plan, tienda, '
-    'productos, categorías, marcas, visitas, pagos, facturas y tu perfil. '
-    '¿Qué querés saber?'
+    'productos, categorías, marcas, visitas, pagos, facturas y tu perfil, '
+    'y te digo dónde está cada cosa en el panel. ¿Qué querés saber?'
 )
+
+#El mapa del dashboard vive en McpApp.domains.skills.services.dashboard_map
+#(DASHBOARD_MAP): lo comparte el bot y la tool MCP `dashboard_guide`.
 
 DATA_KEYWORDS   =   (
     'plan', 'suscrip', 'pago', 'pagos', 'factura', 'producto', 'tienda',
@@ -130,13 +133,9 @@ def _system_prompt(user : User, latest : str) -> str:
         'Si el dato pedido no está en el bloque, decilo y orientalo a la sección '
         'del panel donde se ve. Nunca inventes números ni hables de otros clientes.\n'
         '- También respondés dudas de uso del panel (cómo cargar un producto, '
-        'dónde cambiar el logo, cómo se renueva el plan). Mapa del panel: '
-        'Mi tienda (nombre, slug, link público y dominio propio), Sobre mi '
-        'negocio (descripción, horarios, dirección, redes, WhatsApp de la '
-        'portada), Diseño (plantilla, tema, tipografías, logo y fotos en la '
-        'pestaña Fotos), Mis catálogos (productos, categorías, marcas, '
-        'descuentos), Planes (cambio de plan y renovación), Pagos, Facturas, '
-        'Estadísticas, Herramientas (QR y folletos), Opiniones, Servicios.\n'
+        'dónde cambiar el logo, cómo se renueva el plan). Orientate con este '
+        'mapa — nombrá la sección y la pestaña exactas:\n'
+        f'{DASHBOARD_MAP}\n'
         '- Cuando el usuario quiera diseñar su web o cargar los datos de su '
         'negocio, la app ABRE SOLA la "Asistencia con IA" de esa sección: '
         'avisalo ("te abrí la asistencia con IA para que la completes más '
