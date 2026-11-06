@@ -3789,16 +3789,16 @@ async function changePassword() {
       <template v-else>
         <div class="tabs">
           <button type="button" class="tab t-prod" :class="{ active: catalogTab === 'products' }" @click="catalogTab = 'products'">
-            <AppIcon name="package" :size="16" /> Mis productos
+            <AppIcon name="package" :size="17" /> <span class="tab-txt">Mis productos<small class="tab-sub">tu catálogo</small></span>
           </button>
           <button type="button" class="tab t-cat" :class="{ active: catalogTab === 'categories' }" @click="catalogTab = 'categories'">
-            <AppIcon name="layout-grid" :size="16" /> Categorías <small class="tab-sub">para ordenarlos</small>
+            <AppIcon name="layout-grid" :size="17" /> <span class="tab-txt">Categorías<small class="tab-sub">para ordenarlos</small></span>
           </button>
           <button type="button" class="tab t-brand" :class="{ active: catalogTab === 'brands' }" @click="catalogTab = 'brands'">
-            <AppIcon name="tag" :size="16" /> Marcas
+            <AppIcon name="tag" :size="17" /> <span class="tab-txt">Marcas<small class="tab-sub">de tus productos</small></span>
           </button>
           <button type="button" class="tab t-disc" :class="{ active: catalogTab === 'discounts' }" @click="catalogTab = 'discounts'">
-            <AppIcon name="percent" :size="16" /> Descuentos <small class="tab-sub">{{ canDiscounts ? 'se activan solos' : 'Premium' }}</small>
+            <AppIcon name="percent" :size="17" /> <span class="tab-txt">Descuentos<small class="tab-sub">{{ canDiscounts ? 'se activan solos' : 'Premium' }}</small></span>
           </button>
         </div>
 
