@@ -1035,6 +1035,28 @@ html[data-ds-theme="dark"] .ds-offer-icon{color:var(--volt);border-color:color-m
 .ds-offer-icon svg{width:20px;height:20px}
 .ds-offer-name{font:400 21px/1.15 var(--display);text-transform:uppercase;letter-spacing:.01em}
 .ds-offer-text{font-size:14px;color:var(--ink-2);line-height:1.6}
+/* Riel de "qué hacemos" en la portada: las mismas .ds-offer como tickets
+   compactos con scroll-snap (distinto al grid de la página de servicios). */
+.offer-rail{
+  display:flex;gap:14px;overflow-x:auto;scroll-snap-type:x mandatory;
+  padding:4px 2px 16px;scrollbar-width:thin;
+}
+.offer-rail .ds-offer{
+  flex:0 0 min(280px,78vw);scroll-snap-align:start;
+  padding:18px 18px 20px;gap:10px;
+  transition:border-color .2s,transform .18s var(--ease),box-shadow .2s;
+}
+.offer-rail .ds-offer:hover{
+  border-color:color-mix(in srgb,var(--accent) 45%,var(--line));
+  transform:translateY(-2px);
+  box-shadow:0 14px 30px -18px color-mix(in srgb,var(--accent) 55%,transparent);
+}
+.offer-rail .ds-offer-icon{width:38px;height:38px}
+.offer-rail .ds-offer-name{font-size:16px}
+.offer-rail .ds-offer-text{
+  font-size:13px;
+  display:-webkit-box;-webkit-line-clamp:3;line-clamp:3;-webkit-box-orient:vertical;overflow:hidden;
+}
 .services-title{font:400 clamp(24px,3vw,36px)/1 var(--display);text-transform:uppercase;letter-spacing:.01em;margin-bottom:8px}
 .services-title em{font-style:normal;color:var(--accent-deep)}
 html[data-ds-theme="dark"] .services-title em{color:var(--volt)}
@@ -1510,6 +1532,21 @@ html[data-ds-theme="dark"] .foot-col a:hover{color:var(--volt)}
         <p class="sec-note">Respuestas del taller.</p>
       </header>
       <div class="faq-list ds-zone">{{faqs}}</div>
+    </div>
+  </section>
+
+  <section class="sec" data-flag="services" data-hide-if-empty=".ds-offer" style="padding-top:0">
+    <div class="wrap">
+      <header class="sec-head">
+        <div>
+          <p class="eyebrow">Qué hacemos</p>
+          <h2 class="sec-title">Servicios y <em>soporte</em></h2>
+        </div>
+        <a class="sec-link" href="#servicios" data-ds-route="services">Armar pedido
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+        </a>
+      </header>
+      <div class="offer-rail ds-zone">{{offerings}}</div>
     </div>
   </section>
 
@@ -2072,7 +2109,7 @@ html[data-ds-theme="dark"] .foot-col a:hover{color:var(--volt)}
       li.tabIndex = 0
 
       var nameEl = body.querySelector('.ds-service-name')
-      items.push({ li: li, price: hasPrice ? price : 0, hasPrice: hasPrice, name: nameEl ? nameEl.textContent : '' })
+      items.push({ li: li, price: hasPrice ? price : 0, hasPrice: hasPrice, label: label, name: nameEl ? nameEl.textContent : '' })
       li.addEventListener('click', toggle)
       li.addEventListener('keydown', function (e) {
         if (e.key === ' ' || e.key === 'Enter') { e.preventDefault(); toggle() }
@@ -2097,9 +2134,12 @@ html[data-ds-theme="dark"] .foot-col a:hover{color:var(--volt)}
       total.textContent = sum > 0 ? money(sum) : 'A convenir'
       note.hidden = !sel.some(function (i) { return !i.hasPrice })
       if (!wa || !send) return
-      var names = sel.map(function (i) { return i.name }).filter(Boolean).join(', ')
-      var msg = 'Hola! Quiero consultar por estos servicios: ' + names +
-        '. Presupuesto orientativo: ' + (sum > 0 ? money(sum) : 'a convenir') + '.'
+      /* El pedido viaja como lista: un servicio por línea con su precio. */
+      var lines = sel.map(function (i) {
+        return '• ' + i.name + ' — ' + (i.hasPrice ? i.label : 'a convenir')
+      })
+      var msg = 'Hola! Quiero pedir estos servicios:\n' + lines.join('\n') +
+        '\nPresupuesto orientativo: ' + (sum > 0 ? money(sum) : 'a convenir') + '.'
       var enc = encodeURIComponent(msg)
       var base = wa.split('?')[0]
       var params = wa.indexOf('?') > -1 ? wa.slice(wa.indexOf('?') + 1) : ''
