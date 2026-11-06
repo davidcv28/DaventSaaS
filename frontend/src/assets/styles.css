@@ -1159,7 +1159,9 @@ body{ transition: background-color .2s ease, color .2s ease; }
 .inv-add{ display: none; }
 @media (max-width: 640px){
   .cat-actions{ display: none; }
-  .inv-add{ display: inline-flex; width: auto; min-height: 34px; padding: 0 13px; font-size: 12.5px; gap: 5px; }
+  .inv-head h3{ display: none; }
+  .inv-head{ padding-bottom: 0; margin-bottom: 10px; border-bottom: none; }
+  .inv-add{ display: inline-flex; width: 100%; justify-content: center; min-height: 40px; padding: 0 13px; font-size: 13px; gap: 6px; }
 }
 .prod-bulkbar-hint{ margin-left: auto; font-size: 12px; font-weight: 500; color: var(--muted); }
 @media (max-width: 640px){ .prod-bulkbar-hint{ display: none; } }
