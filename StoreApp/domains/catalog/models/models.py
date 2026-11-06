@@ -166,6 +166,28 @@ class SpecialOfferCampaign(models.Model):
         if start is None or start <= moment:
             start   =   timezone.datetime(moment.year + 1, self.month, self.day, tzinfo = moment.tzinfo)
         return start
+    def window(self, moment = None):
+        """
+        (inicio, fin) de la ocurrencia vigente en `moment`; si ninguna corre,
+        la próxima. Par coherente para mostrar "del X al Y": la oferta dura
+        desde el día de inicio hasta el día de término (duration_days),
+        incluyendo el cruce de fin de año.
+        """
+        moment      =   moment or timezone.now()
+        duration    =   timezone.timedelta(days = self.duration_days)
+        candidates  =   []
+        for year in (moment.year - 1, moment.year, moment.year + 1):
+            try:
+                start   =   timezone.datetime(year, self.month, self.day, tzinfo = moment.tzinfo)
+            except ValueError:
+                #29 de febrero en año no bisiesto: ese año no corre.
+                continue
+            candidates.append((start, start + duration))
+        for start, end in candidates:
+            if start <= moment < end:
+                return start, end
+        future      =   [pair for pair in candidates if pair[0] > moment]
+        return min(future, key = lambda pair: pair[0]) if future else candidates[-1]
 #=========================================
 # DISCOUNT MODEL (descuento programado: se activa/vence solo por fecha)
 #=========================================

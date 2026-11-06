@@ -48,6 +48,12 @@ def _campaign_payload(campaign):
         'label_alt'     :   campaign.label_alt,
         'label_width'   :   campaign.label_width,
         'label_height'  :   campaign.label_height,
+        #Ventana y estado de la campaña: el panel muestra "no disponible"
+        #cuando el descuento está etiquetado pero la campaña no corre.
+        'is_running'    :   campaign.is_running(),
+        'is_recurring'  :   campaign.is_recurring,
+        'starts_at'     :   campaign.window()[0],
+        'ends_at'       :   campaign.window()[1],
     }
 #=========================================
 # CATEGORY SERIALIZER
@@ -87,9 +93,10 @@ class SpecialOfferCampaignSerializer(serializers.ModelSerializer):
     def get_label_url(self, campaign):
         return object_url(campaign.label_key, private = True)
     def get_starts_at(self, campaign):
-        return campaign.next_starts_at()
+        #Ventana coherente (vigente o próxima): inicio y fin del mismo tramo.
+        return campaign.window()[0]
     def get_ends_at(self, campaign):
-        return campaign.ends_at()
+        return campaign.window()[1]
     def get_is_running(self, campaign):
         return campaign.is_running()
 #=========================================
@@ -344,9 +351,10 @@ class DiscountSerializerList(serializers.ModelSerializer):
             return 'ended'
         if discount.starts_at > now:
             return 'scheduled'
-        #Dentro de la ventana propia pero fuera de la campaña: no descuenta.
+        #Dentro de la ventana propia pero la campaña no corre: la oferta
+        #especial no está disponible aunque el descuento esté "encendido".
         if discount.campaign_id is not None and not discount.campaign.is_running(now):
-            return 'scheduled'
+            return 'unavailable'
         return 'active'
     def get_campaign(self, discount):
         return _campaign_payload(discount.campaign)

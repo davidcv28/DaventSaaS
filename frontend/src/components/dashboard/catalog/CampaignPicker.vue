@@ -2,6 +2,7 @@
 import { computed, onMounted } from 'vue'
 import AppIcon from '../../AppIcon.vue'
 import DesignSelect from '../../design/DesignSelect.vue'
+import { campaignWindowLabel } from '../../../api/catalog.api.js'
 import { useOffers } from '../../../composables/useOffers.js'
 
 // Selector de campaña especial del descuento: "sin campaña" (default) o una
@@ -17,6 +18,7 @@ onMounted(() => { load() })
 
 const selected = computed(() => campaigns.value.find((c) => c.id === Number(props.modelValue)) || null)
 const outOfWindow = computed(() => selected.value && !selected.value.is_running)
+const windowText = computed(() => (selected.value ? campaignWindowLabel(selected.value) : ''))
 
 const options = computed(() => [
   { value: '', label: 'Sin campaña' },
@@ -28,16 +30,10 @@ const options = computed(() => [
     imgH: c.label_height || undefined,
     imgAlt: c.label_alt || c.name,
     swatch: c.accent || '#888',
-    badge: c.is_running ? 'En curso' : startsLabel(c),
+    badge: c.is_running ? 'En curso' : 'Fuera de fecha',
     badgeTone: c.is_running ? 'green' : 'amber'
   }))
 ])
-
-function startsLabel(c) {
-  const d = new Date(c.starts_at || '')
-  if (Number.isNaN(d.getTime())) return ''
-  return `Desde el ${d.toLocaleDateString('es-AR', { day: 'numeric', month: 'short' })}`
-}
 </script>
 
 <template>
@@ -50,7 +46,7 @@ function startsLabel(c) {
     />
     <p v-if="outOfWindow" class="hint camp-warn" role="status">
       <AppIcon name="clock" :size="13" aria-hidden="true" />
-      «{{ selected.name }}» todavía no está en fecha: el descuento queda programado y recién se aplica cuando la campaña esté vigente.
+      «{{ selected.name }}» no está disponible: la oferta especial va del {{ windowText }}<template v-if="selected.is_recurring"> cada año</template> y el descuento solo se aplica dentro de esos días.
     </p>
   </div>
 </template>

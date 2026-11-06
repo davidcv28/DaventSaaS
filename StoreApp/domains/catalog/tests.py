@@ -1197,10 +1197,24 @@ class SpecialOfferCampaignTests(TestCase):
         self.assertTrue(campaign.is_running(timezone.datetime(2030, 12, 30, 12, 0, tzinfo = UTC)))
         self.assertFalse(campaign.is_running(timezone.datetime(2030, 1, 10, 12, 0, tzinfo = UTC)))
 
+    def test_campaign_window_returns_coherent_occurrence(self):
+        #window() devuelve el par (inicio, fin) del tramo vigente o del
+        #próximo: fin = inicio + duration_days, aunque cruce de año.
+        campaign        =   SpecialOfferCampaign(
+            slug = 'win', name = 'W', accent = '#000',
+            month = 12, day = 28, duration_days = 6,
+        )
+        start, end      =   campaign.window(timezone.datetime(2030, 1, 1, tzinfo = UTC))
+        self.assertEqual((start.year, start.month, start.day), (2029, 12, 28))
+        self.assertEqual(end - start, timedelta(days = 6))
+        start, end      =   campaign.window(timezone.datetime(2030, 1, 10, tzinfo = UTC))
+        self.assertEqual((start.year, start.month, start.day), (2030, 12, 28))
+        self.assertEqual(end - start, timedelta(days = 6))
+
     def test_owner_can_tag_discount_with_active_campaign(self):
         #El dueño etiqueta su descuento por id de campaña; el listado le
-        #devuelve el bloque de campaña y el estado real (scheduled fuera
-        #de ventana de campaña).
+        #devuelve el bloque de campaña y el estado real (unavailable
+        #fuera de la ventana de la campaña).
         store           =   self._store()
         campaign        =   self._campaign(running = False)
         client          =   APIClient()
@@ -1212,7 +1226,9 @@ class SpecialOfferCampaignTests(TestCase):
         }, format = 'json')
         self.assertEqual(response.status_code, 201)
         self.assertEqual(response.data['item']['campaign']['slug'], campaign.slug)
-        self.assertEqual(response.data['item']['status'], 'scheduled')
+        #Fuera de la ventana de la campaña el descuento queda "no
+        #disponible": está activo pero la oferta especial no corre.
+        self.assertEqual(response.data['item']['status'], 'unavailable')
 
     def test_offers_list_is_public_and_write_is_staff_only(self):
         self._campaign(running = True)

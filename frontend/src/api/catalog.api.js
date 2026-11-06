@@ -343,7 +343,10 @@ export const DISCOUNT_STATUS = {
   scheduled: { label: 'Programado', pill: 'warn' },
   active: { label: 'Vigente', pill: 'ok' },
   ended: { label: 'Finalizado', pill: 'muted' },
-  paused: { label: 'Pausado', pill: 'muted' }
+  paused: { label: 'Pausado', pill: 'muted' },
+  //Fuera de la ventana de su campaña: el descuento está prendido pero la
+  //oferta especial no está disponible en esas fechas.
+  unavailable: { label: 'No disponible', pill: 'warn' }
 }
 export const discountStatusMeta = (d) => DISCOUNT_STATUS[d?.status] || DISCOUNT_STATUS.active
 
@@ -401,6 +404,20 @@ export function formatDiscountDate(iso) {
 export function discountWindowLabel(d) {
   const start = formatDiscountDate(d?.starts_at)
   return d?.ends_at ? `${start} → ${formatDiscountDate(d.ends_at)}` : `Desde ${start}`
+}
+
+// Ventana anual de una campaña ("del 24 al 27 de nov"): starts_at/ends_at
+// llegan coherentes desde el backend (ocurrencia vigente o próxima) y ends_at
+// es exclusivo — medianoche del día siguiente — así que el último día
+// cubierto es ends_at - 1 día.
+export function campaignWindowLabel(c) {
+  const start = new Date(c?.starts_at || '')
+  const rawEnd = new Date(c?.ends_at || '')
+  if (Number.isNaN(start.getTime()) || Number.isNaN(rawEnd.getTime())) return ''
+  const lastDay = new Date(rawEnd.getTime() - 86400000)
+  const end = lastDay < start ? rawEnd : lastDay
+  const f = (d) => d.toLocaleDateString('es-AR', { day: 'numeric', month: 'short' })
+  return start.toDateString() === end.toDateString() ? f(start) : `${f(start)} → ${f(end)}`
 }
 
 // Oferta a mostrar en "Tus productos": la menor entre la oferta manual
