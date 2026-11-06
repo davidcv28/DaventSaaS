@@ -2,7 +2,7 @@
 import { ref, reactive, computed, provide, watch, nextTick, onMounted, onBeforeUnmount } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import {
-  storesApi, normalizeSlug, normalizeCatalogParams, storeThemeVars, storeFontFamily, ensureStoreFont, resolveStoreTemplate, CUSTOMIZATION_DEFAULTS, STORE_TEMPLATES, AI_EXTRA_TEMPLATES, storeSkinOf,
+  storesApi, normalizeSlug, normalizeCatalogParams, storeThemeVars, ensureStoreFont, resolveStoreTemplate, CUSTOMIZATION_DEFAULTS, STORE_TEMPLATES, AI_EXTRA_TEMPLATES, storeSkinOf,
   storeContactLink, hasContactChannel
 } from '../api/stores.api.js'
 import { extractApiError } from '../api/http.js'
@@ -414,7 +414,10 @@ onBeforeUnmount(() => {
   document.body.style.backgroundColor = ''
 })
 const shopName = computed(() => custom.value.display_name || store.value?.business_name || 'Tienda')
-const nameFont = computed(() => ({ fontFamily: storeFontFamily(custom.value.name_font) }))
+// La fuente del nombre (`name_font`) ya no se elige en el dashboard: la
+// tipografía de la web la define cada diseño/tema. El binding queda vacío
+// para que nombre, titular y marca usen las familias de la piel.
+const nameFont = computed(() => ({}))
 const initial = computed(() => shopName.value.slice(0, 1).toUpperCase())
 const location = computed(() => [store.value?.city_name, store.value?.province_name].filter(Boolean).join(', '))
 const year = new Date().getFullYear()
@@ -865,14 +868,11 @@ onMounted(async () => {
     // documento del patrón: flash del diseño viejo en cada carga.
     await patternReq
     status.value = 'success'
-    ensureStoreFont(custom.value.name_font)
-    // Inter queda siempre disponible como cuerpo neutro: la fuente del dueño
-    // (--store-font) solo pinta el titular de la portada y el nombre.
+    // Inter queda siempre disponible como cuerpo neutro de las pieles.
     ensureStoreFont('inter')
-    // Fuentes propias de la plantilla (titulares): las declara la Template
-    // Definition (`fonts` en templates/<id>/index.js). Misma carga
-    // on-demand que name_font; el resto del texto sigue con la fuente
-    // elegida por el dueño.
+    // Fuentes propias de la plantilla (titulares y cuerpo): las declara la
+    // Template Definition (`fonts` en templates/<id>/index.js). Misma carga
+    // on-demand; el resto del texto usa las familias de la piel/tema.
     templateFonts(pageTemplate.value).forEach(ensureStoreFont)
   } catch (e) {
     status.value = 'error'

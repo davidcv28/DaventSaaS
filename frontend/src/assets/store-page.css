@@ -3516,14 +3516,6 @@ Reels— van angostas, las 16:9 anchas). El botón de vivo es Premium. */
   font-size: var(--st-text-size, 15px);
   line-height: var(--st-leading, 1.5);
 }
-/* La fuente del dueño (--store-font) solo pinta el titular de la portada y
-   el nombre de la empresa (.sp-name y los <strong> de marca ya la reciben
-   inline). El resto del texto usa las familias de cada piel/tema. Misma
-   lógica !important que [data-st-font-*]: las pieles declaran font-family
-   con más especificidad y se cargan después. */
-.store-page[data-template] :is(.sp-hero-title, .sp-hero-logo-title, .sp-hal-title, .sp-shop-title.is-name, [id$="-hero-title"], .mi-masthead-brand, .rh-brand){
-  font-family: var(--store-font, inherit) !important;
-}
 /* La elección explícita del dueño gana sobre la familia de la piel de cada
    diseño (store-<tpl>.css declara font-family en los mismos elementos con
    más especificidad y se carga después): por eso el !important, que solo
