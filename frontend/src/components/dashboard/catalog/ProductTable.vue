@@ -4,9 +4,9 @@ import AppIcon from '../../AppIcon.vue'
 import { formatARS } from '../../../api/billing.api.js'
 import { productListOffer, isDiscountedProduct, offerPct } from '../../../api/catalog.api.js'
 
-// Tabla densa del inventario: checkbox de selección múltiple, miniatura con
-// badges de oferta/campaña, categoría/marca en dos líneas, precio efectivo
-// y estado. Sin columna de acciones: la fila entera abre la edición y las
+// Tabla densa del inventario: la fila entera marca/desmarca la selección,
+// miniatura con badges de oferta/campaña, categoría/marca en dos líneas,
+// precio efectivo y estado. El nombre del producto abre la edición y las
 // acciones en lote viven en la barra de selección.
 const props = defineProps({
   products: { type: Array, required: true },
@@ -51,7 +51,7 @@ function skuOf(p) { return `DAV-${String(p.id).padStart(4, '0')}` }
       <tbody>
         <tr
           v-for="p in products" :key="p.id" :class="{ off: !p.is_active, sel: selectedSet.has(p.id) }"
-          :title="`Editar ${p.name}`" @click="emit('edit', p)"
+          :title="`Seleccionar ${p.name}`" @click="toggleOne(p.id)"
         >
           <td class="pt-check" @click.stop>
             <input type="checkbox" :checked="selectedSet.has(p.id)" :aria-label="`Seleccionar ${p.name}`" @change="toggleOne(p.id)" />
@@ -71,7 +71,7 @@ function skuOf(p) { return `DAV-${String(p.id).padStart(4, '0')}` }
               </span>
             </span>
             <span class="pt-name">
-              <strong>{{ p.name }}</strong>
+              <strong class="pt-edit" :title="`Editar ${p.name}`" @click.stop="emit('edit', p)">{{ p.name }}</strong>
               <small>SKU {{ skuOf(p) }}<template v-if="addedLabel(p.created_at)"> · {{ addedLabel(p.created_at) }}</template><template v-if="!p.image"> · sin foto</template></small>
             </span>
           </td>
@@ -142,6 +142,8 @@ function skuOf(p) { return `DAV-${String(p.id).padStart(4, '0')}` }
 }
 .pt-name { min-width: 0; display: grid; gap: 1px; }
 .pt-name strong { font-size: 13.5px; font-weight: 600; color: var(--ink); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.pt-edit { cursor: pointer; }
+.pt-edit:hover { color: var(--brand-ink); text-decoration: underline; }
 .pt-name small { font-size: 11.5px; color: var(--muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .pt-org { white-space: normal; }
 .pt-cell { color: var(--ink-2); font-size: 12.5px; white-space: nowrap; }
