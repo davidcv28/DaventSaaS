@@ -675,3 +675,8 @@ Convención de indexación (obligatoria al agregar relaciones):
   - Validación por QR/código → endpoint público tipo `/api/cards/<code>/status/`; verificación con el mismo enfoque del `pattern_bridge` (whitelist de API por tienda).
   - Vencimiento: comando cron idempotente siguiendo el patrón de `subscription_notices`/`prune_visits`.
   - Beneficio `has_cards` en `SECTION_BENEFITS` (plus/advanced).
+- **POS / caja física con stock** (idea evaluada): **no** es ecommerce online — el objetivo es que la tienda use Davent como app de cajero en el local: venta presencial, factura/comprobante en físico y administración de stock sobre el catálogo ya existente (`Product`, `Category`, `Brand`). Diseño previsto:
+  - Modelos: `Sale`/`SaleItem` (ticket: ítems, medio de pago, total, operador) y movimiento de stock (`StockMovement`: venta, ajuste, ingreso) sobre `Product.stock`.
+  - Numeración de comprobantes propia (ticket/factura interna); ojo con no mezclar con `invoices` (que hoy factura la suscripción SaaS — son dos circuitos distintos: Davent→tienda vs tienda→cliente final).
+  - Reuso: catálogo y precios ya existen; la UI de caja puede ser una pestaña más del dashboard (modo táctil).
+  - Beneficio `has_pos` en `SECTION_BENEFITS`.
