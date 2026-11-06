@@ -773,7 +773,7 @@ body{ transition: background-color .2s ease, color .2s ease; }
 }
 /* Medidor de almacenamiento de imágenes (StorageMeter.vue): usado en
    Resumen y en la sección Mi catálogo. */
-.storage-meter{ display: grid; gap: 8px; }
+.storage-meter{ display: grid; gap: 8px; margin-bottom: 16px; }
 .storage-meter-head{ display: flex; align-items: center; justify-content: space-between; gap: 10px 16px; flex-wrap: wrap; }
 .storage-meter-label{ display: inline-flex; align-items: center; gap: 6px; font-size: 13px; font-weight: 600; color: var(--ink-2); }
 .storage-meter-label .icon{ color: var(--brand-600); }
