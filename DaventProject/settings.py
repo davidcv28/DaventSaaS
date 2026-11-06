@@ -347,6 +347,11 @@ CORS_ALLOWED_ORIGINS = config(
 # Necesario para que un frontend cross-origin pueda enviar la cookie httpOnly
 # de refresh (mismo-origen no lo necesita; en prod/dev el proxy ya es same-origin).
 CORS_ALLOW_CREDENTIALS = config('CORS_ALLOW_CREDENTIALS', default = True, cast = bool)
+# El header X-Davent-Client lo manda la APK autocontenida en TODAS las requests
+# (identifica la sesión nativa de refresh-en-body); sin declararlo, el
+# preflight del WebView rechaza la request antes de llegar a Django.
+from corsheaders.defaults import default_headers
+CORS_ALLOW_HEADERS = list(default_headers) + ['x-davent-client']
 
 # Orígenes https confiables para CSRF (admin/formularios cross-origin). En
 # Docker: https://davent.com,https://*.davent.com — separados por coma.
