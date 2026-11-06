@@ -1,5 +1,30 @@
 import axios from 'axios'
+import { Capacitor } from '@capacitor/core'
 import { env } from '../config/env.js'
+
+// Cliente nativo (APK autocontenida): el WebView sirve los assets empaquetados
+// desde https://localhost — no hay cookies del dominio real (document.cookie
+// solo ve el origen local). La sesión viaja en el body: el login devuelve
+// {access, refresh} (header X-Davent-Client) y el refresh se guarda en
+// localStorage del WebView. El backend rota el refresh en cada refresh y lo
+// devuelve en el body (sin CSRF — no hay cookie que proteger).
+const IS_NATIVE = Capacitor.isNativePlatform()
+const NATIVE_REFRESH_KEY = 'davent.app-refresh'
+const NATIVE_HEADERS = { 'X-Davent-Client': 'davent-app' }
+
+function getNativeRefresh() {
+  try { return localStorage.getItem(NATIVE_REFRESH_KEY) || '' } catch { return '' }
+}
+function setNativeRefresh(token) {
+  try {
+    if (token) localStorage.setItem(NATIVE_REFRESH_KEY, token)
+    else localStorage.removeItem(NATIVE_REFRESH_KEY)
+  } catch { /* storage bloqueado */ }
+}
+// Login/social devuelven el refresh en el body para el cliente nativo.
+export function persistNativeLogin(data) {
+  if (IS_NATIVE && data?.refresh) setNativeRefresh(data.refresh)
+}
 
 // =============================================================================
 // Sesión JWT — modelo cookie-refresh (anti robo por XSS):
@@ -56,8 +81,10 @@ function clearSessionHints() {
 
 // La cookie CSRF se setea junto al refresh httpOnly: su presencia es el hint
 // de que existe una sesión recuperable (la propia cookie refresh es ilegible).
+// En nativo el hint es el refresh guardado en el WebView.
 export function hasSessionCookie() {
   if (sessionEnded) return false
+  if (IS_NATIVE) return Boolean(getNativeRefresh())
   return Boolean(csrfToken())
 }
 
@@ -66,7 +93,7 @@ export const http = axios.create({
   baseURL: env.apiBaseUrl,
   timeout: 30000,   // 15s era corto para el cold start del dyno gratis de Render (~30-60s)
   withCredentials: true, // la cookie de sesión viaja en refresh/logout
-  headers: { 'Content-Type': 'application/json' }
+  headers: { 'Content-Type': 'application/json', ...(IS_NATIVE ? NATIVE_HEADERS : {}) }
 })
 
 // Cliente de lecturas públicas (web de tienda, catálogo, captcha, contacto,
@@ -100,11 +127,19 @@ const tokenEndpoint = (path) => `${env.apiBaseUrl.replace(/\/$/, '')}/token/${pa
 
 async function refreshCall() {
   const epoch = sessionEpoch
-  const res = await axios.post(tokenEndpoint('refresh/'), {}, {
-    timeout: 30000,   // 15s era corto para el cold start del dyno gratis de Render (~30-60s)
-    withCredentials: true,
-    headers: { 'X-CSRFToken': csrfToken() }
-  })
+  // Nativo: refresh en body (sin cookie ni CSRF); el backend lo rota y lo
+  // devuelve en la respuesta — hay que persistir el nuevo.
+  const res = IS_NATIVE
+    ? await axios.post(tokenEndpoint('refresh/'), { refresh: getNativeRefresh() }, {
+        timeout: 30000,
+        headers: { ...NATIVE_HEADERS }
+      })
+    : await axios.post(tokenEndpoint('refresh/'), {}, {
+        timeout: 30000,   // 15s era corto para el cold start del dyno gratis de Render (~30-60s)
+        withCredentials: true,
+        headers: { 'X-CSRFToken': csrfToken() }
+      })
+  if (IS_NATIVE && res.data?.refresh) setNativeRefresh(res.data.refresh)
   const { access } = res.data || {}
   if (!access) throw new Error('EMPTY_REFRESH')
   // Un refresh que salió ANTES del logout o de un login nuevo puede aterrizar
@@ -139,7 +174,7 @@ async function tryRefresh() {
           // otra pestaña o blacklisteada (cambio de clave). Los hints se
           // borran para cortar el ciclo: hasSessionCookie() pasa a false y no
           // se reintenta el refresh en cada carga ni en otras pestañas.
-          if (err?.response?.status === 401) clearSessionHints()
+          if (err?.response?.status === 401) { clearSessionHints(); setNativeRefresh('') }
         }
         throw err
       })
@@ -172,16 +207,21 @@ export async function logoutSession() {
   sessionEnded = true // ningún refresh puede resucitar la sesión saliente
   sessionEpoch++     // los refresh en vuelo se descartan aunque respondan OK
   try {
-    await axios.post(tokenEndpoint('logout/'), {}, {
-      timeout: 10000,
-      withCredentials: true,
-      headers: { 'X-CSRFToken': csrfToken() }
-    })
+    await axios.post(
+      tokenEndpoint('logout/'),
+      IS_NATIVE ? { refresh: getNativeRefresh() } : {},
+      {
+        timeout: 10000,
+        withCredentials: true,
+        headers: IS_NATIVE ? { ...NATIVE_HEADERS } : { 'X-CSRFToken': csrfToken() }
+      }
+    )
   } catch {
     // Sesión ya inválida/expirada en server: igual se limpia local.
   }
   tokenStorage.clear()
   clearSessionHints()
+  setNativeRefresh('')
 }
 
 http.interceptors.response.use(

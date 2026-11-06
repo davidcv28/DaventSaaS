@@ -5,12 +5,14 @@
 //   4. Copia a apk-dist/davent-<versionName>-<versionCode>.apk
 // Uso: npm run release:apk          → build + firma + staging
 //      npm run release:apk -- --upload  → idem + sube a R2 via manage.py publish_apk
-//      npm run release:apk -- --domain daventsaas.onrender.com
-//        → build apuntando a otro backend (parchea server.hostname de
-//          capacitor.config.json durante el build y lo restaura al final).
-//          Sin --domain usa el hostname del config (hoy: davent.com).
+//      npm run release:apk -- --domain api.midominio.com
+//        → API en otro backend (default: daventsaas.onrender.com).
+// La app es AUTOCONTENIDA: el WebView sirve los assets empaquetados desde
+// https://localhost y las requests salen a VITE_API_BASE_URL absoluto
+// (sesión nativa por refresh token en body — ver http.js). No se parchea
+// capacitor.config.json: server.hostname queda siempre 'localhost'.
 import { spawnSync } from 'node:child_process'
-import { existsSync, mkdirSync, copyFileSync, readFileSync, writeFileSync } from 'node:fs'
+import { existsSync, mkdirSync, copyFileSync, readFileSync } from 'node:fs'
 import { dirname, join, resolve, isAbsolute } from 'node:path'
 import { fileURLToPath } from 'node:url'
 
@@ -18,28 +20,12 @@ const FRONTEND = resolve(dirname(fileURLToPath(import.meta.url)), '..')
 const ANDROID = join(FRONTEND, 'android')
 const APK_DIST = join(FRONTEND, 'apk-dist')
 const REPO_ROOT = resolve(FRONTEND, '..')
-const CAP_CONFIG = join(FRONTEND, 'capacitor.config.json')
 const isWin = process.platform === 'win32'
 const upload = process.argv.includes('--upload')
 const domainArg = (() => { const i = process.argv.indexOf('--domain'); return i !== -1 ? process.argv[i + 1] : null })()
 
-// Dominio del WebView: el origen same-site de la app (y del /api). Por defecto
-// es el server.hostname commiteado en capacitor.config.json.
-const capConfigText = readFileSync(CAP_CONFIG, 'utf8')
-const capConfig = JSON.parse(capConfigText)
-const domain = (domainArg || capConfig.server?.hostname || 'davent.com').toLowerCase()
-
-// Con --domain distinto, parcheo hostname + server.url solo durante el build —
-// el archivo commiteado conserva el dominio de producción. server.url es lo que
-// hace que el WebView cargue el sitio real (sin él, el asset loader local
-// intercepta el hostname y se come /api devolviendo index.html).
-const targetUrl = `https://${domain}`
-let capConfigBackup = null
-if (capConfig.server?.hostname !== domain || capConfig.server?.url !== targetUrl) {
-  capConfigBackup = capConfigText
-  capConfig.server = { ...(capConfig.server || {}), hostname: domain, url: targetUrl }
-  writeFileSync(CAP_CONFIG, JSON.stringify(capConfig, null, 2) + '\n')
-}
+// Backend real al que la app llama: API absoluta https://<domain>/api.
+const domain = (domainArg || 'daventsaas.onrender.com').toLowerCase()
 
 let failed = false
 const fail = (msg) => { console.error(`✗ ${msg}`); failed = true }
@@ -118,13 +104,13 @@ const vp = readFileSync(join(ANDROID, 'app-version.properties'), 'utf8')
 const versionName = vp.match(/^versionName=(.+)$/m)?.[1].trim()
 const versionCode = vp.match(/^versionCode=(.+)$/m)?.[1].trim()
 console.log(`\nVersión objetivo: ${versionName} (${versionCode})`)
-console.log(`Origen WebView / API: https://${domain}  (/api same-site)`)
+console.log(`API: https://${domain}/api  (WebView local https://localhost)`)
 
 try {
-  // 1. Vite build — /api resuelve same-site en el WebView; VITE_PLATFORM_DOMAIN
+  // 1. Vite build — API absoluta al backend real; VITE_PLATFORM_DOMAIN
   //    controla la detección de subdominios de tienda.
   step('Vite build (producción APK)', 'npx', ['vite', 'build'], {
-    env: { ...process.env, VITE_API_BASE_URL: '/api', VITE_PLATFORM_DOMAIN: domain },
+    env: { ...process.env, VITE_API_BASE_URL: `https://${domain}/api`, VITE_PLATFORM_DOMAIN: domain },
   })
 
   // 2. Sync web assets + plugins al proyecto Android.
@@ -166,9 +152,4 @@ Listo. Pasos de publicación:
 } catch (e) {
   console.error(`\n✗ ${e.message}`)
   process.exitCode = 1
-} finally {
-  if (capConfigBackup) {
-    writeFileSync(CAP_CONFIG, capConfigBackup)
-    console.log('\n(capacitor.config.json restaurado al hostname de producción)')
-  }
 }

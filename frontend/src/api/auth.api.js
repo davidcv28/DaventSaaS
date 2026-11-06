@@ -1,4 +1,4 @@
-import { http } from './http.js'
+import { http, persistNativeLogin } from './http.js'
 
 // Contrato backend (ver ARCHITECTURE.md + users/viewset_config.py):
 // POST /api/token/            {username, password} -> {access} (+cookie refresh httpOnly)
@@ -53,7 +53,9 @@ export const authApi = {
   async login({ username, password, remember = false }) {
     // remember=true -> refresh de 30 días + cookie persistente ("mantener
     // sesión iniciada"); false -> cookie de sesión del navegador.
-    return expectJson(await withDiag(http.post('/token/', { username, password, remember }), 'token'), 'token')
+    const data = expectJson(await withDiag(http.post('/token/', { username, password, remember }), 'token'), 'token')
+    persistNativeLogin(data)
+    return data
   },
 
   // El refresh real viaja por cookie y lo ejecuta http.js (tryRefresh);
@@ -160,7 +162,9 @@ export const authApi = {
   // El celular no viaja en los datos del provider: si falta, la respuesta trae
   // requires_phone y el router fuerza /completar-celular antes del panel.
   async googleLogin(credential, remember = true) {
-    return expectJson(await withDiag(http.post('/auth/google/', { credential, remember }), 'google'), 'google')
+    const data = expectJson(await withDiag(http.post('/auth/google/', { credential, remember }), 'google'), 'google')
+    persistNativeLogin(data)
+    return data
   }
 }
 

@@ -38,12 +38,14 @@ services:
         value: "False"
       - key: ALLOWED_HOSTS
         value: daventsaas.onrender.com,davent.com.ar,www.davent.com.ar
-      - key: CORS_ALLOWED_ORIGINS
-        value: https://daventsaas.onrender.com,https://davent.com.ar,https://www.davent.com.ar
+      - key: CORS_ALLOWED_ORIGINS               # https://localhost = WebView de
+        value: https://daventsaas.onrender.com,https://davent.com.ar,https://www.davent.com.ar,https://localhost
+                                        # la APK autocontenida (assets bundled,
+                                        # capacitor hostname localhost)
       - key: CORS_ALLOW_CREDENTIALS
         value: "True"
       - key: CSRF_TRUSTED_ORIGINS
-        value: https://daventsaas.onrender.com,https://davent.com.ar,https://www.davent.com.ar
+        value: https://daventsaas.onrender.com,https://davent.com.ar,https://www.davent.com.ar,https://localhost
       - key: FRONTEND_URL
         value: https://davent.com.ar              # apex = canónico SEO;
                                         # www.davent.com.ar redirige 301 acá

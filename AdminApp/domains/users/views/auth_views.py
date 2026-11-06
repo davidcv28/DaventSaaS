@@ -151,6 +151,17 @@ def _secure():
     # Secure solo bajo HTTPS real (prod); en dev http://localhost se omite.
     return settings.SESSION_COOKIE_SECURE
 
+# Cliente nativo (APK autocontenida): el WebView sirve los assets empaquetados
+# desde https://localhost — jamás vería las cookies del dominio real (otro
+# origen, y document.cookie solo lee el suyo). Por eso su sesión viaja en el
+# body: refresh token en las respuestas de login/social y en los POST
+# refresh/logout (sin CSRF — no hay cookie que proteger).
+NATIVE_CLIENT_HEADER  =   'X-Davent-Client'
+NATIVE_CLIENT_VALUE   =   'davent-app'
+
+def _is_native_app(request):
+    return request.headers.get(NATIVE_CLIENT_HEADER) == NATIVE_CLIENT_VALUE
+
 def _remember_of(request):
     # Hint legible seteado en el login: en el refresh la rotación conserva
     # la persistencia original (sin el flag se degradaría a cookie de sesión).
@@ -258,9 +269,14 @@ class CustomTokenObtainPairView(TokenObtainPairView):
             token       =   RefreshToken(refresh)
             if remember:
                 token.set_exp(lifetime = REMEMBER_LIFETIME)
-                _set_remember_cookie(response)
-            _set_refresh_cookie(response, str(token), remember)
-            _set_csrf_cookie(response, remember)
+            if _is_native_app(request):
+                #App nativa: el refresh queda en el body — no hay cookies.
+                response.data['refresh']    =   str(token)
+            else:
+                if remember:
+                    _set_remember_cookie(response)
+                _set_refresh_cookie(response, str(token), remember)
+                _set_csrf_cookie(response, remember)
         return response
 
 
@@ -318,6 +334,10 @@ class TokenLogoutView(APIView):
         refresh = request.COOKIES.get(REFRESH_COOKIE)
         if refresh:
             _require_csrf(request)
+        elif _is_native_app(request):
+            #Cliente nativo: el refresh viaja en body (sin cookie ni CSRF).
+            refresh = request.data.get('refresh')
+        if refresh:
             try:
                 RefreshToken(refresh).blacklist()
             except Exception:
@@ -419,10 +439,13 @@ def _social_session_response(request, user, is_new):
         #completarlo antes de seguir (el claim de la web lo exige).
         'requires_phone'    :   not bool(getattr(profile, 'phone', None)),
     }, status = status.HTTP_200_OK)
-    if remember:
-        _set_remember_cookie(response)
-    _set_refresh_cookie(response, str(refresh), remember)
-    _set_csrf_cookie(response, remember)
+    if _is_native_app(request):
+        response.data['refresh']    =   str(refresh)
+    else:
+        if remember:
+            _set_remember_cookie(response)
+        _set_refresh_cookie(response, str(refresh), remember)
+        _set_csrf_cookie(response, remember)
     return response
 
 
