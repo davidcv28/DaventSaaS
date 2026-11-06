@@ -206,7 +206,7 @@ function skuOf(p) { return `DAV-${String(p.id).padStart(4, '0')}` }
 .pt-status .pill svg { flex: none; }
 .pt-deal { color: var(--brand-ink); }
 .pt-num { text-align: right; font-variant-numeric: var(--num); white-space: nowrap; }
-.pt-price b { font-weight: 700; font-size: 14.5px; color: var(--ink); }
+.pt-price b { font-weight: 700; font-size: 14.5px; color: var(--ok); }
 .pt-price small { display: block; font-size: 11px; font-weight: 400; color: var(--muted); }
 .pt-price s { color: var(--muted); font-weight: 400; font-size: 12px; }
 /* Acciones de fila: lápiz + menú ⋮, reservan su ancho para que la fila no salte. */
