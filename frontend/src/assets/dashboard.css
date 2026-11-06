@@ -696,16 +696,23 @@
 .roadmap-thumb { flex: none; width: 30px; height: 30px; border-radius: 9px; object-fit: cover; }
 .changelog-thumb { flex: none; width: 30px; height: 30px; border-radius: 9px; object-fit: cover; }
 .roadmap-arrow { flex: none; color: var(--muted); }
-.roadmap-feats { list-style: none; margin: 10px 0 0; padding: 10px 0 0; border-top: 1px dashed var(--line); display: grid; gap: 6px; }
-.roadmap-feats li { position: relative; padding-left: 16px; font-size: 13px; color: var(--ink-2); line-height: 1.4; }
-.roadmap-feats li::before { content: ''; position: absolute; left: 0; top: 7px; width: 6px; height: 6px; border-radius: 50%; background: var(--brand-500); opacity: .65; }
-/* Modal de detalle de novedad. */
-.news-modal { margin: auto; width: min(460px, calc(100vw - 32px)); max-height: 80vh; overflow-y: auto; padding: 18px 20px 20px; border-radius: 16px; background: var(--card); border: 1px solid var(--line); box-shadow: var(--shadow); }
-.news-modal-head { display: flex; align-items: center; gap: 10px; }
-.news-modal-head h3 { flex: 1; min-width: 0; margin: 0; font-size: 16px; color: var(--ink); }
-.news-modal-img { display: block; width: 100%; max-height: 220px; object-fit: cover; margin-top: 14px; border-radius: 10px; border: 1px solid var(--line); }
-.news-modal-date { margin: 10px 0 0; font-size: 12px; font-weight: 600; color: var(--muted); }
-.news-modal-desc { margin: 8px 0 0; font-size: 14px; line-height: 1.55; color: var(--ink-2); }
+/* Detalle de novedad a pantalla completa (release-notes). */
+.news-modal { position: absolute; inset: 0; overflow-y: auto; background: var(--bg); }
+.news-modal-hero { position: relative; display: grid; place-items: center; min-height: clamp(200px, 32vh, 320px); background: linear-gradient(160deg, var(--brand-soft), var(--surface) 70%); border-bottom: 1px solid var(--brand-soft-line, var(--line)); }
+.news-modal-hero.has-img { min-height: clamp(220px, 38vh, 400px); padding: 0; border-bottom: 0; }
+.news-modal-hero img { width: 100%; height: 100%; object-fit: cover; }
+.news-modal-ico { display: grid; place-items: center; width: 72px; height: 72px; border-radius: 20px; background: var(--card); border: 1px solid var(--brand-soft-line, var(--line)); color: var(--brand-ink); box-shadow: var(--shadow-sm, 0 4px 14px rgba(15,23,42,.08)); }
+.news-modal-close { position: absolute; top: 16px; right: 16px; display: grid; place-items: center; width: 36px; height: 36px; border: 1px solid var(--line); border-radius: 50%; background: var(--card); color: var(--ink-2); cursor: pointer; transition: color .12s, border-color .12s; }
+.news-modal-close:hover { color: var(--ink); border-color: var(--line-strong, var(--line)); }
+.news-modal-body { max-width: 640px; margin: 0 auto; padding: 28px 24px 64px; }
+.news-modal-chip { display: inline-block; padding: 4px 12px; border-radius: 999px; background: var(--brand-soft); color: var(--brand-ink); font-size: 12px; font-weight: 650; letter-spacing: .02em; }
+.news-modal-title { margin: 14px 0 0; font-size: clamp(24px, 3.4vw, 32px); font-weight: 750; line-height: 1.15; color: var(--ink); letter-spacing: -.02em; }
+.news-modal-desc { margin: 12px 0 0; font-size: 15.5px; line-height: 1.65; color: var(--ink-2); }
+.news-modal-includes { margin-top: 28px; padding: 20px 22px; border: 1px solid var(--line); border-radius: 14px; background: var(--card); }
+.news-modal-includes h4 { margin: 0 0 12px; font-size: 13px; font-weight: 700; text-transform: uppercase; letter-spacing: .06em; color: var(--muted); }
+.news-modal-includes ul { list-style: none; margin: 0; padding: 0; display: grid; gap: 10px; }
+.news-modal-includes li { display: flex; align-items: flex-start; gap: 10px; font-size: 14px; line-height: 1.5; color: var(--ink-2); }
+.news-modal-includes li svg { flex: none; margin-top: 3px; color: var(--ok); }
 
 /* Asistente automático como contacto del equipo: avatar con gradiente de
    marca y sugerencias clickeables dentro de la conversación. */

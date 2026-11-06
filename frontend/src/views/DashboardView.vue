@@ -6089,17 +6089,22 @@ async function changePassword() {
         <Transition name="pf">
           <div v-if="newsModal" class="pf-overlay" @click.self="newsModal = null">
             <div class="news-modal" role="dialog" aria-modal="true" :aria-label="newsModal.title">
-              <header class="news-modal-head">
-                <span class="roadmap-ico"><AppIcon :name="newsModal.icon" :size="17" /></span>
-                <h3>{{ newsModal.title }}</h3>
-                <button type="button" class="icon-btn" aria-label="Cerrar" @click="newsModal = null"><AppIcon name="x" :size="16" /></button>
-              </header>
-              <img v-if="newsModal.image" class="news-modal-img" :src="newsModal.image" alt="" />
-              <p v-if="newsModal.date" class="news-modal-date">{{ newsModal.date }}</p>
-              <p class="news-modal-desc">{{ newsModal.desc }}</p>
-              <ul v-if="newsModal.feats?.length" class="roadmap-feats">
-                <li v-for="f in newsModal.feats" :key="f">{{ f }}</li>
-              </ul>
+              <div class="news-modal-hero" :class="{ 'has-img': newsModal.image }">
+                <img v-if="newsModal.image" :src="newsModal.image" alt="" />
+                <span v-else class="news-modal-ico"><AppIcon :name="newsModal.icon" :size="30" /></span>
+                <button type="button" class="news-modal-close" aria-label="Cerrar" @click="newsModal = null"><AppIcon name="x" :size="16" /></button>
+              </div>
+              <div class="news-modal-body">
+                <span class="news-modal-chip">{{ newsModal.date || 'Próximamente' }}</span>
+                <h3 class="news-modal-title">{{ newsModal.title }}</h3>
+                <p class="news-modal-desc">{{ newsModal.desc }}</p>
+                <div v-if="newsModal.feats?.length" class="news-modal-includes">
+                  <h4>Qué incluye</h4>
+                  <ul>
+                    <li v-for="f in newsModal.feats" :key="f"><AppIcon name="check" :size="14" />{{ f }}</li>
+                  </ul>
+                </div>
+              </div>
             </div>
           </div>
         </Transition>
