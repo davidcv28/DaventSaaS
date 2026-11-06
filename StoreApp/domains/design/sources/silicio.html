@@ -905,6 +905,111 @@ html[data-ds-theme="dark"] .pdp-cat{color:var(--volt)}
 .ds-rev-reply{margin-top:10px;padding:12px 14px;background:var(--accent-soft);font-size:13px;color:var(--ink-2);border-left:2px solid var(--accent)}
 html[data-ds-theme="dark"] .ds-rev-reply{border-color:var(--volt)}
 .ds-rev-form{margin-top:18px;border-top:1px solid var(--line);padding-top:18px}
+/* Formulario de opinión (lo arma el puente): votos, datos y captcha en la
+   misma piel de instrumento — mono, esquinas cortadas, foco con halo. */
+.ds-rev-fields{display:grid;gap:12px;padding:20px;border:1px solid var(--line);background:var(--surface)}
+.ds-rev-votes{display:flex;gap:8px;flex-wrap:wrap}
+.ds-rev-pick{
+  display:inline-flex;align-items:center;gap:8px;padding:10px 14px;cursor:pointer;
+  border:1px solid var(--line);background:transparent;color:var(--muted);
+  clip-path:polygon(0 0,calc(100% - 8px) 0,100% 8px,100% 100%,0 100%);
+  font:600 10.5px/1 var(--mono);letter-spacing:.16em;text-transform:uppercase;
+  transition:border-color .18s,color .18s,background .18s,box-shadow .2s;
+}
+.ds-rev-pick svg{width:15px;height:15px;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+.ds-rev-pick:hover{border-color:var(--accent);color:var(--accent-deep)}
+html[data-ds-theme="dark"] .ds-rev-pick:hover{border-color:var(--volt);color:var(--volt)}
+.ds-rev-pick[aria-checked="true"]{
+  border-color:var(--accent);background:var(--accent);color:var(--on-accent);
+  box-shadow:0 0 18px -8px color-mix(in srgb,var(--accent) 70%,transparent);
+}
+html[data-ds-theme="dark"] .ds-rev-pick[aria-checked="true"]{border-color:var(--volt);background:var(--volt);color:#0A0D12}
+.ds-rev-row{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.ds-rev-input{
+  width:100%;padding:11px 13px;border:1px solid var(--line);background:var(--paper);color:var(--ink);
+  font:500 13px/1.4 var(--sans);outline:none;
+  transition:border-color .18s,box-shadow .2s;
+}
+.ds-rev-input::placeholder{color:var(--muted);opacity:.75}
+.ds-rev-input:focus{border-color:var(--accent);box-shadow:0 0 0 3px color-mix(in srgb,var(--accent) 15%,transparent)}
+.ds-rev-area{min-height:88px;resize:vertical}
+.ds-rev-cap{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.ds-rev-q{font:600 10px/1.4 var(--mono);letter-spacing:.16em;text-transform:uppercase;color:var(--muted)}
+.ds-rev-cap .ds-rev-input{width:110px;flex:none}
+.ds-rev-reload{
+  width:36px;height:36px;flex:none;display:grid;place-items:center;cursor:pointer;
+  border:1px solid var(--line);background:transparent;color:var(--ink-2);
+  transition:border-color .18s,color .18s;
+}
+.ds-rev-reload:hover{border-color:var(--accent);color:var(--accent-deep)}
+html[data-ds-theme="dark"] .ds-rev-reload:hover{color:var(--volt)}
+.ds-rev-hp{position:absolute;left:-10000px;top:auto;width:1px;height:1px;overflow:hidden}
+.ds-rev-status{min-height:15px;margin:0;font:500 10.5px/1.4 var(--mono);letter-spacing:.06em;color:var(--muted)}
+.ds-rev-status[data-ok="1"]{color:var(--ok)}
+.ds-rev-send{
+  justify-self:start;min-height:42px;padding:0 24px;cursor:pointer;border:1px solid transparent;
+  clip-path:polygon(0 0,calc(100% - 12px) 0,100% 12px,100% 100%,0 100%);
+  background:
+    linear-gradient(180deg,rgba(255,255,255,.15),transparent 55%),
+    linear-gradient(135deg,var(--accent),color-mix(in srgb,var(--accent) 70%,#000));
+  color:var(--on-accent);font:600 12px/1 var(--mono);letter-spacing:.18em;text-transform:uppercase;
+  box-shadow:0 10px 26px -14px color-mix(in srgb,var(--accent) 80%,transparent);
+  transition:transform .16s var(--ease),box-shadow .2s,filter .2s;
+}
+.ds-rev-send:hover{transform:translateY(-1px);filter:brightness(1.08)}
+html[data-ds-theme="dark"] .ds-rev-send{
+  background:
+    linear-gradient(180deg,rgba(255,255,255,.18),transparent 55%),
+    linear-gradient(135deg,var(--volt),color-mix(in srgb,var(--volt) 82%,#3a4a00));
+  color:#0A0D12;
+}
+.ds-rev-send:disabled{opacity:.5;cursor:default;transform:none}
+@media(max-width:560px){.ds-rev-row{grid-template-columns:1fr}.ds-rev-fields{padding:14px}}
+
+/* Formulario de contacto (mismo puente, mismas clases con prefijo ds-contact):
+   misma piel de instrumento que el de opiniones. */
+.ds-contact-fields{display:grid;gap:12px}
+.ds-contact-row{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.ds-contact-input{
+  width:100%;padding:11px 13px;border:1px solid var(--line);background:var(--paper);color:var(--ink);
+  font:500 13px/1.4 var(--sans);outline:none;
+  transition:border-color .18s,box-shadow .2s;
+}
+.ds-contact-input::placeholder{color:var(--muted);opacity:.75}
+.ds-contact-input:focus{border-color:var(--accent);box-shadow:0 0 0 3px color-mix(in srgb,var(--accent) 15%,transparent)}
+.ds-contact-area{min-height:110px;resize:vertical}
+.ds-contact-cap{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.ds-contact-q{font:600 10px/1.4 var(--mono);letter-spacing:.16em;text-transform:uppercase;color:var(--muted)}
+.ds-contact-cap .ds-contact-input{width:110px;flex:none}
+.ds-contact-reload{
+  width:36px;height:36px;flex:none;display:grid;place-items:center;cursor:pointer;
+  border:1px solid var(--line);background:transparent;color:var(--ink-2);
+  transition:border-color .18s,color .18s;
+}
+.ds-contact-reload:hover{border-color:var(--accent);color:var(--accent-deep)}
+html[data-ds-theme="dark"] .ds-contact-reload:hover{color:var(--volt)}
+.ds-contact-hp{position:absolute;left:-10000px;top:auto;width:1px;height:1px;overflow:hidden}
+.ds-contact-status{min-height:15px;margin:0;font:500 10.5px/1.4 var(--mono);letter-spacing:.06em;color:var(--muted)}
+.ds-contact-status[data-ok="1"]{color:var(--ok)}
+.ds-contact-send{
+  justify-self:start;min-height:44px;padding:0 26px;cursor:pointer;border:1px solid transparent;
+  clip-path:polygon(0 0,calc(100% - 12px) 0,100% 12px,100% 100%,0 100%);
+  background:
+    linear-gradient(180deg,rgba(255,255,255,.15),transparent 55%),
+    linear-gradient(135deg,var(--accent),color-mix(in srgb,var(--accent) 70%,#000));
+  color:var(--on-accent);font:600 12px/1 var(--mono);letter-spacing:.18em;text-transform:uppercase;
+  box-shadow:0 10px 26px -14px color-mix(in srgb,var(--accent) 80%,transparent);
+  transition:transform .16s var(--ease),box-shadow .2s,filter .2s;
+}
+.ds-contact-send:hover{transform:translateY(-1px);filter:brightness(1.08)}
+html[data-ds-theme="dark"] .ds-contact-send{
+  background:
+    linear-gradient(180deg,rgba(255,255,255,.18),transparent 55%),
+    linear-gradient(135deg,var(--volt),color-mix(in srgb,var(--volt) 82%,#3a4a00));
+  color:#0A0D12;
+}
+.ds-contact-send:disabled{opacity:.5;cursor:default;transform:none}
+@media(max-width:560px){.ds-contact-row{grid-template-columns:1fr}}
 .pdp-related{margin-top:clamp(48px,7vh,80px)}
 .pdp-related h2{font:400 clamp(24px,3vw,36px)/1 var(--display);text-transform:uppercase;letter-spacing:.01em;margin-bottom:24px}
 .pdp-related .grid-products{grid-template-columns:repeat(4,1fr)}
