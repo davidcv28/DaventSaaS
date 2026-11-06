@@ -178,8 +178,8 @@ function clearFilters() {
     color: var(--ink-2); cursor: pointer;
   }
   .ctoolbar-filterbtn:hover { border-color: var(--brand-500); color: var(--brand-ink); }
-  .ctoolbar-search { flex: 1 1 auto; }
-  .ctoolbar-prices { flex: 1 1 auto; justify-content: center; }
+  .ctoolbar-search { flex: 1 1 calc(100% - 46px); min-width: 0; }
+  .ctoolbar-prices { flex: 1 1 100%; justify-content: center; }
 }
 /* Hoja de filtros (móvil). */
 .cfilters-overlay {
