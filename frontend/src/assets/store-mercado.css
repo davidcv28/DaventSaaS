@@ -42,8 +42,8 @@
   --mc-on-accent: var(--mc-on-blue);
   --mc-link: var(--mc-blue-deep);
   /* Tipografía */
-  --mc-display: var(--store-font, 'Inter'), system-ui, -apple-system, 'Segoe UI', sans-serif;
-  --mc-body: var(--store-font, 'Inter'), system-ui, -apple-system, 'Segoe UI', sans-serif;
+  --mc-display: 'Inter', system-ui, -apple-system, 'Segoe UI', sans-serif;
+  --mc-body: 'Inter', system-ui, -apple-system, 'Segoe UI', sans-serif;
   /* Ritmo y formas */
   --mc-container: 1240px;
   --mc-gutter: 24px;

@@ -41,8 +41,8 @@
   --mt-selection: color-mix(in srgb, var(--mt-accent) 85%, transparent);
 
   /* --- Tipografía --- */
-  --mt-display: 'Outfit', var(--store-font, 'Inter'), system-ui, sans-serif;
-  --mt-body: var(--store-font, 'Inter'), system-ui, sans-serif;
+  --mt-display: 'Outfit', 'Inter', system-ui, sans-serif;
+  --mt-body: 'Inter', system-ui, sans-serif;
   --mt-mono: 'JetBrains Mono', ui-monospace, monospace;
   --mt-fs-h1: clamp(42px, 6.4vw, 78px);
   --mt-fs-h2: clamp(26px, 3.2vw, 36px);

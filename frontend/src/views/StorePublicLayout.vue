@@ -866,6 +866,9 @@ onMounted(async () => {
     await patternReq
     status.value = 'success'
     ensureStoreFont(custom.value.name_font)
+    // Inter queda siempre disponible como cuerpo neutro: la fuente del dueño
+    // (--store-font) solo pinta el titular de la portada y el nombre.
+    ensureStoreFont('inter')
     // Fuentes propias de la plantilla (titulares): las declara la Template
     // Definition (`fonts` en templates/<id>/index.js). Misma carga
     // on-demand que name_font; el resto del texto sigue con la fuente

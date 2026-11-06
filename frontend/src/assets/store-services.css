@@ -60,8 +60,8 @@
   --sv-btn-ls: 0;
   --sv-spring: cubic-bezier(.34, 1.5, .64, 1);
   --sv-ease: cubic-bezier(.22, .61, .36, 1);
-  --sv-display: var(--st-font-heading, var(--sp-display, var(--store-font, system-ui))), 'Arial Rounded MT Bold', sans-serif;
-  --sv-body: var(--st-font-body, var(--sp-body, var(--store-font, system-ui))), sans-serif;
+  --sv-display: var(--st-font-heading, var(--sp-display, system-ui)), 'Arial Rounded MT Bold', sans-serif;
+  --sv-body: var(--st-font-body, var(--sp-body, system-ui)), sans-serif;
   /* Escala 2026: espacio, tipografía, radios y sombras en tokens */
   --space-1: 4px; --space-2: 8px; --space-3: 12px; --space-4: 16px; --space-5: 24px; --space-6: 32px; --space-7: 48px; --space-8: 64px;
   --fs-hero: var(--st-h1-size, clamp(32px, 7vw, 64px)); --fs-h2: var(--st-h2-size, clamp(28px, 4vw, 48px)); --fs-body: var(--st-text-size, clamp(15px, 1.05vw, 17px));

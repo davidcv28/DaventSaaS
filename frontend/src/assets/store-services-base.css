@@ -57,8 +57,8 @@
   --rz-inverse-line: color-mix(in srgb, var(--sp-on-band, #fff) 18%, transparent);
   --rz-inverse-accent: var(--sp-on-band, #fff);
 
-  --rz-display: var(--sp-display, var(--store-font, system-ui, sans-serif));
-  --rz-body: var(--store-font, system-ui, sans-serif);
+  --rz-display: var(--sp-display, 'Inter', system-ui, sans-serif);
+  --rz-body: 'Inter', system-ui, sans-serif;
   --rz-fs-h1: clamp(36px, 5vw, 64px);
   --rz-fs-h2: clamp(26px, 3.4vw, 40px);
   --rz-fs-h3: clamp(19px, 2vw, 24px);

@@ -45,7 +45,7 @@
 
   /* --- Tipografía --- */
   --mi-display: 'Anton', 'Arial Narrow', Impact, sans-serif;
-  --mi-body: 'Space Grotesk', var(--store-font, 'Inter'), system-ui, sans-serif;
+  --mi-body: 'Space Grotesk', 'Inter', system-ui, sans-serif;
   --mi-mono: 'JetBrains Mono', ui-monospace, SFMono-Regular, monospace;
   --mi-fs-mega: clamp(58px, 12.5vw, 168px);
   --mi-fs-h1: clamp(40px, 7vw, 84px);

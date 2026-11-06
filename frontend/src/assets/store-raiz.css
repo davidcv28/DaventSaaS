@@ -68,12 +68,11 @@
   --rz-inverse-accent: color-mix(in srgb, var(--rz-accent) 46%, #fff);
 
   /* --- Tipografía ---
-     La fuente del dueño (--store-font) gobierna TODO el texto; el bug de
-     Manrope en el body queda corregido. La display propia de la plantilla
-     (Bricolage Grotesque, ya cargada por templates/raiz) queda solo para
-     titulares — si el dueño eligió una display, se respeta su familia. */
-  --rz-display: 'Bricolage Grotesque', var(--store-font, 'Manrope'), system-ui, sans-serif;
-  --rz-body: var(--store-font, 'Manrope'), system-ui, sans-serif;
+     La fuente del dueño (--store-font) solo pinta el titular de la portada
+     y el nombre de la empresa (regla global en store-page.css); el resto
+     del texto usa las familias propias de la plantilla. */
+  --rz-display: 'Bricolage Grotesque', 'Manrope', 'Inter', system-ui, sans-serif;
+  --rz-body: 'Manrope', 'Inter', system-ui, sans-serif;
   --rz-fs-h1: clamp(38px, 5.2vw, 76px);
   --rz-fs-h2: clamp(28px, 3.8vw, 46px);
   --rz-fs-h3: clamp(21px, 2.2vw, 26px);
@@ -222,8 +221,8 @@
   --rz-dur-2: 200ms;
   --rz-dur-3: 380ms;
   --rz-dur-4: 700ms;
-  --rz-display: 'Bricolage Grotesque', var(--store-font, 'Manrope'), system-ui, sans-serif;
-  --rz-body: var(--store-font, 'Manrope'), system-ui, sans-serif;
+  --rz-display: 'Bricolage Grotesque', 'Manrope', 'Inter', system-ui, sans-serif;
+  --rz-body: 'Manrope', 'Inter', system-ui, sans-serif;
   --rz-fs-h1: clamp(38px, 5.2vw, 76px);
   --rz-fs-h2: clamp(28px, 3.8vw, 46px);
   --rz-fs-h3: clamp(21px, 2.2vw, 26px);

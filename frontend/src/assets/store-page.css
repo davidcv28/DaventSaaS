@@ -37,7 +37,7 @@
   --shadow-1: var(--sp-shadow-sm); --shadow-2: var(--sp-shadow-md);
   min-height: 100vh; min-height: 100dvh; display: flex; flex-direction: column;
   background: var(--sp-bg); background-attachment: fixed; color: var(--sp-ink); font-size: 15px; line-height: 1.5;
-  font-family: var(--store-font, Inter, system-ui, sans-serif);
+  font-family: 'Inter', system-ui, -apple-system, 'Segoe UI', sans-serif;
 }
 /* La fuente del diseño entra por herencia: los controles de formulario no la
    heredan solos (user-agent los re-define), así que se fuerza acá. */
@@ -3516,6 +3516,14 @@ Reels— van angostas, las 16:9 anchas). El botón de vivo es Premium. */
   font-size: var(--st-text-size, 15px);
   line-height: var(--st-leading, 1.5);
 }
+/* La fuente del dueño (--store-font) solo pinta el titular de la portada y
+   el nombre de la empresa (.sp-name y los <strong> de marca ya la reciben
+   inline). El resto del texto usa las familias de cada piel/tema. Misma
+   lógica !important que [data-st-font-*]: las pieles declaran font-family
+   con más especificidad y se cargan después. */
+.store-page[data-template] :is(.sp-hero-title, .sp-hero-logo-title, .sp-hal-title, .sp-shop-title.is-name, [id$="-hero-title"], .mi-masthead-brand, .rh-brand){
+  font-family: var(--store-font, inherit) !important;
+}
 /* La elección explícita del dueño gana sobre la familia de la piel de cada
    diseño (store-<tpl>.css declara font-family en los mismos elementos con
    más especificidad y se carga después): por eso el !important, que solo
@@ -4020,7 +4028,7 @@ Reels— van angostas, las 16:9 anchas). El botón de vivo es Premium. */
   text-transform: var(--st-f-h3-case, none);
 }
 .store-page[data-st-roles~='body']{
-  font-family: var(--st-f-body-family, var(--store-font, Inter, system-ui, sans-serif));
+  font-family: var(--st-f-body-family, 'Inter', system-ui, sans-serif);
   font-size: var(--st-f-body-size, 15px);
   font-weight: var(--st-f-body-weight, 400);
   letter-spacing: var(--st-f-body-tracking, normal);
