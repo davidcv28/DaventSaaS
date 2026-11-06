@@ -1036,19 +1036,81 @@ html[data-ds-theme="dark"] .ds-offer-icon{color:var(--volt);border-color:color-m
 .ds-offer-name{font:400 21px/1.15 var(--display);text-transform:uppercase;letter-spacing:.01em}
 .ds-offer-text{font-size:14px;color:var(--ink-2);line-height:1.6}
 .services-title{font:400 clamp(24px,3vw,36px)/1 var(--display);text-transform:uppercase;letter-spacing:.01em;margin-bottom:8px}
-.ds-services-list{border-top:1px solid var(--line)}
+.services-title em{font-style:normal;color:var(--accent-deep)}
+html[data-ds-theme="dark"] .services-title em{color:var(--volt)}
+/* Orden de trabajo: tickets seleccionables (el JS del patrón convierte cada
+   .ds-service en tarjeta con icono, chips, precio y check). */
+.ds-services-list{display:grid;gap:12px;counter-reset:ot;margin:0;padding:0;list-style:none}
 .ds-service{
-  display:grid;grid-template-columns:64px minmax(0,1fr);gap:20px;align-items:baseline;
-  padding:20px 4px;border-bottom:1px solid var(--line);
+  position:relative;display:flex;align-items:center;gap:16px;
+  padding:16px 18px;border:1px solid var(--line);background:var(--surface);
+  cursor:pointer;list-style:none;
+  transition:border-color .2s,background .2s,box-shadow .25s,transform .18s var(--ease);
 }
-.ds-service::before{
-  counter-increment:svc;content:"S." counter(svc,decimal-leading-zero);
-  font:500 12px/1 var(--mono);letter-spacing:.14em;color:var(--accent);
+.ds-service:hover{border-color:color-mix(in srgb,var(--accent) 45%,var(--line));transform:translateY(-1px)}
+.ds-service:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.ds-service.is-sel{
+  border-color:var(--accent);background:var(--accent-soft);
+  box-shadow:0 0 0 1px var(--accent),0 16px 34px -20px color-mix(in srgb,var(--accent) 65%,transparent);
 }
-html[data-ds-theme="dark"] .ds-service::before{color:var(--volt)}
-.ds-services-list{counter-reset:svc}
-.ds-service-name{font:500 19px/1.3 var(--sans);letter-spacing:-.01em;display:block}
-.ds-service-desc{display:block;margin-top:6px;font-size:14px;color:var(--muted);line-height:1.6}
+html[data-ds-theme="dark"] .ds-service.is-sel{
+  border-color:var(--volt);background:color-mix(in srgb,var(--volt) 7%,var(--surface));
+  box-shadow:0 0 0 1px var(--volt),0 16px 34px -20px color-mix(in srgb,var(--volt) 40%,transparent);
+}
+.svc-ico{
+  flex:none;width:46px;height:46px;display:grid;place-items:center;
+  border:1px solid var(--line);background:var(--paper);color:var(--accent-deep);
+}
+html[data-ds-theme="dark"] .svc-ico{color:var(--volt);border-color:color-mix(in srgb,var(--volt) 30%,var(--line))}
+.svc-ico svg{width:21px;height:21px;display:block}
+.svc-body{flex:1;min-width:0;display:flex;flex-direction:column;gap:5px}
+.svc-body::before{
+  counter-increment:ot;content:"OT." counter(ot,decimal-leading-zero);
+  font:600 9px/1 var(--mono);letter-spacing:.22em;color:var(--muted);
+}
+.svc-chips{display:flex;gap:6px;flex-wrap:wrap}
+.svc-chip{
+  font:600 9px/1 var(--mono);letter-spacing:.14em;text-transform:uppercase;color:var(--muted);
+  border:1px solid var(--line);padding:5px 7px;background:var(--paper);
+}
+.svc-price{flex:none;display:flex;flex-direction:column;align-items:flex-end;gap:4px}
+.svc-price b{font:600 16px/1 var(--display);letter-spacing:.02em}
+.svc-price small{font:600 8.5px/1 var(--mono);letter-spacing:.16em;text-transform:uppercase;color:var(--muted)}
+.svc-check{
+  flex:none;width:24px;height:24px;display:grid;place-items:center;
+  border:1.5px solid var(--line);background:var(--paper);
+  transition:background .18s,border-color .18s;
+}
+.svc-check::after{
+  content:"";width:10px;height:6px;border-left:2px solid #fff;border-bottom:2px solid #fff;
+  transform:rotate(-45deg) scale(0);transition:transform .18s var(--ease);
+}
+.ds-service.is-sel .svc-check{background:var(--accent);border-color:var(--accent)}
+html[data-ds-theme="dark"] .ds-service.is-sel .svc-check{background:var(--volt);border-color:var(--volt)}
+.ds-service.is-sel .svc-check::after{border-color:#0A0D12;transform:rotate(-45deg) scale(1)}
+@media(max-width:560px){
+  .ds-service{flex-wrap:wrap;padding:14px}
+  .svc-ico{width:40px;height:40px}
+  .svc-price{order:3;width:100%;flex-direction:row;align-items:baseline;gap:10px}
+  .svc-check{order:2;margin-left:auto}
+}
+/* Barra de presupuesto (aparece al marcar el primer servicio). */
+.wo-bar{
+  position:sticky;bottom:14px;z-index:5;display:flex;align-items:center;gap:14px;flex-wrap:wrap;
+  margin-top:16px;padding:14px 18px;border:1px solid var(--accent);background:var(--surface);
+  box-shadow:0 18px 44px -18px color-mix(in srgb,var(--accent) 55%,transparent);
+}
+html[data-ds-theme="dark"] .wo-bar{
+  border-color:var(--volt);
+  box-shadow:0 18px 44px -18px color-mix(in srgb,var(--volt) 40%,transparent);
+}
+.wo-count{font:600 11px/1 var(--mono);letter-spacing:.16em;text-transform:uppercase;color:var(--muted)}
+.wo-total{font:400 clamp(20px,2.4vw,28px)/1 var(--display);letter-spacing:.02em}
+.wo-note{font:500 10px/1.4 var(--mono);letter-spacing:.1em;text-transform:uppercase;color:var(--muted)}
+.wo-bar .btn{margin-left:auto}
+@media(max-width:720px){.wo-bar .btn{margin-left:0;flex:1 1 100%}}
+.ds-service-name{font:500 17px/1.3 var(--sans);letter-spacing:-.01em}
+.ds-service-desc{display:block;margin-top:4px;font-size:13.5px;color:var(--muted);line-height:1.6;max-width:64ch}
 .svc-empty{border:1px dashed var(--line);padding:30px;text-align:center;font:500 12px/1.7 var(--mono);letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
 .svc-cta{margin-top:34px}
 .svc-cta .btn svg{width:15px;height:15px;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
@@ -1658,9 +1720,23 @@ html[data-ds-theme="dark"] .foot-col a:hover{color:var(--volt)}
   </header>
   <div class="wrap">
     <div class="offerings" data-hide-if-empty=".ds-offer">{{offerings}}</div>
-    <div data-hide-if-empty=".ds-service">
-      <h2 class="services-title">Servicios del taller</h2>
+    <div class="workorder" data-hide-if-empty=".ds-service">
+      <header class="sec-head wo-head">
+        <div>
+          <p class="eyebrow">Orden de trabajo</p>
+          <h2 class="services-title">Armá tu <em>presupuesto</em></h2>
+        </div>
+        <p class="sec-note">Marcá lo que necesitás: el total se arma al instante y viaja por WhatsApp.</p>
+      </header>
       {{services}}
+      <div class="wo-bar" data-wo-bar hidden>
+        <span class="wo-count" data-wo-count>0 servicios</span>
+        <span class="wo-total" data-wo-total></span>
+        <span class="wo-note" data-wo-note hidden>incluye ítems a convenir</span>
+        <a class="btn btn-accent" data-wo-send href="#">Armar pedido
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+        </a>
+      </div>
     </div>
     <p class="svc-empty">El taller todavía no publicó servicios. Escribinos por WhatsApp y te contamos qué podemos hacer por tu equipo.</p>
     <div class="svc-cta">
@@ -1929,6 +2005,113 @@ html[data-ds-theme="dark"] .foot-col a:hover{color:var(--volt)}
     })
   }
 
+  /* ---------- Servicios: orden de trabajo seleccionable ----------
+     El fragmento {{services}} trae data-price/data-price-label/data-duration/
+     data-icon-svg por ítem; acá cada <li> se convierte en ticket con check,
+     y la barra arma el total + mensaje de WhatsApp (misma idea que la vista
+     Vue de Servicios, con la piel del patrón). */
+  function setupServices() {
+    var list = document.querySelector('.ds-services-list')
+    var bar = document.querySelector('[data-wo-bar]')
+    if (!list || !bar || list.getAttribute('data-svc-ready')) return
+    list.setAttribute('data-svc-ready', '1')
+    var count = bar.querySelector('[data-wo-count]')
+    var total = bar.querySelector('[data-wo-total]')
+    var note = bar.querySelector('[data-wo-note]')
+    var send = bar.querySelector('[data-wo-send]')
+    var waLink = document.querySelector('.svc-cta .btn-accent, a[href*="wa.me"], a[href*="whatsapp"]')
+    var wa = waLink ? waLink.getAttribute('href') : ''
+    var items = []
+
+    qsa('.ds-service', list).forEach(function (li) {
+      var priceTxt = li.getAttribute('data-price') || ''
+      var price = parseFloat(priceTxt) || 0
+      var hasPrice = priceTxt !== '' && price > 0
+      var label = li.getAttribute('data-price-label') || 'A convenir'
+      var dur = li.getAttribute('data-duration') || ''
+
+      var ico = document.createElement('span')
+      ico.className = 'svc-ico'
+      ico.setAttribute('aria-hidden', 'true')
+      var svg = li.getAttribute('data-icon-svg')
+      if (svg) ico.innerHTML = svg
+
+      var body = document.createElement('div')
+      body.className = 'svc-body'
+      while (li.firstChild) body.appendChild(li.firstChild)
+      var chips = document.createElement('div')
+      chips.className = 'svc-chips'
+      if (dur) {
+        var c = document.createElement('span')
+        c.className = 'svc-chip'
+        c.textContent = 'Duración · ' + dur
+        chips.appendChild(c)
+      }
+      body.appendChild(chips)
+
+      var priceEl = document.createElement('span')
+      priceEl.className = 'svc-price'
+      var pb = document.createElement('b')
+      pb.textContent = hasPrice ? label : 'A convenir'
+      var ps = document.createElement('small')
+      ps.textContent = hasPrice ? 'precio orientativo' : 'se conversa'
+      priceEl.appendChild(pb)
+      priceEl.appendChild(ps)
+
+      var check = document.createElement('span')
+      check.className = 'svc-check'
+      check.setAttribute('aria-hidden', 'true')
+
+      li.textContent = ''
+      li.appendChild(ico)
+      li.appendChild(body)
+      li.appendChild(priceEl)
+      li.appendChild(check)
+      li.setAttribute('role', 'checkbox')
+      li.setAttribute('aria-checked', 'false')
+      li.tabIndex = 0
+
+      var nameEl = body.querySelector('.ds-service-name')
+      items.push({ li: li, price: hasPrice ? price : 0, hasPrice: hasPrice, name: nameEl ? nameEl.textContent : '' })
+      li.addEventListener('click', toggle)
+      li.addEventListener('keydown', function (e) {
+        if (e.key === ' ' || e.key === 'Enter') { e.preventDefault(); toggle() }
+      })
+      function toggle() {
+        var on = !li.classList.contains('is-sel')
+        li.classList.toggle('is-sel', on)
+        li.setAttribute('aria-checked', on ? 'true' : 'false')
+        paint()
+      }
+    })
+
+    function money(n) {
+      return '$' + String(Math.round(n)).replace(/\B(?=(\d{3})+(?!\d))/g, '.')
+    }
+    function paint() {
+      var sel = items.filter(function (i) { return i.li.classList.contains('is-sel') })
+      if (!sel.length) { bar.hidden = true; return }
+      bar.hidden = false
+      count.textContent = sel.length + (sel.length === 1 ? ' servicio' : ' servicios')
+      var sum = sel.reduce(function (s, i) { return s + i.price }, 0)
+      total.textContent = sum > 0 ? money(sum) : 'A convenir'
+      note.hidden = !sel.some(function (i) { return !i.hasPrice })
+      if (!wa || !send) return
+      var names = sel.map(function (i) { return i.name }).filter(Boolean).join(', ')
+      var msg = 'Hola! Quiero consultar por estos servicios: ' + names +
+        '. Presupuesto orientativo: ' + (sum > 0 ? money(sum) : 'a convenir') + '.'
+      var enc = encodeURIComponent(msg)
+      var base = wa.split('?')[0]
+      var params = wa.indexOf('?') > -1 ? wa.slice(wa.indexOf('?') + 1) : ''
+      params = params.split('&').filter(function (p) { return p && p.indexOf('text=') !== 0 })
+      params.push('text=' + enc)
+      send.setAttribute('href', base + '?' + params.join('&'))
+      send.setAttribute('target', '_blank')
+      send.setAttribute('rel', 'noopener')
+    }
+    paint()
+  }
+
   /* ---------- Titular del hero: palabras escalonadas (.ht-w) ---------- */
   function setupTitles() {
     qsa('.hero-title').forEach(function (h) {
@@ -2004,7 +2187,7 @@ html[data-ds-theme="dark"] .foot-col a:hover{color:var(--volt)}
       return
     }
     if (d.type === 'davent:ds-surface') {
-      setTimeout(function () { hideEmpty(); setupTitles(); setupDeck(); setupRails(); initReveal(); paint(); measure() }, 80)
+      setTimeout(function () { hideEmpty(); setupTitles(); setupDeck(); setupRails(); setupServices(); initReveal(); paint(); measure() }, 80)
     }
   })
 
@@ -2012,6 +2195,7 @@ html[data-ds-theme="dark"] .foot-col a:hover{color:var(--volt)}
   hideEmpty()
   setupTitles()
   setupDeck()
+  setupServices()
   setupRails()
   initReveal()
   requestAnimationFrame(paint)

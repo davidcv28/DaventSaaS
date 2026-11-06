@@ -363,13 +363,27 @@ def _service_fragment(store, flags = None):
     if not flags.get('services', True):
         return ''
     rows = StoreService.objects.filter(store = store, is_active = True).order_by('position', 'name')[:FRAGMENT_LIMIT]
-    items = [
-        '<li class="ds-service">'
-        f'<strong class="ds-service-name">{escape(_text(row.name, 80))}</strong>'
-        f'<span class="ds-service-desc">{escape(_text(getattr(row, "description", ""), 200))}</span>'
-        '</li>'
-        for row in rows
-    ]
+    items = []
+    for row in rows:
+        #Precio/duración/icono viajan como data-attrs: los patrones que no
+        #los usan no cambian nada; el que sí (p. ej. silicio) arma su propia
+        #tarjeta interactiva sin pedir endpoints extra.
+        price_num = ''
+        price_label = 'A convenir'
+        if row.price is not None and _amount(row.price):
+            price_num = str(row.price)
+            price_label = _money(row.price)
+        items.append(
+            '<li class="ds-service"'
+            f' data-price="{_attr(price_num)}"'
+            f' data-price-label="{_attr(price_label)}"'
+            f' data-duration="{_attr(_text(getattr(row, "duration", ""), 40))}"'
+            f' data-icon="{_attr(_text(getattr(row, "icon", ""), 30))}"'
+            f' data-icon-svg="{_attr(_icon_svg(getattr(row, "icon", "")))}">'
+            f'<strong class="ds-service-name">{escape(_text(row.name, 80))}</strong>'
+            f'<span class="ds-service-desc">{escape(_text(getattr(row, "description", ""), 200))}</span>'
+            '</li>'
+        )
     return f'<ul class="ds-services-list">{"".join(items)}</ul>' if items else ''
 
 def _plans_fragment(store, customization, flags = None):
