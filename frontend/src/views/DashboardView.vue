@@ -6056,6 +6056,7 @@ async function changePassword() {
             @keydown.enter="newsModal = { icon: c.icon || 'sparkles', title: c.title, desc: c.body, feats: c.features, image: c.image_url, date: fmtDate(c.published_at || c.created_at) }"
           >
             <img v-if="c.image_url" class="changelog-thumb" :src="c.image_url" alt="" />
+            <span v-else class="roadmap-ico"><AppIcon :name="c.icon || 'sparkles'" :size="15" /></span>
             <span class="changelog-date">{{ fmtDate(c.published_at || c.created_at) }}</span>
             <div class="changelog-text">
               <strong>{{ c.title }}</strong>
