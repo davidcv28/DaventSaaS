@@ -2,22 +2,21 @@
 import AppIcon from '../../AppIcon.vue'
 
 // Barra del inventario en una sola fila: búsqueda + categoría + marca +
-// solo-ofertas + orden + toggle de vista (tabla densa / grilla). El título
-// "Inventario · n de m" y el botón "Actualizar precios" viven en la card,
-// arriba de esta barra. Solo presentación: el estado vive en DashboardView.
+// solo-ofertas + orden. El título "Inventario · n de m" y el botón
+// "Actualizar precios" viven en la card, arriba de esta barra.
+// Solo presentación: el estado vive en DashboardView.
 defineProps({
   query: { type: String, default: '' },
   category: { type: [Number, String], default: '' },
   brand: { type: [Number, String], default: '' },
   onlyOffers: { type: Boolean, default: false },
   sort: { type: String, default: 'newest' },
-  view: { type: String, default: 'table' },
   categories: { type: Array, default: () => [] },
   brands: { type: Array, default: () => [] }
 })
 const emit = defineEmits([
   'update:query', 'update:category', 'update:brand',
-  'update:onlyOffers', 'update:sort', 'update:view'
+  'update:onlyOffers', 'update:sort'
 ])
 
 const SORTS = [
@@ -65,16 +64,6 @@ const SORTS = [
       >
         <AppIcon name="percent" :size="14" aria-hidden="true" />
       </button>
-      <span class="ctoolbar-views" role="group" aria-label="Cambiar vista">
-        <button
-          type="button" class="ctoolbar-view" :class="{ on: view === 'table' }"
-          :aria-pressed="view === 'table'" title="Vista lista" @click="emit('update:view', 'table')"
-        ><AppIcon name="list" :size="16" /></button>
-        <button
-          type="button" class="ctoolbar-view" :class="{ on: view === 'list' }"
-          :aria-pressed="view === 'list'" title="Vista grilla" @click="emit('update:view', 'list')"
-        ><AppIcon name="layout-grid" :size="16" /></button>
-      </span>
     </div>
   </div>
 </template>
@@ -107,18 +96,7 @@ const SORTS = [
 }
 .ctoolbar-toggle:hover { color: var(--ink-2); }
 .ctoolbar-toggle.on { border-color: var(--brand-500); background: var(--brand-soft); color: var(--brand-ink); }
-.ctoolbar-views {
-  display: inline-flex; flex: none; margin-left: auto;
-  border: 1px solid var(--line); border-radius: var(--radius-sm); overflow: hidden; background: var(--surface);
-}
-.ctoolbar-view {
-  display: grid; place-items: center; width: 38px; height: 38px; border: none;
-  background: transparent; color: var(--muted); cursor: pointer; transition: color .15s, background .15s;
-}
-.ctoolbar-view:hover { color: var(--ink-2); }
-.ctoolbar-view + .ctoolbar-view { border-left: 1px solid var(--line); }
-.ctoolbar-view.on { background: var(--card); color: var(--brand-ink); box-shadow: inset 0 0 0 1px var(--brand-500); }
-.ctoolbar-view:focus-visible, .ctoolbar-toggle:focus-visible { outline: 2px solid var(--brand-500); outline-offset: 2px; }
+.ctoolbar-toggle:focus-visible { outline: 2px solid var(--brand-500); outline-offset: 2px; }
 @media (max-width: 720px) {
   .ctoolbar-search { flex: 1 1 100%; }
   .ctoolbar-sel, .ctoolbar-sort { flex: 1 1 calc(50% - 4px); min-width: 0; }

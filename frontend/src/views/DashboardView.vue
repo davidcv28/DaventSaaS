@@ -68,7 +68,6 @@ import AiAssistModal from '../components/assist/AiAssistModal.vue'
 import PriceUpdateModal from '../components/PriceUpdateModal.vue'
 import CampaignPicker from '../components/dashboard/catalog/CampaignPicker.vue'
 import CatalogToolbar from '../components/dashboard/catalog/CatalogToolbar.vue'
-import ProductCard from '../components/dashboard/catalog/ProductCard.vue'
 import ProductTable from '../components/dashboard/catalog/ProductTable.vue'
 import ProductForm from '../components/dashboard/catalog/ProductForm.vue'
 import DiscountCard from '../components/dashboard/catalog/DiscountCard.vue'
@@ -933,13 +932,7 @@ watch(
 // Buscador del listado: filtra por nombre, categoría o marca (sin tildes).
 const productQuery = ref('')
 // Toolbar del listado: filtros por categoría/marca, "solo en oferta",
-// orden y vista grilla/lista (persistida en localStorage).
-// Vista del listado: 'list' (filas, default y más amigable) | 'table'
-// (densa, para catálogos grandes). El viejo 'grid' cae en la lista.
-const PRODUCT_VIEW_KEY = 'davent.catalog.view'
-const savedProductView = localStorage.getItem(PRODUCT_VIEW_KEY)
-const productView = ref(savedProductView === 'list' ? 'list' : 'table')
-watch(productView, (v) => { try { localStorage.setItem(PRODUCT_VIEW_KEY, v) } catch {} })
+// orden del listado (una sola vista: tabla densa).
 const prodFilterCategory = ref('')
 const prodFilterBrand = ref('')
 const prodOnlyOffers = ref(false)
@@ -3860,7 +3853,7 @@ async function changePassword() {
                 </div>
                 <CatalogToolbar
                   v-model:query="productQuery" v-model:category="prodFilterCategory" v-model:brand="prodFilterBrand"
-                  v-model:only-offers="prodOnlyOffers" v-model:sort="prodSort" v-model:view="productView"
+                  v-model:only-offers="prodOnlyOffers" v-model:sort="prodSort"
                   :categories="catalog.categories" :brands="catalog.brands"
                 />
                 <div v-if="!filteredProducts.length" class="empty-mini">
@@ -3882,21 +3875,11 @@ async function changePassword() {
                     <button type="button" class="prod-bulkbar-x" aria-label="Limpiar selección" @click="selectedIds = []"><AppIcon name="x" :size="14" /></button>
                   </div>
                   <ProductTable
-                    v-if="productView === 'table'"
                     :products="pagedProducts" v-model:selected-ids="selectedIds"
                     :campaign-of="(id) => productCampaign.get(id) || null"
                     @edit="editProduct" @duplicate="duplicateProduct"
                     @toggle="toggleProductActive" @remove="removeProduct"
                   />
-                  <ul v-else class="prod-grid">
-                    <li v-for="p in pagedProducts" :key="p.id">
-                      <ProductCard
-                        :p="p" :campaign="productCampaign.get(p.id) || null"
-                        @edit="editProduct" @duplicate="duplicateProduct"
-                        @toggle="toggleProductActive" @remove="removeProduct"
-                      />
-                    </li>
-                  </ul>
                   <div v-if="prodPageInfo.pages > 1" class="prod-pager">
                     <span>Mostrando {{ prodPageInfo.from }}–{{ prodPageInfo.to }} de {{ prodPageInfo.total }}</span>
                     <span class="prod-pager-btns">
