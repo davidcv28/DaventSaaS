@@ -164,7 +164,7 @@ def _facts(store, customization):
         'steps'         :   bool(customization.service_steps or customization.services),
         'service_form'  :   bool(customization.service_days or customization.service_slots),
         'compare'       :   stats['products'] >= 4,
-        'contact'       :   bool(customization.whatsapp or customization.contact_email or customization.show_location),
+        'contact'       :   bool(customization.whatsapp or customization.contact_email or stats['location']),
         'logo'          :   bool(customization.logo_key),
         'cover'         :   bool(customization.cover_key),
     }
