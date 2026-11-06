@@ -672,8 +672,9 @@
 
 /* Novedades (changelog): lista cronológica sobria dentro de una card. */
 .changelog-list { list-style: none; margin: 0; padding: 0; display: grid; gap: 0; }
-.changelog-item { display: flex; gap: 14px; padding: 14px; margin-bottom: 10px; border: 1px solid var(--line); border-radius: 12px; background: var(--surface); }
-.changelog-item:last-child { margin-bottom: 0; }
+.changelog-item { display: flex; gap: 14px; padding: 14px 4px; border-bottom: 1px solid var(--line-soft); cursor: pointer; }
+.changelog-item:last-child { border-bottom: 0; }
+.changelog-item:hover .changelog-text strong { color: var(--brand-ink); }
 .changelog-date { flex: none; width: 84px; padding-top: 2px; font-size: 12px; font-weight: 600; color: var(--muted); font-variant-numeric: tabular-nums; }
 .changelog-text { flex: 1; min-width: 0; display: grid; gap: 4px; }
 .changelog-text strong { font-size: 14px; font-weight: 650; color: var(--ink); }
@@ -683,15 +684,25 @@
 /* Próximamente (roadmap): mismo lenguaje que el changelog, en card aparte. */
 .roadmap-title { margin: 0; font-size: 16px; font-weight: 700; color: var(--ink); }
 .roadmap-sub { margin: 4px 0 0; font-size: 13px; color: var(--muted); }
-.roadmap-list { list-style: none; margin: 14px 0 0; padding: 0; display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 12px; }
-.roadmap-item { display: grid; gap: 6px; align-content: start; padding: 14px; border: 1px solid var(--line); border-radius: 12px; background: var(--surface); }
-.roadmap-item-head { display: flex; align-items: center; gap: 9px; }
-.roadmap-item-head svg { flex: none; width: 28px; height: 28px; padding: 6px; box-sizing: border-box; border-radius: 8px; background: var(--brand-soft); color: var(--brand-ink); }
-.roadmap-item strong { font-size: 14px; font-weight: 650; color: var(--ink); }
-.roadmap-item p { margin: 0; font-size: 13px; line-height: 1.5; color: var(--ink-2); }
-.roadmap-feats { list-style: none; margin: 4px 0 0; padding: 8px 0 0; border-top: 1px dashed var(--line); display: grid; gap: 5px; }
-.roadmap-feats li { position: relative; padding-left: 16px; font-size: 12.5px; color: var(--ink-2); line-height: 1.4; }
-.roadmap-feats li::before { content: ''; position: absolute; left: 0; top: 6px; width: 6px; height: 6px; border-radius: 50%; background: var(--brand-500); opacity: .65; }
+.roadmap-list { list-style: none; margin: 14px 0 0; padding: 0; display: grid; }
+.roadmap-item { display: flex; align-items: center; gap: 12px; padding: 12px 4px; border-bottom: 1px solid var(--line-soft); cursor: pointer; transition: background .12s; }
+.roadmap-item:last-child { border-bottom: 0; }
+.roadmap-item:hover { background: var(--surface); }
+.roadmap-item:hover strong { color: var(--brand-ink); }
+.roadmap-ico { flex: none; display: grid; place-items: center; width: 30px; height: 30px; border-radius: 9px; background: var(--brand-soft); color: var(--brand-ink); }
+.roadmap-item-txt { flex: 1; min-width: 0; display: grid; gap: 1px; }
+.roadmap-item-txt strong { font-size: 14px; font-weight: 650; color: var(--ink); }
+.roadmap-item-txt small { font-size: 12.5px; color: var(--muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.roadmap-arrow { flex: none; color: var(--muted); }
+.roadmap-feats { list-style: none; margin: 10px 0 0; padding: 10px 0 0; border-top: 1px dashed var(--line); display: grid; gap: 6px; }
+.roadmap-feats li { position: relative; padding-left: 16px; font-size: 13px; color: var(--ink-2); line-height: 1.4; }
+.roadmap-feats li::before { content: ''; position: absolute; left: 0; top: 7px; width: 6px; height: 6px; border-radius: 50%; background: var(--brand-500); opacity: .65; }
+/* Modal de detalle de novedad. */
+.news-modal { margin: auto; width: min(460px, calc(100vw - 32px)); max-height: 80vh; overflow-y: auto; padding: 18px 20px 20px; border-radius: 16px; background: var(--card); border: 1px solid var(--line); box-shadow: var(--shadow); }
+.news-modal-head { display: flex; align-items: center; gap: 10px; }
+.news-modal-head h3 { flex: 1; min-width: 0; margin: 0; font-size: 16px; color: var(--ink); }
+.news-modal-date { margin: 10px 0 0; font-size: 12px; font-weight: 600; color: var(--muted); }
+.news-modal-desc { margin: 8px 0 0; font-size: 14px; line-height: 1.55; color: var(--ink-2); }
 
 /* Asistente automático como contacto del equipo: avatar con gradiente de
    marca y sugerencias clickeables dentro de la conversación. */

@@ -2711,6 +2711,14 @@ const reviewsSeenAt = ref(null)
 const notifsOpen = ref(false)
 const changelogEntries = ref([])
 const changelogLoaded = ref(false)
+// Detalle de una novedad (changelog publicado o item del roadmap) en modal.
+const newsModal = ref(null)
+const ROADMAP_ITEMS = [
+  { icon: 'download', title: 'Respaldo de tu tienda', desc: 'Descargá todos tus datos y recuperá la tienda si la borraste por error.', feats: ['Exportación de productos, imágenes y configuración', 'Papelera para restaurar la tienda borrada'] },
+  { icon: 'calendar', title: 'Turnos y reservas', desc: 'Agenda online para rubros de servicios.', feats: ['Tus clientes reservan directo desde tu web', 'Horarios y disponibilidad configurables'] },
+  { icon: 'credit-card', title: 'Credenciales de acceso', desc: 'Tarjetas de membresía para gimnasios, clubes y coworkings.', feats: ['Diseño de la credencial con tu marca', 'Emisión con fecha de vencimiento'] },
+  { icon: 'shopping-bag', title: 'Venta en local (POS)', desc: 'DAVENT Ventas: un programa para cobrar en tu local con el mismo catálogo de tu web.', feats: ['Productos, fotos y precios sincronizados con tu catálogo', 'Tickets y facturas con tus datos, imprimibles al cobrar', 'Resumen de ventas del día al cierre', 'Funciona sin internet y sincroniza después'] }
+]
 
 const NOTIF_ICONS = { review: 'star', admin_message: 'message-circle', subscription: 'credit-card', changelog: 'sparkles', system: 'info' }
 const notifIcon = (kind) => NOTIF_ICONS[kind] || 'info'
@@ -6042,12 +6050,17 @@ async function changePassword() {
           <div><p>Todavía no hay novedades publicadas.</p></div>
         </div>
         <ul v-else class="changelog-list">
-          <li v-for="c in changelogEntries" :key="c.id" class="changelog-item">
+          <li
+            v-for="c in changelogEntries" :key="c.id" class="changelog-item" role="button" tabindex="0"
+            @click="newsModal = { icon: 'sparkles', title: c.title, desc: c.body, date: fmtDate(c.published_at || c.created_at) }"
+            @keydown.enter="newsModal = { icon: 'sparkles', title: c.title, desc: c.body, date: fmtDate(c.published_at || c.created_at) }"
+          >
             <span class="changelog-date">{{ fmtDate(c.published_at || c.created_at) }}</span>
             <div class="changelog-text">
               <strong>{{ c.title }}</strong>
               <p class="changelog-body">{{ c.body }}</p>
             </div>
+            <AppIcon name="chevron-right" :size="14" class="roadmap-arrow" />
           </li>
         </ul>
       </div>
@@ -6056,42 +6069,37 @@ async function changePassword() {
         <h2 class="roadmap-title">Próximamente</h2>
         <p class="roadmap-sub">En lo que estamos trabajando para tu tienda.</p>
         <ul class="roadmap-list">
-          <li class="roadmap-item">
-            <div class="roadmap-item-head"><AppIcon name="download" :size="16" /><strong>Respaldo de tu tienda</strong></div>
-            <p>Descargá todos tus datos y una papelera para recuperar la tienda si la borraste por error.</p>
-            <ul class="roadmap-feats">
-              <li>Exportación de productos, imágenes y configuración</li>
-              <li>Papelera para restaurar la tienda borrada</li>
-            </ul>
-          </li>
-          <li class="roadmap-item">
-            <div class="roadmap-item-head"><AppIcon name="calendar" :size="16" /><strong>Turnos y reservas</strong></div>
-            <p>Agenda online para rubros de servicios.</p>
-            <ul class="roadmap-feats">
-              <li>Tus clientes reservan directo desde tu web</li>
-              <li>Horarios y disponibilidad configurables</li>
-            </ul>
-          </li>
-          <li class="roadmap-item">
-            <div class="roadmap-item-head"><AppIcon name="credit-card" :size="16" /><strong>Credenciales de acceso</strong></div>
-            <p>Tarjetas de membresía para gimnasios, clubes y coworkings.</p>
-            <ul class="roadmap-feats">
-              <li>Diseño de la credencial con tu marca</li>
-              <li>Emisión con fecha de vencimiento</li>
-            </ul>
-          </li>
-          <li class="roadmap-item">
-            <div class="roadmap-item-head"><AppIcon name="shopping-bag" :size="16" /><strong>Venta en local (POS)</strong></div>
-            <p>DAVENT Ventas: un programa para cobrar en tu local con el mismo catálogo de tu web.</p>
-            <ul class="roadmap-feats">
-              <li>Productos, fotos y precios sincronizados con tu catálogo</li>
-              <li>Tickets y facturas con tus datos, imprimibles al cobrar</li>
-              <li>Resumen de ventas del día al cierre</li>
-              <li>Funciona sin internet y sincroniza después</li>
-            </ul>
+          <li
+            v-for="r in ROADMAP_ITEMS" :key="r.title" class="roadmap-item" role="button" tabindex="0"
+            @click="newsModal = r" @keydown.enter="newsModal = r"
+          >
+            <span class="roadmap-ico"><AppIcon :name="r.icon" :size="15" /></span>
+            <span class="roadmap-item-txt"><strong>{{ r.title }}</strong><small>{{ r.desc }}</small></span>
+            <AppIcon name="chevron-right" :size="14" class="roadmap-arrow" />
           </li>
         </ul>
       </div>
+
+      <!-- Detalle de la novedad en modal: título, descripción completa y
+           el listado de todo lo que incluye. -->
+      <Teleport to="body">
+        <Transition name="pf">
+          <div v-if="newsModal" class="pf-overlay" @click.self="newsModal = null">
+            <div class="news-modal" role="dialog" aria-modal="true" :aria-label="newsModal.title">
+              <header class="news-modal-head">
+                <span class="roadmap-ico"><AppIcon :name="newsModal.icon" :size="17" /></span>
+                <h3>{{ newsModal.title }}</h3>
+                <button type="button" class="icon-btn" aria-label="Cerrar" @click="newsModal = null"><AppIcon name="x" :size="16" /></button>
+              </header>
+              <p v-if="newsModal.date" class="news-modal-date">{{ newsModal.date }}</p>
+              <p class="news-modal-desc">{{ newsModal.desc }}</p>
+              <ul v-if="newsModal.feats?.length" class="roadmap-feats">
+                <li v-for="f in newsModal.feats" :key="f">{{ f }}</li>
+              </ul>
+            </div>
+          </div>
+        </Transition>
+      </Teleport>
     </div>
 
     <div v-if="seen.settings" v-show="section === 'settings'" :class="{ 'sec-on': section === 'settings' }">
