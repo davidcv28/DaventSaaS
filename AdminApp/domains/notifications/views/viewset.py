@@ -128,6 +128,7 @@ class ChangelogViewSet(viewsets.GenericViewSet):
                                              'image'). Reemplaza la anterior.
         DELETE /api/changelog/<id>/image/  → staff: quita la foto.
         """
+        from StoreApp.domains.stores.services.imaging import normalize_image
         from StoreApp.domains.stores.services.storage import (
             _delete_object,
             object_url,
@@ -147,9 +148,10 @@ class ChangelogViewSet(viewsets.GenericViewSet):
         error       =   validate_image_file(upload)
         if error:
             return Response({'detail': error}, status = status.HTTP_400_BAD_REQUEST)
-        ext         =   upload.name.rsplit('.', 1)[-1].lower() if '.' in upload.name else 'jpg'
+        #Siempre WebP optimizado al mínimo peso posible.
+        body, ext, content_type =   normalize_image(upload)
         old         =   entry.image_key
-        entry.image_key =   put_object(f'changelog/{uuid.uuid4()}.{ext}', upload.read(), upload.content_type)
+        entry.image_key =   put_object(f'changelog/{uuid.uuid4()}.{ext}', body, content_type)
         entry.save(update_fields = ['image_key', 'updated_at'])
         _delete_object(old)
         return Response({'ok': True, 'image_url': object_url(entry.image_key)})
