@@ -80,35 +80,47 @@ const SORTS = [
 </template>
 
 <style scoped>
-.ctoolbar { display: grid; gap: 8px; margin-bottom: 10px; }
+.ctoolbar { display: grid; gap: 8px; margin-bottom: 6px; }
 .ctoolbar-row { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
 .ctoolbar-search {
-  flex: 1 1 200px; display: flex; align-items: center; gap: 8px; height: 38px;
+  flex: 1 1 220px; min-width: 0; display: flex; align-items: center; gap: 8px; height: 38px;
   padding: 0 12px; border: 1px solid var(--line); border-radius: var(--radius-sm);
-  background: var(--card); color: var(--muted);
+  background: var(--surface); color: var(--muted); transition: border-color .15s, background .15s;
 }
-.ctoolbar-search:focus-within { border-color: var(--brand-500); box-shadow: var(--ring); }
+.ctoolbar-search:hover { border-color: var(--line-strong, var(--line)); }
+.ctoolbar-search:focus-within { border-color: var(--brand-500); background: var(--card); box-shadow: var(--ring); }
+.ctoolbar-search svg { flex: none; }
 .ctoolbar-search input { flex: 1; min-width: 0; border: none; background: transparent; padding: 0; font: inherit; font-size: 13.5px; color: var(--ink); }
 .ctoolbar-search input:focus { outline: none; }
+.ctoolbar-search input::placeholder { color: var(--muted); }
 .ctoolbar-search input::-webkit-search-cancel-button { -webkit-appearance: none; }
-.ctoolbar-sel { flex: 0 1 170px; min-height: 38px; padding: 7px 12px; font-size: 13px; }
-.ctoolbar-sort { flex: 0 1 150px; }
-.ctoolbar-toggle {
-  display: inline-grid; place-items: center; width: 38px; height: 38px;
-  border: 1px solid var(--line); border-radius: var(--radius-sm); background: var(--card);
-  color: var(--ink-2); cursor: pointer;
+.ctoolbar-sel {
+  flex: 0 1 170px; min-width: 120px; min-height: 38px; padding: 7px 30px 7px 12px;
+  font-size: 13px; color: var(--ink-2); border-color: var(--line); background-color: var(--surface);
 }
+.ctoolbar-sel:hover { border-color: var(--line-strong, var(--line)); }
+.ctoolbar-sort { flex: 0 1 145px; min-width: 110px; }
+.ctoolbar-toggle {
+  display: inline-grid; place-items: center; flex: none; width: 38px; height: 38px;
+  border: 1px solid var(--line); border-radius: var(--radius-sm); background: var(--surface);
+  color: var(--muted); cursor: pointer; transition: color .15s, border-color .15s, background .15s;
+}
+.ctoolbar-toggle:hover { color: var(--ink-2); }
 .ctoolbar-toggle.on { border-color: var(--brand-500); background: var(--brand-soft); color: var(--brand-ink); }
-.ctoolbar-views { display: inline-flex; border: 1px solid var(--line); border-radius: var(--radius-sm); overflow: hidden; margin-left: auto; }
+.ctoolbar-views {
+  display: inline-flex; flex: none; margin-left: auto;
+  border: 1px solid var(--line); border-radius: var(--radius-sm); overflow: hidden; background: var(--surface);
+}
 .ctoolbar-view {
   display: grid; place-items: center; width: 38px; height: 38px; border: none;
-  background: var(--card); color: var(--muted); cursor: pointer;
+  background: transparent; color: var(--muted); cursor: pointer; transition: color .15s, background .15s;
 }
+.ctoolbar-view:hover { color: var(--ink-2); }
 .ctoolbar-view + .ctoolbar-view { border-left: 1px solid var(--line); }
-.ctoolbar-view.on { background: var(--brand-soft); color: var(--brand-ink); }
+.ctoolbar-view.on { background: var(--card); color: var(--brand-ink); box-shadow: inset 0 0 0 1px var(--brand-500); }
 .ctoolbar-view:focus-visible, .ctoolbar-toggle:focus-visible { outline: 2px solid var(--brand-500); outline-offset: 2px; }
-@media (max-width: 640px) {
-  .ctoolbar-sel, .ctoolbar-sort { flex: 1 1 calc(50% - 4px); }
-  .ctoolbar-views { margin-left: 0; }
+@media (max-width: 720px) {
+  .ctoolbar-search { flex: 1 1 100%; }
+  .ctoolbar-sel, .ctoolbar-sort { flex: 1 1 calc(50% - 4px); min-width: 0; }
 }
 </style>

@@ -128,29 +128,28 @@ function skuOf(p) { return `DAV-${String(p.id).padStart(4, '0')}` }
 </template>
 
 <style scoped>
-.prod-table-wrap { overflow-x: auto; }
-.prod-table { width: 100%; min-width: 540px; border-collapse: collapse; font-size: 13px; }
+.prod-table-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; margin: 0 -2px; padding: 0 2px; }
+.prod-table { width: 100%; min-width: 560px; border-collapse: collapse; font-size: 13px; }
 .prod-table th {
-  padding: 8px 10px; text-align: left; font-size: 10.5px; font-weight: 700;
-  letter-spacing: .05em; text-transform: uppercase; color: var(--muted);
+  padding: 6px 12px 8px; text-align: left; font-size: 10.5px; font-weight: 700;
+  letter-spacing: .06em; text-transform: uppercase; color: var(--muted);
   border-bottom: 1px solid var(--line); white-space: nowrap;
-  background: var(--surface); position: sticky; top: 0; z-index: 1;
 }
-.prod-table td { padding: 6px 10px; border-bottom: 1px solid var(--line-soft); vertical-align: middle; }
+.prod-table td { padding: 9px 12px; border-bottom: 1px solid var(--line-soft); vertical-align: middle; }
 .prod-table tbody tr:last-child td { border-bottom: none; }
 .prod-table tbody tr { transition: background .12s; }
 .prod-table tbody tr:hover { background: var(--surface); }
 .prod-table tbody tr.off { opacity: .55; }
 .prod-table tbody tr.sel { background: var(--brand-soft); }
 .prod-table tbody tr.sel:hover { background: var(--brand-soft); }
-.pt-check { width: 34px; padding-right: 4px; }
-.pt-check input { width: 16px; height: 16px; accent-color: var(--brand-600); cursor: pointer; }
-.prod-table td.pt-prod { min-width: 190px; }
-.pt-actions-col { width: 150px; }
-.pt-prod { display: flex; align-items: center; gap: 10px; min-width: 0; }
+.pt-check { width: 36px; padding-right: 4px; }
+.pt-check input { width: 15px; height: 15px; accent-color: var(--brand-600); cursor: pointer; }
+.prod-table td.pt-prod { min-width: 200px; }
+.pt-actions-col { width: 130px; }
+.pt-prod { display: flex; align-items: center; gap: 11px; min-width: 0; }
 .pt-thumb {
-  position: relative; flex: none; width: 40px; height: 40px; border-radius: 9px;
-  border: 1px solid var(--line); color: var(--muted);
+  position: relative; flex: none; width: 42px; height: 42px; border-radius: 10px;
+  border: 1px solid var(--line); color: var(--muted); background: var(--surface);
   display: grid; place-items: center; overflow: hidden;
 }
 .pt-thumb img { width: 100%; height: 100%; object-fit: cover; display: block; }
@@ -176,7 +175,7 @@ function skuOf(p) { return `DAV-${String(p.id).padStart(4, '0')}` }
 }
 .pt-name { min-width: 0; display: grid; gap: 1px; }
 .pt-name strong { font-size: 13.5px; font-weight: 600; color: var(--ink); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.pt-name small { font-size: 11.5px; color: var(--muted); }
+.pt-name small { font-size: 11.5px; color: var(--muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .pt-org { white-space: normal; }
 .pt-cell { color: var(--ink-2); font-size: 12.5px; white-space: nowrap; }
 /* Categoría/marca en dos líneas: categoría arriba, marca debajo en muted. */
@@ -197,7 +196,12 @@ function skuOf(p) { return `DAV-${String(p.id).padStart(4, '0')}` }
 @media (hover: none) {
   .pt-actions { opacity: 1; }
 }
-@media (max-width: 720px) {
+@media (max-width: 860px) {
   .prod-table th:nth-child(3), .prod-table td.pt-org { display: none; }
+  .prod-table { min-width: 440px; }
+}
+@media (max-width: 520px) {
+  .prod-table td, .prod-table th { padding-left: 8px; padding-right: 8px; }
+  .pt-thumb { width: 36px; height: 36px; }
 }
 </style>
