@@ -37,7 +37,7 @@ const props = defineProps({
 })
 const emit = defineEmits(['navigate', 'ring', 'open-studio', 'update:previewOpen', 'toggle-page'])
 
-const { patterns, styles, status, load } = useDesignCatalog()
+const { patterns, styles, categories, status, load } = useDesignCatalog()
 // Cada elección de diseño/estilo recarga la vista previa (el iframe hace un
 // refresh real, no solo postMessage): contador que DesignLivePreview mira.
 const previewReload = ref(0)
@@ -118,12 +118,23 @@ const tierBadge = (template, own) => {
   const tier = STORE_TEMPLATES[template]?.tier || own || 'base'
   return TIER_BADGE[tier] || TIER_BADGE.base
 }
-const patternSelectOptions = computed(() => patternOptions.value.map((p) => ({
+// Filtro por rubro (DesignCategory): solo acota lo que muestran los
+// selectores — patternOptions/styleOptions quedan completas para que el
+// diseño ya elegido nunca se deseleccione solo por filtrar.
+const categoryFilter = ref('')
+const categoryOptions = computed(() => [
+  { value: '', label: 'Todas las categorías', icon: 'layout-grid' },
+  ...categories.value.map((c) => ({ value: c.slug, label: c.nombre, icon: 'tag' }))
+])
+function onCategoryPick(value) { categoryFilter.value = value }
+const inCategory = (row) => !categoryFilter.value || row.categoria === categoryFilter.value
+
+const patternSelectOptions = computed(() => patternOptions.value.filter(inCategory).map((p) => ({
   value: p.slug,
   label: `${p.nombre} · ${p.categoria_nombre || p.categoria}`,
   icon: 'layout-grid'
 })))
-const styleSelectOptions = computed(() => styleOptions.value.map((s) => ({
+const styleSelectOptions = computed(() => styleOptions.value.filter(inCategory).map((s) => ({
   value: s.slug,
   label: `${s.nombre} · ${s.categoria_nombre || s.categoria}`,
   icon: 'palette',
@@ -422,6 +433,16 @@ onBeforeUnmount(() => {
           </header>
 
           <div class="dmenu-fields">
+            <div class="dmenu-field">
+              <label>Categoría</label>
+              <DesignSelect
+                :model-value="categoryFilter" :options="categoryOptions" icon="tag"
+                aria-label="Categoría" placeholder="Todas las categorías"
+                @change="onCategoryPick"
+              />
+              <p class="dmenu-hint">Acota los diseños y estilos por rubro.</p>
+            </div>
+
             <div class="dmenu-field">
               <label>Diseño</label>
               <DesignSelect

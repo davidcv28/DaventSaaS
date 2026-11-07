@@ -11,7 +11,8 @@ const catalog = reactive({
   patterns: [],
   styles: [],
   iconStyles: [],
-  defaultIconStyle: null
+  defaultIconStyle: null,
+  categories: []
 })
 
 // Presets del Studio: misma forma que la galería espera, armada desde la base.
@@ -55,6 +56,7 @@ export function useDesignCatalog() {
         catalog.styles = data?.styles || []
         catalog.iconStyles = data?.icon_styles || []
         catalog.defaultIconStyle = data?.default_icon_style || null
+        catalog.categories = data?.categories || []
         catalog.status = 'success'
         loaded.value = true
         fillPresets(catalog.styles)
@@ -78,6 +80,7 @@ export function useDesignCatalog() {
     styles: computed(() => catalog.styles),
     patterns: computed(() => catalog.patterns),
     iconStyles: computed(() => catalog.iconStyles),
+    categories: computed(() => catalog.categories),
     defaultIconStyle: computed(() => catalog.defaultIconStyle),
     // Estilos propios de un diseño (FK DesignStyle.pattern): sin diseño
     // devuelve el catálogo completo.
