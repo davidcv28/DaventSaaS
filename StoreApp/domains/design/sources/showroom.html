@@ -400,16 +400,22 @@ html:not([data-ds-surface="landing"]) main{padding-top:var(--head-h)}
 .pdp-crumb{display:flex;flex-wrap:wrap;gap:10px;padding:24px 0;font:600 9px var(--mono);letter-spacing:.16em;text-transform:uppercase;color:var(--muted)}
 .pdp-crumb a:hover{color:var(--ink)}
 .pdp-crumb .sep{opacity:.5}
-.pdp-grid{display:grid;grid-template-columns:minmax(0,7fr) minmax(0,5fr);gap:56px;align-items:start}
+.pdp-grid{display:grid;grid-template-columns:minmax(0,6fr) minmax(0,6fr);gap:64px;align-items:start}
+.pdp-media-wrap{display:grid;grid-template-columns:76px minmax(0,1fr);gap:14px;align-items:start}
+.pdp-thumbs{display:grid;gap:10px;align-content:start}
+.pdp-thumb{width:76px;aspect-ratio:3/4;padding:0;border:1px solid var(--line);background:var(--media);overflow:hidden;transition:border-color var(--tr)}
+.pdp-thumb.is-on{border-color:var(--ink)}
+.pdp-thumb img{width:100%;height:100%;object-fit:cover;display:block}
 .pdp-media{position:relative;margin:0;aspect-ratio:4/5;background:var(--media);overflow:hidden}
 .pdp-media img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
 .pdp-cat{margin:0 0 10px;font:600 9px var(--mono);letter-spacing:.24em;text-transform:uppercase;color:var(--muted)}
 .pdp-cat:empty{display:none}
-.pdp-title{margin:0;font:800 clamp(24px,3vw,34px)/1.08 var(--disp);letter-spacing:.1em;text-transform:uppercase}
-.pdp-meta{margin:12px 0 0;font:500 10px var(--mono);letter-spacing:.14em;text-transform:uppercase;color:var(--muted)}
+.pdp-title{margin:0;font:700 15px/1.5 var(--sans);letter-spacing:.18em;text-transform:uppercase}
+.pdp-meta{display:flex;flex-wrap:wrap;gap:8px 26px;margin:12px 0 0;font:500 10px var(--mono);letter-spacing:.14em;text-transform:uppercase;color:var(--muted)}
 .pdp-meta:empty{display:none}
+.pdp-meta b{color:var(--ink-2);font-weight:500}
 .pdp-price{display:flex;align-items:center;gap:12px;margin:22px 0 0}
-.pdp-price b{font:800 24px/1 var(--disp);letter-spacing:.02em}
+.pdp-price b{font:800 20px/1 var(--disp);letter-spacing:.02em}
 .pdp-off{display:inline-block;padding:4px 8px;background:var(--ink);color:var(--bg);font:700 9px/1 var(--sans);letter-spacing:.12em;text-transform:uppercase}
 .pdp-off:empty{display:none}
 .pdp-off:not(:empty)::after{content:" OFF"}
@@ -420,18 +426,19 @@ html:not([data-ds-surface="landing"]) main{padding-top:var(--head-h)}
 .pdp-save:not(:empty)::before{content:"Ahorrás "}
 .pdp-desc{margin:20px 0 0;font-size:13.5px;color:var(--ink-2);max-width:56ch}
 .pdp-desc:empty{display:none}
-.pdp-ctas{display:grid;grid-template-columns:1fr;gap:10px;margin-top:28px}
+.pdp-ctas{display:grid;grid-template-columns:minmax(0,1fr);gap:10px;margin-top:28px}
 .pdp-ctas .btn{min-height:52px}
-.pdp-brand:not(:empty){margin-left:10px;padding-left:10px;border-left:1px solid var(--line)}
 .pdp-social{display:flex;align-items:center;gap:14px;margin-top:22px}
 .pdp-social span{font:600 9px var(--mono);letter-spacing:.16em;text-transform:uppercase;color:var(--muted)}
 .pdp-social a{display:grid;place-items:center;width:34px;height:34px;color:var(--ink-2);transition:color var(--tr)}
 .pdp-social a:hover{color:var(--ink)}
 .pdp-social svg{width:15px;height:15px}
-.pdp-specs{width:100%;border-collapse:collapse;margin-top:32px;font-size:13px}
+.pdp-specs{width:100%;border-collapse:collapse;margin-top:28px;font-size:13px}
 .pdp-specs:has(tbody:empty){display:none}
-.ds-pdp-spec th,.ds-pdp-spec td{padding:12px 0;border-bottom:1px solid var(--line);text-align:left;vertical-align:top;font-weight:400}
-.ds-pdp-spec th{width:38%;font:600 9px/1.8 var(--mono);letter-spacing:.16em;text-transform:uppercase;color:var(--muted)}
+.ds-pdp-spec th,.ds-pdp-spec td{padding:12px 0;text-align:left;vertical-align:top;font-weight:400}
+.ds-pdp-spec + .ds-pdp-spec th,.ds-pdp-spec + .ds-pdp-spec td{border-top:1px solid var(--line)}
+.ds-pdp-spec th{width:34%;font:600 9px/1.9 var(--mono);letter-spacing:.16em;text-transform:uppercase;color:var(--muted)}
+.ds-pdp-spec td{color:var(--ink-2)}
 .pdp-rev{margin-top:64px;border-top:1px solid var(--line);padding-top:40px}
 .pdp-rev:not(:has(.ds-reviews)){display:none}
 .pdp-rel:not(:has(.ds-product)){display:none}
@@ -480,6 +487,9 @@ footer.foot{border-top:1px solid var(--line);margin-top:96px}
   .hero{min-height:clamp(420px,100vw,620px)}
   .hero-in{padding-bottom:72px}
   .about,.pdp-grid,.contact,.svc-grid{grid-template-columns:1fr;gap:40px}
+  .pdp-media-wrap{grid-template-columns:1fr}
+  .pdp-thumbs{grid-auto-flow:column;grid-auto-columns:64px;overflow-x:auto;order:-1}
+  .pdp-thumb{width:64px}
   .svc-side{position:static}
   .guars{grid-template-columns:repeat(2,minmax(0,1fr))}
   .looks{grid-template-columns:repeat(2,minmax(0,1fr))}
@@ -781,14 +791,19 @@ footer.foot{border-top:1px solid var(--line);margin-top:96px}
     <span aria-current="page">{{product_name}}</span>
   </nav>
   <div class="pdp-grid">
-    <figure class="pdp-media">
-      <img src="{{product_image}}" alt="{{product_name}}" loading="eager">
-      {{product_campaign_label}}
-    </figure>
+    <div class="pdp-media-wrap">
+      <div class="pdp-thumbs" data-hide-blank="img:not([src=''])">
+        <button class="pdp-thumb is-on" type="button" aria-label="Foto 1"><img src="{{product_image}}" alt="" loading="lazy"></button>
+      </div>
+      <figure class="pdp-media">
+        <img src="{{product_image}}" alt="{{product_name}}" loading="eager" data-pdp-img>
+        {{product_campaign_label}}
+      </figure>
+    </div>
     <div>
       <p class="pdp-cat">{{product_category}}</p>
       <h1 class="pdp-title">{{product_name}}</h1>
-      <p class="pdp-meta">REF: {{product_ref}} <span class="pdp-brand">{{product_brand}}</span></p>
+      <p class="pdp-meta"><span>REFE: <b>{{product_ref}}</b></span><span data-hide-blank="b">MARCA: <b>{{product_brand}}</b></span></p>
       <div class="pdp-price"><b>{{product_price}}</b><span class="pdp-off">{{product_offer_pct}}</span><s>{{product_old_price}}</s></div>
       <span class="pdp-save">{{product_save}}</span>
       <p class="pdp-desc">{{product_description}}</p>
@@ -948,13 +963,29 @@ footer.foot{border-top:1px solid var(--line);margin-top:96px}
     if (window.innerWidth > 960) setMenu(false);
   });
 
+  /* Ficha: el flag de oferta llega como "-15%" — la etiqueta del diseño
+     muestra el porcentaje limpio (15% OFF). */
+  var off = document.querySelector('.pdp-off');
+  if (off) off.textContent = (off.textContent || '').replace(/^[\u2212\-–—]\s*/, '');
+
+  /* Miniaturas de la ficha (una sola foto real hoy; queda el riel para
+     cuando haya más imágenes). */
+  document.addEventListener('click', function(e){
+    var t = e.target && e.target.closest ? e.target.closest('.pdp-thumb') : null;
+    if (!t) return;
+    [].forEach.call(document.querySelectorAll('.pdp-thumb'), function(b){ b.classList.remove('is-on'); });
+    t.classList.add('is-on');
+  });
+
   /* Bloques con valores vacíos (años sin cargar, etc.): no pintar la
      cáscara. Opt-in del diseño con data-hide-blank="<selector>". */
   ;[].forEach.call(document.querySelectorAll('[data-hide-blank]'), function(el){
     var sel = el.getAttribute('data-hide-blank');
     var node = sel ? el.querySelector(sel) : null;
-    /* Un enlace con destino propio cuenta aunque no tenga texto (iconos). */
-    el.hidden = !node || (!((node.textContent || '').trim()) && !(node.getAttribute && node.getAttribute('href')));
+    /* Un enlace con destino o una imagen con src propio cuentan aunque no
+       tengan texto (iconos, miniaturas). */
+    el.hidden = !node || (!((node.textContent || '').trim())
+      && !(node.getAttribute && (node.getAttribute('href') || node.getAttribute('src'))));
   });
 })();
 </script>
