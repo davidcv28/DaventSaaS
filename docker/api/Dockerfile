@@ -67,7 +67,11 @@ WORKDIR /app
 COPY requirements.txt .
 COPY --from=builder /wheels /wheels
 RUN pip install --no-index --find-links=/wheels -r requirements.txt \
-    && rm -rf /wheels
+    && rm -rf /wheels \
+    # setuptools viene en la imagen base (ensurepip) y arrastra vendors
+    # vulnerables (jaraco.context, wheel) que trivy image-scan flaggea.
+    # En runtime no se usa pkg_resources ni se buildea nada: se elimina.
+    && pip uninstall -y setuptools
 # --chown en el COPY en vez de `chown -R /app` después: el chown recursivo
 # generaba una capa extra con una copia completa de la app.
 COPY --chown=app:app . .
