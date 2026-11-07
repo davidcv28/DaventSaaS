@@ -35,6 +35,7 @@ const StorePlansView = () => import('../views/StorePlansView.vue')
 const StoreProductView = () => import('../views/StoreProductView.vue')
 const StoreFlyerView = () => import('../views/StoreFlyerView.vue')
 const DaventFlyerView = () => import('../views/DaventFlyerView.vue')
+const RobotQaView = () => import('../views/RobotQaView.vue')
 
 // Páginas de la web pública del cliente. En el dominio de la plataforma
 // cuelgan de /<slug>; en un subdominio de tienda (<slug>.<dominio>) son la
@@ -208,6 +209,13 @@ const routes = [
     name: 'davent-flyer',
     component: DaventFlyerView,
     meta: { requiresAuth: true, requiresStaff: true, title: 'Folleto promo' }
+  },
+  // QA del guía robot + burbuja de chat (pública, sin auth).
+  {
+    path: '/robot-qa',
+    name: 'robot-qa',
+    component: RobotQaView,
+    meta: { title: 'Robot QA' }
   },
   // Tienda pública del cliente: link limpio /<slug>; /tienda/<slug> queda como alias.
   // El layout resuelve la tienda una vez; Inicio y Catálogo son páginas hijas.
