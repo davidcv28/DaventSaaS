@@ -59,7 +59,8 @@ export const STUDIO_ENUMS = {
   surface:    ['flat', 'glass', 'elevated', 'outlined'],
   typeScale:  ['compact', 'balanced', 'editorial'],
   btnShape:   ['square', 'rounded', 'pill'],
-  btnStyle:   ['solid', 'outline', 'ghost', 'gradient'],
+  btnStyle:   ['solid', 'outline', 'ghost', 'gradient', 'transparent'],
+  btnBorder:  ['none', 'solid', 'dashed', 'dotted'],
   btnSize:    ['sm', 'md', 'lg'],
   bgType:     ['solid', 'gradient', 'mesh', 'pattern', 'image'],
   overlay:    ['none', 'soft', 'strong'],
@@ -69,7 +70,35 @@ export const STUDIO_ENUMS = {
   nav:        ['top', 'bottom', 'drawer'],
   cardStyle:  ['standard', 'compact', 'overlay'],
   heroHeight: ['compact', 'tall'],
-  imgTreat:   ['none', 'soft', 'grayscale', 'duotone']
+  imgTreat:   ['none', 'soft', 'grayscale', 'duotone'],
+  imgRatio:   ['square', 'portrait', 'tall', 'wide'],
+  imgFit:     ['cover', 'contain'],
+  imgRadius:  ['none', 'sm', 'md', 'lg']
+}
+
+// Superficies con color propio (sección `surfaces`): las claves son un
+// catálogo cerrado — la web las consume por data-st-surface-<clave>.
+export const STUDIO_SURFACE_KEYS = ['card', 'nav', 'footer', 'hero']
+
+// Roles tipográficos del contrato v2/v4 (typography.roles): espejo de
+// TYPOGRAPHY_ROLES del backend y de ROLE_KEYS del previewBridge.
+export const STUDIO_ROLE_KEYS = [
+  'display', 'h1', 'h2', 'h3', 'body', 'lead', 'eyebrow',
+  'label', 'quote', 'price', 'nav', 'button', 'footer'
+]
+const ROLE_SIZE_IDS = ['xs', 'sm', 'md', 'lg', 'xl', '2xl', '3xl', 'display']
+const ROLE_TRACKING_IDS = ['tighter', 'tight', 'normal', 'wide', 'wider']
+const ROLE_LEADING_IDS = ['tight', 'snug', 'normal', 'relaxed']
+const ROLE_CASE_IDS = ['none', 'upper']
+
+// Claves/enums del layout v2 (espejo de _SECTION_SPECS.layout del backend).
+const LAYOUT_ENUMS = {
+  density: ['compact', 'comfortable', 'spacious'],
+  grid: ['12', 'asym', 'split', 'bento', 'editorial'],
+  hero: ['centered', 'split', 'cinema', 'logo', 'editorial'],
+  gutter: ['sm', 'md', 'lg'],
+  measure: ['narrow', 'normal', 'wide'],
+  radiusScale: ['none', 'sm', 'md', 'lg', 'xl']
 }
 
 // Defaults = look actual (tema claro, acento índigo, plantilla raiz):
@@ -112,7 +141,9 @@ export const SITE_THEME_DEFAULTS = deepFreeze({
   buttons: {
     shape: 'pill',
     style: 'solid',
-    size: 'md'
+    size: 'md',
+    // null = el borde nativo de cada estilo de botón (sin forzar).
+    borderStyle: null
   },
   background: {
     type: 'solid',
@@ -135,8 +166,18 @@ export const SITE_THEME_DEFAULTS = deepFreeze({
     extras: false
   },
   images: {
-    treatment: 'none'
-  }
+    treatment: 'none',
+    // Marco de las fotos de producto (.tpc-media): null = hereda el look
+    // de la plantilla; un valor fija esa propiedad sola.
+    ratio: null,
+    fit: null,
+    bg: null,
+    radius: null,
+    border: null
+  },
+  // Colores propios de superficies (tarjetas, barra, pie, portada): mapa
+  // parcial {card?, nav?, footer?, hero?} — sin clave = look de la plantilla.
+  surfaces: {}
 })
 
 // Valores CSS concretos de cada enum (una sola fuente de verdad: los
@@ -167,6 +208,10 @@ const BTN_SIZE = {
 }
 const OVERLAY_CSS = { none: 'transparent', soft: 'rgba(9, 12, 24, .32)', strong: 'rgba(9, 12, 24, .6)' }
 const MOTION_MS = { subtle: '160ms', medium: '240ms', bold: '360ms' }
+// Marco de fotos de producto (images.*): proporción, encaje, fondo detrás
+// de la foto y radio/borde propios del marco.
+const IMG_ASPECT = { square: '1 / 1', portrait: '4 / 5', tall: '3 / 4', wide: '16 / 10' }
+const IMG_RADIUS_PX = { none: '0', sm: '8px', md: '14px', lg: '20px' }
 
 // ---------------------------------------------------------------------------
 // Saneo de valores
@@ -189,6 +234,46 @@ function pickEnum(list, value, fallback) {
 
 function pickCssText(value, fallback, max = 200) {
   return typeof value === 'string' && value.trim() && value.length <= max ? value.trim() : fallback
+}
+
+// Secciones v4 que resolveSiteTheme no normaliza campo a campo pero que el
+// contrato sí transporta: se copian saneadas (enums/forma por campo) para
+// que el tema resuelto —y el mensaje studio:update que lo lleva al iframe—
+// no las pierda. Los consumidores (roleVars/layoutVars del previewBridge y
+// la hoja pública) vuelven a validar al pintar.
+function cleanThemeRoles(raw) {
+  if (!raw || typeof raw !== 'object') return null
+  const out = {}
+  for (const [role, spec] of Object.entries(raw).slice(0, STUDIO_ROLE_KEYS.length)) {
+    if (!STUDIO_ROLE_KEYS.includes(role) || !spec || typeof spec !== 'object') continue
+    const clean = {}
+    if (typeof spec.font === 'string' && spec.font.trim()) clean.font = spec.font.trim().slice(0, 120)
+    if (ROLE_SIZE_IDS.includes(spec.size)) clean.size = spec.size
+    const weight = Number(spec.weight)
+    if (Number.isFinite(weight)) clean.weight = Math.min(900, Math.max(100, Math.round(weight)))
+    if (ROLE_TRACKING_IDS.includes(spec.tracking)) clean.tracking = spec.tracking
+    if (ROLE_LEADING_IDS.includes(spec.leading)) clean.leading = spec.leading
+    if (ROLE_CASE_IDS.includes(spec.case)) clean.case = spec.case
+    if (Object.keys(clean).length) out[role] = clean
+  }
+  return Object.keys(out).length ? out : null
+}
+
+function cleanThemeLayout(raw) {
+  if (!raw || typeof raw !== 'object') return null
+  const out = {}
+  for (const [key, allowed] of Object.entries(LAYOUT_ENUMS)) {
+    if (allowed.includes(raw[key])) out[key] = raw[key]
+  }
+  return Object.keys(out).length ? out : null
+}
+
+function cleanThemeSkin(raw) {
+  if (!raw || typeof raw !== 'object') return null
+  const id = typeof raw.id === 'string' ? raw.id.trim().slice(0, 60) : ''
+  const family = typeof raw.family === 'string' ? raw.family.trim().slice(0, 40) : ''
+  if (!id && !family) return null
+  return { ...(id ? { id } : {}), ...(family ? { family } : {}) }
 }
 
 // ---------------------------------------------------------------------------
@@ -215,6 +300,10 @@ export function resolveSiteTheme(partial = {}) {
     if (/^[a-z][a-z0-9-]{0,31}$/.test(key)) decorations[key] = dec[key] === true
   }
   const im = p.images && typeof p.images === 'object' ? p.images : {}
+  const sur = p.surfaces && typeof p.surfaces === 'object' ? p.surfaces : {}
+  const roles = cleanThemeRoles(typ.roles)
+  const layout = cleanThemeLayout(p.layout)
+  const skin = cleanThemeSkin(p.skin)
 
   const palette = {}
   for (const key of Object.keys(d.palette)) {
@@ -241,12 +330,15 @@ export function resolveSiteTheme(partial = {}) {
       body: pickCssText(typ.body, d.typography.body, 120),
       scale: pickEnum(STUDIO_ENUMS.typeScale, typ.scale, d.typography.scale),
       weightHeading: Number.isFinite(weight) ? Math.min(900, Math.max(100, Math.round(weight))) : d.typography.weightHeading,
-      letterSpacing: pickCssText(typ.letterSpacing, d.typography.letterSpacing, 16)
+      letterSpacing: pickCssText(typ.letterSpacing, d.typography.letterSpacing, 16),
+      // Roles por área (v4): solo viajan los roles declarados y válidos.
+      ...(roles ? { roles } : {})
     },
     buttons: {
       shape: pickEnum(STUDIO_ENUMS.btnShape, btn.shape, d.buttons.shape),
       style: pickEnum(STUDIO_ENUMS.btnStyle, btn.style, d.buttons.style),
-      size: pickEnum(STUDIO_ENUMS.btnSize, btn.size, d.buttons.size)
+      size: pickEnum(STUDIO_ENUMS.btnSize, btn.size, d.buttons.size),
+      borderStyle: pickEnum(STUDIO_ENUMS.btnBorder, btn.borderStyle, null)
     },
     background: {
       type: pickEnum(STUDIO_ENUMS.bgType, bg.type, d.background.type),
@@ -267,8 +359,22 @@ export function resolveSiteTheme(partial = {}) {
     },
     decorations,
     images: {
-      treatment: pickEnum(STUDIO_ENUMS.imgTreat, im.treatment, d.images.treatment)
-    }
+      treatment: pickEnum(STUDIO_ENUMS.imgTreat, im.treatment, d.images.treatment),
+      ratio: pickEnum(STUDIO_ENUMS.imgRatio, im.ratio, null),
+      fit: pickEnum(STUDIO_ENUMS.imgFit, im.fit, null),
+      bg: normalizeHex(im.bg),
+      radius: pickEnum(STUDIO_ENUMS.imgRadius, im.radius, null),
+      border: pickEnum(STUDIO_ENUMS.borderW, im.border, null)
+    },
+    // Colores propios de superficies: solo las claves declaradas y válidas
+    // (hex); una clave ausente conserva el look de la plantilla.
+    surfaces: Object.fromEntries(
+      STUDIO_SURFACE_KEYS
+        .map((key) => [key, normalizeHex(sur[key])])
+        .filter(([, hex]) => hex)
+    ),
+    ...(layout ? { layout } : {}),
+    ...(skin ? { skin } : {})
   }
   // Juego de colores del estilo: solo viaja si el tema lo trae (parcial,
   // sembrado desde el preset elegido). Las claves ausentes se completan con
@@ -559,7 +665,34 @@ export function themeToCssVars(theme, resolveFont, mode = 'light') {
     '--st-style-container-bg': style.containers.bg,
     '--st-style-container-surface': style.containers.surface,
     '--st-style-container-border': style.containers.border,
-    '--st-style-container-on-surface': style.containers.onSurface
+    '--st-style-container-on-surface': style.containers.onSurface,
+    // Botones: estilo de borde (dashed/dotted/solid/none) — viaja como
+    // valor de border-style; el atributo data-st-btn-border lo gatea.
+    ...(t.buttons.borderStyle ? { '--st-btn-border': t.buttons.borderStyle } : {}),
+    // Superficies con color propio: el hex y su tinta derivada (AA) para
+    // que el texto dentro del contenedor se repinte solo.
+    ...(t.surfaces.card ? {
+      '--st-surface-card': t.surfaces.card,
+      '--st-card-ink': textOn(t.surfaces.card)
+    } : {}),
+    ...(t.surfaces.nav ? {
+      '--st-surface-nav': t.surfaces.nav,
+      '--st-nav-ink': textOn(t.surfaces.nav)
+    } : {}),
+    ...(t.surfaces.footer ? {
+      '--st-surface-footer': t.surfaces.footer,
+      '--st-footer-ink': textOn(t.surfaces.footer)
+    } : {}),
+    ...(t.surfaces.hero ? {
+      '--st-surface-hero': t.surfaces.hero,
+      '--st-hero-ink': textOn(t.surfaces.hero)
+    } : {}),
+    // Marco de fotos de producto: solo las propiedades fijadas.
+    ...(t.images.ratio ? { '--st-img-aspect': IMG_ASPECT[t.images.ratio] } : {}),
+    ...(t.images.fit ? { '--st-img-fit': t.images.fit } : {}),
+    ...(t.images.bg ? { '--st-img-bg': t.images.bg } : {}),
+    ...(t.images.radius ? { '--st-img-radius': IMG_RADIUS_PX[t.images.radius] } : {}),
+    ...(t.images.border ? { '--st-img-border-w': BORDER_PX[t.images.border] } : {})
   }
 }
 
@@ -579,7 +712,10 @@ const THEME_SECTION_KEYS = {
   motion: Object.keys(SITE_THEME_DEFAULTS.motion),
   mobile: Object.keys(SITE_THEME_DEFAULTS.mobile),
   decorations: Object.keys(SITE_THEME_DEFAULTS.decorations),
-  images: Object.keys(SITE_THEME_DEFAULTS.images)
+  images: Object.keys(SITE_THEME_DEFAULTS.images),
+  // surfaces es un mapa parcial de claves propias (no tiene defaults por
+  // clave): el set cerrado vive en STUDIO_SURFACE_KEYS.
+  surfaces: STUDIO_SURFACE_KEYS
 }
 
 export function themeExplicitKeys(partial) {
@@ -600,6 +736,14 @@ export function themeExplicitKeys(partial) {
   if (partial.styleColors && typeof partial.styleColors === 'object'
     && Object.keys(partial.styleColors).length) out.add('styleColors')
   if (partial.style && typeof partial.style === 'object' && partial.style.id) out.add('style.id')
+  // Secciones v4 que no son claves de campo del contrato base: roles por
+  // área, layout y piel viajan como bloque.
+  if (partial.typography?.roles && typeof partial.typography.roles === 'object'
+    && Object.keys(partial.typography.roles).length) out.add('typography.roles')
+  if (partial.layout && typeof partial.layout === 'object'
+    && Object.keys(partial.layout).length) out.add('layout')
+  if (partial.skin && typeof partial.skin === 'object'
+    && (partial.skin.id || partial.skin.family)) out.add('skin')
   return out
 }
 
@@ -653,7 +797,21 @@ export const STUDIO_VAR_KEYS = {
   '--st-style-container-bg': ['styleColors'],
   '--st-style-container-surface': ['styleColors'],
   '--st-style-container-border': ['styleColors'],
-  '--st-style-container-on-surface': ['styleColors']
+  '--st-style-container-on-surface': ['styleColors'],
+  '--st-btn-border': ['buttons.borderStyle'],
+  '--st-surface-card': ['surfaces.card'],
+  '--st-card-ink': ['surfaces.card'],
+  '--st-surface-nav': ['surfaces.nav'],
+  '--st-nav-ink': ['surfaces.nav'],
+  '--st-surface-footer': ['surfaces.footer'],
+  '--st-footer-ink': ['surfaces.footer'],
+  '--st-surface-hero': ['surfaces.hero'],
+  '--st-hero-ink': ['surfaces.hero'],
+  '--st-img-aspect': ['images.ratio'],
+  '--st-img-fit': ['images.fit'],
+  '--st-img-bg': ['images.bg'],
+  '--st-img-radius': ['images.radius'],
+  '--st-img-border-w': ['images.border']
 }
 
 // Filtra el set completo de themeToCssVars a las variables cuyo campo está
@@ -704,7 +862,22 @@ export function themeDataAttrs(theme, explicit = null, mode = 'light') {
     'data-st-card': on('mobile.cardStyle') ? t.mobile.cardStyle : null,
     'data-st-hero': on('mobile.heroHeight') ? t.mobile.heroHeight : null,
     'data-st-sticky-cta': on('mobile.stickyCta') && t.mobile.stickyCta ? 'true' : null,
-    'data-st-img': on('images.treatment') && t.images.treatment !== 'none' ? t.images.treatment : null
+    'data-st-img': on('images.treatment') && t.images.treatment !== 'none' ? t.images.treatment : null,
+    // Marco de fotos de producto: un atributo por propiedad fijada, así una
+    // elección parcial no pisa el look de la plantilla en las demás.
+    'data-st-img-ratio': on('images.ratio') && t.images.ratio ? t.images.ratio : null,
+    'data-st-img-fit': on('images.fit') && t.images.fit ? t.images.fit : null,
+    'data-st-img-bg': on('images.bg') && t.images.bg ? '' : null,
+    'data-st-img-radius': on('images.radius') && t.images.radius ? t.images.radius : null,
+    'data-st-img-border': on('images.border') && t.images.border ? t.images.border : null,
+    // Botones: estilo de borde (dashed/dotted/solid/none) — el valor viaja
+    // también por --st-btn-border para border-style.
+    'data-st-btn-border': on('buttons.borderStyle') && t.buttons.borderStyle ? t.buttons.borderStyle : null,
+    // Superficies con color propio: marcador por superficie fijada.
+    'data-st-surface-card': on('surfaces.card') && t.surfaces.card ? '' : null,
+    'data-st-surface-nav': on('surfaces.nav') && t.surfaces.nav ? '' : null,
+    'data-st-surface-footer': on('surfaces.footer') && t.surfaces.footer ? '' : null,
+    'data-st-surface-hero': on('surfaces.hero') && t.surfaces.hero ? '' : null
   }
 }
 

@@ -1727,6 +1727,55 @@ class SiteThemeTests(TestCase):
         self.assertEqual(theme['background']['type'], 'gradient')
         self.assertEqual(theme['mobile'], {'nav': 'drawer', 'gridCols': 2, 'cardStyle': 'overlay', 'stickyCta': True, 'heroHeight': 'tall'})
 
+    def test_studio_editors_sections_saved_with_advanced(self):
+        #Pestaña Studio de Diseño: colores de superficies, marco de fotos
+        #de producto y borde/estilo de botón — todo el contrato nuevo.
+        client      =   self._client(has_design_advanced = True)
+        response    =   self._patch(client, {'site_theme': {
+            'surfaces'  :   {'card': '#FFF', 'nav': '#101820', 'footer': '#445566'},
+            'images'    :   {'ratio': 'portrait', 'fit': 'contain', 'bg': '#a1b2c3', 'radius': 'md', 'border': 'bold'},
+            'buttons'   :   {'style': 'transparent', 'borderStyle': 'dashed'},
+        }})
+        self.assertEqual(response.status_code, 200)
+        theme       =   response.data['customization']['site_theme']
+        self.assertEqual(theme['surfaces'], {'card': '#ffffff', 'nav': '#101820', 'footer': '#445566'})
+        self.assertEqual(theme['images'], {'ratio': 'portrait', 'fit': 'contain', 'bg': '#a1b2c3', 'radius': 'md', 'border': 'bold'})
+        self.assertEqual(theme['buttons'], {'style': 'transparent', 'borderStyle': 'dashed'})
+        #La web pública expone el tema efectivo completo con Premium.
+        public      =   self._public_theme('tienda-duenio')
+        self.assertEqual(public['surfaces']['card'], '#ffffff')
+        self.assertEqual(public['images']['ratio'], 'portrait')
+        self.assertEqual(public['buttons']['borderStyle'], 'dashed')
+
+    def test_studio_editors_invalid_values_rejected(self):
+        client      =   self._client(has_design_advanced = True)
+        for section, key, bad in (
+            ('surfaces', 'card', 'rgb(1,2,3)'),
+            ('surfaces', 'nav', '#12345'),
+            ('images', 'ratio', 'panoramica'),
+            ('images', 'fit', 'stretch'),
+            ('images', 'bg', 'url(https://evil.com/a.png)'),
+            ('images', 'radius', 'enorme'),
+            ('images', 'border', 'dashed'),   # border del marco = thin|bold|none
+            ('buttons', 'borderStyle', 'wavy'),
+            ('buttons', 'style', 'holograma'),
+        ):
+            response    =   self._patch(client, {'site_theme': {section: {key: bad}}})
+            self.assertEqual(response.status_code, 400, (section, key, bad))
+
+    def test_studio_editors_gated_to_advanced(self):
+        #Estándar/Básico: las secciones de los editores se descartan en
+        #silencio (como el resto del tema premium) y no llegan a la web.
+        client      =   self._client(has_design_plus = True)
+        response    =   self._patch(client, {'site_theme': {
+            'surfaces'  :   {'card': '#112233'},
+            'images'    :   {'ratio': 'wide'},
+            'buttons'   :   {'borderStyle': 'dotted'},
+        }})
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.data['customization']['site_theme'], {})
+        self.assertEqual(self._public_theme('tienda-duenio'), {})
+
     def test_store_without_theme_looks_identical(self):
         #Una tienda sin site_theme se ve idéntica a hoy: {} guardado y
         #{} en el payload público (el frontend resuelve los defaults).

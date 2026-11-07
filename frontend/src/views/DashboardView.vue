@@ -80,6 +80,7 @@ import TourGuide from '../components/TourGuide.vue'
 import TipHint from '../components/TipHint.vue'
 import { useStudioDesign, DESIGN_FIELDS } from '../composables/useStudioDesign.js'
 import DesignStylesTab from '../components/design/DesignStylesTab.vue'
+import DesignStudioTab from '../components/design/DesignStudioTab.vue'
 import { TEMPLATE_DEFS, TEMPLATE_LABELS, templateDef, templatePages, patternsForSiteTemplates, patternSurfaces, normalizeLayoutConfig } from '../templates/index.js'
 import { designApi } from '../api/design.api.js'
 
@@ -1742,8 +1743,17 @@ const designForm = reactive({ ...CUSTOMIZATION_DEFAULTS, services: [], stats: []
 const designTouched = reactive({})
 const designTab = ref('look')
 const designPreviewOpen = ref(false)
+// Sub-pestañas de la sección Diseño: 'look' = selectores de diseño/estilo
+// (DesignStylesTab); 'studio' = editores finos del site_theme (Premium).
+const designSubTab = ref('look')
 const canCustomize = computed(() => Boolean(plan.value?.benefits?.has_customization))
 const canDesignAdvanced = computed(() => Boolean(plan.value?.benefits?.has_design_advanced))
+// Si el plan baja mientras el usuario está en Studio, vuelve a Diseño.
+watch(canDesignAdvanced, (ok) => { if (!ok && designSubTab.value === 'studio') designSubTab.value = 'look' })
+function pickDesignSubTab(id) {
+  if (id === 'studio' && !canDesignAdvanced.value) { openLocked('design_studio'); return }
+  designSubTab.value = id
+}
 
 // "Asistencia con IA": mismo modal con dos contextos ('design' | 'business').
 // Candado = has_ai_design (mismo gate que el diseño asistido) + opt-out del
@@ -4901,6 +4911,17 @@ async function changePassword() {
       </div>
       <SectionTabs :tabs="tabGroups.web" active="design" @select="section = $event" />
 
+      <div class="design-subtabs" role="tablist" aria-label="Editor de diseño">
+        <button
+          type="button" role="tab" class="chip-btn" :class="{ strong: designSubTab === 'look' }"
+          :aria-selected="designSubTab === 'look'" @click="pickDesignSubTab('look')"
+        ><AppIcon name="palette" :size="14" /> Diseño</button>
+        <button
+          type="button" role="tab" class="chip-btn" :class="{ strong: designSubTab === 'studio' }"
+          :aria-selected="designSubTab === 'studio'" @click="pickDesignSubTab('studio')"
+        ><AppIcon :name="canDesignAdvanced ? 'sliders' : 'lock'" :size="14" /> Studio</button>
+      </div>
+
       <div v-if="aiAssistEnabled" class="next-card assist-card">
         <span class="next-icon"><AppIcon name="sparkles" :size="22" /></span>
         <div><strong>Asistencia con IA</strong><small>Respondé unas preguntas y te armamos el diseño de tu web.</small></div>
@@ -4910,6 +4931,7 @@ async function changePassword() {
       </div>
 
       <DesignStylesTab
+        v-show="designSubTab === 'look'"
         :form="designForm" :benefits="plan?.benefits || {}"
         :shop-name="store.customization?.display_name || business" :can-studio="canDesignAdvanced"
         :site-templates="designSiteTemplates" v-model:preview-open="designPreviewOpen"
@@ -4924,6 +4946,20 @@ async function changePassword() {
           <p v-if="designDirtyAll" class="hint design-dirty-hint"><AppIcon name="pencil" :size="13" /> Los cambios ya se ven en la vista previa, pero todavía no están publicados: tocá «Guardar cambios».</p>
         </template>
       </DesignStylesTab>
+
+      <DesignStudioTab
+        v-if="designSubTab === 'studio'"
+        :form="designForm" :benefits="plan?.benefits || {}"
+        :customization="store.customization || {}"
+      >
+        <template #actions>
+          <div class="design-actions">
+            <AppButton :loading="designBusy" :disabled="!designDirtyAll" @click="saveDesign()"><AppIcon name="check" :size="16" /> Guardar cambios</AppButton>
+            <button type="button" class="btn secondary btn-auto" @click="openStore"><AppIcon name="external-link" :size="16" /> Ver mi web</button>
+          </div>
+          <p v-if="designDirtyAll" class="hint design-dirty-hint"><AppIcon name="pencil" :size="13" /> Los cambios ya se ven en la vista previa, pero todavía no están publicados: tocá «Guardar cambios».</p>
+        </template>
+      </DesignStudioTab>
     </div>
     <!-- ================= MI EMPRESA (marketing de la portada) ================= -->
     <div v-if="seen.company" v-show="section === 'company'" :class="{ 'sec-on': section === 'company' }">

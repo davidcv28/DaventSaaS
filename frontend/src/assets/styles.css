@@ -1346,6 +1346,11 @@ body{ transition: background-color .2s ease, color .2s ease; }
 .design-dirty-hint{ display: flex; align-items: flex-start; gap: 7px; }
 .design-dirty-hint .icon{ flex: none; margin-top: 2px; color: var(--warn-ink, #92400e); }
 @media (max-width: 560px){ .design-actions{ flex-direction: column; } }
+/* Sub-pestañas de la sección Diseño: Diseño (selectores) | Studio (editores
+   finos, Premium). Mismo lenguaje chip que el resto del dashboard. */
+.design-subtabs{ display: flex; gap: 8px; flex-wrap: wrap; margin: 4px 0 14px; }
+.design-subtabs .chip-btn{ min-height: 38px; padding: 6px 16px; font-size: 13px; }
+.design-subtabs .chip-btn strong, .design-subtabs .chip-btn{ gap: 7px; }
 /* Puntos de acento del Diseño web: cada .swatch pinta su color y escribe
    designForm.accent directo (1 tap; el estado se marca con check + ring). */
 .swatch[aria-disabled='true']{ opacity: .55; cursor: default; }

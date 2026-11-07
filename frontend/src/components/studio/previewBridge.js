@@ -9,7 +9,8 @@
 //    claro/oscuro del visor y carga de la fuente elegida.
 import {
   themeToCssVars, themeDataAttrs, themeExplicitKeys, pickThemeVars,
-  resolveSiteTheme, resolveStyleColors, hexToRgb, rgbToHex, textOn
+  resolveSiteTheme, resolveStyleColors, hexToRgb, rgbToHex, textOn,
+  STUDIO_ROLE_KEYS
 } from '../../studio/contract.js'
 import { STORE_FONTS, ensureStoreFont, effectiveAccent } from '../../api/stores.api.js'
 import { deriveAccent, bandPalette, adaptPalette } from '../../utils/colorTools.js'
@@ -56,10 +57,7 @@ function backgroundStack(t, all) {
 // Todo sale por variables CSS y atributos data-st-*: la hoja pública consume
 // tokens, nunca CSS arbitrario.
 // ---------------------------------------------------------------------------
-export const ROLE_KEYS = [
-  'display', 'h1', 'h2', 'h3', 'body', 'lead', 'eyebrow', 'label',
-  'quote', 'price', 'nav', 'button', 'footer'
-]
+export const ROLE_KEYS = STUDIO_ROLE_KEYS
 
 // Espejo de SKIN_FAMILIES de ai_design_skins.py (32: las 26 de la v5 + las 6
 // exclusivas de la IA, que el Studio no ofrece pero el motor sí propone).

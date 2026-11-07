@@ -51,4 +51,29 @@ describe('paridad tema Studio / web publicada', () => {
     expect(msg.device).toBe('mobile')
     expect(msg.layout.landing.blocks).toEqual([])
   })
+
+  it('los editores del Studio (surfaces/images/botones/roles) tienen paridad lienzo/publicada', () => {
+    const editors = {
+      surfaces: { card: '#101820', nav: '#f4f6fb' },
+      images: { ratio: 'portrait', fit: 'contain', bg: '#a1b2c3', radius: 'md', border: 'bold' },
+      buttons: { style: 'transparent', borderStyle: 'dashed' },
+      typography: { roles: { h1: { font: 'oswald', size: '3xl', weight: 800, tracking: 'tight', leading: 'tight', case: 'none' } } }
+    }
+    const merged = { ...theme, ...editors }
+    const keys = themeExplicitKeys(merged)
+    const canvas = studioPreviewVars(merged, 'light', keys)
+    const published = storeSiteThemeVars({ site_theme: merged, accent: 'teal', name_font: 'inter' }, 'light')
+    for (const key of ['--st-surface-card', '--st-nav-ink', '--st-img-aspect', '--st-img-fit', '--st-img-bg', '--st-img-radius', '--st-img-border-w', '--st-btn-border']) {
+      expect(canvas[key], `lienzo ${key}`).toBeTruthy()
+      expect(published[key], `publicada ${key}`).toBe(canvas[key])
+    }
+    const canvasAttrs = studioPreviewAttrs(merged, keys, 'light')
+    const publishedAttrs = storeSiteThemeAttrs({ site_theme: merged }, 'light')
+    for (const attr of ['data-st-surface-card', 'data-st-surface-nav', 'data-st-img-ratio', 'data-st-img-fit', 'data-st-img-bg', 'data-st-img-radius', 'data-st-img-border', 'data-st-btn-border', 'data-st-btn-style', 'data-st-roles']) {
+      // Los marcadores de presencia viajan como '' (superficies/bg): valen
+      // "definido", no truthy — se compara contra null/undefined.
+      expect(canvasAttrs[attr] !== null && canvasAttrs[attr] !== undefined, `attr lienzo ${attr}`).toBe(true)
+      expect(publishedAttrs[attr], `attr publicada ${attr}`).toBe(canvasAttrs[attr])
+    }
+  })
 })

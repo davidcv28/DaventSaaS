@@ -3588,24 +3588,24 @@ Reels— van angostas, las 16:9 anchas). El botón de vivo es Premium. */
 
 /* ---------- Botones ---------- */
 .store-page[data-st-btn-size] .sp-btn:not(.sm){
-  min-height: var(--st-btn-h, 44px);
-  padding-inline: var(--st-btn-px, 20px);
-  font-size: var(--st-btn-fs, 14px);
+  min-height: var(--st-btn-h, 44px) !important;
+  padding-inline: var(--st-btn-px, 20px) !important;
+  font-size: var(--st-btn-fs, 14px) !important;
 }
 .store-page[data-st-btn-size] :is(.sp-hero-ctas .sp-btn, .sp-hal-ctas .sp-hal-btn){
   height: auto;
-  min-height: var(--st-btn-h, 46px);
-  padding-inline: var(--st-btn-px, 24px);
-  font-size: var(--st-btn-fs, 14.5px);
+  min-height: var(--st-btn-h, 46px) !important;
+  padding-inline: var(--st-btn-px, 24px) !important;
+  font-size: var(--st-btn-fs, 14.5px) !important;
 }
-.store-page[data-st-btn-size] .sp-top-cta{ height: auto; min-height: var(--st-btn-h, 44px); }
-.store-page[data-st-btn-size] .sp-dock-btn{ min-height: var(--st-btn-h, 46px); }
+.store-page[data-st-btn-size] .sp-top-cta{ height: auto; min-height: var(--st-btn-h, 44px) !important; }
+.store-page[data-st-btn-size] .sp-dock-btn{ min-height: var(--st-btn-h, 46px) !important; }
 .store-page[data-st-btn-shape] :is(
   .sp-btn, .sp-top-cta, .sp-dock-btn, .sp-icon-btn, .sp-hal-btn,
   .sp-hal-search, .sp-hal-search-btn){
-  border-radius: var(--st-btn-radius, 99px);
+  border-radius: var(--st-btn-radius, 99px) !important;
 }
-.store-page[data-st-btn-shape] .sp-icon-btn{ border-radius: var(--st-btn-radius, 50%); }
+.store-page[data-st-btn-shape] .sp-icon-btn{ border-radius: var(--st-btn-radius, 50%) !important; }
 /* Relleno sólido: rol Primario del tema (fallback = accent-ink de siempre). */
 .store-page[data-st-brand] :is(
   .sp-btn:not(.ghost):not(.sp-hero-btn):not(.sp-hero-ghost):not(.is-wa),
@@ -3636,6 +3636,48 @@ Reels— van angostas, las 16:9 anchas). El botón de vivo es Premium. */
   .tpc-go){
   background: linear-gradient(120deg, var(--st-primary, var(--store-accent)), var(--st-secondary, var(--store-accent-ink)));
   color: var(--st-on-primary, #fff);
+  border-color: transparent;
+}
+/* Transparente: fondo casi invisible y sin borde forzado — el borde lo
+   decide data-st-btn-border (none = botón de solo texto). */
+.store-page[data-st-btn-style='transparent'] :is(
+  .sp-btn:not(.sp-hero-btn):not(.sp-hero-ghost):not(.ghost):not(.is-wa),
+  .tpc-go){
+  background: color-mix(in srgb, var(--store-accent) 8%, transparent);
+  color: var(--sp-accent-text, var(--store-accent-ink));
+  border-color: transparent;
+  box-shadow: none;
+}
+/* Borde del botón (buttons.borderStyle): punteado, discontinuo, sólido o
+   sin borde — se aplica a cualquier estilo de botón. La tinta es
+   currentColor: contrasta sola sobre sólido, contorno, ghost y
+   transparente. */
+.store-page[data-st-btn-border] :is(
+  .sp-btn:not(.sp-hero-btn):not(.sp-hero-ghost):not(.ghost):not(.is-wa),
+  .tpc-go){
+  border-style: var(--st-btn-border, solid);
+}
+.store-page[data-st-btn-border='solid'] :is(
+  .sp-btn:not(.sp-hero-btn):not(.sp-hero-ghost):not(.ghost):not(.is-wa),
+  .tpc-go){
+  border-width: 1.5px;
+  border-color: color-mix(in srgb, currentColor 72%, transparent);
+}
+.store-page[data-st-btn-border='dashed'] :is(
+  .sp-btn:not(.sp-hero-btn):not(.sp-hero-ghost):not(.ghost):not(.is-wa),
+  .tpc-go){
+  border-width: 2px;
+  border-color: color-mix(in srgb, currentColor 72%, transparent);
+}
+.store-page[data-st-btn-border='dotted'] :is(
+  .sp-btn:not(.sp-hero-btn):not(.sp-hero-ghost):not(.ghost):not(.is-wa),
+  .tpc-go){
+  border-width: 2px;
+  border-color: color-mix(in srgb, currentColor 72%, transparent);
+}
+.store-page[data-st-btn-border='none'] :is(
+  .sp-btn:not(.sp-hero-btn):not(.sp-hero-ghost):not(.ghost):not(.is-wa),
+  .tpc-go){
   border-color: transparent;
 }
 
@@ -3750,6 +3792,73 @@ Reels— van angostas, las 16:9 anchas). El botón de vivo es Premium. */
   filter: grayscale(1) sepia(.55) hue-rotate(-12deg) contrast(1.05) brightness(.94) saturate(1.4);
 }
 
+/* ---------- Marco de las fotos de producto (images.ratio/fit/bg/radius/border) ----------
+   Un atributo por propiedad: solo se pisa lo que el tema fija, el resto
+   conserva el look de la plantilla. El especificador largo empata a las
+   reglas por plantilla ([data-store-template] .sp-grid .sp-card …). */
+.store-page[data-st-img-bg] .tpc-media{ background: var(--st-img-bg) !important; }
+.store-page[data-st-img-fit] .tpc-media img:not(.tpc-campaign){ object-fit: var(--st-img-fit) !important; }
+.store-page[data-st-img-ratio] .tpc-media{
+  aspect-ratio: var(--st-img-aspect) !important;
+}
+.store-page[data-st-img-radius] .tpc-media{ border-radius: var(--st-img-radius) !important; }
+.store-page[data-st-img-radius] .tpc-media img:not(.tpc-campaign){ border-radius: inherit !important; }
+.store-page[data-st-img-border] .tpc-media{
+  border: var(--st-img-border-w) solid var(--sp-line) !important;
+}
+
+/* ---------- Superficies con color propio (surfaces.card/nav/footer/hero) ----------
+   Cada color deriva su tinta con textOn (AA) y la expone por variables
+   scoped sobre el contenedor: el texto de adentro se repinta solo y el
+   resto de la página no se entera. */
+.store-page[data-st-surface-card] :is(
+  .sp-card, .tpc, .sp-form, .sp-faq-item, .sp-testimonial, .sp-service,
+  .sp-about-card, .sp-drawer, .sp-filters, .sp-gallery-item, .sp-map-frame,
+  .sp-empty, .sp-price, .sp-sort, .sp-search, .sp-showcase-frame,
+  .sp-stats-grid, .sp-cta-inner){
+  --sp-card: var(--st-surface-card) !important;
+  --sp-card-solid: var(--st-surface-card) !important;
+  --sp-surface: var(--st-surface-card) !important;
+  --sp-ink: var(--st-card-ink, var(--sp-ink)) !important;
+  --sp-ink-2: color-mix(in srgb, var(--st-card-ink, var(--sp-ink)) 78%, var(--st-surface-card)) !important;
+  --sp-muted: color-mix(in srgb, var(--st-card-ink, var(--sp-ink)) 62%, var(--st-surface-card)) !important;
+  --sp-line: color-mix(in srgb, var(--st-card-ink, var(--sp-ink)) 16%, transparent) !important;
+  background-color: var(--st-surface-card) !important;
+}
+.store-page[data-st-surface-nav] .sp-top{
+  --sp-on-band: var(--st-nav-ink, var(--sp-on-band)) !important;
+  --sp-on-band-2: color-mix(in srgb, var(--st-nav-ink, var(--sp-on-band)) 82%, transparent) !important;
+  --sp-on-band-muted: color-mix(in srgb, var(--st-nav-ink, var(--sp-on-band)) 68%, transparent) !important;
+  background: var(--st-surface-nav) !important;
+  border-bottom-color: color-mix(in srgb, var(--st-nav-ink, var(--sp-on-band)) 22%, transparent) !important;
+}
+.store-page[data-st-surface-nav] .sp-top :is(.sp-icon-btn, .sp-burger){
+  background: color-mix(in srgb, var(--st-nav-ink, var(--sp-on-band)) 14%, transparent) !important;
+  border-color: color-mix(in srgb, var(--st-nav-ink, var(--sp-on-band)) 35%, transparent) !important;
+}
+.store-page[data-st-surface-footer] .sp-foot{
+  --sp-ink: var(--st-footer-ink, var(--sp-ink)) !important;
+  --sp-ink-2: color-mix(in srgb, var(--st-footer-ink, var(--sp-ink)) 78%, var(--st-surface-footer)) !important;
+  --sp-muted: color-mix(in srgb, var(--st-footer-ink, var(--sp-ink)) 62%, var(--st-surface-footer)) !important;
+  --sp-line: color-mix(in srgb, var(--st-footer-ink, var(--sp-ink)) 16%, transparent) !important;
+  background: var(--st-surface-footer) !important;
+}
+/* Portada: banda de acento propia (degradado limpio del color elegido, sin
+   la aurora) y su tinta derivada. Con foto de portada (.has-cover) la
+   imagen manda y el color queda de respaldo. Las clases *-hero son las
+   portadas propias de cada plantilla (impacto, mercado, gimnasio…). */
+.store-page[data-st-surface-hero] :is(
+  .sp-hero-band, .mi-hero, .mc-hero, .gy-hero, .rh-hero, .mv-hero,
+  .in-hero, .mt-hero, .ss-hero, .ci-hero, .sg-hero, .al-hero, .sv-hero):not(.has-cover){
+  --sp-on-band: var(--st-hero-ink, var(--sp-on-band)) !important;
+  --sp-on-band-2: color-mix(in srgb, var(--st-hero-ink, var(--sp-on-band)) 82%, transparent) !important;
+  --sp-on-band-muted: color-mix(in srgb, var(--st-hero-ink, var(--sp-on-band)) 68%, transparent) !important;
+  background-image: linear-gradient(125deg, var(--st-surface-hero), color-mix(in srgb, var(--st-surface-hero) 68%, #000000)) !important;
+}
+.store-page[data-st-surface-hero] :is(
+  .sp-hero-band, .mi-hero, .mc-hero, .gy-hero, .rh-hero, .mv-hero,
+  .in-hero, .mt-hero, .ss-hero, .ci-hero, .sg-hero, .al-hero, .sv-hero).has-cover{ background-color: var(--st-surface-hero) !important; }
+
 /* ---------- Móvil: grilla, tarjetas, portada, navegación y CTA ---------- */
 @media (max-width: 768px){
   .store-page[data-st-grid='2'] .sp-grid{
@@ -3853,11 +3962,12 @@ Reels— van angostas, las 16:9 anchas). El botón de vivo es Premium. */
 /* ---------- Fondo del tema sobre cualquier plantilla ----------
    Las pieles alternas pintan background-* directo en .store-page; con el
    tipo de fondo elegido, la pila del tema (velo + capa + color) gana en
-   claro. En oscuro la regla oscura de la plantilla queda después y manda. */
-.store-page[data-st-bgtype][data-store-template]{ background: var(--sp-bg); }
+   claro y en oscuro (el !important es la barrera contra las reglas de piel
+   que cargan después — mismo criterio que [data-st-font-*]). */
+.store-page[data-st-bgtype][data-store-template]{ background: var(--sp-bg) !important; }
 /* Rol Fondo sin tipo de fondo: solo pinta el color de página (no mata los
    patrones/degradados propios de la plantilla). */
-.store-page[data-st-bgrole][data-store-template]{ background-color: var(--st-bg); }
+.store-page[data-st-bgrole][data-store-template]{ background-color: var(--st-bg) !important; }
 
 /* ---------- Paleta extendida: estados ---------- */
 .store-page[data-st-themed] .sp-form-error{ color: var(--st-danger, #dc2626); }
@@ -3982,133 +4092,133 @@ Reels— van angostas, las 16:9 anchas). El botón de vivo es Premium. */
 
 /* --- Roles: cada selector real, no cada componente ---------------------- */
 .store-page[data-st-roles~='display'] .sp-hero-title.is-name{
-  font-family: var(--st-f-display-family, var(--sp-display));
-  font-size: var(--st-f-display-size, clamp(28px, 6vw, var(--store-name-size, 48px)));
-  font-weight: var(--st-f-display-weight, 800);
-  letter-spacing: var(--st-f-display-tracking, -.03em);
-  line-height: var(--st-f-display-leading, 1.1);
-  text-transform: var(--st-f-display-case, none);
+  font-family: var(--st-f-display-family, var(--sp-display)) !important;
+  font-size: var(--st-f-display-size, clamp(28px, 6vw, var(--store-name-size, 48px))) !important;
+  font-weight: var(--st-f-display-weight, 800) !important;
+  letter-spacing: var(--st-f-display-tracking, -.03em) !important;
+  line-height: var(--st-f-display-leading, 1.1) !important;
+  text-transform: var(--st-f-display-case, none) !important;
 }
 .store-page[data-st-roles~='h1'] .sp-hero-title:not(.is-name){
-  font-family: var(--st-f-h1-family, var(--sp-display));
-  font-size: var(--st-f-h1-size, clamp(30px, 4.8vw, 50px));
-  font-weight: var(--st-f-h1-weight, 800);
-  letter-spacing: var(--st-f-h1-tracking, -.03em);
-  line-height: var(--st-f-h1-leading, 1.12);
-  text-transform: var(--st-f-h1-case, none);
+  font-family: var(--st-f-h1-family, var(--sp-display)) !important;
+  font-size: var(--st-f-h1-size, clamp(30px, 4.8vw, 50px)) !important;
+  font-weight: var(--st-f-h1-weight, 800) !important;
+  letter-spacing: var(--st-f-h1-tracking, -.03em) !important;
+  line-height: var(--st-f-h1-leading, 1.12) !important;
+  text-transform: var(--st-f-h1-case, none) !important;
 }
 .store-page[data-st-roles~='h2'] .sp-section-title,
 .store-page[data-st-roles~='h2'] .spd-sec-title,
 .store-page[data-st-roles~='h2'] .sp-aipricing-title,
 .store-page[data-st-roles~='h2'] .sp-aiprocess-title,
 .store-page[data-st-roles~='h2'] .sp-aimosaic-title{
-  font-family: var(--st-f-h2-family, var(--sp-display));
-  font-size: var(--st-f-h2-size, 22px);
-  font-weight: var(--st-f-h2-weight, 700);
-  letter-spacing: var(--st-f-h2-tracking, -.02em);
-  line-height: var(--st-f-h2-leading, 1.25);
-  text-transform: var(--st-f-h2-case, none);
+  font-family: var(--st-f-h2-family, var(--sp-display)) !important;
+  font-size: var(--st-f-h2-size, 22px) !important;
+  font-weight: var(--st-f-h2-weight, 700) !important;
+  letter-spacing: var(--st-f-h2-tracking, -.02em) !important;
+  line-height: var(--st-f-h2-leading, 1.25) !important;
+  text-transform: var(--st-f-h2-case, none) !important;
 }
 .store-page[data-st-roles~='h3'] .sp-card .tpc-name,
 .store-page[data-st-roles~='h3'] .sp-aigrid-name,
 .store-page[data-st-roles~='h3'] .sp-aiprocess-step-title,
 .store-page[data-st-roles~='h3'] .sp-aipricing-name{
-  font-family: var(--st-f-h3-family, var(--sp-body));
-  font-size: var(--st-f-h3-size, 15px);
-  font-weight: var(--st-f-h3-weight, 700);
-  letter-spacing: var(--st-f-h3-tracking, -.01em);
-  line-height: var(--st-f-h3-leading, 1.35);
-  text-transform: var(--st-f-h3-case, none);
+  font-family: var(--st-f-h3-family, var(--sp-body)) !important;
+  font-size: var(--st-f-h3-size, 15px) !important;
+  font-weight: var(--st-f-h3-weight, 700) !important;
+  letter-spacing: var(--st-f-h3-tracking, -.01em) !important;
+  line-height: var(--st-f-h3-leading, 1.35) !important;
+  text-transform: var(--st-f-h3-case, none) !important;
 }
 .store-page[data-st-roles~='body']{
-  font-family: var(--st-f-body-family, 'Inter', system-ui, sans-serif);
-  font-size: var(--st-f-body-size, 15px);
-  font-weight: var(--st-f-body-weight, 400);
-  letter-spacing: var(--st-f-body-tracking, normal);
-  line-height: var(--st-f-body-leading, 1.5);
-  text-transform: var(--st-f-body-case, none);
+  font-family: var(--st-f-body-family, 'Inter', system-ui, sans-serif) !important;
+  font-size: var(--st-f-body-size, 15px) !important;
+  font-weight: var(--st-f-body-weight, 400) !important;
+  letter-spacing: var(--st-f-body-tracking, normal) !important;
+  line-height: var(--st-f-body-leading, 1.5) !important;
+  text-transform: var(--st-f-body-case, none) !important;
 }
 .store-page[data-st-roles~='lead'] .sp-hero-sub,
 .store-page[data-st-roles~='lead'] .sp-about-text,
 .store-page[data-st-roles~='lead'] .sp-cat-sub,
 .store-page[data-st-roles~='lead'] .sp-aiprocess-text{
-  font-family: var(--st-f-lead-family, var(--sp-body));
-  font-size: var(--st-f-lead-size, 15.5px);
-  font-weight: var(--st-f-lead-weight, 400);
-  letter-spacing: var(--st-f-lead-tracking, normal);
-  line-height: var(--st-f-lead-leading, 1.75);
-  text-transform: var(--st-f-lead-case, none);
+  font-family: var(--st-f-lead-family, var(--sp-body)) !important;
+  font-size: var(--st-f-lead-size, 15.5px) !important;
+  font-weight: var(--st-f-lead-weight, 400) !important;
+  letter-spacing: var(--st-f-lead-tracking, normal) !important;
+  line-height: var(--st-f-lead-leading, 1.75) !important;
+  text-transform: var(--st-f-lead-case, none) !important;
 }
 .store-page[data-st-roles~='eyebrow'] .sp-eyebrow{
-  font-family: var(--st-f-eyebrow-family, var(--sp-body));
-  font-size: var(--st-f-eyebrow-size, 12px);
-  font-weight: var(--st-f-eyebrow-weight, 700);
-  letter-spacing: var(--st-f-eyebrow-tracking, .12em);
-  line-height: var(--st-f-eyebrow-leading, 1.3);
-  text-transform: var(--st-f-eyebrow-case, uppercase);
+  font-family: var(--st-f-eyebrow-family, var(--sp-body)) !important;
+  font-size: var(--st-f-eyebrow-size, 12px) !important;
+  font-weight: var(--st-f-eyebrow-weight, 700) !important;
+  letter-spacing: var(--st-f-eyebrow-tracking, .12em) !important;
+  line-height: var(--st-f-eyebrow-leading, 1.3) !important;
+  text-transform: var(--st-f-eyebrow-case, uppercase) !important;
 }
 .store-page[data-st-roles~='label'] .sp-foot-heading,
 .store-page[data-st-roles~='label'] .sp-about-mission-label,
 .store-page[data-st-roles~='label'] .sp-aipricing-colhead{
-  font-family: var(--st-f-label-family, var(--sp-body));
-  font-size: var(--st-f-label-size, 11px);
-  font-weight: var(--st-f-label-weight, 700);
-  letter-spacing: var(--st-f-label-tracking, .08em);
-  line-height: var(--st-f-label-leading, 1.3);
-  text-transform: var(--st-f-label-case, uppercase);
+  font-family: var(--st-f-label-family, var(--sp-body)) !important;
+  font-size: var(--st-f-label-size, 11px) !important;
+  font-weight: var(--st-f-label-weight, 700) !important;
+  letter-spacing: var(--st-f-label-tracking, .08em) !important;
+  line-height: var(--st-f-label-leading, 1.3) !important;
+  text-transform: var(--st-f-label-case, uppercase) !important;
 }
 .store-page[data-st-roles~='quote'] .sp-aiquote-text,
 .store-page[data-st-roles~='quote'] blockquote,
 .store-page[data-st-roles~='quote'] .sp-testi-text{
-  font-family: var(--st-f-quote-family, var(--sp-display));
-  font-size: var(--st-f-quote-size, clamp(22px, 3.4vw, 38px));
-  font-weight: var(--st-f-quote-weight, 700);
-  letter-spacing: var(--st-f-quote-tracking, -.02em);
-  line-height: var(--st-f-quote-leading, 1.25);
-  text-transform: var(--st-f-quote-case, none);
+  font-family: var(--st-f-quote-family, var(--sp-display)) !important;
+  font-size: var(--st-f-quote-size, clamp(22px, 3.4vw, 38px)) !important;
+  font-weight: var(--st-f-quote-weight, 700) !important;
+  letter-spacing: var(--st-f-quote-tracking, -.02em) !important;
+  line-height: var(--st-f-quote-leading, 1.25) !important;
+  text-transform: var(--st-f-quote-case, none) !important;
 }
 .store-page[data-st-roles~='price'] .sp-card .tpc-price,
 .store-page[data-st-roles~='price'] .sp-aipricing-amount{
-  font-family: var(--st-f-price-family, var(--sp-body));
-  font-size: var(--st-f-price-size, 18px);
-  font-weight: var(--st-f-price-weight, 750);
-  letter-spacing: var(--st-f-price-tracking, -.02em);
-  line-height: var(--st-f-price-leading, 1.2);
-  text-transform: var(--st-f-price-case, none);
+  font-family: var(--st-f-price-family, var(--sp-body)) !important;
+  font-size: var(--st-f-price-size, 18px) !important;
+  font-weight: var(--st-f-price-weight, 750) !important;
+  letter-spacing: var(--st-f-price-tracking, -.02em) !important;
+  line-height: var(--st-f-price-leading, 1.2) !important;
+  text-transform: var(--st-f-price-case, none) !important;
 }
 .store-page[data-st-roles~='nav'] .sp-top-links a,
 .store-page[data-st-roles~='nav'] .sp-nav-item,
 .store-page[data-st-roles~='nav'] .sp-foot-col a,
 .store-page[data-st-roles~='nav'] .sp-dock-item{
-  font-family: var(--st-f-nav-family, var(--sp-body));
-  font-size: var(--st-f-nav-size, 13.5px);
-  font-weight: var(--st-f-nav-weight, 600);
-  letter-spacing: var(--st-f-nav-tracking, normal);
-  line-height: var(--st-f-nav-leading, 1.3);
-  text-transform: var(--st-f-nav-case, none);
+  font-family: var(--st-f-nav-family, var(--sp-body)) !important;
+  font-size: var(--st-f-nav-size, 13.5px) !important;
+  font-weight: var(--st-f-nav-weight, 600) !important;
+  letter-spacing: var(--st-f-nav-tracking, normal) !important;
+  line-height: var(--st-f-nav-leading, 1.3) !important;
+  text-transform: var(--st-f-nav-case, none) !important;
 }
 .store-page[data-st-roles~='button'] .sp-btn{
-  font-family: var(--st-f-button-family, var(--sp-body));
-  font-size: var(--st-f-button-size, var(--sp-btn-fs, 14px));
-  font-weight: var(--st-f-button-weight, 600);
-  letter-spacing: var(--st-f-button-tracking, normal);
-  line-height: var(--st-f-button-leading, 1.2);
-  text-transform: var(--st-f-button-case, none);
+  font-family: var(--st-f-button-family, var(--sp-body)) !important;
+  font-size: var(--st-f-button-size, var(--sp-btn-fs, 14px)) !important;
+  font-weight: var(--st-f-button-weight, 600) !important;
+  letter-spacing: var(--st-f-button-tracking, normal) !important;
+  line-height: var(--st-f-button-leading, 1.2) !important;
+  text-transform: var(--st-f-button-case, none) !important;
 }
 .store-page[data-st-roles~='footer'] .sp-foot,
 .store-page[data-st-roles~='footer'] .sp-foot-copy{
-  font-family: var(--st-f-footer-family, var(--sp-body));
-  font-size: var(--st-f-footer-size, 14px);
-  font-weight: var(--st-f-footer-weight, 400);
-  letter-spacing: var(--st-f-footer-tracking, normal);
-  line-height: var(--st-f-footer-leading, 1.6);
-  text-transform: var(--st-f-footer-case, none);
+  font-family: var(--st-f-footer-family, var(--sp-body)) !important;
+  font-size: var(--st-f-footer-size, 14px) !important;
+  font-weight: var(--st-f-footer-weight, 400) !important;
+  letter-spacing: var(--st-f-footer-tracking, normal) !important;
+  line-height: var(--st-f-footer-leading, 1.6) !important;
+  text-transform: var(--st-f-footer-case, none) !important;
 }
 
 /* --- Layout: density / gutter / measure / radius / grid / hero ---------- */
 .store-page[data-st-l-gutter] .sp-container{
   padding-inline: max(var(--st-l-gutter, clamp(16px, 5vw, 40px)), env(safe-area-inset-left))
-                 max(var(--st-l-gutter, clamp(16px, 5vw, 40px)), env(safe-area-inset-right));
+                 max(var(--st-l-gutter, clamp(16px, 5vw, 40px)), env(safe-area-inset-right)) !important;
 }
 .store-page[data-st-l-density] .sp-aigrid,
 .store-page[data-st-l-density] .sp-aicheck,
@@ -4117,14 +4227,14 @@ Reels— van angostas, las 16:9 anchas). El botón de vivo es Premium. */
 .store-page[data-st-l-density] .sp-aipricing,
 .store-page[data-st-l-density] .sp-aiprocess,
 .store-page[data-st-l-density] .sp-aimosaic{
-  padding-top: calc(64px * var(--st-l-density, 1));
+  padding-top: calc(64px * var(--st-l-density, 1)) !important;
 }
-.store-page[data-st-l-density] .spd-sec{ padding-block: calc(28px * var(--st-l-density, 1)); }
+.store-page[data-st-l-density] .spd-sec{ padding-block: calc(28px * var(--st-l-density, 1)) !important; }
 .store-page[data-st-l-density] .sp-card,
 .store-page[data-st-l-density] .sp-aigrid-card,
 .store-page[data-st-l-density] .sp-aipricing-card,
 .store-page[data-st-l-density] .sp-aiprocess-step{
-  padding: calc(18px * var(--st-l-density, 1));
+  padding: calc(18px * var(--st-l-density, 1)) !important;
 }
 .store-page[data-st-l-measure] .sp-hero-sub,
 .store-page[data-st-l-measure] .sp-about-text,
@@ -4132,11 +4242,11 @@ Reels— van angostas, las 16:9 anchas). El botón de vivo es Premium. */
 .store-page[data-st-l-measure] .sp-aiprocess-text,
 .store-page[data-st-l-measure] .sp-aimosaic-caption,
 .store-page[data-st-l-measure] .sp-aipricing-note{
-  max-width: var(--st-l-measure, 66ch);
+  max-width: var(--st-l-measure, 66ch) !important;
 }
 .store-page[data-st-l-measure='narrow'] .sp-aiquote.is-centered .sp-aiquote-body,
 .store-page[data-st-l-measure='normal'] .sp-aiquote.is-centered .sp-aiquote-body{
-  max-width: var(--st-l-measure, 46ch);
+  max-width: var(--st-l-measure, 46ch) !important;
 }
 .store-page[data-st-l-radius] .sp-btn,
 .store-page[data-st-l-radius] .sp-card,
@@ -4145,7 +4255,7 @@ Reels— van angostas, las 16:9 anchas). El botón de vivo es Premium. */
 .store-page[data-st-l-radius] .sp-aipricing-card,
 .store-page[data-st-l-radius] .sp-aiprocess-step,
 .store-page[data-st-l-radius] .sp-aimosaic-tile{
-  border-radius: var(--st-l-radius, 16px);
+  border-radius: var(--st-l-radius, 16px) !important;
 }
 /* Grilla de bloques: 12 | asym | split | bento | editorial. Siempre colapsa
    a una columna por debajo de 640px (probado a 360px). */

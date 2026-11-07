@@ -93,6 +93,26 @@ eq('atributo de campo ausente se omite', attrsOnly['data-st-surface'], null)
 eq('stickyCta false no emite atributo', attrsOnly['data-st-sticky-cta'], null)
 check('sin tema no hay atributos', Object.values(themeDataAttrs({}, new Set())).every((v) => v === null))
 
+console.log('— editores del Studio (surfaces/images/buttons.borderStyle/roles) —')
+const rich = {
+  surfaces: { card: '#112233', nav: 'mala', footer: '#445566' },
+  images: { ratio: 'portrait', fit: 'contain', bg: '#aabbcc', radius: 'md', border: 'dashed', treatment: 'grayscale' },
+  buttons: { borderStyle: 'dotted', style: 'transparent' },
+  typography: { roles: { h1: { font: 'oswald', size: '3xl', weight: 800, tracking: 'tight', leading: 'tight', case: 'none' } } }
+}
+const richKeys = themeExplicitKeys(rich)
+check('surfaces: solo hex válidos', JSON.stringify(resolveSiteTheme(rich).surfaces) === JSON.stringify({ card: '#112233', footer: '#445566' }))
+check('images: enums + hex resueltos', (() => { const i = resolveSiteTheme(rich).images; return i.ratio === 'portrait' && i.fit === 'contain' && i.bg === '#aabbcc' && i.radius === 'md' && i.border === null })())
+check('buttons: transparent + dotted viajan', (() => { const b = resolveSiteTheme(rich).buttons; return b.style === 'transparent' && b.borderStyle === 'dotted' })())
+check('roles: spec parcial saneado viaja en el resuelto', resolveSiteTheme(rich).typography.roles?.h1?.font === 'oswald')
+check('keys explícitas de surfaces/images/buttons/roles', ['surfaces.card', 'surfaces.footer', 'surfaces.nav', 'images.ratio', 'images.bg', 'images.border', 'buttons.borderStyle', 'buttons.style', 'typography.roles'].every((k) => richKeys.has(k)))
+const richVars = themeToCssVars(rich)
+check('vars de superficies/imgs/borde emitidas', richVars['--st-surface-card'] === '#112233' && richVars['--st-img-aspect'] === '4 / 5' && richVars['--st-img-bg'] === '#aabbcc' && richVars['--st-img-radius'] === '14px' && richVars['--st-btn-border'] === 'dotted')
+const richAttrs = themeDataAttrs(rich, richKeys)
+check('attrs de superficies/imgs/borde emitidos', richAttrs['data-st-surface-card'] === '' && richAttrs['data-st-surface-nav'] === null && richAttrs['data-st-img-ratio'] === 'portrait' && richAttrs['data-st-img-border'] === null && richAttrs['data-st-btn-border'] === 'dotted' && richAttrs['data-st-btn-style'] === 'transparent')
+const richPicked = pickThemeVars(richVars, richKeys)
+check('pickThemeVars respeta explícitas nuevas', richPicked['--st-surface-card'] === '#112233' && richPicked['--st-img-aspect'] === '4 / 5' && richPicked['--st-btn-border'] === 'dotted' && richPicked['--st-surface-nav'] === undefined)
+
 console.log('— studioPreset —')
 const preset = resolveStudioPreset({
   name: 'Serena Índigo', category: 'belleza', tier: 'plus', template: 'calma',

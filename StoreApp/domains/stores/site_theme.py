@@ -13,8 +13,9 @@ defaults para el render: una tienda sin site_theme se ve idéntica a hoy).
 
 Reglas:
 - Secciones permitidas: palette, containers, typography, buttons,
-  background, motion, mobile, blocks, layout, skin — cualquier otra clave de
-  primer nivel o de sección se rechaza (nada de HTML/CSS libre).
+  background, motion, mobile, blocks, layout, skin, style, styleColors,
+  decorations, images, surfaces — cualquier otra clave de primer nivel o
+  de sección se rechaza (nada de HTML/CSS libre).
 - v2 del tema (motor "Diseñar con IA" 4): typography.roles (13 roles
   cerrados con font/size/weight/tracking/leading/case), layout (density,
   grid, hero, gutter, measure, radiusScale) y skin {id, family} del
@@ -65,7 +66,8 @@ _DENSITY        =   ('compact', 'comfortable', 'spacious')
 _SURFACE        =   ('flat', 'glass', 'elevated', 'outlined')
 _TYPE_SCALE     =   ('compact', 'balanced', 'editorial')
 _BTN_SHAPE      =   ('square', 'rounded', 'pill')
-_BTN_STYLE      =   ('solid', 'outline', 'ghost', 'gradient')
+_BTN_STYLE      =   ('solid', 'outline', 'ghost', 'gradient', 'transparent')
+_BTN_BORDER     =   ('none', 'solid', 'dashed', 'dotted')
 _BTN_SIZE       =   ('sm', 'md', 'lg')
 _BG_TYPE        =   ('solid', 'gradient', 'mesh', 'pattern', 'image')
 _OVERLAY        =   ('none', 'soft', 'strong')
@@ -76,6 +78,14 @@ _NAV            =   ('top', 'bottom', 'drawer')
 _CARD_STYLE     =   ('standard', 'compact', 'overlay')
 _HERO_HEIGHT    =   ('compact', 'tall')
 _IMG_TREATMENT  =   ('none', 'soft', 'grayscale', 'duotone')
+#Marco de las fotos de producto (.tpc-media): proporción, encaje, fondo
+#detrás de la foto y radio/borde propios del marco.
+_IMG_RATIO      =   ('square', 'portrait', 'tall', 'wide')
+_IMG_FIT        =   ('cover', 'contain')
+_IMG_RADIUS     =   ('none', 'sm', 'md', 'lg')
+#Colores propios de superficies de la web (tarjetas, barra superior, pie,
+#portada): sección `surfaces` — cada clave es un hex opcional.
+_SURFACE_KEYS   =   ('card', 'nav', 'footer', 'hero')
 _BLOCK_ALIGN    =   ('left', 'center', 'right')
 #v2 del tema: layout cerrado (mismas claves/enums que el contrato del
 #frontend) y catálogo de pieles. `_DENSITY` se comparte con containers.
@@ -189,6 +199,9 @@ _SECTION_SPECS  =   {
         'shape'     :   ('enum', _BTN_SHAPE),
         'style'     :   ('enum', _BTN_STYLE),
         'size'      :   ('enum', _BTN_SIZE),
+        #'Borde del botón: punteado/discontinuo/sólido/sin borde. null en el
+        #contrato = el borde nativo de cada estilo.
+        'borderStyle':   ('enum', _BTN_BORDER),
     },
     'background'    :   {
         'type'      :   ('enum', _BG_TYPE),
@@ -236,7 +249,15 @@ _SECTION_SPECS  =   {
     #`capabilities`; el filtro viaja como atributo data-st-img.
     'images'        :   {
         'treatment'     :   ('enum', _IMG_TREATMENT),
+        'ratio'         :   ('enum', _IMG_RATIO),
+        'fit'           :   ('enum', _IMG_FIT),
+        'bg'            :   ('hex',),
+        'radius'        :   ('enum', _IMG_RADIUS),
+        'border'        :   ('enum', _BORDER),
     },
+    #Colores propios de superficies (Studio → Colores de contenedores):
+    #cada clave es un hex opcional; ausente = el look de la plantilla.
+    'surfaces'      :   {key: ('hex',) for key in _SURFACE_KEYS},
 }
 #Subconjunto básico del tema que admite has_design_plus (Estándar): el
 #resto de las secciones/claves exige has_design_advanced (Premium).
