@@ -1,4 +1,5 @@
 from .anthropic import anthropic_enabled, ask_claude
+from .dashboard_map import DASHBOARD_MAP
 from .llm import ask_llm, llm_enabled
 from .mcp import SERVER_NAME, SERVER_VERSION, call_tool, tools_list
 from .services import (
@@ -10,7 +11,6 @@ from .services import (
     list_design_styles,
     search_design_styles,
 )
-from .dashboard_map import DASHBOARD_MAP
 from .user_tools import assistant_snapshot, mcp_user_access
 
 __all__ = [

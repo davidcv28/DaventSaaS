@@ -15,6 +15,9 @@ extend-exclude = [
     "qa_*.py",
     "seed_bench*.py",
     "folleto-calle",
+    # Scratch dirs de trabajo local (_tmp_gif, _tmp_pw, .tmp_build, ...).
+    "_tmp_*",
+    ".tmp_*",
 ]
 
 [tool.ruff.lint]

@@ -351,6 +351,7 @@ CORS_ALLOW_CREDENTIALS = config('CORS_ALLOW_CREDENTIALS', default = True, cast =
 # (identifica la sesión nativa de refresh-en-body); sin declararlo, el
 # preflight del WebView rechaza la request antes de llegar a Django.
 from corsheaders.defaults import default_headers
+
 CORS_ALLOW_HEADERS = list(default_headers) + ['x-davent-client']
 
 # Orígenes https confiables para CSRF (admin/formularios cross-origin). En

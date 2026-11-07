@@ -3,7 +3,12 @@ import logging
 from django.contrib.auth.models import User
 
 from AdminApp.domains.chat.models import AssistantMessage
-from McpApp.domains.skills.services import DASHBOARD_MAP, ask_llm, assistant_snapshot, llm_enabled
+from McpApp.domains.skills.services import (
+    DASHBOARD_MAP,
+    ask_llm,
+    assistant_snapshot,
+    llm_enabled,
+)
 
 """
 "Tu Asistente": bot automático por usuario, hilo APARTE del soporte.

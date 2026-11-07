@@ -12,7 +12,6 @@ from rest_framework.response import Response
 from rest_framework.throttling import UserRateThrottle
 
 from DaventProject.throttling import PublicReadThrottle
-
 from StoreApp.domains.catalog.serializers.serializers import (
     BrandSerializer,
     ProductSerializerList,

@@ -127,7 +127,10 @@ def pattern_payload(pattern, full : bool = False) -> dict:
     data    =   {
         'slug'      :   pattern.slug,
         'nombre'    :   pattern.nombre,
-        'categoria' :   pattern.categoria,
+        #`categoria` es FK a DesignCategory desde la tabla de rubros
+        #compartida: se expone el slug (contrato que ya usaban los
+        #patrones cuando era CharField), nunca la instancia.
+        'categoria' :   pattern.categoria.slug if pattern.categoria_id and pattern.categoria else '',
         'tier'      :   pattern.tier,
         'template'  :   pattern.template,
         'tags'      :   list(pattern.tags or []),
@@ -142,13 +145,13 @@ def pattern_payload(pattern, full : bool = False) -> dict:
 
 def list_design_patterns(categoria : str = '', limit : int = DEFAULT_LIMIT) -> list:
     from StoreApp.domains.design.models import DesignPattern
-    qs  =   DesignPattern.objects.filter(is_active = True).order_by('position', 'pk')
+    qs  =   DesignPattern.objects.filter(is_active = True).select_related('categoria', 'style').order_by('position', 'pk')
     if categoria:
-        qs  =   qs.filter(categoria__iexact = categoria)
+        qs  =   qs.filter(categoria__slug__iexact = categoria)
     return list(qs[:clamp_limit(limit)])
 
 
 def get_design_pattern(slug : str):
     from StoreApp.domains.design.models import DesignPattern
-    return DesignPattern.objects.select_related('style').filter(slug = slug, is_active = True).first()
+    return DesignPattern.objects.select_related('categoria', 'style').filter(slug = slug, is_active = True).first()
 

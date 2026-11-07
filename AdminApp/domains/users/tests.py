@@ -67,6 +67,12 @@ def _refresh_for(user):
 class PasswordResetTests(TestCase):
     """Anti-enumeración + invalidación de sesiones del flujo de reset."""
 
+    def setUp(self):
+        #El scope 'password_reset' (5/h por IP) vive en el cache del worker:
+        #sin limpiarlo los tests de la clase y de otros módulos agotan la
+        #cuota y el request de anti-enumeración devuelve 429.
+        cache.clear()
+
     def test_request_returns_same_response_for_existing_and_missing_email(self):
         _make_user()
         existing        =   self.client.post(RESET_URL, {'email': 'cliente@gmail.com'}, format = 'json')
@@ -118,6 +124,11 @@ class PasswordResetTests(TestCase):
 
 class PasswordPolicyTests(TestCase):
     """AUTH_PASSWORD_VALIDATORS aplicada en alta y cambio de clave."""
+
+    def setUp(self):
+        #El alta pasa por el throttle 'register' (10/h por IP) del cache
+        #compartido del worker: limpiar el cache aísla cada test.
+        cache.clear()
 
     def _payload(self, password):
         #Alta minimal: los datos fiscales se piden recién al pagar un plan.
