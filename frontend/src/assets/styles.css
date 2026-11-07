@@ -1181,8 +1181,9 @@ body{ transition: background-color .2s ease, color .2s ease; }
    Cada fila es un lanzador: ícono en pastilla teñida, título + descripción
    a la izquierda, sello de estado y flecha a la derecha. ===== */
 .mk-launch{ display: flex; flex-direction: column; gap: 8px; margin-bottom: 6px; }
-.mk-launcher{ display: flex; align-items: center; gap: 14px; width: 100%; padding: 13px 16px; border: 1px solid var(--line); border-radius: 14px; background: var(--card); text-align: left; font: inherit; color: inherit; cursor: pointer; transition: border-color .16s, background .16s, box-shadow .16s; }
-.mk-launcher:hover{ border-color: var(--brand-soft-line); background: linear-gradient(90deg, var(--brand-soft), transparent 45%), var(--card); }
+.mk-launcher{ display: flex; align-items: center; gap: 14px; width: 100%; padding: 13px 16px; border: 1px solid var(--line); border-radius: 14px; background: var(--card); text-align: left; font: inherit; color: inherit; cursor: pointer; transition: border-color .16s, background .16s, box-shadow .16s, transform .16s; }
+.mk-launcher:hover{ border-color: var(--brand-soft-line); background: linear-gradient(90deg, var(--brand-soft), transparent 45%), var(--card); transform: translateY(-1px); box-shadow: var(--shadow-md); }
+.mk-launcher:active{ transform: translateY(0); }
 .mk-launcher:hover .mk-launcher-go{ background: var(--brand-soft); border-color: var(--brand-soft-line); color: var(--brand-ink); transform: translateX(2px); }
 .mk-launcher:focus-visible{ outline: none; border-color: var(--brand-500); box-shadow: var(--ring); }
 .mk-launcher-ico{ flex: none; width: 44px; height: 44px; display: grid; place-items: center; border-radius: 12px; }
@@ -1220,18 +1221,39 @@ body{ transition: background-color .2s ease, color .2s ease; }
 .hue-ann{ color: #dc2626; background: #dc26261f; }
 .hue-video{ color: #64748b; background: #64748b1f; }
 .hue-extras{ color: #4f46e5; background: #4f46e51f; }
+/* En oscuro los tonos saturados de .hue-* quedan sin contraste sobre la
+   tarjeta: se aclaran a variantes pastel manteniendo la familia de color. */
+[data-theme='dark'] .hue-identity{ color: #fdba74; background: rgba(251, 146, 60, .15); }
+[data-theme='dark'] .hue-contact{ color: #7dd3fc; background: rgba(125, 211, 252, .14); }
+[data-theme='dark'] .hue-about{ color: #a5b4fc; background: rgba(165, 180, 252, .14); }
+[data-theme='dark'] .hue-services{ color: #38bdf8; background: rgba(56, 189, 248, .14); }
+[data-theme='dark'] .hue-plans{ color: #fcd34d; background: rgba(252, 211, 77, .13); }
+[data-theme='dark'] .hue-stats{ color: #6ee7b7; background: rgba(110, 231, 183, .13); }
+[data-theme='dark'] .hue-testimonials{ color: #fbbf24; background: rgba(251, 191, 36, .13); }
+[data-theme='dark'] .hue-faqs{ color: #c4b5fd; background: rgba(196, 181, 253, .14); }
+[data-theme='dark'] .hue-benefits{ color: #86efac; background: rgba(134, 239, 172, .13); }
+[data-theme='dark'] .hue-timeline{ color: #f9a8d4; background: rgba(249, 168, 212, .13); }
+[data-theme='dark'] .hue-team{ color: #67e8f9; background: rgba(103, 232, 249, .13); }
+[data-theme='dark'] .hue-hours{ color: #bef264; background: rgba(190, 242, 100, .12); }
+[data-theme='dark'] .hue-cta{ color: #fb923c; background: rgba(251, 146, 60, .15); }
+[data-theme='dark'] .hue-ann{ color: #fca5a5; background: rgba(252, 165, 165, .13); }
+[data-theme='dark'] .hue-video{ color: #cbd5e1; background: rgba(203, 213, 225, .12); }
+[data-theme='dark'] .hue-extras{ color: #818cf8; background: rgba(129, 140, 248, .15); }
 /* Modal de edición: cabecera fija + cuerpo con scroll. */
-.mk-overlay{ position: fixed; inset: 0; z-index: 80; display: flex; align-items: center; justify-content: center; padding: 20px; background: rgba(15, 15, 12, .5); backdrop-filter: blur(3px); }
-.mk-modal{ width: min(720px, 100%); max-height: min(88vh, 900px); display: flex; flex-direction: column; background: var(--bg); border: 1px solid var(--line); border-radius: 18px; box-shadow: 0 30px 70px -20px rgba(15, 23, 42, .45); overflow: hidden; }
-.mk-modal-head{ display: flex; align-items: center; gap: 12px; padding: 14px 18px; border-bottom: 1px solid var(--line); background: var(--card); }
-.mk-modal-ico{ flex: none; width: 38px; height: 38px; display: grid; place-items: center; border-radius: 11px; background: var(--brand-soft); color: var(--brand-ink); }
+.mk-overlay{ position: fixed; inset: 0; z-index: 80; display: flex; align-items: center; justify-content: center; padding: 20px; background: rgba(15, 15, 12, .5); backdrop-filter: blur(3px); animation: mk-overlay-in .18s ease-out; }
+.mk-modal{ width: min(780px, 100%); max-height: min(90vh, 940px); display: flex; flex-direction: column; background: var(--bg); border: 1px solid var(--line); border-radius: 18px; box-shadow: 0 30px 70px -20px rgba(15, 23, 42, .45); overflow: hidden; animation: mk-modal-in .26s cubic-bezier(.22, .8, .3, 1); }
+@keyframes mk-overlay-in{ from{ opacity: 0; } }
+@keyframes mk-modal-in{ from{ opacity: 0; transform: translateY(14px) scale(.985); } }
+@keyframes mk-card-in{ from{ opacity: 0; transform: translateY(8px); } }
+.mk-modal-head{ display: flex; align-items: center; gap: 12px; padding: 15px 20px; border-bottom: 1px solid var(--line); background: var(--card); }
+.mk-modal-ico{ flex: none; width: 40px; height: 40px; display: grid; place-items: center; border-radius: 12px; }
 .mk-modal-txt{ flex: 1; min-width: 0; }
 .mk-modal-txt h2{ font-size: 16px; margin: 0; }
 .mk-modal-txt small{ color: var(--muted); }
 .mk-modal-x{ flex: none; width: 34px; height: 34px; display: grid; place-items: center; border: 0; border-radius: 10px; background: transparent; color: var(--ink-2); cursor: pointer; }
 .mk-modal-x:hover{ background: var(--surface); color: var(--ink); }
-.mk-modal-body{ overflow: auto; padding: 16px 18px; }
-.mk-modal-body .mk-card{ margin-bottom: 0; }
+.mk-modal-body{ overflow: auto; padding: 20px 22px 0; }
+.mk-modal-body .mk-card{ margin-bottom: 0; border: 0; border-radius: 0; background: transparent; box-shadow: none; padding: 0; animation: mk-card-in .22s ease-out; }
 @media (max-width: 640px){
   .mk-overlay{ padding: 0; align-items: flex-end; }
   .mk-modal{ width: 100%; max-height: 92vh; border-radius: 18px 18px 0 0; border-left: 0; border-right: 0; border-bottom: 0; }
@@ -1257,6 +1279,56 @@ body{ transition: background-color .2s ease, color .2s ease; }
 .mk-mini > span{ display: inline-flex; align-items: center; gap: 5px; font-size: 11.5px; font-weight: 650; color: var(--muted); }
 .mk-mini > span em{ font-style: normal; font-weight: 500; opacity: .8; }
 .mk-card .btn.mk-add{ width: 100%; justify-content: center; border-style: dashed; }
+/* ===== Piel de los formularios del modal =====
+   Los 16 bloques comparten la misma receta: campos blancos sobre el fondo
+   del modal, interruptores y repetibles como tarjetas, etiquetas de ítem en
+   versalita y el botón de guardar fijo al pie del scroll. Todo va scopeado
+   a .mk-modal para no tocar las mismas clases en otras secciones. */
+.mk-modal .mk-card > h3{ font-size: 15.5px; font-weight: 700; margin-bottom: 14px; }
+.mk-modal .mk-tip{ margin-bottom: 16px; }
+.mk-modal .mk-tip .icon{ color: var(--info-ink); }
+.mk-modal .field{ margin-bottom: 18px; }
+.mk-modal .input, .mk-modal .select, .mk-modal .textarea{ border-radius: 11px; padding: 12px 14px; }
+.mk-modal .textarea.invalid{ border-color: var(--danger); }
+.mk-modal .textarea.invalid:focus{ box-shadow: 0 0 0 4px rgba(220, 38, 38, .12); }
+.mk-modal input[type='number']{ -moz-appearance: textfield; appearance: textfield; }
+.mk-modal input[type='number']::-webkit-outer-spin-button, .mk-modal input[type='number']::-webkit-inner-spin-button{ -webkit-appearance: none; margin: 0; }
+.mk-modal .select{ appearance: none; -webkit-appearance: none; padding-right: 38px; background-image: url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='%2364748b' stroke-width='2.4' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 13px center; }
+[data-theme='dark'] .mk-modal .select{ background-image: url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='%2393a0bd' stroke-width='2.4' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E"); }
+/* Interruptores "Mostrar en tu web": de lista unida a tarjetas separadas,
+   con tinte de marca cuando quedan activados. */
+.mk-modal .check-list{ display: grid; gap: 8px; border: 0; border-radius: 0; overflow: visible; background: transparent; }
+.mk-modal .check-item{ border: 1px solid var(--line); border-radius: 12px; padding: 12px 14px; background: var(--card); box-shadow: var(--shadow-sm); transition: border-color .15s, background .15s, box-shadow .15s; }
+.mk-modal .check-item + .check-item{ border-top-color: var(--line); }
+.mk-modal .check-item:not(.disabled):hover{ border-color: var(--line-strong); background: var(--surface); }
+.mk-modal .check-item:has(input:checked){ border-color: var(--brand-soft-line); background: var(--brand-soft); }
+.mk-modal .check-item:has(input:checked):not(.disabled):hover{ border-color: var(--brand-500); background: var(--brand-soft); }
+.mk-modal .check-item:focus-within{ border-color: var(--brand-500); box-shadow: var(--ring); }
+/* Ítems repetibles (servicios, cifras, testimonios…): panel suave redondeado
+   con el número como pastilla y acciones a la derecha. */
+.mk-modal .qa-list{ gap: 12px; margin: 12px 0 14px; }
+.mk-modal .qa-item{ padding: 14px; border-radius: 14px; background: var(--card); transition: border-color .15s, box-shadow .15s; }
+.mk-modal .qa-item:hover{ border-color: var(--line-strong); }
+.mk-modal .qa-fields{ gap: 10px; }
+.mk-modal .qa-fields .input, .mk-modal .qa-fields .select, .mk-modal .qa-fields .textarea{ background-color: var(--surface); }
+.mk-modal .mk-mini > span{ font-size: 10.5px; font-weight: 700; letter-spacing: .05em; text-transform: uppercase; color: var(--muted); }
+.mk-modal .mk-card .btn.mk-add{ border-radius: 12px; padding: 12px 16px; color: var(--muted); }
+.mk-modal .mk-card .btn.mk-add:hover:not(:disabled){ border-color: var(--brand-500); color: var(--brand-ink); background: var(--brand-soft); }
+/* Pie de guardado: queda fijo abajo del scroll para no perseguirlo al final
+   de formularios largos; sangra hasta los bordes del cuerpo del modal. */
+.mk-modal .btn-row{ position: sticky; bottom: 0; z-index: 3; margin: 24px -22px 0; padding: 14px 22px 18px; background: var(--bg); border-top: 1px solid var(--line-soft); box-shadow: 0 -12px 24px -16px rgba(15, 23, 42, .28); }
+@media (max-width: 640px){
+  .mk-modal-body{ padding: 16px 16px 0; }
+  .mk-modal .btn-row{ margin: 20px -16px 0; padding: 12px 16px calc(14px + env(safe-area-inset-bottom)); }
+}
+@media (max-width: 520px){
+  .mk-modal .qa-item{ flex-wrap: wrap; }
+  .mk-modal .qa-actions{ flex-direction: row; width: 100%; justify-content: flex-end; }
+}
+@media (prefers-reduced-motion: reduce){
+  .mk-overlay, .mk-modal, .mk-modal .mk-card{ animation: none; }
+  .mk-launcher{ transition: none; }
+}
 /* Acciones de la sección Diseño: Guardar + Ver web debajo de la vista previa. */
 .design-actions{ display: flex; gap: 10px; }
 .design-actions .btn{ flex: 1; justify-content: center; min-height: 44px; }
