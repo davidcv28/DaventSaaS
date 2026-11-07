@@ -52,7 +52,7 @@ onBeforeUnmount(() => clearTimeout(timer))
   border: 1px solid var(--line);
   border-radius: 14px;
   background: var(--card);
-  color: var(--ink);
+  color: #7c3aed;
   font-size: 13px;
   font-weight: 500;
   line-height: 1.45;
