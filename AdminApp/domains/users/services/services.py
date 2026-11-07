@@ -84,6 +84,11 @@ def UpdatePasswordUserQuery(user : User, validated_data : dict) -> User:
 
 #PROFILE UPDATE QUERY
 def UpdateProfileQuery(profile : UserProfile, validated_data : dict) -> UserProfile:
+    #La asistencia IA solo se decide una vez (modal del primer ingreso): si
+    #ya fue consultada, el PATCH no puede volver a cambiarla.
+    if profile.ai_assist_prompted:
+        validated_data.pop('ai_assist_enabled', None)
+        validated_data.pop('ai_assist_prompted', None)
     #Si cambia el celular hay que verificarlo de nuevo: la verificación anterior
     #valía para el número viejo (misma regla que el cambio de correo). Solo si
     #'phone' viajó en el payload — un PATCH sin phone no debe resetear el flag.

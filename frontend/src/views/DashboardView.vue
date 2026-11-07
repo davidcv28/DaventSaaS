@@ -65,6 +65,7 @@ import CountUp from '../components/CountUp.vue'
 import FlyerStudio from '../components/FlyerStudio.vue'
 import FlyerEditor from '../components/FlyerEditor.vue'
 import AiAssistModal from '../components/assist/AiAssistModal.vue'
+import AiAssistOptIn from '../components/assist/AiAssistOptIn.vue'
 import PriceUpdateModal from '../components/PriceUpdateModal.vue'
 import { useOffers } from '../composables/useOffers.js'
 import CatalogToolbar from '../components/dashboard/catalog/CatalogToolbar.vue'
@@ -1743,10 +1744,16 @@ const canCustomize = computed(() => Boolean(plan.value?.benefits?.has_customizat
 const canDesignAdvanced = computed(() => Boolean(plan.value?.benefits?.has_design_advanced))
 
 // "Asistencia con IA": mismo modal con dos contextos ('design' | 'business').
-// Candado = has_ai_design (mismo gate que el diseño asistido).
+// Candado = has_ai_design (mismo gate que el diseño asistido) + opt-out del
+// primer ingreso (profile.ai_assist_enabled; sin perfil cargado se asume
+// activa, que es el default del modelo).
+const aiAssistEnabled = computed(() => (auth.user?.profile ? auth.user.profile.ai_assist_enabled !== false : true))
+const aiOptInOpen = ref(false)
+const aiOptInPending = ref(false)
 const assistOpen = ref(false)
 const assistOrigin = ref('design')
 function openAssist(origin) {
+  if (!aiAssistEnabled.value) return
   if (navLocks.value.design_assisted) { openLocked('design_assisted'); return }
   assistOrigin.value = origin
   assistOpen.value = true
@@ -2793,6 +2800,19 @@ onMounted(async () => {
   try {
     if (localStorage.getItem('davent:tour:done') !== '1') setTimeout(() => { tourOpen.value = true }, 900)
   } catch {}
+  // Asistencia IA: el modal del opt-out sale una sola vez por cuenta. Si la
+  // guía está abierta espera a que cierre (watch de tourOpen más abajo).
+  if (auth.user?.profile?.ai_assist_prompted === false) {
+    aiOptInPending.value = true
+    setTimeout(() => {
+      if (!tourOpen.value) { aiOptInPending.value = false; aiOptInOpen.value = true }
+    }, 1400)
+  }
+})
+
+// La guía tapa el opt-in: cuando cierra, entra la consulta de IA.
+watch(tourOpen, (v) => {
+  if (!v && aiOptInPending.value) { aiOptInPending.value = false; aiOptInOpen.value = true }
 })
 
 watch(() => carouselImages.value.length, (total) => {
@@ -4840,7 +4860,7 @@ async function changePassword() {
       </div>
       <SectionTabs :tabs="tabGroups.web" active="design" @select="section = $event" />
 
-      <div class="next-card assist-card">
+      <div v-if="aiAssistEnabled" class="next-card assist-card">
         <span class="next-icon"><AppIcon name="sparkles" :size="22" /></span>
         <div><strong>Asistencia con IA</strong><small>Respondé unas preguntas y te armamos el diseño de tu web.</small></div>
         <button class="btn btn-auto assist-btn" @click="openAssist('design')">
@@ -4875,7 +4895,7 @@ async function changePassword() {
       </div>
       <SectionTabs :tabs="tabGroups.web" active="company" @select="section = $event" />
 
-      <div class="next-card assist-card">
+      <div v-if="aiAssistEnabled" class="next-card assist-card">
         <span class="next-icon"><AppIcon name="sparkles" :size="22" /></span>
         <div><strong>Asistencia con IA</strong><small>Te ayudamos a completar los datos de tu negocio, sin pisar lo que ya cargaste.</small></div>
         <button class="btn btn-auto assist-btn" @click="openAssist('business')">
@@ -6500,6 +6520,7 @@ async function changePassword() {
 
     <!-- Asistencia con IA: mismo asistente para Diseño y Mi negocio -->
     <Teleport to="body">
+      <AiAssistOptIn v-if="aiOptInOpen" @done="aiOptInOpen = false" />
       <AiAssistModal
         v-if="assistOpen"
         :origin="assistOrigin"

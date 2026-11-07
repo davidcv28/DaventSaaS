@@ -56,11 +56,15 @@ class UserProfileSerializer(UserProfileValidatorsMixins,UserProfileUpdateMethod,
     #EMAIL VERIFICATION (solo lectura: se marca desde el link firmado del correo)
     email_verified      =   serializers.BooleanField(read_only = True)
     email_verified_at   =   serializers.DateTimeField(read_only = True)
+    #ASISTENCIA IA (una sola escritura: el modal del primer ingreso; después
+    #UpdateProfileQuery ignora ambos campos)
+    ai_assist_enabled   =   serializers.BooleanField(required = False)
+    ai_assist_prompted  =   serializers.BooleanField(required = False)
     class Meta:
         model           =   UserProfile
         fields          =   ['user', 'tax_condition', 'business_name', 'type_document', 'document', 'first_name', 'last_name',
                              'province', 'city', 'address', 'phone', 'terms_accepted', 'terms_accepted_at', 'terms_version',
-                             'email_verified', 'email_verified_at']
+                             'email_verified', 'email_verified_at', 'ai_assist_enabled', 'ai_assist_prompted']
 
     
 #=============================#=============================#=============================#=============================

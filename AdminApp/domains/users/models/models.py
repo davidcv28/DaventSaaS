@@ -57,6 +57,11 @@ class UserProfile(models.Model):
     #vía WhatsApp entrante — el usuario le manda un código al número business)
     phone_verified      =   models.BooleanField(default = False, verbose_name = 'Celular verificado')
     phone_verified_at   =   models.DateTimeField(null = True, blank = True, verbose_name = 'Fecha de verificación del celular')
+    #ASISTENCIA IA: opt-out en el alta — el modal del primer ingreso la
+    #enciende/apaga y marca ai_assist_prompted; una vez respondida no se
+    #vuelve a preguntar ni a cambiar (UpdateProfileQuery lo ignora).
+    ai_assist_enabled   =   models.BooleanField(default = True, verbose_name = 'Asistencia IA activada')
+    ai_assist_prompted  =   models.BooleanField(default = False, verbose_name = 'Asistencia IA consultada')
     def save(self, *args, **kwargs):
         #Las huellas acompañan al campo cifrado: se recomputan siempre (barato)
         #y viajan en el UPDATE cuando el campo origen está en update_fields.
