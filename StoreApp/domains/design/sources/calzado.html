@@ -489,6 +489,23 @@ html.m-lock,html.m-lock body,body.filters-open{overflow:hidden}
 .cats .ds-cat:hover::after{transform:none;opacity:1;color:var(--accent)}
 .cats .ds-cat:hover::before{color:var(--accent)}
 
+/* Marcas (fragmento ds-brand): logo o inicial + nombre; cada item
+   enlaza al catálogo filtrado por esa marca. */
+.brands-strip{display:flex;flex-wrap:wrap;gap:10px;list-style:none;margin:0;padding:0}
+.brands-strip .ds-brand-link{
+  display:inline-flex;align-items:center;gap:12px;min-width:0;padding:12px 16px;
+  border:1px solid var(--line);background:var(--surface);color:var(--ink);text-decoration:none;
+  transition:background .22s,color .22s,border-color .22s}
+.brands-strip .ds-brand-link:hover{background:var(--panel);color:var(--panel-ink);border-color:var(--panel)}
+.ds-brand-img{width:28px;height:28px;object-fit:contain;flex:none}
+.ds-brand-initial{
+  display:grid;place-items:center;flex:none;width:28px;height:28px;border-radius:50%;
+  background:var(--accent);color:var(--accent-ink);font-family:var(--font-display);
+  font-size:14px;font-weight:700;letter-spacing:.02em}
+.ds-brand-name{font-family:var(--font-display);font-size:13.5px;font-weight:600;
+  letter-spacing:.06em;text-transform:uppercase;overflow:hidden;text-overflow:ellipsis;
+  white-space:nowrap;max-width:150px}
+
 /* ── riel de productos ── */
 .rail-sec{padding-block:clamp(44px,6vw,72px)}
 .rail{display:grid;grid-template-columns:264px 1fr;align-items:stretch;gap:0;
@@ -1246,6 +1263,7 @@ a.contact-row:hover{background:var(--soft);color:var(--accent)}
 [data-flag="testimonials"]:has(.quotes-grid:empty),
 [data-flag="faq"]:has(.faq-list:empty),
 [data-flag="plans"]:has(.ds-plans:empty),
+[data-flag="brands"]:has(.brands-strip:empty),
 #servicios-landing:not(:has(.ds-services-list)){display:none}
 
 @media (prefers-reduced-motion:reduce){
@@ -1425,6 +1443,20 @@ a.contact-row:hover{background:var(--soft);color:var(--accent)}
           <svg class="icon" viewBox="0 0 24 24"><path d="M5 12h14M13 6l6 6-6 6"/></svg></a>
       </div>
       <div class="cats ds-zone">{{categories}}</div>
+    </div>
+  </section>
+
+  <section class="sec" data-flag="brands">
+    <div class="wrap">
+      <div class="head rv">
+        <div>
+          <span class="kicker">Marcas</span>
+          <h2>Las casas que calzamos</h2>
+        </div>
+        <a class="head-link" href="#catalogo" data-ds-route="catalog">Ver catálogo
+          <svg class="icon" viewBox="0 0 24 24"><path d="M5 12h14M13 6l6 6-6 6"/></svg></a>
+      </div>
+      <ul class="brands-strip ds-zone">{{brands}}</ul>
     </div>
   </section>
 

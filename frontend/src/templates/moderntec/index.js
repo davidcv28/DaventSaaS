@@ -17,7 +17,7 @@ export default {
   },
   blocks: {
     landing: [
-      'hero', 'categories', 'featured', 'benefits', 'offers', 'about',
+      'hero', 'categories', 'featured', 'benefits', 'offers', 'brands', 'about',
       'gallery', 'faq', 'cta', 'contact'
     ],
     catalog: ['note', 'promo', ...CATALOG_BLOCKS],

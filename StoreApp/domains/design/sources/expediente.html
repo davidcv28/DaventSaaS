@@ -493,6 +493,26 @@ html[data-ds-theme="dark"] .grid-products .ds-product-link::after{background:lin
 .ds-cat::after{content:"→";color:var(--stamp);transition:transform .3s}
 .ds-cat:hover{transform:translateX(6px);box-shadow:var(--shadow);background:var(--surface-2)}
 .ds-cat:hover::after{transform:translateX(3px)}
+
+/* Marcas (fragmento ds-brand): logo o inicial + nombre; cada item
+   enlaza al catálogo filtrado por esa marca. */
+.brands-strip{display:flex;flex-wrap:wrap;gap:clamp(10px,1.4vw,16px);list-style:none;margin:0;padding:0}
+.brands-strip .ds-brand-link{
+  display:inline-flex;align-items:center;gap:12px;min-width:0;
+  border:1px solid var(--line);border-left:5px solid var(--stamp);background:var(--surface);
+  padding:14px 18px;color:var(--ink);text-decoration:none;
+  font:500 12px/1.4 var(--mono);letter-spacing:.06em;text-transform:uppercase;
+  transition:transform .3s var(--ease),box-shadow .3s,background-color .35s;
+}
+.brands-strip .ds-brand-link:hover{transform:translateX(6px);box-shadow:var(--shadow);background:var(--surface-2)}
+.ds-brand-img{width:28px;height:28px;object-fit:contain;flex:none}
+.ds-brand-initial{
+  display:grid;place-items:center;flex:none;width:28px;height:28px;
+  border:1.5px solid var(--stamp);color:var(--stamp);font:600 13px/1 var(--mono);
+  transform:rotate(-3deg);
+}
+.ds-brand-name{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:160px}
+
 .shots{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-top:clamp(36px,5vw,60px)}
 .ds-shot{border:1px solid var(--line);background:var(--surface);padding:8px;transform:rotate(-.6deg);transition:transform .35s var(--ease),box-shadow .35s}
 .ds-shot:nth-child(even){transform:rotate(.7deg)}
@@ -1236,6 +1256,17 @@ html[data-ds-theme="dark"] .grid-products .ds-product-link::after{background:lin
         <span class="right">Consultas frecuentes</span>
       </div>
       <div class="faq-list">{{faqs}}</div>
+    </div>
+  </section>
+
+  <section class="sec" data-flag="brands" data-hide-if-empty=".ds-brand" style="padding-top:0">
+    <div class="wrap">
+      <div class="doc-head">
+        <span class="file-no">DOC. 10</span>
+        <h2>Marcas</h2>
+        <span class="right">Casas que figuran en el catálogo</span>
+      </div>
+      <ul class="brands-strip">{{brands}}</ul>
     </div>
   </section>
 

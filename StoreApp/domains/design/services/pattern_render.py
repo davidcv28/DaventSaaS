@@ -100,6 +100,7 @@ PATTERN_VARIABLES = {
     'plans':             {'type': 'list',  'label': 'Planes de suscripción'},
     'plans_title':       {'type': 'text',  'label': 'Título de la sección Planes'},
     'gallery':           {'type': 'list',  'label': 'Galería'},
+    'brands':            {'type': 'list',  'label': 'Marcas'},
 }
 SURFACE_RE = re.compile(r'data-surface="([a-z]+)"')
 LIST_VARIABLES = frozenset(name for name, spec in PATTERN_VARIABLES.items() if spec['type'] == 'list')
@@ -621,6 +622,47 @@ def _contact_fragment(store, flags):
         f'data-cap-url="/api/stores/public/{slug}/contact/captcha/"></div>'
     )
 
+def _brands_fragment(store, flags = None):
+    """
+    Marcas de la tienda: logo WebP (o inicial) + nombre. Cada item enlaza
+    al catálogo filtrado por esa marca — el puente fija `state.brands` con
+    `data-ds-brand` antes de navegar (`data-ds-route="catalog"`). Sin
+    página de catálogo el enlace no filtraría nada y el item va estático.
+    """
+    if flags is None:
+        flags = _page_flags(store, getattr(store, 'customization', None))
+    if not flags.get('brands', True):
+        return ''
+    from StoreApp.domains.catalog.models import Brand
+    from StoreApp.domains.stores.services.storage import object_url
+
+    can_link = bool(flags.get('catalog', True))
+    rows = Brand.objects.filter(store = store).order_by('position', 'name')[:FRAGMENT_LIMIT]
+    items = []
+    for row in rows:
+        name = _text(row.name, 60)
+        if not name:
+            continue
+        #Mismo corte que `data-brand` de las tarjetas: el filtro del
+        #puente compara strings exactos.
+        key = _text(name, 40)
+        url = object_url(row.image_key)
+        media = (
+            f'<img class="ds-brand-img" src="{_attr(url)}" alt="" loading="lazy" decoding="async">'
+            if url else f'<span class="ds-brand-initial" aria-hidden="true">{escape(name[:1].upper())}</span>'
+        )
+        label = f'<span class="ds-brand-name">{escape(name)}</span>'
+        if can_link:
+            inner = (
+                f'<a class="ds-brand-link" href="#catalogo" data-ds-route="catalog"'
+                f' data-ds-brand="{_attr(key)}" aria-label="Ver productos de {escape(name)}">'
+                f'{media}{label}</a>'
+            )
+        else:
+            inner = f'<span class="ds-brand-link">{media}{label}</span>'
+        items.append(f'<li class="ds-brand">{inner}</li>')
+    return ''.join(items)
+
 def _gallery_fragment(store, customization):
     from StoreApp.domains.stores.models import StoreGalleryImage
     from StoreApp.domains.stores.services.storage import object_url
@@ -966,6 +1008,7 @@ def build_store_context(store, product = None, flags = None, raw_keys = None):
         'videos': lambda: _videos_fragment(customization, flags),
         'contact_form': lambda: _contact_fragment(store, flags),
         'gallery': lambda: _gallery_fragment(store, customization),
+        'brands': lambda: _brands_fragment(store, flags = flags),
     }
     keys = builders.keys() if raw_keys is None else [key for key in builders if key in raw_keys]
     raw = {key: builders[key]() for key in keys}

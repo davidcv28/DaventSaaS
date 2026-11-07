@@ -314,6 +314,20 @@
         return
       }
     }
+    /* Marca del escaparate -> catálogo filtrado: el nombre viaja en
+     * `data-ds-brand` (mismo valor que `data-brand` de las tarjetas) y se
+     * fija ANTES de que `data-ds-route` navegue a la superficie catálogo,
+     * que aplica los filtros al activarse. */
+    var brandHit = t.closest('[data-ds-brand]')
+    if (brandHit) {
+      var brandName = brandHit.getAttribute('data-ds-brand') || ''
+      state.brands = brandName ? [brandName] : []
+      saveState()
+      if (root.getAttribute('data-ds-surface') === 'catalog') {
+        syncFilterUI()
+        applyCatalog()
+      }
+    }
     var link = t.closest('[data-ds-route]')
     if (link) {
       e.preventDefault()

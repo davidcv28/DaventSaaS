@@ -1185,6 +1185,24 @@ html[data-ds-theme="dark"] .services-list .ds-service::before,html[data-ds-style
   *,*::before,*::after{animation-duration:.001s!important;transition-duration:.001s!important}
   .reveal{opacity:1;transform:none}
 }
+
+/* Marcas (fragmento ds-brand): logo o inicial + nombre; cada item
+   enlaza al catálogo filtrado por esa marca. */
+.brands-strip{display:flex;flex-wrap:wrap;gap:10px;list-style:none;margin:0;padding:0}
+.brands-strip .ds-brand-link{
+  display:inline-flex;align-items:center;gap:10px;min-width:0;padding:10px 16px;
+  border:1px solid var(--line);border-radius:var(--r-btn);background:var(--surface);
+  color:var(--ink);text-decoration:none;
+  transition:border-color .25s var(--ease),transform .25s var(--ease),box-shadow .25s var(--ease);
+}
+.brands-strip .ds-brand-link:hover{border-color:var(--accent);transform:translateY(-2px);box-shadow:var(--shadow-soft)}
+.ds-brand-img{width:28px;height:28px;object-fit:contain;flex:none}
+.ds-brand-initial{
+  display:grid;place-items:center;flex:none;width:28px;height:28px;border-radius:50%;
+  background:var(--accent-soft);color:var(--accent-deep);font:700 13px/1 var(--mono);
+}
+.ds-brand-name{font:500 11px/1 var(--mono);letter-spacing:.1em;text-transform:uppercase;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:140px}
+.brands-sec:not(:has(.ds-brand)){display:none}
 </style>
 </head>
 <body>
@@ -1417,6 +1435,19 @@ html[data-ds-theme="dark"] .services-list .ds-service::before,html[data-ds-style
         <p class="sec-note">Respuestas de la tienda.</p>
       </header>
       <div class="faq-list ds-zone">{{faqs}}</div>
+    </div>
+  </section>
+
+  <section class="sec brands-sec" data-flag="brands" data-hide-if-empty=".ds-brand" style="padding-top:0">
+    <div class="wrap">
+      <header class="sec-head">
+        <div class="sec-title-wrap">
+          <p class="eyebrow">Marcas</p>
+          <h2 class="sec-title">Casas que <em>trabajamos</em></h2>
+        </div>
+        <p class="sec-note">Cada marca filtra el catálogo.</p>
+      </header>
+      <ul class="brands-strip ds-zone">{{brands}}</ul>
     </div>
   </section>
 

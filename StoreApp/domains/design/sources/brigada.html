@@ -814,6 +814,24 @@
     .postal-grid{grid-auto-columns:minmax(220px,78vw)}
     .cat-surface,.svc-surface,.pdp-surface{padding:24px 16px 54px}
   }
+
+  /* Marcas (fragmento ds-brand): logo o inicial + nombre; cada item
+     enlaza al catálogo filtrado por esa marca. */
+  .brands-grid{display:flex;flex-wrap:wrap;gap:12px;list-style:none;margin:0;padding:0}
+  .brands-grid .ds-brand-link{
+    display:inline-flex;align-items:center;gap:12px;min-width:0;padding:13px 18px 13px 14px;
+    background:var(--surface);border:1.5px solid var(--frame);color:var(--ink);
+    font:800 11.5px/1 var(--font-m);letter-spacing:.1em;text-transform:uppercase;
+    text-decoration:none;transition:transform .15s var(--ease),box-shadow .15s var(--ease),background .15s var(--ease);
+  }
+  .brands-grid .ds-brand-link:hover{transform:translate(-2px,-2px);box-shadow:5px 5px 0 0 var(--hard);background:var(--hazard-soft)}
+  .ds-brand-img{width:28px;height:28px;object-fit:contain;flex:none}
+  .ds-brand-initial{
+    display:grid;place-items:center;flex:none;width:28px;height:28px;
+    background:var(--band);color:var(--hazard);font:800 13px/1 var(--font-m);
+    clip-path:polygon(0 0,100% 0,100% 74%,74% 100%,0 100%);
+  }
+  .ds-brand-name{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:150px}
 </style>
 </head>
 <body>
@@ -970,6 +988,16 @@
         <a class="sec-note" href="#catalogo" data-ds-route="catalog">Catálogo →</a>
       </div>
       <div class="grid">{{products}}</div>
+    </section>
+
+    <section class="sec reveal" data-flag="brands">
+      <div class="sec-head">
+        <span class="idx" aria-hidden="true"></span>
+        <h2>Marcas</h2>
+        <span class="rule" aria-hidden="true"></span>
+        <a class="sec-note" href="#catalogo" data-ds-route="catalog">Ver por marca →</a>
+      </div>
+      <ul class="brands-grid ds-zone">{{brands}}</ul>
     </section>
 
     <section class="sec reveal" id="ofrecemos" data-flag="services">

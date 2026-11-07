@@ -107,6 +107,23 @@
   .ds-cat{display:inline-flex;align-items:center;min-height:36px;padding:0 14px;border:1px solid var(--line);border-radius:999px;font-size:12px;background:var(--card)}
   .ds-cat:hover{border-color:var(--accent)}
 
+  /* Marcas (fragmento ds-brand): logo o inicial + nombre; cada item
+     enlaza al catálogo filtrado por esa marca. */
+  .brands-strip{display:flex;flex-wrap:wrap;gap:8px;list-style:none;margin:0;padding:0}
+  .brands-strip .ds-brand-link{
+    display:inline-flex;align-items:center;gap:10px;min-width:0;
+    min-height:40px;padding:0 14px;border:1px dashed var(--dash);border-radius:var(--radius);
+    background:var(--card);color:var(--ink);font-size:12px;text-decoration:none;
+    transition:border-color .15s,background .15s}
+  .brands-strip .ds-brand-link:hover{border-color:var(--accent);border-style:solid}
+  .ds-brand-img{width:26px;height:26px;object-fit:contain;flex:none}
+  .ds-brand-initial{
+    display:grid;place-items:center;flex:none;width:26px;height:26px;border-radius:50%;
+    border:1px solid var(--ink);background:var(--paper);color:var(--ink);
+    font:700 11px system-ui}
+  .ds-brand-name{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:150px}
+  [data-flag="brands"]:has(.brands-strip:empty){display:none}
+
   .about{display:grid;grid-template-columns:minmax(0,5fr) minmax(0,7fr);gap:48px;align-items:center}
   .about .ph{min-height:320px}
   .about ul{margin:14px 0 0;padding-left:18px;color:var(--muted);font-size:13.5px}
@@ -259,13 +276,20 @@
     </div>
   </section>
 
+  <section class="band" data-flag="brands">
+    <div class="shell">
+      <p class="sec-label"><b>05 · Marcas</b><span>Casas y proveedores</span></p>
+      <ul class="brands-strip">{{brands}}</ul>
+    </div>
+  </section>
+
   <section class="band">
     <div class="shell about">
       <figure class="ph" data-ph="Foto del estudio">
         <img src="{{store_cover}}" alt="">
       </figure>
       <div>
-        <p class="sec-label"><b>05 · El estudio</b><span>Quién está detrás</span></p>
+        <p class="sec-label"><b>06 · El estudio</b><span>Quién está detrás</span></p>
         <h2>Sobre {{store_name}}</h2>
         <p class="lead">{{store_about}}</p>
         <ul>
@@ -279,7 +303,7 @@
 
   <section class="band">
     <div class="shell">
-      <p class="sec-label"><b>06 · Confianza</b><span>Por qué elegirnos</span></p>
+      <p class="sec-label"><b>07 · Confianza</b><span>Por qué elegirnos</span></p>
       <div class="trust">
         <div class="trust-item"><b>01</b><strong>Agenda flexible</strong><span>Sábados y feriados con turno previo.</span></div>
         <div class="trust-item"><b>02</b><strong>Edición profesional</strong><span>Color, luz y acabado de estudio.</span></div>

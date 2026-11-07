@@ -579,6 +579,24 @@ html[data-ds-theme="dark"] .ds-rev-send{background:var(--accent);color:var(--on-
   .reveal{transition:none;opacity:1;transform:none}
   *{transition-duration:.01ms!important}
 }
+
+/* Marcas (fragmento ds-brand): logo o inicial + nombre; cada item
+   enlaza al catálogo filtrado por esa marca. */
+.brands-strip{display:flex;flex-wrap:wrap;gap:10px;list-style:none;margin:0;padding:0}
+.brands-strip .ds-brand-link{
+  display:inline-flex;align-items:center;gap:10px;min-width:0;padding:12px 18px;
+  border:1px solid var(--line);border-radius:var(--pill);background:var(--card);
+  color:var(--ink);text-decoration:none;
+  transition:border-color .2s var(--ease),transform .2s var(--ease);
+}
+.brands-strip .ds-brand-link:hover{border-color:var(--accent);transform:translateY(-2px)}
+.ds-brand-img{width:28px;height:28px;object-fit:contain;flex:none}
+.ds-brand-initial{
+  display:grid;place-items:center;flex:none;width:28px;height:28px;border-radius:50%;
+  background:var(--ink);color:var(--paper);font:700 13px/1 var(--mono);
+}
+html[data-ds-theme="dark"] .ds-brand-initial{background:var(--accent);color:var(--on-accent)}
+.ds-brand-name{font:600 11px/1 var(--mono);letter-spacing:.1em;text-transform:uppercase;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:150px}
 </style>
 </head>
 <body>
@@ -723,6 +741,11 @@ html[data-ds-theme="dark"] .ds-rev-send{background:var(--accent);color:var(--on-
 <section id="faq" data-flag="faqs"><div class="wrap">
   <div class="sec-head" data-reveal><span class="idx">12</span><h2>{{faqs_title}}</h2></div>
   <div class="faqs-list ds-zone">{{faqs}}</div>
+</div></section>
+
+<section id="marcas" data-flag="brands"><div class="wrap">
+  <div class="sec-head" data-reveal><span class="idx">13</span><h2>Marcas</h2><p>Filtrá el catálogo por casa.</p></div>
+  <ul class="brands-strip ds-zone">{{brands}}</ul>
 </div></section>
 
 <section id="cta"><div class="wrap">

@@ -780,6 +780,23 @@
     .loop{overflow-x:auto}
     .loop-group[aria-hidden="true"]{display:none}
   }
+
+  /* Marcas (fragmento ds-brand): logo o inicial + nombre; cada item
+     enlaza al catálogo filtrado por esa marca. */
+  .brands-strip{display:flex;flex-wrap:wrap;gap:10px;list-style:none;margin:0;padding:0}
+  .brands-strip .ds-brand-link{
+    display:inline-flex;align-items:center;gap:10px;min-width:0;padding:10px 16px;
+    border:1px solid var(--line);border-radius:var(--radius);background:var(--card);
+    color:var(--ink);text-decoration:none;
+    transition:border-color .25s var(--ease),transform .25s var(--ease),box-shadow .25s var(--ease);
+  }
+  .brands-strip .ds-brand-link:hover{border-color:var(--coral);transform:translateY(-2px);box-shadow:var(--shadow-sm)}
+  .ds-brand-img{width:28px;height:28px;object-fit:contain;flex:none}
+  .ds-brand-initial{
+    display:grid;place-items:center;flex:none;width:28px;height:28px;border-radius:50%;
+    background:var(--pine);color:var(--band-ink);font:700 13px/1 "JetBrains Mono",ui-monospace,monospace;
+  }
+  .ds-brand-name{font:600 10.5px/1 "JetBrains Mono",ui-monospace,monospace;letter-spacing:.14em;text-transform:uppercase;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:140px}
 </style>
 </head>
 <body>
@@ -1080,6 +1097,15 @@
         <span class="sec-note">Opiniones</span>
       </div>
       <div class="quotes-grid ds-zone">{{testimonials}}</div>
+    </section>
+
+    <section class="sec reveal" data-flag="brands">
+      <div class="sec-head">
+        <span class="idx" aria-hidden="true"></span>
+        <h2>Marcas aliadas</h2>
+        <span class="sec-note">Operadores y proveedores</span>
+      </div>
+      <ul class="brands-strip ds-zone">{{brands}}</ul>
     </section>
 
     <section class="sec reveal" data-flag="faq">

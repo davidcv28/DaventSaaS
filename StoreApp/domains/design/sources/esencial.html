@@ -703,6 +703,15 @@ html[data-ds-surface="product"] section[data-surface="product"]:has(.catalog-gri
 .ds-rev-send:hover{transform:translateY(-2px);box-shadow:0 12px 24px -14px var(--accent)}
 @media (max-width:560px){.ds-rev-row{grid-template-columns:1fr}}
 
+/* Marcas (fragmento ds-brand): logo o inicial + nombre; cada item
+   enlaza al catálogo filtrado por esa marca. */
+.brands-strip{display:flex;flex-wrap:wrap;gap:10px;list-style:none;margin:0;padding:0}
+.brands-strip .ds-brand-link{display:inline-flex;align-items:center;gap:10px;min-width:0;padding:9px 14px;border:1px solid var(--line);border-radius:var(--radius);background:var(--surface);color:var(--ink);text-decoration:none;transition:border-color .2s,transform .2s}
+.brands-strip .ds-brand-link:hover{border-color:var(--accent);transform:translateY(-1px)}
+.ds-brand-img{width:30px;height:30px;object-fit:contain;flex:none}
+.ds-brand-initial{display:grid;place-items:center;flex:none;width:30px;height:30px;border-radius:50%;background:color-mix(in srgb,var(--accent) 14%,transparent);color:var(--accent);font-weight:800;font-size:14px}
+.ds-brand-name{font-size:13px;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:140px}
+
 /* ============================================
    ZONAS DE DATOS (fragmentos del contrato)
    ============================================ */
@@ -1407,6 +1416,16 @@ html.io .reveal.in{opacity:1;translate:0 0}
       </div>
       <div class="ds-plans reveal">{{plans}}</div>
       <div style="margin-top:24px"><a class="btn ghost" href="{{store_whatsapp_url}}">Consultar por WhatsApp <svg class="icon arrow" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg></a></div>
+    </div>
+  </section>
+
+  <section class="section zone-sec" data-flag="brands">
+    <div class="wrap">
+      <div class="section-head reveal">
+        <p class="eyebrow">Marcas</p>
+        <h2>Trabajamos con</h2>
+      </div>
+      <ul class="brands-strip ds-zone reveal">{{brands}}</ul>
     </div>
   </section>
 

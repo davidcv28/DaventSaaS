@@ -6753,49 +6753,54 @@
             "order": 3
           },
           {
-            "id": "plans",
+            "id": "brands",
             "enabled": true,
             "order": 4
           },
           {
-            "id": "benefits",
+            "id": "plans",
             "enabled": true,
             "order": 5
           },
           {
-            "id": "stats",
+            "id": "benefits",
             "enabled": true,
             "order": 6
+          },
+          {
+            "id": "stats",
+            "enabled": true,
+            "order": 7
           },
           {
             "id": "gallery",
             "variant": "grid",
             "enabled": true,
-            "order": 7
+            "order": 8
           },
           {
             "id": "testimonials",
             "variant": "cards",
             "enabled": true,
-            "order": 8
+            "order": 9
           },
           {
             "id": "faq",
             "variant": "accordion",
             "enabled": true,
-            "order": 9
+            "order": 10
           },
           {
             "id": "cta",
             "variant": "band",
             "enabled": true,
-            "order": 10
+            "order": 11
           },
           {
             "id": "contact",
             "variant": "card",
             "enabled": true,
-            "order": 11
+            "order": 12
           }
         ],
         "catalog": [
@@ -7063,39 +7068,44 @@
             "order": 2
           },
           {
-            "id": "benefits",
+            "id": "brands",
             "enabled": true,
             "order": 3
           },
           {
-            "id": "offers",
+            "id": "benefits",
             "enabled": true,
             "order": 4
           },
           {
-            "id": "about",
+            "id": "offers",
             "enabled": true,
             "order": 5
           },
           {
-            "id": "gallery",
+            "id": "about",
             "enabled": true,
             "order": 6
           },
           {
-            "id": "faq",
+            "id": "gallery",
             "enabled": true,
             "order": 7
           },
           {
-            "id": "cta",
+            "id": "faq",
             "enabled": true,
             "order": 8
           },
           {
-            "id": "contact",
+            "id": "cta",
             "enabled": true,
             "order": 9
+          },
+          {
+            "id": "contact",
+            "enabled": true,
+            "order": 10
           }
         ],
         "catalog": [
@@ -7197,49 +7207,54 @@
             "order": 2
           },
           {
-            "id": "about",
+            "id": "brands",
             "enabled": true,
             "order": 3
+          },
+          {
+            "id": "about",
+            "enabled": true,
+            "order": 4
           },
           {
             "id": "benefits",
             "variant": "cards",
             "enabled": true,
-            "order": 4
+            "order": 5
           },
           {
             "id": "plans",
             "enabled": true,
-            "order": 5
+            "order": 6
           },
           {
             "id": "testimonials",
             "variant": "cards",
             "enabled": true,
-            "order": 6
+            "order": 7
           },
           {
             "id": "gallery",
             "variant": "grid",
             "enabled": true,
-            "order": 7
+            "order": 8
           },
           {
             "id": "faq",
             "enabled": true,
-            "order": 8
+            "order": 9
           },
           {
             "id": "cta",
             "variant": "band",
             "enabled": true,
-            "order": 9
+            "order": 10
           },
           {
             "id": "contact",
             "variant": "card",
             "enabled": true,
-            "order": 10
+            "order": 11
           }
         ],
         "catalog": [
@@ -7373,19 +7388,24 @@
             "order": 1
           },
           {
-            "id": "about",
+            "id": "brands",
             "enabled": true,
             "order": 2
           },
           {
-            "id": "contact",
+            "id": "about",
             "enabled": true,
             "order": 3
           },
           {
-            "id": "gallery",
+            "id": "contact",
             "enabled": true,
             "order": 4
+          },
+          {
+            "id": "gallery",
+            "enabled": true,
+            "order": 5
           }
         ],
         "services": [
@@ -7491,49 +7511,54 @@
             "order": 5
           },
           {
-            "id": "gallery",
+            "id": "brands",
             "enabled": true,
             "order": 6
           },
           {
-            "id": "timeline",
+            "id": "gallery",
             "enabled": true,
             "order": 7
           },
           {
-            "id": "team",
+            "id": "timeline",
             "enabled": true,
             "order": 8
           },
           {
-            "id": "testimonials",
+            "id": "team",
             "enabled": true,
             "order": 9
           },
           {
-            "id": "plans",
+            "id": "testimonials",
             "enabled": true,
             "order": 10
           },
           {
-            "id": "video",
+            "id": "plans",
             "enabled": true,
             "order": 11
           },
           {
-            "id": "faq",
+            "id": "video",
             "enabled": true,
             "order": 12
           },
           {
-            "id": "cta",
+            "id": "faq",
             "enabled": true,
             "order": 13
           },
           {
-            "id": "contact",
+            "id": "cta",
             "enabled": true,
             "order": 14
+          },
+          {
+            "id": "contact",
+            "enabled": true,
+            "order": 15
           }
         ],
         "catalog": [
@@ -7606,69 +7631,74 @@
             "order": 3
           },
           {
-            "id": "services",
+            "id": "brands",
             "enabled": true,
             "order": 4
           },
           {
-            "id": "about",
+            "id": "services",
             "enabled": true,
             "order": 5
           },
           {
-            "id": "stats",
+            "id": "about",
             "enabled": true,
             "order": 6
           },
           {
-            "id": "benefits",
+            "id": "stats",
             "enabled": true,
             "order": 7
           },
           {
-            "id": "gallery",
+            "id": "benefits",
             "enabled": true,
             "order": 8
           },
           {
-            "id": "timeline",
+            "id": "gallery",
             "enabled": true,
             "order": 9
           },
           {
-            "id": "team",
+            "id": "timeline",
             "enabled": true,
             "order": 10
           },
           {
-            "id": "plans",
+            "id": "team",
             "enabled": true,
             "order": 11
           },
           {
-            "id": "testimonials",
+            "id": "plans",
             "enabled": true,
             "order": 12
           },
           {
-            "id": "faq",
+            "id": "testimonials",
             "enabled": true,
             "order": 13
           },
           {
-            "id": "video",
+            "id": "faq",
             "enabled": true,
             "order": 14
           },
           {
-            "id": "cta",
+            "id": "video",
             "enabled": true,
             "order": 15
           },
           {
-            "id": "contact",
+            "id": "cta",
             "enabled": true,
             "order": 16
+          },
+          {
+            "id": "contact",
+            "enabled": true,
+            "order": 17
           }
         ],
         "catalog": [
@@ -7807,49 +7837,54 @@
             "order": 2
           },
           {
-            "id": "about",
+            "id": "brands",
             "enabled": true,
             "order": 3
+          },
+          {
+            "id": "about",
+            "enabled": true,
+            "order": 4
           },
           {
             "id": "benefits",
             "variant": "cards",
             "enabled": true,
-            "order": 4
+            "order": 5
           },
           {
             "id": "offers",
             "enabled": true,
-            "order": 5
+            "order": 6
           },
           {
             "id": "testimonials",
             "variant": "cards",
             "enabled": true,
-            "order": 6
+            "order": 7
           },
           {
             "id": "gallery",
             "variant": "grid",
             "enabled": true,
-            "order": 7
+            "order": 8
           },
           {
             "id": "faq",
             "enabled": true,
-            "order": 8
+            "order": 9
           },
           {
             "id": "cta",
             "variant": "band",
             "enabled": true,
-            "order": 9
+            "order": 10
           },
           {
             "id": "contact",
             "variant": "card",
             "enabled": true,
-            "order": 10
+            "order": 11
           }
         ],
         "catalog": [
@@ -7958,44 +7993,49 @@
             "order": 2
           },
           {
-            "id": "about",
+            "id": "brands",
             "enabled": true,
             "order": 3
           },
           {
-            "id": "benefits",
+            "id": "about",
             "enabled": true,
             "order": 4
           },
           {
-            "id": "offers",
+            "id": "benefits",
             "enabled": true,
             "order": 5
           },
           {
-            "id": "gallery",
+            "id": "offers",
             "enabled": true,
             "order": 6
           },
           {
-            "id": "testimonials",
+            "id": "gallery",
             "enabled": true,
             "order": 7
           },
           {
-            "id": "faq",
+            "id": "testimonials",
             "enabled": true,
             "order": 8
           },
           {
-            "id": "cta",
+            "id": "faq",
             "enabled": true,
             "order": 9
           },
           {
-            "id": "contact",
+            "id": "cta",
             "enabled": true,
             "order": 10
+          },
+          {
+            "id": "contact",
+            "enabled": true,
+            "order": 11
           }
         ],
         "catalog": [
@@ -8097,54 +8137,59 @@
             "order": 3
           },
           {
-            "id": "services",
+            "id": "brands",
             "enabled": true,
             "order": 4
           },
           {
-            "id": "about",
+            "id": "services",
             "enabled": true,
             "order": 5
           },
           {
-            "id": "stats",
+            "id": "about",
             "enabled": true,
             "order": 6
           },
           {
-            "id": "benefits",
+            "id": "stats",
             "enabled": true,
             "order": 7
           },
           {
-            "id": "plans",
+            "id": "benefits",
             "enabled": true,
             "order": 8
           },
           {
-            "id": "gallery",
+            "id": "plans",
             "enabled": true,
             "order": 9
           },
           {
-            "id": "testimonials",
+            "id": "gallery",
             "enabled": true,
             "order": 10
           },
           {
-            "id": "faq",
+            "id": "testimonials",
             "enabled": true,
             "order": 11
           },
           {
-            "id": "cta",
+            "id": "faq",
             "enabled": true,
             "order": 12
           },
           {
-            "id": "contact",
+            "id": "cta",
             "enabled": true,
             "order": 13
+          },
+          {
+            "id": "contact",
+            "enabled": true,
+            "order": 14
           }
         ],
         "catalog": [
@@ -8215,42 +8260,47 @@
             "order": 2
           },
           {
-            "id": "about",
+            "id": "brands",
             "enabled": true,
             "order": 3
+          },
+          {
+            "id": "about",
+            "enabled": true,
+            "order": 4
           },
           {
             "id": "benefits",
             "variant": "cards",
             "enabled": true,
-            "order": 4
+            "order": 5
           },
           {
             "id": "plans",
             "enabled": true,
-            "order": 5
+            "order": 6
           },
           {
             "id": "testimonials",
             "variant": "cards",
             "enabled": true,
-            "order": 6
+            "order": 7
           },
           {
             "id": "faq",
             "enabled": true,
-            "order": 7
+            "order": 8
           },
           {
             "id": "cta",
             "variant": "band",
             "enabled": true,
-            "order": 8
+            "order": 9
           },
           {
             "id": "contact",
             "enabled": true,
-            "order": 9
+            "order": 10
           }
         ],
         "catalog": [
@@ -8352,42 +8402,47 @@
             "order": 2
           },
           {
-            "id": "about",
+            "id": "brands",
             "enabled": true,
             "order": 3
+          },
+          {
+            "id": "about",
+            "enabled": true,
+            "order": 4
           },
           {
             "id": "benefits",
             "variant": "cards",
             "enabled": true,
-            "order": 4
+            "order": 5
           },
           {
             "id": "plans",
             "enabled": true,
-            "order": 5
+            "order": 6
           },
           {
             "id": "testimonials",
             "variant": "cards",
             "enabled": true,
-            "order": 6
+            "order": 7
           },
           {
             "id": "faq",
             "enabled": true,
-            "order": 7
+            "order": 8
           },
           {
             "id": "cta",
             "variant": "band",
             "enabled": true,
-            "order": 8
+            "order": 9
           },
           {
             "id": "contact",
             "enabled": true,
-            "order": 9
+            "order": 10
           }
         ],
         "catalog": [
@@ -8486,72 +8541,77 @@
             "order": 1
           },
           {
-            "id": "categories",
+            "id": "brands",
             "enabled": true,
             "order": 2
           },
           {
-            "id": "about",
+            "id": "categories",
             "enabled": true,
             "order": 3
+          },
+          {
+            "id": "about",
+            "enabled": true,
+            "order": 4
           },
           {
             "id": "benefits",
             "variant": "cards",
             "enabled": true,
-            "order": 4
+            "order": 5
           },
           {
             "id": "offerings",
             "enabled": true,
-            "order": 5
+            "order": 6
           },
           {
             "id": "gallery",
             "enabled": true,
-            "order": 6
+            "order": 7
           },
           {
             "id": "timeline",
             "enabled": true,
-            "order": 7
+            "order": 8
           },
           {
             "id": "team",
             "enabled": true,
-            "order": 8
+            "order": 9
           },
           {
             "id": "testimonials",
             "variant": "cards",
             "enabled": true,
-            "order": 9
+            "order": 10
           },
           {
             "id": "plans",
             "enabled": true,
-            "order": 10
+            "order": 11
           },
           {
             "id": "video",
             "enabled": true,
-            "order": 11
+            "order": 12
           },
           {
             "id": "faq",
             "enabled": true,
-            "order": 12
+            "order": 13
           },
           {
             "id": "cta",
             "variant": "band",
             "enabled": true,
-            "order": 13
+            "order": 14
           },
           {
             "id": "contact",
             "enabled": true,
-            "order": 14
+            "order": 15
           }
         ],
         "catalog": [
@@ -8634,42 +8694,47 @@
             "order": 2
           },
           {
-            "id": "about",
+            "id": "brands",
             "enabled": true,
             "order": 3
+          },
+          {
+            "id": "about",
+            "enabled": true,
+            "order": 4
           },
           {
             "id": "benefits",
             "variant": "cards",
             "enabled": true,
-            "order": 4
+            "order": 5
           },
           {
             "id": "plans",
             "enabled": true,
-            "order": 5
+            "order": 6
           },
           {
             "id": "testimonials",
             "variant": "cards",
             "enabled": true,
-            "order": 6
+            "order": 7
           },
           {
             "id": "faq",
             "enabled": true,
-            "order": 7
+            "order": 8
           },
           {
             "id": "cta",
             "variant": "band",
             "enabled": true,
-            "order": 8
+            "order": 9
           },
           {
             "id": "contact",
             "enabled": true,
-            "order": 9
+            "order": 10
           }
         ],
         "catalog": [
@@ -8771,42 +8836,47 @@
             "order": 2
           },
           {
-            "id": "about",
+            "id": "brands",
             "enabled": true,
             "order": 3
+          },
+          {
+            "id": "about",
+            "enabled": true,
+            "order": 4
           },
           {
             "id": "benefits",
             "variant": "cards",
             "enabled": true,
-            "order": 4
+            "order": 5
           },
           {
             "id": "plans",
             "enabled": true,
-            "order": 5
+            "order": 6
           },
           {
             "id": "testimonials",
             "variant": "cards",
             "enabled": true,
-            "order": 6
+            "order": 7
           },
           {
             "id": "faq",
             "enabled": true,
-            "order": 7
+            "order": 8
           },
           {
             "id": "cta",
             "variant": "band",
             "enabled": true,
-            "order": 8
+            "order": 9
           },
           {
             "id": "contact",
             "enabled": true,
-            "order": 9
+            "order": 10
           }
         ],
         "catalog": [
@@ -8908,42 +8978,47 @@
             "order": 2
           },
           {
-            "id": "about",
+            "id": "brands",
             "enabled": true,
             "order": 3
+          },
+          {
+            "id": "about",
+            "enabled": true,
+            "order": 4
           },
           {
             "id": "benefits",
             "variant": "cards",
             "enabled": true,
-            "order": 4
+            "order": 5
           },
           {
             "id": "plans",
             "enabled": true,
-            "order": 5
+            "order": 6
           },
           {
             "id": "testimonials",
             "variant": "cards",
             "enabled": true,
-            "order": 6
+            "order": 7
           },
           {
             "id": "faq",
             "enabled": true,
-            "order": 7
+            "order": 8
           },
           {
             "id": "cta",
             "variant": "band",
             "enabled": true,
-            "order": 8
+            "order": 9
           },
           {
             "id": "contact",
             "enabled": true,
-            "order": 9
+            "order": 10
           }
         ],
         "catalog": [
@@ -9048,49 +9123,54 @@
             "order": 3
           },
           {
-            "id": "services",
+            "id": "brands",
             "enabled": true,
             "order": 4
           },
           {
-            "id": "stats",
+            "id": "services",
             "enabled": true,
             "order": 5
           },
           {
-            "id": "benefits",
+            "id": "stats",
             "enabled": true,
             "order": 6
           },
           {
-            "id": "gallery",
+            "id": "benefits",
             "enabled": true,
             "order": 7
           },
           {
-            "id": "testimonials",
+            "id": "gallery",
             "enabled": true,
             "order": 8
           },
           {
-            "id": "faq",
+            "id": "testimonials",
             "enabled": true,
             "order": 9
           },
           {
-            "id": "plans",
+            "id": "faq",
             "enabled": true,
             "order": 10
           },
           {
-            "id": "cta",
+            "id": "plans",
             "enabled": true,
             "order": 11
           },
           {
-            "id": "contact",
+            "id": "cta",
             "enabled": true,
             "order": 12
+          },
+          {
+            "id": "contact",
+            "enabled": true,
+            "order": 13
           }
         ],
         "catalog": [
@@ -9198,60 +9278,65 @@
             "order": 3
           },
           {
-            "id": "stats",
+            "id": "brands",
             "enabled": true,
             "order": 4
           },
           {
-            "id": "about",
+            "id": "stats",
             "enabled": true,
             "order": 5
           },
           {
-            "id": "timeline",
+            "id": "about",
             "enabled": true,
             "order": 6
           },
           {
-            "id": "categories",
+            "id": "timeline",
             "enabled": true,
             "order": 7
           },
           {
-            "id": "gallery",
+            "id": "categories",
             "enabled": true,
             "order": 8
           },
           {
-            "id": "benefits",
+            "id": "gallery",
             "enabled": true,
             "order": 9
           },
           {
-            "id": "plans",
+            "id": "benefits",
             "enabled": true,
             "order": 10
           },
           {
-            "id": "testimonials",
+            "id": "plans",
             "enabled": true,
             "order": 11
           },
           {
-            "id": "faq",
+            "id": "testimonials",
             "enabled": true,
             "order": 12
+          },
+          {
+            "id": "faq",
+            "enabled": true,
+            "order": 13
           },
           {
             "id": "cta",
             "variant": "band",
             "enabled": true,
-            "order": 13
+            "order": 14
           },
           {
             "id": "contact",
             "enabled": true,
-            "order": 14
+            "order": 15
           }
         ],
         "catalog": [
@@ -9373,45 +9458,50 @@
             "order": 3
           },
           {
-            "id": "about",
+            "id": "brands",
             "enabled": true,
             "order": 4
           },
           {
-            "id": "stats",
+            "id": "about",
             "enabled": true,
             "order": 5
           },
           {
-            "id": "benefits",
+            "id": "stats",
             "enabled": true,
             "order": 6
           },
           {
-            "id": "plans",
+            "id": "benefits",
             "enabled": true,
             "order": 7
           },
           {
-            "id": "testimonials",
+            "id": "plans",
             "enabled": true,
             "order": 8
           },
           {
-            "id": "faq",
+            "id": "testimonials",
             "enabled": true,
             "order": 9
+          },
+          {
+            "id": "faq",
+            "enabled": true,
+            "order": 10
           },
           {
             "id": "cta",
             "variant": "band",
             "enabled": true,
-            "order": 10
+            "order": 11
           },
           {
             "id": "contact",
             "enabled": true,
-            "order": 11
+            "order": 12
           }
         ],
         "catalog": [

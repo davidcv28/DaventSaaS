@@ -1237,6 +1237,24 @@ html[data-ds-theme="dark"] .foot-col a:hover{color:var(--volt)}
   .hero-title .ht-w{opacity:1;transform:none;animation:none}
   .hero-title::after{animation:none;opacity:.9}
 }
+
+/* Marcas (fragmento ds-brand): logo o inicial + nombre; cada item
+   enlaza al catálogo filtrado por esa marca. */
+.brands-strip{display:flex;flex-wrap:wrap;gap:10px;list-style:none;margin:0;padding:0}
+.brands-strip .ds-brand-link{
+  display:inline-flex;align-items:center;gap:10px;min-width:0;padding:10px 16px;
+  border:1px solid var(--line);border-radius:var(--r-btn);background:var(--surface);
+  color:var(--ink);text-decoration:none;
+  transition:border-color .2s var(--ease),transform .2s var(--ease),box-shadow .2s var(--ease);
+}
+.brands-strip .ds-brand-link:hover{border-color:var(--accent);transform:translateY(-2px);box-shadow:var(--shadow-soft)}
+.ds-brand-img{width:28px;height:28px;object-fit:contain;flex:none}
+.ds-brand-initial{
+  display:grid;place-items:center;flex:none;width:28px;height:28px;border-radius:8px;
+  background:var(--accent);color:var(--on-accent);font:700 13px/1 var(--mono);
+}
+.ds-brand-name{font:600 11px/1 var(--mono);letter-spacing:.12em;text-transform:uppercase;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:150px}
+.brands-sec:not(:has(.ds-brand)){display:none}
 </style>
 </head>
 <body>
@@ -1553,6 +1571,19 @@ html[data-ds-theme="dark"] .foot-col a:hover{color:var(--volt)}
         </a>
       </header>
       <div class="offer-rail ds-zone">{{offerings}}</div>
+    </div>
+  </section>
+
+  <section class="sec brands-sec" data-flag="brands" data-hide-if-empty=".ds-brand" style="padding-top:0">
+    <div class="wrap">
+      <header class="sec-head">
+        <div>
+          <p class="eyebrow">Marcas</p>
+          <h2 class="sec-title">Las casas que <em>armamos</em></h2>
+        </div>
+        <p class="sec-note">Componentes originales y nacionales.</p>
+      </header>
+      <ul class="brands-strip ds-zone">{{brands}}</ul>
     </div>
   </section>
 

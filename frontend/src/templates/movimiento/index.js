@@ -21,7 +21,7 @@ export default {
   blocks: {
     landing: [
       'announcements', 'hero', 'categories', 'featured', 'about', 'services',
-      'timeline', 'plans', 'benefits', 'stats', 'gallery', 'testimonials',
+      'timeline', 'plans', 'benefits', 'stats', 'brands', 'gallery', 'testimonials',
       'team', 'faq', 'cta', 'contact'
     ],
     catalog: [...new Set(['note', 'promo', ...CATALOG_BLOCKS])],
