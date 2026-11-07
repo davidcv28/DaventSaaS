@@ -132,7 +132,7 @@ html[data-ds-surface="landing"] header.top:not(.is-solid) .brand{color:#fff}
 html[data-ds-surface="landing"] header.top:not(.is-solid) .top-search input{color:#fff}
 html[data-ds-surface="landing"] header.top:not(.is-solid) .top-search input::placeholder{color:rgba(255,255,255,.6)}
 html[data-ds-surface="landing"] header.top:not(.is-solid) .m-open{color:#fff}
-main{min-height:60vh}
+main{min-height:480px}
 html[data-ds-surface="landing"] main{padding-top:0}
 html:not([data-ds-surface="landing"]) main{padding-top:var(--head-h)}
 
@@ -151,7 +151,9 @@ html:not([data-ds-surface="landing"]) main{padding-top:var(--head-h)}
 .m-foot a{font:600 10px var(--mono);letter-spacing:.16em;text-transform:uppercase;color:var(--muted)}
 
 /* ---------------- Héroe ---------------- */
-.hero{position:relative;min-height:88vh;display:flex;align-items:flex-end;background:#0d0d0d;overflow:hidden}
+/* El alto nunca va en vh: el iframe va estirado y el puente ajusta su
+   alto al contenido — un vh acá se retroalimenta y crece sin tope. */
+.hero{position:relative;min-height:clamp(480px,58vw,780px);display:flex;align-items:flex-end;background:#0d0d0d;overflow:hidden}
 .hero-img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
 .hero-img[src=""]{display:none}
 .hero::after{content:"";position:absolute;inset:0;background:linear-gradient(180deg,rgba(0,0,0,.18),rgba(0,0,0,.05) 40%,rgba(0,0,0,.55))}
@@ -475,7 +477,7 @@ footer.foot{border-top:1px solid var(--line);margin-top:96px}
   .top-search input{width:130px}
   .top-right .mono-link{display:none}
   header.top .top-inner{min-height:64px}
-  .hero{min-height:78vh}
+  .hero{min-height:clamp(420px,100vw,620px)}
   .hero-in{padding-bottom:72px}
   .about,.pdp-grid,.contact,.svc-grid{grid-template-columns:1fr;gap:40px}
   .svc-side{position:static}
