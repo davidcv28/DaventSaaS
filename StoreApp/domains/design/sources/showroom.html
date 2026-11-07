@@ -199,10 +199,16 @@ html:not([data-ds-surface="landing"]) main{padding-top:var(--head-h)}
   padding:5px 9px;background:var(--bg);color:var(--ink);
   font:700 9px/1 var(--sans);letter-spacing:.14em;text-transform:uppercase;
 }
-.ds-product-copy{display:block;padding:14px 0 0}
+.ds-product-copy{display:flex;align-items:baseline;justify-content:space-between;gap:12px;padding:14px 0 0}
 .ds-product-name{margin:0;font:700 11px/1.5 var(--sans);letter-spacing:.14em;text-transform:uppercase}
 .ds-product-desc{display:none}
-.ds-product-cat{display:block;margin-top:4px;font:500 9px var(--mono);letter-spacing:.16em;text-transform:uppercase;color:var(--muted)}
+.ds-product-cat{display:none}
+/* Corazón de la ficha (wishlist local — la tienda no tiene cuentas). */
+.p-heart{flex:none;width:22px;height:22px;padding:0;border:0;background:none;color:var(--muted);display:grid;place-items:center;transition:color var(--tr)}
+.p-heart:hover{color:var(--ink)}
+.p-heart svg{width:16px;height:16px;fill:none;stroke:currentColor;stroke-width:1.6}
+.p-heart.is-on{color:var(--ink)}
+.p-heart.is-on svg{fill:currentColor}
 .ds-stock{display:none}
 .ds-product-price{display:flex;align-items:baseline;gap:8px;margin-top:6px}
 .ds-product-amount{font-size:13px;font-weight:700}
@@ -903,12 +909,46 @@ footer.foot{border-top:1px solid var(--line);margin-top:96px}
      link; se envuelve en .p-media para el marco gris y la etiqueta OFF. */
   ;[].forEach.call(document.querySelectorAll('.ds-product-link'), function(link){
     var img = link.querySelector(':scope > .ds-product-img');
-    if (!img) return;
-    var media = document.createElement('span');
-    media.className = 'p-media';
-    link.insertBefore(media, img);
-    media.appendChild(img);
+    if (img) {
+      var media = document.createElement('span');
+      media.className = 'p-media';
+      link.insertBefore(media, img);
+      media.appendChild(img);
+    }
+    /* Corazón al costado del nombre (wishlist local por id de producto). */
+    var copy = link.querySelector('.ds-product-copy');
+    if (copy && !copy.querySelector('.p-heart')) {
+      var b = document.createElement('button');
+      b.type = 'button';
+      b.className = 'p-heart';
+      b.setAttribute('aria-label', 'Guardar en favoritos');
+      b.innerHTML = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M19.5 4.6a5 5 0 0 0-7.1 0l-.4.4-.4-.4a5 5 0 1 0-7.1 7.1l7.5 7.5 7.5-7.5a5 5 0 0 0 0-7.1z"/></svg>';
+      copy.appendChild(b);
+    }
   });
+
+  /* Wishlist: set de ids en localStorage, sin backend. */
+  var WL_KEY = 'davent:wl';
+  var wl = {};
+  try { wl = JSON.parse(localStorage.getItem(WL_KEY) || '{}') || {}; } catch (e) { wl = {}; }
+  ;[].forEach.call(document.querySelectorAll('[data-ds-product]'), function(link){
+    var heart = link.querySelector('.p-heart');
+    var id = link.getAttribute('data-ds-product');
+    if (heart && id && wl[id]) heart.classList.add('is-on');
+  });
+  document.addEventListener('click', function(e){
+    var h = e.target && e.target.closest ? e.target.closest('.p-heart') : null;
+    if (!h) return;
+    e.preventDefault();
+    e.stopPropagation();
+    var link = h.closest('[data-ds-product]');
+    var id = link ? link.getAttribute('data-ds-product') : '';
+    h.classList.toggle('is-on');
+    try {
+      if (id && h.classList.contains('is-on')) wl[id] = 1; else if (id) delete wl[id];
+      localStorage.setItem(WL_KEY, JSON.stringify(wl));
+    } catch (e2) {}
+  }, true);
 
   /* Cabecera: transparente sobre el héroe de la portada, sólida al hacer
      scroll. El iframe va estirado — el scroll real lo informa el host por
