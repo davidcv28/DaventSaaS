@@ -73,6 +73,7 @@ import ProductTable from '../components/dashboard/catalog/ProductTable.vue'
 import ProductForm from '../components/dashboard/catalog/ProductForm.vue'
 import DiscountCard from '../components/dashboard/catalog/DiscountCard.vue'
 import ChatDock from '../components/ChatDock.vue'
+import RobotGuide from '../components/RobotGuide.vue'
 import GlobalSearch from '../components/GlobalSearch.vue'
 import TourGuide from '../components/TourGuide.vue'
 import TipHint from '../components/TipHint.vue'
@@ -6489,6 +6490,10 @@ async function changePassword() {
         </section>
       </Transition>
     </ChatDock>
+
+    <!-- Guía de primera vez: robot + globo que presenta la burbuja de chat
+         (solo escritorio, 5s, una vez por sesión). -->
+    <RobotGuide :active="!chatDockHidden && !chatDockContent" />
 
     <!-- Búsqueda global: Ctrl/⌘+K o "/" desde cualquier sección -->
     <GlobalSearch v-model:open="searchOpen" :commands="searchCommands" />
