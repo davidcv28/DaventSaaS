@@ -107,6 +107,13 @@ function queueUpdate() {
 }
 
 let loadTimer = null
+// El timer se arma en cada navegación, no solo en el mount: una recarga
+// colgada (p. ej. cambio de diseño con la red lenta) antes dejaba el
+// spinner eterno sin "Reintentar".
+function armLoadTimer() {
+  clearTimeout(loadTimer)
+  loadTimer = setTimeout(() => { if (state.value === 'loading') state.value = 'failed' }, 12000)
+}
 function onLoad() {
   clearTimeout(loadTimer)
   state.value = 'ready'
@@ -130,17 +137,23 @@ watch(
 )
 watch(() => props.form.name_font, (font) => { if (font) ensureStoreFont(font) })
 
+const fetchPreviewToken = () => storesApi.sharePreview()
+  .then((data) => { previewToken.value = data?.token || '' })
+
 onMounted(() => {
   if (MOCK) {
     tokenReady.value = true
   } else {
-  storesApi.sharePreview()
-    .then((data) => { previewToken.value = data?.token || '' })
-    .catch(() => { previewToken.value = '' })
-    .finally(() => { tokenReady.value = true })
+    // Un fallo transitorio del share dejaba la vista sin token: el iframe
+    // cargaba igual pero mostraba lo PUBLICADO (y sin overrides del
+    // diseño en ensayo) en vez del borrador — un solo reintento lo cubre.
+    fetchPreviewToken()
+      .catch(() => new Promise((resolve) => setTimeout(resolve, 1500)).then(fetchPreviewToken))
+      .catch(() => { previewToken.value = '' })
+      .finally(() => { tokenReady.value = true })
   }
   window.addEventListener('message', onMessage)
-  loadTimer = setTimeout(() => { if (state.value === 'loading') state.value = 'failed' }, 12000)
+  armLoadTimer()
   if (stage.value) {
     resizeObserver = new ResizeObserver((entries) => {
       const rect = entries[0]?.contentRect
@@ -161,6 +174,7 @@ onBeforeUnmount(() => {
 function reload() {
   if (state.value === 'loading' && !src.value) return
   state.value = 'loading'
+  armLoadTimer()
   const el = frame.value
   if (el) el.src = el.src
 }

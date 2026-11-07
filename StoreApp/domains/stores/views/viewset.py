@@ -627,6 +627,21 @@ class StoreViewSet(StoreBaseViewSet):
             override                        =   (request.query_params.get('template') or '').strip()
             if override:
                 customization.template      =   override
+            #El estilo elegido en el panel también viaja como override: el
+            #documento hornea su paleta/tipografía en el render (el puente
+            #no puede recolorear un iframe de origen opaco). Mismo gesto
+            #que `applyStyle` del front: los tokens del estilo reemplazan
+            #el site_theme del borrador, y `effects` queda disponible para
+            #theme_css (radios/sombras — como en pattern_preview).
+            style_override                  =   (request.query_params.get('style') or '').strip()
+            if style_override:
+                from StoreApp.domains.design.models import DesignStyle
+                style_row                   =   DesignStyle.objects.filter(slug = style_override, is_active = True).first()
+                if style_row is not None:
+                    customization.site_theme = {
+                        **(style_row.tokens if isinstance(style_row.tokens, dict) else {}),
+                        'style': {'id': style_row.slug, 'effects': style_row.effects},
+                    }
         #La ficha del diseño pinta un producto concreto: ?product=<id> (solo
         #activos de la tienda; un id ajeno o de baja rinde con el contexto
         #vacío, nunca con datos de otro).
@@ -704,6 +719,7 @@ class StoreViewSet(StoreBaseViewSet):
             request.query_params.get('preview') or '', data.get('style') or '',
             nonce   =   nonce,
             preload =   data.get('preload') or [],
+            template    =   request.query_params.get('template') or '',
         )
         response            =   HttpResponse(html, content_type = 'text/html; charset=utf-8')
         #El documento se embebe en la web (iframe same-origin): el default
@@ -750,7 +766,12 @@ class StoreViewSet(StoreBaseViewSet):
         #El iframe va sandboxeado (origen opaco): el default `same-origin`
         #de Django bloqueaba el script como cross-origin.
         response['Cross-Origin-Resource-Policy'] = 'cross-origin'
-        patch_cache_control(response, public = True, max_age = 30)
+        #En vista previa el JS es del diseño en ensayo: cachearlo 30 s
+        #servía el script del patrón viejo sobre el documento nuevo.
+        if request.query_params.get('preview'):
+            patch_cache_control(response, private = True, no_store = True)
+        else:
+            patch_cache_control(response, public = True, max_age = 30)
         return response
     #=========================================
     # STATS (visitas de la web del dueño, beneficio has_stats: Estándar+)

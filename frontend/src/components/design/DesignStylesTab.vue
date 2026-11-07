@@ -199,7 +199,10 @@ function onPatternPick(value) {
   const style = linked || defaultStyleFor(p.slug)
   if (style) applyStyle(style)
   else props.form.site_theme = patternTheme(p)
-  previewReload.value++
+  // Sin recargar el iframe: el UPDATE llega por postMessage y la página
+  // decide con el meta del diseño ELEGIDO (template=/style= del documento).
+  // Recargar reabría toda la cadena de fetches y era la ventana donde los
+  // mensajes se perdían ("a veces no cambia nada").
 }
 
 // Cada diseño trae sus propios temas (DesignStyle): el elegido aplica el
@@ -210,7 +213,6 @@ function onStylePick(value) {
   const s = styleOptions.value.find((x) => x.slug === value)
   if (!s) return
   applyStyle(s)
-  previewReload.value++
 }
 
 // Diseño y estilo nunca quedan vacíos: si el diseño guardado es retirado o

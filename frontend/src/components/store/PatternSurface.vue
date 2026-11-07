@@ -15,6 +15,10 @@ const props = defineProps({
   //Diseño en ensayo del Studio: el backend solo lo acepta junto al token
   //de vista previa (la web pública nunca lo lee).
   template: { type: String, default: '' },
+  //Estilo en ensayo (slug DesignStyle): viaja en la URL porque el puente
+  //no puede recolorear un iframe de origen opaco — la paleta/fuentes del
+  //estilo se hornean en el render del documento (theme_css).
+  style: { type: String, default: '' },
   //Huella de lo que el documento pinta desde la base (logo/portada): al
   //cambiar, el iframe se recarga con los datos nuevos.
   revision: { type: String, default: '' },
@@ -31,11 +35,14 @@ const props = defineProps({
 const frame = ref(null)
 const height = ref(0)
 
-//El tema va en la URL solo en la carga inicial: al alternar claro/oscuro
-//el puente (`davent:ds-theme`) cambia data-ds-theme sin recargar el
-//documento — si theme estuviera en el src reactivo, cada toggle recargaría
-//el iframe y la página saltaría.
-const mountTheme = props.theme
+//El tema va en la URL solo al montar cada documento: al alternar
+//claro/oscuro el puente (`davent:ds-theme`) cambia data-ds-theme sin
+//recargar — si theme estuviera en el src reactivo, cada toggle recargaría
+//el iframe y la página saltaría. Pero cualquier otro cambio que fuerza un
+//documento nuevo (diseño, estilo, revisión, ficha) hornea el tema VIGENTE,
+//no el del primer mount: antes quedaba fijado el claro/oscuro viejo y el
+//documento arrancaba con el modo equivocado.
+const mountTheme = ref(props.theme)
 /* El documento sirve TODAS las superficies: cambiar de Inicio a Catálogo o
  * Servicios no necesita recargar el iframe (el puente cambia
  * `data-ds-surface`). Solo la ficha de producto viaja con `product` y
@@ -47,10 +54,15 @@ watch(() => props.surface, (next, prev) => {
   if (prev === 'product' && next !== 'product') reloadSurface.value = next
 })
 const srcSurface = computed(() => (props.product ? props.surface : reloadSurface.value))
+watch(
+  () => [props.template, props.style, props.revision, props.product, srcSurface.value],
+  () => { mountTheme.value = props.theme }
+)
 const src = computed(() => {
-  const params = new URLSearchParams({ theme: mountTheme, surface: srcSurface.value })
+  const params = new URLSearchParams({ theme: mountTheme.value, surface: srcSurface.value })
   if (props.preview) params.set('preview', props.preview)
   if (props.preview && props.template) params.set('template', props.template)
+  if (props.preview && props.style) params.set('style', props.style)
   if (props.revision) params.set('v', props.revision)
   if (props.product) params.set('product', String(props.product))
   return `/api/stores/public/${encodeURIComponent(props.slug)}/pattern/document/?${params}`
@@ -208,7 +220,6 @@ onBeforeUnmount(() => {
     :title="title || 'Diseño de la web'"
     :style="height ? { height: `${height}px` } : null"
     sandbox="allow-scripts allow-popups allow-popups-to-escape-sandbox allow-forms"
-    loading="lazy"
     @load="onLoad"
   ></iframe>
 </template>

@@ -62,6 +62,7 @@ const appUrl = env.appUrl
 // aplica reactivo, sin recargar el iframe.
 const layoutOverride = ref(null)
 let removeStudioGuard = null
+let studioSeenTimer = null
 // Identidad/cromo del borrador que el Studio empuja en modo edición
 // (tamaño del nombre, portada, logo, copy de secciones): lo que se ve en el
 // lienzo es exactamente lo que va a quedar guardado, sin recargar.
@@ -149,6 +150,15 @@ const patternRevision = computed(() => (
     ? JSON.stringify([custom.value.logo?.url || '', custom.value.cover?.url || ''])
     : ''
 ))
+//Estilo en ensayo distinto al del borrador: viaja como `?style=` del
+//documento (su paleta/fuentes se hornean en el render del lado del
+//servidor — el puente no puede recolorear un iframe de origen opaco).
+//Sin override el documento renderiza el site_theme del borrador tal cual.
+const patternStyleOverride = computed(() => {
+  const picked = custom.value?.site_theme?.style?.id || ''
+  const saved = store.value?.customization?.site_theme?.style?.id || ''
+  return picked !== saved ? picked : ''
+})
 // Navegación del documento del patrón: sus enlaces de chrome viajan como
 // rutas (home/catalog/services) y acá se resuelven con el router de la app.
 function onPatternNavigate({ route, id } = {}) {
@@ -177,6 +187,12 @@ const studioTheme = ref(null)      // siteTheme del borrador
 const studioExplicit = ref(null)   // campos que el borrador toca de verdad
 const studioTemplate = ref(null)   // template del borrador
 const studioViewMode = ref(null)   // claro/oscuro del visor (msg.mode)
+const studioUpdateSeen = ref(false) // llegó el primer UPDATE del host
+// Meta del patrón en ensayo pidiéndose: hasta que resuelve, la rama que
+// pinta (documento del diseño o plantilla Vue) no se puede decidir con el
+// meta del patrón GUARDADO — mostrarla antes flasheaba el diseño viejo.
+const patternMetaBusy = ref(false)
+const patternWaiting = computed(() => studioMode.value && (!studioUpdateSeen.value || patternMetaBusy.value))
 // En un iframe el referrer es el document del host: se acepta como origen
 // válido además del propio (el update llega del Studio que lo embebe).
 const parentOrigin = window.parent !== window && document.referrer
@@ -187,6 +203,7 @@ function onStudioMessage(e) {
   if (e.origin !== window.location.origin && e.origin !== parentOrigin) return
   const d = e.data
   if (d.type === STUDIO_MSG.UPDATE) {
+    studioUpdateSeen.value = true
     if (d.theme) studioTheme.value = d.theme
     studioExplicit.value = Array.isArray(d.explicit) ? new Set(d.explicit) : null
     if (d.layout) layoutOverride.value = d.layout
@@ -197,6 +214,33 @@ function onStudioMessage(e) {
     applyFocusRing(document, d.target)
   }
 }
+//El meta (ready/superficies/totales) describe el patrón del documento:
+//al ensayar otro diseño se repide con `template=` — antes se evaluaba
+//usePattern con el meta del GUARDADO y el documento del ELEGIDO, así un
+//diseño distinto al guardado podía no montarse o caer al default.
+//`patternMetaFor` recuerda de qué template es el meta vigente ('' = el
+//del borrador, el que pidió el mount): volver al diseño del borrador
+//también repide, porque el meta ya es del último ensayo.
+const patternMetaFor = ref('')
+watch(studioTemplate, async (tpl) => {
+  if (!tpl) return
+  const saved = store.value?.customization?.template || ''
+  if (tpl === (patternMetaFor.value || saved)) return
+  patternMetaBusy.value = true
+  //El documento que viene es de OTRO diseño: skeleton hasta que pinte
+  //(patternFrameReady quedaba en true del anterior y el swap mostraba un
+  //lienzo en blanco mientras el iframe cargaba).
+  patternFrameReady.value = false
+  try {
+    const doc = await storesApi.publicPattern(slug.value, { preview: previewToken.value, meta: true, template: tpl })
+    patternDoc.value = doc && (doc.has_html || doc.html) ? doc : null
+  } catch {
+    patternDoc.value = null
+  } finally {
+    patternMetaFor.value = tpl
+    patternMetaBusy.value = false
+  }
+})
 // Variables del tema Studio sobre la hoja actual: --st-* del contrato +
 // equivalentes --store-*/--sp-* (studioPreviewVars traduce). En oscuro el
 // tema propio de la página manda (solo viajan acento/fuente + --st-*).
@@ -857,7 +901,11 @@ onMounted(async () => {
   // todavía no tiene contrato de datos vuelve `{}` y se usa la plantilla Vue.
   let patternReq = Promise.resolve()
   if (isHome.value || isCatalog.value || isServices.value || isProduct.value) {
-    patternReq = storesApi.publicPattern(slug.value, { preview: previewToken.value, meta: true })
+    const metaParams = { preview: previewToken.value, meta: true }
+    //Reintento único: un fallo transitorio del meta dejaba a la web (y a la
+    //vista previa) con la plantilla Vue aunque el diseño tenga documento.
+    patternReq = storesApi.publicPattern(slug.value, metaParams)
+      .catch(() => storesApi.publicPattern(slug.value, metaParams))
       .then((doc) => { patternDoc.value = doc && (doc.has_html || doc.html) ? doc : null })
       .catch(() => { patternDoc.value = null })
   }
@@ -898,6 +946,12 @@ onMounted(async () => {
       window.parent.postMessage(studioReady(), parentOrigin)
     }
   }
+  if (studioMode.value) {
+    //Si el host nunca manda UPDATE (una visita directa con ?studio=1), la
+    //espera no puede dejar la página en skeleton para siempre: se pinta
+    //con el borrador/publicado después del margen.
+    studioSeenTimer = setTimeout(() => { studioUpdateSeen.value = true }, 2500)
+  }
   onScroll()
 })
 
@@ -909,6 +963,7 @@ onBeforeUnmount(() => {
   removeStudioGuard?.()
   contentObserver?.disconnect()
   clearTimeout(contentFallback)
+  clearTimeout(studioSeenTimer)
   clearSeo?.()
   applyFavicon(null)
 })
@@ -921,10 +976,11 @@ onBeforeUnmount(() => {
     <!-- Diseño del catálogo con contrato de datos: se pinta el documento
          del patrón (HTML/CSS/JS) en vez de la plantilla Vue. -->
     <PatternSurface
-      v-if="usePattern"
+      v-if="usePattern && !patternWaiting"
       :slug="slug"
       :preview="previewToken"
       :template="studioMode && studioTemplate ? studioTemplate : ''"
+      :style="patternStyleOverride"
       :revision="patternRevision"
       :theme="pageTheme"
       :surface="patternSurface"
@@ -935,8 +991,10 @@ onBeforeUnmount(() => {
       @load="patternFrameReady = true"
     />
     <!-- Mientras el documento del diseño baja y pinta, skeleton: la página
-         Vue ya no está montada (usePattern) y sin esto quedaba un hueco. -->
-    <div v-if="usePattern && !patternFrameReady" class="sp-boot" role="status" aria-live="polite" aria-busy="true">
+         Vue ya no está montada (usePattern) y sin esto quedaba un hueco.
+         patternWaiting también lo manda: sin el UPDATE del host o con el
+         meta del diseño en ensayo en viaje, la rama no está decidida. -->
+    <div v-if="patternWaiting || (usePattern && !patternFrameReady)" class="sp-boot" role="status" aria-live="polite" aria-busy="true">
       <span class="sp-sr-only">Cargando la tienda…</span>
       <div class="sp-boot-hero" aria-hidden="true">
         <span class="sp-sk-line sp-boot-badge"></span>
@@ -948,7 +1006,7 @@ onBeforeUnmount(() => {
         <div v-for="n in 4" :key="n" class="sp-boot-card"><span class="sp-sk-line sp-boot-img"></span><span class="sp-sk-line"></span><span class="sp-sk-line short"></span></div>
       </div>
     </div>
-    <div v-if="!usePattern" class="sp-vue-page">
+    <div v-if="!usePattern && !patternWaiting" class="sp-vue-page">
     <!-- ===== Barra superior ===== -->
     <header class="sp-top" :class="{ scrolled }">
       <span class="sp-progress" aria-hidden="true" :style="{ transform: `scaleX(${progress})` }"></span>

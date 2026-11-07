@@ -227,15 +227,18 @@ export const storesApi = {
     return data
   },
 
-  async publicPattern(slug, { preview, meta } = {}) {
+  async publicPattern(slug, { preview, meta, template } = {}) {
     // Documento del DesignPattern resuelto contra la tienda (HTML/CSS/JS
     // con variables). `{}` cuando el diseño todavía no tiene contrato de
     // datos: la web sigue con la plantilla Vue.
     // `meta=1` pide solo el sobre (ready/superficies/totales): el documento
     // completo lo carga el iframe, no hace falta duplicarlo en JSON.
+    // `template` es el diseño en ensayo del Studio: solo lo honra el
+    // backend junto al token de vista previa (igual que el documento).
     const params = {}
     if (preview) params.preview = preview
     if (meta) params.meta = 1
+    if (preview && template) params.template = template
     const { data } = await publicHttp.get(`/stores/public/${slug}/pattern/`, { params })
     return data
   },

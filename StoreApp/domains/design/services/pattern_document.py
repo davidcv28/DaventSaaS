@@ -199,16 +199,20 @@ def sanitize_markup(html):
     return META_REFRESH_RE.sub('', html)
 
 
-def pattern_document(html, css, theme, surface, preview = '', style = '', nonce = '', preload = None):
+def pattern_document(html, css, theme, surface, preview = '', style = '', nonce = '', preload = None, template = ''):
     """
     Documento completo listo para servir como `text/html`.
     `html` ya viene renderizado contra la tienda y `css` ya trae el tema del
     estilo + la hoja del patrón. `preload` son las imágenes críticas
     (portada del hero) que conviene descubrir antes de parsear el body.
+    `template` es el diseño en ensayo: se propaga a `script.js` para que el
+    JS corresponda al patrón del documento (antes servía el del borrador).
     """
     query = {'surface': surface, 'theme': theme}
     if preview:
         query['preview'] = preview
+        if template:
+            query['template'] = template
     script = f'../script.js/?{urlencode(query)}'
     html = sanitize_markup(html)
     #Tema/superficie van a atributos del `<html>`: se normalizan acá y no
