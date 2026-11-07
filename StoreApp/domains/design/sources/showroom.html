@@ -1,0 +1,961 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>{{store_name}}</title>
+<style>
+/* ==========================================================================
+   SHOWROOM — retail de indumentaria serio
+   Blanco puro / negro puro, grotesca en versalitas y fotografía sobre fondo
+   neutro. Sin animaciones: solo transiciones cortas. Cabecera de tres bandas
+   (buscador · marca · acciones) con navegación centrada, héroe a sangre,
+   grilla de recomendados asimétrica (tarjeta grande + 2×2), ficha de
+   producto tipo e-commerce y pie minimalista.
+   Roles desde el tema del panel (--ds-*); sin tema, piel propia.
+   ========================================================================== */
+
+@font-face{font-family:"Archivo";font-style:normal;font-weight:400 900;font-stretch:100%;font-display:swap;
+  src:url(https://fonts.gstatic.com/s/archivo/v25/k3k6o8UDI-1M0wlSV9XAw6lQkqWY8Q82sJaRE-NWIDdgffTTNDNp8A.ttf) format("truetype")}
+@font-face{font-family:"Inter";font-style:normal;font-weight:400 800;font-display:swap;
+  src:url(https://fonts.gstatic.com/s/inter/v20/UcCO3FwrK3iLTeHuS_nVMrMxCp50SjIw2boKoduKmMEVuLyfMZg.ttf) format("truetype")}
+@font-face{font-family:"JetBrains Mono";font-style:normal;font-weight:400 700;font-display:swap;
+  src:url(https://fonts.gstatic.com/s/jetbrainsmono/v24/tDbv2o-flEEny0FZhsfKu5WU4zr3E_BX0PnT8RD8yKwBNntkaToggR7BYRbKPxDcwg.woff2) format("woff2")}
+
+:root{
+  --bg:var(--ds-bg,#FFFFFF);
+  --surface:var(--ds-surface,#F4F4F4);
+  --media:#EFEFEF;
+  --ink:var(--ds-text,#111111);
+  --ink-2:color-mix(in srgb,var(--ink) 74%,var(--bg));
+  --muted:var(--ds-muted,#8A8A8A);
+  --line:var(--ds-border,#E5E5E5);
+  --accent:var(--ds-accent,#111111);
+  --on-accent:var(--ds-accent-ink,#FFFFFF);
+  --ok:var(--ds-success,#1E7F4F);
+  --disp:"Archivo","Arial Narrow",system-ui,sans-serif;
+  --sans:"Inter","Helvetica Neue",system-ui,sans-serif;
+  --mono:"JetBrains Mono","SFMono-Regular",monospace;
+  --head-h:118px;
+  --tr:.16s ease;
+  color-scheme:light;
+}
+/* Negro explícito (nunca la paleta clara de --ds-*): el estilo noche ya
+   inyecta sus roles, pero el toggle del puente cambia solo el atributo. */
+html[data-ds-theme="dark"],
+html[data-ds-style="showroom-noche"]{
+  --bg:#0A0A0A;
+  --surface:#141414;
+  --media:#1B1B1B;
+  --ink:#F5F5F5;
+  --ink-2:#C9C9C9;
+  --muted:#8B8B8B;
+  --line:#262626;
+  --accent:#F5F5F5;
+  --on-accent:#0A0A0A;
+  --ok:#4CC38A;
+  color-scheme:dark;
+}
+
+*{box-sizing:border-box}
+html,body{margin:0}
+body{background:var(--bg);color:var(--ink);font:14px/1.6 var(--sans);-webkit-font-smoothing:antialiased}
+img{max-width:100%}
+a{color:inherit;text-decoration:none;transition:color var(--tr)}
+button{font:inherit;color:inherit;cursor:pointer}
+input,select,textarea{font:inherit;color:inherit}
+[href=""]{display:none!important}
+.mono{font:500 10px/1.5 var(--mono);letter-spacing:.14em;text-transform:uppercase}
+.wrap{max-width:1280px;margin:0 auto;padding:0 32px}
+.sec{padding:72px 0}
+.sec-head{text-align:center;margin:0 0 40px}
+.sec-head h2{margin:0;font:700 13px/1.4 var(--sans);letter-spacing:.32em;text-transform:uppercase}
+.sec-head p{margin:10px auto 0;max-width:52ch;font-size:13px;color:var(--muted)}
+
+/* ---------------- Cabecera ---------------- */
+header.top{position:fixed;top:0;left:0;right:0;z-index:60;background:var(--bg);border-bottom:1px solid var(--line);transition:background var(--tr),border-color var(--tr)}
+/* Flex, no grid: el interruptor de tema lo apenda el puente como último
+   hijo (margin-inline-start:auto) — con grid quedaría en una fila nueva. */
+header.top .top-inner{display:flex;align-items:center;gap:20px;min-height:72px}
+.top-left{flex:1;display:flex;align-items:center;gap:18px;min-width:0}
+.top-search{position:relative;display:flex;align-items:center;gap:8px}
+.top-search svg{flex:none;width:16px;height:16px;color:var(--muted)}
+.top-search input{width:180px;min-height:34px;padding:0 4px;border:0;border-bottom:1px solid transparent;background:transparent;font-size:12px;color:var(--ink);transition:border-color var(--tr)}
+.top-search input::placeholder{color:var(--muted);font:500 10px var(--mono);letter-spacing:.14em;text-transform:uppercase}
+.top-search input:focus{outline:0;border-bottom-color:var(--ink)}
+.search-clear{border:0;background:none;padding:4px;font:600 9px var(--mono);letter-spacing:.12em;text-transform:uppercase;color:var(--muted)}
+.search-clear:hover{color:var(--ink)}
+.suggest{position:absolute;top:calc(100% + 10px);left:0;z-index:70;width:320px;background:var(--bg);border:1px solid var(--line);box-shadow:0 18px 40px -20px rgba(0,0,0,.25);padding:6px}
+.suggest-head{padding:8px 10px 4px;font:600 9px var(--mono);letter-spacing:.16em;text-transform:uppercase;color:var(--muted)}
+.suggest-item{display:flex;align-items:center;gap:10px;width:100%;padding:8px 10px;border:0;background:none;text-align:left;transition:background var(--tr)}
+.suggest-item:hover,.suggest-item.is-active{background:var(--surface)}
+.suggest-thumb{flex:none;width:38px;height:46px;display:grid;place-items:center;background:var(--media);color:var(--muted);font-size:12px;overflow:hidden}
+.suggest-thumb img{width:100%;height:100%;object-fit:cover}
+.suggest-copy{display:grid;gap:2px;min-width:0}
+.suggest-copy strong{font-size:12px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.suggest-copy small{font-size:11px;color:var(--muted)}
+.suggest-more{display:block;width:100%;margin-top:4px;padding:10px;border:0;border-top:1px solid var(--line);background:none;font:600 10px var(--mono);letter-spacing:.14em;text-transform:uppercase;text-align:center;transition:background var(--tr)}
+.suggest-more:hover{background:var(--ink);color:var(--bg)}
+.suggest-empty{margin:0;padding:14px 10px;font-size:12px;color:var(--muted)}
+
+.brand{display:block;position:relative;font:800 26px/1 var(--disp);letter-spacing:.22em;text-transform:uppercase;white-space:nowrap;text-align:center}
+.brand img{display:block;max-height:34px;width:auto;margin:0 auto}
+/* Con logo cargado la marca de agua queda solo para lectores de pantalla. */
+.brand img:not([src=""]) + .brand-word{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip-path:inset(50%);white-space:nowrap}
+
+.top-right{flex:1;display:flex;align-items:center;justify-content:flex-end;gap:16px;min-width:0}
+.top-right .mono-link{font:600 10px var(--mono);letter-spacing:.14em;text-transform:uppercase;color:var(--ink-2);white-space:nowrap}
+.top-right .mono-link:hover{color:var(--ink)}
+.top-right .sep{color:var(--line)}
+
+.nav{display:flex;justify-content:center;gap:34px;padding:14px 0 16px;border-top:1px solid transparent}
+.nav a{position:relative;font:600 10px/1.4 var(--sans);letter-spacing:.22em;text-transform:uppercase;color:var(--ink-2);padding:2px 0}
+.nav a::after{content:"";position:absolute;left:0;right:0;bottom:-2px;height:1px;background:var(--ink);transform:scaleX(0);transform-origin:left;transition:transform var(--tr)}
+.nav a:hover{color:var(--ink)}
+.nav a:hover::after{transform:scaleX(1)}
+html[data-ds-surface="landing"] .nav a[data-ds-route="home"],
+html[data-ds-surface="catalog"] .nav a[data-ds-route="catalog"],
+html[data-ds-surface="services"] .nav a[data-ds-route="services"]{color:var(--ink)}
+html[data-ds-surface="landing"] .nav a[data-ds-route="home"]::after,
+html[data-ds-surface="catalog"] .nav a[data-ds-route="catalog"]::after,
+html[data-ds-surface="services"] .nav a[data-ds-route="services"]::after{transform:scaleX(1)}
+
+/* Cabecera transparente sobre el héroe (solo landing, antes del scroll) */
+html[data-ds-surface="landing"] header.top:not(.is-solid){background:transparent;border-bottom-color:transparent;color:#fff}
+html[data-ds-surface="landing"] header.top:not(.is-solid) .nav a,
+html[data-ds-surface="landing"] header.top:not(.is-solid) .top-right .mono-link,
+html[data-ds-surface="landing"] header.top:not(.is-solid) .top-search svg{color:rgba(255,255,255,.85)}
+html[data-ds-surface="landing"] header.top:not(.is-solid) .nav a:hover,
+html[data-ds-surface="landing"] header.top:not(.is-solid) .top-right .mono-link:hover{color:#fff}
+html[data-ds-surface="landing"] header.top:not(.is-solid) .nav a::after{background:#fff}
+html[data-ds-surface="landing"] header.top:not(.is-solid) .brand{color:#fff}
+html[data-ds-surface="landing"] header.top:not(.is-solid) .top-search input{color:#fff}
+html[data-ds-surface="landing"] header.top:not(.is-solid) .top-search input::placeholder{color:rgba(255,255,255,.6)}
+html[data-ds-surface="landing"] header.top:not(.is-solid) .m-open{color:#fff}
+main{min-height:60vh}
+html[data-ds-surface="landing"] main{padding-top:0}
+html:not([data-ds-surface="landing"]) main{padding-top:var(--head-h)}
+
+/* Menú móvil */
+.m-open{display:none;width:40px;height:40px;padding:0;border:0;background:none;color:var(--ink);place-items:center}
+.m-open svg{width:18px;height:18px}
+.m-sheet{position:fixed;inset:0;z-index:90;display:flex;flex-direction:column;background:var(--bg);visibility:hidden;opacity:0;transition:opacity .2s,visibility .2s}
+.m-sheet.open{visibility:visible;opacity:1}
+.m-head{display:flex;align-items:center;justify-content:space-between;min-height:72px;padding:0 24px;border-bottom:1px solid var(--line)}
+.m-head .brand{font-size:18px}
+.m-close{width:40px;height:40px;padding:0;border:0;background:none;display:grid;place-items:center}
+.m-close svg{width:18px;height:18px}
+.m-links{display:flex;flex-direction:column;padding:32px 24px;gap:6px}
+.m-links a{font:800 26px/1.3 var(--disp);letter-spacing:.12em;text-transform:uppercase;padding:10px 0;border-bottom:1px solid var(--line)}
+.m-foot{margin-top:auto;padding:24px;border-top:1px solid var(--line);display:flex;gap:18px}
+.m-foot a{font:600 10px var(--mono);letter-spacing:.16em;text-transform:uppercase;color:var(--muted)}
+
+/* ---------------- Héroe ---------------- */
+.hero{position:relative;min-height:88vh;display:flex;align-items:flex-end;background:#0d0d0d;overflow:hidden}
+.hero-img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+.hero-img[src=""]{display:none}
+.hero::after{content:"";position:absolute;inset:0;background:linear-gradient(180deg,rgba(0,0,0,.18),rgba(0,0,0,.05) 40%,rgba(0,0,0,.55))}
+.hero-noimg{background:linear-gradient(160deg,var(--surface),var(--media))}
+.hero-noimg::after{background:linear-gradient(180deg,color-mix(in srgb,var(--ink) 4%,transparent),color-mix(in srgb,var(--ink) 18%,transparent))}
+.hero-in{position:relative;z-index:2;width:100%;text-align:center;color:#fff;padding:0 24px 96px}
+.hero-tag{margin:0 0 14px;font:600 10px var(--mono);letter-spacing:.3em;text-transform:uppercase;opacity:.85}
+.hero-title{margin:0;font:800 clamp(38px,7vw,84px)/1.02 var(--disp);letter-spacing:.16em;text-transform:uppercase}
+.hero-title:empty{display:none}
+.hero-title.hero-fb{display:none}
+.hero-title:empty + .hero-fb{display:block}
+.hero-sub{margin:16px auto 0;max-width:56ch;font-size:14px;opacity:.85}
+.hero-sub:empty{display:none}
+.hero-cta{display:inline-flex;align-items:center;justify-content:center;margin-top:30px;min-height:44px;padding:0 30px;background:#fff;color:#111;font:700 11px var(--sans);letter-spacing:.2em;text-transform:uppercase;transition:background var(--tr),color var(--tr)}
+.hero-cta:hover{background:#111;color:#fff}
+
+/* Cinta de anuncios (estática: borde superior/inferior) */
+.notes{border-bottom:1px solid var(--line)}
+.notes-in{display:flex;justify-content:center;gap:40px;padding:12px 0;overflow:hidden}
+.notes .ds-note{display:inline-flex;align-items:center;gap:8px;font:600 9px var(--mono);letter-spacing:.18em;text-transform:uppercase;color:var(--muted);white-space:nowrap}
+.notes .ds-note svg{width:13px;height:13px;color:var(--ink-2)}
+
+/* ---------------- Recomendados (grilla asimétrica) ---------------- */
+.rec-grid{display:grid;grid-template-columns:1.35fr 1fr 1fr;grid-auto-flow:dense;gap:28px 24px}
+.rec-grid .ds-product:first-child{grid-row:span 2}
+.rec-grid .ds-product:first-child .ds-product-img,
+.rec-grid .ds-product:first-child .ds-product-img.is-empty{aspect-ratio:auto;position:absolute;inset:0;height:100%}
+.rec-grid .ds-product:first-child .ds-product-link{height:100%;display:flex;flex-direction:column}
+.rec-grid .ds-product:first-child .p-media{flex:1;min-height:520px;aspect-ratio:auto}
+
+.ds-product{min-width:0}
+.ds-product-link{position:relative;display:block}
+.p-media .ds-product-img{width:100%;height:100%;object-fit:cover;display:block;transition:opacity var(--tr)}
+.p-media .ds-product-img.is-empty{position:absolute;inset:0}
+.ds-product-link:hover .ds-product-img{opacity:.88}
+/* La tarjeta real envía la foto suelta dentro del link: pattern.js la
+   envuelve en .p-media (marco gris). Sin JS queda la regla de respaldo. */
+.p-media{position:relative;display:block;aspect-ratio:3/4;background:var(--media);overflow:hidden}
+.ds-product-link > .ds-product-img{display:block;width:100%;aspect-ratio:3/4;object-fit:cover;background:var(--media)}
+.ds-product-link > .ds-product-img.is-empty{aspect-ratio:3/4}
+.ds-product-price[data-off]::after{
+  content:attr(data-off) "% OFF";position:absolute;top:12px;right:12px;z-index:3;
+  padding:5px 9px;background:var(--bg);color:var(--ink);
+  font:700 9px/1 var(--sans);letter-spacing:.14em;text-transform:uppercase;
+}
+.ds-product-copy{display:block;padding:14px 0 0}
+.ds-product-name{margin:0;font:700 11px/1.5 var(--sans);letter-spacing:.14em;text-transform:uppercase}
+.ds-product-desc{display:none}
+.ds-product-cat{display:block;margin-top:4px;font:500 9px var(--mono);letter-spacing:.16em;text-transform:uppercase;color:var(--muted)}
+.ds-stock{display:none}
+.ds-product-price{display:flex;align-items:baseline;gap:8px;margin-top:6px}
+.ds-product-amount{font-size:13px;font-weight:700}
+.ds-product-old{font-size:12px;color:var(--muted);font-weight:400;text-decoration:line-through}
+.ds-product-price[data-off]{margin-top:6px}
+.ds-empty{grid-column:1/-1;margin:0;padding:40px 0;text-align:center;font-size:13px;color:var(--muted)}
+
+/* Categorías centradas (eco del menú de la referencia) */
+.cats{display:flex;flex-wrap:wrap;justify-content:center;gap:8px 34px}
+.cats .ds-cat{font:600 10px/1.4 var(--sans);letter-spacing:.22em;text-transform:uppercase;color:var(--ink-2);padding:4px 0;border-bottom:1px solid transparent;transition:color var(--tr),border-color var(--tr)}
+.cats .ds-cat:hover{color:var(--ink);border-bottom-color:var(--ink)}
+
+/* Inspirate / Armá tu look */
+.looks{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:20px}
+.looks .ds-shot{position:relative;margin:0;aspect-ratio:3/4;background:var(--media);overflow:hidden}
+.looks .ds-shot:nth-child(2){transform:translateY(28px)}
+.looks .ds-shot img{width:100%;height:100%;object-fit:cover;transition:opacity var(--tr)}
+.looks .ds-shot:hover img{opacity:.9}
+.looks-head{display:flex;align-items:baseline;justify-content:space-between;gap:20px;margin:0 0 36px}
+.looks-head h2{margin:0;font:800 22px/1.2 var(--disp);letter-spacing:.14em;text-transform:uppercase}
+.looks-head .mono{color:var(--muted)}
+
+/* Sobre nosotros */
+.about{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:64px;align-items:center;border-top:1px solid var(--line);border-bottom:1px solid var(--line);padding:72px 0}
+.about-media{margin:0;aspect-ratio:4/5;background:var(--media);overflow:hidden}
+.about-media img{width:100%;height:100%;object-fit:cover}
+.about-kicker{margin:0 0 16px;font:600 9px var(--mono);letter-spacing:.26em;text-transform:uppercase;color:var(--muted)}
+.about h2{margin:0;font:800 clamp(24px,3vw,36px)/1.1 var(--disp);letter-spacing:.08em;text-transform:uppercase}
+.about-txt{margin:20px 0 0;font-size:14px;color:var(--ink-2);max-width:52ch}
+.about-txt:empty{display:none}
+.about-facts{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:1px;background:var(--line);border:1px solid var(--line);margin-top:32px}
+.about-facts>div{background:var(--bg);padding:18px}
+.about-facts b{display:block;font:800 20px/1.2 var(--disp);letter-spacing:.04em}
+.about-facts span{display:block;margin-top:6px;font:500 9px var(--mono);letter-spacing:.16em;text-transform:uppercase;color:var(--muted)}
+.ds-stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:1px;background:var(--line);border:1px solid var(--line);margin-top:32px}
+.ds-stat{background:var(--bg);padding:18px}
+.ds-stat-value{display:block;font:800 20px/1.2 var(--disp);letter-spacing:.04em}
+.ds-stat-label{display:block;margin-top:6px;font:500 9px var(--mono);letter-spacing:.16em;text-transform:uppercase;color:var(--muted)}
+
+/* Garantías */
+.guars{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:1px;background:var(--line);border-block:1px solid var(--line)}
+.ds-guar{display:flex;gap:14px;background:var(--bg);padding:26px 22px}
+.ds-guar-icon{flex:none;color:var(--ink)}
+.ds-guar-icon svg{display:block}
+.ds-guar-copy{display:grid;gap:4px}
+.ds-guar-copy b{font:700 11px/1.4 var(--sans);letter-spacing:.12em;text-transform:uppercase}
+.ds-guar-copy span{font-size:12px;color:var(--muted)}
+
+/* Membresías */
+.plans{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:20px}
+.ds-plan{border:1px solid var(--line);padding:26px;display:grid;gap:8px;align-content:start;transition:border-color var(--tr)}
+.ds-plan:hover{border-color:var(--ink)}
+.ds-plan-name{margin:0;font:700 12px/1.4 var(--sans);letter-spacing:.18em;text-transform:uppercase}
+.ds-plan-price{font:800 24px/1.1 var(--disp);letter-spacing:.04em}
+.ds-plan-note{margin:0;font-size:12px;color:var(--muted)}
+.ds-plan-feats{margin:8px 0 0;padding:0;list-style:none;border-top:1px solid var(--line)}
+.ds-plan-feats li{padding:9px 0;border-bottom:1px solid var(--line);font-size:12px;color:var(--ink-2)}
+
+/* Testimonios */
+.quotes{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:20px}
+.ds-quote{margin:0;border:1px solid var(--line);padding:26px}
+.ds-quote-text{margin:0;font-size:14px;color:var(--ink-2)}
+.ds-quote-text::before{content:"“";display:block;font:800 34px/1 var(--disp);color:var(--ink);margin-bottom:10px}
+.ds-quote-name{display:block;margin-top:16px;font:600 10px var(--mono);letter-spacing:.16em;text-transform:uppercase;color:var(--muted)}
+
+/* Marcas */
+.brands{display:flex;flex-wrap:wrap;gap:14px 44px;list-style:none;margin:0;padding:0;justify-content:center}
+.ds-brand-link{display:flex;align-items:center;gap:10px}
+.ds-brand-img{width:30px;height:30px;object-fit:contain;filter:grayscale(1)}
+.ds-brand-initial{display:grid;place-items:center;width:30px;height:30px;border:1px solid var(--ink);font:700 12px var(--disp)}
+.ds-brand-name{font:600 10px var(--mono);letter-spacing:.18em;text-transform:uppercase;color:var(--ink-2)}
+.ds-brand-link:hover .ds-brand-name{color:var(--ink)}
+
+/* FAQ */
+.faq{max-width:760px;margin:0 auto;border-top:1px solid var(--line)}
+.ds-faq{border-bottom:1px solid var(--line)}
+.ds-faq-q{position:relative;display:block;padding:20px 44px 20px 0;font:700 12px/1.5 var(--sans);letter-spacing:.1em;text-transform:uppercase;cursor:pointer;list-style:none}
+.ds-faq-q::-webkit-details-marker{display:none}
+.ds-faq-q::after{content:"+";position:absolute;right:4px;top:50%;transform:translateY(-50%);font:400 18px/1 var(--sans);color:var(--muted);transition:transform var(--tr)}
+.ds-faq[open] .ds-faq-q::after{transform:translateY(-50%) rotate(45deg)}
+.ds-faq-a{margin:0;padding:0 0 20px;font-size:13px;color:var(--ink-2);max-width:60ch}
+
+/* CTA de tinta */
+.cta-band{background:var(--ink);color:var(--bg);text-align:center;padding:72px 24px}
+.cta-band h2{margin:0;font:800 clamp(24px,3.4vw,40px)/1.1 var(--disp);letter-spacing:.12em;text-transform:uppercase}
+.cta-band p{margin:14px auto 0;max-width:52ch;font-size:13px;opacity:.75}
+.cta-band p:empty{display:none}
+.cta-band .btn{margin-top:28px;background:var(--bg);color:var(--ink)}
+.cta-band .btn:hover{opacity:.85}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:46px;padding:0 28px;border:1px solid var(--ink);background:var(--ink);color:var(--bg);font:700 11px/1 var(--sans);letter-spacing:.2em;text-transform:uppercase;transition:background var(--tr),color var(--tr),border-color var(--tr)}
+.btn:hover{background:var(--bg);color:var(--ink)}
+.btn-ghost{background:transparent;color:var(--ink)}
+.btn-ghost:hover{background:var(--ink);color:var(--bg)}
+
+/* Contacto */
+.contact{display:grid;grid-template-columns:minmax(0,5fr) minmax(0,7fr);gap:64px}
+.contact-rows{display:grid;gap:0;border-top:1px solid var(--line)}
+.contact-row{display:grid;grid-template-columns:150px minmax(0,1fr);gap:16px;padding:16px 0;border-bottom:1px solid var(--line);font-size:13px}
+.contact-row>b{font:600 9px/2 var(--mono);letter-spacing:.2em;text-transform:uppercase;color:var(--muted)}
+.contact-row span,.contact-row a{color:var(--ink-2)}
+.contact-row a:hover{color:var(--ink);text-decoration:underline;text-underline-offset:3px}
+.contact-social{display:flex;gap:18px;margin-top:20px}
+.contact-social a{display:grid;place-items:center;width:38px;height:38px;border:1px solid var(--line);color:var(--ink-2);transition:border-color var(--tr),color var(--tr)}
+.contact-social a:hover{border-color:var(--ink);color:var(--ink)}
+.contact-social svg{width:16px;height:16px}
+
+/* Formularios del puente (contacto + opiniones) */
+.ds-contact-fields,.ds-rev-fields{display:grid;gap:12px}
+.ds-contact-row{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.ds-contact-input,.ds-rev-input{width:100%;min-height:44px;padding:10px 12px;border:1px solid var(--line);background:var(--bg);font-size:13px;color:var(--ink);transition:border-color var(--tr)}
+.ds-contact-input:focus,.ds-rev-input:focus{outline:0;border-color:var(--ink)}
+.ds-contact-area,.ds-rev-area{min-height:120px;resize:vertical}
+.ds-contact-cap,.ds-rev-cap{display:grid;grid-template-columns:1fr 150px 44px;gap:10px;align-items:center}
+.ds-contact-q,.ds-rev-q{font:500 11px var(--mono);letter-spacing:.04em;color:var(--muted)}
+.ds-contact-reload,.ds-rev-reload{height:44px;border:1px solid var(--line);background:var(--bg);font-size:15px;transition:border-color var(--tr)}
+.ds-contact-reload:hover,.ds-rev-reload:hover{border-color:var(--ink)}
+.ds-contact-send,.ds-rev-send{min-height:48px;border:1px solid var(--ink);background:var(--ink);color:var(--bg);font:700 11px var(--sans);letter-spacing:.2em;text-transform:uppercase;transition:background var(--tr),color var(--tr)}
+.ds-contact-send:hover,.ds-rev-send:hover{background:var(--bg);color:var(--ink)}
+.ds-contact-status,.ds-rev-status{margin:0;font-size:12px;min-height:1em}
+.ds-contact-status[data-ok="1"],.ds-rev-status[data-ok="1"]{color:var(--ok)}
+.ds-contact-status[data-ok="0"],.ds-rev-status[data-ok="0"]{color:#B3261E}
+.ds-rev-votes{display:flex;gap:10px}
+.ds-rev-pick{display:inline-flex;align-items:center;gap:8px;min-height:40px;padding:0 16px;border:1px solid var(--line);background:var(--bg);font:600 10px var(--mono);letter-spacing:.12em;text-transform:uppercase;transition:border-color var(--tr),background var(--tr)}
+.ds-rev-pick.is-on{border-color:var(--ink);background:var(--ink);color:var(--bg)}
+.ds-rev-row{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.ds-rev-list{list-style:none;margin:0;padding:0;display:grid;gap:0}
+.ds-rev-item{padding:18px 0;border-bottom:1px solid var(--line)}
+.ds-rev-name{font:700 11px var(--sans);letter-spacing:.12em;text-transform:uppercase}
+.ds-rev-date{display:block;margin-top:4px;font:500 10px var(--mono);color:var(--muted)}
+.ds-rev-vote{margin-left:8px;color:var(--ink-2)}
+.ds-rev-text{margin:10px 0 0;font-size:13px;color:var(--ink-2)}
+
+/* ---------------- Catálogo ---------------- */
+.cat-head{display:flex;align-items:flex-end;justify-content:space-between;gap:20px;padding:56px 0 24px;border-bottom:1px solid var(--line)}
+.cat-head h1{margin:0;font:800 clamp(30px,4vw,48px)/1 var(--disp);letter-spacing:.14em;text-transform:uppercase}
+.cat-head .mono{color:var(--muted)}
+.cat-tools{display:flex;flex-wrap:wrap;align-items:center;gap:14px;padding:16px 0;border-bottom:1px solid var(--line)}
+.cat-filters{display:flex;flex-wrap:wrap;gap:6px 22px}
+.cat-filters .ds-cat{font:600 10px/1.4 var(--sans);letter-spacing:.18em;text-transform:uppercase;color:var(--muted);padding:6px 0;border-bottom:1px solid transparent}
+.cat-filters .ds-cat:hover{color:var(--ink)}
+.cat-filters .ds-cat[aria-pressed="true"]{color:var(--ink);border-bottom-color:var(--ink);text-decoration:none}
+.cat-side{margin-left:auto;display:flex;flex-wrap:wrap;align-items:center;gap:14px}
+.cat-price{display:flex;align-items:center;gap:8px;font:600 9px var(--mono);letter-spacing:.14em;text-transform:uppercase;color:var(--muted)}
+.cat-price input{width:84px;min-height:34px;padding:0 10px;border:1px solid var(--line);background:var(--bg);font-size:12px;color:var(--ink)}
+.cat-price input:focus{outline:0;border-color:var(--ink)}
+.cat-offers{display:inline-flex;align-items:center;gap:8px;font:600 9px var(--mono);letter-spacing:.14em;text-transform:uppercase;color:var(--muted);cursor:pointer}
+.cat-offers input{accent-color:var(--ink)}
+.cat-sort{display:inline-flex;align-items:center;gap:8px;font:600 9px var(--mono);letter-spacing:.14em;text-transform:uppercase;color:var(--muted)}
+.cat-sort select{min-height:34px;padding:0 8px;border:1px solid var(--line);background:var(--bg);font:600 10px var(--sans);letter-spacing:.1em;text-transform:uppercase;color:var(--ink)}
+.cat-clear{border:0;background:none;padding:8px 0;font:600 9px var(--mono);letter-spacing:.14em;text-transform:uppercase;color:var(--ink);text-decoration:underline;text-underline-offset:3px}
+.cat-chips{display:flex;flex-wrap:wrap;gap:8px;padding:14px 0 0}
+.cat-chips:empty,.cat-chips[hidden]{display:none}
+.cat-chip{display:inline-flex;align-items:center;gap:8px;padding:7px 10px;border:1px solid var(--line);background:var(--bg);font:600 9px var(--mono);letter-spacing:.1em;text-transform:uppercase}
+.cat-chip b{color:var(--muted);font-weight:500}
+.cat-chip i{font-style:normal}
+.cat-chip:hover{border-color:var(--ink)}
+.cat-chip-clear{border:0;background:none;padding:7px 4px;font:600 9px var(--mono);letter-spacing:.12em;text-transform:uppercase;color:var(--muted);text-decoration:underline}
+.cat-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:28px 20px;padding-top:32px}
+.cat-grid[data-ds-view-mode="list"]{grid-template-columns:1fr;gap:0;border-top:1px solid var(--line)}
+.cat-grid[data-ds-view-mode="list"] .ds-product-link{display:grid;grid-template-columns:88px minmax(0,1fr) auto;gap:18px;align-items:center;padding:14px 0;border-bottom:1px solid var(--line)}
+.cat-grid[data-ds-view-mode="list"] .p-media{width:88px;aspect-ratio:3/4}
+.cat-grid[data-ds-view-mode="list"] .ds-product-link > .ds-product-img{width:88px}
+.cat-grid[data-ds-view-mode="list"] .ds-product-copy{padding:0}
+.cat-grid[data-ds-view-mode="list"] .ds-product-cat{display:none}
+.cat-grid[data-ds-view-mode="list"] .ds-product-price{margin:0;grid-column:3;text-align:right}
+.cat-grid[data-ds-view-mode="list"] .ds-product-price[data-off]::after{position:static;padding:4px 8px}
+.cat-view{display:inline-flex;border:1px solid var(--line)}
+.cat-view button{width:34px;height:34px;border:0;background:none;display:grid;place-items:center;color:var(--muted);transition:background var(--tr),color var(--tr)}
+.cat-view button[aria-pressed="true"]{background:var(--ink);color:var(--bg)}
+.cat-view svg{width:14px;height:14px}
+
+/* ---------------- Servicios ---------------- */
+.svc-head{padding:56px 0 24px;border-bottom:1px solid var(--line)}
+.svc-head h1{margin:0;font:800 clamp(30px,4vw,48px)/1 var(--disp);letter-spacing:.14em;text-transform:uppercase}
+.svc-offers{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:1px;background:var(--line);border:1px solid var(--line);margin-top:32px}
+.ds-offer{background:var(--bg);padding:24px}
+.ds-offer-icon{color:var(--ink);display:block;margin-bottom:12px}
+.ds-offer-name{margin:0;font:700 11px/1.4 var(--sans);letter-spacing:.16em;text-transform:uppercase}
+.ds-offer-text{margin:8px 0 0;font-size:12.5px;color:var(--muted)}
+.svc-grid{display:grid;grid-template-columns:minmax(0,7fr) minmax(0,5fr);gap:64px;padding-top:48px;align-items:start}
+.ds-services-list{list-style:none;margin:0;padding:0;counter-reset:svc;border-top:1px solid var(--line)}
+.ds-service{display:grid;grid-template-columns:48px minmax(0,1fr) auto;gap:16px;align-items:baseline;padding:20px 0;border-bottom:1px solid var(--line)}
+.ds-service::before{counter-increment:svc;content:"0" counter(svc);font:600 11px var(--mono);color:var(--muted)}
+.ds-service-name{font:700 12px/1.5 var(--sans);letter-spacing:.14em;text-transform:uppercase}
+.ds-service-desc{grid-column:2;display:block;font-size:13px;color:var(--muted)}
+.ds-service-desc:empty{display:none}
+.ds-service::after{content:attr(data-price-label);font:600 10px var(--mono);letter-spacing:.1em;text-transform:uppercase;color:var(--ink-2);white-space:nowrap}
+.svc-side{position:sticky;top:calc(var(--head-h) + 24px);display:grid;gap:16px}
+.svc-card{border:1px solid var(--line);padding:28px}
+.svc-card h3{margin:0;font:800 18px/1.2 var(--disp);letter-spacing:.12em;text-transform:uppercase}
+.svc-card p{margin:12px 0 0;font-size:13px;color:var(--muted)}
+.svc-card .btn{width:100%;margin-top:20px}
+
+/* ---------------- Ficha de producto ---------------- */
+.pdp-crumb{display:flex;flex-wrap:wrap;gap:10px;padding:24px 0;font:600 9px var(--mono);letter-spacing:.16em;text-transform:uppercase;color:var(--muted)}
+.pdp-crumb a:hover{color:var(--ink)}
+.pdp-crumb .sep{opacity:.5}
+.pdp-grid{display:grid;grid-template-columns:minmax(0,7fr) minmax(0,5fr);gap:56px;align-items:start}
+.pdp-media{position:relative;margin:0;aspect-ratio:4/5;background:var(--media);overflow:hidden}
+.pdp-media img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+.pdp-cat{margin:0 0 10px;font:600 9px var(--mono);letter-spacing:.24em;text-transform:uppercase;color:var(--muted)}
+.pdp-cat:empty{display:none}
+.pdp-title{margin:0;font:800 clamp(24px,3vw,34px)/1.08 var(--disp);letter-spacing:.1em;text-transform:uppercase}
+.pdp-meta{margin:12px 0 0;font:500 10px var(--mono);letter-spacing:.14em;text-transform:uppercase;color:var(--muted)}
+.pdp-meta:empty{display:none}
+.pdp-price{display:flex;align-items:center;gap:12px;margin:22px 0 0}
+.pdp-price b{font:800 24px/1 var(--disp);letter-spacing:.02em}
+.pdp-off{display:inline-block;padding:4px 8px;background:var(--ink);color:var(--bg);font:700 9px/1 var(--sans);letter-spacing:.12em;text-transform:uppercase}
+.pdp-off:empty{display:none}
+.pdp-off:not(:empty)::after{content:" OFF"}
+.pdp-price s{font-size:14px;color:var(--muted);font-weight:400}
+.pdp-price s:empty{display:none}
+.pdp-save{display:block;margin-top:6px;font:500 10px var(--mono);letter-spacing:.12em;text-transform:uppercase;color:var(--ok)}
+.pdp-save:empty{display:none}
+.pdp-save:not(:empty)::before{content:"Ahorrás "}
+.pdp-desc{margin:20px 0 0;font-size:13.5px;color:var(--ink-2);max-width:56ch}
+.pdp-desc:empty{display:none}
+.pdp-ctas{display:grid;grid-template-columns:1fr;gap:10px;margin-top:28px}
+.pdp-ctas .btn{min-height:52px}
+.pdp-brand:not(:empty){margin-left:10px;padding-left:10px;border-left:1px solid var(--line)}
+.pdp-social{display:flex;align-items:center;gap:14px;margin-top:22px}
+.pdp-social span{font:600 9px var(--mono);letter-spacing:.16em;text-transform:uppercase;color:var(--muted)}
+.pdp-social a{display:grid;place-items:center;width:34px;height:34px;color:var(--ink-2);transition:color var(--tr)}
+.pdp-social a:hover{color:var(--ink)}
+.pdp-social svg{width:15px;height:15px}
+.pdp-specs{width:100%;border-collapse:collapse;margin-top:32px;font-size:13px}
+.pdp-specs:has(tbody:empty){display:none}
+.ds-pdp-spec th,.ds-pdp-spec td{padding:12px 0;border-bottom:1px solid var(--line);text-align:left;vertical-align:top;font-weight:400}
+.ds-pdp-spec th{width:38%;font:600 9px/1.8 var(--mono);letter-spacing:.16em;text-transform:uppercase;color:var(--muted)}
+.pdp-rev{margin-top:64px;border-top:1px solid var(--line);padding-top:40px}
+.pdp-rev:not(:has(.ds-reviews)){display:none}
+.pdp-rel:not(:has(.ds-product)){display:none}
+.pdp-rev-head{display:flex;align-items:baseline;justify-content:space-between;gap:16px;margin-bottom:8px}
+.pdp-rev-head h2{margin:0;font:800 18px/1.2 var(--disp);letter-spacing:.14em;text-transform:uppercase}
+.pdp-score{font:500 10px var(--mono);letter-spacing:.14em;text-transform:uppercase;color:var(--muted)}
+.pdp-score b{font:800 18px var(--disp);color:var(--ink);letter-spacing:0}
+.pdp-score b:empty{display:none}
+.pdp-score-t i{font-style:normal}
+.pdp-score-t:not([hidden])::before{content:"· "}
+.pdp-rel{margin-top:64px}
+.pdp-rel h2{margin:0 0 32px;font:800 18px/1.2 var(--disp);letter-spacing:.14em;text-transform:uppercase;text-align:center}
+.pdp-rel .rel-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:28px 20px}
+
+/* ---------------- Pie ---------------- */
+footer.foot{border-top:1px solid var(--line);margin-top:96px}
+.foot-brand{padding:56px 0 40px;text-align:center}
+.foot-brand a{font:800 clamp(30px,5vw,56px)/1 var(--disp);letter-spacing:.24em;text-transform:uppercase}
+.foot-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:40px;padding:40px 0;border-top:1px solid var(--line)}
+.foot-h{margin:0 0 14px;font:600 9px var(--mono);letter-spacing:.24em;text-transform:uppercase;color:var(--muted)}
+.foot-grid a,.foot-grid span{display:block;font-size:12px;color:var(--ink-2);margin:6px 0}
+.foot-grid a:hover{color:var(--ink);text-decoration:underline;text-underline-offset:3px}
+.foot-social{display:flex;gap:10px}
+.foot-social a{display:grid;place-items:center;width:34px;height:34px;border:1px solid var(--line);color:var(--ink-2);transition:border-color var(--tr),color var(--tr)}
+.foot-social a:hover{border-color:var(--ink);color:var(--ink)}
+.foot-social svg{width:14px;height:14px}
+.foot-legal{display:flex;flex-wrap:wrap;justify-content:space-between;gap:10px;padding:20px 0;border-top:1px solid var(--line);font:500 9px var(--mono);letter-spacing:.16em;text-transform:uppercase;color:var(--muted)}
+.foot-legal span:empty{display:none}
+/* Grilla de datos del about: si todas sus celdas quedaron ocultas por
+   data-hide-blank, la cáscara (borde + fila de fondo) también se apaga. */
+.about-facts:not(:has(>div:not([hidden]))){display:none}
+
+@media (max-width:1080px){
+  .rec-grid{grid-template-columns:repeat(3,minmax(0,1fr))}
+  .rec-grid .ds-product:first-child{grid-row:auto;grid-column:1/-1}
+  .rec-grid .ds-product:first-child .p-media{min-height:0;aspect-ratio:16/10}
+  .cat-grid,.pdp-rel .rel-grid{grid-template-columns:repeat(3,minmax(0,1fr))}
+}
+@media (max-width:960px){
+  .wrap{padding:0 20px}
+  .nav{display:none}
+  .m-open{display:grid}
+  .top-search input{width:130px}
+  .top-right .mono-link{display:none}
+  header.top .top-inner{min-height:64px}
+  .hero{min-height:78vh}
+  .hero-in{padding-bottom:72px}
+  .about,.pdp-grid,.contact,.svc-grid{grid-template-columns:1fr;gap:40px}
+  .svc-side{position:static}
+  .guars{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .looks{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .looks .ds-shot:nth-child(2){transform:none}
+  .foot-grid{grid-template-columns:1fr 1fr}
+}
+@media (max-width:640px){
+  .sec{padding:48px 0}
+  .rec-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:20px 12px}
+  .rec-grid .ds-product:first-child{grid-column:1/-1}
+  .rec-grid .ds-product:first-child .p-media{aspect-ratio:3/4}
+  .cat-grid,.pdp-rel .rel-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:20px 12px}
+  .cat-side{width:100%;margin-left:0}
+  .ds-contact-row,.ds-rev-row{grid-template-columns:1fr}
+  .ds-contact-cap,.ds-rev-cap{grid-template-columns:1fr;gap:8px}
+  .ds-contact-cap .ds-contact-input,.ds-rev-cap .ds-rev-input{width:100%}
+  .foot-grid{grid-template-columns:1fr}
+  .brand{font-size:20px}
+  .top-search input{width:100px}
+}
+@media (prefers-reduced-motion:reduce){
+  *{transition:none!important}
+}
+</style>
+</head>
+<body>
+
+<header class="top" data-ds-pin="top" data-ds-offset="118">
+  <div class="wrap top-inner">
+    <div class="top-left">
+      <button class="m-open" type="button" data-m-open aria-label="Abrir menú" aria-expanded="false">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16"/></svg>
+      </button>
+      <form class="top-search" data-ds-search role="search">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
+        <input type="search" data-ds-search-input placeholder="Buscar" aria-label="Buscar productos" autocomplete="off">
+        <button class="search-clear" type="button" data-ds-search-clear hidden>Limpiar</button>
+        <div class="suggest" data-ds-suggest hidden></div>
+      </form>
+    </div>
+    <a class="brand" href="#inicio" data-ds-route="home" aria-label="{{store_name}}">
+      <img src="{{store_logo}}" alt="{{store_name}}">
+      <span class="brand-word">{{store_name}}</span>
+    </a>
+    <div class="top-right">
+      <a class="mono-link" href="{{store_instagram_url}}" rel="noopener">Instagram</a>
+      <span class="sep" aria-hidden="true">|</span>
+      <a class="mono-link" href="#contacto" data-ds-anchor data-flag="contact">Contacto</a>
+      <span class="sep" aria-hidden="true">|</span>
+      <a class="mono-link" href="{{store_whatsapp_url}}" rel="noopener">WhatsApp</a>
+    </div>
+  </div>
+  <nav class="nav wrap" aria-label="Secciones">
+    <a href="#inicio" data-ds-route="home">Inicio</a>
+    <a href="#catalogo" data-ds-route="catalog" data-flag="catalog">Colección</a>
+    <a href="#servicios" data-ds-route="services" data-flag="services">Servicios</a>
+    <a href="#nosotros" data-ds-anchor data-flag="about">Nosotros</a>
+    <a href="#contacto" data-ds-anchor data-flag="contact">Contacto</a>
+  </nav>
+</header>
+
+<div class="m-sheet" id="m-sheet" aria-hidden="true">
+  <div class="m-head">
+    <span class="brand">{{store_name}}</span>
+    <button class="m-close" type="button" data-m-close aria-label="Cerrar menú">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18"/></svg>
+    </button>
+  </div>
+  <nav class="m-links" aria-label="Menú">
+    <a href="#inicio" data-ds-route="home" data-m-close>Inicio</a>
+    <a href="#catalogo" data-ds-route="catalog" data-m-close data-flag="catalog">Colección</a>
+    <a href="#servicios" data-ds-route="services" data-m-close data-flag="services">Servicios</a>
+    <a href="#nosotros" data-ds-anchor data-m-close data-flag="about">Nosotros</a>
+    <a href="#contacto" data-ds-anchor data-m-close data-flag="contact">Contacto</a>
+  </nav>
+  <div class="m-foot">
+    <a href="{{store_instagram_url}}" rel="noopener">Instagram</a>
+    <a href="{{store_whatsapp_url}}" rel="noopener">WhatsApp</a>
+  </div>
+</div>
+
+<main>
+
+<!-- ============ LANDING ============ -->
+<div data-surface="landing">
+
+  <section class="hero" id="inicio" data-hero>
+    <img class="hero-img" src="{{store_cover}}" alt="{{store_name}}" loading="eager">
+    <div class="hero-in">
+      <p class="hero-tag">{{store_location}}</p>
+      <h1 class="hero-title">{{store_tagline}}</h1>
+      <h1 class="hero-title hero-fb">{{store_name}}</h1>
+      <p class="hero-sub">{{store_description}}</p>
+      <a class="hero-cta" href="#catalogo" data-ds-route="catalog">Descubrir</a>
+    </div>
+  </section>
+
+  <div class="notes ds-zone" data-flag="announcements">
+    <div class="wrap notes-in">{{announcements}}</div>
+  </div>
+
+  <section class="sec" data-flag="featured">
+    <div class="wrap">
+      <div class="sec-head">
+        <h2>Recomendados</h2>
+      </div>
+      <div class="rec-grid ds-zone">{{products}}</div>
+    </div>
+  </section>
+
+  <section class="sec" style="padding-top:0" data-flag="categories">
+    <div class="wrap">
+      <div class="cats ds-zone">{{categories}}</div>
+    </div>
+  </section>
+
+  <section class="sec" data-flag="gallery">
+    <div class="wrap">
+      <div class="looks-head">
+        <h2>Inspirate</h2>
+        <span class="mono">Armá tu look</span>
+      </div>
+      <div class="looks ds-zone">{{gallery}}</div>
+    </div>
+  </section>
+
+  <section class="sec" style="padding-top:0" data-flag="about" id="nosotros">
+    <div class="wrap">
+      <div class="about">
+        <figure class="about-media"><img src="{{store_cover}}" alt="{{store_name}}"></figure>
+        <div>
+          <p class="about-kicker">La marca</p>
+          <h2>{{store_about_title}}</h2>
+          <p class="about-txt">{{store_about}}</p>
+          <div class="about-facts">
+            <div data-hide-blank="b"><b>{{store_about_years}}</b><span>Años de trayectoria</span></div>
+            <div data-hide-blank="b"><b>{{store_location}}</b><span>Origen</span></div>
+          </div>
+          <p class="about-txt">{{store_about_mission}}</p>
+          <p class="about-txt">{{store_about_specialties}}</p>
+          <div class="ds-stats ds-zone">{{stats}}</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="sec" style="padding-top:0" data-flag="benefits">
+    <div class="wrap">
+      <div class="guars ds-zone">{{benefits}}</div>
+    </div>
+  </section>
+
+  <section class="sec" data-flag="plans" id="suscripciones">
+    <div class="wrap">
+      <div class="sec-head">
+        <h2>{{plans_title}}</h2>
+      </div>
+      <div class="plans ds-zone">{{plans}}</div>
+    </div>
+  </section>
+
+  <section class="sec" style="padding-top:0" data-flag="testimonials">
+    <div class="wrap">
+      <div class="sec-head">
+        <h2>{{testimonials_title}}</h2>
+      </div>
+      <div class="quotes ds-zone">{{testimonials}}</div>
+    </div>
+  </section>
+
+  <section class="sec" style="padding-top:0" data-flag="brands">
+    <div class="wrap">
+      <ul class="brands ds-zone">{{brands}}</ul>
+    </div>
+  </section>
+
+  <section class="sec" style="padding-top:0" data-flag="faq">
+    <div class="wrap">
+      <div class="sec-head">
+        <h2>{{faqs_title}}</h2>
+      </div>
+      <div class="faq ds-zone">{{faqs}}</div>
+    </div>
+  </section>
+
+  <section data-flag="cta">
+    <div class="cta-band">
+      <h2>{{cta_title}}</h2>
+      <p>{{cta_text}}</p>
+      <a class="btn" href="{{store_whatsapp_url}}">{{cta_label}}</a>
+    </div>
+  </section>
+
+  <section class="sec" id="contacto" data-flag="contact">
+    <div class="wrap">
+      <div class="sec-head">
+        <h2>Contacto</h2>
+      </div>
+      <div class="contact">
+        <div>
+          <div class="contact-rows">
+            <div class="contact-row" data-flag="location"><b>Dirección</b><span>{{store_address}}</span></div>
+            <div class="contact-row" data-flag="location"><b>Zona</b><span>{{store_location}}</span></div>
+            <div class="contact-row" data-flag="hours"><b>Horarios</b><span>{{store_hours}}</span></div>
+            <div class="contact-row"><b>WhatsApp</b><a href="{{store_whatsapp_url}}">Escribinos</a></div>
+          </div>
+          <div class="contact-social">
+            <a href="{{store_instagram_url}}" aria-label="Instagram" rel="noopener">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.2" cy="6.8" r="1" fill="currentColor" stroke="none"/></svg>
+            </a>
+            <a href="{{store_facebook_url}}" aria-label="Facebook" rel="noopener">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z"/></svg>
+            </a>
+            <a href="{{store_tiktok_url}}" aria-label="TikTok" rel="noopener">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 12a4 4 0 1 0 4 4V4c.6 2.5 2.4 4.5 5 5"/></svg>
+            </a>
+            <a href="{{store_maps_url}}" aria-label="Cómo llegar" rel="noopener">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/></svg>
+            </a>
+          </div>
+        </div>
+        <div>{{contact_form}}</div>
+      </div>
+    </div>
+  </section>
+
+</div>
+
+<!-- ============ CATÁLOGO ============ -->
+<section class="wrap" data-surface="catalog" id="catalogo" data-flag="catalog">
+  <div class="cat-head">
+    <h1>Colección</h1>
+    <span class="mono" data-ds-count aria-live="polite"></span>
+  </div>
+  <div class="cat-tools">
+    <div class="cat-filters" data-ds-filters role="group" aria-label="Filtrar por categoría"></div>
+    <div class="cat-side">
+      <div class="cat-price" role="group" aria-label="Rango de precio">
+        <span>Precio</span>
+        <input type="number" inputmode="numeric" min="0" step="1" placeholder="Mín." aria-label="Precio mínimo" data-ds-price-min>
+        <span aria-hidden="true">—</span>
+        <input type="number" inputmode="numeric" min="0" step="1" placeholder="Máx." aria-label="Precio máximo" data-ds-price-max>
+      </div>
+      <label class="cat-offers"><input type="checkbox" data-ds-offers> Solo ofertas</label>
+      <button class="cat-clear" type="button" data-ds-clear>Limpiar</button>
+      <label class="cat-sort">Ordenar
+        <select data-ds-sort>
+          <option value="relevance">Sugerido</option>
+          <option value="recent">Más nuevos</option>
+          <option value="price-asc">Menor precio</option>
+          <option value="price-desc">Mayor precio</option>
+          <option value="name">Nombre</option>
+        </select>
+      </label>
+      <div class="cat-view" role="group" aria-label="Vista">
+        <button type="button" data-ds-view="grid" aria-pressed="true" aria-label="Vista grilla">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg>
+        </button>
+        <button type="button" data-ds-view="list" aria-pressed="false" aria-label="Vista lista">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><path d="M4 6h16M4 12h16M4 18h16"/></svg>
+        </button>
+      </div>
+    </div>
+  </div>
+  <div class="cat-chips" data-ds-chips hidden></div>
+  <div class="cat-grid" data-ds-products data-ds-view-mode="grid">{{products}}</div>
+  <p class="ds-empty" data-ds-noresults hidden>No hay productos que coincidan con tu búsqueda.</p>
+</section>
+
+<!-- ============ SERVICIOS ============ -->
+<section class="wrap" data-surface="services" id="servicios" data-flag="services">
+  <div class="svc-head">
+    <h1>Servicios</h1>
+  </div>
+  <div class="svc-offers ds-zone" data-flag="services">{{offerings}}</div>
+  <div class="svc-grid">
+    <div class="ds-zone">{{services}}</div>
+    <aside class="svc-side">
+      <div class="svc-card">
+        <h3>Consultanos</h3>
+        <p>Contanos qué estás buscando: talles, disponibilidad, envíos o cambios. Respondemos por WhatsApp.</p>
+        <a class="btn" href="{{store_whatsapp_url}}">Escribir por WhatsApp</a>
+      </div>
+      <div class="svc-card" data-flag="hours">
+        <h3>Horarios</h3>
+        <p>{{store_hours}}</p>
+      </div>
+    </aside>
+  </div>
+</section>
+
+<!-- ============ FICHA DE PRODUCTO ============ -->
+<section class="wrap" data-surface="product" data-flag="catalog">
+  <nav class="pdp-crumb" aria-label="Ruta">
+    <a href="#inicio" data-ds-route="home">Inicio</a>
+    <span class="sep" aria-hidden="true">/</span>
+    <a href="#catalogo" data-ds-route="catalog">Colección</a>
+    <span class="sep" aria-hidden="true">/</span>
+    <span aria-current="page">{{product_name}}</span>
+  </nav>
+  <div class="pdp-grid">
+    <figure class="pdp-media">
+      <img src="{{product_image}}" alt="{{product_name}}" loading="eager">
+      {{product_campaign_label}}
+    </figure>
+    <div>
+      <p class="pdp-cat">{{product_category}}</p>
+      <h1 class="pdp-title">{{product_name}}</h1>
+      <p class="pdp-meta">REF: {{product_ref}} <span class="pdp-brand">{{product_brand}}</span></p>
+      <div class="pdp-price"><b>{{product_price}}</b><span class="pdp-off">{{product_offer_pct}}</span><s>{{product_old_price}}</s></div>
+      <span class="pdp-save">{{product_save}}</span>
+      <p class="pdp-desc">{{product_description}}</p>
+      <div class="pdp-ctas">
+        <a class="btn" href="{{product_whatsapp_url}}">Consultar por WhatsApp</a>
+        <a class="btn btn-ghost" href="#catalogo" data-ds-route="catalog">Volver a la colección</a>
+      </div>
+      <div class="pdp-social" data-hide-blank="a:not([href=''])">
+        <span>Seguinos</span>
+        <a href="{{store_instagram_url}}" aria-label="Instagram" rel="noopener">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.2" cy="6.8" r="1" fill="currentColor" stroke="none"/></svg>
+        </a>
+        <a href="{{store_facebook_url}}" aria-label="Facebook" rel="noopener">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z"/></svg>
+        </a>
+        <a href="{{store_tiktok_url}}" aria-label="TikTok" rel="noopener">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 12a4 4 0 1 0 4 4V4c.6 2.5 2.4 4.5 5 5"/></svg>
+        </a>
+      </div>
+      <table class="pdp-specs"><tbody>{{product_features}}</tbody></table>
+    </div>
+  </div>
+  <section class="pdp-rev" aria-label="Opiniones">
+    <div class="pdp-rev-head">
+      <h2>Opiniones</h2>
+      <p class="pdp-score"><b>{{product_rating_avg}}</b><span class="pdp-score-t" data-hide-blank="i"><i>{{product_rating_count}}</i> valoraciones</span></p>
+    </div>
+    {{product_reviews}}
+  </section>
+  <section class="pdp-rel" aria-label="Looks recomendados">
+    <h2>Looks recomendados</h2>
+    <div class="rel-grid">{{product_related}}</div>
+  </section>
+</section>
+
+</main>
+
+<footer class="foot">
+  <div class="wrap">
+    <div class="foot-brand"><a href="#inicio" data-ds-route="home">{{store_name}}</a></div>
+    <div class="foot-grid">
+      <div>
+        <p class="foot-h">Navegación</p>
+        <a href="#inicio" data-ds-route="home">Inicio</a>
+        <a href="#catalogo" data-ds-route="catalog" data-flag="catalog">Colección</a>
+        <a href="#servicios" data-ds-route="services" data-flag="services">Servicios</a>
+        <a href="#contacto" data-ds-anchor data-flag="contact">Contacto</a>
+      </div>
+      <div>
+        <p class="foot-h">El negocio</p>
+        <span>{{store_name}}</span>
+        <span>{{store_address}}</span>
+        <span>{{store_location}}</span>
+        <span data-flag="hours">{{store_hours}}</span>
+      </div>
+      <div>
+        <p class="foot-h">Seguinos</p>
+        <div class="foot-social">
+          <a href="{{store_instagram_url}}" aria-label="Instagram" rel="noopener">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.2" cy="6.8" r="1" fill="currentColor" stroke="none"/></svg>
+          </a>
+          <a href="{{store_facebook_url}}" aria-label="Facebook" rel="noopener">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z"/></svg>
+          </a>
+          <a href="{{store_tiktok_url}}" aria-label="TikTok" rel="noopener">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 12a4 4 0 1 0 4 4V4c.6 2.5 2.4 4.5 5 5"/></svg>
+          </a>
+          <a href="{{store_whatsapp_url}}" aria-label="WhatsApp" rel="noopener">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7.9 20A9 9 0 1 0 4 16.1L2 22Z"/></svg>
+          </a>
+        </div>
+        <p class="foot-h" style="margin-top:20px">{{store_tagline}}</p>
+      </div>
+    </div>
+    <div class="foot-legal">
+      <span>© {{year}} {{store_name}}</span>
+      <span>{{footer_text}}</span>
+    </div>
+  </div>
+</footer>
+
+<script>
+(function(){
+  var html = document.documentElement;
+  var body = document.body;
+  var header = document.querySelector('header.top');
+
+  /* Enlaces sin destino (placeholder vacío o "#" pelado): no navegar. */
+  document.addEventListener('click', function(e){
+    var a = e.target && e.target.closest ? e.target.closest('a') : null;
+    if (!a) return;
+    var href = a.getAttribute('href');
+    if (href === '' || href === '#') e.preventDefault();
+  });
+
+  /* Media de las tarjetas: el fragmento emite la foto suelta dentro del
+     link; se envuelve en .p-media para el marco gris y la etiqueta OFF. */
+  ;[].forEach.call(document.querySelectorAll('.ds-product-link'), function(link){
+    var img = link.querySelector(':scope > .ds-product-img');
+    if (!img) return;
+    var media = document.createElement('span');
+    media.className = 'p-media';
+    link.insertBefore(media, img);
+    media.appendChild(img);
+  });
+
+  /* Cabecera: transparente sobre el héroe de la portada, sólida al hacer
+     scroll. El iframe va estirado — el scroll real lo informa el host por
+     davent:ds-frame (top del marco, negativo = scrolleado). */
+  var hero = document.querySelector('[data-hero]');
+  function syncHeader(scrollTop){
+    if (!header) return;
+    var solid = scrollTop > 24 || html.getAttribute('data-ds-surface') !== 'landing';
+    header.classList.toggle('is-solid', solid);
+  }
+  window.addEventListener('message', function(e){
+    var d = e.data || {};
+    if (d.type === 'davent:ds-frame') {
+      syncHeader(Math.max(0, -Number(d.top) || 0));
+      return;
+    }
+    if (d.type === 'davent:ds-surface') {
+      syncHeader(999);
+    }
+  });
+  window.addEventListener('scroll', function(){ syncHeader(window.scrollY || 0); }, {passive:true});
+  syncHeader(window.scrollY || 0);
+
+  /* Menú móvil a pantalla completa. */
+  var sheet = document.getElementById('m-sheet');
+  function setMenu(open){
+    if (!sheet) return;
+    sheet.classList.toggle('open', open);
+    sheet.setAttribute('aria-hidden', open ? 'false' : 'true');
+    var btn = document.querySelector('[data-m-open]');
+    if (btn) btn.setAttribute('aria-expanded', open ? 'true' : 'false');
+    body.style.overflow = open ? 'hidden' : '';
+  }
+  document.addEventListener('click', function(e){
+    var t = e.target;
+    if (!t || !t.closest) return;
+    if (t.closest('[data-m-open]')) { setMenu(true); return; }
+    if (t.closest('[data-m-close]')) { setMenu(false); return; }
+    /* Categorías del menú/landing: llevan a la superficie catálogo. */
+    var cat = t.closest('a.ds-cat');
+    if (cat && cat.closest('.cats')) {
+      e.preventDefault();
+      if (window.parent !== window) {
+        parent.postMessage({ type: 'davent:ds-route', route: 'catalog' }, '*');
+      }
+    }
+  });
+  document.addEventListener('keydown', function(e){
+    if (e.key === 'Escape') setMenu(false);
+  });
+  window.addEventListener('resize', function(){
+    if (window.innerWidth > 960) setMenu(false);
+  });
+
+  /* Bloques con valores vacíos (años sin cargar, etc.): no pintar la
+     cáscara. Opt-in del diseño con data-hide-blank="<selector>". */
+  ;[].forEach.call(document.querySelectorAll('[data-hide-blank]'), function(el){
+    var sel = el.getAttribute('data-hide-blank');
+    var node = sel ? el.querySelector(sel) : null;
+    /* Un enlace con destino propio cuenta aunque no tenga texto (iconos). */
+    el.hidden = !node || (!((node.textContent || '').trim()) && !(node.getAttribute && node.getAttribute('href')));
+  });
+})();
+</script>
+
+</body>
+</html>

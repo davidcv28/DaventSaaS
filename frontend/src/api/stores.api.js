@@ -826,6 +826,7 @@ export const STORE_TEMPLATES = {
   moderntec:   { label: 'ModernTec',   rubro: 'tecnologia',   tier: 'plus',     defaultAccent: '#3dd6ff', desc: 'ModernTec: oscuro tecnológico, acento cyan/violeta — tiendas de tecnología, electrónica y gaming.' },
   indumentaria: { label: 'Indumentaria', rubro: 'indumentaria', tier: 'plus',   defaultAccent: '#B4442A', desc: 'Indumentaria: lookbook editorial — crudo tela, acento de temporada, rail COLECCIÓN, etiquetas colgantes y cinta marquee.' },
   impacto:     { label: 'Indumentaria ModernImpact', rubro: 'indumentaria', tier: 'plus', defaultAccent: '#FF4B1F', desc: 'ModernImpact: revista suiza de moda — papel crudo, tinta y acento señal, Anton en caja alta, numeración 01/02 y cintas marquee.' },
+  showroom:    { label: 'Showroom',   rubro: 'indumentaria', tier: 'plus',   defaultAccent: '#111111', desc: 'Showroom: retail serio en blanco y negro — Archivo en versalitas, cabecera de tres bandas con buscador, grilla asimétrica y ficha tipo e-commerce. Sin animaciones.' },
   ruta:        { label: 'Ruta',        rubro: 'turismo',      tier: 'plus',     defaultAccent: '#14443B', desc: 'Ruta: guía de viaje editorial — papel crema, verde pino y ámbar, destinos como tickets y galería de postales.' },
   aurum:       { label: 'Áurea',       rubro: 'general',      tier: 'advanced', defaultAccent: '#C8A25A', desc: 'Áurea: insignia premium — tinta y dorado, índices numerados y todas las secciones del negocio.' },
   neon:        { label: 'Neon',        rubro: 'hogar',        tier: 'plus',     defaultAccent: '#BBF351', desc: 'Neon: tienda nocturna de objetos — tinta profunda, neón lima/cian, glow, scanlines y cintas en loop.' },
@@ -837,7 +838,7 @@ export const STORE_TEMPLATE_FAMILIES = [
   { key: 'mercado',      label: 'Generalista',  caption: 'Marketplace y retail',     templates: ['mercado'] },
   { key: 'deporte',      label: 'Deporte',      caption: 'Gimnasios y fitness',     templates: ['gimnasio', 'movimiento'] },
   { key: 'sastreria',    label: 'Indumentaria', caption: 'Sastrería de autor',      templates: ['sastreria'] },
-  { key: 'indumentaria', label: 'Indumentaria', caption: 'Moda, lookbook y revista', templates: ['indumentaria', 'impacto'] },
+  { key: 'indumentaria', label: 'Indumentaria', caption: 'Moda, lookbook y revista', templates: ['indumentaria', 'impacto', 'showroom'] },
   { key: 'tecnologia',   label: 'Tecnología',   caption: 'Electrónica y gaming',    templates: ['moderntec'] },
   { key: 'turismo',      label: 'Turismo',      caption: 'Viajes y experiencias',   templates: ['ruta'] },
   { key: 'premium',      label: 'Premium',      caption: 'Insignia para todo rubro', templates: ['aurum'] },
@@ -854,6 +855,7 @@ export const STORE_TEMPLATE_SKIN = {
   moderntec: 'moderntec',
   indumentaria: 'indumentaria',
   impacto: 'impacto',
+  showroom: 'raiz',
   ruta: 'raiz',
   aurum: 'raiz'
 }

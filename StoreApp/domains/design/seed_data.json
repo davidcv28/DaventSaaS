@@ -6906,6 +6906,192 @@
         "corners": "rounded"
       },
       "concept": "Menta + celeste: el neón del hielo."
+    },
+    {
+      "slug": "showroom",
+      "nombre": "Showroom",
+      "categoria": "Retail de indumentaria",
+      "descripcion": "Retail serio en blanco puro: Archivo en versalitas para la marca y los titulares, Inter en lectura y JetBrains Mono en datos. Fotografia sobre gris neutro, grilla asimetrica, cabecera de tres bandas con buscador y pie minimalista. Sin animaciones.",
+      "tier": "plus",
+      "template": "showroom",
+      "page_theme": "light",
+      "pattern": "showroom",
+      "tokens": {
+        "palette": {
+          "accent": "#111111",
+          "primary": "#111111",
+          "secondary": "#3B3B3B",
+          "bg": "#FFFFFF",
+          "surface": "#F4F4F4",
+          "text": "#111111",
+          "muted": "#8A8A8A",
+          "border": "#E5E5E5",
+          "success": "#1E7F4F",
+          "danger": "#B3261E"
+        },
+        "containers": {
+          "radius": "none",
+          "shadow": "none",
+          "border": "thin",
+          "density": "comfortable",
+          "surface": "flat"
+        },
+        "typography": {
+          "heading": "archivo",
+          "subheading": "inter",
+          "body": "inter",
+          "scale": "compact",
+          "weightHeading": 800,
+          "letterSpacing": "0.12em"
+        },
+        "buttons": {
+          "shape": "square",
+          "style": "solid",
+          "size": "md"
+        },
+        "background": {
+          "type": "solid",
+          "value": null,
+          "overlay": "none"
+        },
+        "motion": {
+          "reveal": "none",
+          "hover": "none",
+          "intensity": "subtle"
+        },
+        "mobile": {
+          "cardStyle": "standard",
+          "heroHeight": "tall"
+        },
+        "preview": "",
+        "icons": {
+          "style": "line",
+          "stroke": "1.8",
+          "size": "20",
+          "corners": "square"
+        }
+      },
+      "layout": {},
+      "layout_spec": {},
+      "tags": [
+        "indumentaria",
+        "moda",
+        "fashion",
+        "retail",
+        "tienda",
+        "ofertas",
+        "ecommerce"
+      ],
+      "preview": "",
+      "style": "Retail de indumentaria",
+      "anim": {
+        "hero": "none",
+        "reveal": "none",
+        "hover": "none",
+        "button": "solid-press"
+      },
+      "easing": "ease",
+      "duration": "160ms",
+      "icons": {
+        "style": "line",
+        "stroke": "1.8",
+        "size": "20",
+        "corners": "rounded"
+      },
+      "concept": "Blanco puro, tinta y gris foto: Archivo versalita, grilla retail y cabecera tipo e-commerce."
+    },
+    {
+      "slug": "showroom-noche",
+      "nombre": "Showroom Noche",
+      "categoria": "Retail de indumentaria",
+      "descripcion": "El mismo showroom en negro puro: fondo #0A0A0A, superficies de carbon y texto hueso. Archivo en versalitas, grilla asimetrica y ficha de producto intactas; solo transiciones.",
+      "tier": "plus",
+      "template": "showroom",
+      "page_theme": "dark",
+      "pattern": "showroom",
+      "tokens": {
+        "palette": {
+          "accent": "#F5F5F5",
+          "primary": "#F5F5F5",
+          "secondary": "#C9C9C9",
+          "bg": "#0A0A0A",
+          "surface": "#141414",
+          "text": "#F5F5F5",
+          "muted": "#8B8B8B",
+          "border": "#262626",
+          "success": "#4CC38A",
+          "danger": "#F2555A"
+        },
+        "containers": {
+          "radius": "none",
+          "shadow": "none",
+          "border": "thin",
+          "density": "comfortable",
+          "surface": "flat"
+        },
+        "typography": {
+          "heading": "archivo",
+          "subheading": "inter",
+          "body": "inter",
+          "scale": "compact",
+          "weightHeading": 800,
+          "letterSpacing": "0.12em"
+        },
+        "buttons": {
+          "shape": "square",
+          "style": "solid",
+          "size": "md"
+        },
+        "background": {
+          "type": "solid",
+          "value": null,
+          "overlay": "none"
+        },
+        "motion": {
+          "reveal": "none",
+          "hover": "none",
+          "intensity": "subtle"
+        },
+        "mobile": {
+          "cardStyle": "standard",
+          "heroHeight": "tall"
+        },
+        "preview": "",
+        "icons": {
+          "style": "line",
+          "stroke": "1.8",
+          "size": "20",
+          "corners": "square"
+        }
+      },
+      "layout": {},
+      "layout_spec": {},
+      "tags": [
+        "indumentaria",
+        "moda",
+        "fashion",
+        "retail",
+        "tienda",
+        "ofertas",
+        "ecommerce"
+      ],
+      "preview": "",
+      "style": "Retail de indumentaria",
+      "anim": {
+        "hero": "none",
+        "reveal": "none",
+        "hover": "none",
+        "button": "solid-press"
+      },
+      "easing": "ease",
+      "duration": "160ms",
+      "icons": {
+        "style": "line",
+        "stroke": "1.8",
+        "size": "20",
+        "corners": "rounded"
+      },
+      "concept": "Negro puro, hueso y carbon: Archivo versalita, grilla retail y cabecera tipo e-commerce."
     }
   ],
   "patterns": [
@@ -10208,6 +10394,148 @@
       "variables": {},
       "supports_dark_mode": true,
       "style": "neon"
+    },
+    {
+      "slug": "showroom",
+      "nombre": "Showroom",
+      "categoria": "indumentaria",
+      "descripcion": "Retail de indumentaria serio, a lo BERCHER: blanco puro, grotesca en versalitas y fotografia sobre fondo neutro. Cabecera de tres bandas con buscador, hero editorial a sangre, grilla de recomendados asimetrica, catalogo con filtros de precio y orden, ficha tipo e-commerce y pie minimalista. Sin animaciones: solo transiciones.",
+      "tier": "plus",
+      "template": "showroom",
+      "layout": {
+        "landing": [
+          {
+            "id": "hero",
+            "variant": "split",
+            "enabled": true,
+            "order": 0
+          },
+          {
+            "id": "categories",
+            "enabled": true,
+            "order": 1
+          },
+          {
+            "id": "featured",
+            "enabled": true,
+            "order": 2
+          },
+          {
+            "id": "brands",
+            "enabled": true,
+            "order": 3
+          },
+          {
+            "id": "about",
+            "enabled": true,
+            "order": 4
+          },
+          {
+            "id": "benefits",
+            "variant": "cards",
+            "enabled": true,
+            "order": 5
+          },
+          {
+            "id": "plans",
+            "enabled": true,
+            "order": 6
+          },
+          {
+            "id": "testimonials",
+            "variant": "cards",
+            "enabled": true,
+            "order": 7
+          },
+          {
+            "id": "faq",
+            "enabled": true,
+            "order": 8
+          },
+          {
+            "id": "cta",
+            "variant": "band",
+            "enabled": true,
+            "order": 9
+          },
+          {
+            "id": "contact",
+            "enabled": true,
+            "order": 10
+          }
+        ],
+        "catalog": [
+          {
+            "id": "hero",
+            "enabled": true,
+            "order": 0
+          },
+          {
+            "id": "grid",
+            "enabled": true,
+            "order": 1
+          }
+        ],
+        "services": [
+          {
+            "id": "hero",
+            "enabled": true,
+            "order": 0
+          },
+          {
+            "id": "list",
+            "enabled": true,
+            "order": 1
+          }
+        ]
+      },
+      "tokens": {
+        "accent": "#111111",
+        "palette": {
+          "accent": "#111111",
+          "primary": "#111111",
+          "secondary": "#3B3B3B",
+          "bg": "#FFFFFF",
+          "surface": "#F4F4F4",
+          "text": "#111111",
+          "muted": "#8A8A8A",
+          "border": "#E5E5E5",
+          "success": "#1E7F4F",
+          "danger": "#B3261E"
+        },
+        "fonts": [
+          "inter",
+          "archivo"
+        ],
+        "radius": "0px",
+        "anim": {
+          "hero": "none",
+          "reveal": "none",
+          "hover": "none",
+          "button": "solid-press"
+        },
+        "easing": "ease",
+        "duration": "160ms",
+        "icons": {
+          "style": "line",
+          "stroke": "1.8",
+          "size": "20",
+          "corners": "square"
+        }
+      },
+      "tags": [
+        "indumentaria",
+        "moda",
+        "fashion",
+        "retail",
+        "tienda",
+        "ofertas",
+        "ecommerce"
+      ],
+      "preview": "",
+      "variables": {},
+      "supports_dark_mode": true,
+      "style": "showroom"
     }
   ]
 }
