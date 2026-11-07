@@ -1333,7 +1333,7 @@ body{ transition: background-color .2s ease, color .2s ease; }
   .side-panel{
     position: fixed; top: calc(var(--header-h, 64px) - 2px); left: 0; right: 0; bottom: 0; z-index: 40;
     flex: none; gap: 18px;
-    background: #0f1130;
+    background: #0f1424;
     padding: 14px calc(16px + env(safe-area-inset-right)) calc(20px + env(safe-area-inset-bottom)) calc(16px + env(safe-area-inset-left));
     transform: translateY(-8px); opacity: 0; visibility: hidden;
     transition: transform .15s ease, opacity .15s ease, visibility .15s;
