@@ -8,6 +8,7 @@ from unittest.mock import patch
 
 from django.contrib.auth.models import User
 from django.core import mail
+from django.core.cache import cache
 from django.test import TestCase, override_settings
 from rest_framework.test import APIClient
 
@@ -30,6 +31,10 @@ def _user(username = 'cliente'):
 class MailTaskTests(TestCase):
     def setUp(self):
         mail.outbox.clear()
+        #El POST de password-reset consume el scope 'password_reset' (5/h
+        #por IP) del cache compartido del worker: sin limpiar, un bucket
+        #agotado por otra clase devuelve 429 y la task nunca se encola.
+        cache.clear()
 
     @override_settings(CELERY_TASK_ALWAYS_EAGER = False)
     def test_password_reset_request_only_enqueues(self):

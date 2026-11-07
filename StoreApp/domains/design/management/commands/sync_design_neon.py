@@ -3,9 +3,8 @@ import re
 import psycopg2
 from decouple import config
 from django.core.management import BaseCommand, CommandError
-from psycopg2.extras import Json
-
 from django.db.models import Q
+from psycopg2.extras import Json
 
 from StoreApp.domains.design.models import (
     DesignCategory,
