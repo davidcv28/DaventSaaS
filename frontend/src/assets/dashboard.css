@@ -944,6 +944,9 @@
   html { scroll-behavior: smooth; }
   .app--tabs { -webkit-tap-highlight-color: transparent; }
   .app--tabs button, .app--tabs a, .app--tabs summary { touch-action: manipulation; }
+  /* La burbuja del chat se arrastra con Pointer Events: manipulation le
+     ganaría por especificidad y el browser se quedaría el paneo (pointercancel). */
+  .app--tabs .dock-fab { touch-action: none; }
   .app--tabs .main { overscroll-behavior-y: contain; }
 
   /* Barra superior fija con vidrio: el contexto de la sección no se pierde

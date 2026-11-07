@@ -92,16 +92,26 @@ const onKey = (e) => { if (e.key === 'Escape') close() }
 // "plano" (los carruseles internos — chips, pestañas, tablas — se excluyen
 // para no robarles el scroll horizontal).
 let swipeX = null, swipeY = null, swipeBlocked = false
-const SWIPE_SAFE = '.qa-row, .tabs, .dsg-tabs, .gs-list, .table-wrap, .stats-chart, .sheet-nav, [data-noswipe]'
+const SWIPE_SAFE = '.qa-row, .tabs, .sec-tabs, .dsg-tabs, .gs-list, .table-wrap, .prod-table-wrap, .stats-chart, .sheet-nav, .fed-tools, .aidw-bar, .chat-dock, input, textarea, select, [contenteditable], [data-noswipe]'
+// Controles de gesto puro (touch-action none — burbuja del chat, elementos
+// del lienzo de flyers — o pan-x sin pan-y): su arrastre horizontal les
+// pertenece a ellos, nunca es un cambio de sección.
+function gestureOwnsSwipe(target, boundary) {
+  for (let n = target; n instanceof Element && n !== boundary; n = n.parentElement) {
+    const ta = getComputedStyle(n).touchAction
+    if (ta === 'none' || (ta.includes('pan-x') && !ta.includes('pan-y'))) return true
+  }
+  return false
+}
 const onSwipeStart = (e) => {
   swipeX = swipeY = null
   if (!hasTabs.value || open.value || e.touches.length > 1) return
-  swipeBlocked = !!e.target.closest(SWIPE_SAFE)
+  swipeBlocked = !!e.target.closest(SWIPE_SAFE) || gestureOwnsSwipe(e.target, e.currentTarget)
   swipeX = e.touches[0].clientX
   swipeY = e.touches[0].clientY
 }
 const onSwipeEnd = (e) => {
-  if (swipeX === null) return
+  if (swipeX === null || e.touches.length > 0) { swipeX = swipeY = null; return }
   const dx = e.changedTouches[0].clientX - swipeX
   const dy = e.changedTouches[0].clientY - swipeY
   swipeX = swipeY = null
