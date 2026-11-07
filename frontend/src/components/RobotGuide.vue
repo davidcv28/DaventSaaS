@@ -12,12 +12,14 @@ const visible = ref(false)
 let timer = null
 
 onMounted(() => {
+  // ?robot=1 fuerza la vista (testing), ignorando la marca de sesión.
+  const force = new URLSearchParams(window.location.search).has('robot')
   try {
-    if (sessionStorage.getItem('davent:robot-guide') === '1') return
+    if (!force && sessionStorage.getItem('davent:robot-guide') === '1') return
     sessionStorage.setItem('davent:robot-guide', '1')
   } catch { /* storage bloqueado */ }
   visible.value = true
-  timer = setTimeout(() => { visible.value = false }, 5000)
+  timer = setTimeout(() => { visible.value = false }, force ? 30000 : 5000)
 })
 onBeforeUnmount(() => clearTimeout(timer))
 </script>
