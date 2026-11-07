@@ -20,6 +20,7 @@ import {
   validateAboutTitle, validateAboutText, validateAboutYears, validateAboutMission, validateAboutSpecialties,
   validateContactEmail,
   validateWhatsapp, validateInstagram, validateTiktok, validateFacebook,
+  normalizeWhatsapp, normalizeInstagram, normalizeTiktok, normalizeFacebook,
   validateImageFile, validateLogoFile, LOGO_ACCEPT, CAROUSEL_MAX_IMAGES, DECOR_MAX_IMAGES,
   CHATBOT_DEFAULTS, CHATBOT_QA_MAX,
   MARKETING_LIMITS, SERVICE_ICONS, serviceHue,
@@ -1892,6 +1893,7 @@ function moveRow(list, index, direction) {
 // no técnicos). El orden de las tarjetas sigue el de las secciones de la web.
 const mkOpen = ref(null)
 const mkNav = [
+  { key: 'identity', label: 'Tu negocio', icon: 'user', desc: 'Nombre, titular y descripción' },
   { key: 'about', label: 'Sobre nosotros', icon: 'store', desc: 'Tu historia, años y misión' },
   { key: 'services', label: 'Qué ofrecemos', icon: 'layout-grid', desc: 'Ventajas y servicios con ícono' },
   { key: 'plans', label: 'Planes y membresías', icon: 'crown', desc: 'Packs y clubs para tus clientes' },
@@ -1905,6 +1907,7 @@ const mkNav = [
   { key: 'cta', label: 'Llamado a la acción', icon: 'zap', desc: 'El botón final que invita a escribirte' },
   { key: 'ann', label: 'Anuncios', icon: 'megaphone', desc: 'Novedades que corren bajo la portada' },
   { key: 'video', label: 'Videos', icon: 'play', desc: 'Videos de tus redes y stream en vivo' },
+  { key: 'contact', label: 'Contacto y redes', icon: 'phone', desc: 'WhatsApp, redes y email público' },
   { key: 'extras', label: 'Extras', icon: 'plus', desc: 'Aviso del catálogo y frase del pie' }
 ]
 const mkOpenMeta = computed(() => mkNav.find((m) => m.key === mkOpen.value) || null)
@@ -1914,6 +1917,7 @@ function mkSummary(key) {
   const f = designForm
   const n = (list) => (Array.isArray(list) ? list.length : 0)
   switch (key) {
+    case 'identity': return (f.display_name || f.headline || f.description) ? 'Con contenido' : ''
     case 'about': return (f.about_text || f.about_mission || f.about_specialties || f.about_years) ? 'Con contenido' : ''
     case 'services': return n(f.services) ? `${n(f.services)} cargado${n(f.services) === 1 ? '' : 's'}` : ''
     case 'plans': return n(f.plans) ? `${n(f.plans)} cargado${n(f.plans) === 1 ? '' : 's'}` : ''
@@ -1930,6 +1934,7 @@ function mkSummary(key) {
       const nv = n(f.videos) + (f.video_url ? 1 : 0)
       return (nv || f.live_stream_url) ? `${nv ? `${nv} video${nv === 1 ? '' : 's'}` : ''}${nv && f.live_stream_url ? ' + ' : ''}${f.live_stream_url ? 'en vivo' : ''}` : ''
     }
+    case 'contact': return (f.whatsapp || f.instagram || f.tiktok || f.facebook || f.contact_email) ? 'Con contenido' : ''
     case 'extras': return (f.catalog_note || f.footer_text) ? 'Con contenido' : ''
     default: return ''
   }
@@ -1960,6 +1965,41 @@ async function saveCompany() {
     about_years: years === '' || years === null || years === undefined ? null : Number(years),
     about_mission: designForm.about_mission.trim(),
     about_specialties: designForm.about_specialties.trim()
+  })
+  companyBusy.value = false
+  if (ok) pushToast('Guardado ✓')
+}
+
+// Identidad visible de la portada (nombre, titular, descripción) y datos de
+// contacto/redes: viajan en el mismo PATCH parcial que el resto de las
+// tarjetas — antes no tenían editor en ninguna sección.
+const IDENTITY_FIELDS = ['display_name', 'headline', 'description']
+const CONTACT_FIELDS = ['contact_email', 'whatsapp', 'instagram', 'tiktok', 'facebook']
+async function saveIdentity() {
+  IDENTITY_FIELDS.forEach((k) => { designTouched[k] = true })
+  if (IDENTITY_FIELDS.some((k) => designErrors.value[k])) return
+  companyBusy.value = true
+  const ok = await store.saveCustomization({
+    display_name: designForm.display_name.trim(),
+    headline: designForm.headline.trim(),
+    description: designForm.description.trim()
+  })
+  companyBusy.value = false
+  if (ok) pushToast('Guardado ✓')
+}
+
+async function saveContact() {
+  CONTACT_FIELDS.forEach((k) => { designTouched[k] = true })
+  if (CONTACT_FIELDS.some((k) => designErrors.value[k])) return
+  companyBusy.value = true
+  const ok = await store.saveCustomization({
+    contact_email: designForm.contact_email.trim(),
+    show_contact: Boolean(designForm.show_contact),
+    whatsapp: normalizeWhatsapp(designForm.whatsapp),
+    instagram: normalizeInstagram(designForm.instagram),
+    tiktok: normalizeTiktok(designForm.tiktok),
+    facebook: normalizeFacebook(designForm.facebook),
+    show_location: Boolean(designForm.show_location)
   })
   companyBusy.value = false
   if (ok) pushToast('Guardado ✓')
@@ -4939,6 +4979,32 @@ async function changePassword() {
             </header>
             <div class="mk-modal-body">
 
+        <!-- ===== Tu negocio (nombre visible, titular y descripción) ===== -->
+        <div v-show="mkOpen === 'identity'" class="card mk-card">
+          <h3><AppIcon name="user" :size="18" /> Tu negocio</h3>
+          <p class="mk-tip"><AppIcon name="info" :size="15" /><span>Lo primero que se ve en tu portada: el nombre, una frase corta y una descripción.</span></p>
+          <AppInput v-model="designForm.display_name" label="Nombre que se muestra" name="company_display_name" placeholder="Ej. Almacén Don Pedro" hint="Vacío: se usa el nombre de tu cuenta." maxlength="60" :error="designFieldErr('display_name')" @blur="designTouched.display_name = true" />
+          <AppInput v-model="designForm.headline" label="Titular" name="company_headline" placeholder="Ej. Tu almacén de barrio, ahora también online" hint="Frase corta debajo del nombre. Vacío: no se muestra." maxlength="140" :error="designFieldErr('headline')" @blur="designTouched.headline = true" />
+          <div class="field">
+            <label for="company-description">Descripción</label>
+            <textarea
+              id="company-description"
+              v-model="designForm.description"
+              class="textarea"
+              :class="{ invalid: designFieldErr('description') }"
+              placeholder="Contá en pocas líneas qué hace tu negocio"
+              maxlength="800"
+              rows="4"
+              @blur="designTouched.description = true"
+            ></textarea>
+            <p class="hint">Se ve en la portada y al compartir el link de tu web. {{ designForm.description.length }}/800</p>
+            <p v-if="designFieldErr('description')" class="field-error" role="alert">{{ designFieldErr('description') }}</p>
+          </div>
+          <div class="btn-row">
+            <AppButton :loading="companyBusy" @click="saveIdentity">Guardar información</AppButton>
+          </div>
+        </div>
+
         <!-- ===== Sobre nosotros ===== -->
         <div v-show="mkOpen === 'about'" class="card mk-card">
           <h3><AppIcon name="building-2" :size="18" /> Sobre nosotros</h3>
@@ -5536,6 +5602,38 @@ async function changePassword() {
           <p v-if="companyErrs.video" class="field-error" role="alert">{{ companyErrs.video }}</p>
           <div class="btn-row">
             <AppButton :loading="companyBusy" @click="saveVideo">Guardar sección</AppButton>
+          </div>
+        </div>
+
+        <!-- ===== Contacto y redes (WhatsApp, redes, email público y mapa) ===== -->
+        <div v-show="mkOpen === 'contact'" class="card mk-card">
+          <h3><AppIcon name="phone" :size="18" /> Contacto y redes</h3>
+          <p class="mk-tip"><AppIcon name="info" :size="15" /><span>Cómo te escriben tus clientes: el botón de WhatsApp, tus redes y la sección de contacto al final de la página.</span></p>
+          <AppInput v-model="designForm.whatsapp" label="WhatsApp" name="company_whatsapp" type="tel" placeholder="+5493871551234" hint="Número con código de país. Los botones «Escribime» de tu web abren este chat. Vacío: no hay botón." :error="designFieldErr('whatsapp')" @blur="designTouched.whatsapp = true" />
+          <div class="grid-2">
+            <AppInput v-model="designForm.instagram" label="Instagram" name="company_instagram" placeholder="tunegocio" hint="Solo el usuario, sin «@»." :error="designFieldErr('instagram')" @blur="designTouched.instagram = true" />
+            <AppInput v-model="designForm.tiktok" label="TikTok" name="company_tiktok" placeholder="tunegocio" hint="Solo el usuario, sin «@»." :error="designFieldErr('tiktok')" @blur="designTouched.tiktok = true" />
+          </div>
+          <AppInput v-model="designForm.facebook" label="Facebook" name="company_facebook" placeholder="tunegocio o link de tu página" hint="El nombre de tu página o tu usuario." :error="designFieldErr('facebook')" @blur="designTouched.facebook = true" />
+          <AppInput v-model="designForm.contact_email" label="Email de contacto público" name="company_contact_email" type="email" placeholder="hola@tunegocio.com" hint="Los mensajes del formulario de contacto llegan acá. Vacío: llegan al email de tu cuenta." :error="designFieldErr('contact_email')" @blur="designTouched.contact_email = true" />
+          <div class="check-list">
+            <label class="check-item">
+              <input v-model="designForm.show_contact" type="checkbox" />
+              <span class="check-text">
+                <strong>Mostrar sección de contacto</strong>
+                <small>El formulario «Escribinos» al final de tu página. Se oculta sola si no hay datos de contacto.</small>
+              </span>
+            </label>
+            <label class="check-item" :class="{ disabled: !canLocationMap }">
+              <input v-model="designForm.show_location" type="checkbox" :disabled="!canLocationMap" />
+              <span class="check-text">
+                <strong>Mostrar mapa de ubicación <span v-if="!canLocationMap" class="lock-badge"><AppIcon name="lock" :size="11" :stroke="2" /> Plan Estándar en adelante</span></strong>
+                <small>Tu domicilio en un mapa dentro de la sección de contacto.</small>
+              </span>
+            </label>
+          </div>
+          <div class="btn-row">
+            <AppButton :loading="companyBusy" @click="saveContact">Guardar información</AppButton>
           </div>
         </div>
 

@@ -1204,6 +1204,8 @@ body{ transition: background-color .2s ease, color .2s ease; }
 }
 /* Un color por sección: ícono teñido sobre fondo translúcido del mismo
    tono (funciona igual en tema claro y oscuro). */
+.hue-identity{ color: #7c2d12; background: #7c2d121f; }
+.hue-contact{ color: #0369a1; background: #0369a11f; }
 .hue-about{ color: #6366f1; background: #6366f11f; }
 .hue-services{ color: #0ea5e9; background: #0ea5e91f; }
 .hue-plans{ color: #b45309; background: #b453091f; }
