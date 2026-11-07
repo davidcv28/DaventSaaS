@@ -11,6 +11,8 @@ from rest_framework.permissions import SAFE_METHODS, AllowAny, IsAdminUser
 from rest_framework.response import Response
 from rest_framework.throttling import UserRateThrottle
 
+from DaventProject.throttling import PublicReadThrottle
+
 from StoreApp.domains.catalog.serializers.serializers import (
     BrandSerializer,
     ProductSerializerList,
@@ -187,6 +189,15 @@ class SpecialOfferCampaignViewSet(
     GET /api/offers/<slug>/label/ → redirige a la etiqueta servida desde R2.
     Escritura                 → IsAdminUser (el calendario es del sistema).
     """
+    #Lectura pública: scope 'public_read' (1000/h por IP) como el resto de
+    #endpoints públicos — sin esto los GET del calendario descontaban de la
+    #cuota 'user' (1000/día) del dueño logueado y, agotada, el dashboard no
+    #podía cargar las campañas (avisos "Se acerca…" y opciones del select
+    #de vigencia desaparecían con un 429).
+    def get_throttles(self):
+        if self.request.method in SAFE_METHODS:
+            return [PublicReadThrottle()]
+        return super().get_throttles()
     lookup_field        =   'slug'
     def get_queryset(self):
         from StoreApp.domains.catalog.models import SpecialOfferCampaign
