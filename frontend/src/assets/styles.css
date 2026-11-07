@@ -1241,7 +1241,7 @@ body{ transition: background-color .2s ease, color .2s ease; }
 [data-theme='dark'] .hue-extras{ color: #818cf8; background: rgba(129, 140, 248, .15); }
 /* Modal de edición: cabecera fija + cuerpo con scroll. */
 .mk-overlay{ position: fixed; inset: 0; z-index: 80; display: flex; align-items: center; justify-content: center; padding: 20px; background: rgba(15, 15, 12, .5); backdrop-filter: blur(3px); animation: mk-overlay-in .18s ease-out; }
-.mk-modal{ width: min(780px, 100%); max-height: min(90vh, 940px); display: flex; flex-direction: column; background: var(--bg); border: 1px solid var(--line); border-radius: 18px; box-shadow: 0 30px 70px -20px rgba(15, 23, 42, .45); overflow: hidden; animation: mk-modal-in .26s cubic-bezier(.22, .8, .3, 1); }
+.mk-modal{ width: min(780px, 100%); max-height: min(90vh, 940px); display: flex; flex-direction: column; background: var(--card); border: 1px solid var(--line); border-radius: 18px; box-shadow: 0 30px 70px -20px rgba(15, 23, 42, .45); overflow: hidden; animation: mk-modal-in .26s cubic-bezier(.22, .8, .3, 1); }
 @keyframes mk-overlay-in{ from{ opacity: 0; } }
 @keyframes mk-modal-in{ from{ opacity: 0; transform: translateY(14px) scale(.985); } }
 @keyframes mk-card-in{ from{ opacity: 0; transform: translateY(8px); } }
@@ -1295,28 +1295,39 @@ body{ transition: background-color .2s ease, color .2s ease; }
 .mk-modal input[type='number']::-webkit-outer-spin-button, .mk-modal input[type='number']::-webkit-inner-spin-button{ -webkit-appearance: none; margin: 0; }
 .mk-modal .select{ appearance: none; -webkit-appearance: none; padding-right: 38px; background-image: url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='%2364748b' stroke-width='2.4' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 13px center; }
 [data-theme='dark'] .mk-modal .select{ background-image: url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='%2393a0bd' stroke-width='2.4' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E"); }
+/* Tema oscuro: la hoja del modal sube un tono entero para que los
+   formularios se lean claros — fondos navy iluminados y campos elevados. */
+[data-theme='dark'] .mk-modal{ background: #1e2547; }
+[data-theme='dark'] .mk-modal-head{ background: #28315a; }
+[data-theme='dark'] .mk-modal-x:hover{ background: #333d6b; }
+[data-theme='dark'] .mk-modal .btn-row{ background: #1e2547; }
+[data-theme='dark'] .mk-modal .check-item, [data-theme='dark'] .mk-modal .qa-item{ background: #272f57; border-color: #3a4568; }
+[data-theme='dark'] .mk-modal .check-item:not(.disabled):hover{ background: #2e3866; }
+[data-theme='dark'] .mk-modal .input, [data-theme='dark'] .mk-modal .select, [data-theme='dark'] .mk-modal .textarea{ background-color: #333d6b; border-color: #414c7e; }
+[data-theme='dark'] .mk-modal .qa-fields .input, [data-theme='dark'] .mk-modal .qa-fields .select, [data-theme='dark'] .mk-modal .qa-fields .textarea{ background-color: #333d6b; }
+[data-theme='dark'] .mk-modal .mk-card .btn.mk-add{ background: #272f57; }
 /* Interruptores "Mostrar en tu web": de lista unida a tarjetas separadas,
    con tinte de marca cuando quedan activados. */
 .mk-modal .check-list{ display: grid; gap: 8px; border: 0; border-radius: 0; overflow: visible; background: transparent; }
-.mk-modal .check-item{ border: 1px solid var(--line); border-radius: 12px; padding: 12px 14px; background: var(--card); box-shadow: var(--shadow-sm); transition: border-color .15s, background .15s, box-shadow .15s; }
+.mk-modal .check-item{ border: 1px solid var(--line); border-radius: 12px; padding: 12px 14px; background: var(--surface); box-shadow: var(--shadow-sm); transition: border-color .15s, background .15s, box-shadow .15s; }
 .mk-modal .check-item + .check-item{ border-top-color: var(--line); }
-.mk-modal .check-item:not(.disabled):hover{ border-color: var(--line-strong); background: var(--surface); }
+.mk-modal .check-item:not(.disabled):hover{ border-color: var(--line-strong); background: var(--brand-soft); }
 .mk-modal .check-item:has(input:checked){ border-color: var(--brand-soft-line); background: var(--brand-soft); }
 .mk-modal .check-item:has(input:checked):not(.disabled):hover{ border-color: var(--brand-500); background: var(--brand-soft); }
 .mk-modal .check-item:focus-within{ border-color: var(--brand-500); box-shadow: var(--ring); }
 /* Ítems repetibles (servicios, cifras, testimonios…): panel suave redondeado
    con el número como pastilla y acciones a la derecha. */
 .mk-modal .qa-list{ gap: 12px; margin: 12px 0 14px; }
-.mk-modal .qa-item{ padding: 14px; border-radius: 14px; background: var(--card); transition: border-color .15s, box-shadow .15s; }
+.mk-modal .qa-item{ padding: 14px; border-radius: 14px; background: var(--surface); transition: border-color .15s, box-shadow .15s; }
 .mk-modal .qa-item:hover{ border-color: var(--line-strong); }
 .mk-modal .qa-fields{ gap: 10px; }
-.mk-modal .qa-fields .input, .mk-modal .qa-fields .select, .mk-modal .qa-fields .textarea{ background-color: var(--surface); }
+.mk-modal .qa-fields .input, .mk-modal .qa-fields .select, .mk-modal .qa-fields .textarea{ background-color: var(--card); }
 .mk-modal .mk-mini > span{ font-size: 10.5px; font-weight: 700; letter-spacing: .05em; text-transform: uppercase; color: var(--muted); }
 .mk-modal .mk-card .btn.mk-add{ border-radius: 12px; padding: 12px 16px; color: var(--muted); }
 .mk-modal .mk-card .btn.mk-add:hover:not(:disabled){ border-color: var(--brand-500); color: var(--brand-ink); background: var(--brand-soft); }
 /* Pie de guardado: queda fijo abajo del scroll para no perseguirlo al final
    de formularios largos; sangra hasta los bordes del cuerpo del modal. */
-.mk-modal .btn-row{ position: sticky; bottom: 0; z-index: 3; margin: 24px -22px 0; padding: 14px 22px 18px; background: var(--bg); border-top: 1px solid var(--line-soft); box-shadow: 0 -12px 24px -16px rgba(15, 23, 42, .28); }
+.mk-modal .btn-row{ position: sticky; bottom: 0; z-index: 3; margin: 24px -22px 0; padding: 14px 22px 18px; background: var(--card); border-top: 1px solid var(--line-soft); box-shadow: 0 -12px 24px -16px rgba(15, 23, 42, .28); }
 @media (max-width: 640px){
   .mk-modal-body{ padding: 16px 16px 0; }
   .mk-modal .btn-row{ margin: 20px -16px 0; padding: 12px 16px calc(14px + env(safe-area-inset-bottom)); }
