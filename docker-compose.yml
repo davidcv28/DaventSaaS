@@ -359,6 +359,13 @@ services:
     depends_on:
       web: {condition: service_healthy}
       api: {condition: service_healthy}
+    # Mismo hardening que el resto del stack: la imagen corre como uid 1001
+    # (ver docker/caddy/Dockerfile), rootfs inmutable y sin capabilities —
+    # los puertos 80/443 los habilita ip_unprivileged_port_start=0.
+    read_only: true
+    tmpfs: [/tmp]
+    security_opt: ["no-new-privileges:true"]
+    cap_drop: [ALL]
     logging: *logging
 
   # ---------------------------------------------------------------------------

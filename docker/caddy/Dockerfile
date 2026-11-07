@@ -6,3 +6,11 @@ RUN xcaddy build --with github.com/caddy-dns/cloudflare
 
 FROM caddy:2
 COPY --from=builder /usr/bin/caddy /usr/bin/caddy
+
+# UID arbitrario: la imagen oficial ya trae /usr/bin/caddy con
+# cap_net_bind_service y /data/caddy + /config/caddy en 1777, y Docker
+# >=20.10 deja bindear 80/443 a cualquier usuario
+# (net.ipv4.ip_unprivileged_port_start=0 en el netns del container).
+# Sin root no hay escape por setuid ni escritura fuera de los volúmenes.
+RUN addgroup -S -g 1001 caddy && adduser -S -D -H -u 1001 -G caddy -s /sbin/nologin caddy
+USER caddy
