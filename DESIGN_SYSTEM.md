@@ -691,3 +691,56 @@ la misma consola en concreto (`#E9E7E0` / `#F5F3EC`). Archivo 900 estirada al
   buscador/filtros, ficha y servicios; claro/oscuro; 390/768/1360).
   Migración: `manage.py seed_design_catalog --patterns-only` y
   `manage.py sync_design_neon --slug guardia` (arrastra `guardia-claro`).
+
+## 18. Silicio — "laboratorio de hardware" (`silicio`, plus)
+
+Vive en `StoreApp/domains/design/sources/silicio.html` (patrón `silicio`,
+estilos `silicio` dark y `silicio-claro` light). Grafito `#0A0D12`, volt
+`#C8FF3D` como señal y acero `#7FA8E8` secundario; el claro es papel de
+plano `#F2F3EE` con acento derivado. Anton (display, solo weight 400) +
+Space Grotesk + JetBrains Mono por `@font-face` TTF de gstatic (el CSP
+bloquea `<link>` de Google Fonts).
+
+- **Firmas**: sello de instrumento giratorio (`.hero-badge`, SVG con
+  `textPath` circular + chip), deck del hero con esquineros de instrumento,
+  scanline que barre el slide activo (Ken Burns en el `is-on`), osciloscopio
+  `.wave` entre hero y cinta (pista duplicada 1200 px en loop, pausa al
+  hover), cinta de categorías `data-marquee` con duplicados `aria-hidden`,
+  rieles de productos/testimonios con fades de borde y contador, plano de
+  circuito vivo `.pcb-bg` (`<pattern>` + `animateMotion` SMIL), titular
+  `.hero-title` partido en `.ht-w` por JS con cursor `::after` parpadeante.
+- **Acente por tema**: `--ds-accent` llega único del estilo (volt) — en
+  claro se deriva con `color-mix(in srgb,var(--ds-accent) 50%,#14171C)`
+  (oliva legible sobre papel) y en oscuro se usa directo; `--on-accent`
+  sigue a `--ds-accent-ink`. Sin la mezcla el volt sobre `#F2F3EE` queda
+  invisible (~1.1:1).
+- **Buscador del catálogo**: el puente genera `.suggest-head/.suggest-item/
+  .suggest-thumb/.suggest-copy/.suggest-more/.suggest-empty` dentro de
+  `[data-ds-suggest]`; el formulario lleva `[data-ds-search-input]`,
+  botón submit y `data-ds-search-clear` (el puente lo busca explícito).
+  Las reglas de control del form van con hijo directo (`.cat-search >
+  button`) — un `.cat-search button` genérico posiciona los botones de las
+  sugerencias y las apila.
+- **Grilla del hero**: `grid-template-columns:1fr` equivale a
+  `minmax(auto,1fr)` — el mínimo `auto` toma el min-content del ítem más
+  ancho (los dots del deck, `flex:none` de 22 px) y estira la columna a
+  ~433 px en móvil. Regla: `minmax(0,1fr)` + `.hero-grid>*{min-width:0}`.
+- **Reveal**: `.reveal` usa `animation`, no `transition` — una `transition`
+  ahí pisa los hovers de `.ds-plan/.ds-offer/.ds-service` y los deja sin
+  transición rápida.
+- **Servicios**: orden de trabajo propia (`setupServices()` arma ticket
+  `.svc-ico/.svc-body/.svc-price/.svc-check` desde `data-price/-label/
+  -duration/-icon` que emite `_service_fragment`); la barra `.wo-bar`
+  arma total + mensaje WhatsApp lista por líneas. No poner `.ds-zone` en
+  `.offerings` (el puente oculta la página entera).
+- **Trampas del sistema**: `padding` shorthand pisa `padding-inline` de
+  `.wrap`; `scroll-margin-top` en anclas por el header fijo
+  `data-ds-pin="top"`; el iframe va estirado → reveal/progreso se alimentan
+  de `davent:ds-frame`, no del viewport; los duplicados del marquee van
+  `aria-hidden` + fuera del tab order.
+- **QA**: tienda local `viajero-qa` con `customization.template='silicio'`
+  (documento directo: `/api/stores/public/viajero-qa/pattern/document/
+  ?surface={landing,catalog,product,services}&theme={light,dark}`;
+  390/768/1360, sugerencias de búsqueda, filtro móvil, orden de trabajo).
+  Migración: `manage.py seed_design_catalog --patterns-only` y
+  `manage.py sync_design_neon --slug silicio` (arrastra `silicio-claro`).
