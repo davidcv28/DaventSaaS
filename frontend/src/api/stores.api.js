@@ -828,6 +828,7 @@ export const STORE_TEMPLATES = {
   impacto:     { label: 'Indumentaria ModernImpact', rubro: 'indumentaria', tier: 'plus', defaultAccent: '#FF4B1F', desc: 'ModernImpact: revista suiza de moda — papel crudo, tinta y acento señal, Anton en caja alta, numeración 01/02 y cintas marquee.' },
   ruta:        { label: 'Ruta',        rubro: 'turismo',      tier: 'plus',     defaultAccent: '#14443B', desc: 'Ruta: guía de viaje editorial — papel crema, verde pino y ámbar, destinos como tickets y galería de postales.' },
   aurum:       { label: 'Áurea',       rubro: 'general',      tier: 'advanced', defaultAccent: '#C8A25A', desc: 'Áurea: insignia premium — tinta y dorado, índices numerados y todas las secciones del negocio.' },
+  neon:        { label: 'Neon',        rubro: 'hogar',        tier: 'plus',     defaultAccent: '#BBF351', desc: 'Neon: tienda nocturna de objetos — tinta profunda, neón lima/cian, glow, scanlines y cintas en loop.' },
 }
 
 // Familias de diseño para el selector del dashboard.
@@ -840,6 +841,7 @@ export const STORE_TEMPLATE_FAMILIES = [
   { key: 'tecnologia',   label: 'Tecnología',   caption: 'Electrónica y gaming',    templates: ['moderntec'] },
   { key: 'turismo',      label: 'Turismo',      caption: 'Viajes y experiencias',   templates: ['ruta'] },
   { key: 'premium',      label: 'Premium',      caption: 'Insignia para todo rubro', templates: ['aurum'] },
+  { key: 'neon',         label: 'Neón',         caption: 'Tienda nocturna de objetos', templates: ['neon'] },
 ]
 export const FAMILY_TEMPLATE_KEYS = STORE_TEMPLATE_FAMILIES.flatMap((f) => f.templates)
 
