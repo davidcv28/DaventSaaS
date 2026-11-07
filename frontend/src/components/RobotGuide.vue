@@ -49,9 +49,9 @@ onBeforeUnmount(() => clearTimeout(timer))
   max-width: 250px;
   margin: 0 0 14px;
   padding: 10px 14px;
-  border: 1px solid var(--line);
+  border: 1px solid #e2e8f0;
   border-radius: 14px;
-  background: var(--card);
+  background: #fff;
   color: #7c3aed;
   font-size: 13px;
   font-weight: 500;
@@ -64,7 +64,7 @@ onBeforeUnmount(() => clearTimeout(timer))
   right: -8px;
   bottom: 18px;
   border: 6px solid transparent;
-  border-left: 8px solid var(--card);
+  border-left: 8px solid #fff;
 }
 .rguide-img {
   width: 76px;
