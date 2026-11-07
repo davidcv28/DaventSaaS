@@ -53,7 +53,7 @@ onBeforeUnmount(() => clearTimeout(timer))
   border-radius: 16px;
   background: #fff;
   color: #7c3aed;
-  font-size: 16px;
+  font-size: 15px;
   font-weight: 600;
   line-height: 1.4;
   box-shadow: 0 16px 40px -14px rgba(9, 12, 24, .45);
