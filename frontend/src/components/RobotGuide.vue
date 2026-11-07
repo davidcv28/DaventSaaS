@@ -19,7 +19,7 @@ onMounted(() => {
     sessionStorage.setItem('davent:robot-guide', '1')
   } catch { /* storage bloqueado */ }
   visible.value = true
-  timer = setTimeout(() => { visible.value = false }, force ? 30000 : 5000)
+  timer = setTimeout(() => { visible.value = false }, 5000)
 })
 onBeforeUnmount(() => clearTimeout(timer))
 </script>
@@ -27,7 +27,7 @@ onBeforeUnmount(() => clearTimeout(timer))
 <template>
   <Transition name="rguide">
     <div v-if="visible && active" class="rguide">
-      <p class="rguide-bubble">¡Hola! Soy Davent. Podés consultarme cualquier cosa desde la burbujita de chat.</p>
+      <p class="rguide-bubble">¡Hola! Soy Davent — escribime desde la burbujita de chat.</p>
       <img class="rguide-img" src="/robot-saludo.webp" alt="Robot Davent" width="76" height="76" draggable="false">
     </div>
   </Transition>
@@ -46,16 +46,16 @@ onBeforeUnmount(() => clearTimeout(timer))
 }
 .rguide-bubble {
   position: relative;
-  max-width: 250px;
-  margin: 0 0 14px;
-  padding: 10px 14px;
+  max-width: 300px;
+  margin: 0 0 10px;
+  padding: 13px 18px;
   border: 1px solid #e2e8f0;
-  border-radius: 14px;
+  border-radius: 16px;
   background: #fff;
   color: #7c3aed;
-  font-size: 13px;
-  font-weight: 500;
-  line-height: 1.45;
+  font-size: 16px;
+  font-weight: 600;
+  line-height: 1.4;
   box-shadow: 0 16px 40px -14px rgba(9, 12, 24, .45);
 }
 .rguide-bubble::after {
