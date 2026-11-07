@@ -2,7 +2,10 @@
 # por DNS-01 (ACME HTTP-01 no puede emitir wildcards) y se renueva solo.
 # Mismo proveedor DNS que certbot (docker/certbot/cloudflare.ini).
 FROM caddy:2-builder AS builder
-RUN xcaddy build --with github.com/caddy-dns/cloudflare
+# x/net v0.60.0 (la que resuelve caddy 2.11.x) tiene CVE-2026-78661 (DoS en
+# x/net/html): --replace fuerza v0.62.0 hasta que upstream actualice go.mod.
+RUN xcaddy build --with github.com/caddy-dns/cloudflare \
+    --replace golang.org/x/net=golang.org/x/net@v0.62.0
 
 FROM caddy:2
 COPY --from=builder /usr/bin/caddy /usr/bin/caddy
