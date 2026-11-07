@@ -6462,6 +6462,450 @@
         "corners": "square"
       },
       "concept": "Plano de papel + oliva: el laboratorio en versión diurna."
+    },
+    {
+      "slug": "neon",
+      "nombre": "Neon",
+      "categoria": "Hogar y objetos",
+      "descripcion": "Tinta y neón lima/cian: la tienda nocturna por excelencia. STIX Two Text en titulares, Roboto en lectura y JetBrains Mono en datos; glow, scanlines y cintas en loop.",
+      "tier": "plus",
+      "template": "neon",
+      "page_theme": "dark",
+      "pattern": "neon",
+      "tokens": {
+        "palette": {
+          "accent": "#BBF351",
+          "primary": "#BBF351",
+          "secondary": "#00BCFF",
+          "bg": "#0A0C10",
+          "surface": "#12161F",
+          "text": "#F2F5EC",
+          "muted": "#8B95A7",
+          "border": "#232B3A",
+          "success": "#4ADE80",
+          "danger": "#FF6B7A"
+        },
+        "containers": {
+          "radius": "lg",
+          "shadow": "medium",
+          "border": "thin",
+          "density": "comfortable",
+          "surface": "elevated"
+        },
+        "typography": {
+          "heading": "space-grotesk",
+          "subheading": "roboto",
+          "body": "roboto",
+          "scale": "balanced",
+          "weightHeading": 600,
+          "letterSpacing": "-0.01em"
+        },
+        "buttons": {
+          "shape": "rounded",
+          "style": "solid",
+          "size": "md"
+        },
+        "background": {
+          "type": "solid",
+          "value": null,
+          "overlay": "none"
+        },
+        "motion": {
+          "reveal": "fade-up",
+          "hover": "lift",
+          "intensity": "subtle"
+        },
+        "mobile": {
+          "cardStyle": "standard",
+          "heroHeight": "standard"
+        },
+        "preview": "",
+        "icons": {
+          "style": "line",
+          "stroke": "1.8",
+          "size": "20",
+          "corners": "rounded"
+        }
+      },
+      "effects": {
+        "accent": "#BBF351",
+        "primary": "#BBF351",
+        "secondary": "#00BCFF",
+        "bg": "#0A0C10",
+        "surface": "#12161F",
+        "text": "#F2F5EC",
+        "muted": "#8B95A7",
+        "border": "#232B3A",
+        "success": "#4ADE80",
+        "danger": "#FF6B7A",
+        "radius": "lg",
+        "shadow": "medium",
+        "border_width": 1,
+        "border_style": "solid",
+        "space": "normal",
+        "button_shape": "rounded",
+        "divider": "none"
+      },
+      "layout": {},
+      "layout_spec": {},
+      "tags": [
+        "hogar",
+        "objetos",
+        "tienda",
+        "neon",
+        "ecommerce",
+        "oscuro"
+      ],
+      "preview": "",
+      "style": "Neon",
+      "anim": {
+        "hero": "fade-up",
+        "reveal": "fade-up",
+        "hover": "lift",
+        "button": "solid-press"
+      },
+      "easing": "cubic-bezier(.22,1,.36,1)",
+      "duration": "420ms",
+      "icons": {
+        "style": "line",
+        "stroke": "1.8",
+        "size": "20",
+        "corners": "rounded"
+      },
+      "concept": "Tinta + lima/cian: el neón de objetos para el hogar."
+    },
+    {
+      "slug": "neon-noche",
+      "nombre": "Neon Noche",
+      "categoria": "Hogar y objetos",
+      "descripcion": "Neón nocturno en fucsia eléctrico y cian sobre violeta profundo. Misma estructura, otro voltaje.",
+      "tier": "plus",
+      "template": "neon",
+      "page_theme": "dark",
+      "pattern": "neon",
+      "tokens": {
+        "palette": {
+          "accent": "#FF3DDB",
+          "primary": "#FF3DDB",
+          "secondary": "#00BCFF",
+          "bg": "#0B0714",
+          "surface": "#171024",
+          "text": "#F7F0FF",
+          "muted": "#9D8BB8",
+          "border": "#2C2044",
+          "success": "#4ADE80",
+          "danger": "#FF6B7A"
+        },
+        "containers": {
+          "radius": "lg",
+          "shadow": "medium",
+          "border": "thin",
+          "density": "comfortable",
+          "surface": "elevated"
+        },
+        "typography": {
+          "heading": "space-grotesk",
+          "subheading": "roboto",
+          "body": "roboto",
+          "scale": "balanced",
+          "weightHeading": 600,
+          "letterSpacing": "-0.01em"
+        },
+        "buttons": {
+          "shape": "rounded",
+          "style": "solid",
+          "size": "md"
+        },
+        "background": {
+          "type": "solid",
+          "value": null,
+          "overlay": "none"
+        },
+        "motion": {
+          "reveal": "fade-up",
+          "hover": "lift",
+          "intensity": "subtle"
+        },
+        "mobile": {
+          "cardStyle": "standard",
+          "heroHeight": "standard"
+        },
+        "preview": "",
+        "icons": {
+          "style": "line",
+          "stroke": "1.8",
+          "size": "20",
+          "corners": "rounded"
+        }
+      },
+      "effects": {
+        "accent": "#FF3DDB",
+        "primary": "#FF3DDB",
+        "secondary": "#00BCFF",
+        "bg": "#0B0714",
+        "surface": "#171024",
+        "text": "#F7F0FF",
+        "muted": "#9D8BB8",
+        "border": "#2C2044",
+        "success": "#4ADE80",
+        "danger": "#FF6B7A",
+        "radius": "lg",
+        "shadow": "medium",
+        "border_width": 1,
+        "border_style": "solid",
+        "space": "normal",
+        "button_shape": "rounded",
+        "divider": "none"
+      },
+      "layout": {},
+      "layout_spec": {},
+      "tags": [
+        "hogar",
+        "objetos",
+        "tienda",
+        "neon",
+        "ecommerce",
+        "oscuro"
+      ],
+      "preview": "",
+      "style": "Neon",
+      "anim": {
+        "hero": "fade-up",
+        "reveal": "fade-up",
+        "hover": "lift",
+        "button": "solid-press"
+      },
+      "easing": "cubic-bezier(.22,1,.36,1)",
+      "duration": "420ms",
+      "icons": {
+        "style": "line",
+        "stroke": "1.8",
+        "size": "20",
+        "corners": "rounded"
+      },
+      "concept": "Violeta + fucsia: el neón deafter hours."
+    },
+    {
+      "slug": "neon-ocaso",
+      "nombre": "Neon Ocaso",
+      "categoria": "Hogar y objetos",
+      "descripcion": "Neón de ocaso: ámbar y rosa quemada sobre marrón casi negro. Atardecer en versión tienda.",
+      "tier": "plus",
+      "template": "neon",
+      "page_theme": "dark",
+      "pattern": "neon",
+      "tokens": {
+        "palette": {
+          "accent": "#FFB224",
+          "primary": "#FFB224",
+          "secondary": "#FF4D6D",
+          "bg": "#0F0A06",
+          "surface": "#1C1209",
+          "text": "#FFF6EA",
+          "muted": "#B89B7C",
+          "border": "#3A2410",
+          "success": "#4ADE80",
+          "danger": "#FF6B7A"
+        },
+        "containers": {
+          "radius": "lg",
+          "shadow": "medium",
+          "border": "thin",
+          "density": "comfortable",
+          "surface": "elevated"
+        },
+        "typography": {
+          "heading": "space-grotesk",
+          "subheading": "roboto",
+          "body": "roboto",
+          "scale": "balanced",
+          "weightHeading": 600,
+          "letterSpacing": "-0.01em"
+        },
+        "buttons": {
+          "shape": "rounded",
+          "style": "solid",
+          "size": "md"
+        },
+        "background": {
+          "type": "solid",
+          "value": null,
+          "overlay": "none"
+        },
+        "motion": {
+          "reveal": "fade-up",
+          "hover": "lift",
+          "intensity": "subtle"
+        },
+        "mobile": {
+          "cardStyle": "standard",
+          "heroHeight": "standard"
+        },
+        "preview": "",
+        "icons": {
+          "style": "line",
+          "stroke": "1.8",
+          "size": "20",
+          "corners": "rounded"
+        }
+      },
+      "effects": {
+        "accent": "#FFB224",
+        "primary": "#FFB224",
+        "secondary": "#FF4D6D",
+        "bg": "#0F0A06",
+        "surface": "#1C1209",
+        "text": "#FFF6EA",
+        "muted": "#B89B7C",
+        "border": "#3A2410",
+        "success": "#4ADE80",
+        "danger": "#FF6B7A",
+        "radius": "lg",
+        "shadow": "medium",
+        "border_width": 1,
+        "border_style": "solid",
+        "space": "normal",
+        "button_shape": "rounded",
+        "divider": "none"
+      },
+      "layout": {},
+      "layout_spec": {},
+      "tags": [
+        "hogar",
+        "objetos",
+        "tienda",
+        "neon",
+        "ecommerce",
+        "oscuro"
+      ],
+      "preview": "",
+      "style": "Neon",
+      "anim": {
+        "hero": "fade-up",
+        "reveal": "fade-up",
+        "hover": "lift",
+        "button": "solid-press"
+      },
+      "easing": "cubic-bezier(.22,1,.36,1)",
+      "duration": "420ms",
+      "icons": {
+        "style": "line",
+        "stroke": "1.8",
+        "size": "20",
+        "corners": "rounded"
+      },
+      "concept": "Ámbar + rosa: el neón del atardecer."
+    },
+    {
+      "slug": "neon-hielo",
+      "nombre": "Neon Hielo",
+      "categoria": "Hogar y objetos",
+      "descripcion": "Neón glacial: menta y azul cielo sobre azul medianoche. Fresco, limpio y luminoso.",
+      "tier": "plus",
+      "template": "neon",
+      "page_theme": "dark",
+      "pattern": "neon",
+      "tokens": {
+        "palette": {
+          "accent": "#3DF2A6",
+          "primary": "#3DF2A6",
+          "secondary": "#4DA6FF",
+          "bg": "#061014",
+          "surface": "#0F2230",
+          "text": "#EFFAFF",
+          "muted": "#7FA6BC",
+          "border": "#1E4258",
+          "success": "#4ADE80",
+          "danger": "#FF6B7A"
+        },
+        "containers": {
+          "radius": "lg",
+          "shadow": "medium",
+          "border": "thin",
+          "density": "comfortable",
+          "surface": "elevated"
+        },
+        "typography": {
+          "heading": "space-grotesk",
+          "subheading": "roboto",
+          "body": "roboto",
+          "scale": "balanced",
+          "weightHeading": 600,
+          "letterSpacing": "-0.01em"
+        },
+        "buttons": {
+          "shape": "rounded",
+          "style": "solid",
+          "size": "md"
+        },
+        "background": {
+          "type": "solid",
+          "value": null,
+          "overlay": "none"
+        },
+        "motion": {
+          "reveal": "fade-up",
+          "hover": "lift",
+          "intensity": "subtle"
+        },
+        "mobile": {
+          "cardStyle": "standard",
+          "heroHeight": "standard"
+        },
+        "preview": "",
+        "icons": {
+          "style": "line",
+          "stroke": "1.8",
+          "size": "20",
+          "corners": "rounded"
+        }
+      },
+      "effects": {
+        "accent": "#3DF2A6",
+        "primary": "#3DF2A6",
+        "secondary": "#4DA6FF",
+        "bg": "#061014",
+        "surface": "#0F2230",
+        "text": "#EFFAFF",
+        "muted": "#7FA6BC",
+        "border": "#1E4258",
+        "success": "#4ADE80",
+        "danger": "#FF6B7A",
+        "radius": "lg",
+        "shadow": "medium",
+        "border_width": 1,
+        "border_style": "solid",
+        "space": "normal",
+        "button_shape": "rounded",
+        "divider": "none"
+      },
+      "layout": {},
+      "layout_spec": {},
+      "tags": [
+        "hogar",
+        "objetos",
+        "tienda",
+        "neon",
+        "ecommerce",
+        "oscuro"
+      ],
+      "preview": "",
+      "style": "Neon",
+      "anim": {
+        "hero": "fade-up",
+        "reveal": "fade-up",
+        "hover": "lift",
+        "button": "solid-press"
+      },
+      "easing": "cubic-bezier(.22,1,.36,1)",
+      "duration": "420ms",
+      "icons": {
+        "style": "line",
+        "stroke": "1.8",
+        "size": "20",
+        "corners": "rounded"
+      },
+      "concept": "Menta + celeste: el neón del hielo."
     }
   ],
   "patterns": [
@@ -9589,6 +10033,181 @@
       "variables": {},
       "supports_dark_mode": true,
       "style": "silicio"
+    },
+    {
+      "slug": "neon",
+      "nombre": "Neon",
+      "categoria": "hogar",
+      "descripcion": "Tienda nocturna de objetos: tinta profunda, neón lima/cian, glow y scanlines. Portada con tarjeta de portada enmarcada en neón, cintas en loop, categorías en chips, vitrina en riel, stats, about, garantías, membresías, testimonios, FAQ, marcas, videos, CTA y contacto. Catálogo con filtros laterales, búsqueda con sugerencias, orden y vista grilla/lista; ficha de producto con specs y opiniones; servicios como presupuesto interactivo por WhatsApp. Solo datos reales de la tienda.",
+      "tier": "plus",
+      "template": "neon",
+      "layout": {
+        "landing": [
+          {
+            "id": "hero",
+            "variant": "split",
+            "enabled": true,
+            "order": 0
+          },
+          {
+            "id": "announcements",
+            "enabled": true,
+            "order": 1
+          },
+          {
+            "id": "categories",
+            "enabled": true,
+            "order": 2
+          },
+          {
+            "id": "featured",
+            "enabled": true,
+            "order": 3
+          },
+          {
+            "id": "stats",
+            "enabled": true,
+            "order": 4
+          },
+          {
+            "id": "about",
+            "enabled": true,
+            "order": 5
+          },
+          {
+            "id": "services",
+            "enabled": true,
+            "order": 6
+          },
+          {
+            "id": "benefits",
+            "variant": "cards",
+            "enabled": true,
+            "order": 7
+          },
+          {
+            "id": "plans",
+            "enabled": true,
+            "order": 8
+          },
+          {
+            "id": "testimonials",
+            "variant": "cards",
+            "enabled": true,
+            "order": 9
+          },
+          {
+            "id": "faq",
+            "enabled": true,
+            "order": 10
+          },
+          {
+            "id": "brands",
+            "enabled": true,
+            "order": 11
+          },
+          {
+            "id": "video",
+            "enabled": true,
+            "order": 12
+          },
+          {
+            "id": "cta",
+            "variant": "band",
+            "enabled": true,
+            "order": 13
+          },
+          {
+            "id": "contact",
+            "enabled": true,
+            "order": 14
+          }
+        ],
+        "catalog": [
+          {
+            "id": "hero",
+            "enabled": true,
+            "order": 0
+          },
+          {
+            "id": "grid",
+            "enabled": true,
+            "order": 1
+          }
+        ],
+        "product": [
+          {
+            "id": "hero",
+            "enabled": true,
+            "order": 0
+          },
+          {
+            "id": "related",
+            "enabled": true,
+            "order": 1
+          }
+        ],
+        "services": [
+          {
+            "id": "hero",
+            "enabled": true,
+            "order": 0
+          },
+          {
+            "id": "list",
+            "enabled": true,
+            "order": 1
+          }
+        ]
+      },
+      "tokens": {
+        "accent": "#BBF351",
+        "palette": {
+          "accent": "#BBF351",
+          "primary": "#BBF351",
+          "secondary": "#00BCFF",
+          "bg": "#0A0C10",
+          "surface": "#12161F",
+          "text": "#F2F5EC",
+          "muted": "#8B95A7",
+          "border": "#232B3A",
+          "success": "#4ADE80",
+          "danger": "#FF6B7A"
+        },
+        "fonts": [
+          "space-grotesk",
+          "roboto",
+          "jetbrains-mono"
+        ],
+        "radius": "lg",
+        "anim": {
+          "hero": "fade-up",
+          "reveal": "fade-up",
+          "hover": "lift",
+          "button": "solid-press"
+        },
+        "easing": "cubic-bezier(.22,1,.36,1)",
+        "duration": "420ms",
+        "icons": {
+          "style": "line",
+          "stroke": "1.8",
+          "size": "20",
+          "corners": "rounded"
+        }
+      },
+      "tags": [
+        "hogar",
+        "objetos",
+        "tienda",
+        "neon",
+        "ecommerce",
+        "oscuro",
+        "diseño"
+      ],
+      "preview": "",
+      "variables": {},
+      "supports_dark_mode": true,
+      "style": "neon"
     }
   ]
 }
