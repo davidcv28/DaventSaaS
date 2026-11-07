@@ -100,6 +100,8 @@ PATTERN_VARIABLES = {
     'plans':             {'type': 'list',  'label': 'Planes de suscripción'},
     'plans_title':       {'type': 'text',  'label': 'Título de la sección Planes'},
     'gallery':           {'type': 'list',  'label': 'Galería'},
+    'carousel':          {'type': 'list',  'label': 'Carrusel de portada'},
+    'decor':             {'type': 'list',  'label': 'Imágenes decorativas'},
     'brands':            {'type': 'list',  'label': 'Marcas'},
 }
 SURFACE_RE = re.compile(r'data-surface="([a-z]+)"')
@@ -663,17 +665,17 @@ def _brands_fragment(store, flags = None):
         items.append(f'<li class="ds-brand">{inner}</li>')
     return ''.join(items)
 
-def _gallery_fragment(store, customization):
-    from StoreApp.domains.stores.models import StoreGalleryImage
+def _shots_fragment(rows):
+    """
+    Figure `.ds-shot` por imagen (portada/carrusel/galería/decor): el
+    patrón las distribuye donde quiera — filmstrip, vitrina, collage —
+    y cada hoja les da su marco. El tope es FRAGMENT_LIMIT igual que el
+    resto de los fragmentos.
+    """
     from StoreApp.domains.stores.services.storage import object_url
 
-    if customization is not None and customization.show_gallery is False:
-        return ''
-    rows = store.gallery_images.all()[:FRAGMENT_LIMIT]
     shots = []
-    for row in rows:
-        if row.kind != StoreGalleryImage.KIND_GALLERY:
-            continue
+    for row in rows[:FRAGMENT_LIMIT]:
         url = object_url(row.image_key)
         if not url:
             continue
@@ -682,6 +684,46 @@ def _gallery_fragment(store, customization):
             f'<figure class="ds-shot"><img src="{_attr(url)}" alt="{_attr(alt)}" loading="lazy"></figure>'
         )
     return ''.join(shots)
+
+def _gallery_fragment(store, customization):
+    from StoreApp.domains.stores.models import StoreGalleryImage
+
+    if customization is not None and customization.show_gallery is False:
+        return ''
+    rows = [
+        row for row in store.gallery_images.all()
+        if row.kind == StoreGalleryImage.KIND_GALLERY
+    ]
+    return _shots_fragment(rows)
+
+def _carousel_fragment(store):
+    """
+    Carrusel de portada (StoreCarouselImage): contenido premium — sin
+    `has_design_advanced` las imágenes no viajan al documento, igual que
+    en la plantilla Vue.
+    """
+    from StoreApp.domains.stores.services import profile_has_benefit
+
+    if not profile_has_benefit(store.user, 'has_design_advanced'):
+        return ''
+    return _shots_fragment(store.carousel_images.all())
+
+def _decor_fragment(store):
+    """
+    Imágenes `decor` de la galería (KIND_DECOR, hasta 3): decoración de
+    portada premium. No depende de `show_gallery` — en la web Vue se
+    usan en about/contacto aunque la sección Galería esté apagada.
+    """
+    from StoreApp.domains.stores.models import StoreGalleryImage
+    from StoreApp.domains.stores.services import profile_has_benefit
+
+    if not profile_has_benefit(store.user, 'has_design_advanced'):
+        return ''
+    rows = [
+        row for row in store.gallery_images.all()
+        if row.kind == StoreGalleryImage.KIND_DECOR
+    ]
+    return _shots_fragment(rows)
 
 MONTHS_ES = {
     1: 'enero', 2: 'febrero', 3: 'marzo', 4: 'abril', 5: 'mayo', 6: 'junio',
@@ -1008,6 +1050,8 @@ def build_store_context(store, product = None, flags = None, raw_keys = None):
         'videos': lambda: _videos_fragment(customization, flags),
         'contact_form': lambda: _contact_fragment(store, flags),
         'gallery': lambda: _gallery_fragment(store, customization),
+        'carousel': lambda: _carousel_fragment(store),
+        'decor': lambda: _decor_fragment(store),
         'brands': lambda: _brands_fragment(store, flags = flags),
     }
     keys = builders.keys() if raw_keys is None else [key for key in builders if key in raw_keys]
