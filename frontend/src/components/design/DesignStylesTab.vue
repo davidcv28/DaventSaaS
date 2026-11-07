@@ -126,7 +126,15 @@ const categoryOptions = computed(() => [
   { value: '', label: 'Todas las categorías', icon: 'layout-grid' },
   ...categories.value.map((c) => ({ value: c.slug, label: c.nombre, icon: 'tag' }))
 ])
-function onCategoryPick(value) { categoryFilter.value = value }
+function onCategoryPick(value) {
+  categoryFilter.value = value
+  // Al elegir un rubro se aplica el primer diseño que aparece en el
+  // selector (su estilo default viene incluido vía onPatternPick).
+  // "Todas las categorías" no toca el diseño elegido.
+  if (!value) return
+  const first = patternSelectOptions.value[0]
+  if (first && first.value !== currentPattern.value) onPatternPick(first.value)
+}
 const inCategory = (row) => !categoryFilter.value || row.categoria === categoryFilter.value
 
 const patternSelectOptions = computed(() => patternOptions.value.filter(inCategory).map((p) => ({
