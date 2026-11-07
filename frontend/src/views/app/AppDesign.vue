@@ -139,7 +139,7 @@ const openWeb = () => { const s = stores.store?.slug; if (s) window.open(publicS
     <div class="ad-card">
       <label class="ad-lbl" for="ad-pattern">Diseño</label>
       <select id="ad-pattern" class="select" :value="currentPattern" :disabled="busy" @change="pickPattern($event.target.value)">
-        <option v-for="p in patternOptions" :key="p.slug" :value="p.slug">{{ p.nombre }} · {{ p.categoria }}</option>
+        <option v-for="p in patternOptions" :key="p.slug" :value="p.slug">{{ p.nombre }} · {{ p.categoria_nombre || p.categoria }}</option>
       </select>
       <p class="ad-hint">La estructura de tu página: portada, catálogo y fichas.</p>
     </div>

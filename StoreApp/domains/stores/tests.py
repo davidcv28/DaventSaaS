@@ -493,9 +493,10 @@ class StoreTemplateGatingTests(TestCase):
         #El estilo elegido en el Studio es un slug del catálogo DesignStyle
         #(no de los presets viejos): se persiste si su plantilla entra en el
         #plan y se descarta si el plan no la alcanza.
-        from StoreApp.domains.design.models import DesignStyle
+        from StoreApp.domains.design.models import DesignCategory, DesignStyle
+        category, _    =   DesignCategory.objects.get_or_create(slug = 'editorial', defaults = {'nombre': 'Editorial'})
         DesignStyle.objects.create(
-            slug = 'base-catalogo', nombre = 'Base', categoria = 'editorial',
+            slug = 'base-catalogo', nombre = 'Base', categoria = category,
             tier = 'base', template = 'raiz',
         )
         client, _       =   self._client('has_design_plus')

@@ -170,10 +170,43 @@ def clean_style_capabilities(raw):
     return out
 
 
+#=========================================
+# DESIGN CATEGORY MODEL (rubros del catálogo)
+#=========================================
+#Taxonomía compartida de patrones y estilos: una sola tabla de rubros
+#(indumentaria, gastronomía, turismo…). El estilo ya no guarda un
+#descriptor propio ("Tienda de moda nocturna"): ese texto vive en
+#`nombre`/`tags`; la categoría es siempre el rubro.
+class DesignCategory(models.Model):
+    slug                =   models.SlugField(max_length = 60, unique = True, db_index = True, verbose_name = 'Slug')
+    nombre              =   models.CharField(max_length = 80, verbose_name = 'Nombre')
+    descripcion         =   models.TextField(blank = True, verbose_name = 'Descripción')
+    is_active           =   models.BooleanField(default = True, db_index = True, verbose_name = 'Activa')
+    position            =   models.PositiveIntegerField(default = 0, verbose_name = 'Orden')
+    created_at          =   models.DateTimeField(auto_now_add = True)
+    updated_at          =   models.DateTimeField(auto_now = True)
+
+    class Meta:
+        app_label           =   'design'
+        verbose_name        =   'Categoría de diseño'
+        verbose_name_plural =   'Categorías de diseño'
+        ordering            =   ['position', 'nombre', 'id']
+
+    def __str__(self):
+        return f'{self.nombre} ({self.slug})'
+
+
 class DesignStyle(models.Model):
     slug                =   models.SlugField(max_length = 120, unique = True, db_index = True, verbose_name = 'Slug')
     nombre              =   models.CharField(max_length = 120, verbose_name = 'Nombre')
-    categoria           =   models.CharField(max_length = 60, db_index = True, verbose_name = 'Categoría')
+    categoria           =   models.ForeignKey(
+        DesignCategory,
+        on_delete = models.SET_NULL,
+        null = True,
+        blank = True,
+        related_name = 'styles',
+        verbose_name = 'Categoría',
+    )
     descripcion         =   models.TextField(blank = True, verbose_name = 'Descripción')
     tier                =   models.CharField(max_length = 10, choices = TIER_CHOICES, default = 'base', verbose_name = 'Nivel de plan')
     #Plantilla y layout que aplica el estilo (vacío = solo tema)
@@ -239,7 +272,17 @@ class DesignStyle(models.Model):
 class DesignPattern(models.Model):
     slug                =   models.SlugField(max_length = 120, unique = True, db_index = True, verbose_name = 'Slug')
     nombre              =   models.CharField(max_length = 120, verbose_name = 'Nombre')
-    categoria           =   models.CharField(max_length = 60, db_index = True, verbose_name = 'Categoría')
+    categoria           =   models.ForeignKey(
+        DesignCategory,
+        on_delete = models.SET_NULL,
+        null = True,
+        blank = True,
+        related_name = 'patterns',
+        verbose_name = 'Categoría',
+    )
+    #True si el diseño trae animación propia (keyframes/JS en su markup):
+    #el catálogo lo usa para marcar/señalar diseños "vivos".
+    dynamic             =   models.BooleanField(default = False, verbose_name = 'Diseño animado')
     descripcion         =   models.TextField(blank = True, verbose_name = 'Descripción')
     tier                =   models.CharField(max_length = 10, choices = TIER_CHOICES, default = 'base', verbose_name = 'Nivel de plan')
     #Plantilla del front que monta el patrón y layout por superficie

@@ -13,7 +13,7 @@ from rest_framework.test import APIClient
 from AdminApp.domains.locations.models import City, Province, ZipCode
 from AdminApp.domains.users.models import UserProfile
 from StoreApp.domains.catalog.models import Category, Product
-from StoreApp.domains.design.models import DesignPattern
+from StoreApp.domains.design.models import DesignCategory, DesignPattern
 from StoreApp.domains.design.services import (
     build_store_context,
     pattern_for_template,
@@ -54,10 +54,11 @@ def _store(slug = 'mi-tienda', **customization):
 
 
 def _pattern(slug = 'raiz', html = None, **kwargs):
+    category, _ = DesignCategory.objects.get_or_create(slug = 'general', defaults = {'nombre': 'General'})
     return DesignPattern.objects.create(
         slug        =   slug,
         nombre      =   slug.title(),
-        categoria   =   'general',
+        categoria   =   category,
         template    =   kwargs.pop('template', slug),
         html        =   html if html is not None else '<h1>{{store_name}}</h1><div>{{products}}</div>',
         css         =   '.x{color:red}',
@@ -404,7 +405,7 @@ class PatternSourceTests(TestCase):
             with self.subTest(slug = slug):
                 html, _, _, variables = load_source(slug)
                 pattern = DesignPattern(
-                    slug = slug, nombre = slug.title(), categoria = 'general',
+                    slug = slug, nombre = slug.title(),
                     template = slug, html = html, variables = variables,
                 )
                 rendered = pattern.render({'store_name': '<b>x</b>'})

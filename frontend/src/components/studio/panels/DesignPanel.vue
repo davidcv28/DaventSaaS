@@ -73,7 +73,7 @@ function pick(p) {
         <span class="stp-pick-art" aria-hidden="true"><AppIcon name="layers" :size="17" /></span>
         <span class="stp-pick-body">
           <span class="stp-pick-name">{{ p.nombre }}</span>
-          <span class="stp-pick-meta">{{ p.categoria }} · {{ tierLabel(p.template) }}</span>
+          <span class="stp-pick-meta">{{ p.categoria_nombre || p.categoria }} · {{ tierLabel(p.template) }}</span>
         </span>
         <AppIcon v-if="!allowed.includes(p.template)" name="lock" :size="14" class="stp-pick-lock" aria-hidden="true" />
         <AppIcon v-else-if="current === p.slug" name="circle-check" :size="16" aria-hidden="true" />

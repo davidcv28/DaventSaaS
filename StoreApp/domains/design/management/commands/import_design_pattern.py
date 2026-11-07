@@ -4,7 +4,7 @@ from pathlib import Path
 from django.core.management import BaseCommand, CommandError
 from django.db import transaction
 
-from StoreApp.domains.design.models import DesignPattern, DesignStyle
+from StoreApp.domains.design.models import DesignCategory, DesignPattern, DesignStyle
 from StoreApp.domains.design.services.source_document import split_document
 
 """
@@ -81,9 +81,21 @@ class Command(BaseCommand):
         if typography:
             tokens['typography'] = {**tokens.get('typography', {}), **typography}
 
+        #`--categoria` espera el slug del rubro (DesignCategory); si no se
+        #pasa hereda el del estilo y por último 'general'.
+        categoria = None
+        if options['categoria']:
+            categoria = DesignCategory.objects.filter(slug = options['categoria']).first()
+            if not categoria:
+                raise CommandError(f'No existe la categoría: {options["categoria"]}')
+        elif style and style.categoria_id:
+            categoria = style.categoria
+        else:
+            categoria = DesignCategory.objects.filter(slug = 'general').first()
+
         defaults = {
             'nombre'        :   options['nombre'],
-            'categoria'     :   options['categoria'] or (style.categoria if style else 'general'),
+            'categoria'     :   categoria,
             'descripcion'   :   options['descripcion'] or (style.descripcion if style else ''),
             'tier'          :   options['tier'] or (style.tier if style else 'base'),
             'template'      :   options['template'] or (style.template if style else 'raiz'),

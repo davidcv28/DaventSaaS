@@ -5,7 +5,14 @@ from decouple import config
 from django.core.management import BaseCommand, CommandError
 from psycopg2.extras import Json
 
-from StoreApp.domains.design.models import DesignIconStyle, DesignPattern, DesignStyle
+from django.db.models import Q
+
+from StoreApp.domains.design.models import (
+    DesignCategory,
+    DesignIconStyle,
+    DesignPattern,
+    DesignStyle,
+)
 
 """
 
@@ -20,14 +27,17 @@ Uso:
 
 """
 PATTERN_COLS    =   [
-    'slug', 'nombre', 'categoria', 'descripcion', 'tier', 'template', 'layout',
-    'html', 'css', 'js', 'variables', 'supports_dark_mode', 'tokens', 'tags',
+    'slug', 'nombre', 'categoria_id', 'descripcion', 'tier', 'template', 'layout',
+    'html', 'css', 'js', 'variables', 'supports_dark_mode', 'dynamic', 'tokens', 'tags',
     'preview', 'is_default', 'is_active', 'position', 'created_at', 'updated_at',
 ]
 STYLE_COLS      =   [
-    'slug', 'nombre', 'categoria', 'descripcion', 'tier', 'template', 'layout',
+    'slug', 'nombre', 'categoria_id', 'descripcion', 'tier', 'template', 'layout',
     'layout_spec', 'page_theme', 'tokens', 'effects', 'capabilities', 'tags', 'is_default',
     'is_active', 'position', 'created_at', 'updated_at',
+]
+CATEGORY_COLS   =   [
+    'slug', 'nombre', 'descripcion', 'is_active', 'position', 'created_at', 'updated_at',
 ]
 ICON_COLS       =   [
     'slug', 'nombre', 'descripcion', 'categoria', 'icons', 'stroke_width',
@@ -74,7 +84,15 @@ class Command(BaseCommand):
             pattern.icon_style for pattern in patterns if pattern.icon_style_id
         ]
 
+        #Rubros referenciados por los patrones/estilos pedidos: se replican
+        #primero para resolver categoria_id contra la base remota.
+        categories   =   list(DesignCategory.objects.filter(
+            Q(patterns__in = patterns) | Q(styles__in = styles)
+        ).distinct()) if patterns or styles else []
+
         if options['dry_run']:
+            for category in categories:
+                self.stdout.write(f'[dry-run] category {category.slug}')
             for icon_style in icon_styles:
                 self.stdout.write(f'[dry-run] icon-style {icon_style.slug}')
             for style in styles:
@@ -92,20 +110,28 @@ class Command(BaseCommand):
         try:
             with connection, connection.cursor() as cursor:
                 self._ensure_pattern_column(cursor)
+                self._ensure_category_columns(cursor)
+                category_ids   =   {}
+                for category in categories:
+                    category_ids[category.slug] = self._upsert(
+                        cursor, 'design_designcategory', CATEGORY_COLS,
+                        self._values(category, CATEGORY_COLS),
+                    )
+                    self.stdout.write(self.style.SUCCESS(f'category {category.slug} -> Neon'))
                 for icon_style in icon_styles:
                     self._upsert(cursor, 'design_designiconstyle', ICON_COLS, self._values(icon_style, ICON_COLS))
                     self.stdout.write(self.style.SUCCESS(f'icon-style {icon_style.slug} -> Neon'))
                 for style in styles:
-                    self._style(cursor, style)
+                    self._style(cursor, style, category_ids)
                     self.stdout.write(self.style.SUCCESS(f'style {style.slug} -> Neon'))
                 pattern_ids = {}
                 for pattern in patterns:
-                    style_id = self._style(cursor, pattern.style) if pattern.style_id else None
+                    style_id = self._style(cursor, pattern.style, category_ids) if pattern.style_id else None
                     icon_id = self._upsert(
                         cursor, 'design_designiconstyle', ICON_COLS,
                         self._values(pattern.icon_style, ICON_COLS),
                     ) if pattern.icon_style_id else None
-                    pattern_ids[pattern.slug] = self._pattern(cursor, pattern, style_id, icon_id)
+                    pattern_ids[pattern.slug] = self._pattern(cursor, pattern, style_id, icon_id, category_ids)
                     self.stdout.write(self.style.SUCCESS(f'pattern {pattern.slug} -> Neon'))
                 #FK de estilos -> diseño: se resuelve después de los patrones
                 #(el alta de un estilo no puede referenciar una fila que
@@ -131,23 +157,51 @@ class Command(BaseCommand):
                 'FOREIGN KEY (pattern_id) REFERENCES design_designpattern(id) ON DELETE SET NULL'
             )
 
+    #COLUMNAS DEL RUBRO Y DEL FLAG (bases remotas anteriores al modelo nuevo)
+    def _ensure_category_columns(self, cursor):
+        for table in ('design_designpattern', 'design_designstyle'):
+            cursor.execute(f'ALTER TABLE {table} ADD COLUMN IF NOT EXISTS categoria_id bigint')  # nosec B608 — identificadores constantes del módulo
+        cursor.execute('ALTER TABLE design_designpattern ADD COLUMN IF NOT EXISTS dynamic boolean DEFAULT false')
+        cursor.execute(
+            "SELECT 1 FROM pg_constraint WHERE conname = 'design_designpattern_categoria_id_fk'"
+        )
+        if cursor.fetchone() is None:
+            cursor.execute(
+                'ALTER TABLE design_designpattern ADD CONSTRAINT design_designpattern_categoria_id_fk '
+                'FOREIGN KEY (categoria_id) REFERENCES design_designcategory(id) ON DELETE SET NULL'
+            )
+        cursor.execute(
+            "SELECT 1 FROM pg_constraint WHERE conname = 'design_designstyle_categoria_id_fk'"
+        )
+        if cursor.fetchone() is None:
+            cursor.execute(
+                'ALTER TABLE design_designstyle ADD CONSTRAINT design_designstyle_categoria_id_fk '
+                'FOREIGN KEY (categoria_id) REFERENCES design_designcategory(id) ON DELETE SET NULL'
+            )
+
     #ESTILO REFERENCIADO (FK)
-    def _style(self, cursor, style):
+    def _style(self, cursor, style, category_ids):
         #Upsert real: un estilo ya existente también se actualiza.
-        return self._upsert(cursor, 'design_designstyle', STYLE_COLS, self._values(style, STYLE_COLS))
+        return self._upsert(cursor, 'design_designstyle', STYLE_COLS, self._values(style, STYLE_COLS, category_ids))
 
     #PATRÓN
-    def _pattern(self, cursor, pattern, style_id, icon_id):
-        values  =   self._values(pattern, PATTERN_COLS)
+    def _pattern(self, cursor, pattern, style_id, icon_id, category_ids):
+        values  =   self._values(pattern, PATTERN_COLS, category_ids)
         values.append(style_id)
         values.append(icon_id)
         return self._upsert(cursor, 'design_designpattern', [*PATTERN_COLS, 'style_id', 'icon_style_id'], values)
 
-    def _values(self, instance, columns):
-        return [
+    def _values(self, instance, columns, category_ids = None):
+        values  =   [
             Json(getattr(instance, column)) if column in JSON_COLS else getattr(instance, column)
             for column in columns
         ]
+        #categoria_id local != remoto: se resuelve por slug del rubro.
+        if category_ids is not None and 'categoria_id' in columns:
+            idx     =   columns.index('categoria_id')
+            local   =   getattr(instance, 'categoria', None)
+            values[idx] =   category_ids.get(local.slug) if local else None
+        return values
 
     def _upsert(self, cursor, table, columns, values):
         if not IDENT_RE.match(table) or not all(IDENT_RE.match(c) for c in columns):

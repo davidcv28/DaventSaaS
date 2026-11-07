@@ -1,4 +1,5 @@
 from .models import (
+    DesignCategory,
     DesignIconStyle,
     DesignPattern,
     DesignStyle,

@@ -1,4 +1,5 @@
 from .serializers import (
+    DesignCategorySerializer,
     DesignIconStyleSerializer,
     DesignPatternListSerializer,
     DesignPatternSerializer,

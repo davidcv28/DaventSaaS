@@ -719,7 +719,7 @@ onBeforeUnmount(dropLocalLogo)
                   <select id="design-style" class="select" :value="currentStyleId" :disabled="!styleOptions.length" aria-describedby="design-style-help" @change="onStylePick">
                     <option value="" disabled>Elegí un estilo…</option>
                     <option v-for="s in styleOptions" :key="s.slug" :value="s.slug" :disabled="!allowedTemplates.includes(s.template)">
-                      {{ s.nombre }} · {{ s.categoria }} · {{ tierLabel(s.template) }}
+                      {{ s.nombre }} · {{ s.categoria_nombre || s.categoria }} · {{ tierLabel(s.template) }}
                     </option>
                   </select>
                   <span class="dl-style-meta">

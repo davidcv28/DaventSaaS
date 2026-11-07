@@ -120,12 +120,12 @@ const tierBadge = (template, own) => {
 }
 const patternSelectOptions = computed(() => patternOptions.value.map((p) => ({
   value: p.slug,
-  label: `${p.nombre} · ${p.categoria}`,
+  label: `${p.nombre} · ${p.categoria_nombre || p.categoria}`,
   icon: 'layout-grid'
 })))
 const styleSelectOptions = computed(() => styleOptions.value.map((s) => ({
   value: s.slug,
-  label: `${s.nombre} · ${s.categoria}`,
+  label: `${s.nombre} · ${s.categoria_nombre || s.categoria}`,
   icon: 'palette',
   swatch: s.tokens?.palette?.accent || ''
 })))

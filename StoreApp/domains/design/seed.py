@@ -57,6 +57,81 @@ DEFAULT_PATTERN     =   'esencial'
 DEFAULT_STYLE       =   BASE_STYLE['slug']
 
 #=========================================
+# CATEGORÍAS (rubros compartidos patrón/estilo)
+#=========================================
+#La taxonomía es una sola: los patrones ya venían con rubro y los estilos
+#traían descriptores ("Tienda de moda nocturna") que STYLE_RUBRO pliega al
+#rubro que les corresponde.
+CATEGORIES          =   [
+    {'slug': 'general',        'nombre': 'General'},
+    {'slug': 'indumentaria',   'nombre': 'Indumentaria'},
+    {'slug': 'calzado',        'nombre': 'Calzado'},
+    {'slug': 'deporte',        'nombre': 'Deporte'},
+    {'slug': 'gastronomia',    'nombre': 'Gastronomía'},
+    {'slug': 'hogar',          'nombre': 'Hogar'},
+    {'slug': 'turismo',        'nombre': 'Turismo'},
+    {'slug': 'viajes',         'nombre': 'Viajes'},
+    {'slug': 'tecnologia',     'nombre': 'Tecnología'},
+    {'slug': 'computacion',    'nombre': 'Computación'},
+    {'slug': 'retail',         'nombre': 'Retail'},
+    {'slug': 'servicios',      'nombre': 'Servicios'},
+    {'slug': 'seguridad',      'nombre': 'Seguridad'},
+    {'slug': 'premium',        'nombre': 'Premium'},
+]
+
+#Descriptor histórico de `categoria` en estilos -> slug de rubro.
+#El seed viejo guardaba texto libre; esta tabla lo normaliza una sola vez.
+STYLE_RUBRO         =   {
+    'Boutique chic':                        'indumentaria',
+    'Calzado y deportes':                   'calzado',
+    'Componentes de PC':                    'tecnologia',
+    'Deporte claro':                        'deporte',
+    'Deporte oscuro':                       'deporte',
+    'Hogar y objetos':                      'hogar',
+    'Lookbook editorial':                   'indumentaria',
+    'Marketplace':                          'retail',
+    'Marketplace de ofertas':               'retail',
+    'Marketplace nocturno':                 'retail',
+    'Premium':                              'premium',
+    'Retail de indumentaria':               'indumentaria',
+    'Revista de moda':                      'indumentaria',
+    'Runway nocturno':                      'indumentaria',
+    'Sastrería corporativa':                'indumentaria',
+    'Sastrería editorial':                  'indumentaria',
+    'Sastrería industrial':                 'indumentaria',
+    'Sastrería nocturna':                   'indumentaria',
+    'Seguridad contra incendios':           'seguridad',
+    'Seguridad y protección':               'seguridad',
+    'Servicios profesionales':              'servicios',
+    'Servicios profesionales archivo':      'servicios',
+    'Servicios profesionales nocturnos':    'servicios',
+    'Streetwear':                           'indumentaria',
+    'Tecnologia oscura':                     'tecnologia',
+    'Tienda de indumentaria':               'indumentaria',
+    'Tienda de indumentaria nocturna':      'indumentaria',
+    'Tienda de moda':                       'indumentaria',
+    'Tienda de moda de autor':              'indumentaria',
+    'Tienda de moda de autor nocturna':     'indumentaria',
+    'Tienda de moda nocturna':              'indumentaria',
+    'Tienda de modista':                    'indumentaria',
+    'Tienda de modista nocturna':           'indumentaria',
+    'Turismo':                              'turismo',
+    'Turismo nocturno':                     'turismo',
+    'Viajes y experiencias':                'viajes',
+    'Viajes y experiencias nocturnas':      'viajes',
+    'Workwear':                             'indumentaria',
+    'gastronomia':                          'gastronomia',
+    'gastronomia nocturna':                 'gastronomia',
+    'general':                              'general',
+}
+DEFAULT_RUBRO       =   'general'
+
+
+def style_rubro(categoria):
+    """Descriptor de categoría del seed -> slug de rubro (fallback general)."""
+    return STYLE_RUBRO.get(str(categoria or '').strip(), DEFAULT_RUBRO)
+
+#=========================================
 # MARKUP DEL PATRÓN (HTML/CSS/JS de arranque)
 #=========================================
 def build_markup(pattern):

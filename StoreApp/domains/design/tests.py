@@ -12,7 +12,7 @@ from django.core.management import call_command
 from django.test import SimpleTestCase, TestCase
 from rest_framework.test import APIClient
 
-from StoreApp.domains.design.models import DesignPattern, DesignStyle
+from StoreApp.domains.design.models import DesignCategory, DesignPattern, DesignStyle
 
 STYLES_URL      =   '/api/design/styles/'
 PATTERNS_URL    =   '/api/design/patterns/'
@@ -28,12 +28,21 @@ def _user(username, staff = False):
     return User.objects.create_user(username = username, email = f'{username}@gmail.com', password = 'Xq7#mP2vL9bT', is_staff = staff)
 
 
+def _cat(slug):
+    row, _ = DesignCategory.objects.get_or_create(slug = slug, defaults = {'nombre': slug.title()})
+    return row
+
+
 class DesignCatalogTests(TestCase):
     def setUp(self):
         #La migración 0003 deja el catálogo cargado: estos tests prueban la
         #API con sus propias filas, así que parten de tablas vacías.
         DesignPattern.objects.all().delete()
         DesignStyle.objects.all().delete()
+        _cat('minimal')
+        _cat('landing')
+        _cat('general')
+        _cat('retail')
         self.owner  =   _user('owner')
         self.admin  =   _user('admin', staff = True)
         self.client =   APIClient()
@@ -47,13 +56,13 @@ class DesignCatalogTests(TestCase):
 
     def _style(self, slug = 'minimal', active = True):
         return DesignStyle.objects.create(
-            slug = slug, nombre = slug.title(), categoria = 'minimal',
+            slug = slug, nombre = slug.title(), categoria = _cat('minimal'),
             tokens = {'primary': '#111111'}, tags = ['claro'], is_active = active,
         )
 
     def _pattern(self, slug = 'hero-split', active = True, style = None, tags = ('hero',)):
         return DesignPattern.objects.create(
-            slug = slug, nombre = slug.title(), categoria = 'landing',
+            slug = slug, nombre = slug.title(), categoria = _cat('landing'),
             html = '<section>hola</section>', css = '.x{}', js = '',
             tokens = {'radius': '8px'}, tags = list(tags), style = style,
             is_active = active,
@@ -137,6 +146,8 @@ class DesignCatalogDefaultsTests(TestCase):
     def setUp(self):
         DesignPattern.objects.all().delete()
         DesignStyle.objects.all().delete()
+        _cat('general')
+        _cat('retail')
         self.client =   APIClient()
 
     def test_catalog_is_public(self):
@@ -147,8 +158,8 @@ class DesignCatalogDefaultsTests(TestCase):
 
     def test_defaults_public(self):
         self.assertEqual(self.client.get(f'{STYLES_URL}default/').status_code, 404)
-        DesignStyle.objects.create(slug = 'base', nombre = 'Base', categoria = 'general', is_default = True)
-        DesignPattern.objects.create(slug = 'mercado', nombre = 'Bazar', categoria = 'retail', is_default = True)
+        DesignStyle.objects.create(slug = 'base', nombre = 'Base', categoria = _cat('general'), is_default = True)
+        DesignPattern.objects.create(slug = 'mercado', nombre = 'Bazar', categoria = _cat('retail'), is_default = True)
         style = self.client.get(f'{STYLES_URL}default/')
         pattern = self.client.get(f'{PATTERNS_URL}default/')
         self.assertEqual(style.status_code, 200)
@@ -181,6 +192,9 @@ class DesignContractTests(TestCase):
     """Contrato nuevo: estilo limitado, variables de patrón e iconos."""
 
     def setUp(self):
+        _cat('general')
+        _cat('landing')
+        _cat('minimal')
         self.admin  =   _user('admin2', staff = True)
         self.owner  =   _user('owner2')
         self.client =   APIClient()
@@ -215,7 +229,7 @@ class DesignContractTests(TestCase):
 
     def test_pattern_variables_and_render(self):
         pattern = DesignPattern.objects.create(
-            slug = 'vars', nombre = 'Vars', categoria = 'landing',
+            slug = 'vars', nombre = 'Vars', categoria = _cat('landing'),
             html = '<h1>{{store_name}}</h1><p>{{missing}}</p><script>{{store_name}}</script>',
             variables = {
                 'store_name': {'type': 'text', 'label': 'Nombre'},
@@ -231,7 +245,7 @@ class DesignContractTests(TestCase):
 
     def test_pattern_preview_renders_sample_data(self):
         DesignPattern.objects.create(
-            slug = 'prev', nombre = 'Prev', categoria = 'landing',
+            slug = 'prev', nombre = 'Prev', categoria = _cat('landing'),
             html = '<h1>{{store_name}}</h1><div class="grid">{{products}}</div>',
             variables = {
                 'store_name': {'type': 'text'},

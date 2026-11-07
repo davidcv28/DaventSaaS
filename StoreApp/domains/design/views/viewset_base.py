@@ -49,7 +49,7 @@ class DesignCatalogViewSet(viewsets.ModelViewSet):
             qs      =   qs.filter(is_active = True)
         categoria   =   params.get('categoria', '').strip()
         if categoria:
-            qs      =   qs.filter(categoria__iexact = categoria)
+            qs      =   qs.filter(categoria__slug__iexact = categoria)
         tag         =   params.get('tag', '').strip()
         if tag:
             qs      =   qs.filter(tags__contains = [tag])
@@ -58,6 +58,7 @@ class DesignCatalogViewSet(viewsets.ModelViewSet):
             qs      =   qs.filter(
                 Q(slug__icontains = query)
                 | Q(nombre__icontains = query)
-                | Q(categoria__icontains = query)
+                | Q(categoria__slug__icontains = query)
+                | Q(categoria__nombre__icontains = query)
             )
         return qs

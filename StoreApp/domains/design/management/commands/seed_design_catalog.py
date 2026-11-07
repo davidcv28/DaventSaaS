@@ -1,15 +1,24 @@
 import json
+import re
 from pathlib import Path
 
 from django.core.management import BaseCommand
 from django.db import transaction
 
-from StoreApp.domains.design.models import DesignIconStyle, DesignPattern, DesignStyle
+from StoreApp.domains.design.models import (
+    DesignCategory,
+    DesignIconStyle,
+    DesignPattern,
+    DesignStyle,
+)
 from StoreApp.domains.design.seed import (
     BASE_STYLE,
+    CATEGORIES,
     DEFAULT_PATTERN,
+    DEFAULT_RUBRO,
     DEFAULT_STYLE,
     build_markup,
+    style_rubro,
 )
 from StoreApp.domains.design.services.source_document import load_source
 
@@ -44,6 +53,7 @@ class Command(BaseCommand):
         styles      =   [] if options['patterns_only'] else [BASE_STYLE, *data.get('styles', [])]
         patterns    =   [] if options['styles_only'] else data.get('patterns', [])
         with transaction.atomic():
+            self._categories()
             style_count     =   self._styles(styles)
             pattern_count   =   self._patterns(patterns)
             #Vínculo explícito al diseño (slug de DesignPattern) declarado en
@@ -61,6 +71,35 @@ class Command(BaseCommand):
             f'default: {DEFAULT_STYLE}/{DEFAULT_PATTERN}'
         ))
 
+    #CATEGORÍAS (rubros compartidos)
+    def _categories(self):
+        for position, category in enumerate(CATEGORIES):
+            DesignCategory.objects.update_or_create(
+                slug = category['slug'],
+                defaults = {
+                    'nombre'    :   category['nombre'],
+                    'position'  :   position,
+                    'is_active' :   True,
+                },
+            )
+        return len(CATEGORIES)
+
+    #Rubro del estilo: el seed trae descriptores ("Tienda de moda
+    #nocturna") que STYLE_RUBRO pliega al rubro; BASE_STYLE ya es 'general'.
+    @staticmethod
+    def _style_category(categoria):
+        return DesignCategory.objects.filter(slug = style_rubro(categoria)).first()
+
+    #Rubro del patrón: el seed ya trae el slug; si llegara un descriptor
+    #viejo se pliega igual que en estilos.
+    @staticmethod
+    def _pattern_category(categoria):
+        slug = str(categoria or '').strip() or DEFAULT_RUBRO
+        row = DesignCategory.objects.filter(slug = slug).first()
+        if row is None:
+            row = DesignCategory.objects.filter(slug = style_rubro(slug)).first()
+        return row or DesignCategory.objects.filter(slug = DEFAULT_RUBRO).first()
+
     #ESTILOS
     def _styles(self, styles):
         for position, style in enumerate(styles):
@@ -68,7 +107,7 @@ class Command(BaseCommand):
                 slug = style['slug'],
                 defaults = {
                     'nombre'        :   style['nombre'],
-                    'categoria'     :   style['categoria'],
+                    'categoria'     :   self._style_category(style.get('categoria')),
                     'descripcion'   :   style.get('descripcion', ''),
                     'tier'          :   style.get('tier', 'base'),
                     'template'      :   style.get('template', ''),
@@ -101,7 +140,10 @@ class Command(BaseCommand):
                 html, css, js, variables = source
             defaults = {
                 'nombre'        :   pattern['nombre'],
-                'categoria'     :   pattern['categoria'],
+                'categoria'     :   self._pattern_category(pattern.get('categoria')),
+                #`dynamic` marca si el diseño es animado: explícito en el
+                #seed o detectado en el markup (keyframes/animation/rAF).
+                'dynamic'       :   pattern.get('dynamic', self._animated(css, js)),
                 'descripcion'   :   pattern.get('descripcion', ''),
                 'tier'          :   pattern.get('tier', 'base'),
                 'template'      :   pattern.get('template', ''),
@@ -128,6 +170,13 @@ class Command(BaseCommand):
                 defaults['icon_style'] = DesignIconStyle.objects.filter(slug = pattern['icon_style']).first()
             DesignPattern.objects.update_or_create(slug = pattern['slug'], defaults = defaults)
         return len(patterns)
+
+    #ANIMADO: keyframes/propiedad animation en el CSS o rAF en el JS.
+    _ANIM_RE    =   re.compile(r'@keyframes|animation(-[\w-]+)?\s*:', re.IGNORECASE)
+
+    @classmethod
+    def _animated(cls, css, js):
+        return bool(cls._ANIM_RE.search(css or '') or 'requestAnimationFrame' in (js or ''))
 
     #ESTILOS PROPIOS DE CADA DISEÑO (FK DesignStyle.pattern)
     def _link_styles(self):

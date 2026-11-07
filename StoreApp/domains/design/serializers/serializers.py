@@ -1,6 +1,7 @@
 from rest_framework import serializers
 
 from StoreApp.domains.design.models import (
+    DesignCategory,
     DesignIconStyle,
     DesignPattern,
     DesignStyle,
@@ -49,11 +50,36 @@ def validate_code(value, label):
     return value
 
 #=========================================
+# DESIGN CATEGORY SERIALIZER (rubros del catálogo)
+#=========================================
+class DesignCategorySerializer(serializers.ModelSerializer):
+    class Meta:
+        model           =   DesignCategory
+        fields          =   ['id', 'slug', 'nombre', 'descripcion', 'is_active', 'position']
+        read_only_fields    =   ['id']
+
+
+#FK de rubro: se escribe/lee por slug y `categoria_nombre` expone el
+#texto visible sin cambiar la forma del payload.
+CATEGORY_FIELD    =   serializers.SlugRelatedField(
+    slug_field = 'slug',
+    queryset = DesignCategory.objects.all(),
+    required = False,
+    allow_null = True,
+)
+CATEGORY_NOMBRE   =   serializers.SlugRelatedField(
+    source = 'categoria', slug_field = 'nombre', read_only = True,
+)
+CATEGORY_READONLY =   serializers.SlugRelatedField(slug_field = 'slug', read_only = True)
+
+#=========================================
 # DESIGN STYLE SERIALIZER (catálogo de temas)
 #=========================================
 class DesignStyleSerializer(serializers.ModelSerializer):
     tokens              =   serializers.JSONField(required = False)
     effects             =   serializers.JSONField(required = False)
+    categoria           =   CATEGORY_FIELD
+    categoria_nombre    =   CATEGORY_NOMBRE
     pattern             =   serializers.SlugRelatedField(
         slug_field = 'slug',
         queryset = DesignPattern.objects.all(),
@@ -63,7 +89,7 @@ class DesignStyleSerializer(serializers.ModelSerializer):
     class Meta:
         model           =   DesignStyle
         fields          =   [
-            'id', 'slug', 'nombre', 'categoria', 'descripcion', 'tier',
+            'id', 'slug', 'nombre', 'categoria', 'categoria_nombre', 'descripcion', 'tier',
             'template', 'layout', 'layout_spec', 'page_theme', 'tokens', 'effects', 'tags',
             'capabilities', 'pattern', 'is_default', 'is_active', 'position', 'created_at', 'updated_at',
         ]
@@ -85,10 +111,12 @@ class DesignStyleSerializer(serializers.ModelSerializer):
 #=========================================
 class DesignStyleListSerializer(serializers.ModelSerializer):
     pattern             =   serializers.SlugRelatedField(slug_field = 'slug', read_only = True)
+    categoria           =   CATEGORY_READONLY
+    categoria_nombre    =   CATEGORY_NOMBRE
     class Meta:
         model           =   DesignStyle
         fields          =   [
-            'id', 'slug', 'nombre', 'categoria', 'descripcion', 'tier',
+            'id', 'slug', 'nombre', 'categoria', 'categoria_nombre', 'descripcion', 'tier',
             'template', 'layout', 'layout_spec', 'page_theme', 'tokens', 'effects', 'tags',
             'capabilities', 'pattern', 'is_default', 'is_active', 'position',
         ]
@@ -110,11 +138,13 @@ class DesignPatternSerializer(serializers.ModelSerializer):
         required = False,
         allow_null = True,
     )
+    categoria           =   CATEGORY_FIELD
+    categoria_nombre    =   CATEGORY_NOMBRE
     class Meta:
         model           =   DesignPattern
         fields          =   [
-            'id', 'slug', 'nombre', 'categoria', 'descripcion', 'tier',
-            'template', 'layout', 'html', 'css', 'js', 'variables',
+            'id', 'slug', 'nombre', 'categoria', 'categoria_nombre', 'descripcion', 'tier',
+            'template', 'layout', 'html', 'css', 'js', 'variables', 'dynamic',
             'supports_dark_mode', 'icon_style', 'tokens', 'tags',
             'preview', 'style', 'is_default', 'is_active', 'position',
             'created_at', 'updated_at',
@@ -138,12 +168,14 @@ class DesignPatternSerializer(serializers.ModelSerializer):
 class DesignPatternListSerializer(serializers.ModelSerializer):
     style               =   serializers.SlugRelatedField(slug_field = 'slug', read_only = True)
     icon_style          =   serializers.SlugRelatedField(slug_field = 'slug', read_only = True)
+    categoria           =   CATEGORY_READONLY
+    categoria_nombre    =   CATEGORY_NOMBRE
     has_markup          =   serializers.SerializerMethodField()
     class Meta:
         model           =   DesignPattern
         fields          =   [
-            'id', 'slug', 'nombre', 'categoria', 'descripcion', 'tier',
-            'template', 'layout', 'variables', 'supports_dark_mode',
+            'id', 'slug', 'nombre', 'categoria', 'categoria_nombre', 'descripcion', 'tier',
+            'template', 'layout', 'variables', 'supports_dark_mode', 'dynamic',
             'icon_style', 'tokens', 'tags', 'preview', 'style',
             'has_markup', 'is_default', 'is_active', 'position',
         ]

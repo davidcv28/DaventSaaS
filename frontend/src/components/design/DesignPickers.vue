@@ -207,7 +207,7 @@ function onStylePick(event) {
             v-for="p in patternOptions" :key="p.slug" :value="p.slug"
             :disabled="!templateAllowed(p.template)"
           >
-            {{ p.nombre }} · {{ p.categoria }} · {{ tierLabel(p.template) }}
+            {{ p.nombre }} · {{ p.categoria_nombre || p.categoria }} · {{ tierLabel(p.template) }}
           </option>
         </select>
         <p class="hint">La estructura de la portada, el catálogo y los servicios.</p>
@@ -232,7 +232,7 @@ function onStylePick(event) {
             v-for="s in styleOptions" :key="s.slug" :value="s.slug"
             :disabled="!templateAllowed(s.template)"
           >
-            {{ s.nombre }} · {{ s.categoria }} · {{ tierLabel(s.template) }}
+            {{ s.nombre }} · {{ s.categoria_nombre || s.categoria }} · {{ tierLabel(s.template) }}
           </option>
         </select>
         <p class="hint">Colores, tipografía, estructura e iconos de la web.</p>

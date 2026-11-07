@@ -89,7 +89,7 @@ const isCurrent = (style) => (
         <span class="stp-pick-art" aria-hidden="true"><AppIcon name="palette" :size="17" /></span>
         <span class="stp-pick-body">
           <span class="stp-pick-name">{{ s.nombre }}</span>
-          <span class="stp-pick-meta">{{ s.categoria }}</span>
+          <span class="stp-pick-meta">{{ s.categoria_nombre || s.categoria }}</span>
         </span>
         <AppIcon v-if="!allowed.includes(s.template)" name="lock" :size="14" class="stp-pick-lock" aria-hidden="true" />
         <AppIcon v-else-if="isCurrent(s)" name="circle-check" :size="16" aria-hidden="true" />

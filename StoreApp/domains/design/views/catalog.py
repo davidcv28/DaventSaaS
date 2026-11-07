@@ -4,8 +4,14 @@ from rest_framework.views import APIView
 
 from DaventProject.cache_utils import cache_get, cache_set
 from DaventProject.throttling import PublicReadThrottle
-from StoreApp.domains.design.models import DesignIconStyle, DesignPattern, DesignStyle
+from StoreApp.domains.design.models import (
+    DesignCategory,
+    DesignIconStyle,
+    DesignPattern,
+    DesignStyle,
+)
 from StoreApp.domains.design.serializers import (
+    DesignCategorySerializer,
     DesignIconStyleSerializer,
     DesignPatternListSerializer,
     DesignPatternSerializer,
@@ -85,6 +91,9 @@ class DesignCatalogView(APIView):
             ).data,
             'default_icon_style': DesignIconStyleSerializer(default_icon_style()).data
                 if default_icon_style() else None,
+            'categories': DesignCategorySerializer(
+                DesignCategory.objects.filter(is_active = True), many = True
+            ).data,
         }
 
     def get(self, request):
