@@ -1,7 +1,7 @@
 # DESIGN_SYSTEM.md — Reglas de diseño y componentes (SaaS DAVENT)
 
 > Destilado de `awesome-design-skills/` (typeui.sh) + el contrato de patrones
-> del repo (`rediseño_prompt.md`, `pattern_document.py`). Aplica a los
+> del repo (`pattern_document.py`). Aplica a los
 > documentos de `StoreApp/domains/design/sources/*.html` y a la UI del panel.
 
 ## 1. Tokens y fundamentos
