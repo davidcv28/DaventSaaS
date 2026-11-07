@@ -5,7 +5,9 @@
    transform/opacity y se anula con prefers-reduced-motion al pie. */
 
 .app {
-  /* Hairlines del lienzo y elevaciones. */
+  /* Duotono del rail (violeta -> grafito) y hairlines del lienzo. */
+  --dv-rail-a: #171d4d;
+  --dv-rail-b: #0a0c20;
   --dv-hair: color-mix(in srgb, var(--ink) 9%, transparent);
   --dv-hair-2: color-mix(in srgb, var(--ink) 4.5%, transparent);
   --dv-tint: color-mix(in srgb, var(--brand-500) 7%, transparent);
@@ -16,6 +18,8 @@
   isolation: isolate;
 }
 [data-theme='dark'] .app {
+  --dv-rail-a: #141a44;
+  --dv-rail-b: #060814;
   --dv-elev-1: 0 1px 2px rgba(0, 0, 0, .45), 0 18px 34px -24px rgba(0, 0, 0, .85);
   --dv-elev-2: 0 2px 4px rgba(0, 0, 0, .45), 0 28px 52px -26px rgba(0, 0, 0, .9);
 }
@@ -60,9 +64,32 @@
 /* ---------- Rail ---------- */
 .app > .sidebar {
   background:
-    radial-gradient(110% 42% at 0% 0%, rgba(99, 102, 241, .15) 0%, transparent 62%),
-    #0f1424;
-  box-shadow: inset -1px 0 0 rgba(255, 255, 255, .05), 26px 0 60px -50px rgba(6, 8, 24, .95);
+    radial-gradient(120% 55% at 0% 0%, color-mix(in srgb, var(--brand-500) 42%, transparent) 0%, transparent 58%),
+    radial-gradient(95% 45% at 110% 104%, color-mix(in srgb, var(--accent) 26%, transparent) 0%, transparent 62%),
+    linear-gradient(168deg, var(--dv-rail-a) 0%, var(--dv-rail-b) 62%, #06070f 100%);
+  box-shadow: inset -1px 0 0 rgba(255, 255, 255, .06), 26px 0 60px -50px rgba(6, 8, 24, .95);
+}
+.app > .sidebar::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  opacity: .45;
+  background-image: radial-gradient(rgba(255, 255, 255, .17) 1px, transparent 1px);
+  background-size: 18px 18px;
+  mask-image: linear-gradient(180deg, #000 0%, transparent 58%);
+  -webkit-mask-image: linear-gradient(180deg, #000 0%, transparent 58%);
+}
+.app > .sidebar::after {
+  content: '';
+  position: absolute;
+  left: -30%;
+  right: -30%;
+  bottom: -34%;
+  height: 58%;
+  pointer-events: none;
+  background: linear-gradient(115deg, transparent 38%, rgba(255, 255, 255, .07) 50%, transparent 62%);
+  transform: rotate(-7deg);
 }
 .app > .sidebar > .brand,
 .app > .sidebar > .plan-badge,
@@ -85,9 +112,9 @@
 }
 
 .app .plan-badge {
-  background: rgba(99, 102, 241, .16);
-  border: 1px solid rgba(129, 140, 248, .32);
-  color: #c7d2fe;
+  background: rgba(255, 255, 255, .06);
+  border: 1px solid rgba(255, 255, 255, .14);
+  color: #dbe2ff;
   font-size: 11.5px;
   font-weight: 650;
   letter-spacing: .02em;
@@ -98,30 +125,39 @@
 
 .app .sidebar nav { gap: 1px; }
 .app .sidebar nav button {
-  padding: 8px 10px;
-  border-radius: 9px;
-  font-size: 13.5px;
+  padding: 7px 10px;
+  border-radius: 10px;
+  font-size: 14px;
   letter-spacing: -.005em;
-  transition: color .2s, transform .2s var(--ease-out), background-color .2s;
 }
-.app .sidebar nav button:hover { background: rgba(255, 255, 255, .05); }
-.app .sidebar nav button.active:hover { background: transparent; }
 .app .sidebar nav button > .icon:first-child {
-  width: 17px;
-  height: 17px;
-  padding: 0;
+  width: 26px;
+  height: 26px;
+  padding: 5px;
   box-sizing: border-box;
-  border-radius: 0;
-  color: #8b96b8;
-  background: transparent;
-  box-shadow: none;
+  border-radius: 8px;
+  color: #b7c2e6;
+  background: rgba(255, 255, 255, .055);
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, .05);
+  transition: background-color .22s var(--ease-out), color .22s, box-shadow .22s;
 }
-.app .sidebar nav button:hover > .icon:first-child { color: #eef1f8; }
-.app .sidebar nav button.active > .icon:first-child { color: #a5b4fc; }
+.app .sidebar nav button:hover > .icon:first-child {
+  color: #fff;
+  background: rgba(255, 255, 255, .1);
+}
+.app .sidebar nav button.active > .icon:first-child {
+  color: #fff;
+  background: linear-gradient(135deg, var(--brand-500), var(--accent));
+  box-shadow: 0 6px 16px -8px rgba(99, 102, 241, .95), inset 0 1px 0 rgba(255, 255, 255, .3);
+}
 .app .nav-indicator {
-  border-radius: 9px;
-  background: rgba(99, 102, 241, .22);
-  box-shadow: none;
+  border-radius: 12px;
+  background:
+    linear-gradient(90deg, color-mix(in srgb, var(--brand-400) 30%, transparent), color-mix(in srgb, var(--brand-400) 6%, transparent) 70%);
+  box-shadow:
+    inset 0 0 0 1px rgba(129, 140, 248, .26),
+    inset 3px 0 0 var(--brand-400),
+    0 10px 24px -16px rgba(99, 102, 241, .9);
 }
 .app .nav-heading {
   margin: 10px 10px 2px;
@@ -133,9 +169,9 @@
 }
 .app .nav-heading::after { display: none; }
 .app .side-foot { border-top: 1px solid rgba(255, 255, 255, .09); }
-.app .side-foot .link { border-radius: 8px; padding: 6px; font-size: 12.5px; }
+.app .side-foot .link { border-radius: 8px; padding: 6px; font-size: 13px; }
 .app .side-foot .who { padding: 2px 6px; }
-.app .side-foot .link:hover { background: rgba(255, 255, 255, .06); color: #eef1f8; }
+.app .side-foot .link:hover { background: rgba(255, 255, 255, .07); color: #fff; }
 
 /* Rail colapsado en notebooks (861–1366px): solo íconos. Los textos se
    ocultan con el patrón "visually hidden" (no display:none) para que los
@@ -153,7 +189,6 @@
   .app .sidebar nav { gap: 4px; }
   .app .sidebar nav button { justify-content: center; gap: 0; padding: 9px 4px; }
   .app .sidebar nav button > .icon:first-child { width: 32px; height: 32px; padding: 7px; }
-  .app .nav-lock { display: none; }
   .app .nav-badge {
     position: absolute; top: 3px; right: 3px; margin-left: 0;
     min-width: 16px; height: 16px; padding: 0 4px; font-size: 9px;
@@ -677,8 +712,8 @@
 .app .tabbar > button.active .icon { filter: drop-shadow(0 3px 8px color-mix(in srgb, var(--brand-500) 60%, transparent)); }
 .app .more-sheet {
   background:
-    radial-gradient(120% 60% at 0% 0%, rgba(99, 102, 241, .14) 0%, transparent 62%),
-    #0f1424;
+    radial-gradient(120% 60% at 0% 0%, color-mix(in srgb, var(--brand-500) 40%, transparent) 0%, transparent 56%),
+    linear-gradient(168deg, var(--dv-rail-a), var(--dv-rail-b) 70%, #06070f);
 }
 .app .sheet-nav {
   mask-image: linear-gradient(180deg, #000 0%, #000 calc(100% - 26px), transparent 100%);
@@ -757,10 +792,12 @@
   }
   /* El rail pasa a barra fija: sin textura que se recorte al abrir el menú. */
   .app > .sidebar { overflow: visible; }
+  .app > .sidebar::before { opacity: .3; mask-image: linear-gradient(180deg, #000, transparent 100%); -webkit-mask-image: linear-gradient(180deg, #000, transparent 100%); }
+  .app > .sidebar::after { display: none; }
   .app .side-panel {
     background:
-      radial-gradient(120% 50% at 0% 0%, rgba(99, 102, 241, .13) 0%, transparent 60%),
-      #0f1424;
+      radial-gradient(120% 50% at 0% 0%, color-mix(in srgb, var(--brand-500) 34%, transparent) 0%, transparent 58%),
+      linear-gradient(168deg, var(--dv-rail-a), var(--dv-rail-b) 70%, #06070f);
   }
   .app .topbar::after { display: none; }
   .app .page-head h1 { font-size: 22px; letter-spacing: -.03em; }
