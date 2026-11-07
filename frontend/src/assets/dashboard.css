@@ -662,6 +662,11 @@
 .top-back:hover { border-color: var(--brand-soft-line); transform: translateX(-2px); }
 .top-icon { flex: none; display: grid; place-items: center; width: 36px; height: 36px; border: 1px solid var(--line); border-radius: 10px; background: var(--card); color: var(--ink-2); cursor: pointer; transition: border-color .2s, color .2s, background-color .2s; }
 .top-icon:hover { border-color: var(--brand-soft-line); color: var(--ink); background: var(--surface); }
+.top-user { position: relative; display: inline-flex; border-radius: 50%; }
+.top-user:focus { outline: none; }
+.top-user:focus-visible .avatar { box-shadow: 0 0 0 2px var(--bg), 0 0 0 4px var(--brand-400); }
+.top-user .tip-bubble { left: auto; right: -8px; transform: translateY(3px); }
+.top-user:hover .tip-bubble, .top-user:focus-within .tip-bubble { opacity: 1; visibility: visible; transform: translateY(0); }
 .crumbs { display: flex; flex-direction: column; min-width: 0; }
 .crumb-parent { font-size: 11px; font-weight: 600; letter-spacing: .06em; text-transform: uppercase; color: var(--muted); }
 .crumbs > strong { font-weight: 600; letter-spacing: -.01em; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }

@@ -233,7 +233,6 @@ onBeforeUnmount(() => {
         <div class="side-foot">
           <RouterLink class="link" to="/terminos" title="Términos y condiciones" @click="close"><AppIcon name="file-text" :size="16" /> <span>Términos y condiciones</span></RouterLink>
           <RouterLink class="link" to="/denuncias" title="Denunciar contenido" @click="close"><AppIcon name="flag" :size="16" /> <span>Denunciar contenido</span></RouterLink>
-          <div class="who"><span class="avatar sm">{{ initial }}</span> <span class="who-name">{{ userName }}</span></div>
           <button class="link" title="Cerrar sesión" @click="close(); emit('logout')"><AppIcon name="logout" :size="16" /> <span>Cerrar sesión</span></button>
         </div>
       </div>
@@ -277,7 +276,10 @@ onBeforeUnmount(() => {
         >
           <AppIcon :name="theme.isDark ? 'sun' : 'moon'" :size="17" />
         </button>
-        <span class="avatar sm" :title="userName">{{ initial }}</span>
+        <span class="top-user" tabindex="0">
+          <span class="avatar sm">{{ initial }}</span>
+          <span class="tip-bubble" role="tooltip">{{ userName }}</span>
+        </span>
       </header>
       <slot />
     </main>
@@ -348,7 +350,6 @@ onBeforeUnmount(() => {
           <RouterLink class="link" to="/terminos" @click="close"><AppIcon name="file-text" :size="16" /> <span>Términos y condiciones</span></RouterLink>
           <RouterLink class="link" to="/denuncias" @click="close"><AppIcon name="flag" :size="16" /> <span>Denunciar contenido</span></RouterLink>
           <button v-if="!forceTheme" class="link" @click="theme.toggleTheme()"><AppIcon :name="theme.isDark ? 'sun' : 'moon'" :size="16" /> <span>{{ theme.isDark ? 'Modo claro' : 'Modo oscuro' }}</span></button>
-          <div class="who"><span class="avatar sm">{{ initial }}</span> <span class="who-name">{{ userName }}</span></div>
           <button class="link" @click="close(); emit('logout')"><AppIcon name="logout" :size="16" /> <span>Cerrar sesión</span></button>
         </div>
       </div>
