@@ -512,6 +512,18 @@ jobs:
             export CADDY_IMAGE=${{ env.CADDY_IMAGE }}:sha-${{ github.sha }}
             docker compose pull
 
+            # 3c. Caddy corre sin root (uid 1001, ver docker/caddy/Dockerfile):
+            #     los volúmenes de estado creados con la imagen vieja pueden
+            #     tener /data//config propiedad de root y el certmgr no podría
+            #     escribir. Se re-asignan una vez por volumen existente
+            #     (idempotente; en volúmenes nuevos las dirs ya son 1777).
+            for v in davent_caddy_data davent_caddy_config; do
+              docker volume inspect "$v" >/dev/null 2>&1 || continue
+              docker run --rm --user 0:0 -v "$v":/vol \
+                --entrypoint /bin/sh "${CADDY_IMAGE}" \
+                -c 'chown -R 1001:1001 /vol'
+            done
+
             # 3b. Backup de Postgres a R2 ANTES de migrar (fail-closed): una
             #     migración destructiva o fallida no tiene otra red.
             docker compose run --rm api python manage.py backup_db
