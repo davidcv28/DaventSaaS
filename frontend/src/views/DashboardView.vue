@@ -1385,18 +1385,11 @@ const campaignOptions = computed(() => {
   return list
 })
 
-// Aviso "se aproxima un evento": campañas en ventana de configuración que
-// no tienen todavía un descuento de TODO el catálogo (vigente o futuro).
-// Un descuento por categoría/marca/productos no agota el evento: el dueño
-// puede querer armar varias ofertas del mismo evento por alcance distinto.
-const upcomingCampaigns = computed(() => {
-  const covered = new Set(
-    catalog.discounts
-      .filter((d) => d.campaign && d.scope === 'all' && d.status !== 'ended')
-      .map((d) => d.campaign.id)
-  )
-  return availableCampaigns.value.filter((c) => !covered.has(c.id))
-})
+// Aviso "se aproxima un evento": todas las campañas en ventana de
+// configuración, siempre. El dueño puede querer varias ofertas del mismo
+// evento por alcance distinto (catálogo completo, categorías, marcas,
+// productos) — que ya exista una no tiene que ocultar el CTA.
+const upcomingCampaigns = computed(() => availableCampaigns.value)
 watch(catalogTab, (t) => { if (t === 'discounts') offers.load() })
 // Abre el drawer con el evento ya elegido: fechas fijas, solo falta nombre y %.
 function newCampaignDiscount(c) {
