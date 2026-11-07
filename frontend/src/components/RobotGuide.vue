@@ -27,7 +27,7 @@ onBeforeUnmount(() => clearTimeout(timer))
 <template>
   <Transition name="rguide">
     <div v-if="visible && active" class="rguide">
-      <p class="rguide-bubble">¡Hola! Soy Davent — escribime desde la burbujita de chat.</p>
+      <p class="rguide-bubble">¡Hola! Soy el asistente de Davent — escribime desde la burbujita de chat.</p>
       <img class="rguide-img" src="/robot-saludo.webp" alt="Robot Davent" width="76" height="76" draggable="false">
     </div>
   </Transition>
