@@ -1,0 +1,631 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Tienda Objeto · Boceto de diseño</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Hanken+Grotesk:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#dfdedb;
+  --surface:#d3d2ce;
+  --paper:#e8e6e2;
+  --paper-dim:#d9d7d3;
+  --ink:#26251e;
+  --ink-soft:#3b392f;
+  --muted:#5f5d55;
+  --accent:#2456d6;
+  --accent-ink:#ffffff;
+  --step-small:.875rem;
+  --step-body:clamp(1.0625rem,1rem + .25vw,1.1875rem);
+  --step-lead:clamp(1.25rem,1.1rem + .7vw,1.625rem);
+  --step-head:clamp(2rem,1.3rem + 3.2vw,4rem);
+  --pad:clamp(16px,4vw,48px);
+  --ease:cubic-bezier(.16,.8,.24,1);
+}
+*{margin:0;padding:0;box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{
+  font-family:"Hanken Grotesk",system-ui,sans-serif;
+  background:var(--accent);
+  color:var(--ink);
+  font-size:var(--step-body);
+  line-height:1.5;
+  letter-spacing:-.005em;
+  -webkit-font-smoothing:antialiased;
+  overflow-x:clip;
+}
+::selection{background:var(--accent);color:var(--paper)}
+a{color:inherit;text-decoration:none}
+.sheet{position:relative;z-index:1;background:var(--bg)}
+button{font:inherit;color:inherit;background:none;border:0;cursor:pointer}
+:focus-visible{outline:2px solid var(--accent);outline-offset:3px}
+img{display:block;max-width:100%}
+.sr-only{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+
+/* ---------- reveal ---------- */
+.rv{transform:translateY(26px);transition:transform .8s var(--ease) var(--d,0s)}
+.rv.in{transform:none}
+@media (prefers-reduced-motion:reduce){
+  .rv{transform:none;transition:none}
+  html{scroll-behavior:auto}
+}
+
+/* ---------- hero: la tarjeta-objeto ---------- */
+.hero{background:var(--bg);min-height:100svh;padding-top:28px}
+.topbar{
+  display:grid;grid-template-columns:1fr auto 1fr;align-items:center;
+  padding-inline:var(--pad);gap:16px;
+}
+.mark{font-weight:500;font-size:var(--step-lead);letter-spacing:-.03em}
+.mark .dot{color:var(--accent)}
+.topnav{display:flex;gap:clamp(14px,2.5vw,36px);font-size:var(--step-small)}
+.topnav a{color:var(--muted);transition:color .2s}
+.topnav a:hover{color:var(--ink)}
+.btn{
+  display:inline-flex;align-items:center;justify-content:center;gap:8px;
+  background:var(--ink);color:var(--paper);
+  padding:12px 22px;font-size:var(--step-small);font-weight:500;
+  transition:transform .18s var(--ease),filter .18s;
+}
+.btn:hover{transform:translateY(-2px);filter:brightness(1.15)}
+.btn:active{transform:translateY(0)}
+.topbar .btn{justify-self:end}
+
+.card-wrap{padding-inline:var(--pad);display:flex;justify-content:center}
+.card{
+  position:relative;
+  width:min(580px,100%);
+  aspect-ratio:5/7;
+  margin-top:clamp(80px,15svh,170px);
+  margin-bottom:-1px;
+  background:var(--paper);
+}
+.cnr{position:absolute;width:36px;height:36px;background:var(--bg);border-radius:50%;z-index:2}
+.cnr.tl{top:-18px;left:-18px}.cnr.tr{top:-18px;right:-18px}
+.cnr.bl{bottom:-18px;left:-18px}.cnr.br{bottom:-18px;right:-18px}
+.card-in{
+  position:relative;height:100%;
+  display:flex;flex-direction:column;align-items:center;
+  padding:clamp(28px,4.5vw,52px) clamp(24px,4vw,48px);
+}
+.card-art{width:min(180px,38%);margin-top:clamp(4px,2svh,20px)}
+.card-title{
+  margin-top:auto;
+  font-weight:500;letter-spacing:-.05em;line-height:.92;
+  font-size:clamp(48px,12vw,96px);
+  text-transform:uppercase;
+}
+.card-title .l1{display:block;transform:translateX(-7%)}
+.card-title .l2{display:block;transform:translateX(7%)}
+.card-meta{
+  margin-top:auto;
+  display:flex;flex-wrap:wrap;justify-content:center;align-items:center;gap:6px 16px;
+  font-size:var(--step-small);color:var(--muted);
+  padding-top:28px;
+}
+.dia{color:var(--ink);font-size:var(--step-small)}
+.card-cat{
+  margin-top:18px;
+  font-size:var(--step-lead);font-weight:500;color:var(--ink);
+  max-width:24ch;line-height:1.25;letter-spacing:-.01em;
+}
+
+/* ---------- showcase: placa cuadrada ---------- */
+.showcase{
+  display:grid;grid-template-columns:1fr 1fr;
+  min-height:88svh;
+  padding-block:clamp(90px,12svh,160px);
+}
+.plate-side{display:flex;align-items:center;justify-content:center;padding:var(--pad)}
+.plate{
+  width:min(100%,62svh);
+  aspect-ratio:1/1;
+  background:var(--paper);
+  padding:clamp(16px,2.5vw,32px);
+  display:flex;align-items:center;justify-content:center;
+}
+.plate svg{width:78%;height:78%}
+.plate-cap{
+  margin-top:14px;text-align:center;
+  font-size:var(--step-small);color:var(--muted);
+}
+.plate-cap b{display:block;color:var(--ink);font-weight:500;font-size:var(--step-body)}
+.info-side{
+  display:flex;flex-direction:column;justify-content:space-between;
+  padding:clamp(40px,var(--pad),80px) var(--pad) clamp(40px,var(--pad),80px) 0;
+}
+.tabs{display:flex;gap:clamp(14px,2vw,32px)}
+.tab{
+  font-size:var(--step-body);color:var(--muted);padding:6px 2px;
+  border-bottom:2px solid transparent;
+  transition:color .2s,border-color .2s;
+}
+.tab:hover{color:var(--ink)}
+.tab[aria-selected="true"]{color:var(--ink);font-weight:500;border-bottom-color:var(--accent)}
+.info-mid{padding-block:48px}
+.info-mid h2{font-size:var(--step-head);font-weight:500;letter-spacing:-.03em;line-height:1.02}
+.info-mid p{max-width:34ch;margin-top:22px;font-size:var(--step-lead)}
+.info-bot{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.cell{
+  height:72px;display:flex;align-items:center;justify-content:center;
+  font-weight:500;font-size:var(--step-small);
+  transition:transform .18s var(--ease),filter .18s;
+}
+.cell:hover{transform:translateY(-2px);filter:brightness(1.06)}
+.cell.ink{background:var(--ink);color:var(--paper)}
+.cell.tone{background:var(--surface);color:var(--ink)}
+
+/* ---------- láminas de materiales ---------- */
+.plates-sec{
+  padding-inline:var(--pad);
+  padding-block:clamp(90px,12svh,160px);
+}
+.plates-head{max-width:620px}
+.plates-head h2{font-size:var(--step-head);font-weight:500;letter-spacing:-.03em;line-height:1}
+.plates-head p{margin-top:20px;max-width:34ch}
+.plates-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:clamp(14px,2vw,28px);margin-top:56px}
+.plate-item{background:var(--paper);padding:10px}
+.plate-item img{width:100%;aspect-ratio:1/1;object-fit:cover}
+.plate-item figcaption{padding:12px 4px 6px;font-size:var(--step-small);color:var(--muted)}
+.plate-item figcaption b{display:block;color:var(--ink);font-weight:500;margin-bottom:2px}
+
+/* ---------- carta del fundador ---------- */
+.about{
+  padding-block:clamp(90px,12svh,160px);
+  padding-inline:var(--pad);
+  display:flex;flex-direction:column;align-items:center;
+}
+.about .perf,.about .strip{width:min(680px,100%)}
+.letter-sheet{
+  width:min(680px,100%);
+  background:var(--paper);
+  padding:clamp(32px,5vw,56px) clamp(24px,5vw,56px) clamp(56px,7vw,80px);
+  clip-path:polygon(0% 0%,100% 0%,100% calc(100% - 8px),100.00% calc(100% - 8px),96.67% 100%,93.33% calc(100% - 8px),90.00% 100%,86.67% calc(100% - 8px),83.33% 100%,80.00% calc(100% - 8px),76.67% 100%,73.33% calc(100% - 8px),70.00% 100%,66.67% calc(100% - 8px),63.33% 100%,60.00% calc(100% - 8px),56.67% 100%,53.33% calc(100% - 8px),50.00% 100%,46.67% calc(100% - 8px),43.33% 100%,40.00% calc(100% - 8px),36.67% 100%,33.33% calc(100% - 8px),30.00% 100%,26.67% calc(100% - 8px),23.33% 100%,20.00% calc(100% - 8px),16.67% 100%,13.33% calc(100% - 8px),10.00% 100%,6.67% calc(100% - 8px),3.33% 100%,0.00% calc(100% - 8px));
+}
+.sheet-in{display:grid;grid-template-columns:44px 1fr;gap:28px}
+.avatar{
+  width:44px;height:44px;border-radius:50%;
+  background:var(--ink);color:var(--paper);
+  display:flex;align-items:center;justify-content:center;
+  font-weight:500;font-size:var(--step-small);letter-spacing:.04em;
+}
+.letter p{margin-bottom:1.1em;max-width:52ch}
+.letter p.hl{background:var(--accent);color:var(--paper);padding:1px 8px;box-decoration-break:clone;-webkit-box-decoration-break:clone}
+.signoff{margin-top:34px}
+.signoff b{display:block;font-weight:500;font-size:var(--step-lead);letter-spacing:-.02em}
+.signoff span{font-size:var(--step-small);color:var(--muted)}
+.tipped{margin-top:34px;max-width:340px}
+.tipped figure{background:var(--bg);padding:8px;transform:rotate(-1.6deg)}
+.tipped img,.tipped video{display:block;width:100%;aspect-ratio:4/3;object-fit:cover}
+.tipped figcaption{padding-top:8px;font-size:var(--step-small);color:var(--muted)}
+.perf{
+  height:6px;margin-top:0;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='15' height='6'%3E%3Ccircle cx='7' cy='3' r='2.2' fill='%235f5d55'/%3E%3C/svg%3E");
+  background-repeat:repeat-x;background-position:center;
+  opacity:.5;
+}
+.strip{
+  display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap;
+  background:var(--paper);min-height:72px;padding:14px clamp(20px,4vw,40px);
+}
+.strip .mail{font-weight:500;font-size:var(--step-lead);letter-spacing:-.02em}
+.strip .mail:hover{text-decoration:underline;text-underline-offset:5px}
+.strip .btn{padding:12px 24px;font-size:var(--step-small)}
+
+/* ---------- cómo comprar: el recibo ---------- */
+.process{
+  display:grid;grid-template-columns:repeat(12,1fr);gap:24px;
+  padding-inline:var(--pad);
+  padding-block:clamp(90px,12svh,160px);
+}
+.process-head{grid-column:1/6;align-self:start}
+.process-head h2{font-size:var(--step-head);font-weight:500;letter-spacing:-.03em;line-height:1}
+.process-head p{margin-top:20px;max-width:32ch}
+.slip{
+  grid-column:7/12;justify-self:end;width:min(100%,460px);
+  background:var(--paper);
+  padding:30px 28px 30px;
+  clip-path:polygon(0% 0%,100% 0%,100% calc(100% - 9px),100.00% calc(100% - 9px),95.45% 100%,90.91% calc(100% - 9px),86.36% 100%,81.82% calc(100% - 9px),77.27% 100%,72.73% calc(100% - 9px),68.18% 100%,63.64% calc(100% - 9px),59.09% 100%,54.55% calc(100% - 9px),50.00% 100%,45.45% calc(100% - 9px),40.91% 100%,36.36% calc(100% - 9px),31.82% 100%,27.27% calc(100% - 9px),22.73% 100%,18.18% calc(100% - 9px),13.64% 100%,9.09% calc(100% - 9px),4.55% 100%,0.00% calc(100% - 9px));
+}
+.grp{font-weight:500;margin:30px 0 8px}
+.grp:first-child{margin-top:6px}
+.prow{display:flex;align-items:baseline;gap:10px;font-size:var(--step-body);padding-block:7px}
+.prow .what{flex:0 1 auto}
+.prow .dots{flex:1;min-width:24px;border-bottom:2px dotted var(--muted);transform:translateY(-4px)}
+.prow .val{flex:none;font-variant-numeric:tabular-nums;color:var(--muted);white-space:nowrap}
+.total{
+  display:flex;align-items:center;justify-content:space-between;gap:12px;
+  background:var(--ink);color:var(--paper);
+  min-height:44px;padding:10px 18px;margin:22px -28px 0;
+  font-weight:500;font-size:var(--step-small);
+}
+.total .val{font-variant-numeric:tabular-nums;color:var(--paper)}
+
+/* ---------- testimonio: una carta ---------- */
+.letter-sec{padding-inline:var(--pad);padding-block:clamp(110px,14svh,180px)}
+.quote{max-width:36ch;margin-left:33%}
+.q-open{font-size:clamp(1.5rem,2.7vw,2rem);font-weight:500;line-height:1.15;letter-spacing:-.02em}
+.quote p{margin-top:22px;line-height:1.55}
+.quote p+p{margin-top:20px}
+.q-sign{margin-top:42px}
+.q-sign b{display:block;font-weight:500}
+.q-sign span{font-size:var(--step-small);color:var(--muted)}
+
+/* ---------- cierre: losetas ---------- */
+.cta{padding-inline:var(--pad);padding-bottom:clamp(110px,14svh,180px)}
+.cta-row{
+  display:grid;grid-template-columns:1.15fr 6.6fr 1.15fr;gap:10px;height:360px;
+  margin-inline:calc(-1 * var(--pad));
+}
+.tile{position:relative;overflow:hidden}
+.tile-photo img,.tile-photo .drift{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+.drift{animation:drift 22s ease-in-out infinite alternate}
+@keyframes drift{from{transform:scale(1.03)}to{transform:scale(1.1)}}
+.tile-ink{background:var(--ink)}
+.tile-cta{background:var(--accent);color:var(--paper);padding:40px;display:flex;flex-direction:column;justify-content:center;gap:16px}
+.tile-cta h2{font-size:clamp(1.75rem,2.8vw,2.6rem);font-weight:500;letter-spacing:-.03em;line-height:1.02}
+.tile-cta p{font-size:var(--step-body);color:var(--paper-dim);max-width:34ch}
+.order-form{display:flex;background:var(--paper);max-width:430px;margin-top:6px}
+.order-form:focus-within{outline:2px solid var(--paper);outline-offset:3px}
+.order-form input{
+  flex:1;min-width:0;border:0;background:transparent;
+  padding:15px 18px;font:inherit;font-size:var(--step-small);color:var(--ink);
+}
+.order-form input::placeholder{color:var(--muted)}
+.order-form input:focus{outline:none}
+.order-form button{
+  background:var(--ink);color:var(--paper);
+  padding:15px 24px;font-weight:500;font-size:var(--step-small);
+  transition:filter .18s;
+}
+.order-form button:hover{filter:brightness(1.2)}
+
+/* ---------- contacto: el email es el titular ---------- */
+.contact-sec{
+  padding-inline:var(--pad);
+  padding-block:clamp(100px,14svh,180px) clamp(80px,10svh,140px);
+}
+.contact-notes{
+  font-size:var(--step-small);color:var(--muted);
+  display:flex;flex-wrap:wrap;gap:6px 22px;
+}
+.contact-mail{
+  margin-top:clamp(48px,7svh,90px);
+  font-weight:500;letter-spacing:-.045em;line-height:.94;
+  font-size:clamp(2.4rem,9.5vw,9rem);
+}
+.contact-mail a{transition:color .2s}
+.contact-mail a:hover{color:var(--accent)}
+.contact-mail a:focus-visible{outline:2px solid var(--accent);outline-offset:6px}
+
+/* ---------- footer cortina ---------- */
+body>footer{
+  position:sticky;bottom:0;z-index:0;
+  background:var(--accent);color:var(--paper);
+}
+.foot{min-height:52svh;display:flex;flex-direction:column;padding:40px var(--pad) 30px}
+.foot-top{display:flex;justify-content:space-between;align-items:center;gap:20px}
+.foot .mark{color:var(--paper);font-size:var(--step-body)}
+.foot .mark .dot{color:var(--paper-dim)}
+.foot-top a.toplink{color:var(--paper);white-space:nowrap;font-size:var(--step-small)}
+.foot-top a:hover{text-decoration:underline;text-underline-offset:5px}
+.foot-meta{
+  display:flex;justify-content:space-between;align-items:flex-end;gap:16px;flex-wrap:wrap;
+  margin-top:auto;padding-top:40px;
+  font-size:var(--step-small);
+}
+.foot-meta a:hover{text-decoration:underline;text-underline-offset:4px}
+.foot-meta .credits{color:var(--paper);max-width:52ch}
+
+/* ---------- responsive ---------- */
+@media (max-width:980px){
+  .showcase{grid-template-columns:1fr;min-height:0}
+  .plate-side{padding:56px var(--pad) 24px}
+  .plate{width:min(100%,56svh)}
+  .info-side{padding:24px var(--pad) 80px}
+  .info-bot{max-width:520px}
+  .plates-grid{grid-template-columns:repeat(2,1fr)}
+  .plates-head{display:grid;grid-template-columns:1fr 1fr;gap:24px;align-items:end;max-width:none}
+  .plates-head p{margin-top:0;max-width:none}
+  .process-head{grid-column:1/13}
+  .slip{grid-column:1/13;justify-self:stretch}
+  .quote{margin-left:0}
+}
+@media (max-width:640px){
+  .topnav{display:none}
+  .card{
+    width:calc(100vw - 24px);
+    aspect-ratio:auto;height:88svh;
+    margin-top:96px;
+  }
+  .card-title{font-size:clamp(44px,14vw,72px)}
+  .card-art{width:min(140px,44%)}
+  .card-meta{font-size:var(--step-small);gap:4px 12px}
+  .info-mid{padding-block:32px}
+  .info-bot{grid-template-columns:1fr}
+  .cell{height:60px}
+  .plates-grid{grid-template-columns:1fr;gap:18px}
+  .plate-item img{aspect-ratio:4/3}
+  .plates-head{display:block;max-width:620px}
+  .plates-head p{margin-top:20px;max-width:34ch}
+  .sheet-in{grid-template-columns:1fr}
+  .tipped{margin-top:26px}
+  .strip .mail{font-size:var(--step-body)}
+  .cta-row{grid-template-columns:1fr 1fr;height:auto}
+  .tile-cta{grid-column:1/-1;order:-1;height:300px}
+  .tile-photo{height:120px}
+  .tile-ink{height:120px}
+  .contact-mail{font-size:12.5vw}
+}
+@media (max-width:420px){
+  .contact-mail{font-size:13.5vw}
+}
+</style>
+</head>
+<body id="arriba">
+<main class="sheet">
+
+  <!-- HERO: la tarjeta de la tienda -->
+  <section class="hero">
+    <div class="topbar rv" style="--d:.05s">
+      <span class="mark">Obj<span class="dot">.</span></span>
+      <nav class="topnav" aria-label="Principal">
+        <a href="#piezas">Productos</a>
+        <a href="#proceso">Cómo comprar</a>
+        <a href="#contacto">Contacto</a>
+      </nav>
+      <a class="btn" href="#pedido">Pedir catálogo</a>
+    </div>
+
+    <div class="card-wrap">
+      <article class="card rv" style="--d:.15s" aria-label="Tienda Objeto, catálogo de objetos">
+        <i class="cnr tl" aria-hidden="true"></i><i class="cnr tr" aria-hidden="true"></i>
+        <i class="cnr bl" aria-hidden="true"></i><i class="cnr br" aria-hidden="true"></i>
+        <div class="card-in">
+          <svg class="card-art" viewBox="0 0 220 260" role="img" aria-label="Jarra de gres esmaltado, dibujo de línea">
+            <g fill="none" stroke="#2456d6" stroke-width="7" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M62 96 C48 118 44 158 52 198 C58 224 162 224 168 198 C176 158 172 118 158 96"/>
+              <path d="M74 96 C70 78 78 64 110 62 C142 64 150 78 146 96"/>
+              <ellipse cx="110" cy="62" rx="30" ry="9"/>
+              <path d="M156 108 C188 112 192 154 168 174 C160 182 150 180 148 168"/>
+              <path d="M56 212 H164"/>
+              <circle cx="110" cy="150" r="10" fill="#2456d6" stroke="none"/>
+            </g>
+          </svg>
+          <h1 class="card-title"><span class="l1">Tienda</span><span class="l2">Objeto</span></h1>
+          <p class="card-cat">Catálogo de invierno: objetos para el día a día</p>
+          <div class="card-meta">
+            <span>Envíos a todo el país</span><span class="dia">◆</span>
+            <span>Cambios en 30 días</span><span class="dia">◆</span>
+            <span>Cuotas sin interés</span>
+          </div>
+        </div>
+      </article>
+    </div>
+  </section>
+
+  <!-- SHOWCASE: placa cuadrada + pieza -->
+  <section class="showcase" id="piezas">
+    <div class="plate-side rv">
+      <figure>
+        <div class="plate" role="img" aria-label="Dibujo de la pieza seleccionada">
+          <svg id="piece-chair" viewBox="0 0 240 240" aria-hidden="true">
+            <g fill="none" stroke="#2456d6" stroke-width="7" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M84 46 H156 V112"/>
+              <path d="M70 76 H86 V130 H70 Z"/>
+              <path d="M154 76 H170 V130 H154 Z"/>
+              <path d="M64 130 H176 V144 H64 Z" fill="#2456d6"/>
+              <path d="M82 144 V192 M158 144 V192 M96 144 V184 M144 144 V184"/>
+            </g>
+          </svg>
+          <svg id="piece-lamp" viewBox="0 0 240 240" aria-hidden="true" hidden>
+            <g fill="none" stroke="#2456d6" stroke-width="7" stroke-linecap="round" stroke-linejoin="round">
+              <ellipse cx="120" cy="206" rx="44" ry="9"/>
+              <path d="M120 200 V104"/>
+              <path d="M76 92 A44 34 0 0 1 164 92 Z" fill="#2456d6"/>
+              <path d="M120 126 V158"/>
+              <circle cx="120" cy="164" r="5" fill="#2456d6" stroke="none"/>
+            </g>
+          </svg>
+          <svg id="piece-stool" viewBox="0 0 240 240" aria-hidden="true" hidden>
+            <g fill="none" stroke="#2456d6" stroke-width="7" stroke-linecap="round" stroke-linejoin="round">
+              <ellipse cx="120" cy="78" rx="56" ry="15" fill="#2456d6"/>
+              <path d="M96 90 L80 192 M120 92 L120 198 M144 90 L160 192"/>
+              <path d="M86 158 H154"/>
+            </g>
+          </svg>
+        </div>
+        <figcaption class="plate-cap"><b id="piece-name">Butaca Oslo</b><span id="piece-price">$ 189.000</span></figcaption>
+      </figure>
+    </div>
+    <div class="info-side">
+      <div class="tabs rv" role="tablist" aria-label="Colecciones">
+        <button class="tab" role="tab" aria-selected="true" data-piece="chair">Novedades</button>
+        <button class="tab" role="tab" aria-selected="false" data-piece="lamp">Clásicos</button>
+        <button class="tab" role="tab" aria-selected="false" data-piece="stool">Ofertas</button>
+      </div>
+      <div class="info-mid rv" style="--d:.1s">
+        <h2>Pocas piezas,<br>bien hechas.</h2>
+        <p>Cerámica, madera y textiles elegidos uno por uno. Objetos para usar todos los días y durar años.</p>
+      </div>
+      <div class="info-bot rv" style="--d:.2s">
+        <a class="cell ink" href="#materiales">Ver piezas</a>
+        <a class="cell tone" href="#proceso">Cómo comprar</a>
+      </div>
+    </div>
+  </section>
+
+  <!-- LÁMINAS: materiales -->
+  <section class="plates-sec" id="materiales">
+    <div class="plates-head rv">
+      <h2>De qué<br>están hechos</h2>
+      <p>Trabajamos con materiales nobles y procesos lentos. Esto es lo que vas a encontrar en cada caja.</p>
+    </div>
+    <div class="plates-grid">
+      <figure class="plate-item rv" style="--d:.05s">
+        <img src="assets/elegant-minimalist-white-ceramic-vase.webp" width="1024" height="958" alt="Jarrón cerámico esmaltado de gres, sobre fondo neutro" decoding="async">
+        <figcaption><b>Gres esmaltado</b>Cerámica de cocción lenta, vidriada a mano</figcaption>
+      </figure>
+      <figure class="plate-item rv" style="--d:.15s">
+        <img src="assets/minimalist-white-ceramic-bowl.webp" width="1024" height="651" alt="Cuenco de cerámica esmaltada, vista cenital" decoding="async">
+        <figcaption><b>Cerámica de autor</b>Piezas únicas de talleres invitados</figcaption>
+      </figure>
+      <figure class="plate-item rv" style="--d:.25s">
+        <img src="assets/colorful-woven-baskets.jpg" width="2048" height="1152" alt="Cestas tejidas en fibras vegetales de colores" decoding="async">
+        <figcaption><b>Fibras trenzadas</b>Mimbre, junco y textiles de trama abierta</figcaption>
+      </figure>
+      <figure class="plate-item rv" style="--d:.35s">
+        <img src="assets/woodbowlsguerrero03-zoom1.jpg" width="1907" height="1827" alt="Cuenco de madera torneada con grabado" decoding="async">
+        <figcaption><b>Madera torneada</b>Roble y nogal tratados con aceite natural</figcaption>
+      </figure>
+    </div>
+  </section>
+
+  <!-- CARTA: la fundadora -->
+  <section class="about">
+    <div class="letter-sheet rv">
+      <h2 class="sr-only">Sobre la tienda</h2>
+      <div class="sheet-in">
+        <div class="avatar" aria-hidden="true">MD</div>
+        <div class="letter">
+          <p>Abrimos la tienda en 2019 con una sola regla: cada objeto tiene que merecer el lugar que ocupa en tu casa. Si dudamos al elegirlo, no entra al catálogo.</p>
+          <p>Por eso los pedidos son chicos y las fichas largas. Contamos de dónde sale cada pieza, quién la hace y cómo se cuida, porque <span class="hl">un objeto bien contado también se usa mejor</span>.</p>
+          <p>Hoy seguimos siendo una tienda chica, con un depósito en Caballito y la misma obsesión: vender menos, pero mejor.</p>
+          <div class="signoff">
+            <b>Martina Duarte</b>
+            <span>Fundadora, Tienda Objeto</span>
+          </div>
+        </div>
+      </div>
+      <div class="tipped rv" style="--d:.15s">
+        <figure>
+          <video autoplay muted loop playsinline preload="metadata" poster="assets/opyshnja-poster.jpg" width="640" height="480" aria-label="Video: manos modelando arcilla en un torno manual"><source src="assets/opyshnja.mp4" type="video/mp4"></video>
+          <figcaption>El torno en Opyshnja, Ucrania.</figcaption>
+        </figure>
+      </div>
+    </div>
+    <div class="perf rv" aria-hidden="true"></div>
+    <div class="strip rv" style="--d:.1s">
+      <a class="mail" href="mailto:hola@tiendaobjeto.com">hola@tiendaobjeto.com</a>
+      <a class="btn" href="mailto:hola@tiendaobjeto.com?subject=Consulta%20desde%20la%20web">Escribinos</a>
+    </div>
+  </section>
+
+  <!-- RECIBO: cómo comprar -->
+  <section class="process" id="proceso">
+    <div class="process-head rv">
+      <h2>Cómo<br>comprar</h2>
+      <p>Todo se hace desde la web o el correo. Sin llamadas ni vueltas: tres momentos y el pedido está en camino.</p>
+    </div>
+    <div class="slip rv" style="--d:.15s">
+      <div class="grp">En la web</div>
+      <div class="prow"><span class="what">Armás tu pedido pieza por pieza</span><span class="dots"></span><span class="val">15 min</span></div>
+      <div class="prow"><span class="what">Elegís envío y cuotas</span><span class="dots"></span><span class="val">2 min</span></div>
+      <div class="grp">En tu correo</div>
+      <div class="prow"><span class="what">Confirmación con número de seguimiento</span><span class="dots"></span><span class="val">al instante</span></div>
+      <div class="grp">En tu puerta</div>
+      <div class="prow"><span class="what">Recibís y probás tus objetos</span><span class="dots"></span><span class="val">24–72 h</span></div>
+      <div class="total"><span>Tus objetos en casa</span><span class="val">total: 24–72 h</span></div>
+    </div>
+  </section>
+
+  <!-- TESTIMONIO: una carta -->
+  <section class="letter-sec">
+    <blockquote class="quote rv">
+      <h2 class="sr-only">Lo que dicen los clientes</h2>
+      <p class="q-open">La lámpara Arco cambió la esquina del living.</p>
+      <p>La pedí un martes y el jueves ya la estaba armando. El embalaje es de los que da ganas de guardar, y la lámpara, de las que da ganas de no guardarla nunca.</p>
+      <p>Lo que más valoro es que la ficha diga la verdad: medidas exactas, peso real, de dónde viene la pieza. Con eso no hay devoluciones, hay confianza.</p>
+      <footer class="q-sign">
+        <b>Julián Pereyra</b>
+        <span>Cliente desde 2024 · compra de marzo de 2025</span>
+      </footer>
+    </blockquote>
+  </section>
+
+  <!-- CIERRE: las tres losetas -->
+  <section class="cta" id="pedido">
+    <div class="cta-row">
+      <div class="tile tile-photo rv" style="--d:.05s">
+        <img class="drift" src="assets/pair-of-sinumbra-lamps.jpg" width="1689" height="2250" alt="Par de lámparas de latón del siglo XIX" decoding="async">
+      </div>
+      <div class="tile tile-cta rv" style="--d:.15s">
+        <h2>Armá tu<br>primer pedido</h2>
+        <p>Contanos qué piezas buscás y te armamos el envío en 24 h.</p>
+        <form class="order-form" id="order-form">
+          <label class="sr-only" for="mail">Tu correo</label>
+          <input id="mail" type="email" placeholder="tu@email.com" required>
+          <button type="submit">Enviar</button>
+        </form>
+      </div>
+      <div class="tile tile-ink rv" style="--d:.25s" aria-hidden="true"></div>
+    </div>
+  </section>
+
+<!-- CONTACTO: el email es el titular -->
+<section class="contact-sec" id="contacto">
+  <p class="contact-notes rv">Av. Corrientes 1234, CABA · Lun a vie, 10–19 h · Objetos para el día a día, desde 2019</p>
+  <h2 class="contact-mail rv" style="--d:.1s"><a href="mailto:hola@tiendaobjeto.com">hola@<br>tiendaobjeto.com</a></h2>
+</section>
+
+</main>
+
+<!-- FOOTER CORTINA -->
+<footer>
+  <div class="foot">
+    <div class="foot-top">
+      <span class="mark">Obj<span class="dot">.</span></span>
+      <a class="toplink" href="#arriba">Volver arriba ↑</a>
+    </div>
+    <div class="foot-meta">
+      <span><a href="#">Instagram</a> · <a href="#">WhatsApp</a> · <a href="#">Newsletter</a></span>
+      <span class="credits">Fotos: lacma, Jennifer Bourn, Cornelius and Company y Alejandro Linares García, vía Wikimedia Commons, rawpixel, Art Institute of Chicago y WordPress Photo Directory (CC0, CC BY y CC BY-SA). Video: "Opyshnja" por DenysZ, CC BY 3.0, vía Wikimedia Commons</span>
+      <span>Buenos Aires, 2026</span>
+    </div>
+  </div>
+</footer>
+
+<script>
+// reveal on scroll
+const io = new IntersectionObserver((entries) => {
+  entries.forEach((e) => {
+    if (e.isIntersecting) { e.target.classList.add('in'); io.unobserve(e.target); }
+  });
+}, { threshold: 0.12 });
+document.querySelectorAll('.rv').forEach((el) => io.observe(el));
+
+// video en reposo para prefers-reduced-motion
+const clip = document.querySelector('.tipped video');
+if (clip && matchMedia('(prefers-reduced-motion: reduce)').matches) clip.pause();
+
+// tabs de la placa
+const PIECES = {
+  chair: { name: 'Butaca Oslo', price: '$ 189.000' },
+  lamp:  { name: 'Lámpara Arco', price: '$ 96.000' },
+  stool: { name: 'Taburete Trébol', price: '$ 34.000' }
+};
+document.querySelectorAll('.tab').forEach((btn) => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.tab').forEach((b) => b.setAttribute('aria-selected', b === btn ? 'true' : 'false'));
+    const key = btn.dataset.piece;
+    ['chair', 'lamp', 'stool'].forEach((k) => {
+      document.getElementById('piece-' + k).hidden = k !== key;
+    });
+    document.getElementById('piece-name').textContent = PIECES[key].name;
+    document.getElementById('piece-price').textContent = PIECES[key].price;
+  });
+});
+
+// formulario de pedido (boceto)
+document.getElementById('order-form').addEventListener('submit', (e) => {
+  e.preventDefault();
+  const btn = e.target.querySelector('button');
+  btn.textContent = 'Enviado';
+  btn.disabled = true;
+});
+</script>
+</body>
+</html>
