@@ -508,11 +508,19 @@ class ThemeV2(_AiDesignBase):
             self._clean({'typography': {'roles': roles}})
 
     def test_weight_must_be_300_to_900_step_100(self):
-        for weight in (250, 350, 450, 950, 400.5, True, '700', None):
+        for weight in (250, 350, 450, 950, 400.5, True, 'bold', '70a', None):
             roles   =   self._roles()
             roles['h1'] =   dict(roles['h1'], weight = weight)
             with self.assertRaises(DRFValidationError, msg = f'weight {weight!r} aceptado'):
                 self._clean({'typography': {'roles': roles}})
+
+    def test_weight_digit_string_is_normalized_to_int(self):
+        #Datos legacy guardaron el peso como texto: "700" se normaliza a 700
+        #en vez de bloquear el guardado del tema.
+        roles   =   self._roles()
+        roles['h1'] =   dict(roles['h1'], weight = '700')
+        clean   =   self._clean({'typography': {'roles': roles}})
+        self.assertEqual(clean['typography']['roles']['h1']['weight'], 700)
 
     def test_invalid_role_enums_are_rejected(self):
         for key, value in (('size', 'gigante'), ('tracking', 'ancho'),
