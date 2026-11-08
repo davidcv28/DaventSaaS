@@ -903,12 +903,15 @@ const brandImageInput = ref(null)
 const brandImageTarget = ref(null)
 const brandImageBusy = ref(null)
 const brandImageErr = ref('')
-// Logo opcional al crear la marca: queda elegido hasta el "Agregar" y se
-// sube después del alta por /brands/<id>/image/ (WebP con alfa, 2 MB).
+// Logo opcional al crear/editar la marca: queda elegido hasta el submit y
+// se sube después por /brands/<id>/image/ (WebP con alfa, 2 MB).
 const brandFormImage = ref(null)
 const brandFormPreview = ref('')
 const brandFormImageInput = ref(null)
 const brandFormErr = ref('')
+// Edición de marca: el mismo form del alta carga nombre (y permite cambiar
+// el logo) — igual que categorías.
+const brandEditing = ref(null)
 // Edición de categoría: el mismo form agrega o guarda según haya id cargado.
 const taxonomyEditing = ref(null)
 
@@ -1580,23 +1583,44 @@ async function addTaxonomy(kind) {
     } else taxonomyErr.category = catalog.fieldErrors.name || catalog.fieldErrors.feature_schema || catalog.lastError
     return
   }
-  const res = await catalog.saveBrand(null, payload)
+  const res = await catalog.saveBrand(brandEditing.value, payload)
   taxonomyBusy.brand = false
   if (!res.ok) {
     taxonomyErr.brand = catalog.fieldErrors.name || catalog.lastError
     return
   }
-  // La marca ya existe: si venía logo elegido se sube por el endpoint de
-  // imagen (multipart -> normalize_image). Si falla, la marca queda creada
-  // y el error se muestra abajo para reintentar desde la fila.
+  // Si venía logo elegido se sube por el endpoint de imagen (multipart ->
+  // normalize_image). Si falla, la marca queda guardada y el error se
+  // muestra abajo para reintentar desde la fila.
   const image = brandFormImage.value
-  const brandId = res.data?.item?.id
+  const brandId = res.data?.item?.id || brandEditing.value
   if (image && brandId) {
     const up = await catalog.saveBrandImage(brandId, image)
     if (!up.ok) brandImageErr.value = catalog.lastError
   }
   taxonomyForm.brand = ''
+  brandEditing.value = null
   clearBrandFormImage()
+}
+
+// Carga la marca en el form para editar nombre y logo (misma vista que
+// "Agregar", con botón Guardar). El preview arranca con su imagen actual.
+function editBrand(b) {
+  brandEditing.value = b.id
+  taxonomyForm.brand = b.name
+  taxonomyErr.brand = ''
+  brandFormErr.value = ''
+  if (brandFormPreview.value?.startsWith('blob:')) URL.revokeObjectURL(brandFormPreview.value)
+  brandFormImage.value = null
+  brandFormPreview.value = b.image || ''
+}
+function cancelBrandEdit() {
+  brandEditing.value = null
+  taxonomyForm.brand = ''
+  brandFormErr.value = ''
+  if (brandFormPreview.value?.startsWith('blob:')) URL.revokeObjectURL(brandFormPreview.value)
+  brandFormImage.value = null
+  brandFormPreview.value = ''
 }
 
 function onBrandFormImagePicked(event) {
@@ -1605,15 +1629,16 @@ function onBrandFormImagePicked(event) {
   if (!file) return
   brandFormErr.value = validateLogoFile(file)
   if (brandFormErr.value) return
-  if (brandFormPreview.value) URL.revokeObjectURL(brandFormPreview.value)
+  if (brandFormPreview.value?.startsWith('blob:')) URL.revokeObjectURL(brandFormPreview.value)
   brandFormImage.value = file
   brandFormPreview.value = URL.createObjectURL(file)
 }
 function clearBrandFormImage() {
-  if (brandFormPreview.value) URL.revokeObjectURL(brandFormPreview.value)
+  if (brandFormPreview.value?.startsWith('blob:')) URL.revokeObjectURL(brandFormPreview.value)
   brandFormImage.value = null
-  brandFormPreview.value = ''
   brandFormErr.value = ''
+  const editing = catalog.brands.find((b) => b.id === brandEditing.value)
+  brandFormPreview.value = editing?.image || ''
 }
 
 // Carga la categoría en el form para editar nombre y plantilla de
@@ -1643,6 +1668,7 @@ function removeTaxonomy(kind, item) {
       const ok = kind === 'category' ? await catalog.removeCategory(item.id) : await catalog.removeBrand(item.id)
       if (!ok) taxonomyErr[kind] = catalog.lastError
       else if (kind === 'category' && taxonomyEditing.value === item.id) cancelCategoryEdit()
+      else if (kind === 'brand' && brandEditing.value === item.id) cancelBrandEdit()
     }
   })
 }
@@ -4267,7 +4293,7 @@ async function changePassword() {
             </div>
             <div class="tax-add">
               <div class="tax-fields">
-                <AppInput v-model="taxonomyForm.brand" label="Nueva marca" name="brand_name" placeholder="Ej. Nike" :error="taxonomyErr.brand" />
+                <AppInput v-model="taxonomyForm.brand" :label="brandEditing ? 'Editar marca' : 'Nueva marca'" name="brand_name" placeholder="Ej. Nike" :error="taxonomyErr.brand" />
                 <div class="field">
                   <label>Logo <small class="tab-sub">(opcional)</small></label>
                   <div class="brand-logo-pick">
@@ -4276,11 +4302,11 @@ async function changePassword() {
                       <AppIcon v-else name="image" :size="18" />
                     </span>
                     <span class="brand-logo-meta">
-                      <strong>{{ brandFormImage ? brandFormImage.name : 'Sin imagen' }}</strong>
+                      <strong>{{ brandFormImage ? brandFormImage.name : (brandEditing ? 'Logo actual' : 'Sin imagen') }}</strong>
                       <small>PNG, JPG, WebP o GIF de hasta 2 MB</small>
                     </span>
                     <button type="button" class="btn ghost btn-auto" @click="brandFormImageInput?.click()">
-                      <AppIcon name="upload" :size="14" /> {{ brandFormImage ? 'Cambiar' : 'Elegir' }}
+                      <AppIcon name="upload" :size="14" /> {{ brandFormImage || brandFormPreview ? 'Cambiar' : 'Elegir' }}
                     </button>
                     <button v-if="brandFormImage" type="button" class="icon-btn danger" aria-label="Quitar imagen" @click="clearBrandFormImage"><AppIcon name="x" :size="15" /></button>
                   </div>
@@ -4288,7 +4314,8 @@ async function changePassword() {
                   <p v-if="brandFormErr" class="field-error" role="alert">{{ brandFormErr }}</p>
                 </div>
                 <div class="tax-actions">
-                  <AppButton :loading="taxonomyBusy.brand" class="btn-auto" @click="addTaxonomy('brand')">Agregar marca</AppButton>
+                  <button v-if="brandEditing" type="button" class="btn ghost btn-auto" @click="cancelBrandEdit">Cancelar</button>
+                  <AppButton :loading="taxonomyBusy.brand" class="btn-auto" @click="addTaxonomy('brand')">{{ brandEditing ? 'Guardar' : 'Agregar marca' }}</AppButton>
                 </div>
               </div>
             </div>
@@ -4302,6 +4329,7 @@ async function changePassword() {
                   <small>{{ b.products_count || 0 }} productos</small>
                 </span>
                 <span class="tax-item-actions">
+                  <button type="button" class="icon-btn" aria-label="Editar marca" @click="editBrand(b)"><AppIcon name="pencil" :size="15" /></button>
                   <button type="button" class="icon-btn" :disabled="brandImageBusy === b.id" :aria-label="b.image ? `Cambiar imagen de ${b.name}` : `Subir imagen de ${b.name}`" @click="pickBrandImage(b)"><AppIcon name="image" :size="15" /></button>
                   <button v-if="b.image" type="button" class="icon-btn danger" :disabled="brandImageBusy === b.id" :aria-label="`Quitar imagen de ${b.name}`" @click="removeBrandImage(b)"><AppIcon name="x" :size="15" /></button>
                   <button type="button" class="icon-btn danger" aria-label="Eliminar marca" @click="removeTaxonomy('brand', b)"><AppIcon name="trash" :size="15" /></button>
