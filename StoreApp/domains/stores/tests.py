@@ -1776,6 +1776,29 @@ class SiteThemeTests(TestCase):
         self.assertEqual(response.data['customization']['site_theme'], {})
         self.assertEqual(self._public_theme('tienda-duenio'), {})
 
+    def test_null_optional_values_saved_as_inherit(self):
+        #El contrato del Studio emite null en las claves opcionales (borde
+        #de botón, tratamiento de imagen, fondo): significa "heredar el
+        #default del estilo". Antes el PATCH entero devolvía 400 y no se
+        #guardaba NI el template NI el layout del diseño elegido.
+        client      =   self._client(has_design_advanced = True)
+        response    =   self._patch(client, {'site_theme': {
+            'palette'    :   {'primary': '#112233'},
+            'buttons'    :   {'borderStyle': None},
+            'images'     :   {'ratio': None, 'fit': None, 'bg': None, 'radius': None, 'border': None},
+            'background' :   {'type': 'solid', 'value': None},
+        }})
+        self.assertEqual(response.status_code, 200)
+        theme       =   response.data['customization']['site_theme']
+        self.assertIsNone(theme['buttons']['borderStyle'])
+        self.assertIsNone(theme['images']['ratio'])
+        self.assertIsNone(theme['images']['bg'])
+        self.assertIsNone(theme['background']['value'])
+        #Y una elección posterior pisa el null (merge por sección).
+        response    =   self._patch(client, {'site_theme': {'buttons': {'borderStyle': 'dashed'}}})
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.data['customization']['site_theme']['buttons']['borderStyle'], 'dashed')
+
     def test_store_without_theme_looks_identical(self):
         #Una tienda sin site_theme se ve idéntica a hoy: {} guardado y
         #{} en el payload público (el frontend resuelve los defaults).

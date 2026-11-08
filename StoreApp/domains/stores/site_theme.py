@@ -597,12 +597,19 @@ def clean_site_theme(value, *, has_plus = False, has_advanced = False, has_style
                 continue    #clave reservada a otro plan: descarte silencioso
             kind        =   spec[key][0]
             if kind == 'hex':
+                #null = sin color propio: la web hereda el default del
+                #estilo (el contrato lo emite para las claves opcionales).
+                if raw is None:
+                    out[key]    =   None
+                    continue
                 color   =   _norm_hex(raw)
                 if color is None:
                     raise serializers.ValidationError(f'"{key}": ingresá un color válido (hex #RRGGBB).')
                 out[key]    =   color
             elif kind == 'enum':
-                out[key]    =   _v_enum(raw, spec[key][1], key)
+                #null = "sin elección propia" (borde de botón, tratamiento
+                #de imagen): se guarda tal cual y la web resuelve el default.
+                out[key]    =   None if raw is None else _v_enum(raw, spec[key][1], key)
             elif kind == 'styleId':
                 #El catálogo nuevo vive en la base: el id se valida contra
                 #DesignStyle y, si no está, contra los presets viejos.
