@@ -7483,6 +7483,460 @@
         "corners": "rounded"
       },
       "concept": "Noche azul: el plano de la casa en versión nocturna."
+    },
+    {
+      "slug": "umbral-ocre",
+      "nombre": "Umbral Ocre",
+      "categoria": "Hogar y objetos",
+      "descripcion": "Lino tostado y ocre quemado: la casa en clave tierra. Mismos arcos y filetes de plano, con el acento ámbar de la madera y el barro.",
+      "tier": "advanced",
+      "template": "umbral",
+      "page_theme": "light",
+      "pattern": "umbral",
+      "tokens": {
+        "palette": {
+          "accent": "#8A5A12",
+          "primary": "#262015",
+          "secondary": "#5C4F33",
+          "bg": "#F5EFE0",
+          "surface": "#EBE2CC",
+          "text": "#262015",
+          "muted": "#6E6248",
+          "border": "#DACBA8",
+          "success": "#3E7C4F",
+          "danger": "#A63D2F"
+        },
+        "containers": {
+          "radius": "lg",
+          "shadow": "soft",
+          "border": "thin",
+          "density": "comfortable",
+          "surface": "flat"
+        },
+        "typography": {
+          "heading": "playfair-display",
+          "subheading": "work-sans",
+          "body": "work-sans",
+          "scale": "editorial",
+          "weightHeading": 500,
+          "letterSpacing": "-0.01em"
+        },
+        "buttons": {
+          "shape": "rounded",
+          "style": "solid",
+          "size": "md"
+        },
+        "background": {
+          "type": "solid",
+          "value": null,
+          "overlay": "none"
+        },
+        "motion": {
+          "reveal": "fade-up",
+          "hover": "lift",
+          "intensity": "subtle"
+        },
+        "mobile": {
+          "cardStyle": "standard",
+          "heroHeight": "standard"
+        },
+        "preview": "",
+        "icons": {
+          "style": "line",
+          "stroke": "1.8",
+          "size": "20",
+          "corners": "rounded"
+        }
+      },
+      "effects": {
+        "accent": "#8A5A12",
+        "primary": "#262015",
+        "secondary": "#5C4F33",
+        "bg": "#F5EFE0",
+        "surface": "#EBE2CC",
+        "text": "#262015",
+        "muted": "#6E6248",
+        "border": "#DACBA8",
+        "success": "#3E7C4F",
+        "danger": "#A63D2F",
+        "radius": "lg",
+        "shadow": "soft",
+        "border_width": 1,
+        "border_style": "solid",
+        "space": "normal",
+        "button_shape": "rounded",
+        "divider": "none"
+      },
+      "layout": {},
+      "layout_spec": {},
+      "tags": [
+        "hogar",
+        "premium",
+        "arquitectura",
+        "deco",
+        "muebles",
+        "casa",
+        "tierra",
+        "elegante"
+      ],
+      "preview": "",
+      "style": "Umbral Ocre",
+      "anim": {
+        "hero": "fade-up",
+        "reveal": "fade-up",
+        "hover": "lift",
+        "button": "solid-press"
+      },
+      "easing": "cubic-bezier(.22,1,.36,1)",
+      "duration": "420ms",
+      "icons": {
+        "style": "line",
+        "stroke": "1.8",
+        "size": "20",
+        "corners": "rounded"
+      },
+      "concept": "Tierra y ocre: la casa con pigmento de barro y madera."
+    },
+    {
+      "slug": "umbral-vino",
+      "nombre": "Umbral Vino",
+      "categoria": "Hogar y objetos",
+      "descripcion": "Lino y burdeos: la casa en clave vino. Los mismos arcos y el índice de ambientes con el acento profundo de la cava y la biblioteca.",
+      "tier": "advanced",
+      "template": "umbral",
+      "page_theme": "light",
+      "pattern": "umbral",
+      "tokens": {
+        "palette": {
+          "accent": "#6E2B3A",
+          "primary": "#251F22",
+          "secondary": "#4A3E42",
+          "bg": "#F4F1E8",
+          "surface": "#EAE3DA",
+          "text": "#251F22",
+          "muted": "#6E655F",
+          "border": "#D8CFC4",
+          "success": "#3E7C4F",
+          "danger": "#A63D2F"
+        },
+        "containers": {
+          "radius": "lg",
+          "shadow": "soft",
+          "border": "thin",
+          "density": "comfortable",
+          "surface": "flat"
+        },
+        "typography": {
+          "heading": "playfair-display",
+          "subheading": "work-sans",
+          "body": "work-sans",
+          "scale": "editorial",
+          "weightHeading": 500,
+          "letterSpacing": "-0.01em"
+        },
+        "buttons": {
+          "shape": "rounded",
+          "style": "solid",
+          "size": "md"
+        },
+        "background": {
+          "type": "solid",
+          "value": null,
+          "overlay": "none"
+        },
+        "motion": {
+          "reveal": "fade-up",
+          "hover": "lift",
+          "intensity": "subtle"
+        },
+        "mobile": {
+          "cardStyle": "standard",
+          "heroHeight": "standard"
+        },
+        "preview": "",
+        "icons": {
+          "style": "line",
+          "stroke": "1.8",
+          "size": "20",
+          "corners": "rounded"
+        }
+      },
+      "effects": {
+        "accent": "#6E2B3A",
+        "primary": "#251F22",
+        "secondary": "#4A3E42",
+        "bg": "#F4F1E8",
+        "surface": "#EAE3DA",
+        "text": "#251F22",
+        "muted": "#6E655F",
+        "border": "#D8CFC4",
+        "success": "#3E7C4F",
+        "danger": "#A63D2F",
+        "radius": "lg",
+        "shadow": "soft",
+        "border_width": 1,
+        "border_style": "solid",
+        "space": "normal",
+        "button_shape": "rounded",
+        "divider": "none"
+      },
+      "layout": {},
+      "layout_spec": {},
+      "tags": [
+        "hogar",
+        "premium",
+        "arquitectura",
+        "deco",
+        "muebles",
+        "casa",
+        "vino",
+        "elegante"
+      ],
+      "preview": "",
+      "style": "Umbral Vino",
+      "anim": {
+        "hero": "fade-up",
+        "reveal": "fade-up",
+        "hover": "lift",
+        "button": "solid-press"
+      },
+      "easing": "cubic-bezier(.22,1,.36,1)",
+      "duration": "420ms",
+      "icons": {
+        "style": "line",
+        "stroke": "1.8",
+        "size": "20",
+        "corners": "rounded"
+      },
+      "concept": "Burdeos y lino: la casa de la biblioteca y la cava."
+    },
+    {
+      "slug": "umbral-oliva",
+      "nombre": "Umbral Oliva",
+      "categoria": "Hogar y objetos",
+      "descripcion": "Grafito oliva y verde aceituna: la casa de noche en clave jardín. Los arcos se leen como invernadero luminoso sobre verde noche.",
+      "tier": "advanced",
+      "template": "umbral",
+      "page_theme": "dark",
+      "pattern": "umbral",
+      "tokens": {
+        "palette": {
+          "accent": "#B5C25E",
+          "primary": "#ECEADF",
+          "secondary": "#8A9159",
+          "bg": "#16170F",
+          "surface": "#20221A",
+          "text": "#ECEADF",
+          "muted": "#A0A48C",
+          "border": "#333624",
+          "success": "#4C9A6A",
+          "danger": "#D96A5F"
+        },
+        "containers": {
+          "radius": "lg",
+          "shadow": "medium",
+          "border": "thin",
+          "density": "comfortable",
+          "surface": "elevated"
+        },
+        "typography": {
+          "heading": "playfair-display",
+          "subheading": "work-sans",
+          "body": "work-sans",
+          "scale": "editorial",
+          "weightHeading": 500,
+          "letterSpacing": "-0.01em"
+        },
+        "buttons": {
+          "shape": "rounded",
+          "style": "solid",
+          "size": "md"
+        },
+        "background": {
+          "type": "solid",
+          "value": null,
+          "overlay": "none"
+        },
+        "motion": {
+          "reveal": "fade-up",
+          "hover": "lift",
+          "intensity": "subtle"
+        },
+        "mobile": {
+          "cardStyle": "standard",
+          "heroHeight": "standard"
+        },
+        "preview": "",
+        "icons": {
+          "style": "line",
+          "stroke": "1.8",
+          "size": "20",
+          "corners": "rounded"
+        }
+      },
+      "effects": {
+        "accent": "#B5C25E",
+        "primary": "#ECEADF",
+        "secondary": "#8A9159",
+        "bg": "#16170F",
+        "surface": "#20221A",
+        "text": "#ECEADF",
+        "muted": "#A0A48C",
+        "border": "#333624",
+        "success": "#4C9A6A",
+        "danger": "#D96A5F",
+        "radius": "lg",
+        "shadow": "medium",
+        "border_width": 1,
+        "border_style": "solid",
+        "space": "normal",
+        "button_shape": "rounded",
+        "divider": "none"
+      },
+      "layout": {},
+      "layout_spec": {},
+      "tags": [
+        "hogar",
+        "premium",
+        "arquitectura",
+        "deco",
+        "muebles",
+        "casa",
+        "oliva",
+        "noche",
+        "elegante"
+      ],
+      "preview": "",
+      "style": "Umbral Oliva",
+      "anim": {
+        "hero": "fade-up",
+        "reveal": "fade-up",
+        "hover": "lift",
+        "button": "solid-press"
+      },
+      "easing": "cubic-bezier(.22,1,.36,1)",
+      "duration": "420ms",
+      "icons": {
+        "style": "line",
+        "stroke": "1.8",
+        "size": "20",
+        "corners": "rounded"
+      },
+      "concept": "Verde noche: el plano de la casa en clave invernadero."
+    },
+    {
+      "slug": "umbral-pizarra",
+      "nombre": "Umbral Pizarra",
+      "categoria": "Hogar y objetos",
+      "descripcion": "Grafito cálido y pizarra azulada: la casa en clave taller. El acento gris azulado lee como lápiz sobre papel de plano nocturno.",
+      "tier": "advanced",
+      "template": "umbral",
+      "page_theme": "dark",
+      "pattern": "umbral",
+      "tokens": {
+        "palette": {
+          "accent": "#9AA8B8",
+          "primary": "#ECE9E2",
+          "secondary": "#7E8A96",
+          "bg": "#1B1917",
+          "surface": "#26231F",
+          "text": "#ECE9E2",
+          "muted": "#A6A196",
+          "border": "#3A352E",
+          "success": "#3FA66F",
+          "danger": "#D96A5F"
+        },
+        "containers": {
+          "radius": "lg",
+          "shadow": "medium",
+          "border": "thin",
+          "density": "comfortable",
+          "surface": "elevated"
+        },
+        "typography": {
+          "heading": "playfair-display",
+          "subheading": "work-sans",
+          "body": "work-sans",
+          "scale": "editorial",
+          "weightHeading": 500,
+          "letterSpacing": "-0.01em"
+        },
+        "buttons": {
+          "shape": "rounded",
+          "style": "solid",
+          "size": "md"
+        },
+        "background": {
+          "type": "solid",
+          "value": null,
+          "overlay": "none"
+        },
+        "motion": {
+          "reveal": "fade-up",
+          "hover": "lift",
+          "intensity": "subtle"
+        },
+        "mobile": {
+          "cardStyle": "standard",
+          "heroHeight": "standard"
+        },
+        "preview": "",
+        "icons": {
+          "style": "line",
+          "stroke": "1.8",
+          "size": "20",
+          "corners": "rounded"
+        }
+      },
+      "effects": {
+        "accent": "#9AA8B8",
+        "primary": "#ECE9E2",
+        "secondary": "#7E8A96",
+        "bg": "#1B1917",
+        "surface": "#26231F",
+        "text": "#ECE9E2",
+        "muted": "#A6A196",
+        "border": "#3A352E",
+        "success": "#3FA66F",
+        "danger": "#D96A5F",
+        "radius": "lg",
+        "shadow": "medium",
+        "border_width": 1,
+        "border_style": "solid",
+        "space": "normal",
+        "button_shape": "rounded",
+        "divider": "none"
+      },
+      "layout": {},
+      "layout_spec": {},
+      "tags": [
+        "hogar",
+        "premium",
+        "arquitectura",
+        "deco",
+        "muebles",
+        "casa",
+        "pizarra",
+        "noche",
+        "elegante"
+      ],
+      "preview": "",
+      "style": "Umbral Pizarra",
+      "anim": {
+        "hero": "fade-up",
+        "reveal": "fade-up",
+        "hover": "lift",
+        "button": "solid-press"
+      },
+      "easing": "cubic-bezier(.22,1,.36,1)",
+      "duration": "420ms",
+      "icons": {
+        "style": "line",
+        "stroke": "1.8",
+        "size": "20",
+        "corners": "rounded"
+      },
+      "concept": "Pizarra y grafito: el plano de la casa en clave taller."
     }
   ],
   "patterns": [
