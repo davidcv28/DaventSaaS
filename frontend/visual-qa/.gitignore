@@ -3,5 +3,5 @@
 current/
 .tmp/
 .jobs/
-report.json
+report*.json
 baseline/
