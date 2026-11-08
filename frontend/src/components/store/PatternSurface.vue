@@ -29,7 +29,12 @@ const props = defineProps({
   surface: { type: String, default: 'landing' },
   //Id del producto cuando la superficie es `product`: el backend resuelve
   //las variables product_* del documento con esa ficha.
-  product: { type: [String, Number], default: '' }
+  product: { type: [String, Number], default: '' },
+  //CSS del Studio (editores finos de site_theme) para documentos de
+  //diseño: en la web publicada lo hornea el backend en el documento;
+  //en la vista previa del Studio viaja por postMessage porque el iframe
+  //es de origen opaco. Vacío = sin reglas del Studio.
+  studioCss: { type: String, default: '' }
 })
 
 const frame = ref(null)
@@ -165,11 +170,16 @@ function syncTheme() {
   post('davent:ds-measure', {})
 }
 
+function syncStudioCss() {
+  post('davent:ds-studio-css', { css: props.studioCss || '' })
+}
+
 function onLoad() {
   height.value = 0
   emit('load')
   post('davent:ds-surface', { surface: props.surface })
   syncTheme()
+  syncStudioCss()
   postFrame()
 }
 
@@ -198,6 +208,9 @@ watch(() => props.surface, () => {
   post('davent:ds-surface', { surface: props.surface })
   syncTheme()
 })
+//Ediciones del Studio en vivo: el CSS viaja entero (es barato — son unas
+//pocas reglas) y el puente lo reemplaza en un <style> dedicado.
+watch(() => props.studioCss, syncStudioCss)
 
 if (typeof window !== 'undefined') {
   window.addEventListener('message', onMessage)

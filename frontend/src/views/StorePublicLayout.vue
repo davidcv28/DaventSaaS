@@ -24,6 +24,7 @@ import {
   storeSiteThemeVars, storeSiteThemeAttrs, skinOf, SKIN_FAMILIES,
   sanitizeSiteTheme
 } from '../components/studio/previewBridge.js'
+import { patternStudioCss, patternStudioFontsCss } from '../studio/patternStudio.js'
 import '../assets/store-page.css'
 // Capa de movimiento (keyframes + microinteracciones) por familia de piel.
 import '../assets/store-motion.css'
@@ -254,6 +255,26 @@ const studioAttrs = computed(() => (
     ? studioPreviewAttrs(studioTheme.value, studioExplicit.value, pageTheme.value)
     : {}
 ))
+//CSS del Studio para el documento de diseño (DesignPattern): el tema
+//efectivo es el borrador en modo Studio/en preview compartido, o el
+//publicado (ya filtrado por plan en la API). patternStudioCss es el
+//espejo JS de studio_theme_css del backend — mismas reglas sobre los
+//hooks compartidos (.btn/.ds-product*/section.hero/...).
+//custom.site_theme ya resuelve el borrador en Studio/preview y lo
+//publicado (filtrado por plan) en la web pública.
+const patternStudioTheme = computed(() => custom.value?.site_theme || null)
+const patternStudioCssText = ref('')
+let patternStudioSeq = 0
+watch([patternStudioTheme, () => usePattern.value], async ([theme, isPattern]) => {
+  const seq = ++patternStudioSeq
+  if (!isPattern || !theme || typeof theme !== 'object') {
+    patternStudioCssText.value = ''
+    return
+  }
+  const fontsCss = await patternStudioFontsCss(theme)
+  if (seq !== patternStudioSeq) return
+  patternStudioCssText.value = patternStudioCss(theme, fontsCss)
+}, { immediate: true })
 const themeVars = computed(() => storeThemeVars(custom.value))
 // Tema guardado (site_theme): se emite SIEMPRE, no solo en modo Studio, para
 // que lo que se ve en el canvas sea exactamente lo que ve el visitante.
@@ -985,6 +1006,7 @@ onBeforeUnmount(() => {
       :theme="pageTheme"
       :surface="patternSurface"
       :product="patternSurface === 'product' ? route.params.productId : ''"
+      :studio-css="patternStudioCssText"
       :title="shopName"
       @navigate="onPatternNavigate"
       @toggle-theme="togglePageTheme"

@@ -250,7 +250,9 @@ function cleanThemeRoles(raw) {
     if (typeof spec.font === 'string' && spec.font.trim()) clean.font = spec.font.trim().slice(0, 120)
     if (ROLE_SIZE_IDS.includes(spec.size)) clean.size = spec.size
     const weight = Number(spec.weight)
-    if (Number.isFinite(weight)) clean.weight = Math.min(900, Math.max(100, Math.round(weight)))
+    // Mismo enum que el backend (300–900 de a 100): un peso como 550 no
+    // pasaría la validación del PATCH y dejaría el guardado en 400.
+    if (Number.isFinite(weight)) clean.weight = Math.min(900, Math.max(300, Math.round(weight / 100) * 100))
     if (ROLE_TRACKING_IDS.includes(spec.tracking)) clean.tracking = spec.tracking
     if (ROLE_LEADING_IDS.includes(spec.leading)) clean.leading = spec.leading
     if (ROLE_CASE_IDS.includes(spec.case)) clean.case = spec.case

@@ -4,6 +4,8 @@ from StoreApp.domains.design.services.pattern_render import (
     build_store_context,
     pattern_for_template,
     render_store_pattern,
+    studio_font_css,
+    studio_theme_css,
     theme_css,
 )
 
@@ -13,5 +15,7 @@ __all__ = [
     'build_store_context',
     'pattern_for_template',
     'render_store_pattern',
+    'studio_font_css',
+    'studio_theme_css',
     'theme_css',
 ]

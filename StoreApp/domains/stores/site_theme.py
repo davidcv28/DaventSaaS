@@ -431,6 +431,10 @@ def _v_roles(raw):
         if not isinstance(font, str) or font not in _TYPE_FONT_SLUGS:
             raise serializers.ValidationError(f'"{role}.font": elegí una fuente del catálogo.')
         weight  =   value.get('weight')
+        # Datos viejos guardaron el peso como texto ("400"): se normaliza a
+        # int para que una tienda con ese valor no quede bloqueada al guardar.
+        if isinstance(weight, str) and weight.strip().isdigit():
+            weight = int(weight)
         if isinstance(weight, bool) or not isinstance(weight, int) or weight % 100 or not 300 <= weight <= 900:
             raise serializers.ValidationError(f'"{role}.weight" debe ser 300, 400, 500, 600, 700, 800 o 900.')
         out[role]   =   {

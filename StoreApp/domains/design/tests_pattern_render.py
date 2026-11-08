@@ -18,9 +18,11 @@ from StoreApp.domains.design.services import (
     build_store_context,
     pattern_for_template,
     render_store_pattern,
+    studio_theme_css,
     theme_css,
 )
 from StoreApp.domains.stores.models import Store, StoreCustomization
+from StoreApp.domains.stores.tests import _grant
 
 PATTERN_URL = '/api/stores/public/mi-tienda/pattern/'
 
@@ -134,6 +136,68 @@ class PatternRenderServiceTests(TestCase):
         self.assertIn('--ds-radius-btn:999px', css)
         self.assertIn('--ds-accent:#0f766e', css)
         self.assertNotIn('layout', css)
+
+    #--- Studio: editores finos de site_theme sobre los hooks del diseño.
+    STUDIO_THEME = {
+        'surfaces':   {'card': '#F4F2EC', 'nav': '#111111', 'footer': '#1C1A17', 'hero': '#FF4B1F'},
+        'images':     {'ratio': 'wide', 'fit': 'contain', 'bg': '#EEEEEE', 'radius': 'md', 'border': 'bold'},
+        'background': {'type': 'gradient', 'value': 'linear-gradient(120deg,#111,#333)', 'overlay': 'soft'},
+        'buttons':    {'style': 'outline', 'shape': 'pill', 'size': 'lg', 'borderStyle': 'dotted'},
+        'typography': {'roles': {
+            'h2':     {'font': 'oswald', 'size': '2xl', 'weight': 700, 'tracking': 'tight'},
+            'price':  {'font': 'archivo-black', 'size': 'lg'},
+            'eyebrow': {'case': 'upper', 'tracking': 'wider'},
+        }},
+    }
+
+    def test_studio_theme_css_empty_without_sections(self):
+        self.assertEqual(studio_theme_css({}), '')
+        self.assertEqual(studio_theme_css({'palette': {'accent': '#123456'}}), '')
+        self.assertEqual(studio_theme_css(None), '')
+
+    def test_studio_theme_css_emits_surface_image_bg_button_role_rules(self):
+        css = studio_theme_css(self.STUDIO_THEME)
+        #Superficies sobre los hooks compartidos del documento.
+        self.assertIn('.ds-product, .ds-cat', css)
+        self.assertIn('background:#F4F2EC!important', css)
+        self.assertIn('[data-ds-pin="top"], header.top, header.head{background:#111111!important', css)
+        self.assertIn('footer, .foot{background:#1C1A17!important', css)
+        self.assertIn('section.hero, .hero{background:#FF4B1F!important', css)
+        #Marco de fotos de producto.
+        self.assertIn('.ds-product-img{aspect-ratio:16 / 10!important', css)
+        self.assertIn('object-fit:contain!important', css)
+        self.assertIn('border-radius:14px!important', css)
+        #Fondo + overlay.
+        self.assertIn('body, main{background:linear-gradient(120deg,#111,#333)!important}', css)
+        self.assertIn('body::after{content:"";position:fixed;inset:0;', css)
+        #Botones: estilo + borde + forma + tamaño.
+        self.assertIn('.btn, .svc-cta, .pdp-buy', css)
+        self.assertIn('border-style:dotted!important', css)
+        self.assertIn('border-radius:999px!important', css)
+        self.assertIn('min-height:54px!important', css)
+        #Roles tipográficos con la familia del catálogo.
+        self.assertIn("font-family:'Oswald', sans-serif", css)
+        self.assertIn("font-family:'Archivo Black', sans-serif", css)
+        self.assertIn('text-transform:uppercase!important', css)
+
+    def test_render_store_pattern_bakes_studio_css_for_premium(self):
+        DesignPattern.objects.all().delete()
+        store   =   _store(template = 'raiz', site_theme = self.STUDIO_THEME)
+        _grant(store.user, has_design_advanced = True, has_customization = True)
+        _pattern(slug = 'raiz')
+        doc     =   render_store_pattern(store)
+        self.assertIn('.ds-product-img{aspect-ratio', doc['css'])
+        self.assertIn('border-style:dotted', doc['css'])
+        self.assertIn("font-family:'Oswald'", doc['css'])
+
+    def test_render_store_pattern_strips_studio_css_without_plan(self):
+        DesignPattern.objects.all().delete()
+        store   =   _store(template = 'raiz', site_theme = self.STUDIO_THEME)
+        _pattern(slug = 'raiz')
+        doc     =   render_store_pattern(store)
+        self.assertNotIn('.ds-product-img', doc['css'])
+        self.assertNotIn('border-style:dotted', doc['css'])
+        self.assertNotIn('section.hero, .hero{background', doc['css'])
 
     def test_pattern_resolution_prefers_slug_then_template(self):
         DesignPattern.objects.all().delete()

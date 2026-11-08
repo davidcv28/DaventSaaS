@@ -1095,16 +1095,20 @@ def _contrast_ink(value):
     return '#191611' if luminance > 0.1833 else '#FFFDF8'
 
 
-def theme_css(customization, pattern = None):
+def theme_css(customization, pattern = None, site_theme = None):
     """
     Bloque `:root { --ds-* }` con lo que el estilo puede tocar. Los
     `effects` del estilo ya vienen saneados por `clean_style_effects`; acá
-    solo se traducen a custom properties.
+    solo se traducen a custom properties. `site_theme` permite pasar el
+    tema EFECTIVO (filtrado por plan) sin tocar el objeto customization.
     """
     style = None
     palette = {}
-    if customization is not None:
-        site_theme = customization.site_theme if isinstance(customization.site_theme, dict) else {}
+    if site_theme is None and customization is not None:
+        site_theme = getattr(customization, 'site_theme', None)
+    if not isinstance(site_theme, dict):
+        site_theme = {}
+    if customization is not None or site_theme:
         style = site_theme.get('style')
         if isinstance(site_theme.get('palette'), dict):
             palette = site_theme['palette']
@@ -1146,6 +1150,284 @@ def theme_css(customization, pattern = None):
     body = ''.join(f'{name}:{value};' for name, value in vars_.items() if value)
     return f':root{{{body}}}' if body else ''
 
+#=====================================================================
+# STUDIO — editores finos de `site_theme` sobre los hooks compartidos
+#=====================================================================
+# Los documentos de diseño no usan las clases .sp-* de la plantilla Vue:
+# comparten un vocabulario propio (.btn, .ds-product*, section.hero,
+# header fijado, footer). Estos selectores son el puente: el Studio
+# (surfaces/images/background/buttons/typography.roles) escribe reglas
+# !important sobre ellos, igual que data-st-* lo hace en store-page.css.
+_STUDIO_BTN_SEL   =   '.btn, .svc-cta, .pdp-buy, .nav-cta, .top-cta, .rail-btn, .deck-btn'
+_STUDIO_CARD_SEL  =   '.ds-product, .ds-cat, .ds-service, .ds-plan, .ds-faq, .ds-guar, .ds-offer, .ds-contact'
+_STUDIO_IMG_SEL   =   '.ds-product-img'
+#La barra superior se reconoce por el pin del puente (position:fixed) con
+#fallback a las clases top/head que usan los diseños sin pin.
+_STUDIO_NAV_SEL   =   '[data-ds-pin="top"], header.top, header.head'
+_STUDIO_FOOT_SEL  =   'footer, .foot'
+_STUDIO_HERO_SEL  =   'section.hero, .hero'
+#Rol tipográfico -> selector del documento (espejo del contrato v2).
+_STUDIO_ROLE_SEL  =   {
+    'display':  'section.hero h1, .hero h1, h1.display',
+    'h1':       'h1',
+    'h2':       'h2',
+    'h3':       'h3',
+    'body':     'body',
+    'lead':     '.lead, section.hero p, .hero p',
+    'eyebrow':  '.eyebrow, .kicker, [class*="kicker"], [class*="eyebrow"]',
+    'label':    '.label, [class*="label"]',
+    'quote':    'blockquote, .quote, q',
+    'price':    '.ds-product-price, .ds-product-amount, .ds-plan-price',
+    'nav':      '.nav a, nav a',
+    'button':   '.btn',
+    'footer':   'footer, .foot',
+}
+#Espejo de los mapas de frontend/src/studio/contract.js.
+_STUDIO_BTN_RADIUS    =   {'square': '8px', 'rounded': '14px', 'pill': '999px'}
+_STUDIO_BTN_SIZE      =   {'sm': ('38px', '16px', '13px'), 'md': ('46px', '22px', '14.5px'), 'lg': ('54px', '28px', '16px')}
+_STUDIO_IMG_ASPECT    =   {'square': '1 / 1', 'portrait': '4 / 5', 'tall': '3 / 4', 'wide': '16 / 10'}
+_STUDIO_IMG_RADIUS    =   {'none': '0', 'sm': '8px', 'md': '14px', 'lg': '20px'}
+_STUDIO_IMG_BORDER    =   {'none': '0', 'thin': '1px', 'bold': '2px'}
+_STUDIO_ROLE_SIZE     =   {'xs': '0.75rem', 'sm': '0.875rem', 'md': '1rem', 'lg': '1.25rem', 'xl': '1.5rem', '2xl': '2rem', '3xl': '2.75rem', 'display': 'clamp(2.5rem, 6vw, 4.5rem)'}
+_STUDIO_ROLE_TRACKING =   {'tighter': '-0.03em', 'tight': '-0.015em', 'normal': '0', 'wide': '0.04em', 'wider': '0.09em'}
+_STUDIO_ROLE_LEADING  =   {'tight': '1.08', 'snug': '1.25', 'normal': '1.55', 'relaxed': '1.75'}
+_STUDIO_ROLE_CASE     =   {'none': 'none', 'upper': 'uppercase'}
+_STUDIO_OVERLAY_CSS   =   {'soft': 'rgba(9, 12, 24, .32)', 'strong': 'rgba(9, 12, 24, .6)'}
+#Familias del catálogo de roles (ai_design_typography.FONT_FAMILIES):
+#slug -> (query css2 de Google Fonts, stack font-family). El documento no
+#puede cargar hojas externas (style-src 'unsafe-inline'), así que las
+#@font-face se descargan acá y viajan inline — los .woff2 de gstatic sí
+#entran por font-src https:.
+_STUDIO_FONT_FACE = {
+    'inter':                 ('Inter:opsz,wght@14..32,100..900', 'Inter, system-ui, sans-serif'),
+    'manrope':               ('Manrope:wght@400..800', "'Manrope', sans-serif"),
+    'figtree':               ('Figtree:wght@400..700', "'Figtree', system-ui, sans-serif"),
+    'dm-sans':               ('DM+Sans:wght@400..800', "'DM Sans', sans-serif"),
+    'space-grotesk':         ('Space+Grotesk:wght@400..700', "'Space Grotesk', sans-serif"),
+    'archivo':               ('Archivo:wdth,wght@62..125,400..900', "'Archivo', 'Helvetica Neue', sans-serif"),
+    'sora':                  ('Sora:wght@400..800', "'Sora', sans-serif"),
+    'work-sans':             ('Work+Sans:wght@400..800', "'Work Sans', sans-serif"),
+    'outfit':                ('Outfit:wght@300..900', "'Outfit', system-ui, sans-serif"),
+    'plus-jakarta-sans':     ('Plus+Jakarta+Sans:wght@300..800', "'Plus Jakarta Sans', system-ui, sans-serif"),
+    'nunito':                ('Nunito:wght@400..800', "'Nunito', sans-serif"),
+    'raleway':               ('Raleway:wght@400..800', "'Raleway', sans-serif"),
+    'playfair-display':      ('Playfair+Display:ital,wght@0,400..800;1,400..800', "'Playfair Display', Georgia, serif"),
+    'fraunces':              ('Fraunces:ital,opsz,wght@0,9..144,300..900;1,9..144,300..900', "'Fraunces', Georgia, serif"),
+    'lora':                  ('Lora:ital,wght@0,400..700;1,400..700', "'Lora', Georgia, serif"),
+    'cormorant-garamond':    ('Cormorant+Garamond:ital,wght@0,400;0,500;0,600;0,700;1,400', "'Cormorant Garamond', Georgia, serif"),
+    'dm-serif-display':      ('DM+Serif+Display', "'DM Serif Display', Georgia, serif"),
+    'libre-baskerville':     ('Libre+Baskerville:ital,wght@0,400;0,700;1,400', "'Libre Baskerville', Georgia, serif"),
+    'cinzel':                ('Cinzel:wght@400..800', "'Cinzel', Georgia, serif"),
+    'oswald':                ('Oswald:wght@400..700', "'Oswald', sans-serif"),
+    'archivo-black':         ('Archivo+Black', "'Archivo Black', sans-serif"),
+    'bebas-neue':            ('Bebas+Neue', "'Bebas Neue', sans-serif"),
+    'space-mono':            ('Space+Mono:ital,wght@0,400;0,700;1,400;1,700', "'Space Mono', monospace"),
+    'jetbrains-mono':        ('JetBrains+Mono:ital,wght@0,400..800;1,400..800', "'JetBrains Mono', monospace"),
+}
+_GOOGLE_FONTS_UA =   ('Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 '
+                     '(KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36')
+
+def _studio_font_slugs(site_theme):
+    """Slugs del catálogo usados por typography.roles (para @font-face)."""
+    typo    =   site_theme.get('typography') if isinstance(site_theme.get('typography'), dict) else {}
+    roles   =   typo.get('roles') if isinstance(typo.get('roles'), dict) else {}
+    out     =   []
+    for spec in roles.values():
+        slug    =   spec.get('font') if isinstance(spec, dict) else None
+        if slug in _STUDIO_FONT_FACE and slug not in out:
+            out.append(slug)
+    return out
+
+def studio_font_css(site_theme):
+    """
+    @font-face de las familias elegidas en los roles tipográficos: el CSS2
+    de Google Fonts llega con URLs de gstatic (font-src https: las acepta)
+    y se inlinea porque style-src no permite hojas externas. Cacheado por
+    query; si Google no responde se omite (la pila cae a la siguiente).
+    """
+    import urllib.request
+    from django.core.cache import cache
+
+    parts   =   []
+    for slug in _studio_font_slugs(site_theme):
+        query, _family =   _STUDIO_FONT_FACE[slug]
+        key     =   f'dsfont:{query}'
+        css     =   cache.get(key)
+        if css is None:
+            try:
+                req =   urllib.request.Request(
+                    f'https://fonts.googleapis.com/css2?family={query}&display=swap',
+                    headers = {'User-Agent': _GOOGLE_FONTS_UA},
+                )
+                with urllib.request.urlopen(req, timeout = 4) as res:
+                    css =   res.read().decode('utf-8', 'replace')
+            except Exception:
+                css =   ''
+            #Lo que no responde se reintenta en 5 min; lo bueno una semana.
+            cache.set(key, css, 300 if not css else 60 * 60 * 24 * 7)
+        if css:
+            parts.append(css)
+    return '\n'.join(parts)
+
+def _studio_ink(value):
+    """
+    Tinta sobre una superficie del Studio: los dos extremos de
+    `_contrast_ink` (casi tinta / casi papel) según luminancia — espejo
+    exacto del `textOn` simplificado que usa el preview en vivo.
+    """
+    match = re.fullmatch(r'#([0-9a-fA-F]{6}|[0-9a-fA-F]{3})', str(value or '').strip())
+    if not match:
+        return '#191611'
+    digits = match.group(1)
+    if len(digits) == 3:
+        digits = ''.join(ch * 2 for ch in digits)
+    r, g, b = (int(digits[i:i + 2], 16) / 255 for i in (0, 2, 4))
+    linear = [c / 12.92 if c <= 0.03928 else ((c + 0.055) / 1.055) ** 2.4 for c in (r, g, b)]
+    luminance = 0.2126 * linear[0] + 0.7152 * linear[1] + 0.0722 * linear[2]
+    return '#191611' if luminance > 0.1833 else '#FFFDF8'
+
+def studio_theme_css(site_theme):
+    """
+    Reglas del Studio sobre los hooks compartidos de los documentos de
+    diseño (`.btn`, `.ds-product*`, `section.hero`, barra fijada, footer,
+    body). Espejo de `patternStudioCss` del frontend: misma entrada
+    (site_theme parcial ya filtrado por plan), misma salida CSS — el
+    documento publicado la hornea en `css` y la vista previa del Studio
+    la inyecta en vivo por postMessage.
+    """
+    theme   =   site_theme if isinstance(site_theme, dict) else {}
+    def sect(name):
+        value   =   theme.get(name)
+        return  value if isinstance(value, dict) else {}
+
+    surfaces    =   sect('surfaces')
+    images      =   sect('images')
+    buttons     =   sect('buttons')
+    background  =   sect('background')
+    roles       =   sect('typography').get('roles')
+    roles       =   roles if isinstance(roles, dict) else {}
+
+    rules   =   []
+
+    #--- Tipografía por rol: familia del catálogo (con su @font-face en
+    #studio_font_css), tamaño, peso, tracking, leading y caja. Va PRIMERO:
+    #a igual especificidad las reglas de secciones (botones, superficies)
+    #ganan después — p.ej. buttons.size manda sobre el font-size del rol
+    #'button' pero la familia/peso del rol se conservan.
+    for role, sel in _STUDIO_ROLE_SEL.items():
+        spec    =   roles.get(role)
+        if not isinstance(spec, dict):
+            continue
+        decl    =   []
+        font    =   spec.get('font')
+        if font in _STUDIO_FONT_FACE:
+            decl.append(f'font-family:{_STUDIO_FONT_FACE[font][1]}')
+        if spec.get('size') in _STUDIO_ROLE_SIZE:
+            decl.append(f'font-size:{_STUDIO_ROLE_SIZE[spec["size"]]}')
+        weight  =   spec.get('weight')
+        if isinstance(weight, (int, float)) and 300 <= weight <= 900:
+            decl.append(f'font-weight:{int(round(weight / 100) * 100)}')
+        if spec.get('tracking') in _STUDIO_ROLE_TRACKING:
+            decl.append(f'letter-spacing:{_STUDIO_ROLE_TRACKING[spec["tracking"]]}')
+        if spec.get('leading') in _STUDIO_ROLE_LEADING:
+            decl.append(f'line-height:{_STUDIO_ROLE_LEADING[spec["leading"]]}')
+        if spec.get('case') in _STUDIO_ROLE_CASE:
+            decl.append(f'text-transform:{_STUDIO_ROLE_CASE[spec["case"]]}')
+        if decl:
+            body    =   ';'.join(f'{prop}!important' for prop in decl)
+            rules.append(f'{sel}{{{body}}}')
+
+    #--- Superficies: fondo propio + tinta derivada (AA por luminancia).
+    surf_sel    =   {'card': _STUDIO_CARD_SEL, 'nav': _STUDIO_NAV_SEL,
+                     'footer': _STUDIO_FOOT_SEL, 'hero': _STUDIO_HERO_SEL}
+    for key, sel in surf_sel.items():
+        hexv    =   _text(surfaces.get(key), 7)
+        if not hexv.startswith('#'):
+            continue
+        ink     =   _studio_ink(hexv)
+        rules.append(f'{sel}{{background:{hexv}!important;color:{ink}!important}}')
+
+    #--- Marco de fotos de producto (.ds-product-img es el <img>/<span>).
+    img_decl   =   {}
+    if images.get('ratio') in _STUDIO_IMG_ASPECT:
+        img_decl['aspect-ratio']    =   _STUDIO_IMG_ASPECT[images['ratio']]
+    if images.get('fit') in ('cover', 'contain'):
+        img_decl['object-fit']      =   images['fit']
+    img_bg     =   _text(images.get('bg'), 7)
+    if img_bg.startswith('#'):
+        img_decl['background']      =   img_bg
+    if images.get('radius') in _STUDIO_IMG_RADIUS:
+        img_decl['border-radius']   =   _STUDIO_IMG_RADIUS[images['radius']]
+    if images.get('border') in _STUDIO_IMG_BORDER:
+        bw  =   _STUDIO_IMG_BORDER[images['border']]
+        img_decl['border']          =   '0' if bw == '0' else f'{bw} solid var(--ds-border, currentColor)'
+    if img_decl:
+        body    =   ';'.join(f'{prop}:{val}!important' for prop, val in img_decl.items())
+        rules.append(f'{_STUDIO_IMG_SEL}{{{body}}}')
+
+    #--- Fondo de página: 'solid' ya viaja por palette.bg (--ds-bg);
+    #gradient/mesh/pattern traen la declaración CSS saneada al guardar e
+    #image una URL propia de la tienda.
+    bg_type  =   background.get('type')
+    bg_value =   _text(background.get('value'), 400)
+    if bg_type == 'image' and bg_value:
+        safe    =   bg_value.replace('"', '%22')
+        rules.append(f'body, main{{background:url("{safe}") center / cover no-repeat!important}}')
+    elif bg_type in ('gradient', 'mesh', 'pattern') and bg_value:
+        rules.append(f'body, main{{background:{bg_value}!important}}')
+    overlay    =   _STUDIO_OVERLAY_CSS.get(background.get('overlay'), '')
+    if overlay:
+        rules.append(
+            'body::after{content:"";position:fixed;inset:0;'
+            f'background:{overlay};pointer-events:none;z-index:2147483000}}'
+        )
+
+    #--- Botones: estilo de relleno, borde, forma y tamaño sobre .btn y
+    #los CTA-link propios de cada diseño (mismo alcance que .sp-btn).
+    btn_style  =   buttons.get('style')
+    if btn_style in ('solid', 'outline', 'ghost', 'gradient', 'transparent'):
+        if btn_style == 'solid':
+            decl    =   'background:var(--ds-accent, currentColor)!important;'
+            decl    +=  'color:var(--ds-accent-ink, #fff)!important;'
+            decl    +=  'border-color:transparent!important'
+        elif btn_style == 'outline':
+            decl    =   'background:transparent!important;'
+            decl    +=  'color:var(--ds-accent, currentColor)!important;'
+            decl    +=  'border-color:var(--ds-accent, currentColor)!important'
+        elif btn_style == 'ghost':
+            decl    =   'background:color-mix(in srgb, var(--ds-accent, currentColor) 12%, transparent)!important;'
+            decl    +=  'color:var(--ds-accent, currentColor)!important;'
+            decl    +=  'border-color:transparent!important'
+        elif btn_style == 'gradient':
+            decl    =   'background:linear-gradient(120deg, var(--ds-primary, var(--ds-accent, currentColor)), var(--ds-secondary, var(--ds-accent, currentColor)))!important;'
+            decl    +=  'color:#fff!important;'
+            decl    +=  'border-color:transparent!important'
+        else:  # transparent
+            decl    =   'background:color-mix(in srgb, var(--ds-accent, currentColor) 8%, transparent)!important;'
+            decl    +=  'color:var(--ds-accent, currentColor)!important;'
+            decl    +=  'border-color:transparent!important'
+        rules.append(f'{_STUDIO_BTN_SEL}{{{decl}}}')
+    btn_border  =   buttons.get('borderStyle')
+    if btn_border in ('solid', 'dashed', 'dotted', 'none'):
+        if btn_border == 'none':
+            decl    =   'border-color:transparent!important'
+        else:
+            width   =   '1.5px' if btn_border == 'solid' else '2px'
+            decl    =   (f'border-style:{btn_border}!important;'
+                         f'border-width:{width}!important;'
+                         'border-color:color-mix(in srgb, currentColor 72%, transparent)!important')
+        rules.append(f'{_STUDIO_BTN_SEL}{{{decl}}}')
+    if buttons.get('shape') in _STUDIO_BTN_RADIUS:
+        rules.append(f'{_STUDIO_BTN_SEL}{{border-radius:{_STUDIO_BTN_RADIUS[buttons["shape"]]}!important}}')
+    if buttons.get('size') in _STUDIO_BTN_SIZE:
+        h, px, fs   =   _STUDIO_BTN_SIZE[buttons['size']]
+        rules.append(
+            f'{_STUDIO_BTN_SEL}{{min-height:{h}!important;'
+            f'padding-inline:{px}!important;font-size:{fs}!important}}'
+        )
+
+    return '\n'.join(rules)
+
 #=========================================
 # RESOLUCION DEL PATRON DE UNA TIENDA
 #=========================================
@@ -1168,6 +1450,26 @@ def pattern_for_template(template):
             return by_template
     return DesignPattern.objects.filter(is_default = True, is_active = True).first()
 
+def _effective_site_theme(store, site_theme):
+    """
+    site_theme filtrado por el plan vigente de la tienda (espejo del
+    serializer público). Si la consulta de beneficios falla se devuelve
+    lo guardado: mejor un tema de más que un documento sin estilos.
+    """
+    try:
+        from StoreApp.domains.stores.services.services import profile_has_benefit
+        from StoreApp.domains.stores.site_theme import filter_site_theme
+
+        user    =   getattr(store, 'user', None)
+        return  filter_site_theme(
+            site_theme,
+            has_plus     =   profile_has_benefit(user, 'has_design_plus'),
+            has_advanced =   profile_has_benefit(user, 'has_design_advanced'),
+            has_style    =   profile_has_benefit(user, 'has_customization'),
+        )
+    except Exception:
+        return site_theme if isinstance(site_theme, dict) else {}
+
 def render_store_pattern(store, customization = None, product = None):
     """
     Documento del patrón resuelto contra la tienda:
@@ -1189,7 +1491,15 @@ def render_store_pattern(store, customization = None, product = None):
     html = pattern.render(context, raw = raw)
     from StoreApp.domains.catalog.models import Product
 
-    site_theme = customization.site_theme if customization is not None and isinstance(customization.site_theme, dict) else {}
+    site_theme_raw = (
+        customization.site_theme
+        if customization is not None and isinstance(getattr(customization, 'site_theme', None), dict)
+        else {}
+    )
+    #Tema EFECTIVO según el plan vigente — el mismo filtro que aplica la
+    #API pública de la plantilla Vue: sin has_design_advanced las secciones
+    #premium del Studio no se publican en el documento.
+    site_theme = _effective_site_theme(store, site_theme_raw)
     style = site_theme.get('style') if isinstance(site_theme.get('style'), dict) else {}
     #Las páginas apagadas en "Qué mostrar" también se apagan en el
     #documento: se quita la superficie (la ruta sigue con la plantilla
@@ -1222,7 +1532,15 @@ def render_store_pattern(store, customization = None, product = None):
         'products_total': Product.objects.filter(store = store, is_active = True).count(),
         'products_shown': FRAGMENT_LIMIT,
         'html': html,
-        'css': f'{theme_css(customization, pattern)}\n{flags_css}\n{pattern.css or ""}',
+        #theme_css con el tema efectivo + las reglas del Studio (superficies,
+        #fotos, fondo, botones, roles) y las @font-face de las familias
+        #elegidas — todo inline por el CSP del documento.
+        'css': (
+            f'{theme_css(customization, pattern, site_theme)}\n'
+            f'{studio_font_css(site_theme)}\n'
+            f'{studio_theme_css(site_theme)}\n'
+            f'{flags_css}\n{pattern.css or ""}'
+        ),
         'js': pattern.js or '',
         #Imágenes críticas del primer viewport: el documento las preloadea
         #en el head (portada del hero y logo) en vez de descubrirlas al

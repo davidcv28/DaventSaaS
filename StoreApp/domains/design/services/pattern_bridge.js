@@ -276,6 +276,18 @@
       frameBox = { top: Number(d.top) || 0, bottom: Number(d.bottom) || 0, vh: Number(d.vh) || 0 }
       pinFixed()
     }
+    /* Studio en vivo: el host manda el CSS de los editores finos
+     * (surfaces/fotos/fondo/botones/roles) — se inlinea en un <style>
+     * propio que gana por !important, igual que la hoja horneada. */
+    if (d.type === 'davent:ds-studio-css') {
+      var st = document.getElementById('ds-studio-css')
+      if (!st) {
+        st = document.createElement('style')
+        st.id = 'ds-studio-css'
+        document.head.appendChild(st)
+      }
+      st.textContent = typeof d.css === 'string' ? d.css : ''
+    }
   })
 
   document.addEventListener('click', function (e) {
