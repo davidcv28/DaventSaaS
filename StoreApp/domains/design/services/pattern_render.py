@@ -1184,10 +1184,21 @@ def theme_css(customization, pattern = None, site_theme = None):
     }
     #Acento como COLOR DE TEXTO (botones outline/ghost/transparent, enlaces):
     #se ajusta a AA contra la superficie efectiva para que un acento claro
-    #nunca deje letras ilegibles. Sin superficie conocida no se emite y el
-    #CSS cae al --ds-accent de siempre.
-    surface_bg  =   _text(palette.get('surface'), 7) or _text(palette.get('bg'), 7)
-    if surface_bg.startswith('#') and str(color).startswith('#'):
+    #nunca deje letras ilegibles. El texto se apoya sobre --ds-bg y
+    #--ds-surface por igual, así que se corrige contra el fondo más duro
+    # (menor ratio con el acento): si no, un bg apenas más oscuro que la
+    #surface deja el texto por debajo de AA. Sin fondo conocido no se emite
+    #y el CSS cae al --ds-accent de siempre.
+    surface_bg  =   ''
+    if str(color).startswith('#'):
+        backs       =   [
+            c for c in (_text(palette.get('bg'), 7), _text(palette.get('surface'), 7))
+            if _hex_rgb(c)
+        ]
+        rgb_c       =   _hex_rgb(color)
+        if backs and rgb_c:
+            surface_bg  =   min(backs, key = lambda c: _ratio(rgb_c, _hex_rgb(c)))
+    if surface_bg:
         accent_text    =   _fix_contrast(color, surface_bg)
         if accent_text:
             vars_['--ds-accent-text'] = accent_text

@@ -160,6 +160,24 @@ class PatternRenderServiceTests(TestCase):
         css2            =   theme_css(store.customization)
         self.assertIn('--ds-accent-text:#f5d90a', css2)
 
+    def test_theme_css_accent_text_covers_darker_bg(self):
+        #bg apenas más oscuro que surface: el texto de acento se usa sobre
+        #los dos fondos, así que la corrección se hace contra el más duro
+        # (antes solo miraba surface → 4.33 sobre #EDEBE4 en sastreria).
+        store           =   _store(site_theme = {
+            'palette': {'accent': '#ff4b1f', 'bg': '#edebe4', 'surface': '#f7f4ee'},
+        })
+        store.customization.accent_custom   =   '#ff4b1f'
+        store.customization.save(update_fields = ['accent_custom'])
+        css             =   theme_css(store.customization)
+        m               =   re.search(r'--ds-accent-text:(#[0-9a-f]{6})', css)
+        self.assertIsNotNone(m)
+        for back in ('#edebe4', '#f7f4ee'):
+            self.assertGreaterEqual(
+                _ratio(_hex_rgb(m.group(1)), _hex_rgb(back)), 4.5,
+                f'accent-text {m.group(1)} no llega a AA sobre {back}',
+            )
+
     def test_fix_contrast_matches_contract(self):
         #Espejo de fixContrast() del contrato: ya legible no se toca;
         #amarillo sobre blanco cae a un oliva AA; sin hex válido, ''.
