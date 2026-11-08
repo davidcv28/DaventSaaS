@@ -42,6 +42,11 @@
 - Todo interactivo declara: default, hover, focus-visible (anillo de acento
   2px, offset 3px), active (scale .98), disabled/loading (spinner por
   pseudo-elemento), vacío (`:empty{display:none}`).
+- Chrome fijo transparente sobre el hero (header con `color:#fff` hasta
+  `is-scrolled`): solo es válido si el hero garantiza fondo oscuro — foto
+  con velo o fallback `--ink`. Si el hero puede quedar claro (p. ej.
+  `hero-noimg` sin portada), el chrome pasa a sólido/tinta o el hero fija
+  un fondo oscuro propio: texto claro sobre hero claro = marca invisible.
 - Botones: min-height 46px (44+ táctil), filo o brillo que viaja al hover,
   flecha que se desplaza (`translateX`) nunca aparece de golpe.
 - Tarjetas: borde `--line`, radio del token, elevación por sombra difusa al
@@ -55,7 +60,12 @@
   `color-mix(bg 96%,transparent)`.
 - Sombras grandes solo en `:hover`; sombra estática barata el resto del tiempo.
 - Un solo listener de scroll `{passive:true}` con rAF para progreso/estado.
-- Sin frameworks ni requests externos dentro del documento del patrón.
+- Sin frameworks ni requests externos de datos dentro del documento del
+  patrón (`connect-src 'none'`). Excepción prevista por la CSP: fuentes e
+  imágenes `https:` (`font-src`/`img-src`) — las tipografías del diseño
+  viajan como `@font-face` a `fonts.gstatic.com` dentro del `<style>`;
+  un `<link>` a Google Fonts está muerto (`style-src 'unsafe-inline'` no
+  admite hojas externas).
 
 ## 6. Anti-patrones prohibidos
 
@@ -72,6 +82,14 @@
 - Claro y oscuro: contraste AA en texto y estados.
 - Estados vacíos: sin huecos (secciones/CTA/filas se apagan con `:has`/`:empty`).
 - `prefers-reduced-motion`: página estática y completa.
+- Contraste AA **medido** con `npm run visual:qa` (`--only=<slug>`): texto
+  normal ≥4.5 y grande ≥3.0 **sobre `--bg` y sobre `--surface`**. El
+  `--muted` tiene dos fuentes que deben dar AA en ambas: el fallback del
+  documento `var(--ds-muted,#…)` y `tokens.palette.muted` del estilo en
+  `seed_data.json` (el `--ds-*` del tema pisa el fallback — tocar solo el
+  fallback no arregla una tienda con estilo aplicado). Ojo: el audit no ve
+  underlays absolutos (`.hero-media`, header transparente sobre hero): un
+  FAIL de ratio ~1 sobre foto puede ser falso positivo, verificar a ojo.
 
 ## 8. ModernTec — lenguaje "instrumento de laboratorio"
 
