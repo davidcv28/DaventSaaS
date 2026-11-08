@@ -102,13 +102,15 @@ export const useCatalogStore = defineStore('catalog', () => {
   }
 
   // ----- Marcas -----
+  // Devuelve el resultado de run ({ok, data}) para que el alta pueda encadenar
+  // la subida del logo con el id del item creado.
   async function saveBrand(pk, payload) {
     const res = await run(
       () => pk ? catalogApi.updateBrand(pk, payload) : catalogApi.createBrand(payload),
       'La marca se guardó correctamente.'
     )
     if (res.ok) brands.value = await catalogApi.listBrands()
-    return res.ok
+    return res
   }
   async function removeBrand(pk) {
     const res = await run(() => catalogApi.deleteBrand(pk), 'La marca se eliminó.')

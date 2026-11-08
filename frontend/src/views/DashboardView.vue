@@ -903,6 +903,12 @@ const brandImageInput = ref(null)
 const brandImageTarget = ref(null)
 const brandImageBusy = ref(null)
 const brandImageErr = ref('')
+// Logo opcional al crear la marca: queda elegido hasta el "Agregar" y se
+// sube después del alta por /brands/<id>/image/ (WebP con alfa, 2 MB).
+const brandFormImage = ref(null)
+const brandFormPreview = ref('')
+const brandFormImageInput = ref(null)
+const brandFormErr = ref('')
 // Edición de categoría: el mismo form agrega o guarda según haya id cargado.
 const taxonomyEditing = ref(null)
 
@@ -1565,14 +1571,49 @@ async function addTaxonomy(kind) {
     payload.feature_schema = schema
   }
   taxonomyBusy[kind] = true
-  const ok = kind === 'category'
-    ? await catalog.saveCategory(taxonomyEditing.value, payload)
-    : await catalog.saveBrand(null, payload)
-  taxonomyBusy[kind] = false
-  if (ok) {
-    taxonomyForm[kind] = ''
-    if (kind === 'category') cancelCategoryEdit()
-  } else taxonomyErr[kind] = catalog.fieldErrors.name || catalog.fieldErrors.feature_schema || catalog.lastError
+  if (kind === 'category') {
+    const ok = await catalog.saveCategory(taxonomyEditing.value, payload)
+    taxonomyBusy.category = false
+    if (ok) {
+      taxonomyForm.category = ''
+      cancelCategoryEdit()
+    } else taxonomyErr.category = catalog.fieldErrors.name || catalog.fieldErrors.feature_schema || catalog.lastError
+    return
+  }
+  const res = await catalog.saveBrand(null, payload)
+  taxonomyBusy.brand = false
+  if (!res.ok) {
+    taxonomyErr.brand = catalog.fieldErrors.name || catalog.lastError
+    return
+  }
+  // La marca ya existe: si venía logo elegido se sube por el endpoint de
+  // imagen (multipart -> normalize_image). Si falla, la marca queda creada
+  // y el error se muestra abajo para reintentar desde la fila.
+  const image = brandFormImage.value
+  const brandId = res.data?.item?.id
+  if (image && brandId) {
+    const up = await catalog.saveBrandImage(brandId, image)
+    if (!up.ok) brandImageErr.value = catalog.lastError
+  }
+  taxonomyForm.brand = ''
+  clearBrandFormImage()
+}
+
+function onBrandFormImagePicked(event) {
+  const file = event.target.files?.[0]
+  event.target.value = ''
+  if (!file) return
+  brandFormErr.value = validateLogoFile(file)
+  if (brandFormErr.value) return
+  if (brandFormPreview.value) URL.revokeObjectURL(brandFormPreview.value)
+  brandFormImage.value = file
+  brandFormPreview.value = URL.createObjectURL(file)
+}
+function clearBrandFormImage() {
+  if (brandFormPreview.value) URL.revokeObjectURL(brandFormPreview.value)
+  brandFormImage.value = null
+  brandFormPreview.value = ''
+  brandFormErr.value = ''
 }
 
 // Carga la categoría en el form para editar nombre y plantilla de
@@ -4225,8 +4266,31 @@ async function changePassword() {
               <small class="inv-head-note">Filtran tus productos por marca en el menú de tu página</small>
             </div>
             <div class="tax-add">
-              <AppInput v-model="taxonomyForm.brand" label="Nueva marca" name="brand_name" placeholder="Ej. Nike" :error="taxonomyErr.brand" />
-              <AppButton :loading="taxonomyBusy.brand" @click="addTaxonomy('brand')">Agregar</AppButton>
+              <div class="tax-fields">
+                <AppInput v-model="taxonomyForm.brand" label="Nueva marca" name="brand_name" placeholder="Ej. Nike" :error="taxonomyErr.brand" />
+                <div class="field">
+                  <label>Logo <small class="tab-sub">(opcional)</small></label>
+                  <div class="brand-logo-pick">
+                    <span class="brand-logo-thumb">
+                      <img v-if="brandFormPreview" :src="brandFormPreview" alt="Logo de la marca" />
+                      <AppIcon v-else name="image" :size="18" />
+                    </span>
+                    <span class="brand-logo-meta">
+                      <strong>{{ brandFormImage ? brandFormImage.name : 'Sin imagen' }}</strong>
+                      <small>PNG, JPG, WebP o GIF de hasta 2 MB</small>
+                    </span>
+                    <button type="button" class="btn ghost btn-auto" @click="brandFormImageInput?.click()">
+                      <AppIcon name="upload" :size="14" /> {{ brandFormImage ? 'Cambiar' : 'Elegir' }}
+                    </button>
+                    <button v-if="brandFormImage" type="button" class="icon-btn danger" aria-label="Quitar imagen" @click="clearBrandFormImage"><AppIcon name="x" :size="15" /></button>
+                  </div>
+                  <input ref="brandFormImageInput" type="file" class="sr-only" :accept="LOGO_ACCEPT_TYPES" aria-label="Logo de la marca" @change="onBrandFormImagePicked" />
+                  <p v-if="brandFormErr" class="field-error" role="alert">{{ brandFormErr }}</p>
+                </div>
+                <div class="tax-actions">
+                  <AppButton :loading="taxonomyBusy.brand" class="btn-auto" @click="addTaxonomy('brand')">Agregar marca</AppButton>
+                </div>
+              </div>
             </div>
             <p class="hint">Logo opcional por marca: PNG, JPG, WebP o GIF de hasta 2 MB. Se convierte a WebP con fondo transparente.</p>
             <ul v-if="catalog.brands.length" class="tax-list">
