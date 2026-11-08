@@ -11,7 +11,7 @@
 // Cada control escribe solo su clave: lo no tocado hereda el look del
 // diseño/estilo elegido y el tema guardado queda parcial y limpio.
 import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue'
-import { normalizeHex } from '../../studio/contract.js'
+import { normalizeHex, inkOn } from '../../studio/contract.js'
 import { STORE_FONTS, ensureStoreFont } from '../../api/stores.api.js'
 import {
   buildGradient, buildMesh, buildPattern, parseGradient,
@@ -38,6 +38,11 @@ onMounted(() => {
   window.addEventListener('keydown', onKeydown)
   document.body.style.overflow = 'hidden'
   nextTick(() => closeBtn.value?.focus())
+  // Las muestras «Aa» de cada rol necesitan su familia cargada en el dashboard.
+  ROLE_ROWS.forEach((r) => {
+    const f = roleVal(r.role, 'font')
+    if (f && STORE_FONTS[f]) ensureStoreFont(f)
+  })
 })
 onBeforeUnmount(() => {
   window.removeEventListener('keydown', onKeydown)
@@ -283,6 +288,84 @@ function clearBackground() {
 // 5. Botones (buttons: style/shape/size/borderStyle)
 // ===========================================================================
 const BTNS = computed(() => theme.value.buttons || {})
+
+// ===========================================================================
+// Navegación del sidebar: acordeón de secciones + previews en vivo
+// ===========================================================================
+const SECTIONS = [
+  { id: 'surfaces', icon: 'palette', tone: 'violet', title: 'Colores', sub: 'Superficies', desc: 'Colores propios para las superficies de la página. Lo que no toques hereda el look de tu diseño.' },
+  { id: 'type', icon: 'type', tone: 'blue', title: 'Tipografía', sub: 'Fuentes por área', desc: 'Cada rol tiene su propia familia, tamaño, peso, interletraje, interlineado y caja. «Heredar» vuelve al estilo del diseño.' },
+  { id: 'media', icon: 'image', tone: 'emerald', title: 'Fotos', sub: 'Marco de producto', desc: 'El marco de las fotos en las tarjetas: proporción, encaje, fondo detrás, esquinas y borde.' },
+  { id: 'bg', icon: 'monitor', tone: 'amber', title: 'Fondo', sub: 'El fondo de la web', desc: 'Qué lleva el fondo detrás de todo: color, degradado, malla, patrón o una imagen tuya.' },
+  { id: 'buttons', icon: 'sliders', tone: 'rose', title: 'Botones', sub: 'Estilo y forma', desc: 'Estilo, forma, tamaño y borde de todos los botones de la web.' }
+]
+const secMeta = (id) => SECTIONS.find((s) => s.id === id)
+const openSection = ref('surfaces')
+function toggleSection(id) { openSection.value = openSection.value === id ? null : id }
+// Cuántos ajustes propios tiene cada sección — el numerito del encabezado.
+const customCount = computed(() => ({
+  surfaces: Object.keys(theme.value.surfaces || {}).length,
+  type: Object.keys(theme.value.typography?.roles || {}).length,
+  media: Object.keys(theme.value.images || {}).length,
+  bg: theme.value.background ? 1 : 0,
+  buttons: Object.keys(theme.value.buttons || {}).length
+}))
+
+// Muestra «Aa» de cada rol: refleja familia/tamaño/peso/tracking/caja al instante.
+const ROLE_SAMPLE_SIZE = { xs: 10, sm: 11, md: 12, lg: 14, xl: 16, '2xl': 18, '3xl': 21, display: 24 }
+const ROLE_SAMPLE_TRACK = { tighter: '-0.04em', tight: '-0.02em', normal: '0', wide: '0.05em', wider: '0.1em' }
+function roleSampleStyle(role) {
+  const font = roleVal(role, 'font')
+  return {
+    fontFamily: STORE_FONTS[font]?.family || 'inherit',
+    fontSize: `${ROLE_SAMPLE_SIZE[roleVal(role, 'size')] || 12}px`,
+    fontWeight: roleVal(role, 'weight') || 400,
+    letterSpacing: ROLE_SAMPLE_TRACK[roleVal(role, 'tracking')] || '0',
+    textTransform: roleVal(role, 'case') === 'upper' ? 'uppercase' : 'none'
+  }
+}
+
+// Botón de muestra que refleja estilo/forma/tamaño/borde elegidos.
+const accentColor = computed(() => normalizeHex(pal.value.accent) || '#4f46e5')
+const btnSampleStyle = computed(() => {
+  const b = BTNS.value
+  const style = b.style || 'solid'
+  const shape = b.shape || 'pill'
+  const size = b.size || 'md'
+  const bs = b.borderStyle || 'solid'
+  const acc = accentColor.value
+  const ink = inkOn(acc)
+  const border = bs === 'none' ? 'none' : `1.5px ${bs} `
+  const base = {
+    display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
+    borderRadius: shape === 'pill' ? '999px' : shape === 'rounded' ? '12px' : '6px',
+    padding: size === 'sm' ? '7px 14px' : size === 'lg' ? '13px 26px' : '10px 20px',
+    fontSize: size === 'sm' ? '12.5px' : size === 'lg' ? '15.5px' : '14px',
+    fontWeight: 650, letterSpacing: '.01em', whiteSpace: 'nowrap'
+  }
+  if (style === 'outline') return { ...base, background: 'transparent', color: acc, border: `${border}${acc}` }
+  if (style === 'ghost') return { ...base, background: `color-mix(in srgb, ${acc} 12%, transparent)`, color: acc, border: `${border}color-mix(in srgb, ${acc} 35%, transparent)` }
+  if (style === 'gradient') return { ...base, background: `linear-gradient(135deg, ${acc}, ${normalizeHex(pal.value.secondary) || acc})`, color: '#fff', border: `${border}rgba(255,255,255,.4)` }
+  if (style === 'transparent') return { ...base, background: 'transparent', color: acc, border: `${border}${acc}` }
+  return { ...base, background: acc, color: ink, border: `${border}${ink}` }
+})
+
+// Marco de foto simulado: proporción + fondo + esquinas + borde + encuadre.
+const FRAME_RATIO = { square: '1 / 1', portrait: '4 / 5', tall: '3 / 4', wide: '16 / 10' }
+const FRAME_RADIUS = { none: '0', sm: '6px', md: '12px', lg: '20px' }
+const FRAME_BORDER = { thin: '1px', bold: '3px' }
+const frameSampleStyle = computed(() => {
+  const img = IMG.value
+  return {
+    aspectRatio: FRAME_RATIO[img.ratio] || '1 / 1',
+    background: normalizeHex(img.bg) || 'var(--surface, #eef1f6)',
+    borderRadius: FRAME_RADIUS[img.radius] || '10px',
+    border: img.border && img.border !== 'none'
+      ? `${FRAME_BORDER[img.border] || '1px'} solid var(--ink-3, #94a3b8)`
+      : '1px dashed var(--line-strong, #cbd5e1)'
+  }
+})
+
 const BTN_STYLES = [
   { id: 'solid', label: 'Sólido', hint: 'Relleno del color primario.' },
   { id: 'outline', label: 'Contorno', hint: 'Borde del color de acento, fondo transparente.' },
@@ -321,21 +404,26 @@ function setBtn(key, value) { setKey('buttons', key, value) }
     <div class="dstm-body">
       <aside class="dstm-side">
         <div class="dst-main">
-      <p class="dst-lead">
-        El Studio de tu web: colores de contenedores, fuentes por área, marco de las
-        fotos de producto, fondo y botones. Todo se ve al instante en la vista previa;
-        publicalo con «Guardar cambios».
-      </p>
 
       <!-- ===== 1. Colores de contenedores ===== -->
-      <section class="card dst-card" aria-labelledby="dst-surfaces-t">
-        <header class="dst-head">
-          <h2 id="dst-surfaces-t"><AppIcon name="palette" :size="16" aria-hidden="true" /> Colores de contenedores</h2>
-          <p>Colores propios para las superficies de la página. Lo que no toques hereda el look de tu diseño.</p>
-        </header>
-        <div class="stp-fields">
+      <section class="dst-sec card" :class="{ 'is-open': openSection === 'surfaces' }">
+        <h3 class="dst-sec-h">
+          <button type="button" class="dst-sec-head" :aria-expanded="openSection === 'surfaces'" @click="toggleSection('surfaces')">
+            <span class="dst-sec-ico" data-tone="violet" aria-hidden="true"><AppIcon name="palette" :size="16" /></span>
+            <span class="dst-sec-tx"><strong>Colores</strong><small>Superficies de la página</small></span>
+            <span v-if="customCount.surfaces" class="dst-sec-n" :title="`${customCount.surfaces} ajuste(s) propio(s)`">{{ customCount.surfaces }}</span>
+            <AppIcon name="chevron-down" :size="15" class="dst-sec-chev" aria-hidden="true" />
+          </button>
+        </h3>
+        <div class="dst-sec-body">
+          <div class="dst-sec-inner">
+            <p class="dst-sec-desc">Colores propios para las superficies de la página. Lo que no toques hereda el look de tu diseño.</p>
+            <div class="stp-fields">
           <div v-for="s in SURFACES" :key="s.key" class="stp-role" :title="s.hint">
-            <span class="stp-role-lb">{{ s.label }}</span>
+            <span class="dst-surf-lb">
+              <span class="dst-surf-chip" :class="{ 'is-inherit': !surfaceColor(s.key) }" :style="surfaceColor(s.key) ? { background: surfaceColor(s.key) } : null" aria-hidden="true"></span>
+              {{ s.label }}
+            </span>
             <input
               type="color" class="stp-swatch" :value="normalizeHex(surfaceColor(s.key)) || '#ffffff'"
               :aria-label="`${s.label}: selector de color`"
@@ -353,25 +441,37 @@ function setBtn(key, value) { setKey('buttons', key, value) }
             ><AppIcon name="x" :size="13" aria-hidden="true" /> Heredar</button>
           </div>
           <p class="stp-fhint">El texto dentro de cada superficie se ajusta solo para seguir leyéndose (contraste AA).</p>
+            </div>
+          </div>
         </div>
       </section>
 
       <!-- ===== 2. Fuentes por área ===== -->
-      <section class="card dst-card" aria-labelledby="dst-type-t">
-        <header class="dst-head">
-          <h2 id="dst-type-t"><AppIcon name="type" :size="16" aria-hidden="true" /> Fuentes por área</h2>
-          <p>Cada rol tiene su propia familia, tamaño, peso, interletraje, interlineado y caja. «Heredar» vuelve al estilo del diseño.</p>
-        </header>
-        <div class="stp-fields">
+      <section class="dst-sec card" :class="{ 'is-open': openSection === 'type' }">
+        <h3 class="dst-sec-h">
+          <button type="button" class="dst-sec-head" :aria-expanded="openSection === 'type'" @click="toggleSection('type')">
+            <span class="dst-sec-ico" data-tone="blue" aria-hidden="true"><AppIcon name="type" :size="16" /></span>
+            <span class="dst-sec-tx"><strong>Tipografía</strong><small>Fuentes por área</small></span>
+            <span v-if="customCount.type" class="dst-sec-n" :title="`${customCount.type} ajuste(s) propio(s)`">{{ customCount.type }}</span>
+            <AppIcon name="chevron-down" :size="15" class="dst-sec-chev" aria-hidden="true" />
+          </button>
+        </h3>
+        <div class="dst-sec-body">
+          <div class="dst-sec-inner">
+            <p class="dst-sec-desc">Cada rol tiene su propia familia, tamaño, peso, interletraje, interlineado y caja. «Heredar» vuelve al estilo del diseño.</p>
+            <div class="stp-fields">
           <div v-for="g in ROLE_GROUPS" :key="g" class="stp-role-group">
             <span class="stp-role-group-lb">{{ g }}</span>
             <div v-for="r in rowsOf(g)" :key="r.role" class="dst-role">
               <div class="dst-role-top">
                 <span class="dst-role-name">{{ r.label }} <em v-if="roleSpec(r.role)" class="dst-badge">Propio</em></span>
-                <button
-                  v-if="roleSpec(r.role)" type="button" class="dst-reset-btn"
-                  :aria-label="`Heredar la fuente de ${r.label}`" @click="clearRole(r.role)"
-                >Heredar</button>
+                <span class="dst-role-act">
+                  <span class="dst-role-sample" :style="roleSampleStyle(r.role)" aria-hidden="true">Aa</span>
+                  <button
+                    v-if="roleSpec(r.role)" type="button" class="dst-reset-btn"
+                    :aria-label="`Heredar la fuente de ${r.label}`" @click="clearRole(r.role)"
+                  >Heredar</button>
+                </span>
               </div>
               <div class="dst-role-grid">
                 <label class="dst-f">
@@ -428,16 +528,31 @@ function setBtn(key, value) { setKey('buttons', key, value) }
               </div>
             </div>
           </div>
+            </div>
+          </div>
         </div>
       </section>
 
       <!-- ===== 3. Fotos de producto ===== -->
-      <section class="card dst-card" aria-labelledby="dst-media-t">
-        <header class="dst-head">
-          <h2 id="dst-media-t"><AppIcon name="image" :size="16" aria-hidden="true" /> Fotos de producto</h2>
-          <p>El marco de las fotos en las tarjetas: proporción, encaje, fondo detrás, esquinas y borde.</p>
-        </header>
-        <div class="stp-fields">
+      <section class="dst-sec card" :class="{ 'is-open': openSection === 'media' }">
+        <h3 class="dst-sec-h">
+          <button type="button" class="dst-sec-head" :aria-expanded="openSection === 'media'" @click="toggleSection('media')">
+            <span class="dst-sec-ico" data-tone="emerald" aria-hidden="true"><AppIcon name="image" :size="16" /></span>
+            <span class="dst-sec-tx"><strong>Fotos</strong><small>Marco de producto</small></span>
+            <span v-if="customCount.media" class="dst-sec-n" :title="`${customCount.media} ajuste(s) propio(s)`">{{ customCount.media }}</span>
+            <AppIcon name="chevron-down" :size="15" class="dst-sec-chev" aria-hidden="true" />
+          </button>
+        </h3>
+        <div class="dst-sec-body">
+          <div class="dst-sec-inner">
+            <p class="dst-sec-desc">El marco de las fotos en las tarjetas: proporción, encuadre, fondo detrás, esquinas y borde.</p>
+            <div class="dst-frame-preview">
+              <span class="dst-frame" :style="frameSampleStyle" aria-hidden="true">
+                <span class="dst-frame-photo" :class="{ 'is-contain': IMG.fit === 'contain' }"><AppIcon name="image" :size="20" /></span>
+              </span>
+              <span class="dst-frame-lb">Vista previa del marco</span>
+            </div>
+            <div class="stp-fields">
           <div>
             <span class="stp-role-lb">Proporción</span>
             <div class="dst-ratios" role="group" aria-label="Proporción del marco de foto">
@@ -502,16 +617,25 @@ function setBtn(key, value) { setKey('buttons', key, value) }
               </select>
             </label>
           </div>
+            </div>
+          </div>
         </div>
       </section>
 
       <!-- ===== 4. Fondo de la web ===== -->
-      <section class="card dst-card" aria-labelledby="dst-bg-t">
-        <header class="dst-head">
-          <h2 id="dst-bg-t"><AppIcon name="monitor" :size="16" aria-hidden="true" /> Fondo de la web</h2>
-          <p>Qué lleva el fondo detrás de todo: color, degradado, malla, patrón o una imagen tuya.</p>
-        </header>
-        <div class="stp-fields">
+      <section class="dst-sec card" :class="{ 'is-open': openSection === 'bg' }">
+        <h3 class="dst-sec-h">
+          <button type="button" class="dst-sec-head" :aria-expanded="openSection === 'bg'" @click="toggleSection('bg')">
+            <span class="dst-sec-ico" data-tone="amber" aria-hidden="true"><AppIcon name="monitor" :size="16" /></span>
+            <span class="dst-sec-tx"><strong>Fondo</strong><small>El fondo de la web</small></span>
+            <span v-if="customCount.bg" class="dst-sec-n" :title="`${customCount.bg} ajuste(s) propio(s)`">{{ customCount.bg }}</span>
+            <AppIcon name="chevron-down" :size="15" class="dst-sec-chev" aria-hidden="true" />
+          </button>
+        </h3>
+        <div class="dst-sec-body">
+          <div class="dst-sec-inner">
+            <p class="dst-sec-desc">Qué lleva el fondo detrás de todo: color, degradado, malla, patrón o una imagen tuya.</p>
+            <div class="stp-fields">
           <div class="stp-seg dst-bgtypes" role="group" aria-label="Tipo de fondo">
             <button
               v-for="t in BG_TYPES" :key="t.id" type="button" class="stp-opt"
@@ -595,16 +719,29 @@ function setBtn(key, value) { setKey('buttons', key, value) }
           <button type="button" class="btn ghost btn-auto" @click="clearBackground">
             <AppIcon name="refresh" :size="14" aria-hidden="true" /> Quitar fondo personalizado
           </button>
+            </div>
+          </div>
         </div>
       </section>
 
       <!-- ===== 5. Botones ===== -->
-      <section class="card dst-card" aria-labelledby="dst-btn-t">
-        <header class="dst-head">
-          <h2 id="dst-btn-t"><AppIcon name="sliders" :size="16" aria-hidden="true" /> Botones</h2>
-          <p>Estilo, forma, tamaño y borde de todos los botones de la web.</p>
-        </header>
-        <div class="stp-fields">
+      <section class="dst-sec card" :class="{ 'is-open': openSection === 'buttons' }">
+        <h3 class="dst-sec-h">
+          <button type="button" class="dst-sec-head" :aria-expanded="openSection === 'buttons'" @click="toggleSection('buttons')">
+            <span class="dst-sec-ico" data-tone="rose" aria-hidden="true"><AppIcon name="sliders" :size="16" /></span>
+            <span class="dst-sec-tx"><strong>Botones</strong><small>Estilo y forma</small></span>
+            <span v-if="customCount.buttons" class="dst-sec-n" :title="`${customCount.buttons} ajuste(s) propio(s)`">{{ customCount.buttons }}</span>
+            <AppIcon name="chevron-down" :size="15" class="dst-sec-chev" aria-hidden="true" />
+          </button>
+        </h3>
+        <div class="dst-sec-body">
+          <div class="dst-sec-inner">
+            <p class="dst-sec-desc">Estilo, forma, tamaño y borde de todos los botones de la web.</p>
+            <div class="dst-btn-preview">
+              <span class="dst-btn-sample" :style="btnSampleStyle">Comprar ahora</span>
+              <span class="dst-btn-preview-lb">Vista previa del estilo elegido</span>
+            </div>
+            <div class="stp-fields">
           <div>
             <span class="stp-role-lb">Estilo</span>
             <div class="stp-minis wide" role="group" aria-label="Estilo de botón">
@@ -642,6 +779,8 @@ function setBtn(key, value) { setKey('buttons', key, value) }
               >{{ b.label }}</button>
             </div>
             <p class="stp-fhint">Punteado y discontinuo se ven mejor sobre Contorno o Transparente; sobre Sólido el borde toma el color del texto del botón.</p>
+          </div>
+            </div>
           </div>
         </div>
       </section>
@@ -682,11 +821,85 @@ function setBtn(key, value) { setKey('buttons', key, value) }
 .dstm-side .dst-main { padding-bottom: 6px; }
 .dstm-stage { min-width: 0; overflow: auto; padding: 20px; display: flex; }
 .dstm-stage > * { margin: auto; width: 100%; max-width: 1180px; }
-.dst-main { display: flex; flex-direction: column; gap: 16px; min-width: 0; }
-.dst-lead { margin: 0; font-size: 13px; color: var(--muted); line-height: 1.5; }
-.dst-card { padding: 16px 18px; display: grid; gap: 12px; }
-.dst-head h2 { display: flex; align-items: center; gap: 7px; margin: 0 0 4px; font-size: 14.5px; letter-spacing: -.01em; }
-.dst-head p { margin: 0; font-size: 12px; color: var(--muted); line-height: 1.45; }
+.dst-main { display: flex; flex-direction: column; gap: 10px; min-width: 0; }
+
+/* ===== Acordeón de secciones ===== */
+.dst-sec { padding: 0; overflow: hidden; }
+.dst-sec-h { margin: 0; }
+.dst-sec-head {
+  display: flex; align-items: center; gap: 10px; width: 100%;
+  padding: 11px 14px; border: 0; background: none; cursor: pointer;
+  font: inherit; text-align: left;
+}
+.dst-sec-head:hover { background: var(--surface, #f8fafc); }
+.dst-sec-ico {
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 32px; height: 32px; flex: none; border-radius: 9px;
+}
+.dst-sec-ico[data-tone='violet'] { background: #f3e8ff; color: #7c3aed; }
+.dst-sec-ico[data-tone='blue'] { background: #dbeafe; color: #2563eb; }
+.dst-sec-ico[data-tone='emerald'] { background: #d1fae5; color: #059669; }
+.dst-sec-ico[data-tone='amber'] { background: #fef3c7; color: #b45309; }
+.dst-sec-ico[data-tone='rose'] { background: #ffe4e6; color: #e11d48; }
+.dst-sec-tx { display: grid; gap: 1px; min-width: 0; flex: 1 1 auto; }
+.dst-sec-tx strong { font-size: 13px; font-weight: 700; color: var(--ink, #0f172a); }
+.dst-sec-tx small { font-size: 11px; color: var(--muted); }
+.dst-sec-n {
+  flex: none; min-width: 20px; height: 20px; padding: 0 6px;
+  display: inline-flex; align-items: center; justify-content: center;
+  border-radius: 99px; background: var(--brand-500, #4f46e5); color: #fff;
+  font-size: 10.5px; font-weight: 700;
+}
+.dst-sec-chev { flex: none; color: var(--muted); transition: transform .22s ease; }
+.dst-sec.is-open .dst-sec-chev { transform: rotate(180deg); }
+.dst-sec-desc { margin: 0; padding: 0 16px 10px; font-size: 11.5px; color: var(--muted); line-height: 1.45; }
+.dst-sec-body {
+  display: grid; grid-template-rows: 0fr; visibility: hidden;
+  transition: grid-template-rows .26s ease, visibility 0s .26s;
+}
+.dst-sec.is-open .dst-sec-body {
+  grid-template-rows: 1fr; visibility: visible;
+  transition: grid-template-rows .26s ease, visibility 0s;
+}
+.dst-sec-inner { overflow: hidden; min-height: 0; padding-bottom: 14px; }
+.dst-sec-inner > .stp-fields { padding: 0 16px; }
+
+/* ===== Chips de color por superficie ===== */
+.dst-surf-lb {
+  flex: 0 0 96px; display: inline-flex; align-items: center; gap: 6px;
+  font-size: 12px; font-weight: 600; color: var(--ink-2); min-width: 0;
+}
+.dst-surf-chip {
+  width: 15px; height: 15px; flex: none; border-radius: 5px;
+  border: 1px solid var(--line-strong, #cbd5e1);
+}
+.dst-surf-chip.is-inherit {
+  background: repeating-linear-gradient(45deg, var(--surface, #f8fafc) 0 3px, var(--line, #e5e7eb) 3px 6px);
+}
+
+/* ===== Muestra tipográfica «Aa» ===== */
+.dst-role-act { display: inline-flex; align-items: center; gap: 6px; }
+.dst-role-sample {
+  min-width: 32px; padding: 3px 9px; border-radius: 7px; text-align: center;
+  background: var(--surface, #f8fafc); border: 1px solid var(--line, #e5e7eb);
+  color: var(--ink, #0f172a); line-height: 1.25;
+}
+
+/* ===== Previews de marco de foto y botón ===== */
+.dst-frame-preview, .dst-btn-preview {
+  display: flex; flex-direction: column; align-items: center; gap: 6px;
+  padding: 12px; border: 1px dashed var(--line, #e5e7eb); border-radius: 12px;
+  background: var(--surface, #f8fafc); margin-bottom: 12px;
+}
+.dst-frame { display: block; width: 74px; position: relative; overflow: hidden; }
+.dst-frame-photo {
+  position: absolute; inset: 0; display: grid; place-items: center;
+  background: linear-gradient(135deg, #cbd5e1, #94a3b8); color: #fff;
+}
+.dst-frame-photo.is-contain { inset: 14%; border: 1px solid rgba(255, 255, 255, .55); border-radius: 4px; }
+.dst-frame-lb, .dst-btn-preview-lb { font-size: 10.5px; font-weight: 600; color: var(--muted); }
+.dst-btn-preview { flex-direction: row; gap: 14px; }
+.dst-btn-sample { user-select: none; }
 .dst-reset { min-height: 32px; padding: 4px 10px; font-size: 11.5px; }
 .dst-2col { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
 .dst-f { display: grid; gap: 4px; min-width: 0; }
