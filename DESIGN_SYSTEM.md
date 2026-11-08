@@ -744,3 +744,42 @@ bloquea `<link>` de Google Fonts).
   390/768/1360, sugerencias de búsqueda, filtro móvil, orden de trabajo).
   Migración: `manage.py seed_design_catalog --patterns-only` y
   `manage.py sync_design_neon --slug silicio` (arrastra `silicio-claro`).
+
+## 19. Pórtico — "galería editorial, día y noche" (`portico`, plus)
+
+Aplica a `StoreApp/domains/design/sources/portico.html` (documento único:
+landing, catálogo, ficha y servicios) y a los estilos `portico` (día) y
+`portico-noche` (noche). Piedra caliza, tinta verde-negra y cobre; Italiana
++ Manrope + Spline Sans Mono; retícula de museo con índices 01–13.
+
+- **Portada**: titular palabra por palabra, foto 4/5 con marco desplazado,
+  sello giratorio sobre papel, estampa de años, cédula bajo la foto, tres
+  miniaturas del carrusel y **ticket** de datos reales (dirección, horarios,
+  WhatsApp, sala). La luz de sala sigue al puntero solo con `transform`.
+- **Cintas**: anuncios arriba, especialidades del negocio en serif sobre
+  tinta (cobre en noche), firmas en marquesina full-bleed, pie en mono y
+  palabra gigante detrás del CTA. Todas duplican tramos idénticos hasta
+  cubrir el doble del ancho visible; los clones van `aria-hidden`.
+- **Secciones firma**: ofrecemos 2×2, cifras con count-up, ficha de la casa,
+  garantías en filas, vitrina con la primera pieza destacada, bento de
+  galería, trayectoria sobre riel, equipo, opiniones con la primera cita
+  grande, membresías, video, FAQ numerada y contacto con formulario.
+- **Noche**: `[data-ds-theme="dark"]` fija la paleta oscura del estilo (no
+  hereda `--ds-bg` claro) y el acento viaja; cinta y pie cambian de tinta a
+  cobre. El toggle del puente no recarga: el tema tiene que leerse solo con
+  CSS.
+- **Trampas resueltas**: (1) el `SURFACE_CSS` del host pinta `.head > span`
+  y su `::before` — el índice necesita `.head > span.head-no` y resetear
+  `width/height/background/opacity` del pseudo o el número desaparece;
+  (2) `background` shorthand en `.hero-media`/`.ds-product-img` borra el
+  degradado del estado vacío del host: usar `background-color`;
+  (3) `getComputedStyle(::before).content` devuelve `counter(...)`, no el
+  número: el índice de cabecera usa el orden de los `.head-no`;
+  (4) `display:contents` en `.hero-copy` (≤900) reordena la portada, pero el
+  `gap` del grid separa cada hijo: resetear márgenes; (5) el catálogo sin
+  productos muestra un panel `.ds-empty` a ancho completo y oculta el aside
+  y la barra con `html:has([data-ds-products] > .ds-empty)`.
+- **Registro**: tier `plus` (Estándar) en `seed_data.json` (patrón y ambos
+  estilos) y en `STORE_TEMPLATES` de `stores.api.js`; QA con
+  `qa-devin-store` (`?theme=dark&surface=…`) + `seed_design_catalog` +
+  `sync_design_neon --slug portico`.

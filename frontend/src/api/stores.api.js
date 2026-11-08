@@ -832,7 +832,7 @@ export const STORE_TEMPLATES = {
   showroom:    { label: 'Showroom',   rubro: 'indumentaria', tier: 'plus',   defaultAccent: '#111111', desc: 'Showroom: retail serio en blanco y negro — Archivo en versalitas, cabecera de tres bandas con buscador, grilla asimétrica y ficha tipo e-commerce. Sin animaciones.' },
   ruta:        { label: 'Ruta',        rubro: 'turismo',      tier: 'plus',     defaultAccent: '#14443B', desc: 'Ruta: guía de viaje editorial — papel crema, verde pino y ámbar, destinos como tickets y galería de postales.' },
   aurum:       { label: 'Áurea',       rubro: 'general',      tier: 'advanced', defaultAccent: '#C8A25A', desc: 'Áurea: insignia premium — tinta y dorado, índices numerados y todas las secciones del negocio.' },
-  portico:     { label: 'Pórtico',     rubro: 'general',      tier: 'advanced', defaultAccent: '#A75E3C', desc: 'Pórtico: galería premium de piedra y cobre — Italiana, índices 01–13, catálogo filtrable y todas las secciones.' },
+  portico:     { label: 'Pórtico',     rubro: 'general',      tier: 'plus',     defaultAccent: '#A75E3C', desc: 'Pórtico: galería editorial de piedra y cobre — Italiana, índices 01–13, sellos giratorios, cintas y catálogo filtrable.' },
   neon:        { label: 'Neon',        rubro: 'hogar',        tier: 'plus',     defaultAccent: '#BBF351', desc: 'Neon: tienda nocturna de objetos — tinta profunda, neón lima/cian, glow, scanlines y cintas en loop.' },
 }
 
