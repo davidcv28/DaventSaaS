@@ -5838,7 +5838,7 @@
           "bg": "#F0E7D3",
           "surface": "#E6DAC2",
           "text": "#241F18",
-          "muted": "#6F6350",
+          "muted": "#675C48",
           "border": "#D8C9AC",
           "success": "#3E6B3A",
           "danger": "#B3261E"
@@ -6182,7 +6182,7 @@
           "bg": "#E9E1CB",
           "surface": "#F2ECDA",
           "text": "#1D1A12",
-          "muted": "#7D7460",
+          "muted": "#6B6250",
           "border": "#C9BFA1",
           "success": "#2F5D50",
           "danger": "#B3261E"
@@ -6368,7 +6368,7 @@
           "bg": "#E7DFCC",
           "surface": "#F0E9D6",
           "text": "#1D1A12",
-          "muted": "#77694F",
+          "muted": "#6B6250",
           "border": "#C2B694",
           "success": "#3E6B4F",
           "danger": "#B3261E"
@@ -7090,7 +7090,7 @@
           "bg": "#FFFFFF",
           "surface": "#F4F4F4",
           "text": "#111111",
-          "muted": "#8A8A8A",
+          "muted": "#6E6E6E",
           "border": "#E5E5E5",
           "success": "#1E7F4F",
           "danger": "#B3261E"
@@ -9992,7 +9992,7 @@
           "bg": "#F4EFE6",
           "surface": "#EAE2D3",
           "text": "#1B1815",
-          "muted": "#8A7F70",
+          "muted": "#6E6455",
           "border": "#D9CFC0",
           "success": "#2F6B4F",
           "danger": "#B3261E"
@@ -10325,7 +10325,7 @@
           "bg": "#E9E1CB",
           "surface": "#F2ECDA",
           "text": "#1D1A12",
-          "muted": "#7D7460",
+          "muted": "#6B6250",
           "border": "#C9BFA1",
           "success": "#2F5D50",
           "danger": "#B3261E"
@@ -10805,7 +10805,7 @@
           "bg": "#FFFFFF",
           "surface": "#F4F4F4",
           "text": "#111111",
-          "muted": "#8A8A8A",
+          "muted": "#6E6E6E",
           "border": "#E5E5E5",
           "success": "#1E7F4F",
           "danger": "#B3261E"

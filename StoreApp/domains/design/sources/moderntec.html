@@ -4,9 +4,23 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>NEXA — Tecnología</title>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
 <style>
+/* Tipografías del diseño (CSP font-src https:): la identidad viaja con la
+   hoja. El <link> a Google Fonts estaba muerto por style-src 'unsafe-inline'
+   (no admite hojas externas): ahora son @font-face a gstatic como el resto
+   de los documentos. */
+@font-face{font-family:"Space Grotesk";font-style:normal;font-weight:400;font-display:swap;
+  src:url(https://fonts.gstatic.com/s/spacegrotesk/v22/V8mQoQDjQSkFtoMM3T6r8E7mF71Q-gOoraIAEj7oUUsj.ttf) format("truetype")}
+@font-face{font-family:"Space Grotesk";font-style:normal;font-weight:500;font-display:swap;
+  src:url(https://fonts.gstatic.com/s/spacegrotesk/v22/V8mQoQDjQSkFtoMM3T6r8E7mF71Q-gOoraIAEj7aUUsj.ttf) format("truetype")}
+@font-face{font-family:"Space Grotesk";font-style:normal;font-weight:600;font-display:swap;
+  src:url(https://fonts.gstatic.com/s/spacegrotesk/v22/V8mQoQDjQSkFtoMM3T6r8E7mF71Q-gOoraIAEj42Vksj.ttf) format("truetype")}
+@font-face{font-family:"Space Grotesk";font-style:normal;font-weight:700;font-display:swap;
+  src:url(https://fonts.gstatic.com/s/spacegrotesk/v22/V8mQoQDjQSkFtoMM3T6r8E7mF71Q-gOoraIAEj4PVksj.ttf) format("truetype")}
+@font-face{font-family:"Inter";font-style:normal;font-weight:400 800;font-display:swap;
+  src:url(https://fonts.gstatic.com/s/inter/v20/UcCO3FwrK3iLTeHuS_nVMrMxCp50SjIw2boKoduKmMEVuLyfMZg.ttf) format("truetype")}
+@font-face{font-family:"JetBrains Mono";font-style:normal;font-weight:400 700;font-display:swap;
+  src:url(https://fonts.gstatic.com/s/jetbrainsmono/v24/tDbv2o-flEEny0FZhsfKu5WU4zr3E_BX0PnT8RD8yKwBNntkaToggR7BYRbKPxDcwg.woff2) format("woff2")}
 :root{
   --bg:#07090d;
   --bg-2:#0b0f16;
