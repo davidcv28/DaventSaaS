@@ -54,6 +54,7 @@ from StoreApp.domains.stores.services import (
     delete_logo,
     is_platform_domain,
     issue_captcha,
+    media_quality,
     new_verify_token,
     normalize_domain,
     profile_has_benefit,
@@ -1561,6 +1562,9 @@ class StoreViewSet(StoreBaseViewSet):
                 'Exito'         : 'El logo se actualizó correctamente',
                 'customization' : StoreCustomizationSerializer(customization).data,
                 'storage'       : storage_payload(customization.store, store.user),
+                #Aviso de calidad (informativo, nunca rechaza): el upload ya
+                #quedó normalizado; quality() re-busca el archivo al inicio.
+                'quality'       : media_quality.quality(upload, 'logo'),
             },
             status = status.HTTP_200_OK,
         )
@@ -1576,6 +1580,7 @@ class StoreViewSet(StoreBaseViewSet):
                 status = status.HTTP_403_FORBIDDEN,
             )
         customization, _    =   StoreCustomization.objects.get_or_create(store = store)
+        quality             =   None
         if request.method == 'DELETE':
             delete_cover(customization)
             message     =   'La imagen de portada se eliminó correctamente'
@@ -1588,11 +1593,14 @@ class StoreViewSet(StoreBaseViewSet):
             except ValueError as error:
                 return Response({'cover': str(error)}, status = status.HTTP_400_BAD_REQUEST)
             message     =   'La imagen de portada se actualizó correctamente'
+            #Aviso de calidad informativo (nunca rechaza la subida).
+            quality     =   media_quality.quality(upload, 'cover')
         return Response(
             {
                 'Exito'         : message,
                 'customization' : StoreCustomizationSerializer(customization).data,
                 'storage'       : storage_payload(customization.store, store.user),
+                'quality'       :   quality,
             },
             status = status.HTTP_200_OK,
         )
