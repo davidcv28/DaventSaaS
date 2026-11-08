@@ -66,3 +66,8 @@ awesome-design-skills/
 # Prompts y logs generados por tools/ola.ps1 (los roles viven en .devin/agents/)
 .devin/prompts/
 .devin/logs/
+
+# Residuos de pip y temporales de la raiz
+/pip-*/
+/.tmp_*/
+/_tmp_*/
