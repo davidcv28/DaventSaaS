@@ -912,6 +912,13 @@ const brandFormErr = ref('')
 // Edición de marca: el mismo form del alta carga nombre (y permite cambiar
 // el logo) — igual que categorías.
 const brandEditing = ref(null)
+// Buscador de la lista de marcas: filtra por nombre sin tildes.
+const brandQuery = ref('')
+const filteredBrands = computed(() => {
+  const strip = (v) => (v || '').toLowerCase().normalize('NFD').replace(/\p{Diacritic}/gu, '')
+  const q = strip(brandQuery.value.trim())
+  return q ? catalog.brands.filter((b) => strip(b.name).includes(q)) : catalog.brands
+})
 // Edición de categoría: el mismo form agrega o guarda según haya id cargado.
 const taxonomyEditing = ref(null)
 
@@ -4320,8 +4327,12 @@ async function changePassword() {
               </div>
             </div>
             <p class="hint">Logo opcional por marca: PNG, JPG, WebP o GIF de hasta 2 MB. Se convierte a WebP con fondo transparente.</p>
-            <ul v-if="catalog.brands.length" class="tax-list">
-              <li v-for="b in catalog.brands" :key="b.id">
+            <div v-if="catalog.brands.length" class="brand-search">
+              <AppIcon name="search" :size="15" />
+              <input v-model="brandQuery" class="input" type="search" placeholder="Buscar marca…" aria-label="Buscar marca" />
+            </div>
+            <ul v-if="filteredBrands.length" class="tax-list">
+              <li v-for="b in filteredBrands" :key="b.id">
                 <img v-if="b.image" class="tax-thumb" :src="b.image" :alt="`Logo de ${b.name}`" loading="lazy" decoding="async" />
                 <span v-else class="tax-dot" :style="{ '--h': taxonomyHue(b.name) }" aria-hidden="true"></span>
                 <span class="tax-name">
@@ -4339,6 +4350,10 @@ async function changePassword() {
             <input ref="brandImageInput" type="file" class="sr-only" :accept="LOGO_ACCEPT_TYPES" aria-label="Subir imagen de marca" @change="onBrandImagePicked" />
             <p v-if="brandImageErr" class="field-error" role="alert">{{ brandImageErr }}</p>
             <p v-if="!catalog.brands.length" class="hint">Sin marcas todavía.</p>
+            <p v-else-if="!filteredBrands.length" class="hint">
+              Ninguna marca coincide con «{{ brandQuery.trim() }}».
+              <button type="button" class="empty-mini-cta" @click="brandQuery = ''">Limpiar búsqueda</button>
+            </p>
           </div>
 
           <!-- -------- Descuentos programados (premium) -------- -->
