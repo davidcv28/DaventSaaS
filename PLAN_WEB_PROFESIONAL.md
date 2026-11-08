@@ -377,6 +377,46 @@ Entregable: tabla borrado | tamaño liberado | motivo, + total liberado, + salid
 
 ## 8. Runbook — cómo darle las tareas a los agentes
 
+### Modo fácil (sin copiar y pegar)
+
+Los roles están versionados en `.devin/agents/track-*.md` (uno por track, con su
+`allowed-tools` restringido). Hay tres formas de usarlos, de menos fricción a más:
+
+**1. Un comando, cinco pestañas** — recomendado:
+
+```powershell
+.\tools\ola.ps1 -Wave 1          # abre 5 pestañas de Windows Terminal, cada una ya con su rol
+.\tools\ola.ps1 -Wave 2          # track F (integración)
+.\tools\ola.ps1 -Wave 3          # G1-G4 (fixes por patrón)
+.\tools\ola.ps1 -Wave 4          # track Z (limpieza)
+.\tools\ola.ps1 -Wave 1 -Only a,b        # solo algunos tracks
+.\tools\ola.ps1 -Wave 1 -Mode batch      # sin ventanas, logs en .devin/logs/
+.\tools\ola.ps1 -Wave 1 -DryRun          # muestra qué haría, no lanza nada
+```
+
+El script lee el rol, le quita el frontmatter y arranca `devin --prompt-file`. No hay
+nada que pegar: la tarea ya viaja en el archivo.
+
+**2. Skills desde una sesión** — `/ola1`, `/ola2`, `/ola3`, `/limpieza`.
+`/ola1` lanza los 5 tracks como subagentes en paralelo desde un solo chat.
+`/limpieza` corre inline porque necesita `ask_user_question` para aprobar borrados.
+Ojo: los subagentes en background heredan solo los permisos ya aprobados en la sesión;
+si uno falla por permiso denegado, relanzalo en foreground.
+
+**3. Rol por nombre en cualquier sesión** — "usá el subagente `track-d` para las fotos".
+Editar `.devin/agents/track-d.md` cambia todos los lanzamientos futuros de ese rol.
+
+| Rol | Track | Scope de escritura |
+|-----|-------|--------------------|
+| `track-a` | Auditoría visual (read-only) | `docs/audit-design-slop.md` |
+| `track-b` | Gate visual CI | `frontend/scripts/visual-qa.*`, `frontend/package.json` (1 línea) |
+| `track-c` | Calidad de contenido | `DashboardView.vue`, `WebQualityCard.vue`, endpoint `web-quality` |
+| `track-d` | Fotos | `imaging.py`, `media_quality.py`, `DesignLookTab.vue` |
+| `track-e` | Tipografía + tokens | `TypographyPanel.vue`, `panelShared.js`, `store-*.css` |
+| `track-f` | Integración | cualquiera, con justificación |
+| `track-g1..g4` | Fixes por patrón | solo su grupo de slugs |
+| `track-z` | Limpieza | borrado confirmado + `.gitignore` |
+
 ### Paso 0 — Preparación (una vez)
 
 ```bash
@@ -416,6 +456,27 @@ git push origin main
 
 **Orden de lanzamiento:** los cinco a la vez. A no escribe código, así que puede ir con
 cualquiera. Si tu máquina sufre con cinco agentes simultáneos, corré A+B y después C+D+E.
+
+### Paso 1-bis — Si usaste `tools/ola.ps1` (o `/ola1`)
+
+Ya no hay que pegar nada, pero **sí hay que revisar y commitear**:
+
+```powershell
+git status --porcelain                 # ¿cada track tocó solo lo suyo?
+git diff --stat
+```
+
+Por cada track, verificá contra la tabla de scopes de §1:
+
+```powershell
+git add -A -- <rutas permitidas del track>
+git commit -m "feat: <resumen del track>"    # conventional, inglés
+git push origin main
+```
+
+Si un track se salió del scope: `git checkout -- <archivo ajeno>` (o editá a mano si el cambio
+es parcial) y volvé a pedirle solo lo suyo. Si dos tracks tocaron el mismo archivo, el
+conflicto se resuelve en la ola 2 (track F), no acá.
 
 ### Paso 2 — Ola 2: integración
 

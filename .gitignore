@@ -61,3 +61,7 @@ qa_token.tmp
 
 # Referencia de diseño (clon de awesome-design-skills, solo lectura)
 awesome-design-skills/
+
+# Prompts y logs generados por tools/ola.ps1 (los roles viven en .devin/agents/)
+.devin/prompts/
+.devin/logs/
