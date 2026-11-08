@@ -531,11 +531,14 @@ Marcá el progreso en §10 y actualizá `AGENTS.md` si algún comando nuevo qued
 
 | Track | Agente | Estado | Commit | Notas |
 |-------|--------|--------|--------|-------|
-| A | Auditoría visual | pendiente | — | |
-| B | Gate visual CI | pendiente | — | |
-| C | Calidad de contenido | pendiente | — | |
-| D | Fotos | pendiente | — | |
-| E | Tipografía + tokens | pendiente | — | |
-| F | Integración | pendiente | — | depende de A-E |
-| G1-G4 | Fixes por patrón | opcional | — | depende de A y F |
-| Z | Limpieza | pendiente | — | último, requiere confirmación |
+| A | Auditoría visual | hecho | `d7d42a0` | `docs/audit-design-slop.md` |
+| B | Gate visual CI | hecho | `32ad0d2` | `npm run visual:qa`, baselines opt-in |
+| C | Calidad de contenido | hecho | `fce0110` | endpoint `web-quality` + tarjeta |
+| D | Fotos | hecho | `7e9a690` | `media_quality.py`, hints, 1600px |
+| E | Tipografía + tokens | hecho | `65468ef` | pares curados + `--st-*` |
+| F | Integración | hecho | `d239922`…`634c7ab` | 5 commits por área; tests 660 OK |
+| G1 | portico…ruta | hecho | `0eebc8c` | 51/51 páginas ok |
+| G2 | moda…impacto | hecho | `35d39e9` | 54/54 páginas ok |
+| G3 | modista…guardia | hecho | `d88e6f5` | 6/6 patrones ok |
+| G4 | expediente…sastreria | hecho | `a3d35e6` | FP documentados; 1 fix backend `43c631f` |
+| Z | Limpieza | parcial | `7e4d630`,`25ac347` | pip/tmp/bocetos borrados; `_tmp_gif`, `.pnpm-store`, `__pycache__` pendientes de aprobación |
