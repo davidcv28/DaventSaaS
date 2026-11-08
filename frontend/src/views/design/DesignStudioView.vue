@@ -29,13 +29,54 @@ const designForm = reactive({
   benefits: [], timeline: [], team: [], section_order: [], announcements: [], site_templates: [],
   service_steps: [], service_days: [], service_slots: []
 })
-watch(() => store.customization, (c) => Object.assign(designForm, { ...CUSTOMIZATION_DEFAULTS, ...(c || {}) }), { immediate: true })
+let lastServerDesign = null
+// Bandera compartida con useStudioDesign: true mientras el save del diseño
+// está en vuelo, para que el watcher de la tienda no pise lo editado.
+const serverFlags = { accept: false }
+const designFieldValue = (v) => (
+  typeof v === 'string' ? v.trim() : (v && typeof v === 'object' ? JSON.stringify(v) : v ?? '')
+)
+// template/layout_config/site_theme se persisten como BORRADOR en el
+// Studio: la columna publicada nunca refleja la elección en curso, así que
+// el watcher las conserva siempre que difieran del último estado del
+// servidor (el resto de campos sí se resincroniza tras cada guardado).
+const DRAFT_BACKED = new Set(['template', 'layout_config', 'site_theme'])
+// Precarga el diseño guardado y conserva lo editado sin guardar cuando la
+// tienda se refresca (autoguardado, logo, otra sección): sin este keep el
+// pick del diseño volvía a lo publicado y la preview "deshacía" el cambio.
+watch(() => store.customization, (c) => {
+  if (!c) return
+  const merged = { ...CUSTOMIZATION_DEFAULTS, ...(c || {}) }
+  const keep = {}
+  if (lastServerDesign) {
+    DESIGN_FIELDS.forEach((k) => {
+      if (designFieldValue(designForm[k]) === designFieldValue(lastServerDesign[k])) return
+      if (DRAFT_BACKED.has(k) || !serverFlags.accept) keep[k] = designForm[k]
+    })
+  }
+  serverFlags.accept = false
+  Object.assign(designForm, merged)
+  Object.assign(designForm, keep)
+  lastServerDesign = Object.fromEntries(DESIGN_FIELDS.map((k) => [k, merged[k]]))
+}, { immediate: true })
 
-const designFieldValue = (v) => (typeof v === 'string' ? v.trim() : v ?? '')
 const designDirty = computed(() => {
   if (!store.store) return false
-  const base = { ...CUSTOMIZATION_DEFAULTS, ...store.customization }
-  return DESIGN_FIELDS.some((k) => designFieldValue(designForm[k]) !== designFieldValue(base[k]))
+  const c = store.customization || {}
+  const base = { ...CUSTOMIZATION_DEFAULTS, ...(c || {}) }
+  // El baseline de los campos de diseño es el BORRADOR (lo que el
+  // autoguardado persiste), no lo publicado: si no, el dirty quedaba
+  // prendido para siempre tras el primer guardado y el publish se bloqueaba.
+  // site_theme queda afuera: en el Studio viaja por studioTheme (borrador
+  // parcial del shell) y form.site_theme nunca se envía en el payload.
+  const draftBase = {
+    ...base,
+    template: c.template_draft || base.template,
+    layout_config: c.layout_config_draft || base.layout_config
+  }
+  return DESIGN_FIELDS.filter((k) => k !== 'site_theme').some(
+    (k) => designFieldValue(designForm[k]) !== designFieldValue(draftBase[k])
+  )
 })
 const designErrors = computed(() => ({}))
 const designTouched = reactive({})
@@ -57,7 +98,7 @@ const {
 } = useStudioDesign({
   store, plan, designForm, designDirty, designErrors, designTouched,
   canDesignAdvanced, canLocationMap, catalog, services,
-  pushToast,
+  pushToast, serverFlags,
   autosave: true,
   navigate() { backToDashboard() }
 })
