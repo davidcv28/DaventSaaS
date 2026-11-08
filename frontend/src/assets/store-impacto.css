@@ -63,7 +63,7 @@
   /* --- Retícula --- */
   --mi-wrap: 1280px;
   --mi-gutter: clamp(16px, 4.4vw, 48px);
-  --mi-section: clamp(56px, 7vw, 96px);
+  --mi-section: calc(clamp(56px, 7vw, 96px) + var(--st-section-gap, 28px) - 28px);
   --mi-gap: 18px;
   --mi-rule-w: 2px;
   --mi-hair: 1px;
@@ -2885,7 +2885,7 @@
 }
 
 @media (max-width: 640px) {
-  .store-page[data-template='impacto'] { --mi-section: 52px; --mi-gutter: 16px; }
+  .store-page[data-template='impacto'] { --mi-section: calc(52px + var(--st-section-gap, 28px) - 28px); --mi-gutter: 16px; }
   .mi-masthead { flex-wrap: wrap; row-gap: 6px; }
   .mi-masthead-mid { display: none; }
   .mi-hero-title { font-size: clamp(46px, 15vw, 78px); }

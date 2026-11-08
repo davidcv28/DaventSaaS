@@ -26,7 +26,7 @@
   --in-mono: 'JetBrains Mono', ui-monospace, SFMono-Regular, monospace;
   --in-wrap: 1200px;
   --in-gutter: 32px;
-  --in-section: clamp(54px, 6vw, 80px);
+  --in-section: calc(clamp(54px, 6vw, 80px) + var(--st-section-gap, 28px) - 28px);
   --in-top-h: 118px;
   --in-stitch: repeating-linear-gradient(90deg, var(--in-line-strong) 0 7px, transparent 7px 13px);
 
@@ -622,7 +622,7 @@
 .in-about-grid {
   display: grid;
   grid-template-columns: minmax(0, 1.1fr) minmax(0, .9fr);
-  gap: 56px;
+  gap: calc(56px + var(--st-section-gap, 28px) - 28px);
   align-items: start;
 }
 .in-about-grid.is-bare { grid-template-columns: minmax(0, 1fr); }

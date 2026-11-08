@@ -71,7 +71,7 @@
 
   --rz-container: 1240px;
   --rz-gutter: clamp(16px, 4.4vw, 32px);
-  --rz-section-y: clamp(52px, 7vw, 96px);
+  --rz-section-y: calc(clamp(52px, 7vw, 96px) + var(--st-section-gap, 28px) - 28px);
   --rz-gap: 24px;
   --rz-rad-sm: 8px;
   --rz-rad-md: 12px;

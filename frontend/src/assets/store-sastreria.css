@@ -25,7 +25,7 @@
   --ss-mono: 'JetBrains Mono', ui-monospace, SFMono-Regular, monospace;
   --ss-wrap: 1180px;
   --ss-gutter: 32px;
-  --ss-section: clamp(52px, 6vw, 76px);
+  --ss-section: calc(clamp(52px, 6vw, 76px) + var(--st-section-gap, 28px) - 28px);
   --ss-top-h: 118px;
 
   --sp-bg: var(--ss-paper);

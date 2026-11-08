@@ -231,7 +231,7 @@ html.sp-lock body{ overflow: hidden; overscroll-behavior: none; }
 .sp-chip.clear{ border-style: dashed; border-color: var(--sp-line); background: transparent; color: var(--sp-muted); }
 
 /* --- Grilla de productos --- */
-.sp-grid{ display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); grid-auto-rows: 1fr; align-items: stretch; gap: 28px; transition: opacity .15s; }
+.sp-grid{ display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); grid-auto-rows: 1fr; align-items: stretch; gap: calc(28px + var(--st-section-gap, 28px) - 28px); transition: opacity .15s; }
 .sp-grid.loading{ opacity: .55; pointer-events: none; }
 .sp-card{ background: var(--sp-card); border: 1px solid var(--sp-line); border-radius: var(--sp-radius); overflow: hidden; display: flex; flex-direction: column; box-shadow: var(--sp-shadow-sm); transition: box-shadow .15s, transform .15s, border-color .15s; }
 .sp-card:hover{ box-shadow: var(--sp-shadow-md); transform: translateY(-2px); border-color: color-mix(in srgb, var(--store-accent) 45%, var(--sp-line)); }
@@ -902,7 +902,7 @@ html:has(.store-page[data-store-theme='dark'])::-webkit-scrollbar-thumb{ backgro
 .sp-quick-pill.active{ background: linear-gradient(135deg, var(--sp-band-c1, var(--store-accent)), var(--store-accent-ink)); border-color: transparent; color: var(--sp-on-band, #fff); box-shadow: 0 10px 20px -10px var(--store-accent-ink); }
 
 /* Tarjetas de producto */
-.sp-grid{ grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 26px; }
+.sp-grid{ grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: calc(26px + var(--st-section-gap, 28px) - 28px); }
 .sp-card{ border-radius: 20px; }
 .sp-card .tpc-media{ position: relative; cursor: pointer; border-bottom: 0; }
 .sp-card-badge{ position: absolute; top: 12px; left: 12px; z-index: 2; display: inline-flex; align-items: center; gap: 5px; max-width: calc(100% - 24px); padding: 5px 11px; border-radius: 99px; background: rgba(255, 255, 255, .92); color: var(--store-accent-ink); font-size: 11.5px; font-weight: 700; letter-spacing: .01em; box-shadow: 0 6px 16px -8px rgba(15, 23, 42, .5); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
@@ -969,7 +969,7 @@ html:has(.store-page[data-store-theme='dark'])::-webkit-scrollbar-thumb{ backgro
 }
 
 /* ===== Tarjetas de producto: acabado profesional ===== */
-.sp-grid{ grid-template-columns: repeat(auto-fill, minmax(256px, 1fr)); gap: 24px; }
+.sp-grid{ grid-template-columns: repeat(auto-fill, minmax(256px, 1fr)); gap: calc(24px + var(--st-section-gap, 28px) - 28px); }
 .sp-card{ border-radius: 20px; background: var(--sp-card-solid, var(--sp-card)); border: 1px solid var(--sp-line); box-shadow: 0 1px 2px rgba(15, 23, 42, .05), 0 8px 24px -18px rgba(15, 23, 42, .35); }
 .sp-card:hover{ transform: translateY(-6px); border-color: color-mix(in srgb, var(--store-accent) 45%, var(--sp-line)); box-shadow: 0 2px 4px rgba(15, 23, 42, .06), 0 28px 44px -26px var(--store-accent-ink); }
 .sp-card .tpc-media{ aspect-ratio: 1 / 1; margin: 8px 8px 0; border: 0; border-radius: 14px; background: linear-gradient(145deg, var(--sp-soft), color-mix(in srgb, var(--store-accent) 8%, var(--sp-soft))); }
@@ -3009,7 +3009,7 @@ Reels— van angostas, las 16:9 anchas). El botón de vivo es Premium. */
 
 /* --- Ritmo vertical compartido entre secciones --- */
 .sp-about, .sp-showcase, .sp-gallery, .sp-services, .sp-stats,
-.sp-testimonials, .sp-faq, .sp-cta, .sp-contact{ padding-block: clamp(48px, 8vw, 96px); }
+.sp-testimonials, .sp-faq, .sp-cta, .sp-contact{ padding-block: calc(clamp(48px, 8vw, 96px) + var(--st-section-gap, 28px) - 28px); }
 
 /* --- Layout bento: 1 col bajo 768px, 2 cols hasta 1024, 12 cols con
    spans variados arriba. Las plantillas que redefinen estas grillas

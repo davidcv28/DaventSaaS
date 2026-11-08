@@ -65,6 +65,159 @@ export const FONT_PAIRS = [
   { id: 'prolija', heading: 'bricolage-grotesque', body: 'figtree', label: 'Prolija', hint: 'Fresca y ordenada.' }
 ]
 
+// ============================================================================
+// Tipografía curada por diseño: qué pares y pesos sostiene cada piel.
+// TYPO_DESIGN_RULES se indexa por SLUG DE DISEÑO (form.template: slug de
+// patrón o plantilla Vue; los estilos heredan la regla de su diseño).
+//   block        → pares de FONT_PAIRS que la piel no admite, con el motivo
+//                  visible que ve el cliente en el panel.
+//   weightFloor  → piso de theme.typography.weightHeading: las pieles de
+//                  bloque/condensadas no leen títulos finos.
+// Nada se borra del catálogo: solo se deshabilita donde rompe, y un tema ya
+// guardado se sigue viendo igual (las reglas limitan la UI, no reescriben).
+// ============================================================================
+const TYPO_WHY_SERIF = {
+  impacto: 'La piel es serif editorial: un grotesque negro la vuelve tosca.',
+  calida: 'La redonda no combina con la serif editorial de este diseño.'
+}
+const TYPO_WHY_SANS = {
+  editorial: 'Este diseño es sans de bloque: una serif de título rompe la retícula.',
+  clasica: 'La serif clásica no lee bien sobre la piel sans de bloque de este diseño.',
+  calida: 'La redonda no combina con la retícula sans de bloque de este diseño.'
+}
+const TYPO_WHY_CALIDA = {
+  calida: 'La redonda no combina con la piel de este diseño.'
+}
+
+export const TYPO_DESIGN_RULES = {
+  // ---- Serif / editorial: la display con carácter es el gesto. 'impacto'
+  // queda habilitado en indumentaria (indumentaria-street lo usa de fábrica)
+  // y en expediente (su display es grotesque brutalista).
+  portico:      { block: TYPO_WHY_SERIF },
+  aurum:        { block: TYPO_WHY_SERIF },
+  modista:      { block: TYPO_WHY_SERIF },
+  viajero:      { block: TYPO_WHY_SERIF },
+  olivium:      { block: TYPO_WHY_SERIF },
+  moda:         { block: TYPO_WHY_SERIF },
+  'atelier-noir': { block: TYPO_WHY_SERIF },
+  ruta:         { block: TYPO_WHY_SERIF },
+  sastreria:    { block: TYPO_WHY_SERIF },
+  indumentaria: { block: TYPO_WHY_CALIDA },
+  expediente:   { block: TYPO_WHY_CALIDA },
+  // ---- Sans de bloque / tecnología / retail: la serif rompe la retícula.
+  // weightFloor sube el piso del grosor según lo pesada que sea la piel.
+  mercado:      { block: TYPO_WHY_SANS, weightFloor: 400 },
+  gimnasio:     { block: TYPO_WHY_SANS, weightFloor: 600 },
+  moderntec:    { block: TYPO_WHY_SANS, weightFloor: 500 },
+  impacto:      { block: TYPO_WHY_SANS, weightFloor: 400 },
+  silicio:      { block: TYPO_WHY_SANS, weightFloor: 500 },
+  showroom:     { block: TYPO_WHY_SANS, weightFloor: 600 },
+  calzado:      { block: TYPO_WHY_SANS, weightFloor: 500 },
+  topmodern:    { block: TYPO_WHY_SANS, weightFloor: 600 },
+  guardia:      { block: TYPO_WHY_SANS, weightFloor: 600 },
+  brigada:      { block: TYPO_WHY_SANS, weightFloor: 600 },
+  neon:         { block: TYPO_WHY_CALIDA, weightFloor: 500 },
+  movimiento:   { block: TYPO_WHY_CALIDA, weightFloor: 400 }
+}
+
+// Regla tipográfica del diseño activo (null = diseño neutro: nada se bloquea).
+export function typoDesignRule(templateSlug) {
+  return TYPO_DESIGN_RULES[templateSlug] || null
+}
+
+// Motivo por el que un par de FONT_PAIRS no se puede aplicar en el diseño
+// (null = se puede aplicar).
+export function pairBlockReason(pair, rule) {
+  return rule?.block?.[pair?.id] || null
+}
+
+// Pesos reales de cada fuente del catálogo (espejo de las queries wght@ de
+// stores.api.js). min/max en pasos de 100; min === max = un solo peso.
+export const FONT_WEIGHT_LIMITS = {
+  'bebas-neue':        { min: 400, max: 400 },
+  'anton':             { min: 400, max: 400 },
+  'archivo-black':     { min: 400, max: 400 },
+  'righteous':         { min: 400, max: 400 },
+  'pacifico':          { min: 400, max: 400 },
+  'lobster':           { min: 400, max: 400 },
+  'dm-serif-display':  { min: 400, max: 400 },
+  'italiana':          { min: 400, max: 400 },
+  'orbitron':          { min: 500, max: 900 },
+  'inter-tight':       { min: 500, max: 700 },
+  'space-grotesk':     { min: 400, max: 700 },
+  'lora':              { min: 400, max: 700 },
+  'dancing-script':    { min: 400, max: 700 },
+  'caveat':            { min: 400, max: 700 },
+  'quicksand':         { min: 400, max: 700 },
+  'comfortaa':         { min: 400, max: 700 },
+  'jost':              { min: 400, max: 700 },
+  'figtree':           { min: 400, max: 700 },
+  'source-serif-4':    { min: 400, max: 700 },
+  'cormorant-garamond':{ min: 400, max: 700 },
+  'oswald':            { min: 400, max: 700 },
+  'space-mono':        { min: 400, max: 700 },
+  'libre-baskerville': { min: 400, max: 700 },
+  'instrument-sans':   { min: 400, max: 700 },
+  'open-sans':         { min: 400, max: 800 },
+  'montserrat':        { min: 400, max: 800 },
+  'raleway':           { min: 400, max: 800 },
+  'nunito':            { min: 400, max: 800 },
+  'work-sans':         { min: 400, max: 800 },
+  'dm-sans':           { min: 400, max: 800 },
+  'sora':              { min: 400, max: 800 },
+  'rubik':             { min: 400, max: 800 },
+  'playfair-display':  { min: 400, max: 800 },
+  'merriweather':      { min: 400, max: 800 },
+  'cinzel':            { min: 400, max: 800 },
+  'jetbrains-mono':    { min: 400, max: 800 },
+  'manrope':           { min: 400, max: 800 },
+  'hanken-grotesk':    { min: 400, max: 800 },
+  'barlow':            { min: 400, max: 800 },
+  'barlow-condensed':  { min: 400, max: 800 },
+  'bricolage-grotesque': { min: 400, max: 800 },
+  'poppins':           { min: 400, max: 800 },
+  'plus-jakarta-sans': { min: 300, max: 800 },
+  'archivo':           { min: 400, max: 900 },
+  'roboto':            { min: 400, max: 900 },
+  'lato':              { min: 400, max: 900 }
+}
+
+// Rango efectivo de weightHeading para un diseño+fuente: piso de la piel ∩
+// pesos que la fuente realmente tiene. Devuelve {min,max} para el slider.
+export function headingWeightRange(rule, headingSlug) {
+  const lim = FONT_WEIGHT_LIMITS[headingSlug] || null
+  let min = 300
+  let max = 900
+  if (rule?.weightFloor) min = rule.weightFloor
+  if (lim) {
+    min = Math.max(min, lim.min)
+    max = Math.min(max, lim.max)
+  }
+  if (min > max) {
+    min = lim?.min ?? min
+    max = min
+  }
+  return { min, max }
+}
+
+// Nota visible cuando la combinación guardada/elegida no existe o la piel
+// pide más peso del que tiene el control (null = todo en rango).
+export function weightRangeNote(rule, headingSlug, current) {
+  const lim = FONT_WEIGHT_LIMITS[headingSlug] || null
+  const w = Number(current)
+  if (lim && lim.min === lim.max && Number.isFinite(w)) {
+    return w === lim.min
+      ? null
+      : `Esta fuente solo existe en peso ${lim.min}: el grosor elegido (${w}) no existe.`
+  }
+  const { min, max } = headingWeightRange(rule, headingSlug)
+  if (!Number.isFinite(w) || (w >= min && w <= max)) return null
+  if (rule?.weightFloor && w < rule.weightFloor) {
+    return `Los títulos de este diseño no bajan de ${rule.weightFloor}: más fino rompe la piel de bloque.`
+  }
+  return `El peso ${w} no existe en esta fuente${lim ? ` (rango ${lim.min}–${lim.max})` : ''}; la web lo ajusta al más cercano.`
+}
+
 // Fondos: `background.value` dentro del charset que whitelistea el backend.
 // Las imágenes viajan como URL pura de la tienda (nunca url()).
 export function buildGradient(stops, angle = 135) {

@@ -57,7 +57,7 @@
   /* --- Estructura --- */
   --mt-container: 1200px;
   --mt-gutter: 24px;
-  --mt-section-y: clamp(64px, 7vw, 96px);
+  --mt-section-y: calc(clamp(64px, 7vw, 96px) + var(--st-section-gap, 28px) - 28px);
   --mt-gap: 16px;
   --mt-rad-sm: 6px;
   --mt-rad-md: 12px;
@@ -1057,7 +1057,7 @@
 .store-page[data-template='moderntec'] .mt-about-grid {
   display: grid;
   grid-template-columns: minmax(0, 1.12fr) minmax(0, .88fr);
-  gap: clamp(28px, 4vw, 56px);
+  gap: calc(clamp(28px, 4vw, 56px) + var(--st-section-gap, 28px) - 28px);
   align-items: start;
 }
 /* Sin relato ni especialidades: una sola columna, el registro debajo. */

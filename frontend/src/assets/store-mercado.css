@@ -47,7 +47,7 @@
   /* Ritmo y formas */
   --mc-container: 1240px;
   --mc-gutter: 24px;
-  --mc-section: clamp(36px, 4.2vw, 56px);
+  --mc-section: calc(clamp(36px, 4.2vw, 56px) + var(--st-section-gap, 28px) - 28px);
   --mc-radius: 8px;
   --mc-top-h: 64px;
 
@@ -956,7 +956,7 @@
 .store-page[data-template='mercado'] .mc-cat-layout {
   display: grid;
   grid-template-columns: 238px minmax(0, 1fr);
-  gap: 20px;
+  gap: calc(20px + var(--st-section-gap, 28px) - 28px);
   align-items: start;
 }
 .store-page[data-template='mercado'] .mc-cat-aside {

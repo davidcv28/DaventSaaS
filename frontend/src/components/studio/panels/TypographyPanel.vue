@@ -10,9 +10,9 @@ import PanelField from './PanelField.vue'
 import PanelLock from './PanelLock.vue'
 import {
   STORE_FONT_PICKER, STORE_FONTS, storeFontFamily, ensureStoreFont, ensureStoreFontPicker,
-  NAME_FONT_SIZE_MIN, NAME_FONT_SIZE_MAX
+  NAME_FONT_SIZE_MIN, NAME_FONT_SIZE_MAX, STORE_TEMPLATE_RETIRED_MAP
 } from '../../../api/stores.api.js'
-import { FONT_PAIRS } from './panelShared.js'
+import { FONT_PAIRS, typoDesignRule, pairBlockReason, headingWeightRange, weightRangeNote } from './panelShared.js'
 import { capOption, capSection } from '../../../studio/capabilities.js'
 
 const props = defineProps({
@@ -54,6 +54,20 @@ function pickPair(p) {
 }
 const pairActive = (p) => typo.value.heading === p.heading && typo.value.body === p.body
 
+// Tipografía curada por diseño: cada piel solo admite los pares y pesos que
+// sostienen su identidad. Las reglas viven en panelShared.js (TYPO_DESIGN_RULES)
+// y se indexan por el diseño activo; los diseños retirados resuelven al
+// equivalente vigente. Un tema ya guardado no se toca: el bloqueo es solo de
+// UI para nuevas elecciones.
+const designTemplate = computed(() => {
+  const raw = String(props.form.template || '').trim()
+  return STORE_TEMPLATE_RETIRED_MAP[raw] || raw
+})
+const typoRule = computed(() => typoDesignRule(designTemplate.value))
+const pairWhy = (p) => pairBlockReason(p, typoRule.value)
+const weightRange = computed(() => headingWeightRange(typoRule.value, typo.value.heading))
+const weightNote = computed(() => weightRangeNote(typoRule.value, typo.value.heading, typo.value.weightHeading))
+
 const SCALES = [
   { id: 'compact', label: 'Compacta', hint: 'Títulos más chicos, más contenido a la vista.' },
   { id: 'balanced', label: 'Balanceada', hint: 'El equilibrio de siempre.' },
@@ -90,12 +104,13 @@ const nameSize = computed({
       <div class="stp-pairs" role="group" aria-label="Pares de fuentes recomendados">
         <button
           v-for="p in FONT_PAIRS" :key="p.id" type="button" class="stp-pair"
-          :class="{ active: pairActive(p) }" :aria-pressed="pairActive(p)"
+          :class="{ active: pairActive(p), 'is-blocked': !!pairWhy(p) }" :aria-pressed="pairActive(p)"
+          :disabled="!!pairWhy(p)" :title="pairWhy(p) || p.hint"
           @click="pickPair(p)"
         >
           <span class="stp-pair-aa" :style="fontCss(p.heading)" aria-hidden="true">Aa</span>
           <span class="stp-pair-lb">{{ p.label }}</span>
-          <span class="stp-pair-hint">{{ p.hint }}</span>
+          <span class="stp-pair-hint">{{ pairWhy(p) || p.hint }}</span>
         </button>
       </div>
     </PanelField>
@@ -181,8 +196,15 @@ const nameSize = computed({
     >
       <label class="stp-angle">
         <span class="stp-role-lb">Grosor <b class="stp-val">{{ typo.weightHeading }}</b></span>
-        <input type="range" class="stp-range" min="300" max="900" step="100" :value="typo.weightHeading" aria-label="Peso de los títulos" @input="typo.weightHeading = Number($event.target.value)" />
+        <input
+          v-if="weightRange.min !== weightRange.max" type="range" class="stp-range"
+          :min="weightRange.min" :max="weightRange.max" step="100"
+          :value="typo.weightHeading" aria-label="Peso de los títulos"
+          @input="typo.weightHeading = Number($event.target.value)"
+        />
+        <span v-else class="stp-val stp-val-fixed">{{ weightRange.min }}</span>
       </label>
+      <p v-if="weightNote" class="stp-hint2">{{ weightNote }}</p>
     </PanelField>
 
     <PanelField
@@ -225,3 +247,11 @@ const nameSize = computed({
     />
   </div>
 </template>
+
+<style scoped>
+/* Pares que la piel del diseño no admite: se ven apagados y el motivo
+   reemplaza al hint (misma grilla, mismo tamaño). */
+.stp-pair.is-blocked { opacity: .55; cursor: not-allowed; }
+.stp-pair.is-blocked .stp-pair-hint { color: var(--warn, #b45309); }
+.stp-val-fixed { font-size: 15px; }
+</style>

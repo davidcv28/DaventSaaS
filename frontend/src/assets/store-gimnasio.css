@@ -39,7 +39,7 @@
   --gy-mono: 'JetBrains Mono', ui-monospace, 'SFMono-Regular', Consolas, monospace;
   --gy-wrap: 1240px;
   --gy-gutter: 28px;
-  --gy-section: clamp(76px, 8.4vw, 108px);
+  --gy-section: calc(clamp(76px, 8.4vw, 108px) + var(--st-section-gap, 28px) - 28px);
   --gy-top-h: 84px;
   --gy-ease: cubic-bezier(.2, .8, .2, 1);
   --gy-radius: 0px;
@@ -1670,7 +1670,7 @@
 .store-page[data-template='gimnasio'] .sp-gallery-item img { transition: transform .6s var(--gy-ease), filter .3s var(--gy-ease); filter: saturate(.92); }
 .store-page[data-template='gimnasio'] .sp-gallery-item:hover img { transform: scale(1.05); filter: saturate(1.08); }
 .store-page[data-template='gimnasio'] .sp-showcase { padding: var(--gy-section) 0 0; }
-.store-page[data-template='gimnasio'] .sp-showcase-grid { gap: clamp(28px, 4vw, 56px); align-items: center; }
+.store-page[data-template='gimnasio'] .sp-showcase-grid { gap: calc(clamp(28px, 4vw, 56px) + var(--st-section-gap, 28px) - 28px); align-items: center; }
 .store-page[data-template='gimnasio'] .sp-showcase-frame { border: 1px solid var(--gy-line-strong); border-radius: 0; }
 .store-page[data-template='gimnasio'] .sp-showcase-frame img { filter: saturate(.95) contrast(1.04); }
 .store-page[data-template='gimnasio'] .sp-showcase-title { font-family: var(--gy-display); font-weight: 800; text-transform: uppercase; }
@@ -1870,7 +1870,7 @@
    CONTACTO — mesa de consulta
    ========================================================================== */
 .store-page[data-template='gimnasio'] .sp-contact { padding: var(--gy-section) 0 0; }
-.store-page[data-template='gimnasio'] .sp-contact-grid { gap: clamp(28px, 4vw, 56px); }
+.store-page[data-template='gimnasio'] .sp-contact-grid { gap: calc(clamp(28px, 4vw, 56px) + var(--st-section-gap, 28px) - 28px); }
 .store-page[data-template='gimnasio'] .sp-contact-title { font-family: var(--gy-display); font-weight: 800; text-transform: uppercase; }
 .store-page[data-template='gimnasio'] .sp-contact-sub { color: var(--gy-muted); }
 .store-page[data-template='gimnasio'] .sp-contact-hours { border-top: 1px solid var(--gy-line); }
@@ -2287,7 +2287,7 @@
   .store-page[data-template='gimnasio'] .sp-gallery-item:nth-child(4) { grid-column: span 2; }
 }
 @media (max-width: 620px) {
-  .store-page[data-template='gimnasio'] { --gy-gutter: 18px; --gy-section: 68px; }
+  .store-page[data-template='gimnasio'] { --gy-gutter: 18px; --gy-section: calc(68px + var(--st-section-gap, 28px) - 28px); }
   .store-page[data-template='gimnasio'] .sp-brand .sp-name { font-size: 20px; letter-spacing: .02em; }
   /* En móvil el destino Catálogo ya vive en la tab bar: el botón del header
      se apaga para que el nombre del club no se corte. */
