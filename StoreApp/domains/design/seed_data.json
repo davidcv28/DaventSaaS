@@ -1,6 +1,172 @@
 {
   "styles": [
     {
+      "slug": "portico",
+      "nombre": "Pórtico",
+      "categoria": "Premium",
+      "descripcion": "Insignia premium generalista: piedra caliza, tinta verde-negra y cobre, serif Italiana, índices 01–13 y todas las secciones del negocio.",
+      "tier": "advanced",
+      "template": "portico",
+      "pattern": "portico",
+      "page_theme": "light",
+      "tokens": {
+        "palette": {
+          "primary": "#1e2a22",
+          "secondary": "#a75e3c",
+          "accent": "#a75e3c",
+          "bg": "#f3efe6",
+          "surface": "#fbf8f1",
+          "text": "#151a16",
+          "muted": "#6b7168",
+          "border": "#d7cfbf",
+          "success": "#3f7a5a",
+          "danger": "#b3402e"
+        },
+        "containers": {
+          "radius": "sm",
+          "shadow": "soft",
+          "border": "thin",
+          "density": "normal",
+          "surface": "flat"
+        },
+        "typography": {
+          "heading": "italiana",
+          "subheading": "italiana",
+          "body": "manrope",
+          "scale": "balanced",
+          "weightHeading": 400,
+          "letterSpacing": "-0.015em"
+        },
+        "buttons": {
+          "shape": "rounded",
+          "style": "solid",
+          "size": "md"
+        },
+        "background": {
+          "type": "solid",
+          "overlay": "none"
+        },
+        "motion": {
+          "reveal": "fade",
+          "hover": "lift",
+          "intensity": "subtle"
+        },
+        "mobile": {
+          "gridCols": 1,
+          "cardStyle": "standard",
+          "heroHeight": "tall"
+        }
+      },
+      "effects": {
+        "accent": "#a75e3c",
+        "primary": "#1e2a22",
+        "secondary": "#a75e3c",
+        "border": "#d7cfbf",
+        "radius": "sm",
+        "border_width": 1,
+        "border_style": "solid",
+        "shadow": "soft",
+        "space": "normal",
+        "button_shape": "rounded",
+        "divider": "line"
+      },
+      "layout": {},
+      "layout_spec": {},
+      "tags": [
+        "general",
+        "premium",
+        "galeria",
+        "cobre"
+      ],
+      "is_default": false,
+      "is_active": true
+    },
+    {
+      "slug": "portico-noche",
+      "nombre": "Pórtico Noche",
+      "categoria": "Premium",
+      "descripcion": "Pórtico en modo noche: grafito verde, piedra cálida y cobre encendido. La misma galería editorial, después del cierre.",
+      "tier": "advanced",
+      "template": "portico",
+      "pattern": "portico",
+      "page_theme": "dark",
+      "tokens": {
+        "palette": {
+          "primary": "#c77e54",
+          "secondary": "#e8dfcf",
+          "accent": "#c77e54",
+          "bg": "#121512",
+          "surface": "#191d19",
+          "text": "#f2ede1",
+          "muted": "#9aa093",
+          "border": "#2d332c",
+          "success": "#7fb79a",
+          "danger": "#e0745f"
+        },
+        "containers": {
+          "radius": "sm",
+          "shadow": "medium",
+          "border": "thin",
+          "density": "normal",
+          "surface": "flat"
+        },
+        "typography": {
+          "heading": "italiana",
+          "subheading": "italiana",
+          "body": "manrope",
+          "scale": "balanced",
+          "weightHeading": 400,
+          "letterSpacing": "-0.015em"
+        },
+        "buttons": {
+          "shape": "rounded",
+          "style": "solid",
+          "size": "md"
+        },
+        "background": {
+          "type": "solid",
+          "overlay": "none"
+        },
+        "motion": {
+          "reveal": "fade",
+          "hover": "lift",
+          "intensity": "subtle"
+        },
+        "mobile": {
+          "gridCols": 1,
+          "cardStyle": "standard",
+          "heroHeight": "tall"
+        }
+      },
+      "effects": {
+        "accent": "#c77e54",
+        "primary": "#c77e54",
+        "secondary": "#e8dfcf",
+        "bg": "#121512",
+        "surface": "#191d19",
+        "text": "#f2ede1",
+        "muted": "#9aa093",
+        "border": "#2d332c",
+        "radius": "sm",
+        "border_width": 1,
+        "border_style": "solid",
+        "shadow": "medium",
+        "space": "normal",
+        "button_shape": "rounded",
+        "divider": "line"
+      },
+      "layout": {},
+      "layout_spec": {},
+      "tags": [
+        "general",
+        "premium",
+        "galeria",
+        "noche"
+      ],
+      "is_default": false,
+      "is_active": true
+    },
+    {
       "slug": "esencial",
       "nombre": "Esencial",
       "categoria": "general",
@@ -7095,6 +7261,147 @@
     }
   ],
   "patterns": [
+    {
+      "slug": "portico",
+      "nombre": "Pórtico",
+      "categoria": "premium",
+      "descripcion": "Insignia premium generalista: galería editorial de piedra y cobre con todas las secciones del negocio (ofrecemos, cifras, historia, garantías, catálogo, marcas, galería, trayectoria, equipo, opiniones, membresías, video, FAQ, CTA y contacto), catálogo filtrable, servicios y ficha de producto.",
+      "tier": "advanced",
+      "template": "portico",
+      "style": "portico",
+      "layout": {
+        "landing": [
+          {
+            "id": "hero",
+            "enabled": true,
+            "order": 0
+          },
+          {
+            "id": "announcements",
+            "enabled": true,
+            "order": 1
+          },
+          {
+            "id": "services",
+            "enabled": true,
+            "order": 2
+          },
+          {
+            "id": "stats",
+            "enabled": true,
+            "order": 3
+          },
+          {
+            "id": "about",
+            "enabled": true,
+            "order": 4
+          },
+          {
+            "id": "benefits",
+            "enabled": true,
+            "order": 5
+          },
+          {
+            "id": "categories",
+            "enabled": true,
+            "order": 6
+          },
+          {
+            "id": "featured",
+            "enabled": true,
+            "order": 7
+          },
+          {
+            "id": "brands",
+            "enabled": true,
+            "order": 8
+          },
+          {
+            "id": "gallery",
+            "enabled": true,
+            "order": 9
+          },
+          {
+            "id": "timeline",
+            "enabled": true,
+            "order": 10
+          },
+          {
+            "id": "team",
+            "enabled": true,
+            "order": 11
+          },
+          {
+            "id": "testimonials",
+            "enabled": true,
+            "order": 12
+          },
+          {
+            "id": "plans",
+            "enabled": true,
+            "order": 13
+          },
+          {
+            "id": "video",
+            "enabled": true,
+            "order": 14
+          },
+          {
+            "id": "faq",
+            "enabled": true,
+            "order": 15
+          },
+          {
+            "id": "cta",
+            "enabled": true,
+            "order": 16
+          },
+          {
+            "id": "contact",
+            "enabled": true,
+            "order": 17
+          }
+        ],
+        "catalog": [
+          {
+            "id": "filters",
+            "enabled": true,
+            "order": 0
+          },
+          {
+            "id": "sort",
+            "enabled": true,
+            "order": 1
+          },
+          {
+            "id": "grid",
+            "enabled": true,
+            "order": 2
+          }
+        ],
+        "services": [
+          {
+            "id": "hero",
+            "enabled": true,
+            "order": 0
+          },
+          {
+            "id": "band",
+            "enabled": true,
+            "order": 1
+          }
+        ]
+      },
+      "supports_dark_mode": true,
+      "tags": [
+        "general",
+        "premium",
+        "galeria",
+        "cobre",
+        "todos"
+      ],
+      "preview": ""
+    },
     {
       "slug": "esencial",
       "nombre": "Esencial",
