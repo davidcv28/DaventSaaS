@@ -35,7 +35,7 @@ const props = defineProps({
   // secciones en un solo gesto (async → bool). Sin él el footer no sale.
   onSaveShow: { type: Function, default: null }
 })
-const emit = defineEmits(['navigate', 'ring', 'open-studio', 'update:previewOpen', 'toggle-page'])
+const emit = defineEmits(['navigate', 'ring', 'open-studio', 'update:previewOpen', 'toggle-page', 'support'])
 
 const { patterns, styles, categories, status, load } = useDesignCatalog()
 // Cada elección de diseño/estilo recarga la vista previa (el iframe hace un
@@ -491,6 +491,12 @@ onBeforeUnmount(() => {
             </div>
           </div>
 
+          <p class="dmenu-support">
+            <AppIcon name="message-circle" :size="14" aria-hidden="true" />
+            ¿Ves algo roto en tu web? Podés reportar errores visuales desde el chat de soporte.
+            <button type="button" class="dmenu-support-link" @click="emit('support')">Reportar un error</button>
+          </p>
+
           <p v-if="status === 'error'" class="dmenu-alert" role="alert">
             No pudimos cargar el catálogo de diseño.
             <button type="button" class="btn ghost btn-auto" @click="load(true)">Reintentar</button>
@@ -662,6 +668,19 @@ onBeforeUnmount(() => {
 [data-theme='dark'] .dmenu-badge.purple { background: rgba(139, 92, 246, .16); border-color: rgba(167, 139, 250, .4); color: #c4b5fd; }
 .dmenu-alert { display: flex; align-items: center; flex-wrap: wrap; gap: 10px; margin: 0; font-size: 12px; color: var(--danger, #b91c1c); }
 .dmenu-alert code { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; }
+.dmenu-support {
+  margin: 0; display: flex; align-items: center; flex-wrap: wrap; gap: 6px;
+  font-size: 12px; line-height: 1.45; color: var(--muted);
+}
+.dmenu-support .icon { flex: none; color: var(--brand-600); }
+.dmenu-support-link {
+  padding: 0; border: 0; background: none; cursor: pointer; font: inherit;
+  font-weight: 600; color: var(--brand-600); text-decoration: underline;
+  text-underline-offset: 3px;
+}
+@media (hover: hover) and (pointer: fine) {
+  .dmenu-support-link:hover { color: var(--brand-700, var(--brand-600)); }
+}
 /* Dos columnas solo cuando el contenedor da lugar: por debajo la preview
    vive en la hoja a pantalla completa y las acciones quedan bajo los campos. */
 @container (min-width: 840px) {

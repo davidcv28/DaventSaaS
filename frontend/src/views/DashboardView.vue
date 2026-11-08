@@ -5041,7 +5041,7 @@ async function changePassword() {
         :shop-name="store.customization?.display_name || business" :can-studio="canDesignAdvanced"
         :site-templates="designSiteTemplates" v-model:preview-open="designPreviewOpen"
         :page-options="designPageOptions" @toggle-page="toggleSiteTemplate" :on-save-show="saveShowFromModal"
-        @navigate="section = $event" @open-studio="onOpenStudio"
+        @navigate="section = $event" @open-studio="onOpenStudio" @support="onBellClick"
       >
         <template #actions>
           <div class="design-actions">
