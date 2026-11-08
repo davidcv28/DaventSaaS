@@ -7258,6 +7258,231 @@
         "corners": "rounded"
       },
       "concept": "Negro puro, hueso y carbon: Archivo versalita, grilla retail y cabecera tipo e-commerce."
+    },
+    {
+      "slug": "umbral",
+      "nombre": "Umbral",
+      "categoria": "Hogar y objetos",
+      "descripcion": "La casa como plano editorial: papel lino, tinta cálida y azul cobalto. Playfair Display en titulares, Work Sans en lectura y JetBrains Mono en datos; arcos de medio punto, índice de ambientes, filetes de plano y fichas técnicas. El diseño premium del hogar.",
+      "tier": "advanced",
+      "template": "umbral",
+      "page_theme": "light",
+      "pattern": "umbral",
+      "tokens": {
+        "palette": {
+          "accent": "#2B4C9B",
+          "primary": "#252119",
+          "secondary": "#4A453A",
+          "bg": "#F4F1E8",
+          "surface": "#EBE7D8",
+          "text": "#252119",
+          "muted": "#6E6858",
+          "border": "#D9D3C2",
+          "success": "#3E7C4F",
+          "danger": "#A63D2F"
+        },
+        "containers": {
+          "radius": "lg",
+          "shadow": "soft",
+          "border": "thin",
+          "density": "comfortable",
+          "surface": "flat"
+        },
+        "typography": {
+          "heading": "playfair-display",
+          "subheading": "work-sans",
+          "body": "work-sans",
+          "scale": "editorial",
+          "weightHeading": 500,
+          "letterSpacing": "-0.01em"
+        },
+        "buttons": {
+          "shape": "rounded",
+          "style": "solid",
+          "size": "md"
+        },
+        "background": {
+          "type": "solid",
+          "value": null,
+          "overlay": "none"
+        },
+        "motion": {
+          "reveal": "fade-up",
+          "hover": "lift",
+          "intensity": "subtle"
+        },
+        "mobile": {
+          "cardStyle": "standard",
+          "heroHeight": "standard"
+        },
+        "preview": "",
+        "icons": {
+          "style": "line",
+          "stroke": "1.8",
+          "size": "20",
+          "corners": "rounded"
+        }
+      },
+      "effects": {
+        "accent": "#2B4C9B",
+        "primary": "#252119",
+        "secondary": "#4A453A",
+        "bg": "#F4F1E8",
+        "surface": "#EBE7D8",
+        "text": "#252119",
+        "muted": "#6E6858",
+        "border": "#D9D3C2",
+        "success": "#3E7C4F",
+        "danger": "#A63D2F",
+        "radius": "lg",
+        "shadow": "soft",
+        "border_width": 1,
+        "border_style": "solid",
+        "space": "normal",
+        "button_shape": "rounded",
+        "divider": "none"
+      },
+      "layout": {},
+      "layout_spec": {},
+      "tags": [
+        "hogar",
+        "premium",
+        "arquitectura",
+        "deco",
+        "muebles",
+        "casa",
+        "elegante"
+      ],
+      "preview": "",
+      "style": "Umbral",
+      "anim": {
+        "hero": "fade-up",
+        "reveal": "fade-up",
+        "hover": "lift",
+        "button": "solid-press"
+      },
+      "easing": "cubic-bezier(.22,1,.36,1)",
+      "duration": "420ms",
+      "icons": {
+        "style": "line",
+        "stroke": "1.8",
+        "size": "20",
+        "corners": "rounded"
+      },
+      "concept": "Lino + cobalto: la casa dibujada como plano editorial."
+    },
+    {
+      "slug": "umbral-noche",
+      "nombre": "Umbral Noche",
+      "categoria": "Hogar y objetos",
+      "descripcion": "La misma casa de noche: tinta azul profunda, papel hueso y el cobalto aclarado. Los arcos y el índice de ambientes se leen como plano luminoso sobre azul noche.",
+      "tier": "advanced",
+      "template": "umbral",
+      "page_theme": "dark",
+      "pattern": "umbral",
+      "tokens": {
+        "palette": {
+          "accent": "#8FA6E8",
+          "primary": "#ECE8DC",
+          "secondary": "#6E8FD0",
+          "bg": "#15181F",
+          "surface": "#1D212B",
+          "text": "#ECE8DC",
+          "muted": "#9BA1AE",
+          "border": "#2E3442",
+          "success": "#3FA66F",
+          "danger": "#D96A5F"
+        },
+        "containers": {
+          "radius": "lg",
+          "shadow": "medium",
+          "border": "thin",
+          "density": "comfortable",
+          "surface": "elevated"
+        },
+        "typography": {
+          "heading": "playfair-display",
+          "subheading": "work-sans",
+          "body": "work-sans",
+          "scale": "editorial",
+          "weightHeading": 500,
+          "letterSpacing": "-0.01em"
+        },
+        "buttons": {
+          "shape": "rounded",
+          "style": "solid",
+          "size": "md"
+        },
+        "background": {
+          "type": "solid",
+          "value": null,
+          "overlay": "none"
+        },
+        "motion": {
+          "reveal": "fade-up",
+          "hover": "lift",
+          "intensity": "subtle"
+        },
+        "mobile": {
+          "cardStyle": "standard",
+          "heroHeight": "standard"
+        },
+        "preview": "",
+        "icons": {
+          "style": "line",
+          "stroke": "1.8",
+          "size": "20",
+          "corners": "rounded"
+        }
+      },
+      "effects": {
+        "accent": "#8FA6E8",
+        "primary": "#ECE8DC",
+        "secondary": "#6E8FD0",
+        "bg": "#15181F",
+        "surface": "#1D212B",
+        "text": "#ECE8DC",
+        "muted": "#9BA1AE",
+        "border": "#2E3442",
+        "success": "#3FA66F",
+        "danger": "#D96A5F",
+        "radius": "lg",
+        "shadow": "medium",
+        "border_width": 1,
+        "border_style": "solid",
+        "space": "normal",
+        "button_shape": "rounded",
+        "divider": "none"
+      },
+      "layout": {},
+      "layout_spec": {},
+      "tags": [
+        "hogar",
+        "premium",
+        "arquitectura",
+        "deco",
+        "muebles",
+        "casa",
+        "noche",
+        "elegante"
+      ],
+      "preview": "",
+      "style": "Umbral Noche",
+      "anim": {
+        "hero": "fade-up",
+        "reveal": "fade-up",
+        "hover": "lift",
+        "button": "solid-press"
+      },
+      "easing": "cubic-bezier(.22,1,.36,1)",
+      "duration": "420ms",
+      "icons": {
+        "style": "line",
+        "stroke": "1.8",
+        "size": "20",
+        "corners": "rounded"
+      },
+      "concept": "Noche azul: el plano de la casa en versión nocturna."
     }
   ],
   "patterns": [
@@ -10843,6 +11068,203 @@
       "variables": {},
       "supports_dark_mode": true,
       "style": "showroom"
+    },
+    {
+      "slug": "umbral",
+      "nombre": "Umbral",
+      "categoria": "hogar",
+      "descripcion": "La casa como plano editorial premium: arcos de medio punto, índice de ambientes, filetes de arquitectura y fichas técnicas en mono. Portada con titular Playfair y portada enmarcada en arco, cinta de anuncios, ambientes, colección, la casa con stats, qué ofrecemos, garantías, galería de espacios, testimonios, membresías, FAQ, marcas, videos, CTA y contacto. Catálogo con filtros laterales y hoja móvil, búsqueda con sugerencias, orden y vista grilla/lista; ficha de producto en arco con specs y opiniones; servicios como lista de la casa por WhatsApp. Solo datos reales de la tienda.",
+      "tier": "advanced",
+      "template": "umbral",
+      "layout": {
+        "landing": [
+          {
+            "id": "hero",
+            "variant": "split",
+            "enabled": true,
+            "order": 0
+          },
+          {
+            "id": "announcements",
+            "enabled": true,
+            "order": 1
+          },
+          {
+            "id": "categories",
+            "enabled": true,
+            "order": 2
+          },
+          {
+            "id": "featured",
+            "enabled": true,
+            "order": 3
+          },
+          {
+            "id": "about",
+            "enabled": true,
+            "order": 4
+          },
+          {
+            "id": "stats",
+            "enabled": true,
+            "order": 5
+          },
+          {
+            "id": "services",
+            "enabled": true,
+            "order": 6
+          },
+          {
+            "id": "benefits",
+            "variant": "cards",
+            "enabled": true,
+            "order": 7
+          },
+          {
+            "id": "gallery",
+            "enabled": true,
+            "order": 8
+          },
+          {
+            "id": "plans",
+            "enabled": true,
+            "order": 9
+          },
+          {
+            "id": "testimonials",
+            "variant": "cards",
+            "enabled": true,
+            "order": 10
+          },
+          {
+            "id": "faq",
+            "enabled": true,
+            "order": 11
+          },
+          {
+            "id": "brands",
+            "enabled": true,
+            "order": 12
+          },
+          {
+            "id": "video",
+            "enabled": true,
+            "order": 13
+          },
+          {
+            "id": "cta",
+            "variant": "band",
+            "enabled": true,
+            "order": 14
+          },
+          {
+            "id": "contact",
+            "enabled": true,
+            "order": 15
+          }
+        ],
+        "catalog": [
+          {
+            "id": "hero",
+            "enabled": true,
+            "order": 0
+          },
+          {
+            "id": "filters",
+            "enabled": true,
+            "order": 1
+          },
+          {
+            "id": "grid",
+            "enabled": true,
+            "order": 2
+          }
+        ],
+        "product": [
+          {
+            "id": "hero",
+            "enabled": true,
+            "order": 0
+          },
+          {
+            "id": "details",
+            "enabled": true,
+            "order": 1
+          },
+          {
+            "id": "related",
+            "enabled": true,
+            "order": 2
+          }
+        ],
+        "services": [
+          {
+            "id": "hero",
+            "enabled": true,
+            "order": 0
+          },
+          {
+            "id": "offerings",
+            "enabled": true,
+            "order": 1
+          },
+          {
+            "id": "list",
+            "enabled": true,
+            "order": 2
+          }
+        ]
+      },
+      "tokens": {
+        "accent": "#2B4C9B",
+        "palette": {
+          "accent": "#2B4C9B",
+          "primary": "#252119",
+          "secondary": "#4A453A",
+          "bg": "#F4F1E8",
+          "surface": "#EBE7D8",
+          "text": "#252119",
+          "muted": "#6E6858",
+          "border": "#D9D3C2",
+          "success": "#3E7C4F",
+          "danger": "#A63D2F"
+        },
+        "fonts": [
+          "playfair-display",
+          "work-sans",
+          "jetbrains-mono"
+        ],
+        "radius": "lg",
+        "anim": {
+          "hero": "fade-up",
+          "reveal": "fade-up",
+          "hover": "lift",
+          "button": "solid-press"
+        },
+        "easing": "cubic-bezier(.22,1,.36,1)",
+        "duration": "420ms",
+        "icons": {
+          "style": "line",
+          "stroke": "1.8",
+          "size": "20",
+          "corners": "rounded"
+        }
+      },
+      "tags": [
+        "hogar",
+        "premium",
+        "arquitectura",
+        "deco",
+        "muebles",
+        "casa",
+        "ecommerce",
+        "elegante",
+        "diseño"
+      ],
+      "preview": "",
+      "variables": {},
+      "supports_dark_mode": true,
+      "style": "umbral"
     }
   ]
 }
