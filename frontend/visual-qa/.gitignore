@@ -1,0 +1,7 @@
+# Artefactos generados por scripts/visual-qa.mjs — nada de esto va al repo.
+# Los baselines son locales por máquina: se regeneran con --update-baseline.
+current/
+.tmp/
+.jobs/
+report.json
+baseline/

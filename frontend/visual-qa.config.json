@@ -1,0 +1,24 @@
+{
+  "apiBase": "http://localhost:8000",
+  "store": "mi-qa",
+  "python": "",
+  "surfaces": ["landing"],
+  "viewports": [
+    { "name": "mobile", "width": 390, "height": 844 },
+    { "name": "tablet", "width": 768, "height": 1024 },
+    { "name": "desktop", "width": 1360, "height": 900 }
+  ],
+  "timeoutMs": 30000,
+  "settleMs": 900,
+  "baselineTolerance": 0.02,
+  "outDir": "visual-qa",
+  "audit": {
+    "maxNodes": 25,
+    "contrastMin": 4.5,
+    "contrastMinLarge": 3.0
+  },
+  "consoleIgnore": [],
+  "username": "",
+  "password": "",
+  "previewToken": ""
+}

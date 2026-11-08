@@ -9,6 +9,7 @@
     "build": "vite build",
     "release:apk": "node scripts/release-apk.mjs",
     "verify:studio": "node scripts/verify-studio-contract.mjs",
+    "visual:qa": "node scripts/visual-qa.mjs",
     "preview": "vite preview --port 5173",
     "lint": "eslint .",
     "test": "vitest run"
