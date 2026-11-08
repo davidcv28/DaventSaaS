@@ -58,7 +58,7 @@ html[data-ds-theme="light"]{
   --ink:#12171F;
   --mut:#565F6C;
   --steel:#39424F;
-  --accent:var(--ds-accent,#D63A17);
+  --accent:var(--ds-accent,color-mix(in srgb,#D63A17 86%,#000));
   --accent-text:#B3300E;
   --on-accent:var(--ds-accent-ink,#FFF7F2);
   color-scheme:light;
@@ -129,6 +129,11 @@ header.top.menu-open{
   --hdr-ink:var(--ink);
   --hdr-mut:var(--mut);
 }
+/* En portada el header flota sobre el hero oscuro: un velo superior mantiene
+   marca y menú legibles sin volver opaco el chrome. */
+html[data-ds-surface="landing"] header.top:not(.solid):not(.menu-open){
+  background:linear-gradient(180deg,rgba(12,16,22,.72) 0%,rgba(12,16,22,.28) 72%,transparent 100%);
+}
 .brand{display:flex;align-items:center;gap:11px;min-width:0;flex:none;color:var(--hdr-ink)}
 .brand .badge{
   flex:none;width:34px;height:34px;display:grid;place-items:center;
@@ -154,11 +159,11 @@ header.top.menu-open{
 .nav-links a:hover::after,.nav-links a.is-on::after{transform:scaleX(1)}
 .nav-links a.is-on{color:var(--accent-text)}
 .nav-cta{
-  flex:none;border:1px solid var(--accent);color:var(--accent-text)!important;
+  flex:none;border:1px solid var(--accent);background:var(--accent);color:var(--on-accent)!important;
   padding:9px 16px;transition:background .25s var(--ease),color .25s var(--ease);
 }
 .nav-cta::after{display:none}
-.nav-cta:hover{background:var(--accent);color:var(--on-accent)!important}
+.nav-cta:hover{background:var(--accent-text);border-color:var(--accent-text);color:var(--on-accent)!important}
 .burger{
   display:none;background:none;border:1px solid var(--line-2);color:var(--hdr-ink);
   cursor:pointer;width:42px;height:42px;flex:none;line-height:1;
@@ -597,7 +602,7 @@ header.top.menu-open{
 @keyframes drift{to{transform:translateX(-50%)}}
 .cta-in{position:relative;display:flex;justify-content:space-between;align-items:center;gap:32px;flex-wrap:wrap}
 .cta-title{font-weight:900;font-stretch:112%;font-size:clamp(30px,5.4vw,72px);line-height:.98;text-transform:uppercase;text-wrap:balance}
-.cta-text{color:color-mix(in srgb,var(--on-accent) 78%,transparent);max-width:48ch;margin-top:14px}
+.cta-text{color:var(--on-accent);max-width:48ch;margin-top:14px}
 .cta-text:empty{display:none}
 .cta-band .btn{background:var(--on-accent);border-color:var(--on-accent);color:var(--accent)}
 .cta-band .btn:hover{background:transparent;color:var(--on-accent);border-color:var(--on-accent)}
@@ -605,7 +610,7 @@ header.top.menu-open{
 /* ---------- contacto ---------- */
 .contact{display:grid;grid-template-columns:1.05fr .95fr;gap:clamp(28px,5vw,72px);align-items:start}
 .contact-title{font-weight:900;font-stretch:112%;font-size:clamp(32px,5.4vw,72px);line-height:.98;text-transform:uppercase;margin-bottom:18px;overflow-wrap:anywhere}
-.contact-title .fire{color:var(--accent)}
+.contact-title .fire{color:var(--accent-text)}
 .contact .lead{color:var(--steel);max-width:44ch;margin-bottom:26px}
 .contact .lead:empty{display:none}
 .info-row{

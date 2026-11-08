@@ -36,8 +36,8 @@
   --accent:var(--ds-accent,#B34A2E);
   --accent-soft:#D98A63;
   --accent-deep:color-mix(in srgb,var(--accent) 74%,#000);
-  --accent-text:color-mix(in srgb,var(--accent) 72%,var(--ink));
-  --accent-on-ink:color-mix(in srgb,var(--accent) 54%,var(--paper));
+  --accent-text:var(--ds-accent-text,color-mix(in srgb,var(--accent) 72%,var(--ink)));
+  --accent-on-ink:color-mix(in srgb,var(--accent) 58%,var(--band-ink));
   --on-accent:var(--ds-accent-ink,#F4EFE6);
   --ok:var(--ds-success,#2F6B4F);
   --band:#0E0C0A;
@@ -127,8 +127,7 @@ ul,ol{margin:0;padding:0;list-style:none}
   transition:background .4s,color .4s,border-color .4s;
 }
 .head.is-scrolled{
-  background:color-mix(in srgb,var(--paper) 86%,transparent);
-  -webkit-backdrop-filter:blur(14px);backdrop-filter:blur(14px);
+  background:color-mix(in srgb,var(--paper) 94%,transparent);
   border-color:var(--line);color:var(--ink);
 }
 .ribbon{
@@ -388,7 +387,7 @@ body.m-open .m-sheet{transform:none}
   position:absolute;bottom:20px;left:20px;background:var(--paper);color:var(--ink);
   padding:14px 20px;font:500 10px/1.4 var(--mono);letter-spacing:.18em;text-transform:uppercase;
 }
-.atelier-tag{display:block;color:var(--accent);margin-bottom:22px}
+.atelier-tag{display:block;color:var(--accent-text);margin-bottom:22px}
 .about-copy h3{margin:0;font:400 clamp(34px,4.5vw,60px)/1.05 var(--display);letter-spacing:.01em;text-transform:uppercase;text-wrap:balance;overflow-wrap:anywhere}
 .about-copy h3:empty{display:none}
 .about-lead{margin-top:18px;color:var(--muted);font-size:16px;line-height:1.7;max-width:46ch}
