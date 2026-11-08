@@ -155,14 +155,20 @@ const currentPatternBadge = computed(() => {
 })
 
 // Un patrón sin tema elegido trae sus fuentes (tokens del DesignPattern).
+// Tema LIMPIO: no mezcla el site_theme anterior — los ajustes
+// personalizados del usuario se borran al cambiar de diseño (el guardado
+// viaja con _reset y el backend reemplaza en vez de mergear).
 function patternTheme(p) {
   const tokens = p.tokens || {}
-  const theme = { ...(props.form.site_theme || {}) }
   const fonts = Array.isArray(tokens.fonts) ? tokens.fonts.filter(Boolean) : []
+  const theme = {}
   if (fonts.length) {
-    theme.typography = { ...(theme.typography || {}), body: fonts[0], heading: fonts[1] || fonts[0] }
+    theme.typography = { body: fonts[0], heading: fonts[1] || fonts[0] }
     fonts.forEach((f) => ensureStoreFont(f))
   }
+  const palette = { ...(tokens.palette || {}) }
+  if (tokens.accent) palette.accent = tokens.accent
+  if (Object.keys(palette).length) theme.palette = palette
   return theme
 }
 
@@ -199,6 +205,9 @@ function onPatternPick(value) {
   const style = linked || defaultStyleFor(p.slug)
   if (style) applyStyle(style)
   else props.form.site_theme = patternTheme(p)
+  // Los ajustes del usuario (Editor Avanzado / Studio) se descartan: el
+  // próximo guardado envía site_theme con _reset y el servidor reemplaza.
+  props.form.site_theme_reset = true
   // Sin recargar el iframe: el UPDATE llega por postMessage y la página
   // decide con el meta del diseño ELEGIDO (template=/style= del documento).
   // Recargar reabría toda la cadena de fetches y era la ventana donde los
@@ -213,6 +222,7 @@ function onStylePick(value) {
   const s = styleOptions.value.find((x) => x.slug === value)
   if (!s) return
   applyStyle(s)
+  props.form.site_theme_reset = true
 }
 
 // Diseño y estilo nunca quedan vacíos: si el diseño guardado es retirado o

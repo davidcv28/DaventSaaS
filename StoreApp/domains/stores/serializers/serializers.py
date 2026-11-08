@@ -442,7 +442,14 @@ class StoreCustomizationSerializer(serializers.ModelSerializer):
         has_advanced            =   profile_has_benefit(profile, 'has_design_advanced') if profile is not None else False
         has_plus                =   has_advanced or (profile_has_benefit(profile, 'has_design_plus') if profile is not None else False)
         has_style               =   has_plus or (profile_has_benefit(profile, 'has_customization') if profile is not None else False)
-        cleaned                 =   clean_site_theme(value, has_plus = has_plus, has_advanced = has_advanced, has_style = has_style, store = store)
+        #`_reset: true` = reemplazo total (cambio de diseño): sin merge con
+        #lo guardado — las claves/secciones ausentes no sobreviven. El flag
+        #no es parte del contrato: se descarta antes de clean_site_theme.
+        reset                   =   isinstance(value, dict) and value.get('_reset') is True
+        payload                 =   {k: v for k, v in value.items() if k != '_reset'} if reset else value
+        cleaned                 =   clean_site_theme(payload, has_plus = has_plus, has_advanced = has_advanced, has_style = has_style, store = store)
+        if reset:
+            return cleaned
         return merge_theme(getattr(self.instance, field, None), cleaned)
 
     def validate_site_theme(self, value):

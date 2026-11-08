@@ -1799,6 +1799,48 @@ class SiteThemeTests(TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.data['customization']['site_theme']['buttons']['borderStyle'], 'dashed')
 
+    def test_reset_replaces_theme_instead_of_merging(self):
+        #`_reset: true` (cambio de diseño en la sección Diseño): el tema
+        #viaja como reemplazo total — las claves/secciones que el nuevo
+        #tema no declara NO sobreviven del guardado anterior.
+        client      =   self._client(has_design_advanced = True)
+        response    =   self._patch(client, {'site_theme': {
+            'surfaces'  :   {'card': '#112233', 'nav': '#445566'},
+            'images'    :   {'ratio': 'wide', 'bg': '#a1b2c3'},
+            'buttons'   :   {'style': 'outline', 'borderStyle': 'dotted'},
+            'typography':   {'roles': {'h2': {'font': 'oswald', 'size': '2xl', 'weight': 700, 'tracking': 'tight', 'leading': 'snug', 'case': 'none'}}},
+        }})
+        self.assertEqual(response.status_code, 200)
+        #Cambio de diseño: el nuevo tema solo trae estilo + una superficie.
+        response    =   self._patch(client, {'site_theme': {
+            '_reset'    :   True,
+            'style'     :   {'id': 'base'},
+            'surfaces'  :   {'card': '#abcdef'},
+        }})
+        self.assertEqual(response.status_code, 200)
+        theme       =   response.data['customization']['site_theme']
+        self.assertEqual(theme.get('surfaces'), {'card': '#abcdef'})
+        self.assertNotIn('nav', theme.get('surfaces', {}))
+        self.assertNotIn('images', theme)
+        self.assertNotIn('typography', theme)
+        #El botón quedó en el default del estilo nuevo (sin borderStyle viejo).
+        self.assertNotEqual(theme.get('buttons', {}).get('borderStyle'), 'dotted')
+        #La web pública refleja el reemplazo, no el merge.
+        public      =   self._public_theme('tienda-duenio')
+        self.assertNotIn('images', public)
+        self.assertEqual(public.get('surfaces', {}).get('card'), '#abcdef')
+
+    def test_reset_with_empty_theme_clears_everything(self):
+        #Patrón sin tokens ni estilo: `_reset` + tema vacío = columna limpia.
+        client      =   self._client(has_design_advanced = True)
+        self._patch(client, {'site_theme': {
+            'surfaces'  :   {'card': '#112233'},
+            'buttons'   :   {'style': 'ghost'},
+        }})
+        response    =   self._patch(client, {'site_theme': {'_reset': True}})
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.data['customization']['site_theme'], {})
+
     def test_store_without_theme_looks_identical(self):
         #Una tienda sin site_theme se ve idéntica a hoy: {} guardado y
         #{} en el payload público (el frontend resuelve los defaults).

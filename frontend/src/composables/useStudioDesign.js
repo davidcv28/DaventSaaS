@@ -182,12 +182,19 @@ export function useStudioDesign({
     // con su borrador cuando corresponde. En modo borrador (save del Studio)
     // template/layout/tema van a sus columnas *_draft: la web sigue
     // mostrando lo publicado hasta "Publicar".
+    // site_theme_reset lo marca Diseño al cambiar de diseño/estilo: el tema
+    // viaja con `_reset` y el backend REEMPLAZA la columna en vez de
+    // mergearla — los ajustes personalizados del usuario se borran.
+    let siteTheme = studioTheme.value || designForm.site_theme
+    if (designForm.site_theme_reset && siteTheme && typeof siteTheme === 'object') {
+      siteTheme = { _reset: true, ...siteTheme }
+    }
     Object.assign(payload, savePayloadPlan({
       asDraft,
       formTemplate: designForm.template,
       savedTemplate: store.customization?.template || 'raiz',
       trialTemplate: studioExtras.value?.template || '',
-      siteTheme: studioTheme.value || designForm.site_theme,
+      siteTheme,
       layoutConfig: studioExtras.value?.layout_config || designForm.layout_config
     }))
     // El mapa tiene beneficio propio (has_location_map: Estándar y Premium).
@@ -196,6 +203,7 @@ export function useStudioDesign({
     if (serverFlags) serverFlags.accept = false
     designBusy.value = false
     if (okDesign) {
+      designForm.site_theme_reset = false
       studioSavedTheme.value = studioTheme.value
       studioRef.value?.markSaved()
       if (!quiet) pushToast(asDraft ? 'Borrador guardado ✓' : 'Diseño guardado ✓')
@@ -214,6 +222,7 @@ export function useStudioDesign({
   function discardDesign() {
     const base = { ...CUSTOMIZATION_DEFAULTS, ...store.customization }
     DESIGN_FIELDS.forEach((k) => { designForm[k] = base[k] })
+    designForm.site_theme_reset = false
     Object.keys(designTouched).forEach((k) => { delete designTouched[k] })
     ensureStoreFont(designForm.name_font)
     studioRef.value?.discardDraft()
