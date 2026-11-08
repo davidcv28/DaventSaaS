@@ -265,15 +265,17 @@ const studioAttrs = computed(() => (
 const patternStudioTheme = computed(() => custom.value?.site_theme || null)
 const patternStudioCssText = ref('')
 let patternStudioSeq = 0
-watch([patternStudioTheme, () => usePattern.value], async ([theme, isPattern]) => {
+watch([patternStudioTheme, () => usePattern.value, () => custom.value?.accent_custom], async ([theme, isPattern]) => {
   const seq = ++patternStudioSeq
-  if (!isPattern || !theme || typeof theme !== 'object') {
+  // theme puede ser null: accent_custom solo ya emite --ds-accent/-ink,
+  // igual que theme_css del backend.
+  if (!isPattern) {
     patternStudioCssText.value = ''
     return
   }
-  const fontsCss = await patternStudioFontsCss(theme)
+  const fontsCss = await patternStudioFontsCss(theme && typeof theme === 'object' ? theme : {})
   if (seq !== patternStudioSeq) return
-  patternStudioCssText.value = patternStudioCss(theme, fontsCss)
+  patternStudioCssText.value = patternStudioCss(theme, fontsCss, custom.value?.accent_custom)
 }, { immediate: true })
 const themeVars = computed(() => storeThemeVars(custom.value))
 // Tema guardado (site_theme): se emite SIEMPRE, no solo en modo Studio, para

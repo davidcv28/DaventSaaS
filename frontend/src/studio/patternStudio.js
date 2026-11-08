@@ -134,8 +134,9 @@ export async function patternStudioFontsCss(theme) {
 
 // CSS completo del Studio para documentos de diseño. `fontsCss` son las
 // @font-face ya resueltas (patternStudioFontsCss); vacío = sin fuentes
-// nuevas (caen a las pilas de fallback).
-export function patternStudioCss(theme, fontsCss = '') {
+// nuevas (caen a las pilas de fallback). `accent` es el accent_custom de la
+// tienda (prioridad sobre palette.accent, igual que theme_css).
+export function patternStudioCss(theme, fontsCss = '', accent = null) {
   theme = theme && typeof theme === 'object' ? theme : {}
   const surfaces = sect(theme, 'surfaces')
   const images = sect(theme, 'images')
@@ -235,12 +236,26 @@ export function patternStudioCss(theme, fontsCss = '') {
   }
 
   const css = rules.join('\n')
-  // --ds-accent-text: acento ajustado a AA contra la superficie del tema
-  // (espejo de theme_css). Solo si el tema parcial trae superficie/bfondo.
+  // Variables --ds-* de paleta: theme_css las hornea en el documento
+  // publicado; acá viajan en vivo por el mismo <style> inyectado. Solo se
+  // emiten las claves que el tema parcial trae — el resto conserva el valor
+  // horneado (efectos/tokens del estilo que el contrato no transporta).
   const pal = sect(theme, 'palette')
-  const accent = normalizeHex(pal.accent) || normalizeHex(pal.primary)
-  const surface = normalizeHex(pal.surface) || normalizeHex(pal.bg)
-  const accentText = accent && surface ? fixContrast(accent, surface) : ''
-  const root = accentText ? `:root{--ds-accent-text:${accentText}}\n` : ''
-  return fontsCss || root ? `${fontsCss}\n${root}${css}` : css
+  const palAccent = normalizeHex(accent) || normalizeHex(pal.accent) || normalizeHex(pal.primary)
+  const surfaceBg = normalizeHex(pal.surface) || normalizeHex(pal.bg)
+  const vars = []
+  if (palAccent) {
+    vars.push(`--ds-accent:${palAccent}`, `--ds-accent-ink:${studioInk(palAccent)}`)
+    if (surfaceBg) vars.push(`--ds-accent-text:${fixContrast(palAccent, surfaceBg)}`)
+  }
+  for (const key of ['primary', 'secondary', 'bg', 'surface', 'text', 'muted', 'border', 'success', 'danger']) {
+    const value = normalizeHex(pal[key])
+    if (value) vars.push(`--ds-${key}:${value}`)
+  }
+  for (const key of ['primary', 'secondary', 'success']) {
+    const fill = normalizeHex(pal[key])
+    if (fill) vars.push(`--ds-${key}-ink:${studioInk(fill)}`)
+  }
+  const root = vars.length ? `:root{${vars.join(';')}}\n` : ''
+  return fontsCss || root || css ? `${fontsCss}\n${root}${css}` : ''
 }

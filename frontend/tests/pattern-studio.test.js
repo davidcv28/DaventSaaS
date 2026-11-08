@@ -21,10 +21,44 @@ const theme = {
 describe('patternStudioCss (documentos de diseño)', () => {
   const css = patternStudioCss(theme)
 
-  it('devuelve vacío sin secciones del Studio', () => {
+  it('devuelve vacío sin tema ni acento', () => {
     expect(patternStudioCss({})).toBe('')
     expect(patternStudioCss(null)).toBe('')
-    expect(patternStudioCss({ palette: { accent: '#123456' } })).toBe('')
+    expect(patternStudioCss({ surfaces: {} })).toBe('')
+  })
+
+  it('paleta -> vars --ds-* en vivo (espejo de theme_css)', () => {
+    const out = patternStudioCss({
+      palette: {
+        accent: '#f5d90a', primary: '#f5d90a', secondary: '#847505',
+        bg: '#ffffff', surface: '#ffffff', text: '#111111'
+      }
+    })
+    expect(out).toContain('--ds-accent:#f5d90a')
+    expect(out).toContain('--ds-accent-ink:')
+    expect(out).toContain('--ds-primary:#f5d90a')
+    expect(out).toContain('--ds-secondary:#847505')
+    expect(out).toContain('--ds-bg:#ffffff')
+    expect(out).toContain('--ds-surface:#ffffff')
+    expect(out).toContain('--ds-text:#111111')
+    expect(out).toContain('--ds-primary-ink:')
+    expect(out).toContain('--ds-secondary-ink:')
+  })
+
+  it('accent_custom tiene prioridad sobre palette.accent (como theme_css)', () => {
+    const out = patternStudioCss(
+      { palette: { accent: '#123456', surface: '#ffffff' } },
+      '',
+      '#ff0000'
+    )
+    expect(out).toContain('--ds-accent:#ff0000')
+    expect(out).not.toContain('--ds-accent:#123456')
+  })
+
+  it('accent_custom solo (sin site_theme) igual emite --ds-accent', () => {
+    const out = patternStudioCss(null, '', '#0f766e')
+    expect(out).toContain(':root{--ds-accent:#0f766e')
+    expect(out).toContain('--ds-accent-ink:')
   })
 
   it('superficies: fondo + tinta derivada sobre los hooks del diseño', () => {
