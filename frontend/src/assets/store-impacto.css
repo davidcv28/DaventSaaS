@@ -34,12 +34,14 @@
   --mi-accent-ink: var(--st-accent-ink, #111111);
   /* Acento para TEXTO chico sobre papel: el naranja puro no llega a AA a
      9–10px, así que se oscurece contra la tinta. En noche se aclara. */
-  --mi-accent-text: color-mix(in srgb, var(--mi-accent) 70%, var(--mi-ink));
+  --mi-accent-text: color-mix(in srgb, var(--mi-accent) 66%, var(--mi-ink));
   /* Acento para display (>= 24px): conserva la vibración con 3:1. */
   --mi-accent-display: color-mix(in srgb, var(--mi-accent) 86%, var(--mi-ink));
   --mi-accent-soft: color-mix(in srgb, var(--mi-accent) 16%, var(--mi-paper));
   --mi-on-accent: var(--st-on-accent, #FFFDF6);
   --mi-focus: var(--mi-accent);
+  --mi-err: #B3261E;
+  --tpc-stock-ink: #177245;
   --mi-scrim: rgba(17, 17, 17, .62);
   --mi-selection: color-mix(in srgb, var(--mi-accent) 88%, transparent);
 
@@ -126,6 +128,8 @@
   --mi-line-2: #4B4B43;
   --mi-accent-soft: color-mix(in srgb, var(--mi-accent) 20%, #131311);
   --mi-scrim: rgba(8, 8, 7, .72);
+  --mi-err: #FF8A7A;
+  --tpc-stock-ink: #2FBF71;
   --mi-ribbon-bg: var(--mi-accent);
   --mi-ribbon-ink: var(--mi-accent-ink);
   --mi-ribbon-alt-bg: var(--mi-ink);
@@ -418,7 +422,7 @@
 .store-page[data-template='impacto'] .sp-top {
   background: var(--mi-paper);
   background-image: none;
-  color: var(--mi-ink);
+  color: var(--sp-on-band);
   border-bottom: var(--mi-rule-w) solid var(--mi-rule);
   box-shadow: none;
   backdrop-filter: none;
@@ -441,7 +445,7 @@
   transform-origin: left center;
 }
 .store-page[data-template='impacto'] .sp-top .sp-brand,
-.store-page[data-template='impacto'] .sp-top .sp-name { color: var(--mi-ink); }
+.store-page[data-template='impacto'] .sp-top .sp-name { color: var(--sp-on-band); }
 .store-page[data-template='impacto'] .sp-top .sp-name {
   font-family: var(--mi-display);
   font-size: 21px;
@@ -453,7 +457,7 @@
 .store-page[data-template='impacto'] .sp-top-links a {
   border-radius: 0;
   padding: 8px 14px;
-  color: var(--mi-ink-2);
+  color: var(--sp-on-band-2);
   font-family: var(--mi-mono);
   font-size: var(--mi-fs-label);
   font-weight: 500;
@@ -464,14 +468,14 @@
 }
 .store-page[data-template='impacto'] .sp-top-links a:hover {
   background: transparent;
-  color: var(--mi-ink);
+  color: var(--sp-on-band);
   text-decoration: underline;
   text-decoration-thickness: var(--mi-rule-w);
   text-underline-offset: 6px;
 }
 .store-page[data-template='impacto'] .sp-top-links a.router-link-exact-active {
   background: transparent;
-  color: var(--mi-ink);
+  color: var(--sp-on-band);
   box-shadow: inset 0 calc(-1 * var(--mi-rule-w)) 0 var(--mi-accent);
 }
 .store-page[data-template='impacto'] .sp-top .sp-icon-btn,
@@ -479,20 +483,20 @@
   border: var(--mi-hair) solid var(--mi-line-2);
   border-radius: 0;
   background: transparent;
-  color: var(--mi-ink);
+  color: var(--sp-on-band);
   box-shadow: none;
 }
 .store-page[data-template='impacto'] .sp-top .sp-icon-btn:hover,
 .store-page[data-template='impacto'] .sp-top .sp-burger:hover {
-  background: var(--mi-ink);
-  border-color: var(--mi-ink);
-  color: var(--mi-paper);
+  background: var(--mi-accent);
+  border-color: var(--mi-accent);
+  color: var(--mi-accent-ink);
   filter: none;
 }
 .store-page[data-template='impacto'] .sp-top .sp-logo,
 .store-page[data-template='impacto'] .sp-top .sp-mono { border-radius: 0; }
 .store-page[data-template='impacto'] .sp-top .sp-search { border-radius: 0; background: var(--mi-paper-2); }
-.store-page[data-template='impacto'] .sp-top .sp-search input { background: transparent; }
+.store-page[data-template='impacto'] .sp-top .sp-search input { background: transparent; color: var(--mi-ink); }
 .store-page[data-template='impacto'] .sp-top .sp-icon-btn.primary {
   background: var(--mi-accent);
   border-color: var(--mi-accent);
@@ -507,7 +511,11 @@
 .store-page[data-template='impacto'] .sp-foot {
   border-top: var(--mi-rule-w) solid var(--mi-rule);
   background: var(--mi-paper-2);
-  color: var(--mi-ink);
+  /* La superficie real la fija el contrato ([data-st-surface-footer] →
+     --st-surface-footer + --sp-ink/--sp-ink-2/--sp-muted derivados con AA).
+     Los textos no pueden usar --mi-ink: en los estilos claros es tinta
+     oscura y el pie publicado es oscuro — queda ilegible (1.09). */
+  color: var(--sp-ink);
   padding-top: clamp(40px, 5vw, 64px);
 }
 .store-page[data-template='impacto'] .sp-foot::before {
@@ -534,21 +542,26 @@
   height: 18px;
   margin-top: 14px;
   background-image: repeating-linear-gradient(90deg,
-    var(--mi-ink) 0 1px, transparent 1px 3px,
-    var(--mi-ink) 3px 5px, transparent 5px 6px,
-    var(--mi-ink) 6px 7px, transparent 7px 11px);
+    var(--sp-ink) 0 1px, transparent 1px 3px,
+    var(--sp-ink) 3px 5px, transparent 5px 6px,
+    var(--sp-ink) 6px 7px, transparent 7px 11px);
   opacity: .5;
 }
-.store-page[data-template='impacto'] .sp-foot-brand span,
-.store-page[data-template='impacto'] .sp-foot-copy {
-  color: var(--mi-muted);
+/* Ojo: la regla [data-st-palette] de store-page pinta .sp-foot-copy /
+   .sp-foot-brand span|strong con --st-muted/--st-text (paleta de página,
+   no de superficie) a especificidad (0,3,1) — hace falta .sp-foot en el
+   selector para ganarle y usar las vars derivadas del footer. */
+.store-page[data-template='impacto'] .sp-foot .sp-foot-brand strong { color: var(--sp-ink); }
+.store-page[data-template='impacto'] .sp-foot .sp-foot-brand span,
+.store-page[data-template='impacto'] .sp-foot .sp-foot-copy {
+  color: var(--sp-ink-2);
   font-family: var(--mi-mono);
   font-size: var(--mi-fs-label);
   letter-spacing: .1em;
   text-transform: uppercase;
 }
 .store-page[data-template='impacto'] .sp-foot-heading {
-  color: var(--mi-ink);
+  color: var(--sp-ink);
   font-family: var(--mi-mono);
   font-size: var(--mi-fs-label);
   font-weight: 500;
@@ -558,14 +571,14 @@
   border-bottom: var(--mi-hair) solid var(--mi-line-2);
 }
 .store-page[data-template='impacto'] .sp-foot-col a {
-  color: var(--mi-ink-2);
+  color: var(--sp-ink-2);
   font-size: var(--mi-fs-sm);
-  transition: color var(--mi-dur-1) linear, padding var(--mi-dur-1) var(--mi-ease);
+  transition: color var(--mi-dur-1) linear, transform var(--mi-dur-1) var(--mi-ease);
 }
 .store-page[data-template='impacto'] .sp-foot-col a:hover {
-  color: var(--mi-ink);
+  color: var(--sp-ink);
   text-decoration: none;
-  padding-left: 6px;
+  transform: translateX(6px);
   box-shadow: inset 2px 0 0 var(--mi-accent);
 }
 .store-page[data-template='impacto'] .sp-foot-bottom { border-top: var(--mi-hair) solid var(--mi-line-2); }
@@ -574,9 +587,18 @@
   border-radius: 0;
 }
 .store-page[data-template='impacto'] .sp-foot-social a:hover {
-  background: var(--mi-ink);
-  border-color: var(--mi-ink);
-  color: var(--mi-paper);
+  background: var(--sp-ink);
+  border-color: var(--sp-ink);
+  color: var(--st-surface-footer, var(--mi-paper));
+}
+/* Resto de textos del pie que el bloque "chrome" de store-page pinta con
+   --sp-on-band (tinta de página, ilegible sobre la superficie-footer
+   oscura): contacto, nota legal y badge DAVENT. */
+.store-page[data-template='impacto'] .sp-foot :is(.sp-foot-contact li, .sp-foot-contact a, .sp-foot-note, .sp-davent-badge) {
+  color: var(--sp-ink-2);
+}
+.store-page[data-template='impacto'] .sp-foot .sp-davent-badge strong {
+  color: var(--sp-ink);
 }
 
 /* ==========================================================================
@@ -824,7 +846,7 @@
   object-fit: cover;
   object-position: var(--store-cover-pos, 50% 50%);
   filter: saturate(.94) contrast(1.04);
-  transition: transform 1.2s var(--mi-ease), filter var(--mi-dur-3) linear;
+  transition: transform 1.2s var(--mi-ease);
 }
 .mi-hero-media:hover img { transform: scale(1.035); filter: saturate(1) contrast(1.06); }
 .mi-hero-initial {
@@ -914,7 +936,7 @@
   color: var(--mi-ink);
   box-shadow: 7px 7px 0 color-mix(in srgb, var(--mi-ink) 14%, transparent);
   transform: rotate(-1.6deg);
-  transition: transform var(--mi-dur-2) var(--mi-ease), box-shadow var(--mi-dur-2) var(--mi-ease);
+  transition: transform var(--mi-dur-2) var(--mi-ease);
 }
 .mi-hero-look:hover,
 .mi-hero-look:focus-visible {
@@ -981,7 +1003,9 @@
 }
 .mi-ribbon-item i {
   font-style: normal;
-  color: var(--mi-accent);
+  /* El filete ✳ toma la tinta de SU cinta: con acentos que son también el
+     fondo (noche/blanco) el acento crudo quedaba invisible (ratio ~1). */
+  color: var(--mi-ribbon-ink);
   font-size: 13px;
   line-height: 1;
 }
@@ -1038,7 +1062,7 @@
   width: 100%;
   height: 100%;
   object-fit: cover;
-  transition: transform 900ms var(--mi-ease), filter var(--mi-dur-2) linear;
+  transition: transform 900ms var(--mi-ease);
 }
 .mi-dept-initial {
   position: absolute;
@@ -1493,6 +1517,17 @@
 }
 :is(.store-page[data-template='impacto'], .store-page.mi-skin) .tpc-quick { border-radius: 0; }
 
+/* Tarjetas en tema oscuro: la superficie-card publicada es clara
+   (#F4F2EC) pero las tintas --mi-* del tema son claras también — los
+   textos de la tarjeta toman --sp-ink, el card-ink que el contrato deriva
+   con AA para esa superficie. El stock mantiene su verde oscurecido. */
+:is(.store-page[data-template='impacto'], .store-page.mi-skin)[data-store-theme='dark'] .tpc :is(.tpc-name, .tpc-eyebrow, .tpc-eyebrow span, .tpc-desc, .tpc-price, .tpc-price s, .tpc-price strong, .tpc-go) {
+  color: var(--sp-ink);
+}
+:is(.store-page[data-template='impacto'], .store-page.mi-skin)[data-store-theme='dark'] .tpc {
+  --tpc-stock-ink: #177245;
+}
+
 /* ==========================================================================
    7. SOBRE LA MARCA — ficha de dossier
    ========================================================================== */
@@ -1888,7 +1923,7 @@
   transition: opacity var(--mi-dur-2) linear, transform var(--mi-dur-2) var(--mi-ease);
 }
 .store-page[data-template='impacto'] .sp-gallery-item:hover::after { opacity: 1; transform: none; }
-.store-page[data-template='impacto'] .sp-gallery-item img { transition: transform 900ms var(--mi-ease), filter var(--mi-dur-2) linear; }
+.store-page[data-template='impacto'] .sp-gallery-item img { transition: transform 900ms var(--mi-ease); }
 .store-page[data-template='impacto'] .sp-gallery-item:hover img { transform: scale(1.05); filter: saturate(1.05); }
 
 /* Testimonios: cita editorial */
@@ -1947,6 +1982,12 @@
   text-transform: uppercase;
   color: var(--mi-muted);
 }
+/* En tema oscuro la tarjeta de testimonio publica superficie clara
+   (--st-surface-card) pero las tintas --mi-* son claras: texto y autor
+   toman el card-ink derivado con AA. */
+:is(.store-page[data-template='impacto'], .store-page.mi-skin)[data-store-theme='dark'] .sp-testimonial :is(.sp-testimonial-text, .sp-testimonial-by strong, .sp-testimonial-by span) {
+  color: var(--sp-ink);
+}
 .store-page[data-template='impacto'] .sp-ava { border-radius: 0; }
 .store-page[data-template='impacto'] .sp-stars { color: var(--mi-accent); }
 
@@ -1998,6 +2039,21 @@
   color: var(--mi-accent-ink);
 }
 .store-page[data-template='impacto'] .sp-faq-answer { color: var(--mi-ink-2); font-size: var(--mi-fs-sm); line-height: 1.65; }
+/* En tema oscuro el contrato surface-card pinta la respuesta sobre tarjeta
+   clara (#F4F2EC): summary, respuesta y pregunta abierta toman --sp-ink. */
+:is(.store-page[data-template='impacto'], .store-page.mi-skin)[data-store-theme='dark'] .sp-faq-item > summary,
+:is(.store-page[data-template='impacto'], .store-page.mi-skin)[data-store-theme='dark'] .sp-faq-answer,
+:is(.store-page[data-template='impacto'], .store-page.mi-skin)[data-store-theme='dark'] .sp-faq-item.is-open .sp-faq-q {
+  color: var(--sp-ink);
+}
+:is(.store-page[data-template='impacto'], .store-page.mi-skin)[data-store-theme='dark'] .sp-faq-item > summary:hover,
+:is(.store-page[data-template='impacto'], .store-page.mi-skin)[data-store-theme='dark'] .sp-faq-item[open] > summary {
+  color: var(--sp-ink);
+  border-left-color: var(--mi-accent);
+}
+:is(.store-page[data-template='impacto'], .store-page.mi-skin)[data-store-theme='dark'] .sp-faq-caret {
+  color: var(--sp-ink);
+}
 
 /* CTA: banda de tinta con acento */
 .store-page[data-template='impacto'] .sp-cta {
@@ -2043,6 +2099,12 @@
   pointer-events: none;
 }
 .store-page[data-template='impacto'] .sp-cta-inner { position: relative; z-index: 1; }
+/* La superficie publicada puede pintar `.sp-cta-inner` con --st-surface-card
+   (!important en store-page.css): la banda CTA de este diseño es siempre a
+   tinta, así que se redeclara el fondo con más especificidad. */
+.store-page[data-template='impacto'] .sp-cta .sp-cta-inner {
+  background-color: var(--mi-ink) !important;
+}
 .store-page[data-template='impacto'] .sp-cta-title {
   font-family: var(--mi-display);
   font-size: var(--mi-fs-h1);
@@ -2150,6 +2212,25 @@
   letter-spacing: .01em;
   text-transform: uppercase;
 }
+/* Labels, bajada, contador, nota y captcha del formulario: el contrato de
+   superficie-card deriva --sp-muted por debajo de AA sobre la tarjeta
+   clara — dentro de .sp-form, --sp-ink es el card-ink con AA garantizado. */
+.store-page[data-template='impacto'] .sp-form :is(.sp-field label, .sp-form-head span:not(.sp-form-badge), .sp-counter, .sp-form-note) {
+  color: var(--sp-ink);
+}
+/* La pregunta del captcha va sobre tinte de acento (--mi-accent-soft):
+   --sp-ink queda corto de AA ahí, se oscurece un punto hacia el negro. */
+.store-page[data-template='impacto'] .sp-form .sp-captcha-q {
+  color: color-mix(in srgb, var(--sp-ink) 70%, #000);
+}
+/* Tema oscuro: el tinte de acento es un oliva saturado oscuro — la pregunta
+   pasa a la superficie-card clara y el titular del form toma --sp-ink. */
+:is(.store-page[data-template='impacto'], .store-page.mi-skin)[data-store-theme='dark'] .sp-form .sp-captcha-q {
+  background: var(--st-surface-card, var(--mi-paper-2));
+}
+:is(.store-page[data-template='impacto'], .store-page.mi-skin)[data-store-theme='dark'] .sp-form .sp-form-head strong {
+  color: var(--sp-ink);
+}
 .store-page[data-template='impacto'] .sp-form-badge {
   border-radius: 0;
   background: var(--mi-accent);
@@ -2177,8 +2258,7 @@
   outline: none;
   box-shadow: inset 0 calc(-1 * var(--mi-rule-w)) 0 var(--mi-accent);
 }
-.store-page[data-template='impacto'] .sp-field-error { color: #B3261E; font-family: var(--mi-mono); font-size: 11px; }
-.store-page[data-template='impacto'][data-store-theme='dark'] .sp-field-error { color: #FF8A7A; }
+.store-page[data-template='impacto'] .sp-field-error { color: var(--mi-err); font-family: var(--mi-mono); font-size: 11px; }
 
 /* Planes (vidriera) */
 .store-page[data-template='impacto'] .sp-plan-card,
@@ -2299,7 +2379,8 @@
   --mi-hatch-b: #E7D9BF;
   --mi-ink: #1A1611;
   --mi-ink-2: #3A3227;
-  --mi-muted: #6A5F4E;
+  /* #6A5F4E quedaba en 4.49 sobre --mi-paper-2 — un punto más a la tinta. */
+  --mi-muted: #5C5242;
   --mi-rule: #1A1611;
   --mi-line: #CDBB9B;
   --mi-line-2: #AE9977;
@@ -2459,8 +2540,7 @@
   --sp-btn-bg: var(--mi-accent);
   --st-on-primary: var(--mi-accent-ink);
 }
-.store-page.mi-skin[data-template='raiz'] .sp-field-error { color: #B3261E; font-family: var(--mi-mono); font-size: 11px; }
-.store-page[data-template='impacto'][data-store-theme='dark'] .mi-skin .sp-field-error { color: #FF8A7A; }
+.store-page.mi-skin[data-template='raiz'] .sp-field-error { color: var(--mi-err); font-family: var(--mi-mono); font-size: 11px; }
 .store-page.mi-skin :is(.rz-cat-card, .rz-pdp-rel-card, .sp-card, .tpc) {
   --tpc-radius: 0;
   --tpc-shadow: none;

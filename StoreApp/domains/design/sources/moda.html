@@ -34,13 +34,14 @@
   --surface:var(--ds-surface,#E9E2D4);
   --ink:var(--ds-text,#171410);
   --ink-2:color-mix(in srgb,var(--ink) 80%,var(--paper));
-  --muted:var(--ds-muted,#6F675B);
+  --muted:color-mix(in srgb,var(--ds-muted,#6F675B) 76%,var(--ink));
   --line:var(--ds-border,#D5CBB8);
   --accent:var(--ds-accent,#C93218);
   --accent-deep:color-mix(in srgb,var(--accent) 78%,#000);
-  --accent-text:color-mix(in srgb,var(--accent) 84%,var(--ink));
+  --accent-text:color-mix(in srgb,var(--accent) 72%,var(--ink));
   --accent-on-ink:color-mix(in srgb,var(--accent) 62%,var(--paper));
   --on-accent:var(--ds-accent-ink,#FFF8F2);
+  --on-media:#FFF8F2;
   --ok:var(--ds-success,#2F6B4F);
   --display:"DM Serif Display","Didot",Georgia,serif;
   --sans:"Instrument Sans","Helvetica Neue",system-ui,sans-serif;
@@ -125,17 +126,16 @@ ul,ol{margin:0;padding:0;list-style:none}
   position:fixed;top:0;left:0;right:0;z-index:90;
   background:var(--paper);
   border-bottom:1px solid var(--line);
-  transition:box-shadow .3s var(--ease-soft);
 }
 .head.is-scrolled{box-shadow:0 18px 40px -32px rgba(0,0,0,.45)}
 .ribbon{
   position:relative;overflow:hidden;background:var(--ink);color:var(--paper);--band:var(--ink);
   border-bottom:1px solid color-mix(in srgb,var(--paper) 12%,transparent);
-  max-height:38px;opacity:1;
-  transition:max-height .35s var(--ease-soft),opacity .25s var(--ease-soft);
+  display:grid;grid-template-rows:1fr;max-height:38px;opacity:1;
+  transition:grid-template-rows .35s var(--ease-soft),opacity .25s var(--ease-soft);
 }
-.head.is-scrolled .ribbon{max-height:0;opacity:0;border-bottom-color:transparent}
-.ribbon-track{position:relative;z-index:0;display:flex;align-items:center;width:max-content;min-width:100%;animation:marquee 38s linear infinite}
+.head.is-scrolled .ribbon{grid-template-rows:0fr;max-height:0;opacity:0;border-bottom-color:transparent}
+.ribbon-track{position:relative;z-index:0;display:flex;align-items:center;width:max-content;min-width:100%;min-height:0;overflow:hidden;animation:marquee 38s linear infinite}
 .ribbon:hover .ribbon-track{animation-play-state:paused}
 .ribbon-track .ds-note{
   display:inline-flex;align-items:center;gap:8px;padding:9px 26px;flex:none;
@@ -143,7 +143,7 @@ ul,ol{margin:0;padding:0;list-style:none}
 }
 .ribbon-track .ds-note svg{width:13px;height:13px;color:var(--accent);flex:none}
 .ribbon-track .ds-note::after{content:"✦";margin-left:26px;color:var(--accent);font-size:9px}
-.top-inner{display:flex;align-items:center;gap:clamp(12px,2vw,28px);min-height:74px;transition:min-height .3s var(--ease-soft)}
+.top-inner{display:flex;align-items:center;gap:clamp(12px,2vw,28px);min-height:74px}
 .head.is-scrolled .top-inner{min-height:64px}
 .brand{display:flex;align-items:center;gap:12px;min-width:0;flex:none}
 .brand-mark{
@@ -203,10 +203,10 @@ body.m-open .m-sheet{transform:none}
 .m-nav a{
   display:flex;align-items:center;justify-content:space-between;gap:12px;padding:16px 20px;
   border-bottom:1px solid var(--line);font:400 22px/1 var(--display);letter-spacing:.02em;
-  transition:color .2s,background .2s,padding .2s;
+  transition:color .2s,background .2s,transform .2s;
 }
 .m-nav a span:last-child{font:500 9px/1 var(--mono);letter-spacing:.2em;color:var(--muted)}
-.m-nav a:hover{color:var(--accent);background:var(--surface);padding-left:26px}
+.m-nav a:hover{color:var(--accent);background:var(--surface);transform:translateX(6px)}
 .m-foot{margin-top:auto;padding:20px;display:grid;gap:10px;border-top:1px solid var(--line)}
 .m-foot .btn{width:100%}
 
@@ -256,6 +256,12 @@ body.m-open .m-sheet{transform:none}
   content:"";position:absolute;inset:0;z-index:1;pointer-events:none;
   background:linear-gradient(180deg,transparent 52%,rgba(10,8,6,.62) 100%);
 }
+/* Cortina de papel que se retira con transform: el reveal del hero no
+   depende de clip-path (repaint por frame). */
+.hero-media::before{
+  content:"";position:absolute;inset:0;z-index:6;background:var(--paper);
+  pointer-events:none;animation:curtain 1.1s .12s var(--ease) both;
+}
 .hero-ghost{
   position:absolute;inset:0;z-index:0;display:grid;place-items:center;
   font:500 clamp(90px,16vw,200px)/1 var(--display);color:color-mix(in srgb,var(--ink) 9%,transparent);
@@ -264,7 +270,9 @@ body.m-open .m-sheet{transform:none}
 .hero-fig{
   position:absolute;z-index:3;left:18px;right:18px;bottom:16px;
   display:flex;align-items:center;justify-content:space-between;gap:14px;
-  font:500 8.5px/1.3 var(--mono);letter-spacing:.18em;text-transform:uppercase;color:#FFF8F2;
+  padding:12px 0 10px;
+  background:linear-gradient(180deg,transparent,rgba(10,8,6,.55));
+  font:500 8.5px/1.3 var(--mono);letter-spacing:.18em;text-transform:uppercase;color:var(--on-media);
 }
 .hero-fig span:last-child{text-align:right;opacity:.78}
 .hero-tape{
@@ -391,14 +399,14 @@ body.m-open .m-sheet{transform:none}
 .cat-index .ds-cat{
   position:relative;display:grid;grid-template-columns:auto minmax(0,1fr) auto;align-items:center;gap:14px;
   padding:clamp(16px,2.4vw,26px) 4px;border-bottom:1px solid var(--line);counter-increment:cat;
-  transition:padding .3s var(--ease),color .2s;
+  transition:transform .3s var(--ease),color .2s;
 }
 .cat-index .ds-cat:nth-child(odd){padding-right:clamp(16px,3vw,40px);border-right:1px solid var(--line)}
 .cat-index .ds-cat:nth-child(even){padding-left:clamp(16px,3vw,40px)}
 .cat-index .ds-cat::before{content:counter(cat,decimal-leading-zero);font:500 9px/1 var(--mono);letter-spacing:.14em;color:var(--accent-text)}
 .cat-index .ds-cat span{font:500 clamp(24px,3.2vw,42px)/1 var(--display);letter-spacing:-.02em;text-transform:uppercase;overflow-wrap:anywhere;min-width:0}
 .cat-index .ds-cat::after{content:"↗";font:400 20px/1 var(--sans);color:var(--muted);transition:transform .25s,color .2s}
-.cat-index .ds-cat:hover{padding-left:12px;color:var(--accent)}
+.cat-index .ds-cat:hover{transform:translateX(8px);color:var(--accent)}
 .cat-index .ds-cat:hover::after{transform:translate(3px,-3px);color:var(--accent)}
 .cat-index .ds-cat:last-child:nth-child(odd){grid-column:1/-1;border-right:0}
 
@@ -471,13 +479,13 @@ body.m-open .m-sheet{transform:none}
   position:relative;display:flex;align-items:center;justify-content:space-between;gap:20px;
   padding:18px 0;cursor:pointer;list-style:none;
   font:500 clamp(17px,1.9vw,22px)/1.25 var(--display);letter-spacing:-.005em;
-  transition:color .2s,padding .2s;
+  transition:color .2s,transform .2s;
 }
 .ds-faq summary::-webkit-details-marker{display:none}
 .ds-faq summary::after{content:"+";flex:none;font:400 24px/1 var(--sans);color:var(--accent);transition:transform .3s var(--ease)}
 .ds-faq[open] summary{color:var(--accent-text)}
 .ds-faq[open] summary::after{transform:rotate(45deg)}
-.ds-faq summary:hover{padding-left:8px}
+.ds-faq summary:hover{transform:translateX(8px)}
 .ds-faq-a{padding:0 0 20px;max-width:78ch;color:var(--muted);font-size:13.5px;line-height:1.7}
 
 /* ---------- CTA ---------- */
@@ -519,7 +527,7 @@ body.m-open .m-sheet{transform:none}
 .contact-social svg{width:17px;height:17px}
 .contact-form-wrap{position:relative;padding:clamp(20px,3vw,32px);border:1px solid var(--ink);background:var(--surface)}
 .contact-form-wrap::before{content:"";position:absolute;left:-1px;top:-1px;width:14px;height:14px;border-left:2px solid var(--accent);border-top:2px solid var(--accent)}
-.form-title{margin-bottom:16px;font:500 10px/1 var(--mono);letter-spacing:.2em;text-transform:uppercase;color:var(--accent-text)}
+.form-title{margin-bottom:16px;font:500 10px/1 var(--mono);letter-spacing:.2em;text-transform:uppercase;color:color-mix(in srgb,var(--accent-text) 82%,var(--ink))}
 .ds-contact-fields{display:grid;gap:10px}
 .ds-contact-row{display:grid;grid-template-columns:1fr 1fr;gap:10px}
 .ds-contact-input{
@@ -530,7 +538,7 @@ body.m-open .m-sheet{transform:none}
 .ds-contact-input:focus{outline:none;border-color:var(--accent);background:var(--paper)}
 .ds-contact-area{min-height:104px;resize:vertical}
 .ds-contact-cap{display:flex;align-items:center;gap:9px;flex-wrap:wrap}
-.ds-contact-q{font:500 9px/1.4 var(--mono);letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+.ds-contact-q{font:500 9px/1.4 var(--mono);letter-spacing:.08em;text-transform:uppercase;color:color-mix(in srgb,var(--muted) 80%,var(--ink))}
 .ds-contact-cap .ds-contact-input{width:110px;flex:none}
 .ds-contact-reload{width:36px;height:36px;flex:none;border:1px solid var(--line);background:transparent;cursor:pointer;border-radius:var(--r)}
 .ds-contact-reload:hover{border-color:var(--accent);color:var(--accent)}
@@ -609,10 +617,10 @@ body.m-open .m-sheet{transform:none}
 .f-cat{
   display:flex;align-items:center;justify-content:space-between;gap:10px;padding:8px 0;
   border:0;background:transparent;text-align:left;cursor:pointer;
-  font:400 12.5px/1.3 var(--sans);color:var(--ink-2);transition:color .2s,padding .2s;
+  font:400 12.5px/1.3 var(--sans);color:var(--ink-2);transition:color .2s,transform .2s;
 }
 .f-cat em{font:500 8.5px/1 var(--mono);color:var(--muted);font-style:normal}
-.f-cat:hover{color:var(--accent);padding-left:5px}
+.f-cat:hover{color:var(--accent);transform:translateX(5px)}
 .f-cat[aria-pressed="true"]{color:var(--accent-text);font-weight:600}
 .f-cat[aria-pressed="true"] em{color:var(--accent-text)}
 .f-check{display:flex;align-items:center;gap:8px;padding:5px 0;cursor:pointer;font-size:12.5px;color:var(--ink-2)}
@@ -803,14 +811,13 @@ body.m-open .m-sheet{transform:none}
 @keyframes spin{to{transform:rotate(360deg)}}
 @keyframes pulse{0%{opacity:.55;transform:scale(.6)}70%,100%{opacity:0;transform:scale(1.35)}}
 @keyframes rise{from{opacity:0;transform:translateY(22px)}to{opacity:1;transform:none}}
-@keyframes wipe{from{clip-path:inset(0 0 100% 0)}to{clip-path:inset(0 0 0 0)}}
+@keyframes curtain{from{transform:translateY(0)}to{transform:translateY(-102%)}}
 .hero-kicker{animation:rise .7s var(--ease) both}
 .hero-title{animation:rise .9s .08s var(--ease) both}
 .hero-tag{animation:rise .8s .18s var(--ease) both}
 .hero-desc{animation:rise .8s .26s var(--ease) both}
 .hero-actions{animation:rise .8s .34s var(--ease) both}
 .hero-meta{animation:rise .8s .42s var(--ease) both}
-.hero-media{animation:wipe 1.1s .12s var(--ease) both}
 .hero-seal{animation:rise .8s .55s var(--ease) both}
 
 /* ---------- Responsive ---------- */

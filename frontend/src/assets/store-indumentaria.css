@@ -17,9 +17,13 @@
   --in-line-strong: #BFB6A4;
   --in-ink: #1C1B18;
   --in-ink-2: #3B3833;
-  --in-muted: #7A7468;
+  --in-muted: #6B655A;
   --in-accent: var(--store-accent-ink, #B4442A);
   --in-accent-raw: var(--store-accent, #B4442A);
+  /* Acento usable como TEXTO sobre superficies de la piel: el acento-ink
+     puede ser claro en pieles de acento vivo (street) y el crudo no
+     llega a AA — se mezcla hacia la tinta, que se invierte en noche. */
+  --in-accent-text: color-mix(in srgb, var(--in-accent-raw) 60%, var(--in-ink));
   --in-on-accent: #FFFDF6;
   --in-display: 'Fraunces', Georgia, 'Times New Roman', serif;
   --in-body: 'Archivo', system-ui, -apple-system, 'Segoe UI', sans-serif;
@@ -40,10 +44,19 @@
   --sp-muted: var(--in-muted);
   --sp-line: var(--in-line);
   --sp-radius: 0;
-  --sp-accent-text: var(--in-accent);
+  --sp-accent-text: color-mix(in srgb, var(--in-accent-raw) 60%, var(--in-ink));
   --sp-shadow-sm: 0 1px 0 rgba(28, 27, 24, .05);
   --sp-shadow-md: 0 26px 50px -34px rgba(28, 27, 24, .5);
   --sp-chrome: var(--in-crudo);
+  /* Chrome del header: sin superficie publicada manda la tinta de la
+     piel; con [data-st-surface-nav] se toma la tinta que el contrato
+     resuelve para esa banda (--sp-on-band* con !important). */
+  --in-nav-ink: var(--in-ink);
+  --in-nav-ink-2: var(--in-ink-2);
+  --in-nav-muted: var(--in-muted);
+  /* Stock de tarjeta: verde de señal templado con la tinta del tema —
+     legible sobre card clara y sobre card oscura sin hex por tema. */
+  --tpc-stock-ink: color-mix(in srgb, #2f8f5b 55%, var(--in-ink));
 
   --tpc-bg: var(--in-card);
   --tpc-border: 1px solid var(--in-line);
@@ -73,7 +86,9 @@
   --tpc-flag-border: 0;
   --tpc-flag-transform: uppercase;
   --tpc-flag-track: .14em;
-  --tpc-offer-bg: var(--in-accent-raw);
+  /* Chip de oferta: el acento-ink crudo no llega a AA con la tinta clara
+     en todos los estilos — se profundiza un punto hacia el negro. */
+  --tpc-offer-bg: color-mix(in srgb, var(--in-accent-raw) 80%, #000);
   --tpc-offer-ink: var(--in-on-accent);
   --tpc-quick-bg: var(--in-ink);
   --tpc-add-radius: 0;
@@ -96,6 +111,12 @@
 
 /* Trama de tejido sutil: dos hilos cruzados a <6% de tinta (firma, no
    ornamento). Sin los orbes del layout base. */
+/* Con tema publicado el contrato fija --sp-accent-text desde
+   --st-style-font-link con más especificidad ([data-st-themed], 0,3,0):
+   la piel re-declara el acento-como-texto con su propia mezcla. */
+.store-page[data-template='indumentaria'][data-st-themed] {
+  --sp-accent-text: color-mix(in srgb, var(--in-accent-raw) 60%, var(--in-ink));
+}
 .store-page[data-template='indumentaria']::before,
 .store-page[data-template='indumentaria']::after {
   border-radius: 0;
@@ -198,6 +219,14 @@
   background: color-mix(in srgb, var(--in-crudo) 94%, transparent);
   border-bottom: 1px solid var(--in-line);
   box-shadow: none;
+  color: var(--in-nav-ink);
+}
+/* Con superficie de nav publicada el contrato fija --sp-on-band* en
+   .sp-top (!important): la tinta del chrome sigue esa resolución. */
+.store-page[data-template='indumentaria'][data-st-surface-nav] .sp-top {
+  --in-nav-ink: var(--sp-on-band);
+  --in-nav-ink-2: var(--sp-on-band-2);
+  --in-nav-muted: var(--sp-on-band-muted);
 }
 .store-page[data-template='indumentaria'] .sp-top::after {
   content: '';
@@ -218,7 +247,7 @@
   font-size: 20px;
   font-weight: 420;
   letter-spacing: -.015em;
-  color: var(--in-ink);
+  color: var(--in-nav-ink);
 }
 .store-page[data-template='indumentaria'] .sp-brand .sp-mono {
   font-family: var(--in-mono);
@@ -241,7 +270,7 @@
   align-items: center;
   min-height: 74px;
   font-size: 13px;
-  color: var(--in-ink-2);
+  color: var(--in-nav-ink-2);
 }
 .store-page[data-template='indumentaria'] .sp-top-links a::after {
   content: '';
@@ -255,22 +284,23 @@
   transform-origin: left;
   transition: transform .25s cubic-bezier(.2, .7, .2, 1);
 }
-.store-page[data-template='indumentaria'] .sp-top-links a:hover { color: var(--in-ink); }
+.store-page[data-template='indumentaria'] .sp-top-links a:hover { color: var(--in-nav-ink); }
 .store-page[data-template='indumentaria'] .sp-top-links a:hover::after,
 .store-page[data-template='indumentaria'] .sp-top-links a.router-link-exact-active::after {
   transform: scaleX(1);
 }
-.store-page[data-template='indumentaria'] .sp-top-links a.router-link-exact-active { color: var(--in-accent); }
+.store-page[data-template='indumentaria'] .sp-top-links a.router-link-exact-active { color: var(--in-nav-ink); }
 .store-page[data-template='indumentaria'] .sp-top-end .sp-icon-btn,
 .store-page[data-template='indumentaria'] .sp-top .sp-burger {
   border: 1px solid var(--in-line);
   border-radius: 0;
-  color: var(--in-ink);
+  color: var(--in-nav-ink);
 }
 .store-page[data-template='indumentaria'] .sp-top-end .sp-icon-btn:hover,
 .store-page[data-template='indumentaria'] .sp-top .sp-burger:hover {
   border-color: var(--in-ink);
   background: var(--in-card);
+  color: var(--in-ink);
 }
 .store-page[data-template='indumentaria'] .sp-foot {
   background: var(--in-crudo);
@@ -334,6 +364,9 @@
   line-height: .96;
   letter-spacing: -.03em;
   text-wrap: balance;
+  /* Titulares de display en fuentes anchas (street) no deben salir de la
+     columna: la última palabra se parte antes de desbordar. */
+  overflow-wrap: anywhere;
 }
 .in-hero h1 em { font-style: italic; color: var(--in-accent); }
 .in-hero-text { max-width: 44ch; margin: 24px 0 0; font-size: 16.5px; color: var(--in-ink-2); }
@@ -464,7 +497,7 @@
   font-size: 9px;
   letter-spacing: .22em;
   text-transform: uppercase;
-  color: var(--in-accent);
+  color: color-mix(in srgb, var(--in-accent) 78%, var(--in-ink));
 }
 .in-hero-note strong { font-family: var(--in-display); font-size: 16px; font-weight: 460; }
 .in-hero-note a {
@@ -473,7 +506,7 @@
   font-weight: 600;
   letter-spacing: .14em;
   text-transform: uppercase;
-  color: var(--in-accent);
+  color: color-mix(in srgb, var(--in-accent) 78%, var(--in-ink));
 }
 /* Cinta marquee de temporada: pista duplicada al 50%, pausa al hover. */
 .in-marq {
@@ -505,7 +538,13 @@
   text-transform: uppercase;
   white-space: nowrap;
 }
-.in-marq-item i { font-style: normal; color: var(--in-accent); }
+.in-marq-item i {
+  font-style: normal;
+  /* Filete separador: tinte de acento sobre la tinta de la cinta —
+     currentColor hereda el color de texto de la cinta en cada piel
+     (--in-crudo en la banda tinta, --in-ink en noche/street). */
+  color: color-mix(in srgb, var(--in-accent) 55%, currentColor);
+}
 @keyframes in-marq {
   from { transform: translateX(0); }
   to { transform: translateX(-50%); }
@@ -529,7 +568,9 @@
   font-size: 10px;
   letter-spacing: .18em;
   text-transform: uppercase;
-  color: var(--in-accent);
+  /* Índice de sección: el acento-crudo no llega a AA como texto — usa el
+     token acento-como-texto templado a la tinta. */
+  color: var(--in-accent-text);
 }
 .in-lookbook {
   display: grid;
@@ -707,7 +748,7 @@
   text-transform: uppercase;
   color: var(--in-muted);
 }
-.in-label-head b { color: var(--in-accent); }
+.in-label-head b { color: var(--in-accent-text); }
 .in-label-years {
   display: flex;
   align-items: baseline;
@@ -762,7 +803,7 @@
   font-size: 9.5px;
   letter-spacing: .22em;
   text-transform: uppercase;
-  color: var(--in-accent);
+  color: var(--in-accent-text);
 }
 .in-mission p {
   margin: 10px 0 0;
@@ -976,11 +1017,17 @@
   --sp-ink-2: var(--in-ink-2);
   --sp-muted: var(--in-muted);
   --sp-line: var(--in-line);
-  --sp-accent-text: var(--in-accent);
+  --sp-accent-text: color-mix(in srgb, var(--in-accent-raw) 60%, var(--in-ink));
   --sp-chrome: var(--in-crudo);
   --tpc-bg: var(--in-card);
   --tpc-border: 1px solid var(--in-line);
   --tpc-media-bg: var(--in-soft);
+  /* Chip de oferta: el acento crudo medio no llega a AA con la tinta
+     oscura de la piel — se profundiza un punto hacia el negro. */
+  --tpc-offer-bg: color-mix(in srgb, var(--in-accent-raw) 72%, #000);
+  /* Sobre el chip profundizado la tinta de acento queda oscura — va la
+     tinta clara de la piel (5+ AA). */
+  --tpc-offer-ink: var(--in-ink);
   --tpc-flag-bg: var(--in-ink);
   --tpc-flag-ink: var(--in-crudo);
   background: var(--in-crudo);
@@ -1031,11 +1078,15 @@
   --sp-ink-2: var(--in-ink-2);
   --sp-muted: var(--in-muted);
   --sp-line: var(--in-line);
-  --sp-accent-text: var(--in-accent);
+  --sp-accent-text: color-mix(in srgb, var(--in-accent-raw) 60%, var(--in-ink));
   --sp-chrome: var(--in-crudo);
   --tpc-bg: var(--in-card);
   --tpc-border: 1px solid var(--in-line);
   --tpc-media-bg: var(--in-soft);
+  --tpc-offer-bg: color-mix(in srgb, var(--in-accent-raw) 72%, #000);
+  /* Sobre el chip profundizado la tinta de acento queda oscura — va la
+     tinta clara de la piel (5+ AA). */
+  --tpc-offer-ink: var(--in-ink);
   --tpc-flag-bg: var(--in-ink);
   --tpc-flag-ink: var(--in-crudo);
   background: var(--in-crudo);
@@ -1074,9 +1125,19 @@
 .store-page[data-template='indumentaria'][data-style='indumentaria-street'] .in-marq {
   background: var(--in-accent-raw);
   border-color: var(--in-ink);
-  color: var(--in-on-accent);
+  /* Acento pleno de fondo: la tinta clara no llega a AA — va la tinta. */
+  color: var(--in-ink);
 }
-.store-page[data-template='indumentaria'][data-style='indumentaria-street'] .in-marq-item i { color: var(--in-on-accent); }
+.store-page[data-template='indumentaria'][data-style='indumentaria-street'] .in-marq-item i { color: var(--in-ink); }
+/* El flag de oferta usa el acento crudo a pleno con tinta de piel, y el
+   CTA "Ver más" (--store-accent-ink claro) lleva la tinta de la piel. */
+.store-page[data-template='indumentaria'][data-style='indumentaria-street'] {
+  --tpc-offer-bg: var(--in-accent-raw);
+  --tpc-offer-ink: var(--in-ink);
+}
+.store-page[data-template='indumentaria'][data-style='indumentaria-street'] .tpc .tpc-go {
+  color: var(--in-ink);
+}
 .store-page[data-template='indumentaria'][data-style='indumentaria-street'] .in-tag { transform: rotate(-3deg); }
 .store-page[data-template='indumentaria'][data-style='indumentaria-street'] .in-label { transform: rotate(0); }
 
@@ -1096,6 +1157,151 @@
   text-transform: uppercase;
 }
 .store-page[data-template='indumentaria'] .sp-tabbar a.is-on { color: var(--in-accent); }
+/* Tab bar: la piel fija texto de pestaña con tinta secundaria (AA sobre
+   --in-card en todos los estilos) y el activo con acento templado a la
+   tinta — el acento crudo no llega a 4.5 en street/boutique. */
+.store-page[data-template='indumentaria'] .sp-tabbar .sp-tab { color: var(--in-ink-2); }
+.store-page[data-template='indumentaria'] .sp-tabbar .sp-tab.active,
+.store-page[data-template='indumentaria'] .sp-tabbar .sp-tab.router-link-exact-active {
+  color: color-mix(in srgb, var(--in-accent) 72%, var(--in-ink));
+}
+/* Tarjetas de producto: la superficie publicada puede forzar
+   `background-color: var(--st-surface-card) !important` sobre .tpc
+   (store-page.css) y dejar la tarjeta clara bajo la piel noche — se
+   redeclara el fondo del diseño con más especificidad. */
+.store-page[data-template='indumentaria'] .tpc.tpc-card {
+  background-color: var(--tpc-bg, var(--sp-card)) !important;
+}
+/* Flags "Nuevo"/offer dentro de .sp-card: store-page.css las pinta con
+   verde #00a650 y acento-ink absolutos; la piel las resuelve con sus
+   tokens --tpc-flag-bg/ink y --tpc-offer-bg/ink. */
+.store-page[data-template='indumentaria'] .sp-card .tpc-flag {
+  background: var(--tpc-flag-bg);
+  color: var(--tpc-flag-ink);
+  border: var(--tpc-flag-border, 0);
+}
+.store-page[data-template='indumentaria'] .sp-card .tpc-flag.offer {
+  background: var(--tpc-offer-bg);
+  color: var(--tpc-offer-ink);
+}
+/* Precio en oferta: el acento crudo queda bajo AA como texto — usa el
+   token de acento-como-texto ya templado a la tinta. */
+.store-page[data-template='indumentaria'] .sp-card .tpc-price strong.deal {
+  color: var(--in-accent-text);
+}
+/* Precio regular: con paleta publicada el contrato pinta .tpc-price con
+   --st-accent crudo (bajo AA en varios estilos) — vuelve a la tinta de
+   tarjeta que el contrato ya deriva con AA. */
+.store-page[data-template='indumentaria'] .sp-card .tpc-price {
+  color: var(--sp-ink);
+}
+/* Eyebrow de tarjeta: el contrato de superficie-card repinta --sp-muted
+   demasiado claro para la segunda parte ("Categoría · Marca"); la piel
+   fija tinta secundaria propia en ambas mitades. */
+.store-page[data-template='indumentaria'] .sp-card .tpc-eyebrow {
+  color: var(--in-accent-text);
+}
+.store-page[data-template='indumentaria'] .sp-card .tpc-eyebrow span + i + span {
+  color: var(--in-ink-2);
+}
+.store-page[data-template='indumentaria'] .sp-card .tpc-eyebrow i {
+  background: var(--in-ink-2);
+}
+/* Testimonios: la superficie-card puede ser clara incluso en noche
+   (--st-surface-card publicado), así que --in-ink-2 (tinta del tema) no
+   sirve — se usan las variables que el contrato deriva por superficie
+   (--sp-ink = card-ink con AA garantizado por textOn). */
+.store-page[data-template='indumentaria'] .sp-testimonial :is(.sp-testimonial-text, .sp-testimonial-by strong, .sp-testimonial-by span) {
+  color: var(--sp-ink);
+}
+/* Tarjetas en tema oscuro: la superficie real es --in-card (oscura, ver
+   el override de .tpc.tpc-card más abajo) pero el contrato de
+   superficie-card repinta --sp-ink/--sp-ink-2/--sp-muted dentro de .tpc
+   derivándolos de --st-surface-card (claro en noche) — quedan grises
+   medios sobre tarjeta oscura. Se restauran las tintas de la piel, que
+   son las que combinan con --in-card. */
+.store-page[data-template='indumentaria'][data-store-theme='dark'] .tpc {
+  --sp-ink: var(--in-ink) !important;
+  --sp-ink-2: var(--in-ink-2) !important;
+  --sp-muted: var(--in-muted) !important;
+  --sp-line: var(--in-line) !important;
+}
+/* Formulario de contacto en tema oscuro: la superficie-card publicada es
+   clara (#F4F2EC) y las tintas --in-* del tema son claras también — los
+   textos toman --sp-ink, que dentro de .sp-form sigue derivado del
+   card-ink del contrato (oscuro, AA sobre la superficie clara). */
+.store-page[data-template='indumentaria'][data-store-theme='dark'] .sp-form :is(.sp-form-head strong, .sp-form-head span:not(.sp-form-badge), .sp-field label, .sp-counter, .sp-form-note) {
+  color: var(--sp-ink);
+}
+/* La pregunta del captcha va sobre su propia caja más clara que la tarjeta
+   — el card-ink justo queda en 4.37; un punto más hacia el negro llega a AA. */
+.store-page[data-template='indumentaria'][data-store-theme='dark'] .sp-form .sp-captcha-q {
+  color: color-mix(in srgb, var(--sp-ink) 60%, #000);
+}
+/* "Ver más" de tarjeta en tema oscuro: el acento-ink de la piel queda en
+   3.5 sobre la tarjeta — se aclara hacia la tinta del tema. */
+.store-page[data-template='indumentaria'][data-store-theme='dark'] .tpc .tpc-go {
+  color: color-mix(in srgb, var(--in-accent) 60%, var(--in-ink));
+}
+/* FAQ: mismo caso — el item es superficie-card y en noche queda claro
+   mientras la tinta de página es clara también. */
+.store-page[data-template='indumentaria'] .sp-faq-item summary,
+.store-page[data-template='indumentaria'] .sp-faq-answer {
+  color: var(--sp-ink);
+}
+/* Formulario de contacto: el contrato de superficie-card aclara
+   --sp-muted/--sp-accent-text por debajo de AA en labels, contador,
+   nota, captcha y bajada — tintas propias de la piel. */
+.store-page[data-template='indumentaria'] .sp-form :is(.sp-field label, .sp-form-head span:not(.sp-form-badge), .sp-counter, .sp-form-note) {
+  color: var(--in-ink-2);
+}
+.store-page[data-template='indumentaria'] .sp-form .sp-field:focus-within label {
+  color: var(--in-accent-text);
+}
+.store-page[data-template='indumentaria'] .sp-form .sp-captcha-q {
+  color: var(--in-accent-text);
+}
+/* Eyebrow de sección compartido (testimonios/contacto): la mezcla del
+   contrato queda bajo AA en boutique — acento-como-texto de la piel. */
+.store-page[data-template='indumentaria'] .sp-eyebrow {
+  color: var(--in-accent-text);
+}
+/* Pie: la superficie la fija el contrato ([data-st-surface-footer] →
+   --st-surface-footer + --sp-ink/--sp-ink-2/--sp-muted derivados con AA),
+   pero el bloque "chrome" de store-page (:849+) pinta los textos con
+   --sp-on-band, que para esta piel resuelve a la tinta de página (clara en
+   noche, oscura en día) y queda ilegible sobre la banda. Se repiten los
+   colores de ese bloque usando las variables ya derivadas del pie. */
+.store-page[data-template='indumentaria'] .sp-foot {
+  color: var(--sp-ink);
+}
+.store-page[data-template='indumentaria'] .sp-foot .sp-foot-brand strong {
+  color: var(--sp-ink);
+}
+.store-page[data-template='indumentaria'] .sp-foot .sp-foot-heading {
+  color: var(--sp-ink-2);
+}
+.store-page[data-template='indumentaria'] .sp-foot :is(.sp-foot-col a, .sp-foot-contact a) {
+  color: var(--sp-ink-2);
+}
+.store-page[data-template='indumentaria'] .sp-foot :is(.sp-foot-copy, .sp-foot-note, .sp-foot-brand span) {
+  color: var(--sp-ink-2);
+}
+.store-page[data-template='indumentaria'] .sp-foot .sp-foot-col a:hover {
+  color: var(--sp-ink);
+}
+.store-page[data-template='indumentaria'] .sp-foot :is(.sp-davent-badge, .sp-davent-badge strong) {
+  color: var(--sp-ink-2);
+}
+.store-page[data-template='indumentaria'] .sp-foot .sp-davent-badge strong {
+  color: var(--sp-ink);
+}
+/* Badge del monograma en noche: la placa queda clara (--store-accent-ink
+   blanco) y la muted de la piel no llega a AA — toma la tinta de acento. */
+.store-page[data-template='indumentaria'][data-store-theme='dark'] .sp-brand .sp-mono,
+.store-page[data-template='indumentaria'][data-style='indumentaria-noche'] .sp-brand .sp-mono {
+  color: var(--in-on-accent);
+}
 .store-page[data-template='indumentaria'][data-style='indumentaria-street'] .sp-drawer,
 .store-page[data-template='indumentaria'] .sp-drawer {
   background: var(--in-card);
