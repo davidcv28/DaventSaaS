@@ -779,6 +779,11 @@ landing, catálogo, ficha y servicios) y a los estilos `portico` (día) y
   `gap` del grid separa cada hijo: resetear márgenes; (5) el catálogo sin
   productos muestra un panel `.ds-empty` a ancho completo y oculta el aside
   y la barra con `html:has([data-ds-products] > .ds-empty)`.
+- **Navegación**: el chrome (header, hoja móvil, tab bar, pie) lleva
+  `data-ds-anchor` y cada acceso de sección suma `data-ds-route="home"`:
+  con la sección visible el puente scrollea y, si vive en otra superficie,
+  navega al inicio. El `data-ds-offset` del header se re-mide con la
+  cabecera real (alto + 12) o los anclajes caen bajo la barra.
 - **Registro**: tier `plus` (Estándar) en `seed_data.json` (patrón y ambos
   estilos) y en `STORE_TEMPLATES` de `stores.api.js`; QA con
   `qa-devin-store` (`?theme=dark&surface=…`) + `seed_design_catalog` +
