@@ -69,6 +69,7 @@ from StoreApp.domains.stores.services import (
     upload_logo,
     verify_captcha,
     visit_stats_of,
+    web_quality_report,
 )
 from StoreApp.domains.stores.services.ai_design import (
     AiDesignError,
@@ -788,6 +789,25 @@ class StoreViewSet(StoreBaseViewSet):
         if not profile_has_benefit(profile, 'has_stats'):
             return Response({'detail': 'Las estadísticas de visitas están disponibles desde el plan Estándar.'}, status = status.HTTP_403_FORBIDDEN)
         return Response(visit_stats_of(store), status = status.HTTP_200_OK)
+    #=========================================
+    # WEB QUALITY (checklist "Calidad de tu web" del dashboard)
+    #=========================================
+    @action(detail = False, methods = ['get'], url_path = r'(?P<slug>[a-z0-9-]+)/web-quality')
+    def web_quality(self, request, slug = None):
+        #GET /api/stores/<slug>/web-quality/ — score 0-100 + checks con la
+        #pestaña del dashboard que resuelve cada pendiente. Dueño o staff:
+        #el slug ajeno responde 403 explícito (la tienda ni siquiera entra
+        #en el queryset del panel, pero acá el motivo es más claro).
+        store   =   get_object_or_404(
+            Store.objects.select_related('customization', 'user__city', 'user__province'),
+            slug = slug,
+        )
+        if not request.user.is_staff and store.user.user_id != request.user.pk:
+            return Response(
+                {'detail': 'No tenés permiso para ver la calidad de esa web.'},
+                status = status.HTTP_403_FORBIDDEN,
+            )
+        return Response(web_quality_report(store), status = status.HTTP_200_OK)
     #=========================================
     # CHATBOT (asistente de la web pública, beneficio has_chatbot: solo Premium)
     #=========================================

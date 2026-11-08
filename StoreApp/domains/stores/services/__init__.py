@@ -52,3 +52,4 @@ from .storage import (
     validate_image_file,
     validate_logo_file,
 )
+from .web_quality import web_quality_report

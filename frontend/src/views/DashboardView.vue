@@ -81,6 +81,8 @@ import TipHint from '../components/TipHint.vue'
 import { useStudioDesign, DESIGN_FIELDS } from '../composables/useStudioDesign.js'
 import DesignStylesTab from '../components/design/DesignStylesTab.vue'
 import DesignStudioTab from '../components/design/DesignStudioTab.vue'
+import WebQualityCard from '../components/design/WebQualityCard.vue'
+import { useWebQuality } from '../composables/useWebQuality.js'
 import { TEMPLATE_DEFS, TEMPLATE_LABELS, templateDef, templatePages, patternsForSiteTemplates, patternSurfaces, normalizeLayoutConfig } from '../templates/index.js'
 import { designApi } from '../api/design.api.js'
 
@@ -668,6 +670,13 @@ const designTarget = computed(() => {
   const b = plan.value?.benefits || {}
   return plan.value?.isCurrent && b.has_customization ? 'design' : 'web'
 })
+// Checklist "Calidad de tu web": score + checks del endpoint
+// /stores/<slug>/web-quality/. Se monta en Inicio y se oculta solo con
+// score 100; cada check navega a su pestaña vía el setter de `section`
+// (valida ids y abre el candado del plan si la sección está bloqueada).
+const { report: webQualityReport, loading: webQualityLoading, load: loadWebQuality } = useWebQuality(() => store.store?.slug)
+watch(section, (s) => { if (s === 'overview') loadWebQuality() })
+function onQualityNavigate(tab) { section.value = tab }
 const stepsPct = computed(() => (nextSteps.value.length ? Math.round((stepsDone.value / nextSteps.value.length) * 100) : 0))
 const quickLinks = [
   { id: 'catalogs', label: 'Productos', hint: 'Cargar y editar', icon: 'package' },
@@ -3959,6 +3968,9 @@ async function changePassword() {
           <small class="ovh-meta">{{ plan && plan.isCurrent ? `${fmtDate(plan.end)} · ${plan.name}` : 'sin plan vigente' }}</small>
         </div>
       </section>
+
+      <!-- 3b. Calidad de la web: score + pendientes con acción directa -->
+      <WebQualityCard :report="webQualityReport" :loading="webQualityLoading" @navigate="onQualityNavigate" />
 
       <!-- 4. Fila: gráfico de visitas + checklist de puesta en marcha -->
       <div class="ovh-row">
