@@ -283,24 +283,68 @@ const BTN_BORDERS = [
   { id: 'dotted', label: 'Discontinuo', hint: 'Borde de puntos.' }
 ]
 function setBtn(key, value) { setKey('buttons', key, value) }
+
+// ===========================================================================
+// Layout tipo editor de folletos: riel de editores | lienzo (preview en
+// vivo) | inspector con los controles del editor activo.
+// ===========================================================================
+const TOOLS = [
+  { id: 'colors', icon: 'palette', label: 'Colores', hint: 'Superficies', desc: 'Colores propios para las superficies de la página. Lo que no toques hereda el look de tu diseño.' },
+  { id: 'type', icon: 'type', label: 'Fuentes', hint: 'Por área', desc: 'Cada rol tiene su propia familia, tamaño, peso, interletraje, interlineado y caja. «Heredar» vuelve al estilo del diseño.' },
+  { id: 'media', icon: 'image', label: 'Fotos', hint: 'De producto', desc: 'El marco de las fotos en las tarjetas: proporción, encaje, fondo detrás, esquinas y borde.' },
+  { id: 'bg', icon: 'monitor', label: 'Fondo', hint: 'De la web', desc: 'Qué lleva el fondo detrás de todo: color, degradado, malla, patrón o una imagen tuya.' },
+  { id: 'buttons', icon: 'square', label: 'Botones', hint: 'Estilo y forma', desc: 'Estilo, forma, tamaño y borde de todos los botones de la web.' }
+]
+const panel = ref('colors')
+const activeTool = computed(() => TOOLS.find((t) => t.id === panel.value) || TOOLS[0])
 </script>
 
 <template>
   <div class="dst">
-    <div class="dst-main">
-      <p class="dst-lead">
-        El Studio de tu web: colores de contenedores, fuentes por área, marco de las
-        fotos de producto, fondo y botones. Todo se ve al instante en la vista previa;
-        publicalo con «Guardar cambios».
-      </p>
+    <!-- Barra superior: título + acciones del guardado (mismo lenguaje que
+         el editor de folletos: barra, lienzo al centro, inspector al costado) -->
+    <header class="dst-bar card">
+      <div class="dst-bar-title">
+        <span class="dst-bar-ico" aria-hidden="true"><AppIcon name="sliders" :size="16" /></span>
+        <div class="dst-bar-text">
+          <strong>Studio</strong>
+          <small>Edición fina de tu web — lo que tocás se ve al instante en el lienzo.</small>
+        </div>
+      </div>
+      <div class="dst-bar-actions"><slot name="actions" /></div>
+    </header>
 
-      <!-- ===== 1. Colores de contenedores ===== -->
-      <section class="card dst-card" aria-labelledby="dst-surfaces-t">
-        <header class="dst-head">
-          <h2 id="dst-surfaces-t"><AppIcon name="palette" :size="16" aria-hidden="true" /> Colores de contenedores</h2>
-          <p>Colores propios para las superficies de la página. Lo que no toques hereda el look de tu diseño.</p>
+    <div class="dst-main">
+      <!-- Riel de editores -->
+      <nav class="dst-tools card" aria-label="Editores del Studio">
+        <button
+          v-for="t in TOOLS" :key="t.id" type="button" class="dst-tool"
+          :class="{ on: panel === t.id }" :aria-pressed="panel === t.id"
+          @click="panel = t.id"
+        >
+          <AppIcon :name="t.icon" :size="17" aria-hidden="true" />
+          <strong>{{ t.label }}</strong>
+          <small>{{ t.hint }}</small>
+        </button>
+      </nav>
+
+      <!-- Lienzo: la web real en vivo -->
+      <div class="dst-stage-wrap">
+        <DesignLivePreview :form="form" />
+        <p class="dst-stage-hint">Elegí un editor del panel y mirá el resultado acá. «Guardar cambios» lo publica en tu web.</p>
+      </div>
+
+      <!-- Inspector: los controles del editor activo -->
+      <aside class="dst-side card" :aria-label="`Editor: ${activeTool.label}`">
+        <header class="dst-side-head">
+          <span class="dst-side-ico" aria-hidden="true"><AppIcon :name="activeTool.icon" :size="17" /></span>
+          <div>
+            <h2>{{ activeTool.label }}</h2>
+            <p>{{ activeTool.desc }}</p>
+          </div>
         </header>
         <div class="stp-fields">
+          <template v-if="panel === 'colors'">
           <div v-for="s in SURFACES" :key="s.key" class="stp-role" :title="s.hint">
             <span class="stp-role-lb">{{ s.label }}</span>
             <input
@@ -320,16 +364,9 @@ function setBtn(key, value) { setKey('buttons', key, value) }
             ><AppIcon name="x" :size="13" aria-hidden="true" /> Heredar</button>
           </div>
           <p class="stp-fhint">El texto dentro de cada superficie se ajusta solo para seguir leyéndose (contraste AA).</p>
-        </div>
-      </section>
+          </template>
 
-      <!-- ===== 2. Fuentes por área ===== -->
-      <section class="card dst-card" aria-labelledby="dst-type-t">
-        <header class="dst-head">
-          <h2 id="dst-type-t"><AppIcon name="type" :size="16" aria-hidden="true" /> Fuentes por área</h2>
-          <p>Cada rol tiene su propia familia, tamaño, peso, interletraje, interlineado y caja. «Heredar» vuelve al estilo del diseño.</p>
-        </header>
-        <div class="stp-fields">
+          <template v-if="panel === 'type'">
           <div v-for="g in ROLE_GROUPS" :key="g" class="stp-role-group">
             <span class="stp-role-group-lb">{{ g }}</span>
             <div v-for="r in rowsOf(g)" :key="r.role" class="dst-role">
@@ -395,16 +432,9 @@ function setBtn(key, value) { setKey('buttons', key, value) }
               </div>
             </div>
           </div>
-        </div>
-      </section>
+          </template>
 
-      <!-- ===== 3. Fotos de producto ===== -->
-      <section class="card dst-card" aria-labelledby="dst-media-t">
-        <header class="dst-head">
-          <h2 id="dst-media-t"><AppIcon name="image" :size="16" aria-hidden="true" /> Fotos de producto</h2>
-          <p>El marco de las fotos en las tarjetas: proporción, encaje, fondo detrás, esquinas y borde.</p>
-        </header>
-        <div class="stp-fields">
+          <template v-if="panel === 'media'">
           <div>
             <span class="stp-role-lb">Proporción</span>
             <div class="dst-ratios" role="group" aria-label="Proporción del marco de foto">
@@ -469,16 +499,9 @@ function setBtn(key, value) { setKey('buttons', key, value) }
               </select>
             </label>
           </div>
-        </div>
-      </section>
+          </template>
 
-      <!-- ===== 4. Fondo de la web ===== -->
-      <section class="card dst-card" aria-labelledby="dst-bg-t">
-        <header class="dst-head">
-          <h2 id="dst-bg-t"><AppIcon name="monitor" :size="16" aria-hidden="true" /> Fondo de la web</h2>
-          <p>Qué lleva el fondo detrás de todo: color, degradado, malla, patrón o una imagen tuya.</p>
-        </header>
-        <div class="stp-fields">
+          <template v-if="panel === 'bg'">
           <div class="stp-seg dst-bgtypes" role="group" aria-label="Tipo de fondo">
             <button
               v-for="t in BG_TYPES" :key="t.id" type="button" class="stp-opt"
@@ -562,16 +585,9 @@ function setBtn(key, value) { setKey('buttons', key, value) }
           <button type="button" class="btn ghost btn-auto" @click="clearBackground">
             <AppIcon name="refresh" :size="14" aria-hidden="true" /> Quitar fondo personalizado
           </button>
-        </div>
-      </section>
+          </template>
 
-      <!-- ===== 5. Botones ===== -->
-      <section class="card dst-card" aria-labelledby="dst-btn-t">
-        <header class="dst-head">
-          <h2 id="dst-btn-t"><AppIcon name="sliders" :size="16" aria-hidden="true" /> Botones</h2>
-          <p>Estilo, forma, tamaño y borde de todos los botones de la web.</p>
-        </header>
-        <div class="stp-fields">
+          <template v-if="panel === 'buttons'">
           <div>
             <span class="stp-role-lb">Estilo</span>
             <div class="stp-minis wide" role="group" aria-label="Estilo de botón">
@@ -610,25 +626,44 @@ function setBtn(key, value) { setKey('buttons', key, value) }
             </div>
             <p class="stp-fhint">Punteado y discontinuo se ven mejor sobre Contorno o Transparente; sobre Sólido el borde toma el color del texto del botón.</p>
           </div>
+          </template>
         </div>
-      </section>
+      </aside>
     </div>
-
-    <aside class="dst-live">
-      <DesignLivePreview :form="form" />
-      <slot name="actions" />
-    </aside>
   </div>
 </template>
 
 <style scoped>
-.dst { display: grid; grid-template-columns: minmax(0, 1fr) minmax(340px, 400px); gap: 18px; align-items: start; }
-.dst-main { display: flex; flex-direction: column; gap: 16px; min-width: 0; }
-.dst-live { position: sticky; top: 16px; min-width: 0; }
-.dst-lead { margin: 0; font-size: 13px; color: var(--muted); line-height: 1.5; }
-.dst-card { padding: 16px 18px; display: grid; gap: 12px; }
-.dst-head h2 { display: flex; align-items: center; gap: 7px; margin: 0 0 4px; font-size: 14.5px; letter-spacing: -.01em; }
-.dst-head p { margin: 0; font-size: 12px; color: var(--muted); line-height: 1.45; }
+/* Layout del editor de folletos: barra con acciones, riel de editores,
+   lienzo (preview en vivo) al centro e inspector con los controles. */
+.dst { display: grid; gap: 12px; }
+.dst-bar { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; padding: 10px 14px; }
+.dst-bar-title { display: flex; align-items: center; gap: 10px; min-width: 0; }
+.dst-bar-ico { display: inline-flex; align-items: center; justify-content: center; width: 34px; height: 34px; flex: none; border-radius: 10px; background: var(--brand-soft, #eef2ff); color: var(--brand-600, #4f46e5); }
+.dst-bar-text { display: grid; gap: 1px; min-width: 0; }
+.dst-bar-text strong { font-size: 14.5px; letter-spacing: -.01em; }
+.dst-bar-text small { font-size: 11.5px; color: var(--muted); }
+.dst-bar-actions { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+.dst-main { display: grid; grid-template-columns: 124px minmax(0, 1fr) minmax(300px, 340px); gap: 12px; align-items: start; }
+.dst-tools { display: grid; gap: 6px; padding: 8px; position: sticky; top: 16px; }
+.dst-tool {
+  display: grid; justify-items: center; gap: 2px; padding: 10px 4px;
+  border: 1px solid var(--line, #e5e7eb); border-radius: 10px; background: var(--card, #fff);
+  color: var(--muted); font: inherit; cursor: pointer; text-align: center;
+  transition: border-color .15s, transform .15s, background .15s;
+}
+.dst-tool strong { font-size: 11.5px; color: var(--ink, #0f172a); }
+.dst-tool small { font-size: 10px; line-height: 1.2; }
+.dst-tool:hover { border-color: var(--brand-400, #818cf8); transform: translateY(-1px); color: var(--brand-ink, #4f46e5); }
+.dst-tool.on { border-color: var(--brand-500, #4f46e5); background: var(--brand-soft, #eef2ff); color: var(--brand-ink, #4f46e5); }
+.dst-tool.on strong { color: var(--brand-600, #4f46e5); }
+.dst-stage-wrap { min-width: 0; display: grid; gap: 8px; align-content: start; }
+.dst-stage-hint { margin: 0; font-size: 12px; color: var(--muted); text-align: center; }
+.dst-side { padding: 12px 14px 16px; position: sticky; top: 16px; max-height: calc(100vh - 140px); overflow-y: auto; min-width: 0; }
+.dst-side-head { display: flex; align-items: flex-start; gap: 10px; padding-bottom: 10px; border-bottom: 1px solid var(--line, #e5e7eb); margin-bottom: 12px; }
+.dst-side-ico { display: inline-flex; align-items: center; justify-content: center; width: 32px; height: 32px; flex: none; border-radius: 9px; background: var(--brand-soft, #eef2ff); color: var(--brand-600, #4f46e5); }
+.dst-side-head h2 { margin: 0; font-size: 14px; letter-spacing: -.01em; }
+.dst-side-head p { margin: 2px 0 0; font-size: 11.5px; color: var(--muted); line-height: 1.45; }
 .dst-reset { min-height: 32px; padding: 4px 10px; font-size: 11.5px; }
 .dst-2col { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
 .dst-f { display: grid; gap: 4px; min-width: 0; }
@@ -675,8 +710,10 @@ function setBtn(key, value) { setKey('buttons', key, value) }
 .dst-btn-art[data-style='gradient']::after { background: linear-gradient(90deg, var(--brand-500, #4f46e5), var(--brand-700, #3730a3)); }
 .dst-btn-art[data-style='transparent']::after { background: color-mix(in srgb, var(--brand-500, #4f46e5) 8%, transparent); border: 1.5px dashed var(--brand-500, #4f46e5); }
 .dst-bgtypes { flex-wrap: wrap; }
-@media (max-width: 1099px) {
-  .dst { grid-template-columns: 1fr; }
-  .dst-live { position: static; order: -1; }
+@media (max-width: 1239px) {
+  .dst-main { grid-template-columns: 1fr; }
+  .dst-tools { display: flex; overflow-x: auto; position: static; }
+  .dst-tool { min-width: 88px; }
+  .dst-side { position: static; max-height: none; }
 }
 </style>
