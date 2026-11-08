@@ -32,11 +32,17 @@
   --line:var(--ds-border,#D9DED6);
   --accent:var(--ds-accent,#0E5A4F);
   --accent-ink:var(--ds-accent-ink,#FFFFFF);
+  /* Acento como TEXMA: --ds-accent-text ya viene corregido a AA contra la
+     superficie del tema, pero las secciones claras no son #fff puro — un
+     punto hacia la tinta deja margen sin perder el tono. En oscuro se
+     redefine abajo (el acento ya va aclarado). */
+  --accent-text:color-mix(in srgb,var(--ds-accent-text,var(--accent)) 84%,var(--ink));
   /* El ámbar es firma del diseño, no un rol del tema: si colgara de
      --ds-secondary cualquier paleta lo teñiría de verde y el degradado
      acento→ámbar (filo de tarjetas, cinta, subrayados) perdía su lectura. */
   --warm:#E9A23B;
   --warm-ink:#1A1305;
+  --glint:#fff;
   --radius:var(--ds-radius,14px);
   --radius-btn:var(--ds-radius-btn,10px);
   --font-display:"Bricolage Grotesque","Arial Narrow",system-ui,sans-serif;
@@ -62,6 +68,7 @@ html[data-ds-style="esencial-noche"]{
   --line:#2A3832;
   --accent:color-mix(in srgb,var(--ds-accent,#0E5A4F) 55%,#E9EFEA);
   --accent-ink:#0F1613;
+  --accent-text:var(--accent);
   --warm:#F0B55A;
   color-scheme:dark;
 }
@@ -104,7 +111,10 @@ a{color:inherit}
    lo reemplaza la regla + rombo. */
 .eyebrow{
   display:inline-flex;align-items:center;gap:9px;
-  font-size:.8rem;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--accent);
+  font-size:.8rem;font-weight:600;letter-spacing:.08em;text-transform:uppercase;
+  /* --accent-text ya viene corregido a AA por el renderer + mezcla a tinta;
+     el acento crudo (#ff4b1f en base) queda a ~3.2:1 como texto pequeño. */
+  color:var(--accent-text);
 }
 .eyebrow::before{
   content:"";width:6px;height:6px;border-radius:50%;flex:none;
@@ -137,7 +147,7 @@ main{counter-reset:sec}
 /* Atajo al catálogo completo desde la vitrina de la home. */
 .head-link{
   justify-self:start;display:inline-flex;align-items:center;gap:8px;
-  font-size:.95rem;font-weight:600;color:var(--accent);text-decoration:none;
+  font-size:.95rem;font-weight:600;color:var(--accent-text);text-decoration:none;
   padding-bottom:2px;border-bottom:1px solid color-mix(in srgb,var(--accent) 35%,transparent);
   transition:border-color .25s,color .25s;
 }
@@ -154,17 +164,18 @@ main{counter-reset:sec}
   min-height:46px;padding:0 22px;border-radius:var(--radius-btn);
   border:1px solid var(--accent);background:var(--accent);color:var(--accent-ink);
   font:inherit;font-weight:600;text-decoration:none;cursor:pointer;
-  transition:transform .25s var(--ease),box-shadow .25s var(--ease),background-color .25s,color .25s;
+  transition:transform .25s var(--ease),background-color .25s,color .25s;
 }
-/* Brillo que viaja al hover: firma del sistema, no solo premium. */
+/* Brillo que viaja al hover: firma del sistema, no solo premium. La banda
+   cruza por transform (background-position animado repintaba el fondo). */
 .btn{overflow:hidden}
 .btn::before{
-  content:"";position:absolute;inset:0;pointer-events:none;
-  background:linear-gradient(115deg,transparent 35%,color-mix(in srgb,var(--accent-ink) 26%,transparent) 50%,transparent 65%);
-  background-size:250% 100%;background-position:130% 0;
-  transition:background-position .7s var(--ease);
+  content:"";position:absolute;top:0;bottom:0;left:-45%;width:45%;pointer-events:none;
+  background:linear-gradient(100deg,transparent,color-mix(in srgb,var(--accent-ink) 26%,transparent),transparent);
+  transform:translateX(-60%) skewX(-16deg);
+  transition:transform .7s var(--ease);
 }
-.btn:hover::before{background-position:-40% 0}
+.btn:hover::before{transform:translateX(320%) skewX(-16deg)}
 .btn:hover{transform:translateY(-2px);box-shadow:0 12px 24px -14px var(--accent)}
 .btn:active{transform:translateY(0) scale(.98)}
 .btn.ghost{background:transparent;color:var(--ink);border-color:var(--line)}
@@ -189,7 +200,6 @@ main{counter-reset:sec}
      opaco da el mismo aire sin coste de pintura. */
   background:color-mix(in srgb,var(--bg) 96%,transparent);
   border-bottom:1px solid var(--line);
-  transition:box-shadow .3s;
 }
 /* Barra de progreso de lectura: gradiente acento→ámbar, solo scaleX. */
 .site-header::after{
@@ -266,7 +276,7 @@ html[data-ds-surface="services"] .nav a[data-ds-route="services"]::after{transfo
 }
 .hero-card{
   transform:rotateX(var(--rx,0deg)) rotateY(var(--ry,0deg));
-  transition:transform .35s var(--ease),box-shadow .35s;
+  transition:transform .35s var(--ease);
   box-shadow:var(--ds-shadow,0 30px 60px -40px color-mix(in srgb,var(--ink) 50%,transparent));
 }
 .hero-card .shot{position:relative;aspect-ratio:16/9;background:color-mix(in srgb,var(--accent) 10%,var(--bg));border-bottom:1px solid var(--line);overflow:hidden}
@@ -291,7 +301,6 @@ html[data-ds-surface="services"] .nav a[data-ds-route="services"]::after{transfo
   width:42px;height:42px;border-radius:12px;flex:none;display:grid;place-items:center;
   background:color-mix(in srgb,var(--accent) 12%,transparent);color:var(--accent);
   animation:float 4s ease-in-out infinite;
-  transition:box-shadow .3s;
 }
 /* El float ya anima transform: el hover marca con halo en vez de pelear
    por la misma propiedad. */
@@ -324,7 +333,7 @@ html[data-ds-surface="services"] .nav a[data-ds-route="services"]::after{transfo
 .ds-product{
   position:relative;display:flex;flex-direction:column;min-width:0;
   background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);overflow:hidden;
-  transition:transform .35s var(--ease),box-shadow .35s var(--ease),border-color .3s;
+  transition:transform .35s var(--ease),border-color .3s;
 }
 /* Filo de acento que se despliega al hover: firma del sistema. */
 .ds-product::before{
@@ -360,7 +369,7 @@ html[data-ds-surface="services"] .nav a[data-ds-route="services"]::after{transfo
 .ds-product-img{
   position:relative;display:block;width:100%;aspect-ratio:4/3;object-fit:cover;
   background:color-mix(in srgb,var(--accent) 10%,var(--bg));border-bottom:1px solid var(--line);
-  transition:transform .6s var(--ease),filter .6s var(--ease);
+  transition:transform .6s var(--ease);
 }
 /* Zoom interno: la tarjeta no cambia de tamaño, la foto respira dentro. */
 .ds-product:hover .ds-product-img:not(.is-empty){transform:scale(1.05);filter:saturate(1.06)}
@@ -377,8 +386,11 @@ html[data-ds-surface="services"] .nav a[data-ds-route="services"]::after{transfo
 }
 .ds-product-img.is-empty::after{content:"";width:56px;height:56px;color:var(--accent);opacity:.5;
   background:currentColor;clip-path:polygon(50% 0,100% 30%,100% 70%,50% 100%,0 70%,0 30%)}
-.ds-product-cat{min-height:1.2em;margin:14px 16px 0;font-size:.78rem;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--accent)}
+.ds-product-cat{min-height:1.2em;margin:14px 16px 0;font-size:.78rem;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--accent-text)}
 .ds-product-cat:empty{display:none}
+/* El tag global usa --ds-success crudo (~3.6:1 sobre surface); se oscurece
+   hacia la tinta para AA sin tocar el verde de marca en fondos oscuros. */
+.ds-stock{color:color-mix(in srgb,var(--ds-success,#0f9d58) 68%,var(--ink))}
 .ds-product-cat:empty + .ds-product-copy{padding-top:16px}
 .ds-product-copy{display:grid;gap:4px;min-width:0;padding:2px 16px 0;flex:1}
 .ds-product-name{margin:0;font-size:1.08rem;font-family:var(--font-display);line-height:1.25;overflow-wrap:anywhere;transition:color .25s}
@@ -394,7 +406,7 @@ html[data-ds-surface="services"] .nav a[data-ds-route="services"]::after{transfo
   font-size:.72rem;font-weight:700;color:var(--warm-ink);background:var(--warm);
   padding:2px 8px;border-radius:999px;
 }
-html[data-ds-theme="dark"] .ds-product-price[data-off]::after{color:#241a05}
+html[data-ds-theme="dark"] .ds-product-price[data-off]::after{color:var(--warm-ink)}
 /* Vacío con marco de guiones: se lee como estado diseñado, no como error. */
 .ds-empty{
   padding:38px 24px;color:var(--muted);text-align:center;
@@ -453,7 +465,7 @@ a[href=""].btn{display:none}
 .cat-sort select{
   font:inherit;color:var(--ink);background:var(--surface);
   border:1px solid var(--line);border-radius:var(--radius-btn);padding:8px 10px;
-  cursor:pointer;transition:border-color .25s,box-shadow .25s;
+  cursor:pointer;transition:border-color .25s;
 }
 .cat-sort select:hover{border-color:color-mix(in srgb,var(--ink) 30%,var(--line))}
 .cat-sort select:focus{
@@ -472,7 +484,7 @@ a[href=""].btn{display:none}
   display:grid;grid-template-columns:56px minmax(0,1fr);grid-template-rows:auto auto;
   column-gap:20px;row-gap:4px;align-items:start;
   padding-block:28px;border-bottom:1px solid var(--line);
-  transition:padding-inline .35s var(--ease);counter-increment:svc;
+  counter-increment:svc;
 }
 .ds-service:hover{padding-inline:12px;background:color-mix(in srgb,var(--accent) 3.5%,transparent)}
 .ds-service::before{
@@ -504,7 +516,7 @@ body:not(:has(.ds-plan)) a[href="#suscripciones"]{display:none}
 .ds-plan{
   display:grid;gap:10px;align-content:start;
   background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);padding:24px;
-  transition:transform .35s var(--ease),box-shadow .35s var(--ease),border-color .3s;
+  transition:transform .35s var(--ease),border-color .3s;
 }
 .ds-plan:hover{
   transform:translateY(-4px);border-color:color-mix(in srgb,var(--accent) 45%,var(--line));
@@ -570,7 +582,7 @@ body:not(:has(.ds-plan)) a[href="#suscripciones"]{display:none}
 /* El CTA cierra la tarjeta a todo el ancho: en una columna angosta el botón
    suelto a la izquierda dejaba un hueco muerto debajo. */
 .contact-card > .btn{width:100%;justify-content:center;margin-top:10px}
-.form-note{display:flex;align-items:center;gap:8px;font-size:.95rem;color:var(--accent);min-height:1.6em}
+.form-note{display:flex;align-items:center;gap:8px;font-size:.95rem;color:var(--accent-text);min-height:1.6em}
 .form-note .icon{width:20px;height:20px}
 .form-note.show{animation:popIn .45s var(--ease) both}
 .field{display:grid;gap:6px;min-width:0}
@@ -578,7 +590,7 @@ body:not(:has(.ds-plan)) a[href="#suscripciones"]{display:none}
 .field input,.field textarea{
   width:100%;min-height:46px;padding:10px 12px;border-radius:var(--radius-btn);
   border:1px solid var(--line);background:var(--surface);color:var(--ink);font:inherit;
-  transition:border-color .25s,box-shadow .25s;
+  transition:border-color .25s;
 }
 .field input:hover:not(:focus),.field textarea:hover:not(:focus){
   border-color:color-mix(in srgb,var(--ink) 35%,var(--line));
@@ -677,7 +689,7 @@ html[data-ds-surface="product"] section[data-surface="product"]:has(.catalog-gri
   width:100%;min-height:46px;padding:10px 12px;box-sizing:border-box;
   border:1px solid var(--line);border-radius:var(--radius-btn);
   background:var(--surface);color:var(--ink);font:inherit;
-  transition:border-color .25s,box-shadow .25s;
+  transition:border-color .25s;
 }
 .ds-rev-input:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 4px color-mix(in srgb,var(--accent) 22%,transparent)}
 .ds-rev-area{min-height:96px;resize:vertical}
@@ -698,7 +710,7 @@ html[data-ds-surface="product"] section[data-surface="product"]:has(.catalog-gri
   justify-self:start;min-height:46px;padding:0 22px;border:1px solid var(--accent);
   border-radius:var(--radius-btn);background:var(--accent);color:var(--accent-ink);
   font:inherit;font-weight:600;cursor:pointer;
-  transition:transform .25s var(--ease),box-shadow .25s;
+  transition:transform .25s var(--ease);
 }
 .ds-rev-send:hover{transform:translateY(-2px);box-shadow:0 12px 24px -14px var(--accent)}
 @media (max-width:560px){.ds-rev-row{grid-template-columns:1fr}}
@@ -709,7 +721,7 @@ html[data-ds-surface="product"] section[data-surface="product"]:has(.catalog-gri
 .brands-strip .ds-brand-link{display:inline-flex;align-items:center;gap:10px;min-width:0;padding:9px 14px;border:1px solid var(--line);border-radius:var(--radius);background:var(--surface);color:var(--ink);text-decoration:none;transition:border-color .2s,transform .2s}
 .brands-strip .ds-brand-link:hover{border-color:var(--accent);transform:translateY(-1px)}
 .ds-brand-img{width:30px;height:30px;object-fit:contain;flex:none}
-.ds-brand-initial{display:grid;place-items:center;flex:none;width:30px;height:30px;border-radius:50%;background:color-mix(in srgb,var(--accent) 14%,transparent);color:var(--accent);font-weight:800;font-size:14px}
+.ds-brand-initial{display:grid;place-items:center;flex:none;width:30px;height:30px;border-radius:50%;background:color-mix(in srgb,var(--accent) 14%,transparent);color:color-mix(in srgb,var(--accent-text) 74%,var(--ink));font-weight:800;font-size:14px}
 .ds-brand-name{font-size:13px;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:140px}
 
 /* ============================================
@@ -769,7 +781,7 @@ a.chip:hover{border-color:var(--accent);color:var(--accent)}
   display:grid;gap:8px;align-content:start;padding:20px;
   background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);
 }
-.about-card > span{font-size:.78rem;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:var(--accent)}
+.about-card > span{font-size:.78rem;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:var(--accent-text)}
 .about-card p{color:var(--muted);font-size:.94rem}
 .about-side{
   display:grid;gap:18px;padding:26px;
@@ -803,7 +815,7 @@ a.chip:hover{border-color:var(--accent);color:var(--accent)}
 .ds-guar{
   display:flex;gap:14px;align-items:flex-start;padding:20px;
   background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);
-  transition:transform .3s var(--ease),border-color .3s,box-shadow .3s;
+  transition:transform .3s var(--ease),border-color .3s;
 }
 .ds-guar:hover{transform:translateY(-3px);border-color:color-mix(in srgb,var(--accent) 40%,var(--line));box-shadow:0 14px 28px -22px color-mix(in srgb,var(--ink) 50%,transparent)}
 .ds-guar-icon{
@@ -823,7 +835,7 @@ a.chip:hover{border-color:var(--accent);color:var(--accent)}
   border:1px solid var(--line);background:color-mix(in srgb,var(--accent) 10%,var(--bg));
 }
 .ds-shot:first-child{grid-column:span 2;grid-row:span 2}
-.ds-shot img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;transition:transform .7s var(--ease),filter .7s var(--ease)}
+.ds-shot img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;transition:transform .7s var(--ease)}
 .ds-shot:hover img{transform:scale(1.06);filter:saturate(1.05)}
 .ds-shot::after{
   content:"";position:absolute;inset:0;pointer-events:none;
@@ -877,7 +889,7 @@ a.chip:hover{border-color:var(--accent);color:var(--accent)}
   width:100%;min-height:46px;padding:10px 12px;box-sizing:border-box;
   border:1px solid var(--line);border-radius:var(--radius-btn);
   background:var(--bg);color:var(--ink);font:inherit;
-  transition:border-color .25s,box-shadow .25s;
+  transition:border-color .25s;
 }
 .ds-contact-input:hover:not(:focus){border-color:color-mix(in srgb,var(--ink) 35%,var(--line))}
 .ds-contact-input:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 4px color-mix(in srgb,var(--accent) 22%,transparent)}
@@ -892,14 +904,14 @@ a.chip:hover{border-color:var(--accent);color:var(--accent)}
   cursor:pointer;font-size:16px;line-height:1;transition:border-color .2s,color .2s;
 }
 .ds-contact-reload:hover{border-color:var(--accent);color:var(--accent)}
-.ds-contact-status{margin:0;font-size:.9rem;color:#b3402e;min-height:1.4em}
+.ds-contact-status{margin:0;font-size:.9rem;color:var(--ds-danger,#b3402e);min-height:1.4em}
 .ds-contact-status[data-ok="1"]{color:var(--accent)}
 .ds-contact-status:empty{display:none}
 .ds-contact-send{
   justify-self:start;min-height:46px;padding:0 22px;border:1px solid var(--accent);
   border-radius:var(--radius-btn);background:var(--accent);color:var(--accent-ink);
   font:inherit;font-weight:600;cursor:pointer;
-  transition:transform .25s var(--ease),box-shadow .25s;
+  transition:transform .25s var(--ease);
 }
 .ds-contact-send:hover{transform:translateY(-2px);box-shadow:0 12px 24px -14px var(--accent)}
 @media (max-width:560px){.ds-contact-row{grid-template-columns:1fr}}
@@ -927,9 +939,10 @@ html[data-ds-style="esencial-premium"] .brand .mark{
   box-shadow:0 0 0 1px color-mix(in srgb,var(--warm) 55%,transparent),0 0 18px -4px color-mix(in srgb,var(--warm) 60%,transparent);
 }
 html[data-ds-style="esencial-premium"] .brand .mark::after{
-  content:"";position:absolute;inset:0;
-  background:linear-gradient(115deg,transparent 30%,color-mix(in srgb,#fff 55%,transparent) 50%,transparent 70%);
-  background-size:250% 100%;background-position:120% 0;
+  /* Misma firma que .btn::before: banda de luz que cruza por transform. */
+  content:"";position:absolute;top:0;bottom:0;left:-70%;width:70%;
+  background:linear-gradient(100deg,transparent,color-mix(in srgb,var(--glint) 55%,transparent),transparent);
+  transform:translateX(-30%) skewX(-18deg);
   animation:sheen 4.5s var(--ease) infinite;
 }
 /* Eyebrow editorial: regla + rombo antes del texto. */
@@ -946,10 +959,10 @@ html[data-ds-style="esencial-premium"] .section-head h2::after{
   content:"";position:absolute;left:0;bottom:0;height:2px;width:64px;border-radius:2px;
   background:linear-gradient(90deg,var(--accent),var(--warm));
 }
-/* CTA: el brillo que viaja ya es de base; premium lo tiñe de ámbar. */
+/* CTA: el brillo que viaja ya es de base; premium lo tiñe de ámbar
+   (misma banda por transform que .btn::before). */
 html[data-ds-style="esencial-premium"] .btn::before{
-  background:linear-gradient(115deg,transparent 35%,color-mix(in srgb,var(--warm) 34%,transparent) 50%,transparent 65%);
-  background-size:250% 100%;background-position:130% 0;
+  background:linear-gradient(100deg,transparent,color-mix(in srgb,var(--warm) 34%,transparent),transparent);
 }
 /* Tarjeta del hero con marco doble y cantos dorados. */
 html[data-ds-style="esencial-premium"] .hero-card{
@@ -1029,7 +1042,10 @@ html[data-ds-style="esencial-premium"] .hero::after{
 html[data-ds-style="esencial-premium"][data-ds-theme="dark"] .eyebrow{color:var(--warm)}
 html[data-ds-style="esencial-premium"][data-ds-theme="dark"] .ticker-item .icon{color:var(--warm)}
 
-@keyframes sheen{0%,55%{background-position:130% 0}90%,100%{background-position:-40% 0}}
+@keyframes sheen{
+  0%,55%{transform:translateX(-30%) skewX(-18deg)}
+  90%,100%{transform:translateX(320%) skewX(-18deg)}
+}
 @keyframes pulse-ring{0%{opacity:.7;transform:scale(.9)}70%,100%{opacity:0;transform:scale(1.18)}}
 @keyframes spin-slow{to{transform:rotate(360deg)}}
 
@@ -1132,7 +1148,7 @@ html.io .reveal.in{opacity:1;translate:0 0}
   .m-sheet-brand strong{font-family:var(--font-display);font-weight:700;font-size:16px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
   .m-close{position:absolute;top:14px;right:12px;display:grid;place-items:center;width:44px;height:44px;border:1px solid var(--line);border-radius:50%;background:var(--bg);color:var(--ink);font-size:22px;line-height:1;cursor:pointer}
   .m-sheet-nav{display:grid;gap:0;align-content:start;padding:16px 12px calc(16px + env(safe-area-inset-bottom));overflow-y:auto;counter-reset:mnav}
-  .m-sheet-nav a{display:flex;align-items:center;justify-content:space-between;gap:12px;min-height:56px;padding:8px 12px;border-bottom:1px solid var(--line);font-size:17px;text-decoration:none;color:var(--ink);transition:color .2s,padding-left .3s var(--ease)}
+  .m-sheet-nav a{display:flex;align-items:center;justify-content:space-between;gap:12px;min-height:56px;padding:8px 12px;border-bottom:1px solid var(--line);font-size:17px;text-decoration:none;color:var(--ink);transition:color .2s}
   .m-sheet-nav a:hover{padding-left:20px}
   /* Numeración viva: al apagar una página (p. ej. Suscripciones sin planes)
      la lista no salta de 03 a 05. Los display:none no incrementan. */
@@ -1215,8 +1231,14 @@ html.io .reveal.in{opacity:1;translate:0 0}
 @media (hover:none){
   .ds-product:hover{transform:none;box-shadow:none;border-color:var(--line)}
   .ds-product::after{display:none}
+  .ds-plan:hover{transform:none;box-shadow:none}
   .btn:hover{transform:none;box-shadow:none}
   .brand:hover .mark{transform:none}
+  .hero-card:hover .shot img{transform:none}
+  .stat:hover .ico-box{box-shadow:none;animation-play-state:running}
+  .ticker:hover .ticker-track{animation-play-state:running}
+  .social a:hover{transform:none}
+  .filters .ds-cat:not([aria-pressed="true"]):hover{border-color:var(--line);color:var(--muted)}
   .ds-service:hover{padding-inline:0}
 }
 

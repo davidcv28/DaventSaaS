@@ -33,6 +33,8 @@
   --gy-paper-ink: #0A0B08;
   --gy-paper-muted: #55534B;
   --gy-paper-line: #C9C5B8;
+  /* Texto sobre veladuras/scrims que son oscuros en ambos temas. */
+  --gy-on-dark: #F4F1E8;
   --gy-display: 'Barlow Condensed', 'Arial Narrow', Impact, sans-serif;
   --gy-body: 'Inter', system-ui, -apple-system, 'Segoe UI', sans-serif;
   --gy-label: 'Inter', system-ui, -apple-system, 'Segoe UI', sans-serif;
@@ -205,11 +207,11 @@
   width: 40%;
   background: linear-gradient(100deg, transparent, rgb(255 255 255 / .32), transparent);
   transform: skewX(-18deg);
-  transition: left .55s var(--gy-ease);
+  transition: transform .55s var(--gy-ease);
   pointer-events: none;
 }
 .store-page[data-template='gimnasio'] .sp-btn:hover::after,
-.store-page[data-template='gimnasio'] .bq-btn:hover::after { left: 120%; }
+.store-page[data-template='gimnasio'] .bq-btn:hover::after { transform: translateX(450%) skewX(-18deg); }
 .store-page[data-template='gimnasio'] .sp-btn:hover,
 .store-page[data-template='gimnasio'] .bq-btn:hover {
   background: var(--gy-text);
@@ -266,7 +268,10 @@
   font-weight: 800;
   letter-spacing: .055em;
   text-transform: uppercase;
-  color: var(--gy-text);
+  /* La banda de navegación puede ser tinta aunque el tema sea día
+     (data-st-surface-nav): la tinta sale de --sp-on-band, que el puente
+     deriva del fondo real de la banda. */
+  color: var(--sp-on-band, var(--gy-text));
 }
 .store-page[data-template='gimnasio'] .sp-brand .sp-mono {
   font-family: var(--gy-mono);
@@ -314,7 +319,7 @@
   font-weight: 600;
   letter-spacing: .1em;
   text-transform: uppercase;
-  color: var(--gy-text-2);
+  color: var(--sp-on-band-2, var(--gy-text-2));
 }
 .store-page[data-template='gimnasio'] .sp-top-links a::after {
   content: '';
@@ -323,15 +328,15 @@
   right: 10px;
   bottom: 9px;
   height: 2px;
-  background: var(--gy-lime);
+  background: var(--sp-on-band, var(--gy-lime));
   transform: scaleX(0);
   transform-origin: left;
   transition: transform .22s var(--gy-ease);
 }
-.store-page[data-template='gimnasio'] .sp-top-links a:hover { color: var(--gy-text); }
+.store-page[data-template='gimnasio'] .sp-top-links a:hover { color: var(--sp-on-band, var(--gy-text)); }
 .store-page[data-template='gimnasio'] .sp-top-links a:hover::after,
 .store-page[data-template='gimnasio'] .sp-top-links a.router-link-exact-active::after { transform: scaleX(1); }
-.store-page[data-template='gimnasio'] .sp-top-links a.router-link-exact-active { color: var(--gy-lime); background: transparent; }
+.store-page[data-template='gimnasio'] .sp-top-links a.router-link-exact-active { color: var(--sp-on-band, var(--gy-lime)); background: transparent; }
 /* La barra superior no repite los anclajes de la portada: quedan en el
    menú móvil y en el pie. Así el nombre del club conserva su ancho. */
 .store-page[data-template='gimnasio'] .sp-top-links a[href*='#nosotros'],
@@ -421,6 +426,12 @@
   color: var(--gy-lime);
 }
 .store-page[data-template='gimnasio'] .sp-foot a:hover { color: var(--gy-lime); }
+/* La copia y el descriptor del pie: el puente de paleta ([data-st-palette])
+   las pinta con --st-muted pensado para la página, no para el pie repintado
+   por surfaces.footer; --gy-muted toma la mezcla reforzada del footer. La
+   especificidad extra (.sp-foot .x) gana al :is() del puente. */
+.store-page[data-template='gimnasio'] .sp-foot .sp-foot-copy,
+.store-page[data-template='gimnasio'] .sp-foot .sp-foot-brand span { color: var(--gy-muted); }
 
 /* ==========================================================================
    PORTADA — sala de fuerza
@@ -519,11 +530,20 @@
 }
 .gy-live.is-open { border-color: var(--gy-lime); color: var(--gy-lime); }
 .gy-live-dot {
+  position: relative;
   width: 7px;
   height: 7px;
   border-radius: 50%;
   background: currentColor;
-  box-shadow: 0 0 0 0 currentColor;
+}
+/* El anillo que respira va en un pseudo (opacity+scale, capa compuesta):
+   animar box-shadow repintaba el frame. */
+.gy-live-dot::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  border: 1.5px solid currentColor;
   animation: gy-pulse 2.4s ease-out infinite;
 }
 .gy-hero-title {
@@ -592,10 +612,10 @@
   width: 40%;
   background: linear-gradient(100deg, transparent, rgb(255 255 255 / .3), transparent);
   transform: skewX(-18deg);
-  transition: left .55s var(--gy-ease);
+  transition: transform .55s var(--gy-ease);
   pointer-events: none;
 }
-.gy-btn:hover::after { left: 120%; }
+.gy-btn:hover::after { transform: translateX(450%) skewX(-18deg); }
 .gy-btn--solid { background: var(--gy-lime); color: var(--gy-on-lime); }
 .gy-btn--solid:hover { background: var(--gy-text); border-color: var(--gy-text); color: var(--gy-ink); }
 .gy-btn--ghost { background: transparent; border-color: var(--gy-line-strong); color: var(--gy-text); }
@@ -636,7 +656,7 @@
   object-fit: cover;
   display: block;
   filter: saturate(1.02) contrast(1.06) brightness(.92);
-  transition: transform .8s var(--gy-ease), filter .4s var(--gy-ease);
+  transition: transform .8s var(--gy-ease);
 }
 .gy-hero-plate:hover > img { transform: scale(1.035); filter: saturate(1.1) contrast(1.08) brightness(.98); }
 .gy-hero-plate::after {
@@ -666,7 +686,7 @@
   font-family: var(--gy-mono);
   font-size: 10.5px;
   letter-spacing: .18em;
-  color: #F4F1E8;
+  color: var(--gy-on-dark);
 }
 .gy-plate-vert {
   position: absolute;
@@ -988,7 +1008,7 @@
   object-fit: cover;
   display: block;
   filter: saturate(.9) contrast(1.03);
-  transition: transform .6s var(--gy-ease), filter .3s var(--gy-ease);
+  transition: transform .6s var(--gy-ease);
 }
 .gy-card:hover .gy-card-media img { transform: scale(1.055); filter: saturate(1.05) contrast(1.05); }
 .gy-card-media.is-empty { display: grid; place-items: center; }
@@ -1102,7 +1122,7 @@
 .gy-card.is-offer .gy-card-name,
 .gy-card.is-offer .gy-card-price { color: var(--gy-on-lime); }
 .gy-card.is-offer .gy-card-cat,
-.gy-card.is-offer .gy-card-price s { color: color-mix(in srgb, var(--gy-on-lime) 62%, transparent); }
+.gy-card.is-offer .gy-card-price s { color: var(--gy-on-lime); }
 .gy-card.is-offer .gy-card-go { border-color: color-mix(in srgb, var(--gy-on-lime) 30%, transparent); color: var(--gy-on-lime); }
 .gy-card.is-offer .gy-card-media { border-bottom-color: color-mix(in srgb, var(--gy-on-lime) 24%, transparent); }
 .gy-card.is-offer .gy-card-flag { background: var(--gy-ink); color: var(--gy-lime); }
@@ -1586,7 +1606,7 @@
 }
 .store-page[data-template='gimnasio'] .sp-shop-dept-thumb img {
   filter: grayscale(1) contrast(1.05);
-  transition: filter .35s var(--gy-ease), transform .45s var(--gy-ease);
+  transition: transform .45s var(--gy-ease);
 }
 .store-page[data-template='gimnasio'] .sp-shop-dept:hover .sp-shop-dept-thumb img { filter: none; transform: scale(1.05); }
 .store-page[data-template='gimnasio'] .sp-shop-dept-initial {
@@ -1667,7 +1687,7 @@
 .store-page[data-template='gimnasio'] .sp-gallery-item:nth-child(2),
 .store-page[data-template='gimnasio'] .sp-gallery-item:nth-child(3) { grid-column: span 1; }
 .store-page[data-template='gimnasio'] .sp-gallery-item:nth-child(4) { grid-column: span 2; }
-.store-page[data-template='gimnasio'] .sp-gallery-item img { transition: transform .6s var(--gy-ease), filter .3s var(--gy-ease); filter: saturate(.92); }
+.store-page[data-template='gimnasio'] .sp-gallery-item img { transition: transform .6s var(--gy-ease); filter: saturate(.92); }
 .store-page[data-template='gimnasio'] .sp-gallery-item:hover img { transform: scale(1.05); filter: saturate(1.08); }
 .store-page[data-template='gimnasio'] .sp-showcase { padding: var(--gy-section) 0 0; }
 .store-page[data-template='gimnasio'] .sp-showcase-grid { gap: calc(clamp(28px, 4vw, 56px) + var(--st-section-gap, 28px) - 28px); align-items: center; }
@@ -1778,9 +1798,9 @@
   font-family: var(--gy-mono);
   font-size: 10px;
   letter-spacing: .1em;
-  color: var(--gy-lime);
+  color: var(--gy-muted);
 }
-.store-page[data-template='gimnasio'] .sp-faq-item summary:hover { color: var(--gy-lime); }
+.store-page[data-template='gimnasio'] .sp-faq-item summary:hover { color: var(--sp-ink); }
 .store-page[data-template='gimnasio'] .sp-faq-caret {
   position: absolute;
   right: 0;
@@ -1790,7 +1810,7 @@
   border: 1px solid var(--gy-line-strong);
   border-radius: 0;
   background: transparent;
-  color: var(--gy-lime);
+  color: var(--gy-muted);
 }
 .store-page[data-template='gimnasio'] .sp-faq-caret svg { display: none; }
 .store-page[data-template='gimnasio'] .sp-faq-caret::before {
@@ -1890,8 +1910,14 @@
   background: var(--gy-card);
   box-shadow: none;
   padding: 26px;
+  /* Tinta propia: sin ella el texto heredaba el color de página y quedaba
+     claro sobre la tarjeta papel que pinta data-st-surface-card. */
+  color: var(--gy-text-2);
 }
-.store-page[data-template='gimnasio'] .sp-form-head strong { font-family: var(--gy-display); font-size: 26px; text-transform: uppercase; }
+.store-page[data-template='gimnasio'] .sp-form-head strong { font-family: var(--gy-display); font-size: 26px; text-transform: uppercase; color: var(--gy-text); }
+.store-page[data-template='gimnasio'] .sp-form-head span:not(.sp-form-badge) { color: var(--gy-muted); }
+.store-page[data-template='gimnasio'] .sp-counter { color: var(--gy-muted); }
+.store-page[data-template='gimnasio'] .sp-captcha-q { color: var(--gy-text-2); }
 .store-page[data-template='gimnasio'] .sp-form-badge { border-radius: 0; background: var(--gy-lime); color: var(--gy-on-lime); }
 .store-page[data-template='gimnasio'] .sp-input {
   border-radius: 0;
@@ -2040,7 +2066,7 @@
 .store-page[data-template='raiz'].gy-skin .rz-cat-head,
 .store-page[data-template='raiz'].gy-skin .rz-sv-head,
 .store-page[data-template='raiz'].gy-skin .rz-pdp-sec-head {
-  border-bottom: 1px solid #4A4D40;
+  border-bottom: 1px solid var(--gy-line-strong);
 }
 .store-page[data-template='raiz'].gy-skin .rz-cat-title,
 .store-page[data-template='raiz'].gy-skin .rz-sv-hero-title,
@@ -2056,7 +2082,7 @@
   font-family: var(--gy-mono);
   font-weight: 600;
   letter-spacing: .16em;
-  color: #C8F169;
+  color: var(--sp-accent-text);
 }
 /* Marcos con aire: solo las piezas que Raíz dibuja desnudas y acá van como
    placa (riel de filtros, caja de precio, placa de servicios). La grilla y
@@ -2065,9 +2091,9 @@
 .store-page[data-template='raiz'].gy-skin .rz-cat-rail,
 .store-page[data-template='raiz'].gy-skin .rz-sv-plate,
 .store-page[data-template='raiz'].gy-skin .rz-pdp-pricebox {
-  border: 1px solid #2A2D24;
+  border: 1px solid var(--gy-line);
   border-radius: 0;
-  background: #151711;
+  background: var(--gy-card);
   box-shadow: none;
 }
 .store-page[data-template='raiz'].gy-skin .rz-cat-rail { padding: 20px 12px 20px 20px; }
@@ -2092,12 +2118,12 @@
   text-transform: uppercase;
   background: var(--rz-accent-deep);
   border-color: var(--rz-accent-deep);
-  color: #FFF;
+  color: var(--rz-on-band);
 }
 .store-page[data-template='raiz'].gy-skin .rz-btn:hover {
   background: var(--rz-accent-deep-2);
   border-color: var(--rz-accent-deep-2);
-  color: #FFF;
+  color: var(--rz-on-band);
   box-shadow: none;
   transform: none;
 }
@@ -2170,6 +2196,30 @@
   background: var(--gy-ink);
   color: var(--gy-lime);
 }
+/* Acento como TEXTO sobre papel: ~4.3:1 en mono de 10px — se mezcla hacia
+   la tinta para llegar a AA sin cambiar el tono de la marca. */
+.store-page[data-template='gimnasio'][data-store-theme='light'] :is(
+  .gy-shop-all, .gy-card-index, .gy-stat-idx,
+  .gy-card.is-offer .gy-card-flag) {
+  color: color-mix(in srgb, var(--gy-lime) 78%, var(--gy-text));
+}
+.store-page[data-template='gimnasio'][data-store-theme='light'] .sp-tab.active {
+  color: color-mix(in srgb, var(--store-accent, var(--gy-lime)) 60%, var(--gy-text));
+}
+.store-page[data-template='gimnasio'][data-store-theme='light'] .sp-tab.active::before {
+  background: color-mix(in srgb, var(--store-accent, var(--gy-lime)) 60%, var(--gy-text));
+}
+/* Eyebrow e iniciales de marca: mismo acento como texto sobre papel. */
+.store-page[data-template='gimnasio'][data-store-theme='light'] :is(.sp-eyebrow, .bq-eyebrow) {
+  color: color-mix(in srgb, var(--gy-lime) 78%, var(--gy-text));
+}
+/* …salvo dentro de la banda de señal, que ya trae su propia tinta. */
+.store-page[data-template='gimnasio'] .sp-cta-inner :is(.sp-eyebrow, .bq-eyebrow) {
+  color: var(--gy-on-lime);
+}
+.store-page[data-template='gimnasio'][data-store-theme='light'] .sp-brands-logo-initial {
+  color: color-mix(in srgb, var(--store-accent, var(--gy-lime)) 60%, var(--gy-text));
+}
 /* El data-store-theme vive en el .store-page padre ([data-template='gimnasio']),
    no en el subárbol .gy-skin: el selector cuelga del ancestro. Las --rz-*
    de color ya invierten solas vía var(--gy-*); acá solo van los ajustes que
@@ -2203,13 +2253,13 @@
   --rz-theme-color: #F4F1E8;
   --tpc-price-ink: var(--gy-lime-ink);
   color-scheme: light;
-  background: #F4F1E8;
-  color: #0A0B08;
+  background: var(--sp-bg);
+  color: var(--sp-ink);
 }
 .store-page[data-template='gimnasio'][data-store-theme='light'] .gy-skin .rz-cat-head,
 .store-page[data-template='gimnasio'][data-store-theme='light'] .gy-skin .rz-sv-head,
 .store-page[data-template='gimnasio'][data-store-theme='light'] .gy-skin .rz-pdp-sec-head {
-  border-bottom-color: #A39E8E;
+  border-bottom-color: var(--gy-line-strong);
 }
 .store-page[data-template='gimnasio'][data-store-theme='light'] .gy-skin .rz-eyebrow,
 .store-page[data-template='gimnasio'][data-store-theme='light'] .gy-skin .rz-cat-kicker {
@@ -2218,20 +2268,74 @@
 .store-page[data-template='gimnasio'][data-store-theme='light'] .gy-skin .rz-cat-rail,
 .store-page[data-template='gimnasio'][data-store-theme='light'] .gy-skin .rz-sv-plate,
 .store-page[data-template='gimnasio'][data-store-theme='light'] .gy-skin .rz-pdp-pricebox {
-  border-color: #C9C5B8;
-  background: #FBF9F2;
+  border-color: var(--gy-line);
+  background: var(--gy-card);
 }
 .store-page[data-template='gimnasio'][data-store-theme='light'] .gy-skin .rz-cat-card {
   --tpc-price-ink: var(--gy-lime-ink);
+}
+
+/* Tarjetas repintadas por el tema (data-st-surface-card → background-color
+   !important + remap de --sp-ink*): adentro manda la tinta del puente, no la
+   --gy-* del tema — si no, texto claro sobre tarjeta papel (AA roto). Las
+   mezclas del puente (--sp-ink-2/--sp-muted ≈ 3:1) no alcanzan para texto
+   chico, así que la tinta secundaria se oscurece un punto más. */
+.store-page[data-template='gimnasio'][data-st-surface-card] :is(
+  .sp-card, .tpc, .sp-form, .sp-faq-item, .sp-testimonial, .sp-service,
+  .sp-about-card, .sp-drawer, .sp-filters) {
+  --gy-text: var(--sp-ink);
+  --gy-text-2: color-mix(in srgb, var(--sp-ink) 80%, #000);
+  --gy-muted: color-mix(in srgb, var(--sp-ink) 80%, #000);
+}
+/* La banda CTA entra en la lista de tarjetas del puente: con
+   data-st-surface-card su fondo --gy-lime se pierde y queda papel, así que
+   la tinta --gy-on-lime (clara u oscura según el tema) se invierte. Solo se
+   remapea cuando el puente repinta; sin la marca sigue siendo banda acento. */
+.store-page[data-template='gimnasio'][data-st-surface-card] .sp-cta-inner {
+  --gy-on-lime: var(--sp-ink);
+}
+.store-page[data-template='gimnasio'][data-st-surface-card] .sp-cta-inner .sp-cta-text {
+  color: var(--sp-ink);
+}
+/* Pie: el puente lo repinta con surfaces.footer y ya deja --sp-ink* con la
+   tinta AA de ese color; los --gy-* del tema quedarían invertidos. */
+.store-page[data-template='gimnasio'][data-st-surface-footer] .sp-foot {
+  --gy-text: var(--sp-ink);
+  --gy-text-2: color-mix(in srgb, var(--sp-ink) 85%, var(--st-surface-footer));
+  --gy-muted: color-mix(in srgb, var(--sp-ink) 85%, var(--st-surface-footer));
+  --gy-lime: var(--sp-ink);
+}
+/* Tarjeta de producto: la paleta del tema ([data-st-palette]) repinta
+   .tpc-eyebrow/.tpc-price con --st-muted/--st-accent y las reglas compartidas
+   fijan el flag en verde #00a650 / accent-ink — todos por debajo de AA sobre
+   la tarjeta papel. Se vuelve a los tokens propios del gimnasio, que dentro
+   de data-st-surface-card ya reciben la tinta reforzada vía --gy-muted. */
+.store-page[data-template='gimnasio'] .tpc .tpc-eyebrow,
+.store-page[data-template='raiz'].gy-skin .tpc .tpc-eyebrow,
+.store-page[data-template='gimnasio'] .tpc .tpc-eyebrow span + i + span,
+.store-page[data-template='raiz'].gy-skin .tpc .tpc-eyebrow span + i + span {
+  color: var(--gy-muted);
+}
+.store-page[data-template='gimnasio'] .tpc .tpc-price,
+.store-page[data-template='raiz'].gy-skin .tpc .tpc-price { color: var(--tpc-price-ink); }
+.store-page[data-template='gimnasio'] .tpc .tpc-flag,
+.store-page[data-template='raiz'].gy-skin .tpc .tpc-flag {
+  background: var(--tpc-flag-bg);
+  color: var(--tpc-flag-ink);
+}
+.store-page[data-template='gimnasio'] .tpc .tpc-flag.offer,
+.store-page[data-template='raiz'].gy-skin .tpc .tpc-flag.offer {
+  background: var(--tpc-offer-bg);
+  color: var(--tpc-offer-ink);
 }
 
 /* ==========================================================================
    ANIMACIONES
    ========================================================================== */
 @keyframes gy-pulse {
-  0% { box-shadow: 0 0 0 0 color-mix(in srgb, currentColor 60%, transparent); }
-  70% { box-shadow: 0 0 0 7px transparent; }
-  100% { box-shadow: 0 0 0 0 transparent; }
+  0% { opacity: .6; transform: scale(.8); }
+  70% { opacity: 0; transform: scale(2.1); }
+  100% { opacity: 0; transform: scale(2.1); }
 }
 @keyframes gy-ribbon { to { transform: translateX(-50%); } }
 @keyframes gy-stamp { to { transform: rotate(360deg); } }
@@ -2358,7 +2462,7 @@
   .gy-hero-ghost,
   .gy-plate-scan,
   .gy-plate-stamp svg,
-  .gy-live-dot,
+  .gy-live-dot::after,
   .gy-hero-eq i,
   .gy-stat-track i,
   .gy-ribbon-track { animation: none !important; }

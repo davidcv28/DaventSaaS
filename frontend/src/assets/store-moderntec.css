@@ -28,7 +28,7 @@
   --mt-line-strong: rgba(255, 255, 255, .16);
   --mt-ink: #eaf0f8;
   --mt-ink-2: #9dabbd;
-  --mt-ink-3: #5d6b80;
+  --mt-ink-3: #7c8ca1;
   --mt-accent: color-mix(in srgb, var(--st-accent, var(--store-accent, #3dd6ff)) 78%, #fff);
   --mt-accent-2: color-mix(in srgb, var(--st-secondary, #7c5cff) 82%, #fff);
   --mt-accent-ink: var(--st-accent-ink, #04121a);
@@ -126,7 +126,7 @@
   --mt-line-strong: rgba(10, 22, 38, .24);
   --mt-ink: #08111f;
   --mt-ink-2: #3b4a60;
-  --mt-ink-3: #6b7a90;
+  --mt-ink-3: #5d6b80;
   --mt-accent: var(--st-accent, var(--store-accent, #0b7ea8));
   --mt-accent-ink: var(--st-accent-ink, #04121a);
   --mt-accent-soft: color-mix(in srgb, var(--mt-accent) 10%, transparent);
@@ -195,6 +195,21 @@
   --sp-on-band-2: color-mix(in srgb, var(--mt-ink) 16%, transparent);
   --sp-on-band-muted: var(--mt-ink-3);
   color: var(--mt-ink);
+}
+/* Copia y descriptor del pie: el puente de paleta los pinta con --st-muted
+   y el --sp-muted del footer queda en la mezcla débil del puente (~3:1).
+   La tinta llena del footer (--sp-ink = footer-ink del tema) sí llega a AA. */
+.store-page[data-template='moderntec'] .sp-foot .sp-foot-copy,
+.store-page[data-template='moderntec'] .sp-foot .sp-foot-brand span {
+  color: var(--sp-ink);
+}
+/* Con surfaces.footer el cromo puede ser CLARO: --sp-on-band=--mt-ink (tinta
+   del tema) queda claro sobre claro. Adentro del pie repintado la "tinta de
+   banda" es la footer-ink que ya derivó el puente. */
+.store-page[data-template='moderntec'][data-st-surface-footer] .sp-foot {
+  --sp-on-band: var(--sp-ink);
+  --sp-on-band-2: color-mix(in srgb, var(--sp-ink) 80%, var(--st-surface-footer));
+  --sp-on-band-muted: color-mix(in srgb, var(--sp-ink) 70%, var(--st-surface-footer));
 }
 .store-page[data-template='moderntec'] .sp-top-links a:hover { background: color-mix(in srgb, var(--mt-ink) 10%, transparent); }
 .store-page[data-template='moderntec'] .sp-top-links a.router-link-exact-active {
@@ -442,7 +457,6 @@
   -webkit-background-clip: text;
   background-clip: text;
   color: transparent;
-  animation: mt-shift 9s ease-in-out infinite alternate;
 }
 /* Titular de una sola palabra (nombre de la tienda): sin gradiente pleno —
    tinta + regla de acento, la firma del sistema. */
@@ -454,8 +468,6 @@
   padding-bottom: 6px;
   border-bottom: 3px solid var(--mt-accent);
 }
-@keyframes mt-shift { to { background-position: 100% 0; } }
-
 .store-page[data-template='moderntec'] .mt-hero-lead {
   color: var(--mt-ink-2);
   font-size: var(--mt-fs-lead);
@@ -587,6 +599,7 @@
   color: var(--mt-ink-3);
 }
 .store-page[data-template='moderntec'] .mt-device-badge {
+  position: relative;
   display: inline-flex;
   align-items: center;
   gap: 5px;
@@ -596,9 +609,19 @@
   background: color-mix(in srgb, var(--mt-ok) 10%, transparent);
   color: var(--mt-ok);
   white-space: nowrap;
-  animation: mt-pulse 2.6s ease-in-out infinite;
 }
-@keyframes mt-pulse { 50% { box-shadow: 0 0 16px color-mix(in srgb, var(--mt-ok) 40%, transparent); } }
+/* El glow que respira va en un pseudo (opacity+scale, capa compuesta):
+   animar box-shadow repintaba el frame. */
+.store-page[data-template='moderntec'] .mt-device-badge::after {
+  content: "";
+  position: absolute;
+  inset: -1px;
+  border-radius: 4px;
+  border: 1px solid color-mix(in srgb, var(--mt-ok) 40%, transparent);
+  animation: mt-pulse 2.6s ease-in-out infinite;
+  pointer-events: none;
+}
+@keyframes mt-pulse { 0%, 100% { opacity: .7; transform: scale(.97); } 50% { opacity: 0; transform: scale(1.1); } }
 
 .store-page[data-template='moderntec'] .mt-device-in {
   position: relative;
@@ -806,7 +829,7 @@
   object-fit: cover;
   display: block;
   filter: grayscale(.35) contrast(1.05);
-  transition: transform .5s var(--mt-ease-out), filter .4s ease;
+  transition: transform .5s var(--mt-ease-out);
 }
 .store-page[data-template='moderntec'] .mt-dept:hover .mt-dept-thumb img { transform: scale(1.06); filter: none; }
 .store-page[data-template='moderntec'] .mt-dept-initial {
@@ -938,7 +961,7 @@
   position: relative;
   border: 1px solid var(--mt-line);
   background: linear-gradient(180deg, color-mix(in srgb, var(--mt-surface-2) 60%, var(--mt-panel)), var(--mt-panel) 58%);
-  transition: transform .35s var(--mt-ease-out), border-color .25s ease, box-shadow .35s var(--mt-ease-out);
+  transition: transform .35s var(--mt-ease-out), border-color .25s ease;
 }
 .store-page[data-template='moderntec'] .tpc::before {
   content: "";
@@ -1417,7 +1440,77 @@
 .store-page.mt-skin .tpc:hover { border-color: var(--mt-accent-line); }
 
 /* ==========================================================================
-   11. RESPONSIVE
+   11. SUPERFICIES REPINTADAS POR EL TEMA (surfaces.card/footer/hero)
+   El puente pinta esas tarjetas con --st-surface-* y sus tintas --sp-ink*;
+   los --mt-* del tema quedaban claros sobre papel (o invertidos dentro de
+   la banda CTA). Adentro manda la tinta del puente: el texto toma --sp-ink*
+   y el acento se oscurece derivando del --st-accent del tema (nunca de
+   --mt-accent: auto-referencia cíclica). --mt-accent-ink pasa a blanco
+   porque el acento dentro de tarjeta es siempre la variante oscura.
+   ========================================================================== */
+.store-page[data-template='moderntec'][data-st-surface-card] :is(
+  .sp-card, .tpc, .sp-form, .sp-faq-item, .sp-testimonial, .sp-service,
+  .sp-about-card, .sp-drawer, .sp-filters, .sp-map-frame, .sp-empty,
+  .sp-price, .sp-sort, .sp-search, .sp-showcase-frame, .sp-stats-grid,
+  .sp-cta-inner) {
+  --mt-bg: var(--sp-card);
+  --mt-bg-2: var(--sp-card);
+  --mt-panel: var(--sp-card);
+  --mt-surface-2: var(--sp-card);
+  --mt-surface-3: var(--sp-card);
+  --mt-line: color-mix(in srgb, var(--sp-ink) 12%, transparent);
+  --mt-line-soft: color-mix(in srgb, var(--sp-ink) 7%, transparent);
+  --mt-line-strong: color-mix(in srgb, var(--sp-ink) 24%, transparent);
+  --mt-ink: var(--sp-ink);
+  --mt-ink-2: color-mix(in srgb, var(--sp-ink) 80%, #000);
+  --mt-ink-3: color-mix(in srgb, var(--sp-ink) 80%, #000);
+  --mt-accent: color-mix(in srgb, var(--st-accent, var(--store-accent, #3dd6ff)) 55%, #000);
+  --mt-accent-ink: #ffffff;
+  /* Tinta base propia: sin ella el texto que solo hereda color queda con la
+     tinta clara de página sobre la tarjeta papel. */
+  color: var(--mt-ink);
+}
+/* Textos que el puente pinta con --sp-ink-2/--sp-muted (~3:1) o que heredan
+   la tinta clara de página: se repuntan a los --mt-* ya remapeados. */
+.store-page[data-template='moderntec'][data-store-template] :is(.sp-faq-item, .sp-testimonial) {
+  color: var(--mt-ink);
+}
+.store-page[data-template='moderntec'][data-store-template] :is(.sp-faq-answer, .sp-testimonial-text) {
+  color: var(--mt-ink-2);
+}
+/* Contador y nota del formulario: --sp-muted del puente (~3:1) → --mt-ink-3
+   (dentro de tarjeta ya va remapeado a la mezcla reforzada). */
+.store-page[data-template='moderntec'][data-store-template] :is(.sp-counter, .sp-form-note) {
+  color: var(--mt-ink-3);
+}
+.store-page[data-template='moderntec'][data-store-template] .sp-testimonial-by span {
+  color: var(--mt-ink-3);
+}
+.store-page[data-template='moderntec'][data-store-template] .tpc .tpc-price {
+  color: var(--mt-ink);
+}
+.store-page[data-template='moderntec'][data-store-template] .tpc .tpc-price s {
+  color: var(--mt-ink-3);
+}
+.store-page[data-template='moderntec'][data-store-template] .tpc .tpc-go {
+  color: var(--mt-accent);
+}
+/* La banda CTA también es tarjeta para el puente: el texto hardcodeado a
+   blanco translúcido se repinta solo cuando eso pasa. */
+.store-page[data-template='moderntec'][data-store-template][data-st-surface-card] .sp-cta-inner .sp-cta-text {
+  color: var(--mt-ink-2);
+}
+/* La píldora del mapa conserva su fondo de tema (no es superficie-card):
+   su tinta es la del tema publicado, no la remapeada del acento. */
+.store-page[data-template='moderntec'][data-store-template] .sp-map-open {
+  color: var(--st-text, #eaf0f8);
+}
+.store-page[data-template='moderntec'][data-store-template][data-store-theme='light'] .sp-map-open {
+  color: var(--st-text, #08111f);
+}
+
+/* ==========================================================================
+   12. RESPONSIVE
    ========================================================================== */
 @media (max-width: 1080px) {
   .store-page[data-template='moderntec'] .mt-hero-grid { gap: 40px; }
@@ -1479,13 +1572,21 @@
   .store-page[data-template='moderntec'] .sp-shop-featured-head { flex-direction: column; align-items: flex-start; gap: 12px; }
 }
 
+/* Sin hover real (táctil): no dejar lifts ni brillos pegados. */
+@media (hover: none) {
+  .store-page[data-template='moderntec'] :is(.tpc, .mt-dept, .mt-btn--primary, .mt-btn--ghost, .mt-btn:hover :is(svg), .sp-foot-col a, .sp-shop-viewall .sp-arrow) { transform: none; }
+  .store-page[data-template='moderntec'] .tpc:hover img,
+  .store-page[data-template='moderntec'] .mt-dept:hover .mt-dept-thumb img { transform: none; filter: none; }
+  .store-page[data-template='moderntec'] .mt-dept:hover::after { transform: scaleX(0); }
+}
+
 /* ==========================================================================
    12. MOVIMIENTO REDUCIDO
    ========================================================================== */
 @media (prefers-reduced-motion: reduce) {
   .store-page[data-template='moderntec'] .mt-btn { transition: none; }
   .store-page[data-template='moderntec'] :is(.mt-beam, .mt-particles, .mt-device, .mt-scan,
-    .mt-device-badge, .mt-meter i, .mt-hero-title em, .sp-cta-inner::before) { animation: none; }
+    .mt-device-badge::after, .mt-meter i, .mt-hero-title em, .sp-cta-inner::before) { animation: none; }
   .store-page[data-template='moderntec'] .mt-btn--primary::after { display: none; }
   .store-page[data-template='moderntec'] :is(.tpc, .mt-dept):hover { transform: none; }
   .store-page[data-template='moderntec'] .tpc:hover img,
