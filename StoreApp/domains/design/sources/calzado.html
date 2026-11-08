@@ -1200,8 +1200,55 @@ a.contact-row:hover{background:var(--soft);color:var(--accent)}
 .ds-rev-down{color:var(--ds-danger,#c0392b)}
 .ds-rev-text{grid-column:1/-1;font-size:14.5px;font-weight:300;color:var(--muted);
   line-height:1.65}
-[data-ds-rev-form]{margin-top:18px}
+[data-ds-rev-form]{margin-top:18px;border:1px solid var(--line);background:var(--surface);
+  padding:clamp(18px,2.4vw,26px)}
 [data-ds-rev-form]:empty{display:none}
+/* Formulario de opiniones: lo arma el puente (pattern_bridge.js) dentro de
+   [data-ds-rev-form] — mismas clases que el resto de los diseños. */
+.ds-rev-fields{display:grid;gap:12px}
+.ds-rev-votes{display:flex;gap:8px;flex-wrap:wrap}
+.ds-rev-pick{display:inline-flex;align-items:center;gap:7px;padding:9px 13px;
+  border:1px solid var(--line);background:var(--surface);color:var(--muted);
+  font-family:var(--font-display);font-size:11px;font-weight:700;
+  letter-spacing:.14em;text-transform:uppercase;
+  transition:border-color .2s,color .2s,background .2s,transform .2s var(--ease)}
+.ds-rev-pick svg{width:14px;height:14px}
+.ds-rev-pick:hover{border-color:var(--accent);color:var(--ink)}
+.ds-rev-pick[aria-checked="true"],.ds-rev-pick.is-on{border-color:var(--accent);
+  background:var(--accent);color:var(--accent-ink)}
+.ds-rev-row{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.ds-rev-input{width:100%;padding:11px 13px;border:1px solid var(--line);
+  background:var(--bg);color:var(--ink);font:inherit;font-size:14.5px}
+.ds-rev-input::placeholder{color:var(--muted)}
+.ds-rev-input:focus{outline:none;border-color:var(--accent)}
+.ds-rev-area{min-height:90px;resize:vertical}
+.ds-rev-cap{display:flex;align-items:center;gap:9px;flex-wrap:wrap}
+.ds-rev-q{font-family:var(--font-display);font-size:11px;font-weight:700;
+  letter-spacing:.14em;text-transform:uppercase;color:var(--muted)}
+.ds-rev-cap .ds-rev-input{width:120px;flex:none}
+.ds-rev-reload{width:38px;height:38px;flex:none;border:1px solid var(--line);
+  background:var(--surface);color:var(--muted);font-size:15px;line-height:1;
+  transition:border-color .2s,color .2s}
+.ds-rev-reload:hover{border-color:var(--accent);color:var(--accent)}
+.ds-rev-send{justify-self:start;min-height:44px;padding:0 22px;
+  border:1px solid var(--btn);background:var(--btn);color:var(--btn-ink);
+  font-family:var(--font-display);font-size:12px;font-weight:700;
+  letter-spacing:.14em;text-transform:uppercase;
+  transition:background .22s,color .22s,border-color .22s,transform .22s var(--ease)}
+.ds-rev-send:hover{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+.ds-rev-status{min-height:15px;margin:0;font-size:12.5px;color:var(--muted)}
+.ds-rev-status[data-ok="1"]{color:var(--ds-success,#1a7f4b)}
+.ds-rev-status[data-ok="0"]:not(:empty){color:var(--ds-danger,#c0392b)}
+.ds-rev-reply{grid-column:1/-1;margin-top:6px;padding:10px 13px;
+  border-left:2px solid var(--accent);background:var(--soft);
+  font-size:13.5px;color:var(--muted)}
+.ds-rev-reply strong{display:block;font-family:var(--font-display);font-size:10.5px;
+  font-weight:700;letter-spacing:.14em;text-transform:uppercase;
+  color:var(--accent);margin-bottom:3px}
+.ds-rev-reply span{display:block}
+/* Honeypot del captcha: nunca visible. */
+.ds-rev-hp{position:absolute;left:-9999px;width:1px;height:1px;overflow:hidden}
+@media(max-width:640px){.ds-rev-row{grid-template-columns:1fr}}
 /* El panel de opiniones se apaga solo si no hay lista ni formulario. */
 .pdp-detail:has(>#pdp-rev:empty) .pdp-tab[data-tab="pdp-rev"]{display:none}
 .pdp-detail:has(>#pdp-rel .pdp-rel-grid:empty) .pdp-tab[data-tab="pdp-rel"]{display:none}
