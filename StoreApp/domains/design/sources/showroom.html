@@ -38,6 +38,10 @@
   --mono:"JetBrains Mono","SFMono-Regular",monospace;
   --head-h:118px;
   --tr:.16s ease;
+  /* fijos sobre foto/héroe: no invierten con el tema (la foto siempre es oscura) */
+  --hero-bg:#0D0D0D;
+  --hero-ink:#FFFFFF;
+  --hero-btn-ink:#111111;
   color-scheme:light;
 }
 /* Negro explícito (nunca la paleta clara de --ds-*): el estilo noche ya
@@ -65,6 +69,7 @@ a{color:inherit;text-decoration:none;transition:color var(--tr)}
 button{font:inherit;color:inherit;cursor:pointer}
 input,select,textarea{font:inherit;color:inherit}
 [href=""]{display:none!important}
+a:focus-visible,button:focus-visible,[tabindex]:focus-visible{outline:2px solid var(--ink);outline-offset:3px}
 .mono{font:500 10px/1.5 var(--mono);letter-spacing:.14em;text-transform:uppercase}
 .wrap{max-width:1280px;margin:0 auto;padding:0 32px}
 .sec{padding:72px 0}
@@ -83,6 +88,7 @@ header.top .top-inner{display:flex;align-items:center;gap:20px;min-height:72px}
 .top-search input{width:180px;min-height:34px;padding:0 4px;border:0;border-bottom:1px solid transparent;background:transparent;font-size:12px;color:var(--ink);transition:border-color var(--tr)}
 .top-search input::placeholder{color:var(--muted);font:500 10px var(--mono);letter-spacing:.14em;text-transform:uppercase}
 .top-search input:focus{outline:0;border-bottom-color:var(--ink)}
+.top-search input:focus-visible{outline:2px solid var(--ink);outline-offset:3px}
 .search-clear{border:0;background:none;padding:4px;font:600 9px var(--mono);letter-spacing:.12em;text-transform:uppercase;color:var(--muted)}
 .search-clear:hover{color:var(--ink)}
 .suggest{position:absolute;top:calc(100% + 10px);left:0;z-index:70;width:320px;background:var(--bg);border:1px solid var(--line);box-shadow:0 18px 40px -20px rgba(0,0,0,.25);padding:6px}
@@ -106,7 +112,7 @@ header.top .top-inner{display:flex;align-items:center;gap:20px;min-height:72px}
 .top-right{flex:1;display:flex;align-items:center;justify-content:flex-end;gap:16px;min-width:0}
 .top-right .mono-link{font:600 10px var(--mono);letter-spacing:.14em;text-transform:uppercase;color:var(--ink-2);white-space:nowrap}
 .top-right .mono-link:hover{color:var(--ink)}
-.top-right .sep{color:var(--line)}
+.top-right .sep{color:var(--muted)}
 
 .nav{display:flex;justify-content:center;gap:34px;padding:14px 0 16px;border-top:1px solid transparent}
 .nav a{position:relative;font:600 10px/1.4 var(--sans);letter-spacing:.22em;text-transform:uppercase;color:var(--ink-2);padding:2px 0}
@@ -121,17 +127,18 @@ html[data-ds-surface="catalog"] .nav a[data-ds-route="catalog"]::after,
 html[data-ds-surface="services"] .nav a[data-ds-route="services"]::after{transform:scaleX(1)}
 
 /* Cabecera transparente sobre el héroe (solo landing, antes del scroll) */
-html[data-ds-surface="landing"] header.top:not(.is-solid){background:transparent;border-bottom-color:transparent;color:#fff}
+html[data-ds-surface="landing"] header.top:not(.is-solid){background:transparent;border-bottom-color:transparent;color:var(--hero-ink)}
 html[data-ds-surface="landing"] header.top:not(.is-solid) .nav a,
 html[data-ds-surface="landing"] header.top:not(.is-solid) .top-right .mono-link,
-html[data-ds-surface="landing"] header.top:not(.is-solid) .top-search svg{color:rgba(255,255,255,.85)}
+html[data-ds-surface="landing"] header.top:not(.is-solid) .top-search svg{color:color-mix(in srgb,var(--hero-ink) 85%,transparent)}
 html[data-ds-surface="landing"] header.top:not(.is-solid) .nav a:hover,
-html[data-ds-surface="landing"] header.top:not(.is-solid) .top-right .mono-link:hover{color:#fff}
-html[data-ds-surface="landing"] header.top:not(.is-solid) .nav a::after{background:#fff}
-html[data-ds-surface="landing"] header.top:not(.is-solid) .brand{color:#fff}
-html[data-ds-surface="landing"] header.top:not(.is-solid) .top-search input{color:#fff}
-html[data-ds-surface="landing"] header.top:not(.is-solid) .top-search input::placeholder{color:rgba(255,255,255,.6)}
-html[data-ds-surface="landing"] header.top:not(.is-solid) .m-open{color:#fff}
+html[data-ds-surface="landing"] header.top:not(.is-solid) .top-right .mono-link:hover{color:var(--hero-ink)}
+html[data-ds-surface="landing"] header.top:not(.is-solid) .nav a::after{background:var(--hero-ink)}
+html[data-ds-surface="landing"] header.top:not(.is-solid) .brand{color:var(--hero-ink)}
+html[data-ds-surface="landing"] header.top:not(.is-solid) .top-search input{color:var(--hero-ink)}
+html[data-ds-surface="landing"] header.top:not(.is-solid) .top-search input::placeholder{color:color-mix(in srgb,var(--hero-ink) 60%,transparent)}
+html[data-ds-surface="landing"] header.top:not(.is-solid) .m-open{color:var(--hero-ink)}
+html[data-ds-surface="landing"] header.top:not(.is-solid) :focus-visible{outline-color:var(--hero-ink)}
 main{min-height:480px}
 html[data-ds-surface="landing"] main{padding-top:0}
 html:not([data-ds-surface="landing"]) main{padding-top:var(--head-h)}
@@ -153,13 +160,18 @@ html:not([data-ds-surface="landing"]) main{padding-top:var(--head-h)}
 /* ---------------- Héroe ---------------- */
 /* El alto nunca va en vh: el iframe va estirado y el puente ajusta su
    alto al contenido — un vh acá se retroalimenta y crece sin tope. */
-.hero{position:relative;min-height:clamp(480px,58vw,780px);display:flex;align-items:flex-end;background:#0d0d0d;overflow:hidden}
+.hero{position:relative;min-height:clamp(480px,58vw,780px);display:flex;align-items:flex-end;background:var(--hero-bg);overflow:hidden}
 .hero-img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
 .hero-img[src=""]{display:none}
 .hero::after{content:"";position:absolute;inset:0;background:linear-gradient(180deg,rgba(0,0,0,.18),rgba(0,0,0,.05) 40%,rgba(0,0,0,.55))}
 .hero-noimg{background:linear-gradient(160deg,var(--surface),var(--media))}
 .hero-noimg::after{background:linear-gradient(180deg,color-mix(in srgb,var(--ink) 4%,transparent),color-mix(in srgb,var(--ink) 18%,transparent))}
-.hero-in{position:relative;z-index:2;width:100%;text-align:center;color:#fff;padding:0 24px 96px}
+/* Sin foto de portada el héroe es claro: el texto usa la tinta del tema y la
+   cabecera queda sólida (la aplica el JS con .is-solid). */
+.hero-noimg .hero-in{color:var(--ink)}
+.hero-noimg .hero-cta{background:var(--ink);color:var(--bg);transition:background var(--tr),color var(--tr),opacity var(--tr)}
+.hero-noimg .hero-cta:hover{background:var(--ink);color:var(--bg);opacity:.82}
+.hero-in{position:relative;z-index:2;width:100%;text-align:center;color:var(--hero-ink);padding:0 24px 96px}
 .hero-tag{margin:0 0 14px;font:600 10px var(--mono);letter-spacing:.3em;text-transform:uppercase;opacity:.85}
 .hero-title{margin:0;font:800 clamp(38px,7vw,84px)/1.02 var(--disp);letter-spacing:.16em;text-transform:uppercase}
 .hero-title:empty{display:none}
@@ -167,8 +179,8 @@ html:not([data-ds-surface="landing"]) main{padding-top:var(--head-h)}
 .hero-title:empty + .hero-fb{display:block}
 .hero-sub{margin:16px auto 0;max-width:56ch;font-size:14px;opacity:.85}
 .hero-sub:empty{display:none}
-.hero-cta{display:inline-flex;align-items:center;justify-content:center;margin-top:30px;min-height:44px;padding:0 30px;background:#fff;color:#111;font:700 11px var(--sans);letter-spacing:.2em;text-transform:uppercase;transition:background var(--tr),color var(--tr)}
-.hero-cta:hover{background:#111;color:#fff}
+.hero-cta{display:inline-flex;align-items:center;justify-content:center;margin-top:30px;min-height:44px;padding:0 30px;background:var(--hero-ink);color:var(--hero-btn-ink);font:700 11px var(--sans);letter-spacing:.2em;text-transform:uppercase;transition:background var(--tr),color var(--tr)}
+.hero-cta:hover{background:var(--hero-btn-ink);color:var(--hero-ink)}
 
 /* Cinta de anuncios (estática: borde superior/inferior) */
 .notes{border-bottom:1px solid var(--line)}
@@ -320,6 +332,7 @@ html:not([data-ds-surface="landing"]) main{padding-top:var(--head-h)}
 .ds-contact-row{display:grid;grid-template-columns:1fr 1fr;gap:12px}
 .ds-contact-input,.ds-rev-input{width:100%;min-height:44px;padding:10px 12px;border:1px solid var(--line);background:var(--bg);font-size:13px;color:var(--ink);transition:border-color var(--tr)}
 .ds-contact-input:focus,.ds-rev-input:focus{outline:0;border-color:var(--ink)}
+.ds-contact-input:focus-visible,.ds-rev-input:focus-visible{outline:2px solid var(--ink);outline-offset:2px}
 .ds-contact-area,.ds-rev-area{min-height:120px;resize:vertical}
 .ds-contact-cap,.ds-rev-cap{display:grid;grid-template-columns:1fr 150px 44px;gap:10px;align-items:center}
 .ds-contact-q,.ds-rev-q{font:500 11px var(--mono);letter-spacing:.04em;color:var(--muted)}
@@ -329,7 +342,7 @@ html:not([data-ds-surface="landing"]) main{padding-top:var(--head-h)}
 .ds-contact-send:hover,.ds-rev-send:hover{background:var(--bg);color:var(--ink)}
 .ds-contact-status,.ds-rev-status{margin:0;font-size:12px;min-height:1em}
 .ds-contact-status[data-ok="1"],.ds-rev-status[data-ok="1"]{color:var(--ok)}
-.ds-contact-status[data-ok="0"],.ds-rev-status[data-ok="0"]{color:#B3261E}
+.ds-contact-status[data-ok="0"],.ds-rev-status[data-ok="0"]{color:var(--ds-danger,#B3261E)}
 .ds-rev-votes{display:flex;gap:10px}
 .ds-rev-pick{display:inline-flex;align-items:center;gap:8px;min-height:40px;padding:0 16px;border:1px solid var(--line);background:var(--bg);font:600 10px var(--mono);letter-spacing:.12em;text-transform:uppercase;transition:border-color var(--tr),background var(--tr)}
 .ds-rev-pick.is-on{border-color:var(--ink);background:var(--ink);color:var(--bg)}
@@ -354,6 +367,7 @@ html:not([data-ds-surface="landing"]) main{padding-top:var(--head-h)}
 .cat-price{display:flex;align-items:center;gap:8px;font:600 9px var(--mono);letter-spacing:.14em;text-transform:uppercase;color:var(--muted)}
 .cat-price input{width:84px;min-height:34px;padding:0 10px;border:1px solid var(--line);background:var(--bg);font-size:12px;color:var(--ink)}
 .cat-price input:focus{outline:0;border-color:var(--ink)}
+.cat-price input:focus-visible{outline:2px solid var(--ink);outline-offset:2px}
 .cat-offers{display:inline-flex;align-items:center;gap:8px;font:600 9px var(--mono);letter-spacing:.14em;text-transform:uppercase;color:var(--muted);cursor:pointer}
 .cat-offers input{accent-color:var(--ink)}
 .cat-sort{display:inline-flex;align-items:center;gap:8px;font:600 9px var(--mono);letter-spacing:.14em;text-transform:uppercase;color:var(--muted)}
@@ -518,6 +532,10 @@ footer.foot{border-top:1px solid var(--line);margin-top:96px}
 }
 @media (prefers-reduced-motion:reduce){
   *{transition:none!important}
+}
+/* Táctil: el hover no queda pegado tras el tap (imágenes atenuadas). */
+@media (hover:none){
+  .ds-product-link:hover .ds-product-img,.looks .ds-shot:hover img{opacity:1}
 }
 </style>
 </head>
@@ -954,11 +972,30 @@ footer.foot{border-top:1px solid var(--line);margin-top:96px}
      scroll. El iframe va estirado — el scroll real lo informa el host por
      davent:ds-frame (top del marco, negativo = scrolleado). */
   var hero = document.querySelector('[data-hero]');
+  var heroImg = hero ? hero.querySelector('.hero-img') : null;
+  /* Sin foto de portada el héroe cae al gradiente claro (.hero-noimg): el
+     texto pasa a tinta y la cabecera se vuelve sólida — el blanco transparente
+     solo vale sobre foto real. */
+  function heroHasArt(){
+    if (!heroImg) return false;
+    if (!heroImg.getAttribute('src')) return false;
+    if (heroImg.complete && heroImg.naturalWidth === 0) return false;
+    return true;
+  }
+  function syncHeroState(){
+    if (hero) hero.classList.toggle('hero-noimg', !heroHasArt());
+  }
+  if (heroImg) {
+    heroImg.addEventListener('load', syncHeroState);
+    heroImg.addEventListener('error', syncHeroState);
+  }
   function syncHeader(scrollTop){
     if (!header) return;
-    var solid = scrollTop > 24 || html.getAttribute('data-ds-surface') !== 'landing';
+    var solid = scrollTop > 24 || html.getAttribute('data-ds-surface') !== 'landing'
+      || (hero && hero.classList.contains('hero-noimg'));
     header.classList.toggle('is-solid', solid);
   }
+  syncHeroState();
   window.addEventListener('message', function(e){
     var d = e.data || {};
     if (d.type === 'davent:ds-frame') {
