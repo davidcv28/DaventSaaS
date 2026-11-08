@@ -295,14 +295,11 @@ const tabGroups = computed(() => {
   const hasAccess = Boolean(plan.value?.isCurrent)
   const web = [{ id: 'store', label: 'Mi dirección web', icon: 'share-2', hint: 'Link para compartir' }]
   if (hasAccess && b.has_customization) {
-    // Studio es sección propia: sin has_design_advanced se muestra con
-    // candado y el click abre el modal de planes (navLocks.design_studio).
     web.push(
       { id: 'photos', label: 'Mis fotos', icon: 'images', hint: 'Logo, portada y galería' },
       { id: 'design', label: 'Diseño', icon: 'palette', hint: 'Cómo se ve tu página' },
-      { id: 'studio', label: 'Studio', icon: 'sliders', hint: 'Editor avanzado de tu web', locked: !b.has_design_advanced }
+      { id: 'company', label: 'Sobre mi negocio', icon: 'building-2', hint: 'Servicios, horarios y más' }
     )
-    web.push({ id: 'company', label: 'Sobre mi negocio', icon: 'building-2', hint: 'Servicios, horarios y más' })
   }
   const promo = [
     { id: 'tools', label: 'QR y folletos', icon: 'qr-code', hint: 'Para imprimir y repartir' },
@@ -322,7 +319,6 @@ const tabGroups = computed(() => {
 const SECTION_BENEFITS = {
   design_assisted: ['has_ai_design'],
   design_studio: ['has_design_advanced'],
-  studio: ['has_design_advanced'],
   services: ['has_services_site'],
   reviews: ['has_product_comments'],
   support: ['has_support_chat'],
@@ -334,7 +330,6 @@ const SECTION_BENEFITS = {
 const LOCKED_FEATURES = {
   design_assisted: { icon: 'sparkles', title: 'Diseño asistido', text: 'Contale a qué te dedicás y recibí tu web armada: plantilla, orden de secciones y textos. Después la ajustás a mano.' },
   design_studio: { icon: 'layout-panel-left', title: 'Studio de diseño', text: 'El editor completo con vista previa en vivo: colores, tipografía, contenedores, portada y versión de prueba antes de publicar.' },
-  studio: { icon: 'layout-panel-left', title: 'Studio de diseño', text: 'El editor completo con vista previa en vivo: colores, tipografía, contenedores, portada y versión de prueba antes de publicar.' },
   catalogs: { icon: 'package', title: 'Tu catálogo de productos', text: 'Cargá productos con foto, precio y categorías: se publican solos en tu web.' },
   services: { icon: 'wrench', title: 'Página de servicios', text: 'Una página propia para mostrar lo que hacés, con duración, precio y botón de consulta directa a tu WhatsApp.' },
   pos: { icon: 'monitor', title: 'Venta en persona', text: 'Cobrá en tu local usando el mismo catálogo de tu web. Llega muy pronto.' },
@@ -354,7 +349,7 @@ const navLocks = computed(() => {
   const hasAccess = Boolean(plan.value?.isCurrent)
   const map = {}
   const gated = (id) => (SECTION_BENEFITS[id] || []).some((k) => !b[k])
-  for (const id of ['catalogs', 'services', 'pos', 'reviews', 'support', 'bot', 'tools', 'stats', 'design_assisted', 'design_studio', 'studio', 'flyer_editor']) {
+  for (const id of ['catalogs', 'services', 'pos', 'reviews', 'support', 'bot', 'tools', 'stats', 'design_assisted', 'design_studio', 'flyer_editor']) {
     // El asistente/soporte es para planes pagos (gate mcp_user_access en
     // el backend): el trial queda con candado de upgrade aunque esté vigente.
     map[id] = !hasAccess ? 'expired' : (id === 'support' && plan.value?.isTrial) ? 'upgrade' : gated(id) ? 'upgrade' : null
@@ -1750,6 +1745,13 @@ const designTab = ref('look')
 const designPreviewOpen = ref(false)
 const canCustomize = computed(() => Boolean(plan.value?.benefits?.has_customization))
 const canDesignAdvanced = computed(() => Boolean(plan.value?.benefits?.has_design_advanced))
+// Editor Avanzado: modal fullscreen del site_theme (botón en Diseño).
+// Sin has_design_advanced el click abre el modal de planes, no el editor.
+const studioModalOpen = ref(false)
+function onOpenStudio() {
+  if (!canDesignAdvanced.value) { openLocked('design_studio'); return }
+  studioModalOpen.value = true
+}
 
 // "Asistencia con IA": mismo modal con dos contextos ('design' | 'business').
 // Candado = has_ai_design (mismo gate que el diseño asistido) + opt-out del
@@ -4920,7 +4922,7 @@ async function changePassword() {
         :shop-name="store.customization?.display_name || business" :can-studio="canDesignAdvanced"
         :site-templates="designSiteTemplates" v-model:preview-open="designPreviewOpen"
         :page-options="designPageOptions" @toggle-page="toggleSiteTemplate" :on-save-show="saveShowFromModal"
-        @navigate="section = $event" @open-studio="router.push({ name: 'design-studio' })"
+        @navigate="section = $event" @open-studio="onOpenStudio"
       >
         <template #actions>
           <div class="design-actions">
@@ -4931,19 +4933,13 @@ async function changePassword() {
         </template>
       </DesignStylesTab>
     </div>
-    <!-- ================= STUDIO (Premium) ================= -->
-    <div v-if="seen.studio" v-show="section === 'studio'" :class="{ 'sec-on': section === 'studio' }">
-      <div class="page-head">
-        <div>
-          <h1>Studio</h1>
-          <p>Edición fina de tu web: contenedores, fuentes por área, fotos de producto, fondo y botones.</p>
-        </div>
-      </div>
-      <SectionTabs :tabs="tabGroups.web" active="studio" @select="section = $event" />
 
+    <!-- Editor Avanzado (Premium): modal fullscreen con el preview al
+         centro y los editores del site_theme en el sidebar izquierdo. -->
+    <Teleport to="body">
       <DesignStudioTab
-        :form="designForm" :benefits="plan?.benefits || {}"
-        :customization="store.customization || {}"
+        v-if="studioModalOpen" :form="designForm" :benefits="plan?.benefits || {}"
+        :customization="store.customization || {}" @close="studioModalOpen = false"
       >
         <template #actions>
           <div class="design-actions">
@@ -4953,7 +4949,7 @@ async function changePassword() {
           <p v-if="designDirtyAll" class="hint design-dirty-hint"><AppIcon name="pencil" :size="13" /> Los cambios ya se ven en la vista previa, pero todavía no están publicados: tocá «Guardar cambios».</p>
         </template>
       </DesignStudioTab>
-    </div>
+    </Teleport>
     <!-- ================= MI EMPRESA (marketing de la portada) ================= -->
     <div v-if="seen.company" v-show="section === 'company'" :class="{ 'sec-on': section === 'company' }">
       <div class="page-head">

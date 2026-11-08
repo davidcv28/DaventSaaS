@@ -430,6 +430,13 @@ onBeforeUnmount(() => {
               </div>
               <div class="dmenu-head-actions">
                 <button
+                  type="button" class="btn secondary btn-auto"
+                  :title="canStudio ? 'Colores, fuentes, fotos, fondo y botones en un editor dedicado' : 'Disponible en el plan Premium'"
+                  @click="emit('open-studio')"
+                >
+                  <AppIcon :name="canStudio ? 'sliders' : 'lock'" :size="16" /> Editor Avanzado
+                </button>
+                <button
                   type="button" class="btn secondary btn-auto dmenu-preview-btn"
                   aria-label="Ver mi web en vista previa" @click="openMobilePreview"
                 >

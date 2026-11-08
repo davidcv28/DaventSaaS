@@ -20,7 +20,7 @@ defineEmits(['select'])
       :aria-selected="active === t.id"
       @click="$emit('select', t.id)"
     >
-      <AppIcon :name="t.locked ? 'lock' : t.icon" :size="17" />
+      <AppIcon :name="t.icon" :size="17" />
       <span><strong>{{ t.label }}</strong><small v-if="t.hint">{{ t.hint }}</small></span>
     </button>
   </nav>
