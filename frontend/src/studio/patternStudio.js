@@ -6,7 +6,7 @@
 // por postMessage (`davent:ds-studio-css`) porque el iframe es de origen
 // opaco y no puede leer el tema del host.
 import { STORE_FONTS } from '../api/stores.api.js'
-import { STUDIO_ROLE_KEYS } from './contract.js'
+import { STUDIO_ROLE_KEYS, fixContrast, normalizeHex } from './contract.js'
 
 // Selectores — espejo de los _STUDIO_*_SEL de pattern_render.py.
 const BTN_SEL = '.btn, .svc-cta, .pdp-buy, .nav-cta, .top-cta, .rail-btn, .deck-btn'
@@ -200,18 +200,22 @@ export function patternStudioCss(theme, fontsCss = '') {
   }
 
   const style = buttons.style
+  // Acento como color de texto: --ds-accent-text es el acento ajustado a AA
+  // contra la superficie (espejo de theme_css del backend); sin superficie
+  // conocida cae al --ds-accent de siempre.
+  const accentTextVar = 'var(--ds-accent-text, var(--ds-accent, currentColor))'
   if (['solid', 'outline', 'ghost', 'gradient', 'transparent'].includes(style)) {
     let decl
     if (style === 'solid') {
       decl = 'background:var(--ds-accent, currentColor)!important;color:var(--ds-accent-ink, #fff)!important;border-color:transparent!important'
     } else if (style === 'outline') {
-      decl = 'background:transparent!important;color:var(--ds-accent, currentColor)!important;border-color:var(--ds-accent, currentColor)!important'
+      decl = `background:transparent!important;color:${accentTextVar}!important;border-color:var(--ds-accent, currentColor)!important`
     } else if (style === 'ghost') {
-      decl = 'background:color-mix(in srgb, var(--ds-accent, currentColor) 12%, transparent)!important;color:var(--ds-accent, currentColor)!important;border-color:transparent!important'
+      decl = `background:color-mix(in srgb, var(--ds-accent, currentColor) 12%, transparent)!important;color:${accentTextVar}!important;border-color:transparent!important`
     } else if (style === 'gradient') {
       decl = 'background:linear-gradient(120deg, var(--ds-primary, var(--ds-accent, currentColor)), var(--ds-secondary, var(--ds-accent, currentColor)))!important;color:#fff!important;border-color:transparent!important'
     } else {
-      decl = 'background:color-mix(in srgb, var(--ds-accent, currentColor) 8%, transparent)!important;color:var(--ds-accent, currentColor)!important;border-color:transparent!important'
+      decl = `background:color-mix(in srgb, var(--ds-accent, currentColor) 8%, transparent)!important;color:${accentTextVar}!important;border-color:transparent!important`
     }
     rules.push(`${BTN_SEL}{${decl}}`)
   }
@@ -231,5 +235,12 @@ export function patternStudioCss(theme, fontsCss = '') {
   }
 
   const css = rules.join('\n')
-  return fontsCss ? `${fontsCss}\n${css}` : css
+  // --ds-accent-text: acento ajustado a AA contra la superficie del tema
+  // (espejo de theme_css). Solo si el tema parcial trae superficie/bfondo.
+  const pal = sect(theme, 'palette')
+  const accent = normalizeHex(pal.accent) || normalizeHex(pal.primary)
+  const surface = normalizeHex(pal.surface) || normalizeHex(pal.bg)
+  const accentText = accent && surface ? fixContrast(accent, surface) : ''
+  const root = accentText ? `:root{--ds-accent-text:${accentText}}\n` : ''
+  return fontsCss || root ? `${fontsCss}\n${root}${css}` : css
 }

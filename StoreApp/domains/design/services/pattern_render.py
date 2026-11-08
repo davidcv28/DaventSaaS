@@ -1095,6 +1095,53 @@ def _contrast_ink(value):
     return '#191611' if luminance > 0.1833 else '#FFFDF8'
 
 
+_HEX_RE   =   re.compile(r'^#([0-9a-fA-F]{6}|[0-9a-fA-F]{3})$')
+
+def _hex_rgb(value):
+    match   =   _HEX_RE.match(str(value or '').strip())
+    if not match:
+        return None
+    d   =   match.group(1)
+    if len(d) == 3:
+        d   =   ''.join(ch * 2 for ch in d)
+    return  [int(d[i:i + 2], 16) for i in (0, 2, 4)]
+
+def _rgb_hex(rgb):
+    return  '#' + ''.join(f'{max(0, min(255, round(c))):02x}' for c in rgb)
+
+def _rel_lum(rgb):
+    def channel(v):
+        s   =   v / 255
+        return  s / 12.92 if s <= 0.03928 else ((s + 0.055) / 1.055) ** 2.4
+    r, g, b   =   rgb
+    return  0.2126 * channel(r) + 0.7152 * channel(g) + 0.0722 * channel(b)
+
+def _ratio(a, b):
+    la, lb   =   _rel_lum(a), _rel_lum(b)
+    return  (max(la, lb) + 0.05) / (min(la, lb) + 0.05)
+
+def _fix_contrast(fg, bg, min_ratio = 4.5):
+    """
+    Acerca `fg` al extremo (negro o blanco) que mejor contraste con `bg`
+    hasta alcanzar `min_ratio` — espejo de `fixContrast` del contrato
+    (studio/contract.js): el acento conserva su tono pero nunca deja un
+    texto ilegible (botones outline/ghost/transparent de los diseños).
+    """
+    f, b   =   _hex_rgb(fg), _hex_rgb(bg)
+    if not f or not b:
+        return  ''
+    if _ratio(f, b) >= min_ratio:
+        return  _rgb_hex(f)
+    black   =   _ratio([0, 0, 0], b) >= _ratio([255, 255, 255], b)
+    target  =   [0, 0, 0] if black else [255, 255, 255]
+    for step in range(1, 51):
+        t   =   step / 50
+        hexv    =   _rgb_hex([c + (target[i] - c) * t for i, c in enumerate(f)])
+        if _ratio(_hex_rgb(hexv), b) >= min_ratio:
+            return  hexv
+    return  _rgb_hex(target)
+
+
 def theme_css(customization, pattern = None, site_theme = None):
     """
     Bloque `:root { --ds-* }` con lo que el estilo puede tocar. Los
@@ -1135,6 +1182,15 @@ def theme_css(customization, pattern = None, site_theme = None):
         '--ds-accent': color if str(color).startswith('#') else '',
         '--ds-accent-ink': _contrast_ink(color),
     }
+    #Acento como COLOR DE TEXTO (botones outline/ghost/transparent, enlaces):
+    #se ajusta a AA contra la superficie efectiva para que un acento claro
+    #nunca deje letras ilegibles. Sin superficie conocida no se emite y el
+    #CSS cae al --ds-accent de siempre.
+    surface_bg  =   _text(palette.get('surface'), 7) or _text(palette.get('bg'), 7)
+    if surface_bg.startswith('#') and str(color).startswith('#'):
+        accent_text    =   _fix_contrast(color, surface_bg)
+        if accent_text:
+            vars_['--ds-accent-text'] = accent_text
     #Superficies, bordes y texto del tema aplicado: la paleta del panel de
     #Diseño manda sobre los effects del estilo. Sin paleta, la hoja del
     #diseño usa su propia piel (fallback en CSS).
@@ -1392,11 +1448,11 @@ def studio_theme_css(site_theme):
             decl    +=  'border-color:transparent!important'
         elif btn_style == 'outline':
             decl    =   'background:transparent!important;'
-            decl    +=  'color:var(--ds-accent, currentColor)!important;'
+            decl    +=  'color:var(--ds-accent-text, var(--ds-accent, currentColor))!important;'
             decl    +=  'border-color:var(--ds-accent, currentColor)!important'
         elif btn_style == 'ghost':
             decl    =   'background:color-mix(in srgb, var(--ds-accent, currentColor) 12%, transparent)!important;'
-            decl    +=  'color:var(--ds-accent, currentColor)!important;'
+            decl    +=  'color:var(--ds-accent-text, var(--ds-accent, currentColor))!important;'
             decl    +=  'border-color:transparent!important'
         elif btn_style == 'gradient':
             decl    =   'background:linear-gradient(120deg, var(--ds-primary, var(--ds-accent, currentColor)), var(--ds-secondary, var(--ds-accent, currentColor)))!important;'
@@ -1404,7 +1460,7 @@ def studio_theme_css(site_theme):
             decl    +=  'border-color:transparent!important'
         else:  # transparent
             decl    =   'background:color-mix(in srgb, var(--ds-accent, currentColor) 8%, transparent)!important;'
-            decl    +=  'color:var(--ds-accent, currentColor)!important;'
+            decl    +=  'color:var(--ds-accent-text, var(--ds-accent, currentColor))!important;'
             decl    +=  'border-color:transparent!important'
         rules.append(f'{_STUDIO_BTN_SEL}{{{decl}}}')
     btn_border  =   buttons.get('borderStyle')

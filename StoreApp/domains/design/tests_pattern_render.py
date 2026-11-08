@@ -4,6 +4,7 @@ Tests del render de DesignPattern contra los datos de la tienda.
 Contrato: variables de texto escapadas, fragmentos de lista armados por el
 backend, tema del estilo traducido a `--ds-*` y endpoint público.
 """
+import re
 from unittest.mock import patch
 
 from django.contrib.auth.models import User
@@ -21,6 +22,7 @@ from StoreApp.domains.design.services import (
     studio_theme_css,
     theme_css,
 )
+from StoreApp.domains.design.services.pattern_render import _fix_contrast, _hex_rgb, _ratio
 from StoreApp.domains.stores.models import Store, StoreCustomization
 from StoreApp.domains.stores.tests import _grant
 
@@ -136,6 +138,36 @@ class PatternRenderServiceTests(TestCase):
         self.assertIn('--ds-radius-btn:999px', css)
         self.assertIn('--ds-accent:#0f766e', css)
         self.assertNotIn('layout', css)
+
+    def test_theme_css_emits_legible_accent_text(self):
+        #Acento claro sobre superficie clara: --ds-accent-text se oscurece
+        #hasta AA; sobre superficie oscura el mismo acento se conserva.
+        #accent_custom manda sobre palette.accent (como en el guardado real
+        #del Editor Avanzado, que escribe ambos con el mismo hex).
+        store           =   _store(site_theme = {
+            'palette': {'accent': '#f5d90a', 'surface': '#ffffff', 'bg': '#ffffff'},
+        })
+        store.customization.accent_custom   =   '#f5d90a'
+        store.customization.save(update_fields = ['accent_custom'])
+        css             =   theme_css(store.customization)
+        m               =   re.search(r'--ds-accent-text:(#[0-9a-f]{6})', css)
+        self.assertIsNotNone(m)
+        self.assertNotEqual(m.group(1), '#f5d90a')
+        store.customization.site_theme   =   {
+            'palette': {'accent': '#f5d90a', 'surface': '#171914', 'bg': '#171914'},
+        }
+        store.customization.save(update_fields = ['site_theme'])
+        css2            =   theme_css(store.customization)
+        self.assertIn('--ds-accent-text:#f5d90a', css2)
+
+    def test_fix_contrast_matches_contract(self):
+        #Espejo de fixContrast() del contrato: ya legible no se toca;
+        #amarillo sobre blanco cae a un oliva AA; sin hex válido, ''.
+        self.assertEqual(_fix_contrast('#1d4ed8', '#ffffff'), '#1d4ed8')
+        fixed          =   _fix_contrast('#f5d90a', '#ffffff')
+        self.assertTrue(fixed.startswith('#') and fixed != '#f5d90a')
+        self.assertGreaterEqual(_ratio(_hex_rgb(fixed), _hex_rgb('#ffffff')), 4.5)
+        self.assertEqual(_fix_contrast('no-es-color', '#ffffff'), '')
 
     #--- Studio: editores finos de site_theme sobre los hooks del diseño.
     STUDIO_THEME = {

@@ -85,4 +85,32 @@ describe('patternStudioCss (documentos de diseño)', () => {
     expect(queries).toContain('Archivo+Black')
     expect(patternStudioFontQueries({})).toEqual([])
   })
+
+  it('acento como texto: --ds-accent-text se ajusta a AA contra la superficie', () => {
+    // Amarillo claro sobre superficie blanca: el texto NO puede quedar
+    // amarillo — se oscurece hasta cumplir contraste.
+    const out = patternStudioCss({
+      palette: { accent: '#f5d90a', surface: '#ffffff' },
+      buttons: { style: 'outline' }
+    })
+    const m = out.match(/--ds-accent-text:(#[0-9a-f]{6})/)
+    expect(m).toBeTruthy()
+    expect(m[1]).not.toBe('#f5d90a')
+    expect(out).toContain('color:var(--ds-accent-text, var(--ds-accent, currentColor))!important')
+  })
+
+  it('acento ya legible sobre la superficie se conserva', () => {
+    const out = patternStudioCss({
+      palette: { accent: '#1d4ed8', surface: '#ffffff' },
+      buttons: { style: 'ghost' }
+    })
+    expect(out).toContain('--ds-accent-text:#1d4ed8')
+    expect(out).toContain('color:var(--ds-accent-text, var(--ds-accent, currentColor))!important')
+  })
+
+  it('sin superficie conocida no se emite --ds-accent-text', () => {
+    const out = patternStudioCss({ palette: { accent: '#f5d90a' }, buttons: { style: 'outline' } })
+    expect(out).not.toContain('--ds-accent-text:')
+    expect(out).toContain('color:var(--ds-accent-text, var(--ds-accent, currentColor))!important')
+  })
 })

@@ -3,7 +3,7 @@
 // Cinco editores que escriben el site_theme PARCIAL del formulario — el
 // mismo que aplica DesignStylesTab— así la vista previa en vivo los muestra
 // al instante por postMessage y «Guardar cambios» los publica:
-//   1. Colores de contenedores  -> site_theme.surfaces {card,nav,footer,hero}
+//   1. Color de tema             -> site_theme.palette {accent,primary,secondary} + accent_custom
 //   2. Fuentes por área         -> site_theme.typography.roles (13 roles)
 //   3. Fotos de producto        -> site_theme.images {ratio,fit,bg,radius,border}
 //   4. Fondo de la web          -> site_theme.background {type,value,overlay}
@@ -11,7 +11,8 @@
 // Cada control escribe solo su clave: lo no tocado hereda el look del
 // diseño/estilo elegido y el tema guardado queda parcial y limpio.
 import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue'
-import { normalizeHex, inkOn } from '../../studio/contract.js'
+import { normalizeHex, inkOn, textOn } from '../../studio/contract.js'
+import { deriveAccent } from '../../utils/colorTools.js'
 import { STORE_FONTS, ensureStoreFont } from '../../api/stores.api.js'
 import {
   buildGradient, buildMesh, buildPattern, parseGradient,
@@ -43,6 +44,12 @@ onMounted(() => {
     const f = roleVal(r.role, 'font')
     if (f && STORE_FONTS[f]) ensureStoreFont(f)
   })
+  // Los colores por contenedor (surfaces) ya no se editan desde este panel:
+  // un fondo a mano puede pelear contra el texto. Si el tema guardado los
+  // trae, se quitan — la tinta siempre la deriva el sistema (contraste AA).
+  if (theme.value.surfaces && Object.keys(theme.value.surfaces).length) {
+    patchTheme((t) => { delete t.surfaces })
+  }
 })
 onBeforeUnmount(() => {
   window.removeEventListener('keydown', onKeydown)
@@ -79,18 +86,34 @@ function colorText(section, key, e) {
 }
 
 // ===========================================================================
-// 1. Colores de contenedores (surfaces)
+// 1. Color de tema (palette.accent — el color de marca de toda la web)
 // ===========================================================================
-const SURFACES = [
-  { key: 'card', label: 'Tarjetas y paneles', hint: 'El fondo de tarjetas de producto, servicios, preguntas y formularios.' },
-  { key: 'nav', label: 'Barra superior', hint: 'La barra con tu logo, el menú y el botón de acción.' },
-  { key: 'footer', label: 'Pie de página', hint: 'La franja final con tus datos, links y redes.' },
-  { key: 'hero', label: 'Portada', hint: 'La banda principal de la home cuando no lleva foto.' }
-]
-const surfaceColor = (key) => theme.value.surfaces?.[key] || ''
-function setSurface(key, raw) { setColor('surfaces', key, raw) }
-function surfaceText(key, e) { colorText('surfaces', key, e) }
-function clearSurface(key) { setKey('surfaces', key, null) }
+const themeColor = computed(() => normalizeHex(pal.value.accent) || normalizeHex(pal.value.primary) || '')
+// Tinta derivada del acento: la misma que usa la web publicada para el
+// texto sobre botones y la banda — nunca queda una letra ilegible.
+const themeInk = computed(() => deriveAccent(themeColor.value || '#4f46e5').ink)
+const themeBtnInk = computed(() => textOn(themeInk.value, 7))
+const themeChipInk = computed(() => inkOn(themeColor.value || '#4f46e5'))
+function setThemeColor(raw) {
+  const hex = normalizeHex(raw)
+  if (!hex) return
+  patchTheme((t) => {
+    const p = { ...(t.palette || {}) }
+    // El trío queda coherente (mismo criterio que ColorsPanel del Studio
+    // completo): primario = acento, secundario = su tinta derivada.
+    p.accent = hex
+    p.primary = hex
+    p.secondary = deriveAccent(hex).ink
+    t.palette = p
+  })
+  // Espejo del campo persistido: los documentos de diseño (patrones) dan
+  // prioridad a accent_custom sobre palette.accent al pintar --ds-accent.
+  props.form.accent_custom = hex
+}
+function themeColorText(e) {
+  setThemeColor(e.target.value)
+  e.target.value = themeColor.value
+}
 
 // ===========================================================================
 // 2. Fuentes por área (typography.roles — 13 roles del contrato v4)
@@ -293,18 +316,18 @@ const BTNS = computed(() => theme.value.buttons || {})
 // Navegación del sidebar: acordeón de secciones + previews en vivo
 // ===========================================================================
 const SECTIONS = [
-  { id: 'surfaces', icon: 'palette', tone: 'violet', title: 'Colores', sub: 'Superficies', desc: 'Colores propios para las superficies de la página. Lo que no toques hereda el look de tu diseño.' },
+  { id: 'colors', icon: 'palette', tone: 'violet', title: 'Colores', sub: 'Color de tema', desc: 'Un solo color de marca para toda la web: botones, enlaces, precios y detalles. El texto encima se ajusta solo para leerse siempre.' },
   { id: 'type', icon: 'type', tone: 'blue', title: 'Tipografía', sub: 'Fuentes por área', desc: 'Cada rol tiene su propia familia, tamaño, peso, interletraje, interlineado y caja. «Heredar» vuelve al estilo del diseño.' },
   { id: 'media', icon: 'image', tone: 'emerald', title: 'Fotos', sub: 'Marco de producto', desc: 'El marco de las fotos en las tarjetas: proporción, encaje, fondo detrás, esquinas y borde.' },
   { id: 'bg', icon: 'monitor', tone: 'amber', title: 'Fondo', sub: 'El fondo de la web', desc: 'Qué lleva el fondo detrás de todo: color, degradado, malla, patrón o una imagen tuya.' },
   { id: 'buttons', icon: 'sliders', tone: 'rose', title: 'Botones', sub: 'Estilo y forma', desc: 'Estilo, forma, tamaño y borde de todos los botones de la web.' }
 ]
 const secMeta = (id) => SECTIONS.find((s) => s.id === id)
-const openSection = ref('surfaces')
+const openSection = ref('colors')
 function toggleSection(id) { openSection.value = openSection.value === id ? null : id }
 // Cuántos ajustes propios tiene cada sección — el numerito del encabezado.
 const customCount = computed(() => ({
-  surfaces: Object.keys(theme.value.surfaces || {}).length,
+  colors: props.form.accent_custom ? 1 : 0,
   type: Object.keys(theme.value.typography?.roles || {}).length,
   media: Object.keys(theme.value.images || {}).length,
   bg: theme.value.background ? 1 : 0,
@@ -405,42 +428,39 @@ function setBtn(key, value) { setKey('buttons', key, value) }
       <aside class="dstm-side">
         <div class="dst-main">
 
-      <!-- ===== 1. Colores de contenedores ===== -->
-      <section class="dst-sec card" :class="{ 'is-open': openSection === 'surfaces' }">
+      <!-- ===== 1. Color de tema ===== -->
+      <section class="dst-sec card" :class="{ 'is-open': openSection === 'colors' }">
         <h3 class="dst-sec-h">
-          <button type="button" class="dst-sec-head" :aria-expanded="openSection === 'surfaces'" @click="toggleSection('surfaces')">
+          <button type="button" class="dst-sec-head" :aria-expanded="openSection === 'colors'" @click="toggleSection('colors')">
             <span class="dst-sec-ico" data-tone="violet" aria-hidden="true"><AppIcon name="palette" :size="16" /></span>
-            <span class="dst-sec-tx"><strong>Colores</strong><small>Superficies de la página</small></span>
-            <span v-if="customCount.surfaces" class="dst-sec-n" :title="`${customCount.surfaces} ajuste(s) propio(s)`">{{ customCount.surfaces }}</span>
+            <span class="dst-sec-tx"><strong>Colores</strong><small>Color de tema</small></span>
+            <span v-if="customCount.colors" class="dst-sec-n" :title="`${customCount.colors} ajuste(s) propio(s)`">{{ customCount.colors }}</span>
             <AppIcon name="chevron-down" :size="15" class="dst-sec-chev" aria-hidden="true" />
           </button>
         </h3>
         <div class="dst-sec-body">
           <div class="dst-sec-inner">
-            <p class="dst-sec-desc">Colores propios para las superficies de la página. Lo que no toques hereda el look de tu diseño.</p>
+            <p class="dst-sec-desc">Un solo color de marca para toda la web: botones, enlaces, precios y detalles. El texto encima se ajusta solo para leerse siempre.</p>
+            <div class="dst-theme-preview">
+              <span class="dst-theme-btn" :style="{ background: themeInk, color: themeBtnInk }">Comprar ahora</span>
+              <span class="dst-theme-chip" :style="{ background: themeColor || '#4f46e5' }"><b :style="{ color: themeChipInk }">Aa</b></span>
+              <span class="dst-theme-lb">Vista previa: el texto siempre contrasta</span>
+            </div>
             <div class="stp-fields">
-          <div v-for="s in SURFACES" :key="s.key" class="stp-role" :title="s.hint">
-            <span class="dst-surf-lb">
-              <span class="dst-surf-chip" :class="{ 'is-inherit': !surfaceColor(s.key) }" :style="surfaceColor(s.key) ? { background: surfaceColor(s.key) } : null" aria-hidden="true"></span>
-              {{ s.label }}
-            </span>
-            <input
-              type="color" class="stp-swatch" :value="normalizeHex(surfaceColor(s.key)) || '#ffffff'"
-              :aria-label="`${s.label}: selector de color`"
-              @input="setSurface(s.key, $event.target.value)"
-            />
-            <input
-              type="text" class="stp-hex" :value="surfaceColor(s.key)" maxlength="7" spellcheck="false"
-              :placeholder="s.key === 'card' ? '#ffffff' : 'Heredar'"
-              :aria-label="`${s.label} en hexadecimal`"
-              @change="surfaceText(s.key, $event)" @keydown.enter.prevent="surfaceText(s.key, $event)"
-            />
-            <button
-              v-if="surfaceColor(s.key)" type="button" class="btn ghost btn-auto dst-reset"
-              :aria-label="`Quitar color de ${s.label}`" @click="clearSurface(s.key)"
-            ><AppIcon name="x" :size="13" aria-hidden="true" /> Heredar</button>
-          </div>
-          <p class="stp-fhint">El texto dentro de cada superficie se ajusta solo para seguir leyéndose (contraste AA).</p>
+              <div class="stp-role">
+                <span class="stp-role-lb">Color de tema</span>
+                <input
+                  type="color" class="stp-swatch" :value="themeColor || '#4f46e5'"
+                  aria-label="Color de tema de la web"
+                  @input="setThemeColor($event.target.value)"
+                />
+                <input
+                  type="text" class="stp-hex" :value="themeColor" maxlength="7" spellcheck="false"
+                  placeholder="#4f46e5" aria-label="Color de tema en hexadecimal"
+                  @change="themeColorText" @keydown.enter.prevent="themeColorText"
+                />
+              </div>
+              <p class="stp-fhint">Probá cualquier color: la tinta del texto se calcula sola hasta cumplir contraste AA. Para volver al color del diseño, elegí otro Tema en la sección Diseño.</p>
             </div>
           </div>
         </div>
@@ -864,18 +884,23 @@ function setBtn(key, value) { setKey('buttons', key, value) }
 .dst-sec-inner { overflow: hidden; min-height: 0; padding-bottom: 14px; }
 .dst-sec-inner > .stp-fields { padding: 0 16px; }
 
-/* ===== Chips de color por superficie ===== */
-.dst-surf-lb {
-  flex: 0 0 96px; display: inline-flex; align-items: center; gap: 6px;
-  font-size: 12px; font-weight: 600; color: var(--ink-2); min-width: 0;
+/* ===== Preview del color de tema (botón + muestra con tinta automática) ===== */
+.dst-theme-preview {
+  display: flex; align-items: center; gap: 12px; flex-wrap: wrap;
+  padding: 12px; border: 1px dashed var(--line, #e5e7eb); border-radius: 12px;
+  background: var(--surface, #f8fafc); margin-bottom: 12px;
 }
-.dst-surf-chip {
-  width: 15px; height: 15px; flex: none; border-radius: 5px;
-  border: 1px solid var(--line-strong, #cbd5e1);
+.dst-theme-btn {
+  display: inline-flex; align-items: center; justify-content: center;
+  min-height: 34px; padding: 7px 16px; border-radius: 99px;
+  font-size: 12.5px; font-weight: 700; user-select: none;
 }
-.dst-surf-chip.is-inherit {
-  background: repeating-linear-gradient(45deg, var(--surface, #f8fafc) 0 3px, var(--line, #e5e7eb) 3px 6px);
+.dst-theme-chip {
+  display: inline-grid; place-items: center; width: 44px; height: 44px;
+  border-radius: 12px; border: 1px solid var(--line, #e5e7eb);
 }
+.dst-theme-chip b { font-size: 15px; font-weight: 800; line-height: 1; }
+.dst-theme-lb { font-size: 10.5px; font-weight: 600; color: var(--muted); }
 
 /* ===== Muestra tipográfica «Aa» ===== */
 .dst-role-act { display: inline-flex; align-items: center; gap: 6px; }

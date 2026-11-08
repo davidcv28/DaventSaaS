@@ -204,7 +204,12 @@ function onPatternPick(value) {
   const linked = styles.value.find((s) => s.slug === p.style && s.is_active !== false)
   const style = linked || defaultStyleFor(p.slug)
   if (style) applyStyle(style)
-  else props.form.site_theme = patternTheme(p)
+  else {
+    props.form.site_theme = patternTheme(p)
+    // Sin estilo propio el acento personalizado tampoco sobrevive: los
+    // documentos de patrón dan prioridad a accent_custom sobre la paleta.
+    props.form.accent_custom = ''
+  }
   // Los ajustes del usuario (Editor Avanzado / Studio) se descartan: el
   // próximo guardado envía site_theme con _reset y el servidor reemplaza.
   props.form.site_theme_reset = true
