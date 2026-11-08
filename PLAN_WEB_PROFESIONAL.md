@@ -541,4 +541,4 @@ Marcá el progreso en §10 y actualizá `AGENTS.md` si algún comando nuevo qued
 | G2 | moda…impacto | hecho | `35d39e9` | 54/54 páginas ok |
 | G3 | modista…guardia | hecho | `d88e6f5` | 6/6 patrones ok |
 | G4 | expediente…sastreria | hecho | `a3d35e6` | FP documentados; 1 fix backend `43c631f` |
-| Z | Limpieza | parcial | `7e4d630`,`25ac347` | pip/tmp/bocetos borrados; `_tmp_gif`, `.pnpm-store`, `__pycache__` pendientes de aprobación |
+| Z | Limpieza | hecho | `7e4d630`,`25ac347` + git rm `_tmp_gif` | pip/tmp/bocetos/`.pnpm-store`/`__pycache__`/`_tmp_pw` borrados; `.vite/` ignorado |

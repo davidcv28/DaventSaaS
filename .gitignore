@@ -71,3 +71,6 @@ awesome-design-skills/
 /pip-*/
 /.tmp_*/
 /_tmp_*/
+
+# Cache de Vite/Vitest
+**/.vite/
