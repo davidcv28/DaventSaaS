@@ -28,7 +28,7 @@ Procesado automático de imágenes del cliente (Pillow, server-side).
 Image.MAX_IMAGE_PIXELS  =   40_000_000
 WEBP_QUALITY            =   78
 MAX_SIDE_GALLERY        =   1600
-MAX_SIDE_PRODUCT        =   1200
+MAX_SIDE_PRODUCT        =   1600
 PRODUCT_CANVAS          =   1000
 MAX_SIDE_COVER          =   2200
 MAX_SIDE_LOGO           =   800

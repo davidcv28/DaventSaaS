@@ -15,6 +15,7 @@ import { resolveSiteTheme } from '../../studio/contract.js'
 import AppIcon from '../AppIcon.vue'
 import DesignPreview from './DesignPreview.vue'
 import DesignPickers from './DesignPickers.vue'
+import MediaQualityHint, { inspectImageFile, buildQuality } from './MediaQualityHint.vue'
 
 const props = defineProps({
   form: { type: Object, required: true },
@@ -91,6 +92,19 @@ const coverBusy = ref(false)
 const coverErr = ref('')
 const LOGO_ACCEPT_TYPES = LOGO_ACCEPT
 
+// Aviso de calidad de foto (soft/recorte) por slot: se inspecciona el File en
+// el navegador al elegirlo — no depende de la respuesta del upload ni bloquea
+// el guardado. Misma tabla de umbrales que media_quality.py del backend.
+const logoQuality = ref(null)
+const coverQuality = ref(null)
+async function inspectPicked(file, slot) {
+  try {
+    return buildQuality(await inspectImageFile(file, slot))
+  } catch {
+    return null
+  }
+}
+
 const storageText = computed(() => {
   const s = store.storage
   if (!s) return ''
@@ -115,8 +129,10 @@ async function onLogoPicked(event) {
   dropLocalLogo()
   localLogoUrl = URL.createObjectURL(file)
   logoBusy.value = true
+  const quality = inspectPicked(file, 'logo')
   const ok = await store.uploadLogo(file)
   logoBusy.value = false
+  logoQuality.value = ok ? await quality : null
   if (!ok) {
     dropLocalLogo()
     logoErr.value = store.fieldErrors.logo || store.lastError
@@ -129,8 +145,10 @@ async function onRemoveLogo() {
   logoBusy.value = true
   const ok = await store.removeLogo()
   logoBusy.value = false
-  if (ok) dropLocalLogo()
-  else logoErr.value = store.fieldErrors.logo || store.lastError
+  if (ok) {
+    dropLocalLogo()
+    logoQuality.value = null
+  } else logoErr.value = store.fieldErrors.logo || store.lastError
 }
 
 async function onCoverPicked(event) {
@@ -140,8 +158,10 @@ async function onCoverPicked(event) {
   coverErr.value = validateImageFile(file)
   if (coverErr.value) return
   coverBusy.value = true
+  const quality = inspectPicked(file, 'cover')
   const ok = await store.uploadCover(file)
   coverBusy.value = false
+  coverQuality.value = ok ? await quality : null
   if (!ok) coverErr.value = store.fieldErrors.cover || store.fieldErrors.detail || store.lastError
 }
 
@@ -151,7 +171,8 @@ async function onRemoveCover() {
   coverBusy.value = true
   const ok = await store.removeCover()
   coverBusy.value = false
-  if (!ok) coverErr.value = store.fieldErrors.cover || store.fieldErrors.detail || store.lastError
+  if (ok) coverQuality.value = null
+  else coverErr.value = store.fieldErrors.cover || store.fieldErrors.detail || store.lastError
 }
 
 const storeThemes = STORE_THEMES
@@ -512,6 +533,7 @@ onBeforeUnmount(dropLocalLogo)
                 </div>
               </div>
               <p class="hint">PNG, JPG, WebP o GIF de hasta 2 MB. Mejor si es cuadrado.</p>
+              <MediaQualityHint :quality="logoQuality" />
               <p v-if="storageText" class="hint">{{ storageText }}</p>
               <p v-if="logoErr" class="field-error" role="alert">{{ logoErr }}</p>
             </div>
@@ -700,6 +722,7 @@ onBeforeUnmount(dropLocalLogo)
                 </div>
               </div>
               <p class="hint">Foto apaisada y luminosa de hasta 4 MB; la ajustamos sola.</p>
+              <MediaQualityHint :quality="coverQuality" />
               <p v-if="coverErr" class="field-error" role="alert">{{ coverErr }}</p>
             </div>
             <div class="field" :class="{ locked: !advanced }" @focusin="setRing('cover')">
