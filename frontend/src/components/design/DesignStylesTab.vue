@@ -140,7 +140,9 @@ const inCategory = (row) => !categoryFilter.value || row.categoria === categoryF
 const patternSelectOptions = computed(() => patternOptions.value.filter(inCategory).map((p) => ({
   value: p.slug,
   label: `${p.nombre} · ${p.categoria_nombre || p.categoria}`,
-  icon: 'layout-grid'
+  icon: 'layout-grid',
+  // Con tienda ilustrativa el menú muestra el ojo "Ver ejemplo".
+  demo: Boolean(p.demo_slug)
 })))
 const styleSelectOptions = computed(() => styleOptions.value.filter(inCategory).map((s) => ({
   value: s.slug,
@@ -419,11 +421,22 @@ function onMobilePreviewKey(e) {
 // p. ej. Maison Vela para Moda). "Ver ejemplo" la abre en una hoja con el
 // iframe de la web pública — el usuario ve el diseño ya armado con datos.
 const demoOpen = ref(false)
-const demoUrl = computed(() => {
-  const slug = patternOptions.value.find((x) => x.slug === currentPattern.value)?.demo_slug
-  return slug ? `/${slug}` : ''
-})
-function openDemo() { if (demoUrl.value) demoOpen.value = true }
+// Slug de tienda ilustrativa abierto: puede venir del ojo del menú (cualquier
+// diseño, aunque no sea el elegido) o del botón bajo el select (el elegido).
+const demoSlug = ref('')
+const demoUrl = computed(() => (demoSlug.value ? `/${demoSlug.value}` : ''))
+const currentDemoSlug = computed(() => (
+  patternOptions.value.find((x) => x.slug === currentPattern.value)?.demo_slug || ''
+))
+function openDemo() {
+  if (currentDemoSlug.value) { demoSlug.value = currentDemoSlug.value; demoOpen.value = true }
+}
+// Ojo del menú Diseño: previsualiza la web ilustrativa de ESE diseño sin
+// seleccionarlo (el menú no emite change).
+function openDemoFor(patternSlug) {
+  const slug = patternOptions.value.find((x) => x.slug === patternSlug)?.demo_slug
+  if (slug) { demoSlug.value = slug; demoOpen.value = true }
+}
 function closeDemo() { demoOpen.value = false }
 watch(demoOpen, (open) => {
   if (props.previewOpen || showOpen.value) return
@@ -490,12 +503,12 @@ onBeforeUnmount(() => {
               <DesignSelect
                 :model-value="currentPattern" :options="patternSelectOptions" icon="layout-grid"
                 aria-label="Diseño" placeholder="Elegí un diseño…"
-                :disabled="!patternOptions.length" @change="onPatternPick"
+                :disabled="!patternOptions.length" @change="onPatternPick" @preview="openDemoFor"
               />
               <p v-if="currentPatternBadge" class="dmenu-plan">
                 <span class="dmenu-badge" :class="currentPatternBadge.tone">{{ currentPatternBadge.text }}</span>
               </p>
-              <button v-if="demoUrl" type="button" class="dmenu-demo" @click="openDemo">
+              <button v-if="currentDemoSlug" type="button" class="dmenu-demo" @click="openDemo">
                 <AppIcon name="eye" :size="14" /> Ver ejemplo
               </button>
             </div>

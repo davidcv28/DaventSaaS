@@ -16,7 +16,7 @@ const props = defineProps({
   ariaLabel: { type: String, default: '' },
   disabled: { type: Boolean, default: false }
 })
-const emit = defineEmits(['update:modelValue', 'change'])
+const emit = defineEmits(['update:modelValue', 'change', 'preview'])
 
 const open = ref(false)
 const root = ref(null)
@@ -182,6 +182,11 @@ onBeforeUnmount(() => {
             <span class="ds-option-text" :style="o.style">{{ o.label }}</span>
             <span v-if="o.badge" class="ds-badge" :class="o.badgeTone || ''">{{ o.badge }}</span>
           </span>
+          <span
+            v-if="o.demo" class="ds-eye" role="button" tabindex="-1"
+            :aria-label="`Ver ejemplo de ${o.label}`" title="Ver ejemplo"
+            @click.stop.prevent="emit('preview', o.value)"
+          ><AppIcon name="eye" :size="14" /></span>
           <AppIcon v-if="String(o.value) === String(modelValue)" name="check" :size="14" :stroke="2.4" class="ds-check" aria-hidden="true" />
         </button>
       </template>
@@ -268,5 +273,13 @@ onBeforeUnmount(() => {
 .ds-badge.amber { background: var(--warn-bg, #fef3c7); border-color: var(--warn-line, #fde68a); color: var(--warn-ink, #b45309); }
 .ds-badge.purple { background: #ede9fe; border-color: #ddd6fe; color: #6d28d9; }
 [data-theme='dark'] .ds-badge.purple { background: rgba(139, 92, 246, .16); border-color: rgba(167, 139, 250, .4); color: #c4b5fd; }
+/* Ojo "ver ejemplo": la opción tiene tienda ilustrativa — abre la vista
+   sin elegir el diseño (stop para no disparar el pick). */
+.ds-eye {
+  flex: none; display: grid; place-items: center; width: 28px; height: 28px;
+  margin: -4px -2px -4px 0; border-radius: 8px; color: var(--muted, #64748b);
+  cursor: pointer; transition: background .15s, color .15s;
+}
+.ds-eye:hover { background: var(--brand-soft, #eef2ff); color: var(--brand-600, #4f46e5); }
 .ds-check { flex: none; color: var(--brand-600, #4f46e5); }
 </style>
