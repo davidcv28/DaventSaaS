@@ -52,12 +52,16 @@
   --accent-soft:color-mix(in srgb,var(--accent) 11%,var(--paper));
   --on-accent:var(--ds-accent-ink,#1A1009);
   --ok:var(--ds-success,#2C6E55);
+  --danger:#B3261E;
   /* Banda de tinta (cintas, footer, hojas): no invierte con el tema — en
      noche es grafito profundo, así el texto claro sigue leyéndose. */
   --band:var(--ink);
   --band-ink:var(--paper);
   --sea:#1C5D57;
   --sand:#D8C39E;
+  /* Héroe y chrome sobre foto: siempre de noche, no invierten con el tema. */
+  --hero-bg:#09141B;
+  --media-ink:#FFF;
   --display:"Fraunces","Playfair Display",Georgia,serif;
   --sans:"Instrument Sans","Rubik","Helvetica Neue",system-ui,sans-serif;
   --mono:"JetBrains Mono","SFMono-Regular",monospace;
@@ -155,7 +159,7 @@ em{font-style:italic;font-variation-settings:"WONK" 1}
 .btn-line{background:transparent;color:var(--ink);border-color:var(--line)}
 .btn-line:hover{border-color:var(--ink)}
 .btn-big{min-height:56px;padding-inline:30px}
-.btn-ghost{background:color-mix(in srgb,var(--surface) 14%,transparent);color:#fff;border-color:rgba(255,255,255,.32);backdrop-filter:blur(10px)}
+.btn-ghost{background:color-mix(in srgb,var(--surface) 14%,transparent);color:var(--media-ink);border-color:rgba(255,255,255,.32);backdrop-filter:blur(10px)}
 .btn-ghost:hover{border-color:var(--accent);background:color-mix(in srgb,var(--accent) 22%,transparent)}
 .btn-ink{background:var(--band);color:var(--band-ink);border-color:var(--band)}
 .btn-ink:hover{background:color-mix(in srgb,var(--ink) 86%,var(--accent))}
@@ -182,7 +186,7 @@ em{font-style:italic;font-variation-settings:"WONK" 1}
    medición sumaría el padding → cabecera creciendo sin fin). */
 .head-inner{display:flex;align-items:center;gap:28px;min-height:var(--head-base);padding-block:14px}
 .head.is-scrolled{background:color-mix(in srgb,var(--paper) 96%,transparent);box-shadow:0 1px 0 var(--line)}
-.head:not(.is-scrolled){color:#fff}
+.head:not(.is-scrolled){color:var(--media-ink)}
 /* En portada el header flota sobre la foto: un velo superior mantiene la
    marca y el menú legibles sin volver opaco el chrome. */
 html[data-ds-surface="landing"] .head:not(.is-scrolled){
@@ -250,10 +254,10 @@ body.m-open .mmenu{transform:none;visibility:visible}
    auto-dimensionado 100svh = alto del documento y realimenta el resize. */
 .hero{
   position:relative;min-height:var(--hero-h,640px);display:grid;align-content:end;align-items:end;
-  color:#fff;padding-top:var(--head-h);isolation:isolate;overflow:hidden;
-  background:#09141B;
+  color:var(--media-ink);padding-top:var(--head-h);isolation:isolate;overflow:hidden;
+  background:var(--hero-bg);
 }
-.hero-media{position:absolute;inset:0;overflow:hidden;background:#09141B}
+.hero-media{position:absolute;inset:0;overflow:hidden;background:var(--hero-bg)}
 .hero-media img{width:100%;height:100%;object-fit:cover;transform:translate3d(var(--mx,0),calc(var(--my,0) + var(--py,0)),0) scale(1.06);transition:transform .35s ease-out}
 .hero-media::after{
   content:"";position:absolute;inset:0;
@@ -311,7 +315,7 @@ body.m-open .mmenu{transform:none;visibility:visible}
   color:rgba(255,255,255,.62);pointer-events:none;opacity:.9;
 }
 .hero-route .dash{stroke-dasharray:6 10;animation:route-dash 2.6s linear infinite}
-@keyframes route-dash{to{stroke-dashoffset:-32}}
+@keyframes route-dash{0%,100%{opacity:.4}50%{opacity:1}}
 .hero-route .plane{transform-box:fill-box;transform-origin:center;animation:plane-bob 5s var(--ease-soft) infinite}
 @keyframes plane-bob{0%,100%{transform:translate(0,0) rotate(0deg)}50%{transform:translate(0,-9px) rotate(-7deg)}}
 .hero-coords{
@@ -436,7 +440,7 @@ html[data-ds-theme="dark"] .dest-grid .ds-cat::before{color:var(--accent)}
 }
 .grid-products .ds-product-link::before{
   content:counter(itin,decimal-leading-zero);position:absolute;top:14px;right:14px;z-index:2;
-  font:500 10px/1 var(--mono);letter-spacing:.12em;color:#fff;
+  font:500 10px/1 var(--mono);letter-spacing:.12em;color:var(--media-ink);
   padding:6px 8px;border-radius:6px;background:rgba(9,20,27,.42);backdrop-filter:blur(6px);
 }
 .grid-products .ds-product-link:hover{transform:translateY(-4px);box-shadow:var(--shadow-soft);border-color:color-mix(in srgb,var(--accent) 45%,var(--line))}
@@ -460,7 +464,7 @@ html[data-ds-theme="dark"] .grid-products .ds-product-cat{color:var(--accent)}
   display:inline-flex;align-items:center;gap:6px;
   font:600 9px/1 var(--mono);letter-spacing:.14em;text-transform:uppercase;
   background:rgba(9,20,27,.46);backdrop-filter:blur(6px);
-  border:1px solid rgba(255,255,255,.2);color:#fff;padding:6px 10px;border-radius:999px;
+  border:1px solid rgba(255,255,255,.2);color:var(--media-ink);padding:6px 10px;border-radius:999px;
 }
 .grid-products .ds-stock i{width:6px;height:6px;border-radius:50%;background:var(--ok)}
 .grid-products .ds-stock{display:none}
@@ -640,7 +644,7 @@ html[data-ds-theme="dark"] .faq-list .ds-faq .ds-faq-q::after{color:var(--accent
 
 /* ---------- CTA ---------- */
 .cta-band{
-  margin-top:clamp(30px,4vw,60px);background:color-mix(in srgb,var(--accent) 92%,#170B05);
+  margin-top:clamp(30px,4vw,60px);background:color-mix(in srgb,var(--accent) 92%,var(--on-accent));
   color:var(--on-accent);overflow:hidden;position:relative;
 }
 .cta-band::before{
@@ -662,7 +666,7 @@ html[data-ds-theme="dark"] .cta-inner .eyebrow{color:var(--on-accent)}
 .cta-text{margin-top:12px;max-width:48ch;font:400 14.5px/1.68 var(--sans);opacity:.88}
 .cta-band .btn-accent{background:var(--ink);border-color:var(--ink);color:var(--paper);box-shadow:none}
 .cta-band .btn-accent::before{background:color-mix(in srgb,var(--ink) 78%,#000)}
-html[data-ds-theme="dark"] .cta-band .btn-accent{background:#060D13;border-color:#060D13}
+html[data-ds-theme="dark"] .cta-band .btn-accent{background:var(--band);border-color:var(--band)}
 
 /* ---------- Contacto ---------- */
 .contact-grid{display:grid;grid-template-columns:1fr 1fr;gap:clamp(30px,5vw,80px)}
@@ -901,7 +905,7 @@ html[data-ds-theme="dark"] .ds-rev-q{color:var(--accent)}
   transition:border-color .25s,color .25s;
 }
 .ds-rev-reload:hover{border-color:var(--accent);color:var(--accent-text)}
-.ds-rev-status{margin:0;font-size:13px;color:#B3261E;min-height:1.2em}
+.ds-rev-status{margin:0;font-size:13px;color:var(--danger);min-height:1.2em}
 .ds-rev-status[data-ok="1"]{color:var(--ok)}
 .ds-rev-status:empty{display:none}
 .ds-rev-send{

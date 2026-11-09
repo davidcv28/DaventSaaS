@@ -54,6 +54,12 @@
   --band-ink:var(--paper);
   --leaf:#4E5B1C;
   --sand:#CBB87F;
+  /* Héroe y chrome sobre foto: siempre de noche, no invierten con el tema. */
+  --hero-bg:#141A0A;
+  --media-ink:#FFF;
+  /* Texto sobre --honey (claro u oscuro): marrón tinta fijo. */
+  --on-honey:#241A05;
+  --danger:#B3261E;
   --display:"DM Serif Display","Iowan Old Style",Georgia,serif;
   --sans:"Instrument Sans","Helvetica Neue",system-ui,sans-serif;
   --mono:"JetBrains Mono","SFMono-Regular",monospace;
@@ -187,7 +193,7 @@ em{font-style:italic}
 .btn-line{background:transparent;color:var(--ink);border-color:var(--line)}
 .btn-line:hover{border-color:var(--ink)}
 .btn-big{min-height:56px;padding-inline:30px}
-.btn-ghost{background:color-mix(in srgb,var(--surface) 14%,transparent);color:#fff;border-color:rgba(255,255,255,.32);backdrop-filter:blur(10px)}
+.btn-ghost{background:color-mix(in srgb,var(--surface) 14%,transparent);color:var(--media-ink);border-color:rgba(255,255,255,.32);backdrop-filter:blur(10px)}
 .btn-ghost:hover{border-color:var(--accent);background:color-mix(in srgb,var(--accent) 22%,transparent)}
 .btn-ink{background:var(--band);color:var(--band-ink);border-color:var(--band)}
 .btn-ink:hover{background:color-mix(in srgb,var(--ink) 86%,var(--accent))}
@@ -221,7 +227,7 @@ html[data-ds-theme="dark"] .ribbon-track>*+*::before,html[data-ds-style="olivium
    medición sumaría el padding → cabecera creciendo sin fin). */
 .head-inner{display:flex;align-items:center;gap:28px;min-height:var(--head-base);padding-block:14px}
 .head.is-scrolled{background:color-mix(in srgb,var(--paper) 96%,transparent);box-shadow:0 1px 0 var(--line)}
-.head:not(.is-scrolled){color:#fff}
+.head:not(.is-scrolled){color:var(--media-ink)}
 /* En portada el header flota sobre la foto: un velo superior mantiene la
    marca y el menú legibles sin volver opaco el chrome. */
 html[data-ds-surface="landing"] .head:not(.is-scrolled){
@@ -292,10 +298,10 @@ html[data-ds-surface="services"] .tabbar a[data-ds-route="services"] svg{color:v
    auto-dimensionado 100svh = alto del documento y realimenta el resize. */
 .hero{
   position:relative;min-height:var(--hero-h,500px);display:grid;align-content:end;align-items:end;
-  color:#fff;padding-top:var(--head-h);isolation:isolate;overflow:hidden;
-  background:#141A0A;
+  color:var(--media-ink);padding-top:var(--head-h);isolation:isolate;overflow:hidden;
+  background:var(--hero-bg);
 }
-.hero-media{position:absolute;inset:0;overflow:hidden;background:#141A0A}
+.hero-media{position:absolute;inset:0;overflow:hidden;background:var(--hero-bg)}
 .hero-media img{width:100%;height:100%;object-fit:cover;transform:translate3d(var(--mx,0),calc(var(--my,0) + var(--py,0)),0) scale(1.06);transition:transform .35s ease-out}
 .hero-media::after{
   content:"";position:absolute;inset:0;
@@ -347,7 +353,7 @@ html[data-ds-surface="services"] .tabbar a[data-ds-route="services"] svg{color:v
   color:rgba(255,255,255,.6);pointer-events:none;opacity:.85;
 }
 .hero-route .dash{stroke-dasharray:5 9;animation:route-dash 3.2s linear infinite}
-@keyframes route-dash{to{stroke-dashoffset:-28}}
+@keyframes route-dash{0%,100%{opacity:.4}50%{opacity:1}}
 .hero-route .leaf{transform-box:fill-box;transform-origin:bottom center;animation:leaf-sway 6s var(--ease-soft) infinite alternate}
 @keyframes leaf-sway{from{transform:rotate(-5deg)}to{transform:rotate(6deg)}}
 .hero-coords{
@@ -549,7 +555,7 @@ html[data-ds-theme="dark"] .grid-products .ds-product-cat,html[data-ds-style="ol
 }
 .grid-products .ds-product-price[data-off]::before{
   content:"-" attr(data-off) "%";order:3;flex:none;
-  font:700 9px/1 var(--mono);letter-spacing:.06em;color:#241A05;
+  font:700 9px/1 var(--mono);letter-spacing:.06em;color:var(--on-honey);
   background:var(--honey);padding:4px 8px;border-radius:999px;
 }
 
@@ -750,8 +756,8 @@ html[data-ds-theme="dark"] .faq-list .ds-faq .ds-faq-q::after,html[data-ds-style
 }
 .cta-title{margin-top:14px;font:400 clamp(32px,4.4vw,52px)/1.08 var(--display);max-width:16ch;letter-spacing:-.015em}
 .cta-text{margin-top:12px;max-width:48ch;font:400 14.5px/1.68 var(--sans);opacity:.88}
-.cta-band .btn-accent{background:var(--honey);border-color:var(--honey);color:#241A05;box-shadow:none}
-.cta-band .btn-accent::before{background:color-mix(in srgb,var(--honey) 82%,#000);color:#241A05}
+.cta-band .btn-accent{background:var(--honey);border-color:var(--honey);color:var(--on-honey);box-shadow:none}
+.cta-band .btn-accent::before{background:color-mix(in srgb,var(--honey) 82%,#000);color:var(--on-honey)}
 html[data-ds-theme="dark"] .cta-band .btn-accent,html[data-ds-style="olivium-noche"] .cta-band .btn-accent{background:var(--honey);border-color:var(--honey)}
 
 /* ---------- Contacto ---------- */
@@ -940,7 +946,7 @@ html[data-ds-theme="dark"] .pdp-crumbs a,html[data-ds-style="olivium-noche"] .pd
 .pdp-media img{width:100%;height:100%;object-fit:cover}
 .pdp-off{
   position:absolute;top:18px;left:18px;z-index:2;
-  font:700 12px/1 var(--mono);letter-spacing:.12em;background:var(--honey);color:#241A05;
+  font:700 12px/1 var(--mono);letter-spacing:.12em;background:var(--honey);color:var(--on-honey);
   padding:10px 15px;border-radius:999px;box-shadow:0 10px 22px -12px rgba(0,0,0,.5);
 }
 .pdp-off:empty{display:none}
@@ -971,7 +977,7 @@ html[data-ds-theme="dark"] .pdp-cat,html[data-ds-style="olivium-noche"] .pdp-cat
 .pdp-price s:empty{display:none}
 .pdp-save{
   margin-left:auto;align-self:center;font:700 10px/1 var(--mono);letter-spacing:.08em;text-transform:uppercase;
-  background:var(--honey);color:#241A05;padding:7px 12px;border-radius:999px;
+  background:var(--honey);color:var(--on-honey);padding:7px 12px;border-radius:999px;
 }
 .pdp-save:not(:empty)::before{content:"Ahorrás "}
 .pdp-save:empty{display:none}
@@ -1048,7 +1054,7 @@ html[data-ds-theme="dark"] .ds-rev-q,html[data-ds-style="olivium-noche"] .ds-rev
   transition:border-color .25s,color .25s;
 }
 .ds-rev-reload:hover{border-color:var(--accent);color:var(--accent-text)}
-.ds-rev-status{margin:0;font-size:13px;color:#B3261E;min-height:1.2em}
+.ds-rev-status{margin:0;font-size:13px;color:var(--danger);min-height:1.2em}
 .ds-rev-status[data-ok="1"]{color:var(--ok)}
 .ds-rev-status:empty{display:none}
 .ds-rev-send{
@@ -1258,7 +1264,7 @@ html[data-ds-theme="dark"] .services-list .ds-service::before,html[data-ds-style
   box-shadow:var(--shadow);
 }
 .ds-chat-head{background:var(--band);color:var(--band-ink)}
-.ds-chat-avatar{border-radius:50%;background:var(--honey);color:#241A05}
+.ds-chat-avatar{border-radius:50%;background:var(--honey);color:var(--on-honey)}
 .ds-chat-close:hover{background:color-mix(in srgb,var(--band-ink) 16%,transparent)}
 .ds-chat-id strong{font-family:var(--display)}
 .ds-chat-log{background:var(--paper)}
