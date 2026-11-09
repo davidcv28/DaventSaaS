@@ -7937,6 +7937,831 @@
         "corners": "rounded"
       },
       "concept": "Pizarra y grafito: el plano de la casa en clave taller."
+    },
+    {
+      "slug": "autoservicio",
+      "nombre": "Fresco",
+      "categoria": "Supermercado",
+      "descripcion": "Supermercado contemporáneo: papel claro, tinta verde bosque, acento verde fresco y precios como dato protagonista.",
+      "tier": "plus",
+      "template": "autoservicio",
+      "page_theme": "light",
+      "tokens": {
+        "palette": {
+          "primary": "#15211A",
+          "secondary": "#2C3A32",
+          "accent": "#17794B",
+          "bg": "#F5F6F2",
+          "surface": "#FFFFFF",
+          "text": "#15211A",
+          "muted": "#627068",
+          "border": "#E2E5DC",
+          "success": "#1E8E5A",
+          "danger": "#C2402A"
+        },
+        "containers": {
+          "radius": "sm",
+          "shadow": "none",
+          "border": "none",
+          "density": "compact",
+          "surface": "flat"
+        },
+        "typography": {
+          "heading": "archivo",
+          "subheading": "archivo",
+          "body": "inter",
+          "scale": "compact",
+          "weightHeading": 700,
+          "letterSpacing": "-0.01em"
+        },
+        "buttons": {
+          "shape": "square",
+          "style": "solid",
+          "size": "md"
+        },
+        "background": {
+          "type": "solid",
+          "overlay": "none"
+        },
+        "motion": {
+          "reveal": "none",
+          "hover": "none",
+          "intensity": "subtle"
+        },
+        "mobile": {
+          "gridCols": 1,
+          "cardStyle": "standard",
+          "heroHeight": "standard"
+        }
+      },
+      "layout": {
+        "landing": {
+          "blocks": [
+            {
+              "id": "hero",
+              "variant": "split",
+              "enabled": true,
+              "order": 0
+            },
+            {
+              "id": "categories",
+              "enabled": true,
+              "order": 1
+            },
+            {
+              "id": "offers",
+              "enabled": true,
+              "order": 2
+            },
+            {
+              "id": "featured",
+              "enabled": true,
+              "order": 3
+            },
+            {
+              "id": "announcements",
+              "variant": "static",
+              "enabled": true,
+              "order": 4
+            },
+            {
+              "id": "highlights",
+              "enabled": true,
+              "order": 5
+            },
+            {
+              "id": "brands",
+              "enabled": true,
+              "order": 6
+            },
+            {
+              "id": "about",
+              "enabled": true,
+              "order": 7
+            },
+            {
+              "id": "services",
+              "enabled": true,
+              "order": 8
+            },
+            {
+              "id": "stats",
+              "enabled": true,
+              "order": 9
+            },
+            {
+              "id": "gallery",
+              "variant": "grid",
+              "enabled": true,
+              "order": 10
+            },
+            {
+              "id": "testimonials",
+              "enabled": true,
+              "order": 11
+            },
+            {
+              "id": "faq",
+              "enabled": true,
+              "order": 12
+            },
+            {
+              "id": "cta",
+              "enabled": true,
+              "order": 13
+            },
+            {
+              "id": "contact",
+              "variant": "card",
+              "enabled": true,
+              "order": 14
+            }
+          ]
+        },
+        "catalog": {
+          "blocks": [
+            {
+              "id": "note",
+              "enabled": true,
+              "order": 0
+            },
+            {
+              "id": "promo",
+              "enabled": true,
+              "order": 1
+            },
+            {
+              "id": "filters",
+              "enabled": true,
+              "order": 2
+            },
+            {
+              "id": "sort",
+              "enabled": true,
+              "order": 3
+            },
+            {
+              "id": "grid",
+              "enabled": true,
+              "order": 4
+            }
+          ]
+        },
+        "services": {
+          "blocks": [
+            {
+              "id": "hero",
+              "enabled": true,
+              "order": 0
+            },
+            {
+              "id": "band",
+              "enabled": true,
+              "order": 1
+            },
+            {
+              "id": "picker",
+              "enabled": true,
+              "order": 2
+            },
+            {
+              "id": "steps",
+              "enabled": true,
+              "order": 3
+            },
+            {
+              "id": "form",
+              "enabled": true,
+              "order": 4
+            },
+            {
+              "id": "faq",
+              "enabled": true,
+              "order": 5
+            }
+          ]
+        }
+      },
+      "layout_spec": {
+        "landing": {
+          "on": [
+            "hero",
+            "categories",
+            "offers",
+            "featured",
+            "announcements",
+            "highlights",
+            "brands",
+            "about",
+            "services",
+            "stats",
+            "gallery",
+            "testimonials",
+            "faq",
+            "cta",
+            "contact"
+          ],
+          "var": {
+            "hero": "split",
+            "announcements": "static",
+            "gallery": "grid",
+            "contact": "card"
+          }
+        },
+        "catalog": {
+          "on": [
+            "note",
+            "promo",
+            "filters",
+            "sort",
+            "grid"
+          ]
+        },
+        "services": {
+          "on": [
+            "hero",
+            "band",
+            "picker",
+            "steps",
+            "form",
+            "faq"
+          ]
+        }
+      },
+      "tags": [
+        "supermercado",
+        "retail",
+        "autoservicio",
+        "fresco",
+        "minimal"
+      ],
+      "preview": "",
+      "style": "Supermercado",
+      "anim": {
+        "hero": "none",
+        "reveal": "none",
+        "hover": "none",
+        "button": "solid-press"
+      },
+      "easing": "ease",
+      "duration": "160ms",
+      "icons": {
+        "style": "line",
+        "stroke": "1.8",
+        "size": "20",
+        "corners": "rounded"
+      },
+      "concept": "Supermercado minimalista: papel, tinta y verde fresco; precios grandes y departamentos como índice."
+    },
+    {
+      "slug": "autoservicio-noche",
+      "nombre": "Fresco Noche",
+      "categoria": "Supermercado nocturno",
+      "descripcion": "Supermercado de noche: fondo verde casi negro, acento verde lima y precios en verde claro.",
+      "tier": "plus",
+      "template": "autoservicio",
+      "page_theme": "dark",
+      "tokens": {
+        "palette": {
+          "primary": "#EDF1E8",
+          "secondary": "#3E5C48",
+          "accent": "#8FD18A",
+          "bg": "#0F130E",
+          "surface": "#171C16",
+          "text": "#EDF1E8",
+          "muted": "#96A190",
+          "border": "#2A3129",
+          "success": "#6FCF97",
+          "danger": "#FF8A70"
+        },
+        "containers": {
+          "radius": "sm",
+          "shadow": "none",
+          "border": "none",
+          "density": "compact",
+          "surface": "flat"
+        },
+        "typography": {
+          "heading": "archivo",
+          "subheading": "archivo",
+          "body": "inter",
+          "scale": "compact",
+          "weightHeading": 700,
+          "letterSpacing": "-0.01em"
+        },
+        "buttons": {
+          "shape": "square",
+          "style": "solid",
+          "size": "md"
+        },
+        "background": {
+          "type": "solid",
+          "overlay": "none"
+        },
+        "motion": {
+          "reveal": "none",
+          "hover": "none",
+          "intensity": "subtle"
+        },
+        "mobile": {
+          "gridCols": 1,
+          "cardStyle": "standard",
+          "heroHeight": "standard"
+        }
+      },
+      "layout": {
+        "landing": {
+          "blocks": [
+            {
+              "id": "hero",
+              "variant": "split",
+              "enabled": true,
+              "order": 0
+            },
+            {
+              "id": "categories",
+              "enabled": true,
+              "order": 1
+            },
+            {
+              "id": "offers",
+              "enabled": true,
+              "order": 2
+            },
+            {
+              "id": "featured",
+              "enabled": true,
+              "order": 3
+            },
+            {
+              "id": "announcements",
+              "variant": "static",
+              "enabled": true,
+              "order": 4
+            },
+            {
+              "id": "highlights",
+              "enabled": true,
+              "order": 5
+            },
+            {
+              "id": "brands",
+              "enabled": true,
+              "order": 6
+            },
+            {
+              "id": "about",
+              "enabled": true,
+              "order": 7
+            },
+            {
+              "id": "services",
+              "enabled": true,
+              "order": 8
+            },
+            {
+              "id": "stats",
+              "enabled": true,
+              "order": 9
+            },
+            {
+              "id": "gallery",
+              "variant": "grid",
+              "enabled": true,
+              "order": 10
+            },
+            {
+              "id": "testimonials",
+              "enabled": true,
+              "order": 11
+            },
+            {
+              "id": "faq",
+              "enabled": true,
+              "order": 12
+            },
+            {
+              "id": "cta",
+              "enabled": true,
+              "order": 13
+            },
+            {
+              "id": "contact",
+              "variant": "card",
+              "enabled": true,
+              "order": 14
+            }
+          ]
+        },
+        "catalog": {
+          "blocks": [
+            {
+              "id": "note",
+              "enabled": true,
+              "order": 0
+            },
+            {
+              "id": "promo",
+              "enabled": true,
+              "order": 1
+            },
+            {
+              "id": "filters",
+              "enabled": true,
+              "order": 2
+            },
+            {
+              "id": "sort",
+              "enabled": true,
+              "order": 3
+            },
+            {
+              "id": "grid",
+              "enabled": true,
+              "order": 4
+            }
+          ]
+        },
+        "services": {
+          "blocks": [
+            {
+              "id": "hero",
+              "enabled": true,
+              "order": 0
+            },
+            {
+              "id": "band",
+              "enabled": true,
+              "order": 1
+            },
+            {
+              "id": "picker",
+              "enabled": true,
+              "order": 2
+            },
+            {
+              "id": "steps",
+              "enabled": true,
+              "order": 3
+            },
+            {
+              "id": "form",
+              "enabled": true,
+              "order": 4
+            },
+            {
+              "id": "faq",
+              "enabled": true,
+              "order": 5
+            }
+          ]
+        }
+      },
+      "layout_spec": {
+        "landing": {
+          "on": [
+            "hero",
+            "categories",
+            "offers",
+            "featured",
+            "announcements",
+            "highlights",
+            "brands",
+            "about",
+            "services",
+            "stats",
+            "gallery",
+            "testimonials",
+            "faq",
+            "cta",
+            "contact"
+          ],
+          "var": {
+            "hero": "split",
+            "announcements": "static",
+            "gallery": "grid",
+            "contact": "card"
+          }
+        },
+        "catalog": {
+          "on": [
+            "note",
+            "promo",
+            "filters",
+            "sort",
+            "grid"
+          ]
+        },
+        "services": {
+          "on": [
+            "hero",
+            "band",
+            "picker",
+            "steps",
+            "form",
+            "faq"
+          ]
+        }
+      },
+      "tags": [
+        "supermercado",
+        "retail",
+        "autoservicio",
+        "noche",
+        "oscuro"
+      ],
+      "preview": "",
+      "style": "Supermercado",
+      "anim": {
+        "hero": "none",
+        "reveal": "none",
+        "hover": "none",
+        "button": "solid-press"
+      },
+      "easing": "ease",
+      "duration": "160ms",
+      "icons": {
+        "style": "line",
+        "stroke": "1.8",
+        "size": "20",
+        "corners": "rounded"
+      },
+      "concept": "Supermercado nocturno: verde profundo, acento lima y la misma retícula minimalista."
+    },
+    {
+      "slug": "autoservicio-oferta",
+      "nombre": "Ahorro",
+      "categoria": "Supermercado de ofertas",
+      "descripcion": "Supermercado de ofertas: crema cálida, tinta y acento teja para destacar precios y promociones.",
+      "tier": "plus",
+      "template": "autoservicio",
+      "page_theme": "light",
+      "tokens": {
+        "palette": {
+          "primary": "#8A3B12",
+          "secondary": "#5C270C",
+          "accent": "#E4572E",
+          "bg": "#FBF7EF",
+          "surface": "#FFFFFF",
+          "text": "#1F1B16",
+          "muted": "#6E6459",
+          "border": "#EAE1D3",
+          "success": "#2E7D4F",
+          "danger": "#B3261E"
+        },
+        "containers": {
+          "radius": "sm",
+          "shadow": "none",
+          "border": "none",
+          "density": "compact",
+          "surface": "flat"
+        },
+        "typography": {
+          "heading": "archivo",
+          "subheading": "archivo",
+          "body": "inter",
+          "scale": "compact",
+          "weightHeading": 700,
+          "letterSpacing": "-0.01em"
+        },
+        "buttons": {
+          "shape": "square",
+          "style": "solid",
+          "size": "md"
+        },
+        "background": {
+          "type": "solid",
+          "overlay": "none"
+        },
+        "motion": {
+          "reveal": "none",
+          "hover": "none",
+          "intensity": "subtle"
+        },
+        "mobile": {
+          "gridCols": 1,
+          "cardStyle": "standard",
+          "heroHeight": "standard"
+        }
+      },
+      "layout": {
+        "landing": {
+          "blocks": [
+            {
+              "id": "hero",
+              "variant": "split",
+              "enabled": true,
+              "order": 0
+            },
+            {
+              "id": "categories",
+              "enabled": true,
+              "order": 1
+            },
+            {
+              "id": "offers",
+              "enabled": true,
+              "order": 2
+            },
+            {
+              "id": "featured",
+              "enabled": true,
+              "order": 3
+            },
+            {
+              "id": "announcements",
+              "variant": "static",
+              "enabled": true,
+              "order": 4
+            },
+            {
+              "id": "highlights",
+              "enabled": true,
+              "order": 5
+            },
+            {
+              "id": "brands",
+              "enabled": true,
+              "order": 6
+            },
+            {
+              "id": "about",
+              "enabled": true,
+              "order": 7
+            },
+            {
+              "id": "services",
+              "enabled": true,
+              "order": 8
+            },
+            {
+              "id": "stats",
+              "enabled": true,
+              "order": 9
+            },
+            {
+              "id": "gallery",
+              "variant": "grid",
+              "enabled": true,
+              "order": 10
+            },
+            {
+              "id": "testimonials",
+              "enabled": true,
+              "order": 11
+            },
+            {
+              "id": "faq",
+              "enabled": true,
+              "order": 12
+            },
+            {
+              "id": "cta",
+              "enabled": true,
+              "order": 13
+            },
+            {
+              "id": "contact",
+              "variant": "card",
+              "enabled": true,
+              "order": 14
+            }
+          ]
+        },
+        "catalog": {
+          "blocks": [
+            {
+              "id": "note",
+              "enabled": true,
+              "order": 0
+            },
+            {
+              "id": "promo",
+              "enabled": true,
+              "order": 1
+            },
+            {
+              "id": "filters",
+              "enabled": true,
+              "order": 2
+            },
+            {
+              "id": "sort",
+              "enabled": true,
+              "order": 3
+            },
+            {
+              "id": "grid",
+              "enabled": true,
+              "order": 4
+            }
+          ]
+        },
+        "services": {
+          "blocks": [
+            {
+              "id": "hero",
+              "enabled": true,
+              "order": 0
+            },
+            {
+              "id": "band",
+              "enabled": true,
+              "order": 1
+            },
+            {
+              "id": "picker",
+              "enabled": true,
+              "order": 2
+            },
+            {
+              "id": "steps",
+              "enabled": true,
+              "order": 3
+            },
+            {
+              "id": "form",
+              "enabled": true,
+              "order": 4
+            },
+            {
+              "id": "faq",
+              "enabled": true,
+              "order": 5
+            }
+          ]
+        }
+      },
+      "layout_spec": {
+        "landing": {
+          "on": [
+            "hero",
+            "categories",
+            "offers",
+            "featured",
+            "announcements",
+            "highlights",
+            "brands",
+            "about",
+            "services",
+            "stats",
+            "gallery",
+            "testimonials",
+            "faq",
+            "cta",
+            "contact"
+          ],
+          "var": {
+            "hero": "split",
+            "announcements": "static",
+            "gallery": "grid",
+            "contact": "card"
+          }
+        },
+        "catalog": {
+          "on": [
+            "note",
+            "promo",
+            "filters",
+            "sort",
+            "grid"
+          ]
+        },
+        "services": {
+          "on": [
+            "hero",
+            "band",
+            "picker",
+            "steps",
+            "form",
+            "faq"
+          ]
+        }
+      },
+      "tags": [
+        "supermercado",
+        "retail",
+        "autoservicio",
+        "ofertas",
+        "ahorro"
+      ],
+      "preview": "",
+      "style": "Supermercado",
+      "anim": {
+        "hero": "none",
+        "reveal": "none",
+        "hover": "none",
+        "button": "solid-press"
+      },
+      "easing": "ease",
+      "duration": "160ms",
+      "icons": {
+        "style": "line",
+        "stroke": "1.8",
+        "size": "20",
+        "corners": "rounded"
+      },
+      "concept": "Supermercado de ofertas: crema, tinta y teja para precios y promociones."
     }
   ],
   "patterns": [
@@ -11719,6 +12544,176 @@
       "variables": {},
       "supports_dark_mode": true,
       "style": "umbral"
+    },
+    {
+      "slug": "autoservicio",
+      "nombre": "Autoservicio",
+      "categoria": "retail",
+      "descripcion": "Supermercado minimalista: índice de departamentos, precios protagonistas y ticket con los datos de la tienda.",
+      "tier": "plus",
+      "template": "autoservicio",
+      "layout": {
+        "landing": [
+          {
+            "id": "hero",
+            "variant": "split",
+            "enabled": true,
+            "order": 0
+          },
+          {
+            "id": "categories",
+            "enabled": true,
+            "order": 1
+          },
+          {
+            "id": "offers",
+            "enabled": true,
+            "order": 2
+          },
+          {
+            "id": "featured",
+            "enabled": true,
+            "order": 3
+          },
+          {
+            "id": "plans",
+            "enabled": true,
+            "order": 4
+          },
+          {
+            "id": "announcements",
+            "variant": "static",
+            "enabled": true,
+            "order": 5
+          },
+          {
+            "id": "highlights",
+            "enabled": true,
+            "order": 6
+          },
+          {
+            "id": "brands",
+            "enabled": true,
+            "order": 7
+          },
+          {
+            "id": "about",
+            "enabled": true,
+            "order": 8
+          },
+          {
+            "id": "stats",
+            "enabled": true,
+            "order": 9
+          },
+          {
+            "id": "gallery",
+            "variant": "grid",
+            "enabled": true,
+            "order": 10
+          },
+          {
+            "id": "testimonials",
+            "enabled": true,
+            "order": 11
+          },
+          {
+            "id": "faq",
+            "enabled": true,
+            "order": 12
+          },
+          {
+            "id": "cta",
+            "enabled": true,
+            "order": 13
+          },
+          {
+            "id": "contact",
+            "variant": "card",
+            "enabled": true,
+            "order": 14
+          }
+        ],
+        "catalog": [
+          {
+            "id": "note",
+            "enabled": true,
+            "order": 0
+          },
+          {
+            "id": "promo",
+            "enabled": true,
+            "order": 1
+          },
+          {
+            "id": "filters",
+            "enabled": true,
+            "order": 2
+          },
+          {
+            "id": "sort",
+            "enabled": true,
+            "order": 3
+          },
+          {
+            "id": "grid",
+            "enabled": true,
+            "order": 4
+          }
+        ],
+        "services": [
+          {
+            "id": "hero",
+            "enabled": true,
+            "order": 0
+          },
+          {
+            "id": "list",
+            "enabled": true,
+            "order": 1
+          }
+        ]
+      },
+      "tokens": {
+        "accent": "#17794B",
+        "palette": {
+          "accent": "#17794B",
+          "primary": "#15211A",
+          "secondary": "#2C3A32",
+          "bg": "#F5F6F2",
+          "surface": "#FFFFFF",
+          "text": "#15211A",
+          "muted": "#627068",
+          "border": "#E2E5DC",
+          "success": "#1E8E5A",
+          "danger": "#C2402A"
+        },
+        "fonts": [
+          "archivo",
+          "inter",
+          "jetbrains-mono"
+        ],
+        "radius": "4px",
+        "anim": {
+          "hero": "none",
+          "reveal": "none",
+          "hover": "none",
+          "button": "solid-press"
+        },
+        "easing": "linear",
+        "duration": "0ms"
+      },
+      "tags": [
+        "supermercado",
+        "retail",
+        "autoservicio",
+        "minimal",
+        "fresco"
+      ],
+      "preview": "",
+      "variables": {},
+      "supports_dark_mode": true,
+      "style": "autoservicio"
     }
   ]
 }

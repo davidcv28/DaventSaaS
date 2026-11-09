@@ -107,6 +107,7 @@ export const TYPO_DESIGN_RULES = {
   // ---- Sans de bloque / tecnología / retail: la serif rompe la retícula.
   // weightFloor sube el piso del grosor según lo pesada que sea la piel.
   mercado:      { block: TYPO_WHY_SANS, weightFloor: 400 },
+  autoservicio: { block: TYPO_WHY_SANS, weightFloor: 400 },
   gimnasio:     { block: TYPO_WHY_SANS, weightFloor: 600 },
   moderntec:    { block: TYPO_WHY_SANS, weightFloor: 500 },
   impacto:      { block: TYPO_WHY_SANS, weightFloor: 400 },

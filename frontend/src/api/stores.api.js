@@ -823,6 +823,7 @@ export const STORE_TEMPLATES = {
   raiz:        { label: 'Esencial',    rubro: 'general',      tier: 'base',     defaultAccent: '#0F766E', desc: 'Esencial: papel claro, tinta verde bosque y acento teal — generalista para cualquier rubro.' },
   esencial:    { label: 'Esencial',    rubro: 'general',      tier: 'base',     defaultAccent: '#0F766E', desc: 'Esencial: papel claro, tinta verde bosque y acento teal — generalista para cualquier rubro.' },
   mercado:     { label: 'Bazar',       rubro: 'bazar',        tier: 'plus',     defaultAccent: '#FFE600', desc: 'Bazar: marketplace con masthead amarillo, buscador y grilla densa de productos.' },
+  autoservicio: { label: 'Autoservicio', rubro: 'bazar',       tier: 'plus',     defaultAccent: '#17794B', desc: 'Autoservicio: supermercado minimalista — índice de departamentos, precios protagonistas y datos de la tienda en ticket.' },
   gimnasio:    { label: 'Gimnasio',    rubro: 'gimnasio',     tier: 'plus',     defaultAccent: '#F97316', desc: 'Gimnasio: energía deportiva, planes y sedes.' },
   movimiento:  { label: 'Movimiento',  rubro: 'gimnasio',     tier: 'advanced', defaultAccent: '#E4572E', desc: 'Movimiento: editorial luminoso — papel, tinta y acento señal, numeración 01/02/03 y membresías.' },
   sastreria:   { label: 'Sastrería',   rubro: 'indumentaria', tier: 'plus',     defaultAccent: '#6E4A2F', desc: 'Sastrería editorial: papel hueso, tinta y cuero, índice numerado y filas de prendas tipo fichero.' },
@@ -839,7 +840,7 @@ export const STORE_TEMPLATES = {
 // Familias de diseño para el selector del dashboard.
 export const STORE_TEMPLATE_FAMILIES = [
   { key: 'general',      label: 'Generalista',  caption: 'Retail y servicios',      templates: ['raiz'] },
-  { key: 'mercado',      label: 'Generalista',  caption: 'Marketplace y retail',     templates: ['mercado'] },
+  { key: 'mercado',      label: 'Generalista',  caption: 'Marketplace y retail',     templates: ['mercado', 'autoservicio'] },
   { key: 'deporte',      label: 'Deporte',      caption: 'Gimnasios y fitness',     templates: ['gimnasio', 'movimiento'] },
   { key: 'sastreria',    label: 'Indumentaria', caption: 'Sastrería de autor',      templates: ['sastreria'] },
   { key: 'indumentaria', label: 'Indumentaria', caption: 'Moda, lookbook y revista', templates: ['indumentaria', 'impacto', 'showroom'] },
@@ -861,7 +862,8 @@ export const STORE_TEMPLATE_SKIN = {
   impacto: 'impacto',
   showroom: 'raiz',
   ruta: 'raiz',
-  aurum: 'raiz'
+  aurum: 'raiz',
+  autoservicio: 'raiz'
 }
 export function storeSkinOf(t) { return STORE_TEMPLATE_SKIN[t] || 'raiz' }
 
