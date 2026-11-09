@@ -13,7 +13,7 @@ import {
   STUDIO_ROLE_KEYS
 } from '../../studio/contract.js'
 import { STORE_FONTS, ensureStoreFont, effectiveAccent } from '../../api/stores.api.js'
-import { deriveAccent, bandPalette, adaptPalette } from '../../utils/colorTools.js'
+import { deriveAccent, bandPalette, adaptPalette, onDark } from '../../utils/colorTools.js'
 import { pickTargetFor } from './studioModel.js'
 
 function mixHex(a, b, t) {
@@ -243,6 +243,7 @@ export function studioPreviewVars(theme, pageTheme = 'light', explicit = null) {
     vars['--store-accent'] = accent
     vars['--store-accent-ink'] = ink
     vars['--store-accent-soft'] = deriveAccent(accent).soft
+    vars['--store-accent-bright'] = onDark(accent, '#0A0B08', 4.5)
     // Banda del hero y superficies de acento con texto blanco.
     const band = bandPalette(accent)
     vars['--sp-band-c1'] = band.c1

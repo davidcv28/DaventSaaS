@@ -48,7 +48,6 @@ export const productViews = {
 
 export const servicesViews = {
   raiz:         () => import('../views/store/raiz/ServiciosView.vue'),
-  gimnasio:     () => import('../views/store/gimnasio/ServiciosView.vue'),
   movimiento:   () => import('../views/store/movimiento/ServiciosView.vue'),
   sastreria:    () => import('../views/store/sastreria/ServiciosView.vue'),
 

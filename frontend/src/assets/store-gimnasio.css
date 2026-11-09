@@ -25,8 +25,15 @@
   /* El acento se mezcla con el hueso en la noche: los presets oscuros
      (lima #65a30d del plan Estándar, índigo, violeta) no se leen sobre
      tinta. La mezcla mantiene el tono y garantiza contraste AA. */
-  --gy-lime: color-mix(in srgb, var(--store-accent, #C8F169) 78%, #F4F1E8);
+  /* --store-accent-bright tiene piso de contraste sobre tinta (lo emite el
+     front): un accent_custom oscuro ya no produce una señal ilegible. La
+     mezcla con hueso se mantiene — aclarar el resultado solo sube el
+     contraste contra --gy-ink. */
+  --gy-lime: color-mix(in srgb, var(--store-accent-bright, var(--store-accent, #C8F169)) 78%, #F4F1E8);
   --gy-lime-ink: var(--store-accent-ink, #8FBF2E);
+  /* Lima legible sobre tinta para texto chico (flags, encabezados de pie):
+     el --gy-lime puro queda en ~4.4:1 a 9-11px; esta mezcla sube a AA. */
+  --gy-lime-read: color-mix(in srgb, var(--gy-lime) 55%, var(--gy-text));
   --gy-deep: #557A12;
   --gy-on-lime: #0A0B08;
   --gy-paper: #F4F1E8;
@@ -41,6 +48,9 @@
   --gy-mono: 'JetBrains Mono', ui-monospace, 'SFMono-Regular', Consolas, monospace;
   --gy-wrap: 1240px;
   --gy-gutter: 28px;
+  /* La raíz del diseño es oscura: scrollbars y widgets UA del chrome
+     (buscador del header) siguen el tema claro sin esto. */
+  color-scheme: dark;
   --gy-section: calc(clamp(76px, 8.4vw, 108px) + var(--st-section-gap, 28px) - 28px);
   --gy-top-h: 84px;
   --gy-ease: cubic-bezier(.2, .8, .2, 1);
@@ -243,6 +253,13 @@
   background: color-mix(in srgb, var(--gy-ink) 96%, transparent);
   border-bottom: 1px solid var(--gy-line);
   box-shadow: none;
+  /* El chrome compartido deja color:--sp-on-band (blanco) en toda la barra;
+     la nav del gimnasio es --gy-ink, así que la tinta base es la del tema. */
+  color: var(--gy-text);
+  /* Fondo al 96%: el blur heredado del chrome es imperceptible y cuesta
+     repaint en cada frame de scroll. */
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
 }
 .store-page[data-template='gimnasio'] .sp-top::before {
   content: '';
@@ -268,10 +285,11 @@
   font-weight: 800;
   letter-spacing: .055em;
   text-transform: uppercase;
-  /* La banda de navegación puede ser tinta aunque el tema sea día
-     (data-st-surface-nav): la tinta sale de --sp-on-band, que el puente
-     deriva del fondo real de la banda. */
-  color: var(--sp-on-band, var(--gy-text));
+  /* La banda de navegación es --gy-ink en ambos temas (nunca la banda de
+     acento): la tinta sale de los tokens propios. --sp-on-band queda
+     reservado al acento y el puente lo pinta blanco aunque la nav sea
+     papel — usarlo acá dejaba el nombre invisible en modo día. */
+  color: var(--gy-text);
 }
 .store-page[data-template='gimnasio'] .sp-brand .sp-mono {
   font-family: var(--gy-mono);
@@ -319,7 +337,7 @@
   font-weight: 600;
   letter-spacing: .1em;
   text-transform: uppercase;
-  color: var(--sp-on-band-2, var(--gy-text-2));
+  color: var(--gy-text-2);
 }
 .store-page[data-template='gimnasio'] .sp-top-links a::after {
   content: '';
@@ -328,15 +346,15 @@
   right: 10px;
   bottom: 9px;
   height: 2px;
-  background: var(--sp-on-band, var(--gy-lime));
+  background: var(--gy-lime);
   transform: scaleX(0);
   transform-origin: left;
   transition: transform .22s var(--gy-ease);
 }
-.store-page[data-template='gimnasio'] .sp-top-links a:hover { color: var(--sp-on-band, var(--gy-text)); }
+.store-page[data-template='gimnasio'] .sp-top-links a:hover { color: var(--gy-text); }
 .store-page[data-template='gimnasio'] .sp-top-links a:hover::after,
 .store-page[data-template='gimnasio'] .sp-top-links a.router-link-exact-active::after { transform: scaleX(1); }
-.store-page[data-template='gimnasio'] .sp-top-links a.router-link-exact-active { color: var(--sp-on-band, var(--gy-lime)); background: transparent; }
+.store-page[data-template='gimnasio'] .sp-top-links a.router-link-exact-active { color: var(--gy-lime); background: transparent; }
 /* La barra superior no repite los anclajes de la portada: quedan en el
    menú móvil y en el pie. Así el nombre del club conserva su ancho. */
 .store-page[data-template='gimnasio'] .sp-top-links a[href*='#nosotros'],
@@ -423,7 +441,7 @@
   font-size: 11px;
   letter-spacing: .18em;
   text-transform: uppercase;
-  color: var(--gy-lime);
+  color: var(--gy-lime-read);
 }
 .store-page[data-template='gimnasio'] .sp-foot a:hover { color: var(--gy-lime); }
 /* La copia y el descriptor del pie: el puente de paleta ([data-st-palette])
@@ -432,6 +450,19 @@
    especificidad extra (.sp-foot .x) gana al :is() del puente. */
 .store-page[data-template='gimnasio'] .sp-foot .sp-foot-copy,
 .store-page[data-template='gimnasio'] .sp-foot .sp-foot-brand span { color: var(--gy-muted); }
+/* El chrome compartido pinta TODO el pie con --sp-on-band (blanco) porque
+   asume la banda de acento; acá el pie es --gy-panel y el texto debe salir
+   de los tokens del tema. Sin estas reglas el modo día queda blanco
+   sobre papel (~1.2:1). */
+.store-page[data-template='gimnasio'] .sp-foot .sp-foot-col a { color: var(--gy-text-2); }
+.store-page[data-template='gimnasio'] .sp-foot .sp-foot-col a:hover { color: var(--gy-lime); }
+.store-page[data-template='gimnasio'] .sp-foot .sp-foot-contact li,
+.store-page[data-template='gimnasio'] .sp-foot .sp-foot-contact a { color: var(--gy-muted); }
+.store-page[data-template='gimnasio'] .sp-foot .sp-foot-contact a:hover { color: var(--gy-text); }
+.store-page[data-template='gimnasio'] .sp-foot-bottom { border-top-color: var(--gy-line); }
+.store-page[data-template='gimnasio'] .sp-foot .sp-davent-badge { color: var(--gy-muted); background: transparent; border-color: var(--gy-line); }
+.store-page[data-template='gimnasio'] .sp-foot .sp-davent-badge strong { color: var(--gy-text); }
+.store-page[data-template='gimnasio'] .sp-foot .sp-davent-badge:hover { border-color: var(--gy-line-strong); background: var(--gy-card); }
 
 /* ==========================================================================
    PORTADA — sala de fuerza
@@ -748,6 +779,14 @@
   color: var(--gy-text-2);
 }
 .gy-plate-hour b { font-weight: 500; color: var(--gy-text); }
+.gy-plate-hours-more {
+  margin: 4px 0 0;
+  font-family: var(--gy-mono);
+  font-size: 9.5px;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+  color: var(--gy-muted);
+}
 .gy-plate-stamp {
   position: absolute;
   right: 22px;
@@ -955,7 +994,7 @@
   text-transform: uppercase;
   color: var(--gy-lime);
   text-decoration: none;
-  transition: border-color .2s var(--gy-ease), gap .2s var(--gy-ease);
+  transition: border-color .2s var(--gy-ease);
 }
 .gy-shop-all:hover { border-color: var(--gy-lime); gap: 12px; }
 .gy-grid {
@@ -1124,6 +1163,9 @@
 .gy-card.is-offer .gy-card-cat,
 .gy-card.is-offer .gy-card-price s { color: var(--gy-on-lime); }
 .gy-card.is-offer .gy-card-go { border-color: color-mix(in srgb, var(--gy-on-lime) 30%, transparent); color: var(--gy-on-lime); }
+/* En la tarjeta oferta (fondo lima) el hover genérico pintaba el enlace
+   del mismo lima sobre el mismo fondo: se conserva la tinta propia. */
+.gy-card.is-offer:hover .gy-card-go { color: var(--gy-on-lime); }
 .gy-card.is-offer .gy-card-media { border-bottom-color: color-mix(in srgb, var(--gy-on-lime) 24%, transparent); }
 .gy-card.is-offer .gy-card-flag { background: var(--gy-ink); color: var(--gy-lime); }
 
@@ -1209,7 +1251,7 @@
 .gy-plan-flag {
   padding: 4px 9px;
   background: var(--gy-ink);
-  color: var(--gy-lime);
+  color: var(--gy-lime-read);
   font-family: var(--gy-mono);
   font-size: 9px;
   font-weight: 600;
@@ -1270,6 +1312,9 @@
 .gy-plan-cta svg { transition: transform .2s var(--gy-ease); }
 .gy-plan-cta:hover { color: var(--gy-lime); }
 .gy-plan-cta:hover svg { transform: translate(3px, -3px); }
+/* El plan destacado usa --gy-on-lime en todo su texto: el hover no puede
+   cambiarlo a lima sin romper la paleta invertida de la tarjeta. */
+.gy-plan.is-featured .gy-plan-cta:hover { color: var(--gy-on-lime); }
 .gy-plan.is-featured {
   background: var(--gy-lime);
   border-color: var(--gy-lime);
@@ -1278,9 +1323,9 @@
 .gy-plan.is-featured::before { background: var(--gy-ink); transform: scaleX(1); }
 .gy-plan.is-featured .gy-plan-name,
 .gy-plan.is-featured .gy-plan-price { color: var(--gy-on-lime); }
-.gy-plan.is-featured .gy-plan-note { color: color-mix(in srgb, var(--gy-on-lime) 72%, transparent); }
+.gy-plan.is-featured .gy-plan-note { color: var(--gy-on-lime); }
 .gy-plan.is-featured .gy-plan-idx { color: color-mix(in srgb, var(--gy-on-lime) 55%, transparent); }
-.gy-plan.is-featured .gy-plan-flag { background: var(--gy-ink); color: var(--gy-lime); }
+.gy-plan.is-featured .gy-plan-flag { background: var(--gy-ink); color: var(--gy-lime-read); }
 .gy-plan.is-featured .gy-plan-feats,
 .gy-plan.is-featured .gy-plan-cta { border-color: color-mix(in srgb, var(--gy-on-lime) 26%, transparent); }
 .gy-plan.is-featured .gy-plan-feats li { color: var(--gy-on-lime); }
@@ -1770,6 +1815,9 @@
   align-items: start;
 }
 .store-page[data-template='gimnasio'] .sp-faq-intro { position: sticky; top: calc(var(--gy-top-h) + 26px); }
+/* La columna del intro es angosta (~430px): a 74px "FRECUENTES" solo ya
+   supera el ancho y el título desborda. Se baja el tope dentro del intro. */
+.store-page[data-template='gimnasio'] .sp-faq-intro .sp-section-title { font-size: clamp(34px, 4.4vw, 58px); }
 .store-page[data-template='gimnasio'] .sp-faq .sp-section-title { margin: 6px 0 0; }
 .store-page[data-template='gimnasio'] .sp-faq-list { gap: 0; max-width: none; border-top: 1px solid var(--gy-line); counter-reset: gy-faq; }
 .store-page[data-template='gimnasio'] .sp-faq-item {
@@ -1800,7 +1848,7 @@
   letter-spacing: .1em;
   color: var(--gy-muted);
 }
-.store-page[data-template='gimnasio'] .sp-faq-item summary:hover { color: var(--sp-ink); }
+.store-page[data-template='gimnasio'] .sp-faq-item summary:hover { color: var(--gy-lime); }
 .store-page[data-template='gimnasio'] .sp-faq-caret {
   position: absolute;
   right: 0;
@@ -1875,7 +1923,7 @@
   max-width: 48ch;
   font-size: 16px;
   line-height: 1.6;
-  color: color-mix(in srgb, var(--gy-on-lime) 78%, transparent);
+  color: var(--gy-on-lime);
 }
 .store-page[data-template='gimnasio'] .sp-cta-btn {
   position: relative;
@@ -1971,6 +2019,9 @@
    CATÁLOGO / FICHA / SERVICIOS (subárbol Raíz + capa gimnasio)
    ========================================================================== */
 .store-page[data-template='raiz'].gy-skin {
+  /* El subárbol hereda .store-page{min-height:100vh}: dentro de la página
+     externa eso estiraba catálogo/ficha y dejaba el pie bajo el pliegue. */
+  min-height: 0;
   --sp-bg: #0A0B08;
   --sp-card: #151711;
   --sp-card-solid: #151711;
@@ -1981,7 +2032,7 @@
   --sp-muted: #9E9C92;
   --sp-line: #2A2D24;
   --sp-radius: 0px;
-  --sp-accent-text: #C8F169;
+  --sp-accent-text: var(--gy-lime);
   --sp-shadow-sm: none;
   --sp-shadow-md: none;
   --sp-chrome: #0A0B08;
@@ -2147,6 +2198,7 @@
    MODO DÍA — gimnasio-dia: papel hueso, tinta casi negra, lima apagado.
    ========================================================================== */
 .store-page[data-template='gimnasio'][data-store-theme='light'] {
+  color-scheme: light;
   --gy-ink: #F4F1E8;
   --gy-panel: #EAE6DA;
   --gy-card: #FBF9F2;
@@ -2157,8 +2209,10 @@
   --gy-text-2: #3A382F;
   --gy-muted: #55534B;
   /* En papel el acento se usa en su tono de banda (el que garantiza texto
-     blanco): así un acento claro como la lima #C8F169 no desaparece. */
-  --gy-lime: var(--sp-band-c1, var(--store-accent-ink, #4E7410));
+     blanco) OSCURECIDO un punto: band-c1/accent-ink dan ~4.4:1 sobre el
+     papel — bajo AA para texto chico. La mezcla hacia la tinta sube a
+     ~5.9:1 como texto y ~6.4:1 con --gy-on-lime blanco encima. */
+  --gy-lime: color-mix(in srgb, var(--sp-band-c1, var(--store-accent-ink, #4E7410)) 76%, #0A0B08);
   --gy-lime-ink: var(--sp-band-c2, var(--store-accent-ink, #4E7410));
   --gy-deep: var(--sp-band-c2, var(--store-accent-ink, #4E7410));
   --gy-on-lime: #FFFFFF;
@@ -2234,7 +2288,7 @@
   --sp-ink-2: #3A382F;
   --sp-muted: #55534B;
   --sp-line: #C9C5B8;
-  --sp-accent-text: var(--store-accent-ink, #4E7410);
+  --sp-accent-text: var(--gy-lime);
   --sp-chrome: #F4F1E8;
   --rz-accent-text: var(--gy-lime-ink);
   --rz-accent-soft: color-mix(in srgb, var(--gy-lime) 14%, #fff);
@@ -2263,7 +2317,7 @@
 }
 .store-page[data-template='gimnasio'][data-store-theme='light'] .gy-skin .rz-eyebrow,
 .store-page[data-template='gimnasio'][data-store-theme='light'] .gy-skin .rz-cat-kicker {
-  color: var(--store-accent-ink, #4E7410);
+  color: var(--gy-lime);
 }
 .store-page[data-template='gimnasio'][data-store-theme='light'] .gy-skin .rz-cat-rail,
 .store-page[data-template='gimnasio'][data-store-theme='light'] .gy-skin .rz-sv-plate,
@@ -2340,10 +2394,12 @@
 @keyframes gy-ribbon { to { transform: translateX(-50%); } }
 @keyframes gy-stamp { to { transform: rotate(360deg); } }
 @keyframes gy-scan {
-  0% { transform: translateY(0); opacity: 0; }
+  /* `top` en % recorre la placa entera en cualquier breakpoint (antes un
+     translateY fijo de 586px se salía antes en placas cortas). */
+  0% { top: 0; opacity: 0; }
   8% { opacity: .55; }
   92% { opacity: .55; }
-  100% { transform: translateY(586px); opacity: 0; }
+  100% { top: calc(100% - 2px); opacity: 0; }
 }
 @keyframes gy-eq {
   0% { transform: scaleY(.35); }
@@ -2396,8 +2452,10 @@
   /* En móvil el destino Catálogo ya vive en la tab bar: el botón del header
      se apaga para que el nombre del club no se corte. */
   .store-page[data-template='gimnasio'] .sp-top-cta { display: none; }
-  /* Anuncios como cinta de una línea, no tres párrafos apilados. */
-  .store-page[data-template='gimnasio'] .sp-ann-track {
+  /* Anuncios como cinta de una línea, no tres párrafos apilados. Solo la
+     variante marquee (.is-static es una sola secuencia): forzar nowrap ahí
+     rompía el loop y dejaba el texto cortado. */
+  .store-page[data-template='gimnasio'] .sp-ann:not(.is-static) .sp-ann-track {
     flex-wrap: nowrap;
     width: max-content;
     justify-content: flex-start;
@@ -2455,10 +2513,48 @@
   .gy-card:hover,
   .gy-plan:hover,
   .gy-coach:hover,
-  .store-page[data-template='gimnasio'] .sp-benefit:hover { transform: none; }
+  .store-page[data-template='gimnasio'] .sp-benefit:hover,
+  .store-page[data-template='gimnasio'] .sp-shop-dept:hover,
+  .store-page[data-template='gimnasio'] .sp-gallery-item:hover,
+  .gy-shop-all:hover { transform: none; }
   .gy-hero-plate:hover > img { transform: none; }
+  /* Escalas/filtros de imagen y barras ::before que quedan "encendidas"
+     tras el tap en táctil. */
+  .gy-card:hover .gy-card-media img { transform: none; filter: saturate(.9) contrast(1.03); }
+  .gy-card:hover::before,
+  .gy-plan:hover::before,
+  .store-page[data-template='gimnasio'] .sp-benefit:hover::before,
+  .store-page[data-template='gimnasio'] .sp-testimonial:hover::before,
+  .store-page[data-template='gimnasio'] .sp-aipricing-card:hover::before { transform: scaleX(0); }
+  .store-page[data-template='gimnasio'] .sp-shop-dept:hover .sp-shop-dept-thumb img { transform: none; filter: grayscale(1) contrast(1.05); }
+  .store-page[data-template='gimnasio'] .sp-gallery-item:hover img { transform: none; filter: saturate(.92); }
+  .gy-shop-all:hover { gap: 8px; border-color: var(--gy-line-strong); }
+  /* Flip de color de la placa del coach. */
+  .gy-coach:hover .gy-coach-plate { background: var(--gy-plate); }
+  .gy-coach:hover .gy-coach-initial { color: transparent; -webkit-text-stroke-color: var(--gy-lime); }
+  .gy-coach:hover .gy-coach-lines { opacity: .7; }
+  /* Textos que pasan a lima en hover: vuelven a su tinta base. Los
+     contextos invertidos (plan destacado, tarjeta oferta) conservan la
+     suya. */
+  .gy-card:hover .gy-card-go { color: var(--gy-text-2); }
+  .gy-card.is-offer:hover .gy-card-go { color: var(--gy-on-lime); }
+  .gy-card:hover .gy-card-go svg,
+  .gy-plan-cta:hover svg { transform: none; }
+  .gy-plan-cta:hover { color: var(--gy-text); }
+  .gy-plan.is-featured .gy-plan-cta:hover { color: var(--gy-on-lime); }
+  .gy-btn--ghost:hover,
+  .store-page[data-template='gimnasio'] .sp-btn.ghost:hover,
+  .store-page[data-template='gimnasio'] .bq-btn--ghost:hover { border-color: var(--gy-line-strong); color: var(--gy-text); }
+  .store-page[data-template='gimnasio'] .sp-top-links a:hover:not(.router-link-exact-active) { color: var(--gy-text-2); }
+  .store-page[data-template='gimnasio'] .sp-top-links a:hover:not(.router-link-exact-active)::after { transform: scaleX(0); }
+  .store-page[data-template='gimnasio'] .sp-foot .sp-foot-col a:hover { color: var(--gy-text-2); }
+  .store-page[data-template='gimnasio'] .sp-foot .sp-foot-contact a:hover { color: var(--gy-muted); }
 }
 @media (prefers-reduced-motion: reduce) {
+  /* La cinta de anuncios queda estática y sin duplicados: una sola copia
+     envuelta, visible completa (el nowrap móvil la recortaba). */
+  .store-page[data-template='gimnasio'] .sp-ann-track { animation: none; flex-wrap: wrap; width: 100%; justify-content: center; }
+  .store-page[data-template='gimnasio'] .sp-ann-item[aria-hidden='true'] { display: none; }
   .gy-hero-ghost,
   .gy-plate-scan,
   .gy-plate-stamp svg,

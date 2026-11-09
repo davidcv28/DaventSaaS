@@ -54,7 +54,6 @@ const feats = (plan) => (Array.isArray(plan.items) ? plan.items : []).filter(Boo
           <span class="gy-plan-idx" aria-hidden="true">{{ String(i + 1).padStart(2, '0') }}</span>
           <div class="gy-plan-top">
             <h3 class="gy-plan-name">{{ plan.name }}</h3>
-            <span v-if="i === featuredIndex" class="gy-plan-flag">Recomendado</span>
           </div>
           <p v-if="plan.price" class="gy-plan-price">{{ plan.price }}</p>
           <p v-if="plan.note" class="gy-plan-note">{{ plan.note }}</p>

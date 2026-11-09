@@ -3,7 +3,7 @@
 // junto a texto + CTAs — nunca una foto suelta a todo lo ancho) y la
 // grilla de la galería con su visor (lightbox con flechas/Esc).
 // props.title pisa el título "Galería" de la sección.
-import { ref, computed, inject, onMounted, onBeforeUnmount } from 'vue'
+import { ref, computed, inject, onMounted, onBeforeUnmount, watch, nextTick } from 'vue'
 import { storeHostSlug } from '../../../config/env.js'
 import AppIcon from '../../AppIcon.vue'
 import { vReveal } from '../../../directives/reveal.js'
@@ -35,21 +35,51 @@ const galleryTitle = computed(() => props.block?.props?.title?.trim() || 'Galer�
 const galleryVariant = computed(() => props.block?.variant || 'grid')
 
 const lightboxIndex = ref(-1)
+const dialogEl = ref(null)
+let lastFocus = null
+const lightboxOpen = computed(() => lightboxIndex.value >= 0)
 const lightboxImage = computed(() => (lightboxIndex.value >= 0 ? gallery.value[lightboxIndex.value] || null : null))
-const openLightbox = (index) => { lightboxIndex.value = index }
+const openLightbox = (index) => {
+  lastFocus = document.activeElement
+  lightboxIndex.value = index
+  // El visor recibe el foco: teclado y lectores de pantalla entran al diálogo.
+  nextTick(() => dialogEl.value?.focus())
+}
 const closeLightbox = () => { lightboxIndex.value = -1 }
+watch(lightboxOpen, async (open) => {
+  // Scroll lock propio (inline, no la clase sp-lock del layout: así no
+  // pisa el bloqueo del menú "Más"/drawer si coincidieran).
+  document.documentElement.style.overflow = open ? 'hidden' : ''
+  document.body.style.overflow = open ? 'hidden' : ''
+  if (!open) nextTick(() => lastFocus?.focus?.())
+})
 function stepLightbox(direction) {
   const total = gallery.value.length
   if (total < 2) return
   lightboxIndex.value = ((lightboxIndex.value + direction) % total + total) % total
 }
 const onKey = (e) => {
+  if (!lightboxImage.value) return
   if (e.key === 'Escape') closeLightbox()
-  else if (lightboxIndex.value >= 0 && e.key === 'ArrowLeft') stepLightbox(-1)
-  else if (lightboxIndex.value >= 0 && e.key === 'ArrowRight') stepLightbox(1)
+  else if (e.key === 'ArrowLeft') stepLightbox(-1)
+  else if (e.key === 'ArrowRight') stepLightbox(1)
+  else if (e.key === 'Tab' && dialogEl.value) {
+    // Trampa de foco: Tab/Shift+Tab ciclan dentro del visor.
+    const items = [...dialogEl.value.querySelectorAll('button')]
+    if (!items.length) return
+    const first = items[0]
+    const last = items[items.length - 1]
+    if (e.shiftKey && document.activeElement === first) { e.preventDefault(); last.focus() }
+    else if (!e.shiftKey && document.activeElement === last) { e.preventDefault(); first.focus() }
+    else if (!dialogEl.value.contains(document.activeElement)) { e.preventDefault(); first.focus() }
+  }
 }
 onMounted(() => window.addEventListener('keydown', onKey))
-onBeforeUnmount(() => window.removeEventListener('keydown', onKey))
+onBeforeUnmount(() => {
+  window.removeEventListener('keydown', onKey)
+  document.documentElement.style.overflow = ''
+  document.body.style.overflow = ''
+})
 </script>
 
 <template>
@@ -92,7 +122,7 @@ onBeforeUnmount(() => window.removeEventListener('keydown', onKey))
 
   <!-- ===== Galería: visor de imagen ===== -->
   <Transition name="sp-modal">
-  <div v-if="lightboxImage" class="sp-lightbox" role="dialog" aria-modal="true" aria-label="Visor de la galería" @click.self="closeLightbox">
+  <div v-if="lightboxImage" ref="dialogEl" class="sp-lightbox" role="dialog" aria-modal="true" aria-label="Visor de la galería" tabindex="-1" @click.self="closeLightbox">
     <button type="button" class="sp-modal-close" aria-label="Cerrar" @click="closeLightbox">
       <AppIcon name="x" :size="18" />
     </button>

@@ -72,7 +72,7 @@ const centered = computed(() => props.block?.variant === 'centered')
 
 const services = computed(() => (Array.isArray(custom.value.services) ? custom.value.services : []))
 const plans = computed(() => (Array.isArray(custom.value.plans) ? custom.value.plans : []))
-const hours = computed(() => (Array.isArray(custom.value.hours) ? custom.value.hours : [])
+const hours = computed(() => (custom.value.show_hours !== false && Array.isArray(custom.value.hours) ? custom.value.hours : [])
   .filter((h) => String(h?.label || '').trim() && String(h?.value || '').trim()))
 
 // Datos reales derivados: años, disciplinas, membresías y sede. No inventamos
@@ -106,7 +106,7 @@ const stampText = computed(() => `FUERZA · TÉCNICA · CONSTANCIA · ${since.va
 const kicker = computed(() => `Centro de entrenamiento${location.value ? ` · ${location.value}` : ''}`)
 
 const primaryCta = computed(() => {
-  if (plans.value.length) return { href: '#planes', label: 'Ver membresías' }
+  if (plans.value.length && custom.value.show_plans !== false) return { href: '#planes', label: 'Ver membresías' }
   if (showCatalog.value) return { to: catalogTo.value, label: 'Ver planes y tienda' }
   return { href: '#contacto', label: 'Empezar hoy' }
 })
@@ -195,6 +195,7 @@ const intensity = [72, 46, 88]
             <span>{{ h.label }}</span>
             <b>{{ h.value }}</b>
           </div>
+          <p v-if="hours.length > 3" class="gy-plate-hours-more">+{{ hours.length - 3 }} días más</p>
         </figcaption>
 
         <div class="gy-plate-stamp" aria-hidden="true">

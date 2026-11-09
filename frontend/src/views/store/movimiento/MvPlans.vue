@@ -51,7 +51,6 @@ const feats = (plan) => (Array.isArray(plan.items) ? plan.items : []).filter(Boo
         >
           <div class="mv-plan-top">
             <span class="mv-plan-idx" aria-hidden="true">{{ String(i + 1).padStart(2, '0') }}</span>
-            <span v-if="i === featuredIndex" class="mv-plan-flag">Recomendado</span>
           </div>
           <h3 class="mv-plan-name">{{ plan.name }}</h3>
           <p v-if="plan.price" class="mv-plan-price">{{ plan.price }}</p>

@@ -170,7 +170,7 @@ export function deriveAccent(hex) {
 const mixHex = (a, b, t) => rgbToHex(hexToRgb(a).map((c, i) => c + (hexToRgb(b)[i] - c) * t))
 
 // Aclara `hex` (mismo tono) hasta cumplir `min` contra un fondo oscuro.
-function onDark(hex, bg = '#0d1220', min = 3) {
+export function onDark(hex, bg = '#0d1220', min = 3) {
   if (contrastRatio(hex, bg) >= min) return hex
   const [h, s, l0] = hexHsl(hex)
   for (let l = Math.max(l0, 0.02); l <= 1; l += 0.02) {
@@ -195,7 +195,7 @@ export function bandPalette(accentHex) {
     base1: safe,
     base2: mixHex(safe, '#000000', 0.28),
     // Acento para texto sobre el velo oscuro de una portada (Ãºltima palabra
-    // del nombre en los diseños retirados): se aclara hasta 3:1 (texto
+    // del nombre en los diseï¿½os retirados): se aclara hasta 3:1 (texto
     // grande) si el acento es oscuro.
     mark: onDark(safe)
   }

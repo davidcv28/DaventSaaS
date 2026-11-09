@@ -1,6 +1,6 @@
 import { http, publicHttp } from './http.js'
 import { apiUrl, storeUrl } from '../config/env.js'
-import { isHex, deriveAccent, bandPalette } from '../utils/colorTools.js'
+import { isHex, deriveAccent, bandPalette, onDark } from '../utils/colorTools.js'
 
 // Dominio stores (StoreApp):
 // GET  /api/stores/                      Bearer   -> mi tienda (lista con 0..1, incluye customization,
@@ -1067,6 +1067,11 @@ export function storeThemeVars(customization) {
     '--store-accent': a.hex,
     '--store-accent-ink': a.ink,
     '--store-accent-soft': a.soft,
+    // Acento con piso de luminancia sobre tinta: un accent_custom oscuro
+    // (navy, grafito) rompía las mezclas de las pieles que asumen señal
+    // clara (p. ej. --gy-lime del gimnasio). Si el acento ya pasa, es el
+    // mismo hex — costo cero para los acentos medios de siempre.
+    '--store-accent-bright': onDark(a.hex, '#0A0B08', 4.5),
     // Banda de acento con texto blanco garantizado (hero, inicial, placas).
     '--sp-band-c1': band.c1,
     '--sp-band-c2': band.c2,

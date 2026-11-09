@@ -15,7 +15,7 @@ import { vReveal } from '../directives/reveal.js'
 import { applySeo } from '../utils/seo.js'
 import { readVisitorTheme, persistVisitorTheme, resolveStoreTheme } from '../utils/storeTheme.js'
 import { schemaHours } from '../utils/storeHours.js'
-import { templateFonts, normalizeLayoutConfig, templatePages, templateOf } from '../templates/index.js'
+import { templateFonts, normalizeLayoutConfig, templatePages, templateBlocks, templateOf } from '../templates/index.js'
 import { useDesignCatalog } from '../composables/useDesignCatalog.js'
 import { STUDIO_MSG, isStudioMessage, studioReady } from '../studio/contract.js'
 import { familyOf } from '../utils/styleIcons.js'
@@ -508,7 +508,11 @@ function skipToContent() {
 }
 
 // Visibilidad de las secciones del inicio: alimenta los links del nav.
-const hasAbout = computed(() => custom.value.show_about !== false && Boolean(
+// El ancla #nosotros solo existe si el bloque 'about' quedó habilitado en
+// la composición efectiva del diseño (algunos templates no lo declaran).
+const landingHasAbout = computed(() => templateBlocks(pageTemplate.value, 'landing', custom.value?.layout_config)
+  .some((b) => b.id === 'about' && b.enabled !== false))
+const hasAbout = computed(() => custom.value.show_about !== false && landingHasAbout.value && Boolean(
   custom.value.about_text?.trim()
   || custom.value.about_mission?.trim()
   || custom.value.about_specialties?.trim()
@@ -662,6 +666,18 @@ const homeFallbackTo = computed(() => (showServices.value ? servicesTo.value : s
 // Anclas de sección (#nosotros/#galeria/#contacto): van al inicio.
 const anchorTo = (hash) => ({ path: homeTo.value.path, hash })
 watch([landingOff, isHome], ([off, home]) => { if (off && home) router.replace(homeFallbackTo.value) }, { immediate: true })
+// Página pedida por URL pero que el diseño/plan no soporta (p. ej.
+// /servicios en un template sin superficie services): vuelve al inicio
+// o a la primera página disponible en vez de renderizar una hoja vacía.
+watch([isServices, isPlans, isCatalog, showServices, showPlans, showCatalog, status], () => {
+  if (status.value !== 'success') return
+  const blocked = (isServices.value && !showServices.value)
+    || (isPlans.value && !showPlans.value)
+    || (isCatalog.value && !showCatalog.value)
+  // Con portada disponible se vuelve al inicio; sin ella, a la primera
+  // página habilitada (homeFallbackTo nunca apunta a una bloqueada).
+  if (blocked) router.replace(landingOff.value ? homeFallbackTo.value : homeTo.value)
+})
 
 // Buscador del masthead (Tienda Pro): en el catálogo filtra en vivo; en el
 // resto de las páginas Enter/botón navega al catálogo con ?q= (la vista lo

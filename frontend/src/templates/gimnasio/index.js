@@ -7,9 +7,12 @@ import { landingViews, catalogViews, productViews, CATALOG_BLOCKS } from '../_sh
 // defecto. Catálogo / ficha reutilizan Raíz bajo `.gy-skin`. El diseño no
 // cubre la página Servicios: la conversión del gimnasio es la suscripción
 // (bloque `plans` — membresías), no el pedido de servicios.
+// `pages` limita site_templates: sin página Servicios propia, 'services'
+// renderizaba una superficie vacía (surfaces.services no está declarada).
 export default {
   usesSectionOrder: false,
   fonts: ['barlow-condensed', 'inter', 'jetbrains-mono'],
+  pages: ['landing', 'catalog', 'plans'],
   surfaces: {
     landing: landingViews.gimnasio,
     catalog: catalogViews.gimnasio,

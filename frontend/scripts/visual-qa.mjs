@@ -508,7 +508,13 @@ async function main() {
       for (const k of DRAFT_FIELDS) {
         const orig = draftSnapshot[k]
         if (k === 'site_theme_draft') {
-          const theme = orig && typeof orig === 'object' && Object.keys(orig).length ? orig : {}
+          const theme = orig && typeof orig === 'object' && Object.keys(orig).length ? { ...orig } : {}
+          //`style.effects` lo inyecta el render de patrón (no es parte del
+          //contrato persistido): _reset lo rechaza y el restore fallaba.
+          if (theme.style && typeof theme.style === 'object' && 'effects' in theme.style) {
+            const { effects, ...styleRest } = theme.style
+            theme.style = styleRest
+          }
           restore[k] = { ...theme, _reset: true }
         } else {
           restore[k] = orig === undefined || orig === null

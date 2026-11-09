@@ -25,7 +25,7 @@ const track = computed(() => [...list.value, ...list.value, ...list.value, ...li
     aria-hidden="true"
   >
     <div class="gy-ribbon-track">
-      <span v-for="(item, i) in track" :key="i" class="gy-ribbon-item">
+      <span v-for="(item, i) in track" :key="i" class="gy-ribbon-item" :aria-hidden="i >= list.length || null">
         <i class="gy-ribbon-mark"></i>{{ item }}
       </span>
     </div>
