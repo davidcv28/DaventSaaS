@@ -6,7 +6,7 @@ import { useStoreStore } from '../stores/store.store.js'
 import { useSlugCheck } from '../composables/useSlugCheck.js'
 import { normalizeSlug, validateSlugFormat } from '../api/stores.api.js'
 import { authApi } from '../api/auth.api.js'
-import { storeSlugAffixes } from '../config/env.js'
+import { env } from '../config/env.js'
 import AuthLayout from '../components/AuthLayout.vue'
 import AppButton from '../components/AppButton.vue'
 import AlertMessage from '../components/AlertMessage.vue'
@@ -23,9 +23,9 @@ const touched = ref(false)
 const busy = ref(false)
 const { state: checkState, isAvailable, message: checkMessage, kind: checkKind, requestCheck } = useSlugCheck()
 
-// Prefijo/sufijo del link público según el modo: subdominio <slug>.<dominio>
-// o alias de path <appUrl>/<slug> (env.js storeSlugAffixes).
-const { prefix: slugPrefix, suffix: slugSuffix } = storeSlugAffixes()
+// El link público es path sobre el dominio de plataforma:
+// https://www.davent.com.ar/[slug]
+const slugPrefix = `${env.appUrl}/`
 const normalized = computed(() => normalizeSlug(slug.value))
 const formatError = computed(() => (touched.value ? validateSlugFormat(normalized.value) : ''))
 const fieldError = computed(() => formatError.value || stores.fieldErrors.slug || '')
@@ -118,7 +118,7 @@ async function logout() {
             @input="onInput"
             @blur="touched = true"
           />
-          <span v-if="slugSuffix" class="slug-suffix">{{ slugSuffix }}</span>
+
         </div>
         <p class="hint">Entre 3 y 60 caracteres: letras minúsculas, números y guiones.</p>
         <p v-if="fieldError" class="field-error" role="alert">{{ fieldError }}</p>

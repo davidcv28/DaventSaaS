@@ -33,30 +33,9 @@ describe('env', () => {
     expect(platform.storeHostSlug).toBe(null)
   })
 
-  it('storeUrl builds the canonical subdomain link when subdomains are active', async () => {
+  it('storeUrl always builds the link as a path on the platform origin', async () => {
     vi.resetModules()
     vi.stubEnv('VITE_PLATFORM_DOMAIN', 'davent.com.ar')
-    vi.stubEnv('VITE_APP_URL', 'https://www.davent.com.ar')
-    globalThis.window = { location: { protocol: 'https:', hostname: 'www.davent.com.ar', port: '' } }
-    const { storeUrl, storeSlugAffixes } = await import('../src/config/env.js')
-    expect(storeUrl('mitienda')).toBe('https://mitienda.davent.com.ar')
-    expect(storeSlugAffixes()).toEqual({ prefix: 'https://', suffix: '.davent.com.ar' })
-  })
-
-  it('storeUrl falls back to the path alias when subdomains are off', async () => {
-    vi.resetModules()
-    vi.stubEnv('VITE_PLATFORM_DOMAIN', 'daventsaas.onrender.com')
-    vi.stubEnv('VITE_APP_URL', 'https://daventsaas.onrender.com')
-    globalThis.window = { location: { protocol: 'https:', hostname: 'daventsaas.onrender.com', port: '' } }
-    const { storeUrl, storeSlugAffixes } = await import('../src/config/env.js')
-    expect(storeUrl('mitienda')).toBe('https://daventsaas.onrender.com/mitienda')
-    expect(storeSlugAffixes()).toEqual({ prefix: 'https://daventsaas.onrender.com/', suffix: '' })
-  })
-
-  it('storeUrl honors VITE_STORE_SUBDOMAINS=0 as path alias', async () => {
-    vi.resetModules()
-    vi.stubEnv('VITE_PLATFORM_DOMAIN', 'davent.com.ar')
-    vi.stubEnv('VITE_STORE_SUBDOMAINS', '0')
     vi.stubEnv('VITE_APP_URL', 'https://www.davent.com.ar')
     globalThis.window = { location: { protocol: 'https:', hostname: 'www.davent.com.ar', port: '' } }
     const { storeUrl } = await import('../src/config/env.js')
