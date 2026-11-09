@@ -321,7 +321,7 @@ def _product_fragment(store, products = None, flags = None):
             f'<article class="ds-product" data-cat="{_attr(category)}"'
             f' data-brand="{_attr(brand)}"'
             f' data-name="{_attr(product.name.lower())}"'
-            f' data-price="{_attr(amount)}"'
+            f' data-price="{_attr(amount)}">'
             f'<a class="ds-product-link" href="#catalogo" data-ds-product="{product.pk}"'
             f' aria-label="{_attr(product.name)}">'
             f'{media}'

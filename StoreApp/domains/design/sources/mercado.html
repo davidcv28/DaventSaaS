@@ -130,7 +130,8 @@
   .top-meta{display:flex;align-items:center;gap:14px;font-size:12px;font-weight:700;color:var(--yellow-ink)}
   .top-meta span{display:inline-flex;align-items:center;gap:5px;white-space:nowrap;font-family:var(--mono);letter-spacing:-.02em}
   .top-meta span:empty{display:none}
-  .top-meta span + span::before{content:"";width:4px;height:4px;border-radius:50%;background:currentColor;opacity:.5}
+  .top-meta:not(:has(span:not(:empty))){display:none}
+  .top-meta span:not(:empty) + span::before{content:"";width:4px;height:4px;border-radius:50%;background:currentColor;opacity:.5}
 
   .tabs{background:var(--surface);border-bottom:1px solid var(--line)}
   .tabs-in{display:flex;align-items:center;gap:2px;min-height:46px;overflow-x:auto;scrollbar-width:none}
@@ -146,6 +147,7 @@
   .tabs a.on::after{transform:scaleX(1)}
   .tabs-note{margin-inline-start:auto;padding-inline:10px;font:600 10px var(--mono);letter-spacing:.14em;text-transform:uppercase;color:var(--muted);white-space:nowrap}
   .tabs-wa{display:none;align-items:center;gap:6px;min-height:46px;padding:0 14px;font-size:13px;font-weight:800;color:var(--link)}
+  .tabs-wa[href]:not([href=""]){display:inline-flex}
   .tabs-wa svg{width:15px;height:15px}
 
   /* ==========================================================
@@ -220,7 +222,7 @@
     font:600 11px var(--mono);letter-spacing:.02em;color:color-mix(in srgb,var(--yellow-ink) 88%,transparent);
   }
   .facts li:empty{display:none}
-  .facts:not(:has(li)){display:none}
+  .facts:not(:has(li:not(:empty))){display:none}
   .facts li::before{content:"";width:5px;height:5px;border-radius:50%;background:currentColor;opacity:.55}
 
   .hero-media{
@@ -335,7 +337,7 @@
   }
   .ds-cat:hover::after{opacity:1;transform:none}
   .cats:not(:has(.ds-cat)){display:none}
-  .band.white:not(:has(.ds-cat)){display:none}
+  .band.white[data-flag="categories"]:not(:has(.ds-cat)){display:none}
 
   /* ==========================================================
      PRODUCTOS — tarjetas de feria: índice, filo amarillo, precio
@@ -379,8 +381,10 @@
   .ds-product-img.is-empty::after{content:"▣";position:relative;z-index:1;color:color-mix(in srgb,var(--ink) 22%,transparent);font-size:54px;line-height:1;transition:transform .5s var(--ease)}
   .ds-product:hover .ds-product-img.is-empty::after{transform:scale(1.06) rotate(-3deg)}
   /* El tag global usa --ds-success crudo (~3:1 sobre tarjeta en noche);
-     se mezcla hacia la tinta del tema para AA en ambos modos. */
-  .ds-stock{color:color-mix(in srgb,var(--ds-success,#0f9d58) 62%,var(--ink))}
+     se mezcla hacia la tinta del tema para AA en ambos modos.
+     .ds-stock no tiene lugar en la grilla de la tarjeta (auto-caía en una
+     fila implícita bajo el precio): se omite, como en moda/modista. */
+  .ds-stock{display:none}
   .ds-product-cat{
     grid-area:cat;justify-self:start;min-height:1.2em;margin:12px 14px 0;
     font:700 9.5px var(--mono);letter-spacing:.14em;text-transform:uppercase;color:var(--muted);
@@ -415,6 +419,7 @@
     object-fit:contain;border-radius:3px;transform:rotate(-2deg);
     box-shadow:0 8px 16px -10px rgba(0,0,0,.55);
   }
+  .ds-product:has(.ds-campaign-label)::before{top:40px}
   .ds-empty{padding:22px 0;color:var(--muted);font-size:13.5px}
   .grid > .ds-empty{grid-column:1/-1}
   .band.gray:not(:has(.ds-product)){display:none}
@@ -452,7 +457,7 @@
     content:"";position:absolute;left:0;right:0;top:0;height:4px;
     background:repeating-linear-gradient(90deg,var(--yellow) 0 14px,var(--ink) 14px 28px);opacity:.85;
   }
-  .trust-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:0}
+  .trust-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:0}
   .trust-item{position:relative;display:flex;gap:13px;align-items:flex-start;padding:2px 20px}
   .trust-item + .trust-item{border-left:1px solid color-mix(in srgb,var(--ink) 14%,transparent)}
   .trust-item .glyph{
@@ -494,7 +499,7 @@
   .cat-layout{display:grid;grid-template-columns:242px minmax(0,1fr);gap:20px;align-items:start;padding-top:18px}
   .cat-aside{
     position:sticky;top:130px;min-width:0;
-    max-height:calc(100dvh - 150px);overflow-y:auto;overscroll-behavior:contain;
+    max-height:calc(var(--fr-h,100dvh) - 150px);overflow-y:auto;overscroll-behavior:contain;
     background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow);
     scrollbar-width:thin;
   }
@@ -630,6 +635,9 @@
 
   .cat-surface .ds-empty{margin:18px 0 4px;padding:0;color:var(--muted);font-size:14px}
   .cat-surface .ds-empty:not([hidden]){padding:40px 16px;text-align:center;border:1px dashed var(--line);border-radius:var(--radius);background:var(--soft)}
+  /* Con cero productos el fragmento ya deja su propio .ds-empty dentro de
+     la grilla y el puente destapa [data-ds-noresults]: no duplicar. */
+  .cat-results:has([data-ds-noresults]:not([hidden])) .grid > .ds-empty{display:none}
   .cat-surface .ds-empty:not([hidden])::before{content:"⌕";display:block;font-size:30px;color:var(--muted);opacity:.6;margin-bottom:6px}
 
   /* ==========================================================
@@ -644,7 +652,7 @@
   }
   .pdp-gallery .pdp-shot{display:grid;place-items:center;aspect-ratio:4/3;background:var(--soft)}
   .pdp-gallery img{width:100%;height:100%;object-fit:contain;display:block}
-  .pdp-gallery:not(:has(img)) .pdp-shot::after{content:"▣";font-size:96px;color:color-mix(in srgb,var(--ink) 18%,transparent)}
+  .pdp-gallery:not(:has(img[src]:not([src=""]))) .pdp-shot::after{content:"▣";font-size:96px;color:color-mix(in srgb,var(--ink) 18%,transparent)}
   .pdp-media-tag{
     position:absolute;z-index:3;top:20px;left:14px;padding:6px 10px;border-radius:3px;transform:rotate(-3deg);
     background:var(--green);color:var(--on-success);font:800 12px var(--mono);
@@ -654,7 +662,7 @@
   .pdp-info{position:sticky;top:130px;background:var(--surface);border:1px solid var(--line);border-radius:calc(var(--radius) + 2px);padding:22px;box-shadow:var(--shadow);overflow:hidden}
   .pdp-info::before{content:"";position:absolute;left:0;right:0;top:0;height:4px;background:linear-gradient(90deg,var(--yellow),var(--blue))}
   .pdp-kicker{font:700 10px var(--mono);letter-spacing:.14em;text-transform:uppercase;color:var(--muted)}
-  .pdp-kicker span + span::before{content:" · "}
+  .pdp-kicker span:not(:empty) + span::before{content:" · "}
   .pdp-kicker span:empty{display:none}
   .pdp-info h1{margin:8px 0 0;font-size:24px;font-weight:800;line-height:1.25;letter-spacing:-.03em}
   .pdp-ref{margin-top:6px;font-size:11px;color:var(--muted);font-family:var(--mono)}
@@ -679,7 +687,7 @@
   .pdp-seller{margin:18px 0 0;padding:14px 0 0;border-top:1px solid var(--line);display:grid;gap:6px;font-size:12px;color:var(--muted)}
   .pdp-seller strong{color:var(--ink);font-weight:700}
   .pdp-seller span:empty{display:none}
-  .pdp-desc{margin:0 0 14px;font-size:14px;line-height:1.6;color:var(--ink-2)}
+  .pdp-desc{grid-column:1/-1;margin:0;font-size:14px;line-height:1.6;color:var(--ink-2)}
   .pdp-desc:empty{display:none}
   .pdp-box{grid-column:1;margin-top:0;background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);padding:20px 22px}
   .pdp-box h2{margin:0 0 10px;font-size:15px;font-weight:800;letter-spacing:-.02em}
@@ -689,6 +697,7 @@
   .pdp-specs th{width:34%;font-weight:600;color:var(--ink-2);font-size:11px;letter-spacing:.06em;text-transform:uppercase}
   .pdp-specs tr:nth-child(odd){background:var(--soft)}
   .pdp-rel{margin-top:26px}
+  .pdp-rel:not(:has(.ds-product)){display:none}
   .pdp-rel h2{margin:0 0 14px;font-size:20px;font-weight:800;letter-spacing:-.03em}
   .pdp-rev{margin-top:26px;background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);padding:20px 22px}
   .pdp-rev:not(:has(.ds-reviews)){display:none}
@@ -733,6 +742,9 @@
   }
   .foot-kicker{margin:0 0 8px;font:700 10px var(--mono);letter-spacing:.2em;text-transform:uppercase;color:var(--yellow)}
   .foot-kicker:empty{display:none}
+  .foot-kicker-loc{display:inline}
+  .foot-kicker-loc:empty{display:none}
+  .foot-kicker-loc::before{content:" · "}
   .foot-name{margin:0;font-size:clamp(28px,4.4vw,46px);font-weight:800;letter-spacing:-.045em;line-height:1;color:var(--footer-ink)}
   .foot-up{display:inline-flex;align-items:center;gap:6px;margin-top:14px;font:700 11px var(--mono);letter-spacing:.1em;text-transform:uppercase;color:var(--footer-ink);opacity:.8}
   .foot-up:hover{opacity:1;color:var(--yellow)}
@@ -742,6 +754,9 @@
   .foot-grid span:empty{display:none}
   .foot-grid a{font-weight:700;color:var(--yellow);text-decoration:none}
   .foot-grid a:hover{text-decoration:underline;text-underline-offset:3px}
+  /* Columna sin ningún dato visible (spans :empty se ocultan): tampoco
+     queda el encabezado huérfano. */
+  .foot-grid > div:not(:has(span:not(:empty),a[href]:not([href=""]))){display:none}
   .foot-bar{
     display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:8px;
     border-top:1px solid color-mix(in srgb,var(--footer-ink) 12%,transparent);
@@ -761,6 +776,9 @@
     --blue-soft:color-mix(in srgb,var(--blue) 26%,#141518);
     --green:#4ADE80; --green-soft:color-mix(in srgb,var(--green) 20%,#141518);
     --green-ink:#7BE6A4;
+    /* --on-success blanco sobre el verde claro de noche quedaba a ~1.8:1
+       en el sticker -N% y el tag de la ficha: tinta oscura sobre verde. */
+    --on-success:#052E16;
     --link:color-mix(in srgb,var(--blue) 55%,#FFFFFF);
     --footer-bg:#0C0D10;
     --ribbon-bg:#0C0D10;
@@ -828,7 +846,6 @@
     .cat-filters-toggle{display:inline-flex;justify-self:start}
     .pdp-layout{grid-template-columns:1fr}
     .pdp-info{position:static}
-    .cat-view{display:none}
     .cat-surface .grid[data-ds-view-mode="grid"]{grid-template-columns:repeat(2,minmax(0,1fr))}
   }
   @media(max-width:760px){
@@ -852,7 +869,7 @@
     .m-tab:active{background:var(--soft)}
     .m-sheet{
       display:flex;flex-direction:column;visibility:hidden;position:fixed;z-index:70;
-      left:0;right:0;bottom:0;max-height:min(78dvh,560px);
+      left:0;right:0;bottom:0;max-height:min(calc(var(--fr-h,100vh) * .78),560px);
       background:var(--surface);color:var(--ink);border-top:1px solid var(--line);
       border-radius:16px 16px 0 0;
       transform:translateY(102%);transition:transform .3s var(--ease),visibility .3s;
@@ -869,7 +886,9 @@
     .m-sheet-nav a{display:flex;align-items:center;justify-content:space-between;gap:12px;min-height:50px;padding:8px 12px;border-bottom:1px solid var(--line);font-size:15px;font-weight:700}
     .m-sheet-nav a span:last-child{font:700 10px var(--mono);letter-spacing:.14em;color:var(--muted)}
     .m-sheet-nav a:hover{color:var(--link)}
-    .m-scrim.open{display:block;position:fixed;inset:0;z-index:69;background:rgba(20,20,20,.5)}
+    /* El scrim cubre solo el marco visible (--fr-h lo publica el puente);
+       con inset:0 dentro del iframe estirado tapaba el documento entero. */
+    .m-scrim.open{display:block;position:fixed;left:0;right:0;top:0;height:var(--fr-h,100vh);z-index:69;background:rgba(20,20,20,.5)}
     html.m-lock,html.m-lock body{overflow:hidden}
 
     .grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
@@ -1009,15 +1028,15 @@
         </button>
         <div class="search-suggest" data-ds-suggest role="listbox" aria-label="Sugerencias de búsqueda" hidden></div>
       </form>
-      <div class="top-meta"><span>{{store_location}}</span><span>{{store_hours}}</span></div>
+      <div class="top-meta"><span data-flag="location">{{store_location}}</span><span data-flag="hours">{{store_hours}}</span></div>
     </div>
   </header>
   <nav class="tabs" aria-label="Secciones">
     <div class="shell tabs-in">
       <a class="on" href="#inicio" data-ds-route="home">Inicio</a>
       <a href="#catalogo" data-ds-route="catalog" data-flag="catalog">Catálogo</a>
-      <a href="#contacto" data-flag="contact">Contacto</a>
-      <a class="tabs-wa" href="{{store_whatsapp_url}}" data-flag="contact">
+      <a href="#contacto" data-ds-anchor data-ds-route="home" data-flag="contact">Contacto</a>
+      <a class="tabs-wa wa-link" href="{{store_whatsapp_url}}" data-flag="contact">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 11.5a8.4 8.4 0 0 1-8.5 8.4 8.6 8.6 0 0 1-3.8-.9L3 21l2-5.3a8.3 8.3 0 0 1-1-4A8.4 8.4 0 0 1 12.5 3.2 8.4 8.4 0 0 1 21 11.5Z"/></svg>
         WhatsApp
       </a>
@@ -1035,7 +1054,7 @@
     <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16"/><path d="M7 7v10M17 7v10"/></svg>
     <span>Catálogo</span>
   </a>
-  <a class="m-tab" href="#contacto" data-flag="contact">
+  <a class="m-tab" href="#contacto" data-ds-anchor data-ds-route="home" data-flag="contact">
     <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 11.5a8.4 8.4 0 0 1-8.5 8.4 8.6 8.6 0 0 1-3.8-.9L3 21l2-5.3a8.3 8.3 0 0 1-1-4A8.4 8.4 0 0 1 12.5 3.2 8.4 8.4 0 0 1 21 11.5Z"/></svg>
     <span>Contacto</span>
   </a>
@@ -1058,8 +1077,8 @@
   <nav class="m-sheet-nav" aria-label="Todas las secciones">
     <a href="#inicio" data-ds-route="home" data-m-close><span>Inicio</span><span aria-hidden="true">01</span></a>
     <a href="#catalogo" data-ds-route="catalog" data-m-close data-flag="catalog"><span>Catálogo</span><span aria-hidden="true">02</span></a>
-    <a href="#contacto" data-m-close data-flag="contact"><span>Contacto</span><span aria-hidden="true">03</span></a>
-    <a href="{{store_whatsapp_url}}" data-m-close><span>WhatsApp</span><span aria-hidden="true">↗</span></a>
+    <a href="#contacto" data-ds-anchor data-ds-route="home" data-m-close data-flag="contact"><span>Contacto</span><span aria-hidden="true">03</span></a>
+    <a class="wa-link" href="{{store_whatsapp_url}}" data-m-close data-flag="contact"><span>WhatsApp</span><span aria-hidden="true">↗</span></a>
   </nav>
 </div>
 
@@ -1082,7 +1101,7 @@
           </a>
         </div>
         <ul class="facts">
-          <li>{{store_hours}}</li>
+          <li data-flag="hours">{{store_hours}}</li>
           <li data-flag="catalog">Catálogo online</li>
         </ul>
       </div>
@@ -1101,7 +1120,7 @@
         </figcaption>
       </figure>
     </div>
-    <div class="ribbon" aria-hidden="true">
+    <div class="ribbon" aria-hidden="true" data-flag="announcements">
       <div class="ribbon-track">
         <span class="ribbon-group">
           <span>{{store_name}}</span><i>✦</i><span>Catálogo online</span><i>✦</i><span>Precios en pesos</span><i>✦</i><span>Atención directa</span><i>✦</i>
@@ -1184,7 +1203,7 @@
   <div class="shell">
     <div class="cat-hero">
       <nav class="crumbs" aria-label="Ruta">
-        <a href="#inicio" data-ds-route="home">Inicio</a>
+        <a href="#inicio" data-ds-anchor data-ds-route="home">Inicio</a>
         <span class="sep" aria-hidden="true">›</span>
         <a href="#catalogo" data-ds-route="catalog">Catálogo</a>
         <span class="sep" aria-hidden="true">›</span>
@@ -1277,9 +1296,9 @@
 
 <section class="pdp-surface" data-surface="product" data-flag="catalog">
   <div class="shell">
-    <h1 class="sr-only">{{product_name}} · {{store_name}}</h1>
+    <p class="sr-only">{{product_name}} · {{store_name}}</p>
     <nav class="crumbs" aria-label="Ruta">
-      <a href="#inicio" data-ds-route="home">Inicio</a>
+      <a href="#inicio" data-ds-anchor data-ds-route="home">Inicio</a>
       <span class="sep" aria-hidden="true">›</span>
       <a href="#catalogo" data-ds-route="catalog">Catálogo</a>
       <span class="sep" aria-hidden="true">›</span>
@@ -1304,14 +1323,14 @@
         <a class="pdp-back" href="#catalogo" data-ds-route="catalog">‹ Volver al catálogo</a>
         <div class="pdp-seller">
           <span>Vendido por <strong>{{store_name}}</strong></span>
-          <span>{{store_location}}</span>
-          <span>{{store_hours}}</span>
+          <span data-flag="location">{{store_location}}</span>
+          <span data-flag="hours">{{store_hours}}</span>
         </div>
       </aside>
+      <p class="pdp-desc">{{product_description}}</p>
       <section class="pdp-box" aria-label="Características">
         <h2>Características del producto</h2>
         <table class="pdp-specs"><tbody>{{product_features}}</tbody></table>
-        <p class="pdp-desc">{{product_description}}</p>
       </section>
     </div>
 
@@ -1332,14 +1351,14 @@
 
 <footer class="foot" id="contacto">
   <div class="foot-top">
-    <p class="foot-kicker">Bazar · {{store_location}}</p>
+    <p class="foot-kicker">Bazar<span class="foot-kicker-loc">{{store_location}}</span></p>
     <p class="foot-name">{{store_name}}</p>
-    <a class="foot-up" href="#inicio">Volver arriba ↑</a>
+    <a class="foot-up" href="#inicio" data-ds-anchor data-ds-route="home">Volver arriba ↑</a>
   </div>
   <div class="shell foot-grid">
-    <div><p class="foot-h">Encontranos</p><span>{{store_address}}</span><span>{{store_location}}</span></div>
-    <div data-flag="contact"><p class="foot-h">Contacto</p><span>{{store_hours}}</span><a class="wa-link" href="{{store_whatsapp_url}}">Escribinos por WhatsApp</a></div>
-    <div><p class="foot-h">El negocio</p><span>{{store_tagline}}</span></div>
+    <div><p class="foot-h">Encontranos</p><span>{{store_address}}</span><span data-flag="location">{{store_location}}</span></div>
+    <div data-flag="contact"><p class="foot-h">Contacto</p><span data-flag="hours">{{store_hours}}</span><a class="wa-link" href="{{store_whatsapp_url}}">Escribinos por WhatsApp</a></div>
+    <div data-flag="about"><p class="foot-h">El negocio</p><span>{{store_tagline}}</span></div>
   </div>
   <div class="foot-bar">
     <span>© {{year}} {{store_name}}</span>
@@ -1348,48 +1367,170 @@
 </footer>
 <script>
 (function(){
-  // Menú móvil: "Más" abre la hoja; cierra con fondo, cruz, Esc o al navegar.
+  var root = document.documentElement;
+  var body = document.body;
+
+  /* Un img sin src pide el propio documento como imagen (request fantasma
+     y caja vacía sobre el monograma): se quita del DOM. */
+  [].slice.call(document.querySelectorAll('img[src=""],img:not([src])')).forEach(function(img){ img.remove() });
+
+  /* ---------- Categorías de la portada → catálogo filtrado ----------
+     .ds-cat viaja como <a href="#catalogo"> sin ruta: en la superficie
+     landing esa sección está display:none y el puente scrollearía al tope.
+     Acá se pre-selecciona la misma línea en el panel de filtros (el estado
+     del puente vive en este documento y viaja entre superficies) y se
+     navega con el protocolo oficial davent:ds-route. Capture para ganarle
+     al listener del puente. */
+  document.addEventListener('click', function (e) {
+    var t = e.target;
+    if (!t || !t.closest) return;
+    var cat = t.closest('.ds-cat');
+    if (!cat || cat.closest('[data-ds-filters]')) return;
+    if (!cat.closest('[data-surface="landing"]')) return;
+    var nameEl = cat.querySelector('span');
+    var name = nameEl ? (nameEl.textContent || '').trim() : '';
+    if (name) {
+      /* .ds-cat muestra el nombre a 60 chars; data-cat viaja truncado a 40:
+         matchea exacto o por prefijo para nombres largos. */
+      var btns = document.querySelectorAll('[data-ds-filters] button[data-cat]');
+      for (var i = 0; i < btns.length; i++) {
+        var key = btns[i].getAttribute('data-cat') || '';
+        if (key && (key === name || name.indexOf(key) === 0)) { btns[i].click(); break; }
+      }
+    }
+    e.preventDefault();
+    e.stopPropagation();
+    if (window.parent !== window) {
+      parent.postMessage({ type: 'davent:ds-route', route: 'catalog' }, '*');
+    }
+  }, true);
+
+  /* ---------- Buscador: click en la barra enfoca el input ---------- */
+  var searchForm = document.querySelector('[data-ds-search]');
+  if (searchForm) {
+    searchForm.addEventListener('click', function(e){
+      if (e.target.closest('input,button,.search-suggest')) return;
+      var input = searchForm.querySelector('.search-input, input[type="search"], input');
+      if (input) input.focus();
+    });
+  }
+
+  /* ---------- Menú móvil: "Más" abre la hoja; cierra con fondo, cruz, Esc
+     o al navegar. inert en el fondo + foco al close y restauración. */
   var sheet = document.getElementById('m-sheet');
   if (sheet) {
     var scrim = document.querySelector('.m-scrim');
     var openers = [].slice.call(document.querySelectorAll('[data-m-open]'));
     var closers = [].slice.call(document.querySelectorAll('[data-m-close]'));
+    var inertables = [].slice.call(document.querySelectorAll('.topbar,.m-tabs,[data-surface],.foot'));
+    var lastFocus = null;
     var setOpen = function(open){
       sheet.classList.toggle('open', open);
       if (scrim) scrim.classList.toggle('open', open);
-      openers.forEach(function(b){ b.setAttribute('aria-expanded', open ? 'true' : 'false'); });
-      document.documentElement.classList.toggle('m-lock', open);
+      openers.forEach(function(b){
+        b.setAttribute('aria-expanded', open ? 'true' : 'false');
+        b.setAttribute('aria-label', open ? 'Cerrar menú' : 'Abrir menú');
+      });
+      root.classList.toggle('m-lock', open);
+      inertables.forEach(function(el){ if (el) el.inert = open; });
+      if (open) {
+        lastFocus = document.activeElement;
+        var closeBtn = sheet.querySelector('.m-close');
+        if (closeBtn) setTimeout(function(){ closeBtn.focus(); }, 40);
+      } else if (lastFocus && lastFocus.focus) {
+        lastFocus.focus();
+        lastFocus = null;
+      }
     };
     openers.forEach(function(b){
       b.addEventListener('click', function(){ setOpen(!sheet.classList.contains('open')); });
     });
     closers.forEach(function(el){ el.addEventListener('click', function(){ setOpen(false); }); });
     document.addEventListener('keydown', function(e){ if (e.key === 'Escape') setOpen(false); });
+    /* La hoja solo existe bajo 760px: si el viewport crece con el menú
+       abierto, cierra para no dejar m-lock/inert colgados. */
+    window.addEventListener('resize', function(){
+      if (sheet.classList.contains('open') && window.innerWidth > 760) setOpen(false);
+    });
   }
+
+  /* ---------- Ribbon: el loop -50% necesita una segunda mitad idéntica y
+     al menos tan ancha como el marco; se duplican grupos hasta cubrir
+     2×viewport (conteo par) y la duración escala por grupo. */
+  var ribbonTrack = document.querySelector('.ribbon-track');
+  if (ribbonTrack && ribbonTrack.children.length) {
+    var unitHTML = ribbonTrack.children[0].innerHTML;
+    var fillRibbon = function(){
+      /* Con la cinta apagada por flag la medida da 0: no reconstruir. */
+      if (!ribbonTrack.offsetWidth) return;
+      var unitW = ribbonTrack.children[0].getBoundingClientRect().width || 1;
+      var vw = window.innerWidth || document.documentElement.clientWidth || 1;
+      var copies = Math.ceil((vw * 2) / unitW);
+      if (copies % 2) copies++;
+      copies = Math.max(copies, 2);
+      if (ribbonTrack.children.length !== copies) {
+        ribbonTrack.innerHTML = '';
+        for (var i = 0; i < copies; i++) {
+          var g = document.createElement('span');
+          g.className = 'ribbon-group';
+          g.innerHTML = unitHTML;
+          ribbonTrack.appendChild(g);
+        }
+        ribbonTrack.style.animationDuration = (copies * 15) + 's';
+      }
+    };
+    fillRibbon();
+    window.addEventListener('resize', fillRibbon);
+    if (document.fonts && document.fonts.ready) document.fonts.ready.then(fillRibbon);
+  }
+
+  /* ---------- Estado activo de las pestañas (desktop .tabs + móvil .m-tab) ---------- */
   var paintTabs = function(){
-    var surface = document.documentElement.getAttribute('data-ds-surface') || 'landing';
-    [].forEach.call(document.querySelectorAll('.m-tab[data-ds-route]'), function(tab){
+    var surface = root.getAttribute('data-ds-surface') || 'landing';
+    [].forEach.call(document.querySelectorAll('.m-tab[data-ds-route]:not([data-ds-anchor]),.tabs a[data-ds-route]:not([data-ds-anchor])'), function(tab){
       var route = tab.getAttribute('data-ds-route');
-      var on = (surface === 'landing' && route === 'home') || (surface === 'catalog' && route === 'catalog') || (surface === 'services' && route === 'services');
+      var on = (surface === 'landing' && route === 'home') || (surface === 'catalog' && route === 'catalog') || (surface === 'product' && route === 'catalog') || (surface === 'services' && route === 'services');
       tab.classList.toggle('is-on', on);
+      tab.classList.toggle('on', on);
       if (on) tab.setAttribute('aria-current', 'page');
       else tab.removeAttribute('aria-current');
     });
   };
   paintTabs();
-  new MutationObserver(paintTabs).observe(document.documentElement, { attributes: true, attributeFilter: ['data-ds-surface'] });
+  new MutationObserver(paintTabs).observe(root, { attributes: true, attributeFilter: ['data-ds-surface'] });
 
-  // El masthead y la tab bar son fijos (el puente los ancla al marco real):
-  // el relleno del body se mide, no se estima, así ningún breakpoint deja
-  // una franja vacía ni tapa la primera sección.
+  /* ---------- Chrome fijo: el relleno del body se mide, no se estima,
+     data-ds-offset queda exacto para los anchors del puente y --fr-h
+     publica el alto visible del marco para scrim/hojas/filtros. */
   var topbar = document.querySelector('.topbar');
   var mTabs = document.querySelector('.m-tabs');
+  var frameBox = null;
   var syncPad = function(){
-    if (topbar) document.body.style.paddingTop = Math.round(topbar.getBoundingClientRect().height) + 'px';
+    if (topbar) {
+      var h = Math.round(topbar.getBoundingClientRect().height);
+      body.style.paddingTop = h + 'px';
+      topbar.setAttribute('data-ds-offset', String(h));
+    }
     var showBottom = mTabs && getComputedStyle(mTabs).display !== 'none';
-    document.body.style.paddingBottom = showBottom ? Math.round(mTabs.getBoundingClientRect().height + 10) + 'px' : '';
+    body.style.paddingBottom = showBottom ? Math.round(mTabs.getBoundingClientRect().height + 10) + 'px' : '';
   };
+  var paintFrame = function(){
+    if (!frameBox) return;
+    var ih = root.scrollHeight || 1;
+    var top = Math.max(0, -frameBox.top);
+    var bottom = Math.min(ih, frameBox.vh - frameBox.top);
+    var h = Math.max(0, bottom - top);
+    root.style.setProperty('--fr-h', h + 'px');
+  };
+  window.addEventListener('message', function(e){
+    var d = e.data || {};
+    if (d.type === 'davent:ds-frame') {
+      frameBox = { top: Number(d.top) || 0, bottom: Number(d.bottom) || 0, vh: Number(d.vh) || 0 };
+      paintFrame();
+    }
+  });
   syncPad();
+  paintFrame();
   window.addEventListener('resize', syncPad);
   if (window.ResizeObserver && topbar) new ResizeObserver(syncPad).observe(topbar);
 })();
