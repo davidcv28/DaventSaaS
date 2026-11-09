@@ -541,6 +541,10 @@ const siteTemplates = computed(() => {
 const showServices = computed(() => status.value === 'success' && siteTemplates.value.includes('services'))
 // Página "Suscripciones": ídem — sin flag propio, solo el cupo del plan.
 const showPlans = computed(() => status.value === 'success' && siteTemplates.value.includes('plans'))
+// Catálogo efectivo: la página existe en el set del plan y el dueño no la
+// apagó. Sin esto el prefetch de portada pegaba un 404 en tiendas sin
+// catálogo (patrones tipo ruta: landing + servicios nomás).
+const catalogPageOn = computed(() => showCatalog.value && siteTemplates.value.includes('catalog'))
 // Web sin portada: el home redirige a la primera página disponible
 // (Servicios si existe, si no el catálogo) y el menú no ofrece Inicio ni
 // las secciones de marketing. Cubre el viejo "modo solo catálogo" y la
@@ -948,9 +952,9 @@ onMounted(async () => {
   // vitrina de destacados ({sort:'recent'}), en Catálogo el listado inicial
   // ({sort:'name'}) y en la ficha de producto el catálogo completo. La vista
   // hija recibe la misma promesa por loadPublicCatalog — cero espera extra.
-  if (isHome.value) loadPublicCatalog({ sort: 'recent' })
-  else if (isCatalog.value) loadPublicCatalog({ sort: 'name' })
-  else if (isProduct.value) loadPublicCatalog()
+  if (isHome.value && catalogPageOn.value) loadPublicCatalog({ sort: 'recent' })
+  else if (isCatalog.value && catalogPageOn.value) loadPublicCatalog({ sort: 'name' })
+  else if (isProduct.value && catalogPageOn.value) loadPublicCatalog()
   // La página Servicios no necesita el catálogo: sus ítems viajan en el
   // payload público de la tienda (service_items).
   // El documento del diseño viaja en paralelo con la ficha: si el patrón

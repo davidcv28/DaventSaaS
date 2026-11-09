@@ -2979,7 +2979,7 @@
       "categoria": "Turismo",
       "descripcion": "Guía de viaje diurna: papel crema, verde pino y ámbar, con Fraunces editorial e Instrument Sans.",
       "tier": "plus",
-      "template": "raiz",
+      "template": "ruta",
       "page_theme": "light",
       "pattern": "ruta",
       "tokens": {
@@ -3046,7 +3046,7 @@
       "categoria": "Turismo nocturno",
       "descripcion": "La ruta de noche: pino profundo, ámbar encendido y crema, con el mismo aire editorial de Fraunces.",
       "tier": "plus",
-      "template": "raiz",
+      "template": "ruta",
       "page_theme": "dark",
       "pattern": "ruta",
       "tokens": {
@@ -3249,7 +3249,7 @@
       "categoria": "Seguridad contra incendios",
       "descripcion": "Amarillo de alta visibilidad sobre tinta de cuartel: franjas de riesgo, placas de verificación y tipografía técnica en mayúsculas.",
       "tier": "plus",
-      "template": "raiz",
+      "template": "brigada",
       "page_theme": "light",
       "pattern": "brigada",
       "tokens": {
@@ -3319,7 +3319,7 @@
       "categoria": "Seguridad contra incendios",
       "descripcion": "Azul institucional de servicios de emergencia: mismo cuartel, placa fría y acento cobalto.",
       "tier": "plus",
-      "template": "raiz",
+      "template": "brigada",
       "page_theme": "light",
       "pattern": "brigada",
       "tokens": {
@@ -3389,7 +3389,7 @@
       "categoria": "Seguridad contra incendios",
       "descripcion": "Rojo fuego de alarma: la franja de riesgo se vuelve carmín sobre papel cálido.",
       "tier": "plus",
-      "template": "raiz",
+      "template": "brigada",
       "page_theme": "light",
       "pattern": "brigada",
       "tokens": {
@@ -4292,7 +4292,7 @@
       "categoria": "Calzado y deportes",
       "descripcion": "Vitrina deportiva clásica: billboard a sangre completa con titular fino, collage mosaico con paneles rojos/negros y riel de productos.",
       "tier": "advanced",
-      "template": "raiz",
+      "template": "calzado",
       "page_theme": "light",
       "pattern": "calzado",
       "tokens": {
@@ -4503,7 +4503,7 @@
       "categoria": "Calzado y deportes",
       "descripcion": "La vitrina de noche: asfalto, paneles rojos y el mismo billboard deportivo.",
       "tier": "advanced",
-      "template": "raiz",
+      "template": "calzado",
       "page_theme": "dark",
       "pattern": "calzado",
       "tokens": {
@@ -5084,7 +5084,7 @@
       "categoria": "Tienda de indumentaria",
       "descripcion": "E-commerce editorial en clave SHOP.CO: papel claro, tipografía ultra-negrita en mayúsculas, píldoras redondeadas, tira de marcas en negro y grillas de producto con rating y badges de descuento.",
       "tier": "plus",
-      "template": "raiz",
+      "template": "topmodern",
       "page_theme": "light",
       "pattern": "topmodern",
       "tokens": {
@@ -5178,7 +5178,7 @@
       "categoria": "Tienda de indumentaria nocturna",
       "descripcion": "La edición nocturna de TopModern: grafito casi negro, acento lima ácido y el mismo aparato de e-commerce editorial en clave after-hours.",
       "tier": "plus",
-      "template": "raiz",
+      "template": "topmodern",
       "page_theme": "dark",
       "pattern": "topmodern",
       "tokens": {
@@ -6014,7 +6014,7 @@
       "categoria": "Seguridad y protección",
       "descripcion": "Consola industrial oscura: hero a sangre con titular Archivo 900 estirado, señal rojo fuego, JetBrains Mono en datos. Indumentaria de seguridad, extintores, vigilancia y rubros B2B.",
       "tier": "plus",
-      "template": "raiz",
+      "template": "guardia",
       "page_theme": "dark",
       "pattern": "guardia",
       "tokens": {
@@ -6093,7 +6093,7 @@
       "categoria": "Seguridad y protección",
       "descripcion": "La misma consola en clave concreto: papel gris cálido, tinta grafito y el mismo rojo fuego, con el hero siempre de guardia.",
       "tier": "plus",
-      "template": "raiz",
+      "template": "guardia",
       "page_theme": "light",
       "pattern": "guardia",
       "tokens": {
@@ -9829,7 +9829,7 @@
             "order": 1
           },
           {
-            "id": "brands",
+            "id": "offers",
             "enabled": true,
             "order": 2
           },
@@ -9839,14 +9839,59 @@
             "order": 3
           },
           {
-            "id": "contact",
+            "id": "stats",
             "enabled": true,
             "order": 4
           },
           {
-            "id": "gallery",
+            "id": "benefits",
             "enabled": true,
             "order": 5
+          },
+          {
+            "id": "gallery",
+            "enabled": true,
+            "order": 6
+          },
+          {
+            "id": "timeline",
+            "enabled": true,
+            "order": 7
+          },
+          {
+            "id": "team",
+            "enabled": true,
+            "order": 8
+          },
+          {
+            "id": "testimonials",
+            "enabled": true,
+            "order": 9
+          },
+          {
+            "id": "brands",
+            "enabled": true,
+            "order": 10
+          },
+          {
+            "id": "faq",
+            "enabled": true,
+            "order": 11
+          },
+          {
+            "id": "contact",
+            "enabled": true,
+            "order": 12
+          },
+          {
+            "id": "video",
+            "enabled": true,
+            "order": 13
+          },
+          {
+            "id": "cta",
+            "enabled": true,
+            "order": 14
           }
         ],
         "services": [
@@ -9856,29 +9901,9 @@
             "order": 0
           },
           {
-            "id": "band",
+            "id": "cta",
             "enabled": true,
             "order": 1
-          },
-          {
-            "id": "picker",
-            "enabled": true,
-            "order": 2
-          },
-          {
-            "id": "steps",
-            "enabled": true,
-            "order": 3
-          },
-          {
-            "id": "form",
-            "enabled": true,
-            "order": 4
-          },
-          {
-            "id": "faq",
-            "enabled": true,
-            "order": 5
           }
         ]
       },
