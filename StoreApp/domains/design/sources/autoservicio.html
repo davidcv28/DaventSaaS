@@ -1,0 +1,1583 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>{{store_name}} · Autoservicio</title>
+<style>
+/* ==========================================================================
+   AUTOSERVICIO — supermercado contemporáneo minimalista
+   Índice editorial de tienda: grotesk expandida (Archivo), lectura Inter,
+   datos en JetBrains Mono. Precios como dato protagonista, departamentos
+   como directorio con numeración de pasillo y un "ticket" con los datos
+   duros de la tienda. Sin animaciones: los estados cambian al instante.
+   Roles desde el tema del panel (--ds-*); sin tema, piel "Fresco".
+   ========================================================================== */
+
+/* Tipografías del diseño (CSP font-src https:): sin hojas externas.
+   Subconjuntos latin + latin-ext: el sitio es en español. */
+@font-face{font-family:"Archivo";font-style:normal;font-weight:400 900;font-stretch:62% 125%;font-display:swap;
+  src:url(https://fonts.gstatic.com/s/archivo/v25/k3kQo8UDI-1M0wlSfdfoLnnA.woff2) format("woff2");
+  unicode-range:U+0100-02BA,U+02BD-02C5,U+02C7-02CC,U+02CE-02D7,U+02DD-02FF,U+0304,U+0308,U+0329,U+1D00-1DBF,U+1E00-1E9F,U+1EF2-1EFF,U+2020,U+20A0-20AB,U+20AD-20C4,U+2113,U+2C60-2C7F,U+A720-A7FF}
+@font-face{font-family:"Archivo";font-style:normal;font-weight:400 900;font-stretch:62% 125%;font-display:swap;
+  src:url(https://fonts.gstatic.com/s/archivo/v25/k3kQo8UDI-1M0wlSfdnoLg.woff2) format("woff2");
+  unicode-range:U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+0304,U+0308,U+0329,U+2000-206F,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD}
+@font-face{font-family:"Inter";font-style:normal;font-weight:100 900;font-display:swap;
+  src:url(https://fonts.gstatic.com/s/inter/v20/UcCo3FwrK3iLTcvsYwYL8g.woff2) format("woff2");
+  unicode-range:U+0100-02BA,U+02BD-02C5,U+02C7-02CC,U+02CE-02D7,U+02DD-02FF,U+0304,U+0308,U+0329,U+1D00-1DBF,U+1E00-1E9F,U+1EF2-1EFF,U+2020,U+20A0-20AB,U+20AD-20C4,U+2113,U+2C60-2C7F,U+A720-A7FF}
+@font-face{font-family:"Inter";font-style:normal;font-weight:100 900;font-display:swap;
+  src:url(https://fonts.gstatic.com/s/inter/v20/UcCo3FwrK3iLTcviYwY.woff2) format("woff2");
+  unicode-range:U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+0304,U+0308,U+0329,U+2000-206F,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD}
+@font-face{font-family:"JetBrains Mono";font-style:normal;font-weight:400 800;font-display:swap;
+  src:url(https://fonts.gstatic.com/s/jetbrainsmono/v24/tDbv2o-flEEny0FZhsfKu5WU4zr3E_BX0PnT8RD8yKwBNntkaToggR7BYRbKPx7cwhsk.woff2) format("woff2");
+  unicode-range:U+0100-02BA,U+02BD-02C5,U+02C7-02CC,U+02CE-02D7,U+02DD-02FF,U+0304,U+0308,U+0329,U+1D00-1DBF,U+1E00-1E9F,U+1EF2-1EFF,U+2020,U+20A0-20AB,U+20AD-20C4,U+2113,U+2C60-2C7F,U+A720-A7FF}
+@font-face{font-family:"JetBrains Mono";font-style:normal;font-weight:400 800;font-display:swap;
+  src:url(https://fonts.gstatic.com/s/jetbrainsmono/v24/tDbv2o-flEEny0FZhsfKu5WU4zr3E_BX0PnT8RD8yKwBNntkaToggR7BYRbKPxDcwg.woff2) format("woff2");
+  unicode-range:U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+0304,U+0308,U+0329,U+2000-206F,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD}
+
+:root{
+  /* Paleta semántica: cada rol sale del tema del panel (--ds-*) y, sin
+     tema, de la piel "Fresco" (papel claro, verde marca, oferta teja). */
+  --bg:var(--ds-bg,#F5F6F2);
+  --surface:var(--ds-surface,#FFFFFF);
+  --ink:var(--ds-text,#15211A);
+  --muted:var(--ds-muted,#627068);
+  --line:var(--ds-border,#E2E5DC);
+  /* Tono alterno derivado de tinta+superficie: se adapta a cualquier tema. */
+  --soft:color-mix(in srgb,var(--ink) 6%,var(--surface));
+  --ink-2:color-mix(in srgb,var(--ink) 70%,var(--muted));
+  --brand:var(--ds-primary,var(--ds-accent,#17794B));
+  --on-brand:var(--ds-primary-ink,var(--ds-accent-ink,#FFFFFF));
+  --brand-deep:var(--ds-secondary,#0F4229);
+  --on-brand-deep:var(--ds-secondary-ink,#FFFFFF);
+  --offer:var(--ds-danger,#C2402A);
+  --on-offer:#FFF7F2;
+  --ok:var(--ds-success,#1E8E5A);
+  --on-ok:var(--ds-success-ink,#FFFFFF);
+  --link:var(--brand-deep);
+  --r:var(--ds-radius,4px);
+  --r-btn:var(--ds-radius-btn,4px);
+  --display:"Archivo","Helvetica Neue",system-ui,sans-serif;
+  --sans:"Inter","Helvetica Neue",system-ui,-apple-system,sans-serif;
+  --mono:"JetBrains Mono","SF Mono",ui-monospace,Menlo,Consolas,monospace;
+  color-scheme:light;
+}
+html[data-ds-theme="dark"]{
+  color-scheme:dark;
+  --bg:#0F130E; --surface:#171C16; --ink:#EDF1E8; --muted:#96A190; --line:#2A3129;
+  --brand:var(--ds-primary,var(--ds-accent,#8FD18A));
+  --on-brand:var(--ds-primary-ink,var(--ds-accent-ink,#0F130E));
+  --brand-deep:var(--ds-secondary,#B7E26B);
+  --on-brand-deep:var(--ds-secondary-ink,#0F130E);
+  --offer:#FF8A70; --on-offer:#2B0D05;
+  --ok:var(--ds-success,#8FD18A); --on-ok:var(--ds-success-ink,#0F130E);
+  --link:var(--brand-deep);
+}
+
+*{box-sizing:border-box}
+html,body{margin:0}
+body{
+  background:var(--bg);color:var(--ink);font:15px/1.55 var(--sans);
+  -webkit-font-smoothing:antialiased;
+}
+img{max-width:100%}
+img[src=""]{display:none}
+a{color:inherit;text-decoration:none}
+a[href=""]{display:none}
+button{font-family:inherit}
+h1:empty,h2:empty,h3:empty,p:empty{display:none}
+[hidden]{display:none!important}
+::selection{background:color-mix(in srgb,var(--brand) 22%,transparent)}
+.shell{max-width:1200px;margin:0 auto;padding:0 24px}
+.sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap;border:0}
+/* Zonas de datos: la sección se apaga cuando TODAS sus zonas quedan vacías
+   (la complementa el refuerzo por DOM del puente). */
+[data-flag]:has(.ds-zone:empty):not(:has(.ds-zone:not(:empty))){display:none!important}
+.m-tabs,.m-scrim,.m-sheet{display:none}
+
+/* ==========================================================
+   CHROME — cabecera fija de dos pisos: marca + buscador +
+   datos, y debajo la barra de secciones. El puente la ancla
+   al marco real (data-ds-pin) y mide el alto para el padding.
+   ========================================================== */
+.topbar{position:fixed;top:0;left:0;right:0;z-index:60;background:var(--bg);border-bottom:1px solid var(--line)}
+.top-in{display:flex;align-items:center;gap:18px;min-height:64px}
+.brand{display:flex;align-items:center;gap:11px;font-weight:800;font-size:18px;letter-spacing:-.02em;color:var(--ink);white-space:nowrap;min-width:0}
+.brand .mark{
+  position:relative;display:grid;place-items:center;flex:none;width:36px;height:36px;
+  border:1px solid var(--ink);background:var(--surface);color:var(--ink);
+  font:800 15px var(--display);overflow:hidden;
+}
+.brand .mark img{position:absolute;inset:0;width:100%;height:100%;object-fit:contain;background:var(--surface)}
+.brand-txt{display:grid;gap:1px;min-width:0}
+.brand-name{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;line-height:1.1}
+.brand-tag{font:600 9px var(--mono);letter-spacing:.22em;text-transform:uppercase;color:var(--muted)}
+
+.search{position:relative;display:flex;align-items:center;flex:1 1 520px;height:48px;background:var(--surface);border:1px solid var(--line);color:var(--ink)}
+.search:focus-within{border-color:var(--link);box-shadow:0 0 0 1px var(--link)}
+.search::before{
+  content:"";flex:none;width:16px;height:16px;margin-left:13px;opacity:.5;
+  background:currentColor;
+  -webkit-mask:url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round'%3E%3Ccircle cx='11' cy='11' r='7'/%3E%3Cpath d='m20 20-3.5-3.5'/%3E%3C/svg%3E") center/contain no-repeat;
+  mask:url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round'%3E%3Ccircle cx='11' cy='11' r='7'/%3E%3Cpath d='m20 20-3.5-3.5'/%3E%3C/svg%3E") center/contain no-repeat;
+}
+.search-input{flex:1 1 auto;min-width:0;height:100%;border:0;background:transparent;padding:0 10px;font:inherit;font-size:14px;color:var(--ink);outline:none}
+.search-input::placeholder{color:var(--muted);opacity:1}
+.search-input::-webkit-search-cancel-button,.search-input::-webkit-search-decoration{display:none}
+.search-clear{display:grid;place-items:center;flex:none;width:40px;height:40px;border:0;background:transparent;color:var(--muted);font-size:19px;line-height:1;cursor:pointer}
+.search-clear:hover{color:var(--ink);background:var(--soft)}
+.search-clear[hidden]{display:none}
+.search-go{
+  position:relative;flex:none;display:inline-flex;align-items:center;gap:7px;
+  height:calc(100% - 8px);margin-right:4px;padding:0 14px;border:0;
+  background:var(--brand);color:var(--on-brand);font:inherit;font-size:12.5px;font-weight:700;cursor:pointer;
+}
+.search-go:hover{background:var(--brand-deep);color:var(--on-brand-deep)}
+.search-go svg{width:14px;height:14px}
+.search-suggest{position:absolute;top:calc(100% + 6px);left:0;right:0;z-index:80;max-height:min(60vh,400px);overflow-y:auto;padding:6px;background:var(--surface);color:var(--ink);border:1px solid var(--line);box-shadow:0 18px 40px -24px rgba(0,0,0,.45)}
+.search-suggest[hidden]{display:none}
+.suggest-head{padding:8px 10px 4px;font:600 9.5px var(--mono);letter-spacing:.16em;text-transform:uppercase;color:var(--muted)}
+.suggest-item{display:flex;align-items:center;gap:10px;width:100%;min-height:46px;padding:6px 10px;border:0;background:transparent;color:var(--ink);font:inherit;text-align:left;cursor:pointer}
+.suggest-item:hover,.suggest-item.is-active{background:var(--soft)}
+.suggest-item:focus-visible{outline:2px solid var(--link);outline-offset:-2px}
+.suggest-thumb{flex:none;display:grid;place-items:center;width:38px;height:38px;overflow:hidden;background:var(--soft);color:var(--muted);font-size:16px}
+.suggest-thumb img{width:100%;height:100%;object-fit:contain}
+.suggest-copy{display:grid;gap:2px;min-width:0}
+.suggest-copy strong{font-size:13px;font-weight:600;line-height:1.3;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.suggest-copy small{font-size:11.5px;color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.suggest-empty{padding:12px 10px;font-size:13px;color:var(--muted)}
+.suggest-more{display:flex;align-items:center;justify-content:center;width:100%;min-height:42px;margin-top:4px;border:1px solid var(--line);background:transparent;color:var(--link);font:inherit;font-size:12.5px;font-weight:700;cursor:pointer}
+.suggest-more:hover{background:var(--soft)}
+.top-meta{display:flex;align-items:center;gap:14px;font-size:11.5px;font-weight:600;color:var(--ink-2);white-space:nowrap}
+.top-meta span{display:inline-flex;align-items:center;gap:5px}
+.top-meta span:empty{display:none}
+.top-meta span + span::before{content:"";width:3px;height:3px;background:currentColor;opacity:.4}
+.top-meta span:first-child:empty + span::before{display:none}
+
+.tabs{background:var(--surface);border-top:1px solid var(--line)}
+.tabs-in{display:flex;align-items:center;gap:2px;min-height:44px;overflow-x:auto;scrollbar-width:none}
+.tabs-in::-webkit-scrollbar{display:none}
+.tabs a{
+  position:relative;display:inline-flex;align-items:center;min-height:44px;padding:0 14px;
+  font-size:12.5px;font-weight:600;color:var(--ink-2);white-space:nowrap;
+}
+.tabs a::after{content:"";position:absolute;left:14px;right:14px;bottom:0;height:2px;background:var(--brand)}
+.tabs a.on{color:var(--ink);font-weight:700}
+.tabs a:not(.on)::after{transform:scaleX(0)}
+.tabs-wa{margin-inline-start:auto;display:inline-flex;align-items:center;gap:6px;min-height:44px;padding:0 14px;font-size:12.5px;font-weight:700;color:var(--link)}
+.tabs-wa svg{width:14px;height:14px}
+
+/* ==========================================================
+   PORTADA — titular grotesco expandido, foto de portada y
+   datos duros en mono. Cero ornamentos: grid, filetes, aire.
+   ========================================================== */
+.hero{padding:clamp(44px,7vh,92px) 0 clamp(40px,6vh,76px)}
+.hero-grid{display:grid;grid-template-columns:1.05fr .95fr;gap:clamp(28px,5vw,72px);align-items:center}
+.hero-name{margin:0;max-width:16ch;font:800 clamp(46px,7.4vw,104px)/0.94 var(--display);font-stretch:125%;letter-spacing:-.035em;color:var(--ink);text-wrap:balance}
+.hero-tag{margin:20px 0 0;max-width:44ch;font:600 clamp(16px,1.9vw,21px)/1.45 var(--sans);color:var(--ink-2)}
+.hero-tag:empty{display:none}
+.hero-desc{margin:12px 0 0;max-width:52ch;font-size:15px;line-height:1.6;color:var(--muted)}
+.hero-desc:empty{display:none}
+.hero-actions{display:flex;flex-wrap:wrap;gap:10px;margin-top:30px}
+.btn{
+  position:relative;display:inline-flex;align-items:center;justify-content:center;gap:9px;
+  min-height:48px;padding:0 22px;border:1px solid transparent;border-radius:var(--r-btn);
+  font-size:14px;font-weight:700;cursor:pointer;
+}
+.btn svg{width:15px;height:15px}
+.btn-solid{background:var(--brand);color:var(--on-brand)}
+.btn-solid:hover{background:var(--brand-deep);color:var(--on-brand-deep)}
+.btn-line{background:transparent;border-color:var(--ink);color:var(--ink)}
+.btn-line:hover{background:var(--ink);color:var(--bg)}
+.hero-facts{display:flex;flex-wrap:wrap;gap:7px 22px;margin:28px 0 0;padding:0;list-style:none}
+.hero-facts li{display:inline-flex;align-items:center;gap:8px;font:500 11px var(--mono);letter-spacing:.1em;text-transform:uppercase;color:var(--muted)}
+.hero-facts li a{display:inline-flex;align-items:center;min-height:32px}
+.hero-facts li::before{content:"";flex:none;width:5px;height:5px;background:var(--brand)}
+.hero-facts li:has(>span:empty),.hero-facts li:has(>a[href=""]){display:none}
+.hero-facts li[hidden]{display:none!important}
+
+.hero-media{position:relative;margin:0;aspect-ratio:4/3;max-height:520px;background:var(--soft);border:1px solid var(--line);border-radius:var(--r);overflow:hidden;display:grid;place-items:center}
+.hero-fallback{font:800 clamp(110px,13vw,190px) var(--display);font-stretch:125%;color:color-mix(in srgb,var(--ink) 9%,transparent);user-select:none}
+.hero-media img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;display:block}
+
+/* ==========================================================
+   AVISOS — cinta estática de novedades (sin marquee).
+   ========================================================== */
+.avisos{border-bottom:1px solid var(--line);padding:13px 0}
+.avisos-in{display:flex;flex-wrap:wrap;gap:9px 26px}
+.ds-note{display:inline-flex;align-items:center;gap:8px;font:600 10.5px var(--mono);letter-spacing:.1em;text-transform:uppercase;color:var(--ink-2)}
+.ds-note svg{width:14px;height:14px;flex:none;color:var(--brand)}
+
+/* ==========================================================
+   BANDAS Y ENCABEZADOS
+   ========================================================== */
+.band{padding:clamp(38px,5.5vh,64px) 0}
+.band.alt{background:var(--surface);border-block:1px solid var(--line)}
+.sec-head{display:flex;align-items:flex-end;justify-content:space-between;gap:16px;margin-bottom:24px}
+.sec-head h2,.block-title{margin:0;font:800 clamp(24px,3vw,36px)/1.05 var(--display);font-stretch:112%;letter-spacing:-.02em}
+.sec-link{
+  display:inline-flex;align-items:center;gap:7px;flex:none;min-height:36px;padding:6px 0;
+  font:600 11.5px var(--mono);letter-spacing:.1em;text-transform:uppercase;color:var(--link);
+}
+.sec-link:hover{text-decoration:underline;text-underline-offset:4px}
+.sec-link svg{width:13px;height:13px}
+.block-title{font-size:clamp(19px,2.2vw,25px);margin-bottom:18px}
+
+/* ==========================================================
+   DEPARTAMENTOS — directorio con numeración de pasillo.
+   ========================================================== */
+.aisles{display:grid;grid-template-columns:1fr 1fr;gap:0 clamp(24px,4vw,56px);counter-reset:aisle}
+.aisles .ds-cat{
+  position:relative;display:flex;align-items:baseline;gap:14px;
+  padding:15px 2px;border-bottom:1px solid var(--line);
+  font-size:clamp(16px,1.8vw,21px);font-weight:600;letter-spacing:-.01em;color:var(--ink);
+}
+.aisles .ds-cat::before{
+  counter-increment:aisle;content:"P-" counter(aisle,decimal-leading-zero);
+  font:500 10.5px var(--mono);letter-spacing:.1em;color:var(--muted);flex:none;
+}
+.aisles .ds-cat span{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.aisles .ds-cat::after{
+  content:"→";margin-inline-start:auto;font-size:15px;color:var(--link);opacity:0;flex:none;
+}
+@media(hover:hover){
+  .aisles .ds-cat:hover{color:var(--link)}
+  .aisles .ds-cat:hover::after{opacity:1}
+}
+.aisles:not(:has(.ds-cat)){display:none}
+
+/* ==========================================================
+   PRODUCTOS — tarjeta de góndola: foto limpia, categoría en
+   mono chico, nombre y precio protagonista en mono tabular.
+   ========================================================== */
+.pgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(190px,1fr));gap:14px}
+.pgrid > .ds-empty{grid-column:1/-1}
+.cat-surface [data-ds-products] > .ds-empty{grid-column:1/-1}
+.ds-product{position:relative;display:flex;flex-direction:column;min-width:0;background:var(--surface);border:1px solid var(--line)}
+.ds-product-link{
+  display:grid;flex:1;height:100%;color:inherit;
+  grid-template-columns:minmax(0,1fr) auto;
+  grid-template-areas:"media media" "cat stock" "copy copy" "price price";
+  grid-template-rows:auto auto 1fr auto;
+}
+.ds-product-img{grid-area:media;display:block;width:100%;aspect-ratio:1/1;object-fit:contain;background:var(--soft);border-bottom:1px solid var(--line)}
+.ds-product-img.is-empty{border-bottom:1px solid var(--line)}
+.ds-product-cat{grid-area:cat;min-height:1.4em;padding:10px 14px 0;font:600 9.5px var(--mono);letter-spacing:.14em;text-transform:uppercase;color:var(--muted)}
+.ds-stock{grid-area:stock;align-self:start;display:inline-flex;align-items:center;gap:5px;padding:10px 14px 0;font:500 10px var(--mono);letter-spacing:.04em;color:var(--ok);white-space:nowrap}
+.ds-product-copy{grid-area:copy;display:grid;gap:4px;align-content:start;min-width:0;padding:8px 14px 0}
+.ds-product-name{
+  margin:0;font:600 14px/1.35 var(--sans);letter-spacing:-.01em;
+  display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;overflow-wrap:anywhere;
+}
+.ds-product-desc{font-size:12px;line-height:1.45;color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.ds-product-desc:empty{display:none}
+.ds-product-price{
+  grid-area:price;display:flex;flex-wrap:wrap;align-items:baseline;gap:3px 8px;min-width:0;
+  padding:12px 14px 14px;font:800 20px/1.1 var(--mono);letter-spacing:-.02em;
+  font-variant-numeric:tabular-nums;color:var(--ink);overflow-wrap:anywhere;
+}
+.ds-product-amount{position:relative}
+.ds-product-old{font:400 12px var(--mono);color:var(--muted);text-decoration:line-through}
+.ds-product-old:empty{display:none}
+.ds-product-price[data-off]::after{
+  content:"−" attr(data-off) "%";color:var(--offer);font-weight:700;font-size:.78em;letter-spacing:0;
+}
+.ds-campaign-label{position:absolute;top:8px;left:8px;z-index:2;height:22px;width:auto;max-width:55%;object-fit:contain}
+@media(hover:hover){
+  .ds-product:hover{border-color:color-mix(in srgb,var(--ink) 45%,var(--line))}
+  .ds-product:hover .ds-product-name{color:var(--link)}
+}
+.ds-empty{margin:0;padding:26px 0;color:var(--muted);font-size:14px}
+.pgrid > .ds-empty,.pgrid:has(> .ds-empty:only-child){grid-column:1/-1}
+
+/* ==========================================================
+   MARCAS — logos o inicial + nombre; cada item filtra el catálogo.
+   ========================================================== */
+.brands{display:flex;flex-wrap:wrap;gap:10px;list-style:none;margin:0;padding:0}
+.brands .ds-brand-link{
+  display:inline-flex;align-items:center;gap:10px;min-width:0;max-width:100%;
+  padding:9px 14px;border:1px solid var(--line);background:var(--surface);color:var(--ink);
+}
+.brands .ds-brand-link:hover{border-color:var(--ink)}
+.ds-brand-img{width:28px;height:28px;object-fit:contain;flex:none;background:var(--surface)}
+.ds-brand-initial{
+  display:grid;place-items:center;flex:none;width:28px;height:28px;
+  border:1px solid var(--line);background:var(--soft);color:var(--ink);
+  font:800 13px var(--mono);
+}
+.ds-brand-name{font:600 12.5px var(--sans);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:150px}
+.brands:not(:has(.ds-brand)){display:none}
+
+/* ==========================================================
+   BENEFICIOS — grilla de celdas con filetes (índice de garantías).
+   ========================================================== */
+.guars{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:1px;background:var(--line);border:1px solid var(--line)}
+.ds-guar{display:flex;gap:13px;align-items:flex-start;background:var(--surface);padding:20px}
+.ds-guar-icon{display:grid;place-items:center;flex:none;width:36px;height:36px;border:1px solid var(--line);color:var(--brand)}
+.ds-guar-icon svg{width:17px;height:17px}
+.ds-guar-copy{display:grid;gap:4px;min-width:0}
+.ds-guar-copy b{font-size:13.5px;font-weight:700;letter-spacing:-.01em}
+.ds-guar-copy span{font-size:12.5px;line-height:1.5;color:var(--muted)}
+.guars:not(:has(.ds-guar)){display:none}
+
+/* ==========================================================
+   STATS — cifras en mono sobre filetes.
+   ========================================================== */
+.stats{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));border-block:1px solid var(--line)}
+.ds-stat{padding:24px 20px;min-width:0}
+.ds-stat + .ds-stat{border-left:1px solid var(--line)}
+.ds-stat-value{display:block;font:800 clamp(26px,3vw,38px)/1.05 var(--mono);letter-spacing:-.03em;font-variant-numeric:tabular-nums;color:var(--ink)}
+.ds-stat-label{display:block;margin-top:8px;font-size:11.5px;line-height:1.45;color:var(--muted)}
+.stats:not(:has(.ds-stat)){display:none}
+
+/* ==========================================================
+   LA TIENDA (about) — texto editorial + años y misión.
+   ========================================================== */
+.about-grid{display:grid;grid-template-columns:minmax(0,.9fr) minmax(0,1.1fr);gap:clamp(24px,4vw,56px);align-items:start}
+.about-title{margin:0 0 14px;font:800 clamp(24px,3vw,36px)/1.05 var(--display);font-stretch:112%;letter-spacing:-.02em}
+.about-title:empty{display:none}
+.about-years{display:flex;align-items:baseline;gap:12px;margin:0 0 26px}
+.about-years b{font:800 clamp(40px,5vw,64px)/1 var(--mono);letter-spacing:-.04em;font-variant-numeric:tabular-nums;color:var(--brand)}
+.about-years span{font:600 11px var(--mono);letter-spacing:.14em;text-transform:uppercase;color:var(--muted)}
+.about-years:has(b:empty){display:none}
+.about-text{margin:0 0 18px;font-size:16px;line-height:1.7;color:var(--ink-2);max-width:58ch}
+.about-text:empty{display:none}
+.about-mission{margin:0 0 18px;padding:16px 0 0;border-top:1px solid var(--line);font-size:14.5px;line-height:1.65;color:var(--muted);max-width:58ch}
+.about-mission::before{content:"Misión";display:block;margin-bottom:6px;font:600 10px var(--mono);letter-spacing:.16em;text-transform:uppercase;color:var(--brand)}
+.about-mission:empty{display:none}
+.about-spec{margin:0;font:500 11.5px var(--mono);letter-spacing:.04em;color:var(--muted)}
+.about-spec:empty{display:none}
+
+/* ==========================================================
+   GALERÍA — planchas limpias con filete.
+   ========================================================== */
+.gal{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px}
+.ds-shot{margin:0;aspect-ratio:4/3;overflow:hidden;border:1px solid var(--line);background:var(--soft)}
+.ds-shot img{width:100%;height:100%;object-fit:cover;display:block}
+.gal:not(:has(.ds-shot)){display:none}
+
+/* ==========================================================
+   TESTIMONIOS — citas sobre retícula de filetes.
+   ========================================================== */
+.quotes{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:1px;background:var(--line);border:1px solid var(--line)}
+.ds-quote{margin:0;background:var(--surface);padding:24px;display:flex;flex-direction:column;gap:14px}
+.ds-quote-text{margin:0;font-size:15px;line-height:1.6;color:var(--ink-2)}
+.ds-quote-name{margin-top:auto;font:600 11px var(--mono);letter-spacing:.1em;text-transform:uppercase;color:var(--muted)}
+.ds-quote-name::before{content:"— ";color:var(--brand)}
+.quotes:not(:has(.ds-quote)){display:none}
+
+/* ==========================================================
+   FAQ — lista de preguntas con filetes y marca +/–.
+   ========================================================== */
+.faq{border-top:1px solid var(--line);max-width:820px}
+.faq .ds-faq{border-bottom:1px solid var(--line)}
+.faq .ds-faq-q{
+  display:flex;align-items:baseline;gap:12px;min-height:48px;padding:14px 0;cursor:pointer;
+  font-size:15.5px;font-weight:600;letter-spacing:-.01em;list-style:none;
+}
+.faq .ds-faq-q::-webkit-details-marker{display:none}
+.faq .ds-faq-q::before{content:"+";flex:none;font:500 15px var(--mono);color:var(--brand)}
+.faq .ds-faq[open] .ds-faq-q::before{content:"–"}
+.faq .ds-faq-a{margin:0;padding:0 0 18px 27px;font-size:14px;line-height:1.65;color:var(--muted);max-width:64ch}
+.faq:not(:has(.ds-faq)){display:none}
+
+/* ==========================================================
+   CTA — banda de cierre tipográfico.
+   ========================================================== */
+.cta-band{background:var(--brand);color:var(--on-brand);padding:clamp(48px,7vh,84px) 0}
+.cta-in{display:flex;flex-wrap:wrap;align-items:flex-end;justify-content:space-between;gap:20px 32px}
+.cta-title{margin:0;max-width:20ch;font:800 clamp(30px,4.4vw,54px)/1.02 var(--display);font-stretch:118%;letter-spacing:-.025em}
+.cta-title:empty{display:none}
+.cta-text{margin:14px 0 0;max-width:46ch;font-size:15px;line-height:1.6;color:color-mix(in srgb,var(--on-brand) 82%,transparent)}
+.cta-text:empty{display:none}
+.cta-label{flex:none;min-height:52px;padding:0 26px;border:1px solid var(--on-brand);background:transparent;color:var(--on-brand);font-size:14px}
+.cta-label:hover{background:var(--on-brand);color:var(--brand)}
+.cta-label:empty{display:none}
+
+/* ==========================================================
+   CONTACTO — datos de la tienda (ticket) + formulario del puente.
+   ========================================================== */
+.contact-grid{display:grid;grid-template-columns:minmax(0,.85fr) minmax(0,1.15fr);gap:clamp(24px,4vw,56px);align-items:start}
+.contact-sub{margin:10px 0 0;max-width:40ch;font-size:14.5px;line-height:1.6;color:var(--muted)}
+.contact-sub:empty{display:none}
+.contact-form{min-width:0}
+
+/* Ticket — firma del diseño: recibo mono con filetes punteados. */
+.ticket{margin-top:26px;background:var(--surface);border:1px solid var(--ink)}
+.ticket-head{
+  display:flex;align-items:baseline;justify-content:space-between;gap:12px;
+  padding:13px 16px 12px;border-bottom:2px dashed var(--line);
+  font:700 12px var(--mono);letter-spacing:.12em;text-transform:uppercase;
+}
+.ticket-tag{flex:none;font-weight:500;color:var(--muted)}
+.ticket-rows{padding:4px 16px}
+.trow{display:flex;align-items:baseline;gap:10px;padding:9px 0;border-bottom:1px dotted var(--line);font:12px/1.5 var(--mono)}
+.trow:last-child{border-bottom:0}
+.tkey{flex:none;color:var(--muted)}
+.tleader{flex:1;min-width:14px;border-bottom:1px dotted var(--line);transform:translateY(-3px)}
+.tval{min-width:0;text-align:right;color:var(--ink);overflow-wrap:anywhere}
+.tval a{display:inline-flex;align-items:center;min-height:30px;color:var(--link);font-weight:600}
+.tval a:hover{text-decoration:underline;text-underline-offset:3px}
+.trow[hidden]{display:none!important}
+.ticket-foot{
+  display:flex;align-items:center;justify-content:space-between;gap:10px;
+  padding:11px 16px;border-top:2px dashed var(--line);
+  font:500 10px var(--mono);letter-spacing:.12em;text-transform:uppercase;color:var(--muted);
+}
+
+/* Formulario de contacto (lo arma el puente: .ds-contact-fields…). */
+.ds-contact-fields{display:grid;gap:12px}
+.ds-contact-row{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.ds-contact-input{
+  width:100%;min-height:46px;padding:10px 13px;border:1px solid var(--line);border-radius:var(--r);
+  background:var(--surface);color:var(--ink);font:400 14px var(--sans);
+}
+.ds-contact-input::placeholder{color:var(--muted);opacity:1}
+.ds-contact-input:focus{outline:2px solid var(--link);outline-offset:1px;border-color:var(--link)}
+.ds-contact-area{resize:vertical;min-height:112px;line-height:1.5}
+.ds-contact-cap{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.ds-contact-q{font:600 12px var(--mono);color:var(--muted)}
+.ds-contact-reload{
+  display:grid;place-items:center;width:40px;height:40px;border:1px solid var(--line);border-radius:var(--r);
+  background:var(--surface);color:var(--ink);font-size:15px;cursor:pointer;
+}
+.ds-contact-reload:hover{border-color:var(--ink)}
+.ds-contact-status{margin:0;font-size:12.5px;color:var(--offer)}
+.ds-contact-status[data-ok="1"]{color:var(--ok)}
+.ds-contact-status:empty{display:none}
+.ds-contact-send{
+  justify-self:start;min-height:48px;padding:0 26px;border:0;border-radius:var(--r-btn);
+  background:var(--brand);color:var(--on-brand);font:700 13.5px var(--sans);cursor:pointer;
+}
+.ds-contact-send:hover{background:var(--brand-deep);color:var(--on-brand-deep)}
+
+/* ==========================================================
+   CATÁLOGO — cabecera, filtros de mercado y resultados.
+   ========================================================== */
+.cat-surface,.pdp-surface,.svc-surface{padding:clamp(30px,5vh,56px) 0 64px}
+.crumbs{display:flex;align-items:center;flex-wrap:wrap;gap:7px;padding-bottom:18px;font-size:12px;line-height:1.3;color:var(--muted)}
+.crumbs a{color:var(--ink-2);font-weight:600}
+.crumbs a:hover{color:var(--ink);text-decoration:underline;text-underline-offset:3px}
+.crumbs .sep{opacity:.5}
+.crumbs strong{color:var(--ink);font-weight:700}
+.cat-hero h1{margin:0;font:800 clamp(34px,4.6vw,58px)/1 var(--display);font-stretch:118%;letter-spacing:-.03em}
+.cat-sub{margin:12px 0 0;max-width:52ch;font-size:15px;color:var(--muted)}
+.cat-sub:empty{display:none}
+.cat-meta{display:flex;flex-wrap:wrap;gap:8px 22px;margin:16px 0 0;padding:0;list-style:none}
+.cat-meta li{display:inline-flex;align-items:center;gap:8px;font:500 11px var(--mono);letter-spacing:.1em;text-transform:uppercase;color:var(--muted)}
+.cat-meta li::before{content:"";flex:none;width:5px;height:5px;background:var(--brand)}
+.cat-meta li:has(>span:empty){display:none}
+.cat-meta li[hidden]{display:none!important}
+
+.cat-layout{display:grid;grid-template-columns:250px minmax(0,1fr);gap:28px;align-items:start;padding-top:26px}
+.cat-aside{
+  min-width:0;background:var(--surface);border:1px solid var(--line);
+  max-height:calc(100dvh - 150px);overflow-y:auto;overscroll-behavior:contain;
+}
+.cat-aside-head{display:none;align-items:center;justify-content:space-between;gap:10px;padding:12px 16px;border-bottom:1px solid var(--line)}
+.cat-aside-head strong{font:800 16px var(--display);letter-spacing:-.01em}
+.cat-aside-close{display:inline-grid;place-items:center;width:40px;height:40px;padding:0;border:1px solid var(--line);border-radius:var(--r);background:var(--surface);color:var(--ink);cursor:pointer}
+.cat-aside-close:hover{border-color:var(--ink)}
+.f-group{padding:15px 16px;border-top:1px solid var(--line)}
+.f-group:first-of-type{border-top:0}
+.f-title{margin:0 0 8px;font:600 10px var(--mono);letter-spacing:.16em;text-transform:uppercase;line-height:1.3;color:var(--muted)}
+.f-list{display:grid;gap:2px}
+.f-cat{
+  display:flex;align-items:baseline;justify-content:space-between;gap:8px;width:100%;
+  min-height:40px;padding:8px 0;border:0;background:none;color:var(--ink-2);
+  font:500 13px var(--sans);line-height:1.35;text-align:left;cursor:pointer;
+}
+.f-cat:hover{color:var(--ink)}
+.f-cat.is-active,.f-cat[aria-pressed="true"]{color:var(--link);font-weight:700}
+.f-cat.is-active span::before,.f-cat[aria-pressed="true"] span::before{content:"› ";color:var(--link)}
+.f-cat em{flex:none;font:400 11px var(--mono);font-style:normal;color:var(--muted)}
+.f-check{display:flex;align-items:center;gap:9px;min-width:0;min-height:40px;font-size:13px;color:var(--ink-2);cursor:pointer}
+.f-check:hover{color:var(--ink)}
+.f-check input{
+  appearance:none;-webkit-appearance:none;display:grid;place-content:center;
+  flex:none;width:16px;height:16px;margin:0;cursor:pointer;
+  border:1px solid color-mix(in srgb,var(--ink) 32%,transparent);border-radius:2px;background:var(--surface);
+}
+.f-check input:hover{border-color:color-mix(in srgb,var(--ink) 60%,transparent)}
+.f-check input:checked{background:var(--brand);border-color:var(--brand)}
+.f-check input:checked::after{content:"";width:9px;height:5px;border-left:2px solid var(--on-brand);border-bottom:2px solid var(--on-brand);transform:rotate(-45deg) translate(1px,-1px)}
+.f-check span{flex:1 1 auto;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.f-check em{margin-inline-start:auto;flex:none;font:400 11px var(--mono);font-style:normal;color:var(--muted)}
+.f-list[data-collapsed] .f-check:nth-child(n+7){display:none}
+.f-more{display:inline-flex;align-items:center;min-height:40px;margin-top:2px;padding:0;border:0;background:none;color:var(--link);font:inherit;font-size:12px;font-weight:700;cursor:pointer}
+.f-more:hover{text-decoration:underline;text-underline-offset:3px}
+.f-price{display:flex;align-items:center;gap:8px}
+.f-price-field{flex:1 1 0;min-width:0}
+.f-price input{width:100%;min-height:40px;padding:8px 10px;border:1px solid var(--line);border-radius:var(--r);background:var(--surface);color:var(--ink);font:600 13px var(--mono)}
+.f-price input::placeholder{color:var(--muted);opacity:1;font-weight:400}
+.f-price input:focus{border-color:var(--link);outline:none;box-shadow:0 0 0 1px var(--link)}
+.f-price-dash{flex:none;color:var(--muted);font-size:12px}
+.f-apply{
+  margin-top:10px;width:100%;min-height:44px;padding:0 16px;border:1px solid var(--brand);border-radius:var(--r-btn);
+  background:var(--brand);color:var(--on-brand);font:inherit;font-size:12.5px;font-weight:700;cursor:pointer;
+}
+.f-apply:hover{background:var(--brand-deep);border-color:var(--brand-deep);color:var(--on-brand-deep)}
+.cat-aside-foot{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:13px 16px;border-top:1px solid var(--line)}
+.f-clear{padding:6px 0;border:0;background:none;color:var(--link);font:inherit;font-size:12.5px;font-weight:700;cursor:pointer;text-align:left}
+.f-clear:hover{text-decoration:underline;text-underline-offset:3px}
+.f-done{display:none}
+.cat-scrim{display:none}
+
+.cat-results{min-width:0}
+.cat-bar{display:flex;align-items:center;gap:10px 16px;flex-wrap:wrap;padding:2px 0 14px;border-bottom:1px solid var(--line)}
+.cat-filters-toggle{
+  display:none;align-items:center;gap:9px;margin-bottom:16px;min-height:44px;padding:0 16px;
+  border:1px solid var(--ink);border-radius:var(--r-btn);background:var(--surface);color:var(--ink);
+  font:inherit;font-size:13px;font-weight:700;cursor:pointer;
+}
+.cat-filters-toggle svg{flex:none}
+.cat-filters-badge{display:inline-grid;place-items:center;min-width:18px;height:18px;padding:0 5px;background:var(--brand);color:var(--on-brand);font:700 10px var(--mono)}
+.cat-count{margin:0;font:700 13px var(--mono);letter-spacing:.02em;color:var(--ink)}
+.cat-count:empty{display:none}
+.cat-view{display:inline-flex;gap:2px;margin-inline-start:auto;padding:2px;border:1px solid var(--line)}
+.cat-view button{display:grid;place-items:center;width:40px;height:40px;padding:0;border:0;background:transparent;color:var(--muted);cursor:pointer}
+.cat-view button:hover{background:var(--soft);color:var(--ink)}
+.cat-view button[aria-pressed="true"]{background:var(--ink);color:var(--surface)}
+.cat-sort{position:relative;display:inline-flex;align-items:center;gap:7px;margin:0;font:600 11px var(--mono);color:var(--muted);white-space:nowrap}
+.cat-sort select{appearance:none;-webkit-appearance:none;padding:8px 24px 8px 4px;border:0;background:transparent;color:var(--ink);font:700 13px var(--sans);cursor:pointer}
+.cat-sort::after{content:"";position:absolute;right:6px;top:50%;width:6px;height:6px;border-right:1.5px solid var(--muted);border-bottom:1.5px solid var(--muted);transform:translateY(-70%) rotate(45deg);pointer-events:none}
+.cat-sort select:focus-visible{outline:2px solid var(--link);outline-offset:2px}
+
+.cat-chips{display:flex;flex-wrap:wrap;align-items:center;gap:7px;padding:12px 0 0}
+.cat-chips[hidden]{display:none}
+.cat-chip{
+  display:inline-flex;align-items:center;gap:7px;min-height:36px;padding:0 7px 0 10px;
+  border:1px solid var(--line);background:var(--surface);color:var(--ink);
+  font:600 12px var(--sans);cursor:pointer;
+}
+.cat-chip:hover{border-color:var(--ink)}
+.cat-chip b{font:600 9.5px var(--mono);letter-spacing:.1em;text-transform:uppercase;color:var(--muted)}
+.cat-chip i{display:grid;place-items:center;width:17px;height:17px;background:var(--soft);font-style:normal;font-size:12px;line-height:1}
+.cat-chip-clear{padding:2px 4px;border:0;background:none;color:var(--link);font:700 12px var(--sans);cursor:pointer}
+.cat-chip-clear:hover{text-decoration:underline;text-underline-offset:3px}
+
+/* Resultados: grilla de góndola (default) o filas de lista. */
+.cat-surface [data-ds-products]{margin-top:16px}
+.cat-surface [data-ds-products][data-ds-view-mode="grid"]{display:grid;grid-template-columns:repeat(auto-fill,minmax(165px,1fr));gap:14px}
+.cat-surface [data-ds-view-mode="list"]{display:block;border-top:1px solid var(--line)}
+.cat-surface [data-ds-view-mode="list"] .ds-product{border:0;border-bottom:1px solid var(--line);background:transparent}
+.cat-surface [data-ds-view-mode="list"] .ds-product-link{
+  grid-template-columns:118px minmax(0,1fr) auto;
+  grid-template-areas:"media cat price" "media copy price" "media stock price";
+  grid-template-rows:auto auto auto;align-content:center;column-gap:20px;
+  padding:15px 4px;
+}
+.cat-surface [data-ds-view-mode="list"] .ds-product-img{grid-area:media;width:118px;height:118px;aspect-ratio:auto;border-bottom:0}
+.cat-surface [data-ds-view-mode="list"] .ds-product-img.is-empty{width:118px;height:118px}
+.cat-surface [data-ds-view-mode="list"] .ds-product-cat{grid-area:cat;min-height:0;padding:0 0 3px}
+.cat-surface [data-ds-view-mode="list"] .ds-product-copy{grid-area:copy;padding:0;gap:3px}
+.cat-surface [data-ds-view-mode="list"] .ds-product-name{font-size:16px;min-height:0;-webkit-line-clamp:2}
+.cat-surface [data-ds-view-mode="list"] .ds-product-desc{white-space:normal;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.cat-surface [data-ds-view-mode="list"] .ds-stock{grid-area:stock;align-self:start;padding:0}
+.cat-surface [data-ds-view-mode="list"] .ds-product-price{grid-area:price;flex-direction:column;align-items:flex-end;justify-content:center;gap:2px;padding:0;font-size:23px;text-align:right}
+.cat-surface [data-ds-view-mode="list"] .ds-product-old{font-size:11.5px}
+.cat-surface [data-ds-view-mode="list"] .ds-product-price[data-off]::after{font-size:.68em}
+.cat-surface [data-ds-noresults]{margin:26px 0 8px;padding:38px 20px;text-align:center;border:1px dashed var(--line);color:var(--muted);font-size:14px}
+.cat-surface [data-ds-noresults][hidden]{display:none}
+
+/* ==========================================================
+   FICHA DE PRODUCTO — foto limpia + datos como ficha de góndola.
+   ========================================================== */
+.pdp-crumbs{padding-bottom:20px}
+.pdp-layout{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:clamp(22px,4vw,52px);align-items:start;padding-top:8px}
+.pdp-media{
+  position:relative;margin:0;display:grid;place-items:center;aspect-ratio:1/1;max-height:580px;
+  background:var(--soft);border:1px solid var(--line);border-radius:var(--r);overflow:hidden;
+}
+.pdp-fallback{font:800 clamp(100px,14vw,180px) var(--display);font-stretch:125%;color:color-mix(in srgb,var(--ink) 10%,transparent);user-select:none}
+.pdp-media:has(>img[src]:not([src=""])) .pdp-fallback{display:none}
+.pdp-media img{position:absolute;inset:0;width:100%;height:100%;object-fit:contain;display:block}
+.pdp-off{
+  position:absolute;z-index:3;top:14px;left:14px;padding:5px 9px;
+  background:color-mix(in srgb,var(--offer) 14%,var(--surface));color:var(--offer);
+  font:800 11.5px var(--mono);letter-spacing:.04em;
+}
+.pdp-off:empty{display:none}
+.pdp-info{min-width:0}
+.pdp-kicker{display:flex;flex-wrap:wrap;gap:6px 14px;margin:0 0 12px;font:600 10.5px var(--mono);letter-spacing:.14em;text-transform:uppercase;color:var(--muted)}
+.pdp-kicker span{display:inline-flex;align-items:center;gap:6px}
+.pdp-kicker span + span::before{content:"· ";color:var(--line)}
+.pdp-kicker span:first-child:empty + span::before{display:none}
+.pdp-kicker span:empty{display:none}
+.pdp-info h1{margin:0;font:800 clamp(26px,3.4vw,42px)/1.08 var(--display);font-stretch:112%;letter-spacing:-.025em}
+.pdp-price{display:flex;flex-wrap:wrap;align-items:baseline;gap:8px 14px;margin:20px 0 0;padding:18px 0;border-block:1px solid var(--line)}
+.pdp-price b{font:800 clamp(30px,4vw,46px)/1 var(--mono);letter-spacing:-.03em;font-variant-numeric:tabular-nums}
+.pdp-price s{font:400 14px var(--mono);color:var(--muted)}
+.pdp-price s:empty{display:none}
+.pdp-save{display:flex;align-items:baseline;gap:8px;margin:12px 0 0;font-size:12.5px;color:var(--muted)}
+.pdp-save b{font:700 13px var(--mono);color:var(--offer)}
+.pdp-save:has(b:empty){display:none}
+.pdp-score{display:inline-flex;align-items:baseline;gap:8px;margin:12px 0 0;font-size:12px;color:var(--muted)}
+.pdp-score b{font:800 15px var(--mono);color:var(--ink)}
+.pdp-score:has(b:empty){display:none}
+.pdp-desc{margin:20px 0 0;font-size:14.5px;line-height:1.7;color:var(--ink-2);max-width:56ch}
+.pdp-desc:empty{display:none}
+.pdp-buy{
+  display:flex;align-items:center;justify-content:center;gap:9px;width:100%;margin-top:24px;
+  min-height:52px;border:0;border-radius:var(--r-btn);background:var(--brand);color:var(--on-brand);
+  font-size:15px;font-weight:700;cursor:pointer;
+}
+.pdp-buy svg{width:17px;height:17px}
+.pdp-buy:hover{background:var(--brand-deep);color:var(--on-brand-deep)}
+.pdp-buy[href=""]{display:none}
+.pdp-back{display:inline-flex;align-items:center;gap:6px;margin-top:10px;padding:8px 0;font-size:12.5px;font-weight:700;color:var(--link)}
+.pdp-back:hover{text-decoration:underline;text-underline-offset:3px}
+.pdp-seller{margin-top:22px;padding-top:16px;border-top:1px solid var(--line);display:grid;gap:5px;font-size:12.5px;color:var(--muted)}
+.pdp-seller strong{color:var(--ink);font-weight:700}
+.pdp-seller span:empty{display:none}
+.pdp-box{grid-column:1/-1;margin-top:34px;background:var(--surface);border:1px solid var(--line);padding:22px 24px}
+.pdp-box h2{margin:0 0 12px;font:800 18px var(--display);letter-spacing:-.01em}
+.pdp-box:not(:has(tbody tr)){display:none}
+.pdp-specs{width:100%;border-collapse:collapse;font-size:13px}
+.pdp-specs th,.pdp-specs td{padding:10px 12px;text-align:left;vertical-align:top;border-bottom:1px solid var(--line)}
+.pdp-specs tr:last-child th,.pdp-specs tr:last-child td{border-bottom:0}
+.pdp-specs th{width:36%;font:600 10px var(--mono);letter-spacing:.12em;text-transform:uppercase;color:var(--muted)}
+.pdp-rel{margin-top:44px}
+.pdp-rel h2{margin:0 0 18px;font:800 clamp(20px,2.4vw,28px)/1.1 var(--display);font-stretch:112%;letter-spacing:-.02em}
+.pdp-rel:not(:has(.ds-product)){display:none}
+.pdp-rev{margin-top:44px}
+.pdp-rev h2{margin:0 0 6px;font:800 clamp(20px,2.4vw,28px)/1.1 var(--display);font-stretch:112%;letter-spacing:-.02em}
+.pdp-rev:not(:has(.ds-reviews)){display:none}
+.pdp-rev-head{display:flex;flex-wrap:wrap;align-items:baseline;gap:12px;margin-bottom:16px}
+.pdp-rev-head h2{margin:0}
+.pdp-score{margin:0}
+.ds-rev-list{list-style:none;margin:0;padding:0;display:grid;gap:10px}
+.ds-rev-item{border:1px solid var(--line);padding:14px 16px;font-size:13px;background:var(--surface)}
+.ds-rev-item .ds-rev-name{font-weight:700;margin-right:8px}
+.ds-rev-item .ds-rev-date{font:400 10.5px var(--mono);color:var(--muted);margin-right:8px}
+.ds-rev-item .ds-rev-vote{color:var(--link)}
+.ds-rev-item .ds-rev-vote.ds-rev-down{color:var(--muted)}
+.ds-rev-text{margin:8px 0 0;font-size:13px;line-height:1.6;color:var(--ink-2)}
+.ds-rev-form{margin-top:16px;border-top:1px solid var(--line);padding-top:16px}
+.ds-rev-fields{display:grid;gap:10px;font-size:13px}
+.ds-rev-votes{display:flex;gap:8px;flex-wrap:wrap}
+.ds-rev-pick{
+  display:inline-flex;align-items:center;gap:7px;min-height:40px;padding:7px 13px;
+  border:1px solid var(--line);background:var(--surface);color:var(--ink);
+  font:inherit;font-size:12.5px;cursor:pointer;
+}
+.ds-rev-pick.is-on{border-color:var(--link);color:var(--link);background:var(--soft)}
+.ds-rev-row{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.ds-rev-input{
+  width:100%;font:inherit;font-size:13px;padding:10px 12px;border:1px solid var(--line);border-radius:var(--r);
+  background:var(--surface);color:var(--ink);
+}
+.ds-rev-input:focus{outline:2px solid var(--link);outline-offset:1px;border-color:var(--link)}
+.ds-rev-area{resize:vertical;line-height:1.5}
+.ds-rev-cap{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.ds-rev-q{font:600 12px var(--mono);color:var(--muted)}
+.ds-rev-cap .ds-rev-input{max-width:130px}
+.ds-rev-reload{
+  display:grid;place-items:center;width:40px;height:40px;border:1px solid var(--line);border-radius:var(--r);
+  background:var(--surface);color:var(--ink);font-size:15px;cursor:pointer;
+}
+.ds-rev-reload:hover{border-color:var(--ink)}
+.ds-rev-status{margin:0;font-size:12.5px;color:var(--offer)}
+.ds-rev-status[data-ok="1"]{color:var(--ok)}
+.ds-rev-status:empty{display:none}
+.ds-rev-send{
+  justify-self:start;min-height:44px;padding:0 22px;border:0;border-radius:var(--r-btn);
+  background:var(--brand);color:var(--on-brand);font:700 12.5px var(--sans);cursor:pointer;
+}
+.ds-rev-send:hover{background:var(--brand-deep);color:var(--on-brand-deep)}
+
+/* ==========================================================
+   SERVICIOS — offerings en retícula y lista de servicios como
+   directorio con precio/duración desde los data-attrs.
+   ========================================================== */
+.svc-head h1{margin:0;font:800 clamp(34px,4.6vw,58px)/1 var(--display);font-stretch:118%;letter-spacing:-.03em}
+.svc-sub{margin:12px 0 0;max-width:54ch;font-size:15px;color:var(--muted)}
+.svc-sub:empty{display:none}
+.svc-meta{display:flex;flex-wrap:wrap;gap:8px 22px;margin:16px 0 0;padding:0;list-style:none}
+.svc-meta li{display:inline-flex;align-items:center;gap:8px;font:500 11px var(--mono);letter-spacing:.1em;text-transform:uppercase;color:var(--muted)}
+.svc-meta li::before{content:"";flex:none;width:5px;height:5px;background:var(--brand)}
+.svc-meta li:has(>span:empty){display:none}
+.svc-meta li[hidden]{display:none!important}
+.offerings{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:1px;background:var(--line);border:1px solid var(--line)}
+.offerings .ds-offer{display:grid;gap:8px;align-content:start;background:var(--surface);padding:22px}
+.ds-offer-icon{display:grid;place-items:center;width:38px;height:38px;border:1px solid var(--line);color:var(--brand)}
+.ds-offer-icon svg{width:18px;height:18px}
+.ds-offer-name{margin:0;font-size:15.5px;font-weight:700;letter-spacing:-.01em}
+.ds-offer-text{margin:0;font-size:13px;line-height:1.6;color:var(--muted)}
+.offerings:not(:has(.ds-offer)){display:none}
+.services-block{margin-top:44px}
+.services-title{margin:0 0 8px;font:800 clamp(19px,2.2vw,25px)/1.15 var(--display);font-stretch:112%;letter-spacing:-.02em}
+.services-note{margin:0 0 20px;font-size:13px;color:var(--muted);max-width:56ch}
+.services-note:empty{display:none}
+.ds-services-list{list-style:none;margin:0;padding:0;border-top:1px solid var(--line);counter-reset:svc}
+.ds-service{
+  display:grid;grid-template-columns:34px 40px minmax(0,1fr) auto;grid-template-areas:"num ico name side" "num ico desc side";
+  column-gap:16px;align-items:center;padding:17px 2px;border-bottom:1px solid var(--line);
+}
+.ds-service::before{counter-increment:svc;content:counter(svc,decimal-leading-zero);grid-area:num;font:500 11px var(--mono);letter-spacing:.08em;color:var(--muted)}
+.sv-ico{grid-area:ico;display:grid;place-items:center;width:38px;height:38px;border:1px solid var(--line);color:var(--brand)}
+.sv-ico svg{width:17px;height:17px}
+.ds-service-name{grid-area:name;margin:0;font-size:15.5px;font-weight:700;letter-spacing:-.01em;line-height:1.3;overflow-wrap:anywhere}
+.ds-service-desc{grid-area:desc;margin:3px 0 0;font-size:13px;line-height:1.55;color:var(--muted);overflow-wrap:anywhere}
+.ds-service-desc:empty{display:none}
+.sv-side{grid-area:side;text-align:right;min-width:0}
+.sv-price{display:block;font:700 14px var(--mono);font-variant-numeric:tabular-nums;white-space:nowrap}
+.sv-dur{display:block;margin-top:3px;font:500 10.5px var(--mono);letter-spacing:.06em;text-transform:uppercase;color:var(--muted);white-space:nowrap}
+.services-block:not(:has(.ds-service)){display:none}
+.svc-empty{
+  display:none;margin-top:36px;padding:46px 24px;text-align:center;
+  border:1px dashed var(--line);font:500 12px var(--mono);letter-spacing:.08em;text-transform:uppercase;color:var(--muted);
+}
+.svc-empty[hidden]{display:none}
+[data-surface="services"]:not(:has(.ds-offer)):not(:has(.ds-service)) .svc-empty{display:block}
+.svc-cta{margin-top:38px}
+.svc-faq{margin-top:52px}
+.svc-faq .faq{margin-top:8px}
+
+/* ==========================================================
+   PIE — datos, navegación y barra legal. Siempre visible.
+   ========================================================== */
+.foot{background:var(--surface);border-top:1px solid var(--line);padding:0 0 0}
+.foot-top{padding:clamp(34px,5vh,56px) 0 30px;border-bottom:1px solid var(--line)}
+.foot-name{margin:0;font:800 clamp(34px,5.4vw,72px)/0.98 var(--display);font-stretch:120%;letter-spacing:-.03em}
+.foot-tag{margin:14px 0 0;max-width:44ch;font-size:14px;line-height:1.6;color:var(--muted)}
+.foot-tag:empty{display:none}
+.foot-up{display:inline-flex;align-items:center;gap:7px;margin-top:14px;padding:8px 0;font:600 11px var(--mono);letter-spacing:.12em;text-transform:uppercase;color:var(--link)}
+.foot-up:hover{text-decoration:underline;text-underline-offset:4px}
+.foot-up svg{width:13px;height:13px}
+.foot-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:22px;padding:28px 0;font-size:13px;line-height:1.7;color:var(--muted)}
+.foot-h{margin:0 0 10px;font:600 10px var(--mono);letter-spacing:.18em;text-transform:uppercase;color:var(--ink)}
+.foot-col ul{list-style:none;margin:0;padding:0;display:grid;gap:7px}
+.foot-col li{min-width:0}
+.foot-col li:has(>span:empty){display:none}
+.foot-col li span:empty{display:none}
+.foot-col a{display:inline-flex;align-items:center;min-height:32px;color:var(--ink-2);font-weight:600}
+.foot-col a:hover{color:var(--link);text-decoration:underline;text-underline-offset:3px}
+.foot-social{display:flex;gap:8px;margin-top:16px}
+.foot-social:not(:has(a[href]:not([href=""]))){display:none}
+.foot-social a{
+  display:inline-flex;align-items:center;justify-content:center;width:40px;height:40px;
+  border:1px solid var(--line);color:var(--ink-2);
+}
+.foot-social a:hover{border-color:var(--ink);color:var(--ink)}
+.foot-social svg{width:16px;height:16px}
+.foot-bar{
+  display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:8px 18px;
+  border-top:1px solid var(--line);padding:16px 0 22px;
+  font:500 11px var(--mono);letter-spacing:.04em;color:var(--muted);
+}
+.foot-bar b{color:var(--brand);font-weight:700}
+.foot-bar span:empty{display:none}
+
+/* ==========================================================
+   MENÚ MÓVIL — barra inferior + hoja inferior. Sin animaciones:
+   se abren y cierran al instante con display.
+   ========================================================== */
+.m-tabs{
+  position:fixed;left:0;right:0;bottom:0;z-index:68;display:none;
+  align-items:stretch;justify-content:space-around;
+  background:color-mix(in srgb,var(--surface) 96%,transparent);
+  border-top:1px solid var(--line);
+  padding:5px calc(5px + env(safe-area-inset-right)) calc(5px + env(safe-area-inset-bottom)) calc(5px + env(safe-area-inset-left));
+}
+.m-tab{
+  position:relative;flex:1 1 0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;
+  min-height:52px;padding:0 4px;border:0;border-radius:var(--r);background:none;color:var(--ink-2);
+  font:600 10px var(--sans);text-align:center;cursor:pointer;
+}
+.m-tab:hover{color:var(--ink)}
+.m-tab.is-on{color:var(--link)}
+.m-tab.is-on::before{content:"";position:absolute;top:2px;left:50%;width:18px;height:2px;background:var(--brand)}
+.m-tab svg{width:19px;height:19px}
+.m-scrim{display:none;position:fixed;left:0;right:0;top:0;height:var(--fr-h,100vh);z-index:69;background:rgba(12,17,13,.5)}
+.m-scrim.open{display:block}
+.m-sheet{
+  display:none;position:fixed;left:0;right:0;top:0;height:var(--fr-h,100vh);z-index:70;
+  align-items:flex-end;
+}
+.m-sheet.open{display:flex}
+.m-sheet-card{
+  width:100%;max-height:82%;overflow-y:auto;
+  background:var(--surface);color:var(--ink);border-top:1px solid var(--line);
+  border-radius:var(--r) var(--r) 0 0;padding-bottom:env(safe-area-inset-bottom);
+}
+.m-sheet-head{position:relative;display:grid;gap:6px;padding:12px 20px 10px;border-bottom:1px solid var(--line)}
+.m-grab{justify-self:center;width:36px;height:4px;background:var(--line)}
+.m-sheet-brand{display:flex;align-items:center;gap:10px;min-width:0;padding-right:44px}
+.m-sheet-brand .mark{display:grid;place-items:center;width:30px;height:30px;border:1px solid var(--ink);background:var(--surface);color:var(--ink);font:800 12px var(--display)}
+.m-sheet-brand strong{font-size:15px;font-weight:800;letter-spacing:-.01em;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.m-close{position:absolute;top:14px;right:12px;display:grid;place-items:center;width:40px;height:40px;border:1px solid var(--line);border-radius:var(--r);background:var(--surface);color:var(--ink);font-size:20px;line-height:1;cursor:pointer}
+.m-close:hover{border-color:var(--ink)}
+.m-sheet-nav{display:grid;padding:6px 20px 20px}
+.m-sheet-nav a{
+  display:flex;align-items:center;justify-content:space-between;gap:12px;
+  min-height:52px;padding:10px 2px;border-bottom:1px solid var(--line);
+  font-size:16px;font-weight:600;
+}
+.m-sheet-nav a span:last-child{font:500 10px var(--mono);letter-spacing:.14em;color:var(--muted)}
+.m-sheet-nav a:hover{color:var(--link)}
+html.m-lock,html.m-lock body{overflow:hidden}
+
+/* ==========================================================
+   RESPONSIVE — grid de productos denso, chrome compacto.
+   ========================================================== */
+@media(max-width:1080px){
+  .guars{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .stats{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .ds-stat:nth-child(3){border-left:0}
+  .ds-stat:nth-child(n+3){border-top:1px solid var(--line)}
+  .gal{grid-template-columns:repeat(3,minmax(0,1fr))}
+  .quotes{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .offerings{grid-template-columns:repeat(2,minmax(0,1fr))}
+}
+@media(max-width:860px){
+  .hero-grid{grid-template-columns:1fr;gap:34px}
+  .hero-media{max-width:560px;width:100%}
+  .hero-name{max-width:20ch}
+  .cat-layout{grid-template-columns:minmax(0,1fr);gap:14px}
+  .cat-aside{
+    display:none;position:fixed;top:0;right:0;bottom:auto;width:min(400px,94vw);z-index:85;
+    height:var(--fr-h,100vh);max-height:none;border:0;border-left:1px solid var(--line);
+    background:var(--surface);box-shadow:-24px 0 60px -40px rgba(0,0,0,.5);
+    padding-bottom:env(safe-area-inset-bottom);
+  }
+  .cat-aside.is-open{display:block}
+  body.filters-open .cat-scrim{
+    display:block;position:fixed;left:0;right:0;top:0;height:var(--fr-h,100vh);z-index:80;
+    background:rgba(12,17,13,.5);
+  }
+  .cat-aside-head{display:flex}
+  .cat-aside-foot{position:sticky;bottom:0;background:var(--surface)}
+  .f-clear{flex:1 1 auto;min-height:46px;border:1px solid var(--line);border-radius:var(--r-btn);text-align:center;color:var(--ink)}
+  .f-done{display:inline-flex;align-items:center;justify-content:center;flex:1 1 auto;min-height:46px;padding:0 18px;border:0;border-radius:var(--r-btn);background:var(--brand);color:var(--on-brand);font:inherit;font-size:14px;font-weight:700;cursor:pointer}
+  .cat-filters-toggle{display:inline-flex}
+  .pdp-layout,.contact-grid,.about-grid{grid-template-columns:1fr}
+  .pdp-media{max-width:560px}
+}
+@media(max-width:720px){
+  .tabs{display:none}
+  .top-meta{display:none}
+  .m-tabs{display:flex}
+  body{padding-bottom:calc(64px + env(safe-area-inset-bottom))}
+  .aisles{grid-template-columns:1fr}
+  .pgrid{grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px}
+  .ds-product-name{font-size:13px}
+  .ds-product-price{font-size:17px;padding:10px 12px 12px}
+  .guars,.stats,.quotes,.offerings,.gal{grid-template-columns:1fr}
+  .ds-stat + .ds-stat{border-left:0;border-top:1px solid var(--line)}
+  .ds-stat:nth-child(3){border-left:0}
+  .foot-grid{grid-template-columns:1fr 1fr}
+}
+@media(max-width:560px){
+  .shell{padding:0 16px}
+  .top-in{gap:10px;min-height:0;flex-wrap:wrap;padding-top:10px;padding-bottom:10px;row-gap:8px}
+  .brand{font-size:16px;order:1}
+  .top-in .ds-theme-toggle{order:2;margin-inline-start:auto}
+  .search{order:3;flex:1 1 100%;height:48px}
+  .search-input{font-size:16px}
+  .search-clear{width:42px;height:42px}
+  .search-go{padding:0 12px;min-width:58px}
+  .search-go span{display:none}
+  .search-suggest{max-height:50vh}
+  .hero{padding-top:34px}
+  .hero-actions .btn{flex:1 1 auto}
+  .cat-surface [data-ds-products][data-ds-view-mode="grid"]{grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:10px}
+  .cat-surface [data-ds-view-mode="list"] .ds-product-link{grid-template-columns:88px minmax(0,1fr) auto;column-gap:12px}
+  .cat-surface [data-ds-view-mode="list"] .ds-product-img,
+  .cat-surface [data-ds-view-mode="list"] .ds-product-img.is-empty{width:88px;height:88px}
+  .cat-surface [data-ds-view-mode="list"] .ds-product-name{font-size:14px}
+  .cat-surface [data-ds-view-mode="list"] .ds-product-price{font-size:19px}
+  .ds-service{grid-template-columns:28px 34px minmax(0,1fr);grid-template-areas:"num ico name" "num ico desc";row-gap:4px}
+  .sv-side{grid-column:3;text-align:left;margin-top:4px}
+  .sv-price,.sv-dur{display:inline;margin-right:12px}
+  .ds-contact-row,.ds-rev-row{grid-template-columns:1fr}
+  .foot-grid{grid-template-columns:1fr}
+  .foot-bar{flex-direction:column;align-items:flex-start;gap:6px}
+}
+a:focus-visible,button:focus-visible,select:focus-visible,input:focus-visible,summary:focus-visible{outline:2px solid var(--link);outline-offset:2px}
+</style>
+</head>
+<body>
+
+<!-- ============================ CHROME ============================ -->
+<div class="topbar" data-ds-pin="top" data-ds-offset="118">
+  <header class="top">
+    <div class="shell top-in">
+      <a class="brand" href="#inicio" data-ds-route="home">
+        <span class="mark">{{store_initial}}<img src="{{store_logo}}" alt=""></span>
+        <span class="brand-txt">
+          <span class="brand-name">{{store_name}}</span>
+          <span class="brand-tag">Autoservicio</span>
+        </span>
+      </a>
+      <form class="search" role="search" data-ds-search autocomplete="off" novalidate>
+        <input class="search-input" type="search" name="q" placeholder="Buscar en {{store_name}}…" aria-label="Buscar productos" data-ds-search-input>
+        <button class="search-clear" type="button" aria-label="Borrar búsqueda" data-ds-search-clear hidden>×</button>
+        <button class="search-go" type="submit" aria-label="Buscar">
+          <span>Buscar</span>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+        </button>
+        <div class="search-suggest" data-ds-suggest role="listbox" aria-label="Sugerencias de búsqueda" hidden></div>
+      </form>
+      <div class="top-meta"><span>{{store_location}}</span><span>{{store_hours}}</span></div>
+    </div>
+  </header>
+  <nav class="tabs" aria-label="Secciones">
+    <div class="shell tabs-in">
+      <a class="on" href="#inicio" data-ds-route="home">Inicio</a>
+      <a href="#catalogo" data-ds-route="catalog" data-flag="catalog">Catálogo</a>
+      <a href="#servicios" data-ds-route="services" data-flag="services">Servicios</a>
+      <a href="#contacto" data-flag="contact">Contacto</a>
+      <a class="tabs-wa" href="{{store_whatsapp_url}}" data-flag="contact">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 11.5a8.4 8.4 0 0 1-8.5 8.4 8.6 8.6 0 0 1-3.8-.9L3 21l2-5.3a8.3 8.3 0 0 1-1-4A8.4 8.4 0 0 1 12.5 3.2 8.4 8.4 0 0 1 21 11.5Z"/></svg>
+        WhatsApp
+      </a>
+    </div>
+  </nav>
+</div>
+
+<nav class="m-tabs" data-ds-pin="bottom" aria-label="Secciones principales">
+  <a class="m-tab" href="#inicio" data-ds-route="home">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 10.5 12 3l9 7.5"/><path d="M5 9.5V21h14V9.5"/></svg>
+    <span>Inicio</span>
+  </a>
+  <a class="m-tab" href="#catalogo" data-ds-route="catalog" data-flag="catalog">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="4" y="4" width="7" height="7" rx="1"/><rect x="13" y="4" width="7" height="7" rx="1"/><rect x="4" y="13" width="7" height="7" rx="1"/><rect x="13" y="13" width="7" height="7" rx="1"/></svg>
+    <span>Catálogo</span>
+  </a>
+  <a class="m-tab" href="#servicios" data-ds-route="services" data-flag="services">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16"/><path d="M7 7v10M17 7v10"/></svg>
+    <span>Servicios</span>
+  </a>
+  <button class="m-tab" type="button" aria-expanded="false" aria-controls="m-sheet" data-m-open>
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16"/></svg>
+    <span>Más</span>
+  </button>
+</nav>
+
+<div class="m-scrim" data-m-close aria-hidden="true"></div>
+<div id="m-sheet" class="m-sheet" role="dialog" aria-modal="true" aria-label="Todas las secciones">
+  <div class="m-sheet-card">
+    <div class="m-sheet-head">
+      <span class="m-grab" aria-hidden="true"></span>
+      <div class="m-sheet-brand">
+        <span class="mark">{{store_initial}}</span>
+        <strong>{{store_name}}</strong>
+      </div>
+      <button class="m-close" type="button" aria-label="Cerrar menú" data-m-close>×</button>
+    </div>
+    <nav class="m-sheet-nav" aria-label="Todas las secciones">
+      <a href="#inicio" data-ds-route="home" data-m-close><span>Inicio</span><span aria-hidden="true">01</span></a>
+      <a href="#catalogo" data-ds-route="catalog" data-m-close data-flag="catalog"><span>Catálogo</span><span aria-hidden="true">02</span></a>
+      <a href="#servicios" data-ds-route="services" data-m-close data-flag="services"><span>Servicios</span><span aria-hidden="true">03</span></a>
+      <a href="#contacto" data-m-close data-flag="contact"><span>Contacto</span><span aria-hidden="true">04</span></a>
+      <a href="{{store_whatsapp_url}}" data-m-close><span>WhatsApp</span><span aria-hidden="true">↗</span></a>
+    </nav>
+  </div>
+</div>
+
+<!-- ============================ LANDING ============================ -->
+<div data-surface="landing">
+
+  <section class="hero" id="inicio">
+    <div class="shell hero-grid">
+      <div class="hero-copy">
+        <h1 class="hero-name">{{store_name}}</h1>
+        <p class="hero-tag">{{store_tagline}}</p>
+        <p class="hero-desc">{{store_description}}</p>
+        <div class="hero-actions">
+          <a class="btn btn-solid" href="#catalogo" data-ds-route="catalog" data-flag="catalog">
+            Ver catálogo
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+          </a>
+          <a class="btn btn-line wa-link" href="{{store_whatsapp_url}}">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 11.5a8.4 8.4 0 0 1-8.5 8.4 8.6 8.6 0 0 1-3.8-.9L3 21l2-5.3a8.3 8.3 0 0 1-1-4A8.4 8.4 0 0 1 12.5 3.2 8.4 8.4 0 0 1 21 11.5Z"/></svg>
+            Consultar
+          </a>
+        </div>
+        <ul class="hero-facts">
+          <li data-flag="hours" data-hide-blank="span"><span>{{store_hours}}</span></li>
+          <li data-flag="location" data-hide-blank="span"><span>{{store_address}}</span></li>
+          <li data-hide-blank="a"><a class="wa-link" href="{{store_whatsapp_url}}">WhatsApp</a></li>
+        </ul>
+      </div>
+      <figure class="hero-media">
+        <span class="hero-fallback" aria-hidden="true">{{store_initial}}</span>
+        <img src="{{store_cover}}" alt="{{store_name}}">
+      </figure>
+    </div>
+  </section>
+
+  <section class="avisos" data-flag="announcements">
+    <div class="shell"><div class="avisos-in ds-zone">{{announcements}}</div></div>
+  </section>
+
+  <section class="band" id="departamentos" data-flag="categories">
+    <div class="shell">
+      <div class="sec-head">
+        <h2>Departamentos</h2>
+        <a class="sec-link" href="#catalogo" data-ds-route="catalog" data-flag="catalog">
+          Ver catálogo
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+        </a>
+      </div>
+      <div class="aisles ds-zone">{{categories}}</div>
+    </div>
+  </section>
+
+  <section class="band alt" data-flag="featured">
+    <div class="shell">
+      <div class="sec-head">
+        <h2>Productos</h2>
+        <a class="sec-link" href="#catalogo" data-ds-route="catalog" data-flag="catalog">
+          Ver todo
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+        </a>
+      </div>
+      <div class="pgrid ds-zone">{{products}}</div>
+    </div>
+  </section>
+
+  <section class="band" data-flag="brands">
+    <div class="shell">
+      <div class="sec-head"><h2>Marcas</h2></div>
+      <ul class="brands ds-zone">{{brands}}</ul>
+    </div>
+  </section>
+
+  <section class="band alt" data-flag="benefits">
+    <div class="shell">
+      <div class="sec-head"><h2>Garantías y beneficios</h2></div>
+      <div class="guars ds-zone">{{benefits}}</div>
+    </div>
+  </section>
+
+  <section class="band" data-flag="stats">
+    <div class="shell"><div class="stats ds-zone">{{stats}}</div></div>
+  </section>
+
+  <section class="band alt" data-flag="about" data-hide-if-empty=".about-title|.about-text|.about-mission|.about-spec">
+    <div class="shell about-grid">
+      <div class="about-side">
+        <h2 class="about-title">{{store_about_title}}</h2>
+        <p class="about-years" data-hide-blank="b"><b>{{store_about_years}}</b><span>Años de trayectoria</span></p>
+      </div>
+      <div class="about-body">
+        <p class="about-text">{{store_about}}</p>
+        <p class="about-mission">{{store_about_mission}}</p>
+        <p class="about-spec">{{store_about_specialties}}</p>
+      </div>
+    </div>
+  </section>
+
+  <section class="band" data-flag="gallery">
+    <div class="shell">
+      <div class="sec-head"><h2>Galería</h2></div>
+      <div class="gal ds-zone">{{gallery}}</div>
+    </div>
+  </section>
+
+  <section class="band alt" data-flag="testimonials">
+    <div class="shell">
+      <div class="sec-head"><h2>{{testimonials_title}}</h2></div>
+      <div class="quotes ds-zone">{{testimonials}}</div>
+    </div>
+  </section>
+
+  <section class="band" data-flag="faq">
+    <div class="shell">
+      <div class="sec-head"><h2>{{faqs_title}}</h2></div>
+      <div class="faq ds-zone">{{faqs}}</div>
+    </div>
+  </section>
+
+  <section class="cta-band" data-flag="cta" data-hide-if-empty=".cta-title|.cta-text|.cta-label">
+    <div class="shell cta-in">
+      <div class="cta-copy">
+        <h2 class="cta-title">{{cta_title}}</h2>
+        <p class="cta-text">{{cta_text}}</p>
+      </div>
+      <a class="btn cta-label" href="#contacto" data-ds-anchor data-ds-route="home" data-flag="contact">{{cta_label}}</a>
+    </div>
+  </section>
+
+  <section class="band contact" id="contacto" data-flag="contact">
+    <div class="shell contact-grid">
+      <div class="contact-side">
+        <h2 class="block-title">Contacto</h2>
+        <p class="contact-sub">Escribinos por WhatsApp o dejános tu consulta: te respondemos a la brevedad.</p>
+        <aside class="ticket" aria-label="Datos de la tienda">
+          <p class="ticket-head"><span>{{store_name}}</span><span class="ticket-tag">Autoservicio</span></p>
+          <div class="ticket-rows">
+            <div class="trow" data-flag="location" data-hide-blank=".tval"><span class="tkey">Dirección</span><span class="tleader" aria-hidden="true"></span><span class="tval">{{store_address}}</span></div>
+            <div class="trow" data-hide-blank=".tval"><span class="tkey">Zona</span><span class="tleader" aria-hidden="true"></span><span class="tval">{{store_location}}</span></div>
+            <div class="trow" data-flag="hours" data-hide-blank=".tval"><span class="tkey">Horarios</span><span class="tleader" aria-hidden="true"></span><span class="tval">{{store_hours}}</span></div>
+            <div class="trow" data-hide-blank=".tval"><span class="tkey">WhatsApp</span><span class="tleader" aria-hidden="true"></span><span class="tval"><a class="wa-link" href="{{store_whatsapp_url}}">Consultar</a></span></div>
+            <div class="trow" data-flag="location" data-hide-blank=".tval"><span class="tkey">Mapa</span><span class="tleader" aria-hidden="true"></span><span class="tval"><a href="{{store_maps_url}}">Cómo llegar</a></span></div>
+          </div>
+          <p class="ticket-foot"><span>© {{year}}</span><span>Gracias por tu visita</span></p>
+        </aside>
+      </div>
+      <div class="contact-form ds-zone">{{contact_form}}</div>
+    </div>
+  </section>
+
+</div>
+
+<!-- ============================ CATÁLOGO ============================ -->
+<section class="cat-surface" data-surface="catalog" id="catalogo" data-flag="catalog">
+  <div class="shell">
+    <header class="cat-hero">
+      <nav class="crumbs" aria-label="Ruta">
+        <a href="#inicio" data-ds-route="home">Inicio</a>
+        <span class="sep" aria-hidden="true">/</span>
+        <strong data-ds-crumb aria-current="page">Todos los productos</strong>
+      </nav>
+      <h1>Catálogo</h1>
+      <p class="cat-sub">{{store_tagline}}</p>
+      <ul class="cat-meta">
+        <li data-flag="location" data-hide-blank="span"><span>{{store_location}}</span></li>
+        <li data-flag="hours" data-hide-blank="span"><span>{{store_hours}}</span></li>
+      </ul>
+    </header>
+
+    <div class="cat-layout">
+      <button class="cat-filters-toggle" type="button" data-ds-filters-toggle aria-expanded="false" aria-controls="as-filters">
+        <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><path d="M4 7h16M7 12h10M10 17h4"/></svg>
+        Filtros
+        <span class="cat-filters-badge" data-ds-filter-count hidden></span>
+      </button>
+      <aside class="cat-aside" id="as-filters" data-ds-filters-panel aria-label="Filtros del catálogo">
+        <div class="cat-aside-head">
+          <strong>Filtros</strong>
+          <button class="cat-aside-close" type="button" data-ds-filters-close aria-label="Cerrar filtros">
+            <svg viewBox="0 0 24 24" width="19" height="19" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18"/></svg>
+          </button>
+        </div>
+
+        <section class="f-group" aria-labelledby="as-f-cat">
+          <h2 class="f-title" id="as-f-cat">Categorías</h2>
+          <div class="f-list" data-ds-filters data-ds-filters-mode="list" role="group" aria-label="Categorías"></div>
+        </section>
+
+        <section class="f-group" data-ds-brands-group aria-labelledby="as-f-brand" hidden>
+          <h2 class="f-title" id="as-f-brand">Marcas</h2>
+          <div class="f-list" data-ds-brands role="group" aria-label="Marcas"></div>
+          <button class="f-more" type="button" data-ds-brands-more hidden>Ver todas las marcas</button>
+        </section>
+
+        <section class="f-group" aria-labelledby="as-f-price">
+          <h2 class="f-title" id="as-f-price">Precio</h2>
+          <div class="f-price">
+            <label class="f-price-field"><span class="sr-only">Precio mínimo</span>
+              <input type="number" inputmode="numeric" min="0" step="1" placeholder="Desde" data-ds-price-min>
+            </label>
+            <span class="f-price-dash" aria-hidden="true">—</span>
+            <label class="f-price-field"><span class="sr-only">Precio máximo</span>
+              <input type="number" inputmode="numeric" min="0" step="1" placeholder="Hasta" data-ds-price-max>
+            </label>
+          </div>
+          <button class="f-apply" type="button" data-ds-price-apply>Aplicar</button>
+        </section>
+
+        <section class="f-group" aria-labelledby="as-f-offer">
+          <h2 class="f-title" id="as-f-offer">Ofertas</h2>
+          <label class="f-check"><input type="checkbox" data-ds-offers><span>Solo ofertas</span></label>
+        </section>
+
+        <div class="cat-aside-foot">
+          <button class="f-clear" type="button" data-ds-clear>Limpiar filtros</button>
+          <button class="f-done" type="button" data-ds-filters-close>Aplicar</button>
+        </div>
+      </aside>
+      <div class="cat-scrim" data-ds-filters-close aria-hidden="true"></div>
+
+      <div class="cat-results">
+        <div class="cat-bar">
+          <p class="cat-count" data-ds-count aria-live="polite"></p>
+          <div class="cat-view" role="group" aria-label="Vista de resultados">
+            <button type="button" data-ds-view="grid" aria-pressed="true" aria-label="Ver como grilla" title="Vista de grilla">
+              <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><rect x="4" y="4" width="7" height="7" rx="1"/><rect x="13" y="4" width="7" height="7" rx="1"/><rect x="4" y="13" width="7" height="7" rx="1"/><rect x="13" y="13" width="7" height="7" rx="1"/></svg>
+            </button>
+            <button type="button" data-ds-view="list" aria-pressed="false" aria-label="Ver como lista" title="Vista de lista">
+              <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><path d="M4 6h16M4 12h16M4 18h16"/></svg>
+            </button>
+          </div>
+          <label class="cat-sort"><span>Ordenar por</span>
+            <select data-ds-sort>
+              <option value="relevance">Más relevantes</option>
+              <option value="price-asc">Menor precio</option>
+              <option value="price-desc">Mayor precio</option>
+              <option value="recent">Más nuevos</option>
+              <option value="name">Nombre</option>
+            </select>
+          </label>
+        </div>
+
+        <div class="cat-chips" data-ds-chips hidden></div>
+
+        <div class="cat-results-grid" data-ds-products data-ds-view-mode="grid">{{products}}</div>
+        <p class="ds-empty" data-ds-noresults hidden>No hay productos que coincidan con tu búsqueda.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============================ PRODUCTO ============================ -->
+<section class="pdp-surface" data-surface="product" data-flag="catalog">
+  <div class="shell">
+    <h1 class="sr-only">{{product_name}} · {{store_name}}</h1>
+    <nav class="crumbs pdp-crumbs" aria-label="Ruta">
+      <a href="#inicio" data-ds-route="home">Inicio</a>
+      <span class="sep" aria-hidden="true">/</span>
+      <a href="#catalogo" data-ds-route="catalog">Catálogo</a>
+      <span class="sep" aria-hidden="true">/</span>
+      <strong aria-current="page">{{product_name}}</strong>
+    </nav>
+
+    <div class="pdp-layout">
+      <figure class="pdp-media">
+        <span class="pdp-fallback" aria-hidden="true">{{store_initial}}</span>
+        <img src="{{product_image}}" alt="{{product_name}}" fetchpriority="high" decoding="async">
+        <span class="pdp-off">{{product_offer_pct}}</span>
+        {{product_campaign_label}}
+      </figure>
+      <div class="pdp-info">
+        <p class="pdp-kicker"><span>{{product_category}}</span><span>{{product_brand}}</span><span>Ref. {{product_ref}}</span></p>
+        <h1>{{product_name}}</h1>
+        <div class="pdp-price"><b>{{product_price}}</b><s>{{product_old_price}}</s></div>
+        <p class="pdp-save" data-hide-blank="b"><span>Ahorrás</span><b>{{product_save}}</b></p>
+        <p class="pdp-score" data-hide-blank="b"><b>{{product_rating_avg}}</b><span>promedio · {{product_rating_count}} valoraciones</span></p>
+        <p class="pdp-desc">{{product_description}}</p>
+        <a class="pdp-buy wa-link" href="{{product_whatsapp_url}}">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 11.5a8.4 8.4 0 0 1-8.5 8.4 8.6 8.6 0 0 1-3.8-.9L3 21l2-5.3a8.3 8.3 0 0 1-1-4A8.4 8.4 0 0 1 12.5 3.2 8.4 8.4 0 0 1 21 11.5Z"/></svg>
+          Consultar por WhatsApp
+        </a>
+        <a class="pdp-back" href="#catalogo" data-ds-route="catalog">‹ Volver al catálogo</a>
+        <div class="pdp-seller">
+          <span>Vendido por <strong>{{store_name}}</strong></span>
+          <span>{{store_location}}</span>
+          <span>{{store_hours}}</span>
+        </div>
+      </div>
+      <section class="pdp-box" aria-label="Características">
+        <h2>Características</h2>
+        <table class="pdp-specs"><tbody>{{product_features}}</tbody></table>
+      </section>
+    </div>
+
+    <section class="pdp-rev" aria-label="Opiniones">
+      <div class="pdp-rev-head">
+        <h2>Opiniones del producto</h2>
+        <p class="pdp-score"><b>{{product_rating_avg}}</b><span>promedio · {{product_rating_count}} valoraciones</span></p>
+      </div>
+      {{product_reviews}}
+    </section>
+
+    <section class="pdp-rel" aria-label="También te puede interesar">
+      <h2>También te puede interesar</h2>
+      <div class="pgrid">{{product_related}}</div>
+    </section>
+  </div>
+</section>
+
+<!-- ============================ SERVICIOS ============================ -->
+<section class="svc-surface" data-surface="services" id="servicios" data-flag="services">
+  <div class="shell">
+    <header class="svc-head">
+      <nav class="crumbs" aria-label="Ruta">
+        <a href="#inicio" data-ds-route="home">Inicio</a>
+        <span class="sep" aria-hidden="true">/</span>
+        <strong>Servicios</strong>
+      </nav>
+      <h1>{{offerings_title}}</h1>
+      <p class="svc-sub">{{store_tagline}}</p>
+      <ul class="svc-meta">
+        <li data-flag="hours" data-hide-blank="span"><span>{{store_hours}}</span></li>
+        <li data-flag="location" data-hide-blank="span"><span>{{store_location}}</span></li>
+      </ul>
+    </header>
+
+    <div class="offerings" data-hide-if-empty=".ds-offer">{{offerings}}</div>
+
+    <div class="services-block" data-hide-if-empty=".ds-service">
+      <h2 class="services-title">Servicios</h2>
+      <p class="services-note">Consultá por WhatsApp para coordinar cada servicio.</p>
+      {{services}}
+    </div>
+
+    <p class="svc-empty">La tienda todavía no publicó servicios. Escribinos por WhatsApp y te contamos qué podemos hacer por vos.</p>
+
+    <div class="svc-cta">
+      <a class="btn btn-solid" href="{{store_whatsapp_url}}">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 11.5a8.4 8.4 0 0 1-8.5 8.4 8.6 8.6 0 0 1-3.8-.9L3 21l2-5.3a8.3 8.3 0 0 1-1-4A8.4 8.4 0 0 1 12.5 3.2 8.4 8.4 0 0 1 21 11.5Z"/></svg>
+        Consultar por WhatsApp
+      </a>
+    </div>
+
+    <section class="svc-faq" data-flag="faq">
+      <h2 class="block-title">{{faqs_title}}</h2>
+      <div class="faq ds-zone">{{faqs}}</div>
+    </section>
+  </div>
+</section>
+
+<!-- ============================ FOOTER ============================ -->
+<footer class="foot">
+  <div class="shell">
+    <div class="foot-top">
+      <p class="foot-name">{{store_name}}</p>
+      <p class="foot-tag">{{store_tagline}}</p>
+      <div class="foot-social">
+        <a href="{{store_instagram_url}}" aria-label="Instagram"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.2" cy="6.8" r="1" fill="currentColor" stroke="none"/></svg></a>
+        <a href="{{store_facebook_url}}" aria-label="Facebook"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true"><path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z"/></svg></a>
+        <a href="{{store_tiktok_url}}" aria-label="TikTok"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true"><path d="M9 12a4 4 0 1 0 4 4V4c.6 2.5 2.4 4.4 5 5"/></svg></a>
+      </div>
+      <a class="foot-up" href="#inicio" data-ds-anchor data-ds-route="home">
+        Volver arriba
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 19V5M6 11l6-6 6 6"/></svg>
+      </a>
+    </div>
+    <div class="foot-grid">
+      <div class="foot-col">
+        <h3 class="foot-h">Tienda</h3>
+        <ul>
+          <li><a href="#inicio" data-ds-route="home">Inicio</a></li>
+          <li><a href="#catalogo" data-ds-route="catalog" data-flag="catalog">Catálogo</a></li>
+          <li><a href="#servicios" data-ds-route="services" data-flag="services">Servicios</a></li>
+          <li><a href="#departamentos" data-ds-anchor data-ds-route="home" data-flag="categories">Departamentos</a></li>
+          <li><a href="#contacto" data-ds-anchor data-ds-route="home" data-flag="contact">Contacto</a></li>
+        </ul>
+      </div>
+      <div class="foot-col">
+        <h3 class="foot-h">Contacto</h3>
+        <ul>
+          <li data-flag="location"><span>{{store_address}}</span></li>
+          <li data-flag="location"><span>{{store_location}}</span></li>
+          <li data-flag="hours"><span>{{store_hours}}</span></li>
+          <li><a class="wa-link" href="{{store_whatsapp_url}}">WhatsApp</a></li>
+          <li><a href="{{store_maps_url}}">Cómo llegar</a></li>
+        </ul>
+      </div>
+      <div class="foot-col">
+        <h3 class="foot-h">El negocio</h3>
+        <ul>
+          <li><span>{{store_about_title}}</span></li>
+          <li><span>{{footer_text}}</span></li>
+        </ul>
+      </div>
+    </div>
+    <div class="foot-bar">
+      <span>© {{year}} {{store_name}} · Todos los derechos reservados</span>
+      <span>Hecho con <b>DAVENT</b></span>
+    </div>
+  </div>
+</footer>
+
+<script>
+(function(){
+  var root=document.documentElement, body=document.body;
+  function qsa(sel,ctx){return [].slice.call((ctx||document).querySelectorAll(sel))}
+
+  /* ---------- Menú móvil: "Más" abre la hoja; cierra con fondo, cruz,
+     Esc o al navegar. Se muestra/oculta con display (sin animación). */
+  var sheet=document.getElementById('m-sheet');
+  function setMenu(open){
+    if(!sheet)return;
+    sheet.classList.toggle('open',open);
+    var scrim=document.querySelector('.m-scrim');
+    if(scrim)scrim.classList.toggle('open',open);
+    qsa('[data-m-open]').forEach(function(b){b.setAttribute('aria-expanded',open?'true':'false')});
+    root.classList.toggle('m-lock',open);
+  }
+  document.addEventListener('click',function(e){
+    var t=e.target;
+    if(!t||!t.closest)return;
+    if(t.closest('[data-m-open]')){setMenu(!sheet||!sheet.classList.contains('open'));return}
+    if(t.closest('[data-m-close]'))setMenu(false);
+  });
+  document.addEventListener('keydown',function(e){
+    if(e.key==='Escape'){setMenu(false);closeFilters()}
+  });
+
+  /* ---------- Tabs activas según la superficie visible ---------- */
+  function paintTabs(){
+    var surface=root.getAttribute('data-ds-surface')||'landing';
+    qsa('.tabs a[data-ds-route],.m-tab[data-ds-route]').forEach(function(el){
+      var route=el.getAttribute('data-ds-route');
+      var on=(surface==='landing'&&route==='home')
+        ||(surface==='catalog'&&route==='catalog')
+        ||(surface==='services'&&route==='services')
+        ||(surface==='product'&&route==='catalog');
+      el.classList.toggle('on',on);
+      el.classList.toggle('is-on',on);
+      if(on)el.setAttribute('aria-current','page');else el.removeAttribute('aria-current');
+    });
+  }
+  paintTabs();
+  if('MutationObserver' in window)new MutationObserver(paintTabs).observe(root,{attributes:true,attributeFilter:['data-ds-surface']});
+
+  /* ---------- Chrome fijo: el relleno del body se mide, no se estima,
+     y data-ds-offset queda exacto para los anchors del puente. Además se
+     publica --fr-h (alto visible del marco) para las hojas fijas. */
+  var topbar=document.querySelector('.topbar');
+  var mTabs=document.querySelector('.m-tabs');
+  var frameBox=null;
+  function syncPad(){
+    if(topbar){
+      var h=Math.round(topbar.getBoundingClientRect().height);
+      body.style.paddingTop=h+'px';
+      topbar.setAttribute('data-ds-offset',String(h));
+    }
+    var showBottom=mTabs&&window.getComputedStyle(mTabs).display!=='none';
+    body.style.paddingBottom=showBottom?Math.round(mTabs.getBoundingClientRect().height)+'px':'';
+  }
+  function paintFrame(){
+    if(!frameBox)return;
+    var ih=root.scrollHeight||1;
+    var top=Math.max(0,-frameBox.top);
+    var bottom=Math.min(ih,frameBox.vh-frameBox.top);
+    var h=Math.max(0,bottom-top);
+    root.style.setProperty('--fr-h',h+'px');
+  }
+  window.addEventListener('message',function(e){
+    var d=e.data||{};
+    if(d.type==='davent:ds-frame'){
+      frameBox={top:Number(d.top)||0,bottom:Number(d.bottom)||0,vh:Number(d.vh)||0};
+      paintFrame();
+    }
+  });
+  syncPad();
+  paintFrame();
+  window.addEventListener('resize',function(){syncPad();closeFilters()});
+  if(window.ResizeObserver&&topbar)new ResizeObserver(syncPad).observe(topbar);
+
+  /* ---------- Panel de filtros en móvil: el puente lo abre como hoja
+     (.is-open + body.filters-open). Acá: scrim que cierra y cierre
+     automático al agrandar la pantalla. */
+  function closeFilters(){
+    var panel=document.querySelector('[data-ds-filters-panel].is-open');
+    if(!panel)return;
+    if(window.innerWidth>860){
+      panel.classList.remove('is-open');
+      body.classList.remove('filters-open');
+      var t=document.querySelector('[data-ds-filters-toggle]');
+      if(t)t.setAttribute('aria-expanded','false');
+    }
+  }
+  var fScrim=document.querySelector('.cat-scrim');
+  if(fScrim)fScrim.addEventListener('click',function(){
+    var c=document.querySelector('[data-ds-filters-panel] [data-ds-filters-close]');
+    if(c)c.click();
+  });
+
+  /* ---------- Índice de departamentos → catálogo filtrado.
+     El fragmento .ds-cat llega como <a href="#catalogo"> sin data-ds-*
+     propios: sin esta intercepción el puente haría scroll a una superficie
+     oculta. Se pre-selecciona la categoría en el panel de filtros (el
+     estado del puente vive en este mismo documento) y se navega con el
+     protocolo oficial. Corre en capture para ganarle al puente. */
+  document.addEventListener('click',function(e){
+    var t=e.target;
+    if(!t||!t.closest)return;
+    var cat=t.closest('a.ds-cat');
+    if(!cat||cat.closest('[data-ds-filters]'))return;
+    if(!cat.closest('[data-surface="landing"]'))return;
+    var nameEl=cat.querySelector('span');
+    var name=nameEl?(nameEl.textContent||'').trim():'';
+    if(name){
+      /* .ds-cat muestra el nombre a 60 chars; data-cat viaja truncado a 40:
+         matchea exacto o por prefijo para nombres largos. */
+      var btns=document.querySelectorAll('[data-ds-filters] button[data-cat]');
+      for(var i=0;i<btns.length;i++){
+        var key=btns[i].getAttribute('data-cat')||'';
+        if(key&&(key===name||name.indexOf(key)===0)){btns[i].click();break}
+      }
+    }
+    e.preventDefault();
+    e.stopPropagation();
+    if(window.parent!==window)parent.postMessage({type:'davent:ds-route',route:'catalog'},'*');
+  },true);
+
+  /* ---------- Secciones sin datos ----------
+     "Vacío" de verdad: sin texto y sin nada visible. Los a[href=""] e
+     img[src=""] ya están ocultos por CSS — se descartan antes de medir. */
+  function isBlankNode(node){
+    if(!node)return true;
+    if(node.nodeType===1&&node.matches('a[href=""],img[src=""]'))return true;
+    var clone=node.cloneNode(true);
+    qsa('a[href=""],img[src=""]',clone).forEach(function(n){
+      if(n.parentNode)n.parentNode.removeChild(n);
+    });
+    if((clone.textContent||'').trim())return false;
+    return !clone.querySelector('img[src]:not([src=""]),svg,video');
+  }
+  function hideEmpty(){
+    qsa('[data-hide-if-empty]').forEach(function(sec){
+      var sels=sec.getAttribute('data-hide-if-empty').split('|');
+      var has=sels.some(function(sel){
+        var node=sec.querySelector(sel);
+        return node&&(node.children.length||(node.textContent||'').trim());
+      });
+      if(!has)sec.hidden=true;
+    });
+    qsa('[data-hide-blank]').forEach(function(el){
+      el.hidden=isBlankNode(el.querySelector(el.getAttribute('data-hide-blank')));
+    });
+    /* El ticket solo se muestra si le queda al menos una fila visible. */
+    qsa('.ticket').forEach(function(t){
+      var rows=qsa('.trow',t);
+      if(!rows.length)return;
+      var any=false;
+      rows.forEach(function(r){
+        if(!any&&window.getComputedStyle(r).display!=='none')any=true;
+      });
+      if(!any)t.hidden=true;
+    });
+    /* Mensaje de "sin servicios": solo cuando no hay offerings ni servicios. */
+    var svcEmpty=document.querySelector('[data-surface="services"] .svc-empty');
+    if(svcEmpty)svcEmpty.hidden=!!document.querySelector('[data-surface="services"] .ds-offer,[data-surface="services"] .ds-service');
+  }
+  hideEmpty();
+  window.addEventListener('message',function(e){
+    var d=e.data||{};
+    if(d.type==='davent:ds-surface')setTimeout(hideEmpty,60);
+  });
+
+  /* ---------- Servicios: icono, precio y duración viajan en data-attrs
+     del fragmento; se componen acá sin pedir nada al servidor. ---------- */
+  qsa('.ds-services-list .ds-service').forEach(function(li){
+    if(li.getAttribute('data-svc-done'))return;
+    li.setAttribute('data-svc-done','1');
+    var svg=li.getAttribute('data-icon-svg');
+    if(svg){
+      var ic=document.createElement('span');
+      ic.className='sv-ico';
+      ic.setAttribute('aria-hidden','true');
+      ic.innerHTML=svg;
+      li.insertBefore(ic,li.firstChild);
+    }
+    var price=li.getAttribute('data-price-label')||'';
+    var dur=li.getAttribute('data-duration')||'';
+    if(price||dur){
+      var side=document.createElement('span');
+      side.className='sv-side';
+      if(price){
+        var b=document.createElement('b');
+        b.className='sv-price';
+        b.textContent=price;
+        side.appendChild(b);
+      }
+      if(dur){
+        var i=document.createElement('i');
+        i.className='sv-dur';
+        i.textContent=dur;
+        side.appendChild(i);
+      }
+      li.appendChild(side);
+    }
+  });
+})();
+</script>
+</body>
+</html>
