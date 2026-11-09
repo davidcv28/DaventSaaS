@@ -1,0 +1,227 @@
+/* ===== dash-redesign/acc — Plan y pagos, Facturas, Mi cuenta y Novedades =====
+   Capa de acabado para las secciones "de datos" del dashboard. Solo suma
+   presentación sobre `.acc-sec` (marcador en cada wrapper de sección) y el
+   modal de novedad (`.news-modal`, teletransportado a <body>). Hereda los
+   tokens de styles.css y las elevaciones/hairlines de dashboard-v3.css. */
+
+.app .acc-sec { --acc-num: tabular-nums; }
+
+/* ---------- Cabecera: kicker mono sobre el título ---------- */
+.app .acc-sec .page-head { align-items: flex-end; }
+.app .acc-sec .page-head h1::before {
+  width: 28px; height: 2px; margin-bottom: 10px;
+  background: var(--brand-500);
+  box-shadow: none;
+}
+.app .acc-sec .page-head p { color: var(--muted); max-width: 64ch; }
+
+/* ---------- Tablas de datos (pagos / facturas) ---------- */
+.app .acc-sec .table-wrap {
+  border: 1px solid var(--dv-hair);
+  border-radius: 14px;
+  box-shadow: var(--dv-elev-1);
+}
+.app .acc-sec .pay-table th {
+  padding: 11px 18px;
+  font-family: var(--font);
+  font-size: 11px;
+  font-weight: 650;
+  letter-spacing: .07em;
+  color: var(--muted);
+  background: var(--surface);
+  border-bottom: 1px solid var(--dv-hair);
+}
+.app .acc-sec .pay-table td {
+  padding: 13px 18px;
+  font-size: 13.5px;
+  color: var(--ink-2);
+  border-bottom: 1px solid var(--line-soft);
+  vertical-align: middle;
+}
+.app .acc-sec .pay-table tbody tr { transition: background-color .15s var(--ease-out, ease); }
+.app .acc-sec .pay-table tbody tr:hover { background: color-mix(in srgb, var(--brand-500) 4.5%, transparent); }
+.app .acc-sec .pay-table td:first-child { color: var(--ink); font-weight: 550; font-variant-numeric: var(--acc-num); }
+.app .acc-sec .pay-table td[data-label='Emisión'],
+.app .acc-sec .pay-table td[data-label='Fecha'] { font-variant-numeric: var(--acc-num); white-space: nowrap; }
+.app .acc-sec .pay-table .amount {
+  font-weight: 650; color: var(--ink);
+  font-variant-numeric: var(--acc-num); white-space: nowrap;
+}
+.app .acc-sec .pay-table td[data-label='Acciones'] { text-align: right; }
+.app .acc-sec .pay-table td[data-label='Acciones'] .btn { margin-left: auto; }
+.app .acc-sec .pay-table .mono {
+  font-family: var(--dv-mono);
+  font-size: 12px;
+  color: var(--muted);
+  background: var(--surface);
+  border-color: var(--dv-hair);
+}
+
+/* Chips de estado: punto semántico + superficie suave */
+.app .acc-sec .pill {
+  gap: 7px; padding: 3px 11px 3px 8px;
+  font-size: 12px; font-weight: 600; letter-spacing: .01em;
+  border-radius: 999px;
+}
+.app .acc-sec .pill::before {
+  content: ''; width: 6px; height: 6px; border-radius: 50%;
+  background: currentColor;
+}
+
+/* ---------- Empty states ---------- */
+.app .acc-sec .empty {
+  border: 1px dashed var(--line-strong);
+  border-radius: 16px;
+  background: var(--card);
+  box-shadow: var(--shadow-sm);
+}
+.app .acc-sec .empty-icon {
+  width: 52px; height: 52px; border-radius: 14px;
+  background: var(--brand-soft);
+  box-shadow: inset 0 0 0 1px var(--brand-soft-line);
+  color: var(--brand-ink);
+}
+.app .acc-sec .empty h3 { font-weight: 700; letter-spacing: -.02em; }
+
+/* ---------- Listas dentro de cards (cupones, ingresos, kv) ---------- */
+.app .acc-sec .card { border-color: var(--dv-hair); }
+.app .acc-sec .card h3 { font-weight: 700; font-size: 15px; }
+.app .acc-sec .card > p { font-size: 13.5px; }
+
+.app .acc-sec .coupon-history { gap: 0; margin-top: 14px; }
+.app .acc-sec .coupon-history li {
+  border: 0; border-bottom: 1px solid var(--line-soft);
+  border-radius: 0; background: transparent;
+  padding: 11px 2px;
+}
+.app .acc-sec .coupon-history li:first-child { padding-top: 4px; }
+.app .acc-sec .coupon-history li:last-child { border-bottom: 0; padding-bottom: 0; }
+.app .acc-sec .coupon-history .coupon-code {
+  font-family: var(--dv-mono); font-size: 12.5px; font-weight: 650;
+  color: var(--brand-ink);
+  background: var(--brand-soft);
+  box-shadow: inset 0 0 0 1px var(--brand-soft-line);
+  border-radius: 6px; padding: 3px 8px;
+}
+.app .acc-sec .coupon-history time { font-variant-numeric: var(--acc-num); }
+
+.app .acc-sec .kv div { padding: 11px 0; border-bottom-color: var(--line-soft); }
+.app .acc-sec .kv strong { font-variant-numeric: var(--acc-num); font-weight: 600; }
+
+/* ---------- Novedades: cronología + próximamente ---------- */
+.app .acc-sec .changelog-item {
+  gap: 16px; padding: 15px 6px;
+  border-radius: 10px;
+  transition: background-color .15s var(--ease-out, ease);
+}
+.app .acc-sec .changelog-item:hover { background: var(--surface); }
+.app .acc-sec .changelog-item:focus-visible,
+.app .acc-sec .roadmap-item:focus-visible {
+  outline: none;
+  box-shadow: var(--ring);
+  border-radius: 10px;
+}
+.app .acc-sec .changelog-date {
+  width: 92px;
+  font-family: var(--dv-mono); font-size: 11.5px; font-weight: 500;
+  letter-spacing: .02em; text-transform: none;
+}
+.app .acc-sec .changelog-text strong,
+.app .acc-sec .roadmap-item-txt strong { font-weight: 650; letter-spacing: -.01em; }
+.app .acc-sec .changelog-body { color: var(--muted); }
+.app .acc-sec .changelog-thumb,
+.app .acc-sec .roadmap-thumb { border: 1px solid var(--dv-hair); }
+.app .acc-sec .roadmap-ico {
+  border-radius: 10px;
+  background: var(--brand-soft);
+  box-shadow: inset 0 0 0 1px var(--brand-soft-line);
+  color: var(--brand-ink);
+}
+.app .acc-sec .roadmap-item { border-radius: 10px; padding: 12px 6px; transition: background-color .15s var(--ease-out, ease); }
+.app .acc-sec .roadmap-title { font-size: 15px; font-weight: 700; letter-spacing: -.02em; }
+.app .acc-sec .roadmap-arrow { transition: transform .18s var(--ease-out, ease), color .15s; }
+.app .acc-sec .changelog-item:hover .roadmap-arrow,
+.app .acc-sec .roadmap-item:hover .roadmap-arrow { transform: translateX(2px); color: var(--brand-ink); }
+
+/* Modal de novedad (va a <body>, fuera de .app) */
+.news-modal { border-radius: 16px; border-color: var(--dv-hair, var(--line)); }
+.news-modal-body { padding: 26px 32px 36px; }
+.news-modal-ico {
+  background: var(--brand-soft);
+  box-shadow: inset 0 0 0 1px var(--brand-soft-line);
+  border: 0;
+}
+.news-modal-chip {
+  font-weight: 600; font-variant-numeric: tabular-nums;
+  background: var(--surface); color: var(--muted);
+  border: 1px solid var(--line);
+}
+.news-modal-title { font-weight: 750; letter-spacing: -.03em; }
+.news-modal-includes {
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: 12px;
+}
+.news-modal-includes h4 { font-size: 11px; letter-spacing: .08em; }
+
+/* ---------- Mi cuenta: formularios ---------- */
+.app .acc-sec .grid-2 { align-items: start; gap: 18px; }
+.app .acc-sec .field label { font-size: 12.5px; font-weight: 650; color: var(--ink-2); }
+.app .acc-sec .select {
+  appearance: none; -webkit-appearance: none;
+  padding-right: 38px;
+  background-image: url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='%2364748b' stroke-width='2.4' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 13px center;
+}
+[data-theme='dark'] .app .acc-sec .select {
+  background-image: url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='%2393a0bd' stroke-width='2.4' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
+}
+.app .acc-sec .select:disabled { opacity: .6; cursor: not-allowed; }
+.app .acc-sec .field .hint,
+.app .acc-sec .field-error { font-size: 12px; }
+.app .acc-sec .lead { color: var(--muted); }
+
+/* ---------- <860px: las tablas pasan a tarjetas apiladas ---------- */
+@media (max-width: 860px) {
+  .app .acc-sec .table-wrap { border: 0; background: transparent; box-shadow: none; overflow: visible; }
+  .app .acc-sec .pay-table { min-width: 0; display: block; }
+  .app .acc-sec .pay-table thead { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); }
+  .app .acc-sec .pay-table tbody { display: grid; gap: 12px; }
+  .app .acc-sec .pay-table tbody tr {
+    display: grid;
+    background: var(--card);
+    border: 1px solid var(--dv-hair);
+    border-radius: 14px;
+    box-shadow: var(--dv-elev-1);
+    padding: 6px 16px;
+  }
+  .app .acc-sec .pay-table tbody tr:hover { background: var(--card); }
+  .app .acc-sec .pay-table td {
+    display: flex; justify-content: space-between; align-items: center;
+    gap: 12px; padding: 10px 0;
+    border-bottom: 1px solid var(--line-soft);
+    text-align: right; min-width: 0;
+  }
+  .app .acc-sec .pay-table td:last-child { border-bottom: 0; }
+  .app .acc-sec .pay-table td::before {
+    content: attr(data-label);
+    flex: none; text-align: left;
+    font-size: 11px; font-weight: 650; letter-spacing: .07em;
+    text-transform: uppercase; color: var(--muted);
+  }
+  .app .acc-sec .pay-table td[data-label='Acciones'] { text-align: right; }
+  .app .acc-sec .pay-table td .mono { max-width: 100%; }
+  .app .acc-sec .kv div { flex-wrap: wrap; gap: 2px 12px; }
+  .app .acc-sec .kv strong { text-align: left; flex: 1 1 100%; }
+  .app .acc-sec .changelog-item { flex-wrap: wrap; }
+  .app .acc-sec .changelog-date { width: auto; }
+  .app .acc-sec .changelog-text { flex: 1 1 100%; order: 3; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .app .acc-sec .pay-table tbody tr,
+  .app .acc-sec .changelog-item,
+  .app .acc-sec .roadmap-item,
+  .app .acc-sec .roadmap-arrow { transition: none; }
+}

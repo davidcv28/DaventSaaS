@@ -1,0 +1,327 @@
+/* dash-redesign/biz — Sección "Sobre mi negocio" (marketing de la portada).
+   Rediseño sobrio tipo Linear/Stripe: tarjetas con hairline --line-soft,
+   radios 12–16, sombras de tokens, acento único --brand-500. Todo va
+   scopeado bajo .app para no pisar los mismos classnames fuera de la
+   sección. Carga después de dashboard-v3.css: gana por orden. */
+
+/* ===== Lanzadores: una card por bloque de la portada ===== */
+.app .mk-launch { gap: 10px; }
+.app .mk-launcher {
+  gap: 13px;
+  padding: 14px 16px;
+  border: 1px solid var(--line-soft);
+  border-radius: 14px;
+  background: var(--card);
+  box-shadow: var(--shadow-sm);
+  transition: border-color .18s var(--ease-out), box-shadow .18s var(--ease-out), transform .18s var(--ease-out);
+}
+.app .mk-launcher:hover {
+  border-color: var(--line-strong);
+  background: var(--card);
+  transform: translateY(-1px);
+  box-shadow: var(--shadow-md);
+}
+.app .mk-launcher:focus-visible {
+  border-color: var(--brand-500);
+  box-shadow: var(--ring);
+}
+/* Ícono del lanzador: tratamiento único neutro (los .hue-* quedan como
+   hooks de datos pero ya no pintan un color por sección). */
+.app .mk-launcher-ico {
+  width: 40px; height: 40px;
+  border-radius: 11px;
+  border: 1px solid var(--line-soft);
+  background: var(--surface);
+  color: var(--ink-2);
+  transition: color .18s var(--ease-out), border-color .18s var(--ease-out), background .18s var(--ease-out);
+}
+.app .mk-launcher:hover .mk-launcher-ico {
+  color: var(--brand-ink);
+  border-color: var(--brand-soft-line);
+  background: var(--brand-soft);
+}
+.app .mk-launcher-txt strong { font-weight: 650; }
+.app .mk-launcher-txt small { color: var(--muted); }
+.app .mk-launcher-go {
+  border-color: var(--line-soft);
+  transition: color .18s var(--ease-out), border-color .18s var(--ease-out), transform .18s var(--ease-out), background .18s var(--ease-out);
+}
+.app .mk-launcher:hover .mk-launcher-go {
+  background: var(--surface);
+  border-color: var(--line-strong);
+  color: var(--ink-2);
+  transform: translateX(2px);
+}
+.app .mk-done {
+  padding: 3px 9px;
+  border-radius: 999px;
+  border: 1px solid var(--ok-line);
+  background: var(--ok-bg);
+  color: var(--ok-ink);
+  font-size: 11px; font-weight: 650;
+}
+.app .mk-launch-hint { color: var(--muted); }
+
+/* ===== Tarjeta "Asistencia con IA": mismo lenguaje, sin glow ===== */
+.app .assist-card {
+  border: 1px solid var(--line-soft);
+  border-radius: 14px;
+  background: var(--card);
+  box-shadow: var(--shadow-sm);
+}
+.app .assist-card::before { content: none; }
+.app .assist-card .next-icon {
+  border: 1px solid var(--brand-soft-line);
+  border-radius: 11px;
+  background: var(--brand-soft);
+  color: var(--brand-ink);
+  box-shadow: none;
+}
+.app .assist-btn {
+  background: var(--brand-500);
+  border: 1px solid var(--brand-500);
+  color: #fff;
+  font-weight: 650;
+  box-shadow: var(--shadow-sm);
+  transition: background .18s var(--ease-out), box-shadow .18s var(--ease-out);
+}
+.app .assist-btn:hover:not(:disabled) {
+  transform: none; filter: none;
+  background: var(--brand-600);
+  border-color: var(--brand-600);
+  box-shadow: var(--shadow-md);
+}
+.app .assist-btn:focus-visible { outline: none; box-shadow: var(--ring); }
+
+/* ===== Modal de edición: header fijo, cuerpo scrolleable, footer sticky ===== */
+.app .mk-overlay {
+  background: rgba(10, 12, 24, .48);
+  backdrop-filter: blur(2px);
+  animation-duration: .18s;
+}
+.app .mk-modal {
+  border: 1px solid var(--line-soft);
+  border-radius: 16px;
+  background: var(--card);
+  box-shadow: var(--shadow);
+  animation-timing-function: var(--ease-out);
+  animation-duration: .24s;
+}
+.app .mk-modal-head {
+  gap: 12px;
+  padding: 16px 20px;
+  border-bottom: 1px solid var(--line-soft);
+  background: var(--card);
+}
+.app .mk-modal-ico {
+  width: 38px; height: 38px;
+  border-radius: 11px;
+  border: 1px solid var(--brand-soft-line);
+  background: var(--brand-soft);
+  color: var(--brand-ink);
+}
+.app .mk-modal-txt h2 { font-size: 16px; font-weight: 700; letter-spacing: -.01em; }
+.app .mk-modal-txt small { color: var(--muted); font-size: 12.5px; }
+.app .mk-modal-x {
+  width: 32px; height: 32px;
+  border-radius: 9px;
+  color: var(--muted);
+  transition: background .15s var(--ease-out), color .15s var(--ease-out);
+}
+.app .mk-modal-x:hover { background: var(--surface); color: var(--ink); }
+.app .mk-modal-x:focus-visible { outline: none; box-shadow: var(--ring); }
+.app .mk-modal-body { padding: 18px 20px 0; scrollbar-gutter: stable; }
+
+/* Cada bloque dentro del modal comparte la misma anatomía. */
+.app .mk-modal .mk-card > h3 { font-size: 15px; font-weight: 700; }
+.app .mk-modal .mk-card > h3 .icon { color: var(--muted); }
+
+/* Hint contextual: panel neutro, sin azul info. */
+.app .mk-modal .mk-tip {
+  gap: 9px;
+  margin-bottom: 16px;
+  padding: 11px 13px;
+  border: 1px solid var(--line-soft);
+  border-radius: 12px;
+  background: var(--surface);
+  color: var(--muted);
+  font-size: 13px;
+}
+.app .mk-modal .mk-tip .icon { color: var(--muted); }
+
+/* Interruptor "Mostrar en tu web": card hairline con tinte de marca al activarse. */
+.app .mk-modal .check-item {
+  border: 1px solid var(--line-soft);
+  border-radius: 12px;
+  padding: 12px 14px;
+  background: var(--card);
+  box-shadow: none;
+  transition: border-color .15s var(--ease-out), background .15s var(--ease-out), box-shadow .15s var(--ease-out);
+}
+.app .mk-modal .check-item:not(.disabled):hover {
+  border-color: var(--line-strong);
+  background: var(--surface);
+}
+.app .mk-modal .check-item:has(input:checked) {
+  border-color: var(--brand-soft-line);
+  background: var(--brand-soft);
+}
+.app .mk-modal .check-item:focus-within {
+  border-color: var(--brand-500);
+  box-shadow: var(--ring);
+}
+
+/* Ítems repetibles: sub-card de superficie con numeración en pastilla. */
+.app .mk-modal .qa-list { gap: 10px; margin: 10px 0 12px; }
+.app .mk-modal .qa-item {
+  gap: 10px;
+  padding: 13px;
+  border: 1px solid var(--line-soft);
+  border-radius: 12px;
+  background: var(--surface);
+  transition: border-color .15s var(--ease-out);
+}
+.app .mk-modal .qa-item:hover { border-color: var(--line-strong); }
+.app .mk-modal .qa-fields { gap: 10px; }
+.app .mk-modal .qa-fields .input,
+.app .mk-modal .qa-fields .select,
+.app .mk-modal .qa-fields .textarea { background-color: var(--card); }
+.app .mk-modal .qa-num {
+  padding: 3px 10px;
+  border: 1px solid var(--line-soft);
+  border-radius: 999px;
+  background: var(--card);
+  color: var(--muted);
+  font-size: 11px; font-weight: 650; letter-spacing: .02em;
+}
+.app .mk-modal .qa-actions .icon-btn {
+  width: 28px; height: 28px;
+  border: 1px solid var(--line-soft);
+  border-radius: 8px;
+  background: var(--card);
+  color: var(--muted);
+  transition: border-color .15s var(--ease-out), color .15s var(--ease-out);
+}
+.app .mk-modal .qa-actions .icon-btn:hover { border-color: var(--line-strong); color: var(--ink-2); }
+.app .mk-modal .qa-actions .icon-btn.danger:hover { border-color: var(--danger-line); color: var(--danger); }
+.app .mk-modal .mk-mini > span { color: var(--muted); }
+
+/* Selector de ícono: preview + select en una sola fila. */
+.app .mk-modal .mk-icon-preview {
+  width: 34px; height: 34px;
+  border: 1px solid var(--line-soft);
+  border-radius: 9px;
+  background: var(--card);
+  color: var(--ink-2);
+}
+
+/* Campos del modal: radios de la receta, foco de marca. */
+.app .mk-modal .input,
+.app .mk-modal .select,
+.app .mk-modal .textarea { border-radius: 10px; }
+.app .mk-modal .input:focus,
+.app .mk-modal .select:focus,
+.app .mk-modal .textarea:focus {
+  border-color: var(--brand-500);
+  box-shadow: var(--ring);
+}
+
+/* Estado vacío de las listas repetibles. */
+.app .mk-modal .mk-empty {
+  display: flex; align-items: center; gap: 9px;
+  margin: 10px 0 12px;
+  padding: 14px;
+  border: 1px dashed var(--line-strong);
+  border-radius: 12px;
+  background: var(--surface);
+  color: var(--muted);
+  font-size: 13px;
+}
+.app .mk-modal .mk-empty .icon { color: var(--muted); }
+
+/* Botón "Agregar": fila punteada de ancho completo. */
+.app .mk-modal .mk-card .btn.mk-add {
+  width: 100%;
+  justify-content: center;
+  border: 1px dashed var(--line-strong);
+  border-radius: 12px;
+  padding: 11px 16px;
+  background: transparent;
+  color: var(--muted);
+  font-weight: 600;
+  transition: border-color .15s var(--ease-out), color .15s var(--ease-out), background .15s var(--ease-out);
+}
+.app .mk-modal .mk-card .btn.mk-add:hover:not(:disabled) {
+  border-color: var(--brand-500);
+  color: var(--brand-ink);
+  background: var(--brand-soft);
+}
+
+/* Footer sticky con la acción de guardado. */
+.app .mk-modal .btn-row {
+  margin: 22px -20px 0;
+  padding: 14px 20px 16px;
+  background: var(--card);
+  border-top: 1px solid var(--line-soft);
+  box-shadow: none;
+}
+
+/* Fieldset bloqueado por diseño/plan. */
+.app .mk-fieldset:disabled { opacity: .55; }
+
+/* Badge de bloqueo (plan / diseño sin soporte). */
+.app .lock-badge {
+  border: 1px solid var(--brand-soft-line);
+  background: var(--brand-soft);
+  color: var(--brand-ink);
+}
+
+/* ===== Tema oscuro: todo por tokens (se retiran los navy fijos) ===== */
+[data-theme='dark'] .app .mk-modal { background: var(--card); }
+[data-theme='dark'] .app .mk-modal-head { background: var(--card); }
+[data-theme='dark'] .app .mk-modal-x:hover { background: var(--surface); }
+[data-theme='dark'] .app .mk-modal .btn-row { background: var(--card); }
+[data-theme='dark'] .app .mk-modal .check-item,
+[data-theme='dark'] .app .mk-modal .qa-item { background: var(--surface); border-color: var(--line-soft); }
+[data-theme='dark'] .app .mk-modal .check-item:not(.disabled):hover { background: var(--surface); }
+[data-theme='dark'] .app .mk-modal .input,
+[data-theme='dark'] .app .mk-modal .select,
+[data-theme='dark'] .app .mk-modal .textarea,
+[data-theme='dark'] .app .mk-modal .qa-fields .input,
+[data-theme='dark'] .app .mk-modal .qa-fields .select,
+[data-theme='dark'] .app .mk-modal .qa-fields .textarea { background-color: var(--card); border-color: var(--line); }
+[data-theme='dark'] .app .mk-modal .mk-card .btn.mk-add { background: transparent; }
+[data-theme='dark'] .app .assist-card { background: var(--card); }
+
+/* ===== Móvil: el modal pasa a hoja completa ===== */
+@media (max-width: 860px) {
+  .app .mk-launcher { padding: 13px 14px; }
+}
+@media (max-width: 640px) {
+  .app .mk-overlay { padding: 0; align-items: flex-end; }
+  .app .mk-modal {
+    width: 100%;
+    max-height: 94vh; max-height: 94dvh;
+    border-radius: 16px 16px 0 0;
+    border-left: 0; border-right: 0; border-bottom: 0;
+  }
+  .app .mk-modal-body { padding: 16px 16px 0; }
+  .app .mk-modal .btn-row {
+    margin: 18px -16px 0;
+    padding: 12px 16px calc(14px + env(safe-area-inset-bottom));
+  }
+}
+@media (max-width: 520px) {
+  .app .mk-modal .qa-item { flex-wrap: wrap; }
+  .app .mk-modal .qa-actions { flex-direction: row; width: 100%; justify-content: flex-end; }
+}
+
+/* ===== Movimiento reducido ===== */
+@media (prefers-reduced-motion: reduce) {
+  .app .mk-overlay, .app .mk-modal, .app .mk-modal .mk-card { animation: none; }
+  .app .mk-launcher, .app .mk-launcher-ico, .app .mk-launcher-go,
+  .app .mk-modal .check-item, .app .mk-modal .qa-item,
+  .app .mk-modal .mk-card .btn.mk-add, .app .assist-btn { transition: none; }
+  .app .mk-launcher:hover { transform: none; }
+  .app .mk-launcher:hover .mk-launcher-go { transform: none; }
+}

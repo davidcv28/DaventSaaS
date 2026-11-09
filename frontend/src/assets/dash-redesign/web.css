@@ -1,0 +1,469 @@
+/* ==========================================================================
+   dash-redesign/web — MI PÁGINA (índice), MI TIENDA (dirección web) y DISEÑO.
+   Alcance: solo dentro de .web-scope (wrappers de DashboardView). Sobrio,
+   hairlines, radios 12–16, sombras suaves; sin gradientes ni glow.
+   ========================================================================== */
+
+/* ---------- Índice de apartados: tarjetas de navegación ---------- */
+.app .web-scope .sec-tabs {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
+  gap: 12px;
+  margin: 0 0 20px;
+}
+.app .web-scope .sec-tab {
+  position: relative;
+  display: flex;
+  align-items: flex-start;
+  gap: 13px;
+  padding: 16px 46px 16px 16px;
+  text-align: left;
+  font: inherit;
+  color: var(--ink-2);
+  background: var(--card);
+  border: 1px solid var(--line-soft);
+  border-radius: 14px;
+  box-shadow: var(--shadow-sm);
+  cursor: pointer;
+  transition: border-color .18s var(--ease-out), box-shadow .18s var(--ease-out),
+              transform .18s var(--ease-out), background-color .18s var(--ease-out);
+}
+.app .web-scope .sec-tab:hover {
+  border-color: var(--brand-soft-line);
+  box-shadow: var(--shadow-md);
+  transform: translateY(-1px);
+}
+.app .web-scope .sec-tab:active { transform: translateY(0); }
+.app .web-scope .sec-tab .icon {
+  flex: none;
+  width: 40px;
+  height: 40px;
+  padding: 10px;
+  box-sizing: border-box;
+  border-radius: 11px;
+  background: var(--surface);
+  color: var(--brand-ink);
+  box-shadow: inset 0 0 0 1px var(--line-soft);
+  transition: background-color .18s var(--ease-out), color .18s var(--ease-out),
+              box-shadow .18s var(--ease-out);
+}
+.app .web-scope .sec-tab:hover .icon {
+  background: var(--brand-soft);
+  box-shadow: inset 0 0 0 1px var(--brand-soft-line);
+}
+.app .web-scope .sec-tab > span { min-width: 0; }
+.app .web-scope .sec-tab strong {
+  display: block;
+  font-size: 14.5px;
+  font-weight: 650;
+  letter-spacing: -.01em;
+  color: var(--ink);
+}
+.app .web-scope .sec-tab small {
+  display: block;
+  margin-top: 3px;
+  font-size: 12.5px;
+  line-height: 1.45;
+  color: var(--muted);
+}
+/* Flecha de navegación */
+.app .web-scope .sec-tab::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  right: 18px;
+  width: 8px;
+  height: 8px;
+  margin-top: -5px;
+  border-right: 2px solid var(--muted);
+  border-bottom: 2px solid var(--muted);
+  transform: rotate(-45deg);
+  transition: transform .18s var(--ease-out), border-color .18s var(--ease-out);
+}
+.app .web-scope .sec-tab:hover::after {
+  border-color: var(--brand-500);
+  transform: translateX(2px) rotate(-45deg);
+}
+/* Activa: acento de marca sobrio (barra lateral + aro, sin glow) */
+.app .web-scope .sec-tab.active {
+  border-color: color-mix(in srgb, var(--brand-500) 55%, var(--line));
+  background: var(--card);
+  box-shadow: var(--shadow-sm), inset 3px 0 0 var(--brand-500);
+}
+.app .web-scope .sec-tab.active .icon {
+  background: var(--brand-soft);
+  color: var(--brand-ink);
+  box-shadow: inset 0 0 0 1px var(--brand-soft-line);
+}
+.app .web-scope .sec-tab.active::after { border-color: var(--brand-500); }
+.app .web-scope .sec-tab:focus-visible {
+  outline: none;
+  border-color: var(--brand-500);
+  box-shadow: var(--ring);
+}
+
+/* ---------- Banner "tu página está en vivo" ---------- */
+.app .web-scope .web-live {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 14px;
+  margin: 0 0 20px;
+  padding: 14px 18px;
+  background: var(--card);
+  border: 1px solid var(--line-soft);
+  border-radius: 14px;
+  box-shadow: var(--shadow-sm);
+}
+.app .web-scope .web-live-icon {
+  position: relative;
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: 42px;
+  height: 42px;
+  border-radius: 11px;
+  background: var(--surface);
+  color: var(--brand-ink);
+  box-shadow: inset 0 0 0 1px var(--line-soft);
+}
+.app .web-scope .web-live-icon::after {
+  content: '';
+  position: absolute;
+  right: -3px;
+  bottom: -3px;
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: var(--ok);
+  border: 2.5px solid var(--card);
+}
+.app .web-scope .web-live-txt { flex: 1; min-width: 180px; display: grid; gap: 2px; }
+.app .web-scope .web-live-txt strong { font-size: 14.5px; font-weight: 650; letter-spacing: -.01em; }
+.app .web-scope .web-live-txt small {
+  font-size: 13px;
+  color: var(--muted);
+  overflow-wrap: anywhere;
+  font-variant-numeric: tabular-nums;
+}
+.app .web-scope .web-live-actions { display: flex; flex-wrap: wrap; gap: 8px; }
+.app .web-scope .web-live-actions .btn { min-height: 40px; width: auto; }
+
+/* ---------- Cards de Mi tienda ---------- */
+.app .web-scope .card {
+  border: 1px solid var(--line-soft);
+  border-radius: 16px;
+  box-shadow: var(--shadow-sm);
+}
+.app .web-scope .card h3 {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 16px;
+  font-weight: 700;
+  letter-spacing: -.02em;
+}
+.app .web-scope .card h3 > .icon:first-child {
+  width: 30px;
+  height: 30px;
+  padding: 6px;
+  box-sizing: border-box;
+  border-radius: 9px;
+  background: var(--brand-soft);
+  color: var(--brand-ink);
+  box-shadow: inset 0 0 0 1px var(--brand-soft-line);
+}
+.app .web-scope .card-loading {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 22px;
+  color: var(--muted);
+  font-size: 14px;
+}
+.app .web-scope .card-loading p { margin: 0; }
+
+/* Barra de dirección pública */
+.app .web-scope .link-bar {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin: 14px 0;
+  padding: 10px 12px;
+  background: var(--surface);
+  border: 1px solid var(--line-soft);
+  border-radius: 12px;
+}
+.app .web-scope .link-url {
+  flex: 1;
+  min-width: 200px;
+  margin: 0;
+  padding: 0;
+  background: transparent;
+  border: 0;
+  font-family: var(--dv-mono, ui-monospace, 'Cascadia Code', Consolas, monospace);
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--ink);
+  overflow-wrap: anywhere;
+  font-variant-numeric: tabular-nums;
+}
+.app .web-scope .link-actions { margin-top: 0; }
+.app .web-scope .link-actions .btn { width: auto; min-height: 42px; }
+
+/* Detalle plegable "Cambiar mi dirección" */
+.app .web-scope .more-card { padding: 0; }
+.app .web-scope .more-card > summary {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 4px 10px;
+  padding: 16px 20px;
+  font-size: 14.5px;
+  font-weight: 650;
+  color: var(--ink);
+  cursor: pointer;
+  list-style: none;
+  border-radius: 16px;
+  transition: background-color .15s var(--ease-out);
+}
+.app .web-scope .more-card > summary:hover { background: var(--surface); }
+.app .web-scope .more-card > summary::-webkit-details-marker { display: none; }
+.app .web-scope .more-card > summary::after {
+  content: '';
+  margin-left: auto;
+  width: 8px;
+  height: 8px;
+  border-right: 2px solid var(--muted);
+  border-bottom: 2px solid var(--muted);
+  transform: rotate(45deg);
+  transition: transform .18s var(--ease-out);
+}
+.app .web-scope .more-card[open] > summary::after { transform: rotate(-135deg); }
+.app .web-scope .more-card > summary small { font-weight: 400; color: var(--muted); font-size: 12.5px; }
+.app .web-scope .more-card > summary .icon { color: var(--brand-ink); }
+.app .web-scope .more-card[open] > summary {
+  border-bottom: 1px solid var(--line-soft);
+  border-bottom-left-radius: 0;
+  border-bottom-right-radius: 0;
+  margin-bottom: 16px;
+}
+.app .web-scope .more-card > :not(summary) { margin-left: 20px; margin-right: 20px; }
+.app .web-scope .more-card > :last-child { margin-bottom: 20px; }
+.app .web-scope .more-card > summary:focus-visible {
+  outline: none;
+  box-shadow: var(--ring);
+}
+
+/* Slug del link */
+.app .web-scope .slug-box {
+  border-radius: 11px;
+  transition: border-color .15s var(--ease-out), box-shadow .15s var(--ease-out);
+}
+.app .web-scope .slug-prefix {
+  font-family: var(--dv-mono, ui-monospace, 'Cascadia Code', Consolas, monospace);
+  font-size: 12.5px;
+}
+.app .web-scope .slug-check { font-variant-numeric: tabular-nums; }
+
+/* ---------- Dominio propio ---------- */
+.app .web-scope .domain-card > p { max-width: 62ch; }
+.app .web-scope .domain-mini-steps {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 0 0 16px;
+  padding: 0;
+  list-style: none;
+}
+.app .web-scope .domain-mini-steps li {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 7px 12px;
+  border: 1px solid var(--line-soft);
+  border-radius: 999px;
+  background: var(--surface);
+  font-size: 12.5px;
+  font-weight: 600;
+  color: var(--ink-2);
+}
+.app .web-scope .domain-mini-steps li span {
+  display: grid;
+  place-items: center;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: var(--brand-500);
+  color: #fff;
+  font-size: 11px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+.app .web-scope .domain-dns {
+  margin: 4px 0 14px;
+  padding: 12px 14px;
+  background: var(--surface);
+  border: 1px solid var(--line-soft);
+  border-radius: 12px;
+}
+.app .web-scope .domain-dns > .hint { margin-top: 0; }
+.app .web-scope .dns-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+  padding: 9px 0;
+  border-top: 1px dashed var(--line);
+  font-size: 13.5px;
+}
+.app .web-scope .dns-row .mono {
+  font-family: var(--dv-mono, ui-monospace, 'Cascadia Code', Consolas, monospace);
+  font-size: 12.5px;
+  word-break: break-all;
+  font-variant-numeric: tabular-nums;
+}
+.app .web-scope .domain-guide {
+  margin-top: 16px;
+  border-top: 1px solid var(--line-soft);
+  padding-top: 12px;
+}
+.app .web-scope .domain-guide > summary {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 7px 12px;
+  margin-left: -12px;
+  border-radius: 9px;
+  cursor: pointer;
+  font-size: 13.5px;
+  font-weight: 650;
+  color: var(--brand-ink);
+  list-style: none;
+  transition: background-color .15s var(--ease-out);
+}
+.app .web-scope .domain-guide > summary:hover { background: var(--brand-soft); }
+.app .web-scope .domain-guide > summary::-webkit-details-marker { display: none; }
+.app .web-scope .domain-guide > summary::after {
+  content: '';
+  width: 7px;
+  height: 7px;
+  border-right: 2px solid currentColor;
+  border-bottom: 2px solid currentColor;
+  transform: rotate(45deg);
+  transition: transform .16s var(--ease-out);
+}
+.app .web-scope .domain-guide[open] > summary::after { transform: rotate(-135deg); }
+.app .web-scope .domain-guide ol {
+  margin: 12px 0 2px;
+  padding-left: 20px;
+  display: grid;
+  gap: 8px;
+  font-size: 13.5px;
+  line-height: 1.5;
+  color: var(--ink-2);
+}
+.app .web-scope .domain-guide li::marker {
+  color: var(--brand-500);
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+.app .web-scope .domain-guide li strong { color: var(--ink); }
+.app .web-scope .domain-guide-help { margin-top: 10px; width: auto; }
+
+/* ---------- CTA "Asistencia con IA" (versión sobria) ---------- */
+.app .web-scope .assist-card {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 16px 20px;
+  margin: 0 0 20px;
+  background: var(--card);
+  border: 1px solid var(--line-soft);
+  border-radius: 14px;
+  box-shadow: var(--shadow-sm), inset 3px 0 0 var(--brand-500);
+  overflow: visible;
+}
+.app .web-scope .assist-card::before { content: none; }
+.app .web-scope .assist-card > div { flex: 1; min-width: 0; }
+.app .web-scope .assist-card strong { display: block; font-size: 14.5px; font-weight: 650; letter-spacing: -.01em; }
+.app .web-scope .assist-card small { color: var(--muted); font-size: 13px; }
+.app .web-scope .assist-card .next-icon {
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: 42px;
+  height: 42px;
+  border-radius: 11px;
+  background: var(--brand-soft);
+  color: var(--brand-ink);
+  border: none;
+  box-shadow: inset 0 0 0 1px var(--brand-soft-line);
+}
+.app .web-scope .assist-btn { white-space: nowrap; }
+
+/* ---------- Diseño: acciones bajo el editor ---------- */
+.app .web-scope .design-actions { display: flex; gap: 10px; }
+.app .web-scope .design-actions .btn { flex: 1; justify-content: center; min-height: 44px; width: auto; }
+.app .web-scope .design-dirty-hint {
+  display: flex;
+  align-items: flex-start;
+  gap: 7px;
+  font-variant-numeric: tabular-nums;
+}
+.app .web-scope .design-dirty-hint .icon { flex: none; margin-top: 2px; color: var(--warn-ink, #92400e); }
+
+/* ---------- Responsive ---------- */
+@media (max-width: 899px) {
+  .app .web-scope .sec-tabs {
+    display: flex;
+    flex-direction: row;
+    overflow-x: auto;
+    gap: 8px;
+    margin-bottom: 14px;
+    padding-bottom: 2px;
+    scrollbar-width: none;
+  }
+  .app .web-scope .sec-tabs::-webkit-scrollbar { display: none; }
+  .app .web-scope .sec-tab {
+    flex: none;
+    align-items: center;
+    gap: 9px;
+    padding: 9px 16px 9px 9px;
+    border-radius: 999px;
+    min-height: 44px;
+  }
+  .app .web-scope .sec-tab::after { content: none; }
+  .app .web-scope .sec-tab .icon { width: 28px; height: 28px; padding: 6px; border-radius: 999px; }
+  .app .web-scope .sec-tab small { display: none; }
+  .app .web-scope .sec-tab strong { font-size: 13px; white-space: nowrap; }
+  .app .web-scope .sec-tab.active {
+    box-shadow: inset 0 0 0 1px var(--brand-500);
+    border-color: var(--brand-500);
+    background: var(--brand-soft);
+  }
+}
+@media (max-width: 640px) {
+  .app .web-scope .web-live-actions { width: 100%; }
+  .app .web-scope .web-live-actions .btn { flex: 1; }
+  .app .web-scope .assist-card { flex-wrap: wrap; }
+  .app .web-scope .assist-card .assist-btn { width: 100%; }
+  .app .web-scope .design-actions { flex-direction: column; }
+  .app .web-scope .link-actions .btn { width: 100%; }
+}
+
+/* ---------- Movimiento reducido ---------- */
+@media (prefers-reduced-motion: reduce) {
+  .app .web-scope .sec-tab,
+  .app .web-scope .sec-tab .icon,
+  .app .web-scope .sec-tab::after,
+  .app .web-scope .more-card > summary,
+  .app .web-scope .more-card > summary::after,
+  .app .web-scope .domain-guide > summary,
+  .app .web-scope .domain-guide > summary::after,
+  .app .web-scope .slug-box {
+    transition: none;
+  }
+  .app .web-scope .sec-tab:hover { transform: none; }
+}

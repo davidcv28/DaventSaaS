@@ -4064,7 +4064,7 @@ async function changePassword() {
 
         <section class="ovh ovh-card">
           <header class="ovh-card-head">
-            <h3>Para empezar</h3>
+            <h3>Puesta en marcha</h3>
             <span class="ovh-count">{{ stepsDone }} de {{ nextSteps.length }}</span>
           </header>
           <div class="ovh-prog" role="progressbar" aria-label="Avance de puesta en marcha" aria-valuemin="0" aria-valuemax="100" :aria-valuenow="stepsPct"><span :style="{ transform: `scaleX(${stepsPct / 100})` }"></span></div>
@@ -4099,7 +4099,7 @@ async function changePassword() {
 
         <section class="ovh ovh-card">
           <header class="ovh-card-head">
-            <h3>Ir directo a</h3>
+            <h3>Atajos</h3>
           </header>
           <div class="ovh-quick">
             <button v-for="q in quickLinks" :key="q.id" type="button" class="ovh-quick-item" :class="{ locked: navLocks[q.id] }" @click="section = q.id">
@@ -4551,7 +4551,7 @@ async function changePassword() {
       </template>
     </div>
     <!-- ================= MIS SERVICIOS ================= -->
-    <div v-if="seen.services" v-show="section === 'services'" :class="{ 'sec-on': section === 'services' }">
+    <div v-if="seen.services" v-show="section === 'services'" class="sec-serv" :class="{ 'sec-on': section === 'services' }">
       <div class="page-head">
         <div>
           <h1>Mis servicios</h1>
@@ -4573,7 +4573,7 @@ async function changePassword() {
       </template>
 
       <template v-else>
-        <div v-if="!designSiteTemplates.includes('services')" class="card" role="note">
+        <div v-if="!designSiteTemplates.includes('services')" class="card svc-note" role="note">
           <h3><AppIcon name="info" :size="18" /> La página está apagada</h3>
           <p class="hint">Tus servicios quedan guardados, pero la página Servicios no aparece en tu web hasta que la actives en <a href="#" @click.prevent="section = 'pages'"><strong>Plantillas</strong></a>.</p>
         </div>
@@ -4744,7 +4744,7 @@ async function changePassword() {
       </template>
     </div>
     <!-- ================= OPINIONES ================= -->
-    <div v-if="seen.reviews" v-show="section === 'reviews'" :class="{ 'sec-on': section === 'reviews' }">
+    <div v-if="seen.reviews" v-show="section === 'reviews'" class="sec-rev" :class="{ 'sec-on': section === 'reviews' }">
       <div class="page-head">
         <div>
           <h1>Opiniones</h1>
@@ -4855,7 +4855,7 @@ async function changePassword() {
       </template>
     </div>
     <!-- ================= MI PÁGINA (índice de apartados) ================= -->
-    <div v-if="seen.web" v-show="section === 'web'" :class="{ 'sec-on': section === 'web' }">
+    <div v-if="seen.web" v-show="section === 'web'" class="web-scope" :class="{ 'sec-on': section === 'web' }">
       <div class="page-head">
         <div>
           <h1>Mi página</h1>
@@ -4876,11 +4876,11 @@ async function changePassword() {
       </div>
     </div>
     <!-- ================= MI TIENDA ================= -->
-    <div v-if="seen.store" v-show="section === 'store' || (section === 'web' && tabGroups.web.length === 1)" :class="{ 'sec-on': section === 'store' }">
+    <div v-if="seen.store" v-show="section === 'store' || (section === 'web' && tabGroups.web.length === 1)" class="web-scope" :class="{ 'sec-on': section === 'store' }">
       <div class="page-head">
         <div>
           <h1>Mi página web</h1>
-          <p>Tu dirección en internet. Compartila el link por WhatsApp o donde quieras.</p>
+          <p>Tu dirección en internet. Compartí el link por WhatsApp o donde quieras.</p>
         </div>
       </div>
       <SectionTabs :tabs="tabGroups.web" active="store" @select="section = $event" />
@@ -4928,7 +4928,7 @@ async function changePassword() {
               />
 
             </div>
-            <p class="hint">Ojo: la dirección anterior deja de funcionar, y tendrás que avisarle a tus clientes.</p>
+            <p class="hint">Ojo: la dirección anterior deja de funcionar y vas a tener que avisarles a tus clientes.</p>
             <p v-if="store.fieldErrors.slug" class="field-error" role="alert">{{ store.fieldErrors.slug }}</p>
             <p v-else-if="renameMsg" class="slug-check" :class="renameKind" role="status">
               <AppIcon v-if="renameCheck === 'available'" name="circle-check" :size="14" />
@@ -5019,7 +5019,7 @@ async function changePassword() {
       </template>
     </div>
     <!-- ================= DISEÑO ================= -->
-    <div v-if="seen.design" v-show="section === 'design'" :class="{ 'sec-on': section === 'design' }">
+    <div v-if="seen.design" v-show="section === 'design'" class="web-scope" :class="{ 'sec-on': section === 'design' }">
       <div class="page-head">
         <div>
           <h1>Diseño</h1>
@@ -5238,6 +5238,7 @@ async function changePassword() {
                 </div>
               </div>
             </div>
+            <div v-else class="mk-empty"><AppIcon name="inbox" :size="16" /><span>Todavía no cargaste servicios.</span></div>
             <button type="button" class="btn ghost btn-auto mk-add" :disabled="designForm.services.length >= mkLimits.services" @click="addRow(designForm.services, mkLimits.services, { icon: 'package', title: '', text: '' })">
               <AppIcon name="plus" :size="15" /> Agregar servicio
             </button>
@@ -5294,6 +5295,7 @@ async function changePassword() {
                 </div>
               </div>
             </div>
+            <div v-else class="mk-empty"><AppIcon name="inbox" :size="16" /><span>Todavía no cargaste planes.</span></div>
             <button type="button" class="btn ghost btn-auto mk-add" :disabled="designForm.plans.length >= mkLimits.plans" @click="addRow(designForm.plans, mkLimits.plans, { name: '', price: '', note: '', items: '' })">
               <AppIcon name="plus" :size="15" /> Agregar plan
             </button>
@@ -5341,6 +5343,7 @@ async function changePassword() {
                 </div>
               </div>
             </div>
+            <div v-else class="mk-empty"><AppIcon name="inbox" :size="16" /><span>Todavía no cargaste cifras.</span></div>
             <button type="button" class="btn ghost btn-auto mk-add" :disabled="designForm.stats.length >= mkLimits.stats" @click="addRow(designForm.stats, mkLimits.stats, { value: '', label: '' })">
               <AppIcon name="plus" :size="15" /> Agregar cifra
             </button>
@@ -5391,6 +5394,7 @@ async function changePassword() {
                 </div>
               </div>
             </div>
+            <div v-else class="mk-empty"><AppIcon name="inbox" :size="16" /><span>Todavía no cargaste testimonios.</span></div>
             <button type="button" class="btn ghost btn-auto mk-add" :disabled="designForm.testimonials.length >= mkLimits.testimonials" @click="addRow(designForm.testimonials, mkLimits.testimonials, { name: '', detail: '', text: '' })">
               <AppIcon name="plus" :size="15" /> Agregar testimonio
             </button>
@@ -5436,6 +5440,7 @@ async function changePassword() {
                 </div>
               </div>
             </div>
+            <div v-else class="mk-empty"><AppIcon name="inbox" :size="16" /><span>Todavía no cargaste preguntas.</span></div>
             <button type="button" class="btn ghost btn-auto mk-add" :disabled="designForm.faqs.length >= mkLimits.faqs" @click="addRow(designForm.faqs, mkLimits.faqs, { q: '', a: '' })">
               <AppIcon name="plus" :size="15" /> Agregar pregunta
             </button>
@@ -5487,6 +5492,7 @@ async function changePassword() {
                 </div>
               </div>
             </div>
+            <div v-else class="mk-empty"><AppIcon name="inbox" :size="16" /><span>Todavía no cargaste beneficios.</span></div>
             <button type="button" class="btn ghost btn-auto mk-add" :disabled="designForm.benefits.length >= mkLimits.benefits" @click="addRow(designForm.benefits, mkLimits.benefits, { icon: 'shield-check', title: '', text: '' })">
               <AppIcon name="plus" :size="15" /> Agregar beneficio
             </button>
@@ -5530,6 +5536,7 @@ async function changePassword() {
                 </div>
               </div>
             </div>
+            <div v-else class="mk-empty"><AppIcon name="inbox" :size="16" /><span>Todavía no cargaste hitos.</span></div>
             <button type="button" class="btn ghost btn-auto mk-add" :disabled="designForm.timeline.length >= mkLimits.timeline" @click="addRow(designForm.timeline, mkLimits.timeline, { label: '', text: '' })">
               <AppIcon name="plus" :size="15" /> Agregar hito
             </button>
@@ -5575,6 +5582,7 @@ async function changePassword() {
                 </div>
               </div>
             </div>
+            <div v-else class="mk-empty"><AppIcon name="inbox" :size="16" /><span>Todavía no cargaste integrantes.</span></div>
             <button type="button" class="btn ghost btn-auto mk-add" :disabled="designForm.team.length >= mkLimits.team" @click="addRow(designForm.team, mkLimits.team, { name: '', role: '' })">
               <AppIcon name="plus" :size="15" /> Agregar integrante
             </button>
@@ -5620,6 +5628,7 @@ async function changePassword() {
                 </div>
               </div>
             </div>
+            <div v-else class="mk-empty"><AppIcon name="inbox" :size="16" /><span>Todavía no cargaste horarios.</span></div>
             <button type="button" class="btn ghost btn-auto mk-add" :disabled="designForm.hours.length >= mkLimits.hours" @click="addRow(designForm.hours, mkLimits.hours, { label: '', value: '' })">
               <AppIcon name="plus" :size="15" /> Agregar horario
             </button>
@@ -5694,6 +5703,7 @@ async function changePassword() {
                 </div>
               </div>
             </div>
+            <div v-else class="mk-empty"><AppIcon name="inbox" :size="16" /><span>Todavía no cargaste anuncios.</span></div>
             <button type="button" class="btn ghost btn-auto mk-add" :disabled="designForm.announcements.length >= mkLimits.announcements" @click="addRow(designForm.announcements, mkLimits.announcements, { icon: 'megaphone', text: '' })">
               <AppIcon name="plus" :size="15" /> Agregar anuncio
             </button>
@@ -5733,6 +5743,7 @@ async function changePassword() {
                 </div>
               </div>
             </div>
+            <div v-else class="mk-empty"><AppIcon name="inbox" :size="16" /><span>Todavía no cargaste videos.</span></div>
             <button type="button" class="btn ghost btn-auto mk-add" :disabled="(designForm.videos || []).length >= videosCap" @click="addRow(designForm.videos, videosCap, '')">
               <AppIcon name="plus" :size="15" /> Agregar video
             </button>
@@ -5938,7 +5949,7 @@ async function changePassword() {
       </div>
     </div>
     <!-- ================= ESTADÍSTICAS (premium) ================= -->
-    <div v-if="seen.stats" v-show="section === 'stats'" :class="{ 'sec-on': section === 'stats' }">
+    <div v-if="seen.stats" v-show="section === 'stats'" class="promo-sec promo-stats" :class="{ 'sec-on': section === 'stats' }">
       <div class="page-head">
         <div>
           <h1>Mis visitas</h1>
@@ -5981,7 +5992,7 @@ async function changePassword() {
       </div>
     </div>
     <!-- ================= QR Y FOLLETOS (premium) ================= -->
-    <div v-if="seen.tools" v-show="section === 'tools'" :class="{ 'sec-on': section === 'tools' }">
+    <div v-if="seen.tools" v-show="section === 'tools'" class="promo-sec promo-tools" :class="{ 'sec-on': section === 'tools' }">
       <div class="page-head">
         <div>
           <h1>QR y folletos</h1>
@@ -6067,7 +6078,7 @@ async function changePassword() {
 
     <!-- ================= VENTA EN LOCAL (próximamente) ================= -->
     <!-- ================= CHATBOT (solo Premium) ================= -->
-    <div v-if="seen.bot" v-show="section === 'bot'" :class="{ 'sec-on': section === 'bot' }">
+    <div v-if="seen.bot" v-show="section === 'bot'" class="sec-bot" :class="{ 'sec-on': section === 'bot' }">
       <div class="page-head">
         <div>
           <h1>Asistente de chat</h1>
@@ -6121,7 +6132,7 @@ async function changePassword() {
       </div>
     </div>
     <!-- ================= SOPORTE (equipo + chat en vivo) ================= -->
-    <div v-if="seen.support" v-show="section === 'support'" :class="{ 'sec-on': section === 'support' }">
+    <div v-if="seen.support" v-show="section === 'support'" class="sec-support" :class="{ 'sec-on': section === 'support' }">
       <div class="page-head">
         <div>
           <h1>Mensajes y Tu Asistente</h1>
@@ -6274,11 +6285,11 @@ async function changePassword() {
       </div>
     </div>
     <!-- ================= PAGOS ================= -->
-    <div v-if="seen.payments" v-show="section === 'payments'" :class="{ 'sec-on': section === 'payments' }">
+    <div v-if="seen.payments" v-show="section === 'payments'" class="acc-sec" :class="{ 'sec-on': section === 'payments' }">
       <div class="page-head">
         <div>
           <h1>Plan y pagos</h1>
-          <p>Todo lo que pagaste por tu suscripción. Se acredita solo cuando Mercado Pago lo confirma.</p>
+          <p>Historial de pagos de tu suscripción. Se acreditan cuando Mercado Pago los confirma.</p>
         </div>
         <button class="btn ghost btn-auto" @click="payments.loadPayments()"><AppIcon name="refresh" :size="16" /> Actualizar</button>
       </div>
@@ -6288,7 +6299,7 @@ async function changePassword() {
       <AlertMessage v-if="payments.notice" kind="success" :message="payments.notice" />
       <AlertMessage v-if="payments.lastError" kind="error" :message="payments.lastError" />
 
-      <div v-if="payments.status === 'loading'" class="card"><p>Cargando tus pagos…</p></div>
+      <div v-if="payments.status === 'loading'" class="card card-loading"><span class="spinner spinner-brand"></span><p>Cargando tus pagos…</p></div>
       <div v-else-if="payments.hasPayments" class="table-wrap">
         <table class="pay-table">
           <thead>
@@ -6337,7 +6348,7 @@ async function changePassword() {
           <div v-if="payments.dailyRevenues.length" class="kv">
             <div v-for="r in payments.dailyRevenues.slice(0, 7)" :key="r.id">
               <span>{{ r.date }}</span>
-              <strong>{{ formatARS(r.total_amount) }} · {{ r.payments_count }} pago(s)</strong>
+              <strong>{{ formatARS(r.total_amount) }} · {{ r.payments_count }} {{ r.payments_count === 1 ? 'pago' : 'pagos' }}</strong>
             </div>
           </div>
           <p v-else>Sin datos todavía.</p>
@@ -6347,7 +6358,7 @@ async function changePassword() {
           <div v-if="payments.monthlyRevenues.length" class="kv">
             <div v-for="r in payments.monthlyRevenues" :key="r.id">
               <span>{{ MONTH_NAMES[r.month] }} {{ r.year }}</span>
-              <strong>{{ formatARS(r.total_amount) }} · {{ r.payments_count }} pago(s)</strong>
+              <strong>{{ formatARS(r.total_amount) }} · {{ r.payments_count }} {{ r.payments_count === 1 ? 'pago' : 'pagos' }}</strong>
             </div>
           </div>
           <p v-else>Sin datos todavía.</p>
@@ -6355,11 +6366,11 @@ async function changePassword() {
       </div>
     </div>
     <!-- ================= FACTURAS ================= -->
-    <div v-if="seen.invoices" v-show="section === 'invoices'" :class="{ 'sec-on': section === 'invoices' }">
+    <div v-if="seen.invoices" v-show="section === 'invoices'" class="acc-sec" :class="{ 'sec-on': section === 'invoices' }">
       <div class="page-head">
         <div>
           <h1>Plan y pagos</h1>
-          <p>Tus comprobantes por cada pago. También te los mandamos por correo.</p>
+          <p>Comprobantes de cada pago acreditado. También te los enviamos por correo.</p>
         </div>
         <button class="btn ghost btn-auto" @click="invoices.loadInvoices()"><AppIcon name="refresh" :size="16" /> Actualizar</button>
       </div>
@@ -6405,7 +6416,7 @@ async function changePassword() {
     <!-- ================= CUENTA ================= -->
     <!-- ================= NOVEDADES (changelog — discreto, sin candados) ====
          -->
-    <div v-if="seen.changelog" v-show="section === 'changelog'" :class="{ 'sec-on': section === 'changelog' }">
+    <div v-if="seen.changelog" v-show="section === 'changelog'" class="acc-sec" :class="{ 'sec-on': section === 'changelog' }">
       <div class="page-head">
         <div>
           <h1>Novedades</h1>
@@ -6480,7 +6491,7 @@ async function changePassword() {
       </Teleport>
     </div>
 
-    <div v-if="seen.settings" v-show="section === 'settings'" :class="{ 'sec-on': section === 'settings' }">
+    <div v-if="seen.settings" v-show="section === 'settings'" class="acc-sec" :class="{ 'sec-on': section === 'settings' }">
       <div class="page-head">
         <div>
           <h1>Mi cuenta</h1>

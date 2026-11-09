@@ -5,6 +5,7 @@ import AppIcon from './AppIcon.vue'
 import { useThemeStore } from '../stores/theme.store.js'
 import '../assets/dashboard.css'
 import '../assets/dashboard-v3.css'
+import '../assets/dash-redesign.css'
 
 const theme = useThemeStore()
 

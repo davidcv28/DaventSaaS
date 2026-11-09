@@ -1,0 +1,304 @@
+/* ==========================================================================
+   dash-redesign/home — Sección INICIO (overview)
+   Sobrescribe los .ovh-*/.aq/.plan-strip/.oh-help de dashboard-v3.css.
+   Dirección: SaaS sobrio — superficies --card, hairlines --line-soft,
+   radios 12–14px, sombras --shadow-sm, acento único --brand-500, sin
+   gradientes ni glow. Prefijo .app para igualar/ganar especificidad.
+   ========================================================================== */
+
+/* ---------- Superficie base ---------- */
+.app .ovh {
+  border: 1px solid var(--line-soft);
+  border-radius: 14px;
+  background: var(--card);
+  box-shadow: var(--shadow-sm);
+}
+
+/* ---------- 1. Héroe: saludo + acciones + tarjeta del sitio ---------- */
+.app .ovh-hero {
+  gap: 20px;
+  padding: 24px;
+  margin-bottom: 12px;
+  background: var(--card);
+}
+.app .ovh-hero-main { gap: 8px; }
+.app .ovh-pill {
+  gap: 6px;
+  padding: 4px 11px;
+  border-color: var(--line);
+  background: var(--surface);
+  font-size: 11.5px;
+  font-weight: 600;
+  color: var(--ink-2);
+  font-variant-numeric: tabular-nums;
+}
+.app .ovh-title {
+  font-size: 24px;
+  font-weight: 700;
+  letter-spacing: -.025em;
+  line-height: 1.2;
+  color: var(--ink);
+}
+.app .ovh-sub { font-size: 14px; color: var(--muted); }
+.app .ovh-hero-actions { gap: 8px; margin-top: 6px; }
+
+/* Mini tarjeta "tu página": pozo neutro con hairline, sin tinte. */
+.app .ovh-site {
+  gap: 10px;
+  padding: 12px;
+  border-color: var(--line-soft);
+  border-radius: 12px;
+  background: var(--surface);
+}
+.app .ovh-site-cover {
+  height: 112px;
+  border-color: var(--line-soft);
+  border-radius: 10px;
+  background: color-mix(in srgb, var(--ink) 4%, var(--surface));
+}
+.app .ovh-site-cover-cta {
+  right: 8px;
+  bottom: 8px;
+  padding: 4px 10px;
+  border-radius: 8px;
+  background: rgba(13, 16, 28, .82); /* overlay sobre imagen: oscuro fijo */
+  color: #fff;
+  font-size: 11px;
+  font-weight: 600;
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+}
+.app .ovh-site-info { padding: 0 2px 2px; }
+.app .ovh-site-url { font-size: 11.5px; color: var(--muted); }
+.app .ovh-icon-btn {
+  width: 30px;
+  height: 30px;
+  border-color: var(--line);
+  border-radius: 8px;
+  background: var(--card);
+  color: var(--muted);
+  box-shadow: var(--shadow-sm);
+}
+.app .ovh-icon-btn:hover {
+  border-color: color-mix(in srgb, var(--brand-500) 40%, var(--line));
+  color: var(--brand-ink);
+}
+.app .ovh-site-stats {
+  gap: 6px 18px;
+  margin: 8px 0 4px;
+  padding: 9px 0;
+  border-top-color: var(--line-soft);
+  border-bottom-color: var(--line-soft);
+}
+.app .ovh-site-stats dt {
+  font-size: 15px;
+  font-weight: 700;
+  letter-spacing: -.015em;
+}
+.app .ovh-site-stats dd { font-size: 11px; }
+.app .ovh-site-empty { padding: 14px 10px; gap: 10px; }
+.app .ovh-site-empty-icon {
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+  border: 1px solid var(--line-soft);
+  background: var(--card);
+  color: var(--brand-ink);
+}
+
+/* ---------- 2. Alertas: franja con marcador sólido ---------- */
+.app .aq {
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: var(--card);
+  box-shadow: var(--shadow-sm);
+}
+.app .aq::before { width: 3px; background: var(--brand-500); }
+.app .aq.a-danger { border-color: var(--danger-line); background: var(--danger-bg); }
+.app .aq.a-danger::before { background: var(--danger); }
+.app .aq.a-warn { border-color: var(--warn-line); background: var(--warn-bg); }
+.app .aq.a-warn::before { background: var(--warn); }
+.app .aq.a-info { border-color: var(--info-line); background: var(--info-bg); }
+.app .aq.a-info::before { background: var(--info-ink); }
+.app .aq.a-brand { border-color: var(--brand-soft-line); background: var(--brand-soft); }
+.app .aq-main { padding: 12px 16px 12px 18px; }
+.app .aq-body strong { font-size: 13.5px; font-weight: 650; }
+.app .aq-body span { font-size: 12.5px; }
+.app .aq-list { border-top-color: var(--line-soft); }
+.app .aq-row { padding: 10px 16px 10px 18px; border-top-color: var(--line-soft); }
+
+/* Skeleton de carga del héroe */
+.app .skel-hero {
+  padding: 24px;
+  border-color: var(--line-soft);
+  border-radius: 14px;
+  box-shadow: var(--shadow-sm);
+}
+
+/* ---------- 3. Banda de métricas ---------- */
+.app .ovh-metrics {
+  padding: 2px 0;
+  margin-bottom: 12px;
+}
+.app .ovh-metric { gap: 4px; padding: 14px 18px; }
+.app .ovh-metric + .ovh-metric { border-left-color: var(--line-soft); }
+.app .ovh-label {
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: .04em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+.app .ovh-num {
+  font-size: 22px;
+  font-weight: 700;
+  letter-spacing: -.02em;
+  color: var(--ink);
+}
+.app .ovh-meta { font-size: 11.5px; }
+.app .ovh-meta .ovh-link { font-size: 11.5px; }
+
+/* ---------- 4/5. Filas de tarjetas ---------- */
+.app .ovh-row { gap: 12px; margin-bottom: 12px; }
+.app .ovh-card { padding: 16px 18px; }
+.app .ovh-card-head { margin-bottom: 12px; }
+.app .ovh-card-head h3 {
+  font-size: 13.5px;
+  font-weight: 650;
+  letter-spacing: -.01em;
+  color: var(--ink);
+}
+.app .ovh-count { font-size: 11.5px; color: var(--muted); }
+.app .ovh-link {
+  gap: 4px;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--brand-ink);
+}
+.app .ovh-link:hover { text-decoration: none; }
+.app .ovh-link .icon { transition: transform .18s var(--ease-out); }
+.app .ovh-link:hover .icon { transform: translateX(2px); }
+
+/* Barra de progreso: pista neutra, relleno sólido marca */
+.app .ovh-prog {
+  height: 5px;
+  margin: -2px 0 12px;
+  background: var(--line-soft);
+}
+.app .ovh-prog span { background: var(--brand-500); }
+
+/* Gráfico de barras: relleno sobrio, día actual en acento sólido */
+.app .ovh-bars { gap: 7px; height: 124px; }
+.app .ovh-bar { gap: 5px; }
+.app .ovh-bar-fill {
+  border-radius: 4px;
+  background: color-mix(in srgb, var(--brand-500) 42%, transparent);
+  transition: background .18s ease;
+}
+.app .ovh-bar:hover .ovh-bar-fill {
+  background: color-mix(in srgb, var(--brand-500) 62%, transparent);
+}
+.app .ovh-bar-fill.today { background: var(--brand-500); }
+.app .ovh-bar small { font-size: 10px; color: var(--muted); }
+
+/* Listas (checklist / actividad) */
+.app .ovh-list li { gap: 11px; padding: 10px 0; border-top-color: var(--line-soft); }
+.app .ovh-item-icon {
+  width: 30px;
+  height: 30px;
+  border: 1px solid var(--line-soft);
+  border-radius: 9px;
+  background: var(--surface);
+  color: var(--ink-2);
+}
+.app .ovh-item-body strong { font-size: 13px; font-weight: 600; }
+.app .ovh-item-body small { font-size: 12px; }
+.app .ovh-empty { font-size: 13px; }
+.app .ovh-done { font-size: 13px; color: var(--ok-ink); }
+.app .ovh-storage { margin-top: 12px; padding-top: 12px; border-top-color: var(--line-soft); }
+
+/* Atajos */
+.app .ovh-quick { gap: 8px; }
+.app .ovh-quick-item {
+  gap: 10px;
+  padding: 10px 12px;
+  border-color: var(--line-soft);
+  border-radius: 10px;
+  background: var(--card);
+}
+.app .ovh-quick-item:hover {
+  border-color: color-mix(in srgb, var(--brand-500) 30%, var(--line));
+  box-shadow: var(--shadow-sm);
+}
+.app .ovh-quick-item:hover .ovh-item-icon { color: var(--brand-ink); }
+.app .ovh-quick-item.locked .ovh-item-icon {
+  background: var(--surface);
+  color: var(--muted);
+}
+.app .ovh-quick-txt strong { font-size: 12.5px; font-weight: 600; }
+.app .ovh-quick-txt small { font-size: 11.5px; }
+
+/* ---------- Franja de plan ---------- */
+.app .plan-strip {
+  padding: 12px 16px;
+  border-color: var(--line-soft);
+  border-radius: 12px;
+  background: var(--card);
+  box-shadow: var(--shadow-sm);
+}
+.app .ps-name { font-weight: 650; font-size: 13.5px; }
+.app .ps-meta { font-size: 12.5px; color: var(--muted); font-variant-numeric: tabular-nums; }
+.app .ps-bar { height: 5px; background: var(--line-soft); box-shadow: none; }
+.app .ps-bar span { background: var(--brand-500); box-shadow: none; }
+
+/* Confirmación de cancelar débito */
+.app .confirm-card {
+  border-color: var(--danger-line);
+  border-radius: 14px;
+  box-shadow: var(--shadow-sm);
+}
+
+/* ---------- Ayuda ---------- */
+.app .oh-help {
+  padding: 16px 18px;
+  border-color: var(--line-soft);
+  border-radius: 14px;
+  background: var(--card);
+  box-shadow: var(--shadow-sm);
+}
+.app .oh-help-icon {
+  width: 44px;
+  height: 44px;
+  border: 1px solid var(--line-soft);
+  border-radius: 12px;
+  background: var(--brand-soft);
+  color: var(--brand-ink);
+  box-shadow: none;
+}
+.app .oh-help-txt strong { font-size: 15px; font-weight: 650; }
+.app .oh-help-txt small { font-size: 13px; color: var(--muted); }
+.app .oh-help-actions .btn { min-height: 42px; font-size: 14px; }
+
+/* ---------- Responsive ---------- */
+@media (max-width: 1023px) {
+  .app .ovh-metric:nth-child(even) { border-left-color: var(--line-soft); }
+  .app .ovh-metric:nth-child(n+3) { border-top-color: var(--line-soft); }
+}
+@media (max-width: 860px) {
+  .app .ovh-hero { padding: 18px; gap: 14px; }
+  .app .ovh-title { font-size: 21px; }
+  .app .ovh-site-cover { height: 120px; }
+  .app .ovh-num { font-size: 20px; }
+  .app .ovh-metric { padding: 12px 14px; }
+}
+@media (max-width: 480px) {
+  .app .ovh-bars { height: 100px; gap: 5px; }
+}
+
+/* ---------- Movimiento reducido ---------- */
+@media (prefers-reduced-motion: reduce) {
+  .app .ovh-bar-fill,
+  .app .ovh-link .icon,
+  .app .ovh-quick-item,
+  .app .ovh-icon-btn { transition: none !important; }
+}

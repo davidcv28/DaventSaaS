@@ -1,0 +1,392 @@
+/* ===== dash-redesign / shell — chrome del dashboard (rail, topbar, tab bar, sheet)
+   Carga después de dashboard.css + dashboard-v3.css (vía @import en dash-redesign.css).
+   Todo va prefijado con .app: pisa solo el chrome, nunca el contenido de <main>.
+   Dirección: SaaS sobrio tipo Linear/Stripe — rail oscuro fijo en ambos temas,
+   ítem activo como píldora clara con acento --brand-500, hairlines sutiles,
+   radios 10-14px, movimiento <= .25s. */
+
+.app {
+  /* Rail ligeramente más neutro y profundo (vale para sidebar, panel móvil y sheet). */
+  --dv-rail-a: #131730;
+  --dv-rail-b: #090b18;
+  --shell-rail-ink: #98a3c4;
+  --shell-rail-ink-hi: #e8ecf7;
+  --shell-rail-line: rgba(255, 255, 255, .08);
+  --shell-rail-line-soft: rgba(255, 255, 255, .05);
+  --shell-active-bg: color-mix(in srgb, var(--brand-500) 16%, transparent);
+  --shell-active-line: color-mix(in srgb, var(--brand-400) 38%, transparent);
+}
+[data-theme='dark'] .app {
+  --dv-rail-a: #10142a;
+  --dv-rail-b: #060812;
+}
+
+/* ---------- Rail lateral ---------- */
+.app > .sidebar {
+  background:
+    radial-gradient(140% 40% at 0% 0%, color-mix(in srgb, var(--brand-500) 16%, transparent) 0%, transparent 60%),
+    linear-gradient(180deg, var(--dv-rail-a) 0%, var(--dv-rail-b) 100%);
+  border-right-color: transparent;
+  box-shadow: inset -1px 0 0 var(--shell-rail-line-soft);
+  padding: 18px 12px;
+  gap: 14px;
+}
+/* Sin textura de puntos ni brillo barrido: superficie limpia. */
+.app > .sidebar::before,
+.app > .sidebar::after { display: none; }
+
+.app > .sidebar .brand { padding: 0 10px; gap: 11px; letter-spacing: .16em; }
+.app .brand-word {
+  background: none;
+  color: var(--shell-rail-ink-hi);
+  font-weight: 750;
+}
+.app .brand-ping {
+  margin-left: auto;
+  background: var(--ok);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--ok) 16%, transparent);
+  animation-duration: 3.6s;
+}
+
+.app .plan-badge {
+  margin: 0 2px;
+  justify-content: flex-start;
+  padding: 7px 12px;
+  background: rgba(255, 255, 255, .04);
+  border: 1px solid var(--shell-rail-line);
+  color: var(--shell-rail-ink);
+  font-size: 11.5px;
+  font-weight: 650;
+  letter-spacing: .01em;
+  box-shadow: none;
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+}
+.app .plan-badge .icon { color: color-mix(in srgb, var(--brand-400) 80%, #fff); }
+
+/* ---------- Nav del rail ---------- */
+.app .sidebar nav { gap: 2px; padding: 2px; }
+.app .sidebar nav button {
+  padding: 8px 10px;
+  border-radius: 10px;
+  font-size: 13.5px;
+  font-weight: 500;
+  letter-spacing: -.005em;
+  color: var(--shell-rail-ink);
+  animation: nav-in .3s var(--ease-out) both;
+  animation-delay: calc(var(--i, 0) * 18ms + 60ms);
+  transition: color .18s, background-color .18s, transform .18s var(--ease-out);
+}
+.app .sidebar nav button:hover { transform: none; color: var(--shell-rail-ink-hi); }
+.app .sidebar nav button:focus-visible {
+  outline: 2px solid color-mix(in srgb, var(--brand-400) 75%, transparent);
+  outline-offset: -2px;
+}
+/* Tile del ícono: plano, sin gradiente ni glow. */
+.app .sidebar nav button > .icon:first-child {
+  width: 27px;
+  height: 27px;
+  padding: 5px;
+  box-sizing: border-box;
+  border-radius: 8px;
+  color: var(--shell-rail-ink);
+  background: transparent;
+  box-shadow: none;
+  transition: background-color .18s, color .18s;
+}
+.app .sidebar nav button:hover > .icon:first-child {
+  color: var(--shell-rail-ink-hi);
+  background: rgba(255, 255, 255, .06);
+}
+.app .sidebar nav button.active { color: var(--shell-rail-ink-hi); }
+.app .sidebar nav button.active > .icon:first-child {
+  color: #fff;
+  background: var(--brand-500);
+  box-shadow: none;
+}
+.app .sidebar nav button.locked { opacity: .55; }
+.app .sidebar nav button .icon { transition: transform .22s var(--ease-out), color .18s; }
+.app .sidebar nav button:hover .icon { transform: none; }
+
+/* Píldora activa (indicador animado): tinte de marca + varilla lateral. */
+.app .nav-indicator {
+  border-radius: 10px;
+  background: var(--shell-active-bg);
+  box-shadow:
+    inset 0 0 0 1px var(--shell-active-line),
+    inset 3px 0 0 var(--brand-500);
+  transition: transform .3s var(--ease-spring), height .22s var(--ease-out), opacity .18s;
+}
+
+.app .nav-heading {
+  margin: 14px 12px 4px;
+  font-family: var(--font);
+  font-size: 10.5px;
+  font-weight: 700;
+  letter-spacing: .11em;
+  color: color-mix(in srgb, var(--shell-rail-ink) 78%, transparent);
+}
+.app .nav-sep { margin: 10px 14px; border-top: 1px solid var(--shell-rail-line-soft); }
+
+.app .nav-label small { color: var(--shell-rail-ink); opacity: .7; }
+.app .sidebar nav button.active .nav-label small { color: var(--shell-rail-ink-hi); opacity: .85; }
+
+.app .nav-badge {
+  background: rgba(255, 255, 255, .07);
+  border-color: transparent;
+  color: var(--shell-rail-ink-hi);
+}
+.app .sidebar nav button.active .nav-badge { background: rgba(255, 255, 255, .12); }
+.app .nav-lock { color: var(--shell-rail-ink); opacity: .7; }
+
+/* Pie del rail */
+.app .side-foot { border-top: 1px solid var(--shell-rail-line-soft); padding-top: 10px; }
+.app .side-foot .link { color: var(--shell-rail-ink); border-radius: 9px; }
+.app .side-foot .link:hover { background: rgba(255, 255, 255, .05); color: var(--shell-rail-ink-hi); }
+.app .side-foot .link:last-child:hover { color: #fca5a5; }
+.app .side-foot .link:focus-visible {
+  outline: 2px solid color-mix(in srgb, var(--brand-400) 75%, transparent);
+  outline-offset: -2px;
+}
+
+/* Rail colapsado (861–1366px): centrar el tile del ícono activo. */
+@media (min-width: 861px) and (max-width: 1366px) {
+  .app > .sidebar { padding: 16px 10px; }
+  .app .sidebar nav button { padding: 8px 4px; }
+  .app .sidebar nav button > .icon:first-child { width: 34px; height: 34px; padding: 7px; }
+}
+
+/* ---------- Topbar ---------- */
+.app .topbar {
+  gap: 12px;
+  background: color-mix(in srgb, var(--bg) 82%, transparent);
+  backdrop-filter: blur(14px) saturate(1.35);
+  -webkit-backdrop-filter: blur(14px) saturate(1.35);
+  box-shadow: inset 0 -1px 0 var(--dv-hair);
+}
+/* Sin varilla de gradiente bajo la barra. */
+.app .topbar::after { display: none; }
+
+.app .top-brand strong { letter-spacing: .15em; }
+
+.app .topbar-title { gap: 9px; font-size: 14.5px; }
+.app .topbar-title .icon { color: var(--muted); }
+.app .topbar-title strong { font-weight: 650; letter-spacing: -.015em; }
+.app .crumb-parent { font-size: 10.5px; font-weight: 650; letter-spacing: .08em; }
+
+.app .topbar-date {
+  font-family: var(--font);
+  font-size: 12.5px;
+  letter-spacing: 0;
+  text-transform: capitalize;
+  color: var(--muted);
+}
+
+.app .top-back,
+.app .top-icon {
+  width: 34px;
+  height: 34px;
+  border-radius: 10px;
+  border-color: var(--line);
+  background: var(--card);
+  color: var(--ink-2);
+  transition: border-color .18s, color .18s, background-color .18s, transform .18s var(--ease-out);
+}
+.app .top-back:hover { border-color: var(--line-strong); color: var(--ink); transform: translateX(-1px); }
+.app .top-icon:hover { border-color: var(--line-strong); color: var(--ink); background: var(--surface); }
+
+.app .top-search {
+  min-height: 34px;
+  padding: 0 10px 0 12px;
+  gap: 9px;
+  border-radius: 10px;
+  border-color: var(--line);
+  background: var(--card);
+  font-size: 13px;
+}
+.app .top-search:hover {
+  border-color: var(--line-strong);
+  background: var(--card);
+  box-shadow: var(--shadow-sm);
+  color: var(--ink);
+}
+.app .kbd {
+  font-family: var(--font);
+  font-size: 10.5px;
+  font-weight: 600;
+  letter-spacing: .02em;
+  padding: 2px 6px;
+  border-radius: 5px;
+  border-bottom-width: 1px;
+  color: var(--muted);
+  background: var(--surface);
+}
+
+/* Chip de plan en la topbar móvil: discreto, mismo lenguaje que .top-search. */
+@media (max-width: 860px) {
+  .app .top-plan {
+    background: var(--card);
+    border-color: var(--line);
+    color: var(--ink-2);
+    font-weight: 650;
+  }
+  .app .top-plan .icon { color: var(--brand-ink); }
+}
+
+.app .avatar {
+  background: var(--brand-600);
+  box-shadow: 0 0 0 2px var(--bg), 0 0 0 3px var(--line);
+}
+.app .top-user:focus-visible .avatar { box-shadow: 0 0 0 2px var(--bg), 0 0 0 4px var(--brand-500); }
+.app .top-user .tip-bubble {
+  border-radius: 8px;
+  background: #141a34;
+  font-size: 12px;
+  box-shadow: 0 8px 24px -8px rgba(8, 10, 24, .5);
+}
+.app .top-user .tip-bubble::after { border-top-color: #141a34; }
+
+/* ---------- Tab bar móvil ---------- */
+@media (max-width: 860px) {
+  .app .tabbar {
+    border-radius: 20px;
+    background: color-mix(in srgb, var(--card) 82%, transparent);
+    border-color: var(--line-soft);
+    box-shadow: 0 12px 32px -14px rgba(9, 12, 24, .3), inset 0 1px 0 rgba(255, 255, 255, .4);
+  }
+  [data-theme='dark'] .app .tabbar {
+    background: color-mix(in srgb, #151b2e 84%, transparent);
+    border-color: var(--line);
+    box-shadow: 0 12px 32px -14px rgba(0, 0, 0, .65), inset 0 1px 0 rgba(255, 255, 255, .06);
+  }
+  .app .tabbar > button { border-radius: 14px; color: var(--muted); font-size: 10.5px; }
+  .app .tabbar > button.active { color: var(--brand-ink); }
+  .app .tabbar > button.active .icon { color: var(--brand-ink); filter: none; transform: translateY(-1px); }
+  .app .tabbar > button:active { transform: scale(.96); }
+
+  /* Píldora viajera: tinte suave de marca, sin borde duro. */
+  .app .tab-ind {
+    border-radius: 14px;
+    background: color-mix(in srgb, var(--brand-500) 12%, transparent);
+    box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--brand-500) 22%, transparent);
+    transition: transform .28s var(--ease-spring);
+  }
+  [data-theme='dark'] .app .tab-ind {
+    background: color-mix(in srgb, var(--brand-500) 20%, transparent);
+    box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--brand-400) 28%, transparent);
+  }
+  .app .tab-badge { box-shadow: 0 0 0 2px var(--card); }
+}
+
+/* ---------- Sheet "Más" ---------- */
+.app .sheet-scrim {
+  background: rgba(8, 10, 24, .5);
+  backdrop-filter: blur(5px);
+  -webkit-backdrop-filter: blur(5px);
+}
+.app .more-sheet {
+  background:
+    radial-gradient(130% 34% at 0% 0%, color-mix(in srgb, var(--brand-500) 14%, transparent) 0%, transparent 62%),
+    linear-gradient(180deg, var(--dv-rail-a), var(--dv-rail-b));
+  border-top-color: var(--shell-rail-line);
+  border-radius: 20px 20px 0 0;
+  box-shadow: 0 -16px 44px -18px rgba(8, 10, 24, .7), inset 0 1px 0 var(--shell-rail-line-soft);
+}
+.app .sheet-head { border-bottom-color: var(--shell-rail-line-soft); padding-bottom: 10px; }
+.app .sheet-grab { background: rgba(255, 255, 255, .18); }
+.app .sheet-brand { color: var(--shell-rail-ink-hi); letter-spacing: .15em; }
+.app .sheet-plan {
+  background: rgba(255, 255, 255, .05);
+  border-color: var(--shell-rail-line);
+  color: var(--shell-rail-ink);
+}
+.app .sheet-x {
+  border-radius: 10px;
+  background: rgba(255, 255, 255, .05);
+  color: var(--shell-rail-ink);
+  transition: background-color .18s, color .18s;
+}
+.app .sheet-x:hover { background: rgba(255, 255, 255, .09); color: var(--shell-rail-ink-hi); }
+
+.app .sheet-nav > button {
+  border-radius: 12px;
+  color: var(--shell-rail-ink);
+  font-size: 14.5px;
+  transition: background-color .18s, border-color .18s, color .18s;
+}
+.app .sheet-nav > button:hover { background: rgba(255, 255, 255, .045); color: var(--shell-rail-ink-hi); }
+.app .sheet-nav > button .icon {
+  border-radius: 11px;
+  background: rgba(255, 255, 255, .05);
+  color: var(--shell-rail-ink);
+}
+.app .sheet-nav > button.active {
+  background: var(--shell-active-bg);
+  border-color: var(--shell-active-line);
+  color: var(--shell-rail-ink-hi);
+}
+.app .sheet-nav > button.active .icon { background: var(--brand-500); color: #fff; }
+.app .sheet-nav > button.locked { opacity: .55; }
+.app .sheet-nav .nav-badge { background: rgba(255, 255, 255, .08); border-color: transparent; color: var(--shell-rail-ink-hi); }
+.app .sheet-nav .nav-heading { margin: 12px 12px 4px; }
+.app .sheet-go { color: var(--shell-rail-ink); opacity: .45; }
+
+.app .sheet-foot {
+  border-top-color: var(--shell-rail-line-soft);
+  background: rgba(6, 8, 20, .28);
+}
+.app .sheet-foot .link { color: var(--shell-rail-ink); border-radius: 9px; }
+.app .sheet-foot .link:hover { background: rgba(255, 255, 255, .05); color: var(--shell-rail-ink-hi); }
+.app .sheet-foot .link:last-child:hover { color: #fca5a5; }
+
+/* Entrada del sheet un poco más rápida y sobria. */
+.app .msheet-enter-active, .app .msheet-leave-active { transition: transform .25s var(--ease-out); }
+
+/* ---------- Móvil: rail como barra superior + panel desplegable ---------- */
+@media (max-width: 860px) {
+  .app > .sidebar {
+    background: linear-gradient(180deg, var(--dv-rail-a), var(--dv-rail-b));
+    border-bottom: 1px solid var(--shell-rail-line-soft);
+    box-shadow: 0 8px 22px -12px rgba(6, 8, 20, .55);
+  }
+  .app > .sidebar .brand { letter-spacing: .16em; }
+  .app .plan-badge { margin: 0; justify-content: center; }
+  .app .menu-toggle { border-radius: 10px; color: var(--shell-rail-ink-hi); }
+  .app .menu-toggle:hover { background: rgba(255, 255, 255, .06); }
+
+  .app .side-panel {
+    background: linear-gradient(180deg, var(--dv-rail-a), var(--dv-rail-b));
+    transition: transform .22s var(--ease-out), opacity .2s ease, visibility .2s;
+  }
+  .app .side-panel nav { gap: 3px; }
+  .app .sidebar nav button {
+    border-radius: 10px;
+    animation: none;
+  }
+  .app .side-panel.open nav button {
+    animation: nav-in .3s var(--ease-out) both;
+    animation-delay: calc(var(--i, 0) * 16ms + 40ms);
+  }
+  /* Activo sin indicador (oculto en móvil): misma píldora, dibujada en el botón. */
+  .app .sidebar nav button.active {
+    background: var(--shell-active-bg);
+    box-shadow: inset 0 0 0 1px var(--shell-active-line), inset 3px 0 0 var(--brand-500);
+    color: var(--shell-rail-ink-hi);
+  }
+  .app .side-foot .link { border-radius: 10px; }
+}
+
+/* ---------- Movimiento reducido ---------- */
+@media (prefers-reduced-motion: reduce) {
+  .app .brand-ping,
+  .app .sidebar nav button { animation: none !important; }
+  .app .nav-indicator,
+  .app .tab-ind,
+  .app .tabbar > button .icon,
+  .app .msheet-enter-active,
+  .app .msheet-leave-active,
+  .app .side-panel,
+  .app .top-back,
+  .app .top-icon,
+  .app .top-search { transition: none !important; }
+}

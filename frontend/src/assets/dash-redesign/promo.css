@@ -1,0 +1,372 @@
+/* ==========================================================================
+   dash-redesign/promo — Mis fotos, Mis visitas y QR y folletos.
+   Alcance: todo va colgado de .promo-sec (clase en la raíz de cada sección)
+   para no pisar .card/.stat/.dsg-tabs usados por otras secciones.
+   Dirección: SaaS sobrio — cards planas, hairlines, un solo acento
+   (--brand-500), números tabulares, sin gradientes ni glow.
+   ========================================================================== */
+
+/* ---------- Base compartida de las tres secciones ---------- */
+.app .promo-sec .card {
+  border-color: var(--line-soft);
+  border-radius: 14px;
+  box-shadow: var(--shadow-sm);
+  padding: 20px;
+}
+.app .promo-sec .card > h3 {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  margin: 0 0 14px;
+  font-size: 14.5px;
+  font-weight: 650;
+  letter-spacing: -.01em;
+  color: var(--ink);
+}
+.app .promo-sec .card > h3 .icon {
+  display: grid;
+  place-items: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 8px;
+  background: var(--surface);
+  box-shadow: inset 0 0 0 1px var(--line-soft);
+  color: var(--muted);
+  flex: none;
+}
+.app .promo-sec .card .hint {
+  margin: 12px 0 0;
+  font-size: 12.5px;
+  line-height: 1.45;
+  color: var(--muted);
+}
+.app .promo-sec .lock-badge {
+  background: var(--surface);
+  box-shadow: inset 0 0 0 1px var(--line-soft);
+  color: var(--muted);
+}
+.app .promo-sec .lock-badge .icon { color: var(--muted); }
+
+/* ==========================================================================
+   MIS FOTOS
+   ========================================================================== */
+.app .promo-photos .photos-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px;
+  margin-bottom: 4px;
+}
+.app .promo-photos .photos-grid > .card { margin-bottom: 0; }
+
+/* Logo: thumb más grande, object-fit contain para no recortar marcas */
+.app .promo-photos .logo-box { align-items: flex-start; }
+.app .promo-photos .logo-thumb {
+  width: 72px;
+  height: 72px;
+  border-radius: 12px;
+  border-color: var(--line-soft);
+  background: var(--surface);
+  padding: 8px;
+}
+.app .promo-photos .logo-thumb img { object-fit: contain; }
+
+/* Portada: preview panorámico a todo el ancho de la card */
+.app .promo-photos .cover-box {
+  display: grid;
+  gap: 12px;
+}
+.app .promo-photos .cover-thumb {
+  width: 100%;
+  max-width: none;
+  aspect-ratio: 16 / 7;
+  border-radius: 10px;
+  border-color: var(--line-soft);
+}
+.app .promo-photos .cover-thumb.empty { border-style: dashed; border-color: var(--line-strong); }
+
+/* Carrusel / galería / decorativas: tiles uniformes con acciones discretas */
+.app .promo-photos .carousel-box { gap: 10px; }
+.app .promo-photos .carousel-thumb {
+  width: 104px;
+  height: 76px;
+  border-radius: 10px;
+  border-color: var(--line-soft);
+  background: var(--surface);
+}
+.app .promo-photos .carousel-thumb-actions {
+  gap: 4px;
+  padding: 4px;
+  background: rgba(10, 12, 30, .55);
+}
+.app .promo-photos .carousel-thumb-actions .icon-btn {
+  width: 24px;
+  height: 24px;
+  border-radius: 6px;
+}
+.app .promo-photos .carousel-add {
+  width: 104px;
+  height: 76px;
+  border-radius: 10px;
+  border-color: var(--line-strong);
+  background: transparent;
+  font-size: 12px;
+}
+.app .promo-photos .carousel-add:hover:not(:disabled) {
+  border-color: var(--brand-500);
+  color: var(--brand-500);
+  background: var(--brand-soft);
+}
+.app .promo-photos .logo-actions { gap: 8px; }
+
+/* ==========================================================================
+   MIS VISITAS (stats)
+   ========================================================================== */
+.app .promo-stats .stats {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 14px;
+}
+.app .promo-stats .stat {
+  border-color: var(--line-soft);
+  border-radius: 14px;
+  padding: 16px 18px;
+  background: var(--card);
+  box-shadow: var(--shadow-sm);
+  gap: 13px;
+}
+.app .promo-stats .stat:hover { border-color: var(--line); }
+.app .promo-stats .stat-icon {
+  width: 40px;
+  height: 40px;
+  border-radius: 10px;
+  background: var(--surface);
+  box-shadow: inset 0 0 0 1px var(--line-soft);
+  color: var(--brand-ink);
+}
+.app .promo-stats .stat strong {
+  font-size: 24px;
+  font-weight: 700;
+  letter-spacing: -.02em;
+  font-variant-numeric: tabular-nums;
+  color: var(--ink);
+}
+.app .promo-stats .stat small {
+  font-size: 12.5px;
+  color: var(--muted);
+}
+
+/* Gráfico: barras planas de un solo acento sobre grid hairline */
+.app .promo-stats .stats-chart {
+  height: 168px;
+  gap: 5px;
+  margin-top: 18px;
+  padding-bottom: 0;
+  border-bottom: 1px solid var(--line-soft);
+  background-image:
+    linear-gradient(to bottom, var(--line-soft) 1px, transparent 1px);
+  background-size: 100% 25%;
+  background-repeat: repeat-y;
+}
+.app .promo-stats .stats-bar {
+  background: var(--brand-500);
+  border-radius: 3px 3px 0 0;
+  opacity: .38;
+  animation: none;
+  box-shadow: none;
+  transition: opacity .2s var(--ease-out);
+}
+.app .promo-stats .stats-bar:hover { opacity: .8; filter: none; }
+.app .promo-stats .stats-bar.today {
+  background: var(--brand-500);
+  opacity: 1;
+  box-shadow: none;
+}
+.app .promo-stats .stats-chart-axis {
+  margin-top: 8px;
+  font-size: 11.5px;
+  font-variant-numeric: tabular-nums;
+  color: var(--muted);
+}
+
+/* Vacío del gráfico */
+.app .promo-stats .stats-empty { padding: 30px 20px 26px; }
+.app .promo-stats .stats-empty-icon {
+  background: var(--surface);
+  box-shadow: inset 0 0 0 1px var(--line-soft);
+  color: var(--muted);
+}
+
+/* ==========================================================================
+   QR Y FOLLETOS
+   ========================================================================== */
+
+/* Hero sobrio: card plana en vez del banner de marca */
+.app .promo-tools .tools-hero {
+  align-items: center;
+  gap: 14px;
+  margin-bottom: 14px;
+  padding: 16px 18px;
+  background: var(--card);
+  border: 1px solid var(--line-soft);
+  border-radius: 14px;
+  box-shadow: var(--shadow-sm);
+  color: var(--ink);
+}
+.app .promo-tools .tools-hero-icon {
+  width: 44px;
+  height: 44px;
+  border-radius: 11px;
+  background: var(--brand-soft);
+  border: none;
+  box-shadow: inset 0 0 0 1px var(--brand-soft-line);
+  color: var(--brand-ink);
+  flex: none;
+}
+.app .promo-tools .tools-hero strong {
+  font-size: 15px;
+  font-weight: 650;
+  letter-spacing: -.01em;
+}
+.app .promo-tools .tools-hero p {
+  color: var(--muted);
+  font-size: 13px;
+}
+.app .promo-tools .tools-hero-chip {
+  gap: 6px;
+  padding: 5px 12px;
+  border-radius: 99px;
+  background: var(--surface);
+  border: none;
+  box-shadow: inset 0 0 0 1px var(--line-soft);
+  color: var(--ink-2);
+  font-size: 12.5px;
+  font-weight: 650;
+  font-variant-numeric: tabular-nums;
+}
+.app .promo-tools .tools-hero-chip .icon { color: var(--brand-500); }
+
+/* Tabs de herramientas: pill sobria, badge "Nuevo" sin amarillo */
+.app .promo-tools .tools-tabs {
+  display: inline-flex;
+  width: auto;
+  max-width: 100%;
+  margin-bottom: 16px;
+  border-color: var(--line-soft);
+  border-radius: 11px;
+  box-shadow: var(--shadow-sm);
+}
+.app .promo-tools .tools-tabs .dsg-tab {
+  border-radius: 8px;
+  font-weight: 600;
+}
+.app .promo-tools .tools-tabs .dsg-tab.active {
+  background: var(--brand-500);
+  color: #fff;
+  box-shadow: none;
+}
+.app .promo-tools .tools-tabs .dsg-tab.locked { opacity: .7; }
+.app .promo-tools .tools-new {
+  background: var(--brand-soft);
+  box-shadow: inset 0 0 0 1px var(--brand-soft-line);
+  color: var(--brand-ink);
+  font-weight: 700;
+}
+.app .promo-tools .tools-tabs .dsg-tab.active .tools-new {
+  background: rgba(255, 255, 255, .18);
+  box-shadow: none;
+  color: #fff;
+}
+
+/* Cards de QR y folleto */
+.app .promo-tools .tools-grid { align-items: start; }
+.app .promo-tools .tools-card > p {
+  margin: -6px 0 14px;
+  font-size: 13px;
+  line-height: 1.5;
+  color: var(--muted);
+}
+
+/* Escenario del QR: pozo plano con hairline, marco blanco con esquinas finas */
+.app .promo-tools .qr-stage {
+  min-height: 210px;
+  margin: 2px 0 14px;
+  padding: 22px;
+  border-radius: 12px;
+  background: var(--surface);
+  border: 1px solid var(--line-soft);
+}
+.app .promo-tools .qr-frame {
+  border-radius: 12px;
+  box-shadow: var(--shadow-md);
+}
+.app .promo-tools .qr-frame i { border-width: 2px; }
+.app .promo-tools .qr-link {
+  border-color: var(--line-soft);
+  border-radius: 10px;
+  font-variant-numeric: tabular-nums;
+  transition: border-color .2s var(--ease-out), background-color .2s var(--ease-out);
+}
+.app .promo-tools .qr-link:hover {
+  border-color: var(--brand-500);
+  background: var(--brand-soft);
+}
+.app .promo-tools .tools-tips { gap: 7px; margin-bottom: 14px; }
+.app .promo-tools .tools-tips .icon { color: var(--muted); }
+.app .promo-tools .tools-card .btn-row { margin-top: auto; }
+
+/* Las dos cards de la grilla estiran igual y empujan acciones al pie */
+.app .promo-tools .tools-card {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+.app .promo-tools .tools-card > p { flex: none; }
+
+/* Miniatura del folleto: esquema plano, sin rotación ni gradientes */
+.app .promo-tools .flyer-mini {
+  margin: 4px auto 16px;
+  transform: none;
+  border-color: var(--line-soft);
+  border-radius: 8px;
+  background: var(--card);
+  box-shadow: var(--shadow-sm);
+}
+.app .promo-tools .flyer-mini-top { background: var(--ink); }
+.app .promo-tools .flyer-mini-top i { background: var(--card); }
+.app .promo-tools .flyer-mini-top b { background: rgba(255, 255, 255, .55); }
+.app .promo-tools .flyer-mini-lines b { background: var(--line-strong); }
+.app .promo-tools .flyer-mini-prods i {
+  background: var(--surface);
+  border-color: var(--line-soft);
+}
+.app .promo-tools .flyer-mini-foot { background: var(--surface); box-shadow: inset 0 0 0 1px var(--line-soft); }
+.app .promo-tools .flyer-mini-foot i { background: var(--ink); }
+.app .promo-tools .flyer-mini-foot b { background: var(--line-strong); }
+
+/* ==========================================================================
+   Responsive < 860px
+   ========================================================================== */
+@media (max-width: 860px) {
+  .app .promo-photos .photos-grid { grid-template-columns: minmax(0, 1fr); }
+  .app .promo-stats .stats { grid-template-columns: minmax(0, 1fr); gap: 10px; }
+  .app .promo-stats .stats-chart { height: 140px; }
+  .app .promo-tools .tools-hero { align-items: flex-start; }
+  .app .promo-tools .tools-hero-chip { align-self: flex-start; }
+  .app .promo-tools .tools-tabs { display: flex; width: 100%; }
+  .app .promo-tools .tools-tabs .dsg-tab { flex: 1 0 auto; }
+}
+@media (max-width: 480px) {
+  .app .promo-photos .logo-box { flex-direction: column; }
+  .app .promo-photos .logo-actions,
+  .app .promo-photos .logo-actions .btn { width: 100%; }
+  .app .promo-photos .logo-actions .btn { justify-content: center; }
+}
+
+/* ==========================================================================
+   Movimiento reducido
+   ========================================================================== */
+@media (prefers-reduced-motion: reduce) {
+  .app .promo-sec .qr-link,
+  .app .promo-sec .stats-bar,
+  .app .promo-sec .carousel-add,
+  .app .promo-sec .dsg-tab { transition: none !important; }
+}

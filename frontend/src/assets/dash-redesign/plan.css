@@ -1,0 +1,332 @@
+/* ============================================================
+   dash-redesign/plan — Asistente virtual, Ayuda/soporte y Planes.
+   Sobrio tipo Linear/Stripe: cards --card, hairlines --line-soft,
+   radios 12-16, sin gradientes ni glow, acento --brand-500.
+   Scopes de sección: .sec-bot, .sec-support, .sec-plans (clases
+   propias en los wrappers de DashboardView).
+   ============================================================ */
+
+/* ---------- Base compartida de las tres secciones ---------- */
+.app :is(.sec-bot, .sec-support, .sec-plans) .card{
+  border-color: var(--line-soft);
+  border-radius: 14px;
+  box-shadow: var(--shadow-sm);
+  padding: 24px;
+}
+.app :is(.sec-bot, .sec-support, .sec-plans) .card h3{
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  font-size: 15.5px;
+  font-weight: 650;
+  letter-spacing: -.01em;
+}
+.app :is(.sec-bot, .sec-support, .sec-plans) .card h3 .icon{
+  color: var(--brand-500);
+  flex: none;
+}
+.app :is(.sec-bot, .sec-support, .sec-plans) .hint,
+.app :is(.sec-bot, .sec-support, .sec-plans) .hint-inline{
+  color: var(--muted);
+}
+.app :is(.sec-bot, .sec-support, .sec-plans) :is(.input, .select, .textarea){
+  border-radius: 10px;
+  box-shadow: none;
+  transition: border-color .15s var(--ease-out), box-shadow .15s var(--ease-out);
+}
+.app :is(.sec-bot, .sec-support, .sec-plans) :is(.input, .select, .textarea):focus{
+  border-color: var(--brand-500);
+  box-shadow: var(--ring);
+}
+
+/* ================== ASISTENTE VIRTUAL ================== */
+.app .sec-bot .check-list{
+  border-color: var(--line-soft);
+  border-radius: 12px;
+  background: var(--surface);
+}
+.app .sec-bot .check-item{
+  padding: 14px 16px;
+  transition: background .15s var(--ease-out);
+}
+.app .sec-bot .check-item .check-text strong{
+  font-size: 14px;
+  font-weight: 650;
+}
+.app .sec-bot .qa-list{ gap: 12px; }
+.app .sec-bot .qa-item{
+  align-items: stretch;
+  gap: 10px;
+  padding: 14px;
+  border-color: var(--line-soft);
+  border-radius: 12px;
+  background: var(--surface);
+  transition: border-color .15s var(--ease-out), box-shadow .15s var(--ease-out);
+}
+.app .sec-bot .qa-item:focus-within{
+  border-color: var(--brand-soft-line);
+  box-shadow: var(--shadow-sm);
+}
+.app .sec-bot .qa-fields{
+  flex: 1;
+  min-width: 0;
+  display: grid;
+  gap: 8px;
+}
+.app .sec-bot .qa-item .icon-btn{
+  align-self: flex-start;
+  margin-top: 2px;
+}
+.app .sec-bot .card > .app-btn,
+.app .sec-bot .card > .btn{ width: auto; }
+
+/* ================== AYUDA / SOPORTE ================== */
+.app .sec-support .presence-chip{
+  gap: 7px;
+  padding: 6px 13px;
+  background: var(--surface);
+  border: 1px solid var(--line-soft);
+  font-weight: 650;
+  font-variant-numeric: tabular-nums;
+}
+.app .sec-support .presence-chip.on{
+  color: var(--ok-ink);
+  border-color: var(--ok-line);
+  background: var(--ok-bg);
+}
+.app .sec-support .presence-chip.on .presence-dot{
+  box-shadow: none;
+}
+.app .sec-support .support-grid{
+  gap: 18px;
+  grid-template-columns: minmax(280px, 380px) minmax(0, 1fr);
+}
+.app .sec-support .support-team{ gap: 12px; padding: 20px; }
+.app .sec-support .support-team-head h3{
+  font-size: 15.5px;
+  font-weight: 650;
+  letter-spacing: -.01em;
+}
+.app .sec-support .support-count{
+  background: var(--surface);
+  border: 1px solid var(--line-soft);
+  color: var(--muted);
+  font-weight: 650;
+}
+.app .sec-support .support-list{ gap: 2px; margin: 0 -6px; }
+.app .sec-support .support-member{
+  gap: 12px;
+  padding: 10px 12px;
+  border-radius: 10px;
+  transition: background .15s var(--ease-out), border-color .15s var(--ease-out);
+}
+.app .sec-support .support-member:hover{
+  background: var(--surface);
+  border-color: var(--line-soft);
+}
+.app .sec-support .support-member:active{ transform: none; }
+.app .sec-support .support-avatar{
+  width: 40px;
+  height: 40px;
+  border-radius: 10px;
+  background: var(--brand-soft);
+  color: var(--brand-ink);
+  font-weight: 650;
+}
+.app .sec-support .support-avatar.bot{
+  background: var(--brand-soft);
+  color: var(--brand-ink);
+}
+.app .sec-support .support-member.on .support-avatar{
+  background: var(--brand-600);
+  color: #fff;
+}
+.app .sec-support .support-status{
+  border-color: var(--card);
+}
+.app .sec-support .support-status.on{ box-shadow: none; }
+.app .sec-support .support-info strong{ font-weight: 600; }
+.app .sec-support .support-member.on .support-info small{ font-weight: 600; }
+.app .sec-support .support-side{
+  gap: 12px;
+  padding: 24px;
+}
+.app .sec-support .support-side-icon{
+  width: 44px;
+  height: 44px;
+  border-radius: 12px;
+  background: var(--brand-soft);
+  color: var(--brand-ink);
+  box-shadow: none;
+}
+.app .sec-support .support-side h3{ font-weight: 650; letter-spacing: -.01em; }
+.app .sec-support .support-side p{ font-size: 13.5px; }
+.app .sec-support .support-live{ width: auto; }
+.app .sec-support .support-unread{
+  border-radius: 10px;
+  border-color: var(--brand-soft-line);
+  font-weight: 600;
+  transition: border-color .15s var(--ease-out), background .15s var(--ease-out);
+}
+.app .sec-support .support-unread:hover{
+  border-color: var(--brand-500);
+  transform: none;
+}
+.app .sec-support .support-facts{
+  gap: 8px;
+  padding-top: 14px;
+  border-top: 1px solid var(--line-soft);
+}
+.app .sec-support .support-facts li{ font-size: 12.5px; }
+.app .sec-support .support-facts li .icon{
+  padding: 2px;
+}
+
+/* ================== PLANES ================== */
+/* Tarjetas: grilla pareja, sin gradientes; destacada por borde acento. */
+.app .sec-plans .price-grid{
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(240px, 100%), 1fr));
+  gap: 16px;
+  margin-bottom: 24px;
+}
+.app .sec-plans .price-card{
+  border: 1px solid var(--line-soft);
+  border-radius: 14px;
+  padding: 22px 20px 18px;
+  box-shadow: var(--shadow-sm);
+  transition: border-color .15s var(--ease-out), box-shadow .15s var(--ease-out);
+}
+.app .sec-plans .price-card:hover{
+  transform: none;
+  border-color: var(--line-strong);
+  box-shadow: var(--shadow-md);
+}
+/* Borde acento para recomendado y actual (antes gradiente + halo). */
+.app .sec-plans .price-card.featured{
+  border-color: var(--brand-500);
+  box-shadow: var(--shadow-sm);
+}
+.app .sec-plans .price-card.featured::before,
+.app .sec-plans .price-card.featured::after{
+  content: none;
+}
+.app .sec-plans .price-card.current{
+  border-color: var(--line-card);
+  background: var(--card);
+  box-shadow: var(--shadow-sm);
+}
+.app .sec-plans .price-card.trial{
+  border-color: var(--line);
+}
+.app .sec-plans .price-card .flag{
+  top: -11px;
+  left: 16px;
+  background: var(--brand-600);
+  font-weight: 650;
+  letter-spacing: .05em;
+  padding: 3px 11px;
+}
+.app .sec-plans .price-card .flag.trial{ background: var(--muted); }
+/* Medallón plano: chip brand-soft en vez de gradiente + glow. */
+.app .sec-plans .plan-medal{
+  width: 38px;
+  height: 38px;
+  border-radius: 10px;
+  background: var(--brand-soft);
+  color: var(--brand-ink);
+  box-shadow: none;
+}
+.app .sec-plans .price-card.featured .plan-medal,
+.app .sec-plans .price-card.trial .plan-medal{
+  background: var(--brand-soft);
+  color: var(--brand-ink);
+  box-shadow: none;
+}
+.app .sec-plans .price-card h3{
+  font-size: 16.5px;
+  font-weight: 700;
+}
+.app .sec-plans .price-card .price{
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+.app .sec-plans .plan-vs{
+  font-size: 10.5px;
+  font-weight: 700;
+  color: var(--ok-ink);
+}
+.app .sec-plans .plan-perk{
+  padding: 4px 9px;
+  background: var(--surface);
+  border: 1px solid var(--line-soft);
+  color: var(--ink-2);
+  font-weight: 600;
+}
+.app .sec-plans .plan-perk.up{
+  background: var(--ok-bg);
+  border-color: var(--ok-line);
+  color: var(--ok-ink);
+  box-shadow: none;
+}
+.app .sec-plans .plan-more > summary{
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: .06em;
+}
+.app .sec-plans .plan-more > summary .icon{
+  transition: transform .2s var(--ease-out);
+}
+.app .sec-plans .price-card li .icon{
+  padding: 2px;
+}
+.app .sec-plans .price-card .btn{
+  border-radius: 10px;
+}
+
+/* Cupón: fila sobria, input monoespaciado para códigos. */
+.app .sec-plans .coupon-card{ gap: 16px; }
+.app .sec-plans .coupon-copy h3{ font-size: 15.5px; }
+.app .sec-plans .coupon-copy p{
+  margin: 0;
+  color: var(--muted);
+  font-size: 13.5px;
+}
+.app .sec-plans .coupon-form .input{
+  text-transform: uppercase;
+  letter-spacing: .06em;
+  font-variant-numeric: tabular-nums;
+}
+.app .sec-plans .coupon-form .btn{ border-radius: 10px; }
+
+/* Datos de facturación: borde acento + ring, sin sombra de color. */
+.app .sec-plans .billing-card{
+  border-color: var(--brand-500);
+  box-shadow: var(--ring);
+}
+.app .sec-plans .billing-head h3{ font-size: 15.5px; }
+.app .sec-plans .billing-head p{ font-size: 13px; }
+
+/* ---------- Responsive ---------- */
+@media (max-width: 860px){
+  .app .sec-support .support-grid{ grid-template-columns: 1fr; }
+  .app .sec-support .support-list{ max-height: 300px; }
+  .app .sec-plans .coupon-card{ align-items: stretch; }
+  .app .sec-plans .coupon-form{ max-width: none; }
+}
+@media (max-width: 560px){
+  .app :is(.sec-bot, .sec-support, .sec-plans) .card{ padding: 18px; }
+  .app .sec-plans .price-card{ padding: 20px 16px 16px; }
+  .app .sec-plans .coupon-form{ flex-direction: column; }
+  .app .sec-plans .coupon-form .btn{ width: 100%; }
+  .app .sec-bot .qa-item{ flex-wrap: wrap; }
+  .app .sec-bot .qa-item .icon-btn{ margin-left: auto; }
+}
+
+/* ---------- Movimiento reducido ---------- */
+@media (prefers-reduced-motion: reduce){
+  .app :is(.sec-bot, .sec-support, .sec-plans) *{
+    transition-duration: .01ms !important;
+    animation-duration: .01ms !important;
+  }
+}
