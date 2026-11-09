@@ -73,7 +73,7 @@ const src = computed(() => {
   return `/api/stores/public/${encodeURIComponent(props.slug)}/pattern/document/?${params}`
 })
 
-const emit = defineEmits(['navigate', 'toggle-theme', 'load'])
+const emit = defineEmits(['navigate', 'toggle-theme', 'load', 'chrome'])
 
 //El iframe va sin `allow-same-origin` (origen opaco): el JS del diseño no
 //puede tocar el DOM ni las cookies de la app. Los datos que necesita de la
@@ -150,6 +150,13 @@ function onMessage(e) {
     } else if (route === 'product' && e.data.id) {
       emit('navigate', { route, id: String(e.data.id) })
     }
+    return
+  }
+  if (e.data?.type === 'davent:ds-chrome') {
+    /* Alto del chrome inferior del documento (tab bar móvil, FAB propio):
+     * el host lo usa para levantar sus flotantes (chatbot) y que no queden
+     * tapados por el menú del diseño. */
+    emit('chrome', Number(e.data.bottom) || 0)
     return
   }
   if (e.data?.type !== 'davent:ds-height') return

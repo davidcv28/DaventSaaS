@@ -11,7 +11,10 @@ const props = defineProps({
   config: { type: Object, required: true }, // {greeting, qa:[{q,a}]}
   name: { type: String, default: 'Tienda' },
   logo: { type: String, default: null },
-  initial: { type: String, default: 'T' }
+  initial: { type: String, default: 'T' },
+  //Alto del chrome inferior del documento de diseño (tab bar móvil):
+  //levanta la burbuja para que no quede tapada. 0 = posición base.
+  bottomLift: { type: Number, default: 0 }
 })
 
 const open = ref(false)
@@ -108,7 +111,7 @@ onBeforeUnmount(() => window.removeEventListener('keydown', onKey))
 </script>
 
 <template>
-  <div class="sp-bot">
+  <div class="sp-bot" :style="bottomLift > 0 ? { bottom: `calc(18px + ${bottomLift}px)` } : null">
     <Transition name="sp-bot-pop">
       <section v-if="open" class="sp-bot-panel" role="dialog" :aria-label="`Asistente de ${name}`">
         <header class="sp-bot-head">

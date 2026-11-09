@@ -54,6 +54,7 @@
         if (!h) h = document.body.scrollHeight
       }
       if (!h) h = root.scrollHeight
+      reportChrome()
       parent.postMessage({ type: 'davent:ds-height', height: h }, '*')
     })
   }
@@ -246,6 +247,23 @@
         p.el.style.top = (p.base + dyTop) + 'px'
       }
     })
+    reportChrome()
+  }
+  /* Alto del chrome pegado abajo (tab bar móvil, FAB del diseño): el host
+   * lo usa para levantar sus propios flotantes (chatbot) y que no queden
+   * debajo del menú del documento. Se reporta sólo cuando cambia. */
+  var lastChrome = -1
+  function reportChrome() {
+    if (!frameBox || pinned == null) return
+    var max = 0
+    ;(pinned || []).forEach(function (p) {
+      if (p.prop !== 'bottom' || !p.el.offsetHeight) return
+      max = Math.max(max, p.el.offsetHeight + (p.base || 0))
+    })
+    var next = Math.round(max)
+    if (next === lastChrome) return
+    lastChrome = next
+    parent.postMessage({ type: 'davent:ds-chrome', bottom: next }, '*')
   }
   window.addEventListener('resize', function () { resetFixed(); pinFixed() })
 
