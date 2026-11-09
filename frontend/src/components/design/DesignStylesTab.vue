@@ -412,36 +412,36 @@ watch(() => props.previewOpen, async (open) => {
 })
 function onMobilePreviewKey(e) {
   if (e.key === 'Escape' && props.previewOpen) closeMobilePreview()
-  else if (e.key === 'Escape' && demoOpen.value) closeDemo()
   else if (e.key === 'Escape' && showOpen.value) closeShow()
 }
 
 // --- Web ilustrativa del diseño -----------------------------------------
 // Cada patrón puede declarar `demo_slug` (tienda real cargada como ejemplo,
-// p. ej. Maison Vela para Moda). "Ver ejemplo" la abre en una hoja con el
-// iframe de la web pública — el usuario ve el diseño ya armado con datos.
-const demoOpen = ref(false)
-// Slug de tienda ilustrativa abierto: puede venir del ojo del menú (cualquier
-// diseño, aunque no sea el elegido) o del botón bajo el select (el elegido).
-const demoSlug = ref('')
-const demoUrl = computed(() => (demoSlug.value ? `/${demoSlug.value}` : ''))
+// p. ej. Maison Vela para Moda). El panel de vista previa la monta como
+// segunda sección ("Ejemplo ilustrativo"); el ojo del menú Diseño la abre
+// para ese diseño aunque no sea el elegido.
 const currentDemoSlug = computed(() => (
   patternOptions.value.find((x) => x.slug === currentPattern.value)?.demo_slug || ''
 ))
-function openDemo() {
-  if (currentDemoSlug.value) { demoSlug.value = currentDemoSlug.value; demoOpen.value = true }
-}
-// Ojo del menú Diseño: previsualiza la web ilustrativa de ESE diseño sin
-// seleccionarlo (el menú no emite change).
+// El ojo puede pedir el ejemplo de OTRO diseño: override mientras no se
+// cambie de diseño (al cambiar, el panel vuelve al ejemplo del elegido).
+const demoAsideSlug = ref('')
+const asideDemoUrl = computed(() => {
+  const slug = demoAsideSlug.value || currentDemoSlug.value
+  return slug ? `/${slug}` : ''
+})
+// Pulso para que DesignLivePreview conmute a la sección "Ejemplo".
+const demoSignal = ref(0)
+watch(currentPattern, () => { demoAsideSlug.value = '' })
 function openDemoFor(patternSlug) {
   const slug = patternOptions.value.find((x) => x.slug === patternSlug)?.demo_slug
-  if (slug) { demoSlug.value = slug; demoOpen.value = true }
+  if (!slug) return
+  demoAsideSlug.value = slug === currentDemoSlug.value ? '' : slug
+  demoSignal.value += 1
+  // En pantallas chicas el panel no está montado: se abre la hoja de
+  // vista previa, que comparte el mismo demoUrl.
+  if (!liveVisible.value) emit('update:previewOpen', true)
 }
-function closeDemo() { demoOpen.value = false }
-watch(demoOpen, (open) => {
-  if (props.previewOpen || showOpen.value) return
-  document.body.style.overflow = open ? 'hidden' : ''
-})
 // Si el contenedor crece a dos columnas, la hoja se cierra (ahí ya está el panel).
 function onViewport() {
   if (!props.previewOpen) return
@@ -508,9 +508,10 @@ onBeforeUnmount(() => {
               <p v-if="currentPatternBadge" class="dmenu-plan">
                 <span class="dmenu-badge" :class="currentPatternBadge.tone">{{ currentPatternBadge.text }}</span>
               </p>
-              <button v-if="currentDemoSlug" type="button" class="dmenu-demo" @click="openDemo">
-                <AppIcon name="eye" :size="14" /> Ver ejemplo
-              </button>
+              <p v-if="currentDemoSlug" class="dmenu-hint">
+                Este diseño tiene una web de ejemplo: la ves en la sección
+                «Ejemplo ilustrativo» de la vista previa.
+              </p>
             </div>
 
             <div class="dmenu-field">
@@ -541,7 +542,10 @@ onBeforeUnmount(() => {
       </div>
 
       <aside class="dmenu-live">
-        <DesignLivePreview v-if="liveVisible" :form="form" :reload-key="previewReload" />
+        <DesignLivePreview
+          v-if="liveVisible" :form="form" :reload-key="previewReload"
+          :demo-url="asideDemoUrl" :demo-signal="demoSignal"
+        />
         <slot name="actions" />
       </aside>
     </div>
@@ -622,28 +626,6 @@ onBeforeUnmount(() => {
   <Teleport to="body">
     <Transition name="dmenu-pv">
       <div
-        v-if="demoOpen" class="dmenu-pv" role="dialog" aria-modal="true"
-        aria-label="Ejemplo del diseño elegido" @click.self="closeDemo"
-      >
-        <header class="dmenu-pv-head">
-          <strong><AppIcon name="eye" :size="16" aria-hidden="true" /> Ejemplo del diseño</strong>
-          <a class="dmenu-demo-out" :href="demoUrl" target="_blank" rel="noopener">
-            <AppIcon name="external-link" :size="14" /> Abrir en pestaña
-          </a>
-          <button type="button" class="dmenu-pv-x" aria-label="Cerrar el ejemplo" @click="closeDemo">
-            <AppIcon name="x" :size="18" />
-          </button>
-        </header>
-        <div class="dmenu-pv-body dmenu-demo-body">
-          <iframe class="dmenu-demo-frame" :src="demoUrl" title="Ejemplo del diseño"></iframe>
-        </div>
-      </div>
-    </Transition>
-  </Teleport>
-
-  <Teleport to="body">
-    <Transition name="dmenu-pv">
-      <div
         v-if="previewOpen" class="dmenu-pv" role="dialog" aria-modal="true"
         aria-label="Vista previa de tu web"
         :style="pvDrag ? { transform: `translateY(${pvDrag}px)`, transition: 'none' } : null"
@@ -667,7 +649,10 @@ onBeforeUnmount(() => {
           </button>
         </header>
         <div class="dmenu-pv-body">
-          <DesignLivePreview :form="form" initial-device="mobile" :reload-key="previewReload" />
+          <DesignLivePreview
+            :form="form" initial-device="mobile" :reload-key="previewReload"
+            :demo-url="asideDemoUrl" :demo-signal="demoSignal"
+          />
         </div>
       </div>
     </Transition>
@@ -712,27 +697,6 @@ onBeforeUnmount(() => {
 .dmenu-field .select { width: 100%; min-width: 0; text-overflow: ellipsis; }
 .dmenu-hint { margin: 0; font-size: 12px; line-height: 1.4; color: var(--muted); }
 .dmenu-plan { margin: 0; display: flex; align-items: center; }
-/* "Ver ejemplo": abre la tienda ilustrativa del diseño en una hoja. */
-.dmenu-demo {
-  display: inline-flex; align-items: center; justify-content: center; gap: 6px;
-  justify-self: start; min-height: 34px; padding: 0 12px; border-radius: 9px;
-  border: 1px solid var(--line, #e5e7eb); background: transparent;
-  color: var(--ink-2, #334155); font-size: 12.5px; font-weight: 600; cursor: pointer;
-}
-@media (hover: hover) and (pointer: fine) {
-  .dmenu-demo:hover { border-color: var(--brand-500, #6366f1); color: var(--brand-600, #4f46e5); }
-}
-.dmenu-demo-out {
-  display: inline-flex; align-items: center; gap: 6px; margin-left: auto;
-  font-size: 12.5px; font-weight: 600; color: var(--brand-600, #4f46e5);
-  text-decoration: none; padding: 6px 4px;
-}
-.dmenu-demo-body { padding: 0; }
-.dmenu-demo-frame {
-  flex: 1 1 auto; width: 100%; min-height: 0; border: 0; border-radius: 18px;
-  background: var(--card, #fff);
-  box-shadow: 0 20px 50px -26px rgba(9, 12, 24, .45);
-}
 .dmenu-badge {
   display: inline-flex; align-items: center; padding: 1px 8px; border-radius: 99px;
   font-size: 10.5px; font-weight: 700; letter-spacing: .02em; line-height: 1.5;

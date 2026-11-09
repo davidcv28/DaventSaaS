@@ -15,7 +15,13 @@ const props = defineProps({
   initialDevice: { type: String, default: 'desktop' },
   // Al cambiar este contador el iframe se recarga completo (recarga real,
   // no solo postMessage): lo sube el padre cuando se elige diseño/estilo.
-  reloadKey: { type: Number, default: 0 }
+  reloadKey: { type: Number, default: 0 },
+  // Web ilustrativa del diseño elegido (/<demo_slug>): habilita la segunda
+  // sección "Ejemplo ilustrativo" del panel. Vacío = sin ejemplo cargado.
+  demoUrl: { type: String, default: '' },
+  // Pulso para forzar la sección "Ejemplo" (lo sube el padre cuando el
+  // usuario toca el ojo de otra opción del menú Diseño).
+  demoSignal: { type: Number, default: 0 }
 })
 
 const store = useStoreStore()
@@ -40,6 +46,13 @@ const src = computed(() => {
   return `/${slug.value}?${params}`
 })
 const device = ref(props.initialDevice === 'mobile' ? 'mobile' : 'desktop')
+// Sección del panel: 'live' (tu web con el borrador) | 'demo' (tienda
+// ilustrativa del diseño). Sin demoUrl la pestaña no existe.
+const view = ref('live')
+watch(() => props.demoUrl, (url) => { if (!url) view.value = 'live' })
+watch(() => props.demoSignal, (n, o) => { if (n !== o && props.demoUrl) view.value = 'demo' })
+// Slug legible para la barra del marco del ejemplo.
+const demoLabel = computed(() => String(props.demoUrl || '').replace(/^\//, ''))
 const frame = ref(null)
 const state = ref('loading')
 // El panel es angosto: la web se renderiza a ancho de escritorio y se escala
@@ -186,8 +199,16 @@ watch(() => props.reloadKey, (n, o) => { if (n !== o && src.value) reload() })
 <template>
   <section class="dlp" aria-label="Vista previa en vivo de tu web">
     <header class="dlp-head">
-      <strong><AppIcon name="eye" :size="15" aria-hidden="true" /> Vista previa en vivo</strong>
+      <strong><AppIcon name="eye" :size="15" aria-hidden="true" /> Vista previa</strong>
       <div class="dlp-actions">
+        <div v-if="demoUrl" class="dlp-seg" role="group" aria-label="Fuente de la vista previa">
+          <button type="button" :class="{ on: view === 'live' }" :aria-pressed="view === 'live'" @click="view = 'live'">
+            Página en vivo
+          </button>
+          <button type="button" :class="{ on: view === 'demo' }" :aria-pressed="view === 'demo'" @click="view = 'demo'">
+            Ejemplo ilustrativo
+          </button>
+        </div>
         <div class="dlp-seg" role="group" aria-label="Tamaño de la vista previa">
           <button type="button" :class="{ on: device === 'desktop' }" :aria-pressed="device === 'desktop'" @click="device = 'desktop'">
             <AppIcon name="monitor" :size="14" /> Escritorio
@@ -196,16 +217,31 @@ watch(() => props.reloadKey, (n, o) => { if (n !== o && src.value) reload() })
             <AppIcon name="smartphone" :size="14" /> Móvil
           </button>
         </div>
-        <button type="button" class="dlp-icon" title="Recargar" aria-label="Recargar la vista previa" @click="reload">
+        <button v-if="view === 'live'" type="button" class="dlp-icon" title="Recargar" aria-label="Recargar la vista previa" @click="reload">
           <AppIcon name="refresh" :size="14" />
         </button>
-        <a v-if="slug" class="dlp-icon" :href="`/${slug}`" target="_blank" rel="noopener" title="Abrir en una pestaña" aria-label="Abrir mi web en una pestaña">
+        <a
+          v-if="view === 'demo' ? demoUrl : slug" class="dlp-icon"
+          :href="view === 'demo' ? demoUrl : `/${slug}`" target="_blank" rel="noopener"
+          :title="view === 'demo' ? 'Abrir el ejemplo en una pestaña' : 'Abrir en una pestaña'"
+          :aria-label="view === 'demo' ? 'Abrir el ejemplo en una pestaña' : 'Abrir mi web en una pestaña'"
+        >
           <AppIcon name="arrow-right" :size="14" />
         </a>
       </div>
     </header>
     <div ref="stage" class="dlp-stage" :class="device">
-      <div class="dlp-fit" :style="fitStyle">
+      <div v-if="view === 'demo'" class="dlp-fit" :style="fitStyle">
+        <div class="dlp-device" :style="deviceStyle">
+          <div class="dlp-chrome" aria-hidden="true">
+            <span class="dlp-dots"><i></i><i></i><i></i></span>
+            <span class="dlp-url">davent.app/{{ demoLabel }}</span>
+            <span class="dlp-live"><i></i>Ejemplo</span>
+          </div>
+          <iframe :src="demoUrl" title="Ejemplo ilustrativo del diseño" class="dlp-frame"></iframe>
+        </div>
+      </div>
+      <div v-else class="dlp-fit" :style="fitStyle">
         <div class="dlp-device" :style="deviceStyle">
           <div class="dlp-chrome" aria-hidden="true">
             <span class="dlp-dots"><i></i><i></i><i></i></span>
