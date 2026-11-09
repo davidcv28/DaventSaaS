@@ -366,6 +366,9 @@ html[data-ds-surface="services"] .nav a[data-ds-route="services"]::after{transfo
 .ds-product-link > .ds-product-copy{order:3}
 .ds-product-link > .ds-product-price{order:4}
 .ds-product-link > .ds-product-img{order:1}
+/* El tag de stock llega sin order: con order:0 se pintaba ENCIMA de la
+   foto; va al pie de la tarjeta, bajo el precio. */
+.ds-product-link > .ds-stock{order:5;align-self:flex-start;margin:2px 16px 14px}
 .ds-product-img{
   position:relative;display:block;width:100%;aspect-ratio:4/3;object-fit:cover;
   background:color-mix(in srgb,var(--accent) 10%,var(--bg));border-bottom:1px solid var(--line);
@@ -391,7 +394,9 @@ html[data-ds-surface="services"] .nav a[data-ds-route="services"]::after{transfo
 /* El tag global usa --ds-success crudo (~3.6:1 sobre surface); se oscurece
    hacia la tinta para AA sin tocar el verde de marca en fondos oscuros. */
 .ds-stock{color:color-mix(in srgb,var(--ds-success,#0f9d58) 68%,var(--ink))}
-.ds-product-cat:empty + .ds-product-copy{padding-top:16px}
+/* En el DOM la copia va ANTES de la categoría (el orden visual lo da
+   flex-order): el selector `+` nunca alcanzaba. */
+.ds-product-copy:has(+ .ds-product-cat:empty){padding-top:16px}
 .ds-product-copy{display:grid;gap:4px;min-width:0;padding:2px 16px 0;flex:1}
 .ds-product-name{margin:0;font-size:1.08rem;font-family:var(--font-display);line-height:1.25;overflow-wrap:anywhere;transition:color .25s}
 /* El título confirma que la tarjeta entera es clicable. */
@@ -642,6 +647,8 @@ body:not(:has(.ds-plan)) a[href="#suscripciones"]{display:none}
 .pdp-box{margin-top:48px;border-top:1px solid var(--line);padding-top:28px}
 /* Sin características ni descripción el bloque no existe. */
 .pdp-box:not(:has(.pdp-specs td, .pdp-desc:not(:empty))){display:none}
+.pdp-specs:not(:has(td)){display:none}
+.pdp-box:not(:has(.pdp-specs td)) h2{display:none}
 .pdp-specs{width:100%;border-collapse:collapse}
 .pdp-specs th,.pdp-specs td{padding:10px 0;border-bottom:1px solid var(--line);text-align:left;font-weight:400}
 .pdp-specs th{color:var(--muted);font-weight:600;width:40%}
@@ -703,7 +710,7 @@ html[data-ds-surface="product"] section[data-surface="product"]:has(.catalog-gri
   transition:border-color .25s,color .25s;
 }
 .ds-rev-reload:hover{border-color:var(--accent);color:var(--accent)}
-.ds-rev-status{margin:0;font-size:.9rem;color:var(--danger,#b3402e);min-height:1.4em}
+.ds-rev-status{margin:0;font-size:.9rem;color:var(--ds-danger,#b3402e);min-height:1.4em}
 .ds-rev-status[data-ok="1"]{color:var(--accent)}
 .ds-rev-status:empty{display:none}
 .ds-rev-send{
@@ -743,6 +750,7 @@ html[data-ds-surface="product"] section[data-surface="product"]:has(.catalog-gri
 
 /* Meta del hero: horarios y dirección en chips. */
 .hero-meta{display:flex;flex-wrap:wrap;gap:10px;margin-top:22px}
+.hero-meta:not(:has(.chip-val:not(:empty))){display:none}
 .chip{
   display:inline-flex;align-items:center;gap:8px;min-height:34px;padding:0 13px;
   border:1px solid var(--line);border-radius:999px;
@@ -926,6 +934,7 @@ a.chip:hover{border-color:var(--accent);color:var(--accent)}
 .social a:hover{border-color:var(--accent);color:var(--accent);transform:translateY(-2px)}
 .social a::after{display:none}
 .social a[href=""]{display:none}
+.social:empty{display:none}
 .social .icon{width:17px;height:17px}
 
 /* ============================================
@@ -1101,13 +1110,12 @@ html[data-ds-style="esencial-premium"][data-ds-theme="dark"] .ticker-item .icon{
    aire arriba o el título nace debajo de la barra. */
 section[id]{scroll-margin-top:86px}
 
-/* Revelado al hacer scroll (solo donde hay scroll-driven animations). */
-@supports (animation-timeline:view()){
-  .reveal{animation:revealUp linear both;animation-timeline:view();animation-range:entry 0% entry 45%}
-}
-/* Fallback sin scroll-timeline: el script marca html.io y observa .reveal. */
-html.io .reveal{opacity:0;translate:0 24px;transition:opacity .65s var(--ease),translate .65s var(--ease)}
-html.io .reveal.in{opacity:1;translate:0 0}
+/* Revelado al hacer scroll: lo maneja el script con `davent:ds-frame` — el
+   iframe va estirado al documento y ni view() ni IntersectionObserver ven
+   el scroll real de la página host. Sin ds-js (JS muerto) el contenido
+   queda visible: la animación es mejora, no requisito. */
+.ds-js .reveal{opacity:0;translate:0 24px;transition:opacity .65s var(--ease),translate .65s var(--ease)}
+.ds-js .reveal.in{opacity:1;translate:0 0}
 /* Parallax de blobs con el scroll: corre en el compositor, gratis. */
 @supports (animation-timeline:scroll()){
   .b1{animation:drift 14s ease-in-out infinite,blobDrift linear both;animation-timeline:auto,scroll(root)}
@@ -1240,6 +1248,26 @@ html.io .reveal.in{opacity:1;translate:0 0}
   .social a:hover{transform:none}
   .filters .ds-cat:not([aria-pressed="true"]):hover{border-color:var(--line);color:var(--muted)}
   .ds-service:hover{padding-inline:0}
+  /* El resto de hover de la hoja: en táctil el estado quedaba pegado tras
+     el toque. Se devuelve cada elemento a su aspecto base. */
+  .nav a:hover{color:var(--muted)}
+  .nav a:hover::after,.site-footer a:hover::after{transform:scaleX(0)}
+  .site-footer a:hover,.foot-top:hover{color:var(--muted)}
+  .head-link:hover{border-color:color-mix(in srgb,var(--accent) 35%,transparent)}
+  .head-link:hover .icon{transform:none}
+  .ds-product:hover::before{transform:scaleX(0)}
+  .ds-product:hover .ds-product-img:not(.is-empty){transform:none;filter:none}
+  .ds-product:hover .ds-product-name{color:inherit}
+  .cats .ds-cat:hover{border-color:var(--line);color:var(--muted)}
+  .cat-crumbs a:hover{color:var(--muted)}
+  .cat-sort select:hover,.field input:hover:not(:focus),.field textarea:hover:not(:focus),.ds-contact-input:hover:not(:focus){border-color:var(--line)}
+  .brands-strip .ds-brand-link:hover{border-color:var(--line);transform:none}
+  .chip:hover{border-color:var(--line);color:var(--muted)}
+  .ds-guar:hover{transform:none;box-shadow:none;border-color:var(--line)}
+  .ds-shot:hover img,.pdp-gallery:hover img{transform:none;filter:none}
+  .contact-row:hover .icon{transform:none;background:color-mix(in srgb,var(--accent) 9%,transparent)}
+  .contact-row a:hover{color:inherit}
+  .m-sheet-nav a:hover{padding-left:14px;color:var(--muted)}
 }
 
 @keyframes fadeUp{from{opacity:0;translate:0 18px}to{opacity:1;translate:0 0}}
@@ -1305,7 +1333,7 @@ html.io .reveal.in{opacity:1;translate:0 0}
 </style>
 
 <body>
-<header class="site-header top" id="site-header">
+<header class="site-header top" id="site-header" data-ds-pin="top" data-ds-offset="73">
   <div class="wrap top-in">
     <a class="brand" href="#inicio" data-ds-route="home">
       <span class="mark">{{store_initial}}<img src="{{store_logo}}" alt="" decoding="async"></span>
@@ -1314,7 +1342,7 @@ html.io .reveal.in{opacity:1;translate:0 0}
     <nav class="nav" id="site-nav" aria-label="Principal">
       <a href="#inicio" data-ds-route="home">Inicio</a>
       <a href="#catalogo" data-ds-route="catalog" data-flag="catalog">Catálogo</a>
-      <a href="#nosotros" data-ds-anchor data-flag="about">Nosotros</a>
+      <a href="#nosotros" data-ds-route="home" data-ds-anchor data-flag="about">Nosotros</a>
       <a href="#servicios" data-ds-route="services" data-flag="services">Servicios</a>
       <a href="#suscripciones" data-ds-route="home" data-ds-anchor data-flag="plans">Suscripciones</a>
       <a href="#contacto" data-ds-route="home" data-ds-anchor data-flag="contact">Contacto</a>
@@ -1338,10 +1366,10 @@ html.io .reveal.in{opacity:1;translate:0 0}
   <nav class="m-sheet-nav" aria-label="Todas las secciones">
     <a href="#inicio" data-ds-route="home" data-m-num data-m-close><span>Inicio</span><span aria-hidden="true"></span></a>
     <a href="#catalogo" data-ds-route="catalog" data-m-num data-m-close data-flag="catalog"><span>Catálogo</span><span aria-hidden="true"></span></a>
-    <a href="#nosotros" data-ds-anchor data-m-num data-m-close data-flag="about"><span>Nosotros</span><span aria-hidden="true"></span></a>
+    <a href="#nosotros" data-ds-route="home" data-ds-anchor data-m-num data-m-close data-flag="about"><span>Nosotros</span><span aria-hidden="true"></span></a>
     <a href="#servicios" data-ds-route="services" data-m-num data-m-close data-flag="services"><span>Servicios</span><span aria-hidden="true"></span></a>
-    <a href="#suscripciones" data-m-num data-m-close data-flag="plans"><span>Suscripciones</span><span aria-hidden="true"></span></a>
-    <a href="#contacto" data-m-num data-m-close data-flag="contact"><span>Contacto</span><span aria-hidden="true"></span></a>
+    <a href="#suscripciones" data-ds-route="home" data-ds-anchor data-m-num data-m-close data-flag="plans"><span>Suscripciones</span><span aria-hidden="true"></span></a>
+    <a href="#contacto" data-ds-route="home" data-ds-anchor data-m-num data-m-close data-flag="contact"><span>Contacto</span><span aria-hidden="true"></span></a>
     <a href="{{store_whatsapp_url}}" data-m-close><span>WhatsApp</span><span aria-hidden="true">↗</span></a>
   </nav>
 </div>
@@ -1427,7 +1455,7 @@ html.io .reveal.in{opacity:1;translate:0 0}
         <h2>Lo hacemos por vos</h2>
         <p class="lead">{{store_about}}</p>
       </div>
-      {{services}}
+      <div class="ds-zone">{{services}}</div>
       <div style="margin-top:24px"><a class="btn ghost" href="#servicios" data-ds-route="services">Ver todos los servicios <svg class="icon arrow" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg></a></div>
     </div>
   </section>
@@ -1587,7 +1615,7 @@ html.io .reveal.in{opacity:1;translate:0 0}
       <h2>Lo hacemos por vos</h2>
       <p class="lead">{{store_about}}</p>
     </div>
-    {{services}}
+    <div class="ds-zone">{{services}}</div>
     <div style="margin-top:24px"><a class="btn" href="{{store_whatsapp_url}}">Consultar por WhatsApp <svg class="icon arrow" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg></a></div>
   </div>
 </section>
@@ -1660,7 +1688,7 @@ html.io .reveal.in{opacity:1;translate:0 0}
     <nav class="foot-nav" aria-label="Secciones del sitio">
       <a href="#inicio" data-ds-route="home">Inicio</a>
       <a href="#catalogo" data-ds-route="catalog" data-flag="catalog">Catálogo</a>
-      <a href="#nosotros" data-ds-anchor data-flag="about">Nosotros</a>
+      <a href="#nosotros" data-ds-route="home" data-ds-anchor data-flag="about">Nosotros</a>
       <a href="#servicios" data-ds-route="services" data-flag="services">Servicios</a>
       <a href="#contacto" data-ds-route="home" data-ds-anchor data-flag="contact">Contacto</a>
     </nav>
@@ -1675,6 +1703,11 @@ html.io .reveal.in{opacity:1;translate:0 0}
 <script>
 (function(){
   var reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  document.documentElement.classList.add('ds-js');
+
+  /* Un img sin src pide el propio documento como imagen (request fantasma
+     y caja vacía sobre el monograma): se quita del DOM. */
+  [].slice.call(document.querySelectorAll('img[src=""],img:not([src])')).forEach(function(img){ img.remove() });
 
   // Anclas sin destino (placeholders vacíos o "#" pelado): no navegar.
   document.addEventListener('click', function(e){
@@ -1684,9 +1717,117 @@ html.io .reveal.in{opacity:1;translate:0 0}
     if (href === '' || href === '#') e.preventDefault();
   });
 
+  /* Las fichas .ds-cat del landing llegan como <a href="#catalogo"> sin
+     data-ds-* propios: sin esta intercepción el puente haría scroll a una
+     superficie oculta. Acá se pre-selecciona la misma línea en el panel de
+     filtros (el estado del puente vive en este documento y viaja entre
+     superficies) y se navega con davent:ds-route. Capture para ganarle al
+     listener del puente. */
+  document.addEventListener('click', function (e) {
+    var t = e.target;
+    if (!t || !t.closest) return;
+    var cat = t.closest('.ds-cat');
+    if (!cat || cat.closest('[data-ds-filters]')) return;
+    if (!cat.closest('[data-surface="landing"]')) return;
+    var nameEl = cat.querySelector('span');
+    var name = nameEl ? (nameEl.textContent || '').trim() : '';
+    if (name) {
+      /* .ds-cat muestra el nombre a 60 chars; data-cat viaja truncado a 40:
+         matchea exacto o por prefijo para nombres largos. */
+      var btns = document.querySelectorAll('[data-ds-filters] button[data-cat]');
+      for (var i = 0; i < btns.length; i++) {
+        var key = btns[i].getAttribute('data-cat') || '';
+        if (key && (key === name || name.indexOf(key) === 0)) { btns[i].click(); break; }
+      }
+    }
+    e.preventDefault();
+    e.stopPropagation();
+    if (window.parent !== window) {
+      parent.postMessage({ type: 'davent:ds-route', route: 'catalog' }, '*');
+    }
+  }, true);
+
+  /* Titular vacío (tienda sin headline ni descripción): cae al nombre. */
+  var heroTitle = document.querySelector('.hero h1.enter');
+  if (heroTitle && !(heroTitle.textContent || '').trim()) {
+    heroTitle.textContent = (document.title.split('·')[0] || '').trim();
+  }
+  /* " — " literal cuando faltan ubicación o dirección: se descartan las
+     partes vacías y se une lo que queda (si no hay nada, la fila sale). */
+  document.querySelectorAll('.base-val').forEach(function(el){
+    var parts = (el.textContent || '').split('—')
+      .map(function(s){ return s.trim(); })
+      .filter(function(s){ return /[\p{L}\p{N}]/u.test(s); });
+    if (!parts.length) {
+      var row = el.closest('.base-row'); if (row) row.remove();
+      return;
+    }
+    var joined = parts.join(' · ');
+    if (el.textContent.trim() !== joined) el.textContent = joined;
+  });
+  /* Enlaces a contacto vacío (`href=""`): el renderer no manda el dato
+   * real, solo el path del redirect — sin configuración queda un enlace
+   * muerto que además salta al tope. Se retira el control entero. */
+  document.querySelectorAll('a[href=""]').forEach(function(a){ a.remove(); });
+
+  /* Ticker: el loop -50% exige dos mitades iguales; si una mitad no cubre
+     el viewport queda un tramo vacío al final del recorrido. Se duplican
+     periodos completos hasta cubrir 2× el ancho y la duración escala con
+     el ancho del contenido (velocidad constante). Todo lo que pasa la
+     primera mitad es decorativo: aria-hidden para no leerlo dos veces. */
+  var tickerTrack = document.querySelector('.ticker-track');
+  if (tickerTrack && tickerTrack.children.length > 2) {
+    var period = tickerTrack.children.length / 2;
+    var baseW = tickerTrack.scrollWidth || 1;
+    var fillTicker = function(){
+      if (!tickerTrack.offsetWidth) return;
+      var vw = window.innerWidth || document.documentElement.clientWidth || 1;
+      while (tickerTrack.scrollWidth / 2 < vw * 1.05) {
+        var frag = document.createDocumentFragment();
+        for (var i = 0; i < period * 2; i++) {
+          frag.appendChild(tickerTrack.children[i].cloneNode(true));
+        }
+        tickerTrack.appendChild(frag);
+      }
+      var kids = tickerTrack.children;
+      for (var j = period; j < kids.length; j++) {
+        kids[j].setAttribute('aria-hidden', 'true');
+      }
+      tickerTrack.style.animationDuration =
+        (28 * (tickerTrack.scrollWidth / baseW)).toFixed(1) + 's';
+    };
+    fillTicker();
+    addEventListener('resize', fillTicker);
+    if (document.fonts && document.fonts.ready) document.fonts.ready.then(fillTicker);
+  }
+
+  /* Esencial Noche es SIEMPRE oscura: el toggle del puente alterna entre
+     noche y medianoche, no claro/oscuro — se re-etiqueta para que el
+     aria-label no mienta sobre el estado. */
+  if (document.documentElement.getAttribute('data-ds-style') === 'esencial-noche') {
+    var nocheLabel = function(){
+      var t = document.querySelector('.ds-theme-toggle');
+      if (!t) return;
+      var deep = document.documentElement.getAttribute('data-ds-theme') === 'dark';
+      var lbl = deep ? 'Volver a la noche' : 'Profundizar a medianoche';
+      var ttl = deep ? 'Noche' : 'Medianoche';
+      if (t.getAttribute('aria-label') !== lbl) t.setAttribute('aria-label', lbl);
+      if (t.getAttribute('title') !== ttl) t.setAttribute('title', ttl);
+    };
+    new MutationObserver(nocheLabel).observe(document.documentElement,
+      {subtree: true, attributes: true, attributeFilter: ['data-ds-theme', 'aria-label']});
+    addEventListener('load', nocheLabel);
+    nocheLabel();
+  }
+
   // Cabecera: sombra al hacer scroll + barra de progreso de lectura
   // (--progress mueve un scaleX en ::after, solo compositor).
+  // El iframe va estirado: el scroll real es de la página host y llega por
+  // `davent:ds-frame`; sin mensaje (documento abierto solo) se usa el
+  // scroll propio del documento.
   var header = document.getElementById('site-header');
+  var frame = null;
+  var viewTop = function(){ return frame ? -frame.top : (window.scrollY || 0); };
   if (header) {
     var ticking = false;
     var onScroll = function(){
@@ -1694,26 +1835,53 @@ html.io .reveal.in{opacity:1;translate:0 0}
       ticking = true;
       requestAnimationFrame(function(){
         ticking = false;
-        header.classList.toggle('scrolled', window.scrollY > 8);
+        var vt = viewTop();
+        header.classList.toggle('scrolled', vt > 8);
         var h = document.documentElement;
-        var max = h.scrollHeight - h.clientHeight;
-        h.style.setProperty('--progress', max > 0 ? Math.min(1, window.scrollY / max) : 0);
+        var vh = frame ? frame.vh : window.innerHeight;
+        var max = Math.max(1, h.scrollHeight - vh);
+        h.style.setProperty('--progress', Math.min(1, Math.max(0, vt / max)));
       });
     };
     addEventListener('scroll', onScroll, {passive: true});
+    window.addEventListener('message', function(e){
+      var d = e.data || {};
+      if (d.type === 'davent:ds-frame') {
+        frame = { top: Number(d.top) || 0, bottom: Number(d.bottom) || 0, vh: Number(d.vh) || 0 };
+        onScroll();
+      }
+    });
     onScroll();
   }
 
-  // Reveal: fallback con IntersectionObserver donde no hay animation-timeline.
-  if (!CSS.supports('animation-timeline: view()')) {
-    document.documentElement.classList.add('io');
-    var io = new IntersectionObserver(function(entries){
-      entries.forEach(function(en){
-        if (en.isIntersecting) { en.target.classList.add('in'); io.unobserve(en.target); }
-      });
-    }, {rootMargin: '0px 0px -8% 0px'});
-    document.querySelectorAll('.reveal').forEach(function(el){ io.observe(el); });
+  /* Reveal al scroll: el iframe va estirado y el scroll real llega por
+     `davent:ds-frame`; abierto solo se usa la ventana propia del documento. */
+  var reveals = [].slice.call(document.querySelectorAll('.reveal'));
+  var frameBox = null;
+  function inView(el){
+    if (!el.getClientRects().length) return false;
+    var r = el.getBoundingClientRect();
+    var vt = frameBox ? -frameBox.top : (window.scrollY || 0);
+    var vh = frameBox ? frameBox.vh : window.innerHeight;
+    var rt = r.top + (window.scrollY || 0);
+    return rt < vt + vh - 40 && rt + r.height > vt + 20;
   }
+  function paintReveals(){
+    reveals.forEach(function(el){
+      if (!el.classList.contains('in') && inView(el)) el.classList.add('in');
+    });
+  }
+  window.addEventListener('message', function(e){
+    var d = e.data || {};
+    if (d.type === 'davent:ds-frame') {
+      frameBox = { top: Number(d.top) || 0, vh: Number(d.vh) || 0 };
+      paintReveals();
+    }
+    if (d.type === 'davent:ds-surface') setTimeout(paintReveals, 60);
+  });
+  addEventListener('scroll', paintReveals, {passive: true});
+  addEventListener('resize', paintReveals);
+  paintReveals();
 
   // Menú móvil del dashboard: "Más" abre la hoja; se cierra con el fondo,
   // la cruz, Esc o al navegar. El scroll queda bloqueado mientras está abierta.

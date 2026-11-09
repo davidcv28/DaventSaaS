@@ -1015,7 +1015,7 @@ def build_store_context(store, product = None, flags = None, raw_keys = None):
     context = {
         'store_name': name,
         'store_initial': name[:1].upper(),
-        'store_tagline': headline or description,
+        'store_tagline': headline or description or name,
         'store_description': description,
         'store_about': about,
         'store_about_title': _text(getattr(customization, 'about_title', ''), 80),

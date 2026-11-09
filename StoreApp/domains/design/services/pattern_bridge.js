@@ -1550,6 +1550,21 @@
   initReviews()
   initContact()
   initChatbot()
+  /* Hoja modal abierta: los diseños marcan <html> con `m-lock`, pero la
+   * clase solo frena el scroll DENTRO del iframe — el scroll real es de la
+   * página host y la hoja quedaba con el fondo moviéndose detrás. Se
+   * avisa por postMessage y el host bloquea su scroll mientras dure. */
+  var lastLock = null
+  function syncLock() {
+    var locked = root.classList.contains('m-lock')
+    if (locked === lastLock) return
+    lastLock = locked
+    parent.postMessage({ type: 'davent:ds-lock', locked: locked }, '*')
+  }
+  if ('MutationObserver' in window) {
+    new MutationObserver(syncLock).observe(root, { attributes: true, attributeFilter: ['class'] })
+  }
+  syncLock()
   syncFilterUI()
   applyCatalog()
   mountThemeToggle()

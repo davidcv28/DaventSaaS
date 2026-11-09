@@ -39,6 +39,9 @@ const props = defineProps({
 
 const frame = ref(null)
 const height = ref(0)
+//Overflow del documento previo a un bloqueo de scroll pedido por el diseño
+//(hoja modal abierta). null = la página scrollea normal.
+let docOverflow = null
 
 //El tema va en la URL solo al montar cada documento: al alternar
 //claro/oscuro el puente (`davent:ds-theme`) cambia data-ds-theme sin
@@ -141,6 +144,21 @@ function onMessage(e) {
     if (fr) window.scrollTo({ top: fr.top + window.scrollY + (Number(e.data.top) || 0) - offset, behavior: 'smooth' })
     return
   }
+  if (e.data?.type === 'davent:ds-lock') {
+    /* Hoja modal del diseño abierta (m-lock en el documento): el scroll es
+     * de la página, así que el candado viaja por postMessage. Se guarda el
+     * overflow previo para no pisar un bloqueo que ya existiera. */
+    if (e.data.locked) {
+      if (docOverflow == null) {
+        docOverflow = document.documentElement.style.overflow
+        document.documentElement.style.overflow = 'hidden'
+      }
+    } else if (docOverflow != null) {
+      document.documentElement.style.overflow = docOverflow
+      docOverflow = null
+    }
+    return
+  }
   if (e.data?.type === 'davent:ds-theme-toggle') {
     emit('toggle-theme')
     return
@@ -224,6 +242,10 @@ onBeforeUnmount(() => {
   window.removeEventListener('scroll', postFrame)
   window.removeEventListener('resize', postFrame)
   if (frameRaf) cancelAnimationFrame(frameRaf)
+  if (docOverflow != null) {
+    document.documentElement.style.overflow = docOverflow
+    docOverflow = null
+  }
 })
 </script>
 
