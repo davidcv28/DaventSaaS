@@ -1189,6 +1189,51 @@ a.contact-row:hover{color:var(--accent-text);padding-left:8px}
 }
 .ds-brand-name{font:500 11px/1 var(--mono);letter-spacing:.1em;text-transform:uppercase;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:140px}
 .brands-sec:not(:has(.ds-brand)){display:none}
+
+/* ==========================================================
+   CHATBOT DEL NEGOCIO (.ds-chat-*, lo monta pattern_bridge.js)
+   Piel Modista: atelier de papel — banda de tinta en la
+   cabecera, serif itálica en el avatar y el filete
+   acento→rosa que firma las fichas de plan.
+   ========================================================== */
+.ds-chat-fab{
+  border-radius:50%;
+  background:var(--accent);color:var(--on-accent);
+  box-shadow:0 14px 30px -16px color-mix(in srgb,var(--accent-deep) 70%,transparent);
+}
+.ds-chat-fab:hover{transform:translateY(-2px)}
+.ds-chat-fab:active{transform:scale(.94)}
+.ds-chat-panel{
+  position:relative;border-radius:var(--r);
+  background:var(--surface);border:1px solid var(--line);
+  box-shadow:var(--shadow);
+}
+/* Filete degradado acento→rosa, la misma firma que .ds-plan::before. */
+.ds-chat-panel::before{
+  content:"";position:absolute;top:0;left:0;right:0;height:3px;z-index:2;pointer-events:none;
+  background:linear-gradient(90deg,var(--accent),var(--rose));
+}
+.ds-chat-head{background:var(--ink);color:var(--paper)}
+.ds-chat-avatar{
+  border-radius:50%;background:color-mix(in srgb,var(--paper) 14%,transparent);
+  font:italic 400 15px/1 var(--serif);
+}
+.ds-chat-id strong{font:italic 400 17px/1.15 var(--serif)}
+.ds-chat-id small{font-family:var(--mono);font-size:9px;letter-spacing:.16em;text-transform:uppercase}
+.ds-chat-close:hover{background:color-mix(in srgb,var(--paper) 16%,transparent)}
+.ds-chat-log{background:var(--paper)}
+.ds-chat-msg.bot p{border-radius:var(--r);border-color:var(--line);background:var(--surface)}
+.ds-chat-msg.user p{background:var(--accent);color:var(--on-accent);border-radius:var(--r)}
+.ds-chat-chip{
+  border:1px solid color-mix(in srgb,var(--accent) 40%,transparent);border-radius:var(--r-btn);
+  color:var(--accent-text);background:var(--accent-soft);
+}
+.ds-chat-chip:hover{background:color-mix(in srgb,var(--accent) 18%,var(--paper))}
+.ds-chat-bar{background:var(--surface)}
+.ds-chat-input{border-radius:var(--r-btn);background:var(--paper);border-color:var(--line)}
+.ds-chat-input:focus{border-color:var(--accent)}
+.ds-chat-send{border-radius:var(--r-btn);background:var(--accent);color:var(--on-accent)}
+.ds-chat-send:hover{background:var(--accent-deep)}
 </style>
 </head>
 <body>

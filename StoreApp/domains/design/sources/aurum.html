@@ -1296,6 +1296,50 @@ footer::before{content:"";position:absolute;top:-1px;left:50%;transform:translat
   background:var(--gold-soft);color:var(--gold-text);font:700 13px/1 var(--mono);
 }
 .ds-brand-name{font:500 11px/1 var(--mono);letter-spacing:.1em;text-transform:uppercase;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:140px}
+
+  /* ============================================================
+     CHATBOT DEL NEGOCIO (.ds-chat-*, lo monta pattern_bridge.js)
+     Piel Áurea: oro sobre tinta/hueso, píldoras, serif en el
+     nombre y filetes dorados — misma mano que .btn-gold/.ds-product.
+     ============================================================ */
+  .ds-chat-fab{
+    background:var(--gold);color:var(--gold-ink);
+    box-shadow:var(--shadow-lift),0 14px 34px -14px color-mix(in srgb,var(--gold) 50%,transparent);
+  }
+  .ds-chat-panel{
+    border:1px solid var(--line);border-radius:var(--radius);
+    background:var(--card);color:var(--bone);
+    box-shadow:var(--shadow-lift);
+  }
+  .ds-chat-head{background:var(--gold);color:var(--gold-ink)}
+  .ds-chat-avatar{border-radius:50%;background:color-mix(in srgb,var(--gold-ink) 18%,transparent)}
+  .ds-chat-id strong{font-family:var(--serif);font-weight:400;letter-spacing:-.01em;font-size:16px}
+  .ds-chat-id small{font:500 10px/1.4 var(--mono);letter-spacing:.14em;text-transform:uppercase}
+  .ds-chat-close{border-radius:50%}
+  .ds-chat-close:hover{background:color-mix(in srgb,var(--gold-ink) 18%,transparent)}
+  .ds-chat-log{background:var(--ink)}
+  .ds-chat-msg.bot p{
+    background:var(--card);border:1px solid var(--line);
+    border-radius:var(--radius-sm);color:var(--bone);
+  }
+  .ds-chat-msg.user p{
+    background:var(--gold);color:var(--gold-ink);
+    border-radius:var(--radius-sm);
+  }
+  .ds-chat-chip{
+    border:1px solid var(--gold-line);border-radius:99px;
+    background:transparent;color:var(--gold-text);
+  }
+  .ds-chat-chip:hover{background:var(--gold-soft);border-color:var(--gold)}
+  .ds-chat-bar{border-top:1px solid var(--line);background:var(--card)}
+  .ds-chat-input{
+    border:1px solid var(--line);border-radius:99px;
+    background:var(--ink);color:var(--bone);
+  }
+  .ds-chat-input:focus{border-color:var(--gold-line)}
+  .ds-chat-input::placeholder{color:var(--muted)}
+  .ds-chat-send{background:var(--gold);color:var(--gold-ink)}
+  .ds-chat-send:hover{background:color-mix(in srgb,var(--gold) 90%,#fff)}
 </style>
 </head>
 <body>

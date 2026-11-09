@@ -819,6 +819,48 @@
     .top-nav a.is-active:hover::after{transform:scaleX(1)}
     .loop:hover .loop-track{animation-play-state:running}
   }
+
+  /* ==========================================================
+     CHATBOT DEL NEGOCIO (.ds-chat-*, lo monta pattern_bridge.js)
+     Piel Ruta: burbujas bien redondeadas como las ofertas, acento
+     que invierte con el tema (--accent/--accent-ink), cabecera en
+     banda pino y sello sol en el avatar — misma mano que .btn/.ds-offer.
+     ========================================================== */
+  .ds-chat-fab{
+    border-radius:999px;
+    background:var(--accent);color:var(--accent-ink);
+    box-shadow:0 14px 28px -16px color-mix(in srgb,var(--accent) 70%,transparent);
+  }
+  .ds-chat-fab:hover{transform:translateY(-2px);box-shadow:0 18px 34px -14px color-mix(in srgb,var(--accent) 78%,transparent)}
+  .ds-chat-fab:active{transform:translateY(1px)}
+  .ds-chat-panel{
+    border-color:var(--line);border-radius:calc(var(--radius) + 4px);
+    background:var(--card);color:var(--ink);
+    box-shadow:var(--shadow);
+  }
+  .ds-chat-head{background:var(--band);color:var(--band-ink)}
+  .ds-chat-avatar{border-radius:50%;background:var(--sun);color:var(--on-sun)}
+  .ds-chat-close:hover{background:color-mix(in srgb,var(--band-ink) 16%,transparent)}
+  .ds-chat-id strong{font-family:"Fraunces",serif;font-weight:600;font-size:18px}
+  .ds-chat-log{background:var(--paper)}
+  .ds-chat-msg.bot p{
+    background:var(--card);border-color:var(--line);color:var(--ink);
+    border-radius:var(--radius);border-bottom-left-radius:8px;
+  }
+  .ds-chat-msg.user p{
+    background:var(--accent);color:var(--accent-ink);
+    border-radius:var(--radius);border-bottom-right-radius:8px;
+  }
+  .ds-chat-chip{
+    border-color:var(--pine-ink);border-radius:999px;
+    background:var(--card);color:var(--pine-ink);
+  }
+  .ds-chat-chip:hover{background:var(--pine-ink);color:var(--paper)}
+  .ds-chat-bar{background:var(--card);border-top-color:var(--line)}
+  .ds-chat-input{border-color:var(--line);border-radius:999px;background:var(--paper);color:var(--ink)}
+  .ds-chat-input:focus{border-color:var(--pine-ink)}
+  .ds-chat-send{border-radius:999px;background:var(--accent);color:var(--accent-ink)}
+  .ds-chat-typing i{background:var(--pine-ink)}
 </style>
 </head>
 <body>

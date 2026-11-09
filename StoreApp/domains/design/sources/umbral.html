@@ -1580,6 +1580,44 @@ html[data-ds-theme="dark"] .cta-band .cta-title em{color:var(--accent)}
 .services-title,.form-title,.foot-word,.reviews-head h2,.pdp-related h2,.ds-offer-name,.ds-plan-name{
   text-wrap:balance;
 }
+
+/* ==========================================================
+   CHATBOT DEL NEGOCIO (.ds-chat-*, lo monta pattern_bridge.js)
+   Piel Umbral: la casa como plano — aristas casi vivas, tinta
+   de plano cobalta, cabecera a banda editorial y cotas en
+   JetBrains Mono.
+   ========================================================== */
+.ds-chat-fab{
+  border-radius:var(--r-btn);
+  background:var(--accent);color:var(--on-accent);
+  border:1px solid var(--accent-deep);
+  box-shadow:0 14px 34px -18px color-mix(in srgb,var(--accent) 75%,transparent);
+}
+.ds-chat-fab:hover{transform:translateY(-2px)}
+.ds-chat-panel{
+  background:var(--surface);border:1px solid var(--line);
+  border-radius:var(--r-btn);box-shadow:var(--shadow);
+}
+.ds-chat-head{background:var(--band);color:var(--band-ink)}
+.ds-chat-avatar{border-radius:var(--r-btn);background:var(--accent);color:var(--on-accent);font:600 15px/1 var(--display)}
+.ds-chat-id strong{font:600 18px/1.15 var(--display);letter-spacing:-.01em}
+.ds-chat-id small{font-family:var(--mono);font-size:9px;letter-spacing:.2em;text-transform:uppercase}
+.ds-chat-close:hover{background:color-mix(in srgb,var(--band-ink) 12%,transparent)}
+.ds-chat-log{background:var(--paper)}
+.ds-chat-msg.bot p{background:var(--surface-2);border:1px solid var(--line);border-radius:var(--r-btn)}
+.ds-chat-msg.user p{background:var(--accent);color:var(--on-accent);border-radius:var(--r-btn)}
+.ds-chat-sugg{align-items:flex-start}
+.ds-chat-chip{
+  border:1px solid var(--line);border-radius:var(--r-btn);background:var(--surface);
+  color:var(--accent-text);font:600 10px/1.4 var(--mono);letter-spacing:.16em;text-transform:uppercase;
+}
+.ds-chat-chip:hover{border-color:var(--accent);background:var(--accent-soft)}
+.ds-chat-bar{background:var(--surface);border-top:1px solid var(--line)}
+.ds-chat-input{border:1px solid var(--line);border-radius:var(--r-btn);background:var(--paper);color:var(--ink);font-family:var(--mono);font-size:12.5px}
+.ds-chat-input:focus{border-color:var(--accent)}
+.ds-chat-send{border-radius:var(--r-btn);background:var(--accent);color:var(--on-accent)}
+.ds-chat-send:hover{background:var(--accent-deep)}
+.ds-chat-typing i{background:var(--accent)}
 </style>
 </head>
 <body>

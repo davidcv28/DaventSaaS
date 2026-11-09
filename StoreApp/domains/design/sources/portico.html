@@ -1323,6 +1323,48 @@ html[data-ds-theme="dark"] .foot-word{-webkit-text-stroke-color:color-mix(in srg
   .ribbon:hover .ribbon-track,.cinta:hover .cinta-track,.brands.is-loop:hover,
   .foot-cinta:hover .foot-cinta-track{animation-play-state:running}
 }
+
+/* ==========================================================
+   CHATBOT DEL NEGOCIO (.ds-chat-*, lo monta pattern_bridge.js)
+   Piel Portico: placas de galería de esquinas casi rectas, cobre
+   como .btn-solid, epígrafes en mono y nombre en serif — misma
+   mano que .ds-mate/.ds-quote.
+   ========================================================== */
+.ds-chat-fab{
+  border-radius:var(--radius);
+  background:var(--copper);color:var(--ds-accent-ink,#fbf7ef);
+  box-shadow:0 22px 38px -24px color-mix(in srgb,var(--copper) 78%,transparent);
+}
+.ds-chat-fab:hover{transform:translateY(-2px);box-shadow:0 26px 44px -22px color-mix(in srgb,var(--copper) 82%,transparent)}
+.ds-chat-fab:active{transform:translateY(0) scale(.98)}
+.ds-chat-panel{
+  border-color:var(--line);border-radius:var(--radius);
+  background:var(--card);color:var(--ink);
+  box-shadow:var(--shadow);
+}
+.ds-chat-head{background:var(--copper);color:var(--ds-accent-ink,#fbf7ef)}
+.ds-chat-avatar{border-radius:50%;background:var(--paper);color:var(--copper-deep);font-family:var(--serif)}
+.ds-chat-close:hover{background:color-mix(in srgb,var(--ds-accent-ink,#fbf7ef) 16%,transparent)}
+.ds-chat-id strong{font-family:var(--serif);font-weight:400;font-size:19px;letter-spacing:.01em}
+.ds-chat-id small{font-family:var(--mono);font-size:8.5px;letter-spacing:.18em;text-transform:uppercase}
+.ds-chat-log{background:var(--paper)}
+.ds-chat-msg.bot p{
+  background:var(--card);border-color:var(--line);color:var(--ink);
+  border-radius:var(--radius);border-bottom-left-radius:2px;
+}
+.ds-chat-msg.user p{
+  background:var(--copper);color:var(--ds-accent-ink,#fbf7ef);
+  border-radius:var(--radius);border-bottom-right-radius:2px;
+}
+.ds-chat-chip{
+  border-color:var(--copper-line);border-radius:var(--radius);
+  background:var(--card);color:var(--copper-deep);
+}
+.ds-chat-chip:hover{border-color:var(--copper);background:var(--copper-soft)}
+.ds-chat-bar{background:var(--card);border-top-color:var(--line)}
+.ds-chat-input{border-color:var(--line);border-radius:var(--radius);background:var(--paper);color:var(--ink)}
+.ds-chat-input:focus{border-color:var(--copper)}
+.ds-chat-send{border-radius:var(--radius);background:var(--copper);color:var(--ds-accent-ink,#fbf7ef)}
 </style>
 </head>
 <body>

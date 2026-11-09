@@ -1734,6 +1734,57 @@ html[data-ds-theme="dark"] .brands-strip .ds-brand-link::before{background:var(-
   .cta-marquee span{animation:none}
   .cat-hero h1::before{animation:none;opacity:.85}
 }
+
+/* ==========================================================
+   CHATBOT DEL NEGOCIO (.ds-chat-*, lo monta pattern_bridge.js)
+   Piel Silicio: placa de circuito — acento con halo, esquinas
+   achaflanadas como .btn, cabecera a banda de tinta y rótulos
+   JetBrains Mono; en noche la señal es el volt.
+   ========================================================== */
+.ds-chat-fab{
+  border-radius:0;
+  clip-path:polygon(0 0,calc(100% - 14px) 0,100% 14px,100% 100%,0 100%);
+  background:linear-gradient(180deg,rgba(255,255,255,.16),transparent 55%),linear-gradient(135deg,var(--accent),color-mix(in srgb,var(--accent) 70%,#000));
+  color:var(--on-accent);
+  box-shadow:0 0 0 1px color-mix(in srgb,var(--accent) 55%,transparent),0 14px 34px -16px color-mix(in srgb,var(--accent) 65%,transparent),0 0 22px -10px color-mix(in srgb,var(--accent) 45%,transparent);
+}
+.ds-chat-fab:hover{transform:translateY(-2px)}
+.ds-chat-panel{
+  background:var(--surface);border:1px solid var(--line);
+  border-radius:var(--r);box-shadow:var(--shadow);
+}
+.ds-chat-head{background:var(--band);color:var(--band-ink);border-bottom:1px solid color-mix(in srgb,var(--band-ink) 14%,transparent)}
+.ds-chat-avatar{border-radius:8px;background:var(--accent);color:var(--on-accent);font:700 14px/1 var(--mono)}
+html[data-ds-theme="dark"] .ds-chat-avatar{box-shadow:0 0 12px -2px color-mix(in srgb,var(--volt) 70%,transparent)}
+.ds-chat-id strong{font:400 16px/1.1 var(--display);letter-spacing:.03em;text-transform:uppercase}
+.ds-chat-id small{font-family:var(--mono);font-size:9.5px;letter-spacing:.2em;text-transform:uppercase}
+html[data-ds-theme="dark"] .ds-chat-id small{color:var(--volt)}
+.ds-chat-close:hover{background:color-mix(in srgb,var(--band-ink) 14%,transparent)}
+.ds-chat-log{background:var(--paper)}
+.ds-chat-msg.bot p{background:var(--surface-2);border:1px solid var(--line);border-radius:var(--r-btn)}
+.ds-chat-msg.user p{background:var(--accent);color:var(--on-accent);border-radius:var(--r-btn)}
+.ds-chat-sugg{align-items:flex-start}
+.ds-chat-chip{
+  border:1px solid var(--line);border-radius:var(--r-btn);background:var(--surface);
+  color:var(--accent-deep);font:600 10px/1.4 var(--mono);letter-spacing:.14em;text-transform:uppercase;
+}
+.ds-chat-chip:hover{border-color:var(--accent);background:var(--accent-soft);color:var(--ink)}
+html[data-ds-theme="dark"] .ds-chat-chip:hover{border-color:var(--volt);color:var(--volt)}
+.ds-chat-bar{background:var(--surface);border-top:1px solid var(--line)}
+.ds-chat-input{border:1px solid var(--line);border-radius:var(--r-btn);background:var(--surface-2);color:var(--ink);font-family:var(--mono);font-size:12.5px;letter-spacing:.02em}
+.ds-chat-input:focus{border-color:var(--accent)}
+html[data-ds-theme="dark"] .ds-chat-input:focus{border-color:var(--volt)}
+.ds-chat-send{
+  border-radius:0;
+  clip-path:polygon(0 0,calc(100% - 10px) 0,100% 10px,100% 100%,0 100%);
+  background:linear-gradient(180deg,rgba(255,255,255,.15),transparent 55%),linear-gradient(135deg,var(--accent),color-mix(in srgb,var(--accent) 70%,#000));
+  color:var(--on-accent);
+  box-shadow:0 0 0 1px color-mix(in srgb,var(--accent) 55%,transparent),0 10px 24px -12px color-mix(in srgb,var(--accent) 65%,transparent);
+  transition:transform .15s,box-shadow .2s;
+}
+.ds-chat-send:hover{transform:translateY(-1px)}
+.ds-chat-typing i{background:var(--accent)}
+html[data-ds-theme="dark"] .ds-chat-typing i{background:var(--volt)}
 </style>
 </head>
 <body>

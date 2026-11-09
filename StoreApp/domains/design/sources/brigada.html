@@ -832,6 +832,72 @@
     clip-path:polygon(0 0,100% 0,100% 74%,74% 100%,0 100%);
   }
   .ds-brand-name{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:150px}
+
+  /* ==========================================================
+     CHATBOT DEL NEGOCIO (.ds-chat-*, lo monta pattern_bridge.js)
+     Piel Brigada: placas con sombra dura, cinta de peligro en la
+     cabecera y etiquetas mono — misma mano que .btn-primary/.plate.
+     ========================================================== */
+  .ds-chat-fab{
+    border-radius:var(--radius-btn);
+    border:1.5px solid var(--frame);
+    background:var(--hazard);color:var(--hazard-ink);
+    box-shadow:var(--shadow-hard);
+  }
+  @media(hover:hover){
+    .ds-chat-fab:hover{transform:translate(-2px,-2px);box-shadow:8px 8px 0 0 var(--hard)}
+  }
+  .ds-chat-fab:active{transform:translate(2px,2px);box-shadow:2px 2px 0 0 var(--hard)}
+  .ds-chat-panel{
+    border:1.5px solid var(--frame);border-radius:var(--radius);
+    background:var(--surface);color:var(--ink);
+    box-shadow:var(--shadow-hard);
+  }
+  .ds-chat-head{
+    background:var(--hazard);color:var(--hazard-ink);
+    border-bottom:1.5px solid var(--frame);
+  }
+  .ds-chat-avatar{
+    border-radius:0;
+    background:var(--band);color:var(--hazard);
+    clip-path:polygon(0 0,100% 0,100% 74%,74% 100%,0 100%);
+  }
+  .ds-chat-id strong{font-family:var(--font-d);font-weight:800;letter-spacing:-.01em}
+  .ds-chat-id small{font:700 9.5px/1.4 var(--font-m);letter-spacing:.14em;text-transform:uppercase}
+  .ds-chat-close{border-radius:var(--radius-btn)}
+  .ds-chat-close:hover{background:color-mix(in srgb,var(--hazard-ink) 18%,transparent)}
+  .ds-chat-log{background:var(--bg)}
+  .ds-chat-msg.bot p{
+    background:var(--surface);border:1.5px solid var(--frame);
+    border-radius:var(--radius-btn);color:var(--ink);
+  }
+  .ds-chat-msg.user p{
+    background:var(--hazard);color:var(--hazard-ink);
+    border:1.5px solid var(--frame);border-radius:var(--radius-btn);
+  }
+  .ds-chat-chip{
+    border:1.5px solid var(--frame);border-radius:var(--radius-btn);
+    background:var(--surface);color:var(--ink);
+    font:700 11px/1.4 var(--font-m);letter-spacing:.08em;text-transform:uppercase;
+  }
+  @media(hover:hover){
+    .ds-chat-chip:hover{background:var(--hazard-soft);border-color:var(--hazard-deep)}
+  }
+  .ds-chat-bar{border-top:1.5px solid var(--frame);background:var(--surface)}
+  .ds-chat-input{
+    border:1.5px solid var(--frame);border-radius:var(--radius-btn);
+    background:var(--bg);color:var(--ink);
+  }
+  .ds-chat-input:focus{border-color:var(--hazard)}
+  .ds-chat-send{
+    border-radius:var(--radius-btn);
+    border:1.5px solid var(--frame);
+    background:var(--hazard);color:var(--hazard-ink);
+    box-shadow:3px 3px 0 0 var(--hard);
+  }
+  @media(hover:hover){
+    .ds-chat-send:hover{transform:translate(-1px,-1px);box-shadow:4px 4px 0 0 var(--hard)}
+  }
 </style>
 </head>
 <body>

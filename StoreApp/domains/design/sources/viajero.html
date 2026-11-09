@@ -1089,6 +1089,43 @@ html[data-ds-theme="dark"] .services-list .ds-service::before{color:var(--accent
 html[data-ds-theme="dark"] .ds-brand-initial{color:var(--paper)}
 .ds-brand-name{font:500 11px/1 var(--mono);letter-spacing:.1em;text-transform:uppercase;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:140px}
 .brands-sec:not(:has(.ds-brand)){display:none}
+
+/* ==========================================================
+   CHATBOT DEL NEGOCIO (.ds-chat-*, lo monta pattern_bridge.js)
+   Piel Viajero: arena y coral de agencia — cabecera en señal
+   coral, avatar verde mar, burbujas cálidas y nombres en
+   Fraunces.
+   ========================================================== */
+.ds-chat-fab{
+  border-radius:50%;
+  background:var(--accent);color:var(--on-accent);
+  box-shadow:0 16px 32px -18px var(--accent),0 0 0 1px color-mix(in srgb,var(--accent) 45%,transparent);
+}
+.ds-chat-fab:hover{transform:translateY(-3px)}
+.ds-chat-panel{
+  background:var(--surface);border:1px solid var(--line);
+  border-radius:var(--r);box-shadow:var(--shadow);
+}
+.ds-chat-head{background:var(--accent);color:var(--on-accent)}
+.ds-chat-avatar{border-radius:50%;background:var(--sea);color:var(--paper);font:600 14px/1 var(--display)}
+.ds-chat-id strong{font:600 17px/1.15 var(--display);letter-spacing:-.01em}
+.ds-chat-id small{font-family:var(--mono);font-size:9.5px;letter-spacing:.2em;text-transform:uppercase}
+.ds-chat-close:hover{background:color-mix(in srgb,var(--on-accent) 14%,transparent)}
+.ds-chat-log{background:var(--paper)}
+.ds-chat-msg.bot p{background:var(--surface);border:1px solid var(--line);border-radius:var(--r-btn)}
+.ds-chat-msg.user p{background:var(--accent);color:var(--on-accent);border-radius:var(--r-btn)}
+.ds-chat-sugg{align-items:flex-start}
+.ds-chat-chip{
+  border:1px solid var(--accent);border-radius:var(--r-btn);background:var(--surface);
+  color:var(--accent-text);font:600 12px/1.4 var(--sans);
+}
+.ds-chat-chip:hover{background:var(--accent-soft)}
+.ds-chat-bar{background:var(--surface);border-top:1px solid var(--line)}
+.ds-chat-input{border:1px solid var(--line);border-radius:var(--r-btn);background:var(--paper);color:var(--ink)}
+.ds-chat-input:focus{border-color:var(--accent)}
+.ds-chat-send{border-radius:50%;background:var(--accent);color:var(--on-accent)}
+.ds-chat-send:hover{background:var(--accent-deep);transform:translateY(-1px)}
+.ds-chat-typing i{background:var(--accent)}
 </style>
 </head>
 <body>

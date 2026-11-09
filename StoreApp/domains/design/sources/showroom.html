@@ -537,6 +537,44 @@ footer.foot{border-top:1px solid var(--line);margin-top:96px}
 @media (hover:none){
   .ds-product-link:hover .ds-product-img,.looks .ds-shot:hover img{opacity:1}
 }
+
+/* ==========================================================================
+   CHATBOT DEL NEGOCIO (.ds-chat-*, lo monta pattern_bridge.js)
+   Piel Showroom: blanco/negro puro y nada redondeado — el asistente
+   es una pieza más de la grilla: hairlines, tinta y versalitas de
+   Archivo/JetBrains Mono, como .btn y .suggest-more.
+   ========================================================================== */
+.ds-chat-fab{
+  border-radius:0;
+  background:var(--ink);color:var(--bg);
+  box-shadow:0 14px 34px -16px rgba(0,0,0,.5);
+}
+.ds-chat-fab:hover{transform:translateY(-2px)}
+.ds-chat-panel{
+  background:var(--bg);border:1px solid var(--line);
+  border-radius:0;box-shadow:0 34px 70px -34px rgba(0,0,0,.45);
+}
+.ds-chat-head{background:var(--ink);color:var(--bg)}
+.ds-chat-avatar{border-radius:0;background:var(--bg);color:var(--ink);font:800 15px/1 var(--disp)}
+.ds-chat-avatar img{object-fit:contain}
+.ds-chat-id strong{font:800 11px/1.4 var(--disp);letter-spacing:.22em;text-transform:uppercase}
+.ds-chat-id small{font-family:var(--mono);font-size:9px;letter-spacing:.2em;text-transform:uppercase}
+.ds-chat-close:hover{background:color-mix(in srgb,var(--bg) 14%,transparent)}
+.ds-chat-log{background:var(--surface)}
+.ds-chat-msg.bot p{background:var(--bg);border:1px solid var(--line);border-radius:0}
+.ds-chat-msg.user p{background:var(--ink);color:var(--bg);border-radius:0}
+.ds-chat-sugg{align-items:flex-start}
+.ds-chat-chip{
+  border:1px solid var(--ink);border-radius:0;background:transparent;
+  color:var(--ink);font:700 10px/1.4 var(--mono);letter-spacing:.18em;text-transform:uppercase;
+}
+.ds-chat-chip:hover{background:var(--ink);color:var(--bg)}
+.ds-chat-bar{background:var(--bg);border-top:1px solid var(--line)}
+.ds-chat-input{border:1px solid var(--line);border-radius:0;background:var(--surface);color:var(--ink)}
+.ds-chat-input:focus{border-color:var(--ink)}
+.ds-chat-send{border:1px solid var(--ink);border-radius:0;background:var(--ink);color:var(--bg)}
+.ds-chat-send:hover{background:var(--bg);color:var(--ink)}
+.ds-chat-typing i{background:var(--ink)}
 </style>
 </head>
 <body>

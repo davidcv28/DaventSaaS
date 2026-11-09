@@ -949,6 +949,43 @@ body.m-open .m-sheet{transform:none}
 }
 .ds-brand-name{font:500 11px/1 var(--mono);letter-spacing:.1em;text-transform:uppercase;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:140px}
 .brands-sec:not(:has(.ds-brand)){display:none}
+
+/* ==========================================================
+   CHATBOT DEL NEGOCIO (.ds-chat-*, lo monta pattern_bridge.js)
+   Piel Moda: fashion club editorial — banda de tinta en la
+   cabecera, serif de display en el nombre y etiquetas mono.
+   ========================================================== */
+.ds-chat-fab{
+  border-radius:var(--r-btn);
+  background:var(--accent);color:var(--on-accent);
+  box-shadow:0 14px 30px -16px color-mix(in srgb,var(--accent-deep) 70%,transparent);
+}
+.ds-chat-fab:hover{transform:translateY(-2px)}
+.ds-chat-fab:active{transform:scale(.985)}
+.ds-chat-panel{
+  border-radius:var(--r);
+  background:var(--paper);border:1px solid var(--line);
+  box-shadow:var(--shadow);
+}
+.ds-chat-head{background:var(--ink);color:var(--paper)}
+.ds-chat-avatar{border-radius:50%;background:color-mix(in srgb,var(--paper) 12%,transparent)}
+.ds-chat-id strong{font-family:var(--display);font-weight:400;font-size:17px;letter-spacing:-.01em}
+.ds-chat-id small{font-family:var(--mono);font-size:9px;letter-spacing:.18em;text-transform:uppercase}
+.ds-chat-close:hover{background:color-mix(in srgb,var(--paper) 14%,transparent)}
+.ds-chat-log{background:var(--paper)}
+.ds-chat-msg.bot p{border-radius:var(--r);border-color:var(--line);background:var(--surface)}
+.ds-chat-msg.user p{background:var(--accent);color:var(--on-accent);border-radius:var(--r)}
+.ds-chat-chip{
+  border:1px solid var(--line);border-radius:var(--r-btn);
+  color:var(--accent-text);background:var(--surface);
+  font:500 10px/1.45 var(--mono);letter-spacing:.14em;text-transform:uppercase;
+}
+.ds-chat-chip:hover{border-color:var(--accent);background:color-mix(in srgb,var(--accent) 8%,var(--surface))}
+.ds-chat-bar{background:var(--paper);border-top:1px solid var(--line)}
+.ds-chat-input{border-radius:var(--r-btn);background:var(--surface);border-color:var(--line)}
+.ds-chat-input:focus{border-color:var(--accent)}
+.ds-chat-send{border-radius:var(--r-btn);background:var(--accent);color:var(--on-accent)}
+.ds-chat-send:hover{background:var(--accent-deep)}
 </style>
 </head>
 <body>

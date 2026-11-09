@@ -224,6 +224,46 @@ a:focus-visible,button:focus-visible{outline:2px solid var(--accent);outline-off
     transition-duration:.001ms!important;scroll-behavior:auto!important}
   .device::before{animation:none!important}
 }
+
+  /* ==========================================================
+     CHATBOT DEL NEGOCIO (.ds-chat-*, lo monta pattern_bridge.js)
+     Piel NEXA: panel grafito con filete fino, acento cian con
+     halo, píldoras y mono — misma mano que .btn/.prod.
+     ========================================================== */
+  .ds-chat-fab{
+    border-radius:999px;
+    background:var(--accent);color:var(--accent-ink);
+    box-shadow:0 0 0 1px rgba(61,214,255,.5),0 8px 28px rgba(61,214,255,.22);
+  }
+  .ds-chat-fab:hover{transform:translateY(-2px);box-shadow:0 0 0 1px rgba(61,214,255,.7),0 10px 34px rgba(61,214,255,.35)}
+  .ds-chat-fab:active{transform:translateY(1px)}
+  .ds-chat-panel{
+    border-color:var(--line);border-radius:20px;
+    background:var(--panel);color:var(--ink);
+    box-shadow:0 30px 80px rgba(0,0,0,.5);
+  }
+  .ds-chat-head{background:var(--accent);color:var(--accent-ink)}
+  .ds-chat-avatar{border-radius:10px;background:color-mix(in srgb,var(--accent-ink) 16%,transparent)}
+  .ds-chat-close:hover{background:color-mix(in srgb,var(--accent-ink) 18%,transparent)}
+  .ds-chat-log{background:var(--bg)}
+  .ds-chat-msg.bot p{
+    background:var(--bg-2);border-color:var(--line);color:var(--ink);
+    border-radius:var(--r);border-bottom-left-radius:6px;
+  }
+  .ds-chat-msg.user p{
+    background:var(--accent);color:var(--accent-ink);
+    border-radius:var(--r);border-bottom-right-radius:6px;
+  }
+  .ds-chat-chip{
+    border-color:color-mix(in srgb,var(--accent) 45%,transparent);border-radius:999px;
+    background:var(--bg-2);color:var(--accent);
+  }
+  .ds-chat-chip:hover{background:color-mix(in srgb,var(--accent) 12%,var(--bg-2))}
+  .ds-chat-bar{background:var(--panel);border-top-color:var(--line)}
+  .ds-chat-input{border-color:var(--line);border-radius:999px;background:var(--bg);color:var(--ink)}
+  .ds-chat-input:focus{border-color:var(--accent)}
+  .ds-chat-send{background:var(--accent);color:var(--accent-ink);box-shadow:0 0 0 1px rgba(61,214,255,.5)}
+  .ds-chat-typing i{background:var(--ink-3)}
 </style>
 </head>
 <body>

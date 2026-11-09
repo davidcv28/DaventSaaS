@@ -876,6 +876,47 @@ body.filters-open .cat-scrim{opacity:1;pointer-events:auto}
   .nav-links a:hover,.mmenu nav a:hover,.sec-link:hover,.ds-product:hover::before,
   .cats-grid .ds-cat:hover::after,.ds-offer:hover::before,.ds-plan:hover::after{opacity:1}
 }
+
+/* ==========================================================
+   CHATBOT DEL NEGOCIO (.ds-chat-*, lo monta pattern_bridge.js)
+   Piel Neon: tubo lima con glow, panel grafito, chips en mono
+   y envío brillante — misma mano que .btn-a/.ds-product.
+   ========================================================== */
+.ds-chat-fab{
+  border-radius:var(--r-btn);
+  background:var(--accent);color:var(--accent-ink);
+  box-shadow:var(--glow-a);
+}
+.ds-chat-fab:hover{transform:translateY(-2px);box-shadow:0 0 30px color-mix(in srgb,var(--accent) 55%,transparent),0 0 80px color-mix(in srgb,var(--accent) 20%,transparent)}
+.ds-chat-fab:active{transform:translateY(1px)}
+.ds-chat-panel{
+  border-color:var(--line);border-radius:calc(var(--r) + 6px);
+  background:var(--panel);color:var(--ink);
+  box-shadow:0 24px 60px rgba(0,0,0,.6),0 0 44px color-mix(in srgb,var(--accent) 10%,transparent);
+}
+.ds-chat-head{background:var(--accent);color:var(--accent-ink)}
+.ds-chat-avatar{border-radius:9px;background:color-mix(in srgb,var(--accent-ink) 16%,transparent)}
+.ds-chat-close:hover{background:color-mix(in srgb,var(--accent-ink) 18%,transparent)}
+.ds-chat-log{background:var(--bg)}
+.ds-chat-msg.bot p{
+  background:var(--panel-2);border-color:var(--line);color:var(--ink);
+  border-radius:var(--r);border-bottom-left-radius:5px;
+}
+.ds-chat-msg.user p{
+  background:var(--accent);color:var(--accent-ink);
+  border-radius:var(--r);border-bottom-right-radius:5px;
+}
+.ds-chat-chip{
+  border-color:var(--accent-line);border-radius:var(--r-btn);
+  background:var(--panel);color:var(--accent);
+  font-family:var(--mono);font-size:11.5px;letter-spacing:.04em;
+}
+.ds-chat-chip:hover{background:var(--accent-dim)}
+.ds-chat-bar{background:var(--panel);border-top-color:var(--line)}
+.ds-chat-input{border-color:var(--line);border-radius:var(--r-btn);background:var(--bg);color:var(--ink)}
+.ds-chat-input:focus{border-color:var(--accent-line)}
+.ds-chat-send{background:var(--accent);color:var(--accent-ink);box-shadow:var(--glow-a)}
+.ds-chat-typing i{background:var(--mut)}
 </style>
 </head>
 <body>
