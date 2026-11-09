@@ -618,7 +618,7 @@ class AiDesignV2Tests(AiDesignBase):
         sources     =   {proposal['style_source'] for proposal in data['proposals']}
         self.assertEqual(sources, {'plan'})
         self.assertEqual(set(allowed_templates_of(store.user)),
-                         {'raiz', 'esencial', 'moderntec', 'mercado', 'gimnasio', 'sastreria', 'indumentaria', 'impacto', 'ruta', 'aurum', 'movimiento'})
+                         {'raiz', 'esencial', 'moderntec', 'mercado', 'gimnasio', 'sastreria', 'indumentaria', 'impacto', 'ruta', 'autoservicio', 'aurum', 'movimiento'})
 
     def test_ai_templates_never_outside_plan(self):
         #Sin has_ai_design los ai_* no están en la whitelist del plan y el
@@ -1053,7 +1053,7 @@ class AiDesignV4Tests(AiDesignBase):
         store       =   Store.objects.create(user = profile, slug = 'tienda-estandar')
         StoreCustomization.objects.create(store = store, site_templates = ['landing', 'catalog', 'services'])
         allowed     =   set(allowed_templates_of(store.user))
-        self.assertEqual(allowed, {'raiz', 'esencial', 'moderntec', 'mercado', 'gimnasio', 'sastreria', 'indumentaria', 'impacto', 'ruta'})
+        self.assertEqual(allowed, {'raiz', 'esencial', 'moderntec', 'mercado', 'gimnasio', 'sastreria', 'indumentaria', 'impacto', 'ruta', 'autoservicio'})
         data        =   self._client(store).post(AI_URL, {'rubro': 'seguridad'}, format = 'json').json()
         self.assertTrue(data['proposals'])
         for proposal in data['proposals']:
@@ -1070,7 +1070,7 @@ class AiDesignV4Tests(AiDesignBase):
     def test_allowed_templates_grow_with_the_flag(self):
         premium, _  =   self._store()
         self.assertEqual(set(allowed_templates_of(premium.user)),
-                         {'raiz', 'esencial', 'mercado', 'gimnasio', 'sastreria', 'moderntec', 'indumentaria', 'impacto', 'ruta', 'aurum', 'movimiento'})
+                         {'raiz', 'esencial', 'mercado', 'gimnasio', 'sastreria', 'moderntec', 'indumentaria', 'impacto', 'ruta', 'autoservicio', 'aurum', 'movimiento'})
         basic, _    =   self._store(advanced = False, username = 'basico')
         self.assertEqual(set(allowed_templates_of(basic.user)), {'raiz', 'esencial'})
 

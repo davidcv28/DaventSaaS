@@ -17808,6 +17808,13 @@
       "enabled": true,
       "order": 1
      }
+    ],
+    "product": [
+     {
+      "id": "pdp",
+      "enabled": true,
+      "order": 0
+     }
     ]
    },
    "tokens": {

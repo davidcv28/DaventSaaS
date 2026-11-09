@@ -363,7 +363,10 @@ def _category_fragment(store, flags = None):
         return ''
     rows = Category.objects.filter(store = store).order_by('position', 'name')[:FRAGMENT_LIMIT]
     links = [
-        f'<a class="ds-cat" href="#catalogo"><span>{escape(_text(row.name, 60))}</span></a>'
+        #`data-ds-cat` copia el mismo corte de 40 chars que `data-cat` de las
+        #tarjetas: el puente fija el filtro antes de navegar a catálogo.
+        f'<a class="ds-cat" href="#catalogo" data-ds-route="catalog"'
+        f' data-ds-cat="{_attr(_text(row.name, 40))}"><span>{escape(_text(row.name, 60))}</span></a>'
         for row in rows
     ]
     return ''.join(links)

@@ -378,6 +378,18 @@
         applyCatalog()
       }
     }
+    /* Categoría del escaparate -> catálogo filtrado: mismo contrato que
+     * `data-ds-brand`, con el valor recortado a 40 chars como `data-cat`
+     * de las tarjetas. */
+    var catHit = t.closest('[data-ds-cat]')
+    if (catHit) {
+      state.cat = catHit.getAttribute('data-ds-cat') || ''
+      saveState()
+      if (root.getAttribute('data-ds-surface') === 'catalog') {
+        syncFilterUI()
+        applyCatalog()
+      }
+    }
     var link = t.closest('[data-ds-route]')
     if (link) {
       e.preventDefault()
