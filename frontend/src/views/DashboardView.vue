@@ -46,7 +46,7 @@ import { fetchChat, fetchChatMessages, sendChatMessage, chatHeartbeat } from '..
 import { fetchNotifications, markNotificationRead, markReviewsSeen, fetchChangelog } from '../api/notifications.api.js'
 import { fetchAssistant, sendAssistant } from '../api/assistant.api.js'
 import { extractApiError } from '../api/http.js'
-import { env } from '../config/env.js'
+import { storeSlugAffixes } from '../config/env.js'
 import {
   TAX_CONDITIONS, validatePassword, validateEmail, validateName,
   validateDocument, validateBusinessName, validatePhone, validateAddress,
@@ -697,9 +697,9 @@ function fmtDate(d) {
 }
 
 // --- Mi tienda: link público (copiar, abrir, pausar, renombrar) ---
-// El link público es path sobre el dominio de plataforma:
-// https://www.davent.com.ar/[slug]
-const slugPrefix = `${env.appUrl}/`
+// Prefijo/sufijo del link público según el modo: subdominio <slug>.<dominio>
+// o alias de path <appUrl>/<slug> (env.js storeSlugAffixes).
+const { prefix: slugPrefix, suffix: slugSuffix } = storeSlugAffixes()
 const renameSlug = ref('')
 const renameBusy = ref(false)
 const storeBusy = ref(false)
@@ -4926,7 +4926,7 @@ async function changePassword() {
                 autocomplete="off"
                 @input="onRenameInput"
               />
-
+              <span v-if="slugSuffix" class="slug-suffix">{{ slugSuffix }}</span>
             </div>
             <p class="hint">Ojo: la dirección anterior deja de funcionar, y tendrás que avisarle a tus clientes.</p>
             <p v-if="store.fieldErrors.slug" class="field-error" role="alert">{{ store.fieldErrors.slug }}</p>

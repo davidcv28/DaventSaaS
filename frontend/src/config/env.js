@@ -4,6 +4,9 @@ const platformDomain = (import.meta.env.VITE_PLATFORM_DOMAIN || 'localhost').toL
 const { protocol, hostname, port } = window.location
 // Host de la plataforma con su puerto (dev: localhost:5173, prod: davent.com).
 const platformHost = `${platformDomain}${port ? `:${port}` : ''}`
+// Host base de los subdominios de tienda: platformDomain sin 'www.' inicial
+// (dev: localhost:5173 → mitienda.localhost:5173).
+const subdomainHost = platformHost.replace(/^www\./, '')
 
 export const env = {
   //Fallback relativo: si un build olvida VITE_API_BASE_URL, la SPA le pega
@@ -74,11 +77,22 @@ export const storeSubdomains = storeSubdomainsEnv
   ? !['0', 'false', 'no'].includes(storeSubdomainsEnv)
   : !platformDomain.endsWith('onrender.com')
 
-// Link público canónico de una tienda: path sobre el origen de plataforma
-// (https://www.davent.com.ar/<slug>). Los subdominios <slug>.<dominio>
-// ya emitidos siguen resolviendo vía storeHostSlug.
+// Link público canónico de una tienda: subdominio <slug>.<dominio> cuando
+// storeSubdomains está activo; si no (Render/interino), alias de path
+// <appUrl>/<slug>. Los subdominios ya emitidos siguen resolviendo vía
+// storeHostSlug.
 export function storeUrl(slug) {
-  return `${env.appUrl}/${slug}`
+  if (!storeSubdomains) return `${env.appUrl}/${slug}`
+  return `${protocol}//${slug}.${subdomainHost}`
+}
+
+// Prefijo/sufijo del input de slug según el modo de link público: en
+// subdominio el slug va entre 'https://' y '.<dominio>'; en alias de path,
+// entre '<appUrl>/' y nada.
+export function storeSlugAffixes() {
+  return storeSubdomains
+    ? { prefix: `${protocol}//`, suffix: `.${subdomainHost}` }
+    : { prefix: `${env.appUrl}/`, suffix: '' }
 }
 
 export function apiUrl(path = '') {
