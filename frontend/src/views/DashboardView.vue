@@ -4555,7 +4555,7 @@ async function changePassword() {
       <div class="page-head">
         <div>
           <h1>Mis servicios</h1>
-          <p>Lo que ofrecés en la página Servicios de tu web: tus clientes arman su presupuesto y el pedido te llega por WhatsApp. Nada se cobra online.</p>
+          <p>Mostrá lo que hacés, con precio y duración, en tu página. El cliente arma su presupuesto y el pedido te llega por WhatsApp; nada se cobra online.</p>
         </div>
         <button class="btn ghost btn-auto" @click="services.loadAll()"><AppIcon name="refresh" :size="16" /> Recargar</button>
       </div>
@@ -4574,8 +4574,11 @@ async function changePassword() {
 
       <template v-else>
         <div v-if="!designSiteTemplates.includes('services')" class="card svc-note" role="note">
-          <h3><AppIcon name="info" :size="18" /> La página está apagada</h3>
-          <p class="hint">Tus servicios quedan guardados, pero la página Servicios no aparece en tu web hasta que la actives en <a href="#" @click.prevent="section = 'pages'"><strong>Plantillas</strong></a>.</p>
+          <span class="svc-note-ico" aria-hidden="true"><AppIcon name="eye-off" :size="18" /></span>
+          <div class="svc-note-body">
+            <h3>Tu página de servicios está apagada</h3>
+            <p class="hint">Los clientes no la ven en tu web. Tus servicios quedan guardados: activá la página en <a href="#" @click.prevent="section = 'pages'"><strong>Plantillas</strong></a> cuando quieras mostrarla.</p>
+          </div>
         </div>
         <div v-if="services.status === 'loading'" class="card card-loading"><span class="spinner spinner-brand"></span><p>Cargando tus servicios…</p></div>
         <template v-else>
@@ -4592,9 +4595,12 @@ async function changePassword() {
           <div class="svc-meter" role="progressbar" :aria-valuenow="serviceUsage" aria-valuemin="0" aria-valuemax="100" aria-label="Cupo de servicios usado">
             <span :style="{ width: serviceUsage + '%' }"></span>
           </div>
-          <div class="grid-2">
+          <div class="grid-2 svc-grid">
             <div class="card svc-form">
-              <h3><AppIcon :name="serviceEditing ? 'pencil' : 'plus'" :size="18" /> {{ serviceEditing ? 'Editar servicio' : 'Agregar un servicio' }}</h3>
+              <header class="svc-form-head">
+                <h3><AppIcon :name="serviceEditing ? 'pencil' : 'plus'" :size="18" /> {{ serviceEditing ? 'Editar servicio' : 'Agregar un servicio' }}</h3>
+                <p class="hint">Completá los campos: arriba ves una vista previa de cómo queda en tu web.</p>
+              </header>
               <div class="svc-preview" :style="{ '--h': serviceHue(serviceForm.icon) }" aria-hidden="true">
                 <span class="svc-ico"><AppIcon :name="serviceIcon(serviceForm.icon)" :size="22" /></span>
                 <div>
@@ -4602,27 +4608,36 @@ async function changePassword() {
                   <small>{{ servicePriceLabel(serviceForm) }}<template v-if="serviceForm.duration"> · {{ serviceForm.duration }}</template></small>
                 </div>
               </div>
-              <p class="lead">El precio es orientativo: podés dejarlo vacío y se muestra como «a convenir».</p>
-              <AppInput v-model="serviceForm.name" label="Nombre" icon="pencil" name="svc_name" placeholder="Ej. Reparación a domicilio" :error="serviceFieldErr('name')" @blur="serviceTouched.name = true" />
-              <div class="grid-2">
-                <AppInput v-model="serviceForm.price" label="Precio orientativo" icon="tag" name="svc_price" type="number" min="0" step="0.01" placeholder="Vacío = a convenir" :error="serviceFieldErr('price')" @blur="serviceTouched.price = true" />
-                <AppInput v-model="serviceForm.duration" label="Duración estimada" icon="clock" name="svc_duration" placeholder="Ej. ≈ 45 min" :error="serviceFieldErr('duration')" @blur="serviceTouched.duration = true" />
-              </div>
-              <div class="grid-2">
+              <div class="svc-group">
+                <span class="svc-group-label">Qué ofrecés</span>
+                <AppInput v-model="serviceForm.name" label="Nombre" icon="pencil" name="svc_name" placeholder="Ej. Reparación a domicilio" :error="serviceFieldErr('name')" @blur="serviceTouched.name = true" />
                 <div class="field">
-                  <label for="svc-icon"><AppIcon name="sparkles" :size="14" class="label-icon" aria-hidden="true" />Icono</label>
-                  <IconSelect id="svc-icon" v-model="serviceForm.icon" :options="serviceIconOptions" />
-                </div>
-                <div class="field">
-                  <label for="svc-active"><AppIcon name="eye" :size="14" class="label-icon" aria-hidden="true" />Visibilidad</label>
-                  <IconSelect id="svc-active" v-model="serviceForm.is_active" :options="serviceVisibilityOptions" />
+                  <label for="svc-description"><AppIcon name="message-circle" :size="14" class="label-icon" aria-hidden="true" />Descripción corta <span class="svc-opt">opcional</span></label>
+                  <textarea id="svc-description" v-model="serviceForm.description" class="textarea" :class="{ invalid: serviceFieldErr('description') }" placeholder="Qué incluye o cómo se coordina" :maxlength="serviceLimits.description" rows="2" @blur="serviceTouched.description = true"></textarea>
+                  <p class="hint">{{ serviceForm.description.length }}/{{ serviceLimits.description }}</p>
+                  <p v-if="serviceFieldErr('description')" class="field-error" role="alert">{{ serviceFieldErr('description') }}</p>
                 </div>
               </div>
-              <div class="field">
-                <label for="svc-description"><AppIcon name="message-circle" :size="14" class="label-icon" aria-hidden="true" />Descripción corta</label>
-                <textarea id="svc-description" v-model="serviceForm.description" class="textarea" :class="{ invalid: serviceFieldErr('description') }" placeholder="Qué incluye o cómo se coordina (opcional)" :maxlength="serviceLimits.description" rows="2" @blur="serviceTouched.description = true"></textarea>
-                <p class="hint">{{ serviceForm.description.length }}/{{ serviceLimits.description }}</p>
-                <p v-if="serviceFieldErr('description')" class="field-error" role="alert">{{ serviceFieldErr('description') }}</p>
+              <div class="svc-group">
+                <span class="svc-group-label">Precio y duración</span>
+                <div class="grid-2">
+                  <AppInput v-model="serviceForm.price" label="Precio orientativo" icon="tag" name="svc_price" type="number" min="0" step="0.01" placeholder="Vacío = a convenir" :error="serviceFieldErr('price')" @blur="serviceTouched.price = true" />
+                  <AppInput v-model="serviceForm.duration" label="Duración estimada" icon="clock" name="svc_duration" placeholder="Ej. ≈ 45 min" :error="serviceFieldErr('duration')" @blur="serviceTouched.duration = true" />
+                </div>
+                <p class="hint">Si dejás el precio vacío, en tu web se muestra como «a convenir».</p>
+              </div>
+              <div class="svc-group">
+                <span class="svc-group-label">Cómo se ve en tu web</span>
+                <div class="grid-2">
+                  <div class="field">
+                    <label for="svc-icon"><AppIcon name="sparkles" :size="14" class="label-icon" aria-hidden="true" />Icono</label>
+                    <IconSelect id="svc-icon" v-model="serviceForm.icon" :options="serviceIconOptions" />
+                  </div>
+                  <div class="field">
+                    <label for="svc-active"><AppIcon name="eye" :size="14" class="label-icon" aria-hidden="true" />Visibilidad</label>
+                    <IconSelect id="svc-active" v-model="serviceForm.is_active" :options="serviceVisibilityOptions" />
+                  </div>
+                </div>
               </div>
               <div class="btn-row">
                 <AppButton :loading="serviceBusy" :disabled="!serviceEditing && services.limitReached" @click="saveService">{{ serviceEditing ? 'Guardar cambios' : 'Publicar servicio' }}</AppButton>
@@ -4631,11 +4646,20 @@ async function changePassword() {
               <p v-if="services.limitReached" class="hint">Llegaste al máximo de {{ serviceLimits.max }} servicios por página.</p>
             </div>
 
-            <div class="card">
-              <h3><AppIcon name="wrench" :size="18" /> Tus servicios</h3>
-              <div v-if="!services.items.length" class="empty-mini">
-                <AppIcon name="wrench" :size="22" />
-                <div><p>Todavía no cargaste servicios. Contá qué hacés, cuánto tarda y a qué precio.</p><button type="button" class="empty-mini-cta" @click="focusField('svc_name')">Cargar el primero</button></div>
+            <div class="card svc-list-card">
+              <header class="svc-list-head">
+                <h3><AppIcon name="wrench" :size="18" /> Tus servicios</h3>
+                <p class="hint">Aparecen en tu web en este orden.</p>
+              </header>
+              <div v-if="!services.items.length" class="empty-mini svc-empty">
+                <span class="svc-empty-ico" aria-hidden="true"><AppIcon name="wrench" :size="26" /></span>
+                <h4>Empezá tu carta de servicios</h4>
+                <ul class="svc-empty-points">
+                  <li><AppIcon name="check" :size="14" aria-hidden="true" /> Mostrá qué hacés, con precio y duración</li>
+                  <li><AppIcon name="check" :size="14" aria-hidden="true" /> El cliente arma su presupuesto solo</li>
+                  <li><AppIcon name="check" :size="14" aria-hidden="true" /> El pedido te llega por WhatsApp</li>
+                </ul>
+                <button type="button" class="empty-mini-cta svc-empty-cta" @click="focusField('svc_name')"><AppIcon name="plus" :size="15" aria-hidden="true" /> Agregar mi primer servicio</button>
               </div>
               <ul v-else class="svc-list">
                 <li v-for="(s, i) in services.items" :key="s.id" class="svc-card" :class="{ off: !s.is_active, editing: serviceEditing?.id === s.id }" :style="{ '--h': serviceHue(s.icon) }">
@@ -4644,7 +4668,6 @@ async function changePassword() {
                     <div class="svc-title">
                       <span class="svc-num">{{ String(i + 1).padStart(2, '0') }}</span>
                       <strong>{{ s.name }}</strong>
-                      <span class="svc-badge" :class="s.is_active ? 'on' : 'off'">{{ s.is_active ? 'Visible' : 'Oculto' }}</span>
                     </div>
                     <div class="svc-meta">
                       <span><AppIcon name="tag" :size="13" aria-hidden="true" /> {{ servicePriceLabel(s) }}</span>
@@ -4652,16 +4675,20 @@ async function changePassword() {
                     </div>
                     <p v-if="s.description" class="svc-desc">{{ s.description }}</p>
                   </div>
-                  <div class="svc-actions">
-                    <button type="button" class="icon-btn" aria-label="Subir" :disabled="i === 0" @click="moveService(s, -1)"><AppIcon name="chevron-up" :size="14" /></button>
-                    <button type="button" class="icon-btn" aria-label="Bajar" :disabled="i === services.items.length - 1" @click="moveService(s, 1)"><AppIcon name="chevron-down" :size="14" /></button>
-                    <button type="button" class="icon-btn" :aria-label="s.is_active ? 'Ocultar servicio' : 'Mostrar servicio'" :title="s.is_active ? 'Ocultar' : 'Mostrar'" @click="services.toggleService(s)"><AppIcon :name="s.is_active ? 'eye-off' : 'eye'" :size="15" /></button>
-                    <button type="button" class="icon-btn" aria-label="Editar servicio" @click="editService(s)"><AppIcon name="pencil" :size="15" /></button>
-                    <button type="button" class="icon-btn danger" aria-label="Eliminar servicio" @click="removeService(s)"><AppIcon name="trash" :size="15" /></button>
+                  <div class="svc-side">
+                    <button type="button" class="svc-vis" :class="{ on: s.is_active }" role="switch" :aria-checked="s.is_active" :aria-label="s.is_active ? 'Ocultar servicio' : 'Mostrar servicio'" :title="s.is_active ? 'Ocultarlo en tu web' : 'Mostrarlo en tu web'" @click="services.toggleService(s)">
+                      <span class="svc-vis-track" aria-hidden="true"><i></i></span>
+                      <span class="svc-vis-text">{{ s.is_active ? 'Visible' : 'Oculto' }}</span>
+                    </button>
+                    <div class="svc-actions">
+                      <button type="button" class="icon-btn" aria-label="Subir" :disabled="i === 0" @click="moveService(s, -1)"><AppIcon name="chevron-up" :size="14" /></button>
+                      <button type="button" class="icon-btn" aria-label="Bajar" :disabled="i === services.items.length - 1" @click="moveService(s, 1)"><AppIcon name="chevron-down" :size="14" /></button>
+                      <button type="button" class="icon-btn" aria-label="Editar servicio" title="Editar" @click="editService(s)"><AppIcon name="pencil" :size="15" /></button>
+                      <button type="button" class="icon-btn danger" aria-label="Eliminar servicio" title="Eliminar" @click="removeService(s)"><AppIcon name="trash" :size="15" /></button>
+                    </div>
                   </div>
                 </li>
               </ul>
-              <p class="hint">El orden de esta lista es el orden en que aparecen en tu web.</p>
             </div>
           </div>
 

@@ -1,15 +1,16 @@
 /* ==========================================================================
    dash-redesign/serv — Mis servicios (.sec-serv) y Opiniones (.sec-rev)
-   SaaS sobrio: hairlines, radios 12-14px, un solo acento brand, números
-   tabulares. Se carga después de dashboard-v3.css; los scopes ganan por
-   orden + especificidad sin tocar los componentes compartidos.
+   Pasada 2 (servicios): panel amigable tipo Shopify/Stripe — jerarquía
+   obvia, copy claro, switch Visible/Oculto real, empty state guía.
+   Se carga después de dashboard-v3.css; los scopes ganan por orden +
+   especificidad sin tocar los componentes compartidos.
    ========================================================================== */
 
 /* ---------- Base compartida ---------- */
 .sec-serv .card,
 .sec-rev .card {
   border-color: var(--line-soft);
-  border-radius: 14px;
+  border-radius: 16px;
   box-shadow: var(--shadow-sm);
 }
 .sec-serv .card h3,
@@ -28,12 +29,12 @@
 /* Icon buttons fantasmas dentro de estas secciones */
 .sec-serv .icon-btn,
 .sec-rev .icon-btn {
-  width: 30px;
-  height: 30px;
+  width: 32px;
+  height: 32px;
   border-color: transparent;
   background: transparent;
   color: var(--muted);
-  border-radius: 8px;
+  border-radius: 9px;
   transition: color 0.15s var(--ease-out, ease), background 0.15s var(--ease-out, ease), border-color 0.15s var(--ease-out, ease);
 }
 .sec-serv .icon-btn:hover:not(:disabled),
@@ -51,17 +52,37 @@
 .sec-serv .icon-btn:focus-visible,
 .sec-rev .icon-btn:focus-visible { outline: none; box-shadow: var(--ring); border-color: var(--brand-500); }
 
-/* Aviso "la página está apagada" */
+/* ==========================================================================
+   MIS SERVICIOS (.sec-serv)
+   ========================================================================== */
+
+/* Cabecera: respira más */
+.sec-serv .page-head p { max-width: 56ch; }
+
+/* ---------- Banner "página apagada" ---------- */
 .sec-serv .svc-note {
   display: flex;
-  flex-direction: column;
-  gap: 4px;
+  flex-direction: row;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 14px 16px;
   background: var(--warn-bg);
   border-color: var(--warn-line);
+  border-radius: 14px;
 }
-.sec-serv .svc-note h3 { margin: 0; font-size: 14px; color: var(--warn-ink); }
-.sec-serv .svc-note h3 .icon { color: var(--warn-ink); }
-.sec-serv .svc-note .hint { margin: 0; color: var(--warn-ink); opacity: 0.85; }
+.sec-serv .svc-note-ico {
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: 34px;
+  height: 34px;
+  border-radius: 10px;
+  background: hsl(38 90% 50% / 0.14);
+  color: var(--warn-ink);
+}
+.sec-serv .svc-note-body { display: flex; flex-direction: column; gap: 3px; min-width: 0; }
+.sec-serv .svc-note h3 { margin: 0; font-size: 14px; font-weight: 650; color: var(--warn-ink); }
+.sec-serv .svc-note .hint { margin: 0; color: var(--warn-ink); opacity: 0.88; }
 .sec-serv .svc-note a { color: var(--warn-ink); }
 
 /* ---------- Stats ---------- */
@@ -71,7 +92,7 @@
   gap: 12px;
   background: var(--card);
   border: 1px solid var(--line-soft);
-  border-radius: 12px;
+  border-radius: 14px;
   box-shadow: var(--shadow-sm);
 }
 .sec-serv .svc-stat:hover {
@@ -101,28 +122,70 @@
   height: 5px;
   margin-bottom: 20px;
   background: var(--line-soft);
+  border-radius: 99px;
+  overflow: hidden;
 }
 .sec-serv .svc-meter span {
   background: var(--brand-500);
+  border-radius: 99px;
   transition: width 0.25s var(--ease-out, ease);
 }
 
-/* ---------- Formulario ---------- */
+/* ---------- Formulario guiado ---------- */
+.sec-serv .svc-grid { align-items: start; }
 .sec-serv .svc-form {
   overflow: visible;
   border-color: var(--line-soft);
   background: var(--card);
+  position: sticky;
+  top: 16px;
 }
 .sec-serv .svc-form::before { content: none; }
+.sec-serv .svc-form-head { margin-bottom: 14px; }
+.sec-serv .svc-form-head h3 { margin-bottom: 4px; }
+.sec-serv .svc-form-head .hint { margin: 0; }
+
+/* Vista previa: cómo se ve la ficha */
 .sec-serv .svc-preview {
+  display: flex;
+  align-items: center;
+  gap: 12px;
   padding: 12px 14px;
-  border: 1px solid var(--line-soft);
+  margin-bottom: 16px;
+  border: 1px dashed var(--line-strong);
   border-radius: 12px;
   background: var(--surface);
 }
-.sec-serv .svc-form .svc-preview { background: var(--surface); }
 .sec-serv .svc-preview strong { font-size: 14px; font-weight: 650; }
 .sec-serv .svc-preview small { font-variant-numeric: tabular-nums; }
+
+/* Grupos de campos con etiqueta de sección */
+.sec-serv .svc-group {
+  padding: 14px 14px 12px;
+  margin-bottom: 12px;
+  border: 1px solid var(--line-soft);
+  border-radius: 12px;
+  background: color-mix(in srgb, var(--surface) 55%, transparent);
+}
+.sec-serv .svc-group-label {
+  display: block;
+  margin: -2px 0 10px;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+.sec-serv .svc-group > .hint { margin: 8px 0 0; }
+.sec-serv .svc-group .grid-2 { margin-bottom: 0; }
+.sec-serv .svc-opt {
+  margin-left: 4px;
+  font-size: 11px;
+  font-weight: 500;
+  text-transform: none;
+  letter-spacing: 0;
+  color: var(--muted);
+}
 
 /* Íconos por servicio: tinte plano del hue propio (dato), sin gradientes */
 .sec-serv .svc-ico {
@@ -139,13 +202,21 @@
 }
 
 /* ---------- Lista de servicios ---------- */
-.sec-serv .svc-list { gap: 8px; }
+.sec-serv .svc-list-card { min-height: 100%; }
+.sec-serv .svc-list-head { margin-bottom: 12px; }
+.sec-serv .svc-list-head h3 { margin-bottom: 4px; }
+.sec-serv .svc-list-head .hint { margin: 0; }
+
+.sec-serv .svc-list { gap: 10px; }
 .sec-serv .svc-card {
+  display: flex;
+  align-items: flex-start;
   gap: 12px;
-  padding: 12px 14px;
+  padding: 14px;
   border: 1px solid var(--line-soft);
-  border-radius: 12px;
+  border-radius: 14px;
   background: var(--card);
+  transition: border-color 0.15s var(--ease-out, ease), box-shadow 0.15s var(--ease-out, ease), opacity 0.15s var(--ease-out, ease);
 }
 .sec-serv .svc-card::before { content: none; }
 .sec-serv .svc-card:hover {
@@ -153,13 +224,15 @@
   border-color: var(--line-strong);
   box-shadow: var(--shadow-sm);
 }
-.sec-serv .svc-card.off { opacity: 0.65; }
+.sec-serv .svc-card.off { opacity: 0.72; }
 .sec-serv .svc-card.off .svc-ico { filter: grayscale(0.7); }
 .sec-serv .svc-card.editing {
   border-color: var(--brand-500);
   box-shadow: var(--ring);
 }
-.sec-serv .svc-title strong { font-size: 14px; font-weight: 650; }
+.sec-serv .svc-body { flex: 1 1 auto; min-width: 0; }
+.sec-serv .svc-title { display: flex; align-items: center; gap: 8px; }
+.sec-serv .svc-title strong { font-size: 14.5px; font-weight: 650; letter-spacing: -0.01em; }
 .sec-serv .svc-num {
   font-variant-numeric: tabular-nums;
   font-size: 11px;
@@ -171,11 +244,115 @@
   padding: 1px 7px;
   border-radius: 6px;
 }
-.sec-serv .svc-badge { font-weight: 600; letter-spacing: 0; }
-.sec-serv .svc-meta { font-size: 12.5px; }
+.sec-serv .svc-meta { margin-top: 4px; font-size: 12.5px; display: flex; flex-wrap: wrap; gap: 4px 14px; }
 .sec-serv .svc-meta svg { color: var(--muted); }
-.sec-serv .svc-desc { font-size: 13px; color: var(--muted); }
-.sec-serv .svc-actions { gap: 2px; max-width: 118px; }
+.sec-serv .svc-desc { margin-top: 6px; font-size: 13px; color: var(--muted); }
+
+/* Columna derecha de la card: switch de visibilidad + acciones */
+.sec-serv .svc-side {
+  flex: none;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 8px;
+}
+.sec-serv .svc-actions { display: flex; gap: 2px; }
+
+/* Switch Visible/Oculto: control real con texto, no un ícono críptico */
+.sec-serv .svc-vis {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 5px 10px 5px 5px;
+  border: 1px solid var(--line-soft);
+  border-radius: 999px;
+  background: var(--surface);
+  color: var(--muted);
+  font: inherit;
+  font-size: 12px;
+  font-weight: 650;
+  cursor: pointer;
+  transition: border-color 0.15s var(--ease-out, ease), background 0.15s var(--ease-out, ease), color 0.15s var(--ease-out, ease);
+}
+.sec-serv .svc-vis-track {
+  position: relative;
+  flex: none;
+  width: 32px;
+  height: 18px;
+  border-radius: 999px;
+  background: var(--line-strong);
+  transition: background 0.18s var(--ease-out, ease);
+}
+.sec-serv .svc-vis-track i {
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: var(--card);
+  box-shadow: 0 1px 2px rgb(0 0 0 / 0.25);
+  transition: transform 0.18s var(--ease-out, ease);
+}
+.sec-serv .svc-vis.on {
+  border-color: var(--brand-soft-line);
+  background: var(--brand-soft);
+  color: var(--brand-ink);
+}
+.sec-serv .svc-vis.on .svc-vis-track { background: var(--brand-500); }
+.sec-serv .svc-vis.on .svc-vis-track i { transform: translateX(14px); }
+.sec-serv .svc-vis:hover { border-color: var(--brand-500); }
+.sec-serv .svc-vis:focus-visible { outline: none; box-shadow: var(--ring); }
+
+/* ---------- Empty state guía ---------- */
+.sec-serv .svc-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  padding: 34px 22px;
+  border: 1px dashed var(--line-strong);
+  border-radius: 14px;
+  background: var(--surface);
+}
+.sec-serv .svc-empty-ico {
+  display: grid;
+  place-items: center;
+  width: 52px;
+  height: 52px;
+  margin-bottom: 12px;
+  border-radius: 14px;
+  background: var(--brand-soft);
+  color: var(--brand-ink);
+}
+.sec-serv .svc-empty h4 {
+  margin: 0 0 12px;
+  font-size: 15.5px;
+  font-weight: 650;
+  letter-spacing: -0.01em;
+}
+.sec-serv .svc-empty-points {
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+  margin: 0 0 18px;
+  padding: 0;
+  list-style: none;
+  text-align: left;
+}
+.sec-serv .svc-empty-points li {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  color: var(--ink-2);
+}
+.sec-serv .svc-empty-points svg { flex: none; color: var(--brand-500); }
+.sec-serv .svc-empty-cta {
+  padding: 9px 18px;
+  font-size: 13.5px;
+  border-radius: 10px;
+}
 
 /* ---------- Bloques de configuración de la página ---------- */
 .sec-serv .svc-block {
@@ -335,19 +512,16 @@
 .sec-rev .rev-reply-actions .btn { width: auto; padding: 8px 14px; font-size: 13px; }
 
 /* Empty states dentro de las secciones */
-.sec-serv .empty-mini,
 .sec-rev .empty-mini {
   padding: 26px 20px;
   border-color: var(--line);
   border-radius: 12px;
   background: var(--surface);
 }
-.sec-serv .empty-mini > svg:first-child,
 .sec-rev .empty-mini > svg:first-child { color: var(--brand-500); opacity: 0.8; }
-.sec-serv .empty-mini p,
 .sec-rev .empty-mini p { font-size: 13px; }
-.sec-serv .empty-mini-cta,
-.sec-rev .empty-mini-cta {
+.sec-rev .empty-mini-cta,
+.sec-serv .empty-mini-cta {
   display: inline-flex;
   align-items: center;
   gap: 6px;
@@ -361,8 +535,8 @@
   border-radius: 8px;
   transition: background 0.15s var(--ease-out, ease), border-color 0.15s var(--ease-out, ease);
 }
-.sec-serv .empty-mini-cta:hover,
-.sec-rev .empty-mini-cta:hover { border-color: var(--brand-500); }
+.sec-rev .empty-mini-cta:hover,
+.sec-serv .empty-mini-cta:hover { border-color: var(--brand-500); }
 
 /* Empty grande (planes / sin tienda) */
 .sec-serv .empty,
@@ -387,7 +561,8 @@
 
 /* ---------- Responsive ---------- */
 @media (max-width: 860px) {
-  .sec-serv .grid-2 > .card { margin-bottom: 14px; }
+  .sec-serv .svc-grid > .card { margin-bottom: 14px; }
+  .sec-serv .svc-form { position: static; }
   .sec-serv .svc-block { padding: 14px; }
 }
 @media (max-width: 560px) {
@@ -395,7 +570,16 @@
   .sec-serv .svc-stat { padding: 12px; }
   .sec-serv .svc-stat strong { font-size: 19px; }
   .sec-serv .svc-card { flex-wrap: wrap; }
-  .sec-serv .svc-actions { max-width: none; width: 100%; justify-content: flex-end; }
+  .sec-serv .svc-side {
+    width: 100%;
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+    border-top: 1px solid var(--line-soft);
+    padding-top: 10px;
+  }
+  .sec-serv .svc-group { padding: 12px; }
+  .sec-serv .svc-empty { padding: 26px 16px; }
   .sec-rev .rev-head strong { flex: 1 1 100%; }
   .sec-rev .rev-reply-actions { flex-direction: column; }
   .sec-rev .rev-reply-actions .btn { width: 100%; }
