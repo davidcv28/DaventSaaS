@@ -15,7 +15,7 @@ import { useRhLinks } from '../raiz/rhLinks.js'
 defineProps({ block: { type: Object, default: null } })
 
 const { ctx, catalogTo } = useRhLinks()
-const { custom, shopName, nameFont, location, showCatalog, showContact } = ctx
+const { custom, shopName, nameFont, location, showCatalog, showContact, landingHasContact } = ctx
 const { featured } = useFeaturedCatalog()
 
 const heroTitleIsName = computed(() => !custom.value.headline?.trim())
@@ -93,14 +93,14 @@ const specs = computed(() => {
           <RouterLink v-if="showCatalog" class="mt-btn mt-btn--primary" :to="catalogTo">
             Ver catálogo <AppIcon name="arrow-right" :size="16" />
           </RouterLink>
-          <a v-if="showContact" class="mt-btn mt-btn--ghost" href="#contacto">
+          <a v-if="showContact && landingHasContact" class="mt-btn mt-btn--ghost" href="#contacto">
             Asesoría <AppIcon name="message-circle" :size="16" />
           </a>
         </div>
         <dl v-if="stats.length" v-reveal="240" class="mt-hero-meta mono">
           <div v-for="s in stats" :key="s.label">
-            <dd>{{ s.value }}</dd>
             <dt>{{ s.label }}</dt>
+            <dd>{{ s.value }}</dd>
           </div>
         </dl>
       </div>
@@ -110,7 +110,7 @@ const specs = computed(() => {
         <i class="mt-corner mt-corner--br" aria-hidden="true"></i>
         <div class="mt-device-head mono">
           <span class="mt-device-label">ficha técnica</span>
-          <span class="mt-device-badge">● en stock</span>
+          <span v-if="top" class="mt-device-badge">● en stock</span>
         </div>
         <div class="mt-device-in">
           <div v-if="top?.image" class="mt-device-media" aria-hidden="true">

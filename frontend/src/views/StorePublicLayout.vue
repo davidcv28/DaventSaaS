@@ -508,10 +508,14 @@ function skipToContent() {
 }
 
 // Visibilidad de las secciones del inicio: alimenta los links del nav.
-// El ancla #nosotros solo existe si el bloque 'about' quedó habilitado en
-// la composición efectiva del diseño (algunos templates no lo declaran).
-const landingHasAbout = computed(() => templateBlocks(pageTemplate.value, 'landing', custom.value?.layout_config)
-  .some((b) => b.id === 'about' && b.enabled !== false))
+// Un ancla (#nosotros/#galeria/#contacto) solo existe si el bloque quedó
+// habilitado en la composición efectiva del diseño (algunos templates no
+// lo declaran) — sin esto el link del nav quedaba muerto.
+const landingBlockOn = (id) => templateBlocks(pageTemplate.value, 'landing', custom.value?.layout_config)
+  .some((b) => b.id === id && b.enabled !== false)
+const landingHasAbout = computed(() => landingBlockOn('about'))
+const landingHasGallery = computed(() => landingBlockOn('gallery'))
+const landingHasContact = computed(() => landingBlockOn('contact'))
 const hasAbout = computed(() => custom.value.show_about !== false && landingHasAbout.value && Boolean(
   custom.value.about_text?.trim()
   || custom.value.about_mission?.trim()
@@ -561,8 +565,8 @@ const navMenuLinks = computed(() => {
   if (showCatalog.value) links.push({ to: catalogTo.value, label: 'Catálogo' })
   if (showPlans.value) links.push({ to: plansTo.value, label: 'Suscripciones' })
   if (hasAbout.value && !landingOff.value) links.push({ to: anchorTo('#nosotros'), label: 'Nosotros', anchor: true })
-  if (showGallery.value && !landingOff.value) links.push({ to: anchorTo('#galeria'), label: 'Galería', anchor: true })
-  if (showContact.value && !landingOff.value) links.push({ to: anchorTo('#contacto'), label: 'Contacto', anchor: true })
+  if (showGallery.value && landingHasGallery.value && !landingOff.value) links.push({ to: anchorTo('#galeria'), label: 'Galería', anchor: true })
+  if (showContact.value && landingHasContact.value && !landingOff.value) links.push({ to: anchorTo('#contacto'), label: 'Contacto', anchor: true })
   return links
 })
 // El burger se muestra cuando hay navegación que esconder — Tienda Pro usa
@@ -622,7 +626,19 @@ watch(() => ui.moreOpen, async (open) => {
   }
 })
 
-const onMenuKey = (e) => { if (e.key === 'Escape') ui.menuOpen = false }
+const onMenuKey = (e) => {
+  if (e.key === 'Escape') { ui.menuOpen = false; return }
+  // Trampa de foco del drawer: Tab/Shift+Tab ciclan dentro mientras está
+  // abierto (mismo contrato que el sheet "Más").
+  if (e.key !== 'Tab' || !ui.menuOpen || !menuDrawer.value) return
+  const items = [...menuDrawer.value.querySelectorAll(FOCUSABLE)]
+  if (!items.length) return
+  const first = items[0]
+  const last = items[items.length - 1]
+  const inside = menuDrawer.value.contains(document.activeElement)
+  if (e.shiftKey && (!inside || document.activeElement === first)) { last.focus(); e.preventDefault() }
+  else if (!e.shiftKey && (!inside || document.activeElement === last)) { first.focus(); e.preventDefault() }
+}
 watch(() => route.fullPath, () => { ui.menuOpen = false; ui.searchOpen = false; ui.moreOpen = false })
 // Drawer de navegación: mientras está abierto bloquea el scroll del body,
 // lleva el foco al botón de cerrar y lo devuelve al burger al cerrarse.
@@ -812,6 +828,7 @@ provide('storeIconContext', computed(() => ({
 provide('storePage', {
   slug, store, status, custom, shopName, nameFont, initial, location,
   hasDesignAdvanced, pageTemplate, hasAbout, showGallery, showContact, showCatalog, showServices, showPlans, siteTemplates, ui,
+  landingHasGallery, landingHasContact,
   loadPublicCatalog
 })
 
@@ -1092,8 +1109,8 @@ onBeforeUnmount(() => {
           <RouterLink v-if="showCatalog" :to="catalogTo">Catálogo</RouterLink>
           <RouterLink v-if="showPlans" :to="plansTo">Suscripciones</RouterLink>
           <RouterLink v-if="hasAbout && !landingOff" :to="anchorTo('#nosotros')" active-class="sp-anchor" exact-active-class="sp-anchor">Nosotros</RouterLink>
-          <RouterLink v-if="showGallery && !landingOff" :to="anchorTo('#galeria')" active-class="sp-anchor" exact-active-class="sp-anchor">Galería</RouterLink>
-          <RouterLink v-if="showContact && !landingOff" :to="anchorTo('#contacto')" active-class="sp-anchor" exact-active-class="sp-anchor">Contacto</RouterLink>
+          <RouterLink v-if="showGallery && landingHasGallery && !landingOff" :to="anchorTo('#galeria')" active-class="sp-anchor" exact-active-class="sp-anchor">Galería</RouterLink>
+          <RouterLink v-if="showContact && landingHasContact && !landingOff" :to="anchorTo('#contacto')" active-class="sp-anchor" exact-active-class="sp-anchor">Contacto</RouterLink>
         </nav>
         <!-- Tienda Pro: el buscador del masthead también existe fuera del
              catálogo — Enter o la lupa navegan a /catalogo?q= -->
@@ -1143,8 +1160,8 @@ onBeforeUnmount(() => {
             <RouterLink v-if="showCatalog" :to="catalogTo" :class="{ 'is-current': shopCurrent === 'catalog' }" :aria-current="shopCurrent === 'catalog' ? 'page' : null">Catálogo</RouterLink>
             <RouterLink v-if="showPlans" :to="plansTo" :class="{ 'is-current': shopCurrent === 'plans' }" :aria-current="shopCurrent === 'plans' ? 'page' : null">Suscripciones</RouterLink>
             <RouterLink v-if="hasAbout && !landingOff" :to="anchorTo('#nosotros')" :class="{ 'is-current': shopCurrent === 'nosotros' }" :aria-current="shopCurrent === 'nosotros' ? 'true' : null" active-class="sp-anchor" exact-active-class="sp-anchor">Nosotros</RouterLink>
-            <RouterLink v-if="showGallery && !landingOff" :to="anchorTo('#galeria')" :class="{ 'is-current': shopCurrent === 'galeria' }" :aria-current="shopCurrent === 'galeria' ? 'true' : null" active-class="sp-anchor" exact-active-class="sp-anchor">Galería</RouterLink>
-            <RouterLink v-if="showContact && !landingOff" :to="anchorTo('#contacto')" :class="{ 'is-current': shopCurrent === 'contacto' }" :aria-current="shopCurrent === 'contacto' ? 'true' : null" active-class="sp-anchor" exact-active-class="sp-anchor">Contacto</RouterLink>
+            <RouterLink v-if="showGallery && landingHasGallery && !landingOff" :to="anchorTo('#galeria')" :class="{ 'is-current': shopCurrent === 'galeria' }" :aria-current="shopCurrent === 'galeria' ? 'true' : null" active-class="sp-anchor" exact-active-class="sp-anchor">Galería</RouterLink>
+            <RouterLink v-if="showContact && landingHasContact && !landingOff" :to="anchorTo('#contacto')" :class="{ 'is-current': shopCurrent === 'contacto' }" :aria-current="shopCurrent === 'contacto' ? 'true' : null" active-class="sp-anchor" exact-active-class="sp-anchor">Contacto</RouterLink>
           </div>
           <span class="sp-shop-nav-note">Precios en pesos argentinos</span>
         </div>
@@ -1154,7 +1171,7 @@ onBeforeUnmount(() => {
     <!-- Menú móvil (solo navegación): los filtros del catálogo NO viven
          acá — van en CatalogFilters (bottom sheet propio). -->
     <div v-if="hasNavMenu" class="sp-overlay" :class="{ open: ui.menuOpen }" aria-hidden="true" @click="ui.menuOpen = false"></div>
-    <nav v-if="hasNavMenu" ref="menuDrawer" id="sp-drawer" class="sp-drawer sp-navdrawer" :class="{ open: ui.menuOpen }" aria-label="Menú de la tienda">
+    <nav v-if="hasNavMenu" ref="menuDrawer" id="sp-drawer" class="sp-drawer sp-navdrawer" :class="{ open: ui.menuOpen }" role="dialog" aria-modal="true" aria-label="Menú de la tienda">
       <div class="sp-drawer-head">
         <strong>{{ shopName }}</strong>
         <button type="button" class="sp-drawer-close" aria-label="Cerrar menú" @click="ui.menuOpen = false">
@@ -1299,8 +1316,8 @@ onBeforeUnmount(() => {
             <RouterLink v-if="showCatalog" :to="catalogTo">Catálogo</RouterLink>
             <RouterLink v-if="showPlans" :to="plansTo">Suscripciones</RouterLink>
             <RouterLink v-if="hasAbout && !landingOff" :to="anchorTo('#nosotros')" active-class="sp-anchor" exact-active-class="sp-anchor">Nosotros</RouterLink>
-            <RouterLink v-if="showGallery && !landingOff" :to="anchorTo('#galeria')" active-class="sp-anchor" exact-active-class="sp-anchor">Galería</RouterLink>
-            <RouterLink v-if="showContact && !landingOff" :to="anchorTo('#contacto')" active-class="sp-anchor" exact-active-class="sp-anchor">Contacto</RouterLink>
+            <RouterLink v-if="showGallery && landingHasGallery && !landingOff" :to="anchorTo('#galeria')" active-class="sp-anchor" exact-active-class="sp-anchor">Galería</RouterLink>
+            <RouterLink v-if="showContact && landingHasContact && !landingOff" :to="anchorTo('#contacto')" active-class="sp-anchor" exact-active-class="sp-anchor">Contacto</RouterLink>
           </nav>
           <nav class="sp-foot-col" aria-label="Información del sitio">
             <p class="sp-foot-heading">Información</p>

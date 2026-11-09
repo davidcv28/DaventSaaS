@@ -50,7 +50,7 @@ const registry = computed(() => {
         </ul>
       </div>
 
-      <aside v-reveal="140" class="mt-registry" aria-label="Ficha de la tienda">
+      <aside v-if="registry.length || custom.about_years" v-reveal="140" class="mt-registry" aria-label="Ficha de la tienda">
         <p class="mt-registry-head mono"><span>registro</span><b>·</b><span>en vivo</span></p>
         <div v-if="custom.about_years" class="mt-registry-gauge">
           <strong class="mono">+{{ custom.about_years }}</strong>
@@ -63,7 +63,6 @@ const registry = computed(() => {
             <dd :class="{ 'is-accent': row.accent }">{{ row.v }}</dd>
           </div>
         </dl>
-        <p v-if="!registry.length" class="mt-registry-empty mono">sin datos cargados</p>
       </aside>
 
       <blockquote v-if="custom.about_mission" v-reveal="200" class="mt-mission">

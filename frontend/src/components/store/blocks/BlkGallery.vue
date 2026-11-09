@@ -9,6 +9,9 @@ import AppIcon from '../../AppIcon.vue'
 import { vReveal } from '../../../directives/reveal.js'
 
 const props = defineProps({ block: { type: Object, default: null } })
+// Raíz fragmentada (banda + grilla + Transition): los attrs del padre
+// (:data-blk) no caen solos — se reenvían a la sección principal.
+defineOptions({ inheritAttrs: false })
 
 const ctx = inject('storePage')
 const { slug, custom, shopName, hasAbout, showContact, showCatalog, hasDesignAdvanced } = ctx
@@ -104,7 +107,7 @@ onBeforeUnmount(() => {
   </section>
 
   <!-- ===== Galería ===== -->
-  <section v-if="showGallery" id="galeria" class="sp-gallery" :class="`is-${galleryVariant}`" :data-blk-variant="galleryVariant !== 'grid' ? galleryVariant : null" aria-labelledby="sp-gallery-title">
+  <section v-if="showGallery" id="galeria" v-bind="$attrs" class="sp-gallery" :class="`is-${galleryVariant}`" :data-blk-variant="galleryVariant !== 'grid' ? galleryVariant : null" aria-labelledby="sp-gallery-title">
     <div class="sp-container">
       <h2 id="sp-gallery-title" v-reveal class="sp-section-title">{{ galleryTitle }}</h2>
       <div class="sp-gallery-grid">

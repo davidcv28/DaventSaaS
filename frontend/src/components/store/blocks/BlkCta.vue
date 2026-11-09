@@ -14,6 +14,9 @@ const props = defineProps({ block: { type: Object, default: null } })
 const ctx = inject('storePage')
 const { slug, custom, showContact, showCatalog } = ctx
 const servicesPage = ctx.showServices
+// #contacto solo existe si el bloque 'contact' quedó habilitado en la
+// composición del diseño; sin él el CTA caía en un ancla muerta.
+const contactBlockOn = computed(() => ctx.landingHasContact?.value !== false)
 
 const catalogTo = computed(() => ({ name: 'store-catalog', params: storeHostSlug ? {} : { slug: slug.value } }))
 const servicesTo = computed(() => ({ name: 'store-services', params: storeHostSlug ? {} : { slug: slug.value } }))
@@ -24,13 +27,13 @@ const show = computed(() => custom.value.show_cta !== false
 const ctaTitle = computed(() => props.block?.props?.title?.trim() || custom.value.cta_title?.trim() || '¿Hablamos?')
 const ctaLink = computed(() => {
   if (whatsappUrl.value) return { href: whatsappUrl.value, external: true }
-  if (showContact.value) return { href: '#contacto', external: false }
+  if (showContact.value && contactBlockOn.value) return { href: '#contacto', external: false }
   if (showCatalog.value) return { to: catalogTo.value, external: false }
   if (servicesPage.value) return { to: servicesTo.value, external: false }
   return null
 })
 const ctaLabel = computed(() => custom.value.cta_label?.trim()
-  || (ctaLink.value?.external ? 'Escribinos por WhatsApp' : ctaLink.value?.href === '#contacto' ? 'Contáctanos' : ctaLink.value?.to === servicesTo.value ? 'Ver servicios' : 'Ver catálogo'))
+  || (ctaLink.value?.external ? 'Escribinos por WhatsApp' : ctaLink.value?.href === '#contacto' ? 'Contáctanos' : ctaLink.value?.to?.name === 'store-services' ? 'Ver servicios' : 'Ver catálogo'))
 const ctaVariant = computed(() => props.block?.variant || 'card')
 </script>
 

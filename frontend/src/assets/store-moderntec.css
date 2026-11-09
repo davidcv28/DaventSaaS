@@ -32,11 +32,14 @@
   --mt-accent: color-mix(in srgb, var(--st-accent, var(--store-accent, #3dd6ff)) 78%, #fff);
   --mt-accent-2: color-mix(in srgb, var(--st-secondary, #7c5cff) 82%, #fff);
   --mt-accent-ink: var(--st-accent-ink, #04121a);
+  /* Tinta de acento: en oscuro el acento ya es claro; en "lumen" el tinte
+     crudo (#3dd6ff) no llega a AA como texto y se oscurece aparte. */
+  --mt-accent-text: var(--mt-accent);
   --mt-accent-soft: color-mix(in srgb, var(--mt-accent) 12%, transparent);
   --mt-accent-line: color-mix(in srgb, var(--mt-accent) 38%, transparent);
   --mt-ok: #34e0a1;
   --mt-danger: #ff7a7a;
-  --mt-focus: var(--mt-accent);
+  --mt-focus: var(--mt-accent-text);
   --mt-scrim: rgba(2, 5, 9, .78);
   --mt-selection: color-mix(in srgb, var(--mt-accent) 85%, transparent);
 
@@ -93,13 +96,15 @@
   --tpc-pad: 14px 15px 15px;
   --tpc-name-ink: var(--mt-ink);
   --tpc-price-ink: var(--mt-ink);
-  --tpc-eyebrow-ink: var(--mt-accent);
+  --tpc-eyebrow-ink: var(--mt-accent-text);
   --tpc-desc-ink: var(--mt-ink-2);
   --tpc-old-ink: var(--mt-ink-3);
-  --tpc-go-ink: var(--mt-accent);
+  --tpc-go-ink: var(--mt-accent-text);
 
-  /* Metadato del navegador (theme-color, hex explícito). */
+  /* Metadato del navegador (theme-color, hex explícito). --rz-theme-color
+     es el hook que lee StorePublicLayout para <meta theme-color>. */
   --mt-theme-color: #06080c;
+  --rz-theme-color: var(--mt-theme-color);
 
   color-scheme: dark;
   font-family: var(--mt-body);
@@ -129,6 +134,7 @@
   --mt-ink-3: #5d6b80;
   --mt-accent: var(--st-accent, var(--store-accent, #0b7ea8));
   --mt-accent-ink: var(--st-accent-ink, #04121a);
+  --mt-accent-text: color-mix(in srgb, var(--mt-accent) 45%, #000);
   --mt-accent-soft: color-mix(in srgb, var(--mt-accent) 10%, transparent);
   --mt-accent-line: color-mix(in srgb, var(--mt-accent) 34%, transparent);
   --mt-ok: #0b7a55;
@@ -154,7 +160,7 @@
    slate del contrato), así que la piel remapea los tokens en los hijos:
    una declaración propia del hijo vence al valor heredado del inline.
    ========================================================================== */
-.store-page[data-template='moderntec'] :is(.sp-page-root, .sp-top, .sp-foot, .mt-skin) {
+.store-page[data-template='moderntec'] :is(.sp-page-root, .sp-top, .sp-foot, .sp-tabbar, .sp-more-sheet, .sp-drawer, .mt-skin) {
   /* El tema publicado fija `color` en .store-page con más especificidad: sin
      esto, los títulos sin color propio heredaban la tinta slate y quedaban
      casi invisibles sobre el lienzo oscuro. */
@@ -169,7 +175,7 @@
   --sp-muted: var(--mt-ink-3);
   --sp-line: var(--mt-line);
   --sp-radius: var(--mt-rad-md);
-  --sp-accent-text: var(--mt-accent);
+  --sp-accent-text: var(--mt-accent-text);
   --sp-shadow-sm: var(--mt-shadow-1);
   --sp-shadow-md: var(--mt-shadow-device);
   --sp-on-band: var(--mt-accent-ink);
@@ -182,7 +188,7 @@
      de la marca queda para precios, foco y CTAs. */
   --sp-chrome: linear-gradient(180deg, #0a0f18, #06090e);
 }
-.store-page[data-template='moderntec'][data-store-theme='light'] :is(.sp-page-root, .sp-top, .sp-foot, .mt-skin) {
+.store-page[data-template='moderntec'][data-store-theme='light'] :is(.sp-page-root, .sp-top, .sp-foot, .sp-tabbar, .sp-more-sheet, .sp-drawer, .mt-skin) {
   --sp-chrome: linear-gradient(180deg, #ffffff, #f1f4f9);
   --sp-on-band: #08111f;
 }
@@ -195,6 +201,12 @@
   --sp-on-band-2: color-mix(in srgb, var(--mt-ink) 16%, transparent);
   --sp-on-band-muted: var(--mt-ink-3);
   color: var(--mt-ink);
+}
+/* Barras fijas: el blur del chrome compartido repinta el fondo en cada frame
+   de scroll; el cromo --sp-chrome ya es casi opaco. */
+.store-page[data-template='moderntec'] :is(.sp-top, .sp-tabbar, .sp-drawer) {
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
 }
 /* Copia y descriptor del pie: el puente de paleta los pinta con --st-muted
    y el --sp-muted del footer queda en la mezcla débil del puente (~3:1).
@@ -214,7 +226,7 @@
 .store-page[data-template='moderntec'] .sp-top-links a:hover { background: color-mix(in srgb, var(--mt-ink) 10%, transparent); }
 .store-page[data-template='moderntec'] .sp-top-links a.router-link-exact-active {
   background: var(--mt-accent-soft);
-  color: var(--mt-accent);
+  color: var(--mt-accent-text);
   box-shadow: inset 0 0 0 1px var(--mt-accent-line);
 }
 .store-page[data-template='moderntec'] .sp-top .sp-burger {
@@ -337,7 +349,7 @@
   border: 1px solid var(--mt-accent-line);
   border-radius: 3px;
   background: var(--mt-accent-soft);
-  color: var(--mt-accent);
+  color: var(--mt-accent-text);
   font-size: 10px;
   letter-spacing: .06em;
 }
@@ -358,7 +370,7 @@
   font-size: var(--mt-fs-label);
   letter-spacing: var(--mt-track-label);
   text-transform: uppercase;
-  color: var(--mt-accent);
+  color: var(--mt-accent-text);
   border: 1px solid var(--mt-accent-line);
   padding: 4px 10px;
   border-radius: var(--mt-rad-pill);
@@ -412,7 +424,7 @@
 .store-page[data-template='moderntec'] .mt-btn--ghost:hover {
   transform: translateY(-2px);
   border-color: var(--mt-accent);
-  color: var(--mt-accent);
+  color: var(--mt-accent-text);
 }
 .store-page[data-template='moderntec'] .mt-btn:focus-visible {
   outline: 2px solid var(--mt-accent);
@@ -452,7 +464,7 @@
 }
 .store-page[data-template='moderntec'] .mt-hero-title em {
   font-style: normal;
-  background-image: linear-gradient(100deg, var(--mt-accent), var(--mt-accent-2), var(--mt-accent), var(--mt-accent-2));
+  background-image: linear-gradient(100deg, var(--mt-accent-text), var(--mt-accent-2), var(--mt-accent-text), var(--mt-accent-2));
   background-size: 300% 100%;
   -webkit-background-clip: text;
   background-clip: text;
@@ -727,7 +739,7 @@
   text-align: right;
   overflow-wrap: anywhere;
 }
-.store-page[data-template='moderntec'] .mt-spec-v.is-accent { color: var(--mt-accent); }
+.store-page[data-template='moderntec'] .mt-spec-v.is-accent { color: var(--mt-accent-text); }
 .store-page[data-template='moderntec'] .mt-spec-v.is-strike { color: var(--mt-ink-3); text-decoration: line-through; }
 
 .store-page[data-template='moderntec'] .mt-meter {
@@ -812,7 +824,7 @@
   letter-spacing: .12em;
   color: var(--mt-ink-3);
 }
-.store-page[data-template='moderntec'] .mt-dept:hover .mt-dept-idx { color: var(--mt-accent); }
+.store-page[data-template='moderntec'] .mt-dept:hover .mt-dept-idx { color: var(--mt-accent-text); }
 .store-page[data-template='moderntec'] .mt-dept-thumb {
   display: grid;
   place-items: center;
@@ -821,7 +833,7 @@
   overflow: hidden;
   border: 1px solid var(--mt-line);
   background: var(--mt-bg-2);
-  color: var(--mt-accent);
+  color: var(--mt-accent-text);
 }
 .store-page[data-template='moderntec'] .mt-dept-thumb img {
   width: 100%;
@@ -836,7 +848,7 @@
   font-family: var(--mt-display);
   font-size: 26px;
   font-weight: 800;
-  color: var(--mt-accent);
+  color: var(--mt-accent-text);
 }
 .store-page[data-template='moderntec'] .mt-dept-name {
   font-family: var(--mt-display);
@@ -882,7 +894,7 @@
 }
 .store-page[data-template='moderntec'] .sp-shop-featured-eyebrow::before {
   content: "//";
-  color: var(--mt-accent);
+  color: var(--mt-accent-text);
   font-weight: 700;
 }
 .store-page[data-template='moderntec'] .sp-shop-featured-title {
@@ -906,7 +918,7 @@
 .store-page[data-template='moderntec'] .sp-shop-viewall:hover {
   border-color: var(--mt-accent);
   background: var(--mt-accent-soft);
-  color: var(--mt-accent);
+  color: var(--mt-accent-text);
 }
 .store-page[data-template='moderntec'] .sp-shop-viewall .sp-arrow { transition: transform .25s var(--mt-ease-out); }
 .store-page[data-template='moderntec'] .sp-shop-viewall:hover .sp-arrow { transform: translateX(3px); }
@@ -926,7 +938,7 @@
   content: "// ";
   font-family: var(--mt-mono);
   font-weight: 500;
-  color: var(--mt-accent);
+  color: var(--mt-accent-text);
   opacity: .9;
 }
 .store-page[data-template='moderntec'] .sp-section-title::after {
@@ -988,7 +1000,7 @@
   font-size: 10px;
   letter-spacing: .12em;
   text-transform: uppercase;
-  color: var(--mt-accent);
+  color: var(--mt-accent-text);
 }
 .store-page[data-template='moderntec'][data-store-template] .tpc-name {
   font-family: var(--mt-display);
@@ -1125,7 +1137,7 @@
   text-transform: uppercase;
   color: var(--mt-ink-2);
 }
-.store-page[data-template='moderntec'] .mt-about-list-idx { color: var(--mt-accent); font-size: 10px; }
+.store-page[data-template='moderntec'] .mt-about-list-idx { color: var(--mt-accent-text); font-size: 10px; }
 
 /* Registro: ficha con gauge y filas guía. */
 .store-page[data-template='moderntec'] .mt-registry {
@@ -1159,7 +1171,7 @@
   text-transform: uppercase;
   color: var(--mt-ink-3);
 }
-.store-page[data-template='moderntec'] .mt-registry-head b { color: var(--mt-accent); }
+.store-page[data-template='moderntec'] .mt-registry-head b { color: var(--mt-accent-text); }
 .store-page[data-template='moderntec'] .mt-registry-gauge {
   display: flex;
   align-items: baseline;
@@ -1208,7 +1220,7 @@
   text-align: right;
   overflow-wrap: anywhere;
 }
-.store-page[data-template='moderntec'] .mt-registry-rows dd.is-accent { color: var(--mt-accent); }
+.store-page[data-template='moderntec'] .mt-registry-rows dd.is-accent { color: var(--mt-accent-text); }
 .store-page[data-template='moderntec'] .mt-registry-empty {
   margin: 0;
   font-size: 11px;
@@ -1234,7 +1246,7 @@
   font-size: 10px;
   letter-spacing: var(--mt-track-label);
   text-transform: uppercase;
-  color: var(--mt-accent);
+  color: var(--mt-accent-text);
 }
 .store-page[data-template='moderntec'] .mt-mission p {
   margin: 0;
@@ -1272,7 +1284,7 @@
 .store-page[data-template='moderntec'] .sp-form-badge {
   background: var(--mt-accent-soft);
   border: 1px solid var(--mt-accent-line);
-  color: var(--mt-accent);
+  color: var(--mt-accent-text);
   border-radius: var(--mt-rad-sm);
 }
 .store-page[data-template='moderntec'] .sp-field label,
@@ -1321,10 +1333,10 @@
   font-size: 10px;
   font-weight: 500;
   letter-spacing: var(--mt-track-label);
-  color: var(--mt-accent);
+  color: var(--mt-accent-text);
 }
 .store-page[data-template='moderntec'] .sp-foot-col a { color: var(--mt-ink-2); font-size: 13.5px; }
-.store-page[data-template='moderntec'] .sp-foot-col a:hover { color: var(--mt-accent); text-decoration: none; transform: translateX(3px); }
+.store-page[data-template='moderntec'] .sp-foot-col a:hover { color: var(--mt-accent-text); text-decoration: none; transform: translateX(3px); }
 .store-page[data-template='moderntec'] .sp-foot-bottom { border-top-color: var(--mt-line); }
 .store-page[data-template='moderntec'] .sp-davent-badge {
   background: color-mix(in srgb, var(--mt-panel) 80%, transparent);
@@ -1347,7 +1359,7 @@
    Las vistas de Raíz se montan en un contenedor con los TOKENS remapeados
    a la paleta ModernTec para que esas páginas salgan con la misma piel.
    ========================================================================== */
-.store-page.mt-skin {
+.store-page[data-template='raiz'].mt-skin {
   --rz-bg: var(--mt-bg);
   --rz-surface: var(--mt-panel);
   --rz-surface-2: var(--mt-surface-2);
@@ -1360,7 +1372,7 @@
   --rz-muted: var(--mt-ink-3);
   --rz-accent: var(--mt-accent);
   --rz-accent-soft: var(--mt-accent-soft);
-  --rz-accent-text: var(--mt-accent);
+  --rz-accent-text: var(--mt-accent-text);
   --rz-accent-deep: var(--mt-accent);
   --rz-accent-deep-2: var(--mt-accent-2);
   --rz-band-1: var(--mt-accent);
@@ -1396,7 +1408,7 @@
   --sp-ink-2: var(--mt-ink-2);
   --sp-muted: var(--mt-ink-3);
   --sp-line: var(--mt-line);
-  --sp-accent-text: var(--mt-accent);
+  --sp-accent-text: var(--mt-accent-text);
 
   --tpc-radius: var(--mt-rad-md);
   --tpc-shadow: none;
@@ -1410,8 +1422,18 @@
   color: var(--mt-ink);
   font-family: var(--mt-body);
   isolation: isolate;
+  /* .store-page base estira el subárbol a 100vh y descolocaba el pie; en
+     móvil además sumaba el padding-top del header fijo (ya reservado por la
+     página externa). */
+  min-height: 0;
+  padding-top: 0;
 }
-.store-page.mt-skin::before {
+/* En tema claro los controles nativos (inputs, selects, scrollbars) deben
+   seguir el papel: color-scheme oscuro los dejaba oscuros sobre fondo claro. */
+.store-page[data-template='moderntec'][data-store-theme='light'] .store-page[data-template='raiz'].mt-skin {
+  color-scheme: light;
+}
+.store-page[data-template='raiz'].mt-skin::before {
   content: "";
   position: fixed;
   inset: 0;
@@ -1421,13 +1443,13 @@
     radial-gradient(800px 440px at 86% -8%, color-mix(in srgb, var(--mt-accent) 13%, transparent), transparent 62%),
     radial-gradient(640px 440px at 4% 104%, color-mix(in srgb, var(--mt-accent-2) 11%, transparent), transparent 62%);
 }
-.store-page.mt-skin :is(.rz-btn, button, a) { transition-timing-function: var(--mt-ease-out); }
-.store-page.mt-skin .rz-btn { border-radius: var(--mt-rad-pill); }
-.store-page.mt-skin :is(.rz-cat-title, .rz-prod-title, .rz-svc-title, h1) {
+.store-page[data-template='raiz'].mt-skin :is(.rz-btn, button, a) { transition-timing-function: var(--mt-ease-out); }
+.store-page[data-template='raiz'].mt-skin .rz-btn { border-radius: var(--mt-rad-pill); }
+.store-page[data-template='raiz'].mt-skin :is(.rz-cat-title, .rz-prod-title, .rz-svc-title, h1) {
   font-family: var(--mt-display);
   letter-spacing: -.03em;
 }
-.store-page.mt-skin :is(.rz-cat-title, h1)::after {
+.store-page[data-template='raiz'].mt-skin :is(.rz-cat-title, h1)::after {
   content: "";
   display: block;
   width: 52px;
@@ -1436,8 +1458,25 @@
   border-radius: 2px;
   background: linear-gradient(90deg, var(--mt-accent), var(--mt-accent-2));
 }
-.store-page.mt-skin .tpc { border: 1px solid var(--mt-line); background: var(--mt-panel); }
-.store-page.mt-skin .tpc:hover { border-color: var(--mt-accent-line); }
+.store-page[data-template='raiz'].mt-skin .tpc { border: 1px solid var(--mt-line); background: var(--mt-panel); }
+.store-page[data-template='raiz'].mt-skin .tpc:hover { border-color: var(--mt-accent-line); }
+/* Botones/placas/tags de Raíz pintan fondo --rz-accent-deep (= --mt-accent,
+   claro) con texto #fff hardcodeado → ~1.5:1. Sobre el acento tech la tinta
+   correcta es --mt-accent-ink (oscura). Ghost/ink traen colores propios. */
+.store-page[data-template='raiz'].mt-skin :is(.rz-btn, .rz-plate, .rz-tag):not(.rz-btn--ghost):not(.rz-btn--ink) {
+  color: var(--mt-accent-ink);
+}
+.store-page[data-template='raiz'].mt-skin .rz-band--accent :is(a.rz-btn, button.rz-btn):not(.rz-btn--ghost):not(.rz-btn--ink) {
+  color: var(--mt-accent-ink);
+}
+.store-page[data-template='raiz'].mt-skin .rz-band--accent :is(a.rz-btn--ghost, button.rz-btn--ghost) {
+  color: var(--mt-accent-ink);
+  border-color: color-mix(in srgb, var(--mt-accent-ink) 55%, transparent);
+}
+.store-page[data-template='raiz'].mt-skin .rz-band--accent :is(a.rz-btn--ghost, button.rz-btn--ghost):hover {
+  background: rgb(0 0 0 / .12);
+  color: var(--mt-accent-ink);
+}
 
 /* ==========================================================================
    11. SUPERFICIES REPINTADAS POR EL TEMA (surfaces.card/footer/hero)
@@ -1493,7 +1532,7 @@
   color: var(--mt-ink-3);
 }
 .store-page[data-template='moderntec'][data-store-template] .tpc .tpc-go {
-  color: var(--mt-accent);
+  color: var(--mt-accent-text);
 }
 /* La banda CTA también es tarjeta para el puente: el texto hardcodeado a
    blanco translúcido se repinta solo cuando eso pasa. */

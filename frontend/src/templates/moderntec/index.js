@@ -20,7 +20,7 @@ export default {
       'hero', 'categories', 'featured', 'benefits', 'offers', 'brands', 'about',
       'gallery', 'faq', 'cta', 'contact'
     ],
-    catalog: ['note', 'promo', ...CATALOG_BLOCKS],
+    catalog: [...new Set(['note', 'promo', ...CATALOG_BLOCKS])],
     services: SERVICES_BLOCKS
   }
 }
