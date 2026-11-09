@@ -50,7 +50,7 @@
 }
 /* Modo claro: estilo Áurea Día (o el toggle del diseño). */
 html[data-ds-theme="light"],
-html[data-ds-style="aurum-dia"]{
+html[data-ds-style="aurum-dia"]:not([data-ds-theme="dark"]){
   --ink:#f5f0e3; --ink-2:#fbf7ec; --ink-3:#fffdf7;
   --bone:#1b1912; --bone-2:#2a261b;
   --line:#ded3b8; --line-soft:#e8dfca;
@@ -59,13 +59,13 @@ html[data-ds-style="aurum-dia"]{
   --card:var(--ds-surface,#fffdf6);
   /*El dorado como TEXTO necesita más profundidad sobre crema; los rellenos
      (botones, banda, sellos) siguen usando el acento tal cual. */
-  --gold-text:color-mix(in srgb,var(--gold) 50%,#3a2a08);
+  --gold-text:color-mix(in srgb,var(--gold) 44%,#33240a);
   --shadow-card:0 24px 55px -38px rgba(59,44,14,.45);
   --shadow-lift:0 34px 70px -42px rgba(59,44,14,.5);
   color-scheme:light;
 }
-html:not([data-ds-theme="light"]):not([data-ds-style="aurum-dia"]){color-scheme:dark}
-html[data-ds-style="aurum-dia"]{color-scheme:light}
+html[data-ds-theme="dark"]{color-scheme:dark}
+html[data-ds-theme="light"],html[data-ds-style="aurum-dia"]:not([data-ds-theme="dark"]){color-scheme:light}
 *{box-sizing:border-box}
 img[src=""]{display:none}
 html{-webkit-text-size-adjust:100%;text-size-adjust:100%;background:var(--ink);scroll-behavior:smooth}
@@ -135,7 +135,7 @@ body::after{content:"";position:fixed;inset:0;pointer-events:none;z-index:60;opa
 /*`content-visibility` crea un bloque contenedor para `position:fixed`:
    el panel de filtros móvil quedaba anclado a la sección y no al viewport,
    además de pintarse debajo de la tab bar. El catálogo queda fuera. */
-body>section:not(.cat-surface),[data-surface="landing"]>section{content-visibility:auto;contain-intrinsic-size:auto 480px}
+body>section:not(.cat-surface),[data-surface="landing"] main>section{content-visibility:auto;contain-intrinsic-size:auto 480px}
 .cat-layout>*,.contact-2>*,.about>*,.hero-grid>*,.pdp-layout>*{min-width:0}
 /* Superficie activa: el puente fija data-ds-surface en <html>. */
 html[data-ds-surface="landing"] [data-surface]:not([data-surface="landing"]),
@@ -162,7 +162,7 @@ html[data-ds-surface="product"] [data-surface]:not([data-surface="product"]){dis
 .ribbon-set .ds-note{display:inline-flex;align-items:center;gap:10px}
 .ribbon-set .ds-note svg{width:12px;height:12px;opacity:.8}
 @keyframes marquee{to{transform:translateX(-50%)}}
-html[data-ds-theme="light"] .ribbon,html[data-ds-style="aurum-dia"] .ribbon{
+html[data-ds-theme="light"] .ribbon,html[data-ds-style="aurum-dia"]:not([data-ds-theme="dark"]) .ribbon{
   background:var(--ink-2);color:var(--bone);border-bottom-color:var(--line)}
 
 /* Cinta fantasma: la misma cinta en versión editorial — sin relleno, solo
@@ -289,12 +289,16 @@ html[data-ds-surface="product"] #contacto .idx{display:none}
   .m-tab.is-on{color:var(--gold-text);background:var(--gold-soft)}
   /*Cinco pestañas en 320px: la etiqueta se aprieta para no cortarse.*/
   @media(max-width:360px){.m-tab{font-size:9px;letter-spacing:.02em;padding:9px 2px}}
-  .m-scrim{display:block;position:fixed;inset:0;z-index:56;background:rgba(0,0,0,.58);
+  /*El scrim cubre solo el marco visible: el iframe va estirado y --fr-h
+    lo publica el puente con el alto real de la ventana (mismo criterio
+    que mercado/portico/ruta).*/
+  .m-scrim{display:block;position:fixed;left:0;right:0;top:0;z-index:56;height:var(--fr-h,100vh);background:rgba(0,0,0,.58);
     opacity:0;pointer-events:none;transition:opacity .3s}
   .m-scrim.open{opacity:1;pointer-events:auto}
   .m-sheet{display:block;position:fixed;left:0;right:0;bottom:0;z-index:57;background:var(--ink-2);
     border:1px solid var(--line);border-bottom:0;border-radius:26px 26px 0 0;
     padding:14px 20px calc(34px + env(safe-area-inset-bottom,0px));overscroll-behavior:contain;
+    max-height:min(calc(var(--fr-h,100vh) * .86),640px);overflow-y:auto;
     transform:translateY(105%);visibility:hidden;
     transition:transform .45s var(--ease),visibility 0s .45s}
   .m-sheet.open{transform:none;visibility:visible;transition:transform .45s var(--ease)}
@@ -412,13 +416,17 @@ html[data-ds-surface="product"] #contacto .idx{display:none}
   -webkit-backdrop-filter:blur(4px);backdrop-filter:blur(4px)}
 .fig-cap i{width:5px;height:5px;flex:none;background:var(--gold);transform:rotate(45deg)}
 html[data-ds-theme="light"] .fig-cap,
-html[data-ds-style="aurum-dia"] .fig-cap{background:rgba(255,253,246,.72);color:var(--bone);
+html[data-ds-style="aurum-dia"]:not([data-ds-theme="dark"]) .fig-cap{background:rgba(255,253,246,.72);color:var(--bone);
   border-color:color-mix(in srgb,var(--gold) 40%,transparent)}
 /* La plaqueta de identidad sigue el mismo criterio: vidrio oscuro sobre foto
    en tema noche, vidrio claro + tinta en aurum-dia. */
 html[data-ds-theme="light"] .ph-card,
-html[data-ds-style="aurum-dia"] .ph-card{background:rgba(255,253,246,.72);color:var(--bone);
+html[data-ds-style="aurum-dia"]:not([data-ds-theme="dark"]) .ph-card{background:rgba(255,253,246,.72);color:var(--bone);
   border-color:color-mix(in srgb,var(--gold) 40%,transparent)}
+/*El small de la plaqueta iba crema al 62%: sobre el vidrio claro de
+dia quedaba ~1.3:1 — sigue la tinta del tema.*/
+html[data-ds-theme="light"] .ph-id small,
+html[data-ds-style="aurum-dia"]:not([data-ds-theme="dark"]) .ph-id small{color:color-mix(in srgb,var(--bone) 66%,transparent)}
 /* Sin portada, el hueco muestra el monograma en vez de un degradado mudo. */
 .ph-mono{position:absolute;inset:0;display:grid;place-items:center;
   font:400 clamp(88px,13vw,150px)/1 var(--serif);color:color-mix(in srgb,var(--gold) 42%,transparent);
@@ -486,6 +494,9 @@ section{padding:clamp(52px,8vh,96px) 0;border-bottom:1px solid var(--line);posit
 .sec-head h2{font-size:clamp(30px,4vw,50px);line-height:1.08;margin-right:auto;
   text-wrap:balance;overflow-wrap:anywhere}
 .sec-head h2 em{font-style:italic;color:var(--gold-text)}
+/*Título vacío (p. ej. offerings_title sin cargar): la cabecera no queda
+  como una fila de índice + icono + "+" huérfana.*/
+.sec-head:has(h2:empty){display:none}
 .sec-head p{max-width:38ch;color:var(--muted);font-size:13.5px;text-align:right;margin:0}
 .sec-head p a{color:var(--gold-text);font:600 11px var(--mono);letter-spacing:.12em;text-transform:uppercase}
 .sec-head p a:hover{text-decoration:underline;text-underline-offset:5px}
@@ -541,7 +552,7 @@ section{padding:clamp(52px,8vh,96px) 0;border-bottom:1px solid var(--line);posit
 .ds-stat b,.ds-stat-value{display:block;font:400 clamp(44px,5vw,72px)/1 var(--serif);
   font-variant-numeric:tabular-nums;letter-spacing:-.02em}
 .ds-stat span,.ds-stat-label{display:block;margin-top:10px;font:600 10px var(--mono);
-  letter-spacing:.2em;text-transform:uppercase;opacity:.78}
+  letter-spacing:.2em;text-transform:uppercase;opacity:.92}
 .ds-stat{transition:transform .3s var(--ease)}
 @media(hover:hover){.ds-stat:hover{transform:translateY(-3px)}}
 
@@ -566,6 +577,11 @@ section{padding:clamp(52px,8vh,96px) 0;border-bottom:1px solid var(--line);posit
   letter-spacing:-.005em}
 .about-copy .mision{border-left:2px solid var(--gold);padding-left:16px;color:var(--bone);font-size:14px}
 .about-copy .mision:empty{display:none}
+.about-copy p:empty{display:none}
+.years-card:has(b:empty){display:none}
+/*Sección sin ningún dato de "sobre nosotros": se apaga entera en vez de
+  dejar titular + columnas vacías (el flag del dueño sigue mandando).*/
+#nosotros:not(:has(h2:not(:empty))):not(:has(.about-copy p:not(:empty))):not(:has(.years-card b:not(:empty))){display:none}
 .years-card{margin-top:auto;position:relative;display:inline-flex;align-items:center;gap:20px;
   border:1px solid var(--gold-line);border-radius:18px;padding:20px 26px;
   background:linear-gradient(135deg,color-mix(in srgb,var(--gold) 10%,transparent),transparent 62%);
@@ -631,7 +647,7 @@ section{padding:clamp(52px,8vh,96px) 0;border-bottom:1px solid var(--line);posit
 .ds-product .ds-stock i{width:5px;height:5px;flex:none;border-radius:50%;background:var(--gold);
   animation:ds-ping 2.4s ease-out infinite}
 html[data-ds-theme="light"] .ds-product .ds-stock,
-html[data-ds-style="aurum-dia"] .ds-product .ds-stock{
+html[data-ds-style="aurum-dia"]:not([data-ds-theme="dark"]) .ds-product .ds-stock{
   background:color-mix(in srgb,var(--surface,#fffdf6) 74%,transparent);color:var(--bone)}
 [data-ds-view-mode="list"] .ds-stock{display:none}
 /*Etiqueta de campaña del descuento (la sube la tienda): se lee dentro del
@@ -701,7 +717,11 @@ html[data-ds-style="aurum-dia"] .ds-product .ds-stock{
 [data-ds-view-mode="list"] .ds-product-copy{padding:6px 20px 18px}
 [data-ds-view-mode="list"] .ds-product-price{align-self:center;padding:16px 20px;
   flex-direction:column;align-items:flex-end;gap:4px}
-[data-ds-view-mode="list"] .ds-product-price[data-off]::before{left:14px;right:auto}
+/*El sticker de descuento va siempre a la esquina sup. derecha de la
+  tarjeta: a la izquierda pisaba el "↗" que aparece con el hover en lista.*/
+/*El estado vacío lo cubre [data-ds-noresults] del puente (un solo mensaje);
+  el .ds-empty del fragmento sería un duplicado debajo de la grilla.*/
+.grid[data-ds-products] .ds-empty{display:none}
 .ds-empty{color:var(--muted);font-size:14px;padding:26px;border:1px dashed var(--line);border-radius:var(--radius)}
 @media(max-width:640px){
   .grid{grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:12px}
@@ -743,16 +763,16 @@ html[data-ds-style="aurum-dia"] .ds-product .ds-stock{
 .gal .ds-shot:hover img{transform:scale(1.06)}
 /*Sin fotos el hueco de la galería sigue el tema (no una mancha negra). */
 html[data-ds-theme="light"] .hero-fig .ph,
-html[data-ds-style="aurum-dia"] .hero-fig .ph{background:linear-gradient(160deg,var(--line-soft),var(--card) 60%,var(--line))}
+html[data-ds-style="aurum-dia"]:not([data-ds-theme="dark"]) .hero-fig .ph{background:linear-gradient(160deg,var(--line-soft),var(--card) 60%,var(--line))}
 html[data-ds-theme="light"] .ds-product-img.is-empty,
-html[data-ds-style="aurum-dia"] .ds-product-img.is-empty{background:
+html[data-ds-style="aurum-dia"]:not([data-ds-theme="dark"]) .ds-product-img.is-empty{background:
   repeating-linear-gradient(135deg,transparent 0 16px,color-mix(in srgb,var(--gold) 10%,transparent) 16px 17px),
   radial-gradient(120% 90% at 50% 8%,color-mix(in srgb,var(--gold) 16%,transparent),transparent 68%),
   linear-gradient(150deg,var(--line-soft),var(--card))}
 html[data-ds-theme="light"] .gal .ds-shot,
-html[data-ds-style="aurum-dia"] .gal .ds-shot{background:linear-gradient(140deg,var(--line-soft),var(--card))}
+html[data-ds-style="aurum-dia"]:not([data-ds-theme="dark"]) .gal .ds-shot{background:linear-gradient(140deg,var(--line-soft),var(--card))}
 html[data-ds-theme="light"] .pdp-shot,
-html[data-ds-style="aurum-dia"] .pdp-shot{background:linear-gradient(150deg,var(--line-soft),var(--card))}
+html[data-ds-style="aurum-dia"]:not([data-ds-theme="dark"]) .pdp-shot{background:linear-gradient(150deg,var(--line-soft),var(--card))}
 
 /* Trayectoria: riel dorado + hitos. */
 .ds-miles{list-style:none;max-width:820px;margin:0;padding:0 0 0 26px;position:relative}
@@ -797,7 +817,7 @@ html[data-ds-style="aurum-dia"] .pdp-shot{background:linear-gradient(150deg,var(
   box-shadow:0 0 0 5px color-mix(in srgb,var(--gold) 5%,transparent)}
 .ds-mate-mark{transition:border-color .35s,transform .45s var(--ease-spring)}
 .ds-mate:hover .ds-mate-mark{border-color:var(--gold);transform:rotate(-6deg) scale(1.04)}
-.ds-mate-name{display:block;font:400 17px var(--serif)}
+.ds-mate-name{display:block;font:400 17px var(--serif);overflow-wrap:break-word}
 .ds-mate-role{display:block;font:600 10px var(--mono);letter-spacing:.14em;text-transform:uppercase;
   color:var(--muted);margin-top:6px}
 .ds-mate-role:empty{display:none}
@@ -825,7 +845,7 @@ html[data-ds-style="aurum-dia"] .pdp-shot{background:linear-gradient(150deg,var(
 .ds-quote:hover{border-color:var(--gold-line);transform:translateY(-3px)}
 .ds-quote::before{content:"“";position:absolute;top:14px;right:22px;font:400 64px/1 var(--serif);
   color:var(--gold-text);opacity:.32}
-.ds-quote-text{font:italic 400 17px/1.55 var(--serif);margin:0}
+.ds-quote-text{font:italic 400 17px/1.55 var(--serif);margin:0;overflow-wrap:break-word}
 .ds-quote-name{display:block;margin-top:18px;font:600 10.5px var(--mono);letter-spacing:.16em;
   text-transform:uppercase;color:var(--muted)}
 .ds-quote-name:empty{display:none}
@@ -868,7 +888,11 @@ html[data-ds-style="aurum-dia"] .pdp-shot{background:linear-gradient(150deg,var(
   transition:border-color .25s,transform .3s var(--ease)}
 .video-card:hover{border-color:var(--gold-line);transform:translateY(-2px)}
 .video-card[href=""]{display:none}
-[data-flag="video"]:has(.video-card[href=""]){display:none!important}
+/* Con videos[] cargados el fragmento pinta su grilla y la tarjeta legado
+   se apaga (si no, el video_url se vería duplicado). Sin ninguno de los
+   dos la sección entera se oculta. */
+[data-flag="video"]:has(.ds-videos) .video-card{display:none}
+[data-flag="video"]:has(.video-card[href=""]):not(:has(.ds-videos)){display:none!important}
 .video-play{flex:none;width:62px;height:62px;border-radius:50%;background:var(--gold);color:var(--gold-ink);
   display:grid;place-items:center;transition:transform .35s var(--ease-spring)}
 .video-card:hover .video-play{transform:scale(1.06)}
@@ -992,8 +1016,9 @@ html[data-ds-style="aurum-dia"] .pdp-shot{background:linear-gradient(150deg,var(
 .crumbs strong{color:var(--bone);font-weight:600;min-width:0;overflow-wrap:anywhere}
 .cat-layout{display:grid;grid-template-columns:240px 1fr;gap:32px;align-items:start}
 @media(max-width:860px){.cat-layout{grid-template-columns:1fr}}
-.cat-aside{display:grid;gap:22px;position:sticky;top:calc(var(--top-h) + 14px);
-  max-height:calc(100vh - var(--top-h) - 30px);overflow:auto;overscroll-behavior:contain}
+/*Columna estática: el iframe no scrollea por dentro (scroll del host),
+  así que sticky/max-height no aplican — la aside acompaña al catálogo.*/
+.cat-aside{display:grid;gap:22px}
 .f-group{border:1px solid var(--line);border-radius:16px;padding:18px;background:var(--card)}
 .f-title{font:600 10.5px var(--mono);letter-spacing:.2em;text-transform:uppercase;color:var(--gold-text);margin:0 0 14px}
 .f-title::before{content:"";display:inline-block;width:4px;height:4px;margin-right:8px;
@@ -1002,7 +1027,9 @@ html[data-ds-style="aurum-dia"] .pdp-shot{background:linear-gradient(150deg,var(
 .f-list [data-ds-filters] button,.f-list button{display:flex;justify-content:space-between;width:100%;
   border:0;background:none;color:var(--muted);font:inherit;font-size:13px;padding:8px 10px;border-radius:8px;
   cursor:pointer;text-align:left;transition:background-color .2s,color .2s}
-.f-list button:hover,.f-list button.is-on{background:var(--gold-soft);color:var(--bone)}
+.f-list button:hover,.f-list button.is-on,.f-list button.is-active,
+.f-list button[aria-pressed="true"]{background:var(--gold-soft);color:var(--bone);
+  box-shadow:inset 3px 0 0 var(--gold)}
 .f-price{display:flex;align-items:center;gap:8px}
 .f-price-field{flex:1;min-width:0}
 .f-price-field input{width:100%;background:var(--ink);border:1px solid var(--line);border-radius:8px;
@@ -1034,15 +1061,21 @@ html[data-ds-style="aurum-dia"] .pdp-shot{background:linear-gradient(150deg,var(
 .cat-sort{display:flex;align-items:center;gap:10px;font-size:12px;color:var(--muted)}
 .cat-sort select{background:var(--card);border:1px solid var(--line);border-radius:10px;color:var(--bone);
   font:inherit;font-size:12.5px;padding:9px 12px}
+.cat-scrim{display:none}
 @media(max-width:860px){
   .cat-filters-toggle{display:inline-flex;align-items:center;gap:8px;border:1px solid var(--line);
     background:var(--card);color:var(--bone);font:700 11px var(--mono);letter-spacing:.14em;
     text-transform:uppercase;padding:11px 16px;border-radius:10px;cursor:pointer}
   .cat-filters-badge{background:var(--gold);color:var(--gold-ink);border-radius:99px;
     font:700 10px var(--mono);padding:2px 8px}
-  .cat-aside{display:none;position:fixed;inset:auto 0 0 0;top:14vh;z-index:58;background:var(--ink-2);
-    border:1px solid var(--line);border-radius:24px 24px 0 0;padding:20px 20px calc(20px + env(safe-area-inset-bottom,0px));
-    overflow:auto;max-height:none}
+  /*Hoja de filtros: scrim frame-aware (--fr-h = alto del marco visible)
+    y panel anclado abajo con tope relativo al marco, no al documento.*/
+  .cat-scrim{display:block;position:fixed;left:0;right:0;top:0;height:var(--fr-h,100vh);z-index:57;
+    background:rgba(0,0,0,.5);opacity:0;pointer-events:none;transition:opacity .3s}
+  body.filters-open .cat-scrim{opacity:1;pointer-events:auto}
+  .cat-aside{display:none;position:fixed;left:0;right:0;bottom:0;z-index:58;background:var(--ink-2);
+    border:1px solid var(--line);border-bottom:0;border-radius:24px 24px 0 0;padding:20px 20px calc(20px + env(safe-area-inset-bottom,0px));
+    max-height:min(calc(var(--fr-h,100vh) * .88),680px);overflow:auto;overscroll-behavior:contain}
   .cat-aside.is-open{display:grid}
   body.filters-open{overflow:hidden}
   /*iOS no hace zoom al enfocar: inputs/selects >=16px en el sheet.*/
@@ -1072,6 +1105,13 @@ html[data-ds-style="aurum-dia"] .pdp-shot{background:linear-gradient(150deg,var(
 .svc-surface .ds-service-name{display:block;font:400 20px var(--serif);margin-bottom:6px;
   overflow-wrap:anywhere}
 .svc-surface .ds-service-desc{color:var(--muted);font-size:13.5px}
+/*Precio/duración/icono viajan en data-attrs del fragmento: la meta se
+  arma por JS (el CSS no puede leer attrs compuestos sin trucos frágiles).*/
+.svc-surface .ds-service-meta{display:flex;align-items:center;gap:9px;margin-top:12px;
+  font:600 10.5px var(--mono);letter-spacing:.14em;text-transform:uppercase;
+  color:var(--gold-text)}
+.svc-surface .ds-service-meta .ds-service-ico{display:inline-flex;flex:none}
+.svc-surface .ds-service-meta .ds-service-ico svg{width:15px;height:15px;display:block}
 .svc-cta{display:inline-flex;margin-top:30px}
 
 /* ===== Ficha de producto ===== */
@@ -1098,7 +1138,7 @@ html[data-ds-style="aurum-dia"] .pdp-shot{background:linear-gradient(150deg,var(
 .pdp-kicker span:empty{display:none}
 .pdp-ref{color:var(--muted);font-size:12px;overflow-wrap:anywhere}
 .pdp-price{display:flex;flex-wrap:wrap;align-items:baseline;gap:12px;margin:22px 0 8px}
-.pdp-price b{font:400 44px var(--serif);font-variant-numeric:tabular-nums}
+.pdp-price b{font:400 44px var(--serif);font-variant-numeric:tabular-nums;overflow-wrap:anywhere}
 .pdp-price em{font:700 13px var(--mono);font-style:normal;color:var(--gold-text)}
 .pdp-price em:empty{display:none}
 .pdp-price s{color:var(--muted);font-size:16px}
@@ -1130,10 +1170,13 @@ html[data-ds-style="aurum-dia"] .pdp-shot{background:linear-gradient(150deg,var(
 .pdp-desc:empty{display:none}
 .pdp-box:has(.pdp-specs tbody:empty):has(.pdp-desc:empty){display:none}
 .pdp-rev,.pdp-rel{margin-top:44px}
+/*Sin el beneficio de opiniones el fragmento no emite .ds-reviews: la
+  sección no debe quedar como encabezado huérfano.*/
+.pdp-rev:not(:has(.ds-reviews)){display:none}
 .pdp-rev:has(.ds-rev-list:empty):has(.ds-rev-form:empty){display:none}
 .pdp-rel:has(.grid:empty){display:none}
 .pdp-rev h2,.pdp-rel h2{font-size:24px;margin-bottom:20px}
-.pdp-rev-head{display:flex;align-items:baseline;justify-content:space-between;gap:16px}
+.pdp-rev-head{display:flex;align-items:baseline;justify-content:space-between;gap:16px;flex-wrap:wrap}
 .pdp-score{display:flex;align-items:baseline;gap:8px;margin:0}
 .pdp-score b{font:400 30px var(--serif);color:var(--gold-text);font-variant-numeric:tabular-nums}
 .pdp-score b:empty{display:none}
@@ -1400,7 +1443,7 @@ footer::before{content:"";position:absolute;top:-1px;left:50%;transform:translat
   </button>
 </nav>
 <div class="m-scrim" data-m-close aria-hidden="true"></div>
-<div id="m-sheet" class="m-sheet" role="dialog" aria-modal="true" aria-label="Todas las secciones">
+<div id="m-sheet" class="m-sheet" role="dialog" aria-modal="true" aria-label="Todas las secciones" data-ds-pin="bottom">
   <div class="m-sheet-head">
     <span class="m-grab" aria-hidden="true"></span>
     <div class="m-sheet-brand">
@@ -1418,7 +1461,7 @@ footer::before{content:"";position:absolute;top:-1px;left:50%;transform:translat
   </nav>
 </div>
 
-<div data-surface="landing">
+<div data-surface="landing"><main>
 
   <section class="hero" id="inicio"><div class="wrap hero-grid">
     <div class="hero-copy">
@@ -1488,7 +1531,7 @@ footer::before{content:"";position:absolute;top:-1px;left:50%;transform:translat
     <div class="guars-grid ds-zone">{{benefits}}</div>
   </div></section>
 
-  <section id="catalogo" data-flag="catalog"><div class="wrap reveal">
+  <section id="destacados" data-flag="catalog"><div class="wrap reveal">
     <div class="sec-head">
       <span class="idx">04</span>
       <span class="sec-ico" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><rect x="4" y="4" width="7" height="7" rx="1"/><rect x="13" y="4" width="7" height="7" rx="1"/><rect x="4" y="13" width="7" height="7" rx="1"/><rect x="13" y="13" width="7" height="7" rx="1"/></svg></span>
@@ -1550,6 +1593,7 @@ footer::before{content:"";position:absolute;top:-1px;left:50%;transform:translat
       <span class="sec-ico" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M7 3v18"/><path d="M17 3v18"/><path d="M3 7.5h4"/><path d="M3 12h18"/><path d="M3 16.5h4"/><path d="M17 7.5h4"/><path d="M17 16.5h4"/></svg></span>
       <h2>{{video_title}}</h2>
     </div>
+    <div class="ds-zone">{{videos}}</div>
     <a class="video-card" href="{{video_url}}" target="_blank" rel="noopener noreferrer">
       <span class="video-play"><svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg></span>
       <span><b>Ver el video</b></span>
@@ -1583,9 +1627,9 @@ footer::before{content:"";position:absolute;top:-1px;left:50%;transform:translat
     </a>
   </div></div>
 
-</div>
+</main></div>
 
-<section class="cat-surface" data-surface="catalog" id="catalogo" data-flag="catalog">
+<section class="cat-surface" data-surface="catalog" id="catalogo" data-flag="catalog"><main>
   <div class="wrap">
     <h1 style="position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)">Catálogo de {{store_name}}</h1>
     <nav class="crumbs" aria-label="Ruta">
@@ -1599,7 +1643,8 @@ footer::before{content:"";position:absolute;top:-1px;left:50%;transform:translat
       <button class="cat-filters-toggle" type="button" data-ds-filters-toggle aria-expanded="false" aria-controls="ds-catalog-filters">
         Filtros <span class="cat-filters-badge" data-ds-filter-count hidden></span>
       </button>
-      <aside class="cat-aside" id="ds-catalog-filters" data-ds-filters-panel aria-label="Filtros del catálogo">
+      <div class="cat-scrim" data-ds-filters-scrim aria-hidden="true"></div>
+      <aside class="cat-aside" id="ds-catalog-filters" data-ds-filters-panel data-ds-pin="bottom" aria-label="Filtros del catálogo">
         <div class="cat-aside-head">
           <strong>Filtros</strong>
           <button class="cat-aside-close" type="button" data-ds-filters-close aria-label="Cerrar filtros">×</button>
@@ -1616,9 +1661,9 @@ footer::before{content:"";position:absolute;top:-1px;left:50%;transform:translat
         <section class="f-group" aria-labelledby="f-price-title">
           <h2 class="f-title" id="f-price-title">Precio</h2>
           <div class="f-price">
-            <label class="f-price-field"><input type="number" inputmode="numeric" min="0" step="1" placeholder="Desde" data-ds-price-min></label>
+            <label class="f-price-field"><input type="number" inputmode="numeric" min="0" step="1" placeholder="Desde" aria-label="Precio mínimo" data-ds-price-min></label>
             <span aria-hidden="true">—</span>
-            <label class="f-price-field"><input type="number" inputmode="numeric" min="0" step="1" placeholder="Hasta" data-ds-price-max></label>
+            <label class="f-price-field"><input type="number" inputmode="numeric" min="0" step="1" placeholder="Hasta" aria-label="Precio máximo" data-ds-price-max></label>
           </div>
           <button class="f-apply" type="button" data-ds-price-apply>Aplicar</button>
         </section>
@@ -1657,9 +1702,9 @@ footer::before{content:"";position:absolute;top:-1px;left:50%;transform:translat
       </div>
     </div>
   </div>
-</section>
+</main></section>
 
-<section class="svc-surface" data-surface="services" id="servicios" data-flag="services">
+<section class="svc-surface" data-surface="services" id="servicios" data-flag="services"><main>
   <div class="wrap reveal">
     <div class="svc-head"><span class="stamp">Servicios</span><h1>{{offerings_title}}</h1><p>{{store_about}}</p></div>
     <div class="ds-zone">{{services}}</div>
@@ -1667,9 +1712,9 @@ footer::before{content:"";position:absolute;top:-1px;left:50%;transform:translat
       <svg class="btn-go" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14"/><path d="m13 6 6 6-6 6"/></svg>
     </a>
   </div>
-</section>
+</main></section>
 
-<section class="pdp-surface" data-surface="product" data-flag="catalog">
+<section class="pdp-surface" data-surface="product" data-flag="catalog"><main>
   <div class="wrap">
     <nav class="crumbs" aria-label="Ruta">
       <a href="#inicio" data-ds-route="home">Inicio</a>
@@ -1715,7 +1760,7 @@ footer::before{content:"";position:absolute;top:-1px;left:50%;transform:translat
       <div class="grid">{{product_related}}</div>
     </section>
   </div>
-</section>
+</main></section>
 
 <section id="contacto" data-flag="contact"><div class="wrap reveal">
   <div class="sec-head">
@@ -1810,6 +1855,29 @@ footer::before{content:"";position:absolute;top:-1px;left:50%;transform:translat
   root.classList.add('ds-js');
   var reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
+  /*Logo/foto vacía: el <img src=""> pedía el propio documento (200 HTML)
+    en cada carga — se elimina para que quede solo el monograma/fallback.*/
+  [].slice.call(document.querySelectorAll('img[src=""],img:not([src])')).forEach(function(img){ img.remove() });
+
+  /*Precio/duración/icono de cada servicio viajan en data-attrs del
+    fragmento .ds-service: se materializan como línea de meta visible.*/
+  document.querySelectorAll('.ds-service').forEach(function(li){
+    var price = li.getAttribute('data-price-label') || '';
+    var dur = li.getAttribute('data-duration') || '';
+    var icon = li.getAttribute('data-icon-svg') || '';
+    if (!price && !dur && !icon) return;
+    var meta = document.createElement('span');
+    meta.className = 'ds-service-meta';
+    if (icon) {
+      var ico = document.createElement('span');
+      ico.className = 'ds-service-ico';
+      ico.innerHTML = icon;
+      meta.appendChild(ico);
+    }
+    meta.appendChild(document.createTextNode([price, dur].filter(Boolean).join(' · ')));
+    li.appendChild(meta);
+  });
+
   /*Sin anuncios cargados la cinta dorada quedaba como una franja vacía.*/
   var ribbon = document.querySelector('.ribbon');
   var track = ribbon && ribbon.querySelector('.ribbon-track');
@@ -1840,40 +1908,40 @@ footer::before{content:"";position:absolute;top:-1px;left:50%;transform:translat
     }
   }
 
-  /*Cifras de la banda dorada: cuentan desde cero al entrar en viewport.
-  Solo valores "limpios" (\d{1,3} con decimales de 1-2 y sufijo sin dígitos:
-  "98%", "12+", "5 años"); "24/7" o "$1.200" quedan quietos.*/
+  /*Cifras de la banda dorada: cuentan desde cero cuando la banda entra en
+  la ventana visible (la dispara el sistema de scroll por frame de abajo,
+  no un IntersectionObserver: dentro del iframe estirado el observer ve
+  el documento entero y dispararía todo al cargar). Solo valores "limpios"
+  (\d{1,3} con decimales de 1-2 y sufijo sin dígitos: "98%", "12+",
+  "5 años"); "24/7" o "$1.200" quedan quietos.*/
   var statsGrid = document.querySelector('.stats-grid');
-  if (statsGrid && !reduce && 'IntersectionObserver' in window) {
-    var statIO = new IntersectionObserver(function(entries){
-      entries.forEach(function(entry){
-        if (!entry.isIntersecting) return;
-        statIO.disconnect();
-        entry.target.querySelectorAll('.ds-stat-value').forEach(function(el){
-          var txt = el.textContent.trim();
-          var m = txt.match(/^(\d{1,3}(?:[.,]\d{1,2})?)(\D*)$/);
-          if (!m) return;
-          var target = parseFloat(m[1].replace(',', '.'));
-          var dec = (m[1].split(/[.,]/)[1] || '').length;
-          var comma = m[1].indexOf(',') >= 0;
-          var render = function(v){
-            var s = v.toFixed(dec);
-            return (comma ? s.replace('.', ',') : s) + m[2];
-          };
-          var t0 = null, dur = 1200;
-          var step = function(ts){
-            if (t0 === null) t0 = ts;
-            var p = Math.min(1, (ts - t0) / dur);
-            var eased = 1 - Math.pow(1 - p, 3);
-            el.textContent = render(target * eased);
-            if (p < 1) requestAnimationFrame(step);
-            else el.textContent = txt;
-          };
-          requestAnimationFrame(step);
-        });
-      });
-    }, { threshold: 0.4 });
-    statIO.observe(statsGrid);
+  var statsDone = false;
+  function runStats(){
+    if (statsDone) return;
+    statsDone = true;
+    if (!statsGrid || reduce) return;
+    statsGrid.querySelectorAll('.ds-stat-value').forEach(function(el){
+      var txt = el.textContent.trim();
+      var m = txt.match(/^(\d{1,3}(?:[.,]\d{1,2})?)(\D*)$/);
+      if (!m) return;
+      var target = parseFloat(m[1].replace(',', '.'));
+      var dec = (m[1].split(/[.,]/)[1] || '').length;
+      var comma = m[1].indexOf(',') >= 0;
+      var render = function(v){
+        var s = v.toFixed(dec);
+        return (comma ? s.replace('.', ',') : s) + m[2];
+      };
+      var t0 = null, dur = 1200;
+      var step = function(ts){
+        if (t0 === null) t0 = ts;
+        var p = Math.min(1, (ts - t0) / dur);
+        var eased = 1 - Math.pow(1 - p, 3);
+        el.textContent = render(target * eased);
+        if (p < 1) requestAnimationFrame(step);
+        else el.textContent = txt;
+      };
+      requestAnimationFrame(step);
+    });
   }
 
   /* Hoja móvil */
@@ -1882,17 +1950,47 @@ footer::before{content:"";position:absolute;top:-1px;left:50%;transform:translat
     var scrim = document.querySelector('.m-scrim');
     var openers = [].slice.call(document.querySelectorAll('[data-m-open]'));
     var closers = [].slice.call(document.querySelectorAll('[data-m-close]'));
+    var lastFocus = null;
     var setOpen = function(open){
       sheet.classList.toggle('open', open);
       if (scrim) scrim.classList.toggle('open', open);
       openers.forEach(function(b){ b.setAttribute('aria-expanded', open ? 'true' : 'false'); });
+      sheet.setAttribute('aria-hidden', open ? 'false' : 'true');
+      if ('inert' in sheet) sheet.inert = !open;
       root.classList.toggle('m-lock', open);
+      if (open) {
+        lastFocus = document.activeElement;
+        var first = sheet.querySelector('a,button');
+        if (first) first.focus();
+      } else if (lastFocus && lastFocus.focus) {
+        lastFocus.focus();
+      }
     };
+    setOpen(false);
     openers.forEach(function(b){
       b.addEventListener('click', function(){ setOpen(!sheet.classList.contains('open')); });
     });
     closers.forEach(function(el){ el.addEventListener('click', function(){ setOpen(false); }); });
-    document.addEventListener('keydown', function(e){ if (e.key === 'Escape') setOpen(false); });
+    document.addEventListener('keydown', function(e){
+      if (e.key === 'Escape') { setOpen(false); return; }
+      /*Trampa de foco: con la hoja abierta Tab no escapa al fondo.*/
+      if (e.key === 'Tab' && sheet.classList.contains('open')) {
+        var f = sheet.querySelectorAll('a[href],button:not([disabled])');
+        if (!f.length) return;
+        var firstEl = f[0], lastEl = f[f.length - 1];
+        if (e.shiftKey && document.activeElement === firstEl) { e.preventDefault(); lastEl.focus(); }
+        else if (!e.shiftKey && document.activeElement === lastEl) { e.preventDefault(); firstEl.focus(); }
+      }
+    });
+    /*Al agrandar el viewport la hoja móvil queda fuera de su media query:
+      cerrarla (y la de filtros del catálogo, que escucha Escape).*/
+    window.addEventListener('resize', function(){
+      if (window.innerWidth > 900 && sheet.classList.contains('open')) setOpen(false);
+      var panel = document.querySelector('[data-ds-filters-panel]');
+      if (panel && window.innerWidth > 860 && panel.classList.contains('is-open')) {
+        panel.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true }));
+      }
+    });
   }
 
   /*La ficha de producto pertenece al catálogo: en esa superficie el menú
@@ -1912,18 +2010,37 @@ footer::before{content:"";position:absolute;top:-1px;left:50%;transform:translat
     });
   };
   paintTabs();
-  new MutationObserver(function(){ paintTabs(); paintActive(); measure(); paint(); })
+  new MutationObserver(function(){ paintTabs(); schedule(); })
     .observe(root, { attributes: true, attributeFilter: ['data-ds-surface'] });
 
-  /* Barra + progreso + sección activa. El scroll solo escribe clases y un
-     transform; las posiciones no se leen por frame (content-visibility
-     cambia el alto real de las secciones mientras se renderizan). */
+  /* Barra + progreso + sección activa + reveal. El iframe va estirado y
+     no scrollea por dentro: la ventana visible llega en `davent:ds-frame`
+     (en modo directo —documento abierto sin host— cae a window.scrollY). */
   var top = document.querySelector('[data-top]');
   var bar = document.querySelector('.top-progress');
   var links = [].slice.call(document.querySelectorAll('.top-nav a[href^="#"]'));
+  var linkHrefs = links.map(function(a){ return a.getAttribute('href'); });
+  var spySections = [].slice.call(document.querySelectorAll(
+    '[data-surface="landing"] > section, #contacto, .cat-surface, .svc-surface'
+  ));
+  var reveals = [].slice.call(document.querySelectorAll('.reveal'));
   var activeId = 'inicio';
-  var maxScroll = 1;
   var lastScrolled = false;
+  var frameTop = null, frameVh = window.innerHeight || 1, raf = 0;
+
+  /*Ventana visible en coordenadas del documento: el tramo que el visitante
+    está viendo (top/bot) y el alto del marco para --fr-h.*/
+  function viewBox(){
+    var ih = Math.max(1, root.scrollHeight || (document.body ? document.body.scrollHeight : window.innerHeight || 1));
+    if (frameTop !== null) {
+      var vt = Math.max(0, -frameTop);
+      var vb = Math.min(ih, frameVh - frameTop);
+      return { top: vt, bot: Math.max(vt, vb), docH: ih, vh: Math.max(1, vb - vt) };
+    }
+    var y = window.scrollY || 0;
+    var vh = window.innerHeight || 1;
+    return { top: y, bot: y + vh, docH: ih, vh: vh };
+  }
 
   function paintActive(){
     var surface = surfaceRoute();
@@ -1937,82 +2054,89 @@ footer::before{content:"";position:absolute;top:-1px;left:50%;transform:translat
     });
   }
 
-  function paint(){
-    var y = window.scrollY;
-    var scrolled = y > 10;
+  function apply(){
+    raf = 0;
+    var vb = viewBox();
+    /*--fr-h: alto visible del marco. Las unidades vh del documento miden
+      la página estirada entera, no la ventana — el scrim y la hoja móvil
+      la necesitan para cubrir solo lo que se ve.*/
+    root.style.setProperty('--fr-h', Math.round(vb.vh) + 'px');
+
+    var scrolled = vb.top > 10;
     if (scrolled !== lastScrolled) {
       lastScrolled = scrolled;
       if (top) top.classList.toggle('is-scrolled', scrolled);
     }
-    if (bar) bar.style.transform = 'scaleX(' + Math.min(1, Math.max(0, y / maxScroll)).toFixed(4) + ')';
-  }
+    if (bar) bar.style.transform = 'scaleX(' + Math.min(1, Math.max(0, vb.top / Math.max(1, vb.docH - vb.vh))).toFixed(4) + ')';
 
-  function measure(){
-    maxScroll = Math.max(1, document.documentElement.scrollHeight - window.innerHeight);
-    paint();
-  }
-
-  var ticking = false;
-  addEventListener('scroll', function(){
-    if (ticking) return;
-    ticking = true;
-    requestAnimationFrame(function(){ ticking = false; paint(); });
-  }, { passive: true });
-  addEventListener('resize', measure, { passive: true });
-  if ('ResizeObserver' in window) new ResizeObserver(measure).observe(document.body);
-  measure();
-  paintActive();
-
-  /* La sección bajo la franja media del viewport enciende su enlace (o
-     apaga el menú si la sección no tiene uno). Se guarda el estado de cada
-     sección y se elige la más alta de las visibles: al arrancar, el puente
-     todavía no ocultó las otras superficies y todas "interseccionan". */
-  if (links.length && !reduce && 'IntersectionObserver' in window) {
-    var linkHrefs = links.map(function(a){ return a.getAttribute('href'); });
-    var spySections = [].slice.call(document.querySelectorAll(
-      '[data-surface="landing"] > section, #contacto, .cat-surface, .svc-surface'
-    ));
-    var seen = new Map();
-    var spy = new IntersectionObserver(function(entries){
-      entries.forEach(function(e){ seen.set(e.target, e.isIntersecting); });
-      var best = null;
-      seen.forEach(function(on, el){
-        if (!on || el.offsetParent === null) return;
-        if (!best || el.getBoundingClientRect().top < best.getBoundingClientRect().top) best = el;
+    /*Sección activa: la última con id que arranca sobre la sonda al 34%
+      del marco; en catálogo/servicios la superficie fuerza su enlace.*/
+    var surface = surfaceRoute();
+    var forced = surface === 'catalog' ? '#catalogo' : surface === 'services' ? '#servicios' : null;
+    if (forced) {
+      activeId = forced.slice(1);
+    } else {
+      var probe = vb.top + vb.vh * 0.34;
+      var current = '';
+      spySections.forEach(function(sec){
+        if (!sec.id || sec.getClientRects().length === 0) return;
+        if (sec.getBoundingClientRect().top <= probe) current = sec.id;
       });
-      if (!best) return;
-      var id = best.id;
-      activeId = linkHrefs.indexOf('#' + id) >= 0 ? id : '';
-      paintActive();
-    }, { rootMargin: '-30% 0px -62% 0px', threshold: 0 });
-    spySections.forEach(function(sec){ spy.observe(sec); });
-  }
+      activeId = linkHrefs.indexOf('#' + current) >= 0 ? current : '';
+    }
+    paintActive();
 
-  /* Reveal: un observer con rootMargin negativo para que la entrada se vea
-     dentro del viewport, no al borde. */
-  var items = document.querySelectorAll('.reveal');
-  if (reduce || !('IntersectionObserver' in window)) {
-    items.forEach(function(el){ el.classList.add('on'); });
-    return;
-  }
-  var io = new IntersectionObserver(function(es){
-    es.forEach(function(e){
-      if (e.isIntersecting) {
-        e.target.classList.add('on');
-        io.unobserve(e.target);
-        /*Índice de estagger por bloque: cada tarjeta recibe --i (tope 8)
-        para escalonar su entrada sin animar el hover después.*/
-        e.target.querySelectorAll(
+    /*Reveal por orden de documento: lo que asoma por el borde inferior
+      del marco se enciende y los índices --i escalonan las tarjetas. Los
+      elementos sin caja (display:none de otra superficie, secciones aún
+      no renderizadas por content-visibility) se saltan sin cortar.*/
+    for (var i = 0; i < reveals.length; i++) {
+      var el = reveals[i];
+      if (el.classList.contains('on')) continue;
+      var r = el.getBoundingClientRect();
+      if (!r.height && !r.width) continue;
+      if (r.top < vb.bot - 24) {
+        el.classList.add('on');
+        el.querySelectorAll(
           '.ds-offer,.ds-guar,.ds-quote,.ds-plan,.ds-mate,.ds-faq,.ds-shot,' +
           '.ds-product,.ds-mile,.ds-service,.ds-stat,.cel,.ds-cat'
         ).forEach(function(k){
           var sibs = k.parentNode ? [].slice.call(k.parentNode.children) : [k];
           k.style.setProperty('--i', Math.min(Math.max(sibs.indexOf(k), 0), 8));
         });
-      }
-    });
-  }, { threshold: 0.12, rootMargin: '0px 0px -8% 0px' });
-  items.forEach(function(el){ io.observe(el); });
+      } else break;
+    }
+
+    /*Contadores de la banda dorada: una sola vez, cuando la banda asoma.*/
+    if (!statsDone && statsGrid) {
+      var sr = statsGrid.getBoundingClientRect();
+      if ((sr.height || sr.width) && sr.top < vb.bot && sr.bottom > vb.top) runStats();
+    }
+  }
+
+  function schedule(){ if (!raf) raf = requestAnimationFrame(apply); }
+
+  /*El host publica la ventana visible del marco en cada scroll/resize;
+    el documento abierto directo (sin host) usa el scroll propio.*/
+  window.addEventListener('message', function(e){
+    if (e.source !== window.parent) return;
+    var d = e.data || {};
+    if (d.type === 'davent:ds-frame') {
+      frameTop = Number(d.top) || 0;
+      frameVh = Number(d.vh) || window.innerHeight || 1;
+      schedule();
+    }
+  });
+  window.addEventListener('scroll', schedule, { passive: true });
+  window.addEventListener('resize', schedule, { passive: true });
+  if ('ResizeObserver' in window && document.body) {
+    new ResizeObserver(schedule).observe(document.body);
+  }
+  if (reduce) {
+    reveals.forEach(function(el){ el.classList.add('on'); });
+    statsDone = true;
+  }
+  schedule();
 })();
 </script>
 </body>

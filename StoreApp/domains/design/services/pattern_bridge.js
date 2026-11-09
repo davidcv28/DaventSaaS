@@ -830,6 +830,12 @@
             closeSheet(true)
           }
         })
+        /*Scrim del diseño (data-ds-filters-scrim): clic fuera de la hoja
+         *la cierra igual que el botón "Aplicar"/"Cerrar".*/
+        document.addEventListener('click', function (e) {
+          var scrim = e.target && e.target.closest ? e.target.closest('[data-ds-filters-scrim]') : null
+          if (scrim && panel.classList.contains('is-open')) closeSheet(true)
+        })
       }
     }
     var applyBtn = document.querySelector('[data-ds-price-apply]')
@@ -1550,19 +1556,23 @@
   initReviews()
   initContact()
   initChatbot()
-  /* Hoja modal abierta: los diseños marcan <html> con `m-lock`, pero la
-   * clase solo frena el scroll DENTRO del iframe — el scroll real es de la
-   * página host y la hoja quedaba con el fondo moviéndose detrás. Se
-   * avisa por postMessage y el host bloquea su scroll mientras dure. */
+  /* Hoja modal abierta: los diseños marcan <html> con `m-lock` y la hoja
+   * de filtros del catálogo usa `filters-open` en <body> — ambas frenan
+   * el scroll DENTRO del iframe, pero el scroll real es de la página host
+   * y la hoja quedaba con el fondo moviéndose detrás. Se avisa por
+   * postMessage y el host bloquea su scroll mientras dure. */
   var lastLock = null
   function syncLock() {
-    var locked = root.classList.contains('m-lock')
+    var locked = root.classList.contains('m-lock') ||
+      !!(document.body && document.body.classList.contains('filters-open'))
     if (locked === lastLock) return
     lastLock = locked
     parent.postMessage({ type: 'davent:ds-lock', locked: locked }, '*')
   }
   if ('MutationObserver' in window) {
-    new MutationObserver(syncLock).observe(root, { attributes: true, attributeFilter: ['class'] })
+    var lockObs = new MutationObserver(syncLock)
+    lockObs.observe(root, { attributes: true, attributeFilter: ['class'] })
+    if (document.body) lockObs.observe(document.body, { attributes: true, attributeFilter: ['class'] })
   }
   syncLock()
   syncFilterUI()
