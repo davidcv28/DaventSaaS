@@ -28,7 +28,11 @@ const hasWa = computed(() => hasContactChannel(custom.value, 'whatsapp'))
 const waUrl = computed(() => (hasWa.value ? storeContactLink(slug.value, 'whatsapp') : ''))
 const hours = computed(() => {
   const rows = Array.isArray(custom.value.hours) ? custom.value.hours.filter((h) => h && !h.closed) : []
-  return rows.length ? 'Horarios en el local' : ''
+  const first = rows[0]
+  if (!first) return ''
+  if (first.label && first.value) return `${first.label}: ${first.value}`
+  if (first.open && first.close) return `${first.open}–${first.close}`
+  return first.value || first.label || ''
 })
 const address = computed(() => (custom.value.show_location === false ? '' : location.value || ''))
 const centered = computed(() => props.block?.variant === 'centered')

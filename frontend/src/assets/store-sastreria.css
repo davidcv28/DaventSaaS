@@ -8,18 +8,28 @@
    re-escribe los tokens --sp-* y los componentes .rz-* del atelier.
    ========================================================================== */
 
+/* La paleta sale del tema elegido (--st-*, lo emite el site_theme en el
+   contenedor): cada estilo del catálogo trae su bg/surface/tinta/borde.
+   Sin site_theme caen los literales de la piel. */
 .store-page[data-template='sastreria'] {
-  --ss-paper: #F3EFE7;
-  --ss-card: #FBF8F2;
-  --ss-soft: #EAE4D8;
-  --ss-line: #D9D3C6;
-  --ss-line-strong: #C4BCAB;
-  --ss-ink: #1B1A17;
-  --ss-ink-2: #3A3730;
-  --ss-muted: #6B665C;
+  --ss-paper: var(--st-bg, #F3EFE7);
+  --ss-card: var(--st-surface, #FBF8F2);
+  --ss-soft: color-mix(in srgb, var(--st-text, #1B1A17) 6%, var(--st-surface, #FBF8F2));
+  --ss-line: var(--st-border, #D9D3C6);
+  --ss-line-strong: color-mix(in srgb, var(--st-border, #D9D3C6) 62%, var(--st-text, #1B1A17));
+  --ss-ink: var(--st-text, #1B1A17);
+  --ss-ink-2: color-mix(in srgb, var(--st-text, #1B1A17) 82%, var(--st-bg, #F3EFE7));
+  --ss-muted: var(--st-muted, #6B665C);
+  --ss-ok: var(--st-success, #5E6B57);
+  --ss-danger: var(--st-danger, #9E2B25);
   --ss-leather: var(--store-accent-ink, #6E4A2F);
-  --ss-leather-raw: var(--store-accent, #6E4A2F);
+  /* Relleno de acento: --store-accent-ink es el tono white-safe del acento
+     (bandPalette/deriveAccent) → blanco encima siempre ≥4.5:1, cualquier
+     acento claro del dueño incluido. */
+  --ss-leather-raw: var(--store-accent-ink, var(--store-accent, #6E4A2F));
   --ss-on-leather: #FFFDF8;
+  --rz-theme-color: #F3EFE7;
+  --sp-theme-color: #F3EFE7;
   --ss-display: 'Fraunces', Georgia, 'Times New Roman', serif;
   --ss-body: 'Instrument Sans', system-ui, -apple-system, 'Segoe UI', sans-serif;
   --ss-mono: 'JetBrains Mono', ui-monospace, SFMono-Regular, monospace;
@@ -179,9 +189,8 @@
    ========================================================================== */
 .store-page[data-template='sastreria'] { --sp-top-h: var(--ss-top-h); }
 .store-page[data-template='sastreria'] .sp-top {
-  background: color-mix(in srgb, var(--ss-paper) 92%, transparent);
+  background: var(--ss-paper);
   border-bottom: 1px solid var(--ss-line);
-  backdrop-filter: blur(8px);
   box-shadow: none;
 }
 .store-page[data-template='sastreria'] .sp-top-inner {
@@ -560,31 +569,78 @@
    CATÁLOGO / FICHA / SERVICIOS (subárbol Raíz + capa sastrería)
    ========================================================================== */
 .store-page[data-template='raiz'].ss-skin {
-  --sp-bg: #F3EFE7;
-  --sp-card: #FBF8F2;
-  --sp-card-solid: #FBF8F2;
-  --sp-surface: #EAE4D8;
-  --sp-soft: #EAE4D8;
-  --sp-ink: #1B1A17;
-  --sp-ink-2: #3A3730;
-  --sp-muted: #6B665C;
-  --sp-line: #D9D3C6;
-  --sp-radius: 2px;
-  --sp-accent-text: #6E4A2F;
-  --sp-shadow-sm: 0 1px 0 rgba(27, 26, 23, .06);
-  --sp-shadow-md: 0 22px 44px -30px rgba(27, 26, 23, .45);
-  --sp-chrome: #F3EFE7;
+  /* Firma del atelier sobre los tokens de Raíz: tipografía, radios 2px,
+     superficies planas y acento cuero. Los --rz-accent-deep/-2 y
+     --rz-band-1/2 NO se pisan: caen a --sp-band-base1/2 (tonos white-safe
+     calculados del acento por bandPalette). */
+  --rz-bg: var(--ss-paper);
+  --rz-surface: var(--ss-card);
+  --rz-surface-2: var(--ss-soft);
+  --rz-surface-3: var(--ss-soft);
+  --rz-line: var(--ss-line);
+  --rz-line-strong: var(--ss-line-strong);
+  --rz-line-ui: var(--ss-line);
+  --rz-ink: var(--ss-ink);
+  --rz-ink-2: var(--ss-ink-2);
+  --rz-muted: var(--ss-muted);
+  --rz-accent: var(--store-accent, #6E4A2F);
+  --rz-accent-soft: color-mix(in srgb, var(--store-accent, #6E4A2F) 10%, var(--ss-card));
+  --rz-accent-text: var(--ss-leather);
+  --rz-ok: var(--ss-ok, #5E6B57);
+  --rz-danger: var(--ss-danger, #9E2B25);
+  --rz-warm: #8A5A24;
+  --rz-focus: var(--ss-leather);
+  --rz-scrim: rgb(23 22 20 / .55);
+  --rz-selection: color-mix(in srgb, var(--store-accent, #6E4A2F) 22%, var(--ss-card));
+  --rz-inverse-bg: #201D18;
+  --rz-inverse-bg-2: #2B2823;
+  --rz-inverse-ink: #F2EEE4;
+  --rz-inverse-ink-2: #D7D1C4;
+  --rz-inverse-muted: #A39C8D;
+  --rz-inverse-line: rgb(242 238 228 / .16);
+  --rz-inverse-accent: color-mix(in srgb, var(--store-accent-bright, #C08A5A) 70%, #F2EEE4);
+  --rz-display: var(--ss-display);
+  --rz-body: var(--ss-body);
+  --rz-rad-sm: 2px;
+  --rz-rad-md: 2px;
+  --rz-rad-lg: 2px;
+  --rz-shadow-1: var(--sp-shadow-sm);
+  --rz-shadow-2: var(--sp-shadow-md);
+
+  --sp-bg: var(--ss-paper);
+  --sp-card: var(--ss-card);
+  --sp-card-solid: var(--ss-card);
+  --sp-surface: var(--ss-soft);
+  --sp-soft: var(--ss-soft);
+  --sp-ink: var(--ss-ink);
+  --sp-ink-2: var(--ss-ink-2);
+  --sp-muted: var(--ss-muted);
+  --sp-line: var(--ss-line);
+  --sp-accent-text: var(--ss-leather);
+  --sp-chrome: var(--ss-paper);
+  --sp-top-h: var(--ss-top-h, 118px);
+
+  color-scheme: light;
+  /* .store-page base estira el subárbol a 100dvh y en móvil suma el
+     padding-top del header fijo (ya reservado por la página externa). */
+  min-height: 0;
+  padding-top: 0;
+  background: var(--ss-paper);
+  color: var(--ss-ink);
   font-family: var(--ss-body, 'Instrument Sans', system-ui, sans-serif);
-  background: #F3EFE7;
-  color: #1B1A17;
+}
+/* El atributo de tema vive en el .store-page externo: la variante de
+   ancestro es la única que alcanza al subárbol anidado. */
+.store-page[data-template='sastreria'][data-store-theme='dark'] .store-page[data-template='raiz'].ss-skin {
+  color-scheme: dark;
 }
 .store-page[data-template='raiz'].ss-skin .rz-cat-head,
 .store-page[data-template='raiz'].ss-skin .rz-sv-head,
 .store-page[data-template='raiz'].ss-skin .rz-pdp-sec-head {
-  border-bottom: 1px solid #C4BCAB;
+  border-bottom: 1px solid var(--ss-line-strong);
 }
 .store-page[data-template='raiz'].ss-skin .rz-cat-title,
-.store-page[data-template='raiz'].ss-skin .rz-sv-hero-title,
+.store-page[data-template='raiz'].ss-skin .rz-sv-title,
 .store-page[data-template='raiz'].ss-skin .rz-pdp-name,
 .store-page[data-template='raiz'].ss-skin .rz-pdp-sec-title {
   font-family: var(--ss-display, 'Fraunces', Georgia, serif);
@@ -595,17 +651,21 @@
 .store-page[data-template='raiz'].ss-skin .rz-cat-kicker {
   font-family: var(--ss-mono, 'JetBrains Mono', monospace);
   letter-spacing: .2em;
-  color: #6E4A2F;
+  color: var(--ss-leather);
 }
 .store-page[data-template='raiz'].ss-skin .rz-cat-rail,
 .store-page[data-template='raiz'].ss-skin .rz-cat-card,
-.store-page[data-template='raiz'].ss-skin .rz-cat-products,
-.store-page[data-template='raiz'].ss-skin .rz-sv-plate,
 .store-page[data-template='raiz'].ss-skin .rz-pdp-pricebox,
 .store-page[data-template='raiz'].ss-skin .rz-pdp-gallery {
-  border: 1px solid #D9D3C6;
+  border: 1px solid var(--ss-line);
   border-radius: 2px;
-  background: #FBF8F2;
+  background: var(--ss-card);
+  box-shadow: none;
+}
+/* .rz-sv-plate es el sello de acento rotado: si hereda la tarjeta queda
+   texto blanco sobre papel. Vuelve a ser la placa de cuero. */
+.store-page[data-template='raiz'].ss-skin .rz-sv-plate {
+  border-radius: 2px;
   box-shadow: none;
 }
 .store-page[data-template='raiz'].ss-skin .rz-btn {
@@ -616,20 +676,20 @@
   text-transform: uppercase;
 }
 .store-page[data-template='raiz'].ss-skin .rz-btn:not(.rz-btn--ghost) {
-  background: #1B1A17;
-  border-color: #1B1A17;
-  color: #F3EFE7;
+  background: var(--ss-ink);
+  border-color: var(--ss-ink);
+  color: var(--ss-paper);
 }
 .store-page[data-template='raiz'].ss-skin .rz-btn:not(.rz-btn--ghost):hover {
-  background: #6E4A2F;
-  border-color: #6E4A2F;
-  color: #FFFDF8;
+  background: var(--ss-leather-raw);
+  border-color: var(--ss-leather-raw);
+  color: var(--ss-on-leather);
 }
 .store-page[data-template='raiz'].ss-skin .rz-cat-results .tpc,
 .store-page[data-template='raiz'].ss-skin .rz-pdp-rel-card {
-  border: 1px solid #D9D3C6;
+  border: 1px solid var(--ss-line);
   border-radius: 2px;
-  background: #FBF8F2;
+  background: var(--ss-card);
   box-shadow: none;
 }
 .store-page[data-template='raiz'].ss-skin .rz-cat-results .tpc-name,
@@ -637,28 +697,27 @@
   font-family: var(--ss-display, 'Fraunces', Georgia, serif);
   font-weight: 400;
 }
-.store-page[data-template='raiz'].ss-skin .rz-sv-hero,
-.store-page[data-template='raiz'].ss-skin .rz-sv-band {
-  background: #EAE4D8;
-  border-color: #D9D3C6;
+.store-page[data-template='raiz'].ss-skin .rz-sv-hero {
+  background: var(--ss-soft);
+  border-color: var(--ss-line);
 }
 .store-page[data-template='raiz'].ss-skin .rz-sv-hero-num,
 .store-page[data-template='raiz'].ss-skin .rz-sv-flow-num {
   font-family: var(--ss-mono, 'JetBrains Mono', monospace);
-  color: #6E4A2F;
+  color: var(--ss-leather);
 }
 .store-page[data-template='raiz'].ss-skin .rz-sv-hero-card,
 .store-page[data-template='raiz'].ss-skin .rz-sv-bar {
   border-radius: 2px;
-  border: 1px solid #D9D3C6;
-  background: #FBF8F2;
+  border: 1px solid var(--ss-line);
+  background: var(--ss-card);
   box-shadow: none;
 }
 .store-page[data-template='raiz'].ss-skin .rz-field,
 .store-page[data-template='raiz'].ss-skin .rz-cat-apply {
   border-radius: 2px;
-  border-color: #D9D3C6;
-  background: #FBF8F2;
+  border-color: var(--ss-line);
+  background: var(--ss-card);
 }
 
 /* ==========================================================================
@@ -673,8 +732,16 @@
   --ss-ink: #F2EEE4;
   --ss-ink-2: #D7D1C4;
   --ss-muted: #A39C8D;
-  --ss-leather: color-mix(in srgb, var(--store-accent, #C08A5A) 82%, #F2EEE4);
+  --ss-ok: #A9B79E;
+  --ss-danger: #D4685E;
+  /* En noche el cuero se invierte: la tinta de acento se aclara hacia el
+     papel (≥7:1 sobre --ss-paper) y el relleno queda un tono medio que
+     sostiene texto tinta --ss-on-leather (≥5:1) con cualquier acento. */
+  --ss-leather: color-mix(in srgb, var(--store-accent, #C08A5A) 42%, #F2EEE4);
+  --ss-leather-raw: color-mix(in srgb, var(--store-accent, #C08A5A) 58%, #F2EEE4);
   --ss-on-leather: #171614;
+  --rz-theme-color: #171614;
+  --sp-theme-color: #171614;
   --sp-bg: var(--ss-paper);
   --sp-card: var(--ss-card);
   --sp-card-solid: var(--ss-card);
@@ -700,20 +767,7 @@
 .store-page[data-template='sastreria'][data-store-theme='dark'] .ss-hero-media img { filter: saturate(.82) brightness(.92); }
 .store-page[data-template='sastreria'][data-store-theme='dark'] .ss-swatch:nth-child(1) .chip { background: #6E6252; }
 .store-page[data-template='sastreria'][data-store-theme='dark'] .ss-swatch:nth-child(2) .chip { background: #4C5647; }
-.store-page[data-template='raiz'].ss-skin[data-store-theme='dark'] {
-  --sp-bg: #171614;
-  --sp-card: #211F1C;
-  --sp-card-solid: #211F1C;
-  --sp-surface: #2B2823;
-  --sp-soft: #2B2823;
-  --sp-ink: #F2EEE4;
-  --sp-ink-2: #D7D1C4;
-  --sp-muted: #A39C8D;
-  --sp-line: #3A362F;
-  --sp-chrome: #171614;
-  background: #171614;
-  color: #F2EEE4;
-}
+.store-page[data-template='sastreria'][data-store-theme='dark'] .ss-swatch:nth-child(3) .chip { background: #8A6B52; }
 
 /* ==========================================================================
    RESPONSIVE

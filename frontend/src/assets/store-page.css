@@ -3543,10 +3543,12 @@ Reels— van angostas, las 16:9 anchas). El botón de vivo es Premium. */
   --mt-body: var(--st-font-body) !important;
   --rz-body: var(--st-font-body) !important;
   --sg-body: var(--st-font-body) !important;
+  --ss-body: var(--st-font-body) !important;
   --sv-body: var(--st-font-body) !important;
   --tr-body: var(--st-font-body) !important;
   --trc-body: var(--st-font-body) !important;
 }
+.store-page[data-st-font-heading]{ --ss-display: var(--st-font-heading) !important; }
 .store-page[data-st-font-heading] :is(h1, h2, h3, .sp-hero-title, .sp-hal-title, .sp-section-title){
   font-family: var(--st-font-heading, var(--sp-display, var(--store-font, inherit))) !important;
 }

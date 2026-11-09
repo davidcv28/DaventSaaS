@@ -6,6 +6,7 @@
 // compartidos re-skineados desde store-sastreria.css.
 import { computed, ref } from 'vue'
 import { templateBlocks } from '../../../templates/index.js'
+import { landingExtras } from '../../../templates/_shared.js'
 import { useStorePage } from '../../../composables/useStorePage.js'
 import BlkAnnouncements from '../../../components/store/blocks/BlkAnnouncements.vue'
 import BlkCategories from '../../../components/store/blocks/BlkCategories.vue'
@@ -43,7 +44,8 @@ const MAP = {
   gallery: BlkGallery,
   faq: BlkFaq,
   cta: BlkCta,
-  contact: BlkContact
+  contact: BlkContact,
+  ...landingExtras
 }
 
 function withDefaults(block) {

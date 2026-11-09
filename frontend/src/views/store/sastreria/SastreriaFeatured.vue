@@ -36,7 +36,7 @@ const oldOf = (p) => (p.offer_price != null && p.price ? formatARS(p.price) : ''
     <div class="ss-wrap">
       <header v-reveal class="ss-head">
         <h2 id="ss-shop-title">{{ title }}</h2>
-        <span>{{ year }} · Otoño invierno</span>
+        <span>{{ year }}</span>
       </header>
       <div class="ss-lookbook">
         <article
