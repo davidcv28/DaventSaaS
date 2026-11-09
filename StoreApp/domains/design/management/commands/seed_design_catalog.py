@@ -159,6 +159,9 @@ class Command(BaseCommand):
                 'tokens'        :   pattern.get('tokens') or {},
                 'tags'          :   pattern.get('tags') or [],
                 'preview'       :   pattern.get('preview', ''),
+                #Tienda ilustrativa: el seed la declara por slug; vacío si
+                #todavía no hay web de ejemplo para ese diseño.
+                'demo_slug'     :   pattern.get('demo_slug', ''),
                 #Estilo firma del patrón (FK opcional): permite que el
                 #documento use `data-ds-style` aun sin estilo elegido.
                 'style'         :   DesignStyle.objects.filter(slug = pattern.get('style')).first() if pattern.get('style') else None,

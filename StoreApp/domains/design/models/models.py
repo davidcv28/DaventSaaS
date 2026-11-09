@@ -315,6 +315,9 @@ class DesignPattern(models.Model):
     )
     #Clave/URL de la miniatura que muestra el catálogo
     preview             =   models.CharField(max_length = 255, blank = True, verbose_name = 'Miniatura')
+    #Slug de la tienda ilustrativa que muestra el diseño ya armado
+    #(el dashboard la abre como "Ver ejemplo" en la sección Diseño).
+    demo_slug           =   models.SlugField(max_length = 90, blank = True, verbose_name = 'Tienda ilustrativa')
     style               =   models.ForeignKey(
         DesignStyle,
         on_delete = models.SET_NULL,

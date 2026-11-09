@@ -8768,6 +8768,7 @@
     {
       "slug": "portico",
       "nombre": "Pórtico",
+      "demo_slug": "vertice",
       "categoria": "premium",
       "descripcion": "Insignia premium generalista: galería editorial de piedra y cobre con todas las secciones del negocio (ofrecemos, cifras, historia, garantías, catálogo, marcas, galería, trayectoria, equipo, opiniones, membresías, video, FAQ, CTA y contacto), catálogo filtrable, servicios y ficha de producto.",
       "tier": "plus",
@@ -8910,6 +8911,7 @@
       "slug": "esencial",
       "nombre": "Esencial",
       "categoria": "general",
+      "demo_slug": "vivero-esencia",
       "descripcion": "Diseño base de la plataforma: portada completa con todas las secciones habilitadas — catálogo, suscripción, servicios, ofertas y contacto.",
       "tier": "base",
       "template": "raiz",
@@ -9164,6 +9166,7 @@
     {
       "slug": "gimnasio",
       "nombre": "Gimnasio",
+      "demo_slug": "forja",
       "categoria": "deporte",
       "descripcion": "Gimnasio y fitness: negro oliva con hueso, lima eléctrico, Barlow Condensed 800, portada con ficha de horarios y sello giratorio, cinta de disciplinas en loop, cifras animadas, equipo en fichas y planes en tarjetas de precio.",
       "tier": "plus",
@@ -9326,6 +9329,7 @@
     {
       "slug": "mercado",
       "nombre": "Bazar",
+      "demo_slug": "bazar-artemisa",
       "categoria": "retail",
       "descripcion": "Marketplace masivo: barra amarilla, búsqueda al frente, grilla densa de productos y descuentos en verde.",
       "tier": "plus",
@@ -9487,6 +9491,7 @@
     {
       "slug": "moderntec",
       "nombre": "ModernTec",
+      "demo_slug": "nodo",
       "categoria": "tecnologia",
       "descripcion": "ModernTec: oscuro tecnologico con acento cyan/violeta, hero con specs en mono y tarjeta device — tiendas de tecnologia, electronica y gaming.",
       "tier": "plus",
@@ -9624,6 +9629,7 @@
     {
       "slug": "sastreria",
       "nombre": "Sastrería",
+      "demo_slug": "telar",
       "categoria": "indumentaria",
       "descripcion": "Sastrería editorial: papel hueso, tinta y cuero, nav con índice numerado, filas de prendas tipo fichero y fondo de líneas de sastre en deriva lenta.",
       "tier": "plus",
@@ -9812,6 +9818,7 @@
     {
       "slug": "ruta",
       "nombre": "Ruta",
+      "demo_slug": "ruta-sur",
       "categoria": "turismo",
       "descripcion": "Guía de viaje: escena animada con sol, nubes y ruta punteada, servicios en itinerario, datos de la empresa y galería de postales.",
       "tier": "plus",
@@ -9939,6 +9946,7 @@
     {
       "slug": "aurum",
       "nombre": "Áurea",
+      "demo_slug": "casa-aurea",
       "categoria": "premium",
       "descripcion": "Insignia premium generalista: tinta y dorado, índices numerados, todas las secciones del negocio (ofrecemos, números, garantías, trayectoria, equipo, opiniones, planes, FAQ, video y CTA).",
       "tier": "advanced",
@@ -10703,6 +10711,7 @@
     {
       "slug": "moda",
       "nombre": "Moda",
+      "demo_slug": "maison-vela",
       "categoria": "indumentaria",
       "descripcion": "Fashion club editorial: portada de revista con sello y cinta, índice de líneas, vitrina con tabs reales, atelier con cifras, garantías, membresías, testimonios, FAQ, CTA y contacto. Solo datos de la tienda; sin ofertas inventadas.",
       "tier": "plus",

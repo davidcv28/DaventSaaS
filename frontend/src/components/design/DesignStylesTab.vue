@@ -410,8 +410,25 @@ watch(() => props.previewOpen, async (open) => {
 })
 function onMobilePreviewKey(e) {
   if (e.key === 'Escape' && props.previewOpen) closeMobilePreview()
+  else if (e.key === 'Escape' && demoOpen.value) closeDemo()
   else if (e.key === 'Escape' && showOpen.value) closeShow()
 }
+
+// --- Web ilustrativa del diseño -----------------------------------------
+// Cada patrón puede declarar `demo_slug` (tienda real cargada como ejemplo,
+// p. ej. Maison Vela para Moda). "Ver ejemplo" la abre en una hoja con el
+// iframe de la web pública — el usuario ve el diseño ya armado con datos.
+const demoOpen = ref(false)
+const demoUrl = computed(() => {
+  const slug = patternOptions.value.find((x) => x.slug === currentPattern.value)?.demo_slug
+  return slug ? `/${slug}` : ''
+})
+function openDemo() { if (demoUrl.value) demoOpen.value = true }
+function closeDemo() { demoOpen.value = false }
+watch(demoOpen, (open) => {
+  if (props.previewOpen || showOpen.value) return
+  document.body.style.overflow = open ? 'hidden' : ''
+})
 // Si el contenedor crece a dos columnas, la hoja se cierra (ahí ya está el panel).
 function onViewport() {
   if (!props.previewOpen) return
@@ -478,6 +495,9 @@ onBeforeUnmount(() => {
               <p v-if="currentPatternBadge" class="dmenu-plan">
                 <span class="dmenu-badge" :class="currentPatternBadge.tone">{{ currentPatternBadge.text }}</span>
               </p>
+              <button v-if="demoUrl" type="button" class="dmenu-demo" @click="openDemo">
+                <AppIcon name="eye" :size="14" /> Ver ejemplo
+              </button>
             </div>
 
             <div class="dmenu-field">
@@ -589,6 +609,28 @@ onBeforeUnmount(() => {
   <Teleport to="body">
     <Transition name="dmenu-pv">
       <div
+        v-if="demoOpen" class="dmenu-pv" role="dialog" aria-modal="true"
+        aria-label="Ejemplo del diseño elegido" @click.self="closeDemo"
+      >
+        <header class="dmenu-pv-head">
+          <strong><AppIcon name="eye" :size="16" aria-hidden="true" /> Ejemplo del diseño</strong>
+          <a class="dmenu-demo-out" :href="demoUrl" target="_blank" rel="noopener">
+            <AppIcon name="external-link" :size="14" /> Abrir en pestaña
+          </a>
+          <button type="button" class="dmenu-pv-x" aria-label="Cerrar el ejemplo" @click="closeDemo">
+            <AppIcon name="x" :size="18" />
+          </button>
+        </header>
+        <div class="dmenu-pv-body dmenu-demo-body">
+          <iframe class="dmenu-demo-frame" :src="demoUrl" title="Ejemplo del diseño"></iframe>
+        </div>
+      </div>
+    </Transition>
+  </Teleport>
+
+  <Teleport to="body">
+    <Transition name="dmenu-pv">
+      <div
         v-if="previewOpen" class="dmenu-pv" role="dialog" aria-modal="true"
         aria-label="Vista previa de tu web"
         :style="pvDrag ? { transform: `translateY(${pvDrag}px)`, transition: 'none' } : null"
@@ -657,6 +699,27 @@ onBeforeUnmount(() => {
 .dmenu-field .select { width: 100%; min-width: 0; text-overflow: ellipsis; }
 .dmenu-hint { margin: 0; font-size: 12px; line-height: 1.4; color: var(--muted); }
 .dmenu-plan { margin: 0; display: flex; align-items: center; }
+/* "Ver ejemplo": abre la tienda ilustrativa del diseño en una hoja. */
+.dmenu-demo {
+  display: inline-flex; align-items: center; justify-content: center; gap: 6px;
+  justify-self: start; min-height: 34px; padding: 0 12px; border-radius: 9px;
+  border: 1px solid var(--line, #e5e7eb); background: transparent;
+  color: var(--ink-2, #334155); font-size: 12.5px; font-weight: 600; cursor: pointer;
+}
+@media (hover: hover) and (pointer: fine) {
+  .dmenu-demo:hover { border-color: var(--brand-500, #6366f1); color: var(--brand-600, #4f46e5); }
+}
+.dmenu-demo-out {
+  display: inline-flex; align-items: center; gap: 6px; margin-left: auto;
+  font-size: 12.5px; font-weight: 600; color: var(--brand-600, #4f46e5);
+  text-decoration: none; padding: 6px 4px;
+}
+.dmenu-demo-body { padding: 0; }
+.dmenu-demo-frame {
+  flex: 1 1 auto; width: 100%; min-height: 0; border: 0; border-radius: 18px;
+  background: var(--card, #fff);
+  box-shadow: 0 20px 50px -26px rgba(9, 12, 24, .45);
+}
 .dmenu-badge {
   display: inline-flex; align-items: center; padding: 1px 8px; border-radius: 99px;
   font-size: 10.5px; font-weight: 700; letter-spacing: .02em; line-height: 1.5;

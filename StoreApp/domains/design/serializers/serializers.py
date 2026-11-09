@@ -176,7 +176,7 @@ class DesignPatternListSerializer(serializers.ModelSerializer):
         fields          =   [
             'id', 'slug', 'nombre', 'categoria', 'categoria_nombre', 'descripcion', 'tier',
             'template', 'layout', 'variables', 'supports_dark_mode', 'dynamic',
-            'icon_style', 'tokens', 'tags', 'preview', 'style',
+            'icon_style', 'tokens', 'tags', 'preview', 'demo_slug', 'style',
             'has_markup', 'is_default', 'is_active', 'position',
         ]
     def get_has_markup(self, obj):
