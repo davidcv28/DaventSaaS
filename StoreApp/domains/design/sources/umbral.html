@@ -2459,7 +2459,7 @@ html[data-ds-theme="dark"] .cta-band .cta-title em{color:var(--accent)}
     var sec = document.querySelector('[data-video-sec]')
     if (!sec || sec.getAttribute('data-v-ready')) return
     sec.setAttribute('data-v-ready', '1')
-    var hasEmbed = !!sec.querySelector('.ds-videos iframe')
+    var hasEmbed = !!sec.querySelector('.ds-videos a, .ds-videos iframe')
     var solo = sec.querySelector('.video-solo')
     var live = sec.querySelector('.live-link')
     var hasSolo = solo && solo.getAttribute('href')

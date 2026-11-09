@@ -153,6 +153,8 @@ section:has(.ds-plans:empty){display:none!important}
   color:var(--ds-success,#0f9d58);
 }
 .ds-stock i{width:6px;height:6px;border-radius:50%;background:currentColor;flex:none}
+/* Sin token del estilo el verde de stock no llega a AA en oscuro. */
+html[data-ds-theme="dark"] .ds-stock{color:var(--ds-success,#5ecf8f)}
 
 /* Opiniones de producto: honeypot fuera de pantalla y pulgar inline. */
 .ds-rev-hp{position:absolute!important;left:-9999px;width:1px;height:1px;overflow:hidden}

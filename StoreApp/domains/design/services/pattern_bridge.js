@@ -260,6 +260,14 @@
     ;(pinned || []).forEach(function (p) {
       if (p.prop !== 'bottom' || !p.el.offsetHeight) return
       if (p.el.closest && p.el.closest('.ds-chat')) return
+      /* Hojas cerradas (translateY(102%)) conservan layout: su rect queda
+       * debajo del borde visible del marco y no son chrome real — contarlas
+       * inflaba --ds-chat-lift y desplazaba el FAB a media pantalla. */
+      if (frameBox) {
+        var docBot = Math.min(frameBox.vh - frameBox.top, frameBox.bottom - frameBox.top)
+        var r = p.el.getBoundingClientRect()
+        if (r.top > docBot + 4) return
+      }
       max = Math.max(max, p.el.offsetHeight + (p.base || 0))
     })
     return max
@@ -985,6 +993,7 @@
     html += '<button type="button" class="suggest-more" role="option" aria-selected="false" data-suggest-all>Ver todos los resultados</button>'
     panel.innerHTML = html
     panel.hidden = false
+    panel.setAttribute('role', 'listbox')
     input.setAttribute('aria-expanded', 'true')
     suggestItems = [].slice.call(panel.querySelectorAll('[role="option"]'))
     suggestItems.forEach(function (item, i) {

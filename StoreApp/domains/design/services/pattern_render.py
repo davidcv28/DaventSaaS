@@ -138,8 +138,9 @@ def _money(value):
 
 def _hours_text(customization):
     """
-    "Lun a Vie 9 a 18 h · Sáb 9 a 13 h" a partir de `hours`
-    ([{day, open, close, closed}]).
+    "Lun a Vie 9 a 18 h · Sáb 9 a 13 h" a partir de `hours`.
+    Dos formatos coexisten en las tiendas: el del panel [{label, value}]
+    ("Lun a vie" / "9 a 18 h") y el de esquema [{day, open, close, closed}].
     """
     if customization is None or not customization.show_hours:
         return ''
@@ -149,15 +150,21 @@ def _hours_text(customization):
         if not isinstance(row, dict):
             continue
         day = DAYS_ES.get(str(row.get('day') or '').lower(), '')
-        if not day:
+        if day:
+            if row.get('closed'):
+                parts.append(f'{day} cerrado')
+                continue
+            open_at = _text(row.get('open'), 5)
+            close_at = _text(row.get('close'), 5)
+            if open_at and close_at:
+                parts.append(f'{day} {open_at} a {close_at}')
             continue
-        if row.get('closed'):
-            parts.append(f'{day} cerrado')
-            continue
-        open_at = _text(row.get('open'), 5)
-        close_at = _text(row.get('close'), 5)
-        if open_at and close_at:
-            parts.append(f'{day} {open_at} a {close_at}')
+        label = _text(row.get('label'), 60)
+        value = _text(row.get('value'), 60)
+        if label and value:
+            parts.append(f'{label} {value}')
+        elif label or value:
+            parts.append(label or value)
     return ' · '.join(parts[:7])
 
 def _contact_link(store, customization, kind, field, text = ''):
@@ -221,7 +228,10 @@ def _page_flags(store, customization):
         'offers':       on('show_offers'),
         'brands':       on('show_brands'),
         'countdown':    on('show_countdown'),
-        'reviews':      on('show_reviews', False),
+        #La zona de opiniones se muestra si hay rating O solo comentarios:
+        #el fragmento .ds-reviews sale con data-rate/data-comment y el flag
+        #gobierna la sección entera, no una de las dos vías.
+        'reviews':      on('show_reviews', False) or on('show_comments', False),
         'comments':     on('show_comments', False),
     }
 
@@ -339,8 +349,8 @@ def _product_fragment(store, products = None, flags = None):
         )
     if not cards:
         return (
-            '<p class="ds-empty" role="status">Todavía no cargaste productos: '
-            'agregalos desde el panel y aparecen acá.</p>'
+            '<p class="ds-empty" role="status">Estamos preparando nuevas piezas. '
+            'Volvé pronto para verlas.</p>'
         )
     return ''.join(cards)
 
@@ -945,13 +955,25 @@ def _videos_fragment(customization, flags):
 
     limit = plan_benefits_of(customization.store.user).get('max_videos')
     cap = StoreCustomization.VIDEOS_MAX if limit is None else min(int(limit), StoreCustomization.VIDEOS_MAX)
-    cards = ''.join(
-        '<figure style="margin:0"><div style="position:relative;aspect-ratio:16/9;overflow:hidden;border-radius:12px;background:#000">'
-        f'<iframe src="{_attr(url)}" style="position:absolute;inset:0;width:100%;height:100%;border:0" '
-        'loading="lazy" allowfullscreen referrerpolicy="strict-origin-when-cross-origin"></iframe></div></figure>'
-        for url in videos[:cap]
-    )
-    return f'<div class="ds-videos" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:16px">{cards}</div>'
+    #Tarjetas-enlace: el documento corre sandboxeado (CSP frame-src 'none'
+    #y sanitize_markup elimina <iframe>): un embed nunca podría pintarse.
+    #El click abre el video en pestaña nueva vía target=_blank.
+    from urllib.parse import urlparse
+    cards = []
+    for url in videos[:cap]:
+        host = urlparse(url).netloc.replace('www.', '') or 'Video'
+        cards.append(
+            '<a class="ds-video-card" href="' + _attr(url) + '" target="_blank" rel="noopener noreferrer"'
+            ' style="display:flex;align-items:center;gap:12px;padding:14px 16px;'
+            'border:1px solid color-mix(in srgb,currentColor 22%,transparent);border-radius:12px;'
+            'color:inherit;text-decoration:none">'
+            '<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" '
+            'stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/>'
+            '<path d="m10 8 6 4-6 4z"/></svg>'
+            '<span style="font-size:13px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'
+            + escape(host) + '</span></a>'
+        )
+    return f'<div class="ds-videos" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:16px">{"".join(cards)}</div>'
 
 
 #=========================================
