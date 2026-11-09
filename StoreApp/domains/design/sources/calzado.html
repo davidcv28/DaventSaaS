@@ -1379,6 +1379,17 @@ a.contact-row:hover{background:var(--soft);color:var(--accent)}
   border:1px solid var(--btn);
 }
 .ds-chat-send:hover{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+/* Táctil: el hover no debe quedar pegado tras el tap. */
+@media (hover:none){
+  .btn:hover .icon,.head-nav a:hover::after,.m-sheet-nav a:hover,
+  .ms-big:hover img,.ms-shots .ds-shot:hover img,.gal-track .ds-shot:hover img,
+  .ds-product:hover,.ds-product:hover::before,.ds-service:hover::after,
+  .ds-plan:hover::after{transform:none}
+  .cats .ds-cat:hover::after{opacity:0}
+  .ds-product:hover .ds-product-img{transform:none;filter:saturate(.92)}
+  .ds-guar:hover .ds-guar-icon{background:color-mix(in srgb,var(--accent) 12%,var(--surface));color:var(--accent)}
+  .ribbon:hover .ribbon-track,.gallery-band:hover .gal-track{animation-play-state:running}
+}
 </style>
 
 <body>

@@ -865,7 +865,9 @@
   .ds-chat-id strong{font-family:var(--font-d);font-weight:800;letter-spacing:-.01em}
   .ds-chat-id small{font:700 9.5px/1.4 var(--font-m);letter-spacing:.14em;text-transform:uppercase}
   .ds-chat-close{border-radius:var(--radius-btn)}
-  .ds-chat-close:hover{background:color-mix(in srgb,var(--hazard-ink) 18%,transparent)}
+  @media(hover:hover){
+    .ds-chat-close:hover{background:color-mix(in srgb,var(--hazard-ink) 18%,transparent)}
+  }
   .ds-chat-log{background:var(--bg)}
   .ds-chat-msg.bot p{
     background:var(--surface);border:1.5px solid var(--frame);

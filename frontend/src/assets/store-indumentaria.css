@@ -1363,3 +1363,20 @@
   .in-marq-track { animation: none; transform: none; }
   .in-hero-media img { animation: none; transform: none; }
 }
+/* Táctil: el hover no debe quedar pegado tras el tap. */
+@media (hover: none) {
+  .store-page[data-template='indumentaria'] .sp-btn:hover,
+  .store-page[data-template='indumentaria'] .bq-btn:hover,
+  .in-btn-primary:hover { transform: none; }
+  .store-page[data-template='indumentaria'] .sp-btn.ghost:hover,
+  .store-page[data-template='indumentaria'] .bq-btn--ghost:hover,
+  .in-btn-ghost:hover { background: transparent; }
+  .store-page[data-template='indumentaria'] .sp-top-links a:hover::after { transform: scaleX(0); }
+  .store-page[data-template='indumentaria'] .mc-cat-chips button:hover::after,
+  .store-page[data-template='indumentaria'] .f-cat:hover::after { transform: scaleX(0); }
+  .in-marq:hover .in-marq-track { animation-play-state: running; }
+  .in-look:hover { background: var(--in-crudo); }
+  .in-look:hover .in-look-media img { transform: none; }
+  .in-look:hover .in-look-media::after { opacity: 0; }
+  .in-sizes li:hover { background: transparent; border-color: var(--in-line-strong); color: inherit; }
+}
