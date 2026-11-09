@@ -128,7 +128,49 @@ export default function auditPage(opts = {}) {
   // Capas de fondo desde el elemento hacia la raíz (la primera con alfa
   // casi opaco corta). Devuelve null si hay imagen/gradiente de por medio
   // (contraste no calculable con precisión).
+  function blendLayers(layers) {
+    let acc = { r: 255, g: 255, b: 255, a: 1 } // lienzo por defecto
+    for (let i = layers.length - 1; i >= 0; i -= 1) acc = blend(layers[i], acc)
+    return acc
+  }
+
+  /* Backdrop real por pila de pintado: elementsFromPoint devuelve los
+     elementos bajo el punto en orden visible — cubre headers fijos
+     transparentes sobre héroes oscuros, donde el fondo NO es ancestro.
+     Si debajo hay media (img/fondo con imagen) el contraste no es
+     calculable: null = skip, no fallo. */
+  function bgColorOfStack(el) {
+    const r = el.getBoundingClientRect()
+    if (r.width < 1 || r.height < 1) return undefined
+    const stack = document.elementsFromPoint(r.left + r.width / 2, r.top + r.height / 2)
+    const idx = stack.indexOf(el)
+    if (idx < 0) return undefined
+    const layers = []
+    /* El fondo propio del elemento pinta directo detrás del texto:
+       va primero, igual que en el ancestor walk. */
+    const ownCs = getComputedStyle(el)
+    if (ownCs.backgroundImage && ownCs.backgroundImage !== 'none') return null
+    const ownBg = parseColor(ownCs.backgroundColor)
+    if (ownBg && ownBg.a > 0.01) {
+      layers.push(ownBg)
+      if (ownBg.a >= 0.99) return blendLayers(layers)
+    }
+    for (let i = idx + 1; i < stack.length; i += 1) {
+      const n = stack[i]
+      const ncs = getComputedStyle(n)
+      if (ncs.backgroundImage && ncs.backgroundImage !== 'none') return null
+      const tag = n.tagName
+      if (tag === 'IMG' || tag === 'VIDEO' || tag === 'CANVAS' || tag === 'PICTURE' || tag === 'SVG') return null
+      const c = parseColor(ncs.backgroundColor)
+      if (c && c.a > 0.01) layers.push(c)
+      if (c && c.a >= 0.99) break
+    }
+    return layers.length ? blendLayers(layers) : undefined
+  }
+
   function bgColorOf(el) {
+    const stacked = bgColorOfStack(el)
+    if (stacked !== undefined) return stacked
     const layers = []
     let node = el
     while (node && node.nodeType === 1) {
@@ -139,9 +181,7 @@ export default function auditPage(opts = {}) {
       if (c && c.a >= 0.99) break
       node = node.parentElement
     }
-    let acc = { r: 255, g: 255, b: 255, a: 1 } // lienzo por defecto
-    for (let i = layers.length - 1; i >= 0; i -= 1) acc = blend(layers[i], acc)
-    return acc
+    return blendLayers(layers)
   }
 
   function lum({ r, g, b }) {
@@ -178,6 +218,9 @@ export default function auditPage(opts = {}) {
   for (const el of all) {
     if (result.textOverflow.length >= O.maxNodes && result.contrast.failures.length >= O.maxNodes) break
     if (inSkippable(el) || inPreviewChrome(el)) continue
+    /* Decorativos aria-hidden (watermarks, sellos, numeración de pliego):
+       no son texto para AT ni para el cliente — el contraste no aplica. */
+    if (el.closest('[aria-hidden="true"]')) continue
     const cs = getComputedStyle(el)
     if (!hasDirectText(el)) continue
     if (isHidden(el, cs)) continue
