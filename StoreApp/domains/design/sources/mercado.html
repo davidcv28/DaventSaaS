@@ -957,6 +957,36 @@
     .m-tab:hover{color:var(--ink-2)}
     .ribbon:hover .ribbon-track{animation-play-state:running}
   }
+
+  /* ==========================================================
+     CHATBOT DEL NEGOCIO (.ds-chat-*, lo monta pattern_bridge.js)
+     Piel Mercado: acento amarillo, tinta dura, radios cortos y
+     sombra sólida — misma mano que .btn/.ds-product.
+     ========================================================== */
+  .ds-chat-fab{
+    border-radius:var(--radius-btn);
+    background:var(--yellow);color:var(--on-accent);
+    box-shadow:0 4px 0 -1px color-mix(in srgb,var(--ink) 22%,transparent),0 10px 22px -12px rgba(0,0,0,.6);
+  }
+  .ds-chat-fab:hover{transform:translateY(-2px)}
+  .ds-chat-fab:active{transform:translateY(1px);box-shadow:0 1px 0 -1px color-mix(in srgb,var(--ink) 22%,transparent),0 6px 14px -10px rgba(0,0,0,.55)}
+  .ds-chat-panel{
+    border-color:var(--line);border-radius:calc(var(--radius) + 4px);
+    box-shadow:0 24px 50px -18px rgba(0,0,0,.5);
+  }
+  .ds-chat-head{background:var(--yellow);color:var(--on-accent)}
+  .ds-chat-avatar{border-radius:8px;background:color-mix(in srgb,var(--on-accent) 18%,transparent)}
+  .ds-chat-close:hover{background:color-mix(in srgb,var(--on-accent) 20%,transparent)}
+  .ds-chat-msg.bot p{border-radius:var(--radius-btn)}
+  .ds-chat-msg.user p{background:var(--yellow);color:var(--on-accent);border-radius:var(--radius-btn)}
+  .ds-chat-chip{
+    border-color:var(--yellow);border-radius:var(--radius-btn);
+    color:var(--ink);background:var(--surface);
+  }
+  .ds-chat-chip:hover{background:var(--paper)}
+  .ds-chat-input{border-radius:var(--radius-btn);background:var(--soft)}
+  .ds-chat-send{border-radius:var(--radius-btn);background:var(--blue);color:var(--on-primary)}
+  .ds-chat-send:hover{background:var(--blue-deep)}
 </style>
 </head>
 <body>

@@ -73,15 +73,17 @@ const src = computed(() => {
   return `/api/stores/public/${encodeURIComponent(props.slug)}/pattern/document/?${params}`
 })
 
-const emit = defineEmits(['navigate', 'toggle-theme', 'load', 'chrome'])
+const emit = defineEmits(['navigate', 'toggle-theme', 'load'])
 
 //El iframe va sin `allow-same-origin` (origen opaco): el JS del diseño no
 //puede tocar el DOM ni las cookies de la app. Los datos que necesita de la
 //API pública (captcha y opiniones del producto) los pide por postMessage y
 //los busca este componente, que sí es mismo origen.
-//Whitelist cerrada: el documento no elige el endpoint. Solo estas dos
-//rutas de la tienda que embebe, y siempre con su slug (nunca el de otra).
-const PUBLIC_API_RE = /^\/api\/stores\/public\/[a-z0-9-]+\/(?:reviews\/captcha|contact\/captcha|contact|products\/\d+\/reviews)\/?$/
+//Whitelist cerrada: el documento no elige el endpoint. Solo estas rutas
+//de la tienda que embebe, y siempre con su slug (nunca el de otra). La
+//raíz (`<slug>/`) es el payload público completo: de ahí el chatbot del
+//diseño saca {greeting, qa} (ya viene filtrado por beneficio + switch).
+const PUBLIC_API_RE = /^\/api\/stores\/public\/[a-z0-9-]+\/(?:reviews\/captcha|contact\/captcha|contact|products\/\d+\/reviews)?\/?$/
 
 function publicApiUrl(raw) {
   const url = String(raw || '')
@@ -150,13 +152,6 @@ function onMessage(e) {
     } else if (route === 'product' && e.data.id) {
       emit('navigate', { route, id: String(e.data.id) })
     }
-    return
-  }
-  if (e.data?.type === 'davent:ds-chrome') {
-    /* Alto del chrome inferior del documento (tab bar móvil, FAB propio):
-     * el host lo usa para levantar sus flotantes (chatbot) y que no queden
-     * tapados por el menú del diseño. */
-    emit('chrome', Number(e.data.bottom) || 0)
     return
   }
   if (e.data?.type !== 'davent:ds-height') return

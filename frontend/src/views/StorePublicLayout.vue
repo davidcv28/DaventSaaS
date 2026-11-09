@@ -541,10 +541,6 @@ const landingOff = computed(() => status.value === 'success' && !siteTemplates.v
 // Chatbot (beneficio has_chatbot, solo Premium): el serializer público lo manda
 // solo si el dueño lo activó y el plan lo incluye — None = sin widget.
 const botConfig = computed(() => (status.value === 'success' ? store.value?.chatbot || null : null))
-// Alto del chrome inferior del documento del patrón (tab bar móvil): el
-// puente del diseño lo reporta y se lo pasa al chatbot para que la burbuja
-// no quede tapada por el menú del documento.
-const botLift = ref(0)
 
 // Estado compartido con la vista del catálogo: buscador del header, burger y
 // si existe navegación de catálogo (categorías/marcas) para el drawer.
@@ -1017,7 +1013,6 @@ onBeforeUnmount(() => {
       @navigate="onPatternNavigate"
       @toggle-theme="togglePageTheme"
       @load="patternFrameReady = true"
-      @chrome="botLift = $event"
     />
     <!-- Mientras el documento del diseño baja y pinta, skeleton: la página
          Vue ya no está montada (usePattern) y sin esto quedaba un hueco.
@@ -1310,15 +1305,14 @@ onBeforeUnmount(() => {
     </div>
 
     <!-- Chatbot del negocio (has_chatbot): burbuja robot abajo a la derecha.
-         Vive fuera de .sp-vue-page para montarse también sobre los
-         documentos de diseño (PatternSurface). -->
+         Solo en la plantilla Vue: los documentos de diseño montan el suyo
+         propio dentro del iframe (pattern_bridge.js, clases .ds-chat-*). -->
     <StoreBot
-      v-if="botConfig"
+      v-if="botConfig && !usePattern"
       :config="botConfig"
       :name="shopName"
       :logo="custom.logo"
       :initial="initial"
-      :bottom-lift="usePattern ? botLift : 0"
     />
   </div>
 </template>

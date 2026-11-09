@@ -54,7 +54,7 @@
         if (!h) h = document.body.scrollHeight
       }
       if (!h) h = root.scrollHeight
-      reportChrome()
+      syncChatMetrics()
       parent.postMessage({ type: 'davent:ds-height', height: h }, '*')
     })
   }
@@ -169,6 +169,9 @@
     var ih = window.innerHeight || 1
     pinnedIh = ih
     ;[].forEach.call(document.body.querySelectorAll('*'), function (el) {
+      /* UI del propio puente (chatbot): no es chrome del diseño — su
+       * posición la maneja syncChatMetrics, no el pin de barras. */
+      if (el.hasAttribute && el.hasAttribute('data-ds-no-pin')) return
       var cs = getComputedStyle(el)
       if (cs.position !== 'fixed') return
       /* `top`/`bottom` computados siempre resuelven a píxeles para un
@@ -247,23 +250,32 @@
         p.el.style.top = (p.base + dyTop) + 'px'
       }
     })
-    reportChrome()
+    syncChatMetrics()
   }
-  /* Alto del chrome pegado abajo (tab bar móvil, FAB del diseño): el host
-   * lo usa para levantar sus propios flotantes (chatbot) y que no queden
-   * debajo del menú del documento. Se reporta sólo cuando cambia. */
-  var lastChrome = -1
-  function reportChrome() {
-    if (!frameBox || pinned == null) return
+  /* Alto del chrome pegado abajo del diseño (tab bar móvil, FAB propio):
+   * el chatbot del documento se levanta para no quedar debajo. El propio
+   * `.ds-chat` se excluye — si no, se contaría a sí mismo como chrome. */
+  function bottomChromePx() {
     var max = 0
     ;(pinned || []).forEach(function (p) {
       if (p.prop !== 'bottom' || !p.el.offsetHeight) return
+      if (p.el.closest && p.el.closest('.ds-chat')) return
       max = Math.max(max, p.el.offsetHeight + (p.base || 0))
     })
-    var next = Math.round(max)
-    if (next === lastChrome) return
-    lastChrome = next
-    parent.postMessage({ type: 'davent:ds-chrome', bottom: next }, '*')
+    return max
+  }
+  /* Posición del chatbot dentro del iframe estirado: `position:fixed`
+   * anclaría al documento entero, así que el top se calcula contra el
+   * borde inferior visible del marco (mismo criterio que pinFixed) y el
+   * alto del panel sale del viewport real (`--ds-chat-vh`), no del alto
+   * del documento. */
+  function syncChatMetrics() {
+    if (!chat || !chat.root || !frameBox) return
+    var docBot = Math.min(frameBox.vh - frameBox.top, frameBox.bottom - frameBox.top)
+    var lift = bottomChromePx()
+    chat.root.style.setProperty('--ds-chat-lift', Math.round(lift) + 'px')
+    chat.root.style.setProperty('--ds-chat-vh', Math.round(frameBox.vh) + 'px')
+    chat.root.style.top = Math.max(0, docBot - chat.root.offsetHeight - 16 - lift) + 'px'
   }
   window.addEventListener('resize', function () { resetFixed(); pinFixed() })
 
@@ -1303,6 +1315,214 @@
     })
     loadCaptcha()
   }
+  /* ==================================================================
+   * CHATBOT DEL NEGOCIO (beneficio has_chatbot)
+   *
+   * El documento no puede pedir la API solo (origen opaco): la config
+   * {greeting, qa} viaja en el payload público de la tienda y se pide por
+   * el relay `ds-api` (mismo endpoint que ya usa el host). La piel la pone
+   * el CSS de cada diseño sobre las clases `.ds-chat-*`; la base neutra
+   * se inyecta acá con los tokens `--ds-*`/`--ink`/`--surface` del diseño.
+   * Sin chatbot habilitado el payload llega con `chatbot: null` y no se
+   * monta nada.
+   * ================================================================== */
+  var CHAT_FALLBACK = 'Todavía no tengo una respuesta para eso. Podés escribirnos desde la sección "Contáctanos" de esta página y te respondemos en persona.'
+  var chat = null
+  var CHAT_CSS = ''
+    + '.ds-chat{position:fixed;right:16px;top:0;bottom:auto;z-index:70;display:flex;flex-direction:column;align-items:flex-end;gap:12px;font-family:inherit}'
+    + '.ds-chat-fab{position:relative;width:56px;height:56px;flex:none;border:0;border-radius:50%;cursor:pointer;display:grid;place-items:center;background:var(--ds-accent,var(--accent,#4f46e5));color:var(--ds-accent-ink,#fff);box-shadow:0 10px 28px rgba(0,0,0,.28);transition:transform .15s,box-shadow .2s}'
+    + '.ds-chat-fab:hover{transform:translateY(-2px)}'
+    + '.ds-chat-fab:active{transform:scale(.94)}'
+    + '.ds-chat-fab svg{width:26px;height:26px}'
+    + '.ds-chat-panel{width:min(380px,calc(100vw - 32px));height:min(620px,calc(var(--ds-chat-vh,680px) - 140px - var(--ds-chat-lift,0px)));min-height:300px;display:flex;flex-direction:column;background:var(--surface,var(--ds-surface,#fff));color:var(--ink,var(--ds-text,#1a1a1a));border:1px solid var(--line,var(--ds-border,#e5e7eb));border-radius:var(--ds-radius,16px);box-shadow:0 24px 60px rgba(0,0,0,.3);overflow:hidden;font-family:inherit}'
+    + '.ds-chat-head{display:flex;align-items:center;gap:10px;padding:13px 14px;background:var(--ds-accent,var(--accent,#4f46e5));color:var(--ds-accent-ink,#fff)}'
+    + '.ds-chat-avatar{width:36px;height:36px;flex:none;border-radius:12px;display:grid;place-items:center;background:rgba(255,255,255,.16);font-weight:800;font-size:15px;overflow:hidden}'
+    + '.ds-chat-avatar img{width:100%;height:100%;object-fit:cover}'
+    + '.ds-chat-id{flex:1;min-width:0;display:grid}'
+    + '.ds-chat-id strong{font-size:14.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}'
+    + '.ds-chat-id small{font-size:11.5px;opacity:.85;display:inline-flex;align-items:center;gap:4px}'
+    + '.ds-chat-close{width:30px;height:30px;flex:none;border:0;border-radius:8px;background:transparent;color:inherit;display:grid;place-items:center;cursor:pointer}'
+    + '.ds-chat-close:hover{background:rgba(255,255,255,.18)}'
+    + '.ds-chat-log{flex:1;overflow-y:auto;padding:14px;display:grid;gap:10px;align-content:start;background:var(--bg,var(--ds-bg,#f6f7fb))}'
+    + '.ds-chat-msg{max-width:92%;display:flex}'
+    + '.ds-chat-msg p{margin:0;padding:9px 12px;border-radius:14px;font-size:13.5px;line-height:1.5;white-space:pre-line;overflow-wrap:anywhere}'
+    + '.ds-chat-msg.bot p{background:var(--surface,var(--ds-surface,#fff));border:1px solid var(--line,var(--ds-border,#e5e7eb));color:var(--ink,var(--ds-text,#1a1a1a));border-bottom-left-radius:4px}'
+    + '.ds-chat-msg.user{justify-self:end}'
+    + '.ds-chat-msg.user p{background:var(--ds-accent,var(--accent,#4f46e5));color:var(--ds-accent-ink,#fff);border-bottom-right-radius:4px}'
+    + '.ds-chat-typing{display:inline-flex;gap:4px;align-items:center;min-width:38px}'
+    + '.ds-chat-typing i{width:6px;height:6px;border-radius:50%;background:var(--muted,var(--ds-muted,#6b7280));animation:ds-chat-dot 1s infinite}'
+    + '.ds-chat-typing i:nth-child(2){animation-delay:.15s}'
+    + '.ds-chat-typing i:nth-child(3){animation-delay:.3s}'
+    + '@keyframes ds-chat-dot{0%,60%,100%{transform:translateY(0);opacity:.45}30%{transform:translateY(-4px);opacity:1}}'
+    + '.ds-chat-sugg{display:flex;flex-direction:column;align-items:flex-end;gap:6px}'
+    + '.ds-chat-chip{max-width:88%;border:1.5px solid var(--ds-accent,var(--accent,#4f46e5));border-radius:14px;border-bottom-right-radius:4px;background:var(--surface,var(--ds-surface,#fff));color:var(--ds-accent-text,var(--ds-accent,var(--accent,#4f46e5)));font:inherit;font-size:13px;font-weight:600;line-height:1.45;padding:9px 12px;cursor:pointer;text-align:left}'
+    + '.ds-chat-chip:hover{background:color-mix(in srgb,var(--ds-accent,var(--accent,#4f46e5)) 10%,var(--surface,var(--ds-surface,#fff)))}'
+    + '.ds-chat-bar{display:flex;gap:8px;padding:10px 12px;border-top:1px solid var(--line,var(--ds-border,#e5e7eb));background:var(--surface,var(--ds-surface,#fff))}'
+    + '.ds-chat-input{flex:1;min-width:0;border:1px solid var(--line,var(--ds-border,#e5e7eb));border-radius:99px;background:var(--bg,var(--ds-bg,#f6f7fb));color:var(--ink,var(--ds-text,#1a1a1a));font:inherit;font-size:13.5px;padding:8px 14px;outline:none}'
+    + '.ds-chat-input:focus{border-color:var(--ds-accent,var(--accent,#4f46e5))}'
+    + '.ds-chat-send{width:38px;height:38px;flex:none;border:0;border-radius:50%;background:var(--ds-accent,var(--accent,#4f46e5));color:var(--ds-accent-ink,#fff);display:grid;place-items:center;cursor:pointer}'
+    + '.ds-chat-send:disabled{opacity:.45;cursor:default}'
+    + '@media (prefers-reduced-motion:reduce){.ds-chat-typing i{animation:none}.ds-chat-fab,.ds-chat-send,.ds-chat-chip{transition:none}}'
+  var CHAT_ICON_BOT = '<svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="4" y="8" width="16" height="11" rx="3"/><path d="M12 8V4M8 13h.01M16 13h.01"/><path d="M9 17v2M15 17v2"/></svg>'
+  var CHAT_ICON_SEND = '<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m22 2-7 20-4-9-9-4Z"/><path d="M22 2 11 13"/></svg>'
+  var CHAT_ICON_X = '<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M18 6 6 18M6 6l12 12"/></svg>'
+  var CHAT_ICON_BOT_SM = '<svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="4" y="8" width="16" height="11" rx="3"/><path d="M12 8V4M8 13h.01M16 13h.01"/></svg>'
+  function chatNorm(s) {
+    return String(s || '').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '')
+  }
+  /* Misma heurística que el StoreBot de la plantilla Vue: exacta >
+   * contención > palabras de la pregunta en el texto (score >= 2). */
+  function chatFindAnswer(text) {
+    var t = chatNorm(text)
+    if (!t || !chat) return null
+    var best = null
+    var score = 0
+    ;(chat.qa || []).forEach(function (item) {
+      var q = chatNorm(item.q)
+      if (!q) return
+      var s = 0
+      if (t === q) s += 20
+      else if (t.length > 3 && q.indexOf(t) >= 0) s += 6
+      else if (q.length > 3 && t.indexOf(q) >= 0) s += 8
+      q.split(/[^a-z0-9ñ]+/).forEach(function (w) {
+        if (w.length > 3 && t.indexOf(w) >= 0) s += 2
+      })
+      if (s > score) { score = s; best = item }
+    })
+    return score >= 2 ? best.a : null
+  }
+  function mountChatbot(store, cfg) {
+    var name = String(store.business_name || '').trim() || 'La tienda'
+    var initial = (name.charAt(0) || 'T').toUpperCase()
+    var cust = store.customization && typeof store.customization === 'object' ? store.customization : {}
+    var logo = /^https?:\/\//.test(String(cust.logo || '')) ? cust.logo : ''
+    var qa = (Array.isArray(cfg.qa) ? cfg.qa : []).filter(function (i) { return i && i.q && i.a })
+    var greeting = String(cfg.greeting || '').trim() || ('¡Hola! Soy el asistente de ' + name + '. ¿En qué te puedo ayudar?')
+
+    var st = document.createElement('style')
+    st.textContent = CHAT_CSS
+    /* Antes de la hoja del diseño: la base neutra queda DEBAJO de su CSS,
+     * así las reglas `.ds-chat-*` de cada patrón (misma especificidad,
+     * más abajo en el documento) la pisan sin !important. */
+    document.head.insertBefore(st, document.querySelector('style') || null)
+
+    var root = document.createElement('div')
+    root.className = 'ds-chat'
+    root.setAttribute('data-ds-no-pin', '')
+    root.innerHTML =
+      '<section class="ds-chat-panel" role="dialog" aria-label="Asistente de ' + esc(name) + '" hidden>' +
+        '<header class="ds-chat-head">' +
+          '<span class="ds-chat-avatar">' + (logo ? '<img src="' + esc(logo) + '" alt="">' : esc(initial)) + '</span>' +
+          '<span class="ds-chat-id"><strong>' + esc(name) + '</strong><small>' + CHAT_ICON_BOT_SM + ' Asistente virtual</small></span>' +
+          '<button type="button" class="ds-chat-close" aria-label="Cerrar">' + CHAT_ICON_X + '</button>' +
+        '</header>' +
+        '<div class="ds-chat-log" role="log" aria-live="polite"></div>' +
+        '<form class="ds-chat-bar">' +
+          '<input class="ds-chat-input" type="text" maxlength="200" placeholder="Escribí tu mensaje" autocomplete="off">' +
+          '<button type="submit" class="ds-chat-send" aria-label="Enviar">' + CHAT_ICON_SEND + '</button>' +
+        '</form>' +
+      '</section>' +
+      '<button type="button" class="ds-chat-fab" aria-label="Abrir asistente" aria-expanded="false">' + CHAT_ICON_BOT + '</button>'
+    document.body.appendChild(root)
+
+    chat = {
+      root: root,
+      qa: qa,
+      asked: {},
+      greeted: false,
+      typing: false,
+      log: root.querySelector('.ds-chat-log'),
+      panel: root.querySelector('.ds-chat-panel'),
+      input: root.querySelector('.ds-chat-input'),
+      fab: root.querySelector('.ds-chat-fab')
+    }
+
+    function pushMsg(from, text) {
+      var row = document.createElement('div')
+      row.className = 'ds-chat-msg ' + from
+      var p = document.createElement('p')
+      p.textContent = text
+      row.appendChild(p)
+      chat.log.appendChild(row)
+      chat.log.scrollTop = chat.log.scrollHeight
+    }
+    function clearTyping() {
+      var t = chat.log.querySelector('.ds-chat-typing')
+      if (t) t.remove()
+    }
+    function renderChips() {
+      var old = chat.log.querySelector('.ds-chat-sugg')
+      if (old) old.remove()
+      var items = []
+      ;(chat.qa || []).forEach(function (item, i) { if (!chat.asked[i]) items.push({ item: item, i: i }) })
+      if (!items.length) return
+      var box = document.createElement('div')
+      box.className = 'ds-chat-sugg'
+      items.slice(0, 4).forEach(function (x) {
+        var b = document.createElement('button')
+        b.type = 'button'
+        b.className = 'ds-chat-chip'
+        b.textContent = x.item.q
+        b.addEventListener('click', function () { reply(x.item.q, x.i) })
+        box.appendChild(b)
+      })
+      chat.log.appendChild(box)
+      chat.log.scrollTop = chat.log.scrollHeight
+    }
+    function reply(text, idx) {
+      pushMsg('user', text)
+      if (idx != null) chat.asked[idx] = true
+      chat.typing = true
+      var t = document.createElement('div')
+      t.className = 'ds-chat-msg bot ds-chat-typing'
+      t.innerHTML = '<i></i><i></i><i></i>'
+      chat.log.appendChild(t)
+      chat.log.scrollTop = chat.log.scrollHeight
+      setTimeout(function () {
+        chat.typing = false
+        clearTyping()
+        var answer = idx != null ? chat.qa[idx].a : chatFindAnswer(text)
+        pushMsg('bot', answer || CHAT_FALLBACK)
+        renderChips()
+        syncChatMetrics()
+      }, 450)
+    }
+    function setOpen(open) {
+      chat.panel.hidden = !open
+      chat.fab.setAttribute('aria-expanded', open ? 'true' : 'false')
+      if (open) {
+        if (!chat.greeted) { chat.greeted = true; pushMsg('bot', greeting); renderChips() }
+        chat.input.focus()
+      }
+      syncChatMetrics()
+    }
+    chat.fab.addEventListener('click', function () { setOpen(chat.panel.hidden) })
+    root.querySelector('.ds-chat-close').addEventListener('click', function () { setOpen(false) })
+    root.querySelector('.ds-chat-bar').addEventListener('submit', function (e) {
+      e.preventDefault()
+      var text = chat.input.value.trim()
+      if (!text || chat.typing) return
+      chat.input.value = ''
+      reply(text.slice(0, 200))
+    })
+    document.addEventListener('keydown', function (e) {
+      if (e.key === 'Escape' && chat && !chat.panel.hidden) setOpen(false)
+    })
+    syncChatMetrics()
+  }
+  function initChatbot() {
+    /* El slug sale de la propia URL del documento
+     * (/api/stores/public/<slug>/pattern/document/): el payload público
+     * ya filtra `chatbot` por beneficio + switch del dueño. */
+    var m = /\/api\/stores\/public\/([a-z0-9-]+)\/pattern\//.exec(location.pathname || '')
+    if (!m) return
+    api('/api/stores/public/' + m[1] + '/').then(function (out) {
+      var data = out && out.ok && out.data ? out.data : null
+      var cfg = data && data.chatbot
+      if (!cfg) return
+      mountChatbot(data, cfg)
+    })
+  }
   var sortSel = document.querySelector('[data-ds-sort]')
   if (sortSel) sortSel.addEventListener('change', applyCatalog)
   catalog()
@@ -1320,6 +1540,7 @@
   initView()
   initReviews()
   initContact()
+  initChatbot()
   syncFilterUI()
   applyCatalog()
   mountThemeToggle()
