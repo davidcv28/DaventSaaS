@@ -1335,9 +1335,9 @@
 
 /* Nav: grafito translúcido con hairline de acento al hacer scroll. */
 .store-page[data-template='moderntec'] .sp-top {
-  background: color-mix(in srgb, var(--mt-bg) 88%, transparent);
-  backdrop-filter: saturate(150%) blur(12px);
-  -webkit-backdrop-filter: saturate(150%) blur(12px);
+  /* Sin backdrop-filter: el blur de una barra sticky sobre contenido que
+     scrollea se recompone en cada frame. Fondo casi opaco, mismo aire. */
+  background: color-mix(in srgb, var(--mt-bg) 94%, transparent);
   border-bottom: 1px solid var(--mt-line);
 }
 .store-page[data-template='moderntec'] .sp-top .sp-name { font-family: var(--mt-display); letter-spacing: -.02em; }

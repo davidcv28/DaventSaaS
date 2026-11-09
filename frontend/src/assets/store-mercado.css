@@ -373,7 +373,7 @@
   color: var(--mc-ink);
   text-decoration: none;
   box-shadow: 0 14px 30px -18px rgba(0, 0, 0, .5);
-  transition: transform .18s, box-shadow .18s;
+  transition: transform .18s;
 }
 .store-page[data-template='mercado'] .mc-hero-card:hover { transform: translateY(-3px); box-shadow: 0 20px 36px -18px rgba(0, 0, 0, .5); }
 .store-page[data-template='mercado'] .mc-hero-badge {
@@ -527,7 +527,7 @@
   background: var(--mc-surface);
   border-radius: var(--mc-radius);
   box-shadow: 0 1px 2px rgba(0, 0, 0, .1);
-  transition: box-shadow .18s, transform .18s;
+  transition: transform .18s;
 }
 .store-page[data-template='mercado'] .mc-card.tpc:hover {
   transform: translateY(-2px);
@@ -1481,4 +1481,11 @@
   .store-page[data-template='mercado'] .mc-cat-list .tpc-row { transition: none; }
   .store-page[data-template='mercado'] .mc-cat-skel-media,
   .store-page[data-template='mercado'] .mc-cat-skel-line { animation: none; }
+}
+
+/* Sin hover real (táctil): no dejar lifts ni sombras pegados tras el tap. */
+@media (hover: none) {
+  .store-page[data-template='mercado'] .mc-hero-card:hover { transform: none; box-shadow: 0 14px 30px -18px rgba(0, 0, 0, .5); }
+  .store-page[data-template='mercado'] .mc-card.tpc:hover { transform: none; box-shadow: 0 1px 2px rgba(0, 0, 0, .1); }
+  .store-page[data-template='mercado'] .mc-cat-list[data-view='grid'] .mc-cat-card:hover { box-shadow: 0 1px 2px rgba(0, 0, 0, .06); }
 }
