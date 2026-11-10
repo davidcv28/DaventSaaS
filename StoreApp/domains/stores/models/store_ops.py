@@ -70,7 +70,7 @@ class StorePaymentConfig(models.Model):
     """
     store                       =   models.OneToOneField(Store, on_delete = models.CASCADE, related_name = 'payment_config')
     accept_transfer             =   models.BooleanField(default = True, verbose_name = 'Transferencia / depósito')
-    accept_whatsapp             =   models.BooleanField(default = True, verbose_name = 'Coordinar por WhatsApp')
+    accept_whatsapp             =   models.BooleanField(default = False, verbose_name = 'Coordinar por WhatsApp')
     accept_cash                 =   models.BooleanField(default = False, verbose_name = 'Efectivo / pago en persona')
     mp_enabled                  =   models.BooleanField(default = True, verbose_name = 'Mostrar Mercado Pago')
     transfer_alias              =   models.CharField(max_length = 120, blank = True, verbose_name = 'Alias / CVU / CBU')
