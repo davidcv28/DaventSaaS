@@ -165,7 +165,7 @@ function onBackdrop(e) { if (e.target === e.currentTarget) close() }
 .ec-cart-total { display: flex; align-items: baseline; justify-content: space-between; font-size: 15px; }
 .ec-cart-total strong { font-size: 20px; font-weight: 800; font-variant-numeric: tabular-nums; }
 .ec-cart-discount { margin: 0; font-size: 12px; color: var(--sp-success, #0E7A55); }
-.ec-cart-cta { display: inline-flex; align-items: center; justify-content: center; gap: 8px; padding: 13px 16px; border: none; border-radius: calc(var(--sp-radius) * .75); background: var(--store-accent, #111); color: var(--store-accent-ink, #fff); font-size: 15px; font-weight: 800; cursor: pointer; text-decoration: none; }
+.ec-cart-cta { display: inline-flex; align-items: center; justify-content: center; gap: 8px; padding: 13px 16px; border: none; border-radius: calc(var(--sp-radius) * .75); background: var(--store-accent-ink, #111); color: #fff; font-size: 15px; font-weight: 800; cursor: pointer; text-decoration: none; }
 .ec-cart-foot-row { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
 .ec-cart-ghost { display: inline-flex; align-items: center; justify-content: center; gap: 8px; padding: 11px 16px; border: 1px solid var(--sp-line, currentColor); border-radius: calc(var(--sp-radius) * .75); background: transparent; color: inherit; font-size: 14px; font-weight: 600; cursor: pointer; }
 .ec-cart-ghost:disabled { opacity: .5; cursor: default; }

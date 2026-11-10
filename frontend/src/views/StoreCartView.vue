@@ -177,7 +177,7 @@ onMounted(async () => {
 .ec-cp-totals dd { margin: 0; font-weight: 600; font-variant-numeric: tabular-nums; }
 .ec-cp-grand { padding-top: 10px; border-top: 1px solid var(--sp-line, rgba(0,0,0,.09)); font-size: 16px; }
 .ec-cp-grand dd { font-weight: 800; }
-.ec-btn-primary { display: inline-flex; align-items: center; justify-content: center; gap: 8px; padding: 13px 16px; border: none; border-radius: calc(var(--sp-radius) * .75); background: var(--store-accent, #111); color: var(--store-accent-ink, #fff); font-size: 15px; font-weight: 800; cursor: pointer; text-decoration: none; }
+.ec-btn-primary { display: inline-flex; align-items: center; justify-content: center; gap: 8px; padding: 13px 16px; border: none; border-radius: calc(var(--sp-radius) * .75); background: var(--store-accent-ink, #111); color: #fff; font-size: 15px; font-weight: 800; cursor: pointer; text-decoration: none; }
 .ec-cp-cta { width: 100%; }
 
 @media (max-width: 860px) {

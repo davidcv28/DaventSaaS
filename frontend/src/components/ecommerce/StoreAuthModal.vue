@@ -285,7 +285,7 @@ onUnmounted(() => resizeObs?.disconnect())
 .ec-auth-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
 .ec-auth-submit {
   margin-top: 4px; padding: 12px 16px; border: none; border-radius: calc(var(--sp-radius) * .75);
-  background: var(--store-accent, #111); color: var(--store-accent-ink, #fff);
+  background: var(--store-accent-ink, #111); color: #fff;
   font-size: 14.5px; font-weight: 700; cursor: pointer;
 }
 .ec-auth-submit:disabled { opacity: .55; cursor: default; }

@@ -433,7 +433,7 @@ onUnmounted(() => {
 .ec-timeline strong { display: block; font-size: 13.5px; }
 .ec-timeline small { font-size: 12px; color: var(--sp-muted, inherit); }
 .ec-track-actions { display: flex; gap: 10px; flex-wrap: wrap; }
-.ec-btn-primary { display: inline-flex; align-items: center; justify-content: center; gap: 8px; padding: 11px 16px; border: none; border-radius: calc(var(--sp-radius) * .75); background: var(--store-accent, #111); color: var(--store-accent-ink, #fff); font-size: 14px; font-weight: 700; cursor: pointer; text-decoration: none; }
+.ec-btn-primary { display: inline-flex; align-items: center; justify-content: center; gap: 8px; padding: 11px 16px; border: none; border-radius: calc(var(--sp-radius) * .75); background: var(--store-accent-ink, #111); color: #fff; font-size: 14px; font-weight: 700; cursor: pointer; text-decoration: none; }
 .ec-btn-ghost { display: inline-flex; align-items: center; justify-content: center; gap: 8px; padding: 11px 16px; border: 1px solid var(--sp-line, currentColor); border-radius: calc(var(--sp-radius) * .75); background: transparent; color: inherit; font-size: 14px; font-weight: 600; cursor: pointer; text-decoration: none; }
 .ec-hp { position: absolute; left: -9999px; width: 1px; height: 1px; opacity: 0; }
 @media (max-width: 560px) { .ec-stepper { grid-template-columns: 1fr; gap: 10px; } .ec-step { grid-template-columns: 30px 1fr; justify-items: start; text-align: left; } }

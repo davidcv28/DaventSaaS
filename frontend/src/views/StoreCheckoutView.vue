@@ -413,7 +413,7 @@ onMounted(load)
 .ec-co-grand { padding-top: 8px; border-top: 1px solid var(--sp-line, rgba(0,0,0,.1)); font-size: 15px !important; }
 .ec-co-grand dt { font-weight: 700; color: inherit !important; }
 .ec-co-grand dd { font-size: 18px; font-weight: 800; }
-.ec-co-submit { width: 100%; padding: 14px; border: none; border-radius: calc(var(--sp-radius) * .8); background: var(--store-accent, #111); color: var(--store-accent-ink, #fff); font-size: 15.5px; font-weight: 800; cursor: pointer; }
+.ec-co-submit { width: 100%; padding: 14px; border: none; border-radius: calc(var(--sp-radius) * .8); background: var(--store-accent-ink, #111); color: #fff; font-size: 15.5px; font-weight: 800; cursor: pointer; }
 .ec-co-submit:disabled { opacity: .5; cursor: default; }
 .ec-co-error { padding: 10px 12px; border-radius: calc(var(--sp-radius) * .65); }
 .ec-co-link { font-size: 13px; font-weight: 600; color: var(--store-accent, inherit); }

@@ -219,7 +219,7 @@ onMounted(load)
 <style scoped>
 .ec-support { display: grid; gap: 14px; }
 .ec-support-bar { display: flex; justify-content: flex-end; }
-.ec-btn-primary { display: inline-flex; align-items: center; gap: 8px; padding: 11px 16px; border: none; border-radius: calc(var(--sp-radius) * .75); background: var(--store-accent, #111); color: var(--store-accent-ink, #fff); font-size: 14px; font-weight: 700; cursor: pointer; }
+.ec-btn-primary { display: inline-flex; align-items: center; gap: 8px; padding: 11px 16px; border: none; border-radius: calc(var(--sp-radius) * .75); background: var(--store-accent-ink, #111); color: #fff; font-size: 14px; font-weight: 700; cursor: pointer; }
 .ec-btn-primary:disabled { opacity: .55; cursor: default; }
 .ec-btn-ghost { display: inline-flex; align-items: center; padding: 11px 16px; border: 1px solid var(--sp-line, currentColor); border-radius: calc(var(--sp-radius) * .75); background: transparent; color: inherit; font-size: 14px; font-weight: 600; cursor: pointer; }
 .ec-btn-ghost:disabled { opacity: .5; cursor: default; }

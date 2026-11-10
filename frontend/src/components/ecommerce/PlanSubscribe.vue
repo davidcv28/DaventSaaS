@@ -144,6 +144,6 @@ async function subscribe() {
 .ec-sub-benefits { margin: 0; padding-left: 18px; display: grid; gap: 5px; font-size: 13px; line-height: 1.45; }
 .ec-sub-methods { display: grid; gap: 10px; }
 .ec-sub-hint { margin: 0; font-size: 12.5px; color: var(--sp-muted, inherit); }
-.ec-btn-primary { display: inline-flex; align-items: center; justify-content: center; gap: 8px; padding: 12px 16px; border: none; border-radius: calc(var(--sp-radius) * .75); background: var(--store-accent, #111); color: var(--store-accent-ink, #fff); font-size: 14.5px; font-weight: 700; cursor: pointer; }
+.ec-btn-primary { display: inline-flex; align-items: center; justify-content: center; gap: 8px; padding: 12px 16px; border: none; border-radius: calc(var(--sp-radius) * .75); background: var(--store-accent-ink, #111); color: #fff; font-size: 14.5px; font-weight: 700; cursor: pointer; }
 .ec-btn-primary:disabled { opacity: .55; cursor: default; }
 </style>

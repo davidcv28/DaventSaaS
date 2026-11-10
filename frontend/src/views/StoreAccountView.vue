@@ -536,7 +536,7 @@ onMounted(async () => {
 .ec-acc-check { display: flex; align-items: center; gap: 9px; font-size: 13.5px; }
 .ec-acc-tabs { display: flex; gap: 6px; overflow-x: auto; padding-bottom: 2px; }
 .ec-acc-tab { flex: none; padding: 9px 14px; border: 1px solid var(--sp-line, rgba(0,0,0,.12)); border-radius: 999px; background: transparent; color: inherit; font-size: 13px; font-weight: 600; cursor: pointer; }
-.ec-acc-tab.is-on { background: var(--store-accent, #111); border-color: var(--store-accent, #111); color: var(--store-accent-ink, #fff); }
+.ec-acc-tab.is-on { background: var(--store-accent-ink, #111); border-color: var(--store-accent-ink, #111); color: #fff; }
 .ec-acc-empty { display: grid; place-items: center; gap: 8px; padding: 26px 10px; text-align: center; color: var(--sp-muted, inherit); font-size: 13.5px; }
 .ec-orders { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; }
 .ec-order { display: grid; grid-template-columns: 1fr auto auto auto; align-items: center; gap: 12px; padding: 12px 14px; border: 1px solid var(--sp-line, rgba(0,0,0,.1)); border-radius: calc(var(--sp-radius) * .75); }
@@ -552,7 +552,7 @@ onMounted(async () => {
 .ec-sub-card { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 14px; border: 1px solid var(--sp-line, rgba(0,0,0,.12)); border-radius: calc(var(--sp-radius) * .85); flex-wrap: wrap; }
 .ec-sub-card-info { display: grid; gap: 3px; }
 .ec-sub-card-info small { color: var(--sp-muted, inherit); }
-.ec-member-card { display: grid; gap: 14px; padding: 18px; border-radius: var(--sp-radius); background: linear-gradient(135deg, var(--store-accent, #111), color-mix(in srgb, var(--store-accent, #111) 70%, #fff)); color: var(--store-accent-ink, #fff); }
+.ec-member-card { display: grid; gap: 14px; padding: 18px; border-radius: var(--sp-radius); background: linear-gradient(135deg, var(--store-accent, #111), color-mix(in srgb, var(--store-accent-ink, #111) 70%, #000)); color: #fff; }
 .ec-member-card-top { display: flex; justify-content: space-between; gap: 10px; }
 .ec-member-card-store { font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: .08em; opacity: .8; }
 .ec-member-card-plan { font-size: 15px; font-weight: 800; }
@@ -572,7 +572,7 @@ onMounted(async () => {
 .ec-addr-btn { border: none; background: none; font-size: 12.5px; font-weight: 700; color: var(--store-accent, inherit); cursor: pointer; padding: 6px 8px; }
 .ec-addr-btn.is-danger { color: var(--sp-danger); }
 .ec-addrform { display: grid; gap: 12px; }
-.ec-btn-primary { display: inline-flex; align-items: center; justify-content: center; gap: 8px; padding: 11px 16px; border: none; border-radius: calc(var(--sp-radius) * .75); background: var(--store-accent, #111); color: var(--store-accent-ink, #fff); font-size: 14px; font-weight: 700; cursor: pointer; text-decoration: none; }
+.ec-btn-primary { display: inline-flex; align-items: center; justify-content: center; gap: 8px; padding: 11px 16px; border: none; border-radius: calc(var(--sp-radius) * .75); background: var(--store-accent-ink, #111); color: #fff; font-size: 14px; font-weight: 700; cursor: pointer; text-decoration: none; }
 .ec-btn-primary:disabled { opacity: .55; cursor: default; }
 .ec-btn-ghost { display: inline-flex; align-items: center; justify-content: center; gap: 8px; padding: 11px 16px; border: 1px solid var(--sp-line, currentColor); border-radius: calc(var(--sp-radius) * .75); background: transparent; color: inherit; font-size: 14px; font-weight: 600; cursor: pointer; text-decoration: none; }
 .ec-acc-link { font-size: 13px; font-weight: 600; color: var(--store-accent, inherit); }

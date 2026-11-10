@@ -170,7 +170,7 @@ onMounted(load)
 .ec-rp-link { display: inline-flex; align-items: center; gap: 6px; color: var(--store-accent, inherit); font-weight: 700; font-size: 14px; text-decoration: underline; }
 .ec-rp-card { display: grid; gap: 12px; padding: 24px 18px; border: 1px solid var(--sp-line, rgba(0,0,0,.09)); border-radius: var(--sp-radius); background: var(--sp-card, transparent); }
 .ec-rp-error { margin: 0; color: var(--sp-danger); }
-.ec-btn-primary { display: inline-flex; align-items: center; justify-content: center; gap: 8px; padding: 11px 18px; border: none; border-radius: calc(var(--sp-radius) * .75); background: var(--store-accent, #111); color: var(--store-accent-ink, #fff); font-size: 14px; font-weight: 800; cursor: pointer; text-decoration: none; }
+.ec-btn-primary { display: inline-flex; align-items: center; justify-content: center; gap: 8px; padding: 11px 18px; border: none; border-radius: calc(var(--sp-radius) * .75); background: var(--store-accent-ink, #111); color: #fff; font-size: 14px; font-weight: 800; cursor: pointer; text-decoration: none; }
 
 /* Documento imprimible */
 .ec-rp-doc {

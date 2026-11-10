@@ -250,7 +250,7 @@ async function submitReturn() {
 .ec-ret-form { display: grid; gap: 12px; }
 .ec-legal-ok { margin: 0; font-size: 14px; font-weight: 600; color: var(--sp-success); }
 .ec-legal-error { margin: 0; color: var(--sp-danger); }
-.ec-btn-primary { display: inline-flex; align-items: center; justify-content: center; gap: 8px; padding: 11px 16px; border: none; border-radius: calc(var(--sp-radius) * .75); background: var(--store-accent, #111); color: var(--store-accent-ink, #fff); font-size: 14px; font-weight: 700; cursor: pointer; text-decoration: none; }
+.ec-btn-primary { display: inline-flex; align-items: center; justify-content: center; gap: 8px; padding: 11px 16px; border: none; border-radius: calc(var(--sp-radius) * .75); background: var(--store-accent-ink, #111); color: #fff; font-size: 14px; font-weight: 700; cursor: pointer; text-decoration: none; }
 .ec-btn-primary:disabled { opacity: .55; cursor: default; }
 .ec-btn-ghost { display: inline-flex; align-items: center; justify-content: center; gap: 8px; padding: 11px 16px; border: 1px solid var(--sp-line, currentColor); border-radius: calc(var(--sp-radius) * .75); background: transparent; color: inherit; font-size: 14px; font-weight: 600; cursor: pointer; text-decoration: none; }
 .ec-hp { position: absolute; left: -9999px; width: 1px; height: 1px; opacity: 0; }
