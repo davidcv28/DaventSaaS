@@ -1076,11 +1076,22 @@ class VisitCounterTests(TestCase):
         client.get(f'{STORES_URL}public/mi-tienda/')
         self.assertEqual(StoreDailyVisit.objects.get().count, 1)
 
-    def test_distinct_visitor_counts_again(self):
+    def test_same_ip_rotating_user_agent_counts_once(self):
+        #Regresión: la clave de dedupe es IP+fecha — rotar el User-Agent no
+        #puede inflar el contador (antes cada UA nuevo sumaba un visitante).
         self._setup()
         client      =   APIClient()
         client.get(f'{STORES_URL}public/mi-tienda/', HTTP_USER_AGENT = 'Bot/1.0')
         client.get(f'{STORES_URL}public/mi-tienda/', HTTP_USER_AGENT = 'Bot/2.0')
+        self.assertEqual(StoreDailyVisit.objects.get().count, 1)
+
+    def test_distinct_visitor_counts_again(self):
+        #IPs distintas (último hop XFF — el spoofeable es el primero) sí
+        #cuentan como visitantes separados.
+        self._setup()
+        client      =   APIClient()
+        client.get(f'{STORES_URL}public/mi-tienda/', HTTP_X_FORWARDED_FOR = '1.1.1.1, 8.8.8.8')
+        client.get(f'{STORES_URL}public/mi-tienda/', HTTP_X_FORWARDED_FOR = '2.2.2.2, 9.9.9.9')
         self.assertEqual(StoreDailyVisit.objects.get().count, 2)
 
     def test_xff_first_hop_spoofing_dedupes_by_last(self):

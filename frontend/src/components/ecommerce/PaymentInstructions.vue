@@ -36,7 +36,7 @@ async function copy(text, key) {
 // La URL de checkout viene del backend (preferencia de MP), pero se
 // revalida acá: solo hosts oficiales de Mercado Pago pueden recibir el
 // redirect — defensa en profundidad ante un upstream comprometido.
-const MP_HOST_RE = /(^|\.)(mercadopago|mercadolibre)\.[a-z.]+$|(^|\.)mpago\.la$/
+const MP_HOST_RE = /(^|\.)(mercadopago|mercadolibre)\.[a-z]{2,63}(\.[a-z]{2,63})?$|(^|\.)mpago\.la$/
 function isMpCheckoutUrl(url) {
   try {
     const u = new URL(url)
