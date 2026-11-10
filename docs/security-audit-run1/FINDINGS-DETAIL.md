@@ -232,50 +232,6 @@ _Cubierto por tests agregados en el fix (ver commits 7d53e880 / 5c249b52)._
 
 ---
 
-## [MEDIUM] Public order receipt endpoint leaks buyer email, national document and last name to any tracking-token holder
-
-Fingerprint: `orders:public-receipt-buyer-pii`
-
-GET /api/stores/public/<slug>/orders/<tracking_token>/receipt/ is AllowAny (no authentication, only PublicReadThrottle) and returns build_receipt_payload(order), whose 'customer' block includes customer_email, customer_document_type, customer_document (EncryptedCharField decrypts transparently → plaintext national ID) and customer_last_name. The sibling tracking endpoint order_tracking_payload deliberately withholds exactly these fields — its docstring states email/teléfono/documento 'NUNCA salen' — and the customer-authenticated detail endpoint reuses that same scrubbed payload. The receipt endpoint is therefore the only non-owner path that exposes the buyer's government ID and email. Verifier confirmed the frontend NEVER renders receipt.customer (StoreTrackingView uses only seller/order/items/totals) — the PII block is dead weight, making scrubbing trivial. shipping_address is already disclosed by tracking by design, so the incremental exposure is last_name+email+document_type+document.
-
-### Trace
-- **entrypoint** `StoreApp/domains/orders/views/public.py:238` — PublicOrderReceiptView.get: AllowAny + authentication_classes=[] endpoint; resolves store (published/unblocked, orders_enabled NOT required) and order by tracking_token, then returns build_receipt_payload(order) with only PublicReadThrottle.
-- **propagation** `StoreApp/domains/orders/services/checkout.py:482` — build_receipt_payload: Builds the receipt dict including the 'customer' block with first_name, last_name, email, document_type and document.
-- **sink** `StoreApp/domains/orders/services/checkout.py:514` — build_receipt_payload → customer.document: order.customer_document is an EncryptedCharField whose from_db_value/to_python decrypt AES-256-GCM transparently, so the JSON response contains the buyer's plaintext national document number alongside email and last name.
-
-### Evidence
-- `StoreApp/domains/orders/services/checkout.py:511` — 'customer' block returns first_name, last_name, email, document_type, document — the last three are PII the tracking payload explicitly forbids.
-- `StoreApp/domains/orders/services/checkout.py:463` — order_tracking_payload docstring: 'PII mínima: solo el nombre del comprador y su dirección de envío … email/teléfono/documento NUNCA salen' — the stated policy the receipt violates.
-- `StoreApp/domains/orders/views/public.py:239` — PublicOrderReceiptView: permission_classes=[AllowAny], authentication_classes=[] — anonymous access gated solely by the unguessable tracking_token.
-- `StoreApp/domains/orders/models/models.py:122` — customer_document = EncryptedCharField(aad='Order.customer_document') — decrypts transparently on attribute access.
-- `StoreApp/domains/orders/views/customer.py:95` — Even the authenticated customer's own detail endpoint uses order_tracking_payload (scrubbed) — the receipt endpoint is the ONLY non-owner path exposing document/email.
-- `frontend/src/views/StoreTrackingView.vue:307` — Receipt render uses only receipt.seller/order/items/totals/legend — never references receipt.customer; the PII block is unused by the frontend.
-
-### Reproduction (target-neutral, local)
-Attacker principal: Anonymous internet user who obtains a store order tracking link (e.g., a forwarded 'Tu pedido fue enviado' email, a WhatsApp message, or a leaked access-log entry containing /api/stores/public/<slug>/orders/<token>/).
-
-- Payload/input: `GET /api/stores/public/<slug>/orders/<tracking_token>/receipt/`
-
-1. Obtain any valid tracking_token for a store order (intercept/forward the public tracking link).
-2. Issue GET /api/stores/public/<slug>/orders/<token>/receipt/ with no authentication.
-3. Read the JSON 'customer' object: email, document_type and document (plaintext national ID) plus last_name are returned.
-
-Observed: Source-verified and independently confirmed: build_receipt_payload returns order.customer_email, customer_document_type, customer_document (decrypted) and customer_last_name in the anonymous response — fields that order_tracking_payload explicitly documents as never leaving the public API, and that the frontend never consumes.
-
-### Conditions
-- authentication_level: None — endpoint is AllowAny; the only credential is knowledge of the order's tracking_token (secrets.token_urlsafe(24), ~192 bits, unguessable by brute force).
-- data_state: Attacker must possess or intercept the tracking link — realistic via forwarded status emails/WhatsApp messages, shared devices, browser history, or HTTP access logs since the token travels in the URL path.
-- system_configuration: Store must be published and not blocked (require_orders_enabled=False, so even stores that disabled online sales still expose receipts for existing orders).
-
-### Remediation
-Remove buyer-identifying fields that the tracking policy forbids from the public receipt payload: drop email, document_type, document and last_name from build_receipt_payload's 'customer' block (keep first_name, which tracking already exposes). The frontend never renders these fields, so removal is zero-risk. If fiscal receipt data is ever needed, gate it behind CustomerJWTAuthentication + ownership check instead of the anonymous token path.
-- {"file_name": "StoreApp/domains/orders/services/checkout.py", "fixed_code": "        'customer'          :   {\n            'first_name'        :   order.customer_first_name,\n            # PII policy (order_tracking_payload): email/phone/document\n            # NUNCA salen por la API pública — el token es la credencial\n            # de seguimiento, no de identidad.\n        },"}
-
-### Regression case
-_Cubierto por tests agregados en el fix (ver commits 7d53e880 / 5c249b52)._
-
----
-
 ## [MEDIUM] Owner-controlled R2 endpoint URL is fetched server-side by boto3 — blind SSRF into internal network
 
 Fingerprint: `stores:storage-byo-endpoint-blind-ssrf`

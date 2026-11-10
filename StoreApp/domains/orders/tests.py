@@ -557,6 +557,12 @@ class PublicOrderApiTests(TestCase):
         self.assertEqual(body['seller']['legal_name'], 'Prueba SA')
         self.assertEqual(body['totals']['total'], '100.00')
         self.assertEqual(len(body['items']), 1)
+        #PII del comprador: el recibo público solo expone first_name —
+        #email/documento/apellido NUNCA (misma regla que el tracking).
+        customer_block  =   body.get('customer') or {}
+        self.assertEqual(set(customer_block.keys()), {'first_name'})
+        for forbidden in ('customer_email', 'customer_phone', 'customer_document', 'customer_document_type', 'customer_last_name'):
+            self.assertNotIn(forbidden, body)
 
 
 class OwnerOrderApiTests(TestCase):

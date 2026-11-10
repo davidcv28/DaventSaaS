@@ -10,7 +10,7 @@
 
 ## Posture summary
 
-El módulo e-commerce nuevo (8 dominios + frontend) se auditó completo: 11 vulnerabilidades confirmadas (todas corregidas en la misma rama), 2 leads que requieren un dato del proveedor/despliegue para cerrarse, y 2 candidatos refutados post-fix. La postura general es sana: secretos de vendedor write-only, webhooks MP con HMAC + scoping por tienda, PII de compradores cifrada, aislamiento de tenants por store en todos los endpoints revisados. Los hallazgos concentrados fueron de ciclo de vida de sesión/PII del comprador y de superficies públicas anti-abuso.
+El módulo e-commerce nuevo (8 dominios + frontend) se auditó completo: 9 vulnerabilidades confirmadas (todas corregidas en la misma rama), 1 lead que requiere un dato del proveedor/despliegue para cerrarse, y 5 candidatos refutados post-fix (la remediación ya estaba aplicada cuando el verificador final revisó el árbol). La postura general es sana: secretos de vendedor write-only, webhooks MP con HMAC + scoping por tienda, PII de compradores cifrada, aislamiento de tenants por store en todos los endpoints revisados. Los hallazgos concentrados fueron de ciclo de vida de sesión/PII del comprador y de superficies públicas anti-abuso.
 
 ## Confirmed findings
 
@@ -21,11 +21,9 @@ El módulo e-commerce nuevo (8 dominios + frontend) se auditó completo: 11 vuln
 | MEDIUM | `customers:session-establishing-endpoints-missing-origin-check` — Cross-site POST can bind the victim's browser to an attacker's customer session (login CSRF) | StoreApp/domains/customers/views/auth_views.py (CustomerLoginView.post) | Source-verified and independently confirmed: no origin/CSRF check on cookie issuance; DRF accepts form posts; CsrfViewMiddleware bypassed... |
 | MEDIUM | `design:pattern-render-exclusive-products-leak` — Exclusive (member-only) products leak name, description, price, image and ID through the anonymous pattern document | StoreApp/domains/stores/views/viewset.py (StoreViewSet.public_pattern_document / public_pattern) | Source-verified and independently confirmed with a bounded local queryset check: the pattern queryset lacks the is_exclusive predicate wh... |
 | MEDIUM | `frontend:customer-logout-no-epoch-invalidation` — Customer logout never invalidates the refresh epoch — an in-flight or failed logout can leave the buyer session recoverable | frontend/src/stores/customer.store.js (logout()) | Source-verified: refreshCall's guard cannot observe customer.store.logout() (sessionEnded never set, epoch never bumped), so customerToke... |
-| MEDIUM | `orders:public-receipt-buyer-pii` — Public order receipt endpoint leaks buyer email, national document and last name to any tracking-token holder | StoreApp/domains/orders/views/public.py (PublicOrderReceiptView.get) | Source-verified and independently confirmed: build_receipt_payload returns order.customer_email, customer_document_type, customer_documen... |
 | MEDIUM | `stores:storage-byo-endpoint-blind-ssrf` — Owner-controlled R2 endpoint URL is fetched server-side by boto3 — blind SSRF into internal network | StoreApp/domains/storepayments/views/integrations.py (StorageConfigView.put) | Source-verified and independently confirmed: no host allowlist in validation or client construction; server-side PUT/DELETE to the arbitr... |
 | MEDIUM | `support:per-message-owner-email-spam` — Any registered customer can email-bomb a store owner: one Celery email per support message, no per-store cap or opt-out | StoreApp/domains/support/views/customer.py (CustomerSupportMessageCreateView.post) | Source-verified by hunter and orchestrator: every accepted customer message deterministically produces one in-app notification upsert and... |
 | LOW | `customers:logout-access-token-survives-12h` — Customer logout blacklists only the refresh token — Bearer access tokens remain valid up to 12h in other tabs/clients | StoreApp/domains/customers/views/auth_views.py (CustomerLogoutView.post) | Source-verified and independently confirmed: logout never touches tokens_valid_after; access JWTs remain valid for CUSTOMER_ACCESS_LIFETI... |
-| LOW | `customers:profile-pii-hash-unique-oracle` — Profile update leaks whether an arbitrary phone/document belongs to any DAVENT customer via unique-hash collision (500 vs 200) | StoreApp/domains/customers/views/profile_views.py (CustomerProfileView.patch) | Source-verified and independently confirmed: unique constraints in model+migration, unconditional hash recompute, no collision handling i... |
 | LOW | `memberships:public-plans-payment-pii` — Anonymous membership-plans endpoint exposes raw merchant payment data that other public surfaces deliberately hide | StoreApp/domains/memberships/views/public.py (PublicStorePlansView.get) | Source-verified and independently confirmed: raw payment fields returned anonymously, contradicting the endpoint's own docstring and the ... |
 
 ### Detail
@@ -211,41 +209,6 @@ El módulo e-commerce nuevo (8 dominios + frontend) se auditó completo: 11 vuln
 
 ---
 
-#### [MEDIUM] Public order receipt endpoint leaks buyer email, national document and last name to any tracking-token holder
-
-`orders:public-receipt-buyer-pii`
-
-**Root cause:** build_receipt_payload assembles the 'customer' dict with order.customer_email, customer_document_type, customer_document and customer_last_name for the anonymous PublicOrderReceiptView, contradicting the PII-minimization contract enforced by order_tracking_payload which explicitly documents that email/phone/document must never leave the public API.
-
-**Intended behavior:** Public order endpoints must expose only the minimum needed for tracking/payment: per order_tracking_payload's documented policy, buyer email, phone and document must NEVER appear in public payloads; the receipt should carry at most the buyer's first name (and the shipping address already exposed by tracking).
-
-**Trace:**
-
-- `entrypoint` `StoreApp/domains/orders/views/public.py:238` (PublicOrderReceiptView.get): AllowAny + authentication_classes=[] endpoint; resolves store (published/unblocked, orders_enabled NOT required) and order by tracking_token, then returns build_receipt_payload(order) with only PublicReadThrottle.
-- `propagation` `StoreApp/domains/orders/services/checkout.py:482` (build_receipt_payload): Builds the receipt dict including the 'customer' block with first_name, last_name, email, document_type and document.
-- `sink` `StoreApp/domains/orders/services/checkout.py:514` (build_receipt_payload → customer.document): order.customer_document is an EncryptedCharField whose from_db_value/to_python decrypt AES-256-GCM transparently, so the JSON response contains the buyer's plaintext national document number alongside email and last name.
-
-**Conditions:**
-- *authentication_level*: None — endpoint is AllowAny; the only credential is knowledge of the order's tracking_token (secrets.token_urlsafe(24), ~192 bits, unguessable by brute force).
-- *data_state*: Attacker must possess or intercept the tracking link — realistic via forwarded status emails/WhatsApp messages, shared devices, browser history, or HTTP access logs since the token travels in the URL path.
-- *system_configuration*: Store must be published and not blocked (require_orders_enabled=False, so even stores that disabled online sales still expose receipts for existing orders).
-
-**Reproduction (target-neutral):** Anonymous internet user who obtains a store order tracking link (e.g., a forwarded 'Tu pedido fue enviado' email, a WhatsApp message, or a leaked access-log entry containing /api/stores/public/<slug>/orders/<token>/).
-
-1. Obtain any valid tracking_token for a store order (intercept/forward the public tracking link).
-2. Issue GET /api/stores/public/<slug>/orders/<token>/receipt/ with no authentication.
-3. Read the JSON 'customer' object: email, document_type and document (plaintext national ID) plus last_name are returned.
-
-**Observed:** Source-verified and independently confirmed: build_receipt_payload returns order.customer_email, customer_document_type, customer_document (decrypted) and customer_last_name in the anonymous response — fields that order_tracking_payload explicitly documents as never leaving the public API, and that the frontend never consumes.
-
-**Severity:** likelihood=low (Requires possession of a 192-bit unguessable tracking token; exposure depends on secondary channels (forwarded links, logs, shared devices) rather than direct attack.); impact=medium (Discloses government national ID number, email, full name and delivery address of a buyer — sufficient for identity theft and highly targeted phishing referencing the exact order code/total also returned.); overall=medium.
-
-**Confidence:** high — Independently verified end-to-end including the decisive fact that the frontend never renders receipt.customer; AllowAny endpoint, payload fields, decryption path, and contradicting sibling policy all confirmed.
-
-**Remediation:** Remove buyer-identifying fields that the tracking policy forbids from the public receipt payload: drop email, document_type, document and last_name from build_receipt_payload's 'customer' block (keep first_name, which tracking already exposes). The frontend never renders these fields, so removal is zero-risk. If fiscal receipt data is ever needed, gate it behind CustomerJWTAuthentication + ownership check instead of the anonymous token path.
-
----
-
 #### [MEDIUM] Owner-controlled R2 endpoint URL is fetched server-side by boto3 — blind SSRF into internal network
 
 `stores:storage-byo-endpoint-blind-ssrf`
@@ -354,42 +317,6 @@ El módulo e-commerce nuevo (8 dominios + frontend) se auditó completo: 11 vuln
 
 ---
 
-#### [LOW] Profile update leaks whether an arbitrary phone/document belongs to any DAVENT customer via unique-hash collision (500 vs 200)
-
-`customers:profile-pii-hash-unique-oracle`
-
-**Root cause:** Global uniqueness on the HMAC fingerprint columns plus absence of any collision handling in the profile-update path turns a database constraint into a cross-tenant membership oracle.
-
-**Intended behavior:** PII fingerprints may be unique for lookup integrity, but the write path must not expose the constraint outcome across accounts — e.g., drop the global unique requirement (scope lookups instead), or return an indistinguishable response so success/failure cannot be told apart.
-
-**Trace:**
-
-- `entrypoint` `StoreApp/domains/customers/views/profile_views.py:47` (CustomerProfileView.patch): Authenticated PATCH /api/customer/profile/ with attacker-chosen phone/document; identical flow at auth_views.py:325-329 (CustomerMeView).
-- `propagation` `StoreApp/domains/customers/serializers/serializers.py:91` (CustomerProfileUpdateSerializer.validate_phone/validate_document): Normalizes and validates format only — never checks hash uniqueness; no update() override.
-- `propagation` `StoreApp/domains/customers/models/models.py:102` (Customer.save): Recomputes phone_hash/document_hash via digest_for on every save.
-- `sink` `StoreApp/domains/customers/models/models.py:52` (Customer.phone_hash / document_hash unique constraints): UniqueConstraint violation propagates as IntegrityError → generic 500 via EXCEPTION_HANDLER, vs 200 for a non-colliding value.
-
-**Conditions:**
-- *authentication_level*: Any registered customer account (self-service, no store needed).
-- *data_state*: Attacker must supply the exact normalized phone (+digits) or document digits of the value being probed.
-- *timing_dependency*: Probe throughput bounded by 'user' throttle scope (1000/day per customer.pk, per-account not per-IP).
-
-**Reproduction (target-neutral):** Authenticated buyer on any DAVENT store
-
-1. Authenticate as any customer and PATCH profile with a candidate phone number.
-2. Observe HTTP status: 500 means the value's HMAC fingerprint collides with another customer's (value is registered); 200 means it is not.
-3. Repeat within the 1000/day throttle to test candidate values.
-
-**Observed:** Source-verified and independently confirmed: unique constraints in model+migration, unconditional hash recompute, no collision handling in either PATCH path, real 500-vs-200 distinction via the exception handler.
-
-**Severity:** likelihood=low (Requires an authenticated account plus exact knowledge of candidate PII; ~1000 probes/day per account; HMAC prevents offline precomputation.); impact=low (Confirms whether a specific phone/DNI/CUIT is registered to some DAVENT customer — privacy leak of an account-existence predicate, no direct account access.); overall=low.
-
-**Confidence:** high — Independently verified all six points: constraints in model+migration, unconditional recompute, no pre-check, real 500 via exception handler, global (non-store-scoped) digest, second affected endpoint found.
-
-**Remediation:** Remove the cross-account signal: either drop unique=True on phone_hash/document_hash (they are lookup aids; seller-side queries can tolerate multiple matches or scope by store), or — if global uniqueness is a hard requirement — catch IntegrityError and return a response indistinguishable from success is not possible, so prefer removing uniqueness or hashing per-store. At minimum document the oracle and add monitoring.
-
----
-
 #### [LOW] Anonymous membership-plans endpoint exposes raw merchant payment data that other public surfaces deliberately hide
 
 `memberships:public-plans-payment-pii`
@@ -429,12 +356,14 @@ Leads source-grounded cuyo cierre depende de un hecho del proveedor MP o del des
 
 | Lead | Boundary | Blocker |
 |---|---|---|
-| `storepayments:mp-refund-check-then-act-toctou` — Refund endpoint checks order status without locking before the irreversible MP refund call — concurrent requests can double-refund | StoreApp/domains/storepayments/views/mp.py (MpRefundView.post) | Whether Mercado Pago's POST /v1/payments/<id>/refunds is idempotent or rejects a second total refund for the same payment (provider behavior, not in repo). |
-| `storepayments:webhook-approved-amount-none-failopen` — Approved webhook auto-credits the order when transaction_amount is present but unparseable — amount binding silently skipped | StoreApp/domains/storepayments/views/webhook.py (StoreMpWebhookView.post) | Whether Mercado Pago's payments API can return status='approved' with transaction_amount present but null/empty/non-numeric for any payment type or API version. |
+| `storepayments:mp-refund-check-then-act-toctou` — MP refund endpoint locks the order row before the refund call (concurrent TOCTOU fixed), but an ambiguous MP outcome lets a retry issue a second refund POST — dedup is provider-side | StoreApp/domains/storepayments/views/mp.py (MpRefundView.post) | Whether Mercado Pago's POST /v1/payments/<id>/refunds is idempotent or rejects a second total refund for the same payment_id when the first attempt's outcome wa |
 
 ## Rejected candidates (post-fix verification)
 
+- `customers:profile-pii-hash-unique-oracle` — Already remediated in current source: migration 0002 removes unique=True from Customer.phone_hash and Customer.document_hash, and the model declares both without uniqueness with an explicit comment citing this audit finding. Every other element verified accurate, but the sink — the DB unique constra
 - `orders:mails-unverified-customer-email-recipient` — Claim was VALID against the audited source: deliver_order_event_email resolved the buyer recipient from the unverified Customer.email snapshot with no verification gate. Independent verification ran against the working tree AFTER the remediation phase and found the sink already closed: deliver_order
+- `orders:public-receipt-buyer-pii` — Claim was VALID against the audited source, but Phase-5 verification against the current working tree found the sink already closed: build_receipt_payload's 'customer' block was stripped to first_name only — exactly the prescribed remediation, documented inline. The endpoint remains public but no lo
+- `storepayments:webhook-approved-amount-none-failopen` — Fixed in current source. The claimed fail-open no longer exists: amount=None/order_total=None are explicit mismatch conditions that set amount_mismatch + OrderEvent and skip mark_paid; credit requires exact amount == order.total. The residual provider question is no longer security-relevant because 
 - `stores:captcha-single-use-failopen-toctou` — Claim was VALID against the audited source: verify_captcha used the fail-open cache helpers and wrote the used-marker with cache_set only after a correct answer (TOCTOU window + replay collapse on cache outage). Independent verification ran against the working tree AFTER the remediation phase and fo
 
 ## Hardening notes
@@ -465,4 +394,4 @@ Leads source-grounded cuyo cierre depende de un hecho del proveedor MP o del des
 
 ## Disposición de remediación
 
-Los 11 confirmados fueron corregidos en `7d53e880` y `5c249b52` (pusheados a `ECCOMMERCE-ADD`) con tests de regresión; suite backend relevante verde (customers 45, orders+support+memberships+design+captcha 191, storepayments+notify+expiry 133).
+Los confirmados fueron corregidos en `7d53e880` y `5c249b52` (pusheados a `ECCOMMERCE-ADD`) con tests de regresión; suite backend relevante verde (customers 45, orders+support+memberships+design+captcha 191, storepayments+notify+expiry 133). Los rejected post-fix documentan claims que eran reales en el ref auditado pero cuyo sink ya fue remediado durante la fase de fixes — se conservan para que futuras corridas no repitan el claim sin evidencia nueva.
