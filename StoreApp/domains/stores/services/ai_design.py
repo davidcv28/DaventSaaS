@@ -3132,7 +3132,9 @@ def upload_design_image(store, upload):
     storage._check_image_slot(store, is_new = True)
     storage._check_quota(store, size)
     key     =   f'stores/{store.pk}/gallery/{uuid4().hex}.{ext}'
-    if storage.storage_configured():
+    #BYO cuenta: una tienda con solo su bucket propio también sube a R2
+    #— storage_configured() solo mira las credenciales de DAVENT.
+    if storage.store_storage_configured(store):
         storage.put_object(key, body, content_type)
     else:
         key     =   default_storage.save(key, ContentFile(body))
@@ -3153,7 +3155,7 @@ def upload_design_image(store, upload):
             )
             storage._consume_quota(locked, new_used)
     except ValueError:
-        if storage.storage_configured():
+        if storage.store_storage_configured(store):
             storage._delete_object(key)
         else:
             default_storage.delete(key)
