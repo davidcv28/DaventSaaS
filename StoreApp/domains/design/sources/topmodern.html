@@ -30,7 +30,10 @@
   --accent-text:var(--ds-accent,#0A0A0A);
   --on-accent:var(--ds-accent-ink,#FFFFFF);
   --ok:var(--ds-success,#2F6B4F);
-  --danger:#E33;
+  /* --danger se usa como tinta sobre tinte propio (badge de oferta PDP):
+     #E33 no llega a 4.5:1 sobre el fondo claro; #991B1B lo supera con
+     margen en todos los temas claros del patrón. */
+  --danger:#991B1B;
   --sans:"Montserrat",Arial,Helvetica,sans-serif;
   --mono:"JetBrains Mono",monospace;
   --radius:20px;
@@ -49,14 +52,18 @@ html[data-ds-theme="dark"]{
   --accent-text:var(--ds-accent,#C8F031);
   --on-accent:var(--ds-accent-ink,#101010);
   --ok:var(--ds-success,#4CC38A);
+  /* En oscuro el badge de oferta necesita una tinta clara sobre fondo
+     oscuro: #B3261E no llega a AA ahí. */
+  --danger:#FF8A80;
 }
 html[data-ds-theme="dark"]{color-scheme:dark}
 html[data-ds-style="topmodern"]{color-scheme:light}
 
 *{margin:0;padding:0;box-sizing:border-box}
 html{scroll-behavior:smooth}
-body{background:var(--paper);color:var(--ink);font:400 15px/1.55 var(--sans);-webkit-font-smoothing:antialiased}
+body{background:var(--paper);color:var(--ink);font:400 15px/1.55 var(--sans);-webkit-font-smoothing:antialiased;padding-top:var(--head-h,76px)}
 img{max-width:100%;display:block}
+img[src=""],img:not([src]){display:none}
 a{color:inherit;text-decoration:none}
 button{font:inherit}
 .wrap{max-width:var(--wrap);margin:0 auto;padding:0 clamp(16px,4vw,48px)}
@@ -96,19 +103,20 @@ html[data-ds-theme="dark"] .ribbon{background:var(--accent);color:var(--on-accen
 @keyframes bob{0%,100%{transform:translateY(0)}50%{transform:translateY(-7px)}}
 
 /* ---------- Header ---------- */
-.top{position:sticky;top:0;z-index:40;background:var(--paper);border-bottom:1px solid var(--line);transition:box-shadow .3s var(--ease)}
+/* fixed + data-ds-pin: el iframe va estirado y sticky nunca engancha — el
+   puente (pattern_bridge) lo recompone al tope del marco visible. */
+.top{position:fixed;top:0;left:0;right:0;z-index:40;background:var(--paper);border-bottom:1px solid var(--line);transition:box-shadow .3s var(--ease)}
 .top.is-scrolled{box-shadow:0 14px 40px -26px rgba(0,0,0,.4)}
 .scroll-line{position:absolute;left:0;right:0;bottom:-1px;height:2px;pointer-events:none}
 .scroll-line i{display:block;width:100%;height:100%;background:var(--ink);transform:scaleX(0);transform-origin:left;will-change:transform}
 html[data-ds-theme="dark"] .scroll-line i{background:var(--accent)}
-.top{position:sticky}
 .top-in{position:relative;display:flex;align-items:center;gap:28px;padding:16px 0}
 .brand{display:flex;align-items:center;gap:10px;font-weight:900;font-size:22px;letter-spacing:-.03em;text-transform:uppercase;min-width:0}
 .brand>span:last-child{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.brand .mark{display:flex;align-items:center;justify-content:center;width:34px;height:34px;flex:none;background:var(--ink);color:var(--paper);border-radius:50%;font:900 15px var(--sans);transition:transform .4s var(--ease)}
+.brand .mark{position:relative;display:flex;align-items:center;justify-content:center;width:34px;height:34px;flex:none;overflow:hidden;background:var(--ink);color:var(--paper);border-radius:50%;font:900 15px var(--sans);transition:transform .4s var(--ease)}
 .brand:hover .mark{transform:rotate(-12deg) scale(1.06)}
 html[data-ds-theme="dark"] .brand .mark{background:var(--accent);color:var(--on-accent)}
-.brand img{height:34px;width:auto;border-radius:50%}
+.brand .mark img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;border-radius:50%}
 .top-nav{display:flex;gap:22px;font:600 14px var(--sans);margin-left:8px}
 .top-nav a{position:relative;opacity:.75;padding:4px 0;transition:opacity .2s}
 .top-nav a::after{content:"";position:absolute;left:0;right:0;bottom:-2px;height:2px;background:var(--ink);transform:scaleX(0);transform-origin:left;transition:transform .3s var(--ease)}
@@ -125,6 +133,15 @@ html[data-ds-theme="dark"] .btn{background:var(--accent);color:var(--on-accent)}
 .btn-ghost{background:transparent;color:var(--ink);border:1px solid var(--line)}
 .btn-ghost:hover{border-color:var(--ink);box-shadow:none}
 html[data-ds-theme="dark"] .btn-ghost:hover{border-color:var(--accent);color:var(--accent)}
+/* El host inyecta una regla de contrato que fuerza .btn/.svc-cta/.pdp-buy a
+   --ds-accent/--ds-accent-ink con !important. Ese par no siempre llega a AA
+   (p. ej. estilo oferta #E0311F/#FFFDF8 = 4.46), así que la piel reafirma su
+   propia combinación de tinta — el diseño original ya es AA en ambos temas. */
+html[data-ds-theme="light"] .btn{background:var(--ink)!important;color:var(--paper)!important}
+html[data-ds-theme="light"] .btn-ghost{background:transparent!important;color:var(--ink)!important;border-color:var(--line)!important}
+html[data-ds-theme="light"] .cta-band .btn{background:var(--paper)!important;color:var(--ink)!important}
+html[data-ds-theme="dark"] .cta-band .btn{background:var(--ink)!important;color:var(--paper)!important}
+html[data-ds-theme="dark"] .btn-ghost{background:transparent!important;color:var(--ink)!important;border-color:var(--line)!important}
 
 /* ---------- Hero ---------- */
 .hero{border-bottom:1px solid var(--line);overflow:hidden}
@@ -152,14 +169,16 @@ html[data-ds-theme="dark"] .hero-kicker::before{background:var(--accent)}
 .ds-stat-label{display:block;font:500 10px/1.4 var(--sans);color:var(--muted);letter-spacing:.04em}
 .hero-fig{position:relative}
 .hero-fig .ph{position:relative;aspect-ratio:5/6;border-radius:26px;overflow:hidden;background:var(--card);border:1px solid var(--line);transform:translate(var(--mx,0),var(--my,0));transition:transform .5s var(--ease)}
+.hero-fig .ph-fallback{position:absolute;inset:0;display:grid;place-items:center;font:900 clamp(90px,11vw,160px)/1 var(--sans);letter-spacing:-.05em;color:var(--line);pointer-events:none}
+.hero-fig .ph:has(>img[src]:not([src=""])) .ph-fallback{display:none}
 .hero-fig img{width:100%;height:100%;object-fit:cover;transform:scale(1.06) translate(var(--px,0),var(--py,0));transition:transform .6s var(--ease)}
 .ph-mono{display:none}
 .hero-fig .ph-id{position:absolute;left:18px;bottom:18px;display:flex;align-items:center;gap:10px;background:var(--paper);border:1px solid var(--line);border-radius:var(--pill);padding:8px 18px 8px 8px;box-shadow:0 10px 30px -14px rgba(0,0,0,.3)}
 .hero-fig .ph-id b{font-size:13px;display:block;max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .hero-fig .ph-id small{display:block;color:var(--muted);font-size:11px}
-.hero-fig .ph-id .ph-logo{width:32px;height:32px;flex:none;border-radius:50%;background:var(--ink);color:var(--paper);display:flex;align-items:center;justify-content:center;font:900 13px var(--sans);overflow:hidden}
+.hero-fig .ph-id .ph-logo{position:relative;width:32px;height:32px;flex:none;border-radius:50%;background:var(--ink);color:var(--paper);display:flex;align-items:center;justify-content:center;font:900 13px var(--sans);overflow:hidden}
 html[data-ds-theme="dark"] .hero-fig .ph-id .ph-logo{background:var(--accent);color:var(--on-accent)}
-.hero-fig .ph-id .ph-logo img{width:100%;height:100%;object-fit:cover;border-radius:0}
+.hero-fig .ph-id .ph-logo img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;border-radius:0}
 .spark{position:absolute;font-size:64px;color:var(--ink);line-height:1;pointer-events:none;animation:twinkle 3.6s ease-in-out infinite}
 .spark.s2{animation-delay:1.4s;font-size:44px}
 html[data-ds-theme="dark"] .spark{color:var(--accent)}
@@ -403,8 +422,9 @@ html[data-ds-theme="dark"] .ds-contact-input:focus{border-color:var(--accent);bo
 .ds-contact-reload{flex:none;width:40px;height:40px;border:1px solid var(--line);border-radius:10px;background:var(--paper);color:var(--ink);cursor:pointer;transition:border-color .2s,color .2s,transform .3s var(--ease)}
 .ds-contact-reload:hover{border-color:var(--ink);transform:rotate(-14deg)}
 html[data-ds-theme="dark"] .ds-contact-reload:hover{border-color:var(--accent);color:var(--accent)}
-.ds-contact-send{width:100%;border:0;cursor:pointer;justify-content:center}
+.ds-contact-send{width:100%;border:0;cursor:pointer}
 .ds-contact-status{min-height:16px;margin:0;font:600 10px/1.4 var(--mono);letter-spacing:.06em;color:var(--muted)}
+.ds-contact-status[data-ok="1"]{color:var(--ok)}
 
 /* ---------- Footer ---------- */
 footer{border-top:1px solid var(--line);margin-top:clamp(48px,7vw,88px)}
@@ -430,12 +450,20 @@ html[data-ds-theme="dark"] .foot-soc a:hover{background:var(--accent);color:var(
 html[data-ds-theme="dark"] .cat-filters-badge{background:var(--accent);color:var(--on-accent)}
 .cat-aside h3{font:900 20px var(--sans);text-transform:uppercase;letter-spacing:-.02em;display:flex;justify-content:space-between;align-items:center}
 .cat-aside-close{display:none;place-items:center;width:34px;height:34px;border:1px solid var(--line);border-radius:50%;background:var(--paper);color:var(--ink);font-size:20px;line-height:1;cursor:pointer}
+/* Scrim de la hoja de filtros móvil (data-ds-filters-scrim): fijo fuera de
+   flujo en todos los anchos — solo se ve con body.filters-open, que pone
+   el puente al abrir/cerrar la hoja. */
+.m-scrim-cat{position:fixed;top:0;left:0;right:0;height:var(--fr-h,100vh);z-index:60;background:rgba(0,0,0,.5);opacity:0;visibility:hidden;transition:opacity .25s,visibility .25s;pointer-events:none}
+body.filters-open{overflow:hidden}
+body.filters-open .m-scrim-cat{opacity:1;visibility:visible;pointer-events:auto}
 .f-group{border-top:1px solid var(--line);padding:18px 0}
 .f-group h4{font:700 12px var(--mono);text-transform:uppercase;letter-spacing:.14em;margin-bottom:14px;color:var(--muted)}
 .f-list{display:grid;gap:8px}
-.f-list button{display:flex;justify-content:space-between;gap:10px;width:100%;background:none;border:0;font:600 13px var(--sans);color:var(--ink);cursor:pointer;padding:4px 0;text-align:left;transition:color .15s,padding-left .25s var(--ease)}
+.f-list button{display:flex;justify-content:space-between;align-items:center;gap:10px;width:100%;background:none;border:0;font:600 13px var(--sans);color:var(--ink);cursor:pointer;padding:4px 0;text-align:left;transition:color .15s,padding-left .25s var(--ease)}
 .f-list button:hover{color:var(--muted);padding-left:4px}
-.f-list button.is-on{font-weight:800}
+.f-list button.is-on,.f-list button.is-active,.f-list button[aria-pressed="true"]{font-weight:800}
+.f-list .f-cat em,.f-check em{flex:none;margin-left:auto;font:600 11px var(--mono);font-style:normal;color:var(--muted)}
+.f-list .f-cat.is-active em,.f-list .f-cat[aria-pressed="true"] em{color:var(--ink)}
 .f-check{display:flex;align-items:center;gap:10px;font:600 13px var(--sans);cursor:pointer}
 .f-check input{accent-color:var(--ink);width:16px;height:16px}
 html[data-ds-theme="dark"] .f-check input{accent-color:var(--accent)}
@@ -475,6 +503,8 @@ select[data-ds-sort]{background:var(--card);border:1px solid var(--line);border-
 .pdp-back:hover{color:var(--ink);transform:translateX(-3px)}
 .pdp-layout{display:grid;grid-template-columns:1fr 1fr;gap:clamp(24px,4vw,64px);align-items:start}
 .pdp-shot{aspect-ratio:1;border-radius:26px;overflow:hidden;background:var(--card);border:1px solid var(--line);position:relative}
+.pdp-fallback{position:absolute;inset:0;display:grid;place-items:center;font:900 clamp(90px,14vw,170px)/1 var(--sans);letter-spacing:-.05em;color:var(--line);pointer-events:none}
+.pdp-shot:has(>img[src]:not([src=""])) .pdp-fallback{display:none}
 .pdp-shot img{width:100%;height:100%;object-fit:cover}
 .pdp-media-tag{position:absolute;top:18px;left:18px;background:var(--ink);color:var(--paper);font:800 12px var(--sans);border-radius:var(--pill);padding:6px 14px;z-index:2}
 html[data-ds-theme="dark"] .pdp-media-tag{background:var(--accent);color:var(--on-accent)}
@@ -491,9 +521,11 @@ html[data-ds-theme="dark"] .pdp-media-tag{background:var(--accent);color:var(--o
 .pdp-price s:empty{display:none}
 .pdp-desc{color:var(--muted);font-size:15px;margin-bottom:20px}
 .pdp-desc:empty{display:none}
-.pdp-feats{margin:0 0 26px;padding-left:18px;color:var(--muted);font-size:14px}
-.pdp-feats:empty{display:none}
-.pdp-feats li{margin-bottom:6px}
+.pdp-specs{width:100%;margin:0 0 26px;border-collapse:collapse;font-size:14px}
+.pdp-specs:not(:has(tr)){display:none}
+.pdp-specs th,.pdp-specs td{padding:9px 0;border-bottom:1px solid var(--line);text-align:left;vertical-align:top}
+.pdp-specs th{width:42%;color:var(--muted);font:700 11px var(--mono);letter-spacing:.1em;text-transform:uppercase}
+.pdp-specs td{color:var(--ink-2)}
 .pdp-buy{display:flex;justify-content:center;margin-bottom:22px}
 .pdp-sell{display:flex;gap:10px;align-items:center;border-top:1px solid var(--line);padding-top:18px;font:600 13px var(--sans);color:var(--muted)}
 .pdp-sell svg{flex:none}
@@ -531,9 +563,9 @@ html[data-ds-theme="dark"] .ds-rev-input:focus{border-color:var(--accent);box-sh
 .ds-rev-reload:hover{border-color:var(--ink);transform:rotate(-14deg)}
 html[data-ds-theme="dark"] .ds-rev-reload:hover{border-color:var(--accent);color:var(--accent)}
 .ds-rev-status{min-height:16px;margin:0;font:600 10px/1.4 var(--mono);letter-spacing:.06em;color:var(--muted)}
-.ds-rev-send{width:100%;border:0;cursor:pointer;justify-content:center;display:inline-flex;align-items:center;gap:10px;background:var(--ink);color:var(--paper);border-radius:var(--pill);padding:13px 30px;font:700 14px var(--sans);transition:transform .25s var(--ease),box-shadow .25s var(--ease)}
-.ds-rev-send:hover{transform:translateY(-2px);box-shadow:0 12px 28px -12px rgba(0,0,0,.45)}
-html[data-ds-theme="dark"] .ds-rev-send{background:var(--accent);color:var(--on-accent)}
+.ds-rev-send,.ds-contact-send{width:100%;border:0;cursor:pointer;justify-content:center;display:inline-flex;align-items:center;gap:10px;background:var(--ink);color:var(--paper);border-radius:var(--pill);padding:13px 30px;font:700 14px var(--sans);transition:transform .25s var(--ease),box-shadow .25s var(--ease)}
+.ds-rev-send:hover,.ds-contact-send:hover{transform:translateY(-2px);box-shadow:0 12px 28px -12px rgba(0,0,0,.45)}
+html[data-ds-theme="dark"] .ds-rev-send,html[data-ds-theme="dark"] .ds-contact-send{background:var(--accent);color:var(--on-accent)}
 @media(max-width:560px){.ds-rev-row{grid-template-columns:1fr}}
 .pdp-rel{margin-top:56px}
 .pdp-rel h2{font:900 26px var(--sans);text-transform:uppercase;letter-spacing:-.02em;margin-bottom:22px}
@@ -560,8 +592,12 @@ html[data-ds-theme="dark"] .ds-rev-send{background:var(--accent);color:var(--on-
   .hero-seal{right:6px;top:auto;bottom:-14px;width:96px;height:96px}
   .spark{display:none}
   .cat-filters-toggle{display:inline-flex}
-  .cat-aside{display:none;margin-bottom:18px;background:var(--card);border:1px solid var(--line);border-radius:var(--radius);padding:18px}
-  .cat-aside.is-open{display:block}
+  /* Hoja de filtros off-canvas: el puente (pattern_bridge) toggles .is-open
+     en el panel + .filters-open en el body, cierra con [data-ds-filters-close],
+     Escape (foco dentro del panel) y el scrim [data-ds-filters-scrim].
+     --fr-h = alto visible del marco, lo publica el script con ds-frame. */
+  .cat-aside{position:fixed;top:0;left:0;height:var(--fr-h,100vh);width:min(340px,88vw);z-index:61;margin:0;padding:20px;background:var(--card);border:1px solid var(--line);border-left:0;border-radius:0 var(--radius) var(--radius) 0;overflow:auto;transform:translateX(-104%);visibility:hidden;transition:transform .3s var(--ease),visibility .3s}
+  .cat-aside.is-open{display:block;transform:none;visibility:visible}
   .cat-aside-close{display:grid}
   .f-done{display:block}
   .m-tabs{display:flex;position:fixed;left:12px;right:12px;bottom:12px;z-index:50;background:var(--ink);border-radius:var(--pill);padding:8px;gap:4px;box-shadow:0 12px 40px rgba(0,0,0,.25)}
@@ -668,6 +704,7 @@ html[data-ds-theme="dark"] .ds-brand-initial{background:var(--accent);color:var(
   <span class="scroll-line" aria-hidden="true"><i data-progress></i></span>
 </div></header>
 
+<main>
 <section id="inicio" class="hero" data-surface="landing"><div class="wrap hero-grid">
   <div class="hero-copy">
     <span class="hero-kicker">{{store_location}} · Est. {{store_about_years}}</span>
@@ -687,6 +724,7 @@ html[data-ds-theme="dark"] .ds-brand-initial{background:var(--accent);color:var(
     <span class="spark" style="left:-20px;top:60%">✦</span>
     <span class="spark s2" style="right:14%;top:-10px">✦</span>
     <div class="ph">
+      <span class="ph-fallback" aria-hidden="true">{{store_initial}}</span>
       <img src="{{store_cover}}" alt="{{store_name}}">
       <span class="ph-mono" aria-hidden="true"></span>
       <span class="ph-id">
@@ -871,6 +909,7 @@ html[data-ds-theme="dark"] .ds-brand-initial{background:var(--accent);color:var(
         <button class="f-done" type="button" data-ds-filters-close>Aplicar</button>
       </section>
     </aside>
+    <div class="m-scrim-cat" data-ds-filters-scrim aria-hidden="true"></div>
     <div>
       <div class="cat-bar">
         <h1 style="position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)">Catálogo de {{store_name}}</h1>
@@ -910,6 +949,7 @@ html[data-ds-theme="dark"] .ds-brand-initial{background:var(--accent);color:var(
   <div class="pdp-layout">
     <div class="pdp-shot">
       <span class="pdp-media-tag">{{product_offer_pct}}</span>
+      <span class="pdp-fallback" aria-hidden="true">{{store_initial}}</span>
       <img src="{{product_image}}" alt="{{product_name}}" fetchpriority="high">
     </div>
     <div>
@@ -918,7 +958,7 @@ html[data-ds-theme="dark"] .ds-brand-initial{background:var(--accent);color:var(
       <p class="pdp-ref">Ref. {{product_ref}} · {{store_name}}</p>
       <div class="pdp-price"><b>{{product_price}}</b><em>{{product_offer_pct}}</em><s>{{product_old_price}}</s></div>
       <p class="pdp-desc">{{product_description}}</p>
-      <ul class="pdp-feats">{{product_features}}</ul>
+      <table class="pdp-specs"><tbody>{{product_features}}</tbody></table>
       <a class="btn pdp-buy" href="{{product_whatsapp_url}}">Consultar por WhatsApp</a>
       <div class="pdp-sell">
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l1-5h16l1 5M3 9v11h18V9M9 20v-6h6v6"/></svg>
@@ -938,6 +978,8 @@ html[data-ds-theme="dark"] .ds-brand-initial{background:var(--accent);color:var(
     <div class="grid">{{product_related}}</div>
   </section>
 </div></section>
+
+</main>
 
 <footer><div class="wrap">
   <div class="foot">
@@ -1085,15 +1127,41 @@ html[data-ds-theme="dark"] .ds-brand-initial{background:var(--accent);color:var(
     });
   }
 
+  /* ---------- Header fijo: alto real para el padding del body ---------- */
+  function measureHead() {
+    if (!head) return;
+    var hh = head.offsetHeight;
+    if (hh > 0) {
+      document.documentElement.style.setProperty('--head-h', hh + 'px');
+      /* data-ds-offset exacto: los anchors no quedan tapados por el chrome. */
+      head.setAttribute('data-ds-offset', String(Math.round(hh)));
+    }
+  }
+  window.addEventListener('resize', measureHead);
+
+  /* ---------- Marco del host: --fr-h + posición de fijos ---------- */
+  function syncFrame(d) {
+    frame = { top: Number(d.top) || 0, bottom: Number(d.bottom) || 0, vh: Number(d.vh) || window.innerHeight };
+    /* --fr-h = alto VISIBLE del documento dentro del marco estirado: las
+       hojas y scrims fijos se dimensionan con él (nunca con 100vh, que en
+       el iframe estirado equivale al alto TOTAL del documento). */
+    var ftop = frame.top;
+    var ih = document.documentElement.scrollHeight || 1;
+    var dTop = Math.max(0, -ftop);
+    var dBot = Math.min(ih, frame.vh - ftop);
+    document.documentElement.style.setProperty('--fr-h', Math.max(0, dBot - dTop) + 'px');
+    measureHead();
+  }
+
   window.addEventListener('message', function (e) {
     var d = e.data || {};
     if (d.type === 'davent:ds-frame') {
-      frame = { top: Number(d.top) || 0, bottom: Number(d.bottom) || 0, vh: Number(d.vh) || window.innerHeight };
+      syncFrame(d);
       paint();
       return;
     }
     if (d.type === 'davent:ds-surface') {
-      setTimeout(function () { initReveal(); paint() }, 80);
+      setTimeout(function () { initReveal(); paint(); measureHead() }, 80);
     }
   });
 
@@ -1115,6 +1183,7 @@ html[data-ds-theme="dark"] .ds-brand-initial{background:var(--accent);color:var(
 
   /* ---------- Arranque ---------- */
   initReveal();
+  measureHead();
   requestAnimationFrame(paint);
   setTimeout(function () {
     if (!frame) {

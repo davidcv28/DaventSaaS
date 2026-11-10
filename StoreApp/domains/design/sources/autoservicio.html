@@ -52,7 +52,9 @@
   --on-brand-deep:var(--ds-secondary-ink,#FFFFFF);
   --offer:var(--ds-danger,#C2402A);
   --on-offer:#FFF7F2;
-  --ok:var(--ds-success,#1E8E5A);
+  /* "En stock"/estados ok son texto de 10px: el success del tema se oscurece
+     un punto para AA sobre surface (4.5:1) en cualquier paleta clara. */
+  --ok:color-mix(in srgb,var(--ds-success,#1E8E5A) 80%,#0A140D);
   --on-ok:var(--ds-success-ink,#FFFFFF);
   --link:var(--brand-deep);
   --r:var(--ds-radius,4px);
@@ -71,7 +73,10 @@ html[data-ds-theme="dark"]{
   --on-brand-deep:var(--ds-secondary-ink,#0F130E);
   --offer:#FF8A70; --on-offer:#2B0D05;
   --ok:var(--ds-success,#8FD18A); --on-ok:var(--ds-success-ink,#0F130E);
-  --link:var(--brand-deep);
+  /* En oscuro el secondary del tema puede ser un verde medio que no llega a
+     AA como texto de enlace: el acento del tema sí está pensado para fondo
+     oscuro y se usa para --link (brand-deep queda solo para hovers de CTA). */
+  --link:var(--ds-accent,#8FD18A);
 }
 
 *{box-sizing:border-box}
@@ -521,7 +526,7 @@ h1:empty,h2:empty,h3:empty,p:empty{display:none}
 .f-clear{padding:6px 0;border:0;background:none;color:var(--link);font:inherit;font-size:12.5px;font-weight:700;cursor:pointer;text-align:left}
 .f-clear:hover{text-decoration:underline;text-underline-offset:3px}
 .f-done{display:none}
-.cat-scrim{display:none}
+.cat-scrim{display:none;position:fixed;left:0;right:0;top:0;height:var(--fr-h,100vh);z-index:80;background:rgba(12,17,13,.5)}
 
 .cat-results{min-width:0}
 .cat-bar{display:flex;align-items:center;gap:10px 16px;flex-wrap:wrap;padding:2px 0 14px;border-bottom:1px solid var(--line)}
@@ -842,10 +847,7 @@ html.m-lock,html.m-lock body{overflow:hidden}
     padding-bottom:env(safe-area-inset-bottom);
   }
   .cat-aside.is-open{display:block}
-  body.filters-open .cat-scrim{
-    display:block;position:fixed;left:0;right:0;top:0;height:var(--fr-h,100vh);z-index:80;
-    background:rgba(12,17,13,.5);
-  }
+  body.filters-open .cat-scrim{display:block}
   .cat-aside-head{display:flex}
   .cat-aside-foot{position:sticky;bottom:0;background:var(--surface)}
   .f-clear{flex:1 1 auto;min-height:46px;border:1px solid var(--line);border-radius:var(--r-btn);text-align:center;color:var(--ink)}
@@ -1032,6 +1034,7 @@ a:focus-visible,button:focus-visible,select:focus-visible,input:focus-visible,su
 </div>
 
 <!-- ============================ LANDING ============================ -->
+<main>
 <div data-surface="landing">
 
   <section class="hero" id="inicio">
@@ -1245,7 +1248,7 @@ a:focus-visible,button:focus-visible,select:focus-visible,input:focus-visible,su
           <button class="f-done" type="button" data-ds-filters-close>Aplicar</button>
         </div>
       </aside>
-      <div class="cat-scrim" data-ds-filters-close aria-hidden="true"></div>
+      <div class="cat-scrim" data-ds-filters-scrim aria-hidden="true"></div>
 
       <div class="cat-results">
         <div class="cat-bar">
@@ -1376,6 +1379,7 @@ a:focus-visible,button:focus-visible,select:focus-visible,input:focus-visible,su
     </section>
   </div>
 </section>
+</main>
 
 <!-- ============================ FOOTER ============================ -->
 <footer class="foot">
@@ -1437,13 +1441,30 @@ a:focus-visible,button:focus-visible,select:focus-visible,input:focus-visible,su
   /* ---------- Menú móvil: "Más" abre la hoja; cierra con fondo, cruz,
      Esc o al navegar. Se muestra/oculta con display (sin animación). */
   var sheet=document.getElementById('m-sheet');
+  var lastFocus=null;
   function setMenu(open){
     if(!sheet)return;
     sheet.classList.toggle('open',open);
     var scrim=document.querySelector('.m-scrim');
     if(scrim)scrim.classList.toggle('open',open);
+    sheet.setAttribute('aria-hidden',open?'false':'true');
     qsa('[data-m-open]').forEach(function(b){b.setAttribute('aria-expanded',open?'true':'false')});
     root.classList.toggle('m-lock',open);
+    /* Diálogo modal: el resto del documento queda inerte para que Tab no
+       escape de la hoja (el chrome es position:fixed pero sigue en el
+       orden de tabulación). */
+    qsa('body > *').forEach(function(el){
+      if(el===sheet||el===scrim)return;
+      el.inert=open;
+    });
+    if(open){
+      lastFocus=document.activeElement;
+      var c=sheet.querySelector('.m-close');
+      if(c)setTimeout(function(){c.focus()},40);
+    }else if(lastFocus&&lastFocus.focus){
+      lastFocus.focus();
+      lastFocus=null;
+    }
   }
   document.addEventListener('click',function(e){
     var t=e.target;
@@ -1452,7 +1473,15 @@ a:focus-visible,button:focus-visible,select:focus-visible,input:focus-visible,su
     if(t.closest('[data-m-close]'))setMenu(false);
   });
   document.addEventListener('keydown',function(e){
-    if(e.key==='Escape'){setMenu(false);closeFilters()}
+    if(e.key==='Escape'){setMenu(false);closeFilters();return}
+    /* Focus trap dentro de la hoja inferior. */
+    if(e.key==='Tab'&&sheet&&sheet.classList.contains('open')){
+      var f=sheet.querySelectorAll('a[href],button:not([disabled])');
+      if(!f.length)return;
+      var first=f[0],last=f[f.length-1];
+      if(e.shiftKey&&document.activeElement===first){e.preventDefault();last.focus()}
+      else if(!e.shiftKey&&document.activeElement===last){e.preventDefault();first.focus()}
+    }
   });
 
   /* ---------- Tabs activas según la superficie visible ---------- */
@@ -1520,11 +1549,8 @@ a:focus-visible,button:focus-visible,select:focus-visible,input:focus-visible,su
       if(t)t.setAttribute('aria-expanded','false');
     }
   }
-  var fScrim=document.querySelector('.cat-scrim');
-  if(fScrim)fScrim.addEventListener('click',function(){
-    var c=document.querySelector('[data-ds-filters-panel] [data-ds-filters-close]');
-    if(c)c.click();
-  });
+  /* El scrim del panel de filtros lleva data-ds-filters-scrim: el puente
+     ya lo cierra (closeSheet con readFilters + applyCatalog + refoco). */
 
   /* ---------- Índice de departamentos → catálogo filtrado.
      El fragmento .ds-cat llega como <a href="#catalogo"> sin data-ds-*
