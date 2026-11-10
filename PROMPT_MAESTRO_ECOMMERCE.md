@@ -148,6 +148,24 @@ Todo upload nuevo (foto de perfil NO aplica — ver 4.1; comprobantes de
 pago, imágenes de tarjeta digital si las hubiera) pasa por
 `normalize_image` → WebP en R2.
 
+### 3.5 Tests de seguridad por track (OBLIGATORIO antes de cerrar cada subagente)
+
+Ningún track se da por terminado sin escribir y dejar verdes sus tests
+de seguridad (`manage.py test <dominio>`). Mínimos por superficie:
+
+| Superficie | Tests obligatorios |
+|---|---|
+| Todo endpoint nuevo | Auth/permiso correcto (401/403/404 según el caso — IDOR devuelve 404, nunca 403-leak); mass-assignment (campos `status`/`store`/`customer`/precios jamás escribibles por serializer); payloads malformados → 400, nunca 500 |
+| Multi-tenant (todo lo de tiendas) | IDOR: dueño A no lee/escribe pedidos/clientes/planes/cobros de tienda B; comprador solo ve SUS pedidos/suscripción/tarjeta; tests con dos tiendas y dos customers |
+| Endpoints públicos de compra | Rate limit + captcha (patrón `ProductReview`), qty=0/negativa/gigante, producto de otra tienda en carrito/pedido, precios SIEMPRE recalculados server-side (mandar `total`/`price` en el body NO altera el pedido) |
+| Webhook MP (track C) | Firma `x-signature` inválida/ausente → 401/403; `live_mode=False` rechazado; `payment_id` de otra tienda/inexistente; webhook duplicado → un solo `PAID`; monto distinto al pedido → no marca pagado; `external_reference` ajeno |
+| Concurrencia (B, C, D) | Dos compradores por la última unidad de stock → uno solo gana (`select_for_update`); doble confirmación de pago / webhook concurrente → una sola transición; retry de creación de pedido con misma idempotency-key → un solo pedido |
+| Secretos (A, C, H) | Token MP/Google/R2 jamás en respuesta API, serializer ni log — solo flags `connected`; round-trip vault (encrypt→decrypt) testeado; `enc:v1:` inválido/manipulado → error controlado sin filtrar material |
+| PII compradores (A) | Documento/teléfono cifrados en reposo + hash indexable (patrón `UserProfile`); email jamás expuesto en endpoints de terceros |
+| Notificaciones/emails (F) | Emails solo al destinatario correcto (comprador/dueño); avisos deduplicados, no spam ante eventos repetidos |
+| Soporte (G) | Cliente solo ve SUS hilos; dueño solo los de SU tienda; adjuntos validados (tipo/tamaño; `normalize_image` si aplica) |
+| Frontend (I, J) | Sin tokens de refresh en localStorage (patrón cookie-refresh del proyecto); `v-html` solo con contenido sanitizado; rutas nuevas con `meta` de guard correcto |
+
 ## 4. ALCANCE FUNCIONAL
 
 > **Decisiones asumidas** (confirmar con el usuario antes de codificar
@@ -427,6 +445,27 @@ membership) — avisar al orquestador para revisar diffs.
   (checklist de lo implementado vs fases).
 - Reporte final: qué quedó, qué falta, decisiones tomadas, riesgos.
 
+### Ola 6 — Auditoría de seguridad final (security-audit)
+
+Antes del reporte final, ejecutar el workflow completo del skill
+`.devin/skills/security-audit/SKILL.md` (**full audit mode**) sobre el
+diff de la rama `ECCOMMERCE-ADD`:
+
+- **Scope**: dominios nuevos (`customers`, `cart`, `orders`,
+  `memberships`, `storepayments`, `legalpages`, `support`/`storeadmin`
+  si existen) + lo modificado en `stores`, `catalog`, `notifications`,
+  `chat` y el frontend público (componentes/vistas nuevas).
+- **Perfil**: `standard` (o `deep` si el diff lo justifica). Output
+  directory FUERA del repo (`~/security-audit-skill/<repo>/run-<N>`,
+  nunca dentro del target salvo orden expresa).
+- **Cierre**: todo `confirmed` critical/high se corrige en la rama y
+  se re-verifica antes de reportar; medios/bajos quedan documentados
+  en `SECURITY_AUDIT.md` con su veredicto. Los `needs_validation` se
+  listan en el reporte final con su plan de validación — no se asumen
+  controles ausentes del repo.
+- El orquestador verifica los artefactos generados (`run-metadata.json`,
+  `findings.json`, `REPORT.md`) antes de cerrar la rama.
+
 ## 6. CRITERIOS DE ACEPTACIÓN GLOBAL
 
 - [ ] Un comprador se registra (email o Google), arma carrito en la web
@@ -448,6 +487,11 @@ membership) — avisar al orquestador para revisar diffs.
 - [ ] Nada pusheado a `main`, nada sincronizado con Neon/prod.
 - [ ] `manage.py check` limpio + tests de cada dominio nuevo verdes +
       build frontend OK.
+- [ ] Cada track cerró con sus tests de seguridad de la sección 3.5
+      escritos y en verde.
+- [ ] `security-audit` (`.devin/skills/security-audit/`, full audit
+      mode) ejecutado sobre la rama: cero `confirmed` critical/high
+      abiertos; el resto documentado.
 
 ## 7. PROTOCOLO DEL ORQUESTADOR
 
@@ -460,6 +504,9 @@ membership) — avisar al orquestador para revisar diffs.
    aceptación del track). Los subagentes NO ven esta conversación:
    incluirles todo el contexto necesario en su prompt.
 4. Tras cada track: revisar diff (`git diff --stat`), correr tests del
-   dominio, commitear en la rama. Si dos tracks chocan en un archivo
-   compartido, resolver el orquestador.
-5. Nunca `git push` ni `git merge` sin orden expresa del usuario.
+   dominio **incluidos los de seguridad de la sección 3.5**, commitear
+   en la rama. Si dos tracks chocan en un archivo compartido, resolver
+   el orquestador.
+5. Ola 6: lanzar la auditoría `security-audit` final; corregir los
+   `confirmed` critical/high y documentar el resto antes del reporte.
+6. Nunca `git push` ni `git merge` sin orden expresa del usuario.
