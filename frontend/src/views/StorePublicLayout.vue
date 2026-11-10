@@ -75,7 +75,8 @@ const ordersEnabled = computed(() => Boolean(store.value?.orders_enabled))
 // patternSurface las mandara al 'landing' del patrón, el checkout y la
 // cuenta quedarían tapados por el iframe del diseño.
 const ECOMMERCE_ROUTES = new Set([
-  'store-checkout', 'store-tracking',
+  'store-checkout', 'store-tracking', 'store-cart', 'store-receipt',
+  'store-auth',
   'store-account', 'store-account-verify', 'store-account-reset',
   'store-legal', 'store-legal-page'
 ])
@@ -204,15 +205,15 @@ function onPatternBuy({ id } = {}) {
   cartStore.addToCart(id, 1)
 }
 // Entrada "Mi cuenta" del documento del patrón (postMessage ds-account):
-// con sesión de comprador va directo a /cuenta; sin sesión abre el modal
-// de auth con la cuenta como ruta pendiente (onCustomerAuthed navega al
-// completarse el login/registro/Google).
+// con sesión de comprador va directo a /cuenta; sin sesión navega a la
+// página de auth /ingresar con la cuenta como ?next= (un {route} sí puede
+// cruzar la navegación — a diferencia de un {action} pendiente).
 function onPatternAccount() {
   if (customerStore.isAuthenticated) {
     router.push(accountTo.value)
     return
   }
-  cartStore.openAuth('login', { route: accountTo.value })
+  router.push(cartStore.authRoute('login', accountTo.value))
 }
 function onLayoutMessage(e) {
   if (e.data?.type !== 'davent:layout') return
@@ -395,7 +396,12 @@ const TEMPLATE_CSS = {
   gimnasio:  () => import('../assets/store-gimnasio.css'),
   movimiento: () => import('../assets/store-movimiento.css'),
   sastreria: () => import('../assets/store-sastreria.css'),
-  moderntec: () => import('../assets/store-moderntec.css'),
+  moderntec: () => Promise.all([
+    import('../assets/store-moderntec.css'),
+    import('../assets/store-moderntec-auth.css'),
+    import('../assets/store-moderntec-account.css'),
+    import('../assets/store-moderntec-account-sections.css')
+  ]),
   indumentaria: () => import('../assets/store-indumentaria.css'),
   impacto:   () => import('../assets/store-impacto.css')
 }
@@ -919,6 +925,7 @@ watch([status, () => route.name], ([s, name]) => {
   document.title = name === 'store-catalog' ? `${shopName.value} · Catálogo`
     : name === 'store-services' ? `${shopName.value} · Servicios`
     : name === 'store-plans' ? `${shopName.value} · Suscripciones`
+    : name === 'store-auth' ? `${shopName.value} · Ingresar`
     : shopName.value
 }, { immediate: true })
 

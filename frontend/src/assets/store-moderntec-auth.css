@@ -1,0 +1,157 @@
+.store-page[data-template='moderntec'] .ec-auth-shell {
+  border-radius: var(--mt-rad-sm);
+  border: 1px solid var(--mt-line-strong);
+  background: var(--mt-panel);
+  box-shadow: var(--mt-shadow-device);
+}
+.store-page[data-template='moderntec'] .ec-auth-brand {
+  background:
+    linear-gradient(var(--mt-line-soft) 1px, transparent 1px) 0 0 / 100% 32px,
+    linear-gradient(90deg, var(--mt-line-soft) 1px, transparent 1px) 0 0 / 32px 100%,
+    var(--mt-bg);
+  color: var(--mt-ink);
+  border-right: 1px solid var(--mt-line-strong);
+}
+.store-page[data-template='moderntec'] .ec-auth-brand::before { opacity: .22; mix-blend-mode: luminosity; }
+.store-page[data-template='moderntec'] .ec-auth-brand::after {
+  background: linear-gradient(180deg, transparent 55%, var(--mt-bg));
+}
+.store-page[data-template='moderntec'] .ec-auth-brand::after,
+.store-page[data-template='moderntec'] .ec-auth-brand::before { pointer-events: none; }
+.store-page[data-template='moderntec'] .ec-auth-logo {
+  border-radius: var(--mt-rad-sm);
+  background: var(--mt-surface-2);
+  border: 1px solid var(--mt-line-strong);
+  color: var(--mt-accent-text);
+  font-family: var(--mt-display);
+}
+.store-page[data-template='moderntec'] .ec-auth-brand-name {
+  font-family: var(--mt-display); font-weight: 600; letter-spacing: -.01em; color: var(--mt-ink);
+}
+.store-page[data-template='moderntec'] .ec-auth-rail {
+  display: block; width: fit-content; padding-bottom: 8px; margin-bottom: 2px;
+  font-family: var(--mt-mono); font-size: var(--mt-fs-label); letter-spacing: var(--mt-track-label);
+  color: var(--mt-accent-text);
+  border-bottom: 1px solid var(--mt-accent-line);
+  padding-right: 28px;
+}
+.store-page[data-template='moderntec'] .ec-auth-brand-kicker {
+  font-family: var(--mt-mono); font-weight: 500; font-size: var(--mt-fs-label);
+  letter-spacing: var(--mt-track-label); color: var(--mt-ink-2);
+}
+.store-page[data-template='moderntec'] .ec-auth-brand-title {
+  font-family: var(--mt-display); font-weight: 600; letter-spacing: -.03em; line-height: 1.02;
+  color: var(--mt-ink);
+}
+.store-page[data-template='moderntec'] .ec-auth-brand-text { color: var(--mt-ink-2); }
+.store-page[data-template='moderntec'] .ec-auth-perks { gap: 0; border-top: 1px solid var(--mt-line); }
+.store-page[data-template='moderntec'] .ec-auth-perks li {
+  padding: 10px 0; border-bottom: 1px solid var(--mt-line);
+  font-weight: 500; font-size: var(--mt-fs-sm); color: var(--mt-ink);
+}
+.store-page[data-template='moderntec'] .ec-auth-perks svg { color: var(--mt-accent-text); }
+.store-page[data-template='moderntec'] .ec-auth-brand-foot {
+  font-family: var(--mt-mono); font-size: var(--mt-fs-label); letter-spacing: .08em;
+  text-transform: uppercase; color: var(--mt-ink-3);
+}
+
+.store-page[data-template='moderntec'] .ec-auth-panel {
+  background: var(--mt-panel); color: var(--mt-ink);
+}
+.store-page[data-template='moderntec'] .ec-auth-back {
+  font-family: var(--mt-mono); font-size: var(--mt-fs-xs); font-weight: 500;
+  letter-spacing: .04em; color: var(--mt-ink-2);
+}
+.store-page[data-template='moderntec'] .ec-auth-back:hover { color: var(--mt-accent-text); }
+.store-page[data-template='moderntec'] .ec-auth-loading { color: var(--mt-ink-2); font-family: var(--mt-mono); font-size: var(--mt-fs-sm); }
+.store-page[data-template='moderntec'] .ec-auth-spin { color: var(--mt-accent-text); }
+
+.store-page[data-template='moderntec'] .ec-auth-head {
+  padding-bottom: 18px; border-bottom: 1px solid var(--mt-line);
+}
+.store-page[data-template='moderntec'] .ec-auth-badge { display: none; }
+.store-page[data-template='moderntec'] .ec-auth-tag {
+  display: inline-flex; align-items: center; gap: 8px; width: fit-content;
+  font-family: var(--mt-mono); font-size: var(--mt-fs-label); letter-spacing: var(--mt-track-label);
+  text-transform: uppercase; color: var(--mt-accent-text);
+}
+.store-page[data-template='moderntec'] .ec-auth-tag::before {
+  content: ''; width: 6px; height: 6px; border-radius: 50%; background: var(--mt-ok);
+}
+.store-page[data-template='moderntec'] .ec-auth-title {
+  font-family: var(--mt-display); font-weight: 600; letter-spacing: -.025em; color: var(--mt-ink);
+}
+.store-page[data-template='moderntec'] .ec-auth-sub { color: var(--mt-ink-2); }
+
+.store-page[data-template='moderntec'] .ecaf .sp-field-label {
+  font-family: var(--mt-mono); font-size: var(--mt-fs-label); font-weight: 500;
+  letter-spacing: .1em; text-transform: uppercase; color: var(--mt-ink-2);
+}
+.store-page[data-template='moderntec'] .ecaf .sp-input {
+  background: var(--mt-bg); color: var(--mt-ink);
+  border: 1px solid var(--mt-line-strong); border-radius: var(--mt-rad-sm);
+}
+.store-page[data-template='moderntec'] .ecaf .sp-input::placeholder { color: var(--mt-ink-3); }
+.store-page[data-template='moderntec'] .ecaf .sp-input:hover { border-color: var(--mt-accent-line); }
+.store-page[data-template='moderntec'] .ecaf .sp-input:focus,
+.store-page[data-template='moderntec'] .ecaf .sp-input:focus-visible {
+  outline: 2px solid var(--mt-focus); outline-offset: 1px; border-color: var(--mt-accent-text);
+  box-shadow: none;
+}
+.store-page[data-template='moderntec'] .ecaf-pass-toggle { border-radius: var(--mt-rad-sm); color: var(--mt-ink-2); }
+.store-page[data-template='moderntec'] .ecaf-pass-toggle:hover { color: var(--mt-accent-text); background: var(--mt-accent-soft); }
+.store-page[data-template='moderntec'] .ecaf-submit {
+  border-radius: var(--mt-rad-sm);
+  background: linear-gradient(90deg, var(--mt-accent), var(--mt-accent-2));
+  color: var(--mt-accent-ink);
+  font-family: var(--mt-mono); font-size: var(--mt-fs-sm); font-weight: 600;
+  letter-spacing: .06em; text-transform: uppercase;
+}
+.store-page[data-template='moderntec'] .ecaf-submit:hover:not(:disabled) { filter: brightness(1.08); }
+.store-page[data-template='moderntec'] .ecaf-notice,
+.store-page[data-template='moderntec'] .ecaf-error {
+  border-radius: var(--mt-rad-sm); border-left-width: 2px; color: var(--mt-ink);
+}
+.store-page[data-template='moderntec'] .ecaf-notice {
+  background: color-mix(in srgb, var(--mt-ok) 10%, transparent);
+  border-color: color-mix(in srgb, var(--mt-ok) 40%, transparent);
+}
+.store-page[data-template='moderntec'] .ecaf-error {
+  background: color-mix(in srgb, var(--mt-danger) 10%, transparent);
+  border-color: color-mix(in srgb, var(--mt-danger) 45%, transparent);
+}
+.store-page[data-template='moderntec'] .ecaf-divider {
+  font-family: var(--mt-mono); font-size: var(--mt-fs-label); letter-spacing: .1em;
+  text-transform: uppercase; color: var(--mt-ink-3);
+}
+.store-page[data-template='moderntec'] .ecaf-divider::before,
+.store-page[data-template='moderntec'] .ecaf-divider::after { background: var(--mt-line-strong); opacity: 1; }
+.store-page[data-template='moderntec'] .ecaf-link { color: var(--mt-accent-text); font-family: var(--mt-mono); font-size: var(--mt-fs-xs); }
+.store-page[data-template='moderntec'] :is(.ecaf-link, .ecaf-pass-toggle, .ec-auth-back, .ec-auth-close, .ecaf-submit):focus-visible {
+  outline: 2px solid var(--mt-focus); outline-offset: 2px;
+}
+
+.store-page[data-template='moderntec'] .ec-auth-backdrop {
+  background: var(--mt-scrim); backdrop-filter: none;
+}
+.store-page[data-template='moderntec'] .ec-auth-card {
+  background: var(--mt-panel); color: var(--mt-ink);
+  border: 1px solid var(--mt-line-strong); border-top: 2px solid var(--mt-accent);
+  border-radius: var(--mt-rad-sm); box-shadow: var(--mt-shadow-device);
+}
+.store-page[data-template='moderntec'] .ec-auth-card .ec-auth-head { padding-right: 36px; }
+.store-page[data-template='moderntec'] .ec-auth-close {
+  border-radius: var(--mt-rad-sm); border: 1px solid var(--mt-line); color: var(--mt-ink-2);
+}
+.store-page[data-template='moderntec'] .ec-auth-close:hover { background: var(--mt-surface-2); color: var(--mt-ink); }
+
+@media (max-width: 1024px) {
+  .store-page[data-template='moderntec'] .ec-auth-brand { border-right: 0; border-bottom: 1px solid var(--mt-line-strong); }
+  .store-page[data-template='moderntec'] .ec-auth-rail { display: none; }
+}
+@media (max-width: 480px) {
+  .store-page[data-template='moderntec'] .ec-auth-shell { border-radius: 0; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .store-page[data-template='moderntec'] .ecaf-submit { transition: none; }
+}

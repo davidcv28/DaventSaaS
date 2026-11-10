@@ -1,0 +1,94 @@
+/* MODERNTEC - Mi cuenta (comprador) */
+.store-page[data-template='moderntec'] .ec-account .acc-tele,
+.store-page[data-template='moderntec'] .ec-account .acc-idx {
+  font-family: var(--mt-mono); font-size: 10.5px; letter-spacing: .14em; text-transform: uppercase; color: var(--mt-ink-3);
+}
+.store-page[data-template='moderntec'] .ec-account .acc-tele { display: block; width: 100%; }
+.store-page[data-template='moderntec'] .ec-account .acc-tele::before {
+  content: ''; display: inline-block; width: 6px; height: 6px; margin-right: 8px; border-radius: 50%;
+  background: var(--mt-ok); box-shadow: 0 0 8px var(--mt-ok); vertical-align: 1px;
+}
+.store-page[data-template='moderntec'] .ec-account .acc-auth-card .acc-tele { text-align: center; }
+.store-page[data-template='moderntec'] .ec-account .acc-mhead { flex-wrap: wrap; }
+.store-page[data-template='moderntec'] .ec-account .acc-id { flex-wrap: wrap; }
+
+/* superficies */
+.store-page[data-template='moderntec'] .ec-account :is(.acc-side, .acc-panel, .acc-auth-card, .acc-gate-card, .acc-mhead) {
+  background: var(--mt-panel) !important; border: 1px solid var(--mt-line) !important; border-radius: var(--mt-rad-md) !important;
+  box-shadow: var(--mt-shadow-1) !important; color: var(--mt-ink);
+  background-image: linear-gradient(var(--mt-line-soft) 1px, transparent 1px), linear-gradient(90deg, var(--mt-line-soft) 1px, transparent 1px) !important;
+  background-size: 32px 32px; background-position: -1px -1px;
+}
+.store-page[data-template='moderntec'] .ec-account .acc-mhead { padding: 12px 14px; }
+.store-page[data-template='moderntec'] .ec-account :is(.acc-panel-title, .acc-auth-title, .acc-gate-title, .acc-id-name, .acc-mhead-meta strong) {
+  font-family: var(--mt-display); font-weight: 600; letter-spacing: -.02em; color: var(--mt-ink);
+}
+.store-page[data-template='moderntec'] .ec-account :is(.acc-panel-sub, .acc-id-email, .acc-mhead-meta small, .acc-auth-msg, .acc-gate-sub, .acc-hint) { color: var(--mt-ink-2); }
+.store-page[data-template='moderntec'] .ec-account .acc-hint { font-family: var(--mt-mono); font-size: 11px; color: var(--mt-ink-3); }
+.store-page[data-template='moderntec'] .ec-account .acc-avatar {
+  font-family: var(--mt-mono); border-radius: var(--mt-rad-sm) !important; color: var(--mt-accent-ink) !important;
+  background: linear-gradient(135deg, var(--mt-accent), var(--mt-accent-2)) !important;
+}
+
+/* navegación */
+.store-page[data-template='moderntec'] .ec-account :is(.acc-navitem, .acc-tab) {
+  font-family: var(--mt-body); color: var(--mt-ink-2); border-radius: var(--mt-rad-sm); border: 1px solid transparent;
+  background: transparent; transition: color var(--mt-dur-1), border-color var(--mt-dur-1), background var(--mt-dur-1);
+}
+.store-page[data-template='moderntec'] .ec-account .acc-navitem .acc-idx { margin-left: auto; }
+.store-page[data-template='moderntec'] .ec-account .acc-tab .acc-idx { font-size: 10px; }
+.store-page[data-template='moderntec'] .ec-account :is(.acc-navitem, .acc-tab):hover { color: var(--mt-ink); background: var(--mt-surface-2); border-color: var(--mt-line); }
+.store-page[data-template='moderntec'] .ec-account :is(.acc-navitem, .acc-tab).is-on {
+  color: var(--mt-accent-text); background: var(--mt-accent-soft); border-color: var(--mt-accent-line);
+  box-shadow: inset 2px 0 0 var(--mt-accent);
+}
+.store-page[data-template='moderntec'] .ec-account :is(.acc-navitem, .acc-tab).is-on .acc-idx { color: var(--mt-accent-text); }
+.store-page[data-template='moderntec'] .ec-account :is(.acc-logout, .acc-icon-btn) {
+  color: var(--mt-ink-2); border: 1px solid var(--mt-line-strong); background: transparent; border-radius: var(--mt-rad-sm);
+}
+.store-page[data-template='moderntec'] .ec-account :is(.acc-logout, .acc-icon-btn):hover { color: var(--mt-danger); border-color: var(--mt-danger); }
+.store-page[data-template='moderntec'] .ec-account :is(.acc-navitem, .acc-tab, .acc-logout, .acc-icon-btn, .acc-auth-link, .acc-gate-link, .ec-btn-primary, .ec-btn-ghost):focus-visible,
+.store-page[data-template='moderntec'] .ec-account :is(.sp-input):focus-visible {
+  outline: 2px solid var(--mt-focus) !important; outline-offset: 2px;
+}
+
+/* estados auth */
+.store-page[data-template='moderntec'] .ec-account :is(.acc-auth-ico, .acc-gate-ico) {
+  border-radius: var(--mt-rad-sm) !important; color: var(--mt-accent-text); background: var(--mt-accent-soft) !important; border: 1px solid var(--mt-accent-line);
+}
+.store-page[data-template='moderntec'] .ec-account .acc-auth-ok { color: var(--mt-ok); font-family: var(--mt-mono); font-size: 13px; }
+.store-page[data-template='moderntec'] .ec-account :is(.acc-auth-link, .acc-gate-link) { color: var(--mt-accent-text); }
+.store-page[data-template='moderntec'] .ec-account .acc-gate-list { background: var(--mt-bg-2) !important; border: 1px solid var(--mt-line) !important; border-radius: var(--mt-rad-sm) !important; color: var(--mt-ink-2); }
+.store-page[data-template='moderntec'] .ec-account .acc-gate-list svg { color: var(--mt-accent-text); }
+.store-page[data-template='moderntec'] .ec-account .acc-spin { border-color: var(--mt-line-strong); border-top-color: var(--mt-accent); }
+.store-page[data-template='moderntec'] .ec-account .sp-form-error { color: var(--mt-danger); font-family: var(--mt-mono); font-size: 12.5px; }
+
+/* botones */
+.store-page[data-template='moderntec'] .ec-account .ec-btn-primary {
+  background: linear-gradient(120deg, var(--mt-accent), var(--mt-accent-2)) !important; color: var(--mt-accent-ink) !important;
+  border-radius: var(--mt-rad-pill) !important; font-weight: 600; filter: none;
+}
+.store-page[data-template='moderntec'] .ec-account .ec-btn-ghost {
+  background: transparent !important; color: var(--mt-ink) !important; border: 1px solid var(--mt-line-strong) !important; border-radius: var(--mt-rad-pill) !important;
+}
+.store-page[data-template='moderntec'] .ec-account .ec-btn-ghost:hover { border-color: var(--mt-accent) !important; }
+
+/* perfil */
+.store-page[data-template='moderntec'] .ec-account .acc-fieldset { background: var(--mt-bg-2); border: 1px solid var(--mt-line); border-radius: var(--mt-rad-sm); }
+.store-page[data-template='moderntec'] .ec-account .acc-fieldset legend { font-family: var(--mt-mono); font-size: 11px; letter-spacing: var(--mt-track-label); color: var(--mt-ink-2); }
+.store-page[data-template='moderntec'] .ec-account .acc-fieldset legend .acc-idx { color: var(--mt-accent-text); margin-right: 6px; }
+.store-page[data-template='moderntec'] .ec-account .sp-field-label { font-family: var(--mt-mono); font-size: 11px; letter-spacing: .1em; text-transform: uppercase; color: var(--mt-ink-2); }
+.store-page[data-template='moderntec'] .ec-account .sp-input { background: var(--mt-bg) !important; color: var(--mt-ink) !important; border: 1px solid var(--mt-line-strong) !important; border-radius: var(--mt-rad-sm) !important; }
+.store-page[data-template='moderntec'] .ec-account .sp-input:focus { border-color: var(--mt-accent) !important; }
+.store-page[data-template='moderntec'] .ec-account .sp-input:disabled { color: var(--mt-ink-3) !important; background: var(--mt-bg-2) !important; }
+.store-page[data-template='moderntec'] .ec-account .acc-msg { font-family: var(--mt-mono); font-size: 12.5px; }
+.store-page[data-template='moderntec'] .ec-account .acc-msg.is-ok { color: var(--mt-ok); }
+.store-page[data-template='moderntec'] .ec-account .acc-msg.is-err { color: var(--mt-danger); }
+
+@media (max-width: 560px) {
+  .store-page[data-template='moderntec'] .ec-account .acc-tele { font-size: 10px; letter-spacing: .1em; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .store-page[data-template='moderntec'] .ec-account * { transition: none !important; animation-duration: .01ms !important; }
+}
+
