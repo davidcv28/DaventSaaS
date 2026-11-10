@@ -191,10 +191,10 @@ html.rv-off .rv{animation:none!important;opacity:1!important;transform:none!impo
 }
 
 /* ── menú móvil (hoja lateral) ── */
-.m-scrim{position:fixed;inset:0;background:rgba(0,0,0,.58);opacity:0;visibility:hidden;
+.m-scrim{position:fixed;top:0;left:0;right:0;height:var(--fr-h,100vh);background:rgba(0,0,0,.58);opacity:0;visibility:hidden;
   transition:opacity .25s;z-index:60}
 .m-scrim.open{opacity:1;visibility:visible}
-.m-sheet{position:fixed;top:0;right:0;bottom:0;width:min(330px,88vw);z-index:61;
+.m-sheet{position:fixed;top:0;right:0;height:var(--fr-h,100vh);width:min(330px,88vw);z-index:61;
   background:var(--surface);color:var(--ink);
   transform:translateX(102%);visibility:hidden;
   transition:transform .32s var(--ease),visibility .32s;
@@ -584,7 +584,7 @@ span.ds-product-img.is-empty{display:block}
 .ds-product-cat:empty{display:none}
 .ds-product .ds-stock{display:flex;align-items:center;justify-content:center;gap:6px;
   margin:8px 14px 0;font-size:11.5px;font-weight:700;letter-spacing:.14em;
-  text-transform:uppercase;color:var(--ds-success,#1a7f4b)}
+  text-transform:uppercase;color:color-mix(in srgb,var(--ds-success,#1a7f4b) 72%,var(--ink))}
 .ds-product .ds-stock i{width:5px;height:5px;border-radius:50%;background:currentColor;flex:none}
 .ds-product-price{display:flex;align-items:center;gap:9px;padding:13px 14px;margin-top:auto;
   border-top:1px solid var(--line)}
@@ -629,9 +629,18 @@ span.ds-product-img.is-empty{display:block}
 .ds-service-desc{display:block;font-size:14.5px;font-weight:300;color:var(--muted);
   line-height:1.6;transition:color .25s}
 .ds-service:hover .ds-service-desc{color:inherit;opacity:.8}
+/* Precio/duración viajan como data-attrs del fragmento: el script del
+   documento los convierte en .ds-service-meta debajo de la ficha. */
+.ds-service-meta{display:flex;align-items:center;gap:10px;margin-top:5px}
+.ds-service-price{font-family:var(--font-display);font-size:12.5px;font-weight:700;
+  letter-spacing:.1em;color:var(--ds-accent-text,var(--accent-text));text-transform:uppercase}
+.ds-service-dur{font-family:var(--font-body);font-size:12px;font-weight:300;
+  color:var(--muted);text-transform:uppercase;letter-spacing:.08em}
+.ds-service:hover .ds-service-dur{color:inherit;opacity:.8}
 @media(max-width:880px){.ds-services-list{grid-template-columns:1fr 1fr}}
 @media(max-width:560px){.ds-services-list{grid-template-columns:1fr}}
-.svc-cta{margin-top:26px}
+.svc-cta{margin-top:26px;display:flex;flex-wrap:wrap}
+@media(max-width:560px){.svc-cta .btn{white-space:normal;text-align:center}}
 
 /* ── nosotros + dorsal + números ── */
 /* Flex (no grid): si la tienda no cargó relato, la placa del dorsal ocupa
@@ -1002,7 +1011,7 @@ a.contact-row:hover{background:var(--soft);color:var(--accent)}
     letter-spacing:.16em;text-transform:uppercase}
   .cat-filters-badge{display:grid;place-items:center;min-width:18px;height:18px;padding:0 4px;
     background:var(--accent);color:var(--accent-ink);font-size:12px}
-  .cat-aside{position:fixed;top:0;left:0;bottom:0;width:min(330px,88vw);z-index:61;
+  .cat-aside{position:fixed;top:0;left:0;height:var(--fr-h,100vh);width:min(330px,88vw);z-index:61;
     padding:18px;overflow:auto;background:var(--bg);
     transform:translateX(-102%);visibility:hidden;
     transition:transform .3s var(--ease),visibility .3s;
@@ -1058,7 +1067,7 @@ a.contact-row:hover{background:var(--soft);color:var(--accent)}
   background:none;color:var(--accent);font-family:var(--font-display);font-size:11px;
   font-weight:700;letter-spacing:.16em;text-transform:uppercase}
 .cat-chips .cat-chip-clear:hover{background:var(--accent);color:var(--accent-ink)}
-.m-scrim-cat{position:fixed;inset:0;z-index:60;background:rgba(0,0,0,.5);
+.m-scrim-cat{position:fixed;top:0;left:0;right:0;height:var(--fr-h,100vh);z-index:60;background:rgba(0,0,0,.5);
   opacity:0;visibility:hidden;transition:opacity .25s}
 .cat-aside.is-open~.m-scrim-cat{opacity:1;visibility:visible}
 
@@ -1795,7 +1804,7 @@ a.contact-row:hover{background:var(--soft);color:var(--accent)}
           <button class="f-done" type="button" data-ds-filters-close>Aplicar</button>
         </div>
       </aside>
-      <div class="m-scrim-cat" data-ds-filters-close aria-hidden="true"></div>
+      <div class="m-scrim-cat" data-ds-filters-scrim aria-hidden="true"></div>
 
       <div class="cat-results">
         <div class="cat-bar">
@@ -2059,14 +2068,26 @@ a.contact-row:hover{background:var(--soft);color:var(--accent)}
   /* Header: se condensa y mueve el filo de progreso con el marco real que
      manda el host (dentro del iframe estirado no hay scroll propio). */
   var header = document.getElementById('site-header');
+  var frameBox = null;
   function paintFrame(d){
     if (!header) return;
-    var top = Number(d.top) || 0;
+    frameBox = { top: Number(d.top) || 0, bottom: Number(d.bottom) || 0, vh: Number(d.vh) || 0 };
+    var top = frameBox.top;
     header.classList.toggle('is-stuck', top < -12);
-    var vh = Number(d.vh) || 0;
-    var span = Math.max(1, (Number(d.bottom) || 0) - top - vh);
+    var span = Math.max(1, frameBox.bottom - top - frameBox.vh);
     var p = Math.min(1, Math.max(0, -top / span));
     header.style.setProperty('--progress', p.toFixed(4));
+    /* --fr-h = alto visible del documento dentro del marco estirado: las
+       hojas y scrims fijos se dimensionan con él (nunca con 100vh, que en
+       el iframe estirado equivale al alto TOTAL del documento). */
+    var ih = document.documentElement.scrollHeight || 1;
+    var dTop = Math.max(0, -top);
+    var dBot = Math.min(ih, frameBox.vh - top);
+    document.documentElement.style.setProperty('--fr-h', Math.max(0, dBot - dTop) + 'px');
+    /* data-ds-offset exacto: el header se compacta al scrollear y el
+       offset fijo de 76px dejaba los anchors tapados por el chrome. */
+    var off = Math.round(header.getBoundingClientRect().height);
+    if (off > 0) header.setAttribute('data-ds-offset', String(off));
   }
   window.addEventListener('message', function(e){
     if (e.source !== window.parent) return;
@@ -2084,6 +2105,7 @@ a.contact-row:hover{background:var(--soft);color:var(--accent)}
     var setOpen = function(open){
       sheet.classList.toggle('open', open);
       if (scrim) scrim.classList.toggle('open', open);
+      sheet.setAttribute('aria-hidden', open ? 'false' : 'true');
       openers.forEach(function(b){ b.setAttribute('aria-expanded', open ? 'true' : 'false'); });
       document.documentElement.classList.toggle('m-lock', open);
       [header, document.querySelector('main'), document.querySelector('.site-footer')]
@@ -2101,7 +2123,18 @@ a.contact-row:hover{background:var(--soft);color:var(--accent)}
       b.addEventListener('click', function(){ setOpen(!sheet.classList.contains('open')); });
     });
     closers.forEach(function(el){ el.addEventListener('click', function(){ setOpen(false); }); });
-    document.addEventListener('keydown', function(e){ if (e.key === 'Escape') setOpen(false); });
+    document.addEventListener('keydown', function(e){
+      if (e.key === 'Escape') { setOpen(false); return; }
+      /* Focus trap dentro de la hoja: sin él Tab saltaba al chrome inert
+         (o al navegador) y el foco quedaba fuera del diálogo modal. */
+      if (e.key === 'Tab' && sheet.classList.contains('open')) {
+        var f = sheet.querySelectorAll('a[href],button:not([disabled])');
+        if (!f.length) return;
+        var first = f[0], last = f[f.length - 1];
+        if (e.shiftKey && document.activeElement === first) { e.preventDefault(); last.focus(); }
+        else if (!e.shiftKey && document.activeElement === last) { e.preventDefault(); first.focus(); }
+      }
+    });
   }
 
   /* Riel de productos: flechas reales, contador y snap. */
@@ -2167,6 +2200,30 @@ a.contact-row:hover{background:var(--soft);color:var(--accent)}
       });
     });
   }
+
+  /* Servicios: precio/duración viajan como data-attrs del fragmento
+     (.ds-service); se componen acá sin pedir nada al servidor. */
+  [].slice.call(document.querySelectorAll('.ds-service')).forEach(function(li){
+    if (li.querySelector('.ds-service-meta')) return;
+    var price = li.getAttribute('data-price-label') || '';
+    var dur = li.getAttribute('data-duration') || '';
+    if (!price && !dur) return;
+    var meta = document.createElement('span');
+    meta.className = 'ds-service-meta';
+    if (price) {
+      var p = document.createElement('b');
+      p.className = 'ds-service-price';
+      p.textContent = price;
+      meta.appendChild(p);
+    }
+    if (dur) {
+      var d = document.createElement('b');
+      d.className = 'ds-service-dur';
+      d.textContent = dur;
+      meta.appendChild(d);
+    }
+    li.appendChild(meta);
+  });
 })();
 </script>
 </body>

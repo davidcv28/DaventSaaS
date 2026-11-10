@@ -4299,7 +4299,7 @@
     "palette": {
      "primary": "#1A1A1A",
      "secondary": "#333333",
-     "accent": "#EE2D45",
+     "accent": "#D81E33",
      "bg": "#FFFFFF",
      "surface": "#FFFFFF",
      "text": "#1A1A1A",
@@ -10537,7 +10537,7 @@
     "palette": {
      "primary": "#5C3A24",
      "secondary": "#8A6B52",
-     "accent": "#C4572E",
+     "accent": "#B5491F",
      "bg": "#F2EAE0",
      "surface": "#FBF5EC",
      "text": "#2A2018",
@@ -10735,7 +10735,7 @@
    "preview": "",
    "concept": "Hueso + óxido + suela: calzado de taller artesanal.",
    "effects": {
-    "accent": "#C4572E",
+    "accent": "#B5491F",
     "primary": "#5C3A24",
     "secondary": "#8A6B52",
     "bg": "#F2EAE0",
@@ -18173,11 +18173,11 @@
    "tier": "advanced",
    "template": "raiz",
    "tokens": {
-    "accent": "#EE2D45",
+    "accent": "#D81E33",
     "palette": {
      "primary": "#1A1A1A",
      "secondary": "#333333",
-     "accent": "#EE2D45",
+     "accent": "#D81E33",
      "bg": "#FFFFFF",
      "surface": "#FFFFFF",
      "text": "#1A1A1A",
