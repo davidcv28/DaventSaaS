@@ -17859,7 +17859,8 @@
    ],
    "preview": "",
    "supports_dark_mode": true,
-   "style": "brigada"
+   "style": "brigada",
+   "demo_slug": "vigia"
   },
   {
    "slug": "indumentaria",
@@ -18047,7 +18048,8 @@
    "preview": "",
    "variables": {},
    "supports_dark_mode": true,
-   "style": "indumentaria"
+   "style": "indumentaria",
+   "demo_slug": "atelier-luma"
   },
   {
    "slug": "impacto",
@@ -18163,7 +18165,8 @@
    "preview": "",
    "variables": {},
    "supports_dark_mode": true,
-   "style": "impacto"
+   "style": "impacto",
+   "demo_slug": "mi-qa"
   },
   {
    "slug": "calzado",
@@ -18318,7 +18321,8 @@
    ],
    "preview": "",
    "supports_dark_mode": true,
-   "style": "calzado"
+   "style": "calzado",
+   "demo_slug": "zancada"
   },
   {
    "slug": "moda",
@@ -18605,7 +18609,8 @@
    "preview": "",
    "variables": {},
    "supports_dark_mode": true,
-   "style": "modista"
+   "style": "modista",
+   "demo_slug": "atelier-serena"
   },
   {
    "slug": "topmodern",
@@ -18753,7 +18758,8 @@
    "preview": "",
    "variables": {},
    "supports_dark_mode": true,
-   "style": "topmodern"
+   "style": "topmodern",
+   "demo_slug": "voga"
   },
   {
    "slug": "viajero",
@@ -18895,7 +18901,8 @@
    "preview": "",
    "variables": {},
    "supports_dark_mode": true,
-   "style": "viajero"
+   "style": "viajero",
+   "demo_slug": "viajero-andino"
   },
   {
    "slug": "olivium",
@@ -19037,7 +19044,8 @@
    "preview": "",
    "variables": {},
    "supports_dark_mode": true,
-   "style": "olivium"
+   "style": "olivium",
+   "demo_slug": "olivium-qa"
   },
   {
    "slug": "atelier-noir",
@@ -19178,7 +19186,8 @@
    "preview": "",
    "variables": {},
    "supports_dark_mode": true,
-   "style": "atelier-noir"
+   "style": "atelier-noir",
+   "demo_slug": "atelier-bruma"
   },
   {
    "slug": "guardia",
@@ -19332,7 +19341,8 @@
    "preview": "",
    "variables": {},
    "supports_dark_mode": true,
-   "style": "guardia"
+   "style": "guardia",
+   "demo_slug": "centinela"
   },
   {
    "slug": "expediente",
@@ -19512,7 +19522,8 @@
    "preview": "",
    "variables": {},
    "supports_dark_mode": true,
-   "style": "expediente"
+   "style": "expediente",
+   "demo_slug": "bufete-vega"
   },
   {
    "slug": "silicio",
@@ -19675,7 +19686,8 @@
    "preview": "",
    "variables": {},
    "supports_dark_mode": true,
-   "style": "silicio"
+   "style": "silicio",
+   "demo_slug": "nucleo"
   },
   {
    "slug": "neon",
@@ -19850,7 +19862,8 @@
    "preview": "",
    "variables": {},
    "supports_dark_mode": true,
-   "style": "neon"
+   "style": "neon",
+   "demo_slug": "nocturna"
   },
   {
    "slug": "showroom",
@@ -19992,7 +20005,8 @@
    "preview": "",
    "variables": {},
    "supports_dark_mode": true,
-   "style": "showroom"
+   "style": "showroom",
+   "demo_slug": "nomada"
   },
   {
    "slug": "umbral",
@@ -20189,7 +20203,8 @@
    "preview": "",
    "variables": {},
    "supports_dark_mode": true,
-   "style": "umbral"
+   "style": "umbral",
+   "demo_slug": "limen"
   },
   {
    "slug": "autoservicio",
@@ -20359,7 +20374,8 @@
    "preview": "",
    "variables": {},
    "supports_dark_mode": true,
-   "style": "autoservicio"
+   "style": "autoservicio",
+   "demo_slug": "el-trebol"
   }
  ]
 }

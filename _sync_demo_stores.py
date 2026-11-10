@@ -195,7 +195,7 @@ def _store(store, plan):
             qs.first()._state.db = None
             qs.update(**pvals)
         else:
-            Product.objects.using(REMOTE).create(store = rstore, name = p.name, **pvals)
+            Product.objects.using(REMOTE).create(store = rstore, **pvals)
         n += 1
     print(f'  services ok · products {n}')
 
