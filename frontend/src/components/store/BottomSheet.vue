@@ -1,5 +1,5 @@
 <script setup>
-import { ref, watch, nextTick, onBeforeUnmount } from 'vue'
+import { ref, watch, nextTick, onMounted, onBeforeUnmount } from 'vue'
 import AppIcon from '../AppIcon.vue'
 
 // Bottom sheet (talles, filtros, horarios): alto 60-85dvh, handle 36×4,
@@ -11,6 +11,16 @@ const props = defineProps({
   tall: { type: Boolean, default: false } // 85dvh en vez de 60
 })
 const emit = defineEmits(['close'])
+// Teleport al root .store-page cuando existe: los tokens --sp-* y el
+// data-store-theme activo solo viven en ese scope (en body la hoja quedaba
+// blanca con tinta heredada — invisible en tiendas oscuras). Se resuelve en
+// onMounted porque el .store-page propio todavía no está en el document al
+// correr setup; fuera de una tienda cae a body y el par bg/fg explícito del
+// sheet la mantiene legible igual.
+const teleportTarget = ref('body')
+onMounted(() => {
+  if (document.querySelector('.store-page')) teleportTarget.value = '.store-page'
+})
 const sheet = ref(null)
 const dragY = ref(0)
 let startY = 0
@@ -57,7 +67,7 @@ onBeforeUnmount(() => document.documentElement.classList.remove('sp-lock'))
 </script>
 
 <template>
-  <Teleport to="body">
+  <Teleport :to="teleportTarget">
     <Transition name="bs">
       <div v-if="open" class="bs-root" @keydown="onKey">
         <div class="bs-backdrop" aria-hidden="true" @click="close"></div>
@@ -87,7 +97,9 @@ onBeforeUnmount(() => document.documentElement.classList.remove('sp-lock'))
 <style scoped>
 .bs-root { position: fixed; inset: 0; z-index: 90; }
 .bs-backdrop { position: absolute; inset: 0; background: rgba(8, 10, 14, .5); }
-.bs-sheet { position: absolute; left: 0; right: 0; bottom: 0; max-height: 62dvh; display: flex; flex-direction: column; background: var(--sp-card, #fff); color: inherit; border-radius: 20px 20px 0 0; box-shadow: 0 -12px 40px -12px rgba(0, 0, 0, .35); overscroll-behavior: contain; padding-bottom: env(safe-area-inset-bottom, 0px); }
+/* Par bg+fg explícito del mismo scope de tokens (--sp-card-solid es opaco en
+   oscuro, --sp-card lleva 72% de alfa y sobre el scrim lavaba el texto). */
+.bs-sheet { position: absolute; left: 0; right: 0; bottom: 0; max-height: 62dvh; display: flex; flex-direction: column; background: var(--sp-card-solid, var(--sp-card, #fff)); color: var(--sp-ink, #0f172a); border-radius: 20px 20px 0 0; box-shadow: 0 -12px 40px -12px rgba(0, 0, 0, .35); overscroll-behavior: contain; padding-bottom: env(safe-area-inset-bottom, 0px); }
 .bs-sheet.tall { max-height: 85dvh; }
 .bs-grip { padding: 10px 0 6px; touch-action: none; cursor: grab; flex: none; }
 .bs-handle { display: block; width: 36px; height: 4px; margin-inline: auto; border-radius: 99px; background: color-mix(in srgb, currentColor 24%, transparent); }

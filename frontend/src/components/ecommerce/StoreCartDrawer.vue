@@ -41,7 +41,13 @@ function onBackdrop(e) { if (e.target === e.currentTarget) close() }
 </script>
 
 <template>
-  <Teleport to="body">
+  <!-- El teleport va a .store-page (raíz del layout), no a body: solo dentro
+       de ese scope existen los tokens --sp-* y el data-store-theme activo.
+       En body el panel quedaba blanco con tinta heredada — invisible en
+       tiendas oscuras. position:fixed sigue siendo viewport: .store-page no
+       declara transform/filter/contain. `defer` resuelve el target después
+       del montaje: .store-page existe como el raíz del mismo ciclo. -->
+  <Teleport defer to=".store-page">
     <div v-if="cart.drawerOpen" class="ec-cart-backdrop" @click="onBackdrop">
       <aside class="ec-cart-panel" role="dialog" aria-label="Tu carrito" @keydown.esc="close">
         <header class="ec-cart-head">
@@ -130,7 +136,8 @@ function onBackdrop(e) { if (e.target === e.currentTarget) close() }
 .ec-cart-panel {
   position: absolute; top: 0; right: 0; bottom: 0; width: min(420px, 94vw);
   display: flex; flex-direction: column;
-  background: var(--sp-card, var(--ds-bg, #fff)); color: var(--sp-ink, inherit);
+  /* Par bg+fg del MISMO scope de tokens: nunca card fija + color:inherit. */
+  background: var(--sp-card, #fff); color: var(--sp-ink, #0f172a);
   border-left: 1px solid var(--sp-line, rgba(0,0,0,.1));
   box-shadow: -18px 0 50px rgba(0,0,0,.2);
 }
@@ -138,31 +145,31 @@ function onBackdrop(e) { if (e.target === e.currentTarget) close() }
 .ec-cart-title { display: flex; align-items: center; gap: 10px; margin: 0; font-size: 18px; font-weight: 800; }
 .ec-cart-close { display: grid; place-items: center; width: 34px; height: 34px; border: none; border-radius: calc(var(--sp-radius) * .65); background: transparent; color: inherit; cursor: pointer; }
 .ec-cart-body { flex: 1; overflow-y: auto; padding: 14px 18px; }
-.ec-cart-empty { display: grid; place-items: center; gap: 10px; padding: 48px 12px; text-align: center; color: var(--sp-muted, inherit); font-size: 14px; }
+.ec-cart-empty { display: grid; place-items: center; gap: 10px; padding: 48px 12px; text-align: center; color: var(--sp-muted, #5b6678); font-size: 14px; }
 .ec-cart-items { list-style: none; margin: 0; padding: 0; display: grid; gap: 14px; }
 .ec-cart-item { display: grid; grid-template-columns: 64px 1fr auto; gap: 12px; align-items: start; }
 .ec-cart-thumb { width: 64px; height: 64px; object-fit: cover; border-radius: calc(var(--sp-radius) * .75); background: var(--sp-line, rgba(0,0,0,.06)); }
-.ec-cart-thumb.is-empty { display: grid; place-items: center; color: var(--sp-muted, inherit); }
+.ec-cart-thumb.is-empty { display: grid; place-items: center; color: var(--sp-muted, #5b6678); }
 .ec-cart-info { min-width: 0; display: grid; gap: 6px; }
 .ec-cart-name { margin: 0; font-size: 14px; font-weight: 700; line-height: 1.3; }
-.ec-cart-warn { margin: 0; font-size: 12px; color: var(--sp-warning); }
+.ec-cart-warn { margin: 0; font-size: 12px; color: var(--sp-warning, #B45309); }
 .ec-cart-row { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
 .ec-cart-qty { display: inline-flex; align-items: center; gap: 4px; border: 1px solid var(--sp-line, currentColor); border-radius: calc(var(--sp-radius) * .65); }
 .ec-cart-qty button { display: grid; place-items: center; width: 30px; height: 30px; border: none; background: transparent; color: inherit; cursor: pointer; }
 .ec-cart-qty button:disabled { opacity: .4; cursor: default; }
 .ec-cart-qty span { min-width: 22px; text-align: center; font-size: 13px; font-weight: 700; }
 .ec-cart-price { font-size: 14px; font-weight: 800; font-variant-numeric: tabular-nums; }
-.ec-cart-was { margin: 0; font-size: 11.5px; color: var(--sp-muted, inherit); }
-.ec-cart-remove { border: none; background: transparent; color: var(--sp-muted, inherit); cursor: pointer; padding: 4px; }
+.ec-cart-was { margin: 0; font-size: 11.5px; color: var(--sp-muted, #5b6678); }
+.ec-cart-remove { border: none; background: transparent; color: var(--sp-muted, #5b6678); cursor: pointer; padding: 4px; }
 .ec-cart-foot { display: grid; gap: 10px; padding: 16px 18px calc(16px + env(safe-area-inset-bottom)); border-top: 1px solid var(--sp-line, rgba(0,0,0,.08)); }
 .ec-cart-total { display: flex; align-items: baseline; justify-content: space-between; font-size: 15px; }
 .ec-cart-total strong { font-size: 20px; font-weight: 800; font-variant-numeric: tabular-nums; }
-.ec-cart-discount { margin: 0; font-size: 12px; color: var(--sp-success); }
+.ec-cart-discount { margin: 0; font-size: 12px; color: var(--sp-success, #0E7A55); }
 .ec-cart-cta { display: inline-flex; align-items: center; justify-content: center; gap: 8px; padding: 13px 16px; border: none; border-radius: calc(var(--sp-radius) * .75); background: var(--store-accent, #111); color: var(--store-accent-ink, #fff); font-size: 15px; font-weight: 800; cursor: pointer; text-decoration: none; }
 .ec-cart-foot-row { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
 .ec-cart-ghost { display: inline-flex; align-items: center; justify-content: center; gap: 8px; padding: 11px 16px; border: 1px solid var(--sp-line, currentColor); border-radius: calc(var(--sp-radius) * .75); background: transparent; color: inherit; font-size: 14px; font-weight: 600; cursor: pointer; }
 .ec-cart-ghost:disabled { opacity: .5; cursor: default; }
-.ec-cart-hint { margin: 0; font-size: 13px; color: var(--sp-muted, inherit); text-align: center; }
+.ec-cart-hint { margin: 0; font-size: 13px; color: var(--sp-muted, #5b6678); text-align: center; }
 .ec-cart-full { justify-content: center; text-decoration: none; }
-.ec-cart-link { border: none; background: none; color: var(--store-accent, inherit); font-weight: 700; cursor: pointer; text-decoration: underline; }
+.ec-cart-link { border: none; background: none; color: var(--store-accent, #111); font-weight: 700; cursor: pointer; text-decoration: underline; }
 </style>

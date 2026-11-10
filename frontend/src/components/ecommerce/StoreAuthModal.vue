@@ -172,7 +172,13 @@ onUnmounted(() => resizeObs?.disconnect())
 </script>
 
 <template>
-  <Teleport to="body">
+  <!-- El teleport va a .store-page (raíz del layout), no a body: solo dentro
+       de ese scope existen los tokens --sp-* y el data-store-theme activo.
+       En body la tarjeta quedaba blanca con tinta heredada — invisible en
+       tiendas oscuras. position:fixed sigue siendo viewport: .store-page no
+       declara transform/filter/contain. `defer` resuelve el target después
+       del montaje: .store-page existe como el raíz del mismo ciclo. -->
+  <Teleport defer to=".store-page">
     <div v-if="cart.authOpen" class="ec-auth-backdrop" @click="onBackdrop" @keydown="onKey">
       <div class="ec-auth-card" role="dialog" aria-modal="true" :aria-label="title">
         <button type="button" class="ec-auth-close" aria-label="Cerrar" @click="close">
@@ -261,7 +267,8 @@ onUnmounted(() => resizeObs?.disconnect())
   position: relative; width: min(420px, 100%); max-height: min(90vh, 720px);
   overflow-y: auto; padding: 26px 24px 22px;
   border-radius: calc(var(--sp-radius) * 1.15); border: 1px solid var(--sp-line, rgba(255,255,255,.12));
-  background: var(--sp-card, var(--ds-bg, #fff)); color: var(--sp-ink, inherit);
+  /* Par bg+fg del MISMO scope de tokens: nunca card fija + color:inherit. */
+  background: var(--sp-card, #fff); color: var(--sp-ink, #0f172a);
   box-shadow: 0 24px 60px rgba(0,0,0,.28);
 }
 .ec-auth-close {
@@ -271,9 +278,9 @@ onUnmounted(() => resizeObs?.disconnect())
 }
 .ec-auth-head { margin-bottom: 14px; padding-right: 30px; }
 .ec-auth-title { margin: 0 0 4px; font-size: 21px; font-weight: 800; letter-spacing: -.01em; }
-.ec-auth-sub { margin: 0; font-size: 13px; line-height: 1.5; color: var(--sp-muted, inherit); }
-.ec-auth-notice { margin: 0 0 12px; padding: 10px 12px; border-radius: calc(var(--sp-radius) * .65); font-size: 13px; background: color-mix(in srgb, var(--sp-success) 14%, transparent); }
-.ec-auth-error { margin: 0 0 12px; padding: 10px 12px; border-radius: calc(var(--sp-radius) * .65); font-size: 13px; background: color-mix(in srgb, var(--sp-danger) 14%, transparent); }
+.ec-auth-sub { margin: 0; font-size: 13px; line-height: 1.5; color: var(--sp-muted, #5b6678); }
+.ec-auth-notice { margin: 0 0 12px; padding: 10px 12px; border-radius: calc(var(--sp-radius) * .65); font-size: 13px; background: color-mix(in srgb, var(--sp-success, #0E7A55) 14%, transparent); }
+.ec-auth-error { margin: 0 0 12px; padding: 10px 12px; border-radius: calc(var(--sp-radius) * .65); font-size: 13px; background: color-mix(in srgb, var(--sp-danger, #B42318) 14%, transparent); }
 .ec-auth-form { display: grid; gap: 12px; }
 .ec-auth-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
 .ec-auth-submit {
@@ -283,10 +290,10 @@ onUnmounted(() => resizeObs?.disconnect())
 }
 .ec-auth-submit:disabled { opacity: .55; cursor: default; }
 .ec-auth-google { margin-top: 14px; }
-.ec-auth-divider { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; font-size: 12px; color: var(--sp-muted, inherit); }
+.ec-auth-divider { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; font-size: 12px; color: var(--sp-muted, #5b6678); }
 .ec-auth-divider::before, .ec-auth-divider::after { content: ''; flex: 1; height: 1px; background: var(--sp-line, currentColor); opacity: .4; }
 .ec-auth-google-btn { display: grid; place-items: center; min-height: 44px; }
 .ec-auth-foot { display: flex; flex-wrap: wrap; gap: 8px 14px; margin-top: 16px; }
-.ec-auth-link { border: none; background: none; padding: 4px 0; font-size: 13px; font-weight: 600; color: var(--store-accent, inherit); cursor: pointer; text-decoration: underline; text-underline-offset: 2px; }
+.ec-auth-link { border: none; background: none; padding: 4px 0; font-size: 13px; font-weight: 600; color: var(--store-accent, #111); cursor: pointer; text-decoration: underline; text-underline-offset: 2px; }
 @media (max-width: 480px) { .ec-auth-grid { grid-template-columns: 1fr; } }
 </style>
