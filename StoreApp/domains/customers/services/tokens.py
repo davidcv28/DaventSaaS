@@ -22,10 +22,11 @@ from datetime import timedelta
 
 from rest_framework_simplejwt.tokens import AccessToken, RefreshToken
 
-#Access 12 h (el comprador compra sin re-loguear en la misma visita) y
-#refresh 30 días — distinto del par de DAVENT (5 min / 7 días) porque el
-#comprador es un consumidor final que vuelve a su tienda semanas después.
-CUSTOMER_ACCESS_LIFETIME      =   timedelta(hours = 12)
+#Access 30 min + refresh 30 días — el SPA renueva en silencio (cookie
+#httpOnly + single-flight), así que el comprador no re-loguea, pero un
+#access filtrado pre-logout solo sobrevive como mucho 30 min (la ventana
+#residual del logout era 12 h — security audit run-1).
+CUSTOMER_ACCESS_LIFETIME      =   timedelta(minutes = 30)
 CUSTOMER_REFRESH_LIFETIME     =   timedelta(days = 30)
 
 

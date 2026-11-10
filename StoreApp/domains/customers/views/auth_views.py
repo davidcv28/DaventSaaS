@@ -5,7 +5,7 @@ Prefijo `/api/customer-auth/` — cuenta separada de la cuenta SaaS
 (auth.User/UserProfile del dueño): nada de estos endpoints toca
 `/api/token/`, `/api/auth/` ni las cookies `davent_*`.
 
-Sesión: access JWT en el body (lo guarda el front en memoria, 12 h) +
+Sesión: access JWT en el body (lo guarda el front en memoria, 30 min) +
 refresh en cookie httpOnly `customer_refresh` (Path=/api/, 30 días,
 SameSite=Lax, Secure si no DEBUG) con doble-submit CSRF `customer_csrf`
 (Path=/, legible por JS) — mismo patrón que auth_views.py de users.
