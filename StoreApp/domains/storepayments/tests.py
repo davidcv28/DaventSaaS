@@ -518,6 +518,20 @@ class MpRefundTests(StorePaymentsTestBase):
         _, kwargs   =   mark_refunded.call_args
         self.assertEqual(kwargs.get('actor'), user_b)
 
+    def test_refund_packing_order_ok(self):
+        #mark_order_paid auto-avanza PAID→PACKING: el reembolso debe
+        #aceptar los estados desde los que la máquina permite REFUNDED.
+        user_b, _, store_b   =   self._make_owner('duenio-b2b')
+        self._connect_mp(store_b)
+        order_b              =   self._order_for(store_b, status = 'PACKING')
+        self.client.force_authenticate(user = user_b)
+        with patch(f'{BRIDGE}.get_order_for_store', return_value = order_b), \
+             patch(f'{MP_CLIENT}.refund_mp_payment', return_value = {'id': 1}), \
+             patch(f'{BRIDGE}.mark_refunded') as mark_refunded:
+            response    =   self.client.post(self.REFUND_URL_FMT.format(order_b.pk), {}, format = 'json')
+        self.assertEqual(response.status_code, 200)
+        mark_refunded.assert_called_once()
+
     def test_refund_non_mp_order_400(self):
         user_b, _, store_b   =   self._make_owner('duenio-b3')
         self._connect_mp(store_b)

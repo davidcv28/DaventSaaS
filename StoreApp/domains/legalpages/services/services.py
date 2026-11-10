@@ -158,11 +158,10 @@ def save_legal_page(store, kind, data):
 #=========================================
 # ARREPENTIMIENTO (notificación + email al dueño)
 #=========================================
-#Sección del dashboard destino del aviso. 'orders' todavía no existe como
-#sección válida (validIds del front): 'catalogs' ("Mis productos") es la
-#más cercana a ventas hoy — cuando el dashboard sume Pedidos/Devoluciones
-#hay que cambiar este target.
-RETURN_NOTIFICATION_TARGET   =   'catalogs'
+#Sección del dashboard destino del aviso: tab 'legal' de "Vender online"
+#("Páginas legales y devoluciones") — el target es el id del tab en
+#tabGroups.selling del front.
+RETURN_NOTIFICATION_TARGET   =   'legal'
 
 def notify_return_request(store, req : ReturnRequest):
     """

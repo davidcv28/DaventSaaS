@@ -467,3 +467,28 @@
   }
   .app .web-scope .sec-tab:hover { transform: none; }
 }
+
+/* ---------- Vender online: tarjetas de entrada del índice ---------- */
+.app .web-scope .sell-entry {
+  display: flex;
+  align-items: center;
+  gap: 13px;
+  padding: 16px;
+  text-align: left;
+  font: inherit;
+  color: var(--ink-2);
+  cursor: pointer;
+  transition: border-color .18s var(--ease-out), box-shadow .18s var(--ease-out),
+              transform .18s var(--ease-out);
+}
+.app .web-scope .sell-entry:hover {
+  border-color: var(--brand-soft-line);
+  box-shadow: var(--shadow-md);
+  transform: translateY(-1px);
+}
+.app .web-scope .sell-entry:active { transform: translateY(0); }
+.app .web-scope .sell-entry .stat-icon { flex: none; }
+.app .web-scope .sell-entry-txt { flex: 1; min-width: 0; display: grid; gap: 2px; }
+.app .web-scope .sell-entry-txt strong { font-size: 14.5px; color: var(--ink); }
+.app .web-scope .sell-entry-txt small { font-size: 12.5px; color: var(--muted); }
+.app .web-scope .sell-entry-arrow { flex: none; color: var(--muted); }

@@ -27,7 +27,7 @@ Servicios del dominio support (hilos comprador <-> dueño de tienda).
   anti-IDOR doble: un token de otra tienda o de otro comprador no
   resuelve.
 - notify_owner_message / deliver_support_email: avisos al dueño.
-  target='support' del dashboard (la sección la monta el front — track J).
+  target='inquiries' del dashboard (tab "Consultas" de Vender online).
 """
 logger  =   logging.getLogger(__name__)
 #=========================================
@@ -173,7 +173,7 @@ def notify_owner_message(thread, message):
             Notification.KIND_STORE_MESSAGE,
             f'Nuevo mensaje de {customer} — {store_name}'[:200],
             body        =   f'{thread.subject} — {message.body[:300]}'[:500],
-            target      =   'support',
+            target      =   'inquiries',
             dedupe_key  =   f'support:{thread.pk}',
         )
     except Exception:

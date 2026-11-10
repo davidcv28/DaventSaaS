@@ -59,8 +59,11 @@ def refund_payment(order, *, actor = None):
         raise serializers.ValidationError({'detail': 'La tienda no tiene Mercado Pago conectado'})
     if str(getattr(order, 'payment_method', '') or '') != 'mp':
         raise serializers.ValidationError({'detail': 'El pedido no fue pagado con Mercado Pago'})
-    if str(getattr(order, 'status', '') or '') != 'PAID':
-        raise serializers.ValidationError({'detail': 'Solo se pueden reembolsar pedidos pagados'})
+    #La máquina de estados permite REFUNDED desde PAID/PACKING/SHIPPED —
+    #mark_order_paid auto-avanza a PACKING en la misma transacción, así que
+    #exigir PAID exacto volvía el reembolso inalcanzable en la práctica.
+    if str(getattr(order, 'status', '') or '') not in {'PAID', 'PACKING', 'SHIPPED'}:
+        raise serializers.ValidationError({'detail': 'Solo se pueden reembolsar pedidos pagados no entregados'})
     payment_id, record  =   _mp_payment_id_for(order)
     if not payment_id:
         raise serializers.ValidationError({'detail': 'No se encontró el pago de Mercado Pago del pedido'})

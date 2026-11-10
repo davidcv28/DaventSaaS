@@ -240,7 +240,7 @@ class CustomerSupportApiTests(TestCase):
         #Y la NOTIFICACIÓN del dueño quedó deduplicada por hilo.
         notif   =   Notification.objects.get(user = owner_user, kind = 'store_message')
         self.assertEqual(notif.dedupe_key, f'support:{thread.pk}')
-        self.assertEqual(notif.target, 'support')
+        self.assertEqual(notif.target, 'inquiries')
         self.assertIn('Mi consulta', notif.body)
 
     def test_customer_reply_endpoint_and_closed(self):
@@ -365,7 +365,7 @@ class SupportNotificationTests(TestCase):
         self.assertEqual(notifs.count(), 1)                     # dedupe por hilo
         notif   =   notifs.get()
         self.assertEqual(notif.dedupe_key, f'support:{thread.pk}')
-        self.assertEqual(notif.target, 'support')
+        self.assertEqual(notif.target, 'inquiries')
         self.assertIn('tres', notif.body)                       # último mensaje en el body
         #Y el dueño NO genera notificación al responder.
         post_message(thread, sender = SupportMessage.Sender.OWNER, body = 'respuesta')
