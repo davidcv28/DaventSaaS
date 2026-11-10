@@ -19,7 +19,9 @@ from datetime import timedelta
 from decimal import Decimal
 
 from django.contrib.auth.models import User
+from django.core import mail
 from django.core.cache import cache
+from django.core.management import call_command
 from django.test import TestCase
 from django.utils import timezone
 from rest_framework.test import APIClient
@@ -647,3 +649,77 @@ class ExclusiveCatalogTests(TestCase):
         response    =   self.anon.get(PUBLIC_REVIEWS.format(slug = 'tienda-x', pid = self.normal.pk))
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.data, [])
+
+
+#=========================================
+# TRACK F — aviso de membresía por vencer
+#=========================================
+class MembershipExpiryNoticesTests(TestCase):
+    """
+    Comando `membership_expiry_notices`: mail al cliente cuya
+    suscripción 'active' vence en <= N días, idempotente por vigencia
+    (`expiry_notified_until` = el vigente_hasta ya avisado).
+    """
+    def setUp(self):
+        cache.clear()
+        _, profile               =   _make_user('duenio-m')
+        self.store               =   Store.objects.create(user = profile, slug = 'tienda-m')
+        self.customer            =   _customer('socia@test.com')
+        self.membership          =   _membership(self.customer, self.store)
+        self.plan                =   _plan(self.store)
+        #Vence en 2 días → dentro de la ventana default (3).
+        self.sub                 =   _active_subscription(self.membership, self.plan, days = 2)
+
+    def test_dry_run_lists_without_sending_or_marking(self):
+        call_command('membership_expiry_notices', '--dry-run')
+        self.assertEqual(len(mail.outbox), 0)
+        self.sub.refresh_from_db()
+        self.assertIsNone(self.sub.expiry_notified_until)
+
+    def test_sends_mail_and_is_idempotent(self):
+        call_command('membership_expiry_notices')
+        self.assertEqual(len(mail.outbox), 1)
+        self.assertEqual(mail.outbox[0].to, ['socia@test.com'])
+        self.assertIn(self.plan.name, mail.outbox[0].subject)
+        self.sub.refresh_from_db()
+        self.assertEqual(self.sub.expiry_notified_until, self.sub.vigente_hasta)
+        #Segunda corrida el mismo día: NO duplica el mail.
+        call_command('membership_expiry_notices')
+        self.assertEqual(len(mail.outbox), 1)
+
+    def test_outside_window_not_notified(self):
+        StoreSubscription.objects.filter(pk = self.sub.pk).update(
+            vigente_hasta = timezone.now() + timedelta(days = 30),
+        )
+        call_command('membership_expiry_notices')
+        self.assertEqual(len(mail.outbox), 0)
+        self.sub.refresh_from_db()
+        self.assertIsNone(self.sub.expiry_notified_until)
+        #Y una suscripción ya vencida tampoco entra en la ventana.
+        StoreSubscription.objects.filter(pk = self.sub.pk).update(
+            vigente_hasta = timezone.now() - timedelta(days = 1),
+        )
+        call_command('membership_expiry_notices')
+        self.assertEqual(len(mail.outbox), 0)
+
+    def test_renewal_notifies_again(self):
+        """Si vigente_hasta cambia (renovación), la key de dedupe cambia
+y vuelve a avisar — mismo criterio que subscription_notices."""
+        call_command('membership_expiry_notices')
+        self.assertEqual(len(mail.outbox), 1)
+        self.sub.vigente_hasta   =   timezone.now() + timedelta(days = 1)
+        self.sub.save(update_fields = ['vigente_hasta'])
+        call_command('membership_expiry_notices')
+        self.assertEqual(len(mail.outbox), 2)
+
+    def test_non_active_or_suspended_membership_skipped(self):
+        #Suscripción no activa → fuera.
+        StoreSubscription.objects.filter(pk = self.sub.pk).update(status = 'cancelled')
+        call_command('membership_expiry_notices')
+        self.assertEqual(len(mail.outbox), 0)
+        #Membresía suspendida → fuera aunque la suscripción siga activa.
+        StoreSubscription.objects.filter(pk = self.sub.pk).update(status = 'active')
+        self.membership.status   =   'suspended'
+        self.membership.save(update_fields = ['status'])
+        call_command('membership_expiry_notices')
+        self.assertEqual(len(mail.outbox), 0)

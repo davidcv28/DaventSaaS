@@ -135,3 +135,30 @@ class StoreOrderDetailSerializer(serializers.ModelSerializer):
         from StoreApp.domains.stores.services.storage import object_url
         #El comprobante NO es contenido público de tienda: URL firmada.
         return object_url(proof.image_key, private = True)
+#=========================================
+# CUSTOMER (listado de pedidos del comprador logueado)
+#=========================================
+class CustomerOrderListSerializer(serializers.ModelSerializer):
+    """
+    Fila del listado /api/customer/orders/: lo mínimo para que el
+    comprador reconozca y linkee el seguimiento — tracking_token es la
+    credencial pública (el id numérico NO viaja, mismo criterio
+    anti-IDOR que order_public_payload). Sin PII del snapshot: el
+    detalle completo lo da el endpoint de tracking ya auditado.
+    """
+    code                =   serializers.CharField(read_only = True)
+    store_slug          =   serializers.SerializerMethodField()
+    store_name          =   serializers.SerializerMethodField()
+    items_count         =   serializers.SerializerMethodField()
+    class Meta:
+        model           =   Order
+        fields          =   ['tracking_token', 'store_slug', 'store_name', 'code', 'status', 'payment_method', 'total', 'created_at', 'items_count']
+    def get_store_slug(self, order):
+        return order.store.slug
+    def get_store_name(self, order):
+        from StoreApp.domains.memberships.services.benefits import store_display_name
+        return store_display_name(order.store)
+    def get_items_count(self, order):
+        #items viene prefetcheado por el queryset de la vista — len()
+        #sobre la cache no genera query extra (cero N+1 en la lista).
+        return sum(item.qty for item in order.items.all())

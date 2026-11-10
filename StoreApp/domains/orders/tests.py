@@ -22,6 +22,7 @@ from decimal import Decimal
 from unittest.mock import patch
 
 from django.contrib.auth.models import User
+from django.core import mail
 from django.core.cache import cache
 from django.core.files.uploadedfile import SimpleUploadedFile
 from django.core.management import call_command
@@ -33,6 +34,7 @@ from rest_framework import serializers as drf_serializers
 from rest_framework.test import APIClient
 from rest_framework_simplejwt.tokens import RefreshToken
 
+from AdminApp.domains.notifications.models import Notification
 from AdminApp.domains.users.models import UserProfile
 from StoreApp.domains.catalog.models import Product
 from StoreApp.domains.customers.models import Customer
@@ -43,6 +45,7 @@ from StoreApp.domains.orders.models import (
     PaymentProof,
 )
 from StoreApp.domains.orders.services.checkout import create_order
+from StoreApp.domains.orders.services.events import append_event
 from StoreApp.domains.orders.services.payments import (
     advance_order,
     cancel_order,
@@ -87,14 +90,19 @@ def _make_store(slug, *, sellable = True):
     return store
 
 
+_customer_seq    =   [0]
 def _make_customer(email = 'ana@example.com'):
+    #phone/document son unique globales vía su hash HMAC — dos buyers de
+    #la misma suite no pueden compartirlos; se derivan del email.
+    _customer_seq[0] +=   1
+    seq         =   _customer_seq[0]
     customer    =   Customer(
         email       =   email,
         first_name  =   'Ana',
         last_name   =   'Perez',
-        phone       =   '+5491100000000',
+        phone       =   f'+549110{seq:07d}',
         document_type = 'DNI',
-        document    =   '30111222',
+        document    =   f'30{seq:07d}',
     )
     customer.set_password('Comprador#2026')
     customer.save()
@@ -679,3 +687,233 @@ _TINY_PNG_BYTES   =   (
 
 def _tiny_png():
     return SimpleUploadedFile('comprobante.png', _TINY_PNG_BYTES, content_type = 'image/png')
+
+
+#=========================================
+# TRACK F — dispatch de mails + Notification in-app
+#=========================================
+class OrderEventNotifyTests(TestCase):
+    """
+    `_dispatch_order_event` (services/events.py → services/notify.py):
+    - 'created' → Notification kind='order' al dueño + mail al dueño.
+    - estados (paid/packing/shipped/…) → mail al COMPRADOR con link
+      /seguimiento?token=… (el token es la credencial pública).
+    - 'note' y kinds sin mail → no disparan nada.
+    - una falla de SMTP NUNCA rompe append_event (best-effort total).
+
+    Los mails viajan por Celery: en tests corre eager, pero el encolado
+    es `transaction.on_commit` — `captureOnCommitCallbacks(execute=True)`
+    lo dispara dentro del atomic de TestCase (mismo criterio que los
+    tests de customers, que llaman al Query directo porque on_commit no
+    corre solo).
+    """
+    def setUp(self):
+        cache.clear()
+        self.owner_a    =   _make_owner('duenio-f')
+        self.store      =   _make_store('tienda-f')
+        self.store.user =   self.owner_a
+        self.store.save()
+        self.customer   =   _make_customer('fana@example.com')
+        self.product    =   _make_product(self.store, price = '100.00', stock = 5)
+        #El 'created' de este pedido ya disparó notification + encolado
+        #pendiente (on_commit no corre en TestCase — queda sin efecto).
+        self.order      =   _pending_order(self.store, self.customer, self.product, qty = 2)
+
+    @property
+    def owner_email(self):
+        #Store.user = UserProfile → .user = auth.User (cadena real).
+        return self.owner_a.user.email
+
+    def _mails_to(self, email):
+        return [m for m in mail.outbox if email in (m.to or [])]
+
+    def test_created_notifies_owner_and_emails(self):
+        product2    =   _make_product(self.store, name = 'Otro', price = '50.00')
+        with self.captureOnCommitCallbacks(execute = True):
+            order2, _created  =   create_order(**_order_kwargs(self.store, self.customer, product2))
+        #Notification in-app 'order' deduplicada por pedido.
+        notif   =   Notification.objects.get(dedupe_key = f'order:{order2.pk}:created')
+        self.assertEqual(notif.kind, Notification.KIND_ORDER)
+        self.assertEqual(notif.target, 'orders')
+        self.assertEqual(notif.user, self.owner_a.user)
+        self.assertIn(order2.code, notif.title)
+        self.assertIn('50,00', notif.body)      #total con formato es-AR ($50,00)
+        #Y el mail salió al DUEÑO con code + total + link al panel.
+        owner_mails =   self._mails_to(self.owner_email)
+        self.assertTrue(owner_mails)
+        last    =   owner_mails[-1]
+        self.assertIn(order2.code, last.subject)
+        self.assertIn('Nuevo pedido', last.subject)
+        self.assertIn(order2.code, last.body)
+        self.assertIn('/dashboard', last.body)
+
+    def test_notification_dedupe_returns_to_unread(self):
+        """Re-disparar 'created' actualiza el aviso (no duplica) y lo
+        devuelve a no-leído — contrato de upsert_notification."""
+        notif   =   Notification.objects.get(dedupe_key = f'order:{self.order.pk}:created')
+        notif.read_at  =   timezone.now()
+        notif.save(update_fields = ['read_at'])
+        append_event(self.order, 'created', actor = 'system', status_to = Order.Status.PENDING_PAYMENT)
+        notif.refresh_from_db()
+        self.assertIsNone(notif.read_at)
+        self.assertEqual(
+            Notification.objects.filter(dedupe_key = f'order:{self.order.pk}:created').count(), 1,
+        )
+
+    def test_paid_packing_shipped_email_customer_with_tracking_link(self):
+        with self.captureOnCommitCallbacks(execute = True):
+            order   =   mark_order_paid(self.order, source = 'manual', actor = 'owner')
+            advance_order(order, Order.Status.SHIPPED, actor = 'owner')
+        #paid + packing (auto-avance) + shipped → 3 mails al comprador.
+        customer_mails  =   self._mails_to('fana@example.com')
+        self.assertEqual(len(customer_mails), 3)
+        last    =   customer_mails[-1]
+        self.assertIn('enviado', last.subject.lower())
+        #Link de seguimiento con el tracking_token (credencial pública).
+        self.assertIn(f'/seguimiento?token={self.order.tracking_token}', last.body)
+        #El mail va al SNAPSHOT del pedido, no a otra dirección.
+        self.assertEqual(last.to, ['fana@example.com'])
+
+    def test_note_event_sends_nothing(self):
+        outbox_before     =   len(mail.outbox)
+        notif_before      =   Notification.objects.count()
+        with self.captureOnCommitCallbacks(execute = True):
+            append_event(self.order, 'note', actor = 'owner', note = 'prueba interna')
+        self.assertEqual(len(mail.outbox), outbox_before)
+        self.assertEqual(Notification.objects.count(), notif_before)
+
+    def test_stock_conflict_notifies_and_emails_owner(self):
+        #Otro pedido se llevó la unidad entre la creación y el pago.
+        Product.objects.filter(pk = self.product.pk).update(stock = 1)
+        with self.captureOnCommitCallbacks(execute = True):
+            mark_order_paid(self.order, source = 'manual', actor = 'owner')
+        #Notification 'order' deduplicada POR EVENTO (lleva el pk).
+        notif   =   Notification.objects.filter(
+            kind = Notification.KIND_ORDER,
+            dedupe_key__startswith = f'order:{self.order.pk}:stock_conflict:',
+        ).first()
+        self.assertIsNotNone(notif)
+        self.assertEqual(notif.user, self.owner_a.user)
+        #Y el mail al dueño pide revisión (subject de incidencia).
+        issue_mails =   [m for m in self._mails_to(self.owner_email) if 'revisi' in m.subject.lower()]
+        self.assertTrue(issue_mails)
+
+    def test_smtp_failure_never_breaks_append_event(self):
+        """Si el SMTP explota, append_event devuelve el evento igual —
+        la notificación ya quedó y el mail se perdió en el log."""
+        with patch('StoreApp.domains.orders.services.mails.EmailMultiAlternatives') as mock_mail_cls:
+            mock_mail_cls.return_value.send.side_effect   =   RuntimeError('SMTP caído')
+            with self.captureOnCommitCallbacks(execute = True):
+                event   =   append_event(self.order, 'paid', actor = 'system',
+                                         status_from = Order.Status.PENDING_PAYMENT,
+                                         status_to   = Order.Status.PAID)
+        self.assertIsNotNone(event.pk)
+        self.assertTrue(OrderEvent.objects.filter(pk = event.pk).exists())
+        #El mock se llamó (se intentó el envío) pero la excepción se tragó.
+        mock_mail_cls.return_value.send.assert_called()
+
+    def test_missing_order_or_event_is_silent(self):
+        """La task con ids inexistentes (rollback/borrado) no explota."""
+        from StoreApp.domains.orders.services.mails import deliver_order_event_email
+        deliver_order_event_email(999999, 999999)          # no raise
+        deliver_order_event_email(self.order.pk, 999999)   # evento inexistente
+
+
+#=========================================
+# TRACK F — listado de pedidos del comprador
+#=========================================
+class CustomerOrdersApiTests(TestCase):
+    """
+    GET /api/customer/orders/ (+ /<tracking_token>/): solo pedidos del
+    customer logueado (anti-IDOR cross-customer → 404), filtros
+    store/status, sin PII del snapshot en la respuesta.
+    """
+    client_class    =   APIClient
+    def setUp(self):
+        cache.clear()
+        self.store_a    =   _make_store('compras-a')
+        self.store_b    =   _make_store('compras-b')
+        self.customer   =   _make_customer('mia@example.com')
+        self.other      =   _make_customer('otra@example.com')
+        product_a       =   _make_product(self.store_a, price = '100.00')
+        product_b       =   _make_product(self.store_b, name = 'B', price = '50.00')
+        #Dos pedidos del customer (uno por tienda) + uno de OTRO customer.
+        self.order_a    =   _pending_order(self.store_a, self.customer, product_a)
+        self.order_b    =   _pending_order(self.store_b, self.customer, product_b)
+        self.order_other=   _pending_order(self.store_a, self.other, product_a)
+        self.client     =   APIClient()
+        _bearer(self.client, self.customer)
+        self.list_url   =   '/api/customer/orders/'
+
+    def _results(self, response):
+        return response.json().get('results', response.json())
+
+    def test_requires_customer_auth(self):
+        self.assertEqual(APIClient().get(self.list_url).status_code, 401)
+        self.assertEqual(
+            APIClient().get(f'{self.list_url}{self.order_a.tracking_token}/').status_code, 401,
+        )
+
+    def test_lists_only_own_orders_across_stores(self):
+        response    =   self.client.get(self.list_url)
+        self.assertEqual(response.status_code, 200)
+        results =   self._results(response)
+        tokens  =   {row['tracking_token'] for row in results}
+        self.assertEqual(tokens, {self.order_a.tracking_token, self.order_b.tracking_token})
+        #Más nuevos primero: order_b se creó después que order_a.
+        self.assertEqual(results[0]['tracking_token'], self.order_b.tracking_token)
+        for row in results:
+            #Sin id numérico — la credencial pública es tracking_token.
+            self.assertNotIn('id', row)
+            self.assertIn('store_slug', row)
+            self.assertIn('store_name', row)
+            self.assertIn('code', row)
+            self.assertIn('status', row)
+            self.assertIn('items_count', row)
+        by_token    =   {row['tracking_token']: row for row in results}
+        self.assertEqual(by_token[self.order_a.tracking_token]['store_slug'], 'compras-a')
+        self.assertEqual(by_token[self.order_b.tracking_token]['store_slug'], 'compras-b')
+        self.assertEqual(by_token[self.order_a.tracking_token]['items_count'], 1)
+
+    def test_filter_by_store_and_status(self):
+        response    =   self.client.get(self.list_url, {'store': 'compras-a'})
+        results =   self._results(response)
+        self.assertEqual([r['tracking_token'] for r in results], [self.order_a.tracking_token])
+        response    =   self.client.get(self.list_url, {'status': 'PENDING_PAYMENT'})
+        self.assertEqual(len(self._results(response)), 2)
+        response    =   self.client.get(self.list_url, {'status': 'delivered'})
+        self.assertEqual(self._results(response), [])
+        #Status inválido → lista vacía (validado contra Order.Status).
+        response    =   self.client.get(self.list_url, {'status': 'bogus;DROP'})
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(self._results(response), [])
+        #Combinados.
+        response    =   self.client.get(self.list_url, {'store': 'compras-b', 'status': 'PENDING_PAYMENT'})
+        self.assertEqual([r['tracking_token'] for r in self._results(response)], [self.order_b.tracking_token])
+
+    def test_detail_own_order_tracking_payload(self):
+        response    =   self.client.get(f'{self.list_url}{self.order_a.tracking_token}/')
+        self.assertEqual(response.status_code, 200)
+        body    =   response.json()
+        self.assertEqual(body['tracking_token'], self.order_a.tracking_token)
+        self.assertEqual(body['code'], 'PED-0001')
+        self.assertIn('events', body)
+        self.assertIn('items', body)
+        self.assertIn('payment_instructions', body)   #PENDING_PAYMENT + transfer
+        #PII del snapshot NUNCA en la respuesta del comprador.
+        for forbidden in ('customer_email', 'customer_phone', 'customer_document', 'customer_document_type'):
+            self.assertNotIn(forbidden, body)
+
+    def test_detail_cross_customer_is_404(self):
+        """Anti-IDOR: el token de OTRO customer es 404 — ni siquiera se
+        revela que el pedido existe (mismo 404 que un token inventado)."""
+        response    =   self.client.get(f'{self.list_url}{self.order_other.tracking_token}/')
+        self.assertEqual(response.status_code, 404)
+        response    =   self.client.get(f'{self.list_url}token-que-no-existe/')
+        self.assertEqual(response.status_code, 404)
+        #Y en el listado tampoco aparece el pedido ajeno (ya cubierto,
+        #pero el detalle es la superficie crítica).
+        other_client   =   APIClient()
+        _bearer(other_client, self.other)
+        response    =   other_client.get(f'{self.list_url}{self.order_a.tracking_token}/')
+        self.assertEqual(response.status_code, 404)

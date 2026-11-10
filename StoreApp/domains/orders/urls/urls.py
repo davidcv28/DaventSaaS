@@ -2,6 +2,10 @@ from django.urls import path
 from rest_framework import routers
 
 from StoreApp.domains.orders.views import StoreOrderViewSet
+from StoreApp.domains.orders.views.customer import (
+    CustomerOrderDetailView,
+    CustomerOrderListView,
+)
 from StoreApp.domains.orders.views.public import (
     OrderCaptchaView,
     PublicOrderCreateView,
@@ -26,4 +30,8 @@ urlpatterns = [
     path('stores/public/<slug:slug>/orders/<str:tracking_token>/events/', PublicOrderEventsView.as_view(), name = 'order-events'),
     path('stores/public/<slug:slug>/orders/<str:tracking_token>/proof/',  PublicOrderProofView.as_view(), name = 'order-proof'),
     path('stores/public/<slug:slug>/orders/<str:tracking_token>/receipt/', PublicOrderReceiptView.as_view(), name = 'order-receipt'),
+    #COMPRADOR (customer JWT — request.customer): su bandeja de pedidos
+    #en todas las tiendas + detalle por tracking_token (anti-IDOR).
+    path('customer/orders/',                              CustomerOrderListView.as_view(),   name = 'customer-orders'),
+    path('customer/orders/<str:tracking_token>/',         CustomerOrderDetailView.as_view(), name = 'customer-order-detail'),
 ] + router.urls

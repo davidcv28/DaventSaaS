@@ -151,6 +151,11 @@ class StoreSubscription(models.Model):
     payment_method          =   models.CharField(max_length = 10, choices = PAYMENT_CHOICES, default = PAYMENT_MANUAL, verbose_name = 'Método de pago')
     payment_ref             =   models.CharField(max_length = 80, blank = True, verbose_name = 'Referencia de pago')
     public_token            =   models.CharField(max_length = 48, unique = True, editable = False, default = _public_token, verbose_name = 'Token público de la tarjeta')
+    #Dedupe del aviso de vencimiento (comando membership_expiry_notices):
+    #guarda el `vigente_hasta` por el que YA se avisó — si la suscripción
+    #se renueva (vigente_hasta cambia) vuelve a notificar; correr el
+    #comando dos veces el mismo día no duplica el mail.
+    expiry_notified_until   =   models.DateTimeField(null = True, blank = True, verbose_name = 'Aviso de vencimiento enviado (vigente hasta)')
     created_at              =   models.DateTimeField(auto_now_add = True)
     updated_at              =   models.DateTimeField(auto_now = True)
     class Meta:

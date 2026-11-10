@@ -7,9 +7,9 @@ Todo cambio de estado (services.payments), el alta del pedido
 mano. El evento queda append-only (no hay update/delete).
 
 HOOK PARA TRACK F (Ola 2 — emails de estado al comprador, Notification
-in-app al dueño, SSE): `notify_order_event(order, event)` es el stub
-extensible — F lo implementa o envuelve desde este archivo sin tocar
-los services de pagos.
+in-app al dueño, SSE): `notify_order_event` ya despacha —
+services.notify encola el mail por Celery (post-commit) y crea la
+Notification 'order' del dueño dentro de la misma transacción.
 """
 import logging
 
@@ -61,8 +61,10 @@ def notify_order_event(order, event):
 
 def _dispatch_order_event(order, event):
     """
-    Punto de extensión documentado para track F: hoy no despacha nada.
-    Cuando F implemente mails/Notification, la lógica va acá (o reemplaza
-    este stub importando sus services).
+    Track F: delega en services.notify.dispatch_order_event —
+    Notification in-app 'order' al dueño (sync) + mail por Celery
+    encolado post-commit. Import perezoso para no acoplar el orden de
+    imports del paquete services (checkout/payments ya importan events).
     """
-    return None
+    from StoreApp.domains.orders.services import notify
+    notify.dispatch_order_event(order, event)
