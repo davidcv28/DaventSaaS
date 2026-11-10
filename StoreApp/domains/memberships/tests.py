@@ -99,7 +99,9 @@ def _owner(username = 'duenio', slug = 'mi-tienda', with_plan = True, **benefits
 
 
 def _customer(email = 'comprador@test.com', first_name = 'María', last_name = 'Pérez'):
-    customer        =   Customer(email = email, first_name = first_name, last_name = last_name)
+    #email_verified=True: los lifecycle mails (p. ej. aviso de vencimiento)
+    #solo salen a direcciones verificadas — mismo criterio que orders.
+    customer        =   Customer(email = email, email_verified = True, first_name = first_name, last_name = last_name)
     customer.set_password('Clave#12345')
     customer.save()
     return customer
@@ -711,6 +713,13 @@ y vuelve a avisar — mismo criterio que subscription_notices."""
         self.sub.save(update_fields = ['vigente_hasta'])
         call_command('membership_expiry_notices')
         self.assertEqual(len(mail.outbox), 2)
+
+    def test_unverified_customer_gets_no_mail(self):
+        """El alta no prueba la titularidad del email: sin verificar, el
+        aviso de vencimiento no sale (mismo gate que orders lifecycle)."""
+        Customer.objects.filter(pk = self.customer.pk).update(email_verified = False)
+        call_command('membership_expiry_notices')
+        self.assertEqual(len(mail.outbox), 0)
 
     def test_non_active_or_suspended_membership_skipped(self):
         #Suscripción no activa → fuera.

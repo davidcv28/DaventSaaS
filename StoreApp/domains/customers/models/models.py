@@ -46,15 +46,17 @@ class Customer(models.Model):
     password                =   models.CharField(max_length = 128, verbose_name = 'Contraseña (hash)')
     first_name              =   models.CharField(max_length = 150, blank = True, verbose_name = 'Nombre')
     last_name               =   models.CharField(max_length = 150, blank = True, verbose_name = 'Apellido')
-    #PII cifrada — ver docstring del módulo. Las huellas HMAC mantienen la
-    #unicidad/búsqueda por igualdad (el ciphertext usa nonce por escritura).
+    #PII cifrada — ver docstring del módulo. Las huellas HMAC se usan para
+    #búsqueda por igualdad; NO son unique: la unicidad global convertía el
+    #constraint en oráculo de existencia de PII ajeno (500 vs 200 en el
+    #PATCH de perfil — ver security audit run-1).
     phone                   =   EncryptedCharField(aad = 'Customer.phone', max_length = 16, blank = True, verbose_name = 'Teléfono')
-    phone_hash              =   models.CharField(max_length = 64, null = True, blank = True, unique = True, editable = False, verbose_name = 'Huella del teléfono')
+    phone_hash              =   models.CharField(max_length = 64, null = True, blank = True, editable = False, verbose_name = 'Huella del teléfono')
     document_type           =   models.CharField(max_length = 4, choices = DOCUMENT_TYPE, default = 'DNI', blank = True, verbose_name = 'Tipo de documento')
     #Opcional: solo lo pide el checkout del vendedor si lo necesita para
     #facturar — el alta no lo exige.
     document                =   EncryptedCharField(aad = 'Customer.document', max_length = 11, blank = True, verbose_name = 'Documento')
-    document_hash           =   models.CharField(max_length = 64, null = True, blank = True, unique = True, editable = False, verbose_name = 'Huella del documento')
+    document_hash           =   models.CharField(max_length = 64, null = True, blank = True, editable = False, verbose_name = 'Huella del documento')
     #EMAIL VERIFICATION — token firmado (django.core.signing) enviado por
     #correo; ver services/customers.py.
     email_verified          =   models.BooleanField(default = False, verbose_name = 'Correo verificado')
@@ -73,9 +75,9 @@ class Customer(models.Model):
         verbose_name        =   'Cliente'
         verbose_name_plural =   'Clientes'
         indexes             =   [
-            #Búsquedas del panel del dueño por documento (type+hash) — la
-            #unique de document_hash ya cubre igualdad, el compuesto acelera
-            #el filtro por tipo que usa el checkout.
+            #Búsquedas del panel del dueño por documento (type+hash) — el
+            #compuesto indexa la igualdad (las huellas ya no son unique:
+            #dos cuentas pueden compartir teléfono/documento).
             models.Index(fields = ['document_type', 'document_hash'], name = 'idx_customer_doctype_doc'),
         ]
     def __str__(self):

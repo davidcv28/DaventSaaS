@@ -55,7 +55,9 @@ const periodLabel = computed(() => {
 // traduce al shape de PaymentInstructions (mismo que payment_instructions
 // de pedidos) para reutilizar el componente.
 function instructionsFor(method) {
-  const p = props.payments || result.value?.payment || {}
+  //El payload público de planes solo trae flags — las instrucciones de
+  //cobro crudas llegan recién en la respuesta autenticada del subscribe.
+  const p = result.value?.payment || props.payments || {}
   if (method === 'transfer') {
     return { method: 'transfer', alias: p.transfer_alias, holder: p.transfer_holder, instructions: p.transfer_instructions, deadline_hours: p.deadline_hours }
   }

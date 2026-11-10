@@ -80,6 +80,12 @@ def send_membership_expiry_email(subscription):
     if not email:
         logger.warning('membership_expiry: suscripción %s sin email de cliente', subscription.pk)
         return False
+    #Mismo criterio que orders/services/mails.py: el alta no prueba la
+    #titularidad del email — lifecycle mail solo a direcciones verificadas.
+    customer    =   getattr(getattr(subscription, 'membership', None), 'customer', None)
+    if customer is not None and not getattr(customer, 'email_verified', False):
+        logger.info('membership_expiry: email no verificado, mail omitido (subscription=%s)', subscription.pk)
+        return False
     store_name  =   ctx['store_name']
     plan_name   =   ctx['plan_name']
     when        =   ctx['until_label']

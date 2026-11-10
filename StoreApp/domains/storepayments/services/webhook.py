@@ -198,8 +198,10 @@ def StoreMpWebhookQuery(store, payment_id):
         order_status    =   str(getattr(order, 'status', '') or '')
         if mp_status == 'approved':
             #MONTO: si difiere del total del pedido NO se acredita — queda
-            #flag + evento para revisión manual del dueño.
-            if amount is not None and order_total is not None and amount != order_total:
+            #flag + evento para revisión manual del dueño. Un monto
+            #ausente/inparseable (amount=None) tampoco acredita: sin
+            #verificación de monto no hay auto-credit (fail-closed).
+            if amount is None or order_total is None or amount != order_total:
                 if not record.amount_mismatch:
                     record.amount_mismatch =   True
                     orders_bridge.append_event(
@@ -218,8 +220,11 @@ def StoreMpWebhookQuery(store, payment_id):
                 order_status    =   'PAID'
         elif mp_status in MP_STATUS_REFUNDED:
             #Reembolso detectado por MP (ej. desde el panel del vendedor):
-            #solo si el pedido estaba pago.
-            if order_status == 'PAID':
+            #mark_order_paid auto-avanza a PACKING en la misma transacción,
+            #así que PAID nunca es el estado persistido — aceptar todos los
+            #estados desde los que Order.TRANSITIONS permite llegar a
+            #REFUNDED (mismo set que el reembolso del dueño en refunds.py).
+            if order_status in {'PAID', 'PACKING', 'SHIPPED'}:
                 orders_bridge.mark_refunded(order, actor = None)
                 order_status    =   'REFUNDED'
         #Estado final: reflejar el estado mapeado de MP (approved/rejected/

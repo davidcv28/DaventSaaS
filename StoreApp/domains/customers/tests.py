@@ -598,6 +598,23 @@ class CustomerGoogleTests(TestCase):
             response    =   self.client.post(GOOGLE_URL, {'credential': 'tok', 'store_slug': 'mitienda'}, format = 'json')
         self.assertEqual(response.status_code, 403)
 
+    def test_google_link_kills_prior_password_and_sessions(self):
+        """Anti-pre-hijacking: si la cuenta ya existía con contraseña
+        usable (el alta no exige verificación), el auto-link por Google
+        la invalida y sella tokens_valid_after — el pre-registrante no
+        puede seguir entrando por password ni con sus sesiones vivas."""
+        customer    =   _make_customer('google@example.com')
+        self.assertTrue(customer.check_password(PASSWORD))
+        StoreOAuthConfig.objects.create(store = self.store, enabled = True, google_client_id = 'own-id')
+        with patch('StoreApp.domains.customers.services.google.requests.get', return_value = self._tokeninfo(aud = 'own-id')):
+            response    =   self.client.post(GOOGLE_URL, {'credential': 'tok', 'store_slug': 'mitienda'}, format = 'json')
+        self.assertEqual(response.status_code, 200)
+        customer.refresh_from_db()
+        self.assertFalse(customer.check_password(PASSWORD))
+        self.assertIsNotNone(customer.tokens_valid_after)
+        #Y el login por password queda cerrado.
+        self.assertEqual(_login(self.client, email = 'google@example.com', password = PASSWORD).status_code, 401)
+
 
 class CustomerThrottleTests(TestCase):
     def setUp(self):

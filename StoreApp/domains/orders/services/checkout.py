@@ -508,12 +508,11 @@ def build_receipt_payload(order):
             'created_at'    :   order.created_at.isoformat() if order.created_at else None,
             'shipping_method': order.shipping_method,
         },
+        #PII mínima (misma política que order_tracking_payload): email,
+        #documento y apellido NUNCA salen por la API pública — el
+        #tracking_token es credencial de seguimiento, no de identidad.
         'customer'          :   {
             'first_name'        :   order.customer_first_name,
-            'last_name'         :   order.customer_last_name,
-            'email'             :   order.customer_email,
-            'document_type'     :   order.customer_document_type,
-            'document'          :   order.customer_document,
         },
         'shipping_address'  :   order.shipping_address or {},
         'items'             :   [_item_public(item) for item in order.items.all()],

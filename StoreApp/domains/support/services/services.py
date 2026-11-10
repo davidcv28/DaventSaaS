@@ -1,4 +1,5 @@
 import logging
+from datetime import timedelta
 
 from django.conf import settings
 from django.core.mail import send_mail
@@ -6,6 +7,7 @@ from django.db import transaction
 from django.db.models import Q
 from django.utils import timezone
 
+from DaventProject.cache_utils import cache_add, cache_incr, cache_set
 from StoreApp.domains.memberships.services.benefits import store_display_name
 from StoreApp.domains.orders.services.checkout import find_order_by_token
 from StoreApp.domains.stores.models import Store
@@ -30,6 +32,11 @@ Servicios del dominio support (hilos comprador <-> dueño de tienda).
   target='inquiries' del dashboard (tab "Consultas" de Vender online).
 """
 logger  =   logging.getLogger(__name__)
+#Abuso: cota AGREGADA por tienda (todos los compradores juntos) y
+#cadencia mínima entre emails al dueño por hilo — sin ellas, una cuenta
+#descartable podía generar ~1.400 emails/día al contacto del negocio.
+SUPPORT_STORE_MSGS_PER_HOUR  =   120
+SUPPORT_EMAIL_MIN_INTERVAL   =   timedelta(minutes = 30)
 #=========================================
 # HELPERS
 #=========================================
@@ -68,6 +75,31 @@ def customer_visible_store(slug):
     if store is None:
         return None
     return store
+
+def _store_inbound_quota_ok(store):
+    """
+    Como mucho SUPPORT_STORE_MSGS_PER_HOUR mensajes de compradores por
+    hora EN LA TIENDA (agregado de todos los customer). Contador en
+    cache fail-open — misma política que los throttles: una caída de
+    Redis no puede tumbar el canal de soporte (el throttle por cliente
+    sigue activo como primera capa).
+    """
+    key     =   f'support:store:{store.pk}:msgs'
+    if cache_add(key, 1, 3600):
+        return True
+    try:
+        count   =   cache_incr(key)
+    except ValueError:
+        cache_set(key, 1, 3600)
+        count   =   1
+    if count is None:
+        return True
+    return count <= SUPPORT_STORE_MSGS_PER_HOUR
+
+def _check_store_inbound_quota(store):
+    if not _store_inbound_quota_ok(store):
+        from rest_framework.exceptions import Throttled
+        raise Throttled(detail = 'La tienda recibió demasiados mensajes. Probá más tarde.')
 #=========================================
 # ESCRITURA (único camino — lo usan las vistas de ambos lados)
 #=========================================
@@ -76,6 +108,7 @@ def create_thread(*, customer, store, subject, body, order = None):
     Crea el hilo + su primer mensaje (del comprador) en un atomic y
     dispara los avisos al dueño. Devuelve el SupportThread.
     """
+    _check_store_inbound_quota(store)
     now     =   timezone.now()
     with transaction.atomic():
         thread  =   SupportThread.objects.create(
@@ -103,6 +136,8 @@ def post_message(thread, *, sender, body):
     vista. Devuelve el SupportMessage. Si escribe el comprador avisa al
     dueño; si escribe el dueño no notifica a nadie (él ya está en el panel).
     """
+    if sender == SupportMessage.Sender.CUSTOMER:
+        _check_store_inbound_quota(thread.store)
     message =   SupportMessage.objects.create(
         thread  =   thread,
         sender  =   sender,
@@ -184,7 +219,21 @@ def enqueue_support_email(thread, message):
     Email best-effort al contacto del negocio por mensaje del comprador.
     El SMTP corre en Celery (mismo patrón que legalpages); sin broker o
     con el task caído, la notificación in-app ya quedó.
+
+    Cadencia: como mucho UN email por hilo cada SUPPORT_EMAIL_MIN_INTERVAL
+    — el resto de mensajes del comprador queda cubierto por la
+    notificación in-app (deduplicada por hilo). El primer mensaje del
+    hilo siempre avisa.
     """
+    prev    =   (
+        thread.messages
+        .filter(sender = SupportMessage.Sender.CUSTOMER, created_at__lt = message.created_at)
+        .order_by('-created_at')
+        .values_list('created_at', flat = True)
+        .first()
+    )
+    if prev is not None and message.created_at - prev < SUPPORT_EMAIL_MIN_INTERVAL:
+        return
     try:
         from StoreApp.domains.support.tasks import send_support_message_email
         send_support_message_email.delay(message.pk)

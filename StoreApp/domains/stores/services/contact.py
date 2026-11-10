@@ -11,7 +11,13 @@ from django.conf import settings
 from django.core import signing
 from django.core.mail import EmailMessage
 
-from DaventProject.cache_utils import cache_add, cache_get, cache_incr, cache_set
+from DaventProject.cache_utils import (
+    CacheUnavailable,
+    cache_add_strict,
+    cache_get_strict,
+    cache_incr_strict,
+    cache_set_strict,
+)
 
 """
 Formulario de contacto de la web pública + captcha antispam.
@@ -80,33 +86,41 @@ def verify_captcha(slug : str, challenge_id : str, answer : str) -> bool:
     nonce   =   str(payload.get('n') or '')
     if not nonce:
         return False
-    if cache_get(f'captcha:used:{nonce}'):
-        return False
-    #Contador de intentos por challenge: 5 respuestas malas lo queman aunque
-    #el atacante conserve el challenge_id firmado.
-    attempts_key    =   f'captcha:try:{nonce}'
-    if cache_add(attempts_key, 1, CAPTCHA_MAX_AGE):
-        attempts    =   1
-    else:
-        try:
-            attempts    =   cache_incr(attempts_key) or 1
-        except ValueError:
-            cache_set(attempts_key, 1, CAPTCHA_MAX_AGE)
-            attempts    =   1
-    if attempts > CAPTCHA_MAX_ATTEMPTS:
-        return False
-    if payload.get('s') != slug:
-        return False
-    if time.time() - float(payload.get('t') or 0) < CAPTCHA_MIN_SECONDS:
-        return False
     try:
-        answer_int  =   int(str(answer).strip())
-    except (TypeError, ValueError):
+        #Cache FAIL-CLOSED: el nonce usado y el contador de intentos son
+        #estado de seguridad — sin cache no hay captcha fiable (antes el
+        #fail-open convertía una caída de Redis en replay ilimitado).
+        if cache_get_strict(f'captcha:used:{nonce}'):
+            return False
+        #Contador de intentos por challenge: 5 respuestas malas lo queman aunque
+        #el atacante conserve el challenge_id firmado.
+        attempts_key    =   f'captcha:try:{nonce}'
+        if cache_add_strict(attempts_key, 1, CAPTCHA_MAX_AGE):
+            attempts    =   1
+        else:
+            try:
+                attempts    =   cache_incr_strict(attempts_key) or 1
+            except ValueError:
+                cache_set_strict(attempts_key, 1, CAPTCHA_MAX_AGE)
+                attempts    =   1
+        if attempts > CAPTCHA_MAX_ATTEMPTS:
+            return False
+        if payload.get('s') != slug:
+            return False
+        if time.time() - float(payload.get('t') or 0) < CAPTCHA_MIN_SECONDS:
+            return False
+        try:
+            answer_int  =   int(str(answer).strip())
+        except (TypeError, ValueError):
+            return False
+        if not hmac.compare_digest(str(payload.get('h') or ''), _answer_hash(slug, answer_int)):
+            return False
+        #Reclamo ATÓMICO (set-if-absent) en el punto de decisión: dos
+        #requests concurrentes con el mismo challenge no pueden ganar
+        #las dos — cierra el TOCTOU del check-then-set anterior.
+        return cache_add_strict(f'captcha:used:{nonce}', 1, CAPTCHA_MAX_AGE)
+    except CacheUnavailable:
         return False
-    if not hmac.compare_digest(str(payload.get('h') or ''), _answer_hash(slug, answer_int)):
-        return False
-    cache_set(f'captcha:used:{nonce}', 1, CAPTCHA_MAX_AGE)
-    return True
 #=========================================
 # CONTACT MAIL
 #=========================================

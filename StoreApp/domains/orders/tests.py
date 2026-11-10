@@ -98,6 +98,9 @@ def _make_customer(email = 'ana@example.com'):
     seq         =   _customer_seq[0]
     customer    =   Customer(
         email       =   email,
+        #Los mails de ciclo de vida solo salen a direcciones verificadas
+        #— los tests que esperan mail al comprador necesitan el flag.
+        email_verified =   True,
         first_name  =   'Ana',
         last_name   =   'Perez',
         phone       =   f'+549110{seq:07d}',
@@ -773,6 +776,22 @@ class OrderEventNotifyTests(TestCase):
         self.assertIn(f'/seguimiento?token={self.order.tracking_token}', last.body)
         #El mail va al SNAPSHOT del pedido, no a otra dirección.
         self.assertEqual(last.to, ['fana@example.com'])
+
+    def test_unverified_customer_gets_no_lifecycle_mail(self):
+        """El alta no prueba la titularidad del email: si el comprador
+        nunca verificó, los mails de ciclo de vida no salen (anti-spam
+        con marca DAVENT a direcciones ajenas)."""
+        Customer.objects.filter(pk = self.order.customer_id).update(email_verified = False)
+        with self.captureOnCommitCallbacks(execute = True):
+            order   =   mark_order_paid(self.order, source = 'manual', actor = 'owner')
+            advance_order(order, Order.Status.SHIPPED, actor = 'owner')
+        self.assertEqual(self._mails_to('fana@example.com'), [])
+        #El aviso interno al dueño (Notification) sigue creándose — solo
+        #se suprime el correo saliente al comprador no verificado.
+        self.assertTrue(Notification.objects.filter(
+            kind = Notification.KIND_ORDER,
+            dedupe_key__startswith = f'order:{self.order.pk}:',
+        ).exists())
 
     def test_note_event_sends_nothing(self):
         outbox_before     =   len(mail.outbox)

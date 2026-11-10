@@ -5,6 +5,7 @@ import {
   customerTokenStorage,
   hasCustomerSessionCookie,
   restoreCustomerSession,
+  logoutCustomerSession,
 } from '../api/customer.http.js'
 import { extractApiError } from '../api/http.js'
 
@@ -118,7 +119,11 @@ export const useCustomerStore = defineStore('customer', () => {
   }
 
   async function logout() {
-    try { await customerApi.logout() } catch { /* sesión ya inválida */ }
+    //logoutCustomerSession invalida la época ANTES del request (un
+    //refresh en vuelo se descarta), hace el logout sin el Bearer
+    //posiblemente vencido y limpia cookies/hints aunque falle — el
+    //patrón de logoutSession() de http.js para la sesión DAVENT.
+    await logoutCustomerSession()
     accessToken.value = null
     customerTokenStorage.clear()
     customer.value = null

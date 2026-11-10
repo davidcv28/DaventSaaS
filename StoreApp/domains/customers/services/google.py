@@ -19,6 +19,7 @@ import logging
 import time
 
 import requests
+from django.contrib.auth.hashers import is_password_usable
 from django.db import IntegrityError, transaction
 from django.utils import timezone
 
@@ -145,6 +146,19 @@ def google_customer_login(info, store):
     else:
         ensure_membership(customer, store)
         update_fields   =   []
+        #Anti-pre-hijacking: Google probó la titularidad del EMAIL, no
+        #quién eligió la contraseña que ya tenía la cuenta (el alta no
+        #exige verificación y el link por email no distingue al
+        #pre-registrante del dueño — ni siquiera si la víctima llegó a
+        #verificar el correo). Cualquier password usable se invalida y
+        #tokens_valid_after sella las sesiones ya emitidas (incluida la
+        #del pre-registrante): el dueño entra por Google o por reset.
+        if is_password_usable(customer.password):
+            customer.set_unusable_password()
+            #JWT iat tiene granularidad de 1s: sellar en el borde del
+            #segundo para no revocar el access que se emite recién.
+            customer.tokens_valid_after   =   timezone.now().replace(microsecond = 0)
+            update_fields   +=  ['password', 'tokens_valid_after']
         if not customer.email_verified:
             customer.email_verified      =   True
             customer.email_verified_at   =   timezone.now()

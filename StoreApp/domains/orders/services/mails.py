@@ -252,6 +252,15 @@ def deliver_order_event_email(order_id, event_id):
             return
         kind    =   event.kind
         if kind in CUSTOMER_EVENT_KINDS:
+            #El alta de comprador no prueba la titularidad del email:
+            #mandar lifecycle mail a una dirección sin verificar convierte
+            #cancelaciones/disparos del dueño en spam/phishing con marca
+            #DAVENT a terceros arbitrarios. Solo se escribe a correos
+            #verificados (la verificación queda como puerta del flujo).
+            customer    =   getattr(order, 'customer', None)
+            if customer is not None and not customer.email_verified:
+                logger.info('deliver_order_event_email: email no verificado, mail omitido (order=%s kind=%s)', order.pk, kind)
+                return
             to, subject, body, html =   _customer_status_mail(order, event)
             _send(to, subject = subject, body = body, html = html,
                   log_context = f'order={order.pk} kind={kind}')

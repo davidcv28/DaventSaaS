@@ -44,5 +44,10 @@ class PublicStorePlansView(APIView):
         return Response({
             'store'     :   {'slug': store.slug, 'name': store_display_name(store)},
             'plans'     :   StorePlanPublicSerializer(plans, many = True).data,
-            'payments'  :   _payment_instructions(store),
+            #Solo flags: alias/CVU/CBU, titular y WhatsApp de cobro son datos
+            #de pago del vendedor — viajan únicamente en el POST autenticado
+            #de suscripción (mismo criterio que el tracking_token del pedido).
+            'payments'  :   {k: v for k, v in _payment_instructions(store).items()
+                            if k in {'accept_transfer', 'accept_whatsapp', 'accept_cash',
+                                     'mp_enabled', 'mp_connected', 'deadline_hours'}},
         })

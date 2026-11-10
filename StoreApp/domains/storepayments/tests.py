@@ -312,7 +312,10 @@ class StoreMpWebhookTests(StorePaymentsTestBase):
         self.assertTrue(record.amount_mismatch)
 
     def test_refunded_marks_order_refunded(self):
-        paid_order =   _fake_order(self.store, status = 'PAID')
+        #Estado real persistido: mark_order_paid auto-avanza a PACKING —
+        #un pedido pago NUNCA queda en PAID (el gate del webhook acepta
+        #PAID/PACKING/SHIPPED, espejo de refunds.py).
+        paid_order =   _fake_order(self.store, status = 'PACKING')
         response, mocks   =   self._run(_mp_payment(status = 'refunded'), order = paid_order)
         self.assertEqual(response.status_code, 200)
         mocks['mark_refunded'].assert_called_once()

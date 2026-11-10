@@ -6,6 +6,7 @@ en connect y JAMÁS vuelven en una respuesta (status/config solo devuelven
 flags y metadata).
 """
 import re
+from urllib.parse import urlparse
 
 from django.conf import settings
 from rest_framework import serializers
@@ -194,6 +195,18 @@ class StoreOAuthConfigSerializer(serializers.ModelSerializer):
 # STORAGE CONFIG (bucket R2 propio del dueño — BYO storage)
 #=========================================
 _STORAGE_BUCKET_RE   =   re.compile(r'^[a-z0-9][a-z0-9-]{1,61}[a-z0-9]$')
+#El endpoint BYO lo elige el dueño pero el SERVIDOR le pega PUT/DELETE
+#firmados — sin allowlist es un SSRF ciego contra la red interna.
+#Solo proveedores S3 conocidos (R2 es el caso de uso del feature).
+_STORAGE_ENDPOINT_HOSTS  =   (
+    'r2.cloudflarestorage.com',
+    'amazonaws.com',
+    'backblazeb2.com',
+    'wasabisys.com',
+    'digitaloceanspaces.com',
+    'supabase.co',
+    'storage.googleapis.com',
+)
 
 
 def _clean_https_url(value, *, allow_http):
@@ -254,7 +267,16 @@ class StoreStorageConfigSerializer(serializers.ModelSerializer):
             return 'public'
         return 'presigned' if self.get_has_credentials(obj) else ''
     def validate_endpoint(self, value):
-        return _clean_https_url(value, allow_http = True)
+        value   =   _clean_https_url(value, allow_http = True)
+        if value:
+            #SSRF ciego: el servidor emite requests firmados al endpoint
+            #del dueño — solo hosts S3 conocidos (nunca IPs internas).
+            host    =   (urlparse(value).hostname or '').lower()
+            if not any(host == h or host.endswith('.' + h) for h in _STORAGE_ENDPOINT_HOSTS):
+                raise serializers.ValidationError(
+                    'Endpoint no permitido: usá Cloudflare R2 u otro proveedor S3 compatible conocido.'
+                )
+        return value
     def validate_public_base_url(self, value):
         return _clean_https_url(value, allow_http = True)
     def validate_bucket(self, value):

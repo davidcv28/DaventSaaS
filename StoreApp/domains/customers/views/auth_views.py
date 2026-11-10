@@ -12,6 +12,7 @@ SameSite=Lax, Secure si no DEBUG) con doble-submit CSRF `customer_csrf`
 """
 import logging
 import secrets
+from urllib.parse import urlparse
 
 from django.conf import settings
 from rest_framework import status
@@ -105,6 +106,39 @@ def _require_csrf(request):
         raise PermissionDenied('CSRF token inválido o ausente')
 
 
+def _session_origin_allowed(request):
+    """
+    Anti login-CSRF: los endpoints que EMITEN la sesión por cookie
+    (register/login/google) solo aceptan POST desde orígenes confiables.
+    Un POST cross-site de otro sitio puede hacer que el browser de la
+    víctima quede logueado en la cuenta del atacante (Set-Cookie aplica
+    igual aunque SameSite=Lax). Los browsers siempre mandan Origin (o
+    Referer) en POST; un request sin ninguno es un cliente no-browser
+    (app móvil, curl) sin contexto de cookies ajenas → se permite.
+
+    Orígenes válidos: el mismo host del API (path-alias), CORS_ALLOWED_
+    ORIGINS y CSRF_TRUSTED_ORIGINS — exactamente los orígenes desde los
+    que el SPA puede tener una sesión legítima.
+    """
+    origin  =   (request.headers.get('Origin') or '').strip()
+    if not origin:
+        referer =   (request.headers.get('Referer') or '').strip()
+        if referer:
+            parsed  =   urlparse(referer)
+            origin  =   f'{parsed.scheme}://{parsed.netloc}' if parsed.netloc else ''
+    if not origin:
+        return True
+    host    =   (urlparse(origin).netloc or '').lower()
+    if not host:
+        return False
+    if host == (request.get_host() or '').lower():
+        return True
+    trusted =   set()
+    for o in list(getattr(settings, 'CORS_ALLOWED_ORIGINS', []) or []) + list(getattr(settings, 'CSRF_TRUSTED_ORIGINS', []) or []):
+        trusted.add((urlparse(o).netloc or o).lower())
+    return host in trusted
+
+
 def _session_response(request, customer, is_new = None):
     """
     Emite el par JWT y setea las cookies. `access` va en el body; el
@@ -181,6 +215,8 @@ class CustomerRegisterView(APIView):
     throttle_classes    =   [CustomerRegisterThrottle]
 
     def post(self, request):
+        if not _session_origin_allowed(request):
+            raise PermissionDenied('Origen no permitido.')
         serializer  =   CustomerRegisterSerializer(data = request.data)
         serializer.is_valid(raise_exception = True)
         data        =   serializer.validated_data
@@ -207,6 +243,8 @@ class CustomerLoginView(APIView):
     throttle_classes    =   [CustomerLoginThrottle]
 
     def post(self, request):
+        if not _session_origin_allowed(request):
+            raise PermissionDenied('Origen no permitido.')
         serializer  =   CustomerLoginSerializer(data = request.data)
         serializer.is_valid(raise_exception = True)
         data        =   serializer.validated_data
@@ -441,6 +479,8 @@ class CustomerGoogleAuthView(APIView):
     throttle_classes        =   [CustomerSocialAuthThrottle]
 
     def post(self, request):
+        if not _session_origin_allowed(request):
+            raise PermissionDenied('Origen no permitido.')
         serializer  =   GoogleLoginSerializer(data = request.data)
         serializer.is_valid(raise_exception = True)
         data        =   serializer.validated_data

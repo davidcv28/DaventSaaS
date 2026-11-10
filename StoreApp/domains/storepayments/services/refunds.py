@@ -11,6 +11,7 @@ Si MP rechaza, el pedido NO cambia de estado.
 """
 import logging
 
+from django.db import transaction
 from rest_framework import serializers
 
 from StoreApp.domains.storepayments.models import MpPayment
@@ -62,23 +63,39 @@ def refund_payment(order, *, actor = None):
     #La máquina de estados permite REFUNDED desde PAID/PACKING/SHIPPED —
     #mark_order_paid auto-avanza a PACKING en la misma transacción, así que
     #exigir PAID exacto volvía el reembolso inalcanzable en la práctica.
-    if str(getattr(order, 'status', '') or '') not in {'PAID', 'PACKING', 'SHIPPED'}:
-        raise serializers.ValidationError({'detail': 'Solo se pueden reembolsar pedidos pagados no entregados'})
-    payment_id, record  =   _mp_payment_id_for(order)
-    if not payment_id:
-        raise serializers.ValidationError({'detail': 'No se encontró el pago de Mercado Pago del pedido'})
-    #Reembolso total (body vacío). MP responde 201 con el objeto refund.
-    try:
-        mp_client.refund_mp_payment(payment_id, access_token)
-    except mp_client.MpApiError as exc:
-        logger.warning('Reembolso MP rechazado: order=%s payment=%s status=%s', getattr(order, 'pk', None), payment_id, exc.status_code)
-        raise RefundError('Mercado Pago rechazó el reembolso') from exc
-    #MP aceptó: recién ahora el pedido pasa a REFUNDED (mark_order_refunded
-    #es idempotente según el contrato de orders).
-    orders_bridge.mark_refunded(order, actor = actor)
-    if record is not None:
-        record.status          =   MpPayment.Status.REFUNDED
-        record.mp_status_detail=   'refund'
-        record.save(update_fields = ['status', 'mp_status_detail', 'updated_at'])
+    #El check de estado va BAJO select_for_update y ANTES de la llamada
+    #externa a MP: dos refunds concurrentes se serializan en el lock — el
+    #segundo ve REFUNDED y nunca llega a mover plata dos veces.
+    Order   =   orders_bridge.order_model()
+    with transaction.atomic():
+        #La vista garantiza que el pedido existe y es de la tienda
+        #(get_order_for_store); el `or order` solo cubre dobles de test
+        #sin fila persistida — en producción locked es siempre la fila
+        #real bloqueada.
+        locked  =   (
+            Order.objects
+            .select_for_update()
+            .filter(pk = order.pk, store_id = getattr(order, 'store_id', None))
+            .first()
+            or   order
+        )
+        if str(getattr(locked, 'status', '') or '') not in {'PAID', 'PACKING', 'SHIPPED'}:
+            raise serializers.ValidationError({'detail': 'Solo se pueden reembolsar pedidos pagados no entregados'})
+        payment_id, record  =   _mp_payment_id_for(locked)
+        if not payment_id:
+            raise serializers.ValidationError({'detail': 'No se encontró el pago de Mercado Pago del pedido'})
+        #Reembolso total (body vacío). MP responde 201 con el objeto refund.
+        try:
+            mp_client.refund_mp_payment(payment_id, access_token)
+        except mp_client.MpApiError as exc:
+            logger.warning('Reembolso MP rechazado: order=%s payment=%s status=%s', getattr(order, 'pk', None), payment_id, exc.status_code)
+            raise RefundError('Mercado Pago rechazó el reembolso') from exc
+        #MP aceptó: recién ahora el pedido pasa a REFUNDED (mark_order_refunded
+        #es idempotente según el contrato de orders).
+        orders_bridge.mark_refunded(locked, actor = actor)
+        if record is not None:
+            record.status          =   MpPayment.Status.REFUNDED
+            record.mp_status_detail=   'refund'
+            record.save(update_fields = ['status', 'mp_status_detail', 'updated_at'])
     logger.info('Reembolso MP procesado: order=%s payment=%s actor=%s', getattr(order, 'pk', None), payment_id, getattr(actor, 'pk', None))
     return record
