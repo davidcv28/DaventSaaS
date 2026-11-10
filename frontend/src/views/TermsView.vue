@@ -102,6 +102,15 @@ import LegalLayout from '../components/LegalLayout.vue'
         y comercio se gestionan directamente entre ellos conforme a las páginas legales de cada
         tienda.
       </p>
+      <p>
+        DAVENT <strong>no garantiza ni responde por</strong> los productos, precios, stock,
+        entregas, pagos, facturación, garantías ni cualquier otra obligación de los comercios
+        hacia sus compradores. El comercio es el único responsable frente al consumidor por su
+        actividad, incluido el cumplimiento de sus obligaciones fiscales (facturación de cada
+        venta, condición ante ARCA/AFIP y normativas provinciales). El uso de la plataforma por
+        parte de un comercio implica su aceptación de esa responsabilidad exclusiva. DAVENT
+        puede suspender o dar de baja comercios que incumplan la normativa o estos términos.
+      </p>
 
       <h2>10. Legislación y jurisdicción</h2>
       <p>
