@@ -138,6 +138,19 @@ html.rv-off .rv{animation:none!important;opacity:1!important;transform:none!impo
   padding:8px 0;border-bottom-color:var(--line);
   background:color-mix(in srgb,var(--bg) 97%,transparent)
 }
+/* En superficies sin el héroe de --panel detrás (catálogo/ficha/servicios)
+   el #fff fijo quedaba a ~2:1 sobre el velo oscuro + --bg claro: el header
+   apoyado usa el mismo juego de tokens que el condensado, con fondo real
+   de --bg para garantizar el par tinta/superficie en ambos temas. El #fff
+   solo queda para el header sobre el héroe oscuro de la landing. */
+html[data-ds-surface="catalog"] .site-header:not(.is-stuck),
+html[data-ds-surface="product"] .site-header:not(.is-stuck),
+html[data-ds-surface="services"] .site-header:not(.is-stuck){
+  --hc:var(--ink);--hcb:var(--soft);--hcl:var(--line);
+  --mbg:var(--ink);--mink:var(--bg);
+  border-bottom-color:var(--line);
+  background:color-mix(in srgb,var(--bg) 94%,transparent)
+}
 .head-inner{display:flex;align-items:center;gap:22px}
 .brand{display:inline-flex;align-items:stretch;flex:none;
   font-family:var(--font-display);font-size:16px;letter-spacing:.16em;text-transform:uppercase}

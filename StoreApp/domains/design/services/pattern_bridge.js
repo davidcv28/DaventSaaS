@@ -1601,12 +1601,17 @@
     '.dsx-buy:hover{filter:brightness(1.08)}' +
     '.dsx-buy:active{transform:translateY(1px)}' +
     '.dsx-buy[disabled]{opacity:.6;cursor:default;transform:none}' +
-    '.dsx-buy.is-added{background:var(--ds-success,#0f9d58)}' +
+    '.dsx-buy.is-added{background:var(--ds-success,#0f9d58);' +
+    'color:var(--ds-success-ink,var(--ds-accent-ink,#fff))}' +
     '[data-surface="product"] .dsx-buy{width:auto;min-width:200px;margin:0 0 12px}' +
     /* Entrada de cuenta del comprador: píldora en el header/nav del
      * diseño o, sin slot, píldora flotante abajo a la izquierda (el chat
      * ocupa la derecha). El anclaje al marco lo hace el pin de barras
-     * (data-ds-pin="bottom"), igual que la tab bar de cada diseño. */
+     * (data-ds-pin="bottom"), igual que la tab bar de cada diseño.
+     * Hereda color del header como .ds-theme-toggle: si una banda fija
+     * pinta su propia tinta (toldo amarillo, cabecera crema sobre papel),
+     * el diseño fija color/border-color sobre .dsx-account dentro de su
+     * .top/.head — mismo gancho de override que el toggle de tema. */
     '.dsx-account{display:inline-flex;align-items:center;gap:7px;padding:8px 14px;margin-inline-start:auto;' +
     'border:1px solid currentColor;border-radius:999px;background:transparent;color:inherit;' +
     'font:inherit;font-size:12.5px;font-weight:600;letter-spacing:.04em;cursor:pointer;' +
@@ -1616,8 +1621,8 @@
     '.dsx-account:focus-visible{outline:2px solid currentColor;outline-offset:2px}' +
     '.dsx-account svg{flex:none}' +
     '.dsx-account--fab{position:fixed;left:16px;bottom:16px;z-index:72;margin:0;opacity:1;' +
-    'background:var(--surface,var(--ds-surface,#fff));color:var(--ink,var(--ds-text,#1a1a1a));' +
-    'border:1px solid var(--line,var(--ds-border,#e5e7eb));box-shadow:0 10px 28px rgba(0,0,0,.22)}' +
+    'background:var(--ds-surface,var(--surface,#fff));color:var(--ds-text,var(--ink,#1a1a1a));' +
+    'border:1px solid var(--ds-border,var(--line,#e5e7eb));box-shadow:0 10px 28px rgba(0,0,0,.22)}' +
     '@media (prefers-reduced-motion:reduce){.dsx-account{transition:none}.dsx-account:hover{transform:none}}'
   function dsBuyButton(pid, slot) {
     var b = document.createElement('button')

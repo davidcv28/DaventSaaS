@@ -132,6 +132,10 @@
      perdía sobre la banda amarilla: tinta del toldo en ambos temas. */
   .top .ds-theme-toggle{color:var(--yellow-ink);border-color:color-mix(in srgb,var(--yellow-ink) 45%,transparent);opacity:.9}
   .top .ds-theme-toggle:hover{background:color-mix(in srgb,var(--yellow-ink) 14%,transparent);opacity:1}
+  /* La píldora de cuenta del puente tiene el mismo problema (hereda el
+     --ink del body, claro en noche): tinta del toldo en ambos temas. */
+  .top .dsx-account{color:var(--yellow-ink);border-color:color-mix(in srgb,var(--yellow-ink) 55%,transparent)}
+  .top .dsx-account:hover{background:color-mix(in srgb,var(--yellow-ink) 14%,transparent)}
   .top-meta span{display:inline-flex;align-items:center;gap:5px;white-space:nowrap;font-family:var(--mono);letter-spacing:-.02em}
   .top-meta span:empty{display:none}
   .top-meta:not(:has(span:not(:empty))){display:none}

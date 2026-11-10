@@ -136,11 +136,14 @@ ul,ol{margin:0;padding:0;list-style:none}
   transition:max-height .38s var(--ease-soft),opacity .25s var(--ease-soft);
 }
 .head.is-scrolled .ribbon{max-height:0;opacity:0}
-/* La ficha de producto no tiene héroe/catálogo de tinta detrás: la cabecera
-   fija lee como la versión con scroll (tinta sobre papel). --band-ink se
-   remapea solo dentro de .head para no tocar héroe, cinta ni pie. */
-html[data-ds-surface="product"] .head{--band-ink:var(--ink)}
-html[data-ds-surface="product"] .brand-meta{color:color-mix(in srgb,var(--ink) 72%,transparent)}
+/* La ficha de producto y la página de servicios no tienen héroe/catálogo
+   de tinta detrás: la cabecera fija lee como la versión con scroll
+   (tinta sobre papel). --band-ink se remapea solo dentro de .head para
+   no tocar héroe, cinta ni pie. */
+html[data-ds-surface="product"] .head,
+html[data-ds-surface="services"] .head{--band-ink:var(--ink)}
+html[data-ds-surface="product"] .brand-meta,
+html[data-ds-surface="services"] .brand-meta{color:color-mix(in srgb,var(--ink) 72%,transparent)}
 .ribbon-track{position:relative;z-index:1;display:flex;align-items:center;width:max-content;min-width:100%;animation:marquee 42s linear infinite}
 .ribbon:hover .ribbon-track{animation-play-state:paused}
 .ribbon .ds-note{
