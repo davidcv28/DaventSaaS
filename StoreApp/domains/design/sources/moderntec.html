@@ -50,6 +50,27 @@
   --mono:'JetBrains Mono',monospace;
   color-scheme:dark;
 }
+/* Puente del host (pattern_document/pattern_bridge): los controles
+   inyectados —filtro activo, CTA de compra, badge del carrito, chat— leen
+   tokens --ds-*. Si el estilo de la tienda no los emite caen a neutros
+   claros (#111/#fff) ilegibles sobre esta piel oscura. Van en `html`
+   (especificidad 0-0-1): el :root del tema del estilo (0-1-0) los pisa
+   cuando existen, así las variantes -verde/-azul/-ambar/-cobre y el
+   acento de la tienda siguen mandando. */
+html{
+  --ds-accent:#3dd6ff;
+  --ds-accent-ink:#04121a;
+  --ds-accent-text:var(--accent);
+  --ds-bg:var(--bg);
+  --ds-text:var(--ink);
+  --ds-surface:var(--panel);
+  --ds-border:var(--line);
+  --ds-muted:var(--ink-3);
+  --ds-success:var(--ok);
+  --ds-success-ink:var(--accent-ink);
+  --ds-radius:var(--r);
+  --ds-radius-btn:var(--r-pill);
+}
 *{margin:0;padding:0;box-sizing:border-box}
 html{scroll-behavior:smooth}
 body{
@@ -112,10 +133,92 @@ html[data-ds-surface="services"] .top-nav a[data-ds-route="services"]{color:var(
   border:1px solid color-mix(in srgb,var(--accent) 45%,transparent);border-radius:var(--r-pill);
   font-family:var(--mono);font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--accent)}
 .top-wa:hover{background:color-mix(in srgb,var(--accent) 12%,transparent)}
-/* Cuenta/carrito del puente: heredan el cian del header; el toggle de
-   tema no se monta (data-ds-theme-lock) y la cuenta toma el auto-margin. */
-.top-in .dsx-account,.top-in .dsx-cart{border-color:color-mix(in srgb,var(--accent) 45%,transparent)}
-@media(max-width:760px){.top-nav{display:none}.top-wa{margin-left:auto}}
+/* Cuenta/carrito del puente: píldoras hermanas de .top-wa (mono, filete de
+   acento). El auto-margin que el puente pone en .dsx-account se anula: el
+   cluster ya lo empuja .top-nav en escritorio o .top-wa en móvil — con los
+   dos auto-margins el espacio libre se partía al medio y el nav quedaba
+   flotando separado de las píldoras. El toggle de tema no se monta
+   (data-ds-theme-lock). */
+.top-in .dsx-account,.top-in .dsx-cart{
+  margin-inline-start:0;gap:6px;min-height:36px;padding:0 13px;flex:none;opacity:1;
+  border:1px solid color-mix(in srgb,var(--accent) 45%,transparent);
+  border-radius:var(--r-pill);background:transparent;color:var(--accent);
+  font-family:var(--mono);font-size:10.5px;font-weight:500;letter-spacing:.1em;text-transform:uppercase}
+.top-in .dsx-account:hover,.top-in .dsx-cart:hover{
+  background:color-mix(in srgb,var(--accent) 12%,transparent);
+  border-color:color-mix(in srgb,var(--accent) 70%,transparent);opacity:1}
+.top-in .dsx-account:active,.top-in .dsx-cart:active{transform:scale(.97)}
+.top-in .dsx-account svg,.top-in .dsx-cart svg{width:15px;height:15px}
+/* Badge del carrito: sin --ds-accent el fallback del puente (#111 + anillo
+   #fff) se funde con el header oscuro — se toma la pareja acento/tinta del
+   diseño y el anillo el fondo del chrome. */
+.top-in .dsx-cart-badge{background:var(--accent);color:var(--accent-ink);box-shadow:0 0 0 2px var(--bg)}
+/* Burger: solo aparece cuando el nav cede (media queries de abajo). order:1
+   lo deja al final visual del cluster — las píldoras del puente se apendan
+   después en el DOM pero el orden lo manda flex. */
+.m-burger{display:none;width:38px;height:38px;flex:none;place-items:center;
+  border:1px solid var(--line);border-radius:var(--r-pill);color:var(--ink-2);
+  transition:border-color .2s,color .2s}
+.m-burger:hover{border-color:color-mix(in srgb,var(--accent) 50%,transparent);color:var(--accent)}
+.m-burger svg{width:18px;height:18px}
+/* Menú móvil: panel fijo bajo el header. El iframe va estirado al alto del
+   documento — `vh`/`bottom` medirían la página entera; el script lo posiciona
+   con `davent:ds-frame` y `data-ds-no-pin` lo excluye del pin de barras del
+   puente (su top/height los maneja el JS del patrón). */
+.m-menu{display:none}
+@media(max-width:920px){
+  .m-menu.open{
+    display:flex;flex-direction:column;
+    position:fixed;top:64px;left:0;right:0;z-index:45;
+    padding:20px 24px 34px;overflow-y:auto;
+    background:color-mix(in srgb,var(--bg) 97%,transparent);
+    border-bottom:1px solid var(--line);
+    -webkit-backdrop-filter:blur(14px);backdrop-filter:blur(14px)}
+  .m-menu nav{display:flex;flex-direction:column}
+  .m-menu nav a{
+    display:flex;align-items:baseline;justify-content:space-between;gap:14px;
+    padding:15px 2px;border-bottom:1px solid var(--line-soft);
+    font-family:var(--disp);font-size:clamp(22px,6vw,30px);font-weight:700;line-height:1.1;
+    color:var(--ink);transition:color .18s,padding-left .2s}
+  .m-menu nav a span{font-family:var(--mono);font-size:10px;letter-spacing:.14em;color:var(--accent)}
+  .m-menu nav a:hover{color:var(--accent);padding-left:8px}
+  .m-menu .m-wa{
+    display:flex;align-items:center;justify-content:center;gap:8px;margin-top:24px;
+    min-height:46px;border:1px solid color-mix(in srgb,var(--accent) 45%,transparent);
+    border-radius:var(--r-pill);font-family:var(--mono);font-size:11px;
+    letter-spacing:.1em;text-transform:uppercase;color:var(--accent)}
+  .m-menu .m-wa:hover{background:color-mix(in srgb,var(--accent) 12%,transparent)}
+  .m-menu .m-foot{margin-top:auto;padding-top:28px;font-family:var(--mono);font-size:10.5px;
+    letter-spacing:.12em;text-transform:uppercase;color:var(--ink-3);line-height:1.9}
+}
+@media(max-width:760px){
+  .top-nav{display:none}
+  .top-wa{margin-left:auto}
+  .top-in{gap:16px}
+  .brand-name{max-width:120px}
+  .m-burger{display:grid;order:1}
+}
+/* Con venta online el cluster suma cuenta+carrito: el nav cede antes
+   (≤920px) para que marca + píldoras + burger entren sin desbordar. */
+@media(min-width:761px) and (max-width:920px){
+  html[data-ds-commerce="1"] .top-nav{display:none}
+  html[data-ds-commerce="1"] .top-wa{margin-left:auto}
+  html[data-ds-commerce="1"] .top-in{gap:16px}
+  html[data-ds-commerce="1"] .brand-name{max-width:120px}
+  html[data-ds-commerce="1"] .m-burger{display:grid;order:1}
+}
+@media(max-width:560px){
+  .top-in{gap:10px}
+  .top-wa{min-height:34px;padding:0 12px;font-size:10px}
+  .brand-name{max-width:110px}
+}
+@media(max-width:420px){
+  /* Cluster mínimo: el nombre sale del header (queda el mark con su
+     aria-label) y la píldora de WhatsApp se compacta — el menú móvil ya
+     la repite como CTA principal. */
+  .brand-name{display:none}
+  .top-wa{min-height:32px;padding:0 10px;font-size:9.5px;gap:4px}
+}
 
 /* ── botones ── */
 .btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;
@@ -369,6 +472,11 @@ html[data-ds-surface="services"] .top-nav a[data-ds-route="services"]{color:var(
 .cat-filters{display:flex;flex-wrap:wrap;gap:8px}
 .cat-filters:empty{display:none}
 .cat-filters .ds-cat{min-height:32px;padding:0 13px;font-size:11.5px}
+/* Filtro activo del puente (aria-pressed): la regla genérica del host
+   usa var(--ds-accent,#111) + subrayado — con el puente --ds-* de arriba
+   ya resuelve al acento, pero el subrayado no es la mano del diseño:
+   píldora de acento suave como el nav activo. */
+.cat-filters .ds-cat[aria-pressed="true"]{color:var(--accent);background:color-mix(in srgb,var(--accent) 10%,transparent);text-decoration:none}
 .cat-price{display:flex;align-items:center;gap:8px;font-family:var(--mono);font-size:10.5px;
   letter-spacing:.1em;text-transform:uppercase;color:var(--ink-3)}
 .cat-price input{width:92px;min-height:38px;padding:0 12px;border:1px solid var(--line);border-radius:10px;
@@ -516,6 +624,7 @@ html[data-ds-surface="services"] .top-nav a[data-ds-route="services"]{color:var(
   .wrap{padding:0 18px}
   .band{padding:48px 0}
   .grid,.cat-grid,.pdp-rel .grid,.guars,.quotes,.offers-grid,.stats,.foot-grid{grid-template-columns:1fr}
+  .ds-contact-row{grid-template-columns:1fr}
   .cat-tools{gap:10px}
   .cat-search{flex:1 1 100%;max-width:none}
   .cat-sort{margin-left:0;width:100%}
@@ -571,7 +680,7 @@ a:focus-visible,button:focus-visible,input:focus-visible,select:focus-visible,su
 <body>
 <div class="bg" aria-hidden="true"></div>
 
-<header class="top" data-ds-pin="top" data-ds-theme-lock>
+<header class="top" data-ds-pin="top" data-ds-theme-lock data-ds-offset="64">
   <div class="wrap top-in">
     <a class="brand" href="#inicio" data-ds-route="home" aria-label="{{store_name}}">
       <span class="mark"><span class="mark-i">{{store_initial}}</span><img src="{{store_logo}}" alt=""></span>
@@ -584,8 +693,26 @@ a:focus-visible,button:focus-visible,input:focus-visible,select:focus-visible,su
       <a href="#contacto" data-ds-anchor data-ds-route="home" data-flag="contact">Contacto</a>
     </nav>
     <a class="top-wa" href="{{store_whatsapp_url}}">WhatsApp</a>
+    <button class="m-burger" type="button" data-m-open aria-label="Abrir menú" aria-expanded="false" aria-controls="mmenu">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h10"/></svg>
+    </button>
   </div>
 </header>
+
+<!-- Menú móvil: el nav del header se oculta en pantallas chicas y este
+     panel toma su lugar. Lo abre/cierra el script del patrón (data-m-open /
+     data-m-close); data-ds-no-pin lo excluye del pin de barras del puente
+     porque su posición la maneja el script con `davent:ds-frame`. -->
+<div class="m-menu" id="mmenu" data-ds-no-pin aria-hidden="true">
+  <nav aria-label="Secciones">
+    <a href="#inicio" data-ds-route="home" data-m-close>Inicio<span>01</span></a>
+    <a href="#catalogo" data-ds-route="catalog" data-m-close data-flag="catalog">Catálogo<span>02</span></a>
+    <a href="#servicios" data-ds-route="services" data-m-close data-flag="services">Servicios<span>03</span></a>
+    <a href="#contacto" data-ds-anchor data-ds-route="home" data-m-close data-flag="contact">Contacto<span>04</span></a>
+  </nav>
+  <a class="m-wa" href="{{store_whatsapp_url}}" data-m-close>WhatsApp ↗</a>
+  <p class="m-foot">{{store_name}} · {{year}}</p>
+</div>
 
 <!-- ============ LANDING ============ -->
 <div data-surface="landing">
@@ -839,6 +966,86 @@ a:focus-visible,button:focus-visible,input:focus-visible,select:focus-visible,su
     <p class="foot-legal">© {{year}} {{store_name}}</p>
   </div>
 </footer>
+
+<script>
+(function () {
+  /* Menú móvil del header: el nav se oculta en pantallas chicas y el burger
+     abre este panel. El iframe va estirado al alto del documento — `vh` o
+     `bottom` medirían la página entera, así que la ventana visible llega por
+     `davent:ds-frame` y el panel se posiciona acá. `data-ds-no-pin` lo
+     excluye del pin de barras del puente: su top/height los maneja este
+     script, no el compensador genérico. */
+  var root = document.documentElement
+  var menu = document.getElementById('mmenu')
+  var frame = null
+  var lastFocus = null
+
+  function syncMenuBox() {
+    if (!menu || !menu.classList.contains('open')) {
+      if (menu) menu.style.top = menu.style.height = ''
+      return
+    }
+    var dy = frame ? Math.max(0, -frame.top) : (window.scrollY || 0)
+    var vh = frame ? Math.max(1, frame.vh) : (window.innerHeight || 800)
+    menu.style.top = (dy + 64) + 'px'
+    menu.style.height = Math.max(0, vh - 64) + 'px'
+  }
+  function isOpen() { return !!(menu && menu.classList.contains('open')) }
+  function setMenu(open) {
+    if (!menu) return
+    menu.classList.toggle('open', open)
+    menu.setAttribute('aria-hidden', open ? 'false' : 'true')
+    /* m-lock en <html>: el puente lo detecta y bloquea el scroll de la
+       página host (el iframe no scrollea por dentro). */
+    root.classList.toggle('m-lock', open)
+    var btn = document.querySelector('[data-m-open]')
+    if (btn) btn.setAttribute('aria-expanded', open ? 'true' : 'false')
+    if (open) {
+      lastFocus = document.activeElement
+      var first = menu.querySelector('a,button')
+      if (first) first.focus()
+    } else if (lastFocus && lastFocus.focus) {
+      lastFocus.focus()
+      lastFocus = null
+    }
+    syncMenuBox()
+  }
+  document.addEventListener('click', function (e) {
+    var t = e.target
+    if (!t || !t.closest) return
+    if (t.closest('[data-m-open]')) { setMenu(!isOpen()); return }
+    /* Navegación (enlaces del menú, marca u otra ruta del documento) cierra
+       el panel: el host cambia de superficie sin recargar el iframe. */
+    if (t.closest('[data-m-close],[data-ds-route],[data-ds-anchor]')) setMenu(false)
+  })
+  document.addEventListener('keydown', function (e) {
+    if (e.key === 'Escape') setMenu(false)
+  })
+  /* El burger desaparece cuando el nav vuelve (fin del rango móvil, o fin
+     del rango commerce si la tienda no vende online): ahí el panel se
+     cierra para no quedar abierto sobre el escritorio. */
+  window.addEventListener('resize', function () {
+    var btn = document.querySelector('[data-m-open]')
+    if (btn && window.getComputedStyle(btn).display === 'none') setMenu(false)
+  })
+  /* Cambio de superficie: el puente reescribe data-ds-surface en <html> y
+     el menú no debe quedar abierto sobre la superficie nueva. */
+  if ('MutationObserver' in window) {
+    new MutationObserver(function () { if (isOpen()) setMenu(false) })
+      .observe(root, { attributes: true, attributeFilter: ['data-ds-surface'] })
+  }
+  window.addEventListener('message', function (e) {
+    var d = e.data || {}
+    if (d.type !== 'davent:ds-frame') return
+    frame = { top: Number(d.top) || 0, vh: Number(d.vh) || 0 }
+    syncMenuBox()
+  })
+  /* Documento abierto solo (sin host): la ventana propia del iframe alcanza
+     y el scroll pasivo re-sincroniza por si el iframe scrollea por dentro. */
+  window.addEventListener('scroll', syncMenuBox, { passive: true })
+  syncMenuBox()
+})()
+</script>
 
 </body>
 </html>
