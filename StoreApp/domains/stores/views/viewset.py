@@ -657,19 +657,28 @@ class StoreViewSet(StoreBaseViewSet):
         #activos de la tienda; un id ajeno o de baja rinde con el contexto
         #vacío, nunca con datos de otro).
         product             =   None
-        product_id          =   (request.query_params.get('product') or '').strip()
+        #Tope de longitud: un ?product= gigante o no numérico no debe ni
+        #tocar la base ni entrar crudo a la cache key (cardinalidad
+        #ilimitada = misses forzados + entradas de ~200 KB por request).
+        product_id          =   (request.query_params.get('product') or '').strip()[:20]
         if product_id.isdigit():
             from StoreApp.domains.catalog.models import Product
+            #is_exclusive queda fuera del documento público (este render
+            #es anónimo): un id de exclusivo rinde con contexto vacío,
+            #igual que un id inexistente o de otra tienda.
             product         =   Product.objects.filter(
-                pk = int(product_id), store = store, is_active = True,
+                pk = int(product_id), store = store, is_active = True, is_exclusive = False,
             ).select_related('category', 'brand').first()
         from StoreApp.domains.design.services import render_store_pattern
         if preview:
             return render_store_pattern(store, customization, product) or {}
         epoch, ver      =   public_cache_stamp(store.pk)
         cache_key       =   f'store:pattern:v2:{store.pk}:{epoch}:{ver}'
-        if product_id:
-            cache_key   +=  f':p{product.pk if product else product_id}'
+        #Solo el pk resuelto entra a la clave: un ?product= inválido/ajeno
+        #rinde el mismo documento base y comparte su entrada (antes cada
+        #string único generaba un miss + una entrada propia).
+        if product is not None:
+            cache_key   +=  f':p{product.pk}'
         data            =   cache_get(cache_key)
         if data is None:
             data        =   render_store_pattern(store, customization, product) or {}
@@ -716,7 +725,8 @@ class StoreViewSet(StoreBaseViewSet):
             document_csp,
             pattern_document,
         )
-        data                =   self._pattern_doc(request, self._pattern_store(slug))
+        store               =   self._pattern_store(slug)
+        data                =   self._pattern_doc(request, store)
         if not data.get('html'):
             raise Http404
         theme               =   'dark' if request.query_params.get('theme') == 'dark' else 'light'
@@ -725,12 +735,16 @@ class StoreViewSet(StoreBaseViewSet):
             surface         =   'landing'
         #Nonce por respuesta: único autorizador del JS del documento.
         nonce               =   secrets.token_urlsafe(16)
+        #Venta online efectiva (ecommerce + fiscal): el puente del documento
+        #inyecta los CTA de carrito solo cuando la tienda realmente vende.
+        from StoreApp.domains.stores.services.commerce import orders_enabled
         html                =   pattern_document(
             data['html'], data.get('css') or '', theme, surface,
             request.query_params.get('preview') or '', data.get('style') or '',
             nonce   =   nonce,
             preload =   data.get('preload') or [],
             template    =   request.query_params.get('template') or '',
+            commerce    =   orders_enabled(store),
         )
         response            =   HttpResponse(html, content_type = 'text/html; charset=utf-8')
         #El documento se embebe en la web (iframe same-origin): el default
@@ -894,7 +908,12 @@ class StoreViewSet(StoreBaseViewSet):
             effective_pricing_of,
             running_discounts_of,
         )
-        products        =   Product.objects.filter(store = store, is_active = True).select_related('category', 'brand')
+        #Los productos is_exclusive (memberships) NO salen en la vidriera
+        #anónima: esta action no autentica customers (PUBLIC_ACTIONS) —
+        #los miembros los piden por /api/customer/stores/<slug>/
+        #exclusive-products/ y para el resto ni siquiera se sabe que
+        #existen (tampoco cuentan en facetas ni products_count).
+        products        =   Product.objects.filter(store = store, is_active = True, is_exclusive = False).select_related('category', 'brand')
         #La valoración solo se anota si el dueño habilitó opiniones y el
         #plan las incluye (has_product_comments, premium): score 0-5 =
         #5 × likes/votos (is_positive binario — el promedio sale del ratio
@@ -929,7 +948,11 @@ class StoreViewSet(StoreBaseViewSet):
         #  ?sort=name|recent|price_asc|price_desc
         category_ids    =   _id_list(request.query_params.get('category'))
         brand_ids       =   _id_list(request.query_params.get('brand'))
-        search          =   (request.query_params.get('q') or '').strip().casefold()
+        #Mismo recorte que la huella del cache (_params_fingerprint, 80
+        #chars): si el filtro usara el q completo, dos búsquedas con el
+        #mismo prefijo de 80 chars compartirían entrada de caché con
+        #resultados distintos (envenenamiento de resultados públicos).
+        search          =   (request.query_params.get('q') or '').strip().casefold()[:80]
         min_price       =   _price_bound(request.query_params.get('min_price'))
         max_price       =   _price_bound(request.query_params.get('max_price'))
         feature_filters =   _feature_filters(request.query_params.get('features'))
@@ -1010,8 +1033,8 @@ class StoreViewSet(StoreBaseViewSet):
         #Los conteos de cada taxonomía viajan en products_count (solo
         #productos activos, como la lista que se filtra).
         from django.db.models import Count, Q
-        categories      =   store.categories.annotate(products_count = Count('products', filter = Q(products__is_active = True)))
-        brands          =   store.brands.annotate(products_count = Count('products', filter = Q(products__is_active = True)))
+        categories      =   store.categories.annotate(products_count = Count('products', filter = Q(products__is_active = True, products__is_exclusive = False)))
+        brands          =   store.brands.annotate(products_count = Count('products', filter = Q(products__is_active = True, products__is_exclusive = False)))
         #Orden de los grupos de facetas: con categoría elegida, los atributos
         #que esa categoría declara en su feature_schema van primero y en ese
         #mismo orden (la plantilla del dueño manda); el resto por frecuencia.
@@ -1130,7 +1153,10 @@ class StoreViewSet(StoreBaseViewSet):
 
     def _review_product(self, store, product_id):
         from StoreApp.domains.catalog.models import Product
-        return get_object_or_404(Product, pk = product_id, store = store, is_active = True)
+        #Los exclusivos no tienen reviews públicas: el endpoint es
+        #anónimo (no hay customer auth) y un 404 no revela que el
+        #producto existe — mismo criterio que el catálogo.
+        return get_object_or_404(Product, pk = product_id, store = store, is_active = True, is_exclusive = False)
 
     @action(detail = False, methods = ['get'], url_path = r'public/(?P<slug>[a-z0-9-]+)/reviews/captcha', throttle_classes = [PublicReadThrottle])
     def review_captcha(self, request, slug = None):

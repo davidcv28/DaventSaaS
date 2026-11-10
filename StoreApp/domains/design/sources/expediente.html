@@ -59,7 +59,7 @@
   --band-ink:var(--paper);
   --band-line:color-mix(in srgb,var(--band-ink) 16%,transparent);
   /* pestañas de ficha por categoría (3 rotando) */
-  --tab-a:#2F5D50;--tab-b:#8A6D1F;--tab-c:#4A4E8F;
+  --tab-a:#2F5D50;--tab-b:#7A5F1C;--tab-c:#4A4E8F;
   --dot:color-mix(in srgb,var(--ink) 7%,transparent);
   --disp:"Bricolage Grotesque","Archivo Black",system-ui,sans-serif;
   --serif:"Source Serif 4",Georgia,serif;
@@ -78,7 +78,7 @@ html[data-ds-theme="dark"]{
   --ink-2:#CFC6AE;
   --muted:#948A72;
   --line:#3D362A;
-  --stamp:#D05540;
+  --stamp:#D95F45;
   --stamp-bright:#E0705A;
   --on-stamp:#1C0C09;
   --ok:#6FAE97;
@@ -111,6 +111,10 @@ button{font:inherit;color:inherit}
 h1,h2,h3,h4,p,figure,blockquote{margin:0}
 ul,ol{margin:0;padding:0;list-style:none}
 :focus-visible{outline:2px solid var(--stamp);outline-offset:3px}
+/* Sobre las bandas tinta el sello puro queda bajo 3:1: el anillo usa la
+   variante clara del sello, igual que el resto del texto de acento ahí. */
+.top :focus-visible,.tabbar :focus-visible,.hero :focus-visible,.cta-band :focus-visible,
+.contact-band :focus-visible,.cat-hero :focus-visible,.foot :focus-visible{outline-color:var(--stamp-bright)}
 .sr-only{position:absolute!important;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap;border:0}
 .wrap{width:100%;max-width:1280px;margin:0 auto;padding-inline:clamp(18px,3.5vw,56px)}
 [hidden]{display:none!important}
@@ -137,7 +141,7 @@ main,.foot{position:relative;z-index:1}
   background:var(--band);color:var(--band-ink);
   border-bottom:3px double var(--band-line);
 }
-.top-in{display:flex;align-items:center;gap:22px;min-height:64px}
+.top-in{display:flex;align-items:center;flex-wrap:wrap;row-gap:8px;gap:22px;min-height:64px}
 .brand{display:inline-flex;align-items:center;gap:12px;min-width:0;white-space:nowrap}
 .brand-tab{
   position:relative;width:38px;height:38px;flex:none;display:grid;place-items:center;
@@ -165,7 +169,7 @@ html[data-ds-surface="catalog"] .top-nav a[data-ds-route="catalog"],
 html[data-ds-surface="product"] .top-nav a[data-ds-route="catalog"],
 html[data-ds-surface="services"] .top-nav a[data-ds-route="services"]{color:var(--band-ink)}
 .stamp-mini{
-  display:inline-block;border:1.5px solid var(--stamp);color:var(--stamp-bright);
+  display:inline-flex;align-items:center;min-height:40px;border:1.5px solid var(--stamp);color:var(--stamp-bright);
   padding:9px 16px;font:500 10.5px/1 var(--mono);letter-spacing:.16em;text-transform:uppercase;
   transform:rotate(-2deg);white-space:nowrap;transition:all .25s;
 }
@@ -214,10 +218,10 @@ html[data-ds-surface="services"] .top-nav a[data-ds-route="services"]{color:var(
   max-width:calc(100% - 36px);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
 }
 .folder-tab span{display:inline-block;transform:skewX(8deg)}
-.hero-grid{display:grid;grid-template-columns:1.5fr .5fr;gap:clamp(30px,5vw,80px);position:relative;z-index:1}
+.hero-grid{display:grid;grid-template-columns:minmax(0,1.5fr) minmax(0,.5fr);gap:clamp(30px,5vw,80px);position:relative;z-index:1}
 .hero h1{
   font:600 clamp(44px,9.5vw,140px)/.95 var(--disp);
-  letter-spacing:.005em;text-transform:uppercase;
+  letter-spacing:.005em;text-transform:uppercase;overflow-wrap:anywhere;
 }
 .hero h1 .w{display:inline-block;animation:wordIn .8s cubic-bezier(.2,.9,.2,1) both}
 .hero h1 .w:nth-child(4n+2){animation-delay:.12s}
@@ -328,12 +332,12 @@ html[data-ds-surface="services"] .top-nav a[data-ds-route="services"]{color:var(
 }
 .redact:hover,.redact:focus{color:var(--on-stamp)}
 .redact:hover::before,.redact:focus::before{background:var(--stamp)}
-.mani .cols{display:grid;grid-template-columns:1fr 1fr;gap:clamp(24px,4vw,60px);margin-top:clamp(40px,5vw,70px)}
+.mani .cols{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:clamp(24px,4vw,60px);margin-top:clamp(40px,5vw,70px)}
 .mani .note{font-size:12.5px;color:var(--ink-2)}
 .mani .note b{display:block;font:500 10px/1 var(--mono);letter-spacing:.2em;text-transform:uppercase;color:var(--stamp-ink);margin-bottom:10px}
 
 /* ============================ FICHAS (productos/servicios) ============================ */
-.fgrid{display:grid;grid-template-columns:repeat(3,1fr);gap:clamp(14px,1.8vw,26px);counter-reset:ficha}
+.fgrid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:clamp(14px,1.8vw,26px);counter-reset:ficha}
 .ficha{
   --tc:var(--stamp);
   background:var(--surface);border:1px solid var(--line);border-top:6px solid var(--tc);
@@ -365,7 +369,7 @@ html[data-ds-theme="dark"] .ficha::after{background:linear-gradient(120deg,trans
 /* Tarjeta de producto (.ds-product) = ficha con media: el link es la
    tarjeta (grid por áreas, como el resto del sistema) y la pestaña de
    color sale del --tc que fija el nth-child del grid. */
-.grid-products{display:grid;grid-template-columns:repeat(3,1fr);gap:clamp(14px,1.8vw,26px);counter-reset:ficha}
+.grid-products{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:clamp(14px,1.8vw,26px);counter-reset:ficha}
 .fgrid>.ds-product,.grid-products>.ds-product{--tc:var(--stamp);counter-increment:ficha;min-width:0}
 :is(.fgrid>.ds-product,.grid-products>.ds-product):nth-child(3n+1){--tc:var(--tab-a)}
 :is(.fgrid>.ds-product,.grid-products>.ds-product):nth-child(3n+2){--tc:var(--tab-b)}
@@ -434,10 +438,109 @@ html[data-ds-theme="dark"] .grid-products .ds-product-link::after{background:lin
 }
 .ds-campaign-label{position:absolute;right:0;top:-8px;height:22px;width:auto;max-width:60%;object-fit:contain}
 
+/* ---------- E-commerce (CTA inyectado por el puente) ----------
+   La ficha visual es .ds-product-link; el botón viaja en .dsx-buy-wrap
+   dentro de .ds-product (flex column) y se ancla al pie de la tarjeta. */
+html[data-ds-commerce="1"] .grid-products .ds-product{display:flex;flex-direction:column}
+html[data-ds-commerce="1"] .grid-products .ds-product-link{flex:1 1 auto;height:auto}
+html[data-ds-commerce="1"] .grid-products .ds-product .dsx-buy-wrap{margin-top:auto;min-width:0}
+html[data-ds-commerce="1"] .grid-products .ds-product .dsx-buy{
+  position:relative;overflow:hidden;isolation:isolate;
+  width:100%;margin:12px 0 0;padding:12px 16px;min-height:46px;
+  border:1.5px solid var(--stamp);border-radius:2px;
+  background:var(--stamp);color:var(--on-stamp);
+  font:500 10.5px/1 var(--mono);letter-spacing:.18em;text-transform:uppercase;
+  box-shadow:none;opacity:1;
+  transition:color .25s var(--ease),border-color .25s var(--ease),transform .25s var(--ease),box-shadow .25s var(--ease),filter .2s;
+}
+/* Misma hoja que .btn-solid::before. */
+html[data-ds-commerce="1"] .grid-products .ds-product .dsx-buy::before{
+  content:"";position:absolute;inset:0;background:var(--band);
+  transform:translateY(102%);transition:transform .35s var(--ease);z-index:-1;
+}
+html[data-ds-commerce="1"] .grid-products .ds-product .dsx-buy:hover::before{transform:none}
+html[data-ds-commerce="1"] .grid-products .ds-product .dsx-buy:hover{
+  border-color:var(--band-ink);color:var(--band-ink);
+  transform:translateY(-1px);box-shadow:0 12px 24px -14px var(--stamp);
+}
+html[data-ds-commerce="1"] .grid-products .ds-product .dsx-buy:active{transform:translateY(0) scale(.98)}
+html[data-ds-commerce="1"] .grid-products .ds-product .dsx-buy.is-added{
+  background:var(--ok);border-color:var(--ok);color:var(--paper);
+}
+/* Vista lista: el CTA se compacta a la derecha, bajo la ficha. */
+.grid-products[data-ds-view-mode="list"] .ds-product .dsx-buy-wrap{align-items:flex-end}
+.grid-products[data-ds-view-mode="list"] .ds-product .dsx-buy{width:auto;min-width:180px;margin:12px 0 0}
+/* Ficha: el puente inserta el CTA como primer ítem de .pdp-buy —
+   basis 100% lo manda a su propia fila a todo lo ancho. */
+html[data-ds-commerce="1"] [data-surface="product"] .dsx-buy[data-ds-buy-slot="pdp"]{
+  position:relative;overflow:hidden;isolation:isolate;
+  flex:1 1 100%;width:100%;min-width:0;margin:0;min-height:48px;
+  border:1.5px solid var(--stamp);border-radius:2px;
+  background:var(--stamp);color:var(--on-stamp);
+  font:500 11px/1 var(--mono);letter-spacing:.18em;text-transform:uppercase;
+  box-shadow:none;opacity:1;
+  transition:color .25s var(--ease),border-color .25s var(--ease),transform .25s var(--ease),box-shadow .25s var(--ease),filter .2s;
+}
+html[data-ds-commerce="1"] [data-surface="product"] .dsx-buy[data-ds-buy-slot="pdp"]::before{
+  content:"";position:absolute;inset:0;background:var(--band);
+  transform:translateY(102%);transition:transform .35s var(--ease);z-index:-1;
+}
+html[data-ds-commerce="1"] [data-surface="product"] .dsx-buy[data-ds-buy-slot="pdp"]:hover::before{transform:none}
+html[data-ds-commerce="1"] [data-surface="product"] .dsx-buy[data-ds-buy-slot="pdp"]:hover{
+  border-color:var(--band-ink);color:var(--band-ink);
+  transform:translateY(-1px);box-shadow:0 14px 26px -16px var(--stamp);
+}
+html[data-ds-commerce="1"] [data-surface="product"] .dsx-buy[data-ds-buy-slot="pdp"]:active{transform:translateY(0) scale(.98)}
+html[data-ds-commerce="1"] [data-surface="product"] .dsx-buy[data-ds-buy-slot="pdp"].is-added{
+  background:var(--ok);border-color:var(--ok);color:var(--paper);box-shadow:none;
+}
+html[data-ds-commerce="1"] [data-surface="product"] .pdp-info > .dsx-buy[data-ds-buy-slot="pdp"]{margin-bottom:14px}
+
+/* ---------- Cuenta y carrito del puente en el chrome ----------
+   Píldora de cuenta y círculo de carrito sobre la banda del header:
+   tinta --band-ink como el toggle, sello --stamp como acento de hover. */
+.top-in .dsx-account{
+  margin-inline-start:0;min-height:40px;padding:0 15px;gap:8px;flex:none;
+  border:1.5px solid color-mix(in srgb,var(--band-ink) 30%,transparent);border-radius:999px;
+  background:transparent;color:var(--band-ink);opacity:1;
+  font:500 10px/1 var(--mono);letter-spacing:.16em;text-transform:uppercase;
+  transition:color .2s,border-color .2s,background .2s,transform .2s var(--ease),opacity .2s;
+}
+.top-in .dsx-account:hover{color:var(--on-stamp);border-color:var(--stamp);background:color-mix(in srgb,var(--stamp) 22%,transparent);transform:translateY(-1px);opacity:1}
+.top-in .dsx-account:active{transform:translateY(0) scale(.97)}
+.top-in .dsx-cart{
+  width:40px;height:40px;min-height:0;padding:0;gap:0;margin-inline-start:0;flex:none;
+  border:1.5px solid color-mix(in srgb,var(--band-ink) 30%,transparent);border-radius:50%;
+  background:transparent;color:var(--band-ink);opacity:1;
+  transition:color .2s,border-color .2s,background .2s,transform .2s var(--ease),opacity .2s;
+}
+.top-in .dsx-cart:hover{color:var(--on-stamp);border-color:var(--stamp);background:color-mix(in srgb,var(--stamp) 22%,transparent);transform:translateY(-1px);opacity:1}
+.top-in .dsx-cart:active{transform:translateY(0) scale(.97)}
+.top-in .dsx-cart svg{width:17px;height:17px}
+.top-in .dsx-cart .dsx-cart-badge{top:-6px;right:-6px}
+@media(max-width:1100px){
+  /* Sin .top-nav el sello "+ Contacto" absorbe el auto-margin y arrastra
+     account·cart·toggle como un solo grupo al borde derecho. */
+  .stamp-mini{margin-left:auto}
+  .top-in .dsx-account{margin-inline-start:0}
+}
+@media(max-width:720px){
+  /* Sin sello tampoco: la cuenta recupera el auto-margin del puente. */
+  .top-in .dsx-account{margin-inline-start:auto;width:40px;height:40px;min-height:0;padding:0;justify-content:center}
+  .top-in .dsx-account [data-dsx-account-label]{display:none}
+  .top-in .dsx-account svg{width:17px;height:17px}
+}
+@media(prefers-reduced-motion:reduce){
+  .grid-products .ds-product .dsx-buy,[data-surface="product"] .dsx-buy[data-ds-buy-slot="pdp"],
+  .top-in .dsx-account,.top-in .dsx-cart{transition:none}
+  .grid-products .ds-product .dsx-buy:hover,[data-surface="product"] .dsx-buy[data-ds-buy-slot="pdp"]:hover,
+  .top-in .dsx-account:hover,.top-in .dsx-cart:hover{transform:none}
+}
+
 /* ============================ LEDGER (registro/stats) ============================ */
 .ledger{background:var(--surface-2);border-top:3px double var(--ink);border-bottom:3px double var(--ink);transition:background-color .5s,border-color .5s}
 .ledger-in{padding-block:clamp(56px,7vw,100px)}
-.lgrid{display:grid;grid-template-columns:repeat(4,1fr);gap:0;border-top:1px solid var(--line)}
+.lgrid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:0;border-top:1px solid var(--line)}
 .lgrid .ds-stat{
   padding:clamp(22px,2.6vw,36px) clamp(14px,1.6vw,24px);
   border-right:1px solid var(--line);border-bottom:1px solid var(--line);
@@ -451,7 +554,7 @@ html[data-ds-theme="dark"] .grid-products .ds-product-link::after{background:lin
 .ds-stat-label{font:500 9.5px/1.5 var(--mono);letter-spacing:.18em;text-transform:uppercase;color:var(--muted);transition:transform .35s var(--ease)}
 
 /* ============================ LA CASA (about) ============================ */
-.about-grid{display:grid;grid-template-columns:.9fr 1.1fr;gap:clamp(30px,5vw,80px);align-items:center}
+.about-grid{display:grid;grid-template-columns:minmax(0,.9fr) minmax(0,1.1fr);gap:clamp(30px,5vw,80px);align-items:center}
 .about-media{position:relative}
 .about-frame{
   border:1px solid var(--ink);background:var(--surface);padding:12px;
@@ -481,7 +584,7 @@ html[data-ds-theme="dark"] .grid-products .ds-product-link::after{background:lin
 .tl::before{content:"";position:absolute;left:0;right:0;top:11px;border-top:2px dashed var(--line)}
 .tl::after{content:"";position:absolute;left:0;top:11px;width:100%;border-top:2px solid var(--stamp);transform:scaleX(0);transform-origin:0 50%;transition:transform 1.6s var(--ease) .3s}
 .tl.drawn::after{transform:scaleX(1)}
-.ds-miles{display:grid;grid-template-columns:repeat(4,1fr);gap:clamp(16px,2vw,32px);position:relative}
+.ds-miles{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:clamp(16px,2vw,32px);position:relative}
 .ds-mile{padding-top:44px;position:relative}
 .ds-mile::before{
   content:"";position:absolute;top:0;left:0;width:23px;height:23px;border-radius:50%;
@@ -523,14 +626,14 @@ html[data-ds-theme="dark"] .grid-products .ds-product-link::after{background:lin
 }
 .ds-brand-name{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:160px}
 
-.shots{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-top:clamp(36px,5vw,60px)}
+.shots{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:14px;margin-top:clamp(36px,5vw,60px)}
 .ds-shot{border:1px solid var(--line);background:var(--surface);padding:8px;transform:rotate(-.6deg);transition:transform .35s var(--ease)}
 .ds-shot:nth-child(even){transform:rotate(.7deg)}
 .ds-shot:hover{transform:rotate(0) translateY(-4px);box-shadow:var(--shadow);z-index:2;position:relative}
 .ds-shot img{width:100%;aspect-ratio:1/1;object-fit:cover}
 
 /* ============================ GARANTÍAS / PLANES / TESTIMONIOS / FAQ ============================ */
-.guar-list{display:grid;grid-template-columns:repeat(2,1fr);gap:0;border-top:3px double var(--ink)}
+.guar-list{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:0;border-top:3px double var(--ink)}
 .ds-guar{
   display:flex;gap:18px;align-items:flex-start;
   padding:clamp(20px,2.4vw,30px) clamp(4px,1.4vw,20px);
@@ -547,7 +650,7 @@ html[data-ds-theme="dark"] .grid-products .ds-product-link::after{background:lin
 .ds-guar-copy b{display:block;font:600 15px/1.3 var(--disp);text-transform:uppercase;margin-bottom:5px}
 .ds-guar-copy span{font-size:11.5px;color:var(--muted);line-height:1.6}
 
-.plans{display:grid;grid-template-columns:repeat(3,1fr);gap:clamp(14px,1.8vw,26px)}
+.plans{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:clamp(14px,1.8vw,26px)}
 .ds-plan{
   --tc:var(--tab-a);
   background:var(--surface);border:1px solid var(--line);border-top:6px solid var(--tc);
@@ -564,7 +667,7 @@ html[data-ds-theme="dark"] .grid-products .ds-product-link::after{background:lin
 .ds-plan-feats li{font-size:11.5px;color:var(--ink-2);padding-left:18px;position:relative}
 .ds-plan-feats li::before{content:"";position:absolute;left:0;top:.55em;width:9px;height:1.5px;background:var(--tc,var(--stamp))}
 
-.decls{display:grid;grid-template-columns:repeat(2,1fr);gap:clamp(18px,2.4vw,32px)}
+.decls{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:clamp(18px,2.4vw,32px)}
 .ds-quote{
   position:relative;background:var(--surface);border:1px solid var(--line);border-left:6px solid var(--stamp);
   padding:clamp(26px,3vw,44px);transition:background-color .5s;
@@ -601,7 +704,8 @@ html[data-ds-theme="dark"] .grid-products .ds-product-link::after{background:lin
   animation:gridPan 34s linear infinite reverse;
 }
 .cta-band .tick{position:relative;border-bottom:0}
-.cta-inner{position:relative;z-index:1;padding-block:clamp(60px,8vw,110px);display:grid;grid-template-columns:1fr auto;gap:clamp(28px,5vw,80px);align-items:end}
+.cta-inner{position:relative;z-index:1;padding-block:clamp(60px,8vw,110px);display:grid;grid-template-columns:minmax(0,1fr) auto;gap:clamp(28px,5vw,80px);align-items:end}
+.cta-inner .btn{max-width:100%}
 .cta-band .eyebrow{font:500 10px/1 var(--mono);letter-spacing:.22em;text-transform:uppercase;color:var(--stamp-bright);display:flex;align-items:center;gap:10px}
 .cta-band .eyebrow::before{content:"";width:24px;height:1px;background:currentColor;opacity:.6}
 .cta-title{font:600 clamp(40px,7vw,100px)/.98 var(--disp);text-transform:uppercase;margin:18px 0 22px}
@@ -620,11 +724,11 @@ html[data-ds-theme="dark"] .grid-products .ds-product-link::after{background:lin
   background-size:64px 64px;--pan:64px;
   animation:gridPan 30s linear infinite;
 }
-.contact-grid{position:relative;z-index:1;display:grid;grid-template-columns:.9fr 1.1fr;gap:clamp(30px,5vw,90px);align-items:start;padding-block:clamp(60px,8vw,110px)}
+.contact-grid{position:relative;z-index:1;display:grid;grid-template-columns:minmax(0,.9fr) minmax(0,1.1fr);gap:clamp(30px,5vw,90px);align-items:start;padding-block:clamp(60px,8vw,110px)}
 .contact-grid h2{font:600 clamp(40px,6.4vw,92px)/.98 var(--disp);text-transform:uppercase;margin:18px 0 30px}
 .contact-grid h2 .acc{color:var(--stamp-bright)}
 .cinfo{display:grid;gap:16px;margin-top:34px}
-.cinfo a,.cinfo .row{display:flex;align-items:center;gap:12px;font-size:13px;border-bottom:1px dashed var(--band-line);padding-bottom:9px;width:max-content;max-width:100%;transition:color .25s,border-color .25s,transform .25s}
+.cinfo a,.cinfo .row{display:flex;align-items:center;gap:12px;min-height:44px;font-size:13px;border-bottom:1px dashed var(--band-line);padding-bottom:9px;width:max-content;max-width:100%;transition:color .25s,border-color .25s,transform .25s}
 .cinfo a:hover{color:var(--stamp-bright);border-color:var(--stamp-bright);transform:translateX(8px)}
 .cinfo svg{width:15px;height:15px;stroke:currentColor;fill:none;stroke-width:1.7;flex:none;color:var(--stamp-bright)}
 .cinfo .addr{font-size:11px;color:color-mix(in srgb,var(--band-ink) 55%,transparent);line-height:1.9}
@@ -641,7 +745,7 @@ html[data-ds-theme="dark"] .grid-products .ds-product-link::after{background:lin
 
 /* Formulario del puente (contacto y opiniones comparten lenguaje). */
 .ds-contact-fields,.ds-rev-fields{display:grid;gap:16px}
-.ds-contact-row{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.ds-contact-row{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:16px}
 .ds-contact-input,.ds-rev-input{
   width:100%;background:var(--paper);border:1px solid var(--line);padding:14px 14px;
   font:400 13px/1.5 var(--mono);color:var(--ink);outline:none;border-radius:0;
@@ -649,8 +753,11 @@ html[data-ds-theme="dark"] .grid-products .ds-product-link::after{background:lin
 }
 .ds-contact-input:focus,.ds-rev-input:focus{border-color:var(--stamp);box-shadow:0 0 0 3px color-mix(in srgb,var(--stamp) 15%,transparent)}
 .ds-contact-area,.ds-rev-area{resize:vertical;min-height:140px}
+/* Placeholders con el token muted: el gris por defecto del UA queda bajo AA. */
+.ds-contact-input::placeholder,.ds-rev-input::placeholder,
+.cat-search input::placeholder,.f-price-field input::placeholder{color:var(--muted);opacity:1}
 .ds-contact-cap,.ds-rev-cap{display:flex;align-items:center;gap:12px}
-.ds-contact-cap .ds-contact-input,.ds-rev-cap .ds-rev-input{flex:1}
+.ds-contact-cap .ds-contact-input,.ds-rev-cap .ds-rev-input{flex:1;min-width:0}
 .ds-contact-q,.ds-rev-q{font:500 10px/1.4 var(--mono);letter-spacing:.12em;text-transform:uppercase;color:var(--muted);min-width:120px}
 .ds-contact-reload,.ds-rev-reload{
   width:42px;height:42px;flex:none;border:1px solid var(--line);background:var(--surface);
@@ -688,6 +795,7 @@ html[data-ds-theme="dark"] .grid-products .ds-product-link::after{background:lin
 .foot-grid{display:flex;justify-content:space-between;gap:40px;flex-wrap:wrap;margin-bottom:44px}
 .foot-grid h5{font:500 9.5px/1 var(--mono);letter-spacing:.22em;text-transform:uppercase;color:var(--band-ink);margin-bottom:16px}
 .foot-grid a,.foot-grid p,.foot-grid li{display:block;font-size:12px;margin-bottom:9px;transition:color .3s}
+.foot-grid a{display:inline-flex;align-items:center;min-height:40px}
 .foot-grid a:hover{color:var(--stamp-bright)}
 .foot-grid ul{list-style:none;margin:0;padding:0}
 .foot-base{display:flex;justify-content:space-between;align-items:center;border-top:1px solid var(--band-line);padding-top:24px;font:500 9.5px/1 var(--mono);letter-spacing:.16em;text-transform:uppercase;flex-wrap:wrap;gap:12px}
@@ -708,7 +816,7 @@ html[data-ds-theme="dark"] .grid-products .ds-product-link::after{background:lin
 }
 .cat-hero .wrap{position:relative;z-index:1}
 .crumbs{display:flex;align-items:center;gap:10px;flex-wrap:wrap;font:500 10px/1 var(--mono);letter-spacing:.16em;text-transform:uppercase;color:color-mix(in srgb,var(--band-ink) 55%,transparent);margin-bottom:22px}
-.crumbs a{transition:color .25s}
+.crumbs a{display:inline-flex;align-items:center;min-height:40px;transition:color .25s}
 .crumbs a:hover{color:var(--stamp-bright)}
 .crumbs strong{color:var(--band-ink);font-weight:500}
 .crumbs span{opacity:.4}
@@ -716,7 +824,7 @@ html[data-ds-theme="dark"] .grid-products .ds-product-link::after{background:lin
 .cat-hero h1 .acc{color:var(--stamp-bright)}
 .cat-hero p{margin-top:16px;font-size:13px;color:color-mix(in srgb,var(--band-ink) 70%,transparent);max-width:52ch}
 .cat-hero-meta{display:flex;flex-wrap:wrap;gap:0;margin-top:26px;border-top:1px solid var(--band-line);padding-top:18px}
-.cat-hero-meta span{font:500 9.5px/1 var(--mono);letter-spacing:.16em;text-transform:uppercase;color:color-mix(in srgb,var(--band-ink) 55%,transparent);padding-right:26px;margin-right:26px;border-right:1px solid var(--band-line)}
+.cat-hero-meta span{font:500 9.5px/1 var(--mono);letter-spacing:.16em;text-transform:uppercase;color:color-mix(in srgb,var(--band-ink) 55%,transparent);padding-right:26px;margin-right:26px;border-right:1px solid var(--band-line);min-width:0;overflow-wrap:anywhere}
 .cat-hero-meta span:last-child{border-right:0;margin-right:0}
 .cat-hero-meta span:empty{display:none}
 .cat-body{padding-block:clamp(36px,5vw,64px) clamp(70px,8vw,110px)}
@@ -728,7 +836,7 @@ html[data-ds-theme="dark"] .grid-products .ds-product-link::after{background:lin
 }
 .cat-filters-toggle svg{width:16px;height:16px;stroke:currentColor;fill:none;stroke-width:1.8}
 .cat-filters-badge{margin-left:auto;background:var(--stamp);color:var(--on-stamp);min-width:22px;height:22px;display:grid;place-items:center;font-size:10px;padding-inline:5px}
-.cat-layout{display:grid;grid-template-columns:280px 1fr;gap:clamp(24px,3vw,48px);align-items:start}
+.cat-layout{display:grid;grid-template-columns:280px minmax(0,1fr);gap:clamp(24px,3vw,48px);align-items:start}
 .cat-aside{
   border:1px solid var(--line);background:var(--surface);padding:22px;
   position:sticky;top:88px;
@@ -742,10 +850,12 @@ html[data-ds-theme="dark"] .grid-products .ds-product-link::after{background:lin
 .f-title{font:600 13px/1 var(--disp);text-transform:uppercase;letter-spacing:.04em;margin-bottom:14px;display:flex;align-items:center;gap:10px}
 .f-title::before{counter-increment:sec;content:"DOC." counter(sec,decimal-leading-zero);font:500 9px/1 var(--mono);letter-spacing:.14em;color:var(--stamp-ink)}
 .cat-aside{counter-reset:sec}
+/* En escritorio el envoltorio de la hoja móvil no existe visualmente. */
+.cat-sheet{display:contents}
 .f-list{display:grid;gap:4px}
 .f-cat{
   display:flex;align-items:baseline;justify-content:space-between;gap:10px;width:100%;text-align:left;
-  border:0;background:none;padding:9px 10px;cursor:pointer;
+  border:0;background:none;padding:9px 10px;cursor:pointer;min-height:44px;
   font:500 11px/1.4 var(--mono);letter-spacing:.04em;text-transform:uppercase;color:var(--ink-2);
   border-left:3px solid transparent;transition:background-color .25s,color .25s,border-color .25s;
 }
@@ -755,25 +865,25 @@ html[data-ds-theme="dark"] .grid-products .ds-product-link::after{background:lin
 .f-cat:hover{background:color-mix(in srgb,var(--stamp) 6%,transparent)}
 .f-cat:hover>span,.f-cat:hover>em{transform:translateX(4px)}
 .f-cat.is-active,.f-cat[aria-pressed="true"]{border-left-color:var(--stamp);color:var(--stamp-ink);background:color-mix(in srgb,var(--stamp) 6%,transparent)}
-.f-check{display:flex;align-items:center;gap:10px;padding:8px 0;font-size:11.5px;color:var(--ink-2);cursor:pointer;text-transform:uppercase;letter-spacing:.06em;font-family:var(--mono)}
+.f-check{display:flex;align-items:center;gap:10px;min-height:44px;padding:8px 0;font-size:11.5px;color:var(--ink-2);cursor:pointer;text-transform:uppercase;letter-spacing:.06em;font-family:var(--mono)}
 .f-check input{accent-color:var(--stamp);width:15px;height:15px}
 .f-check em{margin-left:auto;font-style:normal;font-size:10px;color:var(--muted)}
 .f-price{display:flex;align-items:center;gap:10px}
 .f-price-field{flex:1;min-width:0}
 .f-price-field input{
-  width:100%;background:var(--paper);border:1px solid var(--line);padding:11px 10px;
+  width:100%;min-height:44px;background:var(--paper);border:1px solid var(--line);padding:11px 10px;
   font:400 12px/1 var(--mono);color:var(--ink);outline:none;
 }
 .f-price-field input:focus{border-color:var(--stamp)}
 .f-price-dash{color:var(--muted)}
 .f-apply{
-  margin-top:12px;width:100%;padding:11px;border:1.5px solid var(--ink);background:var(--ink);color:var(--paper);
+  margin-top:12px;width:100%;min-height:44px;padding:11px;border:1.5px solid var(--ink);background:var(--ink);color:var(--paper);
   font:500 10px/1 var(--mono);letter-spacing:.16em;text-transform:uppercase;cursor:pointer;transition:all .3s;
 }
 .f-apply:hover{background:var(--stamp);border-color:var(--stamp);color:var(--on-stamp)}
 .cat-aside-foot{display:grid;gap:10px;margin-top:20px;padding-top:18px;border-top:1px solid var(--line)}
 .f-clear,.f-done{
-  padding:11px;border:1.5px solid var(--line);background:none;cursor:pointer;
+  min-height:44px;padding:11px;border:1.5px solid var(--line);background:none;cursor:pointer;
   font:500 10px/1 var(--mono);letter-spacing:.16em;text-transform:uppercase;transition:all .3s;
 }
 .f-clear:hover{border-color:var(--stamp);color:var(--stamp-ink)}
@@ -784,12 +894,12 @@ html[data-ds-theme="dark"] .grid-products .ds-product-link::after{background:lin
 .cat-bar{display:flex;flex-wrap:wrap;align-items:center;gap:14px;padding-bottom:18px;border-bottom:1px solid var(--line);margin-bottom:20px}
 .cat-search{position:relative;flex:1 1 240px;min-width:200px;display:flex}
 .cat-search input{
-  flex:1;min-width:0;background:var(--surface);border:1.5px solid var(--ink);padding:13px 44px 13px 16px;
+  flex:1;min-width:0;min-height:48px;background:var(--surface);border:1.5px solid var(--ink);padding:13px 44px 13px 16px;
   font:400 12.5px/1 var(--mono);color:var(--ink);outline:none;
 }
 .cat-search input:focus{border-color:var(--stamp)}
 .cat-search button{
-  position:absolute;right:5px;top:5px;bottom:5px;width:38px;border:0;background:var(--stamp);color:var(--on-stamp);cursor:pointer;
+  position:absolute;right:4px;top:4px;bottom:4px;min-width:44px;border:0;background:var(--stamp);color:var(--on-stamp);cursor:pointer;
   display:grid;place-items:center;
 }
 .cat-search button svg{width:15px;height:15px;stroke:currentColor;fill:none;stroke-width:1.8}
@@ -809,7 +919,7 @@ html[data-ds-theme="dark"] .grid-products .ds-product-link::after{background:lin
 .suggest-copy{min-width:0;display:flex;flex-direction:column;gap:3px}
 .suggest-copy strong{font:600 12px/1.3 var(--disp);text-transform:uppercase;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .suggest-copy small{font-size:10.5px;color:var(--muted)}
-.suggest-more{display:block;width:100%;text-align:center;padding:12px;font:500 10px/1 var(--mono);letter-spacing:.16em;text-transform:uppercase;color:var(--stamp-ink);border-top:1px dashed var(--line);cursor:pointer}
+.suggest-more{display:flex;align-items:center;justify-content:center;min-height:44px;width:100%;text-align:center;padding:12px;font:500 10px/1 var(--mono);letter-spacing:.16em;text-transform:uppercase;color:var(--stamp-ink);border-top:1px dashed var(--line);cursor:pointer}
 .suggest-more:hover{background:color-mix(in srgb,var(--stamp) 6%,transparent)}
 .suggest-empty{padding:16px;font-size:12px;color:var(--muted)}
 .cat-count{font:500 10px/1 var(--mono);letter-spacing:.16em;text-transform:uppercase;color:var(--muted);white-space:nowrap}
@@ -823,7 +933,7 @@ html[data-ds-theme="dark"] .grid-products .ds-product-link::after{background:lin
 .cat-view button[aria-pressed="true"]{background:var(--ink);color:var(--paper)}
 .cat-sort{display:inline-flex;align-items:center;gap:9px;font:500 10px/1 var(--mono);letter-spacing:.16em;text-transform:uppercase;color:var(--muted)}
 .cat-sort select{
-  font:500 11px/1 var(--mono);letter-spacing:0;text-transform:none;
+  font:500 11px/1 var(--mono);letter-spacing:0;text-transform:none;min-height:44px;
   padding:11px 12px;border:1.5px solid var(--line);background:var(--surface);color:var(--ink);cursor:pointer;
 }
 .cat-sort select:focus{border-color:var(--stamp);outline:none}
@@ -831,17 +941,17 @@ html[data-ds-theme="dark"] .grid-products .ds-product-link::after{background:lin
 .cat-chip{
   display:inline-flex;align-items:center;gap:8px;
   border:1px solid var(--stamp);background:color-mix(in srgb,var(--stamp) 8%,transparent);color:var(--ink);
-  padding:7px 12px;font:500 10px/1 var(--mono);letter-spacing:.1em;text-transform:uppercase;cursor:pointer;
+  padding:7px 12px;min-height:40px;font:500 10px/1 var(--mono);letter-spacing:.1em;text-transform:uppercase;cursor:pointer;
 }
 .cat-chip b{color:var(--stamp-ink);font-weight:600}
 .cat-chip i{font-style:normal;color:var(--muted)}
 .cat-chip:hover i{color:var(--stamp-ink)}
-.cat-chip-clear{border:1px dashed var(--line);background:none;padding:7px 12px;font:500 10px/1 var(--mono);letter-spacing:.1em;text-transform:uppercase;color:var(--muted);cursor:pointer}
+.cat-chip-clear{display:inline-flex;align-items:center;border:1px dashed var(--line);background:none;min-height:40px;padding:7px 12px;font:500 10px/1 var(--mono);letter-spacing:.1em;text-transform:uppercase;color:var(--muted);cursor:pointer}
 .cat-chip-clear:hover{color:var(--stamp-ink);border-color:var(--stamp)}
-.grid-products[data-ds-view-mode="list"]{grid-template-columns:1fr;gap:0}
+.grid-products[data-ds-view-mode="list"]{grid-template-columns:minmax(0,1fr);gap:0}
 .grid-products[data-ds-view-mode="list"]>.ds-product{margin-top:-1px}
 .grid-products[data-ds-view-mode="list"] .ds-product-link{
-  grid-template-columns:180px 1fr;
+  grid-template-columns:180px minmax(0,1fr);
   grid-template-areas:"img cat" "img copy" "img price";
   border-top-width:1px;
 }
@@ -859,11 +969,11 @@ html[data-ds-theme="dark"] .grid-products .ds-product-link::after{background:lin
    ========================================================================== */
 .pdp-surface{padding:calc(var(--head-h) + clamp(20px,3vw,44px)) 0 clamp(70px,9vw,120px)}
 .pdp-crumbs{display:flex;align-items:center;gap:10px;flex-wrap:wrap;font:500 10px/1 var(--mono);letter-spacing:.16em;text-transform:uppercase;color:var(--muted);margin-bottom:clamp(26px,3.5vw,44px)}
-.pdp-crumbs a{transition:color .25s}
+.pdp-crumbs a{display:inline-flex;align-items:center;min-height:40px;transition:color .25s}
 .pdp-crumbs a:hover{color:var(--stamp-ink)}
-.pdp-crumbs strong{color:var(--ink);font-weight:500}
+.pdp-crumbs strong{color:var(--ink);font-weight:500;min-width:0;overflow-wrap:anywhere}
 .pdp-crumbs span{opacity:.4}
-.pdp-grid{display:grid;grid-template-columns:1.05fr .95fr;gap:clamp(28px,4vw,64px);align-items:start}
+.pdp-grid{display:grid;grid-template-columns:minmax(0,1.05fr) minmax(0,.95fr);gap:clamp(28px,4vw,64px);align-items:start}
 .pdp-media{
   position:relative;margin:0;border:1px solid var(--ink);background:var(--surface);
   padding:14px;box-shadow:var(--shadow);transform:rotate(-.8deg);
@@ -909,12 +1019,12 @@ html[data-ds-theme="dark"] .grid-products .ds-product-link::after{background:lin
 .pdp-buy{display:flex;flex-wrap:wrap;gap:12px;margin-top:26px}
 .pdp-specs-wrap{margin-top:34px;border:1px solid var(--line);background:var(--surface)}
 .pdp-specs-wrap::before{content:"FICHA TÉCNICA — ANEXO A";display:block;font:500 9px/1 var(--mono);letter-spacing:.2em;text-transform:uppercase;color:var(--muted);padding:12px 18px;border-bottom:1px dashed var(--line)}
-.pdp-specs{width:100%;border-collapse:collapse}
+.pdp-specs{width:100%;border-collapse:collapse;table-layout:fixed}
 .pdp-specs tr{border-bottom:1px solid var(--line-soft)}
 .pdp-specs tr:last-child{border-bottom:0}
 .pdp-specs th,.pdp-specs td{padding:13px 18px;font-size:12px;text-align:left;vertical-align:top}
 .pdp-specs th{font:500 10px/1.5 var(--mono);letter-spacing:.14em;text-transform:uppercase;color:var(--muted);width:38%;border-right:1px dashed var(--line-soft)}
-.pdp-specs td{color:var(--ink-2)}
+.pdp-specs td{color:var(--ink-2);overflow-wrap:anywhere}
 .pdp-specs-wrap:not(:has(tbody tr)){display:none}
 .pdp-seller{display:flex;flex-wrap:wrap;gap:8px 22px;margin-top:26px;padding-top:18px;border-top:1px dashed var(--line);font:500 10px/1.6 var(--mono);letter-spacing:.14em;text-transform:uppercase;color:var(--muted)}
 .pdp-seller b{color:var(--ink);font-weight:500}
@@ -949,7 +1059,7 @@ html[data-ds-theme="dark"] .grid-products .ds-product-link::after{background:lin
    ========================================================================== */
 .svc-hero{padding-bottom:clamp(36px,4vw,56px)}
 .svc-body{padding-block:clamp(36px,5vw,64px) clamp(70px,8vw,110px)}
-.svc-offerings{display:grid;grid-template-columns:repeat(3,1fr);gap:clamp(14px,1.8vw,26px);margin-bottom:clamp(48px,6vw,80px)}
+.svc-offerings{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:clamp(14px,1.8vw,26px);margin-bottom:clamp(48px,6vw,80px)}
 .ds-offer{
   --tc:var(--stamp);
   border:1px solid var(--line);border-top:5px solid var(--tc);background:var(--surface);
@@ -968,7 +1078,7 @@ html[data-ds-theme="dark"] .grid-products .ds-product-link::after{background:lin
 .svc-ledger{border-top:3px double var(--ink);counter-reset:svc}
 .ds-services-list{border-bottom:3px double var(--ink)}
 .ds-service{
-  display:grid;grid-template-columns:64px 1fr;gap:4px 20px;align-items:baseline;
+  display:grid;grid-template-columns:64px minmax(0,1fr);gap:4px 20px;align-items:baseline;
   padding:clamp(20px,2.6vw,32px) clamp(4px,1.4vw,20px);
   border-bottom:1px solid var(--line);
   transition:background-color .35s;
@@ -996,7 +1106,7 @@ html[data-ds-theme="dark"] .grid-products .ds-product-link::after{background:lin
 [data-surface="services"]:not(:has(.ds-offer)):not(:has(.ds-service)) .svc-empty{display:block}
 [data-surface="services"]:not(:has(.ds-offer)):not(:has(.ds-service)) .svc-cta{display:none}
 .svc-cta{margin-top:36px}
-.svc-steps{display:grid;grid-template-columns:repeat(3,1fr);gap:clamp(16px,2vw,32px);margin-top:clamp(48px,6vw,80px);position:relative}
+.svc-steps{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:clamp(16px,2vw,32px);margin-top:clamp(48px,6vw,80px);position:relative}
 .svc-steps::before{content:"";position:absolute;left:0;right:0;top:21px;border-top:2px dashed var(--line)}
 .svc-step{padding-top:56px;position:relative}
 .svc-step::before{
@@ -1009,36 +1119,54 @@ html[data-ds-theme="dark"] .grid-products .ds-product-link::after{background:lin
 .svc-step p{font-size:11.5px;color:var(--muted);max-width:32ch;line-height:1.65}
 .svc-step .mini{display:inline-block;margin-top:14px;font:500 9px/1 var(--mono);letter-spacing:.16em;text-transform:uppercase;color:var(--stamp-ink);border:1px solid var(--stamp);padding:5px 10px;transform:rotate(-1.5deg)}
 
+/* Contenido inyectado (nombres, descripciones, reseñas, direcciones):
+   cadenas largas sin espacios no deben desbordar la ficha. */
+.ds-product-name,.ds-product-desc,.ds-product-cat,.ds-service-name,.ds-service-desc,.ds-service-meta,
+.ds-offer-name,.ds-offer-text,.ds-plan-name,.ds-plan-note,.ds-plan-feats li,.ds-guar-copy b,.ds-guar-copy span,
+.ds-quote-text,.ds-quote-name,.ds-rev-name,.ds-rev-text,.ds-rev-reply,.ds-mile-label,.ds-mile-text,
+.ficha h3,.ficha .ds-product-desc,.ficha .ds-service-desc,.cta-title,.contact-grid h2,.cat-hero h1,
+.pdp-info h1,.pdp-desc,.svc-title,.svc-sub,.doc-head h2,.suggest-copy small{overflow-wrap:anywhere}
+
 /* ==========================================================================
    RESPONSIVE
    ========================================================================== */
 @media(max-width:1100px){
-  .hero-grid{grid-template-columns:1fr}
+  .hero-grid{grid-template-columns:minmax(0,1fr)}
   .hero-side{border-left:0;border-top:1px solid var(--band-line);padding-left:0;padding-top:30px;flex-direction:row;flex-wrap:wrap;align-items:flex-end}
-  .fgrid,.plans,.svc-offerings{grid-template-columns:repeat(2,1fr)}
-  .grid-products{grid-template-columns:repeat(2,1fr)}
-  .lgrid{grid-template-columns:repeat(2,1fr)}
+  .fgrid,.plans,.svc-offerings{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .grid-products{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .lgrid{grid-template-columns:repeat(2,minmax(0,1fr))}
   .lgrid .ds-stat:nth-child(2n){border-right:0}
   .lgrid .ds-stat:nth-child(-n+2){border-bottom:1px solid var(--line)}
-  .grid-products,.anexos,.shots,.decls,.guar-list,.ds-miles{grid-template-columns:repeat(2,1fr)}
-  .about-grid,.contact-grid,.cta-inner,.pdp-grid{grid-template-columns:1fr}
-  .cat-layout{grid-template-columns:1fr}
+  .grid-products,.anexos,.shots,.decls,.guar-list,.ds-miles{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .about-grid,.contact-grid,.cta-inner,.pdp-grid{grid-template-columns:minmax(0,1fr)}
+  .cat-layout{grid-template-columns:minmax(0,1fr)}
   .cat-aside{position:static;display:none}
-  body.filters-open .cat-aside{display:block}
+  body.filters-open .cat-aside{display:flex;flex-direction:column;justify-content:flex-end}
   .cat-filters-toggle{display:inline-flex}
   .cat-aside-head{display:flex}
   .cat-scrim{
-    display:block;position:fixed;inset:0;z-index:65;background:rgba(10,8,5,.55);
+    display:block;position:fixed;top:0;right:0;bottom:auto;left:0;height:var(--fr-h,100vh);z-index:65;background:rgba(10,8,5,.55);
     opacity:0;pointer-events:none;transition:opacity .3s;
   }
   body.filters-open .cat-scrim{opacity:1;pointer-events:auto}
+  /* La hoja inferior no puede anclarse con bottom:0: dentro del iframe
+     estirado eso la manda al final del documento. .cat-aside queda como
+     lienzo fixed a todo el marco (el puente la clava arriba con top) y
+     .cat-sheet es el panel visual que se apoya al pie y se desliza. */
   .cat-aside{
-    position:fixed;inset:auto 0 0 0;z-index:66;
-    max-height:min(calc(var(--fr-h,100vh) * .85),640px);overflow:auto;
-    transform:translateY(102%);transition:transform .4s var(--ease);
-    border-bottom:0;border-radius:18px 18px 0 0;padding-bottom:calc(20px + env(safe-area-inset-bottom));
+    position:fixed;top:0;right:0;bottom:auto;left:0;height:var(--fr-h,100vh);z-index:66;
+    max-height:none;overflow:visible;background:none;border-color:transparent;padding:0;
+    transform:none;transition:none;pointer-events:none;
   }
-  .cat-aside.is-open{transform:none}
+  .cat-sheet{
+    display:block;width:100%;max-height:min(calc(var(--fr-h,100vh) * .85),640px);overflow:auto;
+    pointer-events:auto;
+    background:var(--surface);border:1px solid var(--line);border-bottom:0;
+    border-radius:18px 18px 0 0;padding:22px 22px calc(20px + env(safe-area-inset-bottom));
+    transform:translateY(102%);transition:transform .4s var(--ease);
+  }
+  .cat-aside.is-open .cat-sheet{transform:none}
   .top-nav{display:none}
   .tabbar{display:flex}
   .foot{padding-bottom:130px}
@@ -1047,11 +1175,12 @@ html[data-ds-theme="dark"] .grid-products .ds-product-link::after{background:lin
   .top-in{min-height:58px;gap:12px}
   .brand-txt small{display:none}
   .stamp-mini{display:none}
-  .fgrid,.plans,.svc-offerings,.lgrid,.grid-products,.anexos,.shots,.decls,.guar-list,.ds-miles,.svc-steps,.mani .cols,.ds-contact-row{grid-template-columns:1fr}
-  .lrow{border-right:0}
+  .fgrid,.plans,.svc-offerings,.lgrid,.grid-products,.anexos,.shots,.decls,.guar-list,.ds-miles,.svc-steps,.mani .cols,.ds-contact-row{grid-template-columns:minmax(0,1fr)}
+  .lgrid .ds-stat{border-right:0}
   .guar-list{border-top:0}
   .ds-guar{border-right:0}
-  .ds-service{grid-template-columns:56px 1fr;gap:6px 14px}
+  .ds-service{grid-template-columns:56px minmax(0,1fr);gap:6px 14px}
+  .svc-steps::before{display:none}
   .hero h1{font-size:clamp(40px,13vw,64px)}
   .hero-side{flex-direction:column;align-items:flex-start}
   .stamp-big{align-self:flex-start}
@@ -1067,9 +1196,10 @@ html[data-ds-theme="dark"] .grid-products .ds-product-link::after{background:lin
 }
 @media(max-width:480px){
   .hero-cta .btn{width:100%;justify-content:center}
-  .cta-inner{grid-template-columns:1fr}
-  .cta-inner .btn{justify-self:start}
+  .cta-inner{grid-template-columns:minmax(0,1fr)}
+  .cta-inner .btn{justify-self:start;max-width:100%}
   .brand-txt b{max-width:44vw}
+  .ds-contact-q,.ds-rev-q{min-width:0}
 }
 @media(prefers-reduced-motion:reduce){
   .orb,.hero::before,.cta-band::before,.contact-band::before,.tick-track,.stamp-big,.stamp-big::after,.hero h1 .w,.caret,.about-stamp,.gridPan{animation:none!important}
@@ -1432,6 +1562,7 @@ html[data-ds-style="expediente-noche"] .top-cta{
     </button>
     <div class="cat-layout">
       <aside class="cat-aside" id="exp-filters" data-ds-filters-panel aria-label="Filtros del catálogo">
+        <div class="cat-sheet">
         <div class="cat-aside-head">
           <strong>Filtros</strong>
           <button class="cat-aside-close" type="button" data-ds-filters-close aria-label="Cerrar filtros">
@@ -1463,6 +1594,7 @@ html[data-ds-style="expediente-noche"] .top-cta{
         <div class="cat-aside-foot">
           <button class="f-clear" type="button" data-ds-clear>Limpiar</button>
           <button class="f-done" type="button" data-ds-filters-close>Aplicar</button>
+        </div>
         </div>
       </aside>
       <div class="cat-scrim" data-ds-filters-scrim aria-hidden="true"></div>

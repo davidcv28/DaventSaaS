@@ -402,7 +402,7 @@
   height: 5px;
   background: var(--mv-accent);
 }
-.store-page[data-template='movimiento'] .sp-foot-brand strong {
+.store-page[data-template='movimiento'] .sp-foot .sp-foot-brand strong {
   font-family: var(--mv-display);
   font-size: clamp(38px, 5vw, 66px);
   font-weight: 700;
@@ -411,10 +411,11 @@
   text-transform: uppercase;
   color: var(--mv-paper);
 }
+.store-page[data-template='movimiento'] .sp-foot .sp-foot-brand span { color: color-mix(in srgb, var(--mv-paper) 72%, transparent); }
 .store-page[data-template='movimiento'] .sp-foot p,
 .store-page[data-template='movimiento'] .sp-foot a,
 .store-page[data-template='movimiento'] .sp-foot li,
-.store-page[data-template='movimiento'] .sp-foot-copy { color: color-mix(in srgb, var(--mv-paper) 72%, transparent); }
+.store-page[data-template='movimiento'] .sp-foot .sp-foot-copy { color: color-mix(in srgb, var(--mv-paper) 72%, transparent); }
 .store-page[data-template='movimiento'] .sp-foot-heading {
   font-family: var(--mv-mono);
   font-size: 10px;
@@ -1396,6 +1397,10 @@
 }
 .store-page[data-template='movimiento'] .sp-form-head strong { font-family: var(--mv-display); font-size: 25px; text-transform: uppercase; }
 .store-page[data-template='movimiento'] .sp-form-badge { border-radius: 0; background: var(--mv-accent); color: var(--mv-on-accent); }
+.store-page[data-template='movimiento'] .sp-form::before,
+.store-page[data-template='movimiento'] .sp-form::after { display: none; }
+.store-page[data-template='movimiento'] .sp-form-badge,
+.store-page[data-template='movimiento'] .sp-form:hover .sp-form-badge { transform: none; }
 .store-page[data-template='movimiento'] .sp-input { border-radius: 0; border-color: var(--mv-line-strong); background: var(--mv-paper); color: var(--mv-ink); }
 .store-page[data-template='movimiento'] .sp-input:focus { border-color: var(--mv-accent); }
 .store-page[data-template='movimiento'] .sp-field label { font-family: var(--mv-mono); font-size: 9.5px; letter-spacing: .12em; text-transform: uppercase; color: var(--mv-muted); }
@@ -1570,6 +1575,11 @@
   font-family: var(--mv-body);
   background: var(--mv-paper);
   color: var(--mv-ink);
+  /* .store-page base estira el subárbol a 100dvh y en ≤1100px le suma el
+     padding-top del header fijo (ya reservado por la página externa):
+     catálogo/ficha quedaban con un hueco doble arriba del contenido. */
+  min-height: 0;
+  padding-top: 0;
 }
 .store-page[data-template='movimiento'] .mv-skin .rz-cat-title,
 .store-page[data-template='movimiento'] .mv-skin .rz-sv-hero-title,
@@ -1614,6 +1624,233 @@
 .store-page[data-template='movimiento'] .mv-skin .rz-btn:hover { background: var(--mv-ink); border-color: var(--mv-ink); color: var(--mv-paper); box-shadow: none; transform: none; }
 .store-page[data-template='movimiento'] .mv-skin .rz-btn--ghost { background: transparent; border-color: var(--mv-line-strong); color: var(--mv-ink); }
 .store-page[data-template='movimiento'] .mv-skin .rz-btn--ghost:hover { background: transparent; border-color: var(--mv-accent); color: var(--mv-accent-ink); }
+/* Los <a class="rz-btn"> heredan reglas globales de Raíz que fijan
+   color:var(--rz-on-band) (#fff): en tema oscuro el acento es claro y el
+   texto quedaba ilegible; el :is() iguala la especificidad para ganarlas. */
+.store-page[data-template='movimiento'] .mv-skin :is(.rz-cat-page, .rz-pdp-page, .rz-sv-page) a.rz-btn:not(.rz-btn--ghost):not(.rz-btn--ink),
+.store-page[data-template='movimiento'] .mv-skin :is(.rz-cat-page, .rz-pdp-page, .rz-sv-page) a.rz-btn:not(.rz-btn--ghost):not(.rz-btn--ink):hover {
+  color: var(--mv-on-accent);
+}
+.store-page[data-template='movimiento'] .mv-skin :is(.rz-cat-page, .rz-pdp-page, .rz-sv-page) a.rz-btn--ghost:hover {
+  color: var(--mv-accent-ink);
+}
+.store-page[data-template='movimiento'] .mv-skin :is(.rz-cat-page, .rz-pdp-page, .rz-sv-page) a.rz-btn--ink,
+.store-page[data-template='movimiento'] .mv-skin :is(.rz-cat-page, .rz-pdp-page, .rz-sv-page) a.rz-btn--ink:hover {
+  color: var(--mv-paper);
+}
+
+/* --- Tarjeta de producto: la misma ficha que .mv-card de la portada --- */
+/* Papel sobre papel con filete, lift de 3px y zoom de imagen más lento
+   (la coreografía cinética de la piel); el precio va en mono acento como
+   en .mv-card-price. Los tokens --tpc-* ya traen flag/oferta/add. */
+.store-page[data-template='movimiento'] .mv-skin .rz-cat-card,
+.store-page[data-template='movimiento'] .mv-skin .rz-pdp-rel-card {
+  position: relative;
+  --tpc-bg: var(--sp-card);
+  --tpc-border: 1px solid var(--mv-line);
+  --tpc-pad: 16px 18px 18px;
+  /* --sp-ink/--sp-muted (no --mv-*): dentro de una .tpc repintada por el
+     tema ([data-st-surface-card]) el puente remapea --sp-* y el texto
+     acompaña la tarjeta; --mv-* quedaría fijo y podría invertirse. */
+  --tpc-name-ink: var(--sp-ink);
+  --tpc-price-font: var(--mv-mono);
+  --tpc-price-size: 14px;
+  --tpc-price-weight: 500;
+  --tpc-price-ink: var(--mv-accent-ink);
+  --tpc-old-size: 11px;
+  --tpc-old-ink: var(--sp-muted);
+  --tpc-go-size: 10px;
+  --tpc-go-weight: 600;
+  --tpc-go-ink: var(--mv-accent-ink);
+  /* Sin --tpc-stock-ink: cae al --sp-success del tema (verde AA en ambos
+     modos; --rz-ok=#2F7D4F quedaba ~3:1 sobre la tarjeta oscura). */
+  --tpc-stock-font: var(--mv-mono);
+  --tpc-stock-size: 10px;
+  --tpc-quick-bg: var(--mv-accent-ink);
+  --tpc-img-hover: scale(1.05);
+  transition: border-color .2s var(--mv-ease), transform .25s var(--mv-ease);
+}
+.store-page[data-template='movimiento'] .mv-skin .rz-pdp-rel-card { --tpc-pad: 13px 15px 15px; }
+/* El guarda de catálogo fija .tpc-name a 15.5px/650/1.3 (más específico que
+   los tokens --tpc-name-*): regla directa con scope de piel para que el
+   nombre salga en display editorial. */
+.store-page[data-template='movimiento'] .mv-skin .rz-cat-card .tpc-name,
+.store-page[data-template='movimiento'] .mv-skin .rz-pdp-rel-card .tpc-name {
+  font-family: var(--mv-display);
+  font-weight: 700;
+  line-height: 1.05;
+  letter-spacing: -.02em;
+}
+.store-page[data-template='movimiento'] .mv-skin .rz-cat-card .tpc-name { font-size: 21px; }
+.store-page[data-template='movimiento'] .mv-skin .rz-pdp-rel-card .tpc-name { font-size: 15.5px; }
+.store-page[data-template='movimiento'] .mv-skin .rz-cat-card:hover,
+.store-page[data-template='movimiento'] .mv-skin .rz-pdp-rel-card:hover {
+  border-color: var(--mv-line-strong);
+  transform: translateY(-3px);
+}
+.store-page[data-template='movimiento'] .mv-skin .rz-cat-card:hover .tpc-go,
+.store-page[data-template='movimiento'] .mv-skin .rz-pdp-rel-card:hover .tpc-go { color: var(--mv-accent); }
+/* Flags de la media: "Nuevo" como ficha de papel y la oferta (-X%) en
+   placa acento — mismo reparto que .mv-card-index/.mv-card-flag. */
+.store-page[data-template='movimiento'] .mv-skin .tpc .tpc-flag {
+  font-family: var(--mv-mono);
+  font-size: 9px;
+  font-weight: 600;
+  letter-spacing: .1em;
+}
+.store-page[data-template='movimiento'] .mv-skin .tpc .tpc-flag:not(.offer) {
+  background: var(--mv-paper);
+  color: var(--mv-ink);
+  border: 1px solid var(--mv-line-strong);
+}
+.store-page[data-template='movimiento'] .mv-skin .tpc .tpc-quick {
+  border-radius: 0;
+  font-family: var(--mv-mono);
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+  /* .tpc-quick trae color:#fff fijo: en tema oscuro el acento es claro y
+     quedaba ilegible — el par accent/on-accent invierte solo. */
+  color: var(--mv-on-accent);
+}
+.store-page[data-template='movimiento'] .mv-skin .rz-cat-card .tpc-go,
+.store-page[data-template='movimiento'] .mv-skin .rz-pdp-rel-card .tpc-go {
+  font-family: var(--mv-mono);
+  letter-spacing: .12em;
+}
+.store-page[data-template='movimiento'] .mv-skin .rz-cat-card-promo {
+  font-family: var(--mv-mono);
+  font-size: 10px;
+  letter-spacing: .06em;
+}
+
+/* --- Catálogo: migas, contadores, chips y riel en mono de dato --- */
+.store-page[data-template='movimiento'] .mv-skin .rz-cat-crumbs,
+.store-page[data-template='movimiento'] .mv-skin .rz-pdp-crumbs,
+.store-page[data-template='movimiento'] .mv-skin .rz-sv-crumbs,
+.store-page[data-template='movimiento'] .mv-skin .rz-cat-counts dt,
+.store-page[data-template='movimiento'] .mv-skin .rz-cat-group legend,
+.store-page[data-template='movimiento'] .mv-skin .rz-cat-pricetag,
+.store-page[data-template='movimiento'] .mv-skin .rz-cat-sort,
+.store-page[data-template='movimiento'] .mv-skin .rz-cat-promos-label,
+.store-page[data-template='movimiento'] .mv-skin .rz-cat-more-label {
+  font-family: var(--mv-mono);
+  letter-spacing: .12em;
+}
+.store-page[data-template='movimiento'] .mv-skin .rz-cat-counts dd { letter-spacing: -.02em; }
+.store-page[data-template='movimiento'] .mv-skin .rz-cat-check input { accent-color: var(--mv-accent); }
+.store-page[data-template='movimiento'] .mv-skin .rz-cat-check em {
+  font-family: var(--mv-mono);
+  font-variant-numeric: tabular-nums;
+}
+.store-page[data-template='movimiento'] .mv-skin .rz-cat-tags button {
+  font-family: var(--mv-mono);
+  font-size: 10px;
+  letter-spacing: .1em;
+  text-transform: uppercase;
+}
+.store-page[data-template='movimiento'] .mv-skin .rz-cat-tags button:hover {
+  border-color: var(--mv-accent);
+  color: var(--mv-accent-ink);
+}
+.store-page[data-template='movimiento'] .mv-skin .rz-cat-filters-toggle {
+  font-family: var(--mv-mono);
+  font-size: 11px;
+  letter-spacing: .12em;
+}
+/* El contador del toggle invierte a tinta/papel (editorial, no acento). */
+.store-page[data-template='movimiento'] .mv-skin .rz-cat-filters-count {
+  background: var(--mv-ink);
+  color: var(--mv-paper);
+}
+.store-page[data-template='movimiento'] .mv-skin .rz-cat-rail-close { border-radius: 0; }
+.store-page[data-template='movimiento'] .mv-skin .rz-cat-prices .rz-field {
+  font-family: var(--mv-mono);
+  font-variant-numeric: tabular-nums;
+}
+.store-page[data-template='movimiento'] .mv-skin .rz-cat-empty-ico,
+.store-page[data-template='movimiento'] .mv-skin .rz-pdp-empty-ico {
+  border-radius: 0;
+  border-color: var(--mv-line-strong);
+  color: var(--mv-accent-ink);
+}
+.store-page[data-template='movimiento'] .mv-skin .rz-cat-empty strong,
+.store-page[data-template='movimiento'] .mv-skin .rz-pdp-empty strong {
+  font-family: var(--mv-display);
+  font-size: 24px;
+  font-weight: 700;
+  letter-spacing: -.01em;
+  text-transform: uppercase;
+}
+
+/* --- Ficha: marco de papel, sello acento y specs de dato --- */
+.store-page[data-template='movimiento'] .mv-skin .rz-pdp-frame {
+  border-color: var(--mv-line);
+  background: var(--mv-paper-2);
+}
+.store-page[data-template='movimiento'] .mv-skin .rz-pdp-caption {
+  font-family: var(--mv-mono);
+  font-size: 9.5px;
+  letter-spacing: .14em;
+}
+/* El sello (.rz-plate) es la placa acento inclinada −2° de la ficha.
+   accent-ink (no accent) para que el texto hueso llegue a AA en ambos
+   temas — en oscuro accent-ink es el naranja aclarado y on-accent tinta. */
+.store-page[data-template='movimiento'] .mv-skin .rz-pdp-seal {
+  border-radius: 0;
+  background: var(--mv-accent-ink);
+  color: var(--mv-on-accent);
+  box-shadow: none;
+  font-family: var(--mv-mono);
+}
+.store-page[data-template='movimiento'] .mv-skin .rz-pdp-off {
+  border-radius: 0;
+  background: var(--mv-accent-ink);
+  color: var(--mv-on-accent);
+  font-family: var(--mv-mono);
+  letter-spacing: .08em;
+}
+.store-page[data-template='movimiento'] .mv-skin .rz-pdp-price { color: var(--mv-accent-ink); }
+.store-page[data-template='movimiento'] .mv-skin .rz-pdp-stock {
+  font-family: var(--mv-mono);
+  font-size: 11px;
+  letter-spacing: .06em;
+}
+.store-page[data-template='movimiento'] .mv-skin .rz-pdp-specs th {
+  font-family: var(--mv-mono);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: .1em;
+  text-transform: uppercase;
+}
+.store-page[data-template='movimiento'] .mv-skin .rz-pdp-share {
+  width: 44px;
+  height: 44px;
+  border-radius: 0;
+}
+.store-page[data-template='movimiento'] .mv-skin .rz-pdp-share:hover {
+  border-color: var(--mv-accent);
+  color: var(--mv-accent-ink);
+}
+.store-page[data-template='movimiento'] .mv-skin .rz-pdp-backlink {
+  font-family: var(--mv-mono);
+  font-size: 11px;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+}
+.store-page[data-template='movimiento'] .mv-skin .rz-pdp-backlink:hover { color: var(--mv-accent-ink); }
+.store-page[data-template='movimiento'] .mv-skin .rz-pdp-stick { border-top-color: var(--mv-line-strong); }
+
+/* Zoom de imagen un poco más lento en las tarjetas del catálogo: es el
+   gesto cinético de la piel sin marear (mismo rango que .mv-card). */
+@media (prefers-reduced-motion: no-preference) {
+  .store-page[data-template='movimiento'] .mv-skin .rz-cat-card .tpc-media img,
+  .store-page[data-template='movimiento'] .mv-skin .rz-pdp-rel-card .tpc-media img {
+    transition: opacity .4s ease-out, transform .6s var(--mv-ease);
+  }
+}
+
 .store-page[data-template='movimiento'][data-store-theme='dark'] .mv-skin {
   --sp-bg: var(--mv-paper);
   --sp-card: #1B1D17;
@@ -1796,10 +2033,22 @@
 @keyframes mv-bar { from { transform: scaleX(0); } to { transform: scaleX(1); } }
 @media (hover: none) {
   .mv-plan:hover, .mv-card:hover, .mv-hero-media:hover > img { transform: none; }
+  /* Sin hover real el lift de las tarjetas Raíz no debe quedar pegado. */
+  .store-page[data-template='movimiento'] .mv-skin .rz-cat-card:hover,
+  .store-page[data-template='movimiento'] .mv-skin .rz-pdp-rel-card:hover { transform: none; }
 }
 @media (prefers-reduced-motion: reduce) {
   .mv-live-dot, .mv-ribbon-track, .mv-meter-track i { animation: none !important; }
   .mv-ribbon-track { transform: none; flex-wrap: wrap; width: 100%; }
   .mv-ribbon-item[aria-hidden='true'] { display: none; }
   .mv-btn, .mv-card, .mv-card-media img, .mv-plan, .mv-hero-media > img { transition: none !important; }
+  /* Subárbol Raíz: lift de tarjeta y zoom de imagen fuera de juego. */
+  .store-page[data-template='movimiento'] .mv-skin .rz-cat-card,
+  .store-page[data-template='movimiento'] .mv-skin .rz-pdp-rel-card,
+  .store-page[data-template='movimiento'] .mv-skin .rz-cat-card .tpc-media img,
+  .store-page[data-template='movimiento'] .mv-skin .rz-pdp-rel-card .tpc-media img { transition: none !important; }
+  .store-page[data-template='movimiento'] .mv-skin .rz-cat-card:hover,
+  .store-page[data-template='movimiento'] .mv-skin .rz-pdp-rel-card:hover { transform: none; }
+  .store-page[data-template='movimiento'] .mv-skin .rz-cat-card:hover .tpc-media img,
+  .store-page[data-template='movimiento'] .mv-skin .rz-pdp-rel-card:hover .tpc-media img { transform: none; }
 }

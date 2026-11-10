@@ -93,12 +93,31 @@ import LegalLayout from '../components/LegalLayout.vue'
         sobre las denuncias válidas conforme a la sección 6. El servicio se ofrece "tal cual", dentro de
         los límites que permite la ley.
       </p>
+      <p>
+        Respecto de las ventas online de cada comercio: DAVENT es solo la infraestructura
+        tecnológica. El contrato de compraventa es entre el comprador y el comercio; DAVENT no
+        procesa ni retiene los pagos de esas ventas (se abonan directamente al comercio o a su
+        cuenta de Mercado Pago), no emite comprobantes fiscales de terceros ni responde por la
+        veracidad de los datos fiscales que cada comercio declare. Los reclamos entre comprador
+        y comercio se gestionan directamente entre ellos conforme a las páginas legales de cada
+        tienda.
+      </p>
+      <p>
+        DAVENT <strong>no garantiza ni responde por</strong> los productos, precios, stock,
+        entregas, pagos, facturación, garantías ni cualquier otra obligación de los comercios
+        hacia sus compradores. El comercio es el único responsable frente al consumidor por su
+        actividad, incluido el cumplimiento de sus obligaciones fiscales (facturación de cada
+        venta, condición ante ARCA/AFIP y normativas provinciales). El uso de la plataforma por
+        parte de un comercio implica su aceptación de esa responsabilidad exclusiva. DAVENT
+        puede suspender o dar de baja comercios que incumplan la normativa o estos términos.
+      </p>
 
       <h2>10. Legislación y jurisdicción</h2>
       <p>
         Estos términos se rigen por las leyes de la República Argentina. Cualquier controversia se
         somete a los tribunales competentes del domicilio de DAVENT, salvo norma de orden público
-        en contrario.
+        en contrario y sin perjuicio de los derechos irrenunciables del consumidor, que podrá
+        iniciar las acciones que correspondan en su propio domicilio.
       </p>
 
       <h2>11. Cambios a estos términos</h2>

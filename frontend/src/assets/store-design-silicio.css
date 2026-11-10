@@ -1,0 +1,852 @@
+/* ============================================================================
+   Diseño `silicio` (nucleo) — páginas de comercio que NO montan el documento
+   del patrón: /ingresar y /cuenta (+ secciones).
+   Composición: BOOT DE SISTEMA + CONSOLA.
+   · Auth  → ventana de terminal: columna de log de arranque (mono, chips
+             [OK]) a la izquierda, entrada de comandos a la derecha; el foco
+             se marca con subrayado ácido.
+   · Cuenta → consola: sidebar como árbol de sistema (├─ / └─), paneles con
+             cabecera de prompt, tablas de specs y chips mono.
+   Todo cuelga de [data-design='silicio'] para ganarle a los <style scoped>.
+   ========================================================================== */
+
+/* ---------------------------------------------------------------- tokens -- */
+[data-design='silicio'] .ec-auth,
+[data-design='silicio'] .ec-account {
+  --dz-bg: #F2F3EE;
+  --dz-surface: #FBFCF8;
+  --dz-surface-2: #E7EAE1;
+  --dz-ink: #14171C;
+  --dz-ink-2: #3A4148;
+  --dz-muted: #5C6570;
+  --dz-line: #D8DCD0;
+  --dz-line-strong: #B4BCA9;
+  --dz-accent: #31450F;
+  --dz-accent-text: #2F4A0A;
+  --dz-accent-ink: #FFFFFF;
+  --dz-volt: #C8FF3D;
+  --dz-volt-ink: #14171C;
+  --dz-band: #14171C;
+  --dz-band-ink: #EDEFE6;
+  --dz-band-muted: #A7B0A0;
+  --dz-ok: #2E7D4F;
+  --dz-danger: #B42318;
+  --dz-display: var(--st-f-display-family, "Anton", "Arial Narrow", Impact, sans-serif);
+  --dz-body: var(--st-f-body-family, "Space Grotesk", "Segoe UI", system-ui, sans-serif);
+  --dz-mono: var(--st-f-eyebrow-family, "JetBrains Mono", ui-monospace, monospace);
+  --dz-r: 8px;
+
+  --sp-ink: var(--dz-ink);
+  --sp-ink-2: var(--dz-ink-2);
+  --sp-muted: var(--dz-muted);
+  --sp-line: var(--dz-line);
+  --sp-card: var(--dz-surface);
+  --sp-card-solid: var(--dz-surface);
+  --sp-surface: var(--dz-bg);
+  --sp-radius: var(--dz-r);
+  --sp-accent-text: var(--dz-accent-text);
+  --sp-on-band: var(--dz-accent-ink);
+  --sp-soft: color-mix(in srgb, var(--dz-ink) 6%, transparent);
+  --sp-success: var(--dz-ok);
+  --sp-warning: #8A5A0B;
+  --sp-danger: var(--dz-danger);
+  --sp-shadow-sm: none;
+  --sp-shadow-md: none;
+  color-scheme: light;
+}
+
+[data-design='silicio'][data-theme='dark'] .ec-auth,
+[data-design='silicio'][data-theme='dark'] .ec-account {
+  --dz-bg: #0A0D12;
+  --dz-surface: #10141C;
+  --dz-surface-2: #151A24;
+  --dz-ink: #E9EEF4;
+  --dz-ink-2: #C2CBD6;
+  --dz-muted: #8B96A6;
+  --dz-line: #232B38;
+  --dz-line-strong: #354153;
+  --dz-accent: #C8FF3D;
+  --dz-accent-text: #C8FF3D;
+  --dz-accent-ink: #0A0D12;
+  --dz-volt: #C8FF3D;
+  --dz-volt-ink: #0A0D12;
+  --dz-band: #05070B;
+  --dz-band-ink: #E9EEF4;
+  --dz-band-muted: #8B96A6;
+  --dz-ok: #5BC49A;
+  --dz-danger: #FF8A8A;
+  --sp-warning: #E3B341;
+  --sp-shadow-sm: none;
+  --sp-shadow-md: none;
+  color-scheme: dark;
+}
+
+/* ==========================================================================
+   AUTH — ventana de terminal
+   ========================================================================== */
+[data-design='silicio'] .ec-auth .ec-auth-shell {
+  grid-template-columns: minmax(0, 320px) minmax(0, 1fr);
+  width: min(1020px, 100%);
+  margin-top: clamp(16px, 3vw, 34px);
+  border: 1px solid var(--dz-line-strong);
+  border-radius: var(--dz-r);
+  background: var(--dz-surface);
+  box-shadow: 0 18px 40px -34px rgba(10, 13, 18, .5);
+  overflow: hidden;
+  position: relative;
+}
+/* retícula técnica bajo el papel */
+[data-design='silicio'] .ec-auth .ec-auth-shell::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  background:
+    linear-gradient(color-mix(in srgb, var(--dz-line) 55%, transparent) 1px, transparent 1px) 0 0 / 100% 30px,
+    linear-gradient(90deg, color-mix(in srgb, var(--dz-line) 55%, transparent) 1px, transparent 1px) 0 0 / 30px 100%;
+  opacity: .5;
+}
+
+/* ---- columna de log de arranque ---- */
+[data-design='silicio'] .ec-auth .ec-auth-brand {
+  z-index: 1;
+  padding: clamp(20px, 3vw, 30px) clamp(18px, 2.4vw, 26px);
+  border-right: 1px solid var(--dz-line-strong);
+  background: var(--dz-band);
+  color: var(--dz-band-ink);
+}
+[data-design='silicio'] .ec-auth .ec-auth-brand::before { display: none; }
+[data-design='silicio'] .ec-auth .ec-auth-brand::after { background: none; }
+[data-design='silicio'] .ec-auth .ec-auth-brand-inner {
+  gap: clamp(16px, 2.4vw, 26px);
+  justify-content: flex-start;
+}
+[data-design='silicio'] .ec-auth .ec-auth-brand-top { gap: 10px; }
+[data-design='silicio'] .ec-auth .ec-auth-logo {
+  width: 34px;
+  height: 34px;
+  border-radius: 6px;
+  border: 1px solid color-mix(in srgb, var(--dz-band-ink) 30%, transparent);
+  background: color-mix(in srgb, var(--dz-band-ink) 10%, transparent);
+  color: var(--dz-volt);
+  font-family: var(--dz-mono);
+  font-size: 15px;
+  font-weight: 700;
+}
+[data-design='silicio'] .ec-auth .ec-auth-brand-name {
+  font-family: var(--dz-mono);
+  font-size: 12.5px;
+  font-weight: 700;
+  letter-spacing: .12em;
+  text-transform: uppercase;
+  color: var(--dz-band-ink);
+}
+[data-design='silicio'] .ec-auth .ec-auth-brand-copy { gap: 10px; max-width: 100%; }
+[data-design='silicio'] .ec-auth .ec-auth-rail {
+  display: inline-block;
+  width: fit-content;
+  padding: 3px 7px;
+  border: 1px solid color-mix(in srgb, var(--dz-volt) 55%, transparent);
+  border-radius: 4px;
+  color: var(--dz-volt);
+  font-family: var(--dz-mono);
+  font-size: 9.5px;
+  font-weight: 700;
+  letter-spacing: .16em;
+  line-height: 1;
+}
+[data-design='silicio'] .ec-auth .ec-auth-rail::before { content: 'BOOT '; }
+[data-design='silicio'] .ec-auth .ec-auth-brand-kicker {
+  font-family: var(--dz-mono);
+  font-size: 9.5px;
+  font-weight: 700;
+  letter-spacing: .18em;
+  text-transform: uppercase;
+  color: var(--dz-band-muted);
+}
+[data-design='silicio'] .ec-auth .ec-auth-brand-title {
+  font-family: var(--dz-display);
+  font-size: clamp(24px, 3vw, 32px);
+  font-weight: 400;
+  line-height: 1.06;
+  letter-spacing: .01em;
+  text-transform: uppercase;
+  color: var(--dz-band-ink);
+}
+[data-design='silicio'] .ec-auth .ec-auth-brand-text {
+  font-family: var(--dz-body);
+  font-size: 12.5px;
+  line-height: 1.6;
+  color: var(--dz-band-muted);
+}
+[data-design='silicio'] .ec-auth .ec-auth-perks {
+  gap: 0;
+  margin-top: 2px;
+  padding-top: 4px;
+  border-top: 1px dashed color-mix(in srgb, var(--dz-band-ink) 18%, transparent);
+}
+[data-design='silicio'] .ec-auth .ec-auth-perks li {
+  gap: 9px;
+  padding: 7px 0;
+  font-family: var(--dz-mono);
+  font-size: 11px;
+  font-weight: 500;
+  line-height: 1.45;
+  color: var(--dz-band-ink);
+  border-bottom: 1px solid color-mix(in srgb, var(--dz-band-ink) 10%, transparent);
+}
+[data-design='silicio'] .ec-auth .ec-auth-perks li:last-child { border-bottom: 0; }
+[data-design='silicio'] .ec-auth .ec-auth-perks li > svg {
+  color: var(--dz-volt);
+  background: color-mix(in srgb, var(--dz-volt) 16%, transparent);
+  border-radius: 3px;
+  padding: 2px;
+  box-sizing: content-box;
+}
+[data-design='silicio'] .ec-auth .ec-auth-brand-foot {
+  font-family: var(--dz-mono);
+  font-size: 9.5px;
+  letter-spacing: .12em;
+  text-transform: uppercase;
+  color: var(--dz-band-muted);
+}
+
+/* ---- entrada de comandos ---- */
+[data-design='silicio'] .ec-auth .ec-auth-panel {
+  z-index: 1;
+  padding: clamp(18px, 3vw, 32px) clamp(18px, 3.4vw, 40px) clamp(22px, 3.4vw, 36px);
+  background: color-mix(in srgb, var(--dz-surface) 92%, transparent);
+  color: var(--dz-ink);
+}
+[data-design='silicio'] .ec-auth .ec-auth-back {
+  display: inline-flex;
+  align-items: center;
+  min-height: 40px;
+  margin-bottom: clamp(10px, 1.8vw, 16px);
+  padding: 4px 9px;
+  border: 1px solid var(--dz-line);
+  border-radius: 5px;
+  background: var(--dz-surface-2);
+  font-family: var(--dz-mono);
+  font-size: 10.5px;
+  font-weight: 600;
+  letter-spacing: .04em;
+  color: var(--dz-ink-2);
+}
+[data-design='silicio'] .ec-auth .ec-auth-back:hover {
+  border-color: var(--dz-accent-text);
+  color: var(--dz-accent-text);
+}
+[data-design='silicio'] .ec-auth .ec-auth-head {
+  position: relative;
+  gap: 7px;
+  padding-bottom: 14px;
+  margin-bottom: 18px;
+  border-bottom: 1px dashed var(--dz-line-strong);
+}
+[data-design='silicio'] .ec-auth .ec-auth-badge {
+  width: 32px;
+  height: 32px;
+  margin-bottom: 3px;
+  border-radius: 5px;
+  border: 1px solid var(--dz-line-strong);
+  background: var(--dz-volt);
+  color: var(--dz-volt-ink);
+}
+[data-design='silicio'] .ec-auth .ec-auth-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  width: fit-content;
+  font-family: var(--dz-mono);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: .16em;
+  text-transform: uppercase;
+  color: var(--dz-accent-text);
+}
+[data-design='silicio'] .ec-auth .ec-auth-tag::before { content: '>'; color: var(--dz-accent-text); }
+[data-design='silicio'] .ec-auth .ec-auth-title {
+  font-family: var(--dz-display);
+  font-size: clamp(24px, 2.9vw, 33px);
+  font-weight: 400;
+  line-height: 1.06;
+  letter-spacing: .01em;
+  text-transform: uppercase;
+  color: var(--dz-ink);
+}
+[data-design='silicio'] .ec-auth .ec-auth-sub {
+  font-family: var(--dz-body);
+  font-size: 13px;
+  line-height: 1.55;
+  color: var(--dz-muted);
+}
+[data-design='silicio'] .ec-auth .ec-auth-loading {
+  font-family: var(--dz-mono);
+  font-size: 12px;
+  color: var(--dz-muted);
+}
+[data-design='silicio'] .ec-auth .ec-auth-spin { color: var(--dz-accent-text); }
+
+[data-design='silicio'] .ec-auth .ecaf .sp-field { gap: 5px; min-width: 0; }
+[data-design='silicio'] .ec-auth .ecaf .sp-field-label {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 6px;
+  font-family: var(--dz-mono);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: .14em;
+  text-transform: uppercase;
+  color: var(--dz-muted);
+}
+[data-design='silicio'] .ec-auth .ecaf .sp-field-label::before {
+  content: '>';
+  color: var(--dz-accent-text);
+  font-weight: 700;
+}
+[data-design='silicio'] .ec-auth .ecaf .sp-input {
+  min-height: 46px;
+  padding: 11px 13px;
+  border: 1px solid var(--dz-line);
+  border-radius: 6px;
+  background: var(--dz-surface-2);
+  color: var(--dz-ink);
+  font-family: var(--dz-mono);
+  font-size: 15px;
+  box-shadow: none;
+}
+[data-design='silicio'] .ec-auth .ecaf .sp-input::placeholder { color: var(--dz-muted); }
+[data-design='silicio'] .ec-auth .ecaf .sp-input:hover { border-color: var(--dz-line-strong); }
+[data-design='silicio'] .ec-auth .ecaf .sp-input:focus,
+[data-design='silicio'] .ec-auth .ecaf .sp-input:focus-visible {
+  outline: none;
+  border-color: var(--dz-accent-text);
+  box-shadow: 0 2px 0 0 var(--dz-accent-text);
+}
+[data-design='silicio'] .ec-auth .ecaf .sp-input:disabled {
+  background: color-mix(in srgb, var(--dz-ink) 6%, var(--dz-surface));
+  color: var(--dz-ink-2);
+  -webkit-text-fill-color: var(--dz-ink-2);
+  opacity: 1;
+}
+[data-design='silicio'] .ec-auth .ecaf .sp-form-error {
+  font-family: var(--dz-mono);
+  font-size: 11.5px;
+  color: var(--dz-danger);
+}
+[data-design='silicio'] .ec-auth .ecaf-pass-toggle { color: var(--dz-muted); border-radius: 5px; }
+[data-design='silicio'] .ec-auth .ecaf-pass-toggle:hover {
+  color: var(--dz-accent-text);
+  background: color-mix(in srgb, var(--dz-ink) 7%, transparent);
+}
+[data-design='silicio'] .ec-auth .ecaf-submit {
+  min-height: 48px;
+  margin-top: 6px;
+  border-radius: 6px;
+  background: var(--dz-accent);
+  color: var(--dz-accent-ink);
+  font-family: var(--dz-mono);
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: .14em;
+  text-transform: uppercase;
+  box-shadow: 0 3px 0 -1px color-mix(in srgb, var(--dz-accent) 40%, transparent);
+}
+[data-design='silicio'] .ec-auth .ecaf-submit:hover:not(:disabled) { filter: brightness(1.1); }
+[data-design='silicio'] .ec-auth .ecaf-notice {
+  border-radius: 5px;
+  border: 1px solid color-mix(in srgb, var(--dz-ok) 45%, transparent);
+  background: color-mix(in srgb, var(--dz-ok) 12%, transparent);
+  color: var(--dz-ink);
+}
+[data-design='silicio'] .ec-auth .ecaf-error {
+  border-radius: 5px;
+  border: 1px solid color-mix(in srgb, var(--dz-danger) 45%, transparent);
+  background: color-mix(in srgb, var(--dz-danger) 10%, transparent);
+  color: var(--dz-danger);
+}
+[data-design='silicio'] .ec-auth .ecaf-divider {
+  font-family: var(--dz-mono);
+  font-size: 9.5px;
+  letter-spacing: .16em;
+  text-transform: uppercase;
+  color: var(--dz-muted);
+}
+[data-design='silicio'] .ec-auth .ecaf-divider::before,
+[data-design='silicio'] .ec-auth .ecaf-divider::after { background: var(--dz-line-strong); opacity: 1; }
+[data-design='silicio'] .ec-auth .ecaf-link {
+  display: inline-flex;
+  align-items: center;
+  min-height: 40px;
+  font-family: var(--dz-mono);
+  font-size: 11.5px;
+  font-weight: 600;
+  color: var(--dz-accent-text);
+}
+[data-design='silicio'] .ec-auth :is(.ecaf-link, .ecaf-submit, .ecaf-pass-toggle, .ec-auth-back):focus-visible {
+  outline: 2px solid var(--dz-accent-text);
+  outline-offset: 2px;
+}
+
+/* ==========================================================================
+   CUENTA — consola con árbol de sistema
+   ========================================================================== */
+[data-design='silicio'] .ec-account .acc-shell { gap: 16px; }
+[data-design='silicio'] .ec-account .acc-main { gap: 14px; }
+
+[data-design='silicio'] .ec-account .acc-mhead {
+  gap: 10px;
+  padding: 10px 12px;
+  border: 1px solid var(--dz-line-strong);
+  border-radius: 7px;
+  background: var(--dz-surface-2);
+}
+[data-design='silicio'] .ec-account .acc-mhead-meta strong {
+  font-family: var(--dz-mono);
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: .04em;
+}
+[data-design='silicio'] .ec-account .acc-mhead-meta small {
+  font-family: var(--dz-mono);
+  font-size: 10.5px;
+  color: var(--dz-muted);
+}
+[data-design='silicio'] .ec-account .acc-icon-btn {
+  width: 40px;
+  height: 40px;
+  border: 1px solid var(--dz-line-strong);
+  border-radius: 6px;
+  background: var(--dz-surface);
+  color: var(--dz-ink-2);
+}
+[data-design='silicio'] .ec-account .acc-icon-btn:hover {
+  border-color: var(--dz-danger);
+  color: var(--dz-danger);
+}
+
+[data-design='silicio'] .ec-account .acc-tele {
+  font-family: var(--dz-mono);
+  font-size: 9.5px;
+  font-weight: 700;
+  letter-spacing: .16em;
+  text-transform: uppercase;
+  color: var(--dz-accent-text);
+}
+[data-design='silicio'] .ec-account .acc-avatar {
+  width: 46px;
+  height: 46px;
+  border-radius: 8px;
+  border: 1px solid var(--dz-line-strong);
+  background: var(--dz-surface-2);
+  color: var(--dz-accent-text);
+  font-family: var(--dz-mono);
+  font-size: 14px;
+  font-weight: 700;
+}
+[data-design='silicio'] .ec-account .acc-avatar--sm { width: 40px; height: 40px; font-size: 12.5px; border-radius: 6px; }
+
+[data-design='silicio'] .ec-account .acc-tabs {
+  gap: 6px;
+  padding: 0 0 8px;
+}
+[data-design='silicio'] .ec-account .acc-tab {
+  min-height: 40px;
+  padding: 9px 12px;
+  border: 1px solid var(--dz-line-strong);
+  border-radius: 6px;
+  background: var(--dz-surface);
+  color: var(--dz-ink-2);
+  font-family: var(--dz-mono);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: .04em;
+}
+[data-design='silicio'] .ec-account .acc-tab:hover {
+  border-color: var(--dz-accent-text);
+  color: var(--dz-accent-text);
+}
+[data-design='silicio'] .ec-account .acc-tab.is-on {
+  background: color-mix(in srgb, var(--dz-accent) 14%, var(--dz-surface));
+  border-color: var(--dz-accent-text);
+  color: var(--dz-accent-text);
+  box-shadow: inset 0 -2px 0 0 var(--dz-accent-text);
+}
+[data-design='silicio'] .ec-account .acc-tab .acc-idx { color: var(--dz-muted); font-family: var(--dz-mono); font-size: 9.5px; }
+[data-design='silicio'] .ec-account .acc-tab.is-on .acc-idx { color: var(--dz-accent-text); }
+
+[data-design='silicio'] .ec-account .acc-panel,
+[data-design='silicio'] .ec-account .acc-gate-card,
+[data-design='silicio'] .ec-account .acc-auth-card {
+  padding: 18px;
+  border: 1px solid var(--dz-line-strong);
+  border-radius: var(--dz-r);
+  background: var(--dz-surface);
+  box-shadow: none;
+}
+[data-design='silicio'] .ec-account .acc-panel-head {
+  padding-bottom: 11px;
+  border-bottom: 1px dashed var(--dz-line-strong);
+}
+[data-design='silicio'] .ec-account .acc-panel-title {
+  display: flex;
+  align-items: baseline;
+  gap: 7px;
+  font-family: var(--dz-display);
+  font-size: 19px;
+  font-weight: 400;
+  letter-spacing: .02em;
+  text-transform: uppercase;
+  color: var(--dz-ink);
+}
+[data-design='silicio'] .ec-account .acc-panel-title::before {
+  content: '>';
+  font-family: var(--dz-mono);
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--dz-accent-text);
+}
+[data-design='silicio'] .ec-account .acc-panel-sub {
+  font-family: var(--dz-mono);
+  font-size: 11.5px;
+  line-height: 1.5;
+  color: var(--dz-muted);
+}
+
+[data-design='silicio'] .ec-account .acc-gate,
+[data-design='silicio'] .ec-account .acc-auth { padding: 18px 0 8px; }
+[data-design='silicio'] .ec-account .acc-gate-title,
+[data-design='silicio'] .ec-account .acc-auth-title {
+  font-family: var(--dz-display);
+  font-size: clamp(21px, 2.6vw, 26px);
+  font-weight: 400;
+  letter-spacing: .02em;
+  text-transform: uppercase;
+  color: var(--dz-ink);
+  overflow-wrap: anywhere;
+}
+[data-design='silicio'] .ec-account .acc-gate-ico,
+[data-design='silicio'] .ec-account .acc-auth-ico {
+  width: 56px;
+  height: 56px;
+  border-radius: 8px;
+  border: 1px solid var(--dz-line-strong);
+  background: color-mix(in srgb, var(--dz-accent) 12%, var(--dz-surface));
+  color: var(--dz-accent-text);
+}
+[data-design='silicio'] .ec-account .acc-gate-sub,
+[data-design='silicio'] .ec-account .acc-auth-msg {
+  font-family: var(--dz-mono);
+  font-size: 12px;
+  line-height: 1.6;
+  color: var(--dz-ink-2);
+}
+[data-design='silicio'] .ec-account .acc-gate-list {
+  gap: 0;
+  padding: 4px 14px;
+  border: 1px dashed var(--dz-line-strong);
+  border-radius: 6px;
+  background: var(--dz-surface-2);
+}
+[data-design='silicio'] .ec-account .acc-gate-list li {
+  padding: 9px 0;
+  border-bottom: 1px solid var(--dz-line);
+  font-family: var(--dz-mono);
+  font-size: 11.5px;
+  font-weight: 500;
+  color: var(--dz-ink-2);
+}
+[data-design='silicio'] .ec-account .acc-gate-list li:last-child { border-bottom: 0; }
+[data-design='silicio'] .ec-account .acc-gate-list svg { color: var(--dz-accent-text); }
+[data-design='silicio'] .ec-account .acc-gate-link,
+[data-design='silicio'] .ec-account .acc-auth-link {
+  display: inline-flex;
+  align-items: center;
+  min-height: 40px;
+  font-family: var(--dz-mono);
+  font-size: 11.5px;
+  font-weight: 600;
+  color: var(--dz-accent-text);
+}
+[data-design='silicio'] .ec-account .acc-auth-ok { color: var(--dz-ok); font-family: var(--dz-mono); font-size: 12.5px; }
+
+[data-design='silicio'] .ec-account .ec-btn-primary {
+  min-height: 44px;
+  padding: 12px 18px;
+  border-radius: 6px;
+  background: var(--dz-accent);
+  color: var(--dz-accent-ink);
+  font-family: var(--dz-mono);
+  font-size: 11.5px;
+  font-weight: 700;
+  letter-spacing: .12em;
+  text-transform: uppercase;
+}
+[data-design='silicio'] .ec-account .ec-btn-primary:hover { filter: brightness(1.1); }
+[data-design='silicio'] .ec-account .ec-btn-primary:disabled { opacity: .55; }
+[data-design='silicio'] .ec-account .ec-btn-ghost {
+  min-height: 44px;
+  padding: 11px 16px;
+  border: 1px solid var(--dz-line-strong);
+  border-radius: 6px;
+  background: transparent;
+  color: var(--dz-ink);
+  font-family: var(--dz-mono);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: .1em;
+  text-transform: uppercase;
+}
+[data-design='silicio'] .ec-account .ec-btn-ghost:hover {
+  border-color: var(--dz-accent-text);
+  color: var(--dz-accent-text);
+}
+
+/* Secciones internas: tablas de specs */
+[data-design='silicio'] .ec-account :is(.acc-order, .acc-addr) {
+  border: 1px solid var(--dz-line);
+  border-radius: 6px;
+  background: var(--dz-surface-2);
+}
+[data-design='silicio'] .ec-account :is(.acc-order-code, .acc-order-meta, .acc-order-total, .acc-idx, .acc-hint, .acc-addr-body small) {
+  font-family: var(--dz-mono);
+}
+[data-design='silicio'] .ec-account .acc-order-code { font-size: 13px; font-weight: 700; letter-spacing: .02em; }
+[data-design='silicio'] .ec-account .acc-order-total { font-variant-numeric: tabular-nums; }
+[data-design='silicio'] .ec-account .acc-status {
+  border-radius: 4px;
+  font-family: var(--dz-mono);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+  border: 1px solid color-mix(in srgb, var(--tone, var(--dz-muted)) 45%, transparent);
+}
+[data-design='silicio'] .ec-account .acc-fieldset {
+  border: 1px dashed var(--dz-line-strong);
+  border-radius: 6px;
+  background: var(--dz-surface-2);
+}
+[data-design='silicio'] .ec-account .acc-fieldset legend {
+  font-family: var(--dz-mono);
+  font-size: 10px;
+  letter-spacing: .14em;
+  color: var(--dz-accent-text);
+}
+[data-design='silicio'] .ec-account .acc-fieldset legend .acc-idx { color: var(--dz-accent-text); margin-right: 5px; }
+[data-design='silicio'] .ec-account .acc-grid2 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+[data-design='silicio'] .ec-account .sp-field-label {
+  font-family: var(--dz-mono);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: .12em;
+  text-transform: uppercase;
+  color: var(--dz-muted);
+}
+[data-design='silicio'] .ec-account .sp-input {
+  min-height: 44px;
+  border: 1px solid var(--dz-line);
+  border-radius: 6px;
+  background: var(--dz-surface-2);
+  color: var(--dz-ink);
+  font-family: var(--dz-mono);
+  font-size: 15px;
+  box-shadow: none;
+}
+[data-design='silicio'] .ec-account .sp-input::placeholder { color: var(--dz-muted); }
+[data-design='silicio'] .ec-account .sp-input:focus,
+[data-design='silicio'] .ec-account .sp-input:focus-visible {
+  outline: none;
+  border-color: var(--dz-accent-text);
+  box-shadow: 0 2px 0 0 var(--dz-accent-text);
+}
+[data-design='silicio'] .ec-account .sp-input:disabled {
+  background: color-mix(in srgb, var(--dz-ink) 6%, var(--dz-surface));
+  color: var(--dz-ink-2);
+  -webkit-text-fill-color: var(--dz-ink-2);
+  opacity: 1;
+}
+[data-design='silicio'] .ec-account select.sp-input {
+  appearance: none;
+  padding-right: 34px;
+  background-color: var(--dz-surface-2);
+  color: var(--dz-ink);
+  background-image:
+    linear-gradient(45deg, transparent 50%, var(--dz-ink-2) 50%),
+    linear-gradient(135deg, var(--dz-ink-2) 50%, transparent 50%);
+  background-position: right 15px center, right 10px center;
+  background-size: 5px 5px, 5px 5px;
+  background-repeat: no-repeat;
+}
+[data-design='silicio'] .ec-account select.sp-input option {
+  background: var(--dz-surface-2);
+  color: var(--dz-ink);
+}
+[data-design='silicio'] .ec-account .acc-skelpanel {
+  border: 1px dashed var(--dz-line-strong);
+  border-radius: var(--dz-r);
+  background: var(--dz-surface);
+}
+[data-design='silicio'] .ec-account .acc-sk { background: color-mix(in srgb, var(--dz-ink) 9%, transparent); border-radius: 4px; }
+[data-design='silicio'] .ec-account .acc-note {
+  border: 1px dashed var(--dz-line-strong);
+  border-radius: 6px;
+  font-family: var(--dz-mono);
+  font-size: 11.5px;
+}
+[data-design='silicio'] .ec-account :is(.acc-panel, .acc-gate-card, .acc-auth-card, .acc-side) :focus-visible {
+  outline: 2px solid var(--dz-accent-text);
+  outline-offset: 2px;
+}
+
+/* Sidebar = árbol de sistema (solo desktop) */
+@media (min-width: 1024px) {
+  [data-design='silicio'] .ec-account .acc-shell {
+    grid-template-columns: 262px minmax(0, 1fr);
+    gap: 18px;
+  }
+  [data-design='silicio'] .ec-account .acc-side {
+    top: 96px;
+    gap: 12px;
+    padding: 15px;
+    border: 1px solid var(--dz-line-strong);
+    border-radius: var(--dz-r);
+    background: var(--dz-surface);
+    box-shadow: none;
+  }
+  [data-design='silicio'] .ec-account .acc-id {
+    gap: 10px;
+    padding-bottom: 12px;
+    border-bottom: 1px dashed var(--dz-line-strong);
+  }
+  [data-design='silicio'] .ec-account .acc-id .acc-tele { display: block; width: 100%; }
+  [data-design='silicio'] .ec-account .acc-id-name {
+    font-family: var(--dz-mono);
+    font-size: 12.5px;
+    font-weight: 700;
+    letter-spacing: .04em;
+  }
+  [data-design='silicio'] .ec-account .acc-id-email {
+    font-family: var(--dz-mono);
+    font-size: 10.5px;
+    color: var(--dz-muted);
+  }
+  [data-design='silicio'] .ec-account .acc-nav { gap: 1px; }
+  [data-design='silicio'] .ec-account .acc-navitem {
+    position: relative;
+    min-height: 40px;
+    padding: 8px 8px 8px 26px;
+    gap: 9px;
+    border: 1px solid transparent;
+    border-radius: 5px;
+    background: transparent;
+    color: var(--dz-ink-2);
+    font-family: var(--dz-mono);
+    font-size: 11.5px;
+    font-weight: 500;
+    letter-spacing: .02em;
+  }
+  [data-design='silicio'] .ec-account .acc-navitem::before {
+    content: '├─';
+    position: absolute;
+    left: 8px;
+    color: var(--dz-muted);
+    font-family: var(--dz-mono);
+    font-size: 11px;
+    letter-spacing: -.06em;
+  }
+  [data-design='silicio'] .ec-account .acc-navitem:last-child::before { content: '└─'; }
+  [data-design='silicio'] .ec-account .acc-navitem:hover {
+    background: color-mix(in srgb, var(--dz-ink) 6%, transparent);
+    color: var(--dz-ink);
+  }
+  [data-design='silicio'] .ec-account .acc-navitem:hover::before { color: var(--dz-ink-2); }
+  [data-design='silicio'] .ec-account .acc-navitem.is-on {
+    background: color-mix(in srgb, var(--dz-accent) 14%, var(--dz-surface));
+    border-color: color-mix(in srgb, var(--dz-accent-text) 55%, transparent);
+    color: var(--dz-accent-text);
+    font-weight: 700;
+  }
+  [data-design='silicio'] .ec-account .acc-navitem.is-on::before { color: var(--dz-accent-text); }
+  [data-design='silicio'] .ec-account .acc-navitem svg { color: var(--dz-muted); }
+  [data-design='silicio'] .ec-account .acc-navitem.is-on svg { color: var(--dz-accent-text); }
+  [data-design='silicio'] .ec-account .acc-idx {
+    margin-left: auto;
+    font-family: var(--dz-mono);
+    font-size: 9.5px;
+    font-weight: 600;
+    color: var(--dz-muted);
+  }
+  [data-design='silicio'] .ec-account .acc-navitem.is-on .acc-idx { color: var(--dz-accent-text); }
+  [data-design='silicio'] .ec-account .acc-logout {
+    min-height: 42px;
+    border: 1px solid var(--dz-line-strong);
+    border-radius: 6px;
+    color: var(--dz-ink-2);
+    font-family: var(--dz-mono);
+    font-size: 10.5px;
+    font-weight: 600;
+    letter-spacing: .1em;
+    text-transform: uppercase;
+  }
+  [data-design='silicio'] .ec-account .acc-logout:hover {
+    border-color: var(--dz-danger);
+    background: color-mix(in srgb, var(--dz-danger) 8%, transparent);
+    color: var(--dz-danger);
+  }
+}
+
+/* ==========================================================================
+   Responsive
+   ========================================================================== */
+@media (max-width: 1024px) {
+  [data-design='silicio'] .ec-auth .ec-auth-shell {
+    grid-template-columns: minmax(0, 1fr);
+    width: min(720px, 100%);
+  }
+  [data-design='silicio'] .ec-auth .ec-auth-brand {
+    border-right: 0;
+    border-bottom: 1px solid var(--dz-line-strong);
+  }
+  [data-design='silicio'] .ec-auth .ec-auth-brand-inner {
+    flex-direction: row;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 10px 18px;
+  }
+  [data-design='silicio'] .ec-auth .ec-auth-brand-copy { flex: 1 1 100%; gap: 6px; }
+  [data-design='silicio'] .ec-auth .ec-auth-brand-title { font-size: clamp(19px, 4vw, 24px); }
+  [data-design='silicio'] .ec-auth .ec-auth-brand-text,
+  [data-design='silicio'] .ec-auth .ec-auth-perks,
+  [data-design='silicio'] .ec-auth .ec-auth-brand-foot { display: none; }
+}
+
+@media (max-width: 860px) {
+  [data-design='silicio'] .ec-account .acc-grid2 { grid-template-columns: minmax(0, 1fr); }
+}
+
+@media (max-width: 640px) {
+  [data-design='silicio'] .ec-auth .ec-auth-brand { padding: 15px 14px 13px; }
+  [data-design='silicio'] .ec-auth .ec-auth-panel { padding: 15px 14px 24px; }
+  [data-design='silicio'] .ec-auth .ec-auth-head { margin-bottom: 15px; }
+  [data-design='silicio'] .ec-auth .ecaf .sp-input { font-size: 16px; }
+  [data-design='silicio'] .ec-account .acc-panel { padding: 14px; }
+  [data-design='silicio'] .ec-account .acc-panel-title { font-size: 17px; }
+  [data-design='silicio'] .ec-account .acc-gate-card,
+  [data-design='silicio'] .ec-account .acc-auth-card { padding: 20px 15px; }
+}
+
+@media (max-width: 390px) {
+  [data-design='silicio'] .ec-auth .ec-auth-brand-title { font-size: 18px; }
+  [data-design='silicio'] .ec-auth .ec-auth-title { font-size: 21px; }
+  [data-design='silicio'] .ec-auth .ecaf .sp-field-label { font-size: 9px; letter-spacing: .1em; }
+  [data-design='silicio'] .ec-account .acc-gate-list { padding: 4px 10px; }
+  [data-design='silicio'] .ec-account .acc-gate-list li { font-size: 10.5px; }
+  [data-design='silicio'] .ec-account .acc-tab { font-size: 10px; padding: 8px 10px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  [data-design='silicio'] .ec-auth .ecaf-submit { transition: none; }
+}

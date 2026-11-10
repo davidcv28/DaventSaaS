@@ -12,12 +12,17 @@
 //        > .tpc-body(.tpc-eyebrow, .tpc-name, stars, .tpc-desc, tags,
 //                    .tpc-foot[.tpc-price+.tpc-save, .tpc-go|.tpc-add])
 // Filas (layout="row"): media en riel lateral fijo + body flex; mismo contrato.
-import { computed, onMounted, ref } from 'vue'
+import { computed, inject, onMounted, onBeforeUnmount, ref } from 'vue'
 import AppIcon from '../AppIcon.vue'
 import OfferSeal from './OfferSeal.vue'
 import ProductStars from '../ProductStars.vue'
 import { productOffer, effectivePrice, offerPct, isNewProduct, productDiscount } from '../../api/catalog.api.js'
 import { formatARS as formatPrice } from '../../api/billing.api.js'
+import { useCartStore } from '../../stores/cart.store.js'
+
+// Contexto de la tienda pública (puede no existir fuera de /<slug>/*).
+const storeCtx = inject('storePage', null)
+const cartStore = useCartStore()
 
 const props = defineProps({
   p: { type: Object, required: true },
@@ -40,9 +45,39 @@ const props = defineProps({
   go: { type: Boolean, default: true },           // chevron/link "Ver más" en el pie
   goLabel: { type: String, default: 'Ver más' },
   addHref: { type: String, default: '' },         // botón "+" (WhatsApp) en el pie
-  addLabel: { type: String, default: '' }
+  addLabel: { type: String, default: '' },
+  // override opcional del gate de venta online — null = leer del contexto
+  // de la tienda (orders_enabled efectivo, calculado por el backend).
+  ordersEnabled: { type: Boolean, default: null }
 })
 const emit = defineEmits(['open'])
+
+// "Agregar al carrito": solo con orders_enabled efectivo (ecommerce +
+// fiscal del backend — el front no recalcula el gate). Sin sesión el
+// cart.store abre el modal de auth y reintenta la acción al volver.
+const canBuy = computed(() => {
+  if (props.ordersEnabled != null) return props.ordersEnabled
+  const v = storeCtx?.ordersEnabled
+  return Boolean(v?.value ?? v)
+})
+const adding = ref(false)
+const added = ref(false)
+let addedTimer = 0
+async function addToCart(e) {
+  e?.stopPropagation?.()
+  if (adding.value || !canBuy.value) return
+  adding.value = true
+  try {
+    const res = await cartStore.addToCart(props.p.id, 1, props.p.name)
+    if (res?.ok) {
+      added.value = true
+      clearTimeout(addedTimer)
+      addedTimer = setTimeout(() => { added.value = false }, 1600)
+    }
+  } finally {
+    adding.value = false
+  }
+}
 
 const offer = computed(() => productOffer(props.p))
 const campaign = computed(() => productDiscount(props.p)?.campaign || null)
@@ -66,6 +101,7 @@ onMounted(() => {
     else if (props.p.image) imgErr.value = true
   }
 })
+onBeforeUnmount(() => clearTimeout(addedTimer))
 </script>
 
 <template>
@@ -90,18 +126,24 @@ onMounted(() => {
     </span>
     <span class="tpc-body">
       <span v-if="eyebrow" class="tpc-eyebrow">{{ eyebrow }}</span>
-      <h2 class="tpc-name">{{ p.name }}</h2>
+      <h2 class="tpc-name" :title="p.name">{{ p.name }}</h2>
       <ProductStars v-if="stars && p.rating_count" :avg="p.rating_avg" :count="p.rating_count" :icon="starsIcon" :size="starsSize" />
-      <span v-if="desc" class="tpc-desc">{{ desc }}</span>
+      <span v-if="desc" class="tpc-desc" :title="desc">{{ desc }}</span>
       <slot name="tags" :p="p" />
       <span class="tpc-stock"><i aria-hidden="true"></i>En stock</span>
       <span class="tpc-foot">
-        <slot name="foot" :p="p" :price="price" :old-price="oldPrice" :offer="offer">
+        <slot name="foot" :p="p" :price="price" :old-price="oldPrice" :offer="offer"
+          :can-buy="canBuy" :added="added" :adding="adding" :buy="addToCart">
           <span class="tpc-price-wrap">
             <span class="tpc-price"><s v-if="offer != null">{{ oldPrice }}</s><strong :class="{ deal: offer != null }">{{ price }}</strong></span>
             <span v-if="save" class="tpc-save">{{ save }}</span>
           </span>
           <a v-if="addHref" class="tpc-add" :href="addHref" target="_blank" rel="noopener" :aria-label="addLabel || `Pedir ${p.name}`" @click.stop><AppIcon name="plus" :size="20" /></a>
+          <button v-else-if="canBuy" type="button" class="tpc-add tpc-cart" :class="{ 'is-added': added }" :disabled="adding"
+            :aria-label="added ? `${p.name} agregado al carrito` : `Agregar ${p.name} al carrito`"
+            :title="added ? 'Agregado' : 'Agregar al carrito'" @click.stop="addToCart">
+            <AppIcon :name="added ? 'check' : 'shopping-cart'" :size="20" />
+          </button>
           <span v-else-if="go" class="tpc-go" aria-hidden="true">{{ goLabel }}<AppIcon name="arrow-right" :size="15" /></span>
         </slot>
       </span>
@@ -109,3 +151,11 @@ onMounted(() => {
     <slot name="after" :p="p" />
   </component>
 </template>
+
+<style scoped>
+/* El botón de carrito reusa la geometría .tpc-add (44px, tokens de piel)
+   — solo corrige el reset de <button> y el estado agregado. */
+.tpc-cart { cursor: pointer; font: inherit; padding: 0; }
+.tpc-cart.is-added { background: #16a34a; }
+.tpc-cart:disabled { opacity: .6; cursor: default; }
+</style>

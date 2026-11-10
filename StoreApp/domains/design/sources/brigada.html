@@ -941,6 +941,137 @@
   @media(hover:hover){
     .ds-chat-send:hover{transform:translate(-1px,-1px);box-shadow:4px 4px 0 0 var(--hard)}
   }
+
+  /* ==========================================================================
+     E-COMMERCE — el puente inyecta .dsx-buy al pie de cada .ds-product (en
+     .dsx-buy-wrap), .dsx-account/.dsx-cart en [data-ds-account-slot] (.top-actions)
+     y el CTA de la ficha antes de .pdp-buy. Misma mano dura: filete, sombra
+     offset y mono en caja alta.
+     ========================================================================== */
+  /* Cuenta y carrito: píldoras hermanas del CTA de WhatsApp, en versión
+     outline para no competir con él. */
+  .top-actions .dsx-account,.top-actions .dsx-cart{
+    gap:7px;min-height:40px;padding:10px 14px;
+    border:1.5px solid var(--band-line);border-radius:var(--radius-btn);
+    background:transparent;color:var(--band-ink);opacity:1;box-shadow:none;
+    font:800 10.5px/1 var(--font-m);letter-spacing:.14em;text-transform:uppercase;
+    transition:border-color .15s var(--ease),color .15s var(--ease),background .15s var(--ease),transform .15s var(--ease);
+  }
+  .top-actions .dsx-account:hover,.top-actions .dsx-cart:hover{
+    border-color:var(--hazard);color:var(--hazard-on-band);opacity:1;
+    background:color-mix(in srgb,var(--hazard) 16%,transparent);
+    transform:translate(-1px,-1px);box-shadow:3px 3px 0 0 var(--hard);
+  }
+  .top-actions .dsx-account:active,.top-actions .dsx-cart:active{transform:translate(1px,1px);box-shadow:1px 1px 0 0 var(--hard)}
+  .top-actions .dsx-account svg,.top-actions .dsx-cart svg{width:14px;height:14px;flex:none}
+  /* Tarjeta: la columna flexible deja el botón al pie de la fila; la compra
+     es una pastilla hazard con sombra dura, ancho completo menos márgenes. */
+  html[data-ds-commerce="1"] .grid .ds-product{display:flex;flex-direction:column}
+  html[data-ds-commerce="1"] .grid .ds-product>.ds-product-link{flex:1 1 auto;height:auto;min-width:0}
+  html[data-ds-commerce="1"] .grid .ds-product .dsx-buy{
+    width:calc(100% - 24px);min-width:0;margin:0 12px 12px;padding:13px 14px;
+    border:1.5px solid var(--frame);border-radius:0;
+    background:var(--hazard);color:var(--hazard-ink);
+    font:800 11px/1 var(--font-m);letter-spacing:.14em;text-transform:uppercase;
+    box-shadow:4px 4px 0 0 var(--hard);text-align:center;
+    transition:transform .15s var(--ease),box-shadow .15s var(--ease),background .15s var(--ease);
+  }
+  html[data-ds-commerce="1"] .grid .ds-product .dsx-buy:hover{
+    transform:translate(-2px,-2px);box-shadow:6px 6px 0 0 var(--hard);
+  }
+  html[data-ds-commerce="1"] .grid .ds-product .dsx-buy:active{transform:translate(1px,1px);box-shadow:2px 2px 0 0 var(--hard)}
+  html[data-ds-commerce="1"] .grid .ds-product .dsx-buy.is-added{
+    background:var(--ds-success,#2e7d32);border-color:var(--ds-success,#2e7d32);
+    color:var(--ds-success-ink,#fff);box-shadow:none;
+  }
+  /* Vista lista: el botón no estira todo el ancho — queda a la derecha. */
+  html[data-ds-commerce="1"] .grid[data-ds-view-mode="list"] .ds-product .dsx-buy{
+    width:auto;min-width:190px;margin:12px 18px 18px;align-self:flex-end;
+  }
+  /* Ficha: el CTA de compra es hermano del de WhatsApp dentro de .pdp-info —
+     barra completa con la misma mano que .pdp-buy. */
+  html[data-ds-commerce="1"] [data-surface="product"] .pdp-info > .dsx-buy{
+    width:100%;min-width:0;margin:0 0 10px;padding:16px;
+    border:1.5px solid var(--frame);border-radius:0;
+    background:var(--hazard);color:var(--hazard-ink);
+    font:800 12px/1 var(--font-m);letter-spacing:.14em;text-transform:uppercase;
+    box-shadow:5px 5px 0 0 var(--hard);text-align:center;
+    transition:transform .15s var(--ease),box-shadow .15s var(--ease),background .15s var(--ease);
+  }
+  html[data-ds-commerce="1"] [data-surface="product"] .pdp-info > .dsx-buy:hover{
+    transform:translate(-2px,-2px);box-shadow:7px 7px 0 0 var(--hard);
+  }
+  html[data-ds-commerce="1"] [data-surface="product"] .pdp-info > .dsx-buy:active{transform:translate(1px,1px);box-shadow:2px 2px 0 0 var(--hard)}
+  html[data-ds-commerce="1"] [data-surface="product"] .pdp-info > .dsx-buy.is-added{
+    background:var(--ds-success,#2e7d32);border-color:var(--ds-success,#2e7d32);
+    color:var(--ds-success-ink,#fff);box-shadow:none;
+  }
+  /* Buscador del catálogo + chips de filtros activos (los monta el puente). */
+  .cat-search{position:relative;flex:1 1 240px;min-width:0;display:flex;align-items:center}
+  .cat-search input{
+    width:100%;height:40px;padding:0 42px 0 13px;
+    border:1.5px solid var(--frame);background:var(--surface);color:var(--ink);
+    font:600 12px/1 var(--font-b);border-radius:0;
+  }
+  .cat-search input::placeholder{color:var(--muted);opacity:.85}
+  .cat-search input:focus{outline:2px solid var(--hazard);outline-offset:1px;border-color:var(--frame)}
+  .cat-search button{
+    position:absolute;right:5px;display:grid;place-items:center;width:30px;height:30px;
+    border:0;background:var(--band);color:var(--hazard-on-band);cursor:pointer;
+  }
+  @media(hover:hover){.cat-search button:hover{background:var(--hazard);color:var(--hazard-ink)}}
+  .suggest{
+    position:absolute;z-index:30;top:calc(100% + 6px);left:0;right:0;
+    background:var(--surface);border:1.5px solid var(--frame);
+    box-shadow:var(--shadow-hard);max-height:320px;overflow:auto;
+  }
+  .suggest-head{padding:10px 12px 6px;font:800 9.5px/1 var(--font-m);letter-spacing:.2em;text-transform:uppercase;color:var(--muted)}
+  .suggest-head + .suggest-head{border-top:1px solid var(--line)}
+  .suggest-item{
+    display:flex;align-items:center;gap:10px;width:100%;padding:9px 12px;
+    border:0;background:none;text-align:left;cursor:pointer;color:var(--ink);
+  }
+  .suggest-item:hover,.suggest-item.is-active{background:var(--hazard-soft)}
+  .suggest-thumb{
+    display:grid;place-items:center;width:38px;height:44px;flex:none;overflow:hidden;
+    border:1.5px solid var(--frame);background:var(--surface-2);color:var(--muted);font-size:12px;
+  }
+  .suggest-thumb img{width:100%;height:100%;object-fit:cover}
+  .suggest-copy{display:grid;gap:3px;min-width:0;flex:1}
+  .suggest-copy strong{font:800 13px/1.25 var(--font-d);text-transform:uppercase;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .suggest-copy small{font:700 9.5px/1 var(--font-m);letter-spacing:.12em;text-transform:uppercase;color:var(--muted)}
+  .suggest-empty{margin:0;padding:12px;color:var(--muted);font-size:13px}
+  .suggest-more{
+    width:100%;margin-top:4px;padding:11px;border:0;border-top:1.5px solid var(--frame);
+    background:var(--surface);cursor:pointer;font:800 10px/1 var(--font-m);
+    letter-spacing:.16em;text-transform:uppercase;color:var(--primary);
+  }
+  @media(hover:hover){.suggest-more:hover{background:var(--hazard-soft)}}
+  .cat-chips{display:flex;flex-wrap:wrap;gap:8px;margin:-6px 0 16px}
+  .cat-chips .cat-chip{
+    display:inline-flex;align-items:center;gap:7px;padding:7px 10px;
+    border:1.5px solid var(--frame);background:var(--surface);cursor:pointer;
+    font:700 10px/1 var(--font-m);letter-spacing:.12em;text-transform:uppercase;color:var(--ink);
+  }
+  .cat-chips .cat-chip b{color:var(--muted);font-weight:700}
+  .cat-chips .cat-chip i{font-style:normal;color:var(--primary)}
+  @media(hover:hover){.cat-chips .cat-chip:hover{border-color:var(--hazard);background:var(--hazard-soft)}}
+  .cat-chips .cat-chip-clear{
+    border:0;background:none;cursor:pointer;padding:7px 4px;
+    font:700 10px/1 var(--font-m);letter-spacing:.12em;text-transform:uppercase;color:var(--muted);
+  }
+  @media(hover:hover){.cat-chips .cat-chip-clear:hover{color:var(--primary)}}
+  .cat-chips[hidden]{display:none}
+  /* Header mínimo: la cuenta queda como círculo de icono junto al toggle. */
+  @media (max-width:640px){
+    .top-actions{gap:8px}
+    .pill{padding:10px 11px;font-size:9.5px;gap:6px}
+    .top-actions .dsx-account{width:38px;height:38px;padding:0;justify-content:center;gap:0}
+    .top-actions .dsx-account [data-dsx-account-label]{display:none}
+    .top-actions .dsx-cart{width:38px;height:38px;padding:0;justify-content:center}
+    .ds-theme-toggle{width:38px;height:38px}
+    .cat-search{flex:1 1 100%;order:-1}
+  }
 </style>
 </head>
 <body>
@@ -964,7 +1095,7 @@
         <a href="#empresa" data-ds-anchor data-ds-route="home" data-flag="about" data-spy="empresa">La empresa</a>
         <a href="#contacto" data-ds-anchor data-ds-route="home" data-flag="contact" data-spy="contacto">Contacto</a>
       </nav>
-      <div class="top-actions">
+      <div class="top-actions" data-ds-account-slot>
         <a class="pill" href="{{store_whatsapp_url}}">
           <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7.9 20A9 9 0 1 0 4 16.1L2 22Z"/></svg>
           Urgencias
@@ -1350,6 +1481,13 @@
 
       <div class="cat-results">
         <div class="cat-bar">
+          <form class="cat-search" data-ds-search role="search">
+            <input type="search" placeholder="Buscar equipamiento…" data-ds-search-input aria-label="Buscar productos" aria-expanded="false" autocomplete="off">
+            <button type="submit" aria-label="Buscar">
+              <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
+            </button>
+            <div class="suggest" data-ds-suggest hidden></div>
+          </form>
           <p class="cat-count" data-ds-count aria-live="polite"></p>
           <div class="cat-view" role="group" aria-label="Vista de resultados">
             <button type="button" data-ds-view="grid" aria-pressed="true" aria-label="Ver como grilla" title="Vista de grilla">
@@ -1369,6 +1507,7 @@
             </select>
           </label>
         </div>
+        <div class="cat-chips" data-ds-chips hidden></div>
         <div class="grid" data-ds-products data-ds-view-mode="grid">{{products}}</div>
         <p class="ds-empty" data-ds-noresults hidden>No hay equipamiento que coincida con el filtro.</p>
       </div>

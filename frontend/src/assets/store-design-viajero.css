@@ -1,0 +1,565 @@
+/* ============================================================================
+   store-design-viajero.css — piel "Viajero" para las páginas de comercio que
+   NO montan el documento del patrón (StoreApp/domains/design/sources/
+   viajero.html): /<slug>/ingresar (auth) y /<slug>/cuenta (cuenta).
+
+   Composición propia (no la genérica):
+     · Auth  = TARJETA DE EMBARQUE. El formulario va a la IZQUIERDA y el
+       talón de papel a la DERECHA, con perforación punteada y muescas.
+     · Cuenta = BITÁCORA. Una banda superior tipo pasaporte (identidad +
+       paradas numeradas + salir) y debajo la hoja con margen de cuaderno.
+       No hay sidebar lateral: la navegación vive en la banda.
+
+   Paleta y familias son las del diseño (Fraunces / Instrument Sans /
+   JetBrains Mono, papel #F5EFE3, tinta #0D1A22, terracota #E0522B).
+   Todo va prefijado con [data-design='viajero'].
+   ========================================================================== */
+
+/* ---------- Tokens locales (claro) ---------------------------------------- */
+.store-page[data-design='viajero']{
+  --dz-bg:#F5EFE3;
+  --dz-surface:#FFFDF8;
+  --dz-surface-2:#ECE1CD;
+  --dz-ink:#0D1A22;
+  --dz-ink-2:#33424D;
+  --dz-muted:#5B6570;
+  --dz-line:#E2D5BF;
+  --dz-accent:#E0522B;
+  --dz-accent-ink:#1A1009;
+  --dz-accent-text:#A8401C;
+  --dz-accent-soft:color-mix(in srgb, var(--dz-accent) 11%, var(--dz-bg));
+  --dz-band:#0D1A22;
+  --dz-band-ink:#F5EFE3;
+  --dz-ok:#2C6E55;
+  --dz-danger:#B3261E;
+  --dz-display:var(--st-f-display-family, "Fraunces", "Playfair Display", Georgia, serif);
+  --dz-body:var(--st-f-body-family, "Instrument Sans", "Rubik", "Helvetica Neue", system-ui, sans-serif);
+  --dz-mono:var(--st-f-eyebrow-family, "JetBrains Mono", "SFMono-Regular", monospace);
+  --dz-r:16px;
+  --dz-r-2:12px;
+  color-scheme:light;
+
+  /* El resto del sistema (.sp-*) toma la paleta del diseño: así los
+     componentes compartidos (inputs, chips, notas, estados de pedido)
+     heredan el papel y la tinta del viajero sin reescribirlos. */
+  --sp-bg:var(--dz-bg);
+  --sp-card:var(--dz-surface);
+  --sp-card-solid:var(--dz-surface);
+  --sp-surface:var(--dz-surface);
+  --sp-ink:var(--dz-ink);
+  --sp-ink-2:var(--dz-ink-2);
+  --sp-muted:var(--dz-muted);
+  --sp-line:var(--dz-line);
+  --sp-accent-text:var(--dz-accent-text);
+  --sp-soft:var(--dz-accent-soft);
+  --sp-radius:var(--dz-r);
+  --sp-success:var(--dz-ok);
+  --sp-danger:var(--dz-danger);
+  --sp-shadow-sm:0 1px 0 var(--dz-line);
+  --sp-shadow-md:0 26px 60px -44px rgba(13,26,34,.55);
+}
+
+/* ---------- Tokens locales (noche) --------------------------------------- */
+.store-page[data-design='viajero'][data-theme='dark'],
+.store-page[data-design='viajero'][data-store-theme='dark']{
+  --dz-bg:#0A131A;
+  --dz-surface:#111E27;
+  --dz-surface-2:#0D1720;
+  --dz-ink:#F4ECDD;
+  --dz-ink-2:#C9D4DC;
+  --dz-muted:#9AA6AF;
+  --dz-line:#22323D;
+  --dz-accent:#E4653F;
+  --dz-accent-ink:#1A1009;
+  --dz-accent-text:#F0906B;
+  --dz-accent-soft:color-mix(in srgb, var(--dz-accent) 14%, var(--dz-bg));
+  --dz-band:#060D13;
+  --dz-band-ink:#F4ECDD;
+  --dz-ok:#5BC49A;
+  --dz-danger:#F0776B;
+  --sp-shadow-sm:0 1px 0 var(--dz-line);
+  --sp-shadow-md:0 26px 60px -38px rgba(0,0,0,.9);
+  color-scheme:dark;
+}
+
+/* ==========================================================================
+   1. AUTH — tarjeta de embarque
+   ========================================================================== */
+[data-design='viajero'] .ec-auth{
+  padding:clamp(16px,3vw,34px) clamp(14px,3vw,30px) clamp(46px,6vw,84px);
+}
+[data-design='viajero'] .ec-auth .ec-auth-shell{
+  width:min(1000px,100%);
+  margin:0 auto;
+  grid-template-columns:minmax(0,1.08fr) minmax(0,.92fr);
+  border:1px solid var(--dz-line);
+  border-radius:calc(var(--dz-r) * 1.3);
+  background:var(--dz-surface);
+  box-shadow:0 30px 70px -46px rgba(13,26,34,.5), 0 1px 0 var(--dz-line);
+  overflow:hidden;
+}
+/* El talón (marca) es el segundo hijo del DOM: se manda a la derecha y el
+   formulario queda primero. */
+[data-design='viajero'] .ec-auth .ec-auth-panel{ order:1; }
+[data-design='viajero'] .ec-auth .ec-auth-brand{ order:2; }
+
+/* --- Talón de papel --- */
+[data-design='viajero'] .ec-auth .ec-auth-brand{
+  color:var(--dz-ink);
+  background:var(--dz-surface-2);
+  border-left:2px dashed color-mix(in srgb, var(--dz-ink) 24%, transparent);
+  padding:clamp(24px,3.4vw,42px);
+}
+/* La portada de la tienda entra solo como textura: el talón tiene que quedar
+   legible siempre (AA sobre arena). */
+[data-design='viajero'] .ec-auth .ec-auth-brand::before{
+  opacity:.16; filter:saturate(.75) contrast(.95);
+}
+[data-design='viajero'] .ec-auth .ec-auth-brand::after{
+  background:
+    radial-gradient(circle 11px at 0 0, var(--dz-surface) 97%, transparent 100%),
+    radial-gradient(circle 11px at 0 100%, var(--dz-surface) 97%, transparent 100%),
+    color-mix(in srgb, var(--dz-surface-2) 95%, transparent);
+}
+[data-design='viajero'] .ec-auth .ec-auth-brand-inner{ gap:clamp(20px,3vw,34px); }
+[data-design='viajero'] .ec-auth .ec-auth-brand-top{
+  min-height:44px; padding:2px 0;
+}
+[data-design='viajero'] .ec-auth .ec-auth-logo{
+  width:46px; height:46px; border-radius:50%;
+  background: var(--store-accent-ink); color: var(--sp-on-band, #fff);
+  border:0; box-shadow:0 0 0 4px color-mix(in srgb, var(--dz-accent) 16%, transparent);
+  font-family:var(--dz-display); font-weight:700; font-size:19px;
+}
+[data-design='viajero'] .ec-auth .ec-auth-brand-name{
+  font-family:var(--dz-display); font-weight:600; letter-spacing:-.01em;
+  color:var(--dz-ink); font-size:clamp(18px,1.7vw,22px);
+}
+[data-design='viajero'] .ec-auth .ec-auth-rail{
+  display:block; width:fit-content; margin-bottom:2px;
+  font:500 10px/1 var(--dz-mono); letter-spacing:.24em; text-transform:uppercase;
+  color:var(--dz-accent-text);
+  padding-bottom:8px; padding-right:34px;
+  border-bottom:1px solid color-mix(in srgb, var(--dz-ink) 18%, transparent);
+}
+[data-design='viajero'] .ec-auth .ec-auth-brand-kicker{
+  font:600 10px/1.4 var(--dz-mono); letter-spacing:.2em; text-transform:uppercase;
+  color:var(--dz-ink-2);
+}
+[data-design='viajero'] .ec-auth .ec-auth-brand-title{
+  font-family:var(--dz-display); font-weight:600; letter-spacing:-.015em; line-height:1.06;
+  color:var(--dz-ink);
+}
+[data-design='viajero'] .ec-auth .ec-auth-brand-text{
+  font-family:var(--dz-body); font-size:13.5px; line-height:1.6;
+  color:var(--dz-ink-2);
+}
+[data-design='viajero'] .ec-auth .ec-auth-perks{
+  gap:0; margin-top:4px;
+  border-top:1px solid color-mix(in srgb, var(--dz-ink) 14%, transparent);
+}
+[data-design='viajero'] .ec-auth .ec-auth-perks li{
+  padding:10px 0;
+  border-bottom:1px solid color-mix(in srgb, var(--dz-ink) 14%, transparent);
+  font:500 12.5px/1.4 var(--dz-body); color:var(--dz-ink);
+}
+[data-design='viajero'] .ec-auth .ec-auth-perks svg{ color:var(--dz-accent-text); }
+[data-design='viajero'] .ec-auth .ec-auth-brand-foot{
+  font:500 9.5px/1.5 var(--dz-mono); letter-spacing:.16em; text-transform:uppercase;
+  color:var(--dz-ink-2);
+}
+
+/* --- Formulario --- */
+[data-design='viajero'] .ec-auth .ec-auth-panel{
+  background:var(--dz-surface); color:var(--dz-ink);
+  padding:clamp(22px,3vw,40px) clamp(20px,3vw,40px) clamp(26px,3.4vw,44px);
+}
+[data-design='viajero'] .ec-auth .ec-auth-back{
+  min-height:40px; margin-bottom:clamp(14px,2.4vw,24px);
+  font:600 10.5px/1 var(--dz-mono); letter-spacing:.16em; text-transform:uppercase;
+  color:var(--dz-muted);
+}
+[data-design='viajero'] .ec-auth .ec-auth-back:hover{ color:var(--dz-accent-text); }
+[data-design='viajero'] .ec-auth .ec-auth-head{ gap:10px; margin-bottom:20px; }
+[data-design='viajero'] .ec-auth .ec-auth-badge{
+  width:44px; height:44px; border-radius:50%;
+  background:transparent; color:var(--dz-accent-text);
+  border:1px dashed color-mix(in srgb, var(--dz-accent) 62%, transparent);
+  margin-bottom:6px;
+}
+[data-design='viajero'] .ec-auth .ec-auth-tag{
+  display:inline-flex; align-items:center; width:fit-content;
+  padding:5px 11px; border-radius:999px;
+  background:var(--dz-accent-soft); color:var(--dz-accent-text);
+  font:600 9.5px/1 var(--dz-mono); letter-spacing:.2em; text-transform:uppercase;
+}
+[data-design='viajero'] .ec-auth .ec-auth-title{
+  font-family:var(--dz-display); font-weight:600; letter-spacing:-.02em;
+  font-size:clamp(24px,2.6vw,31px); color:var(--dz-ink);
+}
+[data-design='viajero'] .ec-auth .ec-auth-sub{
+  font-family:var(--dz-body); font-size:13.5px; line-height:1.6; color:var(--dz-muted);
+}
+[data-design='viajero'] .ec-auth .ec-auth-loading{
+  color:var(--dz-muted); font-family:var(--dz-body);
+}
+[data-design='viajero'] .ec-auth .ec-auth-spin{ color:var(--dz-accent-text); }
+
+/* --- Controles compartidos --- */
+[data-design='viajero'] .ec-auth .sp-field-label,
+[data-design='viajero'] .ec-account .sp-field-label{
+  font:600 10px/1.4 var(--dz-mono); letter-spacing:.16em; text-transform:uppercase;
+  color:var(--dz-ink-2);
+}
+[data-design='viajero'] .ec-auth .sp-input,
+[data-design='viajero'] .ec-account .sp-input{
+  min-height:46px; border-radius:var(--dz-r-2);
+  border:1px solid var(--dz-line); box-shadow:none;
+  background:var(--dz-surface); color:var(--dz-ink);
+  font-family:var(--dz-body); font-size:15px;
+}
+[data-design='viajero'] .ec-auth .sp-input::placeholder,
+[data-design='viajero'] .ec-account .sp-input::placeholder{ color:var(--dz-muted); }
+[data-design='viajero'] .ec-auth .sp-input:focus,
+[data-design='viajero'] .ec-account .sp-input:focus{
+  border-color:var(--dz-accent); background:var(--dz-surface);
+  box-shadow:0 0 0 3px var(--dz-accent-soft);
+}
+[data-design='viajero'] .ec-auth .sp-form-error,
+[data-design='viajero'] .ec-account .sp-form-error{ color:var(--dz-danger); font-weight:600; }
+[data-design='viajero'] .ec-auth .ecaf .ecaf-submit{
+  min-height:50px; border-radius:var(--dz-r-2);
+  background: var(--store-accent-ink); color: var(--sp-on-band, #fff);
+  font:700 14px/1 var(--dz-body); letter-spacing:.01em;
+  box-shadow:0 16px 32px -22px var(--dz-accent);
+}
+[data-design='viajero'] .ec-auth .ecaf .ecaf-submit:hover:not(:disabled){ filter:brightness(1.06); }
+[data-design='viajero'] .ec-auth .ecaf .ecaf-submit:disabled{ opacity:.5; }
+[data-design='viajero'] .ec-auth .ecaf .ecaf-link{
+  color:var(--dz-accent-text); font-family:var(--dz-body); min-height:32px;
+}
+[data-design='viajero'] .ec-auth .ecaf .ecaf-divider{
+  font:500 9.5px/1 var(--dz-mono); letter-spacing:.18em; text-transform:uppercase;
+  color:var(--dz-muted);
+}
+[data-design='viajero'] .ec-auth .ecaf .ecaf-divider::before,
+[data-design='viajero'] .ec-auth .ecaf .ecaf-divider::after{ opacity:.6; }
+[data-design='viajero'] .ec-auth .ecaf .ecaf-pass-toggle{ color:var(--dz-muted); }
+[data-design='viajero'] .ec-auth .ecaf .ecaf-pass-toggle:hover{
+  color:var(--dz-accent-text); background:var(--dz-accent-soft);
+}
+
+/* ==========================================================================
+   2. CUENTA — bitácora
+   ========================================================================== */
+[data-design='viajero'] .ec-account{
+  padding:clamp(14px,3vw,32px) clamp(14px,3vw,30px) clamp(44px,6vw,76px);
+}
+[data-design='viajero'] .ec-account .acc-shell{
+  display:grid; grid-template-columns:minmax(0,1fr); gap:18px;
+  width:min(1080px,100%); margin-inline:auto; align-items:start;
+}
+/* Banda de pasaporte: identidad · paradas · salir */
+[data-design='viajero'] .ec-account .acc-side{
+  display:grid;
+  grid-template-columns:auto minmax(0,1fr) auto;
+  align-items:center; gap:10px clamp(14px,2vw,26px);
+  position:static;
+  padding:14px clamp(14px,2vw,20px);
+  border:1px solid var(--dz-line); border-radius:calc(var(--dz-r) * .9);
+  background:var(--dz-surface);
+  box-shadow:inset 0 3px 0 var(--dz-accent);
+}
+[data-design='viajero'] .ec-account .acc-id{
+  display:flex; align-items:center; gap:11px; min-width:0;
+  padding:0; border:0;
+}
+[data-design='viajero'] .ec-account .acc-tele{
+  font:600 8.5px/1 var(--dz-mono); letter-spacing:.2em; text-transform:uppercase;
+  color:var(--dz-muted);
+}
+[data-design='viajero'] .ec-account .acc-id .acc-tele{
+  position:absolute; width:1px; height:1px; overflow:hidden;
+  clip-path:inset(50%); white-space:nowrap;
+}
+[data-design='viajero'] .ec-account .acc-avatar{
+  width:46px; height:46px; border-radius:50%;
+  background:var(--dz-accent-soft); color:var(--dz-accent-text);
+  box-shadow:inset 0 0 0 1.5px color-mix(in srgb, var(--dz-accent) 70%, transparent);
+  font:700 15px/1 var(--dz-display); letter-spacing:.02em;
+}
+[data-design='viajero'] .ec-account .acc-avatar--sm{ width:40px; height:40px; font-size:13px; }
+[data-design='viajero'] .ec-account .acc-id-meta{ display:grid; gap:2px; min-width:0; }
+[data-design='viajero'] .ec-account .acc-id-name{
+  font:600 14px/1.2 var(--dz-body); color:var(--dz-ink);
+  overflow:hidden; text-overflow:ellipsis; white-space:nowrap;
+}
+[data-design='viajero'] .ec-account .acc-id-email{
+  font:500 11px/1.2 var(--dz-mono); color:var(--dz-muted);
+  overflow:hidden; text-overflow:ellipsis; white-space:nowrap;
+}
+[data-design='viajero'] .ec-account .acc-nav{
+  display:flex; flex-wrap:wrap; gap:2px; min-width:0;
+  margin:0; padding:0; border:0;
+}
+[data-design='viajero'] .ec-account .acc-navitem{
+  display:inline-flex; align-items:center; gap:8px;
+  min-height:42px; padding:8px 12px; width:auto;
+  border:0; border-radius:10px; background:transparent;
+  color:var(--dz-muted); font:600 12.5px/1.2 var(--dz-body);
+  cursor:pointer; text-align:left;
+}
+[data-design='viajero'] .ec-account .acc-navitem svg{ flex:none; }
+[data-design='viajero'] .ec-account .acc-navitem .acc-idx{
+  font:500 9px/1 var(--dz-mono); letter-spacing:.14em;
+  color:var(--dz-muted); font-variant-numeric:tabular-nums;
+}
+[data-design='viajero'] .ec-account .acc-navitem:hover{
+  background:color-mix(in srgb, var(--dz-ink) 6%, transparent); color:var(--dz-ink);
+}
+[data-design='viajero'] .ec-account .acc-navitem.is-on{
+  background:var(--dz-accent-soft); color:var(--dz-accent-text); font-weight:700;
+}
+[data-design='viajero'] .ec-account .acc-navitem.is-on .acc-idx{ color:var(--dz-accent-text); }
+[data-design='viajero'] .ec-account .acc-logout{
+  display:inline-flex; align-items:center; justify-content:center; gap:8px;
+  min-height:42px; padding:8px 14px; width:auto;
+  border:1px solid var(--dz-line); border-radius:10px; background:transparent;
+  color:var(--dz-ink-2); font:600 12px/1 var(--dz-body); cursor:pointer;
+}
+[data-design='viajero'] .ec-account .acc-logout:hover{
+  color:var(--dz-danger); border-color:color-mix(in srgb, var(--dz-danger) 45%, transparent);
+  background:color-mix(in srgb, var(--dz-danger) 7%, transparent);
+}
+/* La bitácora no usa header compacto ni tabs: la banda hace las dos cosas. */
+[data-design='viajero'] .ec-account .acc-mhead,
+[data-design='viajero'] .ec-account .acc-tabs{ display:none; }
+
+[data-design='viajero'] .ec-account .acc-main{
+  display:grid; gap:14px; min-width:0;
+}
+[data-design='viajero'] .ec-account .acc-panel{
+  position:relative; overflow:hidden;
+  padding:clamp(18px,2.4vw,26px) clamp(16px,2.4vw,28px);
+  border:1px solid var(--dz-line); border-radius:var(--dz-r);
+  background:var(--dz-surface); box-shadow:none;
+}
+/* Margen de cuaderno */
+[data-design='viajero'] .ec-account .acc-panel::before{
+  content:''; position:absolute; inset:0 auto 0 0; width:3px;
+  background:var(--dz-accent);
+}
+[data-design='viajero'] .ec-account .acc-panel-head{
+  align-items:flex-end; gap:12px;
+  padding-bottom:12px; margin-bottom:2px;
+  border-bottom:1px solid var(--dz-line);
+}
+[data-design='viajero'] .ec-account .acc-panel-title{
+  font-family:var(--dz-display); font-weight:600; letter-spacing:-.015em;
+  font-size:clamp(17px,1.9vw,21px); color:var(--dz-ink);
+}
+[data-design='viajero'] .ec-account .acc-panel-sub{
+  font-family:var(--dz-body); font-size:12.5px; color:var(--dz-muted);
+}
+[data-design='viajero'] .ec-account .acc-note,
+[data-design='viajero'] .ec-account .acc-inline-error{
+  border-radius:var(--dz-r-2);
+}
+[data-design='viajero'] .ec-account .acc-status{ border-radius:999px; font-family:var(--dz-body); }
+[data-design='viajero'] .ec-account .acc-order{ border-radius:var(--dz-r-2); }
+[data-design='viajero'] .ec-account .acc-order-idx{
+  font:600 9.5px/1 var(--dz-mono); letter-spacing:.14em; color:var(--dz-muted);
+}
+
+/* --- Botones del sistema dentro de la cuenta --- */
+[data-design='viajero'] .ec-account .ec-btn-primary{
+  min-height:46px; border-radius:var(--dz-r-2);
+  background: var(--store-accent-ink); color: var(--sp-on-band, #fff);
+  font:700 13.5px/1 var(--dz-body);
+}
+[data-design='viajero'] .ec-account .ec-btn-primary:hover{ filter:brightness(1.06); }
+[data-design='viajero'] .ec-account .ec-btn-primary:disabled{ opacity:.5; }
+[data-design='viajero'] .ec-account .ec-btn-ghost{
+  min-height:44px; border-radius:var(--dz-r-2);
+  border:1px solid var(--dz-line); color:var(--dz-ink-2);
+  font:600 13px/1 var(--dz-body);
+}
+[data-design='viajero'] .ec-account .ec-btn-ghost:hover{
+  border-color:var(--dz-accent); color:var(--dz-accent-text);
+}
+[data-design='viajero'] .ec-account .acc-icon-btn{
+  min-width:42px; min-height:42px; border-radius:10px;
+  border:1px solid var(--dz-line); background:var(--dz-surface); color:var(--dz-ink-2);
+}
+[data-design='viajero'] .ec-account .acc-icon-btn:hover{
+  border-color:var(--dz-accent); color:var(--dz-accent-text);
+}
+
+/* --- Gate (sin sesión) --- */
+[data-design='viajero'] .ec-account .acc-gate{ padding:clamp(18px,3vw,30px) 0; }
+[data-design='viajero'] .ec-account .acc-gate-card{
+  position:relative; overflow:hidden;
+  width:min(560px,100%);
+  padding:clamp(28px,4vw,40px) clamp(20px,3vw,30px);
+  border:1px solid var(--dz-line); border-radius:calc(var(--dz-r) * 1.15);
+  background:var(--dz-surface); box-shadow:0 26px 60px -46px rgba(13,26,34,.45);
+}
+[data-design='viajero'] .ec-account .acc-gate-card::before{
+  content:''; position:absolute; inset:0 0 auto 0; height:4px; background:var(--dz-accent);
+}
+[data-design='viajero'] .ec-account .acc-gate-ico{
+  width:58px; height:58px; border-radius:50%;
+  background:var(--dz-accent-soft); color:var(--dz-accent-text);
+  box-shadow:inset 0 0 0 1px color-mix(in srgb, var(--dz-accent) 45%, transparent);
+}
+[data-design='viajero'] .ec-account .acc-gate-title{
+  font-family:var(--dz-display); font-weight:600; letter-spacing:-.02em;
+  font-size:clamp(21px,2.4vw,26px); color:var(--dz-ink);
+}
+[data-design='viajero'] .ec-account .acc-gate-sub{
+  font-family:var(--dz-body); color:var(--dz-muted);
+}
+[data-design='viajero'] .ec-account .acc-gate-list{
+  border:1px solid var(--dz-line); border-radius:var(--dz-r-2);
+  background:var(--dz-surface-2); color:var(--dz-ink);
+}
+[data-design='viajero'] .ec-account .acc-gate-list li{ color:var(--dz-ink); font-family:var(--dz-body); }
+[data-design='viajero'] .ec-account .acc-gate-list svg{ color:var(--dz-accent-text); }
+[data-design='viajero'] .ec-account .acc-gate-link{
+  color:var(--dz-accent-text); font-family:var(--dz-body);
+}
+
+/* --- Sub-vistas de mail (verificar / restablecer) --- */
+[data-design='viajero'] .ec-account .acc-auth{ padding:clamp(18px,3vw,34px) 0; }
+[data-design='viajero'] .ec-account .acc-auth-card{
+  width:min(500px,100%);
+  padding:clamp(26px,3.6vw,36px) clamp(20px,3vw,30px);
+  border:1px dashed color-mix(in srgb, var(--dz-ink) 26%, transparent);
+  border-radius:var(--dz-r);
+  background:var(--dz-surface);
+  box-shadow:none;
+}
+[data-design='viajero'] .ec-account .acc-auth-ico{
+  width:56px; height:56px; border-radius:50%;
+  background:var(--dz-accent-soft); color:var(--dz-accent-text);
+}
+[data-design='viajero'] .ec-account .acc-auth-title{
+  font-family:var(--dz-display); font-weight:600; letter-spacing:-.02em;
+  color:var(--dz-ink);
+}
+[data-design='viajero'] .ec-account .acc-auth-msg{ color:var(--dz-muted); font-family:var(--dz-body); }
+[data-design='viajero'] .ec-account .acc-auth-ok{ color:var(--dz-ok); }
+[data-design='viajero'] .ec-account .acc-auth-link{ color:var(--dz-accent-text); }
+[data-design='viajero'] .ec-account .acc-tele + .acc-auth-title{ margin-top:2px; }
+
+/* --- Skeleton --- */
+[data-design='viajero'] .ec-account .acc-skelpanel{
+  border:1px solid var(--dz-line); border-radius:var(--dz-r); background:var(--dz-surface);
+}
+[data-design='viajero'] .ec-account .acc-sk{
+  background:color-mix(in srgb, var(--dz-muted) 18%, transparent);
+}
+
+/* --- Foco visible en toda la página --- */
+[data-design='viajero'] .ec-auth :is(a,button,input,select,textarea):focus-visible,
+[data-design='viajero'] .ec-account :is(a,button,input,select,textarea):focus-visible{
+  outline:2px solid var(--dz-accent); outline-offset:2px;
+}
+
+/* ==========================================================================
+   3. Responsive
+   ========================================================================== */
+@media (max-width:1024px){
+  [data-design='viajero'] .ec-auth .ec-auth-shell{
+    grid-template-columns:minmax(0,1fr);
+    border-radius:calc(var(--dz-r) * 1.05);
+  }
+  /* El talón pasa arriba como faja de equipaje. */
+  [data-design='viajero'] .ec-auth .ec-auth-brand{ order:1; }
+  [data-design='viajero'] .ec-auth .ec-auth-panel{ order:2; }
+  [data-design='viajero'] .ec-auth .ec-auth-brand{
+    border-left:0;
+    border-bottom:2px dashed color-mix(in srgb, var(--dz-ink) 24%, transparent);
+    padding:20px clamp(18px,3vw,26px) 18px;
+  }
+  [data-design='viajero'] .ec-auth .ec-auth-brand::after{
+    background:
+      radial-gradient(circle 10px at 0 100%, var(--dz-surface) 97%, transparent 100%),
+      radial-gradient(circle 10px at 100% 100%, var(--dz-surface) 97%, transparent 100%),
+      color-mix(in srgb, var(--dz-surface-2) 95%, transparent);
+  }
+  [data-design='viajero'] .ec-auth .ec-auth-brand-inner{
+    flex-direction:row; align-items:center; flex-wrap:wrap; gap:10px 16px;
+  }
+  [data-design='viajero'] .ec-auth .ec-auth-brand-copy{ flex:1 1 100%; gap:6px; }
+  [data-design='viajero'] .ec-auth .ec-auth-rail{ display:none; }
+  [data-design='viajero'] .ec-auth .ec-auth-brand-text,
+  [data-design='viajero'] .ec-auth .ec-auth-perks,
+  [data-design='viajero'] .ec-auth .ec-auth-brand-foot{ display:none; }
+  [data-design='viajero'] .ec-auth .ec-auth-brand-title{ font-size:clamp(19px,3.6vw,24px); }
+  [data-design='viajero'] .ec-auth .ec-auth-logo{ width:40px; height:40px; font-size:17px; }
+
+  /* Cuenta: la banda se parte en dos filas (identidad+salir / paradas). */
+  [data-design='viajero'] .ec-account .acc-side{
+    grid-template-columns:minmax(0,1fr) auto;
+    gap:8px 12px;
+  }
+  [data-design='viajero'] .ec-account .acc-nav{
+    grid-column:1 / -1;
+    overflow-x:auto; flex-wrap:nowrap; padding-bottom:2px;
+    scrollbar-width:none; -webkit-overflow-scrolling:touch;
+  }
+  [data-design='viajero'] .ec-account .acc-nav::-webkit-scrollbar{ display:none; }
+  [data-design='viajero'] .ec-account .acc-navitem{ flex:none; }
+}
+
+@media (max-width:860px){
+  [data-design='viajero'] .ec-auth .ec-auth-brand-title{ font-size:clamp(18px,4.4vw,23px); }
+  [data-design='viajero'] .ec-account .acc-panel-head{
+    flex-direction:column; align-items:flex-start; gap:4px;
+  }
+}
+
+@media (max-width:640px){
+  [data-design='viajero'] .ec-auth{
+    padding:8px 0 clamp(34px,8vw,52px);
+  }
+  [data-design='viajero'] .ec-auth .ec-auth-shell{
+    width:100%; border-radius:0; border-inline:0; box-shadow:none;
+  }
+  [data-design='viajero'] .ec-auth .ec-auth-brand{ padding:16px 16px 14px; }
+  [data-design='viajero'] .ec-auth .ec-auth-brand-name{ font-size:16px; }
+  [data-design='viajero'] .ec-auth .ec-auth-panel{ padding:18px 16px 26px; }
+  [data-design='viajero'] .ec-auth .ec-auth-head{ margin-bottom:16px; }
+  [data-design='viajero'] .ec-auth .ec-auth-title{ font-size:clamp(21px,5.6vw,25px); }
+
+  [data-design='viajero'] .ec-account{ padding:10px 12px clamp(32px,7vw,52px); }
+  [data-design='viajero'] .ec-account .acc-side{ padding:12px; border-radius:var(--dz-r-2); }
+  [data-design='viajero'] .ec-account .acc-navitem{ min-height:40px; padding:7px 10px; font-size:12px; }
+  [data-design='viajero'] .ec-account .acc-logout{ min-height:40px; padding:7px 11px; font-size:11.5px; }
+  [data-design='viajero'] .ec-account .acc-panel{ padding:16px 14px; border-radius:var(--dz-r-2); }
+  [data-design='viajero'] .ec-account .acc-panel::before{ width:3px; }
+  [data-design='viajero'] .ec-account .acc-gate-card,
+  [data-design='viajero'] .ec-account .acc-auth-card{
+    padding:24px 16px; border-radius:var(--dz-r-2);
+  }
+}
+
+@media (max-width:390px){
+  [data-design='viajero'] .ec-auth .ec-auth-panel{ padding:16px 14px 24px; }
+  [data-design='viajero'] .ec-auth .ec-auth-logo{ width:36px; height:36px; font-size:15px; }
+  [data-design='viajero'] .ec-auth .ec-auth-brand-kicker{ font-size:9px; letter-spacing:.16em; }
+  [data-design='viajero'] .ec-auth .ec-auth-title{ font-size:20px; }
+  [data-design='viajero'] .ec-auth .ec-auth-sub{ font-size:13px; }
+  [data-design='viajero'] .ec-auth .ecaf .ecaf-submit{ min-height:48px; font-size:13.5px; }
+  [data-design='viajero'] .ec-account .acc-navitem{ font-size:11.5px; gap:6px; }
+  [data-design='viajero'] .ec-account .acc-navitem .acc-idx{ display:none; }
+  [data-design='viajero'] .ec-account .acc-panel-title{ font-size:16px; }
+  [data-design='viajero'] .ec-account .acc-logout span,
+  [data-design='viajero'] .ec-account .acc-logout{ font-size:11px; }
+}
+
+@media (prefers-reduced-motion:reduce){
+  [data-design='viajero'] .ec-auth .ecaf .ecaf-submit:hover:not(:disabled),
+  [data-design='viajero'] .ec-account .ec-btn-primary:hover{ filter:none; }
+}

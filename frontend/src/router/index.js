@@ -21,6 +21,7 @@ const AppDesign = () => import('../views/app/AppDesign.vue')
 const DesignStudioView = () => import('../views/design/DesignStudioView.vue')
 const AdminView = () => import('../views/AdminView.vue')
 const TermsView = () => import('../views/TermsView.vue')
+const PrivacyView = () => import('../views/PrivacyView.vue')
 const ReportView = () => import('../views/ReportView.vue')
 const AboutView = () => import('../views/AboutView.vue')
 const DownloadView = () => import('../views/DownloadView.vue')
@@ -33,6 +34,13 @@ const StoreCatalogView = () => import('../views/StoreCatalogView.vue')
 const StoreServicesView = () => import('../views/StoreServicesView.vue')
 const StorePlansView = () => import('../views/StorePlansView.vue')
 const StoreProductView = () => import('../views/StoreProductView.vue')
+const StoreCheckoutView = () => import('../views/StoreCheckoutView.vue')
+const StoreTrackingView = () => import('../views/StoreTrackingView.vue')
+const StoreAccountView = () => import('../views/StoreAccountView.vue')
+const StoreCartView = () => import('../views/StoreCartView.vue')
+const StoreAuthView = () => import('../views/StoreAuthView.vue')
+const StoreReceiptView = () => import('../views/StoreReceiptView.vue')
+const StoreLegalView = () => import('../views/StoreLegalView.vue')
 const StoreFlyerView = () => import('../views/StoreFlyerView.vue')
 const DaventFlyerView = () => import('../views/DaventFlyerView.vue')
 const RobotQaView = () => import('../views/RobotQaView.vue')
@@ -69,6 +77,78 @@ const storeChildren = [
     name: 'store-plans',
     component: StorePlansView,
     meta: { title: 'Suscripciones' }
+  },
+  // E-commerce del comprador (customer JWT — NO la sesión DAVENT):
+  // checkout con carrito server-side, seguimiento público por
+  // tracking_token, cuenta del cliente y páginas legales de la tienda.
+  {
+    path: 'checkout',
+    name: 'store-checkout',
+    component: StoreCheckoutView,
+    meta: { title: 'Finalizar compra' }
+  },
+  {
+    path: 'seguimiento',
+    name: 'store-tracking',
+    component: StoreTrackingView,
+    meta: { title: 'Seguimiento del pedido' }
+  },
+  {
+    path: 'carrito',
+    name: 'store-cart',
+    component: StoreCartView,
+    meta: { title: 'Tu carrito' }
+  },
+  {
+    path: 'pedido/:token/comprobante',
+    name: 'store-receipt',
+    component: StoreReceiptView,
+    meta: { title: 'Comprobante' }
+  },
+  // Página completa de auth del comprador (login/registro/recuperar por
+  // ?mode=, destino post-auth por ?next=). Convive con el modal global:
+  // el modal queda para acciones pendientes ({action}) que no pueden
+  // cruzar una navegación.
+  {
+    path: 'ingresar',
+    name: 'store-auth',
+    component: StoreAuthView,
+    meta: { title: 'Ingresar' }
+  },
+  // Sub-rutas de /cuenta que llegan por los mails del backend:
+  // verificación de email y reseteo de contraseña (mismo componente,
+  // distingue el sub-path internamente).
+  {
+    path: 'cuenta',
+    name: 'store-account',
+    component: StoreAccountView,
+    meta: { title: 'Mi cuenta' }
+  },
+  {
+    path: 'cuenta/verificar',
+    name: 'store-account-verify',
+    component: StoreAccountView,
+    meta: { title: 'Verificar correo' }
+  },
+  {
+    path: 'cuenta/restablecer',
+    name: 'store-account-reset',
+    component: StoreAccountView,
+    meta: { title: 'Restablecer contraseña' }
+  },
+  // Páginas legales de la tienda (públicas): índice + kind fijo
+  // (terms|privacy|returns — el query ?p= queda como fallback en la vista).
+  {
+    path: 'legal',
+    name: 'store-legal',
+    component: StoreLegalView,
+    meta: { title: 'Información legal' }
+  },
+  {
+    path: 'legal/:kind(terms|privacy|returns)',
+    name: 'store-legal-page',
+    component: StoreLegalView,
+    meta: { title: 'Legal' }
   },
   // Publicación de producto estilo marketplace (ficha completa).
   {
@@ -184,6 +264,12 @@ const routes = [
     meta: { title: 'Términos y condiciones' }
   },
   {
+    path: '/privacidad',
+    name: 'privacy',
+    component: PrivacyView,
+    meta: { title: 'Política de privacidad' }
+  },
+  {
     path: '/denuncias',
     name: 'report',
     component: ReportView,
@@ -237,6 +323,50 @@ const routes = [
           redirect: (to) => ({ name: 'store-services', params: { slug: to.params.slug } })
         },
         {
+          path: '/tienda/:slug/suscripciones',
+          redirect: (to) => ({ name: 'store-plans', params: { slug: to.params.slug } })
+        },
+        {
+          path: '/tienda/:slug/checkout',
+          redirect: (to) => ({ name: 'store-checkout', params: { slug: to.params.slug } })
+        },
+        {
+          path: '/tienda/:slug/seguimiento',
+          redirect: (to) => ({ name: 'store-tracking', params: { slug: to.params.slug } })
+        },
+        {
+          path: '/tienda/:slug/ingresar',
+          redirect: (to) => ({ name: 'store-auth', params: { slug: to.params.slug } })
+        },
+        {
+          path: '/tienda/:slug/carrito',
+          redirect: (to) => ({ name: 'store-cart', params: { slug: to.params.slug } })
+        },
+        {
+          path: '/tienda/:slug/pedido/:token/comprobante',
+          redirect: (to) => ({ name: 'store-receipt', params: { slug: to.params.slug, token: to.params.token } })
+        },
+        {
+          path: '/tienda/:slug/cuenta',
+          redirect: (to) => ({ name: 'store-account', params: { slug: to.params.slug } })
+        },
+        {
+          path: '/tienda/:slug/cuenta/verificar',
+          redirect: (to) => ({ name: 'store-account-verify', params: { slug: to.params.slug } })
+        },
+        {
+          path: '/tienda/:slug/cuenta/restablecer',
+          redirect: (to) => ({ name: 'store-account-reset', params: { slug: to.params.slug } })
+        },
+        {
+          path: '/tienda/:slug/legal',
+          redirect: (to) => ({ name: 'store-legal', params: { slug: to.params.slug } })
+        },
+        {
+          path: '/tienda/:slug/legal/:kind(terms|privacy|returns)',
+          redirect: (to) => ({ name: 'store-legal-page', params: { slug: to.params.slug, kind: to.params.kind } })
+        },
+        {
           path: '/tienda/:slug/producto/:productId(\\d+)',
           redirect: (to) => ({ name: 'store-product', params: { slug: to.params.slug, productId: to.params.productId } })
         },
@@ -287,7 +417,12 @@ router.beforeEach(async (to) => {
   // En un host de tienda (subdominio o dominio propio) solo existe la web
   // pública: cualquier ruta de plataforma (login, panel, legales) se
   // resuelve en el dominio principal.
-  if (isStoreHost && !['store-public', 'store-catalog', 'store-services', 'store-product', 'store-plans'].includes(to.name)) {
+  const STORE_HOST_ROUTES = [
+    'store-public', 'store-catalog', 'store-services', 'store-product', 'store-plans',
+    'store-checkout', 'store-tracking', 'store-cart', 'store-receipt', 'store-auth', 'store-account', 'store-account-verify',
+    'store-account-reset', 'store-legal', 'store-legal-page'
+  ]
+  if (isStoreHost && !STORE_HOST_ROUTES.includes(to.name)) {
     window.location.assign(`${env.appUrl}${to.fullPath}`)
     return false
   }

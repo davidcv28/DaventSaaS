@@ -170,7 +170,9 @@
   font-weight: 500;
   letter-spacing: .22em;
   text-transform: uppercase;
-  color: var(--in-accent);
+  /* Micro-label: el acento-ink crudo no llega a AA en todos los estilos
+     (street/boutique) — va el acento templado a la tinta. */
+  color: var(--in-accent-text);
 }
 .store-page[data-template='indumentaria'] .sp-btn,
 .store-page[data-template='indumentaria'] .bq-btn {
@@ -342,7 +344,7 @@
   writing-mode: vertical-rl;
   transform: rotate(180deg);
 }
-.in-rail b { color: var(--in-accent); font-weight: 600; }
+.in-rail b { color: var(--in-accent-text); font-weight: 600; }
 .in-kicker {
   display: flex;
   align-items: center;
@@ -353,7 +355,7 @@
   font-weight: 500;
   letter-spacing: .26em;
   text-transform: uppercase;
-  color: var(--in-accent);
+  color: var(--in-accent-text);
 }
 .in-kicker::after { content: ''; width: 84px; height: 1px; background: var(--in-stitch); }
 .in-hero h1 {
@@ -646,7 +648,7 @@
   padding-top: 14px;
 }
 .in-look-foot strong { font-size: 15px; font-weight: 600; letter-spacing: -.01em; }
-.in-look:hover .in-look-foot strong { color: var(--in-accent); }
+.in-look:hover .in-look-foot strong { color: var(--in-accent-text); }
 .in-look-count {
   font-family: var(--in-mono);
   font-size: 9.5px;
@@ -674,7 +676,7 @@
   font-weight: 500;
   letter-spacing: .26em;
   text-transform: uppercase;
-  color: var(--in-accent);
+  color: var(--in-accent-text);
 }
 .in-about-copy h2 { margin: 0; }
 .in-about-text { margin: 22px 0 0; font-size: 16px; max-width: 52ch; }
@@ -878,7 +880,7 @@
   transform: scaleX(1);
 }
 .store-page[data-template='indumentaria'] .mc-cat-chips button.is-on,
-.store-page[data-template='indumentaria'] .f-cat.is-on { color: var(--in-accent); }
+.store-page[data-template='indumentaria'] .f-cat.is-on { color: var(--in-accent-text); }
 
 /* ==========================================================================
    CATÁLOGO / FICHA / SERVICIOS (subárbol Raíz + capa indumentaria)
@@ -1051,6 +1053,33 @@
 .store-page[data-template='raiz'].in-skin .rz-pdp-price {
   font-family: var(--in-mono, 'JetBrains Mono', monospace);
   font-variant-numeric: tabular-nums;
+}
+/* Resto del contrato de tarjeta: la base deja el botón de compra como
+   círculo de acento con sombra, los flags con borde y el chip de oferta
+   con la tinta inversa — en el lookbook vuelven planos, en tinta y sin
+   radio, con el acento solo en la oferta (par --in-accent/--in-on-accent
+   con AA en ambos temas). */
+.store-page[data-template='raiz'].in-skin .rz-cat-card,
+.store-page[data-template='raiz'].in-skin .rz-pdp-rel-card {
+  --tpc-name-weight: 500;
+  --tpc-flag-radius: 0;
+  --tpc-flag-bg: var(--in-ink);
+  --tpc-flag-ink: var(--in-crudo);
+  --tpc-flag-border: 0;
+  --tpc-flag-transform: uppercase;
+  --tpc-flag-track: .14em;
+  /* El acento solo en la oferta: --in-accent puro queda a 4.38:1 con la
+     tinta de la piel en noche (acentos custom claros) — se tira un punto
+     hacia --in-ink: en noche aclara el chip para la tinta oscura y en día
+     lo profundiza para la tinta clara. AA en ambos sentidos. */
+  --tpc-offer-bg: color-mix(in srgb, var(--in-accent) 86%, var(--in-ink));
+  --tpc-offer-ink: var(--in-on-accent);
+  --tpc-add-radius: 0;
+  --tpc-add-bg: var(--in-ink);
+  --tpc-add-ink: var(--in-crudo);
+  --tpc-add-shadow: none;
+  --tpc-go-ink: var(--in-accent);
+  --tpc-img-hover: scale(1.02);
 }
 .store-page[data-template='raiz'].in-skin .rz-sv-hero,
 .store-page[data-template='raiz'].in-skin .rz-sv-band {
@@ -1234,7 +1263,7 @@
   letter-spacing: .12em;
   text-transform: uppercase;
 }
-.store-page[data-template='indumentaria'] .sp-tabbar a.is-on { color: var(--in-accent); }
+.store-page[data-template='indumentaria'] .sp-tabbar a.is-on { color: var(--in-accent-text); }
 /* Tab bar: la piel fija texto de pestaña con tinta secundaria (AA sobre
    --in-card en todos los estilos) y el activo con acento templado a la
    tinta — el acento crudo no llega a 4.5 en street/boutique. */
@@ -1404,6 +1433,102 @@
   text-transform: uppercase;
   border-bottom: 1px dashed var(--in-line-strong);
 }
+
+/* ==========================================================================
+   TIENDA: formulario de contacto y CTA final
+   El layout base decora .sp-form con franja degradado, orbe de acento,
+   radio 12–22px y badge rotado -6°; el CTA es una banda degradado
+   redondeada. El lookbook los cambia por fichas planas con hilván:
+   la franja superior pasa a ser la costura punteada y los campos quedan
+   hundidos en la tarjeta. Las mismas reglas alcanzan al formulario de
+   reseñas del sub-árbol .in-skin (es descendiente del template).
+   ========================================================================== */
+.store-page[data-template='indumentaria'] .sp-form {
+  border: 1px solid var(--in-line-strong);
+  border-radius: 0;
+  background: var(--sp-card);
+  box-shadow: none;
+}
+.store-page[data-template='indumentaria'] .sp-form::before {
+  height: 5px;
+  background: var(--in-stitch);
+}
+.store-page[data-template='indumentaria'] .sp-form::after { display: none; }
+.store-page[data-template='indumentaria'] .sp-form-head {
+  border-bottom: 1px dashed var(--in-line-strong);
+  padding-bottom: 14px;
+}
+.store-page[data-template='indumentaria'] .sp-form-badge {
+  border-radius: 0;
+  background: var(--in-ink);
+  color: var(--in-crudo);
+  box-shadow: none;
+  transform: none;
+}
+.store-page[data-template='indumentaria'] .sp-form:hover .sp-form-badge { transform: none; }
+.store-page[data-template='indumentaria'] .sp-form-head strong {
+  font-family: var(--in-display, 'Fraunces', Georgia, serif);
+  font-weight: 400;
+  letter-spacing: -.02em;
+}
+.store-page[data-template='indumentaria'] .sp-form .sp-field label {
+  font-family: var(--in-mono, 'JetBrains Mono', monospace);
+  font-size: 9.5px;
+  letter-spacing: .18em;
+}
+.store-page[data-template='indumentaria'] .sp-form .sp-field:focus-within label { color: var(--in-accent-text); }
+.store-page[data-template='indumentaria'] .sp-form .sp-input {
+  border: 1px solid var(--sp-line);
+  border-radius: 0;
+  background: var(--sp-surface);
+  color: var(--sp-ink);
+  box-shadow: none;
+}
+.store-page[data-template='indumentaria'] .sp-form .sp-input:focus {
+  border-color: var(--in-accent);
+  outline: none;
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--in-accent-raw) 18%, transparent);
+}
+.store-page[data-template='indumentaria'] .sp-form .sp-input-wrap > svg { color: var(--sp-muted); }
+.store-page[data-template='indumentaria'] .sp-form .sp-input-wrap:focus-within > svg { color: var(--in-accent); }
+.store-page[data-template='indumentaria'] .sp-form .sp-captcha-q {
+  border: 1px dashed var(--in-line-strong);
+  border-radius: 0;
+  background: var(--sp-surface);
+  color: var(--sp-ink);
+}
+.store-page[data-template='indumentaria'] .sp-form .sp-captcha-row .sp-icon-btn {
+  border: 1px solid var(--in-line);
+  border-radius: 0;
+  background: var(--in-card);
+  color: var(--in-ink);
+}
+/* CTA final: tarjeta plana con costura hilvanada al borde superior. */
+.store-page[data-template='indumentaria'] .sp-cta-inner {
+  position: relative;
+  border: 1px solid var(--in-line-strong);
+  border-radius: 0;
+  background: var(--sp-card);
+  box-shadow: none;
+  color: var(--sp-ink);
+}
+.store-page[data-template='indumentaria'] .sp-cta-inner::before {
+  content: '';
+  position: absolute;
+  inset-inline: 0;
+  top: 0;
+  height: 5px;
+  background: var(--in-stitch);
+}
+.store-page[data-template='indumentaria'] .sp-cta.is-band .sp-cta-inner { border-inline: 0; }
+.store-page[data-template='indumentaria'] .sp-cta-inner::after { display: none; }
+.store-page[data-template='indumentaria'] .sp-cta-title {
+  font-family: var(--in-display, 'Fraunces', Georgia, serif);
+  font-weight: 380;
+  letter-spacing: -.025em;
+  color: var(--sp-ink);
+}
+.store-page[data-template='indumentaria'] .sp-cta-text { color: var(--sp-ink-2); }
 
 /* ==========================================================================
    RESPONSIVE

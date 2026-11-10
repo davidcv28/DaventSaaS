@@ -198,6 +198,7 @@ class StoreCustomizationSerializer(serializers.ModelSerializer):
             'show_offers', 'show_brands', 'show_countdown',
             'show_about', 'contact_email', 'show_contact',
             'whatsapp', 'instagram', 'tiktok', 'facebook', 'show_location', 'show_gallery', 'show_catalog',
+            'ecommerce_enabled',
             'site_templates', 'service_steps', 'service_days', 'service_slots', 'service_ask_address',
             'service_price_note', 'service_pay_note',
             'show_highlights', 'show_reviews', 'show_comments',
@@ -776,9 +777,10 @@ class StorePublicSerializer(serializers.ModelSerializer):
     location_address            =   serializers.SerializerMethodField()
     chatbot                     =   serializers.SerializerMethodField()
     service_items               =   serializers.SerializerMethodField()
+    orders_enabled              =   serializers.SerializerMethodField()
     class Meta:
         model                   =   Store
-        fields                  =   ['slug', 'business_name', 'city_name', 'province_name', 'customization', 'has_design_advanced', 'allowed_templates', 'location_address', 'chatbot', 'service_items']
+        fields                  =   ['slug', 'business_name', 'city_name', 'province_name', 'customization', 'has_design_advanced', 'allowed_templates', 'location_address', 'chatbot', 'service_items', 'orders_enabled']
     def get_has_design_advanced(self, store):
         #Solo premium: define si la web muestra portada (carrusel) o el
         #botón de modo claro/oscuro para el visitante en el nav.
@@ -806,6 +808,12 @@ class StorePublicSerializer(serializers.ModelSerializer):
             parts.append(user.province.name_province)
         parts.append('Argentina')
         return ', '.join(parts)
+    def get_orders_enabled(self, store):
+        #Gate efectivo de venta online (ecommerce_enabled + perfil fiscal
+        #completo) — la web pública lo usa para mostrar/ocultar el CTA de
+        #compra. Mismo predicado que los endpoints de pedido (gate único).
+        from StoreApp.domains.stores.services.commerce import orders_enabled
+        return orders_enabled(store)
     def get_chatbot(self, store):
         #{'greeting', 'qa'} solo si el plan tiene 'has_chatbot' y el
         #dueño lo activó; el widget público no se renderiza con None.

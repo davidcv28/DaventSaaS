@@ -504,6 +504,7 @@ watch(menu, (v) => { document.documentElement.style.overflow = v ? 'hidden' : ''
           <RouterLink to="/descargar">Descargar app</RouterLink>
           <RouterLink to="/acerca-de">Sobre DAVENT</RouterLink>
           <RouterLink to="/terminos">Términos y condiciones</RouterLink>
+          <RouterLink to="/privacidad">Privacidad</RouterLink>
           <RouterLink to="/denuncias">Denunciar contenido</RouterLink>
           <RouterLink to="/login">Ingresar</RouterLink>
         </nav>

@@ -1,0 +1,634 @@
+/* ===========================================================================
+   AUTOSERVICIO — páginas de comercio (ingresar / cuenta).
+   Se carga on-demand desde StorePublicLayout cuando .store-page lleva
+   data-design="autoservicio". No edita las hojas scoped de las vistas: las
+   reemplaza con más especificidad (0,3,0 mínimo).
+
+   Composición propia: la auth es una CAJA con resumen al costado — el
+   formulario va primero (ticket blanco con filete verde y campos separados
+   por líneas de puntos) y el ala de marca es el RESUMEN de la compra, a la
+   derecha, con filas mono y sello "incluido". La cuenta es el TABLERO DE
+   DEPARTAMENTOS: barra lateral de mosaicos 2×N con código mono (icono +
+   rótulo, activo relleno de marca) y paneles tipo ticket con separadores
+   punteados.
+   =========================================================================== */
+
+[data-design='autoservicio'] {
+  --dz-bg: #f5f6f2;
+  --dz-surface: #ffffff;
+  --dz-ink: #15211a;
+  --dz-ink-2: #33413a;
+  --dz-muted: #56645c;
+  --dz-line: #e2e5dc;
+  --dz-accent: var(--store-accent, #17794b);
+  --dz-accent-ink: var(--store-accent-ink, #ffffff);
+  --dz-accent-text: color-mix(in srgb, var(--store-accent, #17794b) 82%, var(--dz-ink));
+  --dz-accent-soft: color-mix(in srgb, var(--store-accent, #17794b) 10%, var(--dz-surface));
+  --dz-deep: #0f4229;
+  --dz-offer: #c2402a;
+  --dz-ok: #0f6b41;
+  --dz-danger: #a3231c;
+  --dz-display: var(--st-f-display-family, "Archivo", Inter, "Helvetica Neue", system-ui, sans-serif);
+  --dz-body: var(--st-f-body-family, Inter, "Helvetica Neue", system-ui, sans-serif);
+  --dz-mono: var(--st-f-eyebrow-family, "JetBrains Mono", ui-monospace, Menlo, Consolas, monospace);
+  --dz-radius: 4px;
+}
+
+[data-design='autoservicio'][data-theme='dark'] {
+  --dz-bg: #0f130e;
+  --dz-surface: #171c16;
+  --dz-ink: #edf1e8;
+  --dz-ink-2: #cfd8ca;
+  --dz-muted: #96a190;
+  --dz-line: #2a3129;
+  --dz-accent: var(--store-accent, #8fd18a);
+  --dz-accent-ink: var(--store-accent-ink, #0f130e);
+  --dz-accent-text: color-mix(in srgb, var(--store-accent, #8fd18a) 72%, #edf1e8);
+  --dz-accent-soft: color-mix(in srgb, var(--dz-accent) 16%, var(--dz-surface));
+  --dz-deep: #b7e26b;
+  --dz-offer: #ff8a70;
+  --dz-ok: #8fd18a;
+  --dz-danger: #f0958a;
+}
+
+/* ---------- Marco común ---------- */
+[data-design='autoservicio'][data-theme] :is(.ec-auth, .ec-account) :is(a, button, input, select, textarea):focus-visible {
+  outline: 2px solid var(--dz-accent);
+  outline-offset: 2px;
+}
+[data-design='autoservicio'][data-theme] :is(.ec-auth, .ec-account) ::selection {
+  background: color-mix(in srgb, var(--dz-accent) 26%, transparent);
+  color: var(--dz-ink);
+}
+
+/* ===========================================================================
+   AUTH — caja + resumen
+   =========================================================================== */
+[data-design='autoservicio'] .ec-auth { padding-inline: clamp(10px, 3vw, 24px); }
+[data-design='autoservicio'] .ec-auth .ec-auth-shell {
+  width: min(1040px, 100%);
+  grid-template-columns: minmax(0, 1.06fr) minmax(0, .94fr);
+  margin-block: clamp(12px, 2.6vw, 32px) clamp(36px, 6vw, 72px);
+  border: 1px solid var(--dz-line);
+  border-radius: var(--dz-radius);
+  background: var(--dz-surface);
+  box-shadow: 0 1px 2px rgba(21, 33, 26, .06), 0 24px 48px -46px rgba(21, 33, 26, .5);
+}
+
+/* El formulario va primero: es la caja. */
+[data-design='autoservicio'] .ec-auth .ec-auth-panel {
+  order: 1;
+  position: relative;
+  padding: clamp(22px, 3.2vw, 42px) clamp(20px, 3.4vw, 42px) clamp(26px, 3.8vw, 44px);
+  background: var(--dz-surface);
+  color: var(--dz-ink);
+}
+[data-design='autoservicio'] .ec-auth .ec-auth-panel::before {
+  content: ""; position: absolute; inset: 0 0 auto; height: 4px;
+  background: var(--dz-accent);
+}
+[data-design='autoservicio'] .ec-auth .ec-auth-back {
+  gap: 7px; margin-bottom: 18px;
+  font-family: var(--dz-mono); font-size: 10px; font-weight: 500;
+  letter-spacing: .1em; text-transform: uppercase;
+  color: var(--dz-muted);
+}
+[data-design='autoservicio'] .ec-auth .ec-auth-back:hover { color: var(--dz-accent-text); }
+[data-design='autoservicio'] .ec-auth .ec-auth-head { gap: 8px; margin-bottom: 22px; }
+[data-design='autoservicio'] .ec-auth .ec-auth-badge {
+  width: 42px; height: 42px; margin-bottom: 2px;
+  border-radius: var(--dz-radius);
+  background: var(--dz-accent-soft);
+  border: 1px solid color-mix(in srgb, var(--dz-accent) 26%, transparent);
+  color: var(--dz-accent-text);
+}
+[data-design='autoservicio'] .ec-auth .ec-auth-tag {
+  display: inline-flex; align-items: center; gap: 7px;
+  align-self: start;
+  padding: 4px 9px;
+  border: 1px solid color-mix(in srgb, var(--dz-accent) 40%, transparent);
+  border-radius: var(--dz-radius);
+  background: var(--dz-accent-soft);
+  color: var(--dz-accent-text);
+  font-family: var(--dz-mono); font-size: 9.5px; font-weight: 600;
+  letter-spacing: .14em; text-transform: uppercase;
+}
+[data-design='autoservicio'] .ec-auth .ec-auth-title {
+  font-family: var(--dz-display); font-weight: 800;
+  font-size: clamp(22px, 2.5vw, 30px); line-height: 1.1; letter-spacing: -.03em;
+  color: var(--dz-ink);
+}
+[data-design='autoservicio'] .ec-auth .ec-auth-sub {
+  font-family: var(--dz-body); font-size: 13.5px; line-height: 1.55; color: var(--dz-muted);
+}
+[data-design='autoservicio'] .ec-auth .ec-auth-loading { color: var(--dz-muted); font-family: var(--dz-body); }
+[data-design='autoservicio'] .ec-auth .ec-auth-spin { color: var(--dz-accent-text); }
+
+/* Resumen de la compra (ala de marca, a la derecha). */
+[data-design='autoservicio'] .ec-auth .ec-auth-brand {
+  order: 2;
+  padding: clamp(20px, 3vw, 34px);
+  color: var(--dz-ink);
+  background: color-mix(in srgb, var(--dz-accent) 7%, var(--dz-bg));
+  border-left: 1px dashed color-mix(in srgb, var(--dz-ink) 20%, transparent);
+}
+[data-design='autoservicio'] .ec-auth .ec-auth-brand::before { opacity: .1; mix-blend-mode: luminosity; }
+[data-design='autoservicio'] .ec-auth .ec-auth-brand::after {
+  background: linear-gradient(180deg,
+    color-mix(in srgb, var(--dz-surface) 42%, transparent),
+    color-mix(in srgb, var(--dz-bg) 74%, transparent));
+}
+[data-design='autoservicio'] .ec-auth .ec-auth-brand-inner {
+  display: grid;
+  grid-template-rows: auto 1fr auto;
+  gap: clamp(16px, 2.4vw, 26px);
+}
+[data-design='autoservicio'] .ec-auth .ec-auth-brand-top {
+  gap: 10px;
+  padding-bottom: 14px;
+  border-bottom: 1px solid color-mix(in srgb, var(--dz-ink) 16%, transparent);
+}
+[data-design='autoservicio'] .ec-auth .ec-auth-logo {
+  width: 38px; height: 38px;
+  border-radius: var(--dz-radius);
+  background: var(--dz-surface);
+  border: 1px solid var(--dz-line);
+  color: var(--dz-accent-text);
+  font-family: var(--dz-display); font-size: 18px; font-weight: 800; letter-spacing: -.02em;
+}
+[data-design='autoservicio'] .ec-auth .ec-auth-brand-name {
+  font-family: var(--dz-display); font-size: clamp(14px, 1.6vw, 17px); font-weight: 800;
+  letter-spacing: -.02em; color: var(--dz-ink);
+}
+[data-design='autoservicio'] .ec-auth .ec-auth-rail {
+  display: block;
+  width: fit-content;
+  padding: 3px 7px;
+  border: 1px solid color-mix(in srgb, var(--dz-ink) 24%, transparent);
+  border-radius: 3px;
+  font-family: var(--dz-mono); font-size: 9px; font-weight: 500;
+  letter-spacing: .16em; text-transform: uppercase;
+  color: var(--dz-ink-2);
+}
+[data-design='autoservicio'] .ec-auth .ec-auth-brand-copy { gap: 10px; max-width: 40ch; }
+[data-design='autoservicio'] .ec-auth .ec-auth-brand-kicker {
+  font-family: var(--dz-mono); font-size: 9.5px; font-weight: 600;
+  letter-spacing: .16em; text-transform: uppercase;
+  color: var(--dz-accent-text);
+}
+[data-design='autoservicio'] .ec-auth .ec-auth-brand-title {
+  font-family: var(--dz-display); font-weight: 800;
+  font-size: clamp(23px, 2.8vw, 33px); line-height: 1.08; letter-spacing: -.03em;
+  color: var(--dz-ink);
+}
+[data-design='autoservicio'] .ec-auth .ec-auth-brand-text {
+  font-family: var(--dz-body); font-size: 12.5px; line-height: 1.6; color: var(--dz-muted);
+}
+/* Filas de resumen con sello "incluido". */
+[data-design='autoservicio'] .ec-auth .ec-auth-perks { gap: 0; margin-top: 2px; }
+[data-design='autoservicio'] .ec-auth .ec-auth-perks li {
+  display: grid;
+  grid-template-columns: 16px minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 9px;
+  padding: 9px 0;
+  border-bottom: 1px dashed color-mix(in srgb, var(--dz-ink) 18%, transparent);
+  font-family: var(--dz-body); font-size: 12px; font-weight: 500;
+  color: var(--dz-ink-2);
+}
+[data-design='autoservicio'] .ec-auth .ec-auth-perks svg { color: var(--dz-accent-text); }
+[data-design='autoservicio'] .ec-auth .ec-auth-perks li::after {
+  content: "incluido";
+  font-family: var(--dz-mono); font-size: 8.5px; font-weight: 600;
+  letter-spacing: .1em; text-transform: uppercase;
+  color: var(--dz-accent-text);
+  border: 1px solid color-mix(in srgb, var(--dz-accent) 40%, transparent);
+  border-radius: 3px;
+  padding: 2px 5px;
+}
+[data-design='autoservicio'] .ec-auth .ec-auth-brand-foot {
+  padding-top: 12px;
+  border-top: 1px dashed color-mix(in srgb, var(--dz-ink) 18%, transparent);
+  font-family: var(--dz-mono); font-size: 9.5px; font-weight: 500;
+  letter-spacing: .1em; text-transform: uppercase;
+  color: var(--dz-muted);
+}
+
+/* ---------- Controles (compartidos auth + cuenta) ---------- */
+[data-design='autoservicio'][data-theme] :is(.ec-auth, .ec-account) .sp-field { gap: 6px; }
+[data-design='autoservicio'][data-theme] :is(.ec-auth, .ec-account) .sp-field-label {
+  font-family: var(--dz-mono); font-size: 10px; font-weight: 600;
+  letter-spacing: .12em; text-transform: uppercase;
+  color: var(--dz-muted);
+}
+[data-design='autoservicio'][data-theme] :is(.ec-auth, .ec-account) .sp-input {
+  min-height: 46px;
+  padding: 11px 12px;
+  border: 1px solid var(--dz-line);
+  border-radius: var(--dz-radius);
+  background: var(--dz-surface);
+  color: var(--dz-ink);
+  font-family: var(--dz-body); font-size: 16px;
+  box-shadow: none;
+  transition: border-color .16s, box-shadow .16s;
+}
+[data-design='autoservicio'][data-theme] :is(.ec-auth, .ec-account) .sp-input:hover { border-color: color-mix(in srgb, var(--dz-ink) 26%, var(--dz-line)); }
+[data-design='autoservicio'][data-theme] :is(.ec-auth, .ec-account) .sp-input:focus {
+  border-color: var(--dz-accent);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--dz-accent) 18%, transparent);
+}
+[data-design='autoservicio'][data-theme] :is(.ec-auth, .ec-account) .sp-input::placeholder { color: var(--dz-muted); opacity: 1; }
+[data-design='autoservicio'][data-theme] :is(.ec-auth, .ec-account) .sp-input:disabled {
+  background: color-mix(in srgb, var(--dz-line) 34%, var(--dz-surface));
+  color: var(--dz-ink-2); cursor: not-allowed;
+}
+[data-design='autoservicio'][data-theme] :is(.ec-auth, .ec-account) .sp-form-error {
+  color: var(--dz-danger); font-family: var(--dz-body); font-size: 12.5px;
+}
+[data-design='autoservicio'][data-theme] :is(.ec-auth, .ec-account) .sp-input:-webkit-autofill {
+  -webkit-text-fill-color: var(--dz-ink);
+  box-shadow: inset 0 0 0 40px var(--dz-surface);
+}
+/* Ticket: cada campo separado por línea de puntos. */
+[data-design='autoservicio'] .ec-auth .ecaf-form .sp-field + .sp-field {
+  padding-top: 12px;
+  border-top: 1px dashed color-mix(in srgb, var(--dz-ink) 16%, transparent);
+}
+
+/* CTA: verde de marca, mono, ancho completo. */
+[data-design='autoservicio'][data-theme] :is(.ec-auth, .ec-account) :is(.ecaf-submit, .ec-btn-primary) {
+  min-height: 48px;
+  width: 100%;
+  border: 1px solid transparent;
+  border-radius: var(--dz-radius);
+  background: var(--store-accent-ink);
+  color: var(--sp-on-band, #fff);
+  font-family: var(--dz-mono); font-size: 11.5px; font-weight: 700;
+  letter-spacing: .14em; text-transform: uppercase;
+  filter: none;
+  transition: filter .16s, transform .12s, box-shadow .16s;
+}
+[data-design='autoservicio'][data-theme] :is(.ec-auth, .ec-account) :is(.ecaf-submit, .ec-btn-primary):hover:not(:disabled) {
+  filter: brightness(1.07);
+  box-shadow: 0 12px 22px -18px color-mix(in srgb, var(--dz-accent) 82%, transparent);
+}
+[data-design='autoservicio'][data-theme] :is(.ec-auth, .ec-account) :is(.ecaf-submit, .ec-btn-primary):active:not(:disabled) {
+  transform: translateY(1px);
+}
+[data-design='autoservicio'][data-theme] :is(.ec-auth, .ec-account) :is(.ecaf-submit, .ec-btn-primary):disabled {
+  background: color-mix(in srgb, var(--dz-muted) 28%, var(--dz-surface));
+  color: var(--dz-ink-2); opacity: 1; cursor: not-allowed;
+}
+[data-design='autoservicio'][data-theme] :is(.ec-auth, .ec-account) .ec-btn-ghost {
+  min-height: 44px;
+  width: 100%;
+  border: 1px solid var(--dz-line);
+  border-radius: var(--dz-radius);
+  background: var(--dz-surface); color: var(--dz-ink);
+  font-family: var(--dz-mono); font-size: 10.5px; font-weight: 600;
+  letter-spacing: .12em; text-transform: uppercase;
+}
+[data-design='autoservicio'][data-theme] :is(.ec-auth, .ec-account) .ec-btn-ghost:hover {
+  border-color: var(--dz-accent); color: var(--dz-accent-text);
+  background: var(--dz-accent-soft);
+}
+
+/* Formulario compartido (StoreAuthForm). */
+[data-design='autoservicio'] .ec-auth .ecaf { gap: 12px; }
+[data-design='autoservicio'] .ec-auth .ecaf-pass-toggle { color: var(--dz-muted); border-radius: 3px; }
+[data-design='autoservicio'] .ec-auth .ecaf-pass-toggle:hover {
+  color: var(--dz-accent-text); background: var(--dz-accent-soft);
+}
+[data-design='autoservicio'] .ec-auth .ecaf-divider {
+  font-family: var(--dz-mono); font-size: 9.5px; letter-spacing: .1em;
+  text-transform: uppercase; color: var(--dz-muted);
+}
+[data-design='autoservicio'] .ec-auth .ecaf-divider::before,
+[data-design='autoservicio'] .ec-auth .ecaf-divider::after {
+  background: none;
+  border-top: 1px dashed color-mix(in srgb, var(--dz-ink) 22%, transparent);
+  height: 0; opacity: 1;
+}
+[data-design='autoservicio'] .ec-auth .ecaf-link {
+  color: var(--dz-accent-text); font-family: var(--dz-body); font-weight: 600;
+  text-underline-offset: 3px;
+}
+[data-design='autoservicio'] .ec-auth .ecaf-link:hover { color: var(--dz-ink); }
+[data-design='autoservicio'] .ec-auth .ecaf-notice {
+  border-radius: var(--dz-radius);
+  background: color-mix(in srgb, var(--dz-ok) 11%, var(--dz-surface));
+  border: 1px dashed color-mix(in srgb, var(--dz-ok) 42%, transparent);
+  color: var(--dz-ink);
+}
+[data-design='autoservicio'] .ec-auth .ecaf-error {
+  border-radius: var(--dz-radius);
+  background: color-mix(in srgb, var(--dz-danger) 10%, var(--dz-surface));
+  border: 1px dashed color-mix(in srgb, var(--dz-danger) 42%, transparent);
+  color: var(--dz-ink);
+}
+
+/* ===========================================================================
+   CUENTA — tablero de departamentos
+   =========================================================================== */
+[data-design='autoservicio'][data-theme] .ec-account {
+  width: min(1180px, 100%);
+  margin-inline: auto;
+  padding: clamp(14px, 2.6vw, 30px) clamp(12px, 3.4vw, 36px) clamp(40px, 6vw, 72px);
+  gap: 0;
+}
+[data-design='autoservicio'][data-theme] .ec-account .acc-shell {
+  grid-template-columns: minmax(0, 1fr);
+  gap: 14px;
+}
+[data-design='autoservicio'][data-theme] .ec-account .acc-side { display: none; }
+[data-design='autoservicio'][data-theme] .ec-account .acc-main { gap: 14px; }
+
+[data-design='autoservicio'][data-theme] .ec-account .acc-tele {
+  display: block;
+  font-family: var(--dz-mono); font-size: 9.5px; font-weight: 600;
+  letter-spacing: .14em; text-transform: uppercase;
+  color: var(--dz-muted);
+}
+[data-design='autoservicio'][data-theme] .ec-account .acc-idx {
+  font-family: var(--dz-mono); font-size: 9px; font-weight: 600;
+  letter-spacing: .1em; color: inherit; opacity: .72;
+}
+[data-design='autoservicio'][data-theme] .ec-account .acc-avatar {
+  border-radius: var(--dz-radius);
+  background: var(--store-accent-ink); color: var(--sp-on-band, #fff);
+  font-family: var(--dz-display); font-weight: 800; font-size: 17px;
+}
+[data-design='autoservicio'][data-theme] .ec-account .acc-avatar--sm { width: 42px; height: 42px; font-size: 14px; }
+
+/* Cabecera (tablet/mobile): ticket blanco con riel de marca. */
+[data-design='autoservicio'][data-theme] .ec-account .acc-mhead {
+  display: flex; align-items: center; gap: 11px;
+  padding: 11px 13px;
+  border: 1px solid var(--dz-line);
+  border-left: 4px solid var(--dz-accent);
+  border-radius: var(--dz-radius);
+  background: var(--dz-surface);
+}
+[data-design='autoservicio'][data-theme] .ec-account .acc-mhead .acc-tele { display: none; }
+[data-design='autoservicio'][data-theme] .ec-account .acc-mhead-meta strong {
+  font-family: var(--dz-display); font-size: 15px; font-weight: 800;
+  letter-spacing: -.02em; color: var(--dz-ink);
+}
+[data-design='autoservicio'][data-theme] .ec-account .acc-mhead-meta small {
+  font-family: var(--dz-mono); font-size: 10.5px; color: var(--dz-muted);
+}
+[data-design='autoservicio'][data-theme] .ec-account .acc-icon-btn {
+  width: 42px; height: 42px;
+  border: 1px solid var(--dz-line); border-radius: var(--dz-radius);
+  background: var(--dz-surface); color: var(--dz-ink-2);
+}
+[data-design='autoservicio'][data-theme] .ec-account .acc-icon-btn:hover {
+  border-color: color-mix(in srgb, var(--dz-danger) 50%, transparent);
+  color: var(--dz-danger);
+  background: color-mix(in srgb, var(--dz-danger) 7%, var(--dz-surface));
+}
+
+/* Tabs (tablet/mobile): celdas de departamento. */
+[data-design='autoservicio'][data-theme] .ec-account .acc-tabs {
+  gap: 6px; padding: 2px 1px 6px;
+  scrollbar-width: none;
+  -webkit-overflow-scrolling: touch;
+}
+[data-design='autoservicio'][data-theme] .ec-account .acc-tab {
+  min-height: 40px;
+  padding: 8px 12px;
+  border: 1px solid var(--dz-line);
+  border-radius: var(--dz-radius);
+  background: var(--dz-surface);
+  color: var(--dz-ink-2);
+  font-family: var(--dz-body); font-size: 12.5px; font-weight: 600;
+  gap: 7px;
+}
+[data-design='autoservicio'][data-theme] .ec-account .acc-tab:hover {
+  border-color: color-mix(in srgb, var(--dz-accent) 50%, var(--dz-line));
+  color: var(--dz-accent-text);
+  background: var(--dz-accent-soft);
+}
+[data-design='autoservicio'][data-theme] .ec-account .acc-tab.is-on {
+  background: var(--store-accent-ink);
+  border-color: var(--dz-accent);
+  color: var(--sp-on-band, #fff);
+}
+[data-design='autoservicio'][data-theme] .ec-account .acc-tab.is-on .acc-idx { opacity: .85; }
+
+/* Paneles tipo ticket. */
+[data-design='autoservicio'][data-theme] .ec-account .acc-panel,
+[data-design='autoservicio'][data-theme] .ec-account .acc-auth-card,
+[data-design='autoservicio'][data-theme] .ec-account .acc-gate-card,
+[data-design='autoservicio'][data-theme] .ec-account .acc-skelpanel {
+  padding: clamp(16px, 2.4vw, 26px);
+  border: 1px solid var(--dz-line);
+  border-radius: var(--dz-radius);
+  background: var(--dz-surface);
+  box-shadow: 0 1px 2px rgba(21, 33, 26, .05);
+  gap: 14px;
+  color: var(--dz-ink);
+}
+[data-design='autoservicio'][data-theme] .ec-account .acc-panel-head {
+  padding-bottom: 12px;
+  border-bottom: 1px dashed color-mix(in srgb, var(--dz-ink) 18%, transparent);
+}
+[data-design='autoservicio'][data-theme] .ec-account .acc-panel-title {
+  font-family: var(--dz-display); font-weight: 800;
+  font-size: clamp(18px, 2.2vw, 24px); letter-spacing: -.03em; color: var(--dz-ink);
+}
+[data-design='autoservicio'][data-theme] .ec-account .acc-panel-sub {
+  font-family: var(--dz-body); font-size: 12.5px; line-height: 1.55; color: var(--dz-muted);
+}
+
+/* Gate / sub-vistas de mail. */
+[data-design='autoservicio'][data-theme] .ec-account :is(.acc-gate-ico, .acc-auth-ico) {
+  border-radius: var(--dz-radius);
+  background: var(--dz-accent-soft);
+  border: 1px solid color-mix(in srgb, var(--dz-accent) 30%, transparent);
+  color: var(--dz-accent-text);
+}
+[data-design='autoservicio'][data-theme] .ec-account :is(.acc-gate-title, .acc-auth-title) {
+  font-family: var(--dz-display); font-weight: 800; letter-spacing: -.03em; color: var(--dz-ink);
+}
+[data-design='autoservicio'][data-theme] .ec-account :is(.acc-gate-sub, .acc-auth-msg) {
+  font-family: var(--dz-body); color: var(--dz-muted);
+}
+[data-design='autoservicio'][data-theme] .ec-account .acc-gate-list {
+  border: 1px dashed color-mix(in srgb, var(--dz-ink) 20%, transparent);
+  border-radius: var(--dz-radius);
+  background: var(--dz-bg); color: var(--dz-ink-2);
+}
+[data-design='autoservicio'][data-theme] .ec-account .acc-gate-list li { font-family: var(--dz-body); color: var(--dz-ink-2); }
+[data-design='autoservicio'][data-theme] .ec-account .acc-gate-list svg { color: var(--dz-accent-text); }
+[data-design='autoservicio'][data-theme] .ec-account .acc-gate-link,
+[data-design='autoservicio'][data-theme] .ec-account .acc-auth-link {
+  font-family: var(--dz-mono); font-size: 10px; font-weight: 600;
+  letter-spacing: .12em; text-transform: uppercase;
+  color: var(--dz-accent-text);
+  text-decoration: underline; text-underline-offset: 3px;
+}
+[data-design='autoservicio'][data-theme] .ec-account .acc-auth-ok { color: var(--dz-ok); font-family: var(--dz-body); font-weight: 700; }
+[data-design='autoservicio'][data-theme] .ec-account .acc-spin {
+  border-color: color-mix(in srgb, var(--dz-muted) 32%, transparent);
+  border-top-color: var(--dz-accent);
+}
+[data-design='autoservicio'][data-theme] .ec-account .acc-sk {
+  background: color-mix(in srgb, var(--dz-muted) 16%, transparent);
+  border-radius: 3px;
+}
+
+/* ---------- Escritorio: mosaicos de departamento ---------- */
+@media (min-width: 1024px) {
+  [data-design='autoservicio'][data-theme] .ec-account :is(.acc-mhead, .acc-tabs) { display: none; }
+  [data-design='autoservicio'][data-theme] .ec-account .acc-shell {
+    grid-template-columns: 276px minmax(0, 1fr);
+    gap: 18px;
+    align-items: start;
+  }
+  [data-design='autoservicio'][data-theme] .ec-account .acc-side {
+    display: grid;
+    gap: 14px;
+    align-content: start;
+    position: sticky;
+    top: calc(var(--sp-top-h, 64px) + 16px);
+    padding: 14px;
+    border: 1px solid var(--dz-line);
+    border-radius: var(--dz-radius);
+    background: var(--dz-surface);
+    box-shadow: 0 1px 2px rgba(21, 33, 26, .05);
+  }
+  [data-design='autoservicio'][data-theme] .ec-account .acc-id {
+    gap: 11px;
+    padding-bottom: 12px;
+    border-bottom: 1px dashed color-mix(in srgb, var(--dz-ink) 18%, transparent);
+  }
+  [data-design='autoservicio'][data-theme] .ec-account .acc-side .acc-avatar { width: 44px; height: 44px; }
+  [data-design='autoservicio'][data-theme] .ec-account .acc-id-name {
+    font-family: var(--dz-display); font-size: 15px; font-weight: 800;
+    letter-spacing: -.02em; color: var(--dz-ink);
+  }
+  [data-design='autoservicio'][data-theme] .ec-account .acc-id-email {
+    font-family: var(--dz-mono); font-size: 10.5px; color: var(--dz-muted);
+  }
+  /* Mosaicos 2×N: icono + rótulo y el código arriba a la derecha. */
+  [data-design='autoservicio'][data-theme] .ec-account .acc-nav {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 6px;
+  }
+  [data-design='autoservicio'][data-theme] .ec-account .acc-navitem {
+    position: relative;
+    display: grid;
+    grid-template-columns: 18px minmax(0, 1fr);
+    align-items: center;
+    gap: 7px;
+    min-height: 52px;
+    padding: 9px 9px 9px 8px;
+    border: 1px solid var(--dz-line);
+    border-radius: var(--dz-radius);
+    background: var(--dz-surface);
+    color: var(--dz-ink-2);
+    font-family: var(--dz-body); font-size: 12px; font-weight: 600;
+    line-height: 1.2;
+    text-align: left;
+    transition: border-color .16s, background .16s, color .16s;
+  }
+  [data-design='autoservicio'][data-theme] .ec-account .acc-navitem svg { color: var(--dz-muted); transition: color .16s; }
+  [data-design='autoservicio'][data-theme] .ec-account .acc-navitem .acc-idx {
+    position: absolute; top: 5px; right: 6px; margin: 0;
+    font-size: 8px; opacity: .6;
+  }
+  [data-design='autoservicio'][data-theme] .ec-account .acc-navitem:hover {
+    border-color: color-mix(in srgb, var(--dz-accent) 52%, var(--dz-line));
+    background: var(--dz-accent-soft);
+    color: var(--dz-accent-text);
+  }
+  [data-design='autoservicio'][data-theme] .ec-account .acc-navitem:hover svg { color: var(--dz-accent-text); }
+  [data-design='autoservicio'][data-theme] .ec-account .acc-navitem.is-on {
+    background: var(--store-accent-ink);
+    border-color: var(--dz-accent);
+    color: var(--sp-on-band, #fff);
+    font-weight: 700;
+  }
+  [data-design='autoservicio'][data-theme] .ec-account .acc-navitem.is-on svg { color: var(--dz-accent-ink); }
+  [data-design='autoservicio'][data-theme] .ec-account .acc-navitem.is-on .acc-idx { color: var(--dz-accent-ink); opacity: .85; }
+  [data-design='autoservicio'][data-theme] .ec-account .acc-logout {
+    min-height: 44px;
+    border: 1px dashed color-mix(in srgb, var(--dz-ink) 26%, transparent);
+    border-radius: var(--dz-radius);
+    background: transparent;
+    color: var(--dz-ink-2);
+    font-family: var(--dz-mono); font-size: 10px; font-weight: 600;
+    letter-spacing: .12em; text-transform: uppercase;
+  }
+  [data-design='autoservicio'][data-theme] .ec-account .acc-logout:hover {
+    color: var(--dz-danger);
+    border-color: color-mix(in srgb, var(--dz-danger) 52%, transparent);
+    background: color-mix(in srgb, var(--dz-danger) 7%, var(--dz-surface));
+  }
+}
+
+/* ---------- Responsive ---------- */
+@media (max-width: 1024px) {
+  [data-design='autoservicio'] .ec-auth .ec-auth-shell {
+    grid-template-columns: minmax(0, 1fr);
+    margin-block: 10px clamp(26px, 5vw, 44px);
+  }
+  /* En tablet/mobile el resumen va arriba del ticket, compacto. */
+  [data-design='autoservicio'] .ec-auth .ec-auth-brand {
+    order: 0;
+    padding: 16px 18px;
+    border-left: 0;
+    border-bottom: 1px dashed color-mix(in srgb, var(--dz-ink) 20%, transparent);
+  }
+  [data-design='autoservicio'] .ec-auth .ec-auth-brand-inner {
+    grid-template-rows: auto auto;
+    gap: 10px;
+  }
+  [data-design='autoservicio'] .ec-auth .ec-auth-brand-copy { gap: 6px; max-width: none; }
+  [data-design='autoservicio'] .ec-auth .ec-auth-brand-text,
+  [data-design='autoservicio'] .ec-auth .ec-auth-perks,
+  [data-design='autoservicio'] .ec-auth .ec-auth-brand-foot { display: none; }
+  [data-design='autoservicio'] .ec-auth .ec-auth-brand-title { font-size: clamp(19px, 3.8vw, 24px); }
+  [data-design='autoservicio'] .ec-auth .ec-auth-panel { padding: 22px 20px 28px; }
+}
+@media (max-width: 860px) {
+  [data-design='autoservicio'][data-theme] .ec-account .acc-panel-title { font-size: 19px; }
+}
+@media (max-width: 640px) {
+  [data-design='autoservicio'] .ec-auth { padding-inline: 10px; }
+  [data-design='autoservicio'] .ec-auth .ec-auth-brand { padding: 14px 15px; }
+  [data-design='autoservicio'] .ec-auth .ec-auth-logo { width: 34px; height: 34px; font-size: 16px; }
+  [data-design='autoservicio'] .ec-auth .ec-auth-brand-title { font-size: 18px; }
+  [data-design='autoservicio'] .ec-auth .ec-auth-panel { padding: 18px 15px 24px; }
+  [data-design='autoservicio'] .ec-auth .ec-auth-title { font-size: 21px; }
+  [data-design='autoservicio'] .ec-auth .ecaf-grid { grid-template-columns: minmax(0, 1fr); }
+  [data-design='autoservicio'][data-theme] .ec-account { padding-inline: 10px; }
+  [data-design='autoservicio'][data-theme] .ec-account .acc-panel,
+  [data-design='autoservicio'][data-theme] .ec-account .acc-auth-card,
+  [data-design='autoservicio'][data-theme] .ec-account .acc-gate-card { padding: 15px 13px; }
+  [data-design='autoservicio'][data-theme] .ec-account .acc-tab { padding: 8px 10px; font-size: 12px; }
+}
+@media (max-width: 390px) {
+  [data-design='autoservicio'] .ec-auth { padding-inline: 6px; }
+  [data-design='autoservicio'] .ec-auth .ec-auth-brand-title { font-size: 17px; }
+  [data-design='autoservicio'] .ec-auth .ec-auth-title { font-size: 19px; }
+  [data-design='autoservicio'][data-theme] .ec-account { padding-inline: 8px; }
+  [data-design='autoservicio'][data-theme] .ec-account .acc-mhead { padding: 9px 10px; gap: 9px; }
+  [data-design='autoservicio'][data-theme] .ec-account .acc-mhead-meta strong { font-size: 14px; }
+  [data-design='autoservicio'][data-theme] .ec-account .acc-panel-title { font-size: 18px; }
+}
+/* Tab bar inferior de la tienda: aire extra sobre la barra fija. */
+@media (max-width: 768px) {
+  [data-design='autoservicio'][data-theme] .ec-account,
+  [data-design='autoservicio'] .ec-auth {
+    padding-bottom: calc(24px + env(safe-area-inset-bottom));
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  [data-design='autoservicio'] :is(.ec-auth, .ec-account) * {
+    transition-duration: .001ms !important;
+    animation-duration: .001ms !important;
+  }
+}

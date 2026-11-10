@@ -1,5 +1,9 @@
 <script setup>
 import { computed, onBeforeUnmount, ref, watch } from 'vue'
+import { useRouter } from 'vue-router'
+
+import { useCartStore } from '../../stores/cart.store.js'
+import { storeHostSlug } from '../../config/env.js'
 
 // Documento real de un diseño del catálogo (DesignPattern):
 // GET /api/stores/public/<slug>/pattern/document/ devuelve el HTML con los
@@ -34,11 +38,17 @@ const props = defineProps({
   //diseño: en la web publicada lo hornea el backend en el documento;
   //en la vista previa del Studio viaja por postMessage porque el iframe
   //es de origen opaco. Vacío = sin reglas del Studio.
-  studioCss: { type: String, default: '' }
+  studioCss: { type: String, default: '' },
+  //Sesión del comprador: el documento es origen opaco (no lee cookies) —
+  //el host se la empuja por `davent:ds-account-state` y el botón del
+  //puente cambia de "Ingresar" a "Mi cuenta".
+  account: { type: Boolean, default: false }
 })
 
 const frame = ref(null)
 const height = ref(0)
+const router = useRouter()
+const cartStore = useCartStore()
 //Overflow del documento previo a un bloqueo de scroll pedido por el diseño
 //(hoja modal abierta). null = la página scrollea normal.
 let docOverflow = null
@@ -76,7 +86,7 @@ const src = computed(() => {
   return `/api/stores/public/${encodeURIComponent(props.slug)}/pattern/document/?${params}`
 })
 
-const emit = defineEmits(['navigate', 'toggle-theme', 'load'])
+const emit = defineEmits(['navigate', 'toggle-theme', 'load', 'buy', 'account'])
 
 //El iframe va sin `allow-same-origin` (origen opaco): el JS del diseño no
 //puede tocar el DOM ni las cookies de la app. Los datos que necesita de la
@@ -163,6 +173,28 @@ function onMessage(e) {
     emit('toggle-theme')
     return
   }
+  if (e.data?.type === 'davent:ds-buy') {
+    /* CTA de carrito inyectado por el puente (tienda con venta online):
+     * el documento no puede llamar a la API del carrito — el host resuelve
+     * sesión de comprador, alta y drawer. El id lo valida el server. */
+    const id = String(e.data.id || '')
+    if (/^\d{1,10}$/.test(id)) emit('buy', { id: Number(id) })
+    return
+  }
+  if (e.data?.type === 'davent:ds-account') {
+    /* Entrada "Mi cuenta" inyectada por el puente: el host decide entre
+     * abrir el modal de auth del comprador o navegar a /cuenta. */
+    emit('account')
+    return
+  }
+  if (e.data?.type === 'davent:ds-cart') {
+    /* Píldora de carrito inyectada por el puente (tienda con venta
+     * online): navega a la página /carrito de ESTA tienda por path —
+     * mismo criterio que checkoutRoute de cart.store (en subdominio o
+     * dominio propio es '/carrito'; en la plataforma '/<slug>/carrito'). */
+    router.push({ path: storeHostSlug ? '/carrito' : `/${props.slug}/carrito` })
+    return
+  }
   if (e.data?.type === 'davent:ds-route') {
     const route = String(e.data.route || '')
     if (['home', 'catalog', 'services'].includes(route)) {
@@ -194,12 +226,26 @@ function syncStudioCss() {
   post('davent:ds-studio-css', { css: props.studioCss || '' })
 }
 
+function syncAccount() {
+  post('davent:ds-account-state', { authed: props.account })
+}
+
+//El carrito es del comprador (store slug-scoped, ya bindeado por el
+//layout): el documento es origen opaco y no puede leerlo — se le empuja
+//el contador por postMessage, igual que la sesión de cuenta. El badge
+//de `.dsx-cart` dentro del diseño se actualiza sin recargar el iframe.
+function syncCart() {
+  post('davent:ds-cart-state', { count: cartStore.itemCount })
+}
+
 function onLoad() {
   height.value = 0
   emit('load')
   post('davent:ds-surface', { surface: props.surface })
   syncTheme()
   syncStudioCss()
+  syncAccount()
+  syncCart()
   postFrame()
 }
 
@@ -231,6 +277,12 @@ watch(() => props.surface, () => {
 //Ediciones del Studio en vivo: el CSS viaja entero (es barato — son unas
 //pocas reglas) y el puente lo reemplaza en un <style> dedicado.
 watch(() => props.studioCss, syncStudioCss)
+//Login/logout del comprador con el documento ya montado: el rótulo del
+//botón se actualiza sin recargar el iframe.
+watch(() => props.account, syncAccount)
+//Agregar/quitar ítems del carrito (acá o en el drawer): el badge de la
+//píldora dentro del documento se actualiza en vivo.
+watch(() => cartStore.itemCount, syncCart)
 
 if (typeof window !== 'undefined') {
   window.addEventListener('message', onMessage)

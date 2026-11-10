@@ -28,6 +28,32 @@ const app = createApp(App)
 app.use(createPinia())
 app.use(router)
 
+// Tokens de pedidos/comprobantes viajan en la URL (?token=, ?preview= y el
+// segmento /pedido/<token>/). Sin este filtro, Sentry (errores,
+// transacciones y breadcrumbs) filtraría credenciales de clientes a un
+// tercero cada vez que se habilita VITE_SENTRY_DSN.
+const SENSITIVE_PARAM_RE = /([?&\s"']|^)(token|uid|preview|access_token|refresh_token|next)=([^&\s"'<>]+)/gi
+const TOKEN_PATH_RE = /(\/pedido\/)[^/?#\s"'<>]+/gi
+const scrubUrl = (s) => typeof s === 'string'
+  ? s.replace(SENSITIVE_PARAM_RE, '$1$2=[redacted]').replace(TOKEN_PATH_RE, '$1[redacted]')
+  : s
+
+function scrubSentryEvent(event) {
+  if (!event) return event
+  if (event.request?.url) event.request.url = scrubUrl(event.request.url)
+  if (event.request?.query_string) event.request.query_string = scrubUrl(event.request.query_string)
+  if (event.transaction) event.transaction = scrubUrl(event.transaction)
+  for (const b of event.breadcrumbs || []) {
+    if (typeof b?.message === 'string') b.message = scrubUrl(b.message)
+    if (b?.data && typeof b.data === 'object') {
+      for (const [k, v] of Object.entries(b.data)) {
+        if (typeof v === 'string') b.data[k] = scrubUrl(v)
+      }
+    }
+  }
+  return event
+}
+
 // Observabilidad: Sentry solo se activa con VITE_SENTRY_DSN en el build
 // (vacío en dev no cambia nada). Import dinámico para no inflar el bundle
 // inicial cuando no hay DSN.
@@ -37,6 +63,8 @@ if (import.meta.env.VITE_SENTRY_DSN) {
       app,
       dsn: import.meta.env.VITE_SENTRY_DSN,
       environment: import.meta.env.MODE,
+      beforeSend: scrubSentryEvent,
+      beforeSendTransaction: scrubSentryEvent,
     })
   }).catch(() => {})
 }

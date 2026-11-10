@@ -1163,3 +1163,77 @@ producto y landing):
 - `import_design_pattern` sigue aceptando cualquier HTML del repo: el saneo es
   en tiempo de servicio, no de importación (el original queda como fuente de
   verdad para re-importar).
+
+## 8. Auditoría 2026-11-10 (ronda 6) — ecommerce multi-agente + pagos E2E
+
+Alcance: rama `ECCOMMERCE-ADD` (feature ecommerce completo + pulido de los 26
+diseños de tienda). Método: 4 tracks de auditoría en paralelo (documento/CSP
+de patrones, API pública + caché + throttle, auth/panel de cliente, frontend
+de tienda) + suite completa + simulación E2E de pagos con cuentas reales de
+prueba + verificación adversarial de las regex de allowlist.
+
+### 8.1 Hallazgos remediados (commit `6be7baa0`)
+
+| # | Sev | Hallazgo | Fix |
+|---|---|---|---|
+| F1 | Medio | Protocolo Studio (`davent:layout`, `davent:studio-*`) aceptaba `postMessage` desde cualquier origen: `parentOrigin` se derivaba de `document.referrer`, así que un sitio externo que embebiera `?studio=1` quedaba como "padre" habilitado e inyectaba theme/layout/custom (videos, fondos `url()`). | Allowlist explícita de orígenes de plataforma (`location.origin` + `env.appUrl` + subdominios de `platformDomain`); el referrer ya no confiere confianza; `studio:ready` se postea solo a orígenes habilitados. `vercel.json` suma CSP `frame-ancestors` + XFO/nosniff/Referrer-Policy (paridad con el deploy Django empaquetado). |
+| F2 | Medio-bajo | `invoice_ref` del comprobante aceptaba cualquier URL `http(s)` como link de descarga → phishing al comprador desde el panel del vendedor. | Solo se enlaza hacia hosts de confianza (R2, `*.afip.gob.ar`, dominios de plataforma); el resto se muestra como texto. |
+| F3 | Token/privacy | Sentry (`VITE_SENTRY_DSN`) recibía URLs con `?token=` (seguimiento), `?preview=` y el segmento `/pedido/<token>/` del comprobante → credenciales de clientes a un tercero. | `beforeSend`/`beforeSendTransaction` redactan esos parámetros y el segmento de path en request URL, transaction name, query_string y breadcrumbs. |
+| F4 | Medio-bajo | Redirect de checkout MP (`checkout_url`/`init_point`) navegaba sin allowlist de hosts. | Revalidación frontend: solo `https` + hosts oficiales MP (`mercadopago`/`mercadolibre`/`mpago.la`); URL inválida ⇒ error visible, no redirect. |
+| F5 | Medio | `sanitize_markup` generaba `href=="#"` malformado y el documento de patrón era vulnerable a breakout de `</style>` desde CSS y meta refresh por entidades. | Sanitizador corregido y endurecido; CSP por nonce por respuesta (`script-src 'nonce-…'`, `default-src 'none'`); `pattern_preview`/`pattern_bridge` alineados. Regresión: `PatternDocumentSecurityTests` (7 tests). |
+| F6 | Bajo | API pública de tiendas: el parámetro `?product=` bypaseaba caché y `q` tenía mismatch de clave; visitas se deduplicaban por IP+UA (rotar UA inflaba el contador sin límite). | Bypass de caché corregido; clave de dedupe → IP+fecha (el último hop XFF sigue siendo la fuente, NUM_PROXIES). Test de regresión ajustado: mismo IP + UA rotado cuenta 1; IPs distintas cuentan 2. |
+| F7 | Bajo | Throttle de auth de cliente dependía de una sola llamada a cache (fail-open si el cache caía). | `_ResilientThrottleMixin` aplicado en `customer-auth` y `support` de cliente. |
+
+### 8.2 Hallazgo encontrado en verificación (mismo día)
+
+- **Bypass de la regex MP**: la primera versión de `MP_HOST_RE`
+  (`mercadopago\.[a-z.]+$`) aceptaba `mercadopago.com.evil.com` (el TLD
+  comodín tragaba subdominios extra). Corregida a máximo 2 niveles de sufijo
+  (`\.[a-z]{2,63}(\.[a-z]{2,63})?$`): 12 casos adversariales OK. Las demás
+  regex (`invoice_ref`, embeds) ya anclaban el dominio completo y no cedían.
+
+### 8.3 Test E2E de pagos (`.tmp-qa/pay_e2e.py`, tienda `vertice`)
+
+Cuentas de prueba: comprador `qa_buyer@test.local` (customer-auth), dueño
+`portico_test` (password de QA seteada local). Flujo real por HTTP:
+
+- Registro + login de cliente (JWT), rechazo de password incorrecta (401).
+- Catálogo público → pedido `transfer` con captcha firmado → **201**
+  `PENDING_PAYMENT` + `payment_instructions` correctas (alias/holder).
+- **Idempotencia**: replay con mismo `idempotency_key` + captcha fresco →
+  200 mismo `tracking_token`, sin pedido duplicado.
+- Captcha incorrecto → 400; token inexistente → 404; token de otra tienda
+  (`forja`) → 404 (IDOR).
+- Comprobante: imagen PNG → `normalize_image` → WebP en R2
+  (`stores/41/proofs/*.webp`), 201.
+- Dueño: login plataforma → `confirm-payment` → `mark_order_paid`
+  idempotente (`PENDING_PAYMENT → PAID → auto-PACKING` + descuento stock).
+- `advance` SHIPPED → DELIVERED; `invoice-ref` 200.
+- MP sin `StoreMpAccount` conectado: pedido `payment_method='mp'` rechazado
+  upfront (400 método no habilitado) — verificado en la primera corrida.
+- Tracking/receipt públicos actualizan el estado tras la confirmación.
+
+Nota: los `429` observados en corridas masivas son los throttles por diseño
+(`OrderCreateThrottle`, `store_visit` 120/h por IP en locmem) — se limpia
+reiniciando `runserver`, no es defecto.
+
+### 8.4 Verificación
+
+- `manage.py test` → **1484 tests**, 1 fallo inicial
+  (`VisitCounterTests.test_distinct_visitor_counts_again`): el test
+  codificaba el comportamiento viejo vulnerable (UA distinto = visitante
+  nuevo). Actualizado al nuevo contrato (IP+fecha) + nuevo caso de IPs
+  distintas → **OK**.
+- `manage.py check --deploy` → 0 errores; 6 warnings ambientales
+  (DEBUG/SECRET_KEY/SECURE_* del `.env` local — por diseño, ver §5-G).
+- `vite build` → OK.
+
+### 8.5 Residuales honestos
+
+- MP real de tienda requiere `StoreMpAccount` por OAuth del vendedor: el
+  camino `pay/` + webhook quedó cubierto por tests unitarios, no por un
+  pago real (no hay credenciales TEST- de vendedor en local).
+- `NEEDS-VALIDATION` de `security-audit-run1` sigue vigente (idempotencia
+  del reembolso MP del lado del proveedor — observable solo en MP real).
+- Las cuentas/datos de QA (`qa_buyer`, pedido PED-0001 en `vertice`,
+  `payment_config` de prueba) existen solo en la base local.

@@ -4,6 +4,7 @@ from django.utils import timezone
 
 from StoreApp.domains.design.services.pattern_document import (
     SURFACE_CSS,
+    sanitize_css,
     sanitize_markup,
 )
 from StoreApp.domains.design.services.pattern_render import theme_css
@@ -116,6 +117,6 @@ def preview_pattern(pattern, theme = 'light', accent = '', style = None):
         'nombre': pattern.nombre,
         'theme': 'dark' if theme == 'dark' else 'light',
         'html': html,
-        'css': f'{theme_css(customization, pattern)}\n{SURFACE_CSS}\n{pattern.css or ""}',
+        'css': sanitize_css(f'{theme_css(customization, pattern)}\n{SURFACE_CSS}\n{pattern.css or ""}'),
         'js': pattern.js or '',
     }

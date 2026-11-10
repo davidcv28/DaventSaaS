@@ -1,0 +1,671 @@
+/* ===========================================================================
+   CALZADO — páginas de comercio (ingresar / cuenta).
+   Se carga on-demand desde StorePublicLayout cuando .store-page lleva
+   data-design="calzado". No edita las hojas scoped de las vistas: las
+   reemplaza con más especificidad.
+
+   Composición propia: la auth es el CHECK-IN DE CARRERA en dos bandas —
+   el ala de marca es panel tinta con reglas de pista (lane) y dorsal
+   numerado, titular fino en caja alta y reglamento con flechas →; el ala
+   del formulario es papel con filete señal superior, campos de esquina
+   recta y botón bloque de tinta. La cuenta es el MARCADOR: columna de
+   resultados con líderes de puntos, paneles con franja de pista y tabs
+   de pizarra en móvil.
+   =========================================================================== */
+
+[data-design='calzado'] {
+  --dz-bg: #ffffff;
+  --dz-surface: #ffffff;
+  --dz-ink: #141414;
+  --dz-ink-2: #33322f;
+  --dz-muted: #5d5a53;
+  --dz-line: #e7e4df;
+  --dz-accent: var(--store-accent, #e0122b);
+  --dz-accent-ink: var(--store-accent-ink, #ffffff);
+  /* Acento como TEXTO: el rojo señal crudo queda ~3.3:1 sobre blanco —
+     se mezcla hacia la tinta. */
+  --dz-accent-text: color-mix(in srgb, var(--store-accent, #e0122b) 70%, #141414);
+  --dz-ok: #1e6b3a;
+  --dz-danger: #c22b20;
+  --dz-display: var(--st-f-display-family, "Montserrat", "Arial Narrow", system-ui, sans-serif);
+  --dz-body: var(--st-f-body-family, "Lato", system-ui, sans-serif);
+  --dz-mono: var(--st-f-eyebrow-family, "JetBrains Mono", ui-monospace, Menlo, monospace);
+  --dz-panel: #141414;
+  --dz-on-panel: #f5f3ef;
+  --dz-soft: #f5f3ef;
+  --dz-btn: #141414;
+  --dz-btn-ink: #ffffff;
+  --dz-radius: 2px;
+  --dz-ease: cubic-bezier(.2, .7, .2, 1);
+}
+
+[data-design='calzado'][data-theme='dark'] {
+  --dz-bg: #121212;
+  --dz-surface: #181818;
+  --dz-ink: #f2f0ec;
+  --dz-ink-2: #d6d3cd;
+  --dz-muted: #9e9b95;
+  --dz-line: #2b2b2b;
+  --dz-accent: color-mix(in srgb, var(--store-accent, #e0122b) 72%, #f2f0ec);
+  --dz-accent-ink: #121212;
+  --dz-accent-text: color-mix(in srgb, var(--store-accent, #e0122b) 55%, #f2f0ec);
+  --dz-ok: #8fd6a8;
+  --dz-danger: #f0958a;
+  --dz-panel: #1e1e1e;
+  --dz-on-panel: #f2f0ec;
+  --dz-soft: #1a1a1a;
+  --dz-btn: #f2f0ec;
+  --dz-btn-ink: #121212;
+}
+
+/* ---------- Marco común ---------- */
+[data-design='calzado'][data-theme] :is(.ec-auth, .ec-account) :is(a, button, input, select, textarea):focus-visible {
+  outline: 2px solid var(--dz-accent);
+  outline-offset: 3px;
+}
+[data-design='calzado'][data-theme] :is(.ec-auth, .ec-account) ::selection {
+  background: var(--store-accent-ink);
+  color: var(--sp-on-band, #fff);
+}
+
+/* ===========================================================================
+   AUTH — check-in de carrera
+   =========================================================================== */
+[data-design='calzado'] .ec-auth {
+  padding-inline: clamp(0px, 3vw, 26px);
+}
+[data-design='calzado'] .ec-auth .ec-auth-shell {
+  width: min(1120px, 100%);
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1.05fr);
+  margin-block: clamp(16px, 3.4vw, 44px) clamp(40px, 6vw, 80px);
+  border: 1px solid var(--dz-ink);
+  border-radius: var(--dz-radius);
+  background: var(--dz-surface);
+  box-shadow: 10px 10px 0 0 color-mix(in srgb, var(--dz-ink) 9%, transparent);
+  overflow: hidden;
+}
+
+/* Ala de marca: panel tinta con reglas de pista. */
+[data-design='calzado'] .ec-auth .ec-auth-brand {
+  position: relative;
+  isolation: isolate;
+  padding: clamp(26px, 3.6vw, 44px);
+  color: var(--dz-on-panel);
+  background:
+    linear-gradient(160deg, color-mix(in srgb, #000 26%, transparent), transparent 62%),
+    var(--dz-panel);
+}
+/* La portada de la tienda queda como textura luminosa bajo el panel. */
+[data-design='calzado'] .ec-auth .ec-auth-brand::before {
+  opacity: .3;
+  mix-blend-mode: luminosity;
+}
+/* Capa de pista: reglas al pie que se desvanecen + filete señal en el
+   filo inferior (por encima de la textura de portada). */
+[data-design='calzado'] .ec-auth .ec-auth-brand::after {
+  background:
+    repeating-linear-gradient(90deg, transparent 0 46px, color-mix(in srgb, #f5f3ef 15%, transparent) 46px 47px) center bottom / 100% 96px no-repeat,
+    linear-gradient(0deg, var(--dz-accent) 3px, transparent 3px) center bottom / 100% 3px no-repeat,
+    linear-gradient(180deg, transparent 62%, color-mix(in srgb, #000 30%, transparent));
+  -webkit-mask-image: linear-gradient(0deg, #000, transparent 78%);
+  mask-image: linear-gradient(0deg, #000, transparent 78%);
+}
+[data-design='calzado'] .ec-auth .ec-auth-brand-inner {
+  display: grid;
+  grid-template-rows: auto 1fr auto;
+  align-content: stretch;
+  gap: clamp(20px, 3vw, 34px);
+  height: 100%;
+  padding-right: 0;
+}
+[data-design='calzado'] .ec-auth .ec-auth-brand-top {
+  gap: 14px;
+  padding-bottom: 16px;
+  border-bottom: 1px solid color-mix(in srgb, #f5f3ef 18%, transparent);
+}
+[data-design='calzado'] .ec-auth .ec-auth-logo {
+  width: 46px; height: 46px;
+  border-radius: 0;
+  background: var(--store-accent-ink);
+  border: 1px solid var(--dz-panel);
+  color: var(--sp-on-band, #fff);
+  font-family: var(--dz-display); font-size: 15px; font-weight: 700; letter-spacing: .12em;
+}
+[data-design='calzado'] .ec-auth .ec-auth-brand-name {
+  font-family: var(--dz-body); font-size: 11px; font-weight: 700;
+  letter-spacing: .2em; text-transform: uppercase; color: var(--dz-on-panel);
+}
+[data-design='calzado'] .ec-auth .ec-auth-brand-copy {
+  display: grid; gap: 13px; max-width: 46ch;
+}
+/* Dorsal del corredor: "Nº 07 ————" tabular. */
+[data-design='calzado'] .ec-auth .ec-auth-rail {
+  display: inline-flex; align-items: center; gap: 12px;
+  font: 700 9px/1 var(--dz-mono); letter-spacing: .3em; text-transform: uppercase;
+  color: color-mix(in srgb, var(--dz-accent) 80%, var(--dz-on-panel));
+}
+[data-design='calzado'] .ec-auth .ec-auth-rail::after {
+  content: ""; width: 56px; height: 2px;
+  background: repeating-linear-gradient(90deg, var(--dz-accent) 0 10px, transparent 10px 14px);
+}
+[data-design='calzado'] .ec-auth .ec-auth-brand-kicker {
+  font: 700 9px/1 var(--dz-mono); letter-spacing: .26em; text-transform: uppercase;
+  color: color-mix(in srgb, #f5f3ef 62%, transparent);
+}
+[data-design='calzado'] .ec-auth .ec-auth-brand-title {
+  font-family: var(--dz-display); font-weight: 200;
+  font-size: clamp(32px, 3.6vw, 48px); line-height: .98; letter-spacing: .01em;
+  text-transform: uppercase;
+  color: var(--dz-on-panel);
+}
+[data-design='calzado'] .ec-auth .ec-auth-brand-text {
+  font-family: var(--dz-body); font-size: 13.5px; font-weight: 300; line-height: 1.65;
+  color: color-mix(in srgb, #f5f3ef 78%, transparent);
+}
+/* Reglamento de carrera: filas con flecha →. */
+[data-design='calzado'] .ec-auth .ec-auth-perks {
+  counter-reset: dzperk; gap: 0; margin-top: 6px;
+}
+[data-design='calzado'] .ec-auth .ec-auth-perks li {
+  counter-increment: dzperk;
+  display: flex; align-items: center; gap: 12px;
+  padding: 11px 0;
+  border-bottom: 1px solid color-mix(in srgb, #f5f3ef 14%, transparent);
+  font-family: var(--dz-body); font-size: 12.5px; font-weight: 400;
+  color: color-mix(in srgb, #f5f3ef 90%, transparent);
+}
+[data-design='calzado'] .ec-auth .ec-auth-perks li::before {
+  content: "→"; flex: none;
+  font-family: var(--dz-display); font-size: 12px; font-weight: 700;
+  color: var(--dz-accent);
+}
+[data-design='calzado'] .ec-auth .ec-auth-perks li > span { flex: 1 1 auto; min-width: 0; }
+[data-design='calzado'] .ec-auth .ec-auth-perks svg {
+  flex: none; color: color-mix(in srgb, #f5f3ef 55%, transparent);
+}
+[data-design='calzado'] .ec-auth .ec-auth-brand-foot {
+  font: 700 8.5px/1.5 var(--dz-mono); letter-spacing: .22em; text-transform: uppercase;
+  color: color-mix(in srgb, #f5f3ef 58%, transparent);
+  padding-top: 14px;
+  border-top: 1px solid color-mix(in srgb, #f5f3ef 14%, transparent);
+}
+
+/* Ala del formulario: papel con filete señal. */
+[data-design='calzado'] .ec-auth .ec-auth-panel {
+  position: relative;
+  padding: clamp(24px, 3.4vw, 46px) clamp(22px, 3.4vw, 46px) clamp(28px, 4vw, 48px);
+  background: var(--dz-surface);
+  color: var(--dz-ink);
+  border-left: 1px solid var(--dz-line);
+}
+[data-design='calzado'] .ec-auth .ec-auth-panel::before {
+  content: ""; position: absolute; inset: 0 0 auto; height: 3px;
+  background: var(--dz-accent);
+}
+[data-design='calzado'] .ec-auth .ec-auth-back {
+  gap: 9px; margin-bottom: clamp(20px, 3vw, 30px);
+  padding-bottom: 6px;
+  border-bottom: 1px solid transparent;
+  font: 700 9px/1 var(--dz-mono); letter-spacing: .24em; text-transform: uppercase;
+  color: var(--dz-muted);
+  transition: color .2s var(--dz-ease), border-color .2s var(--dz-ease);
+}
+[data-design='calzado'] .ec-auth .ec-auth-back:hover {
+  color: var(--dz-accent-text); border-bottom-color: var(--dz-accent);
+}
+[data-design='calzado'] .ec-auth .ec-auth-head {
+  gap: 10px; margin-bottom: 26px; padding-bottom: 20px;
+  border-bottom: 1px solid var(--dz-line);
+}
+[data-design='calzado'] .ec-auth .ec-auth-badge {
+  width: 46px; height: 46px; margin-bottom: 4px;
+  border: 1px solid var(--dz-ink);
+  border-radius: 0;
+  background: transparent; color: var(--dz-accent-text);
+}
+[data-design='calzado'] .ec-auth .ec-auth-tag {
+  display: inline-flex; align-items: center; gap: 9px;
+  font: 700 9px/1 var(--dz-mono); letter-spacing: .26em; text-transform: uppercase;
+  color: var(--dz-accent-text);
+}
+[data-design='calzado'] .ec-auth .ec-auth-tag::before {
+  content: ""; width: 8px; height: 8px; flex: none;
+  background: var(--dz-accent);
+}
+[data-design='calzado'] .ec-auth .ec-auth-title {
+  font-family: var(--dz-display); font-weight: 200;
+  font-size: clamp(26px, 3vw, 38px); line-height: 1.0; letter-spacing: .01em;
+  text-transform: uppercase;
+  color: var(--dz-ink);
+}
+[data-design='calzado'] .ec-auth .ec-auth-sub {
+  font-family: var(--dz-body); font-size: 13.5px; font-weight: 300; line-height: 1.65; color: var(--dz-muted);
+}
+[data-design='calzado'] .ec-auth .ec-auth-loading { color: var(--dz-muted); font-family: var(--dz-body); }
+[data-design='calzado'] .ec-auth .ec-auth-spin { color: var(--dz-accent-text); }
+
+/* ---------- Controles (compartidos auth + cuenta) ---------- */
+[data-design='calzado'][data-theme] :is(.ec-auth, .ec-account) .sp-field { gap: 8px; }
+[data-design='calzado'][data-theme] :is(.ec-auth, .ec-account) .sp-field-label {
+  font: 700 9px/1 var(--dz-mono); letter-spacing: .24em; text-transform: uppercase;
+  color: var(--dz-muted);
+}
+[data-design='calzado'][data-theme] :is(.ec-auth, .ec-account) .sp-input {
+  min-height: 48px;
+  padding: 12px 14px;
+  border: 1px solid var(--dz-line);
+  border-radius: 0;
+  background: var(--dz-bg);
+  color: var(--dz-ink);
+  font-family: var(--dz-body); font-size: 16px;
+  transition: border-color .18s var(--dz-ease), box-shadow .18s var(--dz-ease);
+}
+[data-design='calzado'][data-theme] :is(.ec-auth, .ec-account) .sp-input:hover { border-color: color-mix(in srgb, var(--dz-ink) 40%, var(--dz-line)); }
+[data-design='calzado'][data-theme] :is(.ec-auth, .ec-account) .sp-input:focus {
+  border-color: var(--dz-ink);
+  box-shadow: inset 0 -2px 0 var(--dz-accent);
+  outline: none;
+}
+[data-design='calzado'][data-theme] :is(.ec-auth, .ec-account) .sp-input::placeholder {
+  color: var(--dz-muted); opacity: 1;
+}
+[data-design='calzado'][data-theme] :is(.ec-auth, .ec-account) .sp-input:disabled {
+  background: color-mix(in srgb, var(--dz-line) 30%, var(--dz-bg));
+  color: var(--dz-ink-2);
+  cursor: not-allowed;
+}
+[data-design='calzado'][data-theme] :is(.ec-auth, .ec-account) .sp-form-error {
+  color: var(--dz-danger); font-family: var(--dz-body); font-size: 12.5px;
+}
+/* El ojo de contraseña (scoped .ecaf-pass .sp-input) necesita su aire:
+   el padding propio del campo no puede pisar los 46px reservados. */
+[data-design='calzado'][data-theme] :is(.ec-auth, .ec-account) .ecaf-pass .sp-input { padding-right: 46px; }
+[data-design='calzado'][data-theme] :is(.ec-auth, .ec-account) .sp-input:-webkit-autofill {
+  -webkit-text-fill-color: var(--dz-ink);
+  box-shadow: inset 0 0 0 40px var(--dz-bg);
+}
+
+/* Botón principal: bloque de tinta con filete señal al hover. */
+[data-design='calzado'][data-theme] :is(.ec-auth, .ec-account) :is(.ecaf-submit, .ec-btn-primary) {
+  min-height: 50px;
+  border: 1px solid var(--dz-btn);
+  border-radius: 0;
+  background: var(--dz-btn);
+  color: var(--dz-btn-ink);
+  font: 700 11px/1 var(--dz-display); letter-spacing: .18em; text-transform: uppercase;
+  filter: none;
+  box-shadow: 4px 4px 0 0 color-mix(in srgb, var(--dz-ink) 16%, transparent);
+  transition: transform .18s var(--dz-ease), box-shadow .18s var(--dz-ease), background .2s, color .2s;
+}
+[data-design='calzado'][data-theme] :is(.ec-auth, .ec-account) :is(.ecaf-submit, .ec-btn-primary):hover:not(:disabled) {
+  background: var(--store-accent-ink);
+  border-color: var(--dz-accent);
+  color: var(--sp-on-band, #fff);
+  transform: translate(-1px, -1px);
+  box-shadow: 5px 5px 0 0 color-mix(in srgb, var(--dz-ink) 20%, transparent);
+  filter: none;
+}
+[data-design='calzado'][data-theme] :is(.ec-auth, .ec-account) :is(.ecaf-submit, .ec-btn-primary):active:not(:disabled) {
+  transform: translate(2px, 2px);
+  box-shadow: 1px 1px 0 0 color-mix(in srgb, var(--dz-ink) 16%, transparent);
+}
+[data-design='calzado'][data-theme] :is(.ec-auth, .ec-account) :is(.ecaf-submit, .ec-btn-primary):disabled {
+  background: var(--dz-line); color: var(--dz-muted); opacity: 1; cursor: not-allowed;
+  border-color: var(--dz-line); box-shadow: none;
+}
+[data-design='calzado'][data-theme] :is(.ec-auth, .ec-account) .ec-btn-ghost {
+  min-height: 46px;
+  border: 1px solid var(--dz-ink);
+  border-radius: 0;
+  background: transparent; color: var(--dz-ink);
+  font: 700 10.5px/1 var(--dz-display); letter-spacing: .16em; text-transform: uppercase;
+}
+[data-design='calzado'][data-theme] :is(.ec-auth, .ec-account) .ec-btn-ghost:hover {
+  background: var(--dz-ink); color: var(--dz-bg); border-color: var(--dz-ink);
+}
+
+/* Formulario compartido (StoreAuthForm). */
+[data-design='calzado'] .ec-auth .ecaf { gap: 15px; }
+[data-design='calzado'] .ec-auth .ecaf-pass-toggle { color: var(--dz-muted); border-radius: 0; }
+[data-design='calzado'] .ec-auth .ecaf-pass-toggle:hover {
+  color: var(--dz-accent-text); background: color-mix(in srgb, var(--dz-accent) 8%, transparent);
+}
+[data-design='calzado'] .ec-auth .ecaf-divider {
+  font: 700 9px/1 var(--dz-mono); letter-spacing: .24em; text-transform: uppercase;
+  color: var(--dz-muted);
+}
+[data-design='calzado'] .ec-auth .ecaf-divider::before,
+[data-design='calzado'] .ec-auth .ecaf-divider::after { background: var(--dz-line); opacity: 1; }
+[data-design='calzado'] .ec-auth .ecaf-link {
+  color: var(--dz-accent-text); font-family: var(--dz-body); font-weight: 700;
+  text-underline-offset: 4px;
+}
+[data-design='calzado'] .ec-auth .ecaf-link:hover { color: var(--dz-ink); }
+[data-design='calzado'] .ec-auth .ecaf-notice {
+  border-radius: var(--dz-radius);
+  background: color-mix(in srgb, var(--dz-ok) 9%, var(--dz-surface));
+  border: 1px solid color-mix(in srgb, var(--dz-ok) 38%, transparent);
+  color: var(--dz-ink);
+}
+[data-design='calzado'] .ec-auth .ecaf-error {
+  border-radius: var(--dz-radius);
+  background: color-mix(in srgb, var(--dz-danger) 8%, var(--dz-surface));
+  border: 1px solid color-mix(in srgb, var(--dz-danger) 36%, transparent);
+  color: var(--dz-ink);
+}
+
+/* ===========================================================================
+   CUENTA — marcador
+   =========================================================================== */
+[data-design='calzado'][data-theme] .ec-account {
+  width: min(1240px, 100%);
+  margin-inline: auto;
+  padding: clamp(16px, 3vw, 34px) clamp(14px, 4vw, 40px) clamp(44px, 6vw, 76px);
+  gap: 0;
+}
+[data-design='calzado'][data-theme] .ec-account .acc-shell {
+  grid-template-columns: minmax(0, 1fr);
+  gap: 18px;
+}
+[data-design='calzado'][data-theme] .ec-account .acc-side { display: none; }
+[data-design='calzado'][data-theme] .ec-account .acc-main { gap: 16px; }
+
+[data-design='calzado'][data-theme] .ec-account .acc-tele {
+  display: block;
+  font: 700 8.5px/1 var(--dz-mono); letter-spacing: .24em; text-transform: uppercase;
+  color: var(--dz-muted);
+}
+[data-design='calzado'][data-theme] .ec-account .acc-idx {
+  font: 700 9px/1 var(--dz-mono); letter-spacing: .14em; color: var(--dz-muted);
+  font-variant-numeric: tabular-nums;
+}
+[data-design='calzado'][data-theme] .ec-account .acc-avatar {
+  border-radius: 0;
+  background: var(--dz-ink); color: var(--dz-bg);
+  font-family: var(--dz-display); font-weight: 700; font-size: 18px; letter-spacing: .1em;
+}
+[data-design='calzado'][data-theme] .ec-account .acc-avatar--sm { width: 44px; height: 44px; font-size: 14px; }
+
+/* Header compacto (tablet/mobile): placa de dorsal. */
+[data-design='calzado'][data-theme] .ec-account .acc-mhead {
+  display: grid;
+  grid-template-columns: 44px minmax(0, 1fr) 44px;
+  align-items: center; gap: 12px;
+  padding: 12px 14px;
+  border: 1px solid var(--dz-ink);
+  border-radius: 0;
+  background: var(--dz-surface);
+}
+[data-design='calzado'][data-theme] .ec-account .acc-mhead::after {
+  content: ""; grid-column: 1 / -1; height: 2px;
+  background: var(--dz-accent);
+}
+[data-design='calzado'][data-theme] .ec-account .acc-mhead-meta strong {
+  font-family: var(--dz-display); font-weight: 200; font-size: 19px; letter-spacing: .04em;
+  text-transform: uppercase; color: var(--dz-ink);
+}
+[data-design='calzado'][data-theme] .ec-account .acc-mhead-meta small {
+  font-family: var(--dz-mono); font-size: 10.5px; letter-spacing: .1em; color: var(--dz-muted);
+}
+[data-design='calzado'][data-theme] .ec-account .acc-icon-btn {
+  width: 44px; height: 44px;
+  border: 1px solid var(--dz-ink); border-radius: 0;
+  background: transparent; color: var(--dz-ink-2);
+}
+[data-design='calzado'][data-theme] .ec-account .acc-icon-btn:hover {
+  border-color: var(--dz-accent); color: var(--dz-accent-text);
+  background: color-mix(in srgb, var(--dz-accent) 8%, transparent);
+}
+
+/* Tabs (tablet/mobile): celdas de pizarra con filete señal. */
+[data-design='calzado'][data-theme] .ec-account .acc-tabs {
+  gap: 0; padding: 0;
+  border: 1px solid var(--dz-ink);
+  border-radius: 0;
+  background: var(--dz-surface);
+  scrollbar-width: none;
+  -webkit-overflow-scrolling: touch;
+}
+[data-design='calzado'][data-theme] .ec-account .acc-tab {
+  min-height: 44px;
+  padding: 10px 13px;
+  border: 0; border-right: 1px solid var(--dz-line);
+  border-radius: 0;
+  background: transparent; color: var(--dz-muted);
+  font: 700 9px/1 var(--dz-mono); letter-spacing: .16em; text-transform: uppercase;
+  gap: 8px;
+  white-space: nowrap;
+}
+[data-design='calzado'][data-theme] .ec-account .acc-tab:last-child { border-right: 0; }
+[data-design='calzado'][data-theme] .ec-account .acc-tab:hover { color: var(--dz-ink); background: var(--dz-soft); }
+[data-design='calzado'][data-theme] .ec-account .acc-tab.is-on {
+  background: var(--dz-ink);
+  color: var(--dz-bg);
+}
+[data-design='calzado'][data-theme] .ec-account .acc-tab.is-on .acc-idx { color: var(--dz-accent); }
+
+/* Paneles: planillas con franja de pista. */
+[data-design='calzado'][data-theme] .ec-account .acc-panel,
+[data-design='calzado'][data-theme] .ec-account .acc-auth-card,
+[data-design='calzado'][data-theme] .ec-account .acc-gate-card,
+[data-design='calzado'][data-theme] .ec-account .acc-skelpanel {
+  position: relative;
+  padding: clamp(18px, 2.6vw, 30px);
+  border: 1px solid var(--dz-ink);
+  border-radius: 0;
+  background: var(--dz-surface);
+  box-shadow: 6px 6px 0 0 color-mix(in srgb, var(--dz-ink) 10%, transparent);
+  gap: 18px;
+  color: var(--dz-ink);
+}
+/* Franja de pista sobre el filete superior del panel. */
+[data-design='calzado'][data-theme] .ec-account .acc-panel::before,
+[data-design='calzado'][data-theme] .ec-account .acc-auth-card::before,
+[data-design='calzado'][data-theme] .ec-account .acc-gate-card::before {
+  content: ""; position: absolute; inset: 0 0 auto; height: 4px;
+  background: repeating-linear-gradient(90deg, var(--dz-accent) 0 26px, transparent 26px 44px), var(--dz-ink);
+  background-size: 100% 4px;
+}
+[data-design='calzado'][data-theme] .ec-account .acc-panel-head {
+  padding-bottom: 14px;
+  border-bottom: 1px solid var(--dz-line);
+}
+[data-design='calzado'][data-theme] .ec-account .acc-panel-title {
+  font-family: var(--dz-display); font-weight: 200;
+  font-size: clamp(22px, 2.4vw, 30px); letter-spacing: .02em;
+  text-transform: uppercase; color: var(--dz-ink);
+}
+[data-design='calzado'][data-theme] .ec-account .acc-panel-sub {
+  font-family: var(--dz-body); font-size: 13px; font-weight: 300; line-height: 1.6; color: var(--dz-muted);
+}
+
+/* Gate / sub-vistas de mail. */
+[data-design='calzado'][data-theme] .ec-account :is(.acc-gate-ico, .acc-auth-ico) {
+  border-radius: 0;
+  background: var(--dz-ink); border: 1px solid var(--dz-ink);
+  color: var(--dz-bg);
+}
+[data-design='calzado'][data-theme] .ec-account :is(.acc-gate-title, .acc-auth-title) {
+  font-family: var(--dz-display); font-weight: 200; letter-spacing: .02em;
+  text-transform: uppercase; color: var(--dz-ink);
+}
+[data-design='calzado'][data-theme] .ec-account :is(.acc-gate-sub, .acc-auth-msg) {
+  font-family: var(--dz-body); color: var(--dz-muted);
+}
+[data-design='calzado'][data-theme] .ec-account .acc-gate-list {
+  border: 1px solid var(--dz-line); border-radius: 0;
+  background: var(--dz-bg); color: var(--dz-ink-2);
+}
+[data-design='calzado'][data-theme] .ec-account .acc-gate-list li { font-family: var(--dz-body); color: var(--dz-ink-2); }
+[data-design='calzado'][data-theme] .ec-account .acc-gate-list svg { color: var(--dz-accent-text); }
+[data-design='calzado'][data-theme] .ec-account :is(.acc-gate-link, .acc-auth-link) {
+  font: 700 9.5px/1 var(--dz-mono); letter-spacing: .2em; text-transform: uppercase;
+  color: var(--dz-accent-text);
+  text-decoration: underline; text-underline-offset: 4px;
+}
+[data-design='calzado'][data-theme] .ec-account .acc-auth-ok {
+  color: var(--dz-ok); font-family: var(--dz-body); font-weight: 700;
+}
+[data-design='calzado'][data-theme] .ec-account .acc-spin {
+  border-color: color-mix(in srgb, var(--dz-muted) 34%, transparent);
+  border-top-color: var(--dz-accent);
+}
+[data-design='calzado'][data-theme] .ec-account .acc-sk {
+  background: color-mix(in srgb, var(--dz-muted) 16%, transparent);
+  border-radius: 0;
+}
+
+/* ---------- Escritorio: columna de resultados ---------- */
+@media (min-width: 1024px) {
+  [data-design='calzado'][data-theme] .ec-account :is(.acc-mhead, .acc-tabs) { display: none; }
+  [data-design='calzado'][data-theme] .ec-account .acc-shell {
+    grid-template-columns: 300px minmax(0, 1fr);
+    gap: 30px;
+    align-items: start;
+  }
+  /* La columna de marcadores: filas con líderes de puntos. */
+  [data-design='calzado'][data-theme] .ec-account .acc-side {
+    display: grid;
+    gap: 0;
+    align-content: start;
+    position: sticky;
+    top: calc(var(--sp-top-h, 64px) + 18px);
+    padding: 20px 22px 16px;
+    border: 1px solid var(--dz-ink);
+    border-top: 4px solid var(--dz-accent);
+    border-radius: 0;
+    background: var(--dz-surface);
+    box-shadow: 6px 6px 0 0 color-mix(in srgb, var(--dz-ink) 12%, transparent);
+  }
+  [data-design='calzado'][data-theme] .ec-account .acc-id {
+    display: grid;
+    grid-template-columns: 52px minmax(0, 1fr);
+    align-items: center;
+    gap: 12px;
+    padding: 0 0 16px;
+    border-bottom: 1px solid var(--dz-line);
+  }
+  [data-design='calzado'][data-theme] .ec-account .acc-id .acc-tele { grid-column: 1 / -1; }
+  [data-design='calzado'][data-theme] .ec-account .acc-id-name {
+    font-family: var(--dz-display); font-weight: 200; font-size: 19px; letter-spacing: .04em;
+    text-transform: uppercase; color: var(--dz-ink);
+  }
+  [data-design='calzado'][data-theme] .ec-account .acc-id-email {
+    font-family: var(--dz-mono); font-size: 10.5px; letter-spacing: .08em; color: var(--dz-muted);
+  }
+  [data-design='calzado'][data-theme] .ec-account .acc-nav { gap: 0; margin-top: 6px; }
+  [data-design='calzado'][data-theme] .ec-account .acc-navitem {
+    gap: 10px;
+    min-height: 46px;
+    padding: 10px 4px;
+    border-radius: 0;
+    border: 0;
+    border-bottom: 1px dashed var(--dz-line);
+    background: transparent;
+    color: var(--dz-ink-2);
+    font-family: var(--dz-body); font-size: 13px; font-weight: 400;
+    transition: color .2s var(--dz-ease), padding-left .2s var(--dz-ease);
+  }
+  [data-design='calzado'][data-theme] .ec-account .acc-navitem svg { color: var(--dz-muted); transition: color .2s; }
+  /* Líder de puntos entre etiqueta y índice. */
+  [data-design='calzado'][data-theme] .ec-account .acc-navitem::after {
+    content: ""; flex: 1 1 auto; min-width: 14px;
+    border-bottom: 1px dotted color-mix(in srgb, var(--dz-muted) 55%, transparent);
+    transform: translateY(-3px);
+  }
+  [data-design='calzado'][data-theme] .ec-account .acc-navitem .acc-idx { margin-left: 0; font-variant-numeric: tabular-nums; }
+  [data-design='calzado'][data-theme] .ec-account .acc-navitem:hover {
+    background: transparent; color: var(--dz-accent-text); padding-left: 8px;
+  }
+  [data-design='calzado'][data-theme] .ec-account .acc-navitem:hover svg { color: var(--dz-accent-text); }
+  [data-design='calzado'][data-theme] .ec-account .acc-navitem.is-on {
+    background: transparent; color: var(--dz-ink); font-weight: 700;
+    box-shadow: inset 3px 0 0 var(--dz-accent);
+  }
+  [data-design='calzado'][data-theme] .ec-account .acc-navitem.is-on svg { color: var(--dz-accent-text); }
+  [data-design='calzado'][data-theme] .ec-account .acc-navitem.is-on .acc-idx { color: var(--dz-accent-text); }
+  [data-design='calzado'][data-theme] .ec-account .acc-logout {
+    margin-top: 16px;
+    min-height: 44px;
+    border: 1px solid var(--dz-ink);
+    border-radius: 0;
+    background: transparent;
+    color: var(--dz-ink-2);
+    font: 700 9.5px/1 var(--dz-mono); letter-spacing: .2em; text-transform: uppercase;
+  }
+  [data-design='calzado'][data-theme] .ec-account .acc-logout:hover {
+    color: var(--sp-on-band, #fff);
+    border-color: var(--dz-accent);
+    background: var(--store-accent-ink);
+  }
+}
+
+/* ---------- Responsive ---------- */
+@media (max-width: 1024px) {
+  [data-design='calzado'] .ec-auth .ec-auth-shell {
+    grid-template-columns: minmax(0, 1fr);
+    margin-block: 12px clamp(28px, 5vw, 48px);
+  }
+  [data-design='calzado'] .ec-auth .ec-auth-brand { padding: 22px 22px 20px; }
+  [data-design='calzado'] .ec-auth .ec-auth-brand-inner {
+    grid-template-rows: auto auto;
+    gap: 14px;
+    height: auto;
+  }
+  [data-design='calzado'] .ec-auth .ec-auth-brand-copy { gap: 8px; max-width: none; }
+  [data-design='calzado'] .ec-auth .ec-auth-brand-text,
+  [data-design='calzado'] .ec-auth .ec-auth-perks,
+  [data-design='calzado'] .ec-auth .ec-auth-brand-foot { display: none; }
+  [data-design='calzado'] .ec-auth .ec-auth-brand-title { font-size: clamp(24px, 5vw, 34px); }
+  [data-design='calzado'] .ec-auth .ec-auth-panel {
+    padding: 24px 22px 30px;
+    border-left: 0;
+    border-top: 1px solid var(--dz-line);
+  }
+}
+@media (max-width: 860px) {
+  [data-design='calzado'][data-theme] .ec-account .acc-mhead-meta strong { font-size: 16px; }
+  [data-design='calzado'][data-theme] .ec-account .acc-panel-title { font-size: 22px; }
+  [data-design='calzado'][data-theme] .ec-account .acc-tab { padding: 10px 11px; letter-spacing: .12em; }
+}
+@media (max-width: 640px) {
+  [data-design='calzado'] .ec-auth { padding-inline: 12px; }
+  [data-design='calzado'] .ec-auth .ec-auth-shell { box-shadow: 5px 5px 0 0 color-mix(in srgb, var(--dz-ink) 8%, transparent); }
+  [data-design='calzado'] .ec-auth .ec-auth-brand { padding: 18px 16px 16px; }
+  [data-design='calzado'] .ec-auth .ec-auth-brand-top { padding-bottom: 12px; }
+  [data-design='calzado'] .ec-auth .ec-auth-logo { width: 38px; height: 38px; font-size: 13px; }
+  [data-design='calzado'] .ec-auth .ec-auth-brand-name { font-size: 10px; letter-spacing: .16em; }
+  [data-design='calzado'] .ec-auth .ec-auth-brand-title { font-size: 22px; }
+  [data-design='calzado'] .ec-auth .ec-auth-panel { padding: 18px 16px 26px; }
+  [data-design='calzado'] .ec-auth .ec-auth-head { margin-bottom: 20px; padding-bottom: 16px; }
+  [data-design='calzado'] .ec-auth .ec-auth-title { font-size: 24px; }
+  [data-design='calzado'] .ec-auth .ecaf-grid { grid-template-columns: minmax(0, 1fr); }
+  [data-design='calzado'][data-theme] .ec-account { padding-inline: 14px; }
+  [data-design='calzado'][data-theme] .ec-account .acc-mhead { padding: 10px 12px; }
+  [data-design='calzado'][data-theme] .ec-account .acc-panel,
+  [data-design='calzado'][data-theme] .ec-account .acc-auth-card,
+  [data-design='calzado'][data-theme] .ec-account .acc-gate-card { padding: 18px 16px; box-shadow: 4px 4px 0 0 color-mix(in srgb, var(--dz-ink) 8%, transparent); }
+}
+@media (max-width: 390px) {
+  [data-design='calzado'] .ec-auth { padding-inline: 8px; }
+  [data-design='calzado'] .ec-auth .ec-auth-brand-title { font-size: 19px; }
+  [data-design='calzado'] .ec-auth .ec-auth-title { font-size: 21px; }
+  [data-design='calzado'][data-theme] .ec-account { padding-inline: 10px; }
+  [data-design='calzado'][data-theme] .ec-account .acc-mhead { grid-template-columns: 40px minmax(0, 1fr) 40px; gap: 10px; }
+  [data-design='calzado'][data-theme] .ec-account .acc-mhead-meta strong { font-size: 16px; }
+  [data-design='calzado'][data-theme] .ec-account .acc-panel-title { font-size: 20px; }
+  [data-design='calzado'][data-theme] .ec-account .acc-tab { font-size: 8.5px; letter-spacing: .1em; padding: 10px 8px; }
+}
+/* Tab bar inferior de la tienda (mobile.nav = bottom). */
+@media (max-width: 768px) {
+  [data-design='calzado'][data-theme] .ec-account,
+  [data-design='calzado'] .ec-auth {
+    padding-bottom: calc(24px + env(safe-area-inset-bottom));
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  [data-design='calzado'] :is(.ec-auth, .ec-account) * {
+    transition-duration: .001ms !important;
+    animation-duration: .001ms !important;
+  }
+}

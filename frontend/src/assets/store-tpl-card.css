@@ -169,7 +169,7 @@
   padding: 7px 14px;
   border-radius: 99px;
   background: var(--tpc-quick-bg, rgba(15, 23, 42, .82));
-  color: #fff;
+  color: var(--tpc-quick-ink, #fff);
   font-size: 12px;
   font-weight: 600;
   opacity: 0;
@@ -210,6 +210,7 @@
   font-size: var(--tpc-name-size, 14.5px);
   font-weight: var(--tpc-name-weight, 600);
   line-height: var(--tpc-name-lh, 1.3);
+  text-transform: var(--tpc-name-transform, none);
   color: var(--tpc-name-ink, inherit);
   /* Geometría dura: clamp 2 + alto mínimo de 2 líneas — un nombre corto
      no reubica el pie y uno larguísimo no desborda la tarjeta. */
@@ -306,6 +307,12 @@
 }
 @media (hover: hover) and (pointer: fine) { .tpc-add:hover { transform: scale(1.08); } }
 .tpc-add:active { transform: scale(.94); }
+/* .tpc-add también se usa como <button> (agregar al carrito) desde slots
+   #foot de las pieles: el reset de <button> no llega por scoped CSS del
+   card, así que vive acá junto a la geometría compartida. */
+button.tpc-add { cursor: pointer; font: inherit; padding: 0; }
+button.tpc-add:disabled { opacity: .6; cursor: default; }
+button.tpc-add.is-added { background: color-mix(in srgb, #16a34a 76%, #052e16); }
 
 /* --- Fila horizontal (listados compactos): la media pasa a miniatura
    cuadrada fija y el cuerpo queda a la derecha — mismo contrato de pie --- */

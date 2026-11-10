@@ -1,0 +1,685 @@
+/* ===========================================================================
+   MODA — páginas de comercio (ingresar / cuenta).
+   Se carga on-demand desde StorePublicLayout cuando .store-page lleva
+   data-design="moda". No edita las hojas scoped de las vistas: las
+   reemplaza con más especificidad (0,3,0 mínimo).
+
+   Composición propia: la auth es una INVITACIÓN DE SALÓN — el ala de marca
+   es terciopelo de tinta con titular serif itálico, filetes finos y el
+   reglamento de la casa en versalitas; el ala del formulario es papel hueso
+   con campos de hairline, serif para títulos y el CTA bermellón de esquinas
+   casi rectas. La cuenta es la CARTILLA DE SOCIA: barra lateral con nombre
+   en serif, índice numerado en mono y paneles de archivo con filetes.
+   =========================================================================== */
+
+/* JetBrains Mono no entra por ensureStoreFont (solo viajan heading/body del
+   tema): se declara acá con la misma URL gstatic que usa el documento del
+   patrón — font-display:swap y una sola familia variable. */
+@font-face{font-family:"JetBrains Mono";font-style:normal;font-weight:400 700;font-display:swap;
+  src:url(https://fonts.gstatic.com/s/jetbrainsmono/v24/tDbv2o-flEEny0FZhsfKu5WU4zr3E_BX0PnT8RD8yKwBNntkaToggR7BYRbKPxDcwg.woff2) format("woff2")}
+
+[data-design='moda'] {
+  --dz-bg: #F2EDE3;
+  --dz-surface: #E9E2D4;
+  --dz-card: #F7F2E8;
+  --dz-ink: #171410;
+  --dz-ink-2: #3A342B;
+  --dz-muted: #6F675B;
+  --dz-line: #D5CBB8;
+  --dz-accent: var(--store-accent, #C93218);
+  /* Sobre #C93218 el blanco llega a ~5.3:1 — par seguro en claro. */
+  --dz-accent-ink: #FFF8F2;
+  --dz-accent-text: color-mix(in srgb, var(--store-accent, #C93218) 72%, var(--dz-ink));
+  --dz-ok: #2F6B4F;
+  --dz-danger: #A3271C;
+  --dz-warning: #8A5A00;
+  --dz-display: var(--st-f-display-family, "DM Serif Display", "Didot", Georgia, serif);
+  --dz-body: var(--st-f-body-family, "Instrument Sans", "Helvetica Neue", system-ui, sans-serif);
+  --dz-mono: var(--st-f-eyebrow-family, "JetBrains Mono", ui-monospace, Menlo, monospace);
+  --dz-band: #171410;
+  --dz-on-band: #F4EFE0;
+  --dz-radius: 2px;
+  --dz-shadow: 0 34px 70px -44px rgba(23, 20, 16, .55);
+}
+
+[data-design='moda'][data-theme='dark'] {
+  --dz-bg: #121110;
+  --dz-surface: #1C1A17;
+  --dz-card: #221F1B;
+  --dz-ink: #F4EFE6;
+  --dz-ink-2: #D8D0C0;
+  --dz-muted: #9A9387;
+  --dz-line: #2E2A24;
+  --dz-accent: var(--store-accent, #FF8A3C);
+  /* Ámbar sobre grafito: la tinta de la casa es el par AA. */
+  --dz-accent-ink: #171008;
+  --dz-accent-text: color-mix(in srgb, var(--store-accent, #FF8A3C) 58%, #F4EFE6);
+  --dz-ok: #8FD4AC;
+  --dz-danger: #F09A8E;
+  --dz-warning: #E8C36A;
+  --dz-band: #0D0C0B;
+  --dz-on-band: #F4EFE6;
+  --dz-shadow: 0 34px 70px -44px rgba(0, 0, 0, .8);
+}
+
+/* Re-tema de las hojas internas (pedidos, planes, direcciones) al token del
+   diseño, solo dentro de auth/cuenta. */
+[data-design='moda'] :is(.ec-auth, .ec-account) {
+  --sp-bg: var(--dz-bg);
+  --sp-card: var(--dz-surface);
+  --sp-card-solid: var(--dz-card);
+  --sp-surface: var(--dz-surface);
+  --sp-ink: var(--dz-ink);
+  --sp-ink-2: var(--dz-ink-2);
+  --sp-muted: var(--dz-muted);
+  --sp-line: var(--dz-line);
+  --sp-soft: color-mix(in srgb, var(--dz-accent) 9%, var(--dz-surface));
+  --sp-accent-text: var(--dz-accent-text);
+  --sp-success: var(--dz-ok);
+  --sp-danger: var(--dz-danger);
+  --sp-warning: var(--dz-warning);
+  --sp-on-band: var(--dz-on-band);
+  --sp-radius: var(--dz-radius);
+  --sp-shadow-sm: 0 1px 2px rgba(20, 15, 8, .07);
+  --sp-shadow-md: var(--dz-shadow);
+  --store-accent: var(--dz-accent);
+}
+
+[data-design='moda'][data-theme] :is(.ec-auth, .ec-account) :is(a, button, input, select, textarea):focus-visible {
+  outline: 2px solid var(--dz-accent);
+  outline-offset: 3px;
+}
+[data-design='moda'][data-theme] :is(.ec-auth, .ec-account) ::selection {
+  background: var(--store-accent-ink);
+  color: var(--sp-on-band, #fff);
+}
+
+/* ===========================================================================
+   AUTH — invitación de salón en dos alas
+   =========================================================================== */
+[data-design='moda'] .ec-auth {
+  padding-inline: clamp(0px, 3vw, 26px);
+}
+[data-design='moda'] .ec-auth .ec-auth-shell {
+  width: min(1120px, 100%);
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1.06fr);
+  margin-block: clamp(16px, 3.4vw, 44px) clamp(40px, 6vw, 80px);
+  border: 1px solid var(--dz-line);
+  border-radius: var(--dz-radius);
+  background: var(--dz-card);
+  box-shadow: var(--dz-shadow);
+  overflow: hidden;
+}
+
+/* Ala de marca: terciopelo + serif itálica + reglamento de la casa. */
+[data-design='moda'] .ec-auth .ec-auth-brand {
+  isolation: isolate;
+  padding: clamp(26px, 3.8vw, 48px);
+  color: var(--dz-on-band);
+  background:
+    radial-gradient(110% 80% at 90% -10%, color-mix(in srgb, var(--dz-accent) 30%, transparent), transparent 62%),
+    linear-gradient(160deg, color-mix(in srgb, #000 18%, transparent), color-mix(in srgb, #000 58%, transparent)),
+    var(--dz-band);
+}
+[data-design='moda'] .ec-auth .ec-auth-brand::before {
+  opacity: .22;
+  mix-blend-mode: luminosity;
+}
+[data-design='moda'] .ec-auth .ec-auth-brand::after {
+  background:
+    linear-gradient(color-mix(in srgb, var(--dz-on-band) 6%, transparent) 1px, transparent 1px) 0 0 / 100% 92px,
+    linear-gradient(180deg, transparent 62%, color-mix(in srgb, #000 46%, transparent));
+}
+[data-design='moda'] .ec-auth .ec-auth-brand-inner {
+  display: grid;
+  grid-template-rows: auto 1fr auto;
+  gap: clamp(20px, 3vw, 36px);
+}
+[data-design='moda'] .ec-auth .ec-auth-brand-top {
+  gap: 14px;
+  padding-bottom: 18px;
+  border-bottom: 1px solid color-mix(in srgb, var(--dz-on-band) 18%, transparent);
+}
+[data-design='moda'] .ec-auth .ec-auth-logo {
+  width: 46px; height: 46px;
+  border-radius: var(--dz-radius);
+  background: transparent;
+  border: 1px solid color-mix(in srgb, var(--dz-on-band) 34%, transparent);
+  color: var(--dz-on-band);
+  font-family: var(--dz-display); font-size: 24px; font-weight: 400;
+}
+[data-design='moda'] .ec-auth .ec-auth-brand-name {
+  font-family: var(--dz-mono); font-size: 10.5px; font-weight: 500;
+  letter-spacing: .26em; text-transform: uppercase; color: var(--dz-on-band);
+}
+[data-design='moda'] .ec-auth .ec-auth-brand-copy { display: grid; gap: 14px; max-width: 44ch; }
+[data-design='moda'] .ec-auth .ec-auth-rail {
+  display: inline-flex; align-items: center; gap: 12px;
+  font: 500 9px/1 var(--dz-mono); letter-spacing: .3em; text-transform: uppercase;
+  color: color-mix(in srgb, var(--dz-accent) 60%, var(--dz-on-band));
+}
+[data-design='moda'] .ec-auth .ec-auth-rail::after {
+  content: ""; width: 48px; height: 1px;
+  background: color-mix(in srgb, var(--dz-on-band) 30%, transparent);
+}
+[data-design='moda'] .ec-auth .ec-auth-brand-kicker {
+  font: 500 9px/1 var(--dz-mono); letter-spacing: .28em; text-transform: uppercase;
+  color: color-mix(in srgb, var(--dz-on-band) 64%, transparent);
+}
+[data-design='moda'] .ec-auth .ec-auth-brand-title {
+  font-family: var(--dz-display); font-weight: 400; font-style: italic;
+  font-size: clamp(30px, 3.6vw, 46px); line-height: 1.06; letter-spacing: -.01em;
+  color: var(--dz-on-band);
+}
+[data-design='moda'] .ec-auth .ec-auth-brand-text {
+  font-family: var(--dz-body); font-size: 13.5px; line-height: 1.75;
+  color: color-mix(in srgb, var(--dz-on-band) 78%, transparent);
+}
+/* Reglamento de la casa: versalitas con filete y rombo bermellón. */
+[data-design='moda'] .ec-auth .ec-auth-perks {
+  counter-reset: dzperk; gap: 0; margin-top: 6px;
+}
+[data-design='moda'] .ec-auth .ec-auth-perks li {
+  counter-increment: dzperk;
+  display: flex; align-items: center; gap: 12px;
+  padding: 12px 0;
+  border-bottom: 1px solid color-mix(in srgb, var(--dz-on-band) 13%, transparent);
+  font-family: var(--dz-body); font-size: 12.5px; font-weight: 400;
+  color: color-mix(in srgb, var(--dz-on-band) 88%, transparent);
+}
+[data-design='moda'] .ec-auth .ec-auth-perks li::before {
+  content: counter(dzperk, decimal-leading-zero) " ·";
+  flex: none;
+  font: 500 9px/1 var(--dz-mono); letter-spacing: .2em;
+  color: var(--dz-accent);
+}
+[data-design='moda'] .ec-auth .ec-auth-perks li > span { flex: 1 1 auto; min-width: 0; }
+[data-design='moda'] .ec-auth .ec-auth-perks svg {
+  flex: none; color: color-mix(in srgb, var(--dz-on-band) 55%, transparent);
+}
+[data-design='moda'] .ec-auth .ec-auth-brand-foot {
+  font: 500 8.5px/1.6 var(--dz-mono); letter-spacing: .24em; text-transform: uppercase;
+  color: color-mix(in srgb, var(--dz-on-band) 58%, transparent);
+  padding-top: 14px;
+  border-top: 1px solid color-mix(in srgb, var(--dz-on-band) 13%, transparent);
+}
+
+/* Ala del formulario: papel hueso, serif, filete bermellón al pie. */
+[data-design='moda'] .ec-auth .ec-auth-panel {
+  position: relative;
+  padding: clamp(26px, 3.6vw, 48px) clamp(22px, 3.6vw, 48px) clamp(30px, 4vw, 50px);
+  background: var(--dz-card);
+  color: var(--dz-ink);
+  border-left: 1px solid var(--dz-line);
+}
+[data-design='moda'] .ec-auth .ec-auth-panel::before {
+  content: ""; position: absolute; inset: auto 0 0; height: 2px;
+  background: linear-gradient(90deg, transparent, var(--dz-accent) 18%, var(--dz-accent) 82%, transparent);
+  opacity: .85;
+}
+[data-design='moda'] .ec-auth .ec-auth-back {
+  gap: 9px; margin-bottom: clamp(20px, 3vw, 30px);
+  font: 500 9px/1 var(--dz-mono); letter-spacing: .24em; text-transform: uppercase;
+  color: var(--dz-muted);
+  transition: color .25s;
+}
+[data-design='moda'] .ec-auth .ec-auth-back:hover { color: var(--dz-accent-text); }
+[data-design='moda'] .ec-auth .ec-auth-head {
+  gap: 12px; margin-bottom: 26px; padding-bottom: 22px;
+  border-bottom: 1px solid var(--dz-line);
+}
+[data-design='moda'] .ec-auth .ec-auth-badge {
+  width: 46px; height: 46px; margin-bottom: 4px;
+  border: 1px solid var(--dz-line); border-radius: var(--dz-radius);
+  background: transparent; color: var(--dz-accent-text);
+}
+[data-design='moda'] .ec-auth .ec-auth-tag {
+  display: inline-flex; align-items: center; gap: 9px;
+  font: 500 9px/1 var(--dz-mono); letter-spacing: .26em; text-transform: uppercase;
+  color: var(--dz-accent-text);
+}
+[data-design='moda'] .ec-auth .ec-auth-tag::before {
+  content: ""; width: 6px; height: 6px; flex: none;
+  background: var(--dz-accent); transform: rotate(45deg);
+}
+[data-design='moda'] .ec-auth .ec-auth-title {
+  font-family: var(--dz-display); font-weight: 400;
+  font-size: clamp(28px, 3.2vw, 40px); line-height: 1.08; letter-spacing: -.01em;
+  color: var(--dz-ink);
+}
+[data-design='moda'] .ec-auth .ec-auth-sub {
+  font-family: var(--dz-body); font-size: 13.5px; line-height: 1.7; color: var(--dz-muted);
+}
+[data-design='moda'] .ec-auth .ec-auth-loading { color: var(--dz-muted); font-family: var(--dz-body); }
+[data-design='moda'] .ec-auth .ec-auth-spin { color: var(--dz-accent-text); }
+
+/* ---------- Controles (compartidos auth + cuenta) ---------- */
+[data-design='moda'][data-theme] :is(.ec-auth, .ec-account) .sp-field { gap: 8px; }
+[data-design='moda'][data-theme] :is(.ec-auth, .ec-account) .sp-field-label {
+  font: 500 9px/1 var(--dz-mono); letter-spacing: .24em; text-transform: uppercase;
+  color: var(--dz-muted);
+}
+[data-design='moda'][data-theme] :is(.ec-auth, .ec-account) .sp-input {
+  min-height: 48px;
+  padding: 12px 14px;
+  border: 1px solid var(--dz-line);
+  border-radius: var(--dz-radius);
+  background: var(--dz-bg);
+  color: var(--dz-ink);
+  font-family: var(--dz-body); font-size: 16px;
+  box-shadow: none;
+  transition: border-color .22s, box-shadow .22s, background .22s;
+}
+[data-design='moda'][data-theme] :is(.ec-auth, .ec-account) .sp-input:hover {
+  border-color: color-mix(in srgb, var(--dz-ink) 32%, var(--dz-line));
+}
+[data-design='moda'][data-theme] :is(.ec-auth, .ec-account) .sp-input:focus {
+  border-color: var(--dz-accent);
+  background: var(--dz-card);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--dz-accent) 15%, transparent);
+}
+[data-design='moda'][data-theme] :is(.ec-auth, .ec-account) .sp-input::placeholder {
+  color: var(--dz-muted); opacity: 1;
+}
+[data-design='moda'][data-theme] :is(.ec-auth, .ec-account) .sp-input:disabled {
+  background: color-mix(in srgb, var(--dz-line) 30%, var(--dz-bg));
+  color: var(--dz-ink-2);
+  cursor: not-allowed;
+}
+[data-design='moda'][data-theme] :is(.ec-auth, .ec-account) .sp-form-error {
+  color: var(--dz-danger); font-family: var(--dz-body); font-size: 12.5px;
+}
+[data-design='moda'][data-theme] :is(.ec-auth, .ec-account) .sp-input:-webkit-autofill {
+  -webkit-text-fill-color: var(--dz-ink);
+  box-shadow: inset 0 0 0 40px var(--dz-bg);
+}
+
+/* CTA bermellón, esquinas de salón. */
+[data-design='moda'][data-theme] :is(.ec-auth, .ec-account) :is(.ecaf-submit, .ec-btn-primary) {
+  min-height: 50px;
+  border: 1px solid transparent;
+  border-radius: var(--dz-radius);
+  background: var(--store-accent-ink);
+  color: var(--sp-on-band, #fff);
+  font: 600 10.5px/1 var(--dz-mono); letter-spacing: .24em; text-transform: uppercase;
+  transition: transform .3s var(--dz-ease, cubic-bezier(.22, 1, .36, 1)), box-shadow .3s, background .3s, filter .3s;
+}
+[data-design='moda'][data-theme] :is(.ec-auth, .ec-account) :is(.ecaf-submit, .ec-btn-primary):hover:not(:disabled) {
+  transform: translateY(-2px);
+  filter: brightness(1.06);
+  box-shadow: 0 18px 32px -24px color-mix(in srgb, var(--dz-accent) 85%, transparent);
+}
+[data-design='moda'][data-theme] :is(.ec-auth, .ec-account) :is(.ecaf-submit, .ec-btn-primary):active:not(:disabled) {
+  transform: translateY(0) scale(.995);
+}
+[data-design='moda'][data-theme] :is(.ec-auth, .ec-account) :is(.ecaf-submit, .ec-btn-primary):disabled {
+  background: var(--dz-line); color: var(--dz-ink-2); opacity: 1; cursor: not-allowed;
+}
+[data-design='moda'][data-theme] :is(.ec-auth, .ec-account) .ec-btn-ghost {
+  min-height: 46px;
+  border: 1px solid color-mix(in srgb, var(--dz-ink) 38%, transparent);
+  border-radius: var(--dz-radius);
+  background: transparent; color: var(--dz-ink);
+  font: 500 9.5px/1 var(--dz-mono); letter-spacing: .22em; text-transform: uppercase;
+  transition: background .25s, color .25s, border-color .25s;
+}
+[data-design='moda'][data-theme] :is(.ec-auth, .ec-account) .ec-btn-ghost:hover {
+  background: var(--dz-ink); color: var(--dz-card); border-color: var(--dz-ink);
+}
+
+/* Formulario compartido (StoreAuthForm). */
+[data-design='moda'] .ec-auth .ecaf { gap: 15px; }
+[data-design='moda'] .ec-auth .ecaf-form { gap: 14px; }
+[data-design='moda'] .ec-auth .ecaf-pass-toggle { color: var(--dz-muted); border-radius: var(--dz-radius); }
+[data-design='moda'] .ec-auth .ecaf-pass-toggle:hover {
+  color: var(--dz-accent-text); background: color-mix(in srgb, var(--dz-accent) 9%, transparent);
+}
+[data-design='moda'] .ec-auth .ecaf-divider {
+  font: 500 9px/1 var(--dz-mono); letter-spacing: .26em; text-transform: uppercase;
+  color: var(--dz-muted);
+}
+[data-design='moda'] .ec-auth .ecaf-divider::before,
+[data-design='moda'] .ec-auth .ecaf-divider::after { background: var(--dz-line); opacity: 1; }
+[data-design='moda'] .ec-auth .ecaf-link {
+  color: var(--dz-accent-text); font-family: var(--dz-body); font-weight: 600;
+  text-underline-offset: 4px;
+}
+[data-design='moda'] .ec-auth .ecaf-link:hover { color: var(--dz-ink); }
+[data-design='moda'] .ec-auth .ecaf-notice {
+  border-radius: var(--dz-radius);
+  background: color-mix(in srgb, var(--dz-ok) 9%, var(--dz-card));
+  border: 1px solid color-mix(in srgb, var(--dz-ok) 34%, transparent);
+  color: var(--dz-ink);
+}
+[data-design='moda'] .ec-auth .ecaf-error {
+  border-radius: var(--dz-radius);
+  background: color-mix(in srgb, var(--dz-danger) 8%, var(--dz-card));
+  border: 1px solid color-mix(in srgb, var(--dz-danger) 34%, transparent);
+  color: var(--dz-ink);
+}
+[data-design='moda'] .ec-auth .ecaf-google-btn { min-height: 48px; }
+
+/* ===========================================================================
+   CUENTA — cartilla de socia
+   =========================================================================== */
+[data-design='moda'][data-theme] .ec-account {
+  width: min(1240px, 100%);
+  margin-inline: auto;
+  padding: clamp(16px, 3vw, 34px) clamp(14px, 4vw, 40px) clamp(44px, 6vw, 76px);
+  gap: 0;
+}
+[data-design='moda'][data-theme] .ec-account .acc-shell {
+  grid-template-columns: minmax(0, 1fr);
+  gap: 18px;
+}
+[data-design='moda'][data-theme] .ec-account .acc-side { display: none; }
+[data-design='moda'][data-theme] .ec-account .acc-main { gap: 16px; }
+
+[data-design='moda'][data-theme] .ec-account .acc-tele {
+  display: block;
+  font: 500 8.5px/1 var(--dz-mono); letter-spacing: .26em; text-transform: uppercase;
+  color: var(--dz-muted);
+}
+[data-design='moda'][data-theme] .ec-account .acc-idx {
+  font: 500 9px/1 var(--dz-mono); letter-spacing: .16em; color: var(--dz-muted);
+}
+[data-design='moda'][data-theme] .ec-account .acc-avatar {
+  border-radius: var(--dz-radius);
+  background: var(--dz-band); color: var(--dz-on-band);
+  border: 1px solid color-mix(in srgb, var(--dz-on-band) 30%, transparent);
+  font-family: var(--dz-display); font-weight: 400; font-size: 21px; letter-spacing: .01em;
+}
+[data-design='moda'][data-theme] .ec-account .acc-avatar--sm { width: 44px; height: 44px; font-size: 16px; }
+
+/* Header compacto: nombre en serif, filete inferior. */
+[data-design='moda'][data-theme] .ec-account .acc-mhead {
+  display: grid;
+  grid-template-columns: 44px minmax(0, 1fr) 44px;
+  align-items: center; gap: 12px;
+  padding: 0 0 16px;
+  border-bottom: 1px solid var(--dz-line);
+}
+[data-design='moda'][data-theme] .ec-account .acc-mhead .acc-tele { grid-column: 1 / -1; }
+[data-design='moda'][data-theme] .ec-account .acc-mhead-meta strong {
+  font-family: var(--dz-display); font-weight: 400; font-size: 21px; letter-spacing: -.01em;
+  color: var(--dz-ink);
+}
+[data-design='moda'][data-theme] .ec-account .acc-mhead-meta small {
+  font-family: var(--dz-mono); font-size: 10.5px; letter-spacing: .08em; color: var(--dz-muted);
+}
+[data-design='moda'][data-theme] .ec-account .acc-icon-btn {
+  width: 44px; height: 44px;
+  border: 1px solid var(--dz-line); border-radius: var(--dz-radius);
+  background: transparent; color: var(--dz-ink-2);
+  transition: border-color .25s, color .25s;
+}
+[data-design='moda'][data-theme] .ec-account .acc-icon-btn:hover {
+  border-color: var(--dz-accent); color: var(--dz-accent-text);
+  background: color-mix(in srgb, var(--dz-accent) 7%, transparent);
+}
+
+/* Tabs: subrayado serif bermellón. */
+[data-design='moda'][data-theme] .ec-account .acc-tabs {
+  gap: 0; padding: 0 0 2px;
+  border-bottom: 1px solid var(--dz-line);
+  scrollbar-width: none;
+  -webkit-overflow-scrolling: touch;
+}
+[data-design='moda'][data-theme] .ec-account .acc-tab {
+  min-height: 46px;
+  padding: 10px 14px;
+  border: 0; border-radius: 0;
+  border-bottom: 2px solid transparent;
+  background: transparent; color: var(--dz-muted);
+  font: 500 10px/1 var(--dz-mono); letter-spacing: .18em; text-transform: uppercase;
+  gap: 8px;
+  transition: color .25s, border-color .25s;
+}
+[data-design='moda'][data-theme] .ec-account .acc-tab:hover {
+  color: var(--dz-accent-text);
+  border-bottom-color: color-mix(in srgb, var(--dz-accent) 45%, transparent);
+}
+[data-design='moda'][data-theme] .ec-account .acc-tab.is-on {
+  background: transparent; color: var(--dz-ink);
+  border-bottom-color: var(--dz-accent);
+}
+[data-design='moda'][data-theme] .ec-account .acc-tab.is-on .acc-idx { color: var(--dz-accent-text); }
+
+/* Paneles: fichas de archivo con filete y cabecera serif. */
+[data-design='moda'][data-theme] .ec-account .acc-panel,
+[data-design='moda'][data-theme] .ec-account .acc-auth-card,
+[data-design='moda'][data-theme] .ec-account .acc-gate-card,
+[data-design='moda'][data-theme] .ec-account .acc-skelpanel {
+  padding: clamp(18px, 2.6vw, 30px);
+  border: 1px solid var(--dz-line);
+  border-radius: var(--dz-radius);
+  background: var(--dz-card);
+  box-shadow: 0 22px 48px -40px rgba(23, 20, 16, .5);
+  gap: 18px;
+  color: var(--dz-ink);
+}
+[data-design='moda'][data-theme] .ec-account .acc-panel-head {
+  padding-bottom: 14px;
+  border-bottom: 1px solid var(--dz-line);
+}
+[data-design='moda'][data-theme] .ec-account .acc-panel-title {
+  font-family: var(--dz-display); font-weight: 400;
+  font-size: clamp(23px, 2.5vw, 31px); letter-spacing: -.01em;
+  color: var(--dz-ink);
+}
+[data-design='moda'][data-theme] .ec-account .acc-panel-sub {
+  font-family: var(--dz-body); font-size: 13px; line-height: 1.65; color: var(--dz-muted);
+}
+
+/* Gate / sub-vistas de mail. */
+[data-design='moda'][data-theme] .ec-account :is(.acc-gate-ico, .acc-auth-ico) {
+  border-radius: var(--dz-radius);
+  background: color-mix(in srgb, var(--dz-accent) 10%, var(--dz-card));
+  border: 1px solid color-mix(in srgb, var(--dz-accent) 30%, transparent);
+  color: var(--dz-accent-text);
+}
+[data-design='moda'][data-theme] .ec-account :is(.acc-gate-title, .acc-auth-title) {
+  font-family: var(--dz-display); font-weight: 400; letter-spacing: -.01em;
+  color: var(--dz-ink);
+}
+[data-design='moda'][data-theme] .ec-account :is(.acc-gate-sub, .acc-auth-msg) {
+  font-family: var(--dz-body); color: var(--dz-muted);
+}
+[data-design='moda'][data-theme] .ec-account .acc-gate-list {
+  border: 1px solid var(--dz-line); border-radius: var(--dz-radius);
+  background: var(--dz-bg); color: var(--dz-ink-2);
+}
+[data-design='moda'][data-theme] .ec-account .acc-gate-list li { font-family: var(--dz-body); color: var(--dz-ink-2); }
+[data-design='moda'][data-theme] .ec-account .acc-gate-list svg { color: var(--dz-accent-text); }
+[data-design='moda'][data-theme] .ec-account .acc-gate-link,
+[data-design='moda'][data-theme] .ec-account .acc-auth-link {
+  font: 500 9px/1 var(--dz-mono); letter-spacing: .22em; text-transform: uppercase;
+  color: var(--dz-accent-text);
+  text-decoration: underline; text-underline-offset: 4px;
+}
+[data-design='moda'][data-theme] .ec-account .acc-auth-ok {
+  color: var(--dz-ok); font-family: var(--dz-body); font-weight: 700;
+}
+[data-design='moda'][data-theme] .ec-account .acc-spin {
+  border-color: color-mix(in srgb, var(--dz-muted) 34%, transparent);
+  border-top-color: var(--dz-accent);
+}
+[data-design='moda'][data-theme] .ec-account .acc-sk {
+  background: color-mix(in srgb, var(--dz-muted) 16%, transparent);
+  border-radius: var(--dz-radius);
+}
+[data-design='moda'][data-theme] .ec-account .acc-status {
+  border-radius: var(--dz-radius);
+  font-family: var(--dz-mono); font-size: 9.5px; letter-spacing: .12em; text-transform: uppercase;
+}
+[data-design='moda'][data-theme] .ec-account .acc-chip {
+  border-radius: var(--dz-radius);
+  font-family: var(--dz-mono); font-size: 9.5px; letter-spacing: .1em; text-transform: uppercase;
+}
+[data-design='moda'][data-theme] .ec-account :is(.acc-order, .acc-plan, .acc-addr, .acc-member, .acc-fieldset) {
+  border-radius: var(--dz-radius);
+}
+
+/* ---------- Escritorio: cartilla lateral ---------- */
+@media (min-width: 1024px) {
+  [data-design='moda'][data-theme] .ec-account :is(.acc-mhead, .acc-tabs) { display: none; }
+  [data-design='moda'][data-theme] .ec-account .acc-shell {
+    grid-template-columns: 310px minmax(0, 1fr);
+    gap: 36px;
+    align-items: start;
+  }
+  [data-design='moda'][data-theme] .ec-account .acc-side {
+    display: grid;
+    gap: 0;
+    align-content: start;
+    position: sticky;
+    top: calc(var(--sp-top-h, 64px) + 18px);
+    padding: 26px 26px 24px 0;
+    border: 0;
+    border-right: 1px solid var(--dz-line);
+    border-radius: 0;
+    background: transparent;
+    box-shadow: none;
+  }
+  [data-design='moda'][data-theme] .ec-account .acc-id {
+    display: grid;
+    grid-template-columns: 54px minmax(0, 1fr);
+    align-items: center;
+    gap: 13px;
+    padding: 0 0 20px;
+    border-bottom: 1px solid var(--dz-line);
+  }
+  [data-design='moda'][data-theme] .ec-account .acc-id .acc-tele { grid-column: 1 / -1; }
+  [data-design='moda'][data-theme] .ec-account .acc-id-name {
+    font-family: var(--dz-display); font-weight: 400; font-size: 21px;
+    letter-spacing: -.01em; color: var(--dz-ink);
+  }
+  [data-design='moda'][data-theme] .ec-account .acc-id-email {
+    font-family: var(--dz-mono); font-size: 10.5px; letter-spacing: .07em; color: var(--dz-muted);
+  }
+  [data-design='moda'][data-theme] .ec-account .acc-nav { gap: 0; margin-top: 8px; }
+  [data-design='moda'][data-theme] .ec-account .acc-navitem {
+    gap: 12px;
+    padding: 13px 8px 13px 0;
+    border-radius: 0;
+    border-bottom: 1px solid var(--dz-line);
+    background: transparent;
+    color: var(--dz-ink-2);
+    font-family: var(--dz-body); font-size: 13px; font-weight: 500;
+    transition: color .25s, padding-left .25s;
+  }
+  [data-design='moda'][data-theme] .ec-account .acc-navitem svg { color: var(--dz-muted); transition: color .25s; }
+  [data-design='moda'][data-theme] .ec-account .acc-navitem .acc-idx { margin-left: auto; }
+  [data-design='moda'][data-theme] .ec-account .acc-navitem:hover {
+    background: transparent; color: var(--dz-accent-text); padding-left: 6px;
+  }
+  [data-design='moda'][data-theme] .ec-account .acc-navitem:hover svg { color: var(--dz-accent-text); }
+  [data-design='moda'][data-theme] .ec-account .acc-navitem.is-on {
+    background: transparent; color: var(--dz-ink); font-weight: 600;
+    box-shadow: inset 2px 0 0 var(--dz-accent);
+  }
+  [data-design='moda'][data-theme] .ec-account .acc-navitem.is-on svg { color: var(--dz-accent-text); }
+  [data-design='moda'][data-theme] .ec-account .acc-navitem.is-on .acc-idx { color: var(--dz-accent-text); }
+  [data-design='moda'][data-theme] .ec-account .acc-logout {
+    margin-top: 22px;
+    min-height: 46px;
+    border: 1px solid color-mix(in srgb, var(--dz-ink) 34%, transparent);
+    border-radius: var(--dz-radius);
+    background: transparent;
+    color: var(--dz-ink-2);
+    font: 500 9.5px/1 var(--dz-mono); letter-spacing: .22em; text-transform: uppercase;
+    transition: color .25s, border-color .25s, background .25s;
+  }
+  [data-design='moda'][data-theme] .ec-account .acc-logout:hover {
+    color: var(--dz-danger);
+    border-color: color-mix(in srgb, var(--dz-danger) 50%, transparent);
+    background: color-mix(in srgb, var(--dz-danger) 6%, transparent);
+  }
+}
+
+/* ---------- Responsive ---------- */
+@media (max-width: 1024px) {
+  [data-design='moda'] .ec-auth .ec-auth-shell {
+    grid-template-columns: minmax(0, 1fr);
+    margin-block: 12px clamp(28px, 5vw, 48px);
+  }
+  [data-design='moda'] .ec-auth .ec-auth-brand { padding: 24px 22px 20px; }
+  [data-design='moda'] .ec-auth .ec-auth-brand-inner {
+    grid-template-rows: auto auto;
+    gap: 14px;
+  }
+  [data-design='moda'] .ec-auth .ec-auth-brand-copy { gap: 8px; max-width: none; }
+  [data-design='moda'] .ec-auth .ec-auth-brand-text,
+  [data-design='moda'] .ec-auth .ec-auth-perks,
+  [data-design='moda'] .ec-auth .ec-auth-brand-foot { display: none; }
+  [data-design='moda'] .ec-auth .ec-auth-brand-title { font-size: clamp(24px, 5.4vw, 32px); }
+  [data-design='moda'] .ec-auth .ec-auth-panel {
+    padding: 26px 22px 32px;
+    border-left: 0;
+    border-top: 1px solid var(--dz-line);
+  }
+}
+@media (max-width: 860px) {
+  [data-design='moda'][data-theme] .ec-account .acc-mhead-meta strong { font-size: 18px; }
+  [data-design='moda'][data-theme] .ec-account .acc-panel-title { font-size: 22px; }
+}
+@media (max-width: 640px) {
+  [data-design='moda'] .ec-auth { padding-inline: 12px; }
+  [data-design='moda'] .ec-auth .ec-auth-brand { padding: 20px 16px 18px; }
+  [data-design='moda'] .ec-auth .ec-auth-brand-top { padding-bottom: 14px; }
+  [data-design='moda'] .ec-auth .ec-auth-logo { width: 40px; height: 40px; font-size: 21px; }
+  [data-design='moda'] .ec-auth .ec-auth-brand-name { font-size: 10px; letter-spacing: .2em; }
+  [data-design='moda'] .ec-auth .ec-auth-brand-title { font-size: 24px; }
+  [data-design='moda'] .ec-auth .ec-auth-panel { padding: 20px 16px 28px; }
+  [data-design='moda'] .ec-auth .ec-auth-head { margin-bottom: 20px; padding-bottom: 16px; }
+  [data-design='moda'] .ec-auth .ec-auth-title { font-size: 25px; }
+  [data-design='moda'] .ec-auth .ecaf-grid { grid-template-columns: minmax(0, 1fr); }
+  [data-design='moda'] .ec-auth :is(.ecaf-submit, .ec-btn-primary) { width: 100%; }
+  [data-design='moda'][data-theme] .ec-account { padding-inline: 14px; }
+  [data-design='moda'][data-theme] .ec-account .acc-tabs { padding-bottom: 0; }
+  [data-design='moda'][data-theme] .ec-account .acc-tab { padding: 10px 12px; letter-spacing: .14em; }
+  [data-design='moda'][data-theme] .ec-account .acc-panel,
+  [data-design='moda'][data-theme] .ec-account .acc-auth-card,
+  [data-design='moda'][data-theme] .ec-account .acc-gate-card { padding: 18px 16px; }
+}
+@media (max-width: 390px) {
+  [data-design='moda'] .ec-auth { padding-inline: 8px; }
+  [data-design='moda'] .ec-auth .ec-auth-brand-title { font-size: 21px; }
+  [data-design='moda'] .ec-auth .ec-auth-title { font-size: 22px; }
+  [data-design='moda'][data-theme] .ec-account { padding-inline: 10px; }
+  [data-design='moda'][data-theme] .ec-account .acc-mhead { grid-template-columns: 40px minmax(0, 1fr) 40px; gap: 10px; }
+  [data-design='moda'][data-theme] .ec-account .acc-mhead-meta strong { font-size: 16px; }
+  [data-design='moda'][data-theme] .ec-account .acc-panel-title { font-size: 20px; }
+}
+/* Tab bar inferior de la tienda (mobile.nav = bottom): el último panel
+   respira sobre la barra fija. */
+@media (max-width: 768px) {
+  [data-design='moda'][data-theme] .ec-account,
+  [data-design='moda'] .ec-auth {
+    padding-bottom: calc(24px + env(safe-area-inset-bottom));
+  }
+  [data-design='moda'][data-theme] .ec-account .acc-tabs {
+    padding-bottom: 6px;
+  }
+}
+/* ---------- Estados internos: mensajes, notas, vacíos, checks ---------- */
+[data-design='moda'] .ec-account :is(.acc-inline-error, .acc-msg.is-err) { color: var(--dz-danger); }
+[data-design='moda'] .ec-account .acc-msg.is-ok { color: var(--dz-ok); }
+[data-design='moda'] .ec-account .acc-note { background: var(--dz-card); }
+[data-design='moda'] .ec-account .acc-note--danger {
+  border-color: color-mix(in srgb, var(--dz-danger) 34%, transparent);
+  background: color-mix(in srgb, var(--dz-danger) 8%, transparent);
+  color: var(--dz-danger);
+}
+[data-design='moda'] .ec-account .acc-empty-ico {
+  border-radius: var(--dz-radius);
+  background: color-mix(in srgb, var(--dz-accent) 12%, var(--dz-card));
+  color: var(--dz-accent-text);
+}
+[data-design='moda'] .ec-account .acc-check input { accent-color: var(--dz-accent); }
+@media (prefers-reduced-motion: reduce) {
+  [data-design='moda'] :is(.ec-auth, .ec-account) * {
+    transition-duration: .001ms !important;
+    animation-duration: .001ms !important;
+  }
+}

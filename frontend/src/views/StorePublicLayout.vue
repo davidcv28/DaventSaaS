@@ -11,6 +11,10 @@ import AppIcon from '../components/AppIcon.vue'
 import BrandLogo from '../components/BrandLogo.vue'
 import StoreBot from '../components/StoreBot.vue'
 import PatternSurface from '../components/store/PatternSurface.vue'
+import StoreCartDrawer from '../components/ecommerce/StoreCartDrawer.vue'
+import StoreAuthModal from '../components/ecommerce/StoreAuthModal.vue'
+import { useCartStore } from '../stores/cart.store.js'
+import { useCustomerStore } from '../stores/customer.store.js'
 import { vReveal } from '../directives/reveal.js'
 import { applySeo } from '../utils/seo.js'
 import { readVisitorTheme, persistVisitorTheme, resolveStoreTheme } from '../utils/storeTheme.js'
@@ -58,6 +62,26 @@ const errorMsg = ref('')
 const slug = computed(() => normalizeSlug(route.params.slug || storeHostSlug || ''))
 const appUrl = env.appUrl
 
+// ---- E-commerce del comprador (customer JWT — independiente de la
+// sesión DAVENT del dueño). El carrito y el modal de auth se montan una
+// sola vez acá y los usan el header, las tarjetas y las vistas hijas. ----
+const cartStore = useCartStore()
+const customerStore = useCustomerStore()
+// Gate efectivo de venta online: lo calcula el backend en el payload
+// público (ecommerce_enabled + perfil fiscal completo) — el front solo
+// lo expone, nunca lo recalcula.
+const ordersEnabled = computed(() => Boolean(store.value?.orders_enabled))
+// Las rutas de comercio NUNCA se sirven como documento de diseño: si el
+// patternSurface las mandara al 'landing' del patrón, el checkout y la
+// cuenta quedarían tapados por el iframe del diseño.
+const ECOMMERCE_ROUTES = new Set([
+  'store-checkout', 'store-tracking', 'store-cart', 'store-receipt',
+  'store-auth', 'store-plans',
+  'store-account', 'store-account-verify', 'store-account-reset',
+  'store-legal', 'store-legal-page'
+])
+const isEcommerceRoute = computed(() => ECOMMERCE_ROUTES.has(route.name))
+
 // Vista previa en vivo del editor de bloques: el panel empuja el
 // layout_config del draft por postMessage same-origin y la página lo
 // aplica reactivo, sin recargar el iframe.
@@ -90,12 +114,15 @@ const patternFrameReady = ref(false)
 const SKIN_TEMPLATES = new Set(['mercado', 'gimnasio', 'movimiento', 'sastreria', 'moderntec', 'indumentaria', 'impacto'])
 //Superficie que el documento del patrón debe pintar en esta ruta. Si el
 //diseño no la declara (`surfaces`), esa ruta sigue con la plantilla Vue.
-const patternSurface = computed(() => (
-  route.name === 'store-catalog' ? 'catalog'
-    : route.name === 'store-services' ? 'services'
-      : route.name === 'store-product' ? 'product'
-        : 'landing'
-))
+const patternSurface = computed(() => {
+  if (isEcommerceRoute.value) return ''
+  return (
+    route.name === 'store-catalog' ? 'catalog'
+      : route.name === 'store-services' ? 'services'
+        : route.name === 'store-product' ? 'product'
+          : 'landing'
+  )
+})
 const usePattern = computed(() => Boolean(
   //Sin el payload de la tienda no se conoce el tema/identidad: montar antes
   //cargaba el documento en claro y el cambio a oscuro se veía como flash.
@@ -170,9 +197,27 @@ function onPatternNavigate({ route, id } = {}) {
   const target = { home: homeTo.value, catalog: catalogTo.value, services: servicesTo.value }[route]
   if (target) router.push(target)
 }
+// "Agregar al carrito" del documento del patrón (postMessage ds-buy): el
+// iframe es origen opaco y no puede llamar a la API — acá sí hay sesión
+// de comprador; addToCart maneja login pendiente, drawer y toasts.
+function onPatternBuy({ id } = {}) {
+  if (!ordersEnabled.value || !id) return
+  cartStore.addToCart(id, 1)
+}
+// Entrada "Mi cuenta" del documento del patrón (postMessage ds-account):
+// con sesión de comprador va directo a /cuenta; sin sesión navega a la
+// página de auth /ingresar con la cuenta como ?next= (un {route} sí puede
+// cruzar la navegación — a diferencia de un {action} pendiente).
+function onPatternAccount() {
+  if (customerStore.isAuthenticated) {
+    router.push(accountTo.value)
+    return
+  }
+  router.push(cartStore.authRoute('login', accountTo.value))
+}
 function onLayoutMessage(e) {
   if (e.data?.type !== 'davent:layout') return
-  if (e.origin !== window.location.origin && e.origin !== parentOrigin) return
+  if (!studioAllowedOrigins.has(e.origin)) return
   layoutOverride.value = e.data.layout || null
 }
 // Modo Studio (?studio=1, iframe de la shell): consume el protocolo del
@@ -194,14 +239,25 @@ const studioUpdateSeen = ref(false) // llegó el primer UPDATE del host
 // meta del patrón GUARDADO — mostrarla antes flasheaba el diseño viejo.
 const patternMetaBusy = ref(false)
 const patternWaiting = computed(() => studioMode.value && (!studioUpdateSeen.value || patternMetaBusy.value))
-// En un iframe el referrer es el document del host: se acepta como origen
-// válido además del propio (el update llega del Studio que lo embebe).
-const parentOrigin = window.parent !== window && document.referrer
-  ? new URL(document.referrer).origin
-  : window.location.origin
+// Orígenes habilitados para el protocolo Studio (?studio=1): el propio
+// origen y la app DAVENT que embebe la vista previa. El referrer NO es
+// fallback válido — cualquier sitio que embeba la página con ?studio=1 se
+// declaraba "padre" y podía inyectar theme/layout/custom (videos, fondos
+// con url()). Solo orígenes de la plataforma pueden hablarle al iframe.
+const studioAllowedOrigins = (() => {
+  const allowed = new Set([window.location.origin])
+  try { allowed.add(new URL(env.appUrl).origin) } catch { /* appUrl inválida en dev */ }
+  const pd = String(env.platformDomain || '').toLowerCase()
+  if (pd && !pd.includes('localhost')) {
+    for (const sub of ['', 'www', 'app', 'api', 'admin', 'panel']) {
+      allowed.add(`https://${sub ? `${sub}.` : ''}${pd}`)
+    }
+  }
+  return allowed
+})()
 function onStudioMessage(e) {
   if (!studioMode.value || !isStudioMessage(e.data)) return
-  if (e.origin !== window.location.origin && e.origin !== parentOrigin) return
+  if (!studioAllowedOrigins.has(e.origin)) return
   const d = e.data
   if (d.type === STUDIO_MSG.UPDATE) {
     studioUpdateSeen.value = true
@@ -351,10 +407,29 @@ const TEMPLATE_CSS = {
   gimnasio:  () => import('../assets/store-gimnasio.css'),
   movimiento: () => import('../assets/store-movimiento.css'),
   sastreria: () => import('../assets/store-sastreria.css'),
-  moderntec: () => import('../assets/store-moderntec.css'),
+  moderntec: () => Promise.all([
+    import('../assets/store-moderntec.css'),
+    import('../assets/store-moderntec-auth.css'),
+    import('../assets/store-moderntec-account.css'),
+    import('../assets/store-moderntec-account-sections.css')
+  ]),
   indumentaria: () => import('../assets/store-indumentaria.css'),
   impacto:   () => import('../assets/store-impacto.css')
 }
+// Diseño del catálogo elegido (slug): tiñe las páginas de comercio que NO
+// montan el documento del patrón (ingresar, cuenta, carrito, checkout).
+// Cada diseño trae su propia hoja `store-design-<slug>.css`, cargada
+// on-demand; si no existe, la página queda con la piel neutra.
+const DESIGN_EC_CSS = import.meta.glob('../assets/store-design-*.css')
+const designId = computed(() => {
+  const raw = String(custom.value.template || custom.value?.site_theme?.style?.id || '').trim().toLowerCase()
+  if (!raw || raw === 'raiz') return 'esencial'
+  return raw
+})
+watch(designId, (id) => {
+  const load = DESIGN_EC_CSS[`../assets/store-design-${id}.css`]
+  if (load) load().catch(() => {})
+}, { immediate: true })
 watch(pageTemplate, (tpl) => {
   const loaded = TEMPLATE_CSS[tpl]?.()
   if (loaded && typeof loaded.then === 'function') {
@@ -679,6 +754,8 @@ const homeTo = computed(() => ({ path: storeHostSlug ? '/' : `/${slug.value}` })
 const catalogTo = computed(() => ({ path: storeHostSlug ? '/catalogo' : `/${slug.value}/catalogo` }))
 const servicesTo = computed(() => ({ path: storeHostSlug ? '/servicios' : `/${slug.value}/servicios` }))
 const plansTo = computed(() => ({ path: storeHostSlug ? '/suscripciones' : `/${slug.value}/suscripciones` }))
+const accountTo = computed(() => ({ path: storeHostSlug ? '/cuenta' : `/${slug.value}/cuenta` }))
+const legalTo = (kind) => ({ path: storeHostSlug ? `/legal/${kind}` : `/${slug.value}/legal/${kind}` })
 // Página de reemplazo cuando no hay portada: Servicios si está, si no el
 // catálogo, si no Suscripciones (la web nunca queda sin destino — el
 // backend siempre manda ≥1).
@@ -833,8 +910,37 @@ provide('storePage', {
   slug, store, status, custom, shopName, nameFont, initial, location,
   hasDesignAdvanced, pageTemplate, hasAbout, showGallery, showContact, showCatalog, showServices, showPlans, siteTemplates, ui,
   landingHasGallery, landingHasContact,
+  ordersEnabled,
   loadPublicCatalog
 })
+
+// El carrito es por tienda: se (re)apunta cada vez que cambia el slug
+// (path /<slug> o subdominio/dominio propio resuelto async).
+watch(slug, (s) => cartStore.bindStore(s), { immediate: true })
+
+// Sesión del comprador expirada (customer.http la emite una sola vez por
+// refresh fallido): se limpia el estado local y se avisa — la compra en
+// curso pide login de nuevo vía el modal.
+function onCustomerSessionExpired() {
+  customerStore.handleSessionExpired()
+  cartStore.onSessionExpired()
+  cartStore.flash('err', 'Tu sesión expiró. Ingresá de nuevo para seguir comprando.', 5000)
+}
+window.addEventListener('davent:customer-session-expired', onCustomerSessionExpired)
+
+// El modal de auth terminó con login/register/google exitoso: corre la
+// acción pendiente ("agregar al carrito", "suscribirme") o navega a la
+// ruta que la disparó (checkout/cuenta).
+async function onCustomerAuthed() {
+  const pending = cartStore.takePending()
+  if (pending?.action) {
+    try { await pending.action() } catch { /* la acción maneja sus errores */ }
+  } else if (pending?.route) {
+    router.push(pending.route)
+  } else {
+    await cartStore.refresh()
+  }
+}
 
 // Título de pestaña por página: "<tienda>" en Inicio, "<tienda> · Catálogo"
 // en el catálogo, "<tienda> · Servicios" en la página de servicios.
@@ -844,6 +950,7 @@ watch([status, () => route.name], ([s, name]) => {
   document.title = name === 'store-catalog' ? `${shopName.value} · Catálogo`
     : name === 'store-services' ? `${shopName.value} · Servicios`
     : name === 'store-plans' ? `${shopName.value} · Suscripciones`
+    : name === 'store-auth' ? `${shopName.value} · Ingresar`
     : shopName.value
 }, { immediate: true })
 
@@ -1003,7 +1110,11 @@ onMounted(async () => {
         : { path: to.path, query: { ...to.query, ...keep }, hash: to.hash }
     ))
     if (studioMode.value && window.parent !== window) {
-      window.parent.postMessage(studioReady(), parentOrigin)
+      //El padre real es uno de los orígenes de la plataforma: se postea a
+      //todos los habilitados y solo el que embebe la página lo recibe.
+      for (const origin of studioAllowedOrigins) {
+        window.parent.postMessage(studioReady(), origin)
+      }
     }
   }
   if (studioMode.value) {
@@ -1020,6 +1131,7 @@ onBeforeUnmount(() => {
   window.removeEventListener('keydown', onMenuKey)
   window.removeEventListener('message', onLayoutMessage)
   window.removeEventListener('message', onStudioMessage)
+  window.removeEventListener('davent:customer-session-expired', onCustomerSessionExpired)
   removeStudioGuard?.()
   contentObserver?.disconnect()
   clearTimeout(contentFallback)
@@ -1030,7 +1142,7 @@ onBeforeUnmount(() => {
 </script>
 
 <template>
-  <div ref="pageRoot" class="store-page" :class="{ 'is-home': isHome, 'is-scrolled': scrolled, 'has-pattern': usePattern }" :data-store-theme="pageTheme" :data-theme="pageTheme" :data-template="pageTemplate" :data-store-template="pageTemplate" :data-style="pageStyle" :data-skin="storeSkinOf(pageTemplate)" :data-logo-mode="custom.logo_mode" :data-has-logo="custom.logo ? '' : null" :data-mono="custom.mono_style" :data-st-tabbar="showTabbar && !usePattern && !patternWaiting ? '' : null" :style="[themeVars, publishedThemeVars, studioVars]" v-bind="pageAttrs">
+  <div ref="pageRoot" class="store-page" :class="{ 'is-home': isHome, 'is-scrolled': scrolled, 'has-pattern': usePattern }" :data-store-theme="pageTheme" :data-theme="pageTheme" :data-template="pageTemplate" :data-store-template="pageTemplate" :data-design="designId" :data-style="pageStyle" :data-skin="storeSkinOf(pageTemplate)" :data-logo-mode="custom.logo_mode" :data-has-logo="custom.logo ? '' : null" :data-mono="custom.mono_style" :data-st-tabbar="showTabbar && !usePattern && !patternWaiting ? '' : null" :style="[themeVars, publishedThemeVars, studioVars]" v-bind="pageAttrs">
     <button type="button" class="sp-skip" @click="skipToContent">Saltar al contenido</button>
     <span v-if="previewMode" class="sp-preview-badge" role="status">Vista previa — el diseño todavía no se publicó</span>
     <!-- Diseño del catálogo con contrato de datos: se pinta el documento
@@ -1047,7 +1159,10 @@ onBeforeUnmount(() => {
       :product="patternSurface === 'product' ? route.params.productId : ''"
       :studio-css="patternStudioCssText"
       :title="shopName"
+      :account="customerStore.isAuthenticated"
       @navigate="onPatternNavigate"
+      @buy="onPatternBuy"
+      @account="onPatternAccount"
       @toggle-theme="togglePageTheme"
       @load="patternFrameReady = true"
     />
@@ -1125,6 +1240,26 @@ onBeforeUnmount(() => {
           <button v-if="isShop && !isCatalog" type="button" class="sp-search-go" aria-label="Buscar en el catálogo" @click="submitTopSearch"><AppIcon name="arrow-right" :size="15" /></button>
         </label>
         <div class="sp-top-end">
+          <!-- E-commerce: cuenta del comprador siempre; carrito solo con
+               orders_enabled efectivo (ecommerce + fiscal del backend). -->
+          <RouterLink
+            v-if="status === 'success'"
+            :to="accountTo" class="sp-icon-btn" style="position: relative"
+            :aria-label="customerStore.isAuthenticated ? `Mi cuenta — ${customerStore.displayName}` : 'Ingresar a mi cuenta'"
+            title="Mi cuenta"
+          >
+            <AppIcon name="user" :size="17" />
+          </RouterLink>
+          <button
+            v-if="status === 'success' && ordersEnabled"
+            type="button" class="sp-icon-btn" style="position: relative"
+            :aria-label="cartStore.itemCount ? `Carrito, ${cartStore.itemCount} ${cartStore.itemCount === 1 ? 'producto' : 'productos'}` : 'Carrito'"
+            title="Carrito"
+            @click="cartStore.openDrawer()"
+          >
+            <AppIcon name="shopping-cart" :size="17" />
+            <span v-if="cartStore.itemCount" class="ec-badge" aria-hidden="true">{{ cartStore.itemCount > 99 ? '99+' : cartStore.itemCount }}</span>
+          </button>
           <!-- Buscador colapsable en móvil: la lupa abre la barra bajo el
                header (Esc, Enter o la misma lupa la cierran). -->
           <button
@@ -1325,7 +1460,13 @@ onBeforeUnmount(() => {
           </nav>
           <nav class="sp-foot-col" aria-label="Información del sitio">
             <p class="sp-foot-heading">Información</p>
-            <a :href="`${appUrl}/terminos`">Términos y condiciones</a>
+            <!-- Legales de la TIENDA (dominio legalpages — texto del dueño);
+                 las de DAVENT siguen abajo como links de plataforma. -->
+            <RouterLink :to="legalTo('terms')">Términos</RouterLink>
+            <RouterLink :to="legalTo('privacy')">Privacidad</RouterLink>
+            <RouterLink :to="legalTo('returns')">Arrepentimiento y devoluciones</RouterLink>
+            <a :href="`${appUrl}/terminos`">Términos y condiciones de DAVENT</a>
+            <a :href="`${appUrl}/privacidad`">Privacidad de DAVENT</a>
             <a :href="`${appUrl}/denuncias`">Denunciar contenido</a>
           </nav>
         </div>
@@ -1351,5 +1492,42 @@ onBeforeUnmount(() => {
       :logo="custom.logo"
       :initial="initial"
     />
+
+    <!-- E-commerce del comprador: drawer del carrito, modal de auth y
+         toast de avisos. Van fuera del .sp-vue-page: también aplican en
+         las rutas de comercio (checkout/cuenta/seguimiento/legal). -->
+    <StoreCartDrawer v-if="status === 'success'" :slug="slug" />
+    <StoreAuthModal v-if="status === 'success'" :slug="slug" @done="onCustomerAuthed" />
+    <Transition name="ec-toast">
+      <div v-if="cartStore.notice" class="ec-toast" :class="cartStore.notice.kind" role="status">
+        {{ cartStore.notice.text }}
+      </div>
+    </Transition>
   </div>
 </template>
+
+<style scoped>
+/* Badge del carrito sobre el icon-btn del header + toast de avisos del
+   cart.store (los drawers/modales llevan sus propios estilos). */
+.ec-badge {
+  position: absolute; top: -5px; right: -5px;
+  min-width: 19px; height: 19px; padding: 0 5px;
+  display: grid; place-items: center;
+  border-radius: 999px; font-size: 10.5px; font-weight: 800;
+  background: var(--sp-danger, #dc2626); color: #fff;
+  border: 2px solid var(--sp-card, #fff);
+  font-variant-numeric: tabular-nums;
+}
+.ec-toast {
+  position: fixed; left: 50%; bottom: calc(20px + env(safe-area-inset-bottom));
+  transform: translateX(-50%); z-index: 1300;
+  max-width: min(92vw, 460px); padding: 12px 18px;
+  border-radius: calc(var(--sp-radius, 16px) * .8); font-size: 13.5px; font-weight: 600; line-height: 1.4;
+  background: #111827; color: #fff;
+  box-shadow: 0 14px 40px rgba(0,0,0,.3);
+}
+.ec-toast.ok { background: var(--sp-success, #15803d); }
+.ec-toast.err { background: var(--sp-danger, #b91c1c); }
+.ec-toast-enter-active, .ec-toast-leave-active { transition: opacity .2s ease, transform .2s ease; }
+.ec-toast-enter-from, .ec-toast-leave-to { opacity: 0; transform: translate(-50%, 8px); }
+</style>

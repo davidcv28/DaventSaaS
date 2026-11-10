@@ -545,6 +545,11 @@ export const CUSTOMIZATION_DEFAULTS = {
   show_location: true,
   show_gallery: true,
   show_catalog: true,
+  // Venta online (carrito + checkout + seguimiento de pedidos en la web
+  // pública). El gate EFECTIVO es customization.ecommerce_enabled + perfil
+  // fiscal completo — el backend lo expone como orders_enabled en la
+  // tienda pública; acá solo se guarda la preferencia del dueño.
+  ecommerce_enabled: false,
   // Páginas de la web: portada + servicios + catálogo (el backend deriva
   // show_catalog y expone site_mode de compat para las plantillas viejas).
   site_templates: ['landing', 'catalog'],

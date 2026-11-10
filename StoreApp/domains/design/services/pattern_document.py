@@ -19,21 +19,55 @@ from django.utils.html import escape
 #El handler se elimina con comillas dobles, simples o sin comillas: la
 #variante `onerror='…'` y `onbegin=alert(1)` sobrevivían al filtro y el
 #documento corre en el MISMO origen de la app (iframe `allow-same-origin`).
-INLINE_HANDLER_RE = re.compile(r"""\son[a-z]+\s*=\s*(?:"[^"]*"|'[^']*'|[^\s>]+)""", re.I)
-INLINE_SCRIPT_RE = re.compile(r'<script\b[^>]*>.*?</script>', re.I | re.S)
-#URL ejecutable en un atributo de navegación: `javascript:` en un href/src
-#corre código dentro del documento (y del origen de la app).
+#El handler se elimina con comillas dobles, simples, sin comillas o pegado
+#a `/`/comilla (HTML5 tokeniza `/` antes de atributo y acepta atributos
+#nuevos tras una comilla de cierre sin whitespace): `onerror='…'`,
+#`onbegin=alert(1)`, `<svg/onload=…>` y `<img src="x"onerror=…>`.
+#El lookbehind excluye `-`/`:` para no tocar `data-onclick` ni `json=`.
+INLINE_HANDLER_RE = re.compile(r"""(?<![\w:-])on[a-z]+\s*=\s*(?:"[^"]*"|'[^']*'|[^\s>]+)""", re.I)
+#El documento no lleva `<script>` propio (el JS viaja por `pattern.js`): se
+#eliminan bloques completos, etiquetas sueltas, self-closing y cierres
+#espaciados (`</script >`). Un `<script>` huérfano sin cerrar devoraría los
+#`<script>` con nonce del documento y dejaría la página sin puente.
+SCRIPT_RE = re.compile(r'<script\b[^>]*>.*?</script\s*>|</?script\b[^>]*>', re.I | re.S)
+
+
+def _obf_scheme(word):
+    """
+    Fragmento de regex para un scheme peligroso tolerando ofuscación que el
+    navegador decodifica dentro de URLs: entidades (`&#106;`, `&Tab;`,
+    `&colon;`…) y whitespace entre caracteres. Sobre-bloquear es seguro:
+    el peor caso es reescribir un href raro a `#`.
+    """
+    junk   =   r'(?:&[#\w]+;|\s)*'
+    parts  =   [f'(?:{re.escape(ch)}|&[#\w]+;)' for ch in word]
+    return  junk.join(parts)
+
+
+_DANGER_SCHEME   =   (rf'(?:{_obf_scheme("javascript")}|{_obf_scheme("vbscript")}'
+                     rf'|{_obf_scheme("data:text/html")})')
+#URL ejecutable en un atributo de navegación: `javascript:`/`vbscript:`/
+#`data:text/html` en href/src/action/etc. corre código (o phishing) dentro
+#del documento. El boundary `(?<![\w:-])` cubre `/` y comillas adyacentes.
 SCRIPT_URL_RE = re.compile(
-    r"""(\s(?:href|src|action|formaction|xlink:href)\s*=\s*)"""
-    r"""(?:"\s*(?:javascript|vbscript|data:text/html)[^"]*"|'\s*(?:javascript|vbscript|data:text/html)[^']*'|(?:javascript|vbscript|data:text/html)[^\s>]*)""",
+    rf"""((?<![\w:-])(?:href|src|action|formaction|xlink:href|poster|background|srcset|ping)\s*=\s*)"""
+    rf"""(?:"\s*{_DANGER_SCHEME}[^"]*"|'\s*{_DANGER_SCHEME}[^']*'|{_DANGER_SCHEME}[^\s>]*)""",
     re.I,
 )
 #`<base>` reescribe TODAS las URLs relativas del documento (incluido el
 #`<script src>` del puente): un `<base href="//evil">` desvía el JS del
-#diseño a un host ajeno. Los embeds externos y el refresh por meta tampoco
-#tienen lugar en un diseño.
+#diseño a un host ajeno. Los embeds externos tampoco tienen lugar.
 DANGEROUS_TAG_RE = re.compile(r'<(?:base|object|embed|iframe|frame|frameset)\b[^>]*>', re.I)
-META_REFRESH_RE = re.compile(r'<meta\b[^>]*http-equiv\s*=\s*["\']?refresh[^>]*>', re.I)
+#Todo `<meta>` sale del markup del patrón: el documento ya declara charset y
+#viewport en su `<head>` propio, y cualquier meta restante solo sirve para
+#refresh/navegación encubierta (el regex de refresh se bypaseaba con
+#entidades `&#114;efresh` o espacios dentro de las comillas — el CSP no
+#cubre meta refresh).
+META_TAG_RE = re.compile(r'<meta\b[^>]*>', re.I)
+#La hoja viaja dentro de `<style>…</style>`: un `</style` en el CSS
+#(`pattern.css` es texto admin sin filtrar) cerraría el elemento y lo que
+#sigue se parsearía como HTML — meta refresh, trackers, handlers.
+STYLE_CLOSE_RE = re.compile(r'</\s*style', re.I)
 
 #CSP del documento del diseño. El iframe va SANDBOXEADO sin
 #`allow-same-origin`: el documento tiene origen opaco y no puede tocar el DOM
@@ -189,19 +223,33 @@ def bridge_url():
 
 def sanitize_markup(html):
     """
-    Markup del diseño sin nada ejecutable: scripts, handlers `on*=` (con
-    cualquier comilla), URLs `javascript:`/`data:text/html`, `<base>`,
-    embeds y refresh por meta. El documento corre en el mismo origen de la
-    app, así que el saneo + el CSP son la barrera del iframe.
+    Markup del diseño sin nada ejecutable: scripts (bloques y etiquetas
+    sueltas), handlers `on*=` (con cualquier comilla o separador `/`),
+    URLs `javascript:`/`vbscript:`/`data:text/html` (incl. ofuscadas por
+    entidades), `<base>`, embeds y TODO `<meta>` (el refresh se bypaseaba
+    por entidades/espacios y el CSP no lo cubre). El documento corre en
+    origen opaco, así que el saneo + el CSP son la barrera del iframe.
     """
-    html = INLINE_SCRIPT_RE.sub('', html or '')
+    html = SCRIPT_RE.sub('', html or '')
     html = INLINE_HANDLER_RE.sub('', html)
-    html = SCRIPT_URL_RE.sub(r'\1="#"', html)
+    html = SCRIPT_URL_RE.sub(r'\1"#"', html)
     html = DANGEROUS_TAG_RE.sub('', html)
-    return META_REFRESH_RE.sub('', html)
+    return META_TAG_RE.sub('', html)
 
 
-def pattern_document(html, css, theme, surface, preview = '', style = '', nonce = '', preload = None, template = ''):
+def sanitize_css(css):
+    """
+    La hoja viaja dentro de `<style>…</style>` en el documento y en el
+    srcdoc de la vista previa: un `</style` en el CSS (`pattern.css` es
+    texto admin sin filtrar, junto a theme/studio css ya validados)
+    cerraría el elemento y lo que sigue se parsearía como HTML — meta
+    refresh, trackers o handlers. Se elimina la secuencia de cierre; el
+    resto del CSS no puede salir del contexto raw-text.
+    """
+    return STYLE_CLOSE_RE.sub('', css or '')
+
+
+def pattern_document(html, css, theme, surface, preview = '', style = '', nonce = '', preload = None, template = '', commerce = False):
     """
     Documento completo listo para servir como `text/html`.
     `html` ya viene renderizado contra la tienda y `css` ya trae el tema del
@@ -209,6 +257,10 @@ def pattern_document(html, css, theme, surface, preview = '', style = '', nonce 
     (portada del hero) que conviene descubrir antes de parsear el body.
     `template` es el diseño en ensayo: se propaga a `script.js` para que el
     JS corresponda al patrón del documento (antes servía el del borrador).
+    `commerce` marca `data-ds-commerce` en <html>: la tienda vende online
+    (orders_enabled) y el puente inyecta los CTA "Agregar al carrito" —
+    el documento nunca toca la API de carrito (origen opaco), solo avisa
+    al host por postMessage.
     """
     query = {'surface': surface, 'theme': theme}
     if preview:
@@ -225,6 +277,7 @@ def pattern_document(html, css, theme, surface, preview = '', style = '', nonce 
     #Solo slug ASCII: el atributo lo escriben selectores CSS, nunca HTML.
     style = re.sub(r'[^a-z0-9-]', '', str(style or '').lower())[:80]
     style_attr = f' data-ds-style="{style}"' if style else ''
+    commerce_attr = ' data-ds-commerce="1"' if commerce else ''
     #Los dos `<script>` son los únicos ejecutables del documento: el nonce
     #(CSP `script-src 'nonce-…'`) los autoriza sin depender del origen.
     nonce   =   str(nonce or '')
@@ -234,7 +287,7 @@ def pattern_document(html, css, theme, surface, preview = '', style = '', nonce 
         for url in (preload or [])[:2] if url
     )
     return (
-        f'<!doctype html><html lang="es" data-ds-theme="{theme}" data-ds-surface="{surface}"{style_attr}>'
+        f'<!doctype html><html lang="es" data-ds-theme="{theme}" data-ds-surface="{surface}"{style_attr}{commerce_attr}>'
         '<head><meta charset="utf-8">'
         '<meta name="viewport" content="width=device-width,initial-scale=1">'
         f'{preload_links}'
@@ -242,7 +295,7 @@ def pattern_document(html, css, theme, surface, preview = '', style = '', nonce 
         #sus reglas genéricas (.ds-cat, .cat-sort) pisan la piel del patrón
         #por empate de especificidad (los chips del catálogo quedaban sin
         #estilo). El !important de las superficies sigue ganando igual.
-        f'<style>html,body{{margin:0}}{SURFACE_CSS}{css}</style></head><body>'
+        f'<style>html,body{{margin:0}}{SURFACE_CSS}{sanitize_css(css)}</style></head><body>'
         f'{html}'
         f'<script src="{script}"{nonce_attr}></script>'
         f'<script src="{bridge_url()}"{nonce_attr}></script>'

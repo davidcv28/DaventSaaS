@@ -1,10 +1,11 @@
 <script setup>
-import { ref, computed, watch, inject, onMounted } from 'vue'
+import { ref, computed, watch, inject, nextTick, onMounted, onBeforeUnmount } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { storeHostSlug } from '../../../config/env.js'
 import { formatARS } from '../../../api/billing.api.js'
 import { productOffer, effectivePrice, offerPct, isNewProduct, productDiscount, offerEndsLabel } from '../../../api/catalog.api.js'
 import { storeContactLink, hasContactChannel } from '../../../api/stores.api.js'
+import { useCartStore } from '../../../stores/cart.store.js'
 import AppIcon from '../../../components/AppIcon.vue'
 import ProductStars from '../../../components/ProductStars.vue'
 import ProductReviews from '../../../components/ProductReviews.vue'
@@ -19,6 +20,62 @@ const ctx = inject('storePage')
 const { slug, custom, shopName, location, loadPublicCatalog } = ctx
 const route = useRoute()
 const router = useRouter()
+const cartStore = useCartStore()
+
+// Venta online efectiva (la calcula el backend: ecommerce_enabled + fiscal
+// completo). Con orders_enabled la ficha suma "Agregar al carrito" como CTA
+// principal; sin él queda el flujo de consulta de siempre. El stock NO se
+// expone en el catálogo público: el cart valida y avisa si no alcanza.
+const ordersEnabled = computed(() => Boolean(ctx?.ordersEnabled?.value ?? ctx?.ordersEnabled))
+// Cantidad del alta: el stepper alimenta el botón "Agregar al carrito" (y la
+// barra fija móvil) y se cita en el mensaje de WhatsApp cuando es > 1.
+const QTY_MAX = 99
+const qty = ref(1)
+const setQty = (n) => { qty.value = Math.min(QTY_MAX, Math.max(1, Math.round(Number(n)) || 1)) }
+const adding = ref(false)
+const added = ref(false)
+let addedTimer = 0
+async function addToCart() {
+  if (adding.value || !product.value) return
+  adding.value = true
+  try {
+    const res = await cartStore.addToCart(product.value.id, qty.value, product.value.name)
+    if (res?.ok) {
+      added.value = true
+      clearTimeout(addedTimer)
+      addedTimer = setTimeout(() => { added.value = false }, 1600)
+    }
+  } finally {
+    adding.value = false
+  }
+}
+
+// Lightbox de la foto principal: la ficha solo tiene una imagen por
+// producto, así que el zoom es una vista ampliada (Esc/fondo/cierra).
+const lightbox = ref(false)
+let lbPrevFocus = null
+const lbClose = ref(null)
+function openLightbox() {
+  if (!product.value?.image) return
+  lbPrevFocus = document.activeElement
+  lightbox.value = true
+  document.documentElement.classList.add('sp-lock')
+  nextTick(() => lbClose.value?.focus())
+}
+function closeLightbox() {
+  if (!lightbox.value) return
+  lightbox.value = false
+  document.documentElement.classList.remove('sp-lock')
+  lbPrevFocus?.focus?.()
+  lbPrevFocus = null
+}
+function onLbKey(e) {
+  if (e.key === 'Escape') closeLightbox()
+}
+watch(lightbox, (v) => {
+  if (v) window.addEventListener('keydown', onLbKey)
+  else window.removeEventListener('keydown', onLbKey)
+})
 
 const homeTo = computed(() => ({ path: storeHostSlug ? '/' : `/${slug.value}` }))
 const catalogTo = computed(() => ({ path: storeHostSlug ? '/catalogo' : `/${slug.value}/catalogo` }))
@@ -67,12 +124,16 @@ const related = computed(() => {
   return [...sameCat, ...sameBrand, ...others].slice(0, 4)
 })
 const eyebrowParts = computed(() => [categoryName.value, brandName.value].filter(Boolean))
+// Lookup por producto para las tarjetas de "También te puede interesar".
+const catNameOf = (p) => catalog.value.categories.find((c) => c.id === p.category)?.name || ''
+const brandNameOf = (p) => catalog.value.brands.find((b) => b.id === p.brand)?.name || ''
 
 // CTA principal: consulta por WhatsApp con el producto ya citado en el
 // mensaje (el comercio recibe el interés concreto, como en un marketplace).
 const whatsappUrl = computed(() => {
   if (!hasContactChannel(custom.value, 'whatsapp') || !product.value) return ''
-  const text = `Hola ${shopName.value}, me interesa "${product.value.name}" (${formatARS(effectivePrice(product.value))}) que vi en tu catálogo.`
+  const qtyNote = qty.value > 1 ? ` · ${qty.value} unidades` : ''
+  const text = `Hola ${shopName.value}, me interesa "${product.value.name}" (${formatARS(effectivePrice(product.value))}${qtyNote}) que vi en tu catálogo.`
   return storeContactLink(slug.value, 'whatsapp', text)
 })
 
@@ -99,6 +160,11 @@ async function load() {
 
 onMounted(() => {
   if (custom.value.show_catalog !== false) load()
+})
+onBeforeUnmount(() => {
+  clearTimeout(addedTimer)
+  window.removeEventListener('keydown', onLbKey)
+  document.documentElement.classList.remove('sp-lock')
 })
 </script>
 
@@ -138,9 +204,17 @@ onMounted(() => {
           <div class="rz-pdp-top">
             <!-- Galería -->
             <figure class="rz-pdp-gallery">
-              <div class="rz-frame rz-pdp-frame">
+              <div
+                class="rz-frame rz-pdp-frame" :class="{ 'is-zoomable': product.image }"
+                :role="product.image ? 'button' : undefined" :tabindex="product.image ? 0 : undefined"
+                :aria-label="product.image ? `Ampliar imagen de ${product.name}` : undefined"
+                @click="openLightbox" @keydown.enter.prevent="openLightbox" @keydown.space.prevent="openLightbox"
+              >
                 <img v-if="product.image" :src="product.image" :alt="product.name" decoding="async" fetchpriority="high" />
                 <span v-else class="rz-pdp-ph" aria-hidden="true"><AppIcon name="package" :size="64" /></span>
+                <span v-if="product.image" class="rz-pdp-zoom-hint" aria-hidden="true">
+                  <AppIcon name="maximize" :size="13" /> Ampliar
+                </span>
               </div>
               <figcaption class="rz-pdp-caption">
                 <span class="rz-pdp-caption-cat">{{ categoryName || 'Producto' }}</span>
@@ -199,14 +273,38 @@ onMounted(() => {
                 </p>
               </div>
 
+              <div v-if="ordersEnabled" class="rz-pdp-qty" role="group" aria-label="Cantidad">
+                <span class="rz-pdp-qty-lbl">Cantidad</span>
+                <div class="rz-pdp-qty-ctl">
+                  <button type="button" :disabled="qty <= 1" aria-label="Disminuir cantidad" @click="setQty(qty - 1)">
+                    <AppIcon name="minus" :size="14" aria-hidden="true" />
+                  </button>
+                  <output class="rz-pdp-qty-num" aria-live="polite">{{ qty }}</output>
+                  <button type="button" :disabled="qty >= QTY_MAX" aria-label="Aumentar cantidad" @click="setQty(qty + 1)">
+                    <AppIcon name="plus" :size="14" aria-hidden="true" />
+                  </button>
+                </div>
+              </div>
+
               <div class="rz-pdp-ctas">
-                <a v-if="whatsappUrl" class="rz-btn rz-pdp-buy-btn" :href="whatsappUrl" target="_blank" rel="noopener">
+                <button
+                  v-if="ordersEnabled" type="button"
+                  class="rz-btn rz-pdp-buy-btn rz-pdp-cart" :disabled="adding"
+                  @click="addToCart"
+                >
+                  <AppIcon :name="added ? 'check' : 'shopping-cart'" :size="17" aria-hidden="true" />
+                  {{ added ? 'Agregado al carrito' : 'Agregar al carrito' }}
+                </button>
+                <a
+                  v-if="whatsappUrl" class="rz-btn rz-pdp-buy-btn" :class="{ 'rz-btn--ghost': ordersEnabled }"
+                  :href="whatsappUrl" target="_blank" rel="noopener"
+                >
                   <AppIcon name="whatsapp" :size="17" aria-hidden="true" /> Consultar por WhatsApp
                 </a>
                 <RouterLink v-else class="rz-btn rz-pdp-buy-btn" :to="contactTo">
                   <AppIcon name="message-circle" :size="17" aria-hidden="true" /> Consultar al vendedor
                 </RouterLink>
-                <RouterLink v-if="whatsappUrl" class="rz-btn rz-btn--ghost" :to="contactTo">
+                <RouterLink v-if="whatsappUrl && !ordersEnabled" class="rz-btn rz-btn--ghost" :to="contactTo">
                   <AppIcon name="mail" :size="15" aria-hidden="true" /> Enviar un mensaje
                 </RouterLink>
                 <RouterLink class="rz-pdp-backlink" :to="catalogTo">
@@ -278,6 +376,12 @@ onMounted(() => {
             <s v-if="hasOffer">{{ formatARS(product.price) }}</s>
             <strong>{{ formatARS(effectivePrice(product)) }}</strong>
           </span>
+          <button
+            v-if="ordersEnabled" type="button" class="rz-btn rz-pdp-stick-btn rz-pdp-stick-cart"
+            :disabled="adding" :aria-label="added ? 'Agregado al carrito' : 'Agregar al carrito'" @click="addToCart"
+          >
+            <AppIcon :name="added ? 'check' : 'shopping-cart'" :size="16" aria-hidden="true" />
+          </button>
           <a v-if="whatsappUrl" class="rz-btn rz-pdp-stick-btn" :href="whatsappUrl" target="_blank" rel="noopener">
             <AppIcon name="whatsapp" :size="16" aria-hidden="true" /> Consultar
           </a>
@@ -295,6 +399,7 @@ onMounted(() => {
           <div class="rz-pdp-rel-grid">
             <TplProductCard
               v-for="r in related" :key="r.id" class="rz-pdp-rel-card" :p="r"
+              :cat="catNameOf(r)" :brand="brandNameOf(r)"
               seal-shape="" :ph-size="24" :go="false" @open="(r2) => router.push(productTo(r2))"
             />
           </div>
@@ -316,5 +421,151 @@ onMounted(() => {
         </RouterLink>
       </div>
     </main>
+
+    <!-- Lightbox de la foto: teleport a body para que position:fixed no
+         quede atrapado por transforms de las animaciones de reveal. Colores
+         neutros propios: fuera del árbol .store-page no heredan tokens. -->
+    <Teleport to="body">
+      <Transition name="rz-pdp-lb">
+        <div
+          v-if="lightbox" class="rz-pdp-lb" role="dialog" aria-modal="true"
+          :aria-label="product ? `Imagen de ${product.name}` : 'Imagen del producto'" @click.self="closeLightbox"
+        >
+          <button ref="lbClose" type="button" class="rz-pdp-lb-close" aria-label="Cerrar imagen" @click="closeLightbox">
+            <AppIcon name="x" :size="20" aria-hidden="true" />
+          </button>
+          <img class="rz-pdp-lb-img" :src="product?.image" :alt="product?.name || ''" />
+        </div>
+      </Transition>
+    </Teleport>
   </div>
 </template>
+
+<style scoped>
+/* Zoom de la foto principal: la ficha solo tiene una imagen, así que el
+   frame entero abre el lightbox (rol=button solo cuando hay foto). */
+.rz-pdp-frame.is-zoomable { cursor: zoom-in; }
+.rz-pdp-frame.is-zoomable:focus-visible {
+  outline: 2px solid var(--rz-focus, var(--rz-ink, #0f172a));
+  outline-offset: 3px;
+}
+.rz-pdp-zoom-hint {
+  position: absolute;
+  right: 12px;
+  bottom: 12px;
+  z-index: 2;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 11px;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--rz-ink, #0f172a) 78%, transparent);
+  color: var(--rz-bg, #fff);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: .05em;
+  text-transform: uppercase;
+  pointer-events: none;
+  opacity: 0;
+  translate: 0 6px;
+  transition: opacity .18s ease-out, translate .18s ease-out;
+}
+@media (hover: hover) and (pointer: fine) {
+  .rz-pdp-frame.is-zoomable:hover .rz-pdp-zoom-hint,
+  .rz-pdp-frame.is-zoomable:focus-visible .rz-pdp-zoom-hint { opacity: 1; translate: 0 0; }
+}
+@media (hover: none) { .rz-pdp-zoom-hint { display: none; } }
+
+/* Stepper de cantidad: misma retícula que el resto del panel de compra. */
+.rz-pdp-qty {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding-block: 12px;
+  border-block: 1px solid var(--rz-line, var(--sp-line, #e2e8f0));
+}
+.rz-pdp-qty-lbl {
+  font-size: 10.5px;
+  font-weight: 700;
+  letter-spacing: .1em;
+  text-transform: uppercase;
+  color: var(--rz-muted, var(--sp-muted, #64748b));
+}
+.rz-pdp-qty-ctl {
+  display: inline-flex;
+  align-items: center;
+  border: 1px solid var(--rz-line, var(--sp-line, #e2e8f0));
+  border-radius: var(--rz-rad-sm, 8px);
+  background: var(--rz-surface, var(--sp-card, #fff));
+  overflow: hidden;
+}
+.rz-pdp-qty-ctl button {
+  display: grid;
+  place-items: center;
+  width: 42px;
+  height: 42px;
+  border: 0;
+  background: transparent;
+  color: var(--rz-ink, var(--sp-ink, #0f172a));
+  cursor: pointer;
+  transition: background .15s ease-out;
+}
+.rz-pdp-qty-ctl button:hover:not(:disabled) { background: var(--rz-surface-2, var(--sp-soft, #f1f5f9)); }
+.rz-pdp-qty-ctl button:disabled { opacity: .35; cursor: default; }
+.rz-pdp-qty-num {
+  min-width: 44px;
+  text-align: center;
+  font-family: var(--rz-display, inherit);
+  font-size: 16px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  color: var(--rz-ink, var(--sp-ink, #0f172a));
+}
+
+/* Lightbox (teleport a body): neutro propio, no depende de tokens --rz-*. */
+.rz-pdp-lb {
+  position: fixed;
+  inset: 0;
+  z-index: 90;
+  display: grid;
+  place-items: center;
+  padding: 24px;
+  background: rgb(8 10 16 / .88);
+  backdrop-filter: blur(6px);
+}
+.rz-pdp-lb-img {
+  max-width: min(92vw, 1100px);
+  max-height: 88dvh;
+  width: auto;
+  height: auto;
+  object-fit: contain;
+  border-radius: 10px;
+  box-shadow: 0 30px 80px -20px rgb(0 0 0 / .6);
+}
+.rz-pdp-lb-close {
+  position: absolute;
+  top: max(16px, env(safe-area-inset-top, 0px));
+  right: max(16px, env(safe-area-inset-right, 0px));
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  border: 1px solid rgb(255 255 255 / .25);
+  border-radius: 50%;
+  background: rgb(255 255 255 / .1);
+  color: #fff;
+  cursor: pointer;
+  transition: background .15s ease-out;
+}
+.rz-pdp-lb-close:hover { background: rgb(255 255 255 / .22); }
+.rz-pdp-lb-enter-active, .rz-pdp-lb-leave-active { transition: opacity .2s ease-out; }
+.rz-pdp-lb-enter-from, .rz-pdp-lb-leave-to { opacity: 0; }
+.rz-pdp-lb-enter-active .rz-pdp-lb-img, .rz-pdp-lb-leave-active .rz-pdp-lb-img { transition: scale .25s var(--rz-ease-out, ease); }
+.rz-pdp-lb-enter-from .rz-pdp-lb-img, .rz-pdp-lb-leave-to .rz-pdp-lb-img { scale: .96; }
+@media (prefers-reduced-motion: reduce) {
+  .rz-pdp-lb-enter-active, .rz-pdp-lb-leave-active,
+  .rz-pdp-lb-enter-active .rz-pdp-lb-img, .rz-pdp-lb-leave-active .rz-pdp-lb-img { transition: none; }
+  .rz-pdp-zoom-hint { transition: none; }
+}
+</style>

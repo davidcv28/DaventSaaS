@@ -119,11 +119,15 @@ class ProductSerializer(ProductMixinValidator, serializers.ModelSerializer):
     category                    =   serializers.PrimaryKeyRelatedField(queryset = Category.objects.all(), **ProductFields['category'])
     brand                       =   serializers.PrimaryKeyRelatedField(queryset = Brand.objects.all(), **ProductFields['brand'])
     is_active                   =   serializers.BooleanField(**ProductFields['is_active'])
+    #Solo visible/comprable para clientes con plan vigente
+    #exclusive_access (memberships) — el flag viaja al público solo como
+    #"existe para miembros": la vidriera anónima lo excluye siempre.
+    is_exclusive                =   serializers.BooleanField(**ProductFields['is_exclusive'])
     #binary=True: en multipart llega como string JSON y se parsea solo.
     features                    =   serializers.JSONField(binary = True, **ProductFields['features'])
     class Meta:
         model                   =   Product
-        fields                  =   ['id', 'name', 'description', 'price', 'offer_price', 'category', 'brand', 'is_active', 'features']
+        fields                  =   ['id', 'name', 'description', 'price', 'offer_price', 'category', 'brand', 'is_active', 'is_exclusive', 'features']
 #=========================================
 # PRODUCT SERIALIZER LIST (mi catálogo, con imagen y nombres)
 #=========================================
@@ -137,7 +141,7 @@ class ProductSerializerList(serializers.ModelSerializer):
         model                   =   Product
         fields                  =   [
             'id', 'name', 'description', 'price', 'offer_price', 'category', 'category_name',
-            'brand', 'brand_name', 'is_active', 'features', 'image', 'created_at',
+            'brand', 'brand_name', 'is_active', 'is_exclusive', 'features', 'image', 'created_at',
             'discount_offer', 'discount_names',
         ]
     def get_image(self, product):

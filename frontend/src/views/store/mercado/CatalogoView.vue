@@ -273,7 +273,7 @@ const activeChips = computed(() => {
               :stars="custom.show_reviews" stars-icon="star"
               seal-shape="" go-label="Ver producto" @open="openProduct"
             >
-              <template #foot="{ price, oldPrice, offer }">
+              <template #foot="{ price, oldPrice, offer, canBuy, added, adding, buy }">
                 <span class="tpc-price-wrap">
                   <span class="tpc-price">
                     <strong>{{ price }}</strong>
@@ -281,6 +281,15 @@ const activeChips = computed(() => {
                     <s v-if="offer != null">{{ oldPrice }}</s>
                   </span>
                 </span>
+                <button
+                  v-if="canBuy" type="button" class="tpc-add tpc-cart"
+                  :class="{ 'is-added': added }" :disabled="adding"
+                  :aria-label="added ? `${p.name} agregado al carrito` : `Agregar ${p.name} al carrito`"
+                  :title="added ? 'Agregado' : 'Agregar al carrito'"
+                  @click.stop="buy()"
+                >
+                  <AppIcon :name="added ? 'check' : 'shopping-cart'" :size="20" />
+                </button>
                 <span v-if="view === 'grid'" class="tpc-go" aria-hidden="true">Ver producto</span>
               </template>
               <template v-if="promoOf(p) && blkOn('promo')" #tags>

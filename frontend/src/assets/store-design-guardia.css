@@ -1,0 +1,550 @@
+/* ============================================================================
+   store-design-guardia.css — piel "Guardia" para las páginas de comercio que
+   NO montan el documento del patrón (StoreApp/domains/design/sources/
+   guardia.html): /<slug>/ingresar (auth) y /<slug>/cuenta (cuenta).
+
+   Guardia es un diseño SIEMPRE nocturno (consola de seguridad): la paleta no
+   depende del tema de la tienda, así que las dos variantes comparten valores
+   y se fuerza color-scheme:dark.
+
+   Composición propia (no la genérica):
+     · Auth  = CONSOLA DE ACCESO. Una sola pieza vertical: barra de estado
+       con marca y renglones de sesión, y debajo el formulario en un panel con
+       retícula. Sin panel lateral ni portada.
+     · Cuenta = SALA DE CONTROL. El contenido ocupa la IZQUIERDA y el riel de
+       secciones va a la DERECHA (en móvil el riel sube y se vuelve fila
+       monoespaciada). Filetes de 1px, esquinas rectas, marcas de encuadre.
+
+   Paleta y familias son las del diseño (Archivo / JetBrains Mono, grafito
+   #0C1016, panel #151D28, señal #E8481F). Prefijado con [data-design='guardia'].
+   ========================================================================== */
+
+/* ---------- Tokens locales (guardia es oscuro siempre) ------------------- */
+.store-page[data-design='guardia']{
+  --dz-bg:#0C1016;
+  --dz-bg-2:#111823;
+  --dz-panel:#151D28;
+  --dz-panel-2:#1B2533;
+  --dz-ink:#E8EDF4;
+  --dz-ink-2:#BAC7D6;
+  --dz-muted:#93A0B4;
+  --dz-line:rgba(226,232,240,.14);
+  --dz-line-2:rgba(226,232,240,.26);
+  --dz-accent:#E8481F;
+  --dz-accent-ink:#0D1117;
+  --dz-accent-text:#FF8A5C;
+  --dz-accent-soft:color-mix(in srgb, var(--dz-accent) 16%, var(--dz-panel));
+  --dz-ok:#6EE7A8;
+  --dz-danger:#F97066;
+  --dz-warning:#FBBF24;
+  --dz-display:var(--st-f-display-family, "Archivo", "Arial Narrow", system-ui, sans-serif);
+  --dz-body:var(--st-f-body-family, "Archivo", "Helvetica Neue", system-ui, sans-serif);
+  --dz-mono:var(--st-f-eyebrow-family, "JetBrains Mono", ui-monospace, SFMono-Regular, monospace);
+  color-scheme:dark;
+
+  --sp-bg:var(--dz-bg);
+  --sp-card:var(--dz-panel);
+  --sp-card-solid:var(--dz-panel);
+  --sp-surface:var(--dz-panel-2);
+  --sp-ink:var(--dz-ink);
+  --sp-ink-2:var(--dz-ink-2);
+  --sp-muted:var(--dz-muted);
+  --sp-line:var(--dz-line-2);
+  --sp-accent-text:var(--dz-accent-text);
+  --sp-soft:var(--dz-accent-soft);
+  --sp-radius:0px;
+  --sp-success:var(--dz-ok);
+  --sp-danger:var(--dz-danger);
+  --sp-warning:var(--dz-warning);
+  --sp-shadow-sm:none;
+  --sp-shadow-md:0 40px 90px -50px rgba(0,0,0,.9);
+}
+/* El tema claro de la tienda no cambia la consola: solo se reafirma la
+   paleta por si el motor empuja valores claros en --sp-*. */
+.store-page[data-design='guardia'][data-theme='light'],
+.store-page[data-design='guardia'][data-store-theme='light']{
+  --sp-bg:var(--dz-bg);
+  --sp-card:var(--dz-panel);
+  --sp-card-solid:var(--dz-panel);
+  --sp-surface:var(--dz-panel-2);
+  --sp-ink:var(--dz-ink);
+  --sp-ink-2:var(--dz-ink-2);
+  --sp-muted:var(--dz-muted);
+  --sp-line:var(--dz-line-2);
+  color-scheme:dark;
+}
+
+/* ==========================================================================
+   1. AUTH — consola de acceso
+   ========================================================================== */
+[data-design='guardia'] .ec-auth{
+  padding:clamp(16px,3vw,40px) clamp(12px,3vw,28px) clamp(46px,6vw,84px);
+}
+[data-design='guardia'] .ec-auth .ec-auth-shell{
+  width:min(620px,100%);
+  margin:0 auto;
+  grid-template-columns:minmax(0,1fr);
+  border:1px solid var(--dz-line-2);
+  border-radius:0;
+  background:var(--dz-panel);
+  box-shadow:0 0 0 1px #05080C, 0 40px 90px -50px rgba(0,0,0,.95);
+  overflow:hidden;
+}
+
+/* --- Barra de estado --- */
+[data-design='guardia'] .ec-auth .ec-auth-brand{
+  color:var(--dz-ink);
+  background:var(--dz-bg-2);
+  border-bottom:1px solid var(--dz-accent);
+  padding:clamp(16px,2.4vw,22px) clamp(16px,3vw,26px) clamp(14px,2.2vw,20px);
+}
+[data-design='guardia'] .ec-auth .ec-auth-brand::before{ display:none; }
+[data-design='guardia'] .ec-auth .ec-auth-brand::after{
+  background:
+    repeating-linear-gradient(90deg, rgba(226,232,240,.05) 0 1px, transparent 1px 32px),
+    radial-gradient(70% 120% at 100% 0%, color-mix(in srgb, var(--dz-accent) 18%, transparent), transparent 62%);
+  opacity:1;
+}
+[data-design='guardia'] .ec-auth .ec-auth-brand-inner{
+  gap:12px; min-height:0;
+}
+[data-design='guardia'] .ec-auth .ec-auth-brand-top{ min-height:40px; gap:11px; }
+[data-design='guardia'] .ec-auth .ec-auth-logo{
+  width:36px; height:36px; border-radius:0;
+  background: var(--store-accent-ink); color: var(--sp-on-band, #fff);
+  border:0;
+  font-family:var(--dz-display); font-weight:900; font-size:15px; letter-spacing:.02em;
+}
+[data-design='guardia'] .ec-auth .ec-auth-brand-name{
+  font-family:var(--dz-display); font-weight:900; text-transform:uppercase;
+  letter-spacing:.02em; font-size:clamp(16px,1.8vw,19px); color:var(--dz-ink);
+  overflow:hidden; text-overflow:ellipsis; white-space:nowrap; max-width:60vw;
+}
+[data-design='guardia'] .ec-auth .ec-auth-brand-copy{ gap:8px; max-width:100%; }
+[data-design='guardia'] .ec-auth .ec-auth-rail{
+  display:block; width:fit-content;
+  font:500 9.5px/1 var(--dz-mono); letter-spacing:.26em; text-transform:uppercase;
+  color:var(--dz-accent-text);
+}
+[data-design='guardia'] .ec-auth .ec-auth-brand-kicker{
+  font:500 9px/1.4 var(--dz-mono); letter-spacing:.24em; text-transform:uppercase;
+  color:var(--dz-muted);
+}
+[data-design='guardia'] .ec-auth .ec-auth-brand-title{
+  font-family:var(--dz-display); font-weight:900; text-transform:uppercase;
+  letter-spacing:-.005em; line-height:1.02;
+  font-size:clamp(20px,2.6vw,27px); color:var(--dz-ink);
+}
+[data-design='guardia'] .ec-auth .ec-auth-brand-text{
+  font-family:var(--dz-body); font-size:12.5px; line-height:1.6; color:var(--dz-ink-2);
+}
+[data-design='guardia'] .ec-auth .ec-auth-perks{
+  display:grid; grid-template-columns:1fr 1fr; gap:4px 16px;
+  margin-top:8px; padding-top:12px;
+  border-top:1px solid var(--dz-line);
+}
+[data-design='guardia'] .ec-auth .ec-auth-perks li{
+  align-items:flex-start; gap:8px; min-width:0;
+  font:500 10.5px/1.4 var(--dz-mono); letter-spacing:.02em; color:var(--dz-ink-2);
+}
+[data-design='guardia'] .ec-auth .ec-auth-perks li > span{ min-width:0; overflow-wrap:anywhere; }
+[data-design='guardia'] .ec-auth .ec-auth-perks svg{ margin-top:2px; color:var(--dz-accent-text); }
+[data-design='guardia'] .ec-auth .ec-auth-brand-foot{
+  font:500 8.5px/1.5 var(--dz-mono); letter-spacing:.2em; text-transform:uppercase;
+  color:var(--dz-muted);
+}
+
+/* --- Panel del formulario --- */
+[data-design='guardia'] .ec-auth .ec-auth-panel{
+  background:
+    repeating-linear-gradient(0deg, rgba(226,232,240,.045) 0 1px, transparent 1px 34px),
+    repeating-linear-gradient(90deg, rgba(226,232,240,.045) 0 1px, transparent 1px 34px),
+    var(--dz-panel);
+  color:var(--dz-ink);
+  padding:clamp(20px,3vw,32px) clamp(16px,3vw,28px) clamp(24px,3.4vw,34px);
+}
+[data-design='guardia'] .ec-auth .ec-auth-back{
+  min-height:40px; margin-bottom:clamp(14px,2.4vw,22px);
+  font:500 9.5px/1 var(--dz-mono); letter-spacing:.2em; text-transform:uppercase;
+  color:var(--dz-muted);
+}
+[data-design='guardia'] .ec-auth .ec-auth-back:hover{ color:var(--dz-accent-text); }
+[data-design='guardia'] .ec-auth .ec-auth-head{
+  gap:8px; margin-bottom:20px;
+  padding-bottom:16px; border-bottom:1px solid var(--dz-line);
+}
+[data-design='guardia'] .ec-auth .ec-auth-badge{
+  width:38px; height:38px; border-radius:0; margin-bottom:2px;
+  background:transparent; color:var(--dz-accent-text);
+  border:1px solid var(--dz-accent);
+}
+[data-design='guardia'] .ec-auth .ec-auth-tag{
+  display:inline-flex; align-items:center; gap:8px; width:fit-content;
+  font:500 9px/1 var(--dz-mono); letter-spacing:.26em; text-transform:uppercase;
+  color:var(--dz-accent-text);
+}
+[data-design='guardia'] .ec-auth .ec-auth-tag::before{ content:'//'; color:var(--dz-muted); }
+[data-design='guardia'] .ec-auth .ec-auth-title{
+  font-family:var(--dz-display); font-weight:900; text-transform:uppercase;
+  letter-spacing:-.005em; font-size:clamp(21px,2.6vw,28px); color:var(--dz-ink);
+}
+[data-design='guardia'] .ec-auth .ec-auth-sub{
+  font-family:var(--dz-body); font-size:13px; line-height:1.6; color:var(--dz-ink-2);
+}
+[data-design='guardia'] .ec-auth .ec-auth-loading{ color:var(--dz-muted); }
+[data-design='guardia'] .ec-auth .ec-auth-spin{ color:var(--dz-accent-text); }
+
+/* --- Controles --- */
+[data-design='guardia'] .ec-auth .sp-field-label,
+[data-design='guardia'] .ec-account .sp-field-label{
+  font:500 9px/1.4 var(--dz-mono); letter-spacing:.22em; text-transform:uppercase;
+  color:var(--dz-muted);
+}
+[data-design='guardia'] .ec-auth .sp-field:focus-within .sp-field-label,
+[data-design='guardia'] .ec-account .sp-field:focus-within .sp-field-label{
+  color:var(--dz-accent-text);
+}
+[data-design='guardia'] .ec-auth .sp-input,
+[data-design='guardia'] .ec-account .sp-input{
+  min-height:46px; border-radius:0;
+  border:1px solid var(--dz-line-2); box-shadow:none;
+  background:var(--dz-panel-2); color:var(--dz-ink);
+  font-family:var(--dz-body); font-size:14.5px;
+}
+[data-design='guardia'] .ec-auth .sp-input::placeholder,
+[data-design='guardia'] .ec-account .sp-input::placeholder{ color:var(--dz-muted); }
+[data-design='guardia'] .ec-auth .sp-input:focus,
+[data-design='guardia'] .ec-account .sp-input:focus{
+  border-color:var(--dz-accent); background:var(--dz-panel-2);
+  box-shadow:inset 0 0 0 1px var(--dz-accent);
+}
+[data-design='guardia'] .ec-auth .sp-form-error,
+[data-design='guardia'] .ec-account .sp-form-error{ color:var(--dz-danger); font-weight:600; }
+[data-design='guardia'] .ec-auth .ecaf .ecaf-submit{
+  min-height:50px; border-radius:0;
+  background: var(--store-accent-ink); color: var(--sp-on-band, #fff);
+  font:500 11px/1 var(--dz-mono); letter-spacing:.2em; text-transform:uppercase;
+  box-shadow:none;
+}
+[data-design='guardia'] .ec-auth .ecaf .ecaf-submit:hover:not(:disabled){
+  background:var(--dz-accent-text); color:var(--dz-accent-ink);
+}
+[data-design='guardia'] .ec-auth .ecaf .ecaf-submit:disabled{ opacity:.45; }
+[data-design='guardia'] .ec-auth .ecaf .ecaf-link{
+  color:var(--dz-accent-text); font-family:var(--dz-body); min-height:32px;
+}
+[data-design='guardia'] .ec-auth .ecaf .ecaf-divider{
+  font:500 9px/1 var(--dz-mono); letter-spacing:.22em; text-transform:uppercase;
+  color:var(--dz-muted);
+}
+[data-design='guardia'] .ec-auth .ecaf .ecaf-pass-toggle{ color:var(--dz-muted); border-radius:0; }
+[data-design='guardia'] .ec-auth .ecaf .ecaf-pass-toggle:hover{
+  color:var(--dz-accent-text); background:var(--dz-accent-soft);
+}
+[data-design='guardia'] .ec-auth .ecaf .ecaf-notice,
+[data-design='guardia'] .ec-auth .ecaf .ecaf-error{
+  border-radius:0; color:var(--dz-ink);
+}
+
+/* ==========================================================================
+   2. CUENTA — sala de control (contenido a la izquierda, riel a la derecha)
+   ========================================================================== */
+[data-design='guardia'] .ec-account{
+  padding:clamp(14px,2.6vw,30px) clamp(12px,2.6vw,28px) clamp(44px,6vw,76px);
+}
+[data-design='guardia'] .ec-account .acc-shell{
+  display:grid;
+  grid-template-columns:minmax(0,1fr) 246px;
+  gap:clamp(14px,2vw,22px);
+  width:min(1140px,100%); margin-inline:auto; align-items:start;
+}
+[data-design='guardia'] .ec-account .acc-main{ order:1; }
+[data-design='guardia'] .ec-account .acc-side{ order:2; }
+
+[data-design='guardia'] .ec-account .acc-side{
+  display:grid; gap:0; align-content:start;
+  position:sticky; top:92px;
+  padding:0;
+  border:1px solid var(--dz-line-2); border-radius:0;
+  background:var(--dz-panel); box-shadow:none;
+  overflow:hidden;
+}
+[data-design='guardia'] .ec-account .acc-side::before{
+  content:''; display:block; height:2px; background:var(--dz-accent);
+}
+[data-design='guardia'] .ec-account .acc-id{
+  display:grid; gap:8px; min-width:0;
+  padding:14px 14px 13px; border:0; border-bottom:1px solid var(--dz-line);
+}
+[data-design='guardia'] .ec-account .acc-tele{
+  font:500 8px/1 var(--dz-mono); letter-spacing:.24em; text-transform:uppercase;
+  color:var(--dz-muted);
+}
+[data-design='guardia'] .ec-account .acc-avatar{
+  width:44px; height:44px; border-radius:0;
+  background: var(--store-accent-ink); color: var(--sp-on-band, #fff);
+  box-shadow:none;
+  font-family:var(--dz-display); font-weight:900; font-size:15px; letter-spacing:.02em;
+}
+[data-design='guardia'] .ec-account .acc-avatar--sm{ width:38px; height:38px; font-size:13px; }
+[data-design='guardia'] .ec-account .acc-id-meta{ display:grid; gap:3px; min-width:0; }
+[data-design='guardia'] .ec-account .acc-id-name{
+  font-family:var(--dz-display); font-weight:900; text-transform:uppercase;
+  letter-spacing:.01em; font-size:14px; color:var(--dz-ink);
+  overflow:hidden; text-overflow:ellipsis; white-space:nowrap;
+}
+[data-design='guardia'] .ec-account .acc-id-email{
+  font:400 9.5px/1.3 var(--dz-mono); color:var(--dz-muted);
+  overflow:hidden; text-overflow:ellipsis; white-space:nowrap;
+}
+[data-design='guardia'] .ec-account .acc-nav{
+  display:grid; gap:0;
+}
+[data-design='guardia'] .ec-account .acc-navitem{
+  position:relative;
+  display:flex; align-items:center; gap:10px; width:100%;
+  min-height:44px; padding:11px 14px;
+  border:0; border-bottom:1px solid var(--dz-line); border-radius:0;
+  background:transparent; color:var(--dz-ink-2);
+  font:500 10px/1.2 var(--dz-mono); letter-spacing:.14em; text-transform:uppercase;
+  cursor:pointer; text-align:left;
+}
+[data-design='guardia'] .ec-account .acc-navitem svg{ flex:none; opacity:.8; }
+[data-design='guardia'] .ec-account .acc-navitem span:not(.acc-idx){ min-width:0; }
+[data-design='guardia'] .ec-account .acc-navitem .acc-idx{
+  margin-left:auto; flex:none;
+  font:400 8.5px/1 var(--dz-mono); color:var(--dz-muted);
+}
+[data-design='guardia'] .ec-account .acc-navitem:hover{
+  background:color-mix(in srgb, var(--dz-accent) 10%, transparent);
+  color:var(--dz-accent-text);
+}
+[data-design='guardia'] .ec-account .acc-navitem.is-on{
+  background:color-mix(in srgb, var(--dz-accent) 16%, transparent);
+  color:var(--dz-accent-text); font-weight:700;
+}
+[data-design='guardia'] .ec-account .acc-navitem.is-on::before{
+  content:''; position:absolute; left:0; top:0; bottom:0; width:3px;
+  background:var(--dz-accent);
+}
+[data-design='guardia'] .ec-account .acc-navitem.is-on svg{ opacity:1; }
+[data-design='guardia'] .ec-account .acc-navitem.is-on .acc-idx{ color:var(--dz-accent-text); }
+[data-design='guardia'] .ec-account .acc-logout{
+  display:flex; align-items:center; justify-content:center; gap:8px; width:100%;
+  min-height:44px; padding:12px 14px;
+  border:0; border-radius:0; background:transparent;
+  color:var(--dz-muted); font:500 9.5px/1 var(--dz-mono);
+  letter-spacing:.18em; text-transform:uppercase; cursor:pointer;
+}
+[data-design='guardia'] .ec-account .acc-logout:hover{
+  background:color-mix(in srgb, var(--dz-danger) 12%, transparent); color:var(--dz-danger);
+}
+[data-design='guardia'] .ec-account .acc-mhead,
+[data-design='guardia'] .ec-account .acc-tabs{ display:none; }
+
+/* Paneles de la consola */
+[data-design='guardia'] .ec-account .acc-main{ display:grid; gap:14px; min-width:0; }
+[data-design='guardia'] .ec-account .acc-panel{
+  position:relative;
+  padding:clamp(18px,2.4vw,26px) clamp(16px,2.4vw,26px);
+  border:1px solid var(--dz-line-2); border-radius:0;
+  background:var(--dz-panel); box-shadow:none;
+}
+[data-design='guardia'] .ec-account .acc-panel::before,
+[data-design='guardia'] .ec-account .acc-panel::after{
+  content:''; position:absolute; width:14px; height:14px; pointer-events:none;
+  border:1px solid var(--dz-accent);
+}
+[data-design='guardia'] .ec-account .acc-panel::before{ top:-1px; left:-1px; border-right:0; border-bottom:0; }
+[data-design='guardia'] .ec-account .acc-panel::after{ bottom:-1px; right:-1px; border-left:0; border-top:0; }
+[data-design='guardia'] .ec-account .acc-panel-head{
+  align-items:flex-end; gap:12px;
+  padding-bottom:12px; margin-bottom:4px;
+  border-bottom:1px solid var(--dz-line);
+}
+[data-design='guardia'] .ec-account .acc-panel-title{
+  font-family:var(--dz-display); font-weight:900; text-transform:uppercase;
+  letter-spacing:.005em; font-size:clamp(17px,1.9vw,21px); color:var(--dz-ink);
+}
+[data-design='guardia'] .ec-account .acc-panel-sub{
+  font:400 11.5px/1.55 var(--dz-mono); letter-spacing:.02em; color:var(--dz-muted);
+}
+[data-design='guardia'] .ec-account .acc-note,
+[data-design='guardia'] .ec-account .acc-inline-error{ border-radius:0; }
+[data-design='guardia'] .ec-account .acc-order{ border-radius:0; background:var(--dz-panel-2); }
+[data-design='guardia'] .ec-account .acc-order-idx{
+  font:500 9px/1 var(--dz-mono); letter-spacing:.16em; color:var(--dz-muted);
+}
+[data-design='guardia'] .ec-account .acc-status{
+  border-radius:0; font-family:var(--dz-mono); font-size:9.5px;
+  letter-spacing:.1em; text-transform:uppercase; padding:6px 9px;
+}
+[data-design='guardia'] .ec-account .acc-chip{ border-radius:0; }
+
+[data-design='guardia'] .ec-account .ec-btn-primary{
+  min-height:46px; border-radius:0;
+  background: var(--store-accent-ink); color: var(--sp-on-band, #fff);
+  font:500 10px/1 var(--dz-mono); letter-spacing:.18em; text-transform:uppercase;
+}
+[data-design='guardia'] .ec-account .ec-btn-primary:hover{
+  background:var(--dz-accent-text); color:var(--dz-accent-ink);
+}
+[data-design='guardia'] .ec-account .ec-btn-primary:disabled{ opacity:.45; }
+[data-design='guardia'] .ec-account .ec-btn-ghost{
+  min-height:44px; border-radius:0;
+  border:1px solid var(--dz-line-2); color:var(--dz-ink-2);
+  font:500 10px/1 var(--dz-mono); letter-spacing:.16em; text-transform:uppercase;
+}
+[data-design='guardia'] .ec-account .ec-btn-ghost:hover{
+  border-color:var(--dz-accent); color:var(--dz-accent-text);
+}
+[data-design='guardia'] .ec-account .acc-icon-btn{
+  min-width:42px; min-height:42px; border-radius:0;
+  border:1px solid var(--dz-line-2); background:transparent; color:var(--dz-ink-2);
+}
+[data-design='guardia'] .ec-account .acc-icon-btn:hover{
+  border-color:var(--dz-accent); color:var(--dz-accent-text);
+}
+
+/* --- Gate --- */
+[data-design='guardia'] .ec-account .acc-gate{ padding:clamp(18px,3vw,32px) 0; }
+[data-design='guardia'] .ec-account .acc-gate-card{
+  position:relative;
+  width:min(560px,100%);
+  padding:clamp(26px,4vw,40px) clamp(18px,3vw,32px);
+  border:1px solid var(--dz-line-2); border-radius:0;
+  background:var(--dz-panel); box-shadow:0 40px 90px -60px rgba(0,0,0,.9);
+}
+[data-design='guardia'] .ec-account .acc-gate-card::before{
+  content:''; position:absolute; inset:0 0 auto 0; height:2px; background:var(--dz-accent);
+}
+[data-design='guardia'] .ec-account .acc-gate-ico{
+  width:56px; height:56px; border-radius:0;
+  background:transparent; color:var(--dz-accent-text);
+  border:1px solid var(--dz-accent);
+}
+[data-design='guardia'] .ec-account .acc-gate-title{
+  font-family:var(--dz-display); font-weight:900; text-transform:uppercase;
+  letter-spacing:0; font-size:clamp(20px,2.4vw,26px); color:var(--dz-ink);
+}
+[data-design='guardia'] .ec-account .acc-gate-sub{ color:var(--dz-ink-2); }
+[data-design='guardia'] .ec-account .acc-gate-list{
+  border:1px solid var(--dz-line); border-radius:0; background:var(--dz-panel-2);
+}
+[data-design='guardia'] .ec-account .acc-gate-list li{
+  color:var(--dz-ink); font:500 11.5px/1.45 var(--dz-mono); letter-spacing:.02em;
+}
+[data-design='guardia'] .ec-account .acc-gate-list svg{ color:var(--dz-accent-text); }
+[data-design='guardia'] .ec-account .acc-gate-link{ color:var(--dz-accent-text); }
+
+/* --- Sub-vistas de mail --- */
+[data-design='guardia'] .ec-account .acc-auth{ padding:clamp(18px,3vw,34px) 0; }
+[data-design='guardia'] .ec-account .acc-auth-card{
+  width:min(480px,100%);
+  padding:clamp(24px,3.6vw,34px) clamp(18px,3vw,28px);
+  border:1px solid var(--dz-line-2); border-radius:0;
+  background:var(--dz-panel); box-shadow:none;
+}
+[data-design='guardia'] .ec-account .acc-auth-ico{
+  width:54px; height:54px; border-radius:0;
+  background:transparent; color:var(--dz-accent-text);
+  border:1px solid var(--dz-accent);
+}
+[data-design='guardia'] .ec-account .acc-auth-title{
+  font-family:var(--dz-display); font-weight:900; text-transform:uppercase;
+  letter-spacing:0; color:var(--dz-ink);
+}
+[data-design='guardia'] .ec-account .acc-auth-msg{ color:var(--dz-muted); }
+[data-design='guardia'] .ec-account .acc-auth-ok{ color:var(--dz-ok); }
+[data-design='guardia'] .ec-account .acc-auth-link{ color:var(--dz-accent-text); }
+
+/* --- Skeleton --- */
+[data-design='guardia'] .ec-account .acc-skelpanel{
+  border:1px solid var(--dz-line-2); border-radius:0; background:var(--dz-panel);
+}
+[data-design='guardia'] .ec-account .acc-sk{
+  border-radius:0; background:color-mix(in srgb, var(--dz-muted) 22%, transparent);
+}
+
+[data-design='guardia'] .ec-auth :is(a,button,input,select,textarea):focus-visible,
+[data-design='guardia'] .ec-account :is(a,button,input,select,textarea):focus-visible{
+  outline:2px solid var(--dz-accent-text); outline-offset:2px;
+}
+
+/* ==========================================================================
+   3. Responsive
+   ========================================================================== */
+@media (max-width:1024px){
+  [data-design='guardia'] .ec-account .acc-shell{
+    grid-template-columns:minmax(0,1fr); gap:14px;
+  }
+  /* El riel sube: identidad + fila de secciones + salir. */
+  [data-design='guardia'] .ec-account .acc-side{
+    position:static; order:1;
+  }
+  [data-design='guardia'] .ec-account .acc-main{ order:2; }
+  [data-design='guardia'] .ec-account .acc-id{
+    display:flex; align-items:center; gap:11px;
+    padding:12px 14px;
+  }
+  [data-design='guardia'] .ec-account .acc-id .acc-tele{
+    position:absolute; width:1px; height:1px; overflow:hidden; clip-path:inset(50%);
+  }
+  [data-design='guardia'] .ec-account .acc-id-meta{ flex:1; }
+  [data-design='guardia'] .ec-account .acc-nav{
+    display:flex; flex-wrap:nowrap; gap:0;
+    overflow-x:auto; scrollbar-width:none; -webkit-overflow-scrolling:touch;
+    border-top:1px solid var(--dz-line);
+  }
+  [data-design='guardia'] .ec-account .acc-nav::-webkit-scrollbar{ display:none; }
+  [data-design='guardia'] .ec-account .acc-navitem{
+    flex:none; width:auto; border-bottom:0; border-right:1px solid var(--dz-line);
+  }
+  [data-design='guardia'] .ec-account .acc-navitem.is-on::before{
+    top:auto; bottom:0; left:0; right:0; width:auto; height:2px;
+  }
+  [data-design='guardia'] .ec-account .acc-logout{
+    border-top:1px solid var(--dz-line);
+  }
+}
+
+@media (max-width:860px){
+  [data-design='guardia'] .ec-auth .ec-auth-perks{ grid-template-columns:1fr; }
+  [data-design='guardia'] .ec-account .acc-panel-head{
+    flex-direction:column; align-items:flex-start; gap:4px;
+  }
+}
+
+@media (max-width:640px){
+  [data-design='guardia'] .ec-auth{ padding:0 0 clamp(32px,8vw,50px); }
+  [data-design='guardia'] .ec-auth .ec-auth-shell{
+    width:100%; border-inline:0; border-top:0; box-shadow:none;
+  }
+  [data-design='guardia'] .ec-auth .ec-auth-brand{ padding:14px 14px 13px; }
+  [data-design='guardia'] .ec-auth .ec-auth-brand-name{ max-width:52vw; font-size:15px; }
+  [data-design='guardia'] .ec-auth .ec-auth-panel{ padding:18px 14px 24px; }
+  [data-design='guardia'] .ec-auth .ec-auth-head{ margin-bottom:16px; padding-bottom:12px; }
+  [data-design='guardia'] .ec-auth .ec-auth-brand-foot{ display:none; }
+
+  [data-design='guardia'] .ec-account{ padding:10px 10px clamp(32px,7vw,52px); }
+  [data-design='guardia'] .ec-account .acc-navitem{ padding:11px 11px; font-size:9.5px; }
+  [data-design='guardia'] .ec-account .acc-panel{ padding:16px 13px; }
+  [data-design='guardia'] .ec-account .acc-gate-card,
+  [data-design='guardia'] .ec-account .acc-auth-card{ padding:22px 15px; }
+}
+
+@media (max-width:390px){
+  [data-design='guardia'] .ec-auth .ec-auth-logo{ width:32px; height:32px; font-size:13px; }
+  [data-design='guardia'] .ec-auth .ec-auth-brand-title{ font-size:19px; }
+  [data-design='guardia'] .ec-auth .ec-auth-perks li{ font-size:10px; }
+  [data-design='guardia'] .ec-auth .ecaf .ecaf-submit{ min-height:48px; font-size:10px; letter-spacing:.16em; }
+  [data-design='guardia'] .ec-account .acc-navitem{ font-size:9px; letter-spacing:.1em; }
+  [data-design='guardia'] .ec-account .acc-navitem .acc-idx{ display:none; }
+  [data-design='guardia'] .ec-account .acc-panel-title{ font-size:16px; }
+  [data-design='guardia'] .ec-account .acc-panel-sub{ font-size:10.5px; }
+}
+
+@media (prefers-reduced-motion:reduce){
+  [data-design='guardia'] .ec-auth .ecaf .ecaf-submit:hover:not(:disabled),
+  [data-design='guardia'] .ec-account .ec-btn-primary:hover{ transition:none; }
+}

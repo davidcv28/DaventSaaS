@@ -179,7 +179,7 @@
   --sp-ink-2: var(--mi-ink-2);
   --sp-muted: var(--mi-muted);
   --sp-line: var(--mi-line);
-  --sp-accent-text: var(--mi-accent);
+  --sp-accent-text: var(--mi-accent-text);
   --sp-radius: 0;
   --sp-shadow-sm: none;
   --sp-shadow-md: none;
@@ -2119,18 +2119,21 @@
 /* store-raiz.css también estiliza `.sp-cta .sp-btn` (se inyecta después):
    el selector doble garantiza el acento de esta piel. */
 .store-page[data-template='impacto'] .sp-cta .sp-btn.sp-cta-btn {
-  background: var(--mi-accent);
-  border-color: var(--mi-accent);
-  color: var(--mi-accent-ink);
+  /* !important: la regla [data-st-btn-style] de store-page pinta TODOS los
+     .sp-btn (incl. outline/transparent) a (0,7,0) y ganaría sobre esta —
+     en la banda a tinta el CTA debe quedar sólido en acento siempre. */
+  background: var(--mi-accent) !important;
+  border-color: var(--mi-accent) !important;
+  color: var(--mi-accent-ink) !important;
   /* El tema publicado pinta los botones con `--sp-btn-bg` desde una regla
      de mayor especificidad: se reescribe el token en el propio CTA. */
   --sp-btn-bg: var(--mi-accent);
   --st-on-primary: var(--mi-accent-ink);
 }
 .store-page[data-template='impacto'] .sp-cta .sp-btn.sp-cta-btn:hover {
-  background: var(--mi-paper);
-  border-color: var(--mi-paper);
-  color: var(--mi-ink);
+  background: var(--mi-paper) !important;
+  border-color: var(--mi-paper) !important;
+  color: var(--mi-ink) !important;
   --sp-btn-bg: var(--mi-paper);
   --st-on-primary: var(--mi-ink);
 }
@@ -2351,7 +2354,7 @@
   --sp-radius: 0;
   --sp-shadow-sm: none;
   --sp-shadow-md: none;
-  --sp-accent-text: var(--mi-accent);
+  --sp-accent-text: var(--mi-accent-text);
   --rz-ink: var(--mi-ink);
   --rz-ink-2: var(--mi-ink-2);
   --rz-muted: var(--mi-muted);

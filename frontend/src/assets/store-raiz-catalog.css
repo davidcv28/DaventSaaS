@@ -465,8 +465,8 @@
   flex: none;
   display: grid;
   place-items: center;
-  width: 38px;
-  height: 38px;
+  width: 44px;
+  height: 44px;
   border: 1px solid var(--rz-line);
   border-radius: var(--rz-rad-sm, 8px);
   background: var(--rz-surface);
@@ -620,7 +620,10 @@
   border-radius: var(--rz-rad-sm, 8px);
   background: var(--rz-accent-soft);
   color: var(--rz-accent-text);
-}.store-page[data-template='raiz'] .rz-pdp-reviews .sp-input{
+  transform: none;
+}.store-page[data-template='raiz'] .rz-pdp-reviews .sp-form::before,
+.store-page[data-template='raiz'] .rz-pdp-reviews .sp-form::after{ display: none; }
+.store-page[data-template='raiz'] .rz-pdp-reviews .sp-input{
   border-radius: var(--rz-rad-sm, 8px);
   border-color: var(--rz-line);
   background: var(--rz-bg);
@@ -1618,16 +1621,16 @@
    estos enlaces quedarían con el color de link sobre el fondo de la placa.
    Se fijan acá los dos casos de uso de CTA como enlace (primario y ghost).
    ========================================================================== */
-.store-page[data-template='raiz'] :is(.rz-cat-page, .rz-pdp-page, .rz-sv-page) a.rz-btn{ color: var(--rz-on-band); }
-.store-page[data-template='raiz'] :is(.rz-cat-page, .rz-pdp-page, .rz-sv-page) a.rz-btn:hover{ color: var(--rz-on-band); }
+.store-page[data-template='raiz'] :is(.rz-cat-page, .rz-pdp-page, .rz-sv-page) a.rz-btn{ color: var(--rz-btn-ink, var(--rz-on-band)); }
+.store-page[data-template='raiz'] :is(.rz-cat-page, .rz-pdp-page, .rz-sv-page) a.rz-btn:hover{ color: var(--rz-btn-ink, var(--rz-on-band)); }
 .store-page[data-template='raiz'] :is(.rz-cat-page, .rz-pdp-page, .rz-sv-page) a.rz-btn--ghost{ color: var(--rz-ink); }
 .store-page[data-template='raiz'] :is(.rz-cat-page, .rz-pdp-page, .rz-sv-page) a.rz-btn--ghost:hover{ color: var(--rz-ink); }
 
 /* Las tarjetas de producto y las reseñas usan h2 internos de componentes
    compartidos: la base de la piel fija el tamaño de h2/h3 por elemento y,
    por la cascada de @import, pisaría la escala pequeña de tarjeta/ficha. */
-.store-page[data-template='raiz'] .rz-cat-card .tpc-name{ font-size: 15.5px; font-weight: 650; line-height: 1.3; }
-.store-page[data-template='raiz'] .rz-pdp-rel-card .tpc-name{ font-size: 14px; font-weight: 600; line-height: 1.3; }
+.store-page[data-template='raiz'] .rz-cat-card .tpc-name{ font-size: var(--tpc-name-size, 15.5px); font-weight: var(--tpc-name-weight, 650); line-height: var(--tpc-name-lh, 1.3); }
+.store-page[data-template='raiz'] .rz-pdp-rel-card .tpc-name{ font-size: var(--tpc-name-size, 14px); font-weight: var(--tpc-name-weight, 600); line-height: var(--tpc-name-lh, 1.3); }
 .store-page[data-template='raiz'] .rz-pdp-reviews .spd-sec-title{ font-size: clamp(24px, 2.6vw, 32px); font-weight: 700; line-height: 1.1; }
 
 /* ==========================================================================

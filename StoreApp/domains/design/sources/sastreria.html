@@ -99,6 +99,13 @@
   html[data-ds-surface="landing"] .top-nav a[data-ds-route="home"] i,
   html[data-ds-surface="catalog"] .top-nav a[data-ds-route="catalog"] i,
   html[data-ds-surface="services"] .top-nav a[data-ds-route="services"] i{color:color-mix(in srgb,var(--paper) 62%,transparent)}
+  /* Cuenta/carrito/tema del puente: el nav (margin-left:auto) ya empuja el
+     grupo a la derecha y las píldoras van pegadas; el toggle pierde su
+     auto-margin cuando hay cuenta para no abrir un hueco entre ambos. */
+  .top-in .dsx-account{margin-inline-start:0}
+  .top-in:has(.dsx-account) .ds-theme-toggle,
+  html[data-ds-style] .top-in:has(.dsx-account) .ds-theme-toggle{margin-inline-start:0}
+  .top-in .dsx-account,.top-in .dsx-cart{font:500 10px var(--mono);letter-spacing:.14em;text-transform:uppercase}
   .top-meta{font:500 10px var(--mono);letter-spacing:.14em;text-transform:uppercase;color:var(--muted);white-space:nowrap}
   .top-meta:empty{display:none}
 
@@ -156,7 +163,7 @@
   .head h2{margin:0;font:300 clamp(28px,3.6vw,44px)/1 var(--display);letter-spacing:-.02em}
   .head a,.head span{font:500 10px var(--mono);letter-spacing:.16em;text-transform:uppercase;color:var(--leather-ink)}
   .cats{display:flex;flex-wrap:wrap;gap:8px;margin-top:20px}
-  .ds-cat{display:inline-flex;align-items:center;padding:10px 18px;border:1px solid var(--line);border-radius:999px;font:500 11px var(--mono);letter-spacing:.1em;text-transform:uppercase;color:var(--ink-2);transition:border-color .2s,color .2s}
+  .ds-cat{display:inline-flex;align-items:center;max-width:100%;padding:10px 18px;border:1px solid var(--line);border-radius:999px;font:500 11px var(--mono);letter-spacing:.1em;text-transform:uppercase;color:var(--ink-2);overflow-wrap:anywhere;transition:border-color .2s,color .2s}
   .ds-cat:hover{border-color:var(--leather);color:var(--leather-ink)}
   .cats:not(:has(.ds-cat)){display:none}
 
@@ -176,6 +183,15 @@
   .ds-product-old{font:400 11px var(--mono);color:var(--muted);text-decoration:line-through}
   .ds-product:hover .ds-product-img{border-color:var(--leather)}
   .ds-product:hover .ds-product-name{color:var(--leather-ink)}
+  /* CTA de compra del puente (commerce): el wrap se apenda dentro de la
+     fila del lookbook; la piel es la de .btn-primary — tinta sobre papel,
+     versalitas mono y radio corto. */
+  .ds-product .dsx-buy{
+    width:calc(100% - 24px);margin:2px 12px 12px;padding:10px 14px;
+    border:0;border-radius:var(--radius-btn);background:var(--ink);color:var(--paper);
+    font:600 10px var(--mono);letter-spacing:.16em;text-transform:uppercase;
+  }
+  .ds-product .dsx-buy:hover:not(.is-added){background:var(--leather-deep);color:var(--on-leather)}
   .ds-empty{grid-column:1/-1;padding:26px 0;color:var(--muted);font-size:13.5px}
 
   .editorial{display:grid;grid-template-columns:minmax(0,.9fr) minmax(0,1.1fr);gap:56px;align-items:start;padding:56px 0;border-top:1px solid var(--line);border-bottom:1px solid var(--line)}
@@ -259,6 +275,15 @@
   .pdp-desc:empty{display:none}
   .pdp-ctas{display:flex;flex-wrap:wrap;gap:10px;margin-top:24px}
   .pdp-ctas .btn[href=""]{display:none}
+  /* CTA de compra del puente en ficha: primer hijo de .pdp-ctas, misma
+     piel que .btn-primary. Especificidad extra para ganarle al
+     [data-surface="product"] .dsx-buy del puente (mismo peso, llega después). */
+  .pdp-info .pdp-ctas .dsx-buy{
+    min-height:48px;margin:0;padding:0 26px;border:0;border-radius:var(--radius-btn);
+    background:var(--ink);color:var(--paper);
+    font:600 11px var(--mono);letter-spacing:.16em;text-transform:uppercase;
+  }
+  .pdp-info .pdp-ctas .dsx-buy:hover:not(.is-added){background:var(--leather-deep);color:var(--on-leather)}
   .pdp-specs{width:100%;border-collapse:collapse;margin-top:30px;font-size:13px}
   .pdp-specs th,.pdp-specs td{padding:11px 12px 11px 0;border-bottom:1px solid var(--line);text-align:left;vertical-align:top;font-weight:400}
   .pdp-specs th{width:34%;font:500 9.5px var(--mono);letter-spacing:.16em;text-transform:uppercase;color:var(--muted)}
@@ -273,7 +298,7 @@
   .pdp-score:has(b:empty){display:none}
   .ds-rev-list{list-style:none;margin:0;padding:0;display:grid;gap:0}
   .ds-rev-item{display:grid;grid-template-columns:auto 1fr;gap:4px 16px;padding:14px 0;border-bottom:1px solid var(--line);font-size:13.5px}
-  .ds-rev-item .ds-rev-name{font:600 12.5px var(--font);color:var(--ink)}
+  .ds-rev-item .ds-rev-name{font:600 12.5px var(--body);color:var(--ink)}
   .ds-rev-item .ds-rev-date{grid-row:2;font:500 9px var(--mono);letter-spacing:.16em;text-transform:uppercase;color:var(--muted)}
   .ds-rev-item .ds-rev-vote{grid-column:2;grid-row:1;justify-self:start;color:var(--leather-ink)}
   .ds-rev-item .ds-rev-vote.ds-rev-down{color:var(--muted)}
@@ -281,19 +306,19 @@
   .ds-rev-form{margin-top:22px;padding-top:18px;border-top:1px solid var(--line)}
   .ds-rev-fields{display:grid;gap:12px;font-size:13px}
   .ds-rev-votes{display:flex;gap:10px}
-  .ds-rev-pick{display:inline-flex;align-items:center;gap:8px;padding:9px 14px;border:1px solid var(--line);background:transparent;color:var(--ink);font:500 9.5px var(--mono);letter-spacing:.16em;text-transform:uppercase;cursor:pointer}
+  .ds-rev-pick{display:inline-flex;align-items:center;gap:8px;min-height:40px;padding:9px 14px;border:1px solid var(--line);background:transparent;color:var(--ink);font:500 9.5px var(--mono);letter-spacing:.16em;text-transform:uppercase;cursor:pointer}
   .ds-rev-pick.is-on{border-color:var(--leather);color:var(--leather-ink)}
   .ds-rev-row{display:grid;grid-template-columns:1fr 1fr;gap:12px}
-  .ds-rev-input{width:100%;font:400 13px var(--font);padding:10px 12px;border:1px solid var(--line);background:var(--card);color:var(--ink);box-sizing:border-box}
+  .ds-rev-input{width:100%;font:400 13px var(--body);padding:10px 12px;border:1px solid var(--line);background:var(--card);color:var(--ink);box-sizing:border-box}
   .ds-rev-input:focus{outline:1px solid var(--leather);outline-offset:1px}
   .ds-rev-cap{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
   .ds-rev-q{font:500 10px var(--mono);letter-spacing:.1em;text-transform:uppercase;color:var(--muted)}
   .ds-rev-cap .ds-rev-input{max-width:130px}
-  .ds-rev-reload{font:inherit;cursor:pointer;border:1px solid var(--line);background:transparent;color:var(--ink);padding:7px 10px;line-height:1}
+  .ds-rev-reload{font:inherit;cursor:pointer;border:1px solid var(--line);background:transparent;color:var(--ink);padding:7px 10px;min-height:40px;line-height:1}
   .ds-rev-status{margin:0;font:500 10.5px var(--mono);letter-spacing:.08em;color:var(--danger)}
   .ds-rev-status[data-ok="1"]{color:var(--leather-ink)}
   .ds-rev-status:empty{display:none}
-  .ds-rev-send{justify-self:start;font:500 10px var(--mono);letter-spacing:.18em;text-transform:uppercase;padding:12px 22px;border:0;background:var(--ink);color:var(--paper);cursor:pointer}
+  .ds-rev-send{justify-self:start;min-height:44px;font:500 10px var(--mono);letter-spacing:.18em;text-transform:uppercase;padding:12px 22px;border:0;background:var(--ink);color:var(--paper);cursor:pointer}
   .ds-rev-send:hover{background:var(--leather)}
   .pdp-rel .lookbook{margin-top:8px}
   .foot{border-top:1px solid var(--line);padding:40px 0 34px}
@@ -425,6 +450,9 @@
     --leather-ink:color-mix(in srgb,var(--leather) 45%,#F2EEE4);
     --leather-deep:#8A623F;--on-leather:#171614;
     --sage:#A9B79E;
+    /* --danger no se redefinía: el #8a4b3a claro sobre --paper #171614
+       quedaba en ~3.2:1 (bajo AA) en los estados de error de reseñas. */
+    --danger:#D4685E;
     --shadow:0 1px 0 rgba(0,0,0,.4);
   }
   html[data-ds-theme="dark"] .backdrop::before{opacity:.26}
@@ -465,6 +493,13 @@
     .top-nav a{flex:1 1 0;justify-content:center;min-height:46px;padding:0 8px;font-size:12px;border-right:0;border-left:1px solid var(--line)}
     .top-nav a:first-child{border-left:0}
     .top-in .ds-theme-toggle{order:2;margin-inline-start:auto}
+    /* Cuenta/carrito del puente en la primera fila: la cuenta toma el
+       auto-margin y empuja el trío a la derecha junto al toggle; en el
+       estilo cruda se ordenan detrás del burger (order 3). */
+    .top-in .dsx-account{order:2;margin-inline-start:auto}
+    .top-in .dsx-cart{order:2;margin-inline-start:0}
+    html[data-ds-style='sastreria-cruda'] .top-in .dsx-account,
+    html[data-ds-style='sastreria-cruda'] .top-in .dsx-cart{order:3;margin-inline-start:0}
     .hero{padding:40px 0 0}
     .hero h1{font-size:clamp(38px,11vw,56px)}
     .specs{grid-template-columns:1fr;gap:0}

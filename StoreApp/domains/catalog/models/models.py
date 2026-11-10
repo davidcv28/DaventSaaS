@@ -76,6 +76,14 @@ class Product(models.Model):
     image_key                   =   models.CharField(max_length = 200, blank = True, verbose_name = 'Imagen (key en R2)')
     image_size                  =   models.PositiveIntegerField(default = 0, verbose_name = 'Tamaño de imagen (bytes)')
     is_active                   =   models.BooleanField(default = True, verbose_name = 'Visible')
+    #E-commerce: stock NULL = sin control de stock (ilimitado, el default
+    #de siempre); un entero >= 0 son las unidades restantes — 0 = agotado.
+    #El descuento de stock ocurre recién al confirmar el pago del pedido
+    #con select_for_update (nunca en el carrito ni al crear el pedido).
+    stock                       =   models.PositiveIntegerField(null = True, blank = True, verbose_name = 'Stock (vacío = sin límite)')
+    #Solo visible/comprable para clientes con suscripción vigente al plan
+    #de la tienda que tenga el beneficio exclusive_access (memberships).
+    is_exclusive                =   models.BooleanField(default = False, verbose_name = 'Solo para miembros')
     created_at                  =   models.DateTimeField(auto_now_add = True)
     class Meta:
         app_label               =   'catalog'

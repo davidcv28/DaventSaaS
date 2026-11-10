@@ -34,7 +34,7 @@ const st = (id) => servicesById.value.get(id) || { id, enabled: true }
 const ord = (id) => { const p = pos(id); return p === 999 ? pos('form') : p }
 const blkTitle = (id, fallback) => st(id).props?.title || fallback
 const router = useRouter()
-const { custom, store, status, shopName, location, siteTemplates } = ctx
+const { custom, store, status, shopName, location, siteTemplates, showCatalog } = ctx
 
 // Guard de la página: sin 'services' en el set efectivo la ruta no existe
 // (rebota al catálogo si lo hay, si no a la portada — el watch del layout
@@ -288,6 +288,9 @@ watch(chosenItems, (v) => { if (v.length) pickError.value = '' })
                 <button type="button" class="rz-btn" @click="scrollTo('sv-servicios')">
                   Ver servicios y precios <AppIcon name="arrow-right" :size="16" aria-hidden="true" />
                 </button>
+                <RouterLink v-if="showCatalog" class="rz-btn rz-btn--ghost" :to="catalogTo">
+                  <AppIcon name="package" :size="16" aria-hidden="true" /> Ver catálogo
+                </RouterLink>
                 <a v-if="waBase" class="rz-btn rz-btn--ghost" :href="waBase" target="_blank" rel="noopener">
                   <AppIcon name="whatsapp" :size="17" aria-hidden="true" /> Escribinos
                 </a>

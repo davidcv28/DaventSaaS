@@ -1,0 +1,879 @@
+/* ============================================================================
+   Diseño `expediente` (bufete-vega) — páginas de comercio que NO montan el
+   documento del patrón: /ingresar y /cuenta (+ secciones).
+   Composición: CARPETA MANILA + CARÁTULA.
+   · Auth  → carpeta con pestaña, sello del modo en el encabezado, formulario
+             como carátula: campos numerados sobre filetes, mono para datos.
+   · Cuenta → dossier: sidebar como lomo con separadores F-01…F-05, paneles
+             con doble filete y tablas de hairlines.
+   Todo cuelga de [data-design='expediente'] para ganarle a los <style scoped>.
+   ========================================================================== */
+
+/* ---------------------------------------------------------------- tokens -- */
+[data-design='expediente'] .ec-auth,
+[data-design='expediente'] .ec-account {
+  --dz-bg: #E9E1CB;
+  --dz-surface: #F2ECDA;
+  --dz-surface-2: #F8F3E5;
+  --dz-ink: #1D1A12;
+  --dz-ink-2: #3A3427;
+  --dz-muted: #6B6250;
+  --dz-line: #C9BFA1;
+  --dz-line-strong: #A99C79;
+  --dz-accent: #B3352C;
+  --dz-accent-text: #A62F27;
+  --dz-accent-ink: #FFF3E2;
+  --dz-ok: #2F5D50;
+  --dz-danger: #A02A1E;
+  --dz-danger-soft: #8E2B20;
+  --dz-display: var(--st-f-display-family, "Bricolage Grotesque", "Archivo Black", system-ui, sans-serif);
+  --dz-body: var(--st-f-body-family, "Source Serif 4", Georgia, serif);
+  --dz-mono: var(--st-f-eyebrow-family, "JetBrains Mono", ui-monospace, monospace);
+  --dz-r: 3px;
+
+  /* Remapeo de los tokens genéricos: los .vue scoped y los componentes de la
+     cuenta leen --sp-*; con esto heredan la paleta del expediente. */
+  --sp-ink: var(--dz-ink);
+  --sp-ink-2: var(--dz-ink-2);
+  --sp-muted: var(--dz-muted);
+  --sp-line: var(--dz-line);
+  --sp-card: var(--dz-surface);
+  --sp-card-solid: var(--dz-surface);
+  --sp-surface: var(--dz-bg);
+  --sp-radius: var(--dz-r);
+  --sp-accent-text: var(--dz-accent-text);
+  --sp-on-band: var(--dz-accent-ink);
+  --sp-soft: color-mix(in srgb, var(--dz-ink) 6%, transparent);
+  --sp-success: var(--dz-ok);
+  --sp-warning: #8A6D1F;
+  --sp-danger: var(--dz-danger);
+  --sp-shadow-sm: none;
+  --sp-shadow-md: none;
+  color-scheme: light;
+}
+
+[data-design='expediente'][data-theme='dark'] .ec-auth,
+[data-design='expediente'][data-theme='dark'] .ec-account {
+  --dz-bg: #12100C;
+  --dz-surface: #1C1813;
+  --dz-surface-2: #241F17;
+  --dz-ink: #E8E0CB;
+  --dz-ink-2: #CFC6AE;
+  --dz-muted: #948A72;
+  --dz-line: #3D362A;
+  --dz-line-strong: #574D3C;
+  --dz-accent: #D05540;
+  --dz-accent-text: #E0705A;
+  --dz-accent-ink: #1C0C09;
+  --dz-ok: #6FAE97;
+  --dz-danger: #E88A7A;
+  --dz-danger-soft: #F0A192;
+  --sp-warning: #C2A24A;
+  --sp-shadow-sm: none;
+  --sp-shadow-md: none;
+  color-scheme: dark;
+}
+
+/* ==========================================================================
+   AUTH — la carpeta con la carátula
+   ========================================================================== */
+[data-design='expediente'] .ec-auth .ec-auth-shell {
+  grid-template-columns: minmax(0, 1fr);
+  width: min(880px, 100%);
+  margin-top: clamp(26px, 4vw, 54px);
+  border: 1px solid var(--dz-line-strong);
+  border-radius: var(--dz-r);
+  background: var(--dz-bg);
+  box-shadow: 5px 5px 0 -1px color-mix(in srgb, var(--dz-line) 65%, transparent);
+  overflow: visible;
+  position: relative;
+}
+
+/* Pestaña de la carpeta (etiqueta decorativa) */
+[data-design='expediente'] .ec-auth .ec-auth-shell::before {
+  content: 'EXPEDIENTE';
+  position: absolute;
+  left: 24px;
+  top: -17px;
+  z-index: 2;
+  display: flex;
+  align-items: center;
+  height: 17px;
+  padding: 0 14px;
+  border: 1px solid var(--dz-line-strong);
+  border-bottom: 0;
+  border-radius: 3px 3px 0 0;
+  background: var(--dz-surface-2);
+  color: var(--dz-muted);
+  font-family: var(--dz-mono);
+  font-size: 9.5px;
+  font-weight: 700;
+  letter-spacing: .22em;
+  line-height: 1;
+}
+
+/* ---- banda de marca: la solapa de la carpeta ---- */
+[data-design='expediente'] .ec-auth .ec-auth-brand {
+  padding: clamp(16px, 2.4vw, 24px) clamp(18px, 3vw, 30px);
+  border-radius: var(--dz-r) var(--dz-r) 0 0;
+  border-bottom: 1px solid var(--dz-line-strong);
+  background: var(--dz-surface);
+  color: var(--dz-ink);
+}
+/* La portada del comercio queda como foto pegada, nunca baja el contraste. */
+[data-design='expediente'] .ec-auth .ec-auth-brand::before {
+  opacity: .1;
+  filter: grayscale(1) sepia(.35);
+}
+[data-design='expediente'] .ec-auth .ec-auth-brand::after {
+  background: linear-gradient(180deg,
+    color-mix(in srgb, var(--dz-surface) 72%, transparent),
+    var(--dz-surface) 62%);
+}
+[data-design='expediente'] .ec-auth .ec-auth-brand-inner {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: start;
+  gap: 10px 24px;
+  min-height: 0;
+}
+[data-design='expediente'] .ec-auth .ec-auth-brand-top { grid-area: 1 / 1; gap: 11px; }
+[data-design='expediente'] .ec-auth .ec-auth-logo {
+  width: 38px;
+  height: 38px;
+  border-radius: 2px;
+  border: 1px solid var(--dz-line-strong);
+  background: var(--dz-surface-2);
+  color: var(--dz-accent-text);
+  font-family: var(--dz-display);
+  font-size: 17px;
+  font-weight: 700;
+}
+[data-design='expediente'] .ec-auth .ec-auth-brand-name {
+  font-family: var(--dz-display);
+  font-size: clamp(15px, 1.5vw, 18px);
+  font-weight: 700;
+  letter-spacing: .04em;
+  text-transform: uppercase;
+  color: var(--dz-ink);
+}
+[data-design='expediente'] .ec-auth .ec-auth-brand-foot {
+  grid-area: 1 / 2;
+  align-self: end;
+  padding-bottom: 2px;
+  font-family: var(--dz-mono);
+  font-size: 9.5px;
+  letter-spacing: .16em;
+  text-transform: uppercase;
+  text-align: right;
+  color: var(--dz-muted);
+}
+[data-design='expediente'] .ec-auth .ec-auth-brand-copy {
+  grid-area: 2 / 1 / 3 / -1;
+  max-width: 62ch;
+  gap: 7px;
+  padding-top: 4px;
+}
+[data-design='expediente'] .ec-auth .ec-auth-rail {
+  display: inline-block;
+  width: fit-content;
+  padding: 3px 7px;
+  border: 1px solid var(--dz-accent-text);
+  border-radius: 2px;
+  color: var(--dz-accent-text);
+  font-family: var(--dz-mono);
+  font-size: 9.5px;
+  font-weight: 700;
+  letter-spacing: .16em;
+  line-height: 1;
+}
+[data-design='expediente'] .ec-auth .ec-auth-rail::before { content: 'EXP. '; }
+[data-design='expediente'] .ec-auth .ec-auth-brand-kicker {
+  font-family: var(--dz-mono);
+  font-size: 9.5px;
+  font-weight: 700;
+  letter-spacing: .2em;
+  text-transform: uppercase;
+  color: var(--dz-muted);
+}
+[data-design='expediente'] .ec-auth .ec-auth-brand-title {
+  font-family: var(--dz-display);
+  font-size: clamp(21px, 2.7vw, 29px);
+  font-weight: 700;
+  line-height: 1.1;
+  letter-spacing: -.01em;
+  color: var(--dz-ink);
+}
+[data-design='expediente'] .ec-auth .ec-auth-brand-text {
+  font-family: var(--dz-body);
+  font-size: clamp(13px, 1.1vw, 14.5px);
+  line-height: 1.6;
+  color: var(--dz-ink-2);
+}
+[data-design='expediente'] .ec-auth .ec-auth-perks {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 6px 22px;
+  margin-top: 6px;
+  padding-top: 10px;
+  border-top: 1px dashed var(--dz-line);
+}
+[data-design='expediente'] .ec-auth .ec-auth-perks li {
+  font-family: var(--dz-mono);
+  font-size: 11px;
+  font-weight: 500;
+  line-height: 1.4;
+  color: var(--dz-ink-2);
+  align-items: flex-start;
+}
+[data-design='expediente'] .ec-auth .ec-auth-perks svg { color: var(--dz-accent-text); margin-top: 1px; }
+
+/* ---- carátula: el formulario ---- */
+[data-design='expediente'] .ec-auth .ec-auth-panel {
+  padding: clamp(18px, 3vw, 32px) clamp(18px, 3.4vw, 40px) clamp(22px, 3.4vw, 36px);
+  border-left: 3px double var(--dz-line-strong);
+  border-radius: 0 0 var(--dz-r) var(--dz-r);
+  background: var(--dz-surface-2);
+  color: var(--dz-ink);
+}
+[data-design='expediente'] .ec-auth .ec-auth-back {
+  margin-bottom: clamp(14px, 2.4vw, 22px);
+  font-family: var(--dz-mono);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: .16em;
+  text-transform: uppercase;
+  color: var(--dz-muted);
+}
+[data-design='expediente'] .ec-auth .ec-auth-back:hover { color: var(--dz-accent-text); }
+[data-design='expediente'] .ec-auth .ec-auth-head {
+  position: relative;
+  gap: 7px;
+  padding-bottom: 13px;
+  margin-bottom: 20px;
+  border-bottom: 3px double var(--dz-line-strong);
+}
+[data-design='expediente'] .ec-auth .ec-auth-badge {
+  width: 34px;
+  height: 34px;
+  margin-bottom: 2px;
+  border-radius: 2px;
+  border: 1px solid var(--dz-line-strong);
+  background: transparent;
+  color: var(--dz-accent-text);
+}
+/* El rótulo del modo es el sello de la carátula */
+[data-design='expediente'] .ec-auth .ec-auth-tag {
+  display: inline-block;
+  position: absolute;
+  top: 0;
+  right: 0;
+  padding: 5px 9px;
+  border: 2px solid var(--dz-accent-text);
+  border-radius: 2px;
+  color: var(--dz-accent-text);
+  font-family: var(--dz-mono);
+  font-size: 9.5px;
+  font-weight: 700;
+  letter-spacing: .2em;
+  line-height: 1;
+  text-transform: uppercase;
+  transform: rotate(-6deg);
+  opacity: .92;
+}
+[data-design='expediente'] .ec-auth .ec-auth-title {
+  font-family: var(--dz-display);
+  font-size: clamp(21px, 2.5vw, 28px);
+  font-weight: 700;
+  line-height: 1.12;
+  letter-spacing: -.01em;
+  color: var(--dz-ink);
+}
+[data-design='expediente'] .ec-auth .ec-auth-sub {
+  font-family: var(--dz-body);
+  font-size: 13.5px;
+  line-height: 1.55;
+  color: var(--dz-ink-2);
+}
+[data-design='expediente'] .ec-auth .ec-auth-loading {
+  font-family: var(--dz-mono);
+  font-size: 12px;
+  letter-spacing: .06em;
+  color: var(--dz-muted);
+}
+[data-design='expediente'] .ec-auth .ec-auth-spin { color: var(--dz-accent-text); }
+
+/* Campos numerados: la carátula tiene renglones */
+[data-design='expediente'] .ec-auth .ecaf-form { counter-reset: dzf; gap: 14px; }
+[data-design='expediente'] .ec-auth .ecaf .sp-field { counter-increment: dzf; gap: 5px; min-width: 0; }
+[data-design='expediente'] .ec-auth .ecaf .sp-field-label,
+[data-design='expediente'] .ec-auth .ecaf label > .sp-field-label {
+  font-family: var(--dz-mono);
+  font-size: 9.5px;
+  font-weight: 700;
+  letter-spacing: .16em;
+  text-transform: uppercase;
+  color: var(--dz-muted);
+}
+[data-design='expediente'] .ec-auth .ecaf .sp-field-label::before {
+  content: "0" counter(dzf) "  ";
+  color: var(--dz-accent-text);
+  letter-spacing: .1em;
+}
+[data-design='expediente'] .ec-auth .ecaf .sp-input {
+  min-height: 44px;
+  padding: 10px 12px;
+  border: 1px solid var(--dz-line);
+  border-bottom: 1px solid var(--dz-line-strong);
+  border-radius: 2px;
+  background: color-mix(in srgb, var(--dz-surface) 88%, transparent);
+  color: var(--dz-ink);
+  font-family: var(--dz-mono);
+  font-size: 15px;
+  box-shadow: none;
+}
+[data-design='expediente'] .ec-auth .ecaf .sp-input::placeholder { color: var(--dz-muted); }
+[data-design='expediente'] .ec-auth .ecaf .sp-input:hover { border-color: var(--dz-line-strong); }
+[data-design='expediente'] .ec-auth .ecaf .sp-input:focus,
+[data-design='expediente'] .ec-auth .ecaf .sp-input:focus-visible {
+  outline: 2px solid var(--dz-accent-text);
+  outline-offset: 1px;
+  border-color: var(--dz-accent-text);
+  box-shadow: none;
+}
+[data-design='expediente'] .ec-auth .ecaf .sp-input:disabled {
+  background: color-mix(in srgb, var(--dz-ink) 6%, var(--dz-surface));
+  color: var(--dz-ink-2);
+  -webkit-text-fill-color: var(--dz-ink-2);
+  opacity: 1;
+}
+[data-design='expediente'] .ec-auth .ecaf .sp-form-error { font-size: 12.5px; color: var(--dz-danger-soft); }
+[data-design='expediente'] .ec-auth .ecaf-pass-toggle { color: var(--dz-muted); border-radius: 2px; }
+[data-design='expediente'] .ec-auth .ecaf-pass-toggle:hover { color: var(--dz-accent-text); background: color-mix(in srgb, var(--dz-ink) 6%, transparent); }
+[data-design='expediente'] .ec-auth .ecaf-submit {
+  min-height: 48px;
+  margin-top: 6px;
+  border-radius: 2px;
+  background: var(--store-accent-ink);
+  color: var(--sp-on-band, #fff);
+  font-family: var(--dz-mono);
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: .16em;
+  text-transform: uppercase;
+  box-shadow: 3px 3px 0 -1px color-mix(in srgb, var(--dz-accent) 30%, transparent);
+}
+[data-design='expediente'] .ec-auth .ecaf-submit:hover:not(:disabled) { filter: brightness(1.08); }
+[data-design='expediente'] .ec-auth .ecaf-notice {
+  border-radius: 2px;
+  border: 1px solid color-mix(in srgb, var(--dz-ok) 45%, transparent);
+  background: color-mix(in srgb, var(--dz-ok) 12%, transparent);
+  color: var(--dz-ink);
+}
+[data-design='expediente'] .ec-auth .ecaf-error {
+  border-radius: 2px;
+  border: 1px solid color-mix(in srgb, var(--dz-danger) 45%, transparent);
+  background: color-mix(in srgb, var(--dz-danger) 10%, transparent);
+  color: var(--dz-danger-soft);
+}
+[data-design='expediente'] .ec-auth .ecaf-divider {
+  font-family: var(--dz-mono);
+  font-size: 9.5px;
+  letter-spacing: .18em;
+  text-transform: uppercase;
+  color: var(--dz-muted);
+}
+[data-design='expediente'] .ec-auth .ecaf-divider::before,
+[data-design='expediente'] .ec-auth .ecaf-divider::after {
+  height: 1px;
+  opacity: 1;
+  background: repeating-linear-gradient(90deg, var(--dz-line-strong) 0 4px, transparent 4px 8px);
+}
+[data-design='expediente'] .ec-auth .ecaf-link {
+  min-height: 40px;
+  display: inline-flex;
+  align-items: center;
+  font-family: var(--dz-mono);
+  font-size: 11.5px;
+  font-weight: 600;
+  letter-spacing: .02em;
+  color: var(--dz-accent-text);
+}
+[data-design='expediente'] .ec-auth :is(.ecaf-link, .ecaf-submit, .ecaf-pass-toggle, .ec-auth-back):focus-visible {
+  outline: 2px solid var(--dz-accent-text);
+  outline-offset: 2px;
+}
+
+/* ==========================================================================
+   CUENTA — dossier con lomo y separadores
+   ========================================================================== */
+[data-design='expediente'] .ec-account .acc-shell { gap: 16px; }
+[data-design='expediente'] .ec-account .acc-main { gap: 14px; }
+
+[data-design='expediente'] .ec-account .acc-mhead {
+  gap: 10px;
+  padding: 10px 12px;
+  border: 1px solid var(--dz-line-strong);
+  border-top: 3px solid var(--dz-accent);
+  border-radius: 2px;
+  background: var(--dz-surface);
+}
+[data-design='expediente'] .ec-account .acc-mhead .acc-tele {
+  display: block;
+  width: 100%;
+  margin-bottom: 2px;
+}
+[data-design='expediente'] .ec-account .acc-mhead-meta strong {
+  font-family: var(--dz-display);
+  font-size: 14px;
+  letter-spacing: .02em;
+  text-transform: uppercase;
+}
+[data-design='expediente'] .ec-account .acc-mhead-meta small {
+  font-family: var(--dz-mono);
+  font-size: 10.5px;
+  color: var(--dz-muted);
+}
+[data-design='expediente'] .ec-account .acc-icon-btn {
+  width: 40px;
+  height: 40px;
+  border-radius: 2px;
+  border: 1px solid var(--dz-line-strong);
+  background: transparent;
+  color: var(--dz-ink-2);
+}
+[data-design='expediente'] .ec-account .acc-icon-btn:hover {
+  border-color: var(--dz-danger);
+  color: var(--dz-danger);
+}
+
+[data-design='expediente'] .ec-account .acc-tele {
+  font-family: var(--dz-mono);
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: .2em;
+  text-transform: uppercase;
+  color: var(--dz-accent-text);
+}
+[data-design='expediente'] .ec-account .acc-avatar {
+  width: 46px;
+  height: 46px;
+  border-radius: 2px;
+  border: 1px solid var(--dz-line-strong);
+  background: var(--dz-surface-2);
+  color: var(--dz-accent-text);
+  font-family: var(--dz-display);
+  font-size: 15px;
+  font-weight: 700;
+  letter-spacing: .04em;
+}
+[data-design='expediente'] .ec-account .acc-avatar--sm { width: 40px; height: 40px; font-size: 13px; }
+
+/* Tabs (mobile/tablet) = separadores de carpeta */
+[data-design='expediente'] .ec-account .acc-tabs {
+  gap: 4px;
+  padding: 0 0 0;
+  border-bottom: 1px solid var(--dz-line-strong);
+}
+[data-design='expediente'] .ec-account .acc-tab {
+  min-height: 40px;
+  padding: 9px 12px;
+  border: 1px solid var(--dz-line-strong);
+  border-bottom: 0;
+  border-radius: 3px 3px 0 0;
+  background: var(--dz-bg);
+  color: var(--dz-ink-2);
+  font-family: var(--dz-mono);
+  font-size: 10.5px;
+  font-weight: 700;
+  letter-spacing: .1em;
+  text-transform: uppercase;
+}
+[data-design='expediente'] .ec-account .acc-tab:hover {
+  background: var(--dz-surface);
+  color: var(--dz-ink);
+}
+[data-design='expediente'] .ec-account .acc-tab.is-on {
+  background: var(--dz-surface-2);
+  border-color: var(--dz-line-strong);
+  color: var(--dz-accent-text);
+  box-shadow: inset 0 2px 0 var(--dz-accent);
+}
+[data-design='expediente'] .ec-account .acc-tab .acc-idx {
+  font-family: var(--dz-mono);
+  font-size: 9.5px;
+  color: var(--dz-muted);
+}
+[data-design='expediente'] .ec-account .acc-tab.is-on .acc-idx { color: var(--dz-accent-text); }
+
+/* Paneles = hojas del dossier */
+[data-design='expediente'] .ec-account .acc-panel,
+[data-design='expediente'] .ec-account .acc-gate-card,
+[data-design='expediente'] .ec-account .acc-auth-card {
+  padding: 18px;
+  border: 1px solid var(--dz-line-strong);
+  border-top: 3px double var(--dz-line-strong);
+  border-radius: 2px;
+  background: var(--dz-surface);
+  box-shadow: none;
+}
+[data-design='expediente'] .ec-account .acc-panel-head {
+  padding-bottom: 10px;
+  border-bottom: 1px dashed var(--dz-line-strong);
+}
+[data-design='expediente'] .ec-account .acc-panel-title {
+  font-family: var(--dz-display);
+  font-size: 17px;
+  font-weight: 700;
+  letter-spacing: .02em;
+  text-transform: uppercase;
+  color: var(--dz-ink);
+}
+[data-design='expediente'] .ec-account .acc-panel-sub {
+  font-family: var(--dz-body);
+  font-size: 12.5px;
+  line-height: 1.55;
+  color: var(--dz-muted);
+}
+
+/* Gate / sub-vistas de mail */
+[data-design='expediente'] .ec-account .acc-gate,
+[data-design='expediente'] .ec-account .acc-auth { padding: 18px 0 8px; }
+[data-design='expediente'] .ec-account .acc-gate-title,
+[data-design='expediente'] .ec-account .acc-auth-title {
+  font-family: var(--dz-display);
+  font-size: clamp(19px, 2.4vw, 23px);
+  font-weight: 700;
+  letter-spacing: .01em;
+  text-transform: uppercase;
+  color: var(--dz-ink);
+  overflow-wrap: anywhere;
+}
+[data-design='expediente'] .ec-account .acc-gate-ico,
+[data-design='expediente'] .ec-account .acc-auth-ico {
+  width: 56px;
+  height: 56px;
+  border-radius: 2px;
+  border: 1px solid var(--dz-line-strong);
+  background: var(--dz-surface-2);
+  color: var(--dz-accent-text);
+}
+[data-design='expediente'] .ec-account .acc-gate-sub,
+[data-design='expediente'] .ec-account .acc-auth-msg {
+  font-family: var(--dz-body);
+  font-size: 13.5px;
+  line-height: 1.6;
+  color: var(--dz-ink-2);
+}
+[data-design='expediente'] .ec-account .acc-gate-list {
+  border: 1px dashed var(--dz-line-strong);
+  border-radius: 2px;
+  background: var(--dz-surface-2);
+  gap: 0;
+  padding: 4px 14px;
+}
+[data-design='expediente'] .ec-account .acc-gate-list li {
+  padding: 9px 0;
+  font-family: var(--dz-mono);
+  font-size: 11.5px;
+  font-weight: 500;
+  color: var(--dz-ink-2);
+  border-bottom: 1px dashed var(--dz-line);
+}
+[data-design='expediente'] .ec-account .acc-gate-list li:last-child { border-bottom: 0; }
+[data-design='expediente'] .ec-account .acc-gate-list svg { color: var(--dz-accent-text); }
+[data-design='expediente'] .ec-account .acc-gate-link,
+[data-design='expediente'] .ec-account .acc-auth-link {
+  min-height: 40px;
+  display: inline-flex;
+  align-items: center;
+  font-family: var(--dz-mono);
+  font-size: 11.5px;
+  font-weight: 600;
+  color: var(--dz-accent-text);
+}
+[data-design='expediente'] .ec-account .acc-auth-ok { color: var(--dz-ok); font-size: 13.5px; }
+
+/* Botones */
+[data-design='expediente'] .ec-account .ec-btn-primary {
+  min-height: 44px;
+  padding: 12px 18px;
+  border-radius: 2px;
+  background: var(--store-accent-ink);
+  color: var(--sp-on-band, #fff);
+  font-family: var(--dz-mono);
+  font-size: 11.5px;
+  font-weight: 700;
+  letter-spacing: .14em;
+  text-transform: uppercase;
+}
+[data-design='expediente'] .ec-account .ec-btn-primary:hover { filter: brightness(1.08); }
+[data-design='expediente'] .ec-account .ec-btn-primary:disabled { opacity: .55; }
+[data-design='expediente'] .ec-account .ec-btn-ghost {
+  min-height: 44px;
+  padding: 11px 16px;
+  border: 1px solid var(--dz-line-strong);
+  border-radius: 2px;
+  background: transparent;
+  color: var(--dz-ink);
+  font-family: var(--dz-mono);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: .12em;
+  text-transform: uppercase;
+}
+[data-design='expediente'] .ec-account .ec-btn-ghost:hover {
+  border-color: var(--dz-accent-text);
+  color: var(--dz-accent-text);
+}
+
+/* Secciones internas (pedidos / direcciones / planes / perfil) */
+[data-design='expediente'] .ec-account :is(.acc-order, .acc-addr) {
+  border: 1px solid var(--dz-line);
+  border-left: 2px solid var(--dz-line-strong);
+  border-radius: 2px;
+  background: var(--dz-surface-2);
+}
+[data-design='expediente'] .ec-account :is(.acc-order-code, .acc-order-meta, .acc-order-total, .acc-idx, .acc-hint) {
+  font-family: var(--dz-mono);
+}
+[data-design='expediente'] .ec-account .acc-order-code { font-size: 13.5px; letter-spacing: .02em; }
+[data-design='expediente'] .ec-account .acc-order-foot { border-top-style: dashed; }
+[data-design='expediente'] .ec-account .acc-status {
+  border-radius: 2px;
+  font-family: var(--dz-mono);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: .1em;
+  text-transform: uppercase;
+  border: 1px solid color-mix(in srgb, var(--tone, var(--dz-muted)) 45%, transparent);
+}
+[data-design='expediente'] .ec-account .acc-fieldset {
+  border: 1px dashed var(--dz-line-strong);
+  border-radius: 2px;
+  background: var(--dz-surface-2);
+}
+[data-design='expediente'] .ec-account .acc-fieldset legend {
+  font-family: var(--dz-mono);
+  font-size: 10px;
+  letter-spacing: .16em;
+  color: var(--dz-accent-text);
+}
+[data-design='expediente'] .ec-account .acc-fieldset legend .acc-idx { color: var(--dz-accent-text); margin-right: 4px; }
+[data-design='expediente'] .ec-account .acc-grid2 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+[data-design='expediente'] .ec-account .sp-field-label {
+  font-family: var(--dz-mono);
+  font-size: 9.5px;
+  font-weight: 700;
+  letter-spacing: .16em;
+  text-transform: uppercase;
+  color: var(--dz-muted);
+}
+[data-design='expediente'] .ec-account .sp-input {
+  min-height: 44px;
+  border: 1px solid var(--dz-line);
+  border-bottom-color: var(--dz-line-strong);
+  border-radius: 2px;
+  background: color-mix(in srgb, var(--dz-surface) 90%, transparent);
+  color: var(--dz-ink);
+  font-family: var(--dz-mono);
+  font-size: 15px;
+  box-shadow: none;
+}
+[data-design='expediente'] .ec-account .sp-input::placeholder { color: var(--dz-muted); }
+[data-design='expediente'] .ec-account .sp-input:focus,
+[data-design='expediente'] .ec-account .sp-input:focus-visible {
+  outline: 2px solid var(--dz-accent-text);
+  outline-offset: 1px;
+  border-color: var(--dz-accent-text);
+  box-shadow: none;
+}
+[data-design='expediente'] .ec-account .sp-input:disabled {
+  background: color-mix(in srgb, var(--dz-ink) 6%, var(--dz-surface));
+  color: var(--dz-ink-2);
+  -webkit-text-fill-color: var(--dz-ink-2);
+  opacity: 1;
+}
+/* El select nativo heredaba superficie oscura con texto oscuro (o al revés) */
+[data-design='expediente'] .ec-account select.sp-input {
+  background: color-mix(in srgb, var(--dz-surface) 90%, transparent);
+  color: var(--dz-ink);
+  appearance: none;
+  padding-right: 34px;
+  background-image:
+    linear-gradient(45deg, transparent 50%, var(--dz-ink-2) 50%),
+    linear-gradient(135deg, var(--dz-ink-2) 50%, transparent 50%);
+  background-position: right 15px center, right 10px center;
+  background-size: 5px 5px, 5px 5px;
+  background-repeat: no-repeat;
+}
+[data-design='expediente'] .ec-account select.sp-input option {
+  background: var(--dz-surface-2);
+  color: var(--dz-ink);
+}
+[data-design='expediente'] .ec-account .acc-skelpanel {
+  border: 1px dashed var(--dz-line-strong);
+  border-radius: 2px;
+  background: var(--dz-surface);
+}
+[data-design='expediente'] .ec-account .acc-sk { background: color-mix(in srgb, var(--dz-ink) 9%, transparent); border-radius: 2px; }
+[data-design='expediente'] .ec-account .acc-note {
+  border: 1px dashed var(--dz-line-strong);
+  border-radius: 2px;
+  font-family: var(--dz-mono);
+  font-size: 12px;
+}
+[data-design='expediente'] .ec-account :is(.acc-panel, .acc-gate-card, .acc-auth-card, .acc-side) :focus-visible {
+  outline: 2px solid var(--dz-accent-text);
+  outline-offset: 2px;
+}
+
+/* Sidebar = lomo de la carpeta (solo desktop) */
+@media (min-width: 1024px) {
+  [data-design='expediente'] .ec-account .acc-shell {
+    grid-template-columns: 252px minmax(0, 1fr);
+    gap: 18px;
+  }
+  [data-design='expediente'] .ec-account .acc-side {
+    top: 96px;
+    gap: 12px;
+    padding: 14px;
+    border: 1px solid var(--dz-line-strong);
+    border-top: 3px solid var(--dz-accent);
+    border-radius: 2px;
+    background: var(--dz-surface);
+    box-shadow: 3px 3px 0 -1px color-mix(in srgb, var(--dz-line) 60%, transparent);
+  }
+  [data-design='expediente'] .ec-account .acc-id {
+    gap: 10px;
+    padding-bottom: 12px;
+    border-bottom: 1px dashed var(--dz-line-strong);
+  }
+  [data-design='expediente'] .ec-account .acc-id .acc-tele { display: block; width: 100%; }
+  [data-design='expediente'] .ec-account .acc-id-name {
+    font-family: var(--dz-display);
+    font-size: 13.5px;
+    letter-spacing: .02em;
+    text-transform: uppercase;
+  }
+  [data-design='expediente'] .ec-account .acc-id-email {
+    font-family: var(--dz-mono);
+    font-size: 10.5px;
+    color: var(--dz-muted);
+  }
+  [data-design='expediente'] .ec-account .acc-nav { gap: 3px; }
+  [data-design='expediente'] .ec-account .acc-navitem {
+    min-height: 40px;
+    padding: 9px 10px;
+    gap: 9px;
+    border: 1px solid transparent;
+    border-radius: 2px;
+    background: transparent;
+    color: var(--dz-ink-2);
+    font-family: var(--dz-mono);
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: .1em;
+    text-transform: uppercase;
+  }
+  [data-design='expediente'] .ec-account .acc-navitem:hover {
+    background: color-mix(in srgb, var(--dz-ink) 5%, transparent);
+    color: var(--dz-ink);
+  }
+  [data-design='expediente'] .ec-account .acc-navitem.is-on {
+    background: var(--dz-surface-2);
+    border-color: var(--dz-line-strong);
+    box-shadow: inset 3px 0 0 var(--dz-accent);
+    color: var(--dz-ink);
+  }
+  [data-design='expediente'] .ec-account .acc-navitem svg { color: var(--dz-muted); }
+  [data-design='expediente'] .ec-account .acc-navitem.is-on svg { color: var(--dz-accent-text); }
+  [data-design='expediente'] .ec-account .acc-idx {
+    margin-left: auto;
+    padding: 2px 5px;
+    border: 1px solid var(--dz-line);
+    border-radius: 2px;
+    font-family: var(--dz-mono);
+    font-size: 9px;
+    font-weight: 700;
+    letter-spacing: .06em;
+    color: var(--dz-muted);
+  }
+  [data-design='expediente'] .ec-account .acc-idx::before { content: 'F-'; }
+  [data-design='expediente'] .ec-account .acc-navitem.is-on .acc-idx {
+    border-color: var(--dz-accent-text);
+    color: var(--dz-accent-text);
+  }
+  [data-design='expediente'] .ec-account .acc-logout {
+    min-height: 42px;
+    border: 1px dashed var(--dz-line-strong);
+    border-radius: 2px;
+    color: var(--dz-ink-2);
+    font-family: var(--dz-mono);
+    font-size: 10.5px;
+    font-weight: 700;
+    letter-spacing: .12em;
+    text-transform: uppercase;
+  }
+  [data-design='expediente'] .ec-account .acc-logout:hover {
+    border-color: var(--dz-danger);
+    background: color-mix(in srgb, var(--dz-danger) 8%, transparent);
+    color: var(--dz-danger);
+  }
+}
+
+/* ==========================================================================
+   Responsive
+   ========================================================================== */
+@media (max-width: 1024px) {
+  [data-design='expediente'] .ec-auth .ec-auth-shell { width: min(760px, 100%); }
+  [data-design='expediente'] .ec-auth .ec-auth-brand-inner { gap: 8px 18px; }
+  [data-design='expediente'] .ec-auth .ec-auth-perks { display: none; }
+}
+
+@media (max-width: 860px) {
+  [data-design='expediente'] .ec-auth .ec-auth-brand-text { display: none; }
+  [data-design='expediente'] .ec-auth .ec-auth-brand-foot { display: none; }
+  [data-design='expediente'] .ec-auth .ec-auth-brand-inner { grid-template-columns: minmax(0, 1fr); }
+  [data-design='expediente'] .ec-auth .ec-auth-brand-copy { grid-area: 2 / 1; }
+  [data-design='expediente'] .ec-auth .ec-auth-shell::before { left: 16px; }
+  [data-design='expediente'] .ec-account .acc-grid2 { grid-template-columns: minmax(0, 1fr); }
+}
+
+@media (max-width: 640px) {
+  [data-design='expediente'] .ec-auth .ec-auth-shell {
+    margin-top: 22px;
+    border-radius: 2px;
+    box-shadow: 3px 3px 0 -1px color-mix(in srgb, var(--dz-line) 55%, transparent);
+  }
+  [data-design='expediente'] .ec-auth .ec-auth-brand { padding: 14px 15px; }
+  [data-design='expediente'] .ec-auth .ec-auth-brand-title { font-size: 19px; }
+  [data-design='expediente'] .ec-auth .ec-auth-panel {
+    padding: 16px 15px 24px;
+    border-left-width: 2px;
+  }
+  [data-design='expediente'] .ec-auth .ec-auth-tag {
+    position: static;
+    transform: none;
+    width: fit-content;
+    margin-top: 2px;
+  }
+  [data-design='expediente'] .ec-auth .ecaf .sp-input { font-size: 16px; }
+  [data-design='expediente'] .ec-account .acc-panel { padding: 14px; }
+  [data-design='expediente'] .ec-account .acc-tab { font-size: 10px; padding: 8px 10px; }
+  [data-design='expediente'] .ec-account .acc-gate-card,
+  [data-design='expediente'] .ec-account .acc-auth-card { padding: 20px 15px; }
+}
+
+@media (max-width: 390px) {
+  [data-design='expediente'] .ec-auth .ec-auth-shell::before { left: 12px; padding: 0 10px; font-size: 9px; }
+  [data-design='expediente'] .ec-auth .ec-auth-brand-name { font-size: 14px; }
+  [data-design='expediente'] .ec-auth .ec-auth-title { font-size: 19px; }
+  [data-design='expediente'] .ec-auth .ecaf .sp-field-label { font-size: 9px; letter-spacing: .12em; }
+  [data-design='expediente'] .ec-account .acc-gate-list { padding: 4px 10px; }
+  [data-design='expediente'] .ec-account .acc-gate-list li { font-size: 11px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  [data-design='expediente'] .ec-auth .ecaf-submit,
+  [data-design='expediente'] .ec-auth .ec-auth-spin { transition: none; animation: none; }
+}

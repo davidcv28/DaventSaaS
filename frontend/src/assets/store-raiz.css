@@ -782,7 +782,7 @@ select:where(.rz-field) {
   padding-bottom: 48px;
   border-bottom: 1px solid var(--rz-inverse-line);
 }
-.store-page[data-template='raiz'] .sp-foot-brand strong {
+.store-page[data-template='raiz'] .sp-foot .sp-foot-brand strong {
   font-family: var(--rz-display);
   font-size: clamp(26px, 3vw, 40px);
   font-weight: 800;
@@ -790,7 +790,7 @@ select:where(.rz-field) {
   line-height: 1.05;
   color: var(--rz-inverse-ink);
 }
-.store-page[data-template='raiz'] .sp-foot-brand span { color: var(--rz-inverse-muted); font-size: 13px; }
+.store-page[data-template='raiz'] .sp-foot .sp-foot-brand span { color: var(--rz-inverse-muted); font-size: 13px; }
 .store-page[data-template='raiz'] .sp-foot-desc { margin: 12px 0 0; max-width: 48ch; font-size: 14px; line-height: 1.65; color: var(--rz-inverse-ink-2); }
 .store-page[data-template='raiz'] .sp-foot-contact { margin-top: 16px; }
 .store-page[data-template='raiz'] .sp-foot .sp-foot-contact li,
@@ -814,7 +814,7 @@ select:where(.rz-field) {
 .store-page[data-template='raiz'] .sp-foot-col a { color: var(--rz-inverse-ink-2); font-size: 14px; }
 .store-page[data-template='raiz'] .sp-foot-col a:hover { color: var(--rz-inverse-ink); text-decoration: none; }
 .store-page[data-template='raiz'] .sp-foot-bottom { border-top: 0; padding-top: 24px; }
-.store-page[data-template='raiz'] .sp-foot-copy { color: var(--rz-inverse-muted); font-size: var(--rz-fs-xs); }
+.store-page[data-template='raiz'] .sp-foot .sp-foot-copy { color: var(--rz-inverse-muted); font-size: var(--rz-fs-xs); }
 .store-page[data-template='raiz'] .sp-davent-badge {
   border: 1px solid var(--rz-inverse-line);
   border-radius: var(--rz-rad-sm);
@@ -823,7 +823,7 @@ select:where(.rz-field) {
 }
 .store-page[data-template='raiz'] .sp-davent-badge:hover { border-color: var(--rz-inverse-ink); background: var(--rz-inverse-bg-2); }
 .store-page[data-template='raiz'] .sp-davent-badge strong { color: var(--rz-inverse-ink); }
-.store-page[data-template='raiz'] .sp-foot-note { color: var(--rz-inverse-muted); font-size: var(--rz-fs-xs); }
+.store-page[data-template='raiz'] .sp-foot .sp-foot-note { color: var(--rz-inverse-muted); font-size: var(--rz-fs-xs); }
 
 /* --- Skip link, aviso de vista previa y skeleton de arranque --- */
 .store-page[data-template='raiz'] .sp-skip {

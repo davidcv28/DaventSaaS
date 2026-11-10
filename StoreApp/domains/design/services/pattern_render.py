@@ -279,8 +279,11 @@ def _product_fragment(store, products = None, flags = None):
     if not flags.get('catalog', True):
         return ''
     if products is None:
+        #is_exclusive=False: el documento es anónimo — los productos de
+        #miembros ni siquiera deben saber que existen (misma regla que el
+        #catálogo público y el resolver ?product=).
         products = (
-            Product.objects.filter(store = store, is_active = True)
+            Product.objects.filter(store = store, is_active = True, is_exclusive = False)
             .select_related('category', 'brand')
             .order_by('-created_at')[:FRAGMENT_LIMIT]
         )
@@ -853,7 +856,7 @@ def _features_fragment(product):
 def _related_fragment(store, product):
     from StoreApp.domains.catalog.models import Product
 
-    base = Product.objects.filter(store = store, is_active = True).exclude(pk = product.pk).select_related('category', 'brand')
+    base = Product.objects.filter(store = store, is_active = True, is_exclusive = False).exclude(pk = product.pk).select_related('category', 'brand')
     #Mismo criterio de sugerencia de un marketplace: categoría, marca y
     #después el resto, hasta 4 tarjetas.
     same_cat = list(base.filter(category_id = product.category_id)[:4]) if product.category_id else []
@@ -1337,7 +1340,7 @@ def studio_font_css(site_theme):
     y se inlinea porque style-src no permite hojas externas. Cacheado por
     query; si Google no responde se omite (la pila cae a la siguiente).
     """
-    import urllib.request
+    import requests
     from django.core.cache import cache
 
     parts   =   []
@@ -1347,12 +1350,12 @@ def studio_font_css(site_theme):
         css     =   cache.get(key)
         if css is None:
             try:
-                req =   urllib.request.Request(
+                res =   requests.get(
                     f'https://fonts.googleapis.com/css2?family={query}&display=swap',
                     headers = {'User-Agent': _GOOGLE_FONTS_UA},
+                    timeout = 4,
                 )
-                with urllib.request.urlopen(req, timeout = 4) as res:
-                    css =   res.read().decode('utf-8', 'replace')
+                css =   res.text if res.ok else ''
             except Exception:
                 css =   ''
             #Lo que no responde se reintenta en 5 min; lo bueno una semana.
@@ -1621,7 +1624,7 @@ def render_store_pattern(store, customization = None, product = None):
         #El catálogo del diseño trae los productos ya renderizados: si la
         #tienda tiene más de los que entran en el documento, esa ruta sigue
         #con la plantilla Vue (que pagina) para no esconder productos.
-        'products_total': Product.objects.filter(store = store, is_active = True).count(),
+        'products_total': Product.objects.filter(store = store, is_active = True, is_exclusive = False).count(),
         'products_shown': FRAGMENT_LIMIT,
         'html': html,
         #theme_css con el tema efectivo + las reglas del Studio (superficies,

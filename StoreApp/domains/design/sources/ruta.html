@@ -39,6 +39,11 @@
        mezcla hacia la tinta del tema lo deja con margen en ambos modos. */
     --coral-text:color-mix(in srgb,var(--coral) 80%,var(--ink));
     --line:var(--ds-border,#d8cbb0); --success:var(--ds-success,#2e7d54);
+    /* "En stock" es texto de 11.5px sobre --card: el success crudo de
+       algunos estilos quedaba a ~4.4:1; la mezcla hacia la tinta del tema
+       lo deja con margen en claro y en oscuro (mismo criterio que
+       --coral-text). */
+    --success-text:color-mix(in srgb,var(--success) 78%,var(--ink));
     --accent:var(--ds-accent,#14443b); --accent-ink:var(--ds-accent-ink,#fbf6ea);
     --band:var(--ds-primary,#14443b); --band-ink:var(--ds-primary-ink,#f2f7f3);
     --band-muted:color-mix(in srgb,var(--band-ink) 72%,transparent);
@@ -877,6 +882,123 @@
   .ds-chat-input:focus{border-color:var(--pine-ink)}
   .ds-chat-send{border-radius:999px;background:var(--accent);color:var(--accent-ink)}
   .ds-chat-typing i{background:var(--pine-ink)}
+
+  /* ==========================================================================
+     E-COMMERCE — la tienda ruta vende en la landing: tira de categorías y
+     grilla de productos con CTA del puente (.dsx-buy). Cuenta y carrito
+     aterrizan en [data-ds-account-slot] (.top-actions) como píldoras hermanas
+     del CTA de WhatsApp.
+     ========================================================================== */
+  html[data-ds-style="ruta-arena"]{--band-muted:color-mix(in srgb,var(--band-ink) 92%,transparent)}
+  /* Cuenta y carrito: mismo pill outline del header, versión icono en móvil. */
+  .top-actions .dsx-account,.top-actions .dsx-cart{
+    gap:8px;min-height:44px;padding:0 17px;border-radius:999px;
+    border:1.5px solid var(--line);background:var(--card);color:var(--ink);
+    font-size:12.5px;font-weight:700;opacity:1;box-shadow:none;
+    transition:border-color .25s,color .25s,background .25s,transform .25s var(--ease);
+  }
+  .top-actions .dsx-account:hover,.top-actions .dsx-cart:hover{
+    border-color:var(--pine-ink);background:var(--pine-ink);color:var(--paper);
+    transform:translateY(-1px);opacity:1;
+  }
+  .top-actions .dsx-account svg,.top-actions .dsx-cart svg{width:15px;height:15px;flex:none}
+  @media (max-width:640px){
+    .top-actions .dsx-account{width:44px;height:44px;padding:0;justify-content:center;gap:0}
+    .top-actions .dsx-account [data-dsx-account-label]{display:none}
+    .top-actions .dsx-cart{width:44px;height:44px;padding:0;justify-content:center}
+    .top-actions .dsx-cart-badge{top:-6px;right:-6px}
+  }
+  /* Sección de catálogo en portada: solo existe si hay categorías o
+     productos renderizados (el puente esconde cada .ds-zone vacía). */
+  #productos:not(:has(.prod-grid .ds-product)):not(:has(.cat-strip .ds-cat)):not(:has(.prod-grid .ds-empty)){display:none}
+  .cat-strip{display:flex;flex-wrap:wrap;gap:9px;margin-bottom:22px}
+  .cat-strip:empty{display:none}
+  .cat-strip .ds-cat{
+    display:inline-flex;align-items:center;gap:8px;min-height:40px;padding:0 16px;
+    border:1.5px solid var(--line);border-radius:999px;background:var(--card);
+    color:var(--ink);font-size:12.5px;font-weight:700;
+    transition:border-color .25s,color .25s,transform .25s var(--ease);
+  }
+  .cat-strip .ds-cat::after{content:"→";font-size:11px;opacity:.55}
+  .cat-strip .ds-cat:hover{border-color:var(--pine-ink);color:var(--pine-ink);transform:translateY(-1px)}
+  .prod-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:18px}
+  .prod-grid .ds-product:nth-child(n+9){display:none}
+  .prod-grid .ds-product{
+    position:relative;min-width:0;display:flex;flex-direction:column;
+    background:var(--card);border:1px solid var(--line);border-radius:var(--radius);
+    overflow:hidden;
+    transition:transform .25s var(--ease),box-shadow .25s var(--ease),border-color .25s var(--ease);
+  }
+  .prod-grid .ds-product:hover{
+    transform:translateY(-4px);border-color:color-mix(in srgb,var(--accent) 45%,var(--line));
+    box-shadow:var(--shadow-sm);
+  }
+  .prod-grid .ds-product>.ds-product-link{flex:1 1 auto;min-width:0;color:inherit;display:flex;flex-direction:column}
+  .prod-grid .ds-product-img{
+    display:block;width:100%;aspect-ratio:4/3;object-fit:cover;
+    background:color-mix(in srgb,var(--pine-ink) 7%,var(--card));
+  }
+  .prod-grid .ds-product-img.is-empty{
+    position:relative;display:grid;place-items:center;
+  }
+  .prod-grid .ds-product-img.is-empty::after{
+    content:"Sin foto";font:600 10px/1 "JetBrains Mono",monospace;letter-spacing:.2em;
+    text-transform:uppercase;color:var(--muted);
+  }
+  .prod-grid .ds-product-copy{display:grid;gap:5px;padding:14px 15px 0;min-width:0}
+  .prod-grid .ds-product-name{
+    margin:0;font:600 16px/1.25 "Fraunces",Georgia,serif;letter-spacing:-.01em;
+    overflow-wrap:anywhere;
+  }
+  .prod-grid .ds-product-desc{
+    font-size:12.5px;line-height:1.5;color:var(--muted);
+    display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;
+  }
+  .prod-grid .ds-product-desc:empty{display:none}
+  .prod-grid .ds-product-cat{
+    margin-top:8px;font:600 9.5px/1 "JetBrains Mono",monospace;letter-spacing:.16em;
+    text-transform:uppercase;color:var(--muted);
+  }
+  .prod-grid .ds-product-cat:empty{display:none}
+  .prod-grid .ds-stock{
+    display:inline-flex;align-items:center;gap:6px;margin-top:6px;
+    font-size:11.5px;font-weight:600;color:var(--success-text);
+  }
+  .prod-grid .ds-stock i{width:6px;height:6px;border-radius:50%;background:currentColor;flex:none}
+  .prod-grid .ds-product-price{
+    display:flex;align-items:baseline;gap:8px;flex-wrap:wrap;
+    margin-top:auto;padding:10px 15px 14px;
+    font:700 17px/1 "JetBrains Mono",monospace;font-variant-numeric:tabular-nums;color:var(--ink);
+  }
+  .prod-grid .ds-product-old{font-size:12px;color:var(--muted);text-decoration:line-through;font-weight:400}
+  .prod-grid .ds-product-old:empty{display:none}
+  .prod-grid .ds-product-price[data-off]::after{
+    content:"−" attr(data-off) "%";padding:3px 7px;border-radius:999px;
+    background:color-mix(in srgb,var(--coral) 16%,transparent);color:var(--coral-text);
+    font-size:10px;font-weight:700;letter-spacing:.06em;
+  }
+  .prod-grid .ds-product-price .ds-campaign-label{position:absolute;top:10px;left:10px;height:22px;width:auto;max-width:55%;object-fit:contain}
+  .prod-grid .ds-product .dsx-buy{
+    width:calc(100% - 24px);min-width:0;margin:0 12px 12px;padding:12px 16px;
+    border:0;border-radius:999px;cursor:pointer;
+    background:var(--accent);color:var(--accent-ink);
+    font:700 12.5px/1 "Instrument Sans",sans-serif;letter-spacing:.03em;
+    box-shadow:0 14px 26px -16px color-mix(in srgb,var(--accent) 75%,transparent);
+    transition:transform .2s var(--ease),box-shadow .25s var(--ease),background .2s;
+  }
+  .prod-grid .ds-product .dsx-buy:hover{
+    transform:translateY(-1px);background:color-mix(in srgb,var(--accent) 88%,var(--ink));
+    box-shadow:0 18px 30px -16px color-mix(in srgb,var(--accent) 80%,transparent);
+  }
+  .prod-grid .ds-product .dsx-buy:active{transform:translateY(0)}
+  /* "Agregado" mezcla el success hacia la tinta del tema: en claro el
+     verde puro con --paper quedaba a ~4:1 sobre texto de 12.5px; la
+     mezcla hacia --ink lo sube a ~5:1 y en noche aclara (papel oscuro). */
+  .prod-grid .ds-product .dsx-buy.is-added{background:color-mix(in srgb,var(--success) 86%,var(--ink));color:var(--paper)}
+  @media (max-width:960px){
+    .prod-grid{grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:12px}
+    .prod-grid .ds-product-name{font-size:14.5px}
+  }
 </style>
 </head>
 <body>
@@ -906,7 +1028,7 @@
         <a href="#contacto" data-ds-anchor data-ds-route="home" data-flag="contact" data-spy="contacto">Contacto</a>
       </nav>
 
-      <div class="top-actions">
+      <div class="top-actions" data-ds-account-slot>
         <a class="pill" href="{{store_whatsapp_url}}">
           <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 11.5a8.5 8.5 0 0 1-12.6 7.4L3 21l2.1-5.4A8.5 8.5 0 1 1 21 11.5Z"/><path d="M8.6 8.4c.3-.6.6-.6.9-.6h.5c.2 0 .4 0 .6.5l.7 1.6c.1.3 0 .5-.1.7l-.5.6c-.1.2-.2.4 0 .6a6.4 6.4 0 0 0 2.9 2.5c.3.1.5 0 .7-.1l.6-.7c.2-.2.4-.3.6-.2l1.6.8c.3.1.4.2.4.4a2 2 0 0 1-1.4 1.9c-.6.2-1.3.3-3.5-.6a9.4 9.4 0 0 1-4.2-4.2c-.5-1-.6-1.9-.4-2.5Z" fill="currentColor" stroke="none"/></svg>
           Consultar
@@ -1080,6 +1202,16 @@
         <span class="sec-note">A medida</span>
       </div>
       <div class="offers-grid ds-zone">{{offerings}}</div>
+    </section>
+
+    <section class="sec reveal" id="productos">
+      <div class="sec-head">
+        <span class="idx" aria-hidden="true"></span>
+        <h2>Llevarse un pedazo del viaje</h2>
+        <span class="sec-note">Catálogo</span>
+      </div>
+      <div class="cat-strip ds-zone">{{categories}}</div>
+      <div class="prod-grid ds-zone">{{products}}</div>
     </section>
 
     <section class="sec reveal" id="empresa" data-flag="about" data-spy-section="empresa">

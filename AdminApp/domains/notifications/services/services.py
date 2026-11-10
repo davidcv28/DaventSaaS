@@ -147,6 +147,87 @@ def sync_subscription_notification(user):
 
 
 #=========================================
+# E-COMMERCE — PEDIDOS DE TIENDA (avisos al dueño)
+#=========================================
+#Los dispara StoreApp.domains.orders.services.notify vía append_event:
+#el comprador NO tiene cuenta DAVENT (es Customer, no auth.User) — estos
+#avisos son siempre para el DUEÑO de la tienda.
+def _store_owner_user(store):
+    """auth.User dueño de la tienda: Store.user = UserProfile → .user."""
+    return getattr(getattr(store, 'user', None), 'user', None)
+
+
+def _store_label(store):
+    """Nombre público de la tienda para títulos de avisos."""
+    customization    =   getattr(store, 'customization', None)
+    display          =   (getattr(customization, 'display_name', '') or '').strip()
+    return display or getattr(store, 'slug', '') or 'tu tienda'
+
+
+def _ars(amount):
+    """Monto con formato es-AR ($12.000,00) — mismo criterio que checkout."""
+    try:
+        return f'${amount:,.2f}'.replace(',', 'X').replace('.', ',').replace('X', '.')
+    except (TypeError, ValueError):
+        return '$0,00'
+
+
+def notify_order_created(store, order):
+    """
+    Pedido nuevo en la web de la tienda: UN aviso 'order' deduplicado
+    por pedido — si el evento 'created' se re-procesa, el aviso vuelve
+    a no-leído en vez de duplicarse.
+    """
+    auth_user   =   _store_owner_user(store)
+    if auth_user is None:
+        return None
+    try:
+        items_count =   sum(item.qty for item in order.items.all())
+    except Exception:                                   # noqa: BLE001 — el aviso no puede romper el pedido
+        items_count =   0
+    return upsert_notification(
+        auth_user,
+        Notification.KIND_ORDER,
+        f'Nuevo pedido {order.code}',
+        body        =   f'{_store_label(store)} · {items_count} {"artículo" if items_count == 1 else "artículos"} · {_ars(order.total)}',
+        target      =   'orders',
+        dedupe_key  =   f'order:{order.pk}:created',
+    )
+
+
+#Títulos cortos por kind de incidencia (los demás caen al genérico).
+_ORDER_ISSUE_TITLES  =   {
+    'stock_conflict'    :   'Stock insuficiente en un pedido pago',
+    'amount_mismatch'   :   'Monto del pedido a revisar',
+}
+
+
+def notify_order_issue(store, order, event):
+    """
+    Incidencia que requiere acción manual del dueño (stock_conflict,
+    amount_mismatch): aviso 'order' deduplicado POR EVENTO — cada
+    incidencia es un aviso distinto (el dedupe_key lleva el pk del
+    OrderEvent, así dos conflictos del mismo pedido no se pisan).
+    """
+    auth_user   =   _store_owner_user(store)
+    if auth_user is None:
+        return None
+    kind        =   getattr(event, 'kind', '') or 'issue'
+    note        =   (getattr(event, 'note', '') or '')[:200]
+    body        =   f'{order.code} · {_store_label(store)}'
+    if note:
+        body    +=  f' — {note}'
+    return upsert_notification(
+        auth_user,
+        Notification.KIND_ORDER,
+        _ORDER_ISSUE_TITLES.get(kind, f'Incidencia en el pedido {order.code}'),
+        body        =   body,
+        target      =   'orders',
+        dedupe_key  =   f'order:{order.pk}:{kind}:{getattr(event, "pk", 0)}',
+    )
+
+
+#=========================================
 # OPINIONES SIN LEER (badge del menú)
 #=========================================
 def _own_store(user):

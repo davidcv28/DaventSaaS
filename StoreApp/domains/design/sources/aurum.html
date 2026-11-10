@@ -66,6 +66,13 @@ html[data-ds-style="aurum-dia"]:not([data-ds-theme="dark"]){
 }
 html[data-ds-theme="dark"]{color-scheme:dark}
 html[data-ds-theme="light"],html[data-ds-style="aurum-dia"]:not([data-ds-theme="dark"]){color-scheme:light}
+/* AA en estilos de acento medio: el --ds-accent-ink que emite el puente es
+   tinta oscura y sobre #4E7FA6/#96702F queda en ~4.2:1 (bajo AA). Se baja
+   el acento ~10% y se fuerza tinta hueso: todos los rellenos de marca
+   (.btn-gold, .ribbon, .pdp-buy, .dsx-buy del puente, CTAs de contacto y
+   opiniones) pasan de 4.5 sin tocar la identidad del estilo. */
+html[data-ds-style="aurum-hielo"]{--ds-accent:#467295;--ds-accent-ink:#fffdf8}
+html[data-ds-style="aurum-marfil"]{--ds-accent:#87652a;--ds-accent-ink:#fffdf8}
 *{box-sizing:border-box}
 img[src=""]{display:none}
 html{-webkit-text-size-adjust:100%;text-size-adjust:100%;background:var(--ink);scroll-behavior:smooth}
@@ -247,6 +254,17 @@ header.top .ds-theme-toggle{width:40px;height:40px;border-color:var(--line)!impo
   color:var(--bone)!important;opacity:.9!important;background:color-mix(in srgb,var(--bone) 4%,transparent)!important}
 header.top .ds-theme-toggle:hover{background:var(--gold-soft)!important;color:var(--gold-text)!important;
   border-color:var(--gold-line)!important}
+/* Cuenta del puente: píldora fina como el .pill de WhatsApp pero en
+   contorno neutro; sin auto-margin porque .top-inner ya es justify-self:end. */
+.top-inner>.dsx-account{
+  margin-inline-start:0;flex:none;
+  display:inline-flex;align-items:center;gap:8px;
+  padding:10px 16px;border:1px solid var(--line);border-radius:99px;
+  background:transparent;color:var(--bone);cursor:pointer;
+  font:700 10.5px var(--mono);letter-spacing:.12em;text-transform:uppercase;
+  opacity:.9;transition:border-color .25s,color .25s,background-color .25s,transform .25s var(--ease)}
+.top-inner>.dsx-account:hover{border-color:var(--gold-line);color:var(--gold-text);
+  background:var(--gold-soft);transform:translateY(-1px)}
 @media(max-width:1040px){.top-nav a{padding:8px 10px;font-size:10px;letter-spacing:.08em}}
 @media(max-width:900px){
   .top{position:fixed}
@@ -623,7 +641,8 @@ section{padding:clamp(52px,8vh,96px) 0;border-bottom:1px solid var(--line);posit
 .cats .ds-cat:hover{border-color:var(--gold-line);color:var(--gold-text);background:var(--gold-soft)}
 .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:18px}
 .ds-product{border:1px solid var(--line);border-radius:var(--radius);overflow:hidden;background:var(--card);
-  transition:border-color .3s,transform .3s var(--ease);position:relative;min-width:0;isolation:isolate}
+  transition:border-color .3s,transform .3s var(--ease);position:relative;min-width:0;isolation:isolate;
+  display:flex;flex-direction:column}
 /* Sombra en capa propia: se anima su opacidad, no el box-shadow. */
 .ds-product::before{content:"";position:absolute;inset:0;z-index:-1;border-radius:inherit;
   box-shadow:var(--shadow-lift);opacity:0;transition:opacity .35s}
@@ -657,7 +676,7 @@ html[data-ds-style="aurum-dia"]:not([data-ds-theme="dark"]) .ds-product .ds-stoc
 /*La tarjeta es una grilla con áreas: así la categoría va arriba del nombre
   y la vista lista puede reordenar sin aplastar el texto.*/
 .ds-product-link{display:grid;grid-template-columns:1fr;grid-template-rows:auto auto 1fr auto;
-  grid-template-areas:"img" "cat" "copy" "price";height:100%;position:relative}
+  grid-template-areas:"img" "cat" "copy" "price";flex:1 1 auto;min-height:0;position:relative}
 /*Aviso de acción sobre la foto: aparece con el hover, no compite en reposo.*/
 .ds-product-link::after{content:"↗";position:absolute;top:12px;left:12px;z-index:3;
   width:30px;height:30px;display:grid;place-items:center;border-radius:50%;pointer-events:none;
@@ -705,6 +724,21 @@ html[data-ds-style="aurum-dia"]:not([data-ds-theme="dark"]) .ds-product .ds-stoc
 [data-ds-view-mode="grid"] .ds-product-price{border-top:1px solid var(--line);padding-top:13px}
 .ds-product-amount{font:400 21px var(--serif);overflow-wrap:anywhere;font-variant-numeric:tabular-nums}
 .ds-product-old{color:var(--muted);font-size:13px}
+/* CTA de compra que inyecta el puente: cierra la ficha como píldora oro,
+   sobre el barrido de brillo (z-index propio) y con la retícula de 20px
+   del contenido de la tarjeta. En la fila densa se compacta a la derecha. */
+.article.ds-product>.dsx-buy{
+  position:relative;z-index:2;
+  width:auto;min-width:0;margin:0 20px 20px;padding:0;
+  display:flex;align-items:center;justify-content:center;gap:10px;
+  min-height:50px;border:0;border-radius:99px;cursor:pointer;
+  background:var(--gold);color:var(--gold-ink);
+  font:700 12px var(--sans);letter-spacing:.12em;text-transform:uppercase;
+  transition:transform .25s var(--ease),filter .2s,box-shadow .3s}
+.article.ds-product>.dsx-buy:hover{transform:translateY(-2px);filter:brightness(1.07);
+  box-shadow:0 18px 36px -20px color-mix(in srgb,var(--gold) 80%,transparent)}
+[data-ds-view-mode="list"] .article.ds-product>.dsx-buy{
+  width:fit-content;min-width:0;margin:0 20px 18px auto;padding:0 26px;min-height:44px}
 /*Vista lista: imagen al costado y el texto en dos filas (categoría/nombre),
   con el precio como columna propia.*/
 [data-ds-products][data-ds-view-mode="list"]{grid-template-columns:1fr}
@@ -730,6 +764,7 @@ html[data-ds-style="aurum-dia"]:not([data-ds-theme="dark"]) .ds-product .ds-stoc
   .ds-product-name{font-size:16px}
   .ds-product-price{padding:12px 14px 14px}
   .ds-product-amount{font-size:18px}
+  .article.ds-product>.dsx-buy{margin:0 14px 16px;min-height:46px}
   /*En móvil la fila se parte: imagen + texto arriba y precio a lo ancho
     abajo, para que no quede una columna de texto de 100px.*/
   [data-ds-view-mode="list"] .ds-product-link{
@@ -1061,6 +1096,59 @@ html[data-ds-style="aurum-dia"]:not([data-ds-theme="dark"]) .pdp-shot{background
 .cat-sort{display:flex;align-items:center;gap:10px;font-size:12px;color:var(--muted)}
 .cat-sort select{background:var(--card);border:1px solid var(--line);border-radius:10px;color:var(--bone);
   font:inherit;font-size:12.5px;padding:9px 12px}
+/* Buscador del catálogo: caja redondeada como el select de orden, con
+   desplegable de sugerencias del puente. */
+.cat-search{position:relative;flex:1 1 230px;min-width:0}
+.cat-search-field{display:flex;align-items:center;gap:10px;height:42px;padding:0 14px;
+  border:1px solid var(--line);border-radius:10px;background:var(--card);
+  transition:border-color .2s,box-shadow .2s}
+.cat-search-field:focus-within{border-color:var(--gold-line);
+  box-shadow:0 0 0 3px color-mix(in srgb,var(--gold) 14%,transparent)}
+.cat-search-field>svg{flex:none;color:var(--gold-text)}
+.cat-search-field input{flex:1;min-width:0;border:0;background:transparent;color:var(--bone);
+  font-size:13px;outline:none}
+.cat-search-field input::placeholder{color:var(--muted)}
+.cat-search-field input::-webkit-search-cancel-button,
+.cat-search-field input::-webkit-search-decoration{-webkit-appearance:none;appearance:none}
+.cat-search-clear{border:0;background:none;padding:2px;font-size:17px;line-height:1;
+  color:var(--muted);cursor:pointer}
+.cat-search-clear:hover{color:var(--bone)}
+.suggest{position:absolute;left:0;right:0;top:calc(100% + 8px);z-index:40;max-height:340px;
+  overflow:auto;background:var(--ink-2);border:1px solid var(--line);border-radius:14px;
+  box-shadow:0 30px 60px -30px rgba(0,0,0,.7)}
+.suggest[hidden]{display:none}
+.suggest-head{padding:10px 14px 4px;font:600 9px/1 var(--mono);letter-spacing:.2em;
+  text-transform:uppercase;color:var(--muted)}
+.suggest-item{display:flex;align-items:center;gap:10px;width:100%;padding:9px 14px;border:0;
+  background:none;text-align:left;cursor:pointer;color:var(--bone)}
+.suggest-item:hover,.suggest-item.is-active{background:var(--gold-soft)}
+.suggest-thumb{width:36px;height:36px;flex:none;display:grid;place-items:center;overflow:hidden;
+  background:var(--ink);border:1px solid var(--line);border-radius:8px}
+.suggest-thumb img{width:100%;height:100%;object-fit:cover}
+.suggest-copy{min-width:0}
+.suggest-copy strong{display:block;font-size:12px;font-weight:600;white-space:nowrap;
+  overflow:hidden;text-overflow:ellipsis}
+.suggest-copy small{display:block;font-size:10.5px;color:var(--muted)}
+.suggest-empty{padding:14px;font-size:12px;color:var(--muted)}
+.suggest-more{width:100%;padding:11px 14px;border:0;border-top:1px solid var(--line);
+  background:none;text-align:left;cursor:pointer;font:600 9px/1 var(--mono);
+  letter-spacing:.16em;text-transform:uppercase;color:var(--gold-text)}
+/* Fila de filtros activos: solo existe cuando el puente la puebla. */
+.cat-tools{display:flex;flex-wrap:wrap;justify-content:flex-end;gap:10px;
+  margin:-8px 0 16px}
+.cat-tools:not(:has(.cat-chips:not([hidden]))){display:none}
+.cat-chips{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.cat-chips[hidden]{display:none}
+.cat-chip{display:inline-flex;align-items:center;gap:8px;padding:6px 12px;
+  border:1px solid var(--gold-line);border-radius:99px;background:var(--gold-soft);
+  color:var(--gold-text);font:600 10px/1 var(--mono);letter-spacing:.1em;
+  text-transform:uppercase;cursor:pointer;transition:border-color .2s}
+.cat-chip:hover{border-color:var(--gold)}
+.cat-chip b{font-weight:600;color:var(--muted)}
+.cat-chip i{font-style:normal;color:var(--gold-text)}
+.cat-chip-clear{border:0;background:none;padding:0;cursor:pointer;
+  font:600 9px/1 var(--mono);letter-spacing:.14em;text-transform:uppercase;
+  color:var(--muted);text-decoration:underline;text-underline-offset:4px}
 .cat-scrim{display:none}
 @media(max-width:860px){
   .cat-filters-toggle{display:inline-flex;align-items:center;gap:8px;border:1px solid var(--line);
@@ -1147,12 +1235,27 @@ html[data-ds-style="aurum-dia"]:not([data-ds-theme="dark"]) .pdp-shot{background
 .pdp-buy{position:relative;display:inline-flex;align-items:center;gap:10px;overflow:hidden;
   isolation:isolate;background:var(--gold);color:var(--gold-ink);
   font:700 12.5px var(--sans);letter-spacing:.1em;text-transform:uppercase;padding:16px 32px;border-radius:99px;
-  transition:transform .25s var(--ease)}
+  transition:transform .25s var(--ease),background-color .25s,border-color .25s,color .25s}
 .pdp-buy::after{content:"";position:absolute;inset:0;z-index:-1;transform:translateX(-130%) skewX(-18deg);
   background:linear-gradient(90deg,transparent,rgba(255,255,255,.34),transparent);transition:transform .6s var(--ease)}
 .pdp-buy:hover::after{transform:translateX(130%) skewX(-18deg)}
 .pdp-buy:hover{transform:translateY(-2px)}
 .pdp-buy[href=""]{display:none}
+/* Compra online: el puente inserta .dsx-buy antes del CTA de WhatsApp; es el
+   botón primario y el de WhatsApp pasa a contorno solo en modo tienda. */
+.pdp-info>.dsx-buy{
+  width:100%;min-width:0;margin:0 0 14px;padding:0;
+  display:flex;align-items:center;justify-content:center;gap:10px;
+  min-height:54px;border:0;border-radius:99px;cursor:pointer;
+  background:var(--gold);color:var(--gold-ink);
+  font:700 13px var(--sans);letter-spacing:.1em;text-transform:uppercase;
+  transition:transform .25s var(--ease),filter .2s,box-shadow .3s}
+.pdp-info>.dsx-buy:hover{transform:translateY(-2px);filter:brightness(1.07);
+  box-shadow:0 22px 44px -22px color-mix(in srgb,var(--gold) 85%,transparent)}
+html[data-ds-commerce="1"] .pdp-buy{
+  background:transparent;color:var(--gold-text);
+  border:1px solid var(--gold-line);box-shadow:none}
+html[data-ds-commerce="1"] .pdp-buy:hover{background:var(--gold-soft)}
 .pdp-back{display:block;margin-top:16px;color:var(--muted);font-size:12.5px}
 .pdp-back:hover{color:var(--gold-text)}
 .pdp-seller{margin-top:24px;border:1px solid var(--line);border-radius:16px;padding:18px 20px;
@@ -1678,6 +1781,14 @@ footer::before{content:"";position:absolute;top:-1px;left:50%;transform:translat
       </aside>
       <div>
         <div class="cat-bar">
+          <form class="cat-search" data-ds-search role="search">
+            <label class="cat-search-field">
+              <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg>
+              <input type="search" data-ds-search-input placeholder="Buscar en el catálogo" aria-label="Buscar en el catálogo" autocomplete="off">
+              <button class="cat-search-clear" type="button" data-ds-search-clear aria-label="Limpiar búsqueda" hidden>×</button>
+            </label>
+            <div class="suggest" data-ds-suggest hidden></div>
+          </form>
           <p class="cat-count" data-ds-count aria-live="polite"></p>
           <div class="cat-view" role="group" aria-label="Vista">
             <button type="button" data-ds-view="list" aria-pressed="false" aria-label="Vista lista">
@@ -1697,6 +1808,7 @@ footer::before{content:"";position:absolute;top:-1px;left:50%;transform:translat
             </select>
           </label>
         </div>
+        <div class="cat-tools"><div class="cat-chips" data-ds-chips hidden></div></div>
         <div class="grid" data-ds-products data-ds-view-mode="grid">{{products}}</div>
         <p class="ds-empty" data-ds-noresults hidden>No hay productos que coincidan con tu búsqueda.</p>
       </div>

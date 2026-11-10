@@ -25,12 +25,20 @@ class Notification(models.Model):
     KIND_SUBSCRIPTION    =   'subscription'
     KIND_CHANGELOG       =   'changelog'
     KIND_SYSTEM          =   'system'
+    #E-commerce (tiendas): pedidos del comprador a la tienda, mensajes
+    #de soporte comprador↔dueño y ciclo de membresías de la tienda.
+    KIND_ORDER           =   'order'
+    KIND_STORE_MESSAGE   =   'store_message'
+    KIND_MEMBERSHIP      =   'membership'
     KIND_CHOICES         =   [
         (KIND_REVIEW,         'Opinión recibida'),
         (KIND_ADMIN_MESSAGE,  'Mensaje del equipo'),
         (KIND_SUBSCRIPTION,   'Estado de la suscripción'),
         (KIND_CHANGELOG,      'Novedades'),
         (KIND_SYSTEM,         'Aviso del sistema'),
+        (KIND_ORDER,          'Pedido de la tienda'),
+        (KIND_STORE_MESSAGE,   'Mensaje de cliente'),
+        (KIND_MEMBERSHIP,      'Membresía de la tienda'),
     ]
     #Un aviso por (usuario, kind, dedupe_key): el mismo evento que se
     #repite actualiza el existente (y lo devuelve a no-leído) en vez de

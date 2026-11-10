@@ -15,7 +15,7 @@ import AppIcon from '../../../components/AppIcon.vue'
 import { vReveal } from '../../../directives/reveal.js'
 
 const ctx = inject('storePage')
-const { custom, shopName, slug } = ctx
+const { custom, shopName, slug, ui } = ctx
 // enabled de cada bloque del catálogo según layout_config (editor "Qué mostrar").
 const blkOn = (id) => templateBlock(ctx.pageTemplate.value, 'catalog', id, ctx.custom.value?.layout_config).enabled !== false
 const homeTo = computed(() => ({ path: storeHostSlug ? '/' : `/${slug.value}` }))
@@ -194,11 +194,18 @@ const toggleFeature = (name, value) => pickFeature(name, value)
           <div class="rz-cat-res-head">
             <div class="rz-cat-res-copy">
               <p class="rz-eyebrow"><span class="rz-eyebrow-num">03</span> Resultados</p>
-              <h2 id="rz-cat-results-title">{{ productLabel }}</h2>
+              <h2 id="rz-cat-results-title" aria-live="polite">{{ productLabel }}</h2>
             </div>
+            <label class="rz-cat-search">
+              <AppIcon name="search" :size="15" aria-hidden="true" />
+              <input
+                v-model="ui.search" class="rz-cat-search-input" type="search"
+                placeholder="Buscar en el catálogo" aria-label="Buscar productos en el catálogo"
+              />
+            </label>
             <label v-if="blkOn('sort')" class="rz-cat-sort">
               <span>Ordenar</span>
-              <select v-model="sort">
+              <select v-model="sort" aria-label="Ordenar resultados">
                 <option v-for="opt in SORT_OPTIONS" :key="opt.value" :value="opt.value">{{ opt.label }}</option>
               </select>
             </label>
@@ -255,3 +262,45 @@ const toggleFeature = (name, value) => pickFeature(name, value)
     </main>
   </div>
 </template>
+
+<style scoped>
+/* Búsqueda in-page del catálogo: comparte la UI de búsqueda con el header
+   (ui.search → useStoreCatalog debounce 300ms y query ?q=). La caja usa los
+   tokens --rz-* de la piel: los skins que montan esta vista bajo su clase
+   (.xx-skin) la heredan sin tocarla. */
+.rz-cat-search {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex: 1 1 200px;
+  min-width: 0;
+  max-width: 320px;
+  height: 42px;
+  margin-inline-start: auto;
+  padding: 0 12px;
+  border: 1px solid var(--rz-line, var(--sp-line, #e2e8f0));
+  border-radius: var(--rz-rad-sm, 8px);
+  background: var(--rz-surface, var(--sp-card, #fff));
+  color: var(--rz-muted, var(--sp-muted, #64748b));
+  transition: border-color var(--rz-dur-2, 200ms) var(--rz-ease-out, ease);
+}
+.rz-cat-search:focus-within { border-color: var(--rz-accent-text, var(--rz-accent, var(--store-accent, #4f46e5))); }
+.rz-cat-search svg { flex: none; }
+.rz-cat-search-input {
+  flex: 1;
+  min-width: 0;
+  border: 0;
+  background: transparent;
+  padding: 0;
+  font: inherit;
+  font-size: 14px;
+  color: var(--rz-ink, var(--sp-ink, #0f172a));
+  outline: none;
+}
+.rz-cat-search-input::placeholder { color: var(--rz-muted, var(--sp-muted, #64748b)); opacity: .9; }
+/* En pantallas angostas la cabecera pasa a columna (regla de la piel a
+   760px): la búsqueda ocupa su propia fila a todo lo ancho, antes del orden. */
+@media (max-width: 760px) {
+  .rz-cat-search { order: 3; align-self: stretch; flex: none; max-width: none; margin-inline-start: 0; }
+}
+</style>

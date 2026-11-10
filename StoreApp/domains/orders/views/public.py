@@ -1,0 +1,245 @@
+"""
+Endpoints públicos de pedidos (e-commerce DAVENT).
+
+- POST /api/stores/public/<slug>/orders/                  → crear pedido
+  (customer JWT + captcha firmado + throttle, como reviews).
+- GET  /api/stores/public/<slug>/orders/captcha/          → challenge.
+- GET  /api/stores/public/<slug>/orders/<token>/          → seguimiento.
+- GET  /api/stores/public/<slug>/orders/<token>/events/   → timeline (polling).
+- POST /api/stores/public/<slug>/orders/<token>/proof/    → comprobante (multipart).
+- GET  /api/stores/public/<slug>/orders/<token>/receipt/  → datos del comprobante NO FISCAL.
+
+Anti-IDOR: el seguimiento usa `tracking_token` (secrets.token_urlsafe)
+acotado a la tienda — el id numérico jamás aparece en rutas públicas.
+"""
+import logging
+import uuid
+
+from django.http import Http404
+from rest_framework import status
+from rest_framework.permissions import AllowAny
+from rest_framework.response import Response
+from rest_framework.throttling import AnonRateThrottle, UserRateThrottle
+from rest_framework.views import APIView
+
+from DaventProject.throttling import PublicReadThrottle
+from StoreApp.domains.customers.authentication import (
+    CustomerJWTAuthentication,
+    IsCustomer,
+)
+from StoreApp.domains.customers.models import CustomerAddress
+from StoreApp.domains.orders.models import Order, PaymentProof
+from StoreApp.domains.orders.serializers import OrderCreateSerializer
+from StoreApp.domains.orders.services.checkout import (
+    build_receipt_payload,
+    create_order,
+    find_order_by_token,
+    order_public_payload,
+    order_tracking_payload,
+    public_store,
+)
+from StoreApp.domains.stores.services import issue_captcha, verify_captcha
+from StoreApp.domains.stores.services.imaging import normalize_image
+from StoreApp.domains.stores.services.storage import (
+    object_url,
+    put_object,
+    validate_image_file,
+)
+
+logger  =   logging.getLogger(__name__)
+PROOF_MAX_BYTES  =   4 * 1024 * 1024   # mismo tope que el resto de imágenes
+#=========================================
+# THROTTLES (scopes propios con rate fija — no requieren tocar settings)
+#=========================================
+class OrderCreateThrottle(UserRateThrottle):
+    """Alta de pedidos por comprador autenticado (10/h — muy por encima
+    de un checkout legítimo, corta el flood de pedidos falsos)."""
+    scope   =   'store_order_create'
+    rate    =   '10/hour'
+class OrderProofThrottle(AnonRateThrottle):
+    """Subida de comprobantes por IP (10/h — cada una escribe en R2)."""
+    scope   =   'store_order_proof'
+    rate    =   '10/hour'
+#=========================================
+# HELPERS
+#=========================================
+def _sellable_or_404(slug, *, require_orders_enabled = True):
+    store   =   public_store(slug, require_orders_enabled = require_orders_enabled)
+    if store is None:
+        raise Http404
+    return store
+
+
+def _order_or_404(store, tracking_token):
+    order   =   find_order_by_token(store, tracking_token)
+    if order is None:
+        raise Http404
+    return order
+
+
+def _resolve_address(customer, data):
+    """
+    Dirección del pedido: `address_id` (CustomerAddress DEL comprador —
+    IDOR: la de otro customer no matchea) tiene prioridad sobre el dict
+    inline `address`. Devuelve el objeto/dict que create_order normaliza.
+    """
+    address_id  =   data.get('address_id')
+    if address_id:
+        address =   CustomerAddress.objects.filter(customer = customer, pk = address_id).first()
+        if address is None:
+            raise Http404('Dirección no encontrada')
+        return address
+    inline  =   data.get('address')
+    return inline if isinstance(inline, dict) and inline else None
+
+
+#=========================================
+# CAPTCHA (mismo mecanismo firmado que reviews/contacto)
+#=========================================
+class OrderCaptchaView(APIView):
+    permission_classes      =   [AllowAny]
+    authentication_classes  =   []
+    throttle_classes        =   [PublicReadThrottle]
+    def get(self, request, slug):
+        _sellable_or_404(slug)
+        return Response(issue_captcha(slug), status = status.HTTP_200_OK)
+
+
+#=========================================
+# CREATE ORDER (customer JWT + captcha + throttle)
+#=========================================
+class PublicOrderCreateView(APIView):
+    authentication_classes  =   [CustomerJWTAuthentication]
+    permission_classes      =   [IsCustomer]
+    throttle_classes        =   [OrderCreateThrottle]
+    def post(self, request, slug):
+        store       =   _sellable_or_404(slug)
+        customer    =   request.customer
+        serializer  =   OrderCreateSerializer(data = request.data)
+        serializer.is_valid(raise_exception = True)
+        data        =   serializer.validated_data
+        #Honeypot: con `website` lleno es un bot — se rechaza genérico
+        #(un pedido falso no puede "salir bien" como en las reviews).
+        if data.get('website'):
+            return Response({'detail': 'No se pudo crear el pedido.'}, status = status.HTTP_400_BAD_REQUEST)
+        if not verify_captcha(slug, data['challenge_id'], data['captcha_answer']):
+            return Response(
+                {'captcha_answer': 'El captcha venció o la respuesta no es correcta. Probá de nuevo.'},
+                status = status.HTTP_400_BAD_REQUEST,
+            )
+        #Carrito server-side: use_cart (o el alias `cart`) lee el Cart del
+        #cliente para ESTA tienda — orders importa cart (sin ciclo).
+        cart    =   None
+        if data.get('use_cart') or data.get('cart'):
+            from StoreApp.domains.cart.models import Cart
+            cart    =   Cart.objects.filter(customer = customer, store = store).prefetch_related('items').first()
+            if cart is None or not cart.items.exists():
+                return Response({'items': 'Tu carrito está vacío para esta tienda.'}, status = status.HTTP_400_BAD_REQUEST)
+        address =   _resolve_address(customer, data)
+        items   =   data.get('items') if not (data.get('use_cart') or data.get('cart')) else None
+        order, created  =   create_order(
+            store               =   store,
+            customer            =   customer,
+            items               =   items,
+            address             =   address,
+            shipping_method     =   data.get('shipping_method') or Order.ShippingMethod.HOME,
+            payment_method      =   data['payment_method'],
+            idempotency_key     =   data.get('idempotency_key') or '',
+            cart                =   cart,
+        )
+        payload =   order_public_payload(order, store)
+        return Response(payload, status = status.HTTP_201_CREATED if created else status.HTTP_200_OK)
+
+
+#=========================================
+# TRACKING (público por token — sin login)
+#=========================================
+class PublicOrderTrackView(APIView):
+    permission_classes      =   [AllowAny]
+    authentication_classes  =   []
+    throttle_classes        =   [PublicReadThrottle]
+    def get(self, request, slug, tracking_token):
+        store   =   _sellable_or_404(slug, require_orders_enabled = False)
+        order   =   _order_or_404(store, tracking_token)
+        return Response(order_tracking_payload(order), status = status.HTTP_200_OK)
+
+
+class PublicOrderEventsView(APIView):
+    """
+    Timeline de eventos del pedido (últimos 50, más viejo→nuevo no:
+    ordering del modelo es created_at asc — la vista los da descendente
+    para que el polling pinte lo último arriba sin recorrer todo).
+    Compatible con polling cada ~5s; track F puede montar SSE encima.
+    """
+    permission_classes      =   [AllowAny]
+    authentication_classes  =   []
+    throttle_classes        =   [PublicReadThrottle]
+    def get(self, request, slug, tracking_token):
+        store   =   _sellable_or_404(slug, require_orders_enabled = False)
+        order   =   _order_or_404(store, tracking_token)
+        events  =   order.events.order_by('-created_at', '-id')[:50]
+        return Response([
+            {
+                'kind'          :   event.kind,
+                'status_from'   :   event.status_from,
+                'status_to'     :   event.status_to,
+                'created_at'    :   event.created_at.isoformat() if event.created_at else None,
+            }
+            for event in events
+        ], status = status.HTTP_200_OK)
+
+
+#=========================================
+# PROOF UPLOAD (multipart → WebP → R2)
+#=========================================
+class PublicOrderProofView(APIView):
+    permission_classes      =   [AllowAny]
+    authentication_classes  =   []
+    throttle_classes        =   [OrderProofThrottle]
+    def post(self, request, slug, tracking_token):
+        store   =   _sellable_or_404(slug, require_orders_enabled = False)
+        order   =   _order_or_404(store, tracking_token)
+        #Solo métodos manuales y pedido pendiente de pago: MP acredita
+        #solo por webhook y un pedido pago/cerrado no admite comprobante.
+        if order.status != Order.Status.PENDING_PAYMENT or order.payment_method == Order.PaymentMethod.MP:
+            return Response({'detail': 'Este pedido no admite comprobante de pago.'}, status = status.HTTP_400_BAD_REQUEST)
+        upload  =   request.FILES.get('image') or request.FILES.get('file')
+        if upload is None:
+            return Response({'image': 'Adjuntá la foto del comprobante.'}, status = status.HTTP_400_BAD_REQUEST)
+        error   =   validate_image_file(upload, PROOF_MAX_BYTES)
+        if error:
+            return Response({'image': error}, status = status.HTTP_400_BAD_REQUEST)
+        try:
+            body, _ext, content_type  =   normalize_image(upload, kind = 'chat')
+        except Exception:
+            return Response({'image': 'No pudimos procesar la imagen. Probá con otra.'}, status = status.HTTP_400_BAD_REQUEST)
+        key     =   f'stores/{store.id}/proofs/{uuid.uuid4().hex}.webp'
+        try:
+            put_object(key, body, content_type)
+        except ValueError as exc:
+            return Response({'image': str(exc)}, status = status.HTTP_400_BAD_REQUEST)
+        old_key =   getattr(getattr(order, 'proof', None), 'image_key', None)
+        PaymentProof.objects.update_or_create(
+            order       =   order,
+            defaults    =   {'image_key': key},
+        )
+        #Si ya había comprobante, el objeto viejo queda huérfano en R2:
+        #se borra best-effort (la key nueva ya está persistida).
+        if old_key and old_key != key:
+            from StoreApp.domains.stores.services.storage import _delete_object
+            _delete_object(old_key)
+        logger.info('Comprobante subido: order=%s store=%s', order.pk, store.slug)
+        return Response({'proof_uploaded': True, 'image': object_url(key, private = True)}, status = status.HTTP_201_CREATED)
+
+
+#=========================================
+# RECEIPT (datos del comprobante NO FISCAL — el PDF lo arma el front)
+#=========================================
+class PublicOrderReceiptView(APIView):
+    permission_classes      =   [AllowAny]
+    authentication_classes  =   []
+    throttle_classes        =   [PublicReadThrottle]
+    def get(self, request, slug, tracking_token):
+        store   =   _sellable_or_404(slug, require_orders_enabled = False)
+        order   =   _order_or_404(store, tracking_token)
+        return Response(build_receipt_payload(order), status = status.HTTP_200_OK)

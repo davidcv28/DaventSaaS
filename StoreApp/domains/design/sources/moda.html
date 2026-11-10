@@ -192,9 +192,11 @@ html[data-ds-surface="services"] .nav a[data-ds-route="services"]::after{transfo
 .scroll-line i{display:block;width:100%;height:100%;background:var(--accent);transform:scaleX(0);transform-origin:left;will-change:transform}
 
 /* ---------- Menú móvil ---------- */
-.m-scrim{position:fixed;inset:0;z-index:94;background:rgba(10,8,6,.5);opacity:0;pointer-events:none;transition:opacity .25s}
+/* Scrim y hoja cubren solo el marco visible: el iframe va estirado y
+   --fr-h es el alto de la ventana que publica el script con ds-frame. */
+.m-scrim{position:fixed;top:0;left:0;right:0;height:var(--fr-h,100vh);z-index:94;background:rgba(10,8,6,.5);opacity:0;pointer-events:none;transition:opacity .25s}
 .m-sheet{
-  position:fixed;top:0;right:0;bottom:0;z-index:95;width:min(360px,88vw);
+  position:fixed;top:0;right:0;height:var(--fr-h,100vh);z-index:95;width:min(360px,88vw);
   display:flex;flex-direction:column;background:var(--paper);border-left:1px solid var(--line);
   transform:translateX(102%);visibility:hidden;
   transition:transform .35s var(--ease),visibility 0s linear .35s;overflow:auto;
@@ -410,6 +412,109 @@ body.m-open .m-sheet{transform:none;visibility:visible;transition:transform .35s
 .ds-empty{
   grid-column:1/-1;padding:34px 20px;text-align:center;color:var(--muted);
   border:1px dashed var(--line);font:500 11px/1.6 var(--mono);letter-spacing:.08em;text-transform:uppercase;
+}
+
+/* ---------- E-commerce (CTA inyectado por el puente) ----------
+   La tarjeta es editorial (filete superior + folio): el botón viaja en
+   .dsx-buy-wrap dentro de .ds-product (flex column) y se ancla al pie,
+   alineado con la línea de precio. */
+html[data-ds-commerce="1"] .grid-products .ds-product{display:flex;flex-direction:column}
+html[data-ds-commerce="1"] .grid-products .ds-product-link{flex:1 1 auto;height:auto}
+html[data-ds-commerce="1"] .grid-products .ds-product .dsx-buy-wrap{margin-top:auto;min-width:0}
+html[data-ds-commerce="1"] .grid-products .ds-product .dsx-buy{
+  position:relative;overflow:hidden;isolation:isolate;
+  width:100%;margin:14px 0 0;padding:12px 16px;min-height:46px;
+  border:1px solid var(--accent);border-radius:var(--r-btn);
+  background:var(--accent);color:var(--on-accent);
+  font:600 10px/1 var(--mono);letter-spacing:.18em;text-transform:uppercase;
+  box-shadow:none;opacity:1;
+  transition:color .25s var(--ease-soft),border-color .25s var(--ease-soft),transform .25s var(--ease-soft),box-shadow .25s var(--ease-soft),filter .2s;
+}
+/* Misma hoja de acento profundo que .btn-accent::before. */
+html[data-ds-commerce="1"] .grid-products .ds-product .dsx-buy::before{
+  content:"";position:absolute;inset:0;z-index:-1;background:var(--accent-deep);
+  transform:translateY(101%);transition:transform .35s var(--ease);
+}
+html[data-ds-commerce="1"] .grid-products .ds-product .dsx-buy:hover::before{transform:none}
+html[data-ds-commerce="1"] .grid-products .ds-product .dsx-buy:hover{
+  transform:translateY(-1px);box-shadow:0 14px 26px -16px var(--accent-deep);
+  border-color:var(--accent-deep);color:var(--on-accent);
+}
+html[data-ds-commerce="1"] .grid-products .ds-product .dsx-buy:active{transform:translateY(0) scale(.985)}
+html[data-ds-commerce="1"] .grid-products .ds-product .dsx-buy.is-added{
+  background:var(--ok);border-color:var(--ok);color:var(--paper);
+}
+/* Vista lista: el CTA se compacta a la derecha, bajo la ficha. */
+.grid-products[data-ds-view-mode="list"] .ds-product .dsx-buy-wrap{align-items:flex-end}
+.grid-products[data-ds-view-mode="list"] .ds-product .dsx-buy{width:auto;min-width:180px;margin:12px 0 0}
+/* Ficha: el puente inserta el CTA como primer ítem de .pdp-buy —
+   basis 100% lo manda a su propia fila a todo lo ancho. */
+html[data-ds-commerce="1"] [data-surface="product"] .dsx-buy[data-ds-buy-slot="pdp"]{
+  position:relative;overflow:hidden;isolation:isolate;
+  flex:1 1 100%;width:100%;min-width:0;margin:0;min-height:50px;
+  border:1px solid var(--accent);border-radius:var(--r-btn);
+  background:var(--accent);color:var(--on-accent);
+  font:600 10.5px/1 var(--mono);letter-spacing:.18em;text-transform:uppercase;
+  box-shadow:none;opacity:1;
+  transition:color .25s var(--ease-soft),border-color .25s var(--ease-soft),transform .25s var(--ease-soft),box-shadow .25s var(--ease-soft),filter .2s;
+}
+html[data-ds-commerce="1"] [data-surface="product"] .dsx-buy[data-ds-buy-slot="pdp"]::before{
+  content:"";position:absolute;inset:0;z-index:-1;background:var(--accent-deep);
+  transform:translateY(101%);transition:transform .35s var(--ease);
+}
+html[data-ds-commerce="1"] [data-surface="product"] .dsx-buy[data-ds-buy-slot="pdp"]:hover::before{transform:none}
+html[data-ds-commerce="1"] [data-surface="product"] .dsx-buy[data-ds-buy-slot="pdp"]:hover{
+  transform:translateY(-1px);box-shadow:0 16px 30px -18px var(--accent-deep);
+  border-color:var(--accent-deep);color:var(--on-accent);
+}
+html[data-ds-commerce="1"] [data-surface="product"] .dsx-buy[data-ds-buy-slot="pdp"]:active{transform:translateY(0) scale(.985)}
+html[data-ds-commerce="1"] [data-surface="product"] .dsx-buy[data-ds-buy-slot="pdp"].is-added{
+  background:var(--ok);border-color:var(--ok);color:var(--paper);box-shadow:none;
+}
+html[data-ds-commerce="1"] [data-surface="product"] .pdp-info > .dsx-buy[data-ds-buy-slot="pdp"]{margin-bottom:14px}
+
+/* ---------- Cuenta y carrito del puente en el chrome ----------
+   Píldora de cuenta (icono + label mono) y círculo de carrito gemelos
+   del toggle: radio --r-btn como el burger, tinta del header. Los
+   auto-margins del puente se anulan: el nav (desktop) y la píldora de
+   cuenta (móvil, sin nav) ya empujan el grupo al borde derecho. */
+.top-inner .dsx-account{
+  margin-inline-start:0;min-height:40px;padding:0 14px;gap:8px;flex:none;order:0;
+  border:1px solid var(--line);border-radius:var(--r-btn);
+  background:var(--surface);color:var(--ink-2);opacity:1;
+  font:600 9.5px/1 var(--mono);letter-spacing:.16em;text-transform:uppercase;
+  transition:color .2s,border-color .2s,background .2s,transform .2s var(--ease-soft),opacity .2s;
+}
+.top-inner .dsx-account:hover{color:var(--ink);border-color:var(--accent);background:var(--surface);transform:translateY(-1px);opacity:1}
+.top-inner .dsx-account:active{transform:translateY(0) scale(.97)}
+.top-inner .dsx-cart{
+  width:40px;height:40px;min-height:0;padding:0;gap:0;margin-inline-start:0;flex:none;order:0;
+  border:1px solid var(--line);border-radius:var(--r-btn);
+  background:var(--surface);color:var(--ink-2);opacity:1;
+  transition:color .2s,border-color .2s,background .2s,transform .2s var(--ease-soft),opacity .2s;
+}
+.top-inner .dsx-cart:hover{color:var(--ink);border-color:var(--accent);background:var(--surface);transform:translateY(-1px);opacity:1}
+.top-inner .dsx-cart:active{transform:translateY(0) scale(.97)}
+.top-inner .dsx-cart svg{width:17px;height:17px}
+.top-inner .dsx-cart .dsx-cart-badge{top:-6px;right:-6px}
+@media (max-width:980px){
+  /* Sin nav de escritorio: la píldora de WhatsApp absorbe el auto-margin
+     y arrastra account·cart·toggle·burger como un solo grupo a la derecha. */
+  .top-inner .nav-wa{margin-left:auto}
+  .top-inner .dsx-account{margin-inline-start:0}
+}
+@media (max-width:720px){
+  /* Sin nav-wa tampoco: la cuenta recupera el auto-margin del puente para
+     empujar el grupo; el resto queda pegado a ella. */
+  .top-inner .dsx-account{margin-inline-start:auto;width:40px;height:40px;min-height:0;padding:0;justify-content:center}
+  .top-inner .dsx-account [data-dsx-account-label]{display:none}
+  .top-inner .dsx-account svg{width:17px;height:17px}
+}
+@media (prefers-reduced-motion:reduce){
+  .grid-products .ds-product .dsx-buy,[data-surface="product"] .dsx-buy[data-ds-buy-slot="pdp"],
+  .top-inner .dsx-account,.top-inner .dsx-cart{transition:none}
+  .grid-products .ds-product .dsx-buy:hover,[data-surface="product"] .dsx-buy[data-ds-buy-slot="pdp"]:hover,
+  .top-inner .dsx-account:hover,.top-inner .dsx-cart:hover{transform:none}
 }
 
 /* ---------- Índice de categorías ---------- */
@@ -707,7 +812,8 @@ body.m-open .m-sheet{transform:none;visibility:visible;transition:transform .35s
 .cat-view button[aria-pressed="true"]{background:var(--ink);color:var(--paper);border-color:var(--ink)}
 .cat-view svg{width:15px;height:15px}
 .cat-sort{display:inline-flex;align-items:center;gap:8px;font:500 8.5px/1 var(--mono);letter-spacing:.12em;text-transform:uppercase;color:var(--muted)}
-.cat-sort select{padding:7px 9px;border:1px solid var(--line);background:transparent;color:var(--ink);border-radius:var(--r);font:500 10px/1 var(--mono);letter-spacing:0;text-transform:none}
+.cat-sort select{padding:7px 9px;border:1px solid var(--line);background:var(--surface);color:var(--ink);border-radius:var(--r);font:500 10px/1 var(--mono);letter-spacing:0;text-transform:none}
+.cat-sort select option{background:var(--surface);color:var(--ink)}
 .cat-sort select:focus{outline:none;border-color:var(--accent)}
 .cat-chips{display:flex;flex-wrap:wrap;gap:6px;padding:12px 0 0}
 .cat-chip{
@@ -894,14 +1000,15 @@ body.m-open .m-sheet{transform:none;visibility:visible;transition:transform .35s
   .cat-layout{grid-template-columns:1fr;gap:0}
   .cat-filters-toggle{display:inline-flex}
   .cat-aside{
-    position:fixed;z-index:96;top:0;right:0;bottom:0;width:min(340px,90vw);
+    position:fixed;z-index:96;top:0;right:0;height:var(--fr-h,100vh);
+    width:min(340px,90vw);
     padding:20px;border:0;border-left:1px solid var(--line);background:var(--paper);
     overflow:auto;transform:translateX(102%);transition:transform .3s var(--ease);
   }
   .cat-aside.is-open{transform:none}
   .cat-aside-close{display:grid;place-items:center}
   .f-done{display:inline-flex}
-  .cat-scrim{display:block;position:fixed;inset:0;z-index:95;background:rgba(10,8,6,.5);opacity:0;pointer-events:none;transition:opacity .25s}
+  .cat-scrim{display:block;position:fixed;top:0;left:0;right:0;height:var(--fr-h,100vh);z-index:95;background:rgba(10,8,6,.5);opacity:0;pointer-events:none;transition:opacity .25s}
   body.filters-open .cat-scrim{opacity:1;pointer-events:auto}
   .cat-results .grid-products{grid-template-columns:repeat(2,minmax(0,1fr))}
   .pdp-grid{grid-template-columns:1fr;gap:28px}
@@ -1070,7 +1177,7 @@ body.m-open .m-sheet{transform:none;visibility:visible;transition:transform .35s
 </header>
 
 <div class="m-scrim" data-m-close aria-hidden="true"></div>
-<aside class="m-sheet" id="moda-menu" role="dialog" aria-modal="true" aria-label="Menú">
+<aside class="m-sheet" id="moda-menu" role="dialog" aria-modal="true" aria-label="Menú" aria-hidden="true" inert>
   <div class="m-head">
     <span class="brand-mark">{{store_initial}}</span>
     <strong>{{store_name}}</strong>
@@ -1587,9 +1694,17 @@ body.m-open .m-sheet{transform:none;visibility:visible;transition:transform .35s
   /* ---------- Menú móvil ---------- */
   var burgerBtn = document.querySelector('[data-m-open]')
   var menuCloseBtn = document.querySelector('.m-close')
+  var sheetEl = document.querySelector('.m-sheet')
   function setMenu(open) {
     var wasOpen = body.classList.contains('m-open')
     body.classList.toggle('m-open', open)
+    /* m-lock en <html>: el puente lo traduce a davent:ds-lock y el host
+       frena su scroll — sin esto la página se movía detrás de la hoja. */
+    document.documentElement.classList.toggle('m-lock', open)
+    if (sheetEl) {
+      sheetEl.setAttribute('aria-hidden', open ? 'false' : 'true')
+      if ('inert' in sheetEl) sheetEl.inert = !open
+    }
     if (burgerBtn) {
       burgerBtn.setAttribute('aria-expanded', open ? 'true' : 'false')
       burgerBtn.setAttribute('aria-label', open ? 'Cerrar menú' : 'Abrir menú')
@@ -1830,9 +1945,15 @@ body.m-open .m-sheet{transform:none;visibility:visible;transition:transform .35s
   }
 
   function paint() {
-    var vh = frame ? frame.vh : window.innerHeight
     var top = frame ? Math.max(0, -frame.top) : (window.scrollY || 0)
     var docH = document.documentElement.scrollHeight || 1
+    /*Alto realmente visible del marco (recortado al documento): las vh del
+      documento miden la página estirada entera, no la ventana del host.
+      Se publica como --fr-h para scrims y hojas (m-scrim, cat-scrim,
+      m-sheet, cat-aside).*/
+    var winVh = frame ? frame.vh : window.innerHeight
+    var vh = Math.max(1, Math.min(docH, top + winVh) - Math.min(top, docH))
+    document.documentElement.style.setProperty('--fr-h', Math.round(vh) + 'px')
     var max = Math.max(1, docH - vh)
     var p = Math.min(1, Math.max(0, top / max))
     if (head) head.classList.toggle('is-scrolled', top > 16)

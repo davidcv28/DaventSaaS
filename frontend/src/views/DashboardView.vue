@@ -85,6 +85,13 @@ import WebQualityCard from '../components/design/WebQualityCard.vue'
 import { useWebQuality } from '../composables/useWebQuality.js'
 import { TEMPLATE_DEFS, TEMPLATE_LABELS, templateDef, templatePages, patternsForSiteTemplates, patternSurfaces, normalizeLayoutConfig } from '../templates/index.js'
 import { designApi } from '../api/design.api.js'
+import OrdersPanel from '../components/dashboard/commerce/OrdersPanel.vue'
+import SalesPanel from '../components/dashboard/commerce/SalesPanel.vue'
+import CustomersPanel from '../components/dashboard/commerce/CustomersPanel.vue'
+import BuyerSupportPanel from '../components/dashboard/commerce/BuyerSupportPanel.vue'
+import PaymentsConfigPanel from '../components/dashboard/commerce/PaymentsConfigPanel.vue'
+import LegalPagesPanel from '../components/dashboard/commerce/LegalPagesPanel.vue'
+import PlansPanel from '../components/dashboard/commerce/PlansPanel.vue'
 
 const router = useRouter()
 const route = useRoute()
@@ -312,7 +319,18 @@ const tabGroups = computed(() => {
     { id: 'payments', label: 'Pagos', icon: 'receipt', hint: 'Lo que pagaste' },
     { id: 'invoices', label: 'Facturas', icon: 'file-text', hint: 'Tus comprobantes' }
   ]
-  return { web, promo, billing: billingTabs }
+  // E-commerce del dueño: pedidos/ventas/clientes/consultas/cobros/legal/
+  // membresías de SU tienda (los paneles viven en components/dashboard/commerce).
+  const selling = [
+    { id: 'orders', label: 'Pedidos', icon: 'package', hint: 'Lo que te compraron' },
+    { id: 'sales', label: 'Ventas', icon: 'trending-up', hint: 'Números del período' },
+    { id: 'customers', label: 'Clientes', icon: 'users', hint: 'Compradores y miembros' },
+    { id: 'inquiries', label: 'Consultas', icon: 'message-circle', hint: 'Preguntas de clientes' },
+    { id: 'payconfig', label: 'Cobros', icon: 'wallet', hint: 'Métodos, fiscal y Mercado Pago' },
+    { id: 'legal', label: 'Legal', icon: 'file-text', hint: 'Páginas y devoluciones' },
+    { id: 'memberships', label: 'Membresías', icon: 'crown', hint: 'Planes de tus clientes' }
+  ]
+  return { web, promo, billing: billingTabs, selling }
 })
 
 // Qué secciones se bloquean por plan y con qué copy abre el candado
@@ -373,6 +391,7 @@ const navItems = computed(() => {
     { id: 'overview', label: 'Inicio', icon: 'dashboard', hint: 'Tu negocio hoy' },
     { id: 'catalogs', label: 'Mis productos', icon: 'package', hint: 'Fotos, precios y categorías', locked: L.catalogs, badge: catalog.products.length || null },
     { id: 'services', label: 'Mis servicios', icon: 'wrench', hint: 'Lo que ofrecés hacer', locked: L.services },
+    { id: 'selling', label: 'Vender online', icon: 'lucide:shopping-cart', hint: 'Pedidos, ventas y cobros de tu tienda' },
     // "Vender en persona" se comunica como novedad (roadmap), no como sección.
 
     { id: 'web', label: 'Mi página', icon: 'store', hint: 'Diseño, secciones y dirección' },
@@ -397,7 +416,7 @@ const validIds = computed(() => {
 // Grupo de pestañas -> ítem de menú que lo representa cuando la primera
 // pestaña ya no tiene entrada propia ('web' es solo un índice de apartados,
 // no abre ninguna pestaña por defecto).
-const GROUP_NAV_ID = { web: 'web' }
+const GROUP_NAV_ID = { web: 'web', selling: 'selling' }
 // Entrada del menú que corresponde a la sección actual (las pestañas comparten una).
 const navActive = computed(() => {
   const ids = new Set(navItems.value.filter((i) => i.id).map((i) => i.id))
@@ -489,6 +508,7 @@ const searchCommands = computed(() => {
     overview: 'inicio resumen home panel hoy comienzo',
     catalogs: 'productos catalogo cargar subir precio foto stock mercaderia categoria marca articulo cosa vender',
     services: 'servicios trabajos ofrezco duracion turnos profesional',
+    selling: 'vender online ecommerce carrito checkout pedidos ventas clientes consultas soporte compradores cobros pagos fiscal mercado pago mp legal devoluciones terminos privacidad membresias suscripciones planes tienda',
     pos: 'vender persona local fisico cobrar caja punto venta mostrador ticket',
     store: 'pagina web tienda diseno link direccion url dominio slug logo colores plantilla publicar pausar editar',
     reviews: 'opiniones comentarios valoraciones estrellas clientes review reputacion',
@@ -5975,6 +5995,111 @@ async function changePassword() {
         <button class="btn btn-auto" @click="section = 'plans'">Ver planes</button>
       </div>
     </div>
+    <!-- ================= VENDER ONLINE (e-commerce del dueño) ================= -->
+    <div v-if="seen.selling" v-show="section === 'selling'" class="web-scope" :class="{ 'sec-on': section === 'selling' }">
+      <div class="page-head">
+        <div>
+          <h1>Vender online</h1>
+          <p>Tu tienda vende de verdad: pedidos, cobros, clientes y membresías en un solo lugar.</p>
+        </div>
+      </div>
+      <SectionTabs :tabs="tabGroups.selling" :active="''" @select="section = $event" />
+      <div class="grid-2">
+        <button v-for="t in tabGroups.selling" :key="t.id" type="button" class="card sell-entry" @click="section = t.id">
+          <span class="stat-icon"><AppIcon :name="t.icon" :size="18" /></span>
+          <span class="sell-entry-txt">
+            <strong>{{ t.label }}</strong>
+            <small>{{ t.hint }}</small>
+          </span>
+          <AppIcon name="chevron-right" :size="16" class="sell-entry-arrow" />
+        </button>
+      </div>
+    </div>
+
+    <!-- ================= PEDIDOS ================= -->
+    <div v-if="seen.orders" v-show="section === 'orders'" class="web-scope" :class="{ 'sec-on': section === 'orders' }">
+      <div class="page-head">
+        <div>
+          <h1>Pedidos</h1>
+          <p>Todo lo que te compraron: del pago a la entrega.</p>
+        </div>
+      </div>
+      <SectionTabs :tabs="tabGroups.selling" active="orders" @select="section = $event" />
+      <OrdersPanel />
+    </div>
+
+    <!-- ================= VENTAS ================= -->
+    <div v-if="seen.sales" v-show="section === 'sales'" class="web-scope" :class="{ 'sec-on': section === 'sales' }">
+      <div class="page-head">
+        <div>
+          <h1>Ventas</h1>
+          <p>Cuánto vendiste en el período, por día, método de pago y estado.</p>
+        </div>
+      </div>
+      <SectionTabs :tabs="tabGroups.selling" active="sales" @select="section = $event" />
+      <SalesPanel />
+    </div>
+
+    <!-- ================= CLIENTES ================= -->
+    <div v-if="seen.customers" v-show="section === 'customers'" class="web-scope" :class="{ 'sec-on': section === 'customers' }">
+      <div class="page-head">
+        <div>
+          <h1>Clientes</h1>
+          <p>Compradores y miembros de tu tienda, con su historial de compras.</p>
+        </div>
+      </div>
+      <SectionTabs :tabs="tabGroups.selling" active="customers" @select="section = $event" />
+      <CustomersPanel />
+    </div>
+
+    <!-- ================= CONSULTAS DE CLIENTES ================= -->
+    <div v-if="seen.inquiries" v-show="section === 'inquiries'" class="web-scope" :class="{ 'sec-on': section === 'inquiries' }">
+      <div class="page-head">
+        <div>
+          <h1>Consultas de clientes</h1>
+          <p>Preguntas y mensajes que te dejan desde tu web.</p>
+        </div>
+      </div>
+      <SectionTabs :tabs="tabGroups.selling" active="inquiries" @select="section = $event" />
+      <BuyerSupportPanel />
+    </div>
+
+    <!-- ================= COBROS ================= -->
+    <div v-if="seen.payconfig" v-show="section === 'payconfig'" class="web-scope" :class="{ 'sec-on': section === 'payconfig' }">
+      <div class="page-head">
+        <div>
+          <h1>Cobros</h1>
+          <p>Venta online, métodos de pago, datos fiscales y Mercado Pago.</p>
+        </div>
+      </div>
+      <SectionTabs :tabs="tabGroups.selling" active="payconfig" @select="section = $event" />
+      <PaymentsConfigPanel />
+    </div>
+
+    <!-- ================= LEGAL ================= -->
+    <div v-if="seen.legal" v-show="section === 'legal'" class="web-scope" :class="{ 'sec-on': section === 'legal' }">
+      <div class="page-head">
+        <div>
+          <h1>Páginas legales y devoluciones</h1>
+          <p>Términos, privacidad y devoluciones de tu web, más la bandeja de solicitudes.</p>
+        </div>
+      </div>
+      <SectionTabs :tabs="tabGroups.selling" active="legal" @select="section = $event" />
+      <LegalPagesPanel />
+    </div>
+
+    <!-- ================= MEMBRESÍAS ================= -->
+    <div v-if="seen.memberships" v-show="section === 'memberships'" class="web-scope" :class="{ 'sec-on': section === 'memberships' }">
+      <div class="page-head">
+        <div>
+          <h1>Membresías</h1>
+          <p>Planes que tus clientes pueden suscribir desde tu web.</p>
+        </div>
+      </div>
+      <SectionTabs :tabs="tabGroups.selling" active="memberships" @select="section = $event" />
+      <PlansPanel />
+    </div>
+
     <!-- ================= ESTADÍSTICAS (premium) ================= -->
     <div v-if="seen.stats" v-show="section === 'stats'" class="promo-sec promo-stats" :class="{ 'sec-on': section === 'stats' }">
       <div class="page-head">

@@ -1,0 +1,835 @@
+/* ===========================================================================
+   MOVIMIENTO — páginas de comercio (ingresar / cuenta).
+   Se carga on-demand desde StorePublicLayout cuando .store-page lleva
+   data-design="movimiento". No edita las hojas scoped de las vistas ni la
+   piel store-movimiento.css (catálogo/ficha/servicios bajo .mv-skin):
+   solo compone las vistas .ec-auth / .ec-account con más especificidad.
+
+   Composición propia: la auth es la FICHA DE SESIÓN — el ala de marca es
+   la hoja de entrenamiento en papel hueso (índice mono "SESIÓN·01",
+   titular Bricolage en caja alta, beneficios como series numeradas con
+   filetes) y el ala del formulario es la planilla (campos-renglón con
+   filete inferior que enciende en acento, CTA en bloque mayúsculo).
+   La cuenta es el LIBRO DE REGISTRO: barra lateral como índice
+   numerado con regla de acento en el activo, paneles-ficha con filete
+   de tinta al techo y tabs móviles como celdas de planilla.
+   Paleta del diseño: papel #F3EFE6, tinta #111310, señal del acento de
+   la tienda. Familia: Bricolage Grotesque / Instrument Sans /
+   JetBrains Mono. Variante noche = los mismos tokens --mv-* oscuros.
+   =========================================================================== */
+
+[data-design='movimiento'] .ec-auth,
+[data-design='movimiento'] .ec-account {
+  /* ---- Tokens (papel, identidad del diseño) ---- */
+  --dz-bg: #F3EFE6;
+  --dz-surface: #FAF7F0;
+  --dz-surface-2: #EAE4D7;
+  --dz-surface-3: #E0D9C9;
+  --dz-ink: #111310;
+  --dz-ink-2: #383B34;
+  --dz-muted: #6B6E64;
+  --dz-line: #D5CFC0;
+  --dz-line-strong: #B7B09F;
+  /* Relleno seguro: el acento profundo de la tienda (accent-ink) con el
+     texto hueso del diseño — el par que ya usan flags/precios/CTA del
+     catálogo. En noche el acento se aclara y la tinta pasa a grafito. */
+  --dz-accent: var(--store-accent-ink, #B23A18);
+  --dz-accent-ink: #FFF8F0;
+  /* Acento como texto sobre papel: el profundo da ~5.5:1. */
+  --dz-accent-text: var(--store-accent-ink, #B23A18);
+  --dz-accent-soft: color-mix(in srgb, var(--store-accent-ink, #B23A18) 9%, var(--dz-surface));
+  --dz-accent-line: color-mix(in srgb, var(--store-accent-ink, #B23A18) 42%, transparent);
+  --dz-ok: #2E7D54;
+  --dz-danger: #B23A18;
+  --dz-display: var(--st-f-display-family, 'Bricolage Grotesque', 'Arial Narrow', sans-serif);
+  --dz-body: var(--st-f-body-family, 'Instrument Sans', 'Inter', system-ui, sans-serif);
+  --dz-mono: var(--st-f-eyebrow-family, 'JetBrains Mono', ui-monospace, Consolas, monospace);
+  --dz-radius: 0px;
+  --dz-veil-a: color-mix(in srgb, #EAE4D7 30%, transparent);
+  --dz-veil-b: color-mix(in srgb, #EAE4D7 78%, transparent);
+
+  /* Remap --sp-*: la cuenta/form compartidos leen la piel Movimiento.
+     .sp-btn usa --store-accent-ink de fondo → texto hueso #FFF8F0. */
+  --sp-bg: var(--dz-bg);
+  --sp-card: var(--dz-surface);
+  --sp-card-solid: var(--dz-surface);
+  --sp-surface: var(--dz-surface-2);
+  --sp-soft: var(--dz-surface-2);
+  --sp-ink: var(--dz-ink);
+  --sp-ink-2: var(--dz-ink-2);
+  --sp-muted: var(--dz-muted);
+  --sp-line: var(--dz-line);
+  --sp-radius: var(--dz-radius);
+  --sp-accent-text: var(--dz-accent-text);
+  --sp-on-band: #FFF8F0;
+  --sp-on-band-2: rgba(255, 248, 240, .82);
+  --sp-on-band-muted: rgba(255, 248, 240, .66);
+  --sp-success: var(--dz-ok);
+  --sp-danger: var(--dz-danger);
+  --sp-shadow-sm: none;
+  --sp-shadow-md: none;
+}
+
+/* Variante noche: los mismos tokens oscuros que .mv-skin. */
+[data-design='movimiento'][data-theme='dark'] .ec-auth,
+[data-design='movimiento'][data-theme='dark'] .ec-account {
+  --dz-bg: #141511;
+  --dz-surface: #1B1D17;
+  --dz-surface-2: #23261E;
+  --dz-surface-3: #2B2E25;
+  --dz-ink: #F3EFE6;
+  --dz-ink-2: #D6D2C6;
+  --dz-muted: #A7A599;
+  --dz-line: #2E3128;
+  --dz-line-strong: #4A4D42;
+  /* Acento aclarándose hacia el hueso (misma regla que --mv-accent). */
+  --dz-accent: color-mix(in srgb, var(--store-accent, #E4572E) 78%, #F3EFE6);
+  --dz-accent-ink: #141511;
+  --dz-accent-text: color-mix(in srgb, var(--store-accent, #E4572E) 80%, #F3EFE6);
+  --dz-accent-soft: color-mix(in srgb, var(--store-accent, #E4572E) 14%, var(--dz-surface));
+  --dz-accent-line: color-mix(in srgb, var(--store-accent, #E4572E) 48%, transparent);
+  --dz-ok: #5FCB9B;
+  --dz-danger: #F08A7A;
+  --dz-veil-a: color-mix(in srgb, #141511 34%, transparent);
+  --dz-veil-b: color-mix(in srgb, #141511 76%, transparent);
+  --sp-accent-text: var(--dz-accent-text);
+  --sp-on-band: #FFF8F0;
+  --sp-on-band-2: rgba(255, 248, 240, .8);
+  --sp-on-band-muted: rgba(255, 248, 240, .62);
+  --sp-success: var(--dz-ok);
+  --sp-danger: var(--dz-danger);
+  color-scheme: dark;
+}
+
+/* ---------- Marco común ---------- */
+[data-design='movimiento'][data-theme] :is(.ec-auth, .ec-account) :is(a, button, input, select, textarea):focus-visible {
+  outline: 2px solid var(--dz-accent-text);
+  outline-offset: 3px;
+}
+[data-design='movimiento'][data-theme] :is(.ec-auth, .ec-account) ::selection {
+  background: var(--store-accent-ink);
+  color: var(--sp-on-band, #fff);
+}
+
+/* ==========================================================================
+   AUTH — ficha de sesión
+   ========================================================================== */
+[data-design='movimiento'] .ec-auth {
+  padding-inline: clamp(0px, 3vw, 26px);
+  background: var(--dz-bg);
+  color: var(--dz-ink);
+}
+[data-design='movimiento'] .ec-auth .ec-auth-shell {
+  width: min(1140px, 100%);
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1.05fr);
+  margin-block: clamp(14px, 3vw, 40px) clamp(44px, 6vw, 84px);
+  border: 1.5px solid var(--dz-ink);
+  border-radius: var(--dz-radius);
+  background: var(--dz-surface);
+  box-shadow: none;
+  overflow: hidden;
+}
+
+/* Ala de la ficha: papel hueso con filetes de registro. */
+[data-design='movimiento'] .ec-auth .ec-auth-brand {
+  position: relative;
+  isolation: isolate;
+  display: grid;
+  padding: 0;
+  color: var(--dz-ink);
+  background:
+    repeating-linear-gradient(0deg, transparent 0 47px, color-mix(in srgb, var(--dz-line-strong) 55%, transparent) 47px 48px),
+    radial-gradient(85% 60% at 84% -8%, color-mix(in srgb, var(--dz-accent) 12%, transparent), transparent 60%),
+    var(--dz-surface-2);
+}
+[data-design='movimiento'] .ec-auth .ec-auth-brand::before { opacity: .24; mix-blend-mode: luminosity; }
+[data-design='movimiento'] .ec-auth .ec-auth-brand::after {
+  background:
+    linear-gradient(180deg, var(--dz-veil-a), transparent 30%, transparent 70%, var(--dz-veil-b));
+}
+[data-design='movimiento'] .ec-auth .ec-auth-brand-inner {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  grid-template-rows: auto 1fr auto;
+  align-content: stretch;
+  gap: clamp(20px, 3vw, 34px);
+  padding: clamp(26px, 3.6vw, 44px) clamp(24px, 3.4vw, 44px) clamp(28px, 4vw, 46px);
+  padding-right: 0;
+}
+[data-design='movimiento'] .ec-auth .ec-auth-logo {
+  width: 50px; height: 50px;
+  border-radius: var(--dz-radius);
+  background: var(--dz-ink);
+  border: 1.5px solid var(--dz-ink);
+  color: var(--dz-bg);
+  font-family: var(--dz-display);
+  font-weight: 700;
+  font-size: 24px;
+  letter-spacing: -.02em;
+}
+[data-design='movimiento'] .ec-auth .ec-auth-brand-name {
+  font-family: var(--dz-display);
+  font-weight: 700;
+  font-size: clamp(21px, 2.1vw, 27px);
+  line-height: 1;
+  letter-spacing: -.02em;
+  text-transform: uppercase;
+  color: var(--dz-ink);
+}
+[data-design='movimiento'] .ec-auth .ec-auth-brand-copy {
+  display: grid;
+  gap: 13px;
+  max-width: 46ch;
+}
+/* Índice de la ficha: "SESIÓN·01" en mono con regla. */
+[data-design='movimiento'] .ec-auth .ec-auth-rail {
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;
+  font: 600 10px/1 var(--dz-mono);
+  letter-spacing: .26em;
+  text-transform: uppercase;
+  color: var(--dz-accent-text);
+}
+[data-design='movimiento'] .ec-auth .ec-auth-rail::after {
+  content: "";
+  width: 52px; height: 2px;
+  background: var(--dz-ink);
+}
+[data-design='movimiento'] .ec-auth .ec-auth-brand-kicker {
+  font: 600 10px/1 var(--dz-mono);
+  letter-spacing: .22em;
+  text-transform: uppercase;
+  color: var(--dz-muted);
+}
+[data-design='movimiento'] .ec-auth .ec-auth-brand-title {
+  font-family: var(--dz-display);
+  font-weight: 700;
+  font-size: clamp(32px, 3.8vw, 50px);
+  line-height: .98;
+  letter-spacing: -.025em;
+  text-transform: uppercase;
+  color: var(--dz-ink);
+}
+[data-design='movimiento'] .ec-auth .ec-auth-brand-text {
+  font-family: var(--dz-body);
+  font-size: 14px;
+  line-height: 1.65;
+  color: var(--dz-ink-2);
+}
+/* Series de la ficha: número + texto sobre filete de tinta. */
+[data-design='movimiento'] .ec-auth .ec-auth-perks {
+  counter-reset: dzserie;
+  gap: 0;
+  margin-top: 6px;
+}
+[data-design='movimiento'] .ec-auth .ec-auth-perks li {
+  counter-increment: dzserie;
+  display: flex;
+  align-items: baseline;
+  gap: 12px;
+  padding: 11px 0;
+  border-bottom: 1px solid var(--dz-line);
+  font-family: var(--dz-body);
+  font-size: 13.5px;
+  font-weight: 600;
+  color: var(--dz-ink-2);
+}
+[data-design='movimiento'] .ec-auth .ec-auth-perks li::before {
+  content: counter(dzserie, decimal-leading-zero);
+  flex: none;
+  font: 600 11px/1.4 var(--dz-mono);
+  letter-spacing: .08em;
+  color: var(--dz-accent-text);
+}
+[data-design='movimiento'] .ec-auth .ec-auth-perks li > span { flex: 1 1 auto; min-width: 0; }
+[data-design='movimiento'] .ec-auth .ec-auth-perks svg {
+  flex: none;
+  align-self: center;
+  color: var(--dz-accent-text);
+}
+[data-design='movimiento'] .ec-auth .ec-auth-brand-foot {
+  font: 600 9px/1.6 var(--dz-mono);
+  letter-spacing: .2em;
+  text-transform: uppercase;
+  color: var(--dz-muted);
+  padding-top: 14px;
+  border-top: 1.5px solid var(--dz-ink);
+}
+
+/* Ala de la planilla: filetes de tinta, campos-renglón. */
+[data-design='movimiento'] .ec-auth .ec-auth-panel {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  padding: clamp(24px, 3.4vw, 46px) clamp(22px, 3.4vw, 48px) clamp(28px, 4vw, 50px);
+  background: var(--dz-surface);
+  color: var(--dz-ink);
+  border-left: 1.5px solid var(--dz-ink);
+}
+[data-design='movimiento'] .ec-auth .ec-auth-back {
+  gap: 9px;
+  margin-bottom: clamp(20px, 3vw, 30px);
+  padding-bottom: 10px;
+  border-bottom: 1.5px solid var(--dz-line-strong);
+  font: 600 10px/1 var(--dz-mono);
+  letter-spacing: .2em;
+  text-transform: uppercase;
+  color: var(--dz-muted);
+  transition: color .2s, border-color .2s;
+}
+[data-design='movimiento'] .ec-auth .ec-auth-back:hover {
+  color: var(--dz-accent-text);
+  border-bottom-color: var(--dz-accent-text);
+}
+[data-design='movimiento'] .ec-auth .ec-auth-head {
+  gap: 10px;
+  margin-bottom: 26px;
+  padding-bottom: 18px;
+  border-bottom: 1.5px solid var(--dz-ink);
+}
+[data-design='movimiento'] .ec-auth .ec-auth-badge {
+  width: 46px; height: 46px;
+  margin-bottom: 4px;
+  border: 1.5px solid var(--dz-ink);
+  border-radius: var(--dz-radius);
+  background: var(--store-accent-ink);
+  color: var(--sp-on-band, #fff);
+}
+[data-design='movimiento'] .ec-auth .ec-auth-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 9px;
+  font: 600 10px/1 var(--dz-mono);
+  letter-spacing: .24em;
+  text-transform: uppercase;
+  color: var(--dz-accent-text);
+}
+[data-design='movimiento'] .ec-auth .ec-auth-tag::before {
+  content: "";
+  width: 9px; height: 9px; flex: none;
+  background: var(--dz-accent);
+}
+[data-design='movimiento'] .ec-auth .ec-auth-title {
+  font-family: var(--dz-display);
+  font-weight: 700;
+  font-size: clamp(30px, 3.4vw, 44px);
+  line-height: .98;
+  letter-spacing: -.025em;
+  text-transform: uppercase;
+  color: var(--dz-ink);
+}
+[data-design='movimiento'] .ec-auth .ec-auth-sub {
+  font-family: var(--dz-body);
+  font-size: 14px;
+  line-height: 1.6;
+  color: var(--dz-muted);
+}
+[data-design='movimiento'] .ec-auth .ec-auth-loading { color: var(--dz-muted); font-family: var(--dz-body); }
+[data-design='movimiento'] .ec-auth .ec-auth-spin { color: var(--dz-accent-text); }
+
+/* ---------- Controles (compartidos auth + cuenta) ---------- */
+[data-design='movimiento'][data-theme] :is(.ec-auth, .ec-account) .sp-field { gap: 8px; }
+[data-design='movimiento'][data-theme] :is(.ec-auth, .ec-account) .sp-field-label {
+  font: 600 10px/1 var(--dz-mono);
+  letter-spacing: .2em;
+  text-transform: uppercase;
+  color: var(--dz-muted);
+}
+/* Campo-renglón: sin caja, filete inferior que se enciende en acento. */
+[data-design='movimiento'][data-theme] :is(.ec-auth, .ec-account) .sp-input {
+  min-height: 50px;
+  padding: 12px 2px;
+  border: 0;
+  border-bottom: 1.5px solid var(--dz-line-strong);
+  border-radius: var(--dz-radius);
+  background: transparent;
+  color: var(--dz-ink);
+  font-family: var(--dz-body);
+  font-size: 16px;
+  box-shadow: none;
+  transition: border-color .2s, box-shadow .2s;
+}
+[data-design='movimiento'][data-theme] :is(.ec-auth, .ec-account) .sp-input:hover {
+  border-bottom-color: var(--dz-ink);
+}
+[data-design='movimiento'][data-theme] :is(.ec-auth, .ec-account) .sp-input:focus {
+  border-bottom-color: var(--dz-accent-text);
+  box-shadow: 0 3px 0 -1px var(--dz-accent);
+  outline: none;
+}
+[data-design='movimiento'][data-theme] :is(.ec-auth, .ec-account) .sp-input::placeholder {
+  color: var(--dz-muted);
+  opacity: 1;
+}
+[data-design='movimiento'][data-theme] :is(.ec-auth, .ec-account) .sp-input:disabled {
+  color: var(--dz-muted);
+  border-bottom-color: var(--dz-line);
+  cursor: not-allowed;
+}
+[data-design='movimiento'][data-theme] :is(.ec-auth, .ec-account) .sp-form-error {
+  color: var(--dz-danger);
+  font-family: var(--dz-body);
+  font-size: 12.5px;
+}
+[data-design='movimiento'][data-theme] :is(.ec-auth, .ec-account) .sp-input:-webkit-autofill {
+  -webkit-text-fill-color: var(--dz-ink);
+  box-shadow: inset 0 0 0 40px var(--dz-surface);
+}
+
+/* CTA: bloque de acento en mayúsculas condensadas (la orden del Coach). */
+[data-design='movimiento'][data-theme] :is(.ec-auth, .ec-account) :is(.ecaf-submit, .ec-btn-primary) {
+  min-height: 52px;
+  border: 1.5px solid transparent;
+  border-radius: var(--dz-radius);
+  background: var(--store-accent-ink);
+  color: var(--sp-on-band, #fff);
+  font-family: var(--dz-display);
+  font-size: 19px;
+  font-weight: 700;
+  letter-spacing: .05em;
+  text-transform: uppercase;
+  filter: none;
+  transition: transform .18s var(--dz-ease, cubic-bezier(.2,.8,.2,1)), background .2s, box-shadow .2s;
+}
+[data-design='movimiento'][data-theme] :is(.ec-auth, .ec-account) :is(.ecaf-submit, .ec-btn-primary):hover:not(:disabled) {
+  transform: translateY(-2px);
+  background: color-mix(in srgb, var(--dz-accent) 88%, #ffffff);
+  box-shadow: 0 14px 26px -18px color-mix(in srgb, var(--dz-accent) 70%, transparent);
+  filter: none;
+}
+[data-design='movimiento'][data-theme] :is(.ec-auth, .ec-account) :is(.ecaf-submit, .ec-btn-primary):active:not(:disabled) {
+  transform: translateY(0) scale(.995);
+}
+[data-design='movimiento'][data-theme] :is(.ec-auth, .ec-account) :is(.ecaf-submit, .ec-btn-primary):disabled {
+  background: var(--dz-line);
+  color: var(--dz-muted);
+  opacity: 1;
+  cursor: not-allowed;
+}
+[data-design='movimiento'][data-theme] :is(.ec-auth, .ec-account) .ec-btn-ghost {
+  min-height: 48px;
+  border: 1.5px solid var(--dz-ink);
+  border-radius: var(--dz-radius);
+  background: transparent;
+  color: var(--dz-ink);
+  font: 600 10.5px/1 var(--dz-mono);
+  letter-spacing: .2em;
+  text-transform: uppercase;
+}
+[data-design='movimiento'][data-theme] :is(.ec-auth, .ec-account) .ec-btn-ghost:hover {
+  background: var(--dz-ink);
+  color: var(--dz-bg);
+}
+
+/* Formulario compartido (StoreAuthForm). */
+[data-design='movimiento'] .ec-auth .ecaf { gap: 15px; }
+[data-design='movimiento'] .ec-auth .ecaf-pass .sp-input { padding-right: 48px; }
+[data-design='movimiento'] .ec-auth .ecaf-pass-toggle { color: var(--dz-muted); border-radius: var(--dz-radius); }
+[data-design='movimiento'] .ec-auth .ecaf-pass-toggle:hover {
+  color: var(--dz-accent-text);
+  background: var(--dz-accent-soft);
+}
+[data-design='movimiento'] .ec-auth .ecaf-divider {
+  font: 600 9px/1 var(--dz-mono);
+  letter-spacing: .22em;
+  text-transform: uppercase;
+  color: var(--dz-muted);
+}
+[data-design='movimiento'] .ec-auth .ecaf-divider::before,
+[data-design='movimiento'] .ec-auth .ecaf-divider::after { background: var(--dz-line-strong); opacity: 1; }
+[data-design='movimiento'] .ec-auth .ecaf-google-btn { border-radius: var(--dz-radius); overflow: hidden; }
+[data-design='movimiento'] .ec-auth .ecaf-link {
+  color: var(--dz-accent-text);
+  font-family: var(--dz-body);
+  font-weight: 700;
+  text-underline-offset: 4px;
+}
+[data-design='movimiento'] .ec-auth .ecaf-link:hover { color: var(--dz-ink); }
+[data-design='movimiento'] .ec-auth .ecaf-notice {
+  border-radius: var(--dz-radius);
+  background: var(--dz-accent-soft);
+  border: 1px solid var(--dz-accent-line);
+  color: var(--dz-ink);
+}
+[data-design='movimiento'] .ec-auth .ecaf-error {
+  border-radius: var(--dz-radius);
+  background: color-mix(in srgb, var(--dz-danger) 10%, var(--dz-surface));
+  border: 1px solid color-mix(in srgb, var(--dz-danger) 38%, transparent);
+  color: var(--dz-ink);
+}
+
+/* ==========================================================================
+   CUENTA — libro de registro
+   ========================================================================== */
+[data-design='movimiento'][data-theme] .ec-account {
+  width: min(1240px, 100%);
+  margin-inline: auto;
+  padding: clamp(14px, 3vw, 34px) clamp(14px, 4vw, 40px) clamp(44px, 6vw, 76px);
+  gap: 0;
+  background: var(--dz-bg);
+  color: var(--dz-ink);
+}
+[data-design='movimiento'][data-theme] .ec-account .acc-shell {
+  grid-template-columns: minmax(0, 1fr);
+  gap: 18px;
+}
+[data-design='movimiento'][data-theme] .ec-account .acc-side { display: none; }
+[data-design='movimiento'][data-theme] .ec-account .acc-main { gap: 16px; }
+
+[data-design='movimiento'][data-theme] .ec-account .acc-tele {
+  display: block;
+  font: 600 9px/1 var(--dz-mono);
+  letter-spacing: .22em;
+  text-transform: uppercase;
+  color: var(--dz-muted);
+}
+[data-design='movimiento'][data-theme] .ec-account .acc-idx {
+  font: 600 9.5px/1 var(--dz-mono);
+  letter-spacing: .14em;
+  color: var(--dz-muted);
+}
+[data-design='movimiento'][data-theme] .ec-account .acc-avatar {
+  border-radius: var(--dz-radius);
+  background: var(--dz-ink);
+  color: var(--dz-bg);
+  font-family: var(--dz-display);
+  font-weight: 700;
+  font-size: 19px;
+  letter-spacing: -.02em;
+  border: 1.5px solid var(--dz-ink);
+}
+[data-design='movimiento'][data-theme] .ec-account .acc-avatar--sm { width: 44px; height: 44px; font-size: 16px; }
+
+/* Header compacto (tablet/mobile): cabecera de la ficha. */
+[data-design='movimiento'][data-theme] .ec-account .acc-mhead {
+  display: grid;
+  grid-template-columns: 44px minmax(0, 1fr) 44px;
+  align-items: center;
+  gap: 12px;
+  padding: 0 0 14px;
+  border-bottom: 2px solid var(--dz-ink);
+}
+[data-design='movimiento'][data-theme] .ec-account .acc-mhead .acc-tele { grid-column: 1 / -1; }
+[data-design='movimiento'][data-theme] .ec-account .acc-mhead-meta strong {
+  font-family: var(--dz-display);
+  font-weight: 700;
+  font-size: 20px;
+  letter-spacing: -.02em;
+  text-transform: uppercase;
+  color: var(--dz-ink);
+}
+[data-design='movimiento'][data-theme] .ec-account .acc-mhead-meta small {
+  font-family: var(--dz-mono);
+  font-size: 10.5px;
+  letter-spacing: .06em;
+  color: var(--dz-muted);
+}
+[data-design='movimiento'][data-theme] .ec-account .acc-icon-btn {
+  width: 44px; height: 44px;
+  border: 1.5px solid var(--dz-line-strong);
+  border-radius: var(--dz-radius);
+  background: transparent;
+  color: var(--dz-ink-2);
+}
+[data-design='movimiento'][data-theme] .ec-account .acc-icon-btn:hover {
+  border-color: var(--dz-ink);
+  color: var(--dz-ink);
+  background: var(--dz-surface-2);
+}
+[data-design='movimiento'][data-theme] .ec-account .acc-icon-btn.is-danger:hover {
+  border-color: var(--dz-danger);
+  color: var(--dz-danger);
+  background: color-mix(in srgb, var(--dz-danger) 10%, transparent);
+}
+
+/* Tabs (tablet/mobile): celdas de planilla con regla de acento. */
+[data-design='movimiento'][data-theme] .ec-account .acc-tabs {
+  gap: 0;
+  padding: 0 0 2px;
+  border-bottom: 1.5px solid var(--dz-line-strong);
+  scrollbar-width: none;
+  -webkit-overflow-scrolling: touch;
+}
+[data-design='movimiento'][data-theme] .ec-account .acc-tab {
+  min-height: 46px;
+  padding: 11px 14px;
+  border: 0;
+  border-radius: 0;
+  border-bottom: 3px solid transparent;
+  background: transparent;
+  color: var(--dz-muted);
+  font-family: var(--dz-display);
+  font-size: 17px;
+  font-weight: 700;
+  letter-spacing: .03em;
+  text-transform: uppercase;
+  gap: 8px;
+}
+[data-design='movimiento'][data-theme] .ec-account .acc-tab:hover {
+  color: var(--dz-ink);
+  border-bottom-color: color-mix(in srgb, var(--dz-accent) 45%, transparent);
+}
+[data-design='movimiento'][data-theme] .ec-account .acc-tab.is-on {
+  background: transparent;
+  color: var(--dz-ink);
+  border-bottom-color: var(--dz-accent);
+}
+[data-design='movimiento'][data-theme] .ec-account .acc-tab.is-on .acc-idx { color: var(--dz-accent-text); }
+
+/* Paneles de contenido: fichas con filete de tinta al techo. */
+[data-design='movimiento'][data-theme] .ec-account .acc-panel,
+[data-design='movimiento'][data-theme] .ec-account .acc-auth-card,
+[data-design='movimiento'][data-theme] .ec-account .acc-gate-card,
+[data-design='movimiento'][data-theme] .ec-account .acc-skelpanel {
+  padding: clamp(18px, 2.6vw, 30px);
+  border: 1px solid var(--dz-line);
+  border-top: 3px solid var(--dz-ink);
+  border-radius: var(--dz-radius);
+  background: var(--dz-surface);
+  box-shadow: none;
+  gap: 18px;
+  color: var(--dz-ink);
+}
+[data-design='movimiento'][data-theme] .ec-account .acc-panel-head {
+  padding-bottom: 14px;
+  border-bottom: 1.5px solid var(--dz-line-strong);
+}
+[data-design='movimiento'][data-theme] .ec-account .acc-panel-title {
+  font-family: var(--dz-display);
+  font-weight: 700;
+  font-size: clamp(24px, 2.6vw, 32px);
+  line-height: 1;
+  letter-spacing: -.02em;
+  text-transform: uppercase;
+  color: var(--dz-ink);
+}
+[data-design='movimiento'][data-theme] .ec-account .acc-panel-sub {
+  font-family: var(--dz-body);
+  font-size: 13.5px;
+  line-height: 1.6;
+  color: var(--dz-muted);
+}
+
+/* Gate / sub-vistas de mail. */
+[data-design='movimiento'][data-theme] .ec-account :is(.acc-gate-ico, .acc-auth-ico) {
+  border-radius: var(--dz-radius);
+  background: var(--dz-ink);
+  border: 1.5px solid var(--dz-ink);
+  color: var(--dz-bg);
+}
+[data-design='movimiento'][data-theme] .ec-account :is(.acc-gate-title, .acc-auth-title) {
+  font-family: var(--dz-display);
+  font-weight: 700;
+  letter-spacing: -.02em;
+  text-transform: uppercase;
+  color: var(--dz-ink);
+}
+[data-design='movimiento'][data-theme] .ec-account :is(.acc-gate-sub, .acc-auth-msg) {
+  font-family: var(--dz-body);
+  color: var(--dz-muted);
+}
+[data-design='movimiento'][data-theme] .ec-account .acc-gate-list {
+  border: 1px solid var(--dz-line);
+  border-radius: var(--dz-radius);
+  background: var(--dz-bg);
+  color: var(--dz-ink-2);
+}
+[data-design='movimiento'][data-theme] .ec-account .acc-gate-list li {
+  font-family: var(--dz-body);
+  color: var(--dz-ink-2);
+}
+[data-design='movimiento'][data-theme] .ec-account .acc-gate-list svg { color: var(--dz-accent-text); }
+[data-design='movimiento'][data-theme] .ec-account .acc-gate-link,
+[data-design='movimiento'][data-theme] .ec-account .acc-auth-link {
+  font: 600 10px/1 var(--dz-mono);
+  letter-spacing: .18em;
+  text-transform: uppercase;
+  color: var(--dz-accent-text);
+  text-decoration: underline;
+  text-underline-offset: 4px;
+}
+[data-design='movimiento'][data-theme] .ec-account .acc-auth-ok {
+  color: var(--dz-ok);
+  font-family: var(--dz-body);
+  font-weight: 700;
+}
+[data-design='movimiento'][data-theme] .ec-account .acc-spin {
+  border-color: color-mix(in srgb, var(--dz-muted) 34%, transparent);
+  border-top-color: var(--dz-accent);
+}
+[data-design='movimiento'][data-theme] .ec-account .acc-sk {
+  background: color-mix(in srgb, var(--dz-muted) 15%, transparent);
+  border-radius: var(--dz-radius);
+}
+
+/* ---------- Escritorio: índice del libro (sidebar) ---------- */
+@media (min-width: 1024px) {
+  [data-design='movimiento'][data-theme] .ec-account :is(.acc-mhead, .acc-tabs) { display: none; }
+  [data-design='movimiento'][data-theme] .ec-account .acc-shell {
+    grid-template-columns: 300px minmax(0, 1fr);
+    gap: 34px;
+    align-items: start;
+  }
+  [data-design='movimiento'][data-theme] .ec-account .acc-side {
+    display: grid;
+    gap: 0;
+    align-content: start;
+    position: sticky;
+    top: calc(var(--sp-top-h, 64px) + 18px);
+    padding: 22px 24px;
+    border: 1.5px solid var(--dz-ink);
+    border-top: 6px solid var(--dz-accent);
+    border-radius: var(--dz-radius);
+    background: var(--dz-surface);
+    box-shadow: none;
+  }
+  [data-design='movimiento'][data-theme] .ec-account .acc-id {
+    display: grid;
+    grid-template-columns: 52px minmax(0, 1fr);
+    align-items: center;
+    gap: 12px;
+    padding: 0 0 16px;
+    border-bottom: 1.5px solid var(--dz-line-strong);
+  }
+  [data-design='movimiento'][data-theme] .ec-account .acc-id .acc-tele { grid-column: 1 / -1; }
+  [data-design='movimiento'][data-theme] .ec-account .acc-id-name {
+    font-family: var(--dz-display);
+    font-weight: 700;
+    font-size: 19px;
+    letter-spacing: -.02em;
+    text-transform: uppercase;
+    color: var(--dz-ink);
+  }
+  [data-design='movimiento'][data-theme] .ec-account .acc-id-email {
+    font-family: var(--dz-mono);
+    font-size: 10.5px;
+    letter-spacing: .05em;
+    color: var(--dz-muted);
+  }
+  /* Entradas del índice: número mono + nombre condensado; el activo
+     enciende la regla de acento. */
+  [data-design='movimiento'][data-theme] .ec-account .acc-nav { gap: 0; margin-top: 8px; counter-reset: dzidx; }
+  [data-design='movimiento'][data-theme] .ec-account .acc-navitem {
+    counter-increment: dzidx;
+    gap: 12px;
+    padding: 13px 10px;
+    border-radius: var(--dz-radius);
+    border-bottom: 1px solid var(--dz-line);
+    background: transparent;
+    color: var(--dz-ink-2);
+    font-family: var(--dz-display);
+    font-size: 18px;
+    font-weight: 700;
+    letter-spacing: .01em;
+    text-transform: uppercase;
+    transition: background .2s, color .2s;
+  }
+  [data-design='movimiento'][data-theme] .ec-account .acc-navitem svg { color: var(--dz-muted); transition: color .2s; }
+  [data-design='movimiento'][data-theme] .ec-account .acc-navitem > span:not(.acc-idx) { min-width: 0; }
+  [data-design='movimiento'][data-theme] .ec-account .acc-navitem .acc-idx {
+    margin-left: auto;
+    color: var(--dz-muted);
+  }
+  [data-design='movimiento'][data-theme] .ec-account .acc-navitem:hover {
+    background: var(--dz-surface-2);
+    color: var(--dz-ink);
+  }
+  [data-design='movimiento'][data-theme] .ec-account .acc-navitem:hover svg,
+  [data-design='movimiento'][data-theme] .ec-account .acc-navitem:hover .acc-idx { color: var(--dz-accent-text); }
+  [data-design='movimiento'][data-theme] .ec-account .acc-navitem.is-on {
+    background: transparent;
+    color: var(--dz-ink);
+    box-shadow: inset 3px 0 0 var(--dz-accent);
+  }
+  [data-design='movimiento'][data-theme] .ec-account .acc-navitem.is-on svg,
+  [data-design='movimiento'][data-theme] .ec-account .acc-navitem.is-on .acc-idx { color: var(--dz-accent-text); }
+  [data-design='movimiento'][data-theme] .ec-account .acc-logout {
+    margin-top: 18px;
+    min-height: 46px;
+    border: 1.5px solid var(--dz-line-strong);
+    border-radius: var(--dz-radius);
+    background: transparent;
+    color: var(--dz-muted);
+    font: 600 10px/1 var(--dz-mono);
+    letter-spacing: .2em;
+    text-transform: uppercase;
+  }
+  [data-design='movimiento'][data-theme] .ec-account .acc-logout:hover {
+    color: var(--dz-danger);
+    border-color: color-mix(in srgb, var(--dz-danger) 55%, transparent);
+    background: color-mix(in srgb, var(--dz-danger) 10%, transparent);
+  }
+}
+
+/* ---------- Responsive ---------- */
+@media (max-width: 1024px) {
+  [data-design='movimiento'] .ec-auth .ec-auth-shell {
+    grid-template-columns: minmax(0, 1fr);
+    margin-block: 12px clamp(28px, 5vw, 48px);
+  }
+  [data-design='movimiento'] .ec-auth .ec-auth-brand-inner {
+    grid-template-rows: auto auto;
+    gap: 14px;
+    padding: 22px 22px 22px;
+    padding-right: 22px;
+  }
+  [data-design='movimiento'] .ec-auth .ec-auth-brand-copy { gap: 8px; max-width: none; }
+  [data-design='movimiento'] .ec-auth .ec-auth-brand-text,
+  [data-design='movimiento'] .ec-auth .ec-auth-perks,
+  [data-design='movimiento'] .ec-auth .ec-auth-brand-foot { display: none; }
+  [data-design='movimiento'] .ec-auth .ec-auth-brand-title { font-size: clamp(24px, 5vw, 32px); }
+  [data-design='movimiento'] .ec-auth .ec-auth-panel {
+    padding: 24px 22px 30px;
+    border-left: 0;
+    border-top: 1.5px solid var(--dz-ink);
+  }
+}
+@media (max-width: 860px) {
+  [data-design='movimiento'][data-theme] .ec-account .acc-mhead-meta strong { font-size: 17px; }
+  [data-design='movimiento'][data-theme] .ec-account .acc-panel-title { font-size: 23px; }
+}
+@media (max-width: 640px) {
+  [data-design='movimiento'] .ec-auth { padding-inline: 12px; }
+  [data-design='movimiento'] .ec-auth .ec-auth-shell { border-radius: var(--dz-radius); }
+  [data-design='movimiento'] .ec-auth .ec-auth-logo { width: 42px; height: 42px; font-size: 20px; }
+  [data-design='movimiento'] .ec-auth .ec-auth-brand-name { font-size: 19px; }
+  [data-design='movimiento'] .ec-auth .ec-auth-brand-title { font-size: 22px; }
+  [data-design='movimiento'] .ec-auth .ec-auth-panel { padding: 20px 16px 28px; }
+  [data-design='movimiento'] .ec-auth .ec-auth-head { margin-bottom: 20px; padding-bottom: 14px; }
+  [data-design='movimiento'] .ec-auth .ec-auth-title { font-size: 26px; }
+  [data-design='movimiento'] .ec-auth .ecaf-grid { grid-template-columns: minmax(0, 1fr); }
+  [data-design='movimiento'][data-theme] .ec-account { padding-inline: 14px; }
+  [data-design='movimiento'][data-theme] .ec-account .acc-tab { padding: 10px 12px; font-size: 15px; letter-spacing: 0; }
+  [data-design='movimiento'][data-theme] .ec-account .acc-panel,
+  [data-design='movimiento'][data-theme] .ec-account .acc-auth-card,
+  [data-design='movimiento'][data-theme] .ec-account .acc-gate-card { padding: 18px 16px; }
+}
+@media (max-width: 390px) {
+  [data-design='movimiento'] .ec-auth { padding-inline: 8px; }
+  [data-design='movimiento'] .ec-auth .ec-auth-brand-title { font-size: 20px; }
+  [data-design='movimiento'] .ec-auth .ec-auth-title { font-size: 23px; }
+  [data-design='movimiento'][data-theme] .ec-account { padding-inline: 10px; }
+  [data-design='movimiento'][data-theme] .ec-account .acc-mhead { grid-template-columns: 40px minmax(0, 1fr) 40px; gap: 10px; }
+  [data-design='movimiento'][data-theme] .ec-account .acc-mhead-meta strong { font-size: 16px; }
+  [data-design='movimiento'][data-theme] .ec-account .acc-panel-title { font-size: 21px; }
+}
+/* Tab bar inferior de la tienda (mobile.nav = bottom): el último panel
+   respira sobre la barra fija. */
+@media (max-width: 768px) {
+  [data-design='movimiento'][data-theme] .ec-account,
+  [data-design='movimiento'] .ec-auth {
+    padding-bottom: calc(24px + env(safe-area-inset-bottom));
+  }
+  [data-design='movimiento'][data-theme] .ec-account .acc-tabs {
+    padding-bottom: 6px;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  [data-design='movimiento'] :is(.ec-auth, .ec-account) * {
+    transition-duration: .001ms !important;
+    animation-duration: .001ms !important;
+  }
+}
