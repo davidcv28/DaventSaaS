@@ -113,8 +113,10 @@ def allowed_templates_of(profile):
 def record_store_visit(store, request):
     """
     +1 al contador del día de la tienda. Dedupe best-effort con cache por
-    hash(IP+UA+fecha): un mismo visitante cuenta una sola vez por día sin
-    guardar su IP. El update con F() no pierde hits concurrentes.
+    hash(IP+fecha): un mismo visitante cuenta una sola vez por día sin
+    guardar su IP. El UA queda fuera de la clave: rotarlo generaba una
+    entrada nueva por request e inflaba la métrica sin límite. El update
+    con F() no pierde hits concurrentes.
     """
     today           =   timezone.localdate()
     #Un solo parseo de XFF en todo el proyecto: client_ip() respeta NUM_PROXIES
@@ -122,8 +124,7 @@ def record_store_visit(store, request):
     #último XFF y con NUM_PROXIES=0 era spoofeable.
     from DaventProject.middleware import client_ip
     ip              =   client_ip(request)
-    ua              =   request.META.get('HTTP_USER_AGENT', '')[:200]
-    key             =   'visit:%s:%s' % (store.pk, hashlib.sha256(f'{ip}|{ua}|{today}'.encode()).hexdigest()[:32])
+    key             =   'visit:%s:%s' % (store.pk, hashlib.sha256(f'{ip}|{today}'.encode()).hexdigest()[:32])
     if not cache_add(key, 1, 86400):
         return
     StoreDailyVisit.objects.get_or_create(store = store, date = today, defaults = {'count': 0})

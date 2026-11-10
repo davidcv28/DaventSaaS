@@ -44,10 +44,18 @@ const STATUS_LABELS = {
 const SHIP_LABELS = { home: 'Envío a domicilio', pickup: 'Retiro en el local' }
 
 // invoice_ref puede ser un código/número de factura o una URL a un
-// archivo que subió el vendedor — si es URL la mostramos como descarga.
+// archivo que subió el vendedor — si es URL la mostramos como descarga,
+// pero solo hacia hosts de confianza (storage propio, AFIP, plataforma):
+// un link arbitrario en el comprobante público sería phishing al cliente.
+const INVOICE_LINK_HOST_RE = /(^|\.)(r2\.dev|r2\.cloudflarestorage\.com|afip\.gob\.ar)$|^(davent\.com\.ar|daventsaas\.onrender\.com|localhost|127\.0\.0\.1)$/
 const invoiceUrl = computed(() => {
   const v = String(receipt.value?.invoice_ref || '')
-  return /^https?:\/\//i.test(v) ? v : ''
+  if (!/^https?:\/\//i.test(v)) return ''
+  try {
+    return INVOICE_LINK_HOST_RE.test(new URL(v).hostname.toLowerCase()) ? v : ''
+  } catch {
+    return ''
+  }
 })
 
 async function load() {

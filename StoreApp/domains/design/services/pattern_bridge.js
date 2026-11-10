@@ -294,6 +294,10 @@
   window.addEventListener('resize', function () { resetFixed(); pinFixed() })
 
   window.addEventListener('message', function (e) {
+    /* Solo el host puede hablarle al documento: sin este chequeo cualquier
+     * ventana/popup con la referencia podía inyectar `ds-studio-css` (CSS
+     * arbitrario) o falsificar `ds-theme`/`ds-surface`. */
+    if (e.source !== window.parent) return
     var d = e.data || {}
     if (d.type === 'davent:ds-theme') {
       root.setAttribute('data-ds-theme', d.theme)

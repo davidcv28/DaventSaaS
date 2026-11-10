@@ -340,6 +340,48 @@ class PatternDocumentSecurityTests(SimpleTestCase):
         self.assertIn('https://cdn.example/foto.png', clean)
         self.assertIn('/api/stores/public/tienda/r/whatsapp/', clean)
 
+    def test_sanitize_strips_entity_and_separator_bypasses(self):
+        #Bypasses reportados en auditoría run-2: entidades HTML en
+        #http-equiv/scheme, handlers tras `/` o comilla adyacente, cierres
+        #de script espaciados y `<script>` huérfano sin cerrar.
+        from StoreApp.domains.design.services.pattern_document import sanitize_markup
+        payload = (
+            '<meta http-equiv="&#114;efresh" content="0;url=https://evil.example">'
+            '<meta http-equiv=" refresh " content="0;url=https://evil.example">'
+            '<svg/onload=alert(1)></svg>'
+            '<img src="x"onerror=alert(2)>'
+            '<img src=x/onerror=alert(3)>'
+            '<script>alert(4)</script >'
+            '<script src="https://evil.example/x.js">'
+            '<a href="&#106;avascript:alert(5)">a</a>'
+            '<a href="j&#x61;vascript:alert(6)">b</a>'
+            '<a href="jav&#x0A;ascript:alert(7)">c</a>'
+            '<form action="&#106;avascript:alert(8)"></form>'
+            '<a href="data&#58;text/html,<b>x</b>">d</a>'
+            '<a href="/api/stores/public/tienda/r/whatsapp/">ok</a>'
+        )
+        clean = sanitize_markup(payload)
+        for needle in ('http-equiv', 'onload', 'onerror', '<script', 'javascript:',
+                       'vbscript:', 'data:text/html', '<meta'):
+            self.assertNotIn(needle, clean.lower())
+        self.assertIn('/api/stores/public/tienda/r/whatsapp/', clean)
+
+    def test_pattern_document_css_cannot_break_out_of_style(self):
+        #Un `</style` en el CSS cerraba el elemento y el resto se parseaba
+        #como HTML (meta refresh, trackers): sanitize_css lo elimina en el
+        #documento servido y en la vista previa.
+        from StoreApp.domains.design.services.pattern_document import (
+            pattern_document, sanitize_css)
+        evil_css = 'a{color:red}</style><meta http-equiv="refresh" content="0;url=https://evil.example"><style>'
+        self.assertNotIn('</style', sanitize_css(evil_css).lower())
+        doc = pattern_document('<p>x</p>', evil_css, 'light', 'landing')
+        #El markup inyectado queda como texto CSS inerte: un solo </style>
+        #real y el "<meta …>" queda ANTES de él (dentro del raw-text de la
+        #hoja), nunca como elemento del documento.
+        low = doc.lower()
+        self.assertEqual(low.count('</style>'), 1)
+        self.assertLess(low.find('http-equiv'), low.find('</style>'))
+
     def test_document_csp_authorizes_only_the_nonce(self):
         from StoreApp.domains.design.services.pattern_document import document_csp
         csp         =   document_csp('AbC123xyz_-9876')

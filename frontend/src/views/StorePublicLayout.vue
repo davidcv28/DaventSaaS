@@ -217,7 +217,7 @@ function onPatternAccount() {
 }
 function onLayoutMessage(e) {
   if (e.data?.type !== 'davent:layout') return
-  if (e.origin !== window.location.origin && e.origin !== parentOrigin) return
+  if (!studioAllowedOrigins.has(e.origin)) return
   layoutOverride.value = e.data.layout || null
 }
 // Modo Studio (?studio=1, iframe de la shell): consume el protocolo del
@@ -239,14 +239,25 @@ const studioUpdateSeen = ref(false) // llegó el primer UPDATE del host
 // meta del patrón GUARDADO — mostrarla antes flasheaba el diseño viejo.
 const patternMetaBusy = ref(false)
 const patternWaiting = computed(() => studioMode.value && (!studioUpdateSeen.value || patternMetaBusy.value))
-// En un iframe el referrer es el document del host: se acepta como origen
-// válido además del propio (el update llega del Studio que lo embebe).
-const parentOrigin = window.parent !== window && document.referrer
-  ? new URL(document.referrer).origin
-  : window.location.origin
+// Orígenes habilitados para el protocolo Studio (?studio=1): el propio
+// origen y la app DAVENT que embebe la vista previa. El referrer NO es
+// fallback válido — cualquier sitio que embeba la página con ?studio=1 se
+// declaraba "padre" y podía inyectar theme/layout/custom (videos, fondos
+// con url()). Solo orígenes de la plataforma pueden hablarle al iframe.
+const studioAllowedOrigins = (() => {
+  const allowed = new Set([window.location.origin])
+  try { allowed.add(new URL(env.appUrl).origin) } catch { /* appUrl inválida en dev */ }
+  const pd = String(env.platformDomain || '').toLowerCase()
+  if (pd && !pd.includes('localhost')) {
+    for (const sub of ['', 'www', 'app', 'api', 'admin', 'panel']) {
+      allowed.add(`https://${sub ? `${sub}.` : ''}${pd}`)
+    }
+  }
+  return allowed
+})()
 function onStudioMessage(e) {
   if (!studioMode.value || !isStudioMessage(e.data)) return
-  if (e.origin !== window.location.origin && e.origin !== parentOrigin) return
+  if (!studioAllowedOrigins.has(e.origin)) return
   const d = e.data
   if (d.type === STUDIO_MSG.UPDATE) {
     studioUpdateSeen.value = true
@@ -1099,7 +1110,11 @@ onMounted(async () => {
         : { path: to.path, query: { ...to.query, ...keep }, hash: to.hash }
     ))
     if (studioMode.value && window.parent !== window) {
-      window.parent.postMessage(studioReady(), parentOrigin)
+      //El padre real es uno de los orígenes de la plataforma: se postea a
+      //todos los habilitados y solo el que embebe la página lo recibe.
+      for (const origin of studioAllowedOrigins) {
+        window.parent.postMessage(studioReady(), origin)
+      }
     }
   }
   if (studioMode.value) {

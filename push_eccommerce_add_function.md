@@ -132,3 +132,34 @@ dueño, dashboard).
   `!important` + tokens, `.sp-top-links` de `mercado` sobre masthead amarillo.
 - QA final: 26 diseños × 4 páginas × 3 anchos → 0 overflow, 0 contraste real,
   0 errores de consola en corridas limpias.
+
+## Auditoría de seguridad (post-diseño, multi-agente)
+
+Auditoría por tracks sobre: documento/CSP de patrones, API pública + caché +
+throttle, auth/panel de cliente (tokens, IDOR) y frontend de tienda
+(XSS, postMessage, URLs). Hallazgos remediados:
+
+- `pattern_document.py` / `pattern_preview.py`: `sanitize_markup` corregido
+  (salida `href=="#"` malformada) y blindado contra breakout de `</style>`
+  desde CSS y meta refresh por entidades; CSP por nonce por respuesta.
+- `pattern_bridge.js`: validación de origen/recurso en mensajes del puente.
+- `stores/views/viewset.py`: bypass de caché en `?product=` y mismatch del
+  parámetro `q`; `stores/services/services.py`: deduplicación de visitas.
+- `customers/views/auth_views.py`: throttle resiliente a fallos de caché.
+- `StorePublicLayout.vue`: protocolo Studio (`davent:layout`,
+  `davent:studio-*`) ahora exige origen en allowlist explícita de la
+  plataforma — el `document.referrer` ya no confiere confianza (cualquier
+  sitio que embeba `?studio=1` podía inyectar theme/layout/custom).
+- `StoreReceiptView.vue`: `invoice_ref` solo se enlaza hacia hosts de
+  confianza (R2, AFIP, plataforma); URLs arbitrarias se muestran como texto.
+- `PaymentInstructions.vue`: redirect de checkout MP revalidado contra
+  allowlist de hosts oficiales (mercadopago/mercadolibre/mpago.la, https).
+- `BlkVideo.vue`: embeds de video revalidados por allowlist de hosts
+  oficiales (los campos `custom` del Studio bypasean la normalización).
+- `main.js`: Sentry `beforeSend`/`beforeSendTransaction` redactan
+  `token`/`uid`/`preview`/`next` y el segmento `/pedido/<token>/`.
+- `vercel.json`: headers de seguridad — CSP `frame-ancestors` (paridad con
+  el deploy Django), `X-Frame-Options`, `nosniff`, `Referrer-Policy`.
+
+Tests: `StoreApp.domains.design.tests` + regresiones de sanitización
+(7 tests OK); suite de dominios 62 tests OK; `vite build` OK.

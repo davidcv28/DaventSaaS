@@ -24,6 +24,7 @@ from rest_framework.views import APIView
 from rest_framework_simplejwt.exceptions import InvalidToken, TokenError
 
 from DaventProject.middleware import client_ip as _client_ip
+from DaventProject.throttling import _ResilientThrottleMixin
 from StoreApp.domains.customers.authentication import (
     CustomerJWTAuthentication,
     IsCustomer,
@@ -162,7 +163,10 @@ def _session_response(request, customer, is_new = None):
 # si no por IP — NO se usa AnonRateThrottle porque saltaría la cuota a
 # un comprador autenticado que golpee estos endpoints.
 #=====================================
-class CustomerRateThrottle(SimpleRateThrottle):
+class CustomerRateThrottle(_ResilientThrottleMixin, SimpleRateThrottle):
+    #Fail-open si el cache cae (misma política que el resto de throttles):
+    #sin Redis estos endpoints devolvían 500 y la auth de compradores
+    #quedaba caída por una falla de infraestructura ajena.
     scope   =   'user'
     def get_cache_key(self, request, view):
         customer    =   getattr(request, 'customer', None)

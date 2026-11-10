@@ -33,6 +33,19 @@ async function copy(text, key) {
   } catch { /* clipboard no disponible */ }
 }
 
+// La URL de checkout viene del backend (preferencia de MP), pero se
+// revalida acá: solo hosts oficiales de Mercado Pago pueden recibir el
+// redirect — defensa en profundidad ante un upstream comprometido.
+const MP_HOST_RE = /(^|\.)(mercadopago|mercadolibre)\.[a-z.]+$|(^|\.)mpago\.la$/
+function isMpCheckoutUrl(url) {
+  try {
+    const u = new URL(url)
+    return u.protocol === 'https:' && MP_HOST_RE.test(u.hostname.toLowerCase())
+  } catch {
+    return false
+  }
+}
+
 async function payMp() {
   if (!props.orderToken || paying.value) return
   paying.value = true
@@ -40,7 +53,8 @@ async function payMp() {
   try {
     const data = await orderPublicApi.payMp(props.slug, props.orderToken)
     const url = data?.checkout_url || data?.init_point || data?.sandbox_init_point
-    if (url) window.location.assign(url)
+    if (url && isMpCheckoutUrl(url)) window.location.assign(url)
+    else if (url) payError.value = 'Enlace de pago no válido.'
     else payError.value = 'No pudimos iniciar el pago. Intentá de nuevo.'
   } catch (err) {
     payError.value = extractApiError(err).nonField || 'No pudimos iniciar el pago con Mercado Pago.'

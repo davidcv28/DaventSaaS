@@ -11,13 +11,26 @@ const props = defineProps({ block: { type: Object, default: null } })
 const ctx = inject('storePage')
 const { custom } = ctx
 
+// Solo embeds oficiales de las redes soportadas: los campos `custom` del
+// Studio bypasean la normalización del backend, así que el host se
+// revalida acá antes de montarlo en un iframe (phishing/embed arbitrario).
+const EMBED_HOST_RE = /(^|\.)(youtube-nocookie\.com|youtube\.com|youtu\.be|vimeo\.com|tiktok\.com|instagram\.com|facebook\.com|fb\.watch|twitch\.tv)$/
+function safeEmbedUrl(url) {
+  try {
+    const u = new URL(String(url || '').trim())
+    return u.protocol === 'https:' && EMBED_HOST_RE.test(u.hostname.toLowerCase()) ? u.href : ''
+  } catch {
+    return ''
+  }
+}
+
 const videos = computed(() => {
-  const list = Array.isArray(custom.value.videos) ? custom.value.videos.filter((u) => String(u || '').trim()) : []
+  const list = Array.isArray(custom.value.videos) ? custom.value.videos.map(safeEmbedUrl).filter(Boolean) : []
   if (list.length) return list
-  const legacy = (custom.value.video_url || '').trim()
+  const legacy = safeEmbedUrl(custom.value.video_url)
   return legacy ? [legacy] : []
 })
-const liveUrl = computed(() => (custom.value.live_stream_url || '').trim())
+const liveUrl = computed(() => safeEmbedUrl(custom.value.live_stream_url))
 const show = computed(() => custom.value.show_video !== false && (videos.value.length > 0 || Boolean(liveUrl.value)))
 const videoTitle = computed(() => props.block?.props?.title?.trim() || custom.value.video_title?.trim() || 'Mirá nuestro video')
 
