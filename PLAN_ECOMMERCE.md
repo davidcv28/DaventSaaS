@@ -1,6 +1,8 @@
 # PLAN — E-commerce + seguimiento de pedidos en DAVENT
 
-Fecha: 09/11/2026. Estado: propuesta.
+Fecha: 09/11/2026. Estado: **implementado en `ECCOMMERCE-ADD`** (Olas 0-5
+completas — backend + frontend + tests; pendiente de revisión legal
+humana antes de habilitar ventas reales).
 
 > Esto es un roadmap técnico-legal, **no asesoría legal**. Los textos de
 > Términos/Privacidad y la config fiscal deben revisarlos un abogado y un
@@ -210,6 +212,44 @@ factura como servicio aparte (el dominio `invoices` ya existe).
 - **IIBB / percepciones**: revisar con contador si alguna provincia
   designa plataformas como agentes — hoy no aplica porque DAVENT no
   toca la plata.
+
+## Estado de implementación (rama `ECCOMMERCE-ADD`)
+
+- **FASE 0 (legal)**: implementada — `legalpages` (páginas por tienda con
+  datos fiscales interpolados, defaults sin persistir, botón de
+  arrepentimiento con captcha+honeypot+throttle), leyenda de venta en
+  checkout, `ecommerce_enabled` como toggle del dueño. Pendiente solo la
+  revisión de un abogado/contador de los textos antes de producción.
+- **FASE 1 (orders)**: implementada — `orders` + `cart` + `customers`
+  (JWT propio, PII cifrada, Google login BYO), state machine con
+  `select_for_update` + idempotencia, stock al pagar, tracking público
+  por token de alta entropía, comprobante interno no fiscal, avisos
+  Celery por kind.
+- **FASE 2 (MP por tienda)**: implementada — OAuth Connect del vendedor,
+  webhook HMAC por secreto propio, preference con credenciales del
+  dueño, refunds por API del vendedor + `mark_refunded`, métodos manuales
+  (transferencia/WhatsApp/efectivo) con instrucciones por tienda.
+- **FASE 3 (fiscal)**: implementada — `StoreFiscalProfile` (CUIT con
+  dígito verificador, condición IVA, domicilio), gate de ventas sin
+  perfil completo, `invoice_ref`/`invoice_file` en el pedido, footer con
+  datos fiscales.
+- **FASE 4 (integraciones)**: parcial — devoluciones con reembolso MP
+  por API del vendedor implementadas (`refunds.py`); envíos con
+  cotización/tracknumber y facturación automática quedan post-MVP.
+- **Extras entregados**: `memberships` (planes del dueño, beneficios,
+  enforcement de `is_exclusive`), `support` (hilos comprador↔dueño),
+  `storeadmin` (panel dueño: pedidos, métricas, clientes/LTV), storage
+  BYO R2 por tienda, CTAs de compra dentro de los documentos de patrón,
+  paneles del dashboard (pedidos, ventas, clientes, soporte, cobros,
+  legal, suscripciones).
+- **Security audit (skill Cloudflare, run-1)**: perfil `standard`,
+  scope `main...ECCOMMERCE-ADD`, 18 unidades de cobertura, 15 records
+  finales — 11 confirmados (todos corregidos en `7d53e880`/`5c249b52`),
+  2 rejected post-fix (captcha atómico, mails a email no verificado),
+  2 needs_validation (comportamiento del proveedor MP: duplicados de
+  refund y payload `approved` sin monto — planes de validación en
+  `NEEDS-VALIDATION.md` del run). Artefactos en
+  `.devin/skills/security-audit` run output `run-1` (fuera del repo).
 
 ## Checklist "libre de problemas fiscales hoy"
 
