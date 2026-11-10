@@ -34,7 +34,11 @@ const props = defineProps({
   //diseño: en la web publicada lo hornea el backend en el documento;
   //en la vista previa del Studio viaja por postMessage porque el iframe
   //es de origen opaco. Vacío = sin reglas del Studio.
-  studioCss: { type: String, default: '' }
+  studioCss: { type: String, default: '' },
+  //Sesión del comprador: el documento es origen opaco (no lee cookies) —
+  //el host se la empuja por `davent:ds-account-state` y el botón del
+  //puente cambia de "Ingresar" a "Mi cuenta".
+  account: { type: Boolean, default: false }
 })
 
 const frame = ref(null)
@@ -76,7 +80,7 @@ const src = computed(() => {
   return `/api/stores/public/${encodeURIComponent(props.slug)}/pattern/document/?${params}`
 })
 
-const emit = defineEmits(['navigate', 'toggle-theme', 'load', 'buy'])
+const emit = defineEmits(['navigate', 'toggle-theme', 'load', 'buy', 'account'])
 
 //El iframe va sin `allow-same-origin` (origen opaco): el JS del diseño no
 //puede tocar el DOM ni las cookies de la app. Los datos que necesita de la
@@ -171,6 +175,12 @@ function onMessage(e) {
     if (/^\d{1,10}$/.test(id)) emit('buy', { id: Number(id) })
     return
   }
+  if (e.data?.type === 'davent:ds-account') {
+    /* Entrada "Mi cuenta" inyectada por el puente: el host decide entre
+     * abrir el modal de auth del comprador o navegar a /cuenta. */
+    emit('account')
+    return
+  }
   if (e.data?.type === 'davent:ds-route') {
     const route = String(e.data.route || '')
     if (['home', 'catalog', 'services'].includes(route)) {
@@ -202,12 +212,17 @@ function syncStudioCss() {
   post('davent:ds-studio-css', { css: props.studioCss || '' })
 }
 
+function syncAccount() {
+  post('davent:ds-account-state', { authed: props.account })
+}
+
 function onLoad() {
   height.value = 0
   emit('load')
   post('davent:ds-surface', { surface: props.surface })
   syncTheme()
   syncStudioCss()
+  syncAccount()
   postFrame()
 }
 
@@ -239,6 +254,9 @@ watch(() => props.surface, () => {
 //Ediciones del Studio en vivo: el CSS viaja entero (es barato — son unas
 //pocas reglas) y el puente lo reemplaza en un <style> dedicado.
 watch(() => props.studioCss, syncStudioCss)
+//Login/logout del comprador con el documento ya montado: el rótulo del
+//botón se actualiza sin recargar el iframe.
+watch(() => props.account, syncAccount)
 
 if (typeof window !== 'undefined') {
   window.addEventListener('message', onMessage)

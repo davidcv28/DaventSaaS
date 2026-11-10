@@ -203,6 +203,17 @@ function onPatternBuy({ id } = {}) {
   if (!ordersEnabled.value || !id) return
   cartStore.addToCart(id, 1)
 }
+// Entrada "Mi cuenta" del documento del patrón (postMessage ds-account):
+// con sesión de comprador va directo a /cuenta; sin sesión abre el modal
+// de auth con la cuenta como ruta pendiente (onCustomerAuthed navega al
+// completarse el login/registro/Google).
+function onPatternAccount() {
+  if (customerStore.isAuthenticated) {
+    router.push(accountTo.value)
+    return
+  }
+  cartStore.openAuth('login', { route: accountTo.value })
+}
 function onLayoutMessage(e) {
   if (e.data?.type !== 'davent:layout') return
   if (e.origin !== window.location.origin && e.origin !== parentOrigin) return
@@ -1112,8 +1123,10 @@ onBeforeUnmount(() => {
       :product="patternSurface === 'product' ? route.params.productId : ''"
       :studio-css="patternStudioCssText"
       :title="shopName"
+      :account="customerStore.isAuthenticated"
       @navigate="onPatternNavigate"
       @buy="onPatternBuy"
+      @account="onPatternAccount"
       @toggle-theme="togglePageTheme"
       @load="patternFrameReady = true"
     />

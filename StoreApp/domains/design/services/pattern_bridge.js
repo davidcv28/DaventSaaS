@@ -309,6 +309,12 @@
       send()
       setTimeout(send, 120)
     }
+    /* Sesión del comprador la empuja el host: solo cambia el rótulo del
+     * botón ("Ingresar" ↔ "Mi cuenta"); la acción siempre es la misma. */
+    if (d.type === 'davent:ds-account-state') {
+      accountAuthed = d.authed === true
+      paintAccount()
+    }
     if (d.type === 'davent:ds-measure') send()
     if (d.type === 'davent:ds-frame') {
       frameBox = { top: Number(d.top) || 0, bottom: Number(d.bottom) || 0, vh: Number(d.vh) || 0 }
@@ -1590,7 +1596,23 @@
     '.dsx-buy:active{transform:translateY(1px)}' +
     '.dsx-buy[disabled]{opacity:.6;cursor:default;transform:none}' +
     '.dsx-buy.is-added{background:var(--ds-success,#0f9d58)}' +
-    '[data-surface="product"] .dsx-buy{width:auto;min-width:200px;margin:0 0 12px}'
+    '[data-surface="product"] .dsx-buy{width:auto;min-width:200px;margin:0 0 12px}' +
+    /* Entrada de cuenta del comprador: píldora en el header/nav del
+     * diseño o, sin slot, píldora flotante abajo a la izquierda (el chat
+     * ocupa la derecha). El anclaje al marco lo hace el pin de barras
+     * (data-ds-pin="bottom"), igual que la tab bar de cada diseño. */
+    '.dsx-account{display:inline-flex;align-items:center;gap:7px;padding:8px 14px;margin-inline-start:auto;' +
+    'border:1px solid currentColor;border-radius:999px;background:transparent;color:inherit;' +
+    'font:inherit;font-size:12.5px;font-weight:600;letter-spacing:.04em;cursor:pointer;' +
+    'opacity:.82;transition:opacity .18s,transform .18s,background .18s}' +
+    '.dsx-account:hover{opacity:1;transform:translateY(-1px);' +
+    'background:color-mix(in srgb,currentColor 10%,transparent)}' +
+    '.dsx-account:focus-visible{outline:2px solid currentColor;outline-offset:2px}' +
+    '.dsx-account svg{flex:none}' +
+    '.dsx-account--fab{position:fixed;left:16px;bottom:16px;z-index:72;margin:0;opacity:1;' +
+    'background:var(--surface,var(--ds-surface,#fff));color:var(--ink,var(--ds-text,#1a1a1a));' +
+    'border:1px solid var(--line,var(--ds-border,#e5e7eb));box-shadow:0 10px 28px rgba(0,0,0,.22)}' +
+    '@media (prefers-reduced-motion:reduce){.dsx-account{transition:none}.dsx-account:hover{transform:none}}'
   function dsBuyButton(pid, slot) {
     var b = document.createElement('button')
     b.type = 'button'
@@ -1634,6 +1656,56 @@
     }
     if (slot && slot.parentNode) slot.parentNode.insertBefore(dsBuyButton(pid, 'pdp'), slot)
   }
+  /* Entrada "Mi cuenta" / "Ingresar": el documento no conoce la sesión
+   * del comprador (origen opaco, sin cookies ni storage del host) — el
+   * host la informa por `davent:ds-account-state` y el clic viaja por
+   * `davent:ds-account`; el host abre el modal de auth o navega a
+   * /cuenta. Se monta en el header/nav del diseño cuando hay slot
+   * ([data-ds-account-slot] explícito, o el masthead como el toggle de
+   * tema); si no, como píldora fija abajo-izquierda que el pin de barras
+   * ancla al marco (bottomChromePx además levanta el chat por encima). */
+  var accountBtn = null
+  var accountAuthed = false
+  var ACCOUNT_ICON = '<svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="8" r="3.4"/><path d="M4.8 20.2a7.2 7.2 0 0 1 14.4 0"/></svg>'
+  function paintAccount() {
+    if (!accountBtn) return
+    var label = accountAuthed ? 'Mi cuenta' : 'Ingresar'
+    var span = accountBtn.querySelector('[data-dsx-account-label]')
+    if (span) span.textContent = label
+    accountBtn.setAttribute('aria-label', label)
+    accountBtn.setAttribute('title', label)
+  }
+  function mountAccount() {
+    if (accountBtn || document.querySelector('.dsx-account')) return
+    var host =
+      document.querySelector('[data-ds-account-slot]') ||
+      document.querySelector('header.top .top-inner') ||
+      document.querySelector('header.top .top-in') ||
+      document.querySelector('header.top') ||
+      document.querySelector('header')
+    accountBtn = document.createElement('button')
+    accountBtn.type = 'button'
+    accountBtn.className = 'dsx-account'
+    accountBtn.innerHTML = ACCOUNT_ICON + '<span data-dsx-account-label></span>'
+    accountBtn.addEventListener('click', function () {
+      parent.postMessage({ type: 'davent:ds-account' }, '*')
+    })
+    if (host) {
+      var ref = host.querySelector('.ds-theme-toggle')
+      if (ref) host.insertBefore(accountBtn, ref)
+      else host.appendChild(accountBtn)
+    } else {
+      accountBtn.classList.add('dsx-account--fab')
+      /* Anclaje declarado: collectFixed la clasifica 'bottom' y pinFixed
+       * la apoya sobre el borde visible del marco (el iframe va estirado
+       * y un fixed crudo quedaría al pie del documento entero). */
+      accountBtn.setAttribute('data-ds-pin', 'bottom')
+      document.body.appendChild(accountBtn)
+      resetFixed()
+      pinFixed()
+    }
+    paintAccount()
+  }
   function initCommerce() {
     if (root.getAttribute('data-ds-commerce') !== '1') return
     var st = document.createElement('style')
@@ -1641,6 +1713,7 @@
     document.head.appendChild(st)
     injectCardBuys()
     injectPdpBuy()
+    mountAccount()
     /* El catálogo reordena tarjetas (applyCatalog mueve nodos, no los
      * recrea) y el buscador puede filtrar — los botones inyectados viajan
      * con su tarjeta. Por si un diseño monta tarjetas por JS después,
