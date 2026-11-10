@@ -161,6 +161,7 @@ class Command(BaseCommand):
         for table in ('design_designpattern', 'design_designstyle'):
             cursor.execute(f'ALTER TABLE {table} ADD COLUMN IF NOT EXISTS categoria_id bigint')  # nosec B608 — identificadores constantes del módulo
         cursor.execute('ALTER TABLE design_designpattern ADD COLUMN IF NOT EXISTS dynamic boolean DEFAULT false')
+        cursor.execute("ALTER TABLE design_designpattern ADD COLUMN IF NOT EXISTS demo_slug varchar(90) NOT NULL DEFAULT ''")
         cursor.execute(
             "SELECT 1 FROM pg_constraint WHERE conname = 'design_designpattern_categoria_id_fk'"
         )
