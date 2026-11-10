@@ -7,6 +7,7 @@ from StoreApp.domains.memberships.views import (
     CustomerSubscriptionCardView,
     CustomerSubscriptionsView,
     MembershipCardPublicView,
+    PublicStorePlansView,
     StorePlanViewSet,
     StoreSubscriptionViewSet,
 )
@@ -29,6 +30,7 @@ COMPRADOR (customer JWT — request.customer):
 
 PÚBLICO:
 - /api/membership-cards/<slug>/<token>/  tarjeta digital por token.
+- /api/stores/public/<slug>/membership-plans/  planes activos + cobro.
 
 Nota: /api/customer/memberships/ la sirve el dominio customers (track
 A) — acá no se duplica.
@@ -48,4 +50,6 @@ urlpatterns = [
     path('customer/stores/<slug:store_slug>/exclusive-products/',    CustomerExclusiveProductsView.as_view(),         name = 'customer_exclusive_products'),
     #MEMBERSHIP CARD (público por token)
     path('membership-cards/<slug:store_slug>/<str:public_token>/',   MembershipCardPublicView.as_view(),             name = 'membership_card_public'),
+    #PLANES DE LA TIENDA (público — página Suscripciones)
+    path('stores/public/<slug:slug>/membership-plans/',              PublicStorePlansView.as_view(),                  name = 'public_membership_plans'),
 ] + router.urls

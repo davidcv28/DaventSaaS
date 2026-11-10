@@ -9,3 +9,4 @@ from .owner import (
     StorePlanViewSet,
     StoreSubscriptionViewSet,
 )
+from .public import PublicStorePlansView
