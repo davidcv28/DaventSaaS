@@ -78,6 +78,10 @@ ProductFields               =   {
     'category'              :   {'required': False, 'allow_null': True},
     'brand'                 :   {'required': False, 'allow_null': True},
     'is_active'             :   {'required': False},
+    'is_exclusive'          :   {
+        'label'             :   'Solo para miembros',
+        'required'          :   False,
+    },
     'features'              :   {'required': False},
 }
 #=========================================

@@ -660,8 +660,11 @@ class StoreViewSet(StoreBaseViewSet):
         product_id          =   (request.query_params.get('product') or '').strip()
         if product_id.isdigit():
             from StoreApp.domains.catalog.models import Product
+            #is_exclusive queda fuera del documento público (este render
+            #es anónimo): un id de exclusivo rinde con contexto vacío,
+            #igual que un id inexistente o de otra tienda.
             product         =   Product.objects.filter(
-                pk = int(product_id), store = store, is_active = True,
+                pk = int(product_id), store = store, is_active = True, is_exclusive = False,
             ).select_related('category', 'brand').first()
         from StoreApp.domains.design.services import render_store_pattern
         if preview:
@@ -894,7 +897,12 @@ class StoreViewSet(StoreBaseViewSet):
             effective_pricing_of,
             running_discounts_of,
         )
-        products        =   Product.objects.filter(store = store, is_active = True).select_related('category', 'brand')
+        #Los productos is_exclusive (memberships) NO salen en la vidriera
+        #anónima: esta action no autentica customers (PUBLIC_ACTIONS) —
+        #los miembros los piden por /api/customer/stores/<slug>/
+        #exclusive-products/ y para el resto ni siquiera se sabe que
+        #existen (tampoco cuentan en facetas ni products_count).
+        products        =   Product.objects.filter(store = store, is_active = True, is_exclusive = False).select_related('category', 'brand')
         #La valoración solo se anota si el dueño habilitó opiniones y el
         #plan las incluye (has_product_comments, premium): score 0-5 =
         #5 × likes/votos (is_positive binario — el promedio sale del ratio
@@ -1010,8 +1018,8 @@ class StoreViewSet(StoreBaseViewSet):
         #Los conteos de cada taxonomía viajan en products_count (solo
         #productos activos, como la lista que se filtra).
         from django.db.models import Count, Q
-        categories      =   store.categories.annotate(products_count = Count('products', filter = Q(products__is_active = True)))
-        brands          =   store.brands.annotate(products_count = Count('products', filter = Q(products__is_active = True)))
+        categories      =   store.categories.annotate(products_count = Count('products', filter = Q(products__is_active = True, products__is_exclusive = False)))
+        brands          =   store.brands.annotate(products_count = Count('products', filter = Q(products__is_active = True, products__is_exclusive = False)))
         #Orden de los grupos de facetas: con categoría elegida, los atributos
         #que esa categoría declara en su feature_schema van primero y en ese
         #mismo orden (la plantilla del dueño manda); el resto por frecuencia.
@@ -1130,7 +1138,10 @@ class StoreViewSet(StoreBaseViewSet):
 
     def _review_product(self, store, product_id):
         from StoreApp.domains.catalog.models import Product
-        return get_object_or_404(Product, pk = product_id, store = store, is_active = True)
+        #Los exclusivos no tienen reviews públicas: el endpoint es
+        #anónimo (no hay customer auth) y un 404 no revela que el
+        #producto existe — mismo criterio que el catálogo.
+        return get_object_or_404(Product, pk = product_id, store = store, is_active = True, is_exclusive = False)
 
     @action(detail = False, methods = ['get'], url_path = r'public/(?P<slug>[a-z0-9-]+)/reviews/captcha', throttle_classes = [PublicReadThrottle])
     def review_captcha(self, request, slug = None):
