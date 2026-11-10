@@ -77,11 +77,11 @@ html[data-ds-theme="dark"]{
   --ink-2:color-mix(in srgb,var(--ink) 82%,var(--paper));
   --muted:#9A8FA8;
   --line:#332B40;
-  --accent:color-mix(in srgb,var(--ds-accent,#C9A6F0) 82%,#fff);
+  --accent:color-mix(in srgb,var(--ds-accent,#C9A6F0) 78%,#fff);
   --accent-deep:color-mix(in srgb,var(--accent) 80%,#000);
   --accent-soft:color-mix(in srgb,var(--accent) 14%,var(--paper));
   --accent-text:color-mix(in srgb,var(--accent) 86%,var(--ink));
-  --on-accent:#1B1426;
+  --on-accent:#0E0A18;
   --rose:#D99AA4;
   --rose-soft:color-mix(in srgb,var(--rose) 14%,var(--paper));
   --ok:#6FBF8F;
@@ -283,9 +283,11 @@ html[data-ds-surface="services"] .nav a[data-ds-route="services"]::after{transfo
 }
 
 /* ---------- Menú móvil: sheet inferior (modelo dashboard) ---------- */
-.m-scrim{position:fixed;inset:0;z-index:94;background:rgba(20,14,30,.5);opacity:0;pointer-events:none;transition:opacity .25s}
+/*El scrim cubre solo el marco visible: el iframe va estirado y --fr-h
+  es el alto de la ventana que publica el script con davent:ds-frame.*/
+.m-scrim{position:fixed;left:0;right:0;top:0;z-index:94;height:var(--fr-h,100vh);background:rgba(20,14,30,.5);opacity:0;pointer-events:none;transition:opacity .25s}
 .m-sheet{
-  position:fixed;left:0;right:0;bottom:0;z-index:95;max-height:min(78dvh,620px);
+  position:fixed;left:0;right:0;bottom:0;z-index:95;max-height:min(calc(var(--fr-h,100vh) * .86),640px);
   display:flex;flex-direction:column;background:var(--paper);border-top:1px solid var(--line);
   border-radius:var(--r) var(--r) 0 0;box-shadow:0 -18px 50px -20px rgba(20,14,30,.5);
   transform:translateY(102%);transition:transform .35s var(--ease);overflow:hidden;
@@ -792,8 +794,8 @@ a.contact-row:hover{color:var(--accent-text);padding-left:8px}
 }
 .f-list .f-cat em{font:500 9px/1 var(--mono);color:var(--muted);font-style:normal}
 .f-list .f-cat:hover{background:var(--accent-soft)}
-.f-list .f-cat.is-active,.f-list .f-cat[aria-pressed="true"]{color:var(--accent-text);background:var(--accent-soft);font-weight:500}
-.f-list .f-cat.is-active em,.f-list .f-cat[aria-pressed="true"] em{color:var(--accent-text)}
+.f-list .f-cat.is-active,.f-list .f-cat[aria-pressed="true"]{color:color-mix(in srgb,var(--accent-text) 86%,var(--ink));background:var(--accent-soft);font-weight:500}
+.f-list .f-cat.is-active em,.f-list .f-cat[aria-pressed="true"] em{color:color-mix(in srgb,var(--accent-text) 86%,var(--ink))}
 .f-apply,.f-clear,.f-done{
   padding:10px 14px;border:1px solid var(--line);background:transparent;border-radius:var(--r);
   font:500 9.5px/1 var(--mono);letter-spacing:.16em;text-transform:uppercase;cursor:pointer;
@@ -926,9 +928,11 @@ a.contact-row:hover{color:var(--accent-text);padding-left:8px}
 .pdp-price s{font:400 14px/1 var(--mono);color:var(--muted)}
 .pdp-score{margin-top:8px;font-size:12px;color:var(--muted)}
 .pdp-score b{color:var(--accent-text);font:500 12px/1 var(--mono)}
+.pdp-score:has(b:empty){display:none}
 .pdp-desc{margin-top:18px;max-width:54ch;font-size:14.5px;line-height:1.7;color:var(--ink-2)}
 .pdp-buy{display:flex;flex-wrap:wrap;gap:10px;margin-top:26px}
 .pdp-specs{width:100%;border-collapse:collapse;margin-top:28px;font-size:13px}
+.pdp-specs:not(:has(tr)){display:none}
 .pdp-specs tr{border-bottom:1px dashed var(--line)}
 .pdp-specs td{padding:11px 4px;vertical-align:top}
 .pdp-specs td:first-child{width:38%;font:500 9px/1.5 var(--mono);letter-spacing:.14em;text-transform:uppercase;color:var(--muted)}
@@ -1050,12 +1054,15 @@ a.contact-row:hover{color:var(--accent-text);padding-left:8px}
   font:500 11px/1 var(--mono);letter-spacing:.1em;color:var(--accent-text);
 }
 .ds-services-list{counter-reset:svc}
-.ds-service-name{font:500 17px/1.25 var(--sans);letter-spacing:-.005em}
-.ds-service-desc{display:block;margin-top:5px;font-size:13px;color:var(--muted);line-height:1.55}
+.ds-service-name{grid-column:2;grid-row:1;font:500 17px/1.25 var(--sans);letter-spacing:-.005em}
+.ds-service-desc{grid-column:2;grid-row:2;display:block;margin-top:5px;font-size:13px;color:var(--muted);line-height:1.55}
+/*Precio/duración del servicio: el fragmento .ds-service los trae en
+  data-attrs y el script los materializa en .ds-service-meta (col 3).*/
+.ds-service-meta{grid-column:3;grid-row:1/span 2;align-self:center;justify-self:end;display:grid;gap:5px;justify-items:end;text-align:right}
 .ds-service-price{
   font:500 12px/1 var(--mono);letter-spacing:.08em;color:var(--accent-text);white-space:nowrap;
 }
-.ds-service-price::before{content:""}
+.ds-service-dur{font:500 9px/1 var(--mono);letter-spacing:.14em;text-transform:uppercase;color:var(--muted)}
 .svc-body{padding-top:clamp(28px,3.5vw,44px)}
 .svc-empty{
   display:none;padding:34px 24px;text-align:center;border:1px dashed var(--line);border-radius:var(--r);
@@ -1124,12 +1131,22 @@ a.contact-row:hover{color:var(--accent-text);padding-left:8px}
   .hero-grid,.atelier-grid,.contact-grid,.pdp-grid,.cta-inner,.ds-reviews{grid-template-columns:1fr}
   .hero-media{aspect-ratio:4/3;max-height:70vh}
   .cat-layout{grid-template-columns:1fr}
+  /*Hoja de filtros: alto acotado al marco visible (--fr-h lo publica el
+    script; las unidades vh miden el documento estirado, no la ventana).
+    El puente (pattern_bridge) maneja .is-open/filters-open, el scrim
+    data-ds-filters-scrim, Escape, foco y el scroll-lock del host.*/
   .cat-aside{
-    position:fixed;inset:auto 0 0 0;z-index:96;max-height:76vh;border-radius:var(--r) var(--r) 0 0;
+    position:fixed;left:0;right:0;bottom:0;top:auto;z-index:96;
+    max-height:min(calc(var(--fr-h,100vh) * .9),720px);
+    border-radius:var(--r) var(--r) 0 0;
     transform:translateY(102%);transition:transform .35s var(--ease);box-shadow:0 -20px 50px -20px rgba(20,14,30,.5);
   }
-  body.cat-open .cat-aside{transform:none}
-  body.cat-open .cat-scrim{display:block;position:fixed;inset:0;z-index:95;background:rgba(20,14,30,.45)}
+  .cat-aside.is-open{transform:none}
+  .cat-scrim{
+    display:block;position:fixed;left:0;right:0;top:0;height:var(--fr-h,100vh);z-index:95;
+    background:rgba(20,14,30,.45);opacity:0;pointer-events:none;transition:opacity .25s;
+  }
+  body.filters-open .cat-scrim{opacity:1;pointer-events:auto}
   .cat-aside-close{display:grid;place-items:center}
   .cat-aside-foot{position:sticky;bottom:0;background:var(--surface);padding-top:10px}
   .cat-filters-toggle{display:inline-flex}
@@ -1151,7 +1168,7 @@ a.contact-row:hover{color:var(--accent-text);padding-left:8px}
   .grid-products[data-ds-view-mode="list"] .ds-product-price{justify-self:start}
   .work-head{flex-direction:column;align-items:flex-start;gap:8px}
   .ds-service{grid-template-columns:44px minmax(0,1fr)}
-  .ds-service-price{grid-column:2;justify-self:start}
+  .ds-service-meta{grid-column:2;grid-row:3;justify-self:start;justify-items:start;text-align:left;display:flex;flex-direction:row;align-items:center;gap:12px;margin-top:8px}
   .ds-contact-row,.ds-rev-row{grid-template-columns:1fr}
   .foot-grid{grid-template-columns:1fr 1fr}
 }
@@ -1285,7 +1302,7 @@ a.contact-row:hover{color:var(--accent-text);padding-left:8px}
 </header>
 
 <!-- Tab bar inferior (modelo dashboard): destinos principales + "Más" -->
-<nav class="tabbar" aria-label="Secciones">
+<nav class="tabbar" aria-label="Secciones" data-ds-pin="bottom">
   <span class="tab-ind" aria-hidden="true"></span>
   <a class="tab" data-tab="home" href="#inicio" data-ds-route="home">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m4 11 8-7 8 7v9a1 1 0 0 1-1 1h-5v-6h-4v6H5a1 1 0 0 1-1-1Z"/></svg>
@@ -1306,7 +1323,7 @@ a.contact-row:hover{color:var(--accent-text);padding-left:8px}
 </nav>
 
 <div class="m-scrim" data-m-close aria-hidden="true"></div>
-<aside class="m-sheet" id="modista-sheet" role="dialog" aria-modal="true" aria-label="Todas las secciones">
+<aside class="m-sheet" id="modista-sheet" role="dialog" aria-modal="true" aria-label="Todas las secciones" data-ds-pin="bottom" aria-hidden="true" inert>
   <span class="sheet-grab" aria-hidden="true"></span>
   <div class="m-head">
     <span class="brand-mark">{{store_initial}}</span>
@@ -1425,7 +1442,7 @@ a.contact-row:hover{color:var(--accent-text);padding-left:8px}
       </div>
     </section>
 
-    <section class="sec atelier" id="taller" data-flag="about" data-hide-if-empty=".atelier-copy h3|.about-lead">
+    <section class="sec atelier" id="taller" data-flag="about" data-hide-if-empty=".atelier-title|.about-lead|.ds-stat">
       <div class="wrap atelier-grid">
         <div class="atelier-copy">
           <p class="eyebrow">El taller</p>
@@ -1573,7 +1590,7 @@ a.contact-row:hover{color:var(--accent-text);padding-left:8px}
         <span class="cat-filters-badge" data-ds-filter-count hidden></span>
       </button>
       <div class="cat-layout">
-        <aside class="cat-aside" id="modista-filters" data-ds-filters-panel aria-label="Filtros del catálogo">
+        <aside class="cat-aside" id="modista-filters" data-ds-filters-panel data-ds-pin="bottom" aria-label="Filtros del catálogo">
           <div class="cat-aside-head">
             <strong>Filtros</strong>
             <button class="cat-aside-close" type="button" data-ds-filters-close aria-label="Cerrar filtros">
@@ -1607,7 +1624,7 @@ a.contact-row:hover{color:var(--accent-text);padding-left:8px}
             <button class="f-done" type="button" data-ds-filters-close>Aplicar</button>
           </div>
         </aside>
-        <div class="cat-scrim" data-ds-filters-close aria-hidden="true"></div>
+        <div class="cat-scrim" data-ds-filters-scrim aria-hidden="true"></div>
         <div class="cat-results">
           <div class="cat-bar">
             <form class="cat-search" data-ds-search role="search">
@@ -1780,6 +1797,10 @@ a.contact-row:hover{color:var(--accent-text);padding-left:8px}
 
   function qsa(sel, ctx) { return [].slice.call((ctx || document).querySelectorAll(sel)) }
 
+  //Imgs sin fuente (logo/portada/producto opcionales): no emitir request
+  //al documento y liberar el espacio para el fallback tipográfico.
+  qsa('img[src=""]').forEach(function (img) { img.remove() })
+
   function measure() {
     requestAnimationFrame(function () {
       if (window.parent === window) return
@@ -1828,13 +1849,31 @@ a.contact-row:hover{color:var(--accent-text);padding-left:8px}
     return 'home'
   }
 
-  /* ---------- Menú móvil (sheet inferior) ---------- */
+  /* ---------- Menú móvil (sheet inferior) ----------
+     El puente (pattern_bridge) mide los fijos con data-ds-pin y el
+     scroll-lock lo da la clase m-lock en <html> + overflow:hidden. */
+  var sheet = document.getElementById('modista-sheet')
+  var menuOpener = document.querySelector('[data-m-open]')
+  var menuCloser = sheet ? sheet.querySelector('.m-close') : null
+  var menuTrigger = null
   function setMenu(open) {
+    var wasOpen = body.classList.contains('m-open')
     body.classList.toggle('m-open', open)
-    var btn = document.querySelector('[data-m-open]')
-    if (btn) btn.setAttribute('aria-expanded', open ? 'true' : 'false')
+    document.documentElement.classList.toggle('m-lock', open)
+    if (menuOpener) menuOpener.setAttribute('aria-expanded', open ? 'true' : 'false')
+    if (sheet) {
+      sheet.setAttribute('aria-hidden', open ? 'false' : 'true')
+      if ('inert' in sheet) sheet.inert = !open
+    }
     document.documentElement.style.overflow = open ? 'hidden' : ''
     setTab(open ? 'more' : currentTab())
+    if (open) {
+      menuTrigger = document.activeElement
+      if (menuCloser) menuCloser.focus()
+    } else if (wasOpen && menuTrigger) {
+      if (menuTrigger.focus) menuTrigger.focus()
+      menuTrigger = null
+    }
   }
   document.addEventListener('click', function (e) {
     var t = e.target
@@ -1843,28 +1882,53 @@ a.contact-row:hover{color:var(--accent-text);padding-left:8px}
     if (t.closest('[data-m-close]')) setMenu(false)
   })
   document.addEventListener('keydown', function (e) {
-    if (e.key === 'Escape') setMenu(false)
+    if (e.key === 'Escape') { setMenu(false); return }
+    if (e.key === 'Tab' && body.classList.contains('m-open') && sheet) {
+      var f = sheet.querySelectorAll('a[href],button:not([disabled])')
+      if (!f.length) return
+      var firstEl = f[0]
+      var lastEl = f[f.length - 1]
+      if (e.shiftKey && document.activeElement === firstEl) { e.preventDefault(); lastEl.focus() }
+      else if (!e.shiftKey && document.activeElement === lastEl) { e.preventDefault(); firstEl.focus() }
+    }
   })
   window.addEventListener('resize', function () {
-    if (window.innerWidth > 980) setMenu(false)
+    if (window.innerWidth > 980) {
+      setMenu(false)
+      /*La hoja de filtros queda fuera de su media query: cerrarla
+        despachando Escape (el puente escucha keydown en el panel).*/
+      var fpanel = document.querySelector('[data-ds-filters-panel]')
+      if (fpanel && fpanel.classList.contains('is-open')) {
+        fpanel.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true }))
+      }
+    }
     syncHead()
   })
 
-  /* ---------- Panel de filtros del catálogo (móvil) ---------- */
-  document.addEventListener('click', function (e) {
-    var t = e.target
-    if (!t || !t.closest) return
-    if (t.closest('[data-ds-filters-toggle]')) {
-      var open = body.classList.toggle('cat-open')
-      var tg = document.querySelector('[data-ds-filters-toggle]')
-      if (tg) tg.setAttribute('aria-expanded', open ? 'true' : 'false')
-      return
-    }
-    if (t.closest('[data-ds-filters-close]')) body.classList.remove('cat-open')
-  })
-  document.addEventListener('keydown', function (e) {
-    if (e.key === 'Escape') body.classList.remove('cat-open')
-  })
+  /* ---------- Servicios: precio/duración desde data-attrs ---------- */
+  function setupServices() {
+    qsa('.ds-service').forEach(function (li) {
+      if (li.querySelector('.ds-service-meta')) return
+      var price = li.getAttribute('data-price-label')
+      var dur = li.getAttribute('data-duration')
+      if (!price && !dur) return
+      var meta = document.createElement('span')
+      meta.className = 'ds-service-meta'
+      if (price) {
+        var p = document.createElement('b')
+        p.className = 'ds-service-price'
+        p.textContent = price
+        meta.appendChild(p)
+      }
+      if (dur) {
+        var d = document.createElement('b')
+        d.className = 'ds-service-dur'
+        d.textContent = dur
+        meta.appendChild(d)
+      }
+      li.appendChild(meta)
+    })
+  }
 
   /* ---------- Cintas en loop (pista duplicada al 50%) ---------- */
   function setupMarquee(track) {
@@ -1951,9 +2015,15 @@ a.contact-row:hover{color:var(--accent-text);padding-left:8px}
   }
 
   function paint() {
-    var vh = frame ? frame.vh : window.innerHeight
-    var top = frame ? Math.max(0, -frame.top) : (window.scrollY || 0)
     var docH = document.documentElement.scrollHeight || 1
+    var top = frame ? Math.max(0, -frame.top) : (window.scrollY || 0)
+    /*Alto realmente visible del marco (recortado al documento): las vh del
+      documento miden la página estirada entera, no la ventana del host.
+      Se publica como --fr-h para scrims y hojas (m-scrim, cat-scrim,
+      m-sheet, cat-aside).*/
+    var winVh = frame ? frame.vh : window.innerHeight
+    var vh = Math.max(1, Math.min(docH, top + winVh) - Math.min(top, docH))
+    document.documentElement.style.setProperty('--fr-h', Math.round(vh) + 'px')
     var max = Math.max(1, docH - vh)
     var p = Math.min(1, Math.max(0, top / max))
     if (head) head.classList.toggle('is-scrolled', top > 16)
@@ -1983,7 +2053,8 @@ a.contact-row:hover{color:var(--accent-text);padding-left:8px}
       return
     }
     if (d.type === 'davent:ds-surface') {
-      setTimeout(function () { hideEmpty(); setupTabs(); initReveal(); paint(); syncHead() }, 80)
+      setMenu(false)
+      setTimeout(function () { hideEmpty(); setupTabs(); setupServices(); initReveal(); paint(); syncHead() }, 80)
     }
   })
 
@@ -2003,8 +2074,10 @@ a.contact-row:hover{color:var(--accent-text);padding-left:8px}
   }
 
   /* ---------- Arranque ---------- */
+  setMenu(false)
   hideEmpty()
   setupTabs()
+  setupServices()
   initReveal()
   syncHead()
   if (document.fonts && document.fonts.ready) document.fonts.ready.then(syncHead)
