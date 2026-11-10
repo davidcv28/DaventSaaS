@@ -53,6 +53,11 @@ watch(() => props.demoUrl, (url) => { if (!url) view.value = 'live' })
 watch(() => props.demoSignal, (n, o) => { if (n !== o && props.demoUrl) view.value = 'demo' })
 // Slug legible para la barra del marco del ejemplo.
 const demoLabel = computed(() => String(props.demoUrl || '').replace(/^\//, ''))
+// Pantalla exclusiva del ejemplo: overlay a viewport completo con la web
+// ilustrativa (sale con Esc, la X o el scrim superior).
+const demoFs = ref(false)
+function openDemoFs() { if (props.demoUrl) demoFs.value = true }
+function onKey(e) { if (e.key === 'Escape' && demoFs.value) demoFs.value = false }
 const frame = ref(null)
 const state = ref('loading')
 // El panel es angosto: la web se renderiza a ancho de escritorio y se escala
@@ -166,6 +171,7 @@ onMounted(() => {
       .finally(() => { tokenReady.value = true })
   }
   window.addEventListener('message', onMessage)
+  window.addEventListener('keydown', onKey)
   armLoadTimer()
   if (stage.value) {
     resizeObserver = new ResizeObserver((entries) => {
@@ -179,6 +185,7 @@ onMounted(() => {
 })
 onBeforeUnmount(() => {
   window.removeEventListener('message', onMessage)
+  window.removeEventListener('keydown', onKey)
   clearTimeout(loadTimer)
   clearTimeout(postTimer)
   resizeObserver?.disconnect()
@@ -219,6 +226,13 @@ watch(() => props.reloadKey, (n, o) => { if (n !== o && src.value) reload() })
         </div>
         <button v-if="view === 'live'" type="button" class="dlp-icon" title="Recargar" aria-label="Recargar la vista previa" @click="reload">
           <AppIcon name="refresh" :size="14" />
+        </button>
+        <button
+          v-if="view === 'demo' && demoUrl" type="button" class="dlp-icon"
+          title="Ver el ejemplo en pantalla completa" aria-label="Ver el ejemplo en pantalla completa"
+          @click="openDemoFs"
+        >
+          <AppIcon name="maximize" :size="14" />
         </button>
         <a
           v-if="view === 'demo' ? demoUrl : slug" class="dlp-icon"
@@ -268,6 +282,25 @@ watch(() => props.reloadKey, (n, o) => { if (n !== o && src.value) reload() })
         <button type="button" class="btn ghost btn-auto" @click="reload">Reintentar</button>
       </p>
     </div>
+    <Teleport to="body">
+      <div v-if="demoFs" class="dlp-fs" role="dialog" aria-modal="true" :aria-label="`Ejemplo ilustrativo ${demoLabel}`">
+        <header class="dlp-fs-head">
+          <span class="dlp-fs-title">
+            <span class="dlp-live"><i></i>Ejemplo ilustrativo</span>
+            <span class="dlp-fs-url">davent.app/{{ demoLabel }}</span>
+          </span>
+          <span class="dlp-fs-actions">
+            <a :href="demoUrl" target="_blank" rel="noopener" class="dlp-icon" title="Abrir en una pestaña" aria-label="Abrir el ejemplo en una pestaña">
+              <AppIcon name="arrow-right" :size="14" />
+            </a>
+            <button type="button" class="dlp-icon" title="Cerrar (Esc)" aria-label="Cerrar pantalla completa" @click="demoFs = false">
+              <AppIcon name="x" :size="14" />
+            </button>
+          </span>
+        </header>
+        <iframe :src="demoUrl" title="Ejemplo ilustrativo del diseño" class="dlp-fs-frame"></iframe>
+      </div>
+    </Teleport>
   </section>
 </template>
 
@@ -355,4 +388,21 @@ watch(() => props.reloadKey, (n, o) => { if (n !== o && src.value) reload() })
   position: absolute; inset: 0; z-index: 2; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 10px;
   background: var(--surface, #f1f5f9); color: var(--muted, #64748b); font-size: 12px; font-weight: 600;
 }
+/* Pantalla exclusiva del ejemplo ilustrativo */
+.dlp-fs {
+  position: fixed; inset: 0; z-index: 200; display: flex; flex-direction: column;
+  background: #fff;
+}
+.dlp-fs-head {
+  flex: none; display: flex; align-items: center; justify-content: space-between; gap: 10px;
+  height: 46px; padding: 0 14px; border-bottom: 1px solid var(--line, #e5e7eb);
+  background: var(--surface, #f8fafc);
+}
+.dlp-fs-title { display: inline-flex; align-items: center; gap: 12px; min-width: 0; }
+.dlp-fs-url {
+  color: var(--muted, #64748b); font-size: 12px; font-weight: 600;
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+.dlp-fs-actions { display: inline-flex; align-items: center; gap: 6px; }
+.dlp-fs-frame { flex: 1 1 auto; width: 100%; min-height: 0; border: 0; background: #fff; }
 </style>
