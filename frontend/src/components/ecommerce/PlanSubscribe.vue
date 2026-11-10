@@ -16,7 +16,10 @@ import PaymentInstructions from './PaymentInstructions.vue'
 const props = defineProps({
   slug: { type: String, required: true },
   plan: { type: Object, required: true },   // StorePlanPublicSerializer
-  payments: { type: Object, default: null } // payments del endpoint público
+  payments: { type: Object, default: null }, // payments del endpoint público
+  // Suscripción del comprador en ESTE plan (StoreSubscriptionCustomer-
+  // Serializer) o null — solo presentación: el server decide igual (409).
+  subscription: { type: Object, default: null }
 })
 const emit = defineEmits(['subscribed'])
 
@@ -72,6 +75,19 @@ const shownInstructions = computed(() => {
   return instructionsFor(method)
 })
 
+// Estado de la suscripción del comprador sobre ESTE plan (viene del
+// padre, que ya matcheó plan.id). is_vigente = status active +
+// vigente_hasta>now (lo calcula el server).
+const subVigente = computed(() => Boolean(props.subscription?.is_vigente))
+const subInProgress = computed(() => (
+  !subVigente.value && ['pending', 'past_due', 'active'].includes(props.subscription?.status)
+))
+const subBlocked = computed(() => subVigente.value || subInProgress.value)
+const vigenteUntil = computed(() => {
+  const iso = props.subscription?.vigente_hasta
+  return iso ? new Date(iso).toLocaleDateString('es-AR', { day: 'numeric', month: 'long', year: 'numeric' }) : ''
+})
+
 async function subscribe() {
   if (busy.value) return
   error.value = ''
@@ -108,15 +124,30 @@ async function subscribe() {
     </template>
 
     <template v-else>
+      <div v-if="subVigente" class="ec-sub-current is-vigente">
+        <AppIcon name="badge-check" :size="17" aria-hidden="true" />
+        <span><strong>Tenés este plan vigente</strong><small v-if="vigenteUntil">Hasta el {{ vigenteUntil }}</small></span>
+      </div>
+      <div v-else-if="subInProgress" class="ec-sub-current is-pending">
+        <AppIcon name="clock" :size="17" aria-hidden="true" />
+        <span><strong>Ya tenés una suscripción a este plan</strong><small>Está en curso — seguíla y pagala desde tu cuenta.</small></span>
+      </div>
+
       <div class="ec-sub-price">
         <strong>{{ money(plan.price) }}</strong>
         <span v-if="plan.period_days"> / {{ plan.period_days }} días{{ periodLabel ? ` (${periodLabel})` : '' }}</span>
       </div>
       <ul v-if="plan.benefits?.length || plan.discount_percent" class="ec-sub-benefits">
-        <li v-for="b in plan.benefits || []" :key="b">{{ benefitLabel(b) }}</li>
-        <li v-if="plan.discount_percent">{{ plan.discount_percent }}% de descuento de miembro</li>
+        <li v-for="b in plan.benefits || []" :key="b">
+          <AppIcon name="check" :size="13" :stroke="2.4" aria-hidden="true" />
+          <span>{{ benefitLabel(b) }}</span>
+        </li>
+        <li v-if="plan.discount_percent">
+          <AppIcon name="check" :size="13" :stroke="2.4" aria-hidden="true" />
+          <span>{{ plan.discount_percent }}% de descuento de miembro</span>
+        </li>
       </ul>
-      <div v-if="methods.length" class="ec-sub-methods">
+      <div v-if="methods.length && !subBlocked" class="ec-sub-methods">
         <label class="sp-field">
           <span class="sp-field-label">Medio de pago</span>
           <select v-model="paymentMethod" class="sp-input" :disabled="busy">
@@ -128,6 +159,7 @@ async function subscribe() {
         </button>
         <p v-if="!customer.isAuthenticated" class="ec-sub-hint">Te vamos a pedir que ingreses o crees tu cuenta.</p>
       </div>
+      <p v-else-if="subBlocked" class="ec-sub-hint">Administrá tu suscripción desde tu cuenta de comprador.</p>
       <p v-else class="ec-sub-hint">Esta tienda todavía no configuró medios de pago para suscripciones.</p>
       <p v-if="error" class="sp-form-error" role="alert">{{ error }}</p>
     </template>
@@ -136,14 +168,24 @@ async function subscribe() {
 
 <style scoped>
 .ec-sub { display: grid; gap: 12px; }
-.ec-sub-ok { display: flex; align-items: center; gap: 8px; margin: 0; font-size: 14px; font-weight: 700; color: var(--sp-success); }
+.ec-sub-ok { display: flex; align-items: center; gap: 8px; margin: 0; font-size: 14px; font-weight: 700; color: var(--sp-success, #0E7A55); }
+.ec-sub-current { display: flex; align-items: flex-start; gap: 9px; padding: 11px 13px; border-radius: calc(var(--sp-radius) * .75); font-size: 13px; line-height: 1.45; }
+.ec-sub-current svg { flex: none; margin-top: 1px; }
+.ec-sub-current span { display: grid; gap: 2px; }
+.ec-sub-current small { opacity: .85; }
+.ec-sub-current.is-vigente { background: color-mix(in srgb, var(--sp-success, #0E7A55) 12%, transparent); color: var(--sp-success, #0E7A55); }
+.ec-sub-current.is-pending { background: color-mix(in srgb, var(--sp-warning, #B45309) 11%, transparent); color: var(--sp-warning, #B45309); }
 .ec-sub-note { margin: 0; font-size: 12.5px; color: var(--sp-muted, inherit); }
 .ec-sub-price { display: flex; align-items: baseline; gap: 4px; font-size: 15px; }
-.ec-sub-price strong { font-size: 24px; font-weight: 800; font-variant-numeric: tabular-nums; }
+.ec-sub-price strong { font-size: 26px; font-weight: 800; font-variant-numeric: tabular-nums; }
 .ec-sub-price span { font-size: 13px; color: var(--sp-muted, inherit); }
-.ec-sub-benefits { margin: 0; padding-left: 18px; display: grid; gap: 5px; font-size: 13px; line-height: 1.45; }
+.ec-sub-benefits { margin: 0; padding: 0; list-style: none; display: grid; gap: 6px; font-size: 13px; line-height: 1.45; }
+.ec-sub-benefits li { display: flex; align-items: flex-start; gap: 8px; }
+.ec-sub-benefits svg { flex: none; margin-top: 2px; color: var(--sp-success, #0E7A55); }
 .ec-sub-methods { display: grid; gap: 10px; }
 .ec-sub-hint { margin: 0; font-size: 12.5px; color: var(--sp-muted, inherit); }
 .ec-btn-primary { display: inline-flex; align-items: center; justify-content: center; gap: 8px; padding: 12px 16px; border: none; border-radius: calc(var(--sp-radius) * .75); background: var(--store-accent-ink, #111); color: #fff; font-size: 14.5px; font-weight: 700; cursor: pointer; }
+.ec-btn-primary:hover:not(:disabled) { filter: brightness(1.06); }
 .ec-btn-primary:disabled { opacity: .55; cursor: default; }
+.ec-btn-primary:focus-visible, .ec-sub select:focus-visible { outline: 2px solid var(--store-accent, #111); outline-offset: 2px; }
 </style>

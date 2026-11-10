@@ -64,12 +64,15 @@ onBeforeUnmount(() => io?.disconnect())
 </template>
 
 <style scoped>
-.sbb { position: fixed; left: 0; right: 0; bottom: 0; z-index: 60; transform: translateY(110%); transition: transform .28s cubic-bezier(.2, .8, .2, 1); background: color-mix(in srgb, var(--sp-card, #fff) 92%, transparent); backdrop-filter: blur(10px); border-top: 1px solid color-mix(in srgb, currentColor 14%, transparent); padding-bottom: env(safe-area-inset-bottom, 0px); }
+.sbb { position: fixed; left: 0; right: 0; bottom: 0; z-index: 60; transform: translateY(110%); transition: transform .28s cubic-bezier(.2, .8, .2, 1); background: color-mix(in srgb, var(--sp-card, #fff) 92%, transparent); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); border-top: 1px solid color-mix(in srgb, currentColor 14%, transparent); box-shadow: 0 -12px 32px color-mix(in srgb, #000 14%, transparent); padding-bottom: env(safe-area-inset-bottom, 0px); }
 .sbb.on { transform: translateY(0); }
 .sbb-in { display: flex; align-items: center; gap: 12px; height: 64px; padding-inline: clamp(14px, 4vw, 24px); max-width: 1200px; margin-inline: auto; }
-.sbb-info { min-width: 0; flex: none; }
+.sbb-info { min-width: 0; flex: none; max-width: 46%; }
 .sbb-acts { display: flex; align-items: center; gap: 8px; flex: 1; justify-content: flex-end; min-width: 0; }
-.sbb-cart { display: inline-flex; align-items: center; gap: 7px; flex: none; padding: 10px 15px; border: none; border-radius: 999px; background: var(--store-accent, #111); color: var(--store-accent-ink, #fff); font-size: 13.5px; font-weight: 700; cursor: pointer; }
+.sbb-cart { display: inline-flex; align-items: center; gap: 7px; flex: none; padding: 10px 15px; border: none; border-radius: 999px; background: var(--store-accent, #111); color: var(--store-accent-ink, #fff); font-size: 13.5px; font-weight: 700; cursor: pointer; transition: filter .15s, transform .12s; }
+.sbb-cart:hover:not(:disabled) { filter: brightness(1.08); }
+.sbb-cart:active:not(:disabled) { transform: scale(.97); }
 .sbb-cart:disabled { opacity: .7; cursor: default; }
-@media (prefers-reduced-motion: reduce) { .sbb { transition: none; } }
+.sbb-cart:focus-visible { outline: 2px solid var(--store-accent, #111); outline-offset: 3px; }
+@media (prefers-reduced-motion: reduce) { .sbb, .sbb-cart { transition: none; } }
 </style>

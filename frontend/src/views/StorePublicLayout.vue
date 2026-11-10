@@ -76,7 +76,7 @@ const ordersEnabled = computed(() => Boolean(store.value?.orders_enabled))
 // cuenta quedarían tapados por el iframe del diseño.
 const ECOMMERCE_ROUTES = new Set([
   'store-checkout', 'store-tracking', 'store-cart', 'store-receipt',
-  'store-auth',
+  'store-auth', 'store-plans',
   'store-account', 'store-account-verify', 'store-account-reset',
   'store-legal', 'store-legal-page'
 ])

@@ -13,6 +13,7 @@ import { storeHostSlug } from '../../config/env.js'
 import { storeContactLink, hasContactChannel } from '../../api/stores.api.js'
 import { membershipPlansApi } from '../../api/membershipPlans.api.js'
 import { formatARS } from '../../api/billing.api.js'
+import { useCustomerStore } from '../../stores/customer.store.js'
 import AppIcon from '../../components/AppIcon.vue'
 import PlanSubscribe from '../../components/ecommerce/PlanSubscribe.vue'
 import { vReveal } from '../../directives/reveal.js'
@@ -20,6 +21,7 @@ import { vReveal } from '../../directives/reveal.js'
 const ctx = inject('storePage')
 const { custom, status, shopName, siteTemplates } = ctx
 const router = useRouter()
+const customer = useCustomerStore()
 
 // Venta online efectiva (ecommerce_enabled + fiscal, calculada por el
 // backend): solo con orders_enabled se muestran los StorePlan REALES —
@@ -52,6 +54,9 @@ const realPlans = ref([])
 const realPayments = ref(null)
 const plansLoading = ref(false)
 const plansError = ref('')
+// Suscripción del comprador logueado en ESTA tienda (customer JWT) —
+// solo para marcar el plan vigente/pendiente; nunca para calcular nada.
+const mySub = ref(null)
 const money = (v) => (Number(v) > 0 ? formatARS(v, 2) : 'Gratis')
 const PERIOD_LABELS = { monthly: 'por mes', yearly: 'por año', custom: '' }
 const periodLabel = (p) => PERIOD_LABELS[p?.period] || ''
@@ -79,8 +84,36 @@ async function loadRealPlans() {
     plansLoading.value = false
   }
 }
-watch([status, ordersEnabled], ([s, on]) => {
+
+// GET /api/customer/subscriptions/<slug>/ devuelve {subscription} con
+// is_vigente/plan/status — endpoint del COMPRADOR (customer JWT), no la
+// sesión DAVENT. Sin sesión no se llama: la página sigue pública.
+async function loadMySub() {
+  if (!customer.isAuthenticated || !ordersEnabled.value) { mySub.value = null; return }
+  try {
+    const data = await membershipPlansApi.storePlans(ctx.slug.value)
+    mySub.value = data?.subscription || null
+  } catch { mySub.value = null }
+}
+
+function subFor(plan) {
+  const s = mySub.value
+  if (!s || !plan?.id || s.plan?.id !== plan.id) return null
+  return s
+}
+// Badge honesto según el estado real de la suscripción del servidor.
+function subBadge(plan) {
+  const s = subFor(plan)
+  if (!s) return null
+  if (s.is_vigente) return { label: 'Plan vigente', icon: 'badge-check', cls: 'is-vigente' }
+  if (s.status === 'pending') return { label: 'Pago pendiente', icon: 'clock', cls: 'is-pending' }
+  if (s.status === 'past_due') return { label: 'Pago vencido', icon: 'circle-alert', cls: 'is-pending' }
+  return null
+}
+
+watch([status, ordersEnabled, () => customer.isAuthenticated], ([s, on]) => {
   if (s === 'success' && on && !realPlans.value.length && !plansLoading.value) loadRealPlans()
+  if (s === 'success' && on) loadMySub()
 }, { immediate: true })
 </script>
 
@@ -98,6 +131,9 @@ watch([status, ordersEnabled], ([s, on]) => {
         <div class="sp-container sp-aipricing-inner">
           <ul class="sp-aipricing-list">
             <li v-for="(plan, i) in realPlans" :key="plan.id" v-reveal="(i % 4) * 70" class="sp-aipricing-card sp-plan-real">
+              <span v-if="subBadge(plan)" class="sp-plan-badge" :class="subBadge(plan).cls">
+                <AppIcon :name="subBadge(plan).icon" :size="12" aria-hidden="true" /> {{ subBadge(plan).label }}
+              </span>
               <h2 class="sp-aipricing-name">{{ plan.name }}</h2>
               <span class="sp-aipricing-amount">{{ money(plan.price) }}<small v-if="plan.period_days" class="sp-plan-period"> / {{ plan.period_days }} días{{ periodLabel(plan) ? ` · ${periodLabel(plan)}` : '' }}</small></span>
               <ul v-if="plan.benefits?.length || plan.discount_percent" class="sp-aipricing-feats">
@@ -110,13 +146,25 @@ watch([status, ordersEnabled], ([s, on]) => {
                   <span>{{ plan.discount_percent }}% de descuento de miembro</span>
                 </li>
               </ul>
-              <PlanSubscribe :slug="ctx.slug.value" :plan="plan" :payments="realPayments" />
+              <PlanSubscribe :slug="ctx.slug.value" :plan="plan" :payments="realPayments" :subscription="subFor(plan)" @subscribed="loadMySub" />
             </li>
           </ul>
         </div>
       </section>
-      <section v-else-if="ordersEnabled && plansLoading" class="sp-container sp-plans-empty" v-reveal>
-        <p>Cargando planes…</p>
+      <section v-else-if="ordersEnabled && plansLoading" class="sp-container sp-plans-skel" aria-busy="true" aria-label="Cargando planes">
+        <div v-for="n in 3" :key="n" class="sp-plan-skel-card">
+          <span class="sp-sk-line sp-sk-title"></span>
+          <span class="sp-sk-line"></span>
+          <span class="sp-sk-line short"></span>
+          <span class="sp-sk-line"></span>
+          <span class="sp-sk-line sp-sk-btn"></span>
+        </div>
+      </section>
+      <section v-else-if="ordersEnabled && plansError" class="sp-container sp-plans-empty" role="alert">
+        <AppIcon name="circle-alert" :size="26" aria-hidden="true" />
+        <p><strong>{{ plansError }}</strong></p>
+        <p>Revisá tu conexión y probá de nuevo.</p>
+        <button type="button" class="sp-plans-btn sp-plans-retry" @click="loadRealPlans">Reintentar</button>
       </section>
 
       <section v-if="!realPlans.length && items.length" class="sp-aipricing" aria-label="Planes disponibles">
@@ -174,6 +222,25 @@ watch([status, ordersEnabled], ([s, on]) => {
 .sp-plans-btn.is-wa{ background: #25d366; color: #0b3d22; }
 .sp-plans-link{ font-size: 14px; font-weight: 600; color: var(--sp-muted); text-decoration: none; }
 .sp-plans-link:hover{ color: var(--sp-ink); }
-.sp-plan-real{ display: grid; gap: 12px; align-content: start; }
+.sp-plan-real{ display: grid; gap: 12px; align-content: start; position: relative; }
 .sp-plan-period{ font-size: .55em; font-weight: 600; opacity: .75; }
+/* Badge de suscripción del comprador (estado real del servidor) */
+.sp-plans-page .sp-plan-badge{ display: inline-flex; align-items: center; gap: 5px; justify-self: start; padding: 4px 10px; border-radius: 999px; font-size: 11.5px; font-weight: 800; letter-spacing: .02em; }
+.sp-plans-page .sp-plan-badge.is-vigente{ background: color-mix(in srgb, var(--sp-success, #0E7A55) 15%, transparent); color: var(--sp-success, #0E7A55); }
+.sp-plans-page .sp-plan-badge.is-pending{ background: color-mix(in srgb, var(--sp-warning, #B45309) 14%, transparent); color: var(--sp-warning, #B45309); }
+/* Skeleton de carga de planes */
+.sp-plans-page .sp-plans-skel{ display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 18px; margin-top: 28px; }
+.sp-plans-page .sp-plan-skel-card{ display: grid; gap: 12px; align-content: start; padding: 22px; border: 1px solid var(--sp-line); border-radius: var(--r-md, 16px); }
+.sp-plans-page .sp-sk-line{ display: block; height: 12px; border-radius: 8px; background: color-mix(in srgb, var(--sp-muted) 16%, transparent); }
+.sp-plans-page .sp-sk-title{ width: 55%; height: 18px; }
+.sp-plans-page .sp-sk-line.short{ width: 60%; }
+.sp-plans-page .sp-sk-btn{ width: 100%; height: 42px; border-radius: var(--r-sm, 10px); margin-top: 8px; }
+@media (prefers-reduced-motion: no-preference){
+  .sp-plans-page .sp-sk-line{ animation: sp-plans-shimmer 1.4s ease-in-out infinite; }
+  .sp-plans-page .sp-plan-skel-card:nth-child(2) .sp-sk-line{ animation-delay: .12s; }
+  .sp-plans-page .sp-plan-skel-card:nth-child(3) .sp-sk-line{ animation-delay: .24s; }
+  @keyframes sp-plans-shimmer{ 0%,100%{ opacity: 1; } 50%{ opacity: .45; } }
+}
+.sp-plans-retry{ border: 1px solid var(--sp-line); background: transparent; color: var(--sp-ink); cursor: pointer; font: inherit; }
+@media (max-width: 560px){ .sp-plans-page .sp-plans-skel{ grid-template-columns: 1fr; } }
 </style>
