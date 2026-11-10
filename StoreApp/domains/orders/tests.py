@@ -11,12 +11,16 @@ Cobertura (PROMPT_MAESTRO §3.5 + spec de la ola):
   cuando no alcanza al pagar, advance/cancel/refund con la máquina de
   estados, contrato exacto del bridge de storepayments.
 - expire_orders: batch idempotente + --dry-run.
+- concurrencia de stock: reserva blanda del checkout (pendiente
+  compromete disponibilidad, cancel/expire libera una vez) y carreras
+  reales con threads — un solo checkout/pago gana la última unidad.
 - API pública: captcha obligatorio, throttle presente, tracking por
   token anti-IDOR (token ajeno/otra tienda → 404, sin PII extra),
   proof solo en métodos manuales y PENDING_PAYMENT, receipt NO FISCAL.
 - Panel del dueño: IDOR → 404, acciones confirm/advance/cancel/
   invoice-ref, listado sin N+1.
 """
+import threading
 from datetime import timedelta
 from decimal import Decimal
 from unittest.mock import patch
@@ -27,7 +31,7 @@ from django.core.cache import cache
 from django.core.files.uploadedfile import SimpleUploadedFile
 from django.core.management import call_command
 from django.db import connection
-from django.test import TestCase
+from django.test import TestCase, TransactionTestCase
 from django.test.utils import CaptureQueriesContext
 from django.utils import timezone
 from rest_framework import serializers as drf_serializers
@@ -384,6 +388,126 @@ class ExpireOrdersCommandTests(TestCase):
         call_command('expire_orders')
         self.order.refresh_from_db()
         self.assertEqual(self.order.status, Order.Status.PENDING_PAYMENT)
+
+
+class StockReservationTests(TestCase):
+    """
+    Reserva blanda del checkout: las unidades en pedidos
+    PENDING_PAYMENT comprometen la disponibilidad (stock - pendiente)
+    sin tocar `stock`. Cancelar/expirar libera exactamente una vez —
+    la transición de status ES la liberación, la máquina de estados la
+    hace idempotente. El descuento físico sigue siendo solo del pago.
+    """
+    def setUp(self):
+        self.store      =   _make_store('mitienda')
+        self.customer   =   _make_customer()
+        self.product    =   _make_product(self.store, price = '10.00', stock = 1)
+
+    def test_pending_order_blocks_checkout(self):
+        _pending_order(self.store, self.customer, self.product, qty = 1)
+        other   =   _make_customer('otro@example.com')
+        with self.assertRaises(drf_serializers.ValidationError):
+            create_order(**_order_kwargs(self.store, other, self.product, qty = 1))
+        self.assertEqual(Order.objects.count(), 1)
+        #La reserva no descuenta: el stock físico baja solo al pagar.
+        self.product.refresh_from_db()
+        self.assertEqual(self.product.stock, 1)
+
+    def test_cancel_releases_availability_exactly_once(self):
+        order   =   _pending_order(self.store, self.customer, self.product, qty = 1)
+        cancel_order(order, actor = 'owner', reason = 'Me arrepentí')
+        #Re-cancelar no libera de nuevo: la transición es única.
+        with self.assertRaises(drf_serializers.ValidationError):
+            cancel_order(order, actor = 'owner')
+        #Entra UN nuevo pedido por la unidad liberada — ni dos.
+        other   =   _make_customer('otro@example.com')
+        ok, created  =   create_order(**_order_kwargs(self.store, other, self.product, qty = 1))
+        self.assertTrue(created)
+        third   =   _make_customer('tercero@example.com')
+        with self.assertRaises(drf_serializers.ValidationError):
+            create_order(**_order_kwargs(self.store, third, self.product, qty = 1))
+        self.product.refresh_from_db()
+        self.assertEqual(self.product.stock, 1)
+
+    def test_expire_releases_availability_idempotent(self):
+        order   =   _pending_order(self.store, self.customer, self.product, qty = 1)
+        Order.objects.filter(pk = order.pk).update(expires_at = timezone.now() - timedelta(hours = 1))
+        call_command('expire_orders')
+        #Segunda corrida solapada: no-op, no re-libera ni duplica evento.
+        call_command('expire_orders')
+        self.assertEqual(order.events.filter(kind = 'expired').count(), 1)
+        other   =   _make_customer('otro@example.com')
+        _ok, created   =   create_order(**_order_kwargs(self.store, other, self.product, qty = 1))
+        self.assertTrue(created)
+
+
+class ConcurrentStockTests(TransactionTestCase):
+    """
+    Carreras reales sobre la misma unidad con conexiones paralelas
+    (TransactionTestCase: lo commiteado por un thread es visible para
+    el otro; TestCase lo aislaría en su transacción).
+    """
+    def setUp(self):
+        self.store      =   _make_store('mitienda')
+        self.customer_a =   _make_customer('comp-a@example.com')
+        self.customer_b =   _make_customer('comp-b@example.com')
+        self.product    =   _make_product(self.store, price = '10.00', stock = 1)
+
+    def _run_pair(self, fn_a, fn_b):
+        """Corre dos callables en threads; devuelve {key: resultado|exc}."""
+        results =   {}
+        def _wrap(key, fn):
+            def _runner():
+                try:
+                    results[key]    =   fn()
+                except Exception as exc:    # noqa: BLE001 - el test clasifica la excepción
+                    results[key]    =   exc
+                finally:
+                    #Cada thread cierra SU conexión (son thread-local):
+                    #sin esto quedan sockets abiertos entre tests.
+                    connection.close()
+            return threading.Thread(target = _runner)
+        threads =   [_wrap('a', fn_a), _wrap('b', fn_b)]
+        for t in threads:
+            t.start()
+        for t in threads:
+            t.join()
+        return results
+
+    def test_concurrent_checkouts_last_unit_one_wins(self):
+        results =   self._run_pair(
+            lambda: create_order(**_order_kwargs(self.store, self.customer_a, self.product, qty = 1)),
+            lambda: create_order(**_order_kwargs(self.store, self.customer_b, self.product, qty = 1)),
+        )
+        winners =   [v for v in results.values() if isinstance(v, tuple)]
+        losers  =   [v for v in results.values() if isinstance(v, drf_serializers.ValidationError)]
+        self.assertEqual(len(winners), 1, results)
+        self.assertEqual(len(losers), 1, results)
+        self.assertTrue(winners[0][1])                          # created=True
+        self.assertEqual(Order.objects.count(), 1)
+        #La reserva no descuenta: el stock baja solo al pagar.
+        self.product.refresh_from_db()
+        self.assertEqual(self.product.stock, 1)
+
+    def test_concurrent_payments_one_decrements_other_conflicts(self):
+        #Dos pendientes legítimos (stock=2 al crearlos); el dueño
+        #corrige el stock a 1 antes de que paguen → el primero en
+        #confirmar gana la unidad, el segundo paga en stock_conflict.
+        Product.objects.filter(pk = self.product.pk).update(stock = 2)
+        order_a =   _pending_order(self.store, self.customer_a, self.product, qty = 1)
+        order_b =   _pending_order(self.store, self.customer_b, self.product, qty = 1)
+        Product.objects.filter(pk = self.product.pk).update(stock = 1)
+        results =   self._run_pair(
+            lambda: mark_order_paid(order_a, source = 'manual'),
+            lambda: mark_order_paid(order_b, source = 'manual'),
+        )
+        for value in results.values():
+            self.assertIsInstance(value, Order, results)
+        self.product.refresh_from_db()
+        self.assertEqual(self.product.stock, 0)                 # un solo descuento
+        self.assertEqual(OrderEvent.objects.filter(kind = 'stock_conflict').count(), 1)
+        #Ambos pagaron (el pago no se revierte) — uno quedó marcado.
+        self.assertEqual(Order.objects.filter(status = Order.Status.PACKING).count(), 2)
 
 
 class PublicOrderApiTests(TestCase):

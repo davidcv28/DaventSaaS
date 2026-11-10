@@ -8,9 +8,17 @@ jamás montos del cliente), congela el snapshot del comprador y crea
 Order + OrderItems + OrderEvent 'created' en UN atomic con la fila de
 Store bloqueada (numeración PED-XXXX serializada por tienda).
 
-NO descuenta stock acá (eso es mark_order_paid al confirmar el pago) y
-NO reserva nada: dos pedidos pueden nacer por la última unidad — el
-segundo lo resuelve el pago con OrderEvent 'stock_conflict'.
+NO descuenta stock acá (eso es mark_order_paid al confirmar el pago):
+la disponibilidad se RESERVA de forma blanda — `stock` menos las
+unidades ya comprometidas por pedidos PENDING_PAYMENT del producto,
+validada bajo `select_for_update` de las filas de Product dentro del
+atomic — así dos checkouts concurrentes por la última unidad se
+serializan y el segundo recibe ValidationError en vez de sobre-vender.
+No hay campo ni tabla de reserva: cancelar/expirar el pedido pendiente
+libera la disponibilidad por sí solo (el cambio de status es la
+liberación, idempotente por la máquina de estados) y el
+'stock_conflict' del pago queda como defensa residual (stock corregido
+a mano por el dueño, pedidos emitidos antes de esta regla).
 
 Decisiones documentadas:
 - `use_cart`/`cart`: el pedido puede armase desde el Cart del cliente
@@ -41,6 +49,7 @@ from decimal import Decimal
 from urllib.parse import quote
 
 from django.db import IntegrityError, transaction
+from django.db.models import Sum
 from django.utils import timezone
 from rest_framework import serializers
 
@@ -220,22 +229,51 @@ def _resolve_lines(store, customer, merged):
     Valida productos de ESA tienda (activos, no exclusivos-sin-acceso,
     stock suficiente en qty agregado) y devuelve las líneas listas para
     precios: [{product, qty}]. Todo ValidationError → 400.
+
+    DECISIÓN (carrera de stock): se adopta RESERVA BLANDA — validar con
+    lock + dejar el decremento al pago era el mínimo cambio, pero deja
+    abierta la ventana (dos checkouts leen el mismo stock, nacen dos
+    pedidos por la última unidad y el segundo paga en stock_conflict).
+    Acá las filas de Product se bloquean con select_for_update (orden
+    por pk → anti-deadlock entre checkouts/pagos multi-producto) y la
+    disponibilidad es `stock` menos las unidades comprometidas por
+    pedidos PENDING_PAYMENT: el segundo checkout espera el lock, ve el
+    compromiso del primero y falla ANTES de crear el pedido. La reserva
+    no se persiste: se libera sola cuando el pedido pendiente sale de
+    PENDING_PAYMENT (cancel/expire/pago), exactamente una vez porque la
+    transición de status es única. El descuento físico de `stock` sigue
+    siendo una sola vez, en mark_order_paid.
     """
     products    =   {
         product.pk: product
-        for product in Product.objects.filter(store = store, pk__in = list(merged.keys()), is_active = True)
+        for product in (Product.objects
+            .select_for_update()
+            .filter(store = store, pk__in = list(merged.keys()), is_active = True)
+            .order_by('pk'))
     }
     missing     =   [pid for pid in merged if pid not in products]
     if missing:
         raise serializers.ValidationError({'items': f'Producto(s) no disponible(s): {", ".join(str(p) for p in missing)}.'})
+    #Unidades ya comprometidas por pedidos pendientes de pago (reserva
+    #blanda — solo para productos con control de stock).
+    controlled  =   [pid for pid, product in products.items() if product.stock is not None]
+    claimed     =   {}
+    if controlled:
+        for row in (OrderItem.objects
+                .filter(product_id__in = controlled, order__status = Order.Status.PENDING_PAYMENT)
+                .values('product_id')
+                .annotate(total = Sum('qty'))):
+            claimed[row['product_id']]  =   row['total'] or 0
     has_exclusive   =   has_exclusive_access(customer, store)
     lines           =   []
     for pid, qty in merged.items():
         product =   products[pid]
         if product.is_exclusive and not has_exclusive:
             raise serializers.ValidationError({'items': f'"{product.name}" es exclusivo para miembros de la tienda.'})
-        if product.stock is not None and qty > product.stock:
-            raise serializers.ValidationError({'items': f'Stock insuficiente de "{product.name}": quedan {product.stock} unidad(es), pediste {qty}.'})
+        if product.stock is not None:
+            available   =   product.stock - claimed.get(pid, 0)
+            if qty > available:
+                raise serializers.ValidationError({'items': f'Stock insuficiente de "{product.name}": quedan {max(available, 0)} unidad(es), pediste {qty}.'})
         lines.append({'product': product, 'qty': qty})
     return lines
 

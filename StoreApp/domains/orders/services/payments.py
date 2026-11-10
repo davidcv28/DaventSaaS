@@ -7,9 +7,10 @@ descuento de stock. CONTRATO con track C (storepayments):
 
 Ambos son IDOR-agnósticos (reciben la instancia) y concurrentes:
 todo corre dentro de `transaction.atomic()` con `select_for_update()`
-sobre la fila del pedido — webhook MP duplicado, doble click del dueño
-o dos workers de Celery se serializan y el segundo ve el estado ya
-avanzado (no-op, no re-cobra ni duplica eventos).
+sobre la fila del pedido (y, en mark_order_paid, sobre las filas de
+Product ordenadas por pk) — webhook MP duplicado, doble click del
+dueño o dos workers de Celery se serializan y el segundo ve el estado
+ya avanzado (no-op, no re-cobra ni duplica eventos).
 
 `advance_order`/`cancel_order` son para el panel del dueño: validan la
 tabla TRANSITIONS del modelo y registran el evento. Regla de roles:
@@ -98,9 +99,22 @@ def _decrement_stock(order):
     y el pago): el pago NO se revierte — el cliente ya pagó — se deja
     constancia con OrderEvent 'stock_conflict' para que el dueño
     resuelva (reponer, proponer alternativa o reembolsar).
+
+    Antes de los UPDATE se bloquean las filas de Product con
+    select_for_update ordenado por pk: dos mark_order_paid concurrentes
+    (o un checkout validando disponibilidad — misma llave de lock)
+    serializan acá en vez de competir/deadlockear en los UPDATE.
     """
-    for item in order.items.select_related('product').all():
-        product =   item.product
+    items   =   list(order.items.select_related('product').all())
+    pks     =   sorted({item.product_id for item in items if item.product_id is not None})
+    products    =   {}
+    if pks:
+        products    =   {
+            product.pk: product
+            for product in Product.objects.select_for_update().filter(pk__in = pks).order_by('pk')
+        }
+    for item in items:
+        product =   products.get(item.product_id)
         if product is None or product.stock is None:
             continue
         updated =   Product.objects.filter(
