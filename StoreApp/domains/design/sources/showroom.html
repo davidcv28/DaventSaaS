@@ -60,6 +60,9 @@ html[data-ds-style="showroom-noche"]{
   --ok:#4CC38A;
   color-scheme:dark;
 }
+/* Arena: el muted del tema (#7B7364) sobre #F5F1E9 da 4.16 y el success
+   (#1E7F4F) 4.43 — ambos bajo AA. Versiones más profundas del mismo tono. */
+html[data-ds-style="showroom-arena"]{--muted:#6E6555;--ok:#1B7449}
 
 *{box-sizing:border-box}
 html,body{margin:0}
@@ -146,7 +149,7 @@ html:not([data-ds-surface="landing"]) main{padding-top:var(--head-h)}
 /* Menú móvil */
 .m-open{display:none;width:40px;height:40px;padding:0;border:0;background:none;color:var(--ink);place-items:center}
 .m-open svg{width:18px;height:18px}
-.m-sheet{position:fixed;inset:0;z-index:90;display:flex;flex-direction:column;background:var(--bg);visibility:hidden;opacity:0;transition:opacity .2s,visibility .2s}
+.m-sheet{position:fixed;top:0;left:0;right:0;height:var(--fr-h,100vh);z-index:90;display:flex;flex-direction:column;overflow-y:auto;background:var(--bg);visibility:hidden;opacity:0;transition:opacity .2s,visibility .2s}
 .m-sheet.open{visibility:visible;opacity:1}
 .m-head{display:flex;align-items:center;justify-content:space-between;min-height:72px;padding:0 24px;border-bottom:1px solid var(--line)}
 .m-head .brand{font-size:18px}
@@ -410,6 +413,7 @@ html:not([data-ds-surface="landing"]) main{padding-top:var(--head-h)}
 .ds-service-desc{grid-column:2;display:block;font-size:13px;color:var(--muted)}
 .ds-service-desc:empty{display:none}
 .ds-service::after{content:attr(data-price-label);font:600 10px var(--mono);letter-spacing:.1em;text-transform:uppercase;color:var(--ink-2);white-space:nowrap}
+.ds-service-dur{display:block;margin-top:5px;font:500 9px var(--mono);letter-spacing:.14em;text-transform:uppercase;color:var(--muted)}
 .svc-side{position:sticky;top:calc(var(--head-h) + 24px);display:grid;gap:16px}
 .svc-card{border:1px solid var(--line);padding:28px}
 .svc-card h3{margin:0;font:800 18px/1.2 var(--disp);letter-spacing:.12em;text-transform:uppercase}
@@ -498,11 +502,12 @@ footer.foot{border-top:1px solid var(--line);margin-top:96px}
   .cat-grid,.pdp-rel .rel-grid{grid-template-columns:repeat(3,minmax(0,1fr))}
 }
 @media (max-width:960px){
+  :root{--head-h:72px}
   .wrap{padding:0 20px}
   .nav{display:none}
   .m-open{display:grid}
   .top-search input{width:130px}
-  .top-right .mono-link{display:none}
+  .top-right .mono-link,.top-right .sep{display:none}
   header.top .top-inner{min-height:64px}
   .hero{min-height:clamp(420px,100vw,620px)}
   .hero-in{padding-bottom:72px}
@@ -518,6 +523,9 @@ footer.foot{border-top:1px solid var(--line);margin-top:96px}
 }
 @media (max-width:640px){
   .sec{padding:48px 0}
+  /* El titular en versalitas con tracking ancho no entra en una línea a
+     38px: bajo tracking y cuerpo para que las palabras largas no desborden. */
+  .hero-title{font-size:clamp(28px,8.6vw,44px);letter-spacing:.08em;overflow-wrap:break-word}
   .rec-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:20px 12px}
   .rec-grid .ds-product:first-child{grid-column:1/-1}
   .rec-grid .ds-product:first-child .p-media{aspect-ratio:3/4}
@@ -649,11 +657,11 @@ footer.foot{border-top:1px solid var(--line);margin-top:96px}
     </div>
   </section>
 
-  <div class="notes ds-zone" data-flag="announcements">
+  <div class="notes ds-zone" data-flag="announcements" data-hide-if-empty=".ds-note">
     <div class="wrap notes-in">{{announcements}}</div>
   </div>
 
-  <section class="sec" data-flag="featured">
+  <section class="sec" data-flag="featured" data-hide-if-empty=".ds-product">
     <div class="wrap">
       <div class="sec-head">
         <h2>Recomendados</h2>
@@ -662,13 +670,13 @@ footer.foot{border-top:1px solid var(--line);margin-top:96px}
     </div>
   </section>
 
-  <section class="sec" style="padding-top:0" data-flag="categories">
+  <section class="sec" style="padding-top:0" data-flag="categories" data-hide-if-empty=".ds-cat">
     <div class="wrap">
       <div class="cats ds-zone">{{categories}}</div>
     </div>
   </section>
 
-  <section class="sec" data-flag="gallery">
+  <section class="sec" data-flag="gallery" data-hide-if-empty=".ds-shot">
     <div class="wrap">
       <div class="looks-head">
         <h2>Inspirate</h2>
@@ -692,19 +700,19 @@ footer.foot{border-top:1px solid var(--line);margin-top:96px}
           </div>
           <p class="about-txt">{{store_about_mission}}</p>
           <p class="about-txt">{{store_about_specialties}}</p>
-          <div class="ds-stats ds-zone">{{stats}}</div>
+          <div class="ds-stats ds-zone" data-hide-if-empty=".ds-stat">{{stats}}</div>
         </div>
       </div>
     </div>
   </section>
 
-  <section class="sec" style="padding-top:0" data-flag="benefits">
+  <section class="sec" style="padding-top:0" data-flag="benefits" data-hide-if-empty=".ds-guar">
     <div class="wrap">
       <div class="guars ds-zone">{{benefits}}</div>
     </div>
   </section>
 
-  <section class="sec" data-flag="plans" id="suscripciones">
+  <section class="sec" data-flag="plans" id="suscripciones" data-hide-if-empty=".ds-plan">
     <div class="wrap">
       <div class="sec-head">
         <h2>{{plans_title}}</h2>
@@ -713,7 +721,7 @@ footer.foot{border-top:1px solid var(--line);margin-top:96px}
     </div>
   </section>
 
-  <section class="sec" style="padding-top:0" data-flag="testimonials">
+  <section class="sec" style="padding-top:0" data-flag="testimonials" data-hide-if-empty=".ds-quote">
     <div class="wrap">
       <div class="sec-head">
         <h2>{{testimonials_title}}</h2>
@@ -722,13 +730,13 @@ footer.foot{border-top:1px solid var(--line);margin-top:96px}
     </div>
   </section>
 
-  <section class="sec" style="padding-top:0" data-flag="brands">
+  <section class="sec" style="padding-top:0" data-flag="brands" data-hide-if-empty=".ds-brand">
     <div class="wrap">
       <ul class="brands ds-zone">{{brands}}</ul>
     </div>
   </section>
 
-  <section class="sec" style="padding-top:0" data-flag="faq">
+  <section class="sec" style="padding-top:0" data-flag="faq" data-hide-if-empty=".ds-faq">
     <div class="wrap">
       <div class="sec-head">
         <h2>{{faqs_title}}</h2>
@@ -737,7 +745,7 @@ footer.foot{border-top:1px solid var(--line);margin-top:96px}
     </div>
   </section>
 
-  <section data-flag="cta">
+  <section data-flag="cta" data-hide-blank="h2">
     <div class="cta-band">
       <h2>{{cta_title}}</h2>
       <p>{{cta_text}}</p>
@@ -826,9 +834,9 @@ footer.foot{border-top:1px solid var(--line);margin-top:96px}
   <div class="svc-head">
     <h1>Servicios</h1>
   </div>
-  <div class="svc-offers ds-zone" data-flag="services">{{offerings}}</div>
+  <div class="svc-offers ds-zone" data-flag="services" data-hide-if-empty=".ds-offer">{{offerings}}</div>
   <div class="svc-grid">
-    <div class="ds-zone">{{services}}</div>
+    <div class="ds-zone" data-hide-if-empty=".ds-service">{{services}}</div>
     <aside class="svc-side">
       <div class="svc-card">
         <h3>Consultanos</h3>
@@ -953,6 +961,18 @@ footer.foot{border-top:1px solid var(--line);margin-top:96px}
   var body = document.body;
   var header = document.querySelector('header.top');
 
+  /* Alto real del chrome fijo: el puente lo usa para dejar el destino de
+     los anclajes debajo de la cabecera (data-ds-offset). En móvil la
+     cabecera baja a ~65px (sin nav) — el 118 estático los tapaba. */
+  function measureTop(){
+    if (!header) return;
+    var h = header.offsetHeight || 0;
+    if (h) header.setAttribute('data-ds-offset', String(Math.round(h) + 10));
+  }
+  measureTop();
+  window.addEventListener('resize', measureTop, {passive:true});
+  if ('ResizeObserver' in window && header) new ResizeObserver(measureTop).observe(header);
+
   /* Enlaces sin destino (placeholder vacío o "#" pelado): no navegar. */
   document.addEventListener('click', function(e){
     var a = e.target && e.target.closest ? e.target.closest('a') : null;
@@ -1037,11 +1057,15 @@ footer.foot{border-top:1px solid var(--line);margin-top:96px}
   window.addEventListener('message', function(e){
     var d = e.data || {};
     if (d.type === 'davent:ds-frame') {
+      /*--fr-h: alto visible del marco — el iframe va estirado y vh mide el
+        documento entero; la hoja móvil lo usa para cubrir solo lo que se ve.*/
+      html.style.setProperty('--fr-h', Math.round(Number(d.vh) || window.innerHeight || 1) + 'px');
       syncHeader(Math.max(0, -Number(d.top) || 0));
       return;
     }
     if (d.type === 'davent:ds-surface') {
       syncHeader(999);
+      hideEmpty();
     }
   });
   window.addEventListener('scroll', function(){ syncHeader(window.scrollY || 0); }, {passive:true});
@@ -1049,27 +1073,31 @@ footer.foot{border-top:1px solid var(--line);margin-top:96px}
 
   /* Menú móvil a pantalla completa. */
   var sheet = document.getElementById('m-sheet');
+  var lastFocus = null;
   function setMenu(open){
     if (!sheet) return;
     sheet.classList.toggle('open', open);
     sheet.setAttribute('aria-hidden', open ? 'false' : 'true');
+    if ('inert' in sheet) sheet.inert = !open;
+    /* m-lock en <html>: el puente bloquea el scroll de la página host. */
+    html.classList.toggle('m-lock', open);
     var btn = document.querySelector('[data-m-open]');
     if (btn) btn.setAttribute('aria-expanded', open ? 'true' : 'false');
     body.style.overflow = open ? 'hidden' : '';
+    if (open) {
+      lastFocus = document.activeElement;
+      var first = sheet.querySelector('a,button');
+      if (first) first.focus();
+    } else if (lastFocus && lastFocus.focus) {
+      lastFocus.focus();
+      lastFocus = null;
+    }
   }
   document.addEventListener('click', function(e){
     var t = e.target;
     if (!t || !t.closest) return;
     if (t.closest('[data-m-open]')) { setMenu(true); return; }
     if (t.closest('[data-m-close]')) { setMenu(false); return; }
-    /* Categorías del menú/landing: llevan a la superficie catálogo. */
-    var cat = t.closest('a.ds-cat');
-    if (cat && cat.closest('.cats')) {
-      e.preventDefault();
-      if (window.parent !== window) {
-        parent.postMessage({ type: 'davent:ds-route', route: 'catalog' }, '*');
-      }
-    }
   });
   document.addEventListener('keydown', function(e){
     if (e.key === 'Escape') setMenu(false);
@@ -1092,6 +1120,30 @@ footer.foot{border-top:1px solid var(--line);margin-top:96px}
     t.classList.add('is-on');
   });
 
+  /* Secciones con fragmento vacío: la cáscara (título + paddings) no queda
+     pintada — data-hide-if-empty="<selector>" apaga la sección entera. */
+  function hideEmpty(){
+    ;[].forEach.call(document.querySelectorAll('[data-hide-if-empty]'), function(sec){
+      var sels = (sec.getAttribute('data-hide-if-empty') || '').split('|');
+      var has = sels.some(function(sel){
+        var node = sec.querySelector(sel);
+        return node && (node.children.length || (node.textContent || '').trim());
+      });
+      if (!has) sec.hidden = true;
+    });
+  }
+
+  /* Duración de servicios: viaja en data-duration del fragmento. */
+  ;[].forEach.call(document.querySelectorAll('.ds-service[data-duration]'), function(li){
+    var dur = (li.getAttribute('data-duration') || '').trim();
+    var name = li.querySelector('.ds-service-name');
+    if (!dur || !name || li.querySelector('.ds-service-dur')) return;
+    var d = document.createElement('small');
+    d.className = 'ds-service-dur';
+    d.textContent = 'Duración · ' + dur;
+    name.appendChild(d);
+  });
+
   /* Bloques con valores vacíos (años sin cargar, etc.): no pintar la
      cáscara. Opt-in del diseño con data-hide-blank="<selector>". */
   ;[].forEach.call(document.querySelectorAll('[data-hide-blank]'), function(el){
@@ -1102,6 +1154,8 @@ footer.foot{border-top:1px solid var(--line);margin-top:96px}
     el.hidden = !node || (!((node.textContent || '').trim())
       && !(node.getAttribute && (node.getAttribute('href') || node.getAttribute('src'))));
   });
+
+  hideEmpty();
 })();
 </script>
 

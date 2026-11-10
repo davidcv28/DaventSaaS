@@ -216,11 +216,11 @@ html[data-ds-theme="dark"] .ds-theme-toggle .i-moon{display:none}
 
 /* Menú móvil — la puerta entera: papel, columnas de plano y serif grande. */
 .mmenu{
-  position:fixed;inset:0;z-index:80;display:flex;flex-direction:column;overflow:auto;
+  position:fixed;top:0;left:0;right:0;height:var(--fr-h,100vh);z-index:80;display:flex;flex-direction:column;overflow:auto;
   background:var(--paper);color:var(--ink);
-  transform:translateY(-102%);transition:transform .45s var(--ease);
+  transform:translateY(-102%);transition:transform .45s var(--ease),visibility 0s .45s;visibility:hidden;
 }
-body.m-open .mmenu{transform:none}
+body.m-open .mmenu{transform:none;visibility:visible;transition:transform .45s var(--ease),visibility 0s}
 body.m-open{overflow:hidden}
 .mmenu::before{
   content:"";position:fixed;inset:0;pointer-events:none;opacity:.5;
@@ -1163,12 +1163,12 @@ html[data-ds-theme="dark"] .cta-band .cta-title em{color:var(--accent)}
 .cat-scrim{display:none}
 @media(max-width:980px){
   .cat-aside{
-    position:fixed;inset:0;z-index:80;max-height:none;border:0;border-top:0;
+    position:fixed;top:0;bottom:auto;left:0;right:0;height:var(--fr-h,100vh);z-index:80;max-height:none;border:0;border-top:0;
     transform:translateX(-103%);transition:transform .34s var(--ease);
   }
   .cat-aside.is-open{transform:none}
   body.filters-open .cat-scrim{
-    display:block;position:fixed;inset:0;z-index:75;
+    display:block;position:fixed;left:0;right:0;top:0;height:var(--fr-h,100vh);z-index:75;
     background:color-mix(in srgb,var(--band) 62%,transparent);
   }
   .cat-aside-foot{display:none}
@@ -1694,7 +1694,7 @@ html[data-ds-theme="dark"] .cta-band .cta-title em{color:var(--accent)}
 </header>
 
 <!-- Menú móvil: la casa entera, numerada como un índice de ambientes. -->
-<div class="mmenu" aria-label="Menú">
+<div class="mmenu" aria-label="Menú" aria-hidden="true">
   <div class="mmenu-top">
     <span class="mmenu-brand"><span class="brand-mark"><i>{{store_initial}}</i><img src="{{store_logo}}" alt=""></span>{{store_name}}</span>
     <button class="mmenu-close" type="button" data-m-close aria-label="Cerrar menú">
@@ -2091,7 +2091,7 @@ html[data-ds-theme="dark"] .cta-band .cta-title em{color:var(--accent)}
           <button class="f-done" type="button" data-ds-filters-close>Aplicar</button>
         </div>
       </aside>
-      <div class="cat-scrim" data-ds-filters-close aria-hidden="true"></div>
+      <div class="cat-scrim" data-ds-filters-scrim data-ds-filters-close aria-hidden="true"></div>
       <div class="cat-results">
         <div class="cat-bar">
           <form class="cat-search" data-ds-search role="search">
@@ -2351,11 +2351,27 @@ html[data-ds-theme="dark"] .cta-band .cta-title em{color:var(--accent)}
   }
 
   /* ---------- Menú móvil ---------- */
+  var lastFocus = null
   function setMenu(open) {
     body.classList.toggle('m-open', open)
+    var mm = document.querySelector('.mmenu')
+    if (mm) {
+      mm.setAttribute('aria-hidden', open ? 'false' : 'true')
+      if ('inert' in mm) mm.inert = !open
+    }
+    /* m-lock en <html>: el puente bloquea el scroll de la página host. */
+    document.documentElement.classList.toggle('m-lock', open)
     var btn = document.querySelector('[data-m-open]')
     if (btn) btn.setAttribute('aria-expanded', open ? 'true' : 'false')
     document.documentElement.style.overflow = open ? 'hidden' : ''
+    if (open && mm) {
+      lastFocus = document.activeElement
+      var first = mm.querySelector('a,button')
+      if (first) first.focus()
+    } else if (!open && lastFocus && lastFocus.focus) {
+      lastFocus.focus()
+      lastFocus = null
+    }
   }
   document.addEventListener('click', function (e) {
     var t = e.target
@@ -2370,7 +2386,13 @@ html[data-ds-theme="dark"] .cta-band .cta-title em{color:var(--accent)}
     }
   })
   document.addEventListener('keydown', function (e) {
-    if (e.key === 'Escape') { setMenu(false); body.classList.remove('filters-open') }
+    if (e.key !== 'Escape') return
+    setMenu(false)
+    /* La hoja de filtros la cierra el puente (is-open + filters-open):
+       hay que despachar el Escape sobre el panel, no solo quitar la clase. */
+    var panel = document.querySelector('[data-ds-filters-panel].is-open')
+    if (panel) panel.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true }))
+    else body.classList.remove('filters-open')
   })
 
   /* ==========================================================================
@@ -2656,6 +2678,9 @@ html[data-ds-theme="dark"] .cta-band .cta-title em{color:var(--accent)}
   function paint() {
     var vh = frame ? frame.vh : window.innerHeight
     var top = frame ? Math.max(0, -frame.top) : (window.scrollY || 0)
+    /*--fr-h: alto visible del marco — las hojas fijas móviles (menú,
+      panel de filtros, scrim) lo usan para cubrir solo lo que se ve.*/
+    rootEl.style.setProperty('--fr-h', Math.round(Math.max(1, vh)) + 'px')
     if (head) head.classList.toggle('is-scrolled', top > 16)
     if (progress) {
       var totalH = Math.max(1, document.documentElement.scrollHeight - vh)
