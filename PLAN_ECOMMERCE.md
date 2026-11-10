@@ -275,3 +275,45 @@ factura como servicio aparte (el dominio `invoices` ya existe).
 - [x] Páginas legales por tienda + botón de arrepentimiento.
 - [x] El vendedor asume en ToS de la tienda su responsabilidad fiscal
       (monotributo/RI al día, facturación de cada venta).
+
+---
+
+## FASE 6 — Pulido visual ecommerce (Ola 2, `ECCOMMERCE-ADD`)
+
+Fecha: ola de subagentes paralelos con ownership disjunto, integrada y
+pusheada en la misma rama.
+
+- **Auth del comprador**: página completa `/ingresar` (`StoreAuthView` +
+  `StoreAuthForm` compartido con el modal global), modos login/register/
+  forgot por `?mode=`, destino post-auth `?next=` sanitizado
+  (`authRoute`/`authNextPath` en `cart.store`, anti open-redirect).
+  Alias `/tienda/<slug>/{ingresar,carrito,pedido/:token/comprobante}`.
+- **Panel de cuenta**: `StoreAccountView` rediseñado — sidebar con
+  avatar/nav/logout en desktop, tabs con scroll en mobile; pedidos con
+  pills semánticos, suscripciones con tarjeta digital, direcciones y
+  perfil autocontenidos (`components/ecommerce/account/*`). Gate de auth
+  propio; `store-auth`/`store-plans` excluidos del iframe de patrón
+  (`ECOMMERCE_ROUTES` en `StorePublicLayout`).
+- **Flujo de compra**: carrito, checkout, tracking, comprobante imprimible,
+  planes y soporte pulidos (skeletons, steppers, empty states); sticky buy
+  bar; `store-plans` ya no queda tapado por el patrón.
+- **Patrones**: los 23 `sources/*.html` con secciones ecommerce propias
+  (CTAs de compra integrados a la identidad de cada diseño, cuenta +
+  carrito en headers, contraste AA, responsive). `moderntec.html`
+  reescrito como patrón ecommerce funcional (catálogo + filtros + PDP).
+  `fotos.html` quedó huérfano del seed (preexistente — pendiente decidir
+  publicarlo o borrarlo).
+- **Bridge**: píldoras cuenta/carrito inyectadas en documentos, badge con
+  `itemCount` vía `postMessage` (`davent:ds-cart-state`), `ds-cart` →
+  `/carrito` de la tienda; CSS base `.dsx-*` elevado.
+- **Templates Vue**: las 7 pieles + Raíz con ecommerce nativo (gimnasio
+  placas lima + mono, moderntec panel instrumento, movimiento fichas,
+  mercado/sastrería/indumentaria/impacto pulidos). Tarjetas consumen los
+  tokens `--tpc-name-*` que las pieles ya declaraban (bug: nunca se
+  aplicaban). `.sp-form` neutralizado por piel (orbe/rotación de Raíz no
+  se filtra a las demás).
+- **Verificación**: `seed_design_catalog` re-corrido (127 estilos, 25
+  patrones), `npm run build` + tests (65) verdes, QA visual de subagentes
+  (~500 páginas combinaciones patrón/estilo/viewport en verde) + smoke
+  browser de `/ingresar`, `/cuenta`, `/carrito`, `/checkout`, landing con
+  iframe de patrón — 0 errores de consola ni requests fallidos.
