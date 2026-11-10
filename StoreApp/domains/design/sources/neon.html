@@ -184,7 +184,8 @@ a:focus-visible,button:focus-visible,input:focus-visible,select:focus-visible,te
   .nav-links{display:none}
   .m-burger{display:grid}
 }
-.mmenu{position:fixed;inset:0;z-index:60;background:color-mix(in srgb,var(--bg) 96%,transparent);
+.mmenu{position:fixed;top:0;left:0;right:0;height:var(--fr-h,100vh);z-index:60;overflow-y:auto;
+  background:color-mix(in srgb,var(--bg) 96%,transparent);
   display:flex;flex-direction:column;padding:26px 26px 40px;
   transform:translateY(-102%);transition:transform .38s cubic-bezier(.22,1,.36,1);visibility:hidden}
 .mmenu.open{transform:none;visibility:visible}
@@ -623,7 +624,7 @@ a:focus-visible,button:focus-visible,input:focus-visible,select:focus-visible,te
 .cat-filters-badge{background:var(--accent);color:var(--accent-ink);border-radius:999px;font:700 10px/1 var(--mono);padding:4px 8px}
 .cat-aside{position:sticky;top:84px;border:1px solid var(--line);border-radius:var(--r);background:var(--panel);padding:22px;max-height:calc(100svh - 110px);overflow:auto}
 @media(max-width:960px){
-  .cat-aside{position:fixed;inset:0 auto 0 0;width:min(340px,88vw);z-index:70;border-radius:0;max-height:none;transform:translateX(-105%);transition:transform .32s cubic-bezier(.22,1,.36,1)}
+  .cat-aside{position:fixed;top:0;bottom:auto;left:0;width:min(340px,88vw);height:var(--fr-h,100vh);z-index:70;border-radius:0;max-height:none;transform:translateX(-105%);transition:transform .32s cubic-bezier(.22,1,.36,1)}
   .cat-aside.is-open{transform:none;box-shadow:0 0 80px rgba(0,0,0,.6)}
   .cat-filters-toggle{display:flex}
   body.filters-open{overflow:hidden}
@@ -658,7 +659,7 @@ a:focus-visible,button:focus-visible,input:focus-visible,select:focus-visible,te
 .f-clear:hover{border-color:var(--bad);color:var(--bad)}
 .cat-aside-foot{display:flex;flex-direction:column;gap:8px;margin-top:14px}
 .cat-scrim{display:none}
-@media(max-width:960px){.cat-scrim{display:block;position:fixed;inset:0;background:rgba(4,6,10,.6);z-index:65;opacity:0;pointer-events:none;transition:opacity .3s}}
+@media(max-width:960px){.cat-scrim{display:block;position:fixed;left:0;right:0;top:0;height:var(--fr-h,100vh);background:rgba(4,6,10,.6);z-index:65;opacity:0;pointer-events:none;transition:opacity .3s}}
 body.filters-open .cat-scrim{opacity:1;pointer-events:auto}
 .cat-results{min-width:0}
 .cat-bar{display:flex;flex-wrap:wrap;gap:12px;align-items:center;margin-bottom:18px}
@@ -805,6 +806,7 @@ body.filters-open .cat-scrim{opacity:1;pointer-events:auto}
 .ds-service-name{display:block;font:600 15.5px/1.3 var(--disp)}
 .ds-service-desc{display:block;margin-top:6px;font-size:13px;color:var(--mut);line-height:1.55}
 .ds-service-price{margin-left:auto;flex:none;font:600 15px/1 var(--disp);color:var(--sec);white-space:nowrap}
+.ds-service-dur{display:block;margin-top:8px;font:500 10.5px/1.5 var(--mono);letter-spacing:.1em;text-transform:uppercase;color:var(--sec)}
 .wo-bar{display:none;position:sticky;bottom:14px;z-index:20;margin-top:22px;align-items:center;gap:18px;flex-wrap:wrap;
   border:1px solid var(--accent-line);border-radius:14px;background:color-mix(in srgb,var(--bg) 96%,transparent);
   padding:16px 20px;box-shadow:var(--glow-a)}
@@ -973,6 +975,7 @@ body.filters-open .cat-scrim{opacity:1;pointer-events:auto}
 
 <!-- ============================ LANDING ============================ -->
 <div data-surface="landing">
+<main>
 
   <div class="mq mq-a" data-flag="announcements" data-marquee-wrap aria-label="Anuncios">
     <div class="mq-track" data-marquee>{{announcements}}</div>
@@ -1228,10 +1231,12 @@ body.filters-open .cat-scrim{opacity:1;pointer-events:auto}
     </div>
   </section>
 
+</main>
 </div>
 
 <!-- ============================ CATÁLOGO ============================ -->
 <section class="cat-surface" data-surface="catalog" id="catalogo" data-flag="catalog">
+<main>
   <header class="cat-hero">
     <div class="wrap cat-hero-grid">
       <div class="cat-hero-copy">
@@ -1332,10 +1337,12 @@ body.filters-open .cat-scrim{opacity:1;pointer-events:auto}
       </div>
     </div>
   </div>
+</main>
 </section>
 
 <!-- ============================ PRODUCTO ============================ -->
 <section class="pdp" data-surface="product" data-flag="catalog">
+<main>
   <div class="wrap">
     <nav class="pdp-crumbs" aria-label="Ruta">
       <a href="#inicio" data-ds-route="home">Inicio</a><span>/</span><a href="#catalogo" data-ds-route="catalog">Catálogo</a><span>/</span><strong>{{product_name}}</strong>
@@ -1382,10 +1389,12 @@ body.filters-open .cat-scrim{opacity:1;pointer-events:auto}
       <div class="grid-products">{{product_related}}</div>
     </div>
   </div>
+</main>
 </section>
 
 <!-- ============================ SERVICIOS ============================ -->
 <section class="svc" data-surface="services" id="servicios-pagina" data-flag="services">
+<main>
   <div class="wrap">
     <header class="cat-hero" style="padding:110px 0 44px">
       <div class="wrap" style="padding:0">
@@ -1420,6 +1429,7 @@ body.filters-open .cat-scrim{opacity:1;pointer-events:auto}
       </a>
     </div>
   </div>
+</main>
 </section>
 
 <!-- ============================ FOOTER ============================ -->
@@ -1468,32 +1478,46 @@ body.filters-open .cat-scrim{opacity:1;pointer-events:auto}
   var reduce = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches
   function qsa(sel, ctx) { return [].slice.call((ctx || document).querySelectorAll(sel)) }
 
+  //Imgs sin fuente (logo/portada/producto opcionales): no emitir request
+  //al documento y liberar el espacio para el fallback tipográfico.
+  qsa('img[src=""]').forEach(function (img) { img.remove() })
+
   /* ---------- Menú móvil ---------- */
+  var lastFocus = null
   function setMenu(open) {
     var mm = document.querySelector('[data-mmenu]')
     if (!mm) return
     mm.classList.toggle('open', open)
     mm.setAttribute('aria-hidden', open ? 'false' : 'true')
+    if ('inert' in mm) mm.inert = !open
+    /* m-lock en <html>: el puente lo detecta y bloquea el scroll de la
+       página host (el iframe va estirado y no scrollea por dentro). */
+    document.documentElement.classList.toggle('m-lock', open)
     var btn = document.querySelector('[data-m-open]')
     if (btn) btn.setAttribute('aria-expanded', open ? 'true' : 'false')
     body.style.overflow = open ? 'hidden' : ''
+    if (open) {
+      lastFocus = document.activeElement
+      var first = mm.querySelector('a,button')
+      if (first) first.focus()
+    } else if (lastFocus && lastFocus.focus) {
+      lastFocus.focus()
+      lastFocus = null
+    }
   }
   document.addEventListener('click', function (e) {
     var t = e.target
     if (!t || !t.closest) return
     if (t.closest('[data-m-open]')) { setMenu(true); return }
     if (t.closest('[data-m-close]')) { setMenu(false); return }
-    /* Chips de categoría del landing -> superficie catálogo. */
-    var cat = t.closest('a.ds-cat')
-    if (cat && cat.closest('[data-surface="landing"]')) {
-      e.preventDefault()
-      if (window.parent !== window) {
-        parent.postMessage({ type: 'davent:ds-route', route: 'catalog' }, '*')
-      }
-    }
   })
   document.addEventListener('keydown', function (e) {
-    if (e.key === 'Escape') { setMenu(false); body.classList.remove('filters-open') }
+    if (e.key !== 'Escape') return
+    setMenu(false)
+    /* La hoja de filtros la cierra el puente (is-open + filters-open):
+       hay que despachar el Escape sobre el panel, no solo quitar la clase. */
+    var panel = document.querySelector('[data-ds-filters-panel].is-open')
+    if (panel) panel.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true }))
   })
   window.addEventListener('resize', function () {
     if (window.innerWidth > 960) setMenu(false)
@@ -1526,18 +1550,44 @@ body.filters-open .cat-scrim{opacity:1;pointer-events:auto}
     })
   }
 
-  /* ---------- Reveal por scroll ---------- */
+  /* ---------- Reveal por scroll ----------
+     El iframe va estirado al alto del documento: IntersectionObserver
+     dispararía todo de una. La ventana visible llega por davent:ds-frame
+     (en documento directo —sin host— cae a window.scrollY). */
   var rvEls = qsa('.rv')
-  if (reduce || !('IntersectionObserver' in window)) {
-    rvEls.forEach(function (el) { el.classList.add('in') })
-  } else {
-    var io = new IntersectionObserver(function (entries) {
-      entries.forEach(function (en) {
-        if (en.isIntersecting) { en.target.classList.add('in'); io.unobserve(en.target) }
-      })
-    }, { threshold: 0.12 })
-    rvEls.forEach(function (el) { io.observe(el) })
+  var frameBox = null
+  function paint() {
+    /*--fr-h: alto visible del marco — las hojas fijas móviles (menú,
+      panel de filtros, scrim) lo usan para cubrir solo lo que se ve.*/
+    var vh = frameBox ? Math.max(1, frameBox.vh) : (window.innerHeight || 1)
+    document.documentElement.style.setProperty('--fr-h', Math.round(vh) + 'px')
+    var vb = frameBox ? Math.max(0, -frameBox.top) + frameBox.vh
+                      : (window.scrollY || 0) + vh
+    rvEls.forEach(function (el) {
+      if (el.classList.contains('in')) return
+      var r = el.getBoundingClientRect()
+      if (!r.height && !r.width) return
+      if (r.top < vb - 30) el.classList.add('in')
+    })
   }
+  window.addEventListener('message', function (e) {
+    var d = e.data || {}
+    if (d.type === 'davent:ds-frame') {
+      frameBox = { top: Number(d.top) || 0, bottom: Number(d.bottom) || 0, vh: Number(d.vh) || 0 }
+      paint()
+    }
+    if (d.type === 'davent:ds-surface') paint()
+  })
+  if (reduce) {
+    rvEls.forEach(function (el) { el.classList.add('in') })
+  }
+  paint()
+  /* Respaldo: si el host no publica el marco (documento abierto directo),
+     encender todo para no dejar la landing invisible. */
+  setTimeout(function () {
+    if (!frameBox) rvEls.forEach(function (el) { el.classList.add('in') })
+    paint()
+  }, 1200)
 
   /* ==========================================================================
      ORDEN DE TRABAJO (servicios): selecciona ítems y arma el total por WhatsApp.
@@ -1587,6 +1637,13 @@ body.filters-open .cat-scrim{opacity:1;pointer-events:auto}
         var desc = li.querySelector('.ds-service-desc')
         if (name) body.appendChild(name)
         if (desc) body.appendChild(desc)
+        var dur = li.getAttribute('data-duration') || ''
+        if (dur) {
+          var d = document.createElement('span')
+          d.className = 'ds-service-dur'
+          d.textContent = 'Duración · ' + dur
+          body.appendChild(d)
+        }
         var tick = document.createElement('span')
         tick.className = 'tick'
         tick.setAttribute('aria-hidden', 'true')

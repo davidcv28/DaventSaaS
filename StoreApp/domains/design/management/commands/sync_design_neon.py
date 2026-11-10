@@ -28,7 +28,7 @@ Uso:
 PATTERN_COLS    =   [
     'slug', 'nombre', 'categoria_id', 'descripcion', 'tier', 'template', 'layout',
     'html', 'css', 'js', 'variables', 'supports_dark_mode', 'dynamic', 'tokens', 'tags',
-    'preview', 'is_default', 'is_active', 'position', 'created_at', 'updated_at',
+    'preview', 'demo_slug', 'is_default', 'is_active', 'position', 'created_at', 'updated_at',
 ]
 STYLE_COLS      =   [
     'slug', 'nombre', 'categoria_id', 'descripcion', 'tier', 'template', 'layout',
