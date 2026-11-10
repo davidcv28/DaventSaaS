@@ -50,12 +50,21 @@ const openProduct = (p) => router.push(productTo(p))
           seal-shape="" :go="false" quick=""
           :save="endsOf(p) || ''" @open="openProduct"
         >
-          <template #foot="{ p: product }">
+          <template #foot="{ p: product, canBuy, added, adding, buy }">
             <span class="mc-price">
               <s v-if="productOffer(product) != null">{{ oldOf(product) }}</s>
               <strong>{{ priceOf(product) }}</strong>
             </span>
             <span class="mc-off">-{{ offerPct(product) }}%</span>
+            <button
+              v-if="canBuy" type="button" class="tpc-add tpc-cart"
+              :class="{ 'is-added': added }" :disabled="adding"
+              :aria-label="added ? `${product.name} agregado al carrito` : `Agregar ${product.name} al carrito`"
+              :title="added ? 'Agregado' : 'Agregar al carrito'"
+              @click.stop="buy()"
+            >
+              <AppIcon :name="added ? 'check' : 'shopping-cart'" :size="20" />
+            </button>
           </template>
         </TplProductCard>
       </div>

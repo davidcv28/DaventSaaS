@@ -196,6 +196,13 @@ function onPatternNavigate({ route, id } = {}) {
   const target = { home: homeTo.value, catalog: catalogTo.value, services: servicesTo.value }[route]
   if (target) router.push(target)
 }
+// "Agregar al carrito" del documento del patrón (postMessage ds-buy): el
+// iframe es origen opaco y no puede llamar a la API — acá sí hay sesión
+// de comprador; addToCart maneja login pendiente, drawer y toasts.
+function onPatternBuy({ id } = {}) {
+  if (!ordersEnabled.value || !id) return
+  cartStore.addToCart(id, 1)
+}
 function onLayoutMessage(e) {
   if (e.data?.type !== 'davent:layout') return
   if (e.origin !== window.location.origin && e.origin !== parentOrigin) return
@@ -1106,6 +1113,7 @@ onBeforeUnmount(() => {
       :studio-css="patternStudioCssText"
       :title="shopName"
       @navigate="onPatternNavigate"
+      @buy="onPatternBuy"
       @toggle-theme="togglePageTheme"
       @load="patternFrameReady = true"
     />

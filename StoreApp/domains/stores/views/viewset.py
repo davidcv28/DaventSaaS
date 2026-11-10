@@ -719,7 +719,8 @@ class StoreViewSet(StoreBaseViewSet):
             document_csp,
             pattern_document,
         )
-        data                =   self._pattern_doc(request, self._pattern_store(slug))
+        store               =   self._pattern_store(slug)
+        data                =   self._pattern_doc(request, store)
         if not data.get('html'):
             raise Http404
         theme               =   'dark' if request.query_params.get('theme') == 'dark' else 'light'
@@ -728,12 +729,16 @@ class StoreViewSet(StoreBaseViewSet):
             surface         =   'landing'
         #Nonce por respuesta: único autorizador del JS del documento.
         nonce               =   secrets.token_urlsafe(16)
+        #Venta online efectiva (ecommerce + fiscal): el puente del documento
+        #inyecta los CTA de carrito solo cuando la tienda realmente vende.
+        from StoreApp.domains.stores.services.commerce import orders_enabled
         html                =   pattern_document(
             data['html'], data.get('css') or '', theme, surface,
             request.query_params.get('preview') or '', data.get('style') or '',
             nonce   =   nonce,
             preload =   data.get('preload') or [],
             template    =   request.query_params.get('template') or '',
+            commerce    =   orders_enabled(store),
         )
         response            =   HttpResponse(html, content_type = 'text/html; charset=utf-8')
         #El documento se embebe en la web (iframe same-origin): el default

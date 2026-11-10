@@ -132,7 +132,8 @@ onBeforeUnmount(() => clearTimeout(addedTimer))
       <slot name="tags" :p="p" />
       <span class="tpc-stock"><i aria-hidden="true"></i>En stock</span>
       <span class="tpc-foot">
-        <slot name="foot" :p="p" :price="price" :old-price="oldPrice" :offer="offer">
+        <slot name="foot" :p="p" :price="price" :old-price="oldPrice" :offer="offer"
+          :can-buy="canBuy" :added="added" :adding="adding" :buy="addToCart">
           <span class="tpc-price-wrap">
             <span class="tpc-price"><s v-if="offer != null">{{ oldPrice }}</s><strong :class="{ deal: offer != null }">{{ price }}</strong></span>
             <span v-if="save" class="tpc-save">{{ save }}</span>

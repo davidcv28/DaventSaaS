@@ -76,7 +76,7 @@ const src = computed(() => {
   return `/api/stores/public/${encodeURIComponent(props.slug)}/pattern/document/?${params}`
 })
 
-const emit = defineEmits(['navigate', 'toggle-theme', 'load'])
+const emit = defineEmits(['navigate', 'toggle-theme', 'load', 'buy'])
 
 //El iframe va sin `allow-same-origin` (origen opaco): el JS del diseño no
 //puede tocar el DOM ni las cookies de la app. Los datos que necesita de la
@@ -161,6 +161,14 @@ function onMessage(e) {
   }
   if (e.data?.type === 'davent:ds-theme-toggle') {
     emit('toggle-theme')
+    return
+  }
+  if (e.data?.type === 'davent:ds-buy') {
+    /* CTA de carrito inyectado por el puente (tienda con venta online):
+     * el documento no puede llamar a la API del carrito — el host resuelve
+     * sesión de comprador, alta y drawer. El id lo valida el server. */
+    const id = String(e.data.id || '')
+    if (/^\d{1,10}$/.test(id)) emit('buy', { id: Number(id) })
     return
   }
   if (e.data?.type === 'davent:ds-route') {

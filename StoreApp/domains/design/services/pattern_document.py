@@ -201,7 +201,7 @@ def sanitize_markup(html):
     return META_REFRESH_RE.sub('', html)
 
 
-def pattern_document(html, css, theme, surface, preview = '', style = '', nonce = '', preload = None, template = ''):
+def pattern_document(html, css, theme, surface, preview = '', style = '', nonce = '', preload = None, template = '', commerce = False):
     """
     Documento completo listo para servir como `text/html`.
     `html` ya viene renderizado contra la tienda y `css` ya trae el tema del
@@ -209,6 +209,10 @@ def pattern_document(html, css, theme, surface, preview = '', style = '', nonce 
     (portada del hero) que conviene descubrir antes de parsear el body.
     `template` es el diseño en ensayo: se propaga a `script.js` para que el
     JS corresponda al patrón del documento (antes servía el del borrador).
+    `commerce` marca `data-ds-commerce` en <html>: la tienda vende online
+    (orders_enabled) y el puente inyecta los CTA "Agregar al carrito" —
+    el documento nunca toca la API de carrito (origen opaco), solo avisa
+    al host por postMessage.
     """
     query = {'surface': surface, 'theme': theme}
     if preview:
@@ -225,6 +229,7 @@ def pattern_document(html, css, theme, surface, preview = '', style = '', nonce 
     #Solo slug ASCII: el atributo lo escriben selectores CSS, nunca HTML.
     style = re.sub(r'[^a-z0-9-]', '', str(style or '').lower())[:80]
     style_attr = f' data-ds-style="{style}"' if style else ''
+    commerce_attr = ' data-ds-commerce="1"' if commerce else ''
     #Los dos `<script>` son los únicos ejecutables del documento: el nonce
     #(CSP `script-src 'nonce-…'`) los autoriza sin depender del origen.
     nonce   =   str(nonce or '')
@@ -234,7 +239,7 @@ def pattern_document(html, css, theme, surface, preview = '', style = '', nonce 
         for url in (preload or [])[:2] if url
     )
     return (
-        f'<!doctype html><html lang="es" data-ds-theme="{theme}" data-ds-surface="{surface}"{style_attr}>'
+        f'<!doctype html><html lang="es" data-ds-theme="{theme}" data-ds-surface="{surface}"{style_attr}{commerce_attr}>'
         '<head><meta charset="utf-8">'
         '<meta name="viewport" content="width=device-width,initial-scale=1">'
         f'{preload_links}'

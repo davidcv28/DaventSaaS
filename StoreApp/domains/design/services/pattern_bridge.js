@@ -338,6 +338,18 @@
       var n = parseInt((host && host.getAttribute('data-ds-offset')) || '', 10)
       return n > 0 ? n : 72
     }
+    /* CTA de carrito inyectado (tienda con venta online): el documento no
+     * puede llamar a la API del carrito (origen opaco) — avisa al host, que
+     * resuelve sesión/alta y abre el drawer. Va ANTES de data-ds-product:
+     * el botón vive dentro de la tarjeta y sin este corte navegaría a la
+     * ficha en vez de agregar. */
+    var buyBtn = t.closest('[data-ds-buy]')
+    if (buyBtn) {
+      e.preventDefault()
+      e.stopPropagation()
+      parent.postMessage({ type: 'davent:ds-buy', id: buyBtn.getAttribute('data-ds-buy') || '' }, '*')
+      return
+    }
     var card = t.closest('[data-ds-product]')
     if (card) { e.preventDefault(); go('product', card.getAttribute('data-ds-product')); return }
     /* Redirects de contacto (/r/whatsapp|instagram|…): el anchor viaja sin
@@ -1561,6 +1573,82 @@
     if (minInput) minInput.value = state.min
     if (maxInput) maxInput.value = state.max
   })()
+  /* ===== E-commerce: CTA "Agregar al carrito" inyectados =====
+   * Solo cuando el documento declara data-ds-commerce (la tienda vende
+   * online — orders_enabled del backend). El botón nunca habla con la API:
+   * postMessage 'davent:ds-buy' al host, que tiene la sesión del comprador.
+   * Se inyecta en las tarjetas .ds-product (marcado compartido del
+   * fragmento de catálogo) y en la ficha [data-surface="product"] antes de
+   * su CTA de WhatsApp — sin reescribir el HTML de ningún diseño. */
+  var COMMERCE_CSS =
+    '.dsx-buy{display:block;width:calc(100% - 24px);margin:10px 12px 12px;padding:11px 14px;' +
+    'border:0;border-radius:var(--ds-radius-btn,var(--ds-radius,8px));cursor:pointer;' +
+    'background:var(--ds-accent,#111);color:var(--ds-accent-ink,#fff);' +
+    'font:inherit;font-size:12px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;' +
+    'transition:filter .15s ease}' +
+    '.dsx-buy:hover{filter:brightness(1.08)}' +
+    '.dsx-buy:active{transform:translateY(1px)}' +
+    '.dsx-buy[disabled]{opacity:.6;cursor:default;transform:none}' +
+    '.dsx-buy.is-added{background:var(--ds-success,#0f9d58)}' +
+    '[data-surface="product"] .dsx-buy{width:auto;min-width:200px;margin:0 0 12px}'
+  function dsBuyButton(pid, slot) {
+    var b = document.createElement('button')
+    b.type = 'button'
+    b.className = 'dsx-buy'
+    b.setAttribute('data-ds-buy', String(pid))
+    if (slot) b.setAttribute('data-ds-buy-slot', slot)
+    b.textContent = 'Agregar al carrito'
+    return b
+  }
+  function injectCardBuys() {
+    var cards = document.querySelectorAll('.ds-product:not([data-ds-buy-done])')
+    for (var i = 0; i < cards.length; i++) {
+      var card = cards[i]
+      var link = card.querySelector('[data-ds-product]')
+      var pid = link ? link.getAttribute('data-ds-product') : ''
+      if (!pid) continue
+      card.setAttribute('data-ds-buy-done', '1')
+      card.appendChild(dsBuyButton(pid))
+    }
+  }
+  function injectPdpBuy() {
+    var pdp = document.querySelector('[data-surface="product"]')
+    //Ojo: la ficha también contiene tarjetas de relacionados ya inyectadas
+    //— el guard busca el CTA de la ficha, no cualquier .dsx-buy.
+    if (!pdp || pdp.querySelector('[data-ds-buy-slot="pdp"]')) return
+    //El id del producto viaja en la URL del documento (?product=<pk>).
+    var pid = ''
+    try { pid = new URLSearchParams(window.location.search).get('product') || '' } catch (e) {}
+    if (!pid) return
+    //Slot: antes del CTA de WhatsApp del diseño (clases/ hrefs conocidos
+    //del fragmento compartido). Fallback: al inicio del panel de info.
+    var wa = pdp.querySelector('a[href*="wa.me"], a[href*="whatsapp"], a[href*="/r/whatsapp"]')
+    var slot = wa ? (wa.closest('.pdp-buy,.pdp-ctas,.pdp-actions,[class*="cta"],[class*="buy"]') || wa) : null
+    if (!slot) {
+      slot = pdp.querySelector('.pdp-info, aside, [class*="info"], [class*="panel"]')
+      if (slot) {
+        var h1 = slot.querySelector('h1')
+        slot.insertBefore(dsBuyButton(pid, 'pdp'), h1 ? h1.nextSibling : slot.firstChild)
+        return
+      }
+    }
+    if (slot && slot.parentNode) slot.parentNode.insertBefore(dsBuyButton(pid, 'pdp'), slot)
+  }
+  function initCommerce() {
+    if (root.getAttribute('data-ds-commerce') !== '1') return
+    var st = document.createElement('style')
+    st.textContent = COMMERCE_CSS
+    document.head.appendChild(st)
+    injectCardBuys()
+    injectPdpBuy()
+    /* El catálogo reordena tarjetas (applyCatalog mueve nodos, no los
+     * recrea) y el buscador puede filtrar — los botones inyectados viajan
+     * con su tarjeta. Por si un diseño monta tarjetas por JS después,
+     * reinyecta en el próximo frame y al cargar. */
+    requestAnimationFrame(function () { injectCardBuys(); injectPdpBuy() })
+    window.addEventListener('load', function () { injectCardBuys(); injectPdpBuy() })
+  }
+  initCommerce()
   buildFilters()
   initSearch()
   initFilters()

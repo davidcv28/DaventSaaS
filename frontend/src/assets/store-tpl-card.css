@@ -306,6 +306,12 @@
 }
 @media (hover: hover) and (pointer: fine) { .tpc-add:hover { transform: scale(1.08); } }
 .tpc-add:active { transform: scale(.94); }
+/* .tpc-add también se usa como <button> (agregar al carrito) desde slots
+   #foot de las pieles: el reset de <button> no llega por scoped CSS del
+   card, así que vive acá junto a la geometría compartida. */
+button.tpc-add { cursor: pointer; font: inherit; padding: 0; }
+button.tpc-add:disabled { opacity: .6; cursor: default; }
+button.tpc-add.is-added { background: #16a34a; }
 
 /* --- Fila horizontal (listados compactos): la media pasa a miniatura
    cuadrada fija y el cuerpo queda a la derecha — mismo contrato de pie --- */

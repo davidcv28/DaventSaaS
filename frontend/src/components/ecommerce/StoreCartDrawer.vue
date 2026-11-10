@@ -105,7 +105,12 @@ function onBackdrop(e) { if (e.target === e.currentTarget) close() }
           <button type="button" class="ec-cart-cta" @click="goCheckout">
             Ir a pagar <AppIcon name="arrow-right" :size="16" aria-hidden="true" />
           </button>
-          <button type="button" class="ec-cart-ghost" :disabled="cart.busy" @click="cart.clear()">Vaciar carrito</button>
+          <div class="ec-cart-foot-row">
+            <button type="button" class="ec-cart-ghost" :disabled="cart.busy" @click="cart.clear()">Vaciar carrito</button>
+            <!-- En tiendas con diseño de patrón no hay header Vue: el drawer
+                 es la única puerta a "Mi cuenta" (pedidos, suscripciones). -->
+            <RouterLink :to="accountTo" class="ec-cart-link" @click="close">Mi cuenta</RouterLink>
+          </div>
         </footer>
 
         <footer v-else-if="!customer.isAuthenticated" class="ec-cart-foot">
@@ -152,6 +157,7 @@ function onBackdrop(e) { if (e.target === e.currentTarget) close() }
 .ec-cart-total strong { font-size: 20px; font-weight: 800; font-variant-numeric: tabular-nums; }
 .ec-cart-discount { margin: 0; font-size: 12px; color: var(--sp-success); }
 .ec-cart-cta { display: inline-flex; align-items: center; justify-content: center; gap: 8px; padding: 13px 16px; border: none; border-radius: calc(var(--sp-radius) * .75); background: var(--store-accent, #111); color: var(--store-accent-ink, #fff); font-size: 15px; font-weight: 800; cursor: pointer; text-decoration: none; }
+.ec-cart-foot-row { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
 .ec-cart-ghost { display: inline-flex; align-items: center; justify-content: center; gap: 8px; padding: 11px 16px; border: 1px solid var(--sp-line, currentColor); border-radius: calc(var(--sp-radius) * .75); background: transparent; color: inherit; font-size: 14px; font-weight: 600; cursor: pointer; }
 .ec-cart-ghost:disabled { opacity: .5; cursor: default; }
 .ec-cart-hint { margin: 0; font-size: 13px; color: var(--sp-muted, inherit); text-align: center; }
