@@ -56,6 +56,9 @@ const seguimientoTo = (token) => ({
   path: storeHostSlug ? '/seguimiento' : `/${slug.value}/seguimiento`,
   query: { token }
 })
+const comprobanteTo = (token) => ({
+  path: storeHostSlug ? `/pedido/${token}/comprobante` : `/${slug.value}/pedido/${token}/comprobante`
+})
 const loginTo = computed(() => ({ path: storeHostSlug ? '/cuenta' : `/${slug.value}/cuenta` }))
 
 // ---------- auth gate ----------
@@ -367,7 +370,12 @@ onMounted(async () => {
               </div>
               <span class="ec-order-status" :class="`is-${(o.status || '').toLowerCase()}`">{{ STATUS_LABELS[o.status] || o.status }}</span>
               <strong class="ec-order-total">{{ money(o.total) }}</strong>
-              <RouterLink :to="seguimientoTo(o.tracking_token)" class="ec-order-link">Seguir</RouterLink>
+              <span class="ec-order-links">
+                <RouterLink :to="seguimientoTo(o.tracking_token)" class="ec-order-link">Seguir</RouterLink>
+                <RouterLink v-if="o.tracking_token" :to="comprobanteTo(o.tracking_token)" class="ec-order-link" target="_blank">
+                  <AppIcon name="receipt" :size="13" aria-hidden="true" /> Comprobante
+                </RouterLink>
+              </span>
             </li>
           </ul>
         </section>
@@ -539,7 +547,8 @@ onMounted(async () => {
 .ec-order-status.is-delivered, .ec-order-status.is-active { background: color-mix(in srgb, var(--sp-success) 14%, transparent); color: var(--sp-success); }
 .ec-order-status.is-cancelled, .ec-order-status.is-expired, .ec-order-status.is-refunded { background: color-mix(in srgb, var(--sp-danger) 12%, transparent); color: var(--sp-danger); }
 .ec-order-total { font-size: 14px; font-variant-numeric: tabular-nums; }
-.ec-order-link { font-size: 13px; font-weight: 700; color: var(--store-accent, inherit); text-decoration: none; }
+.ec-order-links { display: inline-flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+.ec-order-link { display: inline-flex; align-items: center; gap: 5px; font-size: 13px; font-weight: 700; color: var(--store-accent, inherit); text-decoration: none; }
 .ec-sub-card { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 14px; border: 1px solid var(--sp-line, rgba(0,0,0,.12)); border-radius: calc(var(--sp-radius) * .85); flex-wrap: wrap; }
 .ec-sub-card-info { display: grid; gap: 3px; }
 .ec-sub-card-info small { color: var(--sp-muted, inherit); }

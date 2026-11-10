@@ -23,6 +23,7 @@ const customer = useCustomerStore()
 const router = useRouter()
 
 const checkoutTo = computed(() => ({ path: storeHostSlug ? '/checkout' : `/${props.slug}/checkout` }))
+const cartPageTo = computed(() => ({ path: storeHostSlug ? '/carrito' : `/${props.slug}/carrito` }))
 const accountTo = computed(() => ({ path: storeHostSlug ? '/cuenta' : `/${props.slug}/cuenta` }))
 
 const empty = computed(() => cart.status === 'ready' && !cart.hasItems)
@@ -105,6 +106,7 @@ function onBackdrop(e) { if (e.target === e.currentTarget) close() }
           <button type="button" class="ec-cart-cta" @click="goCheckout">
             Ir a pagar <AppIcon name="arrow-right" :size="16" aria-hidden="true" />
           </button>
+          <RouterLink :to="cartPageTo" class="ec-cart-ghost ec-cart-full" @click="close">Ver carrito completo</RouterLink>
           <div class="ec-cart-foot-row">
             <button type="button" class="ec-cart-ghost" :disabled="cart.busy" @click="cart.clear()">Vaciar carrito</button>
             <!-- En tiendas con diseño de patrón no hay header Vue: el drawer
@@ -161,5 +163,6 @@ function onBackdrop(e) { if (e.target === e.currentTarget) close() }
 .ec-cart-ghost { display: inline-flex; align-items: center; justify-content: center; gap: 8px; padding: 11px 16px; border: 1px solid var(--sp-line, currentColor); border-radius: calc(var(--sp-radius) * .75); background: transparent; color: inherit; font-size: 14px; font-weight: 600; cursor: pointer; }
 .ec-cart-ghost:disabled { opacity: .5; cursor: default; }
 .ec-cart-hint { margin: 0; font-size: 13px; color: var(--sp-muted, inherit); text-align: center; }
+.ec-cart-full { justify-content: center; text-decoration: none; }
 .ec-cart-link { border: none; background: none; color: var(--store-accent, inherit); font-weight: 700; cursor: pointer; text-decoration: underline; }
 </style>

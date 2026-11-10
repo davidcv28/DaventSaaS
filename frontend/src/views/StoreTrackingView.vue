@@ -79,6 +79,9 @@ const stepIndex = computed(() => {
 const eventsDesc = computed(() => [...(order.value?.events || [])].sort((a, b) => String(b.created_at).localeCompare(String(a.created_at))))
 
 const cuentaTo = computed(() => ({ path: storeHostSlug ? '/cuenta' : `/${slug.value}/cuenta`, query: { view: 'soporte', order: token.value } }))
+const comprobanteTo = computed(() => ({
+  path: storeHostSlug ? `/pedido/${token.value}/comprobante` : `/${slug.value}/pedido/${token.value}/comprobante`
+}))
 const catalogoTo = computed(() => ({ path: storeHostSlug ? '/catalogo' : `/${slug.value}/catalogo` }))
 
 // ---------- carga / polling ----------
@@ -300,10 +303,15 @@ onUnmounted(() => {
 
       <!-- Comprobante no fiscal -->
       <section class="ec-track-card">
-        <button type="button" class="ec-track-receipt-btn" @click="toggleReceipt">
-          <AppIcon name="receipt" :size="17" aria-hidden="true" />
-          {{ receiptOpen ? 'Ocultar comprobante' : 'Ver comprobante (no fiscal)' }}
-        </button>
+        <div class="ec-track-receipt-row">
+          <button type="button" class="ec-track-receipt-btn" @click="toggleReceipt">
+            <AppIcon name="receipt" :size="17" aria-hidden="true" />
+            {{ receiptOpen ? 'Ocultar comprobante' : 'Ver comprobante (no fiscal)' }}
+          </button>
+          <RouterLink :to="comprobanteTo" class="ec-track-receipt-link" target="_blank">
+            <AppIcon name="printer" :size="14" aria-hidden="true" /> Versión para imprimir
+          </RouterLink>
+        </div>
         <div v-if="receiptOpen" class="ec-receipt">
           <p v-if="receiptBusy" class="ec-track-muted">Cargando…</p>
           <p v-else-if="receiptError" class="sp-form-error" role="alert">{{ receiptError }}</p>
@@ -405,6 +413,8 @@ onUnmounted(() => {
 .ec-track-grand { padding-top: 8px; border-top: 1px solid var(--sp-line, rgba(0,0,0,.1)); font-size: 15px !important; }
 .ec-track-grand dt { font-weight: 700; color: inherit !important; }
 .ec-track-grand dd { font-size: 18px; font-weight: 800; }
+.ec-track-receipt-row { display: flex; align-items: center; gap: 14px; flex-wrap: wrap; }
+.ec-track-receipt-link { display: inline-flex; align-items: center; gap: 6px; font-size: 13px; font-weight: 700; color: var(--store-accent, inherit); text-decoration: underline; }
 .ec-track-receipt-btn { justify-self: start; display: inline-flex; align-items: center; gap: 8px; padding: 10px 14px; border: 1px solid var(--sp-line, currentColor); border-radius: calc(var(--sp-radius) * .7); background: transparent; color: inherit; font-size: 13.5px; font-weight: 700; cursor: pointer; }
 .ec-receipt { display: grid; gap: 12px; padding: 14px; border: 1px dashed var(--sp-line, rgba(0,0,0,.2)); border-radius: calc(var(--sp-radius) * .75); }
 .ec-rc-head { display: flex; justify-content: space-between; gap: 12px; }

@@ -37,6 +37,8 @@ const StoreProductView = () => import('../views/StoreProductView.vue')
 const StoreCheckoutView = () => import('../views/StoreCheckoutView.vue')
 const StoreTrackingView = () => import('../views/StoreTrackingView.vue')
 const StoreAccountView = () => import('../views/StoreAccountView.vue')
+const StoreCartView = () => import('../views/StoreCartView.vue')
+const StoreReceiptView = () => import('../views/StoreReceiptView.vue')
 const StoreLegalView = () => import('../views/StoreLegalView.vue')
 const StoreFlyerView = () => import('../views/StoreFlyerView.vue')
 const DaventFlyerView = () => import('../views/DaventFlyerView.vue')
@@ -89,6 +91,18 @@ const storeChildren = [
     name: 'store-tracking',
     component: StoreTrackingView,
     meta: { title: 'Seguimiento del pedido' }
+  },
+  {
+    path: 'carrito',
+    name: 'store-cart',
+    component: StoreCartView,
+    meta: { title: 'Tu carrito' }
+  },
+  {
+    path: 'pedido/:token/comprobante',
+    name: 'store-receipt',
+    component: StoreReceiptView,
+    meta: { title: 'Comprobante' }
   },
   // Sub-rutas de /cuenta que llegan por los mails del backend:
   // verificación de email y reseteo de contraseña (mismo componente,
