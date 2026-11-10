@@ -1,11 +1,15 @@
+import logging
+import re
 import uuid
 
 import boto3
 from botocore.config import Config as BotoConfig
 from decouple import config
+from django.core.cache import cache
 from django.db import transaction
 
-from StoreApp.domains.stores.models import Store
+from AdminApp.domains.invoices.services.vault import VaultError, decrypt_secret
+from StoreApp.domains.stores.models import Store, StoreStorageConfig
 
 from .imaging import normalize_image
 from .services import plan_benefits_of
@@ -30,7 +34,18 @@ La cuota por tienda sale del beneficio 'limit' max_storage_mb del plan
 vigente (SuscriptionApp/benefits). Store.storage_used_bytes acumula los
 bytes subidos (logo, carrusel e imágenes de productos).
 
+BYO storage (StoreStorageConfig): si la tienda tiene `enabled` y sus
+credenciales descifrables, SUS objetos nuevos van a SU bucket R2; la key
+'stores/<store_id>/...' no cambia — el bucket destino se resuelve por la
+config ACTUAL de la tienda en cada operación. Si el PUT al bucket del
+dueño falla cae al bucket DAVENT (nunca se rompe un upload por una
+config rota). OJO: no hay migración — deshabilitar el BYO (o habilitarlo
+después de tener objetos en DAVENT) deja las keys viejas apuntando al
+bucket equivocado hasta resubirlas. Aceptable en MVP, documentado en la
+guía del panel.
+
 """
+logger                  =   logging.getLogger(__name__)
 LOGO_MAX_BYTES          =   2 * 1024 * 1024   # 2 MB por archivo de logo
 IMAGE_MAX_BYTES         =   4 * 1024 * 1024   # 4 MB por imagen de carrusel/producto
 CAROUSEL_MAX_IMAGES     =   5                 # tope de imágenes del carrusel
@@ -65,7 +80,21 @@ def storage_configured():
         config('R2_SECRET_ACCESS_KEY', default = ''),
         _bucket(),
     ])
-def _client():
+def _client(backend = None):
+    """
+    Cliente boto3 S3. `backend` = dict resuelto por `_byo_backend`
+    (credenciales EN CLARO solo para este cliente — jamás se loguean
+    ni salen del proceso); None = bucket DAVENT de las env vars.
+    """
+    if backend is not None:
+        return boto3.client(
+            's3',
+            endpoint_url          =   backend['endpoint'],
+            aws_access_key_id     =   backend['access_key'],
+            aws_secret_access_key =   backend['secret_key'],
+            region_name           =   backend['region'],
+            config                =   BotoConfig(signature_version = 's3v4'),
+        )
     return boto3.client(
         's3',
         endpoint_url          =   _endpoint(),
@@ -75,24 +104,149 @@ def _client():
         config                =   BotoConfig(signature_version = 's3v4'),
     )
 #=========================================
+# BYO STORAGE (bucket R2 propio del dueño)
+#=========================================
+_STORE_KEY_RE               =   re.compile(r'^stores/(\d+)/')
+_STORE_STORAGE_CACHE_TTL    =   300     #segundos — acota la staleness del BYO
+
+
+def _store_id_from_key(key):
+    """store_id embebido en keys 'stores/<id>/...' (None si no aplica — chat, system, etc.)."""
+    match   =   _STORE_KEY_RE.match(key or '')
+    return int(match.group(1)) if match else None
+
+
+def _storage_config_row(store_id):
+    """
+    Fila StoreStorageConfig cacheada (campos crudos, secretos SIGUEN
+    cifrados en el payload — se descifran recién en `_byo_backend`).
+    Key 'store_storage:<id>' con TTL corto + invalidación explícita al
+    guardar/borrar desde el panel (ver invalidate_store_storage): la key
+    no puede llevar updated_at porque eso exigiría pegarle a la DB en
+    cada object_url — justo lo que el cache evita.
+    """
+    if not store_id:
+        return None
+    cache_key   =   f'store_storage:{store_id}'
+    row         =   cache.get(cache_key)
+    if row is None:
+        cfg     =   StoreStorageConfig.objects.filter(store_id = store_id).first()
+        row     =   {
+            'endpoint'          :   cfg.endpoint,
+            'bucket'            :   cfg.bucket,
+            'region'            :   cfg.region,
+            'access_key_enc'    :   cfg.access_key_enc,
+            'secret_key_enc'    :   cfg.secret_key_enc,
+            'public_base_url'   :   cfg.public_base_url,
+            'enabled'           :   cfg.enabled,
+        } if cfg is not None else {}
+        cache.set(cache_key, row, _STORE_STORAGE_CACHE_TTL)
+    return row or None
+
+
+def invalidate_store_storage(store_id):
+    """Borra el cache BYO de la tienda — llamar tras guardar/borrar su StoreStorageConfig."""
+    if store_id:
+        cache.delete(f'store_storage:{store_id}')
+
+
+def _byo_backend(store_id):
+    """
+    Backend S3 del dueño si su StoreStorageConfig está `enabled` y
+    completo (endpoint + bucket + ambas credenciales descifrables).
+    `public_base_url` es OPCIONAL: sin ella las URLs públicas salen
+    firmadas (presigned) con las credenciales de la tienda.
+
+    Devuelve un dict con credenciales en claro SOLO para construir el
+    cliente boto3 — nunca se loguea ni se devuelve. None = la tienda
+    usa el bucket DAVENT (sin config, deshabilitada o ilegible).
+    """
+    if not store_id:
+        return None
+    row     =   _storage_config_row(store_id)
+    if not row or not row.get('enabled'):
+        return None
+    if not all([
+        row.get('endpoint'),
+        row.get('bucket'),
+        row.get('access_key_enc'),
+        row.get('secret_key_enc'),
+    ]):
+        return None
+    try:
+        access_key  =   decrypt_secret(row['access_key_enc'], f'{StoreStorageConfig.PURPOSE_ACCESS_KEY}:{store_id}').decode()
+        secret_key  =   decrypt_secret(row['secret_key_enc'], f'{StoreStorageConfig.PURPOSE_SECRET_KEY}:{store_id}').decode()
+    except (VaultError, UnicodeDecodeError):
+        #Blob manipulado o llave rotada: se trata como "sin BYO" y todo
+        #cae al bucket DAVENT — nunca romper la tienda por un secreto roto.
+        logger.warning('StoreStorageConfig ilegible store_id=%s — se usa el bucket DAVENT', store_id)
+        return None
+    return {
+        'endpoint'          :   row['endpoint'],
+        'bucket'            :   row['bucket'],
+        'region'            :   row.get('region') or 'auto',
+        'access_key'        :   access_key,
+        'secret_key'        :   secret_key,
+        'public_base_url'   :   (row.get('public_base_url') or '').rstrip('/'),
+    }
+
+
+def _byo_backend_for_key(key):
+    """Backend BYO de la tienda dueña de la key 'stores/<id>/...' (None si no aplica)."""
+    store_id    =   _store_id_from_key(key)
+    return _byo_backend(store_id) if store_id else None
+
+
+def store_storage_configured(store):
+    """
+    True si la tienda tiene backend de storage disponible: el R2 de
+    DAVENT (env) O su propio bucket BYO enabled+configurado. Los uploads
+    lo usan como gate — con BYO activo no hace falta que DAVENT tenga
+    credenciales propias.
+    """
+    store_id    =   getattr(store, 'pk', None) or getattr(store, 'id', None)
+    return storage_configured() or _byo_backend(store_id) is not None
+#=========================================
 # OBJECT URL (delivery pública)
 #=========================================
 def object_url(key, private = False, expires = None):
     """
     URL servible del objeto. Si el bucket tiene URL pública configurada
-    (R2_PUBLIC_URL) la usa; si no, devuelve una URL firmada de lectura
-    (válida PRESIGNED_TTL_SECONDS). Devuelve None sin key o sin config.
+    la usa; si no, devuelve una URL firmada de lectura (válida
+    PRESIGNED_TTL_SECONDS). Devuelve None sin key o sin backend.
+
+    BYO: si la key es 'stores/<id>/...' y ESA tienda tiene storage
+    propio activo, la URL sale de SU public_base_url o se firma con SUS
+    credenciales. OJO: la URL se resuelve por la config ACTUAL — un
+    objeto subido al bucket DAVENT antes de activar el BYO (o durante
+    un fallback) no existe en el bucket del dueño y su URL nueva da 404
+    (limitación MVP documentada, sin migración de objetos).
 
     ``private=True`` ignora la URL pública y fuerza la firmada: para objetos
-    que no son contenido público de tienda (adjuntos del chat de soporte).
-    ``expires`` acota la vigencia de la firma (segundos).
+    que no son contenido público de tienda (adjuntos del chat de soporte,
+    comprobantes de pago, etiquetas de campaña). ``expires`` acota la
+    vigencia de la firma (segundos).
     """
-    if not key or not storage_configured():
+    if not key:
         return None
-    base        =   None if private else _public_base()
+    backend     =   _byo_backend_for_key(key)
+    if backend is None and not storage_configured():
+        return None
+    base        =   None
+    if not private:
+        #BYO: dominio público del dueño (si no tiene, cae a presigned
+        #con SUS credenciales). Sin BYO: R2_PUBLIC_URL de DAVENT.
+        base    =   backend['public_base_url'] if backend is not None else _public_base()
+        base    =   base or None
     if base:
         return f'{base}/{key}'
     try:
+        if backend is not None:
+            return _client(backend).generate_presigned_url(
+                'get_object',
+                Params      =   {'Bucket': backend['bucket'], 'Key': key},
+                ExpiresIn   =   expires or PRESIGNED_TTL_SECONDS,
+            )
         return _client().generate_presigned_url(
             'get_object',
             Params      =   {'Bucket': _bucket(), 'Key': key},
@@ -101,7 +255,23 @@ def object_url(key, private = False, expires = None):
     except Exception:
         return None
 def _delete_object(key):
-    if not key or not storage_configured():
+    """
+    Borrado best-effort: intenta el bucket donde el objeto probablemente
+    vive (BYO de la tienda dueña de la key, si la hay) y, si esa llamada
+    falla, el bucket DAVENT — cubre objetos que cayeron por fallback de
+    upload. Los errores se tragan como siempre: el objeto huérfano no
+    bloquea el flujo y la cuota ya se liberó en DB.
+    """
+    if not key:
+        return
+    backend =   _byo_backend_for_key(key)
+    if backend is not None:
+        try:
+            _client(backend).delete_object(Bucket = backend['bucket'], Key = key)
+            return
+        except Exception:
+            pass
+    if not storage_configured():
         return
     try:
         _client().delete_object(Bucket = _bucket(), Key = key)
@@ -110,10 +280,25 @@ def _delete_object(key):
         pass
 def put_object(key, body, content_type):
     """
-    Sube bytes arbitrarios al bucket bajo una key explícita (adjuntos que
-    no pertenecen a una tienda — p.ej. imágenes del chat de soporte, sin
-    cupo por tienda). Lanza ValueError si la subida falla.
+    Sube bytes arbitrarios bajo una key explícita. Si la key es de una
+    tienda con BYO activo va a SU bucket; si esa subida falla cae al
+    bucket DAVENT (un upload nunca se rompe por una config rota del
+    dueño). Para objetos sin tienda (chat de soporte, 'system/...') va
+    siempre a DAVENT. Lanza ValueError si ninguna subida funciona.
     """
+    backend =   _byo_backend_for_key(key)
+    if backend is not None:
+        try:
+            _client(backend).put_object(
+                Bucket          =   backend['bucket'],
+                Key             =   key,
+                Body            =   body,
+                ContentType     =   content_type,
+                CacheControl    =   'private, max-age=0',
+            )
+            return key
+        except Exception:
+            logger.warning('BYO storage falló store_id=%s — fallback al bucket DAVENT', _store_id_from_key(key))
     try:
         _client().put_object(
             Bucket          =   _bucket(),
@@ -127,9 +312,12 @@ def put_object(key, body, content_type):
     return key
 def _put_object(store, folder, upload, processed = None):
     """
-    Sube un archivo ya validado a R2 y devuelve la key persistible.
+    Sube un archivo ya validado al bucket de la tienda (BYO si está
+    activo, si no DAVENT) y devuelve la key persistible.
     `processed` = (bytes, ext, content_type) si la imagen se recodificó.
-    Lanza ValueError si la subida falla.
+    Si el PUT al bucket del dueño falla cae al DAVENT — la key guardada
+    es la misma y la URL se resuelve por la config ACTUAL de la tienda.
+    Lanza ValueError si ninguna subida funciona.
     """
     if processed is None:
         ext, content_type   =   _IMAGE_CONTENT_TYPES[upload.content_type]
@@ -137,6 +325,19 @@ def _put_object(store, folder, upload, processed = None):
     else:
         body, ext, content_type =   processed
     key                 =   f'stores/{store.id}/{folder}/{uuid.uuid4().hex}.{ext}'
+    backend             =   _byo_backend(store.id)
+    if backend is not None:
+        try:
+            _client(backend).put_object(
+                Bucket          =   backend['bucket'],
+                Key             =   key,
+                Body            =   body,
+                ContentType     =   content_type,
+                CacheControl    =   'public, max-age=31536000, immutable',
+            )
+            return key
+        except Exception:
+            logger.warning('BYO storage falló store_id=%s — fallback al bucket DAVENT', store.id)
     try:
         _client().put_object(
             Bucket          =   _bucket(),
@@ -259,12 +460,12 @@ def upload_logo(customization, upload):
     Lanza ValueError con mensaje para el cliente si falla la cuota o el
     storage no está configurado.
     """
-    if not storage_configured():
+    store       =   customization.store
+    if not store_storage_configured(store):
         raise ValueError('El almacenamiento de imágenes no está configurado. Avisale a soporte.')
     error       =   validate_logo_file(upload)
     if error:
         raise ValueError(error)
-    store       =   customization.store
     processed   =   normalize_image(upload, 'logo')
     size        =   len(processed[0])
     #Fast path: evita subir el objeto cuando el cupo claramente no da.
@@ -322,12 +523,12 @@ def upload_cover(customization, upload):
     Sube la portada (normalizada a WebP) a R2, libera la anterior y ajusta la
     cuota. Lanza ValueError con mensaje es-AR si falla storage, archivo o cuota.
     """
-    if not storage_configured():
+    store       =   customization.store
+    if not store_storage_configured(store):
         raise ValueError('El almacenamiento de imágenes no está configurado. Avisale a soporte.')
     error       =   validate_image_file(upload, IMAGE_MAX_BYTES)
     if error:
         raise ValueError(error)
-    store       =   customization.store
     processed   =   normalize_image(upload, 'cover')
     size        =   len(processed[0])
     #Fast path: evita subir el objeto cuando el cupo claramente no da.
@@ -387,7 +588,7 @@ def upload_carousel_image(store, upload):
     tope o no hay cuota.
     """
     from StoreApp.domains.stores.models import StoreCarouselImage
-    if not storage_configured():
+    if not store_storage_configured(store):
         raise ValueError('El almacenamiento de imágenes no está configurado. Avisale a soporte.')
     error       =   validate_image_file(upload, IMAGE_MAX_BYTES)
     if error:
@@ -448,7 +649,7 @@ def upload_gallery_image(store, upload, kind = 'gallery'):
     archivo es inválido o no hay cupo/cuota.
     """
     from StoreApp.domains.stores.models import StoreGalleryImage
-    if not storage_configured():
+    if not store_storage_configured(store):
         raise ValueError('El almacenamiento de imágenes no está configurado. Avisale a soporte.')
     if kind not in StoreGalleryImage.KINDS:
         raise ValueError('Tipo de imagen no válido.')
@@ -522,12 +723,12 @@ def upload_product_image(product, upload):
     Sube/reemplaza la imagen de un producto y ajusta la cuota de la tienda.
     Lanza ValueError con mensaje para el cliente.
     """
-    if not storage_configured():
+    store       =   product.store
+    if not store_storage_configured(store):
         raise ValueError('El almacenamiento de imágenes no está configurado. Avisale a soporte.')
     error       =   validate_image_file(upload, IMAGE_MAX_BYTES)
     if error:
         raise ValueError(error)
-    store       =   product.store
     processed   =   normalize_image(upload, 'product')
     size        =   len(processed[0])
     #Fast path: evita subir el objeto cuando el cupo claramente no da.
@@ -585,12 +786,12 @@ def upload_brand_image(brand, upload):
     Se normaliza como logo: WebP con transparencia conservada y tamaño
     acotado, así llega a la web con fondo invisible. Lanza ValueError.
     """
-    if not storage_configured():
+    store       =   brand.store
+    if not store_storage_configured(store):
         raise ValueError('El almacenamiento de imágenes no está configurado. Avisale a soporte.')
     error       =   validate_logo_file(upload)
     if error:
         raise ValueError(error)
-    store       =   brand.store
     processed   =   normalize_image(upload, 'logo')
     size        =   len(processed[0])
     #Fast path: evita subir el objeto cuando el cupo claramente no da.

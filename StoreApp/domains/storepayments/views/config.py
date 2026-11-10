@@ -6,11 +6,9 @@ del modelo sin persistir — la lectura no escribe). PATCH actualiza con
 validación estricta en el serializer (WhatsApp solo dígitos, deadline
 1-720h, coherencia de métodos).
 
-Hueco documentado (otros tracks de la ola ecommerce): el CRUD completo
-de "Cobros" del panel (fiscal StoreFiscalProfile, OAuth social
-StoreOAuthConfig, storage R2 StoreStorageConfig) NO vive acá — esos
-modelos ya existen en stores.store_ops y sus endpoints los registra el
-track que corresponda.
+El resto del panel "Cobros" vive en views/integrations.py: fiscal
+(StoreFiscalProfile), login social (StoreOAuthConfig) y storage R2
+propio (StoreStorageConfig).
 """
 from rest_framework import status
 from rest_framework.permissions import IsAuthenticated

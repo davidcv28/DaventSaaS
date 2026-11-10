@@ -9,6 +9,12 @@ Endpoints:
 """
 from .checkout import PublicOrderPayView
 from .config import StorePaymentConfigView
+from .integrations import (
+    FiscalProfileView,
+    OAuthConfigView,
+    StorageConfigView,
+    StorageGuideView,
+)
 from .mp import (
     MpConnectView,
     MpDisconnectView,
@@ -18,11 +24,15 @@ from .mp import (
 from .webhook import StoreMpWebhookView
 
 __all__   =   [
+    'FiscalProfileView',
     'MpConnectView',
     'MpDisconnectView',
     'MpRefundView',
     'MpStatusView',
+    'OAuthConfigView',
     'PublicOrderPayView',
     'StoreMpWebhookView',
     'StorePaymentConfigView',
+    'StorageConfigView',
+    'StorageGuideView',
 ]

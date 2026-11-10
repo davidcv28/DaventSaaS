@@ -26,9 +26,10 @@ import uuid
 from datetime import timedelta
 from decimal import Decimal
 from types import SimpleNamespace
-from unittest.mock import patch
+from unittest.mock import Mock, patch
 
 from django.contrib.auth.models import User
+from django.core.cache import cache
 from django.test import TestCase, override_settings
 from django.utils import timezone
 from rest_framework.test import APIClient
@@ -40,8 +41,11 @@ from StoreApp.domains.stores.models import (
     StoreCustomization,
     StoreFiscalProfile,
     StoreMpAccount,
+    StoreOAuthConfig,
     StorePaymentConfig,
+    StoreStorageConfig,
 )
+from StoreApp.domains.stores.services import storage as storage_service
 
 WEBHOOK_SECRET    =   'whsec-test-123'
 MP_TOKEN_TEST     =   'TEST-1234567890-abcdef'
@@ -543,3 +547,486 @@ class MpRefundTests(StorePaymentsTestBase):
             response    =   self.client.post(self.REFUND_URL_FMT.format(order_b.pk), {}, format = 'json')
         self.assertEqual(response.status_code, 502)
         mark_refunded.assert_not_called()
+
+
+#=========================================
+# FISCAL PROFILE (dueño — panel Cobros)
+#=========================================
+class FiscalProfileOwnerTests(StorePaymentsTestBase):
+    URL     =   '/api/store-payments/fiscal-profile/'
+    VALID   =   {
+        'legal_name'        :   'Comercio Demo SA',
+        'tax_condition'     :   'RI',
+        'cuit'              :   '20-12345678-6',
+        'fiscal_address'    :   'Av. Corrientes 1234',
+        'point_of_sale'     :   '0001',
+    }
+
+    def test_requires_auth(self):
+        self.assertIn(self.client.get(self.URL).status_code, (401, 403))
+
+    def test_no_store_404(self):
+        user, _, _   =   self._make_owner('fiscal-sin', with_store = False)
+        self.client.force_authenticate(user = user)
+        self.assertEqual(self.client.get(self.URL).status_code, 404)
+
+    def test_get_defaults_without_row(self):
+        #sellable=False: no hay StoreFiscalProfile ni customization.
+        user, _, store   =   self._make_owner('fiscal-vacio', sellable = False)
+        self.client.force_authenticate(user = user)
+        response    =   self.client.get(self.URL)
+        self.assertEqual(response.status_code, 200)
+        data    =   response.json()
+        self.assertEqual(data['tax_condition'], 'CF')
+        self.assertEqual(data['cuit'], '')
+        self.assertFalse(data['is_complete'])
+        #GET no persiste nada.
+        self.assertFalse(StoreFiscalProfile.objects.filter(store = store).exists())
+
+    def test_put_valid_normalizes_cuit_and_completes(self):
+        user, _, store   =   self._make_owner('fiscal-ok', sellable = False)
+        StoreCustomization.objects.create(store = store, ecommerce_enabled = True)
+        self.client.force_authenticate(user = user)
+        response    =   self.client.put(self.URL, self.VALID, format = 'json')
+        self.assertEqual(response.status_code, 200)
+        data    =   response.json()
+        #CUIT 'XX-XXXXXXXX-X' normalizado a 11 dígitos.
+        self.assertEqual(data['cuit'], '20123456786')
+        self.assertTrue(data['is_complete'])
+        profile =   StoreFiscalProfile.objects.get(store = store)
+        self.assertEqual(profile.cuit, '20123456786')
+        #Espejo de orders_enabled: con perfil completo + ecommerce_enabled
+        #la tienda queda habilitada para vender.
+        from StoreApp.domains.stores.services.commerce import orders_enabled
+        self.assertTrue(orders_enabled(Store.objects.get(pk = store.pk)))
+
+    def test_put_11_digits_accepted(self):
+        user, _, _   =   self._make_owner('fiscal-digitos', sellable = False)
+        self.client.force_authenticate(user = user)
+        payload     =   dict(self.VALID, cuit = '20123456786')
+        response    =   self.client.put(self.URL, payload, format = 'json')
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.json()['cuit'], '20123456786')
+
+    def test_put_invalid_cuit_400(self):
+        user, _, _   =   self._make_owner('fiscal-cuit', sellable = False)
+        self.client.force_authenticate(user = user)
+        for bad in ('20123456789', '123', '20-ABC-567-8'):
+            response    =   self.client.put(self.URL, dict(self.VALID, cuit = bad), format = 'json')
+            self.assertEqual(response.status_code, 400, f'cuit={bad}')
+        self.assertFalse(StoreFiscalProfile.objects.filter(store__slug = 'tienda-fiscal-cuit').exists())
+
+    def test_put_bad_tax_condition_400(self):
+        user, _, _   =   self._make_owner('fiscal-iva', sellable = False)
+        self.client.force_authenticate(user = user)
+        response    =   self.client.put(self.URL, dict(self.VALID, tax_condition = 'XX'), format = 'json')
+        self.assertEqual(response.status_code, 400)
+
+    def test_put_missing_required_fields_400(self):
+        user, _, _   =   self._make_owner('fiscal-parcial', sellable = False)
+        self.client.force_authenticate(user = user)
+        #Sin los campos que orders_enabled exige no se guarda nada.
+        response    =   self.client.put(self.URL, {'legal_name': 'Solo nombre'}, format = 'json')
+        self.assertEqual(response.status_code, 400)
+
+    def test_idor_store_id_in_body_ignored(self):
+        #No hay id de tienda en la ruta ni el serializer acepta store_id:
+        #un owner no puede escribir la config fiscal de otra tienda.
+        user_a, _, store_a   =   self._make_owner('fiscal-a', sellable = False)
+        _, _, store_b        =   self._make_owner('fiscal-b', sellable = False)
+        self.client.force_authenticate(user = user_a)
+        response    =   self.client.put(self.URL, dict(self.VALID, store_id = store_b.id), format = 'json')
+        self.assertEqual(response.status_code, 200)
+        self.assertTrue(StoreFiscalProfile.objects.filter(store = store_a).exists())
+        self.assertFalse(StoreFiscalProfile.objects.filter(store = store_b).exists())
+
+
+#=========================================
+# OAUTH CONFIG — login social Google (dueño)
+#=========================================
+class OAuthConfigOwnerTests(StorePaymentsTestBase):
+    URL         =   '/api/store-payments/oauth-config/'
+    CLIENT_ID   =   '1234567890-abcdef.apps.googleusercontent.com'
+    SECRET      =   'GOCSPX-test-secret-123'
+
+    def _owner(self, name = 'oauth'):
+        user, _, store   =   self._make_owner(name, sellable = False)
+        self.client.force_authenticate(user = user)
+        return user, store
+
+    def test_get_defaults(self):
+        self._owner('oauth-get')
+        response    =   self.client.get(self.URL)
+        self.assertEqual(response.status_code, 200)
+        data    =   response.json()
+        self.assertFalse(data['enabled'])
+        self.assertEqual(data['google_client_id'], '')
+        self.assertFalse(data['has_client_secret'])
+        self.assertFalse(data['has_own_client'])
+        self.assertNotIn('google_client_secret', data)
+
+    def test_put_secret_write_only_and_roundtrip(self):
+        _, store   =   self._owner('oauth-put')
+        response    =   self.client.put(self.URL, {
+            'enabled'               :   True,
+            'google_client_id'      :   self.CLIENT_ID,
+            'google_client_secret'  :   self.SECRET,
+        }, format = 'json')
+        self.assertEqual(response.status_code, 200)
+        data    =   response.json()
+        self.assertTrue(data['enabled'])
+        self.assertTrue(data['has_own_client'])
+        self.assertTrue(data['has_client_secret'])
+        #El secret JAMÁS sale — ni como campo ni dentro del body.
+        self.assertNotIn('google_client_secret', data)
+        self.assertNotIn(self.SECRET, response.content.decode())
+        cfg =   StoreOAuthConfig.objects.get(store = store)
+        self.assertTrue(cfg.google_client_secret_enc.startswith('enc:v1:'))
+        #Round-trip vault: solo el service lo descifra.
+        self.assertEqual(cfg.get_client_secret(), self.SECRET)
+        #GET tampoco lo expone.
+        get_body    =   self.client.get(self.URL).content.decode()
+        self.assertNotIn(self.SECRET, get_body)
+
+    def test_secret_absent_keeps_existing(self):
+        _, store   =   self._owner('oauth-merge')
+        cfg, _      =   StoreOAuthConfig.objects.get_or_create(store = store)
+        cfg.set_client_secret(self.SECRET)
+        cfg.enabled =   True
+        cfg.save()
+        response    =   self.client.put(self.URL, {'enabled': False}, format = 'json')
+        self.assertEqual(response.status_code, 200)
+        self.assertFalse(response.json()['enabled'])
+        self.assertTrue(response.json()['has_client_secret'])
+        cfg.refresh_from_db()
+        self.assertEqual(cfg.get_client_secret(), self.SECRET)
+
+    def test_secret_empty_string_clears(self):
+        _, store   =   self._owner('oauth-clear')
+        cfg, _      =   StoreOAuthConfig.objects.get_or_create(store = store)
+        cfg.set_client_secret(self.SECRET)
+        cfg.save()
+        response    =   self.client.put(self.URL, {'google_client_secret': ''}, format = 'json')
+        self.assertEqual(response.status_code, 200)
+        self.assertFalse(response.json()['has_client_secret'])
+        cfg.refresh_from_db()
+        self.assertEqual(cfg.get_client_secret(), '')
+
+    def test_invalid_client_id_400(self):
+        self._owner('oauth-badid')
+        response    =   self.client.put(self.URL, {'google_client_id': 'no-es-google'}, format = 'json')
+        self.assertEqual(response.status_code, 400)
+
+    def test_idor_store_id_in_body_ignored(self):
+        user_a, store_a   =   self._owner('oauth-a')
+        _, _, store_b        =   self._make_owner('oauth-b', sellable = False)
+        response    =   self.client.put(self.URL, {'enabled': True, 'store_id': store_b.id}, format = 'json')
+        self.assertEqual(response.status_code, 200)
+        self.assertTrue(StoreOAuthConfig.objects.filter(store = store_a, enabled = True).exists())
+        self.assertFalse(StoreOAuthConfig.objects.filter(store = store_b).exists())
+
+
+#=========================================
+# STORAGE CONFIG — bucket R2 propio (dueño)
+#=========================================
+class StorageConfigOwnerTests(StorePaymentsTestBase):
+    URL         =   '/api/store-payments/storage-config/'
+    GUIDE_URL   =   '/api/store-payments/storage-config/guide/'
+    PAYLOAD     =   {
+        'endpoint'          :   'https://abc123.r2.cloudflarestorage.com',
+        'bucket'            :   'fotos-mi-tienda',
+        'region'            :   'auto',
+        'access_key'        :   'AKIAOWNER123',
+        'secret_key'        :   'owner-secret-xyz',
+        'public_base_url'   :   'https://pub-abc123.r2.dev',
+        'enabled'           :   True,
+    }
+
+    def _owner(self, name = 'storage'):
+        user, _, store   =   self._make_owner(name, sellable = False)
+        self.client.force_authenticate(user = user)
+        return user, store
+
+    def test_get_defaults(self):
+        self._owner('storage-get')
+        response    =   self.client.get(self.URL)
+        self.assertEqual(response.status_code, 200)
+        data    =   response.json()
+        self.assertFalse(data['enabled'])
+        self.assertFalse(data['is_configured'])
+        self.assertFalse(data['has_credentials'])
+        self.assertEqual(data['region'], 'auto')
+        self.assertNotIn('access_key', data)
+        self.assertNotIn('secret_key', data)
+
+    def test_put_full_never_returns_secrets(self):
+        _, store   =   self._owner('storage-put')
+        cache.clear()
+        response    =   self.client.put(self.URL, self.PAYLOAD, format = 'json')
+        self.assertEqual(response.status_code, 200)
+        data    =   response.json()
+        self.assertTrue(data['enabled'])
+        self.assertTrue(data['is_configured'])
+        self.assertTrue(data['has_credentials'])
+        self.assertEqual(data['url_mode'], 'public')
+        self.assertEqual(data['bucket'], 'fotos-mi-tienda')
+        body    =   response.content.decode()
+        self.assertNotIn('AKIAOWNER123', body)
+        self.assertNotIn('owner-secret-xyz', body)
+        cfg =   StoreStorageConfig.objects.get(store = store)
+        self.assertTrue(cfg.access_key_enc.startswith('enc:v1:'))
+        self.assertTrue(cfg.secret_key_enc.startswith('enc:v1:'))
+        #Round-trip vault: el service lo descifra, la API no.
+        self.assertEqual(cfg.get_access_key(), 'AKIAOWNER123')
+        self.assertEqual(cfg.get_secret_key(), 'owner-secret-xyz')
+        get_body    =   self.client.get(self.URL).content.decode()
+        self.assertNotIn('AKIAOWNER123', get_body)
+        self.assertNotIn('owner-secret-xyz', get_body)
+
+    def test_put_validation(self):
+        self._owner('storage-val')
+        #Endpoint sin https (http solo pasa en DEBUG con MinIO — acá no).
+        response    =   self.client.put(self.URL, dict(self.PAYLOAD, endpoint = 'example.com'), format = 'json')
+        self.assertEqual(response.status_code, 400)
+        response    =   self.client.put(self.URL, dict(self.PAYLOAD, public_base_url = 'javascript:alert(1)'), format = 'json')
+        self.assertEqual(response.status_code, 400)
+        response    =   self.client.put(self.URL, dict(self.PAYLOAD, bucket = 'Bucket_Malo'), format = 'json')
+        self.assertEqual(response.status_code, 400)
+        #Sin credenciales el PUT igual guarda la config (enabled no la activa).
+        response    =   self.client.put(self.URL, {'endpoint': self.PAYLOAD['endpoint'], 'bucket': 'otro-bucket'}, format = 'json')
+        self.assertEqual(response.status_code, 200)
+        self.assertFalse(response.json()['has_credentials'])
+
+    def test_credentials_merge_and_clear(self):
+        _, store   =   self._owner('storage-cred')
+        self.client.put(self.URL, self.PAYLOAD, format = 'json')
+        #Solo access_key -> has_credentials False (falta secret).
+        response    =   self.client.put(self.URL, {'access_key': ''}, format = 'json')
+        self.assertEqual(response.status_code, 200)
+        self.assertFalse(response.json()['has_credentials'])
+        cfg =   StoreStorageConfig.objects.get(store = store)
+        self.assertEqual(cfg.get_access_key(), '')
+        self.assertEqual(cfg.get_secret_key(), 'owner-secret-xyz')
+
+    def test_delete_disables_and_clears_secrets(self):
+        _, store   =   self._owner('storage-del')
+        self.client.put(self.URL, self.PAYLOAD, format = 'json')
+        response    =   self.client.delete(self.URL)
+        self.assertEqual(response.status_code, 200)
+        data    =   response.json()
+        self.assertFalse(data['enabled'])
+        self.assertFalse(data['has_credentials'])
+        self.assertFalse(data['is_configured'])
+        #Los secretos se limpiaron; la config no secreta queda.
+        self.assertEqual(data['bucket'], 'fotos-mi-tienda')
+        cfg =   StoreStorageConfig.objects.get(store = store)
+        self.assertEqual(cfg.get_access_key(), '')
+        self.assertEqual(cfg.get_secret_key(), '')
+
+    def test_guide_es_ar(self):
+        self._owner('storage-guide')
+        response    =   self.client.get(self.GUIDE_URL)
+        self.assertEqual(response.status_code, 200)
+        data    =   response.json()
+        self.assertIn('steps', data)
+        self.assertIn('warnings', data)
+        self.assertTrue(any('R2' in s for s in data['steps']))
+
+    def test_idor_store_id_in_body_ignored(self):
+        user_a, store_a   =   self._owner('storage-a')
+        _, _, store_b        =   self._make_owner('storage-b', sellable = False)
+        response    =   self.client.put(self.URL, dict(self.PAYLOAD, store_id = store_b.id), format = 'json')
+        self.assertEqual(response.status_code, 200)
+        self.assertTrue(StoreStorageConfig.objects.filter(store = store_a, enabled = True).exists())
+        self.assertFalse(StoreStorageConfig.objects.filter(store = store_b).exists())
+
+    def test_put_invalidates_byo_cache(self):
+        #El PUT deja el cache BYO invalidado: storage.py resuelve el
+        #backend nuevo en la próxima llamada sin esperar el TTL.
+        _, store   =   self._owner('storage-cache')
+        cache.clear()
+        self.assertIsNone(storage_service._byo_backend(store.id))
+        self.client.put(self.URL, self.PAYLOAD, format = 'json')
+        backend =   storage_service._byo_backend(store.id)
+        self.assertIsNotNone(backend)
+        self.assertEqual(backend['bucket'], 'fotos-mi-tienda')
+        self.assertEqual(backend['access_key'], 'AKIAOWNER123')
+
+
+#=========================================
+# STORAGE BYO — resolución de backend por tienda (stores.services.storage)
+#=========================================
+class StoreStorageByoTests(StorePaymentsTestBase):
+    """
+    Routing del storage: con BYO activo los objetos 'stores/<id>/...' van
+    al bucket del dueño; sin BYO (o con secreto ilegible) al DAVENT;
+    object_url prefiere public_base_url del dueño o firma con SUS
+    credenciales. boto3 se mockea en `_client` — el dispatch devuelve
+    un mock distinto según el backend resuelto.
+    """
+
+    def setUp(self):
+        cache.clear()
+        self.user, _, self.store   =   self._make_owner('byo-store', sellable = False)
+        self.byo_client            =   Mock()
+        self.davent_client         =   Mock()
+        self.byo_client.put_object.return_value                  =   {}
+        self.byo_client.delete_object.return_value               =   {}
+        self.byo_client.generate_presigned_url.return_value      =   'https://signed-owner.example/x'
+        self.davent_client.put_object.return_value               =   {}
+        self.davent_client.delete_object.return_value            =   {}
+        self.davent_client.generate_presigned_url.return_value   =   'https://signed-davent.example/x'
+
+    def _client_dispatch(self, backend = None):
+        return self.byo_client if backend is not None else self.davent_client
+
+    def _patches(self):
+        return (
+            patch.object(storage_service, 'storage_configured', return_value = True),
+            patch.object(storage_service, '_public_base', return_value = 'https://cdn.davent.test'),
+            patch.object(storage_service, '_bucket', return_value = 'davent-bucket'),
+            patch.object(storage_service, '_client', side_effect = self._client_dispatch),
+        )
+
+    def _byo_config(self, store = None, *, enabled = True, public_base_url = 'https://pub-owner.r2.dev'):
+        store   =   store or self.store
+        cfg     =   StoreStorageConfig.objects.create(
+            store           =   store,
+            endpoint        =   'https://acct.r2.cloudflarestorage.com',
+            bucket          =   'bucket-del-duenio',
+            region          =   'auto',
+            public_base_url =   public_base_url,
+            enabled         =   enabled,
+        )
+        cfg.set_credentials('OWNER_ACCESS', 'OWNER_SECRET')
+        cfg.save()
+        return cfg
+
+    def test_put_object_byo_goes_to_owner_bucket(self):
+        self._byo_config()
+        p1, p2, p3, p4   =   self._patches()
+        with p1, p2, p3, p4:
+            key =   storage_service.put_object(f'stores/{self.store.id}/proofs/x.webp', b'1', 'image/webp')
+        self.assertTrue(key.startswith(f'stores/{self.store.id}/proofs/'))
+        self.byo_client.put_object.assert_called_once()
+        self.assertEqual(self.byo_client.put_object.call_args.kwargs['Bucket'], 'bucket-del-duenio')
+        self.davent_client.put_object.assert_not_called()
+
+    def test_put_object_without_byo_goes_davent(self):
+        p1, p2, p3, p4   =   self._patches()
+        with p1, p2, p3, p4:
+            storage_service.put_object(f'stores/{self.store.id}/proofs/x.webp', b'1', 'image/webp')
+        self.davent_client.put_object.assert_called_once()
+        self.assertEqual(self.davent_client.put_object.call_args.kwargs['Bucket'], 'davent-bucket')
+        self.byo_client.put_object.assert_not_called()
+
+    def test_put_object_byo_failure_falls_back_davent(self):
+        self._byo_config()
+        self.byo_client.put_object.side_effect   =   Exception('bucket caído')
+        p1, p2, p3, p4   =   self._patches()
+        with p1, p2, p3, p4:
+            key =   storage_service.put_object(f'stores/{self.store.id}/proofs/x.webp', b'1', 'image/webp')
+        self.assertTrue(key)
+        self.davent_client.put_object.assert_called_once()
+
+    def test_put_object_non_store_key_always_davent(self):
+        #Chat/adjuntos sin patrón stores/<id>/ nunca van al bucket del dueño.
+        self._byo_config()
+        p1, p2, p3, p4   =   self._patches()
+        with p1, p2, p3, p4:
+            storage_service.put_object('chat/1/adj.webp', b'1', 'image/webp')
+        self.davent_client.put_object.assert_called_once()
+        self.byo_client.put_object.assert_not_called()
+
+    def test_put_object_byo_disabled_goes_davent(self):
+        self._byo_config(enabled = False)
+        p1, p2, p3, p4   =   self._patches()
+        with p1, p2, p3, p4:
+            storage_service.put_object(f'stores/{self.store.id}/x/y.webp', b'1', 'image/webp')
+        self.davent_client.put_object.assert_called_once()
+        self.byo_client.put_object.assert_not_called()
+
+    def test_object_url_byo_public_base(self):
+        self._byo_config()
+        p1, p2, p3, p4   =   self._patches()
+        with p1, p2, p3, p4:
+            url =   storage_service.object_url(f'stores/{self.store.id}/logo/abc.webp')
+        self.assertEqual(url, f'https://pub-owner.r2.dev/stores/{self.store.id}/logo/abc.webp')
+        self.byo_client.generate_presigned_url.assert_not_called()
+        self.davent_client.generate_presigned_url.assert_not_called()
+
+    def test_object_url_byo_without_public_base_presigns_with_owner_creds(self):
+        #BYO sin URL pública: URLs firmadas con las credenciales DEL DUEÑO
+        #(el objeto vive en su bucket, no en el de DAVENT).
+        self._byo_config(public_base_url = '')
+        p1, p2, p3, p4   =   self._patches()
+        with p1, p2, p3, p4:
+            url =   storage_service.object_url(f'stores/{self.store.id}/logo/abc.webp')
+        self.assertEqual(url, 'https://signed-owner.example/x')
+        self.byo_client.generate_presigned_url.assert_called_once()
+        params  =   self.byo_client.generate_presigned_url.call_args.kwargs['Params']
+        self.assertEqual(params['Bucket'], 'bucket-del-duenio')
+        self.davent_client.generate_presigned_url.assert_not_called()
+
+    def test_object_url_private_byo_presigns(self):
+        #Comprobantes de la tienda con BYO: private=True fuerza firma
+        #aunque haya public_base_url — con el cliente del dueño.
+        self._byo_config()
+        p1, p2, p3, p4   =   self._patches()
+        with p1, p2, p3, p4:
+            url =   storage_service.object_url(f'stores/{self.store.id}/proofs/x.webp', private = True, expires = 600)
+        self.assertEqual(url, 'https://signed-owner.example/x')
+        self.byo_client.generate_presigned_url.assert_called_once()
+        self.assertEqual(self.byo_client.generate_presigned_url.call_args.kwargs['ExpiresIn'], 600)
+
+    def test_object_url_chat_key_uses_davent(self):
+        self._byo_config()
+        p1, p2, p3, p4   =   self._patches()
+        with p1, p2, p3, p4:
+            url =   storage_service.object_url('chat/1/x.webp')
+        self.assertEqual(url, 'https://cdn.davent.test/chat/1/x.webp')
+
+    def test_object_url_other_store_key_unaffected(self):
+        #La key de OTRA tienda sin BYO resuelve DAVENT aunque exista una
+        #config BYO en este store.
+        self._byo_config()
+        p1, p2, p3, p4   =   self._patches()
+        with p1, p2, p3, p4:
+            url =   storage_service.object_url('stores/999999/logo/x.webp')
+        self.assertEqual(url, 'https://cdn.davent.test/stores/999999/logo/x.webp')
+
+    def test_delete_object_byo_then_davent_fallback(self):
+        self._byo_config()
+        p1, p2, p3, p4   =   self._patches()
+        with p1, p2, p3, p4:
+            storage_service._delete_object(f'stores/{self.store.id}/logo/viejo.webp')
+        self.byo_client.delete_object.assert_called_once()
+        self.davent_client.delete_object.assert_not_called()
+        #Si el delete del dueño falla se intenta DAVENT (el objeto pudo
+        #haber quedado ahí por un fallback de upload).
+        self.byo_client.delete_object.side_effect   =   Exception('fail')
+        with p1, p2, p3, p4:
+            storage_service._delete_object(f'stores/{self.store.id}/logo/viejo2.webp')
+        self.davent_client.delete_object.assert_called_once()
+
+    def test_tampered_secret_falls_back_to_davent(self):
+        #enc:v1: manipulado/desconocido -> VaultError -> backend None ->
+        #todo cae a DAVENT (nunca romper la tienda por un secreto roto).
+        cfg =   self._byo_config()
+        cfg.access_key_enc   =   'enc:v1:kid-inexistente:AAAA'
+        cfg.save()
+        storage_service.invalidate_store_storage(self.store.id)
+        p1, p2, p3, p4   =   self._patches()
+        with p1, p2, p3, p4:
+            storage_service.put_object(f'stores/{self.store.id}/proofs/x.webp', b'1', 'image/webp')
+        self.davent_client.put_object.assert_called_once()
+        self.byo_client.put_object.assert_not_called()
+
+    def test_store_storage_configured_byo_without_davent(self):
+        #Con BYO activo el upload funciona aunque DAVENT no tenga envs.
+        self._byo_config()
+        with patch.object(storage_service, 'storage_configured', return_value = False):
+            self.assertTrue(storage_service.store_storage_configured(self.store))
+            #Sin BYO ni DAVENT -> False.
+            _, _, store2   =   self._make_owner('byo-sin', sellable = False)
+            self.assertFalse(storage_service.store_storage_configured(store2))
