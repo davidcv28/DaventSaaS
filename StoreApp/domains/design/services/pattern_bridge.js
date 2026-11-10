@@ -321,6 +321,15 @@
       accountAuthed = d.authed === true
       paintAccount()
     }
+    /* Contador del carrito: también lo empuja el host (la sesión del
+     * comprador vive afuera — el documento es origen opaco). Solo pinta
+     * el badge de `.dsx-cart`; sin botón montado (tienda sin venta
+     * online) el mensaje se ignora. */
+    if (d.type === 'davent:ds-cart-state') {
+      var cartN = parseInt(d.count, 10)
+      cartCount = isFinite(cartN) && cartN > 0 ? Math.floor(cartN) : 0
+      paintCart()
+    }
     if (d.type === 'davent:ds-measure') send()
     if (d.type === 'davent:ds-frame') {
       frameBox = { top: Number(d.top) || 0, bottom: Number(d.bottom) || 0, vh: Number(d.vh) || 0 }
@@ -792,6 +801,7 @@
     /* Filtrar/ordenar cambia el alto del documento: sin re-medir, el iframe
      * queda con el alto anterior y el pie del diseño se despega del fondo
      * (queda un hueco grande debajo). */
+    syncCardDock()
     send()
   }
   function catalog() {
@@ -1585,45 +1595,102 @@
     if (minInput) minInput.value = state.min
     if (maxInput) maxInput.value = state.max
   })()
-  /* ===== E-commerce: CTA "Agregar al carrito" inyectados =====
+  /* ===== E-commerce: CTA "Agregar al carrito" + píldora de carrito =====
    * Solo cuando el documento declara data-ds-commerce (la tienda vende
    * online — orders_enabled del backend). El botón nunca habla con la API:
    * postMessage 'davent:ds-buy' al host, que tiene la sesión del comprador.
    * Se inyecta en las tarjetas .ds-product (marcado compartido del
    * fragmento de catálogo) y en la ficha [data-surface="product"] antes de
-   * su CTA de WhatsApp — sin reescribir el HTML de ningún diseño. */
+   * su CTA de WhatsApp — sin reescribir el HTML de ningún diseño.
+   *
+   * Anclaje del botón en tarjeta: va dentro de `.dsx-buy-wrap`, un flex
+   * column propio. `.ds-product>.dsx-buy-wrap{margin-top:auto}` absorbe el
+   * alto libre cuando la tarjeta es flex/grid (las tarjetas de una fila se
+   * estiran a la altura de la más alta y el CTA queda al pie, alineado en
+   * toda la fila); en flujo normal `auto` colapsa a 0 y el botón conserva
+   * su margen mínimo de 10px — el margen vive en el botón, no en el wrap,
+   * así que no hace falta flex forzado para que se vea bien. Cuando la
+   * tarjeta es block el puente le agrega `.dsx-col` (display:flex column)
+   * para que el auto-margin funcione: sin eso una card block con link
+   * `height:100%` dejaba el botón fuera de la caja (clipeado por
+   * overflow:hidden o desbordado sobre la fila siguiente). */
   var COMMERCE_CSS =
-    '.dsx-buy{display:block;width:calc(100% - 24px);margin:10px 12px 12px;padding:11px 14px;' +
-    'border:0;border-radius:var(--ds-radius-btn,var(--ds-radius,8px));cursor:pointer;' +
+    '.ds-product>.dsx-buy-wrap{margin-top:auto}' +
+    '.ds-product.dsx-col{display:flex;flex-direction:column}' +
+    '.dsx-buy-wrap{display:flex;flex-direction:column;min-width:0}' +
+    '.dsx-buy{box-sizing:border-box;display:block;width:calc(100% - 24px);margin:10px 12px 12px;padding:12px 14px;' +
+    'border:0;border-radius:var(--ds-radius-btn,var(--ds-radius,10px));cursor:pointer;' +
     'background:var(--ds-accent,#111);color:var(--ds-accent-ink,#fff);' +
     'font:inherit;font-size:12px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;' +
-    'transition:filter .15s ease}' +
-    '.dsx-buy:hover{filter:brightness(1.08)}' +
-    '.dsx-buy:active{transform:translateY(1px)}' +
-    '.dsx-buy[disabled]{opacity:.6;cursor:default;transform:none}' +
+    'box-shadow:0 1px 2px rgba(0,0,0,.10);' +
+    'transition:transform .16s ease,box-shadow .22s ease,background-color .2s ease,filter .2s ease}' +
+    '.dsx-buy:hover{transform:translateY(-1px);' +
+    'box-shadow:0 10px 22px -10px color-mix(in srgb,var(--ds-accent,#111) 60%,transparent)}' +
+    '.dsx-buy:active{transform:translateY(0) scale(.985);filter:brightness(.96)}' +
+    '.dsx-buy:focus-visible{outline:2px solid var(--ds-accent,#111);outline-offset:2px}' +
+    '.dsx-buy[disabled]{opacity:.55;cursor:default;transform:none;box-shadow:none;filter:none}' +
     '.dsx-buy.is-added{background:var(--ds-success,#0f9d58);' +
     'color:var(--ds-success-ink,var(--ds-accent-ink,#fff))}' +
-    '[data-surface="product"] .dsx-buy{width:auto;min-width:200px;margin:0 0 12px}' +
-    /* Entrada de cuenta del comprador: píldora en el header/nav del
-     * diseño o, sin slot, píldora flotante abajo a la izquierda (el chat
-     * ocupa la derecha). El anclaje al marco lo hace el pin de barras
-     * (data-ds-pin="bottom"), igual que la tab bar de cada diseño.
-     * Hereda color del header como .ds-theme-toggle: si una banda fija
-     * pinta su propia tinta (toldo amarillo, cabecera crema sobre papel),
-     * el diseño fija color/border-color sobre .dsx-account dentro de su
-     * .top/.head — mismo gancho de override que el toggle de tema. */
-    '.dsx-account{display:inline-flex;align-items:center;gap:7px;padding:8px 14px;margin-inline-start:auto;' +
-    'border:1px solid currentColor;border-radius:999px;background:transparent;color:inherit;' +
-    'font:inherit;font-size:12.5px;font-weight:600;letter-spacing:.04em;cursor:pointer;' +
-    'opacity:.82;transition:opacity .18s,transform .18s,background .18s}' +
-    '.dsx-account:hover{opacity:1;transform:translateY(-1px);' +
+    /* La regla ancha es SOLO para el CTA de la ficha: los .dsx-buy de las
+     * tarjetas de relacionados (.pdp-rel) son .ds-product comunes y deben
+     * conservar width:calc(100% - 24px) — un min-width:200px ahí desborda
+     * la celda del grid en mobile (hscroll). max-width:100% blinda el CTA
+     * de la ficha dentro de paneles angostos. */
+    '[data-surface="product"] .dsx-buy[data-ds-buy-slot="pdp"]{width:auto;min-width:200px;max-width:100%;margin:0 0 12px}' +
+    /* Entrada de cuenta del comprador y acceso al carrito: píldoras
+     * gemelas en el header/nav del diseño (mismo alto, radio, trazo de
+     * icono y tipografía) o, sin slot, píldoras fijas abajo a la
+     * izquierda — la cuenta apoya en bottom:16 y el carrito se apila
+     * encima (bottom:64) para no pisarse; el anclaje al marco lo hace el
+     * pin de barras (data-ds-pin="bottom"), igual que la tab bar de cada
+     * diseño. Heredan color del header como .ds-theme-toggle: si una
+     * banda fija pinta su propia tinta (toldo amarillo, cabecera crema
+     * sobre papel), el diseño fija color/border-color sobre .dsx-account
+     * / .dsx-cart dentro de su .top/.head — mismo gancho de override que
+     * el toggle de tema. */
+    '.dsx-account,.dsx-cart{box-sizing:border-box;display:inline-flex;align-items:center;justify-content:center;' +
+    'gap:7px;min-height:36px;padding:8px 14px;border:1px solid currentColor;border-radius:999px;' +
+    'background:transparent;color:inherit;font:inherit;font-size:12.5px;font-weight:600;letter-spacing:.04em;' +
+    'cursor:pointer;opacity:.82;-webkit-tap-highlight-color:transparent;' +
+    'transition:opacity .18s ease,transform .18s ease,background-color .18s ease,border-color .18s ease}' +
+    '.dsx-account{margin-inline-start:auto}' +
+    '.dsx-account:hover,.dsx-cart:hover{opacity:1;transform:translateY(-1px);' +
     'background:color-mix(in srgb,currentColor 10%,transparent)}' +
-    '.dsx-account:focus-visible{outline:2px solid currentColor;outline-offset:2px}' +
-    '.dsx-account svg{flex:none}' +
-    '.dsx-account--fab{position:fixed;left:16px;bottom:16px;z-index:72;margin:0;opacity:1;' +
+    '.dsx-account:active,.dsx-cart:active{transform:translateY(0) scale(.97)}' +
+    '.dsx-account:focus-visible,.dsx-cart:focus-visible{outline:2px solid currentColor;outline-offset:2px}' +
+    '.dsx-account svg,.dsx-cart svg{flex:none}' +
+    '.dsx-cart{position:relative}' +
+    /* Badge del contador: el par --ds-accent/--ds-accent-ink ya viene
+     * pensado para contraste AA (es la tinta que el diseño usa sobre su
+     * acento); el anillo de superficie lo despega del borde de la
+     * píldora. */
+    '.dsx-cart-badge{box-sizing:border-box;position:absolute;top:-7px;right:-7px;min-width:18px;height:18px;' +
+    'padding:0 5px;border-radius:999px;pointer-events:none;' +
+    'background:var(--ds-accent,#111);color:var(--ds-accent-ink,#fff);' +
+    'font-size:10px;font-weight:800;line-height:18px;letter-spacing:0;text-align:center;' +
+    'font-variant-numeric:tabular-nums;box-shadow:0 0 0 2px var(--ds-surface,var(--surface,#fff))}' +
+    '.dsx-cart-badge[hidden]{display:none}' +
+    '.dsx-cart-badge.is-bump{animation:dsx-cart-bump .32s cubic-bezier(.2,.9,.3,1.4)}' +
+    '@keyframes dsx-cart-bump{0%{transform:scale(1)}45%{transform:scale(1.4)}100%{transform:scale(1)}}' +
+    '.dsx-account--fab,.dsx-cart--fab{position:fixed;z-index:72;margin:0;opacity:1;' +
     'background:var(--ds-surface,var(--surface,#fff));color:var(--ds-text,var(--ink,#1a1a1a));' +
     'border:1px solid var(--ds-border,var(--line,#e5e7eb));box-shadow:0 10px 28px rgba(0,0,0,.22)}' +
-    '@media (prefers-reduced-motion:reduce){.dsx-account{transition:none}.dsx-account:hover{transform:none}}'
+    '.dsx-account--fab{left:16px;bottom:16px}' +
+    '.dsx-cart--fab{left:16px;bottom:64px}' +
+    /* Mobile: el cluster brand+acciones+píldoras+toggle no entra en
+     * ~390px (la píldora de cuenta ya lo desbordaba antes del carrito).
+     * Bajo 560px la píldora de cuenta pasa a solo-icono (el aria-label
+     * y el title siguen anunciando "Ingresar"/"Mi cuenta") y ambas se
+     * compactan — el carrito queda entero dentro del header. Los
+     * diseños pueden revertirlo con reglas propias más específicas. */
+    '@media (max-width:560px){' +
+    '.dsx-account [data-dsx-account-label]{display:none}' +
+    '.dsx-account,.dsx-cart{min-height:34px;padding:7px 11px;gap:5px;font-size:11.5px}' +
+    '.dsx-account svg,.dsx-cart svg{width:14px;height:14px}}' +
+    '@media (prefers-reduced-motion:reduce){' +
+    '.dsx-buy,.dsx-account,.dsx-cart,.dsx-cart-badge{transition:none;animation:none}' +
+    '.dsx-buy:hover,.dsx-account:hover,.dsx-cart:hover{transform:none}' +
+    '.dsx-buy:active,.dsx-account:active,.dsx-cart:active{transform:none}}'
   function dsBuyButton(pid, slot) {
     var b = document.createElement('button')
     b.type = 'button'
@@ -1641,7 +1708,31 @@
       var pid = link ? link.getAttribute('data-ds-product') : ''
       if (!pid) continue
       card.setAttribute('data-ds-buy-done', '1')
-      card.appendChild(dsBuyButton(pid))
+      /* El botón va en `.dsx-buy-wrap` (flex column propio): el
+       * `margin-top:auto` del wrap lo ancla al pie cuando la tarjeta es
+       * flex/grid — en flujo normal colapsa a 0 sin perder el margen
+       * mínimo del botón. */
+      var wrap = document.createElement('div')
+      wrap.className = 'dsx-buy-wrap'
+      wrap.appendChild(dsBuyButton(pid))
+      card.appendChild(wrap)
+    }
+    syncCardDock()
+  }
+  /* `.ds-col` en la tarjeta: solo cuando su display computado NO es
+   * flex ni grid (block, inline-block, flow-root…). Las tarjetas flex/grid
+   * ya reparten el alto libre solas; forzarles flex/grid rompería su
+   * propia estructura. Las ocultas (`display:none` por filtro) y las
+   * `display:contents` se saltean: la clase queda como estaba y se
+   * reevalúa en la próxima pasada (applyCatalog corre tras cada filtro). */
+  function syncCardDock() {
+    var wraps = document.querySelectorAll('.ds-product>.dsx-buy-wrap')
+    for (var i = 0; i < wraps.length; i++) {
+      var card = wraps[i].parentNode
+      var disp = ''
+      try { disp = String(window.getComputedStyle(card).display || '') } catch (e) {}
+      if (!disp || disp === 'none' || disp === 'contents') continue
+      card.classList.toggle('dsx-col', disp.indexOf('flex') < 0 && disp.indexOf('grid') < 0)
     }
   }
   function injectPdpBuy() {
@@ -1665,7 +1756,19 @@
         return
       }
     }
-    if (slot && slot.parentNode) slot.parentNode.insertBefore(dsBuyButton(pid, 'pdp'), slot)
+    if (slot && slot.parentNode) {
+      var pdpBtn = dsBuyButton(pid, 'pdp')
+      /* Si el slot es el CONTENEDOR de CTAs del diseño (.pdp-actions,
+       * .pdp-ctas — el anchor de WhatsApp vive adentro), el botón entra
+       * como primer ítem del grupo (en un flex queda hermano del CTA).
+       * Si el slot ES el anchor o un inline, va de hermano antes: un
+       * <button> dentro de <a> es HTML inválido. */
+      if (slot !== wa && /^(DIV|SECTION|NAV|ASIDE|FOOTER|HEADER|P|UL|LI)$/.test(slot.tagName)) {
+        slot.insertBefore(pdpBtn, slot.firstChild)
+      } else {
+        slot.parentNode.insertBefore(pdpBtn, slot)
+      }
+    }
   }
   /* Entrada "Mi cuenta" / "Ingresar": el documento no conoce la sesión
    * del comprador (origen opaco, sin cookies ni storage del host) — el
@@ -1717,14 +1820,84 @@
     }
     paintAccount()
   }
+  /* Píldora de carrito junto a la de cuenta: mismo slot del header (o
+   * [data-ds-cart-slot] / [data-ds-account-slot] si el diseño declara
+   * uno), mismo fallback de píldora fija apilada sobre la de cuenta. El
+   * documento no conoce el carrito — el host empuja el contador por
+   * `davent:ds-cart-state` y el clic vuelve por `davent:ds-cart` (el
+   * host navega a la página /carrito de la tienda). */
+  var cartBtn = null
+  var cartCount = 0
+  var CART_ICON = '<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="9" cy="20" r="1.5"/><circle cx="17" cy="20" r="1.5"/><path d="M3.5 4h2.2l2.3 11.4a1.6 1.6 0 0 0 1.6 1.3h7.9a1.6 1.6 0 0 0 1.6-1.3L20.5 8H6.2"/></svg>'
+  function paintCart() {
+    if (!cartBtn) return
+    var badge = cartBtn.querySelector('.dsx-cart-badge')
+    if (badge) {
+      var label = cartCount > 99 ? '99+' : String(cartCount)
+      if (badge.textContent !== label) {
+        badge.textContent = label
+        /* Micro-feedback al sumar unidades: el badge "pega" un pulso.
+         * Se rearma la animación forzando reflow (sin framework). */
+        if (cartCount > 0) {
+          badge.classList.remove('is-bump')
+          void badge.offsetWidth
+          badge.classList.add('is-bump')
+        }
+      }
+      badge.hidden = cartCount <= 0
+    }
+    var text = cartCount > 0
+      ? 'Carrito, ' + cartCount + (cartCount === 1 ? ' producto' : ' productos')
+      : 'Carrito'
+    cartBtn.setAttribute('aria-label', text)
+    cartBtn.setAttribute('title', text)
+  }
+  function mountCart() {
+    if (cartBtn || document.querySelector('.dsx-cart')) return
+    var host =
+      document.querySelector('[data-ds-cart-slot]') ||
+      document.querySelector('[data-ds-account-slot]') ||
+      document.querySelector('header.top .top-inner') ||
+      document.querySelector('header.top .top-in') ||
+      document.querySelector('header.top') ||
+      document.querySelector('header')
+    cartBtn = document.createElement('button')
+    cartBtn.type = 'button'
+    cartBtn.className = 'dsx-cart'
+    cartBtn.innerHTML = CART_ICON + '<span class="dsx-cart-badge" hidden aria-hidden="true"></span>'
+    cartBtn.addEventListener('click', function () {
+      parent.postMessage({ type: 'davent:ds-cart' }, '*')
+    })
+    if (host) {
+      /* Pegada a la píldora de cuenta: se inserta justo después de ella
+       * (el toggle de tema se monta más tarde, al final del header). */
+      var ref = host.querySelector('.dsx-account')
+      if (ref) host.insertBefore(cartBtn, ref.nextSibling)
+      else host.appendChild(cartBtn)
+    } else {
+      cartBtn.classList.add('dsx-cart--fab')
+      /* Se apila sobre la píldora de cuenta (bottom:16): bottom:64 la
+       * deja flotando encima sin pisarla. data-ds-pin="bottom" la ancla
+       * al marco visible, igual que la cuenta y la tab bar. */
+      cartBtn.setAttribute('data-ds-pin', 'bottom')
+      document.body.appendChild(cartBtn)
+      resetFixed()
+      pinFixed()
+    }
+    paintCart()
+  }
   function initCommerce() {
     if (root.getAttribute('data-ds-commerce') !== '1') return
     var st = document.createElement('style')
     st.textContent = COMMERCE_CSS
-    document.head.appendChild(st)
+    /* Antes de la hoja del diseño (igual que CHAT_CSS): la base .dsx-*
+     * queda DEBAJO — los diseños ganan con sus reglas más específicas
+     * (p. ej. `.top .dsx-account` de mercado) sin !important. */
+    document.head.insertBefore(st, document.querySelector('style') || null)
     injectCardBuys()
     injectPdpBuy()
     mountAccount()
+    mountCart()
     /* El catálogo reordena tarjetas (applyCatalog mueve nodos, no los
      * recrea) y el buscador puede filtrar — los botones inyectados viajan
      * con su tarjeta. Por si un diseño monta tarjetas por JS después,
