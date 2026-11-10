@@ -1087,6 +1087,7 @@ html[data-ds-style="esencial-premium"][data-ds-theme="dark"] .ticker-item .icon{
   font-size:.85rem;
 }
 .foot-base span:empty{display:none}
+.foot-credits{flex-basis:100%;color:var(--muted);font-size:.78rem;line-height:1.5}
 .foot-top{color:var(--muted);white-space:nowrap}
 .foot-top:hover{color:var(--ink)}
 .site-footer a{position:relative;text-decoration:none;transition:color .2s}
@@ -1696,6 +1697,7 @@ section[id]{scroll-margin-top:86px}
   <div class="wrap foot-base">
     <span>© {{year}} {{store_name}} · Todos los derechos reservados</span>
     <span>{{store_location}}</span>
+    <span class="foot-credits">{{footer_text}}</span>
     <a class="foot-top" href="#inicio" data-ds-route="home">Volver arriba ↑</a>
   </div>
 </footer>
