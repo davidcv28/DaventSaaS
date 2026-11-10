@@ -186,6 +186,18 @@ html[data-ds-surface="services"] .site-header:not(.is-stuck){
   transition:background .2s,color .2s,border-color .2s,transform .2s var(--ease)}
 .site-header .ds-theme-toggle:hover{opacity:1;transform:translateY(-2px);
   background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+/* Cuenta del puente: se monta dentro de .head-icons (slot explícito) como
+   un ícono más de la cabecera condensada. */
+.site-header .dsx-account{
+  margin-inline-start:0;flex:none;
+  display:inline-flex;align-items:center;justify-content:center;gap:7px;
+  min-height:38px;padding:0 13px;border:1px solid var(--hcl);border-radius:var(--radius-btn);
+  background:var(--hcb);color:var(--hc);cursor:pointer;
+  font-family:var(--font-display);font-size:12px;font-weight:600;
+  letter-spacing:.12em;text-transform:uppercase;white-space:nowrap;
+  transition:background .2s,color .2s,border-color .2s,transform .2s var(--ease)}
+.site-header .dsx-account:hover{background:var(--accent);border-color:var(--accent);
+  color:var(--accent-ink);transform:translateY(-2px)}
 /* Progreso de lectura sobre el filo inferior. */
 .head-progress{position:absolute;left:0;right:0;bottom:-1px;height:2px;
   background:var(--accent);transform:scaleX(var(--progress,0));transform-origin:left;
@@ -199,8 +211,13 @@ html[data-ds-surface="services"] .site-header:not(.is-stuck){
   .site-header{--head:64px;padding:10px 0}
   .brand{font-size:14px;letter-spacing:.1em}
   .brand-name{max-width:42vw;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .head-inner{gap:12px}
   .head-icons{gap:6px}
-  .h-ico,.nav-toggle,.site-header .ds-theme-toggle{width:34px;height:34px}
+  .h-ico,.nav-toggle,.site-header .ds-theme-toggle,.site-header .dsx-account{width:34px;height:34px}
+  /* En el teléfono la cuenta colapsa a ícono: la cabecera ya lleva cuatro
+     mandos y la etiqueta queda en el aria-label. */
+  .site-header .dsx-account{padding:0;min-height:34px}
+  .site-header .dsx-account [data-dsx-account-label]{display:none}
 }
 
 /* ── menú móvil (hoja lateral) ── */
@@ -566,7 +583,7 @@ html.m-lock,html.m-lock body,body.filters-open{overflow:hidden}
 }
 
 /* ── tarjetas de producto ── */
-.ds-product{position:relative;background:var(--surface);border:1px solid var(--line);
+.ds-product{position:relative;display:flex;flex-direction:column;background:var(--surface);border:1px solid var(--line);
   overflow:hidden;transition:border-color .25s,transform .35s var(--ease)}
 .ds-product::before{content:"";position:absolute;left:0;right:0;top:0;height:3px;z-index:4;
   background:var(--accent);transform:scaleX(0);transform-origin:left;
@@ -574,7 +591,7 @@ html.m-lock,html.m-lock body,body.filters-open{overflow:hidden}
 .ds-product:hover{transform:translateY(-4px);
   border-color:color-mix(in srgb,var(--ink) 26%,var(--line))}
 .ds-product:hover::before{transform:scaleX(1)}
-.ds-product-link{position:relative;display:flex;flex-direction:column;height:100%}
+.ds-product-link{position:relative;display:flex;flex-direction:column;height:auto;flex:1 1 auto;min-height:0}
 .ds-product-link::before{counter-increment:prod;content:counter(prod,decimal-leading-zero);
   position:absolute;top:12px;left:13px;z-index:3;
   font-family:var(--font-body);font-size:11.5px;font-weight:700;letter-spacing:.16em;
@@ -615,6 +632,20 @@ span.ds-product-img.is-empty{display:block}
   background:var(--accent);color:var(--accent-ink);
   font-family:var(--font-display);font-size:12px;font-weight:800;letter-spacing:.06em;
   padding:4px 9px;box-shadow:0 6px 14px -8px rgba(0,0,0,.6)}
+/* CTA de compra que inyecta el puente: cierra la ficha dentro del marco,
+   alineado a la retícula de 14px de la tarjeta. En la fila densa se
+   compacta a la derecha, como el precio. */
+.article.ds-product>.dsx-buy{
+  width:auto;min-width:0;margin:10px 14px 14px;padding:0;
+  display:flex;align-items:center;justify-content:center;gap:9px;
+  min-height:46px;border:1px solid var(--accent);border-radius:var(--radius-btn);
+  background:var(--accent);color:var(--accent-ink);cursor:pointer;
+  font-family:var(--font-display);font-size:12.5px;font-weight:700;
+  letter-spacing:.14em;text-transform:uppercase;
+  transition:transform .2s var(--ease),background .2s,border-color .2s,color .2s,box-shadow .2s}
+.article.ds-product>.dsx-buy:hover{transform:translateY(-2px);filter:brightness(1.06)}
+[data-ds-view-mode="list"] .article.ds-product>.dsx-buy{
+  width:fit-content;min-width:0;margin:0 0 16px auto;padding:0 22px;min-height:42px}
 .ds-empty{display:flex;align-items:center;gap:14px;margin-top:4px;
   padding:26px 22px;border:1px dashed var(--line);background:var(--surface);
   color:var(--muted);font-size:15px}
@@ -1170,6 +1201,22 @@ a.contact-row:hover{background:var(--soft);color:var(--accent)}
 .pdp-ref-code:empty{display:none}
 .pdp-ref-code:not(:empty)::before{content:"Ref. "}
 .pdp-actions{display:flex;flex-wrap:wrap;gap:10px;margin-top:22px}
+/* Compra online: el puente inserta .dsx-buy antes de .pdp-actions; es el CTA
+   primario y el de WhatsApp pasa a secundario solo en modo tienda. */
+.pdp-info>.dsx-buy{
+  width:100%;min-width:0;margin:0 0 14px;padding:0;
+  display:flex;align-items:center;justify-content:center;gap:9px;
+  min-height:48px;border:1px solid var(--accent);border-radius:var(--radius-btn);
+  background:var(--accent);color:var(--accent-ink);cursor:pointer;
+  font-family:var(--font-display);font-size:13px;font-weight:700;
+  letter-spacing:.14em;text-transform:uppercase;
+  transition:transform .2s var(--ease),background .2s,box-shadow .2s}
+.pdp-info>.dsx-buy:hover{transform:translateY(-2px);filter:brightness(1.06);
+  box-shadow:0 14px 30px -18px color-mix(in srgb,var(--accent) 70%,transparent)}
+html[data-ds-commerce="1"] .pdp-actions .btn.accent{
+  background:transparent;color:inherit;border-color:currentColor}
+html[data-ds-commerce="1"] .pdp-actions .btn.accent:hover{
+  background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
 .pdp-share{display:flex;align-items:center;gap:8px;margin-top:24px;
   font-family:var(--font-display);font-size:11px;font-weight:700;
   letter-spacing:.2em;text-transform:uppercase;color:var(--muted)}
@@ -1429,7 +1476,7 @@ a.contact-row:hover{background:var(--soft);color:var(--accent)}
       <a href="#suscripciones" data-ds-anchor data-flag="plans">Membresías</a>
       <a href="#contacto" data-ds-anchor data-flag="contact">Contacto</a>
     </nav>
-    <div class="head-icons">
+    <div class="head-icons" data-ds-account-slot>
       <a class="h-ico" href="{{store_whatsapp_url}}" aria-label="WhatsApp" title="WhatsApp" rel="noopener">
         <svg class="icon" viewBox="0 0 24 24"><path d="M21 11.5a8.4 8.4 0 0 1-8.5 8.4 8.6 8.6 0 0 1-3.8-.9L3 21l2-5.3a8.3 8.3 0 0 1-1-4A8.4 8.4 0 0 1 12.5 3.2 8.4 8.4 0 0 1 21 11.5Z"/></svg>
       </a>

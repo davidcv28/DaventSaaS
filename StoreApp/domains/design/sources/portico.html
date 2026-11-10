@@ -81,6 +81,14 @@ html[data-ds-theme="dark"]{
   --sala:color-mix(in srgb,var(--copper) 19%,transparent);
   --spot:color-mix(in srgb,var(--copper) 11%,transparent);
 }
+/* AA en portico-arena: el acento #A3722F con la tinta del puente (#191611)
+   queda en ~4.3:1 sobre todos los rellenos de marca (.btn-solid, .btn-line,
+   .m-bar-wa, .dsx-buy, CTAs del puente). Se baja el cobre ~10% y se fuerza
+   tinta hueso solo en claro — en noche el bloque de arriba ya aclara el
+   cobre y fija su propia tinta. */
+html[data-ds-style="portico-arena"]:not([data-ds-theme="dark"]){
+  --ds-accent:#8f6429;--ds-accent-ink:#fbf7ef;
+}
 *{box-sizing:border-box}
 html{-webkit-text-size-adjust:100%;text-size-adjust:100%;background:var(--paper);
   scroll-behavior:smooth;scrollbar-width:thin;
@@ -276,6 +284,16 @@ html[data-ds-surface="product"] .top-index{display:none}
 .top-burger span{display:block;width:17px;height:1px;background:currentColor;margin:3px auto}
 header.top .ds-theme-toggle{margin-inline-start:0!important;width:40px!important;height:40px!important;
   border-color:var(--line)!important;opacity:.85!important}
+/* Cuenta del puente: píldora mono como .top-wa, sin auto-margin para no
+   partir el bloque .top-actions que ya empuja todo a la derecha. */
+.top-inner>.dsx-account{
+  margin-inline-start:0;flex:none;
+  display:inline-flex;align-items:center;gap:8px;min-height:38px;padding:0 15px;
+  border:1px solid var(--line);border-radius:0;background:transparent;color:var(--ink-2);
+  font:500 9px/1 var(--mono);letter-spacing:.16em;text-transform:uppercase;cursor:pointer;
+  opacity:.9;transition:border-color .25s,color .25s,background .25s,transform .25s var(--ease)}
+.top-inner>.dsx-account:hover{border-color:var(--copper);color:var(--copper-deep);
+  background:var(--copper-soft);transform:translateY(-2px)}
 .top-progress{position:absolute;left:0;bottom:-1px;height:2px;width:100%;background:var(--copper);
   transform:scaleX(0);transform-origin:0 50%;will-change:transform}
 
@@ -579,17 +597,19 @@ html[data-ds-theme="dark"] .band-tag{color:var(--muted)}
   .grid-preview .ds-product:first-child .ds-product-desc{-webkit-line-clamp:3}
 }
 
-/* Tarjeta de pieza: cédula de museo. */
+/* Tarjeta de pieza: cédula de museo. El marco vive en el article (no en el
+   enlace) para que el CTA de compra que inyecta el puente quede dentro de
+   la ficha; en vista lista se vuelve fila separada por filetes. */
 .ds-product{position:relative;min-width:0;counter-increment:piece;
-  transition:transform .4s var(--ease)}
+  display:flex;flex-direction:column;
+  border:1px solid var(--line);background:var(--card);padding:10px 10px 16px;
+  transition:border-color .4s,background .4s,transform .4s var(--ease),box-shadow .4s}
 .ds-product::before{content:counter(piece,decimal-leading-zero);position:absolute;z-index:3;
   top:18px;left:18px;padding:3px 7px;background:color-mix(in srgb,var(--paper) 90%,transparent);
   font:400 8px/1 var(--mono);letter-spacing:.14em;color:var(--copper-deep)}
-.ds-product-link{position:relative;display:flex;flex-direction:column;height:100%;
-  padding:10px 10px 16px;border:1px solid var(--line);background:var(--card);
-  transition:border-color .4s,background .4s}
-.ds-product:hover{transform:translateY(-5px)}
-.ds-product:hover .ds-product-link{border-color:var(--copper-line);box-shadow:var(--shadow)}
+.ds-product-link{position:relative;display:flex;flex-direction:column;flex:1 1 auto;
+  min-height:0;padding:0;border:0;background:none}
+.ds-product:hover{transform:translateY(-5px);border-color:var(--copper-line);box-shadow:var(--shadow)}
 .ds-product-img{width:100%;aspect-ratio:4/5;object-fit:cover;background-color:var(--paper-3)}
 .ds-product:hover .ds-product-img{filter:saturate(1.07) contrast(1.02)}
 .ds-product-img.is-empty{display:grid;place-items:center;background:
@@ -618,6 +638,19 @@ html[data-ds-theme="dark"] .band-tag{color:var(--muted)}
   font:500 8px/1 var(--mono);letter-spacing:.06em}
 .ds-product-old{font-size:10px;color:var(--muted);text-decoration:line-through}
 .ds-product .ds-campaign-label{top:10px;left:auto;right:10px}
+/* CTA de compra que inyecta el puente: cierra la cédula con la piel del
+   .btn-solid. En la fila densa se compacta a la derecha. */
+.article.ds-product>.dsx-buy{
+  width:auto;min-width:0;margin:14px 0 0;padding:0;
+  display:flex;align-items:center;justify-content:center;gap:10px;
+  min-height:46px;border:0;border-radius:var(--radius);cursor:pointer;
+  background:var(--copper);color:var(--ds-accent-ink,#fbf7ef);
+  font:500 9.5px/1 var(--mono);letter-spacing:.2em;text-transform:uppercase;
+  transition:transform .3s var(--ease),box-shadow .3s,filter .15s ease}
+.article.ds-product>.dsx-buy:hover{transform:translateY(-2px);filter:brightness(1.05);
+  box-shadow:0 22px 38px -24px color-mix(in srgb,var(--copper) 78%,transparent)}
+[data-ds-view-mode="list"] .article.ds-product>.dsx-buy{
+  width:fit-content;min-width:0;margin:10px 0 0 auto;padding:0 20px;min-height:40px}
 .ds-empty{display:grid;place-items:center;gap:16px;min-height:220px;padding:40px 24px;
   border:1px dashed var(--line);text-align:center;
   font:400 9px/1.9 var(--mono);letter-spacing:.18em;text-transform:uppercase;color:var(--muted)}
@@ -1039,11 +1072,12 @@ html[data-ds-theme="dark"] .foot-word{-webkit-text-stroke-color:color-mix(in srg
   gap:clamp(16px,2.2vw,26px);counter-reset:piece}
 [data-ds-products][data-ds-view-mode="list"]{display:flex;flex-direction:column;
   border-top:1px solid var(--line)}
-[data-ds-view-mode="list"] .ds-product{border-bottom:1px solid var(--line)}
+[data-ds-view-mode="list"] .ds-product{display:block;border:0;border-bottom:1px solid var(--line);
+  padding:0;background:none;box-shadow:none}
 [data-ds-view-mode="list"] .ds-product::before{display:none}
 [data-ds-view-mode="list"] .ds-product-link{display:flex;flex-direction:row;align-items:center;
   gap:22px;padding:16px 0;border:0;background:none}
-[data-ds-view-mode="list"] .ds-product:hover{transform:none}
+[data-ds-view-mode="list"] .ds-product:hover{transform:none;box-shadow:none}
 [data-ds-view-mode="list"] .ds-product:hover .ds-product-link{box-shadow:none;border-color:transparent}
 [data-ds-view-mode="list"] .ds-product-img{width:118px;flex:none;aspect-ratio:1}
 [data-ds-view-mode="list"] .ds-product-copy{flex:1;min-width:0;padding:0}
@@ -1085,6 +1119,22 @@ html[data-ds-theme="dark"] .foot-word{-webkit-text-stroke-color:color-mix(in srg
   color:var(--copper-deep)}
 .pdp-price s:empty,.pdp-price em:empty{display:none}
 .pdp-actions{display:flex;flex-wrap:wrap;gap:10px;margin-top:24px}
+/* Compra online: el puente inserta .dsx-buy antes de .pdp-actions; es el CTA
+   primario y el de WhatsApp pasa a secundario solo en modo tienda. */
+.pdp-info>.dsx-buy{
+  width:100%;min-width:0;margin:0 0 16px;padding:0;
+  display:flex;align-items:center;justify-content:center;gap:10px;
+  min-height:48px;border:0;border-radius:var(--radius);cursor:pointer;
+  background:var(--copper);color:var(--ds-accent-ink,#fbf7ef);
+  font:500 9.5px/1 var(--mono);letter-spacing:.2em;text-transform:uppercase;
+  transition:transform .3s var(--ease),box-shadow .3s,filter .15s ease}
+.pdp-info>.dsx-buy:hover{transform:translateY(-2px);filter:brightness(1.05);
+  box-shadow:0 22px 38px -24px color-mix(in srgb,var(--copper) 78%,transparent)}
+html[data-ds-commerce="1"] .pdp-actions .btn-solid{
+  background:transparent;color:var(--ink);
+  border-color:color-mix(in srgb,var(--ink) 42%,transparent)}
+html[data-ds-commerce="1"] .pdp-actions .btn-solid:hover{
+  background:var(--ink);color:var(--paper);border-color:var(--ink)}
 .pdp-meta{display:grid;margin-top:26px;border-top:1px solid var(--line-2)}
 .pdp-meta span{display:flex;justify-content:space-between;gap:14px;padding:10px 0;
   border-bottom:1px solid var(--line-2);font-size:11.5px}
