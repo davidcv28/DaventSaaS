@@ -68,3 +68,67 @@ Orquestá subagentes (`subagent_general`, background, ownership disjunto) para c
 - `.m-burger` + `.m-menu`/`#mmenu`: el nav ya no queda inalcanzable ≤760px (y ≤920px con commerce); compactación ≤560/≤420px (`brand-name` fuera, WA mínimo).
 - `.cat-filters .ds-cat[aria-pressed="true"]` píldora de acento (mata el subrayado genérico del host); `.ds-contact-row` a 1 columna en móvil.
 - DB local sincronizada (`DesignPattern('moderntec').html/css/js` desde `split_document`); **producción requiere re-importar el source** — actualizar solo `html/css/js` para no pisar `layout`/`style`/`tags` (el comando `import_design_pattern` pisa `layout` con `style.layout` vacío).
+
+---
+
+# Prompt — Pulido visual de los 26 diseños de web de usuario (auth, cuenta y secciones)
+
+Orquestar subagentes en paralelo (`subagent_general`, background, ownership
+disjunto por diseño) para mejorar **solo las webs que DAVENT genera para sus
+clientes**. Prohibido tocar la web principal de DAVENT (marketing, auth de
+dueño, dashboard).
+
+## Alcance
+
+- `/` (landing), `/catalogo`, `/servicios`, `/ingresar` (auth de cliente) y
+  `/cuenta` (panel) de cada diseño, en los slugs demo de la DB.
+- Responsive en 390 / 768 / 1280 px: cero scroll horizontal.
+- Contraste AA (4.5:1 texto, 3:1 grande) en navs, botones, selects, hovers,
+  footer, badges e iconos.
+- Aspecto profesional y lenguaje visual propio por diseño (sin repetir
+  composiciones), usando las webs ilustrativas de la DB como referencia.
+
+## Infraestructura compartida (hecha por el orquestador)
+
+- `StorePublicLayout.vue`: emite `data-design="<slug>"` y carga
+  `TEMPLATE_CSS[template]` + glob `DESIGN_EC_CSS` →
+  `assets/store-design-<slug>.css`.
+- 26 hojas nuevas `frontend/src/assets/store-design-<diseno>.css` con tokens
+  `--dz-*` derivados del tema de la tienda (`--st-*`).
+
+## Reglas duras para los subagentes
+
+- Scopear todo con `[data-design='<slug>']` (auth/cuenta) y
+  `.store-page[data-template='<tpl>']` (secciones); las skins sobre Raíz
+  necesitan `:is(.store-page[data-template='x'], .store-page.<skin>[data-template='raiz'])`.
+- No editar `store-page.css` salvo cascadas documentadas; `!important` solo
+  contra reglas `[data-st-*]` del puente de paleta.
+- Tokens semánticos: `--st-accent-ink` es RELLENO (texto = `--sp-on-band`),
+  no texto sobre acento; `--dz-accent-text`/`--mc-on-band`/`--in-accent-text`
+  son las variantes templadas a AA.
+- CSS de patrón (`sources/*.html`): `render()` no interpola CSS; fuentes por
+  `@font-face` gstatic (CSP bloquea `<link>` de Google Fonts); en variantes
+  oscuras fijar superficies (`--ds-bg` conserva paleta clara); hooks
+  `data-ds-*` intactos; sin `fetch` dentro del documento.
+- Imágenes: solo WebP vía `normalize_image`.
+- Sin commits en subagentes; el orquestador commitea y pushea a `main`.
+
+## Verificación
+
+- `manage.py seed_design_catalog --patterns-only` tras tocar `sources/*.html`
+  (la fuente manda sobre `seed_data.json`).
+- QA visual `frontend/scripts/qa-store-designs.mjs` (browser-automation): overflow, contraste
+  AA por nodos de texto, consola y requests fallidos a 390/768/1280 en
+  home/auth/cuenta/catálogo. Capturas en `frontend/visual-qa/orch/`.
+- Ojo: el throttle local `store_visit` (120/h por IP) devuelve 429 en QA
+  masivo → reiniciar `runserver` antes de una pasada limpia.
+
+## Resultado aplicado
+
+- 26 hojas `store-design-*.css` + 17 `sources/*.html` corregidos + pieles de
+  secciones (`store-mercado`, `store-raiz`, `store-gimnasio`, `store-impacto`,
+  `store-indumentaria`, `store-movimiento`, `store-sastreria`).
+- Fixes de cascada: footer `.sp-foot` por diseño, CTA de `impacto` con
+  `!important` + tokens, `.sp-top-links` de `mercado` sobre masthead amarillo.
+- QA final: 26 diseños × 4 páginas × 3 anchos → 0 overflow, 0 contraste real,
+  0 errores de consola en corridas limpias.

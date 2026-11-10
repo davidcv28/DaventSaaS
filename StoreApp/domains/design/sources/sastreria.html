@@ -163,7 +163,7 @@
   .head h2{margin:0;font:300 clamp(28px,3.6vw,44px)/1 var(--display);letter-spacing:-.02em}
   .head a,.head span{font:500 10px var(--mono);letter-spacing:.16em;text-transform:uppercase;color:var(--leather-ink)}
   .cats{display:flex;flex-wrap:wrap;gap:8px;margin-top:20px}
-  .ds-cat{display:inline-flex;align-items:center;padding:10px 18px;border:1px solid var(--line);border-radius:999px;font:500 11px var(--mono);letter-spacing:.1em;text-transform:uppercase;color:var(--ink-2);transition:border-color .2s,color .2s}
+  .ds-cat{display:inline-flex;align-items:center;max-width:100%;padding:10px 18px;border:1px solid var(--line);border-radius:999px;font:500 11px var(--mono);letter-spacing:.1em;text-transform:uppercase;color:var(--ink-2);overflow-wrap:anywhere;transition:border-color .2s,color .2s}
   .ds-cat:hover{border-color:var(--leather);color:var(--leather-ink)}
   .cats:not(:has(.ds-cat)){display:none}
 
@@ -298,7 +298,7 @@
   .pdp-score:has(b:empty){display:none}
   .ds-rev-list{list-style:none;margin:0;padding:0;display:grid;gap:0}
   .ds-rev-item{display:grid;grid-template-columns:auto 1fr;gap:4px 16px;padding:14px 0;border-bottom:1px solid var(--line);font-size:13.5px}
-  .ds-rev-item .ds-rev-name{font:600 12.5px var(--font);color:var(--ink)}
+  .ds-rev-item .ds-rev-name{font:600 12.5px var(--body);color:var(--ink)}
   .ds-rev-item .ds-rev-date{grid-row:2;font:500 9px var(--mono);letter-spacing:.16em;text-transform:uppercase;color:var(--muted)}
   .ds-rev-item .ds-rev-vote{grid-column:2;grid-row:1;justify-self:start;color:var(--leather-ink)}
   .ds-rev-item .ds-rev-vote.ds-rev-down{color:var(--muted)}
@@ -306,19 +306,19 @@
   .ds-rev-form{margin-top:22px;padding-top:18px;border-top:1px solid var(--line)}
   .ds-rev-fields{display:grid;gap:12px;font-size:13px}
   .ds-rev-votes{display:flex;gap:10px}
-  .ds-rev-pick{display:inline-flex;align-items:center;gap:8px;padding:9px 14px;border:1px solid var(--line);background:transparent;color:var(--ink);font:500 9.5px var(--mono);letter-spacing:.16em;text-transform:uppercase;cursor:pointer}
+  .ds-rev-pick{display:inline-flex;align-items:center;gap:8px;min-height:40px;padding:9px 14px;border:1px solid var(--line);background:transparent;color:var(--ink);font:500 9.5px var(--mono);letter-spacing:.16em;text-transform:uppercase;cursor:pointer}
   .ds-rev-pick.is-on{border-color:var(--leather);color:var(--leather-ink)}
   .ds-rev-row{display:grid;grid-template-columns:1fr 1fr;gap:12px}
-  .ds-rev-input{width:100%;font:400 13px var(--font);padding:10px 12px;border:1px solid var(--line);background:var(--card);color:var(--ink);box-sizing:border-box}
+  .ds-rev-input{width:100%;font:400 13px var(--body);padding:10px 12px;border:1px solid var(--line);background:var(--card);color:var(--ink);box-sizing:border-box}
   .ds-rev-input:focus{outline:1px solid var(--leather);outline-offset:1px}
   .ds-rev-cap{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
   .ds-rev-q{font:500 10px var(--mono);letter-spacing:.1em;text-transform:uppercase;color:var(--muted)}
   .ds-rev-cap .ds-rev-input{max-width:130px}
-  .ds-rev-reload{font:inherit;cursor:pointer;border:1px solid var(--line);background:transparent;color:var(--ink);padding:7px 10px;line-height:1}
+  .ds-rev-reload{font:inherit;cursor:pointer;border:1px solid var(--line);background:transparent;color:var(--ink);padding:7px 10px;min-height:40px;line-height:1}
   .ds-rev-status{margin:0;font:500 10.5px var(--mono);letter-spacing:.08em;color:var(--danger)}
   .ds-rev-status[data-ok="1"]{color:var(--leather-ink)}
   .ds-rev-status:empty{display:none}
-  .ds-rev-send{justify-self:start;font:500 10px var(--mono);letter-spacing:.18em;text-transform:uppercase;padding:12px 22px;border:0;background:var(--ink);color:var(--paper);cursor:pointer}
+  .ds-rev-send{justify-self:start;min-height:44px;font:500 10px var(--mono);letter-spacing:.18em;text-transform:uppercase;padding:12px 22px;border:0;background:var(--ink);color:var(--paper);cursor:pointer}
   .ds-rev-send:hover{background:var(--leather)}
   .pdp-rel .lookbook{margin-top:8px}
   .foot{border-top:1px solid var(--line);padding:40px 0 34px}
@@ -450,6 +450,9 @@
     --leather-ink:color-mix(in srgb,var(--leather) 45%,#F2EEE4);
     --leather-deep:#8A623F;--on-leather:#171614;
     --sage:#A9B79E;
+    /* --danger no se redefinía: el #8a4b3a claro sobre --paper #171614
+       quedaba en ~3.2:1 (bajo AA) en los estados de error de reseñas. */
+    --danger:#D4685E;
     --shadow:0 1px 0 rgba(0,0,0,.4);
   }
   html[data-ds-theme="dark"] .backdrop::before{opacity:.26}

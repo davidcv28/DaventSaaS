@@ -243,6 +243,17 @@
   box-shadow: inset 0 -2px 0 var(--mc-link);
 }
 .store-page[data-template='mercado'] .sp-shop-nav-note { color: var(--mc-muted); font-weight: 400; }
+/* El nav clásico (.sp-top-links, tiendas no-shop) hereda --sp-on-band
+   (blanco) del chrome compartido: sobre el masthead amarillo queda a
+   ~1.3:1. Se fija la tinta de banda del diseño. */
+.store-page[data-template='mercado'] .sp-top-links a {
+  color: color-mix(in srgb, var(--mc-on-band) 78%, transparent);
+}
+.store-page[data-template='mercado'] .sp-top-links a:hover,
+.store-page[data-template='mercado'] .sp-top-links a.router-link-exact-active {
+  color: var(--mc-on-band);
+  background: color-mix(in srgb, var(--mc-on-band) 14%, transparent);
+}
 
 .store-page[data-template='mercado'] .sp-ann {
   background: var(--mc-ink);
@@ -255,7 +266,27 @@
 .store-page[data-template='mercado'] .sp-foot {
   background: var(--mc-surface);
   border-top: 1px solid var(--mc-line);
+  color: var(--mc-ink);
 }
+/* El chrome global pinta el pie con --sp-on-band (blanco): sobre el fondo
+   claro de mercado eso deja todo el texto blanco sobre blanco. Se repinta
+   con la paleta mc, que ya se adapta a los temas claro/oscuro vía --st-*. */
+.store-page[data-template='mercado'] .sp-foot-brand strong { color: var(--mc-ink); }
+.store-page[data-template='mercado'] .sp-foot-brand span,
+.store-page[data-template='mercado'] .sp-foot-copy,
+.store-page[data-template='mercado'] .sp-foot-note { color: var(--mc-muted); }
+.store-page[data-template='mercado'] .sp-foot-col a,
+.store-page[data-template='mercado'] .sp-foot-contact a,
+.store-page[data-template='mercado'] .sp-foot-contact li { color: var(--mc-ink-2); }
+.store-page[data-template='mercado'] .sp-foot-col a:hover { color: var(--mc-link); }
+.store-page[data-template='mercado'] .sp-foot-bottom { border-top-color: var(--mc-line); }
+.store-page[data-template='mercado'] .sp-foot .sp-davent-badge {
+  color: var(--mc-ink-2);
+  background: var(--mc-surface);
+  border-color: var(--mc-line);
+}
+.store-page[data-template='mercado'] .sp-foot .sp-davent-badge strong { color: var(--mc-accent); }
+.store-page[data-template='mercado'] .sp-foot .sp-davent-badge:hover { border-color: var(--mc-accent); background: var(--mc-soft); }
 .store-page[data-template='mercado'] .sp-foot-heading { color: var(--mc-muted); }
 .store-page[data-template='mercado'] .sp-foot-col a:hover { color: var(--mc-link); }
 

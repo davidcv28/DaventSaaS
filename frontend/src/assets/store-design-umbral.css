@@ -1,0 +1,686 @@
+/* ===========================================================================
+   UMTHAL — páginas de comercio (ingresar / cuenta).
+   Se carga on-demand desde StorePublicLayout cuando .store-page lleva
+   data-design="umbral". No edita las hojas scoped de las vistas: las
+   reemplaza con más especificidad.
+
+   Composición propia: la auth es LA PUERTA — una sola pieza con la banda de
+   marca en tinta que remata en arco (el umbral de la casa) y el formulario
+   debajo sobre papel, con un rombo cobalto marcando el quicio. La cuenta es
+   EL PLANO: lateral con espina cobalto, pestañas cuadradas de ficha y
+   paneles con filete superior de acento como las placas del patrón.
+   =========================================================================== */
+
+[data-design='umbral'] {
+  --dz-bg: #f4f1e8;
+  --dz-surface: #ebe7d8;
+  --dz-surface-2: #e3decd;
+  --dz-ink: #252119;
+  --dz-ink-2: color-mix(in srgb, var(--dz-ink) 72%, var(--dz-bg));
+  --dz-muted: color-mix(in srgb, #6e6858 76%, var(--dz-ink));
+  --dz-line: rgba(37, 33, 25, .16);
+  --dz-line-soft: rgba(37, 33, 25, .09);
+  --dz-line-strong: rgba(37, 33, 25, .3);
+  --dz-accent: var(--sp-band-c1, var(--store-accent-ink, #1f3a73));
+  --dz-accent-ink: var(--sp-on-band, #fffdf8);
+  /* Acento como TEXTO: se tira hacia la tinta para que un acento claro del
+     dueño no quede bajo AA sobre el papel. */
+  --dz-accent-text: color-mix(in srgb, var(--store-accent, #2b4c9b) 72%, var(--dz-ink));
+  --dz-accent-soft: color-mix(in srgb, var(--store-accent, #2b4c9b) 10%, var(--dz-bg));
+  /* Tono de acento legible SOBRE la banda de tinta (claro u oscuro). */
+  --dz-accent-band: color-mix(in srgb, var(--sp-band-c1, #2b4c9b) 50%, #a9bcf0);
+  --dz-band: #252119;
+  --dz-band-ink: #f4f1e8;
+  --dz-band-line: rgba(244, 241, 232, .15);
+  --dz-ok: color-mix(in srgb, #3e7c4f 70%, var(--dz-ink));
+  --dz-danger: #a63d2f;
+  --dz-display: var(--st-f-display-family, "Playfair Display", Georgia, "Times New Roman", serif);
+  --dz-body: var(--st-f-body-family, "Work Sans", "Helvetica Neue", system-ui, sans-serif);
+  --dz-mono: var(--st-f-eyebrow-family, "JetBrains Mono", ui-monospace, SFMono-Regular, monospace);
+  --dz-radius: 0px;
+  --dz-radius-btn: 2px;
+  --dz-shadow: 0 34px 70px -46px rgba(32, 27, 18, .55);
+  --dz-shadow-soft: 0 16px 38px -26px rgba(32, 27, 18, .35);
+}
+
+[data-design='umbral'][data-theme='dark'] {
+  --dz-bg: #15181f;
+  --dz-surface: #1d212b;
+  --dz-surface-2: #242936;
+  --dz-ink: #ece8dc;
+  --dz-ink-2: color-mix(in srgb, var(--dz-ink) 80%, var(--dz-bg));
+  --dz-muted: #9ba1ae;
+  --dz-line: rgba(236, 232, 220, .14);
+  --dz-line-soft: rgba(236, 232, 220, .08);
+  --dz-line-strong: rgba(236, 232, 220, .3);
+  --dz-accent: color-mix(in srgb, var(--sp-band-c1, #2b4c9b) 55%, #a9bcf0);
+  --dz-accent-ink: #14171f;
+  --dz-accent-text: color-mix(in srgb, var(--dz-accent) 82%, #fff);
+  --dz-accent-soft: color-mix(in srgb, var(--dz-accent) 13%, var(--dz-bg));
+  --dz-accent-band: color-mix(in srgb, var(--sp-band-c1, #2b4c9b) 42%, #d6e0f8);
+  --dz-band: #0d1017;
+  --dz-band-ink: #ece8dc;
+  --dz-band-line: rgba(236, 232, 220, .14);
+  --dz-ok: #82c49b;
+  --dz-danger: #e08b7c;
+  --dz-shadow: 0 34px 70px -38px rgba(0, 0, 0, .85);
+  --dz-shadow-soft: 0 18px 42px -26px rgba(0, 0, 0, .7);
+}
+
+/* Tokens --sp-* del chrome genérico: con plantilla 'raiz' la tienda hereda
+   la paleta neutra; acá se repiten los tonos del diseño para que ningún
+   sub-componente quede con el acento equivocado. */
+.store-page[data-design='umbral'] {
+  --sp-bg: var(--dz-bg);
+  --sp-card: var(--dz-surface);
+  --sp-card-solid: var(--dz-surface);
+  --sp-surface: var(--dz-surface-2);
+  --sp-soft: var(--dz-accent-soft);
+  --sp-ink: var(--dz-ink);
+  --sp-ink-2: var(--dz-ink-2);
+  --sp-muted: var(--dz-muted);
+  --sp-line: var(--dz-line);
+  --sp-accent-text: var(--dz-accent-text);
+  --sp-success: var(--dz-ok);
+  --sp-danger: var(--dz-danger);
+  --sp-warning: #8a6a2f;
+  --sp-radius: var(--dz-radius-btn);
+}
+.store-page[data-design='umbral'][data-theme='dark'] {
+  --sp-warning: #d8a94e;
+}
+
+/* ---------- Marco común ---------- */
+[data-design='umbral'][data-theme] :is(.ec-auth, .ec-account) :is(a, button, input, select, textarea):focus-visible {
+  outline: 2px solid var(--dz-accent);
+  outline-offset: 3px;
+}
+[data-design='umbral'][data-theme] :is(.ec-auth, .ec-account) ::selection {
+  background: var(--store-accent-ink);
+  color: var(--sp-on-band, #fff);
+}
+
+/* ===========================================================================
+   AUTH — la puerta: arco de tinta + plano de papel
+   =========================================================================== */
+[data-design='umbral'] .ec-auth {
+  padding-inline: clamp(0px, 3vw, 26px);
+}
+[data-design='umbral'] .ec-auth .ec-auth-shell {
+  width: min(980px, 100%);
+  grid-template-columns: minmax(0, 1fr);
+  margin-block: clamp(16px, 3.4vw, 44px) clamp(40px, 6vw, 80px);
+  border: 1px solid var(--dz-line);
+  /* La silueta del umbral: arcos laterales que cierran en quicio recto. */
+  border-radius: 50% 50% 0 0 / clamp(84px, 12vw, 140px) clamp(84px, 12vw, 140px) 0 0;
+  background: var(--dz-surface);
+  box-shadow: var(--dz-shadow);
+  overflow: hidden;
+}
+
+/* Banda de marca: tinta de la casa, arco superior, rombo cobalto. */
+[data-design='umbral'] .ec-auth .ec-auth-brand {
+  isolation: isolate;
+  display: grid;
+  padding: clamp(76px, 10vw, 124px) clamp(24px, 4.5vw, 52px) clamp(26px, 3.6vw, 40px);
+  color: var(--dz-band-ink);
+  background:
+    radial-gradient(72% 95% at 50% -22%, color-mix(in srgb, var(--dz-accent-band) 24%, transparent), transparent 70%),
+    linear-gradient(180deg, color-mix(in srgb, #000 14%, transparent), color-mix(in srgb, #000 52%, transparent)),
+    var(--dz-band);
+}
+[data-design='umbral'] .ec-auth .ec-auth-brand::before {
+  opacity: .18;
+  mix-blend-mode: luminosity;
+}
+[data-design='umbral'] .ec-auth .ec-auth-brand::after {
+  background:
+    linear-gradient(color-mix(in srgb, var(--dz-band-ink) 5%, transparent) 1px, transparent 1px) 0 0 / 100% 64px,
+    linear-gradient(90deg, color-mix(in srgb, var(--dz-band-ink) 5%, transparent) 1px, transparent 1px) 0 0 / 64px 100%,
+    linear-gradient(180deg, color-mix(in srgb, #000 10%, transparent), color-mix(in srgb, #000 48%, transparent));
+}
+[data-design='umbral'] .ec-auth .ec-auth-brand-inner {
+  display: grid;
+  gap: clamp(18px, 2.6vw, 26px);
+  max-width: 58ch;
+  padding-right: 0;
+}
+[data-design='umbral'] .ec-auth .ec-auth-brand-top {
+  gap: 14px;
+  padding-bottom: 0;
+  border-bottom: 0;
+}
+[data-design='umbral'] .ec-auth .ec-auth-logo {
+  width: 46px; height: 46px;
+  border-radius: var(--dz-radius);
+  background: transparent;
+  border: 1px solid color-mix(in srgb, var(--dz-band-ink) 38%, transparent);
+  color: var(--dz-band-ink);
+  font-family: var(--dz-display); font-size: 24px; font-weight: 400; letter-spacing: 0;
+}
+[data-design='umbral'] .ec-auth .ec-auth-brand-name {
+  font-family: var(--dz-mono); font-size: 11px; font-weight: 400;
+  letter-spacing: .22em; text-transform: uppercase; color: color-mix(in srgb, var(--dz-band-ink) 82%, transparent);
+}
+[data-design='umbral'] .ec-auth .ec-auth-brand-copy {
+  display: grid; gap: 12px; max-width: 52ch;
+}
+/* Cota del plano: mono con rombo cobalto al final. */
+[data-design='umbral'] .ec-auth .ec-auth-rail {
+  display: inline-flex; align-items: center; gap: 12px;
+  font: 400 9px/1 var(--dz-mono); letter-spacing: .34em; text-transform: uppercase;
+  color: var(--dz-accent-band);
+}
+[data-design='umbral'] .ec-auth .ec-auth-rail::after {
+  content: ""; width: 8px; height: 8px; flex: none;
+  background: var(--dz-accent-band);
+  transform: rotate(45deg);
+}
+[data-design='umbral'] .ec-auth .ec-auth-brand-kicker {
+  font: 400 9px/1 var(--dz-mono); letter-spacing: .26em; text-transform: uppercase;
+  color: var(--dz-accent-band);
+}
+[data-design='umbral'] .ec-auth .ec-auth-brand-kicker::before {
+  content: ""; display: inline-block; width: 7px; height: 7px; margin-right: 10px;
+  background: var(--dz-accent-band);
+  transform: rotate(45deg) translateY(-1px);
+}
+[data-design='umbral'] .ec-auth .ec-auth-brand-title {
+  font-family: var(--dz-display); font-weight: 400; font-style: italic;
+  font-size: clamp(30px, 4vw, 50px); line-height: 1.04; letter-spacing: -.015em;
+  color: var(--dz-band-ink);
+}
+[data-design='umbral'] .ec-auth .ec-auth-brand-text {
+  font-family: var(--dz-body); font-size: 13.5px; line-height: 1.7;
+  color: color-mix(in srgb, var(--dz-band-ink) 78%, transparent);
+}
+/* Beneficios del plano: fila de fichas separadas por filete. */
+[data-design='umbral'] .ec-auth .ec-auth-perks {
+  display: flex; flex-wrap: wrap; gap: 10px 0;
+  margin-top: 8px;
+}
+[data-design='umbral'] .ec-auth .ec-auth-perks li {
+  display: flex; align-items: center; gap: 9px;
+  padding: 8px 0;
+  font-family: var(--dz-body); font-size: 12.5px; font-weight: 500;
+  color: color-mix(in srgb, var(--dz-band-ink) 88%, transparent);
+}
+[data-design='umbral'] .ec-auth .ec-auth-perks li + li {
+  border-left: 1px solid var(--dz-band-line);
+  padding-left: 20px;
+  margin-left: 12px;
+}
+[data-design='umbral'] .ec-auth .ec-auth-perks svg {
+  flex: none; color: var(--dz-accent-band);
+}
+[data-design='umbral'] .ec-auth .ec-auth-brand-foot {
+  font: 400 8.5px/1.5 var(--dz-mono); letter-spacing: .22em; text-transform: uppercase;
+  color: color-mix(in srgb, var(--dz-band-ink) 60%, transparent);
+  padding-top: 16px;
+  border-top: 1px solid var(--dz-band-line);
+}
+
+/* Plano del formulario: papel con quicio marcado por un rombo. */
+[data-design='umbral'] .ec-auth .ec-auth-panel {
+  position: relative;
+  padding: clamp(30px, 4vw, 48px) clamp(22px, 4vw, 48px) clamp(30px, 4vw, 48px);
+  background: var(--dz-surface);
+  color: var(--dz-ink);
+}
+/* El rombo del quicio: flota sobre la línea que une arco y plano. */
+[data-design='umbral'] .ec-auth .ec-auth-panel::before {
+  content: ""; position: absolute; top: 0; left: clamp(24px, 6vw, 64px);
+  width: 10px; height: 10px;
+  background: var(--dz-accent);
+  transform: translate(-50%, -50%) rotate(45deg);
+  box-shadow: 0 0 0 4px var(--dz-surface);
+}
+[data-design='umbral'] .ec-auth .ec-auth-panel::after {
+  content: ""; position: absolute; top: 0; left: 0; right: 0; height: 1px;
+  background: var(--dz-line);
+}
+[data-design='umbral'] .ec-auth .ec-auth-back {
+  gap: 9px; margin-bottom: clamp(20px, 3vw, 30px);
+  padding-bottom: 6px;
+  border-bottom: 1px solid transparent;
+  font: 400 9px/1 var(--dz-mono); letter-spacing: .2em; text-transform: uppercase;
+  color: var(--dz-muted);
+  transition: color .25s, border-color .25s;
+}
+[data-design='umbral'] .ec-auth .ec-auth-back:hover {
+  color: var(--dz-accent-text); border-bottom-color: var(--dz-accent);
+}
+[data-design='umbral'] .ec-auth .ec-auth-head {
+  gap: 10px; margin-bottom: 26px; padding-bottom: 20px;
+  border-bottom: 1px solid var(--dz-line);
+}
+[data-design='umbral'] .ec-auth .ec-auth-badge {
+  width: 46px; height: 46px; margin-bottom: 4px;
+  border: 1px solid var(--dz-line); border-radius: var(--dz-radius);
+  background: transparent; color: var(--dz-accent-text);
+}
+[data-design='umbral'] .ec-auth .ec-auth-tag {
+  display: inline-flex; align-items: center; gap: 10px;
+  font: 400 9px/1 var(--dz-mono); letter-spacing: .24em; text-transform: uppercase;
+  color: var(--dz-accent-text);
+}
+[data-design='umbral'] .ec-auth .ec-auth-tag::before {
+  content: ""; width: 8px; height: 8px; flex: none;
+  background: var(--dz-accent);
+  transform: rotate(45deg);
+}
+[data-design='umbral'] .ec-auth .ec-auth-title {
+  font-family: var(--dz-display); font-weight: 400; font-style: italic;
+  font-size: clamp(26px, 3.2vw, 40px); line-height: 1.05; letter-spacing: -.015em;
+  color: var(--dz-ink);
+}
+[data-design='umbral'] .ec-auth .ec-auth-sub {
+  font-family: var(--dz-body); font-size: 13.5px; line-height: 1.65; color: var(--dz-muted);
+}
+[data-design='umbral'] .ec-auth .ec-auth-loading { color: var(--dz-muted); font-family: var(--dz-body); }
+[data-design='umbral'] .ec-auth .ec-auth-spin { color: var(--dz-accent-text); }
+
+/* ---------- Controles (compartidos auth + cuenta) ---------- */
+[data-design='umbral'][data-theme] :is(.ec-auth, .ec-account) .sp-field { gap: 8px; }
+[data-design='umbral'][data-theme] :is(.ec-auth, .ec-account) .sp-field-label {
+  font: 400 9px/1 var(--dz-mono); letter-spacing: .2em; text-transform: uppercase;
+  color: var(--dz-muted);
+}
+[data-design='umbral'][data-theme] :is(.ec-auth, .ec-account) .sp-input {
+  min-height: 50px;
+  padding: 12px 14px;
+  border: 1px solid var(--dz-line);
+  border-radius: var(--dz-radius);
+  background: var(--dz-bg);
+  color: var(--dz-ink);
+  font-family: var(--dz-body); font-size: 16px;
+  box-shadow: none;
+  transition: border-color .2s, box-shadow .2s, background .2s;
+}
+[data-design='umbral'][data-theme] :is(.ec-auth, .ec-account) .sp-input:hover { border-color: var(--dz-line-strong); }
+[data-design='umbral'][data-theme] :is(.ec-auth, .ec-account) .sp-input:focus {
+  border-color: var(--dz-accent);
+  background: var(--dz-surface);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--dz-accent) 14%, transparent);
+}
+[data-design='umbral'][data-theme] :is(.ec-auth, .ec-account) .sp-input::placeholder {
+  color: var(--dz-muted); opacity: 1;
+}
+[data-design='umbral'][data-theme] :is(.ec-auth, .ec-account) .sp-input:disabled {
+  background: color-mix(in srgb, var(--dz-line) 30%, var(--dz-bg));
+  color: var(--dz-ink-2);
+  cursor: not-allowed;
+}
+[data-design='umbral'][data-theme] :is(.ec-auth, .ec-account) select.sp-input {
+  color-scheme: light;
+}
+[data-design='umbral'][data-theme='dark'] :is(.ec-auth, .ec-account) select.sp-input {
+  color-scheme: dark;
+}
+[data-design='umbral'][data-theme] :is(.ec-auth, .ec-account) .sp-form-error {
+  color: var(--dz-danger); font-family: var(--dz-body); font-size: 12.5px;
+}
+[data-design='umbral'][data-theme] :is(.ec-auth, .ec-account) .sp-input:-webkit-autofill {
+  -webkit-text-fill-color: var(--dz-ink);
+  box-shadow: inset 0 0 0 40px var(--dz-bg);
+}
+
+/* Botón principal: placa cobalto del plano, filo recto. */
+[data-design='umbral'][data-theme] :is(.ec-auth, .ec-account) :is(.ecaf-submit, .ec-btn-primary) {
+  min-height: 50px;
+  border: 1px solid transparent;
+  border-radius: var(--dz-radius-btn);
+  background: var(--store-accent-ink);
+  color: var(--sp-on-band, #fff);
+  font: 600 11px/1 var(--dz-mono); letter-spacing: .18em; text-transform: uppercase;
+  filter: none;
+  transition: transform .25s cubic-bezier(.22, 1, .36, 1), box-shadow .25s, background .2s;
+}
+[data-design='umbral'][data-theme] :is(.ec-auth, .ec-account) :is(.ecaf-submit, .ec-btn-primary):hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 18px 30px -24px color-mix(in srgb, var(--dz-accent) 85%, transparent);
+  filter: none;
+}
+[data-design='umbral'][data-theme] :is(.ec-auth, .ec-account) :is(.ecaf-submit, .ec-btn-primary):active:not(:disabled) {
+  transform: translateY(1px);
+}
+[data-design='umbral'][data-theme] :is(.ec-auth, .ec-account) :is(.ecaf-submit, .ec-btn-primary):disabled {
+  background: var(--dz-line); color: var(--dz-ink-2); opacity: 1; cursor: not-allowed;
+}
+[data-design='umbral'][data-theme] :is(.ec-auth, .ec-account) .ec-btn-ghost {
+  min-height: 46px;
+  border: 1px solid color-mix(in srgb, var(--dz-ink) 42%, transparent);
+  border-radius: var(--dz-radius-btn);
+  background: transparent; color: var(--dz-ink);
+  font: 600 10.5px/1 var(--dz-mono); letter-spacing: .18em; text-transform: uppercase;
+}
+[data-design='umbral'][data-theme] :is(.ec-auth, .ec-account) .ec-btn-ghost:hover {
+  background: var(--dz-ink); color: var(--dz-bg); border-color: var(--dz-ink);
+}
+
+/* Formulario compartido (StoreAuthForm). */
+[data-design='umbral'] .ec-auth .ecaf { gap: 15px; }
+[data-design='umbral'] .ec-auth .ecaf-pass-toggle {
+  color: var(--dz-muted); border-radius: var(--dz-radius);
+  min-width: 40px; min-height: 40px;
+}
+[data-design='umbral'] .ec-auth .ecaf-pass-toggle:hover {
+  color: var(--dz-accent-text); background: var(--dz-accent-soft);
+}
+[data-design='umbral'] .ec-auth .ecaf-divider {
+  font: 400 9px/1 var(--dz-mono); letter-spacing: .2em; text-transform: uppercase;
+  color: var(--dz-muted);
+}
+[data-design='umbral'] .ec-auth .ecaf-divider::before,
+[data-design='umbral'] .ec-auth .ecaf-divider::after { background: var(--dz-line); opacity: 1; }
+[data-design='umbral'] .ec-auth .ecaf-link {
+  color: var(--dz-accent-text); font-family: var(--dz-body); font-weight: 600;
+  text-underline-offset: 4px;
+}
+[data-design='umbral'] .ec-auth .ecaf-link:hover { color: var(--dz-ink); }
+[data-design='umbral'] .ec-auth .ecaf-notice {
+  border-radius: var(--dz-radius);
+  background: color-mix(in srgb, var(--dz-ok) 10%, var(--dz-surface));
+  border: 1px solid color-mix(in srgb, var(--dz-ok) 38%, transparent);
+  color: var(--dz-ok);
+}
+[data-design='umbral'] .ec-auth .ecaf-error {
+  border-radius: var(--dz-radius);
+  background: color-mix(in srgb, var(--dz-danger) 9%, var(--dz-surface));
+  border: 1px solid color-mix(in srgb, var(--dz-danger) 36%, transparent);
+  color: var(--dz-danger);
+}
+
+/* ===========================================================================
+   CUENTA — el plano: espina cobalto y fichas de ambiente
+   =========================================================================== */
+[data-design='umbral'][data-theme] .ec-account {
+  width: min(1180px, 100%);
+  margin-inline: auto;
+  padding: clamp(16px, 3vw, 34px) clamp(14px, 4vw, 40px) clamp(44px, 6vw, 76px);
+  gap: 0;
+}
+[data-design='umbral'][data-theme] .ec-account .acc-shell {
+  grid-template-columns: minmax(0, 1fr);
+  gap: 18px;
+}
+[data-design='umbral'][data-theme] .ec-account .acc-side { display: none; }
+[data-design='umbral'][data-theme] .ec-account .acc-main { gap: 16px; }
+
+[data-design='umbral'][data-theme] .ec-account .acc-tele {
+  display: block;
+  font: 400 8.5px/1 var(--dz-mono); letter-spacing: .26em; text-transform: uppercase;
+  color: var(--dz-muted);
+}
+[data-design='umbral'][data-theme] .ec-account .acc-idx {
+  font: 400 9px/1 var(--dz-mono); letter-spacing: .18em; color: var(--dz-muted);
+}
+/* Placa de ambiente: cuadro de acento con inicial serif. */
+[data-design='umbral'][data-theme] .ec-account .acc-avatar {
+  border-radius: var(--dz-radius);
+  background: var(--store-accent-ink); color: var(--sp-on-band, #fff);
+  font-family: var(--dz-display); font-weight: 400; font-size: 20px; letter-spacing: .01em;
+}
+[data-design='umbral'][data-theme] .ec-account .acc-avatar--sm { width: 44px; height: 44px; font-size: 16px; }
+
+/* Header compacto (tablet/mobile): filete de plano, sin tarjeta. */
+[data-design='umbral'][data-theme] .ec-account .acc-mhead {
+  display: grid;
+  grid-template-columns: 44px minmax(0, 1fr) 44px;
+  align-items: center; gap: 12px;
+  padding: 0 0 14px;
+  border-bottom: 1px solid var(--dz-line);
+}
+[data-design='umbral'][data-theme] .ec-account .acc-mhead .acc-tele { grid-column: 1 / -1; }
+[data-design='umbral'][data-theme] .ec-account .acc-mhead-meta strong {
+  font-family: var(--dz-display); font-weight: 400; font-size: 19px; letter-spacing: -.01em;
+  color: var(--dz-ink);
+}
+[data-design='umbral'][data-theme] .ec-account .acc-mhead-meta small {
+  font-family: var(--dz-mono); font-size: 10.5px; letter-spacing: .06em; color: var(--dz-muted);
+}
+[data-design='umbral'][data-theme] .ec-account .acc-icon-btn {
+  width: 44px; height: 44px;
+  border: 1px solid var(--dz-line); border-radius: var(--dz-radius);
+  background: transparent; color: var(--dz-ink-2);
+}
+[data-design='umbral'][data-theme] .ec-account .acc-icon-btn:hover {
+  border-color: var(--dz-accent); color: var(--dz-accent-text);
+  background: var(--dz-accent-soft);
+}
+
+/* Tabs (tablet/mobile): fichas de ambiente, la activa a tinta. */
+[data-design='umbral'][data-theme] .ec-account .acc-tabs {
+  gap: 8px; padding: 4px 0 8px;
+  border-bottom: 0;
+  scrollbar-width: none;
+  -webkit-overflow-scrolling: touch;
+}
+[data-design='umbral'][data-theme] .ec-account .acc-tab {
+  min-height: 44px;
+  padding: 10px 14px;
+  border: 1px solid var(--dz-line); border-radius: var(--dz-radius);
+  background: var(--dz-surface); color: var(--dz-muted);
+  font: 600 9px/1 var(--dz-mono); letter-spacing: .16em; text-transform: uppercase;
+  gap: 8px;
+  transition: background .2s, color .2s, border-color .2s;
+}
+[data-design='umbral'][data-theme] .ec-account .acc-tab:hover {
+  color: var(--dz-accent-text); border-color: var(--dz-accent);
+  background: var(--dz-accent-soft);
+}
+[data-design='umbral'][data-theme] .ec-account .acc-tab.is-on {
+  background: var(--dz-ink); color: var(--dz-bg);
+  border-color: var(--dz-ink);
+}
+[data-design='umbral'][data-theme] .ec-account .acc-tab.is-on .acc-idx {
+  color: color-mix(in srgb, var(--dz-bg) 70%, transparent);
+}
+
+/* Paneles: placas con filete de acento superior como las del patrón. */
+[data-design='umbral'][data-theme] .ec-account .acc-panel,
+[data-design='umbral'][data-theme] .ec-account .acc-auth-card,
+[data-design='umbral'][data-theme] .ec-account .acc-gate-card,
+[data-design='umbral'][data-theme] .ec-account .acc-skelpanel {
+  padding: clamp(18px, 2.6vw, 30px);
+  border: 1px solid var(--dz-line);
+  border-top: 3px solid var(--dz-accent);
+  border-radius: var(--dz-radius);
+  background: var(--dz-surface);
+  box-shadow: none;
+  gap: 18px;
+  color: var(--dz-ink);
+}
+[data-design='umbral'][data-theme] .ec-account .acc-panel-head {
+  padding-bottom: 14px;
+  border-bottom: 1px solid var(--dz-line);
+}
+[data-design='umbral'][data-theme] .ec-account .acc-panel-title {
+  font-family: var(--dz-display); font-weight: 400; font-style: italic;
+  font-size: clamp(22px, 2.4vw, 30px); letter-spacing: -.015em; color: var(--dz-ink);
+}
+[data-design='umbral'][data-theme] .ec-account .acc-panel-sub {
+  font-family: var(--dz-body); font-size: 13px; line-height: 1.6; color: var(--dz-muted);
+}
+
+/* Gate / sub-vistas de mail: fichas de plano. */
+[data-design='umbral'][data-theme] .ec-account :is(.acc-gate-ico, .acc-auth-ico) {
+  border-radius: var(--dz-radius);
+  background: var(--dz-accent-soft);
+  border: 1px solid color-mix(in srgb, var(--dz-accent) 38%, transparent);
+  color: var(--dz-accent-text);
+}
+[data-design='umbral'][data-theme] .ec-account :is(.acc-gate-title, .acc-auth-title) {
+  font-family: var(--dz-display); font-weight: 400; letter-spacing: -.015em; color: var(--dz-ink);
+}
+[data-design='umbral'][data-theme] .ec-account :is(.acc-gate-sub, .acc-auth-msg) {
+  font-family: var(--dz-body); color: var(--dz-muted);
+}
+[data-design='umbral'][data-theme] .ec-account .acc-gate-list {
+  border: 1px solid var(--dz-line); border-radius: var(--dz-radius);
+  background: var(--dz-bg); color: var(--dz-ink-2);
+}
+[data-design='umbral'][data-theme] .ec-account .acc-gate-list li {
+  font-family: var(--dz-body); color: var(--dz-ink-2);
+  border-bottom: 1px solid var(--dz-line-soft);
+}
+[data-design='umbral'][data-theme] .ec-account .acc-gate-list li:last-child { border-bottom: 0; }
+[data-design='umbral'][data-theme] .ec-account .acc-gate-list svg { color: var(--dz-accent-text); }
+[data-design='umbral'][data-theme] .ec-account .acc-gate-link,
+[data-design='umbral'][data-theme] .ec-account .acc-auth-link {
+  font: 600 9px/1 var(--dz-mono); letter-spacing: .2em; text-transform: uppercase;
+  color: var(--dz-accent-text);
+  text-decoration: underline; text-underline-offset: 4px;
+}
+[data-design='umbral'][data-theme] .ec-account .acc-auth-ok {
+  color: var(--dz-ok); font-family: var(--dz-body); font-weight: 700;
+}
+[data-design='umbral'][data-theme] .ec-account .acc-spin {
+  border-color: color-mix(in srgb, var(--dz-muted) 34%, transparent);
+  border-top-color: var(--dz-accent);
+}
+[data-design='umbral'][data-theme] .ec-account .acc-sk {
+  background: color-mix(in srgb, var(--dz-muted) 16%, transparent);
+  border-radius: var(--dz-radius-btn);
+}
+
+/* ---------- Escritorio: la cámara ---------- */
+@media (min-width: 1024px) {
+  [data-design='umbral'][data-theme] .ec-account :is(.acc-mhead, .acc-tabs) { display: none; }
+  [data-design='umbral'][data-theme] .ec-account .acc-shell {
+    grid-template-columns: 300px minmax(0, 1fr);
+    gap: 34px;
+    align-items: start;
+  }
+  /* La cámara: plano con espina cobalto al borde. */
+  [data-design='umbral'][data-theme] .ec-account .acc-side {
+    display: grid;
+    gap: 0;
+    align-content: start;
+    position: sticky;
+    top: calc(var(--sp-top-h, 64px) + 18px);
+    padding: 22px 24px 22px 26px;
+    border: 1px solid var(--dz-line);
+    border-left: 4px solid var(--dz-accent);
+    border-radius: var(--dz-radius);
+    background: var(--dz-surface);
+    box-shadow: none;
+  }
+  [data-design='umbral'][data-theme] .ec-account .acc-id {
+    display: grid;
+    grid-template-columns: 52px minmax(0, 1fr);
+    align-items: center;
+    gap: 12px;
+    padding: 0 0 18px;
+    border-bottom: 1px solid var(--dz-line);
+  }
+  [data-design='umbral'][data-theme] .ec-account .acc-id .acc-tele { grid-column: 1 / -1; }
+  [data-design='umbral'][data-theme] .ec-account .acc-id-name {
+    font-family: var(--dz-display); font-weight: 400; font-size: 19px; letter-spacing: -.01em;
+    color: var(--dz-ink);
+  }
+  [data-design='umbral'][data-theme] .ec-account .acc-id-email {
+    font-family: var(--dz-mono); font-size: 10.5px; letter-spacing: .06em; color: var(--dz-muted);
+  }
+  [data-design='umbral'][data-theme] .ec-account .acc-nav { gap: 0; margin-top: 6px; }
+  [data-design='umbral'][data-theme] .ec-account .acc-navitem {
+    gap: 12px;
+    padding: 13px 8px 13px 2px;
+    border-radius: 0;
+    border-bottom: 1px solid var(--dz-line-soft);
+    background: transparent;
+    color: var(--dz-ink-2);
+    font-family: var(--dz-body); font-size: 13px; font-weight: 500;
+    transition: color .25s, background .25s;
+  }
+  [data-design='umbral'][data-theme] .ec-account .acc-navitem svg { color: var(--dz-muted); transition: color .25s; }
+  [data-design='umbral'][data-theme] .ec-account .acc-navitem .acc-idx { margin-left: auto; }
+  [data-design='umbral'][data-theme] .ec-account .acc-navitem:hover {
+    background: var(--dz-accent-soft); color: var(--dz-ink);
+  }
+  [data-design='umbral'][data-theme] .ec-account .acc-navitem:hover svg { color: var(--dz-accent-text); }
+  /* Ambiente marcado: barra de plano + tinta suave. */
+  [data-design='umbral'][data-theme] .ec-account .acc-navitem.is-on {
+    background: var(--dz-accent-soft); color: var(--dz-ink); font-weight: 600;
+    box-shadow: inset 3px 0 0 var(--dz-accent);
+  }
+  [data-design='umbral'][data-theme] .ec-account .acc-navitem.is-on svg { color: var(--dz-accent-text); }
+  [data-design='umbral'][data-theme] .ec-account .acc-navitem.is-on .acc-idx { color: var(--dz-accent-text); }
+  [data-design='umbral'][data-theme] .ec-account .acc-logout {
+    margin-top: 20px;
+    min-height: 44px;
+    border: 1px solid var(--dz-line);
+    border-radius: var(--dz-radius);
+    background: transparent;
+    color: var(--dz-ink-2);
+    font: 600 9px/1 var(--dz-mono); letter-spacing: .2em; text-transform: uppercase;
+  }
+  [data-design='umbral'][data-theme] .ec-account .acc-logout:hover {
+    color: var(--dz-danger);
+    border-color: color-mix(in srgb, var(--dz-danger) 52%, transparent);
+    background: color-mix(in srgb, var(--dz-danger) 7%, transparent);
+  }
+}
+
+/* ---------- Responsive ---------- */
+@media (max-width: 860px) {
+  [data-design='umbral'][data-theme] .ec-account .acc-mhead-meta strong { font-size: 17px; }
+  [data-design='umbral'][data-theme] .ec-account .acc-panel-title { font-size: 22px; }
+}
+@media (max-width: 640px) {
+  [data-design='umbral'] .ec-auth { padding-inline: 12px; }
+  [data-design='umbral'] .ec-auth .ec-auth-shell {
+    margin-block: 10px clamp(24px, 5vw, 44px);
+    border-radius: 50% 50% 0 0 / 64px 64px 0 0;
+  }
+  [data-design='umbral'] .ec-auth .ec-auth-brand {
+    padding: 58px 18px 22px;
+  }
+  [data-design='umbral'] .ec-auth .ec-auth-brand-inner { gap: 14px; }
+  [data-design='umbral'] .ec-auth .ec-auth-brand-title { font-size: clamp(24px, 7vw, 32px); }
+  [data-design='umbral'] .ec-auth .ec-auth-brand-text,
+  [data-design='umbral'] .ec-auth .ec-auth-perks,
+  [data-design='umbral'] .ec-auth .ec-auth-brand-foot { display: none; }
+  [data-design='umbral'] .ec-auth .ec-auth-panel {
+    padding: 26px 16px 28px;
+  }
+  [data-design='umbral'] .ec-auth .ec-auth-head { margin-bottom: 20px; padding-bottom: 16px; }
+  [data-design='umbral'] .ec-auth .ec-auth-title { font-size: 24px; }
+  [data-design='umbral'] .ec-auth .ecaf-grid { grid-template-columns: minmax(0, 1fr); }
+  [data-design='umbral'][data-theme] .ec-account { padding-inline: 14px; }
+  [data-design='umbral'][data-theme] .ec-account .acc-tabs { padding-bottom: 0; gap: 6px; }
+  [data-design='umbral'][data-theme] .ec-account .acc-tab { padding: 10px 12px; letter-spacing: .12em; }
+  [data-design='umbral'][data-theme] .ec-account .acc-panel,
+  [data-design='umbral'][data-theme] .ec-account .acc-auth-card,
+  [data-design='umbral'][data-theme] .ec-account .acc-gate-card { padding: 18px 16px; }
+}
+@media (max-width: 390px) {
+  [data-design='umbral'] .ec-auth { padding-inline: 8px; }
+  [data-design='umbral'] .ec-auth .ec-auth-shell {
+    border-radius: 50% 50% 0 0 / 52px 52px 0 0;
+  }
+  [data-design='umbral'] .ec-auth .ec-auth-brand { padding: 50px 16px 20px; }
+  [data-design='umbral'] .ec-auth .ec-auth-brand-title { font-size: 22px; }
+  [data-design='umbral'] .ec-auth .ec-auth-title { font-size: 21px; }
+  [data-design='umbral'][data-theme] .ec-account { padding-inline: 10px; }
+  [data-design='umbral'][data-theme] .ec-account .acc-mhead { grid-template-columns: 40px minmax(0, 1fr) 40px; gap: 10px; }
+  [data-design='umbral'][data-theme] .ec-account .acc-mhead-meta strong { font-size: 16px; }
+  [data-design='umbral'][data-theme] .ec-account .acc-panel-title { font-size: 20px; }
+}
+/* Tab bar inferior de la tienda (mobile.nav = bottom): el último panel
+   respira sobre la barra fija. */
+@media (max-width: 768px) {
+  [data-design='umbral'][data-theme] .ec-account,
+  [data-design='umbral'] .ec-auth {
+    padding-bottom: calc(24px + env(safe-area-inset-bottom));
+  }
+  [data-design='umbral'][data-theme] .ec-account .acc-tabs {
+    padding-bottom: 6px;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  [data-design='umbral'] :is(.ec-auth, .ec-account) * {
+    transition-duration: .001ms !important;
+    animation-duration: .001ms !important;
+  }
+}

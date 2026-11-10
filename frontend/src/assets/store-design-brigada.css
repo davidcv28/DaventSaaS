@@ -1,0 +1,676 @@
+/* ===========================================================================
+   BRIGADA — páginas de comercio (ingresar / cuenta).
+   Se carga on-demand desde StorePublicLayout cuando .store-page lleva
+   data-design="brigada". No edita las hojas scoped de las vistas: las
+   reemplaza con más especificidad.
+
+   Composición propia: la auth es un PUESTO DE CONTROL en dos alas — el ala
+   de marca es la banda oscura con cinta de riesgo (hazard tape) en el filo,
+   titular condensado en caja alta y beneficios como lista de verificación
+   con casillas de peligro; el ala del formulario es papel con marco de
+   1.5px y sombra dura desplazada (firma del diseño). La cuenta es el
+   CUARTEL: paneles con marco duro y sombra offset, barra lateral con
+   maniobras numeradas y tabs de placa en móvil.
+   =========================================================================== */
+
+[data-design='brigada'] {
+  --dz-bg: #f2efe6;
+  --dz-surface: #fbf9f2;
+  --dz-ink: #191813;
+  --dz-ink-2: #3a372e;
+  --dz-muted: #6e6a5c;
+  --dz-line: #d8d2c0;
+  --dz-accent: var(--store-accent, #f5b800);
+  --dz-accent-ink: var(--store-accent-ink, #1b1a12);
+  /* Acento como TEXTO: el hazard puro no llega a AA sobre papel en varios
+     estilos — se mezcla hacia la tinta. */
+  --dz-accent-text: color-mix(in srgb, var(--store-accent, #f5b800) 62%, #4a3a00);
+  --dz-ok: #1e6b3a;
+  --dz-danger: #b02a1e;
+  --dz-display: var(--st-f-display-family, "Bricolage Grotesque", "Arial Black", system-ui, sans-serif);
+  --dz-body: var(--st-f-body-family, "Instrument Sans", Inter, system-ui, sans-serif);
+  --dz-mono: var(--st-f-eyebrow-family, "JetBrains Mono", ui-monospace, Menlo, monospace);
+  --dz-band: #1d1b15;
+  --dz-on-band: #f4f1e4;
+  --dz-band-muted: color-mix(in srgb, #f4f1e4 64%, transparent);
+  --dz-band-line: color-mix(in srgb, #f4f1e4 16%, transparent);
+  --dz-frame: #191813;
+  --dz-radius: 4px;
+  --dz-ease: cubic-bezier(.2, .7, .2, 1);
+}
+
+[data-design='brigada'][data-theme='dark'] {
+  --dz-bg: #141310;
+  --dz-surface: #1d1b16;
+  --dz-ink: #f2eee0;
+  --dz-ink-2: #d8d2be;
+  --dz-muted: #a39c86;
+  --dz-line: #38342a;
+  --dz-accent: color-mix(in srgb, var(--store-accent, #f5b800) 88%, #f2eee0);
+  --dz-accent-ink: #171510;
+  --dz-accent-text: color-mix(in srgb, var(--store-accent, #f5b800) 55%, #f2eee0);
+  --dz-ok: #8fd6a8;
+  --dz-danger: #f0958a;
+  --dz-band: #0e0d0a;
+  --dz-on-band: #f2eee0;
+  --dz-band-muted: color-mix(in srgb, #f2eee0 62%, transparent);
+  --dz-band-line: color-mix(in srgb, #f2eee0 16%, transparent);
+  --dz-frame: #f2eee0;
+}
+
+/* Cinta de riesgo reutilizable (hazard tape del documento) en la barra
+   lateral de la cuenta; el ala de marca lleva la suya dentro de ::after
+   para quedar por encima de la textura de portada. */
+[data-design='brigada'][data-theme] .ec-account .acc-side {
+  position: relative;
+}
+[data-design='brigada'][data-theme] .ec-account .acc-side::before {
+  content: ""; position: absolute; left: 0; right: 0; top: 0; height: 6px; z-index: 1;
+  background: repeating-linear-gradient(-45deg, var(--dz-accent) 0 12px, transparent 12px 24px);
+  background-color: var(--dz-band);
+  background-size: 100% 6px;
+}
+
+/* ---------- Marco común ---------- */
+[data-design='brigada'][data-theme] :is(.ec-auth, .ec-account) :is(a, button, input, select, textarea):focus-visible {
+  outline: 2px solid var(--dz-accent);
+  outline-offset: 3px;
+}
+[data-design='brigada'][data-theme] :is(.ec-auth, .ec-account) ::selection {
+  background: var(--store-accent-ink);
+  color: var(--sp-on-band, #fff);
+}
+
+/* ===========================================================================
+   AUTH — puesto de control en dos alas
+   =========================================================================== */
+[data-design='brigada'] .ec-auth {
+  padding-inline: clamp(0px, 3vw, 26px);
+}
+[data-design='brigada'] .ec-auth .ec-auth-shell {
+  width: min(1120px, 100%);
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1.05fr);
+  margin-block: clamp(16px, 3.4vw, 44px) clamp(40px, 6vw, 80px);
+  border: 1.5px solid var(--dz-frame);
+  border-radius: var(--dz-radius);
+  background: var(--dz-surface);
+  box-shadow: 8px 8px 0 0 color-mix(in srgb, var(--dz-frame) 88%, transparent);
+  overflow: hidden;
+}
+
+/* Ala de marca: banda oscura + cinta de riesgo en el filo. */
+[data-design='brigada'] .ec-auth .ec-auth-brand {
+  isolation: isolate;
+  padding: clamp(26px, 3.4vw, 42px) clamp(24px, 3.4vw, 42px) clamp(24px, 3.4vw, 40px);
+  color: var(--dz-on-band);
+  background:
+    radial-gradient(80% 50% at 92% -8%, color-mix(in srgb, var(--dz-accent) 16%, transparent), transparent 70%),
+    var(--dz-band);
+}
+/* La portada de la tienda queda como textura luminosa bajo la banda. */
+[data-design='brigada'] .ec-auth .ec-auth-brand::before {
+  opacity: .24;
+  mix-blend-mode: luminosity;
+}
+/* Capa de plano: cinta de riesgo al filo + retícula + velo de tinta +
+   luz de peligro (todo por encima de la textura de portada). */
+[data-design='brigada'] .ec-auth .ec-auth-brand::after {
+  background:
+    repeating-linear-gradient(-45deg, var(--dz-accent) 0 12px, transparent 12px 24px) center top / 100% 6px no-repeat,
+    linear-gradient(color-mix(in srgb, #f4f1e4 6%, transparent) 1px, transparent 1px) 0 0 / 44px 44px,
+    linear-gradient(90deg, color-mix(in srgb, #f4f1e4 6%, transparent) 1px, transparent 1px) 0 0 / 44px 44px,
+    linear-gradient(165deg, color-mix(in srgb, #000 34%, transparent), color-mix(in srgb, #000 58%, transparent)),
+    radial-gradient(80% 55% at 90% -6%, color-mix(in srgb, var(--dz-accent) 24%, transparent), transparent 70%);
+  -webkit-mask-image: linear-gradient(180deg, #000 24%, transparent 94%);
+  mask-image: linear-gradient(180deg, #000 24%, transparent 94%);
+}
+[data-design='brigada'] .ec-auth .ec-auth-brand-inner {
+  display: grid;
+  grid-template-rows: auto 1fr auto;
+  align-content: stretch;
+  gap: clamp(20px, 3vw, 34px);
+  height: 100%;
+  padding-right: 0;
+}
+[data-design='brigada'] .ec-auth .ec-auth-brand-top {
+  gap: 14px;
+  padding-bottom: 16px;
+  border-bottom: 1.5px solid var(--dz-band-line);
+}
+[data-design='brigada'] .ec-auth .ec-auth-logo {
+  width: 46px; height: 46px;
+  border-radius: 0;
+  background: var(--store-accent-ink);
+  border: 1.5px solid var(--dz-band);
+  color: var(--sp-on-band, #fff);
+  font-family: var(--dz-display); font-size: 24px; font-weight: 800; letter-spacing: 0;
+  clip-path: polygon(0 0, 100% 0, 100% 78%, 78% 100%, 0 100%);
+}
+[data-design='brigada'] .ec-auth .ec-auth-brand-name {
+  font-family: var(--dz-body); font-size: 11.5px; font-weight: 700;
+  letter-spacing: .16em; text-transform: uppercase; color: var(--dz-on-band);
+}
+[data-design='brigada'] .ec-auth .ec-auth-brand-copy {
+  display: grid; gap: 13px; max-width: 46ch;
+}
+/* Sello de turno: "TURNO ————" en mono. */
+[data-design='brigada'] .ec-auth .ec-auth-rail {
+  display: inline-flex; align-items: center; gap: 12px;
+  font: 700 9px/1 var(--dz-mono); letter-spacing: .3em; text-transform: uppercase;
+  color: color-mix(in srgb, var(--dz-accent) 85%, var(--dz-on-band));
+}
+[data-design='brigada'] .ec-auth .ec-auth-rail::after {
+  content: ""; width: 52px; height: 2px;
+  background: repeating-linear-gradient(90deg, var(--dz-accent) 0 8px, transparent 8px 12px);
+}
+[data-design='brigada'] .ec-auth .ec-auth-brand-kicker {
+  font: 700 9px/1 var(--dz-mono); letter-spacing: .22em; text-transform: uppercase;
+  color: var(--dz-band-muted);
+}
+[data-design='brigada'] .ec-auth .ec-auth-brand-title {
+  font-family: var(--dz-display); font-weight: 800;
+  font-size: clamp(30px, 3.4vw, 46px); line-height: 1.02; letter-spacing: -.01em;
+  text-transform: uppercase;
+  color: var(--dz-on-band);
+}
+[data-design='brigada'] .ec-auth .ec-auth-brand-text {
+  font-family: var(--dz-body); font-size: 13.5px; line-height: 1.65;
+  color: var(--dz-band-muted);
+}
+/* Lista de verificación del protocolo: casilla de peligro. */
+[data-design='brigada'] .ec-auth .ec-auth-perks {
+  counter-reset: dzperk; gap: 0; margin-top: 6px;
+}
+[data-design='brigada'] .ec-auth .ec-auth-perks li {
+  counter-increment: dzperk;
+  display: flex; align-items: center; gap: 11px;
+  padding: 11px 0;
+  border-bottom: 1px solid var(--dz-band-line);
+  font-family: var(--dz-body); font-size: 12.5px; font-weight: 600;
+  color: color-mix(in srgb, var(--dz-on-band) 92%, transparent);
+}
+[data-design='brigada'] .ec-auth .ec-auth-perks li::before {
+  content: ""; flex: none;
+  width: 11px; height: 11px;
+  border: 1.5px solid var(--dz-accent);
+  background: color-mix(in srgb, var(--dz-accent) 22%, transparent);
+}
+[data-design='brigada'] .ec-auth .ec-auth-perks li > span { flex: 1 1 auto; min-width: 0; }
+[data-design='brigada'] .ec-auth .ec-auth-perks svg {
+  flex: none; color: var(--dz-accent);
+}
+[data-design='brigada'] .ec-auth .ec-auth-brand-foot {
+  font: 700 8.5px/1.5 var(--dz-mono); letter-spacing: .18em; text-transform: uppercase;
+  color: var(--dz-band-muted);
+  padding-top: 14px;
+  border-top: 1.5px solid var(--dz-band-line);
+}
+
+/* Ala del formulario: papel con marco duro y sombra offset. */
+[data-design='brigada'] .ec-auth .ec-auth-panel {
+  position: relative;
+  padding: clamp(24px, 3.4vw, 46px) clamp(22px, 3.4vw, 46px) clamp(28px, 4vw, 48px);
+  background: var(--dz-surface);
+  color: var(--dz-ink);
+  border-left: 1.5px solid var(--dz-frame);
+}
+[data-design='brigada'] .ec-auth .ec-auth-back {
+  gap: 9px; margin-bottom: clamp(20px, 3vw, 30px);
+  padding-bottom: 6px;
+  border-bottom: 1.5px solid transparent;
+  font: 700 9px/1 var(--dz-mono); letter-spacing: .2em; text-transform: uppercase;
+  color: var(--dz-muted);
+  transition: color .2s var(--dz-ease), border-color .2s var(--dz-ease);
+}
+[data-design='brigada'] .ec-auth .ec-auth-back:hover {
+  color: var(--dz-accent-text); border-bottom-color: var(--dz-accent);
+}
+[data-design='brigada'] .ec-auth .ec-auth-head {
+  gap: 10px; margin-bottom: 26px; padding-bottom: 20px;
+  border-bottom: 1.5px solid var(--dz-line);
+}
+[data-design='brigada'] .ec-auth .ec-auth-badge {
+  width: 46px; height: 46px; margin-bottom: 4px;
+  border: 1.5px solid var(--dz-frame);
+  border-radius: 0;
+  background: var(--store-accent-ink);
+  color: var(--sp-on-band, #fff);
+  clip-path: polygon(0 0, 100% 0, 100% 80%, 80% 100%, 0 100%);
+}
+[data-design='brigada'] .ec-auth .ec-auth-tag {
+  display: inline-flex; align-items: center; gap: 9px;
+  font: 700 9px/1 var(--dz-mono); letter-spacing: .22em; text-transform: uppercase;
+  color: var(--dz-accent-text);
+}
+[data-design='brigada'] .ec-auth .ec-auth-tag::before {
+  content: ""; width: 8px; height: 8px; flex: none;
+  background: var(--dz-accent);
+}
+[data-design='brigada'] .ec-auth .ec-auth-title {
+  font-family: var(--dz-display); font-weight: 800;
+  font-size: clamp(26px, 3vw, 38px); line-height: 1.04; letter-spacing: -.01em;
+  text-transform: uppercase;
+  color: var(--dz-ink);
+}
+[data-design='brigada'] .ec-auth .ec-auth-sub {
+  font-family: var(--dz-body); font-size: 13.5px; line-height: 1.65; color: var(--dz-muted);
+}
+[data-design='brigada'] .ec-auth .ec-auth-loading { color: var(--dz-muted); font-family: var(--dz-body); }
+[data-design='brigada'] .ec-auth .ec-auth-spin { color: var(--dz-accent-text); }
+
+/* ---------- Controles (compartidos auth + cuenta) ---------- */
+[data-design='brigada'][data-theme] :is(.ec-auth, .ec-account) .sp-field { gap: 8px; }
+[data-design='brigada'][data-theme] :is(.ec-auth, .ec-account) .sp-field-label {
+  font: 700 9px/1 var(--dz-mono); letter-spacing: .2em; text-transform: uppercase;
+  color: var(--dz-muted);
+}
+[data-design='brigada'][data-theme] :is(.ec-auth, .ec-account) .sp-input {
+  min-height: 48px;
+  padding: 12px 14px;
+  border: 1.5px solid var(--dz-frame);
+  border-radius: var(--dz-radius);
+  background: var(--dz-bg);
+  color: var(--dz-ink);
+  font-family: var(--dz-body); font-size: 16px;
+  box-shadow: 3px 3px 0 0 color-mix(in srgb, var(--dz-frame) 22%, transparent);
+  transition: border-color .18s var(--dz-ease), box-shadow .18s var(--dz-ease), transform .18s var(--dz-ease);
+}
+[data-design='brigada'][data-theme] :is(.ec-auth, .ec-account) .sp-input:hover { border-color: color-mix(in srgb, var(--dz-accent) 55%, var(--dz-frame)); }
+[data-design='brigada'][data-theme] :is(.ec-auth, .ec-account) .sp-input:focus {
+  border-color: var(--dz-accent);
+  background: var(--dz-surface);
+  box-shadow: 3px 3px 0 0 color-mix(in srgb, var(--dz-accent) 45%, transparent);
+  outline: none;
+}
+[data-design='brigada'][data-theme] :is(.ec-auth, .ec-account) .sp-input::placeholder {
+  color: var(--dz-muted); opacity: 1;
+}
+[data-design='brigada'][data-theme] :is(.ec-auth, .ec-account) .sp-input:disabled {
+  background: color-mix(in srgb, var(--dz-line) 30%, var(--dz-bg));
+  color: var(--dz-ink-2);
+  box-shadow: none;
+  cursor: not-allowed;
+}
+[data-design='brigada'][data-theme] :is(.ec-auth, .ec-account) .sp-form-error {
+  color: var(--dz-danger); font-family: var(--dz-body); font-size: 12.5px;
+}
+/* El ojo de contraseña (scoped .ecaf-pass .sp-input) necesita su aire:
+   el padding propio del campo no puede pisar los 46px reservados. */
+[data-design='brigada'][data-theme] :is(.ec-auth, .ec-account) .ecaf-pass .sp-input { padding-right: 46px; }
+[data-design='brigada'][data-theme] :is(.ec-auth, .ec-account) .sp-input:-webkit-autofill {
+  -webkit-text-fill-color: var(--dz-ink);
+  box-shadow: inset 0 0 0 40px var(--dz-bg);
+}
+
+/* Botón principal: placa de peligro con sombra dura. */
+[data-design='brigada'][data-theme] :is(.ec-auth, .ec-account) :is(.ecaf-submit, .ec-btn-primary) {
+  min-height: 50px;
+  border: 1.5px solid var(--dz-frame);
+  border-radius: var(--dz-radius);
+  background: var(--store-accent-ink);
+  color: var(--sp-on-band, #fff);
+  font: 800 11px/1 var(--dz-display); letter-spacing: .14em; text-transform: uppercase;
+  filter: none;
+  box-shadow: 4px 4px 0 0 var(--dz-frame);
+  transition: transform .16s var(--dz-ease), box-shadow .16s var(--dz-ease), background .2s;
+}
+[data-design='brigada'][data-theme] :is(.ec-auth, .ec-account) :is(.ecaf-submit, .ec-btn-primary):hover:not(:disabled) {
+  transform: translate(-1px, -1px);
+  box-shadow: 6px 6px 0 0 var(--dz-frame);
+  filter: none;
+}
+[data-design='brigada'][data-theme] :is(.ec-auth, .ec-account) :is(.ecaf-submit, .ec-btn-primary):active:not(:disabled) {
+  transform: translate(2px, 2px);
+  box-shadow: 1px 1px 0 0 var(--dz-frame);
+}
+[data-design='brigada'][data-theme] :is(.ec-auth, .ec-account) :is(.ecaf-submit, .ec-btn-primary):disabled {
+  background: var(--dz-line); color: var(--dz-muted); opacity: 1; cursor: not-allowed;
+  box-shadow: none;
+}
+[data-design='brigada'][data-theme] :is(.ec-auth, .ec-account) .ec-btn-ghost {
+  min-height: 46px;
+  border: 1.5px solid var(--dz-frame);
+  border-radius: var(--dz-radius);
+  background: transparent; color: var(--dz-ink);
+  font: 700 10.5px/1 var(--dz-body); letter-spacing: .14em; text-transform: uppercase;
+  box-shadow: 3px 3px 0 0 color-mix(in srgb, var(--dz-frame) 20%, transparent);
+}
+[data-design='brigada'][data-theme] :is(.ec-auth, .ec-account) .ec-btn-ghost:hover {
+  background: var(--dz-ink); color: var(--dz-surface); border-color: var(--dz-ink);
+  transform: translate(-1px, -1px);
+  box-shadow: 4px 4px 0 0 color-mix(in srgb, var(--dz-frame) 30%, transparent);
+}
+
+/* Formulario compartido (StoreAuthForm). */
+[data-design='brigada'] .ec-auth .ecaf { gap: 15px; }
+[data-design='brigada'] .ec-auth .ecaf-pass-toggle { color: var(--dz-muted); border-radius: var(--dz-radius); }
+[data-design='brigada'] .ec-auth .ecaf-pass-toggle:hover {
+  color: var(--dz-accent-text); background: color-mix(in srgb, var(--dz-accent) 10%, transparent);
+}
+[data-design='brigada'] .ec-auth .ecaf-divider {
+  font: 700 9px/1 var(--dz-mono); letter-spacing: .2em; text-transform: uppercase;
+  color: var(--dz-muted);
+}
+[data-design='brigada'] .ec-auth .ecaf-divider::before,
+[data-design='brigada'] .ec-auth .ecaf-divider::after { background: var(--dz-line); opacity: 1; }
+[data-design='brigada'] .ec-auth .ecaf-link {
+  color: var(--dz-accent-text); font-family: var(--dz-body); font-weight: 700;
+  text-underline-offset: 4px;
+}
+[data-design='brigada'] .ec-auth .ecaf-link:hover { color: var(--dz-ink); }
+[data-design='brigada'] .ec-auth .ecaf-notice {
+  border-radius: var(--dz-radius);
+  background: color-mix(in srgb, var(--dz-ok) 10%, var(--dz-surface));
+  border: 1.5px solid color-mix(in srgb, var(--dz-ok) 40%, transparent);
+  color: var(--dz-ink);
+}
+[data-design='brigada'] .ec-auth .ecaf-error {
+  border-radius: var(--dz-radius);
+  background: color-mix(in srgb, var(--dz-danger) 9%, var(--dz-surface));
+  border: 1.5px solid color-mix(in srgb, var(--dz-danger) 38%, transparent);
+  color: var(--dz-ink);
+}
+
+/* ===========================================================================
+   CUENTA — cuartel
+   =========================================================================== */
+[data-design='brigada'][data-theme] .ec-account {
+  width: min(1240px, 100%);
+  margin-inline: auto;
+  padding: clamp(16px, 3vw, 34px) clamp(14px, 4vw, 40px) clamp(44px, 6vw, 76px);
+  gap: 0;
+}
+[data-design='brigada'][data-theme] .ec-account .acc-shell {
+  grid-template-columns: minmax(0, 1fr);
+  gap: 18px;
+}
+[data-design='brigada'][data-theme] .ec-account .acc-side { display: none; }
+[data-design='brigada'][data-theme] .ec-account .acc-main { gap: 16px; }
+
+[data-design='brigada'][data-theme] .ec-account .acc-tele {
+  display: block;
+  font: 700 8.5px/1 var(--dz-mono); letter-spacing: .22em; text-transform: uppercase;
+  color: var(--dz-muted);
+}
+[data-design='brigada'][data-theme] .ec-account .acc-idx {
+  font: 700 9px/1 var(--dz-mono); letter-spacing: .16em; color: var(--dz-muted);
+}
+[data-design='brigada'][data-theme] .ec-account .acc-avatar {
+  border-radius: 0;
+  background: var(--store-accent-ink); color: var(--sp-on-band, #fff);
+  font-family: var(--dz-display); font-weight: 800; font-size: 20px; letter-spacing: .01em;
+  clip-path: polygon(0 0, 100% 0, 100% 78%, 78% 100%, 0 100%);
+}
+[data-design='brigada'][data-theme] .ec-account .acc-avatar--sm { width: 44px; height: 44px; font-size: 16px; }
+
+/* Header compacto (tablet/mobile): placa con marco. */
+[data-design='brigada'][data-theme] .ec-account .acc-mhead {
+  display: grid;
+  grid-template-columns: 44px minmax(0, 1fr) 44px;
+  align-items: center; gap: 12px;
+  padding: 12px 14px;
+  border: 1.5px solid var(--dz-frame);
+  border-radius: var(--dz-radius);
+  background: var(--dz-surface);
+  box-shadow: 4px 4px 0 0 color-mix(in srgb, var(--dz-frame) 30%, transparent);
+}
+[data-design='brigada'][data-theme] .ec-account .acc-mhead-meta strong {
+  font-family: var(--dz-display); font-weight: 800; font-size: 18px; letter-spacing: 0; text-transform: uppercase;
+  color: var(--dz-ink);
+}
+[data-design='brigada'][data-theme] .ec-account .acc-mhead-meta small {
+  font-family: var(--dz-mono); font-size: 10.5px; letter-spacing: .08em; color: var(--dz-muted);
+}
+[data-design='brigada'][data-theme] .ec-account .acc-icon-btn {
+  width: 44px; height: 44px;
+  border: 1.5px solid var(--dz-frame);
+  border-radius: var(--dz-radius);
+  background: transparent; color: var(--dz-ink-2);
+}
+[data-design='brigada'][data-theme] .ec-account .acc-icon-btn:hover {
+  border-color: var(--dz-accent); color: var(--dz-accent-text);
+  background: color-mix(in srgb, var(--dz-accent) 10%, transparent);
+}
+
+/* Tabs (tablet/mobile): placas con filete de peligro activo. */
+[data-design='brigada'][data-theme] .ec-account .acc-tabs {
+  gap: 6px; padding: 4px;
+  border: 1.5px solid var(--dz-frame);
+  border-radius: var(--dz-radius);
+  background: var(--dz-surface);
+  box-shadow: 3px 3px 0 0 color-mix(in srgb, var(--dz-frame) 22%, transparent);
+  scrollbar-width: none;
+  -webkit-overflow-scrolling: touch;
+}
+[data-design='brigada'][data-theme] .ec-account .acc-tab {
+  min-height: 42px;
+  padding: 9px 12px;
+  border: 1.5px solid transparent;
+  border-radius: calc(var(--dz-radius) - 1px);
+  background: transparent; color: var(--dz-muted);
+  font: 700 9px/1 var(--dz-mono); letter-spacing: .16em; text-transform: uppercase;
+  gap: 8px;
+  white-space: nowrap;
+}
+[data-design='brigada'][data-theme] .ec-account .acc-tab:hover { color: var(--dz-ink); background: color-mix(in srgb, var(--dz-accent) 8%, transparent); }
+[data-design='brigada'][data-theme] .ec-account .acc-tab.is-on {
+  background: var(--dz-band);
+  color: var(--dz-on-band);
+  border-color: var(--dz-frame);
+}
+[data-design='brigada'][data-theme] .ec-account .acc-tab.is-on .acc-idx { color: var(--dz-accent); }
+
+/* Paneles: fichas con marco duro y sombra offset. */
+[data-design='brigada'][data-theme] .ec-account .acc-panel,
+[data-design='brigada'][data-theme] .ec-account .acc-auth-card,
+[data-design='brigada'][data-theme] .ec-account .acc-gate-card,
+[data-design='brigada'][data-theme] .ec-account .acc-skelpanel {
+  padding: clamp(18px, 2.6vw, 30px);
+  border: 1.5px solid var(--dz-frame);
+  border-radius: var(--dz-radius);
+  background: var(--dz-surface);
+  box-shadow: 5px 5px 0 0 color-mix(in srgb, var(--dz-frame) 22%, transparent);
+  gap: 18px;
+  color: var(--dz-ink);
+}
+[data-design='brigada'][data-theme] .ec-account .acc-panel-head {
+  padding-bottom: 14px;
+  border-bottom: 1.5px solid var(--dz-line);
+}
+[data-design='brigada'][data-theme] .ec-account .acc-panel-title {
+  font-family: var(--dz-display); font-weight: 800;
+  font-size: clamp(21px, 2.4vw, 30px); letter-spacing: -.01em; text-transform: uppercase;
+  color: var(--dz-ink);
+}
+[data-design='brigada'][data-theme] .ec-account .acc-panel-sub {
+  font-family: var(--dz-body); font-size: 13px; line-height: 1.6; color: var(--dz-muted);
+}
+
+/* Gate / sub-vistas de mail. */
+[data-design='brigada'][data-theme] .ec-account :is(.acc-gate-ico, .acc-auth-ico) {
+  border-radius: 0;
+  background: var(--store-accent-ink);
+  border: 1.5px solid var(--dz-frame);
+  color: var(--sp-on-band, #fff);
+  clip-path: polygon(0 0, 100% 0, 100% 78%, 78% 100%, 0 100%);
+}
+[data-design='brigada'][data-theme] .ec-account :is(.acc-gate-title, .acc-auth-title) {
+  font-family: var(--dz-display); font-weight: 800; letter-spacing: -.01em; text-transform: uppercase; color: var(--dz-ink);
+}
+[data-design='brigada'][data-theme] .ec-account :is(.acc-gate-sub, .acc-auth-msg) {
+  font-family: var(--dz-body); color: var(--dz-muted);
+}
+[data-design='brigada'][data-theme] .ec-account .acc-gate-list {
+  border: 1.5px solid var(--dz-frame); border-radius: var(--dz-radius);
+  background: var(--dz-bg); color: var(--dz-ink-2);
+}
+[data-design='brigada'][data-theme] .ec-account .acc-gate-list li { font-family: var(--dz-body); color: var(--dz-ink-2); }
+[data-design='brigada'][data-theme] .ec-account .acc-gate-list svg { color: var(--dz-accent-text); }
+[data-design='brigada'][data-theme] .ec-account :is(.acc-gate-link, .acc-auth-link) {
+  font: 700 9.5px/1 var(--dz-mono); letter-spacing: .18em; text-transform: uppercase;
+  color: var(--dz-accent-text);
+  text-decoration: underline; text-underline-offset: 4px;
+}
+[data-design='brigada'][data-theme] .ec-account .acc-auth-ok {
+  color: var(--dz-ok); font-family: var(--dz-body); font-weight: 700;
+}
+[data-design='brigada'][data-theme] .ec-account .acc-spin {
+  border-color: color-mix(in srgb, var(--dz-muted) 34%, transparent);
+  border-top-color: var(--dz-accent);
+}
+[data-design='brigada'][data-theme] .ec-account .acc-sk {
+  background: color-mix(in srgb, var(--dz-muted) 16%, transparent);
+  border-radius: var(--dz-radius);
+}
+
+/* ---------- Escritorio: barracón con maniobras ---------- */
+@media (min-width: 1024px) {
+  [data-design='brigada'][data-theme] .ec-account :is(.acc-mhead, .acc-tabs) { display: none; }
+  [data-design='brigada'][data-theme] .ec-account .acc-shell {
+    grid-template-columns: 310px minmax(0, 1fr);
+    gap: 26px;
+    align-items: start;
+  }
+  /* La banda lateral: superficie oscura con cinta de riesgo arriba. */
+  [data-design='brigada'][data-theme] .ec-account .acc-side {
+    display: grid;
+    gap: 0;
+    align-content: start;
+    position: sticky;
+    top: calc(var(--sp-top-h, 64px) + 18px);
+    padding: 24px 22px 18px;
+    border: 1.5px solid var(--dz-frame);
+    border-radius: var(--dz-radius);
+    background: var(--dz-band);
+    color: var(--dz-on-band);
+    box-shadow: 6px 6px 0 0 color-mix(in srgb, var(--dz-frame) 30%, transparent);
+  }
+  [data-design='brigada'][data-theme] .ec-account .acc-id {
+    display: grid;
+    grid-template-columns: 52px minmax(0, 1fr);
+    align-items: center;
+    gap: 12px;
+    padding: 0 0 18px;
+    border-bottom: 1.5px solid var(--dz-band-line);
+  }
+  [data-design='brigada'][data-theme] .ec-account .acc-id .acc-tele { grid-column: 1 / -1; color: var(--dz-band-muted); }
+  [data-design='brigada'][data-theme] .ec-account .acc-id-name {
+    font-family: var(--dz-display); font-weight: 800; font-size: 18px; text-transform: uppercase; letter-spacing: 0;
+    color: var(--dz-on-band);
+  }
+  [data-design='brigada'][data-theme] .ec-account .acc-id-email {
+    font-family: var(--dz-mono); font-size: 10.5px; letter-spacing: .06em; color: var(--dz-band-muted);
+  }
+  [data-design='brigada'][data-theme] .ec-account .acc-nav { gap: 0; margin-top: 8px; }
+  [data-design='brigada'][data-theme] .ec-account .acc-navitem {
+    gap: 12px;
+    min-height: 46px;
+    padding: 11px 10px;
+    border-radius: 0;
+    border: 0;
+    border-left: 3px solid transparent;
+    background: transparent;
+    color: var(--dz-band-muted);
+    font-family: var(--dz-body); font-size: 13px; font-weight: 600;
+    transition: color .2s var(--dz-ease), background .2s var(--dz-ease), border-color .2s var(--dz-ease);
+  }
+  [data-design='brigada'][data-theme] .ec-account .acc-navitem svg { color: color-mix(in srgb, var(--dz-on-band) 45%, transparent); transition: color .2s; }
+  [data-design='brigada'][data-theme] .ec-account .acc-navitem .acc-idx { margin-left: auto; color: color-mix(in srgb, var(--dz-on-band) 40%, transparent); }
+  [data-design='brigada'][data-theme] .ec-account .acc-navitem:hover {
+    background: color-mix(in srgb, var(--dz-accent) 10%, transparent);
+    color: var(--dz-on-band);
+    border-left-color: var(--dz-accent);
+  }
+  [data-design='brigada'][data-theme] .ec-account .acc-navitem:hover svg { color: var(--dz-accent); }
+  [data-design='brigada'][data-theme] .ec-account .acc-navitem.is-on {
+    background: color-mix(in srgb, var(--dz-accent) 14%, transparent);
+    color: var(--dz-on-band); font-weight: 700;
+    border-left-color: var(--dz-accent);
+  }
+  [data-design='brigada'][data-theme] .ec-account .acc-navitem.is-on svg { color: var(--dz-accent); }
+  [data-design='brigada'][data-theme] .ec-account .acc-navitem.is-on .acc-idx { color: var(--dz-accent); }
+  [data-design='brigada'][data-theme] .ec-account .acc-logout {
+    margin-top: 14px;
+    min-height: 44px;
+    border: 1.5px solid color-mix(in srgb, var(--dz-on-band) 34%, transparent);
+    border-radius: var(--dz-radius);
+    background: transparent;
+    color: var(--dz-band-muted);
+    font: 700 9.5px/1 var(--dz-mono); letter-spacing: .18em; text-transform: uppercase;
+  }
+  [data-design='brigada'][data-theme] .ec-account .acc-logout:hover {
+    color: var(--dz-on-band);
+    border-color: var(--dz-danger);
+    background: color-mix(in srgb, var(--dz-danger) 22%, transparent);
+  }
+}
+
+/* ---------- Responsive ---------- */
+@media (max-width: 1024px) {
+  [data-design='brigada'] .ec-auth .ec-auth-shell {
+    grid-template-columns: minmax(0, 1fr);
+    margin-block: 12px clamp(28px, 5vw, 48px);
+  }
+  [data-design='brigada'] .ec-auth .ec-auth-brand { padding: 22px 22px 20px; }
+  [data-design='brigada'] .ec-auth .ec-auth-brand-inner {
+    grid-template-rows: auto auto;
+    gap: 14px;
+    height: auto;
+  }
+  [data-design='brigada'] .ec-auth .ec-auth-brand-copy { gap: 8px; max-width: none; }
+  [data-design='brigada'] .ec-auth .ec-auth-brand-text,
+  [data-design='brigada'] .ec-auth .ec-auth-perks,
+  [data-design='brigada'] .ec-auth .ec-auth-brand-foot { display: none; }
+  [data-design='brigada'] .ec-auth .ec-auth-brand-title { font-size: clamp(22px, 4.6vw, 30px); }
+  [data-design='brigada'] .ec-auth .ec-auth-panel {
+    padding: 24px 22px 30px;
+    border-left: 0;
+    border-top: 1.5px solid var(--dz-frame);
+  }
+}
+@media (max-width: 860px) {
+  [data-design='brigada'][data-theme] .ec-account .acc-mhead-meta strong { font-size: 16px; }
+  [data-design='brigada'][data-theme] .ec-account .acc-panel-title { font-size: 21px; }
+}
+@media (max-width: 640px) {
+  [data-design='brigada'] .ec-auth { padding-inline: 12px; }
+  [data-design='brigada'] .ec-auth .ec-auth-shell { box-shadow: 5px 5px 0 0 color-mix(in srgb, var(--dz-frame) 80%, transparent); }
+  [data-design='brigada'] .ec-auth .ec-auth-brand { padding: 18px 16px 16px; }
+  [data-design='brigada'] .ec-auth .ec-auth-brand-top { padding-bottom: 12px; }
+  [data-design='brigada'] .ec-auth .ec-auth-logo { width: 38px; height: 38px; font-size: 19px; }
+  [data-design='brigada'] .ec-auth .ec-auth-brand-name { font-size: 10.5px; letter-spacing: .12em; }
+  [data-design='brigada'] .ec-auth .ec-auth-brand-title { font-size: 20px; }
+  [data-design='brigada'] .ec-auth .ec-auth-panel { padding: 18px 16px 26px; }
+  [data-design='brigada'] .ec-auth .ec-auth-head { margin-bottom: 20px; padding-bottom: 16px; }
+  [data-design='brigada'] .ec-auth .ec-auth-title { font-size: 23px; }
+  [data-design='brigada'] .ec-auth .ecaf-grid { grid-template-columns: minmax(0, 1fr); }
+  [data-design='brigada'][data-theme] .ec-account { padding-inline: 14px; }
+  [data-design='brigada'][data-theme] .ec-account .acc-tabs { padding: 3px; }
+  [data-design='brigada'][data-theme] .ec-account .acc-tab { min-height: 40px; padding: 8px 10px; }
+  [data-design='brigada'][data-theme] .ec-account .acc-panel,
+  [data-design='brigada'][data-theme] .ec-account .acc-auth-card,
+  [data-design='brigada'][data-theme] .ec-account .acc-gate-card { padding: 18px 16px; box-shadow: 3px 3px 0 0 color-mix(in srgb, var(--dz-frame) 18%, transparent); }
+}
+@media (max-width: 390px) {
+  [data-design='brigada'] .ec-auth { padding-inline: 8px; }
+  [data-design='brigada'] .ec-auth .ec-auth-brand-title { font-size: 18px; }
+  [data-design='brigada'] .ec-auth .ec-auth-title { font-size: 21px; }
+  [data-design='brigada'][data-theme] .ec-account { padding-inline: 10px; }
+  [data-design='brigada'][data-theme] .ec-account .acc-mhead { grid-template-columns: 40px minmax(0, 1fr) 40px; gap: 10px; padding: 10px 12px; }
+  [data-design='brigada'][data-theme] .ec-account .acc-mhead-meta strong { font-size: 15px; }
+  [data-design='brigada'][data-theme] .ec-account .acc-panel-title { font-size: 20px; }
+  [data-design='brigada'][data-theme] .ec-account .acc-tab { font-size: 8.5px; letter-spacing: .1em; padding: 8px 8px; }
+}
+/* Tab bar inferior de la tienda (mobile.nav = bottom). */
+@media (max-width: 768px) {
+  [data-design='brigada'][data-theme] .ec-account,
+  [data-design='brigada'] .ec-auth {
+    padding-bottom: calc(24px + env(safe-area-inset-bottom));
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  [data-design='brigada'] :is(.ec-auth, .ec-account) * {
+    transition-duration: .001ms !important;
+    animation-duration: .001ms !important;
+  }
+}

@@ -405,6 +405,20 @@ const TEMPLATE_CSS = {
   indumentaria: () => import('../assets/store-indumentaria.css'),
   impacto:   () => import('../assets/store-impacto.css')
 }
+// Diseño del catálogo elegido (slug): tiñe las páginas de comercio que NO
+// montan el documento del patrón (ingresar, cuenta, carrito, checkout).
+// Cada diseño trae su propia hoja `store-design-<slug>.css`, cargada
+// on-demand; si no existe, la página queda con la piel neutra.
+const DESIGN_EC_CSS = import.meta.glob('../assets/store-design-*.css')
+const designId = computed(() => {
+  const raw = String(custom.value.template || custom.value?.site_theme?.style?.id || '').trim().toLowerCase()
+  if (!raw || raw === 'raiz') return 'esencial'
+  return raw
+})
+watch(designId, (id) => {
+  const load = DESIGN_EC_CSS[`../assets/store-design-${id}.css`]
+  if (load) load().catch(() => {})
+}, { immediate: true })
 watch(pageTemplate, (tpl) => {
   const loaded = TEMPLATE_CSS[tpl]?.()
   if (loaded && typeof loaded.then === 'function') {
@@ -1113,7 +1127,7 @@ onBeforeUnmount(() => {
 </script>
 
 <template>
-  <div ref="pageRoot" class="store-page" :class="{ 'is-home': isHome, 'is-scrolled': scrolled, 'has-pattern': usePattern }" :data-store-theme="pageTheme" :data-theme="pageTheme" :data-template="pageTemplate" :data-store-template="pageTemplate" :data-style="pageStyle" :data-skin="storeSkinOf(pageTemplate)" :data-logo-mode="custom.logo_mode" :data-has-logo="custom.logo ? '' : null" :data-mono="custom.mono_style" :data-st-tabbar="showTabbar && !usePattern && !patternWaiting ? '' : null" :style="[themeVars, publishedThemeVars, studioVars]" v-bind="pageAttrs">
+  <div ref="pageRoot" class="store-page" :class="{ 'is-home': isHome, 'is-scrolled': scrolled, 'has-pattern': usePattern }" :data-store-theme="pageTheme" :data-theme="pageTheme" :data-template="pageTemplate" :data-store-template="pageTemplate" :data-design="designId" :data-style="pageStyle" :data-skin="storeSkinOf(pageTemplate)" :data-logo-mode="custom.logo_mode" :data-has-logo="custom.logo ? '' : null" :data-mono="custom.mono_style" :data-st-tabbar="showTabbar && !usePattern && !patternWaiting ? '' : null" :style="[themeVars, publishedThemeVars, studioVars]" v-bind="pageAttrs">
     <button type="button" class="sp-skip" @click="skipToContent">Saltar al contenido</button>
     <span v-if="previewMode" class="sp-preview-badge" role="status">Vista previa — el diseño todavía no se publicó</span>
     <!-- Diseño del catálogo con contrato de datos: se pinta el documento

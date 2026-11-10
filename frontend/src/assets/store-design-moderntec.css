@@ -1,0 +1,854 @@
+/* ===========================================================================
+   MODERNTec (NODO) — páginas de comercio (ingresar / cuenta).
+   Se carga on-demand desde StorePublicLayout cuando .store-page lleva
+   data-design="moderntec". No edita las hojas scoped de las vistas: las
+   reemplaza con más especificidad (0,3,0 mínimo).
+
+   Composición propia: la auth es el BANCO DE INSTRUMENTOS — el ala de
+   marca es el panel de lectura (retícula fina, telemetría en mono, perks
+   como filas de especificación con LED de estado) y el ala del
+   formulario es el módulo de acceso (esquinas atornilladas, labels mono,
+   CTA píldora con glow cian/violeta). La cuenta es el RACK DE MÓDULOS:
+   barra lateral como bandeja de instrumentos (ítem activo con filete de
+   acento + LED), paneles-tarjeta con hairlines y ticks de esquina, tabs
+   móviles como control segmentado.
+   Paleta del diseño: grafito #07090D, panel #0E141E, tinta #EEF3F8,
+   acento cian #3DD6FF + violeta #7C5CFF. Familia: Outfit / Inter /
+   JetBrains Mono. La variante "lumen" (tema claro) usa papel frío.
+   =========================================================================== */
+
+[data-design='moderntec'] .ec-auth,
+[data-design='moderntec'] .ec-account {
+  /* ---- Tokens (modo noche, identidad del diseño) ---- */
+  --dz-bg: #07090D;
+  --dz-bg-2: #0A0E15;
+  --dz-surface: #0E141E;
+  --dz-surface-2: #121A27;
+  --dz-surface-3: #17202F;
+  --dz-ink: #EEF3F8;
+  --dz-ink-2: #C6D0DE;
+  --dz-muted: #93A1B5;
+  --dz-line: rgba(255, 255, 255, .075);
+  --dz-line-soft: rgba(255, 255, 255, .045);
+  --dz-line-strong: rgba(255, 255, 255, .16);
+  /* Acento de relleno: el acento de la tienda con piso de luminancia +
+     mezcla de blanco — siempre lo bastante claro para tinta #04121A. */
+  --dz-accent: color-mix(in srgb, var(--store-accent-bright, var(--store-accent, #3dd6ff)) 80%, #ffffff);
+  --dz-accent-2: color-mix(in srgb, var(--st-secondary, #7c5cff) 80%, #ffffff);
+  --dz-accent-ink: #04121A;
+  /* Acento como texto/filo sobre superficies oscuras. */
+  --dz-accent-text: color-mix(in srgb, var(--store-accent-bright, var(--store-accent, #3dd6ff)) 88%, #ffffff);
+  --dz-accent-soft: color-mix(in srgb, var(--dz-accent) 13%, transparent);
+  --dz-accent-line: color-mix(in srgb, var(--dz-accent) 42%, transparent);
+  --dz-ok: #34E0A1;
+  --dz-danger: #FF8A8A;
+  --dz-display: var(--st-f-display-family, 'Outfit', 'Space Grotesk', system-ui, sans-serif);
+  --dz-body: var(--st-f-body-family, 'Inter', system-ui, -apple-system, 'Segoe UI', sans-serif);
+  --dz-mono: var(--st-f-eyebrow-family, 'JetBrains Mono', ui-monospace, 'SFMono-Regular', Consolas, monospace);
+  --dz-radius: 14px;
+  --dz-radius-sm: 10px;
+  --dz-veil-a: color-mix(in srgb, #04070B 30%, transparent);
+  --dz-veil-b: color-mix(in srgb, #04070B 74%, transparent);
+
+  /* Remap --sp-*: los componentes compartidos leen la piel ModernTec.
+     .sp-btn usa --store-accent-ink de fondo → texto casi blanco (el
+     contrato deriveAccent garantiza ≥4.5:1 con blanco). */
+  --sp-bg: var(--dz-bg);
+  --sp-card: var(--dz-surface);
+  --sp-card-solid: var(--dz-surface);
+  --sp-surface: var(--dz-surface-2);
+  --sp-soft: var(--dz-surface-3);
+  --sp-ink: var(--dz-ink);
+  --sp-ink-2: var(--dz-ink-2);
+  --sp-muted: var(--dz-muted);
+  --sp-line: var(--dz-line);
+  --sp-radius: var(--dz-radius-sm);
+  --sp-accent-text: var(--dz-accent-text);
+  --sp-on-band: #F2F7FF;
+  --sp-on-band-2: rgba(242, 247, 255, .82);
+  --sp-on-band-muted: rgba(242, 247, 255, .64);
+  --sp-success: var(--dz-ok);
+  --sp-danger: var(--dz-danger);
+  --sp-shadow-sm: 0 1px 2px rgba(0, 0, 0, .3), 0 18px 40px -30px rgba(0, 0, 0, .7);
+  --sp-shadow-md: 0 2px 4px rgba(0, 0, 0, .35), 0 34px 80px -46px rgba(0, 0, 0, .8);
+  color-scheme: dark;
+}
+
+/* Variante "lumen" (tema claro): papel frío, mismas señales. */
+[data-design='moderntec'][data-theme='light'] .ec-auth,
+[data-design='moderntec'][data-theme='light'] .ec-account {
+  --dz-bg: #F4F6FA;
+  --dz-bg-2: #EAEFF5;
+  --dz-surface: #FFFFFF;
+  --dz-surface-2: #E9EEF6;
+  --dz-surface-3: #DFE7F1;
+  --dz-ink: #08111F;
+  --dz-ink-2: #33445C;
+  --dz-muted: #5D6B80;
+  --dz-line: rgba(10, 22, 38, .12);
+  --dz-line-soft: rgba(10, 22, 38, .07);
+  --dz-line-strong: rgba(10, 22, 38, .26);
+  /* En papel el relleno sigue siendo el acento claro (cian + tinta
+     oscura); solo el acento-como-texto se profundiza. */
+  --dz-accent: color-mix(in srgb, var(--store-accent-bright, var(--store-accent, #3dd6ff)) 78%, #ffffff);
+  --dz-accent-2: color-mix(in srgb, var(--st-secondary, #7c5cff) 72%, #ffffff);
+  --dz-accent-ink: #04121A;
+  --dz-accent-text: color-mix(in srgb, var(--store-accent, #0b7ea8) 46%, #08111F);
+  --dz-accent-soft: color-mix(in srgb, var(--store-accent, #0b7ea8) 12%, transparent);
+  --dz-accent-line: color-mix(in srgb, var(--store-accent, #0b7ea8) 40%, transparent);
+  --dz-ok: #0B7A55;
+  --dz-danger: #B3402E;
+  --dz-veil-a: color-mix(in srgb, #F4F6FA 30%, transparent);
+  --dz-veil-b: color-mix(in srgb, #F4F6FA 76%, transparent);
+  --sp-accent-text: var(--dz-accent-text);
+  --sp-on-band: #FFFFFF;
+  --sp-on-band-2: rgba(255, 255, 255, .82);
+  --sp-on-band-muted: rgba(255, 255, 255, .66);
+  --sp-success: var(--dz-ok);
+  --sp-danger: var(--dz-danger);
+  --sp-shadow-sm: 0 1px 2px rgba(11, 21, 36, .05), 0 18px 40px -34px rgba(11, 21, 36, .45);
+  --sp-shadow-md: 0 2px 4px rgba(11, 21, 36, .05), 0 34px 80px -46px rgba(11, 21, 36, .5);
+  color-scheme: light;
+}
+
+/* ---------- Marco común ---------- */
+[data-design='moderntec'][data-theme] :is(.ec-auth, .ec-account) :is(a, button, input, select, textarea):focus-visible {
+  outline: 2px solid var(--dz-accent);
+  outline-offset: 3px;
+}
+[data-design='moderntec'][data-theme] :is(.ec-auth, .ec-account) ::selection {
+  background: var(--store-accent-ink);
+  color: var(--sp-on-band, #fff);
+}
+
+/* ==========================================================================
+   AUTH — banco de instrumentos
+   ========================================================================== */
+[data-design='moderntec'] .ec-auth {
+  padding-inline: clamp(0px, 3vw, 26px);
+  background: var(--dz-bg);
+  color: var(--dz-ink);
+}
+[data-design='moderntec'] .ec-auth .ec-auth-shell {
+  width: min(1140px, 100%);
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1.05fr);
+  margin-block: clamp(14px, 3vw, 40px) clamp(44px, 6vw, 84px);
+  border: 1px solid var(--dz-line);
+  border-radius: var(--dz-radius);
+  background: var(--dz-surface);
+  box-shadow: var(--sp-shadow-md);
+  overflow: hidden;
+}
+
+/* Ala del panel de lectura: retícula + telemetría. */
+[data-design='moderntec'] .ec-auth .ec-auth-brand {
+  position: relative;
+  isolation: isolate;
+  display: grid;
+  padding: 0;
+  color: var(--dz-ink);
+  background:
+    linear-gradient(var(--dz-line-soft) 1px, transparent 1px) 0 0 / 100% 56px,
+    linear-gradient(90deg, var(--dz-line-soft) 1px, transparent 1px) 0 0 / 56px 100%,
+    radial-gradient(95% 70% at 78% -10%, color-mix(in srgb, var(--dz-accent) 20%, transparent), transparent 62%),
+    radial-gradient(70% 55% at 6% 108%, color-mix(in srgb, var(--dz-accent-2) 20%, transparent), transparent 60%),
+    linear-gradient(165deg, var(--dz-surface-2), var(--dz-surface) 55%, var(--dz-bg-2));
+}
+[data-design='moderntec'] .ec-auth .ec-auth-brand::before { opacity: .2; mix-blend-mode: luminosity; }
+[data-design='moderntec'] .ec-auth .ec-auth-brand::after {
+  background:
+    radial-gradient(80% 55% at 84% -8%, color-mix(in srgb, var(--dz-accent) 24%, transparent), transparent 62%),
+    linear-gradient(170deg, var(--dz-veil-a), var(--dz-veil-b));
+}
+[data-design='moderntec'] .ec-auth .ec-auth-brand-inner {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  grid-template-rows: auto 1fr auto;
+  align-content: stretch;
+  gap: clamp(20px, 3vw, 34px);
+  padding: clamp(26px, 3.6vw, 44px) clamp(24px, 3.4vw, 44px) clamp(28px, 4vw, 46px);
+  padding-right: 0;
+}
+[data-design='moderntec'] .ec-auth .ec-auth-logo {
+  width: 50px; height: 50px;
+  border-radius: var(--dz-radius-sm);
+  background: linear-gradient(140deg, var(--dz-accent), var(--dz-accent-2));
+  color: var(--dz-accent-ink);
+  font-family: var(--dz-display);
+  font-weight: 700;
+  font-size: 24px;
+  letter-spacing: -.02em;
+  box-shadow: 0 0 0 1px var(--dz-line-strong), 0 12px 30px -14px color-mix(in srgb, var(--dz-accent) 65%, transparent);
+}
+[data-design='moderntec'] .ec-auth .ec-auth-brand-name {
+  font-family: var(--dz-display);
+  font-weight: 700;
+  font-size: clamp(22px, 2.2vw, 28px);
+  line-height: 1;
+  letter-spacing: -.02em;
+  color: var(--dz-ink);
+}
+[data-design='moderntec'] .ec-auth .ec-auth-brand-copy {
+  display: grid;
+  gap: 14px;
+  max-width: 46ch;
+}
+/* Telemetría: "SYS.CHECK" + barra de señal. */
+[data-design='moderntec'] .ec-auth .ec-auth-rail {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  font: 600 10px/1 var(--dz-mono);
+  letter-spacing: .24em;
+  text-transform: uppercase;
+  color: var(--dz-accent-text);
+}
+[data-design='moderntec'] .ec-auth .ec-auth-rail::after {
+  content: "";
+  width: 46px; height: 6px;
+  border-radius: 3px;
+  background:
+    linear-gradient(90deg, var(--dz-accent) 0 62%, var(--dz-line-strong) 62% 100%);
+}
+[data-design='moderntec'] .ec-auth .ec-auth-brand-kicker {
+  font: 600 10px/1 var(--dz-mono);
+  letter-spacing: .22em;
+  text-transform: uppercase;
+  color: var(--dz-muted);
+}
+[data-design='moderntec'] .ec-auth .ec-auth-brand-title {
+  font-family: var(--dz-display);
+  font-weight: 700;
+  font-size: clamp(30px, 3.6vw, 46px);
+  line-height: 1.02;
+  letter-spacing: -.025em;
+  color: var(--dz-ink);
+}
+[data-design='moderntec'] .ec-auth .ec-auth-brand-text {
+  font-family: var(--dz-body);
+  font-size: 14px;
+  line-height: 1.65;
+  color: var(--dz-ink-2);
+}
+/* Specs del módulo: LED + etiqueta + filete. */
+[data-design='moderntec'] .ec-auth .ec-auth-perks {
+  counter-reset: dzspec;
+  gap: 0;
+  margin-top: 6px;
+}
+[data-design='moderntec'] .ec-auth .ec-auth-perks li {
+  counter-increment: dzspec;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 11px 0;
+  border-bottom: 1px solid var(--dz-line-soft);
+  font-family: var(--dz-body);
+  font-size: 13.5px;
+  font-weight: 500;
+  color: var(--dz-ink-2);
+}
+[data-design='moderntec'] .ec-auth .ec-auth-perks li::before {
+  content: "";
+  flex: none;
+  width: 8px; height: 8px;
+  border-radius: 2px;
+  background: var(--dz-accent);
+  box-shadow: 0 0 10px color-mix(in srgb, var(--dz-accent) 70%, transparent);
+}
+[data-design='moderntec'] .ec-auth .ec-auth-perks li > span { flex: 1 1 auto; min-width: 0; }
+[data-design='moderntec'] .ec-auth .ec-auth-perks svg {
+  flex: none;
+  color: var(--dz-accent-text);
+}
+[data-design='moderntec'] .ec-auth .ec-auth-brand-foot {
+  font: 600 9px/1.6 var(--dz-mono);
+  letter-spacing: .2em;
+  text-transform: uppercase;
+  color: var(--dz-muted);
+  padding-top: 14px;
+  border-top: 1px solid var(--dz-line);
+}
+
+/* Ala del módulo: atornillada, labels mono, CTA píldora. */
+[data-design='moderntec'] .ec-auth .ec-auth-panel {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  padding: clamp(24px, 3.4vw, 46px) clamp(22px, 3.4vw, 48px) clamp(28px, 4vw, 50px);
+  background: var(--dz-surface);
+  color: var(--dz-ink);
+  border-left: 1px solid var(--dz-line);
+}
+/* Tornillos del módulo: cuatro puntos de fijación. */
+[data-design='moderntec'] .ec-auth .ec-auth-panel::after {
+  content: "";
+  position: absolute; inset: 10px;
+  pointer-events: none;
+  background:
+    radial-gradient(circle 2.5px at 0 0, var(--dz-line-strong) 98%, transparent) 0 0 / 12px 12px no-repeat,
+    radial-gradient(circle 2.5px at 100% 0, var(--dz-line-strong) 98%, transparent) 100% 0 / 12px 12px no-repeat,
+    radial-gradient(circle 2.5px at 0 100%, var(--dz-line-strong) 98%, transparent) 0 100% / 12px 12px no-repeat,
+    radial-gradient(circle 2.5px at 100% 100%, var(--dz-line-strong) 98%, transparent) 100% 100% / 12px 12px no-repeat;
+  opacity: .7;
+}
+[data-design='moderntec'] .ec-auth .ec-auth-back {
+  gap: 9px;
+  margin-bottom: clamp(20px, 3vw, 30px);
+  padding-bottom: 10px;
+  border-bottom: 1px solid var(--dz-line);
+  font: 600 10px/1 var(--dz-mono);
+  letter-spacing: .2em;
+  text-transform: uppercase;
+  color: var(--dz-muted);
+  transition: color .2s, border-color .2s;
+}
+[data-design='moderntec'] .ec-auth .ec-auth-back:hover {
+  color: var(--dz-accent-text);
+  border-bottom-color: var(--dz-accent-line);
+}
+[data-design='moderntec'] .ec-auth .ec-auth-head {
+  gap: 10px;
+  margin-bottom: 26px;
+  padding-bottom: 18px;
+  border-bottom: 1px solid var(--dz-line);
+}
+[data-design='moderntec'] .ec-auth .ec-auth-badge {
+  width: 46px; height: 46px;
+  margin-bottom: 4px;
+  border-radius: var(--dz-radius-sm);
+  border: 1px solid var(--dz-accent-line);
+  background: var(--dz-accent-soft);
+  color: var(--dz-accent-text);
+}
+[data-design='moderntec'] .ec-auth .ec-auth-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 9px;
+  font: 600 10px/1 var(--dz-mono);
+  letter-spacing: .22em;
+  text-transform: uppercase;
+  color: var(--dz-accent-text);
+}
+[data-design='moderntec'] .ec-auth .ec-auth-tag::before {
+  content: "";
+  width: 7px; height: 7px; flex: none;
+  border-radius: 2px;
+  background: var(--dz-accent);
+  box-shadow: 0 0 12px color-mix(in srgb, var(--dz-accent) 75%, transparent);
+}
+[data-design='moderntec'] .ec-auth .ec-auth-title {
+  font-family: var(--dz-display);
+  font-weight: 700;
+  font-size: clamp(28px, 3.2vw, 40px);
+  line-height: 1.04;
+  letter-spacing: -.025em;
+  color: var(--dz-ink);
+}
+[data-design='moderntec'] .ec-auth .ec-auth-sub {
+  font-family: var(--dz-body);
+  font-size: 14px;
+  line-height: 1.6;
+  color: var(--dz-muted);
+}
+[data-design='moderntec'] .ec-auth .ec-auth-loading { color: var(--dz-muted); font-family: var(--dz-body); }
+[data-design='moderntec'] .ec-auth .ec-auth-spin { color: var(--dz-accent-text); }
+
+/* ---------- Controles (compartidos auth + cuenta) ---------- */
+[data-design='moderntec'][data-theme] :is(.ec-auth, .ec-account) .sp-field { gap: 8px; }
+[data-design='moderntec'][data-theme] :is(.ec-auth, .ec-account) .sp-field-label {
+  font: 600 10px/1 var(--dz-mono);
+  letter-spacing: .2em;
+  text-transform: uppercase;
+  color: var(--dz-muted);
+}
+[data-design='moderntec'][data-theme] :is(.ec-auth, .ec-account) .sp-input {
+  min-height: 48px;
+  padding: 12px 15px;
+  border: 1px solid var(--dz-line);
+  border-radius: var(--dz-radius-sm);
+  background: var(--dz-surface-2);
+  color: var(--dz-ink);
+  font-family: var(--dz-body);
+  font-size: 16px;
+  box-shadow: inset 0 1px 0 var(--dz-line-soft);
+  transition: border-color .2s, box-shadow .2s, background .2s;
+}
+[data-design='moderntec'][data-theme] :is(.ec-auth, .ec-account) .sp-input:hover {
+  border-color: var(--dz-line-strong);
+}
+[data-design='moderntec'][data-theme] :is(.ec-auth, .ec-account) .sp-input:focus {
+  border-color: var(--dz-accent);
+  background: var(--dz-surface);
+  box-shadow: 0 0 0 3px var(--dz-accent-soft), 0 0 22px -6px color-mix(in srgb, var(--dz-accent) 45%, transparent);
+}
+[data-design='moderntec'][data-theme] :is(.ec-auth, .ec-account) .sp-input::placeholder {
+  color: var(--dz-muted);
+  opacity: 1;
+}
+[data-design='moderntec'][data-theme] :is(.ec-auth, .ec-account) .sp-input:disabled {
+  background: var(--dz-surface);
+  color: var(--dz-muted);
+  cursor: not-allowed;
+}
+[data-design='moderntec'][data-theme] :is(.ec-auth, .ec-account) .sp-form-error {
+  color: var(--dz-danger);
+  font-family: var(--dz-body);
+  font-size: 12.5px;
+}
+[data-design='moderntec'][data-theme] :is(.ec-auth, .ec-account) .sp-input:-webkit-autofill {
+  -webkit-text-fill-color: var(--dz-ink);
+  box-shadow: inset 0 0 0 40px var(--dz-surface-2);
+}
+
+/* CTA píldora: acento + glow. Ghost: hairline que enciende el filo. */
+[data-design='moderntec'][data-theme] :is(.ec-auth, .ec-account) :is(.ecaf-submit, .ec-btn-primary) {
+  min-height: 50px;
+  border: 1px solid transparent;
+  border-radius: 999px;
+  background: linear-gradient(120deg, var(--dz-accent), color-mix(in srgb, var(--dz-accent) 78%, var(--dz-accent-2)));
+  color: var(--dz-accent-ink);
+  font-family: var(--dz-body);
+  font-size: 14.5px;
+  font-weight: 700;
+  letter-spacing: .01em;
+  filter: none;
+  box-shadow: 0 14px 30px -16px color-mix(in srgb, var(--dz-accent) 70%, transparent);
+  transition: transform .2s var(--dz-ease, cubic-bezier(.2,.8,.2,1)), box-shadow .2s;
+}
+[data-design='moderntec'][data-theme] :is(.ec-auth, .ec-account) :is(.ecaf-submit, .ec-btn-primary):hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 0 0 1px var(--dz-accent-line), 0 10px 26px color-mix(in srgb, var(--dz-accent) 30%, transparent), 0 20px 44px -18px color-mix(in srgb, var(--dz-accent) 60%, transparent);
+  filter: none;
+}
+[data-design='moderntec'][data-theme] :is(.ec-auth, .ec-account) :is(.ecaf-submit, .ec-btn-primary):active:not(:disabled) {
+  transform: translateY(0) scale(.995);
+}
+[data-design='moderntec'][data-theme] :is(.ec-auth, .ec-account) :is(.ecaf-submit, .ec-btn-primary):disabled {
+  background: var(--dz-line);
+  color: var(--dz-muted);
+  opacity: 1;
+  cursor: not-allowed;
+  box-shadow: none;
+}
+[data-design='moderntec'][data-theme] :is(.ec-auth, .ec-account) .ec-btn-ghost {
+  min-height: 46px;
+  border: 1px solid var(--dz-line-strong);
+  border-radius: 999px;
+  background: transparent;
+  color: var(--dz-ink);
+  font-family: var(--dz-body);
+  font-size: 13.5px;
+  font-weight: 600;
+}
+[data-design='moderntec'][data-theme] :is(.ec-auth, .ec-account) .ec-btn-ghost:hover {
+  border-color: var(--dz-accent);
+  color: var(--dz-accent-text);
+  background: var(--dz-accent-soft);
+}
+
+/* Formulario compartido (StoreAuthForm). */
+[data-design='moderntec'] .ec-auth .ecaf { gap: 15px; }
+[data-design='moderntec'] .ec-auth .ecaf-pass .sp-input { padding-right: 48px; }
+[data-design='moderntec'] .ec-auth .ecaf-pass-toggle { color: var(--dz-muted); border-radius: 8px; }
+[data-design='moderntec'] .ec-auth .ecaf-pass-toggle:hover {
+  color: var(--dz-accent-text);
+  background: var(--dz-accent-soft);
+}
+[data-design='moderntec'] .ec-auth .ecaf-divider {
+  font: 600 9.5px/1 var(--dz-mono);
+  letter-spacing: .22em;
+  text-transform: uppercase;
+  color: var(--dz-muted);
+}
+[data-design='moderntec'] .ec-auth .ecaf-divider::before,
+[data-design='moderntec'] .ec-auth .ecaf-divider::after { background: var(--dz-line-strong); opacity: 1; }
+[data-design='moderntec'] .ec-auth .ecaf-google-btn { border-radius: var(--dz-radius-sm); overflow: hidden; }
+[data-design='moderntec'] .ec-auth .ecaf-link {
+  color: var(--dz-accent-text);
+  font-family: var(--dz-body);
+  font-weight: 600;
+  text-underline-offset: 4px;
+}
+[data-design='moderntec'] .ec-auth .ecaf-link:hover { color: var(--dz-ink); }
+[data-design='moderntec'] .ec-auth .ecaf-notice {
+  border-radius: var(--dz-radius-sm);
+  background: color-mix(in srgb, var(--dz-ok) 12%, var(--dz-surface));
+  border: 1px solid color-mix(in srgb, var(--dz-ok) 40%, transparent);
+  color: var(--dz-ink);
+}
+[data-design='moderntec'] .ec-auth .ecaf-error {
+  border-radius: var(--dz-radius-sm);
+  background: color-mix(in srgb, var(--dz-danger) 10%, var(--dz-surface));
+  border: 1px solid color-mix(in srgb, var(--dz-danger) 38%, transparent);
+  color: var(--dz-ink);
+}
+
+/* ==========================================================================
+   CUENTA — rack de módulos
+   ========================================================================== */
+[data-design='moderntec'][data-theme] .ec-account {
+  width: min(1240px, 100%);
+  margin-inline: auto;
+  padding: clamp(14px, 3vw, 34px) clamp(14px, 4vw, 40px) clamp(44px, 6vw, 76px);
+  gap: 0;
+  background: var(--dz-bg);
+  color: var(--dz-ink);
+}
+[data-design='moderntec'][data-theme] .ec-account .acc-shell {
+  grid-template-columns: minmax(0, 1fr);
+  gap: 18px;
+}
+[data-design='moderntec'][data-theme] .ec-account .acc-side { display: none; }
+[data-design='moderntec'][data-theme] .ec-account .acc-main { gap: 16px; }
+
+[data-design='moderntec'][data-theme] .ec-account .acc-tele {
+  display: block;
+  font: 600 9px/1 var(--dz-mono);
+  letter-spacing: .22em;
+  text-transform: uppercase;
+  color: var(--dz-muted);
+}
+[data-design='moderntec'][data-theme] .ec-account .acc-idx {
+  font: 600 9.5px/1 var(--dz-mono);
+  letter-spacing: .14em;
+  color: var(--dz-muted);
+}
+[data-design='moderntec'][data-theme] .ec-account .acc-avatar {
+  border-radius: var(--dz-radius-sm);
+  background: linear-gradient(140deg, var(--dz-accent), var(--dz-accent-2));
+  color: var(--dz-accent-ink);
+  font-family: var(--dz-display);
+  font-weight: 700;
+  font-size: 19px;
+  letter-spacing: -.01em;
+  border: 1px solid var(--dz-accent-line);
+}
+[data-design='moderntec'][data-theme] .ec-account .acc-avatar--sm { width: 44px; height: 44px; font-size: 16px; }
+
+/* Header compacto (tablet/mobile): lectura de módulo. */
+[data-design='moderntec'][data-theme] .ec-account .acc-mhead {
+  display: grid;
+  grid-template-columns: 44px minmax(0, 1fr) 44px;
+  align-items: center;
+  gap: 12px;
+  padding: 0 0 14px;
+  border-bottom: 1px solid var(--dz-line-strong);
+}
+[data-design='moderntec'][data-theme] .ec-account .acc-mhead .acc-tele { grid-column: 1 / -1; }
+[data-design='moderntec'][data-theme] .ec-account .acc-mhead-meta strong {
+  font-family: var(--dz-display);
+  font-weight: 700;
+  font-size: 20px;
+  letter-spacing: -.02em;
+  color: var(--dz-ink);
+}
+[data-design='moderntec'][data-theme] .ec-account .acc-mhead-meta small {
+  font-family: var(--dz-mono);
+  font-size: 10.5px;
+  letter-spacing: .06em;
+  color: var(--dz-muted);
+}
+[data-design='moderntec'][data-theme] .ec-account .acc-icon-btn {
+  width: 44px; height: 44px;
+  border: 1px solid var(--dz-line);
+  border-radius: var(--dz-radius-sm);
+  background: var(--dz-surface);
+  color: var(--dz-ink-2);
+}
+[data-design='moderntec'][data-theme] .ec-account .acc-icon-btn:hover {
+  border-color: var(--dz-accent);
+  color: var(--dz-accent-text);
+  background: var(--dz-accent-soft);
+}
+[data-design='moderntec'][data-theme] .ec-account .acc-icon-btn.is-danger:hover {
+  border-color: color-mix(in srgb, var(--dz-danger) 55%, transparent);
+  color: var(--dz-danger);
+  background: color-mix(in srgb, var(--dz-danger) 10%, transparent);
+}
+
+/* Tabs (tablet/mobile): control segmentado. */
+[data-design='moderntec'][data-theme] .ec-account .acc-tabs {
+  gap: 6px;
+  padding: 5px;
+  border: 1px solid var(--dz-line);
+  border-radius: var(--dz-radius-sm);
+  background: var(--dz-surface-2);
+  scrollbar-width: none;
+  -webkit-overflow-scrolling: touch;
+}
+[data-design='moderntec'][data-theme] .ec-account .acc-tab {
+  min-height: 42px;
+  padding: 9px 14px;
+  border: 0;
+  border-radius: 8px;
+  background: transparent;
+  color: var(--dz-muted);
+  font-family: var(--dz-body);
+  font-size: 12.5px;
+  font-weight: 600;
+  gap: 8px;
+  white-space: nowrap;
+}
+[data-design='moderntec'][data-theme] .ec-account .acc-tab:hover {
+  color: var(--dz-ink);
+  background: var(--dz-surface-3);
+}
+[data-design='moderntec'][data-theme] .ec-account .acc-tab.is-on {
+  background: var(--store-accent-ink);
+  color: var(--sp-on-band, #fff);
+  box-shadow: 0 6px 18px -8px color-mix(in srgb, var(--dz-accent) 70%, transparent);
+}
+[data-design='moderntec'][data-theme] .ec-account .acc-tab.is-on .acc-idx { color: var(--dz-accent-ink); opacity: .75; }
+
+/* Paneles de contenido: tarjetas de instrumento. */
+[data-design='moderntec'][data-theme] .ec-account .acc-panel,
+[data-design='moderntec'][data-theme] .ec-account .acc-auth-card,
+[data-design='moderntec'][data-theme] .ec-account .acc-gate-card,
+[data-design='moderntec'][data-theme] .ec-account .acc-skelpanel {
+  padding: clamp(18px, 2.6vw, 30px);
+  border: 1px solid var(--dz-line);
+  border-radius: var(--dz-radius);
+  background: var(--dz-surface);
+  box-shadow: var(--sp-shadow-sm);
+  gap: 18px;
+  color: var(--dz-ink);
+  position: relative;
+}
+[data-design='moderntec'][data-theme] .ec-account .acc-panel-head {
+  padding-bottom: 14px;
+  border-bottom: 1px solid var(--dz-line);
+}
+[data-design='moderntec'][data-theme] .ec-account .acc-panel-title {
+  font-family: var(--dz-display);
+  font-weight: 700;
+  font-size: clamp(22px, 2.4vw, 30px);
+  line-height: 1.05;
+  letter-spacing: -.02em;
+  color: var(--dz-ink);
+}
+[data-design='moderntec'][data-theme] .ec-account .acc-panel-sub {
+  font-family: var(--dz-body);
+  font-size: 13.5px;
+  line-height: 1.6;
+  color: var(--dz-muted);
+}
+
+/* Gate / sub-vistas de mail: icono de estado. */
+[data-design='moderntec'][data-theme] .ec-account :is(.acc-gate-ico, .acc-auth-ico) {
+  border-radius: var(--dz-radius-sm);
+  background: var(--dz-accent-soft);
+  border: 1px solid var(--dz-accent-line);
+  color: var(--dz-accent-text);
+}
+[data-design='moderntec'][data-theme] .ec-account :is(.acc-gate-title, .acc-auth-title) {
+  font-family: var(--dz-display);
+  font-weight: 700;
+  letter-spacing: -.02em;
+  color: var(--dz-ink);
+}
+[data-design='moderntec'][data-theme] .ec-account :is(.acc-gate-sub, .acc-auth-msg) {
+  font-family: var(--dz-body);
+  color: var(--dz-muted);
+}
+[data-design='moderntec'][data-theme] .ec-account .acc-gate-list {
+  border: 1px solid var(--dz-line);
+  border-radius: var(--dz-radius-sm);
+  background: var(--dz-surface-2);
+  color: var(--dz-ink-2);
+}
+[data-design='moderntec'][data-theme] .ec-account .acc-gate-list li {
+  font-family: var(--dz-body);
+  color: var(--dz-ink-2);
+}
+[data-design='moderntec'][data-theme] .ec-account .acc-gate-list svg { color: var(--dz-accent-text); }
+[data-design='moderntec'][data-theme] .ec-account .acc-gate-link,
+[data-design='moderntec'][data-theme] .ec-account .acc-auth-link {
+  font: 600 10px/1 var(--dz-mono);
+  letter-spacing: .18em;
+  text-transform: uppercase;
+  color: var(--dz-accent-text);
+  text-decoration: underline;
+  text-underline-offset: 4px;
+}
+[data-design='moderntec'][data-theme] .ec-account .acc-auth-ok {
+  color: var(--dz-ok);
+  font-family: var(--dz-body);
+  font-weight: 700;
+}
+[data-design='moderntec'][data-theme] .ec-account .acc-spin {
+  border-color: color-mix(in srgb, var(--dz-muted) 34%, transparent);
+  border-top-color: var(--dz-accent);
+}
+[data-design='moderntec'][data-theme] .ec-account .acc-sk {
+  background: color-mix(in srgb, var(--dz-muted) 15%, transparent);
+  border-radius: var(--dz-radius-sm);
+}
+
+/* ---------- Escritorio: rack de módulos (sidebar) ---------- */
+@media (min-width: 1024px) {
+  [data-design='moderntec'][data-theme] .ec-account :is(.acc-mhead, .acc-tabs) { display: none; }
+  [data-design='moderntec'][data-theme] .ec-account .acc-shell {
+    grid-template-columns: 300px minmax(0, 1fr);
+    gap: 34px;
+    align-items: start;
+  }
+  [data-design='moderntec'][data-theme] .ec-account .acc-side {
+    display: grid;
+    gap: 0;
+    align-content: start;
+    position: sticky;
+    top: calc(var(--sp-top-h, 64px) + 18px);
+    padding: 22px 22px 20px;
+    border: 1px solid var(--dz-line);
+    border-radius: var(--dz-radius);
+    background: linear-gradient(170deg, var(--dz-surface-2), var(--dz-surface) 60%);
+    box-shadow: var(--sp-shadow-sm);
+  }
+  [data-design='moderntec'][data-theme] .ec-account .acc-id {
+    display: grid;
+    grid-template-columns: 52px minmax(0, 1fr);
+    align-items: center;
+    gap: 12px;
+    padding: 0 0 16px;
+    border-bottom: 1px solid var(--dz-line);
+  }
+  [data-design='moderntec'][data-theme] .ec-account .acc-id .acc-tele { grid-column: 1 / -1; }
+  [data-design='moderntec'][data-theme] .ec-account .acc-id-name {
+    font-family: var(--dz-display);
+    font-weight: 700;
+    font-size: 19px;
+    letter-spacing: -.02em;
+    color: var(--dz-ink);
+  }
+  [data-design='moderntec'][data-theme] .ec-account .acc-id-email {
+    font-family: var(--dz-mono);
+    font-size: 10.5px;
+    letter-spacing: .04em;
+    color: var(--dz-muted);
+  }
+  /* Módulos: renglón con LED de estado + filete de acento al activarse. */
+  [data-design='moderntec'][data-theme] .ec-account .acc-nav { gap: 4px; margin-top: 10px; }
+  [data-design='moderntec'][data-theme] .ec-account .acc-navitem {
+    gap: 12px;
+    padding: 12px 12px;
+    border-radius: var(--dz-radius-sm);
+    border: 1px solid transparent;
+    border-left: 3px solid transparent;
+    background: transparent;
+    color: var(--dz-ink-2);
+    font-family: var(--dz-body);
+    font-size: 14px;
+    font-weight: 600;
+    transition: background .2s, border-color .2s, color .2s;
+  }
+  [data-design='moderntec'][data-theme] .ec-account .acc-navitem svg { color: var(--dz-muted); transition: color .2s; }
+  [data-design='moderntec'][data-theme] .ec-account .acc-navitem > span:not(.acc-idx) { min-width: 0; }
+  [data-design='moderntec'][data-theme] .ec-account .acc-navitem .acc-idx { margin-left: auto; }
+  [data-design='moderntec'][data-theme] .ec-account .acc-navitem:hover {
+    background: var(--dz-surface-3);
+    color: var(--dz-ink);
+    border-color: var(--dz-line);
+  }
+  [data-design='moderntec'][data-theme] .ec-account .acc-navitem:hover svg,
+  [data-design='moderntec'][data-theme] .ec-account .acc-navitem:hover .acc-idx { color: var(--dz-accent-text); }
+  /* Módulo activo: filete de acento + tinte suave + LED encendido. */
+  [data-design='moderntec'][data-theme] .ec-account .acc-navitem.is-on {
+    background: var(--dz-accent-soft);
+    border-color: var(--dz-accent-line);
+    border-left-color: var(--dz-accent);
+    color: var(--dz-ink);
+    font-weight: 700;
+    box-shadow: none;
+  }
+  [data-design='moderntec'][data-theme] .ec-account .acc-navitem.is-on svg,
+  [data-design='moderntec'][data-theme] .ec-account .acc-navitem.is-on .acc-idx { color: var(--dz-accent-text); }
+  [data-design='moderntec'][data-theme] .ec-account .acc-logout {
+    margin-top: 16px;
+    min-height: 44px;
+    border: 1px solid var(--dz-line-strong);
+    border-radius: 999px;
+    background: transparent;
+    color: var(--dz-muted);
+    font: 600 10px/1 var(--dz-mono);
+    letter-spacing: .18em;
+    text-transform: uppercase;
+  }
+  [data-design='moderntec'][data-theme] .ec-account .acc-logout:hover {
+    color: var(--dz-danger);
+    border-color: color-mix(in srgb, var(--dz-danger) 55%, transparent);
+    background: color-mix(in srgb, var(--dz-danger) 10%, transparent);
+  }
+}
+
+/* ---------- Responsive ---------- */
+@media (max-width: 1024px) {
+  [data-design='moderntec'] .ec-auth .ec-auth-shell {
+    grid-template-columns: minmax(0, 1fr);
+    margin-block: 12px clamp(28px, 5vw, 48px);
+  }
+  [data-design='moderntec'] .ec-auth .ec-auth-brand-inner {
+    grid-template-rows: auto auto;
+    gap: 14px;
+    padding: 22px 22px 22px;
+    padding-right: 22px;
+  }
+  [data-design='moderntec'] .ec-auth .ec-auth-brand-copy { gap: 8px; max-width: none; }
+  [data-design='moderntec'] .ec-auth .ec-auth-brand-text,
+  [data-design='moderntec'] .ec-auth .ec-auth-perks,
+  [data-design='moderntec'] .ec-auth .ec-auth-brand-foot { display: none; }
+  [data-design='moderntec'] .ec-auth .ec-auth-brand-title { font-size: clamp(24px, 5vw, 32px); }
+  [data-design='moderntec'] .ec-auth .ec-auth-panel {
+    padding: 24px 22px 30px;
+    border-left: 0;
+    border-top: 1px solid var(--dz-line);
+  }
+}
+@media (max-width: 860px) {
+  [data-design='moderntec'][data-theme] .ec-account .acc-mhead-meta strong { font-size: 17px; }
+  [data-design='moderntec'][data-theme] .ec-account .acc-panel-title { font-size: 23px; }
+}
+@media (max-width: 640px) {
+  [data-design='moderntec'] .ec-auth { padding-inline: 12px; }
+  [data-design='moderntec'] .ec-auth .ec-auth-shell { border-radius: var(--dz-radius); }
+  [data-design='moderntec'] .ec-auth .ec-auth-logo { width: 42px; height: 42px; font-size: 20px; }
+  [data-design='moderntec'] .ec-auth .ec-auth-brand-name { font-size: 19px; }
+  [data-design='moderntec'] .ec-auth .ec-auth-brand-title { font-size: 22px; }
+  [data-design='moderntec'] .ec-auth .ec-auth-panel { padding: 20px 16px 28px; }
+  [data-design='moderntec'] .ec-auth .ec-auth-head { margin-bottom: 20px; padding-bottom: 14px; }
+  [data-design='moderntec'] .ec-auth .ec-auth-title { font-size: 26px; }
+  [data-design='moderntec'] .ec-auth .ecaf-grid { grid-template-columns: minmax(0, 1fr); }
+  [data-design='moderntec'][data-theme] .ec-account { padding-inline: 14px; }
+  [data-design='moderntec'][data-theme] .ec-account .acc-tab { padding: 8px 12px; font-size: 12px; }
+  [data-design='moderntec'][data-theme] .ec-account .acc-panel,
+  [data-design='moderntec'][data-theme] .ec-account .acc-auth-card,
+  [data-design='moderntec'][data-theme] .ec-account .acc-gate-card { padding: 18px 16px; }
+}
+@media (max-width: 390px) {
+  [data-design='moderntec'] .ec-auth { padding-inline: 8px; }
+  [data-design='moderntec'] .ec-auth .ec-auth-brand-title { font-size: 20px; }
+  [data-design='moderntec'] .ec-auth .ec-auth-title { font-size: 23px; }
+  [data-design='moderntec'][data-theme] .ec-account { padding-inline: 10px; }
+  [data-design='moderntec'][data-theme] .ec-account .acc-mhead { grid-template-columns: 40px minmax(0, 1fr) 40px; gap: 10px; }
+  [data-design='moderntec'][data-theme] .ec-account .acc-mhead-meta strong { font-size: 16px; }
+  [data-design='moderntec'][data-theme] .ec-account .acc-panel-title { font-size: 21px; }
+}
+/* Tab bar inferior de la tienda (mobile.nav = bottom): el último panel
+   respira sobre la barra fija. */
+@media (max-width: 768px) {
+  [data-design='moderntec'][data-theme] .ec-account,
+  [data-design='moderntec'] .ec-auth {
+    padding-bottom: calc(24px + env(safe-area-inset-bottom));
+  }
+  [data-design='moderntec'][data-theme] .ec-account .acc-tabs {
+    padding-bottom: 6px;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  [data-design='moderntec'] :is(.ec-auth, .ec-account) * {
+    transition-duration: .001ms !important;
+    animation-duration: .001ms !important;
+  }
+}

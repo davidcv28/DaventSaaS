@@ -1,0 +1,626 @@
+/* ===========================================================================
+   PÓRTICO — páginas de comercio (ingresar / cuenta).
+   Se carga on-demand desde StorePublicLayout cuando .store-page lleva
+   data-design="portico". No edita las hojas scoped de las vistas: las
+   reemplaza con más especificidad (0,3,0 mínimo).
+
+   Composición propia: la auth es una SALA DE MUSEO en dos alas — el ala de
+   marca es tinta verde-negra con retícula de cobre, número de sala y
+   cédulas numeradas con línea de puntos; el ala del formulario es papel con
+   filete superior de cobre y campos de esquina recta (2px). La cuenta es el
+   ÍNDICE DE LA SALA: barra lateral de filetes con numerales mono, sin
+   tarjetas redondeadas, paneles con borde de 1px y títulos en serif.
+   =========================================================================== */
+
+[data-design='portico'] {
+  --dz-bg: #f3efe6;
+  --dz-surface: #fbf8f1;
+  --dz-ink: #151a16;
+  --dz-ink-2: #3b4239;
+  --dz-muted: #5b6157;
+  --dz-line: #d4cbb9;
+  --dz-accent: var(--store-accent, #a75e3c);
+  --dz-accent-ink: var(--store-accent-ink, #fbf7ef);
+  /* Acento como TEXTO: se mezcla hacia la tinta (oscurece en claro, aclara
+     en oscuro) para no depender del acento crudo, que sobre papel queda en
+     ~3.4:1. */
+  --dz-accent-text: color-mix(in srgb, var(--store-accent, #a75e3c) 70%, var(--dz-ink));
+  --dz-ok: #14532d;
+  --dz-danger: #a3231c;
+  --dz-display: var(--st-f-display-family, "Italiana", Georgia, "Times New Roman", serif);
+  --dz-body: var(--st-f-body-family, "Manrope", Inter, system-ui, sans-serif);
+  --dz-mono: var(--st-f-eyebrow-family, "Spline Sans Mono", ui-monospace, Menlo, monospace);
+  --dz-ink-band: #141814;
+  --dz-on-band: #f4efe4;
+  --dz-radius: 2px;
+}
+
+[data-design='portico'][data-theme='dark'] {
+  --dz-bg: #101310;
+  --dz-surface: #191d19;
+  --dz-ink: #f2ede1;
+  --dz-ink-2: #cfcabc;
+  --dz-muted: #a3a89b;
+  --dz-line: #2f352e;
+  --dz-accent: color-mix(in srgb, var(--store-accent, #a75e3c) 58%, #f4e7d3);
+  --dz-accent-ink: #241a10;
+  --dz-accent-text: color-mix(in srgb, var(--store-accent, #a75e3c) 46%, #f7f2e6);
+  --dz-ok: #7fd6a0;
+  --dz-danger: #f0958a;
+  --dz-ink-band: #191d19;
+  --dz-on-band: #f2ede1;
+}
+
+/* ---------- Marco común ---------- */
+[data-design='portico'][data-theme] :is(.ec-auth, .ec-account) :is(a, button, input, select, textarea):focus-visible {
+  outline: 2px solid var(--dz-accent);
+  outline-offset: 3px;
+}
+[data-design='portico'][data-theme] :is(.ec-auth, .ec-account) ::selection {
+  background: var(--store-accent-ink);
+  color: var(--sp-on-band, #fff);
+}
+
+/* ===========================================================================
+   AUTH — sala en dos alas
+   =========================================================================== */
+[data-design='portico'] .ec-auth {
+  padding-inline: clamp(0px, 3vw, 26px);
+}
+[data-design='portico'] .ec-auth .ec-auth-shell {
+  width: min(1120px, 100%);
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1.08fr);
+  margin-block: clamp(16px, 3.4vw, 44px) clamp(40px, 6vw, 80px);
+  border: 1px solid var(--dz-line);
+  border-radius: var(--dz-radius);
+  background: var(--dz-surface);
+  box-shadow: 0 44px 84px -60px rgba(46, 34, 16, .55);
+}
+
+/* Ala de marca: tinta + retícula de galería + luz de cobre. */
+[data-design='portico'] .ec-auth .ec-auth-brand {
+  isolation: isolate;
+  padding: clamp(24px, 3.6vw, 44px);
+  color: var(--dz-on-band);
+  background: var(--dz-ink-band);
+}
+[data-design='portico'] .ec-auth .ec-auth-brand::before {
+  opacity: .2;
+  mix-blend-mode: luminosity;
+}
+[data-design='portico'] .ec-auth .ec-auth-brand::after {
+  background:
+    linear-gradient(color-mix(in srgb, #f4efe4 7%, transparent) 1px, transparent 1px) 0 0 / 100% 76px,
+    linear-gradient(90deg, color-mix(in srgb, #f4efe4 7%, transparent) 1px, transparent 1px) 0 0 / 76px 100%,
+    radial-gradient(88% 64% at 88% -8%, color-mix(in srgb, var(--dz-accent) 40%, transparent), transparent 70%),
+    linear-gradient(162deg, color-mix(in srgb, #000 16%, transparent), color-mix(in srgb, #000 62%, transparent));
+}
+[data-design='portico'] .ec-auth .ec-auth-brand-inner {
+  display: grid;
+  grid-template-rows: auto 1fr auto;
+  align-content: stretch;
+  gap: clamp(20px, 3vw, 34px);
+  padding-right: 0;
+}
+[data-design='portico'] .ec-auth .ec-auth-brand-top {
+  gap: 14px;
+  padding-bottom: 16px;
+  border-bottom: 1px solid color-mix(in srgb, #f4efe4 16%, transparent);
+}
+[data-design='portico'] .ec-auth .ec-auth-logo {
+  width: 44px; height: 44px;
+  border-radius: var(--dz-radius);
+  background: transparent;
+  border: 1px solid color-mix(in srgb, #f4efe4 30%, transparent);
+  color: var(--dz-on-band);
+  font-family: var(--dz-display); font-size: 24px; font-weight: 400; letter-spacing: 0;
+}
+[data-design='portico'] .ec-auth .ec-auth-brand-name {
+  font-family: var(--dz-body); font-size: 11.5px; font-weight: 600;
+  letter-spacing: .18em; text-transform: uppercase; color: var(--dz-on-band);
+}
+[data-design='portico'] .ec-auth .ec-auth-brand-copy {
+  display: grid; gap: 13px; max-width: 44ch;
+}
+/* Número de sala: "01 ———" en mono cobre. */
+[data-design='portico'] .ec-auth .ec-auth-rail {
+  display: inline-flex; align-items: center; gap: 12px;
+  font: 400 9px/1 var(--dz-mono); letter-spacing: .34em; text-transform: uppercase;
+  color: color-mix(in srgb, var(--dz-accent) 88%, #f4efe4);
+}
+[data-design='portico'] .ec-auth .ec-auth-rail::after {
+  content: ""; width: 54px; height: 1px;
+  background: color-mix(in srgb, var(--dz-accent) 62%, transparent);
+}
+[data-design='portico'] .ec-auth .ec-auth-brand-kicker {
+  font: 400 9px/1 var(--dz-mono); letter-spacing: .24em; text-transform: uppercase;
+  color: color-mix(in srgb, #f4efe4 74%, transparent);
+}
+[data-design='portico'] .ec-auth .ec-auth-brand-title {
+  font-family: var(--dz-display); font-weight: 400;
+  font-size: clamp(30px, 3.5vw, 46px); line-height: 1.03; letter-spacing: -.02em;
+  color: #f8f4eb;
+}
+[data-design='portico'] .ec-auth .ec-auth-brand-text {
+  font-family: var(--dz-body); font-size: 13.5px; line-height: 1.7;
+  color: color-mix(in srgb, #f4efe4 80%, transparent);
+}
+/* Cédulas numeradas con línea de puntos (catálogo de museo). */
+[data-design='portico'] .ec-auth .ec-auth-perks {
+  counter-reset: dzperk; gap: 0; margin-top: 6px;
+}
+[data-design='portico'] .ec-auth .ec-auth-perks li {
+  counter-increment: dzperk;
+  display: flex; align-items: center; gap: 10px;
+  padding: 11px 0;
+  border-bottom: 1px solid color-mix(in srgb, #f4efe4 14%, transparent);
+  font-family: var(--dz-body); font-size: 12.5px; font-weight: 500;
+  color: color-mix(in srgb, #f4efe4 92%, transparent);
+}
+[data-design='portico'] .ec-auth .ec-auth-perks li::before {
+  content: counter(dzperk, decimal-leading-zero);
+  flex: none;
+  font: 400 8.5px/1 var(--dz-mono); letter-spacing: .18em;
+  color: color-mix(in srgb, var(--dz-accent) 86%, #f4efe4);
+}
+[data-design='portico'] .ec-auth .ec-auth-perks li > span { flex: 1 1 auto; min-width: 0; }
+[data-design='portico'] .ec-auth .ec-auth-perks li::after {
+  content: ""; flex: none; width: 22px; height: 1px;
+  background: color-mix(in srgb, #f4efe4 26%, transparent);
+}
+[data-design='portico'] .ec-auth .ec-auth-perks svg {
+  flex: none; color: color-mix(in srgb, var(--dz-accent) 78%, #f4efe4);
+}
+[data-design='portico'] .ec-auth .ec-auth-brand-foot {
+  font: 400 8.5px/1.5 var(--dz-mono); letter-spacing: .2em; text-transform: uppercase;
+  color: color-mix(in srgb, #f4efe4 66%, transparent);
+  padding-top: 14px;
+  border-top: 1px solid color-mix(in srgb, #f4efe4 14%, transparent);
+}
+
+/* Ala del formulario: papel, filete superior de cobre. */
+[data-design='portico'] .ec-auth .ec-auth-panel {
+  position: relative;
+  padding: clamp(24px, 3.4vw, 46px) clamp(22px, 3.4vw, 46px) clamp(28px, 4vw, 48px);
+  background: var(--dz-surface);
+  color: var(--dz-ink);
+  border-left: 1px solid var(--dz-line);
+}
+[data-design='portico'] .ec-auth .ec-auth-panel::before {
+  content: ""; position: absolute; inset: 0 0 auto; height: 2px;
+  background: linear-gradient(90deg, transparent, var(--dz-accent) 22%, var(--dz-accent) 78%, transparent);
+}
+[data-design='portico'] .ec-auth .ec-auth-back {
+  gap: 9px; margin-bottom: clamp(20px, 3vw, 30px);
+  padding-bottom: 6px;
+  border-bottom: 1px solid transparent;
+  font: 400 9px/1 var(--dz-mono); letter-spacing: .2em; text-transform: uppercase;
+  color: var(--dz-muted);
+  transition: color .25s, border-color .25s;
+}
+[data-design='portico'] .ec-auth .ec-auth-back:hover {
+  color: var(--dz-accent-text); border-bottom-color: var(--dz-accent);
+}
+[data-design='portico'] .ec-auth .ec-auth-head {
+  gap: 10px; margin-bottom: 26px; padding-bottom: 20px;
+  border-bottom: 1px solid var(--dz-line);
+}
+[data-design='portico'] .ec-auth .ec-auth-badge {
+  width: 44px; height: 44px; margin-bottom: 4px;
+  border: 1px solid var(--dz-line); border-radius: var(--dz-radius);
+  background: transparent; color: var(--dz-accent-text);
+}
+[data-design='portico'] .ec-auth .ec-auth-tag {
+  display: inline-flex; align-items: center; gap: 9px;
+  font: 400 9px/1 var(--dz-mono); letter-spacing: .24em; text-transform: uppercase;
+  color: var(--dz-accent-text);
+}
+[data-design='portico'] .ec-auth .ec-auth-tag::before {
+  content: ""; width: 7px; height: 7px; flex: none;
+  background: var(--dz-accent); transform: rotate(45deg);
+}
+[data-design='portico'] .ec-auth .ec-auth-title {
+  font-family: var(--dz-display); font-weight: 400;
+  font-size: clamp(26px, 3.1vw, 38px); line-height: 1.05; letter-spacing: -.018em;
+  color: var(--dz-ink);
+}
+[data-design='portico'] .ec-auth .ec-auth-sub {
+  font-family: var(--dz-body); font-size: 13.5px; line-height: 1.65; color: var(--dz-muted);
+}
+[data-design='portico'] .ec-auth .ec-auth-loading { color: var(--dz-muted); font-family: var(--dz-body); }
+[data-design='portico'] .ec-auth .ec-auth-spin { color: var(--dz-accent-text); }
+
+/* ---------- Controles (compartidos auth + cuenta) ---------- */
+[data-design='portico'][data-theme] :is(.ec-auth, .ec-account) .sp-field { gap: 8px; }
+[data-design='portico'][data-theme] :is(.ec-auth, .ec-account) .sp-field-label {
+  font: 400 9px/1 var(--dz-mono); letter-spacing: .2em; text-transform: uppercase;
+  color: var(--dz-muted);
+}
+[data-design='portico'][data-theme] :is(.ec-auth, .ec-account) .sp-input {
+  min-height: 48px;
+  padding: 12px 14px;
+  border: 1px solid var(--dz-line);
+  border-radius: var(--dz-radius);
+  background: var(--dz-bg);
+  color: var(--dz-ink);
+  font-family: var(--dz-body); font-size: 16px;
+  box-shadow: none;
+  transition: border-color .2s, box-shadow .2s, background .2s;
+}
+[data-design='portico'][data-theme] :is(.ec-auth, .ec-account) .sp-input:hover { border-color: color-mix(in srgb, var(--dz-ink) 34%, var(--dz-line)); }
+[data-design='portico'][data-theme] :is(.ec-auth, .ec-account) .sp-input:focus {
+  border-color: var(--dz-accent);
+  background: var(--dz-surface);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--dz-accent) 16%, transparent);
+}
+[data-design='portico'][data-theme] :is(.ec-auth, .ec-account) .sp-input::placeholder {
+  color: var(--dz-muted); opacity: 1;
+}
+[data-design='portico'][data-theme] :is(.ec-auth, .ec-account) .sp-input:disabled {
+  background: color-mix(in srgb, var(--dz-line) 30%, var(--dz-bg));
+  color: var(--dz-ink-2);
+  cursor: not-allowed;
+}
+[data-design='portico'][data-theme] :is(.ec-auth, .ec-account) .sp-form-error {
+  color: var(--dz-danger); font-family: var(--dz-body); font-size: 12.5px;
+}
+[data-design='portico'][data-theme] :is(.ec-auth, .ec-account) .sp-input:-webkit-autofill {
+  -webkit-text-fill-color: var(--dz-ink);
+  box-shadow: inset 0 0 0 40px var(--dz-bg);
+}
+
+/* Botón principal: pastilla mono de cobre, esquina recta. */
+[data-design='portico'][data-theme] :is(.ec-auth, .ec-account) :is(.ecaf-submit, .ec-btn-primary) {
+  min-height: 50px;
+  border: 1px solid transparent;
+  border-radius: var(--dz-radius);
+  background: var(--store-accent-ink);
+  color: var(--sp-on-band, #fff);
+  font: 500 10px/1 var(--dz-mono); letter-spacing: .22em; text-transform: uppercase;
+  filter: none;
+  transition: transform .3s cubic-bezier(.22, 1, .36, 1), box-shadow .3s, background .3s;
+}
+[data-design='portico'][data-theme] :is(.ec-auth, .ec-account) :is(.ecaf-submit, .ec-btn-primary):hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 20px 34px -26px color-mix(in srgb, var(--dz-accent) 80%, transparent);
+  filter: none;
+}
+[data-design='portico'][data-theme] :is(.ec-auth, .ec-account) :is(.ecaf-submit, .ec-btn-primary):active:not(:disabled) {
+  transform: translateY(0) scale(.995);
+}
+[data-design='portico'][data-theme] :is(.ec-auth, .ec-account) :is(.ecaf-submit, .ec-btn-primary):disabled {
+  background: var(--dz-line); color: var(--dz-ink-2); opacity: 1; cursor: not-allowed;
+}
+[data-design='portico'][data-theme] :is(.ec-auth, .ec-account) .ec-btn-ghost {
+  min-height: 46px;
+  border: 1px solid color-mix(in srgb, var(--dz-ink) 40%, transparent);
+  border-radius: var(--dz-radius);
+  background: transparent; color: var(--dz-ink);
+  font: 500 9.5px/1 var(--dz-mono); letter-spacing: .2em; text-transform: uppercase;
+}
+[data-design='portico'][data-theme] :is(.ec-auth, .ec-account) .ec-btn-ghost:hover {
+  background: var(--dz-ink); color: var(--dz-surface); border-color: var(--dz-ink);
+}
+
+/* Formulario compartido (StoreAuthForm). */
+[data-design='portico'] .ec-auth .ecaf { gap: 15px; }
+[data-design='portico'] .ec-auth .ecaf-pass-toggle { color: var(--dz-muted); border-radius: var(--dz-radius); }
+[data-design='portico'] .ec-auth .ecaf-pass-toggle:hover {
+  color: var(--dz-accent-text); background: color-mix(in srgb, var(--dz-accent) 10%, transparent);
+}
+[data-design='portico'] .ec-auth .ecaf-divider {
+  font: 400 9px/1 var(--dz-mono); letter-spacing: .2em; text-transform: uppercase;
+  color: var(--dz-muted);
+}
+[data-design='portico'] .ec-auth .ecaf-divider::before,
+[data-design='portico'] .ec-auth .ecaf-divider::after { background: var(--dz-line); opacity: 1; }
+[data-design='portico'] .ec-auth .ecaf-link {
+  color: var(--dz-accent-text); font-family: var(--dz-body); font-weight: 600;
+  text-underline-offset: 4px;
+}
+[data-design='portico'] .ec-auth .ecaf-link:hover { color: var(--dz-ink); }
+[data-design='portico'] .ec-auth .ecaf-notice {
+  border-radius: var(--dz-radius);
+  background: color-mix(in srgb, var(--dz-ok) 10%, var(--dz-surface));
+  border: 1px solid color-mix(in srgb, var(--dz-ok) 36%, transparent);
+  color: var(--dz-ink);
+}
+[data-design='portico'] .ec-auth .ecaf-error {
+  border-radius: var(--dz-radius);
+  background: color-mix(in srgb, var(--dz-danger) 9%, var(--dz-surface));
+  border: 1px solid color-mix(in srgb, var(--dz-danger) 34%, transparent);
+  color: var(--dz-ink);
+}
+
+/* ===========================================================================
+   CUENTA — índice de la sala
+   =========================================================================== */
+[data-design='portico'][data-theme] .ec-account {
+  width: min(1240px, 100%);
+  margin-inline: auto;
+  padding: clamp(16px, 3vw, 34px) clamp(14px, 4vw, 40px) clamp(44px, 6vw, 76px);
+  gap: 0;
+}
+[data-design='portico'][data-theme] .ec-account .acc-shell {
+  grid-template-columns: minmax(0, 1fr);
+  gap: 18px;
+}
+[data-design='portico'][data-theme] .ec-account .acc-side { display: none; }
+[data-design='portico'][data-theme] .ec-account .acc-main { gap: 16px; }
+
+[data-design='portico'][data-theme] .ec-account .acc-tele {
+  display: block;
+  font: 400 8.5px/1 var(--dz-mono); letter-spacing: .24em; text-transform: uppercase;
+  color: var(--dz-muted);
+}
+[data-design='portico'][data-theme] .ec-account .acc-idx {
+  font: 400 9px/1 var(--dz-mono); letter-spacing: .18em; color: var(--dz-muted);
+}
+[data-design='portico'][data-theme] .ec-account .acc-avatar {
+  border-radius: var(--dz-radius);
+  background: var(--store-accent-ink); color: var(--sp-on-band, #fff);
+  font-family: var(--dz-display); font-weight: 400; font-size: 20px; letter-spacing: .01em;
+}
+[data-design='portico'][data-theme] .ec-account .acc-avatar--sm { width: 44px; height: 44px; font-size: 16px; }
+
+/* Header compacto (tablet/mobile): filete inferior, sin tarjeta. */
+[data-design='portico'][data-theme] .ec-account .acc-mhead {
+  display: grid;
+  grid-template-columns: 44px minmax(0, 1fr) 44px;
+  align-items: center; gap: 12px;
+  padding: 0 0 14px;
+  border-bottom: 1px solid var(--dz-line);
+}
+[data-design='portico'][data-theme] .ec-account .acc-mhead .acc-tele { grid-column: 1 / -1; }
+[data-design='portico'][data-theme] .ec-account .acc-mhead-meta strong {
+  font-family: var(--dz-display); font-weight: 400; font-size: 19px; letter-spacing: -.01em;
+  color: var(--dz-ink);
+}
+[data-design='portico'][data-theme] .ec-account .acc-mhead-meta small {
+  font-family: var(--dz-mono); font-size: 10.5px; letter-spacing: .06em; color: var(--dz-muted);
+}
+[data-design='portico'][data-theme] .ec-account .acc-icon-btn {
+  width: 44px; height: 44px;
+  border: 1px solid var(--dz-line); border-radius: var(--dz-radius);
+  background: transparent; color: var(--dz-ink-2);
+}
+[data-design='portico'][data-theme] .ec-account .acc-icon-btn:hover {
+  border-color: var(--dz-accent); color: var(--dz-accent-text);
+  background: color-mix(in srgb, var(--dz-accent) 8%, transparent);
+}
+
+/* Tabs (tablet/mobile): celdas mono, filete inferior, scroll sin barra. */
+[data-design='portico'][data-theme] .ec-account .acc-tabs {
+  gap: 0; padding: 0 0 2px;
+  border-bottom: 1px solid var(--dz-line);
+  scrollbar-width: none;
+  -webkit-overflow-scrolling: touch;
+}
+[data-design='portico'][data-theme] .ec-account .acc-tab {
+  min-height: 44px;
+  padding: 10px 14px;
+  border: 0; border-radius: 0;
+  border-bottom: 2px solid transparent;
+  background: transparent; color: var(--dz-muted);
+  font: 500 9px/1 var(--dz-mono); letter-spacing: .18em; text-transform: uppercase;
+  gap: 8px;
+}
+[data-design='portico'][data-theme] .ec-account .acc-tab:hover { color: var(--dz-accent-text); border-bottom-color: color-mix(in srgb, var(--dz-accent) 40%, transparent); }
+[data-design='portico'][data-theme] .ec-account .acc-tab.is-on {
+  background: transparent; color: var(--dz-ink);
+  border-bottom-color: var(--dz-accent);
+}
+[data-design='portico'][data-theme] .ec-account .acc-tab.is-on .acc-idx { color: var(--dz-accent-text); }
+
+/* Paneles de contenido. */
+[data-design='portico'][data-theme] .ec-account .acc-panel,
+[data-design='portico'][data-theme] .ec-account .acc-auth-card,
+[data-design='portico'][data-theme] .ec-account .acc-gate-card,
+[data-design='portico'][data-theme] .ec-account .acc-skelpanel {
+  padding: clamp(18px, 2.6vw, 30px);
+  border: 1px solid var(--dz-line);
+  border-radius: var(--dz-radius);
+  background: var(--dz-surface);
+  box-shadow: none;
+  gap: 18px;
+  color: var(--dz-ink);
+}
+[data-design='portico'][data-theme] .ec-account .acc-panel-head {
+  padding-bottom: 14px;
+  border-bottom: 1px solid var(--dz-line);
+}
+[data-design='portico'][data-theme] .ec-account .acc-panel-title {
+  font-family: var(--dz-display); font-weight: 400;
+  font-size: clamp(22px, 2.4vw, 30px); letter-spacing: -.015em; color: var(--dz-ink);
+}
+[data-design='portico'][data-theme] .ec-account .acc-panel-sub {
+  font-family: var(--dz-body); font-size: 13px; line-height: 1.6; color: var(--dz-muted);
+}
+
+/* Gate / sub-vistas de mail. */
+[data-design='portico'][data-theme] .ec-account :is(.acc-gate-ico, .acc-auth-ico) {
+  border-radius: var(--dz-radius);
+  background: color-mix(in srgb, var(--dz-accent) 10%, var(--dz-surface));
+  border: 1px solid color-mix(in srgb, var(--dz-accent) 30%, transparent);
+  color: var(--dz-accent-text);
+}
+[data-design='portico'][data-theme] .ec-account :is(.acc-gate-title, .acc-auth-title) {
+  font-family: var(--dz-display); font-weight: 400; letter-spacing: -.018em; color: var(--dz-ink);
+}
+[data-design='portico'][data-theme] .ec-account :is(.acc-gate-sub, .acc-auth-msg) {
+  font-family: var(--dz-body); color: var(--dz-muted);
+}
+[data-design='portico'][data-theme] .ec-account .acc-gate-list {
+  border: 1px solid var(--dz-line); border-radius: var(--dz-radius);
+  background: var(--dz-bg); color: var(--dz-ink-2);
+}
+[data-design='portico'][data-theme] .ec-account .acc-gate-list li { font-family: var(--dz-body); color: var(--dz-ink-2); }
+[data-design='portico'][data-theme] .ec-account .acc-gate-list svg { color: var(--dz-accent-text); }
+[data-design='portico'][data-theme] .ec-account .acc-gate-link,
+[data-design='portico'][data-theme] .ec-account .acc-auth-link {
+  font: 500 9px/1 var(--dz-mono); letter-spacing: .2em; text-transform: uppercase;
+  color: var(--dz-accent-text);
+  text-decoration: underline; text-underline-offset: 4px;
+}
+[data-design='portico'][data-theme] .ec-account .acc-auth-ok {
+  color: var(--dz-ok); font-family: var(--dz-body); font-weight: 700;
+}
+[data-design='portico'][data-theme] .ec-account .acc-spin {
+  border-color: color-mix(in srgb, var(--dz-muted) 34%, transparent);
+  border-top-color: var(--dz-accent);
+}
+[data-design='portico'][data-theme] .ec-account .acc-sk {
+  background: color-mix(in srgb, var(--dz-muted) 16%, transparent);
+  border-radius: var(--dz-radius);
+}
+
+/* ---------- Escritorio: barra lateral de índice ---------- */
+@media (min-width: 1024px) {
+  /* El header compacto y las tabs son solo de tablet/mobile: mi regla base
+     los pone en grid, así que hay que apagarlos acá (la scoped lo hace con
+     menos especificidad). */
+  [data-design='portico'][data-theme] .ec-account :is(.acc-mhead, .acc-tabs) { display: none; }
+  [data-design='portico'][data-theme] .ec-account .acc-shell {
+    grid-template-columns: 300px minmax(0, 1fr);
+    gap: 34px;
+    align-items: start;
+  }
+  [data-design='portico'][data-theme] .ec-account .acc-side {
+    display: grid;
+    gap: 0;
+    align-content: start;
+    position: sticky;
+    top: calc(var(--sp-top-h, 64px) + 18px);
+    padding: 0 26px 0 0;
+    border: 0;
+    border-right: 1px solid var(--dz-line);
+    border-radius: 0;
+    background: transparent;
+    box-shadow: none;
+  }
+  [data-design='portico'][data-theme] .ec-account .acc-id {
+    display: grid;
+    grid-template-columns: 52px minmax(0, 1fr);
+    align-items: center;
+    gap: 12px;
+    padding: 0 0 18px;
+    border-bottom: 1px solid var(--dz-line);
+  }
+  [data-design='portico'][data-theme] .ec-account .acc-id .acc-tele { grid-column: 1 / -1; }
+  [data-design='portico'][data-theme] .ec-account .acc-id-name {
+    font-family: var(--dz-display); font-weight: 400; font-size: 19px; letter-spacing: -.01em;
+    color: var(--dz-ink);
+  }
+  [data-design='portico'][data-theme] .ec-account .acc-id-email {
+    font-family: var(--dz-mono); font-size: 10.5px; letter-spacing: .06em; color: var(--dz-muted);
+  }
+  [data-design='portico'][data-theme] .ec-account .acc-nav { gap: 0; margin-top: 6px; }
+  [data-design='portico'][data-theme] .ec-account .acc-navitem {
+    gap: 12px;
+    padding: 14px 8px 14px 0;
+    border-radius: 0;
+    border-bottom: 1px solid var(--dz-line);
+    background: transparent;
+    color: var(--dz-ink-2);
+    font-family: var(--dz-body); font-size: 13px; font-weight: 500;
+    transition: color .25s, padding-left .25s;
+  }
+  [data-design='portico'][data-theme] .ec-account .acc-navitem svg { color: var(--dz-muted); transition: color .25s; }
+  [data-design='portico'][data-theme] .ec-account .acc-navitem .acc-idx { margin-left: auto; }
+  [data-design='portico'][data-theme] .ec-account .acc-navitem:hover {
+    background: transparent; color: var(--dz-accent-text); padding-left: 6px;
+  }
+  [data-design='portico'][data-theme] .ec-account .acc-navitem:hover svg { color: var(--dz-accent-text); }
+  [data-design='portico'][data-theme] .ec-account .acc-navitem.is-on {
+    background: transparent; color: var(--dz-ink); font-weight: 600;
+    box-shadow: inset 0 -2px 0 var(--dz-accent);
+  }
+  [data-design='portico'][data-theme] .ec-account .acc-navitem.is-on svg { color: var(--dz-accent-text); }
+  [data-design='portico'][data-theme] .ec-account .acc-navitem.is-on .acc-idx { color: var(--dz-accent-text); }
+  [data-design='portico'][data-theme] .ec-account .acc-logout {
+    margin-top: 20px;
+    min-height: 44px;
+    border: 1px solid color-mix(in srgb, var(--dz-ink) 32%, transparent);
+    border-radius: var(--dz-radius);
+    background: transparent;
+    color: var(--dz-ink-2);
+    font: 500 9px/1 var(--dz-mono); letter-spacing: .2em; text-transform: uppercase;
+  }
+  [data-design='portico'][data-theme] .ec-account .acc-logout:hover {
+    color: var(--dz-danger);
+    border-color: color-mix(in srgb, var(--dz-danger) 52%, transparent);
+    background: color-mix(in srgb, var(--dz-danger) 7%, transparent);
+  }
+}
+
+/* ---------- Responsive ---------- */
+@media (max-width: 1024px) {
+  [data-design='portico'] .ec-auth .ec-auth-shell {
+    grid-template-columns: minmax(0, 1fr);
+    margin-block: 12px clamp(28px, 5vw, 48px);
+  }
+  [data-design='portico'] .ec-auth .ec-auth-brand { padding: 22px 22px 20px; }
+  [data-design='portico'] .ec-auth .ec-auth-brand-inner {
+    grid-template-rows: auto auto;
+    gap: 14px;
+  }
+  [data-design='portico'] .ec-auth .ec-auth-brand-copy { gap: 8px; max-width: none; }
+  [data-design='portico'] .ec-auth .ec-auth-brand-text,
+  [data-design='portico'] .ec-auth .ec-auth-perks,
+  [data-design='portico'] .ec-auth .ec-auth-brand-foot { display: none; }
+  [data-design='portico'] .ec-auth .ec-auth-brand-title { font-size: clamp(21px, 4.4vw, 27px); }
+  [data-design='portico'] .ec-auth .ec-auth-panel {
+    padding: 24px 22px 30px;
+    border-left: 0;
+    border-top: 1px solid var(--dz-line);
+  }
+}
+@media (max-width: 860px) {
+  [data-design='portico'][data-theme] .ec-account .acc-mhead-meta strong { font-size: 17px; }
+  [data-design='portico'][data-theme] .ec-account .acc-panel-title { font-size: 22px; }
+}
+@media (max-width: 640px) {
+  [data-design='portico'] .ec-auth { padding-inline: 12px; }
+  [data-design='portico'] .ec-auth .ec-auth-shell { border-radius: var(--dz-radius); }
+  [data-design='portico'] .ec-auth .ec-auth-brand { padding: 18px 16px 16px; }
+  [data-design='portico'] .ec-auth .ec-auth-brand-top { padding-bottom: 12px; }
+  [data-design='portico'] .ec-auth .ec-auth-logo { width: 38px; height: 38px; font-size: 20px; }
+  [data-design='portico'] .ec-auth .ec-auth-brand-name { font-size: 10.5px; letter-spacing: .14em; }
+  [data-design='portico'] .ec-auth .ec-auth-brand-title { font-size: 20px; }
+  [data-design='portico'] .ec-auth .ec-auth-panel { padding: 18px 16px 26px; }
+  [data-design='portico'] .ec-auth .ec-auth-head { margin-bottom: 20px; padding-bottom: 16px; }
+  [data-design='portico'] .ec-auth .ec-auth-title { font-size: 24px; }
+  [data-design='portico'] .ec-auth .ecaf-grid { grid-template-columns: minmax(0, 1fr); }
+  [data-design='portico'][data-theme] .ec-account { padding-inline: 14px; }
+  [data-design='portico'][data-theme] .ec-account .acc-tabs { padding-bottom: 0; }
+  [data-design='portico'][data-theme] .ec-account .acc-tab { padding: 10px 12px; letter-spacing: .14em; }
+  [data-design='portico'][data-theme] .ec-account .acc-panel,
+  [data-design='portico'][data-theme] .ec-account .acc-auth-card,
+  [data-design='portico'][data-theme] .ec-account .acc-gate-card { padding: 18px 16px; }
+}
+@media (max-width: 390px) {
+  [data-design='portico'] .ec-auth { padding-inline: 8px; }
+  [data-design='portico'] .ec-auth .ec-auth-brand-title { font-size: 18px; }
+  [data-design='portico'] .ec-auth .ec-auth-title { font-size: 21px; }
+  [data-design='portico'][data-theme] .ec-account { padding-inline: 10px; }
+  [data-design='portico'][data-theme] .ec-account .acc-mhead { grid-template-columns: 40px minmax(0, 1fr) 40px; gap: 10px; }
+  [data-design='portico'][data-theme] .ec-account .acc-mhead-meta strong { font-size: 16px; }
+  [data-design='portico'][data-theme] .ec-account .acc-panel-title { font-size: 20px; }
+}
+/* Tab bar inferior de la tienda (mobile.nav = bottom): el último panel
+   respira sobre la barra fija. */
+@media (max-width: 768px) {
+  [data-design='portico'][data-theme] .ec-account,
+  [data-design='portico'] .ec-auth {
+    padding-bottom: calc(24px + env(safe-area-inset-bottom));
+  }
+  [data-design='portico'][data-theme] .ec-account .acc-tabs {
+    padding-bottom: 6px;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  [data-design='portico'] :is(.ec-auth, .ec-account) * {
+    transition-duration: .001ms !important;
+    animation-duration: .001ms !important;
+  }
+}

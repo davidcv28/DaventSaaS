@@ -269,7 +269,27 @@
 .store-page[data-template='sastreria'] .sp-foot {
   background: var(--ss-paper);
   border-top: 1px solid var(--ss-line);
+  color: var(--ss-ink);
 }
+/* El chrome global pinta el pie con --sp-on-band (blanco) y el puente de
+   paleta ([data-st-palette], especificidad (0,4,0)) repinta copy/strong con
+   --st-muted/--st-text: sobre el papel del pie quedan ilegibles. Se fijan
+   los colores del pie con .sp-foot en el selector para ganar la cascada. */
+.store-page[data-template='sastreria'] .sp-foot .sp-foot-brand strong { color: var(--ss-ink); }
+.store-page[data-template='sastreria'] .sp-foot .sp-foot-brand span,
+.store-page[data-template='sastreria'] .sp-foot .sp-foot-copy,
+.store-page[data-template='sastreria'] .sp-foot .sp-foot-note { color: var(--ss-muted); }
+.store-page[data-template='sastreria'] .sp-foot .sp-foot-heading { color: var(--ss-muted); }
+.store-page[data-template='sastreria'] .sp-foot :is(.sp-foot-col a, .sp-foot-contact a, .sp-foot-contact li) { color: var(--ss-ink-2); }
+.store-page[data-template='sastreria'] .sp-foot :is(.sp-foot-col a, .sp-foot-contact a):hover { color: var(--ss-ink); }
+.store-page[data-template='sastreria'] .sp-foot .sp-foot-social a,
+.store-page[data-template='sastreria'] .sp-foot .sp-davent-badge {
+  color: var(--ss-ink-2);
+  background: transparent;
+  border-color: var(--ss-line);
+}
+.store-page[data-template='sastreria'] .sp-foot .sp-davent-badge strong { color: var(--ss-ink); }
+.store-page[data-template='sastreria'] .sp-foot-bottom { border-top-color: var(--ss-line); }
 .store-page[data-template='sastreria'] .sp-foot-name {
   font-family: var(--ss-display);
   font-weight: 300;

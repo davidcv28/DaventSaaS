@@ -170,7 +170,9 @@
   font-weight: 500;
   letter-spacing: .22em;
   text-transform: uppercase;
-  color: var(--in-accent);
+  /* Micro-label: el acento-ink crudo no llega a AA en todos los estilos
+     (street/boutique) — va el acento templado a la tinta. */
+  color: var(--in-accent-text);
 }
 .store-page[data-template='indumentaria'] .sp-btn,
 .store-page[data-template='indumentaria'] .bq-btn {
@@ -342,7 +344,7 @@
   writing-mode: vertical-rl;
   transform: rotate(180deg);
 }
-.in-rail b { color: var(--in-accent); font-weight: 600; }
+.in-rail b { color: var(--in-accent-text); font-weight: 600; }
 .in-kicker {
   display: flex;
   align-items: center;
@@ -353,7 +355,7 @@
   font-weight: 500;
   letter-spacing: .26em;
   text-transform: uppercase;
-  color: var(--in-accent);
+  color: var(--in-accent-text);
 }
 .in-kicker::after { content: ''; width: 84px; height: 1px; background: var(--in-stitch); }
 .in-hero h1 {
@@ -646,7 +648,7 @@
   padding-top: 14px;
 }
 .in-look-foot strong { font-size: 15px; font-weight: 600; letter-spacing: -.01em; }
-.in-look:hover .in-look-foot strong { color: var(--in-accent); }
+.in-look:hover .in-look-foot strong { color: var(--in-accent-text); }
 .in-look-count {
   font-family: var(--in-mono);
   font-size: 9.5px;
@@ -674,7 +676,7 @@
   font-weight: 500;
   letter-spacing: .26em;
   text-transform: uppercase;
-  color: var(--in-accent);
+  color: var(--in-accent-text);
 }
 .in-about-copy h2 { margin: 0; }
 .in-about-text { margin: 22px 0 0; font-size: 16px; max-width: 52ch; }
@@ -878,7 +880,7 @@
   transform: scaleX(1);
 }
 .store-page[data-template='indumentaria'] .mc-cat-chips button.is-on,
-.store-page[data-template='indumentaria'] .f-cat.is-on { color: var(--in-accent); }
+.store-page[data-template='indumentaria'] .f-cat.is-on { color: var(--in-accent-text); }
 
 /* ==========================================================================
    CATÁLOGO / FICHA / SERVICIOS (subárbol Raíz + capa indumentaria)
@@ -1066,7 +1068,11 @@
   --tpc-flag-border: 0;
   --tpc-flag-transform: uppercase;
   --tpc-flag-track: .14em;
-  --tpc-offer-bg: var(--in-accent);
+  /* El acento solo en la oferta: --in-accent puro queda a 4.38:1 con la
+     tinta de la piel en noche (acentos custom claros) — se tira un punto
+     hacia --in-ink: en noche aclara el chip para la tinta oscura y en día
+     lo profundiza para la tinta clara. AA en ambos sentidos. */
+  --tpc-offer-bg: color-mix(in srgb, var(--in-accent) 86%, var(--in-ink));
   --tpc-offer-ink: var(--in-on-accent);
   --tpc-add-radius: 0;
   --tpc-add-bg: var(--in-ink);
@@ -1257,7 +1263,7 @@
   letter-spacing: .12em;
   text-transform: uppercase;
 }
-.store-page[data-template='indumentaria'] .sp-tabbar a.is-on { color: var(--in-accent); }
+.store-page[data-template='indumentaria'] .sp-tabbar a.is-on { color: var(--in-accent-text); }
 /* Tab bar: la piel fija texto de pestaña con tinta secundaria (AA sobre
    --in-card en todos los estilos) y el activo con acento templado a la
    tinta — el acento crudo no llega a 4.5 en street/boutique. */

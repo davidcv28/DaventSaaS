@@ -402,7 +402,7 @@
   height: 5px;
   background: var(--mv-accent);
 }
-.store-page[data-template='movimiento'] .sp-foot-brand strong {
+.store-page[data-template='movimiento'] .sp-foot .sp-foot-brand strong {
   font-family: var(--mv-display);
   font-size: clamp(38px, 5vw, 66px);
   font-weight: 700;
@@ -411,10 +411,11 @@
   text-transform: uppercase;
   color: var(--mv-paper);
 }
+.store-page[data-template='movimiento'] .sp-foot .sp-foot-brand span { color: color-mix(in srgb, var(--mv-paper) 72%, transparent); }
 .store-page[data-template='movimiento'] .sp-foot p,
 .store-page[data-template='movimiento'] .sp-foot a,
 .store-page[data-template='movimiento'] .sp-foot li,
-.store-page[data-template='movimiento'] .sp-foot-copy { color: color-mix(in srgb, var(--mv-paper) 72%, transparent); }
+.store-page[data-template='movimiento'] .sp-foot .sp-foot-copy { color: color-mix(in srgb, var(--mv-paper) 72%, transparent); }
 .store-page[data-template='movimiento'] .sp-foot-heading {
   font-family: var(--mv-mono);
   font-size: 10px;

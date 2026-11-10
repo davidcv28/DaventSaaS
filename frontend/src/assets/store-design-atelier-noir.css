@@ -1,0 +1,585 @@
+/* ============================================================================
+   store-design-atelier-noir.css — piel "Atelier Noir" para las páginas de
+   comercio que NO montan el documento del patrón
+   (StoreApp/domains/design/sources/atelier-noir.html): /<slug>/ingresar
+   (auth) y /<slug>/cuenta (cuenta).
+
+   Composición propia (no la genérica):
+     · Auth  = ORDEN DE TRABAJO. Banda de tinta a la izquierda con cinta
+       métrica y renglones de fichero numerados; a la derecha el formulario
+       en papel con campos de renglón (solo línea inferior). Esquinas rectas,
+       filetes de 1px, cero sombras.
+     · Cuenta = MESA DE CORTE. Riel angosto a la izquierda con cinta métrica,
+       identidad y secciones numeradas invertidas; la hoja de trabajo ocupa
+       el resto con marcas de corte en acento.
+
+   Paleta y familias son las del diseño (Italiana / Manrope / JetBrains Mono,
+   papel #F4EFE6, tinta #0E0C0A, teja #B34A2E). Radio 0: todo recto.
+   Prefijado con [data-design='atelier-noir'].
+   ========================================================================== */
+
+/* ---------- Tokens locales (claro) ---------------------------------------- */
+.store-page[data-design='atelier-noir']{
+  --dz-bg:#F4EFE6;
+  --dz-surface:#EAE2D3;
+  --dz-surface-2:#F4EFE6;
+  --dz-ink:#0E0C0A;
+  --dz-ink-2:#171310;
+  --dz-muted:#5C5346;
+  --dz-line:rgba(14,12,10,.18);
+  --dz-line-strong:rgba(14,12,10,.42);
+  --dz-accent:#B34A2E;
+  --dz-accent-ink:#F4EFE6;
+  --dz-accent-text:#8E3520;
+  --dz-accent-soft:color-mix(in srgb, var(--dz-accent) 12%, var(--dz-bg));
+  --dz-accent-on-band:#CE8F7B;
+  --dz-band:#0E0C0A;
+  --dz-band-2:#171310;
+  --dz-band-ink:#F4EFE6;
+  --dz-band-muted:rgba(244,239,230,.72);
+  --dz-band-line:rgba(244,239,230,.16);
+  --dz-ok:#2F6B4F;
+  --dz-danger:#9E2B1F;
+  --dz-display:var(--st-f-display-family, "Italiana", "Playfair Display", Georgia, serif);
+  --dz-body:var(--st-f-body-family, "Manrope", "Helvetica Neue", system-ui, sans-serif);
+  --dz-mono:var(--st-f-eyebrow-family, "JetBrains Mono", "SFMono-Regular", monospace);
+  --dz-r:0px;
+  color-scheme:light;
+
+  --sp-bg:var(--dz-bg);
+  --sp-card:var(--dz-surface-2);
+  --sp-card-solid:var(--dz-surface-2);
+  --sp-surface:var(--dz-surface);
+  --sp-ink:var(--dz-ink);
+  --sp-ink-2:var(--dz-ink-2);
+  --sp-muted:var(--dz-muted);
+  --sp-line:var(--dz-line);
+  --sp-accent-text:var(--dz-accent-text);
+  --sp-soft:var(--dz-accent-soft);
+  --sp-radius:0px;
+  --sp-success:var(--dz-ok);
+  --sp-danger:var(--dz-danger);
+  --sp-shadow-sm:none;
+  --sp-shadow-md:none;
+}
+
+/* ---------- Tokens locales (noche) --------------------------------------- */
+.store-page[data-design='atelier-noir'][data-theme='dark'],
+.store-page[data-design='atelier-noir'][data-store-theme='dark']{
+  --dz-bg:#141110;
+  --dz-surface:#1D1915;
+  --dz-surface-2:#141110;
+  --dz-ink:#F4EFE6;
+  --dz-ink-2:#E6DED1;
+  --dz-muted:#B3A895;
+  --dz-line:#332C24;
+  --dz-line-strong:rgba(244,239,230,.4);
+  --dz-accent:#E09F7F;
+  --dz-accent-ink:#191511;
+  --dz-accent-text:#E5AC90;
+  --dz-accent-soft:color-mix(in srgb, var(--dz-accent) 16%, var(--dz-bg));
+  --dz-accent-on-band:#E09F7F;
+  --dz-band:#0E0C0A;
+  --dz-band-2:#171310;
+  --dz-band-ink:#F4EFE6;
+  --dz-band-muted:rgba(244,239,230,.72);
+  --dz-band-line:rgba(244,239,230,.16);
+  --dz-ok:#5BD39A;
+  --dz-danger:#F0776B;
+  color-scheme:dark;
+}
+
+/* ==========================================================================
+   1. AUTH — orden de trabajo
+   ========================================================================== */
+[data-design='atelier-noir'] .ec-auth{
+  padding:clamp(14px,2.6vw,30px) clamp(12px,2.6vw,28px) clamp(44px,6vw,80px);
+}
+[data-design='atelier-noir'] .ec-auth .ec-auth-shell{
+  width:min(1040px,100%);
+  margin:0 auto;
+  grid-template-columns:minmax(0,.94fr) minmax(0,1.06fr);
+  border:1px solid var(--dz-ink);
+  border-radius:0;
+  background:var(--dz-surface-2);
+  box-shadow:none;
+  overflow:hidden;
+}
+
+/* --- Banda de tinta (ficha del taller) --- */
+[data-design='atelier-noir'] .ec-auth .ec-auth-brand{
+  color:var(--dz-band-ink);
+  background:var(--dz-band);
+  padding:clamp(24px,3.4vw,44px) clamp(22px,3.4vw,40px);
+  border-right:1px solid var(--dz-band-line);
+}
+/* La portada entra muy velada: el texto de la banda no puede perder AA. */
+[data-design='atelier-noir'] .ec-auth .ec-auth-brand::before{
+  opacity:.18; filter:grayscale(1) contrast(1.05);
+}
+[data-design='atelier-noir'] .ec-auth .ec-auth-brand::after{
+  background:
+    repeating-linear-gradient(180deg, var(--dz-band-line) 0 1px, transparent 1px 28px),
+    linear-gradient(180deg, color-mix(in srgb, var(--dz-band) 84%, transparent), var(--dz-band) 92%);
+}
+[data-design='atelier-noir'] .ec-auth .ec-auth-brand-inner{ gap:clamp(20px,3vw,34px); }
+[data-design='atelier-noir'] .ec-auth .ec-auth-brand-top{ min-height:44px; }
+[data-design='atelier-noir'] .ec-auth .ec-auth-logo{
+  width:44px; height:44px; border-radius:0;
+  background:transparent; color:var(--dz-band-ink);
+  border:1px solid var(--dz-band-line);
+  font-family:var(--dz-display); font-size:20px; font-weight:400;
+}
+[data-design='atelier-noir'] .ec-auth .ec-auth-brand-name{
+  font-family:var(--dz-display); font-weight:400; font-size:clamp(19px,1.9vw,23px);
+  letter-spacing:.04em; text-transform:uppercase; color:var(--dz-band-ink);
+}
+[data-design='atelier-noir'] .ec-auth .ec-auth-rail{
+  display:block; width:fit-content;
+  font:500 10px/1 var(--dz-mono); letter-spacing:.3em; text-transform:uppercase;
+  color:var(--dz-accent-on-band);
+  padding-bottom:9px;
+  border-bottom:1px dashed var(--dz-band-line);
+  padding-right:44px;
+}
+[data-design='atelier-noir'] .ec-auth .ec-auth-brand-kicker{
+  font:500 9.5px/1.4 var(--dz-mono); letter-spacing:.24em; text-transform:uppercase;
+  color:var(--dz-band-muted);
+}
+[data-design='atelier-noir'] .ec-auth .ec-auth-brand-title{
+  font-family:var(--dz-display); font-weight:400; letter-spacing:.005em; line-height:1.06;
+  color:var(--dz-band-ink);
+  font-size:clamp(28px,3.4vw,42px);
+}
+[data-design='atelier-noir'] .ec-auth .ec-auth-brand-text{
+  font-family:var(--dz-body); font-weight:300; font-size:13px; line-height:1.7;
+  color:var(--dz-band-muted);
+}
+/* Renglones de fichero: numerados con contador, sin tocar el DOM. */
+[data-design='atelier-noir'] .ec-auth .ec-auth-perks{
+  gap:0; margin-top:6px; counter-reset:dz-perk;
+  border-top:1px solid var(--dz-band-line);
+}
+[data-design='atelier-noir'] .ec-auth .ec-auth-perks li{
+  counter-increment:dz-perk;
+  padding:10px 0;
+  border-bottom:1px dashed var(--dz-band-line);
+  font:400 12px/1.45 var(--dz-body); color:var(--dz-band-ink);
+}
+[data-design='atelier-noir'] .ec-auth .ec-auth-perks li::before{
+  content:counter(dz-perk, decimal-leading-zero);
+  flex:none; width:22px;
+  font:500 9px/1.6 var(--dz-mono); letter-spacing:.14em;
+  color:var(--dz-accent-on-band);
+}
+[data-design='atelier-noir'] .ec-auth .ec-auth-perks svg{ display:none; }
+[data-design='atelier-noir'] .ec-auth .ec-auth-brand-foot{
+  font:500 9px/1.6 var(--dz-mono); letter-spacing:.2em; text-transform:uppercase;
+  color:var(--dz-band-muted);
+}
+/* Cinta métrica en el borde derecho de la banda. */
+[data-design='atelier-noir'] .ec-auth .ec-auth-brand-inner::after{
+  content:''; position:absolute; top:0; bottom:0; right:calc(-1 * clamp(22px,3.4vw,40px));
+  width:9px; pointer-events:none;
+  background:
+    repeating-linear-gradient(180deg, var(--dz-band-line) 0 1px, transparent 1px 10px),
+    repeating-linear-gradient(180deg, color-mix(in srgb, var(--dz-accent) 70%, transparent) 0 1px, transparent 1px 50px);
+  opacity:.7;
+}
+
+/* --- Formulario (orden de trabajo) --- */
+[data-design='atelier-noir'] .ec-auth .ec-auth-panel{
+  background:var(--dz-surface-2); color:var(--dz-ink);
+  padding:clamp(22px,3vw,42px) clamp(20px,3.2vw,42px) clamp(26px,3.4vw,44px);
+}
+[data-design='atelier-noir'] .ec-auth .ec-auth-back{
+  min-height:40px; margin-bottom:clamp(14px,2.4vw,22px);
+  font:500 9.5px/1 var(--dz-mono); letter-spacing:.2em; text-transform:uppercase;
+  color:var(--dz-muted);
+}
+[data-design='atelier-noir'] .ec-auth .ec-auth-back:hover{ color:var(--dz-accent-text); }
+[data-design='atelier-noir'] .ec-auth .ec-auth-head{
+  gap:9px; margin-bottom:22px;
+  padding-top:14px; border-top:1px solid var(--dz-ink);
+}
+[data-design='atelier-noir'] .ec-auth .ec-auth-badge{
+  width:38px; height:38px; border-radius:0; margin-bottom:2px;
+  background:transparent; color:var(--dz-accent-text);
+  border:1px solid var(--dz-line-strong);
+}
+[data-design='atelier-noir'] .ec-auth .ec-auth-tag{
+  display:inline-flex; align-items:center; gap:8px; width:fit-content;
+  font:500 9px/1 var(--dz-mono); letter-spacing:.26em; text-transform:uppercase;
+  color:var(--dz-muted);
+}
+[data-design='atelier-noir'] .ec-auth .ec-auth-tag::before{
+  content:''; width:18px; height:1px; background:var(--dz-accent); flex:none;
+}
+[data-design='atelier-noir'] .ec-auth .ec-auth-title{
+  font-family:var(--dz-display); font-weight:400; letter-spacing:.01em;
+  font-size:clamp(25px,2.8vw,34px); color:var(--dz-ink);
+}
+[data-design='atelier-noir'] .ec-auth .ec-auth-sub{
+  font-family:var(--dz-body); font-weight:300; font-size:13px; line-height:1.7;
+  color:var(--dz-muted);
+}
+[data-design='atelier-noir'] .ec-auth .ec-auth-loading{ color:var(--dz-muted); }
+[data-design='atelier-noir'] .ec-auth .ec-auth-spin{ color:var(--dz-accent-text); }
+
+/* --- Controles: campos de renglón --- */
+[data-design='atelier-noir'] .ec-auth .sp-field-label,
+[data-design='atelier-noir'] .ec-account .sp-field-label{
+  font:500 9px/1.4 var(--dz-mono); letter-spacing:.22em; text-transform:uppercase;
+  color:var(--dz-muted);
+}
+[data-design='atelier-noir'] .ec-auth .sp-input,
+[data-design='atelier-noir'] .ec-account .sp-input{
+  min-height:44px; border-radius:0; padding:10px 0;
+  border:0; border-bottom:1px solid var(--dz-line-strong); box-shadow:none;
+  background:transparent; color:var(--dz-ink);
+  font-family:var(--dz-body); font-size:15px;
+}
+[data-design='atelier-noir'] .ec-auth .sp-input::placeholder,
+[data-design='atelier-noir'] .ec-account .sp-input::placeholder{ color:var(--dz-muted); }
+[data-design='atelier-noir'] .ec-auth .sp-input:focus,
+[data-design='atelier-noir'] .ec-account .sp-input:focus{
+  border-bottom-color:var(--dz-accent); background:transparent;
+  box-shadow:inset 0 -2px 0 var(--dz-accent);
+}
+[data-design='atelier-noir'] .ec-auth .sp-form-error,
+[data-design='atelier-noir'] .ec-account .sp-form-error{ color:var(--dz-danger); font-weight:600; }
+[data-design='atelier-noir'] .ec-auth .ecaf .ecaf-submit{
+  min-height:50px; border-radius:0;
+  background:var(--dz-band); color:var(--dz-band-ink);
+  font:600 10.5px/1 var(--dz-mono); letter-spacing:.24em; text-transform:uppercase;
+  box-shadow:none;
+}
+[data-design='atelier-noir'] .ec-auth .ecaf .ecaf-submit:hover:not(:disabled){
+  background: var(--store-accent-ink); color: var(--sp-on-band, #fff);
+}
+[data-design='atelier-noir'] .ec-auth .ecaf .ecaf-submit:disabled{ opacity:.5; }
+[data-design='atelier-noir'] .ec-auth .ecaf .ecaf-link{
+  color:var(--dz-accent-text); font-family:var(--dz-body); min-height:32px;
+}
+[data-design='atelier-noir'] .ec-auth .ecaf .ecaf-divider{
+  font:500 9px/1 var(--dz-mono); letter-spacing:.22em; text-transform:uppercase;
+  color:var(--dz-muted);
+}
+[data-design='atelier-noir'] .ec-auth .ecaf .ecaf-pass-toggle{ color:var(--dz-muted); border-radius:0; }
+[data-design='atelier-noir'] .ec-auth .ecaf .ecaf-pass-toggle:hover{
+  color:var(--dz-accent-text); background:var(--dz-accent-soft);
+}
+
+/* ==========================================================================
+   2. CUENTA — mesa de corte
+   ========================================================================== */
+[data-design='atelier-noir'] .ec-account{
+  padding:clamp(14px,2.6vw,30px) clamp(12px,2.6vw,28px) clamp(44px,6vw,76px);
+}
+[data-design='atelier-noir'] .ec-account .acc-shell{
+  display:grid; grid-template-columns:158px minmax(0,1fr);
+  gap:clamp(14px,2vw,24px); width:min(1120px,100%); margin-inline:auto;
+  align-items:start;
+}
+/* Riel de la mesa */
+[data-design='atelier-noir'] .ec-account .acc-side{
+  display:grid; gap:14px; align-content:start;
+  position:sticky; top:92px;
+  padding:14px 12px 14px 18px;
+  border:1px solid var(--dz-line); border-left:1px solid var(--dz-ink);
+  border-radius:0; background:var(--dz-surface); box-shadow:none;
+}
+/* Cinta métrica del riel */
+[data-design='atelier-noir'] .ec-account .acc-side::before{
+  content:''; position:absolute; top:0; bottom:0; left:0; width:7px; pointer-events:none;
+  background:
+    repeating-linear-gradient(180deg, var(--dz-line-strong) 0 1px, transparent 1px 9px),
+    repeating-linear-gradient(180deg, color-mix(in srgb, var(--dz-accent) 60%, transparent) 0 1px, transparent 1px 45px);
+}
+[data-design='atelier-noir'] .ec-account .acc-id{
+  display:grid; justify-items:start; gap:8px; min-width:0;
+  padding:0 0 12px; border:0; border-bottom:1px dashed var(--dz-line-strong);
+}
+[data-design='atelier-noir'] .ec-account .acc-tele{
+  font:500 8px/1 var(--dz-mono); letter-spacing:.2em; text-transform:uppercase;
+  color:var(--dz-muted);
+}
+[data-design='atelier-noir'] .ec-account .acc-avatar{
+  width:46px; height:46px; border-radius:0;
+  background:var(--dz-band); color:var(--dz-band-ink);
+  border:0; box-shadow:inset 0 0 0 1px var(--dz-accent);
+  font:400 16px/1 var(--dz-display); letter-spacing:.04em;
+}
+[data-design='atelier-noir'] .ec-account .acc-avatar--sm{ width:40px; height:40px; font-size:14px; }
+[data-design='atelier-noir'] .ec-account .acc-id-meta{ display:grid; gap:3px; min-width:0; width:100%; }
+[data-design='atelier-noir'] .ec-account .acc-id-name{
+  font:400 15px/1.2 var(--dz-display); letter-spacing:.03em; text-transform:uppercase;
+  color:var(--dz-ink);
+  overflow:hidden; text-overflow:ellipsis; white-space:nowrap;
+}
+[data-design='atelier-noir'] .ec-account .acc-id-email{
+  font:400 9.5px/1.3 var(--dz-mono); letter-spacing:.02em; color:var(--dz-muted);
+  overflow:hidden; text-overflow:ellipsis; white-space:nowrap;
+}
+[data-design='atelier-noir'] .ec-account .acc-nav{
+  display:grid; gap:0; border-top:1px solid var(--dz-line);
+}
+[data-design='atelier-noir'] .ec-account .acc-navitem{
+  display:flex; align-items:center; gap:9px; width:100%;
+  min-height:44px; padding:9px 8px;
+  border:0; border-bottom:1px solid var(--dz-line); border-radius:0;
+  background:transparent; color:var(--dz-ink-2);
+  font:500 10px/1.2 var(--dz-mono); letter-spacing:.12em; text-transform:uppercase;
+  cursor:pointer; text-align:left;
+}
+[data-design='atelier-noir'] .ec-account .acc-navitem svg{ flex:none; opacity:.8; }
+[data-design='atelier-noir'] .ec-account .acc-navitem span:not(.acc-idx){ min-width:0; }
+[data-design='atelier-noir'] .ec-account .acc-navitem .acc-idx{
+  margin-left:auto; flex:none;
+  font:400 8.5px/1 var(--dz-mono); letter-spacing:.1em; color:var(--dz-muted);
+}
+[data-design='atelier-noir'] .ec-account .acc-navitem:hover{
+  background:var(--dz-accent-soft); color:var(--dz-accent-text);
+}
+[data-design='atelier-noir'] .ec-account .acc-navitem.is-on{
+  background:var(--dz-band); color:var(--dz-band-ink); font-weight:600;
+}
+[data-design='atelier-noir'] .ec-account .acc-navitem.is-on svg{ opacity:1; color:var(--dz-accent-on-band); }
+[data-design='atelier-noir'] .ec-account .acc-navitem.is-on .acc-idx{ color:var(--dz-accent-on-band); }
+[data-design='atelier-noir'] .ec-account .acc-logout{
+  display:flex; align-items:center; justify-content:center; gap:8px; width:100%;
+  min-height:42px; padding:9px;
+  border:1px solid var(--dz-line-strong); border-radius:0; background:transparent;
+  color:var(--dz-muted); font:500 9px/1 var(--dz-mono);
+  letter-spacing:.18em; text-transform:uppercase; cursor:pointer;
+}
+[data-design='atelier-noir'] .ec-account .acc-logout:hover{
+  color:var(--dz-danger); border-color:var(--dz-danger);
+}
+[data-design='atelier-noir'] .ec-account .acc-mhead,
+[data-design='atelier-noir'] .ec-account .acc-tabs{ display:none; }
+
+/* Hoja de trabajo */
+[data-design='atelier-noir'] .ec-account .acc-main{ display:grid; gap:14px; min-width:0; }
+[data-design='atelier-noir'] .ec-account .acc-panel{
+  position:relative;
+  padding:clamp(18px,2.4vw,28px) clamp(16px,2.4vw,28px);
+  border:1px solid var(--dz-line); border-radius:0;
+  background:var(--dz-surface-2); box-shadow:none;
+}
+/* Marcas de corte */
+[data-design='atelier-noir'] .ec-account .acc-panel::before,
+[data-design='atelier-noir'] .ec-account .acc-panel::after{
+  content:''; position:absolute; width:12px; height:12px; pointer-events:none;
+  border:1px solid var(--dz-accent);
+}
+[data-design='atelier-noir'] .ec-account .acc-panel::before{ top:-1px; left:-1px; border-right:0; border-bottom:0; }
+[data-design='atelier-noir'] .ec-account .acc-panel::after{ bottom:-1px; right:-1px; border-left:0; border-top:0; }
+[data-design='atelier-noir'] .ec-account .acc-panel-head{
+  align-items:flex-end; gap:12px;
+  padding-bottom:12px; margin-bottom:4px;
+  border-bottom:1px solid var(--dz-ink);
+}
+[data-design='atelier-noir'] .ec-account .acc-panel-title{
+  font-family:var(--dz-display); font-weight:400; letter-spacing:.02em;
+  font-size:clamp(18px,2vw,23px); color:var(--dz-ink);
+}
+[data-design='atelier-noir'] .ec-account .acc-panel-sub{
+  font-family:var(--dz-body); font-weight:300; font-size:12.5px; color:var(--dz-muted);
+}
+[data-design='atelier-noir'] .ec-account .acc-note,
+[data-design='atelier-noir'] .ec-account .acc-inline-error{ border-radius:0; }
+[data-design='atelier-noir'] .ec-account .acc-order{ border-radius:0; }
+[data-design='atelier-noir'] .ec-account .acc-order-idx{
+  font:500 9px/1 var(--dz-mono); letter-spacing:.16em; color:var(--dz-muted);
+}
+[data-design='atelier-noir'] .ec-account .acc-status{ border-radius:0; font-family:var(--dz-mono); font-size:10px; letter-spacing:.08em; text-transform:uppercase; }
+[data-design='atelier-noir'] .ec-account .acc-chip{ border-radius:0; }
+
+[data-design='atelier-noir'] .ec-account .ec-btn-primary{
+  min-height:46px; border-radius:0;
+  background:var(--dz-band); color:var(--dz-band-ink);
+  font:600 10px/1 var(--dz-mono); letter-spacing:.2em; text-transform:uppercase;
+}
+[data-design='atelier-noir'] .ec-account .ec-btn-primary:hover{
+  background: var(--store-accent-ink); color: var(--sp-on-band, #fff);
+}
+[data-design='atelier-noir'] .ec-account .ec-btn-primary:disabled{ opacity:.5; }
+[data-design='atelier-noir'] .ec-account .ec-btn-ghost{
+  min-height:44px; border-radius:0;
+  border:1px solid var(--dz-line-strong); color:var(--dz-ink-2);
+  font:500 10px/1 var(--dz-mono); letter-spacing:.16em; text-transform:uppercase;
+}
+[data-design='atelier-noir'] .ec-account .ec-btn-ghost:hover{
+  border-color:var(--dz-accent); color:var(--dz-accent-text);
+}
+[data-design='atelier-noir'] .ec-account .acc-icon-btn{
+  min-width:42px; min-height:42px; border-radius:0;
+  border:1px solid var(--dz-line-strong); background:transparent; color:var(--dz-ink-2);
+}
+[data-design='atelier-noir'] .ec-account .acc-icon-btn:hover{
+  border-color:var(--dz-accent); color:var(--dz-accent-text);
+}
+
+/* --- Gate --- */
+[data-design='atelier-noir'] .ec-account .acc-gate{ padding:clamp(18px,3vw,32px) 0; }
+[data-design='atelier-noir'] .ec-account .acc-gate-card{
+  position:relative;
+  width:min(560px,100%);
+  padding:clamp(28px,4vw,42px) clamp(20px,3vw,34px);
+  border:1px solid var(--dz-ink); border-radius:0;
+  background:var(--dz-surface-2); box-shadow:none;
+}
+[data-design='atelier-noir'] .ec-account .acc-gate-card::before{
+  content:''; position:absolute; top:0; left:0; right:0; height:4px; background:var(--dz-band);
+}
+[data-design='atelier-noir'] .ec-account .acc-gate-ico{
+  width:56px; height:56px; border-radius:0;
+  background:transparent; color:var(--dz-accent-text);
+  border:1px solid var(--dz-line-strong);
+}
+[data-design='atelier-noir'] .ec-account .acc-gate-title{
+  font-family:var(--dz-display); font-weight:400; letter-spacing:.02em;
+  font-size:clamp(22px,2.5vw,28px); color:var(--dz-ink);
+}
+[data-design='atelier-noir'] .ec-account .acc-gate-sub{
+  font-family:var(--dz-body); font-weight:300; color:var(--dz-muted);
+}
+[data-design='atelier-noir'] .ec-account .acc-gate-list{
+  border:1px solid var(--dz-line); border-radius:0; background:var(--dz-surface);
+}
+[data-design='atelier-noir'] .ec-account .acc-gate-list li{ color:var(--dz-ink); font-family:var(--dz-body); }
+[data-design='atelier-noir'] .ec-account .acc-gate-list svg{ color:var(--dz-accent-text); }
+[data-design='atelier-noir'] .ec-account .acc-gate-link{ color:var(--dz-accent-text); }
+
+/* --- Sub-vistas de mail --- */
+[data-design='atelier-noir'] .ec-account .acc-auth{ padding:clamp(18px,3vw,34px) 0; }
+[data-design='atelier-noir'] .ec-account .acc-auth-card{
+  width:min(480px,100%);
+  padding:clamp(26px,3.6vw,36px) clamp(20px,3vw,30px);
+  border:1px solid var(--dz-ink); border-radius:0;
+  background:var(--dz-surface-2); box-shadow:none;
+}
+[data-design='atelier-noir'] .ec-account .acc-auth-ico{
+  width:56px; height:56px; border-radius:0;
+  background:transparent; color:var(--dz-accent-text);
+  border:1px solid var(--dz-line-strong);
+}
+[data-design='atelier-noir'] .ec-account .acc-auth-title{
+  font-family:var(--dz-display); font-weight:400; letter-spacing:.02em; color:var(--dz-ink);
+}
+[data-design='atelier-noir'] .ec-account .acc-auth-msg{ color:var(--dz-muted); font-family:var(--dz-body); }
+[data-design='atelier-noir'] .ec-account .acc-auth-ok{ color:var(--dz-ok); }
+[data-design='atelier-noir'] .ec-account .acc-auth-link{ color:var(--dz-accent-text); }
+
+/* --- Skeleton --- */
+[data-design='atelier-noir'] .ec-account .acc-skelpanel{
+  border:1px solid var(--dz-line); border-radius:0; background:var(--dz-surface);
+}
+[data-design='atelier-noir'] .ec-account .acc-sk{
+  border-radius:0; background:color-mix(in srgb, var(--dz-muted) 20%, transparent);
+}
+
+[data-design='atelier-noir'] .ec-auth :is(a,button,input,select,textarea):focus-visible,
+[data-design='atelier-noir'] .ec-account :is(a,button,input,select,textarea):focus-visible{
+  outline:2px solid var(--dz-accent); outline-offset:2px;
+}
+
+/* ==========================================================================
+   3. Responsive
+   ========================================================================== */
+@media (max-width:1024px){
+  [data-design='atelier-noir'] .ec-auth .ec-auth-shell{
+    grid-template-columns:minmax(0,1fr);
+  }
+  [data-design='atelier-noir'] .ec-auth .ec-auth-brand{
+    border-right:0; border-bottom:1px solid var(--dz-band-line);
+    padding:22px clamp(18px,3vw,28px) 20px;
+  }
+  [data-design='atelier-noir'] .ec-auth .ec-auth-brand-inner{
+    flex-direction:row; align-items:center; flex-wrap:wrap; gap:10px 16px;
+  }
+  [data-design='atelier-noir'] .ec-auth .ec-auth-brand-copy{ flex:1 1 100%; gap:6px; }
+  [data-design='atelier-noir'] .ec-auth .ec-auth-brand-inner::after{ display:none; }
+  [data-design='atelier-noir'] .ec-auth .ec-auth-brand-text,
+  [data-design='atelier-noir'] .ec-auth .ec-auth-perks,
+  [data-design='atelier-noir'] .ec-auth .ec-auth-brand-foot{ display:none; }
+  [data-design='atelier-noir'] .ec-auth .ec-auth-brand-title{ font-size:clamp(21px,3.6vw,27px); }
+  [data-design='atelier-noir'] .ec-auth .ec-auth-rail{ padding-right:0; }
+
+  [data-design='atelier-noir'] .ec-account .acc-shell{
+    grid-template-columns:minmax(0,1fr); gap:14px;
+  }
+  [data-design='atelier-noir'] .ec-account .acc-side{
+    position:static;
+    grid-template-columns:auto minmax(0,1fr);
+    align-items:center; gap:10px 14px;
+    padding:12px 12px 12px 16px;
+    border-left:1px solid var(--dz-line);
+  }
+  [data-design='atelier-noir'] .ec-account .acc-side::before{ width:6px; }
+  [data-design='atelier-noir'] .ec-account .acc-id{
+    display:flex; align-items:center; gap:10px;
+    padding:0; border-bottom:0;
+  }
+  [data-design='atelier-noir'] .ec-account .acc-id .acc-tele{
+    position:absolute; width:1px; height:1px; overflow:hidden; clip-path:inset(50%);
+  }
+  [data-design='atelier-noir'] .ec-account .acc-nav{
+    grid-column:1 / -1; display:flex; flex-wrap:nowrap; gap:0;
+    overflow-x:auto; border-top:1px solid var(--dz-line); border-bottom:0;
+    scrollbar-width:none; -webkit-overflow-scrolling:touch;
+  }
+  [data-design='atelier-noir'] .ec-account .acc-nav::-webkit-scrollbar{ display:none; }
+  [data-design='atelier-noir'] .ec-account .acc-navitem{
+    flex:none; width:auto; border-bottom:0;
+    border-right:1px solid var(--dz-line);
+  }
+  [data-design='atelier-noir'] .ec-account .acc-navitem .acc-idx{ display:none; }
+  [data-design='atelier-noir'] .ec-account .acc-logout{ width:auto; padding:9px 12px; }
+}
+
+@media (max-width:860px){
+  [data-design='atelier-noir'] .ec-auth .ec-auth-title{ font-size:clamp(23px,4.4vw,29px); }
+  [data-design='atelier-noir'] .ec-account .acc-panel-head{
+    flex-direction:column; align-items:flex-start; gap:4px;
+  }
+  [data-design='atelier-noir'] .ec-account .acc-logout{
+    grid-column:1 / -1; justify-content:center;
+  }
+}
+
+@media (max-width:640px){
+  [data-design='atelier-noir'] .ec-auth{ padding:0 0 clamp(32px,8vw,50px); }
+  [data-design='atelier-noir'] .ec-auth .ec-auth-shell{
+    width:100%; border-inline:0; border-top:0;
+  }
+  [data-design='atelier-noir'] .ec-auth .ec-auth-brand{ padding:18px 16px 16px; }
+  [data-design='atelier-noir'] .ec-auth .ec-auth-brand-name{ font-size:16px; }
+  [data-design='atelier-noir'] .ec-auth .ec-auth-panel{ padding:18px 16px 26px; }
+  [data-design='atelier-noir'] .ec-auth .ec-auth-head{ margin-bottom:18px; }
+
+  [data-design='atelier-noir'] .ec-account{ padding:10px 10px clamp(32px,7vw,52px); }
+  [data-design='atelier-noir'] .ec-account .acc-side{ padding:10px 10px 10px 14px; }
+  [data-design='atelier-noir'] .ec-account .acc-navitem{ min-height:42px; padding:8px 10px; font-size:9.5px; }
+  [data-design='atelier-noir'] .ec-account .acc-panel{ padding:16px 14px; }
+  [data-design='atelier-noir'] .ec-account .acc-gate-card,
+  [data-design='atelier-noir'] .ec-account .acc-auth-card{
+    padding:24px 16px;
+  }
+}
+
+@media (max-width:390px){
+  [data-design='atelier-noir'] .ec-auth .ec-auth-brand-kicker{ font-size:8.5px; letter-spacing:.18em; }
+  [data-design='atelier-noir'] .ec-auth .ec-auth-brand-title{ font-size:20px; }
+  [data-design='atelier-noir'] .ec-auth .ec-auth-logo{ width:38px; height:38px; font-size:17px; }
+  [data-design='atelier-noir'] .ec-auth .ecaf .ecaf-submit{ min-height:48px; font-size:9.5px; letter-spacing:.18em; }
+  [data-design='atelier-noir'] .ec-account .acc-navitem{ font-size:9px; letter-spacing:.08em; }
+  [data-design='atelier-noir'] .ec-account .acc-panel-title{ font-size:17px; }
+  [data-design='atelier-noir'] .ec-account .acc-id-name{ font-size:14px; }
+}
+
+@media (prefers-reduced-motion:reduce){
+  [data-design='atelier-noir'] .ec-auth .ecaf .ecaf-submit:hover:not(:disabled),
+  [data-design='atelier-noir'] .ec-account .ec-btn-primary:hover{ transition:none; }
+}

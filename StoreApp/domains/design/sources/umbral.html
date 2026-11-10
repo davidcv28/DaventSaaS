@@ -84,6 +84,10 @@
   --accent-soft:color-mix(in srgb,var(--accent) 9%,var(--paper));
   --accent-text:color-mix(in srgb,var(--ds-accent-text,var(--accent-deep)) 86%,var(--ink));
   --on-accent:var(--ds-accent-ink,#FFFDF8);
+  /* Acento legible SOBRE la banda de tinta (claro u oscuro): el --accent
+     crudo queda a ~1.5:1 sobre --band; la mezcla hacia el azul de noche lo
+     sube a AA sin perder el matiz del acento elegido. */
+  --accent-band:color-mix(in srgb,var(--accent) 55%,#A9BCF0);
   --ok:color-mix(in srgb,var(--ds-success,#3E7C4F) 70%,var(--ink));
   --danger:var(--ds-danger,#A63D2F);
   --band:#252119;
@@ -441,11 +445,10 @@ body.m-open{overflow:hidden}
   display:inline-flex;align-items:center;gap:11px;flex:none;
   padding:0 30px;font:600 11px/1 var(--mono);letter-spacing:.18em;text-transform:uppercase;white-space:nowrap;
 }
-.cinta-track .ds-note svg{width:14px;height:14px;flex:none;stroke:var(--accent);fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
-html[data-ds-theme="dark"] .cinta-track .ds-note svg{stroke:#A9BCF0}
+.cinta-track .ds-note svg{width:14px;height:14px;flex:none;stroke:var(--accent-band);fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
 .cinta-track .ds-note::after{
   content:"";width:6px;height:6px;flex:none;margin-left:30px;
-  background:var(--accent);transform:rotate(45deg);
+  background:var(--accent-band);transform:rotate(45deg);
 }
 
 /* ==========================================================================
@@ -931,7 +934,7 @@ details.ds-faq summary.ds-faq-q:hover{color:var(--accent-text)}
    ========================================================================== */
 .video-sec{background:var(--band);color:var(--band-ink);border-block:1px solid var(--band-line)}
 .video-sec .sec-no{color:color-mix(in srgb,var(--band-ink) 55%,transparent)}
-.video-sec .sec-no::after{background:var(--accent)}
+.video-sec .sec-no::after{background:var(--accent-band)}
 .video-sec .sec-title{color:var(--band-ink)}
 .video-sec .sec-title em{color:#A9BCF0}
 html[data-ds-theme="dark"] .video-sec .sec-title em{color:var(--accent)}
@@ -947,7 +950,7 @@ html[data-ds-theme="dark"] .video-sec .sec-title em{color:var(--accent)}
   font:600 12px/1 var(--mono);letter-spacing:.18em;text-transform:uppercase;
   transition:border-color .2s,color .2s,transform .2s var(--ease);
 }
-.video-solo:hover,.live-link:hover{border-color:var(--accent);transform:translateY(-2px)}
+.video-solo:hover,.live-link:hover{border-color:var(--accent-band);transform:translateY(-2px)}
 .video-solo svg{width:16px;height:16px;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
 .live-dot{width:9px;height:9px;border-radius:50%;background:#E5484D;animation:livePulse 1.8s ease-in-out infinite;flex:none}
 @keyframes livePulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.5;transform:scale(.75)}}
@@ -970,7 +973,7 @@ html[data-ds-theme="dark"] .video-sec .sec-title em{color:var(--accent)}
 .cta-inner{position:relative;display:flex;align-items:flex-end;justify-content:space-between;gap:34px;flex-wrap:wrap;z-index:1}
 .cta-inner>*{min-width:0}
 .cta-band .eyebrow{color:color-mix(in srgb,var(--band-ink) 60%,transparent)}
-.cta-band .eyebrow::after{background:var(--accent)}
+.cta-band .eyebrow::after{background:var(--accent-band)}
 .cta-title{
   font:italic 500 clamp(2.6rem,5.8vw,5.4rem)/1.02 var(--display);letter-spacing:-.015em;
   margin-top:20px;overflow-wrap:anywhere;color:var(--band-ink);
@@ -1062,6 +1065,7 @@ html[data-ds-theme="dark"] .cta-band .cta-title em{color:var(--accent)}
 .foot-word{
   position:relative;display:inline-block;max-width:100%;
   font:500 clamp(2.8rem,7vw,5.5rem)/1.04 var(--display);letter-spacing:-.02em;
+  overflow-wrap:anywhere;
 }
 .foot-word .fw-ghost{
   position:absolute;inset:0;color:transparent;pointer-events:none;

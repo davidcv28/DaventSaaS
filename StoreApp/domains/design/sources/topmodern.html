@@ -60,8 +60,8 @@ html[data-ds-theme="dark"]{color-scheme:dark}
 html[data-ds-style="topmodern"]{color-scheme:light}
 
 *{margin:0;padding:0;box-sizing:border-box}
-html{scroll-behavior:smooth}
-body{background:var(--paper);color:var(--ink);font:400 15px/1.55 var(--sans);-webkit-font-smoothing:antialiased;padding-top:var(--head-h,76px)}
+html{scroll-behavior:smooth;overflow-x:hidden}
+body{background:var(--paper);color:var(--ink);font:400 15px/1.55 var(--sans);-webkit-font-smoothing:antialiased;padding-top:var(--head-h,76px);overflow-x:hidden}
 img{max-width:100%;display:block}
 img[src=""],img:not([src]){display:none}
 a{color:inherit;text-decoration:none}
@@ -511,6 +511,7 @@ html[data-ds-theme="dark"] .f-apply{background:var(--accent);color:var(--on-acce
 .view-sw button[aria-pressed="true"]{background:var(--ink);color:var(--paper)}
 html[data-ds-theme="dark"] .view-sw button[aria-pressed="true"]{background:var(--accent);color:var(--on-accent)}
 select[data-ds-sort]{background:var(--card);border:1px solid var(--line);border-radius:var(--pill);padding:9px 14px;font:600 13px var(--sans);color:var(--ink);cursor:pointer}
+select[data-ds-sort] option{background:var(--card);color:var(--ink)}
 /* vista lista */
 .cat-surface .grid[data-ds-view-mode="list"]{grid-template-columns:1fr;gap:12px}
 .cat-surface .grid[data-ds-view-mode="list"] .ds-product{padding:0}
@@ -621,6 +622,8 @@ html[data-ds-theme="dark"] .ds-rev-send,html[data-ds-theme="dark"] .ds-contact-s
 
 /* ---------- Responsive ---------- */
 @media(max-width:960px){
+  /* Reserva para la píldora .m-tabs: sin ella tapa la última fila del pie. */
+  body{padding-bottom:calc(76px + env(safe-area-inset-bottom))}
   .hero-grid,.about,.contact-2,.pdp-layout,.cat-layout{grid-template-columns:1fr}
   .top-nav,.top-search{display:none}
   .cats-grid,.contact-grid{grid-template-columns:1fr}
@@ -639,7 +642,7 @@ html[data-ds-theme="dark"] .ds-rev-send,html[data-ds-theme="dark"] .ds-contact-s
   .cat-aside.is-open{display:block;transform:none;visibility:visible}
   .cat-aside-close{display:grid}
   .f-done{display:block}
-  .m-tabs{display:flex;position:fixed;left:12px;right:12px;bottom:12px;z-index:50;background:var(--ink);border-radius:var(--pill);padding:8px;gap:4px;box-shadow:0 12px 40px rgba(0,0,0,.25)}
+  .m-tabs{display:flex;position:fixed;left:12px;right:12px;bottom:calc(12px + env(safe-area-inset-bottom));z-index:50;background:var(--ink);border-radius:var(--pill);padding:8px;gap:4px;box-shadow:0 12px 40px rgba(0,0,0,.25)}
   html[data-ds-theme="dark"] .m-tabs{background:var(--card);border:1px solid var(--line)}
   .m-tab{flex:1;display:flex;flex-direction:column;align-items:center;gap:4px;padding:8px 4px;border-radius:var(--pill);color:var(--paper);font:700 10px var(--sans);transition:background .25s,color .25s}
   html[data-ds-theme="dark"] .m-tab{color:var(--ink)}

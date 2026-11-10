@@ -1,0 +1,681 @@
+/* ===========================================================================
+   TOPMODERN — páginas de comercio (ingresar / cuenta).
+   Se carga on-demand desde StorePublicLayout cuando .store-page lleva
+   data-design="topmodern". No edita las hojas scoped de las vistas: las
+   reemplaza con más especificidad (0,3,0 mínimo).
+
+   Composición propia: la auth es una GALERÍA EN DOS PANELES redondeados —
+   el ala de marca es tinta con titular Montserrat en caja alta, coordenadas
+   en mono y una pastilla de acento; el ala del formulario es tarjeta blanca
+   con campos suaves y CTA píldora (negra en claro, ácido en noche). La
+   cuenta es el ÍNDICE DE LA EXPOSICIÓN: barra lateral minimal con tabs en
+   segmento y paneles blancos de aire amplio.
+   =========================================================================== */
+
+/* JetBrains Mono (etiquetas mono) no viaja por ensureStoreFont: misma
+   declaración gstatic que el documento del patrón. */
+@font-face{font-family:"JetBrains Mono";font-style:normal;font-weight:400 700;font-display:swap;
+  src:url(https://fonts.gstatic.com/s/jetbrainsmono/v24/tDbv2o-flEEny0FZhsfKu5WU4zr3E_BX0PnT8RD8yKwBNntkaToggR7BYRbKPxDcwg.woff2) format("woff2")}
+
+[data-design='topmodern'] {
+  --dz-bg: #F2F0F1;
+  --dz-surface: #E9E7E9;
+  --dz-card: #FFFFFF;
+  --dz-ink: #0A0A0A;
+  --dz-ink-2: #3B3B3B;
+  --dz-muted: #6B6B6B;
+  --dz-line: rgba(10, 10, 10, .12);
+  --dz-accent: var(--store-accent, #0A0A0A);
+  --dz-accent-ink: #FFFFFF;
+  --dz-accent-text: var(--dz-ink);
+  --dz-ok: #2F6B4F;
+  --dz-danger: #991B1B;
+  --dz-warning: #8A5A00;
+  --dz-display: var(--st-f-display-family, "Montserrat", Arial, Helvetica, sans-serif);
+  --dz-body: var(--st-f-body-family, "Montserrat", Arial, Helvetica, sans-serif);
+  --dz-mono: var(--st-f-eyebrow-family, "JetBrains Mono", ui-monospace, Menlo, monospace);
+  --dz-band: #0A0A0A;
+  --dz-on-band: #F4F2EE;
+  --dz-radius: 20px;
+  --dz-pill: 999px;
+  --dz-shadow: 0 40px 80px -50px rgba(10, 10, 10, .45);
+}
+
+[data-design='topmodern'][data-theme='dark'] {
+  --dz-bg: #101010;
+  --dz-surface: #171717;
+  --dz-card: #191919;
+  --dz-ink: #F4F2EE;
+  --dz-ink-2: #D4D1CB;
+  --dz-muted: #9C9C9C;
+  --dz-line: #2A2A2A;
+  --dz-accent: var(--store-accent, #C8F031);
+  --dz-accent-ink: #101010;
+  --dz-accent-text: var(--store-accent, #C8F031);
+  --dz-ok: #7FD6A0;
+  --dz-danger: #F08A80;
+  --dz-warning: #E8C36A;
+  --dz-band: #1B1B1B;
+  --dz-on-band: #F4F2EE;
+  --dz-shadow: 0 40px 80px -50px rgba(0, 0, 0, .85);
+}
+
+/* Re-tema de las hojas internas (pedidos, planes, direcciones) al token del
+   diseño, solo dentro de auth/cuenta. */
+[data-design='topmodern'] :is(.ec-auth, .ec-account) {
+  --sp-bg: var(--dz-bg);
+  --sp-card: var(--dz-surface);
+  --sp-card-solid: var(--dz-card);
+  --sp-surface: var(--dz-surface);
+  --sp-ink: var(--dz-ink);
+  --sp-ink-2: var(--dz-ink-2);
+  --sp-muted: var(--dz-muted);
+  --sp-line: var(--dz-line);
+  --sp-soft: color-mix(in srgb, var(--dz-accent) 10%, var(--dz-surface));
+  --sp-accent-text: var(--dz-accent-text);
+  --sp-success: var(--dz-ok);
+  --sp-danger: var(--dz-danger);
+  --sp-warning: var(--dz-warning);
+  --sp-on-band: var(--dz-on-band);
+  --sp-radius: var(--dz-radius);
+  --sp-shadow-sm: 0 1px 2px rgba(10, 10, 10, .06);
+  --sp-shadow-md: var(--dz-shadow);
+  --store-accent: var(--dz-accent);
+}
+
+[data-design='topmodern'][data-theme] :is(.ec-auth, .ec-account) :is(a, button, input, select, textarea):focus-visible {
+  outline: 2px solid var(--dz-accent);
+  outline-offset: 3px;
+}
+[data-design='topmodern'][data-theme] :is(.ec-auth, .ec-account) ::selection {
+  background: var(--store-accent-ink);
+  color: var(--sp-on-band, #fff);
+}
+
+/* ===========================================================================
+   AUTH — galería en dos paneles
+   =========================================================================== */
+[data-design='topmodern'] .ec-auth {
+  padding-inline: clamp(0px, 3vw, 26px);
+}
+[data-design='topmodern'] .ec-auth .ec-auth-shell {
+  width: min(1140px, 100%);
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1.04fr);
+  margin-block: clamp(16px, 3.4vw, 44px) clamp(40px, 6vw, 80px);
+  border: 1px solid var(--dz-line);
+  border-radius: calc(var(--dz-radius) + 6px);
+  background: var(--dz-card);
+  box-shadow: var(--dz-shadow);
+  overflow: hidden;
+}
+
+/* Ala de marca: tinta + Montserrat caja alta + pastilla de acento. */
+[data-design='topmodern'] .ec-auth .ec-auth-brand {
+  isolation: isolate;
+  padding: clamp(28px, 4vw, 52px);
+  color: var(--dz-on-band);
+  background:
+    radial-gradient(90% 70% at 90% -10%, color-mix(in srgb, var(--dz-accent) 26%, transparent), transparent 60%),
+    linear-gradient(155deg, color-mix(in srgb, #fff 4%, transparent), transparent 55%),
+    var(--dz-band);
+}
+[data-design='topmodern'] .ec-auth .ec-auth-brand::before {
+  opacity: .18;
+  mix-blend-mode: luminosity;
+}
+[data-design='topmodern'] .ec-auth .ec-auth-brand::after {
+  background:
+    linear-gradient(color-mix(in srgb, var(--dz-on-band) 5%, transparent) 1px, transparent 1px) 0 0 / 100% 84px,
+    linear-gradient(180deg, transparent 55%, color-mix(in srgb, #000 50%, transparent));
+}
+[data-design='topmodern'] .ec-auth .ec-auth-brand-inner {
+  display: grid;
+  grid-template-rows: auto 1fr auto;
+  gap: clamp(22px, 3.2vw, 38px);
+}
+[data-design='topmodern'] .ec-auth .ec-auth-brand-top {
+  gap: 14px;
+  padding-bottom: 20px;
+  border-bottom: 1px solid color-mix(in srgb, var(--dz-on-band) 16%, transparent);
+}
+[data-design='topmodern'] .ec-auth .ec-auth-logo {
+  width: 48px; height: 48px;
+  border-radius: var(--dz-pill);
+  background: var(--store-accent-ink);
+  border: 1px solid color-mix(in srgb, var(--dz-on-band) 30%, transparent);
+  color: var(--sp-on-band, #fff);
+  font-family: var(--dz-display); font-size: 20px; font-weight: 800; letter-spacing: -.02em;
+}
+[data-design='topmodern'] .ec-auth .ec-auth-brand-name {
+  font-family: var(--dz-body); font-size: 11px; font-weight: 700;
+  letter-spacing: .24em; text-transform: uppercase; color: var(--dz-on-band);
+}
+[data-design='topmodern'] .ec-auth .ec-auth-brand-copy { display: grid; gap: 14px; max-width: 44ch; }
+[data-design='topmodern'] .ec-auth .ec-auth-rail {
+  display: inline-flex; align-items: center; gap: 12px;
+  font: 500 9px/1 var(--dz-mono); letter-spacing: .3em; text-transform: uppercase;
+  color: color-mix(in srgb, var(--dz-accent) 55%, var(--dz-on-band));
+}
+[data-design='topmodern'] .ec-auth .ec-auth-rail::after {
+  content: ""; width: 56px; height: 1px;
+  background: color-mix(in srgb, var(--dz-on-band) 30%, transparent);
+}
+[data-design='topmodern'] .ec-auth .ec-auth-brand-kicker {
+  font: 500 9px/1 var(--dz-mono); letter-spacing: .3em; text-transform: uppercase;
+  color: color-mix(in srgb, var(--dz-on-band) 62%, transparent);
+}
+[data-design='topmodern'] .ec-auth .ec-auth-brand-title {
+  font-family: var(--dz-display); font-weight: 800;
+  font-size: clamp(30px, 3.7vw, 48px); line-height: 1.04; letter-spacing: -.025em;
+  text-transform: uppercase;
+  color: var(--dz-on-band);
+}
+[data-design='topmodern'] .ec-auth .ec-auth-brand-text {
+  font-family: var(--dz-body); font-size: 13.5px; font-weight: 500; line-height: 1.7;
+  color: color-mix(in srgb, var(--dz-on-band) 76%, transparent);
+}
+/* Ventajas: chips píldora con viñeta de acento. */
+[data-design='topmodern'] .ec-auth .ec-auth-perks {
+  counter-reset: dzperk; gap: 10px; margin-top: 8px;
+}
+[data-design='topmodern'] .ec-auth .ec-auth-perks li {
+  counter-increment: dzperk;
+  display: flex; align-items: center; gap: 12px;
+  padding: 11px 16px;
+  border: 1px solid color-mix(in srgb, var(--dz-on-band) 16%, transparent);
+  border-radius: var(--dz-pill);
+  font-family: var(--dz-body); font-size: 12.5px; font-weight: 500;
+  color: color-mix(in srgb, var(--dz-on-band) 90%, transparent);
+  background: color-mix(in srgb, var(--dz-on-band) 4%, transparent);
+}
+[data-design='topmodern'] .ec-auth .ec-auth-perks li::before {
+  content: counter(dzperk, decimal-leading-zero);
+  flex: none;
+  font: 600 9px/1 var(--dz-mono); letter-spacing: .16em;
+  color: var(--dz-accent);
+}
+[data-design='topmodern'] .ec-auth .ec-auth-perks li > span { flex: 1 1 auto; min-width: 0; }
+[data-design='topmodern'] .ec-auth .ec-auth-perks svg {
+  flex: none; color: var(--dz-accent);
+}
+[data-design='topmodern'] .ec-auth .ec-auth-brand-foot {
+  font: 500 8.5px/1.6 var(--dz-mono); letter-spacing: .26em; text-transform: uppercase;
+  color: color-mix(in srgb, var(--dz-on-band) 56%, transparent);
+}
+
+/* Ala del formulario: tarjeta aireada, campos suaves, CTA píldora. */
+[data-design='topmodern'] .ec-auth .ec-auth-panel {
+  position: relative;
+  padding: clamp(28px, 4vw, 52px) clamp(24px, 4vw, 52px) clamp(32px, 4.4vw, 54px);
+  background: var(--dz-card);
+  color: var(--dz-ink);
+}
+[data-design='topmodern'] .ec-auth .ec-auth-back {
+  gap: 9px; margin-bottom: clamp(22px, 3.4vw, 34px);
+  font: 600 9px/1 var(--dz-mono); letter-spacing: .26em; text-transform: uppercase;
+  color: var(--dz-muted);
+  transition: color .25s;
+}
+[data-design='topmodern'] .ec-auth .ec-auth-back:hover { color: var(--dz-accent-text); }
+[data-design='topmodern'] .ec-auth .ec-auth-head {
+  gap: 12px; margin-bottom: 28px; padding-bottom: 24px;
+  border-bottom: 1px solid var(--dz-line);
+}
+[data-design='topmodern'] .ec-auth .ec-auth-badge {
+  width: 48px; height: 48px; margin-bottom: 4px;
+  border: 1px solid var(--dz-line); border-radius: var(--dz-pill);
+  background: transparent; color: var(--dz-accent-text);
+}
+[data-design='topmodern'] .ec-auth .ec-auth-tag {
+  display: inline-flex; align-items: center; gap: 9px;
+  font: 600 9px/1 var(--dz-mono); letter-spacing: .28em; text-transform: uppercase;
+  color: var(--dz-accent-text);
+}
+[data-design='topmodern'] .ec-auth .ec-auth-tag::before {
+  content: ""; width: 7px; height: 7px; flex: none;
+  background: var(--dz-accent); border-radius: 50%;
+}
+[data-design='topmodern'] .ec-auth .ec-auth-title {
+  font-family: var(--dz-display); font-weight: 800;
+  font-size: clamp(26px, 3vw, 38px); line-height: 1.06; letter-spacing: -.025em;
+  color: var(--dz-ink);
+}
+[data-design='topmodern'] .ec-auth .ec-auth-sub {
+  font-family: var(--dz-body); font-size: 13.5px; font-weight: 500; line-height: 1.7;
+  color: var(--dz-muted);
+}
+[data-design='topmodern'] .ec-auth .ec-auth-loading { color: var(--dz-muted); font-family: var(--dz-body); }
+[data-design='topmodern'] .ec-auth .ec-auth-spin { color: var(--dz-accent-text); }
+
+/* ---------- Controles (compartidos auth + cuenta) ---------- */
+[data-design='topmodern'][data-theme] :is(.ec-auth, .ec-account) .sp-field { gap: 9px; }
+[data-design='topmodern'][data-theme] :is(.ec-auth, .ec-account) .sp-field-label {
+  font: 600 9px/1 var(--dz-mono); letter-spacing: .26em; text-transform: uppercase;
+  color: var(--dz-muted);
+}
+[data-design='topmodern'][data-theme] :is(.ec-auth, .ec-account) .sp-input {
+  min-height: 50px;
+  padding: 13px 18px;
+  border: 1px solid var(--dz-line);
+  border-radius: 14px;
+  background: var(--dz-bg);
+  color: var(--dz-ink);
+  font-family: var(--dz-body); font-size: 15.5px; font-weight: 500;
+  box-shadow: none;
+  transition: border-color .2s, box-shadow .2s, background .2s;
+}
+[data-design='topmodern'][data-theme] :is(.ec-auth, .ec-account) .sp-input:hover {
+  border-color: color-mix(in srgb, var(--dz-ink) 30%, var(--dz-line));
+}
+[data-design='topmodern'][data-theme] :is(.ec-auth, .ec-account) .sp-input:focus {
+  border-color: var(--dz-accent);
+  background: var(--dz-card);
+  box-shadow: 0 0 0 4px color-mix(in srgb, var(--dz-accent) 16%, transparent);
+}
+[data-design='topmodern'][data-theme] :is(.ec-auth, .ec-account) .sp-input::placeholder {
+  color: var(--dz-muted); opacity: 1;
+}
+[data-design='topmodern'][data-theme] :is(.ec-auth, .ec-account) .sp-input:disabled {
+  background: color-mix(in srgb, var(--dz-line) 26%, var(--dz-bg));
+  color: var(--dz-ink-2);
+  cursor: not-allowed;
+}
+[data-design='topmodern'][data-theme] :is(.ec-auth, .ec-account) .sp-form-error {
+  color: var(--dz-danger); font-family: var(--dz-body); font-size: 12.5px; font-weight: 500;
+}
+[data-design='topmodern'][data-theme] :is(.ec-auth, .ec-account) .sp-input:-webkit-autofill {
+  -webkit-text-fill-color: var(--dz-ink);
+  box-shadow: inset 0 0 0 40px var(--dz-bg);
+}
+
+/* CTA píldora: tinta en claro, ácido en noche. */
+[data-design='topmodern'][data-theme] :is(.ec-auth, .ec-account) :is(.ecaf-submit, .ec-btn-primary) {
+  min-height: 52px;
+  border: 1px solid transparent;
+  border-radius: var(--dz-pill);
+  background: var(--store-accent-ink);
+  color: var(--sp-on-band, #fff);
+  font: 700 11px/1 var(--dz-body); letter-spacing: .14em; text-transform: uppercase;
+  box-shadow: 0 16px 34px -22px color-mix(in srgb, var(--dz-accent) 80%, transparent);
+  transition: transform .3s cubic-bezier(.22, 1, .36, 1), box-shadow .3s, background .3s, filter .3s;
+}
+[data-design='topmodern'][data-theme] :is(.ec-auth, .ec-account) :is(.ecaf-submit, .ec-btn-primary):hover:not(:disabled) {
+  transform: translateY(-2px);
+  filter: brightness(1.05);
+  box-shadow: 0 24px 44px -26px color-mix(in srgb, var(--dz-accent) 85%, transparent);
+}
+[data-design='topmodern'][data-theme] :is(.ec-auth, .ec-account) :is(.ecaf-submit, .ec-btn-primary):active:not(:disabled) {
+  transform: translateY(0) scale(.99);
+}
+[data-design='topmodern'][data-theme] :is(.ec-auth, .ec-account) :is(.ecaf-submit, .ec-btn-primary):disabled {
+  background: var(--dz-line); color: var(--dz-ink-2); opacity: 1; cursor: not-allowed;
+  box-shadow: none;
+}
+[data-design='topmodern'][data-theme] :is(.ec-auth, .ec-account) .ec-btn-ghost {
+  min-height: 48px;
+  border: 1px solid var(--dz-line);
+  border-radius: var(--dz-pill);
+  background: transparent; color: var(--dz-ink);
+  font: 600 10.5px/1 var(--dz-body); letter-spacing: .14em; text-transform: uppercase;
+  transition: background .25s, color .25s, border-color .25s;
+}
+[data-design='topmodern'][data-theme] :is(.ec-auth, .ec-account) .ec-btn-ghost:hover {
+  border-color: var(--dz-ink); background: var(--dz-ink); color: var(--dz-bg);
+}
+
+/* Formulario compartido (StoreAuthForm). */
+[data-design='topmodern'] .ec-auth .ecaf { gap: 15px; }
+[data-design='topmodern'] .ec-auth .ecaf-form { gap: 14px; }
+[data-design='topmodern'] .ec-auth .ecaf-pass-toggle { color: var(--dz-muted); border-radius: 50%; }
+[data-design='topmodern'] .ec-auth .ecaf-pass-toggle:hover {
+  color: var(--dz-accent-text); background: color-mix(in srgb, var(--dz-accent) 10%, transparent);
+}
+[data-design='topmodern'] .ec-auth .ecaf-divider {
+  font: 600 9px/1 var(--dz-mono); letter-spacing: .28em; text-transform: uppercase;
+  color: var(--dz-muted);
+}
+[data-design='topmodern'] .ec-auth .ecaf-divider::before,
+[data-design='topmodern'] .ec-auth .ecaf-divider::after { background: var(--dz-line); opacity: 1; }
+[data-design='topmodern'] .ec-auth .ecaf-link {
+  color: var(--dz-accent-text); font-family: var(--dz-body); font-weight: 600;
+  text-underline-offset: 4px;
+}
+[data-design='topmodern'] .ec-auth .ecaf-link:hover { color: var(--dz-ink); }
+[data-design='topmodern'] .ec-auth .ecaf-notice {
+  border-radius: var(--dz-radius);
+  background: color-mix(in srgb, var(--dz-ok) 10%, var(--dz-card));
+  border: 1px solid color-mix(in srgb, var(--dz-ok) 34%, transparent);
+  color: var(--dz-ink);
+}
+[data-design='topmodern'] .ec-auth .ecaf-error {
+  border-radius: var(--dz-radius);
+  background: color-mix(in srgb, var(--dz-danger) 8%, var(--dz-card));
+  border: 1px solid color-mix(in srgb, var(--dz-danger) 34%, transparent);
+  color: var(--dz-ink);
+}
+[data-design='topmodern'] .ec-auth .ecaf-google-btn { min-height: 50px; }
+
+/* ===========================================================================
+   CUENTA — índice de la exposición
+   =========================================================================== */
+[data-design='topmodern'][data-theme] .ec-account {
+  width: min(1240px, 100%);
+  margin-inline: auto;
+  padding: clamp(16px, 3vw, 34px) clamp(14px, 4vw, 40px) clamp(44px, 6vw, 76px);
+  gap: 0;
+}
+[data-design='topmodern'][data-theme] .ec-account .acc-shell {
+  grid-template-columns: minmax(0, 1fr);
+  gap: 18px;
+}
+[data-design='topmodern'][data-theme] .ec-account .acc-side { display: none; }
+[data-design='topmodern'][data-theme] .ec-account .acc-main { gap: 16px; }
+
+[data-design='topmodern'][data-theme] .ec-account .acc-tele {
+  display: block;
+  font: 600 8.5px/1 var(--dz-mono); letter-spacing: .28em; text-transform: uppercase;
+  color: var(--dz-muted);
+}
+[data-design='topmodern'][data-theme] .ec-account .acc-idx {
+  font: 600 9px/1 var(--dz-mono); letter-spacing: .16em; color: var(--dz-muted);
+}
+[data-design='topmodern'][data-theme] .ec-account .acc-avatar {
+  border-radius: var(--dz-pill);
+  background: var(--dz-ink); color: var(--dz-bg);
+  font-family: var(--dz-display); font-weight: 800; font-size: 18px; letter-spacing: -.02em;
+}
+[data-design='topmodern'][data-theme] .ec-account .acc-avatar--sm { width: 44px; height: 44px; font-size: 15px; }
+
+/* Header compacto: fila aireada con píldora de cierre. */
+[data-design='topmodern'][data-theme] .ec-account .acc-mhead {
+  display: grid;
+  grid-template-columns: 44px minmax(0, 1fr) 44px;
+  align-items: center; gap: 12px;
+  padding: 0 0 16px;
+  border-bottom: 1px solid var(--dz-line);
+}
+[data-design='topmodern'][data-theme] .ec-account .acc-mhead .acc-tele { grid-column: 1 / -1; }
+[data-design='topmodern'][data-theme] .ec-account .acc-mhead-meta strong {
+  font-family: var(--dz-display); font-weight: 800; font-size: 19px; letter-spacing: -.02em;
+  color: var(--dz-ink);
+}
+[data-design='topmodern'][data-theme] .ec-account .acc-mhead-meta small {
+  font-family: var(--dz-mono); font-size: 10.5px; letter-spacing: .06em; color: var(--dz-muted);
+}
+[data-design='topmodern'][data-theme] .ec-account .acc-icon-btn {
+  width: 44px; height: 44px;
+  border: 1px solid var(--dz-line); border-radius: var(--dz-pill);
+  background: transparent; color: var(--dz-ink-2);
+  transition: border-color .25s, color .25s, background .25s;
+}
+[data-design='topmodern'][data-theme] .ec-account .acc-icon-btn:hover {
+  border-color: var(--dz-accent); color: var(--dz-accent-text);
+  background: color-mix(in srgb, var(--dz-accent) 8%, transparent);
+}
+
+/* Tabs: segmento píldora con fondo suave. */
+[data-design='topmodern'][data-theme] .ec-account .acc-tabs {
+  gap: 0; padding: 4px;
+  border: 1px solid var(--dz-line);
+  border-radius: var(--dz-pill);
+  background: var(--dz-surface);
+  scrollbar-width: none;
+  -webkit-overflow-scrolling: touch;
+}
+[data-design='topmodern'][data-theme] .ec-account .acc-tab {
+  min-height: 42px;
+  padding: 9px 16px;
+  border: 0; border-radius: var(--dz-pill);
+  background: transparent; color: var(--dz-muted);
+  font: 600 10px/1 var(--dz-body); letter-spacing: .1em; text-transform: uppercase;
+  gap: 8px;
+  white-space: nowrap;
+  transition: background .25s, color .25s, box-shadow .25s;
+}
+[data-design='topmodern'][data-theme] .ec-account .acc-tab:hover {
+  color: var(--dz-ink);
+}
+[data-design='topmodern'][data-theme] .ec-account .acc-tab.is-on {
+  background: var(--dz-card);
+  color: var(--dz-ink);
+  box-shadow: 0 2px 10px -4px rgba(10, 10, 10, .25);
+}
+[data-design='topmodern'][data-theme] .ec-account .acc-tab.is-on .acc-idx { color: var(--dz-accent-text); }
+
+/* Paneles: tarjetas blancas de aire amplio. */
+[data-design='topmodern'][data-theme] .ec-account .acc-panel,
+[data-design='topmodern'][data-theme] .ec-account .acc-auth-card,
+[data-design='topmodern'][data-theme] .ec-account .acc-gate-card,
+[data-design='topmodern'][data-theme] .ec-account .acc-skelpanel {
+  padding: clamp(20px, 2.8vw, 32px);
+  border: 1px solid var(--dz-line);
+  border-radius: calc(var(--dz-radius) + 4px);
+  background: var(--dz-card);
+  box-shadow: 0 24px 56px -44px rgba(10, 10, 10, .4);
+  gap: 18px;
+  color: var(--dz-ink);
+}
+[data-design='topmodern'][data-theme] .ec-account .acc-panel-head {
+  padding-bottom: 16px;
+  border-bottom: 1px solid var(--dz-line);
+}
+[data-design='topmodern'][data-theme] .ec-account .acc-panel-title {
+  font-family: var(--dz-display); font-weight: 800;
+  font-size: clamp(22px, 2.4vw, 30px); letter-spacing: -.025em;
+  color: var(--dz-ink);
+}
+[data-design='topmodern'][data-theme] .ec-account .acc-panel-sub {
+  font-family: var(--dz-body); font-size: 13px; font-weight: 500; line-height: 1.65;
+  color: var(--dz-muted);
+}
+
+/* Gate / sub-vistas de mail. */
+[data-design='topmodern'][data-theme] .ec-account :is(.acc-gate-ico, .acc-auth-ico) {
+  border-radius: var(--dz-pill);
+  background: color-mix(in srgb, var(--dz-accent) 10%, var(--dz-card));
+  border: 1px solid color-mix(in srgb, var(--dz-accent) 28%, transparent);
+  color: var(--dz-accent-text);
+}
+[data-design='topmodern'][data-theme] .ec-account :is(.acc-gate-title, .acc-auth-title) {
+  font-family: var(--dz-display); font-weight: 800; letter-spacing: -.025em;
+  color: var(--dz-ink);
+}
+[data-design='topmodern'][data-theme] .ec-account :is(.acc-gate-sub, .acc-auth-msg) {
+  font-family: var(--dz-body); font-weight: 500; color: var(--dz-muted);
+}
+[data-design='topmodern'][data-theme] .ec-account .acc-gate-list {
+  border: 1px solid var(--dz-line); border-radius: var(--dz-radius);
+  background: var(--dz-bg); color: var(--dz-ink-2);
+}
+[data-design='topmodern'][data-theme] .ec-account .acc-gate-list li { font-family: var(--dz-body); font-weight: 500; color: var(--dz-ink-2); }
+[data-design='topmodern'][data-theme] .ec-account .acc-gate-list svg { color: var(--dz-accent-text); }
+[data-design='topmodern'][data-theme] .ec-account .acc-gate-link,
+[data-design='topmodern'][data-theme] .ec-account .acc-auth-link {
+  font: 600 9.5px/1 var(--dz-body); letter-spacing: .16em; text-transform: uppercase;
+  color: var(--dz-accent-text);
+  text-decoration: underline; text-underline-offset: 4px;
+}
+[data-design='topmodern'][data-theme] .ec-account .acc-auth-ok {
+  color: var(--dz-ok); font-family: var(--dz-body); font-weight: 700;
+}
+[data-design='topmodern'][data-theme] .ec-account .acc-spin {
+  border-color: color-mix(in srgb, var(--dz-muted) 34%, transparent);
+  border-top-color: var(--dz-accent);
+}
+[data-design='topmodern'][data-theme] .ec-account .acc-sk {
+  background: color-mix(in srgb, var(--dz-muted) 15%, transparent);
+  border-radius: 10px;
+}
+[data-design='topmodern'][data-theme] .ec-account .acc-status {
+  border-radius: var(--dz-pill);
+  font-family: var(--dz-mono); font-size: 9.5px; letter-spacing: .1em; text-transform: uppercase;
+}
+[data-design='topmodern'][data-theme] .ec-account .acc-chip {
+  border-radius: var(--dz-pill);
+  font-family: var(--dz-mono); font-size: 9.5px; letter-spacing: .1em; text-transform: uppercase;
+}
+[data-design='topmodern'][data-theme] .ec-account :is(.acc-order, .acc-plan, .acc-addr, .acc-member, .acc-fieldset) {
+  border-radius: var(--dz-radius);
+}
+
+/* ---------- Escritorio: índice lateral ---------- */
+@media (min-width: 1024px) {
+  [data-design='topmodern'][data-theme] .ec-account :is(.acc-mhead, .acc-tabs) { display: none; }
+  [data-design='topmodern'][data-theme] .ec-account .acc-shell {
+    grid-template-columns: 300px minmax(0, 1fr);
+    gap: 38px;
+    align-items: start;
+  }
+  [data-design='topmodern'][data-theme] .ec-account .acc-side {
+    display: grid;
+    gap: 0;
+    align-content: start;
+    position: sticky;
+    top: calc(var(--sp-top-h, 64px) + 18px);
+    padding: 26px 26px 24px 0;
+    border: 0;
+    border-right: 1px solid var(--dz-line);
+    border-radius: 0;
+    background: transparent;
+    box-shadow: none;
+  }
+  [data-design='topmodern'][data-theme] .ec-account .acc-id {
+    display: grid;
+    grid-template-columns: 54px minmax(0, 1fr);
+    align-items: center;
+    gap: 13px;
+    padding: 0 0 20px;
+    border-bottom: 1px solid var(--dz-line);
+  }
+  [data-design='topmodern'][data-theme] .ec-account .acc-id .acc-tele { grid-column: 1 / -1; }
+  [data-design='topmodern'][data-theme] .ec-account .acc-id-name {
+    font-family: var(--dz-display); font-weight: 800; font-size: 20px;
+    letter-spacing: -.02em; color: var(--dz-ink);
+  }
+  [data-design='topmodern'][data-theme] .ec-account .acc-id-email {
+    font-family: var(--dz-mono); font-size: 10.5px; letter-spacing: .06em; color: var(--dz-muted);
+  }
+  [data-design='topmodern'][data-theme] .ec-account .acc-nav { gap: 0; margin-top: 8px; }
+  [data-design='topmodern'][data-theme] .ec-account .acc-navitem {
+    gap: 12px;
+    padding: 13px 10px 13px 0;
+    border-radius: 0;
+    border-bottom: 1px solid var(--dz-line);
+    background: transparent;
+    color: var(--dz-ink-2);
+    font-family: var(--dz-body); font-size: 13px; font-weight: 600;
+    transition: color .25s, padding-left .25s;
+  }
+  [data-design='topmodern'][data-theme] .ec-account .acc-navitem svg { color: var(--dz-muted); transition: color .25s; }
+  [data-design='topmodern'][data-theme] .ec-account .acc-navitem .acc-idx { margin-left: auto; }
+  [data-design='topmodern'][data-theme] .ec-account .acc-navitem:hover {
+    background: transparent; color: var(--dz-accent-text); padding-left: 6px;
+  }
+  [data-design='topmodern'][data-theme] .ec-account .acc-navitem:hover svg { color: var(--dz-accent-text); }
+  [data-design='topmodern'][data-theme] .ec-account .acc-navitem.is-on {
+    background: transparent; color: var(--dz-ink); font-weight: 700;
+    box-shadow: inset 3px 0 0 var(--dz-accent);
+  }
+  [data-design='topmodern'][data-theme] .ec-account .acc-navitem.is-on svg { color: var(--dz-accent-text); }
+  [data-design='topmodern'][data-theme] .ec-account .acc-navitem.is-on .acc-idx { color: var(--dz-accent-text); }
+  [data-design='topmodern'][data-theme] .ec-account .acc-logout {
+    margin-top: 22px;
+    min-height: 46px;
+    border: 1px solid var(--dz-line);
+    border-radius: var(--dz-pill);
+    background: transparent;
+    color: var(--dz-ink-2);
+    font: 600 10px/1 var(--dz-body); letter-spacing: .14em; text-transform: uppercase;
+    transition: color .25s, border-color .25s, background .25s;
+  }
+  [data-design='topmodern'][data-theme] .ec-account .acc-logout:hover {
+    color: var(--dz-danger);
+    border-color: color-mix(in srgb, var(--dz-danger) 48%, transparent);
+    background: color-mix(in srgb, var(--dz-danger) 6%, transparent);
+  }
+}
+
+/* ---------- Responsive ---------- */
+@media (max-width: 1024px) {
+  [data-design='topmodern'] .ec-auth .ec-auth-shell {
+    grid-template-columns: minmax(0, 1fr);
+    margin-block: 12px clamp(28px, 5vw, 48px);
+  }
+  [data-design='topmodern'] .ec-auth .ec-auth-brand { padding: 26px 22px 22px; }
+  [data-design='topmodern'] .ec-auth .ec-auth-brand-inner {
+    grid-template-rows: auto auto;
+    gap: 16px;
+  }
+  [data-design='topmodern'] .ec-auth .ec-auth-brand-copy { gap: 8px; max-width: none; }
+  [data-design='topmodern'] .ec-auth .ec-auth-brand-text,
+  [data-design='topmodern'] .ec-auth .ec-auth-perks,
+  [data-design='topmodern'] .ec-auth .ec-auth-brand-foot { display: none; }
+  [data-design='topmodern'] .ec-auth .ec-auth-brand-title { font-size: clamp(24px, 5.4vw, 32px); }
+  [data-design='topmodern'] .ec-auth .ec-auth-panel {
+    padding: 26px 22px 32px;
+  }
+}
+@media (max-width: 860px) {
+  [data-design='topmodern'][data-theme] .ec-account .acc-mhead-meta strong { font-size: 17px; }
+  [data-design='topmodern'][data-theme] .ec-account .acc-panel-title { font-size: 22px; }
+}
+@media (max-width: 640px) {
+  [data-design='topmodern'] .ec-auth { padding-inline: 12px; }
+  [data-design='topmodern'] .ec-auth .ec-auth-brand { padding: 22px 18px 20px; }
+  [data-design='topmodern'] .ec-auth .ec-auth-brand-top { padding-bottom: 16px; }
+  [data-design='topmodern'] .ec-auth .ec-auth-logo { width: 42px; height: 42px; font-size: 17px; }
+  [data-design='topmodern'] .ec-auth .ec-auth-brand-name { font-size: 10px; letter-spacing: .18em; }
+  [data-design='topmodern'] .ec-auth .ec-auth-brand-title { font-size: 25px; }
+  [data-design='topmodern'] .ec-auth .ec-auth-panel { padding: 22px 18px 30px; }
+  [data-design='topmodern'] .ec-auth .ec-auth-head { margin-bottom: 22px; padding-bottom: 18px; }
+  [data-design='topmodern'] .ec-auth .ec-auth-title { font-size: 24px; }
+  [data-design='topmodern'] .ec-auth .ecaf-grid { grid-template-columns: minmax(0, 1fr); }
+  [data-design='topmodern'] .ec-auth :is(.ecaf-submit, .ec-btn-primary) { width: 100%; }
+  [data-design='topmodern'][data-theme] .ec-account { padding-inline: 14px; }
+  [data-design='topmodern'][data-theme] .ec-account .acc-tabs { padding: 3px; }
+  [data-design='topmodern'][data-theme] .ec-account .acc-tab { padding: 9px 13px; letter-spacing: .06em; }
+  [data-design='topmodern'][data-theme] .ec-account .acc-panel,
+  [data-design='topmodern'][data-theme] .ec-account .acc-auth-card,
+  [data-design='topmodern'][data-theme] .ec-account .acc-gate-card { padding: 18px 16px; }
+}
+@media (max-width: 390px) {
+  [data-design='topmodern'] .ec-auth { padding-inline: 8px; }
+  [data-design='topmodern'] .ec-auth .ec-auth-brand-title { font-size: 22px; }
+  [data-design='topmodern'] .ec-auth .ec-auth-title { font-size: 21px; }
+  [data-design='topmodern'][data-theme] .ec-account { padding-inline: 10px; }
+  [data-design='topmodern'][data-theme] .ec-account .acc-mhead { grid-template-columns: 40px minmax(0, 1fr) 40px; gap: 10px; }
+  [data-design='topmodern'][data-theme] .ec-account .acc-mhead-meta strong { font-size: 16px; }
+  [data-design='topmodern'][data-theme] .ec-account .acc-panel-title { font-size: 20px; }
+}
+/* Tab bar inferior de la tienda (mobile.nav = bottom): el último panel
+   respira sobre la barra fija. */
+@media (max-width: 768px) {
+  [data-design='topmodern'][data-theme] .ec-account,
+  [data-design='topmodern'] .ec-auth {
+    padding-bottom: calc(24px + env(safe-area-inset-bottom));
+  }
+  [data-design='topmodern'][data-theme] .ec-account .acc-tabs {
+    padding-bottom: 3px;
+  }
+}
+/* ---------- Estados internos: mensajes, notas, vacíos, checks ---------- */
+[data-design='topmodern'] .ec-account :is(.acc-inline-error, .acc-msg.is-err) { color: var(--dz-danger); }
+[data-design='topmodern'] .ec-account .acc-msg.is-ok { color: var(--dz-ok); }
+[data-design='topmodern'] .ec-account .acc-note { background: var(--dz-card); }
+[data-design='topmodern'] .ec-account .acc-note--danger {
+  border-color: color-mix(in srgb, var(--dz-danger) 34%, transparent);
+  background: color-mix(in srgb, var(--dz-danger) 8%, transparent);
+  color: var(--dz-danger);
+}
+[data-design='topmodern'] .ec-account .acc-empty-ico {
+  border-radius: var(--dz-radius);
+  background: color-mix(in srgb, var(--dz-accent) 12%, var(--dz-card));
+  color: var(--dz-accent-text);
+}
+[data-design='topmodern'] .ec-account .acc-check input { accent-color: var(--dz-accent); }
+@media (prefers-reduced-motion: reduce) {
+  [data-design='topmodern'] :is(.ec-auth, .ec-account) * {
+    transition-duration: .001ms !important;
+    animation-duration: .001ms !important;
+  }
+}

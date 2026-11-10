@@ -427,7 +427,7 @@
   height: 4px;
   background: repeating-linear-gradient(-45deg, var(--gy-lime) 0 10px, transparent 10px 20px);
 }
-.store-page[data-template='gimnasio'] .sp-foot-brand strong {
+.store-page[data-template='gimnasio'] .sp-foot .sp-foot-brand strong {
   font-family: var(--gy-display);
   font-size: clamp(38px, 5vw, 64px);
   font-weight: 800;

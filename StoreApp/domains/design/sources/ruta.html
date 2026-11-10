@@ -991,7 +991,10 @@
     box-shadow:0 18px 30px -16px color-mix(in srgb,var(--accent) 80%,transparent);
   }
   .prod-grid .ds-product .dsx-buy:active{transform:translateY(0)}
-  .prod-grid .ds-product .dsx-buy.is-added{background:var(--success);color:var(--paper)}
+  /* "Agregado" mezcla el success hacia la tinta del tema: en claro el
+     verde puro con --paper quedaba a ~4:1 sobre texto de 12.5px; la
+     mezcla hacia --ink lo sube a ~5:1 y en noche aclara (papel oscuro). */
+  .prod-grid .ds-product .dsx-buy.is-added{background:color-mix(in srgb,var(--success) 86%,var(--ink));color:var(--paper)}
   @media (max-width:960px){
     .prod-grid{grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:12px}
     .prod-grid .ds-product-name{font-size:14.5px}

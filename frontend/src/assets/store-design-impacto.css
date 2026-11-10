@@ -1,0 +1,695 @@
+/* ===========================================================================
+   IMPACTO — páginas de comercio (ingresar / cuenta).
+   Se carga on-demand desde StorePublicLayout cuando .store-page lleva
+   data-design="impacto". No edita las hojas scoped de las vistas: las
+   reemplaza con más especificidad (0,3,0 mínimo).
+
+   Composición propia: la auth es una PÁGINA DE REVISTA — el ala de marca es
+   tinta con titular Anton en caja alta, regla de señal y manifiesto
+   numerado; el ala del formulario es papel con filetes de 2px, campos
+   cuadrados y el CTA como bloque de tinta que se enciende en señal. La
+   cuenta es el ÍNDICE DEL NÚMERO: barra lateral de sumario con numerales
+   Anton, tabs como índice subrayado y paneles planos con borde duro.
+   =========================================================================== */
+
+[data-design='impacto'] {
+  --dz-bg: #EDEBE4;
+  --dz-surface: #F4F2EC;
+  --dz-card: #FAF9F4;
+  --dz-ink: #111111;
+  --dz-ink-2: #2B2A26;
+  --dz-muted: #5C5A52;
+  --dz-line: #C9C5B8;
+  --dz-line-strong: #141412;
+  --dz-accent: var(--store-accent, #FF4B1F);
+  /* Texto sobre el acento: la señal #FF4B1F no llega a 4.5:1 con blanco,
+     así que el par se elige por tema (tinta en claro, tinta en noche). */
+  --dz-accent-ink: #141412;
+  /* Acento como TEXTO sobre papel: se mezcla hacia la tinta para AA. */
+  --dz-accent-text: color-mix(in srgb, var(--store-accent, #FF4B1F) 58%, var(--dz-ink));
+  --dz-ok: #1E6B3C;
+  --dz-danger: #B3261E;
+  --dz-warning: #8A5A00;
+  --dz-display: var(--st-f-display-family, "Anton", "Arial Narrow", Impact, sans-serif);
+  --dz-body: var(--st-f-body-family, "Space Grotesk", "Segoe UI", system-ui, sans-serif);
+  --dz-mono: var(--st-f-eyebrow-family, "JetBrains Mono", ui-monospace, Menlo, monospace);
+  --dz-band: #141412;
+  --dz-on-band: #F2EFE4;
+  --dz-radius: 2px;
+  --dz-shadow: 7px 7px 0 color-mix(in srgb, var(--dz-ink) 88%, transparent);
+}
+
+[data-design='impacto'][data-theme='dark'] {
+  --dz-bg: #131311;
+  --dz-surface: #1B1B18;
+  --dz-card: #22211D;
+  --dz-ink: #EDEBE4;
+  --dz-ink-2: #D6D3C9;
+  --dz-muted: #9A968A;
+  --dz-line: #35352F;
+  --dz-line-strong: #EDEBE4;
+  --dz-accent: var(--store-accent, #C8F031);
+  --dz-accent-ink: #131311;
+  --dz-accent-text: color-mix(in srgb, var(--store-accent, #C8F031) 62%, var(--dz-ink));
+  --dz-ok: #6FD598;
+  --dz-danger: #F08A80;
+  --dz-warning: #E3B23C;
+  --dz-band: #0D0D0B;
+  --dz-on-band: #EDEBE4;
+  --dz-shadow: 7px 7px 0 color-mix(in srgb, var(--dz-accent) 30%, transparent);
+}
+
+/* Las hojas internas de cuenta (pedidos, planes, direcciones, miembro)
+   consumen --sp-*: se re-teman al token del diseño solo dentro de auth/cuenta
+   para no tocar el resto de la web pública. */
+[data-design='impacto'] :is(.ec-auth, .ec-account) {
+  --sp-bg: var(--dz-bg);
+  --sp-card: var(--dz-surface);
+  --sp-card-solid: var(--dz-card);
+  --sp-surface: var(--dz-surface);
+  --sp-ink: var(--dz-ink);
+  --sp-ink-2: var(--dz-ink-2);
+  --sp-muted: var(--dz-muted);
+  --sp-line: var(--dz-line);
+  --sp-soft: color-mix(in srgb, var(--dz-accent) 9%, var(--dz-surface));
+  --sp-accent-text: var(--dz-accent-text);
+  --sp-success: var(--dz-ok);
+  --sp-danger: var(--dz-danger);
+  --sp-warning: var(--dz-warning);
+  --sp-on-band: var(--dz-on-band);
+  --sp-radius: var(--dz-radius);
+  --sp-shadow-sm: 0 1px 0 color-mix(in srgb, var(--dz-ink) 12%, transparent);
+  --sp-shadow-md: var(--dz-shadow);
+  --store-accent: var(--dz-accent);
+}
+
+[data-design='impacto'][data-theme] :is(.ec-auth, .ec-account) :is(a, button, input, select, textarea):focus-visible {
+  outline: 2px solid var(--dz-accent);
+  outline-offset: 3px;
+}
+[data-design='impacto'][data-theme] :is(.ec-auth, .ec-account) ::selection {
+  background: var(--store-accent-ink);
+  color: var(--sp-on-band, #fff);
+}
+
+/* ===========================================================================
+   AUTH — página de revista en dos columnas
+   =========================================================================== */
+[data-design='impacto'] .ec-auth {
+  padding-inline: clamp(0px, 3vw, 24px);
+}
+[data-design='impacto'] .ec-auth .ec-auth-shell {
+  width: min(1140px, 100%);
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1.05fr);
+  margin-block: clamp(14px, 3vw, 40px) clamp(40px, 6vw, 80px);
+  border: 2px solid var(--dz-line-strong);
+  border-radius: var(--dz-radius);
+  background: var(--dz-card);
+  box-shadow: var(--dz-shadow);
+  overflow: hidden;
+}
+
+/* Ala de marca: tinta + titular Anton + manifiesto numerado. */
+[data-design='impacto'] .ec-auth .ec-auth-brand {
+  isolation: isolate;
+  padding: clamp(24px, 3.4vw, 46px);
+  color: var(--dz-on-band);
+  background:
+    linear-gradient(color-mix(in srgb, var(--dz-on-band) 5%, transparent) 1px, transparent 1px) 0 0 / 100% 88px,
+    var(--dz-band);
+}
+[data-design='impacto'] .ec-auth .ec-auth-brand::before {
+  opacity: .16;
+  mix-blend-mode: luminosity;
+}
+[data-design='impacto'] .ec-auth .ec-auth-brand::after {
+  background:
+    radial-gradient(90% 60% at 100% 0%, color-mix(in srgb, var(--dz-accent) 30%, transparent), transparent 62%),
+    linear-gradient(180deg, transparent 0%, color-mix(in srgb, #000 55%, transparent) 100%);
+}
+[data-design='impacto'] .ec-auth .ec-auth-brand-inner {
+  display: grid;
+  grid-template-rows: auto 1fr auto;
+  gap: clamp(20px, 3vw, 34px);
+}
+[data-design='impacto'] .ec-auth .ec-auth-brand-top {
+  gap: 13px;
+  padding-bottom: 16px;
+  border-bottom: 2px solid color-mix(in srgb, var(--dz-on-band) 22%, transparent);
+}
+[data-design='impacto'] .ec-auth .ec-auth-logo {
+  width: 46px; height: 46px;
+  border-radius: var(--dz-radius);
+  background: var(--store-accent-ink);
+  border: 2px solid var(--dz-on-band);
+  color: var(--sp-on-band, #fff);
+  font-family: var(--dz-display); font-size: 22px; letter-spacing: 0;
+}
+[data-design='impacto'] .ec-auth .ec-auth-brand-name {
+  font-family: var(--dz-mono); font-size: 11px; font-weight: 700;
+  letter-spacing: .22em; text-transform: uppercase; color: var(--dz-on-band);
+}
+[data-design='impacto'] .ec-auth .ec-auth-brand-copy { display: grid; gap: 14px; max-width: 46ch; }
+/* Riel de edición: "Nº ———" en mono señal. */
+[data-design='impacto'] .ec-auth .ec-auth-rail {
+  display: inline-flex; align-items: center; gap: 12px;
+  font: 700 9px/1 var(--dz-mono); letter-spacing: .3em; text-transform: uppercase;
+  color: var(--dz-accent);
+}
+[data-design='impacto'] .ec-auth .ec-auth-rail::after {
+  content: ""; width: 64px; height: 2px; background: var(--dz-accent);
+}
+[data-design='impacto'] .ec-auth .ec-auth-brand-kicker {
+  font: 700 9px/1 var(--dz-mono); letter-spacing: .26em; text-transform: uppercase;
+  color: color-mix(in srgb, var(--dz-on-band) 66%, transparent);
+}
+[data-design='impacto'] .ec-auth .ec-auth-brand-title {
+  font-family: var(--dz-display); font-weight: 400;
+  font-size: clamp(38px, 5vw, 64px); line-height: .98; letter-spacing: .01em;
+  text-transform: uppercase;
+  color: var(--dz-on-band);
+}
+[data-design='impacto'] .ec-auth .ec-auth-brand-text {
+  font-family: var(--dz-body); font-size: 13.5px; line-height: 1.7;
+  color: color-mix(in srgb, var(--dz-on-band) 82%, transparent);
+}
+/* Manifiesto: filas indexadas con filete, marca de señal al costado. */
+[data-design='impacto'] .ec-auth .ec-auth-perks {
+  counter-reset: dzperk; gap: 0; margin-top: 8px;
+}
+[data-design='impacto'] .ec-auth .ec-auth-perks li {
+  counter-increment: dzperk;
+  display: flex; align-items: center; gap: 12px;
+  padding: 11px 0;
+  border-bottom: 1px solid color-mix(in srgb, var(--dz-on-band) 16%, transparent);
+  font-family: var(--dz-body); font-size: 12.5px; font-weight: 500;
+  color: color-mix(in srgb, var(--dz-on-band) 90%, transparent);
+}
+[data-design='impacto'] .ec-auth .ec-auth-perks li::before {
+  content: counter(dzperk, decimal-leading-zero);
+  flex: none;
+  font: 700 10px/1 var(--dz-mono); letter-spacing: .1em;
+  color: var(--dz-accent);
+}
+[data-design='impacto'] .ec-auth .ec-auth-perks li > span { flex: 1 1 auto; min-width: 0; }
+[data-design='impacto'] .ec-auth .ec-auth-perks li::after {
+  content: ""; flex: none; width: 18px; height: 2px;
+  background: var(--dz-accent);
+}
+[data-design='impacto'] .ec-auth .ec-auth-perks svg {
+  flex: none; color: var(--dz-accent);
+}
+[data-design='impacto'] .ec-auth .ec-auth-brand-foot {
+  font: 700 8.5px/1.6 var(--dz-mono); letter-spacing: .24em; text-transform: uppercase;
+  color: color-mix(in srgb, var(--dz-on-band) 62%, transparent);
+  padding-top: 14px;
+  border-top: 1px solid color-mix(in srgb, var(--dz-on-band) 16%, transparent);
+}
+
+/* Ala del formulario: papel, filete superior de tinta + señal. */
+[data-design='impacto'] .ec-auth .ec-auth-panel {
+  position: relative;
+  padding: clamp(24px, 3.4vw, 46px) clamp(22px, 3.4vw, 46px) clamp(28px, 4vw, 48px);
+  background: var(--dz-card);
+  color: var(--dz-ink);
+  border-left: 2px solid var(--dz-line-strong);
+}
+[data-design='impacto'] .ec-auth .ec-auth-panel::before {
+  content: ""; position: absolute; inset: 0 0 auto; height: 4px;
+  background: linear-gradient(90deg, var(--dz-ink) 0 62%, var(--dz-accent) 62% 100%);
+}
+[data-design='impacto'] .ec-auth .ec-auth-back {
+  gap: 9px; margin-bottom: clamp(18px, 3vw, 28px);
+  font: 700 9px/1 var(--dz-mono); letter-spacing: .22em; text-transform: uppercase;
+  color: var(--dz-muted);
+  transition: color .2s;
+}
+[data-design='impacto'] .ec-auth .ec-auth-back:hover { color: var(--dz-accent-text); }
+[data-design='impacto'] .ec-auth .ec-auth-head {
+  gap: 10px; margin-bottom: 24px; padding-bottom: 18px;
+  border-bottom: 2px solid var(--dz-line-strong);
+}
+[data-design='impacto'] .ec-auth .ec-auth-badge {
+  width: 44px; height: 44px; margin-bottom: 4px;
+  border: 2px solid var(--dz-ink); border-radius: var(--dz-radius);
+  background: var(--store-accent-ink); color: var(--sp-on-band, #fff);
+}
+[data-design='impacto'] .ec-auth .ec-auth-tag {
+  display: inline-flex; align-items: center; gap: 9px;
+  font: 700 9px/1 var(--dz-mono); letter-spacing: .24em; text-transform: uppercase;
+  color: var(--dz-accent-text);
+}
+[data-design='impacto'] .ec-auth .ec-auth-tag::before {
+  content: ""; width: 8px; height: 8px; flex: none;
+  background: var(--dz-accent);
+}
+[data-design='impacto'] .ec-auth .ec-auth-title {
+  font-family: var(--dz-display); font-weight: 400;
+  font-size: clamp(30px, 3.6vw, 44px); line-height: 1; letter-spacing: .02em;
+  text-transform: uppercase;
+  color: var(--dz-ink);
+}
+[data-design='impacto'] .ec-auth .ec-auth-sub {
+  font-family: var(--dz-body); font-size: 13.5px; line-height: 1.65; color: var(--dz-muted);
+}
+[data-design='impacto'] .ec-auth .ec-auth-loading { color: var(--dz-muted); font-family: var(--dz-body); }
+[data-design='impacto'] .ec-auth .ec-auth-spin { color: var(--dz-accent-text); }
+
+/* ---------- Controles (compartidos auth + cuenta) ---------- */
+[data-design='impacto'][data-theme] :is(.ec-auth, .ec-account) .sp-field { gap: 8px; }
+[data-design='impacto'][data-theme] :is(.ec-auth, .ec-account) .sp-field-label {
+  font: 700 9px/1 var(--dz-mono); letter-spacing: .22em; text-transform: uppercase;
+  color: var(--dz-muted);
+}
+[data-design='impacto'][data-theme] :is(.ec-auth, .ec-account) .sp-input {
+  min-height: 48px;
+  padding: 12px 14px;
+  border: 1.5px solid var(--dz-line-strong);
+  border-radius: var(--dz-radius);
+  background: var(--dz-bg);
+  color: var(--dz-ink);
+  font-family: var(--dz-body); font-size: 16px;
+  box-shadow: 3px 3px 0 color-mix(in srgb, var(--dz-ink) 10%, transparent);
+  transition: border-color .18s, box-shadow .18s, background .18s;
+}
+[data-design='impacto'][data-theme] :is(.ec-auth, .ec-account) .sp-input:hover {
+  border-color: var(--dz-accent);
+}
+[data-design='impacto'][data-theme] :is(.ec-auth, .ec-account) .sp-input:focus {
+  border-color: var(--dz-ink);
+  background: var(--dz-card);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--dz-accent) 22%, transparent);
+}
+[data-design='impacto'][data-theme] :is(.ec-auth, .ec-account) .sp-input::placeholder {
+  color: var(--dz-muted); opacity: 1;
+}
+[data-design='impacto'][data-theme] :is(.ec-auth, .ec-account) .sp-input:disabled {
+  background: color-mix(in srgb, var(--dz-line) 34%, var(--dz-bg));
+  color: var(--dz-ink-2);
+  cursor: not-allowed;
+  box-shadow: none;
+}
+[data-design='impacto'][data-theme] :is(.ec-auth, .ec-account) .sp-form-error {
+  color: var(--dz-danger); font-family: var(--dz-body); font-size: 12.5px;
+}
+[data-design='impacto'][data-theme] :is(.ec-auth, .ec-account) .sp-input:-webkit-autofill {
+  -webkit-text-fill-color: var(--dz-ink);
+  box-shadow: inset 0 0 0 40px var(--dz-bg);
+}
+
+/* CTA: bloque de tinta que se enciende en señal. */
+[data-design='impacto'][data-theme] :is(.ec-auth, .ec-account) :is(.ecaf-submit, .ec-btn-primary) {
+  min-height: 50px;
+  border: 2px solid var(--dz-ink);
+  border-radius: var(--dz-radius);
+  background: var(--dz-ink);
+  color: var(--dz-on-band);
+  font: 700 10.5px/1 var(--dz-mono); letter-spacing: .22em; text-transform: uppercase;
+  box-shadow: 4px 4px 0 var(--dz-accent);
+  transition: transform .22s cubic-bezier(.22, 1, .36, 1), background .22s, color .22s, box-shadow .22s;
+}
+[data-design='impacto'][data-theme] :is(.ec-auth, .ec-account) :is(.ecaf-submit, .ec-btn-primary):hover:not(:disabled) {
+  transform: translate(-2px, -2px);
+  background: var(--store-accent-ink);
+  color: var(--sp-on-band, #fff);
+  box-shadow: 6px 6px 0 var(--dz-ink);
+}
+[data-design='impacto'][data-theme] :is(.ec-auth, .ec-account) :is(.ecaf-submit, .ec-btn-primary):active:not(:disabled) {
+  transform: translate(2px, 2px);
+  box-shadow: 2px 2px 0 var(--dz-ink);
+}
+[data-design='impacto'][data-theme] :is(.ec-auth, .ec-account) :is(.ecaf-submit, .ec-btn-primary):disabled {
+  background: var(--dz-line); color: var(--dz-ink-2); opacity: 1; cursor: not-allowed;
+  border-color: var(--dz-line-strong);
+  box-shadow: none;
+}
+[data-design='impacto'][data-theme] :is(.ec-auth, .ec-account) .ec-btn-ghost {
+  min-height: 46px;
+  border: 1.5px solid var(--dz-line-strong);
+  border-radius: var(--dz-radius);
+  background: transparent; color: var(--dz-ink);
+  font: 700 10px/1 var(--dz-mono); letter-spacing: .2em; text-transform: uppercase;
+  transition: background .2s, color .2s, border-color .2s;
+}
+[data-design='impacto'][data-theme] :is(.ec-auth, .ec-account) .ec-btn-ghost:hover {
+  background: var(--dz-ink); color: var(--dz-on-band); border-color: var(--dz-ink);
+}
+
+/* Formulario compartido (StoreAuthForm). */
+[data-design='impacto'] .ec-auth .ecaf { gap: 15px; }
+[data-design='impacto'] .ec-auth .ecaf-form { gap: 14px; }
+[data-design='impacto'] .ec-auth .ecaf-pass-toggle { color: var(--dz-muted); border-radius: var(--dz-radius); }
+[data-design='impacto'] .ec-auth .ecaf-pass-toggle:hover {
+  color: var(--dz-accent-text); background: color-mix(in srgb, var(--dz-accent) 10%, transparent);
+}
+[data-design='impacto'] .ec-auth .ecaf-divider {
+  font: 700 9px/1 var(--dz-mono); letter-spacing: .22em; text-transform: uppercase;
+  color: var(--dz-muted);
+}
+[data-design='impacto'] .ec-auth .ecaf-divider::before,
+[data-design='impacto'] .ec-auth .ecaf-divider::after { background: var(--dz-line-strong); opacity: 1; }
+[data-design='impacto'] .ec-auth .ecaf-link {
+  color: var(--dz-accent-text); font-family: var(--dz-body); font-weight: 700;
+  text-decoration: underline; text-underline-offset: 4px; text-decoration-thickness: 2px;
+}
+[data-design='impacto'] .ec-auth .ecaf-link:hover { color: var(--dz-ink); }
+[data-design='impacto'] .ec-auth .ecaf-notice {
+  border-radius: var(--dz-radius);
+  background: color-mix(in srgb, var(--dz-ok) 10%, var(--dz-card));
+  border: 1.5px solid color-mix(in srgb, var(--dz-ok) 45%, transparent);
+  color: var(--dz-ink);
+}
+[data-design='impacto'] .ec-auth .ecaf-error {
+  border-radius: var(--dz-radius);
+  background: color-mix(in srgb, var(--dz-danger) 9%, var(--dz-card));
+  border: 1.5px solid color-mix(in srgb, var(--dz-danger) 45%, transparent);
+  color: var(--dz-ink);
+}
+[data-design='impacto'] .ec-auth .ecaf-google-btn { min-height: 48px; }
+
+/* ===========================================================================
+   CUENTA — índice del número
+   =========================================================================== */
+[data-design='impacto'][data-theme] .ec-account {
+  width: min(1240px, 100%);
+  margin-inline: auto;
+  padding: clamp(16px, 3vw, 34px) clamp(14px, 4vw, 40px) clamp(44px, 6vw, 76px);
+  gap: 0;
+}
+[data-design='impacto'][data-theme] .ec-account .acc-shell {
+  grid-template-columns: minmax(0, 1fr);
+  gap: 18px;
+}
+[data-design='impacto'][data-theme] .ec-account .acc-side { display: none; }
+[data-design='impacto'][data-theme] .ec-account .acc-main { gap: 16px; }
+
+[data-design='impacto'][data-theme] .ec-account .acc-tele {
+  display: block;
+  font: 700 8.5px/1 var(--dz-mono); letter-spacing: .26em; text-transform: uppercase;
+  color: var(--dz-muted);
+}
+[data-design='impacto'][data-theme] .ec-account .acc-idx {
+  font: 700 9px/1 var(--dz-mono); letter-spacing: .12em; color: var(--dz-muted);
+}
+[data-design='impacto'][data-theme] .ec-account .acc-avatar {
+  border-radius: var(--dz-radius);
+  background: var(--dz-ink); color: var(--dz-on-band);
+  border: 2px solid var(--dz-ink);
+  font-family: var(--dz-display); font-weight: 400; font-size: 20px; letter-spacing: .02em;
+}
+[data-design='impacto'][data-theme] .ec-account .acc-avatar--sm { width: 44px; height: 44px; font-size: 16px; }
+
+/* Header compacto: filete duro, sin tarjeta. */
+[data-design='impacto'][data-theme] .ec-account .acc-mhead {
+  display: grid;
+  grid-template-columns: 44px minmax(0, 1fr) 44px;
+  align-items: center; gap: 12px;
+  padding: 0 0 14px;
+  border-bottom: 2px solid var(--dz-line-strong);
+}
+[data-design='impacto'][data-theme] .ec-account .acc-mhead .acc-tele { grid-column: 1 / -1; }
+[data-design='impacto'][data-theme] .ec-account .acc-mhead-meta strong {
+  font-family: var(--dz-display); font-weight: 400; font-size: 20px; letter-spacing: .02em;
+  text-transform: uppercase; color: var(--dz-ink);
+}
+[data-design='impacto'][data-theme] .ec-account .acc-mhead-meta small {
+  font-family: var(--dz-mono); font-size: 10.5px; letter-spacing: .08em; color: var(--dz-muted);
+}
+[data-design='impacto'][data-theme] .ec-account .acc-icon-btn {
+  width: 44px; height: 44px;
+  border: 1.5px solid var(--dz-line-strong); border-radius: var(--dz-radius);
+  background: transparent; color: var(--dz-ink-2);
+}
+[data-design='impacto'][data-theme] .ec-account .acc-icon-btn:hover {
+  border-color: var(--dz-accent); color: var(--dz-accent-text);
+  background: color-mix(in srgb, var(--dz-accent) 8%, transparent);
+}
+
+/* Tabs: índice mono con subrayado de señal. */
+[data-design='impacto'][data-theme] .ec-account .acc-tabs {
+  gap: 0; padding: 0 0 2px;
+  border-bottom: 2px solid var(--dz-line-strong);
+  scrollbar-width: none;
+  -webkit-overflow-scrolling: touch;
+}
+[data-design='impacto'][data-theme] .ec-account .acc-tab {
+  min-height: 46px;
+  padding: 10px 14px;
+  border: 0; border-radius: 0;
+  border-bottom: 3px solid transparent;
+  background: transparent; color: var(--dz-muted);
+  font: 700 9px/1 var(--dz-mono); letter-spacing: .18em; text-transform: uppercase;
+  gap: 8px;
+}
+[data-design='impacto'][data-theme] .ec-account .acc-tab:hover {
+  color: var(--dz-accent-text);
+  border-bottom-color: color-mix(in srgb, var(--dz-accent) 45%, transparent);
+}
+[data-design='impacto'][data-theme] .ec-account .acc-tab.is-on {
+  background: transparent; color: var(--dz-ink);
+  border-bottom-color: var(--dz-accent);
+}
+[data-design='impacto'][data-theme] .ec-account .acc-tab.is-on .acc-idx { color: var(--dz-accent-text); }
+
+/* Paneles: pliegos planos con borde duro y filete superior. */
+[data-design='impacto'][data-theme] .ec-account .acc-panel,
+[data-design='impacto'][data-theme] .ec-account .acc-auth-card,
+[data-design='impacto'][data-theme] .ec-account .acc-gate-card,
+[data-design='impacto'][data-theme] .ec-account .acc-skelpanel {
+  padding: clamp(18px, 2.6vw, 30px);
+  border: 2px solid var(--dz-line-strong);
+  border-radius: var(--dz-radius);
+  background: var(--dz-card);
+  box-shadow: 5px 5px 0 color-mix(in srgb, var(--dz-ink) 8%, transparent);
+  gap: 18px;
+  color: var(--dz-ink);
+}
+[data-design='impacto'][data-theme] .ec-account .acc-panel-head {
+  padding-bottom: 14px;
+  border-bottom: 2px solid var(--dz-line-strong);
+}
+[data-design='impacto'][data-theme] .ec-account .acc-panel-title {
+  font-family: var(--dz-display); font-weight: 400;
+  font-size: clamp(24px, 2.6vw, 32px); letter-spacing: .02em; text-transform: uppercase;
+  color: var(--dz-ink);
+}
+[data-design='impacto'][data-theme] .ec-account .acc-panel-sub {
+  font-family: var(--dz-body); font-size: 13px; line-height: 1.6; color: var(--dz-muted);
+}
+
+/* Gate / sub-vistas de mail. */
+[data-design='impacto'][data-theme] .ec-account :is(.acc-gate-ico, .acc-auth-ico) {
+  border-radius: var(--dz-radius);
+  background: var(--store-accent-ink); border: 2px solid var(--dz-ink);
+  color: var(--sp-on-band, #fff);
+}
+[data-design='impacto'][data-theme] .ec-account :is(.acc-gate-title, .acc-auth-title) {
+  font-family: var(--dz-display); font-weight: 400; letter-spacing: .02em;
+  text-transform: uppercase; color: var(--dz-ink);
+}
+[data-design='impacto'][data-theme] .ec-account :is(.acc-gate-sub, .acc-auth-msg) {
+  font-family: var(--dz-body); color: var(--dz-muted);
+}
+[data-design='impacto'][data-theme] .ec-account .acc-gate-list {
+  border: 1.5px solid var(--dz-line); border-radius: var(--dz-radius);
+  background: var(--dz-bg); color: var(--dz-ink-2);
+}
+[data-design='impacto'][data-theme] .ec-account .acc-gate-list li {
+  font-family: var(--dz-body); color: var(--dz-ink-2);
+  border-bottom: 1px solid var(--dz-line); padding-bottom: 9px;
+}
+[data-design='impacto'][data-theme] .ec-account .acc-gate-list li:last-child { border-bottom: 0; padding-bottom: 0; }
+[data-design='impacto'][data-theme] .ec-account .acc-gate-list svg { color: var(--dz-accent-text); }
+[data-design='impacto'][data-theme] .ec-account .acc-gate-link,
+[data-design='impacto'][data-theme] .ec-account .acc-auth-link {
+  font: 700 9px/1 var(--dz-mono); letter-spacing: .2em; text-transform: uppercase;
+  color: var(--dz-accent-text);
+  text-decoration: underline; text-underline-offset: 4px; text-decoration-thickness: 2px;
+}
+[data-design='impacto'][data-theme] .ec-account .acc-auth-ok {
+  color: var(--dz-ok); font-family: var(--dz-body); font-weight: 700;
+}
+[data-design='impacto'][data-theme] .ec-account .acc-spin {
+  border-color: color-mix(in srgb, var(--dz-muted) 34%, transparent);
+  border-top-color: var(--dz-accent);
+}
+[data-design='impacto'][data-theme] .ec-account .acc-sk {
+  background: color-mix(in srgb, var(--dz-muted) 18%, transparent);
+  border-radius: var(--dz-radius);
+}
+[data-design='impacto'][data-theme] .ec-account .acc-status {
+  border-radius: var(--dz-radius);
+  font-family: var(--dz-mono); font-size: 9.5px; letter-spacing: .14em; text-transform: uppercase;
+}
+[data-design='impacto'][data-theme] .ec-account .acc-chip {
+  border-radius: var(--dz-radius);
+  font-family: var(--dz-mono); font-size: 9.5px; letter-spacing: .12em; text-transform: uppercase;
+}
+
+/* ---------- Escritorio: sumario lateral ---------- */
+@media (min-width: 1024px) {
+  [data-design='impacto'][data-theme] .ec-account :is(.acc-mhead, .acc-tabs) { display: none; }
+  [data-design='impacto'][data-theme] .ec-account .acc-shell {
+    grid-template-columns: 300px minmax(0, 1fr);
+    gap: 36px;
+    align-items: start;
+  }
+  [data-design='impacto'][data-theme] .ec-account .acc-side {
+    display: grid;
+    gap: 0;
+    align-content: start;
+    position: sticky;
+    top: calc(var(--sp-top-h, 64px) + 18px);
+    padding: 0 26px 0 0;
+    border: 0;
+    border-right: 2px solid var(--dz-line-strong);
+    border-radius: 0;
+    background: transparent;
+    box-shadow: none;
+  }
+  [data-design='impacto'][data-theme] .ec-account .acc-id {
+    display: grid;
+    grid-template-columns: 52px minmax(0, 1fr);
+    align-items: center;
+    gap: 12px;
+    padding: 0 0 18px;
+    border-bottom: 2px solid var(--dz-line-strong);
+  }
+  [data-design='impacto'][data-theme] .ec-account .acc-id .acc-tele { grid-column: 1 / -1; }
+  [data-design='impacto'][data-theme] .ec-account .acc-id-name {
+    font-family: var(--dz-display); font-weight: 400; font-size: 20px;
+    letter-spacing: .02em; text-transform: uppercase; color: var(--dz-ink);
+  }
+  [data-design='impacto'][data-theme] .ec-account .acc-id-email {
+    font-family: var(--dz-mono); font-size: 10.5px; letter-spacing: .06em; color: var(--dz-muted);
+  }
+  [data-design='impacto'][data-theme] .ec-account .acc-nav { gap: 0; margin-top: 6px; }
+  [data-design='impacto'][data-theme] .ec-account .acc-navitem {
+    gap: 12px;
+    padding: 14px 8px 14px 0;
+    border-radius: 0;
+    border-bottom: 1px solid var(--dz-line);
+    background: transparent;
+    color: var(--dz-ink-2);
+    font-family: var(--dz-body); font-size: 13px; font-weight: 600;
+    transition: color .2s, padding-left .2s;
+  }
+  [data-design='impacto'][data-theme] .ec-account .acc-navitem svg { color: var(--dz-muted); transition: color .2s; }
+  [data-design='impacto'][data-theme] .ec-account .acc-navitem .acc-idx { margin-left: auto; }
+  [data-design='impacto'][data-theme] .ec-account .acc-navitem:hover {
+    background: transparent; color: var(--dz-accent-text); padding-left: 6px;
+  }
+  [data-design='impacto'][data-theme] .ec-account .acc-navitem:hover svg { color: var(--dz-accent-text); }
+  [data-design='impacto'][data-theme] .ec-account .acc-navitem.is-on {
+    background: transparent; color: var(--dz-ink); font-weight: 700;
+    box-shadow: inset 3px 0 0 var(--dz-accent);
+  }
+  [data-design='impacto'][data-theme] .ec-account .acc-navitem.is-on svg { color: var(--dz-accent-text); }
+  [data-design='impacto'][data-theme] .ec-account .acc-navitem.is-on .acc-idx { color: var(--dz-accent-text); }
+  [data-design='impacto'][data-theme] .ec-account .acc-logout {
+    margin-top: 20px;
+    min-height: 46px;
+    border: 2px solid var(--dz-line-strong);
+    border-radius: var(--dz-radius);
+    background: transparent;
+    color: var(--dz-ink-2);
+    font: 700 10px/1 var(--dz-mono); letter-spacing: .2em; text-transform: uppercase;
+    transition: background .2s, color .2s, border-color .2s;
+  }
+  [data-design='impacto'][data-theme] .ec-account .acc-logout:hover {
+    color: var(--dz-danger);
+    border-color: var(--dz-danger);
+    background: color-mix(in srgb, var(--dz-danger) 7%, transparent);
+  }
+}
+
+/* ---------- Responsive ---------- */
+@media (max-width: 1024px) {
+  [data-design='impacto'] .ec-auth .ec-auth-shell {
+    grid-template-columns: minmax(0, 1fr);
+    margin-block: 12px clamp(28px, 5vw, 48px);
+  }
+  [data-design='impacto'] .ec-auth .ec-auth-brand { padding: 22px 22px 20px; }
+  [data-design='impacto'] .ec-auth .ec-auth-brand-inner {
+    grid-template-rows: auto auto;
+    gap: 14px;
+  }
+  [data-design='impacto'] .ec-auth .ec-auth-brand-copy { gap: 8px; max-width: none; }
+  [data-design='impacto'] .ec-auth .ec-auth-brand-text,
+  [data-design='impacto'] .ec-auth .ec-auth-perks,
+  [data-design='impacto'] .ec-auth .ec-auth-brand-foot { display: none; }
+  [data-design='impacto'] .ec-auth .ec-auth-brand-title { font-size: clamp(30px, 8vw, 44px); }
+  [data-design='impacto'] .ec-auth .ec-auth-panel {
+    padding: 24px 22px 30px;
+    border-left: 0;
+    border-top: 2px solid var(--dz-line-strong);
+  }
+}
+@media (max-width: 860px) {
+  [data-design='impacto'][data-theme] .ec-account .acc-mhead-meta strong { font-size: 17px; }
+  [data-design='impacto'][data-theme] .ec-account .acc-panel-title { font-size: 22px; }
+}
+@media (max-width: 640px) {
+  [data-design='impacto'] .ec-auth { padding-inline: 12px; }
+  [data-design='impacto'] .ec-auth .ec-auth-shell { box-shadow: 4px 4px 0 color-mix(in srgb, var(--dz-ink) 12%, transparent); }
+  [data-design='impacto'] .ec-auth .ec-auth-brand { padding: 18px 16px 16px; }
+  [data-design='impacto'] .ec-auth .ec-auth-brand-top { padding-bottom: 12px; }
+  [data-design='impacto'] .ec-auth .ec-auth-logo { width: 38px; height: 38px; font-size: 19px; }
+  [data-design='impacto'] .ec-auth .ec-auth-brand-name { font-size: 10.5px; letter-spacing: .16em; }
+  [data-design='impacto'] .ec-auth .ec-auth-brand-title { font-size: 26px; }
+  [data-design='impacto'] .ec-auth .ec-auth-panel { padding: 18px 16px 26px; }
+  [data-design='impacto'] .ec-auth .ec-auth-head { margin-bottom: 20px; padding-bottom: 16px; }
+  [data-design='impacto'] .ec-auth .ec-auth-title { font-size: 26px; }
+  [data-design='impacto'] .ec-auth .ecaf-grid { grid-template-columns: minmax(0, 1fr); }
+  [data-design='impacto'] .ec-auth :is(.ecaf-submit, .ec-btn-primary) { width: 100%; }
+  [data-design='impacto'][data-theme] .ec-account { padding-inline: 14px; }
+  [data-design='impacto'][data-theme] .ec-account .acc-tabs { padding-bottom: 0; }
+  [data-design='impacto'][data-theme] .ec-account .acc-tab { padding: 10px 12px; letter-spacing: .14em; }
+  [data-design='impacto'][data-theme] .ec-account .acc-panel,
+  [data-design='impacto'][data-theme] .ec-account .acc-auth-card,
+  [data-design='impacto'][data-theme] .ec-account .acc-gate-card { padding: 18px 16px; }
+}
+@media (max-width: 390px) {
+  [data-design='impacto'] .ec-auth { padding-inline: 8px; }
+  [data-design='impacto'] .ec-auth .ec-auth-brand-title { font-size: 22px; }
+  [data-design='impacto'] .ec-auth .ec-auth-title { font-size: 22px; }
+  [data-design='impacto'][data-theme] .ec-account { padding-inline: 10px; }
+  [data-design='impacto'][data-theme] .ec-account .acc-mhead { grid-template-columns: 40px minmax(0, 1fr) 40px; gap: 10px; }
+  [data-design='impacto'][data-theme] .ec-account .acc-mhead-meta strong { font-size: 16px; }
+  [data-design='impacto'][data-theme] .ec-account .acc-panel-title { font-size: 20px; }
+}
+/* Tab bar inferior de la tienda (mobile.nav = bottom): el último panel
+   respira sobre la barra fija. */
+@media (max-width: 768px) {
+  [data-design='impacto'][data-theme] .ec-account,
+  [data-design='impacto'] .ec-auth {
+    padding-bottom: calc(24px + env(safe-area-inset-bottom));
+  }
+  [data-design='impacto'][data-theme] .ec-account .acc-tabs {
+    padding-bottom: 6px;
+  }
+}
+/* ---------- Estados internos: mensajes, notas, vacíos, checks ---------- */
+[data-design='impacto'] .ec-account :is(.acc-inline-error, .acc-msg.is-err) { color: var(--dz-danger); }
+[data-design='impacto'] .ec-account .acc-msg.is-ok { color: var(--dz-ok); }
+[data-design='impacto'] .ec-account .acc-note { background: var(--dz-card); }
+[data-design='impacto'] .ec-account .acc-note--danger {
+  border-color: color-mix(in srgb, var(--dz-danger) 34%, transparent);
+  background: color-mix(in srgb, var(--dz-danger) 8%, transparent);
+  color: var(--dz-danger);
+}
+[data-design='impacto'] .ec-account .acc-empty-ico {
+  border-radius: var(--dz-radius);
+  background: color-mix(in srgb, var(--dz-accent) 12%, var(--dz-card));
+  color: var(--dz-accent-text);
+}
+[data-design='impacto'] .ec-account .acc-check input { accent-color: var(--dz-accent); }
+[data-design='impacto'] .ec-account .acc-form-actions :is(.ec-btn-primary, .ecaf-submit, button[type='submit']) {
+  border-radius: var(--dz-radius);
+}
+@media (prefers-reduced-motion: reduce) {
+  [data-design='impacto'] :is(.ec-auth, .ec-account) * {
+    transition-duration: .001ms !important;
+    animation-duration: .001ms !important;
+  }
+}

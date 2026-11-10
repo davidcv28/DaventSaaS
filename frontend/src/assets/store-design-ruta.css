@@ -1,0 +1,842 @@
+/* ===========================================================================
+   RUTA (RUTA SUR) — páginas de comercio (ingresar / cuenta).
+   Se carga on-demand desde StorePublicLayout cuando .store-page lleva
+   data-design="ruta". No edita las hojas scoped de las vistas: las
+   reemplaza con más especificidad (0,3,0 mínimo).
+
+   Composición propia: la auth es la VENTANILLA DE LA TAQUILLA — el ala de
+   marca es el ANDÉN en verde pino con postal, parada de ruta y beneficios
+   como paradas numeradas sobre línea discontinua; el ala del formulario
+   es el BOLETO en papel, con campos de pasajero y botón píldora. La
+   cuenta es la BITÁCORA DE VIAJE: barra lateral como hoja de ruta (ítems
+   como paradas con número mono y subrayado sol en el activo) y paneles-
+   ficha con filetes discontinuos y sello de goma.
+   Paleta y familias del diseño: Fraunces (fallback serif) / Instrument
+   Sans (fallback Manrope, cargada por la plantilla) / JetBrains Mono.
+   Variante noche = la paleta `data-ds-theme="dark"` del documento Ruta.
+   =========================================================================== */
+
+[data-design='ruta'] .ec-auth,
+[data-design='ruta'] .ec-account {
+  /* ---- Tokens (papel de ruta) ---- */
+  --dz-bg: #f4ecdc;
+  --dz-surface: #fbf6ea;
+  --dz-surface-2: #ece0c6;
+  --dz-ink: #1f332c;
+  --dz-ink-2: #33463d;
+  --dz-muted: #55665b;
+  --dz-line: #d8cbb0;
+  --dz-line-strong: #b9a98c;
+  --dz-pine: color-mix(in srgb, var(--store-accent-ink, #14443b) 45%, #14443b);
+  --dz-pine-soft: color-mix(in srgb, var(--dz-pine) 12%, var(--dz-surface));
+  /* El "sol" es constante del diseño (token secondary #E8A33D): el acento
+     de la tienda puede ser un verde medio que no sostiene texto oscuro
+     encima — el sol ámbar sí lo hace siempre. */
+  --dz-sun: #e8a33d;
+  --dz-sun-hi: #f8cd70;
+  --dz-coral: #b4462b;
+  --dz-coral-text: color-mix(in srgb, var(--dz-coral) 80%, var(--dz-ink));
+  --dz-on-pine: #f2f7f3;
+  --dz-on-sun: #1b2a23;
+  --dz-accent: var(--dz-pine);
+  --dz-accent-ink: var(--dz-on-pine);
+  --dz-accent-text: var(--dz-pine);
+  --dz-ok: #2e7d54;
+  --dz-danger: #b4462b;
+  --dz-display: var(--st-f-display-family, 'Fraunces', Georgia, 'Times New Roman', serif);
+  --dz-body: var(--st-f-body-family, 'Instrument Sans', 'Manrope', system-ui, sans-serif);
+  --dz-mono: var(--st-f-eyebrow-family, 'JetBrains Mono', ui-monospace, Menlo, monospace);
+  --dz-radius: 18px;
+  --dz-radius-sm: 12px;
+  --dz-veil-a: color-mix(in srgb, var(--dz-pine) 82%, transparent);
+  --dz-veil-b: color-mix(in srgb, var(--dz-pine) 94%, transparent);
+
+  --sp-bg: var(--dz-bg);
+  --sp-card: var(--dz-surface);
+  --sp-card-solid: var(--dz-surface);
+  --sp-surface: var(--dz-surface-2);
+  --sp-soft: var(--dz-pine-soft);
+  --sp-ink: var(--dz-ink);
+  --sp-ink-2: var(--dz-ink-2);
+  --sp-muted: var(--dz-muted);
+  --sp-line: var(--dz-line);
+  --sp-radius: var(--dz-radius-sm);
+  --sp-accent-text: var(--dz-accent-text);
+  --sp-on-band: var(--dz-on-pine);
+  --sp-success: var(--dz-ok);
+  --sp-danger: var(--dz-danger);
+  --sp-shadow-sm: 0 14px 30px -20px rgba(20, 44, 37, .4);
+  --sp-shadow-md: 0 26px 60px -30px rgba(20, 44, 37, .45);
+}
+
+/* Variante noche: la paleta del documento con data-ds-theme="dark". */
+[data-design='ruta'][data-theme='dark'] .ec-auth,
+[data-design='ruta'][data-theme='dark'] .ec-account {
+  --dz-bg: #0e241f;
+  --dz-surface: #16332b;
+  --dz-surface-2: #143029;
+  --dz-ink: #f1ead9;
+  --dz-ink-2: #d8d2c2;
+  --dz-muted: #a9b9ad;
+  --dz-line: #2a4a3f;
+  --dz-line-strong: #3d5f52;
+  --dz-pine: #1d4d41;
+  --dz-pine-soft: color-mix(in srgb, #1d4d41 30%, var(--dz-surface));
+  --dz-sun: #f0b95a;
+  --dz-sun-hi: #f8cd70;
+  --dz-coral: #e5735c;
+  --dz-coral-text: color-mix(in srgb, #e5735c 70%, #f1ead9);
+  --dz-on-pine: #f3ecda;
+  --dz-accent: color-mix(in srgb, var(--store-accent, #f0b95a) 55%, #f0e9d8);
+  --dz-accent-ink: #14251f;
+  --dz-accent-text: color-mix(in srgb, var(--store-accent, #f0b95a) 60%, #f1ead9);
+  --dz-ok: #4caf7d;
+  --dz-danger: #e5735c;
+  --sp-accent-text: var(--dz-accent-text);
+  /* .sp-btn usa --store-accent-ink (#047857) de fondo en ambos temas:
+     el texto encima es siempre el crema claro. */
+  --sp-on-band: var(--dz-on-pine);
+  --sp-success: var(--dz-ok);
+  --sp-danger: var(--dz-danger);
+  --sp-soft: var(--dz-pine-soft);
+  --sp-shadow-sm: 0 18px 40px -24px rgba(0, 0, 0, .65);
+  --sp-shadow-md: 0 30px 70px -32px rgba(0, 0, 0, .7);
+  color-scheme: dark;
+}
+
+/* ---------- Marco común ---------- */
+[data-design='ruta'][data-theme] :is(.ec-auth, .ec-account) :is(a, button, input, select, textarea):focus-visible {
+  outline: 2px solid var(--dz-coral);
+  outline-offset: 3px;
+}
+[data-design='ruta'][data-theme] :is(.ec-auth, .ec-account) ::selection {
+  background: color-mix(in srgb, var(--dz-sun) 55%, transparent);
+  color: var(--dz-ink);
+}
+
+/* ==========================================================================
+   AUTH — ventanilla de la taquilla
+   ========================================================================== */
+[data-design='ruta'] .ec-auth {
+  padding-inline: clamp(0px, 3vw, 26px);
+  background: var(--dz-bg);
+  color: var(--dz-ink);
+}
+[data-design='ruta'] .ec-auth .ec-auth-shell {
+  width: min(1140px, 100%);
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1.06fr);
+  margin-block: clamp(16px, 3.4vw, 44px) clamp(40px, 6vw, 80px);
+  border: 1px solid var(--dz-line);
+  border-radius: var(--dz-radius);
+  background: var(--dz-surface);
+  box-shadow: var(--sp-shadow-md);
+  overflow: hidden;
+}
+
+/* Ala del andén: pino sólido, nube de papel y sol. */
+[data-design='ruta'] .ec-auth .ec-auth-brand {
+  position: relative;
+  isolation: isolate;
+  display: grid;
+  padding: 0;
+  color: var(--dz-on-pine);
+  background:
+    radial-gradient(90% 60% at 88% -8%, color-mix(in srgb, var(--dz-sun) 30%, transparent), transparent 62%),
+    radial-gradient(70% 50% at 8% 108%, color-mix(in srgb, var(--dz-coral) 24%, transparent), transparent 60%),
+    var(--dz-pine);
+}
+[data-design='ruta'] .ec-auth .ec-auth-brand::before { opacity: .22; mix-blend-mode: luminosity; }
+[data-design='ruta'] .ec-auth .ec-auth-brand::after {
+  background:
+    radial-gradient(80% 55% at 82% -10%, color-mix(in srgb, var(--dz-sun) 22%, transparent), transparent 60%),
+    linear-gradient(168deg, var(--dz-veil-a), var(--dz-veil-b));
+}
+/* Cordillera al pie del andén (misma silueta que el hero del documento). */
+[data-design='ruta'] .ec-auth .ec-auth-brand-inner {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  grid-template-rows: auto 1fr auto;
+  align-content: stretch;
+  gap: clamp(20px, 3vw, 34px);
+  padding: clamp(26px, 3.6vw, 44px) clamp(24px, 3.4vw, 44px) clamp(30px, 4vw, 48px);
+  padding-right: 0;
+}
+[data-design='ruta'] .ec-auth .ec-auth-logo {
+  width: 48px; height: 48px;
+  border-radius: 50%;
+  background: color-mix(in srgb, var(--dz-on-pine) 12%, transparent);
+  border: 1.5px solid color-mix(in srgb, var(--dz-on-pine) 45%, transparent);
+  color: var(--dz-on-pine);
+  font-family: var(--dz-display);
+  font-weight: 600;
+  font-size: 24px;
+}
+[data-design='ruta'] .ec-auth .ec-auth-brand-name {
+  font-family: var(--dz-display);
+  font-weight: 600;
+  font-size: clamp(20px, 2vw, 26px);
+  letter-spacing: -.01em;
+  color: var(--dz-on-pine);
+}
+[data-design='ruta'] .ec-auth .ec-auth-brand-copy {
+  display: grid;
+  gap: 13px;
+  max-width: 44ch;
+}
+/* Sello de ruta: "01 ···" con el guion sol. */
+[data-design='ruta'] .ec-auth .ec-auth-rail {
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;
+  font: 700 9.5px/1 var(--dz-mono);
+  letter-spacing: .26em;
+  text-transform: uppercase;
+  color: var(--dz-sun-hi);
+}
+[data-design='ruta'] .ec-auth .ec-auth-rail::after {
+  content: "";
+  width: 44px; height: 2px;
+  background: linear-gradient(90deg, var(--dz-sun), transparent);
+}
+[data-design='ruta'] .ec-auth .ec-auth-brand-kicker {
+  font: 700 9.5px/1 var(--dz-mono);
+  letter-spacing: .2em;
+  text-transform: uppercase;
+  color: color-mix(in srgb, var(--dz-on-pine) 74%, transparent);
+}
+[data-design='ruta'] .ec-auth .ec-auth-brand-title {
+  font-family: var(--dz-display);
+  font-weight: 600;
+  font-size: clamp(30px, 3.6vw, 48px);
+  line-height: 1.02;
+  letter-spacing: -.02em;
+  color: #f8f4eb;
+}
+[data-design='ruta'] .ec-auth .ec-auth-brand-text {
+  font-family: var(--dz-body);
+  font-size: 14px;
+  line-height: 1.65;
+  color: color-mix(in srgb, var(--dz-on-pine) 82%, transparent);
+}
+/* Paradas del itinerario: punto sol + nombre + línea discontinua. */
+[data-design='ruta'] .ec-auth .ec-auth-perks {
+  counter-reset: dzstop;
+  gap: 0;
+  margin-top: 6px;
+}
+[data-design='ruta'] .ec-auth .ec-auth-perks li {
+  counter-increment: dzstop;
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 11px 0 11px 20px;
+  border-bottom: 1.5px dashed color-mix(in srgb, var(--dz-on-pine) 22%, transparent);
+  font-family: var(--dz-body);
+  font-size: 13.5px;
+  font-weight: 600;
+  color: color-mix(in srgb, var(--dz-on-pine) 92%, transparent);
+}
+[data-design='ruta'] .ec-auth .ec-auth-perks li::before {
+  content: "";
+  position: absolute;
+  left: 2px; top: 50%;
+  width: 9px; height: 9px;
+  transform: translateY(-50%);
+  border-radius: 50%;
+  background: var(--dz-sun);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--dz-sun) 25%, transparent);
+}
+[data-design='ruta'] .ec-auth .ec-auth-perks li > span { flex: 1 1 auto; min-width: 0; }
+[data-design='ruta'] .ec-auth .ec-auth-perks svg {
+  flex: none;
+  color: var(--dz-sun-hi);
+}
+[data-design='ruta'] .ec-auth .ec-auth-brand-foot {
+  font: 700 9px/1.6 var(--dz-mono);
+  letter-spacing: .2em;
+  text-transform: uppercase;
+  color: color-mix(in srgb, var(--dz-on-pine) 74%, transparent);
+  padding-top: 14px;
+  border-top: 1.5px dashed color-mix(in srgb, var(--dz-on-pine) 22%, transparent);
+}
+
+/* Ala del boleto: papel, perf-techo discontinuo y campos de pasajero. */
+[data-design='ruta'] .ec-auth .ec-auth-panel {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  padding: clamp(24px, 3.4vw, 46px) clamp(22px, 3.4vw, 48px) clamp(28px, 4vw, 50px);
+  background: var(--dz-surface);
+  color: var(--dz-ink);
+  border-left: 1px dashed var(--dz-line-strong);
+}
+[data-design='ruta'] .ec-auth .ec-auth-panel::before {
+  content: "";
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 0;
+  border-top: 2px dashed var(--dz-line-strong);
+}
+[data-design='ruta'] .ec-auth .ec-auth-back {
+  gap: 9px;
+  margin-bottom: clamp(20px, 3vw, 30px);
+  padding-bottom: 6px;
+  border-bottom: 1px solid transparent;
+  font: 700 10px/1 var(--dz-mono);
+  letter-spacing: .18em;
+  text-transform: uppercase;
+  color: var(--dz-muted);
+  transition: color .25s, border-color .25s;
+}
+[data-design='ruta'] .ec-auth .ec-auth-back:hover {
+  color: var(--dz-coral-text);
+  border-bottom-color: var(--dz-coral);
+}
+[data-design='ruta'] .ec-auth .ec-auth-head {
+  gap: 10px;
+  margin-bottom: 26px;
+  padding-bottom: 20px;
+  border-bottom: 1.5px dashed var(--dz-line);
+}
+[data-design='ruta'] .ec-auth .ec-auth-badge {
+  width: 46px; height: 46px;
+  margin-bottom: 4px;
+  border-radius: 50%;
+  border: 1.5px dashed var(--dz-coral);
+  background: var(--dz-surface-2);
+  color: var(--dz-coral-text);
+}
+[data-design='ruta'] .ec-auth .ec-auth-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 9px;
+  font: 700 9.5px/1 var(--dz-mono);
+  letter-spacing: .22em;
+  text-transform: uppercase;
+  color: var(--dz-coral-text);
+}
+[data-design='ruta'] .ec-auth .ec-auth-tag::before {
+  content: "";
+  width: 8px; height: 8px; flex: none;
+  border-radius: 50%;
+  background: var(--dz-coral);
+}
+[data-design='ruta'] .ec-auth .ec-auth-title {
+  font-family: var(--dz-display);
+  font-weight: 600;
+  font-size: clamp(28px, 3.2vw, 40px);
+  line-height: 1.04;
+  letter-spacing: -.02em;
+  color: var(--dz-ink);
+}
+[data-design='ruta'] .ec-auth .ec-auth-sub {
+  font-family: var(--dz-body);
+  font-size: 14px;
+  line-height: 1.65;
+  color: var(--dz-muted);
+}
+[data-design='ruta'] .ec-auth .ec-auth-loading { color: var(--dz-muted); font-family: var(--dz-body); }
+[data-design='ruta'] .ec-auth .ec-auth-spin { color: var(--dz-coral-text); }
+
+/* ---------- Controles (compartidos auth + cuenta) ---------- */
+[data-design='ruta'][data-theme] :is(.ec-auth, .ec-account) .sp-field { gap: 8px; }
+[data-design='ruta'][data-theme] :is(.ec-auth, .ec-account) .sp-field-label {
+  font: 700 9.5px/1 var(--dz-mono);
+  letter-spacing: .18em;
+  text-transform: uppercase;
+  color: var(--dz-muted);
+}
+[data-design='ruta'][data-theme] :is(.ec-auth, .ec-account) .sp-input {
+  min-height: 48px;
+  padding: 12px 15px;
+  border: 1.5px solid var(--dz-line);
+  border-radius: var(--dz-radius-sm);
+  background: var(--dz-surface);
+  color: var(--dz-ink);
+  font-family: var(--dz-body);
+  font-size: 16px;
+  box-shadow: none;
+  transition: border-color .2s, box-shadow .2s, background .2s;
+}
+[data-design='ruta'][data-theme] :is(.ec-auth, .ec-account) .sp-input:hover {
+  border-color: var(--dz-line-strong);
+}
+[data-design='ruta'][data-theme] :is(.ec-auth, .ec-account) .sp-input:focus {
+  border-color: var(--dz-accent-text);
+  background: var(--dz-bg);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--dz-sun) 30%, transparent);
+}
+[data-design='ruta'][data-theme] :is(.ec-auth, .ec-account) .sp-input::placeholder {
+  color: color-mix(in srgb, var(--dz-muted) 80%, transparent);
+  opacity: 1;
+}
+[data-design='ruta'][data-theme] :is(.ec-auth, .ec-account) .sp-input:disabled {
+  background: var(--dz-surface-2);
+  color: var(--dz-muted);
+  cursor: not-allowed;
+}
+[data-design='ruta'][data-theme] :is(.ec-auth, .ec-account) .sp-form-error {
+  color: var(--dz-danger);
+  font-family: var(--dz-body);
+  font-size: 12.5px;
+}
+[data-design='ruta'][data-theme] :is(.ec-auth, .ec-account) .sp-input:-webkit-autofill {
+  -webkit-text-fill-color: var(--dz-ink);
+  box-shadow: inset 0 0 0 40px var(--dz-surface);
+}
+
+/* Botón principal: píldora sol (la misma mano que .btn-sun del doc). */
+[data-design='ruta'][data-theme] :is(.ec-auth, .ec-account) :is(.ecaf-submit, .ec-btn-primary) {
+  min-height: 50px;
+  border: 1.5px solid transparent;
+  border-radius: 999px;
+  background: var(--dz-sun);
+  color: var(--dz-on-sun);
+  font-family: var(--dz-body);
+  font-size: 14.5px;
+  font-weight: 700;
+  letter-spacing: .01em;
+  filter: none;
+  box-shadow: 0 14px 26px -16px rgba(0, 0, 0, .45);
+  transition: transform .25s cubic-bezier(.22,1,.36,1), box-shadow .25s, background .2s;
+}
+[data-design='ruta'][data-theme] :is(.ec-auth, .ec-account) :is(.ecaf-submit, .ec-btn-primary):hover:not(:disabled) {
+  transform: translateY(-2px);
+  background: var(--dz-sun-hi);
+  box-shadow: 0 18px 32px -16px rgba(0, 0, 0, .5);
+  filter: none;
+}
+[data-design='ruta'][data-theme] :is(.ec-auth, .ec-account) :is(.ecaf-submit, .ec-btn-primary):active:not(:disabled) {
+  transform: translateY(0);
+}
+[data-design='ruta'][data-theme] :is(.ec-auth, .ec-account) :is(.ecaf-submit, .ec-btn-primary):disabled {
+  background: var(--dz-line);
+  color: var(--dz-muted);
+  opacity: 1;
+  cursor: not-allowed;
+  box-shadow: none;
+}
+[data-design='ruta'][data-theme] :is(.ec-auth, .ec-account) .ec-btn-ghost {
+  min-height: 46px;
+  border: 1.5px solid var(--dz-line);
+  border-radius: 999px;
+  background: var(--dz-surface);
+  color: var(--dz-ink);
+  font-family: var(--dz-body);
+  font-size: 13.5px;
+  font-weight: 700;
+}
+[data-design='ruta'][data-theme] :is(.ec-auth, .ec-account) .ec-btn-ghost:hover {
+  border-color: var(--dz-accent-text);
+  background: color-mix(in srgb, var(--dz-sun) 10%, var(--dz-surface));
+  color: var(--dz-ink);
+}
+
+/* Formulario compartido (StoreAuthForm). */
+[data-design='ruta'] .ec-auth .ecaf { gap: 15px; }
+[data-design='ruta'] .ec-auth .ecaf-pass .sp-input { padding-right: 48px; }
+[data-design='ruta'] .ec-auth .ecaf-pass-toggle { color: var(--dz-muted); border-radius: 50%; }
+[data-design='ruta'] .ec-auth .ecaf-pass-toggle:hover {
+  color: var(--dz-coral-text);
+  background: color-mix(in srgb, var(--dz-coral) 8%, transparent);
+}
+[data-design='ruta'] .ec-auth .ecaf-divider {
+  font: 700 9px/1 var(--dz-mono);
+  letter-spacing: .2em;
+  text-transform: uppercase;
+  color: var(--dz-muted);
+}
+[data-design='ruta'] .ec-auth .ecaf-divider::before,
+[data-design='ruta'] .ec-auth .ecaf-divider::after { background: var(--dz-line); opacity: 1; }
+[data-design='ruta'] .ec-auth .ecaf-google-btn { border-radius: var(--dz-radius-sm); overflow: hidden; }
+[data-design='ruta'] .ec-auth .ecaf-link {
+  color: var(--dz-accent-text);
+  font-family: var(--dz-body);
+  font-weight: 700;
+  text-underline-offset: 4px;
+}
+[data-design='ruta'] .ec-auth .ecaf-link:hover { color: var(--dz-coral-text); }
+[data-design='ruta'] .ec-auth .ecaf-notice {
+  border-radius: var(--dz-radius-sm);
+  background: color-mix(in srgb, var(--dz-ok) 10%, var(--dz-surface));
+  border: 1px solid color-mix(in srgb, var(--dz-ok) 38%, transparent);
+  color: var(--dz-ink);
+}
+[data-design='ruta'] .ec-auth .ecaf-error {
+  border-radius: var(--dz-radius-sm);
+  background: color-mix(in srgb, var(--dz-danger) 9%, var(--dz-surface));
+  border: 1px solid color-mix(in srgb, var(--dz-danger) 36%, transparent);
+  color: var(--dz-ink);
+}
+
+/* ==========================================================================
+   CUENTA — bitácora de viaje
+   ========================================================================== */
+[data-design='ruta'][data-theme] .ec-account {
+  width: min(1240px, 100%);
+  margin-inline: auto;
+  padding: clamp(16px, 3vw, 34px) clamp(14px, 4vw, 40px) clamp(44px, 6vw, 76px);
+  gap: 0;
+  background: var(--dz-bg);
+  color: var(--dz-ink);
+}
+[data-design='ruta'][data-theme] .ec-account .acc-shell {
+  grid-template-columns: minmax(0, 1fr);
+  gap: 18px;
+}
+[data-design='ruta'][data-theme] .ec-account .acc-side { display: none; }
+[data-design='ruta'][data-theme] .ec-account .acc-main { gap: 16px; }
+
+[data-design='ruta'][data-theme] .ec-account .acc-tele {
+  display: block;
+  font: 700 9px/1 var(--dz-mono);
+  letter-spacing: .2em;
+  text-transform: uppercase;
+  color: var(--dz-coral-text);
+}
+[data-design='ruta'][data-theme] .ec-account .acc-idx {
+  font: 700 9.5px/1 var(--dz-mono);
+  letter-spacing: .14em;
+  color: var(--dz-muted);
+}
+[data-design='ruta'][data-theme] .ec-account .acc-avatar {
+  border-radius: 50%;
+  background: var(--dz-pine);
+  color: var(--dz-on-pine);
+  font-family: var(--dz-display);
+  font-weight: 600;
+  font-size: 19px;
+  letter-spacing: .01em;
+  border: 1.5px solid color-mix(in srgb, var(--dz-sun) 60%, transparent);
+}
+[data-design='ruta'][data-theme] .ec-account .acc-avatar--sm { width: 44px; height: 44px; font-size: 16px; }
+
+/* Header compacto (tablet/mobile): cabecera de bitácora. */
+[data-design='ruta'][data-theme] .ec-account .acc-mhead {
+  display: grid;
+  grid-template-columns: 44px minmax(0, 1fr) 44px;
+  align-items: center;
+  gap: 12px;
+  padding: 0 0 14px;
+  border-bottom: 1.5px dashed var(--dz-line-strong);
+}
+[data-design='ruta'][data-theme] .ec-account .acc-mhead .acc-tele { grid-column: 1 / -1; }
+[data-design='ruta'][data-theme] .ec-account .acc-mhead-meta strong {
+  font-family: var(--dz-display);
+  font-weight: 600;
+  font-size: 20px;
+  letter-spacing: -.01em;
+  color: var(--dz-ink);
+}
+[data-design='ruta'][data-theme] .ec-account .acc-mhead-meta small {
+  font-family: var(--dz-mono);
+  font-size: 10.5px;
+  letter-spacing: .06em;
+  color: var(--dz-muted);
+}
+[data-design='ruta'][data-theme] .ec-account .acc-icon-btn {
+  width: 44px; height: 44px;
+  border: 1px solid var(--dz-line);
+  border-radius: 50%;
+  background: var(--dz-surface);
+  color: var(--dz-ink-2);
+}
+[data-design='ruta'][data-theme] .ec-account .acc-icon-btn:hover {
+  border-color: var(--dz-accent-text);
+  color: var(--dz-accent-text);
+  background: var(--dz-pine-soft);
+}
+[data-design='ruta'][data-theme] .ec-account .acc-icon-btn.is-danger:hover {
+  border-color: color-mix(in srgb, var(--dz-danger) 55%, transparent);
+  color: var(--dz-danger);
+  background: color-mix(in srgb, var(--dz-danger) 8%, transparent);
+}
+
+/* Tabs (tablet/mobile): paradas en píldora — activa en pino. */
+[data-design='ruta'][data-theme] .ec-account .acc-tabs {
+  gap: 8px;
+  padding: 4px 2px 10px;
+  scrollbar-width: none;
+  -webkit-overflow-scrolling: touch;
+}
+[data-design='ruta'][data-theme] .ec-account .acc-tab {
+  min-height: 42px;
+  padding: 9px 16px;
+  border: 1.5px solid var(--dz-line);
+  border-radius: 999px;
+  background: var(--dz-surface);
+  color: var(--dz-ink-2);
+  font-family: var(--dz-body);
+  font-size: 12.5px;
+  font-weight: 700;
+  gap: 8px;
+}
+[data-design='ruta'][data-theme] .ec-account .acc-tab:hover {
+  border-color: var(--dz-accent-text);
+  color: var(--dz-accent-text);
+  background: var(--dz-pine-soft);
+}
+[data-design='ruta'][data-theme] .ec-account .acc-tab.is-on {
+  background: var(--dz-pine);
+  border-color: var(--dz-pine);
+  color: var(--dz-on-pine);
+}
+[data-design='ruta'][data-theme] .ec-account .acc-tab.is-on .acc-idx { color: var(--dz-sun-hi); }
+
+/* Paneles de contenido: fichas de viaje con perf-techo. */
+[data-design='ruta'][data-theme] .ec-account .acc-panel,
+[data-design='ruta'][data-theme] .ec-account .acc-auth-card,
+[data-design='ruta'][data-theme] .ec-account .acc-gate-card,
+[data-design='ruta'][data-theme] .ec-account .acc-skelpanel {
+  padding: clamp(18px, 2.6vw, 30px);
+  border: 1px solid var(--dz-line);
+  border-radius: var(--dz-radius);
+  background: var(--dz-surface);
+  box-shadow: var(--sp-shadow-sm);
+  gap: 18px;
+  color: var(--dz-ink);
+  position: relative;
+}
+[data-design='ruta'][data-theme] .ec-account .acc-panel::before {
+  content: "";
+  position: absolute;
+  top: 0; left: 22px; right: 22px;
+  border-top: 1.5px dashed var(--dz-line-strong);
+}
+[data-design='ruta'][data-theme] .ec-account .acc-panel-head {
+  padding-bottom: 14px;
+  border-bottom: 1.5px dashed var(--dz-line);
+}
+[data-design='ruta'][data-theme] .ec-account .acc-panel-title {
+  font-family: var(--dz-display);
+  font-weight: 600;
+  font-size: clamp(24px, 2.6vw, 32px);
+  line-height: 1.04;
+  letter-spacing: -.015em;
+  color: var(--dz-ink);
+}
+[data-design='ruta'][data-theme] .ec-account .acc-panel-sub {
+  font-family: var(--dz-body);
+  font-size: 13.5px;
+  line-height: 1.6;
+  color: var(--dz-muted);
+}
+
+/* Gate / sub-vistas de mail: sello de goma circular. */
+[data-design='ruta'][data-theme] .ec-account :is(.acc-gate-ico, .acc-auth-ico) {
+  border-radius: 50%;
+  background: var(--dz-pine-soft);
+  border: 1.5px dashed var(--dz-accent-text);
+  color: var(--dz-accent-text);
+}
+[data-design='ruta'][data-theme] .ec-account :is(.acc-gate-title, .acc-auth-title) {
+  font-family: var(--dz-display);
+  font-weight: 600;
+  letter-spacing: -.015em;
+  color: var(--dz-ink);
+}
+[data-design='ruta'][data-theme] .ec-account :is(.acc-gate-sub, .acc-auth-msg) {
+  font-family: var(--dz-body);
+  color: var(--dz-muted);
+}
+[data-design='ruta'][data-theme] .ec-account .acc-gate-list {
+  border: 1px dashed var(--dz-line-strong);
+  border-radius: var(--dz-radius-sm);
+  background: var(--dz-bg);
+  color: var(--dz-ink-2);
+}
+[data-design='ruta'][data-theme] .ec-account .acc-gate-list li {
+  font-family: var(--dz-body);
+  color: var(--dz-ink-2);
+}
+[data-design='ruta'][data-theme] .ec-account .acc-gate-list svg { color: var(--dz-coral-text); }
+[data-design='ruta'][data-theme] .ec-account .acc-gate-link,
+[data-design='ruta'][data-theme] .ec-account .acc-auth-link {
+  font: 700 10px/1 var(--dz-mono);
+  letter-spacing: .18em;
+  text-transform: uppercase;
+  color: var(--dz-accent-text);
+  text-decoration: underline;
+  text-underline-offset: 4px;
+}
+[data-design='ruta'][data-theme] .ec-account .acc-auth-ok {
+  color: var(--dz-ok);
+  font-family: var(--dz-body);
+  font-weight: 700;
+}
+[data-design='ruta'][data-theme] .ec-account .acc-spin {
+  border-color: color-mix(in srgb, var(--dz-muted) 34%, transparent);
+  border-top-color: var(--dz-coral);
+}
+[data-design='ruta'][data-theme] .ec-account .acc-sk {
+  background: color-mix(in srgb, var(--dz-muted) 16%, transparent);
+  border-radius: var(--dz-radius-sm);
+}
+
+/* ---------- Escritorio: hoja de ruta (sidebar) ---------- */
+@media (min-width: 1024px) {
+  [data-design='ruta'][data-theme] .ec-account :is(.acc-mhead, .acc-tabs) { display: none; }
+  [data-design='ruta'][data-theme] .ec-account .acc-shell {
+    grid-template-columns: 300px minmax(0, 1fr);
+    gap: 34px;
+    align-items: start;
+  }
+  /* La hoja de ruta: papel con margen perforado a la izquierda. */
+  [data-design='ruta'][data-theme] .ec-account .acc-side {
+    display: grid;
+    gap: 0;
+    align-content: start;
+    position: sticky;
+    top: calc(var(--sp-top-h, 64px) + 18px);
+    padding: 24px 24px 24px 30px;
+    border: 1px solid var(--dz-line);
+    border-radius: var(--dz-radius);
+    background:
+      repeating-linear-gradient(90deg, transparent 0 7px, color-mix(in srgb, var(--dz-coral) 55%, transparent) 7px 8px) 0 0 / 12px 100% no-repeat,
+      var(--dz-surface);
+    box-shadow: var(--sp-shadow-sm);
+  }
+  [data-design='ruta'][data-theme] .ec-account .acc-id {
+    display: grid;
+    grid-template-columns: 52px minmax(0, 1fr);
+    align-items: center;
+    gap: 12px;
+    padding: 0 0 16px 14px;
+    border-bottom: 1.5px dashed var(--dz-line);
+  }
+  [data-design='ruta'][data-theme] .ec-account .acc-id .acc-tele { grid-column: 1 / -1; }
+  [data-design='ruta'][data-theme] .ec-account .acc-id-name {
+    font-family: var(--dz-display);
+    font-weight: 600;
+    font-size: 20px;
+    letter-spacing: -.01em;
+    color: var(--dz-ink);
+  }
+  [data-design='ruta'][data-theme] .ec-account .acc-id-email {
+    font-family: var(--dz-mono);
+    font-size: 10.5px;
+    letter-spacing: .06em;
+    color: var(--dz-muted);
+  }
+  /* Paradas: número mono + nombre; el activo lleva subrayado sol. */
+  [data-design='ruta'][data-theme] .ec-account .acc-nav { gap: 4px; margin-top: 8px; }
+  [data-design='ruta'][data-theme] .ec-account .acc-navitem {
+    gap: 12px;
+    padding: 13px 12px 13px 14px;
+    border-radius: var(--dz-radius-sm);
+    border-bottom: 0;
+    background: transparent;
+    color: var(--dz-ink-2);
+    font-family: var(--dz-body);
+    font-size: 14.5px;
+    font-weight: 700;
+    transition: background .2s, color .2s;
+  }
+  [data-design='ruta'][data-theme] .ec-account .acc-navitem svg { color: var(--dz-muted); transition: color .2s; }
+  [data-design='ruta'][data-theme] .ec-account .acc-navitem > span:not(.acc-idx) { min-width: 0; }
+  [data-design='ruta'][data-theme] .ec-account .acc-navitem .acc-idx { margin-left: auto; }
+  [data-design='ruta'][data-theme] .ec-account .acc-navitem:hover {
+    background: var(--dz-pine-soft);
+    color: var(--dz-accent-text);
+  }
+  [data-design='ruta'][data-theme] .ec-account .acc-navitem:hover svg,
+  [data-design='ruta'][data-theme] .ec-account .acc-navitem:hover .acc-idx { color: var(--dz-accent-text); }
+  [data-design='ruta'][data-theme] .ec-account .acc-navitem.is-on {
+    background: transparent;
+    color: var(--dz-ink);
+    font-weight: 800;
+    box-shadow: inset 3px 0 0 var(--dz-sun), inset 0 -2px 0 color-mix(in srgb, var(--dz-sun) 55%, transparent);
+  }
+  [data-design='ruta'][data-theme] .ec-account .acc-navitem.is-on svg,
+  [data-design='ruta'][data-theme] .ec-account .acc-navitem.is-on .acc-idx { color: var(--dz-sun-hi); }
+  [data-design='ruta'][data-theme] .ec-account .acc-logout {
+    margin-top: 18px;
+    margin-left: 14px;
+    min-height: 44px;
+    border: 1.5px solid var(--dz-line);
+    border-radius: 999px;
+    background: transparent;
+    color: var(--dz-muted);
+    font: 700 10px/1 var(--dz-mono);
+    letter-spacing: .18em;
+    text-transform: uppercase;
+  }
+  [data-design='ruta'][data-theme] .ec-account .acc-logout:hover {
+    color: var(--dz-danger);
+    border-color: color-mix(in srgb, var(--dz-danger) 50%, transparent);
+    background: color-mix(in srgb, var(--dz-danger) 7%, transparent);
+  }
+}
+
+/* ---------- Responsive ---------- */
+@media (max-width: 1024px) {
+  [data-design='ruta'] .ec-auth .ec-auth-shell {
+    grid-template-columns: minmax(0, 1fr);
+    margin-block: 12px clamp(28px, 5vw, 48px);
+  }
+  [data-design='ruta'] .ec-auth .ec-auth-brand-inner {
+    grid-template-rows: auto auto;
+    gap: 14px;
+    padding: 22px 22px 22px;
+    padding-right: 22px;
+  }
+  [data-design='ruta'] .ec-auth .ec-auth-brand-copy { gap: 8px; max-width: none; }
+  [data-design='ruta'] .ec-auth .ec-auth-brand-text,
+  [data-design='ruta'] .ec-auth .ec-auth-perks,
+  [data-design='ruta'] .ec-auth .ec-auth-brand-foot { display: none; }
+  [data-design='ruta'] .ec-auth .ec-auth-brand-title { font-size: clamp(24px, 5vw, 32px); }
+  [data-design='ruta'] .ec-auth .ec-auth-panel {
+    padding: 24px 22px 30px;
+    border-left: 0;
+    border-top: 1px dashed var(--dz-line-strong);
+  }
+}
+@media (max-width: 860px) {
+  [data-design='ruta'][data-theme] .ec-account .acc-mhead-meta strong { font-size: 17px; }
+  [data-design='ruta'][data-theme] .ec-account .acc-panel-title { font-size: 23px; }
+}
+@media (max-width: 640px) {
+  [data-design='ruta'] .ec-auth { padding-inline: 12px; }
+  [data-design='ruta'] .ec-auth .ec-auth-shell { border-radius: var(--dz-radius); }
+  [data-design='ruta'] .ec-auth .ec-auth-logo { width: 40px; height: 40px; font-size: 20px; }
+  [data-design='ruta'] .ec-auth .ec-auth-brand-name { font-size: 18px; }
+  [data-design='ruta'] .ec-auth .ec-auth-brand-title { font-size: 22px; }
+  [data-design='ruta'] .ec-auth .ec-auth-panel { padding: 20px 16px 28px; }
+  [data-design='ruta'] .ec-auth .ec-auth-head { margin-bottom: 20px; padding-bottom: 16px; }
+  [data-design='ruta'] .ec-auth .ec-auth-title { font-size: 26px; }
+  [data-design='ruta'] .ec-auth .ecaf-grid { grid-template-columns: minmax(0, 1fr); }
+  [data-design='ruta'][data-theme] .ec-account { padding-inline: 14px; }
+  [data-design='ruta'][data-theme] .ec-account .acc-tab { padding: 8px 13px; font-size: 12px; }
+  [data-design='ruta'][data-theme] .ec-account .acc-panel,
+  [data-design='ruta'][data-theme] .ec-account .acc-auth-card,
+  [data-design='ruta'][data-theme] .ec-account .acc-gate-card { padding: 18px 16px; }
+}
+@media (max-width: 390px) {
+  [data-design='ruta'] .ec-auth { padding-inline: 8px; }
+  [data-design='ruta'] .ec-auth .ec-auth-brand-title { font-size: 20px; }
+  [data-design='ruta'] .ec-auth .ec-auth-title { font-size: 23px; }
+  [data-design='ruta'][data-theme] .ec-account { padding-inline: 10px; }
+  [data-design='ruta'][data-theme] .ec-account .acc-mhead { grid-template-columns: 40px minmax(0, 1fr) 40px; gap: 10px; }
+  [data-design='ruta'][data-theme] .ec-account .acc-mhead-meta strong { font-size: 16px; }
+  [data-design='ruta'][data-theme] .ec-account .acc-panel-title { font-size: 21px; }
+}
+/* Tab bar inferior de la tienda (mobile.nav = bottom): el último panel
+   respira sobre la barra fija. */
+@media (max-width: 768px) {
+  [data-design='ruta'][data-theme] .ec-account,
+  [data-design='ruta'] .ec-auth {
+    padding-bottom: calc(24px + env(safe-area-inset-bottom));
+  }
+  [data-design='ruta'][data-theme] .ec-account .acc-tabs {
+    padding-bottom: 6px;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  [data-design='ruta'] :is(.ec-auth, .ec-account) * {
+    transition-duration: .001ms !important;
+    animation-duration: .001ms !important;
+  }
+}
