@@ -72,5 +72,16 @@ awesome-design-skills/
 /.tmp_*/
 /_tmp_*/
 
+# Scripts/artefactos one-off de QA y diseño en la raíz (se regeneran;
+# los seeds demo _seed_*.py son locales y leen imágenes ya borradas)
+/_qa_*
+/_tmp_*
+/_pw_browsers/
+/_pwtmp/
+/_tmp_pw/
+/pwtest-*/
+/_bazar_qa/
+/_seed_*.py
+
 # Cache de Vite/Vitest
 **/.vite/
