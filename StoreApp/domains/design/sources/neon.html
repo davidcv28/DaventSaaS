@@ -641,7 +641,7 @@ a:focus-visible,button:focus-visible,input:focus-visible,select:focus-visible,te
 .f-cat,.ds-cat-btn{display:flex;justify-content:space-between;align-items:center;gap:10px;width:100%;text-align:left;
   padding:9px 11px;border-radius:8px;font-size:13.5px;color:var(--body);transition:background .15s,color .15s}
 .f-cat:hover,.ds-cat-btn:hover{background:var(--accent-dim);color:var(--ink)}
-.f-cat[aria-pressed="true"],.ds-cat-btn[aria-pressed="true"]{background:var(--accent-dim);color:var(--accent);font-weight:600}
+.f-cat[aria-pressed="true"],.ds-cat-btn[aria-pressed="true"]{background:var(--accent-dim);color:color-mix(in srgb,var(--accent) 72%,var(--ink));font-weight:600}
 .f-cat em{font:500 10.5px var(--mono);color:var(--mut);font-style:normal}
 .f-check{display:flex;align-items:center;gap:10px;padding:8px 4px;font-size:13.5px;color:var(--body);cursor:pointer}
 .f-check input{accent-color:var(--accent);width:15px;height:15px}
@@ -919,6 +919,90 @@ body.filters-open .cat-scrim{opacity:1;pointer-events:auto}
 .ds-chat-input:focus{border-color:var(--accent-line)}
 .ds-chat-send{background:var(--accent);color:var(--accent-ink);box-shadow:var(--glow-a)}
 .ds-chat-typing i{background:var(--mut)}
+
+/* ==========================================================================
+   E-COMMERCE — el puente inyecta .dsx-buy al pie de cada .ds-product (en
+   .dsx-buy-wrap), .dsx-account/.dsx-cart al final de .top-in y el CTA de
+   la ficha dentro de .pdp-buy. Píldoras de vidrio con borde de neón;
+   el botón de compra es el mismo tubo encendido que .btn-a.
+   ========================================================================== */
+.top-in .dsx-account,.top-in .dsx-cart{
+  margin-inline-start:0;gap:8px;min-height:40px;padding:0 14px;flex:none;
+  border:1px solid var(--accent-line);border-radius:10px;
+  background:color-mix(in srgb,var(--panel) 55%,transparent);color:var(--body);
+  font:600 12px/1 var(--sans);letter-spacing:.02em;
+  -webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px);
+  transition:border-color .2s,color .2s,background .2s,box-shadow .2s,transform .18s,opacity .18s;
+}
+.top-in .dsx-account:hover,.top-in .dsx-cart:hover{
+  border-color:var(--accent);color:var(--accent);opacity:1;transform:translateY(-2px);
+  background:color-mix(in srgb,var(--accent) 14%,transparent);
+  box-shadow:0 0 18px color-mix(in srgb,var(--accent) 35%,transparent),var(--glow-a);
+}
+.top-in .dsx-account:active,.top-in .dsx-cart:active{transform:translateY(0) scale(.97)}
+.top-in .dsx-account svg,.top-in .dsx-cart svg{width:15px;height:15px}
+.top-in .dsx-cart{padding:0 13px}
+/* Móvil: el cluster brand+burger+píldoras no entra en ~390px — el burger
+   conserva su margin-left:auto y las píldoras se le pegan a la derecha. */
+@media(max-width:960px){
+  .top-in{gap:12px}
+  .top-in .dsx-account{min-height:42px;padding:0 12px}
+  .top-in .dsx-cart{min-height:42px;padding:0 12px}
+}
+/* Tarjeta: tubo encendido a todo lo ancho bajo la foto (misma piel que
+   .btn-a — el glow es la firma del patrón). */
+html[data-ds-commerce="1"] .ds-product .dsx-buy{
+  width:calc(100% - 24px);min-width:0;margin:0 12px 12px;padding:12px 14px;
+  border:1px solid var(--accent);border-radius:10px;
+  background:var(--accent);color:var(--accent-ink);
+  box-shadow:var(--glow-a);
+  font:600 12.5px/1 var(--sans);letter-spacing:.04em;text-align:center;
+  transition:transform .18s,box-shadow .2s,background .2s,border-color .2s,filter .2s;
+}
+html[data-ds-commerce="1"] .ds-product .dsx-buy:hover{
+  transform:translateY(-2px);filter:none;
+  box-shadow:0 0 30px color-mix(in srgb,var(--accent) 55%,transparent),0 0 80px color-mix(in srgb,var(--accent) 20%,transparent);
+}
+html[data-ds-commerce="1"] .ds-product .dsx-buy:active{transform:translateY(0) scale(.985);filter:none}
+html[data-ds-commerce="1"] .ds-product .dsx-buy.is-added{
+  background:var(--ok);border-color:var(--ok);color:var(--bg);
+  box-shadow:none;
+}
+/* Vista lista (≥641px): la tarjeta pasa a fila — el enlace se vuelve
+   grilla (foto | texto | precio) y la compra ocupa la fila de abajo a
+   todo lo ancho. Bajo 641px el modo lista ya apila (regla existente). */
+@media(min-width:641px){
+  .grid-products[data-ds-view-mode="list"] .ds-product{flex-wrap:wrap}
+  .grid-products[data-ds-view-mode="list"] .ds-product>.ds-product-link{
+    flex:1 1 100%;height:auto;display:grid;
+    grid-template-columns:150px minmax(0,1fr) auto;
+    grid-template-areas:"img copy price" "img meta price";
+    gap:4px 20px;align-items:center;
+  }
+  .grid-products[data-ds-view-mode="list"] .ds-product-img{grid-area:img;width:150px;flex:none;aspect-ratio:1}
+  .grid-products[data-ds-view-mode="list"] .ds-product-copy{grid-area:copy;flex:none;display:grid;gap:4px;align-content:center}
+  .grid-products[data-ds-view-mode="list"] .ds-product-cat{grid-area:meta;align-self:start;margin:0}
+  .grid-products[data-ds-view-mode="list"] .ds-stock{display:none}
+  .grid-products[data-ds-view-mode="list"] .ds-product-price{grid-area:price;margin:0;justify-self:end;flex-wrap:wrap}
+  .grid-products[data-ds-view-mode="list"] .dsx-buy-wrap{flex:1 1 100%}
+}
+/* Ficha: el CTA de compra entra como primer ítem de .pdp-buy (fila flex
+   con WhatsApp y "seguir mirando") — barra completa estilo .btn-a. */
+html[data-ds-commerce="1"] [data-surface="product"] .pdp-buy>.dsx-buy{
+  flex:1 1 100%;width:auto;min-width:0;margin:0;padding:13px 24px;min-height:0;
+  border:1px solid var(--accent);border-radius:var(--r-btn);
+  background:var(--accent);color:var(--accent-ink);
+  box-shadow:var(--glow-a);
+  font:600 14px/1 var(--sans);letter-spacing:.01em;text-align:center;
+  transition:transform .18s,box-shadow .2s,background .2s,border-color .2s,filter .2s;
+}
+html[data-ds-commerce="1"] [data-surface="product"] .pdp-buy>.dsx-buy:hover{
+  transform:translateY(-2px);filter:none;
+  box-shadow:0 0 30px color-mix(in srgb,var(--accent) 55%,transparent),0 0 80px color-mix(in srgb,var(--accent) 20%,transparent);
+}
+html[data-ds-commerce="1"] [data-surface="product"] .pdp-buy>.dsx-buy.is-added{
+  background:var(--ok);border-color:var(--ok);color:var(--bg);box-shadow:none;
+}
 </style>
 </head>
 <body>

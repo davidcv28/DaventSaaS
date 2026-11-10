@@ -419,6 +419,104 @@ html[data-ds-theme="dark"] .ds-product-price[data-off]::after{color:var(--warm-i
   background:color-mix(in srgb,var(--accent) 4%,transparent);
 }
 .catalog-grid > .ds-empty{grid-column:1/-1}
+
+/* ---------- E-commerce (CTA inyectado por el puente) ----------
+   .ds-product ya es la tarjeta (flex column con marco): el botón viaja
+   en .dsx-buy-wrap dentro de ella y se ancla al pie con inset de 16px,
+   como un footer de compra dentro del marco. */
+html[data-ds-commerce="1"] .ds-product .ds-product-link{flex:1 1 auto;height:auto}
+html[data-ds-commerce="1"] .ds-product .dsx-buy-wrap{margin-top:auto;min-width:0;padding:0 16px 16px}
+html[data-ds-commerce="1"] .ds-product .dsx-buy{
+  position:relative;overflow:hidden;isolation:isolate;
+  width:100%;margin:0;padding:12px 18px;min-height:46px;
+  border:1px solid var(--accent);border-radius:var(--radius-btn);
+  background:var(--accent);color:var(--accent-ink);
+  font:inherit;font-weight:600;font-size:.95rem;letter-spacing:0;text-transform:none;
+  box-shadow:none;opacity:1;
+  transition:transform .25s var(--ease),background-color .25s,color .25s,border-color .25s,box-shadow .25s var(--ease),filter .2s;
+}
+/* Misma banda de luz que .btn::before. */
+html[data-ds-commerce="1"] .ds-product .dsx-buy::before{
+  content:"";position:absolute;top:0;bottom:0;left:-45%;width:45%;pointer-events:none;
+  background:linear-gradient(100deg,transparent,color-mix(in srgb,var(--accent-ink) 26%,transparent),transparent);
+  transform:translateX(-60%) skewX(-16deg);
+  transition:transform .7s var(--ease);
+}
+html[data-ds-commerce="1"] .ds-product .dsx-buy:hover::before{transform:translateX(320%) skewX(-16deg)}
+html[data-ds-commerce="1"] .ds-product .dsx-buy:hover{
+  transform:translateY(-2px);box-shadow:0 12px 24px -14px var(--accent);
+  background:var(--accent);border-color:var(--accent);color:var(--accent-ink);
+}
+html[data-ds-commerce="1"] .ds-product .dsx-buy:active{transform:translateY(0) scale(.98)}
+html[data-ds-commerce="1"] .ds-product .dsx-buy.is-added{
+  background:var(--warm);border-color:var(--warm);color:var(--warm-ink);
+}
+/* Ficha: .pdp-buy agrupa los CTAs (el puente inserta el suyo primero);
+   cada botón ocupa su fila dentro del grid de .pdp-info. */
+.pdp-buy{display:grid;gap:12px;min-width:0}
+html[data-ds-commerce="1"] [data-surface="product"] .pdp-buy > .dsx-buy[data-ds-buy-slot="pdp"]{
+  width:100%;min-width:0;margin:0;min-height:46px;
+  border:1px solid var(--accent);border-radius:var(--radius-btn);
+  background:var(--accent);color:var(--accent-ink);
+  font:inherit;font-weight:600;font-size:.98rem;letter-spacing:0;text-transform:none;
+  box-shadow:none;opacity:1;
+  transition:transform .25s var(--ease),background-color .25s,color .25s,border-color .25s,box-shadow .25s var(--ease),filter .2s;
+}
+html[data-ds-commerce="1"] [data-surface="product"] .pdp-buy > .dsx-buy[data-ds-buy-slot="pdp"]::before{
+  content:"";position:absolute;top:0;bottom:0;left:-45%;width:45%;pointer-events:none;
+  background:linear-gradient(100deg,transparent,color-mix(in srgb,var(--accent-ink) 26%,transparent),transparent);
+  transform:translateX(-60%) skewX(-16deg);
+  transition:transform .7s var(--ease);
+}
+html[data-ds-commerce="1"] [data-surface="product"] .pdp-buy > .dsx-buy[data-ds-buy-slot="pdp"]:hover::before{transform:translateX(320%) skewX(-16deg)}
+html[data-ds-commerce="1"] [data-surface="product"] .pdp-buy > .dsx-buy[data-ds-buy-slot="pdp"]:hover{
+  transform:translateY(-2px);box-shadow:0 12px 24px -14px var(--accent);
+  background:var(--accent);border-color:var(--accent);color:var(--accent-ink);
+}
+html[data-ds-commerce="1"] [data-surface="product"] .pdp-buy > .dsx-buy[data-ds-buy-slot="pdp"]:active{transform:translateY(0) scale(.98)}
+html[data-ds-commerce="1"] [data-surface="product"] .pdp-buy > .dsx-buy[data-ds-buy-slot="pdp"].is-added{
+  background:var(--warm);border-color:var(--warm);color:var(--warm-ink);
+}
+/* Fallback del puente (sin .pdp-buy): el botón cae suelto en .pdp-info. */
+.pdp-info > .dsx-buy[data-ds-buy-slot="pdp"]{
+  width:100%;min-width:0;margin:0;min-height:46px;justify-self:stretch;
+}
+
+/* ---------- Cuenta y carrito del puente en el chrome ----------
+   Píldora de cuenta y círculo de carrito gemelos del toggle/nav-toggle:
+   heredan el fondo del header (--bg al 96%) y sus tokens. */
+.site-header .dsx-account{
+  margin-inline-start:0;min-height:44px;padding:0 16px;gap:8px;flex:none;
+  border:1px solid var(--line);border-radius:999px;
+  background:var(--surface);color:var(--muted);opacity:1;
+  font:inherit;font-weight:600;font-size:.85rem;letter-spacing:.02em;
+  transition:color .2s,border-color .2s,background .2s,transform .2s var(--ease),opacity .2s;
+}
+.site-header .dsx-account:hover{color:var(--ink);border-color:var(--accent);background:var(--surface);transform:translateY(-1px);opacity:1}
+.site-header .dsx-account:active{transform:translateY(0) scale(.97)}
+.site-header .dsx-cart{
+  width:44px;height:44px;min-height:0;padding:0;gap:0;margin-inline-start:0;flex:none;
+  border:1px solid var(--line);border-radius:50%;
+  background:var(--surface);color:var(--muted);opacity:1;
+  transition:color .2s,border-color .2s,background .2s,transform .2s var(--ease),opacity .2s;
+}
+.site-header .dsx-cart:hover{color:var(--ink);border-color:var(--accent);background:var(--surface);transform:translateY(-1px);opacity:1}
+.site-header .dsx-cart:active{transform:translateY(0) scale(.97)}
+.site-header .dsx-cart svg{width:18px;height:18px}
+.site-header .dsx-cart .dsx-cart-badge{top:-6px;right:-6px}
+@media (max-width:760px){
+  /* Junto al burger: la píldora colapsa a círculo para no ahogar el chrome. */
+  .site-header .dsx-account{width:44px;height:44px;min-height:0;padding:0;justify-content:center}
+  .site-header .dsx-account [data-dsx-account-label]{display:none}
+  .site-header .dsx-account svg{width:18px;height:18px}
+}
+@media (prefers-reduced-motion:reduce){
+  .ds-product .dsx-buy,[data-surface="product"] .pdp-buy > .dsx-buy[data-ds-buy-slot="pdp"],
+  .site-header .dsx-account,.site-header .dsx-cart{transition:none}
+  .ds-product .dsx-buy:hover,[data-surface="product"] .pdp-buy > .dsx-buy[data-ds-buy-slot="pdp"]:hover,
+  .site-header .dsx-account:hover,.site-header .dsx-cart:hover{transform:none}
+}
+
 /* Sin WhatsApp/email/horario cargado, el dato y su CTA se apagan:
    un href vacío recargaba el documento. */
 a[href=""]{pointer-events:none}
@@ -629,7 +727,7 @@ body:not(:has(.ds-plan)) a[href="#suscripciones"]{display:none}
 .pdp-info{display:grid;gap:14px;min-width:0}
 .pdp-kicker{display:flex;gap:10px;flex-wrap:wrap}
 .pdp-kicker span{
-  font-size:.78rem;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--accent);
+  font-size:.78rem;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--accent-text);
   background:color-mix(in srgb,var(--accent) 12%,transparent);padding:4px 10px;border-radius:999px;
 }
 .pdp-kicker span:empty{display:none}
@@ -1642,8 +1740,10 @@ section[id]{scroll-margin-top:86px}
         <h1>{{product_name}}</h1>
         <p class="pdp-ref">Ref. {{product_ref}} · Vendido por {{store_name}}</p>
         <div class="pdp-price"><b>{{product_price}}</b><em>{{product_offer_pct}}</em><s>{{product_old_price}}</s></div>
-        <a class="btn" href="{{product_whatsapp_url}}">Consultar por WhatsApp <svg class="icon arrow" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg></a>
-        <a class="btn ghost" href="#catalogo" data-ds-route="catalog">‹ Volver al catálogo</a>
+        <div class="pdp-buy">
+          <a class="btn" href="{{product_whatsapp_url}}">Consultar por WhatsApp <svg class="icon arrow" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg></a>
+          <a class="btn ghost" href="#catalogo" data-ds-route="catalog">‹ Volver al catálogo</a>
+        </div>
         <div class="pdp-seller">
           <span>Vendido por <strong>{{store_name}}</strong></span>
           <span>{{store_location}}</span>

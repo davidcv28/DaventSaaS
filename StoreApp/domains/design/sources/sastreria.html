@@ -99,6 +99,13 @@
   html[data-ds-surface="landing"] .top-nav a[data-ds-route="home"] i,
   html[data-ds-surface="catalog"] .top-nav a[data-ds-route="catalog"] i,
   html[data-ds-surface="services"] .top-nav a[data-ds-route="services"] i{color:color-mix(in srgb,var(--paper) 62%,transparent)}
+  /* Cuenta/carrito/tema del puente: el nav (margin-left:auto) ya empuja el
+     grupo a la derecha y las píldoras van pegadas; el toggle pierde su
+     auto-margin cuando hay cuenta para no abrir un hueco entre ambos. */
+  .top-in .dsx-account{margin-inline-start:0}
+  .top-in:has(.dsx-account) .ds-theme-toggle,
+  html[data-ds-style] .top-in:has(.dsx-account) .ds-theme-toggle{margin-inline-start:0}
+  .top-in .dsx-account,.top-in .dsx-cart{font:500 10px var(--mono);letter-spacing:.14em;text-transform:uppercase}
   .top-meta{font:500 10px var(--mono);letter-spacing:.14em;text-transform:uppercase;color:var(--muted);white-space:nowrap}
   .top-meta:empty{display:none}
 
@@ -176,6 +183,15 @@
   .ds-product-old{font:400 11px var(--mono);color:var(--muted);text-decoration:line-through}
   .ds-product:hover .ds-product-img{border-color:var(--leather)}
   .ds-product:hover .ds-product-name{color:var(--leather-ink)}
+  /* CTA de compra del puente (commerce): el wrap se apenda dentro de la
+     fila del lookbook; la piel es la de .btn-primary — tinta sobre papel,
+     versalitas mono y radio corto. */
+  .ds-product .dsx-buy{
+    width:calc(100% - 24px);margin:2px 12px 12px;padding:10px 14px;
+    border:0;border-radius:var(--radius-btn);background:var(--ink);color:var(--paper);
+    font:600 10px var(--mono);letter-spacing:.16em;text-transform:uppercase;
+  }
+  .ds-product .dsx-buy:hover:not(.is-added){background:var(--leather-deep);color:var(--on-leather)}
   .ds-empty{grid-column:1/-1;padding:26px 0;color:var(--muted);font-size:13.5px}
 
   .editorial{display:grid;grid-template-columns:minmax(0,.9fr) minmax(0,1.1fr);gap:56px;align-items:start;padding:56px 0;border-top:1px solid var(--line);border-bottom:1px solid var(--line)}
@@ -259,6 +275,15 @@
   .pdp-desc:empty{display:none}
   .pdp-ctas{display:flex;flex-wrap:wrap;gap:10px;margin-top:24px}
   .pdp-ctas .btn[href=""]{display:none}
+  /* CTA de compra del puente en ficha: primer hijo de .pdp-ctas, misma
+     piel que .btn-primary. Especificidad extra para ganarle al
+     [data-surface="product"] .dsx-buy del puente (mismo peso, llega después). */
+  .pdp-info .pdp-ctas .dsx-buy{
+    min-height:48px;margin:0;padding:0 26px;border:0;border-radius:var(--radius-btn);
+    background:var(--ink);color:var(--paper);
+    font:600 11px var(--mono);letter-spacing:.16em;text-transform:uppercase;
+  }
+  .pdp-info .pdp-ctas .dsx-buy:hover:not(.is-added){background:var(--leather-deep);color:var(--on-leather)}
   .pdp-specs{width:100%;border-collapse:collapse;margin-top:30px;font-size:13px}
   .pdp-specs th,.pdp-specs td{padding:11px 12px 11px 0;border-bottom:1px solid var(--line);text-align:left;vertical-align:top;font-weight:400}
   .pdp-specs th{width:34%;font:500 9.5px var(--mono);letter-spacing:.16em;text-transform:uppercase;color:var(--muted)}
@@ -465,6 +490,13 @@
     .top-nav a{flex:1 1 0;justify-content:center;min-height:46px;padding:0 8px;font-size:12px;border-right:0;border-left:1px solid var(--line)}
     .top-nav a:first-child{border-left:0}
     .top-in .ds-theme-toggle{order:2;margin-inline-start:auto}
+    /* Cuenta/carrito del puente en la primera fila: la cuenta toma el
+       auto-margin y empuja el trío a la derecha junto al toggle; en el
+       estilo cruda se ordenan detrás del burger (order 3). */
+    .top-in .dsx-account{order:2;margin-inline-start:auto}
+    .top-in .dsx-cart{order:2;margin-inline-start:0}
+    html[data-ds-style='sastreria-cruda'] .top-in .dsx-account,
+    html[data-ds-style='sastreria-cruda'] .top-in .dsx-cart{order:3;margin-inline-start:0}
     .hero{padding:40px 0 0}
     .hero h1{font-size:clamp(38px,11vw,56px)}
     .specs{grid-template-columns:1fr;gap:0}

@@ -198,6 +198,12 @@ html:not([data-ds-surface="landing"]) main{padding-top:var(--head-h)}
 .rec-grid .ds-product:first-child .ds-product-img.is-empty{aspect-ratio:auto;position:absolute;inset:0;height:100%}
 .rec-grid .ds-product:first-child .ds-product-link{height:100%;display:flex;flex-direction:column}
 .rec-grid .ds-product:first-child .p-media{flex:1;min-height:520px;aspect-ratio:auto}
+/* Con el CTA de compra del puente la tarjeta pasa a columna flexible:
+   el link estira su alto y el botón queda anclado al pie sin salirse
+   del overflow de la tarjeta. */
+.rec-grid .ds-product{display:flex;flex-direction:column}
+.rec-grid .ds-product .ds-product-link{flex:1 1 auto;min-height:0}
+.rec-grid .ds-product:first-child .ds-product-link{height:auto}
 
 .ds-product{min-width:0}
 .ds-product-link{position:relative;display:block}
@@ -230,6 +236,24 @@ html:not([data-ds-surface="landing"]) main{padding-top:var(--head-h)}
 .ds-product-old{font-size:12px;color:var(--muted);font-weight:400;text-decoration:line-through}
 .ds-product-price[data-off]{margin-top:6px}
 .ds-empty{grid-column:1/-1;margin:0;padding:40px 0;text-align:center;font-size:13px;color:var(--muted)}
+
+/* CTA de compra del puente (commerce): misma piel que .btn — tinta
+   plena sobre papel, esquinas vivas y versalitas abiertas. El wrap
+   (.dsx-buy-wrap) lo inyecta el puente dentro de cada .ds-product. */
+.ds-product .dsx-buy,.pdp-ctas .dsx-buy{
+  border-radius:0;background:var(--ink);color:var(--bg);
+  font-family:var(--sans);font-size:11px;font-weight:700;letter-spacing:.2em;
+}
+.ds-product .dsx-buy:hover:not(.is-added),.pdp-ctas .dsx-buy:hover:not(.is-added){
+  background:var(--bg);color:var(--ink);filter:none;
+}
+/* Ficha: el botón entra como primer hijo de .pdp-ctas (grid 1col) y
+   replica el alto del CTA de WhatsApp. La especificidad extra le gana al
+   [data-surface="product"] .dsx-buy del puente (mismo peso, llega después). */
+.pdp-grid .pdp-ctas .dsx-buy{width:100%;min-width:0;min-height:52px;margin:0}
+/* Vista lista: el CTA se compacta y se apoya a la derecha bajo la fila. */
+.cat-grid[data-ds-view-mode="list"] .ds-product>.dsx-buy-wrap{align-items:flex-end}
+.cat-grid[data-ds-view-mode="list"] .dsx-buy{width:auto;min-width:0;margin:0 0 18px;padding:10px 18px}
 
 /* Categorías centradas (eco del menú de la referencia) */
 .cats{display:flex;flex-wrap:wrap;justify-content:center;gap:8px 34px}

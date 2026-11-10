@@ -434,6 +434,105 @@ html[data-ds-theme="dark"] .grid-products .ds-product-link::after{background:lin
 }
 .ds-campaign-label{position:absolute;right:0;top:-8px;height:22px;width:auto;max-width:60%;object-fit:contain}
 
+/* ---------- E-commerce (CTA inyectado por el puente) ----------
+   La ficha visual es .ds-product-link; el botón viaja en .dsx-buy-wrap
+   dentro de .ds-product (flex column) y se ancla al pie de la tarjeta. */
+html[data-ds-commerce="1"] .grid-products .ds-product{display:flex;flex-direction:column}
+html[data-ds-commerce="1"] .grid-products .ds-product-link{flex:1 1 auto;height:auto}
+html[data-ds-commerce="1"] .grid-products .ds-product .dsx-buy-wrap{margin-top:auto;min-width:0}
+html[data-ds-commerce="1"] .grid-products .ds-product .dsx-buy{
+  position:relative;overflow:hidden;isolation:isolate;
+  width:100%;margin:12px 0 0;padding:12px 16px;min-height:46px;
+  border:1.5px solid var(--stamp);border-radius:2px;
+  background:var(--stamp);color:var(--on-stamp);
+  font:500 10.5px/1 var(--mono);letter-spacing:.18em;text-transform:uppercase;
+  box-shadow:none;opacity:1;
+  transition:color .25s var(--ease),border-color .25s var(--ease),transform .25s var(--ease),box-shadow .25s var(--ease),filter .2s;
+}
+/* Misma hoja que .btn-solid::before. */
+html[data-ds-commerce="1"] .grid-products .ds-product .dsx-buy::before{
+  content:"";position:absolute;inset:0;background:var(--band);
+  transform:translateY(102%);transition:transform .35s var(--ease);z-index:-1;
+}
+html[data-ds-commerce="1"] .grid-products .ds-product .dsx-buy:hover::before{transform:none}
+html[data-ds-commerce="1"] .grid-products .ds-product .dsx-buy:hover{
+  border-color:var(--band-ink);color:var(--band-ink);
+  transform:translateY(-1px);box-shadow:0 12px 24px -14px var(--stamp);
+}
+html[data-ds-commerce="1"] .grid-products .ds-product .dsx-buy:active{transform:translateY(0) scale(.98)}
+html[data-ds-commerce="1"] .grid-products .ds-product .dsx-buy.is-added{
+  background:var(--ok);border-color:var(--ok);color:var(--paper);
+}
+/* Vista lista: el CTA se compacta a la derecha, bajo la ficha. */
+.grid-products[data-ds-view-mode="list"] .ds-product .dsx-buy-wrap{align-items:flex-end}
+.grid-products[data-ds-view-mode="list"] .ds-product .dsx-buy{width:auto;min-width:180px;margin:12px 0 0}
+/* Ficha: el puente inserta el CTA como primer ítem de .pdp-buy —
+   basis 100% lo manda a su propia fila a todo lo ancho. */
+html[data-ds-commerce="1"] [data-surface="product"] .dsx-buy[data-ds-buy-slot="pdp"]{
+  position:relative;overflow:hidden;isolation:isolate;
+  flex:1 1 100%;width:100%;min-width:0;margin:0;min-height:48px;
+  border:1.5px solid var(--stamp);border-radius:2px;
+  background:var(--stamp);color:var(--on-stamp);
+  font:500 11px/1 var(--mono);letter-spacing:.18em;text-transform:uppercase;
+  box-shadow:none;opacity:1;
+  transition:color .25s var(--ease),border-color .25s var(--ease),transform .25s var(--ease),box-shadow .25s var(--ease),filter .2s;
+}
+html[data-ds-commerce="1"] [data-surface="product"] .dsx-buy[data-ds-buy-slot="pdp"]::before{
+  content:"";position:absolute;inset:0;background:var(--band);
+  transform:translateY(102%);transition:transform .35s var(--ease);z-index:-1;
+}
+html[data-ds-commerce="1"] [data-surface="product"] .dsx-buy[data-ds-buy-slot="pdp"]:hover::before{transform:none}
+html[data-ds-commerce="1"] [data-surface="product"] .dsx-buy[data-ds-buy-slot="pdp"]:hover{
+  border-color:var(--band-ink);color:var(--band-ink);
+  transform:translateY(-1px);box-shadow:0 14px 26px -16px var(--stamp);
+}
+html[data-ds-commerce="1"] [data-surface="product"] .dsx-buy[data-ds-buy-slot="pdp"]:active{transform:translateY(0) scale(.98)}
+html[data-ds-commerce="1"] [data-surface="product"] .dsx-buy[data-ds-buy-slot="pdp"].is-added{
+  background:var(--ok);border-color:var(--ok);color:var(--paper);box-shadow:none;
+}
+html[data-ds-commerce="1"] [data-surface="product"] .pdp-info > .dsx-buy[data-ds-buy-slot="pdp"]{margin-bottom:14px}
+
+/* ---------- Cuenta y carrito del puente en el chrome ----------
+   Píldora de cuenta y círculo de carrito sobre la banda del header:
+   tinta --band-ink como el toggle, sello --stamp como acento de hover. */
+.top-in .dsx-account{
+  margin-inline-start:0;min-height:40px;padding:0 15px;gap:8px;flex:none;
+  border:1.5px solid color-mix(in srgb,var(--band-ink) 30%,transparent);border-radius:999px;
+  background:transparent;color:var(--band-ink);opacity:1;
+  font:500 10px/1 var(--mono);letter-spacing:.16em;text-transform:uppercase;
+  transition:color .2s,border-color .2s,background .2s,transform .2s var(--ease),opacity .2s;
+}
+.top-in .dsx-account:hover{color:var(--on-stamp);border-color:var(--stamp);background:color-mix(in srgb,var(--stamp) 22%,transparent);transform:translateY(-1px);opacity:1}
+.top-in .dsx-account:active{transform:translateY(0) scale(.97)}
+.top-in .dsx-cart{
+  width:40px;height:40px;min-height:0;padding:0;gap:0;margin-inline-start:0;flex:none;
+  border:1.5px solid color-mix(in srgb,var(--band-ink) 30%,transparent);border-radius:50%;
+  background:transparent;color:var(--band-ink);opacity:1;
+  transition:color .2s,border-color .2s,background .2s,transform .2s var(--ease),opacity .2s;
+}
+.top-in .dsx-cart:hover{color:var(--on-stamp);border-color:var(--stamp);background:color-mix(in srgb,var(--stamp) 22%,transparent);transform:translateY(-1px);opacity:1}
+.top-in .dsx-cart:active{transform:translateY(0) scale(.97)}
+.top-in .dsx-cart svg{width:17px;height:17px}
+.top-in .dsx-cart .dsx-cart-badge{top:-6px;right:-6px}
+@media(max-width:1100px){
+  /* Sin .top-nav el sello "+ Contacto" absorbe el auto-margin y arrastra
+     account·cart·toggle como un solo grupo al borde derecho. */
+  .stamp-mini{margin-left:auto}
+  .top-in .dsx-account{margin-inline-start:0}
+}
+@media(max-width:720px){
+  /* Sin sello tampoco: la cuenta recupera el auto-margin del puente. */
+  .top-in .dsx-account{margin-inline-start:auto;width:40px;height:40px;min-height:0;padding:0;justify-content:center}
+  .top-in .dsx-account [data-dsx-account-label]{display:none}
+  .top-in .dsx-account svg{width:17px;height:17px}
+}
+@media(prefers-reduced-motion:reduce){
+  .grid-products .ds-product .dsx-buy,[data-surface="product"] .dsx-buy[data-ds-buy-slot="pdp"],
+  .top-in .dsx-account,.top-in .dsx-cart{transition:none}
+  .grid-products .ds-product .dsx-buy:hover,[data-surface="product"] .dsx-buy[data-ds-buy-slot="pdp"]:hover,
+  .top-in .dsx-account:hover,.top-in .dsx-cart:hover{transform:none}
+}
+
 /* ============================ LEDGER (registro/stats) ============================ */
 .ledger{background:var(--surface-2);border-top:3px double var(--ink);border-bottom:3px double var(--ink);transition:background-color .5s,border-color .5s}
 .ledger-in{padding-block:clamp(56px,7vw,100px)}

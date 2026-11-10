@@ -136,6 +136,10 @@
      --ink del body, claro en noche): tinta del toldo en ambos temas. */
   .top .dsx-account{color:var(--yellow-ink);border-color:color-mix(in srgb,var(--yellow-ink) 55%,transparent)}
   .top .dsx-account:hover{background:color-mix(in srgb,var(--yellow-ink) 14%,transparent)}
+  /* Cuenta + tema del puente: la píldora de cuenta conserva el auto-margin
+     y empuja el par a la derecha; cuando está presente el toggle pierde el
+     suyo para que queden pegados (sin cuenta, el toggle se banca solo). */
+  .top-in:has(.dsx-account) .ds-theme-toggle{margin-inline-start:0}
   .top-meta span{display:inline-flex;align-items:center;gap:5px;white-space:nowrap;font-family:var(--mono);letter-spacing:-.02em}
   .top-meta span:empty{display:none}
   .top-meta:not(:has(span:not(:empty))){display:none}
@@ -371,6 +375,11 @@
   .ds-product:hover{transform:translateY(-4px);box-shadow:var(--shadow-lift);border-color:color-mix(in srgb,var(--ink) 20%,var(--line))}
   .ds-product:hover::after{transform:scaleX(1)}
   .ds-product-link{display:grid;grid-template-areas:"media" "cat" "copy" "price";grid-template-rows:auto auto 1fr auto;height:100%;min-width:0;color:inherit}
+  /* El CTA de compra del puente se apenda a la tarjeta: la fila pasa a
+     columna flexible para que el botón ocupe su alto natural y no quede
+     recortado por el overflow:hidden de .ds-product. */
+  .ds-product{display:flex;flex-direction:column}
+  .ds-product-link{height:auto;flex:1 1 auto;min-height:0}
   .ds-product-img{
     grid-area:media;display:block;width:100%;aspect-ratio:1/1;object-fit:cover;background:var(--soft);
     transition:transform .6s var(--ease);
@@ -431,6 +440,30 @@
   .ds-empty{padding:22px 0;color:var(--muted);font-size:13.5px}
   .grid > .ds-empty{grid-column:1/-1}
   .band.gray:not(:has(.ds-product)){display:none}
+
+  /* CTA de compra del puente (commerce): pie de tarjeta con la misma mano
+     que .btn-primary; en vista lista se compacta bajo la fila. */
+  .ds-product .dsx-buy{
+    width:calc(100% - 24px);margin:0 12px 12px;padding:11px 14px;
+    border:0;border-radius:var(--radius-btn);background:var(--blue);color:var(--on-primary);
+    font:800 12px var(--font);letter-spacing:.02em;
+    transition:background .18s var(--ease);
+  }
+  .ds-product .dsx-buy:hover{background:var(--blue-deep);color:var(--on-secondary)}
+  .cat-surface .grid[data-ds-view-mode="list"] .dsx-buy{
+    width:auto;min-width:180px;margin:0 8px 14px;padding:10px 16px;
+  }
+  /* Ficha: el CTA de compra se apenda antes del WhatsApp y toma el ancho
+     completo con la misma piel azul; el WhatsApp queda como secundario. */
+  .pdp-surface .pdp-info .dsx-buy{
+    display:flex;align-items:center;justify-content:center;gap:8px;
+    width:100%;min-width:0;min-height:50px;margin:18px 0 0;padding:12px;
+    border:0;border-radius:var(--radius-btn);background:var(--blue);color:var(--on-primary);
+    font-size:14.5px;font-weight:800;
+    transition:background .18s var(--ease);
+  }
+  .pdp-surface .pdp-info .dsx-buy:hover{background:var(--blue-deep);color:var(--on-secondary)}
+  .pdp-surface .pdp-info .dsx-buy + .pdp-buy{margin-top:10px}
 
   /* ==========================================================
      MARCAS — logos o inicial + nombre; cada item filtra el catálogo.
@@ -922,6 +955,7 @@
     .top-in{gap:10px;min-height:0;flex-wrap:wrap;padding-top:10px;padding-bottom:10px;row-gap:8px}
     body{padding-top:158px}
     .brand{font-size:16px;order:1}
+    .top-in .dsx-account{order:2;margin-inline-start:auto}
     .top-in .ds-theme-toggle{order:2;margin-inline-start:auto}
     .search{order:3;flex:1 1 100%;height:44px}
     .search-input{font-size:16px}

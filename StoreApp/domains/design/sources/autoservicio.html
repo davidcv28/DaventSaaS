@@ -261,9 +261,9 @@ h1:empty,h2:empty,h3:empty,p:empty{display:none}
 .ds-product{position:relative;display:flex;flex-direction:column;min-width:0;background:var(--surface);border:1px solid var(--line)}
 .ds-product-link{
   display:grid;flex:1;height:100%;color:inherit;
-  grid-template-columns:minmax(0,1fr) auto;
-  grid-template-areas:"media media" "cat stock" "copy copy" "price price";
-  grid-template-rows:auto auto 1fr auto;
+  grid-template-columns:minmax(0,1fr);
+  grid-template-areas:"media" "cat" "stock" "copy" "price";
+  grid-template-rows:auto auto auto 1fr auto;
 }
 .ds-product-img{grid-area:media;display:block;width:100%;aspect-ratio:1/1;object-fit:contain;background:var(--soft);border-bottom:1px solid var(--line)}
 .ds-product-img.is-empty{border-bottom:1px solid var(--line)}
@@ -952,6 +952,76 @@ a:focus-visible,button:focus-visible,select:focus-visible,input:focus-visible,su
     background:var(--brand);color:var(--on-brand);
   }
   .ds-chat-send:hover{background:var(--brand-deep);color:var(--on-brand-deep)}
+
+/* ==========================================================================
+   E-COMMERCE — el puente inyecta .dsx-buy al pie de cada .ds-product (en
+   .dsx-buy-wrap), .dsx-account/.dsx-cart en .top-in y el CTA de la ficha
+   como hermano anterior de .pdp-buy dentro de .pdp-info. Lenguaje góndola:
+   píldoras de catálogo en el header y botón de marca a todo lo ancho.
+   ========================================================================== */
+.top-in .dsx-account,.top-in .dsx-cart{
+  margin-inline-start:0;gap:8px;height:40px;padding:0 14px;flex:none;
+  border:1px solid var(--line);border-radius:var(--r);background:var(--surface);color:var(--ink);
+  font:600 12px var(--sans);letter-spacing:0;white-space:nowrap;
+  box-shadow:none;opacity:1;
+  transition:border-color .2s,color .2s,background .2s,transform .18s,box-shadow .2s;
+}
+.top-in .dsx-account:hover,.top-in .dsx-cart:hover{
+  border-color:var(--link);color:var(--link);opacity:1;transform:translateY(-1px);
+  background:var(--soft);box-shadow:none;
+}
+.top-in .dsx-account:active,.top-in .dsx-cart:active{transform:scale(.97)}
+.top-in .dsx-account svg,.top-in .dsx-cart svg{width:15px;height:15px}
+.top-in .dsx-cart{padding:0 13px}
+/* Móvil (≤560): la fila se parte en dos — marca | cuenta+carrito+tema a la
+   derecha (la píldora de cuenta conserva su margin-inline-start:auto del
+   puente y apoya el cluster; el toggle pierde el suyo para no abrir un
+   hueco entre carrito y tema). */
+@media(max-width:560px){
+  .top-in .dsx-account{order:2;margin-inline-start:auto}
+  .top-in .dsx-cart{order:2;margin-inline-start:0}
+  .top-in .ds-theme-toggle{margin-inline-start:0}
+  .top-in .dsx-account{height:42px;padding:0 12px}
+  .top-in .dsx-cart{height:42px;padding:0 12px}
+}
+/* Tarjeta: botón de marca bajo el precio — el CTA de góndola. */
+html[data-ds-commerce="1"] .ds-product .dsx-buy{
+  width:calc(100% - 20px);min-width:0;margin:0 10px 10px;padding:11px 12px;
+  border:0;border-radius:var(--r-btn);
+  background:var(--brand);color:var(--on-brand);
+  font:700 12px var(--sans);letter-spacing:0;text-align:center;
+  box-shadow:none;
+  transition:background .2s,color .2s,transform .18s,box-shadow .2s,filter .2s;
+}
+html[data-ds-commerce="1"] .ds-product .dsx-buy:hover{
+  background:var(--brand-deep);color:var(--on-brand-deep);transform:none;filter:none;box-shadow:none;
+}
+html[data-ds-commerce="1"] .ds-product .dsx-buy:active{transform:scale(.98);filter:none}
+html[data-ds-commerce="1"] .ds-product .dsx-buy.is-added{
+  background:var(--ok);color:var(--on-ok);border:0;
+}
+/* Vista lista: el botón baja a la derecha de la fila como CTA compacto. */
+.cat-surface [data-ds-view-mode="list"] .ds-product .dsx-buy{
+  width:auto;min-width:170px;margin:10px 0 12px;align-self:flex-end;
+}
+/* Ficha: el puente inserta el CTA antes del anchor .pdp-buy dentro de
+   .pdp-info — barra completa con la misma piel del botón de WhatsApp. */
+html[data-ds-commerce="1"] [data-surface="product"] .pdp-info>.dsx-buy[data-ds-buy-slot="pdp"]{
+  display:flex;align-items:center;justify-content:center;gap:9px;
+  width:100%;min-width:0;max-width:100%;margin:0 0 12px;padding:0 18px;min-height:52px;
+  border:0;border-radius:var(--r-btn);
+  background:var(--brand);color:var(--on-brand);
+  font-size:15px;font-weight:700;text-align:center;
+  box-shadow:none;
+  transition:background .2s,color .2s,transform .18s,box-shadow .2s,filter .2s;
+}
+html[data-ds-commerce="1"] [data-surface="product"] .pdp-info>.dsx-buy[data-ds-buy-slot="pdp"]:hover{
+  background:var(--brand-deep);color:var(--on-brand-deep);transform:none;filter:none;box-shadow:none;
+}
+html[data-ds-commerce="1"] [data-surface="product"] .pdp-info>.dsx-buy[data-ds-buy-slot="pdp"]:active{transform:scale(.98);filter:none}
+html[data-ds-commerce="1"] [data-surface="product"] .pdp-info>.dsx-buy[data-ds-buy-slot="pdp"].is-added{
+  background:var(--ok);color:var(--on-ok);
+}
 </style>
 </head>
 <body>

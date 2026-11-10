@@ -140,10 +140,8 @@ ul,ol{margin:0;padding:0;list-style:none}
    de tinta detrás: la cabecera fija lee como la versión con scroll
    (tinta sobre papel). --band-ink se remapea solo dentro de .head para
    no tocar héroe, cinta ni pie. */
-html[data-ds-surface="product"] .head,
-html[data-ds-surface="services"] .head{--band-ink:var(--ink)}
-html[data-ds-surface="product"] .brand-meta,
-html[data-ds-surface="services"] .brand-meta{color:color-mix(in srgb,var(--ink) 72%,transparent)}
+html[data-ds-surface="product"] .head{--band-ink:var(--ink)}
+html[data-ds-surface="product"] .brand-meta{color:color-mix(in srgb,var(--ink) 84%,transparent)}
 .ribbon-track{position:relative;z-index:1;display:flex;align-items:center;width:max-content;min-width:100%;animation:marquee 42s linear infinite}
 .ribbon:hover .ribbon-track{animation-play-state:paused}
 .ribbon .ds-note{
@@ -1007,6 +1005,85 @@ body.m-open .m-sheet{transform:none}
     border:1px solid var(--accent-deep);
   }
   .ds-chat-send:hover{background:var(--accent-deep);border-color:var(--accent-deep)}
+
+  /* ==========================================================================
+     E-COMMERCE — el puente inyecta .dsx-buy al pie de cada .ds-product (en
+     .dsx-buy-wrap), .dsx-account/.dsx-cart al final de .top-inner y el CTA de
+     la ficha dentro de .pdp-buy. La compra es un filete de tinta bajo la
+     foto; cuenta/carrito son píldoras hermanas de .nav-wa.
+     ========================================================================== */
+  /* Cuenta y carrito: misma piel que .nav-wa — tinta fina sobre el header,
+     que ya lee --band-ink correcto por superficie (héroe oscuro en portada
+     y servicios, papel en ficha). */
+  .top-inner .dsx-account,.top-inner .dsx-cart{
+    margin-inline-start:0;gap:8px;min-height:42px;padding:0 15px;flex:none;
+    border:1px solid color-mix(in srgb,var(--band-ink) 45%,transparent);border-radius:var(--r-btn);
+    background:transparent;color:var(--band-ink);opacity:1;box-shadow:none;
+    font:500 10.5px/1 var(--mono);letter-spacing:.2em;text-transform:uppercase;
+    transition:background .3s,border-color .3s,color .3s,transform .3s var(--ease);
+  }
+  .top-inner .dsx-account:hover,.top-inner .dsx-cart:hover{
+    background:var(--accent);border-color:var(--accent);color:var(--on-accent);
+    transform:translateY(-1px);opacity:1;
+  }
+  .top-inner .dsx-account:active,.top-inner .dsx-cart:active{transform:scale(.97)}
+  .head.is-scrolled .top-inner .dsx-account,.head.is-scrolled .top-inner .dsx-cart{
+    border-color:color-mix(in srgb,var(--ink) 45%,transparent);color:var(--ink);
+  }
+  .top-inner .dsx-account svg,.top-inner .dsx-cart svg{width:14px;height:14px;flex:none}
+  .top-inner .dsx-cart{min-width:42px;justify-content:center;padding:0 13px}
+  /* Tarjeta: filete de tinta pegado al pie de la foto (bajo la tarjeta, que
+     no tiene marco propio — la imagen ES el producto). */
+  html[data-ds-commerce="1"] .ds-product .dsx-buy{
+    width:100%;min-width:0;margin:0;padding:14px 18px;
+    border:0;border-top:1px solid color-mix(in srgb,var(--ink) 30%,transparent);border-radius:0;
+    background:var(--band);color:var(--band-ink);
+    font:500 10.5px/1 var(--mono);letter-spacing:.24em;text-transform:uppercase;
+    box-shadow:none;text-align:center;
+    transition:background .3s var(--ease),color .3s var(--ease);
+  }
+  html[data-ds-commerce="1"] .ds-product .dsx-buy:hover{
+    background:var(--accent);color:var(--on-accent);transform:none;
+    box-shadow:none;filter:none;
+  }
+  html[data-ds-commerce="1"] .ds-product .dsx-buy:active{transform:none;filter:none}
+  html[data-ds-commerce="1"] .ds-product .dsx-buy.is-added{
+    background:var(--ds-success,#2F6B4F);color:var(--ds-success-ink,#F4EFE6);
+  }
+  /* Vista lista: el filete pasa a botón outline a la derecha de la fila. */
+  html[data-ds-commerce="1"] .grid-products[data-ds-view-mode="list"] .ds-product .dsx-buy{
+    width:auto;min-width:200px;margin:10px 0 0;padding:13px 22px;align-self:flex-end;
+    border:1px solid color-mix(in srgb,var(--ink) 55%,transparent);border-top-width:1px;
+    background:transparent;color:var(--ink);
+  }
+  html[data-ds-commerce="1"] .grid-products[data-ds-view-mode="list"] .ds-product .dsx-buy:hover{
+    background:var(--accent);border-color:var(--accent);color:var(--on-accent);
+  }
+  /* Ficha: el CTA de compra entra como primer ítem de .pdp-buy (fila flex
+     con WhatsApp y "seguir mirando") — barra completa estilo .btn-accent. */
+  html[data-ds-commerce="1"] [data-surface="product"] .pdp-buy > .dsx-buy{
+    flex:1 1 100%;width:auto;min-width:0;margin:0;padding:16px 20px;min-height:0;
+    border:1px solid var(--accent);border-radius:var(--r-btn);
+    background:var(--accent);color:var(--on-accent);
+    font:500 11px/1 var(--mono);letter-spacing:.22em;text-transform:uppercase;
+    box-shadow:none;text-align:center;
+    transition:background .35s var(--ease),border-color .35s var(--ease),transform .35s var(--ease);
+  }
+  html[data-ds-commerce="1"] [data-surface="product"] .pdp-buy > .dsx-buy:hover{
+    background:var(--accent-deep);border-color:var(--accent-deep);color:var(--on-accent);
+    transform:translateY(-1px);box-shadow:none;filter:none;
+  }
+  html[data-ds-commerce="1"] [data-surface="product"] .pdp-buy > .dsx-buy:active{transform:scale(.985)}
+  html[data-ds-commerce="1"] [data-surface="product"] .pdp-buy > .dsx-buy.is-added{
+    background:var(--ds-success,#2F6B4F);border-color:var(--ds-success,#2F6B4F);
+    color:var(--ds-success-ink,#F4EFE6);
+  }
+  /* Header mínimo: cuenta como círculo de icono junto al toggle y burger. */
+  @media (max-width:720px){
+    .top-inner .dsx-account{width:42px;height:42px;padding:0;justify-content:center;gap:0}
+    .top-inner .dsx-account [data-dsx-account-label]{display:none}
+    .top-inner .dsx-cart{width:42px;height:42px;padding:0;justify-content:center}
+  }
 </style>
 </head>
 <body>
