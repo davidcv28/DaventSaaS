@@ -1340,7 +1340,7 @@ def studio_font_css(site_theme):
     y se inlinea porque style-src no permite hojas externas. Cacheado por
     query; si Google no responde se omite (la pila cae a la siguiente).
     """
-    import urllib.request
+    import requests
     from django.core.cache import cache
 
     parts   =   []
@@ -1350,13 +1350,12 @@ def studio_font_css(site_theme):
         css     =   cache.get(key)
         if css is None:
             try:
-                req =   urllib.request.Request(
+                res =   requests.get(
                     f'https://fonts.googleapis.com/css2?family={query}&display=swap',
                     headers = {'User-Agent': _GOOGLE_FONTS_UA},
+                    timeout = 4,
                 )
-                #nosec B310 — URL fija https://fonts.googleapis.com con query de _STUDIO_FONT_FACE (constantes del módulo), timeout acotado
-                with urllib.request.urlopen(req, timeout = 4) as res:
-                    css =   res.read().decode('utf-8', 'replace')
+                css =   res.text if res.ok else ''
             except Exception:
                 css =   ''
             #Lo que no responde se reintenta en 5 min; lo bueno una semana.
