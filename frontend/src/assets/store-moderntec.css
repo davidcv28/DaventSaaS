@@ -100,6 +100,14 @@
   --tpc-desc-ink: var(--mt-ink-2);
   --tpc-old-ink: var(--mt-ink-3);
   --tpc-go-ink: var(--mt-accent-text);
+  /* Botón de carrito de la tarjeta: sin estos tokens caía al fallback
+     --store-accent + texto #fff (cyan claro ≈ 2:1). El par accent/accent-ink
+     se remapea solo dentro de tarjetas repintadas por el tema. */
+  --tpc-add-bg: var(--mt-accent);
+  --tpc-add-ink: var(--mt-accent-ink);
+  --tpc-add-radius: var(--mt-rad-pill);
+  --tpc-stock-font: var(--mt-mono);
+  --tpc-stock-size: 10px;
 
   /* Metadato del navegador (theme-color, hex explícito). --rz-theme-color
      es el hook que lee StorePublicLayout para <meta theme-color>. */
@@ -1287,6 +1295,10 @@
   color: var(--mt-accent-text);
   border-radius: var(--mt-rad-sm);
 }
+.store-page[data-template='moderntec'] .sp-form::before,
+.store-page[data-template='moderntec'] .sp-form::after { display: none; }
+.store-page[data-template='moderntec'] .sp-form-badge,
+.store-page[data-template='moderntec'] .sp-form:hover .sp-form-badge { transform: none; }
 .store-page[data-template='moderntec'] .sp-field label,
 .store-page[data-template='moderntec'] .sp-captcha-q,
 .store-page[data-template='moderntec'] .sp-form-note {
@@ -1395,6 +1407,14 @@
   --rz-inverse-accent: var(--mt-accent);
   --rz-display: var(--mt-display);
   --rz-body: var(--mt-body);
+  /* Escala de radios Raíz -> ModernTec: sin esto el catálogo/ficha caía a
+     los 8/12/18px genéricos de Raíz en vez de la escala técnica. */
+  --rz-rad-sm: var(--mt-rad-sm);
+  --rz-rad-md: var(--mt-rad-md);
+  --rz-rad-lg: var(--mt-rad-lg);
+  --rz-rad-pill: var(--mt-rad-pill);
+  --rz-radius-card: var(--mt-rad-md);
+  --rz-radius-media: var(--mt-rad-md);
   --rz-shadow-1: var(--mt-shadow-1);
   --rz-shadow-2: var(--mt-shadow-device);
   --rz-theme-color: #06080c;
@@ -1476,6 +1496,166 @@
 .store-page[data-template='raiz'].mt-skin .rz-band--accent :is(a.rz-btn--ghost, button.rz-btn--ghost):hover {
   background: rgb(0 0 0 / .12);
   color: var(--mt-accent-ink);
+}
+
+/* --- Tarjetas de producto del catálogo/ficha ---
+   El panel y el filete ya vienen de `.mt-skin .tpc`; acá se iguala el radio
+   al de las tarjetas de portada (12px) y se ajusta el calce del cuerpo. */
+.store-page[data-template='raiz'].mt-skin .rz-cat-card,
+.store-page[data-template='raiz'].mt-skin .rz-pdp-rel-card {
+  --tpc-radius: var(--mt-rad-md);
+  --tpc-pad: 14px 16px 16px;
+}
+.store-page[data-template='raiz'].mt-skin .rz-pdp-rel-card { --tpc-pad: 12px 14px 14px; }
+
+/* --- Catálogo: telemetría en mono, chips tipo instrumento --- */
+.store-page[data-template='raiz'].mt-skin .rz-cat-crumbs,
+.store-page[data-template='raiz'].mt-skin .rz-pdp-crumbs,
+.store-page[data-template='raiz'].mt-skin .rz-sv-crumbs,
+.store-page[data-template='raiz'].mt-skin .rz-cat-counts dt,
+.store-page[data-template='raiz'].mt-skin .rz-cat-counts dd,
+.store-page[data-template='raiz'].mt-skin .rz-cat-group legend,
+.store-page[data-template='raiz'].mt-skin .rz-cat-pricetag,
+.store-page[data-template='raiz'].mt-skin .rz-cat-sort,
+.store-page[data-template='raiz'].mt-skin .rz-cat-promos-label,
+.store-page[data-template='raiz'].mt-skin .rz-cat-more-label {
+  font-family: var(--mt-mono);
+}
+.store-page[data-template='raiz'].mt-skin .rz-cat-counts dd {
+  font-weight: 600;
+  letter-spacing: -.02em;
+  font-variant-numeric: tabular-nums;
+}
+.store-page[data-template='raiz'].mt-skin .rz-cat-check input { accent-color: var(--mt-accent); }
+.store-page[data-template='raiz'].mt-skin .rz-cat-check em {
+  font-family: var(--mt-mono);
+  font-variant-numeric: tabular-nums;
+}
+.store-page[data-template='raiz'].mt-skin .rz-cat-tags button {
+  border-radius: var(--mt-rad-pill);
+  border-color: var(--mt-line-strong);
+  font-family: var(--mt-mono);
+  font-size: 10.5px;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+}
+.store-page[data-template='raiz'].mt-skin .rz-cat-tags button:hover {
+  border-color: var(--mt-accent);
+  background: var(--mt-accent-soft);
+  color: var(--mt-accent-text);
+}
+.store-page[data-template='raiz'].mt-skin .rz-cat-filters-toggle {
+  border-radius: var(--mt-rad-pill);
+  font-family: var(--mt-mono);
+  font-size: 11px;
+  letter-spacing: .1em;
+}
+/* El contador ya usa el par invertido --rz-ink/--rz-bg (funciona en ambos
+   temas); acá solo se redondea a píldora. */
+.store-page[data-template='raiz'].mt-skin .rz-cat-filters-count {
+  border-radius: var(--mt-rad-pill);
+}
+.store-page[data-template='raiz'].mt-skin .rz-cat-rail-close { border-radius: var(--mt-rad-pill); }
+/* Riel de filtros como panel de instrumento (en escritorio es sticky). */
+.store-page[data-template='raiz'].mt-skin .rz-cat-rail {
+  border: 1px solid var(--mt-line);
+  border-radius: var(--mt-rad-md);
+  background: var(--mt-panel);
+  box-shadow: var(--mt-shadow-1);
+  padding: 18px 16px 18px 18px;
+}
+.store-page[data-template='raiz'].mt-skin .rz-cat-promos { background: var(--mt-bg-2); }
+/* La regla de resultados es un filete técnico, no una barra de tinta. */
+.store-page[data-template='raiz'].mt-skin .rz-cat-res-head { border-bottom: 1px solid var(--mt-line-strong); }
+.store-page[data-template='raiz'].mt-skin .rz-cat-prices .rz-field {
+  font-family: var(--mt-mono);
+  font-variant-numeric: tabular-nums;
+}
+.store-page[data-template='raiz'].mt-skin .rz-cat-card-promo {
+  font-family: var(--mt-mono);
+  font-size: 10px;
+  letter-spacing: .06em;
+}
+.store-page[data-template='raiz'].mt-skin .rz-cat-empty-ico,
+.store-page[data-template='raiz'].mt-skin .rz-pdp-empty-ico {
+  border-radius: var(--mt-rad-md);
+  border-color: var(--mt-line-strong);
+  color: var(--mt-accent-text);
+}
+
+/* --- Ficha: paneles instrumento, precio telemetría, sello técnico --- */
+.store-page[data-template='raiz'].mt-skin .rz-pdp-frame {
+  border: 1px solid var(--mt-line);
+  border-radius: var(--mt-rad-md);
+  background: var(--mt-bg-2);
+}
+.store-page[data-template='raiz'].mt-skin .rz-pdp-pricebox {
+  border: 1px solid var(--mt-line);
+  border-radius: var(--mt-rad-md);
+  background: var(--mt-panel);
+  box-shadow: var(--mt-shadow-1);
+  padding: 18px 20px;
+}
+.store-page[data-template='raiz'].mt-skin .rz-pdp-price {
+  font-family: var(--mt-mono);
+  font-weight: 600;
+  letter-spacing: -.02em;
+}
+.store-page[data-template='raiz'].mt-skin .rz-pdp-off {
+  border-radius: var(--mt-rad-sm);
+  font-family: var(--mt-mono);
+  font-size: 10px;
+  letter-spacing: .1em;
+}
+.store-page[data-template='raiz'].mt-skin .rz-pdp-seal {
+  border-radius: var(--mt-rad-sm);
+  box-shadow: none;
+  font-family: var(--mt-mono);
+}
+.store-page[data-template='raiz'].mt-skin .rz-pdp-caption {
+  font-family: var(--mt-mono);
+  font-size: 9.5px;
+  letter-spacing: .14em;
+}
+.store-page[data-template='raiz'].mt-skin .rz-pdp-stock {
+  font-family: var(--mt-mono);
+  font-size: 11px;
+  letter-spacing: .08em;
+}
+.store-page[data-template='raiz'].mt-skin .rz-pdp-specs th {
+  font-family: var(--mt-mono);
+  font-size: 10.5px;
+  font-weight: 600;
+  letter-spacing: .1em;
+  text-transform: uppercase;
+  color: var(--mt-ink-3);
+}
+.store-page[data-template='raiz'].mt-skin .rz-pdp-share {
+  width: 44px;
+  height: 44px;
+  border-radius: var(--mt-rad-pill);
+}
+.store-page[data-template='raiz'].mt-skin .rz-pdp-share:hover {
+  border-color: var(--mt-accent);
+  color: var(--mt-accent-text);
+}
+.store-page[data-template='raiz'].mt-skin .rz-pdp-backlink {
+  font-family: var(--mt-mono);
+  font-size: 11px;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+}
+.store-page[data-template='raiz'].mt-skin .rz-pdp-backlink:hover { color: var(--mt-accent-text); }
+/* Barra de compra móvil: vidrio técnico sobre el lienzo. */
+.store-page[data-template='raiz'].mt-skin .rz-pdp-stick {
+  border-top-color: var(--mt-line);
+  background: color-mix(in srgb, var(--mt-bg) 88%, transparent);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+}
+.store-page[data-template='raiz'].mt-skin .rz-pdp-stick-info strong {
+  font-family: var(--mt-mono);
+  font-weight: 600;
 }
 
 /* ==========================================================================

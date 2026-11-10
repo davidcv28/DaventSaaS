@@ -752,7 +752,11 @@
   border-radius: 6px;
   border: 1px solid var(--mc-line);
   background: var(--mc-surface);
+  aspect-ratio: 1 / 1;
 }
+/* Relacionados: mismo ratio 1/1 que las tarjetas del catálogo
+   (la base fija 4/5 en .rz-pdp-rel-card). */
+.store-page[data-template='mercado'] .mc-product .rz-pdp-rel-card { --tpc-ratio: 1 / 1; }
 .store-page[data-template='mercado'] .mc-product .rz-pdp-name { font-weight: 600; }
 .store-page[data-template='mercado'] .mc-product .rz-pdp-pricebox {
   border-radius: 6px;
@@ -780,6 +784,16 @@
 .store-page[data-template='mercado'] .mc-product .rz-pdp-specs td { color: var(--mc-ink); }
 .store-page[data-template='mercado'] .mc-product .rz-pdp-rev-item,
 .store-page[data-template='mercado'] .mc-product .rz-pdp-reviews .sp-input { border-radius: 6px; }
+/* Formulario de reseñas: el layout base le deja franja degradado, orbe
+   de acento y badge rotado -6° — en la ficha queda como tarjeta de
+   marketplace plana. */
+.store-page[data-template='mercado'] .mc-product .rz-pdp-reviews .sp-form::before,
+.store-page[data-template='mercado'] .mc-product .rz-pdp-reviews .sp-form::after { display: none; }
+.store-page[data-template='mercado'] .mc-product .rz-pdp-reviews .sp-form-badge {
+  box-shadow: none;
+  transform: none;
+}
+.store-page[data-template='mercado'] .mc-product .rz-pdp-reviews .sp-form:hover .sp-form-badge { transform: none; }
 
 /* Servicios: misma estructura, acento azul y radios cortos. */
 .store-page[data-template='mercado'] .mc-services .rz-sv-hero { padding-block: 24px clamp(40px, 5vw, 60px); }

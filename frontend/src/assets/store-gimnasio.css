@@ -1967,6 +1967,10 @@
 .store-page[data-template='gimnasio'] .sp-counter { color: var(--gy-muted); }
 .store-page[data-template='gimnasio'] .sp-captcha-q { color: var(--gy-text-2); }
 .store-page[data-template='gimnasio'] .sp-form-badge { border-radius: 0; background: var(--gy-lime); color: var(--gy-on-lime); }
+.store-page[data-template='gimnasio'] .sp-form::before,
+.store-page[data-template='gimnasio'] .sp-form::after { display: none; }
+.store-page[data-template='gimnasio'] .sp-form-badge,
+.store-page[data-template='gimnasio'] .sp-form:hover .sp-form-badge { transform: none; }
 .store-page[data-template='gimnasio'] .sp-input {
   border-radius: 0;
   border-color: var(--gy-line-strong);
@@ -2020,8 +2024,12 @@
    ========================================================================== */
 .store-page[data-template='raiz'].gy-skin {
   /* El subárbol hereda .store-page{min-height:100vh}: dentro de la página
-     externa eso estiraba catálogo/ficha y dejaba el pie bajo el pliegue. */
+     externa eso estiraba catálogo/ficha y dejaba el pie bajo el pliegue.
+     padding-top:0 por el mismo motivo que en .mt-skin — en ≤1100px la base
+     suma la altura del header fijo y el catálogo arrancaba con un hueco
+     doble debajo de la barra. */
   min-height: 0;
+  padding-top: 0;
   --sp-bg: #0A0B08;
   --sp-card: #151711;
   --sp-card-solid: #151711;
@@ -2161,22 +2169,44 @@
 .store-page[data-template='raiz'].gy-skin .rz-cat-sort select {
   border-radius: 0;
 }
+/* CTA primario = la misma placa lima de .gy-btn--solid de la portada
+   (banda oscura + texto hueso; en modo día la lima ya es oliva y el texto
+   papel — el par --gy-lime/--gy-on-lime invierte solo vía tokens). */
 .store-page[data-template='raiz'].gy-skin .rz-btn {
   border-radius: 0;
   font-family: var(--gy-mono);
   font-weight: 600;
   letter-spacing: .08em;
   text-transform: uppercase;
-  background: var(--rz-accent-deep);
-  border-color: var(--rz-accent-deep);
-  color: var(--rz-on-band);
+  background: var(--gy-lime);
+  border-color: var(--gy-lime);
+  color: var(--gy-on-lime);
 }
 .store-page[data-template='raiz'].gy-skin .rz-btn:hover {
-  background: var(--rz-accent-deep-2);
-  border-color: var(--rz-accent-deep-2);
-  color: var(--rz-on-band);
+  background: var(--gy-text);
+  border-color: var(--gy-text);
+  color: var(--gy-ink);
   box-shadow: none;
   transform: none;
+}
+/* Los <a class="rz-btn"> del catálogo comparten reglas globales que fijan
+   color:var(--rz-on-band) (blanco) en reposo y hover — sobre la placa lima
+   queda ilegible (y en hover el fondo pasa a --gy-text claro). El scope
+   :is() iguala la especificidad de esas reglas para ganarlas. */
+.store-page[data-template='raiz'].gy-skin :is(.rz-cat-page, .rz-pdp-page, .rz-sv-page) a.rz-btn:not(.rz-btn--ghost):not(.rz-btn--ink) {
+  color: var(--gy-on-lime);
+}
+.store-page[data-template='raiz'].gy-skin :is(.rz-cat-page, .rz-pdp-page, .rz-sv-page) a.rz-btn:not(.rz-btn--ghost):not(.rz-btn--ink):hover {
+  color: var(--gy-ink);
+}
+.store-page[data-template='raiz'].gy-skin :is(.rz-cat-page, .rz-pdp-page, .rz-sv-page) a.rz-btn--ghost:hover {
+  color: var(--gy-lime);
+}
+/* .rz-btn--ink (CTA inverso) como <a>: la regla global a.rz-btn le ponía
+   --rz-on-band blanco sobre el fondo claro --rz-ink. */
+.store-page[data-template='raiz'].gy-skin :is(.rz-cat-page, .rz-pdp-page, .rz-sv-page) a.rz-btn--ink,
+.store-page[data-template='raiz'].gy-skin :is(.rz-cat-page, .rz-pdp-page, .rz-sv-page) a.rz-btn--ink:hover {
+  color: var(--rz-bg);
 }
 .store-page[data-template='raiz'].gy-skin .rz-btn--ghost {
   background: transparent;
@@ -2193,6 +2223,214 @@
   border-color: var(--rz-ink);
   color: var(--rz-bg);
 }
+
+/* --- Tarjeta de producto: la misma placa que .gy-card de la portada --- */
+/* Marco fino, filete lima que crece al hover y lift; los tokens --tpc-*
+   ya traen flag/oferta/CTA/add, acá va la geometría y la tipografía de
+   pista (condensada en caja alta, precio en display lima). */
+.store-page[data-template='raiz'].gy-skin .rz-cat-card,
+.store-page[data-template='raiz'].gy-skin .rz-pdp-rel-card {
+  position: relative;
+  --tpc-bg: var(--gy-card);
+  --tpc-border: 1px solid var(--gy-line);
+  --tpc-pad: 16px 18px 18px;
+  --tpc-name-ink: var(--gy-text);
+  --tpc-price-font: var(--gy-display);
+  --tpc-price-size: 24px;
+  --tpc-price-weight: 800;
+  --tpc-price-track: .01em;
+  --tpc-old-size: .72em;
+  --tpc-go-size: 10.5px;
+  --tpc-go-weight: 600;
+  --tpc-go-ink: var(--gy-text-2);
+  --tpc-flag-bg: var(--gy-ink);
+  --tpc-flag-ink: var(--gy-lime);
+  --tpc-flag-border: 0;
+  --tpc-offer-bg: var(--gy-lime);
+  --tpc-offer-ink: var(--gy-on-lime);
+  --tpc-quick-bg: var(--gy-lime);
+  /* Sin --tpc-stock-ink: cae al --sp-success del tema (verde AA en ambos
+     modos y dentro de tarjetas repintadas). */
+  --tpc-stock-font: var(--gy-mono);
+  --tpc-stock-size: 10px;
+  --tpc-img-hover: scale(1.05);
+  transition: border-color .2s var(--gy-ease), transform .25s var(--gy-ease);
+}
+.store-page[data-template='raiz'].gy-skin .rz-pdp-rel-card { --tpc-pad: 13px 15px 15px; }
+/* El guarda de catálogo fija .tpc-name a 15.5px/650/1.3 (más específico que
+   los tokens): para que el nombre hable el idioma del gimnasio hace falta
+   la regla directa con el scope de piel. */
+.store-page[data-template='raiz'].gy-skin .rz-cat-card .tpc-name,
+.store-page[data-template='raiz'].gy-skin .rz-pdp-rel-card .tpc-name {
+  font-family: var(--gy-display);
+  font-weight: 700;
+  line-height: 1.05;
+  letter-spacing: .01em;
+  text-transform: uppercase;
+}
+.store-page[data-template='raiz'].gy-skin .rz-cat-card .tpc-name { font-size: 20px; }
+.store-page[data-template='raiz'].gy-skin .rz-pdp-rel-card .tpc-name { font-size: 15.5px; }
+/* Filete lima superior + lift, igual que .gy-card:hover de la portada. */
+.store-page[data-template='raiz'].gy-skin .rz-cat-card::before,
+.store-page[data-template='raiz'].gy-skin .rz-pdp-rel-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: var(--gy-lime);
+  transform: scaleX(0);
+  transform-origin: left;
+  transition: transform .3s var(--gy-ease);
+  z-index: 3;
+  pointer-events: none;
+}
+.store-page[data-template='raiz'].gy-skin .rz-cat-card:hover,
+.store-page[data-template='raiz'].gy-skin .rz-pdp-rel-card:hover {
+  border-color: var(--gy-line-strong);
+  transform: translateY(-4px);
+}
+.store-page[data-template='raiz'].gy-skin .rz-cat-card:hover::before,
+.store-page[data-template='raiz'].gy-skin .rz-pdp-rel-card:hover::before { transform: scaleX(1); }
+.store-page[data-template='raiz'].gy-skin .rz-cat-card:hover .tpc-go,
+.store-page[data-template='raiz'].gy-skin .rz-pdp-rel-card:hover .tpc-go { color: var(--gy-lime); }
+/* Flags de la media: "Nuevo" en placa de tinta con filete lima y la oferta
+   (-X%) en placa lima — el mismo reparto que .gy-card-index/.gy-card-flag. */
+.store-page[data-template='raiz'].gy-skin .rz-cat-card .tpc-flag,
+.store-page[data-template='raiz'].gy-skin .rz-pdp-rel-card .tpc-flag {
+  font-family: var(--gy-mono);
+  font-size: 9.5px;
+  font-weight: 600;
+  letter-spacing: .12em;
+}
+.store-page[data-template='raiz'].gy-skin .rz-cat-card .tpc-quick,
+.store-page[data-template='raiz'].gy-skin .rz-pdp-rel-card .tpc-quick {
+  border-radius: 0;
+  font-family: var(--gy-mono);
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: .1em;
+  text-transform: uppercase;
+  color: var(--gy-on-lime);
+}
+.store-page[data-template='raiz'].gy-skin .rz-cat-card-promo {
+  font-family: var(--gy-mono);
+  font-size: 10px;
+  letter-spacing: .06em;
+}
+
+/* --- Catálogo: migas, contadores, chips y riel en mono de dato --- */
+.store-page[data-template='raiz'].gy-skin .rz-cat-crumbs,
+.store-page[data-template='raiz'].gy-skin .rz-pdp-crumbs,
+.store-page[data-template='raiz'].gy-skin .rz-sv-crumbs {
+  font-family: var(--gy-mono);
+  font-size: 10px;
+  letter-spacing: .14em;
+}
+.store-page[data-template='raiz'].gy-skin .rz-cat-counts dt {
+  font-family: var(--gy-mono);
+  font-size: 9.5px;
+  letter-spacing: .16em;
+}
+.store-page[data-template='raiz'].gy-skin .rz-cat-counts dd { font-weight: 800; }
+.store-page[data-template='raiz'].gy-skin .rz-cat-group legend,
+.store-page[data-template='raiz'].gy-skin .rz-cat-pricetag,
+.store-page[data-template='raiz'].gy-skin .rz-cat-sort,
+.store-page[data-template='raiz'].gy-skin .rz-cat-promos-label,
+.store-page[data-template='raiz'].gy-skin .rz-cat-more-label {
+  font-family: var(--gy-mono);
+  letter-spacing: .14em;
+}
+.store-page[data-template='raiz'].gy-skin .rz-cat-check input { accent-color: var(--gy-lime); }
+.store-page[data-template='raiz'].gy-skin .rz-cat-check em { font-family: var(--gy-mono); }
+.store-page[data-template='raiz'].gy-skin .rz-cat-tags button {
+  font-family: var(--gy-mono);
+  font-size: 10px;
+  letter-spacing: .1em;
+  text-transform: uppercase;
+}
+.store-page[data-template='raiz'].gy-skin .rz-cat-tags button:hover {
+  border-color: var(--gy-lime);
+  color: var(--gy-lime);
+}
+.store-page[data-template='raiz'].gy-skin .rz-cat-filters-toggle {
+  border-radius: 0;
+  font-family: var(--gy-mono);
+  font-size: 11px;
+  letter-spacing: .12em;
+}
+.store-page[data-template='raiz'].gy-skin .rz-cat-filters-count {
+  border-radius: 0;
+  background: var(--gy-lime);
+  color: var(--gy-on-lime);
+}
+.store-page[data-template='raiz'].gy-skin .rz-cat-rail-close { border-radius: 0; }
+/* Los inputs de precio del riel leen como dato de báscula: mono tabular. */
+.store-page[data-template='raiz'].gy-skin .rz-cat-prices .rz-field {
+  font-family: var(--gy-mono);
+  font-variant-numeric: tabular-nums;
+}
+.store-page[data-template='raiz'].gy-skin .rz-cat-empty-ico,
+.store-page[data-template='raiz'].gy-skin .rz-pdp-empty-ico {
+  border-radius: 0;
+  border-color: var(--gy-line-strong);
+  color: var(--gy-lime);
+}
+.store-page[data-template='raiz'].gy-skin .rz-cat-empty strong,
+.store-page[data-template='raiz'].gy-skin .rz-pdp-empty strong {
+  font-family: var(--gy-display);
+  font-size: 24px;
+  font-weight: 800;
+  letter-spacing: .02em;
+  text-transform: uppercase;
+}
+
+/* --- Ficha: marco de placa, sello lima y specs de dato --- */
+.store-page[data-template='raiz'].gy-skin .rz-pdp-frame { background: var(--gy-plate); }
+.store-page[data-template='raiz'].gy-skin .rz-pdp-caption {
+  font-family: var(--gy-mono);
+  font-size: 9.5px;
+  letter-spacing: .14em;
+}
+.store-page[data-template='raiz'].gy-skin .rz-pdp-seal {
+  border-radius: 0;
+  background: var(--gy-lime);
+  color: var(--gy-on-lime);
+  box-shadow: none;
+  font-family: var(--gy-mono);
+}
+.store-page[data-template='raiz'].gy-skin .rz-pdp-off {
+  border-radius: 0;
+  background: var(--gy-lime);
+  color: var(--gy-on-lime);
+  font-family: var(--gy-mono);
+  letter-spacing: .08em;
+}
+.store-page[data-template='raiz'].gy-skin .rz-pdp-price { color: var(--gy-lime); }
+.store-page[data-template='raiz'].gy-skin .rz-pdp-stock {
+  font-family: var(--gy-mono);
+  font-size: 11px;
+  letter-spacing: .06em;
+}
+.store-page[data-template='raiz'].gy-skin .rz-pdp-specs th {
+  font-family: var(--gy-mono);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: .1em;
+  text-transform: uppercase;
+}
+.store-page[data-template='raiz'].gy-skin .rz-pdp-share {
+  width: 44px;
+  height: 44px;
+  border-radius: 0;
+}
+.store-page[data-template='raiz'].gy-skin .rz-pdp-share:hover {
+  border-color: var(--gy-lime);
+  color: var(--gy-lime);
+}
+.store-page[data-template='raiz'].gy-skin .rz-pdp-backlink:hover { color: var(--gy-lime); }
+.store-page[data-template='raiz'].gy-skin .rz-pdp-stick { border-top-color: var(--gy-line-strong); }
 
 /* ==========================================================================
    MODO DÍA — gimnasio-dia: papel hueso, tinta casi negra, lima apagado.
@@ -2572,5 +2810,12 @@
   .gy-coach,
   .gy-coach-initial,
   .store-page[data-template='gimnasio'] .sp-benefit,
-  .store-page[data-template='gimnasio'] .sp-gallery-item img { transition: none !important; }
+  .store-page[data-template='gimnasio'] .sp-gallery-item img,
+  /* Subárbol Raíz: el lift/filete de .rz-cat-card no debe saltar de golpe. */
+  .store-page[data-template='raiz'].gy-skin .rz-cat-card,
+  .store-page[data-template='raiz'].gy-skin .rz-pdp-rel-card,
+  .store-page[data-template='raiz'].gy-skin .rz-cat-card::before,
+  .store-page[data-template='raiz'].gy-skin .rz-pdp-rel-card::before { transition: none !important; }
+  .store-page[data-template='raiz'].gy-skin .rz-cat-card:hover,
+  .store-page[data-template='raiz'].gy-skin .rz-pdp-rel-card:hover { transform: none; }
 }

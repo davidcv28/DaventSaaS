@@ -697,6 +697,36 @@
   font-family: var(--ss-display, 'Fraunces', Georgia, serif);
   font-weight: 400;
 }
+/* Tarjetas del catálogo y relacionadas: la base fija el nombre a
+   --rz-body y deja el botón de compra como círculo de acento con sombra
+   y los flags con borde — vuelven la firma del atelier (serif, tinta,
+   radios 2px), igual que las .sp-card de la portada. */
+.store-page[data-template='raiz'].ss-skin .rz-cat-card,
+.store-page[data-template='raiz'].ss-skin .rz-pdp-rel-card {
+  --tpc-name-font: var(--ss-display, 'Fraunces', Georgia, serif);
+  --tpc-name-size: 15.5px;
+  --tpc-name-weight: 400;
+  --tpc-name-lh: 1.3;
+  --tpc-price-font: var(--ss-display, 'Fraunces', Georgia, serif);
+  --tpc-price-size: 16px;
+  --tpc-price-weight: 500;
+  --tpc-eyebrow-ink: var(--ss-muted);
+  --tpc-flag-radius: 2px;
+  --tpc-flag-bg: var(--ss-ink);
+  --tpc-flag-ink: var(--ss-paper);
+  --tpc-flag-border: 0;
+  --tpc-flag-transform: uppercase;
+  --tpc-flag-track: .12em;
+  --tpc-offer-bg: var(--ss-leather-raw);
+  --tpc-offer-ink: var(--ss-on-leather);
+  --tpc-quick-bg: var(--ss-ink);
+  --tpc-add-radius: 2px;
+  --tpc-add-bg: var(--ss-ink);
+  --tpc-add-ink: var(--ss-paper);
+  --tpc-add-shadow: none;
+  --tpc-go-ink: var(--ss-leather);
+  --tpc-img-hover: scale(1.02);
+}
 .store-page[data-template='raiz'].ss-skin .rz-sv-hero {
   background: var(--ss-soft);
   border-color: var(--ss-line);
@@ -719,6 +749,90 @@
   border-color: var(--ss-line);
   background: var(--ss-card);
 }
+
+/* ==========================================================================
+   TIENDA: formulario de contacto y CTA final
+   El layout base decora .sp-form con franja degradado, orbe de acento,
+   radio 22px y badge rotado -6°; el CTA es una banda degradado redondeada.
+   El atelier los cambia por fichas planas: reglas finas, sello en tinta
+   y campos hundidos. Las mismas reglas alcanzan al formulario de reseñas
+   del sub-árbol .ss-skin (es descendiente de [data-template='sastreria']).
+   ========================================================================== */
+.store-page[data-template='sastreria'] .sp-form {
+  border: 1px solid var(--ss-line-strong);
+  border-radius: 2px;
+  background: var(--ss-card);
+  box-shadow: none;
+}
+.store-page[data-template='sastreria'] .sp-form::before,
+.store-page[data-template='sastreria'] .sp-form::after { display: none; }
+.store-page[data-template='sastreria'] .sp-form-head {
+  border-bottom: 1px solid var(--ss-line);
+  padding-bottom: 14px;
+}
+.store-page[data-template='sastreria'] .sp-form-badge {
+  border-radius: 2px;
+  background: var(--ss-ink);
+  color: var(--ss-paper);
+  box-shadow: none;
+  transform: none;
+}
+.store-page[data-template='sastreria'] .sp-form:hover .sp-form-badge { transform: none; }
+.store-page[data-template='sastreria'] .sp-form-head strong {
+  font-family: var(--ss-display, 'Fraunces', Georgia, serif);
+  font-weight: 400;
+  letter-spacing: -.02em;
+}
+.store-page[data-template='sastreria'] .sp-field label {
+  font-family: var(--ss-mono, 'JetBrains Mono', monospace);
+  font-size: 9.5px;
+  letter-spacing: .16em;
+  color: var(--sp-muted);
+}
+.store-page[data-template='sastreria'] .sp-field:focus-within label { color: var(--ss-leather); }
+.store-page[data-template='sastreria'] .sp-input {
+  border: 1px solid var(--sp-line);
+  border-radius: 2px;
+  background: var(--sp-surface);
+  color: var(--sp-ink);
+  box-shadow: none;
+}
+.store-page[data-template='sastreria'] .sp-input:focus {
+  border-color: var(--ss-leather);
+  outline: none;
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--ss-leather-raw) 20%, transparent);
+}
+.store-page[data-template='sastreria'] .sp-input-wrap > svg { color: var(--sp-muted); }
+.store-page[data-template='sastreria'] .sp-input-wrap:focus-within > svg { color: var(--ss-leather); }
+.store-page[data-template='sastreria'] .sp-captcha-q {
+  border: 1px dashed var(--ss-line-strong);
+  border-radius: 2px;
+  background: var(--ss-soft);
+}
+.store-page[data-template='sastreria'] .sp-captcha-row .sp-icon-btn {
+  border: 1px solid var(--ss-line);
+  border-radius: 2px;
+  background: var(--ss-card);
+  color: var(--ss-ink);
+}
+/* CTA final: ficha de papel con filete de cuero al borde superior. */
+.store-page[data-template='sastreria'] .sp-cta-inner {
+  border: 1px solid var(--ss-line-strong);
+  border-top: 3px solid var(--ss-leather-raw);
+  border-radius: 2px;
+  background: var(--sp-card);
+  box-shadow: none;
+  color: var(--sp-ink);
+}
+.store-page[data-template='sastreria'] .sp-cta.is-band .sp-cta-inner { border-inline: 0; }
+.store-page[data-template='sastreria'] .sp-cta-inner::after { display: none; }
+.store-page[data-template='sastreria'] .sp-cta-title {
+  font-family: var(--ss-display, 'Fraunces', Georgia, serif);
+  font-weight: 300;
+  letter-spacing: -.03em;
+  color: var(--sp-ink);
+}
+.store-page[data-template='sastreria'] .sp-cta-text { color: var(--sp-ink-2); }
 
 /* ==========================================================================
    MODO NOCHE
