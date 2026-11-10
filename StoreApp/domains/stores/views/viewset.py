@@ -326,7 +326,16 @@ class StoreContactThrottle(AnonRateThrottle):
 # REVIEW THROTTLE (alta de opiniones públicas, antispam por IP)
 #=========================================
 class StoreReviewThrottle(AnonRateThrottle):
+    #GET del listado = lectura pública (comparte el bucket de public_read);
+    #solo el POST de altaOpinion usa el rate antispam acotado — el PDP pide
+    #las reviews en cada ficha y 10/h por IP llenaba el throttle en QA.
     scope   =   'store_review'
+    def allow_request(self, request, view):
+        if request.method == 'GET':
+            self.scope                     =   'public_read'
+            self.rate                      =   self.THROTTLE_RATES.get('public_read')
+            self.num_requests, self.duration =   self.parse_rate(self.rate)
+        return super().allow_request(request, view)
 #=========================================
 # AI DESIGN THROTTLE (motor de diseño, rate en settings)
 #=========================================
