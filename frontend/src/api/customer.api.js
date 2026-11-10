@@ -1,5 +1,4 @@
 import { customerHttp, customerCsrfToken } from './customer.http.js'
-import { http } from './http.js'
 
 // =============================================================================
 // Cuenta del COMPRADOR (dominio customers — NO es la sesión DAVENT).
