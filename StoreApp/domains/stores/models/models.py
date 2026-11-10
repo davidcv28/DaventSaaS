@@ -249,6 +249,12 @@ class StoreCustomization(models.Model):
     #vidriera del negocio. No borra productos ni gestión del panel: la ruta
     #/<slug>/catalogo y el endpoint público devuelven 404 hasta reactivarla.
     show_catalog                =   models.BooleanField(default = True, verbose_name = 'Mostrar página de catálogo')
+    #===== E-commerce (tienda online con pedidos) =====
+    #Activa carrito/checkout/seguimiento en la web pública. Vender de
+    #verdad exige además el perfil fiscal completo (StoreFiscalProfile) —
+    #la regla efectiva la expone services.commerce.orders_enabled() y la
+    #usan el payload público y los endpoints de pedido como gate único.
+    ecommerce_enabled           =   models.BooleanField(default = False, verbose_name = 'Tienda online (e-commerce)')
     #Páginas que componen la web pública del cliente (catálogo cerrado y
     #multi-selección): 'landing' = portada de marketing, 'services' =
     #página de servicios con pedido por WhatsApp, 'catalog' = catálogo de

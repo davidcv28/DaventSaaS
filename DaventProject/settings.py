@@ -203,6 +203,16 @@ INSTALLED_APPS = [
     'StoreApp.domains.catalog.apps.apps.CatalogAppConfig',
     'StoreApp.domains.services.apps.apps.ServicesAppConfig',
     'StoreApp.domains.design.apps.apps.DesignAppConfig',
+    #ECOMMERCE (compradores, carrito, pedidos, membresías, cobros de
+    #tienda, páginas legales, soporte y panel del dueño)
+    'StoreApp.domains.customers.apps.apps.CustomersAppConfig',
+    'StoreApp.domains.cart.apps.apps.CartAppConfig',
+    'StoreApp.domains.orders.apps.apps.OrdersAppConfig',
+    'StoreApp.domains.memberships.apps.apps.MembershipsAppConfig',
+    'StoreApp.domains.storepayments.apps.apps.StorePaymentsAppConfig',
+    'StoreApp.domains.legalpages.apps.apps.LegalPagesAppConfig',
+    'StoreApp.domains.support.apps.apps.SupportAppConfig',
+    'StoreApp.domains.storeadmin.apps.apps.StoreAdminAppConfig',
     #MCP APP (biblioteca de estilos de diseño para la IA; servidor MCP propio)
     'McpApp.domains.skills.apps.apps.SkillsAppConfig'
 ]

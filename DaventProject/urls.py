@@ -93,6 +93,16 @@ urlpatterns = [
     path('api/', include('StoreApp.domains.catalog.urls.urls')),
     path('api/', include('StoreApp.domains.services.urls.urls')),
     path('api/', include('StoreApp.domains.design.urls.urls')),
+    #ECOMMERCE (compradores, carrito, pedidos, membresías, cobros, legal,
+    #soporte y panel del dueño — las rutas las registra cada dominio)
+    path('api/', include('StoreApp.domains.customers.urls.urls')),
+    path('api/', include('StoreApp.domains.cart.urls.urls')),
+    path('api/', include('StoreApp.domains.orders.urls.urls')),
+    path('api/', include('StoreApp.domains.memberships.urls.urls')),
+    path('api/', include('StoreApp.domains.storepayments.urls.urls')),
+    path('api/', include('StoreApp.domains.legalpages.urls.urls')),
+    path('api/', include('StoreApp.domains.support.urls.urls')),
+    path('api/', include('StoreApp.domains.storeadmin.urls.urls')),
     #=================================
     # JWT
     #=================================
