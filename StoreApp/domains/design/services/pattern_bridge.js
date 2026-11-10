@@ -119,6 +119,12 @@
     themeToggle.setAttribute('aria-pressed', dark ? 'true' : 'false')
   }
   function mountThemeToggle() {
+    /* Diseños de un solo modo (fotos = solo claro, neon = solo noche):
+     * declaran data-ds-theme-lock en su markup y el toggle no se monta —
+     * un botón que no cambia nada es peor que no tenerlo. El <html> del
+     * documento lo genera pattern_document, así que el flag viaja en
+     * cualquier elemento del fragmento. */
+    if (root.hasAttribute('data-ds-theme-lock') || document.querySelector('[data-ds-theme-lock]')) return
     if (themeToggle || document.querySelector('.ds-theme-toggle')) return
     var host =
       document.querySelector('header.top .top-inner') ||
