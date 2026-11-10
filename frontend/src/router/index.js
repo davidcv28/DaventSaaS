@@ -21,6 +21,7 @@ const AppDesign = () => import('../views/app/AppDesign.vue')
 const DesignStudioView = () => import('../views/design/DesignStudioView.vue')
 const AdminView = () => import('../views/AdminView.vue')
 const TermsView = () => import('../views/TermsView.vue')
+const PrivacyView = () => import('../views/PrivacyView.vue')
 const ReportView = () => import('../views/ReportView.vue')
 const AboutView = () => import('../views/AboutView.vue')
 const DownloadView = () => import('../views/DownloadView.vue')
@@ -236,6 +237,12 @@ const routes = [
     name: 'terms',
     component: TermsView,
     meta: { title: 'Términos y condiciones' }
+  },
+  {
+    path: '/privacidad',
+    name: 'privacy',
+    component: PrivacyView,
+    meta: { title: 'Política de privacidad' }
   },
   {
     path: '/denuncias',

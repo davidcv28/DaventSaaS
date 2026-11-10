@@ -45,6 +45,11 @@ class ReturnRequestCreateSerializer(serializers.Serializer):
     order_ref       =   serializers.CharField(max_length = ReturnRequest.ORDER_REF_MAX, required = False, allow_blank = True)
     name            =   serializers.CharField(max_length = 120)
     email           =   serializers.EmailField(max_length = 254)
+    #Decreto 274/2019: documento/teléfono/domicilio son obligatorios en el
+    #botón de arrepentimiento (blank=False → required por defecto).
+    document        =   serializers.CharField(max_length = 20)
+    phone           =   serializers.CharField(max_length = 40)
+    address         =   serializers.CharField(max_length = 255)
     reason          =   serializers.ChoiceField(choices = ReturnRequest.REASON_CHOICES)
     details         =   serializers.CharField(max_length = 1000, required = False, allow_blank = True)
     #Honeypot + captcha firmado (mismo challenge del formulario de contacto).
@@ -70,7 +75,7 @@ class ReturnRequestSerializer(serializers.ModelSerializer):
     reason_display      =   serializers.SerializerMethodField()
     class Meta:
         model       =   ReturnRequest
-        fields      =   ['id', 'order_ref', 'customer_email', 'name', 'reason', 'reason_display', 'details', 'status', 'created_at', 'updated_at']
+        fields      =   ['id', 'order_ref', 'customer_email', 'name', 'document', 'phone', 'address', 'reason', 'reason_display', 'details', 'status', 'created_at', 'updated_at']
     def get_reason_display(self, req):
         return req.get_reason_display()
 

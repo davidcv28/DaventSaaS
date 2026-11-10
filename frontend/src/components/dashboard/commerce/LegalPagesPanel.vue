@@ -225,6 +225,11 @@ watch(() => store.hasStore, (h) => { if (h) { loadPages(); loadReturns() } }, { 
                 <td data-label="Cliente">
                   <div>{{ r.name || '—' }}</div>
                   <div class="hint">{{ r.customer_email }}</div>
+                  <div v-if="r.document || r.phone || r.address" class="hint">
+                    <template v-if="r.document">Doc: {{ r.document }}</template>
+                    <template v-if="r.phone"> · Tel: {{ r.phone }}</template>
+                    <template v-if="r.address"> · {{ r.address }}</template>
+                  </div>
                 </td>
                 <td data-label="Motivo">
                   <div>{{ r.reason_display || r.reason }}</div>

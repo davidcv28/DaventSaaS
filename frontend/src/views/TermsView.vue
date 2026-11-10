@@ -107,7 +107,8 @@ import LegalLayout from '../components/LegalLayout.vue'
       <p>
         Estos términos se rigen por las leyes de la República Argentina. Cualquier controversia se
         somete a los tribunales competentes del domicilio de DAVENT, salvo norma de orden público
-        en contrario.
+        en contrario y sin perjuicio de los derechos irrenunciables del consumidor, que podrá
+        iniciar las acciones que correspondan en su propio domicilio.
       </p>
 
       <h2>11. Cambios a estos términos</h2>

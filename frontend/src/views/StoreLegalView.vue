@@ -58,7 +58,7 @@ const kindLabel = computed(() => page.value?.kind_label || LEGAL_KINDS[kind.valu
 const legalPath = (k = '') => ({ path: storeHostSlug ? (k ? `/legal/${k}` : '/legal') : `/${slug.value}/legal${k ? `/${k}` : ''}` })
 
 // ---------- Formulario de devolución (kind === 'returns') ----------
-const retForm = ref({ order_ref: '', name: '', email: '', reason: '', details: '', website: '' })
+const retForm = ref({ order_ref: '', name: '', email: '', document: '', phone: '', address: '', reason: '', details: '', website: '' })
 // Motivos = ReturnRequest.REASON_CHOICES del backend (codes estables).
 const retReasons = [
   { value: 'defect', label: 'Producto defectuoso' },
@@ -76,8 +76,9 @@ async function submitReturn() {
   if (retState.value === 'busy') return
   const captcha = captchaRef.value?.payload?.()
   retErrors.value = {}
-  if (!retForm.value.name.trim() || !retForm.value.email.trim() || !retForm.value.reason) {
-    retErrors.value = { nonField: 'Completá nombre, email y motivo.' }
+  if (!retForm.value.name.trim() || !retForm.value.email.trim() || !retForm.value.reason
+      || !retForm.value.document.trim() || !retForm.value.phone.trim() || !retForm.value.address.trim()) {
+    retErrors.value = { nonField: 'Completá nombre y apellido, email, documento, teléfono, domicilio y motivo.' }
     return
   }
   if (!captcha) {
@@ -92,6 +93,9 @@ async function submitReturn() {
       order_ref: retForm.value.order_ref.trim(),
       name: retForm.value.name.trim(),
       email: retForm.value.email.trim(),
+      document: retForm.value.document.trim(),
+      phone: retForm.value.phone.trim(),
+      address: retForm.value.address.trim(),
       reason: retForm.value.reason,
       details: retForm.value.details.trim(),
       website: retForm.value.website || '',
@@ -177,12 +181,24 @@ async function submitReturn() {
           <p v-if="retState === 'done'" class="ec-legal-ok" role="status">{{ retMsg }}</p>
           <form v-else class="ec-ret-form" novalidate @submit.prevent="submitReturn">
             <label class="sp-field">
-              <span class="sp-field-label">Tu nombre *</span>
-              <input v-model="retForm.name" class="sp-input" type="text" maxlength="150" required :disabled="retState === 'busy'" />
+              <span class="sp-field-label">Nombre y apellido *</span>
+              <input v-model="retForm.name" class="sp-input" type="text" maxlength="120" required :disabled="retState === 'busy'" />
             </label>
             <label class="sp-field">
               <span class="sp-field-label">Tu email *</span>
               <input v-model="retForm.email" class="sp-input" type="email" maxlength="254" required :disabled="retState === 'busy'" />
+            </label>
+            <label class="sp-field">
+              <span class="sp-field-label">Documento (DNI o CUIT) *</span>
+              <input v-model="retForm.document" class="sp-input" type="text" maxlength="20" required :disabled="retState === 'busy'" />
+            </label>
+            <label class="sp-field">
+              <span class="sp-field-label">Teléfono *</span>
+              <input v-model="retForm.phone" class="sp-input" type="tel" maxlength="40" required :disabled="retState === 'busy'" />
+            </label>
+            <label class="sp-field">
+              <span class="sp-field-label">Domicilio *</span>
+              <input v-model="retForm.address" class="sp-input" type="text" maxlength="255" required :disabled="retState === 'busy'" />
             </label>
             <label class="sp-field">
               <span class="sp-field-label">Número de pedido (opcional)</span>

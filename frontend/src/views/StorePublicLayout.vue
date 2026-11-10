@@ -1415,8 +1415,9 @@ onBeforeUnmount(() => {
                  las de DAVENT siguen abajo como links de plataforma. -->
             <RouterLink :to="legalTo('terms')">Términos</RouterLink>
             <RouterLink :to="legalTo('privacy')">Privacidad</RouterLink>
-            <RouterLink :to="legalTo('returns')">Devoluciones</RouterLink>
+            <RouterLink :to="legalTo('returns')">Arrepentimiento y devoluciones</RouterLink>
             <a :href="`${appUrl}/terminos`">Términos y condiciones de DAVENT</a>
+            <a :href="`${appUrl}/privacidad`">Privacidad de DAVENT</a>
             <a :href="`${appUrl}/denuncias`">Denunciar contenido</a>
           </nav>
         </div>

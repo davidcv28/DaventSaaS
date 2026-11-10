@@ -48,12 +48,15 @@ Los plazos de entrega o de coordinación del retiro o la prestación del servici
 8. Cancelaciones
 El comprador puede cancelar un pedido pendiente de pago en cualquier momento. Una vez confirmado el pago, la cancelación queda sujeta a la política de devoluciones publicada en este sitio.
 
-9. Contacto
+9. Ley aplicable y garantía legal
+Estos términos se rigen por las leyes de la República Argentina. Nada de lo aquí dispuesto limita los derechos irrenunciables del consumidor previstos en la Ley 24.240 y normas concordantes. Los productos nuevos cuentan con el plazo de garantía legal que fija la ley (3 meses desde la entrega); los usados, el que corresponda. Las garantías por defectos de fabricación se coordinan directamente con el Comercio.
+
+10. Contacto
 Consultas sobre estos términos o cualquier aspecto de la compra: {{contact_email}}.""",
     'privacy': """POLÍTICA DE PRIVACIDAD — {{store_name}}
 
 1. Responsable del tratamiento
-El responsable del tratamiento de los datos personales de los compradores es {{legal_name}} (CUIT {{cuit}}, domicilio fiscal {{fiscal_address}}), en adelante "el Comercio". El Comercio decide qué datos solicita, para qué los usa y durante cuánto tiempo los conserva.
+El responsable del tratamiento de los datos personales de los compradores es {{legal_name}} (CUIT {{cuit}}, domicilio fiscal {{fiscal_address}}), en adelante "el Comercio". El Comercio decide qué datos solicita, para qué los usa y durante cuánto tiempo los conserva. Este tratamiento se realiza conforme a la Ley 25.326 de Protección de Datos Personales; el Comercio es responsable de la inscripción de su base de datos ante la Agencia de Acceso a la Información (AAIP) cuando la normativa lo exija.
 
 2. Rol de DAVENT
 DAVENT es el prestador de la plataforma tecnológica que aloja esta web (encargado del tratamiento): almacena y procesa los datos por cuenta y siguiendo las instrucciones del Comercio para prestar el servicio. DAVENT no usa los datos de los compradores para fines propios ajenos a la prestación del servicio.
@@ -65,22 +68,25 @@ Nombre, apellido, email, teléfono, dirección de envío, datos del pedido y, cu
 Los datos se usan para gestionar y entregar el pedido, coordinar el pago y la entrega, emitir comprobantes, atender consultas y reclamos, y —solo si el comprador lo acepta— enviar novedades del Comercio.
 
 5. Conservación y seguridad
-Los datos se conservan el tiempo necesario para cumplir las finalidades y las obligaciones legales del Comercio. El Comercio y DAVENT aplican medidas técnicas razonables para protegerlos (comunicación cifrada, control de accesos).
+Los datos del pedido y la documentación comercial se conservan por los plazos que exige la normativa fiscal y de defensa del consumidor (aproximadamente 10 años para documentación comercial); cumplido ese plazo se eliminan o anonimizan. El Comercio y DAVENT aplican medidas técnicas razonables para protegerlos (comunicación cifrada, control de accesos).
 
-6. Derechos del titular
+6. Encargados y transferencias
+Además de DAVENT (encargado del tratamiento), los datos pueden ser tratados por el procesador de pagos que el Comercio haya elegido (por ejemplo Mercado Pago recibe los datos del comprador necesarios para operar el pago) y por los proveedores de infraestructura de la plataforma (alojamiento y almacenamiento de imágenes), que pueden tratar datos en servidores del exterior con nivel de protección adecuado.
+
+7. Derechos del titular
 El comprador puede ejercer sus derechos de acceso, rectificación, actualización y supresión escribiendo a {{contact_email}}. Las solicitudes las gestiona el Comercio como responsable; DAVENT asiste en la medida de lo que la plataforma permite.
 
-7. Menores
+8. Menores
 Esta web está dirigida a personas mayores de 18 años o con capacidad legal para contratar.
 
-8. Cambios
+9. Cambios
 El Comercio puede actualizar esta política; la versión vigente es la publicada en esta página (última actualización indicada al pie).""",
     'returns': """POLÍTICA DE DEVOLUCIONES Y DERECHO DE ARREPENTIMIENTO — {{store_name}}
 
 El comercio responsable de estas ventas es {{legal_name}} (CUIT {{cuit}}, domicilio fiscal {{fiscal_address}}).
 
 1. Derecho de arrepentimiento (Ley 24.240)
-El comprador puede arrepentirse de la compra dentro de los 10 días corridos desde la recepción del producto o la contratación del servicio, sin necesidad de causa y sin penalidad, conforme al artículo 34 de la Ley de Defensa del Consumidor. Para ejercerlo, el comprador debe comunicarlo al Comercio desde esta página (botón "Solicitar devolución") o escribiendo a {{contact_email}}, indicando el pedido y el motivo.
+El comprador puede arrepentirse de la compra dentro de los 10 días corridos desde la recepción del producto o la contratación del servicio, sin necesidad de causa y sin penalidad, conforme al artículo 34 de la Ley de Defensa del Consumidor (24.240) y al "botón de arrepentimiento" establecido por la Ley 27.551 y el Decreto 274/2019. Para ejercerlo, el comprador debe comunicarlo al Comercio desde esta página (formulario "Solicitar una devolución") o escribiendo a {{contact_email}}, indicando el pedido y el motivo.
 
 2. Cómo solicitar
 El formulario de esta página pide los datos del comprador, el número de pedido (si lo tiene) y el motivo. El Comercio confirma la recepción de la solicitud y coordina la devolución del producto o la cancelación del servicio.
@@ -241,7 +247,12 @@ class ReturnRequest(models.Model):
     #plano, sin FK — el dueño lo resuelve manualmente en su panel.
     order_ref                =   models.CharField(max_length = ORDER_REF_MAX, blank = True, verbose_name = 'Referencia del pedido')
     customer_email           =   models.CharField(max_length = 254, verbose_name = 'Email del comprador')
-    name                     =   models.CharField(max_length = 120, verbose_name = 'Nombre del comprador')
+    name                     =   models.CharField(max_length = 120, verbose_name = 'Nombre y apellido del comprador')
+    #Decreto 274/2019 (botón de arrepentimiento): el formulario debe pedir
+    #documento, teléfono y domicilio además de nombre/email/motivo.
+    document                 =   models.CharField(max_length = 20, blank = True, verbose_name = 'Documento (DNI/CUIT)')
+    phone                    =   models.CharField(max_length = 40, blank = True, verbose_name = 'Teléfono')
+    address                  =   models.CharField(max_length = 255, blank = True, verbose_name = 'Domicilio')
     reason                   =   models.CharField(max_length = 40, choices = REASON_CHOICES, verbose_name = 'Motivo')
     details                  =   models.TextField(max_length = 1000, blank = True, verbose_name = 'Detalle')
     status                   =   models.CharField(max_length = 20, choices = STATUS_CHOICES, default = STATUS_NEW, db_index = True, verbose_name = 'Estado')

@@ -209,8 +209,11 @@ def deliver_return_request_email(req : ReturnRequest) -> bool:
     body        =   (
         f'Recibiste una solicitud de devolución en tu web ({req.store.slug}).\n\n'
         f'{order_bit}'
-        f'Nombre: {req.name}\n'
+        f'Nombre y apellido: {req.name}\n'
         f'Email: {req.customer_email}\n'
+        f'Documento: {req.document or "-"}\n'
+        f'Teléfono: {req.phone or "-"}\n'
+        f'Domicilio: {req.address or "-"}\n'
         f'Motivo: {req.get_reason_display()}\n\n'
         f'Detalle:\n{req.details or "-"}\n\n'
         f'Podés gestionarla desde el panel → sección Mis productos → Solicitudes de devolución.'

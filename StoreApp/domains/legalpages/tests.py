@@ -62,6 +62,10 @@ def _captcha_payload(**overrides):
     payload =   {
         'name'              :   'Comprador Prueba',
         'email'             :   'comprador@gmail.com',
+        #Decreto 274/2019: documento/teléfono/domicilio obligatorios.
+        'document'          :   '30123456',
+        'phone'             :   '+5491155551234',
+        'address'           :   'Av. Corrientes 1234, CABA',
         'reason'            :   'change_of_mind',
         'details'           :   'Me arrepentí, gracias.',
         'order_ref'         :   'tok_abc123DEF-_456',
@@ -370,6 +374,9 @@ class ReturnRequestTests(TestCase):
         self.assertEqual(req.name, 'Comprador Prueba')
         self.assertEqual(req.reason, 'change_of_mind')
         self.assertEqual(req.order_ref, 'tok_abc123DEF-_456')
+        self.assertEqual(req.document, '30123456')
+        self.assertEqual(req.phone, '+5491155551234')
+        self.assertEqual(req.address, 'Av. Corrientes 1234, CABA')
         self.assertEqual(req.status, 'new')
         #Notificación in-app al dueño (KIND_SYSTEM).
         notif          =   Notification.objects.get(user = user, kind = Notification.KIND_SYSTEM)

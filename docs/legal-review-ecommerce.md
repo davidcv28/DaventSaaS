@@ -4,6 +4,14 @@ Fecha: 10/11/2026 · Rama: `ECCOMMERCE-ADD` · Alcance: todos los textos
 legales que el sistema sirve o genera (páginas legales por tienda,
 Términos de DAVENT, leyenda de checkout, formulario de arrepentimiento).
 
+> **Estado de remediación (mismo día)**: ALTA-1, ALTA-2, MEDIA-1/2/3 y
+> BAJA-1 fueron **implementados** — el formulario de arrepentimiento ya
+> pide documento/teléfono/domicilio (Decreto 274/2019), existe
+> `/privacidad` de DAVENT, las políticas de tienda declaran
+> transferencias/plazos/AAIP y garantía legal, y el footer rotula
+> "Arrepentimiento y devoluciones". Queda solo la revisión
+> profesional opcional y los pasos manuales de §4.
+
 > **Esto NO es asesoría legal.** Es una revisión técnica de los textos
 > contra la normativa argentina vigente, hecha para detectar brechas
 > concretas. Antes de vender con dinero real conviene una revisión de

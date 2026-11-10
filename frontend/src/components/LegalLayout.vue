@@ -23,6 +23,7 @@ const homeLabel = computed(() => (auth.isAuthenticated ? 'Volver al panel' : 'Vo
         <RouterLink to="/descargar">Descargar app</RouterLink>
         <RouterLink to="/acerca-de">Sobre DAVENT</RouterLink>
         <RouterLink to="/terminos">Términos y condiciones</RouterLink>
+        <RouterLink to="/privacidad">Privacidad</RouterLink>
         <RouterLink to="/denuncias">Denunciar contenido</RouterLink>
       </nav>
     </header>

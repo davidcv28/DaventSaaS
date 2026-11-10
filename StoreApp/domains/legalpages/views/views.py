@@ -227,6 +227,9 @@ class PublicReturnRequestView(APIView):
             order_ref       =   data.get('order_ref') or '',
             customer_email  =   data['email'],
             name            =   data['name'],
+            document        =   data['document'],
+            phone           =   data['phone'],
+            address         =   data['address'],
             reason          =   data['reason'],
             details         =   data.get('details') or '',
         )
