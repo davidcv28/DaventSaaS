@@ -234,7 +234,7 @@ html[data-ds-surface="landing"] header.top:not(.solid):not(.menu-open){
     linear-gradient(180deg,rgba(12,16,22,.78) 0%,rgba(12,16,22,.25) 42%,rgba(12,16,22,.96) 100%),
     linear-gradient(90deg,rgba(232,72,31,.16),transparent 58%);
 }
-.hero-bg:has(img[src=""]){background:
+.hero-bg:not(:has(img)){background:
   radial-gradient(62% 58% at 84% 6%,rgba(232,72,31,.24),transparent 64%),
   repeating-linear-gradient(0deg,transparent 0 47px,rgba(226,232,240,.05) 47px 48px),
   repeating-linear-gradient(90deg,transparent 0 47px,rgba(226,232,240,.05) 47px 48px),var(--hdr-bg)}
@@ -487,7 +487,7 @@ html[data-ds-surface="landing"] header.top:not(.solid):not(.menu-open){
 }
 .split-img img{width:100%;height:100%;object-fit:cover;filter:grayscale(45%) contrast(1.05) brightness(.7)}
 .split-img::after{content:'';position:absolute;inset:0;background:linear-gradient(135deg,color-mix(in srgb,var(--accent) 20%,transparent),transparent 52%)}
-.split-img:has(img[src=""])::before{
+.split-img:not(:has(img))::before{
   content:"SIN IMAGEN";position:absolute;inset:auto 0 14px;text-align:center;
   font-family:var(--mono);font-size:9px;letter-spacing:.24em;color:var(--mut);
 }
@@ -507,6 +507,17 @@ html[data-ds-surface="landing"] header.top:not(.solid):not(.menu-open){
 }
 .ds-service-desc{color:var(--steel);font-size:14px;max-width:46ch;display:block}
 .ds-service-desc:empty{display:none}
+/* Nombre, descripción y meta ocupan la columna derecha: el contador ::before
+   queda solo en la primera celda (columna auto). */
+.ds-services-list .ds-service > .ds-service-name,
+.ds-services-list .ds-service > .ds-service-desc,
+.ds-services-list .ds-service > .ds-service-meta{grid-column:2}
+.ds-service-meta{
+  display:flex;align-items:center;gap:9px;margin-top:9px;
+  font-family:var(--mono);font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:var(--accent-text);
+}
+.ds-service-meta .ds-service-ico{display:inline-flex;flex:none}
+.ds-service-meta .ds-service-ico svg{width:14px;height:14px;display:block}
 
 /* ---------- banda de números ---------- */
 .band{
@@ -785,7 +796,7 @@ footer{border-top:1px solid var(--line);position:relative;overflow:hidden}
 .cat-search .suggest{
   position:absolute;top:calc(100% + 8px);left:0;right:0;z-index:30;
   background:var(--panel);border:1px solid var(--line-2);
-  box-shadow:0 24px 48px -28px rgba(0,0,0,.75);max-height:60vh;overflow:auto;
+  box-shadow:0 24px 48px -28px rgba(0,0,0,.75);max-height:min(calc(var(--fr-h,100vh) * .6),420px);overflow:auto;
 }
 .suggest-head{font-family:var(--mono);font-size:9px;letter-spacing:.2em;text-transform:uppercase;color:var(--accent-text);padding:12px 14px 6px}
 .suggest-item{
@@ -817,11 +828,11 @@ footer{border-top:1px solid var(--line);position:relative;overflow:hidden}
 .pdp-grid{display:grid;grid-template-columns:1fr 1fr;gap:clamp(26px,4vw,60px);align-items:start}
 .pdp-media{position:relative;border:1px solid var(--line);background:var(--panel);overflow:hidden}
 .pdp-media img{width:100%;aspect-ratio:4/5;object-fit:cover;filter:grayscale(30%) contrast(1.04) brightness(.9)}
-.pdp-media:has(img[src=""]){display:grid;place-items:center;aspect-ratio:4/5;background:
+.pdp-media:not(:has(img:not(.ds-campaign-label))){display:grid;place-items:center;aspect-ratio:4/5;background:
   radial-gradient(120% 100% at 18% 0%,color-mix(in srgb,var(--accent) 16%,transparent),transparent 62%),
   repeating-linear-gradient(0deg,transparent 0 23px,color-mix(in srgb,var(--ink) 6%,transparent) 23px 24px),
   var(--bg-2)}
-.pdp-media:has(img[src=""])::after{content:"SIN IMAGEN";font-family:var(--mono);font-size:10px;letter-spacing:.24em;color:var(--mut)}
+.pdp-media:not(:has(img:not(.ds-campaign-label)))::after{content:"SIN IMAGEN";font-family:var(--mono);font-size:10px;letter-spacing:.24em;color:var(--mut)}
 .pdp-media .ds-campaign-label{position:absolute;top:14px;left:14px;z-index:3;height:26px;width:auto;max-width:60%;object-fit:contain;padding:3px;background:color-mix(in srgb,var(--hdr-bg2) 82%,transparent);border:1px solid rgba(226,232,240,.22)}
 .pdp-media-tag{
   position:absolute;top:14px;right:0;z-index:3;background:var(--accent);color:var(--on-accent);
@@ -1103,6 +1114,7 @@ html[data-motion="on"] .rv.in{
   </div>
 </nav>
 
+<main>
 <div data-surface="landing">
 
   <!-- ============================ HERO ============================ -->
@@ -1438,6 +1450,8 @@ html[data-motion="on"] .rv.in{
   </div>
 </section>
 
+</main>
+
 <!-- ============================ FOOTER ============================ -->
 <footer>
   <div class="word-ribbon" aria-hidden="true" data-marquee>
@@ -1516,12 +1530,16 @@ html[data-motion="on"] .rv.in{
     var d = e.data || {}
     if (d.type === 'davent:ds-frame') {
       frame = { top: Number(d.top) || 0, vh: Number(d.vh) || window.innerHeight }
+      /* --fr-h: alto visible del marco. Las unidades vh del documento miden
+         la página entera (iframe estirado) — las hojas/sugerencias fijas se
+         dimensionan contra el marco real. */
+      root.style.setProperty('--fr-h', Math.round(Math.max(1, frame.vh)) + 'px')
       paintHead()
       syncHero()
       syncMenuBox()
       schedule()
     }
-    if (d.type === 'davent:ds-surface') setTimeout(function () { paintHead(); syncHero(); reveal() }, 60)
+    if (d.type === 'davent:ds-surface') setTimeout(function () { hideEmpty(); setupServices(); paintHead(); syncHero(); reveal() }, 60)
   })
 
   /* Menú móvil */
@@ -1549,6 +1567,15 @@ html[data-motion="on"] .rv.in{
     if (btn) btn.setAttribute('aria-expanded', open ? 'true' : 'false')
     root.style.overflow = open ? 'hidden' : ''
     syncMenuBox()
+    /* Foco: al abrir entra al primer enlace del panel; al cerrar vuelve
+       al botón que lo disparó (el menú cerrado es display:none y no es
+       focuseable, así que no hace falta atrapar el tab). */
+    if (open) {
+      var first = menu.querySelector('a,button')
+      if (first) first.focus()
+    } else if (btn) {
+      btn.focus()
+    }
   }
   document.addEventListener('click', function (e) {
     var t = e.target
@@ -1556,7 +1583,18 @@ html[data-motion="on"] .rv.in{
     if (t.closest('[data-m-open]')) { setMenu(!menu || !menu.classList.contains('open')); return }
     if (t.closest('[data-m-close]')) setMenu(false)
   })
-  document.addEventListener('keydown', function (e) { if (e.key === 'Escape') setMenu(false) })
+  document.addEventListener('keydown', function (e) {
+    if (e.key !== 'Escape') return
+    setMenu(false)
+    /* Panel de filtros colapsable (data-open): el puente solo ata Escape a
+       las hojas con [data-ds-filters-close]; acá se cierra a mano. */
+    var fpanel = document.querySelector('[data-ds-filters-panel][data-open]')
+    if (fpanel) {
+      fpanel.removeAttribute('data-open')
+      var ft = document.querySelector('[data-ds-filters-toggle]')
+      if (ft) ft.setAttribute('aria-expanded', 'false')
+    }
+  })
   window.addEventListener('resize', function () { if (window.innerWidth > 960) setMenu(false) })
   /* Dentro del host el iframe no scrollea (llega `davent:ds-frame`), pero
      el documento también se abre solo (QA): un listener pasivo cubre ese
@@ -1570,16 +1608,59 @@ html[data-motion="on"] .rv.in{
     track.innerHTML = html + html
   })
 
+  /* ---------- Secciones sin datos ---------- */
+  function hideEmpty() {
+    /* <img src=""> pide el propio documento (~100 KB): se quita del DOM —
+       los :not(:has(img)) de los placeholders (hero, ficha, split) siguen
+       resolviendo porque ya no hay <img> que matchee. */
+    ;[].slice.call(document.querySelectorAll('img[src=""],img:not([src])')).forEach(function (img) { img.remove() })
+    ;[].slice.call(document.querySelectorAll('[data-hide-if-empty]')).forEach(function (sec) {
+      var sels = sec.getAttribute('data-hide-if-empty').split('|')
+      var has = sels.some(function (sel) {
+        var node = sec.querySelector(sel)
+        return node && (node.children.length || (node.textContent || '').trim())
+      })
+      if (!has) sec.hidden = true
+    })
+  }
+
+  /* Precio/duración/icono de cada servicio viajan en data-attrs del
+     fragmento .ds-service: se materializan como línea de meta visible. */
+  function setupServices() {
+    ;[].slice.call(document.querySelectorAll('.ds-service')).forEach(function (li) {
+      if (li.querySelector('.ds-service-meta')) return
+      var price = li.getAttribute('data-price-label') || ''
+      var dur = li.getAttribute('data-duration') || ''
+      var icon = li.getAttribute('data-icon-svg') || ''
+      if (!price && !dur && !icon) return
+      var meta = document.createElement('span')
+      meta.className = 'ds-service-meta'
+      if (icon) {
+        var ico = document.createElement('span')
+        ico.className = 'ds-service-ico'
+        ico.innerHTML = icon
+        meta.appendChild(ico)
+      }
+      meta.appendChild(document.createTextNode([price, dur].filter(Boolean).join(' · ')))
+      li.appendChild(meta)
+    })
+  }
+
   paintHead()
   syncHero()
+  hideEmpty()
+  setupServices()
   reveal()
   setTimeout(function () {
     if (!frame) {
       var vh = window.innerHeight || 800
       root.style.setProperty('--hero-h', Math.max(520, Math.min(Math.round(vh * 0.92), 880)) + 'px')
+      root.style.setProperty('--fr-h', Math.round(Math.max(1, vh)) + 'px')
     }
     paintHead()
     syncHero()
+    hideEmpty()
+    setupServices()
     reveal()
   }, 600)
 })()

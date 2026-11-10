@@ -156,6 +156,7 @@ html[data-ds-theme="dark"] .eyebrow::after{
   padding:14px 26px;border:1px solid transparent;cursor:pointer;
   clip-path:polygon(0 0,calc(100% - 12px) 0,100% 12px,100% 100%,0 100%);
   font:600 12px/1 var(--mono);letter-spacing:.18em;text-transform:uppercase;
+  white-space:nowrap;
   transition:transform .18s var(--ease),box-shadow .25s var(--ease),background .2s,border-color .2s,color .2s;
 }
 .btn::before{
@@ -240,6 +241,11 @@ html[data-ds-theme="dark"] .head-progress i{background:var(--volt)}
 .mmenu{
   position:fixed;inset:0;z-index:70;display:flex;flex-direction:column;
   background:var(--band);color:var(--band-ink);
+  /* El iframe llega estirado a todo el documento: inset:0 solo mediría el
+     documento entero. --fr-h es el alto visible del marco (lo fija paint()
+     con davent:ds-frame); el fallback 100vh aplica solo antes del primer
+     pintado, cuando el menú sigue cerrado. */
+  height:var(--fr-h,100vh);max-height:var(--fr-h,100vh);overflow-y:auto;
   transform:translateY(-102%);transition:transform .38s var(--ease);
 }
 body.m-open .mmenu{transform:none}
@@ -1000,7 +1006,7 @@ html[data-ds-theme="dark"] .cat-hero h1 em{color:var(--volt)}
 .cat-aside{
   position:sticky;top:calc(var(--head-h) + 16px);align-self:start;
   border:1px solid var(--line);background:var(--surface);padding:20px;
-  max-height:calc(100vh - var(--head-h) - 32px);overflow:auto;
+  max-height:calc(var(--fr-h,100vh) - var(--head-h) - 32px);overflow:auto;
 }
 /* En escritorio el panel abre con una "ceja" de instrumento; en móvil la
    hoja ya lleva su propio encabezado (.cat-aside-head). */
@@ -1012,10 +1018,10 @@ html[data-ds-theme="dark"] .cat-hero h1 em{color:var(--volt)}
 @media(max-width:980px){.cat-aside::before{display:none}}
 .cat-scrim{display:none}
 @media(max-width:980px){
-  .cat-aside{position:fixed;inset:0;z-index:80;max-height:none;border:0;transform:translateX(-102%);transition:transform .32s var(--ease)}
-  body.f-open .cat-aside{transform:none}
-  .cat-scrim{display:block;position:fixed;inset:0;z-index:75;background:color-mix(in srgb,var(--band) 60%,transparent);opacity:0;pointer-events:none;transition:opacity .3s}
-  body.f-open .cat-scrim{opacity:1;pointer-events:auto}
+  .cat-aside{position:fixed;inset:0;z-index:80;max-height:var(--fr-h,100vh);border:0;transform:translateX(-102%);transition:transform .32s var(--ease)}
+  body.filters-open .cat-aside{transform:none}
+  .cat-scrim{display:block;position:fixed;inset:0;z-index:75;max-height:var(--fr-h,100vh);background:color-mix(in srgb,var(--band) 60%,transparent);opacity:0;pointer-events:none;transition:opacity .3s}
+  body.filters-open .cat-scrim{opacity:1;pointer-events:auto}
 }
 .cat-aside-head{display:none;align-items:center;justify-content:space-between;margin-bottom:14px}
 @media(max-width:980px){.cat-aside-head{display:flex}}
@@ -1230,6 +1236,7 @@ html[data-ds-theme="dark"] .pdp-media::before,html[data-ds-theme="dark"] .pdp-me
   position:absolute;top:14px;left:14px;z-index:2;
   font:600 10px/1 var(--mono);letter-spacing:.16em;color:var(--on-accent);background:var(--accent);padding:7px 10px;
 }
+.pdp-off:empty{display:none}
 html[data-ds-theme="dark"] .pdp-off{background:var(--volt)}
 .pdp-ref-chip{
   position:absolute;bottom:14px;left:14px;z-index:2;
@@ -1563,6 +1570,11 @@ html[data-ds-theme="dark"] .wo-bar{
 @media(max-width:720px){.wo-bar .btn{margin-left:0;flex:1 1 100%}}
 .ds-service-name{font:500 17px/1.3 var(--sans);letter-spacing:-.01em}
 .ds-service-desc{display:block;margin-top:4px;font-size:13.5px;color:var(--muted);line-height:1.6;max-width:64ch}
+/* Sin servicios ni ofertas la hoja de "órdenes de trabajo" se oculta
+   (data-hide-if-empty) y el aviso .svc-empty toma su lugar; con contenido
+   el aviso se apaga. */
+.svc-empty{display:none}
+[data-surface="services"]:not(:has(.ds-offer)):not(:has(.ds-service)) .svc-empty{display:block}
 .svc-empty{
   position:relative;border:1px dashed var(--line);padding:44px 22px 30px;text-align:center;
   font:500 12px/1.7 var(--mono);letter-spacing:.08em;text-transform:uppercase;color:var(--muted);
@@ -2294,7 +2306,7 @@ html[data-ds-theme="dark"] .ds-chat-typing i{background:var(--volt)}
           <button class="f-done" type="button" data-ds-filters-close>Aplicar</button>
         </div>
       </aside>
-      <div class="cat-scrim" data-ds-filters-close aria-hidden="true"></div>
+      <div class="cat-scrim" data-ds-filters-scrim aria-hidden="true"></div>
       <div class="cat-results">
         <div class="cat-bar">
           <form class="cat-search" data-ds-search role="search">
@@ -2464,6 +2476,7 @@ html[data-ds-theme="dark"] .ds-chat-typing i{background:var(--volt)}
 <script>
 (function () {
   var body = document.body
+  var root = document.documentElement
   var head = document.querySelector('.top')
   var progress = document.querySelector('[data-scroll-progress]')
   var frame = null
@@ -2487,20 +2500,39 @@ html[data-ds-theme="dark"] .ds-chat-typing i{background:var(--volt)}
     var btn = document.querySelector('[data-m-open]')
     if (btn) btn.setAttribute('aria-expanded', open ? 'true' : 'false')
     document.documentElement.style.overflow = open ? 'hidden' : ''
+    /* Foco: al abrir entra al primer enlace del panel; al cerrar vuelve al
+       disparador (el menú cerrado queda translateY fuera de pantalla). */
+    if (open) {
+      var first = document.querySelector('.mmenu a, .mmenu button')
+      if (first) first.focus()
+    } else if (btn && document.activeElement && document.activeElement !== document.body) {
+      btn.focus()
+    }
   }
   document.addEventListener('click', function (e) {
     var t = e.target
     if (!t || !t.closest) return
     if (t.closest('[data-m-open]')) { setMenu(true); return }
     if (t.closest('[data-m-close]')) setMenu(false)
-    if (t.closest('[data-ds-filters-toggle]')) { body.classList.add('f-open'); return }
-    if (t.closest('[data-ds-filters-close]')) body.classList.remove('f-open')
+    /* Los filtros los maneja el puente (is-open + filters-open en body,
+       data-ds-filters-scrim en el velo, Escape dentro del panel). Acá no
+       se toca: dos estados paralelos se desincronizaban al cerrar por
+       scrim o Escape fuera del foco del panel. */
   })
+  /* Cierra la hoja de filtros por la vía del puente: click en su botón
+     de cierre (el listener del puente ya está bindeado al elemento). */
+  function closeFilters() {
+    var panel = document.querySelector('[data-ds-filters-panel].is-open')
+    if (!panel) return false
+    var btn = panel.querySelector('[data-ds-filters-close]')
+    if (btn) btn.click()
+    return true
+  }
   document.addEventListener('keydown', function (e) {
-    if (e.key === 'Escape') { setMenu(false); body.classList.remove('f-open') }
+    if (e.key === 'Escape') { setMenu(false); closeFilters() }
   })
   window.addEventListener('resize', function () {
-    if (window.innerWidth > 960) { setMenu(false); body.classList.remove('f-open') }
+    if (window.innerWidth > 960) { setMenu(false); closeFilters() }
     paint()
   })
   window.addEventListener('scroll', function () { if (!frame) paint() }, { passive: true })
@@ -2526,6 +2558,9 @@ html[data-ds-theme="dark"] .ds-chat-typing i{background:var(--volt)}
 
   /* ---------- Secciones sin datos ---------- */
   function hideEmpty() {
+    /* <img src=""> pide el propio documento (~100 KB): se quita del DOM —
+       el monograma de la marca y la ficha quedan con su fondo propio. */
+    qsa('img[src=""],img:not([src])').forEach(function (img) { img.remove() })
     qsa('[data-hide-if-empty]').forEach(function (sec) {
       var sels = sec.getAttribute('data-hide-if-empty').split('|')
       var has = sels.some(function (sel) {
@@ -2854,6 +2889,10 @@ html[data-ds-theme="dark"] .ds-chat-typing i{background:var(--volt)}
   function paint() {
     var vh = frame ? frame.vh : window.innerHeight
     var top = frame ? Math.max(0, -frame.top) : (window.scrollY || 0)
+    /* --fr-h: alto visible del marco. Las unidades vh del documento miden
+       la página entera (iframe estirado) — la hoja de filtros y el aside
+       fijo se dimensionan contra el marco real. */
+    root.style.setProperty('--fr-h', Math.round(Math.max(1, vh)) + 'px')
     if (head) head.classList.toggle('is-scrolled', top > 16)
     if (progress) {
       var totalH = Math.max(1, document.documentElement.scrollHeight - vh)

@@ -732,6 +732,7 @@ html[data-ds-theme="dark"] .grid-products .ds-product-link::after{background:lin
 .cat-aside{
   border:1px solid var(--line);background:var(--surface);padding:22px;
   position:sticky;top:88px;
+  max-height:calc(var(--fr-h,100vh) - 120px);overflow:auto;
 }
 .cat-aside-head{display:none;align-items:center;justify-content:space-between;margin-bottom:18px}
 .cat-aside-close{width:40px;height:40px;border:1px solid var(--line);background:none;cursor:pointer;display:grid;place-items:center}
@@ -979,6 +980,11 @@ html[data-ds-theme="dark"] .grid-products .ds-product-link::after{background:lin
 }
 .ds-service-name{grid-column:2;font:600 clamp(20px,2.4vw,32px)/1.1 var(--disp);text-transform:uppercase;letter-spacing:.01em;transition:transform .3s}
 .ds-service-desc{grid-column:2;display:block;font-size:12px;color:var(--muted);margin-top:6px;max-width:64ch;transition:transform .3s var(--ease)}
+/* Meta del servicio (precio/duración/icono desde data-attrs): segunda fila
+   de la columna derecha, debajo de nombre y descripción. */
+.ds-service-meta{grid-column:2;display:block;margin-top:9px;font:500 10px/1.7 var(--mono);letter-spacing:.14em;text-transform:uppercase;color:var(--stamp-ink)}
+.ds-service-meta .ds-service-ico{display:inline-flex;vertical-align:-2px;margin-right:7px}
+.ds-service-meta .ds-service-ico svg{width:13px;height:13px;display:block}
 .ds-service:hover{background:color-mix(in srgb,var(--stamp) 8%,transparent)}
 .ds-service:hover::before{transform:translateX(14px)}
 .ds-service:hover .ds-service-name{transform:translateX(20px)}
@@ -1027,7 +1033,8 @@ html[data-ds-theme="dark"] .grid-products .ds-product-link::after{background:lin
   }
   body.filters-open .cat-scrim{opacity:1;pointer-events:auto}
   .cat-aside{
-    position:fixed;inset:auto 0 0 0;z-index:66;max-height:82vh;overflow:auto;
+    position:fixed;inset:auto 0 0 0;z-index:66;
+    max-height:min(calc(var(--fr-h,100vh) * .85),640px);overflow:auto;
     transform:translateY(102%);transition:transform .4s var(--ease);
     border-bottom:0;border-radius:18px 18px 0 0;padding-bottom:calc(20px + env(safe-area-inset-bottom));
   }
@@ -1135,6 +1142,17 @@ html[data-ds-theme="dark"] .grid-products .ds-product-link::after{background:lin
 .ds-chat-input:focus{border-color:var(--stamp)}
 .ds-chat-send{border-radius:var(--r);background:var(--stamp);color:var(--on-stamp)}
 .ds-chat-send:hover{background:var(--band);color:var(--band-ink)}
+
+/* expediente-noche: la tinta de acento calculada por el contrato Studio
+   (--ds-accent-ink #191611) sobre el sello #D05540 queda en 4.34 — bajo
+   AA. La tinta de banda (casi negra) sube a ~4.8 conservando el sello. */
+html[data-ds-style="expediente-noche"] .btn,
+html[data-ds-style="expediente-noche"] .svc-cta,
+html[data-ds-style="expediente-noche"] .pdp-buy,
+html[data-ds-style="expediente-noche"] .nav-cta,
+html[data-ds-style="expediente-noche"] .top-cta{
+  color:var(--band)!important;
+}
 </style>
 </head>
 <body>
@@ -1447,7 +1465,7 @@ html[data-ds-theme="dark"] .grid-products .ds-product-link::after{background:lin
           <button class="f-done" type="button" data-ds-filters-close>Aplicar</button>
         </div>
       </aside>
-      <div class="cat-scrim" data-ds-filters-close aria-hidden="true"></div>
+      <div class="cat-scrim" data-ds-filters-scrim aria-hidden="true"></div>
       <div class="cat-results">
         <div class="cat-bar">
           <form class="cat-search" data-ds-search role="search">
@@ -1681,26 +1699,38 @@ html[data-ds-theme="dark"] .grid-products .ds-product-link::after{background:lin
     })
   }
 
-  /* ---------- Reveal + contadores + línea de tiempo ---------- */
+  /* ---------- Reveal + contadores + línea de tiempo ----------
+     El iframe va estirado al alto del documento: IntersectionObserver
+     mediría contra ese viewport gigante (todo "visible" de una) y el
+     reveal quedaría muerto. paint() enciende .rv/.drawn con el marco
+     real del host (`davent:ds-frame`); acá solo queda el fallback de
+     movimiento reducido. */
   function initReveal() {
-    qsa('.rv').forEach(function (el) { el.classList.add('rv-armed') })
-    if (!('IntersectionObserver' in window) || reduce) {
+    if (reduce) {
       qsa('.rv').forEach(function (el) { el.classList.add('on') })
       qsa('[data-timeline]').forEach(function (el) { el.classList.add('drawn') })
-      return
     }
-    var io = new IntersectionObserver(function (es) {
-      es.forEach(function (e) {
-        if (e.isIntersecting) { e.target.classList.add('on'); io.unobserve(e.target) }
-      })
-    }, { threshold: .08 })
-    qsa('.rv').forEach(function (el) { io.observe(el) })
-    qsa('[data-timeline]').forEach(function (el) {
-      new IntersectionObserver(function (es, o) {
-        es.forEach(function (e) {
-          if (e.isIntersecting) { e.target.classList.add('drawn'); o.disconnect() }
-        })
-      }, { threshold: .3 }).observe(el)
+  }
+
+  /* Precio/duración/icono de cada servicio viajan en data-attrs del
+     fragmento .ds-service: se materializan como línea de meta visible. */
+  function setupServices() {
+    qsa('.ds-service').forEach(function (li) {
+      if (li.querySelector('.ds-service-meta')) return
+      var price = li.getAttribute('data-price-label') || ''
+      var dur = li.getAttribute('data-duration') || ''
+      var icon = li.getAttribute('data-icon-svg') || ''
+      if (!price && !dur && !icon) return
+      var meta = document.createElement('span')
+      meta.className = 'ds-service-meta'
+      if (icon) {
+        var ico = document.createElement('span')
+        ico.className = 'ds-service-ico'
+        ico.innerHTML = icon
+        meta.appendChild(ico)
+      }
+      meta.appendChild(document.createTextNode([price, dur].filter(Boolean).join(' · ')))
+      li.appendChild(meta)
     })
   }
 
@@ -1736,22 +1766,18 @@ html[data-ds-theme="dark"] .grid-products .ds-product-link::after{background:lin
     })
   }
 
-  /* ---------- Índices del landing: clic en categoría → catálogo ---------- */
-  document.addEventListener('click', function (e) {
-    var t = e.target
-    if (!t || !t.closest) return
-    var cat = t.closest('a.ds-cat')
-    if (cat && cat.closest('[data-surface="landing"]')) {
-      e.preventDefault()
-      e.stopImmediatePropagation()
-      parent.postMessage({ type: 'davent:ds-route', route: 'catalog' }, '*')
-    }
-  }, true)
+  /* ---------- Índices del landing ----------
+     Las .ds-cat ya llevan data-ds-route="catalog" + data-ds-cat: el puente
+     fija el filtro y navega solo. Un handler propio con stopImmediatePropagation
+     rompería ese contrato (el postMessage a parent no es un mensaje del puente). */
 
   /* ---------- Scroll: progreso + reveals + contadores ---------- */
   function paint() {
     var vh = frame ? frame.vh : window.innerHeight
     var top = frame ? Math.max(0, -frame.top) : (window.scrollY || 0)
+    /* --fr-h: alto visible del marco — las hojas fijas (filtros móvil) se
+       dimensionan contra él porque vh del documento mide la página entera. */
+    root.style.setProperty('--fr-h', Math.round(Math.max(1, vh)) + 'px')
     if (progress) {
       var total = Math.max(1, document.documentElement.scrollHeight - vh)
       progress.style.transform = 'scaleX(' + Math.min(1, (top / total)).toFixed(4) + ')'
@@ -1760,6 +1786,10 @@ html[data-ds-theme="dark"] .grid-products .ds-product-link::after{background:lin
     qsa('.rv:not(.on)').forEach(function (el) {
       var r = el.getBoundingClientRect()
       if (r.top < visibleBottom - 30 && r.bottom > top - 30) el.classList.add('on')
+    })
+    qsa('[data-timeline]:not(.drawn)').forEach(function (el) {
+      var r = el.getBoundingClientRect()
+      if (r.top < visibleBottom - 30 && r.bottom > top - 30) el.classList.add('drawn')
     })
     qsa('.ds-stat-value').forEach(function (el) {
       var r = el.getBoundingClientRect()
@@ -1776,7 +1806,7 @@ html[data-ds-theme="dark"] .grid-products .ds-product-link::after{background:lin
     }
     if (d.type === 'davent:ds-surface') {
       syncTabbar(d.surface || root.getAttribute('data-ds-surface'))
-      setTimeout(function () { hideEmpty(); paint(); measure() }, 80)
+      setTimeout(function () { hideEmpty(); setupServices(); paint(); measure() }, 80)
       return
     }
     if (d.type === 'davent:ds-measure') measure()
@@ -1788,6 +1818,7 @@ html[data-ds-theme="dark"] .grid-products .ds-product-link::after{background:lin
   /* ---------- Arranque ---------- */
   hideEmpty()
   splitWords()
+  setupServices()
   initReveal()
   syncTabbar(root.getAttribute('data-ds-surface') || 'landing')
   paint()
