@@ -1524,9 +1524,10 @@
 :is(.store-page[data-template='impacto'], .store-page.mi-skin)[data-store-theme='dark'] .tpc :is(.tpc-name, .tpc-eyebrow, .tpc-eyebrow span, .tpc-desc, .tpc-price, .tpc-price s, .tpc-price strong, .tpc-go) {
   color: var(--sp-ink);
 }
-:is(.store-page[data-template='impacto'], .store-page.mi-skin)[data-store-theme='dark'] .tpc {
-  --tpc-stock-ink: #177245;
-}
+/* El stock NO se fija a verde oscuro en noche: las tarjetas .tpc son
+   transparentes y quedan sobre el papel grafito (--mi-card), donde el
+   token de tema (--tpc-stock-ink = #2FBF71 en dark) ya da AA. Fijarlo a
+   #177245 era para tarjetas claras publicadas y hoy rompe el contraste. */
 
 /* ==========================================================================
    7. SOBRE LA MARCA — ficha de dossier
@@ -2358,6 +2359,53 @@
   --rz-bg: var(--mi-paper);
   --rz-card: var(--mi-card);
   --rz-radius: 0;
+  /* Resto del contrato --rz-*: sin estos alias los componentes Raíz
+     (ficha de specs, chips de servicios, tarjetas de zona, picks de
+     reseñas, flags de producto) siguen con la paleta raíz CLARA — texto
+     claro del tema sobre fondos blancos en noche. */
+  --rz-surface: var(--mi-card);
+  --rz-surface-2: var(--mi-paper-2);
+  --rz-surface-3: var(--mi-paper-2);
+  --rz-line-strong: var(--mi-line-2);
+  --rz-line-ui: var(--mi-line);
+  --rz-accent: var(--mi-accent);
+  --rz-accent-soft: var(--mi-accent-soft);
+  --rz-accent-text: var(--mi-accent-text);
+  --rz-accent-deep: var(--mi-ink);
+  --rz-accent-deep-2: var(--mi-ink-2);
+  --rz-band-1: var(--mi-ink);
+  --rz-band-2: var(--mi-ink-2);
+  --rz-on-band: var(--mi-paper);
+  --rz-on-band-2: var(--mi-paper);
+  --rz-on-band-muted: color-mix(in srgb, var(--mi-paper) 78%, transparent);
+  --rz-ok: var(--tpc-stock-ink);
+  --rz-success: var(--tpc-stock-ink);
+  --rz-danger: var(--mi-err);
+  --rz-focus: var(--mi-focus);
+  --rz-scrim: var(--mi-scrim);
+  --rz-selection: var(--mi-selection);
+  --rz-inverse-bg: var(--mi-ink);
+  --rz-inverse-bg-2: var(--mi-ink-2);
+  --rz-inverse-ink: var(--mi-paper);
+  --rz-inverse-ink-2: var(--mi-paper);
+  --rz-inverse-muted: var(--mi-muted);
+  --rz-inverse-line: var(--mi-line-2);
+  --rz-inverse-accent: var(--mi-paper);
+  --rz-warm: var(--mi-accent-text);
+  --rz-rad-sm: 0;
+  --rz-rad-md: 0;
+  --rz-rad-lg: 0;
+  --rz-rad-pill: 0;
+  --rz-display: var(--mi-display);
+  --rz-body: var(--mi-body);
+  --rz-fs-body: var(--mi-fs-body);
+  --rz-fs-label: var(--mi-fs-label);
+  --rz-dur-1: var(--mi-dur-1);
+  --rz-dur-2: var(--mi-dur-2);
+  --rz-dur-3: var(--mi-dur-3);
+  --rz-ease-out: var(--mi-ease);
+  --rz-shadow-1: none;
+  --rz-shadow-2: none;
   background: var(--mi-paper);
   color: var(--mi-ink);
   font-family: var(--mi-body);
@@ -2381,6 +2429,9 @@
   --mi-ink-2: #3A3227;
   /* #6A5F4E quedaba en 4.49 sobre --mi-paper-2 — un punto más a la tinta. */
   --mi-muted: #5C5242;
+  /* #177245 sobre la tarjeta arena (#F6EDDB) daba 4.27 en "En stock" del
+     PDP — un verde un punto más profundo cierra AA. */
+  --tpc-stock-ink: #145A38;
   --mi-rule: #1A1611;
   --mi-line: #CDBB9B;
   --mi-line-2: #AE9977;
@@ -2458,6 +2509,16 @@
 .store-page.mi-skin .rz-btn:hover { background: var(--mi-accent); border-color: var(--mi-accent); color: var(--mi-accent-ink); }
 .store-page.mi-skin .rz-btn--ghost { background: transparent; color: var(--mi-ink); }
 .store-page.mi-skin .rz-btn--ghost:hover { background: var(--mi-ink); color: var(--mi-paper); }
+/* store-raiz.css pinta `a.rz-btn` primario con color:#fff a mayor
+   especificidad que :is(.rz-btn) — en noche el fondo es --mi-ink claro
+   y el blanco queda ilegible. Se repite la tinta de la piel con más
+   especificidad (el sub-árbol lleva data-template='raiz'). */
+.store-page.mi-skin[data-template='raiz'] a.rz-btn:not(.rz-btn--ghost):not(.rz-btn--ink) {
+  color: var(--mi-paper);
+}
+.store-page.mi-skin[data-template='raiz'] a.rz-btn:not(.rz-btn--ghost):not(.rz-btn--ink):hover {
+  color: var(--mi-accent-ink);
+}
 .store-page.mi-skin .rz-eyebrow {
   font-family: var(--mi-mono);
   font-size: var(--mi-fs-label);
@@ -2564,6 +2625,15 @@
   font-family: var(--mi-mono);
   letter-spacing: .1em;
   text-transform: uppercase;
+}
+/* :where(.rz-tag/.rz-plate) compartido pinta fondo --rz-accent-deep +
+   #fff — con el puente --rz-accent-deep→--mi-ink eso es tinta clara con
+   texto blanco en noche. Par tinta/papel de la piel (AA en ambos temas);
+   .rz-plate conserva su placa de acento por la regla .rz-sv-plate de
+   abajo, que tiene más especificidad de contexto. */
+.store-page.mi-skin .rz-tag {
+  background: var(--mi-ink);
+  color: var(--mi-paper);
 }
 .store-page.mi-skin .rz-frame { border: var(--mi-rule-w) solid var(--mi-ink); border-radius: 0; }
 .store-page.mi-skin .rz-price { font-family: var(--mi-mono); font-weight: 600; }

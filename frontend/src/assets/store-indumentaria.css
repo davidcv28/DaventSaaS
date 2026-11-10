@@ -884,28 +884,86 @@
    CATÁLOGO / FICHA / SERVICIOS (subárbol Raíz + capa indumentaria)
    ========================================================================== */
 .store-page[data-template='raiz'].in-skin {
-  --sp-bg: #F2EEE7;
-  --sp-card: #FAF7F1;
-  --sp-card-solid: #FAF7F1;
-  --sp-surface: #E8E2D6;
-  --sp-soft: #E8E2D6;
-  --sp-ink: #1C1B18;
-  --sp-ink-2: #3B3833;
-  --sp-muted: #7A7468;
-  --sp-line: #D8D1C3;
+  /* Todo sale de los tokens --in-*: la raíz los hereda del .store-page
+     exterior, así el sub-árbol sigue la piel noche (tema dark o estilo
+     indumentaria-noche) sin bloque extra — antes iban hex claros fijos y
+     las tarjetas quedaban blancas con tinta clara encima. */
+  --sp-bg: var(--in-crudo);
+  --sp-card: var(--in-card);
+  --sp-card-solid: var(--in-card);
+  --sp-surface: var(--in-soft);
+  --sp-soft: var(--in-soft);
+  --sp-ink: var(--in-ink);
+  --sp-ink-2: var(--in-ink-2);
+  /* Muted un punto más hacia la tinta: --in-muted justo no llega a AA
+     sobre --in-soft en textos de 11–13px (crumbs, lead, hints). */
+  --in-muted-aa: color-mix(in srgb, var(--in-muted) 78%, var(--in-ink));
+  --sp-muted: var(--in-muted-aa);
+  --sp-line: var(--in-line);
   --sp-radius: 0;
-  --sp-accent-text: #B4442A;
+  --sp-accent-text: var(--in-accent-text);
   --sp-shadow-sm: 0 1px 0 rgba(28, 27, 24, .05);
   --sp-shadow-md: 0 26px 50px -34px rgba(28, 27, 24, .5);
-  --sp-chrome: #F2EEE7;
-  font-family: var(--in-body, 'Archivo', system-ui, sans-serif);
-  background: #F2EEE7;
-  color: #1C1B18;
+  --sp-chrome: var(--in-crudo);
+  /* Puente --rz-* → --in-*: sin él los componentes Raíz (ficha de specs,
+     chips/zonas de servicios, flags y precios de tarjeta) usan la paleta
+     raíz clara — superficies blancas con tinta de tema en noche. */
+  --rz-bg: var(--in-crudo);
+  --rz-surface: var(--in-card);
+  --rz-surface-2: var(--in-soft);
+  --rz-surface-3: var(--in-soft);
+  --rz-line: var(--in-line);
+  --rz-line-strong: var(--in-line-strong);
+  --rz-line-ui: var(--in-line);
+  --rz-ink: var(--in-ink);
+  --rz-ink-2: var(--in-ink-2);
+  --rz-muted: var(--in-muted-aa);
+  --rz-accent: var(--in-accent);
+  --rz-accent-soft: color-mix(in srgb, var(--in-accent-raw) 14%, var(--in-card));
+  --rz-accent-text: var(--in-accent-text);
+  --rz-accent-deep: var(--in-ink);
+  --rz-accent-deep-2: var(--in-ink-2);
+  --rz-band-1: var(--in-ink);
+  --rz-band-2: var(--in-ink-2);
+  --rz-on-band: var(--in-crudo);
+  --rz-on-band-2: var(--in-crudo);
+  --rz-on-band-muted: color-mix(in srgb, var(--in-crudo) 78%, transparent);
+  --rz-ok: var(--tpc-stock-ink);
+  --rz-success: var(--tpc-stock-ink);
+  --rz-danger: color-mix(in srgb, #B3261E 70%, var(--in-ink));
+  --rz-focus: var(--in-accent);
+  --rz-scrim: rgba(16, 14, 12, .6);
+  --rz-selection: color-mix(in srgb, var(--in-accent-raw) 30%, transparent);
+  --rz-inverse-bg: var(--in-ink);
+  --rz-inverse-bg-2: var(--in-ink-2);
+  --rz-inverse-ink: var(--in-crudo);
+  --rz-inverse-ink-2: var(--in-crudo);
+  --rz-inverse-muted: color-mix(in srgb, var(--in-crudo) 74%, transparent);
+  --rz-inverse-line: color-mix(in srgb, var(--in-crudo) 18%, transparent);
+  --rz-inverse-accent: var(--in-crudo);
+  --rz-warm: var(--in-accent-text);
+  --rz-rad-sm: 0;
+  --rz-rad-md: 0;
+  --rz-rad-lg: 0;
+  --rz-rad-pill: 0;
+  --rz-display: var(--in-display);
+  --rz-body: var(--in-body);
+  --rz-fs-body: 15.5px;
+  --rz-fs-label: 10.5px;
+  --rz-dur-1: 160ms;
+  --rz-dur-2: 280ms;
+  --rz-dur-3: 620ms;
+  --rz-ease-out: cubic-bezier(.16, 1, .3, 1);
+  --rz-shadow-1: none;
+  --rz-shadow-2: none;
+  font-family: var(--in-body);
+  background: var(--in-crudo);
+  color: var(--in-ink);
 }
 .store-page[data-template='raiz'].in-skin .rz-cat-head,
 .store-page[data-template='raiz'].in-skin .rz-sv-head,
 .store-page[data-template='raiz'].in-skin .rz-pdp-sec-head {
-  border-bottom: 1px solid #BFB6A4;
+  border-bottom: 1px solid var(--in-line-strong);
 }
 .store-page[data-template='raiz'].in-skin .rz-cat-title,
 .store-page[data-template='raiz'].in-skin .rz-sv-hero-title,
@@ -919,18 +977,33 @@
 .store-page[data-template='raiz'].in-skin .rz-cat-kicker {
   font-family: var(--in-mono, 'JetBrains Mono', monospace);
   letter-spacing: .22em;
-  color: #B4442A;
+  color: var(--in-accent-text);
 }
 .store-page[data-template='raiz'].in-skin .rz-cat-rail,
 .store-page[data-template='raiz'].in-skin .rz-cat-card,
 .store-page[data-template='raiz'].in-skin .rz-cat-products,
-.store-page[data-template='raiz'].in-skin .rz-sv-plate,
 .store-page[data-template='raiz'].in-skin .rz-pdp-pricebox,
 .store-page[data-template='raiz'].in-skin .rz-pdp-gallery {
-  border: 1px solid #D8D1C3;
+  border: 1px solid var(--in-line);
   border-radius: 0;
-  background: #FAF7F1;
+  background: var(--in-card);
   box-shadow: none;
+}
+/* El sello "Pagás en persona" no es una tarjeta: va con tinta de página
+   sobre placa de tinta — par --in-ink/--in-crudo con AA en ambos temas
+   (el acento-ink puede ser claro en estilos de acento vivo). */
+.store-page[data-template='raiz'].in-skin .rz-sv-plate {
+  border: 0;
+  background: var(--in-ink);
+  color: var(--in-crudo);
+}
+/* Mismo caso para los sellos/etiquetas Raíz (.rz-pdp-seal "Recién
+   llegado", .rz-pdp-off "-15%"): --rz-accent-deep ahora es --in-ink —
+   claro en noche — y el :where() compartido fija color:#fff. Par tinta/
+   papel de la piel, AA siempre. */
+.store-page[data-template='raiz'].in-skin :is(.rz-plate, .rz-tag) {
+  background: var(--in-ink);
+  color: var(--in-crudo);
 }
 .store-page[data-template='raiz'].in-skin .rz-btn {
   border-radius: 0;
@@ -940,22 +1013,38 @@
   text-transform: uppercase;
 }
 .store-page[data-template='raiz'].in-skin .rz-btn:not(.rz-btn--ghost) {
-  background: #1C1B18;
-  border-color: #1C1B18;
-  color: #F2EEE7;
+  background: var(--in-ink);
+  border-color: var(--in-ink);
+  color: var(--in-crudo);
 }
 .store-page[data-template='raiz'].in-skin .rz-btn:not(.rz-btn--ghost):hover {
-  background: #B4442A;
-  border-color: #B4442A;
-  color: #FFFDF6;
+  background: var(--in-accent);
+  border-color: var(--in-accent);
+  color: var(--in-on-accent);
+}
+/* store-raiz.css pinta `a.rz-btn` primario con color:#fff a mayor
+   especificidad que :not(.rz-btn--ghost) — en piel noche el fondo es
+   --in-ink claro y el blanco queda ilegible. */
+.store-page[data-template='raiz'].in-skin a.rz-btn:not(.rz-btn--ghost):not(.rz-btn--ink) {
+  color: var(--in-crudo);
+}
+.store-page[data-template='raiz'].in-skin a.rz-btn:not(.rz-btn--ghost):not(.rz-btn--ink):hover {
+  color: var(--in-on-accent);
 }
 .store-page[data-template='raiz'].in-skin .rz-cat-results .tpc,
 .store-page[data-template='raiz'].in-skin .rz-pdp-rel-card {
-  border: 1px solid #D8D1C3;
+  border: 1px solid var(--in-line);
   border-radius: 0;
-  background: #FAF7F1;
+  background: var(--in-card);
   box-shadow: none;
 }
+/* Tarjetas del sub-árbol: los fixes de .sp-card no llegan acá — mismo
+   criterio de tinta (acento-como-texto y tinta de tarjeta). */
+.store-page[data-template='raiz'].in-skin .tpc-eyebrow { color: var(--in-accent-text); }
+.store-page[data-template='raiz'].in-skin .tpc-eyebrow span + i + span { color: var(--in-ink-2); }
+.store-page[data-template='raiz'].in-skin .tpc-eyebrow i { background: var(--in-ink-2); }
+.store-page[data-template='raiz'].in-skin .tpc-price { color: var(--in-ink); }
+.store-page[data-template='raiz'].in-skin .tpc-price strong.deal { color: var(--in-accent-text); }
 .store-page[data-template='raiz'].in-skin .rz-cat-results .tpc .tpc-media { aspect-ratio: 3 / 4; }
 .store-page[data-template='raiz'].in-skin .rz-cat-results .tpc-price,
 .store-page[data-template='raiz'].in-skin .rz-pdp-rel-card .tpc-price,
@@ -965,26 +1054,26 @@
 }
 .store-page[data-template='raiz'].in-skin .rz-sv-hero,
 .store-page[data-template='raiz'].in-skin .rz-sv-band {
-  background: #E8E2D6;
-  border-color: #D8D1C3;
+  background: var(--in-soft);
+  border-color: var(--in-line);
 }
 .store-page[data-template='raiz'].in-skin .rz-sv-hero-num,
 .store-page[data-template='raiz'].in-skin .rz-sv-flow-num {
   font-family: var(--in-mono, 'JetBrains Mono', monospace);
-  color: #B4442A;
+  color: var(--in-accent-text);
 }
 .store-page[data-template='raiz'].in-skin .rz-sv-hero-card,
 .store-page[data-template='raiz'].in-skin .rz-sv-bar {
   border-radius: 0;
-  border: 1px solid #D8D1C3;
-  background: #FAF7F1;
+  border: 1px solid var(--in-line);
+  background: var(--in-card);
   box-shadow: none;
 }
 .store-page[data-template='raiz'].in-skin .rz-field,
 .store-page[data-template='raiz'].in-skin .rz-cat-apply {
   border-radius: 0;
-  border-color: #D8D1C3;
-  background: #FAF7F1;
+  border-color: var(--in-line);
+  background: var(--in-card);
 }
 .store-page[data-template='raiz'].in-skin .f-cat {
   border-radius: 0;
@@ -1038,20 +1127,9 @@
 }
 .store-page[data-template='indumentaria'][data-store-theme='dark'] .in-hero-media img { filter: saturate(.85) brightness(.92); }
 .store-page[data-template='indumentaria'][data-store-theme='dark'] .in-marq { background: var(--in-card); color: var(--in-ink); border-color: var(--in-line-strong); }
-.store-page[data-template='raiz'].in-skin[data-store-theme='dark'] {
-  --sp-bg: #14120F;
-  --sp-card: #1C1A16;
-  --sp-card-solid: #1C1A16;
-  --sp-surface: #26231E;
-  --sp-soft: #26231E;
-  --sp-ink: #F1EDE3;
-  --sp-ink-2: #D6D0C1;
-  --sp-muted: #9C9484;
-  --sp-line: #37332C;
-  --sp-chrome: #14120F;
-  background: #14120F;
-  color: #F1EDE3;
-}
+/* El sub-árbol .in-skin ya es oscuro solo: sus tokens son var(--in-*),
+   que el bloque [data-store-theme='dark'] / [data-style='indumentaria-
+   noche'] de la raíz exterior redefine y el inner hereda. */
 
 /* ==========================================================================
    ESTILOS HIJOS (data-style = slug del DesignStyle)
@@ -1284,8 +1362,20 @@
 .store-page[data-template='indumentaria'] .sp-foot :is(.sp-foot-col a, .sp-foot-contact a) {
   color: var(--sp-ink-2);
 }
-.store-page[data-template='indumentaria'] .sp-foot :is(.sp-foot-copy, .sp-foot-note, .sp-foot-brand span) {
+.store-page[data-template='indumentaria'] .sp-foot :is(.sp-foot-copy, .sp-foot-note, .sp-foot-brand span, .sp-foot-contact li, .sp-foot-contact li span, .sp-foot-contact li svg) {
   color: var(--sp-ink-2);
+}
+/* Íconos de redes: la regla chrome los deja blancos translúcidos — sobre
+   el pie claro de la piel quedan invisibles. */
+.store-page[data-template='indumentaria'] .sp-foot .sp-foot-social a {
+  color: var(--sp-ink-2);
+  background: color-mix(in srgb, var(--sp-ink) 7%, transparent);
+  border-color: var(--sp-line);
+}
+.store-page[data-template='indumentaria'] .sp-foot .sp-foot-social a:hover {
+  background: var(--sp-ink);
+  border-color: var(--sp-ink);
+  color: var(--sp-bg);
 }
 .store-page[data-template='indumentaria'] .sp-foot .sp-foot-col a:hover {
   color: var(--sp-ink);
