@@ -28,27 +28,29 @@ comprador y del vendedor, y emitir un **comprobante interno no fiscal**.
 
 Sin esto no se publica "modo ventas" en ninguna tienda.
 
-- [ ] **ToS de DAVENT** (página legal propia): declarar que DAVENT no es
-      parte de las operaciones de compraventa, no procesa pagos ni emite
-      comprobantes fiscales, no responde por veracidad de datos fiscales
-      del vendedor ni por reclamos entre comprador y vendedor.
-      Categorías prohibidas (armas, productos regulados, servicios
-      ilícitos, etc.).
-- [ ] **Páginas legales por tienda** (generadas desde template, editables
+- [x] **ToS de DAVENT** (página legal propia `/terminos`): declara que
+      DAVENT no es parte de las operaciones de compraventa, no procesa
+      pagos ni emite comprobantes fiscales de las ventas de comercios,
+      y no responde por datos fiscales del vendedor ni reclamos
+      comprador↔comercio. Categorías prohibidas cubiertas en §5.
+- [x] **Páginas legales por tienda** (generadas desde template, editables
       por el dueño): Términos y condiciones, Política de privacidad,
       Política de cambios y devoluciones (derecho de arrepentimiento 10
       días en compras online — Ley 24.240), datos de contacto del
-      comercio.
-- [ ] **Botón/enlace de arrepentimiento** en la web pública de la tienda
-      (obligatorio en e-commerce argentino) → flujo de solicitud de
-      devolución que le llega al vendedor como pedido especial.
-- [ ] **Leyenda en checkout**: "La venta se realiza entre el comprador y
-      el comercio. El pedido se confirma cuando el vendedor acredita el
-      pago." + precio final visible + plazos de entrega declarados.
-- [ ] **Datos fiscales del vendedor** obligatorios para activar ventas:
-      razón social/nombre, CUIT, condición frente a IVA (Monotributo /
-      RI / Exento), domicilio fiscal. Se muestran en el pie de la tienda.
-      (Monotributo también tiene CUIT → no excluye a nadie.)
+      comercio. `/tienda/<slug>/legal/<kind>` público + panel del dueño.
+- [x] **Botón/enlace de arrepentimiento** en la web pública de la tienda
+      (obligatorio en e-commerce argentino) → `legal/returns` con
+      formulario captcha+honeypot+throttle; las solicitudes llegan al
+      dueño en el panel (Legal → Devoluciones) y por notificación.
+- [x] **Leyenda en checkout**: "La venta se realiza entre vos y el
+      comercio…" + aceptación de términos linkeada + precio final
+      visible en el resumen + método de envío con su plazo declarado.
+- [x] **Datos fiscales del vendedor** obligatorios para activar ventas:
+      razón social/nombre, CUIT (dígito verificador), condición frente
+      a IVA (Monotributo / RI / Exento), domicilio fiscal y punto de
+      venta. Se muestran en el pie de la tienda y en el comprobante
+      interno no fiscal. (Monotributo también tiene CUIT → no excluye
+      a nadie.)
 
 ## FASE 1 — Dominio `orders` (MVP funcional)
 
@@ -155,46 +157,53 @@ por venta convertiría a DAVENT en intermediario de fondos (obligaciones
 fiscales propias). Si más adelante se quiere comisión por venta, se
 factura como servicio aparte (el dominio `invoices` ya existe).
 
-- [ ] **App de MP**: alta en developers.mercadopago.com + credenciales
-      `MP_CLIENT_ID`/`MP_CLIENT_SECRET`/`FRONTEND_URL` callback.
-      Checkout Pro/Bricks → cero PCI (tarjeta nunca toca DAVENT).
-- [ ] `StoreMpAccount` (OneToOne a Store): `mp_user_id`, access/refresh
-      token **cifrados con `vault.py`** (mismo mecanismo que AFIP_KEY),
-      `live_mode`, scopes, `connected_at`. Desvincular = revocar.
-- [ ] OAuth: `GET /api/stores/<slug>/mp/connect/` → redirect a MP →
-      `GET /api/mp/callback/` guarda tokens. Solo el dueño de la tienda.
-- [ ] Checkout: `POST /api/stores/<slug>/orders/<token>/pay/` crea la
-      preferencia **con el token del vendedor** (`external_reference` =
-      token del pedido, `notification_url` = webhook, `back_urls` =
-      página de seguimiento) → frontend redirige a `init_point`.
-- [ ] Webhook `POST /api/webhooks/mp/<slug>/`: validar firma
-      `x-signature`, `GET /v1/payments/<id>` con el token del vendedor,
-      idempotente por `payment_id` (mismo patrón que
-      `CreatePaymentQuery`/`external_reference` de suscripciones),
-      rechazar `live_mode=False` en producción. Aprobado → `PAID` →
-      `PACKING` automático. Reembolsos: endpoint del dueño que llama a
-      MP con SU token.
-- [ ] `StorePaymentConfig`: `mp_enabled` convive con métodos manuales —
+- [x] **Credenciales MP del vendedor (BYO, no OAuth)**: el vendedor pega
+      su propio access token de MP en `mp/connect/` (vault + AAD por
+      tienda) junto al `webhook_secret` de SU app. Desviación
+      deliberada del OAuth Connect original: cero dependencia de una
+      app MP registrada por DAVENT, mismos efectos (pagos directos al
+      vendedor, Checkout Pro/Bricks → cero PCI).
+- [x] `StoreMpAccount` + `StoreMpWebhookConfig`: `mp_user_id`,
+      access token **cifrado con `vault.py`** (purpose por tienda),
+      `live_mode`, `connected_at`, webhook secret cifrado igual.
+      Desvincular = revocar/borrar tokens.
+- [x] Conexión: `POST /api/store-payments/mp/connect/` (solo el dueño)
+      valida el token contra `/users/me` de MP antes de guardar.
+- [x] Checkout: `POST /api/stores/public/<slug>/orders/<token>/pay/`
+      crea la preferencia **con el token del vendedor**
+      (`external_reference` = pedido, `notification_url` = webhook,
+      `back_urls` = seguimiento) → frontend redirige a `init_point`.
+- [x] Webhook `POST /api/webhooks/store-mp/<slug>/`: firma `x-signature`
+      HMAC con el secret del vendedor + ventana anti-replay, `data.id`
+      solo del query firmado, `GET /v1/payments/<id>` con el token del
+      vendedor, idempotente por `mp_payment_id` unique +
+      `select_for_update`, monto aprobado debe igualar `order.total`
+      (fail-closed), rechaza `live_mode=False` en producción.
+      Aprobado → `PAID` → `PACKING`. Reembolso: endpoint del dueño que
+      llama a MP con SU token bajo lock de la fila del pedido.
+- [x] `StorePaymentConfig`: `mp_enabled` convive con métodos manuales —
       el comprador elige "Mercado Pago" o "Transferencia".
-- [ ] Requisito: el vendedor necesita cuenta MP propia (que ya exige
+- [x] Requisito: el vendedor necesita cuenta MP propia (que ya exige
       CUIT/monotributo — encaja con el perfil fiscal obligatorio).
-- [ ] Tests: webhook firma inválida, pago duplicado, `live_mode=False`
-      en prod, pedido de otra tienda, token revocado.
+- [x] Tests: webhook firma inválida, pago duplicado, monto
+      mismatch, `live_mode=False` en prod, pedido de otra tienda,
+      refund MP y manual.
 
 ## FASE 3 — Fiscal del vendedor (sin integración ARCA)
 
-- [ ] `StoreFiscalProfile` (o campos en `StorePaymentConfig`): CUIT
-      validado (dígito verificador), condición IVA, domicilio fiscal,
-      punto de venta (opcional).
-- [ ] Comprobante interno **no fiscal**: PDF por pedido con datos del
-      emisor (fiscales del vendedor), items, totales, leyenda
-      "DOCUMENTO NO FISCAL — el comprobante fiscal autorizado lo emite
-      el comercio". Descargable por vendedor y comprador.
-- [ ] Campo en el pedido: `invoice_ref` + `invoice_file` — el vendedor
-      carga nº de factura/CAE emitida desde ARCA → queda en el pedido
-      y en el seguimiento.
-- [ ] Footer de la tienda muestra datos fiscales del vendedor.
-- [ ] Validación: no se puede activar `orders_enabled` sin perfil
+- [x] `StoreFiscalProfile`: CUIT validado (dígito verificador),
+      condición IVA, domicilio fiscal, punto de venta.
+- [x] Comprobante interno **no fiscal**: `build_receipt_payload`
+      devuelve datos del emisor (fiscales del vendedor), items con
+      snapshot, totales y leyenda "DOCUMENTO NO FISCAL"; el front lo
+      renderiza imprimible en la página de seguimiento (decisión: sin
+      PDF en backend — el comprobante fiscal real lo emite el
+      comercio desde ARCA).
+- [x] Campo en el pedido: `invoice_ref` — el vendedor carga nº de
+      factura/CAE emitida desde ARCA (`POST store-orders/<id>/invoice-ref/`)
+      → queda en el pedido y visible en seguimiento.
+- [x] Footer de la tienda muestra datos fiscales del vendedor.
+- [x] Validación: no se puede activar `orders_enabled` sin perfil
       fiscal completo.
 
 ## FASE 4 — Integraciones (opcional, post-MVP)
@@ -244,22 +253,25 @@ factura como servicio aparte (el dominio `invoices` ya existe).
   legal, suscripciones).
 - **Security audit (skill Cloudflare, run-1)**: perfil `standard`,
   scope `main...ECCOMMERCE-ADD`, 18 unidades de cobertura, 15 records
-  finales — 11 confirmados (todos corregidos en `7d53e880`/`5c249b52`),
-  2 rejected post-fix (captcha atómico, mails a email no verificado),
-  2 needs_validation (comportamiento del proveedor MP: duplicados de
-  refund y payload `approved` sin monto — planes de validación en
-  `NEEDS-VALIDATION.md` del run). Artefactos en
-  `.devin/skills/security-audit` run output `run-1` (fuera del repo).
+  finales — 9 confirmados (todos corregidos en `7d53e880`/`5c249b52`),
+  5 rejected post-fix (claims reales en el ref auditado cuyo sink ya
+  estaba remediado cuando el verificador revisó el árbol: captcha,
+  mails a email no verificado, huella-PII unique, receipt PII y
+  amount-None del webhook), 1 needs_validation (dedup de refunds
+  duplicados del lado de MP tras outcome ambiguo — plan de validación
+  en `NEEDS-VALIDATION.md` del run). Artefactos del run en
+  `C:\Users\David\security-audit-skill\DaventSaaS\run-1` (fuera del
+  repo); reportes commiteados en `docs/security-audit-run1/`.
 
 ## Checklist "libre de problemas fiscales hoy"
 
 - [x] DAVENT no cobra ni retiene fondos de ventas.
 - [x] DAVENT no emite comprobantes fiscales de terceros.
-- [ ] ToS explícitos de no-parte + categorías prohibidas.
-- [ ] Política de privacidad cubre datos de compradores (encargado del
+- [x] ToS explícitos de no-parte + categorías prohibidas.
+- [x] Política de privacidad cubre datos de compradores (encargado del
       tratamiento por cuenta del vendedor).
-- [ ] Datos fiscales del vendedor obligatorios para vender.
-- [ ] Comprobante interno marcado "no fiscal".
-- [ ] Páginas legales por tienda + botón de arrepentimiento.
-- [ ] El vendedor asume en ToS de la tienda su responsabilidad fiscal
+- [x] Datos fiscales del vendedor obligatorios para vender.
+- [x] Comprobante interno marcado "no fiscal".
+- [x] Páginas legales por tienda + botón de arrepentimiento.
+- [x] El vendedor asume en ToS de la tienda su responsabilidad fiscal
       (monotributo/RI al día, facturación de cada venta).

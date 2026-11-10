@@ -338,6 +338,7 @@ onMounted(load)
         <button type="submit" class="ec-btn-primary ec-co-submit" :disabled="!canSubmit">
           {{ submitting ? 'Creando tu pedido…' : 'Confirmar pedido' }}
         </button>
+        <p class="ec-co-muted ec-co-fine">La venta se realiza entre vos y el comercio: DAVENT solo provee la plataforma. El pedido se confirma cuando el vendedor acredita el pago.</p>
         <p class="ec-co-muted ec-co-fine">Al confirmar aceptás los <RouterLink :to="{ path: storeHostSlug ? '/legal/terminos' : `/${slug}/legal/terminos` }" target="_blank">términos y condiciones</RouterLink> de la tienda.</p>
       </form>
 

@@ -33,19 +33,22 @@ Al realizar una compra en {{store_name}} el comprador declara haber leído y ace
 3. Productos, precios y stock
 Los precios publicados son en pesos argentinos e incluyen los impuestos que correspondan, salvo indicación en contrario. El stock mostrado es el disponible al momento de la consulta; el Comercio puede suspender la venta de un artículo agotado o publicado con datos erróneos, en cuyo caso se informará al comprador y se ofrecerá una alternativa o el reintegro de lo abonado.
 
-4. Formas de pago y confirmación del pedido
+4. Productos y actividades prohibidas
+El Comercio declara que no publica ni vende por este sitio productos o servicios ilegales, falsificados, robados o que infrinjan derechos de terceros, ni los típicamente vedados por la normativa argentina o por las condiciones de las plataformas de pago (por ejemplo: armas y explosivos, estupefacientes, medicamentos con receta, material de abuso sexual, especies protegidas, productos que importen trata de personas o trabajo forzoso, entre otros). El Comercio es el único responsable de la legalidad de lo que ofrece; DAVENT puede suspender la publicación de cualquier contenido que infrinja esta cláusula o la legislación aplicable.
+
+5. Formas de pago y confirmación del pedido
 El Comercio define sus métodos de pago (transferencia, efectivo, coordinar por WhatsApp u otros) y los informa en el checkout. El pedido se confirma cuando el Comercio acredita el pago o acepta la compra; hasta entonces la reserva no está garantizada. DAVENT no procesa pagos ni retiene fondos: el dinero se abona directamente al Comercio.
 
-5. Comprobantes fiscales
+6. Comprobantes fiscales
 La facturación de la venta es responsabilidad exclusiva del Comercio ({{legal_name}}, condición frente a IVA: {{tax_condition}}). DAVENT no emite comprobantes fiscales por las ventas de terceros.
 
-6. Entrega y plazos
+7. Entrega y plazos
 Los plazos de entrega o de coordinación del retiro o la prestación del servicio son los que el Comercio declare al momento de la compra o por su canal de contacto ({{contact_email}}). Si el Comercio no informa un plazo, el comprador puede consultarlo antes de comprar.
 
-7. Cancelaciones
+8. Cancelaciones
 El comprador puede cancelar un pedido pendiente de pago en cualquier momento. Una vez confirmado el pago, la cancelación queda sujeta a la política de devoluciones publicada en este sitio.
 
-8. Contacto
+9. Contacto
 Consultas sobre estos términos o cualquier aspecto de la compra: {{contact_email}}.""",
     'privacy': """POLÍTICA DE PRIVACIDAD — {{store_name}}
 

@@ -1354,6 +1354,7 @@ def studio_font_css(site_theme):
                     f'https://fonts.googleapis.com/css2?family={query}&display=swap',
                     headers = {'User-Agent': _GOOGLE_FONTS_UA},
                 )
+                #nosec B310 — URL fija https://fonts.googleapis.com con query de _STUDIO_FONT_FACE (constantes del módulo), timeout acotado
                 with urllib.request.urlopen(req, timeout = 4) as res:
                     css =   res.read().decode('utf-8', 'replace')
             except Exception:

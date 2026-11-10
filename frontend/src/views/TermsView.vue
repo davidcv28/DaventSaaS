@@ -93,6 +93,15 @@ import LegalLayout from '../components/LegalLayout.vue'
         sobre las denuncias válidas conforme a la sección 6. El servicio se ofrece "tal cual", dentro de
         los límites que permite la ley.
       </p>
+      <p>
+        Respecto de las ventas online de cada comercio: DAVENT es solo la infraestructura
+        tecnológica. El contrato de compraventa es entre el comprador y el comercio; DAVENT no
+        procesa ni retiene los pagos de esas ventas (se abonan directamente al comercio o a su
+        cuenta de Mercado Pago), no emite comprobantes fiscales de terceros ni responde por la
+        veracidad de los datos fiscales que cada comercio declare. Los reclamos entre comprador
+        y comercio se gestionan directamente entre ellos conforme a las páginas legales de cada
+        tienda.
+      </p>
 
       <h2>10. Legislación y jurisdicción</h2>
       <p>
