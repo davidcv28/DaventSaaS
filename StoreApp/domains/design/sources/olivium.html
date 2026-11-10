@@ -1106,6 +1106,7 @@ html[data-ds-theme="dark"] .ds-rev-q,html[data-ds-style="olivium-noche"] .ds-rev
 html[data-ds-theme="dark"] .services-list .ds-service::before,html[data-ds-style="olivium-noche"] .services-list .ds-service::before{color:var(--accent)}
 .services-list .ds-service-name{font:400 21px/1.25 var(--display)}
 .services-list .ds-service-desc{font:400 13px/1.6 var(--sans);color:var(--muted);max-width:64ch}
+.services-list .ds-service-meta{display:block;margin-top:9px;font:600 10.5px/1.5 var(--mono);letter-spacing:.14em;text-transform:uppercase;color:var(--accent-text)}
 .svc-empty{display:none;margin-top:30px;padding:50px 0;text-align:center;font:italic 500 19px/1.6 var(--display);color:var(--muted)}
 [data-surface="services"]:not(:has(.ds-offer)):not(:has(.ds-service)) .svc-empty{display:block}
 [data-surface="services"]:not(:has(.ds-offer)):not(:has(.ds-service)) .svc-cta{display:none}
@@ -1180,13 +1181,13 @@ html[data-ds-theme="dark"] .services-list .ds-service::before,html[data-ds-style
   .about-media{aspect-ratio:16/11;max-height:420px}
   .cat-layout{grid-template-columns:1fr}
   .cat-aside{
-    position:fixed;inset:0 12% 0 0;z-index:70;border-radius:0;max-width:360px;
+    position:fixed;top:0;right:12%;bottom:auto;left:0;height:var(--fr-h,100vh);z-index:70;border-radius:0;max-width:360px;
     transform:translateX(-104%);transition:transform .4s var(--ease);overflow-y:auto;
   }
-  body.f-open .cat-aside{transform:none}
+  .cat-aside.is-open{transform:none}
   .cat-aside-head{display:flex}
-  .cat-scrim{display:block;position:fixed;inset:0;z-index:65;background:rgba(16,22,6,.55);opacity:0;visibility:hidden;transition:opacity .3s}
-  body.f-open .cat-scrim{opacity:1;visibility:visible}
+  .cat-scrim{display:block;position:fixed;top:0;right:0;bottom:auto;left:0;height:var(--fr-h,100vh);z-index:65;background:rgba(16,22,6,.55);opacity:0;visibility:hidden;transition:opacity .3s}
+  body.filters-open .cat-scrim{opacity:1;visibility:visible}
   .cat-filters-toggle{display:inline-flex}
   .hero-route,.hero-coords,.hero-scroll,.hero-drop{display:none}
   .quotes{grid-template-columns:1fr}
@@ -1628,7 +1629,7 @@ html[data-ds-theme="dark"] .services-list .ds-service::before,html[data-ds-style
           <button class="f-apply" type="button" data-ds-brands-more hidden>Ver todas</button>
         </section>
         <section class="f-group" aria-labelledby="ol-f-price">
-          <h2 class="f-title" id="vj-f-price">Presupuesto</h2>
+          <h2 class="f-title" id="ol-f-price">Presupuesto</h2>
           <div class="f-price">
             <label class="f-price-field"><span class="sr-only">Desde</span><input type="number" inputmode="numeric" min="0" step="1" placeholder="Desde" data-ds-price-min></label>
             <span class="f-price-dash" aria-hidden="true">—</span>
@@ -1637,7 +1638,7 @@ html[data-ds-theme="dark"] .services-list .ds-service::before,html[data-ds-style
           <button class="f-apply" type="button" data-ds-price-apply>Aplicar precio</button>
         </section>
         <section class="f-group" aria-labelledby="ol-f-offer">
-          <h2 class="f-title" id="vj-f-offer">Ofertas</h2>
+          <h2 class="f-title" id="ol-f-offer">Ofertas</h2>
           <label class="f-check"><input type="checkbox" data-ds-offers><span>Solo con descuento</span></label>
         </section>
         <div class="cat-aside-foot">
@@ -1645,7 +1646,7 @@ html[data-ds-theme="dark"] .services-list .ds-service::before,html[data-ds-style
           <button class="f-done" type="button" data-ds-filters-close>Aplicar</button>
         </div>
       </aside>
-      <div class="cat-scrim" data-ds-filters-close aria-hidden="true"></div>
+      <div class="cat-scrim" data-ds-filters-scrim aria-hidden="true"></div>
       <div class="cat-results">
         <div class="cat-bar">
           <form class="cat-search" data-ds-search role="search">
@@ -1802,6 +1803,10 @@ html[data-ds-theme="dark"] .services-list .ds-service::before,html[data-ds-style
 
   function qsa(sel, ctx) { return [].slice.call((ctx || document).querySelectorAll(sel)) }
 
+  /*Logo/portada vacía: el <img src=""> pedía el propio documento (200 HTML)
+    en cada carga — se elimina para que quede solo el monograma/fallback.*/
+  qsa('img[src=""],img:not([src])').forEach(function (img) { img.remove() })
+
   function measure() {
     requestAnimationFrame(function () {
       if (window.parent === window) return
@@ -1840,17 +1845,13 @@ html[data-ds-theme="dark"] .services-list .ds-service::before,html[data-ds-style
     }
   }
 
-  document.addEventListener('click', function (e) {
-    var t = e.target
-    if (!t || !t.closest) return
-    if (t.closest('[data-ds-filters-toggle]')) { body.classList.add('f-open'); return }
-    if (t.closest('[data-ds-filters-close]')) body.classList.remove('f-open')
-  })
-  document.addEventListener('keydown', function (e) {
-    if (e.key === 'Escape') body.classList.remove('f-open')
-  })
+  /* La hoja de filtros la maneja el puente (is-open/filters-open): el
+     patrón no toca f-open — dos estados paralelos la dejaban trabada. */
   window.addEventListener('resize', function () {
-    body.classList.remove('f-open')
+    var fp = document.querySelector('[data-ds-filters-panel]')
+    if (fp && window.innerWidth > 920 && fp.classList.contains('is-open')) {
+      fp.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true }))
+    }
     syncHead()
     paint()
   })
@@ -1867,6 +1868,18 @@ html[data-ds-theme="dark"] .services-list .ds-service::before,html[data-ds-style
     track.innerHTML = html + html
   }
   qsa('[data-marquee]').forEach(setupMarquee)
+
+  /* Servicios: precio/duración viajan en data-attrs del fragmento — se
+     materializan como meta visible (el markup base solo trae nombre+desc). */
+  qsa('.svc-body .ds-service').forEach(function (el) {
+    var meta = [el.getAttribute('data-price-label'), el.getAttribute('data-duration')]
+      .filter(function (v) { return v && v.trim() }).join(' · ')
+    if (!meta) return
+    var tag = document.createElement('span')
+    tag.className = 'ds-service-meta'
+    tag.textContent = meta
+    el.appendChild(tag)
+  })
 
   /* ---------- Secciones sin datos ---------- */
   function hideEmpty() {
@@ -1974,6 +1987,13 @@ html[data-ds-theme="dark"] .services-list .ds-service::before,html[data-ds-style
     var d = e.data || {}
     if (d.type === 'davent:ds-frame') {
       frame = { top: Number(d.top) || 0, bottom: Number(d.bottom) || 0, vh: Number(d.vh) || 0 }
+      /*--fr-h: alto visible del marco. Las unidades vh del documento miden
+        la página estirada entera, no la ventana — la hoja de filtros la
+        necesita para cubrir solo lo que se ve.*/
+      var ih = Math.max(1, document.documentElement.scrollHeight || 1)
+      var vt = Math.max(0, -frame.top)
+      var vb = Math.min(ih, frame.vh - frame.top)
+      document.documentElement.style.setProperty('--fr-h', Math.max(1, Math.round(vb - vt)) + 'px')
       syncHero()
       paint()
       return

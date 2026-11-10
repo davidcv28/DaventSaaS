@@ -50,6 +50,10 @@
   --accent-deep:color-mix(in srgb,var(--accent) 78%,#8E2A10);
   --accent-text:color-mix(in srgb,var(--ds-accent-text,color-mix(in srgb,var(--accent) 80%,var(--ink))) 80%,var(--ink));
   --accent-soft:color-mix(in srgb,var(--accent) 11%,var(--paper));
+  /*Acento legible sobre la banda de tinta (footer, cintas, hojas): se
+    aclara hacia el tinta-papel para que un acento tierra/ocre no quede
+    a 3:1 sobre el fondo oscuro.*/
+  --accent-on-ink:color-mix(in srgb,var(--accent) 55%,var(--band-ink));
   --on-accent:var(--ds-accent-ink,#1A1009);
   --ok:var(--ds-success,#2C6E55);
   --danger:#B3261E;
@@ -90,6 +94,7 @@ html[data-ds-theme="dark"]{
   --accent-deep:color-mix(in srgb,var(--accent) 76%,#8E2A10);
   --accent-text:color-mix(in srgb,var(--accent) 82%,var(--ink));
   --accent-soft:color-mix(in srgb,var(--accent) 13%,var(--paper));
+  --accent-on-ink:color-mix(in srgb,var(--accent) 55%,var(--band-ink));
   --on-accent:#1A1009;
   --ok:#5BC49A;
   --band:#060D13;
@@ -227,12 +232,13 @@ html[data-ds-surface="services"] .nav a[data-ds-route="services"]::after{transfo
 
 /* ---------- Menú móvil ---------- */
 .mmenu{
-  position:fixed;inset:0;z-index:80;display:flex;flex-direction:column;
+  position:fixed;top:0;right:0;bottom:auto;left:0;height:var(--fr-h,100vh);z-index:80;display:flex;flex-direction:column;
   background:var(--band);color:var(--band-ink);
   padding:26px clamp(20px,6vw,44px);transform:translateY(-102%);
   transition:transform .45s var(--ease);visibility:hidden;
 }
 body.m-open .mmenu{transform:none;visibility:visible}
+.m-lock{overflow:hidden}
 .mmenu-top{display:flex;align-items:center;justify-content:space-between}
 .mmenu-brand{display:flex;align-items:center;gap:12px}
 .mmenu-close{width:46px;height:46px;border:1px solid color-mix(in srgb,var(--band-ink) 30%,transparent);border-radius:50%;background:transparent;color:inherit;cursor:pointer;display:grid;place-items:center}
@@ -244,8 +250,8 @@ body.m-open .mmenu{transform:none;visibility:visible}
   font:500 clamp(26px,7vw,40px)/1.1 var(--display);
   transition:color .2s,padding-left .25s var(--ease);
 }
-.mmenu nav a:hover{color:var(--accent);padding-left:8px}
-.mmenu nav a span:last-child{font:500 11px/1 var(--mono);letter-spacing:.2em;color:var(--accent)}
+.mmenu nav a:hover{color:var(--accent-on-ink);padding-left:8px}
+.mmenu nav a span:last-child{font:500 11px/1 var(--mono);letter-spacing:.2em;color:var(--accent-on-ink)}
 .mmenu .btn{margin-top:32px;align-self:flex-start}
 .mmenu-foot{margin-top:auto;padding-top:24px;font:500 10px/1.7 var(--mono);letter-spacing:.18em;text-transform:uppercase;opacity:.5}
 
@@ -400,7 +406,7 @@ html[data-ds-theme="dark"] .sec-title-wrap::before{color:var(--accent)}
 .ticker{background:var(--band);color:var(--band-ink);overflow:hidden;padding:15px 0;position:relative;border-block:1px solid var(--band);margin-top:clamp(48px,6vw,68px)}
 .ticker-track{display:inline-flex;gap:0;white-space:nowrap;animation:marq 42s linear infinite}
 .ticker-track>*{display:inline-flex;align-items:center;gap:14px;font:500 12px/1 var(--mono);letter-spacing:.2em;text-transform:uppercase;color:color-mix(in srgb,var(--band-ink) 78%,transparent);padding-inline:26px}
-.ticker-track>*::after{content:"✦";color:var(--accent);margin-left:12px;font-size:13px}
+.ticker-track>*::after{content:"✦";color:var(--accent-on-ink);margin-left:12px;font-size:13px}
 .band-fade{position:absolute;top:0;bottom:0;width:110px;z-index:1;pointer-events:none}
 .band-fade.l{left:0;background:linear-gradient(90deg,var(--band),transparent)}
 .band-fade.r{right:0;background:linear-gradient(-90deg,var(--band),transparent)}
@@ -426,7 +432,7 @@ html[data-ds-theme="dark"] .dest-grid .ds-cat::before{color:var(--accent)}
   transition:transform .3s var(--ease),background-color .3s,border-color .3s;
 }
 .dest-grid .ds-cat:hover{transform:translateY(-4px);border-color:var(--band);box-shadow:var(--shadow-soft);background:var(--band);color:var(--band-ink)}
-.dest-grid .ds-cat:hover::before{color:var(--accent)}
+.dest-grid .ds-cat:hover::before{color:var(--accent-on-ink)}
 .dest-grid .ds-cat:hover::after{transform:rotate(45deg);border-color:var(--accent);background-color:color-mix(in srgb,var(--accent) 20%,transparent)}
 
 /* ---------- Grilla de itinerarios ---------- */
@@ -578,9 +584,9 @@ html[data-ds-theme="dark"] .mission span{color:var(--accent)}
 }
 html[data-ds-theme="dark"] .guars .ds-guar-icon{color:var(--accent)}
 .guars .ds-guar-icon svg{width:21px;height:21px}
-.guars .ds-guar-copy{display:flex;flex-direction:column;gap:8px}
-.guars .ds-guar-copy b{font:600 19px/1.2 var(--display);letter-spacing:-.01em}
-.guars .ds-guar-copy span{font:400 13px/1.62 var(--sans);color:var(--muted)}
+.guars .ds-guar-copy{display:flex;flex-direction:column;gap:8px;min-width:0}
+.guars .ds-guar-copy b{font:600 19px/1.2 var(--display);letter-spacing:-.01em;overflow-wrap:anywhere}
+.guars .ds-guar-copy span{font:400 13px/1.62 var(--sans);color:var(--muted);overflow-wrap:anywhere}
 
 /* ---------- Planes ---------- */
 .plans{display:grid;grid-template-columns:repeat(3,1fr);gap:18px}
@@ -644,7 +650,7 @@ html[data-ds-theme="dark"] .faq-list .ds-faq .ds-faq-q::after{color:var(--accent
 
 /* ---------- CTA ---------- */
 .cta-band{
-  margin-top:clamp(30px,4vw,60px);background:color-mix(in srgb,var(--accent) 92%,var(--on-accent));
+  margin-top:clamp(30px,4vw,60px);background:var(--accent);
   color:var(--on-accent);overflow:hidden;position:relative;
 }
 .cta-band::before{
@@ -957,6 +963,7 @@ html[data-ds-theme="dark"] .ds-rev-q{color:var(--accent)}
 html[data-ds-theme="dark"] .services-list .ds-service::before{color:var(--accent)}
 .services-list .ds-service-name{font:600 20px/1.25 var(--display)}
 .services-list .ds-service-desc{font:400 13px/1.6 var(--sans);color:var(--muted);max-width:64ch}
+.services-list .ds-service-meta{display:block;margin-top:9px;font:600 10.5px/1.5 var(--mono);letter-spacing:.14em;text-transform:uppercase;color:var(--accent-text)}
 .svc-empty{display:none;margin-top:30px;padding:50px 0;text-align:center;font:italic 500 19px/1.6 var(--display);color:var(--muted)}
 [data-surface="services"]:not(:has(.ds-offer)):not(:has(.ds-service)) .svc-empty{display:block}
 [data-surface="services"]:not(:has(.ds-offer)):not(:has(.ds-service)) .svc-cta{display:none}
@@ -970,7 +977,7 @@ html[data-ds-theme="dark"] .services-list .ds-service::before{color:var(--accent
 }
 .foot-top{display:grid;grid-template-columns:1.4fr 1fr 1fr;gap:clamp(30px,5vw,70px);padding-block:clamp(52px,7vw,84px) clamp(34px,4vw,54px)}
 .foot-word{font:500 clamp(30px,3.8vw,46px)/1.05 var(--display);letter-spacing:-.02em;display:flex;align-items:baseline;gap:8px}
-.foot-word i{font-style:normal;color:var(--accent);font-size:.5em;line-height:1}
+.foot-word i{font-style:normal;color:var(--accent-on-ink);font-size:.5em;line-height:1}
 .foot-tag{margin-top:16px;max-width:36ch;font:400 13.5px/1.68 var(--sans);color:color-mix(in srgb,var(--band-ink) 66%,transparent)}
 .foot-social{display:flex;gap:10px;margin-top:24px}
 .foot-social a{
@@ -980,12 +987,12 @@ html[data-ds-theme="dark"] .services-list .ds-service::before{color:var(--accent
 }
 .foot-social a:hover{background:var(--accent);border-color:var(--accent);color:var(--on-accent);transform:translateY(-3px)}
 .foot-social svg{width:17px;height:17px}
-.foot-col h4{font:600 9.5px/1 var(--mono);letter-spacing:.24em;text-transform:uppercase;color:var(--accent);display:flex;align-items:center;gap:8px}
+.foot-col h4{font:600 9.5px/1 var(--mono);letter-spacing:.24em;text-transform:uppercase;color:var(--accent-on-ink);display:flex;align-items:center;gap:8px}
 .foot-col h4::after{content:"";flex:1;height:1px;background:color-mix(in srgb,var(--band-ink) 16%,transparent)}
 .foot-col ul{margin-top:20px;display:flex;flex-direction:column;gap:11px}
 .foot-col li{font:400 13.5px/1.5 var(--sans);color:color-mix(in srgb,var(--band-ink) 78%,transparent)}
 .foot-col a{transition:color .2s}
-.foot-col a:hover{color:var(--accent)}
+.foot-col a:hover{color:var(--accent-on-ink)}
 .foot-bottom{
   border-top:1px solid color-mix(in srgb,var(--band-ink) 14%,transparent);
   padding-block:22px;display:flex;justify-content:space-between;gap:14px;flex-wrap:wrap;
@@ -1028,13 +1035,13 @@ html[data-ds-theme="dark"] .services-list .ds-service::before{color:var(--accent
   .about-media{aspect-ratio:16/11;max-height:420px}
   .cat-layout{grid-template-columns:1fr}
   .cat-aside{
-    position:fixed;inset:0 12% 0 0;z-index:70;border-radius:0;max-width:360px;
+    position:fixed;top:0;right:12%;bottom:auto;left:0;height:var(--fr-h,100vh);z-index:70;border-radius:0;max-width:360px;
     transform:translateX(-104%);transition:transform .4s var(--ease);overflow-y:auto;
   }
-  body.f-open .cat-aside{transform:none}
+  .cat-aside.is-open{transform:none}
   .cat-aside-head{display:flex}
-  .cat-scrim{display:block;position:fixed;inset:0;z-index:65;background:rgba(9,20,27,.55);opacity:0;visibility:hidden;transition:opacity .3s}
-  body.f-open .cat-scrim{opacity:1;visibility:visible}
+  .cat-scrim{display:block;position:fixed;top:0;right:0;bottom:auto;left:0;height:var(--fr-h,100vh);z-index:65;background:rgba(9,20,27,.55);opacity:0;visibility:hidden;transition:opacity .3s}
+  body.filters-open .cat-scrim{opacity:1;visibility:visible}
   .cat-filters-toggle{display:inline-flex}
   .hero-route,.hero-coords,.hero-scroll{display:none}
   .quotes{grid-template-columns:1fr}
@@ -1158,7 +1165,7 @@ html[data-ds-theme="dark"] .ds-brand-initial{color:var(--paper)}
       Planear viaje
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
     </a>
-    <button class="m-open-btn" type="button" data-m-open aria-label="Abrir menú" aria-expanded="false">
+    <button class="m-open-btn" type="button" data-m-open aria-label="Abrir menú" aria-expanded="false" aria-controls="vj-menu">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h10"/></svg>
     </button>
   </div>
@@ -1166,7 +1173,7 @@ html[data-ds-theme="dark"] .ds-brand-initial{color:var(--paper)}
 </header>
 
 <!-- Menú móvil -->
-<div class="mmenu" aria-label="Menú">
+<div class="mmenu" id="vj-menu" role="dialog" aria-modal="true" aria-label="Menú" aria-hidden="true">
   <div class="mmenu-top">
     <span class="mmenu-brand">
       <span class="brand-mark">{{store_initial}}</span>
@@ -1500,7 +1507,7 @@ html[data-ds-theme="dark"] .ds-brand-initial{color:var(--paper)}
           <button class="f-done" type="button" data-ds-filters-close>Aplicar</button>
         </div>
       </aside>
-      <div class="cat-scrim" data-ds-filters-close aria-hidden="true"></div>
+      <div class="cat-scrim" data-ds-filters-scrim aria-hidden="true"></div>
       <div class="cat-results">
         <div class="cat-bar">
           <form class="cat-search" data-ds-search role="search">
@@ -1657,6 +1664,10 @@ html[data-ds-theme="dark"] .ds-brand-initial{color:var(--paper)}
 
   function qsa(sel, ctx) { return [].slice.call((ctx || document).querySelectorAll(sel)) }
 
+  /*Logo/portada vacía: el <img src=""> pedía el propio documento (200 HTML)
+    en cada carga — se elimina para que quede solo el monograma/fallback.*/
+  qsa('img[src=""],img:not([src])').forEach(function (img) { img.remove() })
+
   function measure() {
     requestAnimationFrame(function () {
       if (window.parent === window) return
@@ -1696,25 +1707,55 @@ html[data-ds-theme="dark"] .ds-brand-initial{color:var(--paper)}
   }
 
   /* ---------- Menú móvil ---------- */
+  var menu = document.querySelector('.mmenu')
+  var lastFocus = null
   function setMenu(open) {
     body.classList.toggle('m-open', open)
     var btn = document.querySelector('[data-m-open]')
     if (btn) btn.setAttribute('aria-expanded', open ? 'true' : 'false')
+    /*m-lock en <html>: el puente lo observa y frena el scroll del HOST
+      (el scroll real es de la página, no del iframe estirado).*/
+    document.documentElement.classList.toggle('m-lock', open)
     document.documentElement.style.overflow = open ? 'hidden' : ''
+    if (menu) {
+      menu.setAttribute('aria-hidden', open ? 'false' : 'true')
+      if ('inert' in menu) menu.inert = !open
+      if (open) {
+        lastFocus = document.activeElement
+        var first = menu.querySelector('a[href],button')
+        if (first) first.focus()
+      } else if (lastFocus && lastFocus.focus) {
+        lastFocus.focus()
+      }
+    }
   }
   document.addEventListener('click', function (e) {
     var t = e.target
     if (!t || !t.closest) return
     if (t.closest('[data-m-open]')) { setMenu(true); return }
     if (t.closest('[data-m-close]')) setMenu(false)
-    if (t.closest('[data-ds-filters-toggle]')) { body.classList.add('f-open'); return }
-    if (t.closest('[data-ds-filters-close]')) body.classList.remove('f-open')
+    /*La hoja de filtros la maneja el puente (is-open/filters-open): el
+      patrón no toca f-open — dos estados paralelos la dejaban trabada.*/
   })
   document.addEventListener('keydown', function (e) {
-    if (e.key === 'Escape') { setMenu(false); body.classList.remove('f-open') }
+    if (e.key === 'Escape') { setMenu(false); return }
+    /*Trampa de foco: con el menú abierto Tab no escapa al fondo.*/
+    if (e.key === 'Tab' && menu && body.classList.contains('m-open')) {
+      var f = menu.querySelectorAll('a[href],button:not([disabled])')
+      if (!f.length) return
+      var firstEl = f[0], lastEl = f[f.length - 1]
+      if (e.shiftKey && document.activeElement === firstEl) { e.preventDefault(); lastEl.focus() }
+      else if (!e.shiftKey && document.activeElement === lastEl) { e.preventDefault(); firstEl.focus() }
+    }
   })
   window.addEventListener('resize', function () {
-    if (window.innerWidth > 920) { setMenu(false); body.classList.remove('f-open') }
+    if (window.innerWidth > 920) {
+      setMenu(false)
+      var fp = document.querySelector('[data-ds-filters-panel]')
+      if (fp && fp.classList.contains('is-open')) {
+        fp.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true }))
+      }
+    }
     syncHead()
     paint()
   })
@@ -1731,6 +1772,18 @@ html[data-ds-theme="dark"] .ds-brand-initial{color:var(--paper)}
     track.innerHTML = html + html
   }
   qsa('[data-marquee]').forEach(setupMarquee)
+
+  /* Servicios: precio/duración viajan en data-attrs del fragmento — se
+     materializan como meta visible (el markup base solo trae nombre+desc). */
+  qsa('.svc-body .ds-service').forEach(function (el) {
+    var meta = [el.getAttribute('data-price-label'), el.getAttribute('data-duration')]
+      .filter(function (v) { return v && v.trim() }).join(' · ')
+    if (!meta) return
+    var tag = document.createElement('span')
+    tag.className = 'ds-service-meta'
+    tag.textContent = meta
+    el.appendChild(tag)
+  })
 
   /* ---------- Secciones sin datos ---------- */
   function hideEmpty() {
@@ -1838,6 +1891,13 @@ html[data-ds-theme="dark"] .ds-brand-initial{color:var(--paper)}
     var d = e.data || {}
     if (d.type === 'davent:ds-frame') {
       frame = { top: Number(d.top) || 0, bottom: Number(d.bottom) || 0, vh: Number(d.vh) || 0 }
+      /*--fr-h: alto visible del marco. Las unidades vh del documento miden
+        la página estirada entera, no la ventana — el menú y la hoja de
+        filtros la necesitan para cubrir solo lo que se ve.*/
+      var ih = Math.max(1, document.documentElement.scrollHeight || 1)
+      var vt = Math.max(0, -frame.top)
+      var vb = Math.min(ih, frame.vh - frame.top)
+      document.documentElement.style.setProperty('--fr-h', Math.max(1, Math.round(vb - vt)) + 'px')
       syncHero()
       paint()
       return

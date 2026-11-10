@@ -136,6 +136,11 @@ ul,ol{margin:0;padding:0;list-style:none}
   transition:max-height .38s var(--ease-soft),opacity .25s var(--ease-soft);
 }
 .head.is-scrolled .ribbon{max-height:0;opacity:0}
+/* La ficha de producto no tiene héroe/catálogo de tinta detrás: la cabecera
+   fija lee como la versión con scroll (tinta sobre papel). --band-ink se
+   remapea solo dentro de .head para no tocar héroe, cinta ni pie. */
+html[data-ds-surface="product"] .head{--band-ink:var(--ink)}
+html[data-ds-surface="product"] .brand-meta{color:color-mix(in srgb,var(--ink) 72%,transparent)}
 .ribbon-track{position:relative;z-index:1;display:flex;align-items:center;width:max-content;min-width:100%;animation:marquee 42s linear infinite}
 .ribbon:hover .ribbon-track{animation-play-state:paused}
 .ribbon .ds-note{
@@ -185,15 +190,16 @@ html[data-ds-surface="services"] .nav a[data-ds-route="services"]::after{transfo
 .scroll-line i{display:block;width:100%;height:100%;background:var(--accent);transform:scaleX(0);transform-origin:left;will-change:transform}
 
 /* ---------- Menú móvil ---------- */
-.m-scrim{position:fixed;inset:0;z-index:94;background:rgba(8,6,4,.62);opacity:0;pointer-events:none;transition:opacity .25s}
+.m-scrim{position:fixed;top:0;right:0;bottom:auto;left:0;height:var(--fr-h,100vh);z-index:94;background:rgba(8,6,4,.62);opacity:0;pointer-events:none;transition:opacity .25s}
 .m-sheet{
-  position:fixed;top:0;right:0;bottom:0;z-index:95;width:min(380px,90vw);
+  position:fixed;top:0;right:0;bottom:auto;height:var(--fr-h,100vh);z-index:95;width:min(380px,90vw);
   display:flex;flex-direction:column;background:var(--band);color:var(--band-ink);
   border-left:1px solid var(--accent);
   transform:translateX(102%);transition:transform .4s var(--ease);overflow:auto;
 }
 body.m-open .m-scrim{opacity:1;pointer-events:auto}
 body.m-open .m-sheet{transform:none}
+.m-lock{overflow:hidden}
 .m-head{display:flex;align-items:center;gap:12px;padding:20px;border-bottom:1px solid var(--band-line)}
 .m-head strong{font:400 24px/1 var(--display);letter-spacing:.05em}
 .m-close{margin-left:auto;width:40px;height:40px;border:1px solid var(--band-line);background:transparent;cursor:pointer;border-radius:var(--r);font-size:22px;color:inherit}
@@ -777,6 +783,11 @@ body.m-open .m-sheet{transform:none}
 .pdp-related{margin-top:clamp(46px,6vw,74px)}
 .pdp-related h2{font:400 clamp(28px,3.4vw,44px)/1 var(--display);letter-spacing:.01em;text-transform:uppercase;margin-bottom:24px}
 .pdp-related:not(:has(.ds-product)){display:none}
+/* Las tarjetas relacionadas llevan texto --band-ink pensado para ir sobre la
+   foto: se les da fondo de tinta para que el nombre/precio nunca queden
+   claros sobre papel si la imagen tarda o falta (en catálogo el fondo lo
+   resuelve el gradiente de .cat-surface). */
+.pdp-related .ds-product-link{background:var(--band)}
 
 /* ---------- Servicios ---------- */
 .svc-surface{padding-bottom:clamp(50px,6vw,80px)}
@@ -798,6 +809,7 @@ body.m-open .m-sheet{transform:none}
 .ds-service-name{grid-column:2;grid-row:1;font:400 22px/1.25 var(--display);letter-spacing:.01em;text-transform:uppercase;overflow-wrap:anywhere}
 .ds-service-desc{grid-column:2;grid-row:2;display:block;margin-top:4px;color:var(--muted);font-size:15px;line-height:1.65}
 .ds-service-desc:empty{display:none}
+.ds-service-meta{grid-column:2;display:block;margin-top:7px;font:500 10.5px/1.5 var(--mono);letter-spacing:.14em;text-transform:uppercase;color:var(--accent-text)}
 .svc-cta{display:flex;justify-content:flex-start;margin-top:30px}
 .svc-empty{display:none;max-width:54ch;padding:26px 0;color:var(--muted);font-size:16px;line-height:1.75}
 [data-surface="services"]:not(:has(.ds-offer)):not(:has(.ds-service)) .svc-empty{display:block}
@@ -837,14 +849,14 @@ body.m-open .m-sheet{transform:none}
   .cat-layout{grid-template-columns:1fr;gap:0}
   .cat-filters-toggle{display:inline-flex}
   .cat-aside{
-    position:fixed;z-index:96;top:0;right:0;bottom:0;width:min(350px,90vw);
+    position:fixed;z-index:96;top:0;right:0;bottom:auto;height:var(--fr-h,100vh);width:min(350px,90vw);
     padding:20px;border:0;border-left:1px solid var(--line);background:var(--paper);
     overflow:auto;transform:translateX(102%);transition:transform .32s var(--ease);
   }
   .cat-aside.is-open{transform:none}
   .cat-aside-close{display:grid;place-items:center}
   .f-done{display:inline-flex}
-  .cat-scrim{display:block;position:fixed;inset:0;z-index:95;background:rgba(8,6,4,.55);opacity:0;pointer-events:none;transition:opacity .25s}
+  .cat-scrim{display:block;position:fixed;top:0;right:0;bottom:auto;left:0;height:var(--fr-h,100vh);z-index:95;background:rgba(8,6,4,.55);opacity:0;pointer-events:none;transition:opacity .25s}
   body.filters-open .cat-scrim{opacity:1;pointer-events:auto}
   .cat-results .grid-products{grid-template-columns:repeat(2,minmax(0,1fr))}
   .pdp-grid{grid-template-columns:1fr;gap:28px}
@@ -1016,7 +1028,7 @@ body.m-open .m-sheet{transform:none}
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 11.5a8.4 8.4 0 0 1-8.5 8.4 8.6 8.6 0 0 1-3.8-.9L3 21l2-5.3a8.3 8.3 0 0 1-1-4A8.4 8.4 0 0 1 12.5 3.2 8.4 8.4 0 0 1 21 11.5Z"/></svg>
       Reservar
     </a>
-    <button class="burger" type="button" aria-label="Abrir menú" aria-expanded="false" data-m-open>
+    <button class="burger" type="button" aria-label="Abrir menú" aria-expanded="false" aria-controls="an-menu" data-m-open>
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h10"/></svg>
     </button>
   </div>
@@ -1024,7 +1036,7 @@ body.m-open .m-sheet{transform:none}
 </header>
 
 <div class="m-scrim" data-m-close aria-hidden="true"></div>
-<aside class="m-sheet" role="dialog" aria-modal="true" aria-label="Menú">
+<aside class="m-sheet" id="an-menu" role="dialog" aria-modal="true" aria-label="Menú" aria-hidden="true">
   <div class="m-head">
     <strong>{{store_name}}</strong>
     <button class="m-close" type="button" aria-label="Cerrar menú" data-m-close>×</button>
@@ -1307,7 +1319,7 @@ body.m-open .m-sheet{transform:none}
             <button class="f-done" type="button" data-ds-filters-close>Aplicar</button>
           </div>
         </aside>
-        <div class="cat-scrim" data-ds-filters-close aria-hidden="true"></div>
+        <div class="cat-scrim" data-ds-filters-scrim aria-hidden="true"></div>
         <div class="cat-results">
           <div class="cat-bar">
             <form class="cat-search" data-ds-search role="search">
@@ -1484,6 +1496,10 @@ body.m-open .m-sheet{transform:none}
 
   function qsa(sel, ctx) { return [].slice.call((ctx || document).querySelectorAll(sel)) }
 
+  /*Logo/portada vacía: el <img src=""> pedía el propio documento (200 HTML)
+    en cada carga — se elimina para que quede solo el monograma/fallback.*/
+  qsa('img[src=""],img:not([src])').forEach(function (img) { img.remove() })
+
   function measure() {
     requestAnimationFrame(function () {
       if (window.parent === window) return
@@ -1506,11 +1522,27 @@ body.m-open .m-sheet{transform:none}
   }
 
   /* ---------- Menú móvil ---------- */
+  var menu = document.querySelector('.m-sheet')
+  var lastFocus = null
   function setMenu(open) {
     body.classList.toggle('m-open', open)
     var btn = document.querySelector('[data-m-open]')
     if (btn) btn.setAttribute('aria-expanded', open ? 'true' : 'false')
+    /*m-lock en <html>: el puente lo observa y frena el scroll del HOST
+      (el scroll real es de la página, no del iframe estirado).*/
+    document.documentElement.classList.toggle('m-lock', open)
     document.documentElement.style.overflow = open ? 'hidden' : ''
+    if (menu) {
+      menu.setAttribute('aria-hidden', open ? 'false' : 'true')
+      if ('inert' in menu) menu.inert = !open
+      if (open) {
+        lastFocus = document.activeElement
+        var first = menu.querySelector('a[href],button')
+        if (first) first.focus()
+      } else if (lastFocus && lastFocus.focus) {
+        lastFocus.focus()
+      }
+    }
   }
   document.addEventListener('click', function (e) {
     var t = e.target
@@ -1519,10 +1551,24 @@ body.m-open .m-sheet{transform:none}
     if (t.closest('[data-m-close]')) setMenu(false)
   })
   document.addEventListener('keydown', function (e) {
-    if (e.key === 'Escape') setMenu(false)
+    if (e.key === 'Escape') { setMenu(false); return }
+    /*Trampa de foco: con la hoja abierta Tab no escapa al fondo.*/
+    if (e.key === 'Tab' && menu && body.classList.contains('m-open')) {
+      var f = menu.querySelectorAll('a[href],button:not([disabled])')
+      if (!f.length) return
+      var firstEl = f[0], lastEl = f[f.length - 1]
+      if (e.shiftKey && document.activeElement === firstEl) { e.preventDefault(); lastEl.focus() }
+      else if (!e.shiftKey && document.activeElement === lastEl) { e.preventDefault(); firstEl.focus() }
+    }
   })
   window.addEventListener('resize', function () {
-    if (window.innerWidth > 980) setMenu(false)
+    if (window.innerWidth > 980) {
+      setMenu(false)
+      var fp = document.querySelector('[data-ds-filters-panel]')
+      if (fp && fp.classList.contains('is-open')) {
+        fp.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true }))
+      }
+    }
     syncHead()
   })
 
@@ -1536,6 +1582,18 @@ body.m-open .m-sheet{transform:none}
     track.innerHTML = html + html
   }
   qsa('[data-marquee]').forEach(setupMarquee)
+
+  /* Servicios: precio/duración viajan en data-attrs del fragmento — se
+     materializan como meta visible (el markup base solo trae nombre+desc). */
+  qsa('.svc-body .ds-service').forEach(function (el) {
+    var meta = [el.getAttribute('data-price-label'), el.getAttribute('data-duration')]
+      .filter(function (v) { return v && v.trim() }).join(' · ')
+    if (!meta) return
+    var tag = document.createElement('span')
+    tag.className = 'ds-service-meta'
+    tag.textContent = meta
+    el.appendChild(tag)
+  })
 
   /* ---------- Secciones sin datos ---------- */
   function hideEmpty() {
@@ -1634,6 +1692,13 @@ body.m-open .m-sheet{transform:none}
     var d = e.data || {}
     if (d.type === 'davent:ds-frame') {
       frame = { top: Number(d.top) || 0, bottom: Number(d.bottom) || 0, vh: Number(d.vh) || window.innerHeight }
+      /*--fr-h: alto visible del marco. Las unidades vh del documento miden
+        la página estirada entera, no la ventana — la hoja y el scrim la
+        necesitan para cubrir solo lo que se ve.*/
+      var ih = Math.max(1, document.documentElement.scrollHeight || 1)
+      var vt = Math.max(0, -frame.top)
+      var vb = Math.min(ih, frame.vh - frame.top)
+      document.documentElement.style.setProperty('--fr-h', Math.max(1, Math.round(vb - vt)) + 'px')
       paint()
       return
     }
