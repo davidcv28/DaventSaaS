@@ -11,7 +11,8 @@ Fecha: 09/11/2026. Estado: propuesta.
 DAVENT es **infraestructura**: no vende, no cobra, no factura, no es parte
 del contrato de compraventa. El contrato es **comprador ↔ dueño de tienda**.
 La plata del comprador va **directo al vendedor** (transferencia/depósito/
-WhatsApp coordinado). El comprobante fiscal lo emite el **vendedor** desde
+WhatsApp coordinado, o la cuenta MP del propio vendedor vía OAuth Connect —
+nunca la cuenta de DAVENT ni con `application_fee`). El comprobante fiscal lo emite el **vendedor** desde
 ARCA con su propio CUIT — DAVENT nunca emite CAE de terceros (el CAE exige
 certificado del propio emisor).
 
@@ -143,7 +144,42 @@ Mismo patrón que `subscription_notices`/`prune_visits`.
   `document_hash`/`phone_hash` de UserProfile), cifrado de doc si se
   guarda (EncryptedCharField).
 
-## FASE 2 — Fiscal del vendedor (sin integración ARCA)
+## FASE 2 — Mercado Pago por tienda (OAuth Connect)
+
+La plata cae **directo en la cuenta MP del vendedor** → MP le deposita
+a su banco. DAVENT nunca toca los fondos: mismo esquema fiscal que la
+transferencia. **Prohibido `application_fee`/split**: retener comisión
+por venta convertiría a DAVENT en intermediario de fondos (obligaciones
+fiscales propias). Si más adelante se quiere comisión por venta, se
+factura como servicio aparte (el dominio `invoices` ya existe).
+
+- [ ] **App de MP**: alta en developers.mercadopago.com + credenciales
+      `MP_CLIENT_ID`/`MP_CLIENT_SECRET`/`FRONTEND_URL` callback.
+      Checkout Pro/Bricks → cero PCI (tarjeta nunca toca DAVENT).
+- [ ] `StoreMpAccount` (OneToOne a Store): `mp_user_id`, access/refresh
+      token **cifrados con `vault.py`** (mismo mecanismo que AFIP_KEY),
+      `live_mode`, scopes, `connected_at`. Desvincular = revocar.
+- [ ] OAuth: `GET /api/stores/<slug>/mp/connect/` → redirect a MP →
+      `GET /api/mp/callback/` guarda tokens. Solo el dueño de la tienda.
+- [ ] Checkout: `POST /api/stores/<slug>/orders/<token>/pay/` crea la
+      preferencia **con el token del vendedor** (`external_reference` =
+      token del pedido, `notification_url` = webhook, `back_urls` =
+      página de seguimiento) → frontend redirige a `init_point`.
+- [ ] Webhook `POST /api/webhooks/mp/<slug>/`: validar firma
+      `x-signature`, `GET /v1/payments/<id>` con el token del vendedor,
+      idempotente por `payment_id` (mismo patrón que
+      `CreatePaymentQuery`/`external_reference` de suscripciones),
+      rechazar `live_mode=False` en producción. Aprobado → `PAID` →
+      `PACKING` automático. Reembolsos: endpoint del dueño que llama a
+      MP con SU token.
+- [ ] `StorePaymentConfig`: `mp_enabled` convive con métodos manuales —
+      el comprador elige "Mercado Pago" o "Transferencia".
+- [ ] Requisito: el vendedor necesita cuenta MP propia (que ya exige
+      CUIT/monotributo — encaja con el perfil fiscal obligatorio).
+- [ ] Tests: webhook firma inválida, pago duplicado, `live_mode=False`
+      en prod, pedido de otra tienda, token revocado.
+
+## FASE 3 — Fiscal del vendedor (sin integración ARCA)
 
 - [ ] `StoreFiscalProfile` (o campos en `StorePaymentConfig`): CUIT
       validado (dígito verificador), condición IVA, domicilio fiscal,
@@ -159,17 +195,16 @@ Mismo patrón que `subscription_notices`/`prune_visits`.
 - [ ] Validación: no se puede activar `orders_enabled` sin perfil
       fiscal completo.
 
-## FASE 3 — Integraciones (opcional, post-MVP)
+## FASE 4 — Integraciones (opcional, post-MVP)
 
-- **MP por tienda**: OAuth del vendedor o link de pago estático como
-  método adicional en `StorePaymentConfig`. El pedido pasa a
-  `PAID` por webhook (mismo pipeline de estados, cero cambios de modelo).
 - **Facturación automática**: solo si aparece demanda — WSFE
   multi-tenant (`afip.py` refactor a emisor-por-tienda + cert del
   vendedor) o API de terceros. Requiere contrato que cubra a DAVENT
   como prestador del servicio. **No habilitar sin revisión legal.**
 - **Devoluciones**: flujo formal post-entrega (solicitud → aprobación
-  vendedor → reembolso coordinado por fuera → `REFUNDED`).
+  vendedor → reembolso coordinado por fuera → `REFUNDED`). Con MP
+  conectado el reembolso puede ejecutarse por API con el token del
+  vendedor.
 - **Envíos**: cotización por zona, tracking number, integración
   Andreani/CorreoArgentino (fase posterior).
 - **IIBB / percepciones**: revisar con contador si alguna provincia
