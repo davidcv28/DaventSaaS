@@ -1182,14 +1182,14 @@ html:has(.store-page[data-store-theme='dark'])::-webkit-scrollbar-thumb{ backgro
 .spd-gallery img{ max-width: 100%; max-height: 540px; object-fit: contain; display: block; }
 .spd-buy{ display: flex; flex-direction: column; gap: 14px; padding: 30px 28px; }
 .spd-buy-head{ display: flex; align-items: center; justify-content: space-between; gap: 10px; }
-.spd-cond{ margin: 0; font-size: 13px; font-weight: 650; color: #00a650; }
+.spd-cond{ margin: 0; font-size: 13px; font-weight: 650; color: var(--sp-success); }
 .spd-share{ width: 36px; height: 36px; }
 .spd-name{ margin: 0; font-size: 25px; font-weight: 650; letter-spacing: -.02em; line-height: 1.3; overflow-wrap: anywhere; }
 .spd-brand{ margin: -6px 0 0; font-size: 13.5px; color: var(--sp-muted); }
 .spd-pricebox{ display: grid; gap: 8px; padding: 16px 0; border-top: 1px solid var(--sp-line); }
 .spd-price{ font-size: 34px; font-weight: 700; letter-spacing: -.03em; color: var(--sp-ink); font-variant-numeric: tabular-nums; }
 .spd-pay{ display: flex; align-items: flex-start; gap: 8px; margin: 0; font-size: 13px; line-height: 1.5; color: var(--sp-muted); }
-.spd-pay svg{ flex: none; margin-top: 2px; color: #00a650; }
+.spd-pay svg{ flex: none; margin-top: 2px; color: var(--sp-success); }
 .spd-ctas{ display: grid; gap: 10px; }
 .spd-buy-btn{ height: 48px; font-size: 15px; }
 .spd-backlink{ display: inline-flex; align-items: center; gap: 6px; justify-self: start; font-size: 13.5px; font-weight: 600; color: var(--sp-accent-text); text-decoration: none; }
@@ -1228,8 +1228,8 @@ html:has(.store-page[data-store-theme='dark'])::-webkit-scrollbar-thumb{ backgro
 .spd-rev-form-head{ display: flex; align-items: center; gap: 12px; }
 .spd-rev-form-head strong{ display: block; font-size: 15px; }
 .spd-rev-form-head small{ display: block; font-size: 12.5px; color: var(--sp-muted); margin-top: 1px; }
-.spd-rev-vote{ margin-left: auto; display: inline-flex; align-items: center; color: #3f9d63; }
-.spd-rev-vote.down{ color: #d9534f; }
+.spd-rev-vote{ margin-left: auto; display: inline-flex; align-items: center; color: var(--sp-success); }
+.spd-rev-vote.down{ color: var(--sp-danger); }
 .spd-rev-votes{ display: flex; gap: 10px; flex-wrap: wrap; }
 .spd-rev-pick{ display: inline-flex; align-items: center; gap: 7px; padding: 9px 15px; border-radius: 999px; border: 1.5px solid var(--sp-line); background: var(--sp-card); color: var(--sp-ink-2); font: inherit; font-size: 13px; font-weight: 600; cursor: pointer; transition: border-color .15s, background .15s, color .15s, transform .12s; }
 .spd-rev-pick:hover{ transform: translateY(-1px); }
@@ -1367,7 +1367,7 @@ html:has(.store-page[data-store-theme='dark'])::-webkit-scrollbar-thumb{ backgro
    "Nuevo" va arriba a la izquierda (verde) y el -% de oferta a la derecha
    (color de acento de la tienda). */
 .sp-price-old{ margin-right: 7px; font-size: .72em; font-weight: 550; letter-spacing: 0; color: var(--sp-muted); text-decoration: line-through; }
-.sp-card .tpc-flag{ position: absolute; left: 10px; top: 10px; z-index: 2; padding: 3px 9px; border-radius: 5px; background: #00a650; color: var(--sp-on-band, #fff); font-size: 11px; font-weight: 800; letter-spacing: .06em; text-transform: uppercase; box-shadow: var(--sp-shadow-sm); }
+.sp-card .tpc-flag{ position: absolute; left: 10px; top: 10px; z-index: 2; padding: 3px 9px; border-radius: 5px; background: color-mix(in srgb, #00a650 80%, #000); color: var(--sp-on-band, #fff); font-size: 11px; font-weight: 800; letter-spacing: .06em; text-transform: uppercase; box-shadow: var(--sp-shadow-sm); }
 .sp-card .tpc-flag.offer{ left: auto; right: 10px; background: var(--store-accent-ink); }
 .spd-rel .tpc-media{ position: relative; }
 .spd-price-old{ font-size: 15px; font-weight: 500; color: var(--sp-muted); text-decoration: line-through; }
