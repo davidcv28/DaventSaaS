@@ -1,10 +1,11 @@
 <script setup>
-import { ref, computed, watch, inject, onMounted } from 'vue'
+import { ref, computed, watch, inject, onMounted, onBeforeUnmount } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { storeHostSlug } from '../../../config/env.js'
 import { formatARS } from '../../../api/billing.api.js'
 import { productOffer, effectivePrice, offerPct, isNewProduct, productDiscount, offerEndsLabel } from '../../../api/catalog.api.js'
 import { storeContactLink, hasContactChannel } from '../../../api/stores.api.js'
+import { useCartStore } from '../../../stores/cart.store.js'
 import AppIcon from '../../../components/AppIcon.vue'
 import ProductStars from '../../../components/ProductStars.vue'
 import ProductReviews from '../../../components/ProductReviews.vue'
@@ -19,6 +20,30 @@ const ctx = inject('storePage')
 const { slug, custom, shopName, location, loadPublicCatalog } = ctx
 const route = useRoute()
 const router = useRouter()
+const cartStore = useCartStore()
+
+// Venta online efectiva (la calcula el backend: ecommerce_enabled + fiscal
+// completo). Con orders_enabled la ficha suma "Agregar al carrito" como CTA
+// principal; sin él queda el flujo de consulta de siempre. El stock NO se
+// expone en el catálogo público: el cart valida y avisa si no alcanza.
+const ordersEnabled = computed(() => Boolean(ctx?.ordersEnabled?.value ?? ctx?.ordersEnabled))
+const adding = ref(false)
+const added = ref(false)
+let addedTimer = 0
+async function addToCart() {
+  if (adding.value || !product.value) return
+  adding.value = true
+  try {
+    const res = await cartStore.addToCart(product.value.id, 1, product.value.name)
+    if (res?.ok) {
+      added.value = true
+      clearTimeout(addedTimer)
+      addedTimer = setTimeout(() => { added.value = false }, 1600)
+    }
+  } finally {
+    adding.value = false
+  }
+}
 
 const homeTo = computed(() => ({ path: storeHostSlug ? '/' : `/${slug.value}` }))
 const catalogTo = computed(() => ({ path: storeHostSlug ? '/catalogo' : `/${slug.value}/catalogo` }))
@@ -100,6 +125,7 @@ async function load() {
 onMounted(() => {
   if (custom.value.show_catalog !== false) load()
 })
+onBeforeUnmount(() => clearTimeout(addedTimer))
 </script>
 
 <template>
@@ -200,13 +226,24 @@ onMounted(() => {
               </div>
 
               <div class="rz-pdp-ctas">
-                <a v-if="whatsappUrl" class="rz-btn rz-pdp-buy-btn" :href="whatsappUrl" target="_blank" rel="noopener">
+                <button
+                  v-if="ordersEnabled" type="button"
+                  class="rz-btn rz-pdp-buy-btn rz-pdp-cart" :disabled="adding"
+                  @click="addToCart"
+                >
+                  <AppIcon :name="added ? 'check' : 'shopping-cart'" :size="17" aria-hidden="true" />
+                  {{ added ? 'Agregado al carrito' : 'Agregar al carrito' }}
+                </button>
+                <a
+                  v-if="whatsappUrl" class="rz-btn rz-pdp-buy-btn" :class="{ 'rz-btn--ghost': ordersEnabled }"
+                  :href="whatsappUrl" target="_blank" rel="noopener"
+                >
                   <AppIcon name="whatsapp" :size="17" aria-hidden="true" /> Consultar por WhatsApp
                 </a>
                 <RouterLink v-else class="rz-btn rz-pdp-buy-btn" :to="contactTo">
                   <AppIcon name="message-circle" :size="17" aria-hidden="true" /> Consultar al vendedor
                 </RouterLink>
-                <RouterLink v-if="whatsappUrl" class="rz-btn rz-btn--ghost" :to="contactTo">
+                <RouterLink v-if="whatsappUrl && !ordersEnabled" class="rz-btn rz-btn--ghost" :to="contactTo">
                   <AppIcon name="mail" :size="15" aria-hidden="true" /> Enviar un mensaje
                 </RouterLink>
                 <RouterLink class="rz-pdp-backlink" :to="catalogTo">
@@ -278,6 +315,12 @@ onMounted(() => {
             <s v-if="hasOffer">{{ formatARS(product.price) }}</s>
             <strong>{{ formatARS(effectivePrice(product)) }}</strong>
           </span>
+          <button
+            v-if="ordersEnabled" type="button" class="rz-btn rz-pdp-stick-btn rz-pdp-stick-cart"
+            :disabled="adding" :aria-label="added ? 'Agregado al carrito' : 'Agregar al carrito'" @click="addToCart"
+          >
+            <AppIcon :name="added ? 'check' : 'shopping-cart'" :size="16" aria-hidden="true" />
+          </button>
           <a v-if="whatsappUrl" class="rz-btn rz-pdp-stick-btn" :href="whatsappUrl" target="_blank" rel="noopener">
             <AppIcon name="whatsapp" :size="16" aria-hidden="true" /> Consultar
           </a>

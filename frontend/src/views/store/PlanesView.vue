@@ -7,16 +7,24 @@
 // se coordina por WhatsApp, la web nunca cobra.
 // Si la página no está en los site_templates efectivos del plan la ruta
 // rebota a la página disponible.
-import { computed, inject, watch } from 'vue'
+import { computed, inject, ref, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import { storeHostSlug } from '../../config/env.js'
 import { storeContactLink, hasContactChannel } from '../../api/stores.api.js'
+import { membershipPlansApi } from '../../api/membershipPlans.api.js'
+import { formatARS } from '../../api/billing.api.js'
 import AppIcon from '../../components/AppIcon.vue'
+import PlanSubscribe from '../../components/ecommerce/PlanSubscribe.vue'
 import { vReveal } from '../../directives/reveal.js'
 
 const ctx = inject('storePage')
 const { custom, status, shopName, siteTemplates } = ctx
 const router = useRouter()
+
+// Venta online efectiva (ecommerce_enabled + fiscal, calculada por el
+// backend): solo con orders_enabled se muestran los StorePlan REALES —
+// sin planes reales se conserva el contenido publicitario de siempre.
+const ordersEnabled = computed(() => Boolean(ctx.ordersEnabled?.value ?? ctx.ordersEnabled))
 
 const homeTo = computed(() => ({ path: storeHostSlug ? '/' : `/${ctx.slug.value}` }))
 const catalogTo = computed(() => ({ path: storeHostSlug ? '/catalogo' : `/${ctx.slug.value}/catalogo` }))
@@ -38,6 +46,42 @@ const items = computed(() => (Array.isArray(custom.value.plans) ? custom.value.p
 const title = computed(() => custom.value.plans_title?.trim() || 'Suscripciones y membresías')
 const whatsappUrl = computed(() => (hasContactChannel(custom.value, 'whatsapp') ? storeContactLink(ctx.slug.value, 'whatsapp') : ''))
 const hasLanding = computed(() => siteTemplates.value.includes('landing'))
+
+// ---- Planes REALES (StorePlan) — solo si la tienda vende online ----
+const realPlans = ref([])
+const realPayments = ref(null)
+const plansLoading = ref(false)
+const plansError = ref('')
+const money = (v) => (Number(v) > 0 ? formatARS(v, 2) : 'Gratis')
+const PERIOD_LABELS = { monthly: 'por mes', yearly: 'por año', custom: '' }
+const periodLabel = (p) => PERIOD_LABELS[p?.period] || ''
+// Códigos de beneficio del contrato (memberships/benefits.py) → label ES.
+const BENEFIT_LABELS = {
+  digital_card: 'Tarjeta digital de miembro',
+  free_shipping: 'Envío gratis',
+  exclusive_discounts: 'Descuentos exclusivos',
+  exclusive_access: 'Acceso a contenido exclusivo',
+}
+const benefitLabel = (code) => BENEFIT_LABELS[code] || code
+
+async function loadRealPlans() {
+  if (!ordersEnabled.value) return
+  plansLoading.value = true
+  plansError.value = ''
+  try {
+    const data = await membershipPlansApi.publicPlans(ctx.slug.value)
+    realPlans.value = data?.plans || []
+    realPayments.value = data?.payments || null
+  } catch {
+    realPlans.value = []
+    plansError.value = 'No pudimos cargar los planes.'
+  } finally {
+    plansLoading.value = false
+  }
+}
+watch([status, ordersEnabled], ([s, on]) => {
+  if (s === 'success' && on && !realPlans.value.length && !plansLoading.value) loadRealPlans()
+}, { immediate: true })
 </script>
 
 <template>
@@ -46,10 +90,36 @@ const hasLanding = computed(() => siteTemplates.value.includes('landing'))
       <header class="sp-container sp-plans-hero" v-reveal>
         <p class="sp-plans-eyebrow"><AppIcon name="crown" :size="14" aria-hidden="true" /> {{ shopName }}</p>
         <h1 class="sp-section-title sp-plans-title">{{ title }}</h1>
-        <p class="sp-plans-sub">Elegí el plan que mejor te quede y escribinos para sumarte. La suscripción se coordina directo con el negocio — no se cobra por la web.</p>
+        <p class="sp-plans-sub">{{ realPlans.length ? 'Elegí tu plan y suscribite online — los beneficios se activan al acreditarse el pago.' : 'Elegí el plan que mejor te quede y escribinos para sumarte. La suscripción se coordina directo con el negocio — no se cobra por la web.' }}</p>
       </header>
 
-      <section v-if="items.length" class="sp-aipricing" aria-label="Planes disponibles">
+      <!-- Planes reales con venta online (StorePlan) -->
+      <section v-if="ordersEnabled && realPlans.length" class="sp-aipricing" aria-label="Planes disponibles">
+        <div class="sp-container sp-aipricing-inner">
+          <ul class="sp-aipricing-list">
+            <li v-for="(plan, i) in realPlans" :key="plan.id" v-reveal="(i % 4) * 70" class="sp-aipricing-card sp-plan-real">
+              <h2 class="sp-aipricing-name">{{ plan.name }}</h2>
+              <span class="sp-aipricing-amount">{{ money(plan.price) }}<small v-if="plan.period_days" class="sp-plan-period"> / {{ plan.period_days }} días{{ periodLabel(plan) ? ` · ${periodLabel(plan)}` : '' }}</small></span>
+              <ul v-if="plan.benefits?.length || plan.discount_percent" class="sp-aipricing-feats">
+                <li v-for="b in plan.benefits || []" :key="b">
+                  <AppIcon name="check" :size="14" :stroke="2.6" />
+                  <span>{{ benefitLabel(b) }}</span>
+                </li>
+                <li v-if="plan.discount_percent">
+                  <AppIcon name="check" :size="14" :stroke="2.6" />
+                  <span>{{ plan.discount_percent }}% de descuento de miembro</span>
+                </li>
+              </ul>
+              <PlanSubscribe :slug="ctx.slug.value" :plan="plan" :payments="realPayments" />
+            </li>
+          </ul>
+        </div>
+      </section>
+      <section v-else-if="ordersEnabled && plansLoading" class="sp-container sp-plans-empty" v-reveal>
+        <p>Cargando planes…</p>
+      </section>
+
+      <section v-if="!realPlans.length && items.length" class="sp-aipricing" aria-label="Planes disponibles">
         <div class="sp-container sp-aipricing-inner">
           <ul class="sp-aipricing-list">
             <li v-for="(plan, i) in items" :key="`${i}-${plan.name}`" v-reveal="(i % 4) * 70" class="sp-aipricing-card">
@@ -67,7 +137,7 @@ const hasLanding = computed(() => siteTemplates.value.includes('landing'))
         </div>
       </section>
 
-      <section v-else class="sp-container sp-plans-empty" v-reveal>
+      <section v-if="!realPlans.length && !items.length && !(ordersEnabled && plansLoading)" class="sp-container sp-plans-empty" v-reveal>
         <AppIcon name="crown" :size="26" aria-hidden="true" />
         <p><strong>Todavía no hay suscripciones publicadas.</strong></p>
         <p>Cuando el negocio cargue sus planes van a aparecer acá. Mientras tanto podés contactarlo desde la página principal.</p>
@@ -104,4 +174,6 @@ const hasLanding = computed(() => siteTemplates.value.includes('landing'))
 .sp-plans-btn.is-wa{ background: #25d366; color: #0b3d22; }
 .sp-plans-link{ font-size: 14px; font-weight: 600; color: var(--sp-muted); text-decoration: none; }
 .sp-plans-link:hover{ color: var(--sp-ink); }
+.sp-plan-real{ display: grid; gap: 12px; align-content: start; }
+.sp-plan-period{ font-size: .55em; font-weight: 600; opacity: .75; }
 </style>
