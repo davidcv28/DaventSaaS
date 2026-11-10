@@ -12,6 +12,7 @@ import AlertMessage from '../../AlertMessage.vue'
 // Bandeja de pedidos del dueño — /api/store-orders/ (ownerOrdersApi).
 // Paginado por página (DaventPageNumberPagination → {count,next,previous,results}).
 const store = useStoreStore()
+const PAGE_SIZE = 15
 const loading = ref(false)
 const errMsg = ref('')
 const rows = ref([])
