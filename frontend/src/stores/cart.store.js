@@ -174,6 +174,43 @@ export const useCartStore = defineStore('storeCart', () => {
     path: storeHostSlug ? '/checkout' : `/${slug.value}/checkout`
   })
 
+  // Serializa el destino post-auth (?next= de StoreAuthView) a un path
+  // interno: acepta un string o un RouteLocationRaw ({path, query}) y
+  // descarta lo que no sea path interno — anti open-redirect (la vista
+  // vuelve a sanitizar por las dudas).
+  function authNextPath(next) {
+    let p = ''
+    if (typeof next === 'string') {
+      p = next
+    } else if (next && typeof next === 'object' && typeof next.path === 'string') {
+      p = next.path
+      const qs = new URLSearchParams()
+      for (const [k, v] of Object.entries(next.query || {})) {
+        if (v === undefined || v === null || v === '') continue
+        qs.set(k, String(v))
+      }
+      const s = qs.toString()
+      if (s) p += `?${s}`
+    }
+    if (!p.startsWith('/') || p.startsWith('//') || p.includes('\\')) return ''
+    // La propia página de auth no puede ser destino (loop /ingresar).
+    if (p.split(/[?#]/)[0].endsWith('/ingresar')) return ''
+    return p
+  }
+
+  // Página de auth del comprador (StoreAuthView): '/ingresar' en host
+  // propio, '/<slug>/ingresar' en la plataforma — mismo criterio que
+  // checkoutRoute. `mode` = login|register|forgot; `next` = destino
+  // post-auth (path o route object, viaja como ?next= sanitizado).
+  function authRoute(mode = 'login', next = '') {
+    const path = storeHostSlug || !slug.value ? '/ingresar' : `/${slug.value}/ingresar`
+    const query = {}
+    if (mode && mode !== 'login') query.mode = mode
+    const nextPath = authNextPath(next)
+    if (nextPath) query.next = nextPath
+    return { path, query }
+  }
+
   function openDrawer() {
     if (!customer.isAuthenticated) {
       openAuth('login', { route: checkoutRoute() })
@@ -188,6 +225,6 @@ export const useCartStore = defineStore('storeCart', () => {
     itemCount, items, itemsTotal, hasItems, memberDiscount,
     bindStore, refresh, ensureCustomer, flash,
     openAuth, closeAuth, takePending,
-    addToCart, setQty, removeItem, clear, openDrawer, onSessionExpired,
+    addToCart, setQty, removeItem, clear, openDrawer, onSessionExpired, authRoute,
   }
 })

@@ -38,6 +38,7 @@ const StoreCheckoutView = () => import('../views/StoreCheckoutView.vue')
 const StoreTrackingView = () => import('../views/StoreTrackingView.vue')
 const StoreAccountView = () => import('../views/StoreAccountView.vue')
 const StoreCartView = () => import('../views/StoreCartView.vue')
+const StoreAuthView = () => import('../views/StoreAuthView.vue')
 const StoreReceiptView = () => import('../views/StoreReceiptView.vue')
 const StoreLegalView = () => import('../views/StoreLegalView.vue')
 const StoreFlyerView = () => import('../views/StoreFlyerView.vue')
@@ -103,6 +104,16 @@ const storeChildren = [
     name: 'store-receipt',
     component: StoreReceiptView,
     meta: { title: 'Comprobante' }
+  },
+  // Página completa de auth del comprador (login/registro/recuperar por
+  // ?mode=, destino post-auth por ?next=). Convive con el modal global:
+  // el modal queda para acciones pendientes ({action}) que no pueden
+  // cruzar una navegación.
+  {
+    path: 'ingresar',
+    name: 'store-auth',
+    component: StoreAuthView,
+    meta: { title: 'Ingresar' }
   },
   // Sub-rutas de /cuenta que llegan por los mails del backend:
   // verificación de email y reseteo de contraseña (mismo componente,
@@ -324,6 +335,18 @@ const routes = [
           redirect: (to) => ({ name: 'store-tracking', params: { slug: to.params.slug } })
         },
         {
+          path: '/tienda/:slug/ingresar',
+          redirect: (to) => ({ name: 'store-auth', params: { slug: to.params.slug } })
+        },
+        {
+          path: '/tienda/:slug/carrito',
+          redirect: (to) => ({ name: 'store-cart', params: { slug: to.params.slug } })
+        },
+        {
+          path: '/tienda/:slug/pedido/:token/comprobante',
+          redirect: (to) => ({ name: 'store-receipt', params: { slug: to.params.slug, token: to.params.token } })
+        },
+        {
           path: '/tienda/:slug/cuenta',
           redirect: (to) => ({ name: 'store-account', params: { slug: to.params.slug } })
         },
@@ -396,7 +419,7 @@ router.beforeEach(async (to) => {
   // resuelve en el dominio principal.
   const STORE_HOST_ROUTES = [
     'store-public', 'store-catalog', 'store-services', 'store-product', 'store-plans',
-    'store-checkout', 'store-tracking', 'store-account', 'store-account-verify',
+    'store-checkout', 'store-tracking', 'store-cart', 'store-receipt', 'store-auth', 'store-account', 'store-account-verify',
     'store-account-reset', 'store-legal', 'store-legal-page'
   ]
   if (isStoreHost && !STORE_HOST_ROUTES.includes(to.name)) {
