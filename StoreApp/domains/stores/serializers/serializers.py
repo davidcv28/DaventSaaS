@@ -198,6 +198,7 @@ class StoreCustomizationSerializer(serializers.ModelSerializer):
             'show_offers', 'show_brands', 'show_countdown',
             'show_about', 'contact_email', 'show_contact',
             'whatsapp', 'instagram', 'tiktok', 'facebook', 'show_location', 'show_gallery', 'show_catalog',
+            'ecommerce_enabled',
             'site_templates', 'service_steps', 'service_days', 'service_slots', 'service_ask_address',
             'service_price_note', 'service_pay_note',
             'show_highlights', 'show_reviews', 'show_comments',
