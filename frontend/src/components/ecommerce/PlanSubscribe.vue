@@ -134,7 +134,7 @@ async function subscribe() {
 
 <style scoped>
 .ec-sub { display: grid; gap: 12px; }
-.ec-sub-ok { display: flex; align-items: center; gap: 8px; margin: 0; font-size: 14px; font-weight: 700; color: #16a34a; }
+.ec-sub-ok { display: flex; align-items: center; gap: 8px; margin: 0; font-size: 14px; font-weight: 700; color: var(--sp-success); }
 .ec-sub-note { margin: 0; font-size: 12.5px; color: var(--sp-muted, inherit); }
 .ec-sub-price { display: flex; align-items: baseline; gap: 4px; font-size: 15px; }
 .ec-sub-price strong { font-size: 24px; font-weight: 800; font-variant-numeric: tabular-nums; }
@@ -142,6 +142,6 @@ async function subscribe() {
 .ec-sub-benefits { margin: 0; padding-left: 18px; display: grid; gap: 5px; font-size: 13px; line-height: 1.45; }
 .ec-sub-methods { display: grid; gap: 10px; }
 .ec-sub-hint { margin: 0; font-size: 12.5px; color: var(--sp-muted, inherit); }
-.ec-btn-primary { display: inline-flex; align-items: center; justify-content: center; gap: 8px; padding: 12px 16px; border: none; border-radius: 12px; background: var(--store-accent, #111); color: var(--store-accent-ink, #fff); font-size: 14.5px; font-weight: 700; cursor: pointer; }
+.ec-btn-primary { display: inline-flex; align-items: center; justify-content: center; gap: 8px; padding: 12px 16px; border: none; border-radius: calc(var(--sp-radius) * .75); background: var(--store-accent, #111); color: var(--store-accent-ink, #fff); font-size: 14.5px; font-weight: 700; cursor: pointer; }
 .ec-btn-primary:disabled { opacity: .55; cursor: default; }
 </style>

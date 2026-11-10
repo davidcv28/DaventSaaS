@@ -30,7 +30,9 @@
   --sp-on-band-muted: color-mix(in srgb, var(--sp-on-band) 78%, transparent);
   /* Verde de "estado ok" (stock, votos, confirmaciones) con AA como texto:
      el #0f9d58 histórico daba ~3.3:1 sobre tarjeta clara. */
-  --sp-success: #0E7A55;
+  --sp-success: var(--st-success, #0E7A55);
+  --sp-danger: var(--st-danger, #B42318);
+  --sp-warning: #B45309;
   --sp-top-h: 64px;
   --sp-tabbar-h: 64px;
   /* Escala 2026: espacio, tipografía, radios y sombras en tokens */
@@ -48,7 +50,9 @@
 .store-page[data-store-theme='dark']{
   --sp-bg: radial-gradient(900px 500px at 15% -10%, color-mix(in srgb, var(--store-accent) 14%, transparent), transparent 70%), #0d1220; --sp-card: color-mix(in srgb, #1a2138 72%, transparent); --sp-card-solid: #151b2e; --sp-surface: color-mix(in srgb, #111729 80%, transparent); --sp-ink: #e8ecf7; --sp-ink-2: #c3cbdf; --sp-muted: #93a0bd; --sp-line: #28304d;
   --sp-soft: rgba(255, 255, 255, .08); --sp-accent-text: var(--store-accent);
-  --sp-success: #6EE7A8;
+  --sp-success: var(--st-success, #6EE7A8);
+  --sp-danger: var(--st-danger, #F97066);
+  --sp-warning: #FBBF24;
   --sp-shadow-sm: 0 1px 2px rgba(0, 0, 0, .3);
   --sp-shadow-md: 0 1px 3px rgba(0, 0, 0, .3), 0 8px 24px -12px rgba(0, 0, 0, .6);
 }
@@ -56,7 +60,7 @@
    reusadas (p. ej. .gy-skin con el catálogo Raíz): sin data-store-theme
    propia, el bloque base le devuelve los tokens claros. En contexto
    oscuro el éxito hereda el valor del ancestro. */
-.store-page[data-store-theme='dark'] .store-page{ --sp-success: #6EE7A8; }
+.store-page[data-store-theme='dark'] .store-page{ --sp-success: var(--st-success, #6EE7A8); --sp-danger: var(--st-danger, #F97066); --sp-warning: #FBBF24; }
 .store-page *, .store-page *::before, .store-page *::after{ box-sizing: border-box; }
 .store-page a:focus-visible, .store-page button:focus-visible, .store-page input:focus-visible,
 .sp-search:focus-within{ outline: 2px solid var(--store-accent); outline-offset: 2px; }

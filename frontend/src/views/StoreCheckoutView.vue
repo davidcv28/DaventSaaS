@@ -375,13 +375,13 @@ onMounted(load)
 .ec-co-title { margin: 0; font-size: 26px; font-weight: 800; letter-spacing: -.02em; }
 .ec-co-sub { margin: 0; font-size: 14px; color: var(--sp-muted, inherit); }
 .ec-co-h2 { margin: 0 0 12px; font-size: 16px; font-weight: 800; }
-.ec-co-card { display: grid; gap: 14px; padding: 18px; border: 1px solid var(--sp-line, rgba(0,0,0,.09)); border-radius: 16px; background: var(--sp-card, transparent); }
+.ec-co-card { display: grid; gap: 14px; padding: 18px; border: 1px solid var(--sp-line, rgba(0,0,0,.09)); border-radius: var(--sp-radius); background: var(--sp-card, transparent); }
 .ec-co-muted { margin: 0; font-size: 13px; line-height: 1.5; color: var(--sp-muted, inherit); }
 .ec-co-grid { display: grid; grid-template-columns: minmax(0, 1fr) 340px; gap: 18px; align-items: start; }
 .ec-co-main { display: grid; gap: 16px; min-width: 0; }
 .ec-co-side { position: sticky; top: 90px; }
 .ec-co-ship, .ec-co-pay { display: grid; gap: 8px; }
-.ec-co-opt { display: flex; align-items: flex-start; gap: 10px; padding: 12px 14px; border: 1px solid var(--sp-line, rgba(0,0,0,.12)); border-radius: 12px; cursor: pointer; }
+.ec-co-opt { display: flex; align-items: flex-start; gap: 10px; padding: 12px 14px; border: 1px solid var(--sp-line, rgba(0,0,0,.12)); border-radius: calc(var(--sp-radius) * .75); cursor: pointer; }
 .ec-co-opt.is-on { border-color: var(--store-accent, #111); box-shadow: 0 0 0 1px var(--store-accent, #111) inset; }
 .ec-co-opt.is-inline { padding: 9px 12px; }
 .ec-co-opt input { margin-top: 3px; accent-color: var(--store-accent, #111); }
@@ -389,7 +389,7 @@ onMounted(load)
 .ec-co-opt small { font-size: 12px; color: var(--sp-muted, inherit); }
 .ec-co-addr-mode { display: grid; gap: 6px; }
 .ec-co-addrs { display: grid; gap: 8px; }
-.ec-co-addr { display: flex; align-items: flex-start; gap: 10px; padding: 11px 13px; border: 1px solid var(--sp-line, rgba(0,0,0,.12)); border-radius: 12px; cursor: pointer; }
+.ec-co-addr { display: flex; align-items: flex-start; gap: 10px; padding: 11px 13px; border: 1px solid var(--sp-line, rgba(0,0,0,.12)); border-radius: calc(var(--sp-radius) * .75); cursor: pointer; }
 .ec-co-addr.is-on { border-color: var(--store-accent, #111); }
 .ec-co-addr input { margin-top: 3px; accent-color: var(--store-accent, #111); }
 .ec-co-addr span { display: grid; gap: 2px; }
@@ -399,7 +399,7 @@ onMounted(load)
 .ec-co-save { display: flex; align-items: center; gap: 9px; font-size: 13.5px; cursor: pointer; }
 .ec-co-items { list-style: none; margin: 0 0 12px; padding: 0; display: grid; gap: 10px; max-height: 320px; overflow-y: auto; }
 .ec-co-items li { display: grid; grid-template-columns: 44px 1fr auto; gap: 10px; align-items: center; }
-.ec-co-thumb { width: 44px; height: 44px; object-fit: cover; border-radius: 9px; background: var(--sp-line, rgba(0,0,0,.06)); }
+.ec-co-thumb { width: 44px; height: 44px; object-fit: cover; border-radius: calc(var(--sp-radius) * .55); background: var(--sp-line, rgba(0,0,0,.06)); }
 .ec-co-thumb.is-empty { display: grid; place-items: center; color: var(--sp-muted, inherit); }
 .ec-co-item-info { display: grid; gap: 2px; min-width: 0; }
 .ec-co-item-name { font-size: 13px; font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
@@ -412,9 +412,9 @@ onMounted(load)
 .ec-co-grand { padding-top: 8px; border-top: 1px solid var(--sp-line, rgba(0,0,0,.1)); font-size: 15px !important; }
 .ec-co-grand dt { font-weight: 700; color: inherit !important; }
 .ec-co-grand dd { font-size: 18px; font-weight: 800; }
-.ec-co-submit { width: 100%; padding: 14px; border: none; border-radius: 13px; background: var(--store-accent, #111); color: var(--store-accent-ink, #fff); font-size: 15.5px; font-weight: 800; cursor: pointer; }
+.ec-co-submit { width: 100%; padding: 14px; border: none; border-radius: calc(var(--sp-radius) * .8); background: var(--store-accent, #111); color: var(--store-accent-ink, #fff); font-size: 15.5px; font-weight: 800; cursor: pointer; }
 .ec-co-submit:disabled { opacity: .5; cursor: default; }
-.ec-co-error { padding: 10px 12px; border-radius: 10px; }
+.ec-co-error { padding: 10px 12px; border-radius: calc(var(--sp-radius) * .65); }
 .ec-co-link { font-size: 13px; font-weight: 600; color: var(--store-accent, inherit); }
 .ec-co-loading { padding: 40px; text-align: center; color: var(--sp-muted, inherit); }
 .ec-co-fine { text-align: center; }

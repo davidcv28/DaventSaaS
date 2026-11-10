@@ -81,7 +81,7 @@ defineExpose({ payload, refresh, answer })
 .ec-captcha-controls .sp-input { flex: 1; min-width: 0; }
 .ec-captcha-reload {
   display: grid; place-items: center; flex: none; width: 44px;
-  border: 1px solid var(--sp-line, currentColor); border-radius: 10px;
+  border: 1px solid var(--sp-line, currentColor); border-radius: calc(var(--sp-radius) * .65);
   background: transparent; color: inherit; cursor: pointer;
 }
 .ec-captcha-reload:disabled { opacity: .5; cursor: default; }

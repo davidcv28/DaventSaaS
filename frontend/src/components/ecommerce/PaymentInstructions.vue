@@ -105,7 +105,7 @@ async function payMp() {
 </template>
 
 <style scoped>
-.ec-pay { display: grid; gap: 10px; padding: 16px 18px; border: 1px solid var(--sp-line, color-mix(in srgb, currentColor 14%, transparent)); border-radius: 14px; background: color-mix(in srgb, var(--store-accent, currentColor) 5%, transparent); }
+.ec-pay { display: grid; gap: 10px; padding: 16px 18px; border: 1px solid var(--sp-line, color-mix(in srgb, currentColor 14%, transparent)); border-radius: calc(var(--sp-radius) * .85); background: color-mix(in srgb, var(--store-accent, currentColor) 5%, transparent); }
 .ec-pay-title { display: flex; align-items: center; gap: 8px; margin: 0; font-size: 14px; font-weight: 700; }
 .ec-pay-text { margin: 0; font-size: 13.5px; line-height: 1.55; color: var(--sp-muted, inherit); }
 .ec-pay-data { display: grid; gap: 8px; margin: 0; }
@@ -113,8 +113,8 @@ async function payMp() {
 .ec-pay-row dt { font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: .05em; color: var(--sp-muted, inherit); }
 .ec-pay-row dd { margin: 0; display: flex; align-items: center; gap: 10px; }
 .ec-pay-row code { font-size: 14px; font-weight: 700; font-variant-numeric: tabular-nums; }
-.ec-pay-copy { display: inline-flex; align-items: center; gap: 5px; border: 1px solid var(--sp-line, currentColor); border-radius: 8px; padding: 5px 10px; font-size: 12px; font-weight: 600; background: transparent; color: inherit; cursor: pointer; }
-.ec-pay-btn { display: inline-flex; align-items: center; justify-content: center; gap: 8px; padding: 11px 18px; border-radius: 12px; font-size: 14px; font-weight: 700; text-decoration: none; border: 1px solid transparent; cursor: pointer; }
+.ec-pay-copy { display: inline-flex; align-items: center; gap: 5px; border: 1px solid var(--sp-line, currentColor); border-radius: calc(var(--sp-radius) * .5); padding: 5px 10px; font-size: 12px; font-weight: 600; background: transparent; color: inherit; cursor: pointer; }
+.ec-pay-btn { display: inline-flex; align-items: center; justify-content: center; gap: 8px; padding: 11px 18px; border-radius: calc(var(--sp-radius) * .75); font-size: 14px; font-weight: 700; text-decoration: none; border: 1px solid transparent; cursor: pointer; }
 .ec-pay-btn.is-wa { background: #25d366; color: #0b3d22; }
 .ec-pay-btn.is-mp { background: #00b1ea; color: #fff; }
 .ec-pay-btn:disabled { opacity: .6; cursor: default; }

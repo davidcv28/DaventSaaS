@@ -219,23 +219,23 @@ async function submitReturn() {
 .ec-legal-title { margin: 0; font-size: 26px; font-weight: 800; letter-spacing: -.02em; }
 .ec-legal-sub { margin: 0; font-size: 13.5px; color: var(--sp-muted, inherit); }
 .ec-legal-back { justify-self: start; display: inline-flex; align-items: center; gap: 6px; font-size: 13px; font-weight: 600; color: var(--store-accent, inherit); text-decoration: none; }
-.ec-legal-card { display: grid; gap: 10px; padding: 18px; border: 1px solid var(--sp-line, rgba(0,0,0,.09)); border-radius: 16px; background: var(--sp-card, transparent); }
+.ec-legal-card { display: grid; gap: 10px; padding: 18px; border: 1px solid var(--sp-line, rgba(0,0,0,.09)); border-radius: var(--sp-radius); background: var(--sp-card, transparent); }
 .ec-legal-list { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; }
-.ec-legal-item { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 15px 16px; border: 1px solid var(--sp-line, rgba(0,0,0,.1)); border-radius: 13px; text-decoration: none; color: inherit; }
+.ec-legal-item { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 15px 16px; border: 1px solid var(--sp-line, rgba(0,0,0,.1)); border-radius: calc(var(--sp-radius) * .8); text-decoration: none; color: inherit; }
 .ec-legal-item-main { display: grid; gap: 3px; }
 .ec-legal-item-main small { font-size: 12px; color: var(--sp-muted, inherit); }
 .ec-legal-body { display: grid; gap: 14px; }
-.ec-legal-text { margin: 0; padding: 18px; border: 1px solid var(--sp-line, rgba(0,0,0,.09)); border-radius: 16px; background: var(--sp-card, transparent); font-size: 14.5px; line-height: 1.75; white-space: pre-line; }
+.ec-legal-text { margin: 0; padding: 18px; border: 1px solid var(--sp-line, rgba(0,0,0,.09)); border-radius: var(--sp-radius); background: var(--sp-card, transparent); font-size: 14.5px; line-height: 1.75; white-space: pre-line; }
 .ec-legal-h2 { margin: 0; font-size: 15px; font-weight: 800; }
 .ec-fiscal { margin: 0; display: grid; gap: 8px; }
 .ec-fiscal div { display: grid; grid-template-columns: 140px 1fr; gap: 10px; font-size: 13px; }
 .ec-fiscal dt { font-weight: 700; color: var(--sp-muted, inherit); }
 .ec-fiscal dd { margin: 0; }
 .ec-ret-form { display: grid; gap: 12px; }
-.ec-legal-ok { margin: 0; font-size: 14px; font-weight: 600; color: #16a34a; }
-.ec-legal-error { margin: 0; color: #b91c1c; }
-.ec-btn-primary { display: inline-flex; align-items: center; justify-content: center; gap: 8px; padding: 11px 16px; border: none; border-radius: 12px; background: var(--store-accent, #111); color: var(--store-accent-ink, #fff); font-size: 14px; font-weight: 700; cursor: pointer; text-decoration: none; }
+.ec-legal-ok { margin: 0; font-size: 14px; font-weight: 600; color: var(--sp-success); }
+.ec-legal-error { margin: 0; color: var(--sp-danger); }
+.ec-btn-primary { display: inline-flex; align-items: center; justify-content: center; gap: 8px; padding: 11px 16px; border: none; border-radius: calc(var(--sp-radius) * .75); background: var(--store-accent, #111); color: var(--store-accent-ink, #fff); font-size: 14px; font-weight: 700; cursor: pointer; text-decoration: none; }
 .ec-btn-primary:disabled { opacity: .55; cursor: default; }
-.ec-btn-ghost { display: inline-flex; align-items: center; justify-content: center; gap: 8px; padding: 11px 16px; border: 1px solid var(--sp-line, currentColor); border-radius: 12px; background: transparent; color: inherit; font-size: 14px; font-weight: 600; cursor: pointer; text-decoration: none; }
+.ec-btn-ghost { display: inline-flex; align-items: center; justify-content: center; gap: 8px; padding: 11px 16px; border: 1px solid var(--sp-line, currentColor); border-radius: calc(var(--sp-radius) * .75); background: transparent; color: inherit; font-size: 14px; font-weight: 600; cursor: pointer; text-decoration: none; }
 .ec-hp { position: absolute; left: -9999px; width: 1px; height: 1px; opacity: 0; }
 </style>

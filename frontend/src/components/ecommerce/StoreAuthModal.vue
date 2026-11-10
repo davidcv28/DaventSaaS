@@ -260,24 +260,24 @@ onUnmounted(() => resizeObs?.disconnect())
 .ec-auth-card {
   position: relative; width: min(420px, 100%); max-height: min(90vh, 720px);
   overflow-y: auto; padding: 26px 24px 22px;
-  border-radius: 18px; border: 1px solid var(--sp-line, rgba(255,255,255,.12));
+  border-radius: calc(var(--sp-radius) * 1.15); border: 1px solid var(--sp-line, rgba(255,255,255,.12));
   background: var(--sp-card, var(--ds-bg, #fff)); color: var(--sp-ink, inherit);
   box-shadow: 0 24px 60px rgba(0,0,0,.28);
 }
 .ec-auth-close {
   position: absolute; top: 12px; right: 12px; z-index: 2;
   display: grid; place-items: center; width: 34px; height: 34px;
-  border: none; border-radius: 10px; background: transparent; color: inherit; cursor: pointer;
+  border: none; border-radius: calc(var(--sp-radius) * .65); background: transparent; color: inherit; cursor: pointer;
 }
 .ec-auth-head { margin-bottom: 14px; padding-right: 30px; }
 .ec-auth-title { margin: 0 0 4px; font-size: 21px; font-weight: 800; letter-spacing: -.01em; }
 .ec-auth-sub { margin: 0; font-size: 13px; line-height: 1.5; color: var(--sp-muted, inherit); }
-.ec-auth-notice { margin: 0 0 12px; padding: 10px 12px; border-radius: 10px; font-size: 13px; background: color-mix(in srgb, #16a34a 14%, transparent); }
-.ec-auth-error { margin: 0 0 12px; padding: 10px 12px; border-radius: 10px; font-size: 13px; background: color-mix(in srgb, #dc2626 14%, transparent); }
+.ec-auth-notice { margin: 0 0 12px; padding: 10px 12px; border-radius: calc(var(--sp-radius) * .65); font-size: 13px; background: color-mix(in srgb, var(--sp-success) 14%, transparent); }
+.ec-auth-error { margin: 0 0 12px; padding: 10px 12px; border-radius: calc(var(--sp-radius) * .65); font-size: 13px; background: color-mix(in srgb, var(--sp-danger) 14%, transparent); }
 .ec-auth-form { display: grid; gap: 12px; }
 .ec-auth-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
 .ec-auth-submit {
-  margin-top: 4px; padding: 12px 16px; border: none; border-radius: 12px;
+  margin-top: 4px; padding: 12px 16px; border: none; border-radius: calc(var(--sp-radius) * .75);
   background: var(--store-accent, #111); color: var(--store-accent-ink, #fff);
   font-size: 14.5px; font-weight: 700; cursor: pointer;
 }

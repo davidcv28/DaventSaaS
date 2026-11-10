@@ -129,18 +129,18 @@ function onBackdrop(e) { if (e.target === e.currentTarget) close() }
 }
 .ec-cart-head { display: flex; align-items: center; justify-content: space-between; padding: 16px 18px; border-bottom: 1px solid var(--sp-line, rgba(0,0,0,.08)); }
 .ec-cart-title { display: flex; align-items: center; gap: 10px; margin: 0; font-size: 18px; font-weight: 800; }
-.ec-cart-close { display: grid; place-items: center; width: 34px; height: 34px; border: none; border-radius: 10px; background: transparent; color: inherit; cursor: pointer; }
+.ec-cart-close { display: grid; place-items: center; width: 34px; height: 34px; border: none; border-radius: calc(var(--sp-radius) * .65); background: transparent; color: inherit; cursor: pointer; }
 .ec-cart-body { flex: 1; overflow-y: auto; padding: 14px 18px; }
 .ec-cart-empty { display: grid; place-items: center; gap: 10px; padding: 48px 12px; text-align: center; color: var(--sp-muted, inherit); font-size: 14px; }
 .ec-cart-items { list-style: none; margin: 0; padding: 0; display: grid; gap: 14px; }
 .ec-cart-item { display: grid; grid-template-columns: 64px 1fr auto; gap: 12px; align-items: start; }
-.ec-cart-thumb { width: 64px; height: 64px; object-fit: cover; border-radius: 12px; background: var(--sp-line, rgba(0,0,0,.06)); }
+.ec-cart-thumb { width: 64px; height: 64px; object-fit: cover; border-radius: calc(var(--sp-radius) * .75); background: var(--sp-line, rgba(0,0,0,.06)); }
 .ec-cart-thumb.is-empty { display: grid; place-items: center; color: var(--sp-muted, inherit); }
 .ec-cart-info { min-width: 0; display: grid; gap: 6px; }
 .ec-cart-name { margin: 0; font-size: 14px; font-weight: 700; line-height: 1.3; }
-.ec-cart-warn { margin: 0; font-size: 12px; color: #b45309; }
+.ec-cart-warn { margin: 0; font-size: 12px; color: var(--sp-warning); }
 .ec-cart-row { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
-.ec-cart-qty { display: inline-flex; align-items: center; gap: 4px; border: 1px solid var(--sp-line, currentColor); border-radius: 10px; }
+.ec-cart-qty { display: inline-flex; align-items: center; gap: 4px; border: 1px solid var(--sp-line, currentColor); border-radius: calc(var(--sp-radius) * .65); }
 .ec-cart-qty button { display: grid; place-items: center; width: 30px; height: 30px; border: none; background: transparent; color: inherit; cursor: pointer; }
 .ec-cart-qty button:disabled { opacity: .4; cursor: default; }
 .ec-cart-qty span { min-width: 22px; text-align: center; font-size: 13px; font-weight: 700; }
@@ -150,9 +150,9 @@ function onBackdrop(e) { if (e.target === e.currentTarget) close() }
 .ec-cart-foot { display: grid; gap: 10px; padding: 16px 18px calc(16px + env(safe-area-inset-bottom)); border-top: 1px solid var(--sp-line, rgba(0,0,0,.08)); }
 .ec-cart-total { display: flex; align-items: baseline; justify-content: space-between; font-size: 15px; }
 .ec-cart-total strong { font-size: 20px; font-weight: 800; font-variant-numeric: tabular-nums; }
-.ec-cart-discount { margin: 0; font-size: 12px; color: #16a34a; }
-.ec-cart-cta { display: inline-flex; align-items: center; justify-content: center; gap: 8px; padding: 13px 16px; border: none; border-radius: 12px; background: var(--store-accent, #111); color: var(--store-accent-ink, #fff); font-size: 15px; font-weight: 800; cursor: pointer; text-decoration: none; }
-.ec-cart-ghost { display: inline-flex; align-items: center; justify-content: center; gap: 8px; padding: 11px 16px; border: 1px solid var(--sp-line, currentColor); border-radius: 12px; background: transparent; color: inherit; font-size: 14px; font-weight: 600; cursor: pointer; }
+.ec-cart-discount { margin: 0; font-size: 12px; color: var(--sp-success); }
+.ec-cart-cta { display: inline-flex; align-items: center; justify-content: center; gap: 8px; padding: 13px 16px; border: none; border-radius: calc(var(--sp-radius) * .75); background: var(--store-accent, #111); color: var(--store-accent-ink, #fff); font-size: 15px; font-weight: 800; cursor: pointer; text-decoration: none; }
+.ec-cart-ghost { display: inline-flex; align-items: center; justify-content: center; gap: 8px; padding: 11px 16px; border: 1px solid var(--sp-line, currentColor); border-radius: calc(var(--sp-radius) * .75); background: transparent; color: inherit; font-size: 14px; font-weight: 600; cursor: pointer; }
 .ec-cart-ghost:disabled { opacity: .5; cursor: default; }
 .ec-cart-hint { margin: 0; font-size: 13px; color: var(--sp-muted, inherit); text-align: center; }
 .ec-cart-link { border: none; background: none; color: var(--store-accent, inherit); font-weight: 700; cursor: pointer; text-decoration: underline; }

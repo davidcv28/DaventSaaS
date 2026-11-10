@@ -1456,7 +1456,7 @@ onBeforeUnmount(() => {
   min-width: 19px; height: 19px; padding: 0 5px;
   display: grid; place-items: center;
   border-radius: 999px; font-size: 10.5px; font-weight: 800;
-  background: #dc2626; color: #fff;
+  background: var(--sp-danger, #dc2626); color: #fff;
   border: 2px solid var(--sp-card, #fff);
   font-variant-numeric: tabular-nums;
 }
@@ -1464,12 +1464,12 @@ onBeforeUnmount(() => {
   position: fixed; left: 50%; bottom: calc(20px + env(safe-area-inset-bottom));
   transform: translateX(-50%); z-index: 1300;
   max-width: min(92vw, 460px); padding: 12px 18px;
-  border-radius: 13px; font-size: 13.5px; font-weight: 600; line-height: 1.4;
+  border-radius: calc(var(--sp-radius, 16px) * .8); font-size: 13.5px; font-weight: 600; line-height: 1.4;
   background: #111827; color: #fff;
   box-shadow: 0 14px 40px rgba(0,0,0,.3);
 }
-.ec-toast.ok { background: #15803d; }
-.ec-toast.err { background: #b91c1c; }
+.ec-toast.ok { background: var(--sp-success, #15803d); }
+.ec-toast.err { background: var(--sp-danger, #b91c1c); }
 .ec-toast-enter-active, .ec-toast-leave-active { transition: opacity .2s ease, transform .2s ease; }
 .ec-toast-enter-from, .ec-toast-leave-to { opacity: 0; transform: translate(-50%, 8px); }
 </style>

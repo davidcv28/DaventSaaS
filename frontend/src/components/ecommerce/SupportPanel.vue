@@ -219,27 +219,27 @@ onMounted(load)
 <style scoped>
 .ec-support { display: grid; gap: 14px; }
 .ec-support-bar { display: flex; justify-content: flex-end; }
-.ec-btn-primary { display: inline-flex; align-items: center; gap: 8px; padding: 11px 16px; border: none; border-radius: 12px; background: var(--store-accent, #111); color: var(--store-accent-ink, #fff); font-size: 14px; font-weight: 700; cursor: pointer; }
+.ec-btn-primary { display: inline-flex; align-items: center; gap: 8px; padding: 11px 16px; border: none; border-radius: calc(var(--sp-radius) * .75); background: var(--store-accent, #111); color: var(--store-accent-ink, #fff); font-size: 14px; font-weight: 700; cursor: pointer; }
 .ec-btn-primary:disabled { opacity: .55; cursor: default; }
-.ec-btn-ghost { display: inline-flex; align-items: center; padding: 11px 16px; border: 1px solid var(--sp-line, currentColor); border-radius: 12px; background: transparent; color: inherit; font-size: 14px; font-weight: 600; cursor: pointer; }
+.ec-btn-ghost { display: inline-flex; align-items: center; padding: 11px 16px; border: 1px solid var(--sp-line, currentColor); border-radius: calc(var(--sp-radius) * .75); background: transparent; color: inherit; font-size: 14px; font-weight: 600; cursor: pointer; }
 .ec-btn-ghost:disabled { opacity: .5; cursor: default; }
-.ec-compose { display: grid; gap: 12px; padding: 16px; border: 1px solid var(--sp-line, rgba(0,0,0,.1)); border-radius: 14px; }
+.ec-compose { display: grid; gap: 12px; padding: 16px; border: 1px solid var(--sp-line, rgba(0,0,0,.1)); border-radius: calc(var(--sp-radius) * .85); }
 .ec-compose-title { margin: 0; font-size: 15px; font-weight: 800; }
 .ec-support-empty { display: grid; place-items: center; gap: 8px; padding: 32px 12px; text-align: center; color: var(--sp-muted, inherit); font-size: 13.5px; }
 .ec-threads { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; }
-.ec-thread-row { width: 100%; display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 13px 15px; border: 1px solid var(--sp-line, rgba(0,0,0,.1)); border-radius: 12px; background: transparent; color: inherit; cursor: pointer; text-align: left; }
+.ec-thread-row { width: 100%; display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 13px 15px; border: 1px solid var(--sp-line, rgba(0,0,0,.1)); border-radius: calc(var(--sp-radius) * .75); background: transparent; color: inherit; cursor: pointer; text-align: left; }
 .ec-thread-row-main { display: grid; gap: 3px; min-width: 0; }
 .ec-thread-row-main strong { font-size: 14px; }
 .ec-thread-row-main small { font-size: 12px; color: var(--sp-muted, inherit); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .ec-thread-status { flex: none; font-size: 11.5px; font-weight: 700; padding: 4px 9px; border-radius: 999px; }
-.ec-thread-status.is-open { background: color-mix(in srgb, #16a34a 15%, transparent); color: #16a34a; }
-.ec-thread-status.is-closed { background: color-mix(in srgb, #6b7280 15%, transparent); color: #6b7280; }
+.ec-thread-status.is-open { background: color-mix(in srgb, var(--sp-success) 15%, transparent); color: var(--sp-success); }
+.ec-thread-status.is-closed { background: color-mix(in srgb, var(--sp-muted) 15%, transparent); color: var(--sp-muted); }
 .ec-thread { display: grid; gap: 12px; }
 .ec-support-back { justify-self: start; border: none; background: none; color: var(--store-accent, inherit); font-size: 13px; font-weight: 700; cursor: pointer; padding: 0; display: inline-flex; align-items: center; gap: 6px; }
 .ec-thread-head { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
 .ec-thread-subject { margin: 0; font-size: 17px; font-weight: 800; }
 .ec-thread-msgs { list-style: none; margin: 0; padding: 0; display: grid; gap: 10px; max-height: 420px; overflow-y: auto; }
-.ec-msg { max-width: 85%; padding: 10px 13px; border-radius: 14px; background: var(--sp-surface, rgba(0,0,0,.04)); align-self: flex-start; }
+.ec-msg { max-width: 85%; padding: 10px 13px; border-radius: calc(var(--sp-radius) * .85); background: var(--sp-surface, rgba(0,0,0,.04)); align-self: flex-start; }
 .ec-msg.is-mine { align-self: flex-end; background: color-mix(in srgb, var(--store-accent, #111) 12%, transparent); }
 .ec-msg-meta { margin: 0 0 4px; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .04em; color: var(--sp-muted, inherit); }
 .ec-msg-body { margin: 0; font-size: 14px; line-height: 1.5; white-space: pre-line; }
