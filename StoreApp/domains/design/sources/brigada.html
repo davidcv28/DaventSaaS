@@ -1006,6 +1006,54 @@
     background:var(--ds-success,#2e7d32);border-color:var(--ds-success,#2e7d32);
     color:var(--ds-success-ink,#fff);box-shadow:none;
   }
+  /* ------------------------------------------------------------------------
+     Ficha: envío, medios de pago y compra directa — piezas del host
+     ({{product_shipping}}, {{product_payments}} y .dsx-buy-now) con la mano
+     dura de la brigada: datos en mono, chips de alta visibilidad y el
+     "Comprar ahora" como etiqueta de contorno — la sombra offset queda para
+     el CTA macizo de .pdp-buy.
+     ------------------------------------------------------------------------ */
+  .pdp-info .ds-ship{
+    margin:14px 0 0;color:var(--muted);
+    font:600 11.5px/1.6 var(--font-m);letter-spacing:.04em;
+  }
+  .pdp-info .ds-pay{gap:6px;margin:14px 0 0}
+  .pdp-info .ds-pay-label{
+    font:700 9.5px/1 var(--font-m);letter-spacing:.16em;text-transform:uppercase;color:var(--muted);
+  }
+  .pdp-info .ds-pay-chip{
+    gap:6px;padding:6px 9px;
+    border:1px solid var(--line);border-radius:0;
+    background:var(--hazard-soft);color:var(--ink-2);
+    font:700 9.5px/1 var(--font-m);letter-spacing:.14em;text-transform:uppercase;
+  }
+  .pdp-info .ds-pay-chip svg{opacity:.85}
+  html[data-ds-commerce="1"] [data-surface="product"] .pdp-info > .dsx-buy-now{
+    align-self:flex-start;width:fit-content;margin:0 0 12px;padding:12px 18px;min-height:0;
+    border:1.5px solid var(--frame);border-radius:0;
+    background:transparent;color:var(--ink);
+    font:800 10.5px/1 var(--font-m);letter-spacing:.14em;text-transform:uppercase;
+    text-decoration:none;box-shadow:none;opacity:1;
+    transition:transform .15s var(--ease),box-shadow .15s var(--ease),background .15s var(--ease),color .15s var(--ease);
+  }
+  @media(hover:hover){
+    html[data-ds-commerce="1"] [data-surface="product"] .pdp-info > .dsx-buy-now:hover{
+      background:var(--hazard-soft);color:var(--ink);opacity:1;
+      transform:translate(-2px,-2px);box-shadow:4px 4px 0 0 var(--hard);
+    }
+  }
+  html[data-ds-commerce="1"] [data-surface="product"] .pdp-info > .dsx-buy-now:active{
+    transform:translate(1px,1px);box-shadow:1px 1px 0 0 var(--hard);
+  }
+  html[data-ds-commerce="1"] [data-surface="product"] .pdp-info > .dsx-buy-now:focus-visible{
+    outline:2px solid var(--primary);outline-offset:2px;
+  }
+  @media (prefers-reduced-motion:reduce){
+    html[data-ds-commerce="1"] [data-surface="product"] .pdp-info > .dsx-buy-now,
+    html[data-ds-commerce="1"] [data-surface="product"] .pdp-info > .dsx-buy-now:hover{
+      transition:none;transform:none;
+    }
+  }
   /* Buscador del catálogo + chips de filtros activos (los monta el puente). */
   .cat-search{position:relative;flex:1 1 240px;min-width:0;display:flex;align-items:center}
   .cat-search input{

@@ -592,6 +592,45 @@
   .ds-chat-send{border-radius:var(--radius-btn);background:var(--leather);color:var(--on-leather)}
   .ds-chat-send:hover{background:var(--leather-deep)}
   .ds-chat-typing i{background:var(--leather-ink)}
+
+  /* ------------------------------------------------------------------------
+     Ficha: envío, medios de pago y compra directa — piezas del host
+     ({{product_shipping}}, {{product_payments}} y .dsx-buy-now). Se visten
+     como anotaciones de taller: mono en versalitas, ficha de papel y
+     puntada de hilván. El CTA macizo sigue siendo el .dsx-buy de .pdp-ctas;
+     el "Comprar ahora" es una nota subrayada, no un segundo botón.
+     ------------------------------------------------------------------------ */
+  .pdp-info .ds-ship{
+    margin:14px 0 0;font:500 10px/1.6 var(--mono);
+    letter-spacing:.14em;text-transform:uppercase;color:var(--muted);
+  }
+  .pdp-info .ds-pay{gap:6px 8px;margin:12px 0 0}
+  .pdp-info .ds-pay-label{
+    font:500 9.5px/1 var(--mono);letter-spacing:.18em;text-transform:uppercase;color:var(--muted);
+  }
+  .pdp-info .ds-pay-chip{
+    padding:5px 9px;border:1px solid var(--line);border-radius:var(--radius);
+    background:var(--card);color:var(--ink-2);
+    font:500 9.5px/1.2 var(--mono);letter-spacing:.1em;text-transform:uppercase;
+  }
+  .pdp-info .ds-pay-chip svg{opacity:.6}
+  .pdp-info .pdp-ctas>.dsx-buy-now{
+    align-self:center;margin:0;padding:0 0 3px;min-height:0;
+    border:0;border-bottom:1px dashed color-mix(in srgb,var(--leather) 55%,transparent);
+    border-radius:0;background:none;color:var(--leather-ink);
+    font:500 10px/1.2 var(--mono);letter-spacing:.16em;text-transform:uppercase;
+    text-decoration:none;
+    transition:color .2s,border-color .2s,opacity .18s;
+  }
+  .pdp-info .pdp-ctas>.dsx-buy-now:hover{
+    color:var(--ink);border-bottom-color:var(--leather);opacity:1;
+  }
+  .pdp-info .pdp-ctas>.dsx-buy-now:active{opacity:.72}
+  .pdp-info .pdp-ctas>.dsx-buy-now:focus-visible{outline:1px solid var(--leather);outline-offset:3px}
+  @media (prefers-reduced-motion:reduce){
+    .pdp-info .pdp-ctas>.dsx-buy-now,
+    .pdp-info .pdp-ctas>.dsx-buy-now:hover{transition:none;transform:none}
+  }
 </style>
 </head>
 <body>

@@ -1301,7 +1301,7 @@ html[data-ds-theme="dark"] .pdp-score b{color:var(--volt);border-color:color-mix
 .pdp-buy{display:flex;gap:12px;flex-wrap:wrap;margin-top:26px}
 /* Compra online: el puente inserta .dsx-buy antes de .pdp-buy; es el CTA
    primario y el de WhatsApp pasa a secundario solo en modo tienda. */
-.pdp-info>.dsx-buy{
+.pdp-info .pdp-buy>.dsx-buy{
   width:100%;min-width:0;margin:0 0 14px;padding:0;
   display:flex;align-items:center;justify-content:center;gap:10px;
   min-height:48px;border:0;cursor:pointer;
@@ -1310,7 +1310,7 @@ html[data-ds-theme="dark"] .pdp-score b{color:var(--volt);border-color:color-mix
   color:var(--on-accent);
   font:600 12px/1 var(--mono);letter-spacing:.18em;text-transform:uppercase;
   transition:transform .18s var(--ease),box-shadow .25s var(--ease),filter .15s ease}
-.pdp-info>.dsx-buy:hover{transform:translateY(-2px);filter:brightness(1.07);
+.pdp-info .pdp-buy>.dsx-buy:hover{transform:translateY(-2px);filter:brightness(1.07);
   box-shadow:0 0 0 1px color-mix(in srgb,var(--accent) 55%,transparent),
     0 14px 34px -16px color-mix(in srgb,var(--accent) 65%,transparent)}
 html[data-ds-commerce="1"] .pdp-buy .btn-accent{
@@ -1855,6 +1855,52 @@ html[data-ds-theme="dark"] .ds-chat-input:focus{border-color:var(--volt)}
 .ds-chat-send:hover{transform:translateY(-1px)}
 .ds-chat-typing i{background:var(--accent)}
 html[data-ds-theme="dark"] .ds-chat-typing i{background:var(--volt)}
+
+/* ------------------------------------------------------------------------
+   Ficha: envío, medios de pago y compra directa — piezas del host
+   ({{product_shipping}}, {{product_payments}} y .dsx-buy-now) leídas como
+   etiquetas de ficha técnica: mono, esquina cortada y tinte de acento.
+   El CTA primario sigue siendo el .dsx-buy de la fila .pdp-buy; el
+   "Comprar ahora" es una nota de acento que no compite con él.
+   ------------------------------------------------------------------------ */
+.pdp-info .ds-ship{
+  margin:14px 0 0;font:500 11.5px/1.6 var(--mono);
+  letter-spacing:.06em;color:var(--muted);
+}
+.pdp-info .ds-pay{gap:6px 8px;margin:12px 0 0}
+.pdp-info .ds-pay-label{
+  font:600 10px/1 var(--mono);letter-spacing:.16em;text-transform:uppercase;color:var(--muted);
+}
+.pdp-info .ds-pay-chip{
+  padding:5px 10px;border:1px solid var(--line);border-radius:0;
+  clip-path:polygon(0 0,calc(100% - 6px) 0,100% 6px,100% 100%,0 100%);
+  background:var(--accent-soft);color:var(--accent-deep);
+  font:600 10px/1.2 var(--mono);letter-spacing:.12em;text-transform:uppercase;
+}
+.pdp-info .ds-pay-chip svg{opacity:.75}
+html[data-ds-theme="dark"] .pdp-info .ds-pay-chip{
+  color:var(--volt);border-color:color-mix(in srgb,var(--volt) 30%,var(--line));
+}
+.pdp-buy>.dsx-buy-now{
+  align-self:center;margin:0;padding:2px 0;min-height:0;
+  border:0;border-radius:0;background:none;box-shadow:none;
+  color:var(--accent-deep);
+  font:600 11px/1.4 var(--mono);letter-spacing:.14em;text-transform:uppercase;
+  text-decoration:none;
+  transition:color .2s,opacity .18s;
+}
+.pdp-buy>.dsx-buy-now:hover{
+  color:var(--ink);opacity:1;
+  text-decoration:underline;text-decoration-thickness:1px;text-underline-offset:4px;
+}
+.pdp-buy>.dsx-buy-now:active{opacity:.7}
+.pdp-buy>.dsx-buy-now:focus-visible{outline:2px solid var(--accent);outline-offset:3px}
+html[data-ds-theme="dark"] .pdp-buy>.dsx-buy-now{color:var(--volt)}
+html[data-ds-theme="dark"] .pdp-buy>.dsx-buy-now:hover{color:var(--ink)}
+html[data-ds-theme="dark"] .pdp-buy>.dsx-buy-now:focus-visible{outline-color:var(--volt)}
+@media (prefers-reduced-motion:reduce){
+  .pdp-buy>.dsx-buy-now,.pdp-buy>.dsx-buy-now:hover{transition:none;transform:none}
+}
 </style>
 </head>
 <body>

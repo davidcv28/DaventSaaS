@@ -1085,6 +1085,50 @@ body.m-open .m-sheet{transform:none}
     background:var(--ds-success,#2F6B4F);border-color:var(--ds-success,#2F6B4F);
     color:var(--ds-success-ink,#F4EFE6);
   }
+  /* ------------------------------------------------------------------------
+     Ficha: envío, medios de pago y compra directa — piezas del host
+     ({{product_shipping}}, {{product_payments}} y .dsx-buy-now) con la mano
+     del atelier: datos en mono, chips de papel con filete de acento y el
+     "Comprar ahora" como filete gemelo de .btn-line — nunca un segundo
+     bloque macizo bajo la barra de compra.
+     ------------------------------------------------------------------------ */
+  .pdp-info .ds-ship{
+    margin:14px 0 0;color:var(--muted);
+    font:500 12px/1.7 var(--mono);letter-spacing:.04em;
+  }
+  .pdp-info .ds-pay{gap:7px 8px;margin:14px 0 0}
+  .pdp-info .ds-pay-label{
+    font:500 9.5px/1 var(--mono);letter-spacing:.22em;text-transform:uppercase;color:var(--muted);
+  }
+  .pdp-info .ds-pay-chip{
+    gap:6px;padding:7px 10px;
+    border:1px solid color-mix(in srgb,var(--accent) 26%,var(--line));border-radius:var(--r-btn);
+    background:var(--surface);color:var(--accent-text);
+    font:500 10px/1 var(--mono);letter-spacing:.16em;text-transform:uppercase;
+  }
+  .pdp-info .ds-pay-chip svg{opacity:.85}
+  html[data-ds-commerce="1"] [data-surface="product"] .pdp-buy > .dsx-buy-now{
+    align-self:center;margin:0;padding:15px 22px;min-height:0;
+    border:1px solid color-mix(in srgb,var(--ink) 45%,transparent);
+    border-radius:var(--r-btn);background:none;color:var(--ink);
+    font:500 10.5px/1 var(--mono);letter-spacing:.2em;text-transform:uppercase;
+    text-decoration:none;box-shadow:none;opacity:1;
+    transition:background .3s var(--ease),border-color .3s var(--ease),color .3s var(--ease);
+  }
+  html[data-ds-commerce="1"] [data-surface="product"] .pdp-buy > .dsx-buy-now:hover{
+    background:var(--accent);border-color:var(--accent);color:var(--on-accent);
+    opacity:1;transform:none;box-shadow:none;
+  }
+  html[data-ds-commerce="1"] [data-surface="product"] .pdp-buy > .dsx-buy-now:active{transform:scale(.985)}
+  html[data-ds-commerce="1"] [data-surface="product"] .pdp-buy > .dsx-buy-now:focus-visible{
+    outline:2px solid var(--accent);outline-offset:3px;
+  }
+  @media (prefers-reduced-motion:reduce){
+    html[data-ds-commerce="1"] [data-surface="product"] .pdp-buy > .dsx-buy-now,
+    html[data-ds-commerce="1"] [data-surface="product"] .pdp-buy > .dsx-buy-now:hover{
+      transition:none;transform:none;
+    }
+  }
   /* Header mínimo: cuenta como círculo de icono junto al toggle y burger. */
   @media (max-width:720px){
     .top-inner .dsx-account{width:42px;height:42px;padding:0;justify-content:center;gap:0}

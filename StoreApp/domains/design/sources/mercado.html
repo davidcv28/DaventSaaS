@@ -544,6 +544,53 @@
   .pdp-surface .pdp-info .dsx-buy:hover{background:var(--blue-deep);color:var(--on-secondary)}
   .pdp-surface .pdp-info .dsx-buy + .pdp-buy{margin-top:10px}
 
+  /* ---------------------------------------------------------------
+     Ficha: envío, medios de pago y compra directa — piezas del host
+     ({{product_shipping}}, {{product_payments}} y .dsx-buy-now).
+     OJO: este .pdp-info es flex column con `order` por hijo (título 1,
+     precio 3, CTA 4, pdp-pay 5…) y el puente copia en runtime el order
+     del precio para .ds-ship/.ds-pay y el del CTA para .dsx-buy-now.
+     Aquí NO se declara `order`, ni position:absolute, ni flex-basis: el
+     "Comprar ahora" es un enlace de mercado (--link, negrita, subrayado
+     al hover) que queda pegado bajo el CTA azul; el aire lo da el
+     padding, porque el puente anula el margin-top en paneles flex.
+     --------------------------------------------------------------- */
+  .pdp-info .ds-ship{
+    margin:10px 0 0;color:var(--muted);opacity:1;
+    font-family:var(--font);font-size:12.5px;font-weight:600;line-height:1.5;letter-spacing:0;
+  }
+  .pdp-info .ds-pay{gap:6px 8px;margin:10px 0 0}
+  .pdp-info .ds-pay-label{
+    color:var(--muted);opacity:1;font-family:var(--font);
+    font-size:10px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;
+  }
+  .pdp-info .ds-pay-chip{
+    border:1px solid var(--line-strong);border-radius:var(--radius);
+    background:var(--soft);color:var(--ink-2);
+    font-family:var(--font);font-size:11.5px;font-weight:600;letter-spacing:0;
+    line-height:1.2;padding:4px 9px;gap:6px;
+  }
+  .pdp-info .ds-pay-chip svg{width:13px;height:13px;color:var(--link);opacity:1}
+  html[data-ds-commerce="1"] [data-surface="product"] .pdp-info > .dsx-buy-now{
+    width:auto;max-width:100%;margin:0 0 2px;padding:10px 2px 4px;
+    border:0;background:none;color:var(--link);
+    font-family:var(--font);font-size:12.5px;font-weight:800;letter-spacing:0;
+    text-decoration:none;box-shadow:none;opacity:1;
+    transition:color .18s var(--ease),opacity .18s;
+  }
+  html[data-ds-commerce="1"] [data-surface="product"] .pdp-info > .dsx-buy-now:hover{
+    color:var(--link);opacity:1;
+    text-decoration:underline;text-underline-offset:3px;text-decoration-thickness:1px;
+  }
+  html[data-ds-commerce="1"] [data-surface="product"] .pdp-info > .dsx-buy-now:active{opacity:.75}
+  html[data-ds-commerce="1"] [data-surface="product"] .pdp-info > .dsx-buy-now:focus-visible{
+    outline:2px solid var(--link);outline-offset:2px;border-radius:2px;
+  }
+  @media (prefers-reduced-motion:reduce){
+    html[data-ds-commerce="1"] [data-surface="product"] .pdp-info > .dsx-buy-now{transition:none}
+  }
+
+
   /* ==========================================================
      MARCAS — logos o inicial + nombre; cada item filtra el catálogo.
      ========================================================== */

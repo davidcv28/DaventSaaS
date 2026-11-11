@@ -748,6 +748,52 @@ html[data-ds-surface="services"] .top-nav a[data-ds-route="services"]{color:var(
   box-shadow:0 0 0 1px color-mix(in srgb,var(--accent) 70%,transparent),0 12px 36px color-mix(in srgb,var(--accent) 38%,transparent)}
 [data-surface="product"] .pdp-info > .dsx-buy[data-ds-buy-slot="pdp"]:active{transform:translateY(1px)}
 [data-surface="product"] .pdp-info > .dsx-buy[data-ds-buy-slot="pdp"].is-added{background:var(--ds-success,#0f9d58);color:var(--ds-success-ink,var(--ds-accent-ink,#fff))}
+/* ------------------------------------------------------------------------
+   Ficha: envío, medios de pago y compra directa — piezas del host
+   ({{product_shipping}}, {{product_payments}} y .dsx-buy-now). El envío va
+   en mono sobre el panel, los medios de pago como chips píldora con el
+   acento translúcido y el "Comprar ahora" como enlace fantasma compacto
+   bajo el .pdp-buy propio del diseño: mismo panel, aire del host (12px)
+   y trazo de 1px — no un segundo botón macizo.
+   ------------------------------------------------------------------------ */
+[data-surface="product"] .pdp-info .ds-ship{
+  margin:12px 0 0;
+  font-family:var(--mono);font-size:11px;line-height:1.6;letter-spacing:.04em;
+  color:var(--ink-2);
+}
+[data-surface="product"] .pdp-info .ds-pay{gap:8px;margin:12px 0 0;flex-wrap:wrap}
+[data-surface="product"] .pdp-info .ds-pay-label{
+  font-family:var(--mono);font-size:10px;font-weight:700;letter-spacing:.14em;
+  text-transform:uppercase;color:var(--ink-3);
+}
+[data-surface="product"] .pdp-info .ds-pay-chip{
+  padding:5px 11px;border:1px solid var(--line);border-radius:var(--r-pill);
+  background:color-mix(in srgb,var(--accent) 9%,transparent);color:var(--accent-text);
+  font-family:var(--mono);font-size:10.5px;font-weight:600;letter-spacing:.06em;
+}
+[data-surface="product"] .pdp-info .ds-pay-chip svg{opacity:.85}
+[data-surface="product"] .pdp-info > .dsx-buy-now[data-ds-buy-slot="pdp"]{
+  display:inline-flex;align-items:center;justify-content:center;gap:8px;
+  width:fit-content;max-width:100%;min-height:40px;margin:12px 0 0;padding:0 16px;
+  border:1px solid var(--line);border-radius:.5px;background:transparent;
+  color:var(--accent-text);opacity:1;box-shadow:none;
+  font-family:var(--body);font-size:13.5px;font-weight:600;letter-spacing:0;text-transform:none;
+  text-decoration:none;
+  transition:border-color .2s,color .2s,background .2s;
+}
+[data-surface="product"] .pdp-info > .dsx-buy-now[data-ds-buy-slot="pdp"]:hover{
+  border-color:color-mix(in srgb,var(--accent) 55%,transparent);color:var(--accent-text);opacity:1;
+  background:color-mix(in srgb,var(--accent) 8%,transparent);
+}
+[data-surface="product"] .pdp-info > .dsx-buy-now[data-ds-buy-slot="pdp"]:active{
+  background:color-mix(in srgb,var(--accent) 14%,transparent);
+}
+[data-surface="product"] .pdp-info > .dsx-buy-now[data-ds-buy-slot="pdp"]:focus-visible{
+  outline:2px solid var(--accent-text);outline-offset:3px;
+}
+@media (prefers-reduced-motion:reduce){
+  [data-surface="product"] .pdp-info > .dsx-buy-now[data-ds-buy-slot="pdp"]{transition:none}
+}
 .pdp-rev{margin-top:54px;border-top:1px solid var(--line);padding-top:30px}
 .pdp-rev-head{display:flex;align-items:baseline;gap:16px;flex-wrap:wrap;margin-bottom:18px}
 .pdp-rev-head h2{font-size:clamp(20px,2.6vw,28px)}

@@ -517,6 +517,53 @@ html[data-ds-commerce="1"] [data-surface="product"] .pdp-info > .dsx-buy[data-ds
   .top-inner .dsx-account:hover,.top-inner .dsx-cart:hover{transform:none}
 }
 
+/* ------------------------------------------------------------------------
+   Ficha: envío, medios de pago y compra directa — piezas del host
+   ({{product_shipping}}, {{product_payments}} y .dsx-buy-now) vestidas con
+   la voz editorial del diseño: datos en mono versalita y filete fino. El
+   CTA principal sigue siendo la barra bermellón; el "Comprar ahora" es un
+   enlace subrayado de mono dentro de la fila de .pdp-buy, no un segundo
+   botón macizo.
+   ------------------------------------------------------------------------ */
+.pdp-info .ds-ship{
+  margin:12px 0 0;
+  font:500 9px/1.6 var(--mono);letter-spacing:.12em;text-transform:uppercase;
+  color:var(--muted);
+}
+.pdp-info .ds-pay{gap:7px;margin:12px 0 0;flex-wrap:wrap}
+.pdp-info .ds-pay-label{
+  font:600 8.5px/1 var(--mono);letter-spacing:.18em;text-transform:uppercase;color:var(--muted);
+}
+.pdp-info .ds-pay-chip{
+  padding:5px 9px;border:1px solid var(--line);border-radius:var(--r-btn);
+  background:var(--surface);color:var(--ink-2);
+  font:500 9px/1.2 var(--mono);letter-spacing:.1em;text-transform:uppercase;
+}
+.pdp-info .ds-pay-chip svg{opacity:.6}
+html[data-ds-commerce="1"] [data-surface="product"] .pdp-buy > .dsx-buy-now{
+  align-self:center;margin:0;padding:6px 2px;min-height:0;
+  border:0;border-radius:0;background:none;box-shadow:none;
+  color:var(--accent-text);opacity:1;
+  font:600 9.5px/1 var(--mono);letter-spacing:.14em;text-transform:uppercase;
+  text-decoration:underline;text-underline-offset:5px;text-decoration-thickness:1px;
+  text-decoration-color:color-mix(in srgb,var(--accent) 40%,transparent);
+  transition:color .25s var(--ease-soft),text-decoration-color .25s var(--ease-soft),transform .2s var(--ease-soft);
+}
+html[data-ds-commerce="1"] [data-surface="product"] .pdp-buy > .dsx-buy-now:hover{
+  color:var(--accent);opacity:1;transform:translateY(-1px);
+  text-decoration-color:var(--accent);
+}
+html[data-ds-commerce="1"] [data-surface="product"] .pdp-buy > .dsx-buy-now:active{transform:translateY(0)}
+html[data-ds-commerce="1"] [data-surface="product"] .pdp-buy > .dsx-buy-now:focus-visible{
+  outline:2px solid var(--accent);outline-offset:3px;
+}
+@media (prefers-reduced-motion:reduce){
+  html[data-ds-commerce="1"] [data-surface="product"] .pdp-buy > .dsx-buy-now,
+  html[data-ds-commerce="1"] [data-surface="product"] .pdp-buy > .dsx-buy-now:hover{
+    transition:none;transform:none;
+  }
+}
+
 /* ---------- Índice de categorías ---------- */
 .cat-index{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));border-top:1px solid var(--line);counter-reset:cat}
 .cat-index .ds-cat{

@@ -496,6 +496,51 @@ html[data-ds-commerce="1"] [data-surface="product"] .dsx-buy[data-ds-buy-slot="p
 }
 html[data-ds-commerce="1"] [data-surface="product"] .pdp-info > .dsx-buy[data-ds-buy-slot="pdp"]{margin-bottom:14px}
 
+/* ------------------------------------------------------------------------
+   Ficha: envío, medios de pago y compra directa — piezas del host
+   ({{product_shipping}}, {{product_payments}} y .dsx-buy-now).
+   El envío es un renglón de registro en mono (mayúsculas espaciadas) y los
+   chips van como sellos cuadrados con la línea del papel. El "Comprar
+   ahora" no repite el botón macizo: es un renglón subrayado de mono que se
+   alinea al centro de la fila de CTAs (align-self), como un sello de
+   trámite bajo la barra del CTA.
+   ------------------------------------------------------------------------ */
+.pdp-info .ds-ship{
+  margin:14px 0 0;color:var(--ink-2);opacity:1;
+  font:500 10px/1.7 var(--mono);letter-spacing:.14em;text-transform:uppercase;
+}
+.pdp-info .ds-pay{gap:6px 8px;margin:12px 0 0}
+.pdp-info .ds-pay-label{
+  color:var(--muted);opacity:1;font:500 9px/1 var(--mono);letter-spacing:.2em;text-transform:uppercase;
+}
+.pdp-info .ds-pay-chip{
+  border:1px solid var(--line);border-radius:var(--r);
+  background:var(--surface-2);color:var(--ink-2);
+  font:500 10px/1 var(--mono);letter-spacing:.1em;text-transform:uppercase;
+  padding:6px 9px;gap:6px;
+}
+.pdp-info .ds-pay-chip svg{width:13px;height:13px;color:var(--stamp-ink);opacity:1}
+html[data-ds-commerce="1"] [data-surface="product"] .pdp-buy > .dsx-buy-now{
+  align-self:center;width:auto;max-width:100%;margin:0;min-height:0;padding:10px 2px;
+  border:0;background:none;color:var(--stamp-ink);
+  font:500 10.5px/1 var(--mono);letter-spacing:.18em;text-transform:uppercase;
+  text-decoration:underline;text-decoration-thickness:1px;text-underline-offset:5px;
+  box-shadow:none;opacity:1;
+  transition:color .25s var(--ease),opacity .2s,transform .25s var(--ease);
+}
+html[data-ds-commerce="1"] [data-surface="product"] .pdp-buy > .dsx-buy-now:hover{
+  color:var(--stamp);transform:translateY(-1px);opacity:1;
+}
+html[data-ds-commerce="1"] [data-surface="product"] .pdp-buy > .dsx-buy-now:active{transform:translateY(0);opacity:.75}
+html[data-ds-commerce="1"] [data-surface="product"] .pdp-buy > .dsx-buy-now:focus-visible{
+  outline:2px solid var(--stamp);outline-offset:3px;border-radius:2px;
+}
+@media(prefers-reduced-motion:reduce){
+  html[data-ds-commerce="1"] [data-surface="product"] .pdp-buy > .dsx-buy-now,
+  html[data-ds-commerce="1"] [data-surface="product"] .pdp-buy > .dsx-buy-now:hover,
+  html[data-ds-commerce="1"] [data-surface="product"] .pdp-buy > .dsx-buy-now:active{transition:none;transform:none}
+}
+
 /* ---------- Cuenta y carrito del puente en el chrome ----------
    Píldora de cuenta y círculo de carrito sobre la banda del header:
    tinta --band-ink como el toggle, sello --stamp como acento de hover. */

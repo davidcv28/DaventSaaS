@@ -1256,6 +1256,50 @@ html[data-ds-commerce="1"] .pdp-buy{
   background:transparent;color:var(--gold-text);
   border:1px solid var(--gold-line);box-shadow:none}
 html[data-ds-commerce="1"] .pdp-buy:hover{background:var(--gold-soft)}
+/* --------------------------------------------------------------------------
+   Ficha: envío, medios de pago y compra directa — piezas del host
+   ({{product_shipping}}, {{product_payments}} y .dsx-buy-now) con la mano de
+   Áurea: datos en mono, chips de hueso con filete dorado y el "Comprar ahora"
+   como enlace mono en caja alta — el CTA macizo sigue siendo el de carrito y
+   el de WhatsApp conserva su contorno.
+   -------------------------------------------------------------------------- */
+.pdp-info .ds-ship{
+  margin:14px 0 0;color:var(--muted);
+  font:400 12.5px/1.6 var(--mono);letter-spacing:.02em;
+}
+.pdp-info .ds-pay{gap:8px;margin:14px 0 0}
+.pdp-info .ds-pay-label{
+  font:700 9.5px/1 var(--mono);letter-spacing:.2em;text-transform:uppercase;color:var(--muted);
+}
+.pdp-info .ds-pay-chip{
+  gap:6px;padding:6px 11px;
+  border:1px solid var(--gold-line);border-radius:99px;
+  background:var(--gold-soft);color:var(--gold-text);
+  font:600 11px/1 var(--sans);letter-spacing:.01em;
+}
+.pdp-info .ds-pay-chip svg{opacity:.85}
+html[data-ds-commerce="1"] [data-surface="product"] .pdp-info>.dsx-buy-now{
+  align-self:flex-start;margin:0 0 12px;padding:10px 2px;min-height:0;
+  border:0;border-radius:0;background:none;color:var(--gold-text);
+  font:700 11px/1 var(--mono);letter-spacing:.16em;text-transform:uppercase;
+  text-decoration:underline;text-underline-offset:5px;text-decoration-thickness:1px;
+  box-shadow:none;opacity:1;
+  transition:color .25s var(--ease),text-decoration-color .25s var(--ease);
+}
+html[data-ds-commerce="1"] [data-surface="product"] .pdp-info>.dsx-buy-now:hover{
+  color:var(--gold-text);text-decoration-color:var(--gold);
+  opacity:1;transform:none;box-shadow:none;
+}
+html[data-ds-commerce="1"] [data-surface="product"] .pdp-info>.dsx-buy-now:active{opacity:.85}
+html[data-ds-commerce="1"] [data-surface="product"] .pdp-info>.dsx-buy-now:focus-visible{
+  outline:2px solid var(--gold-text);outline-offset:3px;border-radius:4px;
+}
+@media (prefers-reduced-motion:reduce){
+  html[data-ds-commerce="1"] [data-surface="product"] .pdp-info>.dsx-buy-now,
+  html[data-ds-commerce="1"] [data-surface="product"] .pdp-info>.dsx-buy-now:hover{
+    transition:none;transform:none;
+  }
+}
 .pdp-back{display:block;margin-top:16px;color:var(--muted);font-size:12.5px}
 .pdp-back:hover{color:var(--gold-text)}
 .pdp-seller{margin-top:24px;border:1px solid var(--line);border-radius:16px;padding:18px 20px;

@@ -1022,6 +1022,50 @@ html[data-ds-commerce="1"] [data-surface="product"] .pdp-info>.dsx-buy[data-ds-b
 html[data-ds-commerce="1"] [data-surface="product"] .pdp-info>.dsx-buy[data-ds-buy-slot="pdp"].is-added{
   background:var(--ok);color:var(--on-ok);
 }
+/* --------------------------------------------------------------------------
+   Ficha: envío, medios de pago y compra directa — piezas del host
+   ({{product_shipping}}, {{product_payments}} y .dsx-buy-now) con el lenguaje
+   de góndola: datos en mono, chips rectangulares con filete y el "Comprar
+   ahora" como botón de contorno liviano — sin animación, el estado cambia al
+   instante como el resto del diseño.
+   -------------------------------------------------------------------------- */
+.pdp-info .ds-ship{
+  margin:14px 0 0;color:var(--muted);
+  font:500 12px/1.6 var(--mono);letter-spacing:.02em;
+}
+.pdp-info .ds-pay{gap:7px 8px;margin:14px 0 0}
+.pdp-info .ds-pay-label{
+  font:600 9.5px/1 var(--mono);letter-spacing:.16em;text-transform:uppercase;color:var(--muted);
+}
+.pdp-info .ds-pay-chip{
+  gap:6px;padding:6px 10px;
+  border:1px solid var(--line);border-radius:var(--r);
+  background:var(--soft);color:var(--link);
+  font:600 10.5px/1 var(--mono);letter-spacing:.06em;
+}
+.pdp-info .ds-pay-chip svg{opacity:.85}
+html[data-ds-commerce="1"] [data-surface="product"] .pdp-info>.dsx-buy-now{
+  align-self:flex-start;width:fit-content;margin:0 0 12px;padding:12px 18px;min-height:0;
+  border:1px solid var(--line);border-radius:var(--r-btn);
+  background:var(--surface);color:var(--link);
+  font:700 12.5px/1 var(--sans);letter-spacing:0;
+  text-decoration:none;box-shadow:none;opacity:1;
+  transition:border-color .2s,color .2s,background .2s;
+}
+html[data-ds-commerce="1"] [data-surface="product"] .pdp-info>.dsx-buy-now:hover{
+  border-color:var(--link);color:var(--link);background:var(--soft);
+  opacity:1;transform:none;box-shadow:none;
+}
+html[data-ds-commerce="1"] [data-surface="product"] .pdp-info>.dsx-buy-now:active{background:var(--line)}
+html[data-ds-commerce="1"] [data-surface="product"] .pdp-info>.dsx-buy-now:focus-visible{
+  outline:2px solid var(--link);outline-offset:2px;
+}
+@media (prefers-reduced-motion:reduce){
+  html[data-ds-commerce="1"] [data-surface="product"] .pdp-info>.dsx-buy-now,
+  html[data-ds-commerce="1"] [data-surface="product"] .pdp-info>.dsx-buy-now:hover{
+    transition:none;transform:none;
+  }
+}
 </style>
 </head>
 <body>

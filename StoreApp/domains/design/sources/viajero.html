@@ -1231,6 +1231,43 @@ html[data-ds-theme="dark"] .ds-brand-initial{color:var(--paper)}
 .ds-chat-send{border-radius:50%;background:var(--accent);color:var(--on-accent)}
 .ds-chat-send:hover{background:var(--accent-deep);transform:translateY(-1px)}
 .ds-chat-typing i{background:var(--accent)}
+
+/* ------------------------------------------------------------------------
+   Ficha: envío, medios de pago y compra directa — piezas del host
+   ({{product_shipping}}, {{product_payments}} y .dsx-buy-now). Se visten
+   como datos de la ficha de viaje: mono en versalitas y chips de papel
+   cálido. En .pdp-buy el "Comprar ahora" se centra contra el CTA y queda
+   como enlace de acento, sin abrir un segundo botón macizo.
+   ------------------------------------------------------------------------ */
+.pdp-info .ds-ship{
+  margin:14px 0 0;font:500 12px/1.6 var(--sans);color:var(--muted);
+}
+.pdp-info .ds-pay{gap:6px 8px;margin:12px 0 0}
+.pdp-info .ds-pay-label{
+  font:600 9.5px/1 var(--mono);letter-spacing:.18em;text-transform:uppercase;color:var(--muted);
+}
+.pdp-info .ds-pay-chip{
+  padding:5px 10px;border:1px solid var(--line);border-radius:999px;
+  background:var(--surface);color:var(--ink-2);
+  font:600 11px/1.2 var(--sans);
+}
+.pdp-info .ds-pay-chip svg{opacity:.7}
+.pdp-buy>.dsx-buy-now{
+  align-self:center;margin:0;padding:2px 0;min-height:0;
+  border:0;border-radius:0;background:none;box-shadow:none;
+  color:var(--accent-text);
+  font:600 12.5px/1.4 var(--sans);letter-spacing:.01em;text-transform:none;
+  text-decoration:underline;text-decoration-thickness:1px;text-underline-offset:4px;
+  transition:color .2s,opacity .18s,text-decoration-thickness .18s;
+}
+.pdp-buy>.dsx-buy-now:hover{
+  color:var(--accent);opacity:1;text-decoration-thickness:2px;
+}
+.pdp-buy>.dsx-buy-now:active{opacity:.7}
+.pdp-buy>.dsx-buy-now:focus-visible{outline:2px solid var(--accent);outline-offset:3px}
+@media (prefers-reduced-motion:reduce){
+  .pdp-buy>.dsx-buy-now,.pdp-buy>.dsx-buy-now:hover{transition:none;transform:none}
+}
 </style>
 </head>
 <body>
