@@ -130,8 +130,8 @@
   color: var(--dz-ink);
 }
 [data-design='moderntec'] .ec-auth .ec-auth-shell {
-  width: min(1140px, 100%);
-  grid-template-columns: minmax(0, 1fr) minmax(0, 1.05fr);
+  width: min(960px, 100%);
+  grid-template-columns: minmax(0, 1fr);
   margin-block: clamp(14px, 3vw, 40px) clamp(44px, 6vw, 84px);
   border: 1px solid var(--dz-line);
   border-radius: var(--dz-radius);
@@ -220,8 +220,8 @@
 [data-design='moderntec'] .ec-auth .ec-auth-brand-title {
   font-family: var(--dz-display);
   font-weight: 700;
-  font-size: clamp(30px, 3.6vw, 46px);
-  line-height: 1.02;
+  font-size: clamp(24px, 2.6vw, 34px);
+  line-height: 1.06;
   letter-spacing: -.025em;
   color: var(--dz-ink);
 }
@@ -298,7 +298,7 @@
   padding: clamp(24px, 3.4vw, 46px) clamp(22px, 3.4vw, 48px) clamp(28px, 4vw, 50px);
   background: var(--dz-surface);
   color: var(--dz-ink);
-  border-left: 1px solid var(--dz-line);
+  border-top: 1px solid var(--dz-line);
 }
 /* Tornillos del módulo: cuatro puntos de fijación. */
 [data-design='moderntec'] .ec-auth .ec-auth-panel::after {
@@ -382,6 +382,112 @@
 }
 [data-design='moderntec'] .ec-auth .ec-auth-loading { color: var(--dz-muted); font-family: var(--dz-body); }
 [data-design='moderntec'] .ec-auth .ec-auth-spin { color: var(--dz-accent-text); }
+
+/* ---------- Consola de acceso (≥1024px): composición propia ----------
+   En vez del split vertical compartido, moderntec monta una consola
+   horizontal: la banda de instrumentos (marca a la izquierda, specs a la
+   derecha) y el deck del formulario (rail de título + columnas de
+   controles). Debajo de 1024 el layout compartido de la vista manda. */
+@media (min-width: 1024px) {
+  [data-design='moderntec'] .ec-auth .ec-auth-brand-inner {
+    grid-template-rows: none;
+    grid-template-columns: minmax(0, 1.15fr) minmax(0, .85fr);
+    grid-template-areas:
+      "top    specs"
+      "copy   specs"
+      "foot   foot";
+    gap: 0;
+    padding: 0;
+  }
+  [data-design='moderntec'] .ec-auth .ec-auth-brand-top {
+    grid-area: top;
+    padding: clamp(22px, 2.8vw, 34px) clamp(24px, 3vw, 40px) 0;
+  }
+  [data-design='moderntec'] .ec-auth .ec-auth-brand-copy {
+    grid-area: copy;
+    align-self: center;
+    padding: clamp(18px, 2.4vw, 28px) clamp(24px, 3vw, 40px) clamp(22px, 2.8vw, 34px);
+    max-width: none;
+  }
+  /* Columna de specs: rack lateral separado por hairline doble. */
+  [data-design='moderntec'] .ec-auth .ec-auth-perks {
+    grid-area: specs;
+    align-self: stretch;
+    align-content: center;
+    margin: 0;
+    padding: clamp(20px, 2.6vw, 32px) clamp(22px, 2.8vw, 34px);
+    padding-left: clamp(18px, 2.4vw, 28px);
+    border-left: 1px solid var(--dz-line);
+    background:
+      linear-gradient(var(--dz-line-soft) 1px, transparent 1px) 0 0 / 100% 40px,
+      linear-gradient(180deg, color-mix(in srgb, var(--dz-accent) 4%, transparent), transparent 60%);
+  }
+  [data-design='moderntec'] .ec-auth .ec-auth-perks li {
+    padding: 10px 0 10px 12px;
+    border-bottom-color: transparent;
+    border-radius: 6px;
+  }
+  [data-design='moderntec'] .ec-auth .ec-auth-perks li:hover {
+    background: var(--dz-accent-soft);
+  }
+  [data-design='moderntec'] .ec-auth .ec-auth-perks li::after { left: 4px; }
+  [data-design='moderntec'] .ec-auth .ec-auth-brand-foot {
+    grid-area: foot;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 13px clamp(24px, 3vw, 40px);
+  }
+  [data-design='moderntec'] .ec-auth .ec-auth-brand-foot::before {
+    content: "";
+    width: 7px; height: 7px; flex: none;
+    border-radius: 2px;
+    background: var(--dz-ok);
+    box-shadow: 0 0 10px color-mix(in srgb, var(--dz-ok) 70%, transparent);
+  }
+  /* Deck: rail de título a la izquierda, controles a la derecha.
+     .ec-auth-panel-inner es display:contents — sus hijos son los ítems
+     directos del grid del panel. */
+  [data-design='moderntec'] .ec-auth .ec-auth-panel {
+    display: grid;
+    grid-template-columns: minmax(0, .8fr) minmax(0, 1.2fr);
+    grid-template-areas:
+      "back  back"
+      "head  form"
+      "head  trust";
+    column-gap: clamp(20px, 2.6vw, 36px);
+    padding: clamp(20px, 2.6vw, 30px) clamp(22px, 3vw, 40px) clamp(22px, 2.8vw, 34px);
+  }
+  [data-design='moderntec'] .ec-auth .ec-auth-back {
+    grid-area: back;
+    margin-bottom: clamp(16px, 2vw, 22px);
+  }
+  /* (0,4,0) para ganarle al border-bottom del head que fija la capa
+     override de la plantilla (store-moderntec-auth.css). */
+  [data-design='moderntec'][data-theme] .ec-auth .ec-auth-head {
+    grid-area: head;
+    align-self: start;
+    margin-bottom: 0;
+    padding-bottom: 0;
+    padding-right: clamp(20px, 2.6vw, 34px);
+    border-bottom: 0;
+    border-right: 1px solid var(--dz-line);
+  }
+  [data-design='moderntec'] .ec-auth .ecaf { grid-area: form; }
+  [data-design='moderntec'] .ec-auth .ec-auth-trust { grid-area: trust; }
+  [data-design='moderntec'] .ec-auth .ec-auth-loading { grid-column: 1 / -1; }
+  /* Campos en dos columnas: email+contraseña lado a lado (register mete
+     el par nombre/apellido en .ecaf-grid, que también va lado a lado). */
+  [data-design='moderntec'] .ec-auth .ecaf-form {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    column-gap: 14px;
+    align-items: start;
+  }
+  [data-design='moderntec'] .ec-auth .ecaf-form > .ecaf-grid,
+  [data-design='moderntec'] .ec-auth .ecaf-form > .ecaf-submit { grid-column: 1 / -1; }
+  [data-design='moderntec'] .ec-auth .ecaf-form > .sp-field:only-of-type { grid-column: 1 / -1; }
+}
 
 /* ---------- Controles (compartidos auth + cuenta) ---------- */
 [data-design='moderntec'][data-theme] :is(.ec-auth, .ec-account) .sp-field { gap: 8px; }
