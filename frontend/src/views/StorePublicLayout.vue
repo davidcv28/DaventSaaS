@@ -298,6 +298,29 @@ watch(studioTemplate, async (tpl) => {
     patternMetaBusy.value = false
   }
 })
+//El meta se pide al montar solo si la primera ruta es una superficie del
+//documento: entrando por cuenta/ingresar/carrito (ecommerce) y navegando
+//después al inicio, `patternDoc` quedaba en null para siempre y la landing
+//se veía con la plantilla Vue — el diseño viejo — hasta recargar. Al pisar
+//una superficie sin meta se repide una vez; el skeleton tapa el hueco.
+//`patternMetaDone` corta la repetición cuando la tienda no tiene documento
+//(meta `{}` responde ok): solo un fallo de red habilita otro intento.
+const patternMetaDone = ref(false)
+const patternMetaLoading = ref(false)
+watch(patternSurface, async (surface) => {
+  if (!surface || patternDoc.value || patternMetaDone.value || patternMetaLoading.value || studioMode.value) return
+  patternMetaLoading.value = true
+  const params = { preview: previewToken.value, meta: true }
+  try {
+    const doc = await storesApi.publicPattern(slug.value, params)
+      .catch(() => storesApi.publicPattern(slug.value, params))
+      .catch(() => null)
+    if (doc !== null) patternMetaDone.value = true
+    if (!patternDoc.value) patternDoc.value = doc && (doc.has_html || doc.html) ? doc : null
+  } finally {
+    patternMetaLoading.value = false
+  }
+})
 // Variables del tema Studio sobre la hoja actual: --st-* del contrato +
 // equivalentes --store-*/--sp-* (studioPreviewVars traduce). En oscuro el
 // tema propio de la página manda (solo viajan acento/fuente + --st-*).
@@ -1077,7 +1100,7 @@ onMounted(async () => {
     //vista previa) con la plantilla Vue aunque el diseño tenga documento.
     patternReq = storesApi.publicPattern(slug.value, metaParams)
       .catch(() => storesApi.publicPattern(slug.value, metaParams))
-      .then((doc) => { patternDoc.value = doc && (doc.has_html || doc.html) ? doc : null })
+      .then((doc) => { patternMetaDone.value = true; patternDoc.value = doc && (doc.has_html || doc.html) ? doc : null })
       .catch(() => { patternDoc.value = null })
   }
   try {
@@ -1174,7 +1197,7 @@ onBeforeUnmount(() => {
          Vue ya no está montada (usePattern) y sin esto quedaba un hueco.
          patternWaiting también lo manda: sin el UPDATE del host o con el
          meta del diseño en ensayo en viaje, la rama no está decidida. -->
-    <div v-if="patternWaiting || (usePattern && !patternFrameReady)" class="sp-boot" role="status" aria-live="polite" aria-busy="true">
+    <div v-if="patternWaiting || patternMetaLoading || (usePattern && !patternFrameReady)" class="sp-boot" role="status" aria-live="polite" aria-busy="true">
       <span class="sp-sr-only">Cargando la tienda…</span>
       <div class="sp-boot-hero" aria-hidden="true">
         <span class="sp-sk-line sp-boot-badge"></span>
@@ -1186,7 +1209,7 @@ onBeforeUnmount(() => {
         <div v-for="n in 4" :key="n" class="sp-boot-card"><span class="sp-sk-line sp-boot-img"></span><span class="sp-sk-line"></span><span class="sp-sk-line short"></span></div>
       </div>
     </div>
-    <div v-if="!usePattern && !patternWaiting" class="sp-vue-page">
+    <div v-if="!usePattern && !patternWaiting && !patternMetaLoading" class="sp-vue-page">
     <!-- ===== Barra superior ===== -->
     <header class="sp-top" :class="{ scrolled }">
       <span class="sp-progress" aria-hidden="true" :style="{ transform: `scaleX(${progress})` }"></span>
