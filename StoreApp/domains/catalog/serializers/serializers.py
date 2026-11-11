@@ -123,11 +123,15 @@ class ProductSerializer(ProductMixinValidator, serializers.ModelSerializer):
     #exclusive_access (memberships) — el flag viaja al público solo como
     #"existe para miembros": la vidriera anónima lo excluye siempre.
     is_exclusive                =   serializers.BooleanField(**ProductFields['is_exclusive'])
+    #NULL = sin control de stock (ilimitado); entero >= 0 = unidades
+    #restantes. Solo escribible con 'has_ecommerce' en el plan
+    #(ProductMixinValidator lo rechaza sin el beneficio).
+    stock                       =   serializers.IntegerField(**ProductFields['stock'])
     #binary=True: en multipart llega como string JSON y se parsea solo.
     features                    =   serializers.JSONField(binary = True, **ProductFields['features'])
     class Meta:
         model                   =   Product
-        fields                  =   ['id', 'name', 'description', 'price', 'offer_price', 'category', 'brand', 'is_active', 'is_exclusive', 'features']
+        fields                  =   ['id', 'name', 'description', 'price', 'offer_price', 'category', 'brand', 'is_active', 'is_exclusive', 'stock', 'features']
 #=========================================
 # PRODUCT SERIALIZER LIST (mi catálogo, con imagen y nombres)
 #=========================================
@@ -141,7 +145,7 @@ class ProductSerializerList(serializers.ModelSerializer):
         model                   =   Product
         fields                  =   [
             'id', 'name', 'description', 'price', 'offer_price', 'category', 'category_name',
-            'brand', 'brand_name', 'is_active', 'is_exclusive', 'features', 'image', 'created_at',
+            'brand', 'brand_name', 'is_active', 'is_exclusive', 'stock', 'features', 'image', 'created_at',
             'discount_offer', 'discount_names',
         ]
     def get_image(self, product):

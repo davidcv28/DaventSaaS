@@ -25,7 +25,10 @@ const props = defineProps({
   accept: { type: String, default: 'image/*' },
   featureLimit: { type: Number, default: 20 },
   featuresErr: { type: String, default: '' },
-  fieldErr: { type: Function, required: true }
+  fieldErr: { type: Function, required: true },
+  // Control de stock: solo se muestra con has_ecommerce en el plan
+  // (sin el beneficio el backend rechaza la escritura del campo).
+  stockEnabled: { type: Boolean, default: false }
 })
 const emit = defineEmits([
   'save', 'cancel', 'pick-image', 'remove-bg', 'restore-original',
@@ -61,6 +64,14 @@ const emit = defineEmits([
         <button type="button" class="legacy-offer-btn" @click="emit('clear-offer')">Quitar</button>
       </div>
       <p v-else class="hint">¿Oferta? Programala en la pestaña «Descuentos»: se activa y vence sola.</p>
+    </section>
+
+    <section v-if="stockEnabled" class="pf-block" aria-labelledby="pf-stock">
+      <h4 id="pf-stock" class="pf-title"><AppIcon name="inbox" :size="15" aria-hidden="true" /> Stock</h4>
+      <div class="grid-2">
+        <AppInput v-model="form.stock" label="Unidades disponibles" name="prod_stock" type="number" min="0" step="1" placeholder="Sin límite" :error="fieldErr('stock')" @blur="touched.stock = true" />
+      </div>
+      <p class="hint">Cuántas unidades tenés para vender: 0 = agotado (no se puede comprar) y vacío = sin límite. Se descuenta solo cuando el pago se confirma.</p>
     </section>
 
     <section class="pf-block" aria-labelledby="pf-photo">
@@ -157,6 +168,9 @@ const emit = defineEmits([
 /* Cada bloque lleva su propio tono: azul básicos, verde precio, violeta foto,
    ámbar organización — el ojo encuentra la sección sin leer el título. */
 section.pf-block:nth-of-type(2) .pf-title svg { color: #059669; }
-section.pf-block:nth-of-type(3) .pf-title svg { color: #8b5cf6; }
+/* Stock y foto por id (no nth-of-type): la sección de stock es condicional
+   y movería el índice de la foto cuando el plan la habilita. */
+#pf-stock svg { color: #0d9488; }
+#pf-photo svg { color: #8b5cf6; }
 .more-opts > summary svg { color: #d97706; }
 </style>

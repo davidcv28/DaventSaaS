@@ -11,7 +11,10 @@ import { productListOffer, isDiscountedProduct, offerPct } from '../../../api/ca
 const props = defineProps({
   products: { type: Array, required: true },
   selectedIds: { type: Array, default: () => [] },
-  campaignOf: { type: Function, default: () => null }
+  campaignOf: { type: Function, default: () => null },
+  // Columna de stock: solo con has_ecommerce en el plan (el campo no se
+  // escribe sin el beneficio; NULL = sin límite → ∞).
+  stockEnabled: { type: Boolean, default: false }
 })
 const emit = defineEmits(['edit', 'update:selectedIds', 'duplicate', 'toggle-active', 'remove'])
 
@@ -66,6 +69,7 @@ function skuOf(p) { return `DAV-${String(p.id).padStart(4, '0')}` }
           <th>Producto</th>
           <th class="pt-org-col">Categoría</th>
           <th class="pt-num">Precio</th>
+          <th v-if="stockEnabled" class="pt-num pt-stock-col">Stock</th>
           <th class="pt-num">Estado</th>
           <th class="pt-acts-col"><span class="sr-only">Acciones</span></th>
         </tr>
@@ -109,6 +113,11 @@ function skuOf(p) { return `DAV-${String(p.id).padStart(4, '0')}` }
           <td class="pt-num pt-price">
             <template v-if="offerOf(p) != null"><b class="pt-deal">{{ formatARS(offerOf(p)) }}</b><small><s>{{ formatARS(p.price) }}</s> · en oferta</small></template>
             <template v-else><b>{{ formatARS(p.price) }}</b><small>precio final</small></template>
+          </td>
+          <td v-if="stockEnabled" class="pt-num pt-stock">
+            <span v-if="p.stock == null" class="pt-inf" title="Sin control de stock">∞</span>
+            <span v-else-if="p.stock === 0" class="pill danger">Agotado</span>
+            <b v-else :class="{ 'pt-low': p.stock <= 3 }">{{ p.stock }}</b>
           </td>
           <td class="pt-num">
             <span class="pt-status">
@@ -208,6 +217,9 @@ function skuOf(p) { return `DAV-${String(p.id).padStart(4, '0')}` }
 .pt-status .pill { display: inline-flex; align-items: center; gap: 4px; }
 .pt-status .pill svg { flex: none; }
 .pt-deal { color: var(--brand-ink); }
+.pt-stock b { font-weight: 700; font-variant-numeric: var(--num); }
+.pt-stock b.pt-low { color: var(--warn-ink, #b45309); }
+.pt-stock .pt-inf { color: var(--muted); font-weight: 600; }
 .pt-num { text-align: right; font-variant-numeric: var(--num); white-space: nowrap; }
 .pt-price b { font-weight: 700; font-size: 14.5px; color: var(--ok); }
 .pt-price small { display: block; font-size: 11px; font-weight: 400; color: var(--muted); }

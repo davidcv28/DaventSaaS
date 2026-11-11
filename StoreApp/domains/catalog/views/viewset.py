@@ -418,7 +418,7 @@ class ProductViewSet(CatalogGateMixin, CatalogBaseViewSet):
         except Exception:
             return
         changed =   False
-        for field in ('category', 'brand', 'offer_price'):
+        for field in ('category', 'brand', 'offer_price', 'stock'):
             value   =   mutable.get(field)
             if value in ('', 'null', 'none', 'None'):
                 mutable[field]  =   None

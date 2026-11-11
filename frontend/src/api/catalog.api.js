@@ -11,9 +11,12 @@ import { http } from './http.js'
 // Ídem   /api/brands/  (sin feature_schema; image = logo WebP con transparencia)
 // POST   /api/brands/<pk>/image/          Bearer multipart {image} -> {Exito,item,storage}
 // DELETE /api/brands/<pk>/image/          Bearer -> {Exito,item,storage}  (libera la cuota)
-// GET    /api/products/                   Bearer -> [{id,name,description,price,offer_price,category,category_name,brand,brand_name,is_active,features,image,created_at}]
-// POST   /api/products/                   Bearer multipart {name,price,offer_price?,category?,brand?,description?,is_active?,features?{},image?} -> {Exito,item,storage,image_error?}
+// GET    /api/products/                   Bearer -> [{id,name,description,price,offer_price,category,category_name,brand,brand_name,is_active,stock,features,image,created_at}]
+// POST   /api/products/                   Bearer multipart {name,price,offer_price?,category?,brand?,description?,is_active?,stock?,features?{},image?} -> {Exito,item,storage,image_error?}
 // PATCH  /api/products/<pk>/              Bearer idem parcial (+image_clear=true) -> {Exito,item,storage,image_error?}
+// stock: entero >= 0 (0 = agotado); '' lo limpia (NULL = sin límite).
+// Escribirlo exige has_ecommerce en el plan — sin el beneficio el backend
+// responde 400 {'stock': ...} y el producto queda intacto.
 // feature_schema = plantilla de atributos de la categoría (['Talle','Color']);
 // features = objeto nombre/valor del producto ({Talle:'M'}) — la plantilla
 // sugiere los atributos y el dueño puede sumar otros libres.
@@ -223,6 +226,14 @@ export function validateProductPrice(value) {
   if (Number.isNaN(n)) return 'Ingresá un precio válido'
   if (n < 0) return 'El precio no puede ser negativo'
   if (n > 9999999999) return 'El precio es demasiado grande'
+  return ''
+}
+
+// Stock (plan Ecommerce): entero >= 0; vacío = sin límite (ilimitado).
+export function validateProductStock(value) {
+  if (value === '' || value === null || value === undefined) return ''
+  const n = Number(value)
+  if (!Number.isInteger(n) || n < 0) return 'El stock tiene que ser un entero (0 o más)'
   return ''
 }
 

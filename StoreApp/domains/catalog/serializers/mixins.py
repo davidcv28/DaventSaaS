@@ -89,6 +89,13 @@ class ProductMixinValidator:
             related     =   attrs.get(field)
             if related is not None and related.store_id != store.id:
                 raise serializers.ValidationError({field: 'No pertenece a tu tienda.'})
+        #El control de stock es superficie de la venta online: sin
+        #'has_ecommerce' en el plan no se carga ni se limpia el valor
+        #(los productos que ya tienen stock quedan como están).
+        if 'stock' in attrs:
+            from StoreApp.domains.stores.services import profile_has_benefit
+            if not profile_has_benefit(store.user, 'has_ecommerce'):
+                raise serializers.ValidationError({'stock': 'El control de stock se habilita con el plan Ecommerce.'})
         #La oferta existe solo si es menor que el precio de lista (en un PATCH
         #el precio puede venir del registro actual).
         if 'offer_price' in attrs or 'price' in attrs:

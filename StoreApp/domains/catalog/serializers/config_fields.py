@@ -82,6 +82,17 @@ ProductFields               =   {
         'label'             :   'Solo para miembros',
         'required'          :   False,
     },
+    #Escritura gateada por 'has_ecommerce' en ProductMixinValidator.
+    'stock'                 :   {
+        'label'             :   'Stock',
+        'required'          :   False,
+        'allow_null'        :   True,
+        'min_value'         :   0,
+        'error_messages'    :   {
+            'min_value'     :   'El stock no puede ser negativo',
+            'invalid'       :   'El stock tiene que ser un número entero',
+        },
+    },
     'features'              :   {'required': False},
 }
 #=========================================

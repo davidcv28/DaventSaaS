@@ -27,7 +27,7 @@ import {
   validateSectionTitle, validateCtaTitle, validateCtaText, validateCtaLabel, validateVideoUrl, validateLiveStreamUrl, videosLimit
 } from '../api/stores.api.js'
 import {
-  validateTaxonomyName, validateProductName, validateProductPrice, validateProductDescription,
+  validateTaxonomyName, validateProductName, validateProductPrice, validateProductDescription, validateProductStock,
   catalogApi, FEATURE_LIMITS, validateFeatureSchema, validateProductFeatures,
   DISCOUNT_SCOPES, DISCOUNT_DEFAULT_PERCENT, DISCOUNT_LIMITS,
   validateDiscountName, validateDiscountPercent, validateDiscountWindow,
@@ -918,7 +918,7 @@ const catalogLoaded = ref(false)
 // programados (pestaña Descuentos). Los productos viejos que lo tengan lo
 // conservan hasta que el dueño lo quite — legacyOffer lo muestra y el
 // botón "Quitar" lo limpia al guardar.
-const productForm = reactive({ name: '', price: '', category: '', brand: '', description: '', is_active: true })
+const productForm = reactive({ name: '', price: '', category: '', brand: '', description: '', is_active: true, stock: '' })
 const productTouched = reactive({})
 const legacyOffer = ref(null)
 const offerCleared = ref(false)
@@ -1147,7 +1147,8 @@ async function bulkDuplicate() {
     const res = await catalog.saveProduct(null, {
       fields: {
         name: `${p.name} (copia)`, price: p.price, category: p.category || '', brand: p.brand || '',
-        description: p.description || '', is_active: p.is_active, features: p.features || {}
+        description: p.description || '', is_active: p.is_active, features: p.features || {},
+        ...(hasStockControl.value && p.stock != null ? { stock: p.stock } : {})
       },
       image: null, imageClear: false
     })
@@ -1178,7 +1179,8 @@ async function duplicateProduct(p) {
   const res = await catalog.saveProduct(null, {
     fields: {
       name: `${p.name} (copia)`, price: p.price, category: p.category || '', brand: p.brand || '',
-      description: p.description || '', is_active: p.is_active, features: p.features || {}
+      description: p.description || '', is_active: p.is_active, features: p.features || {},
+      ...(hasStockControl.value && p.stock != null ? { stock: p.stock } : {})
     },
     image: null, imageClear: false
   })
@@ -1216,6 +1218,10 @@ const productCampaign = computed(() => {
 })
 
 const productLimit = computed(() => plan.value?.benefits?.max_products)
+// Control de stock del catálogo: superficie de la venta online — solo
+// planes con has_ecommerce ven el campo en el form y la columna en la
+// tabla (el backend lo rechaza con 400 si igual llega).
+const hasStockControl = computed(() => Boolean(plan.value?.benefits?.has_ecommerce))
 const productsCountText = computed(() => {
   const max = productLimit.value
   const total = catalog.products.length
@@ -1227,9 +1233,11 @@ const productErrors = computed(() => {
   const n = validateProductName(productForm.name)
   const p = validateProductPrice(productForm.price)
   const d = validateProductDescription(productForm.description.trim())
+  const s = hasStockControl.value ? validateProductStock(productForm.stock) : ''
   if (n) e.name = n
   if (p) e.price = p
   if (d) e.description = d
+  if (s) e.stock = s
   if (featuresErr.value) e.features = featuresErr.value
   return e
 })
@@ -1286,7 +1294,7 @@ function restoreProductOriginal() {
 
 function resetProductForm() {
   productOriginal.value = null
-  Object.assign(productForm, { name: '', price: '', category: '', brand: '', description: '', is_active: true })
+  Object.assign(productForm, { name: '', price: '', category: '', brand: '', description: '', is_active: true, stock: '' })
   legacyOffer.value = null
   offerCleared.value = false
   productFeatures.value = []
@@ -1302,7 +1310,7 @@ function editProduct(p) {
   productEditing.value = p.id
   Object.assign(productForm, {
     name: p.name, price: p.price, category: p.category || '', brand: p.brand || '',
-    description: p.description || '', is_active: p.is_active
+    description: p.description || '', is_active: p.is_active, stock: p.stock ?? ''
   })
   legacyOffer.value = p.offer_price ?? null
   offerCleared.value = false
@@ -1334,6 +1342,10 @@ async function saveProduct() {
       brand: productForm.brand,
       description: productForm.description.trim(),
       is_active: productForm.is_active,
+      // stock solo viaja con has_ecommerce: '' limpia el control (NULL =
+      // sin límite); sin el beneficio la clave no se manda y el valor
+      // guardado queda intacto.
+      ...(hasStockControl.value ? { stock: productForm.stock } : {}),
       features: featuresToDict()
     },
     image: productImage.value,
@@ -4311,6 +4323,7 @@ async function changePassword() {
                   <ProductTable
                     :products="pagedProducts" v-model:selected-ids="selectedIds"
                     :campaign-of="(id) => productCampaign.get(id) || null"
+                    :stock-enabled="hasStockControl"
                     @edit="editProduct" @duplicate="duplicateProduct"
                     @toggle-active="toggleProductActive" @remove="removeProduct"
                   />
@@ -7036,6 +7049,7 @@ async function changePassword() {
                 :has-image="Boolean(productImage)" :has-original="Boolean(productOriginal)" :bg-busy="productBgBusy"
                 :accept="LOGO_ACCEPT_TYPES" :feature-limit="FEATURE_LIMITS.entriesMax"
                 :features-err="featuresErr" :field-err="productFieldErr"
+                :stock-enabled="hasStockControl"
                 @save="saveProduct" @cancel="closeProductForm"
                 @pick-image="onProductImagePicked" @remove-bg="removeProductBg"
                 @restore-original="restoreProductOriginal"

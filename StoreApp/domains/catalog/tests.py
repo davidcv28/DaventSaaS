@@ -361,6 +361,72 @@ class ProductValidationTests(TestCase):
         self.assertEqual(response.status_code, 400)
 
 
+class ProductStockGateTests(TestCase):
+    """
+    El control de stock es superficie de `has_ecommerce`: sin el beneficio
+    el campo no se carga ni se limpia (400) y el valor queda intacto; con
+    él el dueño setea unidades (0 = agotado) y '' vuelve a ilimitado.
+    """
+
+    def setUp(self):
+        # Mismo motivo que CatalogOwnerIsolationTests: el cache de
+        # beneficios se keyea por PK y SQLite reutiliza PKs entre tests.
+        cache.clear()
+
+    def _client(self, **benefits):
+        user, profile   =   _make_user('duenio')
+        benefits.setdefault('max_products', None)
+        _grant(profile, has_public_link = True, **benefits)
+        store           =   Store.objects.create(user = profile, slug = 'mi-tienda')
+        client          =   APIClient()
+        client.force_authenticate(user = user)
+        return client, store
+
+    def test_stock_write_requires_ecommerce_benefit(self):
+        client, store   =   self._client()
+        response        =   client.post(
+            PRODUCTS_URL, {'name': 'Calza', 'price': '10', 'stock': 5}, format = 'json')
+        self.assertEqual(response.status_code, 400)
+        product         =   Product.objects.create(store = store, name = 'Calza', price = 10, stock = 7)
+        response        =   client.patch(f'{PRODUCTS_URL}{product.pk}/', {'stock': 2}, format = 'json')
+        self.assertEqual(response.status_code, 400)
+        product.refresh_from_db()
+        self.assertEqual(product.stock, 7)
+        #Sin la clave el resto del producto se edita normal.
+        response        =   client.patch(f'{PRODUCTS_URL}{product.pk}/', {'price': '12'}, format = 'json')
+        self.assertEqual(response.status_code, 200)
+
+    def test_stock_write_with_ecommerce_benefit(self):
+        client, store   =   self._client(has_ecommerce = True)
+        response        =   client.post(
+            PRODUCTS_URL, {'name': 'Calza', 'price': '10', 'stock': 5}, format = 'json')
+        self.assertEqual(response.status_code, 201)
+        product         =   Product.objects.get(store = store)
+        self.assertEqual(product.stock, 5)
+        response        =   client.patch(f'{PRODUCTS_URL}{product.pk}/', {'stock': 0}, format = 'json')
+        self.assertEqual(response.status_code, 200)
+        product.refresh_from_db()
+        self.assertEqual(product.stock, 0)
+        #'' en multipart limpia el control: el producto vuelve a ilimitado.
+        response        =   client.patch(f'{PRODUCTS_URL}{product.pk}/', {'stock': ''}, format = 'multipart')
+        self.assertEqual(response.status_code, 200)
+        product.refresh_from_db()
+        self.assertIsNone(product.stock)
+
+    def test_stock_negative_rejected(self):
+        client, _       =   self._client(has_ecommerce = True)
+        response        =   client.post(
+            PRODUCTS_URL, {'name': 'Calza', 'price': '10', 'stock': -1}, format = 'json')
+        self.assertEqual(response.status_code, 400)
+
+    def test_stock_travels_in_owner_list(self):
+        client, store   =   self._client(has_ecommerce = True)
+        Product.objects.create(store = store, name = 'Calza', price = 10, stock = 3)
+        response        =   client.get(PRODUCTS_URL)
+        item            =   response.data[0] if isinstance(response.data, list) else response.data['results'][0]
+        self.assertEqual(item['stock'], 3)
+
+
 class RemoveBackgroundGateTests(TestCase):
     """El editor de fondo es un recurso caro: solo con catálogo habilitado."""
 
