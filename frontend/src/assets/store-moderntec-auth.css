@@ -25,6 +25,32 @@
   to   { opacity: 1; transform: translateY(0); }
 }
 
+/* Coreografía de entrada: el módulo sube y su contenido entra en cascada
+   (header → switch → campos → CTA → pie → trust). Solo transform/opacity;
+   el stagger se fija por nth-child sobre los hijos reales del DOM. */
+.store-page[data-template='moderntec'] :is(.ec-auth, .ec-auth-card) .ec-auth-head,
+.store-page[data-template='moderntec'] :is(.ec-auth, .ec-auth-card) .ecaf-switch,
+.store-page[data-template='moderntec'] :is(.ec-auth, .ec-auth-card) .ecaf-form > *,
+.store-page[data-template='moderntec'] :is(.ec-auth, .ec-auth-card) .ecaf-google,
+.store-page[data-template='moderntec'] :is(.ec-auth, .ec-auth-card) .ecaf-foot,
+.store-page[data-template='moderntec'] :is(.ec-auth, .ec-auth-card) .ec-auth-trust {
+  animation: mt-auth-item-in .55s var(--mt-ease-out) both;
+}
+@keyframes mt-auth-item-in {
+  from { opacity: 0; transform: translateY(10px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+.store-page[data-template='moderntec'] :is(.ec-auth, .ec-auth-card) .ec-auth-head { animation-delay: .05s; }
+.store-page[data-template='moderntec'] :is(.ec-auth, .ec-auth-card) .ecaf-switch { animation-delay: .11s; }
+.store-page[data-template='moderntec'] :is(.ec-auth, .ec-auth-card) .ecaf-form > *:nth-child(1) { animation-delay: .16s; }
+.store-page[data-template='moderntec'] :is(.ec-auth, .ec-auth-card) .ecaf-form > *:nth-child(2) { animation-delay: .2s; }
+.store-page[data-template='moderntec'] :is(.ec-auth, .ec-auth-card) .ecaf-form > *:nth-child(3) { animation-delay: .24s; }
+.store-page[data-template='moderntec'] :is(.ec-auth, .ec-auth-card) .ecaf-form > *:nth-child(4) { animation-delay: .28s; }
+.store-page[data-template='moderntec'] :is(.ec-auth, .ec-auth-card) .ecaf-form > *:nth-child(n+5) { animation-delay: .31s; }
+.store-page[data-template='moderntec'] :is(.ec-auth, .ec-auth-card) .ecaf-google { animation-delay: .34s; }
+.store-page[data-template='moderntec'] :is(.ec-auth, .ec-auth-card) .ecaf-foot { animation-delay: .38s; }
+.store-page[data-template='moderntec'] :is(.ec-auth, .ec-auth-card) .ec-auth-trust { animation-delay: .42s; }
+
 /* ==========================================================================
    2. ALA DE MARCA — panel de lectura
    El fondo (retícula + blooms + velo) lo pinta store-design-moderntec.css
@@ -256,7 +282,10 @@
   background: var(--mt-accent-soft);
   box-shadow: inset 0 0 0 1px var(--mt-accent-line), 0 6px 18px -10px color-mix(in srgb, var(--mt-accent) 70%, transparent);
   transform: translate3d(calc(var(--ecaf-switch-i, 0) * 100%), 0, 0);
-  transition: transform .42s var(--mt-ease-out);
+  /* Fallback cubic-bezier primero; el linear() (Baseline 2023) lo pisa
+     donde hay soporte: desplazamiento con leve overshoot, más físico. */
+  transition: transform .42s cubic-bezier(.3, 1.35, .4, 1);
+  transition: transform .5s linear(0, .45, .85, 1.06, .97, 1.02, 1);
 }
 .store-page[data-template='moderntec'] :is(.ec-auth, .ec-auth-card) .ecaf-switch-btn {
   position: relative;
@@ -270,12 +299,13 @@
   font-family: var(--mt-mono); font-size: var(--mt-fs-label); font-weight: 600;
   letter-spacing: var(--mt-track-label); text-transform: uppercase;
   color: var(--mt-ink-3);
-  transition: color var(--mt-dur-2) var(--mt-ease-out);
+  transition: color var(--mt-dur-2) var(--mt-ease-out), text-shadow var(--mt-dur-2) var(--mt-ease-out), transform var(--mt-dur-1) var(--mt-ease-out);
 }
 .store-page[data-template='moderntec'] :is(.ec-auth, .ec-auth-card) .ecaf-switch-btn.is-on {
   color: var(--mt-accent-text);
-  text-shadow: 0 0 12px color-mix(in srgb, var(--mt-accent) 45%, transparent);
+  text-shadow: 0 0 12px color-mix(in srgb, var(--mt-accent) 60%, transparent), 0 0 28px color-mix(in srgb, var(--mt-accent) 30%, transparent);
 }
+.store-page[data-template='moderntec'] :is(.ec-auth, .ec-auth-card) .ecaf-switch-btn:active { transform: scale(.96); }
 .store-page[data-template='moderntec'] :is(.ec-auth, .ec-auth-card) .ecaf-switch-btn:hover:not(.is-on) {
   color: var(--mt-ink-2);
 }
@@ -291,16 +321,26 @@
   border: 1px solid var(--mt-line-strong); border-radius: var(--mt-rad-sm);
   transition: border-color var(--mt-dur-1) var(--mt-ease-out), box-shadow var(--mt-dur-2) var(--mt-ease-out), background var(--mt-dur-1) var(--mt-ease-out);
 }
-.store-page[data-template='moderntec'] .ecaf .sp-input::placeholder { color: var(--mt-ink-3); }
+.store-page[data-template='moderntec'] .ecaf .sp-input::placeholder {
+  color: var(--mt-ink-3);
+  transition: color var(--mt-dur-1) var(--mt-ease-out);
+}
 .store-page[data-template='moderntec'] .ecaf .sp-input:hover { border-color: var(--mt-accent-line); }
-/* Foco: filo de acento + anillo suave (sin outline duplicado). */
+.store-page[data-template='moderntec'] .ecaf .sp-input:hover::placeholder { color: var(--mt-ink-2); }
+/* Foco: filete de acento en el filo superior + anillo suave + glow
+   (sin outline duplicado; el filete va como inset shadow, sin depender
+   de pseudo-elementos que <input> no soporta). */
 .store-page[data-template='moderntec'] .ecaf .sp-input:focus,
 .store-page[data-template='moderntec'] .ecaf .sp-input:focus-visible {
   outline: none;
   border-color: var(--mt-accent);
   background: var(--mt-panel);
-  box-shadow: 0 0 0 3px var(--mt-accent-soft), 0 0 24px -8px color-mix(in srgb, var(--mt-accent) 50%, transparent);
+  box-shadow:
+    inset 0 1px 0 var(--mt-accent),
+    0 0 0 3px var(--mt-accent-soft),
+    0 0 24px -8px color-mix(in srgb, var(--mt-accent) 55%, transparent);
 }
+.store-page[data-template='moderntec'] .ecaf .sp-input:focus::placeholder { color: var(--mt-ink-3); opacity: .7; }
 .store-page[data-template='moderntec'] .ecaf .sp-form-error { color: var(--mt-danger); }
 
 /* Toggle de contraseña: filete separador técnico. */
@@ -309,10 +349,13 @@
 .store-page[data-template='moderntec'] .ecaf-pass-toggle {
   border-radius: var(--mt-rad-sm); color: var(--mt-ink-2);
   border-left: 1px solid var(--mt-line);
+  transition: color var(--mt-dur-1) var(--mt-ease-out), background var(--mt-dur-1) var(--mt-ease-out), border-color var(--mt-dur-1) var(--mt-ease-out), transform var(--mt-dur-1) var(--mt-ease-out);
 }
 .store-page[data-template='moderntec'] .ecaf-pass-toggle:hover {
   color: var(--mt-accent-text); background: var(--mt-accent-soft);
+  border-left-color: var(--mt-accent-line);
 }
+.store-page[data-template='moderntec'] .ecaf-pass-toggle:active { transform: scale(.9); }
 
 /* CTA píldora con barrido de luz en hover. */
 .store-page[data-template='moderntec'] .ecaf-submit {
@@ -333,31 +376,47 @@
   inset: 0;
   z-index: 1;
   pointer-events: none;
-  background: linear-gradient(105deg, transparent 42%, rgba(255, 255, 255, .38) 50%, transparent 58%);
-  transform: translateX(-130%);
-  transition: transform .6s var(--mt-ease-out);
+  /* Haz más anguloso y con borde suave: cruza solo en hover. */
+  background: linear-gradient(115deg, transparent 38%, rgba(255, 255, 255, .42) 50%, transparent 62%);
+  transform: translateX(-140%) skewX(-8deg);
+  transition: transform .55s var(--mt-ease-out);
 }
 .store-page[data-template='moderntec'] .ecaf-submit:hover:not(:disabled) {
   transform: translateY(-2px);
   box-shadow: 0 0 0 1px var(--mt-accent-line), 0 14px 34px color-mix(in srgb, var(--mt-accent) 30%, transparent), 0 22px 48px -18px color-mix(in srgb, var(--mt-accent) 65%, transparent);
 }
 .store-page[data-template='moderntec'] .ecaf-submit:hover:not(:disabled)::after {
-  transform: translateX(130%);
+  transform: translateX(140%) skewX(-8deg);
+}
+.store-page[data-template='moderntec'] .ecaf-submit:active:not(:disabled) {
+  transform: translateY(0) scale(.98);
+  box-shadow: 0 0 0 1px var(--mt-accent-line), 0 8px 20px -8px color-mix(in srgb, var(--mt-accent) 55%, transparent);
+}
+.store-page[data-template='moderntec'] .ecaf-submit:focus-visible {
+  outline-offset: 3px;
+  box-shadow: 0 0 0 1px var(--mt-accent-line), var(--mt-glow), 0 0 30px -6px color-mix(in srgb, var(--mt-accent) 65%, transparent);
 }
 .store-page[data-template='moderntec'] .ecaf-submit:disabled {
   background: var(--mt-line);
   color: var(--mt-ink-3);
   box-shadow: none;
+  cursor: not-allowed;
 }
 .store-page[data-template='moderntec'] .ecaf-submit > * { position: relative; z-index: 2; }
 
-/* Avisos: panel técnico con filete de estado. */
+/* Avisos: panel técnico con filete de estado. Entran con un desliz
+   propio (nodo dinámico: aparece tras submit, no en el stagger inicial). */
 .store-page[data-template='moderntec'] .ecaf-notice,
 .store-page[data-template='moderntec'] .ecaf-error {
   border-radius: var(--mt-rad-sm);
   border: 1px solid var(--mt-line);
   border-left-width: 2px;
   color: var(--mt-ink);
+  animation: mt-auth-notice-in .4s var(--mt-ease-out) both;
+}
+@keyframes mt-auth-notice-in {
+  from { opacity: 0; transform: translateX(-8px); }
+  to   { opacity: 1; transform: translateX(0); }
 }
 .store-page[data-template='moderntec'] .ecaf-notice {
   background: color-mix(in srgb, var(--mt-ok) 10%, var(--mt-panel));
@@ -376,15 +435,35 @@
 .store-page[data-template='moderntec'] .ecaf-divider::after {
   background: var(--mt-line-strong); opacity: 1;
 }
-.store-page[data-template='moderntec'] .ecaf-google-btn { border-radius: var(--mt-rad-sm); overflow: hidden; }
+.store-page[data-template='moderntec'] .ecaf-google-btn {
+  border-radius: var(--mt-rad-sm); overflow: hidden;
+  transition: box-shadow var(--mt-dur-2) var(--mt-ease-out), opacity var(--mt-dur-1) var(--mt-ease-out);
+}
+.store-page[data-template='moderntec'] .ecaf-google-btn:hover {
+  box-shadow: 0 0 0 1px var(--mt-accent-line), 0 8px 22px -12px color-mix(in srgb, var(--mt-accent) 45%, transparent);
+}
+.store-page[data-template='moderntec'] .ecaf-google-btn.is-busy { opacity: .55; }
+/* Link técnico: filete de acento que crece desde la izquierda en hover. */
 .store-page[data-template='moderntec'] .ecaf-link {
+  position: relative;
   padding-block: 6px;
   color: var(--mt-accent-text);
   font-family: var(--mt-mono); font-size: var(--mt-fs-xs); font-weight: 500;
   letter-spacing: .03em;
-  transition: color var(--mt-dur-1) var(--mt-ease-out);
+  transition: color var(--mt-dur-1) var(--mt-ease-out), transform var(--mt-dur-1) var(--mt-ease-out);
 }
-.store-page[data-template='moderntec'] .ecaf-link:hover { color: var(--mt-ink); }
+.store-page[data-template='moderntec'] .ecaf-link::after {
+  content: "";
+  position: absolute;
+  left: 0; bottom: 2px;
+  width: 100%; height: 1px;
+  background: var(--mt-accent);
+  transform: scaleX(0);
+  transform-origin: left center;
+  transition: transform var(--mt-dur-2) var(--mt-ease-out);
+}
+.store-page[data-template='moderntec'] .ecaf-link:hover { color: var(--mt-ink); transform: translateX(2px); }
+.store-page[data-template='moderntec'] .ecaf-link:hover::after { transform: scaleX(1); }
 
 /* Línea de confianza bajo el formulario (nace oculta en la vista). */
 .store-page[data-template='moderntec'] .ec-auth-trust {
@@ -415,6 +494,11 @@
 .store-page[data-template='moderntec'] .ec-auth-backdrop {
   background: var(--mt-scrim);
   backdrop-filter: none;
+  animation: mt-auth-fade .3s var(--mt-ease-out) both;
+}
+@keyframes mt-auth-fade {
+  from { opacity: 0; }
+  to   { opacity: 1; }
 }
 /* Retícula técnica muy tenue sobre el scrim. */
 .store-page[data-template='moderntec'] .ec-auth-backdrop::before {
@@ -436,10 +520,13 @@
   border-top: 2px solid var(--mt-accent);
   border-radius: var(--mt-rad-md);
   box-shadow: var(--mt-shadow-device);
-  animation: mt-auth-card-in .4s var(--mt-ease-out) both;
+  /* Entrada con sensación física: cubic-bezier de fallback, y donde hay
+     soporte un linear() spring con overshoot (Baseline 2023). */
+  animation: mt-auth-card-in .45s cubic-bezier(.3, 1.3, .4, 1) both;
+  animation: mt-auth-card-in .55s linear(0, .55, .9, 1.04, .98, 1.01, 1) both;
 }
 @keyframes mt-auth-card-in {
-  from { opacity: 0; transform: translateY(14px) scale(.985); }
+  from { opacity: 0; transform: translateY(18px) scale(.97); }
   to   { opacity: 1; transform: translateY(0) scale(1); }
 }
 /* Ticks de esquina del módulo (esquinas técnicas, no tornillos). */
@@ -464,9 +551,12 @@
   border-radius: var(--mt-rad-sm);
   border: 1px solid var(--mt-line);
   color: var(--mt-ink-2);
+  transition: color var(--mt-dur-1) var(--mt-ease-out), background var(--mt-dur-1) var(--mt-ease-out), border-color var(--mt-dur-1) var(--mt-ease-out), transform var(--mt-dur-1) var(--mt-ease-out);
 }
 .store-page[data-template='moderntec'] .ec-auth-close:hover {
   background: var(--mt-surface-2); color: var(--mt-ink);
+  border-color: var(--mt-accent-line);
+  transform: rotate(90deg);
 }
 /* El card no está bajo .ec-auth: su contenido también sube sobre cualquier
    capa absoluta futura. */
@@ -487,15 +577,38 @@
 @media (prefers-reduced-motion: reduce) {
   .store-page[data-template='moderntec'] .ec-auth-shell,
   .store-page[data-template='moderntec'] .ec-auth-card,
+  .store-page[data-template='moderntec'] .ec-auth-backdrop,
   .store-page[data-template='moderntec'] .ec-auth-hatch,
   .store-page[data-template='moderntec'] .ec-auth-seal-ring,
   .store-page[data-template='moderntec'] .ec-auth-rail::after,
   .store-page[data-template='moderntec'] .ec-auth-tag::before,
   .store-page[data-template='moderntec'] .ec-auth-loading::after,
+  .store-page[data-template='moderntec'] :is(.ec-auth, .ec-auth-card) .ec-auth-head,
+  .store-page[data-template='moderntec'] :is(.ec-auth, .ec-auth-card) .ecaf-switch,
+  .store-page[data-template='moderntec'] :is(.ec-auth, .ec-auth-card) .ecaf-form > *,
+  .store-page[data-template='moderntec'] :is(.ec-auth, .ec-auth-card) .ecaf-google,
+  .store-page[data-template='moderntec'] :is(.ec-auth, .ec-auth-card) .ecaf-foot,
+  .store-page[data-template='moderntec'] :is(.ec-auth, .ec-auth-card) .ec-auth-trust,
+  .store-page[data-template='moderntec'] .ecaf-notice,
+  .store-page[data-template='moderntec'] .ecaf-error,
+  .store-page[data-template='moderntec'] .ecaf-submit,
   .store-page[data-template='moderntec'] .ecaf-submit::after,
-  .store-page[data-template='moderntec'] .ecaf-switch-pill {
+  .store-page[data-template='moderntec'] .ecaf-switch-pill,
+  .store-page[data-template='moderntec'] .ecaf-switch-btn,
+  .store-page[data-template='moderntec'] .ecaf .sp-input,
+  .store-page[data-template='moderntec'] .ecaf .sp-input::placeholder,
+  .store-page[data-template='moderntec'] .ecaf-pass-toggle,
+  .store-page[data-template='moderntec'] .ecaf-link,
+  .store-page[data-template='moderntec'] .ecaf-link::after,
+  .store-page[data-template='moderntec'] .ecaf-google-btn,
+  .store-page[data-template='moderntec'] .ec-auth-close,
+  .store-page[data-template='moderntec'] .ec-auth-back {
     animation: none !important;
     transition: none !important;
   }
   .store-page[data-template='moderntec'] .ec-auth-hatch { display: none; }
+  /* Sin `both` los keyframes no aplican: los estados finales quedan
+     visibles por defecto. El filete del link nace en scaleX(0): forzarlo
+     a reposo total para que no quede un artefacto a medias. */
+  .store-page[data-template='moderntec'] .ecaf-link::after { transform: none; }
 }

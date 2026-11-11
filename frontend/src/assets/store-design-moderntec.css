@@ -239,16 +239,34 @@
 }
 [data-design='moderntec'] .ec-auth .ec-auth-perks li {
   counter-increment: dzspec;
+  position: relative;
   display: flex;
   align-items: center;
   gap: 12px;
-  padding: 11px 0;
+  padding: 11px 0 11px 14px;
   border-bottom: 1px solid var(--dz-line-soft);
   font-family: var(--dz-body);
   font-size: 13.5px;
   font-weight: 500;
   color: var(--dz-ink-2);
+  transition: color .22s, transform .22s;
 }
+/* Filete de acento que se dibuja en el margen al pasar el cursor. */
+[data-design='moderntec'] .ec-auth .ec-auth-perks li::after {
+  content: "";
+  position: absolute; left: 0; top: 8px; bottom: 8px;
+  width: 2px;
+  border-radius: 2px;
+  background: linear-gradient(180deg, var(--dz-accent), var(--dz-accent-2));
+  transform: scaleY(0);
+  transform-origin: 50% 0;
+  transition: transform .28s cubic-bezier(.2, .8, .2, 1);
+}
+[data-design='moderntec'] .ec-auth .ec-auth-perks li:hover {
+  color: var(--dz-ink);
+  transform: translateX(4px);
+}
+[data-design='moderntec'] .ec-auth .ec-auth-perks li:hover::after { transform: scaleY(1); }
 [data-design='moderntec'] .ec-auth .ec-auth-perks li::before {
   content: "";
   flex: none;
@@ -294,6 +312,14 @@
     radial-gradient(circle 2.5px at 100% 100%, var(--dz-line-strong) 98%, transparent) 100% 100% / 12px 12px no-repeat;
   opacity: .7;
 }
+/* Hairline superior del módulo: filo de acento que se apaga en los bordes. */
+[data-design='moderntec'] .ec-auth .ec-auth-panel::before {
+  content: "";
+  position: absolute; top: 0; left: 0; right: 0;
+  height: 1px;
+  pointer-events: none;
+  background: linear-gradient(90deg, transparent, var(--dz-accent-line) 26%, var(--dz-accent-line) 74%, transparent);
+}
 [data-design='moderntec'] .ec-auth .ec-auth-back {
   gap: 9px;
   margin-bottom: clamp(20px, 3vw, 30px);
@@ -303,11 +329,12 @@
   letter-spacing: .2em;
   text-transform: uppercase;
   color: var(--dz-muted);
-  transition: color .2s, border-color .2s;
+  transition: color .2s, border-color .2s, transform .2s;
 }
 [data-design='moderntec'] .ec-auth .ec-auth-back:hover {
   color: var(--dz-accent-text);
   border-bottom-color: var(--dz-accent-line);
+  transform: translateX(-3px);
 }
 [data-design='moderntec'] .ec-auth .ec-auth-head {
   gap: 10px;
@@ -484,6 +511,82 @@
   background: color-mix(in srgb, var(--dz-danger) 10%, var(--dz-surface));
   border: 1px solid color-mix(in srgb, var(--dz-danger) 38%, transparent);
   color: var(--dz-ink);
+}
+
+/* ---------- Movimiento (opt-in): entrada coreografiada + ambiente ----------
+   Todo corre en el compositor (opacity/transform). El easing lleva el
+   fallback cubic-bezier declarado ANTES de linear() (Baseline 2023): el
+   browser que no lo conoce se queda con la curva clásica.
+   fill-mode `backwards` (no `both`): la entrada no pisa las transform
+   de :hover una vez terminada la animación. */
+@media (prefers-reduced-motion: no-preference) {
+  @keyframes dz-auth-rise {
+    from { opacity: 0; transform: translateY(16px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+  /* La cubierta del ala de marca deriva muy lento (va escalada para no
+     abrir bordes); el velo/bloom respira en un ciclo largo. */
+  @keyframes dz-auth-drift {
+    from { transform: scale(1.06) translate(0, 0); }
+    to { transform: scale(1.08) translate(-1.6%, 1.2%); }
+  }
+  @keyframes dz-auth-breathe {
+    from, to { opacity: .82; }
+    50% { opacity: 1; }
+  }
+  /* LED de cada spec: pulso de servicio suave, muy por debajo de 3 Hz. */
+  @keyframes dz-auth-led {
+    from, to { opacity: .55; }
+    50% { opacity: 1; }
+  }
+
+  [data-design='moderntec'] .ec-auth .ec-auth-brand::before {
+    animation: dz-auth-drift 26s ease-in-out infinite alternate;
+  }
+  [data-design='moderntec'] .ec-auth .ec-auth-brand::after {
+    animation: dz-auth-breathe 9s ease-in-out infinite;
+  }
+  [data-design='moderntec'] .ec-auth .ec-auth-perks li::before {
+    animation: dz-auth-led 2.8s ease-in-out infinite;
+  }
+  /* LEDs desfasados entre filas: telemetría viva, no un parpadeo en bloque. */
+  [data-design='moderntec'] .ec-auth .ec-auth-perks li:nth-child(2)::before { animation-delay: -.9s; }
+  [data-design='moderntec'] .ec-auth .ec-auth-perks li:nth-child(3)::before { animation-delay: -1.7s; }
+  [data-design='moderntec'] .ec-auth .ec-auth-perks li:nth-child(4)::before { animation-delay: -2.3s; }
+
+  /* Entrada en cascada: primero el módulo entero, después la marca y
+     por último el módulo de acceso, siempre con delays crecientes. */
+  [data-design='moderntec'] .ec-auth .ec-auth-shell {
+    animation: dz-auth-rise .55s cubic-bezier(.22, .9, .24, 1) backwards;
+    animation-timing-function: linear(0, .42 22%, .84 48%, 1.04 72%, 1);
+  }
+  [data-design='moderntec'] .ec-auth .ec-auth-brand-top,
+  [data-design='moderntec'] .ec-auth .ec-auth-brand-copy > *,
+  [data-design='moderntec'] .ec-auth .ec-auth-brand-foot,
+  [data-design='moderntec'] .ec-auth .ec-auth-panel-inner > * {
+    animation: dz-auth-rise .5s cubic-bezier(.22, .9, .24, 1) backwards;
+    animation-timing-function: linear(0, .42 22%, .84 48%, 1.04 72%, 1);
+  }
+  [data-design='moderntec'] .ec-auth .ec-auth-brand-top { animation-delay: .08s; }
+  [data-design='moderntec'] .ec-auth .ec-auth-brand-copy > :nth-child(1) { animation-delay: .14s; }
+  [data-design='moderntec'] .ec-auth .ec-auth-brand-copy > :nth-child(2) { animation-delay: .18s; }
+  [data-design='moderntec'] .ec-auth .ec-auth-brand-copy > :nth-child(3) { animation-delay: .22s; }
+  [data-design='moderntec'] .ec-auth .ec-auth-brand-copy > :nth-child(4) { animation-delay: .26s; }
+  [data-design='moderntec'] .ec-auth .ec-auth-brand-copy > :nth-child(5) { animation-delay: .3s; }
+  [data-design='moderntec'] .ec-auth .ec-auth-brand-copy > :nth-child(6) { animation-delay: .34s; }
+  [data-design='moderntec'] .ec-auth .ec-auth-brand-foot { animation-delay: .38s; }
+  [data-design='moderntec'] .ec-auth .ec-auth-panel-inner > :nth-child(1) { animation-delay: .1s; }
+  [data-design='moderntec'] .ec-auth .ec-auth-panel-inner > :nth-child(2) { animation-delay: .16s; }
+  [data-design='moderntec'] .ec-auth .ec-auth-panel-inner > :nth-child(3) { animation-delay: .22s; }
+  [data-design='moderntec'] .ec-auth .ec-auth-panel-inner > :nth-child(4) { animation-delay: .28s; }
+  /* Las filas de spec caen una a una dentro de su bloque. */
+  [data-design='moderntec'] .ec-auth .ec-auth-perks li {
+    animation: dz-auth-rise .45s cubic-bezier(.22, .9, .24, 1) backwards;
+  }
+  [data-design='moderntec'] .ec-auth .ec-auth-perks li:nth-child(1) { animation-delay: .36s; }
+  [data-design='moderntec'] .ec-auth .ec-auth-perks li:nth-child(2) { animation-delay: .42s; }
+  [data-design='moderntec'] .ec-auth .ec-auth-perks li:nth-child(3) { animation-delay: .48s; }
+  [data-design='moderntec'] .ec-auth .ec-auth-perks li:nth-child(4) { animation-delay: .54s; }
 }
 
 /* ==========================================================================
