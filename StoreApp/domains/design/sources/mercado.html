@@ -15,6 +15,13 @@
     --blue:var(--ds-primary,#2563EB); --blue-deep:var(--ds-secondary,#1D4ED8);
     --blue-soft:color-mix(in srgb,var(--blue) 12%,var(--surface,#fff));
     --green:var(--ds-success,#007A3D); --green-soft:color-mix(in srgb,var(--green) 12%,var(--surface,#fff));
+    /* Verde de los stickers sólidos (-N% y tag de ficha): el éxito de
+       algunas paletas (p.ej. #0E8A5F) cae en la zona muerta de contraste
+       donde ni la tinta oscura ni la clara del backend llegan a AA.
+       Se levanta un 8% hacia blanco —token escalable, no hex por
+       estilo— para que --on-success llegue a ~4.6:1. --green queda
+       puro porque --green-ink/--green-soft ya están ajustados a AA. */
+    --green-badge:color-mix(in srgb,var(--ds-success,#007A3D) 92%,#fff);
     --green-ink:color-mix(in srgb,var(--green) 80%,var(--ink,#333));
     --bg:var(--ds-bg,#EDEDE9); --surface:var(--ds-surface,#FFFFFF);
     --soft:color-mix(in srgb,var(--surface) 93%,var(--bg));
@@ -446,7 +453,7 @@
   .ds-product-price[data-off]::after{
     content:"-" attr(data-off) "%";position:absolute;top:10px;right:10px;z-index:4;
     padding:4px 7px;border-radius:3px;transform:rotate(3deg);
-    background:var(--green);color:var(--on-success);
+    background:var(--green-badge);color:var(--on-success);
     font:800 11px var(--mono);letter-spacing:0;
     box-shadow:0 8px 16px -10px rgba(0,0,0,.55);
   }
@@ -720,7 +727,7 @@
   .pdp-gallery:not(:has(img[src]:not([src=""]))) .pdp-shot::after{content:"▣";font-size:96px;color:color-mix(in srgb,var(--ink) 30%,transparent)}
   .pdp-media-tag{
     position:absolute;z-index:3;top:20px;left:14px;padding:6px 10px;border-radius:3px;transform:rotate(-3deg);
-    background:var(--green);color:var(--on-success);font:800 12px var(--mono);
+    background:var(--green-badge);color:var(--on-success);font:800 12px var(--mono);
     box-shadow:0 10px 20px -14px rgba(0,0,0,.6);
   }
   .pdp-media-tag:empty{display:none}
@@ -842,7 +849,7 @@
     --paper:color-mix(in srgb,var(--yellow) 8%,var(--surface));
     --ink:#F1F2F4; --ink-2:#D6D8DD; --muted:#A2A6AE;
     --blue-soft:color-mix(in srgb,var(--blue) 26%,#141518);
-    --green:#4ADE80; --green-soft:color-mix(in srgb,var(--green) 20%,#141518);
+    --green:#4ADE80; --green-badge:#4ADE80; --green-soft:color-mix(in srgb,var(--green) 20%,#141518);
     --green-ink:#7BE6A4;
     /* En noche el mismo 42% de tinta queda muy luminoso (~#8A8A93): se
        baja a 34% para que el filete fuerte quede en ~3:1 sin endurecer

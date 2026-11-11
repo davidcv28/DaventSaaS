@@ -63,11 +63,21 @@
   --sp-muted: var(--mc-muted);
   --sp-line: var(--mc-line);
   --sp-radius: 8px;
-  --sp-accent-text: var(--mc-accent);
+  /* El tema publica --sp-* inline en .store-page y le ganan a la hoja: sin
+     !important el acento-text quedaba en la tinta del acento (--store-
+     accent-ink), que para acentos claros (naranja de 'oferta') no llega a
+     AA sobre los velos de acento. --mc-link es el token de texto-acento
+     seguro en claro y en noche. */
+  --sp-accent-text: var(--mc-link) !important;
   /* "En stock"/estados OK del chrome compartido: el --sp-success del tema
      queda en ~4.4:1 sobre el fondo gris; el verde-tinta del diseño ya
      nace oscurecido en claro y aclarado en noche (AA en ambos). */
   --sp-success: var(--mc-green-ink);
+  /* Errores del chrome legal/ecommerce: el --st-danger crudo del tema
+     (#e53935 del diseño base) queda a ~4.2:1 sobre la tarjeta blanca. Se
+     mezcla hacia la tinta como el verde de éxito: AA en claro y, como
+     --mc-ink se aclara en noche, también en oscuro. */
+  --sp-danger: color-mix(in srgb, var(--st-danger, #B42318) 78%, var(--mc-ink));
   --sp-shadow-sm: 0 1px 2px rgba(0, 0, 0, .06), 0 1px 4px -1px rgba(0, 0, 0, .08);
   --sp-shadow-md: 0 2px 6px -2px rgba(0, 0, 0, .12), 0 12px 28px -16px rgba(0, 0, 0, .28);
   --sp-chrome: var(--mc-yellow);
@@ -749,6 +759,31 @@
   border-color: var(--mc-line);
 }
 
+/* Bandas de acento del layout base (años de trayectoria, cifras y CTA de
+   cierre): el motor las pinta con la tinta del acento (--sp-band-c1 →
+   --store-accent-ink) y el texto secundario va en blanco al 82-88 %. Con
+   acentos claros como el naranja de 'oferta' eso queda a ~3.5:1. Mercado
+   ya tiene su lenguaje de banda — masthead y portada usan --mc-yellow con
+   la tinta que el tema garantiza a AA (--mc-on-band / --mc-on-band-2):
+   se repintan con esos tokens. */
+.store-page[data-template='mercado'] :is(.sp-about-years, .sp-cta-inner),
+.store-page[data-template='mercado'] .sp-stats:not(.is-cards) .sp-stats-grid {
+  background: var(--mc-yellow);
+  color: var(--mc-on-band);
+}
+.store-page[data-template='mercado'] :is(.sp-about-years strong, .sp-stat strong, .sp-cta-title) { color: var(--mc-on-band); }
+.store-page[data-template='mercado'] :is(.sp-about-years span, .sp-stat span, .sp-cta-text) { color: var(--mc-on-band-2); }
+
+/* Textos que el layout base tiñe con --store-accent-ink directo (sin pasar
+   por --sp-accent-text): sobre velos de acento claro caen bajo AA. El link
+   del diseño es el token de texto-acento seguro en ambos modos. */
+.store-page[data-template='mercado'] :is(.sp-about-mission-label, .sp-services .sp-eyebrow) { color: var(--mc-link); }
+
+/* Precio de tarjeta: la regla [data-st-palette] de store-page.css fija el
+   acento crudo (--st-accent) y el naranja de 'oferta' queda a 2.9:1 sobre
+   la tarjeta blanca. La piel ya declara su tinta en --tpc-price-ink. */
+.store-page[data-template='mercado'] .tpc-price { color: var(--tpc-price-ink); }
+
 /* ==========================================================================
    CATÁLOGO / FICHA / SERVICIOS — puente sobre las vistas de Raíz
    Se montan en un subárbol `.store-page[data-template='raiz']` (.mc-skin).
@@ -768,7 +803,9 @@
   --rz-muted: var(--mc-muted);
   --rz-accent: var(--mc-accent-raw);
   --rz-accent-soft: color-mix(in srgb, var(--mc-blue) 8%, var(--mc-surface));
-  --rz-accent-text: var(--mc-accent);
+  /* --mc-link (no --mc-accent): en noche se aclara solo; --mc-accent queda
+     en el azul profundo y no llega a AA sobre las superficies oscuras. */
+  --rz-accent-text: var(--mc-link);
   --rz-accent-deep: var(--mc-blue-deep);
   --rz-accent-deep-2: #1E55A8;
   --rz-band-1: var(--mc-blue-deep);
@@ -813,7 +850,7 @@
   --sp-muted: var(--mc-muted);
   --sp-line: var(--mc-line);
   --sp-radius: 6px;
-  --sp-accent-text: var(--mc-accent);
+  --sp-accent-text: var(--mc-link);
 
   min-height: 0;
   background: var(--mc-bg);
@@ -952,6 +989,10 @@
   --mc-ink-2: #D3D6DB;
   --mc-muted: #A0A5AE;
   --mc-link: color-mix(in srgb, var(--mc-blue) 55%, #FFFFFF);
+  /* El acento como TEXTO (sello DAVENT del pie) solo se usa sobre
+     superficies: en noche el azul profundo queda a ~2.5:1, el link
+     aclarado da AA. */
+  --mc-accent: var(--mc-link);
   /* Sobre superficie oscura el verde de marca queda por debajo de AA. */
   --mc-green-ink: #5BD68A;
   /* "Ver producto" de la tarjeta: --mc-blue-deep fijo queda en ~2.5:1
@@ -1014,6 +1055,11 @@
    aclarado para noche y da AA. */
 .store-page[data-template='mercado'][data-store-theme='dark'] .sp-about-mission-label,
 .store-page[data-template='mercado'][data-store-theme='dark'] .sp-davent-badge strong { color: var(--mc-link); }
+/* La caja de misión hereda --sp-soft (velo del acento): con acentos
+   brillantes como el #ffc400 de noche el velo queda marrón-oliva y el
+   link aclarado no llega a AA. Se pasa al neutro del diseño, igual que
+   el resto de las tarjetas oscuras. */
+.store-page[data-template='mercado'][data-store-theme='dark'] .sp-about-mission { background: var(--mc-soft); }
 .store-page[data-template='mercado'][data-store-theme='dark'] .sp-captcha-q {
   color: var(--mc-link);
   border-color: color-mix(in srgb, var(--mc-blue) 55%, var(--mc-line));
