@@ -61,7 +61,7 @@
 }
 [data-design='mercado'][data-theme] :is(.ec-auth, .ec-account) ::selection {
   background: var(--dz-accent-ink);
-  color: var(--sp-on-band, #fff);
+  color: var(--dz-accent);
 }
 
 /* ===========================================================================
@@ -81,7 +81,7 @@
 /* Ticket de marca. */
 [data-design='mercado'] .ec-auth .ec-auth-brand {
   padding: clamp(20px, 3vw, 34px);
-  color: var(--sp-on-band, #fff);
+  color: var(--dz-accent-ink);
   background: var(--dz-accent);
 }
 [data-design='mercado'] .ec-auth .ec-auth-brand::before { opacity: .12; mix-blend-mode: multiply; }
@@ -350,8 +350,8 @@
   padding: 11px 13px;
   border: 1px solid color-mix(in srgb, var(--dz-accent-ink) 18%, transparent);
   border-radius: var(--dz-radius-sm);
-  background: var(--dz-accent-ink);
-  color: var(--sp-on-band, #fff);
+  background: var(--dz-accent);
+  color: var(--dz-accent-ink);
 }
 [data-design='mercado'][data-theme] .ec-account .acc-mhead .acc-tele {
   display: none;
@@ -401,7 +401,7 @@
 [data-design='mercado'][data-theme] .ec-account .acc-tab.is-on {
   background: var(--dz-accent-ink);
   border-color: color-mix(in srgb, var(--dz-accent-ink) 34%, transparent);
-  color: var(--sp-on-band, #fff);
+  color: var(--dz-accent);
 }
 [data-design='mercado'][data-theme] .ec-account .acc-tab.is-on .acc-idx { opacity: .8; }
 
@@ -433,7 +433,7 @@
   border-radius: 10px;
   background: var(--dz-accent-ink);
   border: 1px solid color-mix(in srgb, var(--dz-accent-ink) 20%, transparent);
-  color: var(--sp-on-band, #fff);
+  color: var(--dz-accent);
 }
 [data-design='mercado'][data-theme] .ec-account :is(.acc-gate-title, .acc-auth-title) {
   font-family: var(--dz-display); font-weight: 800; letter-spacing: -.03em; color: var(--dz-ink);
@@ -480,15 +480,17 @@
     padding: 16px;
     border: 1px solid color-mix(in srgb, var(--dz-accent-ink) 18%, transparent);
     border-radius: var(--dz-radius);
-    background: var(--dz-accent-ink);
-    color: var(--sp-on-band, #fff);
+    background: var(--dz-accent);
+    color: var(--dz-accent-ink);
     box-shadow: 0 1px 2px rgba(0, 0, 0, .08);
   }
   [data-design='mercado'][data-theme] .ec-account .acc-side .acc-tele {
+    flex: 1 0 100%;
     color: color-mix(in srgb, var(--dz-accent-ink) 78%, transparent);
   }
   [data-design='mercado'][data-theme] .ec-account .acc-id {
-    gap: 11px;
+    flex-wrap: wrap;
+    gap: 9px 11px;
     padding-bottom: 12px;
     border-bottom: 1px dashed color-mix(in srgb, var(--dz-accent-ink) 32%, transparent);
   }

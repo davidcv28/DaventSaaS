@@ -101,6 +101,10 @@
   --tpc-flag-track: 0;
   --tpc-offer-bg: var(--mc-green);
   --tpc-offer-ink: var(--mc-on-green);
+  /* "En stock": el fallback --sp-success queda en 4.48:1 sobre el fondo
+     gris del diseño (AA pide 4.5). El verde-tinta del diseño ya nace
+     oscurecido/aclarecido por modo. */
+  --tpc-stock-ink: var(--mc-green-ink);
   --tpc-quick-bg: var(--mc-blue);
   --tpc-add-radius: 8px;
   --tpc-add-bg: var(--mc-blue);
@@ -289,6 +293,62 @@
 .store-page[data-template='mercado'] .sp-foot .sp-davent-badge:hover { border-color: var(--mc-accent); background: var(--mc-soft); }
 .store-page[data-template='mercado'] .sp-foot-heading { color: var(--mc-muted); }
 .store-page[data-template='mercado'] .sp-foot-col a:hover { color: var(--mc-link); }
+
+/* ==========================================================================
+   PIEZAS COMPARTIDAS — repintadas a la paleta mc en ambos temas
+   El site_theme publicado emite --sp-card/--sp-card-solid INLINE (juego
+   claro, que "manda en ambos modos"): en modo noche esas superficies quedan
+   blancas con la tinta clara del diseño encima (formulario, hoja "Más",
+   drawer del carrito, tarjeta de misión — texto invisible). Pintarlas con
+   --mc-* es neutro en claro (#FFF = --mc-surface) y las vuelve oscuras en
+   noche, donde --mc-ink acompaña siempre.
+   ========================================================================== */
+.store-page[data-template='mercado'] :is(
+  .sp-form, .sp-about-card, .sp-empty, .sp-drawer, .sp-modal,
+  .sp-more-sheet, .ec-cart-panel, .sp-sort, .sp-price, .sp-hl
+) {
+  background: var(--mc-surface);
+  border-color: var(--mc-line);
+  color: var(--mc-ink);
+}
+/* El foco del input compartido vuelve a --sp-card (blanco congelado): en
+   noche era el único campo que se encendía blanco con texto claro. */
+.store-page[data-template='mercado'] .sp-input:focus { background: var(--mc-surface); }
+/* Icon-buttons fuera del masthead (refresco de captcha, cierres de
+   drawer/modal): el --sp-card congelado los dejaba blancos con icono
+   claro en noche. */
+.store-page[data-template='mercado'] :is(.sp-form, .sp-drawer, .sp-modal) .sp-icon-btn,
+.store-page[data-template='mercado'] .sp-captcha-row .sp-icon-btn {
+  background: var(--mc-soft);
+  border-color: var(--mc-line);
+  color: var(--mc-ink-2);
+  box-shadow: none;
+}
+/* Tab bar móvil: --sp-card-solid congelado la dejaba clara en noche; el
+   activo usaba --store-accent (sky = 4.1:1 sobre blanco, bajo AA). El
+   link del diseño da AA en claro y en noche. */
+.store-page[data-template='mercado'] .sp-tabbar {
+  background: color-mix(in srgb, var(--mc-surface) 90%, transparent);
+  border-top-color: var(--mc-line);
+}
+.store-page[data-template='mercado'] .sp-tab { color: var(--mc-muted); }
+.store-page[data-template='mercado'] .sp-tab.active { color: var(--mc-link); }
+.store-page[data-template='mercado'] .sp-tab.active::before { background: var(--mc-link); }
+.store-page[data-template='mercado'] .sp-tab:active { background: var(--mc-soft); }
+/* Drawer del carrito: CTA y links con la marca del marketplace (el acento
+   del dueño — sky, lima… — no pisa AA sobre el panel). */
+.store-page[data-template='mercado'] .ec-cart-cta { background: var(--mc-blue); color: var(--mc-on-blue); }
+.store-page[data-template='mercado'] .ec-cart-cta:hover { background: var(--mc-blue-deep); filter: none; }
+.store-page[data-template='mercado'] .ec-cart-link { color: var(--mc-link); }
+.store-page[data-template='mercado'] .ec-cart-count {
+  background: color-mix(in srgb, var(--mc-blue) 12%, transparent);
+  color: var(--mc-link);
+}
+.store-page[data-template='mercado'] .ec-cart-discount { color: var(--mc-green-ink); }
+.store-page[data-template='mercado'] .ec-cart-empty-ico {
+  background: color-mix(in srgb, var(--mc-blue) 10%, transparent);
+  color: var(--mc-link);
+}
 
 /* ==========================================================================
    LANDING — hero, categorías, ofertas, destacados y confianza
@@ -909,6 +969,18 @@
   --rz-inverse-bg-2: #16191D;
 }
 .store-page[data-template='mercado'][data-store-theme='dark'] .mc-product .rz-pdp-frame { background: var(--mc-surface); }
+
+/* Tinta de acento que el chrome compartido saca del --store-accent y
+   --store-accent-ink del dueño: sobre superficies oscuras cae a ~2.5:1
+   (etiqueta de misión, captcha, sello DAVENT). El link del diseño está
+   aclarado para noche y da AA. */
+.store-page[data-template='mercado'][data-store-theme='dark'] .sp-about-mission-label,
+.store-page[data-template='mercado'][data-store-theme='dark'] .sp-davent-badge strong { color: var(--mc-link); }
+.store-page[data-template='mercado'][data-store-theme='dark'] .sp-captcha-q {
+  color: var(--mc-link);
+  border-color: color-mix(in srgb, var(--mc-blue) 55%, var(--mc-line));
+  background: color-mix(in srgb, var(--mc-blue) 16%, transparent);
+}
 
 /* ==========================================================================
    RESPONSIVE

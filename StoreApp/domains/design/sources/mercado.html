@@ -828,6 +828,9 @@
     --link:color-mix(in srgb,var(--blue) 55%,#FFFFFF);
     --footer-bg:#0C0D10;
     --ribbon-bg:#0C0D10;
+    /* El rojo crudo #c00 del estado de opiniones caía a ~3:1 sobre
+       #1E2024: rojo levantado para noche. */
+    --error:#FF8A80;
   }
   html[data-ds-theme="dark"] .kicker{background:var(--yellow);color:var(--on-accent)}
   html[data-ds-theme="dark"] .kicker-dot{background:var(--on-accent);box-shadow:0 0 0 3px color-mix(in srgb,var(--on-accent) 22%,transparent)}
@@ -848,7 +851,7 @@
   html[data-ds-theme="dark"] .hero-glyph{-webkit-text-stroke-color:color-mix(in srgb,var(--ink) 14%,transparent)}
   html[data-ds-theme="dark"] .hero-card{background:var(--surface);color:var(--ink);border-color:var(--line)}
   html[data-ds-theme="dark"] .hero-card span:not(.tag){color:var(--muted)}
-  html[data-ds-theme="dark"] .btn-ghost{background:var(--surface);border-color:var(--line);color:var(--ink)}
+  html[data-ds-theme="dark"] .btn-ghost{background:var(--surface);border-color:color-mix(in srgb,var(--ink) 26%,var(--line));color:var(--ink)}
   html[data-ds-theme="dark"] .btn-ghost:hover{border-color:var(--muted)}
   html[data-ds-theme="dark"] .search{background:var(--soft);box-shadow:0 0 0 1px color-mix(in srgb,var(--ink) 10%,transparent)}
   html[data-ds-theme="dark"] .search-input{color:var(--ink)}
@@ -860,7 +863,16 @@
   html[data-ds-theme="dark"] .cat-aside,
   html[data-ds-theme="dark"] .cat-results,
   html[data-ds-theme="dark"] .cat-view{background:var(--surface)}
-  html[data-ds-theme="dark"] .trust-item .glyph{background:var(--soft);color:var(--on-dark)}
+  /* El glifo de confianza sobre --soft (#26282D) se fundía con la banda
+     --paper (#2E2C20): sello amarillo con tinta, misma mano que el
+     sticker y .m-sheet-brand .mark. */
+  html[data-ds-theme="dark"] .trust-item .glyph{background:var(--yellow);color:var(--on-accent)}
+  /* Checkbox y caja "sin foto": el 30%/16% de tinta quedaba al límite
+     sobre #1E2024; un punto más de mezcla para que se lean. */
+  html[data-ds-theme="dark"] .f-check input{border-color:color-mix(in srgb,var(--ink) 45%,transparent)}
+  html[data-ds-theme="dark"] .f-check input:hover{border-color:color-mix(in srgb,var(--ink) 65%,transparent)}
+  html[data-ds-theme="dark"] .ds-product-img.is-empty::before{border-color:color-mix(in srgb,var(--ink) 26%,transparent)}
+  html[data-ds-theme="dark"] .ds-product-img.is-empty::after{color:color-mix(in srgb,var(--ink) 34%,transparent)}
   html[data-ds-theme="dark"] .hero-stamp{background:var(--yellow);color:var(--on-accent)}
 
   /* ==========================================================
