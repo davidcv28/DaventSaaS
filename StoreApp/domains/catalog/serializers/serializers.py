@@ -176,9 +176,10 @@ class ProductPublicSerializer(serializers.ModelSerializer):
     discount                    =   serializers.SerializerMethodField()
     rating_avg                  =   serializers.SerializerMethodField()
     rating_count                =   serializers.SerializerMethodField()
+    available_stock             =   serializers.SerializerMethodField()
     class Meta:
         model                   =   Product
-        fields                  =   ['id', 'name', 'description', 'price', 'offer_price', 'features', 'image', 'category', 'brand', 'created_at', 'discount', 'rating_avg', 'rating_count']
+        fields                  =   ['id', 'name', 'description', 'price', 'offer_price', 'features', 'image', 'category', 'brand', 'created_at', 'discount', 'rating_avg', 'rating_count', 'available_stock']
     def get_image(self, product):
         return object_url(product.image_key)
     def get_offer_price(self, product):
@@ -208,6 +209,15 @@ class ProductPublicSerializer(serializers.ModelSerializer):
         return round(avg, 1) if avg is not None else None
     def get_rating_count(self, product):
         return getattr(product, 'rating_count', None)
+    def get_available_stock(self, product):
+        #El queryset público anota en una sola consulta las unidades de
+        #pedidos PENDING_PAYMENT. NULL mantiene el contrato de inventario
+        #ilimitado; para stock controlado, la reserva nunca lo vuelve negativo.
+        stock = product.stock
+        if stock is None:
+            return None
+        reserved = getattr(product, 'pending_stock', 0) or 0
+        return max(stock - reserved, 0)
 #=========================================
 # REVIEW SERIALIZER (lectura del dueño: moderación desde el panel)
 #=========================================

@@ -65,7 +65,7 @@ const added = ref(false)
 let addedTimer = 0
 async function addToCart(e) {
   e?.stopPropagation?.()
-  if (adding.value || !canBuy.value) return
+  if (adding.value || !canBuy.value || stockExhausted.value) return
   adding.value = true
   try {
     const res = await cartStore.addToCart(props.p.id, 1, props.p.name)
@@ -86,9 +86,22 @@ const isNew = computed(() => isNewProduct(props.p))
 const price = computed(() => formatPrice(effectivePrice(props.p)))
 const oldPrice = computed(() => formatPrice(props.p.price))
 const eyebrow = computed(() => [props.cat, props.brand].filter(Boolean).join(' · '))
-const ariaLabel = computed(() =>
-  offer.value != null ? `${props.p.name} — ${price.value} (antes ${oldPrice.value})` : `${props.p.name} — ${price.value}`
-)
+const ecommerceEnabled = computed(() => canBuy.value)
+const stockLabel = computed(() => {
+  if (!ecommerceEnabled.value || props.p.available_stock === undefined) return ''
+  const stock = props.p.available_stock
+  if (stock === null) return 'Stock ilimitado'
+  if (typeof stock !== 'number' || !Number.isFinite(stock) || stock < 0) return ''
+  if (stock === 0) return 'Agotado'
+  return `${new Intl.NumberFormat('es-AR').format(stock)} ${stock === 1 ? 'disponible' : 'disponibles'}`
+})
+const stockExhausted = computed(() => ecommerceEnabled.value && props.p.available_stock === 0)
+const ariaLabel = computed(() => {
+  const base = offer.value != null
+    ? `${props.p.name} — ${price.value} (antes ${oldPrice.value})`
+    : `${props.p.name} — ${price.value}`
+  return stockLabel.value ? `${base}, ${stockLabel.value}` : base
+})
 
 // Imagen: fade-in al cargar y placeholder amigable si la URL está rota —
 // una foto caída no muestra el ícono de imagen rota del navegador.
@@ -130,7 +143,9 @@ onBeforeUnmount(() => clearTimeout(addedTimer))
       <ProductStars v-if="stars && p.rating_count" :avg="p.rating_avg" :count="p.rating_count" :icon="starsIcon" :size="starsSize" />
       <span v-if="desc" class="tpc-desc" :title="desc">{{ desc }}</span>
       <slot name="tags" :p="p" />
-      <span class="tpc-stock"><i aria-hidden="true"></i>En stock</span>
+      <span v-if="stockLabel" class="tpc-stock" :class="{ 'is-out': p.available_stock === 0 }">
+        <i aria-hidden="true"></i>{{ stockLabel }}
+      </span>
       <span class="tpc-foot">
         <slot name="foot" :p="p" :price="price" :old-price="oldPrice" :offer="offer"
           :can-buy="canBuy" :added="added" :adding="adding" :buy="addToCart">
@@ -139,10 +154,10 @@ onBeforeUnmount(() => clearTimeout(addedTimer))
             <span v-if="save" class="tpc-save">{{ save }}</span>
           </span>
           <a v-if="addHref" class="tpc-add" :href="addHref" target="_blank" rel="noopener" :aria-label="addLabel || `Pedir ${p.name}`" @click.stop><AppIcon name="plus" :size="20" /></a>
-          <button v-else-if="canBuy" type="button" class="tpc-add tpc-cart" :class="{ 'is-added': added }" :disabled="adding"
-            :aria-label="added ? `${p.name} agregado al carrito` : `Agregar ${p.name} al carrito`"
-            :title="added ? 'Agregado' : 'Agregar al carrito'" @click.stop="addToCart">
-            <AppIcon :name="added ? 'check' : 'shopping-cart'" :size="20" />
+          <button v-else-if="canBuy" type="button" class="tpc-add tpc-cart" :class="{ 'is-added': added }" :disabled="adding || stockExhausted"
+            :aria-label="stockExhausted ? `${p.name} agotado` : added ? `${p.name} agregado al carrito` : `Agregar ${p.name} al carrito`"
+            :title="stockExhausted ? 'Agotado' : added ? 'Agregado' : 'Agregar al carrito'" @click.stop="addToCart">
+            <AppIcon :name="stockExhausted ? 'x' : added ? 'check' : 'shopping-cart'" :size="20" />
           </button>
           <span v-else-if="go" class="tpc-go" aria-hidden="true">{{ goLabel }}<AppIcon name="arrow-right" :size="15" /></span>
         </slot>
@@ -158,4 +173,12 @@ onBeforeUnmount(() => clearTimeout(addedTimer))
 .tpc-cart { cursor: pointer; font: inherit; padding: 0; }
 .tpc-cart.is-added { background: #16a34a; }
 .tpc-cart:disabled { opacity: .6; cursor: default; }
+.tpc-stock {
+  max-width: 100%;
+  min-width: 0;
+  flex-wrap: wrap;
+  line-height: 1.25;
+  overflow-wrap: anywhere;
+}
+.tpc-stock.is-out { color: var(--sp-danger, #b42318); }
 </style>

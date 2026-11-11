@@ -19,6 +19,9 @@ from rest_framework.test import APIClient
 from AdminApp.domains.locations.models import City, Province, ZipCode
 from AdminApp.domains.suscriptions.models import Suscription, SuscriptionPlan
 from AdminApp.domains.users.models import UserProfile
+from StoreApp.domains.catalog.models import Product
+from StoreApp.domains.customers.models import Customer
+from StoreApp.domains.orders.models import Order, OrderItem
 from StoreApp.domains.stores.models import (
     Store,
     StoreCarouselImage,
@@ -170,6 +173,79 @@ class StoreCatalogToggleTests(TestCase):
         response        =   APIClient().get(f'{STORES_URL}public/mi-tienda/')
         self.assertEqual(response.status_code, 200)
         self.assertFalse(response.data['customization']['show_catalog'])
+
+
+class PublicCatalogStockTests(TestCase):
+    """El stock público refleja reservas actuales sin invalidar todo el catálogo."""
+
+    def setUp(self):
+        cache.clear()
+        _, profile = _make_user(verified = True)
+        _grant(profile, has_public_link = True)
+        self.store = Store.objects.create(user = profile, slug = 'mi-tienda')
+        StoreCustomization.objects.create(
+            store = self.store,
+            show_catalog = True,
+            site_templates = ['landing', 'catalog'],
+        )
+        self.customer = Customer.objects.create(email = 'comprador@example.com', password = '!')
+
+    def _product(self, name, stock):
+        return Product.objects.create(store = self.store, name = name, price = 10, stock = stock)
+
+    def _reserve(self, product, qty, *, status = Order.Status.PENDING_PAYMENT, number = 1):
+        order = Order.objects.create(
+            store = self.store,
+            number = number,
+            tracking_token = f'test-stock-{number}',
+            customer = self.customer,
+            customer_email = self.customer.email,
+            payment_method = Order.PaymentMethod.TRANSFER,
+            status = status,
+            expires_at = timezone.now() + timedelta(hours = 1),
+        )
+        OrderItem.objects.create(
+            order = order,
+            product = product,
+            name = product.name,
+            unit_price = 10,
+            line_total = 10 * qty,
+            qty = qty,
+        )
+        return order
+
+    def _catalog_products(self):
+        response = APIClient().get(f'{STORES_URL}public/mi-tienda/catalog/')
+        self.assertEqual(response.status_code, 200)
+        return {item['name']: item for item in response.data['products']}
+
+    def test_available_stock_contract_for_limited_reserved_exhausted_and_unlimited(self):
+        self._product('Limitado', 8)
+        reserved = self._product('Reservado', 8)
+        exhausted = self._product('Agotado', 2)
+        unlimited = self._product('Ilimitado', None)
+        self._reserve(reserved, 3)
+        self._reserve(reserved, 2, status = Order.Status.PAID, number = 2)
+        self._reserve(exhausted, 3, number = 3)
+        self._reserve(unlimited, 4, number = 4)
+
+        products = self._catalog_products()
+        self.assertEqual(products['Limitado']['available_stock'], 8)
+        self.assertEqual(products['Reservado']['available_stock'], 5)
+        self.assertEqual(products['Agotado']['available_stock'], 0)
+        self.assertIsNone(products['Ilimitado']['available_stock'])
+
+    def test_available_stock_is_fresh_when_catalog_payload_is_cached(self):
+        product = self._product('Cacheado', 5)
+        self.assertEqual(self._catalog_products()['Cacheado']['available_stock'], 5)
+
+        self._reserve(product, 2)
+        refreshed = self._catalog_products()
+        self.assertEqual(refreshed['Cacheado']['available_stock'], 3)
+
+        Product.objects.filter(pk = product.pk).update(stock = 1)
+        refreshed = self._catalog_products()
+        self.assertEqual(refreshed['Cacheado']['available_stock'], 0)
 
 
 class PublicEndpointsIgnoreStaleTokenTests(TestCase):

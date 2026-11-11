@@ -254,6 +254,41 @@ def _natural_key(text):
     """Orden "humano" de los valores de una faceta: 2 < 10, S < XL."""
     return [int(piece) if piece.isdigit() else piece.casefold() for piece in re.split(r'(\d+)', str(text))]
 
+def _pending_stock_subquery():
+    """Cantidad reservada por producto sin consultar cada línea por separado."""
+    from django.db.models import IntegerField, OuterRef, Subquery, Sum
+
+    from StoreApp.domains.orders.models import OrderItem
+    return Subquery(
+        OrderItem.objects.filter(
+            product_id = OuterRef('pk'),
+            order__status = 'PENDING_PAYMENT',
+        ).order_by().values('product_id').annotate(
+            quantity = Sum('qty'),
+        ).values('quantity')[:1],
+        output_field = IntegerField(),
+    )
+
+def _refresh_cached_catalog_stock(data, store):
+    """Actualiza disponibilidad del payload cacheado con una consulta por lote."""
+    products = data.get('products') or []
+    product_ids = [item.get('id') for item in products if item.get('id') is not None]
+    if not product_ids:
+        return
+    from StoreApp.domains.catalog.models import Product
+    stock_by_id = {
+        product_id: (stock, reserved)
+        for product_id, stock, reserved in Product.objects.filter(store = store, pk__in = product_ids)
+        .annotate(pending_stock = _pending_stock_subquery())
+        .values_list('pk', 'stock', 'pending_stock')
+    }
+    for item in products:
+        values = stock_by_id.get(item.get('id'))
+        if values is None:
+            continue
+        stock, reserved = values
+        item['available_stock'] = None if stock is None else max(stock - (reserved or 0), 0)
+
 #Solo estos params cambian el payload del catálogo público. Cualquier otro
 #(?x=<aleatorio>) se ignora en la huella: sin la whitelist cada query string
 #arbitraria creaba una entrada nueva del payload completo (cache flooding).
@@ -916,6 +951,10 @@ class StoreViewSet(StoreBaseViewSet):
         if data is None:
             data    =   self._public_catalog_data(request, store, customization)
             cache_set(cache_key, data, PUBLIC_CACHE_TTL)
+        else:
+            #El catálogo puede seguir cacheado, pero stock y reservas cambian
+            #con pedidos. Refrescarlos juntos evita respuestas obsoletas y N+1.
+            _refresh_cached_catalog_stock(data, store)
         response    =   Response(data, status = status.HTTP_200_OK)
         #Idem /public/<slug>/: el visitante que pasa de la portada al catálogo
         #o a una ficha no vuelve a pegarle a la API por el mismo listado.
@@ -941,7 +980,9 @@ class StoreViewSet(StoreBaseViewSet):
         #los miembros los piden por /api/customer/stores/<slug>/
         #exclusive-products/ y para el resto ni siquiera se sabe que
         #existen (tampoco cuentan en facetas ni products_count).
-        products        =   Product.objects.filter(store = store, is_active = True, is_exclusive = False).select_related('category', 'brand')
+        products        =   Product.objects.filter(store = store, is_active = True, is_exclusive = False).select_related('category', 'brand').annotate(
+            pending_stock = _pending_stock_subquery(),
+        )
         #La valoración solo se anota si el dueño habilitó opiniones y el
         #plan las incluye (has_product_comments, premium): score 0-5 =
         #5 × likes/votos (is_positive binario — el promedio sale del ratio

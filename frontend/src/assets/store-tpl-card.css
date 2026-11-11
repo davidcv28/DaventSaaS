@@ -105,8 +105,8 @@
   color: var(--tpc-idx-ink, var(--sp-muted, #64748b));
   pointer-events: none;
 }
-/* Tag de disponibilidad: el catálogo solo publica productos en stock (no
-   hay inventario en el sistema), así que se muestra siempre. */
+/* Disponibilidad actual del producto; el frontend la muestra solo con venta
+   online habilitada y distingue unidades, stock ilimitado y agotado. */
 .tpc-stock {
   display: inline-flex;
   align-items: center;

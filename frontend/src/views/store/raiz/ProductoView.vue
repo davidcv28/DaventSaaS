@@ -25,8 +25,7 @@ const cartStore = useCartStore()
 
 // Venta online efectiva (la calcula el backend: ecommerce_enabled + fiscal
 // completo). Con orders_enabled la ficha suma "Agregar al carrito" como CTA
-// principal; sin él queda el flujo de consulta de siempre. El stock NO se
-// expone en el catálogo público: el cart valida y avisa si no alcanza.
+// principal; sin él queda el flujo de consulta de siempre.
 const ordersEnabled = computed(() => Boolean(ctx?.ordersEnabled?.value ?? ctx?.ordersEnabled))
 // Tarifa de envío a domicilio del payload público (StoreShippingConfig):
 // home_price null = "a coordinar"; número >= 0 = precio fijo que el
@@ -52,7 +51,6 @@ const shipLine = computed(() => {
 // barra fija móvil) y se cita en el mensaje de WhatsApp cuando es > 1.
 const QTY_MAX = 99
 const qty = ref(1)
-const setQty = (n) => { qty.value = Math.min(QTY_MAX, Math.max(1, Math.round(Number(n)) || 1)) }
 const adding = ref(false)
 const added = ref(false)
 let addedTimer = 0
@@ -71,7 +69,7 @@ const payMethods = computed(() => {
 // corre post-login desde el modal de auth.
 const buying = ref(false)
 async function buyNow() {
-  if (buying.value || !product.value) return
+  if (buying.value || stockExhausted.value || !product.value) return
   buying.value = true
   try {
     await cartStore.buyNow(product.value.id, qty.value, product.value.name, () => router.push(cartStore.checkoutRoute()))
@@ -80,7 +78,7 @@ async function buyNow() {
   }
 }
 async function addToCart() {
-  if (adding.value || !product.value) return
+  if (adding.value || stockExhausted.value || !product.value) return
   adding.value = true
   try {
     const res = await cartStore.addToCart(product.value.id, qty.value, product.value.name)
@@ -143,6 +141,25 @@ const copied = ref(false)
 const ratingIcon = computed(() => 'star')
 
 const product = computed(() => catalog.value.products.find((p) => String(p.id) === String(route.params.productId)) || null)
+const availableStock = computed(() => {
+  const current = product.value
+  if (!current || !Object.prototype.hasOwnProperty.call(current, 'available_stock')) return undefined
+  const raw = current.available_stock
+  if (raw === null) return null
+  const stock = Number(raw)
+  return Number.isFinite(stock) ? Math.max(0, Math.floor(stock)) : null
+})
+const stockExhausted = computed(() => ordersEnabled.value && availableStock.value === 0)
+const stockLine = computed(() => {
+  if (!ordersEnabled.value || !product.value) return null
+  if (availableStock.value === undefined) return null
+  if (availableStock.value === null) return 'Disponibilidad ilimitada'
+  if (availableStock.value === 0) return 'Agotado · sin unidades disponibles'
+  return `${availableStock.value} ${availableStock.value === 1 ? 'unidad' : 'unidades'} disponibles`
+})
+const qtyLimit = computed(() => Math.max(1, Math.min(QTY_MAX, availableStock.value ?? QTY_MAX)))
+const setQty = (n) => { qty.value = Math.min(qtyLimit.value, Math.max(1, Math.round(Number(n)) || 1)) }
+watch(availableStock, () => setQty(qty.value))
 const categoryName = computed(() => catalog.value.categories.find((c) => c.id === product.value?.category)?.name || '')
 const brandName = computed(() => catalog.value.brands.find((b) => b.id === product.value?.brand)?.name || '')
 const hasOffer = computed(() => product.value != null && productOffer(product.value) != null)
@@ -313,8 +330,11 @@ onBeforeUnmount(() => {
                   :height="productDiscount(product).campaign.label_height || undefined"
                   loading="lazy" decoding="async"
                 />
-                <p class="rz-pdp-stock">
-                  <i aria-hidden="true"></i> En stock
+                <p
+                  v-if="stockLine" class="rz-pdp-stock"
+                  :class="{ 'rz-pdp-stock--exhausted': stockExhausted }" role="status"
+                >
+                  <i aria-hidden="true"></i> {{ stockLine }}
                 </p>
                 <p v-if="shipLine" class="rz-pdp-ship">
                   <AppIcon name="truck" :size="15" aria-hidden="true" />
@@ -335,11 +355,11 @@ onBeforeUnmount(() => {
               <div v-if="ordersEnabled" class="rz-pdp-qty" role="group" aria-label="Cantidad">
                 <span class="rz-pdp-qty-lbl">Cantidad</span>
                 <div class="rz-pdp-qty-ctl">
-                  <button type="button" :disabled="qty <= 1" aria-label="Disminuir cantidad" @click="setQty(qty - 1)">
+                  <button type="button" :disabled="qty <= 1 || stockExhausted" aria-label="Disminuir cantidad" @click="setQty(qty - 1)">
                     <AppIcon name="minus" :size="14" aria-hidden="true" />
                   </button>
                   <output class="rz-pdp-qty-num" aria-live="polite">{{ qty }}</output>
-                  <button type="button" :disabled="qty >= QTY_MAX" aria-label="Aumentar cantidad" @click="setQty(qty + 1)">
+                  <button type="button" :disabled="qty >= qtyLimit || stockExhausted" aria-label="Aumentar cantidad" @click="setQty(qty + 1)">
                     <AppIcon name="plus" :size="14" aria-hidden="true" />
                   </button>
                 </div>
@@ -349,19 +369,19 @@ onBeforeUnmount(() => {
                 <div v-if="ordersEnabled" class="rz-pdp-buyrow">
                   <button
                     type="button"
-                    class="rz-btn rz-pdp-buy-btn rz-pdp-cart" :disabled="adding"
+                    class="rz-btn rz-pdp-buy-btn rz-pdp-cart" :disabled="adding || stockExhausted"
                     @click="addToCart"
                   >
-                    <AppIcon :name="added ? 'check' : 'shopping-cart'" :size="17" aria-hidden="true" />
-                    {{ added ? 'Agregado al carrito' : 'Agregar al carrito' }}
+                    <AppIcon :name="stockExhausted ? 'x' : added ? 'check' : 'shopping-cart'" :size="17" aria-hidden="true" />
+                    {{ stockExhausted ? 'Sin stock' : added ? 'Agregado al carrito' : 'Agregar al carrito' }}
                   </button>
                   <button
                     type="button"
                     class="rz-btn rz-btn--ghost rz-pdp-now" :class="{ 'rz-pdp-now-busy': buying }"
-                    :disabled="buying" @click="buyNow"
+                    :disabled="buying || stockExhausted" @click="buyNow"
                   >
                     <AppIcon :name="buying ? 'loader' : 'arrow-right'" :size="15" aria-hidden="true" />
-                    {{ buying ? 'Procesando…' : 'Comprar ahora' }}
+                    {{ stockExhausted ? 'Agotado' : buying ? 'Procesando…' : 'Comprar ahora' }}
                   </button>
                 </div>
                 <a
@@ -447,7 +467,9 @@ onBeforeUnmount(() => {
           </span>
           <button
             v-if="ordersEnabled" type="button" class="rz-btn rz-pdp-stick-btn rz-pdp-stick-cart"
-            :disabled="adding" :aria-label="added ? 'Agregado al carrito' : 'Agregar al carrito'" @click="addToCart"
+            :disabled="adding || stockExhausted"
+            :aria-label="stockExhausted ? 'Producto agotado' : added ? 'Agregado al carrito' : 'Agregar al carrito'"
+            @click="addToCart"
           >
             <AppIcon :name="added ? 'check' : 'shopping-cart'" :size="16" aria-hidden="true" />
           </button>
@@ -511,6 +533,10 @@ onBeforeUnmount(() => {
 </template>
 
 <style scoped>
+:deep(.store-page[data-template='raiz'] .rz-pdp-stock.rz-pdp-stock--exhausted) {
+  color: var(--rz-danger, #b42318);
+}
+
 /* Zoom de la foto principal: la ficha solo tiene una imagen, así que el
    frame entero abre el lightbox (rol=button solo cuando hay foto). */
 .rz-pdp-frame.is-zoomable { cursor: zoom-in; }
