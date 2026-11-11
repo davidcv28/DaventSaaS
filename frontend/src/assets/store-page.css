@@ -29,9 +29,12 @@
   --sp-on-band-2: color-mix(in srgb, var(--sp-on-band) 88%, transparent);
   --sp-on-band-muted: color-mix(in srgb, var(--sp-on-band) 78%, transparent);
   /* Verde de "estado ok" (stock, votos, confirmaciones) con AA como texto:
-     el #0f9d58 histórico daba ~3.3:1 sobre tarjeta clara. */
-  --sp-success: var(--st-success, #0E7A55);
-  --sp-danger: var(--st-danger, #B42318);
+     el #0f9d58 histórico daba ~3.3:1 sobre tarjeta clara. Se mezcla hacia
+     --sp-ink: en claro oscurece el semántico del tema y en noche (tinta
+     clara) lo aclara — un #0e7a3d de tema oscuro o un #e53935 de tema
+     claro llegan a AA sobre la superficie vigente. */
+  --sp-success: color-mix(in srgb, var(--st-success, #0E7A55) 78%, var(--sp-ink));
+  --sp-danger: color-mix(in srgb, var(--st-danger, #B42318) 78%, var(--sp-ink));
   --sp-warning: #B45309;
   --sp-top-h: 64px;
   --sp-tabbar-h: 64px;
@@ -50,17 +53,18 @@
 .store-page[data-store-theme='dark']{
   --sp-bg: radial-gradient(900px 500px at 15% -10%, color-mix(in srgb, var(--store-accent) 14%, transparent), transparent 70%), #0d1220; --sp-card: color-mix(in srgb, #1a2138 72%, transparent); --sp-card-solid: #151b2e; --sp-surface: color-mix(in srgb, #111729 80%, transparent); --sp-ink: #e8ecf7; --sp-ink-2: #c3cbdf; --sp-muted: #93a0bd; --sp-line: #28304d;
   --sp-soft: rgba(255, 255, 255, .08); --sp-accent-text: var(--store-accent);
-  --sp-success: var(--st-success, #6EE7A8);
-  --sp-danger: var(--st-danger, #F97066);
+  --sp-success: color-mix(in srgb, var(--st-success, #6EE7A8) 78%, var(--sp-ink));
+  --sp-danger: color-mix(in srgb, var(--st-danger, #F97066) 78%, var(--sp-ink));
   --sp-warning: #FBBF24;
   --sp-shadow-sm: 0 1px 2px rgba(0, 0, 0, .3);
   --sp-shadow-md: 0 1px 3px rgba(0, 0, 0, .3), 0 8px 24px -12px rgba(0, 0, 0, .6);
 }
 /* Las pieles montan un segundo .store-page interno para las superficies
    reusadas (p. ej. .gy-skin con el catálogo Raíz): sin data-store-theme
-   propia, el bloque base le devuelve los tokens claros. En contexto
-   oscuro el éxito hereda el valor del ancestro. */
-.store-page[data-store-theme='dark'] .store-page{ --sp-success: var(--st-success, #6EE7A8); --sp-danger: var(--st-danger, #F97066); --sp-warning: #FBBF24; }
+   propia, el bloque base le devuelve los tokens claros, así que éxito y
+   peligro toman la mezcla hacia la tinta clara de ese bloque (AA sobre
+   sus tarjetas claras). Acá solo se ajusta el warning al valor nocturno. */
+.store-page[data-store-theme='dark'] .store-page{ --sp-warning: #FBBF24; }
 .store-page *, .store-page *::before, .store-page *::after{ box-sizing: border-box; }
 .store-page a:focus-visible, .store-page button:focus-visible, .store-page input:focus-visible,
 .sp-search:focus-within{ outline: 2px solid var(--store-accent); outline-offset: 2px; }
@@ -1526,7 +1530,7 @@ html:has(.store-page[data-store-theme='dark'])::-webkit-scrollbar-thumb{ backgro
   .sp-testimonials:not(.is-carousel):not(.is-masonry) .sp-testimonial{ flex: 1 1 0; min-width: 280px; scroll-snap-align: start; }
 }
 .sp-testimonial{ position: relative; display: flex; flex-direction: column; gap: 14px; margin: 0; padding: var(--st-card-pad, 24px) var(--st-card-pad, 22px); border: var(--st-border-w, 1px) solid var(--st-border, var(--sp-line)); border-radius: var(--st-radius, var(--sp-radius)); background: var(--st-surface, var(--sp-card)); box-shadow: var(--st-shadow, var(--sp-shadow-sm)); }
-.sp-testimonial-quote{ display: grid; place-items: center; width: 38px; height: 38px; border-radius: 11px; background: color-mix(in srgb, var(--st-accent, var(--store-accent)) 12%, transparent); color: var(--st-accent, var(--sp-accent-text)); }
+.sp-testimonial-quote{ display: grid; place-items: center; width: 38px; height: 38px; border-radius: 11px; background: color-mix(in srgb, var(--st-accent, var(--store-accent)) 12%, transparent); color: var(--sp-accent-text, var(--st-accent)); }
 .store-page[data-store-theme='dark'] .sp-testimonial-quote{ background: color-mix(in srgb, var(--store-accent) 16%, transparent); }
 .sp-testimonial-text{ margin: 0; font-size: 14.5px; line-height: 1.65; color: var(--sp-ink-2); overflow-wrap: anywhere; }
 /* La firma se ancla al pie de la tarjeta: todas las citas terminan en la
@@ -3308,7 +3312,7 @@ Reels— van angostas, las 16:9 anchas). El botón de vivo es Premium. */
 .sp-shop-cats-group + .sp-shop-cats-group{ margin-top: 30px; }
 .sp-shop-cats-head{ display: flex; align-items: baseline; justify-content: space-between; gap: 12px; margin-bottom: 12px; }
 .sp-shop-cats-name{ margin: 0; font-size: 16px; font-weight: 800; color: var(--st-text, var(--sp-ink)); overflow-wrap: anywhere; }
-.sp-shop-cats-more{ display: inline-flex; align-items: center; gap: 4px; flex: none; font-size: 12.5px; font-weight: 700; color: var(--st-accent, var(--sp-accent-text)); text-decoration: none; }
+.sp-shop-cats-more{ display: inline-flex; align-items: center; gap: 4px; flex: none; font-size: 12.5px; font-weight: 700; color: var(--sp-accent-text, var(--st-accent)); text-decoration: none; }
 .sp-shop-cats-more:hover{ text-decoration: underline; }
 .sp-shop-rail{ display: flex; gap: 14px; overflow-x: auto; overscroll-behavior-x: contain; scroll-snap-type: x mandatory; scrollbar-width: thin; padding: 2px 2px 12px; -webkit-overflow-scrolling: touch; }
 .sp-shop-rail > .tpc{ flex: 0 0 min(240px, 68vw); scroll-snap-align: start; }
@@ -3354,7 +3358,7 @@ Reels— van angostas, las 16:9 anchas). El botón de vivo es Premium. */
 .sp-testimonials-head .sp-section-title{ margin-bottom: 0; }
 .sp-rail-nav{ display: flex; gap: 8px; flex: none; }
 .sp-rail-btn{ display: inline-grid; place-items: center; width: 44px; height: 44px; border-radius: 50%; border: 1px solid var(--st-border, var(--sp-line)); background: var(--st-surface, var(--sp-card)); color: var(--st-text, var(--sp-ink-2)); cursor: pointer; transition: border-color .15s, color .15s; }
-.sp-rail-btn:hover{ border-color: var(--st-accent, var(--store-accent)); color: var(--st-accent, var(--sp-accent-text)); }
+.sp-rail-btn:hover{ border-color: var(--st-accent, var(--store-accent)); color: var(--sp-accent-text, var(--st-accent)); }
 .sp-testimonials.is-carousel .sp-testimonials-grid{ display: flex; gap: 16px; overflow-x: auto; overscroll-behavior-x: contain; scroll-snap-type: x mandatory; scrollbar-width: thin; padding: 2px 2px 12px; margin-top: 22px; -webkit-overflow-scrolling: touch; }
 .sp-testimonials.is-carousel .sp-testimonial{ flex: 0 0 min(330px, 82vw); scroll-snap-align: start; }
 .sp-testimonials.is-masonry .sp-testimonials-grid{ display: block; column-width: 300px; column-gap: 18px; }
@@ -3367,7 +3371,7 @@ Reels— van angostas, las 16:9 anchas). El botón de vivo es Premium. */
 .sp-brands-logos{ list-style: none; display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 12px; margin: 0; padding: 0; }
 .sp-brands-logo{ display: flex; align-items: center; gap: 10px; min-width: 0; padding: 14px 16px; border: 1px solid var(--st-border, var(--sp-line)); border-radius: var(--st-radius, var(--sp-radius)); background: var(--st-surface, var(--sp-card)); box-shadow: var(--st-shadow, var(--sp-shadow-sm)); }
 .sp-brands-logo strong{ min-width: 0; font-size: 14px; font-weight: 700; color: var(--st-text, var(--sp-ink)); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.sp-brands-logo-initial{ display: grid; place-items: center; flex: none; width: 34px; height: 34px; border-radius: 50%; background: color-mix(in srgb, var(--st-accent, var(--store-accent)) 13%, transparent); color: var(--st-accent, var(--sp-accent-text)); font-size: 15px; font-weight: 800; }
+.sp-brands-logo-initial{ display: grid; place-items: center; flex: none; width: 34px; height: 34px; border-radius: 50%; background: color-mix(in srgb, var(--st-accent, var(--store-accent)) 13%, transparent); color: var(--sp-accent-text, var(--st-accent)); font-size: 15px; font-weight: 800; }
 .sp-brands-logo-img{ flex: none; width: 34px; height: 34px; object-fit: contain; }
 
 /* ---------- Galería: masonry y riel ---------- */
@@ -3616,7 +3620,7 @@ Reels— van angostas, las 16:9 anchas). El botón de vivo es Premium. */
   .sp-shop-title, .sp-block-title, .sp-brands-title){
   color: var(--st-text, currentColor);
 }
-.store-page[data-st-palette] .tpc-price{ color: var(--st-accent, currentColor); }
+.store-page[data-st-palette] .tpc-price{ color: var(--sp-accent-text, currentColor); }
 .store-page[data-st-palette] :is(
   .sp-card, .tpc, .sp-form, .sp-faq-item, .sp-testimonial, .sp-service,
   .sp-drawer, .sp-filters){
@@ -4008,9 +4012,16 @@ Reels— van angostas, las 16:9 anchas). El botón de vivo es Premium. */
 .store-page[data-st-bgrole][data-store-template]{ background-color: var(--st-bg) !important; }
 
 /* ---------- Paleta extendida: estados ---------- */
-.store-page[data-st-themed] .sp-form-error{ color: var(--st-danger, #dc2626); }
-.store-page[data-st-themed] .sp-open.is-open{ color: var(--st-success, #86efac); }
-.store-page[data-st-themed] .sp-open.is-closed{ color: var(--st-danger, #fca5a5); }
+.store-page[data-st-themed] .sp-form-error{ color: var(--sp-danger, #dc2626); }
+.store-page[data-st-themed] .sp-open.is-open{ color: var(--sp-success, #86efac); }
+.store-page[data-st-themed] .sp-open.is-closed{ color: var(--sp-danger, #fca5a5); }
+/* Los estados del hero se leen sobre la banda de acento (oscura): los
+   semánticos de superficie no llegan a AA ahí. Se usan los mismos tonos
+   claros que ya fija .sp-hal-meta. */
+.store-page[data-st-themed] .sp-hero-meta .sp-open.is-open,
+.store-page[data-st-themed] .sp-hal-meta .sp-open.is-open{ color: #86efac; }
+.store-page[data-st-themed] .sp-hero-meta .sp-open.is-closed,
+.store-page[data-st-themed] .sp-hal-meta .sp-open.is-closed{ color: #fca5a5; }
 
 /* ---------- Tokens privados de las plantillas ----------
    Cada familia mapea SOLO los tokens de tinta/superficie/filete que la
@@ -4364,11 +4375,11 @@ Reels— van angostas, las 16:9 anchas). El botón de vivo es Premium. */
 }
 .sp-aipricing-card{ display: grid; gap: 8px; align-content: start; padding: var(--st-card-pad, 18px); border-radius: var(--st-radius, var(--r-md, 16px)); border: var(--st-border-w, 1px) solid var(--st-border, var(--sp-line)); background: var(--st-surface, var(--sp-card)); box-shadow: var(--st-shadow, var(--sp-shadow-sm)); overflow-wrap: anywhere; }
 .sp-aipricing-name{ margin: 0; font-size: 15px; font-weight: 700; color: var(--st-text, var(--sp-ink)); font-family: var(--st-font-subheading, inherit); }
-.sp-aipricing-amount{ font-size: 24px; font-weight: 800; letter-spacing: -.02em; color: var(--st-accent, var(--sp-ink)); font-family: var(--st-font-heading, inherit); }
+.sp-aipricing-amount{ font-size: 24px; font-weight: 800; letter-spacing: -.02em; color: var(--sp-accent-text, var(--sp-ink)); font-family: var(--st-font-heading, inherit); }
 .sp-aipricing-note{ margin: 0; font-size: 13px; line-height: 1.6; color: var(--st-muted, var(--sp-muted)); }
 .sp-aipricing-feats{ list-style: none; display: grid; gap: 6px; margin: 6px 0 0; padding: 0; }
 .sp-aipricing-feats li{ display: flex; align-items: flex-start; gap: 8px; font-size: 13.5px; line-height: 1.5; color: var(--st-text, var(--sp-ink-2)); }
-.sp-aipricing-feats svg{ flex: none; margin-top: 2px; color: var(--st-accent, var(--sp-accent-text)); }
+.sp-aipricing-feats svg{ flex: none; margin-top: 2px; color: var(--sp-accent-text, var(--st-accent)); }
 /* Variante tabla: filas alineadas, sin tarjetas. */
 .sp-aipricing.is-table .sp-aipricing-list{ gap: 0; border-top: 1px solid var(--sp-line); }
 .sp-aipricing.is-table .sp-aipricing-card{ grid-template-columns: minmax(0, 1.2fr) minmax(0, .6fr) minmax(0, 1.4fr); align-items: center; gap: 12px 18px; border: 0; border-bottom: 1px solid var(--sp-line); border-radius: 0; background: transparent; box-shadow: none; padding: 14px 0; }

@@ -184,11 +184,14 @@ section:has(.ds-plans:empty){display:none!important}
 .ds-stock{
   display:inline-flex;align-items:center;gap:5px;
   font-size:11px;font-weight:600;letter-spacing:.04em;
-  color:var(--ds-success,#0f9d58);
+  color:var(--ds-success-text,var(--ds-success,#0f9d58));
 }
 .ds-stock i{width:6px;height:6px;border-radius:50%;background:currentColor;flex:none}
-/* Sin token del estilo el verde de stock no llega a AA en oscuro. */
-html[data-ds-theme="dark"] .ds-stock{color:var(--ds-success,#5ecf8f)}
+/* Sin token del estilo el verde de stock no llega a AA en oscuro: se
+   aclara hacia blanco un 45% — las superficies de noche son fijas y no
+   las conoce la paleta, así que el ajuste fino por paleta
+   (--ds-success-text) se refuerza con esta mezcla en el modo noche. */
+html[data-ds-theme="dark"] .ds-stock{color:color-mix(in srgb,var(--ds-success-text,var(--ds-success,#5ecf8f)) 55%,#fff)}
 
 /* Opiniones de producto: honeypot fuera de pantalla y pulgar inline. */
 .ds-rev-hp{position:absolute!important;left:-9999px;width:1px;height:1px;overflow:hidden}

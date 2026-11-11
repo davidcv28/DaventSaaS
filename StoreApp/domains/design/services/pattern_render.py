@@ -1245,6 +1245,15 @@ def theme_css(customization, pattern = None, site_theme = None):
         fill = vars_.get(f'--ds-{key}')
         if fill:
             vars_[f'--ds-{key}-ink'] = _contrast_ink(fill)
+    #Mismo trato para el éxito usado como TEXTO (.ds-stock de la hoja del
+    #host): la success de una paleta night sobre superficies oscuras
+    #quedaba a ~3:1 en modo noche. Va después del loop de paleta porque
+    #--ds-success se resuelve ahí.
+    success        =   vars_.get('--ds-success')
+    if surface_bg and success:
+        success_text =   _fix_contrast(success, surface_bg)
+        if success_text:
+            vars_['--ds-success-text'] = success_text
     body = ''.join(f'{name}:{value};' for name, value in vars_.items() if value)
     return f':root{{{body}}}' if body else ''
 
