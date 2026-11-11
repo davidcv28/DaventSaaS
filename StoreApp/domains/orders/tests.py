@@ -527,11 +527,13 @@ class ConcurrentStockTests(TransactionTestCase):
         self.product    =   _make_product(self.store, price = '10.00', stock = 1)
 
     def _run_pair(self, fn_a, fn_b):
-        """Corre dos callables en threads; devuelve {key: resultado|exc}."""
+        """Arranca ambos callables a la vez; devuelve {key: resultado|exc}."""
         results =   {}
+        start   =   threading.Barrier(2)
         def _wrap(key, fn):
             def _runner():
                 try:
+                    start.wait(timeout = 10)
                     results[key]    =   fn()
                 except Exception as exc:    # noqa: BLE001 - el test clasifica la excepción
                     results[key]    =   exc
@@ -544,7 +546,8 @@ class ConcurrentStockTests(TransactionTestCase):
         for t in threads:
             t.start()
         for t in threads:
-            t.join()
+            t.join(timeout = 30)
+        self.assertFalse(any(t.is_alive() for t in threads), 'La carrera de stock quedó bloqueada.')
         return results
 
     def test_concurrent_checkouts_last_unit_one_wins(self):
