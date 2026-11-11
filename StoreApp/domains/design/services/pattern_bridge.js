@@ -2016,17 +2016,31 @@
     }
     paintCart()
   }
-  function initCommerce() {
-    if (root.getAttribute('data-ds-commerce') !== '1') return
+  function injectCommerceCss() {
+    if (document.querySelector('style[data-dsx-css]')) return
     var st = document.createElement('style')
+    st.setAttribute('data-dsx-css', '')
     st.textContent = COMMERCE_CSS
     /* Antes de la hoja del diseño (igual que CHAT_CSS): la base .dsx-*
      * queda DEBAJO — los diseños ganan con sus reglas más específicas
      * (p. ej. `.top .dsx-account` de mercado) sin !important. */
     document.head.insertBefore(st, document.querySelector('style') || null)
+  }
+  /* Entrada "Ingresar"/"Mi cuenta": NO depende de la venta online — el
+   * comprador puede tener cuenta con el carrito apagado (el dueño todavía
+   * no activó e-commerce). Antes vivía dentro de initCommerce y la píldora
+   * desaparecía de toda la web hasta habilitar el checkout. En la vista
+   * previa del Studio no se monta (el documento llega con ?preview=). */
+  function initAccount() {
+    if (/(?:\?|&)preview=/.test(location.search || '')) return
+    injectCommerceCss()
+    mountAccount()
+  }
+  function initCommerce() {
+    if (root.getAttribute('data-ds-commerce') !== '1') return
+    injectCommerceCss()
     injectCardBuys()
     injectPdpBuy()
-    mountAccount()
     mountCart()
     /* El catálogo reordena tarjetas (applyCatalog mueve nodos, no los
      * recrea) y el buscador puede filtrar — los botones inyectados viajan
@@ -2046,6 +2060,7 @@
       pdpObs.observe(document.body, { childList: true, subtree: true })
     }
   }
+  initAccount()
   initCommerce()
   buildFilters()
   initSearch()
