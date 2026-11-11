@@ -73,7 +73,7 @@ PATTERN_VARIABLES = {
     'product_rating_avg':{'type': 'text',  'label': 'Producto: valoración promedio'},
     'product_rating_count': {'type': 'text', 'label': 'Producto: cantidad de valoraciones'},
     'product_features':  {'type': 'list',  'label': 'Producto: características'},
-    'product_shipping':  {'type': 'text',  'label': 'Producto: envío'},
+    'product_shipping':  {'type': 'list',  'label': 'Producto: envío'},
     'product_payments':  {'type': 'list',  'label': 'Producto: medios de pago'},
     'product_related':   {'type': 'list',  'label': 'Producto: relacionados'},
     'product_reviews':   {'type': 'list',  'label': 'Producto: opiniones'},
@@ -889,7 +889,9 @@ def _shipping_line(store):
     (StoreShippingConfig.home_price — NULL = "a coordinar") o retiro sin
     cargo. Vacío cuando la tienda no vende online: el patrón la deja en
     un <p> que queda :empty y la hoja del host lo oculta. El precio es
-    snapshot del pedido — acá solo informa la tarifa vigente.
+    snapshot del pedido — acá solo informa la tarifa vigente. Viaja como
+    fragmento raw: el valor de la tarifa va marcado en .ds-ship-price y la
+    hoja del host lo pinta verde.
     """
     from StoreApp.domains.stores.models import StoreShippingConfig
     from StoreApp.domains.stores.services.commerce import orders_enabled
@@ -897,9 +899,11 @@ def _shipping_line(store):
         return ''
     cfg     =   StoreShippingConfig.objects.filter(store_id = store.pk).only('home_price').first()
     if cfg is None or cfg.home_price is None:
-        return 'Envío a domicilio a coordinar · retiro en el local sin cargo'
+        return ('Envío a domicilio <b class="ds-ship-price">a coordinar</b>'
+                ' · retiro en el local <b class="ds-ship-price">sin cargo</b>')
     price   =   _money(cfg.home_price) if _amount(cfg.home_price) > 0 else 'sin cargo'
-    return f'Envío a domicilio {price} · retiro en el local sin cargo'
+    return (f'Envío a domicilio <b class="ds-ship-price">{price}</b>'
+            ' · retiro en el local <b class="ds-ship-price">sin cargo</b>')
 
 #Iconos de los chips de pago: stroke simple en currentColor (el color lo
 #pone .ds-pay-chip en la hoja del host). Sin fills ni gradientes: la hoja
@@ -964,8 +968,8 @@ def _product_values(store, product, customization, store_name, flags = None):
             'product_name', 'product_description', 'product_price', 'product_old_price',
             'product_offer_pct', 'product_save', 'product_image', 'product_category',
             'product_brand', 'product_ref', 'product_whatsapp_url', 'product_rating_avg',
-            'product_rating_count', 'product_shipping',
-        )}, {'product_features': '', 'product_related': '', 'product_reviews': '', 'product_campaign_label': '', 'product_payments': ''}
+            'product_rating_count',
+        )}, {'product_features': '', 'product_related': '', 'product_reviews': '', 'product_campaign_label': '', 'product_payments': '', 'product_shipping': ''}
     from StoreApp.domains.catalog.services.services import (
         effective_pricing_of,
         running_discounts_of,
@@ -1009,9 +1013,9 @@ def _product_values(store, product, customization, store_name, flags = None):
         'product_whatsapp_url': _product_whatsapp_url(store, customization, product, store_name, amount),
         'product_rating_avg':   rating_avg,
         'product_rating_count': rating_count,
-        'product_shipping':     _shipping_line(store),
     }
     raw = {
+        'product_shipping': _shipping_line(store),
         'product_features': _features_fragment(product),
         'product_related':  _related_fragment(store, product) if flags is None or flags.get('catalog', True) else '',
         'product_reviews':  _reviews_fragment(store, product, customization),

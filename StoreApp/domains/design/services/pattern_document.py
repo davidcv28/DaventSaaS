@@ -180,6 +180,10 @@ section:has(.ds-plans:empty){display:none!important}
    queda :empty y desaparece. El aire superior la separa del precio. */
 .ds-ship{font-size:12px;font-weight:600;line-height:1.45;opacity:.8;margin:12px 0 0}
 .ds-ship:empty{display:none!important}
+/* El valor de la tarifa viaja marcado (.ds-ship-price, fragmento raw) y va
+   siempre en verde de estado: el precio y el "sin cargo" se leen como dato
+   positivo. */
+.ds-ship .ds-ship-price{color:var(--ds-success,#0f9d58)}
 
 /* Medios de pago de la ficha ({{product_payments}}): chips sobrios con
    los métodos habilitados (transferencia/WhatsApp/efectivo/Mercado
