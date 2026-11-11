@@ -70,7 +70,7 @@ html{
   --ds-success:var(--ok);
   --ds-success-ink:var(--accent-ink);
   --ds-radius:var(--r);
-  --ds-radius-btn:var(--r-pill);
+  --ds-radius-btn:.3px;
 }
 *{margin:0;padding:0;box-sizing:border-box}
 html{scroll-behavior:smooth}
@@ -700,6 +700,18 @@ html[data-ds-surface="services"] .top-nav a[data-ds-route="services"]{color:var(
 .pdp-desc:empty{display:none}
 .pdp-ctas{display:flex;flex-wrap:wrap;gap:10px;margin-top:26px}
 .pdp-ctas .btn{flex:1 1 200px}
+/* Compra de la ficha: ancho completo bajo el precio, icono de carrito +
+   etiqueta. Radix .3px como el resto de botones del documento. */
+.pdp-buy{display:flex;align-items:center;justify-content:center;gap:10px;
+  width:100%;min-height:48px;margin:8px 0 0;padding:0 20px;
+  border:0;border-radius:.3px;background:var(--accent);color:var(--accent-ink);
+  font-family:var(--body);font-size:14px;font-weight:600;letter-spacing:0;text-transform:none;
+  cursor:pointer;
+  box-shadow:0 12px 30px -16px color-mix(in srgb,var(--accent) 70%,transparent);
+  transition:filter .2s,transform .15s,box-shadow .2s ease}
+.pdp-buy svg{flex:none}
+.pdp-buy:hover{filter:brightness(1.08)}
+.pdp-buy:active{transform:translateY(1px)}
 .pdp-specs{width:100%;border-collapse:collapse;margin-top:30px;font-size:13.5px}
 .pdp-specs:not(:has(tr)){display:none}
 .pdp-specs th,.pdp-specs td{padding:11px 0;border-bottom:1px solid var(--line-soft);text-align:left;vertical-align:top;font-weight:400}
@@ -884,6 +896,23 @@ a:focus-visible,button:focus-visible,input:focus-visible,select:focus-visible,su
 .ds-chat-input:focus{border-color:var(--accent-text)}
 .ds-chat-send{background:var(--accent);color:var(--accent-ink);border-radius:var(--r-pill)}
 .ds-chat-typing i{background:var(--ink-3)}
+
+/* ==========================================================
+   BOTONES — filo casi recto (.3px) en todo el documento.
+   CTAs, acciones de formulario, chips de filtro activos, píldoras
+   del puente (cuenta/carrito/comprar) y controles del chat.
+   Nav y filtros (.top-nav, .ds-cat, .suggest-item) quedan pill:
+   son enlaces/opciones, no acciones.
+   ========================================================== */
+:is(.btn,.pdp-buy,
+   .top-wa,.m-burger,.m-menu .m-wa,
+   .ds-contact-send,.ds-contact-reload,
+   .cat-clear,.cat-offers,.cat-chip,.cat-chip-clear,
+   .svc-cta,.ds-rev-pick,.ds-rev-send,.ds-rev-reload,
+   .ds-chat-fab,.ds-chat-send,.ds-chat-chip,
+   .ds-product .dsx-buy-wrap .dsx-buy:not([data-ds-buy-slot]),
+   [data-surface="product"] .pdp-info .dsx-buy,
+   .dsx-account,.dsx-cart){border-radius:.3px}
 </style>
 </head>
 <body>
@@ -1123,10 +1152,16 @@ a:focus-visible,button:focus-visible,input:focus-visible,select:focus-visible,su
         <p class="pdp-ref">Ref. {{product_ref}} · {{store_name}}</p>
         <div class="pdp-price"><b>{{product_price}}</b><em>{{product_offer_pct}}</em><s>{{product_old_price}}</s></div>
         <p class="pdp-save mono">{{product_save}}</p>
+        <!-- CTA de compra propio: data-ds-buy lleva el pk ({{product_ref}})
+             y el slot pdp le avisa al puente que no inyecte el suyo — el
+             click sale por postMessage igual que los botones de tarjeta. -->
+        <button type="button" class="pdp-buy" data-ds-buy="{{product_ref}}" data-ds-buy-slot="pdp">
+          <svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="8.5" cy="20.5" r="1.3"/><circle cx="17.5" cy="20.5" r="1.3"/><path d="M2.5 3.5h2l2.4 11.4a1.5 1.5 0 0 0 1.5 1.2h8.9a1.5 1.5 0 0 0 1.5-1.2l1.4-6.6H6"/></svg>
+          Agregar al carrito
+        </button>
         <p class="pdp-desc">{{product_description}}</p>
         <div class="pdp-ctas">
           <a class="btn btn-primary" href="{{product_whatsapp_url}}">Consultar por WhatsApp</a>
-          <a class="btn btn-ghost" href="#catalogo" data-ds-route="catalog">Volver al catálogo</a>
         </div>
         <table class="pdp-specs"><tbody>{{product_features}}</tbody></table>
       </div>
