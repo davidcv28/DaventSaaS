@@ -427,7 +427,11 @@ class CustomerPasswordResetRequestView(APIView):
     def post(self, request):
         serializer  =   CustomerPasswordResetRequestSerializer(data = request.data)
         serializer.is_valid(raise_exception = True)
-        RequestCustomerPasswordResetQuery(serializer.validated_data['email'])
+        data        =   serializer.validated_data
+        store_slug  =   (data.get('store_slug') or '').strip().lower()
+        if store_slug and resolve_store(store_slug) is None:
+            return Response({'store_slug': ['La tienda no existe o no está disponible.']}, status = status.HTTP_400_BAD_REQUEST)
+        RequestCustomerPasswordResetQuery(data['email'], store_slug = store_slug)
         return Response({'detail': RESET_RESPONSE}, status = status.HTTP_200_OK)
 
 

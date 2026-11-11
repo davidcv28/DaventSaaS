@@ -54,7 +54,12 @@ const TABS = [
 ]
 function setView(v) { router.replace({ query: { ...route.query, view: v } }) }
 
-const loginTo = computed(() => ({ path: storeHostSlug ? '/cuenta' : `/${slug.value}/cuenta` }))
+// Sin slug (rutas /cuenta/* de la plataforma) no hay login de tienda al
+// que volver: se apunta a la landing en vez de un /cuenta inexistente.
+const loginTo = computed(() => {
+  if (storeHostSlug) return { path: '/cuenta' }
+  return { path: slug.value ? `/${slug.value}/cuenta` : '/' }
+})
 const catalogoTo = computed(() => ({ path: storeHostSlug ? '/catalogo' : `/${slug.value}/catalogo` }))
 
 // Identidad para sidebar (desktop) y header compacto (mobile).

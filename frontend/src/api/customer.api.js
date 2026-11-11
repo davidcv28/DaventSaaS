@@ -35,7 +35,8 @@ export const customerApi = {
   updateMe: (payload) => customerHttp.patch(me, payload).then((r) => r.data?.customer || null),
   verifyEmail: (token) => customerHttp.post(`${auth}/verify-email/`, { token }).then((r) => r.data),
   resendVerification: () => customerHttp.post(`${auth}/verify-email/resend/`).then((r) => r.data),
-  requestPasswordReset: (email) => customerHttp.post(`${auth}/password-reset/`, { email }).then((r) => r.data),
+  // store_slug opcional: el link del mail cae en la web de ESA tienda.
+  requestPasswordReset: (email, store_slug) => customerHttp.post(`${auth}/password-reset/`, { email, ...(store_slug ? { store_slug } : {}) }).then((r) => r.data),
   confirmPasswordReset: (payload) => customerHttp.post(`${auth}/password-reset/confirm/`, payload).then((r) => r.data),
   // Google login del comprador: `credential` = el id_token de Google
   // Identity Services; store_slug = la tienda donde se está comprando.

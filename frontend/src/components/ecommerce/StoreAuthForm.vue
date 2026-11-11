@@ -108,7 +108,7 @@ async function submit() {
       }
     } else {
       try {
-        await customerApi.requestPasswordReset(form.value.forgot_email.trim())
+        await customerApi.requestPasswordReset(form.value.forgot_email.trim(), props.slug)
         notice.value = 'Si el correo está registrado, te va a llegar un enlace para restablecer tu contraseña.'
         // Salto a login SIN switchMode: el aviso de éxito no se limpia y
         // el correo ya cargado pasa al campo de login (no se retipa).

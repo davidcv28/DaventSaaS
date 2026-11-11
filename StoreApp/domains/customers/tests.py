@@ -345,6 +345,47 @@ class CustomerAuthFlowTests(TestCase):
         self.assertIn(customer.email, mail.outbox[0].to)
         self.assertIn('restablecer', mail.outbox[0].body)
 
+    #LINKS DE LOS MAILS (regresión: /cuenta/cuenta/... → "Tienda no disponible")
+    def test_password_reset_email_link_platform_account_when_no_store(self):
+        #Sin tienda conocida el link va a la página /cuenta de la
+        #plataforma — UNA sola vez 'cuenta' en el path.
+        customer    =   _make_customer()
+        SendCustomerPasswordResetEmailQuery(customer)
+        body        =   mail.outbox[-1].body
+        self.assertIn('/cuenta/restablecer?', body)
+        self.assertNotIn('/cuenta/cuenta/', body)
+
+    def test_password_reset_email_link_uses_given_store_slug(self):
+        customer    =   _make_customer()
+        SendCustomerPasswordResetEmailQuery(customer, store_slug = 'mitienda')
+        self.assertIn('/mitienda/cuenta/restablecer?', mail.outbox[-1].body)
+
+    def test_password_reset_email_falls_back_to_membership_store(self):
+        #Sin slug en el request: la membresía activa más reciente decide.
+        customer    =   _make_customer()
+        StoreMembership.objects.create(customer = customer, store = self.store)
+        SendCustomerPasswordResetEmailQuery(customer)
+        self.assertIn('/mitienda/cuenta/restablecer?', mail.outbox[-1].body)
+
+    def test_verification_email_falls_back_to_membership_store(self):
+        #Reenvío sin slug (vista autenticada no conoce la tienda): mismo fallback.
+        customer    =   _make_customer()
+        StoreMembership.objects.create(customer = customer, store = self.store)
+        SendCustomerVerificationEmailQuery(customer)
+        self.assertIn('/mitienda/cuenta/verificar?', mail.outbox[-1].body)
+        self.assertNotIn('/cuenta/cuenta/', mail.outbox[-1].body)
+
+    def test_password_reset_request_accepts_and_validates_store_slug(self):
+        _make_customer()
+        client      =   APIClient()
+        #Slug inexistente → 400 (mismo criterio que register/login).
+        bad =   client.post(RESET_URL, {'email': 'ana@example.com', 'store_slug': 'noexiste'}, format = 'json')
+        self.assertEqual(bad.status_code, 400)
+        #Slug válido → 200 genérico (el mail encola por on_commit).
+        ok  =   client.post(RESET_URL, {'email': 'ana@example.com', 'store_slug': 'mitienda'}, format = 'json')
+        self.assertEqual(ok.status_code, 200)
+        self.assertIn('Si el correo está registrado', ok.json()['detail'])
+
     def test_verification_email_is_sent(self):
         customer    =   _make_customer()
         SendCustomerVerificationEmailQuery(customer)

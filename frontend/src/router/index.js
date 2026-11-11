@@ -303,6 +303,32 @@ const routes = [
     component: RobotQaView,
     meta: { title: 'Robot QA' }
   },
+  // Cuenta de COMPRADOR a nivel plataforma (sin tienda): destino de los
+  // mails de verificación/reset cuando el link no trae slug de tienda.
+  // StoreAccountView resuelve las sub-vistas por path y no requiere el
+  // provide('storePage') del layout público.
+  {
+    path: '/cuenta/verificar',
+    name: 'platform-account-verify',
+    component: StoreAccountView,
+    meta: { title: 'Verificar correo' }
+  },
+  {
+    path: '/cuenta/restablecer',
+    name: 'platform-account-reset',
+    component: StoreAccountView,
+    meta: { title: 'Restablecer contraseña' }
+  },
+  // Links viejos de mails (bug /cuenta/cuenta/... que caía en "Tienda no
+  // disponible"): redirigen a la ruta buena conservando uid/token.
+  {
+    path: '/cuenta/cuenta/verificar',
+    redirect: (to) => ({ path: '/cuenta/verificar', query: to.query })
+  },
+  {
+    path: '/cuenta/cuenta/restablecer',
+    redirect: (to) => ({ path: '/cuenta/restablecer', query: to.query })
+  },
   // Tienda pública del cliente: link limpio /<slug>; /tienda/<slug> queda como alias.
   // El layout resuelve la tienda una vez; Inicio y Catálogo son páginas hijas.
   // En un host de tienda (subdominio <slug>.<dominio> o dominio propio

@@ -8,7 +8,8 @@ Contrato de links con el frontend (los resuelve Track I/J):
 - Con contexto de tienda (`store_slug` conocido): el link cuelga de la
   web pública de ESA tienda — `{FRONTEND_URL}/<slug>/cuenta/<accion>`.
 - Sin contexto: página de cuenta de la plataforma —
-  `{FRONTEND_URL}/cuenta/<accion>`.
+  `{FRONTEND_URL}/cuenta/<accion>` (rutas propias del router, fuera de
+  StorePublicLayout: no dependen de que la tienda siga disponible).
 Acciones: `verificar?token=<firmado>` y `restablecer?uid=<b64>&token=<firmado>`.
 """
 import logging
@@ -32,7 +33,10 @@ def account_url(store_slug, action_path):
     slug    =   (store_slug or '').strip().lower()
     if slug:
         return f'{base}/{slug}{action_path}'
-    return f'{base}/cuenta{action_path}'
+    #action_path ya trae el '/cuenta/...' completo: duplicarlo generaba
+    #/{base}/cuenta/cuenta/... → el router lo leía como slug='cuenta' y
+    #la web mostraba "Tienda no disponible".
+    return f'{base}{action_path}'
 
 
 def _mail_html(title, intro, button_label, link, note):

@@ -28,11 +28,11 @@ def send_customer_verification_email(customer_id : int, store_slug : str = '') -
 
 
 @shared_task(**_RETRY)
-def send_customer_password_reset_email(customer_id : int) -> None:
+def send_customer_password_reset_email(customer_id : int, store_slug : str = '') -> None:
     from StoreApp.domains.customers.models import Customer
     from StoreApp.domains.customers.services.customers import (
         SendCustomerPasswordResetEmailQuery,
     )
     customer    =   Customer.objects.filter(pk = customer_id).first()
     if customer:
-        SendCustomerPasswordResetEmailQuery(customer)
+        SendCustomerPasswordResetEmailQuery(customer, store_slug = store_slug)

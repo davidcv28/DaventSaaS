@@ -151,7 +151,13 @@ class CustomerVerifyEmailSerializer(serializers.Serializer):
 
 
 class CustomerPasswordResetRequestSerializer(serializers.Serializer):
-    email   =   serializers.EmailField()
+    email           =   serializers.EmailField()
+    #Contexto de tienda opcional: el link del mail cae en la web de ESA
+    #tienda (/{slug}/cuenta/restablecer). Sin él se usa la membresía más
+    #reciente del comprador o la página /cuenta de la plataforma.
+    store_slug      =   serializers.SlugField(required = False, allow_blank = True, max_length = 60)
+    def validate_store_slug(self, value):
+        return (value or '').strip().lower()
 
 
 class CustomerPasswordResetConfirmSerializer(serializers.Serializer):

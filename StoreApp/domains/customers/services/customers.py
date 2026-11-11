@@ -136,9 +136,30 @@ def _enqueue_verification_email(customer_id, store_slug = ''):
     send_customer_verification_email.delay(customer_id, store_slug)
 
 
-def _enqueue_password_reset_email(customer_id):
+def _enqueue_password_reset_email(customer_id, store_slug = ''):
     from StoreApp.domains.customers.tasks import send_customer_password_reset_email
-    send_customer_password_reset_email.delay(customer_id)
+    send_customer_password_reset_email.delay(customer_id, store_slug)
+
+
+def _membership_store_slug(customer):
+    """
+    Slug de tienda para los links de mail cuando el request no trajo
+    `store_slug` (reset pedido sin contexto, reenvío de verificación):
+    la membresía activa más reciente cuya tienda siga publicada y no
+    bloqueada — mismo criterio que `resolve_store`. '' → el mail cae en
+    la página /cuenta de la plataforma.
+    """
+    membership  =   (
+        StoreMembership.objects
+        .filter(
+            customer = customer, status = StoreMembership.STATUS_ACTIVE,
+            store__is_published = True, store__is_blocked = False,
+        )
+        .select_related('store')
+        .order_by('-joined_at')
+        .first()
+    )
+    return membership.store.slug if membership else ''
 
 
 #=========================================
@@ -178,7 +199,9 @@ def SendCustomerVerificationEmailQuery(customer, store_slug = ''):
     if not (customer.email or '').strip() or customer.email_verified:
         return
     token   =   make_verify_email_token(customer)
-    link    =   account_url(store_slug, f'/cuenta/verificar?token={token}')
+    #Sin slug del request (reenvío, alta global) se usa la tienda de la
+    #membresía más reciente para que el link no caiga en /cuenta suelto.
+    link    =   account_url(store_slug or _membership_store_slug(customer), f'/cuenta/verificar?token={token}')
     name    =   (customer.first_name or customer.email).strip()
     send_branded_mail(
         customer,
@@ -240,11 +263,13 @@ def _uid_token(customer):
     )
 
 
-def SendCustomerPasswordResetEmailQuery(customer):
+def SendCustomerPasswordResetEmailQuery(customer, store_slug = ''):
     if not (customer.email or '').strip():
         return
     uid, token  =   _uid_token(customer)
-    link        =   account_url('', f'/cuenta/restablecer?uid={uid}&token={token}')
+    #Mismo fallback que la verificación: la tienda de la membresía más
+    #reciente mantiene el link dentro de la web del comercio.
+    link        =   account_url(store_slug or _membership_store_slug(customer), f'/cuenta/restablecer?uid={uid}&token={token}')
     hours       =   settings.PASSWORD_RESET_TIMEOUT // 3600
     name        =   (customer.first_name or customer.email).strip()
     from html import escape
@@ -268,11 +293,11 @@ def SendCustomerPasswordResetEmailQuery(customer):
 
 
 #REQUEST PASSWORD RESET — la vista responde siempre genérico (anti-enumeración)
-def RequestCustomerPasswordResetQuery(email):
+def RequestCustomerPasswordResetQuery(email, store_slug = ''):
     customer    =   Customer.objects.filter(email__iexact = normalize_email(email)).first()
     if customer:
         #Encolado post-commit: el tiempo de envío no delata si la cuenta existe.
-        transaction.on_commit(lambda: _enqueue_password_reset_email(customer.pk))
+        transaction.on_commit(lambda: _enqueue_password_reset_email(customer.pk, store_slug))
 
 
 def ConfirmCustomerPasswordResetQuery(customer, new_password):
