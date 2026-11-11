@@ -191,7 +191,7 @@ html[data-ds-surface="services"] .top-nav a[data-ds-route="services"]{color:var(
    documento — `vh`/`bottom` medirían la página entera; el script lo posiciona
    con `davent:ds-frame` y `data-ds-no-pin` lo excluye del pin de barras del
    puente (su top/height los maneja el JS del patrón). */
-.m-menu{display:none}
+.m-menu,.m-tabs{display:none}
 @media(max-width:920px){
   .m-menu.open{
     display:flex;flex-direction:column;
@@ -225,6 +225,35 @@ html[data-ds-surface="services"] .top-nav a[data-ds-route="services"]{color:var(
   .top-in{gap:16px}
   .brand-name{max-width:120px}
   .m-burger{display:grid;order:1}
+  /* Tab bar inferior: consola de navegación propia del documento — el
+     puente la ancla al viewport (data-ds-pin="bottom") y el chatbot la
+     usa como chrome para elevarse (bottomChromePx). */
+  body{padding-bottom:calc(58px + env(safe-area-inset-bottom))}
+  .m-tabs{
+    display:flex;align-items:stretch;
+    position:fixed;left:0;right:0;bottom:0;z-index:60;
+    background:rgba(7,9,13,.94);
+    border-top:1px solid var(--line);
+    padding:0 calc(4px + env(safe-area-inset-right)) env(safe-area-inset-bottom) calc(4px + env(safe-area-inset-left))}
+  .m-tab{
+    position:relative;flex:1 1 0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;
+    min-height:58px;padding:6px 4px;color:var(--ink-2);text-decoration:none;
+    font-family:var(--mono);font-size:9px;letter-spacing:.12em;text-transform:uppercase;
+    transition:color .18s}
+  .m-tab svg{width:19px;height:19px;flex:none}
+  .m-tab:active{transform:scale(.96)}
+  .m-tab::before{content:"";position:absolute;top:0;left:50%;transform:translateX(-50%) scaleX(0);
+    width:18px;height:2px;background:var(--accent);transition:transform .22s}
+  .m-tab.is-on{color:var(--accent-text)}
+  .m-tab.is-on::before{transform:translateX(-50%) scaleX(1)}
+  html[data-ds-surface="landing"] .m-tab[data-ds-route="home"],
+  html[data-ds-surface="catalog"] .m-tab[data-ds-route="catalog"],
+  html[data-ds-surface="services"] .m-tab[data-ds-route="services"]{color:var(--accent-text)}
+  html[data-ds-surface="landing"] .m-tab[data-ds-route="home"]::before,
+  html[data-ds-surface="catalog"] .m-tab[data-ds-route="catalog"]::before,
+  html[data-ds-surface="services"] .m-tab[data-ds-route="services"]::before{transform:translateX(-50%) scaleX(1)}
+  /* El menú del burger corre hasta el borde superior de la tab bar. */
+  .m-menu.open{z-index:45}
 }
 /* Con venta online el cluster suma cuenta+carrito: el nav cede antes
    (≤920px) para que marca + píldoras + burger entren sin desbordar. */
@@ -1000,6 +1029,27 @@ a:focus-visible,button:focus-visible,input:focus-visible,select:focus-visible,su
   <p class="m-foot">{{store_name}} · {{year}}</p>
 </div>
 
+<!-- Tab bar móvil: navegación inferior del documento — data-ds-pin="bottom"
+     la ancla al borde inferior visible del marco vía el puente. -->
+<nav class="m-tabs" data-ds-pin="bottom" aria-label="Navegación principal">
+  <a class="m-tab" href="#inicio" data-ds-route="home">
+    <svg viewBox="0 0 24 24" width="19" height="19" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 10.5 12 3l9 7.5"/><path d="M5 9.5V21h14V9.5"/></svg>
+    <span>Inicio</span>
+  </a>
+  <a class="m-tab" href="#catalogo" data-ds-route="catalog" data-flag="catalog">
+    <svg viewBox="0 0 24 24" width="19" height="19" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16"/><path d="M7 7v10M17 7v10"/></svg>
+    <span>Catálogo</span>
+  </a>
+  <a class="m-tab" href="#servicios" data-ds-route="services" data-flag="services">
+    <svg viewBox="0 0 24 24" width="19" height="19" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14.5 6.5a4 4 0 0 0-5.6 5.6L3 18l3 3 5.9-5.9a4 4 0 0 0 5.6-5.6l-2.8 2.8-2.1-2.1z"/></svg>
+    <span>Servicios</span>
+  </a>
+  <a class="m-tab" href="#contacto" data-ds-anchor data-ds-route="home" data-flag="contact">
+    <svg viewBox="0 0 24 24" width="19" height="19" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 11.5a8.4 8.4 0 0 1-8.5 8.4 8.6 8.6 0 0 1-3.8-.9L3 21l2-5.3a8.3 8.3 0 0 1-1-4A8.4 8.4 0 0 1 12.5 3.2 8.4 8.4 0 0 1 21 11.5Z"/></svg>
+    <span>Contacto</span>
+  </a>
+</nav>
+
 <!-- ============ LANDING ============ -->
 <div data-surface="landing">
   <section class="hero wrap" id="inicio">
@@ -1271,6 +1321,7 @@ a:focus-visible,button:focus-visible,input:focus-visible,select:focus-visible,su
      script, no el compensador genérico. */
   var root = document.documentElement
   var menu = document.getElementById('mmenu')
+  var tabs = document.querySelector('.m-tabs')
   var frame = null
   var lastFocus = null
 
@@ -1281,8 +1332,11 @@ a:focus-visible,button:focus-visible,input:focus-visible,select:focus-visible,su
     }
     var dy = frame ? Math.max(0, -frame.top) : (window.scrollY || 0)
     var vh = frame ? Math.max(1, frame.vh) : (window.innerHeight || 800)
+    /* La tab bar cubre el borde inferior del marco: el menú frena antes
+       de ella, no debajo. */
+    var tabsH = tabs && getComputedStyle(tabs).display !== 'none' ? tabs.offsetHeight : 0
     menu.style.top = (dy + 64) + 'px'
-    menu.style.height = Math.max(0, vh - 64) + 'px'
+    menu.style.height = Math.max(0, vh - 64 - tabsH) + 'px'
   }
   function isOpen() { return !!(menu && menu.classList.contains('open')) }
   function setMenu(open) {
