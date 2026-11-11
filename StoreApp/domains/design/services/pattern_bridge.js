@@ -53,15 +53,23 @@
         var fr = foot.getBoundingClientRect()
         if (fr.height) h = fr.bottom + (window.scrollY || 0)
       }
-      if (!h && document.body) {
+      /* El alto es el MAYOR entre el pie y el último bloque en flujo: si
+       * algo queda debajo del footer (banner, hoja, zona async), medir
+       * solo el pie deja el iframe más bajo que el documento — scroll
+       * interno + encadenamiento con la página = vibración al fondo. */
+      if (document.body) {
         var kids = document.body.children
         for (var i = kids.length - 1; i >= 0; i--) {
           var el = kids[i]
           if (!el || el.tagName === 'SCRIPT' || el.tagName === 'STYLE' || el.tagName === 'LINK') continue
           var cs = window.getComputedStyle(el)
-          if (cs.position === 'fixed' || cs.display === 'none') continue
+          if (cs.position === 'fixed' || cs.position === 'absolute' || cs.display === 'none') continue
           var r = el.getBoundingClientRect()
-          if (r.height > 0) { h = r.bottom + (window.scrollY || 0); break }
+          if (r.height > 0) {
+            var rb = r.bottom + (window.scrollY || 0)
+            if (rb > h) h = rb
+            break
+          }
         }
         if (!h) h = document.body.scrollHeight
       }

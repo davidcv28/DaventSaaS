@@ -214,7 +214,11 @@ function onMessage(e) {
   }
   if (e.data?.type !== 'davent:ds-height') return
   const next = Number(e.data.height) || 0
-  if (next > 0) height.value = next
+  /* `Math.ceil`: el alto viaja fraccionario (getBoundingClientRect) y un
+   * iframe 0.5px más bajo que el documento gana scroll interno — la rueda
+   * encadena iframe↔página en el borde y los fijos del diseño se
+   * desalinean: se siente como vibración al llegar al fondo. */
+  if (next > 0) height.value = Math.ceil(next)
   /* El iframe cambió de alto: el rectángulo del marco quedó viejo y las
    * barras fijas del documento se posicionan con datos de otro alto —
    * repostear el frame para que el puente re-mida con el tamaño real. */
@@ -328,5 +332,8 @@ onBeforeUnmount(() => {
   min-height: 70vh;
   border: 0;
   background: transparent;
+  /* Si el documento llega a tener overflow propio, la rueda no debe
+   * rebotar entre el scroll interno del iframe y el de la página. */
+  overscroll-behavior: contain;
 }
 </style>
