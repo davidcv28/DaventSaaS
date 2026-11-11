@@ -27,6 +27,26 @@ const cartStore = useCartStore()
 // principal; sin él queda el flujo de consulta de siempre. El stock NO se
 // expone en el catálogo público: el cart valida y avisa si no alcanza.
 const ordersEnabled = computed(() => Boolean(ctx?.ordersEnabled?.value ?? ctx?.ordersEnabled))
+// Tarifa de envío a domicilio del payload público (StoreShippingConfig):
+// home_price null = "a coordinar"; número >= 0 = precio fijo que el
+// checkout cobra (0 = envío gratis). El retiro en el local siempre es
+// sin cargo — la línea lo aclara siempre.
+const storeData = computed(() => ctx?.store?.value || ctx?.store || null)
+const homePrice = computed(() => {
+  const raw = storeData.value?.shipping?.home_price
+  if (raw === null || raw === undefined || raw === '') return null
+  const n = Number(raw)
+  return Number.isFinite(n) ? n : null
+})
+const shipLine = computed(() => {
+  if (!ordersEnabled.value) return null
+  const home = homePrice.value === null
+    ? 'Envío a domicilio a coordinar'
+    : homePrice.value > 0
+      ? `Envío a domicilio ${formatARS(homePrice.value)}`
+      : 'Envío a domicilio sin cargo'
+  return `${home} · retiro en el local sin cargo`
+})
 // Cantidad del alta: el stepper alimenta el botón "Agregar al carrito" (y la
 // barra fija móvil) y se cita en el mensaje de WhatsApp cuando es > 1.
 const QTY_MAX = 99
@@ -272,9 +292,13 @@ onBeforeUnmount(() => {
                 <p class="rz-pdp-stock">
                   <i aria-hidden="true"></i> En stock
                 </p>
+                <p v-if="shipLine" class="rz-pdp-ship">
+                  <AppIcon name="truck" :size="15" aria-hidden="true" />
+                  <span>{{ shipLine }}</span>
+                </p>
                 <p class="rz-pdp-pay">
                   <AppIcon name="credit-card" :size="15" aria-hidden="true" />
-                  Medios de pago, cuotas y envío se coordinan con el vendedor
+                  {{ ordersEnabled ? 'Medios de pago y cuotas se coordinan con el vendedor' : 'Medios de pago, cuotas y envío se coordinan con el vendedor' }}
                 </p>
               </div>
 

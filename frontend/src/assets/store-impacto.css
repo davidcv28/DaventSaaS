@@ -2814,6 +2814,7 @@
 }
 .store-page.mi-skin .rz-pdp-seller,
 .store-page.mi-skin .rz-pdp-pay { font-family: var(--mi-mono); font-size: 11px; letter-spacing: .04em; color: var(--mi-muted); }
+.store-page.mi-skin .rz-pdp-ship { font-family: var(--mi-mono); font-size: 11px; letter-spacing: .04em; color: var(--mi-ink); }
 .store-page.mi-skin .rz-pdp-buy-head { align-items: center; }
 
 /* Opiniones: ficha de papel, sin radios ni sombras del tema */

@@ -168,6 +168,12 @@ section:has(.ds-plans:empty){display:none!important}
 }
 .ds-product-img.is-empty::after{opacity:.55}
 
+/* Línea de envío de la ficha ({{product_shipping}}): los diseños la
+   montan junto al precio/CTA; vacía (tienda sin venta online) el <p>
+   queda :empty y desaparece. */
+.ds-ship{font-size:12px;font-weight:600;line-height:1.45;opacity:.8;margin:8px 0 0}
+.ds-ship:empty{display:none!important}
+
 /* Etiqueta de campaña que firma la oferta (Hot Sale, Navidad…): sticker
    anclado a la esquina superior de la tarjeta. Vive en la hoja del host —
    no en cada patrón — porque pattern_render la emite en todos los

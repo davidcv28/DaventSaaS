@@ -26,6 +26,23 @@ const cuentaTo = computed(() => ({ path: storeHostSlug ? '/cuenta' : `/${slug.va
 const empty = computed(() => cart.status !== 'loading' && !cart.hasItems)
 const itemNoun = computed(() => (cart.itemCount === 1 ? 'producto' : 'productos'))
 
+// Tarifa de envío a domicilio del payload público (StoreShippingConfig):
+// home_price null = "a coordinar"; número >= 0 = precio fijo del checkout.
+const storeData = computed(() => ctx?.store?.value || ctx?.store || null)
+const homePrice = computed(() => {
+  const raw = storeData.value?.shipping?.home_price
+  if (raw === null || raw === undefined || raw === '') return null
+  const n = Number(raw)
+  return Number.isFinite(n) ? n : null
+})
+// El envío se elige en el checkout: acá se anticipa la tarifa a domicilio
+// y que el retiro en el local es sin cargo (el total lo cierra el server).
+const shipNote = computed(() => {
+  if (homePrice.value === null) return 'A coordinar en el checkout (domicilio o retiro sin cargo)'
+  const home = homePrice.value > 0 ? `Domicilio ${money(homePrice.value)}` : 'Domicilio sin cargo'
+  return `${home} · retiro sin cargo`
+})
+
 // Métodos de envío: home/pickup se eligen en el checkout (mismas dos
 // opciones fijas que ofrece el formulario) — acá solo se anticipa el
 // texto; el costo real lo fija el server al crear el pedido.
@@ -165,7 +182,7 @@ onMounted(async () => {
               <dt><AppIcon name="badge-check" :size="14" aria-hidden="true" /> Descuento de miembro</dt>
               <dd>−{{ cart.memberDiscount }}% ya incluido</dd>
             </div>
-            <div><dt>Envío</dt><dd class="ec-cp-ship-note">Se elige en el checkout (domicilio o retiro)</dd></div>
+            <div><dt>Envío</dt><dd class="ec-cp-ship-note">{{ shipNote }}</dd></div>
             <div class="ec-cp-grand"><dt>Total estimado</dt><dd>{{ money(cart.itemsTotal) }}</dd></div>
           </dl>
           <p class="ec-cp-muted">El total final lo confirma el servidor al crear el pedido.</p>
@@ -233,7 +250,7 @@ onMounted(async () => {
 .ec-cp-totals dt { color: var(--sp-muted, inherit); display: inline-flex; align-items: center; gap: 5px; }
 .ec-cp-totals dd { margin: 0; font-weight: 600; font-variant-numeric: tabular-nums; text-align: right; }
 .ec-cp-discount dd { color: var(--sp-success, #0E7A55); font-weight: 700; }
-.ec-cp-ship-note { font-size: 12px; font-weight: 500; max-width: 60%; }
+.ec-cp-ship-note { font-size: 12px; font-weight: 500; max-width: 72%; line-height: 1.4; }
 .ec-cp-grand { padding-top: 10px; border-top: 1px solid var(--sp-line, rgba(0,0,0,.09)); font-size: 16px; }
 .ec-cp-grand dd { font-weight: 800; font-size: 18px; }
 .ec-btn-primary { display: inline-flex; align-items: center; justify-content: center; gap: 8px; padding: 13px 16px; border: none; border-radius: calc(var(--sp-radius) * .75); background: var(--store-accent-ink, #111); color: #fff; font-size: 15px; font-weight: 800; cursor: pointer; text-decoration: none; }

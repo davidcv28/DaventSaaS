@@ -73,6 +73,7 @@ PATTERN_VARIABLES = {
     'product_rating_avg':{'type': 'text',  'label': 'Producto: valoración promedio'},
     'product_rating_count': {'type': 'text', 'label': 'Producto: cantidad de valoraciones'},
     'product_features':  {'type': 'list',  'label': 'Producto: características'},
+    'product_shipping':  {'type': 'text',  'label': 'Producto: envío'},
     'product_related':   {'type': 'list',  'label': 'Producto: relacionados'},
     'product_reviews':   {'type': 'list',  'label': 'Producto: opiniones'},
     'products':          {'type': 'list',  'label': 'Productos'},
@@ -881,6 +882,24 @@ def _product_whatsapp_url(store, customization, product, store_name, amount = No
     text += ' que vi en tu catálogo.'
     return _contact_link(store, customization, 'whatsapp', 'whatsapp', text)
 
+def _shipping_line(store):
+    """
+    Línea de envío de la ficha de producto: la tarifa fija del checkout
+    (StoreShippingConfig.home_price — NULL = "a coordinar") o retiro sin
+    cargo. Vacío cuando la tienda no vende online: el patrón la deja en
+    un <p> que queda :empty y la hoja del host lo oculta. El precio es
+    snapshot del pedido — acá solo informa la tarifa vigente.
+    """
+    from StoreApp.domains.stores.models import StoreShippingConfig
+    from StoreApp.domains.stores.services.commerce import orders_enabled
+    if not orders_enabled(store):
+        return ''
+    cfg     =   StoreShippingConfig.objects.filter(store_id = store.pk).only('home_price').first()
+    if cfg is None or cfg.home_price is None:
+        return 'Envío a domicilio a coordinar · retiro en el local sin cargo'
+    price   =   _money(cfg.home_price) if _amount(cfg.home_price) > 0 else 'sin cargo'
+    return f'Envío a domicilio {price} · retiro en el local sin cargo'
+
 def _product_values(store, product, customization, store_name, flags = None):
     """Variables `product_*` del documento (ficha de producto)."""
     from StoreApp.domains.stores.services.storage import object_url
@@ -890,7 +909,7 @@ def _product_values(store, product, customization, store_name, flags = None):
             'product_name', 'product_description', 'product_price', 'product_old_price',
             'product_offer_pct', 'product_save', 'product_image', 'product_category',
             'product_brand', 'product_ref', 'product_whatsapp_url', 'product_rating_avg',
-            'product_rating_count',
+            'product_rating_count', 'product_shipping',
         )}, {'product_features': '', 'product_related': '', 'product_reviews': '', 'product_campaign_label': ''}
     from StoreApp.domains.catalog.services.services import (
         effective_pricing_of,
@@ -935,6 +954,7 @@ def _product_values(store, product, customization, store_name, flags = None):
         'product_whatsapp_url': _product_whatsapp_url(store, customization, product, store_name, amount),
         'product_rating_avg':   rating_avg,
         'product_rating_count': rating_count,
+        'product_shipping':     _shipping_line(store),
     }
     raw = {
         'product_features': _features_fragment(product),
