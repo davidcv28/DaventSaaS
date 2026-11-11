@@ -90,3 +90,11 @@ frontend/tmpout.css
 
 # Cache de Vite/Vitest
 **/.vite/
+
+# Artefactos sueltos de QA/scraping en la raíz (capturas, dumps, repros)
+/%TEMP%*
+/pdp_*
+/repro_*
+/doc.html
+/pat.json
+/store_prod.json
