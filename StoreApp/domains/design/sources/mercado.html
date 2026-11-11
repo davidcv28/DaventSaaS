@@ -259,9 +259,11 @@
   }
   .btn-primary:hover{background:color-mix(in srgb,var(--yellow-ink) 86%,var(--yellow));color:var(--yellow)}
   .btn-primary:hover::after{transform:translateX(400%) skewX(-18deg)}
-  /* Filete al 38%: al 24% el contorno se perdía contra el toldo amarillo. */
-  .btn-ghost{background:var(--surface);border-color:color-mix(in srgb,var(--yellow-ink) 38%,transparent);color:var(--ink);box-shadow:0 6px 16px -14px rgba(0,0,0,.5)}
-  .btn-ghost:hover{border-color:var(--ink);transform:translateY(-1px)}
+  /* Ghost sobre el toldo: --surface puede venir teñido del acento (estilos
+     oferta/naranja) y se funde. Transparente + filete y texto de tinta de
+     acento — par AA sobre --yellow en cualquier paleta Bazar. */
+  .btn-ghost{background:transparent;border-color:color-mix(in srgb,var(--yellow-ink) 55%,transparent);color:var(--yellow-ink);box-shadow:none}
+  .btn-ghost:hover{border-color:var(--yellow-ink);background:color-mix(in srgb,var(--yellow-ink) 10%,transparent);transform:translateY(-1px)}
   .facts{display:flex;flex-wrap:wrap;gap:8px 10px;margin:26px 0 0;padding:0;list-style:none}
   .facts li{
     display:inline-flex;align-items:center;gap:7px;min-height:28px;padding:0 10px;
@@ -925,8 +927,13 @@
   html[data-ds-theme="dark"] .hero-glyph{-webkit-text-stroke-color:color-mix(in srgb,var(--ink) 24%,transparent);text-stroke-color:color-mix(in srgb,var(--ink) 24%,transparent)}
   html[data-ds-theme="dark"] .hero-card{background:var(--surface);color:var(--ink);border-color:var(--line)}
   html[data-ds-theme="dark"] .hero-card span:not(.tag){color:var(--muted)}
-  html[data-ds-theme="dark"] .btn-ghost{background:var(--surface);border-color:color-mix(in srgb,var(--ink) 26%,var(--line));color:var(--ink)}
-  html[data-ds-theme="dark"] .btn-ghost:hover{border-color:var(--muted)}
+  /* En noche el hero no es toldo: el primario vuelve al acento sólido y el
+     ghost a filete de tinta (mismo criterio, par invertido). */
+  html[data-ds-theme="dark"] .btn-primary{background:var(--yellow);color:var(--on-accent);box-shadow:0 14px 26px -18px color-mix(in srgb,var(--yellow) 70%,#000)}
+  html[data-ds-theme="dark"] .btn-primary:hover{background:var(--yellow-deep);color:var(--on-accent)}
+  html[data-ds-theme="dark"] .btn-primary::after{background:linear-gradient(90deg,transparent,color-mix(in srgb,var(--on-accent) 22%,transparent),transparent)}
+  html[data-ds-theme="dark"] .btn-ghost{background:transparent;border-color:color-mix(in srgb,var(--ink) 40%,var(--line));color:var(--ink)}
+  html[data-ds-theme="dark"] .btn-ghost:hover{border-color:var(--ink);background:color-mix(in srgb,var(--ink) 8%,transparent)}
   html[data-ds-theme="dark"] .search{background:var(--soft);box-shadow:0 0 0 1px color-mix(in srgb,var(--ink) 10%,transparent)}
   html[data-ds-theme="dark"] .search-input{color:var(--ink)}
   html[data-ds-theme="dark"] .search-input::placeholder{color:var(--muted)}
