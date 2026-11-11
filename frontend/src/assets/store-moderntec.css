@@ -1670,9 +1670,9 @@
 .store-page[data-template='raiz'].mt-skin .rz-pdp-cart {
   font-size: 16px;
   font-weight: 700;
-  border-radius: .5px;
+  border-radius: .3px;
 }
-.store-page[data-template='raiz'].mt-skin .rz-pdp-stick-cart { border-radius: .5px; }
+.store-page[data-template='raiz'].mt-skin .rz-pdp-stick-cart { border-radius: .3px; }
 
 /* ==========================================================================
    11. SUPERFICIES REPINTADAS POR EL TEMA (surfaces.card/footer/hero)
