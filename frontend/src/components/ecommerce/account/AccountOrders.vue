@@ -42,6 +42,7 @@ const itemNoun = (n) => (n === 1 ? 'producto' : 'productos')
   <section class="acc-panel" aria-label="Mis pedidos">
     <header class="acc-panel-head">
       <div class="acc-panel-headtxt">
+        <span class="acc-panel-kicker" aria-hidden="true">01 · Pedidos</span>
         <h2 class="acc-panel-title">Mis pedidos</h2>
         <p class="acc-panel-sub">
           <template v-if="orders.length">{{ orders.length }} {{ orders.length === 1 ? 'pedido' : 'pedidos' }} en {{ shopName }}</template>
@@ -66,6 +67,21 @@ const itemNoun = (n) => (n === 1 ? 'producto' : 'productos')
     </div>
 
     <div v-else-if="!orders.length" class="acc-empty">
+      <div class="acc-empty-art" aria-hidden="true">
+        <svg viewBox="0 0 240 150" role="presentation" focusable="false">
+          <path class="a-line a-dash" d="M34 132h172" />
+          <path class="a-line" d="M120 92c0-13-1-21-2-28" />
+          <path class="a-leaf a-leaf--l" d="M118 66c-13-2-20-10-21-22 12 2 20 10 21 22Z" />
+          <path class="a-leaf a-leaf--r" d="M122 60c11-3 18-11 18-21-11 2-17 10-18 21Z" />
+          <path class="a-line" d="M92 96h56v30H92z" />
+          <path class="a-line" d="M86 96h68" />
+          <path class="a-line a-dash" d="M120 96v30" />
+          <path class="a-line" d="M101 106h10" />
+          <path class="a-line" d="M101 113h10" />
+          <circle class="a-dot" cx="120" cy="40" r="2.6" />
+          <path class="a-line a-dash" d="M64 122c8-5 16-6 24-3" />
+        </svg>
+      </div>
       <span class="acc-empty-ico" aria-hidden="true"><AppIcon name="package" :size="30" /></span>
       <h3 class="acc-empty-title">Todavía no hiciste pedidos</h3>
       <p class="acc-empty-sub">Cuando compres en {{ shopName }}, tus pedidos van a aparecer acá con su estado y comprobante.</p>
@@ -104,6 +120,8 @@ const itemNoun = (n) => (n === 1 ? 'producto' : 'productos')
 </template>
 
 <style scoped>
+/* Nodos de la piel "esencial" (ocultos por defecto, ver skin CSS). */
+.acc-panel-kicker, .acc-empty-art { display: none; }
 .acc-panel { display: grid; gap: 16px; padding: 20px; border: 1px solid var(--sp-line, rgba(0,0,0,.09)); border-radius: var(--sp-radius); background: var(--sp-card, transparent); box-shadow: var(--sp-shadow-sm, none); }
 .acc-panel-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; }
 .acc-panel-headtxt { display: grid; gap: 3px; min-width: 0; }

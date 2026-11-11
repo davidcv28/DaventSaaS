@@ -1,0 +1,810 @@
+/* ===========================================================================
+   ESENCIAL — autenticación del comprador (ingresar / registro / recuperar).
+   Cargada por StoreAuthView; la comparten la página /ingresar y el modal
+   global (StoreAuthModal), por eso cada regla cubre :is(.ec-auth, .ec-auth-card).
+
+   Composición: DOBLE PÁGINA editorial — plancha de tinta botánica a la
+   izquierda (manifiesto, índice 01/02/03, sello giratorio) y hoja de papel a
+   la derecha con el formulario. Sin tarjeta flotante: el spread es la página.
+   Los ornamentos nuevos (ambiente, trama, sello, índice, control segmentado,
+   línea de confianza) nacen ocultos en sus componentes y esta piel los enciende.
+   =========================================================================== */
+
+[data-design='esencial'] {
+  /* Tokens propios de la piel de auth (no pisan los --dz-* del diseño). */
+  --ec-auth-plate: color-mix(in srgb, var(--dz-accent) 88%, #04100d);
+  --ec-auth-plate-2: color-mix(in srgb, var(--dz-accent) 58%, #04100d);
+  --ec-auth-on-plate: color-mix(in srgb, var(--dz-bg) 94%, #ffffff);
+  --ec-auth-on-plate-2: color-mix(in srgb, var(--dz-bg) 74%, transparent);
+  --ec-auth-on-plate-3: color-mix(in srgb, var(--dz-bg) 52%, transparent);
+  --ec-auth-plate-line: color-mix(in srgb, var(--dz-bg) 20%, transparent);
+  --ec-auth-pill: var(--ec-auth-plate);
+  --ec-auth-pill-ink: var(--ec-auth-on-plate);
+  --ec-auth-halo: color-mix(in srgb, var(--dz-accent) 14%, transparent);
+  --ec-auth-ease: cubic-bezier(.22, .61, .36, 1);
+  --ec-auth-grain-op: .5;
+}
+
+[data-design='esencial'][data-theme='dark'] {
+  --ec-auth-plate: color-mix(in srgb, var(--dz-accent) 20%, var(--dz-bg));
+  --ec-auth-plate-2: color-mix(in srgb, var(--dz-accent) 8%, var(--dz-bg));
+  --ec-auth-on-plate: var(--dz-ink);
+  --ec-auth-on-plate-2: var(--dz-ink-2);
+  --ec-auth-on-plate-3: var(--dz-muted);
+  --ec-auth-plate-line: color-mix(in srgb, var(--dz-ink) 16%, transparent);
+  --ec-auth-pill: color-mix(in srgb, var(--dz-accent) 74%, var(--dz-surface));
+  --ec-auth-pill-ink: var(--dz-accent-ink);
+  --ec-auth-halo: color-mix(in srgb, var(--dz-accent) 18%, transparent);
+  --ec-auth-grain-op: .34;
+}
+
+/* ===========================================================================
+   1. Página + fondo ambiental
+   =========================================================================== */
+[data-design='esencial'][data-theme] .ec-auth {
+  position: relative;
+  isolation: isolate;
+  padding-inline: clamp(16px, 4vw, 34px);
+  background-color: var(--dz-bg);
+  background-image: none;
+}
+
+/* Capa ambiental: deriva lenta de dos halos + grano. Solo transform/opacity
+   (nunca background-position) y pointer-events:none para no tapar nada. */
+[data-design='esencial'] .ec-auth .ec-auth-ambient {
+  display: block;
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  overflow: hidden;
+  pointer-events: none;
+}
+[data-design='esencial'] .ec-auth .ec-auth-ambient .ec-auth-glow {
+  position: absolute;
+  display: block;
+  border-radius: 50%;
+  will-change: transform;
+}
+[data-design='esencial'] .ec-auth .ec-auth-glow-a {
+  top: -26%; left: -16%;
+  width: min(760px, 92vw); height: min(760px, 92vw);
+  background: radial-gradient(circle at 50% 50%, color-mix(in srgb, var(--dz-accent) 20%, transparent) 0%, transparent 66%);
+  animation: ec-auth-drift-a 30s ease-in-out infinite alternate;
+}
+[data-design='esencial'] .ec-auth .ec-auth-glow-b {
+  right: -14%; bottom: -30%;
+  width: min(620px, 84vw); height: min(620px, 84vw);
+  background: radial-gradient(circle at 50% 50%, color-mix(in srgb, var(--dz-warm) 24%, transparent) 0%, transparent 68%);
+  animation: ec-auth-drift-b 38s ease-in-out infinite alternate;
+}
+[data-design='esencial'] .ec-auth .ec-auth-grain {
+  position: absolute;
+  inset: -10%;
+  display: block;
+  opacity: var(--ec-auth-grain-op);
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='160' height='160'><filter id='g'><feTurbulence type='fractalNoise' baseFrequency='.82' numOctaves='3' stitchTiles='stitch'/><feColorMatrix type='saturate' values='0'/></filter><rect width='160' height='160' filter='url(%23g)' opacity='.26'/></svg>");
+  background-size: 160px 160px;
+  mix-blend-mode: multiply;
+  animation: ec-auth-grain-shift 44s steps(6, end) infinite alternate;
+}
+[data-design='esencial'][data-theme='dark'] .ec-auth .ec-auth-grain { mix-blend-mode: screen; }
+
+@keyframes ec-auth-drift-a {
+  from { transform: translate3d(0, 0, 0) scale(1); opacity: .85; }
+  to   { transform: translate3d(6%, 4%, 0) scale(1.12); opacity: 1; }
+}
+@keyframes ec-auth-drift-b {
+  from { transform: translate3d(0, 0, 0) scale(1.06); opacity: .7; }
+  to   { transform: translate3d(-5%, -6%, 0) scale(1); opacity: 1; }
+}
+@keyframes ec-auth-grain-shift {
+  from { transform: translate3d(0, 0, 0); }
+  to   { transform: translate3d(-3%, 2%, 0); }
+}
+
+/* ===========================================================================
+   2. Spread de dos paneles
+   =========================================================================== */
+[data-design='esencial'][data-theme] .ec-auth .ec-auth-shell {
+  position: relative;
+  z-index: 1;
+  width: min(1180px, 100%);
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  align-items: stretch;
+  gap: clamp(18px, 3vw, 54px);
+  margin-block: clamp(18px, 3.6vw, 52px) clamp(40px, 6vw, 84px);
+  border: 0;
+  border-radius: 0;
+  background: none;
+  box-shadow: none;
+  overflow: visible;
+}
+
+/* ===========================================================================
+   3. Plancha de marca (tinta botánica)
+   =========================================================================== */
+[data-design='esencial'][data-theme] .ec-auth .ec-auth-brand {
+  order: 0;
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  min-height: clamp(440px, 56vh, 600px);
+  padding: clamp(24px, 3vw, 40px) clamp(22px, 3.2vw, 42px) clamp(22px, 2.8vw, 32px);
+  border-radius: calc(var(--dz-radius) * 1.15);
+  border: 1px solid color-mix(in srgb, var(--dz-accent) 26%, transparent);
+  color: var(--ec-auth-on-plate);
+  background-color: var(--ec-auth-plate);
+  background-image:
+    radial-gradient(120% 86% at 88% -12%, color-mix(in srgb, var(--dz-warm) 30%, transparent), transparent 62%),
+    radial-gradient(100% 80% at -8% 108%, color-mix(in srgb, var(--dz-accent) 62%, transparent), transparent 72%),
+    linear-gradient(158deg, var(--ec-auth-plate) 0%, var(--ec-auth-plate-2) 100%);
+  box-shadow: 0 40px 80px -60px color-mix(in srgb, var(--dz-accent) 70%, transparent);
+}
+/* Portada de la tienda (premium) + velo de tinta. Ambos quedan DEBAJO del
+   contenido (z-index 0/1 vs 3) y sin pointer-events: nunca tapan texto ni
+   iconos ni bloquean el link del logo. */
+[data-design='esencial'][data-theme] .ec-auth .ec-auth-brand::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  opacity: .18;
+  pointer-events: none;
+  background: var(--ec-cover, none) center / cover no-repeat;
+}
+[data-design='esencial'][data-theme] .ec-auth .ec-auth-brand::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  pointer-events: none;
+  background:
+    linear-gradient(172deg, color-mix(in srgb, var(--ec-auth-plate) 42%, transparent) 0%, color-mix(in srgb, var(--ec-auth-plate) 82%, transparent) 100%);
+}
+
+/* Trama de líneas botánicas en deriva lenta. */
+[data-design='esencial'] .ec-auth .ec-auth-hatch {
+  display: block;
+  position: absolute;
+  inset: -18% -12%;
+  z-index: 2;
+  pointer-events: none;
+  background-image: repeating-linear-gradient(98deg,
+    color-mix(in srgb, var(--ec-auth-on-plate) 10%, transparent) 0 1px,
+    transparent 1px 26px);
+  opacity: .55;
+  -webkit-mask-image: radial-gradient(82% 74% at 24% 26%, black 0%, transparent 76%);
+  mask-image: radial-gradient(82% 74% at 24% 26%, black 0%, transparent 76%);
+  animation: ec-auth-hatch-drift 36s ease-in-out infinite alternate;
+}
+@keyframes ec-auth-hatch-drift {
+  from { transform: translate3d(-2%, -2%, 0); }
+  to   { transform: translate3d(2%, 2%, 0); }
+}
+
+[data-design='esencial'][data-theme] .ec-auth .ec-auth-brand-inner {
+  position: relative;
+  z-index: 3;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  gap: clamp(18px, 2.6vw, 32px);
+  min-height: 0;
+}
+
+/* Cabecera de la plancha */
+[data-design='esencial'][data-theme] .ec-auth .ec-auth-brand-top {
+  gap: 12px;
+  width: fit-content;
+  transition: opacity .24s var(--ec-auth-ease);
+}
+[data-design='esencial'][data-theme] .ec-auth .ec-auth-brand-top:hover { opacity: .82; }
+[data-design='esencial'][data-theme] .ec-auth .ec-auth-logo {
+  width: 44px; height: 44px;
+  border-radius: 50%;
+  background: color-mix(in srgb, var(--ec-auth-on-plate) 12%, transparent);
+  border: 1px solid color-mix(in srgb, var(--ec-auth-on-plate) 30%, transparent);
+  color: var(--ec-auth-on-plate);
+  font-family: var(--dz-display); font-size: 18px; font-weight: 800; letter-spacing: -.02em;
+  box-shadow: none;
+}
+[data-design='esencial'][data-theme] .ec-auth .ec-auth-brand-name {
+  font-family: var(--dz-display); font-size: clamp(16px, 1.5vw, 19px); font-weight: 800;
+  letter-spacing: -.015em; color: var(--ec-auth-on-plate);
+}
+
+/* Manifiesto */
+[data-design='esencial'][data-theme] .ec-auth .ec-auth-brand-copy {
+  display: grid;
+  gap: 12px;
+  max-width: 34ch;
+}
+[data-design='esencial'][data-theme] .ec-auth .ec-auth-rail { display: none; }
+[data-design='esencial'][data-theme] .ec-auth .ec-auth-brand-kicker {
+  display: inline-flex; align-items: center; gap: 8px;
+  font-family: var(--dz-mono); font-size: 10px; font-weight: 600;
+  letter-spacing: .18em; text-transform: uppercase;
+  color: var(--ec-auth-on-plate-2);
+}
+[data-design='esencial'][data-theme] .ec-auth .ec-auth-brand-kicker::before {
+  content: "";
+  width: 6px; height: 6px; flex: none; border-radius: 50%;
+  background: var(--dz-warm);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--dz-warm) 30%, transparent);
+  animation: ec-auth-pulse 3.4s ease-in-out infinite;
+}
+@keyframes ec-auth-pulse {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: .55; transform: scale(.82); }
+}
+[data-design='esencial'][data-theme] .ec-auth .ec-auth-brand-title {
+  font-family: var(--dz-display); font-weight: 800;
+  font-size: clamp(30px, 3.3vw, 46px); line-height: 1.02; letter-spacing: -.035em;
+  color: var(--ec-auth-on-plate);
+  text-wrap: balance;
+}
+[data-design='esencial'][data-theme] .ec-auth .ec-auth-brand-text {
+  margin: 0;
+  font-family: var(--dz-body); font-size: 14px; line-height: 1.6;
+  color: var(--ec-auth-on-plate-2);
+  max-width: 36ch;
+}
+
+/* Índice del modo (01/02/03) */
+[data-design='esencial'] .ec-auth .ec-auth-index {
+  display: flex; flex-wrap: wrap; gap: 4px 16px;
+  margin: 4px 0 0; padding: 0; list-style: none;
+  font-family: var(--dz-mono); font-size: 10px; letter-spacing: .16em;
+  text-transform: uppercase;
+  color: var(--ec-auth-on-plate-3);
+}
+[data-design='esencial'] .ec-auth .ec-auth-index li {
+  display: inline-flex; align-items: center; gap: 6px;
+  opacity: .5;
+  transition: opacity .34s var(--ec-auth-ease), color .34s var(--ec-auth-ease);
+}
+[data-design='esencial'] .ec-auth .ec-auth-index li.is-on { opacity: 1; color: var(--ec-auth-on-plate); }
+[data-design='esencial'] .ec-auth .ec-auth-index-n {
+  color: var(--ec-auth-on-plate-3);
+  transition: color .34s var(--ec-auth-ease);
+}
+[data-design='esencial'] .ec-auth .ec-auth-index li.is-on .ec-auth-index-n { color: var(--dz-warm); }
+
+/* Beneficios como fichero editorial (con numeración de contador) */
+[data-design='esencial'] .ec-auth .ec-auth-perks {
+  display: grid; gap: 0;
+  margin: 2px 0 0; padding: 0; list-style: none;
+  counter-reset: ec-auth-perk;
+  border-top: 1px solid var(--ec-auth-plate-line);
+}
+[data-design='esencial'] .ec-auth .ec-auth-perks li {
+  counter-increment: ec-auth-perk;
+  display: grid;
+  grid-template-columns: auto auto minmax(0, 1fr);
+  align-items: center;
+  gap: 10px;
+  padding: 9px 0;
+  border-bottom: 1px solid var(--ec-auth-plate-line);
+  font-family: var(--dz-body); font-size: 12.5px; font-weight: 600; line-height: 1.3;
+  color: var(--ec-auth-on-plate-2);
+  background: none;
+  border-radius: 0;
+  transition: color .24s var(--ec-auth-ease);
+}
+[data-design='esencial'] .ec-auth .ec-auth-perks li:hover { color: var(--ec-auth-on-plate); }
+[data-design='esencial'] .ec-auth .ec-auth-perks li::before {
+  content: counter(ec-auth-perk, decimal-leading-zero);
+  font-family: var(--dz-mono); font-size: 9.5px; font-weight: 600;
+  letter-spacing: .08em; color: var(--ec-auth-on-plate-3);
+}
+[data-design='esencial'] .ec-auth .ec-auth-perks svg { color: var(--dz-warm); opacity: .9; }
+
+[data-design='esencial'][data-theme] .ec-auth .ec-auth-brand-foot {
+  display: block;
+  margin: 0;
+  padding-right: 96px;
+  font-family: var(--dz-mono); font-size: 9.5px; letter-spacing: .16em;
+  text-transform: uppercase; line-height: 1.5;
+  color: var(--ec-auth-on-plate-3);
+}
+
+/* Sello circular giratorio */
+[data-design='esencial'] .ec-auth .ec-auth-seal {
+  display: grid;
+  place-items: center;
+  position: absolute;
+  right: clamp(16px, 2.4vw, 26px);
+  bottom: clamp(14px, 2vw, 22px);
+  z-index: 3;
+  width: 88px; height: 88px;
+  border-radius: 50%;
+  border: 1px solid var(--ec-auth-plate-line);
+  background: color-mix(in srgb, var(--ec-auth-on-plate) 6%, transparent);
+  color: var(--ec-auth-on-plate-2);
+  pointer-events: none;
+}
+[data-design='esencial'] .ec-auth .ec-auth-seal-ring {
+  position: absolute; inset: 0;
+  width: 100%; height: 100%;
+  animation: ec-auth-spin-slow 52s linear infinite;
+}
+[data-design='esencial'] .ec-auth .ec-auth-seal-ring text {
+  font-family: var(--dz-mono); font-size: 8.2px; letter-spacing: .1em;
+  fill: currentColor;
+}
+[data-design='esencial'] .ec-auth .ec-auth-seal > .icon { color: var(--dz-warm); }
+@keyframes ec-auth-spin-slow { to { transform: rotate(360deg); } }
+
+/* ===========================================================================
+   4. Hoja del formulario
+   =========================================================================== */
+[data-design='esencial'][data-theme] .ec-auth .ec-auth-panel {
+  display: grid;
+  align-content: center;
+  justify-items: stretch;
+  min-width: 0;
+  padding-block: clamp(6px, 1.4vw, 20px);
+  padding-inline: 0;
+  background: none;
+  color: var(--dz-ink);
+}
+[data-design='esencial'] .ec-auth .ec-auth-panel-inner {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  width: 100%;
+  max-width: 432px;
+  margin-inline: auto;
+}
+[data-design='esencial'][data-theme] .ec-auth .ec-auth-back {
+  justify-self: start;
+  gap: 7px;
+  margin-bottom: clamp(16px, 2.2vw, 26px);
+  padding: 6px 2px;
+  font-family: var(--dz-mono); font-size: 10px; font-weight: 600;
+  letter-spacing: .14em; text-transform: uppercase;
+  color: var(--dz-muted);
+  transition: color .22s var(--ec-auth-ease), transform .22s var(--ec-auth-ease);
+}
+[data-design='esencial'][data-theme] .ec-auth .ec-auth-back:hover {
+  color: var(--dz-accent-text);
+  transform: translate3d(-2px, 0, 0);
+}
+
+/* Cabecera: etiqueta mono + título display + sello de icono a la derecha. */
+[data-design='esencial'][data-theme] .ec-auth .ec-auth-head {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: start;
+  gap: 6px 16px;
+  margin-bottom: clamp(18px, 2.2vw, 26px);
+  padding-bottom: clamp(14px, 2vw, 20px);
+  border-bottom: 1px solid var(--dz-line);
+}
+[data-design='esencial'][data-theme] .ec-auth .ec-auth-tag {
+  grid-column: 1;
+  display: inline-flex; align-items: center; gap: 7px;
+  width: fit-content;
+  justify-self: start;
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: none;
+  font-family: var(--dz-mono); font-size: 10px; font-weight: 700;
+  letter-spacing: .18em; text-transform: uppercase;
+  color: var(--dz-accent-text);
+}
+[data-design='esencial'][data-theme] .ec-auth .ec-auth-tag::before {
+  content: "";
+  width: 5px; height: 5px; flex: none;
+  border-radius: 50%;
+  background: var(--dz-warm);
+}
+[data-design='esencial'][data-theme] .ec-auth .ec-auth-badge {
+  grid-column: 2;
+  grid-row: 1 / span 3;
+  width: 42px; height: 42px;
+  margin: 0;
+  border-radius: 50%;
+  background: var(--ec-auth-pill);
+  border: 1px solid color-mix(in srgb, var(--dz-accent) 24%, transparent);
+  color: var(--ec-auth-pill-ink);
+  box-shadow: 0 10px 20px -16px color-mix(in srgb, var(--dz-accent) 90%, transparent);
+}
+[data-design='esencial'][data-theme] .ec-auth .ec-auth-title {
+  grid-column: 1;
+  font-family: var(--dz-display); font-weight: 800;
+  font-size: clamp(24px, 2.3vw, 31px); line-height: 1.06; letter-spacing: -.032em;
+  color: var(--dz-ink);
+  text-wrap: balance;
+}
+[data-design='esencial'][data-theme] .ec-auth .ec-auth-sub {
+  grid-column: 1;
+  font-family: var(--dz-body); font-size: 13.5px; line-height: 1.6;
+  color: var(--dz-muted);
+  max-width: 42ch;
+}
+
+/* Línea de confianza al pie de la hoja. */
+[data-design='esencial'] .ec-auth .ec-auth-trust {
+  display: flex; align-items: center; gap: 7px;
+  margin: clamp(18px, 2.4vw, 26px) 0 0;
+  padding-top: 13px;
+  border-top: 1px solid color-mix(in srgb, var(--dz-line) 76%, transparent);
+  font-family: var(--dz-mono); font-size: 9.5px; font-weight: 600;
+  letter-spacing: .1em; text-transform: uppercase;
+  color: var(--dz-muted);
+}
+[data-design='esencial'] .ec-auth .ec-auth-trust .icon { color: var(--dz-accent-text); flex: none; }
+
+/* Estado de verificación de sesión: spinner + barra skeleton que respira. */
+[data-design='esencial'][data-theme] .ec-auth .ec-auth-loading {
+  min-height: 300px;
+  gap: 14px;
+  font-family: var(--dz-body); font-size: 13.5px;
+  color: var(--dz-muted);
+}
+[data-design='esencial'][data-theme] .ec-auth .ec-auth-loading::after {
+  content: "";
+  width: min(200px, 62%);
+  height: 7px;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--dz-accent) 26%, var(--dz-line));
+  animation: ec-auth-breathe 1.7s ease-in-out infinite;
+}
+[data-design='esencial'][data-theme] .ec-auth .ec-auth-spin { color: var(--dz-accent-text); }
+@keyframes ec-auth-breathe {
+  0%, 100% { opacity: .28; transform: scaleX(.86); transform-origin: center; }
+  50% { opacity: 1; transform: scaleX(1); transform-origin: center; }
+}
+
+/* ===========================================================================
+   5. Formulario compartido (StoreAuthForm)
+   =========================================================================== */
+[data-design='esencial'] :is(.ec-auth, .ec-auth-card) .ecaf { gap: 15px; }
+
+/* Control segmentado del modo con indicador deslizante. */
+[data-design='esencial'] :is(.ec-auth, .ec-auth-card) .ecaf-switch {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  position: relative;
+  isolation: isolate;
+  margin-bottom: 4px;
+  padding: 4px;
+  border: 1px solid var(--dz-line);
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--dz-line) 24%, var(--dz-surface));
+}
+[data-design='esencial'] :is(.ec-auth, .ec-auth-card) .ecaf-switch-pill {
+  position: absolute;
+  z-index: 0;
+  top: 4px; bottom: 4px; left: 4px;
+  width: calc((100% - 8px) / 3);
+  border-radius: 999px;
+  background: var(--ec-auth-pill);
+  box-shadow: 0 8px 18px -12px color-mix(in srgb, var(--dz-accent) 88%, transparent);
+  transform: translate3d(calc(var(--ecaf-switch-i, 0) * 100%), 0, 0);
+  transition: transform .42s var(--ec-auth-ease);
+}
+[data-design='esencial'] :is(.ec-auth, .ec-auth-card) .ecaf-switch-btn {
+  position: relative;
+  z-index: 1;
+  min-height: 44px;
+  padding: 8px 4px;
+  border: 0;
+  border-radius: 999px;
+  background: none;
+  cursor: pointer;
+  font-family: var(--dz-body); font-size: 12.5px; font-weight: 700; letter-spacing: .005em;
+  color: var(--dz-muted);
+  transition: color .3s var(--ec-auth-ease);
+}
+[data-design='esencial'] :is(.ec-auth, .ec-auth-card) .ecaf-switch-btn.is-on { color: var(--ec-auth-pill-ink); }
+[data-design='esencial'] :is(.ec-auth, .ec-auth-card) .ecaf-switch-btn:hover:not(.is-on) { color: var(--dz-ink); }
+[data-design='esencial'] :is(.ec-auth, .ec-auth-card) .ecaf-switch-btn:focus-visible {
+  outline: 2px solid var(--dz-accent);
+  outline-offset: 2px;
+}
+
+/* Campos: etiqueta mono + subrayado de acento que crece al enfocar. */
+[data-design='esencial'][data-theme] :is(.ec-auth, .ec-auth-card) .sp-field { gap: 8px; }
+[data-design='esencial'][data-theme] :is(.ec-auth, .ec-auth-card) .sp-field-label {
+  font-family: var(--dz-mono); font-size: 10px; font-weight: 600;
+  letter-spacing: .16em; text-transform: uppercase;
+  color: var(--dz-muted);
+  transition: color .24s var(--ec-auth-ease), letter-spacing .3s var(--ec-auth-ease);
+}
+[data-design='esencial'][data-theme] :is(.ec-auth, .ec-auth-card) .sp-field:focus-within .sp-field-label {
+  color: var(--dz-accent-text);
+  letter-spacing: .2em;
+}
+[data-design='esencial'][data-theme] :is(.ec-auth, .ec-auth-card) .sp-field .sp-input {
+  min-height: 52px;
+  padding: 14px 14px 12px;
+  border: 1px solid var(--dz-line);
+  border-radius: 10px;
+  background-color: var(--dz-surface);
+  background-image: linear-gradient(var(--dz-accent), var(--dz-accent));
+  background-repeat: no-repeat;
+  background-position: 0 100%;
+  background-size: 0% 2px;
+  color: var(--dz-ink);
+  font-family: var(--dz-body); font-size: 16px;
+  box-shadow: none;
+  transition:
+    border-color .24s var(--ec-auth-ease),
+    background-size .34s var(--ec-auth-ease),
+    box-shadow .24s var(--ec-auth-ease);
+}
+[data-design='esencial'][data-theme] :is(.ec-auth, .ec-auth-card) .sp-field .sp-input:hover {
+  border-color: color-mix(in srgb, var(--dz-accent) 38%, var(--dz-line));
+}
+[data-design='esencial'][data-theme] :is(.ec-auth, .ec-auth-card) .sp-field .sp-input:focus {
+  border-color: color-mix(in srgb, var(--dz-accent) 70%, var(--dz-line));
+  background-size: 100% 2px;
+  box-shadow: 0 0 0 3px var(--ec-auth-halo);
+}
+[data-design='esencial'][data-theme] :is(.ec-auth, .ec-auth-card) .sp-field .sp-input:focus-visible {
+  outline: 0;
+}
+[data-design='esencial'][data-theme] :is(.ec-auth, .ec-auth-card) .sp-form-error {
+  font-family: var(--dz-body); font-size: 12px; line-height: 1.4;
+  color: var(--dz-danger);
+  animation: ec-auth-rise .3s var(--ec-auth-ease) both;
+}
+
+/* Ojo de la contraseña */
+[data-design='esencial'] :is(.ec-auth, .ec-auth-card) .ecaf-pass .sp-input { padding-right: 52px; }
+[data-design='esencial'] :is(.ec-auth, .ec-auth-card) .ecaf-pass-toggle {
+  right: 6px;
+  width: 40px; height: 40px;
+  border-radius: 50%;
+  color: var(--dz-muted);
+  transition: color .22s var(--ec-auth-ease), background .22s var(--ec-auth-ease);
+}
+[data-design='esencial'] :is(.ec-auth, .ec-auth-card) .ecaf-pass-toggle:hover {
+  color: var(--dz-accent-text);
+  background: var(--dz-accent-soft);
+}
+[data-design='esencial'] :is(.ec-auth, .ec-auth-card) .ecaf-pass-toggle .icon {
+  transition: transform .28s var(--ec-auth-ease), opacity .2s;
+}
+[data-design='esencial'] :is(.ec-auth, .ec-auth-card) .ecaf-pass-toggle:active .icon {
+  transform: scale(.84);
+}
+
+/* Botón principal: barrido de brillo + flecha que se desplaza. */
+[data-design='esencial'][data-theme] :is(.ec-auth, .ec-auth-card) .ecaf-submit {
+  position: relative;
+  overflow: hidden;
+  isolation: isolate;
+  margin-top: 6px;
+  min-height: 50px;
+  gap: 10px;
+  border-radius: 999px;
+  background: var(--ec-auth-pill);
+  color: var(--ec-auth-pill-ink);
+  font-family: var(--dz-body); font-size: 14px; font-weight: 700; letter-spacing: .02em;
+  box-shadow: 0 18px 30px -24px color-mix(in srgb, var(--dz-accent) 90%, transparent);
+  transition: transform .2s var(--ec-auth-ease), box-shadow .24s var(--ec-auth-ease), filter .2s;
+}
+[data-design='esencial'][data-theme] :is(.ec-auth, .ec-auth-card) .ecaf-submit::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  background: linear-gradient(100deg, transparent 0 30%, color-mix(in srgb, white 30%, transparent) 48%, transparent 64%);
+  transform: translate3d(-130%, 0, 0);
+  transition: transform .75s var(--ec-auth-ease);
+}
+[data-design='esencial'][data-theme] :is(.ec-auth, .ec-auth-card) .ecaf-submit:hover:not(:disabled)::before {
+  transform: translate3d(130%, 0, 0);
+}
+[data-design='esencial'][data-theme] :is(.ec-auth, .ec-auth-card) .ecaf-submit::after {
+  content: "";
+  width: 15px; height: 9px;
+  flex: none;
+  background: currentColor;
+  -webkit-mask: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 15 9'><path d='M0 4.5h12.4M9.2 1.2 12.9 4.5 9.2 7.8' fill='none' stroke='black' stroke-width='1.6' stroke-linecap='round' stroke-linejoin='round'/></svg>") center / contain no-repeat;
+  mask: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 15 9'><path d='M0 4.5h12.4M9.2 1.2 12.9 4.5 9.2 7.8' fill='none' stroke='black' stroke-width='1.6' stroke-linecap='round' stroke-linejoin='round'/></svg>") center / contain no-repeat;
+  transition: transform .3s var(--ec-auth-ease), opacity .2s;
+}
+[data-design='esencial'][data-theme] :is(.ec-auth, .ec-auth-card) .ecaf-submit:hover:not(:disabled)::after {
+  transform: translate3d(3px, 0, 0);
+}
+[data-design='esencial'][data-theme] :is(.ec-auth, .ec-auth-card) .ecaf-submit:disabled::after { opacity: .45; }
+[data-design='esencial'][data-theme] :is(.ec-auth, .ec-auth-card) .ecaf-submit:disabled::before { display: none; }
+
+/* Separador + Google */
+[data-design='esencial'] :is(.ec-auth, .ec-auth-card) .ecaf-divider {
+  font-family: var(--dz-mono); font-size: 9.5px; font-weight: 600;
+  letter-spacing: .14em; text-transform: uppercase;
+  color: var(--dz-muted);
+}
+[data-design='esencial'] :is(.ec-auth, .ec-auth-card) .ecaf-divider::before,
+[data-design='esencial'] :is(.ec-auth, .ec-auth-card) .ecaf-divider::after {
+  background: var(--dz-line); opacity: 1;
+}
+
+/* Avisos: entrada suave y filete lateral. */
+[data-design='esencial'][data-theme] :is(.ec-auth, .ec-auth-card) .ecaf-notice,
+[data-design='esencial'][data-theme] :is(.ec-auth, .ec-auth-card) .ecaf-error {
+  border-radius: 10px;
+  border-left-width: 3px;
+  font-family: var(--dz-body); font-size: 13px; line-height: 1.5;
+  color: var(--dz-ink);
+  animation: ec-auth-rise .32s var(--ec-auth-ease) both;
+}
+[data-design='esencial'][data-theme] :is(.ec-auth, .ec-auth-card) .ecaf-notice {
+  background: color-mix(in srgb, var(--dz-ok) 10%, var(--dz-surface));
+  border-color: color-mix(in srgb, var(--dz-ok) 30%, transparent);
+  border-left-color: var(--dz-ok);
+}
+[data-design='esencial'][data-theme] :is(.ec-auth, .ec-auth-card) .ecaf-error {
+  background: color-mix(in srgb, var(--dz-danger) 9%, var(--dz-surface));
+  border-color: color-mix(in srgb, var(--dz-danger) 28%, transparent);
+  border-left-color: var(--dz-danger);
+}
+@keyframes ec-auth-rise {
+  from { opacity: 0; transform: translate3d(0, -6px, 0); }
+  to   { opacity: 1; transform: none; }
+}
+
+/* Links del pie: el control segmentado ya cubre el cambio de modo, así que
+   solo sobrevive el reenvío de verificación (sin duplicar acciones). */
+[data-design='esencial'] :is(.ec-auth, .ec-auth-card) .ecaf-foot { gap: 4px 14px; }
+[data-design='esencial'] :is(.ec-auth, .ec-auth-card) .ecaf-foot:not(:has(.ecaf-link-resend)) { display: none; }
+[data-design='esencial'] :is(.ec-auth, .ec-auth-card) .ecaf-link {
+  padding: 6px 0;
+  min-height: 34px;
+  font-family: var(--dz-body); font-size: 12.5px; font-weight: 600;
+  color: var(--dz-accent-text);
+  text-decoration: underline;
+  text-decoration-color: color-mix(in srgb, var(--dz-accent) 40%, transparent);
+  text-underline-offset: 3px;
+  transition: color .2s var(--ec-auth-ease), text-decoration-color .2s;
+}
+[data-design='esencial'] :is(.ec-auth, .ec-auth-card) .ecaf-link:hover {
+  color: var(--dz-ink);
+  text-decoration-color: currentColor;
+}
+
+/* ===========================================================================
+   6. Modal de auth (misma piel, superficie compacta)
+   =========================================================================== */
+[data-design='esencial'][data-theme] .ec-auth-backdrop {
+  background: color-mix(in srgb, var(--ec-auth-plate) 34%, color-mix(in srgb, black 54%, transparent));
+  backdrop-filter: blur(6px);
+}
+[data-design='esencial'][data-theme] .ec-auth-card {
+  width: min(460px, 100%);
+  max-height: min(92vh, 780px);
+  padding: clamp(24px, 4vw, 34px) clamp(20px, 4vw, 32px) clamp(22px, 3.4vw, 28px);
+  border-radius: calc(var(--dz-radius) * 1.05);
+  border: 1px solid var(--dz-line);
+  background: var(--dz-surface);
+  color: var(--dz-ink);
+  box-shadow: 0 50px 100px -60px color-mix(in srgb, black 70%, transparent);
+}
+[data-design='esencial'][data-theme] .ec-auth-card .ec-auth-close {
+  top: 14px; right: 14px;
+  width: 40px; height: 40px;
+  border-radius: 50%;
+  border: 1px solid var(--dz-line);
+  background: var(--dz-surface);
+  color: var(--dz-muted);
+  transition: color .2s var(--ec-auth-ease), border-color .2s, background .2s, transform .2s var(--ec-auth-ease);
+}
+[data-design='esencial'][data-theme] .ec-auth-card .ec-auth-close:hover {
+  color: var(--dz-ink);
+  border-color: var(--dz-accent);
+  background: var(--dz-accent-soft);
+  transform: rotate(90deg);
+}
+[data-design='esencial'][data-theme] .ec-auth-card .ec-auth-head {
+  padding-right: 34px;
+  margin-bottom: 18px;
+}
+
+/* ===========================================================================
+   7. Responsive — 1024 / 860 / 640 / 390
+   =========================================================================== */
+@media (max-width: 1024px) {
+  [data-design='esencial'][data-theme] .ec-auth .ec-auth-shell {
+    grid-template-columns: minmax(0, 1fr);
+    gap: clamp(14px, 2.6vw, 20px);
+    margin-block: 14px clamp(30px, 5vw, 52px);
+  }
+  /* La plancha colapsa a banda compacta sobre el formulario. */
+  [data-design='esencial'][data-theme] .ec-auth .ec-auth-brand {
+    min-height: 0;
+    padding: clamp(18px, 3vw, 26px) clamp(18px, 3.4vw, 30px);
+    border-radius: calc(var(--dz-radius) * 1.05);
+  }
+  [data-design='esencial'][data-theme] .ec-auth .ec-auth-brand-inner {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: 10px;
+  }
+  [data-design='esencial'][data-theme] .ec-auth .ec-auth-brand-copy { gap: 8px; max-width: none; }
+  [data-design='esencial'][data-theme] .ec-auth .ec-auth-brand-title { font-size: clamp(22px, 3.4vw, 30px); }
+  [data-design='esencial'][data-theme] .ec-auth .ec-auth-brand-text { display: none; }
+  [data-design='esencial'][data-theme] .ec-auth .ec-auth-brand-foot { display: none; }
+  [data-design='esencial'] .ec-auth .ec-auth-index { display: none; }
+  [data-design='esencial'] .ec-auth .ec-auth-perks { display: none; }
+  [data-design='esencial'] .ec-auth .ec-auth-seal { display: none; }
+  [data-design='esencial'] .ec-auth .ec-auth-hatch { opacity: .4; }
+  [data-design='esencial'][data-theme] .ec-auth .ec-auth-panel {
+    align-content: start;
+    padding-block: 0;
+  }
+  [data-design='esencial'] .ec-auth .ec-auth-panel-inner { max-width: 480px; }
+  [data-design='esencial'] .ec-auth .ec-auth-trust { margin-top: 18px; }
+}
+
+@media (max-width: 860px) {
+  [data-design='esencial'][data-theme] .ec-auth .ec-auth-brand { padding: 16px 18px; }
+  [data-design='esencial'][data-theme] .ec-auth .ec-auth-brand-title { font-size: 21px; }
+  [data-design='esencial'][data-theme] .ec-auth .ec-auth-brand-kicker { font-size: 9.5px; }
+  [data-design='esencial'][data-theme] .ec-auth .ec-auth-title { font-size: 23px; }
+}
+
+@media (max-width: 640px) {
+  [data-design='esencial'][data-theme] .ec-auth { padding-inline: 12px; }
+  [data-design='esencial'][data-theme] .ec-auth .ec-auth-shell {
+    margin-block: 10px clamp(24px, 6vw, 40px);
+    gap: 12px;
+  }
+  [data-design='esencial'][data-theme] .ec-auth .ec-auth-brand { border-radius: 18px; padding: 14px 15px; }
+  [data-design='esencial'][data-theme] .ec-auth .ec-auth-logo { width: 36px; height: 36px; font-size: 16px; }
+  [data-design='esencial'][data-theme] .ec-auth .ec-auth-brand-name { font-size: 15px; }
+  [data-design='esencial'][data-theme] .ec-auth .ec-auth-brand-title { font-size: 19px; letter-spacing: -.03em; }
+  [data-design='esencial'][data-theme] .ec-auth .ec-auth-panel-inner { max-width: none; }
+  [data-design='esencial'][data-theme] .ec-auth .ec-auth-head { gap: 5px 12px; }
+  [data-design='esencial'][data-theme] .ec-auth .ec-auth-badge { width: 38px; height: 38px; }
+  [data-design='esencial'][data-theme] .ec-auth .ec-auth-title { font-size: 21px; }
+  [data-design='esencial'][data-theme] .ec-auth .ec-auth-sub { font-size: 13px; }
+  [data-design='esencial'] :is(.ec-auth, .ec-auth-card) .ecaf-switch-btn { font-size: 11.5px; padding: 8px 2px; }
+  [data-design='esencial'] :is(.ec-auth, .ec-auth-card) .ecaf-grid { grid-template-columns: minmax(0, 1fr); }
+  [data-design='esencial'][data-theme] :is(.ec-auth, .ec-auth-card) .sp-field .sp-input { min-height: 50px; }
+  [data-design='esencial'] .ec-auth .ec-auth-trust { font-size: 9px; letter-spacing: .08em; }
+}
+
+@media (max-width: 390px) {
+  [data-design='esencial'][data-theme] .ec-auth { padding-inline: 10px; }
+  [data-design='esencial'][data-theme] .ec-auth .ec-auth-brand-title { font-size: 17.5px; }
+  [data-design='esencial'][data-theme] .ec-auth .ec-auth-title { font-size: 20px; }
+  [data-design='esencial'] :is(.ec-auth, .ec-auth-card) .ecaf-switch { padding: 3px; }
+  [data-design='esencial'] :is(.ec-auth, .ec-auth-card) .ecaf-switch-pill {
+    top: 3px; bottom: 3px; left: 3px;
+    width: calc((100% - 6px) / 3);
+  }
+  [data-design='esencial'] :is(.ec-auth, .ec-auth-card) .ecaf-switch-btn { font-size: 11px; letter-spacing: 0; }
+}
+
+/* ===========================================================================
+   8. Movimiento reducido — se apagan todos los loops
+   =========================================================================== */
+@media (prefers-reduced-motion: reduce) {
+  [data-design='esencial'] .ec-auth .ec-auth-glow-a,
+  [data-design='esencial'] .ec-auth .ec-auth-glow-b,
+  [data-design='esencial'] .ec-auth .ec-auth-grain,
+  [data-design='esencial'] .ec-auth .ec-auth-hatch,
+  [data-design='esencial'] .ec-auth .ec-auth-seal-ring,
+  [data-design='esencial'] .ec-auth .ec-auth-brand-kicker::before,
+  [data-design='esencial'] .ec-auth .ec-auth-loading::after {
+    animation: none;
+  }
+  [data-design='esencial'] :is(.ec-auth, .ec-auth-card) .ecaf-switch-pill,
+  [data-design='esencial'] :is(.ec-auth, .ec-auth-card) .ecaf-submit::before,
+  [data-design='esencial'] :is(.ec-auth, .ec-auth-card) .ecaf-submit::after,
+  [data-design='esencial'][data-theme] :is(.ec-auth, .ec-auth-card) .ecaf-notice,
+  [data-design='esencial'][data-theme] :is(.ec-auth, .ec-auth-card) .ecaf-error,
+  [data-design='esencial'][data-theme] :is(.ec-auth, .ec-auth-card) .sp-form-error {
+    animation: none;
+    transition: none;
+  }
+  [data-design='esencial'] .ec-auth .ec-auth-hatch { transform: none; }
+}

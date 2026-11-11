@@ -9,17 +9,16 @@
   background: var(--mt-ok); box-shadow: 0 0 8px var(--mt-ok); vertical-align: 1px;
 }
 .store-page[data-template='moderntec'] .ec-account .acc-auth-card .acc-tele { text-align: center; }
-.store-page[data-template='moderntec'] .ec-account .acc-mhead { flex-wrap: wrap; }
-.store-page[data-template='moderntec'] .ec-account .acc-id { flex-wrap: wrap; }
 
-/* superficies */
-.store-page[data-template='moderntec'] .ec-account :is(.acc-side, .acc-panel, .acc-auth-card, .acc-gate-card, .acc-mhead) {
+/* superficies: .acc-panel y .acc-mhead NO van acá — el panel tiene su
+   propia piel de "reglas" en store-moderntec-account-sections.css y el
+   header móvil es un filete de lectura (lo define store-design-moderntec). */
+.store-page[data-template='moderntec'] .ec-account :is(.acc-side, .acc-auth-card, .acc-gate-card) {
   background: var(--mt-panel) !important; border: 1px solid var(--mt-line) !important; border-radius: var(--mt-rad-md) !important;
   box-shadow: var(--mt-shadow-1) !important; color: var(--mt-ink);
   background-image: linear-gradient(var(--mt-line-soft) 1px, transparent 1px), linear-gradient(90deg, var(--mt-line-soft) 1px, transparent 1px) !important;
   background-size: 32px 32px; background-position: -1px -1px;
 }
-.store-page[data-template='moderntec'] .ec-account .acc-mhead { padding: 12px 14px; }
 .store-page[data-template='moderntec'] .ec-account :is(.acc-panel-title, .acc-auth-title, .acc-gate-title, .acc-id-name, .acc-mhead-meta strong) {
   font-family: var(--mt-display); font-weight: 600; letter-spacing: -.02em; color: var(--mt-ink);
 }

@@ -59,6 +59,17 @@ function focusFirst() {
   const el = props.mode === 'forgot' ? forgotInput.value : emailInput.value
   el?.focus()
 }
+
+// ---------- control segmentado (solo piel esencial) ----------
+// Mismo switchMode que los links del pie: no navega ni recarga, solo emite
+// 'mode' al padre. El markup nace OCULTO (ver <style scoped>) y la piel
+// esencial lo enciende; el resto de los diseños no lo ve.
+const SWITCH_MODES = [
+  { mode: 'login', label: 'Ingresar' },
+  { mode: 'register', label: 'Crear cuenta' },
+  { mode: 'forgot', label: 'Recuperar' },
+]
+const switchIndex = computed(() => Math.max(0, SWITCH_MODES.findIndex((m) => m.mode === props.mode)))
 // Cambio de modo vindo del padre (link del pie, ?mode= de la URL, authMode
 // del store): limpia errores y reenfoca. `notice` NO se limpia acá — el
 // aviso de "te enviamos el enlace" sobrevive al salto forgot → login.
@@ -189,6 +200,21 @@ onUnmounted(() => resizeObs?.disconnect())
 
 <template>
   <div class="ecaf">
+    <!-- Control segmentado del modo (indicador deslizante). Solo piel
+         esencial: en el resto de los diseños queda display:none. -->
+    <div
+      class="ecaf-switch" role="group" aria-label="Tipo de acceso"
+      :style="{ '--ecaf-switch-i': switchIndex }"
+    >
+      <span class="ecaf-switch-pill" aria-hidden="true"></span>
+      <button
+        v-for="m in SWITCH_MODES" :key="m.mode" type="button"
+        class="ecaf-switch-btn" :class="{ 'is-on': mode === m.mode }"
+        :aria-pressed="mode === m.mode"
+        @click="switchMode(m.mode)"
+      >{{ m.label }}</button>
+    </div>
+
     <p v-if="notice" class="ecaf-notice" role="status">{{ notice }}</p>
     <p v-else-if="formError" class="ecaf-error" role="alert">{{ formError }}</p>
 
@@ -262,7 +288,7 @@ onUnmounted(() => resizeObs?.disconnect())
       </template>
       <template v-else-if="mode === 'register'">
         <button type="button" class="ecaf-link" @click="switchMode('login')">¿Ya tenés cuenta? Ingresá</button>
-        <button v-if="registeredPending" type="button" class="ecaf-link" @click="resendVerification">Reenviar correo de verificación</button>
+        <button v-if="registeredPending" type="button" class="ecaf-link ecaf-link-resend" @click="resendVerification">Reenviar correo de verificación</button>
       </template>
       <template v-else>
         <button type="button" class="ecaf-link" @click="switchMode('login')">Volver a ingresar</button>
@@ -272,6 +298,9 @@ onUnmounted(() => resizeObs?.disconnect())
 </template>
 
 <style scoped>
+/* Control segmentado: oculto por defecto (lo enciende la piel esencial con
+   más especificidad). El resto de los diseños sigue usando los links del pie. */
+.ecaf-switch { display: none; }
 .ecaf { display: grid; gap: 14px; }
 .ecaf-notice {
   margin: 0; padding: 11px 14px; border-radius: 12px; font-size: 13.5px; line-height: 1.45;

@@ -48,6 +48,7 @@ const memberInitials = computed(() => {
   <section class="acc-panel" aria-label="Mis suscripciones">
     <header class="acc-panel-head">
       <div class="acc-panel-headtxt">
+        <span class="acc-panel-kicker" aria-hidden="true">02 · Membresía</span>
         <h2 class="acc-panel-title">Suscripciones</h2>
         <p class="acc-panel-sub">Planes de miembro y beneficios de {{ shopName }}</p>
       </div>
@@ -132,7 +133,21 @@ const memberInitials = computed(() => {
           </li>
         </ul>
       </div>
-      <p v-else class="acc-muted">Esta tienda no tiene planes de suscripción activos.</p>
+      <p v-else class="acc-muted acc-muted--plans">
+        <span class="acc-empty-art" aria-hidden="true">
+          <svg viewBox="0 0 240 150" role="presentation" focusable="false">
+            <path class="a-line a-dash" d="M34 132h172" />
+            <circle class="a-ring a-dash" cx="120" cy="80" r="40" />
+            <path class="a-leaf a-leaf--l" d="M88 58c-9 6-12 16-9 25 8-6 11-16 9-25Z" />
+            <path class="a-leaf a-leaf--l" d="M78 82c-8 8-8 18-3 25 6-7 7-17 3-25Z" />
+            <path class="a-leaf a-leaf--r" d="M152 58c9 6 12 16 9 25-8-6-11-16-9-25Z" />
+            <path class="a-leaf a-leaf--r" d="M162 82c8 8 8 18 3 25-6-7-7-17-3-25Z" />
+            <path class="a-line" d="M106 52h28l-3-11-7 6-8-6z" />
+            <circle class="a-dot" cx="120" cy="88" r="2.6" />
+          </svg>
+        </span>
+        <span>Esta tienda no tiene planes de suscripción activos.</span>
+      </p>
     </template>
 
     <p v-else class="acc-muted">No pudimos cargar la información de suscripciones.</p>
@@ -140,6 +155,8 @@ const memberInitials = computed(() => {
 </template>
 
 <style scoped>
+/* Nodos de la piel "esencial" (ocultos por defecto, ver skin CSS). */
+.acc-panel-kicker, .acc-empty-art { display: none; }
 .acc-panel { display: grid; gap: 16px; padding: 20px; border: 1px solid var(--sp-line, rgba(0,0,0,.09)); border-radius: var(--sp-radius); background: var(--sp-card, transparent); box-shadow: var(--sp-shadow-sm, none); }
 .acc-panel-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; }
 .acc-panel-headtxt { display: grid; gap: 3px; min-width: 0; }

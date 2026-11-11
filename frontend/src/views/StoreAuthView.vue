@@ -13,12 +13,17 @@ import { useCustomerStore } from '../stores/customer.store.js'
 import { storeHostSlug } from '../config/env.js'
 import AppIcon from '../components/AppIcon.vue'
 import StoreAuthForm from '../components/ecommerce/StoreAuthForm.vue'
+import '../assets/store-design-esencial-auth.css'
 
 const ctx = inject('storePage')
 const slug = computed(() => ctx?.slug?.value || ctx?.slug || '')
+const pageTemplate = computed(() => ctx?.pageTemplate?.value || ctx?.pageTemplate || '')
 const shopName = computed(() => ctx?.shopName?.value || ctx?.shopName || 'la tienda')
 const custom = computed(() => ctx?.custom?.value || ctx?.custom || {})
 const hasDesignAdvanced = computed(() => Boolean(ctx?.hasDesignAdvanced?.value ?? ctx?.hasDesignAdvanced))
+// Ícono del sello circular por diseño: ModernTec usa rayo (técnico), el
+// resto conserva la hoja editorial del diseño esencial.
+const sealIcon = computed(() => (pageTemplate.value === 'moderntec' ? 'zap' : 'leaf'))
 const ordersEnabled = computed(() => Boolean(ctx?.ordersEnabled?.value ?? ctx?.ordersEnabled))
 
 const route = useRoute()
@@ -108,13 +113,36 @@ const perks = computed(() => {
   list.push({ icon: 'map-pin', text: 'Direcciones y soporte en un solo lugar' })
   return list
 })
+
+// ---------- ornamento editorial (solo piel esencial) ----------
+// Índice del modo activo (01/02/03) y sello circular giratorio. El markup
+// nace oculto (ver <style scoped>) y la piel esencial lo muestra: para el
+// resto de los diseños no existe.
+const MODE_INDEX = [
+  { key: 'login', n: '01', label: 'Ingresar' },
+  { key: 'register', n: '02', label: 'Crear cuenta' },
+  { key: 'forgot', n: '03', label: 'Recuperar' },
+]
+const sealText = computed(() => {
+  const name = shopName.value.length > 22 ? `${shopName.value.slice(0, 21)}…` : shopName.value
+  return `${name} · cuenta de comprador ·`.toUpperCase()
+})
 </script>
 
 <template>
   <div class="sp-page-root ec-auth">
+    <!-- Fondo ambiental (esencial): dos deriva de gradientes + grano. Solo
+         transform/opacity, nunca background-position. -->
+    <div class="ec-auth-ambient" aria-hidden="true">
+      <span class="ec-auth-glow ec-auth-glow-a"></span>
+      <span class="ec-auth-glow ec-auth-glow-b"></span>
+      <span class="ec-auth-grain"></span>
+    </div>
+
     <div class="ec-auth-shell">
       <!-- ===== Panel de marca (piel del diseño activo) ===== -->
       <aside class="ec-auth-brand" :style="brandStyle" aria-label="Tu cuenta en la tienda">
+        <span class="ec-auth-hatch" aria-hidden="true"></span>
         <div class="ec-auth-brand-inner">
           <RouterLink :to="homeTo" class="ec-auth-brand-top">
             <span class="ec-auth-logo">
@@ -129,6 +157,12 @@ const perks = computed(() => {
             <p class="ec-auth-brand-kicker">Cuenta de comprador</p>
             <h1 class="ec-auth-brand-title">{{ brandTitle }}</h1>
             <p class="ec-auth-brand-text">{{ brandText }}</p>
+            <ol class="ec-auth-index" aria-hidden="true">
+              <li v-for="it in MODE_INDEX" :key="it.key" :class="{ 'is-on': it.key === mode }">
+                <span class="ec-auth-index-n">{{ it.n }}</span>
+                <span class="ec-auth-index-l">{{ it.label }}</span>
+              </li>
+            </ol>
             <ul class="ec-auth-perks">
               <li v-for="p in perks" :key="p.text">
                 <AppIcon :name="p.icon" :size="15" aria-hidden="true" />
@@ -139,41 +173,73 @@ const perks = computed(() => {
 
           <p class="ec-auth-brand-foot">Sesión segura · Acceso directo a tu cuenta</p>
         </div>
+
+        <!-- Sello circular giratorio (ornamento, no información). -->
+        <span class="ec-auth-seal" aria-hidden="true">
+          <svg class="ec-auth-seal-ring" viewBox="0 0 100 100" focusable="false">
+            <defs>
+              <path id="ec-auth-seal-path" d="M50,50 m-38,0 a38,38 0 1,1 76,0 a38,38 0 1,1 -76,0" />
+            </defs>
+            <text>
+              <textPath href="#ec-auth-seal-path" startOffset="0" textLength="238" lengthAdjust="spacing">{{ sealText }}</textPath>
+            </text>
+          </svg>
+          <AppIcon :name="sealIcon" :size="17" />
+        </span>
       </aside>
 
       <!-- ===== Panel del formulario ===== -->
       <div class="ec-auth-panel">
-        <RouterLink :to="homeTo" class="ec-auth-back">
-          <AppIcon name="arrow-left" :size="15" aria-hidden="true" /> Volver a la tienda
-        </RouterLink>
+        <div class="ec-auth-panel-inner">
+          <RouterLink :to="homeTo" class="ec-auth-back">
+            <AppIcon name="arrow-left" :size="15" aria-hidden="true" /> Volver a la tienda
+          </RouterLink>
 
-        <div v-if="sessionState === 'checking'" class="ec-auth-loading" role="status">
-          <AppIcon name="loader" :size="24" class="ec-auth-spin" aria-hidden="true" />
-          <p>Verificando tu sesión…</p>
+          <div v-if="sessionState === 'checking'" class="ec-auth-loading" role="status">
+            <AppIcon name="loader" :size="24" class="ec-auth-spin" aria-hidden="true" />
+            <p>Verificando tu sesión…</p>
+          </div>
+
+          <div v-else-if="sessionState === 'auth'" class="ec-auth-loading" role="status">
+            <AppIcon name="loader" :size="24" class="ec-auth-spin" aria-hidden="true" />
+            <p>Ya tenés sesión — te llevamos a tu destino…</p>
+          </div>
+
+          <template v-else>
+            <header class="ec-auth-head">
+              <span class="ec-auth-badge" aria-hidden="true">
+                <AppIcon :name="mode === 'forgot' ? 'lock' : 'user'" :size="18" />
+              </span>
+              <span class="ec-auth-tag">{{ modeTag }}</span>
+              <h2 class="ec-auth-title">{{ title }}</h2>
+              <p class="ec-auth-sub">{{ subtitle }}</p>
+            </header>
+            <StoreAuthForm :slug="slug" :mode="mode" @done="onAuthed" @mode="setMode" />
+            <p class="ec-auth-trust">
+              <AppIcon name="lock" :size="12" aria-hidden="true" />
+              Conexión segura · no compartimos tus datos
+            </p>
+          </template>
         </div>
-
-        <div v-else-if="sessionState === 'auth'" class="ec-auth-loading" role="status">
-          <AppIcon name="loader" :size="24" class="ec-auth-spin" aria-hidden="true" />
-          <p>Ya tenés sesión — te llevamos a tu destino…</p>
-        </div>
-
-        <template v-else>
-          <header class="ec-auth-head">
-            <span class="ec-auth-badge" aria-hidden="true">
-              <AppIcon :name="mode === 'forgot' ? 'lock' : 'user'" :size="18" />
-            </span>
-            <span class="ec-auth-tag">{{ modeTag }}</span>
-            <h2 class="ec-auth-title">{{ title }}</h2>
-            <p class="ec-auth-sub">{{ subtitle }}</p>
-          </header>
-          <StoreAuthForm :slug="slug" :mode="mode" @done="onAuthed" @mode="setMode" />
-        </template>
       </div>
     </div>
   </div>
 </template>
 
 <style scoped>
+/* Ornamento editorial (ambiente, trama, sello, índice, línea de confianza):
+   nace OCULTO para el resto de los diseños — la piel esencial lo enciende
+   con más especificidad desde store-design-esencial-auth.css. */
+.ec-auth-ambient,
+.ec-auth-hatch,
+.ec-auth-seal,
+.ec-auth-index,
+.ec-auth-trust { display: none; }
+
+/* Envoltorio neutro: display:contents lo hace invisible para el layout de
+   cualquier diseño (los hijos siguen siendo ítems directos del panel). */
+.ec-auth-panel-inner { display: contents; }
+
 .ec-auth-shell {
   flex: 1; width: min(1060px, 100%);
   margin: clamp(14px, 3vw, 36px) auto clamp(48px, 7vw, 96px);

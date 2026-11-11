@@ -63,6 +63,7 @@ async function remove(a) {
   <section class="acc-panel" aria-label="Mis direcciones">
     <header class="acc-panel-head">
       <div class="acc-panel-headtxt">
+        <span class="acc-panel-kicker" aria-hidden="true">03 · Direcciones</span>
         <h2 class="acc-panel-title">Direcciones</h2>
         <p class="acc-panel-sub">Las usás en el checkout para calcular el envío — la principal va primera.</p>
       </div>
@@ -108,6 +109,19 @@ async function remove(a) {
       </div>
 
       <div v-if="!error && !addresses.length" class="acc-empty acc-empty--sm">
+        <div class="acc-empty-art" aria-hidden="true">
+          <svg viewBox="0 0 240 150" role="presentation" focusable="false">
+            <path class="a-line a-dash" d="M34 132h172" />
+            <path class="a-line" d="M92 94 120 70l28 24" />
+            <path class="a-line" d="M97 94v32h46V94" />
+            <path class="a-line" d="M113 126v-16h14v16" />
+            <circle class="a-dot" cx="133" cy="105" r="2.6" />
+            <path class="a-line" d="M166 126c0-12 1-20 3-27" />
+            <path class="a-leaf a-leaf--r" d="M169 103c11-3 17-11 17-21-11 2-17 10-17 21Z" />
+            <path class="a-leaf a-leaf--l" d="M166 116c-9-1-15-7-15-15 9 1 14 7 15 15Z" />
+            <path class="a-line a-dash" d="M52 124c10-6 20-7 30-3" />
+          </svg>
+        </div>
         <span class="acc-empty-ico" aria-hidden="true"><AppIcon name="map-pin" :size="26" /></span>
         <h3 class="acc-empty-title">No cargaste direcciones</h3>
         <p class="acc-empty-sub">Agregá tu domicilio para que el checkout lo sugiera solo.</p>
@@ -141,6 +155,8 @@ async function remove(a) {
 </template>
 
 <style scoped>
+/* Nodos de la piel "esencial" (ocultos por defecto, ver skin CSS). */
+.acc-panel-kicker, .acc-empty-art { display: none; }
 .acc-panel { display: grid; gap: 16px; padding: 20px; border: 1px solid var(--sp-line, rgba(0,0,0,.09)); border-radius: var(--sp-radius); background: var(--sp-card, transparent); box-shadow: var(--sp-shadow-sm, none); }
 .acc-panel-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
 .acc-panel-headtxt { display: grid; gap: 3px; min-width: 0; }

@@ -1,134 +1,225 @@
 /* MODERNTEC - cuenta del comprador: Pedidos, Direcciones, Suscripciones.
    Instrumento de laboratorio: paneles con reglas 1px, esquinas rectas,
-   telemetria mono, estados con glifo propio (no solo color). */
-.store-page[data-template='moderntec'] .acc-panel {
+   telemetría mono, estados con glifo propio (no solo color).
+
+   Todos los selectores llevan [data-theme] + .ec-account (0,5,0+): esta
+   hoja se carga después de store-design-moderntec.css (0,4,0) y de
+   store-moderntec-account.css, así que estos overrides siempre ganan. */
+.store-page[data-template='moderntec'][data-theme] .ec-account .acc-panel {
   --acc-r: var(--mt-rad-sm, 4px);
-  gap: 18px; padding: 22px; border: 1px solid var(--mt-line); border-radius: 6px;
-  background: linear-gradient(var(--mt-line-soft) 1px, transparent 1px) 0 0 / 100% 28px, var(--mt-panel);
-  box-shadow: none; color: var(--mt-ink);
+  position: relative;
+  gap: 18px; padding: 22px;
+  border: 1px solid var(--mt-line); border-radius: 6px;
+  background-color: var(--mt-panel);
+  background-image: linear-gradient(var(--mt-line-soft) 1px, transparent 1px);
+  background-size: 100% 28px; background-position: 0 0; background-repeat: repeat;
+  box-shadow: var(--mt-shadow-1); color: var(--mt-ink);
 }
-.store-page[data-template='moderntec'] .acc-panel-head { padding-bottom: 14px; border-bottom: 1px solid var(--mt-line); }
-.store-page[data-template='moderntec'] .acc-panel-title {
+.store-page[data-template='moderntec'][data-theme] .ec-account .acc-panel-head { padding-bottom: 14px; border-bottom: 1px solid var(--mt-line); }
+/* Kickers mono de módulo ("02 · Membresía"): la vista los trae en el
+   markup pero la piel base los oculta — acá se encienden. */
+.store-page[data-template='moderntec'][data-theme] .ec-account .acc-panel-kicker {
+  display: block; margin-bottom: 3px;
+  font-family: var(--mt-mono); font-size: 10px; font-weight: 600;
+  letter-spacing: .2em; text-transform: uppercase; color: var(--mt-accent-text);
+}
+.store-page[data-template='moderntec'][data-theme] .ec-account .acc-panel-title {
   font-family: var(--mt-display); font-size: 22px; font-weight: 600; letter-spacing: -.02em; color: var(--mt-ink);
 }
-.store-page[data-template='moderntec'] .acc-panel-sub,
-.store-page[data-template='moderntec'] .acc-muted,
-.store-page[data-template='moderntec'] .acc-order-meta,
-.store-page[data-template='moderntec'] .acc-addr-body small,
-.store-page[data-template='moderntec'] .acc-sub-now-txt > small,
-.store-page[data-template='moderntec'] .acc-empty-sub { font-family: var(--mt-mono); font-size: 12px; color: var(--mt-ink-2); }
+.store-page[data-template='moderntec'][data-theme] .ec-account :is(.acc-panel-sub, .acc-muted, .acc-order-meta, .acc-addr-body small, .acc-sub-now-txt > small, .acc-empty-sub) {
+  font-family: var(--mt-mono); font-size: 12px; color: var(--mt-ink-2);
+}
 
 /* Tarjetas / filas */
-.store-page[data-template='moderntec'] :is(.acc-order, .acc-addr, .acc-plan, .acc-sub-now, .acc-addrform) {
+.store-page[data-template='moderntec'][data-theme] .ec-account :is(.acc-order, .acc-addr, .acc-plan, .acc-sub-now, .acc-addrform) {
   border: 1px solid var(--mt-line); border-radius: 4px; background: var(--mt-bg-2); box-shadow: none;
-  transition: border-color .15s, background-color .15s;
+  transition: border-color .15s, background-color .15s, transform .18s var(--mt-ease-out);
 }
-.store-page[data-template='moderntec'] :is(.acc-order, .acc-addr, .acc-plan):hover {
+.store-page[data-template='moderntec'][data-theme] .ec-account :is(.acc-order, .acc-addr, .acc-plan):hover {
   border-color: var(--mt-accent-line); background: var(--mt-surface-2); box-shadow: none;
 }
-.store-page[data-template='moderntec'] .acc-order { position: relative; padding-left: 20px; }
-.store-page[data-template='moderntec'] .acc-order::before {
+.store-page[data-template='moderntec'][data-theme] .ec-account .acc-order { position: relative; padding-left: 20px; }
+.store-page[data-template='moderntec'][data-theme] .ec-account .acc-order::before {
   content: ''; position: absolute; left: 0; top: 0; bottom: 0; width: 2px;
   background: linear-gradient(var(--mt-accent), var(--mt-accent-2)); opacity: .55;
 }
-.store-page[data-template='moderntec'] .acc-order-idx {
+.store-page[data-template='moderntec'][data-theme] .ec-account .acc-order-idx {
   font-family: var(--mt-mono); font-size: 10.5px; letter-spacing: var(--mt-track-label); text-transform: uppercase; color: var(--mt-ink-3);
 }
-.store-page[data-template='moderntec'] .acc-order-code { font-family: var(--mt-mono); font-size: 15px; font-weight: 600; letter-spacing: .02em; }
-.store-page[data-template='moderntec'] .acc-order-foot { border-top: 1px solid var(--mt-line); }
-.store-page[data-template='moderntec'] .acc-order-total { font-family: var(--mt-mono); font-size: 17px; font-weight: 600; color: var(--mt-ink); }
-.store-page[data-template='moderntec'] .acc-order-link {
+.store-page[data-template='moderntec'][data-theme] .ec-account .acc-order-code { font-family: var(--mt-mono); font-size: 15px; font-weight: 600; letter-spacing: .02em; }
+.store-page[data-template='moderntec'][data-theme] .ec-account .acc-order-foot { border-top: 1px solid var(--mt-line); }
+.store-page[data-template='moderntec'][data-theme] .ec-account .acc-order-total { font-family: var(--mt-mono); font-size: 17px; font-weight: 600; color: var(--mt-ink); }
+.store-page[data-template='moderntec'][data-theme] .ec-account .acc-order-link {
   font-family: var(--mt-mono); font-size: 12px; font-weight: 500; letter-spacing: .04em; text-transform: uppercase;
-  color: var(--mt-accent-text); min-height: 32px;
+  color: var(--mt-accent-text); min-height: 32px; text-decoration: none;
+  transition: color var(--mt-dur-1), letter-spacing var(--mt-dur-2) var(--mt-ease-out);
 }
+.store-page[data-template='moderntec'][data-theme] .ec-account .acc-order-link:hover { color: var(--mt-accent); letter-spacing: .07em; }
 
 /* Badges de estado: rectos, mono, con glifo distinto por estado */
-.store-page[data-template='moderntec'] .acc-status {
+.store-page[data-template='moderntec'][data-theme] .ec-account .acc-status {
   --tone: var(--mt-ink-2);
   font-family: var(--mt-mono); font-size: 11px; font-weight: 600; letter-spacing: .08em; text-transform: uppercase;
   padding: 6px 10px; border-radius: 3px; border: 1px solid color-mix(in srgb, var(--tone) 45%, transparent);
   background: color-mix(in srgb, var(--tone) 10%, transparent); color: var(--tone);
 }
-.store-page[data-template='moderntec'] .acc-status::before { content: '\25CB'; font-size: 10px; line-height: 1; }
-.store-page[data-template='moderntec'] .acc-status:is(.is-pending_payment, .is-pending) { --tone: #ffc266; }
-.store-page[data-template='moderntec'] .acc-status:is(.is-pending_payment, .is-pending)::before { content: '\25D4'; }
-.store-page[data-template='moderntec'] .acc-status:is(.is-paid, .is-shipped) { --tone: var(--mt-accent-text); }
-.store-page[data-template='moderntec'] .acc-status.is-paid::before { content: '\25CF'; }
-.store-page[data-template='moderntec'] .acc-status.is-packing { --tone: var(--mt-ink); }
-.store-page[data-template='moderntec'] .acc-status.is-packing::before { content: '\25D0'; }
-.store-page[data-template='moderntec'] .acc-status.is-shipped::before { content: '\25B6'; }
-.store-page[data-template='moderntec'] .acc-status:is(.is-delivered, .is-active) { --tone: var(--mt-ok); }
-.store-page[data-template='moderntec'] .acc-status:is(.is-delivered, .is-active)::before { content: '\2713'; }
-.store-page[data-template='moderntec'] .acc-status.is-expired { --tone: var(--mt-ink-3); }
-.store-page[data-template='moderntec'] .acc-status.is-expired::before { content: '\2013'; }
-.store-page[data-template='moderntec'] .acc-status.is-cancelled { --tone: var(--mt-danger); }
-.store-page[data-template='moderntec'] .acc-status.is-cancelled::before { content: '\2715'; }
-.store-page[data-template='moderntec'] .acc-status.is-refunded { --tone: #ffa57a; }
-.store-page[data-template='moderntec'] .acc-status.is-refunded::before { content: '\21A9'; }
-.store-page[data-template='moderntec'] .acc-status svg { display: none; }
+.store-page[data-template='moderntec'][data-theme] .ec-account .acc-status::before { content: '\25CB'; font-size: 10px; line-height: 1; }
+.store-page[data-template='moderntec'][data-theme] .ec-account .acc-status:is(.is-pending_payment, .is-pending) { --tone: #ffc266; }
+.store-page[data-template='moderntec'][data-theme] .ec-account .acc-status:is(.is-pending_payment, .is-pending)::before { content: '\25D4'; }
+.store-page[data-template='moderntec'][data-theme] .ec-account .acc-status:is(.is-paid, .is-shipped) { --tone: var(--mt-accent-text); }
+.store-page[data-template='moderntec'][data-theme] .ec-account .acc-status.is-paid::before { content: '\25CF'; }
+.store-page[data-template='moderntec'][data-theme] .ec-account .acc-status.is-packing { --tone: var(--mt-ink); }
+.store-page[data-template='moderntec'][data-theme] .ec-account .acc-status.is-packing::before { content: '\25D0'; }
+.store-page[data-template='moderntec'][data-theme] .ec-account .acc-status.is-shipped::before { content: '\25B6'; }
+.store-page[data-template='moderntec'][data-theme] .ec-account .acc-status:is(.is-delivered, .is-active) { --tone: var(--mt-ok); }
+.store-page[data-template='moderntec'][data-theme] .ec-account .acc-status:is(.is-delivered, .is-active)::before { content: '\2713'; }
+.store-page[data-template='moderntec'][data-theme] .ec-account .acc-status.is-expired { --tone: var(--mt-ink-3); }
+.store-page[data-template='moderntec'][data-theme] .ec-account .acc-status.is-expired::before { content: '\2013'; }
+.store-page[data-template='moderntec'][data-theme] .ec-account .acc-status.is-cancelled { --tone: var(--mt-danger); }
+.store-page[data-template='moderntec'][data-theme] .ec-account .acc-status.is-cancelled::before { content: '\2715'; }
+.store-page[data-template='moderntec'][data-theme] .ec-account .acc-status.is-refunded { --tone: #ffa57a; }
+.store-page[data-template='moderntec'][data-theme] .ec-account .acc-status.is-refunded::before { content: '\21A9'; }
+.store-page[data-template='moderntec'][data-theme] .ec-account .acc-status svg { display: none; }
+/* Tema claro: los ámbar/rosa pastel no llegan a AA sobre papel — se
+   profundizan a tonos de la piel clara. */
+.store-page[data-template='moderntec'][data-theme='light'] .ec-account .acc-status:is(.is-pending_payment, .is-pending) { --tone: #8a5a00; }
+.store-page[data-template='moderntec'][data-theme='light'] .ec-account .acc-status.is-refunded { --tone: var(--mt-danger); }
 
 /* Direcciones */
-.store-page[data-template='moderntec'] .acc-addr-ico {
+.store-page[data-template='moderntec'][data-theme] .ec-account .acc-addr-ico {
   border-radius: 3px; border: 1px solid var(--mt-line-strong); background: transparent; color: var(--mt-ink-2);
 }
-.store-page[data-template='moderntec'] .acc-addr-ico.is-default { border-color: var(--mt-accent-line); background: var(--mt-accent-soft); color: var(--mt-accent-text); }
-.store-page[data-template='moderntec'] .acc-addr-head strong { font-family: var(--mt-display); font-size: 15px; font-weight: 600; }
-.store-page[data-template='moderntec'] .acc-default-badge {
+.store-page[data-template='moderntec'][data-theme] .ec-account .acc-addr-ico.is-default { border-color: var(--mt-accent-line); background: var(--mt-accent-soft); color: var(--mt-accent-text); }
+.store-page[data-template='moderntec'][data-theme] .ec-account .acc-addr-head strong { font-family: var(--mt-display); font-size: 15px; font-weight: 600; }
+.store-page[data-template='moderntec'][data-theme] .ec-account .acc-default-badge {
   font-family: var(--mt-mono); font-size: 10.5px; font-weight: 600; letter-spacing: .12em; border-radius: 3px;
   border: 1px solid var(--mt-accent-line); background: var(--mt-accent-soft); color: var(--mt-accent-text);
 }
-.store-page[data-template='moderntec'] .acc-icon-btn { width: 40px; height: 40px; border-radius: 3px; color: var(--mt-ink-2); border: 1px solid transparent; }
-.store-page[data-template='moderntec'] .acc-icon-btn:hover { background: var(--mt-surface-3); border-color: var(--mt-line-strong); color: var(--mt-ink); }
-.store-page[data-template='moderntec'] .acc-icon-btn.is-danger:hover { color: var(--mt-danger); border-color: color-mix(in srgb, var(--mt-danger) 50%, transparent); background: color-mix(in srgb, var(--mt-danger) 10%, transparent); }
-.store-page[data-template='moderntec'] .acc-addrform { border-color: var(--mt-accent-line); background: var(--mt-bg-2); }
-.store-page[data-template='moderntec'] .acc-addrform .sp-field-label {
+.store-page[data-template='moderntec'][data-theme] .ec-account .acc-icon-btn { width: 40px; height: 40px; border-radius: 3px; color: var(--mt-ink-2); border: 1px solid transparent; }
+.store-page[data-template='moderntec'][data-theme] .ec-account .acc-icon-btn:hover { background: var(--mt-surface-3); border-color: var(--mt-line-strong); color: var(--mt-ink); }
+.store-page[data-template='moderntec'][data-theme] .ec-account .acc-icon-btn.is-danger:hover { color: var(--mt-danger); border-color: color-mix(in srgb, var(--mt-danger) 50%, transparent); background: color-mix(in srgb, var(--mt-danger) 10%, transparent); }
+.store-page[data-template='moderntec'][data-theme] .ec-account .acc-addrform { border-color: var(--mt-accent-line); background: var(--mt-bg-2); }
+.store-page[data-template='moderntec'][data-theme] .ec-account .acc-addrform .sp-field-label {
   font-family: var(--mt-mono); font-size: 11px; letter-spacing: var(--mt-track-label); text-transform: uppercase; color: var(--mt-ink-2);
 }
-.store-page[data-template='moderntec'] .acc-check { font-family: var(--mt-mono); font-size: 12.5px; color: var(--mt-ink); }
-.store-page[data-template='moderntec'] .acc-check input { accent-color: var(--mt-accent); }
-.store-page[data-template='moderntec'] .acc-inline-error { font-family: var(--mt-mono); font-size: 12.5px; color: var(--mt-danger); }
+.store-page[data-template='moderntec'][data-theme] .ec-account .acc-check { font-family: var(--mt-mono); font-size: 12.5px; color: var(--mt-ink); }
+.store-page[data-template='moderntec'][data-theme] .ec-account .acc-check input { accent-color: var(--mt-accent); }
+.store-page[data-template='moderntec'][data-theme] .ec-account .acc-inline-error { font-family: var(--mt-mono); font-size: 12.5px; color: var(--mt-danger); }
 
 /* Suscripciones */
-.store-page[data-template='moderntec'] .acc-sub-now-ico {
+.store-page[data-template='moderntec'][data-theme] .ec-account .acc-sub-now-ico {
   border-radius: 3px; border: 1px solid var(--mt-accent-line); background: var(--mt-accent-soft); color: var(--mt-accent-text);
 }
-.store-page[data-template='moderntec'] :is(.acc-sub-now-txt > strong, .acc-plan-name, .acc-sub-plans-title) { font-family: var(--mt-display); font-weight: 600; color: var(--mt-ink); }
-.store-page[data-template='moderntec'] .acc-sub-plans-title { font-family: var(--mt-mono); font-size: 11.5px; letter-spacing: var(--mt-track-label); text-transform: uppercase; color: var(--mt-ink-2); }
-.store-page[data-template='moderntec'] :is(.acc-chip, .acc-member-benefits li, .acc-member-chip, .acc-plan-flag) {
+.store-page[data-template='moderntec'][data-theme] .ec-account :is(.acc-sub-now-txt > strong, .acc-plan-name, .acc-sub-plans-title) { font-family: var(--mt-display); font-weight: 600; color: var(--mt-ink); }
+.store-page[data-template='moderntec'][data-theme] .ec-account .acc-sub-plans-title { font-family: var(--mt-mono); font-size: 11.5px; letter-spacing: var(--mt-track-label); text-transform: uppercase; color: var(--mt-ink-2); }
+.store-page[data-template='moderntec'][data-theme] .ec-account :is(.acc-chip, .acc-member-benefits li, .acc-member-chip, .acc-plan-flag) {
   font-family: var(--mt-mono); font-size: 11px; letter-spacing: .06em; border-radius: 3px;
   border: 1px solid var(--mt-line-strong); background: transparent; color: var(--mt-ink);
 }
-.store-page[data-template='moderntec'] .acc-plan.is-current { border-color: var(--mt-accent-line); box-shadow: inset 2px 0 0 var(--mt-accent); }
-.store-page[data-template='moderntec'] .acc-plan-flag { border-color: var(--mt-accent-line); color: var(--mt-accent-text); background: var(--mt-accent-soft); }
-.store-page[data-template='moderntec'] .acc-member {
+.store-page[data-template='moderntec'][data-theme] .ec-account .acc-plan.is-current { border-color: var(--mt-accent-line); box-shadow: inset 2px 0 0 var(--mt-accent); }
+.store-page[data-template='moderntec'][data-theme] .ec-account .acc-plan-flag { border-color: var(--mt-accent-line); color: var(--mt-accent-text); background: var(--mt-accent-soft); }
+.store-page[data-template='moderntec'][data-theme] .ec-account .acc-member {
   border: 1px solid var(--mt-accent-line); border-radius: 6px; color: var(--mt-ink);
   background: linear-gradient(var(--mt-line-soft) 1px, transparent 1px) 0 0 / 100% 22px, linear-gradient(135deg, var(--mt-surface-2), var(--mt-bg));
 }
-.store-page[data-template='moderntec'] .acc-member-store { font-family: var(--mt-mono); letter-spacing: .16em; color: var(--mt-accent-text); }
-.store-page[data-template='moderntec'] .acc-member-avatar { border-radius: 3px; border: 1px solid var(--mt-accent-line); font-family: var(--mt-mono); background: var(--mt-accent-soft); color: var(--mt-accent-text); }
-.store-page[data-template='moderntec'] .acc-member-id small { font-family: var(--mt-mono); color: var(--mt-ink-2); font-size: 10px; }
-.store-page[data-template='moderntec'] .acc-member-id strong { font-family: var(--mt-display); color: var(--mt-ink); }
+/* El glow radial es un ::absuelto de fondo: se tiñe de acento y todo el
+   contenido queda por encima para que nunca lo tape. */
+.store-page[data-template='moderntec'][data-theme] .ec-account .acc-member-glow {
+  background: radial-gradient(circle, color-mix(in srgb, var(--mt-accent) 26%, transparent), transparent 65%);
+  opacity: .9;
+}
+.store-page[data-template='moderntec'][data-theme] .ec-account .acc-member > :not(.acc-member-glow) { position: relative; z-index: 1; }
+.store-page[data-template='moderntec'][data-theme] .ec-account .acc-member-store { font-family: var(--mt-mono); letter-spacing: .16em; color: var(--mt-accent-text); }
+.store-page[data-template='moderntec'][data-theme] .ec-account .acc-member-avatar { border-radius: 3px; border: 1px solid var(--mt-accent-line); font-family: var(--mt-mono); background: var(--mt-accent-soft); color: var(--mt-accent-text); }
+.store-page[data-template='moderntec'][data-theme] .ec-account .acc-member-id small { font-family: var(--mt-mono); color: var(--mt-ink-2); font-size: 10px; }
+.store-page[data-template='moderntec'][data-theme] .ec-account .acc-member-id strong { font-family: var(--mt-display); color: var(--mt-ink); }
 
-.store-page[data-template='moderntec'] .acc-empty { border: 1px dashed var(--mt-line-strong); border-radius: 4px; background: transparent; }
-.store-page[data-template='moderntec'] .acc-empty-ico { border-radius: 3px; border: 1px solid var(--mt-accent-line); background: var(--mt-accent-soft); color: var(--mt-accent-text); }
-.store-page[data-template='moderntec'] .acc-empty-title { font-family: var(--mt-display); font-size: 18px; font-weight: 600; color: var(--mt-ink); }
-.store-page[data-template='moderntec'] .acc-note { border-radius: 4px; font-family: var(--mt-mono); font-size: 12.5px; }
-.store-page[data-template='moderntec'] .acc-note--danger { color: var(--mt-danger); border-color: color-mix(in srgb, var(--mt-danger) 45%, transparent); background: color-mix(in srgb, var(--mt-danger) 8%, transparent); }
-.store-page[data-template='moderntec'] .acc-sk { border-radius: 2px; background: var(--mt-surface-3); }
+/* Vacíos / notas / skeletons */
+.store-page[data-template='moderntec'][data-theme] .ec-account .acc-empty { border: 1px dashed var(--mt-line-strong); border-radius: 4px; background: transparent; }
+.store-page[data-template='moderntec'][data-theme] .ec-account .acc-empty-ico { border-radius: 3px; border: 1px solid var(--mt-accent-line); background: var(--mt-accent-soft); color: var(--mt-accent-text); }
+.store-page[data-template='moderntec'][data-theme] .ec-account .acc-empty-title { font-family: var(--mt-display); font-size: 18px; font-weight: 600; color: var(--mt-ink); }
+.store-page[data-template='moderntec'][data-theme] .ec-account .acc-note { border-radius: 4px; font-family: var(--mt-mono); font-size: 12.5px; }
+.store-page[data-template='moderntec'][data-theme] .ec-account .acc-note--danger { color: var(--mt-danger); border-color: color-mix(in srgb, var(--mt-danger) 45%, transparent); background: color-mix(in srgb, var(--mt-danger) 8%, transparent); }
+.store-page[data-template='moderntec'][data-theme] .ec-account .acc-sk { border-radius: 2px; background: var(--mt-surface-3); }
 
-.store-page[data-template='moderntec'] .acc-panel :is(.ec-btn-primary, .ec-btn-ghost) {
+/* Botones dentro de paneles */
+.store-page[data-template='moderntec'][data-theme] .ec-account .acc-panel :is(.ec-btn-primary, .ec-btn-ghost) {
   min-height: 40px; border-radius: 3px; font-family: var(--mt-mono); font-size: 12px; font-weight: 600; letter-spacing: .08em; text-transform: uppercase;
 }
-.store-page[data-template='moderntec'] .acc-panel .ec-btn-primary { background: linear-gradient(100deg, var(--mt-accent), var(--mt-accent-2)); color: var(--mt-accent-ink); border: 0; }
-.store-page[data-template='moderntec'] .acc-panel .ec-btn-ghost { border: 1px solid var(--mt-line-strong); color: var(--mt-ink); background: transparent; }
-.store-page[data-template='moderntec'] .acc-panel .ec-btn-ghost:hover { border-color: var(--mt-accent-line); background: var(--mt-accent-soft); }
+.store-page[data-template='moderntec'][data-theme] .ec-account .acc-panel .ec-btn-primary { background: linear-gradient(100deg, var(--mt-accent), var(--mt-accent-2)); color: var(--mt-accent-ink); border: 0; }
+.store-page[data-template='moderntec'][data-theme] .ec-account .acc-panel .ec-btn-ghost { border: 1px solid var(--mt-line-strong); color: var(--mt-ink); background: transparent; }
+.store-page[data-template='moderntec'][data-theme] .ec-account .acc-panel .ec-btn-ghost:hover { border-color: var(--mt-accent-line); background: var(--mt-accent-soft); }
 
-.store-page[data-template='moderntec'] .acc-panel :is(a, button, input, select, textarea):focus-visible { outline: 2px solid var(--mt-focus); outline-offset: 2px; }
+/* ---------- Piel extra: telemetría y micro-interacciones ---------- */
+
+/* Entrada suave de cada vista (el wrapper .acc-body se remonta por :key). */
+@media (prefers-reduced-motion: no-preference) {
+  .store-page[data-template='moderntec'][data-theme] .ec-account .acc-body,
+  .store-page[data-template='moderntec'][data-theme] .ec-account .acc-auth-card,
+  .store-page[data-template='moderntec'][data-theme] .ec-account .acc-gate-card {
+    animation: acc-rise .42s var(--mt-ease-out) both;
+  }
+  @keyframes acc-rise { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: none; } }
+}
+
+/* Sidebar "rack": tornillos de esquina + filete de acento nítido en el
+   módulo activo (pisa el doble filete inset+border-left de account.css). */
+.store-page[data-template='moderntec'][data-theme] .ec-account .acc-side { overflow: hidden; }
+.store-page[data-template='moderntec'][data-theme] .ec-account .acc-side::before,
+.store-page[data-template='moderntec'][data-theme] .ec-account .acc-side::after {
+  content: ''; position: absolute; width: 10px; height: 10px; pointer-events: none;
+  border: 1px solid var(--mt-line-strong);
+}
+.store-page[data-template='moderntec'][data-theme] .ec-account .acc-side::before { top: 10px; left: 10px; border-right: 0; border-bottom: 0; }
+.store-page[data-template='moderntec'][data-theme] .ec-account .acc-side::after { bottom: 10px; right: 10px; border-left: 0; border-top: 0; }
+.store-page[data-template='moderntec'][data-theme] .ec-account .acc-navitem {
+  transition: transform .18s var(--mt-ease-out), background .2s, border-color .2s, color .2s;
+}
+.store-page[data-template='moderntec'][data-theme] .ec-account .acc-navitem:hover { transform: translateX(3px); }
+.store-page[data-template='moderntec'][data-theme] .ec-account .acc-navitem.is-on {
+  border-left-color: var(--mt-accent); box-shadow: none;
+}
+/* Avatar con halo de acento (sutil, ambos temas). */
+.store-page[data-template='moderntec'][data-theme] .ec-account .acc-avatar {
+  box-shadow: 0 0 0 1px var(--mt-accent-line),
+              0 10px 26px -14px color-mix(in srgb, var(--mt-accent) 65%, transparent);
+}
+
+/* Tabs móviles (control segmentado): el activo se convierte en la
+   píldora de acento del diseño; icono e índice acompañan. */
+.store-page[data-template='moderntec'][data-theme] .ec-account .acc-tab { transition: background .2s, color .2s, border-color .2s; }
+.store-page[data-template='moderntec'][data-theme] .ec-account .acc-tab-ico { display: inline-flex; align-items: center; color: var(--mt-ink-3); transition: color .2s; }
+.store-page[data-template='moderntec'][data-theme] .ec-account .acc-tab:hover .acc-tab-ico { color: var(--mt-accent-text); }
+.store-page[data-template='moderntec'][data-theme] .ec-account .acc-tab.is-on {
+  background: linear-gradient(100deg, var(--mt-accent), var(--mt-accent-2));
+  color: var(--mt-accent-ink); border-color: transparent;
+  box-shadow: 0 6px 18px -8px color-mix(in srgb, var(--mt-accent) 70%, transparent);
+}
+.store-page[data-template='moderntec'][data-theme] .ec-account .acc-tab.is-on .acc-idx,
+.store-page[data-template='moderntec'][data-theme] .ec-account .acc-tab.is-on .acc-tab-ico { color: var(--mt-accent-ink); opacity: .8; }
+
+/* Header compacto: kicker mono + chips de telemetría reales. */
+.store-page[data-template='moderntec'][data-theme] .ec-account .acc-kicker {
+  display: block; font-family: var(--mt-mono); font-size: 10px; font-weight: 600;
+  letter-spacing: .18em; text-transform: uppercase; color: var(--mt-accent-text);
+}
+.store-page[data-template='moderntec'][data-theme] .ec-account .acc-stats {
+  display: flex; flex-wrap: wrap; gap: 6px; margin: 6px 0 0; padding: 0; list-style: none;
+}
+.store-page[data-template='moderntec'][data-theme] .ec-account .acc-stat {
+  display: inline-flex; align-items: center; gap: 5px;
+  padding: 4px 8px; border: 1px solid var(--mt-line); border-radius: 3px;
+  background: var(--mt-bg-2);
+  font-family: var(--mt-mono); font-size: 10.5px; letter-spacing: .05em; color: var(--mt-ink-2);
+}
+.store-page[data-template='moderntec'][data-theme] .ec-account .acc-stat svg { flex: none; color: var(--mt-accent-text); }
+
+.store-page[data-template='moderntec'][data-theme] .ec-account .acc-panel :is(a, button, input, select, textarea):focus-visible { outline: 2px solid var(--mt-focus); outline-offset: 2px; }
 @media (prefers-reduced-motion: reduce) {
-  .store-page[data-template='moderntec'] .acc-panel * { transition: none !important; animation: none !important; }
+  .store-page[data-template='moderntec'][data-theme] .ec-account .acc-panel * { transition: none !important; animation: none !important; }
 }
 @media (max-width: 560px) {
-  .store-page[data-template='moderntec'] .acc-panel { padding: 14px; }
-  .store-page[data-template='moderntec'] .acc-panel :is(.acc-sub-now-actions, .acc-form-actions) > * { flex: 1 1 100%; }
-  .store-page[data-template='moderntec'] .acc-order-code { font-size: 14px; }
+  .store-page[data-template='moderntec'][data-theme] .ec-account .acc-panel { padding: 14px; }
+  .store-page[data-template='moderntec'][data-theme] .ec-account .acc-panel :is(.acc-sub-now-actions, .acc-form-actions) > * { flex: 1 1 100%; }
+  .store-page[data-template='moderntec'][data-theme] .ec-account .acc-order-code { font-size: 14px; }
 }

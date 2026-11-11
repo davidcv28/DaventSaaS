@@ -7,7 +7,7 @@
 // Panel con sidebar en desktop (≥1024px) y header compacto + tabs con
 // scroll en tablet/mobile. Tabs vía ?view=: pedidos | suscripciones |
 // direcciones | soporte | perfil.
-import { ref, computed, inject, onMounted, watch } from 'vue'
+import { ref, computed, inject, onMounted, onBeforeUnmount, nextTick, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useCustomerStore } from '../stores/customer.store.js'
 import { useCartStore } from '../stores/cart.store.js'
@@ -22,6 +22,7 @@ import AccountOrders from '../components/ecommerce/account/AccountOrders.vue'
 import AccountSubscriptions from '../components/ecommerce/account/AccountSubscriptions.vue'
 import AccountAddresses from '../components/ecommerce/account/AccountAddresses.vue'
 import AccountProfile from '../components/ecommerce/account/AccountProfile.vue'
+import '../assets/store-design-esencial-account.css'
 
 const ctx = inject('storePage')
 const slug = computed(() => ctx?.slug?.value || ctx?.slug || '')
@@ -70,6 +71,41 @@ const initials = computed(() => {
   const parts = clean.split(/[\s._-]+/).filter(Boolean)
   if (parts.length >= 2) return (parts[0][0] + parts[1][0]).toUpperCase()
   return clean.slice(0, 2).toUpperCase()
+})
+
+// ---------- navegación: píldora deslizante ----------
+// La píldora (.acc-tabs-ink) es un adorno de la piel "esencial": mide el tab
+// activo y se desliza con transform. En el resto de los diseños está
+// display:none, así que las medidas no afectan a nadie.
+const navRef = ref(null)
+const ink = ref({ x: 0, w: 0 })
+let inkRo = null
+function syncInk(scroll = false) {
+  const nav = navRef.value
+  if (!nav) return
+  const on = nav.querySelector('.acc-tab.is-on')
+  if (!on) return
+  ink.value = { x: on.offsetLeft, w: on.offsetWidth }
+  if (scroll) {
+    const left = on.offsetLeft - (nav.clientWidth - on.offsetWidth) / 2
+    if (Math.abs(nav.scrollLeft - left) > 2) {
+      nav.scrollTo({ left: Math.max(0, left), behavior: 'smooth' })
+    }
+  }
+}
+const scheduleInk = (scroll = false) => nextTick(() => syncInk(scroll))
+
+// ---------- telemetría real de la cabecera ----------
+// Solo mostramos lo que ya está cargado: nunca inventamos métricas.
+const statsChips = computed(() => {
+  const out = []
+  const n = orders.value.length
+  if (n) out.push({ key: 'pedidos', icon: 'package', label: `${n} ${n === 1 ? 'pedido' : 'pedidos'}` })
+  const sub = subData.value?.subscription
+  if (sub?.is_vigente) out.push({ key: 'sub', icon: 'crown', label: sub.plan?.name || 'Suscripción activa' })
+  const a = addresses.value.length
+  if (a) out.push({ key: 'dir', icon: 'map-pin', label: `${a} ${a === 1 ? 'dirección' : 'direcciones'}` })
+  return out
 })
 
 // ---------- auth gate ----------
@@ -240,9 +276,20 @@ onMounted(async () => {
   if (subView.value === 'verificar') { doVerify(); return }
   if (subView.value === 'restablecer') { sessionChecked.value = true; return }
   await ensureAuth()
+  scheduleInk()
+  if (typeof ResizeObserver !== 'undefined' && navRef.value) {
+    inkRo = new ResizeObserver(() => syncInk())
+    inkRo.observe(navRef.value)
+  }
+  // Las fuentes del diseño cambian el ancho de los tabs: re-medimos al cargar.
+  document.fonts?.ready?.then(() => syncInk()).catch(() => {})
   // El watcher de [subView, view, sessionChecked] dispara la carga del
   // tab activo cuando sessionChecked pasa a true con sesión.
 })
+onBeforeUnmount(() => { inkRo?.disconnect(); inkRo = null })
+
+// La píldora sigue al tab activo (y centra el tab en la tira scrolleable).
+watch([view, subView, sessionChecked], () => scheduleInk(true))
 </script>
 
 <template>
@@ -305,14 +352,27 @@ onMounted(async () => {
       <!-- Gate de auth -->
       <section v-else-if="!customer.isAuthenticated" class="acc-gate">
         <div class="acc-gate-card">
+          <span class="acc-kicker" aria-hidden="true">Tu cuenta · {{ shopName }}</span>
           <span class="acc-gate-ico" aria-hidden="true"><AppIcon name="user" :size="30" /></span>
+          <div class="acc-gate-art" aria-hidden="true">
+            <svg viewBox="0 0 240 150" role="presentation" focusable="false">
+              <path class="a-line a-dash" d="M30 140h180" />
+              <path class="a-line" d="M120 118c0-16-1-26-3-36" />
+              <path class="a-leaf a-leaf--l" d="M117 84c-15-3-23-12-24-25 14 2 23 11 24 25Z" />
+              <path class="a-leaf a-leaf--r" d="M123 78c13-3 20-12 20-24-12 2-19 11-20 24Z" />
+              <path class="a-line" d="M106 118l3 20h22l3-20" />
+              <path class="a-line" d="M102 118h36" />
+              <circle class="a-dot" cx="120" cy="40" r="3" />
+              <circle class="a-ring a-dash" cx="120" cy="40" r="11" />
+            </svg>
+          </div>
           <h1 class="acc-gate-title">Tu cuenta en {{ shopName }}</h1>
           <p class="acc-gate-sub">Ingresá o creá tu cuenta de comprador para tener todo en un solo lugar.</p>
           <ul class="acc-gate-list">
-            <li><AppIcon name="package" :size="17" aria-hidden="true" /> Pedidos con seguimiento y comprobante</li>
-            <li><AppIcon name="crown" :size="17" aria-hidden="true" /> Suscripciones y tarjeta de miembro</li>
-            <li><AppIcon name="map-pin" :size="17" aria-hidden="true" /> Direcciones guardadas para el checkout</li>
-            <li><AppIcon name="circle-help" :size="17" aria-hidden="true" /> Soporte directo con el comercio</li>
+            <li><span class="acc-gate-num" aria-hidden="true">01</span><AppIcon name="package" :size="17" aria-hidden="true" /> Pedidos con seguimiento y comprobante</li>
+            <li><span class="acc-gate-num" aria-hidden="true">02</span><AppIcon name="crown" :size="17" aria-hidden="true" /> Suscripciones y tarjeta de miembro</li>
+            <li><span class="acc-gate-num" aria-hidden="true">03</span><AppIcon name="map-pin" :size="17" aria-hidden="true" /> Direcciones guardadas para el checkout</li>
+            <li><span class="acc-gate-num" aria-hidden="true">04</span><AppIcon name="circle-help" :size="17" aria-hidden="true" /> Soporte directo con el comercio</li>
           </ul>
           <button type="button" class="ec-btn-primary acc-gate-cta" @click="openAuth">Ingresar o crear cuenta</button>
           <RouterLink :to="catalogoTo" class="acc-gate-link">Seguir mirando el catálogo</RouterLink>
@@ -349,73 +409,91 @@ onMounted(async () => {
             <span class="acc-tele" aria-hidden="true">SESIÓN · ACTIVA</span>
             <span class="acc-avatar acc-avatar--sm" aria-hidden="true">{{ initials }}</span>
             <div class="acc-mhead-meta">
+              <span class="acc-kicker" aria-hidden="true">Cuenta de comprador · {{ shopName }}</span>
+              <h1 class="acc-greet">hola, <em>{{ displayFirst }}</em></h1>
               <strong>{{ displayFirst }}</strong>
               <small>{{ customer.customer?.email || '' }}</small>
+              <ul v-if="statsChips.length" class="acc-stats">
+                <li v-for="c in statsChips" :key="c.key" class="acc-stat">
+                  <AppIcon :name="c.icon" :size="13" aria-hidden="true" />
+                  <span>{{ c.label }}</span>
+                </li>
+              </ul>
             </div>
             <button type="button" class="acc-icon-btn" aria-label="Cerrar sesión" @click="logout">
               <AppIcon name="logout" :size="17" aria-hidden="true" />
+              <span class="acc-icon-btn-txt" aria-hidden="true">Salir</span>
             </button>
           </header>
 
           <!-- Tabs horizontales con scroll (tablet/mobile) -->
-          <nav class="acc-tabs" role="tablist" aria-label="Secciones de tu cuenta">
+          <nav ref="navRef" class="acc-tabs" role="tablist" aria-label="Secciones de tu cuenta">
+            <span
+              class="acc-tabs-ink"
+              aria-hidden="true"
+              :style="{ transform: `translateX(${ink.x}px)`, width: `${ink.w}px` }"
+            ></span>
             <button v-for="(t, i) in TABS" :key="t.key" type="button" role="tab" :aria-selected="view === t.key" class="acc-tab" :class="{ 'is-on': view === t.key }" @click="setView(t.key)">
+              <span class="acc-tab-ico" aria-hidden="true"><AppIcon :name="t.icon" :size="16" /></span>
               <span class="acc-idx" aria-hidden="true">{{ String(i + 1).padStart(2, '0') }}</span>
               <span>{{ t.label }}</span>
             </button>
           </nav>
 
-          <!-- PEDIDOS -->
-          <AccountOrders
-            v-if="view === 'pedidos'"
-            :orders="orders"
-            :loading="ordersLoading"
-            :error="ordersError"
-            :shop-name="shopName"
-            @retry="loadOrders"
-          />
+          <div :key="view" class="acc-body">
+            <!-- PEDIDOS -->
+            <AccountOrders
+              v-if="view === 'pedidos'"
+              :orders="orders"
+              :loading="ordersLoading"
+              :error="ordersError"
+              :shop-name="shopName"
+              @retry="loadOrders"
+            />
 
-          <!-- SUSCRIPCIONES -->
-          <AccountSubscriptions
-            v-else-if="view === 'suscripciones'"
-            :slug="slug"
-            :shop-name="shopName"
-            :data="subData"
-            :loading="subLoading"
-            :error="subError"
-            :payments="pubPayments"
-            :card="card"
-            :card-open="cardOpen"
-            :card-loading="cardLoading"
-            :card-error="cardError"
-            @retry="loadSubs"
-            @load-card="loadCard"
-            @hide-card="cardOpen = false"
-            @subscribed="onSubscribed"
-          />
+            <!-- SUSCRIPCIONES -->
+            <AccountSubscriptions
+              v-else-if="view === 'suscripciones'"
+              :slug="slug"
+              :shop-name="shopName"
+              :data="subData"
+              :loading="subLoading"
+              :error="subError"
+              :payments="pubPayments"
+              :card="card"
+              :card-open="cardOpen"
+              :card-loading="cardLoading"
+              :card-error="cardError"
+              @retry="loadSubs"
+              @load-card="loadCard"
+              @hide-card="cardOpen = false"
+              @subscribed="onSubscribed"
+            />
 
-          <!-- DIRECCIONES -->
-          <AccountAddresses
-            v-else-if="view === 'direcciones'"
-            :addresses="addresses"
-            :loading="addrLoading"
-            :error="addrError"
-            @refresh="loadAddresses"
-          />
+            <!-- DIRECCIONES -->
+            <AccountAddresses
+              v-else-if="view === 'direcciones'"
+              :addresses="addresses"
+              :loading="addrLoading"
+              :error="addrError"
+              @refresh="loadAddresses"
+            />
 
-          <!-- SOPORTE -->
-          <section v-else-if="view === 'soporte'" class="acc-panel">
-            <header class="acc-panel-head">
-              <div class="acc-panel-headtxt">
-                <h2 class="acc-panel-title">Soporte</h2>
-                <p class="acc-panel-sub">Escribile a {{ shopName }} — podés relacionar el mensaje con un pedido.</p>
-              </div>
-            </header>
-            <SupportPanel ref="supportRef" :slug="slug" />
-          </section>
+            <!-- SOPORTE -->
+            <section v-else-if="view === 'soporte'" class="acc-panel">
+              <header class="acc-panel-head">
+                <div class="acc-panel-headtxt">
+                  <span class="acc-panel-kicker" aria-hidden="true">04 · Conversación</span>
+                  <h2 class="acc-panel-title">Soporte</h2>
+                  <p class="acc-panel-sub">Escribile a {{ shopName }} — podés relacionar el mensaje con un pedido.</p>
+                </div>
+              </header>
+              <SupportPanel ref="supportRef" :slug="slug" />
+            </section>
 
-          <!-- PERFIL -->
-          <AccountProfile v-else-if="view === 'perfil'" :email="customer.customer?.email || ''" />
+            <!-- PERFIL -->
+            <AccountProfile v-else-if="view === 'perfil'" :email="customer.customer?.email || ''" />
+          </div>
         </div>
       </div>
     </template>
@@ -424,6 +502,20 @@ onMounted(async () => {
 
 <style scoped>
 .ec-account { display: grid; gap: 18px; min-width: 0; }
+
+/* ---------- Nodos de la piel "esencial" ----------
+   Quedan ocultos por defecto: sólo [data-design='esencial'] los enciende
+   desde store-design-esencial-account.css. Otros diseños no los ven. */
+.acc-kicker,
+.acc-greet,
+.acc-stats,
+.acc-tab-ico,
+.acc-tabs-ink,
+.acc-icon-btn-txt,
+.acc-gate-art,
+.acc-gate-num,
+.acc-panel-kicker { display: none; }
+.acc-body { min-width: 0; }
 
 /* ---------- Sub-vistas de mail (verificar / restablecer) ---------- */
 .acc-auth { display: grid; place-items: center; padding: 20px 0 8px; }

@@ -50,6 +50,7 @@ onMounted(loadProfile)
   <section class="acc-panel" aria-label="Mi perfil">
     <header class="acc-panel-head">
       <div class="acc-panel-headtxt">
+        <span class="acc-panel-kicker" aria-hidden="true">05 · Tus datos</span>
         <h2 class="acc-panel-title">Mi perfil</h2>
         <p class="acc-panel-sub">Datos que ve el comercio al preparar tu pedido.</p>
       </div>
@@ -87,6 +88,8 @@ onMounted(loadProfile)
 </template>
 
 <style scoped>
+/* Nodos de la piel "esencial" (ocultos por defecto, ver skin CSS). */
+.acc-panel-kicker { display: none; }
 .acc-panel { display: grid; gap: 16px; padding: 20px; border: 1px solid var(--sp-line, rgba(0,0,0,.09)); border-radius: var(--sp-radius); background: var(--sp-card, transparent); box-shadow: var(--sp-shadow-sm, none); }
 .acc-panel-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; }
 .acc-panel-headtxt { display: grid; gap: 3px; min-width: 0; }
