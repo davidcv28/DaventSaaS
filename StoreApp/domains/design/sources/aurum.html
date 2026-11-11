@@ -654,6 +654,12 @@ section{padding:clamp(52px,8vh,96px) 0;border-bottom:1px solid var(--line);posit
   background:linear-gradient(112deg,transparent 38%,color-mix(in srgb,var(--gold) 13%,transparent) 50%,transparent 62%);
   transform:translateX(-130%) skewX(-14deg);transition:transform .85s var(--ease)}
 .ds-product:hover::after{transform:translateX(130%) skewX(-14deg)}
+/*Teclado: el foco cae en el <a> interno que llena la tarjeta y su outline
+  quedaría recortado por overflow:hidden — el anillo se dibuja en la
+  tarjeta entera y solo con :focus-visible (nada en click de mouse).*/
+.ds-product .ds-product-link:focus-visible{outline:none}
+.ds-product:has(.ds-product-link:focus-visible){border-color:var(--gold-line);
+  outline:2px solid var(--gold);outline-offset:3px}
 /*"En stock" (lo emite el render): píldora oscura con punto pulsante sobre la
   foto. En vista lista se oculta — taparía la columna de texto.*/
 .ds-product .ds-stock{grid-area:img;align-self:end;justify-self:start;margin:0 0 12px 12px;z-index:3;
@@ -704,7 +710,7 @@ html[data-ds-style="aurum-dia"]:not([data-ds-theme="dark"]) .ds-product .ds-stoc
 .ds-product-price[data-off]::before{content:"-" attr(data-off) "%";position:absolute;top:14px;right:14px;
   z-index:2;background:var(--gold);color:var(--gold-ink);font:700 10px var(--mono);letter-spacing:.08em;
   padding:5px 10px;border-radius:6px}
-.ds-product-name{font-size:19px;line-height:1.25;margin:0;overflow-wrap:anywhere;
+.ds-product-name{font-size:19px;font-weight:500;line-height:1.25;margin:0;overflow-wrap:anywhere;
   display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
 .ds-product-desc{display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;
   color:var(--muted);font-size:12.5px;line-height:1.45;margin-top:5px;overflow-wrap:anywhere}
@@ -722,23 +728,17 @@ html[data-ds-style="aurum-dia"]:not([data-ds-theme="dark"]) .ds-product .ds-stoc
 /*En grilla el precio cierra la ficha con un filete: el aire de arriba deja
   de leerse como un hueco.*/
 [data-ds-view-mode="grid"] .ds-product-price{border-top:1px solid var(--line);padding-top:13px}
-.ds-product-amount{font:400 21px var(--serif);overflow-wrap:anywhere;font-variant-numeric:tabular-nums}
-.ds-product-old{color:var(--muted);font-size:13px}
-/* CTA de compra que inyecta el puente: cierra la ficha como píldora oro,
-   sobre el barrido de brillo (z-index propio) y con la retícula de 20px
-   del contenido de la tarjeta. En la fila densa se compacta a la derecha. */
-.article.ds-product>.dsx-buy{
-  position:relative;z-index:2;
-  width:auto;min-width:0;margin:0 20px 20px;padding:0;
-  display:flex;align-items:center;justify-content:center;gap:10px;
-  min-height:50px;border:0;border-radius:99px;cursor:pointer;
-  background:var(--gold);color:var(--gold-ink);
-  font:700 12px var(--sans);letter-spacing:.12em;text-transform:uppercase;
-  transition:transform .25s var(--ease),filter .2s,box-shadow .3s}
-.article.ds-product>.dsx-buy:hover{transform:translateY(-2px);filter:brightness(1.07);
-  box-shadow:0 18px 36px -20px color-mix(in srgb,var(--gold) 80%,transparent)}
-[data-ds-view-mode="list"] .article.ds-product>.dsx-buy{
-  width:fit-content;min-width:0;margin:0 20px 18px auto;padding:0 26px;min-height:44px}
+.ds-product-amount{font:400 22px/1.15 var(--serif);color:var(--bone);letter-spacing:-.01em;
+  overflow-wrap:anywhere;font-variant-numeric:tabular-nums}
+.ds-product-old{color:var(--muted);font-size:12.5px;letter-spacing:.01em;
+  text-decoration-thickness:1.5px;text-decoration-color:color-mix(in srgb,var(--muted) 60%,transparent)}
+/*El puente inyecta `.dsx-buy-wrap>.dsx-buy` en TODAS las .ds-product del
+  documento cuando la tienda vende online — es genérico, sin flag por
+  tienda, y su hoja ancha también apunta al botón suelto. El CTA de la
+  ficha vive en .pdp-info y no se toca: acá solo se apaga el de tarjeta
+  (grilla, lista, destacadas y relacionados de ficha). La tarjeta entera
+  sigue llevando a la ficha por [data-ds-product].*/
+.ds-product .dsx-buy-wrap,.ds-product .dsx-buy{display:none}
 /*Vista lista: imagen al costado y el texto en dos filas (categoría/nombre),
   con el precio como columna propia.*/
 [data-ds-products][data-ds-view-mode="list"]{grid-template-columns:1fr}
@@ -756,7 +756,8 @@ html[data-ds-style="aurum-dia"]:not([data-ds-theme="dark"]) .ds-product .ds-stoc
 /*El estado vacío lo cubre [data-ds-noresults] del puente (un solo mensaje);
   el .ds-empty del fragmento sería un duplicado debajo de la grilla.*/
 .grid[data-ds-products] .ds-empty{display:none}
-.ds-empty{color:var(--muted);font-size:14px;padding:26px;border:1px dashed var(--line);border-radius:var(--radius)}
+.ds-empty{color:var(--muted);font-size:14px;text-align:center;padding:52px 26px;
+  border:1px dashed var(--line);border-radius:var(--radius)}
 @media(max-width:640px){
   .grid{grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:12px}
   .ds-product-copy{padding:10px 14px 6px}
@@ -764,7 +765,6 @@ html[data-ds-style="aurum-dia"]:not([data-ds-theme="dark"]) .ds-product .ds-stoc
   .ds-product-name{font-size:16px}
   .ds-product-price{padding:12px 14px 14px}
   .ds-product-amount{font-size:18px}
-  .article.ds-product>.dsx-buy{margin:0 14px 16px;min-height:46px}
   /*En móvil la fila se parte: imagen + texto arriba y precio a lo ancho
     abajo, para que no quede una columna de texto de 100px.*/
   [data-ds-view-mode="list"] .ds-product-link{
@@ -1090,12 +1090,15 @@ html[data-ds-style="aurum-dia"]:not([data-ds-theme="dark"]) .pdp-shot{background
 .cat-count{color:var(--muted);font-size:12.5px;margin:0 auto 0 0}
 .cat-count:empty::before{content:"Catálogo"}
 .cat-view{display:flex;border:1px solid var(--line);border-radius:10px;overflow:hidden}
-.cat-view button{border:0;background:none;color:var(--muted);padding:9px 12px;cursor:pointer;
+.cat-view button{display:grid;place-items:center;min-width:40px;min-height:40px;padding:0 10px;
+  border:0;background:none;color:var(--muted);cursor:pointer;
   transition:background-color .2s,color .2s}
+.cat-view button:not([aria-pressed="true"]):hover{color:var(--bone);background:var(--gold-soft)}
 .cat-view button[aria-pressed="true"]{background:var(--gold);color:var(--gold-ink)}
 .cat-sort{display:flex;align-items:center;gap:10px;font-size:12px;color:var(--muted)}
 .cat-sort select{background:var(--card);border:1px solid var(--line);border-radius:10px;color:var(--bone);
-  font:inherit;font-size:12.5px;padding:9px 12px}
+  font:inherit;font-size:12.5px;padding:9px 12px;cursor:pointer;transition:border-color .2s}
+.cat-sort select:hover{border-color:var(--gold-line)}
 /* Buscador del catálogo: caja redondeada como el select de orden, con
    desplegable de sugerencias del puente. */
 .cat-search{position:relative;flex:1 1 230px;min-width:0}
@@ -1174,6 +1177,12 @@ html[data-ds-style="aurum-dia"]:not([data-ds-theme="dark"]) .pdp-shot{background
   .cat-aside-foot{display:grid;grid-template-columns:1fr 1fr;gap:10px}
   .cat-aside-foot .f-clear,.cat-aside-foot .f-done{margin-top:0}
 }
+@media(max-width:640px){
+  /*Toolbar en móvil: el buscador toma su propia fila y contador/vista/
+    orden se compactan debajo, sin pelear por ancho con la búsqueda.*/
+  .cat-bar{row-gap:12px}
+  .cat-search{flex:1 1 100%}
+}
 
 /* ===== Superficie servicios ===== */
 .svc-head h1{font-size:clamp(34px,5vw,60px);text-wrap:balance;overflow-wrap:anywhere}
@@ -1231,10 +1240,12 @@ html[data-ds-style="aurum-dia"]:not([data-ds-theme="dark"]) .pdp-shot{background
 .pdp-price em:empty{display:none}
 .pdp-price s{color:var(--muted);font-size:16px}
 .pdp-price s:empty{display:none}
+.pdp-price:not(:has(*:not(:empty))){display:none}
 .pdp-pay{color:var(--muted);font-size:12.5px;margin:0 0 20px}
-.pdp-buy{position:relative;display:inline-flex;align-items:center;gap:10px;overflow:hidden;
-  isolation:isolate;background:var(--gold);color:var(--gold-ink);
-  font:700 12.5px var(--sans);letter-spacing:.1em;text-transform:uppercase;padding:16px 32px;border-radius:99px;
+.pdp-buy{position:relative;display:flex;align-items:center;justify-content:center;gap:10px;overflow:hidden;
+  isolation:isolate;width:100%;min-height:54px;background:var(--gold);color:var(--gold-ink);
+  font:700 12.5px var(--sans);letter-spacing:.1em;text-transform:uppercase;padding:16px 32px;
+  border-radius:var(--ds-radius-btn,10px);
   transition:transform .25s var(--ease),background-color .25s,border-color .25s,color .25s}
 .pdp-buy::after{content:"";position:absolute;inset:0;z-index:-1;transform:translateX(-130%) skewX(-18deg);
   background:linear-gradient(90deg,transparent,rgba(255,255,255,.34),transparent);transition:transform .6s var(--ease)}
@@ -1246,7 +1257,7 @@ html[data-ds-style="aurum-dia"]:not([data-ds-theme="dark"]) .pdp-shot{background
 .pdp-info>.dsx-buy{
   width:100%;min-width:0;margin:0 0 14px;padding:0;
   display:flex;align-items:center;justify-content:center;gap:10px;
-  min-height:54px;border:0;border-radius:99px;cursor:pointer;
+  min-height:54px;border:0;border-radius:var(--ds-radius-btn,10px);cursor:pointer;
   background:var(--gold);color:var(--gold-ink);
   font:700 13px var(--sans);letter-spacing:.1em;text-transform:uppercase;
   transition:transform .25s var(--ease),filter .2s,box-shadow .3s}
@@ -1260,8 +1271,8 @@ html[data-ds-commerce="1"] .pdp-buy:hover{background:var(--gold-soft)}
    Ficha: envío, medios de pago y compra directa — piezas del host
    ({{product_shipping}}, {{product_payments}} y .dsx-buy-now) con la mano de
    Áurea: datos en mono, chips de hueso con filete dorado y el "Comprar ahora"
-   como enlace mono en caja alta — el CTA macizo sigue siendo el de carrito y
-   el de WhatsApp conserva su contorno.
+   como botón fantasma de esquinas secas — el CTA macizo sigue siendo el de
+   carrito y el de WhatsApp conserva su contorno.
    -------------------------------------------------------------------------- */
 .pdp-info .ds-ship{
   margin:14px 0 0;color:var(--muted);
@@ -1279,20 +1290,23 @@ html[data-ds-commerce="1"] .pdp-buy:hover{background:var(--gold-soft)}
 }
 .pdp-info .ds-pay-chip svg{opacity:.85}
 html[data-ds-commerce="1"] [data-surface="product"] .pdp-info>.dsx-buy-now{
-  align-self:flex-start;margin:0 0 12px;padding:10px 2px;min-height:0;
-  border:0;border-radius:0;background:none;color:var(--gold-text);
+  display:inline-flex;align-items:center;justify-content:center;gap:8px;
+  align-self:flex-start;margin:0 0 12px;padding:12px 18px;min-height:0;max-width:100%;
+  border:1px solid var(--line);border-radius:var(--ds-radius-btn,10px);
+  background:transparent;color:var(--muted);box-shadow:none;opacity:1;cursor:pointer;
   font:700 11px/1 var(--mono);letter-spacing:.16em;text-transform:uppercase;
-  text-decoration:underline;text-underline-offset:5px;text-decoration-thickness:1px;
-  box-shadow:none;opacity:1;
-  transition:color .25s var(--ease),text-decoration-color .25s var(--ease);
+  text-decoration:none;
+  transition:border-color .25s var(--ease),color .25s var(--ease),
+    background-color .25s var(--ease),transform .25s var(--ease);
 }
 html[data-ds-commerce="1"] [data-surface="product"] .pdp-info>.dsx-buy-now:hover{
-  color:var(--gold-text);text-decoration-color:var(--gold);
-  opacity:1;transform:none;box-shadow:none;
+  border-color:var(--gold-line);color:var(--gold-text);background:var(--gold-soft);
+  transform:translateY(-1px);opacity:1;box-shadow:none;
 }
 html[data-ds-commerce="1"] [data-surface="product"] .pdp-info>.dsx-buy-now:active{opacity:.85}
+html[data-ds-commerce="1"] [data-surface="product"] .pdp-info>.dsx-buy-now[disabled]{opacity:.55;cursor:default}
 html[data-ds-commerce="1"] [data-surface="product"] .pdp-info>.dsx-buy-now:focus-visible{
-  outline:2px solid var(--gold-text);outline-offset:3px;border-radius:4px;
+  outline:2px solid var(--gold);outline-offset:3px;
 }
 @media (prefers-reduced-motion:reduce){
   html[data-ds-commerce="1"] [data-surface="product"] .pdp-info>.dsx-buy-now,
@@ -1316,7 +1330,9 @@ html[data-ds-commerce="1"] [data-surface="product"] .pdp-info>.dsx-buy-now:focus
 .pdp-desc{color:var(--muted);font-size:14px;margin-top:20px;overflow-wrap:anywhere}
 .pdp-desc:empty{display:none}
 .pdp-box:has(.pdp-specs tbody:empty):has(.pdp-desc:empty){display:none}
-.pdp-rev,.pdp-rel{margin-top:44px}
+/*Son <section> pero subsecciones de la ficha: el ritmo lo marca el margen,
+  no el padding/borde de las secciones de página.*/
+.pdp-rev,.pdp-rel{margin-top:44px;padding:0;border-bottom:0}
 /*Sin el beneficio de opiniones el fragmento no emite .ds-reviews: la
   sección no debe quedar como encabezado huérfano.*/
 .pdp-rev:not(:has(.ds-reviews)){display:none}
@@ -1342,7 +1358,7 @@ html[data-ds-commerce="1"] [data-surface="product"] .pdp-info>.dsx-buy-now:focus
 .ds-rev-fields{display:grid;gap:12px}
 .ds-rev-votes{display:flex;flex-wrap:wrap;gap:8px}
 .ds-rev-pick{display:inline-flex;align-items:center;gap:8px;padding:10px 18px;
-  border:1px solid var(--line);border-radius:99px;background:var(--card);color:var(--bone);
+  border:1px solid var(--line);border-radius:var(--ds-radius-btn,10px);background:var(--card);color:var(--bone);
   font:inherit;font-size:12.5px;cursor:pointer;transition:border-color .25s,color .25s,background-color .25s}
 .ds-rev-pick:hover{border-color:var(--gold-line)}
 .ds-rev-pick.is-on{border-color:var(--gold);color:var(--gold-text);background:var(--gold-soft)}
@@ -1360,7 +1376,7 @@ html[data-ds-commerce="1"] [data-surface="product"] .pdp-info>.dsx-buy-now:focus
   color:var(--gold-text);overflow-wrap:anywhere}
 .ds-rev-cap .ds-rev-input{max-width:130px}
 .ds-rev-reload{font:inherit;cursor:pointer;line-height:1;width:40px;height:40px;flex:none;
-  display:grid;place-items:center;border:1px solid var(--line);border-radius:50%;
+  display:grid;place-items:center;border:1px solid var(--line);border-radius:var(--ds-radius-btn,10px);
   background:var(--card);color:var(--muted);transition:border-color .25s,color .25s}
 .ds-rev-reload:hover{border-color:var(--gold-line);color:var(--gold-text)}
 .ds-rev-status{margin:0;font-size:13px;color:var(--err);min-height:1.2em}
@@ -1368,7 +1384,7 @@ html[data-ds-commerce="1"] [data-surface="product"] .pdp-info>.dsx-buy-now:focus
 .ds-rev-status:empty{display:none}
 .ds-rev-send{justify-self:start;border:0;background:var(--gold);color:var(--gold-ink);
   font:700 12px var(--sans);letter-spacing:.1em;text-transform:uppercase;
-  padding:15px 28px;border-radius:99px;cursor:pointer;transition:transform .25s var(--ease)}
+  padding:15px 28px;border-radius:var(--ds-radius-btn,10px);cursor:pointer;transition:transform .25s var(--ease)}
 @media(hover:hover) and (prefers-reduced-motion:no-preference){
   .ds-rev-send:hover{transform:translateY(-2px)}
 }
@@ -1854,7 +1870,7 @@ footer::before{content:"";position:absolute;top:-1px;left:50%;transform:translat
         </div>
         <div class="cat-tools"><div class="cat-chips" data-ds-chips hidden></div></div>
         <div class="grid" data-ds-products data-ds-view-mode="grid">{{products}}</div>
-        <p class="ds-empty" data-ds-noresults hidden>No hay productos que coincidan con tu búsqueda.</p>
+        <p class="ds-empty" data-ds-noresults role="status" hidden>No hay productos que coincidan con tu búsqueda.</p>
       </div>
     </div>
   </div>

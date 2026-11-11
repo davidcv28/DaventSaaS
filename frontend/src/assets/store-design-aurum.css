@@ -4,10 +4,16 @@
    data-design="aurum". No edita las hojas scoped de las vistas: las
    reemplaza con más especificidad.
 
-   Composición propia: la auth es una VITRINA en dos alas — el ala de marca
-   es tinta profunda con filete dorado doble (marco de exhibición), halo
-   champagne y beneficios con rombos ◆; el ala del formulario es papel hueso
-   con filete dorado superior, campos de radio amplio y botón pastilla.
+   Composición propia de la AUTH — "EL CAPITEL": una hoja de tinta a sangre
+   completa (no un split-screen). Arriba, la BANDA de marca hace de
+   capitel/masthead editorial: marca a la izquierda, manifiesto serif al
+   centro, índice de modos 01/02/03 con filetes a la derecha, trama de
+   hatch en deriva y sello circular montado sobre la juntura. Debajo, la
+   "invitación" de papel con doble filete dorado (outline + filete de
+   esquina) se monta sobre el borde inferior de la banda. El formulario
+   usa interruptor segmentado con filete deslizante, campos sellados por
+   un filete superior y CTA serif con filete de latón. El modal
+   (.ec-auth-card) viste la misma piel en superficie compacta.
    La cuenta es el MOSTRADOR DE LA VITRINA: en escritorio una carta
    redondeada con estantes (líneas horizontales) y nav como piezas con
    índices mono; en móvil cabecera compacta + tabs píldora con rombo.
@@ -35,6 +41,11 @@
   --dz-band-line: color-mix(in srgb, #f6f2e8 14%, transparent);
   --dz-radius: 20px;
   --dz-ease: cubic-bezier(.22, 1, .36, 1);
+  /* Dorados de MARCA sobre la banda de tinta (siempre oscura en ambos
+     temas): el acento mezclado hacia --dz-on-band mantiene AA en los
+     micro-labels del capitel. */
+  --aurum-gold-hi: color-mix(in srgb, var(--dz-accent) 80%, var(--dz-on-band));
+  --aurum-gold-line: color-mix(in srgb, var(--dz-accent) 42%, transparent);
 }
 
 [data-design='aurum'][data-theme='dark'] {
@@ -55,202 +66,411 @@
 }
 
 /* ---------- Marco común ---------- */
-[data-design='aurum'][data-theme] :is(.ec-auth, .ec-account) :is(a, button, input, select, textarea):focus-visible {
+[data-design='aurum'][data-theme] :is(.ec-auth, .ec-auth-card, .ec-account) :is(a, button, input, select, textarea):focus-visible {
   outline: 2px solid var(--dz-accent);
   outline-offset: 3px;
-  border-radius: 6px;
 }
-[data-design='aurum'][data-theme] :is(.ec-auth, .ec-account) ::selection {
+[data-design='aurum'][data-theme] :is(.ec-auth, .ec-auth-card, .ec-account) ::selection {
   background: var(--store-accent-ink);
   color: var(--sp-on-band, #fff);
 }
 
 /* ===========================================================================
-   AUTH — vitrina en dos alas
+   AUTH — "El Capitel": hoja de tinta + invitación de papel
    =========================================================================== */
+/* ---------- Página + fondo ambiental ---------- */
 [data-design='aurum'] .ec-auth {
-  padding-inline: clamp(0px, 3vw, 26px);
-}
-[data-design='aurum'] .ec-auth .ec-auth-shell {
-  width: min(1120px, 100%);
-  grid-template-columns: minmax(0, 1fr) minmax(0, 1.05fr);
-  margin-block: clamp(16px, 3.4vw, 44px) clamp(40px, 6vw, 80px);
-  border: 1px solid var(--dz-line);
-  border-radius: var(--dz-radius);
-  background: var(--dz-surface);
-  box-shadow: 0 40px 90px -58px rgba(30, 22, 6, .55);
-  overflow: hidden;
-}
-
-/* Ala de marca: vitrina de tinta con marco dorado doble. */
-[data-design='aurum'] .ec-auth .ec-auth-brand {
   position: relative;
   isolation: isolate;
-  padding: clamp(24px, 3.4vw, 42px);
+  padding-inline: clamp(12px, 2.6vw, 36px);
+}
+/* Dos halos champagne en deriva lenta + grano de papel. Solo transform/
+   opacity (compositor) y pointer-events:none para no tapar nada. */
+[data-design='aurum'] .ec-auth .ec-auth-ambient {
+  display: block;
+  position: absolute; inset: 0; z-index: 0;
+  overflow: hidden; pointer-events: none;
+  animation: aurum-auth-fade .9s ease .05s both;
+}
+[data-design='aurum'] .ec-auth .ec-auth-ambient .ec-auth-glow {
+  position: absolute; display: block; border-radius: 50%;
+  will-change: transform;
+}
+[data-design='aurum'] .ec-auth .ec-auth-glow-a {
+  top: -30%; left: -18%;
+  width: min(720px, 90vw); height: min(720px, 90vw);
+  background: radial-gradient(circle at 50% 50%, color-mix(in srgb, var(--dz-accent) 17%, transparent) 0%, transparent 66%);
+  animation: aurum-drift-a 34s ease-in-out infinite alternate;
+}
+[data-design='aurum'] .ec-auth .ec-auth-glow-b {
+  right: -16%; bottom: -34%;
+  width: min(600px, 80vw); height: min(600px, 80vw);
+  background: radial-gradient(circle at 50% 50%, color-mix(in srgb, var(--dz-accent) 12%, transparent) 0%, transparent 68%);
+  animation: aurum-drift-b 42s ease-in-out infinite alternate;
+}
+[data-design='aurum'] .ec-auth .ec-auth-grain {
+  position: absolute; inset: -8%;
+  display: block; opacity: .05;
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='160' height='160'><filter id='g'><feTurbulence type='fractalNoise' baseFrequency='.82' numOctaves='3' stitchTiles='stitch'/><feColorMatrix type='saturate' values='0'/></filter><rect width='160' height='160' filter='url(%23g)' opacity='.5'/></svg>");
+  background-size: 160px 160px;
+  animation: aurum-grain-shift 46s steps(6, end) infinite alternate;
+}
+
+/* ---------- La hoja: pliego de tinta con filete de edición ---------- */
+[data-design='aurum'] .ec-auth .ec-auth-shell {
+  position: relative; z-index: 1;
+  width: min(1180px, 100%);
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  grid-template-rows: auto auto;
+  margin-block: clamp(12px, 2.4vw, 30px) clamp(52px, 7vw, 92px);
+  border: 1px solid color-mix(in srgb, var(--dz-accent) 20%, transparent);
+  border-radius: var(--dz-radius);
+  overflow: hidden;
+  background: var(--dz-band);
+  box-shadow: 0 60px 120px -64px rgba(18, 14, 3, .65);
+  animation: aurum-auth-rise .9s var(--dz-ease) .06s both;
+}
+
+/* ---------- Banda de marca: el capitel de la edición ---------- */
+[data-design='aurum'] .ec-auth .ec-auth-brand {
+  position: relative; z-index: 2;
+  isolation: isolate;
+  overflow: visible;
+  padding: clamp(24px, 3vw, 42px) clamp(24px, 3.6vw, 52px) clamp(38px, 3.6vw, 50px);
   color: var(--dz-on-band);
+  border-bottom: 1px solid color-mix(in srgb, var(--dz-accent) 30%, transparent);
   background:
-    radial-gradient(46% 40% at 82% 4%, color-mix(in srgb, var(--dz-accent) 16%, transparent), transparent 70%),
-    radial-gradient(38% 34% at 8% 96%, color-mix(in srgb, var(--dz-accent) 10%, transparent), transparent 72%),
+    radial-gradient(42% 130% at 90% -25%, color-mix(in srgb, var(--dz-accent) 22%, transparent), transparent 68%),
+    radial-gradient(34% 110% at 2% 125%, color-mix(in srgb, var(--dz-accent) 13%, transparent), transparent 72%),
+    linear-gradient(color-mix(in srgb, #000 26%, transparent), color-mix(in srgb, #000 32%, transparent)),
     var(--dz-band);
 }
 /* La portada de la tienda queda como textura luminosa bajo el velo de
    tinta (mismo recurso que el panel scoped: --ec-cover en ::before). */
 [data-design='aurum'] .ec-auth .ec-auth-brand::before {
-  opacity: .3;
+  opacity: .2;
   mix-blend-mode: luminosity;
 }
 /* Velo de vitrina: baja la energía de la imagen y deja el halo champagne. */
 [data-design='aurum'] .ec-auth .ec-auth-brand::after {
   background:
-    linear-gradient(165deg, color-mix(in srgb, #000 30%, transparent), color-mix(in srgb, #000 55%, transparent)),
-    radial-gradient(88% 60% at 86% -6%, color-mix(in srgb, var(--dz-accent) 26%, transparent), transparent 70%);
+    linear-gradient(168deg, color-mix(in srgb, #000 24%, transparent), color-mix(in srgb, #000 46%, transparent)),
+    radial-gradient(80% 55% at 84% -8%, color-mix(in srgb, var(--dz-accent) 24%, transparent), transparent 70%);
 }
-/* Marco de exhibición: filete dorado al filo interior de la carta. */
+/* Trama de filetes finos en deriva muy lenta (textura editorial). Va
+   dentro del flujo de la banda (inset:0 + máscara) para no sangrar con
+   el overflow:visible que necesita el sello. */
+[data-design='aurum'] .ec-auth .ec-auth-hatch {
+  display: block;
+  position: absolute; inset: 0; z-index: 0;
+  pointer-events: none;
+  background-image: repeating-linear-gradient(101deg,
+    color-mix(in srgb, var(--dz-on-band) 8%, transparent) 0 1px,
+    transparent 1px 28px);
+  -webkit-mask-image: radial-gradient(95% 130% at 28% -10%, black 0%, transparent 76%);
+  mask-image: radial-gradient(95% 130% at 28% -10%, black 0%, transparent 76%);
+  opacity: .55;
+  animation: aurum-hatch-drift 44s ease-in-out infinite alternate;
+}
+/* Placa interior: marca arriba-izquierda, manifiesto al centro e índice
+   de modos a la derecha. La fila estira para que los beneficios queden
+   anclados al pie de la banda (fila 1fr + align-self:end). */
 [data-design='aurum'] .ec-auth .ec-auth-brand-inner {
-  position: relative;
+  position: relative; z-index: 1;
   display: grid;
-  grid-template-rows: auto 1fr auto;
+  grid-template-columns: auto minmax(0, 1fr);
+  grid-template-rows: auto;
   align-content: stretch;
-  gap: clamp(20px, 3vw, 34px);
-  height: 100%;
-  padding-right: 0;
-  outline: 1px solid color-mix(in srgb, var(--dz-accent) 30%, transparent);
-  outline-offset: -13px;
+  column-gap: clamp(22px, 3vw, 48px);
+  min-height: clamp(180px, 22vw, 240px);
+  height: auto;
+  outline: 0;
 }
 [data-design='aurum'] .ec-auth .ec-auth-brand-top {
-  gap: 14px;
-  padding-bottom: 16px;
-  border-bottom: 1px solid var(--dz-band-line);
+  display: inline-flex; align-items: center; gap: 12px;
+  width: fit-content; align-self: start;
+  transition: opacity .25s var(--dz-ease);
+  animation: aurum-auth-rise .6s var(--dz-ease) .3s both;
 }
+[data-design='aurum'] .ec-auth .ec-auth-brand-top:hover { opacity: .82; }
 [data-design='aurum'] .ec-auth .ec-auth-logo {
-  width: 46px; height: 46px;
+  width: 48px; height: 48px;
   border-radius: 50%;
-  background: transparent;
-  border: 1px solid color-mix(in srgb, var(--dz-accent) 55%, transparent);
-  color: var(--dz-accent-text);
-  font-family: var(--dz-display); font-size: 24px; font-weight: 400; letter-spacing: 0;
-  box-shadow: 0 0 0 5px color-mix(in srgb, var(--dz-accent) 8%, transparent);
+  background: color-mix(in srgb, var(--dz-accent) 8%, transparent);
+  border: 1px solid color-mix(in srgb, var(--dz-accent) 50%, transparent);
+  color: var(--aurum-gold-hi);
+  font-family: var(--dz-display); font-size: 23px; font-weight: 400; letter-spacing: 0;
+  box-shadow: 0 0 0 4px color-mix(in srgb, var(--dz-accent) 8%, transparent);
+  transition: box-shadow .3s var(--dz-ease), transform .3s var(--dz-ease);
+}
+[data-design='aurum'] .ec-auth .ec-auth-brand-top:hover .ec-auth-logo {
+  transform: scale(1.05);
+  box-shadow: 0 0 0 6px color-mix(in srgb, var(--dz-accent) 15%, transparent);
 }
 [data-design='aurum'] .ec-auth .ec-auth-brand-name {
-  font-family: var(--dz-body); font-size: 11.5px; font-weight: 600;
-  letter-spacing: .18em; text-transform: uppercase; color: var(--dz-on-band);
+  font-family: var(--dz-mono); font-size: 10.5px; font-weight: 600;
+  letter-spacing: .22em; text-transform: uppercase;
+  color: color-mix(in srgb, var(--dz-on-band) 80%, transparent);
 }
+/* Manifiesto: dos columnas — texto a la izquierda, índice a la derecha. */
 [data-design='aurum'] .ec-auth .ec-auth-brand-copy {
-  display: grid; gap: 13px; max-width: 44ch;
+  display: grid;
+  grid-template-columns: minmax(0, 1.05fr) minmax(0, .95fr);
+  grid-template-rows: auto auto auto auto minmax(16px, 1fr);
+  column-gap: clamp(20px, 2.6vw, 44px);
+  row-gap: 12px;
+  align-content: start;
+  max-width: none;
 }
-/* Riel de vitrina: "Nº 01 ————" en mono champagne. */
 [data-design='aurum'] .ec-auth .ec-auth-rail {
+  grid-column: 1; grid-row: 1;
   display: inline-flex; align-items: center; gap: 12px;
-  font: 400 9px/1 var(--dz-mono); letter-spacing: .32em; text-transform: uppercase;
-  color: color-mix(in srgb, var(--dz-accent) 82%, var(--dz-on-band));
+  font: 400 9.5px/1 var(--dz-mono); letter-spacing: .34em; text-transform: uppercase;
+  color: var(--aurum-gold-hi);
+  animation: aurum-auth-rise .55s var(--dz-ease) .4s both;
 }
 [data-design='aurum'] .ec-auth .ec-auth-rail::after {
-  content: ""; width: 58px; height: 1px;
-  background: linear-gradient(90deg, color-mix(in srgb, var(--dz-accent) 70%, transparent), transparent);
+  content: ""; width: 64px; height: 1px;
+  background: linear-gradient(90deg, color-mix(in srgb, var(--dz-accent) 65%, transparent), transparent);
 }
 [data-design='aurum'] .ec-auth .ec-auth-brand-kicker {
-  font: 400 9px/1 var(--dz-mono); letter-spacing: .24em; text-transform: uppercase;
-  color: color-mix(in srgb, var(--dz-on-band) 68%, transparent);
+  grid-column: 1; grid-row: 2;
+  font: 400 9.5px/1.6 var(--dz-mono); letter-spacing: .3em; text-transform: uppercase;
+  color: color-mix(in srgb, var(--dz-on-band) 62%, transparent);
+  animation: aurum-auth-rise .55s var(--dz-ease) .46s both;
 }
 [data-design='aurum'] .ec-auth .ec-auth-brand-title {
+  grid-column: 1; grid-row: 3;
   font-family: var(--dz-display); font-weight: 380;
-  font-size: clamp(30px, 3.4vw, 44px); line-height: 1.04; letter-spacing: -.02em;
+  font-size: clamp(30px, 3.5vw, 46px); line-height: 1.05; letter-spacing: -.02em;
   color: var(--dz-on-band);
+  text-wrap: balance;
+  animation: aurum-auth-rise .6s var(--dz-ease) .52s both;
 }
 [data-design='aurum'] .ec-auth .ec-auth-brand-text {
+  grid-column: 1; grid-row: 4;
   font-family: var(--dz-body); font-size: 13.5px; line-height: 1.7;
-  color: color-mix(in srgb, var(--dz-on-band) 78%, transparent);
+  color: color-mix(in srgb, var(--dz-on-band) 76%, transparent);
+  max-width: 52ch;
+  animation: aurum-auth-rise .55s var(--dz-ease) .58s both;
 }
-/* Piezas de la vitrina: rombo dorado + filete, sin numeración. */
-[data-design='aurum'] .ec-auth .ec-auth-perks {
-  counter-reset: dzperk; gap: 0; margin-top: 6px;
+/* Índice del modo (01/02/03): columna reglada con filetes y rombo activo. */
+[data-design='aurum'] .ec-auth .ec-auth-index {
+  grid-column: 2; grid-row: 3 / span 2; align-self: center;
+  display: flex; flex-direction: column;
+  margin: 0; padding: 2px 0 2px clamp(14px, 1.8vw, 24px);
+  list-style: none;
+  border-left: 1px solid var(--dz-band-line);
+  animation: aurum-auth-rise .55s var(--dz-ease) .64s both;
 }
-[data-design='aurum'] .ec-auth .ec-auth-perks li {
-  counter-increment: dzperk;
-  display: flex; align-items: center; gap: 11px;
-  padding: 11px 0;
+[data-design='aurum'] .ec-auth .ec-auth-index li {
+  display: flex; align-items: center; gap: 10px;
+  padding: 9px 0;
   border-bottom: 1px solid var(--dz-band-line);
   font-family: var(--dz-body); font-size: 12.5px; font-weight: 500;
-  color: color-mix(in srgb, var(--dz-on-band) 90%, transparent);
+  color: color-mix(in srgb, var(--dz-on-band) 82%, transparent);
+  opacity: .45;
+  transition: opacity .35s var(--dz-ease), color .35s var(--dz-ease);
+}
+[data-design='aurum'] .ec-auth .ec-auth-index li:last-child { border-bottom: 0; }
+[data-design='aurum'] .ec-auth .ec-auth-index li::before {
+  content: ""; flex: none;
+  width: 5px; height: 5px;
+  border: 1px solid color-mix(in srgb, var(--dz-on-band) 34%, transparent);
+  transform: rotate(45deg);
+  transition: background .3s var(--dz-ease), border-color .3s var(--dz-ease);
+}
+[data-design='aurum'] .ec-auth .ec-auth-index li.is-on { opacity: 1; color: var(--dz-on-band); }
+[data-design='aurum'] .ec-auth .ec-auth-index li.is-on::before {
+  background: var(--dz-accent); border-color: var(--dz-accent);
+}
+[data-design='aurum'] .ec-auth .ec-auth-index-n {
+  font: 400 10px/1 var(--dz-mono); letter-spacing: .1em; min-width: 2ch;
+  color: color-mix(in srgb, var(--dz-on-band) 55%, transparent);
+  transition: color .3s var(--dz-ease);
+}
+[data-design='aurum'] .ec-auth .ec-auth-index li.is-on .ec-auth-index-n { color: var(--aurum-gold-hi); }
+/* Sumario de beneficios: filete superior + cuatro piezas con rombo. */
+[data-design='aurum'] .ec-auth .ec-auth-perks {
+  grid-column: 1 / -1; grid-row: 5; align-self: end;
+  display: flex; flex-wrap: wrap;
+  margin: 0; padding: 14px 0 2px;
+  list-style: none;
+  border-top: 1px solid var(--dz-band-line);
+  animation: aurum-auth-rise .6s var(--dz-ease) .7s both;
+}
+[data-design='aurum'] .ec-auth .ec-auth-perks li {
+  flex: 1 1 150px;
+  display: flex; align-items: center; gap: 9px;
+  padding: 4px 16px 4px 0;
+  font-family: var(--dz-body); font-size: 12px; font-weight: 500; line-height: 1.4;
+  color: color-mix(in srgb, var(--dz-on-band) 84%, transparent);
+  transition: color .25s var(--dz-ease);
+}
+[data-design='aurum'] .ec-auth .ec-auth-perks li + li {
+  border-left: 1px solid var(--dz-band-line);
+  padding-left: 16px;
 }
 [data-design='aurum'] .ec-auth .ec-auth-perks li::before {
   content: ""; flex: none;
   width: 6px; height: 6px;
   background: var(--dz-accent);
   transform: rotate(45deg);
+  transition: transform .3s var(--dz-ease);
 }
-[data-design='aurum'] .ec-auth .ec-auth-perks li > span { flex: 1 1 auto; min-width: 0; }
+[data-design='aurum'] .ec-auth .ec-auth-perks li:hover { color: var(--dz-on-band); }
+[data-design='aurum'] .ec-auth .ec-auth-perks li:hover::before {
+  transform: rotate(45deg) scale(1.3);
+}
 [data-design='aurum'] .ec-auth .ec-auth-perks svg {
-  flex: none; color: color-mix(in srgb, var(--dz-accent) 80%, var(--dz-on-band));
+  flex: none; color: var(--aurum-gold-hi);
 }
-[data-design='aurum'] .ec-auth .ec-auth-brand-foot {
-  font: 400 8.5px/1.5 var(--dz-mono); letter-spacing: .2em; text-transform: uppercase;
-  color: color-mix(in srgb, var(--dz-on-band) 62%, transparent);
-  padding-top: 14px;
-  border-top: 1px solid var(--dz-band-line);
+/* La nota al pie de la banda la cubre la línea de confianza del panel. */
+[data-design='aurum'] .ec-auth .ec-auth-brand-foot { display: none; }
+/* Sello circular montado sobre la juntura banda/invitación. */
+[data-design='aurum'] .ec-auth .ec-auth-seal {
+  display: grid; place-items: center;
+  position: absolute; z-index: 3;
+  right: clamp(190px, 17vw, 230px);
+  bottom: -66px;
+  width: 102px; height: 102px;
+  border-radius: 50%;
+  border: 1px solid color-mix(in srgb, var(--dz-accent) 42%, transparent);
+  background: color-mix(in srgb, var(--dz-band) 88%, transparent);
+  color: var(--aurum-gold-hi);
+  box-shadow:
+    0 18px 40px -22px rgba(0, 0, 0, .7),
+    inset 0 0 0 3px var(--dz-band),
+    inset 0 0 0 4px color-mix(in srgb, var(--dz-accent) 45%, transparent);
+  pointer-events: none;
+  animation: aurum-seal-in .7s var(--dz-ease) .78s both;
 }
+[data-design='aurum'] .ec-auth .ec-auth-seal-ring {
+  position: absolute; inset: 0;
+  width: 100%; height: 100%;
+  animation: aurum-seal-spin 46s linear infinite;
+}
+[data-design='aurum'] .ec-auth .ec-auth-seal-ring text {
+  font-family: var(--dz-mono); font-size: 8.4px; letter-spacing: .12em;
+  fill: currentColor;
+}
+[data-design='aurum'] .ec-auth .ec-auth-seal > .icon { color: var(--aurum-gold-hi); position: relative; }
 
-/* Ala del formulario: papel hueso con filete dorado superior. */
+/* ---------- La invitación: papel con doble filete dorado ---------- */
 [data-design='aurum'] .ec-auth .ec-auth-panel {
-  position: relative;
-  padding: clamp(24px, 3.4vw, 46px) clamp(22px, 3.4vw, 46px) clamp(28px, 4vw, 48px);
-  background: var(--dz-surface);
+  position: relative; z-index: 1;
+  display: flex; flex-direction: column;
+  margin: clamp(-30px, -3vw, -22px) clamp(18px, 4vw, 56px) clamp(16px, 2.2vw, 26px);
+  padding: clamp(30px, 4vw, 54px) clamp(26px, 4.5vw, 60px) clamp(28px, 3.4vw, 44px);
+  border: 1px solid var(--dz-line);
+  border-radius: var(--dz-radius);
+  outline: 1px solid color-mix(in srgb, var(--dz-accent) 30%, transparent);
+  outline-offset: -13px;
+  background:
+    radial-gradient(72% 34% at 50% 0%, color-mix(in srgb, var(--dz-accent) 6%, transparent), transparent 72%),
+    var(--dz-surface);
   color: var(--dz-ink);
-  border-left: 1px solid var(--dz-line);
+  box-shadow:
+    0 44px 90px -52px rgba(10, 8, 2, .62),
+    inset 0 0 0 1px color-mix(in srgb, var(--dz-accent) 14%, transparent);
+  animation: aurum-auth-pop .85s var(--dz-ease) .34s both;
 }
-[data-design='aurum'] .ec-auth .ec-auth-panel::before {
-  content: ""; position: absolute; inset: 0 0 auto; height: 2px;
-  background: linear-gradient(90deg, transparent, var(--dz-accent) 20%, var(--dz-accent) 80%, transparent);
+/* Rombito de engaste sobre el filete interior, centrado arriba. */
+[data-design='aurum'] .ec-auth .ec-auth-panel::after {
+  content: ""; position: absolute; top: 10px; left: 50%;
+  width: 7px; height: 7px;
+  background: var(--dz-accent);
+  transform: translateX(-50%) rotate(45deg);
+  pointer-events: none;
+}
+/* Columna de texto centrada dentro del pliego (la carta es ancha, el
+   contenido no): display:contents del wrapper scoped la vuelve ítem
+   flex del panel, así que el ancho se fija en los hijos directos. */
+[data-design='aurum'] .ec-auth .ec-auth-panel-inner > * {
+  width: min(620px, 100%);
+  margin-inline: auto;
 }
 [data-design='aurum'] .ec-auth .ec-auth-back {
-  gap: 9px; margin-bottom: clamp(20px, 3vw, 30px);
-  padding-bottom: 6px;
-  border-bottom: 1px solid transparent;
-  font: 400 9px/1 var(--dz-mono); letter-spacing: .2em; text-transform: uppercase;
+  gap: 9px; margin-bottom: clamp(18px, 2.6vw, 28px);
+  font: 400 9.5px/1 var(--dz-mono); letter-spacing: .22em; text-transform: uppercase;
   color: var(--dz-muted);
-  transition: color .25s var(--dz-ease), border-color .25s var(--dz-ease);
+  transition: color .25s var(--dz-ease), transform .25s var(--dz-ease);
+  animation: aurum-auth-rise .5s var(--dz-ease) .46s both;
 }
 [data-design='aurum'] .ec-auth .ec-auth-back:hover {
-  color: var(--dz-accent-text); border-bottom-color: var(--dz-accent);
+  color: var(--dz-accent-text);
+  transform: translate3d(-3px, 0, 0);
 }
-[data-design='aurum'] .ec-auth .ec-auth-head {
-  gap: 10px; margin-bottom: 26px; padding-bottom: 20px;
+[data-design='aurum'] :is(.ec-auth, .ec-auth-card) .ec-auth-head {
+  gap: 10px; margin-bottom: clamp(20px, 2.6vw, 28px); padding-bottom: 18px;
   border-bottom: 1px solid var(--dz-line);
 }
-[data-design='aurum'] .ec-auth .ec-auth-badge {
-  width: 46px; height: 46px; margin-bottom: 4px;
-  border: 1px solid color-mix(in srgb, var(--dz-accent) 45%, var(--dz-line));
+[data-design='aurum'] .ec-auth .ec-auth-head {
+  animation: aurum-auth-pop .6s var(--dz-ease) .52s both;
+}
+[data-design='aurum'] :is(.ec-auth, .ec-auth-card) .ec-auth-badge {
+  width: 48px; height: 48px; margin-bottom: 2px;
+  border: 1px solid color-mix(in srgb, var(--dz-accent) 48%, var(--dz-line));
   border-radius: 50%;
-  background: color-mix(in srgb, var(--dz-accent) 7%, transparent);
+  background: color-mix(in srgb, var(--dz-accent) 8%, var(--dz-surface));
   color: var(--dz-accent-text);
+  box-shadow:
+    0 0 0 4px color-mix(in srgb, var(--dz-accent) 7%, transparent),
+    0 14px 28px -18px color-mix(in srgb, var(--dz-accent) 85%, transparent);
 }
-[data-design='aurum'] .ec-auth .ec-auth-tag {
+[data-design='aurum'] :is(.ec-auth, .ec-auth-card) .ec-auth-tag {
   display: inline-flex; align-items: center; gap: 9px;
-  font: 400 9px/1 var(--dz-mono); letter-spacing: .24em; text-transform: uppercase;
+  font: 400 9px/1 var(--dz-mono); letter-spacing: .26em; text-transform: uppercase;
   color: var(--dz-accent-text);
 }
-[data-design='aurum'] .ec-auth .ec-auth-tag::before {
+[data-design='aurum'] :is(.ec-auth, .ec-auth-card) .ec-auth-tag::before {
   content: ""; width: 6px; height: 6px; flex: none;
   background: var(--dz-accent); transform: rotate(45deg);
 }
-[data-design='aurum'] .ec-auth .ec-auth-title {
+[data-design='aurum'] :is(.ec-auth, .ec-auth-card) .ec-auth-title {
   font-family: var(--dz-display); font-weight: 400;
-  font-size: clamp(26px, 3vw, 37px); line-height: 1.05; letter-spacing: -.018em;
+  font-size: clamp(25px, 2.7vw, 36px); line-height: 1.06; letter-spacing: -.02em;
   color: var(--dz-ink);
+  text-wrap: balance;
 }
-[data-design='aurum'] .ec-auth .ec-auth-sub {
+[data-design='aurum'] :is(.ec-auth, .ec-auth-card) .ec-auth-sub {
   font-family: var(--dz-body); font-size: 13.5px; line-height: 1.65; color: var(--dz-muted);
 }
-[data-design='aurum'] .ec-auth .ec-auth-loading { color: var(--dz-muted); font-family: var(--dz-body); }
+[data-design='aurum'] .ec-auth .ec-auth-trust {
+  display: flex; align-items: center; gap: 8px;
+  margin: clamp(18px, 2.6vw, 26px) auto 0;
+  padding-top: 14px;
+  border-top: 1px solid var(--dz-line);
+  font: 400 9px/1.7 var(--dz-mono); letter-spacing: .24em; text-transform: uppercase;
+  color: var(--dz-muted);
+  animation: aurum-auth-fade .6s ease .88s both;
+}
+[data-design='aurum'] .ec-auth .ec-auth-trust .icon { color: var(--dz-accent-text); flex: none; }
+[data-design='aurum'] .ec-auth .ec-auth-loading {
+  color: var(--dz-muted); font-family: var(--dz-body); font-size: 13.5px;
+  min-height: 320px; gap: 14px;
+  animation: aurum-auth-fade .5s ease both;
+}
+[data-design='aurum'] .ec-auth .ec-auth-loading::after {
+  content: ""; width: min(210px, 60%); height: 7px;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--dz-accent) 24%, var(--dz-line));
+  transform-origin: center;
+  animation: aurum-breathe 1.7s ease-in-out infinite;
+}
 [data-design='aurum'] .ec-auth .ec-auth-spin { color: var(--dz-accent-text); }
+[data-design='aurum'] .ec-auth .ecaf {
+  animation: aurum-auth-rise .65s var(--dz-ease) .62s both;
+}
 
-/* ---------- Controles (compartidos auth + cuenta) ---------- */
-[data-design='aurum'][data-theme] :is(.ec-auth, .ec-account) .sp-field { gap: 8px; }
-[data-design='aurum'][data-theme] :is(.ec-auth, .ec-account) .sp-field-label {
+/* ---------- Controles de la cuenta ---------- */
+[data-design='aurum'][data-theme] .ec-account .sp-field { gap: 8px; }
+[data-design='aurum'][data-theme] .ec-account .sp-field-label {
   font: 400 9px/1 var(--dz-mono); letter-spacing: .2em; text-transform: uppercase;
   color: var(--dz-muted);
 }
-[data-design='aurum'][data-theme] :is(.ec-auth, .ec-account) .sp-input {
+[data-design='aurum'][data-theme] .ec-account .sp-input {
   min-height: 48px;
   padding: 12px 16px;
   border: 1px solid var(--dz-line);
@@ -261,34 +481,34 @@
   box-shadow: inset 0 1px 0 color-mix(in srgb, var(--dz-ink) 4%, transparent);
   transition: border-color .2s var(--dz-ease), box-shadow .2s var(--dz-ease), background .2s;
 }
-[data-design='aurum'][data-theme] :is(.ec-auth, .ec-account) .sp-input:hover { border-color: color-mix(in srgb, var(--dz-ink) 32%, var(--dz-line)); }
-[data-design='aurum'][data-theme] :is(.ec-auth, .ec-account) .sp-input:focus {
+[data-design='aurum'][data-theme] .ec-account .sp-input:hover { border-color: color-mix(in srgb, var(--dz-ink) 32%, var(--dz-line)); }
+[data-design='aurum'][data-theme] .ec-account .sp-input:focus {
   border-color: var(--dz-accent);
   background: var(--dz-surface);
   box-shadow: 0 0 0 3px color-mix(in srgb, var(--dz-accent) 18%, transparent);
   outline: none;
 }
-[data-design='aurum'][data-theme] :is(.ec-auth, .ec-account) .sp-input::placeholder {
+[data-design='aurum'][data-theme] .ec-account .sp-input::placeholder {
   color: var(--dz-muted); opacity: 1;
 }
-[data-design='aurum'][data-theme] :is(.ec-auth, .ec-account) .sp-input:disabled {
+[data-design='aurum'][data-theme] .ec-account .sp-input:disabled {
   background: color-mix(in srgb, var(--dz-line) 26%, var(--dz-bg));
   color: var(--dz-ink-2);
   cursor: not-allowed;
 }
-[data-design='aurum'][data-theme] :is(.ec-auth, .ec-account) .sp-form-error {
+[data-design='aurum'][data-theme] .ec-account .sp-form-error {
   color: var(--dz-danger); font-family: var(--dz-body); font-size: 12.5px;
 }
 /* El ojo de contraseña (scoped .ecaf-pass .sp-input) necesita su aire:
    el padding propio del campo no puede pisar los 46px reservados. */
-[data-design='aurum'][data-theme] :is(.ec-auth, .ec-account) .ecaf-pass .sp-input { padding-right: 46px; }
-[data-design='aurum'][data-theme] :is(.ec-auth, .ec-account) .sp-input:-webkit-autofill {
+[data-design='aurum'][data-theme] .ec-account .ecaf-pass .sp-input { padding-right: 46px; }
+[data-design='aurum'][data-theme] .ec-account .sp-input:-webkit-autofill {
   -webkit-text-fill-color: var(--dz-ink);
   box-shadow: inset 0 0 0 40px var(--dz-bg);
 }
 
 /* Botón principal: pastilla champagne con tinta profunda. */
-[data-design='aurum'][data-theme] :is(.ec-auth, .ec-account) :is(.ecaf-submit, .ec-btn-primary) {
+[data-design='aurum'][data-theme] .ec-account :is(.ecaf-submit, .ec-btn-primary) {
   min-height: 50px;
   border: 1px solid transparent;
   border-radius: 999px;
@@ -299,57 +519,364 @@
   box-shadow: 0 14px 30px -18px color-mix(in srgb, var(--dz-accent) 90%, transparent);
   transition: transform .3s var(--dz-ease), box-shadow .3s var(--dz-ease), background .3s;
 }
-[data-design='aurum'][data-theme] :is(.ec-auth, .ec-account) :is(.ecaf-submit, .ec-btn-primary):hover:not(:disabled) {
+[data-design='aurum'][data-theme] .ec-account :is(.ecaf-submit, .ec-btn-primary):hover:not(:disabled) {
   transform: translateY(-2px);
   box-shadow: 0 22px 40px -20px color-mix(in srgb, var(--dz-accent) 95%, transparent);
   filter: none;
 }
-[data-design='aurum'][data-theme] :is(.ec-auth, .ec-account) :is(.ecaf-submit, .ec-btn-primary):active:not(:disabled) {
+[data-design='aurum'][data-theme] .ec-account :is(.ecaf-submit, .ec-btn-primary):active:not(:disabled) {
   transform: translateY(0) scale(.99);
 }
-[data-design='aurum'][data-theme] :is(.ec-auth, .ec-account) :is(.ecaf-submit, .ec-btn-primary):disabled {
+[data-design='aurum'][data-theme] .ec-account :is(.ecaf-submit, .ec-btn-primary):disabled {
   background: color-mix(in srgb, var(--dz-line) 60%, var(--dz-bg));
   color: var(--dz-muted); opacity: 1; cursor: not-allowed; box-shadow: none;
 }
-[data-design='aurum'][data-theme] :is(.ec-auth, .ec-account) .ec-btn-ghost {
+[data-design='aurum'][data-theme] .ec-account .ec-btn-ghost {
   min-height: 46px;
   border: 1px solid color-mix(in srgb, var(--dz-ink) 38%, transparent);
   border-radius: 999px;
   background: transparent; color: var(--dz-ink);
   font: 600 10.5px/1 var(--dz-body); letter-spacing: .14em; text-transform: uppercase;
 }
-[data-design='aurum'][data-theme] :is(.ec-auth, .ec-account) .ec-btn-ghost:hover {
+[data-design='aurum'][data-theme] .ec-account .ec-btn-ghost:hover {
   background: var(--dz-ink); color: var(--dz-surface); border-color: var(--dz-ink);
 }
 
-/* Formulario compartido (StoreAuthForm). */
-[data-design='aurum'] .ec-auth .ecaf { gap: 15px; }
-[data-design='aurum'] .ec-auth .ecaf-pass-toggle { color: var(--dz-muted); border-radius: 999px; }
-[data-design='aurum'] .ec-auth .ecaf-pass-toggle:hover {
-  color: var(--dz-accent-text); background: color-mix(in srgb, var(--dz-accent) 10%, transparent);
+/* ==========================================================================
+   FORMULARIO DE AUTH — página (/ingresar) y modal (.ec-auth-card).
+   Interruptor segmentado con filete deslizante, campos sellados por un
+   filete dorado superior al foco, CTA serif con filete de latón.
+   ========================================================================== */
+[data-design='aurum'] :is(.ec-auth, .ec-auth-card) .ecaf { gap: 16px; }
+
+/* Interruptor segmentado: índice 01/02/03 con filete dorado deslizante.
+   El pill es un filete de 2px bajo las pestañas (no una píldora rellena). */
+[data-design='aurum'] :is(.ec-auth, .ec-auth-card) .ecaf-switch {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  position: relative; isolation: isolate;
+  counter-reset: dzsw;
+  margin-bottom: 4px;
+  padding: 2px 6px 0;
+  border-bottom: 1px solid var(--dz-line);
 }
-[data-design='aurum'] .ec-auth .ecaf-divider {
-  font: 400 9px/1 var(--dz-mono); letter-spacing: .2em; text-transform: uppercase;
+[data-design='aurum'] :is(.ec-auth, .ec-auth-card) .ecaf-switch-pill {
+  position: absolute; z-index: 0;
+  left: 6px; bottom: -1px;
+  width: calc((100% - 12px) / 3);
+  height: 2px;
+  border-radius: 2px;
+  background: linear-gradient(90deg, transparent, var(--dz-accent) 16%, var(--dz-accent) 84%, transparent);
+  transform: translate3d(calc(var(--ecaf-switch-i, 0) * 100%), 0, 0);
+  transition: transform .45s var(--dz-ease);
+}
+[data-design='aurum'] :is(.ec-auth, .ec-auth-card) .ecaf-switch-btn {
+  position: relative; z-index: 1;
+  counter-increment: dzsw;
+  display: flex; align-items: center; justify-content: center; gap: 8px;
+  min-height: 46px;
+  padding: 9px 4px 11px;
+  border: 0; border-radius: 0; background: none;
+  cursor: pointer;
+  font-family: var(--dz-mono); font-size: 10px; font-weight: 600;
+  letter-spacing: .13em; text-transform: uppercase;
+  color: var(--dz-muted);
+  transition: color .3s var(--dz-ease);
+}
+[data-design='aurum'] :is(.ec-auth, .ec-auth-card) .ecaf-switch-btn::before {
+  content: counter(dzsw, decimal-leading-zero);
+  font-size: 8px; letter-spacing: .04em;
+  color: color-mix(in srgb, var(--dz-accent) 52%, var(--dz-muted));
+  transition: color .3s var(--dz-ease);
+}
+[data-design='aurum'] :is(.ec-auth, .ec-auth-card) .ecaf-switch-btn:hover:not(.is-on) {
+  color: var(--dz-ink-2);
+}
+[data-design='aurum'] :is(.ec-auth, .ec-auth-card) .ecaf-switch-btn.is-on { color: var(--dz-ink); }
+[data-design='aurum'] :is(.ec-auth, .ec-auth-card) .ecaf-switch-btn.is-on::before {
+  color: var(--dz-accent-text);
+}
+
+/* Campos: etiqueta mono que se enmarca + filete dorado superior que se
+   "sella" al enfocar (background-size, 2px en el borde superior). */
+[data-design='aurum'][data-theme] :is(.ec-auth, .ec-auth-card) .sp-field { gap: 8px; }
+[data-design='aurum'][data-theme] :is(.ec-auth, .ec-auth-card) .sp-field-label {
+  font: 400 9px/1.4 var(--dz-mono); letter-spacing: .24em; text-transform: uppercase;
+  color: var(--dz-muted);
+  transition: color .25s var(--dz-ease), letter-spacing .35s var(--dz-ease);
+}
+[data-design='aurum'][data-theme] :is(.ec-auth, .ec-auth-card) .sp-field:focus-within .sp-field-label {
+  color: var(--dz-accent-text);
+  letter-spacing: .3em;
+}
+[data-design='aurum'][data-theme] :is(.ec-auth, .ec-auth-card) .sp-input {
+  min-height: 50px;
+  padding: 13px 16px;
+  border: 1px solid var(--dz-line);
+  border-radius: 10px;
+  background-color: var(--dz-bg);
+  background-image: linear-gradient(var(--dz-accent), var(--dz-accent));
+  background-repeat: no-repeat;
+  background-position: 0 0;
+  background-size: 0% 2px;
+  color: var(--dz-ink);
+  font-family: var(--dz-body); font-size: 16px;
+  box-shadow: inset 0 1px 0 color-mix(in srgb, var(--dz-ink) 4%, transparent);
+  transition: border-color .25s var(--dz-ease), background-size .4s var(--dz-ease),
+    background-color .25s var(--dz-ease), box-shadow .25s var(--dz-ease);
+}
+[data-design='aurum'][data-theme] :is(.ec-auth, .ec-auth-card) .sp-input:hover {
+  border-color: color-mix(in srgb, var(--dz-ink) 30%, var(--dz-line));
+}
+[data-design='aurum'][data-theme] :is(.ec-auth, .ec-auth-card) .sp-input:focus {
+  border-color: color-mix(in srgb, var(--dz-accent) 62%, var(--dz-line));
+  background-color: var(--dz-surface);
+  background-size: 100% 2px;
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--dz-accent) 16%, transparent);
+  outline: none;
+}
+[data-design='aurum'][data-theme] :is(.ec-auth, .ec-auth-card) .sp-input::placeholder {
+  color: var(--dz-muted); opacity: 1;
+}
+[data-design='aurum'][data-theme] :is(.ec-auth, .ec-auth-card) .sp-input:disabled {
+  background: color-mix(in srgb, var(--dz-line) 26%, var(--dz-bg));
+  color: var(--dz-ink-2);
+  cursor: not-allowed;
+}
+[data-design='aurum'][data-theme] :is(.ec-auth, .ec-auth-card) .sp-form-error {
+  color: var(--dz-danger); font-family: var(--dz-body); font-size: 12.5px;
+  animation: aurum-auth-rise .3s var(--dz-ease) both;
+}
+/* El ojo de contraseña (scoped .ecaf-pass .sp-input) necesita su aire:
+   el padding propio del campo no puede pisar los 46px reservados. */
+[data-design='aurum'] :is(.ec-auth, .ec-auth-card) .ecaf-pass .sp-input { padding-right: 46px; }
+[data-design='aurum'][data-theme] :is(.ec-auth, .ec-auth-card) .sp-input:-webkit-autofill {
+  -webkit-text-fill-color: var(--dz-ink);
+  box-shadow: inset 0 0 0 40px var(--dz-bg);
+}
+
+/* CTA: pastilla de tinta con filete de latón serif que se enciende al
+   hover (la firma tipográfica de la invitación). */
+[data-design='aurum'][data-theme] :is(.ec-auth, .ec-auth-card) .ecaf-submit {
+  position: relative; overflow: hidden; isolation: isolate;
+  display: flex; align-items: center; justify-content: center; gap: 10px;
+  margin-top: 8px; min-height: 52px;
+  border: 1px solid transparent;
+  border-radius: 999px;
+  background: var(--store-accent-ink);
+  color: var(--sp-on-band, #fff);
+  font-family: var(--dz-display); font-weight: 500;
+  font-size: clamp(15px, 1.4vw, 18px); letter-spacing: .02em;
+  box-shadow:
+    0 18px 34px -20px color-mix(in srgb, var(--dz-accent) 85%, transparent),
+    inset 0 1px 0 color-mix(in srgb, var(--sp-on-band, #fff) 18%, transparent);
+  transition: transform .3s var(--dz-ease), box-shadow .3s var(--dz-ease), background .3s;
+  cursor: pointer;
+}
+[data-design='aurum'][data-theme] :is(.ec-auth, .ec-auth-card) .ecaf-submit::after {
+  content: ""; position: absolute;
+  left: 14%; right: 14%; bottom: 9px; height: 1px;
+  background: linear-gradient(90deg, transparent, var(--dz-accent) 30%, var(--dz-accent) 70%, transparent);
+  transform: scaleX(0);
+  transition: transform .4s var(--dz-ease);
+  pointer-events: none;
+}
+[data-design='aurum'][data-theme] :is(.ec-auth, .ec-auth-card) .ecaf-submit:hover:not(:disabled)::after {
+  transform: scaleX(1);
+}
+[data-design='aurum'][data-theme] :is(.ec-auth, .ec-auth-card) .ecaf-submit:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow:
+    0 24px 42px -22px color-mix(in srgb, var(--dz-accent) 95%, transparent),
+    inset 0 1px 0 color-mix(in srgb, var(--sp-on-band, #fff) 18%, transparent);
+}
+[data-design='aurum'][data-theme] :is(.ec-auth, .ec-auth-card) .ecaf-submit:active:not(:disabled) {
+  transform: translateY(0) scale(.985);
+}
+[data-design='aurum'][data-theme] :is(.ec-auth, .ec-auth-card) .ecaf-submit:disabled {
+  background: color-mix(in srgb, var(--dz-line) 60%, var(--dz-bg));
+  color: var(--dz-muted); opacity: 1; cursor: not-allowed; box-shadow: none;
+}
+[data-design='aurum'][data-theme] :is(.ec-auth, .ec-auth-card) .ecaf-submit:disabled::after { display: none; }
+
+/* Ojo de la contraseña */
+[data-design='aurum'] :is(.ec-auth, .ec-auth-card) .ecaf-pass-toggle {
+  color: var(--dz-muted); border-radius: 50%;
+  transition: color .25s var(--dz-ease), background .25s var(--dz-ease), transform .2s var(--dz-ease);
+}
+[data-design='aurum'] :is(.ec-auth, .ec-auth-card) .ecaf-pass-toggle:hover {
+  color: var(--dz-accent-text);
+  background: color-mix(in srgb, var(--dz-accent) 10%, transparent);
+}
+/* El scoped centra el botón con translateY(-50%): el :active debe
+   conservarlo o el ojo saltaría de posición. */
+[data-design='aurum'] :is(.ec-auth, .ec-auth-card) .ecaf-pass-toggle:active {
+  transform: translateY(-50%) scale(.86);
+}
+[data-design='aurum'] :is(.ec-auth, .ec-auth-card) .ecaf-pass-toggle .icon {
+  transition: transform .3s var(--dz-ease);
+}
+
+/* Separador + Google */
+[data-design='aurum'] :is(.ec-auth, .ec-auth-card) .ecaf-divider {
+  font: 400 9px/1 var(--dz-mono); letter-spacing: .28em; text-transform: uppercase;
   color: var(--dz-muted);
 }
-[data-design='aurum'] .ec-auth .ecaf-divider::before,
-[data-design='aurum'] .ec-auth .ecaf-divider::after { background: var(--dz-line); opacity: 1; }
-[data-design='aurum'] .ec-auth .ecaf-link {
-  color: var(--dz-accent-text); font-family: var(--dz-body); font-weight: 600;
-  text-underline-offset: 4px;
+[data-design='aurum'] :is(.ec-auth, .ec-auth-card) .ecaf-divider::before,
+[data-design='aurum'] :is(.ec-auth, .ec-auth-card) .ecaf-divider::after {
+  background: var(--dz-line); opacity: 1; height: 1px;
 }
-[data-design='aurum'] .ec-auth .ecaf-link:hover { color: var(--dz-ink); }
-[data-design='aurum'] .ec-auth .ecaf-notice {
-  border-radius: 14px;
+[data-design='aurum'] :is(.ec-auth, .ec-auth-card) .ecaf-divider span::before {
+  content: ""; display: inline-block;
+  width: 5px; height: 5px; margin-right: 9px;
+  background: var(--dz-accent);
+  transform: rotate(45deg) translateY(-1px);
+}
+[data-design='aurum'] :is(.ec-auth, .ec-auth-card) .ecaf-google { margin-top: 2px; }
+[data-design='aurum'] :is(.ec-auth, .ec-auth-card) .ecaf-google-btn {
+  min-height: 48px;
+}
+[data-design='aurum'] :is(.ec-auth, .ec-auth-card) .ecaf-google-btn.is-busy { opacity: .6; }
+
+/* Avisos: filete lateral + entrada suave. */
+[data-design='aurum'][data-theme] :is(.ec-auth, .ec-auth-card) .ecaf-notice,
+[data-design='aurum'][data-theme] :is(.ec-auth, .ec-auth-card) .ecaf-error {
+  border-radius: 10px;
+  border-left-width: 3px;
+  font-family: var(--dz-body); font-size: 13px; line-height: 1.5;
+  color: var(--dz-ink);
+  animation: aurum-auth-rise .35s var(--dz-ease) both;
+}
+[data-design='aurum'][data-theme] :is(.ec-auth, .ec-auth-card) .ecaf-notice {
   background: color-mix(in srgb, var(--dz-ok) 10%, var(--dz-surface));
-  border: 1px solid color-mix(in srgb, var(--dz-ok) 36%, transparent);
-  color: var(--dz-ink);
+  border-color: color-mix(in srgb, var(--dz-ok) 30%, transparent);
+  border-left-color: var(--dz-ok);
 }
-[data-design='aurum'] .ec-auth .ecaf-error {
-  border-radius: 14px;
+[data-design='aurum'][data-theme] :is(.ec-auth, .ec-auth-card) .ecaf-error {
   background: color-mix(in srgb, var(--dz-danger) 9%, var(--dz-surface));
-  border: 1px solid color-mix(in srgb, var(--dz-danger) 34%, transparent);
+  border-color: color-mix(in srgb, var(--dz-danger) 28%, transparent);
+  border-left-color: var(--dz-danger);
+}
+
+/* Colofón del formulario: solo sobrevive el reenvío de verificación
+   (el interruptor ya cubre el cambio de modo). */
+[data-design='aurum'] :is(.ec-auth, .ec-auth-card) .ecaf-foot {
+  margin-top: 4px;
+  padding-top: 14px;
+  border-top: 1px solid var(--dz-line);
+}
+[data-design='aurum'] :is(.ec-auth, .ec-auth-card) .ecaf-foot:not(:has(.ecaf-link-resend)) {
+  display: none;
+}
+[data-design='aurum'] :is(.ec-auth, .ec-auth-card) .ecaf-link {
+  padding: 6px 2px; min-height: 32px;
+  font-family: var(--dz-mono); font-size: 10px; font-weight: 600;
+  letter-spacing: .14em; text-transform: uppercase;
+  color: var(--dz-accent-text);
+  text-decoration: underline;
+  text-decoration-color: color-mix(in srgb, var(--dz-accent) 38%, transparent);
+  text-underline-offset: 4px;
+  transition: color .25s var(--dz-ease), text-decoration-color .25s var(--dz-ease);
+}
+[data-design='aurum'] :is(.ec-auth, .ec-auth-card) .ecaf-link:hover {
   color: var(--dz-ink);
+  text-decoration-color: currentColor;
+}
+[data-design='aurum'] :is(.ec-auth, .ec-auth-card) .ecaf-link:disabled { opacity: .55; cursor: default; }
+
+/* ==========================================================================
+   MODAL DE AUTH (.ec-auth-card) — la misma invitación, superficie compacta.
+   El doble filete va por outline negativo + inset shadow: no scrollea con
+   el contenido del diálogo (a diferencia de un ::before absoluto).
+   ========================================================================== */
+[data-design='aurum'][data-theme] .ec-auth-backdrop {
+  background: color-mix(in srgb, var(--dz-band) 60%, rgba(0, 0, 0, .45));
+  backdrop-filter: blur(7px);
+  -webkit-backdrop-filter: blur(7px);
+  animation: aurum-auth-fade .3s ease both;
+}
+[data-design='aurum'][data-theme] .ec-auth-card {
+  width: min(470px, 100%);
+  max-height: min(90vh, 780px);
+  padding: clamp(28px, 4.5vw, 38px) clamp(24px, 4.5vw, 36px) clamp(26px, 3.6vw, 32px);
+  border: 1px solid var(--dz-line);
+  border-radius: var(--dz-radius);
+  outline: 1px solid color-mix(in srgb, var(--dz-accent) 30%, transparent);
+  outline-offset: -12px;
+  background:
+    radial-gradient(70% 36% at 50% 0%, color-mix(in srgb, var(--dz-accent) 7%, transparent), transparent 70%),
+    var(--dz-surface);
+  color: var(--dz-ink);
+  box-shadow:
+    0 70px 130px -55px rgba(8, 6, 1, .8),
+    inset 0 0 0 1px color-mix(in srgb, var(--dz-accent) 15%, transparent);
+  animation: aurum-auth-pop .55s var(--dz-ease) both;
+}
+[data-design='aurum'][data-theme] .ec-auth-card .ec-auth-close {
+  top: 15px; right: 15px;
+  width: 38px; height: 38px;
+  border: 1px solid var(--dz-line);
+  border-radius: 50%;
+  background: var(--dz-surface);
+  color: var(--dz-muted);
+  transition: color .25s var(--dz-ease), border-color .25s var(--dz-ease),
+    background .25s var(--dz-ease), transform .4s var(--dz-ease);
+}
+[data-design='aurum'][data-theme] .ec-auth-card .ec-auth-close:hover {
+  color: var(--dz-ink);
+  border-color: color-mix(in srgb, var(--dz-accent) 55%, var(--dz-line));
+  background: color-mix(in srgb, var(--dz-accent) 9%, var(--dz-surface));
+  transform: rotate(90deg);
+}
+[data-design='aurum'][data-theme] .ec-auth-card .ec-auth-head {
+  padding-right: 44px;
+  margin-bottom: 20px;
+}
+[data-design='aurum'][data-theme] .ec-auth-card .ec-auth-title { font-size: 24px; }
+[data-design='aurum'] .ec-auth-card .ecaf {
+  animation: aurum-auth-rise .55s var(--dz-ease) .14s both;
+}
+
+/* ==========================================================================
+   KEYFRAMES DE LA PIEL — entrada orquestada + deriva ambiente.
+   Solo opacity/transform (compositor-friendly).
+   ========================================================================== */
+@keyframes aurum-auth-fade {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+@keyframes aurum-auth-rise {
+  from { opacity: 0; transform: translate3d(0, 24px, 0); }
+  to   { opacity: 1; transform: none; }
+}
+@keyframes aurum-auth-pop {
+  from { opacity: 0; transform: translate3d(0, 18px, 0) scale(.965); }
+  to   { opacity: 1; transform: none; }
+}
+@keyframes aurum-seal-in {
+  from { opacity: 0; transform: translate3d(0, 14px, 0) scale(.72); }
+  to   { opacity: 1; transform: none; }
+}
+@keyframes aurum-drift-a {
+  from { transform: translate3d(-2.5%, -1%, 0) scale(1); }
+  to   { transform: translate3d(3%, 2%, 0) scale(1.1); }
+}
+@keyframes aurum-drift-b {
+  from { transform: translate3d(2%, -2%, 0) scale(1.08); }
+  to   { transform: translate3d(-3%, 1.5%, 0) scale(1); }
+}
+@keyframes aurum-hatch-drift {
+  from { transform: translate3d(-1.4%, -1%, 0); }
+  to   { transform: translate3d(1.4%, 1%, 0); }
+}
+@keyframes aurum-grain-shift {
+  from { transform: translate3d(0, 0, 0); }
+  to   { transform: translate3d(-3%, 2%, 0); }
+}
+@keyframes aurum-seal-spin { to { transform: rotate(1turn); } }
+@keyframes aurum-breathe {
+  0%, 100% { opacity: .3; transform: scaleX(.85); }
+  50%      { opacity: 1;  transform: scaleX(1); }
 }
 
 /* ===========================================================================
@@ -592,26 +1119,37 @@
 
 /* ---------- Responsive ---------- */
 @media (max-width: 1024px) {
+  [data-design='aurum'] .ec-auth { padding-inline: 12px; }
   [data-design='aurum'] .ec-auth .ec-auth-shell {
-    grid-template-columns: minmax(0, 1fr);
-    margin-block: 12px clamp(28px, 5vw, 48px);
+    margin-block: 10px clamp(30px, 5vw, 54px);
+    border-radius: 18px;
   }
-  [data-design='aurum'] .ec-auth .ec-auth-brand { padding: 22px 22px 20px; }
-  [data-design='aurum'] .ec-auth .ec-auth-brand::after { inset: 10px; }
+  /* La banda colapsa a cabecera compacta sobre la invitación. */
+  [data-design='aurum'] .ec-auth .ec-auth-brand { padding: 20px 20px 26px; }
   [data-design='aurum'] .ec-auth .ec-auth-brand-inner {
-    grid-template-rows: auto auto;
-    gap: 14px;
-    height: auto;
+    grid-template-columns: auto minmax(0, 1fr);
+    min-height: 0;
+    column-gap: 18px;
   }
-  [data-design='aurum'] .ec-auth .ec-auth-brand-copy { gap: 8px; max-width: none; }
+  [data-design='aurum'] .ec-auth .ec-auth-brand-copy {
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-rows: none;
+    row-gap: 8px;
+  }
+  [data-design='aurum'] .ec-auth .ec-auth-rail,
   [data-design='aurum'] .ec-auth .ec-auth-brand-text,
+  [data-design='aurum'] .ec-auth .ec-auth-index,
   [data-design='aurum'] .ec-auth .ec-auth-perks,
   [data-design='aurum'] .ec-auth .ec-auth-brand-foot { display: none; }
+  [data-design='aurum'] .ec-auth .ec-auth-hatch { opacity: .35; }
+  [data-design='aurum'] .ec-auth .ec-auth-seal { display: none; }
+  [data-design='aurum'] .ec-auth .ec-auth-brand-kicker { font-size: 9px; letter-spacing: .24em; }
   [data-design='aurum'] .ec-auth .ec-auth-brand-title { font-size: clamp(21px, 4.4vw, 27px); }
   [data-design='aurum'] .ec-auth .ec-auth-panel {
-    padding: 24px 22px 30px;
-    border-left: 0;
-    border-top: 1px solid var(--dz-line);
+    margin: clamp(-20px, -2.6vw, -14px) 14px clamp(14px, 2vw, 22px);
+    padding: 26px 20px 30px;
+    border-radius: 16px;
+    outline-offset: -11px;
   }
 }
 @media (max-width: 860px) {
@@ -620,16 +1158,29 @@
   [data-design='aurum'][data-theme] .ec-account .acc-tab { padding: 9px 13px; letter-spacing: .12em; }
 }
 @media (max-width: 640px) {
-  [data-design='aurum'] .ec-auth { padding-inline: 12px; }
-  [data-design='aurum'] .ec-auth .ec-auth-shell { border-radius: 16px; }
-  [data-design='aurum'] .ec-auth .ec-auth-brand { padding: 18px 16px 16px; }
-  [data-design='aurum'] .ec-auth .ec-auth-brand-top { padding-bottom: 12px; }
-  [data-design='aurum'] .ec-auth .ec-auth-logo { width: 38px; height: 38px; font-size: 20px; box-shadow: 0 0 0 4px color-mix(in srgb, var(--dz-accent) 8%, transparent); }
-  [data-design='aurum'] .ec-auth .ec-auth-brand-name { font-size: 10.5px; letter-spacing: .14em; }
+  [data-design='aurum'] .ec-auth { padding-inline: 10px; }
+  [data-design='aurum'] .ec-auth .ec-auth-shell { border-radius: 14px; }
+  [data-design='aurum'] .ec-auth .ec-auth-brand { padding: 16px 16px 22px; }
+  [data-design='aurum'] .ec-auth .ec-auth-brand-inner { column-gap: 14px; }
+  [data-design='aurum'] .ec-auth .ec-auth-logo { width: 38px; height: 38px; font-size: 19px; box-shadow: 0 0 0 4px color-mix(in srgb, var(--dz-accent) 8%, transparent); }
+  [data-design='aurum'] .ec-auth .ec-auth-brand-name { font-size: 10px; letter-spacing: .16em; }
   [data-design='aurum'] .ec-auth .ec-auth-brand-title { font-size: 20px; }
-  [data-design='aurum'] .ec-auth .ec-auth-panel { padding: 18px 16px 26px; }
-  [data-design='aurum'] .ec-auth .ec-auth-head { margin-bottom: 20px; padding-bottom: 16px; }
-  [data-design='aurum'] .ec-auth .ec-auth-title { font-size: 24px; }
+  [data-design='aurum'] .ec-auth .ec-auth-panel {
+    margin: -16px 10px clamp(12px, 2vw, 20px);
+    padding: 22px 16px 26px;
+    border-radius: 14px;
+    outline-offset: -10px;
+  }
+  [data-design='aurum'] .ec-auth .ec-auth-head { margin-bottom: 18px; padding-bottom: 14px; }
+  [data-design='aurum'] .ec-auth .ec-auth-title { font-size: 22px; }
+  [data-design='aurum'] .ec-auth .ec-auth-trust { font-size: 8.5px; letter-spacing: .18em; }
+  [data-design='aurum'] :is(.ec-auth, .ec-auth-card) .ecaf-switch { padding: 2px 4px 0; }
+  [data-design='aurum'] :is(.ec-auth, .ec-auth-card) .ecaf-switch-btn {
+    min-height: 42px; padding: 8px 2px 10px;
+    font-size: 9px; letter-spacing: .08em;
+  }
+  [data-design='aurum'] :is(.ec-auth, .ec-auth-card) .ecaf-switch-btn::before { font-size: 7.5px; }
+  [data-design='aurum'][data-theme] :is(.ec-auth, .ec-auth-card) .sp-input { min-height: 48px; }
   [data-design='aurum'] .ec-auth .ecaf-grid { grid-template-columns: minmax(0, 1fr); }
   [data-design='aurum'][data-theme] .ec-account { padding-inline: 14px; }
   [data-design='aurum'][data-theme] .ec-account .acc-mhead { padding: 12px; }
@@ -642,7 +1193,11 @@
 @media (max-width: 390px) {
   [data-design='aurum'] .ec-auth { padding-inline: 8px; }
   [data-design='aurum'] .ec-auth .ec-auth-brand-title { font-size: 18px; }
-  [data-design='aurum'] .ec-auth .ec-auth-title { font-size: 21px; }
+  [data-design='aurum'] .ec-auth .ec-auth-title { font-size: 20px; }
+  [data-design='aurum'] :is(.ec-auth, .ec-auth-card) .ecaf-switch-btn {
+    font-size: 8.5px; letter-spacing: .05em;
+  }
+  [data-design='aurum'][data-theme] :is(.ec-auth, .ec-auth-card) .ecaf-submit { font-size: 15px; }
   [data-design='aurum'][data-theme] .ec-account { padding-inline: 10px; }
   [data-design='aurum'][data-theme] .ec-account .acc-mhead { grid-template-columns: 42px minmax(0, 1fr) 40px; gap: 10px; }
   [data-design='aurum'][data-theme] .ec-account .acc-mhead-meta strong { font-size: 16px; }
@@ -658,8 +1213,26 @@
   }
 }
 @media (prefers-reduced-motion: reduce) {
-  [data-design='aurum'] :is(.ec-auth, .ec-account) * {
+  [data-design='aurum'] :is(.ec-auth, .ec-account, .ec-auth-card, .ec-auth-backdrop) * {
     transition-duration: .001ms !important;
     animation-duration: .001ms !important;
+    animation-iteration-count: 1 !important;
+  }
+  /* Los propios overlays también (no son descendientes de *). */
+  [data-design='aurum'] :is(.ec-auth-card, .ec-auth-backdrop) {
+    animation-duration: .001ms !important;
+    transition-duration: .001ms !important;
+  }
+  /* Loops ambientales y spinners: animation:none del todo — con duración
+     ~0 un infinite alternate cambiaría de estado en cada frame. */
+  [data-design='aurum'] .ec-auth .ec-auth-glow-a,
+  [data-design='aurum'] .ec-auth .ec-auth-glow-b,
+  [data-design='aurum'] .ec-auth .ec-auth-grain,
+  [data-design='aurum'] .ec-auth .ec-auth-hatch,
+  [data-design='aurum'] .ec-auth .ec-auth-seal-ring,
+  [data-design='aurum'] .ec-auth .ec-auth-loading::after,
+  [data-design='aurum'] .ec-auth .ec-auth-spin,
+  [data-design='aurum'] :is(.ec-auth, .ec-auth-card) .ecaf-spin {
+    animation: none !important;
   }
 }
