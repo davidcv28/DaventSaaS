@@ -405,6 +405,16 @@
       parent.postMessage({ type: 'davent:ds-buy', id: buyBtn.getAttribute('data-ds-buy') || '' }, '*')
       return
     }
+    /* "Comprar ahora" de la ficha (variante ghost junto al CTA de
+     * carrito): compra directa — el host hace alta silenciosa y va al
+     * checkout. Mismo contrato de id que ds-buy. */
+    var buyNowBtn = t.closest('[data-ds-buy-now]')
+    if (buyNowBtn) {
+      e.preventDefault()
+      e.stopPropagation()
+      parent.postMessage({ type: 'davent:ds-buy-now', id: buyNowBtn.getAttribute('data-ds-buy-now') || '' }, '*')
+      return
+    }
     var card = t.closest('[data-ds-product]')
     if (card) { e.preventDefault(); go('product', card.getAttribute('data-ds-product')); return }
     /* Redirects de contacto (/r/whatsapp|instagram|…): el anchor viaja sin
@@ -1678,6 +1688,22 @@
      * la celda del grid en mobile (hscroll). max-width:100% blinda el CTA
      * de la ficha dentro de paneles angostos. */
     '[data-surface="product"] .dsx-buy[data-ds-buy-slot="pdp"]{width:auto;min-width:200px;max-width:100%;margin:0 0 12px}' +
+    /* "Comprar ahora" de la ficha: variante ghost del CTA — mismo alto,
+     * tipografía y radio, pero borde de acento y fondo transparente
+     * (secundario al "Agregar al carrito"). Va como hermano del CTA:
+     * en fila si el contenedor es flex/grid (los diseños traen gap) y
+     * apilado prolijo si es bloque. */
+    '.dsx-buy-now{box-sizing:border-box;display:block;width:calc(100% - 24px);margin:10px 12px 12px;padding:12px 14px;' +
+    'border:1px solid var(--ds-accent,#111);border-radius:var(--ds-radius-btn,var(--ds-radius,10px));cursor:pointer;' +
+    'background:transparent;color:var(--ds-accent-text,var(--ds-accent,#111));' +
+    'font:inherit;font-size:12px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;' +
+    'transition:transform .16s ease,background-color .2s ease,border-color .2s ease,filter .2s ease}' +
+    '.dsx-buy-now:hover{transform:translateY(-1px);' +
+    'background:color-mix(in srgb,var(--ds-accent,#111) 8%,transparent)}' +
+    '.dsx-buy-now:active{transform:translateY(0) scale(.985);filter:brightness(.96)}' +
+    '.dsx-buy-now:focus-visible{outline:2px solid var(--ds-accent,#111);outline-offset:2px}' +
+    '.dsx-buy-now[disabled]{opacity:.55;cursor:default;transform:none;filter:none}' +
+    '[data-surface="product"] .dsx-buy-now[data-ds-buy-slot="pdp"]{width:auto;min-width:200px;max-width:100%;margin:0 0 12px}' +
     /* Entrada de cuenta del comprador y acceso al carrito: píldoras
      * gemelas en el header/nav del diseño (mismo alto, radio, trazo de
      * icono y tipografía) o, sin slot, píldoras fijas abajo a la
@@ -1729,9 +1755,9 @@
     '.dsx-account,.dsx-cart{min-height:34px;padding:7px 11px;gap:5px;font-size:11.5px}' +
     '.dsx-account svg,.dsx-cart svg{width:14px;height:14px}}' +
     '@media (prefers-reduced-motion:reduce){' +
-    '.dsx-buy,.dsx-account,.dsx-cart,.dsx-cart-badge{transition:none;animation:none}' +
-    '.dsx-buy:hover,.dsx-account:hover,.dsx-cart:hover{transform:none}' +
-    '.dsx-buy:active,.dsx-account:active,.dsx-cart:active{transform:none}}'
+    '.dsx-buy,.dsx-buy-now,.dsx-account,.dsx-cart,.dsx-cart-badge{transition:none;animation:none}' +
+    '.dsx-buy:hover,.dsx-buy-now:hover,.dsx-account:hover,.dsx-cart:hover{transform:none}' +
+    '.dsx-buy:active,.dsx-buy-now:active,.dsx-account:active,.dsx-cart:active{transform:none}}'
   function dsBuyButton(pid, slot) {
     var b = document.createElement('button')
     b.type = 'button'
@@ -1739,6 +1765,18 @@
     b.setAttribute('data-ds-buy', String(pid))
     if (slot) b.setAttribute('data-ds-buy-slot', slot)
     b.textContent = 'Agregar al carrito'
+    return b
+  }
+  /* "Comprar ahora" de la ficha: hermano del CTA de carrito, variante
+   * ghost (.dsx-buy-now). NO lleva data-ds-buy — su click viaja por
+   * 'davent:ds-buy-now' y el host hace alta silenciosa + checkout. */
+  function dsBuyNowButton(pid, slot) {
+    var b = document.createElement('button')
+    b.type = 'button'
+    b.className = 'dsx-buy-now'
+    b.setAttribute('data-ds-buy-now', String(pid))
+    if (slot) b.setAttribute('data-ds-buy-slot', slot)
+    b.textContent = 'Comprar ahora'
     return b
   }
   function injectCardBuys() {
@@ -1780,7 +1818,7 @@
     var pdp = document.querySelector('[data-surface="product"]')
     //Ojo: la ficha también contiene tarjetas de relacionados ya inyectadas
     //— el guard busca el CTA de la ficha, no cualquier .dsx-buy.
-    if (!pdp || pdp.querySelector('[data-ds-buy-slot="pdp"]')) return
+    if (!pdp) return
     //?product= sin resolver: la superficie marcada no es una ficha real —
     //el aviso de "no disponible" la reemplaza (paintMissingProduct).
     if (pdp.hasAttribute('data-ds-pdp-missing')) return
@@ -1788,6 +1826,17 @@
     var pid = ''
     try { pid = new URLSearchParams(window.location.search).get('product') || '' } catch (e) {}
     if (!pid) return
+    var existing = pdp.querySelector('[data-ds-buy-slot="pdp"]')
+    if (existing) {
+      /* Ya hay CTA de ficha: si es el par inyectado (.dsx-buy) no hay nada
+       * que hacer; si es un botón PROPIO del diseño (moderntec trae su
+       * .pdp-buy con data-ds-buy — postea ds-buy solo) solo se le suma el
+       * "Comprar ahora" al lado, sin duplicar el de carrito. */
+      if (!existing.classList.contains('dsx-buy') && !pdp.querySelector('.dsx-buy-now')) {
+        existing.parentNode.insertBefore(dsBuyNowButton(pid, 'pdp'), existing.nextSibling)
+      }
+      return
+    }
     //Slot: antes del CTA de WhatsApp del diseño (clases/ hrefs conocidos
     //del fragmento compartido). Fallback: al inicio del panel de info.
     var wa = pdp.querySelector('a[href*="wa.me"], a[href*="whatsapp"], a[href*="/r/whatsapp"]')
@@ -1796,7 +1845,9 @@
       slot = pdp.querySelector('.pdp-info, aside, [class*="info"], [class*="panel"]')
       if (slot) {
         var h1 = slot.querySelector('h1')
-        slot.insertBefore(dsBuyButton(pid, 'pdp'), h1 ? h1.nextSibling : slot.firstChild)
+        var anchor = h1 ? h1.nextSibling : slot.firstChild
+        slot.insertBefore(dsBuyButton(pid, 'pdp'), anchor)
+        slot.insertBefore(dsBuyNowButton(pid, 'pdp'), anchor)
         return
       }
     }
@@ -1806,12 +1857,14 @@
        * .pdp-ctas — el anchor de WhatsApp vive adentro), el botón entra
        * como primer ítem del grupo (en un flex queda hermano del CTA).
        * Si el slot ES el anchor o un inline, va de hermano antes: un
-       * <button> dentro de <a> es HTML inválido. */
+       * <button> dentro de <a> es HTML inválido. El "Comprar ahora" queda
+       * siempre como hermano inmediato del de carrito. */
       if (slot !== wa && /^(DIV|SECTION|NAV|ASIDE|FOOTER|HEADER|P|UL|LI)$/.test(slot.tagName)) {
         slot.insertBefore(pdpBtn, slot.firstChild)
       } else {
         slot.parentNode.insertBefore(pdpBtn, slot)
       }
+      pdpBtn.parentNode.insertBefore(dsBuyNowButton(pid, 'pdp'), pdpBtn.nextSibling)
     }
   }
   /* Ficha de producto que no resuelve (?product= inexistente, inactivo o
@@ -1981,6 +2034,17 @@
      * reinyecta en el próximo frame y al cargar. */
     requestAnimationFrame(function () { injectCardBuys(); injectPdpBuy() })
     window.addEventListener('load', function () { injectCardBuys(); injectPdpBuy() })
+    /* La ficha puede montarse después del primer pintado (diseño que arma
+     * el PDP por JS): observer liviano que reintenta solo mientras falte
+     * el CTA de ficha — con el slot puesto el guard de injectPdpBuy sale
+     * sin tocar el DOM. */
+    if ('MutationObserver' in window && document.body) {
+      var pdpObs = new MutationObserver(function () {
+        var surf = document.querySelector('[data-surface="product"]')
+        if (surf && !surf.querySelector('[data-ds-buy-slot="pdp"]')) injectPdpBuy()
+      })
+      pdpObs.observe(document.body, { childList: true, subtree: true })
+    }
   }
   initCommerce()
   buildFilters()

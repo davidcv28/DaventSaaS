@@ -43,7 +43,7 @@ const props = defineProps({
   save: { type: String, default: '' },            // línea "Ahorrás $X · termina…"
   quick: { type: String, default: '' },           // chip hover sobre la media ("Ver pieza")
   go: { type: Boolean, default: true },           // chevron/link "Ver más" en el pie
-  goLabel: { type: String, default: 'Ver más' },
+  goLabel: { type: String, default: 'Ver producto' },
   addHref: { type: String, default: '' },         // botón "+" (WhatsApp) en el pie
   addLabel: { type: String, default: '' },
   // override opcional del gate de venta online — null = leer del contexto

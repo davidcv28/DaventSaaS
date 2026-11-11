@@ -832,6 +832,10 @@
 .store-page[data-template='indumentaria'] .sp-card:hover { border-color: var(--in-line-strong); }
 .store-page[data-template='indumentaria'] .sp-card .tpc-body { padding: 14px 0 0; }
 .store-page[data-template='indumentaria'] .sp-card .tpc-quick { display: none; }
+/* Lookbook: la media va a sangre (como en el catálogo .in-skin) y el
+   texto apoya en el filete — el margen legacy de .sp-card desalineaba
+   foto y copia. */
+.store-page[data-template='indumentaria'] .sp-card .tpc-media { margin: 0; border-radius: 0; }
 .store-page[data-template='indumentaria'] .sp-shop-dept {
   border: 1px solid var(--in-line);
   border-radius: 0;

@@ -55,7 +55,7 @@ const viewAll = 'Ver todo el catálogo'
         v-for="(p, i) in shopProducts" :key="p.id" v-reveal="(i % 4) * 80"
         class="sp-card" :p="p" :cat="shopCatOf(p)" :brand="shopBrandOf(p)"
         :stars="custom.show_reviews" stars-icon="star" seal-shape="" quick="Ver producto"
-        go-label="Ver más" @open="openProduct" />
+        go-label="Ver producto" @open="openProduct" />
     </div>
     <div v-else class="sp-shop-cats">
       <section v-for="g in catGroups" :key="g.id" class="sp-shop-cats-group" :aria-label="g.name">
@@ -68,7 +68,7 @@ const viewAll = 'Ver todo el catálogo'
             v-for="(p, i) in g.items" :key="p.id" v-reveal="(i % 4) * 70"
             class="sp-card" :p="p" :brand="shopBrandOf(p)"
             :stars="custom.show_reviews" stars-icon="star" seal-shape="" quick="Ver producto"
-            go-label="Ver más" @open="openProduct" />
+            go-label="Ver producto" @open="openProduct" />
         </div>
       </section>
     </div>

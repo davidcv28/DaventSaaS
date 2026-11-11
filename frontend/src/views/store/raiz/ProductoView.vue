@@ -5,6 +5,7 @@ import { storeHostSlug } from '../../../config/env.js'
 import { formatARS } from '../../../api/billing.api.js'
 import { productOffer, effectivePrice, offerPct, isNewProduct, productDiscount, offerEndsLabel } from '../../../api/catalog.api.js'
 import { storeContactLink, hasContactChannel } from '../../../api/stores.api.js'
+import { paymentMethodsFromConfig } from '../../../api/storeCommerce.js'
 import { useCartStore } from '../../../stores/cart.store.js'
 import AppIcon from '../../../components/AppIcon.vue'
 import ProductStars from '../../../components/ProductStars.vue'
@@ -55,6 +56,29 @@ const setQty = (n) => { qty.value = Math.min(QTY_MAX, Math.max(1, Math.round(Num
 const adding = ref(false)
 const added = ref(false)
 let addedTimer = 0
+
+// Medios de pago reales del payload público (store.payments, mismo mapa que
+// el checkout) en labels cortos para la fila de chips de la ficha.
+const PAY_SHORT = { transfer: 'Transferencia', whatsapp: 'WhatsApp', cash: 'Efectivo', mp: 'Mercado Pago' }
+const payMethods = computed(() => {
+  if (!ordersEnabled.value) return []
+  return paymentMethodsFromConfig(storeData.value?.payments)
+    .map((m) => ({ ...m, short: PAY_SHORT[m.value] || m.label }))
+})
+
+// Compra directa: alta silenciosa al carrito y checkout — sin drawer. Si el
+// comprador no tiene sesión, buyNow deja la acción pendiente y el `after`
+// corre post-login desde el modal de auth.
+const buying = ref(false)
+async function buyNow() {
+  if (buying.value || !product.value) return
+  buying.value = true
+  try {
+    await cartStore.buyNow(product.value.id, qty.value, product.value.name, () => router.push(cartStore.checkoutRoute()))
+  } finally {
+    buying.value = false
+  }
+}
 async function addToCart() {
   if (adding.value || !product.value) return
   adding.value = true
@@ -296,7 +320,13 @@ onBeforeUnmount(() => {
                   <AppIcon name="truck" :size="15" aria-hidden="true" />
                   <span>{{ shipLine }}</span>
                 </p>
-                <p class="rz-pdp-pay">
+                <ul v-if="payMethods.length" class="rz-pdp-paylist" aria-label="Medios de pago aceptados">
+                  <li v-for="m in payMethods" :key="m.value" class="rz-pdp-paychip" :title="m.hint">
+                    <AppIcon :name="m.icon" :size="13" aria-hidden="true" />
+                    <span>{{ m.short }}</span>
+                  </li>
+                </ul>
+                <p v-else class="rz-pdp-pay">
                   <AppIcon name="credit-card" :size="15" aria-hidden="true" />
                   {{ ordersEnabled ? 'Medios de pago y cuotas se coordinan con el vendedor' : 'Medios de pago, cuotas y envío se coordinan con el vendedor' }}
                 </p>
@@ -316,14 +346,24 @@ onBeforeUnmount(() => {
               </div>
 
               <div class="rz-pdp-ctas">
-                <button
-                  v-if="ordersEnabled" type="button"
-                  class="rz-btn rz-pdp-buy-btn rz-pdp-cart" :disabled="adding"
-                  @click="addToCart"
-                >
-                  <AppIcon :name="added ? 'check' : 'shopping-cart'" :size="17" aria-hidden="true" />
-                  {{ added ? 'Agregado al carrito' : 'Agregar al carrito' }}
-                </button>
+                <div v-if="ordersEnabled" class="rz-pdp-buyrow">
+                  <button
+                    type="button"
+                    class="rz-btn rz-pdp-buy-btn rz-pdp-cart" :disabled="adding"
+                    @click="addToCart"
+                  >
+                    <AppIcon :name="added ? 'check' : 'shopping-cart'" :size="17" aria-hidden="true" />
+                    {{ added ? 'Agregado al carrito' : 'Agregar al carrito' }}
+                  </button>
+                  <button
+                    type="button"
+                    class="rz-btn rz-btn--ghost rz-pdp-now" :class="{ 'rz-pdp-now-busy': buying }"
+                    :disabled="buying" @click="buyNow"
+                  >
+                    <AppIcon :name="buying ? 'loader' : 'arrow-right'" :size="15" aria-hidden="true" />
+                    {{ buying ? 'Procesando…' : 'Comprar ahora' }}
+                  </button>
+                </div>
                 <a
                   v-if="whatsappUrl" class="rz-btn rz-pdp-buy-btn" :class="{ 'rz-btn--ghost': ordersEnabled }"
                   :href="whatsappUrl" target="_blank" rel="noopener"
@@ -596,5 +636,49 @@ onBeforeUnmount(() => {
   .rz-pdp-lb-enter-active, .rz-pdp-lb-leave-active,
   .rz-pdp-lb-enter-active .rz-pdp-lb-img, .rz-pdp-lb-leave-active .rz-pdp-lb-img { transition: none; }
   .rz-pdp-zoom-hint { transition: none; }
+  .rz-pdp-now-busy svg { animation: none; }
+}
+
+/* Medios de pago reales: chips sobrios con hairline, misma retícula que el
+   resto del panel de compra (tokens --rz-* con fallback --sp-*). */
+.rz-pdp-paylist {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin: 8px 0 0;
+  padding: 0;
+  list-style: none;
+}
+.rz-pdp-paychip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 10px;
+  border: 1px solid var(--rz-line, var(--sp-line, #e2e8f0));
+  border-radius: var(--rz-rad-pill, 999px);
+  background: var(--rz-surface, var(--sp-card, #fff));
+  font-size: 11.5px;
+  font-weight: 650;
+  line-height: 1.4;
+  color: var(--rz-ink-2, var(--sp-ink, #334155));
+}
+.rz-pdp-paychip svg { flex: none; color: var(--rz-ok, var(--rz-muted, #64748b)); }
+
+/* Fila de compra: "Agregar al carrito" queda dominante (flex) y "Comprar
+   ahora" es un ghost compacto con flecha — nunca dos CTAs primarios. En
+   pantallas angostas baja a una segunda fila ghost de ancho completo. */
+.rz-pdp-buyrow { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; }
+.rz-pdp-buyrow .rz-btn.rz-pdp-buy-btn { flex: 1 1 auto; width: auto; min-width: 0; }
+.rz-pdp-now {
+  flex: 0 0 auto;
+  min-height: 46px;
+  padding: 0 16px;
+  font-size: 13.5px;
+  white-space: nowrap;
+}
+.rz-pdp-now-busy svg { animation: rz-pdp-rot .8s linear infinite; }
+@keyframes rz-pdp-rot { to { transform: rotate(360deg); } }
+@media (max-width: 480px) {
+  .rz-pdp-now { flex: 1 1 100%; }
 }
 </style>

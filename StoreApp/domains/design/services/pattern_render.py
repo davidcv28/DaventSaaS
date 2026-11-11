@@ -74,6 +74,7 @@ PATTERN_VARIABLES = {
     'product_rating_count': {'type': 'text', 'label': 'Producto: cantidad de valoraciones'},
     'product_features':  {'type': 'list',  'label': 'Producto: características'},
     'product_shipping':  {'type': 'text',  'label': 'Producto: envío'},
+    'product_payments':  {'type': 'list',  'label': 'Producto: medios de pago'},
     'product_related':   {'type': 'list',  'label': 'Producto: relacionados'},
     'product_reviews':   {'type': 'list',  'label': 'Producto: opiniones'},
     'products':          {'type': 'list',  'label': 'Productos'},
@@ -900,6 +901,60 @@ def _shipping_line(store):
     price   =   _money(cfg.home_price) if _amount(cfg.home_price) > 0 else 'sin cargo'
     return f'Envío a domicilio {price} · retiro en el local sin cargo'
 
+#Iconos de los chips de pago: stroke simple en currentColor (el color lo
+#pone .ds-pay-chip en la hoja del host). Sin fills ni gradientes: la hoja
+#solo aporta trazo/borde/radio/tokens.
+_PAY_ICONS = {
+    'transfer':   '<rect x="3" y="6" width="18" height="13" rx="2"/><path d="M3 10h18M7 15h4"/>',
+    'whatsapp':   '<path d="M4 12.5a8 8 0 0 1 16 0c0 4.4-3.6 8-8 8-1.2 0-2.3-.3-3.3-.7L4 20.5l.7-4.3a7.9 7.9 0 0 1-.7-3.5z"/>',
+    'cash':       '<rect x="3" y="7" width="18" height="11" rx="1.5"/><circle cx="12" cy="12.5" r="2.4"/><path d="M6.5 10.5h.01M17.5 14.5h.01"/>',
+    'mp':         '<rect x="3" y="6" width="18" height="13" rx="2"/><path d="M3 10h18M16.5 15h.01"/>',
+}
+_PAY_LABELS = {
+    'transfer':   'Transferencia',
+    'whatsapp':   'WhatsApp',
+    'cash':       'Efectivo',
+    'mp':         'Mercado Pago',
+}
+
+def _payments_fragment(store):
+    """
+    Medios de pago de la ficha de producto: chips con los métodos
+    habilitados según StorePaymentConfig + StoreMpAccount.is_connected —
+    la misma regla que `_payment_instructions`/`_allowed_payment_methods`
+    del checkout (sin fila = defaults: transferencia y WhatsApp sí,
+    efectivo no, MP solo con cuenta conectada). Vacío cuando la tienda
+    no vende online: el diseño la deja en un <div> que queda :empty y la
+    hoja del host lo oculta. Los labels son fijos del sistema — ningún
+    dato de la tienda entra como texto.
+    """
+    from StoreApp.domains.stores.services.commerce import orders_enabled
+    if not orders_enabled(store):
+        return ''
+    #Reverse O2O: DoesNotExist es subclase de AttributeError -> default OK.
+    cfg     =   getattr(store, 'payment_config', None)
+    account =   getattr(store, 'mp_account', None)
+    methods =   []
+    if cfg.accept_transfer if cfg else True:
+        methods.append('transfer')
+    if cfg.accept_whatsapp if cfg else True:
+        methods.append('whatsapp')
+    if cfg.accept_cash if cfg else False:
+        methods.append('cash')
+    mp_on   =   cfg.mp_enabled if cfg else True
+    if mp_on and account is not None and account.is_connected:
+        methods.append('mp')
+    if not methods:
+        return ''
+    chips   =   ''.join(
+        '<span class="ds-pay-chip">'
+        '<svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" '
+        'stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">'
+        f'{_PAY_ICONS[key]}</svg>{_PAY_LABELS[key]}</span>'
+        for key in methods
+    )
+    return f'<div class="ds-pay"><span class="ds-pay-label">Medios de pago</span>{chips}</div>'
+
 def _product_values(store, product, customization, store_name, flags = None):
     """Variables `product_*` del documento (ficha de producto)."""
     from StoreApp.domains.stores.services.storage import object_url
@@ -910,7 +965,7 @@ def _product_values(store, product, customization, store_name, flags = None):
             'product_offer_pct', 'product_save', 'product_image', 'product_category',
             'product_brand', 'product_ref', 'product_whatsapp_url', 'product_rating_avg',
             'product_rating_count', 'product_shipping',
-        )}, {'product_features': '', 'product_related': '', 'product_reviews': '', 'product_campaign_label': ''}
+        )}, {'product_features': '', 'product_related': '', 'product_reviews': '', 'product_campaign_label': '', 'product_payments': ''}
     from StoreApp.domains.catalog.services.services import (
         effective_pricing_of,
         running_discounts_of,
@@ -961,6 +1016,7 @@ def _product_values(store, product, customization, store_name, flags = None):
         'product_related':  _related_fragment(store, product) if flags is None or flags.get('catalog', True) else '',
         'product_reviews':  _reviews_fragment(store, product, customization),
         'product_campaign_label': campaign_label,
+        'product_payments': _payments_fragment(store),
     }
     return context, raw
 

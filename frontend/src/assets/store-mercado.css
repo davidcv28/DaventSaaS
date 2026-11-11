@@ -692,6 +692,9 @@
   font-size: 12px;
   font-weight: 700;
 }
+/* En destacados/ofertas el -% ya va en el pie junto al precio (.mc-off):
+   el flag de la foto lo duplicaba. Mismo criterio que .mc-catpage. */
+.store-page[data-template='mercado'] :is(.mc-featured, .mc-offers) .mc-card .tpc-flags { display: none; }
 
 /* --- Confianza --- */
 .store-page[data-template='mercado'] .mc-trust {
@@ -1533,6 +1536,12 @@
 .store-page[data-template='mercado'] .mc-cat-list .tpc-row .tpc-eyebrow { min-height: 1.35em; }
 .store-page[data-template='mercado'] .mc-cat-list .tpc-row .tpc-desc { min-height: 0; }
 .store-page[data-template='mercado'] .mc-cat-list .tpc-row .tpc-foot { padding-top: 10px; }
+/* En grilla el pie lleva precio + "Agregar" + "Ver producto": los dos
+   CTA tienen margin-inline-start:auto y el espacio libre se repartía
+   entre ambos (el + quedaba flotando al centro). Con carrito presente el
+   go pierde su auto y el grupo queda anclado a la derecha; sin carrito
+   (orders_enabled off) el go conserva el auto y cierra la fila solo. */
+.store-page[data-template='mercado'] .mc-cat-list .tpc-foot .tpc-cart ~ .tpc-go { margin-inline-start: 0; }
 /* El badge de ahorro va junto al precio (no sobre la foto): misma lectura
    que el documento del diseño. */
 .store-page[data-template='mercado'] .mc-catpage .tpc-flags { display: none; }

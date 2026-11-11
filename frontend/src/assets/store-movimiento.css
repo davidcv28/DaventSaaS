@@ -1132,6 +1132,9 @@
   box-shadow: none;
 }
 .store-page[data-template='movimiento'] .sp-card:hover { border-color: var(--mv-line-strong); }
+/* La piel es de radios 0: la media del .sp-card heredaba margen 8px y
+   radio 14px del chrome genérico — va a sangre como en el catálogo. */
+.store-page[data-template='movimiento'] .sp-card .tpc-media { margin: 0; border-radius: 0; }
 .store-page[data-template='movimiento'] .sp-about { border-top: 1px solid var(--mv-line); padding-top: var(--mv-section); }
 .store-page[data-template='movimiento'] .sp-about-grid { gap: calc(32px + var(--st-section-gap, 28px) - 28px) calc(48px + var(--st-section-gap, 28px) - 28px); align-items: start; }
 .store-page[data-template='movimiento'] .sp-about-heading {

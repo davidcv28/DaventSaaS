@@ -569,6 +569,10 @@
 .store-page[data-template='sastreria'] .sp-card:hover { border-color: var(--ss-line-strong); }
 .store-page[data-template='sastreria'] .sp-card .tpc-body { padding: 14px 0 0; }
 .store-page[data-template='sastreria'] .sp-card .tpc-quick { display: none; }
+/* Ficha editorial: la media va a sangre (como en el catálogo .ss-skin) y
+   el texto apoya en el filete — el margen legacy de .sp-card desalineaba
+   foto y copia. */
+.store-page[data-template='sastreria'] .sp-card .tpc-media { margin: 0; border-radius: 0; }
 .store-page[data-template='sastreria'] .sp-shop-dept {
   border: 1px solid var(--ss-line);
   border-radius: 2px;

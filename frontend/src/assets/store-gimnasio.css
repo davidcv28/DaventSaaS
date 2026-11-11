@@ -2012,6 +2012,9 @@
   box-shadow: none;
 }
 .store-page[data-template='gimnasio'] .sp-card:hover { border-color: var(--gy-line-strong); }
+/* La piel es de radios 0: la media del .sp-card heredaba margen 8px y
+   radio 14px del chrome genérico — va a sangre como en el catálogo. */
+.store-page[data-template='gimnasio'] .sp-card .tpc-media { margin: 0; border-radius: 0; }
 .store-page[data-template='gimnasio'] .sp-about { border-top: 1px solid var(--gy-line); }
 .store-page[data-template='gimnasio'] .sp-team-grid { gap: 16px; }
 .store-page[data-template='gimnasio'] .sp-member { border-radius: 0; }

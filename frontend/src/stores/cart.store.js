@@ -97,19 +97,12 @@ export const useCartStore = defineStore('storeCart', () => {
     return p
   }
 
-  // Alta de línea con gate de sesión: sin comprador logueado abre el
-  // modal pidiendo login y reintenta la acción al volver.
-  async function addToCart(productId, qty = 1, productName = '') {
-    if (!slug.value || !productId) return { ok: false }
-    if (!(await ensureCustomer())) {
-      openAuth('login', { action: () => addToCart(productId, qty, productName) })
-      return { ok: false, needsAuth: true }
-    }
+  // Alta de línea contra la API (sin gate de sesión ni drawer): la usan
+  // addToCart (alta estándar) y buyNow (compra directa).
+  async function addItem(productId, qty = 1) {
     busy.value = true
     try {
       cart.value = await cartApi.addItem(slug.value, productId, qty)
-      flash('ok', productName ? `Agregaste ${productName} al carrito.` : 'Agregaste el producto al carrito.')
-      drawerOpen.value = true
       return { ok: true }
     } catch (err) {
       const parsed = extractApiError(err)
@@ -118,6 +111,43 @@ export const useCartStore = defineStore('storeCart', () => {
     } finally {
       busy.value = false
     }
+  }
+
+  // Alta de línea con gate de sesión: sin comprador logueado abre el
+  // modal pidiendo login y reintenta la acción al volver.
+  async function addToCart(productId, qty = 1, productName = '') {
+    if (!slug.value || !productId) return { ok: false }
+    if (!(await ensureCustomer())) {
+      openAuth('login', { action: () => addToCart(productId, qty, productName) })
+      return { ok: false, needsAuth: true }
+    }
+    const res = await addItem(productId, qty)
+    if (res?.ok) {
+      flash('ok', productName ? `Agregaste ${productName} al carrito.` : 'Agregaste el producto al carrito.')
+      drawerOpen.value = true
+    }
+    return res
+  }
+
+  // Compra directa ("Comprar ahora"): alta silenciosa — NO abre el drawer.
+  // El caller pasa `after` (típicamente () => router.push(checkoutRoute())):
+  // corre tras el alta exitosa, también cuando la acción pendiente se
+  // reintenta post-login desde el modal de auth.
+  async function buyNow(productId, qty = 1, productName = '', after = null) {
+    if (!slug.value || !productId) return { ok: false }
+    const run = async () => {
+      const res = await addItem(productId, qty)
+      if (res?.ok) {
+        flash('ok', productName ? `Agregaste ${productName} al carrito.` : 'Producto agregado.')
+        after?.()
+      }
+      return res
+    }
+    if (!(await ensureCustomer())) {
+      openAuth('login', { action: run })
+      return { ok: false, needsAuth: true }
+    }
+    return run()
   }
 
   async function setQty(itemId, qty) {
@@ -225,6 +255,6 @@ export const useCartStore = defineStore('storeCart', () => {
     itemCount, items, itemsTotal, hasItems, memberDiscount,
     bindStore, refresh, ensureCustomer, flash,
     openAuth, closeAuth, takePending,
-    addToCart, setQty, removeItem, clear, openDrawer, onSessionExpired, authRoute,
+    addToCart, buyNow, setQty, removeItem, clear, openDrawer, onSessionExpired, authRoute, checkoutRoute,
   }
 })

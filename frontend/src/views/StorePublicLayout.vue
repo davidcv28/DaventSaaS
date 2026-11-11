@@ -207,6 +207,13 @@ function onPatternBuy({ id } = {}) {
   if (!ordersEnabled.value || !id) return
   cartStore.addToCart(id, 1)
 }
+// "Comprar ahora" del documento del patrón (postMessage ds-buy-now):
+// alta silenciosa y directo al checkout — buyNow corre `after` también
+// post-login, así que un invitado termina en el mismo destino.
+function onPatternBuyNow({ id } = {}) {
+  if (!ordersEnabled.value || !id) return
+  cartStore.buyNow(id, 1, '', () => router.push(cartStore.checkoutRoute()))
+}
 // Entrada "Mi cuenta" del documento del patrón (postMessage ds-account):
 // con sesión de comprador va directo a /cuenta; sin sesión navega a la
 // página de auth /ingresar con la cuenta como ?next= (un {route} sí puede
@@ -1269,6 +1276,7 @@ onBeforeUnmount(() => {
       :account="customerStore.isAuthenticated"
       @navigate="onPatternNavigate"
       @buy="onPatternBuy"
+      @buy-now="onPatternBuyNow"
       @account="onPatternAccount"
       @toggle-theme="togglePageTheme"
       @load="patternFrameReady = true"

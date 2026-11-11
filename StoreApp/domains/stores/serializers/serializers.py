@@ -779,9 +779,10 @@ class StorePublicSerializer(serializers.ModelSerializer):
     service_items               =   serializers.SerializerMethodField()
     orders_enabled              =   serializers.SerializerMethodField()
     shipping                    =   serializers.SerializerMethodField()
+    payments                    =   serializers.SerializerMethodField()
     class Meta:
         model                   =   Store
-        fields                  =   ['slug', 'business_name', 'city_name', 'province_name', 'customization', 'has_design_advanced', 'allowed_templates', 'location_address', 'chatbot', 'service_items', 'orders_enabled', 'shipping']
+        fields                  =   ['slug', 'business_name', 'city_name', 'province_name', 'customization', 'has_design_advanced', 'allowed_templates', 'location_address', 'chatbot', 'service_items', 'orders_enabled', 'shipping', 'payments']
     def get_has_design_advanced(self, store):
         #Solo premium: define si la web muestra portada (carrusel) o el
         #botón de modo claro/oscuro para el visitante en el nav.
@@ -822,6 +823,20 @@ class StorePublicSerializer(serializers.ModelSerializer):
         cfg     =   getattr(store, 'shipping_config', None)
         price   =   cfg.home_price if cfg is not None else None
         return {'home_price': str(price) if price is not None else None}
+    def get_payments(self, store):
+        #Medios de cobro habilitados del checkout (mismo subconjunto público
+        #que /membership-plans/): la ficha de producto los muestra sin otro
+        #request. La plata va al vendedor — DAVENT nunca la toca.
+        cfg         =   getattr(store, 'payment_config', None)
+        mp_on       =   bool(cfg.mp_enabled) if cfg else True
+        account     =   getattr(store, 'mp_account', None)
+        return {
+            'accept_transfer'   :   cfg.accept_transfer if cfg else True,
+            'accept_whatsapp'   :   cfg.accept_whatsapp if cfg else True,
+            'accept_cash'       :   cfg.accept_cash if cfg else False,
+            'mp_enabled'        :   mp_on,
+            'mp_connected'      :   mp_on and bool(account and account.is_connected),
+        }
     def get_chatbot(self, store):
         #{'greeting', 'qa'} solo si el plan tiene 'has_chatbot' y el
         #dueño lo activó; el widget público no se renderiza con None.

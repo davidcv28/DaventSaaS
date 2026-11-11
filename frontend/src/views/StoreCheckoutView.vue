@@ -16,6 +16,7 @@ import { orderCaptchaApi } from '../api/cart.api.js'
 import { orderPublicApi } from '../api/storeorders.api.js'
 import { membershipPlansApi } from '../api/membershipPlans.api.js'
 import { formatARS } from '../api/billing.api.js'
+import { paymentMethodsFromConfig, PAYMENT_UI } from '../api/storeCommerce.js'
 import { extractApiError } from '../api/http.js'
 import { storeHostSlug } from '../config/env.js'
 import AppIcon from '../components/AppIcon.vue'
@@ -96,24 +97,10 @@ const addressReady = computed(() => {
   return Boolean(a.line1?.trim() && a.city?.trim() && a.province?.trim())
 })
 
-const paymentMethods = computed(() => {
-  const p = payments.value || {}
-  const list = []
-  if (p.accept_transfer !== false) list.push({ value: 'transfer', label: 'Transferencia / depósito' })
-  if (p.accept_whatsapp !== false) list.push({ value: 'whatsapp', label: 'Coordinar por WhatsApp' })
-  if (p.accept_cash) list.push({ value: 'cash', label: 'Efectivo / en persona' })
-  if (p.mp_connected) list.push({ value: 'mp', label: 'Mercado Pago' })
-  return list
-})
+// Mismo orden/mapa que la ficha de producto (storeCommerce.js): el server
+// decide qué métodos están habilitados vía `payments`.
+const paymentMethods = computed(() => paymentMethodsFromConfig(payments.value))
 
-// Icono + descripción por método (solo presentación — el server decide
-// qué métodos están habilitados vía `payments`).
-const PAYMENT_UI = {
-  transfer: { icon: 'building-2', hint: 'Transferí o depositá en la cuenta del comercio y después subí el comprobante.' },
-  whatsapp: { icon: 'whatsapp', hint: 'El pago se coordina por WhatsApp con el comercio.' },
-  cash:     { icon: 'wallet',       hint: 'Pagás en efectivo al retirar el pedido o al recibirlo.' },
-  mp:       { icon: 'credit-card',  hint: 'Te llevamos a Mercado Pago para pagar; la acreditación es automática.' },
-}
 const payUi = computed(() => PAYMENT_UI[form.value.payment_method] || null)
 const payIcon = (v) => PAYMENT_UI[v]?.icon || 'credit-card'
 const payHint = (v) => PAYMENT_UI[v]?.hint || ''

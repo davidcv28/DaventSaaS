@@ -1515,6 +1515,10 @@
   transform: none;
   box-shadow: none;
 }
+/* Los flags viven abajo de la foto en este diseño (ver .tpc-flags): el
+   chip hover y la etiqueta de campaña suben para no pisarlos. */
+:is(.store-page[data-template='impacto'], .store-page.mi-skin) .tpc-quick,
+:is(.store-page[data-template='impacto'], .store-page.mi-skin) .tpc-campaign { bottom: 44px; }
 :is(.store-page[data-template='impacto'], .store-page.mi-skin) .tpc-quick { border-radius: 0; }
 
 /* Tarjetas en tema oscuro: la superficie-card publicada es clara

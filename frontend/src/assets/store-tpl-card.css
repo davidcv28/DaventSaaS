@@ -43,7 +43,13 @@
 
 /* --- Media: alto uniforme por aspect-ratio; la imagen llena y el
    placeholder ocupa EXACTAMENTE la misma caja --- */
-.tpc-media {
+/* Selectores con scope .tpc: la hoja legacy store-page.css trae reglas
+   .sp-card .tpc-* (aspect-ratio 1/1 fijo, flags verdes #00a650 absolutos,
+   paddings propios) que ganaban por especificidad y pisaban los tokens
+   --tpc-* de cada piel. Al empatar especificidad esta hoja carga después
+   (StorePublicLayout la importa post store-page.css) y el contrato manda:
+   la geometría y la estética de la tarjeta salen SOLO de los tokens. */
+.tpc .tpc-media {
   position: relative;
   display: block;
   aspect-ratio: var(--tpc-ratio, 1 / 1);
@@ -64,7 +70,7 @@
 @media (hover: hover) and (pointer: fine) {
   .tpc:hover .tpc-media img:not(.tpc-campaign) { transform: var(--tpc-img-hover, scale(1.04)); }
 }
-.tpc-ph {
+.tpc .tpc-ph {
   position: absolute;
   inset: 0;
   display: grid;
@@ -134,7 +140,7 @@
 /* La fila de flags manda: las pieles viejas posicionaban cada flag en
    absoluto sobre la media — dentro del contrato son hijos flex estáticos. */
 .tpc .tpc-flags .tpc-flag { position: static; }
-.tpc-flag {
+.tpc .tpc-flag {
   display: inline-flex;
   align-items: center;
   padding: 4px 9px;
@@ -152,7 +158,7 @@
   text-overflow: ellipsis;
   white-space: nowrap;
 }
-.tpc-flag.offer {
+.tpc .tpc-flag.offer {
   order: 2;
   background: var(--tpc-offer-bg, var(--store-accent, #4f46e5));
   color: var(--tpc-offer-ink, #fff);
@@ -247,7 +253,7 @@
   min-width: 0;
 }
 .tpc-price-wrap { display: flex; flex-direction: column; gap: 1px; min-width: 0; }
-.tpc-price {
+.tpc .tpc-price {
   display: inline-flex;
   align-items: baseline;
   flex-wrap: wrap;
@@ -266,24 +272,27 @@
   color: var(--tpc-old-ink, var(--sp-muted, #94a3b8));
   text-decoration: line-through;
 }
-.tpc-save {
+.tpc .tpc-save {
   font-size: 11.5px;
   font-weight: 600;
-  color: var(--tpc-save-ink, var(--store-accent-ink, var(--store-accent, #4f46e5)));
+  /* --store-accent-ink es la tinta SOBRE acento (botones), no texto sobre
+     tarjeta: como fallback legible va --sp-accent-text (acento-como-texto
+     con AA que las pieles ya mantienen). */
+  color: var(--tpc-save-ink, var(--sp-accent-text, var(--store-accent, #4f46e5)));
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
   max-width: 100%;
 }
 .tpc-save em { font-style: normal; font-weight: 500; opacity: .75; }
-.tpc-go {
+.tpc .tpc-go {
   margin-inline-start: auto;
   display: inline-flex;
   align-items: center;
   gap: 5px;
   font-size: var(--tpc-go-size, 12.5px);
   font-weight: var(--tpc-go-weight, 600);
-  color: var(--tpc-go-ink, var(--store-accent-ink, var(--store-accent, #4f46e5)));
+  color: var(--tpc-go-ink, var(--sp-accent-text, var(--store-accent, #4f46e5)));
   white-space: nowrap;
 }
 .tpc-go svg { transition: transform .15s ease-out; flex: none; }

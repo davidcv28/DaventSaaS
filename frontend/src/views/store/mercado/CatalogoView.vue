@@ -290,7 +290,7 @@ const activeChips = computed(() => {
                 >
                   <AppIcon :name="added ? 'check' : 'shopping-cart'" :size="20" />
                 </button>
-                <span v-if="view === 'grid'" class="tpc-go" aria-hidden="true">Ver producto</span>
+                <span v-if="view === 'grid'" class="tpc-go" aria-hidden="true">Ver producto<AppIcon name="arrow-right" :size="15" /></span>
               </template>
               <template v-if="promoOf(p) && blkOn('promo')" #tags>
                 <p class="mc-cat-promo">{{ promoOf(p).name }}<span v-if="offerEndsLabel(promoOf(p))"> · {{ offerEndsLabel(promoOf(p)) }}</span></p>

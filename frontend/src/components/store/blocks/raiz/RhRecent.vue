@@ -46,7 +46,7 @@ const openProduct = (p) => router.push(productTo(p))
           v-for="(p, i) in products" :key="p.id" v-reveal="60 * i"
           class="rh-recent-card" :p="p" :cat="catOf(p)" :brand="brandOf(p)"
           :stars="custom.show_reviews" stars-icon="star" seal-shape=""
-          quick="Ver producto" go-label="Ver más" @open="openProduct"
+          quick="Ver producto" go-label="Ver producto" @open="openProduct"
         />
       </div>
     </div>

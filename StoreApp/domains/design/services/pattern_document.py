@@ -174,6 +174,20 @@ section:has(.ds-plans:empty){display:none!important}
 .ds-ship{font-size:12px;font-weight:600;line-height:1.45;opacity:.8;margin:8px 0 0}
 .ds-ship:empty{display:none!important}
 
+/* Medios de pago de la ficha ({{product_payments}}): chips sobrios con
+   los métodos habilitados (transferencia/WhatsApp/efectivo/Mercado
+   Pago). Solo tokens --ds-* — funciona en claro y oscuro sin reglas
+   extra. Vacío (tienda sin venta online) queda :empty y desaparece. */
+.ds-pay{display:flex;flex-wrap:wrap;align-items:center;gap:6px 8px;margin:8px 0 0}
+.ds-pay:empty{display:none!important}
+.ds-pay-label{font-size:10px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;opacity:.65}
+.ds-pay-chip{display:inline-flex;align-items:center;gap:5px;padding:4px 9px;
+  border:1px solid var(--ds-border,var(--line,#ddd));border-radius:999px;
+  font-size:11px;font-weight:600;line-height:1.2;letter-spacing:.02em;
+  color:var(--ds-text,var(--ink,currentColor));
+  background:color-mix(in srgb,var(--ds-accent,#888) 5%,transparent)}
+.ds-pay-chip svg{flex:none;opacity:.75}
+
 /* Etiqueta de campaña que firma la oferta (Hot Sale, Navidad…): sticker
    anclado a la esquina superior de la tarjeta. Vive en la hoja del host —
    no en cada patrón — porque pattern_render la emite en todos los
