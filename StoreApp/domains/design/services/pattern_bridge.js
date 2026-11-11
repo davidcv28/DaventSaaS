@@ -22,7 +22,19 @@
     ;[].forEach.call(document.querySelectorAll('.ds-zone'), function (z) {
       if (z.children.length || (z.textContent || '').trim()) return
       var sec = z.closest('[data-flag]')
-      if (sec) sec.hidden = true
+      if (!sec) return
+      sec.hidden = true
+      /* Los links del menú/footer comparten el data-flag de la sección pero
+       * no son ancestros de la zona: quedaban visibles y clicables hacia
+       * una sección escondida (clic sin efecto). Se ocultan los anchors
+       * que apuntan al id de la sección hideout — inline !important porque
+       * los links del diseño traen display propio que pisa al atributo
+       * `hidden`. */
+      if (sec.id) {
+        ;[].forEach.call(document.querySelectorAll('a[href="#' + sec.id + '"]'), function (l) {
+          l.style.setProperty('display', 'none', 'important')
+        })
+      }
     })
   }
   function send() {
@@ -61,6 +73,19 @@
   function go(route, id) {
     parent.postMessage({ type: 'davent:ds-route', route: route, id: id || '' }, '*')
   }
+  /* Alto del chrome fijo del diseño (masthead + pestañas) para que el
+   * host deje el destino debajo y no tapado. Opt-in: sin atributo, 72. */
+  function scrollOffset() {
+    var host = document.querySelector('[data-ds-offset]')
+    var n = parseInt((host && host.getAttribute('data-ds-offset')) || '', 10)
+    return n > 0 ? n : 72
+  }
+  /* Ancla pedida desde otra superficie (p. ej. "Nosotros" clicado en el
+   * catálogo): el destino existe en el documento pero está display:none,
+   * así que el click cae al data-ds-route y navega sin scroll. Se guarda
+   * el hash y el handler de davent:ds-surface reintenta el scroll una vez
+   * que la superficie destino queda visible. */
+  var pendingAnchor = null
   /* Datos de la API pública (captcha y opiniones del producto).
    *
    * El iframe va sandboxeado SIN `allow-same-origin`: el documento tiene
@@ -305,6 +330,17 @@
     }
     if (d.type === 'davent:ds-surface') {
       root.setAttribute('data-ds-surface', d.surface)
+      /* Reintento de ancla cross-surface: el click navegó al tiempo que la
+       * sección destino estaba oculta; ahora que la superficie quedó
+       * visible se scrollea una sola vez y se descarta el pendiente. */
+      if (pendingAnchor) {
+        var pendHash = pendingAnchor
+        pendingAnchor = null
+        var pendEl = pendHash.charAt(0) === '#' ? document.getElementById(pendHash.slice(1)) : null
+        if (pendEl && pendEl.getClientRects().length) {
+          parent.postMessage({ type: 'davent:ds-scroll', top: pendEl.getBoundingClientRect().top + (window.scrollY || 0), offset: scrollOffset() }, '*')
+        }
+      }
       var openPanel = document.querySelector('[data-ds-filters-panel].is-open')
       if (openPanel) {
         openPanel.classList.remove('is-open')
@@ -357,13 +393,6 @@
   document.addEventListener('click', function (e) {
     var t = e.target
     if (!t || !t.closest) return
-    /* Alto del chrome fijo del diseño (masthead + pestañas) para que el
-     * host deje el destino debajo y no tapado. Opt-in: sin atributo, 72. */
-    var scrollOffset = function () {
-      var host = document.querySelector('[data-ds-offset]')
-      var n = parseInt((host && host.getAttribute('data-ds-offset')) || '', 10)
-      return n > 0 ? n : 72
-    }
     /* CTA de carrito inyectado (tienda con venta online): el documento no
      * puede llamar a la API del carrito (origen opaco) — avisa al host, que
      * resuelve sesión/alta y abre el drawer. Va ANTES de data-ds-product:
@@ -401,6 +430,10 @@
         parent.postMessage({ type: 'davent:ds-scroll', top: sectionEl.getBoundingClientRect().top + (window.scrollY || 0), offset: scrollOffset() }, '*')
         return
       }
+      /* El destino existe pero está oculto (otra superficie o flag
+       * apagado): si el link además navega por data-ds-route, el scroll
+       * se reintenta al activarse la superficie destino. */
+      if (sectionEl && anchor.getAttribute('data-ds-route')) pendingAnchor = hash
     }
     /* Marca del escaparate -> catálogo filtrado: el nombre viaja en
      * `data-ds-brand` (mismo valor que `data-brand` de las tarjetas) y se
@@ -441,7 +474,10 @@
       var href = anchor.getAttribute('href') || ''
       if (href.charAt(0) === '#' && href.length > 1) {
         var targetEl = document.getElementById(href.slice(1))
-        if (targetEl) {
+        /* Solo scrollea si el destino es visible: uno oculto (display:none
+         * por superficie o flag) tiene rect en 0,0 y el host terminaría
+         * arriba del documento en vez de en la sección. */
+        if (targetEl && targetEl.getClientRects().length) {
           e.preventDefault()
           parent.postMessage({ type: 'davent:ds-scroll', top: targetEl.getBoundingClientRect().top + (window.scrollY || 0), offset: scrollOffset() }, '*')
         }
