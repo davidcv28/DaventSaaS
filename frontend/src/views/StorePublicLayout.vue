@@ -459,7 +459,10 @@ const TEMPLATE_CSS = {
     import('../assets/store-moderntec-account-sections.css')
   ]),
   indumentaria: () => import('../assets/store-indumentaria.css'),
-  impacto:   () => import('../assets/store-impacto.css')
+  impacto:   () => Promise.all([
+    import('../assets/store-impacto.css'),
+    import('../assets/store-impacto-auth.css')
+  ])
 }
 // Diseño del catálogo elegido (slug): tiñe las páginas de comercio que NO
 // montan el documento del patrón (ingresar, cuenta, carrito, checkout).

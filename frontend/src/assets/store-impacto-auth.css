@@ -1,0 +1,309 @@
+/* ===========================================================================
+   MODERNIMPACT — auth del comprador (login / registro / recuperar + modal).
+   Se carga solo con el diseño `impacto`. Scope: S = .store-page con
+   data-template='impacto' o .mi-skin. Solo tokens --mi-*. Sin iconos del
+   color de su fondo; animaciones solo transform/opacity.
+   =========================================================================== */
+.store-page:is([data-template='impacto'], .mi-skin) {
+  --ia-bg: #111111;
+  --ia-fg: #EDEBE4;
+  --ia-mut: #B4B0A3;
+  --ia-line: #3A3935;
+  --ia-acc: var(--mi-accent, #FF4B1F);
+}
+.store-page:is([data-template='impacto'], .mi-skin)[data-store-theme='dark'] {
+  --ia-bg: #0B0B0A;
+  --ia-line: #34342E;
+  --ia-acc: var(--mi-accent, #C8F031);
+}
+
+/* ---------- 1. SHELL ---------- */
+.store-page:is([data-template='impacto'], .mi-skin) .ec-auth-ambient { display: none; }
+.store-page:is([data-template='impacto'], .mi-skin) .ec-auth-shell {
+  grid-template-columns: minmax(0, 6fr) minmax(0, 5fr);
+  width: min(1120px, 100%);
+  border-radius: 0;
+  border: 2px solid var(--mi-rule);
+  background: var(--mi-card);
+  box-shadow: 10px 10px 0 var(--mi-rule);
+  animation: ia-rise .5s var(--mi-ease, ease-out) both;
+}
+@keyframes ia-rise { from { opacity: 0; transform: translateY(14px); } to { opacity: 1; transform: none; } }
+
+/* ---------- 2. PANEL DE MARCA ---------- */
+.store-page:is([data-template='impacto'], .mi-skin) .ec-auth-brand {
+  background: var(--ia-bg);
+  color: var(--ia-fg);
+  border-right: 2px solid var(--mi-rule);
+  padding: clamp(24px, 3.6vw, 48px);
+  min-height: 560px;
+}
+.store-page:is([data-template='impacto'], .mi-skin) .ec-auth-brand::before {
+  opacity: .16; mix-blend-mode: normal; filter: grayscale(1) contrast(1.1); pointer-events: none;
+}
+.store-page:is([data-template='impacto'], .mi-skin) .ec-auth-brand::after {
+  pointer-events: none;
+  background: repeating-linear-gradient(135deg, transparent 0 14px, color-mix(in srgb, var(--ia-fg) 5%, transparent) 14px 16px);
+}
+.store-page:is([data-template='impacto'], .mi-skin) .ec-auth-hatch { display: none; }
+.store-page:is([data-template='impacto'], .mi-skin) .ec-auth-brand-inner { gap: 32px; }
+.store-page:is([data-template='impacto'], .mi-skin) .ec-auth-brand-top {
+  gap: 12px; padding-bottom: 16px; width: 100%;
+  border-bottom: 2px solid var(--ia-fg);
+  padding-right: 72px;
+}
+.store-page:is([data-template='impacto'], .mi-skin) .ec-auth-logo {
+  width: 44px; height: 44px; border-radius: 0;
+  background: var(--ia-acc); color: #111; border: 0;
+  font-family: var(--mi-display); font-weight: 400; font-size: 22px; text-transform: uppercase;
+}
+.store-page:is([data-template='impacto'], .mi-skin) .ec-auth-brand-name {
+  font-family: var(--mi-mono); font-size: 12px; font-weight: 700;
+  letter-spacing: .16em; text-transform: uppercase; color: var(--ia-fg);
+}
+.store-page:is([data-template='impacto'], .mi-skin) .ec-auth-brand-copy { gap: 18px; max-width: none; }
+.store-page:is([data-template='impacto'], .mi-skin) .ec-auth-rail {
+  display: block; padding: 0;
+  font-family: var(--mi-display); font-size: clamp(64px, 9vw, 120px); line-height: .8;
+  color: var(--ia-acc); letter-spacing: -.01em;
+}
+.store-page:is([data-template='impacto'], .mi-skin) .ec-auth-rail::after { display: none; }
+.store-page:is([data-template='impacto'], .mi-skin) .ec-auth-brand-kicker {
+  font-family: var(--mi-mono); font-size: 11px; font-weight: 700;
+  letter-spacing: .16em; color: var(--ia-mut);
+}
+.store-page:is([data-template='impacto'], .mi-skin) .ec-auth-brand-title {
+  font-family: var(--mi-display); font-weight: 400; text-transform: uppercase;
+  font-size: clamp(40px, 5vw, 76px); line-height: .94; letter-spacing: -.005em;
+  color: var(--ia-fg); overflow-wrap: anywhere;
+}
+.store-page:is([data-template='impacto'], .mi-skin) .ec-auth-brand-text {
+  font-family: var(--mi-body); font-size: 15px; line-height: 1.55; color: var(--ia-mut); max-width: 44ch;
+}
+.store-page:is([data-template='impacto'], .mi-skin) .ec-auth-index {
+  display: grid; margin: 4px 0 0; padding: 0; list-style: none;
+  border-top: 1px solid var(--ia-line);
+}
+.store-page:is([data-template='impacto'], .mi-skin) .ec-auth-index li {
+  display: flex; gap: 14px; align-items: baseline; padding: 9px 0;
+  border-bottom: 1px solid var(--ia-line);
+  font-family: var(--mi-mono); font-size: 11.5px; letter-spacing: .14em; text-transform: uppercase;
+  color: var(--ia-mut);
+}
+.store-page:is([data-template='impacto'], .mi-skin) .ec-auth-index li.is-on { color: var(--ia-fg); }
+.store-page:is([data-template='impacto'], .mi-skin) .ec-auth-index li.is-on .ec-auth-index-n { color: var(--ia-acc); }
+.store-page:is([data-template='impacto'], .mi-skin) .ec-auth-index li.is-on .ec-auth-index-l::after { content: ' ←'; }
+.store-page:is([data-template='impacto'], .mi-skin) .ec-auth-perks { gap: 8px; margin: 6px 0 0; }
+.store-page:is([data-template='impacto'], .mi-skin) .ec-auth-perks li {
+  font-family: var(--mi-mono); font-size: 11.5px; font-weight: 500; letter-spacing: .04em;
+  color: var(--ia-mut); align-items: flex-start;
+}
+.store-page:is([data-template='impacto'], .mi-skin) .ec-auth-perks svg { color: var(--ia-acc); margin-top: 1px; }
+.store-page:is([data-template='impacto'], .mi-skin) .ec-auth-brand-foot {
+  font-family: var(--mi-mono); font-size: 10.5px; letter-spacing: .14em; text-transform: uppercase;
+  color: var(--ia-mut); padding-top: 14px; border-top: 1px solid var(--ia-line);
+}
+/* Sello: placa cuadrada acento con icono tinta (nunca mismo color). */
+.store-page:is([data-template='impacto'], .mi-skin) .ec-auth-seal {
+  display: grid; place-items: center; pointer-events: none;
+  position: absolute; top: clamp(24px, 3.6vw, 48px); right: clamp(24px, 3.6vw, 48px); z-index: 2;
+  width: 44px; height: 44px; border-radius: 0; border: 0;
+  background: var(--ia-fg); color: #111; transform: rotate(6deg);
+}
+.store-page:is([data-template='impacto'], .mi-skin) .ec-auth-seal-ring { display: none; }
+.store-page:is([data-template='impacto'], .mi-skin) .ec-auth-seal .icon { color: #111; filter: none; }
+
+/* ---------- 3. PANEL DEL FORMULARIO ---------- */
+.store-page:is([data-template='impacto'], .mi-skin) .ec-auth-panel {
+  background: var(--mi-card); color: var(--mi-ink);
+  padding: clamp(24px, 4vw, 56px);
+  justify-content: center;
+}
+.store-page:is([data-template='impacto'], .mi-skin) .ec-auth-panel::before { display: none; }
+.store-page:is([data-template='impacto'], .mi-skin) .ec-auth-panel-inner { display: flex; flex-direction: column; flex: 1; width: 100%; max-width: 440px; margin-inline: auto; }
+.store-page:is([data-template='impacto'], .mi-skin) .ec-auth-back {
+  min-height: 44px; margin-bottom: 16px;
+  font-family: var(--mi-mono); font-size: 11px; letter-spacing: .14em; text-transform: uppercase;
+  color: var(--mi-muted); text-decoration: none;
+}
+.store-page:is([data-template='impacto'], .mi-skin) .ec-auth-back:hover { color: var(--mi-ink); text-decoration: underline; text-underline-offset: 3px; }
+.store-page:is([data-template='impacto'], .mi-skin) :is(.ec-auth, .ec-auth-card) .ec-auth-head { gap: 10px; margin-bottom: 24px; }
+.store-page:is([data-template='impacto'], .mi-skin) :is(.ec-auth, .ec-auth-card) .ec-auth-badge { display: none; }
+.store-page:is([data-template='impacto'], .mi-skin) .ec-auth-tag {
+  display: inline-flex; align-items: center; gap: 8px; width: fit-content;
+  font-family: var(--mi-mono); font-size: 11px; font-weight: 700; letter-spacing: .16em;
+  text-transform: uppercase; color: var(--mi-ink);
+}
+.store-page:is([data-template='impacto'], .mi-skin) .ec-auth-tag::before {
+  content: ''; width: 10px; height: 10px; background: var(--mi-accent); border: 0; border-radius: 0;
+}
+.store-page:is([data-template='impacto'], .mi-skin) :is(.ec-auth, .ec-auth-card) .ec-auth-title {
+  font-family: var(--mi-display); font-weight: 400; text-transform: uppercase;
+  font-size: clamp(34px, 4vw, 52px); line-height: .96; letter-spacing: -.005em; color: var(--mi-ink);
+}
+.store-page:is([data-template='impacto'], .mi-skin) :is(.ec-auth, .ec-auth-card) .ec-auth-sub {
+  font-size: 14.5px; line-height: 1.55; color: var(--mi-muted);
+}
+.store-page:is([data-template='impacto'], .mi-skin) .ec-auth-trust {
+  display: flex; align-items: center; gap: 8px; margin: 22px 0 0; padding-top: 14px;
+  border-top: 1px solid var(--mi-line-2);
+  font-family: var(--mi-mono); font-size: 11px; letter-spacing: .06em; color: var(--mi-muted);
+}
+.store-page:is([data-template='impacto'], .mi-skin) .ec-auth-trust .icon { color: var(--mi-ink); }
+.store-page:is([data-template='impacto'], .mi-skin) .ec-auth-spin { color: var(--mi-ink); }
+.store-page:is([data-template='impacto'], .mi-skin) .ec-auth-loading { color: var(--mi-muted); font-family: var(--mi-mono); }
+
+/* ---------- 4. FORMULARIO ---------- */
+.store-page:is([data-template='impacto'], .mi-skin) :is(.ec-auth, .ec-auth-card) .ecaf { gap: 18px; }
+.store-page:is([data-template='impacto'], .mi-skin) :is(.ec-auth, .ec-auth-card) .ecaf-form { gap: 16px; }
+.store-page:is([data-template='impacto'], .mi-skin) :is(.ec-auth, .ec-auth-card) .ecaf-grid { gap: 12px; }
+
+.store-page:is([data-template='impacto'], .mi-skin) :is(.ec-auth, .ec-auth-card) .ecaf-switch {
+  display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); position: relative;
+  border: 2px solid var(--mi-rule); border-radius: 0; background: transparent; padding: 0;
+}
+.store-page:is([data-template='impacto'], .mi-skin) :is(.ec-auth, .ec-auth-card) .ecaf-switch-pill {
+  position: absolute; top: 0; bottom: 0; left: 0; width: calc(100% / 3);
+  background: var(--mi-ink); border-radius: 0; box-shadow: none;
+  transform: translateX(calc(var(--ecaf-switch-i, 0) * 100%));
+  transition: transform var(--mi-dur-2, .28s) var(--mi-ease, ease-out);
+}
+.store-page:is([data-template='impacto'], .mi-skin) :is(.ec-auth, .ec-auth-card) .ecaf-switch-btn {
+  position: relative; z-index: 1; min-height: 44px; padding: 0 6px;
+  border: 0; border-radius: 0; background: transparent; cursor: pointer;
+  font-family: var(--mi-mono); font-size: 11px; font-weight: 700; letter-spacing: .1em; text-transform: uppercase;
+  color: var(--mi-ink);
+}
+.store-page:is([data-template='impacto'], .mi-skin) :is(.ec-auth, .ec-auth-card) .ecaf-switch-btn.is-on { color: var(--mi-paper); }
+.store-page:is([data-template='impacto'], .mi-skin) :is(.ec-auth, .ec-auth-card) .ecaf-switch-btn:not(.is-on):hover { text-decoration: underline; text-underline-offset: 3px; }
+.store-page:is([data-template='impacto'], .mi-skin) :is(.ec-auth, .ec-auth-card) .ecaf-switch-btn:focus-visible { outline: 3px solid var(--mi-focus); outline-offset: 2px; }
+
+.store-page:is([data-template='impacto'], .mi-skin) :is(.ec-auth, .ec-auth-card) .ecaf .sp-field { gap: 8px; }
+.store-page:is([data-template='impacto'], .mi-skin) :is(.ec-auth, .ec-auth-card) .ecaf .sp-field-label {
+  font-family: var(--mi-mono); font-size: 11px; font-weight: 700; letter-spacing: .14em;
+  text-transform: uppercase; color: var(--mi-ink);
+}
+.store-page:is([data-template='impacto'], .mi-skin) :is(.ec-auth, .ec-auth-card) .ecaf .sp-input {
+  min-height: 48px; padding: 12px 14px; width: 100%;
+  border: 2px solid var(--mi-rule); border-radius: 0; box-shadow: none;
+  background: var(--mi-paper); color: var(--mi-ink);
+  font-family: var(--mi-body); font-size: 16px; line-height: 1.3;
+}
+.store-page:is([data-template='impacto'], .mi-skin) :is(.ec-auth, .ec-auth-card) .ecaf .sp-input::placeholder { color: var(--mi-muted); opacity: 1; }
+.store-page:is([data-template='impacto'], .mi-skin) :is(.ec-auth, .ec-auth-card) .ecaf .sp-input:hover { background: var(--mi-card); }
+.store-page:is([data-template='impacto'], .mi-skin) :is(.ec-auth, .ec-auth-card) .ecaf .sp-input:focus,
+.store-page:is([data-template='impacto'], .mi-skin) :is(.ec-auth, .ec-auth-card) .ecaf .sp-input:focus-visible {
+  outline: 3px solid var(--mi-focus); outline-offset: 2px; border-color: var(--mi-rule); background: var(--mi-card);
+}
+.store-page:is([data-template='impacto'], .mi-skin) :is(.ec-auth, .ec-auth-card) .ecaf .sp-input[aria-invalid='true'] {
+  border-color: var(--mi-err); box-shadow: inset 4px 0 0 var(--mi-err);
+}
+.store-page:is([data-template='impacto'], .mi-skin) :is(.ec-auth, .ec-auth-card) .ecaf .sp-input:disabled { opacity: .6; cursor: not-allowed; }
+.store-page:is([data-template='impacto'], .mi-skin) :is(.ec-auth, .ec-auth-card) .ecaf .sp-input:-webkit-autofill {
+  -webkit-text-fill-color: var(--mi-ink); caret-color: var(--mi-ink);
+  box-shadow: 0 0 0 1000px var(--mi-paper) inset;
+}
+.store-page:is([data-template='impacto'], .mi-skin) :is(.ec-auth, .ec-auth-card) .ecaf .sp-form-error {
+  font-family: var(--mi-mono); font-size: 12px; line-height: 1.4; color: var(--mi-err); font-weight: 600;
+}
+.store-page:is([data-template='impacto'], .mi-skin) :is(.ec-auth, .ec-auth-card) .ecaf .sp-form-error::before { content: '! '; }
+
+.store-page:is([data-template='impacto'], .mi-skin) :is(.ec-auth, .ec-auth-card) .ecaf-pass .sp-input { padding-right: 60px; }
+.store-page:is([data-template='impacto'], .mi-skin) :is(.ec-auth, .ec-auth-card) .ecaf-pass-toggle {
+  top: 0; bottom: 0; right: 0; transform: none; width: 52px; height: auto; min-height: 44px;
+  border-radius: 0; border: 0; border-left: 2px solid var(--mi-rule);
+  background: transparent; color: var(--mi-ink); cursor: pointer;
+}
+.store-page:is([data-template='impacto'], .mi-skin) :is(.ec-auth, .ec-auth-card) .ecaf-pass-toggle:hover:not(:disabled) { background: var(--mi-ink); color: var(--mi-paper); }
+.store-page:is([data-template='impacto'], .mi-skin) :is(.ec-auth, .ec-auth-card) .ecaf-pass-toggle:focus-visible { outline: 3px solid var(--mi-focus); outline-offset: -3px; }
+
+.store-page:is([data-template='impacto'], .mi-skin) :is(.ec-auth, .ec-auth-card) .ecaf .ecaf-submit {
+  min-height: 54px; margin-top: 6px; padding: 0 20px; border: 2px solid var(--mi-rule); border-radius: 0;
+  background: var(--mi-ink); color: var(--mi-paper); filter: none;
+  font-family: var(--mi-body); font-size: 14px; font-weight: 700; letter-spacing: .12em; text-transform: uppercase;
+  transition: transform var(--mi-dur-1, .16s) var(--mi-ease-snap, ease-out);
+}
+.store-page:is([data-template='impacto'], .mi-skin) :is(.ec-auth, .ec-auth-card) .ecaf .ecaf-submit:hover:not(:disabled) {
+  background: var(--mi-accent); color: var(--mi-accent-ink, #111); transform: translate(-2px, -2px);
+  box-shadow: 4px 4px 0 var(--mi-rule); filter: none;
+}
+.store-page:is([data-template='impacto'], .mi-skin) :is(.ec-auth, .ec-auth-card) .ecaf .ecaf-submit:active:not(:disabled) { transform: none; box-shadow: none; }
+.store-page:is([data-template='impacto'], .mi-skin) :is(.ec-auth, .ec-auth-card) .ecaf .ecaf-submit:focus-visible { outline: 3px solid var(--mi-focus); outline-offset: 3px; }
+.store-page:is([data-template='impacto'], .mi-skin) :is(.ec-auth, .ec-auth-card) .ecaf .ecaf-submit:disabled { opacity: .55; cursor: not-allowed; }
+
+.store-page:is([data-template='impacto'], .mi-skin) :is(.ec-auth, .ec-auth-card) .ecaf-divider {
+  gap: 12px; font-family: var(--mi-mono); font-size: 11px; letter-spacing: .14em; text-transform: uppercase; color: var(--mi-muted);
+}
+.store-page:is([data-template='impacto'], .mi-skin) :is(.ec-auth, .ec-auth-card) .ecaf-divider::before,
+.store-page:is([data-template='impacto'], .mi-skin) :is(.ec-auth, .ec-auth-card) .ecaf-divider::after { height: 2px; background: var(--mi-rule); opacity: 1; }
+.store-page:is([data-template='impacto'], .mi-skin) :is(.ec-auth, .ec-auth-card) .ecaf-google-btn {
+  min-height: 52px; border: 2px solid var(--mi-rule); border-radius: 0; background: #fff; overflow: hidden; max-width: 100%;
+}
+
+.store-page:is([data-template='impacto'], .mi-skin) :is(.ec-auth, .ec-auth-card) .ecaf :is(.ecaf-notice, .ecaf-error) {
+  border-radius: 0; border: 2px solid var(--mi-rule); padding: 12px 14px 12px 20px;
+  font-family: var(--mi-mono); font-size: 12.5px; line-height: 1.5; color: var(--mi-ink);
+  background: var(--mi-paper);
+}
+.store-page:is([data-template='impacto'], .mi-skin) :is(.ec-auth, .ec-auth-card) .ecaf .ecaf-notice { box-shadow: inset 6px 0 0 var(--tpc-stock-ink, #177245); }
+.store-page:is([data-template='impacto'], .mi-skin) :is(.ec-auth, .ec-auth-card) .ecaf .ecaf-error { border-color: var(--mi-err); box-shadow: inset 6px 0 0 var(--mi-err); }
+.store-page:is([data-template='impacto'], .mi-skin)[data-store-theme='dark'] :is(.ec-auth, .ec-auth-card) .ecaf .ecaf-notice { box-shadow: inset 6px 0 0 var(--mi-accent); }
+
+.store-page:is([data-template='impacto'], .mi-skin) :is(.ec-auth, .ec-auth-card) .ecaf-foot { gap: 0 20px; }
+.store-page:is([data-template='impacto'], .mi-skin) :is(.ec-auth, .ec-auth-card) .ecaf .ecaf-link {
+  min-height: 44px; padding: 0; display: inline-flex; align-items: center;
+  font-family: var(--mi-mono); font-size: 12px; font-weight: 600; letter-spacing: .04em;
+  color: var(--mi-ink); text-decoration: underline; text-underline-offset: 4px; text-decoration-thickness: 1px;
+}
+.store-page:is([data-template='impacto'], .mi-skin) :is(.ec-auth, .ec-auth-card) .ecaf .ecaf-link:hover:not(:disabled) { text-decoration-thickness: 3px; text-decoration-color: var(--mi-accent); }
+.store-page:is([data-template='impacto'], .mi-skin) :is(.ec-auth, .ec-auth-card) .ecaf .ecaf-link:focus-visible { outline: 3px solid var(--mi-focus); outline-offset: 2px; }
+
+/* ---------- 5. MODAL ---------- */
+.store-page:is([data-template='impacto'], .mi-skin) .ec-auth-backdrop { background: var(--mi-scrim); backdrop-filter: none; }
+.store-page:is([data-template='impacto'], .mi-skin) .ec-auth-card {
+  width: min(460px, 100%); border-radius: 0; border: 2px solid var(--mi-rule);
+  background: var(--mi-card); color: var(--mi-ink);
+  box-shadow: 8px 8px 0 var(--mi-rule); padding: 28px 26px 24px;
+  animation: ia-rise .35s var(--mi-ease, ease-out) both;
+}
+.store-page:is([data-template='impacto'], .mi-skin) .ec-auth-card .ec-auth-head { padding-right: 52px; }
+.store-page:is([data-template='impacto'], .mi-skin) .ec-auth-card .ec-auth-title { font-size: clamp(30px, 8vw, 38px); }
+.store-page:is([data-template='impacto'], .mi-skin) .ec-auth-close {
+  top: 0; right: 0; width: 48px; height: 48px; border-radius: 0; border: 0;
+  border-left: 2px solid var(--mi-rule); border-bottom: 2px solid var(--mi-rule);
+  background: transparent; color: var(--mi-ink);
+}
+.store-page:is([data-template='impacto'], .mi-skin) .ec-auth-close:hover { background: var(--mi-ink); color: var(--mi-paper); }
+.store-page:is([data-template='impacto'], .mi-skin) .ec-auth-close:focus-visible { outline: 3px solid var(--mi-focus); outline-offset: -3px; }
+
+/* ---------- 6. RESPONSIVE ---------- */
+@media (max-width: 1024px) {
+  .store-page:is([data-template='impacto'], .mi-skin) .ec-auth-shell { grid-template-columns: minmax(0, 1fr); box-shadow: 6px 6px 0 var(--mi-rule); }
+  .store-page:is([data-template='impacto'], .mi-skin) .ec-auth-brand { min-height: 0; border-right: 0; border-bottom: 2px solid var(--mi-rule); padding: 20px 22px; }
+  .store-page:is([data-template='impacto'], .mi-skin) .ec-auth-brand-inner { gap: 12px; flex-direction: column; align-items: stretch; flex-wrap: nowrap; }
+  .store-page:is([data-template='impacto'], .mi-skin) .ec-auth-brand-top { padding-bottom: 12px; padding-right: 56px; }
+  .store-page:is([data-template='impacto'], .mi-skin) .ec-auth-brand-copy { gap: 6px; flex: none; }
+  .store-page:is([data-template='impacto'], .mi-skin) .ec-auth-rail,
+  .store-page:is([data-template='impacto'], .mi-skin) .ec-auth-index,
+  .store-page:is([data-template='impacto'], .mi-skin) .ec-auth-brand-kicker { display: none; }
+  .store-page:is([data-template='impacto'], .mi-skin) .ec-auth-brand-title { font-size: clamp(30px, 7vw, 44px); }
+  .store-page:is([data-template='impacto'], .mi-skin) .ec-auth-seal { top: 20px; right: 22px; width: 38px; height: 38px; }
+  .store-page:is([data-template='impacto'], .mi-skin) .ec-auth-panel { padding: 28px 22px 30px; }
+}
+@media (max-width: 480px) {
+  .store-page:is([data-template='impacto'], .mi-skin) .ec-auth { padding-inline: 0; }
+  .store-page:is([data-template='impacto'], .mi-skin) .ec-auth-shell { width: 100%; border-inline: 0; box-shadow: none; margin-top: 0; }
+  .store-page:is([data-template='impacto'], .mi-skin) .ec-auth-brand { padding: 16px; }
+  .store-page:is([data-template='impacto'], .mi-skin) .ec-auth-brand-top { padding-right: 48px; }
+  .store-page:is([data-template='impacto'], .mi-skin) .ec-auth-seal { top: 16px; right: 16px; width: 34px; height: 34px; }
+  .store-page:is([data-template='impacto'], .mi-skin) .ec-auth-brand-title { font-size: 30px; }
+  .store-page:is([data-template='impacto'], .mi-skin) .ec-auth-panel { padding: 24px 16px 28px; }
+  .store-page:is([data-template='impacto'], .mi-skin) :is(.ec-auth, .ec-auth-card) .ecaf-switch-btn { font-size: 10px; letter-spacing: .06em; }
+  .store-page:is([data-template='impacto'], .mi-skin) .ec-auth-card { padding: 24px 16px 20px; box-shadow: 5px 5px 0 var(--mi-rule); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .store-page:is([data-template='impacto'], .mi-skin) :is(.ec-auth-shell, .ec-auth-card) { animation: none; }
+  .store-page:is([data-template='impacto'], .mi-skin) .ecaf-switch-pill,
+  .store-page:is([data-template='impacto'], .mi-skin) .ecaf .ecaf-submit { transition: none; }
+  .store-page:is([data-template='impacto'], .mi-skin) .ecaf .ecaf-submit:hover:not(:disabled) { transform: none; }
+}
