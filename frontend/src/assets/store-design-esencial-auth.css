@@ -18,7 +18,7 @@
   --ec-auth-on-plate-2: color-mix(in srgb, var(--dz-bg) 74%, transparent);
   --ec-auth-on-plate-3: color-mix(in srgb, var(--dz-bg) 52%, transparent);
   --ec-auth-plate-line: color-mix(in srgb, var(--dz-bg) 20%, transparent);
-  --ec-auth-pill: var(--ec-auth-plate);
+  --ec-auth-pill: color-mix(in srgb, var(--dz-accent) 72%, #04100d);
   --ec-auth-pill-ink: var(--ec-auth-on-plate);
   --ec-auth-halo: color-mix(in srgb, var(--dz-accent) 14%, transparent);
   --ec-auth-ease: cubic-bezier(.22, .61, .36, 1);

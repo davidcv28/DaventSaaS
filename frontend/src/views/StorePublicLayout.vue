@@ -429,6 +429,10 @@ const designId = computed(() => {
 watch(designId, (id) => {
   const load = DESIGN_EC_CSS[`../assets/store-design-${id}.css`]
   if (load) load().catch(() => {})
+  // Esencial parte su piel de auth en hoja propia (split con la de cuenta):
+  // el modal de auth puede abrirse desde cualquier página de la tienda, así
+  // que la hoja se carga on-demand junto a la base, no solo en /ingresar.
+  if (id === 'esencial') import('../assets/store-design-esencial-auth.css').catch(() => {})
 }, { immediate: true })
 watch(pageTemplate, (tpl) => {
   const loaded = TEMPLATE_CSS[tpl]?.()
