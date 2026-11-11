@@ -1688,22 +1688,29 @@
      * la celda del grid en mobile (hscroll). max-width:100% blinda el CTA
      * de la ficha dentro de paneles angostos. */
     '[data-surface="product"] .dsx-buy[data-ds-buy-slot="pdp"]{width:auto;min-width:200px;max-width:100%;margin:0 0 12px}' +
-    /* "Comprar ahora" de la ficha: variante ghost del CTA — mismo alto,
-     * tipografía y radio, pero borde de acento y fondo transparente
-     * (secundario al "Agregar al carrito"). Va como hermano del CTA:
-     * en fila si el contenedor es flex/grid (los diseños traen gap) y
-     * apilado prolijo si es bloque. */
-    '.dsx-buy-now{box-sizing:border-box;display:block;width:calc(100% - 24px);margin:10px 12px 12px;padding:12px 14px;' +
-    'border:1px solid var(--ds-accent,#111);border-radius:var(--ds-radius-btn,var(--ds-radius,10px));cursor:pointer;' +
-    'background:transparent;color:var(--ds-accent-text,var(--ds-accent,#111));' +
-    'font:inherit;font-size:12px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;' +
-    'transition:transform .16s ease,background-color .2s ease,border-color .2s ease,filter .2s ease}' +
-    '.dsx-buy-now:hover{transform:translateY(-1px);' +
-    'background:color-mix(in srgb,var(--ds-accent,#111) 8%,transparent)}' +
-    '.dsx-buy-now:active{transform:translateY(0) scale(.985);filter:brightness(.96)}' +
-    '.dsx-buy-now:focus-visible{outline:2px solid var(--ds-accent,#111);outline-offset:2px}' +
-    '.dsx-buy-now[disabled]{opacity:.55;cursor:default;transform:none;filter:none}' +
-    '[data-surface="product"] .dsx-buy-now[data-ds-buy-slot="pdp"]{width:auto;min-width:200px;max-width:100%;margin:0 0 12px}' +
+    /* "Comprar ahora" de la ficha: acción SECUNDARIA liviana — enlace de
+     * acento con flecha, no un segundo botón macizo (dos CTA gigantes
+     * apilados se veían pegados e informales). Sin borde ni relleno: la
+     * jerarquía la da el CTA del diseño; este se apoya debajo con aire y
+     * se alinea al inicio del panel. `font:inherit` mantiene la voz
+     * tipográfica de cada piel. */
+    '.dsx-buy-now{box-sizing:border-box;display:inline-flex;align-items:center;gap:6px;' +
+    'width:fit-content;max-width:100%;margin:12px 0 0;padding:6px 2px;' +
+    'border:0;background:none;cursor:pointer;' +
+    'color:var(--ds-accent-text,var(--ds-accent,#111));' +
+    'font:inherit;font-size:13.5px;font-weight:700;letter-spacing:.01em;text-transform:none;' +
+    'text-decoration:underline;text-underline-offset:4px;text-decoration-thickness:1px;' +
+    'transition:opacity .18s ease,color .18s ease}' +
+    '.dsx-buy-now::after{content:"→";font-size:1em;line-height:1;transition:transform .18s ease}' +
+    '.dsx-buy-now:hover{opacity:.82}' +
+    '.dsx-buy-now:hover::after{transform:translateX(3px)}' +
+    '.dsx-buy-now:active{opacity:.7}' +
+    '.dsx-buy-now:focus-visible{outline:2px solid var(--ds-accent,#111);outline-offset:3px;border-radius:2px}' +
+    '.dsx-buy-now[disabled]{opacity:.5;cursor:default}' +
+    /* En la ficha el enlace se apoya bajo el CTA con separación explícita
+     * (los contenedores flex de los diseños traen gap propio; el margen
+     * suma aire y evita que quede pegado al borde del botón). */
+    '[data-surface="product"] .dsx-buy-now[data-ds-buy-slot="pdp"]{margin:12px 0 4px}' +
     /* Entrada de cuenta del comprador y acceso al carrito: píldoras
      * gemelas en el header/nav del diseño (mismo alto, radio, trazo de
      * icono y tipografía) o, sin slot, píldoras fijas abajo a la
@@ -1757,6 +1764,7 @@
     '@media (prefers-reduced-motion:reduce){' +
     '.dsx-buy,.dsx-buy-now,.dsx-account,.dsx-cart,.dsx-cart-badge{transition:none;animation:none}' +
     '.dsx-buy:hover,.dsx-buy-now:hover,.dsx-account:hover,.dsx-cart:hover{transform:none}' +
+    '.dsx-buy-now:hover::after{transform:none}' +
     '.dsx-buy:active,.dsx-buy-now:active,.dsx-account:active,.dsx-cart:active{transform:none}}'
   function dsBuyButton(pid, slot) {
     var b = document.createElement('button')
@@ -1814,6 +1822,46 @@
       card.classList.toggle('dsx-col', disp.indexOf('flex') < 0 && disp.indexOf('grid') < 0)
     }
   }
+  /* El "Comprar ahora" hereda el `order` del CTA al que acompaña: varios
+   * diseños ordenan los hijos del panel con `order` (mercado: título 1,
+   * precio 3, CTA 4…) y un hijo nuevo sin order cae al principio del flex
+   * (el enlace aparecía sobre el título). Con el mismo order + DOM
+   * adyacente, queda siempre inmediatamente después del CTA. */
+  function syncBuyNowOrder(nowBtn, ctaBtn) {
+    if (!nowBtn || !ctaBtn) return
+    try {
+      var order = window.getComputedStyle(ctaBtn).order
+      if (order && order !== '0') nowBtn.style.order = order
+    } catch (e) {}
+  }
+  /* Si el contenedor de compra es flex/grid, el enlace queda EN FILA con el
+   * CTA y el aire lo da el gap del diseño: el margen superior propio
+   * desalineaba las líneas base (umbral). En flujo de bloque (paneles que
+   * no ordenan sus hijos) se conserva el margen para separarlo del botón. */
+  function relaxBuyNowMargin(nowBtn) {
+    var parent = nowBtn && nowBtn.parentElement
+    if (!parent) return
+    try {
+      var display = window.getComputedStyle(parent).display || ''
+      if (display.indexOf('flex') >= 0 || display.indexOf('grid') >= 0) nowBtn.style.marginTop = '0'
+    } catch (e) {}
+  }
+  /* Envío y medios de pago viven en el panel de la ficha, después del
+   * precio. Los diseños que ordenan los hijos del panel con `order`
+   * (mercado: título 1, precio 3, CTA 4…) dejaban estos dos nodos del host
+   * al principio del flex (arriba del título): se les copia el order del
+   * bloque de precio — con el mismo valor quedan justo después de él en
+   * el orden del DOM, antes del CTA. Sin `order` en el diseño no se toca
+   * nada (el orden natural ya es el correcto). */
+  function syncPdpMetaOrder(pdp) {
+    var price = pdp.querySelector('.pdp-price, [class*="price"]')
+    if (!price) return
+    var order = ''
+    try { order = window.getComputedStyle(price).order || '' } catch (e) {}
+    if (!order || order === '0') return
+    var meta = pdp.querySelectorAll('.ds-ship, .ds-pay')
+    for (var i = 0; i < meta.length; i++) meta[i].style.order = order
+  }
   function injectPdpBuy() {
     var pdp = document.querySelector('[data-surface="product"]')
     //Ojo: la ficha también contiene tarjetas de relacionados ya inyectadas
@@ -1822,6 +1870,7 @@
     //?product= sin resolver: la superficie marcada no es una ficha real —
     //el aviso de "no disponible" la reemplaza (paintMissingProduct).
     if (pdp.hasAttribute('data-ds-pdp-missing')) return
+    syncPdpMetaOrder(pdp)
     //El id del producto viaja en la URL del documento (?product=<pk>).
     var pid = ''
     try { pid = new URLSearchParams(window.location.search).get('product') || '' } catch (e) {}
@@ -1833,7 +1882,10 @@
        * .pdp-buy con data-ds-buy — postea ds-buy solo) solo se le suma el
        * "Comprar ahora" al lado, sin duplicar el de carrito. */
       if (!existing.classList.contains('dsx-buy') && !pdp.querySelector('.dsx-buy-now')) {
-        existing.parentNode.insertBefore(dsBuyNowButton(pid, 'pdp'), existing.nextSibling)
+        var ownNow = dsBuyNowButton(pid, 'pdp')
+        existing.parentNode.insertBefore(ownNow, existing.nextSibling)
+        syncBuyNowOrder(ownNow, existing)
+        relaxBuyNowMargin(ownNow)
       }
       return
     }
@@ -1846,8 +1898,12 @@
       if (slot) {
         var h1 = slot.querySelector('h1')
         var anchor = h1 ? h1.nextSibling : slot.firstChild
-        slot.insertBefore(dsBuyButton(pid, 'pdp'), anchor)
-        slot.insertBefore(dsBuyNowButton(pid, 'pdp'), anchor)
+        var fallbackBtn = dsBuyButton(pid, 'pdp')
+        var fallbackNow = dsBuyNowButton(pid, 'pdp')
+        slot.insertBefore(fallbackBtn, anchor)
+        slot.insertBefore(fallbackNow, anchor)
+        syncBuyNowOrder(fallbackNow, fallbackBtn)
+        relaxBuyNowMargin(fallbackNow)
         return
       }
     }
@@ -1864,7 +1920,17 @@
       } else {
         slot.parentNode.insertBefore(pdpBtn, slot)
       }
-      pdpBtn.parentNode.insertBefore(dsBuyNowButton(pid, 'pdp'), pdpBtn.nextSibling)
+      var nowBtn = dsBuyNowButton(pid, 'pdp')
+      pdpBtn.parentNode.insertBefore(nowBtn, pdpBtn.nextSibling)
+      /* El order se copia del CTA de la ficha (no del contenedor) y, si el
+       * contenedor es un grupo flex con `order` propio en sus ítems, se
+       * copia el del primer ítem para caer en el mismo bloque. */
+      syncBuyNowOrder(nowBtn, pdpBtn)
+      relaxBuyNowMargin(nowBtn)
+      if (!nowBtn.style.order && slot !== wa) {
+        var firstChild = slot.firstElementChild
+        if (firstChild && firstChild !== pdpBtn && firstChild !== nowBtn) syncBuyNowOrder(nowBtn, firstChild)
+      }
     }
   }
   /* Ficha de producto que no resuelve (?product= inexistente, inactivo o
