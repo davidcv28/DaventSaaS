@@ -357,6 +357,7 @@
         document.body.classList.remove('filters-open')
       }
       catalog()
+      applyStock()
       resetFixed()
       pinFixed()
       paintMissingProduct()
@@ -378,6 +379,14 @@
       var cartN = parseInt(d.count, 10)
       cartCount = isFinite(cartN) && cartN > 0 ? Math.floor(cartN) : 0
       paintCart()
+    }
+    /* Disponibilidad de stock: el host empuja el mapa {id: unidades|null}
+     * del catálogo público (available_stock ya descuenta reservas
+     * pendientes) — el documento es origen opaco y no puede pedirlo.
+     * Se aplica a las tarjetas y a la ficha (applyStock). */
+    if (d.type === 'davent:ds-stock') {
+      stockById = (d.stock && typeof d.stock === 'object') ? d.stock : null
+      applyStock()
     }
     if (d.type === 'davent:ds-measure') send()
     if (d.type === 'davent:ds-frame') {
@@ -410,7 +419,11 @@
     if (buyBtn) {
       e.preventDefault()
       e.stopPropagation()
-      parent.postMessage({ type: 'davent:ds-buy', id: buyBtn.getAttribute('data-ds-buy') || '' }, '*')
+      /* CTA apagado por stock agotado: el <a>/<button> propio del diseño
+       * no siempre es deshabilitable — el click se corta acá también. */
+      if (!buyBtn.disabled && buyBtn.getAttribute('aria-disabled') !== 'true') {
+        parent.postMessage({ type: 'davent:ds-buy', id: buyBtn.getAttribute('data-ds-buy') || '' }, '*')
+      }
       return
     }
     /* "Comprar ahora" de la ficha (variante ghost junto al CTA de
@@ -420,7 +433,9 @@
     if (buyNowBtn) {
       e.preventDefault()
       e.stopPropagation()
-      parent.postMessage({ type: 'davent:ds-buy-now', id: buyNowBtn.getAttribute('data-ds-buy-now') || '' }, '*')
+      if (!buyNowBtn.disabled && buyNowBtn.getAttribute('aria-disabled') !== 'true') {
+        parent.postMessage({ type: 'davent:ds-buy-now', id: buyNowBtn.getAttribute('data-ds-buy-now') || '' }, '*')
+      }
       return
     }
     var card = t.closest('[data-ds-product]')
@@ -1754,6 +1769,18 @@
     '.dsx-cart-badge[hidden]{display:none}' +
     '.dsx-cart-badge.is-bump{animation:dsx-cart-bump .32s cubic-bezier(.2,.9,.3,1.4)}' +
     '@keyframes dsx-cart-bump{0%{transform:scale(1)}45%{transform:scale(1.4)}100%{transform:scale(1)}}' +
+    /* Disponibilidad real (stock del catálogo público): el host empuja el
+     * mapa por davent:ds-stock y acá se pinta el .ds-stock de cada
+     * tarjeta y la línea .dsx-stock de la ficha. .is-out fuerza visible
+     * el "Agotado" aunque la piel oculte .ds-stock (viajero la apaga en
+     * la grilla) y deja el CTA muerto con pointer-events + aria. */
+    '.ds-stock.is-out{display:inline-flex!important;color:var(--ds-danger,#dc2626)}' +
+    'html[data-ds-theme="dark"] .ds-stock.is-out{color:color-mix(in srgb,var(--ds-danger,#f87171) 60%,#fff)}' +
+    '.dsx-stock{display:flex;align-items:center;gap:6px;margin:12px 0 0;font-size:12.5px;font-weight:600;line-height:1.45;color:var(--ds-text,var(--ink,currentColor));opacity:.85}' +
+    '.dsx-stock i{width:6px;height:6px;border-radius:50%;background:var(--ds-success,#0f9d58);flex:none}' +
+    '.dsx-stock.is-out{color:var(--ds-danger,#dc2626);opacity:1}' +
+    '.dsx-stock.is-out i{background:currentColor}' +
+    '[data-ds-buy].is-out,[data-ds-buy-now].is-out{opacity:.55;pointer-events:none;cursor:default}' +
     '.dsx-account--fab,.dsx-cart--fab{position:fixed;z-index:72;margin:0;opacity:1;' +
     'background:var(--ds-surface,var(--surface,#fff));color:var(--ds-text,var(--ink,#1a1a1a));' +
     'border:1px solid var(--ds-border,var(--line,#e5e7eb));box-shadow:0 10px 28px rgba(0,0,0,.22)}' +
@@ -2104,6 +2131,102 @@
      * (p. ej. `.top .dsx-account` de mercado) sin !important. */
     document.head.insertBefore(st, document.querySelector('style') || null)
   }
+  /* ===== Disponibilidad de stock (venta online) =====
+   * El host empuja `davent:ds-stock` con el mapa {id: unidades | null}
+   * del catálogo público (`available_stock` ya descuenta las reservas
+   * de pedidos pendientes): el documento es origen opaco y no puede
+   * pedirlo. Se pinta sobre el .ds-stock que el fragmento emite en
+   * TODAS las tarjetas (catálogo, destacados y relacionados) y en la
+   * ficha, y deshabilita los CTA de lo agotado — mismo criterio que la
+   * vista Vue (stock solo se muestra con venta online habilitada). */
+  var stockById = null
+  function stockOf(pid) {
+    if (!stockById) return undefined
+    var v = stockById[String(pid)]
+    return v === undefined ? undefined : v
+  }
+  function stockTagLabel(v) {
+    if (v === null) return 'Stock ilimitado'
+    if (v <= 0) return 'Agotado'
+    return v + (v === 1 ? ' disponible' : ' disponibles')
+  }
+  function stockPdpLabel(v) {
+    if (v === null) return 'Disponibilidad ilimitada'
+    if (v <= 0) return 'Agotado · sin unidades disponibles'
+    return v + (v === 1 ? ' unidad disponible' : ' unidades disponibles')
+  }
+  function paintStockTag(el, label, out) {
+    el.classList.toggle('is-out', out)
+    var dot = el.querySelector('i')
+    el.textContent = ''
+    if (dot) el.appendChild(dot)
+    el.appendChild(document.createTextNode(' ' + label))
+  }
+  function setBuyOut(btn, out) {
+    btn.classList.toggle('is-out', out)
+    if ('disabled' in btn) btn.disabled = out
+    btn.setAttribute('aria-disabled', out ? 'true' : 'false')
+  }
+  function applyPdpStock() {
+    var pdp = document.querySelector('[data-surface="product"]')
+    if (!pdp || pdp.hasAttribute('data-ds-pdp-missing')) return
+    //El id del producto viaja en la URL del documento (?product=<pk>),
+    //igual que en injectPdpBuy.
+    var pid = ''
+    try { pid = new URLSearchParams(window.location.search).get('product') || '' } catch (e) {}
+    var v = pid ? stockOf(pid) : undefined
+    if (v === undefined) return
+    var out = v === 0
+    /* La línea se inyecta una vez: los diseños ya publicados no declaran
+     * una variable product_stock y el puente la monta como .dsx-stock
+     * junto al precio (o antes del bloque de compra si no hay precio). */
+    var line = pdp.querySelector('.dsx-stock')
+    if (!line) {
+      line = document.createElement('p')
+      line.className = 'dsx-stock'
+      line.setAttribute('role', 'status')
+      line.innerHTML = '<i aria-hidden="true"></i>'
+      var price = pdp.querySelector('.pdp-price, [class*="price"]')
+      var cta = pdp.querySelector('[data-ds-buy-slot="pdp"]')
+      var ctaWrap = cta ? (cta.closest('.pdp-buy,.pdp-ctas,.pdp-actions,[class*="cta"],[class*="buy"]') || cta.parentNode) : null
+      if (price && price.parentNode) price.parentNode.insertBefore(line, price.nextSibling)
+      else if (ctaWrap && ctaWrap.parentNode) ctaWrap.parentNode.insertBefore(line, ctaWrap)
+      else {
+        var info = pdp.querySelector('.pdp-info, aside, [class*="info"], [class*="panel"]')
+        if (info) info.appendChild(line)
+        else pdp.appendChild(line)
+      }
+    }
+    paintStockTag(line, stockPdpLabel(v), out)
+    /* CTAs de la ficha: los inyectados (.dsx-buy/.dsx-buy-now con slot),
+     * los propios del diseño con data-ds-buy-slot="pdp" (moderntec) y
+     * cualquier CTA propio sin slot — menos los de las tarjetas de
+     * relacionados, que llevan su propio stock y se resuelven en
+     * applyStock. */
+    var all = pdp.querySelectorAll('[data-ds-buy],[data-ds-buy-now]')
+    for (var i = 0; i < all.length; i++) {
+      if (all[i].closest('.ds-product')) continue
+      setBuyOut(all[i], out)
+    }
+  }
+  function applyStock() {
+    //Solo con venta online: sin data-ds-commerce el host ni siquiera pide
+    //el catálogo y el "En stock" genérico del fragmento queda como antes.
+    if (root.getAttribute('data-ds-commerce') !== '1' || !stockById) return
+    var links = document.querySelectorAll('[data-ds-product]')
+    for (var i = 0; i < links.length; i++) {
+      var link = links[i]
+      var v = stockOf(link.getAttribute('data-ds-product'))
+      if (v === undefined) continue
+      var card = link.closest('.ds-product') || link.parentNode
+      if (!card) continue
+      var tag = card.querySelector('.ds-stock')
+      if (tag) paintStockTag(tag, stockTagLabel(v), v === 0)
+      var buys = card.querySelectorAll('[data-ds-buy],[data-ds-buy-now]')
+      for (var j = 0; j < buys.length; j++) setBuyOut(buys[j], v === 0)
+    }
+    applyPdpStock()
+  }
   /* Entrada "Ingresar"/"Mi cuenta": NO depende de la venta online — el
    * comprador puede tener cuenta con el carrito apagado (el dueño todavía
    * no activó e-commerce). Antes vivía dentro de initCommerce y la píldora
@@ -2120,20 +2243,24 @@
     injectCardBuys()
     injectPdpBuy()
     mountCart()
+    //Si el mapa de stock llegó antes que un PDP montado por JS, esta
+    //pasada lo pinta; con stockById null sale sin tocar el DOM.
+    applyStock()
     /* El catálogo reordena tarjetas (applyCatalog mueve nodos, no los
      * recrea) y el buscador puede filtrar — los botones inyectados viajan
      * con su tarjeta. Por si un diseño monta tarjetas por JS después,
      * reinyecta en el próximo frame y al cargar. */
-    requestAnimationFrame(function () { injectCardBuys(); injectPdpBuy() })
-    window.addEventListener('load', function () { injectCardBuys(); injectPdpBuy() })
+    requestAnimationFrame(function () { injectCardBuys(); injectPdpBuy(); applyStock() })
+    window.addEventListener('load', function () { injectCardBuys(); injectPdpBuy(); applyStock() })
     /* La ficha puede montarse después del primer pintado (diseño que arma
      * el PDP por JS): observer liviano que reintenta solo mientras falte
      * el CTA de ficha — con el slot puesto el guard de injectPdpBuy sale
-     * sin tocar el DOM. */
+     * sin tocar el DOM. applyStock repinta la línea .dsx-stock por si el
+     * contenido del PDP se reconstruyó. */
     if ('MutationObserver' in window && document.body) {
       var pdpObs = new MutationObserver(function () {
         var surf = document.querySelector('[data-surface="product"]')
-        if (surf && !surf.querySelector('[data-ds-buy-slot="pdp"]')) injectPdpBuy()
+        if (surf && !surf.querySelector('[data-ds-buy-slot="pdp"]')) { injectPdpBuy(); applyStock() }
       })
       pdpObs.observe(document.body, { childList: true, subtree: true })
     }

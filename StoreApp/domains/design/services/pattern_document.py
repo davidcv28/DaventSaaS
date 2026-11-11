@@ -219,8 +219,8 @@ section:has(.ds-plans:empty){display:none!important}
   box-shadow:0 8px 16px -10px rgba(0,0,0,.55);
 }
 
-/* Tag de disponibilidad de la tarjeta: el catálogo solo publica productos
-   en stock (no hay inventario en el sistema). */
+/* Tag de disponibilidad de la tarjeta: fallback "En stock" del fragmento —
+   con venta online el puente repinta la cifra real (davent:ds-stock). */
 .ds-stock{
   display:inline-flex;align-items:center;gap:5px;
   font-size:11px;font-weight:600;letter-spacing:.04em;

@@ -1,5 +1,5 @@
 <script setup>
-import { computed, onBeforeUnmount, ref, watch } from 'vue'
+import { computed, inject, onBeforeUnmount, ref, watch } from 'vue'
 import { useRouter } from 'vue-router'
 
 import { useCartStore } from '../../stores/cart.store.js'
@@ -49,6 +49,37 @@ const frame = ref(null)
 const height = ref(0)
 const router = useRouter()
 const cartStore = useCartStore()
+//Contexto de la tienda que provee StorePublicLayout: venta online y el
+//catálogo público compartido (ya trae available_stock fresco — el
+//documento es origen opaco y no puede pedirlo por su cuenta).
+const storeCtx = inject('storePage', null)
+const ordersOn = computed(() => Boolean(storeCtx?.ordersEnabled?.value ?? storeCtx?.ordersEnabled))
+/* Stock real por producto para el documento: el host lo trae una vez por
+ * el endpoint público (el mismo catálogo que consume la vista Vue) y lo
+ * empuja por postMessage; el puente pinta la disponibilidad en las
+ * tarjetas y la ficha, y apaga los CTA de lo agotado. */
+const stockMap = ref(null)
+let stockReq = null
+function postStock() {
+  if (stockMap.value) post('davent:ds-stock', { stock: stockMap.value })
+}
+function loadStock() {
+  if (!ordersOn.value || stockReq || typeof storeCtx?.loadPublicCatalog !== 'function') return
+  stockReq = Promise.resolve(storeCtx.loadPublicCatalog())
+    .then((data) => {
+      const map = {}
+      for (const p of data?.products || []) {
+        if (p?.id == null) continue
+        const n = p.available_stock == null ? null : Number(p.available_stock)
+        if (n === null || Number.isFinite(n)) map[String(p.id)] = n
+      }
+      stockMap.value = map
+      postStock()
+    })
+    .catch(() => {})
+    .finally(() => { stockReq = null })
+}
+watch(ordersOn, (on) => { if (on) loadStock() }, { immediate: true })
 //Overflow del documento previo a un bloqueo de scroll pedido por el diseño
 //(hoja modal abierta). null = la página scrollea normal.
 let docOverflow = null
@@ -258,6 +289,7 @@ function onLoad() {
   syncStudioCss()
   syncAccount()
   syncCart()
+  postStock()
   postFrame()
 }
 
