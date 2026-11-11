@@ -29,3 +29,83 @@
 @media (prefers-reduced-motion: reduce) {
   .store-page[data-st-skin='neon'] .sp-card { box-shadow: var(--sp-shadow-sm); }
 }
+
+/* ----------------------------------------------------------------------------
+   Tarjetas de producto (TplProductCard): vidrio de panel con filete de
+   acento y precio luminoso — la misma firma que .sp-card del skin. Solo
+   tokens --tpc-*: la geometría del contrato no se toca.
+   ---------------------------------------------------------------------------- */
+.store-page[data-st-skin='neon'] .tpc {
+  --tpc-bg: var(--sp-card);
+  --tpc-ink: var(--sp-ink);
+  --tpc-border: 1px solid var(--sp-line);
+  --tpc-radius: var(--sp-radius, 12px);
+  --tpc-shadow: var(--sp-shadow-md);
+  --tpc-media-bg: color-mix(in srgb, var(--sp-card-solid) 92%, transparent);
+  --tpc-price-ink: var(--sp-accent-text, var(--store-accent));
+  --tpc-price-weight: 700;
+  --tpc-old-ink: var(--sp-muted);
+  --tpc-offer-bg: var(--store-accent);
+  --tpc-offer-ink: var(--store-accent-ink, #0b0e1a);
+  --tpc-flag-radius: 6px;
+  --tpc-go-ink: var(--sp-accent-text, var(--store-accent));
+  --tpc-save-ink: var(--sp-accent-text, var(--store-accent));
+  --tpc-stock-ink: var(--sp-success, #0f9d58);
+  --tpc-focus: var(--store-accent);
+}
+.store-page[data-st-skin='neon'] .tpc-media img.tpc-campaign { border-radius: 4px; }
+/* Cuerpo y pie: algunas pieles de plantilla pintan el fondo del cuerpo y
+   el filete del pie por su cuenta — el skin neon los alinea con el vidrio
+   del contenedor (el fondo de la tarjeta manda, sin bandas claras). */
+.store-page[data-st-skin='neon'] .tpc-body { background: transparent; color: var(--sp-ink); }
+.store-page[data-st-skin='neon'] .tpc-foot { border-top-color: color-mix(in srgb, var(--store-accent) 32%, transparent); }
+.store-page[data-st-skin='neon'] .tpc-name { color: var(--sp-ink); }
+.store-page[data-st-skin='neon'] .tpc-go { color: var(--sp-accent-text, var(--store-accent)); }
+.store-page[data-st-skin='neon'] .tpc:hover {
+  box-shadow: 0 0 26px -8px color-mix(in srgb, var(--store-accent) 60%, transparent);
+}
+.store-page[data-st-skin='neon'] .tpc .tpc-go svg { transition: transform .18s ease-out; }
+@media (hover: hover) and (pointer: fine) {
+  .store-page[data-st-skin='neon'] .tpc:hover .tpc-go svg { transform: translateX(3px); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .store-page[data-st-skin='neon'] .tpc:hover { box-shadow: var(--sp-shadow-sm); }
+  .store-page[data-st-skin='neon'] .tpc:hover .tpc-go svg { transform: none; }
+}
+
+/* ----------------------------------------------------------------------------
+   Ficha de producto (Vue): envío, medios de pago y compra directa en la voz
+   del skin — datos en mono, chips de vidrio con filete de acento y el
+   "Comprar ahora" como píldora secundaria con glow contenido.
+   ---------------------------------------------------------------------------- */
+.store-page[data-st-skin='neon'] .rz-pdp-ship {
+  font-family: var(--mono, ui-monospace, SFMono-Regular, monospace);
+  font-size: 12px;
+  letter-spacing: .02em;
+  color: var(--sp-muted);
+}
+.store-page[data-st-skin='neon'] .rz-pdp-paylist { gap: 8px; }
+.store-page[data-st-skin='neon'] .rz-pdp-paychip {
+  border: 1px solid color-mix(in srgb, var(--store-accent) 48%, transparent);
+  border-radius: 8px;
+  background: color-mix(in srgb, var(--store-accent) 12%, transparent);
+  color: var(--sp-accent-text, var(--store-accent));
+  font-weight: 600;
+  letter-spacing: .01em;
+}
+.store-page[data-st-skin='neon'] .rz-pdp-paychip svg { color: currentColor; opacity: .9; }
+.store-page[data-st-skin='neon'] .rz-pdp-now {
+  border: 1px solid color-mix(in srgb, var(--store-accent) 48%, transparent);
+  border-radius: var(--sp-radius, 12px);
+  background: color-mix(in srgb, var(--sp-card-solid, #101426) 60%, transparent);
+  color: var(--sp-accent-text, var(--store-accent));
+  text-transform: uppercase;
+  letter-spacing: .06em;
+  font-size: 12.5px;
+}
+.store-page[data-st-skin='neon'] .rz-pdp-now:hover {
+  box-shadow: 0 0 18px -4px color-mix(in srgb, var(--store-accent) 70%, transparent);
+}
+@media (prefers-reduced-motion: reduce) {
+  .store-page[data-st-skin='neon'] .rz-pdp-now:hover { box-shadow: none; }
+}
