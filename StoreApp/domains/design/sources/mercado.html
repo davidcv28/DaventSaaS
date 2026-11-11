@@ -637,11 +637,7 @@
   .cat-filters-toggle svg{flex:none}
   .cat-filters-badge{display:inline-grid;place-items:center;min-width:18px;height:18px;padding:0 5px;border-radius:999px;background:var(--blue);color:var(--on-primary);font:700 10px var(--mono)}
   .cat-count{margin:0;font:800 15px var(--mono);letter-spacing:-.02em;line-height:1.3;color:var(--ink)}
-  .cat-view{display:inline-flex;gap:2px;margin-inline-start:auto;padding:2px;border:1px solid var(--line-strong);border-radius:6px;background:var(--surface)}
-  .cat-view button{display:grid;place-items:center;width:40px;height:40px;padding:0;border:0;border-radius:4px;background:transparent;color:var(--muted);cursor:pointer;transition:background .15s,color .15s}
-  .cat-view button:hover{background:var(--soft);color:var(--ink)}
-  .cat-view button[aria-pressed="true"]{background:var(--ink);color:var(--surface)}
-  .cat-surface .cat-sort{position:relative;display:inline-flex;align-items:center;gap:6px;margin:0;font:600 11px var(--mono);letter-spacing:.04em;text-transform:none;opacity:1;color:var(--muted);white-space:nowrap}
+  .cat-surface .cat-sort{position:relative;display:inline-flex;align-items:center;gap:6px;margin:0;margin-inline-start:auto;font:600 11px var(--mono);letter-spacing:.04em;text-transform:none;opacity:1;color:var(--muted);white-space:nowrap}
   .cat-surface .cat-sort select{appearance:none;-webkit-appearance:none;min-height:40px;padding:6px 20px 6px 2px;border:0;border-radius:0;background:transparent;color:var(--ink);font:700 12.5px var(--font);letter-spacing:0;text-transform:none;cursor:pointer}
   .cat-surface .cat-sort::after{content:"";position:absolute;right:4px;top:50%;width:6px;height:6px;border-right:1.5px solid var(--muted);border-bottom:1.5px solid var(--muted);transform:translateY(-70%) rotate(45deg);pointer-events:none}
   .cat-surface .cat-sort select:focus-visible{outline:2px solid var(--link);outline-offset:2px}
@@ -904,8 +900,7 @@
   html[data-ds-theme="dark"] .cat-sort select{background:transparent;color:var(--ink);border:0;color-scheme:dark}
   html[data-ds-theme="dark"] .f-price input,
   html[data-ds-theme="dark"] .cat-aside,
-  html[data-ds-theme="dark"] .cat-results,
-  html[data-ds-theme="dark"] .cat-view{background:var(--surface)}
+  html[data-ds-theme="dark"] .cat-results{background:var(--surface)}
   /* El glifo de confianza sobre --soft (#26282D) se fundía con la banda
      --paper (#2E2C20): sello amarillo con tinta, misma mano que el
      sticker y .m-sheet-brand .mark. */
@@ -1377,14 +1372,6 @@
       <div class="cat-results">
         <div class="cat-bar">
           <p class="cat-count" data-ds-count aria-live="polite"></p>
-          <div class="cat-view" role="group" aria-label="Vista de resultados">
-            <button type="button" data-ds-view="list" aria-pressed="true" aria-label="Ver como lista" title="Vista de lista">
-              <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><path d="M4 6h16M4 12h16M4 18h16"/></svg>
-            </button>
-            <button type="button" data-ds-view="grid" aria-pressed="false" aria-label="Ver como grilla" title="Vista de grilla">
-              <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><rect x="4" y="4" width="7" height="7" rx="1"/><rect x="13" y="4" width="7" height="7" rx="1"/><rect x="4" y="13" width="7" height="7" rx="1"/><rect x="13" y="13" width="7" height="7" rx="1"/></svg>
-            </button>
-          </div>
           <label class="cat-sort"><span>Ordenar por</span>
             <select data-ds-sort>
               <option value="relevance">Más relevantes</option>
@@ -1398,7 +1385,7 @@
 
         <div class="cat-chips" data-ds-chips hidden></div>
 
-        <div class="grid" data-ds-products data-ds-view-mode="list">{{products}}</div>
+        <div class="grid" data-ds-products data-ds-view-mode="grid">{{products}}</div>
         <p class="ds-empty" data-ds-noresults hidden>No hay publicaciones que coincidan con tu búsqueda.</p>
       </div>
     </div>
@@ -1484,6 +1471,17 @@
   /* Un img sin src pide el propio documento como imagen (request fantasma
      y caja vacía sobre el monograma): se quita del DOM. */
   [].slice.call(document.querySelectorAll('img[src=""],img:not([src])')).forEach(function(img){ img.remove() });
+
+  /* Vista de resultados fija por dispositivo: grilla en escritorio, lista
+     en celular (mismo corte que el CSS: 760px). No hay toggle. */
+  var prodGrid = document.querySelector('[data-ds-products]');
+  if (prodGrid && window.matchMedia) {
+    var viewMq = window.matchMedia('(max-width: 760px)');
+    var syncView = function(){ prodGrid.setAttribute('data-ds-view-mode', viewMq.matches ? 'list' : 'grid') };
+    syncView();
+    if (viewMq.addEventListener) viewMq.addEventListener('change', syncView);
+    else if (viewMq.addListener) viewMq.addListener(syncView);
+  }
 
   /* ---------- Categorías de la portada → catálogo filtrado ----------
      .ds-cat viaja como <a href="#catalogo"> sin ruta: en la superficie
