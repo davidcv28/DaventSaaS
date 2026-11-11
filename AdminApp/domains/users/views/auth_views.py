@@ -127,6 +127,12 @@ class PasswordResetRateThrottle(AnonRateThrottle):
     """Scope 'password_reset' (settings): frena el abuso del envío de correos."""
     scope = 'password_reset'
 
+class PasswordResetConfirmRateThrottle(AnonRateThrottle):
+    """Scope 'password_reset_confirm' (settings): el confirm no manda mails —
+    bucket propio y más holgado; compartir el de request dejaba la cuenta
+    sin recuperar ~1h tras 2-3 intentos del flujo completo."""
+    scope = 'password_reset_confirm'
+
 class VerifyEmailRateThrottle(UserRateThrottle):
     """Scope 'email_verification' (settings): reenvío por usuario autenticado."""
     scope = 'email_verification'
@@ -229,15 +235,18 @@ class CustomTokenObtainPairView(TokenObtainPairView):
         try:
             lock_seconds    =   _login_lock_seconds(username, ip)
         except CacheUnavailable:
+            #retry_after en el body: el header Retry-After no es legible
+            #cross-origin (no está en CORS_EXPOSE_HEADERS) — el front lo
+            #lee de acá para mostrar la espera real.
             response    =   Response(
-                {'detail': 'Servicio temporalmente no disponible. Probá en unos minutos.'},
+                {'detail': 'Servicio temporalmente no disponible. Probá en unos minutos.', 'retry_after': LOGIN_FAIL_SOFT_WINDOW},
                 status = status.HTTP_503_SERVICE_UNAVAILABLE,
             )
             response['Retry-After'] =   str(LOGIN_FAIL_SOFT_WINDOW)
             return response
         if lock_seconds:
             response    =   Response(
-                {'detail': 'Demasiados intentos fallidos. Probá de nuevo en unos minutos.'},
+                {'detail': 'Demasiados intentos fallidos. Probá de nuevo en unos minutos.', 'retry_after': lock_seconds},
                 status = status.HTTP_429_TOO_MANY_REQUESTS,
             )
             response['Retry-After'] =   str(lock_seconds)
@@ -374,7 +383,7 @@ class PasswordResetConfirmView(APIView):
     cierra todas sus sesiones abiertas.
     """
     permission_classes  =   [AllowAny]
-    throttle_classes    =   [PasswordResetRateThrottle]
+    throttle_classes    =   [PasswordResetConfirmRateThrottle]
 
     def post(self, request):
         serializer  =   PasswordResetConfirmSerializer(data = request.data)

@@ -188,6 +188,12 @@ class CustomerLogoutThrottle(CustomerRateThrottle):
 class CustomerPasswordResetThrottle(CustomerRateThrottle):
     scope   =   'password_reset'
 
+class CustomerPasswordResetConfirmThrottle(CustomerRateThrottle):
+    #Scope 'password_reset_confirm' (settings): el confirm no envía mails —
+    #bucket propio (30/h); compartir el de request dejaba al comprador sin
+    #recuperar la clave tras reintentos del flujo completo.
+    scope   =   'password_reset_confirm'
+
 class CustomerVerifyEmailThrottle(CustomerRateThrottle):
     scope   =   'email_verification'
 
@@ -443,7 +449,7 @@ class CustomerPasswordResetConfirmView(APIView):
     """
     permission_classes      =   [AllowAny]
     authentication_classes  =   [CustomerJWTAuthentication]
-    throttle_classes        =   [CustomerPasswordResetThrottle]
+    throttle_classes        =   [CustomerPasswordResetConfirmThrottle]
 
     def post(self, request):
         serializer  =   CustomerPasswordResetConfirmSerializer(data = request.data)

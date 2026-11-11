@@ -29,11 +29,21 @@ Configuramos los mixins para el dominio users
 
 """
 
+#Anti-enumeración del alta: UN solo mensaje para cualquier unicidad
+#violada (usuario/email/celular/documento). Distinguirlos permitía
+#verificar si un celular ajeno tenía cuenta. Los updates autenticados
+#(perfil, correo) conservan el mensaje específico de cada campo.
+ACCOUNT_EXISTS_MESSAGE   =   'Ya existe una cuenta con esos datos.'
+
 #=================================
 #  USER MIXINS VALIDATE
 #=================================
 
 class UsersValidatorsMixins:
+    #None → mensaje específico del campo; el alta lo pisa con
+    #ACCOUNT_EXISTS_MESSAGE (ver RegisterUserSerializer).
+    unique_error    =   None
+
     def validate_username(self, value):
         username_val    =   value.strip()
         queryset        =   User.objects.filter(username__iexact = username_val)
@@ -41,7 +51,7 @@ class UsersValidatorsMixins:
         if self.instance:
             queryset    =   queryset.exclude(pk = self.instance.pk)
         if queryset.exists():
-            errors.append('El nombre de usuario ingresado ya se encuentra en uso')
+            errors.append(self.unique_error or 'El nombre de usuario ingresado ya se encuentra en uso')
         if errors:
             raise serializers.ValidationError(errors)
         return username_val
@@ -53,7 +63,7 @@ class UsersValidatorsMixins:
         if self.instance:
             queryset    =   queryset.exclude(pk = self.instance.pk)
         if queryset.exists():
-            errors.append('El correo ingresado ya se encuentra en uso')
+            errors.append(self.unique_error or 'El correo ingresado ya se encuentra en uso')
         if errors:
             raise serializers.ValidationError(errors)
         return email_val
@@ -124,6 +134,10 @@ class UserPasswordUpdateMethod:
 # USER PROFILE  MIXINS VALIDATORS
 #=================================
 class UserProfileValidatorsMixins:
+    #Mismo criterio que UsersValidatorsMixins: el alta usa el mensaje
+    #genérico anti-enumeración; los updates conservan el específico.
+    unique_error    =   None
+
     def validate_document(self, value):
         #Nullable desde el alta minimal: un PATCH que lo limpia (null) no
         #debe explotar — la unicidad solo corre sobre un valor real.
@@ -137,7 +151,7 @@ class UserProfileValidatorsMixins:
         if self.instance:
             queryset        =   queryset.exclude(pk = self.instance.pk)
         if queryset.exists():
-            errors.append('El documento ingresado ya se encuentra en uso')
+            errors.append(self.unique_error or 'El documento ingresado ya se encuentra en uso')
         if re.search(r'[^0-9]', document_val):
             errors.append('En este campo solo se aceptan números')
         if errors:
@@ -151,7 +165,7 @@ class UserProfileValidatorsMixins:
         if self.instance:
             queryset        =   queryset.exclude(pk = self.instance.pk)
         if queryset.exists():
-            raise serializers.ValidationError('El número de celular ingresado ya se encuentra en uso')
+            raise serializers.ValidationError(self.unique_error or 'El número de celular ingresado ya se encuentra en uso')
         return phone_val
     def validate(self, attrs):
         #PATCH parcial / alta minimal: los campos ausentes se validan con el

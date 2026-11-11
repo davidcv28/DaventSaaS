@@ -40,6 +40,23 @@ class OrderCreateSerializer(serializers.Serializer):
     website                 =   serializers.CharField(required = False, allow_blank = True, write_only = True)
     challenge_id            =   serializers.CharField(required = True, write_only = True)
     captcha_answer          =   serializers.CharField(required = True, max_length = 8, write_only = True)
+    def validate(self, attrs):
+        #Domicilio obligatorio server-side (el front ya lo exige en
+        #canSubmit, pero el endpoint es público): 'home' sin dirección
+        #guardada requiere calle/ciudad/provincia no vacías — error por
+        #campo para que la UI lo pinte bajo cada input. 'pickup' queda
+        #exento y con `address_id` manda la CustomerAddress del comprador
+        # (su serializer ya exige los campos; services.checkout lo
+        # revalida como invariante para cualquier otro caller).
+        if attrs.get('shipping_method') == Order.ShippingMethod.HOME and not attrs.get('address_id'):
+            address =   attrs.get('address') or {}
+            errors  =   {}
+            for key, label in (('line1', 'la calle y el número'), ('city', 'la ciudad'), ('province', 'la provincia')):
+                if not str(address.get(key) or '').strip():
+                    errors[f'address.{key}']   =   f'Ingresá {label} para el envío a domicilio.'
+            if errors:
+                raise serializers.ValidationError(errors)
+        return attrs
 #=========================================
 # OWNER ACTIONS (panel del dueño)
 #=========================================

@@ -31,9 +31,10 @@ def _user(username = 'cliente'):
 class MailTaskTests(TestCase):
     def setUp(self):
         mail.outbox.clear()
-        #El POST de password-reset consume el scope 'password_reset' (5/h
-        #por IP) del cache compartido del worker: sin limpiar, un bucket
-        #agotado por otra clase devuelve 429 y la task nunca se encola.
+        #El POST de password-reset consume el scope 'password_reset' (10/h
+        #por IP; el confirm usa 'password_reset_confirm', 30/h) del cache
+        #compartido del worker: sin limpiar, un bucket agotado por otra
+        #clase devuelve 429 y la task nunca se encola.
         cache.clear()
 
     @override_settings(CELERY_TASK_ALWAYS_EAGER = False)

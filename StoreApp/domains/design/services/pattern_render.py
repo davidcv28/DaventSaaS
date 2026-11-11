@@ -105,6 +105,9 @@ PATTERN_VARIABLES = {
     'brands':            {'type': 'list',  'label': 'Marcas'},
 }
 SURFACE_RE = re.compile(r'data-surface="([a-z]+)"')
+#Superficie de ficha: con ?product= sin resolver se le agrega la marca que
+#el puente usa para pintar el aviso "ya no está disponible".
+PDP_MISSING_RE = re.compile(r'(<[a-zA-Z][^>]*?\bdata-surface="product"[^>]*?)(/?>)')
 LIST_VARIABLES = frozenset(name for name, spec in PATTERN_VARIABLES.items() if spec['type'] == 'list')
 
 #Cantidad máxima de items por fragmento: el patrón nunca recibe más de lo
@@ -1565,12 +1568,15 @@ def _effective_site_theme(store, site_theme):
     except Exception:
         return site_theme if isinstance(site_theme, dict) else {}
 
-def render_store_pattern(store, customization = None, product = None):
+def render_store_pattern(store, customization = None, product = None, product_missing = False):
     """
     Documento del patrón resuelto contra la tienda:
     `{slug, nombre, html, css, js, dark}`. `None` si el diseño no trae
     markup (la web sigue con la plantilla Vue). Con `product` resuelve
-    además las variables `product_*` (ficha del diseño).
+    además las variables `product_*` (ficha del diseño). `product_missing`
+    marca la superficie product cuando el ?product= pedido no resolvió
+    (inexistente/inactivo/ajeno): sin la marca la ficha salía con todas
+    las variables vacías ("· Ref. ·") — el puente pinta el aviso.
     """
     customization = customization if customization is not None else getattr(store, 'customization', None)
     template = getattr(customization, 'template', '') if customization is not None else ''
@@ -1584,6 +1590,8 @@ def render_store_pattern(store, customization = None, product = None):
     needed = set(VAR_RE.findall(pattern.html or ''))
     context, raw = build_store_context(store, product, flags = zone_flags, raw_keys = needed)
     html = pattern.render(context, raw = raw)
+    if product_missing:
+        html = PDP_MISSING_RE.sub(r'\1 data-ds-pdp-missing\2', html)
     from StoreApp.domains.catalog.models import Product
 
     site_theme_raw = (
@@ -1612,6 +1620,7 @@ def render_store_pattern(store, customization = None, product = None):
     return {
         'slug': pattern.slug,
         'nombre': pattern.nombre,
+        'product_missing': product_missing,
         #Estilo elegido (DesignStyle.slug): el documento lo expone como
         #`data-ds-style` para que la piel y los menús móviles varíen por estilo.
         'style': str(style.get('id') or (pattern.style.slug if pattern.style_id else '')),

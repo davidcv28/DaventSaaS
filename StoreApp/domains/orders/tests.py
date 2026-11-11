@@ -41,7 +41,7 @@ from rest_framework_simplejwt.tokens import RefreshToken
 from AdminApp.domains.notifications.models import Notification
 from AdminApp.domains.users.models import UserProfile
 from StoreApp.domains.catalog.models import Product
-from StoreApp.domains.customers.models import Customer
+from StoreApp.domains.customers.models import Customer, CustomerAddress
 from StoreApp.domains.orders.models import (
     Order,
     OrderEvent,
@@ -580,6 +580,74 @@ class PublicOrderApiTests(TestCase):
         self.assertEqual(order.total, Decimal('100.00'))
         self.assertEqual(order.subtotal, Decimal('100.00'))
 
+    #DIRECCIÓN (validación server-side del checkout — el front ya la pide,
+    #pero el endpoint es público: un body armado a mano no puede crear el
+    #pedido sin calle/ciudad/provincia cuando el envío es a domicilio).
+    def test_home_shipping_empty_address_fields_is_400(self):
+        with patch('StoreApp.domains.orders.views.public.verify_captcha', return_value = True):
+            response    =   self.client.post(
+                self.create_url,
+                self._payload(address = {'line1': '  ', 'city': '', 'province': '', 'country': 'AR'}),
+                format = 'json')
+        self.assertEqual(response.status_code, 400)
+        body    =   response.json()
+        for key in ('address.line1', 'address.city', 'address.province'):
+            self.assertIn(key, body)
+        self.assertFalse(Order.objects.exists())
+
+    def test_home_shipping_without_address_is_400(self):
+        payload =   self._payload()
+        del payload['address']
+        with patch('StoreApp.domains.orders.views.public.verify_captcha', return_value = True):
+            response    =   self.client.post(self.create_url, payload, format = 'json')
+        self.assertEqual(response.status_code, 400)
+        self.assertFalse(Order.objects.exists())
+
+    def test_pickup_needs_no_address(self):
+        payload =   self._payload(shipping_method = 'pickup')
+        del payload['address']
+        with patch('StoreApp.domains.orders.views.public.verify_captcha', return_value = True):
+            response    =   self.client.post(self.create_url, payload, format = 'json')
+        self.assertEqual(response.status_code, 201)
+        order   =   Order.objects.get()
+        self.assertEqual(order.shipping_method, 'pickup')
+        self.assertEqual(order.shipping_address, {})
+
+    def test_saved_address_id_flow_still_works(self):
+        #Dirección guardada del comprador: no exige `address` inline y el
+        #pedido congela su snapshot.
+        saved  =   CustomerAddress.objects.create(
+            customer    =   self.customer,
+            line1       =   'Av. Siempre Viva 742',
+            city        =   'CABA',
+            province    =   'CABA',
+        )
+        payload =   self._payload(address_id = saved.pk)
+        del payload['address']
+        with patch('StoreApp.domains.orders.views.public.verify_captcha', return_value = True):
+            response    =   self.client.post(self.create_url, payload, format = 'json')
+        self.assertEqual(response.status_code, 201)
+        order   =   Order.objects.get()
+        self.assertEqual(order.shipping_address['line1'], 'Av. Siempre Viva 742')
+        self.assertEqual(order.shipping_address['city'], 'CABA')
+
+    def test_address_id_of_other_customer_is_400(self):
+        #IDOR: la dirección de OTRO comprador no puede usarse — 400 por
+        #campo (el checkout lo muestra bajo el selector), no 404.
+        foreign =   CustomerAddress.objects.create(
+            customer    =   _make_customer('ajena@example.com'),
+            line1       =   'Calle Ajena 1',
+            city        =   'Rosario',
+            province    =   'Santa Fe',
+        )
+        payload =   self._payload(address_id = foreign.pk)
+        del payload['address']
+        with patch('StoreApp.domains.orders.views.public.verify_captcha', return_value = True):
+            response    =   self.client.post(self.create_url, payload, format = 'json')
+        self.assertEqual(response.status_code, 400)
+        self.assertIn('address_id', response.json())
+        self.assertFalse(Order.objects.exists())
+
     def test_store_without_orders_enabled_is_404(self):
         closed  =   _make_store('cerrada', sellable = False)
         with patch('StoreApp.domains.orders.views.public.verify_captcha', return_value = True):
@@ -616,6 +684,32 @@ class PublicOrderApiTests(TestCase):
         #Y un pedido de la tienda B tampoco es visible desde A.
         order_b =   _pending_order(self.store_b, self.customer, _make_product(self.store_b, name = 'B', price = '10.00'))
         self.assertEqual(self.client.get(f'{self.track_base}/{order_b.tracking_token}/').status_code, 404)
+
+    def test_shipping_fields_in_create_track_and_receipt(self):
+        #Contrato del envío MVP: shipping_cost=0 NO significa "gratis" —
+        #el domicilio se coordina por WhatsApp, así que shipping_note viaja
+        #"A coordinar" en create/tracking/receipt para que el front no
+        #muestre "Envío $ 0,00". En pickup la nota es None (retiro sin cargo).
+        data    =   self._create_via_api()
+        self.assertEqual(data['shipping_method'], 'home')
+        self.assertEqual(data['shipping_cost'], '0.00')
+        self.assertEqual(data['shipping_note'], 'A coordinar')
+        token   =   data['tracking_token']
+        tracked =   self.client.get(f'{self.track_base}/{token}/').json()
+        self.assertEqual(tracked['shipping_method'], 'home')
+        self.assertEqual(tracked['shipping_cost'], '0.00')
+        self.assertEqual(tracked['shipping_note'], 'A coordinar')
+        receipt =   self.client.get(f'{self.track_base}/{token}/receipt/').json()
+        self.assertEqual(receipt['order']['shipping_method'], 'home')
+        self.assertEqual(receipt['order']['shipping_note'], 'A coordinar')
+        self.assertEqual(receipt['totals']['shipping_cost'], '0.00')
+        #Pickup: sin dirección ni nota de envío.
+        payload =   self._payload(shipping_method = 'pickup')
+        del payload['address']
+        with patch('StoreApp.domains.orders.views.public.verify_captcha', return_value = True):
+            pickup  =   self.client.post(self.create_url, payload, format = 'json').json()
+        self.assertEqual(pickup['shipping_method'], 'pickup')
+        self.assertIsNone(pickup['shipping_note'])
 
     def test_events_endpoint(self):
         data    =   self._create_via_api()

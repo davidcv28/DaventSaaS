@@ -315,6 +315,7 @@
       catalog()
       resetFixed()
       pinFixed()
+      paintMissingProduct()
       window.scrollTo(0, 0)
       send()
       setTimeout(send, 120)
@@ -1744,6 +1745,9 @@
     //Ojo: la ficha también contiene tarjetas de relacionados ya inyectadas
     //— el guard busca el CTA de la ficha, no cualquier .dsx-buy.
     if (!pdp || pdp.querySelector('[data-ds-buy-slot="pdp"]')) return
+    //?product= sin resolver: la superficie marcada no es una ficha real —
+    //el aviso de "no disponible" la reemplaza (paintMissingProduct).
+    if (pdp.hasAttribute('data-ds-pdp-missing')) return
     //El id del producto viaja en la URL del documento (?product=<pk>).
     var pid = ''
     try { pid = new URLSearchParams(window.location.search).get('product') || '' } catch (e) {}
@@ -1773,6 +1777,39 @@
         slot.parentNode.insertBefore(pdpBtn, slot)
       }
     }
+  }
+  /* Ficha de producto que no resuelve (?product= inexistente, inactivo o
+   * ajeno): el servidor marca la superficie con `data-ds-pdp-missing` y
+   * acá se reemplaza el contenido vacío ("· Ref. ·") por un aviso con
+   * salida — fallback único para todos los diseños importados. Estilos
+   * inline con tokens --ds-*: no depende de la hoja del diseño ni de los
+   * flags de comercio/chat. */
+  function paintMissingProduct() {
+    var pdp = document.querySelector('[data-surface="product"][data-ds-pdp-missing]')
+    if (!pdp || pdp.getAttribute('data-ds-missing-painted')) return
+    pdp.setAttribute('data-ds-missing-painted', '1')
+    var hasCatalog = !!document.querySelector('[data-surface="catalog"]')
+    var box = document.createElement('div')
+    box.setAttribute('data-ds-no-pin', '')
+    box.style.cssText = 'display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;min-height:46vh;padding:48px 20px;text-align:center;color:var(--ds-text,var(--ink,#1a1a1a));font-family:inherit;box-sizing:border-box'
+    var msg = document.createElement('p')
+    msg.textContent = 'Este producto ya no está disponible.'
+    msg.style.cssText = 'margin:0;font-size:clamp(17px,2.4vw,22px);font-weight:700;line-height:1.3'
+    var sub = document.createElement('p')
+    sub.textContent = 'Puede que el comercio lo haya dado de baja del catálogo.'
+    sub.style.cssText = 'margin:0;font-size:14px;line-height:1.5;opacity:.7;max-width:44ch'
+    var btn = document.createElement('button')
+    btn.type = 'button'
+    btn.textContent = hasCatalog ? 'Ver el catálogo' : 'Volver al inicio'
+    btn.style.cssText = 'margin-top:10px;min-height:44px;padding:0 24px;border:1px solid var(--ds-accent,var(--accent,#4f46e5));border-radius:var(--ds-radius,10px);background:var(--ds-accent,var(--accent,#4f46e5));color:var(--ds-accent-ink,#fff);font:inherit;font-size:14px;font-weight:700;cursor:pointer'
+    btn.addEventListener('click', function () {
+      go(hasCatalog ? 'catalog' : 'home')
+    })
+    box.appendChild(msg)
+    box.appendChild(sub)
+    box.appendChild(btn)
+    pdp.innerHTML = ''
+    pdp.appendChild(box)
   }
   /* Entrada "Mi cuenta" / "Ingresar": el documento no conoce la sesión
    * del comprador (origen opaco, sin cookies ni storage del host) — el
@@ -1938,6 +1975,7 @@
   syncLock()
   syncFilterUI()
   applyCatalog()
+  paintMissingProduct()
   mountThemeToggle()
   window.addEventListener('load', function () { catalog(); mountThemeToggle(); send() })
   if ('ResizeObserver' in window) new ResizeObserver(send).observe(root)

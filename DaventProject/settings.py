@@ -86,18 +86,25 @@ REST_FRAMEWORK = {
         'login': '5/min',
         #Renovación de JWT por cookie (cada pestaña renueva al expirar el access;
         #holgado para NAT oficinas pero acota brute-force del cookie de sesión).
-        'token_refresh': '120/hour',
+        'token_refresh': '300/hour',
         #Carga de la web pública (suma una visita al contador del día): más
         #acotada que public_read — nadie recarga una tienda 2 veces/minuto
-        #de forma legítima y así se frena la inflación de estadísticas.
-        'store_visit': '120/hour',
+        #de forma legítima y así se frena la inflación de estadísticas. Solo
+        #acota el registro de la visita: el payload NUNCA se throttlea (un
+        #429 acá dejaba la portada caída tras CGNAT/NAT).
+        'store_visit': '300/hour',
         #Formulario de contacto de las webs públicas (antispam por IP).
         'store_contact': '10/hour',
         #Opiniones públicas de productos (valoraciones/comentarios): por IP,
         #además del captcha firmado y el honeypot del formulario.
         'store_review': '10/hour',
         #Reset de contraseña por correo (por IP; la respuesta es genérica).
-        'password_reset': '5/hour',
+        #Scope separado del confirm: compartirlos dejaba la cuenta sin
+        #recuperar ~1h tras 2-3 reintentos del flujo completo.
+        'password_reset': '10/hour',
+        #Confirmación del reset (uid+token+nueva clave): bucket propio y más
+        #holgado — no envía mails, solo valida el token de un solo uso.
+        'password_reset_confirm': '30/hour',
         #Reenvío del correo de verificación (por usuario autenticado).
         'email_verification': '5/hour',
         #Alta de cuentas (por IP): cada registro dispara un mail y un trial.

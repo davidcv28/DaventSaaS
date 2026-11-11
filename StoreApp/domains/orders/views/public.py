@@ -16,7 +16,7 @@ import logging
 import uuid
 
 from django.http import Http404
-from rest_framework import status
+from rest_framework import serializers, status
 from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
 from rest_framework.throttling import AnonRateThrottle, UserRateThrottle
@@ -87,7 +87,9 @@ def _resolve_address(customer, data):
     if address_id:
         address =   CustomerAddress.objects.filter(customer = customer, pk = address_id).first()
         if address is None:
-            raise Http404('Dirección no encontrada')
+            #IDOR/typo del cliente → 400 por campo (el checkout lo muestra
+            #bajo el selector), no un 404 que parece "tienda inexistente".
+            raise serializers.ValidationError({'address_id': 'La dirección elegida no existe o no es tuya.'})
         return address
     inline  =   data.get('address')
     return inline if isinstance(inline, dict) and inline else None

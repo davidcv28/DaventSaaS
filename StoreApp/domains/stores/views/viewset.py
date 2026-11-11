@@ -19,7 +19,7 @@ from rest_framework.response import Response
 from rest_framework.throttling import AnonRateThrottle, UserRateThrottle
 
 from DaventProject.cache_utils import cache_get, cache_set
-from DaventProject.throttling import PublicReadThrottle
+from DaventProject.throttling import PublicReadThrottle, ResilientAnonRateThrottle
 from StoreApp.domains.stores.models import (
     Store,
     StoreCarouselImage,
@@ -313,9 +313,13 @@ def _apply_order(queryset, order):
 #=========================================
 # VISIT THROTTLE (anti-inflación del contador de visitas, rate en settings)
 #=========================================
-class StoreVisitThrottle(AnonRateThrottle):
+class StoreVisitThrottle(ResilientAnonRateThrottle):
     #El GET público de la tienda suma +1 visita/día por visitante: scope
     #dedicado más acotado que public_read para frenar el inflate de stats.
+    #NO va en throttle_classes: se consulta a mano con allow_request()
+    #(devuelve False al agotar la cuota, jamás lanza Throttled) solo para
+    #decidir si la visita cuenta — la portada tiene que seguir en 200 aun
+    #con CGNAT/NAT compartiendo IP (un 429 acá la dejaba caída).
     scope   =   'store_visit'
 #=========================================
 # CONTACT THROTTLE (antispam del formulario público, rate en settings)
@@ -541,9 +545,22 @@ class StoreViewSet(StoreBaseViewSet):
             status = status.HTTP_200_OK,
         )
     #=========================================
+    # VISIT GATE (el rate store_visit solo decide si la visita cuenta)
+    #=========================================
+    _visit_throttle   =   None
+
+    def _visit_allowed(self, request):
+        #Instancia perezosa del throttle de visitas: allow_request() devuelve
+        #bool sin lanzar (False = cuota agotada) y ResilientAnonRateThrottle
+        #fail-open si el cache cae. Gatea únicamente record_store_visit — el
+        #payload responde 200 siempre.
+        if self._visit_throttle is None:
+            self._visit_throttle = StoreVisitThrottle()
+        return self._visit_throttle.allow_request(request, self)
+    #=========================================
     # PUBLIC (resolución pública del link, sin auth)
     #=========================================
-    @action(detail = False, methods = ['get'], url_path = r'public/(?P<slug>[a-z0-9-]+)', throttle_classes = [PublicReadThrottle, StoreVisitThrottle])
+    @action(detail = False, methods = ['get'], url_path = r'public/(?P<slug>[a-z0-9-]+)', throttle_classes = [PublicReadThrottle])
     def public(self, request, slug = None):
         store       =   get_object_or_404(
             Store.objects.select_related('user__city', 'user__province', 'customization'),
@@ -573,7 +590,9 @@ class StoreViewSet(StoreBaseViewSet):
         #todos los visitantes — una tienda con tráfico viral deja de pegarle
         #a la DB por pageview. Quedan vivos el fetch del store (1 query:
         #unpublish/block cortan al instante) y el conteo de visitas, que va
-        #por fuera del cache y siempre corre. La versión (epoch,ver) bustea
+        #por fuera del cache y corre solo si el visitante sigue bajo el rate
+        #store_visit — agotada la cuota la página sale igual, sin sumar.
+        #La versión (epoch,ver) bustea
         #al instante ante cualquier save/delete de lo que compone el payload.
         epoch, ver  =   public_cache_stamp(store.pk)
         cache_key   =   f'store:public:v1:{store.pk}:{epoch}:{ver}'
@@ -588,7 +607,8 @@ class StoreViewSet(StoreBaseViewSet):
                 store._service_items    =   list(StoreService.objects.filter(store = store, is_active = True))
             data    =   dict(StorePublicSerializer(store).data)
             cache_set(cache_key, data, PUBLIC_CACHE_TTL)
-        record_store_visit(store, request)
+        if self._visit_allowed(request):
+            record_store_visit(store, request)
         response    =   Response(data, status = status.HTTP_200_OK)
         #Cache corta: la misma visita no repide la ficha al navegar entre
         #Inicio/Catálogo/Producto ni al volver atrás. El conteo de visitas no
@@ -669,19 +689,25 @@ class StoreViewSet(StoreBaseViewSet):
             product         =   Product.objects.filter(
                 pk = int(product_id), store = store, is_active = True, is_exclusive = False,
             ).select_related('category', 'brand').first()
+        #?product= pedido pero sin resolver (inexistente/inactivo/ajeno):
+        #la ficha no debe salir con las variables vacías — el documento
+        #marca la superficie y el puente pinta el aviso de "no disponible".
+        product_missing     =   bool(product_id) and product is None
         from StoreApp.domains.design.services import render_store_pattern
         if preview:
-            return render_store_pattern(store, customization, product) or {}
+            return render_store_pattern(store, customization, product, product_missing = product_missing) or {}
         epoch, ver      =   public_cache_stamp(store.pk)
         cache_key       =   f'store:pattern:v2:{store.pk}:{epoch}:{ver}'
         #Solo el pk resuelto entra a la clave: un ?product= inválido/ajeno
-        #rinde el mismo documento base y comparte su entrada (antes cada
-        #string único generaba un miss + una entrada propia).
+        #comparte una única entrada ':missing' (antes cada string único
+        #generaba un miss + una entrada propia).
         if product is not None:
             cache_key   +=  f':p{product.pk}'
+        elif product_missing:
+            cache_key   +=  ':missing'
         data            =   cache_get(cache_key)
         if data is None:
-            data        =   render_store_pattern(store, customization, product) or {}
+            data        =   render_store_pattern(store, customization, product, product_missing = product_missing) or {}
             cache_set(cache_key, data, PUBLIC_CACHE_TTL)
         return data
 

@@ -68,9 +68,9 @@ class PasswordResetTests(TestCase):
     """Anti-enumeración + invalidación de sesiones del flujo de reset."""
 
     def setUp(self):
-        #El scope 'password_reset' (5/h por IP) vive en el cache del worker:
-        #sin limpiarlo los tests de la clase y de otros módulos agotan la
-        #cuota y el request de anti-enumeración devuelve 429.
+        #Los scopes 'password_reset' (10/h, request) y 'password_reset_confirm'
+        #(30/h, confirm) viven en el cache del worker: sin limpiarlo los tests
+        #de la clase y de otros módulos agotan la cuota y devuelven 429.
         cache.clear()
 
     def test_request_returns_same_response_for_existing_and_missing_email(self):
@@ -120,6 +120,21 @@ class PasswordResetTests(TestCase):
         #La clave vieja tampoco sirve para loguearse de nuevo.
         login           =   self.client.post('/api/token/', {'username': 'cliente', 'password': STRONG_PASSWORD}, format = 'json')
         self.assertEqual(login.status_code, 401)
+
+    def test_confirm_throttle_bucket_is_separate_from_request(self):
+        #Regresión QA: request y confirm compartían 'password_reset' — 2-3
+        #intentos del flujo completo agotaban el bucket y la cuenta quedaba
+        #sin recuperar ~1h. El confirm tiene scope propio (30/h): con el
+        #bucket de request lleno sigue respondiendo (400 por token, no 429).
+        for _ in range(10):
+            self.client.post(RESET_URL, {'email': 'nadie@gmail.com'}, format = 'json')
+        response        =   self.client.post(RESET_CONFIRM_URL, {
+            'uid'               :   'eA',
+            'token'             :   'trucho',
+            'new_password'      :   NEW_PASSWORD,
+            'confirm_password'  :   NEW_PASSWORD,
+        }, format = 'json')
+        self.assertEqual(response.status_code, 400)
 
 
 class PasswordPolicyTests(TestCase):

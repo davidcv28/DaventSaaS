@@ -179,7 +179,13 @@ class SupportChatViewSet(viewsets.GenericViewSet):
     #=========================================
     @action(detail = False, methods = ['post'], url_path = 'heartbeat')
     def heartbeat(self, request):
-        self._gate(request)
+        #Sin chat en el plan el heartbeat responde 204 (no 403): el panel lo
+        #llama en cada carga aunque el beneficio esté apagado y el 403
+        #ensuciaba la consola del navegador en cada visita. El gate real
+        #sigue en list/messages/send; acá no hay nada que reportar y la
+        #presencia no se toca (no hay sesión "en línea" que marcar).
+        if not chat_enabled(request.user):
+            return Response(status = status.HTTP_204_NO_CONTENT)
         touch_presence(request.user)
         if request.user.is_staff:
             #No-leidos totales (badge del sidebar) + quienes estan conectados

@@ -16,6 +16,7 @@ from .config_fields import (
     UserProfileFieldsConfig,
 )
 from .mixins import (
+    ACCOUNT_EXISTS_MESSAGE,
     UserPasswordUpdateMethod,
     UserPasswordValidateMixin,
     UserProfileUpdateMethod,
@@ -147,6 +148,10 @@ class PasswordResetConfirmSerializer(serializers.Serializer):
 #condición fiscal, provincia/ciudad) se piden recién al iniciar un pago —
 #el gate billing_required de payments los exige antes de crear el cobro.
 class RegisterUserSerializer(UsersValidatorsMixins,UserProfileValidatorsMixins, UserRegisterValidate,UserRegisterCreateMethod, serializers.ModelSerializer):
+    #Anti-enumeración: cualquier dato ya registrado (usuario, email o
+    #celular) devuelve el MISMO mensaje — distinguirlos permitía probar
+    #si un celular ajeno tenía cuenta.
+    unique_error        =   ACCOUNT_EXISTS_MESSAGE
     username            =   serializers.CharField(**UserFieldsConfig['username'])
     email               =   serializers.EmailField(**UserFieldsConfig['email'])
     password            =   serializers.CharField(**UserFieldsConfig['password'])

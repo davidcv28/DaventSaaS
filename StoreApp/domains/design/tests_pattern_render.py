@@ -291,6 +291,27 @@ class PatternRenderServiceTests(TestCase):
         self.assertIn('data-price="1500.00"', doc['html'])
         self.assertIn('data-ds-product=', doc['html'])
 
+    def test_render_store_pattern_marks_missing_product_surface(self):
+        #?product= que no resuelve (inexistente/inactivo/ajeno): la superficie
+        #product sale marcada para que el puente pinte el aviso — sin la
+        #marca la ficha renderizaba con todas las variables vacías.
+        DesignPattern.objects.all().delete()
+        store   =   _store(template = 'raiz')
+        _pattern(
+            slug = 'raiz',
+            html = (
+                '<div data-surface="landing">{{products}}</div>'
+                '<div data-surface="product"><h1>{{product_name}}</h1><span>Ref. {{product_ref}}</span></div>'
+            ),
+        )
+        doc = render_store_pattern(store, product_missing = True)
+        self.assertTrue(doc['product_missing'])
+        self.assertIn('data-surface="product" data-ds-pdp-missing', doc['html'])
+        #Documento base (sin ?product= o producto válido): sin la marca.
+        doc = render_store_pattern(store)
+        self.assertFalse(doc['product_missing'])
+        self.assertNotIn('data-ds-pdp-missing', doc['html'])
+
     def test_product_without_price_asks_to_consult(self):
         DesignPattern.objects.all().delete()
         store   =   _store(template = 'raiz')

@@ -111,7 +111,8 @@ def RegisterCustomerQuery(validated_data):
             transaction.on_commit(lambda: _enqueue_verification_email(customer.pk, slug))
             return customer, membership
     except IntegrityError:
-        raise serializers.ValidationError({'email': 'Ya existe una cuenta con ese correo.'})
+        #Mismo mensaje genérico que el serializer (anti-enumeración).
+        raise serializers.ValidationError({'email': 'Ya existe una cuenta con esos datos.'})
 
 
 def authenticate_customer(email, password):

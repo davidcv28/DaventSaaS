@@ -130,6 +130,8 @@ class LoginLockoutTests(TestCase):
         response    =   self._login('victima', 'x')
         self.assertEqual(response.status_code, 429)
         self.assertEqual(response.headers.get('Retry-After'), str(LOGIN_FAIL_WINDOW))
+        #El header no es legible cross-origin: el body expone los segundos.
+        self.assertEqual(response.json().get('retry_after'), LOGIN_FAIL_WINDOW)
 
     def test_soft_backoff_after_five_failures(self):
         from django.core.cache import cache
@@ -142,6 +144,7 @@ class LoginLockoutTests(TestCase):
         response    =   self._login('victima', 'x')
         self.assertEqual(response.status_code, 429)
         self.assertEqual(response.headers.get('Retry-After'), str(LOGIN_FAIL_SOFT_WINDOW))
+        self.assertEqual(response.json().get('retry_after'), LOGIN_FAIL_SOFT_WINDOW)
 
     def test_distributed_failures_do_not_lock_the_account(self):
         #10 IPs × 1 fallo: cada contador queda en 1, la cuenta no se bloquea

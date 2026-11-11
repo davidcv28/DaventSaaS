@@ -118,7 +118,8 @@ class CustomerRegisterSerializer(serializers.Serializer):
     def validate_email(self, value):
         email   =   normalize_email(value)
         if Customer.objects.filter(email = email).exists():
-            raise serializers.ValidationError('Ya existe una cuenta con ese correo.')
+            #Anti-enumeración: mensaje genérico (mismo criterio que users).
+            raise serializers.ValidationError('Ya existe una cuenta con esos datos.')
         return email
     def validate_password(self, value):
         #Policy de Django (AUTH_PASSWORD_VALIDATORS): mínimo 8, no común,

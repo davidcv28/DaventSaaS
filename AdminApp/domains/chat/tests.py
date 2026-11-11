@@ -90,6 +90,16 @@ class ChatGateTests(TestCase):
         response    =   _client(user).get(CHAT_URL)
         self.assertEqual(response.status_code, 403)
 
+    def test_heartbeat_returns_204_without_chat_plan(self):
+        #QA: el panel llama al heartbeat en cada carga aunque el plan no
+        #incluya chat — el 403 ensuciaba la consola del navegador. Sin
+        #beneficio responde 204 y NO marca presencia; el gate real sigue
+        #en list/messages/send.
+        user, _     =   _make_user('sinplan')
+        response    =   _client(user).post(CHAT_HEARTBEAT_URL, {}, format = 'json')
+        self.assertEqual(response.status_code, 204)
+        self.assertFalse(ChatPresence.objects.filter(user = user).exists())
+
     def test_premium_user_can_access(self):
         user, profile   =   _make_user('premiumuser')
         _grant_chat(profile)

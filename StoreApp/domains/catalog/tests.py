@@ -793,6 +793,19 @@ class PublicCatalogFilterTests(TestCase):
         response        =   self._catalog(new = '1')
         self.assertEqual(sorted(p['name'] for p in response.data['products']), ['Oferta', 'Vieja'])
 
+    def test_inactive_and_exclusive_products_never_listed(self):
+        #Contrato de la ficha pública (/tienda/:slug/producto/:id): el front
+        #resuelve el producto dentro de products[] — uno inactivo, exclusivo
+        #o inexistente cae en su estado "ya no está disponible". El endpoint
+        #no devuelve 404 por producto (no existe retrieve público): la
+        #garantía es que NUNCA viajen en la vidriera.
+        store           =   self._setup()
+        Product.objects.create(store = store, name = 'Visible', price = 10)
+        Product.objects.create(store = store, name = 'Apagado', price = 10, is_active = False)
+        Product.objects.create(store = store, name = 'Miembros', price = 10, is_exclusive = True)
+        response        =   self._catalog()
+        self.assertEqual([p['name'] for p in response.data['products']], ['Visible'])
+
     def test_facets_counts_and_price_max_payload(self):
         #El panel de filtros se alimenta del propio payload: facetas por
         #atributo con su conteo (solo con categoría elegida), products_count

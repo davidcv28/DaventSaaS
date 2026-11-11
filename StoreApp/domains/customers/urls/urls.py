@@ -30,6 +30,10 @@ urlpatterns = [
     path('customer-auth/refresh/',                   CustomerRefreshView.as_view(),                  name = 'customer_refresh'),
     path('customer-auth/logout/',                    CustomerLogoutView.as_view(),                   name = 'customer_logout'),
     path('customer-auth/me/',                        CustomerMeView.as_view(),                       name = 'customer_me'),
+    #Alias sin slash final: el front llama /me a secas — sin esta ruta el
+    #APPEND_SLASH respondía 301 en cada carga (y un PATCH redirigido
+    #podía llegar como GET). La canónica sigue siendo la de arriba.
+    path('customer-auth/me',                         CustomerMeView.as_view(),                       name = 'customer_me_alias'),
     path('customer-auth/verify-email/',              CustomerVerifyEmailView.as_view(),              name = 'customer_verify_email'),
     path('customer-auth/verify-email/resend/',       CustomerVerifyEmailResendView.as_view(),        name = 'customer_verify_email_resend'),
     path('customer-auth/password-reset/',            CustomerPasswordResetRequestView.as_view(),     name = 'customer_password_reset'),

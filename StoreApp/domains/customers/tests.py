@@ -232,6 +232,19 @@ class CustomerAuthFlowTests(TestCase):
         self.assertEqual(patch.json()['customer']['phone'], '+5493871551234')
         self.assertEqual(patch.json()['customer']['avatar'], 'A')
 
+    def test_me_without_trailing_slash_does_not_redirect(self):
+        #Regresión QA: el front llama /customer-auth/me sin slash — el alias
+        #evita el 301 del APPEND_SLASH en cada carga (antes el GET iba y
+        #volvía y un PATCH podía llegar redirigido).
+        customer    =   _make_customer()
+        client      =   APIClient()
+        _bearer(client, customer)
+        response    =   client.get('/api/customer-auth/me')
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.json()['customer']['email'], 'ana@example.com')
+        patch       =   client.patch('/api/customer-auth/me', {'first_name': 'SinSlash'}, format = 'json')
+        self.assertEqual(patch.status_code, 200)
+
     def test_profile_requires_customer_auth(self):
         self.assertEqual(APIClient().get(PROFILE_URL).status_code, 401)
         self.assertEqual(APIClient().get(ME_URL).status_code, 401)
@@ -676,6 +689,20 @@ class CustomerThrottleTests(TestCase):
                 'email': f't{i}@example.com', 'password': PASSWORD,
             }, format = 'json').status_code)
         self.assertEqual(codes[-1], 429)
+
+    def test_password_reset_confirm_has_own_throttle_bucket(self):
+        #Regresión QA (paridad con users): request y confirm compartían
+        #'password_reset' — agotado el de request (10/h) el confirm seguía
+        #bloqueado y el comprador no podía recuperar la clave. Ahora el
+        #confirm usa 'password_reset_confirm' (30/h): con el bucket de
+        #request lleno responde 400 por token inválido, no 429.
+        for _ in range(10):
+            self.client.post(RESET_URL, {'email': 'x@x.com'}, format = 'json')
+        confirm =   self.client.post(RESET_CONFIRM, {
+            'uid': 'eA', 'token': 'trucho',
+            'new_password': 'Nueva#12345', 'confirm_password': 'Nueva#12345',
+        }, format = 'json')
+        self.assertEqual(confirm.status_code, 400)
 
 
 class CustomerModelTests(TestCase):

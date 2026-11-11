@@ -477,6 +477,11 @@ def order_public_payload(order, store = None):
         'status'            :   order.status,
         'payment_method'    :   order.payment_method,
         'shipping_method'   :   order.shipping_method,
+        #MVP: envío a domicilio se coordina por WhatsApp (shipping_cost=0
+        #no significa "gratis" sino "a convenir") — la nota le da al front
+        #el texto listo para mostrar "A coordinar" en tracking/recibo sin
+        #adivinar la semántica del 0. None en pickup (retiro sin cargo).
+        'shipping_note'     :   'A coordinar' if order.shipping_method == Order.ShippingMethod.HOME else None,
         'subtotal'          :   str(order.subtotal),
         'discount_total'    :   str(order.discount_total),
         'shipping_cost'     :   str(order.shipping_cost),
@@ -545,6 +550,9 @@ def build_receipt_payload(order):
             'status'        :   order.status,
             'created_at'    :   order.created_at.isoformat() if order.created_at else None,
             'shipping_method': order.shipping_method,
+            #Mismo criterio que order_public_payload: el 0 de envío a
+            #domicilio es "a coordinar", no "gratis".
+            'shipping_note' :   'A coordinar' if order.shipping_method == Order.ShippingMethod.HOME else None,
         },
         #PII mínima (misma política que order_tracking_payload): email,
         #documento y apellido NUNCA salen por la API pública — el

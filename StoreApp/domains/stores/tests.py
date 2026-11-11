@@ -28,6 +28,7 @@ from StoreApp.domains.stores.models import (
 )
 from StoreApp.domains.stores.services import contact as contact_service
 from StoreApp.domains.stores.services import storage
+from StoreApp.domains.stores.views.viewset import StoreVisitThrottle
 from SuscriptionApp.domains.benefits.models import Benefit, PlanBenefit
 
 STORES_URL = '/api/stores/'
@@ -1119,6 +1120,18 @@ class VisitCounterTests(TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.data['today'], 1)
         self.assertEqual(response.data['total'], 1)
+
+    def test_exhausted_visit_rate_still_200_and_skips_count(self):
+        #Regresión QA: StoreVisitThrottle quedó fuera de throttle_classes del
+        #GET público — agotada la cuota allow_request devuelve False (nunca
+        #429) y solo se saltea record_store_visit. Antes el scope en
+        #throttle_classes hacía que un CGNAT/NAT compartido devolviera 429 y
+        #la portada quedara caída ("Tienda no disponible").
+        self._setup()
+        with patch.object(StoreVisitThrottle, 'THROTTLE_RATES', {'store_visit': '0/minute'}):
+            response    =   APIClient().get(f'{STORES_URL}public/mi-tienda/')
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(StoreDailyVisit.objects.count(), 0)
 
 
 class ImageOrderTests(TestCase):
