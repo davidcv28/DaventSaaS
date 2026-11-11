@@ -3168,6 +3168,44 @@
     text-transform: uppercase;
     border-bottom: var(--mi-hair) solid var(--mi-line);
   }
+  /* Menú tipo Mercado Libre: filas altas con índice de pliego (01, 02…),
+     la firma numerada del diseño, y marca de acento en el destino activo. */
+  .store-page[data-template='impacto'] .sp-drawer-head strong {
+    font-family: var(--mi-display);
+    font-size: 20px;
+    font-weight: 400;
+    letter-spacing: .03em;
+    text-transform: uppercase;
+  }
+  .store-page[data-template='impacto'] .sp-navdrawer .sp-nav-group { counter-reset: mi-nav; }
+  .store-page[data-template='impacto'] .sp-navdrawer .sp-nav-item { padding: 14px 12px; }
+  .store-page[data-template='impacto'] .sp-navdrawer .sp-nav-item::before {
+    counter-increment: mi-nav;
+    content: '0' counter(mi-nav);
+    flex: none;
+    font-family: var(--mi-mono);
+    font-size: 10px;
+    letter-spacing: .08em;
+    color: var(--mi-muted);
+  }
+  .store-page[data-template='impacto'] .sp-navdrawer .sp-nav-item:is(.router-link-active, .router-link-exact-active, .sp-anchor) {
+    box-shadow: inset 3px 0 0 var(--mi-accent);
+    color: var(--mi-ink);
+  }
+}
+
+/* ==========================================================================
+   Menú móvil (patrón Mercado Libre): hamburguesa + drawer lateral.
+   La píldora CTA del header repite destinos que ya viven en el drawer —
+   en pantallas chicas es el elemento más ancho del topbar y empujaba los
+   botones de acción unos contra otros.
+   ========================================================================== */
+@media (max-width: 768px) {
+  .store-page[data-template='impacto'] .sp-top .sp-top-cta { display: none; }
+}
+@media (max-width: 640px) {
+  .store-page[data-template='impacto'] .sp-top-inner { gap: 10px; }
+  .store-page[data-template='impacto'] .sp-top-end { gap: 6px; }
 }
 
 /* ==========================================================================

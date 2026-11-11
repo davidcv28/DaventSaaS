@@ -713,7 +713,10 @@ const hasNavMenu = computed(() => status.value === 'success' && !isShop.value &&
 // Tema mobile.nav: 'bottom' (default de la web pública) monta la tab bar
 // (4 destinos + "Más") en lugar del burger; 'top' conserva el header con
 // burger + drawer lateral y 'drawer' deja solo marca + burger.
-const mobileNav = computed(() => pageAttrs.value['data-st-nav'] || 'bottom')
+// Impacto adopta el patrón Mercado Libre por defecto (hamburguesa + drawer
+// lateral): sin mobile.nav explícito en el tema, 'top' gana sobre 'bottom'.
+const mobileNav = computed(() => pageAttrs.value['data-st-nav']
+  || (pageTemplate.value === 'impacto' ? 'top' : 'bottom'))
 // Prioridad de destinos en la tab bar: Inicio → Catálogo → Servicios → Suscripciones → Contacto.
 const TAB_PRIORITY = ['Inicio', 'Catálogo', 'Servicios', 'Suscripciones', 'Contacto']
 const TAB_ICONS = { Inicio: 'store', Catálogo: 'package', Servicios: 'wrench', Suscripciones: 'crown', Contacto: 'message-circle' }

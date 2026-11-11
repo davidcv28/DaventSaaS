@@ -3965,6 +3965,7 @@
      "intensity": "medium"
     },
     "mobile": {
+     "nav": "top",
      "cardStyle": "standard",
      "heroHeight": "tall"
     },
@@ -4058,6 +4059,7 @@
      "intensity": "medium"
     },
     "mobile": {
+     "nav": "top",
      "cardStyle": "standard",
      "heroHeight": "tall"
     },
@@ -4151,6 +4153,7 @@
      "intensity": "medium"
     },
     "mobile": {
+     "nav": "top",
      "cardStyle": "standard",
      "heroHeight": "tall"
     },
@@ -4245,6 +4248,7 @@
      "intensity": "medium"
     },
     "mobile": {
+     "nav": "top",
      "cardStyle": "standard",
      "heroHeight": "tall"
     },
@@ -16084,6 +16088,7 @@
      "intensity": "medium"
     },
     "mobile": {
+     "nav": "top",
      "cardStyle": "standard",
      "heroHeight": "tall"
     },
