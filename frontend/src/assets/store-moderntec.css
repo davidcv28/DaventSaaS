@@ -1663,6 +1663,16 @@
   font-family: var(--mt-mono);
   font-weight: 600;
 }
+/* CTA de la ficha (espejo del .pdp-buy del documento de patrón): el botón
+   de carrito va más grande y en negrita con radio .5px; el resto de CTAs
+   del panel queda en .3px como las .btn del patrón. */
+.store-page[data-template='raiz'].mt-skin .rz-pdp-buy-btn { border-radius: .3px; }
+.store-page[data-template='raiz'].mt-skin .rz-pdp-cart {
+  font-size: 16px;
+  font-weight: 700;
+  border-radius: .5px;
+}
+.store-page[data-template='raiz'].mt-skin .rz-pdp-stick-cart { border-radius: .5px; }
 
 /* ==========================================================================
    11. SUPERFICIES REPINTADAS POR EL TEMA (surfaces.card/footer/hero)
