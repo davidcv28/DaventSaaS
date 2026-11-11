@@ -401,15 +401,15 @@
      --line, que con el filete base nuevo habría aclarado el borde). */
   .ds-product:hover{transform:translateY(-4px);box-shadow:var(--shadow-lift);border-color:color-mix(in srgb,var(--ink) 55%,var(--line))}
   .ds-product:hover::after{transform:scaleX(1)}
-  .ds-product-link{display:grid;grid-template-areas:"media" "cat" "copy" "price";grid-template-rows:auto auto 1fr auto;height:100%;min-width:0;color:inherit}
+  .ds-product-link{display:grid;grid-template-areas:"media" "cat" "copy" "price" "stock";grid-template-rows:auto auto 1fr auto auto;height:100%;min-width:0;color:inherit}
   /* El CTA de compra del puente se apenda a la tarjeta: la fila pasa a
      columna flexible para que el botón ocupe su alto natural y no quede
      recortado por el overflow:hidden de .ds-product. */
   .ds-product{display:flex;flex-direction:column}
   .ds-product-link{height:auto;flex:1 1 auto;min-height:0}
   .ds-product-img{
-    grid-area:media;display:block;width:100%;aspect-ratio:1/1;object-fit:cover;background:var(--soft);
-    transition:transform .6s var(--ease);
+    grid-area:media;display:block;width:100%;aspect-ratio:1/1;object-fit:contain;background:#fff;
+    padding:18px;box-sizing:border-box;transition:transform .6s var(--ease);
   }
   .ds-product:hover .ds-product-img{transform:scale(1.045)}
   .ds-product-img.is-empty{display:grid;place-items:center;position:relative;background-color:var(--soft);
@@ -424,38 +424,45 @@
   }
   .ds-product-img.is-empty::after{content:"▣";position:relative;z-index:1;color:color-mix(in srgb,var(--ink) 32%,transparent);font-size:54px;line-height:1;transition:transform .5s var(--ease)}
   .ds-product:hover .ds-product-img.is-empty::after{transform:scale(1.06) rotate(-3deg)}
-  /* El tag global usa --ds-success crudo (~3:1 sobre tarjeta en noche);
-     se mezcla hacia la tinta del tema para AA en ambos modos.
-     .ds-stock no tiene lugar en la grilla de la tarjeta (auto-caía en una
-     fila implícita bajo el precio): se omite, como en moda/modista. */
+  /* .ds-stock fuera de tarjeta (ficha, etc.) se omite; dentro de
+     .ds-product es la fila verde de señal bajo el precio. */
   .ds-stock{display:none}
   .ds-product-cat{
     grid-area:cat;justify-self:start;min-height:1.2em;margin:12px 14px 0;
     font:700 9.5px var(--mono);letter-spacing:.14em;text-transform:uppercase;color:var(--muted);
   }
-  .ds-product-copy{grid-area:copy;display:grid;gap:3px;min-width:0;padding:6px 14px 0}
+  .ds-product-copy{grid-area:copy;display:grid;gap:3px;min-width:0;padding:4px 14px 0}
   .ds-product-name{
-    margin:0;font-size:14px;font-weight:600;line-height:1.35;min-height:2.7em;letter-spacing:-.01em;
+    margin:0;font-size:13.5px;font-weight:500;line-height:1.4;min-height:2.8em;letter-spacing:0;
     display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;overflow-wrap:anywhere;
     transition:color .18s;
   }
   .ds-product:hover .ds-product-name{color:var(--link)}
-  .ds-product-desc{font-size:11.5px;line-height:1.45;color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-  .ds-product-desc:empty{display:none}
-  .ds-product-price{
-    grid-area:price;display:flex;flex-wrap:wrap;align-items:baseline;gap:2px 8px;min-width:0;
-    padding:12px 14px 16px;font:800 22px/1.1 var(--mono);letter-spacing:-.05em;
+  .ds-product .ds-product-desc{display:none}
+  /* Precio estilo marketplace: tachado arriba, monto + %OFF verde inline.
+     El grid reordena el markup (amount antes que el <s>) sin tocar el
+     fragmento compartido de pattern_render. */
+  .ds-product .ds-product-price{
+    grid-area:price;display:grid;grid-template-columns:auto 1fr;
+    grid-template-areas:"old old" "amount off";align-items:end;column-gap:8px;min-width:0;
+    padding:8px 14px 4px;font:500 22px/1.15 var(--font);letter-spacing:-.02em;
     font-variant-numeric:tabular-nums;color:var(--ink);overflow-wrap:anywhere;
   }
-  .ds-product-amount{position:relative}
-  .ds-product-old{font:400 11.5px var(--mono);color:var(--muted);text-decoration:line-through;letter-spacing:0;order:3}
-  /* Sticker de ahorro: se ancla a la esquina de la tarjeta. */
-  .ds-product-price[data-off]::after{
-    content:"-" attr(data-off) "%";position:absolute;top:10px;right:10px;z-index:4;
-    padding:4px 7px;border-radius:3px;transform:rotate(3deg);
-    background:var(--green-badge);color:var(--on-success);
-    font:800 11px var(--mono);letter-spacing:0;
-    box-shadow:0 8px 16px -10px rgba(0,0,0,.55);
+  .ds-product-amount{position:relative;grid-area:amount;min-width:0}
+  .ds-product .ds-product-old{
+    grid-area:old;font:400 12px var(--font);color:var(--muted);
+    text-decoration:line-through;letter-spacing:0;
+  }
+  /* % de ahorro como texto verde junto al precio (ML), no sticker rotado. */
+  .ds-product .ds-product-price[data-off]::after{
+    content:attr(data-off) "% OFF";grid-area:off;align-self:end;justify-self:start;
+    padding:0 0 3px;background:none;box-shadow:none;border-radius:0;transform:none;
+    color:var(--green-ink);font:800 13px var(--font);letter-spacing:0;
+  }
+  /* Fila de señal positiva bajo el precio (equivalente al "Envío gratis"). */
+  .ds-product .ds-stock{
+    display:flex;grid-area:stock;align-items:center;gap:6px;
+    padding:6px 14px 14px;font:600 11.5px var(--font);color:var(--green-ink);
   }
   /* Etiqueta de la campaña que firma la oferta (Hot Sale, Navidad…). */
   .ds-campaign-label{
@@ -468,22 +475,23 @@
   .grid > .ds-empty{grid-column:1/-1}
   .band.gray:not(:has(.ds-product)){display:none}
 
-  /* CTA de compra del puente (commerce): pie de tarjeta con la misma mano
-     que .btn-primary; en vista lista se compacta bajo la fila. */
+  /* CTA de compra del puente (commerce): acción de pie de tarjeta con
+     filete superior, estilo marketplace — no una barra sólida. */
   .ds-product .dsx-buy{
-    width:calc(100% - 24px);margin:0 12px 12px;padding:13px 14px;
-    border:0;border-radius:var(--radius-btn);background:var(--blue);color:var(--on-primary);
-    font:800 12px var(--font);letter-spacing:.02em;
-    transition:background .18s var(--ease);
+    width:100%;margin:0;padding:11px 14px;
+    border:0;border-top:1px solid var(--line);border-radius:0;
+    background:transparent;color:var(--link);
+    font:800 11px var(--mono);letter-spacing:.12em;text-transform:uppercase;
+    transition:background .18s var(--ease),color .18s var(--ease);
   }
-  .ds-product .dsx-buy:hover{background:var(--blue-deep);color:var(--on-secondary)}
+  .ds-product .dsx-buy:hover{background:var(--blue);color:var(--on-primary)}
   .cat-surface .grid[data-ds-view-mode="list"] .dsx-buy{
-    align-self:flex-end;width:auto;min-width:0;margin:-6px 10px 16px;padding:11px 20px;
+    align-self:flex-end;width:auto;min-width:0;margin:-4px 10px 16px;padding:10px 18px;
+    border:1px solid var(--line-strong);border-radius:var(--radius-btn);
     font:800 10.5px var(--mono);letter-spacing:.12em;text-transform:uppercase;
-    box-shadow:0 10px 18px -14px color-mix(in srgb,var(--blue) 85%,#000);
-    transition:background .18s var(--ease),transform .18s var(--ease),box-shadow .18s var(--ease);
+    transition:background .18s var(--ease),color .18s var(--ease),transform .18s var(--ease),border-color .18s;
   }
-  .cat-surface .grid[data-ds-view-mode="list"] .dsx-buy:hover{transform:translateY(-1px)}
+  .cat-surface .grid[data-ds-view-mode="list"] .dsx-buy:hover{transform:translateY(-1px);border-color:var(--blue)}
   @media (max-width:640px){
     .cat-surface .grid[data-ds-view-mode="list"] .dsx-buy{align-self:stretch;margin:0 8px 14px}
   }
@@ -679,8 +687,8 @@
   .cat-surface .grid[data-ds-view-mode="list"] .ds-product-link:hover::after,
   .cat-surface .grid[data-ds-view-mode="list"] .ds-product-link:focus-visible::after{opacity:1;transform:none}
   .cat-surface .grid[data-ds-view-mode="list"] .ds-product-img{
-    grid-area:media;align-self:start;width:168px;height:168px;
-    aspect-ratio:auto;border-radius:6px;object-fit:contain;background-color:var(--surface);
+    grid-area:media;align-self:start;width:168px;height:168px;padding:8px;
+    aspect-ratio:auto;border-radius:6px;object-fit:contain;background-color:#fff;
   }
   .cat-surface .grid[data-ds-view-mode="list"] .ds-product-img.is-empty{display:grid;place-items:center;background-color:var(--soft)}
   .cat-surface .grid[data-ds-view-mode="list"] .ds-product-img.is-empty::after{font-size:44px}
@@ -696,20 +704,15 @@
     display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;
   }
   .cat-surface .grid[data-ds-view-mode="list"] .ds-product-price{
-    grid-area:price;margin-top:10px;padding:0;font-size:23px;font-weight:800;letter-spacing:-.05em;
+    grid-area:price;margin-top:10px;padding:0;font-size:23px;font-weight:600;letter-spacing:-.02em;
   }
-  .cat-surface .grid[data-ds-view-mode="list"] .ds-product-price s{font-size:11.5px}
-  .cat-surface .grid[data-ds-view-mode="list"] .ds-product-price[data-off]::after{
-    position:static;display:inline-block;transform:none;margin-left:6px;
-    font-size:10.5px;padding:2px 6px;box-shadow:none;
-  }
+  .cat-surface .grid[data-ds-view-mode="list"] .ds-product-price s{font-size:12px}
+  .cat-surface .grid[data-ds-view-mode="list"] .ds-stock{display:none}
   .cat-surface .grid[data-ds-view-mode="grid"] .ds-product{background:var(--surface);border:1px solid var(--line-strong);border-radius:var(--radius);box-shadow:var(--shadow);overflow:hidden;height:100%;min-width:0}
-  .cat-surface .grid[data-ds-view-mode="grid"] .ds-product-link{display:grid;grid-template-areas:"media" "cat" "copy" "price";grid-template-rows:auto auto 1fr auto;height:100%;min-width:0;color:inherit}
-  .cat-surface .grid[data-ds-view-mode="grid"] .ds-product-img{grid-area:media;display:block;width:100%;aspect-ratio:1/1;object-fit:cover;background:var(--soft)}
+  .cat-surface .grid[data-ds-view-mode="grid"] .ds-product-link{display:grid;grid-template-areas:"media" "cat" "copy" "price" "stock";grid-template-rows:auto auto 1fr auto auto;height:100%;min-width:0;color:inherit}
   .cat-surface .grid[data-ds-view-mode="grid"] .ds-product-cat{grid-area:cat;min-height:1.2em;margin:12px 14px 0;font-size:10px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--muted)}
-  .cat-surface .grid[data-ds-view-mode="grid"] .ds-product-copy{grid-area:copy;display:grid;gap:3px;min-width:0;padding:6px 14px 0}
-  .cat-surface .grid[data-ds-view-mode="grid"] .ds-product-name{margin:0;font-size:14px;font-weight:600;line-height:1.35;min-height:2.7em;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;overflow-wrap:anywhere}
-  .cat-surface .grid[data-ds-view-mode="grid"] .ds-product-price{grid-area:price;padding:10px 14px 16px;font-size:21px}
+  .cat-surface .grid[data-ds-view-mode="grid"] .ds-product-name{margin:0;font-size:13.5px;font-weight:500;line-height:1.4;min-height:2.8em;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;overflow-wrap:anywhere}
+  .cat-surface .grid[data-ds-view-mode="grid"] .ds-product-price{grid-area:price;padding:8px 14px 4px;font-size:21px}
   .cat-surface .grid[data-ds-view-mode="grid"] .ds-product:hover{box-shadow:var(--shadow-lift)}
 
   .cat-surface .ds-empty{margin:18px 0 4px;padding:0;color:var(--muted);font-size:14px}
@@ -1042,10 +1045,12 @@
     .ds-product-copy{padding:4px 10px 0}
     .ds-product-name{font-size:12.5px;line-height:1.3;min-height:2.6em}
     .ds-product-desc{display:none}
-    .ds-product-price{padding:8px 10px 12px;font-size:16px;gap:2px 6px}
-    .ds-product-old{font-size:9.5px}
+    .ds-product .ds-product-price{padding:6px 10px 2px;font-size:17px;column-gap:6px}
+    .ds-product .ds-product-old{font-size:10px}
+    .ds-product .ds-stock{padding:4px 10px 10px;font-size:10.5px}
     .ds-product::before{top:8px;left:8px;padding:2px 5px;font-size:8.5px}
-    .ds-product-price[data-off]::after{top:8px;right:8px;padding:3px 5px;font-size:9.5px}
+    .ds-product .ds-product-price[data-off]::after{font-size:10.5px;padding-bottom:2px}
+    .ds-product-img{padding:10px}
     .ds-product-img.is-empty::after{font-size:34px}
     .trust-grid{grid-template-columns:minmax(0,1fr);gap:0}
     .trust-item{padding:14px 0}
