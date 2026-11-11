@@ -511,12 +511,23 @@
   .ds-product .dsx-buy:hover::before{background:var(--on-primary)}
   .ds-product .dsx-buy.is-added{background:var(--green-badge);border-color:var(--green-badge)}
   .ds-product .dsx-buy.is-added::before{background:var(--on-success)}
-  /* Ficha: el CTA de compra se apenda antes del WhatsApp y toma el ancho
-     completo con la misma piel azul; el WhatsApp queda como secundario. */
+  /* Ficha: el CTA de compra va DIRECTO bajo el precio (.pdp-info pasa a
+     flex column y el orden se fija explícito porque el puente lo inyecta
+     recién antes del link de WhatsApp). Radio 1px: botón casi recto. */
+  .pdp-surface .pdp-info{display:flex;flex-direction:column}
+  .pdp-info .pdp-kicker{order:0}
+  .pdp-info h1{order:1}
+  .pdp-info .pdp-ref{order:2}
+  .pdp-info .pdp-price{order:3}
+  .pdp-info .dsx-buy{order:4}
+  .pdp-info .pdp-pay{order:5}
+  .pdp-info .pdp-buy{order:6}
+  .pdp-info .pdp-back{order:7}
+  .pdp-info .pdp-seller{order:8}
   .pdp-surface .pdp-info .dsx-buy{
     display:flex;align-items:center;justify-content:center;gap:8px;
-    width:100%;min-width:0;min-height:50px;margin:18px 0 0;padding:12px;
-    border:0;border-radius:var(--radius-btn);background:var(--blue);color:var(--on-primary);
+    width:100%;min-width:0;min-height:50px;margin:14px 0 0;padding:12px;
+    border:0;border-radius:1px;background:var(--blue);color:var(--on-primary);
     font-size:14.5px;font-weight:800;
     transition:background .18s var(--ease);
   }
