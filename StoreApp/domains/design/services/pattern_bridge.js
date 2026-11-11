@@ -1893,6 +1893,10 @@
     //del fragmento compartido). Fallback: al inicio del panel de info.
     var wa = pdp.querySelector('a[href*="wa.me"], a[href*="whatsapp"], a[href*="/r/whatsapp"]')
     var slot = wa ? (wa.closest('.pdp-buy,.pdp-ctas,.pdp-actions,[class*="cta"],[class*="buy"]') || wa) : null
+    /* Tienda sin WhatsApp: el anchor sale con href="" y `wa` no lo encuentra.
+     * Si el diseño declara su grupo de acciones, el CTA cae ahí igual — el
+     * fallback al h1 lo dejaba flotando arriba de la ref y del precio. */
+    if (!slot) slot = pdp.querySelector('.pdp-actions,.pdp-ctas,.pdp-buy')
     if (!slot) {
       slot = pdp.querySelector('.pdp-info, aside, [class*="info"], [class*="panel"]')
       if (slot) {
