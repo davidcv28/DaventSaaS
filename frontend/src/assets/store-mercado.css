@@ -64,6 +64,10 @@
   --sp-line: var(--mc-line);
   --sp-radius: 8px;
   --sp-accent-text: var(--mc-accent);
+  /* "En stock"/estados OK del chrome compartido: el --sp-success del tema
+     queda en ~4.4:1 sobre el fondo gris; el verde-tinta del diseño ya
+     nace oscurecido en claro y aclarado en noche (AA en ambos). */
+  --sp-success: var(--mc-green-ink);
   --sp-shadow-sm: 0 1px 2px rgba(0, 0, 0, .06), 0 1px 4px -1px rgba(0, 0, 0, .08);
   --sp-shadow-md: 0 2px 6px -2px rgba(0, 0, 0, .12), 0 12px 28px -16px rgba(0, 0, 0, .28);
   --sp-chrome: var(--mc-yellow);
@@ -293,6 +297,21 @@
 .store-page[data-template='mercado'] .sp-foot .sp-davent-badge:hover { border-color: var(--mc-accent); background: var(--mc-soft); }
 .store-page[data-template='mercado'] .sp-foot-heading { color: var(--mc-muted); }
 .store-page[data-template='mercado'] .sp-foot-col a:hover { color: var(--mc-link); }
+/* Redes sociales: el chrome global las pinta blancas sobre banda oscura
+   (--sp-on-band + chip translúcido blanco). El pie mercado es
+   --mc-surface: en claro quedaban iconos blancos sobre blanco
+   (invisibles). Se repintean con la paleta mc, que contrasta en ambos
+   modos. */
+.store-page[data-template='mercado'] .sp-foot .sp-foot-social a {
+  color: var(--mc-ink-2);
+  background: color-mix(in srgb, var(--mc-ink) 6%, transparent);
+  border-color: var(--mc-line);
+}
+.store-page[data-template='mercado'] .sp-foot .sp-foot-social a:hover {
+  color: var(--mc-link);
+  background: color-mix(in srgb, var(--mc-blue) 12%, transparent);
+  border-color: color-mix(in srgb, var(--mc-blue) 45%, transparent);
+}
 
 /* ==========================================================================
    PIEZAS COMPARTIDAS — repintadas a la paleta mc en ambos temas
@@ -349,6 +368,10 @@
   background: color-mix(in srgb, var(--mc-blue) 10%, transparent);
   color: var(--mc-link);
 }
+/* Legal: el "volver" scoped usa --store-accent del dueño (#0284C7 ≈
+   3.4:1 sobre el fondo mercado). El link del diseño da AA en ambos
+   modos (claro = azul profundo, noche = azul aclarado). */
+.store-page[data-template='mercado'] .ec-legal-back { color: var(--mc-link); }
 
 /* ==========================================================================
    LANDING — hero, categorías, ofertas, destacados y confianza
@@ -762,6 +785,10 @@
   --rz-inverse-muted: #B5B5B5;
   --rz-inverse-line: rgba(255, 255, 255, .16);
   --rz-inverse-accent: var(--mc-yellow);
+  /* "En stock" de la ficha Raíz: sin este token cae al --sp-success del
+     tema (~4.48:1 sobre el fondo). El verde-tinta del diseño da AA en
+     claro y el #5BD68A de noche en oscuro. */
+  --rz-success: var(--mc-green-ink);
   --rz-display: var(--mc-display);
   --rz-body: var(--mc-body);
   --rz-rad-sm: 6px;
@@ -875,6 +902,14 @@
 .store-page[data-template='mercado'] .mc-product .rz-pdp-specs td { color: var(--mc-ink); }
 .store-page[data-template='mercado'] .mc-product .rz-pdp-rev-item,
 .store-page[data-template='mercado'] .mc-product .rz-pdp-reviews .sp-input { border-radius: 6px; }
+/* Pista de zoom: vive con opacity:0 hasta hover/focus, pero cuando se
+   muestra debe leerse sobre cualquier foto. Píldora tinta fija + texto
+   claro: AA determinista en claro y en noche (el par --rz-ink/--rz-bg
+   original podía resolver a tinta clara sobre foto clara). */
+.store-page[data-template='mercado'] .mc-product .rz-pdp-zoom-hint {
+  background: rgba(13, 15, 20, .78);
+  color: #FFFFFF;
+}
 /* Formulario de reseñas: el layout base le deja franja degradado, orbe
    de acento y badge rotado -6° — en la ficha queda como tarjeta de
    marketplace plana. */
@@ -919,6 +954,9 @@
   --mc-link: color-mix(in srgb, var(--mc-blue) 55%, #FFFFFF);
   /* Sobre superficie oscura el verde de marca queda por debajo de AA. */
   --mc-green-ink: #5BD68A;
+  /* "Ver producto" de la tarjeta: --mc-blue-deep fijo queda en ~2.5:1
+     sobre la tarjeta oscura; el link aclarado de noche da AA. */
+  --tpc-go-ink: var(--mc-link);
 }
 .store-page[data-template='mercado'][data-store-theme='dark'] .mc-hero {
   background:
