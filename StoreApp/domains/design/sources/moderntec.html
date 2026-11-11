@@ -701,10 +701,12 @@ html[data-ds-surface="services"] .top-nav a[data-ds-route="services"]{color:var(
 .pdp-ctas{display:flex;flex-wrap:wrap;gap:10px;margin-top:26px}
 .pdp-ctas .btn{flex:1 1 200px}
 /* Compra de la ficha: ancho completo bajo el precio, icono de carrito +
-   etiqueta. Radix .3px como el resto de botones del documento. */
+   etiqueta. Radio .3px !important: la regla `buttons.shape` del Studio
+   (`.pdp-buy{...!important}`) lo volvía píldora; el patrón se emite
+   después y con la misma especificidad gana el cuadrado del diseño. */
 .pdp-buy{display:flex;align-items:center;justify-content:center;gap:10px;
   width:100%;min-height:48px;margin:8px 0 0;padding:0 20px;
-  border:0;border-radius:.5px;background:var(--accent);color:var(--accent-ink);
+  border:0;border-radius:.3px!important;background:var(--accent);color:var(--accent-ink);
   font-family:var(--body);font-size:16px;font-weight:700;letter-spacing:0;text-transform:none;
   cursor:pointer;
   box-shadow:0 12px 30px -16px color-mix(in srgb,var(--accent) 70%,transparent);
