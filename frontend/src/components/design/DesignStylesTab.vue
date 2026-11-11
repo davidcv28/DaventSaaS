@@ -114,6 +114,10 @@ const TIER_BADGE = {
   plus: { text: 'Desde Estándar', tone: 'amber' },
   advanced: { text: 'Premium', tone: 'purple' }
 }
+const START_MODES = [
+  { id: 'light', label: 'Claro', icon: 'sun' },
+  { id: 'dark', label: 'Oscuro', icon: 'moon' }
+]
 const tierBadge = (template, own) => {
   const tier = STORE_TEMPLATES[template]?.tier || own || 'base'
   return TIER_BADGE[tier] || TIER_BADGE.base
@@ -523,6 +527,25 @@ onBeforeUnmount(() => {
               />
               <p class="dmenu-hint">Cada diseño trae sus estilos: color, tipografía y modo.</p>
             </div>
+
+            <div class="dmenu-field">
+              <label>Modo inicial</label>
+              <div class="dmenu-mode-options" role="group" aria-label="Modo inicial de la web">
+                <button
+                  v-for="mode in START_MODES"
+                  :key="mode.id"
+                  type="button"
+                  class="dmenu-mode-option"
+                  :class="{ active: form.theme === mode.id }"
+                  :aria-pressed="form.theme === mode.id"
+                  @click="form.theme = mode.id"
+                >
+                  <AppIcon :name="mode.icon" :size="16" aria-hidden="true" />
+                  {{ mode.label }}
+                </button>
+              </div>
+              <p class="dmenu-hint">Define cómo comienza tu web para nuevos visitantes; cada persona puede cambiarlo desde tu web.</p>
+            </div>
           </div>
 
           <p class="dmenu-support">
@@ -696,6 +719,19 @@ onBeforeUnmount(() => {
 .dmenu-field label { font-size: 13px; font-weight: 600; line-height: 1.3; color: var(--ink-2); }
 .dmenu-field .select { width: 100%; min-width: 0; text-overflow: ellipsis; }
 .dmenu-hint { margin: 0; font-size: 12px; line-height: 1.4; color: var(--muted); }
+.dmenu-mode-options { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
+.dmenu-mode-option {
+  min-height: 44px; display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+  padding: 8px 12px; border: 1px solid var(--line, #e5e7eb); border-radius: 10px;
+  background: var(--card, #fff); color: var(--ink-2, #334155); font: inherit;
+  font-size: 13px; font-weight: 600; cursor: pointer; transition: border-color .15s, background .15s, color .15s;
+}
+.dmenu-mode-option:hover { border-color: var(--brand-400, #818cf8); }
+.dmenu-mode-option:focus-visible { outline: 2px solid var(--brand-500, #6366f1); outline-offset: 2px; }
+.dmenu-mode-option.active {
+  border-color: var(--brand-500, #6366f1); background: var(--brand-50, #eef2ff);
+  color: var(--brand-700, #4338ca);
+}
 .dmenu-plan { margin: 0; display: flex; align-items: center; }
 .dmenu-badge {
   display: inline-flex; align-items: center; padding: 1px 8px; border-radius: 99px;
