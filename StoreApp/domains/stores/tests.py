@@ -3,6 +3,7 @@ Tests de seguridad del dominio stores.
 
 El claim del slug exige correo verificado (anti-abuso del plan de prueba).
 """
+import hashlib
 from datetime import timedelta
 from io import BytesIO
 from unittest.mock import Mock, patch
@@ -2546,6 +2547,18 @@ class PatternDocumentSecurityTests(TestCase):
         #Nonce por respuesta: dos pedidos no comparten autorizador.
         other       =   APIClient().get(f'{STORES_URL}public/mi-tienda/pattern/document/')
         self.assertNotEqual(other['Content-Security-Policy'], csp)
+
+    def test_pattern_meta_exposes_content_revision(self):
+        client      =   APIClient()
+        full        =   client.get(f'{STORES_URL}public/mi-tienda/pattern/').data
+        meta        =   client.get(f'{STORES_URL}public/mi-tienda/pattern/?meta=1').data
+        source      =   '\0'.join(str(full.get(key) or '') for key in ('html', 'css', 'js'))
+        expected    =   hashlib.sha256(source.encode('utf-8')).hexdigest()[:16]
+
+        self.assertEqual(meta['revision'], expected)
+        self.assertNotIn('html', meta)
+        self.assertNotIn('css', meta)
+        self.assertNotIn('js', meta)
 
 
 class StoreDomainTests(TestCase):

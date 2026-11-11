@@ -733,6 +733,8 @@ class StoreViewSet(StoreBaseViewSet):
             keys        =   ('slug', 'nombre', 'style', 'ready', 'surfaces', 'products_total', 'products_shown', 'dark')
             payload     =   {key: data.get(key) for key in keys}
             payload['has_html'] = bool(data.get('html'))
+            revision_source = '\0'.join(str(data.get(key) or '') for key in ('html', 'css', 'js'))
+            payload['revision'] = hashlib.sha256(revision_source.encode('utf-8')).hexdigest()[:16]
             response    =   Response(payload, status = status.HTTP_200_OK)
         else:
             response    =   Response(data, status = status.HTTP_200_OK)

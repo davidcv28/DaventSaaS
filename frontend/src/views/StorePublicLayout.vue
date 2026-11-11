@@ -184,12 +184,13 @@ const custom = computed(() => {
   }
   return merged
 })
-//El documento del diseño se sirve desde la base: logo/portada subidos en
-//el Studio obligan a recargarlo para que la vista previa no mienta.
+//La huella del HTML/CSS/JS fuerza una URL nueva cuando cambia el patrón;
+//en Studio también incluye logo/portada para no reutilizar el iframe viejo.
 const patternRevision = computed(() => (
-  studioMode.value
-    ? JSON.stringify([custom.value.logo?.url || '', custom.value.cover?.url || ''])
-    : ''
+  JSON.stringify([
+    patternDoc.value?.revision || '',
+    ...(studioMode.value ? [custom.value.logo?.url || '', custom.value.cover?.url || ''] : [])
+  ])
 ))
 //Estilo en ensayo distinto al del borrador: viaja como `?style=` del
 //documento (su paleta/fuentes se hornean en el render del lado del

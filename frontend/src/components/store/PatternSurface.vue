@@ -23,8 +23,8 @@ const props = defineProps({
   //no puede recolorear un iframe de origen opaco — la paleta/fuentes del
   //estilo se hornean en el render del documento (theme_css).
   style: { type: String, default: '' },
-  //Huella de lo que el documento pinta desde la base (logo/portada): al
-  //cambiar, el iframe se recarga con los datos nuevos.
+  //Huella del contenido del patrón y recursos de preview: cambia la URL del
+  //iframe para que el navegador no reutilice un documento HTML/CSS obsoleto.
   revision: { type: String, default: '' },
   theme: { type: String, default: 'light' },
   title: { type: String, default: '' },
