@@ -21,6 +21,7 @@ Endpoints (bajo /api/):
 """
 from django.shortcuts import get_object_or_404
 from rest_framework import mixins, status, viewsets
+from rest_framework.exceptions import PermissionDenied
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
@@ -43,17 +44,23 @@ from StoreApp.domains.storeadmin.services.metrics import (
     resolve_date_range,
 )
 from StoreApp.domains.stores.models import Store
+from StoreApp.domains.stores.services.commerce import store_has_ecommerce
 
 
 class _StoreAdminMixin:
     """Tienda del dueño autenticado (404 si no tiene onboarding)."""
     _store  =   None
     def my_store(self):
+        #El panel de ventas exige `has_ecommerce` en el plan vigente —
+        #sin el beneficio las métricas/clientes responden 403.
         if self._store is None:
-            self._store =   get_object_or_404(
+            store   =   get_object_or_404(
                 Store.objects.select_related('user'),
                 user__user = self.request.user,
             )
+            if not store_has_ecommerce(store):
+                raise PermissionDenied('Tu plan no incluye la venta online.')
+            self._store =   store
         return self._store
 
 

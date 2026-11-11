@@ -21,17 +21,44 @@ def cuit_is_valid(cuit):
         return 0 if mod == 11 else 9 if mod == 10 else mod
     return _check(digits[:10]) == int(digits[10])
 #=========================================
+# PLAN GATES (beneficios del plan vigente del dueño)
+#=========================================
+def store_has_ecommerce(store):
+    """
+    True si el plan vigente del dueño incluye `has_ecommerce` — toda la
+    superficie de venta online (panel de pedidos/ventas/cobros, membresías,
+    legal, soporte, checkout y carrito) cuelga de este flag.
+    """
+    from StoreApp.domains.stores.services.services import profile_has_benefit
+    return profile_has_benefit(store.user, 'has_ecommerce')
+
+
+def store_has_customer_auth(store):
+    """True si el plan del dueño habilita cuentas de comprador (has_customer_auth)."""
+    from StoreApp.domains.stores.services.services import profile_has_benefit
+    return profile_has_benefit(store.user, 'has_customer_auth')
+
+
+def store_has_own_storage(store):
+    """True si el plan del dueño habilita el bucket R2 propio (has_own_storage)."""
+    from StoreApp.domains.stores.services.services import profile_has_benefit
+    return profile_has_benefit(store.user, 'has_own_storage')
+#=========================================
 # ORDERS ENABLED (regla efectiva de venta online)
 #=========================================
 def orders_enabled(store):
     """
     True solo si la tienda puede vender online: `ecommerce_enabled` en
     la customización Y perfil fiscal completo (Fase 0 legal — sin datos
-    fiscales del vendedor no se habilita el checkout). Los endpoints de
-    pedido y el payload público la usan como gate único.
+    fiscales del vendedor no se habilita el checkout) Y el plan vigente
+    del dueño con `has_ecommerce` — un plan sin el beneficio deja de
+    vender aunque el toggle y el fiscal sigan OK (downgrade/vencimiento).
+    Los endpoints de pedido y el payload público la usan como gate único.
     """
     customization    =   getattr(store, 'customization', None)
     if customization is None or not customization.ecommerce_enabled:
         return False
     profile          =   getattr(store, 'fiscal_profile', None)
-    return bool(profile and profile.is_complete)
+    if not (profile and profile.is_complete):
+        return False
+    return store_has_ecommerce(store)

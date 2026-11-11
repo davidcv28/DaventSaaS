@@ -39,6 +39,7 @@ from rest_framework.test import APIClient
 from rest_framework_simplejwt.tokens import RefreshToken
 
 from AdminApp.domains.notifications.models import Notification
+from AdminApp.domains.suscriptions.models import Suscription, SuscriptionPlan
 from AdminApp.domains.users.models import UserProfile
 from StoreApp.domains.catalog.models import Product
 from StoreApp.domains.customers.models import Customer, CustomerAddress
@@ -68,19 +69,43 @@ from StoreApp.domains.stores.models import (
     StorePaymentConfig,
     StoreShippingConfig,
 )
+from SuscriptionApp.domains.benefits.models import Benefit, PlanBenefit
 
 CUIT_VALIDO   =   '20123456786'
 ADDRESS       =   {'line1': 'Calle Falsa 123', 'city': 'CABA', 'province': 'CABA', 'postal_code': '1000', 'country': 'AR'}
 
 
-def _make_owner(username):
+def _grant(profile, *codes):
+    """Plan DAVENT + suscripción vigente de 30 días (reusa la suscripción
+    existente si ya tiene una — user es OneToOne)."""
+    suscription =   getattr(profile, 'suscription', None)
+    plan    =   suscription.plan_suscription if suscription is not None else SuscriptionPlan.objects.create(name = f'Plan {profile.pk}')
+    for code in codes:
+        benefit =   Benefit.objects.get_or_create(code = code, defaults = {'label': code, 'kind': Benefit.FLAG})[0]
+        PlanBenefit.objects.get_or_create(plan = plan, benefit = benefit, defaults = {'enabled': True})
+    if suscription is None:
+        Suscription.objects.create(
+            user                =   profile,
+            plan_suscription    =   plan,
+            end_date            =   timezone.now() + timedelta(days = 30),
+            status              =   Suscription.STATUS_ACTIVE,
+        )
+
+
+def _make_owner(username, *, ecommerce = True):
     user    =   User.objects.create_user(username = username, email = f'{username}@example.com', password = 'x')
     profile =   UserProfile.objects.create(user = user)
+    #plan_benefits_of cachea por PK y SQLite las reutiliza entre tests:
+    #sin el delete, un perfil viejo le "hereda" beneficios al nuevo.
+    cache.delete(f'planben:{profile.pk}')
+    if ecommerce:
+        #has_ecommerce: el gate de plan de toda la superficie de venta.
+        _grant(profile, 'has_ecommerce')
     return profile
 
 
-def _make_store(slug, *, sellable = True):
-    profile =   _make_owner(f'owner-{slug}')
+def _make_store(slug, *, sellable = True, ecommerce = True):
+    profile =   _make_owner(f'owner-{slug}', ecommerce = ecommerce)
     store   =   Store.objects.create(user = profile, slug = slug, is_published = True)
     if sellable:
         StoreCustomization.objects.create(store = store, ecommerce_enabled = True)
@@ -704,6 +729,29 @@ class PublicOrderApiTests(TestCase):
                 self._payload(), format = 'json')
         self.assertEqual(response.status_code, 404)
 
+    def test_store_without_ecommerce_benefit_is_404(self):
+        #Toggle + fiscal OK pero plan SIN has_ecommerce (downgrade/
+        #vencimiento): orders_enabled cae — no hay pedidos nuevos.
+        closed  =   _make_store('sinbeneficio', ecommerce = False)
+        from StoreApp.domains.stores.services.commerce import orders_enabled
+        self.assertFalse(orders_enabled(Store.objects.get(pk = closed.pk)))
+        with patch('StoreApp.domains.orders.views.public.verify_captcha', return_value = True):
+            response    =   self.client.post(
+                f'/api/stores/public/{closed.slug}/orders/',
+                self._payload(), format = 'json')
+        self.assertEqual(response.status_code, 404)
+        self.assertFalse(Order.objects.filter(store = closed).exists())
+
+    def test_tracking_survives_plan_loss(self):
+        #Doctrina: un pedido YA emitido sigue rastreable aunque el plan
+        #pierda has_ecommerce (el comprador ya pagó; solo se cortan las
+        #ventas nuevas). El pedido se crea por el service (pre-downgrade).
+        closed  =   _make_store('exvendedora', ecommerce = False)
+        order   =   _pending_order(closed, self.customer, _make_product(closed, name = 'Viejo', price = '10.00'))
+        response    =   self.client.get(f'/api/stores/public/{closed.slug}/orders/{order.tracking_token}/')
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.json()['tracking_token'], order.tracking_token)
+
     #TRACKING (anti-IDOR)
     def _create_via_api(self):
         with patch('StoreApp.domains.orders.views.public.verify_captcha', return_value = True):
@@ -963,6 +1011,19 @@ class OwnerOrderApiTests(TestCase):
         response    =   self.client.get(f'{self.base}?status=DELIVERED')
         results =   response.json().get('results', response.json())
         self.assertEqual(results, [])
+
+    def test_owner_without_ecommerce_benefit_gets_403(self):
+        #Panel de ventas cerrado a un plan sin has_ecommerce (403, no 404:
+        #la tienda ES suya — lo que falta es el beneficio).
+        owner   =   _make_owner('duenio-sin-plan', ecommerce = False)
+        store   =   _make_store('tienda-sin-plan', ecommerce = False)
+        store.user  =   owner
+        store.save()
+        token   =   RefreshToken.for_user(owner.user)
+        client  =   APIClient()
+        client.credentials(HTTP_AUTHORIZATION = f'Bearer {token.access_token}')
+        self.assertEqual(client.get(self.base).status_code, 403)
+        self.assertEqual(client.get(f'{self.base}{self.order_a.pk}/').status_code, 403)
 
     def test_list_no_n_plus_1(self):
         """La bandeja no crece en queries al agregar pedidos (prefetch fijo)."""

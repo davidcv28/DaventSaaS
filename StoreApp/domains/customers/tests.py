@@ -10,6 +10,7 @@ Las tareas de correo corren eager en tests (sin broker); el envío se
 verifica llamando a los Query directo porque `transaction.on_commit` no
 dispara dentro del atomic de TestCase.
 """
+from datetime import timedelta
 from unittest.mock import MagicMock, patch
 
 from django.contrib.auth.models import User
@@ -17,11 +18,13 @@ from rest_framework_simplejwt.tokens import RefreshToken as DaventRefreshToken
 from django.core import mail, signing
 from django.core.cache import cache
 from django.test import TestCase
+from django.utils import timezone
 from django.utils.encoding import force_bytes
 from django.utils.http import urlsafe_base64_encode
 from rest_framework.test import APIClient
 
 from AdminApp.domains.invoices.services.vault import is_encrypted
+from AdminApp.domains.suscriptions.models import Suscription, SuscriptionPlan
 from AdminApp.domains.users.models import UserProfile
 from AdminApp.domains.users.models.fields import digest_for
 from StoreApp.domains.customers.models import (
@@ -36,6 +39,7 @@ from StoreApp.domains.customers.services.customers import (
     make_verify_email_token,
 )
 from StoreApp.domains.stores.models import Store, StoreOAuthConfig
+from SuscriptionApp.domains.benefits.models import Benefit, PlanBenefit
 
 REGISTER_URL     =   '/api/customer-auth/register/'
 LOGIN_URL        =   '/api/customer-auth/login/'
@@ -63,9 +67,32 @@ def _make_customer(email = 'ana@example.com', password = PASSWORD, **kwargs):
     return customer
 
 
-def _make_store(slug = 'mitienda', published = True, blocked = False):
+def _grant(profile, *codes):
+    """Plan DAVENT + suscripción vigente de 30 días (reusa la suscripción
+    existente si ya tiene una — user es OneToOne)."""
+    suscription =   getattr(profile, 'suscription', None)
+    plan        =   suscription.plan_suscription if suscription is not None else SuscriptionPlan.objects.create(name = f'Plan {profile.pk}')
+    for code in codes:
+        benefit =   Benefit.objects.get_or_create(code = code, defaults = {'label': code, 'kind': Benefit.FLAG})[0]
+        PlanBenefit.objects.get_or_create(plan = plan, benefit = benefit, defaults = {'enabled': True})
+    if suscription is None:
+        Suscription.objects.create(
+            user                =   profile,
+            plan_suscription    =   plan,
+            end_date            =   timezone.now() + timedelta(days = 30),
+            status              =   Suscription.STATUS_ACTIVE,
+        )
+
+
+def _make_store(slug = 'mitienda', published = True, blocked = False, customer_auth = True):
     user        =   User.objects.create_user(username = f'owner-{slug}', email = f'{slug}@owner.com', password = 'x')
     profile     =   UserProfile.objects.create(user = user, first_name = 'Due', last_name = 'Nio')
+    #plan_benefits_of cachea por PK y SQLite las reutiliza entre tests.
+    cache.delete(f'planben:{profile.pk}')
+    if customer_auth:
+        #La auth de compradores es superficie del plan: sin
+        #has_customer_auth, resolve_store(slug) devuelve None.
+        _grant(profile, 'has_customer_auth')
     return Store.objects.create(user = profile, slug = slug, is_published = published, is_blocked = blocked)
 
 
@@ -140,6 +167,23 @@ class CustomerAuthFlowTests(TestCase):
         _make_store('bloqueada', blocked = True)
         response    =   self.client.post(REGISTER_URL, {'email': 'x3@example.com', 'password': PASSWORD, 'store_slug': 'bloqueada'}, format = 'json')
         self.assertEqual(response.status_code, 400)
+
+    def test_store_scoped_auth_requires_customer_auth_benefit(self):
+        #Sin has_customer_auth en el plan del dueño, la tienda "no existe"
+        #para TODA la auth de compradores — mismos códigos que una tienda
+        #inexistente (no se filtra que existe pero está fuera de plan).
+        _make_store('sinplan', customer_auth = False)
+        self.assertEqual(
+            self.client.post(REGISTER_URL, {'email': 'r@example.com', 'password': PASSWORD, 'store_slug': 'sinplan'}, format = 'json').status_code, 400)
+        _make_customer('log@example.com')
+        self.assertEqual(
+            _login(APIClient(), email = 'log@example.com', store_slug = 'sinplan').status_code, 400)
+        self.assertEqual(
+            APIClient().get(GOOGLE_CONFIG.format(slug = 'sinplan')).status_code, 404)
+        self.assertEqual(
+            APIClient().post(GOOGLE_URL, {'credential': 'tok', 'store_slug': 'sinplan'}, format = 'json').status_code, 400)
+        self.assertEqual(
+            APIClient().post(RESET_URL, {'email': 'log@example.com', 'store_slug': 'sinplan'}, format = 'json').status_code, 400)
 
     #LOGIN
     def test_login_ok_and_bad_credentials(self):

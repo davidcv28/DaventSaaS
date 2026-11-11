@@ -60,11 +60,20 @@ plan + is_vigente + benefits).
 # HELPERS
 #=========================================
 def _public_store_or_404(slug):
-    """Tienda visible para un comprador: publicada y no bloqueada."""
+    """
+    Tienda visible para un comprador: publicada, no bloqueada y con
+    `has_ecommerce` en el plan del dueño — las membresías del comercio
+    son superficie de venta online. Sin el beneficio es 404 (misma
+    política de ocultamiento: un Customer GLOBAL con sesión válida no
+    desbloquea la tienda de un plan caído).
+    """
     store   =   Store.objects.filter(
         slug = (slug or '').strip().lower(), is_published = True, is_blocked = False,
     ).select_related('user', 'customization').first()
     if store is None:
+        raise Http404
+    from StoreApp.domains.stores.services.commerce import store_has_ecommerce
+    if not store_has_ecommerce(store):
         raise Http404
     return store
 def _payment_config(store):
@@ -312,6 +321,11 @@ class MembershipCardPublicView(APIView):
     vigencia y beneficios — jamás email/teléfono/documento.
     Solo responde con suscripción vigente y plan con has_digital_card;
     cualquier otro caso -> 404 (no se revela estado ni existencia).
+
+    Gate por plan: NINGUNO — es un documento ya emitido por token
+    unguessable (misma doctrina que el tracking de pedidos: una baja de
+    plan no invalida la credencial del miembro). Las membresías NUEVAS
+    sí se gatean en _public_store_or_404 (has_ecommerce).
     """
     permission_classes      =   [AllowAny]
     #Cero autenticadores: un Bearer vencido del dueño no debe romper el

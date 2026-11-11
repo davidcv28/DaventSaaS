@@ -30,10 +30,32 @@ PUBLIC_URL  =   '/api/stores/public/mi-tienda/legal/'
 VALID_CUIT  =   '30712345671'
 
 
-def _make_owner(username = 'duenio', slug = 'mi-tienda', **store_kwargs):
-    """Usuario + perfil + tienda publicada (sin beneficio de plan aún)."""
+def _grant(profile, *codes):
+    """Plan + suscripción vigente con los flags pedidos (reusa la
+    suscripción existente si ya tiene una — user es OneToOne)."""
+    suscription =   getattr(profile, 'suscription', None)
+    plan        =   suscription.plan_suscription if suscription is not None else SuscriptionPlan.objects.create(name = f'Plan {profile.pk}')
+    for code in codes:
+        benefit =   Benefit.objects.get_or_create(code = code, defaults = {'label': code, 'kind': Benefit.FLAG})[0]
+        PlanBenefit.objects.get_or_create(plan = plan, benefit = benefit, defaults = {'enabled': True})
+    if suscription is None:
+        Suscription.objects.create(
+            user                =   profile,
+            plan_suscription    =   plan,
+            end_date            =   timezone.now() + timedelta(days = 30),
+            status              =   Suscription.STATUS_ACTIVE,
+        )
+
+
+def _make_owner(username = 'duenio', slug = 'mi-tienda', ecommerce = True, **store_kwargs):
+    """Usuario + perfil + tienda publicada (con has_ecommerce salvo que se pida lo contrario)."""
     user        =   User.objects.create_user(username = username, email = f'{username}@gmail.com', password = 'Xq7#mP2vL9bT')
     profile     =   UserProfile.objects.create(user = user, email_verified = True)
+    #plan_benefits_of cachea por PK y SQLite las reutiliza entre tests.
+    cache.delete(f'planben:{profile.pk}')
+    if ecommerce:
+        #El panel legal/devoluciones es superficie de venta online.
+        _grant(profile, 'has_ecommerce')
     store       =   Store.objects.create(user = profile, slug = slug, **store_kwargs)
     StoreCustomization.objects.create(store = store)
     return user, profile, store
@@ -41,15 +63,7 @@ def _make_owner(username = 'duenio', slug = 'mi-tienda', **store_kwargs):
 
 def _grant_public_link(profile):
     """Plan + suscripción vigente con has_public_link (gate de lo público)."""
-    plan        =   SuscriptionPlan.objects.create(name = f'Plan {profile.pk}')
-    benefit     =   Benefit.objects.get_or_create(code = 'has_public_link', defaults = {'label': 'Link público', 'kind': Benefit.FLAG})[0]
-    PlanBenefit.objects.create(plan = plan, benefit = benefit, enabled = True)
-    Suscription.objects.create(
-        user                =   profile,
-        plan_suscription    =   plan,
-        end_date            =   timezone.now() + timedelta(days = 30),
-        status              =   Suscription.STATUS_ACTIVE,
-    )
+    _grant(profile, 'has_public_link')
 
 
 def _authed(user):
@@ -94,6 +108,16 @@ class LegalPagesOwnerTests(TestCase):
         #El perfil existe pero el usuario nunca reclamó su web.
         response    =   _authed(user).get(BASE_URL)
         self.assertEqual(response.status_code, 404)
+
+    def test_owner_without_ecommerce_benefit_403(self):
+        #Páginas legales + bandeja de devoluciones: superficie de venta
+        #online — un plan sin has_ecommerce responde 403 (la tienda ES
+        #suya, lo que falta es el beneficio).
+        user, _, _    =   _make_owner('duenio-sin-plan', ecommerce = False)
+        client        =   _authed(user)
+        self.assertEqual(client.get(BASE_URL).status_code, 403)
+        self.assertEqual(client.put(f'{BASE_URL}terms/', {'body': 'x'}, format = 'json').status_code, 403)
+        self.assertEqual(client.get(f'{BASE_URL}returns/').status_code, 403)
 
     def test_list_returns_three_pages_with_defaults(self):
         user, _, store    =   _make_owner()
@@ -355,8 +379,8 @@ class ReturnRequestTests(TestCase):
         cache.clear()
         mail.outbox =   []
 
-    def _setup(self, *, benefit = True, fiscal = True):
-        user, profile, store =   _make_owner()
+    def _setup(self, *, benefit = True, fiscal = True, ecommerce = True):
+        user, profile, store =   _make_owner(ecommerce = ecommerce)
         if benefit:
             _grant_public_link(profile)
         if fiscal:
@@ -425,6 +449,15 @@ class ReturnRequestTests(TestCase):
     def test_store_without_public_link_returns_404(self):
         self._setup(benefit = False)
         self.assertEqual(APIClient().post(self.URL, _captcha_payload(), format = 'json').status_code, 404)
+
+    def test_store_without_ecommerce_benefit_404(self):
+        #La tienda tiene web pública (has_public_link) pero el plan perdió
+        #has_ecommerce: una solicitud NUEVA es superficie de venta online
+        #→ 404 (el dueño tampoco podría abrir la bandeja).
+        self._setup(ecommerce = False)
+        response    =   APIClient().post(self.URL, _captcha_payload(), format = 'json')
+        self.assertEqual(response.status_code, 404)
+        self.assertEqual(ReturnRequest.objects.count(), 0)
 
     def test_honeypot_fake_success_without_persisting(self):
         self._setup()

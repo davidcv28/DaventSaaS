@@ -17,6 +17,12 @@ detalle filtran `customer=request.customer` — el token de otro
 comprador es 404, igual que un token inexistente (no se revela que
 existe). El tracking_token viaja en la lista porque ES la credencial
 que el front usa para linkear /seguimiento; el id numérico no sale.
+
+Gate por plan: NINGUNO a propósito — son lecturas de pedidos YA
+emitidos del propio comprador (misma doctrina que el tracking público
+por token: el cliente ya pagó, su historial no desaparece si el dueño
+pierde `has_ecommerce`). Lo que el plan apaga son las ventas NUEVAS
+(orders/cart/checkout vía orders_enabled), no los datos existentes.
 """
 from django.http import Http404
 from rest_framework import generics, status

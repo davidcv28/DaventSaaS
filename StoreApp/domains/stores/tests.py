@@ -23,6 +23,7 @@ from StoreApp.domains.stores.models import (
     StoreCarouselImage,
     StoreCustomization,
     StoreDailyVisit,
+    StoreFiscalProfile,
     StoreGalleryImage,
     StudioVersion,
 )
@@ -2638,3 +2639,72 @@ class StoreDomainTests(TestCase):
         response        =   client.delete(f'{STORES_URL}domain/')
         self.assertEqual(response.status_code, 200)
         self.assertIsNone(client.get(f'{STORES_URL}domain/').json()['domain'])
+
+
+class StoreEcommerceToggleTests(TestCase):
+    """
+    ecommerce_enabled: prender la venta online exige `has_ecommerce` en
+    el plan vigente — el PATCH la descarta como a los campos premium
+    (respuesta 200 con el campo ignorado, nunca un True persistido).
+    Apagar SIEMPRE se permite: un downgrade o vencimiento no puede dejar
+    la tienda vendiendo.
+    """
+
+    def setUp(self):
+        #plan_benefits_of keyea por PK y SQLite las reutiliza — sin
+        #limpiar, el plan de un test se filtra al siguiente.
+        cache.clear()
+
+    def _client(self, ecommerce = False):
+        _, profile  =   _make_user(verified = True)
+        benefits    =   {'has_public_link': True, 'has_customization': True}
+        if ecommerce:
+            benefits['has_ecommerce']   =   True
+        _grant(profile, **benefits)
+        store       =   Store.objects.create(user = profile, slug = 'mi-tienda')
+        client      =   APIClient()
+        client.force_authenticate(user = profile.user)
+        return client, store
+
+    def test_enable_without_benefit_is_discarded(self):
+        client, store   =   self._client(ecommerce = False)
+        response        =   client.patch(f'{STORES_URL}customization/', {'ecommerce_enabled': True}, format = 'json')
+        self.assertEqual(response.status_code, 200)
+        self.assertFalse(response.data['customization']['ecommerce_enabled'])
+        self.assertFalse(StoreCustomization.objects.get(store = store).ecommerce_enabled)
+
+    def test_enable_with_benefit_persists(self):
+        client, store   =   self._client(ecommerce = True)
+        response        =   client.patch(f'{STORES_URL}customization/', {'ecommerce_enabled': True}, format = 'json')
+        self.assertEqual(response.status_code, 200)
+        self.assertTrue(response.data['customization']['ecommerce_enabled'])
+        self.assertTrue(StoreCustomization.objects.get(store = store).ecommerce_enabled)
+
+    def test_disable_always_allowed(self):
+        #La tienda quedó vendiendo y el plan bajó: el apagado no puede
+        #quedar bloqueado por el mismo gate.
+        client, store   =   self._client(ecommerce = False)
+        StoreCustomization.objects.create(store = store, ecommerce_enabled = True)
+        response        =   client.patch(f'{STORES_URL}customization/', {'ecommerce_enabled': False}, format = 'json')
+        self.assertEqual(response.status_code, 200)
+        self.assertFalse(response.data['customization']['ecommerce_enabled'])
+        self.assertFalse(StoreCustomization.objects.get(store = store).ecommerce_enabled)
+
+    def test_public_payload_orders_enabled_follows_benefit(self):
+        #orders_enabled = toggle + fiscal + has_ecommerce: una tienda que
+        #era vendible deja de anunciarlo cuando el plan pierde el flag.
+        client, store   =   self._client(ecommerce = True)
+        StoreCustomization.objects.create(store = store, ecommerce_enabled = True)
+        StoreFiscalProfile.objects.create(
+            store           =   store,
+            legal_name      =   'Prueba SA',
+            tax_condition   =   'RI',
+            cuit            =   '20123456786',
+            fiscal_address  =   'Av. Siempre Viva 1',
+        )
+        public          =   APIClient().get(f'{STORES_URL}public/mi-tienda/')
+        self.assertTrue(public.data['orders_enabled'])
+        PlanBenefit.objects.filter(plan = store.user.suscription.plan_suscription, benefit__code = 'has_ecommerce').delete()
+        cache.clear()
+        public          =   APIClient().get(f'{STORES_URL}public/mi-tienda/')
+        self.assertFalse(public.data['orders_enabled'])

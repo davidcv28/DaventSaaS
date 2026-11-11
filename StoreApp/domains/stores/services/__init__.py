@@ -18,6 +18,12 @@ from .domains import (
     serialize_domain,
     verify_txt_name,
 )
+from .commerce import (
+    orders_enabled,
+    store_has_customer_auth,
+    store_has_ecommerce,
+    store_has_own_storage,
+)
 from .imaging import remove_background
 from .services import (
     allowed_templates_of,

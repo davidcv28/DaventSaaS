@@ -24,6 +24,7 @@ from rest_framework.test import APIClient
 from rest_framework_simplejwt.tokens import RefreshToken
 
 from AdminApp.domains.notifications.models import Notification
+from AdminApp.domains.suscriptions.models import Suscription, SuscriptionPlan
 from AdminApp.domains.users.models import UserProfile
 from StoreApp.domains.customers.models import Customer
 from StoreApp.domains.orders.models import Order
@@ -35,19 +36,41 @@ from StoreApp.domains.support.views.customer import (
     SupportThreadCreateThrottle,
 )
 from StoreApp.domains.support.views.owner import SupportOwnerWriteThrottle
+from SuscriptionApp.domains.benefits.models import Benefit, PlanBenefit
 
 THREADS_URL       =   '/api/support/threads/'
 OWNER_THREADS_URL =   '/api/store-support/threads/'
 
 
-def _make_owner(username):
+def _grant(profile, *codes):
+    """Plan DAVENT + suscripción vigente de 30 días (reusa la suscripción
+    existente si ya tiene una — user es OneToOne)."""
+    suscription =   getattr(profile, 'suscription', None)
+    plan    =   suscription.plan_suscription if suscription is not None else SuscriptionPlan.objects.create(name = f'Plan {profile.pk}')
+    for code in codes:
+        benefit =   Benefit.objects.get_or_create(code = code, defaults = {'label': code, 'kind': Benefit.FLAG})[0]
+        PlanBenefit.objects.get_or_create(plan = plan, benefit = benefit, defaults = {'enabled': True})
+    if suscription is None:
+        Suscription.objects.create(
+            user                =   profile,
+            plan_suscription    =   plan,
+            end_date            =   timezone.now() + timedelta(days = 30),
+            status              =   Suscription.STATUS_ACTIVE,
+        )
+
+
+def _make_owner(username, *, ecommerce = True):
     user    =   User.objects.create_user(username = username, email = f'{username}@example.com', password = 'x')
     profile =   UserProfile.objects.create(user = user)
+    #plan_benefits_of cachea por PK y SQLite las reutiliza entre tests.
+    cache.delete(f'planben:{profile.pk}')
+    if ecommerce:
+        _grant(profile, 'has_ecommerce')
     return profile
 
 
-def _make_store(slug, *, published = True, blocked = False):
-    profile =   _make_owner(f'owner-{slug}')
+def _make_store(slug, *, published = True, blocked = False, ecommerce = True):
+    profile =   _make_owner(f'owner-{slug}', ecommerce = ecommerce)
     return Store.objects.create(user = profile, slug = slug, is_published = published, is_blocked = blocked)
 
 
@@ -155,6 +178,18 @@ class CustomerSupportApiTests(TestCase):
         response    =   _create_thread_via_api(self.client, self.store, order_token = 'no-existe')
         self.assertEqual(response.status_code, 400)
         self.assertFalse(SupportThread.objects.exists())
+
+    def test_create_thread_store_without_ecommerce_404(self):
+        #Sesión de comprador válida pero el plan del dueño perdió
+        #has_ecommerce → abrir hilos nuevos es superficie del e-commerce:
+        #404 igual que una tienda inexistente (los hilos ya creados sí
+        #siguen legibles para el comprador).
+        sinplan =   _make_store('sinplan', ecommerce = False)
+        response    =   self.client.post(THREADS_URL, {
+            'store': sinplan.slug, 'subject': 'Consulta', 'body': 'Hola',
+        }, format = 'json')
+        self.assertEqual(response.status_code, 404)
+        self.assertFalse(SupportThread.objects.filter(store = sinplan).exists())
 
     def test_create_thread_store_gates(self):
         draft   =   _make_store('borrador', published = False)
@@ -339,6 +374,17 @@ class OwnerSupportApiTests(TestCase):
         self.assertEqual(self.thread_a.status, 'open')
         response    =   self.client.post(f'{OWNER_THREADS_URL}{self.thread_a.pk}/messages/', {'body': 'ahora sí'}, format = 'json')
         self.assertEqual(response.status_code, 201)
+
+    def test_owner_without_ecommerce_benefit_403(self):
+        #El panel de soporte es superficie de venta online: un plan sin
+        #has_ecommerce no abre la bandeja (403 — la tienda ES suya).
+        owner   =   _make_owner('duenio-sin-plan', ecommerce = False)
+        store   =   _make_store('tienda-sin-plan', ecommerce = False)
+        store.user  =   owner
+        store.save()
+        client  =   APIClient()
+        _owner_bearer(client, owner)
+        self.assertEqual(client.get(OWNER_THREADS_URL).status_code, 403)
 
     def test_owner_without_store_gets_404(self):
         lonely  =   _make_owner('sin-tienda')

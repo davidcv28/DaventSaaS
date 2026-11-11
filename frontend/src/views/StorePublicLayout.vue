@@ -74,6 +74,16 @@ const customerStore = useCustomerStore()
 // público (ecommerce_enabled + perfil fiscal completo) — el front solo
 // lo expone, nunca lo recalcula.
 const ordersEnabled = computed(() => Boolean(store.value?.orders_enabled))
+// Cuentas de compradores (beneficio has_customer_auth del plan del dueño):
+// el backend expone customer_auth_enabled en el mismo payload público que
+// orders_enabled. REGLA: solo se oculta cuando el campo existe y viene en
+// false — si el backend aún no lo manda, la entrada de cuenta sigue como
+// antes (comportamiento vigente).
+const customerAuthEnabled = computed(() => store.value?.customer_auth_enabled !== false)
+// Rutas de autenticación/cuenta del comprador: con el beneficio apagado no
+// se sirven — un deep link a /ingresar o /cuenta vuelve a la home (el
+// watch de más abajo hace el replace).
+const CUSTOMER_AUTH_ROUTES = new Set(['store-auth', 'store-account', 'store-account-verify', 'store-account-reset'])
 // Las rutas de comercio NUNCA se sirven como documento de diseño: si el
 // patternSurface las mandara al 'landing' del patrón, el checkout y la
 // cuenta quedarían tapados por el iframe del diseño.
@@ -219,6 +229,7 @@ function onPatternBuyNow({ id } = {}) {
 // página de auth /ingresar con la cuenta como ?next= (un {route} sí puede
 // cruzar la navegación — a diferencia de un {action} pendiente).
 function onPatternAccount() {
+  if (!customerAuthEnabled.value) return
   if (customerStore.isAuthenticated) {
     router.push(accountTo.value)
     return
@@ -792,6 +803,11 @@ const catalogTo = computed(() => ({ path: storeHostSlug ? '/catalogo' : `/${slug
 const servicesTo = computed(() => ({ path: storeHostSlug ? '/servicios' : `/${slug.value}/servicios` }))
 const plansTo = computed(() => ({ path: storeHostSlug ? '/suscripciones' : `/${slug.value}/suscripciones` }))
 const accountTo = computed(() => ({ path: storeHostSlug ? '/cuenta' : `/${slug.value}/cuenta` }))
+// Deep link a /ingresar o /cuenta con el acceso de clientes apagado
+// (customer_auth_enabled === false): vuelve a la home de la tienda.
+watch([customerAuthEnabled, () => route.name], ([on, name]) => {
+  if (!on && CUSTOMER_AUTH_ROUTES.has(name)) router.replace(homeTo.value)
+}, { immediate: true })
 const legalTo = (kind) => ({ path: storeHostSlug ? `/legal/${kind}` : `/${slug.value}/legal/${kind}` })
 // Página de reemplazo cuando no hay portada: Servicios si está, si no el
 // catálogo, si no Suscripciones (la web nunca queda sin destino — el
@@ -1355,10 +1371,11 @@ onBeforeUnmount(() => {
           <button v-if="isShop && !isCatalog" type="button" class="sp-search-go" aria-label="Buscar en el catálogo" @click="submitTopSearch"><AppIcon name="arrow-right" :size="15" /></button>
         </label>
         <div class="sp-top-end">
-          <!-- E-commerce: cuenta del comprador siempre; carrito solo con
-               orders_enabled efectivo (ecommerce + fiscal del backend). -->
+          <!-- E-commerce: cuenta del comprador con customer_auth_enabled;
+               carrito solo con orders_enabled efectivo (ecommerce +
+               fiscal del backend). -->
           <RouterLink
-            v-if="status === 'success'"
+            v-if="status === 'success' && customerAuthEnabled"
             :to="accountTo" class="sp-icon-btn" style="position: relative"
             :aria-label="customerStore.isAuthenticated ? `Mi cuenta — ${customerStore.displayName}` : 'Ingresar a mi cuenta'"
             title="Mi cuenta"
@@ -1615,7 +1632,7 @@ onBeforeUnmount(() => {
          toast de avisos. Van fuera del .sp-vue-page: también aplican en
          las rutas de comercio (checkout/cuenta/seguimiento/legal). -->
     <StoreCartDrawer v-if="status === 'success'" :slug="slug" />
-    <StoreAuthModal v-if="status === 'success'" :slug="slug" @done="onCustomerAuthed" />
+    <StoreAuthModal v-if="status === 'success' && customerAuthEnabled" :slug="slug" @done="onCustomerAuthed" />
     <Transition name="ec-toast">
       <div v-if="cartStore.notice" class="ec-toast" :class="cartStore.notice.kind" role="status">
         {{ cartStore.notice.text }}

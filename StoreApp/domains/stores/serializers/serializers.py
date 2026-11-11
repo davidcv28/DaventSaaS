@@ -778,11 +778,12 @@ class StorePublicSerializer(serializers.ModelSerializer):
     chatbot                     =   serializers.SerializerMethodField()
     service_items               =   serializers.SerializerMethodField()
     orders_enabled              =   serializers.SerializerMethodField()
+    customer_auth_enabled       =   serializers.SerializerMethodField()
     shipping                    =   serializers.SerializerMethodField()
     payments                    =   serializers.SerializerMethodField()
     class Meta:
         model                   =   Store
-        fields                  =   ['slug', 'business_name', 'city_name', 'province_name', 'customization', 'has_design_advanced', 'allowed_templates', 'location_address', 'chatbot', 'service_items', 'orders_enabled', 'shipping', 'payments']
+        fields                  =   ['slug', 'business_name', 'city_name', 'province_name', 'customization', 'has_design_advanced', 'allowed_templates', 'location_address', 'chatbot', 'service_items', 'orders_enabled', 'customer_auth_enabled', 'shipping', 'payments']
     def get_has_design_advanced(self, store):
         #Solo premium: define si la web muestra portada (carrusel) o el
         #botón de modo claro/oscuro para el visitante en el nav.
@@ -812,10 +813,17 @@ class StorePublicSerializer(serializers.ModelSerializer):
         return ', '.join(parts)
     def get_orders_enabled(self, store):
         #Gate efectivo de venta online (ecommerce_enabled + perfil fiscal
-        #completo) — la web pública lo usa para mostrar/ocultar el CTA de
-        #compra. Mismo predicado que los endpoints de pedido (gate único).
+        #completo + beneficio has_ecommerce del plan) — la web pública lo
+        #usa para mostrar/ocultar el CTA de compra. Mismo predicado que
+        #los endpoints de pedido (gate único).
         from StoreApp.domains.stores.services.commerce import orders_enabled
         return orders_enabled(store)
+    def get_customer_auth_enabled(self, store):
+        #Beneficio has_customer_auth del plan del dueño: el front oculta
+        #la entrada "Mi cuenta" (register/login/Google) cuando el plan
+        #no incluye autenticación de compradores.
+        from StoreApp.domains.stores.services.commerce import store_has_customer_auth
+        return store_has_customer_auth(store)
     def get_shipping(self, store):
         #Tarifa de envío a domicilio para el checkout: home_price NULL =
         #"a coordinar" (sin precio online — el pedido lo pacta por

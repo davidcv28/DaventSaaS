@@ -12,7 +12,7 @@ la cuenta MP de otro vendedor.
 import logging
 
 from rest_framework import status
-from rest_framework.exceptions import NotFound
+from rest_framework.exceptions import NotFound, PermissionDenied
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
@@ -27,6 +27,7 @@ from StoreApp.domains.storepayments.services import (
 )
 from StoreApp.domains.storepayments.services.refunds import RefundError, refund_payment
 from StoreApp.domains.stores.models import StoreMpAccount, StorePaymentConfig
+from StoreApp.domains.stores.services.services import profile_has_benefit
 
 logger  =   logging.getLogger(__name__)
 
@@ -44,6 +45,24 @@ def owner_store(request):
     if store is None:
         raise NotFound('No tenés una tienda asociada')
     return store
+
+
+_BENEFIT_DETAILS   =   {
+    'has_ecommerce'     :   'Tu plan no incluye la venta online.',
+    'has_customer_auth' :   'Tu plan no incluye cuentas de comprador.',
+    'has_own_storage'   :   'Tu plan no incluye storage propio.',
+}
+
+
+def require_benefit(store, code):
+    """
+    Gate por plan del dueño: el endpoint responde 403 si el plan vigente
+    no incluye `code`. Cada config del panel "Cobros" cuelga de un
+    beneficio distinto (venta online / auth de compradores / R2 propio),
+    así que el check va por vista y no dentro de `owner_store`.
+    """
+    if not profile_has_benefit(store.user, code):
+        raise PermissionDenied(_BENEFIT_DETAILS.get(code, 'Tu plan no incluye esta función.'))
 
 
 def mp_status_payload(store):
@@ -70,6 +89,7 @@ class MpStatusView(APIView):
     permission_classes    =   [IsAuthenticated]
     def get(self, request):
         store   =   owner_store(request)
+        require_benefit(store, 'has_ecommerce')
         return Response(mp_status_payload(store), status = status.HTTP_200_OK)
 
 
@@ -93,6 +113,7 @@ class MpConnectView(APIView):
         serializer.is_valid(raise_exception = True)
         data        =   serializer.validated_data
         store       =   owner_store(request)
+        require_benefit(store, 'has_ecommerce')
         access_token    =   data['access_token']
         #VALIDACIÓN PREVIA: el token tiene que funcionar contra MP antes
         #de cifrarlo y guardarlo — un typo no deja la cuenta "conectada"
@@ -140,6 +161,7 @@ class MpDisconnectView(APIView):
     permission_classes    =   [IsAuthenticated]
     def post(self, request):
         store   =   owner_store(request)
+        require_benefit(store, 'has_ecommerce')
         account =   getattr(store, 'mp_account', None)
         if account is not None:
             account.clear_tokens()
@@ -161,6 +183,7 @@ class MpRefundView(APIView):
     permission_classes    =   [IsAuthenticated]
     def post(self, request, order_id):
         store   =   owner_store(request)
+        require_benefit(store, 'has_ecommerce')
         try:
             order   =   orders_bridge.get_order_for_store(store, order_id)
         except OrdersUnavailableError:

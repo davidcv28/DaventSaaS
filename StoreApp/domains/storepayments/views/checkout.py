@@ -50,7 +50,7 @@ class PublicOrderPayView(APIView):
         store   =   (
             Store.objects
             .filter(slug = slug, is_published = True, is_blocked = False)
-            .select_related('customization', 'fiscal_profile', 'mp_account', 'payment_config', 'domain')
+            .select_related('customization', 'fiscal_profile', 'mp_account', 'payment_config', 'domain', 'user')
             .first()
         )
         if store is None or not orders_enabled(store):

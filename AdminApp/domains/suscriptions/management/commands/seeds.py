@@ -22,5 +22,9 @@ dict_suscriptions = {
     'Premium'   :   {
         'name'  :   'Plan premium',
         'price' :   40000.00
-    } 
+    },
+    'Ecommerce'   :   {
+        'name'  :   'Plan ecommerce',
+        'price' :   60000.00
+    }
 }

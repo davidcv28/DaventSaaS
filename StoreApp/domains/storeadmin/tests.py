@@ -22,6 +22,7 @@ from decimal import Decimal
 from unittest.mock import patch
 
 from django.contrib.auth.models import User
+from django.core.cache import cache
 from django.db import connection
 from django.test import TestCase
 from django.test.utils import CaptureQueriesContext
@@ -29,6 +30,7 @@ from django.utils import timezone
 from rest_framework.test import APIClient
 from rest_framework_simplejwt.tokens import RefreshToken
 
+from AdminApp.domains.suscriptions.models import Suscription, SuscriptionPlan
 from AdminApp.domains.users.models import UserProfile
 from StoreApp.domains.customers.models import (
     Customer,
@@ -38,11 +40,34 @@ from StoreApp.domains.customers.models import (
 from StoreApp.domains.memberships.models import StorePlan, StoreSubscription
 from StoreApp.domains.orders.models import Order
 from StoreApp.domains.stores.models import Store
+from SuscriptionApp.domains.benefits.models import Benefit, PlanBenefit
 
 
-def _make_owner(username):
+def _grant(profile, *codes):
+    """Plan DAVENT + suscripción vigente de 30 días (reusa la suscripción
+    existente si ya tiene una — user es OneToOne)."""
+    suscription =   getattr(profile, 'suscription', None)
+    plan    =   suscription.plan_suscription if suscription is not None else SuscriptionPlan.objects.create(name = f'Plan {profile.pk}')
+    for code in codes:
+        benefit =   Benefit.objects.get_or_create(code = code, defaults = {'label': code, 'kind': Benefit.FLAG})[0]
+        PlanBenefit.objects.get_or_create(plan = plan, benefit = benefit, defaults = {'enabled': True})
+    if suscription is None:
+        Suscription.objects.create(
+            user                =   profile,
+            plan_suscription    =   plan,
+            end_date            =   timezone.now() + timedelta(days = 30),
+            status              =   Suscription.STATUS_ACTIVE,
+        )
+
+
+def _make_owner(username, *, ecommerce = True):
     user    =   User.objects.create_user(username = username, email = f'{username}@example.com', password = 'x')
-    return UserProfile.objects.create(user = user)
+    profile =   UserProfile.objects.create(user = user)
+    #plan_benefits_of cachea por PK y SQLite las reutiliza entre tests.
+    cache.delete(f'planben:{profile.pk}')
+    if ecommerce:
+        _grant(profile, 'has_ecommerce')
+    return profile
 
 
 def _make_store(slug, owner):
@@ -204,6 +229,17 @@ class SalesSummaryTests(_StoreAdminBase):
         self.assertEqual(self.client.get(f'{self.url}?from=2025-02-01&to=2025-01-01').status_code, 400)
         #Rango > 366 días → 400.
         self.assertEqual(self.client.get(f'{self.url}?from=2020-01-01&to=2025-01-01').status_code, 400)
+
+    def test_owner_without_ecommerce_benefit_403(self):
+        #Métricas/clientes/CSV: superficie de venta online — un plan sin
+        #has_ecommerce responde 403 en los tres endpoints del panel.
+        owner   =   _make_owner('duenio-sin-plan', ecommerce = False)
+        _make_store('tienda-sin-plan', owner)
+        client  =   _jwt(APIClient(), owner)
+        self.assertEqual(client.get(self.url).status_code, 403)
+        self.assertEqual(client.get('/api/store-admin/sales/daily/').status_code, 403)
+        self.assertEqual(client.get('/api/store-admin/sales/export.csv').status_code, 403)
+        self.assertEqual(client.get('/api/store-admin/customers/').status_code, 403)
 
     def test_summary_filters(self):
         #Solo pendientes.

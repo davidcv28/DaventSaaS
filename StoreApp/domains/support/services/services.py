@@ -61,10 +61,13 @@ def resolve_order_link(store, customer, order_token):
 
 def customer_visible_store(slug):
     """
-    Tienda visible para un comprador: publicada y no bloqueada (misma
-    regla que memberships._public_store_or_404). NO exige
-    orders_enabled: el soporte no es una venta — una tienda sin checkout
-    online igual puede recibir mensajes de sus clientes.
+    Tienda visible para un comprador: publicada, no bloqueada y con
+    `has_ecommerce` en el plan del dueño (misma regla que
+    memberships._public_store_or_404). NO exige orders_enabled: el
+    soporte no es una venta — una tienda con el checkout apagado igual
+    puede recibir mensajes — pero SÍ exige el beneficio de plan: abrir
+    hilos nuevos es superficie del e-commerce (los hilos ya existentes
+    siguen legibles, igual que el tracking de pedidos emitidos).
     """
     store   =   (
         Store.objects
@@ -73,6 +76,9 @@ def customer_visible_store(slug):
         .first()
     )
     if store is None:
+        return None
+    from StoreApp.domains.stores.services.commerce import store_has_ecommerce
+    if not store_has_ecommerce(store):
         return None
     return store
 

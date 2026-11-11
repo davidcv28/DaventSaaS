@@ -4,14 +4,18 @@ import { storePaymentsApi } from '../../../api/storePayments.api.js'
 import { storesApi } from '../../../api/stores.api.js'
 import { apiErr, isNotFound } from './shared.js'
 import { useStoreStore } from '../../../stores/store.store.js'
+import { useBillingStore } from '../../../stores/billing.store.js'
 import AppIcon from '../../AppIcon.vue'
 import AlertMessage from '../../AlertMessage.vue'
 
 // Cobros del dueño — /api/store-payments/* (métodos manuales, datos
-// fiscales, login Google, storage R2 propio y cuenta MP del vendedor).
-// REGLA: los secretos (client_secret Google, llaves R2, tokens MP) son
-// write-only — el backend jamás los devuelve; acá solo se muestran flags.
+// fiscales, storage R2 propio y cuenta MP del vendedor). El login con
+// Google del comprador vive en «Acceso de clientes» (CustomerAuthPanel).
+// REGLA: los secretos (llaves R2, tokens MP) son write-only — el backend
+// jamás los devuelve; acá solo se muestran flags.
+const emit = defineEmits(['locked']) // 'locked' → el padre abre el candado 'selling'
 const store = useStoreStore()
+const billing = useBillingStore()
 const loading = ref(true)
 const errMsg = ref('')
 
@@ -56,13 +60,6 @@ const mpErr = ref('')
 const mpForm = ref({ access_token: '', refresh_token: '', live_mode: true, webhook_secret: '' })
 const mpShowToken = ref(false)
 
-// ----- Login con Google (BYO) -----
-const oauthForm = ref({ enabled: false, google_client_id: '', google_client_secret: '' })
-const oauthMeta = ref({ has_client_secret: false, has_own_client: false, updated_at: null })
-const oauthBusy = ref(false)
-const oauthMsg = ref('')
-const oauthErr = ref('')
-
 // ----- Storage R2 propio (BYO) -----
 const storageForm = ref({
   endpoint: '', bucket: '', region: 'auto', public_base_url: '',
@@ -88,11 +85,10 @@ async function loadAll() {
   errMsg.value = ''
   const safe = (p) => p.catch(() => null)
   try {
-    const [cfg, shipCfg, fiscal, oauth, storage, mp] = await Promise.all([
+    const [cfg, shipCfg, fiscal, storage, mp] = await Promise.all([
       safe(storePaymentsApi.getConfig()),
       safe(storePaymentsApi.getShippingConfig()),
       safe(storePaymentsApi.getFiscalProfile()),
-      safe(storePaymentsApi.getOAuthConfig()),
       safe(storePaymentsApi.getStorageConfig()),
       safe(storePaymentsApi.mpStatus()),
     ])
@@ -105,11 +101,6 @@ async function loadAll() {
     if (fiscal) {
       Object.assign(fiscalForm.value, fiscal)
       fiscalMeta.value = { is_complete: Boolean(fiscal.is_complete), updated_at: fiscal.updated_at }
-    }
-    if (oauth) {
-      oauthForm.value.enabled = Boolean(oauth.enabled)
-      oauthForm.value.google_client_id = oauth.google_client_id || ''
-      oauthMeta.value = { has_client_secret: Boolean(oauth.has_client_secret), has_own_client: Boolean(oauth.has_own_client), updated_at: oauth.updated_at }
     }
     if (storage) {
       storageForm.value.endpoint = storage.endpoint || ''
@@ -144,7 +135,13 @@ watch(() => store.customization.ecommerce_enabled, (v) => {
   ecomEnabled.value = Boolean(v)
 })
 
+// Venta online es beneficio del plan Ecommerce (has_ecommerce): sin él el
+// switch queda apagado y el cartel abre el candado 'selling' del panel.
+const ecomAllowed = computed(() => Boolean(billing.currentPlan?.benefits?.has_ecommerce))
+function onEcomLocked() { emit('locked') }
+
 const ecomHint = computed(() => {
+  if (!ecomAllowed.value) return 'Disponible en el plan Ecommerce: carrito, checkout y seguimiento de pedidos en tu web.'
   if (!ecomEnabled.value) return 'Tu web muestra el catálogo, pero el carrito y el checkout están apagados.'
   if (ordersEnabled.value === true) return 'Tu web vende online: carrito, checkout y seguimiento de pedidos activos.'
   if (ordersEnabled.value === false) return 'Venta online activada, pero falta completar los datos fiscales para habilitar el checkout.'
@@ -152,6 +149,7 @@ const ecomHint = computed(() => {
 })
 
 async function toggleEcommerce(v) {
+  if (!ecomAllowed.value) { onEcomLocked(); return }
   ecomBusy.value = true
   ecomErr.value = ''
   ecomMsg.value = ''
@@ -256,22 +254,6 @@ async function disconnectMp() {
   } finally { mpBusy.value = false }
 }
 
-async function saveOAuth(clearSecret = false) {
-  oauthBusy.value = true; oauthMsg.value = ''; oauthErr.value = ''
-  try {
-    const payload = { enabled: oauthForm.value.enabled, google_client_id: oauthForm.value.google_client_id.trim() }
-    if (clearSecret || oauthForm.value.google_client_secret) {
-      payload.google_client_secret = oauthForm.value.google_client_secret
-    }
-    const data = await storePaymentsApi.updateOAuthConfig(payload)
-    oauthMeta.value = { has_client_secret: Boolean(data.has_client_secret), has_own_client: Boolean(data.has_own_client), updated_at: data.updated_at }
-    oauthForm.value.google_client_secret = ''
-    oauthMsg.value = 'Login con Google guardado.'
-  } catch (e) {
-    oauthErr.value = apiErr(e)
-  } finally { oauthBusy.value = false }
-}
-
 async function saveStorage() {
   storageBusy.value = true; storageMsg.value = ''; storageErr.value = ''
   try {
@@ -346,13 +328,16 @@ const mpWebhooksOk = computed(() => Boolean(mpStatus.value?.webhook_configured))
       <section class="card">
         <h3><AppIcon name="package" :size="18" /> Venta online</h3>
         <label class="svc-switch">
-          <input type="checkbox" role="switch" :checked="ecomEnabled" :disabled="ecomBusy" @change="toggleEcommerce($event.target.checked)" />
+          <input type="checkbox" role="switch" :checked="ecomEnabled" :disabled="ecomBusy || !ecomAllowed" @change="toggleEcommerce($event.target.checked)" />
           <span class="svc-switch-track" aria-hidden="true"><i></i></span>
           <span class="check-text">
             <strong>Venta online</strong>
             <small>{{ ecomHint }}</small>
           </span>
         </label>
+        <div v-if="!ecomAllowed" class="btn-row" style="margin-top:10px">
+          <button type="button" class="btn ghost btn-auto" @click="onEcomLocked"><AppIcon name="lock" :size="14" /> Ver el plan Ecommerce</button>
+        </div>
         <AlertMessage v-if="ecomErr" kind="error" :message="ecomErr" />
         <AlertMessage v-else-if="ecomMsg" kind="success" :message="ecomMsg" />
       </section>
@@ -525,35 +510,6 @@ const mpWebhooksOk = computed(() => Boolean(mpStatus.value?.webhook_configured))
         <div class="btn-row">
           <button v-if="!mpConnected" type="button" class="btn btn-auto" :disabled="mpBusy || !mpForm.access_token.trim()" @click="connectMp">{{ mpBusy ? 'Conectando…' : 'Conectar Mercado Pago' }}</button>
           <button v-else type="button" class="btn danger btn-auto" :disabled="mpBusy" @click="disconnectMp">Desconectar</button>
-        </div>
-      </section>
-
-      <!-- ===== Login con Google ===== -->
-      <section class="card" style="margin-top:14px">
-        <h3><AppIcon name="shield-check" :size="18" /> Login con Google</h3>
-        <p class="hint" style="margin:-6px 0 12px">Botón «Ingresar con Google» en tu checkout. Usá tus propias credenciales de Google Cloud (OAuth Client ID) o las de DAVENT si están disponibles.</p>
-        <label class="check-item" style="margin-bottom:12px">
-          <input v-model="oauthForm.enabled" type="checkbox" />
-          <span class="check-text"><strong>Ofrecer login con Google</strong><small>El cliente entra a su cuenta de la tienda con su correo de Google.</small></span>
-        </label>
-        <div class="grid-2">
-          <label class="field">
-            <span class="field-label">Google Client ID</span>
-            <input v-model="oauthForm.google_client_id" class="input mono" maxlength="200" placeholder="123456.apps.googleusercontent.com" />
-          </label>
-          <label class="field">
-            <span class="field-label">
-              Google Client Secret
-              <span v-if="oauthMeta.has_client_secret" class="pill ok" style="margin-left:6px">Guardado</span>
-            </span>
-            <input v-model="oauthForm.google_client_secret" type="password" class="input mono" maxlength="200" autocomplete="off" :placeholder="oauthMeta.has_client_secret ? 'Dejalo vacío para conservar el guardado' : 'Pegá el secret de Google Cloud'" />
-          </label>
-        </div>
-        <AlertMessage v-if="oauthErr" kind="error" :message="oauthErr" />
-        <AlertMessage v-else-if="oauthMsg" kind="success" :message="oauthMsg" />
-        <div class="btn-row">
-          <button type="button" class="btn btn-auto" :disabled="oauthBusy" @click="saveOAuth(false)">{{ oauthBusy ? 'Guardando…' : 'Guardar' }}</button>
-          <button v-if="oauthMeta.has_client_secret" type="button" class="btn ghost btn-auto" :disabled="oauthBusy" @click="saveOAuth(true)">Borrar secreto guardado</button>
         </div>
       </section>
 

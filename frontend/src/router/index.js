@@ -205,7 +205,7 @@ const routes = [
   // misma vista y los mismos guards (meta replicado). Slugs desconocidos
   // caen al catch-all (404), no a una sección equivocada.
   {
-    path: '/dashboard/:section(inicio|productos|catalogo|catalogos|servicios|vender|ventas|pedidos|clientes|consultas|cobros|legal|membresias|pagina|direccion|diseno|fotos|negocio|visitas|promocionar|qr|folletos|opiniones|ayuda|asistente|plan|planes|pagos|facturas|cuenta|novedades)',
+    path: '/dashboard/:section(inicio|productos|catalogo|catalogos|servicios|vender|ventas|pedidos|clientes|consultas|cobros|legal|membresias|cuentas|acceso|accesos|pagina|direccion|diseno|fotos|negocio|visitas|promocionar|qr|folletos|opiniones|ayuda|asistente|plan|planes|pagos|facturas|cuenta|novedades)',
     name: 'dashboard-section',
     component: DashboardView,
     meta: { requiresAuth: true, customerOnly: true, title: 'Panel' }

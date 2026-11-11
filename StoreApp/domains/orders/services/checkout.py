@@ -44,7 +44,9 @@ Decisiones documentadas:
 - Seguimiento público: se gatea por tienda publicada/no bloqueada, NO
   por orders_enabled — un pedido ya creado sigue siendo rastreable y
   pagable aunque el dueño apague la venta online después (orders_enabled
-  gobierna ventas NUEVAS, no la vida de los pedidos emitidos).
+  gobierna ventas NUEVAS, no la vida de los pedidos emitidos). El gate
+  de plan (`has_ecommerce`) vive DENTRO de orders_enabled: baja de plan
+  = no hay pedidos nuevos, pero el tracking de los ya emitidos sigue.
 """
 import logging
 from datetime import timedelta

@@ -1259,6 +1259,17 @@ class StoreViewSet(StoreBaseViewSet):
             data        =   request.data.copy()
             for field in discard:
                 data.pop(field, None)
+        #Prender la venta online exige `has_ecommerce` en el plan vigente:
+        #sin el beneficio el PATCH la descarta como a los campos premium.
+        #Apagar SIEMPRE se permite — un downgrade o vencimiento no puede
+        #dejar la tienda vendiendo.
+        if 'ecommerce_enabled' in data and not profile_has_benefit(store.user, 'has_ecommerce'):
+            value       =   data.get('ecommerce_enabled')
+            enabling    =   value if isinstance(value, bool) else str(value or '').strip().lower() in ('1', 'true', 'yes', 'on')
+            if enabling:
+                if data is request.data:
+                    data    =   request.data.copy()
+                data.pop('ecommerce_enabled')
         #Plantilla según el nivel del plan (Básico: Clásico/Perspectiva;
         #Estándar suma Urbano/Publicidad; Premium, todo): un diseño fuera
         #del nivel se descarta del payload como los campos premium. El

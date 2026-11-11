@@ -90,8 +90,14 @@ def _grant(profile, **benefits):
 
 def _owner(username = 'duenio', slug = 'mi-tienda', with_plan = True, **benefits):
     user, profile   =   _make_user(username)
+    #plan_benefits_of cachea por PK y SQLite las reutiliza entre tests.
+    cache.delete(f'planben:{profile.pk}')
     if with_plan:
-        _grant(profile, has_public_link = True, **benefits)
+        #has_public_link: la web pública; has_ecommerce: toda la
+        #superficie de venta (panel de planes/suscripciones incluido).
+        benefits.setdefault('has_public_link', True)
+        benefits.setdefault('has_ecommerce', True)
+        _grant(profile, **benefits)
     store           =   Store.objects.create(user = profile, slug = slug)
     client          =   APIClient()
     client.force_authenticate(user = user)
@@ -275,6 +281,15 @@ class OwnerPlanTests(TestCase):
         client          =   APIClient()
         client.force_authenticate(user = user)
         self.assertEqual(client.get(PLANS_URL).status_code, 404)
+
+    def test_owner_without_ecommerce_benefit_403(self):
+        #Planes/suscripciones del comercio son superficie de venta online:
+        #un plan DAVENT sin has_ecommerce cierra ambos paneles (403, la
+        #tienda ES suya — no es un 404 de ocultamiento).
+        client, _    =   _owner('duenio-sin-plan', 'tienda-sin-plan', has_ecommerce = False)
+        self.assertEqual(client.get(PLANS_URL).status_code, 403)
+        self.assertEqual(client.get(SUBSCRIPTIONS_URL).status_code, 403)
+        self.assertEqual(client.post(PLANS_URL, {'name': 'X', 'price': '0', 'period': 'monthly'}, format = 'json').status_code, 403)
 
     def test_create_and_list_plan(self):
         client, store    =   _owner('duenio-a', 'tienda-a')
@@ -482,6 +497,16 @@ class CustomerSubscriptionTests(TestCase):
 
     def test_store_slug_unknown_404(self):
         self.assertEqual(self.client.get(CUSTOMER_SUBS + 'no-existe/').status_code, 404)
+
+    def test_store_without_ecommerce_benefit_404(self):
+        #Sesión de comprador válida (global) pero la tienda del plan caído
+        #queda invisible: planes, alta de suscripción y exclusivos → 404.
+        _, store_off    =   _owner('duenio-off', 'tienda-off', has_ecommerce = False)
+        plan_off        =   _plan(store_off)
+        self.assertEqual(self.client.get(CUSTOMER_SUBS + 'tienda-off/').status_code, 404)
+        self.assertEqual(
+            self.client.post(CUSTOMER_SUBS + 'tienda-off/', {'plan_id': plan_off.pk}, format = 'json').status_code, 404)
+        self.assertEqual(self.client.get(EXCLUSIVE_URL.format(slug = 'tienda-off')).status_code, 404)
 
     def test_subscribe_creates_pending_membership_and_instructions(self):
         response    =   self.client.post(CUSTOMER_SUBS + 'tienda-c/', {'plan_id': self.plan.pk, 'payment_method': 'transfer'}, format = 'json')

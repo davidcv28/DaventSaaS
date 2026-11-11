@@ -92,6 +92,7 @@ import BuyerSupportPanel from '../components/dashboard/commerce/BuyerSupportPane
 import PaymentsConfigPanel from '../components/dashboard/commerce/PaymentsConfigPanel.vue'
 import LegalPagesPanel from '../components/dashboard/commerce/LegalPagesPanel.vue'
 import PlansPanel from '../components/dashboard/commerce/PlansPanel.vue'
+import CustomerAuthPanel from '../components/dashboard/commerce/CustomerAuthPanel.vue'
 
 const router = useRouter()
 const route = useRoute()
@@ -337,6 +338,8 @@ const tabGroups = computed(() => {
 // (vista previa del beneficio: 'expired' = suscripción vencida, 'upgrade' =
 // falta el beneficio en el plan actual).
 const SECTION_BENEFITS = {
+  selling: ['has_ecommerce'],
+  accounts: ['has_customer_auth'],
   design_assisted: ['has_ai_design'],
   design_studio: ['has_design_advanced'],
   services: ['has_services_site'],
@@ -348,6 +351,8 @@ const SECTION_BENEFITS = {
   flyer_editor: ['has_flyer_editor']
 }
 const LOCKED_FEATURES = {
+  selling: { icon: 'lucide:shopping-cart', title: 'Vender online', text: 'Carrito, checkout y seguimiento de pedidos en tu web; cobros con tu Mercado Pago, membresías para tus clientes y registro de ventas.' },
+  accounts: { icon: 'lucide:id-card', title: 'Acceso de clientes', text: 'Tus clientes crean su cuenta en tu web, ingresan con email o Google y siguen sus pedidos desde su perfil.' },
   design_assisted: { icon: 'sparkles', title: 'Diseño asistido', text: 'Contale a qué te dedicás y recibí tu web armada: plantilla, orden de secciones y textos. Después la ajustás a mano.' },
   design_studio: { icon: 'layout-panel-left', title: 'Studio de diseño', text: 'El editor completo con vista previa en vivo: colores, tipografía, contenedores, portada y versión de prueba antes de publicar.' },
   catalogs: { icon: 'package', title: 'Tu catálogo de productos', text: 'Cargá productos con foto, precio y categorías: se publican solos en tu web.' },
@@ -369,7 +374,7 @@ const navLocks = computed(() => {
   const hasAccess = Boolean(plan.value?.isCurrent)
   const map = {}
   const gated = (id) => (SECTION_BENEFITS[id] || []).some((k) => !b[k])
-  for (const id of ['catalogs', 'services', 'pos', 'reviews', 'support', 'bot', 'tools', 'stats', 'design_assisted', 'design_studio', 'flyer_editor']) {
+  for (const id of ['catalogs', 'services', 'pos', 'reviews', 'support', 'bot', 'tools', 'stats', 'design_assisted', 'design_studio', 'flyer_editor', 'selling', 'accounts']) {
     // El asistente/soporte es para planes pagos (gate mcp_user_access en
     // el backend): el trial queda con candado de upgrade aunque esté vigente.
     map[id] = !hasAccess ? 'expired' : (id === 'support' && plan.value?.isTrial) ? 'upgrade' : gated(id) ? 'upgrade' : null
@@ -391,7 +396,8 @@ const navItems = computed(() => {
     { id: 'overview', label: 'Inicio', icon: 'dashboard', hint: 'Tu negocio hoy' },
     { id: 'catalogs', label: 'Mis productos', icon: 'package', hint: 'Fotos, precios y categorías', locked: L.catalogs, badge: catalog.products.length || null },
     { id: 'services', label: 'Mis servicios', icon: 'wrench', hint: 'Lo que ofrecés hacer', locked: L.services },
-    { id: 'selling', label: 'Vender online', icon: 'lucide:shopping-cart', hint: 'Pedidos, ventas y cobros de tu tienda' },
+    { id: 'selling', label: 'Vender online', icon: 'lucide:shopping-cart', hint: 'Pedidos, ventas y cobros de tu tienda', locked: L.selling },
+    { id: 'accounts', label: 'Acceso de clientes', icon: 'lucide:id-card', hint: 'Registro e ingreso en tu web', locked: L.accounts },
     // "Vender en persona" se comunica como novedad (roadmap), no como sección.
 
     { id: 'web', label: 'Mi página', icon: 'store', hint: 'Diseño, secciones y dirección' },
@@ -460,6 +466,7 @@ const SECTION_SLUGS = {
   servicios: 'services',
   vender: 'selling', ventas: 'sales', pedidos: 'orders',
   clientes: 'customers', consultas: 'inquiries', cobros: 'payconfig',
+  cuentas: 'accounts', acceso: 'accounts', accesos: 'accounts',
   legal: 'legal', membresias: 'memberships',
   pagina: 'web', direccion: 'store',
   diseno: 'design', fotos: 'photos', negocio: 'company',
@@ -537,7 +544,8 @@ const searchCommands = computed(() => {
     overview: 'inicio resumen home panel hoy comienzo',
     catalogs: 'productos catalogo cargar subir precio foto stock mercaderia categoria marca articulo cosa vender',
     services: 'servicios trabajos ofrezco duracion turnos profesional',
-    selling: 'vender online ecommerce carrito checkout pedidos ventas clientes consultas soporte compradores cobros pagos fiscal mercado pago mp legal devoluciones terminos privacidad membresias suscripciones planes tienda',
+    selling: 'vender online ecommerce tienda online carrito checkout pedidos ventas clientes consultas soporte compradores cobros pagos fiscal mercado pago mp legal devoluciones terminos privacidad membresias suscripciones planes tienda',
+    accounts: 'cuentas clientes acceso registro ingresar login google autenticacion compradores sesion perfil',
     pos: 'vender persona local fisico cobrar caja punto venta mostrador ticket',
     store: 'pagina web tienda diseno link direccion url dominio slug logo colores plantilla publicar pausar editar',
     reviews: 'opiniones comentarios valoraciones estrellas clientes review reputacion',
@@ -6127,7 +6135,7 @@ async function changePassword() {
         </div>
       </div>
       <SectionTabs :tabs="tabGroups.selling" active="payconfig" @select="section = $event" />
-      <PaymentsConfigPanel />
+      <PaymentsConfigPanel @locked="openLocked('selling')" />
     </div>
 
     <!-- ================= LEGAL ================= -->
@@ -6152,6 +6160,17 @@ async function changePassword() {
       </div>
       <SectionTabs :tabs="tabGroups.selling" active="memberships" @select="section = $event" />
       <PlansPanel />
+    </div>
+
+    <!-- ================= ACCESO DE CLIENTES (plan Ecommerce) ================= -->
+    <div v-if="seen.accounts" v-show="section === 'accounts'" class="web-scope" :class="{ 'sec-on': section === 'accounts' }">
+      <div class="page-head">
+        <div>
+          <h1>Acceso de clientes</h1>
+          <p>Tus compradores crean su cuenta en tu web e ingresan con email o Google.</p>
+        </div>
+      </div>
+      <CustomerAuthPanel />
     </div>
 
     <!-- ================= ESTADÍSTICAS (premium) ================= -->

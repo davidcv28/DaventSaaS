@@ -36,6 +36,7 @@ from rest_framework.test import APIClient
 
 from StoreApp.domains.storepayments.models import MpPayment, StoreMpWebhookConfig
 from StoreApp.domains.storepayments.services.mp_client import MpApiError
+from SuscriptionApp.domains.benefits.models import Benefit, PlanBenefit
 from StoreApp.domains.stores.models import (
     Store,
     StoreCustomization,
@@ -54,6 +55,24 @@ MP_TOKEN_LIVE     =   'APP_USR-1234567890-abcdef'
 
 BRIDGE           =   'StoreApp.domains.storepayments.services.orders_bridge'
 MP_CLIENT        =   'StoreApp.domains.storepayments.services.mp_client'
+
+
+def _grant_benefits(profile, *codes):
+    """Plan DAVENT + suscripción vigente de 30 días (reusa la suscripción
+    existente si ya tiene una — user es OneToOne)."""
+    from AdminApp.domains.suscriptions.models import Suscription, SuscriptionPlan
+    suscription =   getattr(profile, 'suscription', None)
+    plan    =   suscription.plan_suscription if suscription is not None else SuscriptionPlan.objects.create(name = f'Plan {profile.pk}')
+    for code in codes:
+        benefit =   Benefit.objects.get_or_create(code = code, defaults = {'label': code, 'kind': Benefit.FLAG})[0]
+        PlanBenefit.objects.get_or_create(plan = plan, benefit = benefit, defaults = {'enabled': True})
+    if suscription is None:
+        Suscription.objects.create(
+            user                =   profile,
+            plan_suscription    =   plan,
+            end_date            =   timezone.now() + timedelta(days = 30),
+            status              =   Suscription.STATUS_ACTIVE,
+        )
 
 
 def _signature_headers(resource_id, request_id = 'req-1', secret = WEBHOOK_SECRET, ts = None):
@@ -102,10 +121,14 @@ def _fake_order(store, token = 'tok-1', status = 'PENDING_PAYMENT', total = '150
 class StorePaymentsTestBase(TestCase):
     client_class    =   APIClient
 
-    def _make_owner(self, username = 'duenio', with_store = True, sellable = True):
+    def _make_owner(self, username = 'duenio', with_store = True, sellable = True, codes = ('has_ecommerce',)):
         user        =   User.objects.create_user(username = username, email = f'{username}@example.com', password = 'Xq7#mP2vL9bT')
         from AdminApp.domains.users.models import UserProfile
         profile     =   UserProfile.objects.create(user = user, email_verified = True)
+        #plan_benefits_of cachea por PK y SQLite las reutiliza entre tests.
+        cache.delete(f'planben:{profile.pk}')
+        if codes:
+            _grant_benefits(profile, *codes)
         store       =   None
         if with_store:
             store   =   Store.objects.create(user = profile, slug = f'tienda-{username}')
@@ -156,6 +179,13 @@ class MpAccountOwnerTests(StorePaymentsTestBase):
         self.client.force_authenticate(user = user)
         response    =   self.client.get('/api/store-payments/mp/status/')
         self.assertEqual(response.status_code, 404)
+
+    def test_status_without_ecommerce_benefit_403(self):
+        #Plan sin has_ecommerce: el dueño ve su tienda pero la superficie
+        #de cobros queda cerrada (403, no 404).
+        user, _, _   =   self._make_owner('sin-beneficio', codes = ())
+        self.client.force_authenticate(user = user)
+        self.assertEqual(self.client.get('/api/store-payments/mp/status/').status_code, 403)
 
     def test_status_never_returns_tokens(self):
         user, _, store   =   self._make_owner('con-mp')
@@ -471,6 +501,12 @@ class StorePaymentConfigTests(StorePaymentsTestBase):
         }, format = 'json')
         self.assertEqual(response.status_code, 400)
 
+    def test_owner_without_ecommerce_benefit_403(self):
+        user, _, _   =   self._make_owner('config-sin', codes = ())
+        client  =   APIClient()
+        client.force_authenticate(user = user)
+        self.assertEqual(client.get(self.CONFIG_URL).status_code, 403)
+
     def test_patch_whatsapp_requires_number(self):
         #accept_whatsapp activo sin número -> incoherente.
         StorePaymentConfig.objects.create(store = self.store, accept_whatsapp = True, whatsapp_number = '')
@@ -497,6 +533,12 @@ class StoreShippingConfigTests(StorePaymentsTestBase):
         client  =   APIClient()
         client.force_authenticate(user = user)
         self.assertEqual(client.get(self.URL).status_code, 404)
+
+    def test_owner_without_ecommerce_benefit_403(self):
+        user, _, _   =   self._make_owner('envios-sin', codes = ())
+        client  =   APIClient()
+        client.force_authenticate(user = user)
+        self.assertEqual(client.get(self.URL).status_code, 403)
 
     def test_get_defaults_without_row(self):
         #GET no crea fila: sin config = "a coordinar" (home_price NULL).
@@ -656,6 +698,12 @@ class FiscalProfileOwnerTests(StorePaymentsTestBase):
         self.client.force_authenticate(user = user)
         self.assertEqual(self.client.get(self.URL).status_code, 404)
 
+    def test_owner_without_ecommerce_benefit_403(self):
+        user, _, _   =   self._make_owner('fiscal-sin-plan', codes = ())
+        self.client.force_authenticate(user = user)
+        self.assertEqual(self.client.get(self.URL).status_code, 403)
+        self.assertEqual(self.client.put(self.URL, self.VALID, format = 'json').status_code, 403)
+
     def test_get_defaults_without_row(self):
         #sellable=False: no hay StoreFiscalProfile ni customization.
         user, _, store   =   self._make_owner('fiscal-vacio', sellable = False)
@@ -735,10 +783,16 @@ class OAuthConfigOwnerTests(StorePaymentsTestBase):
     CLIENT_ID   =   '1234567890-abcdef.apps.googleusercontent.com'
     SECRET      =   'GOCSPX-test-secret-123'
 
-    def _owner(self, name = 'oauth'):
-        user, _, store   =   self._make_owner(name, sellable = False)
+    def _owner(self, name = 'oauth', codes = ('has_customer_auth',)):
+        user, _, store   =   self._make_owner(name, sellable = False, codes = codes)
         self.client.force_authenticate(user = user)
         return user, store
+
+    def test_without_customer_auth_benefit_403(self):
+        #OAuth Google BYO depende de has_customer_auth, NO de has_ecommerce:
+        #un plan con ecommerce pero sin customer-auth queda afuera.
+        self._owner('oauth-sin', codes = ('has_ecommerce',))
+        self.assertEqual(self.client.get(self.URL).status_code, 403)
 
     def test_get_defaults(self):
         self._owner('oauth-get')
@@ -828,10 +882,17 @@ class StorageConfigOwnerTests(StorePaymentsTestBase):
         'enabled'           :   True,
     }
 
-    def _owner(self, name = 'storage'):
-        user, _, store   =   self._make_owner(name, sellable = False)
+    def _owner(self, name = 'storage', codes = ('has_own_storage',)):
+        user, _, store   =   self._make_owner(name, sellable = False, codes = codes)
         self.client.force_authenticate(user = user)
         return user, store
+
+    def test_without_own_storage_benefit_403(self):
+        #Storage BYO depende de has_own_storage: un plan solo con
+        #has_ecommerce no alcanza ni para leer la config ni la guía.
+        self._owner('storage-sin', codes = ('has_ecommerce',))
+        self.assertEqual(self.client.get(self.URL).status_code, 403)
+        self.assertEqual(self.client.get(self.GUIDE_URL).status_code, 403)
 
     def test_get_defaults(self):
         self._owner('storage-get')

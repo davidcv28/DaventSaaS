@@ -4,6 +4,7 @@ from django.shortcuts import get_object_or_404
 from django.utils import timezone
 from rest_framework import mixins, status, viewsets
 from rest_framework.decorators import action
+from rest_framework.exceptions import PermissionDenied
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 
@@ -18,6 +19,7 @@ from StoreApp.domains.memberships.services.benefits import (
 )
 from StoreApp.domains.stores.models import Store
 from StoreApp.domains.stores.public_cache import bump_public_store
+from StoreApp.domains.stores.services.commerce import store_has_ecommerce
 
 """
 
@@ -37,8 +39,13 @@ visibilidad en la web pública.
 class _OwnerStoreMixin:
     _store  =   None
     def my_store(self):
+        #Planes/suscripciones del comercio: superficie de venta online —
+        #exige `has_ecommerce` en el plan vigente (403 si falta).
         if self._store is None:
-            self._store =   get_object_or_404(Store, user__user = self.request.user)
+            store   =   get_object_or_404(Store, user__user = self.request.user)
+            if not store_has_ecommerce(store):
+                raise PermissionDenied('Tu plan no incluye la venta online.')
+            self._store =   store
         return self._store
 #=========================================
 # STORE PLAN VIEWSET (CRUD de planes del dueño)

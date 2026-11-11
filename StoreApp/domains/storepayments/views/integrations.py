@@ -34,7 +34,7 @@ from StoreApp.domains.stores.models import (
 )
 from StoreApp.domains.stores.services.storage import invalidate_store_storage
 
-from .mp import owner_store
+from .mp import owner_store, require_benefit
 
 logger  =   logging.getLogger(__name__)
 
@@ -63,10 +63,12 @@ class FiscalProfileView(APIView):
     permission_classes    =   [IsAuthenticated]
     def get(self, request):
         store   =   owner_store(request)
+        require_benefit(store, 'has_ecommerce')
         profile =   _get_or_default(StoreFiscalProfile, store)
         return Response(StoreFiscalProfileSerializer(profile).data, status = status.HTTP_200_OK)
     def put(self, request):
         store   =   owner_store(request)
+        require_benefit(store, 'has_ecommerce')
         #Instancia transitoria si no hay fila: un PUT inválido NO debe
         #persistir una config vacía (mismo criterio que el GET).
         profile =   _get_or_default(StoreFiscalProfile, store)
@@ -88,10 +90,12 @@ class OAuthConfigView(APIView):
     permission_classes    =   [IsAuthenticated]
     def get(self, request):
         store   =   owner_store(request)
+        require_benefit(store, 'has_customer_auth')
         cfg     =   _get_or_default(StoreOAuthConfig, store)
         return Response(StoreOAuthConfigSerializer(cfg).data, status = status.HTTP_200_OK)
     def put(self, request):
         store   =   owner_store(request)
+        require_benefit(store, 'has_customer_auth')
         cfg     =   _get_or_default(StoreOAuthConfig, store)
         serializer  =   StoreOAuthConfigSerializer(cfg, data = request.data, partial = True)
         serializer.is_valid(raise_exception = True)
@@ -113,10 +117,12 @@ class StorageConfigView(APIView):
     permission_classes    =   [IsAuthenticated]
     def get(self, request):
         store   =   owner_store(request)
+        require_benefit(store, 'has_own_storage')
         cfg     =   _get_or_default(StoreStorageConfig, store)
         return Response(StoreStorageConfigSerializer(cfg).data, status = status.HTTP_200_OK)
     def put(self, request):
         store   =   owner_store(request)
+        require_benefit(store, 'has_own_storage')
         cfg     =   _get_or_default(StoreStorageConfig, store)
         serializer  =   StoreStorageConfigSerializer(cfg, data = request.data, partial = True)
         serializer.is_valid(raise_exception = True)
@@ -127,6 +133,7 @@ class StorageConfigView(APIView):
         return Response(serializer.data, status = status.HTTP_200_OK)
     def delete(self, request):
         store   =   owner_store(request)
+        require_benefit(store, 'has_own_storage')
         cfg     =   StoreStorageConfig.objects.filter(store = store).first()
         if cfg is not None:
             #Disable + clear secrets: revocación local inmediata. Las
@@ -167,5 +174,6 @@ class StorageGuideView(APIView):
     """
     permission_classes    =   [IsAuthenticated]
     def get(self, request):
-        owner_store(request)      #mismo gate: solo dueños con tienda
+        store   =   owner_store(request)      #mismo gate: solo dueños con tienda
+        require_benefit(store, 'has_own_storage')
         return Response(STORAGE_GUIDE, status = status.HTTP_200_OK)

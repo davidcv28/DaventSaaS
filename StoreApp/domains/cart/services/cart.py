@@ -73,7 +73,7 @@ def sellable_store(slug):
     store   =   (
         Store.objects
         .filter(slug = slug, is_published = True, is_blocked = False)
-        .select_related('customization', 'fiscal_profile', 'payment_config', 'mp_account')
+        .select_related('customization', 'fiscal_profile', 'payment_config', 'mp_account', 'user')
         .first()
     )
     if store is None or not orders_enabled(store):

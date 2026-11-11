@@ -16,6 +16,7 @@ mismo patrón que catalog.
 from django.shortcuts import get_object_or_404
 from rest_framework import status, viewsets
 from rest_framework.decorators import action
+from rest_framework.exceptions import PermissionDenied
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 
@@ -35,6 +36,7 @@ from StoreApp.domains.orders.services.payments import (
     mark_order_paid,
 )
 from StoreApp.domains.stores.models import Store
+from StoreApp.domains.stores.services.commerce import store_has_ecommerce
 
 
 class StoreOrderViewSet(viewsets.GenericViewSet):
@@ -45,12 +47,19 @@ class StoreOrderViewSet(viewsets.GenericViewSet):
     # TENANT SCOPE
     #=========================================
     def my_store(self):
-        """Tienda del dueño autenticado (404 si no tiene onboarding)."""
+        """
+        Tienda del dueño autenticado (404 si no tiene onboarding). El
+        panel de ventas exige `has_ecommerce` en el plan vigente — sin
+        el beneficio es 403 aunque la tienda haya vendido antes.
+        """
         if self._store is None:
-            self._store =   get_object_or_404(
+            store   =   get_object_or_404(
                 Store.objects.select_related('user'),
                 user__user = self.request.user,
             )
+            if not store_has_ecommerce(store):
+                raise PermissionDenied('Tu plan no incluye la venta online.')
+            self._store =   store
         return self._store
     def get_queryset(self):
         """

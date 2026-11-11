@@ -3,6 +3,7 @@ import logging
 from django.http import Http404
 from django.shortcuts import get_object_or_404
 from rest_framework import status
+from rest_framework.exceptions import PermissionDenied
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
@@ -25,6 +26,7 @@ from StoreApp.domains.legalpages.services import (
 from StoreApp.domains.stores.models import Store
 from StoreApp.domains.stores.public_cache import bump_public_store
 from StoreApp.domains.stores.services import issue_captcha, verify_captcha
+from StoreApp.domains.stores.services.commerce import store_has_ecommerce
 
 """
 Vistas del dominio legalpages.
@@ -62,11 +64,18 @@ class ReturnRequestThrottle(ResilientAnonRateThrottle):
 # HELPERS
 #=========================================
 def _own_store(request):
-    """La tienda del usuario autenticado; sin tienda o ajena → 404."""
-    return get_object_or_404(
+    """
+    La tienda del usuario autenticado; sin tienda o ajena → 404. El
+    panel de páginas legales/devoluciones es superficie de venta online:
+    sin `has_ecommerce` en el plan vigente → 403.
+    """
+    store   =   get_object_or_404(
         Store.objects.select_related('user__user', 'customization', 'fiscal_profile'),
         user__user = request.user,
     )
+    if not store_has_ecommerce(store):
+        raise PermissionDenied('Tu plan no incluye la venta online.')
+    return store
 
 def _kind_or_404(kind):
     if kind not in StoreLegalPage.KIND_LABELS:
@@ -210,6 +219,12 @@ class PublicReturnRequestView(APIView):
     throttle_classes        =   [ReturnRequestThrottle]
     def post(self, request, slug):
         store       =   public_store_or_404(slug)
+        #Una solicitud de devolución NUEVA es superficie de venta online:
+        #sin `has_ecommerce` el dueño tampoco podría abrir la bandeja —
+        #404 (misma política que el resto de la API pública, no un 201
+        #falso que haría creer al comprador que su reclamo quedó cargado).
+        if not store_has_ecommerce(store):
+            raise Http404
         serializer  =   ReturnRequestCreateSerializer(data = request.data)
         serializer.is_valid(raise_exception = True)
         data        =   serializer.validated_data

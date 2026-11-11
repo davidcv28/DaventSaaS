@@ -44,16 +44,26 @@ def normalize_email(email):
 
 def resolve_store(slug):
     """
-    Tienda pública comprable por slug: publicada y no bloqueada.
-    Devuelve None si no existe o no es visible — la vista decide 400/404.
+    Tienda pública comprable por slug: publicada, no bloqueada y con el
+    plan del dueño incluyendo `has_customer_auth` (la auth de compradores
+    es superficie del e-commerce). Devuelve None si no existe, no es
+    visible o el dueño no tiene el beneficio — la vista decide 400/404
+    con el MISMO mensaje de "tienda no existe" para no filtrar que la
+    tienda existe pero está fuera de plan.
     """
     slug    =   (slug or '').strip().lower()
     if not slug:
         return None
     from StoreApp.domains.stores.models import Store
-    return Store.objects.filter(
+    store   =   Store.objects.filter(
         slug = slug, is_published = True, is_blocked = False,
     ).first()
+    if store is None:
+        return None
+    from StoreApp.domains.stores.services.commerce import store_has_customer_auth
+    if not store_has_customer_auth(store):
+        return None
+    return store
 
 
 class MembershipSuspended(PermissionDenied):

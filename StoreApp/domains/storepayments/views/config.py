@@ -21,7 +21,7 @@ from StoreApp.domains.storepayments.serializers import (
 )
 from StoreApp.domains.stores.models import StorePaymentConfig, StoreShippingConfig
 
-from .mp import owner_store
+from .mp import owner_store, require_benefit
 
 
 class StorePaymentConfigView(APIView):
@@ -35,10 +35,12 @@ class StorePaymentConfigView(APIView):
         return cfg if cfg is not None else StorePaymentConfig(store = store)
     def get(self, request):
         store   =   owner_store(request)
+        require_benefit(store, 'has_ecommerce')
         cfg     =   self._config(store)
         return Response(StorePaymentConfigSerializer(cfg).data, status = status.HTTP_200_OK)
     def patch(self, request):
         store   =   owner_store(request)
+        require_benefit(store, 'has_ecommerce')
         cfg     =   self._config(store, create = True)
         serializer  =   StorePaymentConfigSerializer(cfg, data = request.data, partial = True, context = {'store': store})
         serializer.is_valid(raise_exception = True)
@@ -63,10 +65,12 @@ class StoreShippingConfigView(APIView):
         return cfg if cfg is not None else StoreShippingConfig(store = store)
     def get(self, request):
         store   =   owner_store(request)
+        require_benefit(store, 'has_ecommerce')
         cfg     =   self._config(store)
         return Response(StoreShippingConfigSerializer(cfg).data, status = status.HTTP_200_OK)
     def patch(self, request):
         store   =   owner_store(request)
+        require_benefit(store, 'has_ecommerce')
         cfg     =   self._config(store, create = True)
         serializer  =   StoreShippingConfigSerializer(cfg, data = request.data, partial = True)
         serializer.is_valid(raise_exception = True)

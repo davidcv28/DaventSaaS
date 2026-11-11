@@ -15,12 +15,16 @@ Cobertura:
 - Aislamiento: un carrito por (customer, store) — dos tiendas = dos
   carritos independientes.
 """
+import datetime
 from decimal import Decimal
 
 from django.contrib.auth.models import User
+from django.core.cache import cache
 from django.test import TestCase
+from django.utils import timezone
 from rest_framework.test import APIClient
 
+from AdminApp.domains.suscriptions.models import Suscription, SuscriptionPlan
 from AdminApp.domains.users.models import UserProfile
 from StoreApp.domains.cart.models import Cart, CartItem
 from StoreApp.domains.catalog.models import Product
@@ -30,18 +34,38 @@ from StoreApp.domains.stores.models import (
     StoreCustomization,
     StoreFiscalProfile,
 )
+from SuscriptionApp.domains.benefits.models import Benefit, PlanBenefit
 
 CUIT_VALIDO   =   '20123456786'
 
 
-def _make_owner(username):
+def _grant(profile, *codes):
+    suscription =   getattr(profile, 'suscription', None)
+    plan    =   suscription.plan_suscription if suscription is not None else SuscriptionPlan.objects.create(name = f'Plan {profile.pk}')
+    for code in codes:
+        benefit =   Benefit.objects.get_or_create(code = code, defaults = {'label': code, 'kind': Benefit.FLAG})[0]
+        PlanBenefit.objects.get_or_create(plan = plan, benefit = benefit, defaults = {'enabled': True})
+    if suscription is None:
+        Suscription.objects.create(
+            user                =   profile,
+            plan_suscription    =   plan,
+            end_date            =   timezone.now() + datetime.timedelta(days = 30),
+            status              =   Suscription.STATUS_ACTIVE,
+        )
+
+
+def _make_owner(username, *, ecommerce = True):
     user    =   User.objects.create_user(username = username, email = f'{username}@example.com', password = 'x')
     profile =   UserProfile.objects.create(user = user)
+    #plan_benefits_of cachea por PK y SQLite las reutiliza entre tests.
+    cache.delete(f'planben:{profile.pk}')
+    if ecommerce:
+        _grant(profile, 'has_ecommerce')
     return profile
 
 
-def _make_store(slug, *, sellable = True, published = True, blocked = False):
-    profile =   _make_owner(f'owner-{slug}')
+def _make_store(slug, *, sellable = True, published = True, blocked = False, ecommerce = True):
+    profile =   _make_owner(f'owner-{slug}', ecommerce = ecommerce)
     store   =   Store.objects.create(
         user            =   profile,
         slug            =   slug,
@@ -105,6 +129,14 @@ class CartApiTests(TestCase):
         anon    =   APIClient()
         self.assertIn(anon.get(self.cart_url).status_code, (401, 403))
         self.assertIn(anon.post(self.items_url, {'product_id': self.product.pk, 'qty': 1}, format = 'json').status_code, (401, 403))
+
+    def test_store_without_ecommerce_benefit_is_404(self):
+        #Sesión de cliente válida, tienda "vendible" pero el plan del
+        #dueño perdió has_ecommerce → el carrito de ESA tienda queda
+        #inaccesible (misma semántica 404 que tienda cerrada).
+        closed  =   _make_store('sinplan', ecommerce = False)
+        response    =   self.client.get(f'/api/cart/{closed.slug}/')
+        self.assertEqual(response.status_code, 404)
 
     def test_store_without_orders_enabled_is_404(self):
         closed  =   _make_store('cerrada', sellable = False)
