@@ -71,6 +71,11 @@ awesome-design-skills/
 /pip-*/
 /.tmp_*/
 /_tmp_*/
+/.tmp*
+frontend/.tmp/
+frontend/visual-qa/
+frontend/tmpout.css
+/_credits_*
 
 # Scripts/artefactos one-off de QA y diseño en la raíz (se regeneran;
 # los seeds demo _seed_*.py son locales y leen imágenes ya borradas)
