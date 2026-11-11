@@ -338,13 +338,13 @@
 [data-design='mercado'][data-theme] .ec-account .acc-main { gap: 14px; }
 
 /* Los sub-paneles (pedidos, suscripciones, direcciones, soporte, perfil)
-   son scoped y leen tokens --sp-*/--store-accent del chrome de la tienda:
+   son scoped y leen tokens --sp-* y --store-accent del chrome de la tienda:
    en noche --sp-accent-text quedaba en el azul fijo #1D4ED8 (~2.4:1 sobre
    la superficie) y los "success/danger" venían de otra paleta. Acá se
    repuntean a los tokens --dz-* del diseño, que ya pasan AA en ambos modos
-   y unifican el lenguaje visual del mostrador. --sp-card-solid/--sp-surface
-   apuntan a --dz-bg: las cards internas quedan como "papel" inset sobre el
-   panel (misma idea que la lista del gate). */
+   y unifican el lenguaje visual del mostrador. --sp-card-solid y
+   --sp-surface apuntan a --dz-bg: las cards internas quedan como "papel"
+   inset sobre el panel (misma idea que la lista del gate). */
 [data-design='mercado'][data-theme] .ec-account {
   --sp-ink: var(--dz-ink);
   --sp-ink-2: var(--dz-ink-2);
@@ -400,13 +400,26 @@
   font-family: var(--dz-mono); font-size: 10.5px;
   color: color-mix(in srgb, var(--dz-accent-ink) 82%, transparent);
 }
+/* Iconos de acción dentro de paneles (editar/eliminar dirección): ghost
+   neutro del papel. El accent-ink era tinta para bandas amarillas y en
+   noche quedaba ~1.3:1 sobre la superficie — invisible. */
 [data-design='mercado'][data-theme] .ec-account .acc-icon-btn {
+  border: none;
+  background: transparent;
+  color: var(--dz-muted);
+}
+[data-design='mercado'][data-theme] .ec-account .acc-icon-btn:hover {
+  background: color-mix(in srgb, var(--dz-ink) 7%, transparent);
+  color: var(--dz-ink);
+}
+/* El logout del masthead amarillo (<1024px) sí va en tinta de marca. */
+[data-design='mercado'][data-theme] .ec-account .acc-mhead .acc-icon-btn {
   width: 42px; height: 42px;
   border: 1px solid color-mix(in srgb, var(--dz-accent-ink) 34%, transparent);
   border-radius: 7px;
   background: transparent; color: var(--dz-accent-ink);
 }
-[data-design='mercado'][data-theme] .ec-account .acc-icon-btn:hover {
+[data-design='mercado'][data-theme] .ec-account .acc-mhead .acc-icon-btn:hover {
   background: var(--dz-accent-ink); color: var(--dz-accent);
   border-color: var(--dz-accent-ink);
 }
@@ -415,12 +428,10 @@
    scoped del componente. Acá vuelve el rojo del diseño. */
 [data-design='mercado'][data-theme] .ec-account .acc-icon-btn.is-danger {
   color: var(--dz-danger);
-  border-color: color-mix(in srgb, var(--dz-danger) 38%, transparent);
 }
 [data-design='mercado'][data-theme] .ec-account .acc-icon-btn.is-danger:hover {
   background: color-mix(in srgb, var(--dz-danger) 12%, var(--dz-surface));
   color: var(--dz-danger);
-  border-color: var(--dz-danger);
 }
 
 /* Chips de sección (tablet/mobile). */
