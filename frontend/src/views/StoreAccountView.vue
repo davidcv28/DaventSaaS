@@ -52,7 +52,38 @@ const TABS = [
   { key: 'soporte', label: 'Soporte', icon: 'circle-help' },
   { key: 'perfil', label: 'Perfil', icon: 'user' },
 ]
-function setView(v) { router.replace({ query: { ...route.query, view: v } }) }
+function setView(v) { return router.replace({ query: { ...route.query, view: v } }) }
+
+// ---------- tabs WAI-ARIA (roving tabindex) ----------
+// Selección sigue al foco: las flechas mueven el foco Y cambian de panel en
+// el mismo gesto. Home/End saltan al primero/último. Solo el tab activo
+// queda en el orden de tabulación (tabindex 0), el resto en -1.
+// El layout monta las vistas con :key="route.fullPath" y transición
+// out-in: cambiar ?view= tarda ~1s en reemplazar el subárbol y se lleva
+// puesto el foco. Por eso el tab nuevo se busca en el DOM vivo por su id
+// estable y recién cuando ya quedó activo (tabIndex 0), que es la señal de
+// que el remonte terminó.
+async function focusTabWhenReady(key) {
+  const id = `acc-tab-${key}`
+  for (let i = 0; i < 180; i++) {
+    const el = document.getElementById(id)
+    if (el && el.isConnected && el.tabIndex === 0) { el.focus(); return }
+    await new Promise((r) => requestAnimationFrame(r))
+  }
+}
+function onTabKeydown(e, i) {
+  const last = TABS.length - 1
+  let next = null
+  if (e.key === 'ArrowRight') next = i === last ? 0 : i + 1
+  else if (e.key === 'ArrowLeft') next = i === 0 ? last : i - 1
+  else if (e.key === 'Home') next = 0
+  else if (e.key === 'End') next = last
+  if (next === null) return
+  e.preventDefault()
+  const key = TABS[next].key
+  setView(key)
+  focusTabWhenReady(key)
+}
 
 // Sin slug (rutas /cuenta/* de la plataforma) no hay login de tienda al
 // que volver: se apunta a la landing en vez de un /cuenta inexistente.
@@ -253,6 +284,23 @@ async function loadAddresses() {
   }
 }
 
+// ---------- estado del panel activo ----------
+// aria-busy va en el tabpanel (no en cada hijo: los hijos ya lo ponen en su
+// skeleton) y el anuncio de error de carga es polite en un region aparte —
+// nunca aria-live en el panel entero, que anunciaría cada tecla del perfil.
+const panelBusy = computed(() => {
+  if (view.value === 'pedidos') return ordersLoading.value
+  if (view.value === 'suscripciones') return subLoading.value || cardLoading.value
+  if (view.value === 'direcciones') return addrLoading.value
+  return false
+})
+const panelError = computed(() => {
+  if (view.value === 'pedidos') return ordersError.value
+  if (view.value === 'suscripciones') return subError.value
+  if (view.value === 'direcciones') return addrError.value
+  return ''
+})
+
 // ---------- SOFE ----------
 const supportRef = ref(null)
 watch(() => route.query.order, (tok) => {
@@ -298,7 +346,8 @@ watch([view, subView, sessionChecked], () => scheduleInk(true))
 </script>
 
 <template>
-  <div class="sp-page-root ec-account">
+  <!-- El layout público no monta <main>: cada vista hija lo declara. -->
+  <main class="sp-page-root ec-account">
     <!-- ===== VERIFICAR EMAIL (link del mail) ===== -->
     <div v-if="subView === 'verificar'" class="acc-auth">
       <section class="acc-auth-card">
@@ -345,7 +394,7 @@ watch([view, subView, sessionChecked], () => scheduleInk(true))
     <!-- ===== CUENTA PRINCIPAL ===== -->
     <template v-else>
       <!-- Chequeo de sesión: skeleton del panel -->
-      <div v-if="!sessionChecked" class="acc-skelpanel" aria-busy="true" aria-label="Cargando tu cuenta">
+      <div v-if="!sessionChecked" class="acc-skelpanel" role="status" aria-busy="true" aria-label="Cargando tu cuenta">
         <div class="acc-skel-id">
           <span class="acc-sk acc-sk-avatar"></span>
           <span class="acc-sk-lines"><span class="acc-sk acc-sk-l1"></span><span class="acc-sk acc-sk-l2"></span></span>
@@ -425,7 +474,7 @@ watch([view, subView, sessionChecked], () => scheduleInk(true))
                 </li>
               </ul>
             </div>
-            <button type="button" class="acc-icon-btn" aria-label="Cerrar sesión" @click="logout">
+            <button type="button" class="acc-icon-btn" aria-label="Cerrar sesión" title="Cerrar sesión" @click="logout">
               <AppIcon name="logout" :size="17" aria-hidden="true" />
               <span class="acc-icon-btn-txt" aria-hidden="true">Salir</span>
             </button>
@@ -438,14 +487,35 @@ watch([view, subView, sessionChecked], () => scheduleInk(true))
               aria-hidden="true"
               :style="{ transform: `translateX(${ink.x}px)`, width: `${ink.w}px` }"
             ></span>
-            <button v-for="(t, i) in TABS" :key="t.key" type="button" role="tab" :aria-selected="view === t.key" class="acc-tab" :class="{ 'is-on': view === t.key }" @click="setView(t.key)">
+            <button
+              v-for="(t, i) in TABS" :key="t.key" type="button" role="tab"
+              :id="`acc-tab-${t.key}`"
+              :aria-selected="view === t.key"
+              :tabindex="view === t.key ? 0 : -1"
+              class="acc-tab" :class="{ 'is-on': view === t.key }"
+              @click="setView(t.key)"
+              @keydown="onTabKeydown($event, i)"
+            >
               <span class="acc-tab-ico" aria-hidden="true"><AppIcon :name="t.icon" :size="16" /></span>
               <span class="acc-idx" aria-hidden="true">{{ String(i + 1).padStart(2, '0') }}</span>
               <span>{{ t.label }}</span>
             </button>
           </nav>
 
-          <div :key="view" class="acc-body">
+          <!-- Anuncio del error de carga del panel activo. Vive FUERA del
+               tabpanel (que se remonta con :key="view") para que el cambio
+               de texto sí se anuncie; depende solo de panelError, así que
+               no se re-arma al escribir en los formularios del panel. -->
+          <p class="sp-sr-only" role="status" aria-live="polite">{{ panelError }}</p>
+
+          <div
+            :key="view"
+            :id="`acc-panel-${view}`"
+            class="acc-body"
+            role="tabpanel"
+            :aria-labelledby="`acc-tab-${view}`"
+            :aria-busy="panelBusy ? 'true' : undefined"
+          >
             <!-- PEDIDOS -->
             <AccountOrders
               v-if="view === 'pedidos'"
@@ -502,7 +572,7 @@ watch([view, subView, sessionChecked], () => scheduleInk(true))
         </div>
       </div>
     </template>
-  </div>
+  </main>
 </template>
 
 <style scoped>

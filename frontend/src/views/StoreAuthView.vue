@@ -130,7 +130,9 @@ const sealText = computed(() => {
 </script>
 
 <template>
-  <div class="sp-page-root ec-auth">
+  <!-- El layout público no renderiza <main>: cada página hija lo pone, así
+       que el landmark de contenido principal nace acá. -->
+  <main class="sp-page-root ec-auth">
     <!-- Fondo ambiental (esencial): dos deriva de gradientes + grano. Solo
          transform/opacity, nunca background-position. -->
     <div class="ec-auth-ambient" aria-hidden="true">
@@ -189,7 +191,14 @@ const sealText = computed(() => {
       </aside>
 
       <!-- ===== Panel del formulario ===== -->
-      <div class="ec-auth-panel">
+      <!-- <section> nombrada por el h2 del modo activo: el header/footer del
+           formulario dejan de exponerse como banner/contentinfo (dentro de
+           sectioning content no lo son) y el formulario queda como region. -->
+      <section
+        class="ec-auth-panel"
+        :aria-labelledby="sessionState === 'guest' ? `ec-auth-title-${mode}` : undefined"
+        :aria-describedby="sessionState === 'guest' ? `ec-auth-sub-${mode}` : undefined"
+      >
         <div class="ec-auth-panel-inner">
           <RouterLink :to="homeTo" class="ec-auth-back">
             <AppIcon name="arrow-left" :size="15" aria-hidden="true" /> Volver a la tienda
@@ -211,8 +220,8 @@ const sealText = computed(() => {
                 <AppIcon :name="mode === 'forgot' ? 'lock' : 'user'" :size="18" />
               </span>
               <span class="ec-auth-tag">{{ modeTag }}</span>
-              <h2 class="ec-auth-title">{{ title }}</h2>
-              <p class="ec-auth-sub">{{ subtitle }}</p>
+              <h2 :id="`ec-auth-title-${mode}`" class="ec-auth-title">{{ title }}</h2>
+              <p :id="`ec-auth-sub-${mode}`" class="ec-auth-sub">{{ subtitle }}</p>
             </header>
             <StoreAuthForm :slug="slug" :mode="mode" @done="onAuthed" @mode="setMode" />
             <p class="ec-auth-trust">
@@ -221,9 +230,9 @@ const sealText = computed(() => {
             </p>
           </template>
         </div>
-      </div>
+      </section>
     </div>
-  </div>
+  </main>
 </template>
 
 <style scoped>

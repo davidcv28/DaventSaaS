@@ -51,6 +51,41 @@
   --dz-on-band: #f2ede1;
 }
 
+/* Cromo de la casa: barra y pie van en la banda de tinta del museo, no en
+   el acento. El acento queda para CTAs y filetes, y el texto del pie
+   recupera contraste (el muted de la paleta clara no se lee sobre la banda). */
+[data-design='portico'] {
+  --sp-chrome: linear-gradient(180deg, #171b17, #101310);
+}
+[data-design='portico'][data-theme='dark'] {
+  --sp-chrome: linear-gradient(180deg, #191d19, #101310);
+}
+[data-design='portico'] .sp-foot :is(.sp-foot-copy, .sp-foot-brand span) {
+  color: color-mix(in srgb, var(--sp-on-band, #fff) 84%, transparent);
+}
+/* La banda de tinta no admite los roles de paleta del tema (tinta oscura
+   sobre tinta): todo el pie se lee con el on-band. */
+[data-design='portico'] .sp-foot :is(
+  .sp-foot-brand strong, .sp-foot-heading, .sp-foot-col a,
+  .sp-foot-copy, .sp-foot-brand span, .sp-foot-legal,
+  .sp-foot-contact li, .sp-foot-contact li span, .sp-foot-contact li svg
+) {
+  color: color-mix(in srgb, var(--sp-on-band, #fff) 88%, transparent);
+}
+[data-design='portico'] .sp-foot .sp-foot-col a:hover,
+[data-design='portico'] .sp-foot .sp-foot-brand strong {
+  color: var(--sp-on-band, #fff);
+}
+/* La barra fija conserva la tinta (no el acento ni el blur de la capa
+   base): el diseño no usa cristal sobre bandas. */
+[data-design='portico'] .sp-top,
+[data-design='portico'][data-theme='dark'] .sp-top {
+  background: var(--sp-chrome);
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+  border-bottom-color: color-mix(in srgb, var(--sp-on-band, #fff) 14%, transparent);
+}
+
 /* ---------- Marco común ---------- */
 [data-design='portico'][data-theme] :is(.ec-auth, .ec-account) :is(a, button, input, select, textarea):focus-visible {
   outline: 2px solid var(--dz-accent);
@@ -120,13 +155,15 @@
   letter-spacing: .18em; text-transform: uppercase; color: var(--dz-on-band);
 }
 [data-design='portico'] .ec-auth .ec-auth-brand-copy {
-  display: grid; gap: 13px; max-width: 44ch;
+  display: grid; gap: 13px; max-width: 44ch; min-width: 0;
 }
-/* Número de sala: "01 ———" en mono cobre. */
+/* Número de sala: "01 ———" en mono cobre. La mezcla con hueso sube el
+   cobre hasta AA sobre el velo de la portada (el acento crudo queda en
+   ~4.4:1 cuando la foto aclara la banda). */
 [data-design='portico'] .ec-auth .ec-auth-rail {
   display: inline-flex; align-items: center; gap: 12px;
   font: 400 9px/1 var(--dz-mono); letter-spacing: .34em; text-transform: uppercase;
-  color: color-mix(in srgb, var(--dz-accent) 88%, #f4efe4);
+  color: color-mix(in srgb, var(--dz-accent) 74%, #f4efe4);
 }
 [data-design='portico'] .ec-auth .ec-auth-rail::after {
   content: ""; width: 54px; height: 1px;
@@ -140,6 +177,9 @@
   font-family: var(--dz-display); font-weight: 400;
   font-size: clamp(30px, 3.5vw, 46px); line-height: 1.03; letter-spacing: -.02em;
   color: #f8f4eb;
+  /* El título nunca desborda la cédula: parte palabras largas y balancea
+     las dos líneas en vez de dejar una huérfana. */
+  text-wrap: balance; overflow-wrap: anywhere; min-width: 0;
 }
 [data-design='portico'] .ec-auth .ec-auth-brand-text {
   font-family: var(--dz-body); font-size: 13.5px; line-height: 1.7;
@@ -177,6 +217,42 @@
   padding-top: 14px;
   border-top: 1px solid color-mix(in srgb, #f4efe4 14%, transparent);
 }
+
+/* Sello de sala: el markup ya trae el textPath con el nombre de la tienda y
+   nace oculto para el resto de los diseños. Acá es el único círculo legítimo
+   del ala (es un sello), arriba a la derecha, y se apaga con reduced-motion.
+   Solo en las dos alas (≥1025px): en la cédula apilada no hay esquina libre. */
+@media (min-width: 1025px) {
+  [data-design='portico'] .ec-auth .ec-auth-seal {
+    display: grid;
+    place-items: center;
+    position: absolute;
+    top: clamp(16px, 2.2vw, 26px);
+    right: clamp(16px, 2.2vw, 26px);
+    width: clamp(92px, 7.6vw, 104px);
+    height: clamp(92px, 7.6vw, 104px);
+    z-index: 2;
+    border-radius: 50%;
+    border: 1px solid color-mix(in srgb, var(--dz-accent) 52%, transparent);
+    background: color-mix(in srgb, #0b0e0b 34%, transparent);
+    color: color-mix(in srgb, var(--dz-accent) 74%, #f4efe4);
+    pointer-events: none;
+  }
+  [data-design='portico'] .ec-auth .ec-auth-seal-ring {
+    position: absolute; inset: 0;
+    width: 100%; height: 100%;
+    transform-origin: 50% 50%;
+    animation: dz-seal-spin 40s linear infinite;
+  }
+  [data-design='portico'] .ec-auth .ec-auth-seal-ring text {
+    font-family: var(--dz-mono); font-size: 8px; letter-spacing: .1em;
+    fill: currentColor;
+  }
+  [data-design='portico'] .ec-auth .ec-auth-seal > .icon { color: currentColor; }
+  /* El bloque de marca no puede pasar por debajo del sello. */
+  [data-design='portico'] .ec-auth .ec-auth-brand-top { max-width: calc(100% - 116px); }
+}
+@keyframes dz-seal-spin { to { transform: rotate(1turn); } }
 
 /* Ala del formulario: papel, filete superior de cobre. */
 [data-design='portico'] .ec-auth .ec-auth-panel {
@@ -267,6 +343,18 @@
 [data-design='portico'][data-theme] :is(.ec-auth, .ec-account) .sp-input:-webkit-autofill {
   -webkit-text-fill-color: var(--dz-ink);
   box-shadow: inset 0 0 0 40px var(--dz-bg);
+}
+/* Campo inválido: el filete de peligro va por dentro del box-shadow para
+   duplicar el grosor sin mover el layout al validar (el borde sigue en 1px)
+   y para no pisar el anillo de foco. */
+[data-design='portico'][data-theme] :is(.ec-auth, .ec-account) :is(.sp-input[aria-invalid='true'], .sp-input:user-invalid) {
+  border-color: var(--dz-danger);
+  box-shadow: inset 0 0 0 1px var(--dz-danger);
+}
+[data-design='portico'][data-theme] :is(.ec-auth, .ec-account) :is(.sp-input[aria-invalid='true'], .sp-input:user-invalid):focus {
+  box-shadow:
+    inset 0 0 0 1px var(--dz-danger),
+    0 0 0 3px color-mix(in srgb, var(--dz-danger) 20%, transparent);
 }
 
 /* Botón principal: pastilla mono de cobre, esquina recta. */
@@ -389,12 +477,20 @@
   background: color-mix(in srgb, var(--dz-accent) 8%, transparent);
 }
 
-/* Tabs (tablet/mobile): celdas mono, filete inferior, scroll sin barra. */
+/* Tabs (tablet/mobile): celdas mono, filete inferior, scroll sin barra.
+   La fila NUNCA se parte en dos líneas (Mobile Web Guidance): sigue siendo
+   un scroll horizontal, ahora con snap y con un velo en el borde derecho
+   que avisa que hay más. El relleno derecho de 44px deja al último tab
+   fuera de la zona del velo para que nunca se lea desvanecido. */
 [data-design='portico'][data-theme] .ec-account .acc-tabs {
-  gap: 0; padding: 0 0 2px;
+  gap: 0; padding: 0 44px 2px 0;
   border-bottom: 1px solid var(--dz-line);
   scrollbar-width: none;
   -webkit-overflow-scrolling: touch;
+  scroll-snap-type: inline proximity;
+  scroll-padding-inline: 14px;
+  mask-image: linear-gradient(90deg, #000 0, #000 calc(100% - 44px), transparent 100%);
+  -webkit-mask-image: linear-gradient(90deg, #000 0, #000 calc(100% - 44px), transparent 100%);
 }
 [data-design='portico'][data-theme] .ec-account .acc-tab {
   min-height: 44px;
@@ -404,6 +500,7 @@
   background: transparent; color: var(--dz-muted);
   font: 500 9px/1 var(--dz-mono); letter-spacing: .18em; text-transform: uppercase;
   gap: 8px;
+  scroll-snap-align: start;
 }
 [data-design='portico'][data-theme] .ec-account .acc-tab:hover { color: var(--dz-accent-text); border-bottom-color: color-mix(in srgb, var(--dz-accent) 40%, transparent); }
 [data-design='portico'][data-theme] .ec-account .acc-tab.is-on {
@@ -411,6 +508,30 @@
   border-bottom-color: var(--dz-accent);
 }
 [data-design='portico'][data-theme] .ec-account .acc-tab.is-on .acc-idx { color: var(--dz-accent-text); }
+
+/* Velo progresivo: donde hay scroll-driven animations el ancho del velo se
+   ata al avance del scroll y desaparece al llegar al final. Sin soporte
+   queda el velo estático de arriba. */
+@property --dz-tabs-fade {
+  syntax: '<length>';
+  inherits: false;
+  initial-value: 44px;
+}
+@supports (animation-timeline: scroll()) {
+  [data-design='portico'][data-theme] .ec-account .acc-tabs {
+    --dz-tabs-fade: 44px;
+    mask-image: linear-gradient(90deg, #000 0, #000 calc(100% - var(--dz-tabs-fade)), transparent 100%);
+    -webkit-mask-image: linear-gradient(90deg, #000 0, #000 calc(100% - var(--dz-tabs-fade)), transparent 100%);
+    animation-name: dz-tabs-fade;
+    animation-timing-function: linear;
+    animation-fill-mode: both;
+    animation-timeline: scroll(self inline);
+  }
+  @keyframes dz-tabs-fade {
+    from { --dz-tabs-fade: 44px; }
+    to { --dz-tabs-fade: 0px; }
+  }
+}
 
 /* Paneles de contenido. */
 [data-design='portico'][data-theme] .ec-account .acc-panel,
@@ -439,9 +560,17 @@
 
 /* Gate / sub-vistas de mail. */
 [data-design='portico'][data-theme] .ec-account :is(.acc-gate-ico, .acc-auth-ico) {
+  width: 60px; height: 60px;
   border-radius: var(--dz-radius);
-  background: color-mix(in srgb, var(--dz-accent) 10%, var(--dz-surface));
-  border: 1px solid color-mix(in srgb, var(--dz-accent) 30%, transparent);
+  background: color-mix(in srgb, var(--dz-accent) 9%, var(--dz-surface));
+  border: 1px solid color-mix(in srgb, var(--dz-accent) 32%, transparent);
+  color: var(--dz-accent-text);
+}
+/* Cédula del gate: el markup ya numera las filas (01-04); en pórtico se
+   muestran en mono cobre como el resto de las cédulas de la sala. */
+[data-design='portico'][data-theme] .ec-account .acc-gate-num {
+  display: inline-block;
+  font: 400 8.5px/1 var(--dz-mono); letter-spacing: .18em;
   color: var(--dz-accent-text);
 }
 [data-design='portico'][data-theme] .ec-account :is(.acc-gate-title, .acc-auth-title) {
@@ -462,6 +591,71 @@
   color: var(--dz-accent-text);
   text-decoration: underline; text-underline-offset: 4px;
 }
+
+/* Gate ancho (escritorio): la tarjeta centrada de 560px dejaba un mar de
+   papel. Acá es una CÉDULA de sala apaisada — texto alineado a la izquierda,
+   beneficios en dos columnas sin tarjetas y pie de acciones en una fila.
+   Abajo de 900px se mantiene la tarjeta de una columna. */
+@media (min-width: 900px) {
+  [data-design='portico'][data-theme] .ec-account .acc-gate { padding: clamp(8px, 1.4vw, 16px) 0; }
+  [data-design='portico'][data-theme] .ec-account .acc-gate-card {
+    width: min(920px, 100%);
+    padding: clamp(36px, 3.4vw, 44px);
+    display: flex; flex-wrap: wrap; align-items: center;
+    gap: 14px 20px;
+    justify-content: flex-start;
+    text-align: left;
+  }
+  /* El markup no tiene fila de acciones: con flex y bases 100% los bloques
+     largos abren fila solos y el CTA + link quedan juntos a la izquierda. */
+  [data-design='portico'][data-theme] .ec-account .acc-gate-card > * { min-width: 0; }
+  [data-design='portico'][data-theme] .ec-account .acc-gate .acc-kicker {
+    display: inline-flex; align-items: center; gap: 10px;
+    flex: 1 1 100%;
+    font: 400 9px/1 var(--dz-mono); letter-spacing: .24em; text-transform: uppercase;
+    color: var(--dz-muted);
+  }
+  [data-design='portico'][data-theme] .ec-account .acc-gate .acc-kicker::before {
+    content: ""; flex: none; width: 26px; height: 1px; background: var(--dz-accent);
+  }
+  [data-design='portico'][data-theme] .ec-account .acc-gate-ico {
+    flex: none; width: 56px; height: 56px;
+    align-self: flex-start; margin-top: 2px;
+  }
+  [data-design='portico'][data-theme] .ec-account .acc-gate-title {
+    flex: 1 1 320px;
+    font-size: clamp(30px, 3vw, 42px); line-height: 1.04;
+    text-wrap: balance; overflow-wrap: anywhere;
+  }
+  [data-design='portico'][data-theme] .ec-account .acc-gate-sub {
+    flex: 1 1 100%; max-width: 64ch;
+    font-size: 14.5px; line-height: 1.65;
+  }
+  [data-design='portico'][data-theme] .ec-account .acc-gate-list {
+    flex: 1 1 100%;
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0 28px;
+    margin: 6px 0 2px; padding: 0;
+    max-width: none;
+    border: 0;
+    border-top: 1px solid var(--dz-line);
+    border-bottom: 1px solid var(--dz-line);
+    border-radius: 0;
+    background: transparent;
+  }
+  [data-design='portico'][data-theme] .ec-account .acc-gate-list li {
+    align-items: start; gap: 10px;
+    padding: 14px 0;
+    border-bottom: 1px solid var(--dz-line);
+    font-size: 13.5px; line-height: 1.45;
+  }
+  [data-design='portico'][data-theme] .ec-account .acc-gate-list li:nth-last-child(-n + 2) { border-bottom: 0; }
+  [data-design='portico'][data-theme] .ec-account .acc-gate-cta { flex: none; margin-top: 4px; }
+  [data-design='portico'][data-theme] .ec-account .acc-gate-link {
+    flex: none; align-self: center; margin-top: 4px;
+  }
+}
 [data-design='portico'][data-theme] .ec-account .acc-auth-ok {
   color: var(--dz-ok); font-family: var(--dz-body); font-weight: 700;
 }
@@ -471,6 +665,22 @@
 }
 [data-design='portico'][data-theme] .ec-account .acc-sk {
   background: color-mix(in srgb, var(--dz-muted) 16%, transparent);
+  border-radius: var(--dz-radius);
+}
+
+/* Empty states (pedidos, direcciones, suscripciones, soporte): cédula
+   cuadrada con filete de cobre, no el círculo tintado del diseño base. */
+[data-design='portico'][data-theme] .ec-account :is(.acc-empty-ico, .ec-support-empty-ico) {
+  width: 60px; height: 60px;
+  border-radius: var(--dz-radius);
+  background: color-mix(in srgb, var(--dz-accent) 9%, var(--dz-surface));
+  border: 1px solid color-mix(in srgb, var(--dz-accent) 32%, transparent);
+  color: var(--dz-accent-text);
+}
+[data-design='portico'][data-theme] .ec-account .acc-empty--sm .acc-empty-ico { width: 52px; height: 52px; }
+
+/* Chips, banderas y placeholders del esqueleto: misma esquina recta. */
+[data-design='portico'][data-theme] .ec-account :is(.acc-sk-avatar, .acc-sk-tabs, .acc-sk-panel, .acc-sk-pill, .acc-status, .acc-chip, .acc-plan-flag, .acc-default-badge, .acc-member-chip, .acc-member-benefits li, .acc-member-avatar) {
   border-radius: var(--dz-radius);
 }
 
@@ -551,6 +761,11 @@
     border-color: color-mix(in srgb, var(--dz-danger) 52%, transparent);
     background: color-mix(in srgb, var(--dz-danger) 7%, transparent);
   }
+  /* En escritorio sobraba aire: el panel no se estira (arranca arriba) y la
+     página no reserva 76px de padding cuando el índice ya cerró. */
+  [data-design='portico'][data-theme] .ec-account { padding-bottom: clamp(18px, 2.4vw, 28px); }
+  [data-design='portico'][data-theme] .ec-account .acc-main,
+  [data-design='portico'][data-theme] .ec-account .acc-body { align-content: start; align-self: start; }
 }
 
 /* ---------- Responsive ---------- */
@@ -559,12 +774,27 @@
     grid-template-columns: minmax(0, 1fr);
     margin-block: 12px clamp(28px, 5vw, 48px);
   }
-  [data-design='portico'] .ec-auth .ec-auth-brand { padding: 22px 22px 20px; }
+  /* Cédula de sala: la banda deja de ser un hero recortado. El velo sube
+     (la foto de portada queda de fondo, no de protagonista) para que el
+     texto siga en AA, y el riel + kicker comparten una sola línea mono. */
+  [data-design='portico'] .ec-auth .ec-auth-brand { padding: 20px 20px 24px; }
+  [data-design='portico'] .ec-auth .ec-auth-brand::after {
+    background:
+      radial-gradient(120% 90% at 94% -18%, color-mix(in srgb, var(--dz-accent) 26%, transparent), transparent 64%),
+      linear-gradient(168deg, color-mix(in srgb, #000 42%, transparent), color-mix(in srgb, #000 76%, transparent));
+  }
   [data-design='portico'] .ec-auth .ec-auth-brand-inner {
     grid-template-rows: auto auto;
-    gap: 14px;
+    gap: 12px;
+    min-width: 0;
   }
-  [data-design='portico'] .ec-auth .ec-auth-brand-copy { gap: 8px; max-width: none; }
+  [data-design='portico'] .ec-auth .ec-auth-brand-top { padding-bottom: 12px; }
+  [data-design='portico'] .ec-auth .ec-auth-brand-copy {
+    display: flex; flex-wrap: wrap; align-items: baseline;
+    gap: 8px 12px; max-width: none; min-width: 0;
+  }
+  [data-design='portico'] .ec-auth .ec-auth-brand-copy > * { min-width: 0; }
+  [data-design='portico'] .ec-auth .ec-auth-brand-title { flex: 1 1 100%; }
   [data-design='portico'] .ec-auth .ec-auth-brand-text,
   [data-design='portico'] .ec-auth .ec-auth-perks,
   [data-design='portico'] .ec-auth .ec-auth-brand-foot { display: none; }
@@ -575,6 +805,20 @@
     border-top: 1px solid var(--dz-line);
   }
 }
+
+/* Formulario: a partir de tablet el panel es ancho y los campos quedaban
+   larguísimos (676px de input). El contenido se limita a 30rem y se centra;
+   el filete superior de cobre sigue corriendo por todo el panel. El
+   envoltorio del markup es display:contents, así que hay que alcanzar a sus
+   hijos (son los ítems reales del flex del panel). */
+@media (min-width: 641px) {
+  [data-design='portico'] .ec-auth .ec-auth-panel > *,
+  [data-design='portico'] .ec-auth .ec-auth-panel-inner > * {
+    width: 100%;
+    max-width: min(100%, 30rem);
+    margin-inline: auto;
+  }
+}
 @media (max-width: 860px) {
   [data-design='portico'][data-theme] .ec-account .acc-mhead-meta strong { font-size: 17px; }
   [data-design='portico'][data-theme] .ec-account .acc-panel-title { font-size: 22px; }
@@ -582,7 +826,10 @@
 @media (max-width: 640px) {
   [data-design='portico'] .ec-auth { padding-inline: 12px; }
   [data-design='portico'] .ec-auth .ec-auth-shell { border-radius: var(--dz-radius); }
-  [data-design='portico'] .ec-auth .ec-auth-brand { padding: 18px 16px 16px; }
+  /* En el teléfono el panel ya cierra la lectura: 28px de margen más el aire
+     del pie dejaban una franja de papel vacía. Mismo margen que arriba. */
+  [data-design='portico'] .ec-auth .ec-auth-shell { margin-block-end: 12px; }
+  [data-design='portico'] .ec-auth .ec-auth-brand { padding: 18px 16px 20px; }
   [data-design='portico'] .ec-auth .ec-auth-brand-top { padding-bottom: 12px; }
   [data-design='portico'] .ec-auth .ec-auth-logo { width: 38px; height: 38px; font-size: 20px; }
   [data-design='portico'] .ec-auth .ec-auth-brand-name { font-size: 10.5px; letter-spacing: .14em; }
@@ -597,6 +844,37 @@
   [data-design='portico'][data-theme] .ec-account .acc-panel,
   [data-design='portico'][data-theme] .ec-account .acc-auth-card,
   [data-design='portico'][data-theme] .ec-account .acc-gate-card { padding: 18px 16px; }
+  /* Índice de modos (01/02/03) bajo el título: fila mono de tres celdas con
+     filete; el modo activo enciende el filete de cobre. */
+  [data-design='portico'] .ec-auth .ec-auth-index {
+    display: grid;
+    flex: 1 1 100%;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 0;
+    margin: 4px 0 0;
+    padding: 0;
+    list-style: none;
+    border-top: 1px solid color-mix(in srgb, #f4efe4 20%, transparent);
+  }
+  [data-design='portico'] .ec-auth .ec-auth-index li {
+    display: grid; gap: 5px;
+    margin-top: -1px;
+    padding: 9px 0 0;
+    border-top: 2px solid transparent;
+  }
+  [data-design='portico'] .ec-auth .ec-auth-index-n {
+    font: 400 8.5px/1 var(--dz-mono); letter-spacing: .18em;
+    color: color-mix(in srgb, #f4efe4 64%, transparent);
+  }
+  [data-design='portico'] .ec-auth .ec-auth-index-l {
+    font: 400 8px/1 var(--dz-mono); letter-spacing: .12em; text-transform: uppercase;
+    color: color-mix(in srgb, #f4efe4 62%, transparent);
+  }
+  [data-design='portico'] .ec-auth .ec-auth-index li.is-on { border-top-color: var(--dz-accent); }
+  [data-design='portico'] .ec-auth .ec-auth-index li.is-on .ec-auth-index-n {
+    color: color-mix(in srgb, var(--dz-accent) 74%, #f4efe4);
+  }
+  [data-design='portico'] .ec-auth .ec-auth-index li.is-on .ec-auth-index-l { color: var(--dz-on-band); }
 }
 @media (max-width: 390px) {
   [data-design='portico'] .ec-auth { padding-inline: 8px; }
@@ -606,6 +884,44 @@
   [data-design='portico'][data-theme] .ec-account .acc-mhead { grid-template-columns: 40px minmax(0, 1fr) 40px; gap: 10px; }
   [data-design='portico'][data-theme] .ec-account .acc-mhead-meta strong { font-size: 16px; }
   [data-design='portico'][data-theme] .ec-account .acc-panel-title { font-size: 20px; }
+}
+/* Chrome móvil: con 3 iconos funcionales (cuenta, carrito, tema) más el CTA
+   etiquetado, la marca se quedaba con 68px y el nombre se cortaba a "V…".
+   El CTA pasa a icono solo (44px) y la marca recupera el ancho: ningún icono
+   se oculta. */
+@media (max-width: 560px) {
+  [data-design='portico'] .sp-top-cta {
+    width: 44px;
+    min-height: 44px;
+    padding-inline: 0;
+    gap: 0;
+    font-size: 0;
+    justify-content: center;
+  }
+  [data-design='portico'] .sp-top .sp-brand { flex: 1 1 auto; min-width: 0; }
+  /* La copia ocupa todo el ancho que ganó la marca: el nombre deja de tener
+     una caja de 27px y tampoco se recorta si el nombre es más largo. */
+  [data-design='portico'] .sp-top .sp-brand-copy { flex: 1 1 auto; min-width: 0; }
+  [data-design='portico'] .sp-top .sp-name { max-width: none; }
+  /* Pie del formulario: dos filas de 44px en mono 9px con hairline entre
+     ellas, en vez de dos enlaces amontonados que se cortaban. */
+  [data-design='portico'] .ec-auth .ecaf-foot {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: 0;
+    margin-top: 6px;
+    border-top: 1px solid var(--dz-line);
+  }
+  [data-design='portico'] .ec-auth .ecaf-foot .ecaf-link {
+    display: flex; align-items: center;
+    width: 100%; min-height: 44px;
+    padding: 6px 0;
+    font: 400 9px/1.35 var(--dz-mono); letter-spacing: .16em; text-transform: uppercase;
+    text-align: left; text-decoration-thickness: 1px; text-underline-offset: 3px;
+  }
+  [data-design='portico'] .ec-auth .ecaf-foot .ecaf-link + .ecaf-link {
+    border-top: 1px solid var(--dz-line);
+  }
 }
 /* Tab bar inferior de la tienda (mobile.nav = bottom): el último panel
    respira sobre la barra fija. */
@@ -623,4 +939,9 @@
     transition-duration: .001ms !important;
     animation-duration: .001ms !important;
   }
+  /* El velo de las tabs no es movimiento: lo gobierna el scroll, así que
+     conserva su rango completo también con movimiento reducido. */
+  [data-design='portico'][data-theme] .ec-account .acc-tabs { animation-duration: auto !important; }
+  /* El sello es decorativo y gira sin parar: acá se detiene del todo. */
+  [data-design='portico'] .ec-auth .ec-auth-seal-ring { animation: none !important; }
 }

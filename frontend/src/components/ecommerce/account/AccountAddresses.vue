@@ -102,7 +102,9 @@ async function remove(a) {
     </div>
 
     <template v-else>
-      <div v-if="error || actionError" class="acc-note acc-note--danger" role="alert">
+      <!-- El fallo de carga ya lo anuncia el region polite del panel; solo
+           la acción (guardar/borrar) necesita alert propio. -->
+      <div v-if="error || actionError" class="acc-note acc-note--danger" :role="actionError ? 'alert' : undefined">
         <AppIcon name="circle-alert" :size="18" aria-hidden="true" />
         <p>{{ actionError || error }}</p>
         <button v-if="error" type="button" class="ec-btn-ghost acc-btn-sm" @click="emit('refresh')">Reintentar</button>

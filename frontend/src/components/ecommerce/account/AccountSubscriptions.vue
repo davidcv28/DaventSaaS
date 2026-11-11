@@ -60,7 +60,9 @@ const memberInitials = computed(() => {
       <span class="acc-sk acc-sk-line acc-sk-w40"></span>
     </div>
 
-    <div v-else-if="error" class="acc-note acc-note--danger" role="alert">
+    <!-- El error de carga lo anuncia el region polite del panel; acá solo
+         se pinta (role=alert duplicaría el anuncio). -->
+    <div v-else-if="error" class="acc-note acc-note--danger">
       <AppIcon name="circle-alert" :size="18" aria-hidden="true" />
       <p>{{ error }}</p>
       <button type="button" class="ec-btn-ghost acc-btn-sm" @click="emit('retry')">Reintentar</button>

@@ -32,7 +32,13 @@ const registeredPending = ref(false) // recién se registró → aviso de verifi
 const showPassword = ref(false)
 
 const emailInput = ref(null)
+const passwordInput = ref(null)
+const firstNameInput = ref(null)
+const lastNameInput = ref(null)
 const forgotInput = ref(null)
+// Aviso/error del formulario: recibe el foco cuando el envío falla y el
+// problema no es de un campo concreto.
+const msgRef = ref(null)
 
 // ---------- errores del backend ----------
 // fieldErrors llega como {campo: 'mensaje'} (extractApiError ya joinea
@@ -42,6 +48,44 @@ const fieldError = (name) => {
   return Array.isArray(v) ? (v[0] || '') : (v || '')
 }
 const formError = computed(() => customer.lastError || '')
+
+// ---------- aria-invalid / aria-describedby ----------
+// `bad` lo marca el submit (validación local o fieldErrors del backend) y
+// `fixed` lo limpia el primer tecleo: el mensaje visible no se borra, pero
+// el campo deja de anunciarse como inválido en cuanto el usuario lo corrige.
+const fieldFlags = ref({
+  email: { bad: false, fixed: false },
+  password: { bad: false, fixed: false },
+})
+const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/
+const emailOk = (v) => EMAIL_RE.test(String(v || '').trim())
+function markInvalid(name, bad) {
+  if (fieldFlags.value[name]) fieldFlags.value[name].bad = bad
+}
+function resetInvalid() {
+  fieldFlags.value = { email: { bad: false, fixed: false }, password: { bad: false, fixed: false } }
+}
+function onFieldInput(name) {
+  if (fieldFlags.value[name]) fieldFlags.value[name].fixed = true
+}
+function isInvalid(name) {
+  const f = fieldFlags.value[name]
+  if (!f) return false
+  return Boolean((f.bad || fieldError(name)) && !f.fixed)
+}
+// Id estable del mensaje de campo: login y forgot comparten el del email
+// porque solo se renderiza uno por vez.
+const fieldErrorId = (name) => `ec-auth-${name.replace(/_/g, '-')}-error`
+// Descripción del campo = su propio error + el aviso/error del formulario.
+// Los <span> de error no son live regions: se leen al enfocar, no se
+// re-anuncian en cada tecla.
+function describedBy(name) {
+  const ids = []
+  if (fieldError(name)) ids.push(fieldErrorId(name))
+  if (notice.value) ids.push('ec-auth-notice')
+  else if (formError.value) ids.push('ec-auth-error')
+  return ids.length ? ids.join(' ') : undefined
+}
 
 function clearErrors() {
   customer.lastError = ''
@@ -60,6 +104,24 @@ function focusFirst() {
   el?.focus()
 }
 
+// Primer campo inválido en orden de DOM; null si el fallo no es de un campo.
+function firstInvalidEl() {
+  if (props.mode === 'register') {
+    if (fieldError('first_name')) return firstNameInput.value
+    if (fieldError('last_name')) return lastNameInput.value
+  }
+  if (isInvalid('email')) return props.mode === 'forgot' ? forgotInput.value : emailInput.value
+  if (props.mode !== 'forgot' && isInvalid('password')) return passwordInput.value
+  return null
+}
+// Solo en fallo: el foco va al primer campo inválido o al bloque de error.
+// En éxito no se toca el foco (el padre navega o cierra el modal).
+async function focusAfterError() {
+  await nextTick()
+  const target = firstInvalidEl() || (formError.value ? msgRef.value : null)
+  target?.focus()
+}
+
 // ---------- control segmentado (solo piel esencial) ----------
 // Mismo switchMode que los links del pie: no navega ni recarga, solo emite
 // 'mode' al padre. El markup nace OCULTO (ver <style scoped>) y la piel
@@ -75,6 +137,7 @@ const switchIndex = computed(() => Math.max(0, SWITCH_MODES.findIndex((m) => m.m
 // aviso de "te enviamos el enlace" sobrevive al salto forgot → login.
 watch(() => props.mode, () => {
   clearErrors()
+  resetInvalid()
   registeredPending.value = false
   focusFirst()
 })
@@ -85,6 +148,13 @@ async function submit() {
   if (busy.value) return
   busy.value = true
   clearErrors()
+  resetInvalid()
+  // Validación local mínima (el form va novalidate): sirve para marcar
+  // aria-invalid y saber a qué campo llevar el foco. No bloquea el envío:
+  // el backend sigue siendo la fuente de verdad.
+  const emailVal = props.mode === 'forgot' ? form.value.forgot_email : form.value.email
+  markInvalid('email', !emailOk(emailVal))
+  if (props.mode !== 'forgot') markInvalid('password', form.value.password.length < 8)
   try {
     if (props.mode === 'login') {
       const res = await customer.login({ email: form.value.email.trim(), password: form.value.password, store_slug: props.slug })
@@ -121,6 +191,10 @@ async function submit() {
   } finally {
     busy.value = false
   }
+  // fieldErrors del backend también cuentan como campo inválido.
+  const failed = formError.value || fieldError('email') || fieldError('password')
+    || fieldError('first_name') || fieldError('last_name')
+  if (failed) focusAfterError()
 }
 function done() { emit('done') }
 
@@ -215,47 +289,80 @@ onUnmounted(() => resizeObs?.disconnect())
       >{{ m.label }}</button>
     </div>
 
-    <p v-if="notice" class="ecaf-notice" role="status">{{ notice }}</p>
-    <p v-else-if="formError" class="ecaf-error" role="alert">{{ formError }}</p>
+    <p v-if="notice" id="ec-auth-notice" ref="msgRef" class="ecaf-notice" role="status" tabindex="-1">{{ notice }}</p>
+    <p v-else-if="formError" id="ec-auth-error" ref="msgRef" class="ecaf-error" role="alert" tabindex="-1">{{ formError }}</p>
 
-    <form class="ecaf-form" novalidate @submit.prevent="submit">
+    <form class="ecaf-form" novalidate :aria-busy="busy ? 'true' : undefined" @submit.prevent="submit">
       <template v-if="mode === 'register'">
         <div class="ecaf-grid">
           <label class="sp-field">
-            <span class="sp-field-label">Nombre</span>
-            <input v-model="form.first_name" class="sp-input" type="text" autocomplete="given-name" :disabled="busy" />
-            <span v-if="fieldError('first_name')" class="sp-form-error">{{ fieldError('first_name') }}</span>
+            <span id="ec-auth-first-name-label" class="sp-field-label">Nombre</span>
+            <input
+              ref="firstNameInput" v-model="form.first_name" name="first_name" class="sp-input"
+              type="text" autocomplete="given-name" enterkeyhint="next" :disabled="busy"
+              aria-labelledby="ec-auth-first-name-label"
+              :aria-invalid="fieldError('first_name') ? 'true' : undefined"
+              :aria-describedby="describedBy('first_name')"
+            />
+            <span v-if="fieldError('first_name')" :id="fieldErrorId('first_name')" class="sp-form-error">{{ fieldError('first_name') }}</span>
           </label>
           <label class="sp-field">
-            <span class="sp-field-label">Apellido</span>
-            <input v-model="form.last_name" class="sp-input" type="text" autocomplete="family-name" :disabled="busy" />
-            <span v-if="fieldError('last_name')" class="sp-form-error">{{ fieldError('last_name') }}</span>
+            <span id="ec-auth-last-name-label" class="sp-field-label">Apellido</span>
+            <input
+              ref="lastNameInput" v-model="form.last_name" name="last_name" class="sp-input"
+              type="text" autocomplete="family-name" enterkeyhint="next" :disabled="busy"
+              aria-labelledby="ec-auth-last-name-label"
+              :aria-invalid="fieldError('last_name') ? 'true' : undefined"
+              :aria-describedby="describedBy('last_name')"
+            />
+            <span v-if="fieldError('last_name')" :id="fieldErrorId('last_name')" class="sp-form-error">{{ fieldError('last_name') }}</span>
           </label>
         </div>
       </template>
 
       <template v-if="mode === 'forgot'">
         <label class="sp-field">
-          <span class="sp-field-label">Email</span>
-          <input ref="forgotInput" v-model="form.forgot_email" class="sp-input" type="email" autocomplete="email" required :disabled="busy" />
-          <span v-if="fieldError('email')" class="sp-form-error">{{ fieldError('email') }}</span>
+          <span id="ec-auth-forgot-email-label" class="sp-field-label">Email</span>
+          <input
+            ref="forgotInput" v-model="form.forgot_email" name="email" class="sp-input"
+            type="email" autocomplete="email" inputmode="email" required :disabled="busy"
+            autocapitalize="none" autocorrect="off" spellcheck="false" enterkeyhint="go"
+            aria-labelledby="ec-auth-forgot-email-label"
+            :aria-invalid="isInvalid('email') ? 'true' : undefined"
+            :aria-describedby="describedBy('email')"
+            @input="onFieldInput('email')"
+          />
+          <span v-if="fieldError('email')" :id="fieldErrorId('email')" class="sp-form-error">{{ fieldError('email') }}</span>
         </label>
       </template>
 
       <template v-else>
         <label class="sp-field">
-          <span class="sp-field-label">Email</span>
-          <input ref="emailInput" id="ec-auth-email" v-model="form.email" class="sp-input" type="email" autocomplete="email" required :disabled="busy" />
-          <span v-if="fieldError('email')" class="sp-form-error">{{ fieldError('email') }}</span>
+          <span id="ec-auth-email-label" class="sp-field-label">Email</span>
+          <input
+            ref="emailInput" id="ec-auth-email" v-model="form.email" name="email" class="sp-input"
+            type="email" autocomplete="email" inputmode="email" required :disabled="busy"
+            autocapitalize="none" autocorrect="off" spellcheck="false" enterkeyhint="next"
+            aria-labelledby="ec-auth-email-label"
+            :aria-invalid="isInvalid('email') ? 'true' : undefined"
+            :aria-describedby="describedBy('email')"
+            @input="onFieldInput('email')"
+          />
+          <span v-if="fieldError('email')" :id="fieldErrorId('email')" class="sp-form-error">{{ fieldError('email') }}</span>
         </label>
         <label class="sp-field">
-          <span class="sp-field-label">Contraseña</span>
+          <span id="ec-auth-password-label" class="sp-field-label">Contraseña</span>
           <span class="ecaf-pass">
             <input
-              v-model="form.password" class="sp-input"
+              ref="passwordInput" id="ec-auth-password" v-model="form.password" name="password" class="sp-input"
               :type="showPassword ? 'text' : 'password'"
               :autocomplete="mode === 'login' ? 'current-password' : 'new-password'"
               required minlength="8" :disabled="busy"
+              :enterkeyhint="mode === 'login' ? 'go' : 'done'"
+              aria-labelledby="ec-auth-password-label"
+              :aria-invalid="isInvalid('password') ? 'true' : undefined"
+              :aria-describedby="describedBy('password')"
+              @input="onFieldInput('password')"
             />
             <button
               type="button" class="ecaf-pass-toggle"
@@ -266,7 +373,7 @@ onUnmounted(() => resizeObs?.disconnect())
               <AppIcon :name="showPassword ? 'eye-off' : 'eye'" :size="17" />
             </button>
           </span>
-          <span v-if="fieldError('password')" class="sp-form-error">{{ fieldError('password') }}</span>
+          <span v-if="fieldError('password')" :id="fieldErrorId('password')" class="sp-form-error">{{ fieldError('password') }}</span>
         </label>
       </template>
 

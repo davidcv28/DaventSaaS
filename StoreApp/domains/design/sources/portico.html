@@ -53,7 +53,9 @@
   --spot:color-mix(in srgb,var(--copper) 8%,transparent);
   --ds-success:#14532d;
   --ds-danger:#b3261e;
-  --glint:#fff;
+  /* Brillo del .btn-solid: hueso cálido derivado del cobre, no blanco puro
+     (el gradiente del barrido ya no lleva hex). */
+  --glint:color-mix(in srgb,#fffdf7 90%,var(--copper));
 }
 html[data-ds-theme="dark"]{
   /* La noche es del diseño, no de la paleta clara del dueño: el tema oscuro
@@ -70,8 +72,10 @@ html[data-ds-theme="dark"]{
   --copper-deep:color-mix(in srgb,var(--copper) 80%,var(--ink));
   --copper-on-ink:var(--copper);
   /* El acento se aclara en noche pero --ds-accent-ink se calculó contra el
-     acento crudo: texto tinta sobre cobre claro, no blanco. */
-  --ds-accent-ink:#241a10;
+     acento crudo: texto tinta sobre cobre claro, no blanco. La tinta va un
+     punto más oscura que el #241a10 del puente: con el acento del estilo
+     crudo (#a75e3c) el cobre aclarado quedaba en 4.38:1. */
+  --ds-accent-ink:#1c1409;
   --ds-success:#7fd6a0;
   --ds-danger:#f0958a;
   --copper-soft:color-mix(in srgb,var(--copper) 15%,transparent);
@@ -88,6 +92,20 @@ html[data-ds-theme="dark"]{
    cobre y fija su propia tinta. */
 html[data-ds-style="portico-arena"]:not([data-ds-theme="dark"]){
   --ds-accent:#8f6429;--ds-accent-ink:#fbf7ef;
+}
+/* Noche y pizarra son salas oscuras por diseño. Si el documento llega en
+   claro (el visitante cambió el tema), `--paper-2` se mezclaba con blanco y
+   dejaba bandas casi blancas con texto claro (~2:1). Se re-deriva hacia la
+   tinta: la banda sigue existiendo, pero del lado oscuro. El verde/rojo de
+   estado también: el bloque claro los fija oscuros (#14532d) y sobre un papel
+   nocturno quedaban en 1.8:1. */
+html[data-ds-style="portico-noche"]:not([data-ds-theme="dark"]),
+html[data-ds-style="portico-pizarra"]:not([data-ds-theme="dark"]){
+  --paper-2:color-mix(in srgb,var(--paper) 84%,var(--ink));
+  --paper-3:color-mix(in srgb,var(--paper) 92%,var(--ink));
+  --shadow:0 42px 84px -54px rgba(0,0,0,.88);
+  --ds-success:#7fd6a0;
+  --ds-danger:#f0958a;
 }
 *{box-sizing:border-box}
 html{-webkit-text-size-adjust:100%;text-size-adjust:100%;background:var(--paper);
@@ -317,7 +335,11 @@ header.top .ds-theme-toggle{margin-inline-start:0!important;width:40px!important
   border-bottom:1px solid var(--line-2);
   font-family:var(--serif);font-size:clamp(28px,8vw,42px);line-height:1.05;
   transition:color .25s}
-.m-nav a:hover{color:var(--copper-deep);padding-left:6px}
+/* El corrimiento del hover va en los hijos: mover el <a> arrastraba el
+   filete inferior y animar `padding-left` re-layoutaba la hoja por frame. */
+.m-nav a>span{transition:transform .25s var(--ease)}
+.m-nav a:hover{color:var(--copper-deep)}
+.m-nav a:hover>span{transform:translateX(6px)}
 .m-nav a .m-no{font:400 8.5px var(--mono);letter-spacing:.16em;color:var(--copper-deep);min-width:26px}
 .m-nav a .m-no::before{content:counter(mnav,decimal-leading-zero)}
 .m-foot{margin-top:auto;padding-top:26px;display:grid;gap:8px;font-size:12px;color:var(--muted)}
@@ -353,6 +375,9 @@ html[data-ds-theme="dark"] .hero-glow{opacity:1;
 .kicker{display:inline-flex;align-items:center;gap:12px;font:400 9.5px/1 var(--mono);
   letter-spacing:.24em;text-transform:uppercase;color:var(--muted)}
 .kicker::before{content:"";width:9px;height:9px;background:var(--copper);transform:rotate(45deg)}
+/* Sin ubicación cargada quedaba un "/" colgado al lado del año (y el hueco
+   del gap). */
+.kicker:has(.k-loc:empty) .k-loc,.kicker:has(.k-loc:empty) .k-sep{display:none}
 /* El separador "/" hereda el --muted del kicker: con --line quedaba a ~1.3:1. */
 .hero h1{margin-top:24px;font-size:clamp(42px,7.1vw,106px);line-height:.92;
   letter-spacing:-.028em;max-width:15ch}
@@ -468,7 +493,7 @@ html[data-ds-theme="dark"] .head > span.head-no{-webkit-text-stroke-color:color-
 .head h2{margin-top:13px;font-size:clamp(31px,4.4vw,58px);max-width:22ch}
 .head .lead{margin-top:14px;max-width:58ch;font-size:14px;line-height:1.72;color:var(--muted)}
 .head-link{justify-self:end;align-self:end;display:inline-flex;align-items:center;gap:8px;
-  padding-bottom:5px;border-bottom:1px solid var(--copper-line);
+  min-height:24px;padding-bottom:5px;border-bottom:1px solid var(--copper-line);
   font:400 8.5px/1 var(--mono);letter-spacing:.16em;text-transform:uppercase;color:var(--copper-deep);
   white-space:nowrap;transition:border-color .25s,color .25s}
 .head-link svg{transition:transform .3s var(--ease)}
@@ -603,13 +628,18 @@ html[data-ds-theme="dark"] .band-tag{color:var(--muted)}
 .ds-product{position:relative;min-width:0;counter-increment:piece;
   display:flex;flex-direction:column;
   border:1px solid var(--line);background:var(--card);padding:10px 10px 16px;
-  transition:border-color .4s,background .4s,transform .4s var(--ease),box-shadow .4s}
+  transition:border-color .4s,background .4s,transform .4s var(--ease)}
+/* La sombra del hover va en una capa con opacidad: animar box-shadow repinta
+   la cédula entera en cada frame. */
+.ds-product::after{content:"";position:absolute;inset:0;pointer-events:none;
+  box-shadow:var(--shadow);opacity:0;transition:opacity .4s var(--ease)}
 .ds-product::before{content:counter(piece,decimal-leading-zero);position:absolute;z-index:3;
   top:18px;left:18px;padding:3px 7px;background:color-mix(in srgb,var(--paper) 90%,transparent);
   font:400 8px/1 var(--mono);letter-spacing:.14em;color:var(--copper-deep)}
 .ds-product-link{position:relative;display:flex;flex-direction:column;flex:1 1 auto;
   min-height:0;padding:0;border:0;background:none}
-.ds-product:hover{transform:translateY(-5px);border-color:var(--copper-line);box-shadow:var(--shadow)}
+.ds-product:hover{transform:translateY(-5px);border-color:var(--copper-line)}
+.ds-product:hover::after{opacity:1}
 .ds-product-img{width:100%;aspect-ratio:4/5;object-fit:cover;background-color:var(--paper-3)}
 .ds-product:hover .ds-product-img{filter:saturate(1.07) contrast(1.02)}
 .ds-product-img.is-empty{display:grid;place-items:center;background:
@@ -639,18 +669,23 @@ html[data-ds-theme="dark"] .band-tag{color:var(--muted)}
 .ds-product-old{font-size:10px;color:var(--muted);text-decoration:line-through}
 .ds-product .ds-campaign-label{top:10px;left:auto;right:10px}
 /* CTA de compra que inyecta el puente: cierra la cédula con la piel del
-   .btn-solid. En la fila densa se compacta a la derecha. */
-.article.ds-product>.dsx-buy{
+   .btn-solid. En la fila densa se compacta a la derecha. El puente lo monta
+   dentro de `.dsx-buy-wrap` (no como hijo directo del article) y pinta con
+   `--ds-accent`, que este diseño no define: sin esta regla el botón caía al
+   #111 del fallback — negro sobre negro en modo noche. */
+.ds-product .dsx-buy{
   width:auto;min-width:0;margin:14px 0 0;padding:0;
   display:flex;align-items:center;justify-content:center;gap:10px;
   min-height:46px;border:0;border-radius:var(--radius);cursor:pointer;
   background:var(--copper);color:var(--ds-accent-ink,#fbf7ef);
   font:500 9.5px/1 var(--mono);letter-spacing:.2em;text-transform:uppercase;
-  transition:transform .3s var(--ease),box-shadow .3s,filter .15s ease}
-.article.ds-product>.dsx-buy:hover{transform:translateY(-2px);filter:brightness(1.05);
-  box-shadow:0 22px 38px -24px color-mix(in srgb,var(--copper) 78%,transparent)}
-[data-ds-view-mode="list"] .article.ds-product>.dsx-buy{
+  transition:transform .3s var(--ease),background-color .3s,border-color .3s}
+.ds-product .dsx-buy:hover{transform:translateY(-2px);
+  background-color:color-mix(in srgb,var(--copper) 86%,var(--ink))}
+[data-ds-view-mode="list"] .ds-product .dsx-buy{
   width:fit-content;min-width:0;margin:10px 0 0 auto;padding:0 20px;min-height:40px}
+/* Mismo caso para el contador del carrito. */
+header.top .dsx-cart-badge{background:var(--copper);color:var(--ds-accent-ink,#fbf7ef)}
 .ds-empty{display:grid;place-items:center;gap:16px;min-height:220px;padding:40px 24px;
   border:1px dashed var(--line);text-align:center;
   font:400 9px/1.9 var(--mono);letter-spacing:.18em;text-transform:uppercase;color:var(--muted)}
@@ -770,7 +805,12 @@ html:has([data-ds-products] > .ds-empty) .cat-bar{display:none}
 .ds-plan{position:relative;display:flex;flex-direction:column;padding:30px 26px;
   border:1px solid var(--line);background:var(--card);
   transition:transform .35s var(--ease),border-color .35s}
-.ds-plan:hover{transform:translateY(-4px);border-color:var(--copper-line);box-shadow:var(--shadow)}
+/* Misma capa de sombra que .ds-product: el hover levanta 4px y la sombra
+   aparece por opacidad, no por repintado del box-shadow. */
+.ds-plan::after{content:"";position:absolute;inset:0;pointer-events:none;
+  box-shadow:var(--shadow);opacity:0;transition:opacity .35s var(--ease)}
+.ds-plan:hover{transform:translateY(-4px);border-color:var(--copper-line)}
+.ds-plan:hover::after{opacity:1}
 .ds-plan-name{font-family:var(--serif);font-size:24px;line-height:1.1}
 .ds-plan-price{margin-top:16px;font-family:var(--serif);font-size:40px;line-height:1;
   color:var(--copper-deep);font-variant-numeric:tabular-nums}
@@ -865,7 +905,8 @@ html[data-ds-theme="dark"] .cta-word{-webkit-text-stroke-color:color-mix(in srgb
   letter-spacing:.18em;text-transform:uppercase;color:var(--muted)}
 .contact-k svg{width:12px;height:12px;color:var(--copper);flex:none}
 .contact-v{font-size:12.5px;line-height:1.65}
-.contact-v a{border-bottom:1px solid var(--copper-line)}
+.contact-v a{display:inline-flex;align-items:center;min-height:24px;
+  border-bottom:1px solid var(--copper-line)}
 .contact-v a:hover{color:var(--copper-deep)}
 .contact-socials{display:flex;flex-wrap:wrap;gap:8px;margin-top:20px}
 .contact-socials a{padding:8px 13px;border:1px solid var(--line);
@@ -906,8 +947,9 @@ html[data-ds-theme="dark"] .cta-word{-webkit-text-stroke-color:color-mix(in srgb
 .ds-contact-status[data-ok="0"]{color:var(--ds-danger,#b3402e)}
 .ds-contact-send{justify-self:start;min-height:46px;padding:0 22px;border:0;background:var(--copper);
   color:var(--ds-accent-ink,#fff);font:500 9px/1 var(--mono);letter-spacing:.2em;
-  text-transform:uppercase;cursor:pointer;transition:transform .25s}
-.ds-contact-send:hover{filter:brightness(1.07);transform:translateY(-1px)}
+  text-transform:uppercase;cursor:pointer;transition:transform .25s,background-color .25s}
+.ds-contact-send:hover{transform:translateY(-1px);
+  background-color:color-mix(in srgb,var(--copper) 88%,var(--ink))}
 
 /* Pie */
 .foot{border-top:1px solid var(--line);background:var(--paper-2);padding-top:0}
@@ -949,7 +991,7 @@ html[data-ds-theme="dark"] .foot-word{-webkit-text-stroke-color:color-mix(in srg
 .foot-base{display:flex;justify-content:space-between;flex-wrap:wrap;gap:14px;align-items:center;
   margin-top:clamp(18px,3vw,30px);padding:16px 0;border-top:1px solid var(--line);
   font:400 8px/1.5 var(--mono);letter-spacing:.16em;text-transform:uppercase;color:var(--muted)}
-.foot-base a{display:inline-flex;align-items:center;gap:8px;color:var(--copper-deep)}
+.foot-base a{display:inline-flex;align-items:center;gap:8px;min-height:24px;color:var(--copper-deep)}
 .foot-base a svg{width:12px;height:12px;transition:transform .3s var(--ease)}
 .foot-base a:hover svg{transform:translateY(-3px)}
 
@@ -957,6 +999,7 @@ html[data-ds-theme="dark"] .foot-word{-webkit-text-stroke-color:color-mix(in srg
 .cat-surface{padding:clamp(26px,4vw,48px) 0 clamp(56px,7vw,96px)}
 .crumbs{display:flex;flex-wrap:wrap;align-items:center;gap:8px;margin-bottom:22px;
   font:400 8px/1 var(--mono);letter-spacing:.16em;text-transform:uppercase;color:var(--muted)}
+.crumbs a{display:inline-flex;align-items:center;min-height:24px}
 .crumbs a:hover{color:var(--ink)}
 .crumbs strong{font-weight:400;color:var(--ink)}
 .crumbs .sep{color:var(--line)}
@@ -966,11 +1009,13 @@ html[data-ds-theme="dark"] .foot-word{-webkit-text-stroke-color:color-mix(in srg
 .cat-sub{margin-top:9px;font:400 8.5px/1.5 var(--mono);letter-spacing:.2em;
   text-transform:uppercase;color:var(--muted)}
 .cat-search{position:relative;min-width:0}
-.search-field{display:flex;align-items:center;gap:10px;padding:9px 0;border-bottom:1px solid var(--ink);
+.search-field{display:flex;align-items:center;gap:10px;padding:0;border-bottom:1px solid var(--ink);
   transition:border-color .2s}
 .search-field:focus-within{border-bottom-color:var(--copper)}
 .search-field svg{width:16px;height:16px;color:var(--copper);flex:none}
-.search-field input{flex:1;min-width:0;border:0;background:transparent;color:inherit;
+/* El alto del campo lo pone el input: el padding del contenedor no es área
+   clickeable (el campo quedaba de 20px en escritorio). */
+.search-field input{flex:1;min-width:0;min-height:38px;border:0;background:transparent;color:inherit;
   font:400 13px/1.4 var(--sans);outline:none}
 .search-field input::-webkit-search-cancel-button,
 .search-field input::-webkit-search-decoration{-webkit-appearance:none;appearance:none}
@@ -1056,7 +1101,7 @@ html[data-ds-theme="dark"] .foot-word{-webkit-text-stroke-color:color-mix(in srg
 .f-price-field{flex:1;min-width:0;padding:6px 8px;border:1px solid var(--line);
   transition:border-color .2s}
 .f-price-field:focus-within{border-color:var(--copper)}
-.f-price-field input{width:100%;border:0;background:none;outline:none;
+.f-price-field input{width:100%;min-height:24px;border:0;background:none;outline:none;
   font:400 11px/1.4 var(--mono);color:inherit}
 .f-apply{width:100%;margin-top:8px;padding:8px;border:1px solid var(--ink);background:none;
   cursor:pointer;font:400 8px/1 var(--mono);letter-spacing:.18em;text-transform:uppercase;
@@ -1074,7 +1119,8 @@ html[data-ds-theme="dark"] .foot-word{-webkit-text-stroke-color:color-mix(in srg
   border-top:1px solid var(--line)}
 [data-ds-view-mode="list"] .ds-product{display:block;border:0;border-bottom:1px solid var(--line);
   padding:0;background:none;box-shadow:none}
-[data-ds-view-mode="list"] .ds-product::before{display:none}
+[data-ds-view-mode="list"] .ds-product::before,
+[data-ds-view-mode="list"] .ds-product::after{display:none}
 [data-ds-view-mode="list"] .ds-product-link{display:flex;flex-direction:row;align-items:center;
   gap:22px;padding:16px 0;border:0;background:none}
 [data-ds-view-mode="list"] .ds-product:hover{transform:none;box-shadow:none}
@@ -1119,17 +1165,19 @@ html[data-ds-theme="dark"] .foot-word{-webkit-text-stroke-color:color-mix(in srg
   color:var(--copper-deep)}
 .pdp-price s:empty,.pdp-price em:empty{display:none}
 .pdp-actions{display:flex;flex-wrap:wrap;gap:10px;margin-top:24px}
-/* Compra online: el puente inserta .dsx-buy antes de .pdp-actions; es el CTA
-   primario y el de WhatsApp pasa a secundario solo en modo tienda. */
-.pdp-info>.dsx-buy{
-  width:100%;min-width:0;margin:0 0 16px;padding:0;
+/* Compra online: el puente monta el .dsx-buy dentro de .pdp-actions, así que
+   comparte fila con el CTA de WhatsApp — se le da la piel del .btn-solid y el
+   ancho del slot (un width:100% acá apilaría el botón sobre el secundario).
+   Sin esta regla caía al #111 del fallback de --ds-accent. */
+.pdp-info .dsx-buy{
+  min-width:0;padding:0 22px;min-height:48px;
   display:flex;align-items:center;justify-content:center;gap:10px;
-  min-height:48px;border:0;border-radius:var(--radius);cursor:pointer;
+  border:0;border-radius:var(--radius);cursor:pointer;
   background:var(--copper);color:var(--ds-accent-ink,#fbf7ef);
   font:500 9.5px/1 var(--mono);letter-spacing:.2em;text-transform:uppercase;
-  transition:transform .3s var(--ease),box-shadow .3s,filter .15s ease}
-.pdp-info>.dsx-buy:hover{transform:translateY(-2px);filter:brightness(1.05);
-  box-shadow:0 22px 38px -24px color-mix(in srgb,var(--copper) 78%,transparent)}
+  transition:transform .3s var(--ease),background-color .3s,border-color .3s}
+.pdp-info .dsx-buy:hover{transform:translateY(-2px);
+  background-color:color-mix(in srgb,var(--copper) 86%,var(--ink))}
 html[data-ds-commerce="1"] .pdp-actions .btn-solid{
   background:transparent;color:var(--ink);
   border-color:color-mix(in srgb,var(--ink) 42%,transparent)}
@@ -1234,6 +1282,7 @@ html[data-ds-commerce="1"] .pdp-actions .btn-solid:hover{
 .svc-aside .row{display:grid;gap:3px;padding:11px 0;border-bottom:1px solid var(--line-2)}
 .svc-aside .row dt{font:400 8px/1.4 var(--mono);letter-spacing:.18em;text-transform:uppercase;color:var(--muted)}
 .svc-aside .row dd{font-size:12px;line-height:1.6}
+.svc-aside .row dd a{display:inline-flex;align-items:center;min-height:24px}
 .svc-aside .map-card{margin-top:16px}
 .svc-cta{margin-top:28px}
 
@@ -1309,6 +1358,9 @@ html[data-ds-commerce="1"] .pdp-actions .btn-solid:hover{
   .hero-frame{inset:10px -10px -10px 10px}
   .cat-head{grid-template-columns:1fr}
   .cat-layout{grid-template-columns:1fr}
+  /* Ficha en una columna: el 4/5 de la foto a 768 medía 875px y empujaba
+     precio y CTA fuera del primer scroll. */
+  .pdp-media{aspect-ratio:4/3}
   .cat-filters-toggle{display:inline-flex}
   .cat-aside{position:fixed;left:0;right:0;bottom:0;z-index:96;max-height:min(calc(var(--fr-h,100vh) * .86),760px);overflow:auto;
     border-radius:var(--radius) var(--radius) 0 0;transform:translateY(102%);visibility:hidden;
@@ -1328,6 +1380,40 @@ html[data-ds-commerce="1"] .pdp-actions .btn-solid:hover{
   .ds-stat{padding:4px 20px}
   .hero-ticket .tk{padding-right:16px}
   .hero-ticket .tk+.tk{padding-left:16px}
+}
+/* Objetivos táctiles ≥44px: vive en 900 y no en 760 porque una tablet (768)
+   también se toca — ahí el header, los chips y las filas del pie quedaban en
+   27–40px. Los controles que inyecta el puente (.dsx-account/.dsx-cart/
+   .ds-theme-toggle) se dimensionan acá porque el diseño es su gancho de
+   override. */
+@media(max-width:900px){
+  .brand{min-height:44px}
+  .top-wa{min-height:44px}
+  .top-burger{width:44px;height:44px}
+  header.top .ds-theme-toggle{width:44px!important;height:44px!important}
+  .top-inner>.dsx-account{min-height:44px;min-width:44px}
+  header.top .dsx-cart{min-height:44px;min-width:44px;padding:0 10px}
+  .head-link{min-height:44px;align-items:center}
+  .ds-cat,.cat-chip,.ds-rev-pick,.contact-socials a,.foot-social a,.foot-base a,
+  .ds-brand-link,.m-foot a{min-height:44px}
+  .contact-socials a,.foot-social a,.foot-base a,.m-foot a{display:inline-flex;align-items:center}
+  .contact-v a{display:inline-flex;align-items:center;min-height:44px}
+  .svc-aside .row dd a{min-height:44px}
+  .foot-col a{display:flex;align-items:center;min-height:44px}
+  .crumbs a{display:inline-flex;align-items:center;min-height:44px;padding:0 4px}
+  /* El input manda el alto del campo: el padding vertical del contenedor no
+     es clickeable. */
+  .search-field{padding-block:0}
+  .search-field input{min-height:44px}
+  .suggest-item{min-height:44px}
+  .suggest-more{min-height:44px;display:flex;align-items:center}
+  .ds-rev-input,.f-price-field{min-height:44px}
+  .ds-contact-input{min-height:46px}
+  .f-cat{min-height:44px;align-items:center}
+  .f-check{min-height:44px}
+  .f-more{min-height:44px}
+  .f-price-field{display:flex;align-items:center}
+  .f-apply,.f-done,.f-clear{min-height:46px}
 }
 @media(max-width:760px){
   /* iOS no hace zoom si el campo mide 16px o más. */
@@ -1367,21 +1453,7 @@ html[data-ds-commerce="1"] .pdp-actions .btn-solid:hover{
   .ds-service::after{margin-top:2px}
   .cinta{padding:12px 0}
   .foot-word{-webkit-text-stroke-width:.8px}
-  /* Objetivos táctiles ≥40px: chips, redes, filas de filtro y pie. */
   .m-bar a{min-height:44px;align-content:center}
-  .ds-cat,.cat-chip,.ds-rev-pick,.contact-socials a,.foot-social a,.foot-base a{min-height:40px}
-  .contact-socials a,.foot-social a,.foot-base a{display:inline-flex;align-items:center}
-  .foot-col a{display:flex;align-items:center;min-height:40px}
-  .crumbs a{padding:6px 4px}
-  .suggest-item{min-height:44px}
-  .suggest-more{min-height:44px;display:flex;align-items:center}
-  .ds-rev-input,.f-price-field{min-height:44px}
-  .ds-contact-input{min-height:46px}
-  .f-cat{min-height:40px;align-items:center}
-  .f-check{min-height:40px}
-  .f-more{min-height:40px}
-  .f-price-field{display:flex;align-items:center}
-  .f-apply,.f-done,.f-clear{min-height:46px}
 }
 @media(max-width:460px){
   .grid-preview .ds-product:nth-child(n+5){display:none}
@@ -1418,6 +1490,9 @@ html[data-ds-commerce="1"] .pdp-actions .btn-solid:hover{
   .ds-product:hover,.ds-plan:hover,.ds-quote:hover,.ds-mate:hover,.map-card:hover,
   .ds-guar:hover,.ds-service:hover,.btn:hover,.ds-cat:hover,.foot-col a:hover,
   .f-cat:hover,.head-link:hover svg,.ds-shot:hover img{transform:none;padding-left:0}
+  /* Sin hover real la sombra quedaría pegada tras el tap. */
+  .ds-product:hover::after,.ds-plan:hover::after{opacity:0}
+  .m-nav a:hover>span{transform:none}
   .ds-guar:hover .ds-guar-icon,.ds-guar:hover .ds-guar-copy,
   .ds-service:hover>.ds-service-name,.ds-service:hover>.ds-service-desc,
   .ds-service:hover::before,.ds-service:hover::after{transform:none}
@@ -1563,7 +1638,7 @@ html[data-ds-commerce="1"] .pdp-actions .btn-solid:hover{
     <span class="hero-glow" aria-hidden="true"></span>
     <div class="wrap hero-grid">
       <div class="hero-copy">
-        <p class="kicker"><span data-flag="location">{{store_location}} <span class="k-sep">/</span></span> {{year}}</p>
+        <p class="kicker"><span class="k-loc" data-flag="location">{{store_location}}</span><span class="k-sep">/</span> {{year}}</p>
         <h1 data-fallback="{{store_name}}">{{store_tagline}}</h1>
         <p class="hero-lead">{{store_description}}</p>
         <div class="hero-actions">
