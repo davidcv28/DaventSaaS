@@ -41,8 +41,20 @@ const STATUS_LABELS = {
   SHIPPED: 'Enviado', DELIVERED: 'Entregado', EXPIRED: 'Vencido',
   CANCELLED: 'Cancelado', REFUNDED: 'Reembolsado',
 }
-// Mismas etiquetas que el checkout y el seguimiento.
-const SHIP_LABELS = { home: 'A coordinar con la tienda', pickup: 'Retiro sin cargo' }
+// Con tarifa fija cargada por la tienda el envío a domicilio muestra
+// "Envío a domicilio" (el precio va en Totales); sin tarifa queda
+// "A coordinar" — shipping_priced=False, el 0 no es gratis.
+const shipLabel = computed(() => {
+  const m = receipt.value?.order?.shipping_method
+  if (m === 'pickup') return 'Retiro sin cargo'
+  if (m === 'home') return receipt.value?.order?.shipping_priced ? 'Envío a domicilio' : 'A coordinar con la tienda'
+  return m || ''
+})
+const shipCostLabel = computed(() => {
+  if (!receipt.value?.order?.shipping_priced) return 'A coordinar'
+  const n = Number(receipt.value?.totals?.shipping_cost)
+  return n > 0 ? money(n) : 'Sin cargo'
+})
 
 // invoice_ref puede ser un código/número de factura o una URL a un
 // archivo que subió el vendedor — si es URL la mostramos como descarga,
@@ -141,7 +153,7 @@ onMounted(load)
         <h2 class="ec-rp-sec-title">Datos del pedido</h2>
         <dl class="ec-rp-fields">
           <div><dt>Comprador</dt><dd>{{ receipt.customer?.first_name || '—' }}</dd></div>
-          <div><dt>Entrega</dt><dd>{{ SHIP_LABELS[receipt.order?.shipping_method] || receipt.order?.shipping_method || '—' }}</dd></div>
+          <div><dt>Entrega</dt><dd>{{ shipLabel || '—' }}</dd></div>
           <div v-if="addressLine(receipt.shipping_address)">
             <dt>Dirección</dt><dd>{{ addressLine(receipt.shipping_address) }}</dd>
           </div>
@@ -171,7 +183,7 @@ onMounted(load)
         <dl class="ec-rp-totals">
           <div><dt>Subtotal</dt><dd>{{ money(receipt.totals?.subtotal) }}</dd></div>
           <div v-if="Number(receipt.totals?.discount_total) > 0"><dt>Descuento</dt><dd>−{{ money(receipt.totals.discount_total) }}</dd></div>
-          <div><dt>{{ receipt.order?.shipping_method === 'home' ? 'Envío' : 'Retiro' }}</dt><dd>{{ receipt.order?.shipping_method === 'home' ? money(receipt.totals?.shipping_cost) : 'Sin cargo' }}</dd></div>
+          <div><dt>{{ receipt.order?.shipping_method === 'home' ? 'Envío' : 'Retiro' }}</dt><dd>{{ receipt.order?.shipping_method === 'home' ? shipCostLabel : 'Sin cargo' }}</dd></div>
           <div class="ec-rp-grand"><dt>Total</dt><dd>{{ money(receipt.totals?.total) }}</dd></div>
         </dl>
       </section>

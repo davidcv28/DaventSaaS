@@ -14,6 +14,9 @@ import { http } from './http.js'
 //   {accept_transfer,accept_whatsapp,accept_cash,mp_enabled,transfer_alias,
 //    transfer_holder,transfer_instructions,whatsapp_number,
 //    require_payment_proof,payment_deadline_hours}
+// GET|PATCH /api/store-payments/shipping-config/ → envío a domicilio
+//   {home_price (decimal|string|null), updated_at} — null = "a coordinar",
+//   número >= 0 = tarifa fija cobrada en el pedido (0 = envío gratis)
 // GET|PUT   /api/store-payments/fiscal-profile/ → {legal_name,tax_condition
 //   (CF|MO|RI|EX),cuit,fiscal_address,point_of_sale,is_complete,updated_at}
 // GET|PUT   /api/store-payments/oauth-config/   → {enabled,google_client_id,
@@ -39,6 +42,10 @@ export const storePaymentsApi = {
   // ----- Métodos manuales de cobro -----
   getConfig: () => http.get('/store-payments/config/').then((r) => r.data),
   updateConfig: (payload) => http.patch('/store-payments/config/', payload).then((r) => r.data),
+
+  // ----- Envío a domicilio (tarifa fija del checkout) -----
+  getShippingConfig: () => http.get('/store-payments/shipping-config/').then((r) => r.data),
+  updateShippingConfig: (payload) => http.patch('/store-payments/shipping-config/', payload).then((r) => r.data),
 
   // ----- Datos fiscales (gate de orders_enabled junto a ecommerce_enabled) -----
   getFiscalProfile: () => http.get('/store-payments/fiscal-profile/').then((r) => r.data),

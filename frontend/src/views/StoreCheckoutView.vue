@@ -25,6 +25,25 @@ const ctx = inject('storePage')
 const slug = computed(() => ctx?.slug?.value || ctx?.slug || '')
 const ordersEnabled = computed(() => Boolean(ctx?.ordersEnabled?.value ?? ctx?.ordersEnabled))
 const shopName = computed(() => ctx?.shopName?.value || ctx?.shopName || 'la tienda')
+// Tarifa de envío a domicilio del payload público (StoreShippingConfig):
+// home_price null = "a coordinar"; número >= 0 = precio fijo que el
+// server cobra en create_order (0 = envío gratis).
+const storeData = computed(() => ctx?.store?.value || ctx?.store || null)
+const homePrice = computed(() => {
+  const raw = storeData.value?.shipping?.home_price
+  if (raw === null || raw === undefined || raw === '') return null
+  const n = Number(raw)
+  return Number.isFinite(n) ? n : null
+})
+const shipHomeHint = computed(() => homePrice.value === null
+  ? 'Te lo llevamos a tu dirección — envío a coordinar'
+  : `Te lo llevamos a tu dirección · envío ${money(homePrice.value)}`)
+const shipTotalLabel = computed(() => {
+  if (form.value.shipping_method === 'pickup') return 'Retiro sin cargo'
+  if (homePrice.value === null) return 'A coordinar con la tienda'
+  return homePrice.value > 0 ? money(homePrice.value) : 'Sin cargo'
+})
+const estTotal = computed(() => Number(cart.itemsTotal || 0) + (form.value.shipping_method === 'home' && homePrice.value !== null ? homePrice.value : 0))
 
 const router = useRouter()
 const cart = useCartStore()
@@ -376,7 +395,7 @@ onMounted(load)
               <label class="ec-co-opt" :class="{ 'is-on': form.shipping_method === 'home' }">
                 <input v-model="form.shipping_method" type="radio" value="home" :disabled="submitting" />
                 <span class="ec-co-opt-ico" aria-hidden="true"><AppIcon name="truck" :size="18" /></span>
-                <span class="ec-co-opt-txt"><strong>Envío a domicilio</strong><small>Te lo llevamos a tu dirección</small></span>
+                <span class="ec-co-opt-txt"><strong>Envío a domicilio</strong><small>{{ shipHomeHint }}</small></span>
               </label>
               <label class="ec-co-opt" :class="{ 'is-on': form.shipping_method === 'pickup' }">
                 <input v-model="form.shipping_method" type="radio" value="pickup" :disabled="submitting" />
@@ -508,7 +527,7 @@ onMounted(load)
               <strong>Tu pedido</strong>
               <small>{{ cart.itemCount }} {{ itemNoun }}</small>
             </span>
-            <strong class="ec-co-summary-toggle-total">{{ money(cart.itemsTotal) }}</strong>
+            <strong class="ec-co-summary-toggle-total">{{ money(estTotal) }}</strong>
             <AppIcon name="chevron-down" :size="17" class="ec-co-summary-caret" :class="{ 'is-open': summaryOpen }" aria-hidden="true" />
           </button>
           <section class="ec-co-card ec-co-summary" :class="{ 'is-open': summaryOpen }" aria-label="Resumen del pedido">
@@ -527,8 +546,8 @@ onMounted(load)
             <dl class="ec-co-totals">
               <div><dt>Subtotal</dt><dd>{{ money(cart.itemsTotal) }}</dd></div>
               <div v-if="cart.memberDiscount"><dt>Descuento de miembro</dt><dd>−{{ cart.memberDiscount }}%</dd></div>
-              <div><dt>Envío</dt><dd>{{ form.shipping_method === 'pickup' ? 'Retiro sin cargo' : 'A coordinar con la tienda' }}</dd></div>
-              <div class="ec-co-grand"><dt>Total estimado</dt><dd>{{ money(cart.itemsTotal) }}</dd></div>
+              <div><dt>Envío</dt><dd>{{ shipTotalLabel }}</dd></div>
+              <div class="ec-co-grand"><dt>Total estimado</dt><dd>{{ money(estTotal) }}</dd></div>
             </dl>
             <p class="ec-co-muted">El total final lo confirma el servidor al crear el pedido.</p>
           </section>

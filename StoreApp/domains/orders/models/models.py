@@ -66,9 +66,11 @@ class Order(models.Model):
                            (precio de lista − ofertas − dto. membresía).
       - `discount_total` = ahorro total vs precio de lista
                            (Σ (list_price − unit_price) × qty) — informativo.
-      - `shipping_cost`  = 0 en MVP (no hay config de envío: se coordina
-                           por WhatsApp; el campo ya existe para la fase
-                           de envíos por zona).
+      - `shipping_cost`  = tarifa fija de StoreShippingConfig.home_price
+                           cuando el envío es a domicilio y el dueño la
+                           cargó (0 si está en "a coordinar" o es retiro);
+                           `shipping_priced` distingue "precio cobrado"
+                           (incl. envío gratis $0) de "a coordinar".
       - `total`          = subtotal + shipping_cost.
     """
     class Status(models.TextChoices):
@@ -134,6 +136,10 @@ class Order(models.Model):
     subtotal                    =   models.DecimalField(max_digits = 12, decimal_places = 2, default = 0, verbose_name = 'Subtotal (con descuentos)')
     discount_total              =   models.DecimalField(max_digits = 12, decimal_places = 2, default = 0, verbose_name = 'Descuentos aplicados')
     shipping_cost               =   models.DecimalField(max_digits = 12, decimal_places = 2, default = 0, verbose_name = 'Costo de envío')
+    #True si el envío a domicilio se cobró con tarifa fija al crear
+    #(StoreShippingConfig.home_price no-NULL — incluye envío gratis $0);
+    #False = "a coordinar" (shipping_cost=0 no significa gratis).
+    shipping_priced             =   models.BooleanField(default = False, verbose_name = 'Envío con precio fijo')
     total                       =   models.DecimalField(max_digits = 12, decimal_places = 2, default = 0, verbose_name = 'Total')
     #===== CICLO DE VIDA =====
     status                      =   models.CharField(max_length = 20, choices = Status.choices, default = Status.PENDING_PAYMENT, verbose_name = 'Estado')

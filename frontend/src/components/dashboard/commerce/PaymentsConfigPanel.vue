@@ -33,6 +33,12 @@ const payBusy = ref(false)
 const payMsg = ref('')
 const payErr = ref('')
 
+// ----- Envío a domicilio (tarifa fija del checkout — PATCH merge) -----
+const shipForm = ref({ mode: 'coordinar', home_price: null })
+const shipBusy = ref(false)
+const shipMsg = ref('')
+const shipErr = ref('')
+
 // ----- Datos fiscales (PUT completo) -----
 const fiscalForm = ref({
   legal_name: '', tax_condition: 'CF', cuit: '', fiscal_address: '', point_of_sale: '',
@@ -82,14 +88,20 @@ async function loadAll() {
   errMsg.value = ''
   const safe = (p) => p.catch(() => null)
   try {
-    const [cfg, fiscal, oauth, storage, mp] = await Promise.all([
+    const [cfg, shipCfg, fiscal, oauth, storage, mp] = await Promise.all([
       safe(storePaymentsApi.getConfig()),
+      safe(storePaymentsApi.getShippingConfig()),
       safe(storePaymentsApi.getFiscalProfile()),
       safe(storePaymentsApi.getOAuthConfig()),
       safe(storePaymentsApi.getStorageConfig()),
       safe(storePaymentsApi.mpStatus()),
     ])
     if (cfg) Object.assign(payForm.value, cfg)
+    if (shipCfg) {
+      const price = shipCfg.home_price
+      shipForm.value.mode = (price === null || price === undefined || price === '') ? 'coordinar' : 'fijo'
+      shipForm.value.home_price = (price === null || price === undefined || price === '') ? null : Number(price)
+    }
     if (fiscal) {
       Object.assign(fiscalForm.value, fiscal)
       fiscalMeta.value = { is_complete: Boolean(fiscal.is_complete), updated_at: fiscal.updated_at }
@@ -168,6 +180,27 @@ async function savePayments() {
   } catch (e) {
     payErr.value = apiErr(e)
   } finally { payBusy.value = false }
+}
+
+async function saveShipping() {
+  shipBusy.value = true; shipMsg.value = ''; shipErr.value = ''
+  try {
+    let price = null
+    if (shipForm.value.mode === 'fijo') {
+      price = Number(shipForm.value.home_price)
+      if (shipForm.value.home_price === null || shipForm.value.home_price === '' || Number.isNaN(price) || price < 0) {
+        shipErr.value = 'Ingresá un precio de envío válido (0 o más).'
+        shipBusy.value = false
+        return
+      }
+    }
+    const data = await storePaymentsApi.updateShippingConfig({ home_price: price })
+    const p = data.home_price
+    shipForm.value.home_price = (p === null || p === undefined || p === '') ? null : Number(p)
+    shipMsg.value = 'Envíos guardados.'
+  } catch (e) {
+    shipErr.value = apiErr(e)
+  } finally { shipBusy.value = false }
 }
 
 async function saveFiscal() {
@@ -379,6 +412,32 @@ const mpWebhooksOk = computed(() => Boolean(mpStatus.value?.webhook_configured))
         <AlertMessage v-else-if="payMsg" kind="success" :message="payMsg" />
         <div class="btn-row">
           <button type="button" class="btn btn-auto" :disabled="payBusy" @click="savePayments">{{ payBusy ? 'Guardando…' : 'Guardar métodos' }}</button>
+        </div>
+      </section>
+
+      <!-- ===== Envíos ===== -->
+      <section class="card" style="margin-top:14px">
+        <h3><AppIcon name="truck" :size="18" /> Envíos</h3>
+        <p class="hint" style="margin:-6px 0 12px">Cómo se cobra el envío a domicilio en tu checkout. El retiro en el local siempre es sin cargo.</p>
+        <div class="check-list">
+          <label class="check-item">
+            <input v-model="shipForm.mode" type="radio" value="coordinar" :disabled="shipBusy" />
+            <span class="check-text"><strong>A coordinar con el comprador</strong><small>El envío se pacta por WhatsApp — el pedido no cobra envío online.</small></span>
+          </label>
+          <label class="check-item">
+            <input v-model="shipForm.mode" type="radio" value="fijo" :disabled="shipBusy" />
+            <span class="check-text"><strong>Precio fijo</strong><small>Se suma al total del pedido. $0 = envío gratis.</small></span>
+          </label>
+        </div>
+        <label v-if="shipForm.mode === 'fijo'" class="field" style="margin-top:12px;max-width:240px">
+          <span class="field-label">Precio del envío a domicilio</span>
+          <input v-model.number="shipForm.home_price" type="number" min="0" step="0.01" class="input" placeholder="Ej: 1500" :disabled="shipBusy" />
+          <small class="hint">En pesos argentinos. 0 = envío gratis.</small>
+        </label>
+        <AlertMessage v-if="shipErr" kind="error" :message="shipErr" />
+        <AlertMessage v-else-if="shipMsg" kind="success" :message="shipMsg" />
+        <div class="btn-row">
+          <button type="button" class="btn btn-auto" :disabled="shipBusy" @click="saveShipping">{{ shipBusy ? 'Guardando…' : 'Guardar envíos' }}</button>
         </div>
       </section>
 

@@ -57,13 +57,28 @@ const PAYMENT_LABELS = {
   cash: 'Efectivo / en persona',
   mp: 'Mercado Pago',
 }
-// Mismas etiquetas que el checkout y el comprobante: el costo del envío a
-// domicilio se coordina con la tienda (no hay tarifa online).
-const SHIP_LABELS = { home: 'A coordinar con la tienda', pickup: 'Retiro sin cargo' }
+// Etiqueta de entrega: con tarifa fija cargada por la tienda el envío a
+// domicilio muestra "Envío a domicilio" (el precio va en Detalle); sin
+// tarifa queda "A coordinar" (shipping_priced=False — el 0 no es gratis).
 const ACTIVE = new Set(['PENDING_PAYMENT', 'PAID', 'PACKING', 'SHIPPED'])
 const TERMINAL_BAD = new Set(['EXPIRED', 'CANCELLED', 'REFUNDED'])
 
 const statusLabel = computed(() => STATUS_LABELS[order.value?.status] || order.value?.status || '')
+const shipLabel = computed(() => {
+  const m = order.value?.shipping_method
+  if (m === 'pickup') return 'Retiro sin cargo'
+  if (m === 'home') return order.value?.shipping_priced ? 'Envío a domicilio' : 'A coordinar con la tienda'
+  return m || ''
+})
+// Detalle/recibo: precio fijo cobrado, "Sin cargo" si la tarifa es $0,
+// "A coordinar" cuando la tienda no cargó precio (shipping_cost=0).
+const shipCostLabel = (priced, cost) => {
+  if (!priced) return 'A coordinar'
+  const n = Number(cost)
+  return n > 0 ? money(n) : 'Sin cargo'
+}
+const orderShipCost = computed(() => shipCostLabel(order.value?.shipping_priced, order.value?.shipping_cost))
+const receiptShipCost = computed(() => shipCostLabel(receipt.value?.order?.shipping_priced, receipt.value?.totals?.shipping_cost))
 const isActive = computed(() => ACTIVE.has(order.value?.status))
 const isTerminalBad = computed(() => TERMINAL_BAD.has(order.value?.status))
 
@@ -279,7 +294,7 @@ onUnmounted(() => {
         <dl class="ec-track-chips">
           <div class="ec-track-chip"><AppIcon name="calendar" :size="13" aria-hidden="true" /><span>Realizado el {{ fmtDate(order.created_at) }}</span></div>
           <div v-if="order.payment_method" class="ec-track-chip"><AppIcon name="credit-card" :size="13" aria-hidden="true" /><span>{{ PAYMENT_LABELS[order.payment_method] || order.payment_method }}</span></div>
-          <div v-if="order.shipping_method" class="ec-track-chip"><AppIcon :name="order.shipping_method === 'home' ? 'truck' : 'store'" :size="13" aria-hidden="true" /><span>{{ SHIP_LABELS[order.shipping_method] || order.shipping_method }}</span></div>
+          <div v-if="order.shipping_method" class="ec-track-chip"><AppIcon :name="order.shipping_method === 'home' ? 'truck' : 'store'" :size="13" aria-hidden="true" /><span>{{ shipLabel }}</span></div>
         </dl>
       </section>
 
@@ -332,7 +347,7 @@ onUnmounted(() => {
         <dl class="ec-track-totals">
           <div><dt>Subtotal</dt><dd>{{ money(order.subtotal) }}</dd></div>
           <div v-if="Number(order.discount_total) > 0"><dt>Descuentos</dt><dd>−{{ money(order.discount_total) }}</dd></div>
-          <div v-if="order.shipping_method === 'home'"><dt>Envío</dt><dd>{{ money(order.shipping_cost) }}</dd></div>
+          <div v-if="order.shipping_method === 'home'"><dt>Envío</dt><dd>{{ orderShipCost }}</dd></div>
           <div v-else><dt>Retiro</dt><dd>Sin cargo</dd></div>
           <div class="ec-track-grand"><dt>Total</dt><dd>{{ money(order.total) }}</dd></div>
         </dl>
@@ -381,7 +396,7 @@ onUnmounted(() => {
             <dl class="ec-rc-totals">
               <div><dt>Subtotal</dt><dd>{{ money(receipt.totals?.subtotal) }}</dd></div>
               <div v-if="Number(receipt.totals?.discount_total) > 0"><dt>Descuento</dt><dd>−{{ money(receipt.totals.discount_total) }}</dd></div>
-              <div v-if="receipt.order?.shipping_method === 'home'"><dt>Envío</dt><dd>{{ money(receipt.totals?.shipping_cost) }}</dd></div>
+              <div v-if="receipt.order?.shipping_method === 'home'"><dt>Envío</dt><dd>{{ receiptShipCost }}</dd></div>
               <div><dt>Total</dt><dd>{{ money(receipt.totals?.total) }}</dd></div>
             </dl>
             <p v-if="receipt.legend" class="ec-rc-legend">{{ receipt.legend }}</p>

@@ -563,7 +563,7 @@ class StoreViewSet(StoreBaseViewSet):
     @action(detail = False, methods = ['get'], url_path = r'public/(?P<slug>[a-z0-9-]+)', throttle_classes = [PublicReadThrottle])
     def public(self, request, slug = None):
         store       =   get_object_or_404(
-            Store.objects.select_related('user__city', 'user__province', 'customization'),
+            Store.objects.select_related('user__city', 'user__province', 'customization', 'shipping_config'),
             slug = slug, is_published = True, is_blocked = False,
         )
         #La web pública se apaga sin suscripción vigente (baja o vencimiento sin renovar)

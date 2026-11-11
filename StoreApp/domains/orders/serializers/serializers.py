@@ -137,7 +137,7 @@ class StoreOrderDetailSerializer(serializers.ModelSerializer):
         model               =   Order
         fields              =   [
             'id', 'number', 'code', 'status', 'payment_method', 'payment_ref', 'mp_payment_id',
-            'shipping_method', 'shipping_address', 'subtotal', 'discount_total', 'shipping_cost', 'total',
+            'shipping_method', 'shipping_address', 'subtotal', 'discount_total', 'shipping_cost', 'shipping_priced', 'total',
             'expires_at', 'paid_at', 'created_at', 'updated_at', 'invoice_ref', 'proof_required', 'idempotency_key',
             'customer_first_name', 'customer_last_name', 'customer_email', 'customer_phone',
             'customer_document_type', 'customer_document',

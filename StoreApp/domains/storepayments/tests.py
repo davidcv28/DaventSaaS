@@ -43,6 +43,7 @@ from StoreApp.domains.stores.models import (
     StoreMpAccount,
     StoreOAuthConfig,
     StorePaymentConfig,
+    StoreShippingConfig,
     StoreStorageConfig,
 )
 from StoreApp.domains.stores.services import storage as storage_service
@@ -475,6 +476,74 @@ class StorePaymentConfigTests(StorePaymentsTestBase):
         StorePaymentConfig.objects.create(store = self.store, accept_whatsapp = True, whatsapp_number = '')
         response    =   self.client.patch(self.CONFIG_URL, {'transfer_instructions': 'x'}, format = 'json')
         self.assertEqual(response.status_code, 400)
+
+
+#=========================================
+# ENVÍO A DOMICILIO (tarifa fija del checkout — dueño)
+#=========================================
+class StoreShippingConfigTests(StorePaymentsTestBase):
+    URL =   '/api/store-payments/shipping-config/'
+
+    def setUp(self):
+        self.user, _, self.store   =   self._make_owner('envios')
+        self.client.force_authenticate(user = self.user)
+
+    def test_requires_auth(self):
+        anon    =   APIClient()
+        self.assertIn(anon.get(self.URL).status_code, (401, 403))
+
+    def test_owner_without_store_404(self):
+        user, _, _   =   self._make_owner('sin-tienda-envio', with_store = False)
+        client  =   APIClient()
+        client.force_authenticate(user = user)
+        self.assertEqual(client.get(self.URL).status_code, 404)
+
+    def test_get_defaults_without_row(self):
+        #GET no crea fila: sin config = "a coordinar" (home_price NULL).
+        response    =   self.client.get(self.URL)
+        self.assertEqual(response.status_code, 200)
+        self.assertIsNone(response.json()['home_price'])
+        self.assertFalse(StoreShippingConfig.objects.filter(store = self.store).exists())
+
+    def test_patch_sets_fixed_price(self):
+        response    =   self.client.patch(self.URL, {'home_price': '1500.50'}, format = 'json')
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(Decimal(str(response.json()['home_price'])), Decimal('1500.50'))
+        self.assertEqual(StoreShippingConfig.objects.get(store = self.store).home_price, Decimal('1500.50'))
+
+    def test_patch_zero_is_free_shipping(self):
+        response    =   self.client.patch(self.URL, {'home_price': 0}, format = 'json')
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(Decimal(str(response.json()['home_price'])), Decimal('0.00'))
+
+    def test_patch_null_back_to_coordinar(self):
+        StoreShippingConfig.objects.create(store = self.store, home_price = Decimal('15.00'))
+        response    =   self.client.patch(self.URL, {'home_price': None}, format = 'json')
+        self.assertEqual(response.status_code, 200)
+        self.assertIsNone(response.json()['home_price'])
+        self.assertIsNone(StoreShippingConfig.objects.get(store = self.store).home_price)
+
+    def test_patch_absent_field_keeps_value(self):
+        #PATCH merge: home_price ausente conserva el valor cargado.
+        StoreShippingConfig.objects.create(store = self.store, home_price = Decimal('15.00'))
+        response    =   self.client.patch(self.URL, {}, format = 'json')
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(Decimal(str(response.json()['home_price'])), Decimal('15.00'))
+
+    def test_patch_negative_400(self):
+        response    =   self.client.patch(self.URL, {'home_price': '-1'}, format = 'json')
+        self.assertEqual(response.status_code, 400)
+
+    def test_scoped_to_own_store(self):
+        #Cada dueño edita SOLO la config de su tienda (owner_store — no
+        #hay id de tienda en el path, no hay IDOR posible).
+        other_user, _, _   =   self._make_owner('otro-duenio')
+        other_client    =   APIClient()
+        other_client.force_authenticate(user = other_user)
+        response    =   other_client.patch(self.URL, {'home_price': '99'}, format = 'json')
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(Decimal(str(response.json()['home_price'])), Decimal('99'))
+        self.assertFalse(StoreShippingConfig.objects.filter(store = self.store).exists())
 
 
 #=========================================

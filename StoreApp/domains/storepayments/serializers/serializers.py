@@ -16,6 +16,7 @@ from StoreApp.domains.stores.models import (
     StoreFiscalProfile,
     StoreOAuthConfig,
     StorePaymentConfig,
+    StoreShippingConfig,
     StoreStorageConfig,
 )
 from StoreApp.domains.stores.services.commerce import cuit_is_valid
@@ -107,6 +108,33 @@ class StorePaymentConfigSerializer(serializers.ModelSerializer):
         if accept_whatsapp and not whatsapp_number:
             raise serializers.ValidationError({'whatsapp_number': 'Activaste el cobro por WhatsApp: cargá el número del vendedor'})
         return attrs
+
+#=========================================
+# STORE SHIPPING CONFIG (envío a domicilio del checkout)
+#=========================================
+class StoreShippingConfigSerializer(serializers.ModelSerializer):
+    """
+    `home_price`: NULL = "a coordinar" (el envío se pacta por WhatsApp,
+    como siempre); un valor >= 0 se cobra en el pedido y se suma al
+    total (0 explícito = envío gratis). PATCH merge como el resto de
+    las configs: ausente conserva, null/'' explícito vuelve a "a
+    coordinar". El retiro en el local siempre es sin cargo — no hay
+    campo para él a propósito.
+    """
+    home_price  =   serializers.DecimalField(
+        required        =   False,
+        allow_null      =   True,
+        min_value       =   0,
+        max_digits      =   12,
+        decimal_places  =   2,
+    )
+    class Meta:
+        model       =   StoreShippingConfig
+        fields      =   ['home_price', 'updated_at']
+        read_only_fields    =   ['updated_at']
+    def validate_home_price(self, value):
+        #'' del formulario = "sin precio" → NULL (a coordinar).
+        return None if value in (None, '') else value
 
 #=========================================
 # FISCAL PROFILE (datos fiscales del vendedor — gate de orders_enabled)

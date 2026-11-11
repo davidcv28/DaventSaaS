@@ -66,6 +66,7 @@ from StoreApp.domains.stores.models import (
     StoreCustomization,
     StoreFiscalProfile,
     StorePaymentConfig,
+    StoreShippingConfig,
 )
 
 CUIT_VALIDO   =   '20123456786'
@@ -157,6 +158,7 @@ class CreateOrderServiceTests(TestCase):
         self.assertEqual(order.subtotal, Decimal('200.00'))
         self.assertEqual(order.discount_total, Decimal('0.00'))
         self.assertEqual(order.shipping_cost, Decimal('0.00'))
+        self.assertFalse(order.shipping_priced)
         self.assertEqual(order.total, Decimal('200.00'))
         self.assertEqual(order.status, Order.Status.PENDING_PAYMENT)
         self.assertEqual(order.number, 1)
@@ -244,6 +246,52 @@ class CreateOrderServiceTests(TestCase):
         kwargs['shipping_method']   =   'home'
         with self.assertRaises(drf_serializers.ValidationError):
             create_order(**kwargs)
+
+    #ENVÍO A DOMICILIO — tarifa fija de StoreShippingConfig.home_price:
+    #se cobra en el pedido, se suma al total y queda como snapshot.
+    def test_fixed_home_shipping_is_charged_and_snapshotted(self):
+        StoreShippingConfig.objects.create(store = self.store, home_price = Decimal('15.00'))
+        order   =   _pending_order(self.store, self.customer, self.product, qty = 2)
+        self.assertEqual(order.shipping_cost, Decimal('15.00'))
+        self.assertTrue(order.shipping_priced)
+        self.assertEqual(order.total, Decimal('215.00'))
+        #Snapshot: cambiar la tarifa después NO toca el pedido histórico.
+        StoreShippingConfig.objects.filter(store = self.store).update(home_price = Decimal('99.00'))
+        order.refresh_from_db()
+        self.assertEqual(order.shipping_cost, Decimal('15.00'))
+        self.assertEqual(order.total, Decimal('215.00'))
+
+    def test_zero_home_price_is_free_shipping_not_coordinar(self):
+        #home_price=0 explícito = envío gratis cobrado; NO es "a
+        #coordinar" — shipping_priced=True lo distingue del 0 sin tarifa.
+        StoreShippingConfig.objects.create(store = self.store, home_price = Decimal('0.00'))
+        order   =   _pending_order(self.store, self.customer, self.product)
+        self.assertEqual(order.shipping_cost, Decimal('0.00'))
+        self.assertTrue(order.shipping_priced)
+        self.assertEqual(order.total, Decimal('100.00'))
+
+    def test_unconfigured_home_shipping_stays_coordinar(self):
+        order   =   _pending_order(self.store, self.customer, self.product)
+        self.assertEqual(order.shipping_cost, Decimal('0.00'))
+        self.assertFalse(order.shipping_priced)
+        self.assertEqual(order.total, Decimal('100.00'))
+
+    def test_pickup_never_charges_shipping(self):
+        StoreShippingConfig.objects.create(store = self.store, home_price = Decimal('15.00'))
+        kwargs  =   _order_kwargs(self.store, self.customer, self.product)
+        kwargs['address']         =   None
+        kwargs['shipping_method'] =   'pickup'
+        order, _  =   create_order(**kwargs)
+        self.assertEqual(order.shipping_cost, Decimal('0.00'))
+        self.assertFalse(order.shipping_priced)
+        self.assertEqual(order.total, Decimal('100.00'))
+
+    def test_shipping_config_is_per_store(self):
+        #La tarifa de la tienda B no se aplica a la A.
+        StoreShippingConfig.objects.create(store = self.store_b, home_price = Decimal('15.00'))
+        order   =   _pending_order(self.store, self.customer, self.product)
+        self.assertFalse(order.shipping_priced)
+        self.assertEqual(order.total, Decimal('100.00'))
 
     def test_numbering_is_per_store(self):
         order_a =   _pending_order(self.store, self.customer, self.product)
@@ -572,7 +620,7 @@ class PublicOrderApiTests(TestCase):
             self.assertEqual(Order.objects.count(), 1)
 
     def test_client_cannot_inject_prices(self):
-        evil    =   self._payload(total = '0.01', price = '0.01', subtotal = '0.01')
+        evil    =   self._payload(total = '0.01', price = '0.01', subtotal = '0.01', shipping_cost = '0.01', shipping_priced = True)
         with patch('StoreApp.domains.orders.views.public.verify_captcha', return_value = True):
             response    =   self.client.post(self.create_url, evil, format = 'json')
         self.assertEqual(response.status_code, 201)
@@ -694,14 +742,17 @@ class PublicOrderApiTests(TestCase):
         self.assertEqual(data['shipping_method'], 'home')
         self.assertEqual(data['shipping_cost'], '0.00')
         self.assertEqual(data['shipping_note'], 'A coordinar')
+        self.assertFalse(data['shipping_priced'])
         token   =   data['tracking_token']
         tracked =   self.client.get(f'{self.track_base}/{token}/').json()
         self.assertEqual(tracked['shipping_method'], 'home')
         self.assertEqual(tracked['shipping_cost'], '0.00')
         self.assertEqual(tracked['shipping_note'], 'A coordinar')
+        self.assertFalse(tracked['shipping_priced'])
         receipt =   self.client.get(f'{self.track_base}/{token}/receipt/').json()
         self.assertEqual(receipt['order']['shipping_method'], 'home')
         self.assertEqual(receipt['order']['shipping_note'], 'A coordinar')
+        self.assertFalse(receipt['order']['shipping_priced'])
         self.assertEqual(receipt['totals']['shipping_cost'], '0.00')
         #Pickup: sin dirección ni nota de envío.
         payload =   self._payload(shipping_method = 'pickup')
@@ -710,6 +761,29 @@ class PublicOrderApiTests(TestCase):
             pickup  =   self.client.post(self.create_url, payload, format = 'json').json()
         self.assertEqual(pickup['shipping_method'], 'pickup')
         self.assertIsNone(pickup['shipping_note'])
+
+    def test_priced_shipping_in_create_track_and_receipt(self):
+        #Con tarifa fija cargada por la tienda: el pedido cobra el envío,
+        #lo suma al total y tracking/receipt muestran el precio (la nota
+        #queda None — el 0/ausencia de nota ya no significa "a coordinar").
+        StoreShippingConfig.objects.create(store = self.store, home_price = Decimal('15.00'))
+        data    =   self._create_via_api()
+        self.assertEqual(data['shipping_method'], 'home')
+        self.assertEqual(data['shipping_cost'], '15.00')
+        self.assertIsNone(data['shipping_note'])
+        self.assertTrue(data['shipping_priced'])
+        self.assertEqual(data['total'], '115.00')
+        token   =   data['tracking_token']
+        tracked =   self.client.get(f'{self.track_base}/{token}/').json()
+        self.assertEqual(tracked['shipping_cost'], '15.00')
+        self.assertIsNone(tracked['shipping_note'])
+        self.assertTrue(tracked['shipping_priced'])
+        receipt =   self.client.get(f'{self.track_base}/{token}/receipt/').json()
+        self.assertEqual(receipt['order']['shipping_method'], 'home')
+        self.assertIsNone(receipt['order']['shipping_note'])
+        self.assertTrue(receipt['order']['shipping_priced'])
+        self.assertEqual(receipt['totals']['shipping_cost'], '15.00')
+        self.assertEqual(receipt['totals']['total'], '115.00')
 
     def test_events_endpoint(self):
         data    =   self._create_via_api()

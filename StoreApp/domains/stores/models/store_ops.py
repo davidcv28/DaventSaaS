@@ -223,3 +223,38 @@ class StoreStorageConfig(models.Model):
         if not self.secret_key_enc:
             return ''
         return decrypt_secret(self.secret_key_enc, self._purpose(self.PURPOSE_SECRET_KEY)).decode()
+#=========================================
+# STORE SHIPPING CONFIG (envío a domicilio del checkout)
+#=========================================
+class StoreShippingConfig(models.Model):
+    """
+    Tarifa de envío a domicilio que el dueño fija para su checkout.
+    `home_price` NULL = "a coordinar" (el comprador coordina el envío
+    con la tienda como en el MVP — shipping_cost queda 0 y el pedido
+    NO se marca priced); un valor >= 0 se cobra en create_order y se
+    suma al total (0 explícito = envío gratis). El retiro en el local
+    siempre es sin cargo.
+    """
+    store                       =   models.OneToOneField(Store, on_delete = models.CASCADE, related_name = 'shipping_config')
+    home_price                  =   models.DecimalField(max_digits = 12, decimal_places = 2, null = True, blank = True, default = None, verbose_name = 'Precio de envío a domicilio')
+    updated_at                  =   models.DateTimeField(auto_now = True)
+    class Meta:
+        app_label               =   'stores'
+        verbose_name            =   'Configuración de envíos'
+        verbose_name_plural     =   'Configuraciones de envíos'
+    def __str__(self):
+        return f'shipping:{self.store.slug}'
+#=========================================
+# PUBLIC CACHE BUST (la tarifa de envío viaja en el payload público —
+# una edición del dueño se ve al instante, igual que el resto de la
+# config de tienda; ver public_cache.py y el bloque de signals de
+# models/models.py para los modelos de esa app)
+#=========================================
+from django.db.models.signals import post_delete, post_save
+
+
+def _bust_public_shipping(sender, instance, **kwargs):
+    from StoreApp.domains.stores.public_cache import bump_public_store
+    bump_public_store(instance.store_id)
+post_save.connect(_bust_public_shipping, sender = StoreShippingConfig)
+post_delete.connect(_bust_public_shipping, sender = StoreShippingConfig)

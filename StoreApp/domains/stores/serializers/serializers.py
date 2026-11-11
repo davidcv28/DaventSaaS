@@ -778,9 +778,10 @@ class StorePublicSerializer(serializers.ModelSerializer):
     chatbot                     =   serializers.SerializerMethodField()
     service_items               =   serializers.SerializerMethodField()
     orders_enabled              =   serializers.SerializerMethodField()
+    shipping                    =   serializers.SerializerMethodField()
     class Meta:
         model                   =   Store
-        fields                  =   ['slug', 'business_name', 'city_name', 'province_name', 'customization', 'has_design_advanced', 'allowed_templates', 'location_address', 'chatbot', 'service_items', 'orders_enabled']
+        fields                  =   ['slug', 'business_name', 'city_name', 'province_name', 'customization', 'has_design_advanced', 'allowed_templates', 'location_address', 'chatbot', 'service_items', 'orders_enabled', 'shipping']
     def get_has_design_advanced(self, store):
         #Solo premium: define si la web muestra portada (carrusel) o el
         #botón de modo claro/oscuro para el visitante en el nav.
@@ -814,6 +815,13 @@ class StorePublicSerializer(serializers.ModelSerializer):
         #compra. Mismo predicado que los endpoints de pedido (gate único).
         from StoreApp.domains.stores.services.commerce import orders_enabled
         return orders_enabled(store)
+    def get_shipping(self, store):
+        #Tarifa de envío a domicilio para el checkout: home_price NULL =
+        #"a coordinar" (sin precio online — el pedido lo pacta por
+        #WhatsApp). El retiro en el local siempre es sin cargo.
+        cfg     =   getattr(store, 'shipping_config', None)
+        price   =   cfg.home_price if cfg is not None else None
+        return {'home_price': str(price) if price is not None else None}
     def get_chatbot(self, store):
         #{'greeting', 'qa'} solo si el plan tiene 'has_chatbot' y el
         #dueño lo activó; el widget público no se renderiza con None.

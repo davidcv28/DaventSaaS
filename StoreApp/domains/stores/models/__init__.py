@@ -14,5 +14,6 @@ from .store_ops import (
     StoreMpAccount,
     StoreOAuthConfig,
     StorePaymentConfig,
+    StoreShippingConfig,
     StoreStorageConfig,
 )

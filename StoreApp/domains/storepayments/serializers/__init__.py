@@ -3,5 +3,6 @@ from .serializers import (
     StoreFiscalProfileSerializer,
     StoreOAuthConfigSerializer,
     StorePaymentConfigSerializer,
+    StoreShippingConfigSerializer,
     StoreStorageConfigSerializer,
 )

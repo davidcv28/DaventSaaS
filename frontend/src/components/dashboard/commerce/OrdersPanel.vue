@@ -89,6 +89,17 @@ async function openDetail(orderId) {
 function closeDetail() { detail.value = null }
 
 const detailStatus = computed(() => statusMeta(ORDER_STATUS, detail.value?.status))
+//Envío a domicilio sin tarifa fija = "a coordinar" (shipping_priced
+//False — el 0 no es gratis); con tarifa muestra el precio cobrado
+//(incl. "Sin cargo" si la tarifa es $0). Retiro siempre sin cargo.
+const shippingCostLabel = computed(() => {
+  const d = detail.value
+  if (!d) return ''
+  if (d.shipping_method === 'pickup') return 'Sin cargo'
+  if (d.shipping_method === 'home' && !d.shipping_priced) return 'A coordinar'
+  const n = Number(d.shipping_cost)
+  return n > 0 ? money(n) : 'Sin cargo'
+})
 const nextAction = computed(() => NEXT_ORDER_ACTION[detail.value?.status] || null)
 const canRefundMp = computed(() =>
   detail.value?.payment_method === 'mp'
@@ -384,7 +395,7 @@ function eventLabel(ev) {
                   <div v-if="detail.payment_ref"><span>Ref. de pago</span><strong class="mono">{{ detail.payment_ref }}</strong></div>
                   <div><span>Subtotal</span><strong>{{ money(detail.subtotal) }}</strong></div>
                   <div><span>Descuento</span><strong>{{ money(detail.discount_total) }}</strong></div>
-                  <div><span>Costo de envío</span><strong>{{ money(detail.shipping_cost) }}</strong></div>
+                  <div><span>Costo de envío</span><strong>{{ shippingCostLabel }}</strong></div>
                   <div><span>Total</span><strong>{{ money(detail.total) }}</strong></div>
                 </div>
                 <label class="field" style="margin-top: 12px">

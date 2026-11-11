@@ -12,6 +12,7 @@ from StoreApp.domains.storepayments.views import (
     StorageGuideView,
     StoreMpWebhookView,
     StorePaymentConfigView,
+    StoreShippingConfigView,
 )
 
 #=========================================
@@ -31,6 +32,8 @@ urlpatterns = [
     path('store-payments/mp/refund/<int:order_id>/', MpRefundView.as_view(), name = 'store-mp-refund'),
     #CONFIG DE COBROS (métodos manuales)
     path('store-payments/config/', StorePaymentConfigView.as_view(), name = 'store-payment-config'),
+    #ENVÍO A DOMICILIO (tarifa fija del checkout)
+    path('store-payments/shipping-config/', StoreShippingConfigView.as_view(), name = 'store-shipping-config'),
     #PANEL "COBROS" DEL DUEÑO (track H2): fiscal, login social Google y storage R2 BYO
     path('store-payments/fiscal-profile/', FiscalProfileView.as_view(), name = 'store-fiscal-profile'),
     path('store-payments/oauth-config/', OAuthConfigView.as_view(), name = 'store-oauth-config'),

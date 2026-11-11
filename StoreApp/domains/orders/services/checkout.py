@@ -27,10 +27,13 @@ Decisiones documentadas:
 - `idempotency_key`: retry del cliente → MISMO pedido (lookup previo +
   UniqueConstraint(store, key) como segunda capa; IntegrityError →
   re-fetch, nunca duplicado).
-- `shipping_cost = 0` en MVP: no existe config de envío por zona — el
-  envío se coordina por WhatsApp con el dueño (el campo ya está para la
-  fase de envíos). `free_shipping_for` de membresías queda consumible
-  cuando esa config exista.
+- `shipping_cost`: tarifa fija de `StoreShippingConfig.home_price`
+  (stores) cuando el envío es a domicilio y el dueño cargó precio —
+  se cobra en el pedido y se suma al total. `home_price` NULL = "a
+  coordinar" (shipping_cost=0 y `shipping_priced`=False: el 0 no
+  significa gratis). Retiro en el local siempre es sin cargo.
+  `free_shipping_for` de membresías queda consumible para una futura
+  regla de envío gratis por monto/plan.
 - Descuento de membresía: `member_discount_percent(customer, store)`
   se aplica POR ENCIMA del precio efectivo de catálogo, por unidad,
   half-up a 2 decimales — carrito y pedido muestran/cobran lo mismo.
@@ -70,7 +73,7 @@ from StoreApp.domains.orders.models import (
     new_tracking_token,
 )
 from StoreApp.domains.orders.services.events import append_event
-from StoreApp.domains.stores.models import Store
+from StoreApp.domains.stores.models import Store, StoreShippingConfig
 from StoreApp.domains.stores.services.commerce import orders_enabled
 
 logger  =   logging.getLogger(__name__)
@@ -346,9 +349,19 @@ def create_order(*, store, customer, items = None, address = None, shipping_meth
             priced, subtotal, discount_total   =   _price_lines(lines, locked_store, customer)
             config          =   _payment_config_of(locked_store)
             deadline_hours  =   (config.payment_deadline_hours if config and config.payment_deadline_hours else DEFAULT_DEADLINE_HOURS)
-            #Envio gratis por membresía (free_shipping_for de track D) queda
-            #para cuando exista config de envío por zona: en MVP
-            #shipping_cost es 0 para todos (ver docstring del módulo).
+            #Envío a domicilio con tarifa fija: StoreShippingConfig.
+            #home_price NULL = "a coordinar" (shipping_cost=0 y
+            #shipping_priced=False — el 0 NO significa gratis). Pickup
+            #siempre es sin cargo. El envío gratis por membresía
+            #(`free_shipping_for`) queda para una regla futura.
+            #Query aparte (no select_related): el join nullable del
+            #OneToOne inverso rompe FOR UPDATE en Postgres.
+            shipping_cfg    =   StoreShippingConfig.objects.filter(store_id = locked_store.pk).first()
+            shipping_cost   =   Decimal('0.00')
+            shipping_priced =   False
+            if ship == Order.ShippingMethod.HOME and shipping_cfg is not None and shipping_cfg.home_price is not None:
+                shipping_cost   =   shipping_cfg.home_price
+                shipping_priced =   True
             sequence, _     =   OrderSequence.objects.get_or_create(store = locked_store)
             sequence.last_number    +=  1
             sequence.save(update_fields = ['last_number'])
@@ -364,8 +377,9 @@ def create_order(*, store, customer, items = None, address = None, shipping_meth
                 shipping_address    =   snapshot_addr,
                 subtotal            =   subtotal,
                 discount_total      =   discount_total,
-                shipping_cost       =   Decimal('0.00'),
-                total               =   (subtotal + Decimal('0.00')).quantize(Decimal('0.01')),
+                shipping_cost       =   shipping_cost,
+                shipping_priced     =   shipping_priced,
+                total               =   (subtotal + shipping_cost).quantize(Decimal('0.01')),
                 status              =   Order.Status.PENDING_PAYMENT,
                 expires_at          =   now + timedelta(hours = deadline_hours),
                 proof_required      =   bool(config.require_payment_proof) if config else False,
@@ -477,11 +491,14 @@ def order_public_payload(order, store = None):
         'status'            :   order.status,
         'payment_method'    :   order.payment_method,
         'shipping_method'   :   order.shipping_method,
-        #MVP: envío a domicilio se coordina por WhatsApp (shipping_cost=0
-        #no significa "gratis" sino "a convenir") — la nota le da al front
-        #el texto listo para mostrar "A coordinar" en tracking/recibo sin
-        #adivinar la semántica del 0. None en pickup (retiro sin cargo).
-        'shipping_note'     :   'A coordinar' if order.shipping_method == Order.ShippingMethod.HOME else None,
+        #Envío a domicilio sin tarifa fija se coordina por WhatsApp:
+        #shipping_cost=0 NO significa "gratis" — shipping_note le da al
+        #front el texto listo para mostrar "A coordinar" en
+        #tracking/recibo sin adivinar la semántica del 0. None cuando el
+        #envío se cobró con precio fijo (incl. $0 = gratis) y en pickup
+        #(retiro sin cargo).
+        'shipping_priced'   :   order.shipping_priced,
+        'shipping_note'     :   'A coordinar' if (order.shipping_method == Order.ShippingMethod.HOME and not order.shipping_priced) else None,
         'subtotal'          :   str(order.subtotal),
         'discount_total'    :   str(order.discount_total),
         'shipping_cost'     :   str(order.shipping_cost),
@@ -551,8 +568,9 @@ def build_receipt_payload(order):
             'created_at'    :   order.created_at.isoformat() if order.created_at else None,
             'shipping_method': order.shipping_method,
             #Mismo criterio que order_public_payload: el 0 de envío a
-            #domicilio es "a coordinar", no "gratis".
-            'shipping_note' :   'A coordinar' if order.shipping_method == Order.ShippingMethod.HOME else None,
+            #domicilio sin tarifa fija es "a coordinar", no "gratis".
+            'shipping_priced': order.shipping_priced,
+            'shipping_note' :   'A coordinar' if (order.shipping_method == Order.ShippingMethod.HOME and not order.shipping_priced) else None,
         },
         #PII mínima (misma política que order_tracking_payload): email,
         #documento y apellido NUNCA salen por la API pública — el

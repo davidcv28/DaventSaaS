@@ -8,7 +8,7 @@ Endpoints:
 - Webhook MP: webhooks/store-mp/<slug>/ (auth por firma x-signature).
 """
 from .checkout import PublicOrderPayView
-from .config import StorePaymentConfigView
+from .config import StorePaymentConfigView, StoreShippingConfigView
 from .integrations import (
     FiscalProfileView,
     OAuthConfigView,
@@ -33,6 +33,7 @@ __all__   =   [
     'PublicOrderPayView',
     'StoreMpWebhookView',
     'StorePaymentConfigView',
+    'StoreShippingConfigView',
     'StorageConfigView',
     'StorageGuideView',
 ]
