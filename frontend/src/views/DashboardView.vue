@@ -450,6 +450,35 @@ const navParent = computed(() => {
   return null
 })
 
+// Deep links del panel: /dashboard/<slug> (español, sin acentos) abre la
+// sección directo — la URL queda prolija y compartible. Pasa por el setter
+// de `section`: valida el plan vigente y abre el candado si falta el
+// beneficio (mismo criterio que ?s= y los clics del menú).
+const SECTION_SLUGS = {
+  inicio: 'overview',
+  productos: 'catalogs', catalogo: 'catalogs', catalogos: 'catalogs',
+  servicios: 'services',
+  vender: 'selling', ventas: 'sales', pedidos: 'orders',
+  clientes: 'customers', consultas: 'inquiries', cobros: 'payconfig',
+  legal: 'legal', membresias: 'memberships',
+  pagina: 'web', direccion: 'store',
+  diseno: 'design', fotos: 'photos', negocio: 'company',
+  visitas: 'stats', promocionar: 'tools', qr: 'tools', folletos: 'tools',
+  opiniones: 'reviews', ayuda: 'support', asistente: 'bot',
+  plan: 'plans', planes: 'plans', pagos: 'payments', facturas: 'invoices',
+  cuenta: 'settings', novedades: 'changelog'
+}
+function sectionForSlug(slug) {
+  return SECTION_SLUGS[String(slug || '')] || null
+}
+// /dashboard/<slug> → /dashboard/<otro> reusa esta vista (mismo componente):
+// el param se observa en vivo. Solo aplica slugs mapeados — un replace a
+// /dashboard pelado (retorno de MP, botones "volver") no pisa la sección.
+watch(() => route.params.section, (slug) => {
+  const id = sectionForSlug(slug)
+  if (id) section.value = id
+})
+
 // Plan más barato que incluye alguno de los beneficios pedidos (para el
 // "Disponible en {plan}" del candado).
 function minPlanFor(keys) {
@@ -2905,10 +2934,13 @@ onMounted(async () => {
   // Puente entre pestañas: el retorno de MP cae en la pestaña del checkout,
   // esta escucha avisa a la pestaña original para acreditar al instante.
   window.addEventListener('storage', onPaymentBroadcast)
-  // Todo en paralelo: ninguna lectura del panel depende de otra. El perfil ya
-  // llegó por el guard del router; este refetch actualiza los flags de
-  // verificación y alimenta el formulario de Cuenta sin frenar el resto.
-  auth.fetchMe().then(() => fillAccountForm())
+  // /user/me/ + /profile/me/ ya los resolvió el guard del router al entrar
+  // (y initSession al boot): refetchear en cada montaje duplicaba el par de
+  // requests por navegación. Solo se repide si el perfil nunca cargó; los
+  // refrescos puntuales (guardar cuenta, Recargar, verificación de email —
+  // que llega por reload completo) ya llaman fetchMe por su cuenta.
+  if (auth.user) fillAccountForm()
+  else auth.fetchMe().then(() => fillAccountForm())
   loadAccountProvinces()
   const storeReady = store.status === 'idle' ? store.loadMine() : Promise.resolve()
   // Vía rápida: plan + tienda destraban stats, la precarga del catálogo y el
@@ -2932,6 +2964,11 @@ onMounted(async () => {
     fastLane.then(() => openLocked(String(locked)))
     router.replace({ query: rest })
   }
+  // Deep link por path (/dashboard/diseno, /dashboard/productos, etc.):
+  // mismo efecto que ?s= — espera a que plan/tienda resuelvan para que
+  // validIds ya incluya las pestañas habilitadas por el plan.
+  const slugSection = sectionForSlug(route.params.section)
+  if (slugSection) section.value = slugSection
   // Deep link ?s=<seccion> (mails de estado de cuenta, etc.): abre la
   // sección directo si es válida para el plan del usuario.
   const deepSection = route.query.s
@@ -3079,7 +3116,12 @@ const CHAT_FILES_MAX = 4
 const chatOnlineCount = computed(() => chatStaff.value.filter((s) => s.online).length)
 // El chat (heartbeat incluido) solo corre con el beneficio del plan; el
 // asistente automático queda disponible para cualquier cuenta como contacto.
-const canChat = computed(() => Boolean(plan.value?.benefits?.has_support_chat))
+// Mismo criterio que el backend (chat_enabled): plan VIGENTE y no-trial —
+// el trial trae has_support_chat=true en benefits pero el servidor lo
+// rechaza con 403 y el heartbeat spamearía en cada carga del panel.
+const canChat = computed(() => Boolean(
+  plan.value?.isCurrent && !plan.value?.isTrial && plan.value?.benefits?.has_support_chat
+))
 // El asistente figura como un integrante más del equipo de soporte: es un
 // contacto local (respuestas automáticas, nunca toca la API del chat).
 const BOT_MEMBER = { id: 'bot', name: 'Tu Asistente', online: true, bot: true }
@@ -3312,6 +3354,7 @@ async function pollChat() {
   chatPolling = true
   try {
     const data = await fetchChatMessages({ after: chatLastId.value })
+    if (!data) return // 204 = nada nuevo (el backend lo devuelve pronto)
     // Dedupe por id: un send optimista o un poll encimado ya pudo traer el
     // mensaje — sin el filtro se vería dos veces hasta el próximo refetch.
     const fresh = (data.messages || []).filter((m) => !chatMessages.value.some((x) => x.id === m.id))
@@ -3321,20 +3364,31 @@ async function pollChat() {
       await nextTick()
       scrollChat()
     }
-  } catch { /* reintenta el próximo tick */ }
-  finally { chatPolling = false }
+  } catch (e) {
+    // 403 = plan sin chat (bajó a trial/venció con la ventana abierta):
+    // mismo corte que el heartbeat para no seguir pollendo un 403.
+    if (e?.response?.status === 403) stopChat()
+    // El resto reintenta en el próximo tick.
+  } finally { chatPolling = false }
 }
 
 async function beatChat() {
   try {
     const data = await chatHeartbeat()
+    if (!data) return // 204 = sin payload: no hay presencia/unread que actualizar
     chatStaffOnline.value = Boolean(data.staff_online)
     if (data.staff) chatStaff.value = data.staff
     // El no-leído llega por heartbeat (no marca lectura): con la ventana
     // cerrada/minimizada es el contador del badge; abierta queda en 0
     // porque el polling ya marcó todo como leído.
     chatUnread.value = data.unread || 0
-  } catch { /* silencioso */ }
+  } catch (e) {
+    // 403 = el plan ya no habilita el chat (trial, vencido o cambio de plan
+    // en caliente): cortar heartbeat y polling — si no, cada tick spamea
+    // un POST que el backend rechaza. Si el plan mejora, el watch de
+    // canChat vuelve a llamar startChat().
+    if (e?.response?.status === 403) stopChat()
+  }
 }
 
 async function sendChat() {

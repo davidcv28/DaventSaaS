@@ -50,6 +50,10 @@ let sessionEnded = false
 // El aviso de sesión expirada se emite UNA sola vez: con varias requests en
 // vuelo cada 401 disparaba su propio evento y la redirección a /login.
 let expiredNotified = false
+// 429 persistente del refresh = throttle, no sesión muerta: la cookie puede
+// seguir viva. Se avisa UNA vez con su propio evento ("davent:session-throttled")
+// en vez del "sesión expirada", que redirigiría sin explicación.
+let throttledNotified = false
 // Generación de la sesión: sube con cada access nuevo (login) y con el
 // logout. Un refresh que salió en la generación anterior se descarta al
 // aterrizar — evita que el token de la cuenta vieja pise el de la nueva.
@@ -57,7 +61,7 @@ let sessionEpoch = 0
 
 export const tokenStorage = {
   getAccess: () => accessToken,
-  set: (access) => { if (access) { accessToken = access; sessionEnded = false; expiredNotified = false; sessionEpoch++ } },
+  set: (access) => { if (access) { accessToken = access; sessionEnded = false; expiredNotified = false; throttledNotified = false; sessionEpoch++ } },
   clear: () => { accessToken = null }
 }
 
@@ -125,31 +129,59 @@ http.interceptors.request.use((config) => {
 
 const tokenEndpoint = (path) => `${env.apiBaseUrl.replace(/\/$/, '')}/token/${path}`
 
+const sleep = (ms) => new Promise((r) => setTimeout(r, ms))
+
+// 429 del refresh = throttle del endpoint, NO token inválido: la cookie de
+// refresh puede seguir viva. Backoff corto (máx ~3 reintentos) respetando el
+// Retry-After/retry_after de la respuesta antes de declarar la sesión caída.
+const REFRESH_429_MAX_RETRIES = 3
+const REFRESH_429_BACKOFF_MS = [1200, 3000, 6000]
+
+function refreshRetryDelayMs(err, attempt) {
+  const secs = parseRetryAfterSeconds(err)
+  // Retry-After manda, pero el backoff es "corto": tope de 10 s por espera.
+  if (secs) return Math.min(Math.max(secs * 1000, 500), 10000)
+  return REFRESH_429_BACKOFF_MS[attempt] || 6000
+}
+
 async function refreshCall() {
   const epoch = sessionEpoch
-  // Nativo: refresh en body (sin cookie ni CSRF); el backend lo rota y lo
-  // devuelve en la respuesta — hay que persistir el nuevo.
-  const res = IS_NATIVE
-    ? await axios.post(tokenEndpoint('refresh/'), { refresh: getNativeRefresh() }, {
-        timeout: 30000,
-        headers: { ...NATIVE_HEADERS }
-      })
-    : await axios.post(tokenEndpoint('refresh/'), {}, {
-        timeout: 30000,   // 15s era corto para el cold start del dyno gratis de Render (~30-60s)
-        withCredentials: true,
-        headers: { 'X-CSRFToken': csrfToken() }
-      })
-  if (IS_NATIVE && res.data?.refresh) setNativeRefresh(res.data.refresh)
-  const { access } = res.data || {}
-  if (!access) throw new Error('EMPTY_REFRESH')
-  // Un refresh que salió ANTES del logout o de un login nuevo puede aterrizar
-  // DESPUÉS: sin este corte, tokenStorage.set deja un access zombie en memoria
-  // — ensureSession() lo revive en /login y el guard rebota al panel ("logout
-  // no redirecciona"), o peor: el token de la cuenta vieja pisa el de la que
-  // acaba de entrar. Se descarta aunque sea válido.
-  if (sessionEnded || epoch !== sessionEpoch) throw new Error('SESSION_ENDED')
-  tokenStorage.set(access)
-  return access
+  let lastErr = null
+  for (let attempt = 0; attempt <= REFRESH_429_MAX_RETRIES; attempt++) {
+    if (attempt) {
+      if (sessionEnded || epoch !== sessionEpoch) throw new Error('SESSION_ENDED')
+      await sleep(refreshRetryDelayMs(lastErr, attempt - 1))
+    }
+    try {
+      // Nativo: refresh en body (sin cookie ni CSRF); el backend lo rota y lo
+      // devuelve en la respuesta — hay que persistir el nuevo.
+      const res = IS_NATIVE
+        ? await axios.post(tokenEndpoint('refresh/'), { refresh: getNativeRefresh() }, {
+            timeout: 30000,
+            headers: { ...NATIVE_HEADERS }
+          })
+        : await axios.post(tokenEndpoint('refresh/'), {}, {
+            timeout: 30000,   // 15s era corto para el cold start del dyno gratis de Render (~30-60s)
+            withCredentials: true,
+            headers: { 'X-CSRFToken': csrfToken() }
+          })
+      if (IS_NATIVE && res.data?.refresh) setNativeRefresh(res.data.refresh)
+      const { access } = res.data || {}
+      if (!access) throw new Error('EMPTY_REFRESH')
+      // Un refresh que salió ANTES del logout o de un login nuevo puede aterrizar
+      // DESPUÉS: sin este corte, tokenStorage.set deja un access zombie en memoria
+      // — ensureSession() lo revive en /login y el guard rebota al panel ("logout
+      // no redirecciona"), o peor: el token de la cuenta vieja pisa el de la que
+      // acaba de entrar. Se descarta aunque sea válido.
+      if (sessionEnded || epoch !== sessionEpoch) throw new Error('SESSION_ENDED')
+      tokenStorage.set(access)
+      return access
+    } catch (err) {
+      lastErr = err
+      // Solo el throttle se reintenta: 401/403/red no cambian reintentando.
+      if (err?.response?.status !== 429 || attempt === REFRESH_429_MAX_RETRIES) throw err
+    }
+  }
 }
 
 // Refresh single-flight POR TAB y entre tabs (Web Locks): con refresh
@@ -175,6 +207,14 @@ async function tryRefresh() {
           // borran para cortar el ciclo: hasSessionCookie() pasa a false y no
           // se reintenta el refresh en cada carga ni en otras pestañas.
           if (err?.response?.status === 401) { clearSessionHints(); setNativeRefresh('') }
+          // 429 tras los reintentos = throttle persistente: la cookie puede
+          // seguir viva (los hints NO se borran). Aviso propio para que el
+          // dueño vea "no pudimos renovar tu sesión" en vez de un redirect
+          // silencioso que parece logout.
+          else if (err?.response?.status === 429 && !throttledNotified) {
+            throttledNotified = true
+            window.dispatchEvent(new CustomEvent('davent:session-throttled'))
+          }
         }
         throw err
       })
@@ -260,7 +300,9 @@ http.interceptors.response.use(
         // Refresh fallido -> sesión expirada. El store redirige a /login?expired=1.
         // SESSION_ENDED no se reporta: el usuario está saliendo o ya entró otra
         // cuenta — el evento haría location.assign y pisaría esa navegación.
-        if (e?.message !== 'SESSION_ENDED' && !expiredNotified) {
+        // 429 tampoco: ya se emitió davent:session-throttled con su propio
+        // mensaje; "expired" mentiría (la cookie puede seguir viva).
+        if (e?.message !== 'SESSION_ENDED' && e?.response?.status !== 429 && !expiredNotified) {
           expiredNotified = true
           window.dispatchEvent(new CustomEvent('davent:session-expired'))
         }
@@ -271,11 +313,39 @@ http.interceptors.response.use(
   }
 )
 
+// Espera real de un 429 (throttle DRF o lockout de login): el body puede
+// traer retry_after (el header Retry-After no es legible cross-origin) y el
+// detail dice "...disponible en N segundos". Se usa para cooldowns y backoff.
+function parseRetryAfterSeconds(error) {
+  const data = error?.response?.data
+  const body = Number(data?.retry_after)
+  if (Number.isFinite(body) && body > 0) return Math.ceil(body)
+  const header = Number(error?.response?.headers?.['retry-after'])
+  if (Number.isFinite(header) && header > 0) return Math.ceil(header)
+  const detail = typeof data?.detail === 'string' ? data.detail : ''
+  const m = detail.match(/(\d+)\s*(?:segundos?|seconds?|s\b)/i) || detail.match(/(?:en|in)\s+(\d+)/i)
+  if (m) return Math.max(1, Math.ceil(Number(m[1])))
+  return 0
+}
+
+// Mensaje amable del 429: nunca el detail crudo del throttle.
+function throttleMessage(seconds) {
+  if (!seconds) return 'Demasiados intentos. Esperá un momento y probá de nuevo.'
+  if (seconds < 60) return `Demasiados intentos. Probá de nuevo en ${seconds} segundos.`
+  return `Demasiados intentos. Probá de nuevo en ${Math.ceil(seconds / 60)} min.`
+}
+
 export function extractApiError(error) {
   // Normaliza errores DRF: {field: [msgs]} | {detail} | string
   if (!error) return { nonField: 'Error desconocido' }
   const data = error.response?.data
   const status = error.response?.status
+  // 429 primero: el detail del throttle es técnico y hay que taparlo con la
+  // espera real. retryAfter viaja aparte para cooldowns de UI.
+  if (status === 429) {
+    const wait = parseRetryAfterSeconds(error)
+    return { nonField: throttleMessage(wait), status, retryAfter: wait || undefined }
+  }
   if (error.code === 'PENDING_BACKEND') return { nonField: error.message, pendingBackend: true }
   if (!error.response) return { nonField: 'No se pudo conectar con la API. Verifica que Django corra en 127.0.0.1:8000.' }
   if (typeof data === 'string') {

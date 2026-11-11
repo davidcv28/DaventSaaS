@@ -30,7 +30,10 @@ import { useAuthStore } from '../stores/auth.store.js'
 
 const props = defineProps({
   // 'login' | 'register' — cambia el texto del botón.
-  mode: { type: String, default: 'login' }
+  mode: { type: String, default: 'login' },
+  // Login: respeta el checkbox "Mantener sesión" de la vista (default true
+  // para register/otras vistas que no lo exponen).
+  remember: { type: Boolean, default: true }
 })
 const emit = defineEmits(['done', 'error'])
 const auth = useAuthStore()
@@ -111,7 +114,7 @@ async function onGoogleCredential({ credential }) {
   }
   busy.value = true
   try {
-    const res = await auth.socialLogin(credential)
+    const res = await auth.socialLogin(credential, props.remember)
     if (res.ok) {
       emit('done', res)
     } else {
@@ -144,7 +147,7 @@ async function onNativeGoogleTap() {
     const res = await SocialLogin.login({ provider: 'google', options: {} })
     const credential = res?.result?.idToken
     if (!credential) throw new Error('no-id-token')
-    const login = await auth.socialLogin(credential)
+    const login = await auth.socialLogin(credential, props.remember)
     if (login.ok) {
       emit('done', login)
     } else {

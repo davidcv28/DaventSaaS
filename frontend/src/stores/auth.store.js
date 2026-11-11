@@ -13,13 +13,25 @@ export const useAuthStore = defineStore('auth', () => {
   const lastError = ref('')
   const fieldErrors = ref({})
   const usingApiFallback = ref(false)
+  // Segundos de espera real del último 429 de login (Retry-After/retry_after):
+  // la UI arma el cooldown con esto, no con un 60s fijo.
+  const retryAfter = ref(0)
 
   const isAuthenticated = computed(() => Boolean(accessToken.value))
+
+  // Dedup de /me (user+profile): lo piden initSession, los guards del router,
+  // DashboardView y el opt-in de IA — una sola request en vuelo y cache corta.
+  let mePromise = null
+  let meFetchedAt = 0
+  const ME_CACHE_MS = 10000
 
   function applyTokens({ access }) {
     if (access) {
       accessToken.value = access
       tokenStorage.set(access)
+      // Sesión nueva = perfil nuevo: el cache de /me no puede heredarse.
+      user.value = null
+      meFetchedAt = 0
     }
   }
 
@@ -34,8 +46,11 @@ export const useAuthStore = defineStore('auth', () => {
 
   function setApiError(err) {
     const parsed = extractApiError(err)
-    const { nonField, status: _s, pendingBackend: _pb, ...fields } = parsed
-    lastError.value = nonField || Object.values(fields)[0] || 'Ocurrió un error'
+    const { nonField, status: _s, pendingBackend: _pb, retryAfter: _ra, non_field_errors, ...fields } = parsed
+    // El banner global solo para errores generales; los de campo van inline
+    // (fieldErrors). Antes el primer field-error se mostraba dos veces.
+    // Fallback solo si no hay NI mensaje general NI campos (respuesta vacía).
+    lastError.value = nonField || non_field_errors || (Object.keys(fields).length ? '' : 'Ocurrió un error')
     fieldErrors.value = fields
     return parsed
   }
@@ -44,6 +59,7 @@ export const useAuthStore = defineStore('auth', () => {
     status.value = 'loading'
     lastError.value = ''
     fieldErrors.value = {}
+    retryAfter.value = 0
     try {
       const data = await authApi.login({ username: username.trim(), password, remember })
       // Cuenta nueva = estado limpio: nada de la sesión anterior (tienda, plan, pagos).
@@ -54,9 +70,11 @@ export const useAuthStore = defineStore('auth', () => {
       return true
     } catch (err) {
       status.value = 'error'
-      setApiError(err)
+      const parsed = setApiError(err)
       if (err.response?.status === 429) {
-        lastError.value = 'Demasiados intentos. Espera 60 segundos (protección anti fuerza bruta 5/min).'
+        // Cooldown con la espera REAL del backend (lockout 5/min), no un 60s
+        // fijo que podía quedar corto o larguísimo de más.
+        retryAfter.value = parsed.retryAfter || 60
       }
       return false
     }
@@ -69,6 +87,7 @@ export const useAuthStore = defineStore('auth', () => {
     status.value = 'loading'
     lastError.value = ''
     fieldErrors.value = {}
+    retryAfter.value = 0
     try {
       const data = await authApi.googleLogin(credential, remember)
       // Cuenta nueva = estado limpio: nada de la sesión anterior.
@@ -79,7 +98,8 @@ export const useAuthStore = defineStore('auth', () => {
       return { ok: true, isNew: Boolean(data?.is_new), requiresPhone: Boolean(data?.requires_phone) }
     } catch (err) {
       status.value = 'error'
-      setApiError(err)
+      const parsed = setApiError(err)
+      if (err.response?.status === 429) retryAfter.value = parsed.retryAfter || 60
       return { ok: false }
     }
   }
@@ -105,18 +125,32 @@ export const useAuthStore = defineStore('auth', () => {
     }
   }
 
-  async function fetchMe() {
+  async function fetchMe({ force = false } = {}) {
     if (!accessToken.value) return null
-    try {
-      const data = await authApi.fetchMe()
-      // /profile/ devuelve objeto; /user/ puede devolver lista paginada.
-      user.value = data?.results ? data.results[0] : data
-      usingApiFallback.value = false
-      return user.value
-    } catch (err) {
-      if (err.response?.status === 404) usingApiFallback.value = true
-      return null
-    }
+    // Cache corta: /me lo piden initSession + guards + DashboardView por cada
+    // navegación — sin esto eran 3-4 requests idénticos por carga.
+    if (!force && user.value && Date.now() - meFetchedAt < ME_CACHE_MS) return user.value
+    if (mePromise) return mePromise
+    const token = accessToken.value
+    mePromise = (async () => {
+      try {
+        const data = await authApi.fetchMe()
+        // La sesión pudo cambiar mientras volaba el request (login/logout):
+        // no pisar el user de la cuenta nueva con el de la anterior.
+        if (accessToken.value !== token) return null
+        // /profile/ devuelve objeto; /user/ puede devolver lista paginada.
+        user.value = data?.results ? data.results[0] : data
+        usingApiFallback.value = false
+        meFetchedAt = Date.now()
+        return user.value
+      } catch (err) {
+        if (err.response?.status === 404) usingApiFallback.value = true
+        return null
+      } finally {
+        mePromise = null
+      }
+    })()
+    return mePromise
   }
 
   // Correo (/user/me/) + perfil fiscal (/profile/me/) van a endpoints distintos.
@@ -134,7 +168,7 @@ export const useAuthStore = defineStore('auth', () => {
     for (const r of results) {
       if (r.status !== 'rejected') continue
       failed = true
-      const { nonField, status: _s, pendingBackend: _p, ...fields } = extractApiError(r.reason)
+      const { nonField, status: _s, pendingBackend: _p, retryAfter: _ra, ...fields } = extractApiError(r.reason)
       if (nonField && !lastError.value) lastError.value = nonField
       Object.assign(errors, fields)
     }
@@ -144,7 +178,7 @@ export const useAuthStore = defineStore('auth', () => {
       if (!lastError.value) lastError.value = 'Algunos datos no se pudieron guardar. Revisá los campos marcados.'
       return { ok: false }
     }
-    await fetchMe().catch(() => {})
+    await fetchMe({ force: true }).catch(() => {})
     return { ok: true, message: 'Tus datos se actualizaron correctamente' }
   }
 
@@ -170,6 +204,7 @@ export const useAuthStore = defineStore('auth', () => {
     status.value = 'idle'
     lastError.value = ''
     fieldErrors.value = {}
+    retryAfter.value = 0
     tokenStorage.clear()
     // Un reset que rompiera no debe frenar el cierre: si logoutSession no
     // corre, la cookie de refresh queda viva y la sesión reviviría sola.
@@ -184,13 +219,20 @@ export const useAuthStore = defineStore('auth', () => {
       const here = window.location.pathname
       if (!here.includes('/login')) window.location.assign('/login?expired=1')
     })
+    // Refresh 429 persistente: throttle, no sesión muerta. La cookie puede
+    // seguir viva — aviso visible en /login en vez de redirect silencioso.
+    window.addEventListener('davent:session-throttled', () => {
+      lastError.value = 'No pudimos renovar tu sesión. Reintentá en unos segundos.'
+      const here = window.location.pathname
+      if (!here.includes('/login')) window.location.assign('/login?throttled=1')
+    })
     // Recupera la sesión desde la cookie si el tab se recargó.
     ensureSession().then((ok) => { if (ok) fetchMe().catch(() => {}) })
   }
 
   return {
     accessToken, user, status, lastError, fieldErrors,
-    isAuthenticated, usingApiFallback,
+    isAuthenticated, usingApiFallback, retryAfter,
     login, socialLogin, register, fetchMe, updateAccount, updatePassword, logout, initSession, ensureSession,
     http
   }

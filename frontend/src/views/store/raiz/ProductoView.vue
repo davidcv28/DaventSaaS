@@ -152,7 +152,12 @@ async function load() {
   try {
     catalog.value = await loadPublicCatalog()
     status.value = product.value ? 'ready' : 'missing'
-    if (product.value) document.title = `${product.value.name} · ${shopName.value}`
+    if (product.value) {
+      document.title = `${product.value.name} · ${shopName.value}`
+      // Re-emite OG/JSON-LD del layout con el título del producto (el
+      // syncSeo del layout leyó el título de la tienda antes de esta carga).
+      ctx.refreshSeo?.()
+    }
   } catch {
     status.value = 'error'
   }

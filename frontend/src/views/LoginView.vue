@@ -1,5 +1,5 @@
 <script setup>
-import { ref, reactive, onMounted, onUnmounted } from 'vue'
+import { ref, reactive, computed, onMounted, onUnmounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useAuthStore } from '../stores/auth.store.js'
 import AuthLayout from '../components/AuthLayout.vue'
@@ -12,7 +12,9 @@ const route = useRoute()
 const router = useRouter()
 const auth = useAuthStore()
 
-const form = reactive({ username: '', password: '', remember: true })
+// "Mantener sesión" destildado por defecto: la cookie de refresh larga
+// (30 días) solo se pide si el usuario la marca explícitamente.
+const form = reactive({ username: '', password: '', remember: false })
 const touched = reactive({ username: false, password: false })
 const cooldown = ref(0)
 const socialError = ref('')
@@ -22,7 +24,16 @@ onMounted(() => {
   if (route.query.expired) {
     auth.lastError = 'Tu sesión expiró. Iniciá sesión nuevamente.'
   }
+  if (route.query.throttled) {
+    auth.lastError = 'No pudimos renovar tu sesión. Reintentá en unos segundos.'
+  }
 })
+
+// Cooldown con la espera REAL del throttle (retryAfter del store), no 60s
+// fijos: el lockout de login puede pedir bastante más.
+const cooldownLabel = computed(() =>
+  cooldown.value >= 90 ? `Reintentar en ${Math.ceil(cooldown.value / 60)} min` : `Reintentar en ${cooldown.value}s`
+)
 
 // El intervalo del cooldown muere con la vista: navegar durante los 60 s
 // dejaba el timer vivo (una fuga por visita al login).
@@ -31,12 +42,12 @@ onUnmounted(() => {
   timer = null
 })
 
-function startCooldown() {
-  cooldown.value = 60
+function startCooldown(seconds = 60) {
+  cooldown.value = Math.max(1, Math.ceil(seconds))
   clearInterval(timer)
   timer = setInterval(() => {
     cooldown.value -= 1
-    if (cooldown.value <= 0) clearInterval(timer)
+    if (cooldown.value <= 0) { cooldown.value = 0; clearInterval(timer) }
   }, 1000)
 }
 
@@ -50,7 +61,7 @@ async function onSubmit() {
     const next = route.query.next || (auth.user?.is_staff ? '/admin' : '/dashboard')
     router.push(String(next))
   } else if (auth.lastError.includes('Demasiados intentos')) {
-    startCooldown()
+    startCooldown(auth.retryAfter || 60)
   }
 }
 
@@ -67,7 +78,7 @@ function onSocialDone() {
   <AuthLayout title="Bienvenido de nuevo" subtitle="Ingresá con tu usuario DAVENT para gestionar tus tiendas.">
     <AlertMessage v-if="auth.lastError" kind="error" :message="auth.lastError" />
     <AlertMessage v-if="socialError" kind="error" :message="socialError" />
-    <AlertMessage v-if="route.query.registered" kind="success" message="Cuenta creada. Te enviamos un correo para verificar tu email: revisá tu casilla (y el spam). Después podés iniciar sesión." />
+    <AlertMessage v-if="route.query.registered" kind="success" message="Cuenta creada. Te enviamos un correo para verificar tu email: revisá tu casilla (y el spam). Podés iniciar sesión igual, pero no vas a poder publicar tu tienda hasta verificar el correo." />
 
     <form @submit.prevent="onSubmit" novalidate>
       <AppInput
@@ -100,11 +111,11 @@ function onSocialDone() {
       </div>
 
       <AppButton :loading="auth.status === 'loading'" :disabled="cooldown > 0">
-        {{ cooldown > 0 ? `Reintentar en ${cooldown}s` : 'Iniciar sesión' }}
+        {{ cooldown > 0 ? cooldownLabel : 'Iniciar sesión' }}
       </AppButton>
     </form>
 
-    <SocialAuthButtons mode="login" @done="onSocialDone" @error="(m) => { socialError = m }" />
+    <SocialAuthButtons mode="login" :remember="form.remember" @done="onSocialDone" @error="(m) => { socialError = m }" />
 
     <div class="auth-links">
       <RouterLink to="/forgot-password">¿Olvidaste tu contraseña?</RouterLink>

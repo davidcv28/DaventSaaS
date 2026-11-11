@@ -54,7 +54,7 @@ async function onSubmit() {
     })
     success.value = data?.Exito || 'Tu contraseña se actualizó. Ya podés iniciar sesión.'
   } catch (e) {
-    const { nonField, status: _s, ...fields } = extractApiError(e)
+    const { nonField, status: _s, retryAfter: _ra, ...fields } = extractApiError(e)
     fieldErrors.value = fields
     error.value = nonField || ''
     // Token inválido/vencido viaja en el campo token del serializer.

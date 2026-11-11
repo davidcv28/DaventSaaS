@@ -23,7 +23,9 @@ import { customerHttp, customerCsrfToken } from './customer.http.js'
 // =============================================================================
 
 const auth = '/customer-auth'
-const me = `${auth}/me`
+// Trailing slash canónico: sin ella Django responde 301 en cada carga
+// (APPEND_SLASH) y el GET /me pagaba un redirect extra por sesión.
+const me = `${auth}/me/`
 
 export const customerApi = {
   // ---- auth ----

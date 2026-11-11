@@ -30,6 +30,9 @@
   --dz-blue-ink: #ffffff;
   --dz-ok: #007a3d;
   --dz-danger: #b42318;
+  /* Ámbar de aviso (pagos pendientes, estados "en curso"): sin él los
+     tonos semánticos de los sub-paneles caían al gris. */
+  --dz-warn: #B45309;
   --dz-display: var(--st-f-display-family, Inter, "Helvetica Neue", system-ui, sans-serif);
   --dz-body: var(--st-f-body-family, Inter, "Helvetica Neue", system-ui, sans-serif);
   --dz-mono: var(--st-f-eyebrow-family, ui-monospace, "JetBrains Mono", Menlo, Consolas, monospace);
@@ -51,6 +54,7 @@
   --dz-blue-ink: #0b1220;
   --dz-ok: #4ade80;
   --dz-danger: #f87171;
+  --dz-warn: #FBBF24;
 }
 
 /* ---------- Marco común ---------- */
@@ -248,6 +252,12 @@
   -webkit-text-fill-color: var(--dz-ink);
   box-shadow: inset 0 0 0 40px var(--dz-surface);
 }
+/* El ojo de mostrar/ocultar (.ecaf-pass-toggle) es absolute a 46px del
+   borde: el padding shorthand de .sp-input (0,4,0) pisaba el padding-right
+   scoped del campo (0,2,0) y el texto quedaba debajo del ícono. */
+[data-design='mercado'][data-theme] :is(.ec-auth, .ec-account) .ecaf-pass .sp-input {
+  padding-right: 48px;
+}
 
 /* CTA: azul del diseño (el amarillo queda para el mostrador). */
 [data-design='mercado'][data-theme] :is(.ec-auth, .ec-account) :is(.ecaf-submit, .ec-btn-primary) {
@@ -327,6 +337,29 @@
 [data-design='mercado'][data-theme] .ec-account .acc-side { display: none; }
 [data-design='mercado'][data-theme] .ec-account .acc-main { gap: 14px; }
 
+/* Los sub-paneles (pedidos, suscripciones, direcciones, soporte, perfil)
+   son scoped y leen tokens --sp-*/--store-accent del chrome de la tienda:
+   en noche --sp-accent-text quedaba en el azul fijo #1D4ED8 (~2.4:1 sobre
+   la superficie) y los "success/danger" venían de otra paleta. Acá se
+   repuntean a los tokens --dz-* del diseño, que ya pasan AA en ambos modos
+   y unifican el lenguaje visual del mostrador. --sp-card-solid/--sp-surface
+   apuntan a --dz-bg: las cards internas quedan como "papel" inset sobre el
+   panel (misma idea que la lista del gate). */
+[data-design='mercado'][data-theme] .ec-account {
+  --sp-ink: var(--dz-ink);
+  --sp-ink-2: var(--dz-ink-2);
+  --sp-muted: var(--dz-muted);
+  --sp-line: var(--dz-line);
+  --sp-card: var(--dz-surface);
+  --sp-card-solid: var(--dz-bg);
+  --sp-surface: var(--dz-bg);
+  --sp-soft: var(--dz-bg);
+  --sp-accent-text: var(--dz-link);
+  --sp-success: var(--dz-ok);
+  --sp-danger: var(--dz-danger);
+  --sp-warning: var(--dz-warn);
+}
+
 [data-design='mercado'][data-theme] .ec-account .acc-tele {
   display: block;
   font-family: var(--dz-mono); font-size: 9.5px; font-weight: 600;
@@ -376,6 +409,18 @@
 [data-design='mercado'][data-theme] .ec-account .acc-icon-btn:hover {
   background: var(--dz-accent-ink); color: var(--dz-accent);
   border-color: var(--dz-accent-ink);
+}
+/* El eliminar de direcciones (.is-danger) perdía su affordance: el hover
+   genérico del mostrador (tinta + amarillo) ganaba por especificidad al
+   scoped del componente. Acá vuelve el rojo del diseño. */
+[data-design='mercado'][data-theme] .ec-account .acc-icon-btn.is-danger {
+  color: var(--dz-danger);
+  border-color: color-mix(in srgb, var(--dz-danger) 38%, transparent);
+}
+[data-design='mercado'][data-theme] .ec-account .acc-icon-btn.is-danger:hover {
+  background: color-mix(in srgb, var(--dz-danger) 12%, var(--dz-surface));
+  color: var(--dz-danger);
+  border-color: var(--dz-danger);
 }
 
 /* Chips de sección (tablet/mobile). */
@@ -461,6 +506,107 @@
 [data-design='mercado'][data-theme] .ec-account .acc-sk {
   background: color-mix(in srgb, var(--dz-muted) 16%, transparent);
   border-radius: 6px;
+}
+
+/* ---------- Badges tipo ticket ----------
+   Los pills/badges de los sub-paneles nacían redondos y genéricos (999px).
+   Acá pasan al lenguaje del mostrador: esquinas de 5px, mono en caja alta
+   con tracking — como los precios y códigos de un ticket de bazar. Los
+   colores semánticos ya salen de los tokens --sp-* repunteados a --dz-*. */
+[data-design='mercado'][data-theme] .ec-account .acc-status {
+  border-radius: 5px;
+  padding: 5px 8px;
+  font-family: var(--dz-mono); font-size: 9.5px; font-weight: 700;
+  letter-spacing: .08em; text-transform: uppercase;
+}
+[data-design='mercado'][data-theme] .ec-account .ec-thread-status {
+  border-radius: 5px;
+  padding: 4px 8px;
+  font-family: var(--dz-mono); font-size: 9.5px; font-weight: 700;
+  letter-spacing: .08em; text-transform: uppercase;
+}
+[data-design='mercado'][data-theme] .ec-account :is(.acc-plan-flag, .acc-default-badge, .acc-chip, .acc-member-chip) {
+  border-radius: 5px;
+  font-family: var(--dz-mono); font-size: 9px; font-weight: 700;
+  letter-spacing: .08em; text-transform: uppercase;
+}
+[data-design='mercado'][data-theme] .ec-account .acc-chip {
+  padding: 5px 9px;
+  background: color-mix(in srgb, var(--dz-blue) 10%, var(--dz-surface));
+  color: var(--dz-link);
+}
+
+/* Kickers de panel ("01 · PEDIDOS"): venían display:none (ornamento de la
+   piel esencial). Acá se encienden — son la etiqueta mono del ticket. */
+[data-design='mercado'][data-theme] .ec-account .acc-panel-kicker {
+  display: block;
+  font-family: var(--dz-mono); font-size: 10px; font-weight: 600;
+  letter-spacing: .12em; text-transform: uppercase; color: var(--dz-muted);
+}
+/* Índice numerado de la lista del gate ("01"–"04"): mismo ornamento. */
+[data-design='mercado'][data-theme] .ec-account .acc-gate-num {
+  display: inline-grid; place-items: center; flex: none;
+  min-width: 22px; height: 22px; padding: 0 5px;
+  border-radius: 5px;
+  background: var(--dz-accent-ink); color: var(--dz-accent);
+  font-family: var(--dz-mono); font-size: 10px; font-weight: 700; letter-spacing: .04em;
+}
+
+/* ---------- Estados y cohesion de sub-paneles ---------- */
+/* Empty-states: el círculo genérico pasa a squircle azul, como el badge
+   del form de auth. */
+[data-design='mercado'][data-theme] .ec-account :is(.acc-empty-ico, .acc-support-empty-ico) {
+  border-radius: 12px;
+  background: color-mix(in srgb, var(--dz-blue) 10%, var(--dz-surface));
+  color: var(--dz-link);
+}
+/* "Volver a mis consultas": --store-accent (#0284c7) quedaba en ~4.0:1
+   sobre la superficie oscura — texto de 13px pide 4.5. */
+[data-design='mercado'][data-theme] .ec-account .ec-support-back { color: var(--dz-link); }
+/* Ícono del comercio dentro del hilo (is-mine es del cliente: burbuja
+   azul del diseño en vez del tinte sky del acento de la tienda). */
+[data-design='mercado'][data-theme] .ec-account .ec-msg.is-mine {
+  background: color-mix(in srgb, var(--dz-blue) 12%, var(--dz-surface));
+}
+/* Card "suscripción vigente": filete y fondo azul del diseño (antes el
+   tinte del acento sky de la tienda). */
+[data-design='mercado'][data-theme] .ec-account .acc-sub-now {
+  border-color: color-mix(in srgb, var(--dz-blue) 30%, var(--dz-line));
+  background: color-mix(in srgb, var(--dz-blue) 6%, var(--dz-surface));
+}
+[data-design='mercado'][data-theme] .ec-account .acc-sub-now-ico {
+  background: linear-gradient(135deg, var(--dz-blue), color-mix(in srgb, var(--dz-blue) 62%, #000));
+  color: #ffffff;
+}
+/* Hover de fila de pedido / consulta / hilo: filete azul del diseño. */
+[data-design='mercado'][data-theme] .ec-account .acc-order:hover {
+  border-color: color-mix(in srgb, var(--dz-blue) 40%, var(--dz-line));
+}
+[data-design='mercado'][data-theme] .ec-account .acc-addrform {
+  border-color: color-mix(in srgb, var(--dz-blue) 30%, var(--dz-line));
+}
+[data-design='mercado'][data-theme] .ec-account .acc-plan.is-current {
+  border-color: color-mix(in srgb, var(--dz-blue) 45%, var(--dz-line));
+  background: color-mix(in srgb, var(--dz-blue) 5%, var(--dz-bg));
+}
+[data-design='mercado'][data-theme] .ec-account .ec-thread-row:hover {
+  border-color: color-mix(in srgb, var(--dz-blue) 40%, var(--dz-line));
+  background: color-mix(in srgb, var(--dz-blue) 5%, var(--dz-surface));
+}
+/* Checkbox "dirección principal": tinte del acento sky → azul del diseño. */
+[data-design='mercado'][data-theme] .ec-account .acc-check input { accent-color: var(--dz-blue); }
+/* Código de pedido y índice "N.º 01": mono como el resto de los tickets. */
+[data-design='mercado'][data-theme] .ec-account .acc-order-code {
+  font-family: var(--dz-mono); font-size: 14px; letter-spacing: .02em;
+}
+[data-design='mercado'][data-theme] .ec-account .acc-order-idx {
+  font-family: var(--dz-mono); font-size: 10px; font-weight: 600;
+  letter-spacing: .1em; text-transform: uppercase; color: var(--dz-muted);
+}
+/* Fieldsets del perfil: leyenda mono como los sp-field-label. */
+[data-design='mercado'][data-theme] .ec-account .acc-fieldset legend {
+  font-family: var(--dz-mono); font-size: 10px; font-weight: 600;
+  letter-spacing: .12em;
 }
 
 /* ---------- Escritorio: barra lateral amarilla ---------- */

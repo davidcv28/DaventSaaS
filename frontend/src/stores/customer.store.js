@@ -94,10 +94,8 @@ export const useCustomerStore = defineStore('customer', () => {
       return { ok: true }
     } catch (err) {
       status.value = 'error'
+      //extractApiError ya traduce el 429 a mensaje amable con espera real.
       setError(err)
-      if (err.response?.status === 429) {
-        lastError.value = 'Demasiados intentos. Esperá un minuto y probá de nuevo.'
-      }
       return { ok: false }
     }
   }

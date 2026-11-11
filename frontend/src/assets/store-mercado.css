@@ -1137,7 +1137,8 @@
   display: flex;
   align-items: center;
   gap: 9px;
-  min-height: 32px;
+  /* Fila táctil ≥40px (QA: el checkbox de 16px quedaba chico al toque). */
+  min-height: 40px;
   font-size: 13.5px;
   color: var(--mc-ink-2);
   cursor: pointer;
@@ -1149,20 +1150,20 @@
   display: grid;
   place-content: center;
   flex: none;
-  width: 16px;
-  height: 16px;
+  width: 20px;
+  height: 20px;
   margin: 0;
   cursor: pointer;
   border: 1px solid color-mix(in srgb, var(--mc-ink) 30%, transparent);
-  border-radius: 3px;
+  border-radius: 4px;
   background: var(--mc-surface);
 }
 .store-page[data-template='mercado'] .mc-f-check input:hover { border-color: color-mix(in srgb, var(--mc-ink) 55%, transparent); }
 .store-page[data-template='mercado'] .mc-f-check input:checked { background: var(--mc-blue); border-color: var(--mc-blue); }
 .store-page[data-template='mercado'] .mc-f-check input:checked::after {
   content: "";
-  width: 9px;
-  height: 5px;
+  width: 10px;
+  height: 6px;
   border-left: 2px solid var(--mc-on-blue);
   border-bottom: 2px solid var(--mc-on-blue);
   transform: rotate(-45deg) translate(1px, -1px);
@@ -1588,8 +1589,8 @@
   .store-page[data-template='mercado'] .mc-cat-skel-media { width: 112px; height: 112px; }
 }
 @media (max-width: 560px) {
-  .store-page[data-template='mercado'] .mc-f-cat,
-  .store-page[data-template='mercado'] .mc-f-check { min-height: 38px; }
+  .store-page[data-template='mercado'] .mc-f-cat { min-height: 38px; }
+  .store-page[data-template='mercado'] .mc-f-check { min-height: 44px; }
   .store-page[data-template='mercado'] .mc-f-price input,
   .store-page[data-template='mercado'] .mc-f-apply,
   .store-page[data-template='mercado'] .mc-cat-filters-toggle { min-height: 44px; }

@@ -123,7 +123,10 @@ h1, h2, h3{ letter-spacing: -.02em; }
 .brand-foot{ color: rgba(255, 255, 255, .6); font-size: 13px; display: flex; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
 .brand-foot-link{ color: rgba(255, 255, 255, .75); font-weight: 600; text-decoration: none; }
 .brand-foot-link:hover{ color: #fff; text-decoration: underline; }
-.auth-panel{ display: grid; place-items: center; min-width: 0; padding: 32px 20px; background: var(--bg); }
+/* align-items:safe center: si la tarjeta supera el alto del panel (viewport
+   chico o contenido largo), alinea arriba en vez de recortar el tope — el
+   body scrollea. Browsers viejos ignoran la declaración y quedan en center. */
+.auth-panel{ display: grid; place-items: center; align-items: safe center; min-width: 0; padding: 32px 20px; background: var(--bg); }
 /* Salida a la landing: fija arriba a la izquierda del panel; en mobile
    pasa a flujo sobre la tarjeta (media query al final del archivo). */
 .auth-back{ position: absolute; top: 22px; left: 26px; z-index: 2; display: inline-flex; align-items: center; gap: 7px; padding: 8px 14px; border-radius: 99px; font-size: 13px; font-weight: 600; color: var(--muted); text-decoration: none; transition: color .15s, background .15s; }
@@ -206,7 +209,10 @@ h1, h2, h3{ letter-spacing: -.02em; }
 /* ===== Forms ===== */
 .field{ margin-bottom: 16px; }
 .field label{ display: block; font-size: 13px; font-weight: 600; color: var(--ink-2); margin-bottom: 6px; }
-.field label span{ color: var(--danger); }
+/* Solo el asterisco de requerido (AppInput y labels manuales: span sin clase,
+   aria-hidden, hijo directo del label) es rojo — el texto de los checkboxes
+   y cualquier otro span del label conserva su color normal. */
+.field label > span[aria-hidden="true"]:not([class]){ color: var(--danger); }
 .field .hint{ font-size: 12px; color: var(--muted); margin: 6px 0 0; white-space: pre-line; }
 .input-wrap{ position: relative; }
 .input, .select, .textarea{ width: 100%; border: 1px solid var(--line); border-radius: var(--radius-sm); padding: 11px 14px; font: inherit; font-size: 14.5px; color: var(--ink); background: var(--card); box-shadow: var(--shadow-sm); transition: border-color .15s, box-shadow .15s; }
@@ -594,7 +600,10 @@ body{ transition: background-color .2s ease, color .2s ease; }
 .plan-row small{ display: block; margin-top: 2px; }
 
 /* ===== Checkbox ===== */
-.check{ display: flex; gap: 10px; align-items: flex-start; font-size: 13.5px; color: var(--ink-2); cursor: pointer; line-height: 1.45; font-weight: 400; }
+/* label.check (0,1,1) empata con .field label (0,1,1) y gana por orden:
+   sin el type-selector el checkbox quedaba display:block y el texto del
+   span pisaba el input en mobile/tablet/desktop. */
+label.check{ display: flex; gap: 10px; align-items: flex-start; font-size: 13.5px; color: var(--ink-2); cursor: pointer; line-height: 1.45; font-weight: 400; }
 .check input[type='checkbox']{ width: 18px; height: 18px; margin: 1px 0 0; flex: none; accent-color: var(--brand-600); cursor: pointer; }
 .check a{ color: var(--brand-ink); font-weight: 600; text-decoration: none; }
 .check a:hover{ text-decoration: underline; }

@@ -409,6 +409,14 @@ html.sp-lock body{ overflow: hidden; overscroll-behavior: none; }
   .sp-drawer.open{ transform: none; visibility: visible; }
   .sp-drawer-head{ display: flex; }
 }
+/* Tablet (641–1100px): el nombre de la tienda truncaba a una letra ("d…")
+   porque .sp-top-end repartía el flex con la marca. La marca queda con el
+   ancho restante y el nombre puede usar hasta 2 líneas en cortes de
+   palabra — "BAZAR" nunca se parte al medio y los nombres largos se leen. */
+@media (min-width: 641px) and (max-width: 1100px){
+  .sp-top-end{ flex: 0 0 auto; }
+  .sp-top .sp-name{ white-space: normal; overflow-wrap: break-word; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; line-height: 1.15; }
+}
 @media (max-width: 960px){
   .sp-contact-grid{ grid-template-columns: minmax(0, 1fr); }
   .sp-about-grid, .sp-about-grid.no-side{ grid-template-columns: minmax(0, 1fr); gap: 36px; }
@@ -459,6 +467,14 @@ html.sp-lock body{ overflow: hidden; overscroll-behavior: none; }
 /* Raíz única de cada página hija (la transición la necesita): crece para
    que el pie quede abajo en páginas con poco contenido. */
 .sp-page-root{ flex: 1; display: flex; flex-direction: column; min-width: 0; }
+/* Páginas de comercio sin contenedor propio (carrito, checkout, seguimiento,
+   comprobante, legales): iban a sangría completa — a 1440 el H1 quedaba en
+   x=0 y el resumen "Tu pedido" se cortaba en el borde derecho. Mismo aire
+   lateral que .sp-container pero con medida propia para formularios. */
+.sp-page-root:is(.ec-cartpg, .ec-checkout, .ec-track, .ec-receiptpg, .ec-legal){
+  width: 100%; max-width: 1200px; margin-inline: auto;
+  padding-inline: max(clamp(16px, 4vw, 40px), env(safe-area-inset-left)) max(clamp(16px, 4vw, 40px), env(safe-area-inset-right));
+}
 /* Las vistas familiares agrupan sus secciones dentro de <main>: flex
    permite reordenarlas con `order` desde el editor de bloques (los
    hijos sin order conservan el orden declarado en el markup). */
@@ -872,6 +888,13 @@ html:has(.store-page[data-store-theme='dark'])::-webkit-scrollbar-thumb{ backgro
 @media (max-width: 760px){ .sp-foot{ margin-top: 48px; } }
 .sp-foot .sp-davent-badge{ background: rgba(255, 255, 255, .14); border-color: rgba(255, 255, 255, .35); }
 .sp-foot .sp-davent-badge:hover{ border-color: #fff; background: rgba(255, 255, 255, .22); }
+
+/* Chatbot FAB (.sp-bot es fixed — siempre flota sobre el pie): reserva aire
+   extra abajo para que al llegar al final no tape los links legales ni el
+   badge. La medida cubre FAB(56px)+offset según tab bar / barra de planes. */
+.store-page.has-bot .sp-foot{ padding-bottom: calc(88px + env(safe-area-inset-bottom)); }
+.store-page.has-bot[data-st-tabbar] .sp-foot{ padding-bottom: calc(72px + env(safe-area-inset-bottom)); }
+.store-page.has-bot:has(.sv-bar) .sp-foot{ padding-bottom: calc(160px + env(safe-area-inset-bottom)); }
 
 /* Nav transparente (cristal); el pie conserva el color sólido de la paleta */
 .sp-top, .store-page[data-store-theme='dark'] .sp-top{ background: linear-gradient(180deg, color-mix(in srgb, var(--store-accent-ink) 55%, transparent), color-mix(in srgb, var(--store-accent-ink) 35%, transparent)); backdrop-filter: saturate(160%) blur(14px); -webkit-backdrop-filter: saturate(160%) blur(14px); border-bottom-color: rgba(255, 255, 255, .16); }

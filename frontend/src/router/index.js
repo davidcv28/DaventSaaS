@@ -44,6 +44,7 @@ const StoreLegalView = () => import('../views/StoreLegalView.vue')
 const StoreFlyerView = () => import('../views/StoreFlyerView.vue')
 const DaventFlyerView = () => import('../views/DaventFlyerView.vue')
 const RobotQaView = () => import('../views/RobotQaView.vue')
+const NotFoundView = () => import('../views/NotFoundView.vue')
 
 // Páginas de la web pública del cliente. En el dominio de la plataforma
 // cuelgan de /<slug>; en un subdominio de tienda (<slug>.<dominio>) son la
@@ -196,6 +197,16 @@ const routes = [
   {
     path: '/dashboard',
     name: 'dashboard',
+    component: DashboardView,
+    meta: { requiresAuth: true, customerOnly: true, title: 'Panel' }
+  },
+  // Deep links del panel: /dashboard/<slug> (español) abre la sección
+  // directo — DashboardView la resuelve vía route.params.section con la
+  // misma vista y los mismos guards (meta replicado). Slugs desconocidos
+  // caen al catch-all (404), no a una sección equivocada.
+  {
+    path: '/dashboard/:section(inicio|productos|catalogo|catalogos|servicios|vender|ventas|pedidos|clientes|consultas|cobros|legal|membresias|pagina|direccion|diseno|fotos|negocio|visitas|promocionar|qr|folletos|opiniones|ayuda|asistente|plan|planes|pagos|facturas|cuenta|novedades)',
+    name: 'dashboard-section',
     component: DashboardView,
     meta: { requiresAuth: true, customerOnly: true, title: 'Panel' }
   },
@@ -402,7 +413,12 @@ const routes = [
           children: storeChildren
         }
       ]),
-  { path: '/:pathMatch(.*)*', redirect: isStoreHost ? '/' : '/login' }
+  // Catch-all: en host de tienda lo desconocido vuelve a la home de la
+  // tienda; en la plataforma se muestra una 404 real en vez de rebotar
+  // en silencio al login (el usuario puede estar logueado o no).
+  ...(isStoreHost
+    ? [{ path: '/:pathMatch(.*)*', redirect: '/' }]
+    : [{ path: '/:pathMatch(.*)*', name: 'not-found', component: NotFoundView, meta: { title: 'Página no encontrada' } }])
 ]
 
 export const router = createRouter({
@@ -438,7 +454,7 @@ router.beforeEach(async (to) => {
   // propia de administración de la tienda (/app).
   if (Capacitor.isNativePlatform()) {
     if (to.path === '/') return { name: 'login' }
-    if (to.name === 'dashboard') return { name: 'app' }
+    if (to.name === 'dashboard' || to.name === 'dashboard-section') return { name: 'app' }
   }
   // En un host de tienda (subdominio o dominio propio) solo existe la web
   // pública: cualquier ruta de plataforma (login, panel, legales) se

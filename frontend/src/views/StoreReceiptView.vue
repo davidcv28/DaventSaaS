@@ -41,7 +41,8 @@ const STATUS_LABELS = {
   SHIPPED: 'Enviado', DELIVERED: 'Entregado', EXPIRED: 'Vencido',
   CANCELLED: 'Cancelado', REFUNDED: 'Reembolsado',
 }
-const SHIP_LABELS = { home: 'Envío a domicilio', pickup: 'Retiro en el local' }
+// Mismas etiquetas que el checkout y el seguimiento.
+const SHIP_LABELS = { home: 'A coordinar con la tienda', pickup: 'Retiro sin cargo' }
 
 // invoice_ref puede ser un código/número de factura o una URL a un
 // archivo que subió el vendedor — si es URL la mostramos como descarga,

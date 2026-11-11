@@ -5,7 +5,6 @@ import {
   storesApi, normalizeSlug, normalizeCatalogParams, storeThemeVars, ensureStoreFont, resolveStoreTemplate, CUSTOMIZATION_DEFAULTS, STORE_TEMPLATES, AI_EXTRA_TEMPLATES, storeSkinOf,
   storeContactLink, hasContactChannel
 } from '../api/stores.api.js'
-import { extractApiError } from '../api/http.js'
 import { env, storeHostSlug, customDomainHost, setStoreHostSlug } from '../config/env.js'
 import AppIcon from '../components/AppIcon.vue'
 import BrandLogo from '../components/BrandLogo.vue'
@@ -57,6 +56,10 @@ const router = useRouter()
 const status = ref('loading') // loading | success | error
 const store = ref(null)
 const errorMsg = ref('')
+// Tipo de fallo al cargar la tienda: 'notfound' (404) muestra su propio
+// mensaje; 'busy' (429/5xx/red) ofrece el botón Reintentar. Nunca se
+// vuelca el `detail` crudo del backend a la UI.
+const storeErrorKind = ref('')
 // El slug viene del path (dominio de plataforma /<slug>) o del subdominio
 // (<slug>.<dominio>, donde la tienda es la raíz y no hay param en la ruta).
 const slug = computed(() => normalizeSlug(route.params.slug || storeHostSlug || ''))
@@ -668,7 +671,7 @@ const navMenuLinks = computed(() => {
   const links = []
   if (!landingOff.value) links.push({ to: homeTo.value, label: 'Inicio' })
   if (showServices.value) links.push({ to: servicesTo.value, label: 'Servicios' })
-  if (showCatalog.value) links.push({ to: catalogTo.value, label: 'Catálogo' })
+  if (catalogPageOn.value) links.push({ to: catalogTo.value, label: 'Catálogo' })
   if (showPlans.value) links.push({ to: plansTo.value, label: 'Suscripciones' })
   if (hasAbout.value && !landingOff.value) links.push({ to: anchorTo('#nosotros'), label: 'Nosotros', anchor: true })
   if (showGallery.value && landingHasGallery.value && !landingOff.value) links.push({ to: anchorTo('#galeria'), label: 'Galería', anchor: true })
@@ -786,21 +789,19 @@ const legalTo = (kind) => ({ path: storeHostSlug ? `/legal/${kind}` : `/${slug.v
 // Página de reemplazo cuando no hay portada: Servicios si está, si no el
 // catálogo, si no Suscripciones (la web nunca queda sin destino — el
 // backend siempre manda ≥1).
-const homeFallbackTo = computed(() => (showServices.value ? servicesTo.value : showCatalog.value ? catalogTo.value : plansTo.value))
+const homeFallbackTo = computed(() => (showServices.value ? servicesTo.value : catalogPageOn.value ? catalogTo.value : plansTo.value))
 // Anclas de sección (#nosotros/#galeria/#contacto): van al inicio.
 const anchorTo = (hash) => ({ path: homeTo.value.path, hash })
 watch([landingOff, isHome], ([off, home]) => { if (off && home) router.replace(homeFallbackTo.value) }, { immediate: true })
-// Página pedida por URL pero que el diseño/plan no soporta (p. ej.
-// /servicios en un template sin superficie services): vuelve al inicio
-// o a la primera página disponible en vez de renderizar una hoja vacía.
-watch([isServices, isPlans, isCatalog, showServices, showPlans, showCatalog, status], () => {
+// Página pedida por URL pero que el diseño/plan no soporta: el catálogo
+// vuelve al inicio (o a la primera página disponible). Servicios y
+// Suscripciones NO redirigen en silencio — sus vistas wrapper muestran
+// un aviso explícito de "no disponible".
+watch([isCatalog, catalogPageOn, landingOff, status], () => {
   if (status.value !== 'success') return
-  const blocked = (isServices.value && !showServices.value)
-    || (isPlans.value && !showPlans.value)
-    || (isCatalog.value && !showCatalog.value)
-  // Con portada disponible se vuelve al inicio; sin ella, a la primera
-  // página habilitada (homeFallbackTo nunca apunta a una bloqueada).
-  if (blocked) router.replace(landingOff.value ? homeFallbackTo.value : homeTo.value)
+  if (isCatalog.value && !catalogPageOn.value) {
+    router.replace(landingOff.value ? homeFallbackTo.value : homeTo.value)
+  }
 })
 
 // Buscador del masthead (Tienda Pro): en el catálogo filtra en vivo; en el
@@ -825,10 +826,10 @@ const topCta = computed(() => {
   }
   if (isServices.value || isPlans.value) {
     if (!landingOff.value) return { to: homeTo.value, icon: 'store', label: 'Inicio' }
-    if (showCatalog.value) return { to: catalogTo.value, icon: 'package', label: 'Catálogo' }
+    if (catalogPageOn.value) return { to: catalogTo.value, icon: 'package', label: 'Catálogo' }
     return null
   }
-  if (showCatalog.value) return { to: catalogTo.value, icon: 'package', label: 'Catálogo' }
+  if (catalogPageOn.value) return { to: catalogTo.value, icon: 'package', label: 'Catálogo' }
   if (showServices.value) return { to: servicesTo.value, icon: 'wrench', label: 'Servicios' }
   return null
 })
@@ -935,7 +936,7 @@ provide('storeIconContext', computed(() => ({
 
 provide('storePage', {
   slug, store, status, custom, shopName, nameFont, initial, location,
-  hasDesignAdvanced, pageTemplate, hasAbout, showGallery, showContact, showCatalog, showServices, showPlans, siteTemplates, ui,
+  hasDesignAdvanced, pageTemplate, hasAbout, showGallery, showContact, showCatalog, catalogPageOn, showServices, showPlans, siteTemplates, ui, refreshSeo,
   landingHasGallery, landingHasContact,
   ordersEnabled,
   loadPublicCatalog
@@ -973,6 +974,8 @@ async function onCustomerAuthed() {
 // en el catálogo, "<tienda> · Servicios" en la página de servicios.
 // Corre también al volver al inicio.
 watch([status, () => route.name], ([s, name]) => {
+  // Tienda caída: título de fallback neutro (la ficha real no cargó).
+  if (s === 'error') { document.title = 'Tienda no disponible'; return }
   if (s !== 'success') return
   document.title = name === 'store-catalog' ? `${shopName.value} · Catálogo`
     : name === 'store-services' ? `${shopName.value} · Servicios`
@@ -980,6 +983,22 @@ watch([status, () => route.name], ([s, name]) => {
     : name === 'store-auth' ? `${shopName.value} · Ingresar`
     : shopName.value
 }, { immediate: true })
+
+// Título de pestaña en la ficha de producto cuando la página la pinta el
+// documento del patrón (iframe): la vista Vue no monta, así que el nombre
+// sale del catálogo público ya cacheado. Sin esto la pestaña quedaba con
+// el nombre de la tienda.
+watch([isProduct, usePattern, () => route.params.productId, status], async () => {
+  if (!isProduct.value || !usePattern.value || !catalogPageOn.value || status.value !== 'success') return
+  try {
+    const data = await loadPublicCatalog()
+    const p = (data?.products || []).find((x) => String(x.id) === String(route.params.productId))
+    if (p?.name && status.value === 'success') {
+      document.title = `${p.name} · ${shopName.value}`
+      refreshSeo()
+    }
+  } catch { /* catálogo caído: queda el título de la tienda */ }
+})
 
 // Canales de contacto (pie y barra fija móvil): pasan por el redirect de
 // la API — el número y los usuarios de las redes no viajan en payload ni
@@ -1008,6 +1027,30 @@ function resolvedThemeColor() {
   return themeVars.value['--store-accent-ink']
 }
 
+// Canonical por página: applySeo cubre meta/OG/JSON-LD pero no el link —
+// se gestiona acá con el mismo ciclo de vida (se restaura al desmontar).
+let canonicalEl = null
+let canonicalPrevHref = null // href que traía el index.html (null = no existía)
+function syncCanonical(url) {
+  if (!canonicalEl) {
+    canonicalEl = document.head.querySelector('link[rel="canonical"]')
+    canonicalPrevHref = canonicalEl ? canonicalEl.getAttribute('href') : null
+    if (!canonicalEl) {
+      canonicalEl = document.createElement('link')
+      canonicalEl.setAttribute('rel', 'canonical')
+      document.head.appendChild(canonicalEl)
+    }
+  }
+  canonicalEl.setAttribute('href', url)
+}
+function restoreCanonical() {
+  if (!canonicalEl) return
+  if (canonicalPrevHref == null) canonicalEl.remove()
+  else canonicalEl.setAttribute('href', canonicalPrevHref)
+  canonicalEl = null
+  canonicalPrevHref = null
+}
+
 // SEO y previews: Open Graph / Twitter / theme-color + JSON-LD (Store o
 // LocalBusiness) con nombre, dirección, horarios y redes.
 let clearSeo = null
@@ -1018,13 +1061,13 @@ function syncSeo() {
   const c = custom.value
   const s = store.value
   const url = `${window.location.origin}${route.path}`
-  const description = c.description?.trim() || `${shopName.value}${location.value ? ` en ${location.value}` : ''}. ${showCatalog.value ? 'Mirá el catálogo online y consultá por WhatsApp.' : 'Sitio oficial.'}`
+  const description = c.description?.trim() || `${shopName.value}${location.value ? ` en ${location.value}` : ''}. ${catalogPageOn.value ? 'Mirá el catálogo online y consultá por WhatsApp.' : 'Sitio oficial.'}`
   const image = (hasDesignAdvanced.value && c.cover) || c.carousel?.[0]?.url || c.logo || ''
   // Sin telephone ni sameAs en el JSON-LD: el número y las redes no se
   // exponen en el marcado estructurado (los bots también lo leen).
   const jsonLd = {
     '@context': 'https://schema.org',
-    '@type': showCatalog.value ? 'Store' : 'LocalBusiness',
+    '@type': catalogPageOn.value ? 'Store' : 'LocalBusiness',
     name: shopName.value,
     description,
     url,
@@ -1048,7 +1091,12 @@ function syncSeo() {
     themeColor: resolvedThemeColor(),
     jsonLd: JSON.parse(JSON.stringify(jsonLd))
   })
+  syncCanonical(url)
 }
+// Re-emite OG/JSON-LD con el document.title vigente: la ficha de producto
+// lo cambia async ("<producto> · <tienda>") y sin esto el preview queda
+// con el título de la portada.
+function refreshSeo() { syncSeo() }
 // pageTheme entra en las dependencias: al togglear claro/oscuro se re-emite
 // el theme-color con el cromo del tema nuevo (sin flash en la barra).
 watch([status, () => route.path, custom, pageTheme], syncSeo, { flush: 'post' })
@@ -1069,7 +1117,11 @@ function applyFavicon(logo) {
 }
 watch(() => custom.value.logo, applyFavicon)
 
-onMounted(async () => {
+// Carga de la tienda — la usa el montaje inicial y el botón "Reintentar"
+// del estado de error. Nunca vuelca el `detail` crudo del backend: 404
+// tiene su propio mensaje y todo lo demás (429/5xx/red) muestra el aviso
+// amigable de "tienda ocupada".
+async function loadStore() {
   // Dominio propio (mitienda.com): el host no revela el slug — se resuelve
   // contra la API antes de cualquier fetch y queda en storeHostSlug para
   // que el resto de la página arme sus links como en un subdominio.
@@ -1078,7 +1130,8 @@ onMounted(async () => {
       setStoreHostSlug(await storesApi.resolveDomain(customDomainHost))
     } catch {
       status.value = 'error'
-      errorMsg.value = 'Esta tienda no está disponible.'
+      storeErrorKind.value = 'busy'
+      errorMsg.value = 'La tienda está ocupada, reintentá en unos segundos.'
       return
     }
   }
@@ -1110,6 +1163,8 @@ onMounted(async () => {
     // documento del patrón: flash del diseño viejo en cada carga.
     await patternReq
     status.value = 'success'
+    storeErrorKind.value = ''
+    errorMsg.value = ''
     // Inter queda siempre disponible como cuerpo neutro de las pieles.
     ensureStoreFont('inter')
     // Fuentes propias de la plantilla (titulares y cuerpo): las declara la
@@ -1118,8 +1173,32 @@ onMounted(async () => {
     templateFonts(pageTemplate.value).forEach(ensureStoreFont)
   } catch (e) {
     status.value = 'error'
-    errorMsg.value = extractApiError(e).nonField || 'Esta tienda no está disponible.'
+    const httpStatus = e?.response?.status
+    if (httpStatus === 404) {
+      storeErrorKind.value = 'notfound'
+      errorMsg.value = 'Esta tienda no existe o no está disponible.'
+    } else {
+      // 429, 5xx o error de red: mensaje amigable + Reintentar, sin `detail`.
+      storeErrorKind.value = 'busy'
+      errorMsg.value = 'La tienda está ocupada, reintentá en unos segundos.'
+    }
   }
+}
+
+async function retryStore() {
+  if (status.value === 'loading') return
+  status.value = 'loading'
+  storeErrorKind.value = ''
+  errorMsg.value = ''
+  await loadStore()
+}
+
+onMounted(async () => {
+  // Sesión del comprador: se restaura/valida en segundo plano para que el
+  // header muestre "Mi cuenta" (y el postMessage al patrón reciba el estado)
+  // sin bloquear la carga de la tienda.
+  customerStore.ensureSession().catch(() => {})
+  await loadStore()
   window.addEventListener('scroll', onScroll, { passive: true })
   window.addEventListener('keydown', onMenuKey)
   window.addEventListener('message', onLayoutMessage)
@@ -1164,12 +1243,13 @@ onBeforeUnmount(() => {
   clearTimeout(contentFallback)
   clearTimeout(studioSeenTimer)
   clearSeo?.()
+  restoreCanonical()
   applyFavicon(null)
 })
 </script>
 
 <template>
-  <div ref="pageRoot" class="store-page" :class="{ 'is-home': isHome, 'is-scrolled': scrolled, 'has-pattern': usePattern }" :data-store-theme="pageTheme" :data-theme="pageTheme" :data-template="pageTemplate" :data-store-template="pageTemplate" :data-design="designId" :data-style="pageStyle" :data-skin="storeSkinOf(pageTemplate)" :data-logo-mode="custom.logo_mode" :data-has-logo="custom.logo ? '' : null" :data-mono="custom.mono_style" :data-st-tabbar="showTabbar && !usePattern && !patternWaiting ? '' : null" :style="[themeVars, publishedThemeVars, studioVars]" v-bind="pageAttrs">
+  <div ref="pageRoot" class="store-page" :class="{ 'is-home': isHome, 'is-scrolled': scrolled, 'has-pattern': usePattern, 'has-bot': botConfig && !usePattern }" :data-store-theme="pageTheme" :data-theme="pageTheme" :data-template="pageTemplate" :data-store-template="pageTemplate" :data-design="designId" :data-style="pageStyle" :data-skin="storeSkinOf(pageTemplate)" :data-logo-mode="custom.logo_mode" :data-has-logo="custom.logo ? '' : null" :data-mono="custom.mono_style" :data-st-tabbar="showTabbar && !usePattern && !patternWaiting ? '' : null" :style="[themeVars, publishedThemeVars, studioVars]" v-bind="pageAttrs">
     <button type="button" class="sp-skip" @click="skipToContent">Saltar al contenido</button>
     <span v-if="previewMode" class="sp-preview-badge" role="status">Vista previa — el diseño todavía no se publicó</span>
     <!-- Diseño del catálogo con contrato de datos: se pinta el documento
@@ -1245,14 +1325,14 @@ onBeforeUnmount(() => {
                  marketplace) en vez de ocupar una franja propia arriba. -->
             <span v-if="isShop" class="sp-shop-brand-meta">
               <AppIcon :name="location ? 'map-pin' : 'store'" :size="11" />
-              {{ location || (showCatalog ? 'Catálogo online' : 'Sitio oficial') }}
+              {{ location || (catalogPageOn ? 'Catálogo online' : 'Sitio oficial') }}
             </span>
           </span>
         </RouterLink>
         <nav v-if="status === 'success' && !isShop" class="sp-top-links" aria-label="Secciones de la tienda">
           <RouterLink v-if="!landingOff" :to="homeTo">Inicio</RouterLink>
           <RouterLink v-if="showServices" :to="servicesTo">Servicios</RouterLink>
-          <RouterLink v-if="showCatalog" :to="catalogTo">Catálogo</RouterLink>
+          <RouterLink v-if="catalogPageOn" :to="catalogTo">Catálogo</RouterLink>
           <RouterLink v-if="showPlans" :to="plansTo">Suscripciones</RouterLink>
           <RouterLink v-if="hasAbout && !landingOff" :to="anchorTo('#nosotros')" active-class="sp-anchor" exact-active-class="sp-anchor">Nosotros</RouterLink>
           <RouterLink v-if="showGallery && landingHasGallery && !landingOff" :to="anchorTo('#galeria')" active-class="sp-anchor" exact-active-class="sp-anchor">Galería</RouterLink>
@@ -1323,7 +1403,7 @@ onBeforeUnmount(() => {
           <div class="sp-shop-nav-links">
             <RouterLink v-if="!landingOff" :to="homeTo" :class="{ 'is-current': shopCurrent === 'home' }" :aria-current="shopCurrent === 'home' ? 'page' : null">Inicio</RouterLink>
             <RouterLink v-if="showServices" :to="servicesTo" :class="{ 'is-current': shopCurrent === 'services' }" :aria-current="shopCurrent === 'services' ? 'page' : null">Servicios</RouterLink>
-            <RouterLink v-if="showCatalog" :to="catalogTo" :class="{ 'is-current': shopCurrent === 'catalog' }" :aria-current="shopCurrent === 'catalog' ? 'page' : null">Catálogo</RouterLink>
+            <RouterLink v-if="catalogPageOn" :to="catalogTo" :class="{ 'is-current': shopCurrent === 'catalog' }" :aria-current="shopCurrent === 'catalog' ? 'page' : null">Catálogo</RouterLink>
             <RouterLink v-if="showPlans" :to="plansTo" :class="{ 'is-current': shopCurrent === 'plans' }" :aria-current="shopCurrent === 'plans' ? 'page' : null">Suscripciones</RouterLink>
             <RouterLink v-if="hasAbout && !landingOff" :to="anchorTo('#nosotros')" :class="{ 'is-current': shopCurrent === 'nosotros' }" :aria-current="shopCurrent === 'nosotros' ? 'true' : null" active-class="sp-anchor" exact-active-class="sp-anchor">Nosotros</RouterLink>
             <RouterLink v-if="showGallery && landingHasGallery && !landingOff" :to="anchorTo('#galeria')" :class="{ 'is-current': shopCurrent === 'galeria' }" :aria-current="shopCurrent === 'galeria' ? 'true' : null" active-class="sp-anchor" exact-active-class="sp-anchor">Galería</RouterLink>
@@ -1412,7 +1492,7 @@ onBeforeUnmount(() => {
           <a v-if="whatsappUrl" class="sp-more-link is-wa" :href="whatsappUrl" target="_blank" rel="noopener">
             <AppIcon name="whatsapp" :size="17" aria-hidden="true" /><span>WhatsApp</span>
           </a>
-          <RouterLink v-if="showCatalog && !isCatalog" class="sp-more-link" :to="catalogTo" @click="ui.moreOpen = false">
+          <RouterLink v-if="catalogPageOn && !isCatalog" class="sp-more-link" :to="catalogTo" @click="ui.moreOpen = false">
             <AppIcon name="search" :size="17" aria-hidden="true" /><span>Buscar productos</span>
           </RouterLink>
           <button v-if="showThemeToggle" type="button" class="sp-more-link" @click="ui.moreOpen = false; togglePageTheme()">
@@ -1440,9 +1520,12 @@ onBeforeUnmount(() => {
     </div>
 
     <div v-else-if="status === 'error'" class="sp-state">
-      <span class="sp-state-icon"><AppIcon name="store" :size="26" /></span>
-      <h1>Tienda no disponible</h1>
+      <span class="sp-state-icon"><AppIcon :name="storeErrorKind === 'notfound' ? 'search' : 'store'" :size="26" /></span>
+      <h1>{{ storeErrorKind === 'notfound' ? 'Tienda no encontrada' : 'La tienda está ocupada' }}</h1>
       <p>{{ errorMsg }}</p>
+      <button v-if="storeErrorKind !== 'notfound'" type="button" class="sp-btn" @click="retryStore">
+        Reintentar
+      </button>
     </div>
 
     <!-- Página activa (Inicio / Catálogo) con transición suave entre ambas -->
@@ -1479,7 +1562,7 @@ onBeforeUnmount(() => {
             <p class="sp-foot-heading">Tienda</p>
             <RouterLink v-if="!landingOff" :to="homeTo">Inicio</RouterLink>
             <RouterLink v-if="showServices" :to="servicesTo">Servicios</RouterLink>
-            <RouterLink v-if="showCatalog" :to="catalogTo">Catálogo</RouterLink>
+            <RouterLink v-if="catalogPageOn" :to="catalogTo">Catálogo</RouterLink>
             <RouterLink v-if="showPlans" :to="plansTo">Suscripciones</RouterLink>
             <RouterLink v-if="hasAbout && !landingOff" :to="anchorTo('#nosotros')" active-class="sp-anchor" exact-active-class="sp-anchor">Nosotros</RouterLink>
             <RouterLink v-if="showGallery && landingHasGallery && !landingOff" :to="anchorTo('#galeria')" active-class="sp-anchor" exact-active-class="sp-anchor">Galería</RouterLink>

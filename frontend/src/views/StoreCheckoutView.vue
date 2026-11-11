@@ -70,7 +70,9 @@ const captchaRef = ref(null)
 
 const addressReady = computed(() => {
   if (form.value.shipping_method === 'pickup') return true
-  if (form.value.address_mode === 'saved') return Boolean(form.value.address_id)
+  // "Guardada" solo cuenta si hay direcciones cargadas: si la lista falló
+  // o está vacía el formulario muestra el alta nueva igualmente.
+  if (form.value.address_mode === 'saved' && addresses.value.length) return Boolean(form.value.address_id)
   const a = form.value.address
   return Boolean(a.line1?.trim() && a.city?.trim() && a.province?.trim())
 })
@@ -107,10 +109,11 @@ const stepIndex = computed(() => {
 })
 
 // El captcha no entra en canSubmit: su `answer` vive en el hijo y no es
-// trackeable desde este computed — se valida en submit().
+// trackeable desde este computed — se valida en submit(). Tampoco la
+// entrega/pago: el botón queda habilitado para que el submit muestre los
+// errores inline en vez de quedar muerto sin feedback.
 const canSubmit = computed(() => (
-  phase.value === 'form' && !submitting.value && cart.hasItems &&
-  addressReady.value && form.value.payment_method
+  phase.value === 'form' && !submitting.value && cart.hasItems
 ))
 
 // ---------- carga ----------
@@ -177,9 +180,61 @@ watch(() => customer.isAuthenticated, (authed) => {
 
 // ---------- submit ----------
 function fieldErr(name) { return fieldErrors.value[name] || '' }
+function clearFieldError(name) {
+  if (!fieldErrors.value[name]) return
+  const next = { ...fieldErrors.value }
+  delete next[name]
+  fieldErrors.value = next
+}
+
+// Validación cliente del checkout: envío a domicilio exige dirección
+// (guardada o calle/ciudad/provincia nuevas); retiro en el local queda
+// exento. El pago siempre es obligatorio. Espeja addressReady pero carga
+// los mensajes inline que el QA pedía visibles.
+function validateCheckout() {
+  const errs = {}
+  if (form.value.shipping_method === 'home') {
+    if (form.value.address_mode === 'saved' && addresses.value.length) {
+      if (!form.value.address_id) errs.address_id = 'Elegí una dirección guardada o cargá una nueva.'
+    } else {
+      const a = form.value.address
+      if (!a.line1?.trim()) errs['address.line1'] = 'Ingresá la calle y el número.'
+      if (!a.city?.trim()) errs['address.city'] = 'Ingresá la ciudad.'
+      if (!a.province?.trim()) errs['address.province'] = 'Ingresá la provincia.'
+    }
+  }
+  if (!form.value.payment_method) errs.payment_method = 'Elegí un medio de pago para continuar.'
+  fieldErrors.value = errs
+  return !Object.keys(errs).length
+}
+
+// Errores del backend: extractApiError aplana {campo:[msgs]} a strings,
+// pero una dirección anidada ({address:{line1:[…]}}) llegaría como
+// "[object Object]" — se relee del payload crudo y se mapea a
+// address.<campo> para que caiga en el input correspondiente.
+function applyServerErrors(err) {
+  const parsed = extractApiError(err)
+  const { nonField, status: _s, ...fields } = parsed
+  const out = { ...fields }
+  const rawAddr = err?.response?.data?.address
+  if (rawAddr && typeof rawAddr === 'object' && !Array.isArray(rawAddr)) {
+    delete out.address
+    for (const [ak, av] of Object.entries(rawAddr)) {
+      out[`address.${ak}`] = Array.isArray(av) ? av.join(' ') : String(av)
+    }
+  }
+  fieldErrors.value = out
+  error.value = nonField || Object.values(out)[0] || 'No pudimos crear el pedido. Revisá los datos e intentá de nuevo.'
+}
 
 async function submit() {
-  if (submitting.value || !canSubmit.value) return
+  if (submitting.value) return
+  // Validación primero: sin request si falta entrega/pago. Los errores
+  // quedan inline (aria-invalid + mensaje) y el captcha ni se consulta.
+  if (!validateCheckout()) {
+    error.value = ''
+    return
+  }
   const captcha = captchaRef.value?.payload?.()
   if (!captcha) {
     error.value = 'Completá la verificación para continuar.'
@@ -223,11 +278,9 @@ async function submit() {
     phase.value = 'done'
     if (token) router.push(seguimientoTo.value(token))
   } catch (err) {
-    const parsed = extractApiError(err)
-    const { nonField, status: _s, ...fields } = parsed
-    fieldErrors.value = fields
-    error.value = nonField || Object.values(fields)[0] || 'No pudimos crear el pedido. Revisá los datos e intentá de nuevo.'
-    if (fields.captcha_answer || fields.challenge_id) captchaRef.value?.refresh()
+    applyServerErrors(err)
+    const fe = fieldErrors.value
+    if (fe.captcha_answer || fe.challenge_id) captchaRef.value?.refresh()
     // Si el server rechazó por carrito vacío/sesión, recargar estado.
     if (err.response?.status === 401 || err.response?.status === 403) load()
   } finally {
@@ -345,8 +398,9 @@ onMounted(load)
               </div>
 
               <div v-if="form.address_mode === 'saved' && addresses.length" class="ec-co-addrs">
-                <label v-for="a in addresses" :key="a.id" class="ec-co-addr" :class="{ 'is-on': form.address_id === a.id }">
-                  <input v-model="form.address_id" type="radio" :value="a.id" name="addr" :disabled="submitting" />
+                <label v-for="a in addresses" :key="a.id" class="ec-co-addr" :class="{ 'is-on': form.address_id === a.id, 'is-invalid': fieldErr('address_id') }">
+                  <input v-model="form.address_id" type="radio" :value="a.id" name="addr" :disabled="submitting"
+                         :aria-invalid="fieldErr('address_id') ? 'true' : undefined" @change="clearFieldError('address_id')" />
                   <span>
                     <strong>{{ a.label || 'Dirección' }}{{ a.is_default ? ' · principal' : '' }}</strong>
                     <small>{{ [a.line1, a.line2, a.city, a.province, a.postal_code].filter(Boolean).join(', ') }}</small>
@@ -358,7 +412,9 @@ onMounted(load)
               <div v-else class="ec-co-addrform">
                 <label class="sp-field">
                   <span class="sp-field-label">Calle y número *</span>
-                  <input v-model="form.address.line1" class="sp-input" type="text" maxlength="160" :disabled="submitting" />
+                  <input v-model="form.address.line1" class="sp-input" :class="{ 'is-invalid': fieldErr('address.line1') }" type="text" maxlength="160" :disabled="submitting"
+                         :aria-invalid="fieldErr('address.line1') ? 'true' : undefined" @input="clearFieldError('address.line1')" />
+                  <span v-if="fieldErr('address.line1')" class="sp-form-error" role="alert">{{ fieldErr('address.line1') }}</span>
                 </label>
                 <label class="sp-field">
                   <span class="sp-field-label">Departamento / piso / referencia</span>
@@ -367,11 +423,15 @@ onMounted(load)
                 <div class="ec-co-grid2">
                   <label class="sp-field">
                     <span class="sp-field-label">Ciudad *</span>
-                    <input v-model="form.address.city" class="sp-input" type="text" maxlength="120" :disabled="submitting" />
+                    <input v-model="form.address.city" class="sp-input" :class="{ 'is-invalid': fieldErr('address.city') }" type="text" maxlength="120" :disabled="submitting"
+                           :aria-invalid="fieldErr('address.city') ? 'true' : undefined" @input="clearFieldError('address.city')" />
+                    <span v-if="fieldErr('address.city')" class="sp-form-error" role="alert">{{ fieldErr('address.city') }}</span>
                   </label>
                   <label class="sp-field">
                     <span class="sp-field-label">Provincia *</span>
-                    <input v-model="form.address.province" class="sp-input" type="text" maxlength="120" :disabled="submitting" />
+                    <input v-model="form.address.province" class="sp-input" :class="{ 'is-invalid': fieldErr('address.province') }" type="text" maxlength="120" :disabled="submitting"
+                           :aria-invalid="fieldErr('address.province') ? 'true' : undefined" @input="clearFieldError('address.province')" />
+                    <span v-if="fieldErr('address.province')" class="sp-form-error" role="alert">{{ fieldErr('address.province') }}</span>
                   </label>
                 </div>
                 <div class="ec-co-grid2">
@@ -400,8 +460,9 @@ onMounted(load)
           <section class="ec-co-card">
             <h2 class="ec-co-h2"><span class="ec-co-stepnum" aria-hidden="true">2</span> Pago</h2>
             <div class="ec-co-pay">
-              <label v-for="m in paymentMethods" :key="m.value" class="ec-co-opt" :class="{ 'is-on': form.payment_method === m.value }">
-                <input v-model="form.payment_method" type="radio" :value="m.value" name="pay" :disabled="submitting" />
+              <label v-for="m in paymentMethods" :key="m.value" class="ec-co-opt" :class="{ 'is-on': form.payment_method === m.value, 'is-invalid': fieldErr('payment_method') }">
+                <input v-model="form.payment_method" type="radio" :value="m.value" name="pay" :disabled="submitting"
+                       :aria-invalid="fieldErr('payment_method') ? 'true' : undefined" @change="clearFieldError('payment_method')" />
                 <span class="ec-co-opt-ico" aria-hidden="true"><AppIcon :name="payIcon(m.value)" :size="18" /></span>
                 <span class="ec-co-opt-txt"><strong>{{ m.label }}</strong><small>{{ payHint(m.value) }}</small></span>
               </label>
@@ -466,7 +527,7 @@ onMounted(load)
             <dl class="ec-co-totals">
               <div><dt>Subtotal</dt><dd>{{ money(cart.itemsTotal) }}</dd></div>
               <div v-if="cart.memberDiscount"><dt>Descuento de miembro</dt><dd>−{{ cart.memberDiscount }}%</dd></div>
-              <div><dt>Envío</dt><dd>{{ form.shipping_method === 'pickup' ? 'Retiro sin cargo' : 'A coordinar' }}</dd></div>
+              <div><dt>Envío</dt><dd>{{ form.shipping_method === 'pickup' ? 'Retiro sin cargo' : 'A coordinar con la tienda' }}</dd></div>
               <div class="ec-co-grand"><dt>Total estimado</dt><dd>{{ money(cart.itemsTotal) }}</dd></div>
             </dl>
             <p class="ec-co-muted">El total final lo confirma el servidor al crear el pedido.</p>
@@ -536,6 +597,12 @@ onMounted(load)
 .ec-co-addrform { display: grid; gap: 12px; }
 .ec-co-grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
 .ec-co-save { display: flex; align-items: center; gap: 9px; font-size: 13.5px; cursor: pointer; }
+/* Validación inline: borde de error en opción/dirección/input inválidos */
+.ec-co-opt.is-invalid, .ec-co-addr.is-invalid { border-color: var(--sp-danger, #dc2626); }
+.ec-co-opt.is-invalid { box-shadow: 0 0 0 3px color-mix(in srgb, var(--sp-danger, #dc2626) 12%, transparent); }
+.sp-input.is-invalid { border-color: var(--sp-danger, #dc2626); }
+.sp-input.is-invalid:focus { border-color: var(--sp-danger, #dc2626); box-shadow: 0 0 0 3px color-mix(in srgb, var(--sp-danger, #dc2626) 14%, transparent); }
+.ec-co-addr.is-invalid { box-shadow: 0 0 0 1px var(--sp-danger, #dc2626) inset; }
 .ec-co-items { list-style: none; margin: 0 0 12px; padding: 0; display: grid; gap: 10px; max-height: 320px; overflow-y: auto; }
 .ec-co-items li { display: grid; grid-template-columns: 44px 1fr auto; gap: 10px; align-items: center; }
 .ec-co-thumb { width: 44px; height: 44px; object-fit: cover; border-radius: calc(var(--sp-radius) * .55); background: var(--sp-line, rgba(0,0,0,.06)); }

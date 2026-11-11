@@ -57,7 +57,9 @@ const PAYMENT_LABELS = {
   cash: 'Efectivo / en persona',
   mp: 'Mercado Pago',
 }
-const SHIP_LABELS = { home: 'Envío a domicilio', pickup: 'Retiro en el local' }
+// Mismas etiquetas que el checkout y el comprobante: el costo del envío a
+// domicilio se coordina con la tienda (no hay tarifa online).
+const SHIP_LABELS = { home: 'A coordinar con la tienda', pickup: 'Retiro sin cargo' }
 const ACTIVE = new Set(['PENDING_PAYMENT', 'PAID', 'PACKING', 'SHIPPED'])
 const TERMINAL_BAD = new Set(['EXPIRED', 'CANCELLED', 'REFUNDED'])
 
@@ -331,7 +333,7 @@ onUnmounted(() => {
           <div><dt>Subtotal</dt><dd>{{ money(order.subtotal) }}</dd></div>
           <div v-if="Number(order.discount_total) > 0"><dt>Descuentos</dt><dd>−{{ money(order.discount_total) }}</dd></div>
           <div v-if="order.shipping_method === 'home'"><dt>Envío</dt><dd>{{ money(order.shipping_cost) }}</dd></div>
-          <div v-else><dt>Retiro en el local</dt><dd>Sin cargo</dd></div>
+          <div v-else><dt>Retiro</dt><dd>Sin cargo</dd></div>
           <div class="ec-track-grand"><dt>Total</dt><dd>{{ money(order.total) }}</dd></div>
         </dl>
         <p v-if="order.shipping_address && Object.keys(order.shipping_address).length" class="ec-track-muted">

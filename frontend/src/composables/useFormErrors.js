@@ -15,7 +15,7 @@ export function useFormErrors() {
     const next = {}
     let banner = ''
     for (const [key, value] of Object.entries(errorPayload || {})) {
-      if (key === 'status' || key === 'pendingBackend') continue
+      if (key === 'status' || key === 'pendingBackend' || key === 'retryAfter') continue
       if (['detail', 'non_field_errors', 'nonField'].includes(key)) {
         banner = firstMessage(value)
       } else {
