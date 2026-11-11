@@ -111,6 +111,11 @@ html[data-ds-surface="catalog"] [data-surface]:not([data-surface="catalog"]),
 html[data-ds-surface="services"] [data-surface]:not([data-surface="services"]),
 html[data-ds-surface="product"] [data-surface]:not([data-surface="product"]){display:none!important}
 [hidden]{display:none!important}
+/* Contenedores de CTA de la ficha que quedaron sin hijos: sin WhatsApp ni
+   venta online el diseño deja `.pdp-buy`/`.pdp-ctas` vacío y el tema lo
+   pinta igual como botón (una píldora de acento sin texto). Una cáscara
+   vacía no se muestra. */
+.pdp-buy:not(:has(*)),.pdp-ctas:not(:has(*)),.pdp-actions:not(:has(*)){display:none!important}
 img[src=""]{display:none!important}
 
 /* Cáscaras sin dato: una fila de resumen/contacto cuyo valor salió vacío, un
