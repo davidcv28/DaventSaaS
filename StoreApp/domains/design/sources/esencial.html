@@ -484,6 +484,10 @@ html[data-ds-commerce="1"] [data-surface="product"] .pdp-buy > .dsx-buy[data-ds-
 .pdp-info > .dsx-buy[data-ds-buy-slot="pdp"]{
   width:100%;min-width:0;margin:0;min-height:46px;justify-self:stretch;
 }
+/* "Volver al catálogo": enlace de lectura, no CTA — vive fuera de .pdp-buy
+   para no competir con las acciones de compra. Hover como .cat-crumbs a. */
+.pdp-back{display:block;color:var(--muted);font-size:.85rem;text-decoration:none;transition:color .2s var(--ease)}
+.pdp-back:hover{color:var(--ink)}
 
 /* ---------- Cuenta y carrito del puente en el chrome ----------
    Píldora de cuenta y círculo de carrito gemelos del toggle/nav-toggle:
@@ -1761,8 +1765,8 @@ section[id]{scroll-margin-top:86px}
         <div class="pdp-price"><b>{{product_price}}</b><em>{{product_offer_pct}}</em><s>{{product_old_price}}</s></div>
         <div class="pdp-buy">
           <a class="btn" href="{{product_whatsapp_url}}">Consultar por WhatsApp <svg class="icon arrow" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg></a>
-          <a class="btn ghost" href="#catalogo" data-ds-route="catalog">‹ Volver al catálogo</a>
         </div>
+        <a class="pdp-back" href="#catalogo" data-ds-route="catalog">‹ Volver al catálogo</a>
         <div class="pdp-seller">
           <span>Vendido por <strong>{{store_name}}</strong></span>
           <span>{{store_location}}</span>
