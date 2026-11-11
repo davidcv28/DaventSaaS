@@ -22,7 +22,10 @@
        estilo— para que --on-success llegue a ~4.6:1. --green queda
        puro porque --green-ink/--green-soft ya están ajustados a AA. */
     --green-badge:color-mix(in srgb,var(--ds-success,#007A3D) 92%,#fff);
-    --green-ink:color-mix(in srgb,var(--green) 80%,var(--ink,#333));
+    /* Verde-tinta de textos de ahorro/stock: 70/30 hacia --ink. Con 80/20
+       el éxito oscuro de una paleta night (#0e7a3d) quedaba a ~4.3:1
+       sobre las tarjetas; al 30% todos los temas Bazar pasan de 5:1. */
+    --green-ink:color-mix(in srgb,var(--green) 70%,var(--ink,#333));
     --bg:var(--ds-bg,#EDEDE9); --surface:var(--ds-surface,#FFFFFF);
     --soft:color-mix(in srgb,var(--surface) 93%,var(--bg));
     --paper:color-mix(in srgb,var(--yellow) 9%,var(--surface));
@@ -42,15 +45,25 @@
     --on-secondary:var(--ds-secondary-ink,#FFFFFF);
     --on-success:var(--ds-success-ink,#FFFFFF);
     /* Acento aclarado para texto sobre --ink (chips oscuros del hero):
-       el acento crudo (#ff4b1f) sobre tinta queda a ~3.8:1. */
-    --on-ink:color-mix(in srgb,var(--yellow) 72%,#fff);
+       el acento crudo (#ff4b1f) sobre tinta queda a ~3.8:1. La mezcla va
+       hacia --bg y no hacia #fff porque --ink no siempre es oscuro: con
+       una paleta night el "chip de tinta" es claro y el texto debe ser
+       oscuro — --bg y --ink son siempre el par fg/bg del tema, así que
+       mezclarlos conserva el tinte del acento y el contraste en ambos
+       sentidos (~9:1 en los cinco temas Bazar). */
+    --on-ink:color-mix(in srgb,var(--yellow) 30%,var(--bg,#333));
     /* Texto de acento sobre fondos oscuros FIJOS (pie, cinta, glifos):
        --yellow es el acento crudo y con una paleta de acento oscuro quedaba
        ilegible sobre #151513. --on-ink lo aclara hacia blanco en cualquier
        tema, igual que hace .kicker-loc con su propia mezcla. */
     --on-dark:color-mix(in srgb,var(--yellow) 72%,#fff);
     --glint:#fff;
-    --link:var(--blue-deep);
+    /* Link/acento-texto: el secundario crudo (#1d4ed8 del tema noche)
+       queda a ~2.5:1 sobre las superficies oscuras de una paleta dark.
+       Se mezcla 65/35 hacia --ink —la tinta del tema— igual que
+       --green-ink: en claro profundiza el link y en oscuro lo aclara
+       (35% es el mínimo que deja AA en los cinco temas Bazar). */
+    --link:color-mix(in srgb,var(--blue-deep) 65%,var(--ink,#333));
     --footer-bg:#151513; --footer-ink:#F6F6F2; --footer-muted:#A8A8A0;
     --ribbon-bg:#151513; --ribbon-ink:var(--on-dark);
     --radius:var(--ds-radius,8px); --radius-btn:var(--ds-radius-btn,8px);
@@ -218,7 +231,7 @@
   .kicker-dot::after{content:"";position:absolute;inset:-4px;border-radius:50%;
     border:2px solid color-mix(in srgb,var(--yellow) 26%,transparent);
     animation:bz-pulse 2.4s ease-in-out infinite}
-  .kicker-loc{display:inline-flex;align-items:center;gap:9px;color:color-mix(in srgb,var(--yellow) 74%,#fff)}
+  .kicker-loc{display:inline-flex;align-items:center;gap:9px;color:var(--on-ink)}
   .kicker-loc:empty{display:none}
   .kicker-loc::before{content:"";width:1px;height:10px;background:currentColor;opacity:.45}
 
@@ -407,8 +420,10 @@
      recortado por el overflow:hidden de .ds-product. */
   .ds-product{display:flex;flex-direction:column}
   .ds-product-link{height:auto;flex:1 1 auto;min-height:0}
+  /* Caja fija 1/1 + cover: todas las celdas miden igual y la foto llena
+     el área — nada de letterboxing desparejo entre tarjetas. */
   .ds-product-img{
-    grid-area:media;display:block;width:100%;aspect-ratio:1/1;object-fit:contain;
+    grid-area:media;display:block;width:100%;aspect-ratio:1/1;object-fit:cover;
     transition:transform .6s var(--ease);
   }
   .ds-product:hover .ds-product-img{transform:scale(1.045)}
@@ -475,26 +490,27 @@
   .grid > .ds-empty{grid-column:1/-1}
   .band.gray:not(:has(.ds-product)){display:none}
 
-  /* CTA de compra del puente (commerce): acción de pie de tarjeta con
-     filete superior, estilo marketplace — no una barra sólida. */
+  /* CTA de compra del puente (commerce): solo-icono flotante arriba a la
+     derecha de la tarjeta — el texto "Agregar al carrito" queda a 0px
+     (sigue siendo el nombre accesible). El glifo es un mask para poder
+     recolorearlo con background. */
   .ds-product .dsx-buy{
-    width:100%;margin:0;padding:11px 14px;
-    border:0;border-top:1px solid var(--line);border-radius:0;
-    background:transparent;color:var(--link);
-    font:800 11px var(--mono);letter-spacing:.12em;text-transform:uppercase;
-    transition:background .18s var(--ease),color .18s var(--ease);
+    position:absolute;z-index:5;top:10px;right:10px;
+    width:38px;height:38px;margin:0;padding:0;
+    border:1px solid var(--line-strong);border-radius:50%;background:var(--surface);
+    font-size:0;box-shadow:0 8px 16px -12px rgba(0,0,0,.5);
+    transition:background .18s var(--ease),border-color .18s var(--ease),transform .18s var(--ease);
   }
-  .ds-product .dsx-buy:hover{background:var(--blue);color:var(--on-primary)}
-  .cat-surface .grid[data-ds-view-mode="list"] .dsx-buy{
-    align-self:flex-end;width:auto;min-width:0;margin:-4px 10px 16px;padding:10px 18px;
-    border:1px solid var(--line-strong);border-radius:var(--radius-btn);
-    font:800 10.5px var(--mono);letter-spacing:.12em;text-transform:uppercase;
-    transition:background .18s var(--ease),color .18s var(--ease),transform .18s var(--ease),border-color .18s;
+  .ds-product .dsx-buy::before{
+    content:"";display:block;width:17px;height:17px;margin:auto;background:var(--ink);
+    -webkit-mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='9' cy='21' r='1.4'/%3E%3Ccircle cx='19' cy='21' r='1.4'/%3E%3Cpath d='M2.5 3h2l2.6 12.4a2 2 0 0 0 2 1.6h8.7a2 2 0 0 0 2-1.6L21.5 7H5.6'/%3E%3C/svg%3E") center/contain no-repeat;
+    mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='9' cy='21' r='1.4'/%3E%3Ccircle cx='19' cy='21' r='1.4'/%3E%3Cpath d='M2.5 3h2l2.6 12.4a2 2 0 0 0 2 1.6h8.7a2 2 0 0 0 2-1.6L21.5 7H5.6'/%3E%3C/svg%3E") center/contain no-repeat;
+    transition:background .18s;
   }
-  .cat-surface .grid[data-ds-view-mode="list"] .dsx-buy:hover{transform:translateY(-1px);border-color:var(--blue)}
-  @media (max-width:640px){
-    .cat-surface .grid[data-ds-view-mode="list"] .dsx-buy{align-self:stretch;margin:0 8px 14px}
-  }
+  .ds-product .dsx-buy:hover{background:var(--blue);border-color:var(--blue);transform:translateY(-1px)}
+  .ds-product .dsx-buy:hover::before{background:var(--on-primary)}
+  .ds-product .dsx-buy.is-added{background:var(--green-badge);border-color:var(--green-badge)}
+  .ds-product .dsx-buy.is-added::before{background:var(--on-success)}
   /* Ficha: el CTA de compra se apenda antes del WhatsApp y toma el ancho
      completo con la misma piel azul; el WhatsApp queda como secundario. */
   .pdp-surface .pdp-info .dsx-buy{
@@ -545,7 +561,7 @@
   .trust-item + .trust-item{border-left:1px solid color-mix(in srgb,var(--ink) 14%,transparent)}
   .trust-item .glyph{
     display:grid;place-items:center;flex:none;width:42px;height:42px;border-radius:9px;
-    background:var(--ink);color:var(--on-dark);transform:rotate(-2deg);
+    background:var(--ink);color:var(--on-ink);transform:rotate(-2deg);
     box-shadow:0 8px 16px -12px rgba(0,0,0,.7);
     transition:transform .25s var(--ease),background .25s;
   }
@@ -992,7 +1008,6 @@
 
     .grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
     .ds-product{width:auto;max-width:none;margin:0}
-    .ds-product-img{object-fit:contain}
     .cat-surface .ds-product{width:auto;max-width:none;margin:0}
     .cat-results{padding:12px 14px 16px}
     .cat-bar{gap:8px 10px;padding-bottom:10px}
