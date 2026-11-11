@@ -1,7 +1,7 @@
 // Modo noche universal: el tema efectivo y la persistencia del visitante.
 import { describe, expect, it } from 'vitest'
 import {
-  STORE_THEME_KEY, persistVisitorTheme, readVisitorTheme, resolveStoreTheme
+  STORE_THEME_KEY, clearVisitorTheme, persistVisitorTheme, readVisitorTheme, resolveStoreTheme
 } from '../src/utils/storeTheme.js'
 
 function memoryStorage(initial = {}) {
@@ -9,6 +9,7 @@ function memoryStorage(initial = {}) {
   return {
     getItem: (k) => (data.has(k) ? data.get(k) : null),
     setItem: (k, v) => data.set(k, String(v)),
+    removeItem: (k) => data.delete(k),
     dump: () => Object.fromEntries(data)
   }
 }
@@ -45,9 +46,21 @@ describe('tema de la web publicada', () => {
     expect(readVisitorTheme(storage, 'rota')).toBeNull()
   })
 
+  it('limpia la preferencia local al cambiar el modo inicial de la tienda', () => {
+    const storage = memoryStorage()
+    persistVisitorTheme(storage, 'mistienda', 'light')
+    clearVisitorTheme(storage, 'mistienda')
+    expect(readVisitorTheme(storage, 'mistienda')).toBeNull()
+  })
+
   it('un storage bloqueado no rompe la web', () => {
-    const blocked = { getItem: () => { throw new Error('privado') }, setItem: () => { throw new Error('privado') } }
+    const blocked = {
+      getItem: () => { throw new Error('privado') },
+      setItem: () => { throw new Error('privado') },
+      removeItem: () => { throw new Error('privado') }
+    }
     expect(readVisitorTheme(blocked, 'x')).toBeNull()
     expect(() => persistVisitorTheme(blocked, 'x', 'dark')).not.toThrow()
+    expect(() => clearVisitorTheme(blocked, 'x')).not.toThrow()
   })
 })

@@ -1,6 +1,7 @@
 import { ref, computed, nextTick, watch, onScopeDispose } from 'vue'
 import { storesApi, CUSTOMIZATION_DEFAULTS, ensureStoreFont, normalizeWhatsapp, normalizeInstagram, normalizeTiktok, normalizeFacebook } from '../api/stores.api.js'
 import { savePayloadPlan } from '../studio/designChoice.js'
+import { clearVisitorTheme } from '../utils/storeTheme.js'
 
 // Campos que viajan en saveDesign (base del indicador de cambios sin guardar).
 export const DESIGN_FIELDS = ['display_name', 'headline', 'description', 'show_about', 'show_gallery', 'show_highlights', 'show_offers', 'show_brands', 'show_countdown', 'contact_email', 'show_contact', 'theme', 'theme_toggle', 'whatsapp', 'instagram', 'tiktok', 'facebook', 'name_font', 'name_font_size', 'accent', 'template', 'show_location', 'accent_custom', 'logo_scale', 'logo_mode', 'mono_style', 'cover_overlay', 'cover_focus_x', 'cover_focus_y', 'layout_config', 'site_theme', 'icon_style']
@@ -140,6 +141,7 @@ export function useStudioDesign({
   async function saveDesign(asDraft = false, quiet = false) {
     Object.keys(designForm).forEach((k) => { designTouched[k] = true })
     if (Object.keys(designErrors.value || {}).some((k) => !companyFields.includes(k))) return
+    const savedStartMode = store.customization?.theme || CUSTOMIZATION_DEFAULTS.theme
     designBusy.value = true
     if (serverFlags) serverFlags.accept = true
     const payload = {
@@ -203,6 +205,12 @@ export function useStudioDesign({
     if (serverFlags) serverFlags.accept = false
     designBusy.value = false
     if (okDesign) {
+      if (payload.theme !== savedStartMode) {
+        clearVisitorTheme(
+          typeof localStorage !== 'undefined' ? localStorage : null,
+          store.store?.slug
+        )
+      }
       designForm.site_theme_reset = false
       studioSavedTheme.value = studioTheme.value
       studioRef.value?.markSaved()

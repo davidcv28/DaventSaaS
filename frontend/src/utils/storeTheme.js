@@ -16,6 +16,10 @@ export function persistVisitorTheme(storage, slug, theme) {
   try { storage?.setItem(STORE_THEME_KEY(slug), theme) } catch { /* modo privado */ }
 }
 
+export function clearVisitorTheme(storage, slug) {
+  try { storage?.removeItem(STORE_THEME_KEY(slug)) } catch { /* modo privado */ }
+}
+
 // Tema efectivo: el del Studio (preview) > el elegido por el visitante > el
 // default del negocio > prefers-color-scheme.
 export function resolveStoreTheme({ studio, studioView, visitor, storeDefault, prefersDark }) {

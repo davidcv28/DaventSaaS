@@ -16,7 +16,7 @@ import { useCartStore } from '../stores/cart.store.js'
 import { useCustomerStore } from '../stores/customer.store.js'
 import { vReveal } from '../directives/reveal.js'
 import { applySeo } from '../utils/seo.js'
-import { readVisitorTheme, persistVisitorTheme, resolveStoreTheme } from '../utils/storeTheme.js'
+import { STORE_THEME_KEY, readVisitorTheme, persistVisitorTheme, resolveStoreTheme } from '../utils/storeTheme.js'
 import { schemaHours } from '../utils/storeHours.js'
 import { templateFonts, normalizeLayoutConfig, templatePages, templateBlocks, templateOf } from '../templates/index.js'
 import { useDesignCatalog } from '../composables/useDesignCatalog.js'
@@ -509,6 +509,12 @@ const prefersDark = computed(() => (
 function readVisitorThemeForStore() {
   return readVisitorTheme(typeof localStorage !== 'undefined' ? localStorage : null, slug.value)
 }
+function onVisitorThemeStorage(event) {
+  if (event.key !== STORE_THEME_KEY(slug.value)) return
+  visitorTheme.value = event.newValue === 'light' || event.newValue === 'dark' ? event.newValue : null
+}
+window.addEventListener('storage', onVisitorThemeStorage)
+onBeforeUnmount(() => window.removeEventListener('storage', onVisitorThemeStorage))
 // Si el negocio no fijó default, se respeta prefers-color-scheme (lo resuelve
 // resolveStoreTheme junto con la elección del visitante y el preview).
 const visitorTheme = ref(readVisitorThemeForStore()) // null = tema de la tienda
