@@ -168,7 +168,7 @@
    slate del contrato), así que la piel remapea los tokens en los hijos:
    una declaración propia del hijo vence al valor heredado del inline.
    ========================================================================== */
-.store-page[data-template='moderntec'] :is(.sp-page-root, .sp-top, .sp-foot, .sp-tabbar, .sp-more-sheet, .sp-drawer, .mt-skin) {
+.store-page[data-template='moderntec'] :is(.sp-page-root, .sp-top, .sp-foot, .sp-tabbar, .sp-more-sheet, .sp-drawer, .mt-skin, .sp-state-page) {
   /* El tema publicado fija `color` en .store-page con más especificidad: sin
      esto, los títulos sin color propio heredaban la tinta slate y quedaban
      casi invisibles sobre el lienzo oscuro. */
@@ -184,6 +184,12 @@
   --sp-line: var(--mt-line);
   --sp-radius: var(--mt-rad-md);
   --sp-accent-text: var(--mt-accent-text);
+  --sp-accent: var(--mt-accent);
+  --sp-accent-ink: var(--mt-accent-ink);
+  --st-btn-radius: var(--mt-rad-pill);
+  --st-btn-h: 46px;
+  --st-btn-px: 22px;
+  --st-btn-fs: 14.5px;
   --sp-shadow-sm: var(--mt-shadow-1);
   --sp-shadow-md: var(--mt-shadow-device);
   --sp-on-band: var(--mt-accent-ink);
@@ -196,7 +202,7 @@
      de la marca queda para precios, foco y CTAs. */
   --sp-chrome: linear-gradient(180deg, #0a0f18, #06090e);
 }
-.store-page[data-template='moderntec'][data-store-theme='light'] :is(.sp-page-root, .sp-top, .sp-foot, .sp-tabbar, .sp-more-sheet, .sp-drawer, .mt-skin) {
+.store-page[data-template='moderntec'][data-store-theme='light'] :is(.sp-page-root, .sp-top, .sp-foot, .sp-tabbar, .sp-more-sheet, .sp-drawer, .mt-skin, .sp-state-page) {
   --sp-chrome: linear-gradient(180deg, #ffffff, #f1f4f9);
   --sp-on-band: #08111f;
 }
@@ -1729,7 +1735,454 @@
 }
 
 /* ==========================================================================
-   12. RESPONSIVE
+   12. COMERCIO — carrito, checkout, seguimiento, legal, recibo y planes
+   Las vistas de comprador son compartidas (scoped por vista, tokens --sp-*
+   y --store-accent crudo). Acá se unifican en la gramática ModernTec: CTA
+   píldora de acento plano con glow y barrido, ghost de filete, controles
+   como instrumento mono y tinta --mt-accent-text en vez del acento crudo.
+   ========================================================================== */
+
+/* .sp-btn sólido: la regla de tema ([data-st-brand], 0,7,0) dejaba el texto
+   en --st-on-primary del contrato; acá manda el par acento/tinta de la piel. */
+.store-page[data-template='moderntec'][data-store-template] :is(
+    .sp-btn:not(.ghost):not(.sp-hero-btn):not(.sp-hero-ghost):not(.is-wa),
+    .sp-dock-btn:not(.is-wa)) {
+  background: var(--mt-accent);
+  color: var(--mt-accent-ink);
+  box-shadow: var(--mt-glow);
+  filter: none;
+}
+.store-page[data-template='moderntec'][data-store-template] :is(
+    .sp-btn:not(.ghost):not(.sp-hero-btn):not(.sp-hero-ghost):not(.is-wa),
+    .sp-dock-btn:not(.is-wa)):hover {
+  transform: translateY(-2px);
+  box-shadow: 0 14px 30px -14px color-mix(in srgb, var(--mt-accent) 70%, transparent);
+  filter: none;
+}
+.store-page[data-template='moderntec'][data-store-template] :is(
+    .sp-btn:not(.ghost):not(.sp-hero-btn):not(.sp-hero-ghost):not(.is-wa),
+    .sp-dock-btn:not(.is-wa)):disabled {
+  background: var(--mt-surface-3);
+  color: var(--mt-ink-3);
+  box-shadow: none;
+  cursor: not-allowed;
+}
+.store-page[data-template='moderntec'] .sp-icon-btn.primary {
+  background: var(--mt-accent);
+  border-color: transparent;
+  color: var(--mt-accent-ink);
+}
+.store-page[data-template='moderntec'] .sp-icon-btn.primary:hover {
+  background: var(--mt-accent);
+  border-color: transparent;
+  color: var(--mt-accent-ink);
+  filter: none;
+  box-shadow: 0 10px 22px -10px color-mix(in srgb, var(--mt-accent) 70%, transparent);
+}
+
+/* Botones de acción de las vistas de comprador (.ec-btn-*). */
+.store-page[data-template='moderntec'] :is(.ec-cartpg, .ec-checkout, .ec-track, .ec-legal, .ec-receiptpg, .sp-plans-page) :is(.ec-btn-primary, .ec-btn-ghost) {
+  position: relative;
+  overflow: hidden;
+  isolation: isolate;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-height: 46px;
+  padding: 0 22px;
+  border: 1px solid transparent;
+  border-radius: var(--mt-rad-pill);
+  font-family: var(--mt-body);
+  font-size: 14px;
+  font-weight: 600;
+  letter-spacing: -.005em;
+  white-space: nowrap;
+  cursor: pointer;
+  text-decoration: none;
+  transition: transform var(--mt-dur-1) var(--mt-ease-out), box-shadow var(--mt-dur-1) var(--mt-ease-out),
+    border-color var(--mt-dur-1) var(--mt-ease-out), background var(--mt-dur-1) var(--mt-ease-out),
+    color var(--mt-dur-1) var(--mt-ease-out), filter var(--mt-dur-1) var(--mt-ease-out);
+}
+.store-page[data-template='moderntec'] :is(.ec-cartpg, .ec-checkout, .ec-track, .ec-legal, .ec-receiptpg, .sp-plans-page) .ec-btn-primary {
+  background: var(--mt-accent);
+  color: var(--mt-accent-ink);
+  box-shadow: var(--mt-glow);
+}
+.store-page[data-template='moderntec'] :is(.ec-cartpg, .ec-checkout, .ec-track, .ec-legal, .ec-receiptpg, .sp-plans-page) .ec-btn-primary::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  pointer-events: none;
+  background: linear-gradient(105deg, transparent 42%, rgba(255, 255, 255, .38) 50%, transparent 58%);
+  transform: translateX(-130%);
+  transition: transform .6s var(--mt-ease-out);
+}
+.store-page[data-template='moderntec'] :is(.ec-cartpg, .ec-checkout, .ec-track, .ec-legal, .ec-receiptpg, .sp-plans-page) .ec-btn-primary > * {
+  position: relative;
+  z-index: 2;
+}
+.store-page[data-template='moderntec'] :is(.ec-cartpg, .ec-checkout, .ec-track, .ec-legal, .ec-receiptpg, .sp-plans-page) .ec-btn-primary:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 0 0 1px var(--mt-accent-line), 0 14px 34px color-mix(in srgb, var(--mt-accent) 30%, transparent), 0 22px 48px -18px color-mix(in srgb, var(--mt-accent) 65%, transparent);
+}
+.store-page[data-template='moderntec'] :is(.ec-cartpg, .ec-checkout, .ec-track, .ec-legal, .ec-receiptpg, .sp-plans-page) .ec-btn-primary:hover:not(:disabled)::after {
+  transform: translateX(130%);
+}
+.store-page[data-template='moderntec'] :is(.ec-cartpg, .ec-checkout, .ec-track, .ec-legal, .ec-receiptpg, .sp-plans-page) .ec-btn-primary:active:not(:disabled) {
+  transform: translateY(0) scale(.99);
+}
+.store-page[data-template='moderntec'] :is(.ec-cartpg, .ec-checkout, .ec-track, .ec-legal, .ec-receiptpg, .sp-plans-page) .ec-btn-primary:disabled {
+  background: var(--mt-surface-3);
+  color: var(--mt-ink-3);
+  border-color: var(--mt-line);
+  box-shadow: none;
+  cursor: not-allowed;
+}
+.store-page[data-template='moderntec'] :is(.ec-cartpg, .ec-checkout, .ec-track, .ec-legal, .ec-receiptpg, .sp-plans-page) .ec-btn-ghost {
+  background: transparent;
+  border-color: var(--mt-line-strong);
+  color: var(--mt-ink);
+  box-shadow: none;
+}
+.store-page[data-template='moderntec'] :is(.ec-cartpg, .ec-checkout, .ec-track, .ec-legal, .ec-receiptpg, .sp-plans-page) .ec-btn-ghost:hover {
+  border-color: var(--mt-accent);
+  background: var(--mt-accent-soft);
+  color: var(--mt-accent-text);
+  transform: translateY(-1px);
+}
+.store-page[data-template='moderntec'] :is(.ec-cartpg, .ec-checkout, .ec-track, .ec-legal, .ec-receiptpg, .sp-plans-page) :is(.ec-btn-primary, .ec-btn-ghost):focus-visible {
+  outline: 2px solid var(--mt-focus);
+  outline-offset: 2px;
+}
+
+/* Carrito: stepper como instrumento, quitar y estado vacío. */
+.store-page[data-template='moderntec'] .ec-cp-qty {
+  border: 1px solid var(--mt-line-strong);
+  border-radius: var(--mt-rad-pill);
+  background: var(--mt-panel);
+  box-shadow: inset 0 1px 0 color-mix(in srgb, var(--mt-ink) 4%, transparent);
+}
+.store-page[data-template='moderntec'] .ec-cp-qty button {
+  width: 40px;
+  height: 40px;
+  padding: 0;
+  border-radius: var(--mt-rad-pill);
+  color: var(--mt-ink-2);
+  transition: background var(--mt-dur-1) var(--mt-ease-out), color var(--mt-dur-1) var(--mt-ease-out);
+}
+.store-page[data-template='moderntec'] .ec-cp-qty button:hover:not(:disabled) {
+  background: var(--mt-accent-soft);
+  color: var(--mt-accent-text);
+}
+.store-page[data-template='moderntec'] .ec-cp-qty button:active:not(:disabled) {
+  background: var(--mt-accent-line);
+}
+.store-page[data-template='moderntec'] .ec-cp-qty button:focus-visible {
+  outline: 2px solid var(--mt-focus);
+  outline-offset: -2px;
+}
+.store-page[data-template='moderntec'] .ec-cp-qty span {
+  min-width: 30px;
+  font-family: var(--mt-mono);
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--mt-ink);
+}
+.store-page[data-template='moderntec'] .ec-cp-remove {
+  display: grid;
+  place-items: center;
+  width: 40px;
+  height: 40px;
+  padding: 0;
+  border: 1px solid transparent;
+  border-radius: var(--mt-rad-sm);
+  color: var(--mt-ink-3);
+}
+.store-page[data-template='moderntec'] .ec-cp-remove:hover:not(:disabled) {
+  border-color: color-mix(in srgb, var(--mt-danger) 40%, transparent);
+  background: color-mix(in srgb, var(--mt-danger) 10%, transparent);
+  color: var(--mt-danger);
+}
+.store-page[data-template='moderntec'] .ec-cp-remove:focus-visible {
+  outline: 2px solid var(--mt-focus);
+  outline-offset: 2px;
+}
+.store-page[data-template='moderntec'] .ec-cp-empty-ico {
+  border: 1px solid var(--mt-accent-line);
+  border-radius: var(--mt-rad-md);
+  background: var(--mt-accent-soft);
+  color: var(--mt-accent-text);
+}
+
+/* Vínculos de texto: tinta de acento de la piel, no el --store-accent crudo. */
+.store-page[data-template='moderntec'] :is(.ec-cp-link, .ec-co-link, .ec-track-receipt-link, .ec-legal-back, .ec-rp-link, .ec-track-legal a, .sp-plans-link) {
+  padding-block: 8px;
+  color: var(--mt-accent-text);
+  font-weight: 600;
+}
+.store-page[data-template='moderntec'] :is(.ec-cp-link, .ec-co-link, .ec-track-receipt-link, .ec-legal-back, .ec-rp-link, .ec-track-legal a, .sp-plans-link):hover {
+  color: var(--mt-accent);
+}
+.store-page[data-template='moderntec'] :is(.ec-cp-link, .ec-co-link, .ec-track-receipt-link, .ec-legal-back, .ec-rp-link, .ec-track-legal a, .sp-plans-link):focus-visible {
+  border-radius: var(--mt-rad-sm);
+  outline: 2px solid var(--mt-focus);
+  outline-offset: 2px;
+}
+
+/* Checkout: tarjetas con relieve, opciones seleccionables y stepper. */
+.store-page[data-template='moderntec'] :is(.ec-co-card, .ec-co-summary-toggle, .ec-track-card, .ec-legal-card, .ec-legal-text, .ec-rp-card) {
+  box-shadow: var(--mt-shadow-1);
+}
+.store-page[data-template='moderntec'] .ec-co-summary-toggle:hover {
+  border-color: var(--mt-accent-line);
+}
+.store-page[data-template='moderntec'] :is(.ec-co-opt, .ec-co-addr) {
+  border-color: var(--mt-line);
+  border-radius: var(--mt-rad-md);
+  background: var(--mt-panel);
+  transition: border-color var(--mt-dur-1) var(--mt-ease-out), box-shadow var(--mt-dur-1) var(--mt-ease-out), background var(--mt-dur-1) var(--mt-ease-out);
+}
+.store-page[data-template='moderntec'] :is(.ec-co-opt, .ec-co-addr):hover {
+  border-color: var(--mt-accent-line);
+}
+.store-page[data-template='moderntec'] :is(.ec-co-opt, .ec-co-addr).is-on {
+  border-color: var(--mt-accent);
+  background: var(--mt-accent-soft);
+  box-shadow: 0 0 0 1px var(--mt-accent) inset, 0 0 0 3px var(--mt-accent-soft);
+}
+.store-page[data-template='moderntec'] .ec-co-opt-ico {
+  border: 1px solid var(--mt-accent-line);
+  border-radius: var(--mt-rad-sm);
+  background: var(--mt-accent-soft);
+  color: var(--mt-accent-text);
+}
+.store-page[data-template='moderntec'] .ec-co-opt.is-on .ec-co-opt-ico {
+  border-color: var(--mt-accent);
+  background: var(--mt-accent-line);
+  color: var(--mt-accent-text);
+}
+.store-page[data-template='moderntec'] :is(.ec-co-opt, .ec-co-addr, .ec-co-save) input {
+  accent-color: var(--mt-accent);
+}
+.store-page[data-template='moderntec'] .ec-co-stepnum {
+  border: 1px solid var(--mt-accent-line);
+  border-radius: var(--mt-rad-sm);
+  background: var(--mt-accent-soft);
+  color: var(--mt-accent-text);
+  font-family: var(--mt-mono);
+  font-size: 11px;
+}
+.store-page[data-template='moderntec'] .ec-co-step::before {
+  background: var(--mt-line);
+}
+.store-page[data-template='moderntec'] .ec-co-step.is-done::before {
+  background: var(--mt-ok);
+}
+.store-page[data-template='moderntec'] .ec-co-step.is-current::before {
+  background: var(--mt-accent);
+}
+.store-page[data-template='moderntec'] .ec-co-step-dot {
+  border-radius: var(--mt-rad-sm);
+  font-family: var(--mt-mono);
+  font-size: 11px;
+}
+.store-page[data-template='moderntec'] .ec-co-step.is-done .ec-co-step-dot {
+  border-color: var(--mt-ok);
+  background: var(--mt-ok);
+  color: var(--mt-bg);
+}
+.store-page[data-template='moderntec'] .ec-co-step.is-current .ec-co-step-dot {
+  border-color: var(--mt-accent);
+  background: var(--mt-accent-soft);
+  color: var(--mt-accent-text);
+  box-shadow: 0 0 0 3px var(--mt-accent-soft);
+}
+.store-page[data-template='moderntec'] .ec-co-legal {
+  border: 1px dashed var(--mt-line-strong);
+  border-radius: var(--mt-rad-sm);
+  color: var(--mt-ink-3);
+}
+.store-page[data-template='moderntec'] .ec-co-legal a {
+  padding-block: 6px;
+  color: var(--mt-accent-text);
+}
+.store-page[data-template='moderntec'] .ec-co-paynote {
+  border: 1px solid var(--mt-line-soft);
+  border-radius: var(--mt-rad-sm);
+}
+.store-page[data-template='moderntec'] .ec-co-spin {
+  border-color: color-mix(in srgb, var(--mt-accent-ink) 35%, transparent);
+  border-top-color: var(--mt-accent-ink);
+}
+.store-page[data-template='moderntec'] .ec-co-done-ico {
+  border: 1px solid color-mix(in srgb, var(--mt-ok) 40%, transparent);
+  border-radius: var(--mt-rad-md);
+  background: color-mix(in srgb, var(--mt-ok) 12%, transparent);
+  color: var(--mt-ok);
+}
+.store-page[data-template='moderntec'] .ec-captcha-tag {
+  color: var(--mt-accent-text);
+}
+.store-page[data-template='moderntec'] .ec-captcha-q {
+  border: 1px dashed var(--mt-line-strong);
+  border-radius: var(--mt-rad-sm);
+  font-family: var(--mt-mono);
+}
+.store-page[data-template='moderntec'] .ec-captcha-reload {
+  border-color: var(--mt-line-strong);
+  border-radius: var(--mt-rad-sm);
+  color: var(--mt-ink-2);
+}
+.store-page[data-template='moderntec'] .ec-captcha-reload:hover:not(:disabled) {
+  border-color: var(--mt-accent);
+  background: var(--mt-accent-soft);
+  color: var(--mt-accent-text);
+}
+.store-page[data-template='moderntec'] .ec-captcha-reload:focus-visible {
+  outline: 2px solid var(--mt-focus);
+  outline-offset: 2px;
+}
+
+/* Seguimiento: badge de estado mono, chips, stepper y comprobante. */
+.store-page[data-template='moderntec'] .ec-track-status {
+  border: 1px solid transparent;
+  border-radius: 3px;
+  font-family: var(--mt-mono);
+  font-size: 10.5px;
+  font-weight: 600;
+  letter-spacing: .1em;
+  text-transform: uppercase;
+}
+.store-page[data-template='moderntec'] .ec-track-status.is-pending_payment {
+  border-color: color-mix(in srgb, var(--sp-warning, #B45309) 50%, transparent);
+}
+.store-page[data-template='moderntec'] .ec-track-status.is-paid,
+.store-page[data-template='moderntec'] .ec-track-status.is-packing,
+.store-page[data-template='moderntec'] .ec-track-status.is-shipped {
+  border-color: var(--mt-accent-line);
+  color: var(--mt-accent-text);
+}
+.store-page[data-template='moderntec'] .ec-track-status.is-delivered {
+  border-color: color-mix(in srgb, var(--mt-ok) 50%, transparent);
+  color: var(--mt-ok);
+}
+.store-page[data-template='moderntec'] .ec-track-status.is-cancelled,
+.store-page[data-template='moderntec'] .ec-track-status.is-expired,
+.store-page[data-template='moderntec'] .ec-track-status.is-refunded {
+  border-color: color-mix(in srgb, var(--mt-danger) 55%, transparent);
+  color: var(--mt-danger);
+}
+.store-page[data-template='moderntec'] .ec-track-chip {
+  border-radius: var(--mt-rad-sm);
+  font-family: var(--mt-mono);
+  font-size: 11px;
+  letter-spacing: .02em;
+}
+.store-page[data-template='moderntec'] .ec-track-chip svg {
+  color: var(--mt-accent-text);
+}
+.store-page[data-template='moderntec'] .ec-step::after {
+  background: var(--mt-line);
+}
+.store-page[data-template='moderntec'] .ec-step.is-done::after {
+  background: var(--mt-ok);
+}
+.store-page[data-template='moderntec'] .ec-step-dot {
+  border-radius: var(--mt-rad-sm);
+  font-family: var(--mt-mono);
+  font-size: 11px;
+}
+.store-page[data-template='moderntec'] .ec-step.is-done .ec-step-dot {
+  border-color: var(--mt-ok);
+  background: var(--mt-ok);
+  color: var(--mt-bg);
+}
+.store-page[data-template='moderntec'] .ec-step.is-current .ec-step-dot {
+  border-color: var(--mt-accent);
+  background: var(--mt-accent-soft);
+  color: var(--mt-accent-text);
+  box-shadow: 0 0 0 3px var(--mt-accent-soft);
+}
+.store-page[data-template='moderntec'] .ec-tl-dot {
+  border-radius: 2px;
+  background: var(--mt-accent);
+}
+.store-page[data-template='moderntec'] .ec-proof-drop {
+  border: 2px dashed var(--mt-line-strong);
+  border-radius: var(--mt-rad-md);
+}
+.store-page[data-template='moderntec'] .ec-proof-drop:hover {
+  border-color: var(--mt-accent-line);
+  background: var(--mt-accent-soft);
+}
+.store-page[data-template='moderntec'] .ec-track-receipt-btn {
+  min-height: 42px;
+  padding: 0 16px;
+  border: 1px solid var(--mt-line-strong);
+  border-radius: var(--mt-rad-pill);
+  color: var(--mt-ink);
+  font-weight: 600;
+}
+.store-page[data-template='moderntec'] .ec-track-receipt-btn:hover {
+  border-color: var(--mt-accent);
+  background: var(--mt-accent-soft);
+  color: var(--mt-accent-text);
+}
+.store-page[data-template='moderntec'] .ec-track-ok {
+  color: var(--mt-ok);
+}
+
+/* Legal: filas de índice con hover deliberado. */
+.store-page[data-template='moderntec'] .ec-legal-item {
+  border-color: var(--mt-line);
+  border-radius: var(--mt-rad-md);
+  background: var(--mt-panel);
+  transition: border-color var(--mt-dur-1) var(--mt-ease-out), background var(--mt-dur-1) var(--mt-ease-out), transform var(--mt-dur-1) var(--mt-ease-out);
+}
+.store-page[data-template='moderntec'] .ec-legal-item:hover {
+  border-color: var(--mt-accent-line);
+  background: var(--mt-accent-soft);
+  transform: translateY(-1px);
+}
+.store-page[data-template='moderntec'] .ec-legal-ok {
+  color: var(--mt-ok);
+}
+.store-page[data-template='moderntec'] .ec-legal-error {
+  color: var(--mt-danger);
+}
+
+/* Recibo: solo el cromo (acciones/errores) — el documento (.ec-rp-doc) es
+   papel imprimible y conserva su estilo propio. */
+.store-page[data-template='moderntec'] .ec-rp-note-ico {
+  border: 1px solid color-mix(in srgb, var(--mt-danger) 40%, transparent);
+  border-radius: var(--mt-rad-md);
+  background: color-mix(in srgb, var(--mt-danger) 12%, transparent);
+  color: var(--mt-danger);
+}
+
+/* Planes: CTA píldora de acento (is-wa conserva el verde de WhatsApp). */
+.store-page[data-template='moderntec'] .sp-plans-btn:not(.is-wa) {
+  min-height: 46px;
+  padding: 0 22px;
+  border-radius: var(--mt-rad-pill);
+  background: var(--mt-accent);
+  color: var(--mt-accent-ink);
+  font-weight: 600;
+  box-shadow: var(--mt-glow);
+  transition: transform var(--mt-dur-1) var(--mt-ease-out), box-shadow var(--mt-dur-1) var(--mt-ease-out);
+}
+.store-page[data-template='moderntec'] .sp-plans-btn:not(.is-wa):hover {
+  transform: translateY(-2px);
+  box-shadow: 0 0 0 1px var(--mt-accent-line), 0 14px 34px color-mix(in srgb, var(--mt-accent) 30%, transparent), 0 22px 48px -18px color-mix(in srgb, var(--mt-accent) 65%, transparent);
+}
+.store-page[data-template='moderntec'] .sp-plans-btn.is-wa:hover {
+  transform: translateY(-2px);
+}
+
+/* ==========================================================================
+   13. RESPONSIVE
    ========================================================================== */
 @media (max-width: 1080px) {
   .store-page[data-template='moderntec'] .mt-hero-grid { gap: 40px; }
@@ -1794,16 +2247,20 @@
 /* Sin hover real (táctil): no dejar lifts ni brillos pegados. */
 @media (hover: none) {
   .store-page[data-template='moderntec'] :is(.tpc, .mt-dept, .mt-btn--primary, .mt-btn--ghost, .mt-btn:hover :is(svg), .sp-foot-col a, .sp-shop-viewall .sp-arrow) { transform: none; }
+  .store-page[data-template='moderntec'] :is(.ec-cartpg, .ec-checkout, .ec-track, .ec-legal, .ec-receiptpg, .sp-plans-page) :is(.ec-btn-primary, .ec-btn-ghost, .sp-plans-btn, .ec-legal-item, .ec-co-opt, .ec-co-addr, .ec-track-receipt-btn, .ec-cp-qty button, .ec-cp-remove, .ec-proof-drop, .ec-captcha-reload):hover { transform: none; }
+  .store-page[data-template='moderntec'][data-store-template] :is(.sp-btn:not(.ghost):not(.sp-hero-btn):not(.sp-hero-ghost):not(.is-wa), .sp-dock-btn:not(.is-wa)):hover { transform: none; }
   .store-page[data-template='moderntec'] .tpc:hover img,
   .store-page[data-template='moderntec'] .mt-dept:hover .mt-dept-thumb img { transform: none; filter: none; }
   .store-page[data-template='moderntec'] .mt-dept:hover::after { transform: scaleX(0); }
 }
 
 /* ==========================================================================
-   12. MOVIMIENTO REDUCIDO
+   14. MOVIMIENTO REDUCIDO
    ========================================================================== */
 @media (prefers-reduced-motion: reduce) {
   .store-page[data-template='moderntec'] .mt-btn { transition: none; }
+  .store-page[data-template='moderntec'] :is(.ec-cartpg, .ec-checkout, .ec-track, .ec-legal, .ec-receiptpg, .sp-plans-page) :is(.ec-btn-primary, .ec-btn-ghost, .sp-plans-btn) { transition: none; }
+  .store-page[data-template='moderntec'] :is(.ec-cartpg, .ec-checkout, .ec-track, .ec-legal, .ec-receiptpg, .sp-plans-page) .ec-btn-primary::after { display: none; }
   .store-page[data-template='moderntec'] :is(.mt-beam, .mt-particles, .mt-device, .mt-scan,
     .mt-device-badge::after, .mt-meter i, .mt-hero-title em, .sp-cta-inner::before) { animation: none; }
   .store-page[data-template='moderntec'] .mt-btn--primary::after { display: none; }

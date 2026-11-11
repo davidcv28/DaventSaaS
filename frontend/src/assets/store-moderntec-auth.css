@@ -378,6 +378,7 @@
 }
 .store-page[data-template='moderntec'] .ecaf-google-btn { border-radius: var(--mt-rad-sm); overflow: hidden; }
 .store-page[data-template='moderntec'] .ecaf-link {
+  padding-block: 6px;
   color: var(--mt-accent-text);
   font-family: var(--mt-mono); font-size: var(--mt-fs-xs); font-weight: 500;
   letter-spacing: .03em;
