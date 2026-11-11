@@ -27,6 +27,7 @@ const cart = useCartStore()
 
 const form = ref({ email: '', password: '', first_name: '', last_name: '', forgot_email: '' })
 const busy = ref(false)
+const resendBusy = ref(false)     // guard del "Reenviar verificación" (anti doble-click)
 const notice = ref('')               // mensaje verde (reset pedido, verificación…)
 const registeredPending = ref(false) // recién se registró → aviso de verificación
 const showPassword = ref(false)
@@ -199,11 +200,15 @@ async function submit() {
 function done() { emit('done') }
 
 async function resendVerification() {
+  if (resendBusy.value) return
+  resendBusy.value = true
   try {
     await customerApi.resendVerification()
     notice.value = 'Te reenviamos el correo de verificación.'
   } catch {
     notice.value = customer.lastError || 'No pudimos reenviar el correo.'
+  } finally {
+    resendBusy.value = false
   }
 }
 
@@ -273,7 +278,9 @@ onUnmounted(() => resizeObs?.disconnect())
 </script>
 
 <template>
-  <div class="ecaf">
+  <!-- data-mode: hook neutro para que las pieles hagan selectores por modo
+       (p.ej. .ecaf[data-mode='register'] …) sin JS ni cambiar el markup. -->
+  <div class="ecaf" :data-mode="mode">
     <!-- Control segmentado del modo (indicador deslizante). Solo piel
          esencial: en el resto de los diseños queda display:none. -->
     <div
@@ -358,6 +365,7 @@ onUnmounted(() => resizeObs?.disconnect())
               :type="showPassword ? 'text' : 'password'"
               :autocomplete="mode === 'login' ? 'current-password' : 'new-password'"
               required minlength="8" :disabled="busy"
+              spellcheck="false" autocapitalize="none"
               :enterkeyhint="mode === 'login' ? 'go' : 'done'"
               aria-labelledby="ec-auth-password-label"
               :aria-invalid="isInvalid('password') ? 'true' : undefined"
@@ -365,7 +373,7 @@ onUnmounted(() => resizeObs?.disconnect())
               @input="onFieldInput('password')"
             />
             <button
-              type="button" class="ecaf-pass-toggle"
+              type="button" class="ecaf-pass-toggle" :disabled="busy"
               :aria-label="showPassword ? 'Ocultar contraseña' : 'Mostrar contraseña'"
               :aria-pressed="showPassword"
               @click="showPassword = !showPassword"
@@ -395,7 +403,7 @@ onUnmounted(() => resizeObs?.disconnect())
       </template>
       <template v-else-if="mode === 'register'">
         <button type="button" class="ecaf-link" @click="switchMode('login')">¿Ya tenés cuenta? Ingresá</button>
-        <button v-if="registeredPending" type="button" class="ecaf-link ecaf-link-resend" @click="resendVerification">Reenviar correo de verificación</button>
+        <button v-if="registeredPending" type="button" class="ecaf-link ecaf-link-resend" :disabled="resendBusy" @click="resendVerification">Reenviar correo de verificación</button>
       </template>
       <template v-else>
         <button type="button" class="ecaf-link" @click="switchMode('login')">Volver a ingresar</button>
@@ -460,6 +468,7 @@ onUnmounted(() => resizeObs?.disconnect())
   text-decoration: underline; text-underline-offset: 2px;
 }
 .ecaf-link:hover { text-decoration-thickness: 2px; }
+.ecaf-link:disabled { opacity: .55; cursor: default; }
 @media (prefers-reduced-motion: reduce) { .ecaf-spin { animation: none; } }
 @media (max-width: 480px) { .ecaf-grid { grid-template-columns: 1fr; } }
 </style>

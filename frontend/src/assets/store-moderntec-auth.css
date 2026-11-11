@@ -14,7 +14,8 @@
    1. SHELL — módulo de acceso
    ========================================================================== */
 .store-page[data-template='moderntec'] .ec-auth-shell {
-  border-radius: var(--mt-rad-md);
+  /* Chasis técnico: esquina chica, no tarjeta suave. */
+  border-radius: var(--mt-rad-sm);
   border: 1px solid var(--mt-line-strong);
   background: var(--mt-panel);
   box-shadow: var(--mt-shadow-device);
@@ -27,14 +28,17 @@
 
 /* Coreografía de entrada: el módulo sube y su contenido entra en cascada
    (header → switch → campos → CTA → pie → trust). Solo transform/opacity;
-   el stagger se fija por nth-child sobre los hijos reales del DOM. */
+   el stagger se fija por nth-child sobre los hijos reales del DOM.
+   fill-mode `backwards` (no `both`): `both` retendría el translateY(0)
+   final para siempre y pisaría los transform de :hover/:active del CTA
+   (hijo de .ecaf-form) una vez terminada la entrada. */
 .store-page[data-template='moderntec'] :is(.ec-auth, .ec-auth-card) .ec-auth-head,
 .store-page[data-template='moderntec'] :is(.ec-auth, .ec-auth-card) .ecaf-switch,
 .store-page[data-template='moderntec'] :is(.ec-auth, .ec-auth-card) .ecaf-form > *,
 .store-page[data-template='moderntec'] :is(.ec-auth, .ec-auth-card) .ecaf-google,
 .store-page[data-template='moderntec'] :is(.ec-auth, .ec-auth-card) .ecaf-foot,
 .store-page[data-template='moderntec'] :is(.ec-auth, .ec-auth-card) .ec-auth-trust {
-  animation: mt-auth-item-in .55s var(--mt-ease-out) both;
+  animation: mt-auth-item-in .55s var(--mt-ease-out) backwards;
 }
 @keyframes mt-auth-item-in {
   from { opacity: 0; transform: translateY(10px); }
@@ -151,10 +155,17 @@
 }
 .store-page[data-template='moderntec'] .ec-auth-index li {
   display: inline-flex; align-items: center; gap: 6px;
+  padding-bottom: 3px;
   opacity: .55;
-  transition: opacity var(--mt-dur-2) var(--mt-ease-out), color var(--mt-dur-2) var(--mt-ease-out);
+  /* Filete de registro bajo cada spec: la activa enciende el tramo en
+     acento (esquina técnica, no subrayado decorativo). */
+  box-shadow: inset 0 -1px 0 var(--mt-line-soft);
+  transition: opacity var(--mt-dur-2) var(--mt-ease-out), color var(--mt-dur-2) var(--mt-ease-out), box-shadow var(--mt-dur-2) var(--mt-ease-out);
 }
-.store-page[data-template='moderntec'] .ec-auth-index li.is-on { opacity: 1; color: var(--mt-ink); }
+.store-page[data-template='moderntec'] .ec-auth-index li.is-on {
+  opacity: 1; color: var(--mt-ink);
+  box-shadow: inset 0 -1px 0 var(--mt-accent);
+}
 .store-page[data-template='moderntec'] .ec-auth-index-n {
   color: var(--mt-ink-3);
   transition: color var(--mt-dur-2) var(--mt-ease-out);
@@ -225,7 +236,7 @@
   content: "";
   width: min(180px, 60%);
   height: 6px;
-  border-radius: var(--mt-rad-pill);
+  border-radius: 3px;
   background: linear-gradient(90deg, var(--mt-line), var(--mt-accent-line), var(--mt-line));
   background-size: 220% 100%;
   animation: mt-auth-sweep 1.5s linear infinite;
@@ -259,41 +270,64 @@
 
 /* ==========================================================================
    4. FORMULARIO COMPARTIDO (StoreAuthForm) — página y modal
+   Especificidad deliberada: todos los selectores de controles llevan el
+   prefijo `:is(.ec-auth, .ec-auth-card) .ecaf` ((0,5,0)) para ganarle SIEMPRE
+   a store-design-moderntec.css ((0,4,0)) sin depender del orden en que
+   resuelvan los imports dinámicos — y para que página y modal se vean igual.
    ========================================================================== */
-/* Control segmentado del modo: tabs técnicos con píldora de acento que se
-   desliza (--ecaf-switch-i lo fija el componente). */
-.store-page[data-template='moderntec'] :is(.ec-auth, .ec-auth-card) .ecaf-switch {
+/* Control segmentado del modo: carril técnico con radio chico, canal
+   hundido y ticks de registro entre celdas. La píldora deslizante
+   (--ecaf-switch-i lo fija el componente) es un "detent" mecanizado,
+   no una burbuja: filete de acento arriba y muesca de índice a la izquierda. */
+.store-page[data-template='moderntec'] :is(.ec-auth, .ec-auth-card) .ecaf .ecaf-switch {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
   position: relative;
   isolation: isolate;
   margin-bottom: 6px;
-  padding: 4px;
+  padding: 3px;
   border: 1px solid var(--mt-line);
-  border-radius: var(--mt-rad-pill);
+  border-radius: 4px;
   background: var(--mt-bg-2);
+  /* Canal hundido: labio de luz arriba, sombra abajo. */
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, .05), inset 0 -1px 0 rgba(0, 0, 0, .22);
 }
-.store-page[data-template='moderntec'] :is(.ec-auth, .ec-auth-card) .ecaf-switch-pill {
+.store-page[data-template='moderntec'] :is(.ec-auth, .ec-auth-card) .ecaf .ecaf-switch-pill {
   position: absolute;
   z-index: 0;
-  top: 4px; bottom: 4px; left: 4px;
-  width: calc((100% - 8px) / 3);
-  border-radius: var(--mt-rad-pill);
+  top: 3px; bottom: 3px; left: 3px;
+  width: calc((100% - 6px) / 3);
+  border-radius: 3px;
   background: var(--mt-accent-soft);
-  box-shadow: inset 0 0 0 1px var(--mt-accent-line), 0 6px 18px -10px color-mix(in srgb, var(--mt-accent) 70%, transparent);
+  box-shadow:
+    inset 0 0 0 1px var(--mt-accent-line),
+    inset 0 1px 0 color-mix(in srgb, var(--mt-accent) 42%, transparent),
+    inset 0 -1px 0 rgba(0, 0, 0, .18);
   transform: translate3d(calc(var(--ecaf-switch-i, 0) * 100%), 0, 0);
   /* Fallback cubic-bezier primero; el linear() (Baseline 2023) lo pisa
      donde hay soporte: desplazamiento con leve overshoot, más físico. */
   transition: transform .42s cubic-bezier(.3, 1.35, .4, 1);
   transition: transform .5s linear(0, .45, .85, 1.06, .97, 1.02, 1);
 }
-.store-page[data-template='moderntec'] :is(.ec-auth, .ec-auth-card) .ecaf-switch-btn {
+/* Muesca de índice del detent: filete vertical de acento en el filo
+   izquierdo del segmento activo — marca de posición, no decoración. */
+.store-page[data-template='moderntec'] :is(.ec-auth, .ec-auth-card) .ecaf .ecaf-switch-pill::before {
+  content: "";
+  position: absolute;
+  left: 4px; top: 50%;
+  width: 3px; height: 12px;
+  transform: translateY(-50%);
+  border-radius: 1px;
+  background: var(--mt-accent);
+  box-shadow: 0 0 8px color-mix(in srgb, var(--mt-accent) 65%, transparent);
+}
+.store-page[data-template='moderntec'] :is(.ec-auth, .ec-auth-card) .ecaf .ecaf-switch-btn {
   position: relative;
   z-index: 1;
-  min-height: 38px;
+  min-height: 36px;
   padding: 8px 6px;
   border: 0;
-  border-radius: var(--mt-rad-pill);
+  border-radius: 3px;
   background: none;
   cursor: pointer;
   font-family: var(--mt-mono); font-size: var(--mt-fs-label); font-weight: 600;
@@ -301,76 +335,183 @@
   color: var(--mt-ink-3);
   transition: color var(--mt-dur-2) var(--mt-ease-out), text-shadow var(--mt-dur-2) var(--mt-ease-out), transform var(--mt-dur-1) var(--mt-ease-out);
 }
-.store-page[data-template='moderntec'] :is(.ec-auth, .ec-auth-card) .ecaf-switch-btn.is-on {
+/* Ticks de registro en las juntas entre celdas: filetes cortos centrados
+   en cada costura (el primer botón no lleva — es el borde del carril).
+   En la celda activa se apagan: el detent ya marca la posición. */
+.store-page[data-template='moderntec'] :is(.ec-auth, .ec-auth-card) .ecaf .ecaf-switch-btn ~ .ecaf-switch-btn::before {
+  content: "";
+  position: absolute;
+  left: 0; top: 50%;
+  width: 1px; height: 12px;
+  transform: translateY(-50%);
+  background: var(--mt-line-strong);
+  opacity: .7;
+  transition: opacity var(--mt-dur-2) var(--mt-ease-out);
+}
+.store-page[data-template='moderntec'] :is(.ec-auth, .ec-auth-card) .ecaf .ecaf-switch-btn.is-on::before { opacity: .22; }
+.store-page[data-template='moderntec'] :is(.ec-auth, .ec-auth-card) .ecaf .ecaf-switch-btn.is-on {
   color: var(--mt-accent-text);
   text-shadow: 0 0 12px color-mix(in srgb, var(--mt-accent) 60%, transparent), 0 0 28px color-mix(in srgb, var(--mt-accent) 30%, transparent);
 }
-.store-page[data-template='moderntec'] :is(.ec-auth, .ec-auth-card) .ecaf-switch-btn:active { transform: scale(.96); }
-.store-page[data-template='moderntec'] :is(.ec-auth, .ec-auth-card) .ecaf-switch-btn:hover:not(.is-on) {
+.store-page[data-template='moderntec'] :is(.ec-auth, .ec-auth-card) .ecaf .ecaf-switch-btn:active { transform: scale(.96); }
+.store-page[data-template='moderntec'] :is(.ec-auth, .ec-auth-card) .ecaf .ecaf-switch-btn:hover:not(.is-on) {
   color: var(--mt-ink-2);
 }
 
-/* Labels mono + inputs técnicos. */
-.store-page[data-template='moderntec'] .ecaf .sp-field-label {
+/* Labels mono con muesca de acento: el filete crece (scaleX, solo
+   transform) y el texto enciende cuando su campo recibe foco. */
+.store-page[data-template='moderntec'] :is(.ec-auth, .ec-auth-card) .ecaf .sp-field-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
   font-family: var(--mt-mono); font-size: var(--mt-fs-label); font-weight: 500;
-  letter-spacing: .1em; text-transform: uppercase; color: var(--mt-ink-2);
+  letter-spacing: .12em; text-transform: uppercase; color: var(--mt-ink-2);
+  transition: color var(--mt-dur-1) var(--mt-ease-out);
 }
-.store-page[data-template='moderntec'] .ecaf .sp-field { gap: 8px; }
-.store-page[data-template='moderntec'] .ecaf .sp-input {
-  background: var(--mt-bg); color: var(--mt-ink);
+.store-page[data-template='moderntec'] :is(.ec-auth, .ec-auth-card) .ecaf .sp-field-label::before {
+  content: "";
+  flex: none;
+  width: 9px; height: 1px;
+  background: var(--mt-accent-line);
+  transform: scaleX(.55);
+  transform-origin: left center;
+  transition: transform var(--mt-dur-1) var(--mt-ease-out), background var(--mt-dur-1) var(--mt-ease-out);
+}
+.store-page[data-template='moderntec'] :is(.ec-auth, .ec-auth-card) .ecaf .sp-field:focus-within .sp-field-label { color: var(--mt-accent-text); }
+.store-page[data-template='moderntec'] :is(.ec-auth, .ec-auth-card) .ecaf .sp-field:focus-within .sp-field-label::before {
+  transform: scaleX(1);
+  background: var(--mt-accent);
+}
+.store-page[data-template='moderntec'] :is(.ec-auth, .ec-auth-card) .ecaf .sp-field { gap: 8px; }
+/* Campos de instrumento: fondo hundido, hairline doble (borde + anillo
+   interior) y una scanline de acento que se dibuja de izquierda a derecha
+   al enfocar (background-size, sin tocar layout). Fuente mono: tecleo de
+   consola; el tamaño queda en 16px (anti-zoom de iOS). */
+.store-page[data-template='moderntec'] :is(.ec-auth, .ec-auth-card) .ecaf .sp-input {
+  min-height: 46px;
+  padding: 12px 15px;
+  background-color: var(--mt-bg);
+  background-image: linear-gradient(90deg,
+    var(--mt-accent-line) 0%,
+    var(--mt-accent) 14%,
+    var(--mt-accent) 86%,
+    var(--mt-accent-line) 100%);
+  background-repeat: no-repeat;
+  background-position: 0 0;
+  background-size: 0% 1px;
+  color: var(--mt-ink);
   border: 1px solid var(--mt-line-strong); border-radius: var(--mt-rad-sm);
-  transition: border-color var(--mt-dur-1) var(--mt-ease-out), box-shadow var(--mt-dur-2) var(--mt-ease-out), background var(--mt-dur-1) var(--mt-ease-out);
+  font-family: var(--mt-mono);
+  font-variant-numeric: tabular-nums;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, .05),
+    inset 0 -1px 0 rgba(0, 0, 0, .26),
+    inset 0 0 0 1px var(--mt-line-soft);
+  transition: border-color var(--mt-dur-1) var(--mt-ease-out), box-shadow var(--mt-dur-2) var(--mt-ease-out), background-color var(--mt-dur-1) var(--mt-ease-out), background-size .38s var(--mt-ease-out);
 }
-.store-page[data-template='moderntec'] .ecaf .sp-input::placeholder {
+.store-page[data-template='moderntec'] :is(.ec-auth, .ec-auth-card) .ecaf .sp-input::placeholder {
+  font-family: var(--mt-mono);
+  letter-spacing: .05em;
   color: var(--mt-ink-3);
   transition: color var(--mt-dur-1) var(--mt-ease-out);
 }
-.store-page[data-template='moderntec'] .ecaf .sp-input:hover { border-color: var(--mt-accent-line); }
-.store-page[data-template='moderntec'] .ecaf .sp-input:hover::placeholder { color: var(--mt-ink-2); }
-/* Foco: filete de acento en el filo superior + anillo suave + glow
-   (sin outline duplicado; el filete va como inset shadow, sin depender
-   de pseudo-elementos que <input> no soporta). */
-.store-page[data-template='moderntec'] .ecaf .sp-input:focus,
-.store-page[data-template='moderntec'] .ecaf .sp-input:focus-visible {
+.store-page[data-template='moderntec'] :is(.ec-auth, .ec-auth-card) .ecaf .sp-input:hover {
+  border-color: var(--mt-accent-line);
+  /* El hairline interior enciende apenas: el campo "despierta". */
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, .07),
+    inset 0 -1px 0 rgba(0, 0, 0, .26),
+    inset 0 0 0 1px var(--mt-accent-line);
+}
+.store-page[data-template='moderntec'] :is(.ec-auth, .ec-auth-card) .ecaf .sp-input:hover::placeholder { color: var(--mt-ink-2); }
+/* Foco: la scanline crece (background-size → 100%) + hairline doble en
+   acento + halo suave. Sin outline duplicado; el filete va como sombras
+   e imagen de fondo, sin depender de pseudo-elementos que <input> no
+   soporta. */
+.store-page[data-template='moderntec'] :is(.ec-auth, .ec-auth-card) .ecaf .sp-input:focus,
+.store-page[data-template='moderntec'] :is(.ec-auth, .ec-auth-card) .ecaf .sp-input:focus-visible {
   outline: none;
   border-color: var(--mt-accent);
-  background: var(--mt-panel);
+  background-color: var(--mt-panel);
+  background-size: 100% 1px;
   box-shadow:
-    inset 0 1px 0 var(--mt-accent),
+    inset 0 0 0 1px var(--mt-accent-line),
+    0 0 0 1px var(--mt-accent-line),
     0 0 0 3px var(--mt-accent-soft),
     0 0 24px -8px color-mix(in srgb, var(--mt-accent) 55%, transparent);
 }
-.store-page[data-template='moderntec'] .ecaf .sp-input:focus::placeholder { color: var(--mt-ink-3); opacity: .7; }
-.store-page[data-template='moderntec'] .ecaf .sp-form-error { color: var(--mt-danger); }
+.store-page[data-template='moderntec'] :is(.ec-auth, .ec-auth-card) .ecaf .sp-input:focus::placeholder { color: var(--mt-ink-3); opacity: .7; }
+/* Deshabilitado unificado (página y modal): el campo se apaga sin
+   perder el hairline interior. */
+.store-page[data-template='moderntec'] :is(.ec-auth, .ec-auth-card) .ecaf .sp-input:disabled {
+  background-color: var(--mt-surface-2);
+  /* La scanline no puede quedar encendida si el campo se deshabilita
+     con el foco puesto. */
+  background-size: 0% 1px;
+  color: var(--mt-ink-3);
+  border-color: var(--mt-line);
+  cursor: not-allowed;
+  box-shadow: inset 0 0 0 1px var(--mt-line-soft);
+}
+.store-page[data-template='moderntec'] :is(.ec-auth, .ec-auth-card) .ecaf .sp-form-error {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  color: var(--mt-danger);
+}
+/* Muesca de error: mismo diamante de estado que los avisos. */
+.store-page[data-template='moderntec'] :is(.ec-auth, .ec-auth-card) .ecaf .sp-form-error::before {
+  content: "";
+  flex: none;
+  width: 6px; height: 6px;
+  background: var(--mt-danger);
+  transform: rotate(45deg);
+}
 
-/* Toggle de contraseña: filete separador técnico. */
-.store-page[data-template='moderntec'] .ecaf-pass { position: relative; display: block; }
-.store-page[data-template='moderntec'] .ecaf-pass .sp-input { padding-right: 48px; }
-.store-page[data-template='moderntec'] .ecaf-pass-toggle {
-  border-radius: var(--mt-rad-sm); color: var(--mt-ink-2);
+/* Toggle de contraseña: filete separador técnico + estado "visible"
+   preso en acento mientras la clave se muestra. */
+.store-page[data-template='moderntec'] :is(.ec-auth, .ec-auth-card) .ecaf .ecaf-pass { position: relative; display: block; }
+.store-page[data-template='moderntec'] :is(.ec-auth, .ec-auth-card) .ecaf .ecaf-pass .sp-input { padding-right: 48px; }
+.store-page[data-template='moderntec'] :is(.ec-auth, .ec-auth-card) .ecaf .ecaf-pass-toggle {
+  border-radius: 3px; color: var(--mt-ink-2);
   border-left: 1px solid var(--mt-line);
   transition: color var(--mt-dur-1) var(--mt-ease-out), background var(--mt-dur-1) var(--mt-ease-out), border-color var(--mt-dur-1) var(--mt-ease-out), transform var(--mt-dur-1) var(--mt-ease-out);
 }
-.store-page[data-template='moderntec'] .ecaf-pass-toggle:hover {
+.store-page[data-template='moderntec'] :is(.ec-auth, .ec-auth-card) .ecaf .ecaf-pass-toggle:hover {
   color: var(--mt-accent-text); background: var(--mt-accent-soft);
   border-left-color: var(--mt-accent-line);
 }
-.store-page[data-template='moderntec'] .ecaf-pass-toggle:active { transform: scale(.9); }
+.store-page[data-template='moderntec'] :is(.ec-auth, .ec-auth-card) .ecaf .ecaf-pass-toggle[aria-pressed='true'] {
+  color: var(--mt-accent-text);
+  background: var(--mt-accent-soft);
+  border-left-color: var(--mt-accent-line);
+}
+/* El translateY(-50%) del centrado (scoped) hay que conservarlo: un
+   scale() solo lo pisaría y el botón saltaría hacia arriba al pulsar. */
+.store-page[data-template='moderntec'] :is(.ec-auth, .ec-auth-card) .ecaf .ecaf-pass-toggle:active { transform: translateY(-50%) scale(.9); }
 
-/* CTA píldora con barrido de luz en hover. */
-.store-page[data-template='moderntec'] .ecaf-submit {
+/* CTA técnico: de píldora a tecla mecanizada — esquina casi recta,
+   keyline en --mt-accent-ink (contraste garantizado sobre el fondo
+   acento en ambos temas), labio superior y base sombreados. El barrido
+   de luz (::after) y el glow se conservan; el :active baja de verdad. */
+.store-page[data-template='moderntec'] :is(.ec-auth, .ec-auth-card) .ecaf .ecaf-submit {
   position: relative;
   overflow: hidden;
   isolation: isolate;
-  border-radius: var(--mt-rad-pill);
+  min-height: 48px;
+  border: 1px solid color-mix(in srgb, var(--mt-accent-ink) 36%, transparent);
+  border-radius: 4px;
   background: linear-gradient(90deg, var(--mt-accent), var(--mt-accent-2));
   color: var(--mt-accent-ink);
   font-family: var(--mt-mono); font-size: var(--mt-fs-sm); font-weight: 600;
-  letter-spacing: .06em; text-transform: uppercase;
-  box-shadow: var(--mt-glow);
-  transition: transform var(--mt-dur-2) var(--mt-ease-out), box-shadow var(--mt-dur-2) var(--mt-ease-out);
+  letter-spacing: .08em; text-transform: uppercase;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, .22),
+    inset 0 -1px 0 rgba(0, 0, 0, .2),
+    var(--mt-glow);
+  transition: transform var(--mt-dur-2) var(--mt-ease-out), box-shadow var(--mt-dur-2) var(--mt-ease-out), border-color var(--mt-dur-1) var(--mt-ease-out);
 }
-.store-page[data-template='moderntec'] .ecaf-submit::after {
+.store-page[data-template='moderntec'] :is(.ec-auth, .ec-auth-card) .ecaf .ecaf-submit::after {
   content: "";
   position: absolute;
   inset: 0;
@@ -381,96 +522,173 @@
   transform: translateX(-140%) skewX(-8deg);
   transition: transform .55s var(--mt-ease-out);
 }
-.store-page[data-template='moderntec'] .ecaf-submit:hover:not(:disabled) {
+.store-page[data-template='moderntec'] :is(.ec-auth, .ec-auth-card) .ecaf .ecaf-submit:hover:not(:disabled) {
   transform: translateY(-2px);
-  box-shadow: 0 0 0 1px var(--mt-accent-line), 0 14px 34px color-mix(in srgb, var(--mt-accent) 30%, transparent), 0 22px 48px -18px color-mix(in srgb, var(--mt-accent) 65%, transparent);
+  border-color: color-mix(in srgb, var(--mt-accent-ink) 60%, transparent);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, .26),
+    inset 0 -1px 0 rgba(0, 0, 0, .2),
+    var(--mt-glow),
+    0 14px 34px color-mix(in srgb, var(--mt-accent) 30%, transparent),
+    0 22px 48px -18px color-mix(in srgb, var(--mt-accent) 65%, transparent);
 }
-.store-page[data-template='moderntec'] .ecaf-submit:hover:not(:disabled)::after {
+.store-page[data-template='moderntec'] :is(.ec-auth, .ec-auth-card) .ecaf .ecaf-submit:hover:not(:disabled)::after {
   transform: translateX(140%) skewX(-8deg);
 }
-.store-page[data-template='moderntec'] .ecaf-submit:active:not(:disabled) {
-  transform: translateY(0) scale(.98);
-  box-shadow: 0 0 0 1px var(--mt-accent-line), 0 8px 20px -8px color-mix(in srgb, var(--mt-accent) 55%, transparent);
+/* Presionado físico: la tecla baja (translateY positivo) y la transición
+   se acelera a 90ms — al soltar vuelve el ritmo normal. */
+.store-page[data-template='moderntec'] :is(.ec-auth, .ec-auth-card) .ecaf .ecaf-submit:active:not(:disabled) {
+  transform: translateY(1px) scale(.985);
+  transition-duration: 90ms;
+  border-color: color-mix(in srgb, var(--mt-accent-ink) 60%, transparent);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, .18),
+    inset 0 -1px 0 rgba(0, 0, 0, .24),
+    0 0 0 1px var(--mt-accent-line),
+    0 4px 14px -6px color-mix(in srgb, var(--mt-accent) 60%, transparent);
 }
-.store-page[data-template='moderntec'] .ecaf-submit:focus-visible {
+.store-page[data-template='moderntec'] :is(.ec-auth, .ec-auth-card) .ecaf .ecaf-submit:focus-visible {
   outline-offset: 3px;
-  box-shadow: 0 0 0 1px var(--mt-accent-line), var(--mt-glow), 0 0 30px -6px color-mix(in srgb, var(--mt-accent) 65%, transparent);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, .22),
+    inset 0 -1px 0 rgba(0, 0, 0, .2),
+    var(--mt-glow),
+    0 0 30px -6px color-mix(in srgb, var(--mt-accent) 65%, transparent);
 }
-.store-page[data-template='moderntec'] .ecaf-submit:disabled {
+.store-page[data-template='moderntec'] :is(.ec-auth, .ec-auth-card) .ecaf .ecaf-submit:disabled {
   background: var(--mt-line);
+  border-color: transparent;
   color: var(--mt-ink-3);
   box-shadow: none;
   cursor: not-allowed;
 }
-.store-page[data-template='moderntec'] .ecaf-submit > * { position: relative; z-index: 2; }
+.store-page[data-template='moderntec'] :is(.ec-auth, .ec-auth-card) .ecaf .ecaf-submit > * { position: relative; z-index: 2; }
 
-/* Avisos: panel técnico con filete de estado. Entran con un desliz
+/* Avisos: panel técnico con filete de estado marcado (3px) + muesca
+   diamante ::before en el color de estado. Entran con un desliz
    propio (nodo dinámico: aparece tras submit, no en el stagger inicial). */
-.store-page[data-template='moderntec'] .ecaf-notice,
-.store-page[data-template='moderntec'] .ecaf-error {
+.store-page[data-template='moderntec'] :is(.ec-auth, .ec-auth-card) .ecaf .ecaf-notice,
+.store-page[data-template='moderntec'] :is(.ec-auth, .ec-auth-card) .ecaf .ecaf-error {
+  display: flex;
+  align-items: flex-start;
+  gap: 9px;
   border-radius: var(--mt-rad-sm);
   border: 1px solid var(--mt-line);
-  border-left-width: 2px;
+  border-left-width: 3px;
   color: var(--mt-ink);
   animation: mt-auth-notice-in .4s var(--mt-ease-out) both;
+}
+.store-page[data-template='moderntec'] :is(.ec-auth, .ec-auth-card) .ecaf .ecaf-notice::before,
+.store-page[data-template='moderntec'] :is(.ec-auth, .ec-auth-card) .ecaf .ecaf-error::before {
+  content: "";
+  flex: none;
+  width: 7px; height: 7px;
+  margin-top: 6px;
+  transform: rotate(45deg);
+}
+.store-page[data-template='moderntec'] :is(.ec-auth, .ec-auth-card) .ecaf .ecaf-notice::before {
+  background: var(--mt-ok);
+  box-shadow: 0 0 9px color-mix(in srgb, var(--mt-ok) 55%, transparent);
+}
+.store-page[data-template='moderntec'] :is(.ec-auth, .ec-auth-card) .ecaf .ecaf-error::before {
+  background: var(--mt-danger);
+  box-shadow: 0 0 9px color-mix(in srgb, var(--mt-danger) 55%, transparent);
 }
 @keyframes mt-auth-notice-in {
   from { opacity: 0; transform: translateX(-8px); }
   to   { opacity: 1; transform: translateX(0); }
 }
-.store-page[data-template='moderntec'] .ecaf-notice {
+.store-page[data-template='moderntec'] :is(.ec-auth, .ec-auth-card) .ecaf .ecaf-notice {
   background: color-mix(in srgb, var(--mt-ok) 10%, var(--mt-panel));
   border-left-color: var(--mt-ok);
 }
-.store-page[data-template='moderntec'] .ecaf-error {
+.store-page[data-template='moderntec'] :is(.ec-auth, .ec-auth-card) .ecaf .ecaf-error {
   background: color-mix(in srgb, var(--mt-danger) 10%, var(--mt-panel));
   border-left-color: var(--mt-danger);
 }
 
-.store-page[data-template='moderntec'] .ecaf-divider {
-  font-family: var(--mt-mono); font-size: var(--mt-fs-label); letter-spacing: .1em;
+.store-page[data-template='moderntec'] :is(.ec-auth, .ec-auth-card) .ecaf .ecaf-divider {
+  font-family: var(--mt-mono); font-size: var(--mt-fs-label); letter-spacing: .14em;
   text-transform: uppercase; color: var(--mt-ink-3);
 }
-.store-page[data-template='moderntec'] .ecaf-divider::before,
-.store-page[data-template='moderntec'] .ecaf-divider::after {
-  background: var(--mt-line-strong); opacity: 1;
+/* Filetes que se disuelven hacia los bordes (ya no líneas planas). */
+.store-page[data-template='moderntec'] :is(.ec-auth, .ec-auth-card) .ecaf .ecaf-divider::before {
+  background: linear-gradient(90deg, transparent, var(--mt-line-strong));
+  opacity: 1;
 }
-.store-page[data-template='moderntec'] .ecaf-google-btn {
-  border-radius: var(--mt-rad-sm); overflow: hidden;
-  transition: box-shadow var(--mt-dur-2) var(--mt-ease-out), opacity var(--mt-dur-1) var(--mt-ease-out);
+.store-page[data-template='moderntec'] :is(.ec-auth, .ec-auth-card) .ecaf .ecaf-divider::after {
+  background: linear-gradient(270deg, transparent, var(--mt-line-strong));
+  opacity: 1;
 }
-.store-page[data-template='moderntec'] .ecaf-google-btn:hover {
-  box-shadow: 0 0 0 1px var(--mt-accent-line), 0 8px 22px -12px color-mix(in srgb, var(--mt-accent) 45%, transparent);
+/* Micro-muescas diamante flanqueando la etiqueta. */
+.store-page[data-template='moderntec'] :is(.ec-auth, .ec-auth-card) .ecaf .ecaf-divider > span::before,
+.store-page[data-template='moderntec'] :is(.ec-auth, .ec-auth-card) .ecaf .ecaf-divider > span::after {
+  content: "";
+  display: inline-block;
+  width: 5px; height: 5px;
+  background: var(--mt-line-strong);
+  transform: rotate(45deg);
 }
-.store-page[data-template='moderntec'] .ecaf-google-btn.is-busy { opacity: .55; }
-/* Link técnico: filete de acento que crece desde la izquierda en hover. */
-.store-page[data-template='moderntec'] .ecaf-link {
+.store-page[data-template='moderntec'] :is(.ec-auth, .ec-auth-card) .ecaf .ecaf-divider > span::before { margin-right: 9px; }
+.store-page[data-template='moderntec'] :is(.ec-auth, .ec-auth-card) .ecaf .ecaf-divider > span::after { margin-left: 9px; }
+/* Contenedor del botón de Google: marco técnico ordenado (filete +
+   canal hundido) que enmarca el iframe sin competir con él. */
+.store-page[data-template='moderntec'] :is(.ec-auth, .ec-auth-card) .ecaf .ecaf-google-btn {
+  min-height: 46px;
+  border: 1px solid var(--mt-line-strong);
+  border-radius: 4px;
+  overflow: hidden;
+  background: var(--mt-bg-2);
+  box-shadow: inset 0 1px 0 var(--mt-line-soft);
+  transition: border-color var(--mt-dur-2) var(--mt-ease-out), box-shadow var(--mt-dur-2) var(--mt-ease-out), opacity var(--mt-dur-1) var(--mt-ease-out);
+}
+.store-page[data-template='moderntec'] :is(.ec-auth, .ec-auth-card) .ecaf .ecaf-google-btn:hover {
+  border-color: var(--mt-accent-line);
+  box-shadow:
+    inset 0 1px 0 var(--mt-line-soft),
+    0 0 0 1px var(--mt-accent-line),
+    0 8px 22px -12px color-mix(in srgb, var(--mt-accent) 45%, transparent);
+}
+.store-page[data-template='moderntec'] :is(.ec-auth, .ec-auth-card) .ecaf .ecaf-google-btn.is-busy { opacity: .55; }
+/* Link técnico: filete de acento que crece desde la izquierda en hover.
+   El subrayado nativo se apaga — quedaban dos líneas (underline + filete). */
+.store-page[data-template='moderntec'] :is(.ec-auth, .ec-auth-card) .ecaf .ecaf-link {
   position: relative;
   padding-block: 6px;
+  text-decoration: none;
   color: var(--mt-accent-text);
   font-family: var(--mt-mono); font-size: var(--mt-fs-xs); font-weight: 500;
-  letter-spacing: .03em;
+  letter-spacing: .05em;
   transition: color var(--mt-dur-1) var(--mt-ease-out), transform var(--mt-dur-1) var(--mt-ease-out);
 }
-.store-page[data-template='moderntec'] .ecaf-link::after {
+.store-page[data-template='moderntec'] :is(.ec-auth, .ec-auth-card) .ecaf .ecaf-link::after {
   content: "";
   position: absolute;
-  left: 0; bottom: 2px;
+  left: 0; bottom: 3px;
   width: 100%; height: 1px;
   background: var(--mt-accent);
+  box-shadow: 0 1px 6px color-mix(in srgb, var(--mt-accent) 45%, transparent);
   transform: scaleX(0);
   transform-origin: left center;
-  transition: transform var(--mt-dur-2) var(--mt-ease-out);
+  /* Fallback + spring linear(): el filete "se estampa", no se desliza. */
+  transition: transform .34s cubic-bezier(.2, .9, .3, 1.25);
+  transition: transform .4s linear(0, .55, .85, 1.05, .97, 1);
 }
-.store-page[data-template='moderntec'] .ecaf-link:hover { color: var(--mt-ink); transform: translateX(2px); }
-.store-page[data-template='moderntec'] .ecaf-link:hover::after { transform: scaleX(1); }
+.store-page[data-template='moderntec'] :is(.ec-auth, .ec-auth-card) .ecaf .ecaf-link:hover { color: var(--mt-ink); transform: translateX(2px); }
+.store-page[data-template='moderntec'] :is(.ec-auth, .ec-auth-card) .ecaf .ecaf-link:hover::after { transform: scaleX(1); }
 
 /* Línea de confianza bajo el formulario (nace oculta en la vista). */
 .store-page[data-template='moderntec'] .ec-auth-trust {
   display: flex; align-items: center; gap: 7px;
   margin: clamp(16px, 2.4vw, 24px) 0 0;
   padding-top: 13px;
-  border-top: 1px solid var(--mt-line);
+  /* Filete que se apaga hacia los bordes (antes: border-top plano). */
+  border-top: 0;
+  background: linear-gradient(90deg,
+    transparent 0%,
+    var(--mt-line-strong) 14%,
+    var(--mt-line-strong) 86%,
+    transparent 100%) left top / 100% 1px no-repeat;
   font-family: var(--mt-mono); font-size: var(--mt-fs-label); font-weight: 500;
   letter-spacing: .08em; text-transform: uppercase;
   color: var(--mt-ink-3);
@@ -486,7 +704,7 @@
   outline: 2px solid var(--mt-focus);
   outline-offset: 2px;
 }
-.store-page[data-template='moderntec'] .ecaf .sp-input:focus-visible { outline: none; }
+.store-page[data-template='moderntec'] :is(.ec-auth, .ec-auth-card) .ecaf .sp-input:focus-visible { outline: none; }
 
 /* ==========================================================================
    5. MODAL DE AUTH (.ec-auth-card teletransporta dentro de .store-page)
@@ -514,11 +732,20 @@
   mask-image: radial-gradient(900px 620px at 50% 42%, #000 18%, transparent 74%);
   opacity: .5;
 }
+/* Viñeta: el scrim se hunde hacia los bordes y la consola queda aislada. */
+.store-page[data-template='moderntec'] .ec-auth-backdrop::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: radial-gradient(115% 95% at 50% 46%, transparent 56%, rgba(0, 0, 0, .34));
+}
 .store-page[data-template='moderntec'] .ec-auth-card {
   background: var(--mt-panel); color: var(--mt-ink);
   border: 1px solid var(--mt-line-strong);
   border-top: 2px solid var(--mt-accent);
-  border-radius: var(--mt-rad-md);
+  /* Esquinas técnicas: el card es una consola, no una hoja. */
+  border-radius: var(--mt-rad-sm);
   box-shadow: var(--mt-shadow-device);
   /* Entrada con sensación física: cubic-bezier de fallback, y donde hay
      soporte un linear() spring con overshoot (Baseline 2023). */
@@ -548,7 +775,7 @@
 }
 .store-page[data-template='moderntec'] .ec-auth-card .ec-auth-head { padding-right: 36px; }
 .store-page[data-template='moderntec'] .ec-auth-close {
-  border-radius: var(--mt-rad-sm);
+  border-radius: 3px;
   border: 1px solid var(--mt-line);
   color: var(--mt-ink-2);
   transition: color var(--mt-dur-1) var(--mt-ease-out), background var(--mt-dur-1) var(--mt-ease-out), border-color var(--mt-dur-1) var(--mt-ease-out), transform var(--mt-dur-1) var(--mt-ease-out);
@@ -583,24 +810,29 @@
   .store-page[data-template='moderntec'] .ec-auth-rail::after,
   .store-page[data-template='moderntec'] .ec-auth-tag::before,
   .store-page[data-template='moderntec'] .ec-auth-loading::after,
+  .store-page[data-template='moderntec'] .ec-auth-index li,
+  .store-page[data-template='moderntec'] .ec-auth-index-n,
   .store-page[data-template='moderntec'] :is(.ec-auth, .ec-auth-card) .ec-auth-head,
-  .store-page[data-template='moderntec'] :is(.ec-auth, .ec-auth-card) .ecaf-switch,
   .store-page[data-template='moderntec'] :is(.ec-auth, .ec-auth-card) .ecaf-form > *,
   .store-page[data-template='moderntec'] :is(.ec-auth, .ec-auth-card) .ecaf-google,
   .store-page[data-template='moderntec'] :is(.ec-auth, .ec-auth-card) .ecaf-foot,
   .store-page[data-template='moderntec'] :is(.ec-auth, .ec-auth-card) .ec-auth-trust,
-  .store-page[data-template='moderntec'] .ecaf-notice,
-  .store-page[data-template='moderntec'] .ecaf-error,
-  .store-page[data-template='moderntec'] .ecaf-submit,
-  .store-page[data-template='moderntec'] .ecaf-submit::after,
-  .store-page[data-template='moderntec'] .ecaf-switch-pill,
-  .store-page[data-template='moderntec'] .ecaf-switch-btn,
-  .store-page[data-template='moderntec'] .ecaf .sp-input,
-  .store-page[data-template='moderntec'] .ecaf .sp-input::placeholder,
-  .store-page[data-template='moderntec'] .ecaf-pass-toggle,
-  .store-page[data-template='moderntec'] .ecaf-link,
-  .store-page[data-template='moderntec'] .ecaf-link::after,
-  .store-page[data-template='moderntec'] .ecaf-google-btn,
+  .store-page[data-template='moderntec'] :is(.ec-auth, .ec-auth-card) .ecaf .ecaf-notice,
+  .store-page[data-template='moderntec'] :is(.ec-auth, .ec-auth-card) .ecaf .ecaf-error,
+  .store-page[data-template='moderntec'] :is(.ec-auth, .ec-auth-card) .ecaf .ecaf-submit,
+  .store-page[data-template='moderntec'] :is(.ec-auth, .ec-auth-card) .ecaf .ecaf-submit::after,
+  .store-page[data-template='moderntec'] :is(.ec-auth, .ec-auth-card) .ecaf .ecaf-switch,
+  .store-page[data-template='moderntec'] :is(.ec-auth, .ec-auth-card) .ecaf .ecaf-switch-pill,
+  .store-page[data-template='moderntec'] :is(.ec-auth, .ec-auth-card) .ecaf .ecaf-switch-btn,
+  .store-page[data-template='moderntec'] :is(.ec-auth, .ec-auth-card) .ecaf .ecaf-switch-btn::before,
+  .store-page[data-template='moderntec'] :is(.ec-auth, .ec-auth-card) .ecaf .sp-field-label,
+  .store-page[data-template='moderntec'] :is(.ec-auth, .ec-auth-card) .ecaf .sp-field-label::before,
+  .store-page[data-template='moderntec'] :is(.ec-auth, .ec-auth-card) .ecaf .sp-input,
+  .store-page[data-template='moderntec'] :is(.ec-auth, .ec-auth-card) .ecaf .sp-input::placeholder,
+  .store-page[data-template='moderntec'] :is(.ec-auth, .ec-auth-card) .ecaf .ecaf-pass-toggle,
+  .store-page[data-template='moderntec'] :is(.ec-auth, .ec-auth-card) .ecaf .ecaf-link,
+  .store-page[data-template='moderntec'] :is(.ec-auth, .ec-auth-card) .ecaf .ecaf-link::after,
+  .store-page[data-template='moderntec'] :is(.ec-auth, .ec-auth-card) .ecaf .ecaf-google-btn,
   .store-page[data-template='moderntec'] .ec-auth-close,
   .store-page[data-template='moderntec'] .ec-auth-back {
     animation: none !important;
@@ -610,5 +842,5 @@
   /* Sin `both` los keyframes no aplican: los estados finales quedan
      visibles por defecto. El filete del link nace en scaleX(0): forzarlo
      a reposo total para que no quede un artefacto a medias. */
-  .store-page[data-template='moderntec'] .ecaf-link::after { transform: none; }
+  .store-page[data-template='moderntec'] :is(.ec-auth, .ec-auth-card) .ecaf .ecaf-link::after { transform: none; }
 }

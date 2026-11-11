@@ -8,7 +8,7 @@
 // (StoreAuthView): un solo comportamiento, dos envoltorios. El modal queda
 // para pendientes de ACCIÓN ({action}) que no pueden cruzar una
 // navegación; los {route} ya pueden usar authRoute → /ingresar.
-import { ref, computed, watch } from 'vue'
+import { ref, computed, watch, onUnmounted } from 'vue'
 import { useCartStore } from '../../stores/cart.store.js'
 import StoreAuthForm from './StoreAuthForm.vue'
 import AppIcon from '../AppIcon.vue'
@@ -34,7 +34,14 @@ const subtitle = computed(() => {
 const modeIcon = computed(() => (mode.value === 'forgot' ? 'lock' : 'user'))
 
 watch(() => cart.authMode, (m) => { if (m) mode.value = m })
-watch(() => cart.authOpen, (open) => { if (open) mode.value = cart.authMode || 'login' })
+watch(() => cart.authOpen, (open) => {
+  if (open) mode.value = cart.authMode || 'login'
+  // Escape a nivel window: el @keydown del backdrop solo recibe teclas si el
+  // foco está dentro del diálogo; con el listener global cierra siempre.
+  if (open) window.addEventListener('keydown', onKey)
+  else window.removeEventListener('keydown', onKey)
+}, { immediate: true })
+onUnmounted(() => window.removeEventListener('keydown', onKey))
 
 function switchMode(m) { mode.value = m }
 function close() { emit('close'); cart.closeAuth() }
@@ -53,8 +60,8 @@ function onDone() { cart.closeAuth(); emit('done') }
        declara transform/filter/contain. `defer` resuelve el target después
        del montaje: .store-page existe como el raíz del mismo ciclo. -->
   <Teleport defer to=".store-page">
-    <div v-if="cart.authOpen" class="ec-auth-backdrop" @click="onBackdrop" @keydown="onKey">
-      <div class="ec-auth-card" role="dialog" aria-modal="true" :aria-label="title">
+    <div v-if="cart.authOpen" class="ec-auth-backdrop" @click="onBackdrop">
+      <div class="ec-auth-card" role="dialog" aria-modal="true" aria-labelledby="ec-auth-modal-title">
         <button type="button" class="ec-auth-close" aria-label="Cerrar" @click="close">
           <AppIcon name="x" :size="18" />
         </button>
@@ -63,7 +70,7 @@ function onDone() { cart.closeAuth(); emit('done') }
           <span class="ec-auth-badge" aria-hidden="true">
             <AppIcon :name="modeIcon" :size="18" />
           </span>
-          <h2 class="ec-auth-title">{{ title }}</h2>
+          <h2 id="ec-auth-modal-title" class="ec-auth-title">{{ title }}</h2>
           <p class="ec-auth-sub">{{ subtitle }}</p>
         </header>
 

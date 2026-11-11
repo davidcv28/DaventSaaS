@@ -5,10 +5,11 @@
    reemplaza con más especificidad (0,3,0 mínimo).
 
    Composición propia: la auth es el BANCO DE INSTRUMENTOS — el ala de
-   marca es el panel de lectura (retícula fina, telemetría en mono, perks
-   como filas de especificación con LED de estado) y el ala del
-   formulario es el módulo de acceso (esquinas atornilladas, labels mono,
-   CTA píldora con glow cian/violeta). La cuenta es el RACK DE MÓDULOS:
+   marca es la barra de telemetría (retícula fina, scanline, marcas de
+   corte, perks como chips de spec con LED + índice mono) y el ala del
+   formulario es el módulo de acceso (marcas de corte en las esquinas,
+   labels mono, CTA de esquina técnica con glow cian/violeta). La cuenta
+   es el RACK DE MÓDULOS:
    barra lateral como bandeja de instrumentos (ítem activo con filete de
    acento + LED), paneles-tarjeta con hairlines y ticks de esquina, tabs
    móviles como control segmentado.
@@ -172,7 +173,7 @@
 }
 [data-design='moderntec'] .ec-auth .ec-auth-logo {
   width: 50px; height: 50px;
-  border-radius: var(--dz-radius-sm);
+  border-radius: 6px;
   background: linear-gradient(140deg, var(--dz-accent), var(--dz-accent-2));
   color: var(--dz-accent-ink);
   font-family: var(--dz-display);
@@ -180,6 +181,7 @@
   font-size: 24px;
   letter-spacing: -.02em;
   box-shadow: 0 0 0 1px var(--dz-line-strong), 0 12px 30px -14px color-mix(in srgb, var(--dz-accent) 65%, transparent);
+  transition: box-shadow .25s ease;
 }
 [data-design='moderntec'] .ec-auth .ec-auth-brand-name {
   font-family: var(--dz-display);
@@ -188,6 +190,17 @@
   line-height: 1;
   letter-spacing: -.02em;
   color: var(--dz-ink);
+  transition: color .2s ease;
+}
+/* Hover del enlace de marca: el nombre toma el acento y el logo enciende
+   su halo — micro-feedback de instrumento, sin mover layout. */
+[data-design='moderntec'] .ec-auth .ec-auth-brand-top:hover .ec-auth-brand-name,
+[data-design='moderntec'] .ec-auth .ec-auth-brand-top:focus-visible .ec-auth-brand-name {
+  color: var(--dz-accent-text);
+}
+[data-design='moderntec'] .ec-auth .ec-auth-brand-top:hover .ec-auth-logo,
+[data-design='moderntec'] .ec-auth .ec-auth-brand-top:focus-visible .ec-auth-logo {
+  box-shadow: 0 0 0 1px var(--dz-accent-line), 0 14px 34px -14px color-mix(in srgb, var(--dz-accent) 75%, transparent);
 }
 [data-design='moderntec'] .ec-auth .ec-auth-brand-copy {
   display: grid;
@@ -204,10 +217,20 @@
   text-transform: uppercase;
   color: var(--dz-accent-text);
 }
+/* LED de estado delante de la lectura: cuadradito de acento que respira
+   (misma cadencia que el tag del formulario). */
+[data-design='moderntec'] .ec-auth .ec-auth-rail::before {
+  content: "";
+  flex: none;
+  width: 6px; height: 6px;
+  border-radius: 1px;
+  background: var(--dz-accent);
+  box-shadow: 0 0 9px color-mix(in srgb, var(--dz-accent) 70%, transparent);
+}
 [data-design='moderntec'] .ec-auth .ec-auth-rail::after {
   content: "";
-  width: 46px; height: 6px;
-  border-radius: 3px;
+  width: 46px; height: 5px;
+  border-radius: 1px;
   background:
     linear-gradient(90deg, var(--dz-accent) 0 62%, var(--dz-line-strong) 62% 100%);
 }
@@ -289,7 +312,7 @@
   border-top: 1px solid var(--dz-line);
 }
 
-/* Ala del módulo: atornillada, labels mono, CTA píldora. */
+/* Ala del módulo: marcas de corte, labels mono, CTA de esquina técnica. */
 [data-design='moderntec'] .ec-auth .ec-auth-panel {
   position: relative;
   display: flex;
@@ -300,17 +323,22 @@
   color: var(--dz-ink);
   border-top: 1px solid var(--dz-line);
 }
-/* Tornillos del módulo: cuatro puntos de fijación. */
+/* Marcas de corte del módulo: cuatro L técnicas en las esquinas (misma
+   gramática que el card del modal en store-moderntec-auth.css). */
 [data-design='moderntec'] .ec-auth .ec-auth-panel::after {
   content: "";
   position: absolute; inset: 10px;
   pointer-events: none;
   background:
-    radial-gradient(circle 2.5px at 0 0, var(--dz-line-strong) 98%, transparent) 0 0 / 12px 12px no-repeat,
-    radial-gradient(circle 2.5px at 100% 0, var(--dz-line-strong) 98%, transparent) 100% 0 / 12px 12px no-repeat,
-    radial-gradient(circle 2.5px at 0 100%, var(--dz-line-strong) 98%, transparent) 0 100% / 12px 12px no-repeat,
-    radial-gradient(circle 2.5px at 100% 100%, var(--dz-line-strong) 98%, transparent) 100% 100% / 12px 12px no-repeat;
-  opacity: .7;
+    linear-gradient(var(--dz-accent-line) 1px, transparent 1px) 0 0 / 15px 1px no-repeat,
+    linear-gradient(90deg, var(--dz-accent-line) 1px, transparent 1px) 0 0 / 1px 15px no-repeat,
+    linear-gradient(var(--dz-accent-line) 1px, transparent 1px) 100% 0 / 15px 1px no-repeat,
+    linear-gradient(90deg, var(--dz-accent-line) 1px, transparent 1px) 100% 0 / 1px 15px no-repeat,
+    linear-gradient(var(--dz-accent-line) 1px, transparent 1px) 0 100% / 15px 1px no-repeat,
+    linear-gradient(90deg, var(--dz-accent-line) 1px, transparent 1px) 0 100% / 1px 15px no-repeat,
+    linear-gradient(var(--dz-accent-line) 1px, transparent 1px) 100% 100% / 15px 1px no-repeat,
+    linear-gradient(90deg, var(--dz-accent-line) 1px, transparent 1px) 100% 100% / 1px 15px no-repeat;
+  opacity: .8;
 }
 /* Hairline superior del módulo: filo de acento que se apaga en los bordes. */
 [data-design='moderntec'] .ec-auth .ec-auth-panel::before {
@@ -393,10 +421,18 @@
   position: absolute; inset: 0; z-index: 0;
   pointer-events: none;
   background:
+    /* Viñeta de chasis: el foco queda en el módulo central, los bordes
+       de la página se hunden (en "lumen" aclara = fuga de papel). */
+    radial-gradient(125% 82% at 50% 38%, transparent 52%, color-mix(in srgb, var(--dz-bg) 58%, transparent)),
+    /* Scanline de instrumento: filetes cada 4px, por debajo del umbral
+       de lectura — textura de panel, no de pantalla. */
+    repeating-linear-gradient(180deg, var(--dz-line-soft) 0 1px, transparent 1px 4px),
     linear-gradient(var(--dz-line-soft) 1px, transparent 1px) 0 0 / 72px 72px,
     linear-gradient(90deg, var(--dz-line-soft) 1px, transparent 1px) 0 0 / 72px 72px,
     radial-gradient(55% 38% at 50% -4%, color-mix(in srgb, var(--dz-accent) 10%, transparent), transparent 66%),
-    radial-gradient(40% 30% at 88% 108%, color-mix(in srgb, var(--dz-accent-2) 8%, transparent), transparent 68%);
+    radial-gradient(40% 30% at 88% 108%, color-mix(in srgb, var(--dz-accent-2) 8%, transparent), transparent 68%),
+    /* Tercer bloom abajo a la izquierda: cierra la diagonal de acentos. */
+    radial-gradient(46% 32% at 8% 106%, color-mix(in srgb, var(--dz-accent) 9%, transparent), transparent 66%);
   -webkit-mask-image: radial-gradient(120% 90% at 50% 0%, #000 30%, transparent 88%);
   mask-image: radial-gradient(120% 90% at 50% 0%, #000 30%, transparent 88%);
 }
@@ -411,19 +447,41 @@
     width: min(1120px, 100%);
     margin-top: clamp(26px, 4.5vw, 56px);
   }
-  /* Barra de telemetría: una sola línea, todo en flujo horizontal. */
+  /* Chasis más cerrado: 10px técnicos (0,4,0 — el --mt-rad-md de la
+     plantilla pierde el empate). */
+  .store-page[data-design='moderntec'] .ec-auth .ec-auth-shell { border-radius: 10px; }
+  /* Barra de telemetría: una sola línea, todo en flujo horizontal. La
+     regla inferior se endurece y gana una segunda línea suave (doble
+     filete de instrumento, visible en los tramos que la consola no pisa). */
   [data-design='moderntec'] .ec-auth .ec-auth-brand {
-    border-bottom: 1px solid var(--dz-line);
+    border-bottom: 1px solid var(--dz-line-strong);
+    box-shadow: inset 0 -1px 0 var(--dz-line-soft);
+  }
+  /* Marcas de corte de la barra: L técnicas en las esquinas superiores y
+     ticks verticales rematando la regla en los extremos. Van sobre el
+     velo (::after) pero debajo del contenido (z-index 1 del inner). */
+  [data-design='moderntec'] .ec-auth .ec-auth-brand::after {
+    background:
+      linear-gradient(var(--dz-accent-line) 1px, transparent 1px) 14px 14px / 18px 1px no-repeat,
+      linear-gradient(90deg, var(--dz-accent-line) 1px, transparent 1px) 14px 14px / 1px 18px no-repeat,
+      linear-gradient(var(--dz-accent-line) 1px, transparent 1px) right 14px top 14px / 18px 1px no-repeat,
+      linear-gradient(90deg, var(--dz-accent-line) 1px, transparent 1px) right 14px top 14px / 1px 18px no-repeat,
+      linear-gradient(90deg, var(--dz-accent-line) 1px, transparent 1px) 0 100% / 1px 9px no-repeat,
+      linear-gradient(90deg, var(--dz-accent-line) 1px, transparent 1px) 100% 100% / 1px 9px no-repeat,
+      radial-gradient(80% 55% at 84% -8%, color-mix(in srgb, var(--dz-accent) 24%, transparent), transparent 62%),
+      linear-gradient(170deg, var(--dz-veil-a), var(--dz-veil-b));
   }
   [data-design='moderntec'] .ec-auth .ec-auth-brand-inner {
     display: flex;
     align-items: center;
     flex-wrap: wrap;
-    gap: 4px clamp(14px, 2.2vw, 30px);
+    gap: 8px clamp(14px, 2.2vw, 30px);
     min-height: 98px;
     padding: 14px clamp(22px, 3vw, 44px) 52px;
   }
-  [data-design='moderntec'] .ec-auth .ec-auth-brand-top {
+  /* (0,4,0): en la barra el sello ya no roza la marca — el padding-right
+     que la plantilla reserva para la esquina superior vuelve a cero. */
+  .store-page[data-design='moderntec'] .ec-auth .ec-auth-brand-top {
     flex: none;
     padding-right: 0;
   }
@@ -437,6 +495,10 @@
     flex-wrap: wrap;
     gap: 2px clamp(10px, 1.6vw, 22px);
     max-width: none;
+    /* Bulkhead marca | telemetría: filete vertical que separa el logo
+       del bloque de lectura (índice + specs). */
+    border-left: 1px solid var(--dz-line-soft);
+    padding-left: clamp(16px, 2.4vw, 30px);
   }
   [data-design='moderntec'] .ec-auth .ec-auth-brand-copy > * { min-width: 0; }
   [data-design='moderntec'] .ec-auth .ec-auth-brand-text { display: none; }
@@ -454,7 +516,13 @@
     gap: 10px;
   }
   [data-design='moderntec'] .ec-auth .ec-auth-index li { opacity: .8; }
-  /* Specs → chips técnicos en línea dentro de la misma barra. */
+  /* Índice de modos como canales: filete separador entre entradas. */
+  [data-design='moderntec'] .ec-auth .ec-auth-index li + li {
+    border-left: 1px solid var(--dz-line-soft);
+    padding-left: 13px;
+  }
+  /* Specs → chips técnicos en línea dentro de la misma barra: radio 4px
+     (nada de píldora), LED + texto + índice de spec mono a la derecha. */
   [data-design='moderntec'] .ec-auth .ec-auth-perks {
     flex: none;
     display: flex;
@@ -466,26 +534,56 @@
     background: none;
   }
   [data-design='moderntec'] .ec-auth .ec-auth-perks li {
-    padding: 6px 11px 6px 9px;
+    padding: 6px 10px 6px 8px;
     border: 1px solid var(--dz-line);
-    border-bottom: 1px solid var(--dz-line);
-    border-radius: 999px;
+    border-radius: 4px;
     background: var(--dz-surface-2);
     font-size: 11.5px;
+    transition: color .2s, background .2s, border-color .2s, transform .2s;
+  }
+  /* El icono decorativo estorba en la lectura de spec: fuera, queda
+     LED + texto + número. */
+  [data-design='moderntec'] .ec-auth .ec-auth-perks li svg { display: none; }
+  /* ::after deja de ser el filete de acento y pasa a numerar la spec
+     (counter dzspec ya reseteado/incrementado en la capa base). */
+  [data-design='moderntec'] .ec-auth .ec-auth-perks li::after {
+    content: counter(dzspec, decimal-leading-zero);
+    position: static;
+    width: auto;
+    border-radius: 0;
+    background: none;
+    transform: none;
+    flex: none;
+    font: 600 9px/1 var(--dz-mono);
+    letter-spacing: .06em;
+    color: var(--dz-muted);
   }
   [data-design='moderntec'] .ec-auth .ec-auth-perks li:hover {
     background: var(--dz-accent-soft);
     border-color: var(--dz-accent-line);
+    color: var(--dz-ink);
     transform: translateY(-1px);
   }
-  [data-design='moderntec'] .ec-auth .ec-auth-perks li::after { display: none; }
+  [data-design='moderntec'] .ec-auth .ec-auth-perks li:hover::after { color: var(--dz-accent-text); }
+  [data-design='moderntec'] .ec-auth .ec-auth-perks li:hover::before { background: var(--dz-accent-2); }
   [data-design='moderntec'] .ec-auth .ec-auth-brand-foot {
     flex: none;
     border-top: 0;
     padding-top: 0;
     font-size: 8.5px;
   }
-  /* Consola: tarjeta flotante superpuesta al borde inferior de la barra. */
+  /* Coordenada de estado al pie de la barra: "//" en acento. */
+  [data-design='moderntec'] .ec-auth .ec-auth-brand-foot::before {
+    content: "// ";
+    color: var(--dz-accent-text);
+  }
+  /* Sello giratorio más chico: en la barra no compite con los chips. */
+  .store-page[data-design='moderntec'] .ec-auth .ec-auth-seal {
+    width: 68px; height: 68px;
+    top: 14px; right: 14px;
+  }
+  /* Consola: tarjeta flotante superpuesta al borde inferior de la barra.
+     Esquinas de módulo (8px), sombra dura de contacto + glow de acento. */
   [data-design='moderntec'] .ec-auth .ec-auth-panel {
     position: relative;
     z-index: 2;
@@ -495,21 +593,54 @@
     flex-direction: column;
     padding: clamp(22px, 3vw, 34px) clamp(24px, 3.4vw, 40px) clamp(24px, 3vw, 36px);
     border: 1px solid var(--dz-line-strong);
-    border-radius: var(--dz-radius-lg, 18px);
+    border-radius: 8px;
     background: var(--dz-surface);
-    box-shadow: 0 34px 90px -38px rgba(0, 0, 0, .75), 0 0 0 1px rgba(0, 0, 0, .25);
+    box-shadow:
+      0 34px 90px -38px rgba(0, 0, 0, .78),
+      0 12px 34px -14px rgba(0, 0, 0, .55),
+      0 0 0 1px rgba(0, 0, 0, .28),
+      0 0 80px -26px color-mix(in srgb, var(--dz-accent) 32%, transparent);
+  }
+  /* Cara del módulo: leve clarado arriba + scanline técnica muy tenue.
+     (0,4,0) — el fondo plano de la plantilla pierde el empate.) */
+  .store-page[data-design='moderntec'] .ec-auth .ec-auth-panel {
+    background-color: var(--dz-surface);
+    background-image:
+      linear-gradient(180deg, var(--dz-surface-2), var(--dz-surface) 170px),
+      repeating-linear-gradient(180deg, var(--dz-line-soft) 0 1px, transparent 1px 26px);
+  }
+  /* Filete de acento del borde superior, más presente que el de la
+     plantilla: pico de acento pleno al centro. */
+  .store-page[data-design='moderntec'] .ec-auth .ec-auth-panel::before {
+    background: linear-gradient(90deg,
+      transparent 0%,
+      var(--dz-accent-line) 30%,
+      var(--dz-accent) 50%,
+      var(--dz-accent-line) 70%,
+      transparent 100%);
+    opacity: .9;
   }
   [data-design='moderntec'] .ec-auth .ec-auth-back { margin-bottom: 20px; }
-  /* Head centrado: tag + título + subtítulo como cabecera del módulo. */
-  /* (0,4,0) para ganarle al border-bottom del head que fija la capa
-     override de la plantilla (store-moderntec-auth.css). */
-  [data-design='moderntec'][data-theme] .ec-auth .ec-auth-head {
+  /* Head centrado: tag + título + subtítulo como cabecera del módulo.
+     (0,5,0): el head de la plantilla fija border-bottom/padding en un
+     empate de 0,4,0 y su hoja carga después — hay que superarla. */
+  .store-page[data-design='moderntec'][data-theme] .ec-auth .ec-auth-head {
     justify-items: center;
     text-align: center;
     margin-bottom: 22px;
     padding-bottom: 20px;
-    border-bottom: 1px solid var(--dz-line);
+    /* Doble filete: regla fuerte + línea suave debajo = canal de lectura. */
+    border-bottom: 1px solid var(--dz-line-strong);
+    box-shadow: 0 1px 0 var(--dz-line-soft);
   }
+  /* El tag se lee como etiqueta de panel: chip técnico con filete. */
+  [data-design='moderntec'] .ec-auth .ec-auth-tag {
+    padding: 5px 10px 5px 8px;
+    border: 1px solid var(--dz-line-strong);
+    border-radius: 3px;
+    background: var(--dz-surface-2);
+  }
+  [data-design='moderntec'] .ec-auth .ec-auth-sub { max-width: 46ch; }
   /* Campos en dos columnas dentro de la consola: email+contraseña lado
      a lado (register mete el par nombre/apellido en .ecaf-grid, que
      también va lado a lado). */
@@ -523,6 +654,16 @@
   [data-design='moderntec'] .ec-auth .ecaf-form > .ecaf-submit { grid-column: 1 / -1; }
   [data-design='moderntec'] .ec-auth .ecaf-form > .sp-field:only-of-type { grid-column: 1 / -1; }
   [data-design='moderntec'] .ec-auth .ec-auth-trust { justify-content: center; }
+  /* Confianza como remate del módulo: filetes cortos a ambos lados del
+     grupo (simétricos — el justify-content:center los equilibra). */
+  [data-design='moderntec'] .ec-auth .ec-auth-trust::before,
+  [data-design='moderntec'] .ec-auth .ec-auth-trust::after {
+    content: "";
+    flex: none;
+    width: 22px; height: 1px;
+    margin-inline: 8px;
+    background: var(--dz-line-strong);
+  }
 }
 
 /* ---------- Controles (compartidos auth + cuenta) ---------- */
@@ -572,7 +713,8 @@
   box-shadow: inset 0 0 0 40px var(--dz-surface-2);
 }
 
-/* CTA píldora: acento + glow. Ghost: hairline que enciende el filo. */
+/* CTA base: acento + glow (la auth lo baja a esquina técnica más abajo;
+   la cuenta conserva la píldora). Ghost: hairline que enciende el filo. */
 [data-design='moderntec'][data-theme] :is(.ec-auth, .ec-account) :is(.ecaf-submit, .ec-btn-primary) {
   min-height: 50px;
   border: 1px solid transparent;
@@ -617,6 +759,10 @@
   color: var(--dz-accent-text);
   background: var(--dz-accent-soft);
 }
+
+/* Los controles del formulario (.ecaf-*) los posee la hoja dedicada
+   store-moderntec-auth.css — aquí no se duplican para no depender del
+   orden de carga de los imports dinámicos. */
 
 /* Formulario compartido (StoreAuthForm). */
 [data-design='moderntec'] .ec-auth .ecaf { gap: 15px; }
@@ -695,6 +841,11 @@
   [data-design='moderntec'] .ec-auth .ec-auth-perks li:nth-child(2)::before { animation-delay: -.9s; }
   [data-design='moderntec'] .ec-auth .ec-auth-perks li:nth-child(3)::before { animation-delay: -1.7s; }
   [data-design='moderntec'] .ec-auth .ec-auth-perks li:nth-child(4)::before { animation-delay: -2.3s; }
+  /* LED de la lectura de la barra: mismo pulso, fase intermedia. */
+  [data-design='moderntec'] .ec-auth .ec-auth-rail::before {
+    animation: dz-auth-led 2.8s ease-in-out infinite;
+    animation-delay: -.55s;
+  }
 
   /* Entrada en cascada: primero el módulo entero, después la marca y
      por último el módulo de acceso, siempre con delays crecientes. */
