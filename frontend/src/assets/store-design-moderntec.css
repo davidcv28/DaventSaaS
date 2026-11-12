@@ -1248,3 +1248,335 @@
     animation-duration: .001ms !important;
   }
 }
+
+/* ==========================================================================
+   ARQUETIPOS — navbar command-palette-nav / cuenta sidebar / tracking minimal
+   Selectores keyed en data-nav / data-account / data-tracking (matriz
+   storeArchetypes.js). CSS-only sobre el chrome compartido.
+   ========================================================================== */
+
+/* ---------- NAVBAR · command-palette-nav ----------
+   El buscador es el héroe del header: barra de comando ancha centrada con
+   hint ⌘K, tipografía mono de consola y las secciones degradadas a índice
+   compacto a la derecha. El drawer lateral adopta el look de paleta. */
+.store-page[data-design='moderntec'][data-nav='command-palette-nav'] .sp-top-inner {
+  gap: clamp(10px, 1.6vw, 18px);
+}
+.store-page[data-design='moderntec'][data-nav='command-palette-nav'] .sp-brand .sp-name {
+  font-family: var(--st-f-display-family, 'Outfit', 'Space Grotesk', system-ui, sans-serif);
+  font-weight: 700;
+  letter-spacing: -.03em;
+}
+.store-page[data-design='moderntec'][data-nav='command-palette-nav'] .sp-top-links {
+  gap: 2px;
+  margin-left: auto;
+}
+.store-page[data-design='moderntec'][data-nav='command-palette-nav'] .sp-top-links a {
+  min-height: 44px;
+  padding: 8px 11px;
+  border-radius: 8px;
+  font-family: var(--st-f-eyebrow-family, 'JetBrains Mono', ui-monospace, monospace);
+  font-size: 10.5px; font-weight: 600;
+  letter-spacing: .12em; text-transform: uppercase;
+}
+.store-page[data-design='moderntec'][data-nav='command-palette-nav'] .sp-top-links a.router-link-exact-active,
+.store-page[data-design='moderntec'][data-nav='command-palette-nav'] .sp-top-links a.router-link-active {
+  background: color-mix(in srgb, var(--store-accent, #3dd6ff) 14%, transparent);
+  color: var(--store-accent, #3dd6ff);
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--store-accent, #3dd6ff) 40%, transparent);
+}
+/* Barra de comando: ocupa el centro del header como input de paleta. */
+.store-page[data-design='moderntec'][data-nav='command-palette-nav'] .sp-search-top {
+  flex: 1 1 auto;
+  max-width: 460px;
+  margin-inline: auto;
+  border-radius: 10px;
+  border-color: color-mix(in srgb, var(--sp-line, rgba(255,255,255,.15)) 80%, transparent);
+  background: color-mix(in srgb, var(--sp-card, #0E141E) 82%, transparent);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  font-family: var(--st-f-eyebrow-family, 'JetBrains Mono', ui-monospace, monospace);
+}
+.store-page[data-design='moderntec'][data-nav='command-palette-nav'] .sp-search-top input {
+  font-family: inherit;
+  font-size: 13px;
+  letter-spacing: .02em;
+}
+.store-page[data-design='moderntec'][data-nav='command-palette-nav'] .sp-search-top input::placeholder {
+  font-family: inherit;
+  letter-spacing: .02em;
+}
+.store-page[data-design='moderntec'][data-nav='command-palette-nav'] .sp-search-top:focus-within {
+  border-color: var(--store-accent, #3dd6ff);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--store-accent, #3dd6ff) 22%, transparent);
+}
+/* Hint ⌘K sobre el wrapper cuando el buscador está abierto en desktop. */
+@media (min-width: 901px) {
+  .store-page[data-design='moderntec'][data-nav='command-palette-nav'] .sp-search-top.open::after {
+    content: '⌘K';
+    position: absolute;
+    right: 12px;
+    top: 50%;
+    transform: translateY(-50%);
+    font-family: var(--st-f-eyebrow-family, 'JetBrains Mono', ui-monospace, monospace);
+    font-size: 10px; font-weight: 700;
+    letter-spacing: .08em;
+    color: var(--sp-muted, #93A1B5);
+    border: 1px solid var(--sp-line, rgba(255,255,255,.16));
+    border-radius: 5px;
+    padding: 3px 6px;
+    pointer-events: none;
+  }
+  .store-page[data-design='moderntec'][data-nav='command-palette-nav'] .sp-search-top.open input { padding-right: 52px; }
+}
+.store-page[data-design='moderntec'][data-nav='command-palette-nav'] .sp-icon-btn {
+  border-radius: 8px;
+}
+/* Drawer = paleta: panel oscuro con hairlines, items mono indexados. */
+.store-page[data-design='moderntec'][data-nav='command-palette-nav'] .sp-drawer.sp-navdrawer {
+  border-left: 1px solid var(--sp-line, rgba(255,255,255,.12));
+  background: color-mix(in srgb, var(--sp-card, #0E141E) 97%, transparent);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+}
+.store-page[data-design='moderntec'][data-nav='command-palette-nav'] .sp-drawer.sp-navdrawer .sp-nav-item {
+  border-radius: 8px;
+  font-family: var(--st-f-eyebrow-family, 'JetBrains Mono', ui-monospace, monospace);
+  font-size: 12.5px; font-weight: 600;
+  letter-spacing: .06em; text-transform: uppercase;
+  min-height: 46px;
+}
+.store-page[data-design='moderntec'][data-nav='command-palette-nav'] .sp-drawer.sp-navdrawer .sp-nav-item.is-on,
+.store-page[data-design='moderntec'][data-nav='command-palette-nav'] .sp-drawer.sp-navdrawer .sp-nav-item.router-link-active,
+.store-page[data-design='moderntec'][data-nav='command-palette-nav'] .sp-drawer.sp-navdrawer .sp-nav-item.router-link-exact-active {
+  background: color-mix(in srgb, var(--store-accent, #3dd6ff) 12%, transparent);
+  color: var(--store-accent, #3dd6ff);
+  box-shadow: inset 2px 0 0 var(--store-accent, #3dd6ff);
+}
+.store-page[data-design='moderntec'][data-nav='command-palette-nav'] .sp-drawer.sp-navdrawer .sp-drawer-action {
+  border-radius: 8px;
+  font-family: var(--st-f-eyebrow-family, 'JetBrains Mono', ui-monospace, monospace);
+  font-size: 11px; font-weight: 600;
+  letter-spacing: .12em; text-transform: uppercase;
+  min-height: 46px;
+}
+@media (max-width: 900px) {
+  /* En móvil el header se compacta: marca + acciones, el buscador vive en
+     el toggle de lupa (comportamiento del chrome). */
+  .store-page[data-design='moderntec'][data-nav='command-palette-nav'] .sp-top-links { display: none; }
+}
+
+/* ---------- CUENTA · account-sidebar ----------
+   Ya implementado por la piel NODO (sidebar-rack ≥1024 + tabs segmentadas
+   en móvil). Acá se afirma el contrato del arquetipo: la barra lateral es
+   el índice del panel y el contenido va a la derecha. */
+@media (min-width: 1024px) {
+  .store-page[data-design='moderntec'][data-account='account-sidebar'] .ec-account .acc-shell {
+    grid-template-columns: 288px minmax(0, 1fr);
+    gap: 30px;
+    align-items: start;
+  }
+  .store-page[data-design='moderntec'][data-account='account-sidebar'] .ec-account .acc-side {
+    position: sticky;
+    top: calc(var(--sp-top-h, 68px) + 16px);
+  }
+  .store-page[data-design='moderntec'][data-account='account-sidebar'] .ec-account :is(.acc-mhead, .acc-tabs) { display: none; }
+}
+/* Ítems del índice: lectura de módulo con índice mono. */
+.store-page[data-design='moderntec'][data-account='account-sidebar'] .ec-account .acc-navitem {
+  font-family: var(--st-f-body-family, 'Inter', system-ui, sans-serif);
+  font-size: 13.5px;
+}
+.store-page[data-design='moderntec'][data-account='account-sidebar'] .ec-account .acc-navitem .acc-idx {
+  font-family: var(--st-f-eyebrow-family, 'JetBrains Mono', ui-monospace, monospace);
+}
+.store-page[data-design='moderntec'][data-account='account-sidebar'] .ec-account .acc-navitem.is-on {
+  box-shadow: inset 2px 0 0 var(--store-accent, #3dd6ff);
+}
+/* Stats como filas de spec dentro del panel. */
+.store-page[data-design='moderntec'][data-account='account-sidebar'] .ec-account .acc-stats {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: 8px;
+}
+.store-page[data-design='moderntec'][data-account='account-sidebar'] .ec-account .acc-stat {
+  border: 1px solid var(--dz-line, rgba(255,255,255,.1));
+  border-radius: var(--dz-radius-sm, 10px);
+  background: var(--dz-surface-2, rgba(255,255,255,.04));
+  padding: 12px 14px;
+  font-family: var(--dz-mono, ui-monospace, monospace);
+  font-size: 10.5px; font-weight: 600;
+  letter-spacing: .08em; text-transform: uppercase;
+  color: var(--dz-muted, inherit);
+}
+
+/* ---------- SEGUIMIENTO · tracking-minimal ----------
+   Lectura de consola: una sola columna angosta, hairlines en vez de
+   tarjetas, metadatos en mono y el stepper como línea de progreso fina.
+   La card de estado va primero y sin marco — solo tipografía y datos. */
+.store-page[data-design='moderntec'][data-tracking='tracking-minimal'] .ec-track {
+  max-width: 720px;
+  margin-inline: auto;
+  gap: 0;
+}
+.store-page[data-design='moderntec'][data-tracking='tracking-minimal'] .ec-track > * { margin-block: 0; }
+.store-page[data-design='moderntec'][data-tracking='tracking-minimal'] .ec-track-head {
+  padding-block: 8px 20px;
+  border-bottom: 1px solid var(--sp-line, rgba(255,255,255,.12));
+  margin-bottom: 8px;
+}
+.store-page[data-design='moderntec'][data-tracking='tracking-minimal'] .ec-track-title {
+  font-family: var(--st-f-display-family, 'Outfit', 'Space Grotesk', system-ui, sans-serif);
+  font-weight: 700;
+  font-size: clamp(26px, 3.4vw, 38px);
+  letter-spacing: -.03em;
+  line-height: 1.05;
+}
+.store-page[data-design='moderntec'][data-tracking='tracking-minimal'] .ec-track-code {
+  font-family: var(--st-f-eyebrow-family, 'JetBrains Mono', ui-monospace, monospace);
+  font-size: 10.5px; letter-spacing: .14em; text-transform: uppercase;
+}
+.store-page[data-design='moderntec'][data-tracking='tracking-minimal'] .ec-track-help {
+  font-family: var(--st-f-eyebrow-family, 'JetBrains Mono', ui-monospace, monospace);
+  font-size: 10.5px; letter-spacing: .06em;
+}
+.store-page[data-design='moderntec'][data-tracking='tracking-minimal'] .ec-track-card {
+  border: 0;
+  border-bottom: 1px solid var(--sp-line, rgba(255,255,255,.1));
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+  padding: clamp(18px, 2.4vw, 26px) 0;
+  gap: 12px;
+}
+.store-page[data-design='moderntec'][data-tracking='tracking-minimal'] .ec-track-card:last-child {
+  border-bottom: 0;
+}
+.store-page[data-design='moderntec'][data-tracking='tracking-minimal'] .ec-track-h2 {
+  font-family: var(--st-f-eyebrow-family, 'JetBrains Mono', ui-monospace, monospace);
+  font-size: 10.5px; font-weight: 700;
+  letter-spacing: .2em; text-transform: uppercase;
+  color: var(--sp-muted, inherit);
+}
+.store-page[data-design='moderntec'][data-tracking='tracking-minimal'] .ec-track-status-row {
+  gap: 12px;
+}
+.store-page[data-design='moderntec'][data-tracking='tracking-minimal'] .ec-track-status {
+  border-radius: 6px;
+  padding: 6px 12px;
+  font-family: var(--st-f-eyebrow-family, 'JetBrains Mono', ui-monospace, monospace);
+  font-size: 10.5px; font-weight: 700;
+  letter-spacing: .14em; text-transform: uppercase;
+}
+.store-page[data-design='moderntec'][data-tracking='tracking-minimal'] .ec-track-exp {
+  font-family: var(--st-f-eyebrow-family, 'JetBrains Mono', ui-monospace, monospace);
+  font-size: 11px; letter-spacing: .08em;
+}
+.store-page[data-design='moderntec'][data-tracking='tracking-minimal'] .ec-track-muted {
+  font-family: var(--st-f-body-family, 'Inter', system-ui, sans-serif);
+  font-size: 13px;
+}
+/* Stepper → barra de progreso: una línea fina con marcas por etapa. */
+.store-page[data-design='moderntec'][data-tracking='tracking-minimal'] .ec-stepper {
+  display: flex;
+  gap: 0;
+  margin-top: 10px;
+}
+.store-page[data-design='moderntec'][data-tracking='tracking-minimal'] .ec-step {
+  flex: 1 1 0;
+  display: flex; flex-direction: column; align-items: flex-start;
+  gap: 8px;
+  min-width: 0;
+  position: relative;
+  padding-top: 14px;
+}
+.store-page[data-design='moderntec'][data-tracking='tracking-minimal'] .ec-step::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 2px;
+  background: var(--sp-line, rgba(255,255,255,.14));
+}
+.store-page[data-design='moderntec'][data-tracking='tracking-minimal'] .ec-step.is-done::before {
+  background: var(--sp-success, #34E0A1);
+}
+.store-page[data-design='moderntec'][data-tracking='tracking-minimal'] .ec-step.is-current::before {
+  background: var(--store-accent, #3dd6ff);
+}
+.store-page[data-design='moderntec'][data-tracking='tracking-minimal'] .ec-step::after { display: none; }
+.store-page[data-design='moderntec'][data-tracking='tracking-minimal'] .ec-step-dot {
+  display: none;
+}
+.store-page[data-design='moderntec'][data-tracking='tracking-minimal'] .ec-step-label {
+  font-family: var(--st-f-eyebrow-family, 'JetBrains Mono', ui-monospace, monospace);
+  font-size: 9px; font-weight: 600;
+  letter-spacing: .14em; text-transform: uppercase;
+  text-align: left;
+  color: var(--sp-muted, inherit);
+}
+.store-page[data-design='moderntec'][data-tracking='tracking-minimal'] .ec-step.is-done .ec-step-label,
+.store-page[data-design='moderntec'][data-tracking='tracking-minimal'] .ec-step.is-current .ec-step-label {
+  color: var(--sp-ink, inherit);
+}
+.store-page[data-design='moderntec'][data-tracking='tracking-minimal'] .ec-track-step-date {
+  font-family: var(--st-f-eyebrow-family, 'JetBrains Mono', ui-monospace, monospace);
+  font-size: 9px; letter-spacing: .06em;
+}
+.store-page[data-design='moderntec'][data-tracking='tracking-minimal'] .ec-track-chips {
+  display: flex; flex-wrap: wrap; gap: 6px;
+}
+.store-page[data-design='moderntec'][data-tracking='tracking-minimal'] .ec-track-chip {
+  border-radius: 5px;
+  font-family: var(--st-f-eyebrow-family, 'JetBrains Mono', ui-monospace, monospace);
+  font-size: 9.5px; font-weight: 600;
+  letter-spacing: .12em; text-transform: uppercase;
+}
+.store-page[data-design='moderntec'][data-tracking='tracking-minimal'] .ec-timeline {
+  border-left: 1px solid var(--sp-line, rgba(255,255,255,.14));
+  padding-left: 16px;
+  gap: 14px;
+}
+.store-page[data-design='moderntec'][data-tracking='tracking-minimal'] .ec-tl-dot {
+  border-radius: 50%;
+  width: 7px; height: 7px;
+  background: var(--store-accent, #3dd6ff);
+}
+.store-page[data-design='moderntec'][data-tracking='tracking-minimal'] .ec-tl-date {
+  font-family: var(--st-f-eyebrow-family, 'JetBrains Mono', ui-monospace, monospace);
+  font-size: 9.5px; letter-spacing: .1em; text-transform: uppercase;
+}
+.store-page[data-design='moderntec'][data-tracking='tracking-minimal'] .ec-receipt {
+  border-radius: 8px;
+  border: 1px solid var(--sp-line, rgba(255,255,255,.14));
+}
+.store-page[data-design='moderntec'][data-tracking='tracking-minimal'] .ec-track-note,
+.store-page[data-design='moderntec'][data-tracking='tracking-minimal'] .ec-track-skel {
+  border-radius: 8px;
+}
+@media (max-width: 560px) {
+  .store-page[data-design='moderntec'][data-tracking='tracking-minimal'] .ec-track {
+    max-width: none;
+  }
+  .store-page[data-design='moderntec'][data-tracking='tracking-minimal'] .ec-step-label {
+    font-size: 8px; letter-spacing: .08em;
+  }
+}
+
+/* Shop-nav: índice de módulos — chips mono con filete de acento. */
+.store-page[data-design='moderntec'][data-nav='command-palette-nav'] .sp-shop-nav .sp-shop-nav-links {
+  gap: 4px;
+}
+.store-page[data-design='moderntec'][data-nav='command-palette-nav'] .sp-shop-nav .sp-shop-nav-links a {
+  min-height: 44px;
+  padding: 8px 12px;
+  border-radius: 8px;
+  font-family: var(--st-f-eyebrow-family, 'JetBrains Mono', ui-monospace, monospace);
+  font-size: 10.5px; font-weight: 600;
+  letter-spacing: .12em; text-transform: uppercase;
+}
+.store-page[data-design='moderntec'][data-nav='command-palette-nav'] .sp-shop-nav .sp-shop-nav-links a.is-current,
+.store-page[data-design='moderntec'][data-nav='command-palette-nav'] .sp-shop-nav .sp-shop-nav-links a.router-link-exact-active {
+  background: color-mix(in srgb, var(--store-accent, #3dd6ff) 14%, transparent);
+  color: var(--store-accent, #3dd6ff);
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--store-accent, #3dd6ff) 40%, transparent);
+}

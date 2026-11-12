@@ -888,3 +888,429 @@
     animation-duration: .001ms !important;
   }
 }
+
+/* ==========================================================================
+   ARQUETIPOS — navbar bottom-tabbar / cuenta bento / tracking status-hero
+   ========================================================================== */
+
+/* Los tokens --dz-* de la piel viven en .ec-auth/.ec-account: el seguimiento
+   los necesita propios (misma paleta, mismas variantes día/noche). */
+[data-design='gimnasio'] .ec-track {
+  --dz-bg: #0A0B08;
+  --dz-surface: #151711;
+  --dz-surface-2: #1A1C15;
+  --dz-ink: #F4F1E8;
+  --dz-ink-2: #C9C7BC;
+  --dz-muted: #9E9C92;
+  --dz-line: #2A2D24;
+  --dz-line-strong: #4A4D40;
+  --dz-accent: color-mix(in srgb, var(--store-accent-bright, var(--store-accent, #C8F169)) 78%, #F4F1E8);
+  --dz-accent-ink: color-mix(in srgb, var(--store-accent-ink, #4d7c0f) 45%, #0A0B08);
+  --dz-accent-text: color-mix(in srgb, var(--store-accent, #C8F169) 55%, var(--dz-ink));
+  --dz-ok: #7FD6A0;
+  --dz-danger: #F0958A;
+  --dz-display: var(--st-f-display-family, 'Barlow Condensed', 'Arial Narrow', Impact, sans-serif);
+  --dz-body: var(--st-f-body-family, 'Inter', system-ui, -apple-system, 'Segoe UI', sans-serif);
+  --dz-mono: var(--st-f-eyebrow-family, 'JetBrains Mono', ui-monospace, 'SFMono-Regular', Consolas, monospace);
+  --dz-radius: 0px;
+  --sp-bg: var(--dz-bg);
+  --sp-card: var(--dz-surface);
+  --sp-card-solid: var(--dz-surface);
+  --sp-surface: var(--dz-surface-2);
+  --sp-soft: var(--dz-surface-2);
+  --sp-ink: var(--dz-ink);
+  --sp-ink-2: var(--dz-ink-2);
+  --sp-muted: var(--dz-muted);
+  --sp-line: var(--dz-line);
+  --sp-radius: var(--dz-radius);
+  --sp-accent-text: var(--dz-accent-text);
+  --sp-on-band: var(--store-accent-soft, #F7FEE7);
+  --sp-success: var(--dz-ok);
+  --sp-danger: var(--dz-danger);
+  color-scheme: dark;
+}
+[data-design='gimnasio'][data-theme='light'] .ec-track {
+  --dz-bg: #F4F1E8;
+  --dz-surface: #FBF9F2;
+  --dz-surface-2: #EAE6DA;
+  --dz-ink: #0A0B08;
+  --dz-ink-2: #3A382F;
+  --dz-muted: #55534B;
+  --dz-line: #C9C5B8;
+  --dz-line-strong: #A39E8E;
+  --dz-accent: color-mix(in srgb, var(--store-accent-ink, var(--store-accent, #C8F169)) 76%, #0A0B08);
+  --dz-accent-ink: var(--store-accent-soft, #F7FEE7);
+  --dz-accent-text: color-mix(in srgb, var(--store-accent-ink, var(--store-accent, #8FBF2E)) 80%, #0A0B08);
+  --dz-ok: #14532d;
+  --dz-danger: #a3231c;
+  --sp-accent-text: var(--dz-accent-text);
+  --sp-on-band: var(--store-accent-soft, #F7FEE7);
+  --sp-success: var(--dz-ok);
+  --sp-danger: var(--dz-danger);
+  color-scheme: light;
+}
+
+/* ---------- NAVBAR · bottom-tabbar ----------
+   Header mínimo arriba (marca + secciones condensadas + acciones) y la tab
+   bar inferior del chrome como consola de la sala: esquinas rectas, mono
+   condensado, activo en lima. El tabbar lo monta el layout cuando
+   mobile.nav='bottom' (default); si el tema lo fija en 'top' el drawer
+   lateral toma el look de la misma barra. */
+.store-page[data-design='gimnasio'][data-nav='bottom-tabbar'] {
+  --sp-top-h: 58px;
+}
+.store-page[data-design='gimnasio'][data-nav='bottom-tabbar'] .sp-top .sp-top-inner {
+  gap: 14px;
+}
+.store-page[data-design='gimnasio'][data-nav='bottom-tabbar'] .sp-top .sp-brand .sp-name {
+  font-family: var(--st-f-display-family, 'Barlow Condensed', 'Arial Narrow', Impact, sans-serif);
+  font-weight: 800;
+  font-size: 19px;
+  letter-spacing: .04em;
+  text-transform: uppercase;
+}
+.store-page[data-design='gimnasio'][data-nav='bottom-tabbar'] .sp-top .sp-top-links {
+  gap: 2px;
+}
+.store-page[data-design='gimnasio'][data-nav='bottom-tabbar'] .sp-top .sp-top-links a {
+  min-height: 44px;
+  padding: 8px 12px;
+  border-radius: 0;
+  font-family: var(--st-f-eyebrow-family, 'JetBrains Mono', ui-monospace, monospace);
+  font-size: 10.5px; font-weight: 600;
+  letter-spacing: .14em; text-transform: uppercase;
+}
+.store-page[data-design='gimnasio'][data-nav='bottom-tabbar'] .sp-top .sp-top-links a.router-link-exact-active,
+.store-page[data-design='gimnasio'][data-nav='bottom-tabbar'] .sp-top .sp-top-links a.router-link-active {
+  box-shadow: inset 0 -3px 0 var(--store-accent, #C8F169);
+}
+.store-page[data-design='gimnasio'][data-nav='bottom-tabbar'] .sp-search-top {
+  border-radius: 0;
+}
+.store-page[data-design='gimnasio'][data-nav='bottom-tabbar'] .sp-burger {
+  border-radius: 0;
+}
+/* Tab bar: placa de la sala — filete superior grueso, celdas condensadas,
+   activo con filete lima (el ::before del chrome se reemplaza por barra
+   inferior completa del ancho de la celda). */
+.store-page[data-design='gimnasio'][data-nav='bottom-tabbar'] .sp-tabbar {
+  border-top: 2px solid color-mix(in srgb, var(--sp-ink, #F4F1E8) 70%, transparent);
+  background: color-mix(in srgb, var(--sp-card, #151711) 96%, transparent);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+}
+.store-page[data-design='gimnasio'][data-nav='bottom-tabbar'] .sp-tab {
+  min-height: 56px;
+  border-radius: 0;
+  font-family: var(--st-f-eyebrow-family, 'JetBrains Mono', ui-monospace, monospace);
+  font-size: 9px; font-weight: 600;
+  letter-spacing: .14em; text-transform: uppercase;
+  color: var(--sp-muted, #9E9C92);
+}
+.store-page[data-design='gimnasio'][data-nav='bottom-tabbar'] .sp-tab.active {
+  color: var(--store-accent, #C8F169);
+}
+.store-page[data-design='gimnasio'][data-nav='bottom-tabbar'] .sp-tab.active::before {
+  top: auto; bottom: 0; left: 0; right: 0;
+  width: auto; height: 3px;
+  transform: none;
+  background: var(--store-accent, #C8F169);
+}
+/* Sheet "Más": misma placa, tiradores cuadrados. */
+.store-page[data-design='gimnasio'][data-nav='bottom-tabbar'] .sp-more-sheet {
+  border-radius: 0;
+}
+.store-page[data-design='gimnasio'][data-nav='bottom-tabbar'] .sp-more-link {
+  border-radius: 0;
+  font-family: var(--st-f-eyebrow-family, 'JetBrains Mono', ui-monospace, monospace);
+  font-size: 13px; font-weight: 600;
+  letter-spacing: .1em; text-transform: uppercase;
+  min-height: 52px;
+}
+.store-page[data-design='gimnasio'][data-nav='bottom-tabbar'] .sp-more-link.is-wa {
+  font-family: var(--st-f-body-family, 'Inter', system-ui, sans-serif);
+  letter-spacing: normal; text-transform: none;
+}
+/* Drawer lateral (cuando el tema usa mobile.nav='top'): planilla de sala. */
+.store-page[data-design='gimnasio'][data-nav='bottom-tabbar'] .sp-drawer.sp-navdrawer .sp-nav-item {
+  border-radius: 0;
+  font-family: var(--st-f-display-family, 'Barlow Condensed', 'Arial Narrow', Impact, sans-serif);
+  font-size: 22px; font-weight: 700;
+  letter-spacing: .02em; text-transform: uppercase;
+  min-height: 52px;
+}
+
+/* ---------- CUENTA · account-bento ----------
+   La bitácora se convierte en PIZARRA DE SESIÓN: sin sidebar — la
+   identidad + stats van en tiles condensados arriba y las tabs quedan
+   como fila compacta de celdas. Orientada a acciones, como el home del
+   gimnasio. */
+.store-page[data-design='gimnasio'][data-account='account-bento'] .ec-account .acc-side { display: none; }
+.store-page[data-design='gimnasio'][data-account='account-bento'] .ec-account .acc-shell {
+  grid-template-columns: minmax(0, 1fr);
+  gap: 16px;
+}
+/* mhead+tabs visibles en TODOS los anchos (el sidebar nunca aparece). */
+.store-page[data-design='gimnasio'][data-account='account-bento'] .ec-account .acc-main { gap: 14px; }
+/* Stats como tiles del bento: celdas de planilla con icono + dato. */
+.store-page[data-design='gimnasio'][data-account='account-bento'] .ec-account .acc-stats {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 8px;
+  margin-top: 12px;
+}
+.store-page[data-design='gimnasio'][data-account='account-bento'] .ec-account .acc-stat {
+  display: flex; align-items: center; gap: 10px;
+  min-height: 54px;
+  padding: 10px 14px;
+  border: 1px solid var(--dz-line-strong, rgba(0,0,0,.2));
+  border-top: 3px solid var(--store-accent, #C8F169);
+  border-radius: var(--dz-radius, 0px);
+  background: var(--dz-surface, #151711);
+  font-family: var(--dz-body, inherit);
+  font-size: 12px; font-weight: 600;
+  color: var(--dz-ink-2, inherit);
+}
+.store-page[data-design='gimnasio'][data-account='account-bento'] .ec-account .acc-stat svg {
+  color: var(--store-accent, #C8F169); flex: none;
+}
+/* Cabecera bento: la identidad en una celda ancha y la acción de salir en
+   otra — patrón de tablero, no de barra lateral. */
+.store-page[data-design='gimnasio'][data-account='account-bento'] .ec-account .acc-mhead {
+  display: grid;
+  grid-template-columns: 44px minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 12px 16px;
+  padding: 16px 18px;
+  border: 1px solid var(--dz-line-strong, rgba(0,0,0,.2));
+  border-top: 6px solid var(--store-accent, #C8F169);
+  border-radius: var(--dz-radius, 0px);
+  background: var(--dz-surface, #151711);
+}
+.store-page[data-design='gimnasio'][data-account='account-bento'] .ec-account .acc-mhead .acc-avatar--sm {
+  width: 48px; height: 48px; font-size: 18px;
+}
+.store-page[data-design='gimnasio'][data-account='account-bento'] .ec-account .acc-mhead-meta strong {
+  font-family: var(--dz-display, inherit);
+  font-weight: 700; font-size: 22px;
+  letter-spacing: .02em; text-transform: uppercase;
+  color: var(--dz-ink, inherit);
+}
+.store-page[data-design='gimnasio'][data-account='account-bento'] .ec-account .acc-mhead-meta small {
+  font-family: var(--dz-mono, ui-monospace, monospace);
+  font-size: 10.5px; letter-spacing: .06em;
+}
+.store-page[data-design='gimnasio'][data-account='account-bento'] .ec-account .acc-mhead .acc-icon-btn {
+  min-width: 44px; min-height: 44px;
+}
+/* Tabs compactas: fila de celdas condensadas con filete lima inferior en
+   la activa (ya era el look del diseño; acá se afirma para todos los
+   anchos, incluido escritorio donde antes mandaba el sidebar). */
+.store-page[data-design='gimnasio'][data-account='account-bento'] .ec-account .acc-tabs {
+  display: flex;
+}
+@media (min-width: 1024px) {
+  .store-page[data-design='gimnasio'][data-account='account-bento'] .ec-account .acc-side { display: none; }
+  .store-page[data-design='gimnasio'][data-account='account-bento'] .ec-account :is(.acc-mhead, .acc-tabs) { display: flex; }
+  .store-page[data-design='gimnasio'][data-account='account-bento'] .ec-account .acc-mhead { display: grid; }
+  .store-page[data-design='gimnasio'][data-account='account-bento'] .ec-account .acc-tabs {
+    flex-wrap: wrap;
+    border-bottom: 1px solid var(--dz-line-strong, rgba(0,0,0,.2));
+  }
+  .store-page[data-design='gimnasio'][data-account='account-bento'] .ec-account .acc-tab {
+    flex: 1 1 auto;
+    justify-content: center;
+  }
+}
+@media (max-width: 640px) {
+  .store-page[data-design='gimnasio'][data-account='account-bento'] .ec-account .acc-mhead {
+    grid-template-columns: 44px minmax(0, 1fr) 44px;
+    padding: 14px 14px;
+  }
+  .store-page[data-design='gimnasio'][data-account='account-bento'] .ec-account .acc-mhead-meta strong { font-size: 19px; }
+  .store-page[data-design='gimnasio'][data-account='account-bento'] .ec-account .acc-stat {
+    min-height: 48px; padding: 8px 12px; font-size: 11.5px;
+  }
+}
+
+/* ---------- SEGUIMIENTO · tracking-status-hero ----------
+   La card de estado es el HERO de la página: placa negra con filete lima,
+   estado en condensada gigante y ETA/fecha como lectura de marcador. El
+   stepper se convierte en barra segmentada (una celda por etapa). */
+.store-page[data-design='gimnasio'][data-tracking='tracking-status-hero'] .ec-track {
+  gap: 18px;
+}
+.store-page[data-design='gimnasio'][data-tracking='tracking-status-hero'] .ec-track-head { gap: 6px; }
+.store-page[data-design='gimnasio'][data-tracking='tracking-status-hero'] .ec-track-title {
+  font-family: var(--dz-display, inherit);
+  font-size: clamp(30px, 4vw, 46px);
+  font-weight: 700; line-height: .95; letter-spacing: .01em;
+  text-transform: uppercase;
+  color: var(--dz-ink, inherit);
+}
+.store-page[data-design='gimnasio'][data-tracking='tracking-status-hero'] .ec-track-code {
+  font-family: var(--dz-mono, ui-monospace, monospace);
+  font-size: 11px; letter-spacing: .16em; text-transform: uppercase;
+  color: var(--dz-muted, inherit);
+}
+.store-page[data-design='gimnasio'][data-tracking='tracking-status-hero'] .ec-track-code strong {
+  font-size: 13px; color: var(--dz-accent-text, inherit);
+}
+/* Hero: la primera card (la que tiene la fila de estado) se infla. */
+.store-page[data-design='gimnasio'][data-tracking='tracking-status-hero'] .ec-track-card {
+  border: 1px solid var(--dz-line, rgba(0,0,0,.2));
+  border-top: 4px solid var(--dz-line-strong, rgba(0,0,0,.3));
+  border-radius: var(--dz-radius, 0px);
+  background: var(--dz-surface, #151711);
+  box-shadow: none;
+  padding: clamp(20px, 3vw, 32px);
+  gap: 18px;
+}
+.store-page[data-design='gimnasio'][data-tracking='tracking-status-hero'] .ec-track-card:has(.ec-track-status-row) {
+  border-top-color: var(--store-accent, #C8F169);
+  background:
+    linear-gradient(180deg, color-mix(in srgb, var(--store-accent, #C8F169) 6%, transparent), transparent 34%),
+    var(--dz-surface, #151711);
+}
+.store-page[data-design='gimnasio'][data-tracking='tracking-status-hero'] .ec-track-status-row {
+  align-items: center;
+  gap: 14px;
+}
+.store-page[data-design='gimnasio'][data-tracking='tracking-status-hero'] .ec-track-status {
+  border-radius: var(--dz-radius, 0px);
+  padding: 10px 18px;
+  font-family: var(--dz-display, inherit);
+  font-size: clamp(18px, 2.4vw, 28px);
+  font-weight: 700;
+  letter-spacing: .04em;
+  text-transform: uppercase;
+  line-height: 1;
+  background: var(--store-accent-ink, #0A0B08);
+  color: var(--sp-on-band, #F7FEE7);
+}
+.store-page[data-design='gimnasio'][data-tracking='tracking-status-hero'] .ec-track-status.is-delivered {
+  background: var(--dz-ok, #7FD6A0);
+  color: #0A0B08;
+}
+.store-page[data-design='gimnasio'][data-tracking='tracking-status-hero'] .ec-track-status.is-cancelled,
+.store-page[data-design='gimnasio'][data-tracking='tracking-status-hero'] .ec-track-status.is-expired,
+.store-page[data-design='gimnasio'][data-tracking='tracking-status-hero'] .ec-track-status.is-refunded {
+  background: var(--dz-danger, #F0958A);
+  color: #0A0B08;
+}
+.store-page[data-design='gimnasio'][data-tracking='tracking-status-hero'] .ec-track-status.is-pending_payment {
+  background: var(--store-accent, #C8F169);
+  color: var(--dz-accent-ink, #0A0B08);
+}
+.store-page[data-design='gimnasio'][data-tracking='tracking-status-hero'] .ec-track-exp {
+  font-family: var(--dz-mono, ui-monospace, monospace);
+  font-size: 12px; letter-spacing: .08em; text-transform: uppercase;
+}
+.store-page[data-design='gimnasio'][data-tracking='tracking-status-hero'] .ec-track-h2 {
+  font-family: var(--dz-display, inherit);
+  font-size: clamp(22px, 2.6vw, 32px);
+  font-weight: 700; line-height: 1; letter-spacing: .02em;
+  text-transform: uppercase;
+  color: var(--dz-ink, inherit);
+}
+/* Barra segmentada: una celda por etapa — relleno lima en completadas,
+   filete grueso en la actual. */
+.store-page[data-design='gimnasio'][data-tracking='tracking-status-hero'] .ec-stepper {
+  display: flex;
+  gap: 6px;
+  margin-top: 6px;
+}
+.store-page[data-design='gimnasio'][data-tracking='tracking-status-hero'] .ec-step {
+  flex: 1 1 0;
+  display: flex; flex-direction: column; gap: 8px;
+  min-width: 0;
+}
+.store-page[data-design='gimnasio'][data-tracking='tracking-status-hero'] .ec-step::after { display: none; }
+.store-page[data-design='gimnasio'][data-tracking='tracking-status-hero'] .ec-step::before {
+  content: '';
+  order: -1;
+  height: 10px;
+  border: 1px solid var(--dz-line-strong, rgba(0,0,0,.3));
+  background: var(--dz-surface-2, #1A1C15);
+}
+.store-page[data-design='gimnasio'][data-tracking='tracking-status-hero'] .ec-step.is-done::before {
+  background: var(--store-accent, #C8F169);
+  border-color: var(--store-accent, #C8F169);
+}
+.store-page[data-design='gimnasio'][data-tracking='tracking-status-hero'] .ec-step.is-current::before {
+  background: repeating-linear-gradient(90deg,
+    var(--store-accent, #C8F169) 0 8px,
+    transparent 8px 14px);
+  border-color: var(--store-accent, #C8F169);
+}
+.store-page[data-design='gimnasio'][data-tracking='tracking-status-hero'] .ec-step-dot {
+  display: none;
+}
+.store-page[data-design='gimnasio'][data-tracking='tracking-status-hero'] .ec-step-label {
+  font-family: var(--dz-mono, ui-monospace, monospace);
+  font-size: 9.5px; font-weight: 600;
+  letter-spacing: .12em; text-transform: uppercase;
+  text-align: left;
+}
+.store-page[data-design='gimnasio'][data-tracking='tracking-status-hero'] .ec-track-step-date {
+  font-family: var(--dz-mono, ui-monospace, monospace);
+  font-size: 9px; letter-spacing: .06em;
+}
+/* Chips de datos: celdas planilla. */
+.store-page[data-design='gimnasio'][data-tracking='tracking-status-hero'] .ec-track-chips {
+  display: flex; flex-wrap: wrap; gap: 8px;
+}
+.store-page[data-design='gimnasio'][data-tracking='tracking-status-hero'] .ec-track-chip {
+  border-radius: var(--dz-radius, 0px);
+  border: 1px solid var(--dz-line-strong, rgba(0,0,0,.3));
+  font-family: var(--dz-mono, ui-monospace, monospace);
+  font-size: 10px; font-weight: 600; letter-spacing: .1em; text-transform: uppercase;
+}
+/* Resto de cards: planillas con cabeza de condensada (mismo lenguaje de la
+   cuenta). */
+.store-page[data-design='gimnasio'][data-tracking='tracking-status-hero'] .ec-track-card:not(:has(.ec-track-status-row)) {
+  border-top: 3px solid var(--dz-line-strong, rgba(0,0,0,.3));
+}
+.store-page[data-design='gimnasio'][data-tracking='tracking-status-hero'] .ec-track-note,
+.store-page[data-design='gimnasio'][data-tracking='tracking-status-hero'] .ec-track-skel {
+  border-radius: var(--dz-radius, 0px);
+  background: var(--dz-surface, #151711);
+}
+.store-page[data-design='gimnasio'][data-tracking='tracking-status-hero'] .ec-track-banner {
+  border-radius: var(--dz-radius, 0px);
+  font-family: var(--dz-body, inherit); font-weight: 700;
+}
+.store-page[data-design='gimnasio'][data-tracking='tracking-status-hero'] .ec-tl-dot {
+  border-radius: var(--dz-radius, 0px);
+  background: var(--store-accent, #C8F169);
+}
+.store-page[data-design='gimnasio'][data-tracking='tracking-status-hero'] .ec-receipt {
+  border-radius: var(--dz-radius, 0px);
+  border-color: var(--dz-line-strong, rgba(0,0,0,.3));
+}
+@media (max-width: 560px) {
+  /* La barra segmentada mantiene una celda por etapa pero con labels más
+     cortos: en vez de la lista vertical del base, quedan 5 celdas angostas
+     con el label debajo — legible en condensada. */
+  .store-page[data-design='gimnasio'][data-tracking='tracking-status-hero'] .ec-step-label {
+    font-size: 8px; letter-spacing: .06em;
+  }
+}
+
+/* Shop-nav: fila de celdas de sala — condensada, activa con filete lima. */
+.store-page[data-design='gimnasio'][data-nav='bottom-tabbar'] .sp-shop-nav .sp-shop-nav-links {
+  gap: 2px;
+}
+.store-page[data-design='gimnasio'][data-nav='bottom-tabbar'] .sp-shop-nav .sp-shop-nav-links a {
+  min-height: 44px;
+  padding: 8px 12px;
+  border-radius: 0;
+  font-family: var(--st-f-eyebrow-family, 'JetBrains Mono', ui-monospace, monospace);
+  font-size: 10.5px; font-weight: 600;
+  letter-spacing: .14em; text-transform: uppercase;
+}
+.store-page[data-design='gimnasio'][data-nav='bottom-tabbar'] .sp-shop-nav .sp-shop-nav-links a.is-current,
+.store-page[data-design='gimnasio'][data-nav='bottom-tabbar'] .sp-shop-nav .sp-shop-nav-links a.router-link-exact-active {
+  box-shadow: inset 0 -3px 0 var(--store-accent, #C8F169);
+  color: var(--store-accent, #C8F169);
+}

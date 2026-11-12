@@ -767,3 +767,389 @@
     animation-duration: .001ms !important;
   }
 }
+
+/* ==========================================================================
+   ARQUETIPOS — navbar mega-menu / cuenta stack / tracking bento
+   ========================================================================== */
+
+/* ---------- NAVBAR · mega-menu ----------
+   Los items del header se comportan como disparadores de mega-menú de
+   bazar: caja alta, filete de acento grueso abajo y "caret" que marca que
+   cada sección abre un panel. Aproximación CSS pura: el chrome no tiene
+   markup de paneles, así que el hover enciende la categoría y el drawer
+   móvil lista las secciones indentadas como sub-ítems del menú. */
+.store-page[data-design='mercado'][data-nav='mega-menu'] .sp-top .sp-top-links {
+  gap: 0;
+}
+.store-page[data-design='mercado'][data-nav='mega-menu'] .sp-top .sp-top-links a {
+  position: relative;
+  min-height: 44px;
+  padding: 10px 14px;
+  border-radius: 0;
+  font-family: var(--dz-body, inherit);
+  font-size: 12.5px; font-weight: 800;
+  letter-spacing: .06em; text-transform: uppercase;
+  color: color-mix(in srgb, var(--sp-on-band, #2b2b2b) 88%, transparent);
+}
+/* "Caret" de mega-trigger: pequeño triángulo bajo el label. */
+.store-page[data-design='mercado'][data-nav='mega-menu'] .sp-top .sp-top-links a::after {
+  content: '';
+  position: absolute; left: 14px; right: 14px; bottom: 2px; height: 3px;
+  background: var(--dz-blue, #2563eb);
+  transform: scaleX(0); transform-origin: 0 50%;
+  transition: transform .22s cubic-bezier(.22,.8,.2,1);
+}
+.store-page[data-design='mercado'][data-nav='mega-menu'] .sp-top .sp-top-links a::before {
+  content: '▾';
+  margin-left: 5px;
+  font-size: 8px;
+  opacity: .55;
+  transition: opacity .2s, transform .2s;
+}
+.store-page[data-design='mercado'][data-nav='mega-menu'] .sp-top .sp-top-links a:hover::before,
+.store-page[data-design='mercado'][data-nav='mega-menu'] .sp-top .sp-top-links a.router-link-exact-active::before,
+.store-page[data-design='mercado'][data-nav='mega-menu'] .sp-top .sp-top-links a.router-link-active::before {
+  opacity: 1;
+}
+.store-page[data-design='mercado'][data-nav='mega-menu'] .sp-top .sp-top-links a:hover::after,
+.store-page[data-design='mercado'][data-nav='mega-menu'] .sp-top .sp-top-links a.router-link-exact-active::after,
+.store-page[data-design='mercado'][data-nav='mega-menu'] .sp-top .sp-top-links a.router-link-active::after {
+  transform: scaleX(1);
+}
+.store-page[data-design='mercado'][data-nav='mega-menu'] .sp-top .sp-top-links a:hover,
+.store-page[data-design='mercado'][data-nav='mega-menu'] .sp-top .sp-top-links a.router-link-exact-active,
+.store-page[data-design='mercado'][data-nav='mega-menu'] .sp-top .sp-top-links a.router-link-active {
+  color: var(--sp-on-band, #2b2b2b);
+  background: rgba(255, 255, 255, .16);
+}
+.store-page[data-design='mercado'][data-nav='mega-menu'] .sp-search-top {
+  border-radius: var(--dz-radius-sm, 8px);
+}
+.store-page[data-design='mercado'][data-nav='mega-menu'] .sp-burger {
+  border-radius: var(--dz-radius-sm, 8px);
+}
+/* Drawer móvil: lista indentada estilo sub-ítems del mega-menú — cada
+   sección con filete izquierdo de acento y el chevron del menú. */
+.store-page[data-design='mercado'][data-nav='mega-menu'] .sp-drawer.sp-navdrawer .sp-nav-group {
+  gap: 2px;
+}
+.store-page[data-design='mercado'][data-nav='mega-menu'] .sp-drawer.sp-navdrawer .sp-nav-item {
+  min-height: 48px;
+  padding: 10px 12px 10px 18px;
+  border-left: 3px solid transparent;
+  border-radius: var(--dz-radius-sm, 8px);
+  font-weight: 700;
+  font-size: 14.5px;
+  color: var(--dz-ink-2, inherit);
+}
+.store-page[data-design='mercado'][data-nav='mega-menu'] .sp-drawer.sp-navdrawer .sp-nav-item:hover,
+.store-page[data-design='mercado'][data-nav='mega-menu'] .sp-drawer.sp-navdrawer .sp-nav-item.router-link-active,
+.store-page[data-design='mercado'][data-nav='mega-menu'] .sp-drawer.sp-navdrawer .sp-nav-item.router-link-exact-active {
+  border-left-color: var(--dz-blue, #2563eb);
+  background: color-mix(in srgb, var(--dz-blue, #2563eb) 8%, transparent);
+  color: var(--dz-ink, inherit);
+}
+
+/* ---------- CUENTA · account-stack ----------
+   Todo apilado full-width: la barra amarilla del mostrador deja de ser un
+   sidebar y pasa a una FRANJA DE CHIPS arriba (identidad + secciones +
+   salir en una sola fila con scroll); debajo van mhead, tabs y panel.
+   En móvil queda igual que el mostrador actual (mhead + chips). */
+@media (min-width: 1024px) {
+  .store-page[data-design='mercado'][data-account='account-stack'] .ec-account .acc-shell {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 14px;
+  }
+  /* La franja de chips: la barra amarilla se convierte en tira horizontal. */
+  .store-page[data-design='mercado'][data-account='account-stack'] .ec-account .acc-side {
+    display: flex;
+    flex-wrap: nowrap;
+    align-items: center;
+    gap: 10px;
+    position: static;
+    padding: 10px 14px;
+    border: 1px solid color-mix(in srgb, var(--dz-accent-ink) 18%, transparent);
+    border-radius: var(--dz-radius-sm, 8px);
+    background: var(--dz-accent, #ffe600);
+    color: var(--dz-accent-ink, #2d2a00);
+    box-shadow: 0 1px 2px rgba(0, 0, 0, .08);
+    overflow-x: auto;
+    scrollbar-width: none;
+  }
+  .store-page[data-design='mercado'][data-account='account-stack'] .ec-account .acc-side::-webkit-scrollbar { display: none; }
+  .store-page[data-design='mercado'][data-account='account-stack'] .ec-account .acc-id {
+    display: flex; align-items: center; gap: 10px;
+    flex: none;
+    padding: 0; border: 0;
+  }
+  .store-page[data-design='mercado'][data-account='account-stack'] .ec-account .acc-id .acc-tele { display: none; }
+  .store-page[data-design='mercado'][data-account='account-stack'] .ec-account .acc-id-meta {
+    display: grid; gap: 1px; min-width: 0;
+  }
+  .store-page[data-design='mercado'][data-account='account-stack'] .ec-account .acc-id-name {
+    font-family: var(--dz-display, inherit); font-size: 14px; font-weight: 800;
+    letter-spacing: -.02em; color: var(--dz-accent-ink, #2d2a00);
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 180px;
+  }
+  .store-page[data-design='mercado'][data-account='account-stack'] .ec-account .acc-id-email {
+    font-family: var(--dz-mono, ui-monospace, monospace); font-size: 10px;
+    color: color-mix(in srgb, var(--dz-accent-ink, #2d2a00) 78%, transparent);
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 180px;
+  }
+  .store-page[data-design='mercado'][data-account='account-stack'] .ec-account .acc-nav {
+    display: flex; gap: 6px; flex: none;
+  }
+  .store-page[data-design='mercado'][data-account='account-stack'] .ec-account .acc-navitem {
+    display: inline-flex; align-items: center; gap: 8px;
+    flex: none;
+    min-height: 40px;
+    padding: 8px 13px;
+    border: 1px solid color-mix(in srgb, var(--dz-accent-ink, #2d2a00) 38%, transparent);
+    border-radius: var(--dz-radius-sm, 8px);
+    background: transparent;
+    color: var(--dz-accent-ink, #2d2a00);
+    font-family: var(--dz-body, inherit); font-size: 13px; font-weight: 700;
+    cursor: pointer; white-space: nowrap;
+    transition: background .15s, color .15s;
+  }
+  .store-page[data-design='mercado'][data-account='account-stack'] .ec-account .acc-navitem .acc-idx { display: none; }
+  .store-page[data-design='mercado'][data-account='account-stack'] .ec-account .acc-navitem:hover {
+    background: color-mix(in srgb, var(--dz-accent-ink, #2d2a00) 12%, transparent);
+  }
+  .store-page[data-design='mercado'][data-account='account-stack'] .ec-account .acc-navitem.is-on {
+    background: var(--dz-accent-ink, #2d2a00);
+    border-color: var(--dz-accent-ink, #2d2a00);
+    color: var(--dz-accent, #ffe600);
+    font-weight: 800;
+  }
+  .store-page[data-design='mercado'][data-account='account-stack'] .ec-account .acc-logout {
+    flex: none;
+    margin: 0 0 0 auto;
+    min-height: 40px;
+    padding: 8px 14px;
+    border: 1px solid color-mix(in srgb, var(--dz-accent-ink, #2d2a00) 40%, transparent);
+    border-radius: var(--dz-radius-sm, 8px);
+    background: transparent;
+    color: var(--dz-accent-ink, #2d2a00);
+    font-family: var(--dz-body, inherit); font-size: 13px; font-weight: 700;
+    cursor: pointer; white-space: nowrap;
+  }
+  .store-page[data-design='mercado'][data-account='account-stack'] .ec-account .acc-logout:hover {
+    background: var(--dz-accent-ink, #2d2a00);
+    color: var(--dz-accent, #ffe600);
+    border-color: var(--dz-accent-ink, #2d2a00);
+  }
+  /* mhead + tabs + panel apilados: los tabs móviles quedan como fila de
+     chips redundante con la franja — en escritorio la franja ES la nav. */
+  .store-page[data-design='mercado'][data-account='account-stack'] .ec-account .acc-mhead {
+    display: flex;
+    align-items: center; gap: 12px;
+    padding: 12px 16px;
+    border: 1px solid var(--dz-line, rgba(0,0,0,.1));
+    border-radius: var(--dz-radius-sm, 8px);
+    background: var(--dz-surface, #fff);
+  }
+  .store-page[data-design='mercado'][data-account='account-stack'] .ec-account .acc-mhead .acc-tele { display: none; }
+  .store-page[data-design='mercado'][data-account='account-stack'] .ec-account .acc-mhead-meta strong {
+    font-family: var(--dz-display, inherit); font-size: 16px; font-weight: 800;
+    letter-spacing: -.02em; color: var(--dz-ink, inherit);
+  }
+  .store-page[data-design='mercado'][data-account='account-stack'] .ec-account .acc-mhead-meta small {
+    font-family: var(--dz-mono, ui-monospace, monospace); font-size: 10.5px;
+    color: var(--dz-muted, inherit);
+  }
+  .store-page[data-design='mercado'][data-account='account-stack'] .ec-account .acc-tabs { display: none; }
+}
+
+/* ---------- SEGUIMIENTO · tracking-bento ----------
+   Grid asimétrico de mostrador: el estado ocupa el ancho (8/12) y el
+   detalle de items flanquea a la derecha (4/12); pago y comprobante van en
+   celdas medianas, el ticket del recibo y la línea de tiempo cierran a
+   ancho completo. En móvil todo cae a una columna. */
+.store-page[data-design='mercado'][data-tracking='tracking-bento'] .ec-track {
+  display: grid;
+  grid-template-columns: repeat(12, minmax(0, 1fr));
+  gap: 16px;
+}
+.store-page[data-design='mercado'][data-tracking='tracking-bento'] .ec-track > * {
+  grid-column: 1 / -1;
+  min-width: 0;
+}
+/* Orden del bento: estado ancho con items al costado; pago+prueba en par;
+   recibo y movimientos cierran a ancho completo. */
+.store-page[data-design='mercado'][data-tracking='tracking-bento'] .ec-track > * { order: 9; }
+.store-page[data-design='mercado'][data-tracking='tracking-bento'] .ec-track-head { order: 1; }
+.store-page[data-design='mercado'][data-tracking='tracking-bento'] .ec-track-help { order: 2; }
+.store-page[data-design='mercado'][data-tracking='tracking-bento'] .ec-track-card:has(.ec-track-status-row) { order: 3; }
+.store-page[data-design='mercado'][data-tracking='tracking-bento'] .ec-track-card:has(.ec-track-items) { order: 4; }
+.store-page[data-design='mercado'][data-tracking='tracking-bento'] .ec-track-card:has(.ec-pay) { order: 5; }
+.store-page[data-design='mercado'][data-tracking='tracking-bento'] .ec-track-card:has(.ec-proof) { order: 6; }
+.store-page[data-design='mercado'][data-tracking='tracking-bento'] .ec-track-card:has(.ec-track-receipt-row) { order: 7; }
+.store-page[data-design='mercado'][data-tracking='tracking-bento'] .ec-track-card:has(.ec-timeline) { order: 8; }
+.store-page[data-design='mercado'][data-tracking='tracking-bento'] .ec-track-head {
+  display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between;
+  gap: 4px 16px;
+  padding-bottom: 4px;
+}
+.store-page[data-design='mercado'][data-tracking='tracking-bento'] .ec-track-title {
+  font-family: var(--dz-display, inherit);
+  font-size: clamp(24px, 3vw, 34px); font-weight: 800; letter-spacing: -.03em;
+  color: var(--dz-ink, inherit);
+}
+.store-page[data-design='mercado'][data-tracking='tracking-bento'] .ec-track-code {
+  font-family: var(--dz-mono, ui-monospace, monospace);
+  font-size: 11px; letter-spacing: .1em; text-transform: uppercase;
+  color: var(--dz-muted, inherit);
+}
+.store-page[data-design='mercado'][data-tracking='tracking-bento'] .ec-track-code strong {
+  font-size: 13px; color: var(--dz-link, #1d4ed8);
+}
+.store-page[data-design='mercado'][data-tracking='tracking-bento'] .ec-track-help {
+  border: 1px solid var(--dz-line, rgba(0,0,0,.1));
+  border-radius: var(--dz-radius-sm, 8px);
+  background: var(--dz-surface, #fff);
+}
+/* Cards = celdas del bento: filete azul arriba como los paneles del
+   mostrador, esquinas de ticket. */
+.store-page[data-design='mercado'][data-tracking='tracking-bento'] .ec-track-card {
+  border: 1px solid var(--dz-line, rgba(0,0,0,.1));
+  border-top: 3px solid var(--dz-blue, #2563eb);
+  border-radius: var(--dz-radius, 10px);
+  background: var(--dz-surface, #fff);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, .06);
+  padding: clamp(16px, 2.2vw, 22px);
+  gap: 14px;
+  min-width: 0;
+}
+.store-page[data-design='mercado'][data-tracking='tracking-bento'] .ec-track-h2 {
+  font-family: var(--dz-display, inherit);
+  font-size: 16px; font-weight: 800; letter-spacing: -.02em;
+  color: var(--dz-ink, inherit);
+}
+.store-page[data-design='mercado'][data-tracking='tracking-bento'] .ec-track-muted { color: var(--dz-muted, inherit); }
+.store-page[data-design='mercado'][data-tracking='tracking-bento'] .ec-track-status {
+  border-radius: 5px;
+  font-family: var(--dz-mono, ui-monospace, monospace);
+  font-size: 10px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase;
+}
+.store-page[data-design='mercado'][data-tracking='tracking-bento'] .ec-track-exp {
+  font-family: var(--dz-mono, ui-monospace, monospace);
+  font-size: 10.5px; letter-spacing: .04em;
+}
+/* Bento ≥900px: estado ancho + items lateral; pago/comprobante en par. */
+@media (min-width: 900px) {
+  .store-page[data-design='mercado'][data-tracking='tracking-bento'] .ec-track-card:has(.ec-track-status-row) {
+    grid-column: span 8;
+  }
+  .store-page[data-design='mercado'][data-tracking='tracking-bento'] .ec-track-card:has(.ec-track-items) {
+    grid-column: span 4;
+    align-self: start;
+  }
+  .store-page[data-design='mercado'][data-tracking='tracking-bento'] .ec-track-card:has(.ec-proof) {
+    grid-column: span 8;
+  }
+  .store-page[data-design='mercado'][data-tracking='tracking-bento'] .ec-track-card:has(.ec-pay) {
+    grid-column: span 4;
+  }
+  /* La card de instrucciones de pago se reconoce por .ec-pay (raíz del
+     componente PaymentInstructions). */
+  .store-page[data-design='mercado'][data-tracking='tracking-bento'] .ec-track-card:has(.ec-track-receipt-row) {
+    grid-column: span 12;
+    border-style: dashed;
+    border-top-style: solid;
+  }
+  .store-page[data-design='mercado'][data-tracking='tracking-bento'] .ec-track-card:has(.ec-timeline) {
+    grid-column: span 12;
+  }
+}
+/* Stepper del bento: nodos compactos tipo etiqueta de góndola. */
+.store-page[data-design='mercado'][data-tracking='tracking-bento'] .ec-stepper { gap: 6px; }
+.store-page[data-design='mercado'][data-tracking='tracking-bento'] .ec-step::after { top: 15px; }
+.store-page[data-design='mercado'][data-tracking='tracking-bento'] .ec-step-dot {
+  width: 32px; height: 32px;
+  border-radius: 7px;
+  border: 2px solid var(--dz-line, rgba(0,0,0,.16));
+  font-family: var(--dz-mono, ui-monospace, monospace);
+  font-size: 11px; font-weight: 700;
+}
+.store-page[data-design='mercado'][data-tracking='tracking-bento'] .ec-step.is-done .ec-step-dot {
+  border-color: var(--dz-ok, #007a3d);
+  background: var(--dz-ok, #007a3d);
+  color: #fff;
+}
+.store-page[data-design='mercado'][data-tracking='tracking-bento'] .ec-step.is-current .ec-step-dot {
+  border-color: var(--dz-blue, #2563eb);
+  color: var(--dz-link, #1d4ed8);
+  box-shadow: 0 0 0 4px color-mix(in srgb, var(--dz-blue, #2563eb) 15%, transparent);
+}
+.store-page[data-design='mercado'][data-tracking='tracking-bento'] .ec-step-label {
+  font-family: var(--dz-mono, ui-monospace, monospace);
+  font-size: 9px; letter-spacing: .06em; text-transform: uppercase;
+}
+/* Items laterales: miniaturas más grandes en la celda angosta. */
+.store-page[data-design='mercado'][data-tracking='tracking-bento'] .ec-track-items li {
+  grid-template-columns: 52px minmax(0, 1fr);
+}
+.store-page[data-design='mercado'][data-tracking='tracking-bento'] .ec-track-thumb { width: 52px; height: 52px; }
+.store-page[data-design='mercado'][data-tracking='tracking-bento'] .ec-track-totals { margin-top: 4px; }
+.store-page[data-design='mercado'][data-tracking='tracking-bento'] .ec-track-grand {
+  border-top: 2px dashed var(--dz-line, rgba(0,0,0,.14));
+  padding-top: 10px;
+}
+/* Chips tipo ticket. */
+.store-page[data-design='mercado'][data-tracking='tracking-bento'] .ec-track-chip {
+  border-radius: 5px;
+  font-family: var(--dz-mono, ui-monospace, monospace);
+  font-size: 10px; font-weight: 600; letter-spacing: .06em; text-transform: uppercase;
+}
+/* Recibo como ticket de mostrador. */
+.store-page[data-design='mercado'][data-tracking='tracking-bento'] .ec-track-card:has(.ec-track-receipt-row) .ec-receipt {
+  border: 1px dashed var(--dz-line, rgba(0,0,0,.22));
+  border-radius: var(--dz-radius-sm, 8px);
+  background: var(--dz-bg, #edede9);
+  padding: 14px;
+}
+.store-page[data-design='mercado'][data-tracking='tracking-bento'] .ec-track-card:has(.ec-track-receipt-row) .ec-rc-head {
+  border-bottom: 1px dashed var(--dz-line, rgba(0,0,0,.2));
+  padding-bottom: 10px;
+}
+.store-page[data-design='mercado'][data-tracking='tracking-bento'] .ec-track-receipt-btn {
+  border-radius: var(--dz-radius-sm, 8px);
+  font-family: var(--dz-mono, ui-monospace, monospace);
+  font-size: 10.5px; font-weight: 700; letter-spacing: .1em; text-transform: uppercase;
+}
+/* Timeline como lista de movimientos del mostrador. */
+.store-page[data-design='mercado'][data-tracking='tracking-bento'] .ec-tl-dot {
+  width: 11px; height: 11px;
+  border-radius: 4px;
+  background: var(--dz-blue, #2563eb);
+}
+.store-page[data-design='mercado'][data-tracking='tracking-bento'] .ec-track-note,
+.store-page[data-design='mercado'][data-tracking='tracking-bento'] .ec-track-skel {
+  border-top: 3px solid var(--dz-blue, #2563eb);
+  border-radius: var(--dz-radius, 10px);
+  background: var(--dz-surface, #fff);
+}
+
+/* Shop-nav: misma firma de mega-menú — filete azul que crece al hover. */
+.store-page[data-design='mercado'][data-nav='mega-menu'] .sp-shop-nav .sp-shop-nav-links a {
+  position: relative;
+  min-height: 44px;
+  padding: 8px 14px;
+}
+.store-page[data-design='mercado'][data-nav='mega-menu'] .sp-shop-nav .sp-shop-nav-links a::after {
+  content: ''; position: absolute; left: 14px; right: 14px; bottom: 8px;
+  height: 2px; background: var(--dz-blue, #2563eb);
+  transform: scaleX(0); transform-origin: 0 50%;
+  transition: transform .25s ease;
+}
+.store-page[data-design='mercado'][data-nav='mega-menu'] .sp-shop-nav .sp-shop-nav-links a:hover::after,
+.store-page[data-design='mercado'][data-nav='mega-menu'] .sp-shop-nav .sp-shop-nav-links a.is-current::after,
+.store-page[data-design='mercado'][data-nav='mega-menu'] .sp-shop-nav .sp-shop-nav-links a.router-link-exact-active::after {
+  transform: scaleX(1);
+}
+.store-page[data-design='mercado'][data-nav='mega-menu'] .sp-shop-nav .sp-shop-nav-links a.is-current,
+.store-page[data-design='mercado'][data-nav='mega-menu'] .sp-shop-nav .sp-shop-nav-links a.router-link-exact-active {
+  color: var(--dz-blue, #2563eb);
+  font-weight: 800;
+}

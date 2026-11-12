@@ -168,3 +168,212 @@
     animation-duration: .001ms !important;
   }
 }
+
+/* ==========================================================================
+   ARQUETIPOS — navbar left-logo-standard / cuenta tabs-only / tracking stepper
+   ========================================================================== */
+
+/* ---------- NAVBAR · left-logo-standard ----------
+   Marca a la izquierda, menú centrado, acciones a la derecha — la fila
+   clásica con el acabado esencial: links en pill suave que se encienden con
+   el acento, sin decoración extra. En móvil el drawer se abre desde la
+   DERECHA (drawer derecho), como pide el arquetipo. */
+.store-page[data-design='esencial'][data-nav='left-logo-standard'] .sp-top .sp-top-inner {
+  gap: 18px;
+}
+.store-page[data-design='esencial'][data-nav='left-logo-standard'] .sp-top .sp-top-links {
+  gap: 4px;
+}
+.store-page[data-design='esencial'][data-nav='left-logo-standard'] .sp-top .sp-top-links a {
+  min-height: 44px;
+  padding: 8px 14px;
+  border-radius: 999px;
+  font-family: var(--dz-body, inherit);
+  font-size: 13.5px; font-weight: 600;
+  color: color-mix(in srgb, var(--sp-on-band, #fff) 82%, transparent);
+  transition: background .18s, color .18s;
+}
+.store-page[data-design='esencial'][data-nav='left-logo-standard'] .sp-top .sp-top-links a:hover {
+  color: var(--sp-on-band, #fff);
+  background: rgba(255, 255, 255, .14);
+}
+.store-page[data-design='esencial'][data-nav='left-logo-standard'] .sp-top .sp-top-links a.router-link-exact-active,
+.store-page[data-design='esencial'][data-nav='left-logo-standard'] .sp-top .sp-top-links a.router-link-active {
+  color: var(--sp-on-band, #fff);
+  background: rgba(255, 255, 255, .2);
+}
+.store-page[data-design='esencial'][data-nav='left-logo-standard'] .sp-search-top {
+  border-radius: 999px;
+}
+.store-page[data-design='esencial'][data-nav='left-logo-standard'] .sp-burger {
+  border-radius: 999px;
+}
+/* Drawer móvil desde la derecha: espejo del drawer base (que entra por la
+   izquierda). Mismo overlay, mismos focos — solo cambia el lado y la
+   dirección de la hoja. */
+@media (max-width: 1100px) {
+  .store-page[data-design='esencial'][data-nav='left-logo-standard'] .sp-drawer.sp-navdrawer {
+    left: auto; right: 0;
+    width: min(340px, 88vw);
+    border-width: 0 0 0 1px;
+    border-radius: 0;
+    transform: translateX(102%);
+    box-shadow: -18px 0 50px -18px rgba(15, 23, 42, .45);
+  }
+  .store-page[data-design='esencial'][data-nav='left-logo-standard'] .sp-drawer.sp-navdrawer.open {
+    transform: none;
+  }
+}
+
+/* ---------- CUENTA · account-tabs-only ----------
+   La piel "folio editorial" ya es tabs-only (sin sidebar en ningún ancho).
+   En escritorio las tabs dejan de ser una píldora flotante y pasan a ser
+   la barra de secciones primaria: fila completa con tabs de ancho pareja,
+   como la nav superior del sitio. */
+@media (min-width: 1024px) {
+  .store-page[data-design='esencial'][data-account='account-tabs-only'] .ec-account .acc-side { display: none; }
+  .store-page[data-design='esencial'][data-account='account-tabs-only'] .ec-account .acc-shell {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .store-page[data-design='esencial'][data-account='account-tabs-only'] .ec-account .acc-tabs {
+    display: flex;
+    width: 100%;
+    gap: 4px;
+    margin: 0 0 22px;
+    padding: 6px;
+    border: 1px solid var(--dz-line, rgba(0,0,0,.1));
+    border-radius: 999px;
+    background: color-mix(in srgb, var(--dz-paper, var(--dz-bg, #f4f5f0)) 82%, var(--dz-surface, #fff));
+    position: static;
+    top: auto;
+    box-shadow: none;
+  }
+  .store-page[data-design='esencial'][data-account='account-tabs-only'] .ec-account .acc-tab {
+    flex: 1 1 0;
+    justify-content: center;
+    min-height: 46px;
+    padding: 8px 10px;
+    font-size: 13px;
+  }
+  .store-page[data-design='esencial'][data-account='account-tabs-only'] .ec-account .acc-tab .acc-idx { display: none; }
+  .store-page[data-design='esencial'][data-account='account-tabs-only'] .ec-account .acc-mhead .acc-stats {
+    display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px;
+  }
+}
+
+/* ---------- SEGUIMIENTO · tracking-stepper ----------
+   Stepper horizontal esencial: el estado del pedido como línea de progreso
+   con nodos blandos, fecha del paso visible y cards de papel redondeado. */
+.store-page[data-design='esencial'][data-tracking='tracking-stepper'] .ec-track {
+  gap: 18px;
+}
+.store-page[data-design='esencial'][data-tracking='tracking-stepper'] .ec-track-head { gap: 6px; }
+.store-page[data-design='esencial'][data-tracking='tracking-stepper'] .ec-track-title {
+  font-family: var(--dz-display, inherit);
+  font-size: clamp(26px, 3.2vw, 36px);
+  font-weight: 800; letter-spacing: -.03em;
+  color: var(--dz-ink, inherit);
+}
+.store-page[data-design='esencial'][data-tracking='tracking-stepper'] .ec-track-code {
+  font-family: var(--dz-body, inherit);
+  font-size: 14px; color: var(--dz-muted, inherit);
+}
+.store-page[data-design='esencial'][data-tracking='tracking-stepper'] .ec-track-code strong {
+  font-family: var(--dz-mono, ui-monospace, monospace);
+  font-size: 13px; letter-spacing: .04em;
+  color: var(--dz-accent-text, inherit);
+}
+.store-page[data-design='esencial'][data-tracking='tracking-stepper'] .ec-track-card {
+  border: 1px solid var(--dz-line, rgba(0,0,0,.09));
+  border-radius: var(--dz-radius, 22px);
+  background: var(--dz-surface, #fff);
+  box-shadow: 0 18px 40px -34px color-mix(in srgb, var(--dz-ink, #16201c) 55%, transparent);
+  padding: clamp(18px, 2.6vw, 26px);
+  gap: 16px;
+}
+.store-page[data-design='esencial'][data-tracking='tracking-stepper'] .ec-track-h2 {
+  font-family: var(--dz-display, inherit);
+  font-size: 17px; font-weight: 800; letter-spacing: -.02em;
+  color: var(--dz-ink, inherit);
+}
+.store-page[data-design='esencial'][data-tracking='tracking-stepper'] .ec-track-status {
+  border-radius: 999px;
+  font-family: var(--dz-body, inherit);
+  font-size: 12.5px; font-weight: 700;
+  padding: 7px 14px;
+}
+/* Stepper: nodos blandos conectados por una pista; el paso actual lleva el
+   anillo cálido del diseño y los cumplidos el acento. */
+.store-page[data-design='esencial'][data-tracking='tracking-stepper'] .ec-stepper {
+  gap: 4px;
+}
+.store-page[data-design='esencial'][data-tracking='tracking-stepper'] .ec-step { gap: 8px; }
+.store-page[data-design='esencial'][data-tracking='tracking-stepper'] .ec-step::after {
+  top: 17px; height: 3px; border-radius: 3px;
+  background: color-mix(in srgb, var(--dz-line, rgba(0,0,0,.14)) 70%, transparent);
+}
+.store-page[data-design='esencial'][data-tracking='tracking-stepper'] .ec-step.is-done::after {
+  background: color-mix(in srgb, var(--dz-accent, #0e5a4f) 55%, transparent);
+}
+.store-page[data-design='esencial'][data-tracking='tracking-stepper'] .ec-step-dot {
+  width: 36px; height: 36px;
+  border-radius: 14px;
+  border: 2px solid var(--dz-line, rgba(0,0,0,.14));
+  font-family: var(--dz-mono, ui-monospace, monospace);
+  font-size: 12px; font-weight: 700;
+  color: var(--dz-muted, inherit);
+  background: var(--dz-bg, #f4f5f0);
+}
+.store-page[data-design='esencial'][data-tracking='tracking-stepper'] .ec-step.is-done .ec-step-dot {
+  border-color: var(--dz-accent, #0e5a4f);
+  background: var(--dz-accent, #0e5a4f);
+  color: var(--sp-on-band, #fff);
+}
+.store-page[data-design='esencial'][data-tracking='tracking-stepper'] .ec-step.is-current .ec-step-dot {
+  border-color: var(--dz-warm, #e9a23b);
+  color: var(--dz-warm-ink, #1a1305);
+  background: var(--dz-warm, #e9a23b);
+  box-shadow: 0 0 0 5px color-mix(in srgb, var(--dz-warm, #e9a23b) 20%, transparent);
+}
+.store-page[data-design='esencial'][data-tracking='tracking-stepper'] .ec-step-label {
+  font-family: var(--dz-body, inherit);
+  font-size: 11.5px; font-weight: 600;
+}
+.store-page[data-design='esencial'][data-tracking='tracking-stepper'] .ec-track-step-date {
+  font-family: var(--dz-mono, ui-monospace, monospace);
+  font-size: 9.5px; letter-spacing: .06em;
+}
+/* Chips y totales del detalle. */
+.store-page[data-design='esencial'][data-tracking='tracking-stepper'] .ec-track-chip {
+  border-radius: 999px;
+  border-color: var(--dz-line, rgba(0,0,0,.1));
+  background: color-mix(in srgb, var(--dz-bg, #f4f5f0) 60%, transparent);
+}
+.store-page[data-design='esencial'][data-tracking='tracking-stepper'] .ec-track-grand {
+  border-top-color: var(--dz-line, rgba(0,0,0,.1));
+}
+.store-page[data-design='esencial'][data-tracking='tracking-stepper'] .ec-track-note,
+.store-page[data-design='esencial'][data-tracking='tracking-stepper'] .ec-track-skel {
+  border-radius: var(--dz-radius, 22px);
+  background: var(--dz-surface, #fff);
+  box-shadow: 0 18px 40px -34px color-mix(in srgb, var(--dz-ink, #16201c) 55%, transparent);
+}
+.store-page[data-design='esencial'][data-tracking='tracking-stepper'] .ec-receipt {
+  border-radius: calc(var(--dz-radius, 22px) * .7);
+}
+@media (max-width: 560px) {
+  .store-page[data-design='esencial'][data-tracking='tracking-stepper'] .ec-step-dot { width: 32px; height: 32px; }
+}
+
+/* Shop-nav: fila estándar esencial — links limpios con subrayado suave. */
+.store-page[data-design='esencial'][data-nav='left-logo-standard'] .sp-shop-nav .sp-shop-nav-links a {
+  min-height: 44px;
+  padding: 8px 14px;
+  border-radius: 999px;
+  font-size: 13px; font-weight: 600;
+}
+.store-page[data-design='esencial'][data-nav='left-logo-standard'] .sp-shop-nav .sp-shop-nav-links a.is-current,
+.store-page[data-design='esencial'][data-nav='left-logo-standard'] .sp-shop-nav .sp-shop-nav-links a.router-link-exact-active {
+  background: var(--dz-accent-soft, color-mix(in srgb, var(--store-accent, #0e5a4f) 10%, transparent));
+  color: var(--dz-accent-text, var(--store-accent, #0e5a4f));
+}

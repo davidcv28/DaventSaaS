@@ -945,3 +945,329 @@
   /* El sello es decorativo y gira sin parar: acá se detiene del todo. */
   [data-design='portico'] .ec-auth .ec-auth-seal-ring { animation: none !important; }
 }
+
+/* ==========================================================================
+   ARQUETIPOS — navbar editorial-index / cuenta sidebar / tracking ticket
+   Selectores keyed en data-nav / data-account / data-tracking (matriz
+   storeArchetypes.js). Especificidad 0,4,0+ para ganarle a store-page.css.
+   ========================================================================== */
+
+/* ---------- NAVBAR · editorial-index ----------
+   Índice numerado de sala: cada destino del header lleva su folio 01–07 en
+   cobre mono y filete inferior que se enciende al hover/activo. La banda de
+   tinta no cambia — el índice ES la firma del museo. */
+.store-page[data-design='portico'][data-nav='editorial-index'] .sp-top .sp-top-links {
+  counter-reset: ptidx;
+  gap: 2px;
+  margin-inline-start: auto;
+}
+.store-page[data-design='portico'][data-nav='editorial-index'] .sp-top .sp-top-links a {
+  counter-increment: ptidx;
+  position: relative;
+  display: inline-flex; align-items: baseline; gap: 7px;
+  min-height: 44px;
+  padding: 8px 12px 8px 26px;
+  border-radius: 0;
+  font: 500 10px/1 var(--dz-mono, ui-monospace, monospace);
+  letter-spacing: .16em; text-transform: uppercase;
+  color: color-mix(in srgb, var(--sp-on-band, #fff) 74%, transparent);
+}
+.store-page[data-design='portico'][data-nav='editorial-index'] .sp-top .sp-top-links a::before {
+  content: counter(ptidx, decimal-leading-zero);
+  position: absolute; left: 9px; top: 50%;
+  translate: 0 -50%;
+  font-size: 8px; letter-spacing: .1em;
+  color: color-mix(in srgb, var(--dz-accent, #a75e3c) 82%, var(--sp-on-band, #fff));
+}
+.store-page[data-design='portico'][data-nav='editorial-index'] .sp-top .sp-top-links a::after {
+  content: ''; position: absolute; left: 12px; right: 12px; bottom: 4px;
+  height: 1px; background: var(--dz-accent, #a75e3c);
+  transform: scaleX(0); transform-origin: 0 50%;
+  transition: transform .3s cubic-bezier(.22,.8,.2,1);
+}
+.store-page[data-design='portico'][data-nav='editorial-index'] .sp-top .sp-top-links a:hover {
+  color: var(--sp-on-band, #fff);
+  background: rgba(255, 255, 255, .06);
+}
+.store-page[data-design='portico'][data-nav='editorial-index'] .sp-top .sp-top-links a:hover::after,
+.store-page[data-design='portico'][data-nav='editorial-index'] .sp-top .sp-top-links a.router-link-exact-active::after,
+.store-page[data-design='portico'][data-nav='editorial-index'] .sp-top .sp-top-links a.router-link-active::after {
+  transform: scaleX(1);
+}
+.store-page[data-design='portico'][data-nav='editorial-index'] .sp-top .sp-top-links a.router-link-exact-active,
+.store-page[data-design='portico'][data-nav='editorial-index'] .sp-top .sp-top-links a.router-link-active {
+  color: var(--sp-on-band, #fff);
+}
+/* Buscador de la banda: esquinas rectas de museo, no píldora. */
+.store-page[data-design='portico'][data-nav='editorial-index'] .sp-top .sp-search-top {
+  border-radius: var(--dz-radius, 2px);
+  border-color: color-mix(in srgb, var(--sp-on-band, #fff) 30%, transparent);
+}
+.store-page[data-design='portico'][data-nav='editorial-index'] .sp-burger {
+  border-radius: var(--dz-radius, 2px);
+}
+/* Drawer móvil = índice vertical de la sala: folios mono a la izquierda,
+   filetes entre secciones, labels en serif grande. */
+.store-page[data-design='portico'][data-nav='editorial-index'] .sp-drawer.sp-navdrawer .sp-nav-group {
+  counter-reset: ptmidx;
+  gap: 0;
+}
+.store-page[data-design='portico'][data-nav='editorial-index'] .sp-drawer.sp-navdrawer .sp-nav-item {
+  counter-increment: ptmidx;
+  position: relative;
+  align-items: baseline;
+  gap: 16px;
+  min-height: 52px;
+  padding: 12px 8px 12px 44px;
+  border-bottom: 1px solid var(--dz-line, rgba(0,0,0,.14));
+  border-radius: 0;
+  font-family: var(--dz-display, Georgia, serif);
+  font-size: clamp(22px, 6vw, 30px);
+  font-weight: 400;
+  letter-spacing: -.01em;
+  color: var(--dz-ink, inherit);
+}
+.store-page[data-design='portico'][data-nav='editorial-index'] .sp-drawer.sp-navdrawer .sp-nav-item::before {
+  content: counter(ptmidx, decimal-leading-zero);
+  position: absolute; left: 4px; top: 14px;
+  font: 400 9px/1 var(--dz-mono, ui-monospace, monospace);
+  letter-spacing: .16em;
+  color: var(--dz-accent, #a75e3c);
+}
+.store-page[data-design='portico'][data-nav='editorial-index'] .sp-drawer.sp-navdrawer .sp-nav-item > span { min-width: 0; }
+.store-page[data-design='portico'][data-nav='editorial-index'] .sp-drawer.sp-navdrawer .sp-nav-item svg {
+  color: var(--dz-muted, inherit); opacity: .5;
+}
+.store-page[data-design='portico'][data-nav='editorial-index'] .sp-drawer.sp-navdrawer .sp-nav-item:hover,
+.store-page[data-design='portico'][data-nav='editorial-index'] .sp-drawer.sp-navdrawer .sp-nav-item.router-link-active,
+.store-page[data-design='portico'][data-nav='editorial-index'] .sp-drawer.sp-navdrawer .sp-nav-item.router-link-exact-active {
+  background: transparent;
+  color: var(--dz-accent-text, var(--dz-accent, #a75e3c));
+  padding-left: 12px;
+}
+/* Acciones del pie del drawer: filetes finos, no píldoras. */
+.store-page[data-design='portico'][data-nav='editorial-index'] .sp-drawer.sp-navdrawer .sp-drawer-action {
+  border-radius: var(--dz-radius, 2px);
+  font-family: var(--dz-mono, ui-monospace, monospace);
+  font-size: 10px; letter-spacing: .16em; text-transform: uppercase;
+}
+
+/* ---------- CUENTA · account-sidebar ----------
+   La piel "índice de la sala" ya implementa sidebar + contenido: acá solo
+   se afirma el contrato del arquetipo (filete índice, sticky, tabs fuera
+   en escritorio) por si otra hoja gana por orden de carga. */
+.store-page[data-design='portico'][data-account='account-sidebar'] .ec-account .acc-shell {
+  grid-template-columns: minmax(0, 1fr);
+}
+@media (min-width: 1024px) {
+  .store-page[data-design='portico'][data-account='account-sidebar'] .ec-account .acc-shell {
+    grid-template-columns: 300px minmax(0, 1fr);
+  }
+  .store-page[data-design='portico'][data-account='account-sidebar'] .ec-account .acc-side {
+    position: sticky;
+    top: calc(var(--sp-top-h, 64px) + 18px);
+    border-right: 1px solid var(--dz-line, rgba(0,0,0,.14));
+  }
+  .store-page[data-design='portico'][data-account='account-sidebar'] .ec-account :is(.acc-mhead, .acc-tabs) { display: none; }
+}
+
+/* ---------- SEGUIMIENTO · tracking-ticket ----------
+   El pedido es un TICKET DE MUSEO: folio mono grande, stepper compacto de
+   casillas, y el comprobante como ticket perforado (filetes dashed, código
+   de barras decorativo al pie). */
+.store-page[data-design='portico'][data-tracking='tracking-ticket'] .ec-track {
+  display: grid; gap: 0;
+}
+.store-page[data-design='portico'][data-tracking='tracking-ticket'] .ec-track > * { margin-block: 0; }
+.store-page[data-design='portico'][data-tracking='tracking-ticket'] .ec-track-head {
+  display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between;
+  gap: 6px 18px;
+  padding: 0 0 16px;
+  border-bottom: 2px solid var(--dz-ink, #151a16);
+}
+.store-page[data-design='portico'][data-tracking='tracking-ticket'] .ec-track-title {
+  font-family: var(--dz-display, Georgia, serif);
+  font-weight: 400; font-size: clamp(26px, 3.4vw, 40px);
+  letter-spacing: -.015em; color: var(--dz-ink, inherit);
+}
+.store-page[data-design='portico'][data-tracking='tracking-ticket'] .ec-track-code {
+  font-family: var(--dz-mono, ui-monospace, monospace);
+  font-size: 11px; letter-spacing: .14em; text-transform: uppercase;
+  color: var(--dz-muted, inherit);
+}
+.store-page[data-design='portico'][data-tracking='tracking-ticket'] .ec-track-code strong {
+  font-family: var(--dz-mono, ui-monospace, monospace);
+  font-size: 13px; letter-spacing: .1em;
+  color: var(--dz-accent-text, var(--dz-accent, #a75e3c));
+}
+.store-page[data-design='portico'][data-tracking='tracking-ticket'] .ec-track-help {
+  border: 0; border-bottom: 1px solid var(--dz-line, rgba(0,0,0,.14));
+  border-radius: 0; background: transparent;
+  margin-block: 0;
+}
+/* Cards = secciones del ticket: sin sombra, filete de 1px, radio 2px. */
+.store-page[data-design='portico'][data-tracking='tracking-ticket'] .ec-track-card {
+  border: 0;
+  border-bottom: 1px solid var(--dz-line, rgba(0,0,0,.14));
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+  padding: 20px 0;
+  gap: 14px;
+}
+.store-page[data-design='portico'][data-tracking='tracking-ticket'] .ec-track-card:last-child {
+  border-bottom: 0;
+  padding-bottom: 8px;
+}
+.store-page[data-design='portico'][data-tracking='tracking-ticket'] .ec-track-h2 {
+  font-family: var(--dz-mono, ui-monospace, monospace);
+  font-size: 10px; font-weight: 500; letter-spacing: .22em; text-transform: uppercase;
+  color: var(--dz-muted, inherit);
+}
+.store-page[data-design='portico'][data-tracking='tracking-ticket'] .ec-track-status-row { gap: 10px; }
+.store-page[data-design='portico'][data-tracking='tracking-ticket'] .ec-track-status {
+  border-radius: var(--dz-radius, 2px);
+  font-family: var(--dz-mono, ui-monospace, monospace);
+  font-size: 10px; letter-spacing: .16em; text-transform: uppercase;
+}
+/* Stepper compacto: casillas cuadradas con folio, no círculos. */
+.store-page[data-design='portico'][data-tracking='tracking-ticket'] .ec-stepper { gap: 8px; margin-top: 4px; }
+.store-page[data-design='portico'][data-tracking='tracking-ticket'] .ec-step { gap: 7px; }
+.store-page[data-design='portico'][data-tracking='tracking-ticket'] .ec-step::after {
+  top: 16px; height: 1px; background: var(--dz-line, rgba(0,0,0,.16));
+}
+.store-page[data-design='portico'][data-tracking='tracking-ticket'] .ec-step.is-done::after {
+  background: var(--dz-ok, #14532d);
+}
+.store-page[data-design='portico'][data-tracking='tracking-ticket'] .ec-step-dot {
+  width: 34px; height: 34px;
+  border-radius: var(--dz-radius, 2px);
+  border: 1px solid var(--dz-line, rgba(0,0,0,.2));
+  font-family: var(--dz-mono, ui-monospace, monospace);
+  font-size: 11px; letter-spacing: .04em;
+  color: var(--dz-muted, inherit);
+  background: var(--dz-surface, transparent);
+}
+.store-page[data-design='portico'][data-tracking='tracking-ticket'] .ec-step.is-done .ec-step-dot {
+  border-color: var(--dz-ok, #14532d);
+  background: var(--dz-ok, #14532d);
+  color: #fff;
+}
+.store-page[data-design='portico'][data-tracking='tracking-ticket'] .ec-step.is-current .ec-step-dot {
+  border-color: var(--dz-accent, #a75e3c);
+  color: var(--dz-accent-text, var(--dz-accent, #a75e3c));
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--dz-accent, #a75e3c) 18%, transparent);
+}
+.store-page[data-design='portico'][data-tracking='tracking-ticket'] .ec-step-label {
+  font-family: var(--dz-mono, ui-monospace, monospace);
+  font-size: 8.5px; letter-spacing: .12em; text-transform: uppercase;
+}
+/* Chips de datos: filetes en vez de pills. */
+.store-page[data-design='portico'][data-tracking='tracking-ticket'] .ec-track-chip {
+  border-radius: var(--dz-radius, 2px);
+  font-family: var(--dz-mono, ui-monospace, monospace);
+  font-size: 10px; letter-spacing: .08em; text-transform: uppercase;
+}
+/* Recibo = ticket perforado: filetes dashed arriba/abajo, talón con
+   folio y pseudo-código de barras al pie. */
+.store-page[data-design='portico'][data-tracking='tracking-ticket'] .ec-track-card:has(.ec-track-receipt-row) {
+  border: 1px dashed color-mix(in srgb, var(--dz-ink, #151a16) 45%, transparent);
+  border-radius: var(--dz-radius, 2px);
+  background: var(--dz-surface, transparent);
+  padding: 22px 20px 16px;
+  position: relative;
+}
+.store-page[data-design='portico'][data-tracking='tracking-ticket'] .ec-receipt {
+  border: 0; padding: 0; gap: 12px;
+}
+.store-page[data-design='portico'][data-tracking='tracking-ticket'] .ec-rc-head { border-bottom: 1px dashed var(--dz-line, rgba(0,0,0,.2)); padding-bottom: 10px; }
+.store-page[data-design='portico'][data-tracking='tracking-ticket'] .ec-rc-totals {
+  border-top: 1px dashed var(--dz-line, rgba(0,0,0,.2));
+}
+.store-page[data-design='portico'][data-tracking='tracking-ticket'] .ec-rc-legend {
+  border-radius: var(--dz-radius, 2px);
+}
+.store-page[data-design='portico'][data-tracking='tracking-ticket'] .ec-track-card:has(.ec-track-receipt-row)::after {
+  content: '';
+  display: block;
+  margin-top: 14px;
+  height: 26px;
+  border-top: 1px dashed color-mix(in srgb, var(--dz-ink, #151a16) 40%, transparent);
+  background: repeating-linear-gradient(90deg,
+    var(--dz-ink, #151a16) 0 2px, transparent 2px 5px,
+    var(--dz-ink, #151a16) 5px 6px, transparent 6px 11px);
+  opacity: .5;
+}
+.store-page[data-design='portico'][data-tracking='tracking-ticket'] .ec-track-receipt-btn {
+  border-radius: var(--dz-radius, 2px);
+  font-family: var(--dz-mono, ui-monospace, monospace);
+  font-size: 10px; letter-spacing: .14em; text-transform: uppercase;
+}
+/* Timeline de movimientos: renglones de registro con folio. */
+.store-page[data-design='portico'][data-tracking='tracking-ticket'] .ec-timeline li { padding: 10px 0; }
+.store-page[data-design='portico'][data-tracking='tracking-ticket'] .ec-timeline strong {
+  font-family: var(--dz-body, inherit); font-size: 13px;
+}
+.store-page[data-design='portico'][data-tracking='tracking-ticket'] .ec-tl-dot {
+  width: 9px; height: 9px; margin-top: 5px;
+  border-radius: var(--dz-radius, 2px);
+  background: var(--dz-accent, #a75e3c);
+}
+.store-page[data-design='portico'][data-tracking='tracking-ticket'] .ec-track-note,
+.store-page[data-design='portico'][data-tracking='tracking-ticket'] .ec-track-skel {
+  border: 1px solid var(--dz-line, rgba(0,0,0,.14));
+  border-radius: var(--dz-radius, 2px);
+  background: var(--dz-surface, transparent);
+}
+@media (prefers-reduced-motion: reduce) {
+  .store-page[data-design='portico'][data-nav='editorial-index'] .sp-top .sp-top-links a::after {
+    transition: none;
+  }
+}
+
+/* Shop-nav (fila de secciones del marketplace): mismo índice de sala. */
+.store-page[data-design='portico'][data-nav='editorial-index'] .sp-shop-nav .sp-shop-nav-links {
+  counter-reset: ptshop;
+  gap: 0;
+}
+.store-page[data-design='portico'][data-nav='editorial-index'] .sp-shop-nav .sp-shop-nav-links a {
+  counter-increment: ptshop;
+  position: relative;
+  display: inline-flex; align-items: baseline; gap: 8px;
+  min-height: 44px;
+  padding: 8px 14px;
+  font-family: var(--dz-mono, ui-monospace, monospace);
+  font-size: 10px; font-weight: 500;
+  letter-spacing: .16em; text-transform: uppercase;
+  color: var(--sp-ink-2, inherit);
+}
+.store-page[data-design='portico'][data-nav='editorial-index'] .sp-shop-nav .sp-shop-nav-links a::before {
+  content: counter(ptshop, decimal-leading-zero);
+  font-size: 8px; letter-spacing: .1em;
+  color: var(--dz-accent, #a75e3c);
+}
+.store-page[data-design='portico'][data-nav='editorial-index'] .sp-shop-nav .sp-shop-nav-links a::after {
+  content: ''; position: absolute; left: 14px; right: 14px; bottom: 6px;
+  height: 1px; background: var(--dz-accent, #a75e3c);
+  transform: scaleX(0); transform-origin: 0 50%;
+  transition: transform .3s cubic-bezier(.22,.8,.2,1);
+}
+.store-page[data-design='portico'][data-nav='editorial-index'] .sp-shop-nav .sp-shop-nav-links a:hover::after,
+.store-page[data-design='portico'][data-nav='editorial-index'] .sp-shop-nav .sp-shop-nav-links a.is-current::after,
+.store-page[data-design='portico'][data-nav='editorial-index'] .sp-shop-nav .sp-shop-nav-links a.router-link-exact-active::after {
+  transform: scaleX(1);
+}
+.store-page[data-design='portico'][data-nav='editorial-index'] .sp-shop-nav .sp-shop-nav-links a.is-current,
+.store-page[data-design='portico'][data-nav='editorial-index'] .sp-shop-nav .sp-shop-nav-links a.router-link-exact-active {
+  color: var(--sp-ink, inherit);
+  font-weight: 700;
+}
+.store-page[data-design='portico'][data-nav='editorial-index'] .sp-shop-nav .sp-shop-nav-note {
+  font-family: var(--dz-mono, ui-monospace, monospace);
+  font-size: 9px; letter-spacing: .18em; text-transform: uppercase;
+}
+@media (prefers-reduced-motion: reduce) {
+  .store-page[data-design='portico'][data-nav='editorial-index'] .sp-shop-nav .sp-shop-nav-links a::after {
+    transition: none;
+  }
+}
