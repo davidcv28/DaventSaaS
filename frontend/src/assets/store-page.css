@@ -130,7 +130,7 @@
 .sp-btn.sm{ min-height: 36px; height: 36px; padding: 0 16px; font-size: 13px; }
 .sp-btn.ghost{ background: var(--sp-card); color: var(--sp-ink-2); border-color: var(--sp-line); box-shadow: var(--sp-shadow-sm); filter: none; }
 .sp-btn.ghost:hover{ border-color: var(--store-accent); color: var(--sp-accent-text); }
-.sp-icon-btn{ display: inline-grid; place-items: center; width: 44px; height: 44px; border-radius: 50%; border: 1px solid var(--sp-line); background: var(--sp-card); color: var(--sp-ink-2); cursor: pointer; text-decoration: none; box-shadow: var(--sp-shadow-sm); transition: border-color .15s, color .15s, filter .15s; }
+.sp-icon-btn{ position: relative; display: inline-grid; place-items: center; width: 44px; height: 44px; border-radius: 50%; border: 1px solid var(--sp-line); background: var(--sp-card); color: var(--sp-ink-2); cursor: pointer; text-decoration: none; box-shadow: var(--sp-shadow-sm); transition: border-color .15s, color .15s, filter .15s; }
 .sp-icon-btn:hover{ border-color: var(--store-accent); color: var(--sp-accent-text); }
 .sp-icon-btn.primary{ width: 38px; height: 38px; background: var(--store-accent-ink); border-color: transparent; color: var(--sp-on-band, #fff); }
 .sp-icon-btn.primary:hover{ color: var(--sp-on-band, #fff); border-color: transparent; filter: brightness(1.12); }
@@ -4503,3 +4503,173 @@ Reels— van angostas, las 16:9 anchas). El botón de vivo es Premium. */
 /* ===== Diseño del catálogo servido como documento propio =====
    Toggle de modo noche flotante: el documento del patrón no trae chrome
    de la plataforma, así que el interruptor vive en el host. */
+
+/* ==========================================================================
+   CONTRATO DEL HEADER (track-i) — prioridad de controles por breakpoint
+   --------------------------------------------------------------------------
+   Orden visual estable: burger → marca → links → buscador → acciones → CTA.
+   El header NUNCA hace wrap: los ítems flex tienen min-width:0 y la marca
+   trunca con ellipsis antes de empujar el layout.
+
+   ≥1101px (desktop):
+     burger OCULTO · links inline (.sp-top-links) · buscador inline solo en
+     catálogo (.sp-search-top) · acciones: cuenta, carrito, tema.
+     (.sp-top-cta no existe acá; en .is-home la barra entera se oculta y
+     manda el hero del diseño.)
+
+   769–1100px (tablet):
+     burger + drawer · links ocultos · buscador inline flexible (solo
+     catálogo) · acciones: cuenta, carrito, CTA (label completo), tema.
+
+   ≤768px (móvil):
+     burger + drawer (o tab bar si mobile.nav='bottom') · links siempre
+     ocultos · buscador = toggle lupa (.sp-search-toggle) que abre la barra
+     desplegable bajo el header · acciones: cuenta, carrito, lupa, CTA,
+     tema. La lupa y el tema también viven agrupados en el drawer
+     (.sp-drawer-foot) y en el sheet "Más" de la tab bar.
+
+   ≤480px (móvil angosto):
+     igual que ≤768 pero el CTA pasa a solo-ícono (.sp-top-cta-label se
+     oculta) y gaps del header se comprimen — ningún control se monta
+     fuera del viewport ni genera scroll horizontal.
+
+   Reglas duras: tap targets ≥ 40px (todos los controles del header son
+   44px), badge del carrito SIEMPRE position:absolute (nunca empuja el
+   layout), aria-expanded/aria-controls en burger, lupa y "Más", foco
+   visible con :focus-visible, y la tab bar fixed reserva su alto con
+   padding-bottom en .store-page[data-st-tabbar].
+   ========================================================================== */
+
+/* ==========================================================================
+   CHROME DEL DISEÑO EN TODAS LAS PÁGINAS PÚBLICAS (track-i)
+   --------------------------------------------------------------------------
+   Las páginas de comercio (/ingresar, /cuenta, carrito, checkout,
+   seguimiento, legales) NO montan el documento del patrón: renderizan el
+   chrome Vue (.sp-top / .sp-drawer / .sp-tabbar / .sp-more-sheet). Las
+   hojas store-design-<slug>.css definen los tokens --dz-* en la raíz
+   .store-page[data-design] pero solo vestían las superficies .ec-* — el
+   header quedaba con la banda de acento genérica, "otro navbar".
+
+   Acá el chrome consume los MISMOS tokens --dz-* (con fallback al look
+   base cuando la hoja del diseño no los define o aún no cargó), así el
+   header se ve con la piel del diseño en home, catálogo, ficha, auth,
+   cuenta, carrito y seguimiento.
+
+   Especificidad .store-page[data-design] (0,3,0): las pieles de plantilla
+   (store-<tpl>.css, misma especificidad, cargadas después por import
+   dinámico) y los menús por estilo (store-style-menus.css, más específica)
+   siguen ganando; una hoja store-design-* puede seguir sobre-escribiendo
+   .sp-top* con su propio scope sin !important.
+   ========================================================================== */
+/* Alias defensivo: no todos los diseños definen --dz-soft (ni --dz-card);
+   el hover suave cae al accent-soft del diseño y, sin tokens, al velo del
+   header oscuro original. */
+.store-page[data-design]{ --sp-dz-soft: var(--dz-soft, var(--dz-accent-soft, rgba(255, 255, 255, .14))); }
+.store-page[data-design] :is(.sp-top, .sp-drawer.sp-navdrawer, .sp-tabbar, .sp-more-sheet){ font-family: var(--dz-body, inherit); }
+.store-page[data-design] .sp-top{
+  background: var(--dz-surface, var(--dz-bg, linear-gradient(180deg, var(--store-accent-ink), color-mix(in srgb, var(--store-accent-ink) 82%, #000))));
+  color: var(--dz-ink, var(--sp-on-band, #fff));
+  border-bottom-color: var(--dz-line, rgba(0, 0, 0, .18));
+}
+.store-page[data-design] .sp-top.scrolled{ box-shadow: 0 10px 30px -14px color-mix(in srgb, var(--dz-ink, #0f172a) 45%, transparent); }
+.store-page[data-design] .sp-progress{ background: linear-gradient(90deg, color-mix(in srgb, var(--dz-ink, #fff) 35%, transparent), var(--dz-ink, #fff)); }
+.store-page[data-design] .sp-top .sp-brand,
+.store-page[data-design] .sp-top .sp-name{ color: var(--dz-ink, var(--sp-on-band, #fff)); }
+.store-page[data-design] .sp-top .sp-name{ font-family: var(--dz-display, inherit); }
+.store-page[data-design] .sp-top .sp-mono{ background: var(--dz-accent, var(--sp-on-band, #fff)); color: var(--dz-accent-ink, var(--store-accent-ink)); }
+.store-page[data-design] .sp-top .sp-logo.sm{ border-color: var(--dz-line, rgba(255, 255, 255, .5)); }
+.store-page[data-design] .sp-top-links a{ color: var(--dz-ink-2, color-mix(in srgb, var(--sp-on-band, #fff) 85%, transparent)); }
+.store-page[data-design] .sp-top-links a:hover{ color: var(--dz-ink, var(--sp-on-band, #fff)); background: var(--sp-dz-soft, rgba(255, 255, 255, .14)); }
+.store-page[data-design] .sp-top-links a.router-link-exact-active{ color: var(--dz-accent-text, var(--sp-on-band, #fff)); background: var(--sp-dz-soft, rgba(255, 255, 255, .18)); }
+.store-page[data-design] .sp-top .sp-icon-btn{
+  position: relative;
+  background: var(--dz-card, var(--dz-surface, var(--sp-on-band-2, rgba(255, 255, 255, .16))));
+  border-color: var(--dz-line, rgba(255, 255, 255, .35));
+  color: var(--dz-ink-2, var(--sp-on-band, #fff));
+  border-radius: var(--dz-radius, 50%);
+  box-shadow: none;
+}
+.store-page[data-design] .sp-top .sp-icon-btn:hover{
+  background: var(--sp-dz-soft, rgba(255, 255, 255, .26));
+  border-color: var(--dz-line-strong, var(--dz-line, var(--sp-on-band, #fff)));
+  color: var(--dz-accent-text, var(--sp-on-band, #fff));
+}
+.store-page[data-design] .sp-top .sp-burger{
+  background: var(--dz-card, var(--dz-surface, rgba(255, 255, 255, .14)));
+  border-color: var(--dz-line, rgba(255, 255, 255, .35));
+  color: var(--dz-ink-2, var(--sp-on-band, #fff));
+  border-radius: var(--dz-radius, 10px);
+}
+.store-page[data-design] .sp-top .sp-burger:hover{ background: var(--sp-dz-soft, rgba(255, 255, 255, .24)); border-color: var(--dz-line-strong, var(--dz-line, #fff)); color: var(--dz-accent-text, var(--sp-on-band, #fff)); }
+.store-page[data-design] .sp-top .sp-search-top{
+  background: var(--dz-card, rgba(255, 255, 255, .96));
+  border-color: var(--dz-line, var(--sp-line));
+  color: var(--dz-muted, var(--sp-muted));
+  border-radius: var(--dz-radius, 999px);
+}
+.store-page[data-design] .sp-top .sp-search-top input{ color: var(--dz-ink, var(--sp-ink)); }
+.store-page[data-design] .sp-top .sp-search-top input::placeholder{ color: var(--dz-muted, var(--sp-muted)); }
+.store-page[data-design] .sp-top .sp-search-top:focus-within{ border-color: var(--dz-accent, var(--store-accent)); }
+.store-page[data-design] .sp-top-cta{
+  background: var(--dz-accent, #fff);
+  color: var(--dz-accent-ink, var(--store-accent-ink));
+  border-radius: var(--dz-radius, 99px);
+}
+.store-page[data-design] .sp-top-cta:hover{ background: color-mix(in srgb, var(--dz-accent, #fff) 88%, var(--dz-ink, #000)); color: var(--dz-accent-ink, var(--store-accent-ink)); }
+/* Drawer de navegación y sheet "Más": misma superficie/tinta del diseño. */
+.store-page[data-design] .sp-drawer.sp-navdrawer{
+  background: var(--dz-card, var(--sp-card));
+  border-color: var(--dz-line, var(--sp-line));
+  color: var(--dz-ink, var(--sp-ink));
+}
+.store-page[data-design] .sp-drawer.sp-navdrawer .sp-drawer-head{ border-bottom-color: var(--dz-line, var(--sp-line)); }
+.store-page[data-design] .sp-drawer.sp-navdrawer .sp-nav-item{ color: var(--dz-ink-2, var(--sp-ink-2)); border-radius: var(--dz-radius-sm, var(--dz-radius, 9px)); }
+.store-page[data-design] .sp-drawer.sp-navdrawer .sp-nav-item svg{ color: var(--dz-muted, var(--sp-muted)); }
+.store-page[data-design] .sp-drawer.sp-navdrawer .sp-nav-item:hover{ background: var(--sp-dz-soft, var(--store-accent-soft)); color: var(--dz-accent-text, var(--store-accent-ink)); }
+.store-page[data-design] .sp-drawer.sp-navdrawer .sp-nav-item.active{ background: var(--sp-dz-soft, var(--store-accent-soft)); color: var(--dz-accent-text, var(--store-accent-ink)); }
+.store-page[data-design] .sp-drawer.sp-navdrawer .sp-drawer-close{ color: var(--dz-muted, var(--sp-muted)); }
+.store-page[data-design] .sp-drawer.sp-navdrawer .sp-drawer-close:hover{ background: var(--sp-dz-soft, var(--store-accent-soft)); color: var(--dz-accent-text, var(--store-accent-ink)); }
+.store-page[data-design] .sp-drawer-foot{ border-top-color: var(--dz-line, var(--sp-line)); }
+.store-page[data-design] .sp-drawer-action{ color: var(--dz-ink-2, var(--sp-ink-2)); border-radius: var(--dz-radius-sm, var(--dz-radius, 10px)); }
+.store-page[data-design] .sp-drawer-action:hover{ background: var(--sp-dz-soft, var(--store-accent-soft)); color: var(--dz-accent-text, var(--store-accent-ink)); }
+.store-page[data-design] .sp-tabbar{
+  background: color-mix(in srgb, var(--dz-card, var(--sp-card-solid)) 88%, transparent);
+  border-top-color: var(--dz-line, var(--sp-line));
+}
+.store-page[data-design] .sp-tab{ color: var(--dz-muted, var(--sp-muted)); }
+.store-page[data-design] .sp-tab.active{ color: var(--dz-accent-text, var(--store-accent)); }
+.store-page[data-design] .sp-tab.active::before{ background: var(--dz-accent-text, var(--store-accent)); }
+.store-page[data-design] .sp-tab:active{ background: var(--sp-dz-soft, var(--sp-soft)); }
+.store-page[data-design] .sp-more-sheet{
+  background: var(--dz-card, var(--sp-card-solid));
+  color: var(--dz-ink, var(--sp-ink));
+  border-top-color: var(--dz-line, var(--sp-line));
+}
+.store-page[data-design] .sp-more-head{ border-bottom-color: var(--dz-line, var(--sp-line)); }
+.store-page[data-design] .sp-more-grab{ background: var(--dz-line, var(--sp-line)); }
+.store-page[data-design] .sp-more-close{ background: var(--sp-dz-soft, var(--sp-soft)); color: var(--dz-ink, var(--sp-ink)); }
+.store-page[data-design] .sp-more-link{ color: var(--dz-ink, var(--sp-ink)); border-radius: var(--dz-radius-sm, var(--dz-radius, 10px)); }
+.store-page[data-design] .sp-more-link:hover, .store-page[data-design] .sp-more-link:active{ background: var(--sp-dz-soft, var(--sp-soft)); }
+.store-page[data-design] .sp-more-link > .icon:last-child{ color: var(--dz-muted, var(--sp-muted)); }
+.store-page[data-design] .sp-more-empty{ color: var(--dz-muted, var(--sp-muted)); }
+.store-page[data-design] .sp-more-foot{ border-top-color: var(--dz-line, var(--sp-line)); }
+
+/* Pie del drawer: acciones agrupadas (buscar / tema) — tap target ≥40px. */
+.sp-drawer-foot{ margin-top: auto; padding-top: 14px; border-top: 1px solid var(--sp-line); display: grid; gap: 4px; }
+.sp-drawer-action{ display: flex; align-items: center; gap: 10px; min-height: 44px; padding: 8px 12px; border: 0; border-radius: 10px; background: transparent; color: var(--sp-ink-2); font: inherit; font-size: 14px; font-weight: 600; text-align: left; text-decoration: none; cursor: pointer; transition: background .15s, color .15s; }
+.sp-drawer-action:hover{ background: var(--store-accent-soft); color: var(--sp-accent-text); }
+.store-page[data-store-theme='dark'] .sp-drawer-action:hover{ background: color-mix(in srgb, var(--store-accent) 16%, transparent); color: var(--sp-on-band, #fff); }
+
+/* Móvil angosto (≤480px): el CTA queda solo-ícono y el header comprime
+   gaps — los 5 controles del extremo nunca montan fuera del viewport. */
+@media (max-width: 480px){
+  .sp-top-inner{ gap: 8px; }
+  .sp-top-end{ gap: 4px; }
+  .sp-top-cta-label{ display: none; }
+  .sp-top-cta{ padding: 0 10px; }
+}
+/* Entre 481–640px el CTA conserva su label pero más compacto. */
+@media (min-width: 481px) and (max-width: 640px){
+  .sp-top-inner{ gap: 10px; }
+  .sp-top-end{ gap: 6px; }
+}

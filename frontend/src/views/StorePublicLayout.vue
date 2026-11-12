@@ -1370,13 +1370,13 @@ onBeforeUnmount(() => {
           </span>
         </RouterLink>
         <nav v-if="status === 'success' && !isShop" class="sp-top-links" aria-label="Secciones de la tienda">
-          <RouterLink v-if="!landingOff" :to="homeTo">Inicio</RouterLink>
-          <RouterLink v-if="showServices" :to="servicesTo">Servicios</RouterLink>
-          <RouterLink v-if="catalogPageOn" :to="catalogTo">Catálogo</RouterLink>
-          <RouterLink v-if="showPlans" :to="plansTo">Suscripciones</RouterLink>
-          <RouterLink v-if="hasAbout && !landingOff" :to="anchorTo('#nosotros')" active-class="sp-anchor" exact-active-class="sp-anchor">Nosotros</RouterLink>
-          <RouterLink v-if="showGallery && landingHasGallery && !landingOff" :to="anchorTo('#galeria')" active-class="sp-anchor" exact-active-class="sp-anchor">Galería</RouterLink>
-          <RouterLink v-if="showContact && landingHasContact && !landingOff" :to="anchorTo('#contacto')" active-class="sp-anchor" exact-active-class="sp-anchor">Contacto</RouterLink>
+          <RouterLink v-if="!landingOff" :to="homeTo" :aria-current="shopCurrent === 'home' ? 'page' : undefined">Inicio</RouterLink>
+          <RouterLink v-if="showServices" :to="servicesTo" :aria-current="shopCurrent === 'services' ? 'page' : undefined">Servicios</RouterLink>
+          <RouterLink v-if="catalogPageOn" :to="catalogTo" :aria-current="shopCurrent === 'catalog' ? 'page' : undefined">Catálogo</RouterLink>
+          <RouterLink v-if="showPlans" :to="plansTo" :aria-current="shopCurrent === 'plans' ? 'page' : undefined">Suscripciones</RouterLink>
+          <RouterLink v-if="hasAbout && !landingOff" :to="anchorTo('#nosotros')" :aria-current="shopCurrent === 'nosotros' ? 'location' : undefined" active-class="sp-anchor" exact-active-class="sp-anchor">Nosotros</RouterLink>
+          <RouterLink v-if="showGallery && landingHasGallery && !landingOff" :to="anchorTo('#galeria')" :aria-current="shopCurrent === 'galeria' ? 'location' : undefined" active-class="sp-anchor" exact-active-class="sp-anchor">Galería</RouterLink>
+          <RouterLink v-if="showContact && landingHasContact && !landingOff" :to="anchorTo('#contacto')" :aria-current="shopCurrent === 'contacto' ? 'location' : undefined" active-class="sp-anchor" exact-active-class="sp-anchor">Contacto</RouterLink>
         </nav>
         <!-- Tienda Pro: el buscador del masthead también existe fuera del
              catálogo — Enter o la lupa navegan a /catalogo?q= -->
@@ -1392,7 +1392,7 @@ onBeforeUnmount(() => {
                fiscal del backend). -->
           <RouterLink
             v-if="status === 'success' && customerAuthEnabled"
-            :to="accountTo" class="sp-icon-btn" style="position: relative"
+            :to="accountTo" class="sp-icon-btn"
             :aria-label="customerStore.isAuthenticated ? `Mi cuenta — ${customerStore.displayName}` : 'Ingresar a mi cuenta'"
             title="Mi cuenta"
           >
@@ -1400,7 +1400,7 @@ onBeforeUnmount(() => {
           </RouterLink>
           <button
             v-if="status === 'success' && ordersEnabled"
-            type="button" class="sp-icon-btn" style="position: relative"
+            type="button" class="sp-icon-btn"
             :aria-label="cartStore.itemCount ? `Carrito, ${cartStore.itemCount} ${cartStore.itemCount === 1 ? 'producto' : 'productos'}` : 'Carrito'"
             title="Carrito"
             @click="cartStore.openDrawer()"
@@ -1421,8 +1421,8 @@ onBeforeUnmount(() => {
           >
             <AppIcon :name="ui.searchOpen ? 'x' : 'search'" :size="17" />
           </button>
-          <RouterLink v-if="topCta" class="sp-top-cta" :to="topCta.to">
-            <AppIcon :name="topCta.icon" :size="16" /> {{ topCta.label }}
+          <RouterLink v-if="topCta" class="sp-top-cta" :to="topCta.to" :aria-label="topCta.label">
+            <AppIcon :name="topCta.icon" :size="16" /> <span class="sp-top-cta-label" aria-hidden="true">{{ topCta.label }}</span>
           </RouterLink>
           <button
             v-if="showThemeToggle"
@@ -1473,6 +1473,20 @@ onBeforeUnmount(() => {
           :exact-active-class="l.anchor ? 'sp-anchor' : 'router-link-exact-active'"
           @click="ui.menuOpen = false"
         ><span>{{ l.label }}</span><AppIcon name="chevron-right" :size="15" aria-hidden="true" /></RouterLink>
+      </div>
+      <!-- Acciones agrupadas en el drawer (contrato móvil <768px): la lupa
+           y el tema no compiten con la marca en la barra — viven acá. -->
+      <div class="sp-drawer-foot">
+        <RouterLink
+          v-if="catalogPageOn && !isCatalog"
+          :to="catalogTo" class="sp-drawer-action"
+          @click="ui.menuOpen = false"
+        ><AppIcon name="search" :size="16" aria-hidden="true" /><span>Buscar productos</span></RouterLink>
+        <button
+          v-if="showThemeToggle"
+          type="button" class="sp-drawer-action"
+          @click="ui.menuOpen = false; togglePageTheme()"
+        ><AppIcon :name="pageTheme === 'dark' ? 'sun' : 'moon'" :size="16" aria-hidden="true" /><span>{{ pageTheme === 'dark' ? 'Modo claro' : 'Modo oscuro' }}</span></button>
       </div>
     </nav>
 
