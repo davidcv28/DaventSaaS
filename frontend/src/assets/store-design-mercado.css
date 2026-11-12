@@ -19,11 +19,11 @@
   --dz-ink-2: #3d3d3d;
   --dz-muted: #5c5c5c;
   --dz-line: #e3e3de;
-  /* El toldo es un ámbar cálido por identidad del diseño (#A16A00, 4.6:1
-     con blanco — la tinta del toldo pasa a ser blanca). NO sigue al acento
-     de la tienda (con presets como 'sky' el par queda a ~1.4:1). */
-  --dz-accent: #a16a00;
-  --dz-accent-ink: #ffffff;
+  /* El toldo ES el acento de la tienda (--st-accent del estilo elegido):
+     la banda de auth/cuenta pinta idéntica al navbar en todo estilo, y la
+     tinta viaja en --st-accent-ink (contrast-safe por backend). */
+  --dz-accent: var(--st-accent, #a16a00);
+  --dz-accent-ink: var(--st-accent-ink, #ffffff);
   /* El amarillo como TEXTO no existe: los acentos tipográficos van en el
      azul del diseño (5.9:1 sobre blanco). */
   --dz-link: #1d4ed8;
@@ -48,8 +48,8 @@
   --dz-ink-2: #d6d8dd;
   --dz-muted: #a2a6ae;
   --dz-line: #33363c;
-  --dz-accent: #a16a00;
-  --dz-accent-ink: #ffffff;
+  --dz-accent: var(--st-accent, #a16a00);
+  --dz-accent-ink: var(--st-accent-ink, #ffffff);
   --dz-link: color-mix(in srgb, #2563eb 55%, #ffffff);
   --dz-blue: #3b82f6;
   --dz-blue-ink: #0b1220;
@@ -70,8 +70,8 @@
   --dz-ink-2: #453b36;
   --dz-muted: #6b625c;
   --dz-line: #e7dfd8;
-  --dz-accent: #ff6a00;
-  --dz-accent-ink: #2b1600;
+  --dz-accent: var(--st-accent, #ff6a00);
+  --dz-accent-ink: var(--st-accent-ink, #2b1600);
   --dz-link: #9f1239;
   --dz-blue: #c81e1e;
   --dz-blue-ink: #ffffff;
@@ -86,8 +86,8 @@
   --dz-ink-2: #4a3d2e;
   --dz-muted: #6b5d4f;
   --dz-line: #e5dccb;
-  --dz-accent: #f59e0b;
-  --dz-accent-ink: #2b2118;
+  --dz-accent: var(--st-accent, #f59e0b);
+  --dz-accent-ink: var(--st-accent-ink, #2b2118);
   --dz-link: #92400e;
   --dz-blue: #b45309;
   --dz-blue-ink: #ffffff;
@@ -102,8 +102,8 @@
   --dz-ink-2: #374452;
   --dz-muted: #5b6b7c;
   --dz-line: #d9e0e7;
-  --dz-accent: #38bdf8;
-  --dz-accent-ink: #0b2838;
+  --dz-accent: var(--st-accent, #38bdf8);
+  --dz-accent-ink: var(--st-accent-ink, #0b2838);
   --dz-link: #0369a1;
   --dz-blue: #334155;
   --dz-blue-ink: #ffffff;
@@ -118,8 +118,8 @@
   --dz-ink-2: #d6d8dd;
   --dz-muted: #a0a5ae;
   --dz-line: #30343b;
-  --dz-accent: #a16a00;
-  --dz-accent-ink: #ffffff;
+  --dz-accent: var(--st-accent, #a16a00);
+  --dz-accent-ink: var(--st-accent-ink, #ffffff);
   --dz-link: color-mix(in srgb, #3b82f6 55%, #ffffff);
   --dz-blue: #3b82f6;
   --dz-blue-ink: #0b1220;
