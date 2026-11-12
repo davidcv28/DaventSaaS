@@ -415,6 +415,7 @@ onBeforeUnmount(() => {
                       class="mc-pdp-btn mc-pdp-btn-soft"
                       :disabled="adding || stockExhausted" @click="addToCart"
                     >
+                      <AppIcon :name="added ? 'check' : 'shopping-cart'" :size="16" aria-hidden="true" />
                       {{ stockExhausted ? 'Sin stock' : added ? 'Agregado' : 'Agregar al carrito' }}
                     </button>
                     <a

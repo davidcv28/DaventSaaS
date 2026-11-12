@@ -58,7 +58,8 @@ _SITE_THEME_MAX_BLOCKS  =   12
 #=========================================
 # CATÁLOGO CERRADO (espejo de STUDIO_ENUMS del contrato)
 #=========================================
-_PALETTE_KEYS   =   ('primary', 'secondary', 'accent', 'bg', 'surface', 'text', 'muted', 'border', 'success', 'danger')
+_PALETTE_KEYS   =   ('primary', 'secondary', 'accent', 'bg', 'surface', 'text', 'muted', 'border', 'success', 'danger',
+                    'primary_ink', 'secondary_ink', 'success_ink', 'accent_ink')
 _RADIUS         =   ('none', 'sm', 'md', 'lg', 'xl', 'pill')
 _SHADOW         =   ('none', 'soft', 'medium', 'deep')
 _BORDER         =   ('none', 'thin', 'bold')

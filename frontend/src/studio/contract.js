@@ -311,6 +311,15 @@ export function resolveSiteTheme(partial = {}) {
   for (const key of Object.keys(d.palette)) {
     palette[key] = normalizeHex(pal[key]) || d.palette[key]
   }
+  // Tintas explícitas sobre rellenos de marca (*_ink): el comercio puede
+  // fijar texto propio (p.ej. blanco sobre celeste) sin perder el cálculo
+  // automático de contraste. Mismo juego de claves que _PALETTE_KEYS.
+  for (const key of Object.keys(pal)) {
+    if (key.endsWith('_ink')) {
+      const ink = normalizeHex(pal[key])
+      if (ink) palette[key] = ink
+    }
+  }
 
   const weight = Number(typ.weightHeading)
   const cols = Number(mb.gridCols)
@@ -634,10 +643,10 @@ export function themeToCssVars(theme, resolveFont, mode = 'light') {
     '--st-muted': p.muted,
     '--st-border': p.border,
     '--st-success': p.success,
-    '--st-on-success': textOn(p.success),
+    '--st-on-success': p.success_ink || textOn(p.success),
     '--st-danger': p.danger,
-    '--st-on-primary': textOn(p.primary),
-    '--st-on-secondary': textOn(p.secondary),
+    '--st-on-primary': p.primary_ink || textOn(p.primary),
+    '--st-on-secondary': p.secondary_ink || textOn(p.secondary),
     '--st-radius': RADIUS_PX[t.containers.radius],
     '--st-shadow': SHADOW_CSS[t.containers.shadow],
     '--st-border-w': BORDER_PX[t.containers.border],

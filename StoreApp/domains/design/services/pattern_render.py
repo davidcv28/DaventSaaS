@@ -1328,7 +1328,7 @@ def theme_css(customization, pattern = None, site_theme = None):
         '--ds-border-style': effects.get('border_style', ''),
         '--ds-divider': DIVIDER_MAP.get(effects.get('divider', ''), ''),
         '--ds-accent': color if str(color).startswith('#') else '',
-        '--ds-accent-ink': _contrast_ink(color),
+        '--ds-accent-ink': _text(palette.get('accent_ink'), 7) or _contrast_ink(color),
     }
     #Acento como COLOR DE TEXTO (botones outline/ghost/transparent, enlaces):
     #se ajusta a AA contra la superficie efectiva para que un acento claro
@@ -1358,10 +1358,11 @@ def theme_css(customization, pattern = None, site_theme = None):
         if value.startswith('#'):
             vars_[f'--ds-{key}'] = value
     #Texto legible sobre cada relleno de marca (mismo criterio que --st-*).
+    #Una `*_ink` explícita en la paleta manda sobre el cálculo automático.
     for key in ('primary', 'secondary', 'success'):
         fill = vars_.get(f'--ds-{key}')
         if fill:
-            vars_[f'--ds-{key}-ink'] = _contrast_ink(fill)
+            vars_[f'--ds-{key}-ink'] = _text(palette.get(f'{key}_ink'), 7) or _contrast_ink(fill)
     #Mismo trato para el éxito usado como TEXTO (.ds-stock de la hoja del
     #host): la success de una paleta night sobre superficies oscuras
     #quedaba a ~3:1 en modo noche. Va después del loop de paleta porque
@@ -1611,8 +1612,8 @@ def studio_theme_css(site_theme):
     btn_style  =   buttons.get('style')
     if btn_style in ('solid', 'outline', 'ghost', 'gradient', 'transparent'):
         if btn_style == 'solid':
-            decl    =   'background:var(--ds-accent, currentColor)!important;'
-            decl    +=  'color:var(--ds-accent-ink, #fff)!important;'
+            decl    =   'background:var(--ds-primary, var(--ds-accent, currentColor))!important;'
+            decl    +=  'color:var(--ds-primary-ink, var(--ds-accent-ink, #fff))!important;'
             decl    +=  'border-color:transparent!important'
         elif btn_style == 'outline':
             decl    =   'background:transparent!important;'
