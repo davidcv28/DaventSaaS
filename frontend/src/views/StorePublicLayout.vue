@@ -1485,10 +1485,10 @@ onBeforeUnmount(() => {
           <!-- E-commerce: cuenta del comprador con customer_auth_enabled;
                carrito solo con orders_enabled efectivo (ecommerce +
                fiscal del backend). -->
-          <!-- Campana de avisos: solo con sesión de comprador (el visitante
-               sin cuenta no tiene notificaciones que mostrar). -->
+          <!-- Campana de avisos: visible siempre que el plan tenga auth de
+               compradores — el invitado ve un CTA de login en el panel. -->
           <CustomerNotificationsBell
-            v-if="status === 'success' && customerAuthEnabled && customerStore.isAuthenticated"
+            v-if="status === 'success' && customerAuthEnabled"
             :account-to="accountTo"
             :catalog-to="catalogTo"
           />
@@ -1557,17 +1557,6 @@ onBeforeUnmount(() => {
         </div>
       </nav>
     </header>
-
-    <!-- Campana flotante para tiendas con chrome del diseño (iframe del
-         patrón reemplaza .sp-top): su navbar no es inyectable, así que el
-         acceso a los avisos va en una píldora fija en la esquina opuesta
-         al dock del chat. -->
-    <div
-      v-if="status === 'success' && usePatternChrome && customerAuthEnabled && customerStore.isAuthenticated"
-      class="sp-notif-float"
-    >
-      <CustomerNotificationsBell :account-to="accountTo" :catalog-to="catalogTo" />
-    </div>
 
     <!-- Menú móvil (solo navegación): los filtros del catálogo NO viven
          acá — van en CatalogFilters (bottom sheet propio). -->
@@ -1775,6 +1764,17 @@ onBeforeUnmount(() => {
     <!-- E-commerce del comprador: drawer del carrito, modal de auth y
          toast de avisos. Van fuera del .sp-vue-page: también aplican en
          las rutas de comercio (checkout/cuenta/seguimiento/legal). -->
+    <!-- Campana flotante para diseños con documento propio: el patrón
+         pinta su navbar (chrome) o la página entera (usePattern) en un
+         iframe inyectable, así que el acceso a los avisos va en una
+         píldora fija sobre él, en la esquina opuesta al dock del chat.
+         Va FUERA del .sp-vue-page (que no se monta con usePattern). -->
+    <div
+      v-if="status === 'success' && customerAuthEnabled && (usePattern || usePatternChrome)"
+      class="sp-notif-float"
+    >
+      <CustomerNotificationsBell :account-to="accountTo" :catalog-to="catalogTo" />
+    </div>
     <StoreCartDrawer v-if="status === 'success'" :slug="slug" />
     <StoreAuthModal v-if="status === 'success' && customerAuthEnabled" :slug="slug" @done="onCustomerAuthed" />
     <Transition name="ec-toast">

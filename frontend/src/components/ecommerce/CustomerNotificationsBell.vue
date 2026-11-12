@@ -6,6 +6,7 @@
 import { ref, computed, onMounted, onBeforeUnmount } from 'vue'
 import { useRouter } from 'vue-router'
 import AppIcon from '../AppIcon.vue'
+import { useCustomerStore } from '../../stores/customer.store.js'
 import { useCustomerNotifications } from '../../composables/useCustomerNotifications.js'
 
 const props = defineProps({
@@ -15,6 +16,8 @@ const props = defineProps({
 
 const router = useRouter()
 const notif = useCustomerNotifications()
+const customerStore = useCustomerStore()
+const authed = computed(() => customerStore.isAuthenticated)
 
 const open = ref(false)
 const rootRef = ref(null)
@@ -100,7 +103,14 @@ onBeforeUnmount(() => {
             Marcar todas como leídas
           </button>
         </header>
-        <p v-if="!recent.length" class="sp-notif-empty">
+        <!-- Invitado: el stream no corre sin sesión — el panel ofrece el
+             acceso a la cuenta en vez de una lista vacía engañosa. -->
+        <div v-if="!authed" class="sp-notif-empty">
+          <AppIcon name="bell" :size="18" aria-hidden="true" />
+          <p>Ingresá o creá tu cuenta para ver los avisos de la tienda.</p>
+          <RouterLink :to="accountTo" class="sp-notif-all" @click="open = false">Ingresar a mi cuenta</RouterLink>
+        </div>
+        <p v-else-if="!recent.length" class="sp-notif-empty">
           <AppIcon name="bell" :size="18" aria-hidden="true" />
           Todavía no tenés avisos.
         </p>
@@ -162,6 +172,7 @@ onBeforeUnmount(() => {
 .sp-notif-clear { border: none; background: none; padding: 2px 4px; font: inherit; font-size: 11.5px; font-weight: 700; letter-spacing: 0; text-transform: none; color: var(--sp-accent-text, var(--store-accent, inherit)); cursor: pointer; border-radius: 6px; }
 .sp-notif-clear:hover { text-decoration: underline; text-underline-offset: 2px; }
 .sp-notif-empty { display: grid; justify-items: center; gap: 6px; margin: 0; padding: 22px 14px; font-size: 13px; color: var(--sp-muted, inherit); text-align: center; }
+.sp-notif-empty p { margin: 0; }
 .sp-notif-list { list-style: none; margin: 0; padding: 6px; max-height: 340px; overflow-y: auto; }
 .sp-notif-item { display: flex; gap: 10px; align-items: flex-start; width: 100%; padding: 10px; border: none; border-radius: 10px; background: none; font: inherit; color: inherit; text-align: left; cursor: pointer; }
 .sp-notif-item:hover { background: color-mix(in srgb, var(--sp-ink, #000) 5%, transparent); }
