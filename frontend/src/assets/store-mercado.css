@@ -1608,8 +1608,8 @@
   --tpc-fit: contain;
   --tpc-pad: 0 12px 14px;
   --tpc-gap: 4px;
-  --tpc-name-size: 15px;
-  --tpc-name-weight: 500;
+  --tpc-name-size: 16px;
+  --tpc-name-weight: 700;
   --tpc-name-lh: 1.35;
   --tpc-price-size: 24px;
   --tpc-price-weight: 700;
@@ -1636,10 +1636,10 @@
   /* La regla global de h2 del diseño (clamp 20–26px) le ganaba al token
      del contrato: acá manda el tamaño de tarjeta. */
   font-family: var(--mc-body);
-  font-size: 15px;
-  font-weight: 500;
+  font-size: 16px;
+  font-weight: 700;
   line-height: 1.35;
-  letter-spacing: 0;
+  letter-spacing: -.01em;
   color: var(--mc-ink);
 }
 .store-page[data-template='mercado'] .mc-cat-list[data-view='grid'] .mc-cat-card:hover {
