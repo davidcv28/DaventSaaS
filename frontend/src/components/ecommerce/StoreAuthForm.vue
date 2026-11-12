@@ -25,18 +25,23 @@ const emit = defineEmits(['done', 'mode'])
 const customer = useCustomerStore()
 const cart = useCartStore()
 
-const form = ref({ email: '', password: '', first_name: '', last_name: '', forgot_email: '' })
+const form = ref({ email: '', password: '', password2: '', first_name: '', last_name: '', forgot_email: '' })
 const busy = ref(false)
 const resendBusy = ref(false)     // guard del "Reenviar verificación" (anti doble-click)
 const notice = ref('')               // mensaje verde (reset pedido, verificación…)
 const registeredPending = ref(false) // recién se registró → aviso de verificación
 const showPassword = ref(false)
+const showPassword2 = ref(false)
+// Mismatch local de confirmación: el backend no recibe password2 — la
+// coincidencia se valida en cliente antes de llamar a la API.
+const mismatch = ref('')
 
 const emailInput = ref(null)
 const passwordInput = ref(null)
 const firstNameInput = ref(null)
 const lastNameInput = ref(null)
 const forgotInput = ref(null)
+const confirmInput = ref(null)
 // Aviso/error del formulario: recibe el foco cuando el envío falla y el
 // problema no es de un campo concreto.
 const msgRef = ref(null)
@@ -57,6 +62,7 @@ const formError = computed(() => customer.lastError || '')
 const fieldFlags = ref({
   email: { bad: false, fixed: false },
   password: { bad: false, fixed: false },
+  confirm: { bad: false, fixed: false },
 })
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/
 const emailOk = (v) => EMAIL_RE.test(String(v || '').trim())
@@ -64,7 +70,8 @@ function markInvalid(name, bad) {
   if (fieldFlags.value[name]) fieldFlags.value[name].bad = bad
 }
 function resetInvalid() {
-  fieldFlags.value = { email: { bad: false, fixed: false }, password: { bad: false, fixed: false } }
+  fieldFlags.value = { email: { bad: false, fixed: false }, password: { bad: false, fixed: false }, confirm: { bad: false, fixed: false } }
+  mismatch.value = ''
 }
 function onFieldInput(name) {
   if (fieldFlags.value[name]) fieldFlags.value[name].fixed = true
@@ -156,6 +163,18 @@ async function submit() {
   const emailVal = props.mode === 'forgot' ? form.value.forgot_email : form.value.email
   markInvalid('email', !emailOk(emailVal))
   if (props.mode !== 'forgot') markInvalid('password', form.value.password.length < 8)
+  // Confirmación solo en registro: es chequeo local — no viaja al backend.
+  if (props.mode === 'register') {
+    const bad = !form.value.password2 || form.value.password2 !== form.value.password
+    markInvalid('confirm', bad)
+    if (bad) {
+      mismatch.value = 'Las contraseñas no coinciden.'
+      busy.value = false
+      await nextTick()
+      confirmInput.value?.focus()
+      return
+    }
+  }
   try {
     if (props.mode === 'login') {
       const res = await customer.login({ email: form.value.email.trim(), password: form.value.password, store_slug: props.slug })
@@ -306,7 +325,7 @@ onUnmounted(() => resizeObs?.disconnect())
             <span id="ec-auth-first-name-label" class="sp-field-label">Nombre</span>
             <input
               ref="firstNameInput" v-model="form.first_name" name="first_name" class="sp-input"
-              type="text" autocomplete="given-name" enterkeyhint="next" :disabled="busy"
+              type="text" autocomplete="given-name" placeholder="Nombre" enterkeyhint="next" :disabled="busy"
               aria-labelledby="ec-auth-first-name-label"
               :aria-invalid="fieldError('first_name') ? 'true' : undefined"
               :aria-describedby="describedBy('first_name')"
@@ -317,7 +336,7 @@ onUnmounted(() => resizeObs?.disconnect())
             <span id="ec-auth-last-name-label" class="sp-field-label">Apellido</span>
             <input
               ref="lastNameInput" v-model="form.last_name" name="last_name" class="sp-input"
-              type="text" autocomplete="family-name" enterkeyhint="next" :disabled="busy"
+              type="text" autocomplete="family-name" placeholder="Apellido" enterkeyhint="next" :disabled="busy"
               aria-labelledby="ec-auth-last-name-label"
               :aria-invalid="fieldError('last_name') ? 'true' : undefined"
               :aria-describedby="describedBy('last_name')"
@@ -385,6 +404,33 @@ onUnmounted(() => resizeObs?.disconnect())
             </button>
           </span>
           <span v-if="fieldError('password')" :id="fieldErrorId('password')" class="sp-form-error">{{ fieldError('password') }}</span>
+        </label>
+        <label v-if="mode === 'register'" class="sp-field">
+          <span id="ec-auth-confirm-label" class="sp-field-label">Repetir contraseña</span>
+          <span class="ecaf-pass">
+            <input
+              ref="confirmInput" id="ec-auth-confirm" v-model="form.password2" name="password2" class="sp-input"
+              :type="showPassword2 ? 'text' : 'password'"
+              placeholder="Repetir contraseña"
+              autocomplete="new-password"
+              required minlength="8" :disabled="busy"
+              spellcheck="false" autocapitalize="none"
+              enterkeyhint="done"
+              aria-labelledby="ec-auth-confirm-label"
+              :aria-invalid="isInvalid('confirm') || mismatch ? 'true' : undefined"
+              :aria-describedby="describedBy('confirm')"
+              @input="onFieldInput('confirm'); mismatch = ''"
+            />
+            <button
+              type="button" class="ecaf-pass-toggle" :disabled="busy"
+              :aria-label="showPassword2 ? 'Ocultar contraseña' : 'Mostrar contraseña'"
+              :aria-pressed="showPassword2"
+              @click="showPassword2 = !showPassword2"
+            >
+              <AppIcon :name="showPassword2 ? 'eye-off' : 'eye'" :size="17" />
+            </button>
+          </span>
+          <span v-if="mismatch" id="ec-auth-confirm-error" class="sp-form-error">{{ mismatch }}</span>
         </label>
       </template>
 
