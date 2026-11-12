@@ -141,12 +141,25 @@ Tarea:
    con el contenido (`padding-bottom` del page-root cuando la tab bar es
    fixed), íconos del tab bar con label, "Más" abre el drawer con el resto
    de links.
-4. NO tocar `store-design-*.css` ni `store-<tpl>.css`: los diseños que hoy
+4. **Navbar idéntico en TODAS las páginas públicas** (agregado por el
+   usuario): hoy al navegar a `/ingresar` —y potencialmente `/cuenta`,
+   carrito, checkout, seguimiento— el navbar cambia por completo y no
+   tiene nada que ver con el del diseño de la tienda. Diagnosticar la
+   causa raíz (¿la hoja `store-design-<slug>.css` no carga en esas
+   páginas? ¿el scope `.store-page[data-design]` no matchea el root de
+   auth? ¿el header renderiza variante distinta?) y hacer que el chrome
+   sea EL MISMO en home, catálogo, ficha, auth, cuenta, carrito y
+   seguimiento: misma marca, mismos controles, misma piel del diseño.
+   Si el fix necesita tocar una vista ajena (p. ej. clase root de
+   StoreAuthView), reportarlo con snippet para track-x; el markup y
+   estilos del header en `StorePublicLayout.vue` sí es tuyo.
+5. NO tocar `store-design-*.css` ni `store-<tpl>.css`: los diseños que hoy
    pisan `.sp-top*` lo hacen con su scope; tu contrato debe ser
    sobre-escribible por ellos (clases estables, tokens).
-5. Verificar 360/768/1024/1440 en una tienda local con
+6. Verificar 360/768/1024/1440 en una tienda local con
    `customer_auth_enabled` + `orders_enabled` + tema toggle + CTA, y una
-   tienda mínima (sin catálogo) para el caso de pocos controles.
+   tienda mínima (sin catálogo) para el caso de pocos controles. Comparar
+   el header home vs `/ingresar` en al menos 2 diseños.
 
 Cierre: tabla `breakpoint | controles visibles | problema encontrado | fix`,
 `git diff --stat`, riesgos.
