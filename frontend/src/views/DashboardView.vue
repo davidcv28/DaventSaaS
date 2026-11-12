@@ -3773,8 +3773,13 @@ async function planAction(p) {
   // La pestaña se abre dentro del gesto del usuario para que el navegador no la bloquee.
   const checkoutTab = window.open('about:blank', '_blank')
   try {
-    if (billing.subscription?.auto_renew) {
-      // Con débito automático activo, el cambio de plan se aplica en el próximo débito mensual.
+    // Upgrade (plan más caro) con débito automático: Netflix — se cobra la
+    // diferencia prorrateada YA por checkout manual (el preapproval no puede
+    // debitar fuera de fecha) y el plan cambia al acreditarse sin mover la
+    // facturación. Downgrade/lateral sí se programa en el próximo débito.
+    const isUpgrade = plan.value && Number(p.price) > Number(plan.value.price)
+    if (billing.subscription?.auto_renew && !isUpgrade) {
+      // Con débito automático activo, el downgrade se aplica en el próximo débito mensual.
       const data = await payments.subscribeAuto({ suscription: billing.subscription.id, planPk: p.id })
       if (data?.auto_renew) {
         checkoutTab?.close()
