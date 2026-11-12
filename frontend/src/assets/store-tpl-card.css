@@ -15,7 +15,22 @@
    - .tpc-name: line-clamp 2 + alto mínimo de 2 líneas — un nombre corto NO
      mueve el pie y uno larguísimo no desborda.
    - .tpc-desc: opcional, clamp 2.
-   - .tpc-foot: precio/ahorro/CTA anclados abajo con margin-top:auto.
+   - .tpc-foot: precio/ahorro anclados abajo con margin-top:auto. SIN CTAs:
+     la raíz .tpc es el único link (role=link, Enter/Espacio) — contrato
+     track-j (F1). Las reglas .tpc-go/.tpc-add quedan DEPRECADAS: las
+     conservan las pieles/slots #foot legacy hasta que track-m limpie los
+     call sites; no agregues usos nuevos.
+   - Regla de stacking sobre .tpc-media (z-index):
+       * sello de oferta (OfferSeal o .tpc-flag.offer): esquina SUPERIOR
+         (top-inline-end salvo OfferSeal ribbon → top-inline-start; la fila
+         .tpc-flags ocupa todo el ancho superior con space-between);
+       * etiqueta de campaña .tpc-event (productDiscount → name+percent):
+         esquina INFERIOR inline-end (bottom:10px), z-index 3 — NUNCA
+         comparte esquina con el sello ni con .tpc-campaign/.tpc-idx;
+       * .tpc-campaign (label_url) y .tpc-idx: bottom-inline-start,
+         apilados a 34px cuando coexisten (ya existente);
+       * .tpc-quick: hover, centrado abajo; sube a bottom:46px cuando hay
+         .tpc-event para no taparla.
    - Grids: grid-auto-rows 1fr + stretch (la tarjeta llena su celda).
    - Datos extremos: nombre larguísimo, sin imagen, sin precio, precio
      enorme y oferta con tachado no rompen ni el alto ni el ancho.
@@ -242,7 +257,40 @@
   min-height: calc(2 * 1.45 * var(--tpc-desc-size, 12.5px));
 }
 
-/* --- Pie: SIEMPRE abajo (margin-top:auto) — precio, ahorro y CTA --- */
+/* Etiqueta de campaña/descuento programado (productDiscount(p) →
+   {name, percent, ends_at}): nombre corto + %, p. ej. "HOT SALE −30%".
+   Esquina inferior inline-end de la media — regla de stacking en la
+   cabecera del archivo: nunca comparte esquina con el sello (arriba) ni
+   con .tpc-campaign/.tpc-idx (abajo-inline-start). pointer-events:none:
+   la tarjeta entera es el link. */
+.tpc-event {
+  position: absolute;
+  inset-inline-end: 10px;
+  bottom: 10px;
+  z-index: 3;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  max-width: calc(100% - 20px);
+  padding: 4px 9px;
+  border-radius: var(--tpc-event-radius, 99px);
+  background: var(--tpc-event-bg, var(--store-accent, #4f46e5));
+  color: var(--tpc-event-ink, #fff);
+  font-size: var(--tpc-event-size, 10.5px);
+  font-weight: var(--tpc-event-weight, 700);
+  letter-spacing: .04em;
+  text-transform: var(--tpc-event-transform, uppercase);
+  line-height: 1;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  pointer-events: none;
+}
+.tpc-event .icon { flex: none; }
+/* Con etiqueta de campaña presente el chip hover sube para no taparla. */
+.tpc-event ~ .tpc-quick { bottom: 46px; }
+
+/* --- Pie: SIEMPRE abajo (margin-top:auto) — precio y ahorro (sin CTAs) --- */
 .tpc-foot {
   margin-top: auto;
   display: flex;
@@ -285,6 +333,10 @@
   max-width: 100%;
 }
 .tpc-save em { font-style: normal; font-weight: 500; opacity: .75; }
+/* DEPRECADAS (track-j / F1): .tpc-go y .tpc-add ya no se renderizan desde
+   TplProductCard — la tarjeta no tiene CTAs propios. Las reglas quedan
+   para los slots #foot de las pieles que aún las usan; track-m las
+   elimina junto con los call sites. No agregar usos nuevos. */
 .tpc .tpc-go {
   margin-inline-start: auto;
   display: inline-flex;
