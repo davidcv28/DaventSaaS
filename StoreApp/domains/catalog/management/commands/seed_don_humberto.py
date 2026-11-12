@@ -54,7 +54,7 @@ CUSTOMIZATION       =   {
     'contact_email'         :   'hola@donhumberto.com.ar',
     'whatsapp'              :   '+5493874123456',
     'instagram'             :   'donhumberto.olivas',
-    'facebook'              :   'Don Humberto Aceitunas',
+    'facebook'              :   'donhumberto.aceitunas',
     'tiktok'                :   '',
     'services_title'        :   'Lo que hacemos',
     'services'              :   [
