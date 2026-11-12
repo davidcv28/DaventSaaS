@@ -67,7 +67,26 @@ def refund_payment(order, *, actor = None):
     #externa a MP: dos refunds concurrentes se serializan en el lock — el
     #segundo ve REFUNDED y nunca llega a mover plata dos veces.
     Order   =   orders_bridge.order_model()
+    order_pk    =   getattr(order, 'pk', None) or getattr(order, 'id', None)
     with transaction.atomic():
+        #Orden de locks MpPayment -> Order, IGUAL que el webhook
+        #(services/webhook.py bloquea el MpPayment y después el pedido
+        #vía mark_paid/mark_refunded). Si acá se bloqueara el pedido
+        #primero y el MpPayment al final (record.save), un webhook
+        #'refunded' concurrente del mismo pago quedaría en deadlock
+        #clásico: webhook tiene MpPayment y pide Order, refund tiene
+        #Order y pide MpPayment. Bloqueando TODOS los MpPayment del
+        #pedido (pk-ordenados, son pocos) antes del Order se serializa
+        #contra cualquier webhook de sus pagos. order_pk None (doble de
+        #test sin fila) no matchea nada: order_id es NULL-able y un
+        #filtro IS NULL bloquearía filas ajenas.
+        if order_pk is not None:
+            list(
+                MpPayment.objects
+                .select_for_update()
+                .filter(order_id = order_pk)
+                .order_by('pk')
+            )
         #La vista garantiza que el pedido existe y es de la tienda
         #(get_order_for_store); el `or order` solo cubre dobles de test
         #sin fila persistida — en producción locked es siempre la fila

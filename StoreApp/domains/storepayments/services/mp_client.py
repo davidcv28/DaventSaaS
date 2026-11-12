@@ -106,3 +106,13 @@ def refund_mp_payment(payment_id, access_token, amount = None):
 def create_preference(payload, access_token):
     """POST /checkout/preferences — devuelve el dict de MP (id, init_point...)."""
     return _request('POST', '/checkout/preferences', access_token = access_token, payload = payload)
+
+
+def get_preference(preference_id, access_token):
+    """
+    GET /checkout/preferences/<id> — re-lee una preferencia ya emitida.
+    Lo usa el checkout para IDEMPOTENCIA: un retry/doble click del
+    comprador devuelve el MISMO init_point en vez de crear una segunda
+    preferencia pagable (dos links vivos = dos cobros por un pedido).
+    """
+    return _request('GET', f'/checkout/preferences/{_check_id(preference_id, "preference_id")}', access_token = access_token)

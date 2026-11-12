@@ -23,6 +23,8 @@ Respuesta: {init_point, sandbox_init_point, preference_id, checkout_url}
 """
 import logging
 
+from django.db import transaction
+from django.utils import timezone
 from rest_framework import status
 from rest_framework.exceptions import NotFound
 from rest_framework.permissions import AllowAny
@@ -72,8 +74,27 @@ class PublicOrderPayView(APIView):
             return Response({'detail': f'El pedido ya no admite pago (estado: {order_status or "desconocido"})'}, status = status.HTTP_409_CONFLICT)
         if str(getattr(order, 'payment_method', '') or '') != 'mp':
             return Response({'detail': 'Este pedido no está configurado para pagar con Mercado Pago'}, status = status.HTTP_400_BAD_REQUEST)
+        #Vencimiento por tiempo (expires_at) aunque el cron expire_orders
+        #todavía no corrió: el pedido sigue PENDING_PAYMENT pero ya está
+        #muerto — MP rechazaría expiration_date_to pasada y, peor, el
+        #cliente podría pagar un pedido que el sistema da por vencido.
+        expires_at  =   getattr(order, 'expires_at', None)
+        if expires_at is not None and expires_at <= timezone.now():
+            return Response({'detail': 'El pedido venció'}, status = status.HTTP_409_CONFLICT)
         try:
-            _mp_payment, preference  =   create_order_preference(order, store)
+            #Doble click / retry concurrente: la fila del pedido se
+            #bloquea (select_for_update) y se re-valida el estado — el
+            #segundo request espera el lock y, al entrar, reutiliza la
+            #preferencia ABIERTA (create_order_preference) en vez de
+            #emitir una segunda pagable por el mismo pedido.
+            with transaction.atomic():
+                order_pk    =   getattr(order, 'pk', None) or getattr(order, 'id', None)
+                Order       =   orders_bridge.order_model()
+                if order_pk is not None:
+                    locked  =   Order.objects.select_for_update().filter(pk = order_pk).first()
+                    if locked is not None and str(getattr(locked, 'status', '') or '') != 'PENDING_PAYMENT':
+                        return Response({'detail': 'El pedido ya no admite pago'}, status = status.HTTP_409_CONFLICT)
+                _mp_payment, preference  =   create_order_preference(order, store)
         except MpApiError:
             logger.warning('Preferencia MP falló: store=%s order=%s', store.slug, getattr(order, 'pk', None))
             return Response({'detail': 'No se pudo iniciar el pago en Mercado Pago'}, status = status.HTTP_502_BAD_GATEWAY)

@@ -39,6 +39,11 @@ logger  =   logging.getLogger(__name__)
 
 EXTERNAL_REF_PREFIX     =   'ord:'
 MP_STATUS_REFUNDED      =   ('refunded', 'charged_back')
+#Pedidos que ya implican cobro confirmado o cierre: un pago MP aprobado
+#sobre ellos no puede acreditarse (mark_order_paid solo actúa desde
+#PENDING_PAYMENT) — la plata entró igual y queda OrderEvent para que el
+#dueño revise/reembolse a mano.
+ORDER_PAID_STATUSES     =   {'PAID', 'PACKING', 'SHIPPED', 'DELIVERED'}
 
 
 #=========================================
@@ -49,7 +54,9 @@ def _reject_test_payment(mp_payment):
     #producción jamás debe acreditar un pedido (mismo criterio que
     #AdminApp/domains/payments/services._reject_test_payment).
     from django.conf import settings
-    if not settings.DEBUG and mp_payment.get('live_mode') is False:
+    #live_mode AUSENTE también se rechaza en prod: sin la señal no hay
+    #forma de distinguir un cobro real de uno de prueba (fail-closed).
+    if not settings.DEBUG and mp_payment.get('live_mode') is not True:
         raise serializers.ValidationError({'payment_id': 'Pago de prueba de Mercado Pago rechazado en producción'})
 
 
@@ -179,8 +186,10 @@ def StoreMpWebhookQuery(store, payment_id):
     if getattr(order, 'store_id', None) != store.id:
         logger.warning('Webhook MP store=%s: pedido ajeno ignorado (payment=%s)', store.slug, payment_id)
         return None
-    #MONEDA: los pedidos son ARS; otro currency_id nunca acredita.
-    if (mp_payment.get('currency_id') or 'ARS') != 'ARS':
+    #MONEDA: los pedidos son ARS; otro currency_id nunca acredita — y
+    #currency_id AUSENTE tampoco (fail-closed: sin moneda verificable
+    #no hay acreditación automática).
+    if mp_payment.get('currency_id') != 'ARS':
         logger.error('Webhook MP store=%s: payment %s en moneda %s — ignorado', store.slug, payment_id, mp_payment.get('currency_id'))
         return None
     mp_status   =   str(mp_payment.get('status') or '')
@@ -210,14 +219,36 @@ def StoreMpWebhookQuery(store, payment_id):
                         message     =   f'Pago MP {payment_id} por ${amount} distinto al total del pedido (${order_total})',
                     )
                     logger.error('Webhook MP store=%s: monto distinto payment=%s amount=%s total=%s', store.slug, payment_id, amount, order_total)
-            elif order_status != 'PAID' and old_status != MpPayment.Status.APPROVED:
-                orders_bridge.mark_paid(
-                    order,
-                    source      =   'mp',
-                    reference   =   str(payment_id),
-                    actor       =   None,
-                )
-                order_status    =   'PAID'
+            elif old_status != MpPayment.Status.APPROVED:
+                #mark_order_paid solo acredita desde PENDING_PAYMENT:
+                #cualquier otro estado es un cobro "huérfano" — pedido
+                #vencido/cancelado/reembolsado o ya pago por otro cobro.
+                #Jamás se fuerza la transición; queda OrderEvent para
+                #que el dueño revise y reembolse a mano si corresponde.
+                if order_status == 'PENDING_PAYMENT':
+                    orders_bridge.mark_paid(
+                        order,
+                        source      =   'mp',
+                        reference   =   str(payment_id),
+                        actor       =   None,
+                    )
+                    order_status    =   'PAID'
+                elif order_status in ORDER_PAID_STATUSES:
+                    #OTRO payment_id aprobado sobre un pedido ya pago:
+                    #cobro duplicado real del comprador -> revisión manual.
+                    orders_bridge.append_event(
+                        order,
+                        kind        =   'duplicate_payment',
+                        message     =   f'Pago MP {payment_id} aprobado sobre un pedido ya pago ({order_status}) — posible cobro duplicado',
+                    )
+                    logger.error('Webhook MP store=%s: pago duplicado payment=%s order_status=%s', store.slug, payment_id, order_status)
+                else:
+                    orders_bridge.append_event(
+                        order,
+                        kind        =   'paid_after_close',
+                        message     =   f'Pago MP {payment_id} aprobado sobre pedido {order_status} — requiere revisión/reembolso manual',
+                    )
+                    logger.error('Webhook MP store=%s: pago sobre pedido cerrado payment=%s order_status=%s', store.slug, payment_id, order_status)
         elif mp_status in MP_STATUS_REFUNDED:
             #Reembolso detectado por MP (ej. desde el panel del vendedor):
             #mark_order_paid auto-avanza a PACKING en la misma transacción,
@@ -225,11 +256,37 @@ def StoreMpWebhookQuery(store, payment_id):
             #estados desde los que Order.TRANSITIONS permite llegar a
             #REFUNDED (mismo set que el reembolso del dueño en refunds.py).
             if order_status in {'PAID', 'PACKING', 'SHIPPED'}:
-                orders_bridge.mark_refunded(order, actor = None)
-                order_status    =   'REFUNDED'
+                try:
+                    orders_bridge.mark_refunded(order, actor = None)
+                    order_status    =   'REFUNDED'
+                except serializers.ValidationError:
+                    #Carrera: el pedido cambió de estado entre la lectura
+                    #y el lock interno de orders (otro refund, DELIVERED…)
+                    #— no hay transición válida. El MpPayment igual queda
+                    #REFUNDED y MP no entra en loop de reintentos 500.
+                    logger.info('Webhook MP store=%s: refund de payment=%s ignorado (estado ya no admite reembolso)', store.slug, payment_id)
+            elif order_status == 'DELIVERED':
+                #Contracargo/reembolso MP con la mercadería ya entregada:
+                #REFUNDED es inalcanzable por TRANSITIONS — la devolución
+                #queda invisible si no se registra el evento.
+                orders_bridge.append_event(
+                    order,
+                    kind        =   'refund_after_delivery',
+                    message     =   f'Pago MP {payment_id} reembolsado/contracargo con pedido DELIVERED — resolver devolución manualmente',
+                )
+                logger.error('Webhook MP store=%s: refund sobre pedido entregado payment=%s', store.slug, payment_id)
         #Estado final: reflejar el estado mapeado de MP (approved/rejected/
         #cancelled/refunded; estados intermedios de MP -> PENDING).
-        record.status          =   _map_status(mp_status)
+        new_status      =   _map_status(mp_status)
+        #Las notificaciones de MP pueden llegar DESORDENADAS (reintentos):
+        #el estado registrado nunca retrocede — un 'approved' tardío no
+        #deshace un REFUNDED y un estado intermedio (in_process/
+        #in_mediation/pending) no "des-acredita" un cobro ya aprobado.
+        if record.status == MpPayment.Status.REFUNDED:
+            new_status  =   MpPayment.Status.REFUNDED
+        elif record.status == MpPayment.Status.APPROVED and new_status != MpPayment.Status.REFUNDED:
+            new_status  =   MpPayment.Status.APPROVED
+        record.status          =   new_status
         record.live_mode       =   mp_payment.get('live_mode')
         record.mp_status_detail=   str(mp_payment.get('status_detail') or '')[:255]
         record.amount          =   amount if amount is not None else record.amount

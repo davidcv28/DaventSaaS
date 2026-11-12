@@ -67,9 +67,15 @@ def require_benefit(store, code):
 
 def mp_status_payload(store):
     """Payload público del estado MP — jamás tokens ni secretos."""
-    account         =   getattr(store, 'mp_account', None)
+    #Las reverse OneToOne (mp_account/mp_webhook_config) pueden venir
+    #CACHEADAS en la instancia `store` si otro código las tocó antes en
+    #el mismo proceso/request (p.ej. force_authenticate reusando el
+    #mismo User->profile->store entre requests, o un worker de larga
+    #vida): una connect/disconnect reciente no se vería. Se releen por
+    #ORM — el payload de estado siempre refleja la fila real.
+    account         =   StoreMpAccount.objects.filter(store_id = store.id).first()
     has_config      =   StorePaymentConfig.objects.filter(store_id = store.id).exists()
-    webhook_cfg     =   getattr(store, 'mp_webhook_config', None)
+    webhook_cfg     =   StoreMpWebhookConfig.objects.filter(store_id = store.id).first()
     return {
         'connected'         :   bool(account and account.is_connected),
         'live_mode'         :   bool(account.live_mode) if account else False,

@@ -156,8 +156,13 @@ def mark_order_paid(order, *, source = 'manual', reference = '', actor = None):
         locked.paid_at          =   timezone.now()
         if reference:
             locked.payment_ref  =   reference
+        if source == 'mp' and reference:
+            #El webhook de MP deja el payment_id en su campo propio —
+            #antes solo quedaba en payment_ref/MpPayment y la columna
+            #mp_payment_id del modelo nunca se escribía.
+            locked.mp_payment_id    =   reference[:64]
         locked.status           =   Order.Status.PAID
-        locked.save(update_fields = ['status', 'paid_at', 'payment_ref', 'updated_at'])
+        locked.save(update_fields = ['status', 'paid_at', 'payment_ref', 'mp_payment_id', 'updated_at'])
         append_event(
             locked, 'paid',
             actor       =   actor,
@@ -179,7 +184,14 @@ def mark_order_refunded(order, *, actor = None):
     camino o nunca haber salido) — documentado en OrderEvent.
     Lanza ValidationError si el estado actual no admite reembolso.
     """
-    actor   =   actor or 'system'
+    #actor llega como rol ('owner'/'system'/'mp') o como instancia User
+    #desde la vista de reembolso de storepayments — el OrderEvent guarda
+    #el ROL (choices), no el objeto: sin esta normalización append_event
+    #lo degradaba a 'system' y se perdía quién reembolsó.
+    if not actor:
+        actor   =   'system'
+    elif not isinstance(actor, str):
+        actor   =   'owner'
     with transaction.atomic():
         locked  =   _lock(order)
         if Order.Status.REFUNDED not in Order.TRANSITIONS.get(locked.status, set()):
@@ -199,6 +211,16 @@ def advance_order(order, target_status, *, actor = 'owner'):
         raise serializers.ValidationError({'status': f'Estado destino inválido: "{target_status}".'})
     with transaction.atomic():
         locked  =   _lock(order)
+        if (target == Order.Status.REFUNDED
+                and getattr(locked, 'payment_method', '') == Order.PaymentMethod.MP):
+            #Un pedido MP marcado REFUNDED por acá NO devuelve la plata
+            #(MP no se entera) y queda terminal: el reembolso real por la
+            #endpoint de Cobros quedaría bloqueado para siempre. Los
+            #pedidos MP solo se reembolsan vía store-payments (que llama
+            #a la API de MP del vendedor antes de transicionar).
+            raise serializers.ValidationError({
+                'status': 'Los pedidos pagos con Mercado Pago se reembolsan desde Cobros → Mercado Pago (tiene que volver la plata en MP).',
+            })
         if target not in Order.TRANSITIONS.get(locked.status, set()):
             raise _transition_error(locked)
         _apply_status(locked, target, actor = actor)
