@@ -1,0 +1,705 @@
+/* ===========================================================================
+   CALZADO — auth del comprador (ingresar / registro / recuperar + modal).
+   Hoja propia cargada on-demand por StorePublicLayout cuando .store-page
+   lleva data-design="calzado" (la piel de cuenta sigue en
+   store-design-calzado.css). Reemplaza el check-in de carrera anterior por
+   LA LÍNEA DE SALIDA: split shell de esquina viva — ala de marca en tinta
+   con dorsal numerado gigante, reglamento con números de manga y filetes de
+   pista; ala de formulario en papel con control segmentado de modo
+   (talle), campos de filete y CTA de tinta con sombra desplazada.
+
+   Especificidad: el orden de inyección CSS no está garantizado, así que
+   TODA regla propia empieza con .store-page[data-design='calzado']
+   [data-theme] — le gana siempre a store-design-calzado.css dentro del
+   scope .ec-auth / .ec-auth-card. La sección .ec-account no se toca.
+   Tokens: reusa --dz-* (ya traen variante night) + --ca-* derivados.
+   =========================================================================== */
+
+/* ---------- Tokens propios (heredan --dz-*, cambian solos por tema) ---------- */
+.store-page[data-design='calzado'] {
+  --ca-on-plate: var(--dz-on-panel);
+  --ca-on-plate-2: color-mix(in srgb, var(--dz-on-panel) 74%, transparent);
+  --ca-on-plate-3: color-mix(in srgb, var(--dz-on-panel) 54%, transparent);
+  --ca-plate-line: color-mix(in srgb, var(--dz-on-panel) 15%, transparent);
+  --ca-ease: var(--dz-ease);
+}
+.store-page[data-design='calzado'][data-theme] { color-scheme: light; }
+.store-page[data-design='calzado'][data-theme='dark'] { color-scheme: dark; }
+
+/* ==========================================================================
+   1. Marco — selección, foco visible, fondo de pista
+   ========================================================================== */
+.store-page[data-design='calzado'][data-theme] :is(.ec-auth, .ec-auth-card) ::selection {
+  background: var(--dz-accent);
+  color: var(--dz-accent-ink);
+}
+/* Foco visible explícito: anillo señal 2px + offset en todo control. */
+.store-page[data-design='calzado'][data-theme] :is(.ec-auth, .ec-auth-card) :is(a, button, input, select, textarea):focus-visible {
+  outline: 2px solid var(--dz-accent);
+  outline-offset: 3px;
+}
+
+/* La página auth es la pista: filetes verticales tenues cada 140px. */
+.store-page[data-design='calzado'][data-theme] .ec-auth {
+  padding-inline: clamp(14px, 3vw, 30px);
+  background-color: var(--dz-bg);
+  background-image: repeating-linear-gradient(90deg,
+    transparent 0 139px,
+    color-mix(in srgb, var(--dz-line) 60%, transparent) 139px 140px);
+}
+
+/* ==========================================================================
+   2. Shell partido + filete de salida
+   ========================================================================== */
+.store-page[data-design='calzado'][data-theme] .ec-auth .ec-auth-shell {
+  position: relative;
+  width: min(1160px, 100%);
+  grid-template-columns: minmax(0, 5fr) minmax(0, 6fr);
+  align-items: stretch;
+  margin-block: clamp(18px, 3.6vw, 48px) clamp(44px, 6vw, 88px);
+  border: 1px solid var(--dz-ink);
+  border-radius: 0;
+  background: var(--dz-surface);
+  box-shadow: 10px 10px 0 0 color-mix(in srgb, var(--dz-ink) 9%, transparent);
+  overflow: hidden;
+  animation: cal-auth-shell .55s var(--ca-ease) both;
+}
+/* Filete señal corrido: la línea de salida abraza todo el módulo. */
+.store-page[data-design='calzado'][data-theme] .ec-auth .ec-auth-shell::before {
+  content: "";
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 3px;
+  background: var(--dz-accent);
+  z-index: 6;
+  pointer-events: none;
+}
+@keyframes cal-auth-shell {
+  from { opacity: 0; transform: translate3d(0, 14px, 0); }
+  to   { opacity: 1; transform: none; }
+}
+
+/* ==========================================================================
+   3. Ala de marca — dorsal y reglamento
+   ========================================================================== */
+.store-page[data-design='calzado'][data-theme] .ec-auth .ec-auth-brand {
+  position: relative;
+  isolation: isolate;
+  display: flex;
+  flex-direction: column;
+  min-height: clamp(500px, 60vh, 640px);
+  padding: clamp(28px, 3.8vw, 52px) clamp(26px, 3.6vw, 48px);
+  color: var(--ca-on-plate);
+  /* Tinta con halo señal arriba: el panel no es negro plano. */
+  background: linear-gradient(165deg,
+    color-mix(in srgb, var(--dz-accent) 13%, var(--dz-panel)) 0%,
+    var(--dz-panel) 55%);
+}
+/* Portada premium (--ec-cover): apenas visible bajo la tinta. */
+.store-page[data-design='calzado'][data-theme] .ec-auth .ec-auth-brand::before {
+  opacity: .18;
+  mix-blend-mode: normal;
+}
+/* Capa de pista: filetes verticales que se desvanecen + velo de tinta
+   hacia el pie (el scrim garantiza AA sobre la portada). */
+.store-page[data-design='calzado'][data-theme] .ec-auth .ec-auth-brand::after {
+  background:
+    repeating-linear-gradient(90deg,
+      transparent 0 47px,
+      color-mix(in srgb, var(--ca-on-plate) 13%, transparent) 47px 48px) center bottom / 100% 110px no-repeat,
+    linear-gradient(180deg, transparent 52%, color-mix(in srgb, #000 36%, transparent));
+  -webkit-mask-image: linear-gradient(0deg, #000 0%, #000 52%, transparent 96%);
+  mask-image: linear-gradient(0deg, #000 0%, #000 52%, transparent 96%);
+}
+.store-page[data-design='calzado'][data-theme] .ec-auth .ec-auth-brand-inner {
+  position: relative;
+  z-index: 1;
+  flex: 1;
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr) auto;
+  gap: clamp(22px, 3vw, 38px);
+  min-height: 0;
+}
+.store-page[data-design='calzado'][data-theme] .ec-auth .ec-auth-brand-top {
+  display: inline-flex;
+  align-items: center;
+  gap: 13px;
+  width: fit-content;
+  padding-bottom: 18px;
+  border-bottom: 1px solid var(--ca-plate-line);
+  color: inherit;
+  text-decoration: none;
+  transition: opacity .2s var(--ca-ease);
+}
+.store-page[data-design='calzado'][data-theme] .ec-auth .ec-auth-brand-top:hover { opacity: .78; }
+.store-page[data-design='calzado'][data-theme] .ec-auth .ec-auth-logo {
+  width: 48px; height: 48px;
+  border-radius: 0;
+  overflow: hidden;
+  display: grid; place-items: center;
+  background: var(--dz-accent);
+  border: 1px solid color-mix(in srgb, var(--ca-on-plate) 28%, transparent);
+  color: var(--dz-accent-ink);
+  font-family: var(--dz-display); font-size: 16px; font-weight: 700; letter-spacing: .1em;
+}
+.store-page[data-design='calzado'][data-theme] .ec-auth .ec-auth-brand-name {
+  font: 700 10.5px/1.4 var(--dz-mono);
+  letter-spacing: .26em; text-transform: uppercase;
+  color: var(--ca-on-plate);
+}
+.store-page[data-design='calzado'][data-theme] .ec-auth .ec-auth-brand-copy {
+  display: grid;
+  gap: 14px;
+  align-content: start;
+  max-width: 48ch;
+}
+/* Dorsal del corredor: el "01" gigante en tinta sobre tinta — número de
+   manga que encabeza el manifiesto. */
+.store-page[data-design='calzado'][data-theme] .ec-auth .ec-auth-rail {
+  display: block;
+  width: fit-content;
+  font-family: var(--dz-display); font-weight: 200;
+  font-size: clamp(84px, 10vw, 148px); line-height: .8; letter-spacing: .04em;
+  color: color-mix(in srgb, var(--ca-on-plate) 17%, transparent);
+  user-select: none;
+}
+.store-page[data-design='calzado'][data-theme] .ec-auth .ec-auth-rail::after { content: none; }
+.store-page[data-design='calzado'][data-theme] .ec-auth .ec-auth-brand-kicker {
+  font: 700 9.5px/1.5 var(--dz-mono);
+  letter-spacing: .28em; text-transform: uppercase;
+  color: color-mix(in srgb, var(--ca-on-plate) 60%, transparent);
+}
+.store-page[data-design='calzado'][data-theme] .ec-auth .ec-auth-brand-title {
+  font-family: var(--dz-display); font-weight: 200;
+  font-size: clamp(34px, 4vw, 56px); line-height: .98; letter-spacing: .015em;
+  text-transform: uppercase;
+  color: var(--ca-on-plate);
+  text-wrap: balance;
+}
+.store-page[data-design='calzado'][data-theme] .ec-auth .ec-auth-brand-text {
+  font-family: var(--dz-body); font-size: 14px; font-weight: 300; line-height: 1.7;
+  color: var(--ca-on-plate-2);
+  max-width: 44ch;
+}
+/* Reglamento: filas numeradas de manga con filetes. */
+.store-page[data-design='calzado'][data-theme] .ec-auth .ec-auth-perks {
+  counter-reset: capermk;
+  display: grid; gap: 0;
+  margin: 10px 0 0; padding: 0; list-style: none;
+  border-top: 1px solid var(--ca-plate-line);
+}
+.store-page[data-design='calzado'][data-theme] .ec-auth .ec-auth-perks li {
+  counter-increment: capermk;
+  display: flex; align-items: center; gap: 12px;
+  padding: 12px 0;
+  border-bottom: 1px solid var(--ca-plate-line);
+  font-family: var(--dz-body); font-size: 12.5px; font-weight: 400; line-height: 1.4;
+  color: var(--ca-on-plate-2);
+}
+.store-page[data-design='calzado'][data-theme] .ec-auth .ec-auth-perks li:last-child { border-bottom: 0; }
+.store-page[data-design='calzado'][data-theme] .ec-auth .ec-auth-perks li::before {
+  content: counter(capermk, decimal-leading-zero);
+  flex: none;
+  font: 700 9px/1 var(--dz-mono); letter-spacing: .12em;
+  color: color-mix(in srgb, var(--dz-accent) 82%, var(--ca-on-plate));
+}
+.store-page[data-design='calzado'][data-theme] .ec-auth .ec-auth-perks svg {
+  flex: none;
+  color: color-mix(in srgb, var(--ca-on-plate) 48%, transparent);
+}
+.store-page[data-design='calzado'][data-theme] .ec-auth .ec-auth-brand-foot {
+  font: 700 9px/1.6 var(--dz-mono);
+  letter-spacing: .24em; text-transform: uppercase;
+  color: var(--ca-on-plate-3);
+  padding-top: 16px;
+  border-top: 1px solid var(--ca-plate-line);
+}
+
+/* ==========================================================================
+   4. Ala del formulario — papel con columna acotada
+   ========================================================================== */
+.store-page[data-design='calzado'][data-theme] .ec-auth .ec-auth-panel {
+  position: relative;
+  display: grid;
+  align-content: center;
+  justify-items: stretch;
+  min-width: 0;
+  padding: clamp(28px, 4vw, 56px) clamp(26px, 4vw, 56px);
+  background: var(--dz-surface);
+  color: var(--dz-ink);
+  border-left: 1px solid var(--dz-line);
+}
+/* El filete señal lo pinta el shell (ancho completo): acá no va otro. */
+.store-page[data-design='calzado'][data-theme] .ec-auth .ec-auth-panel::before { content: none; }
+.store-page[data-design='calzado'][data-theme] .ec-auth .ec-auth-panel-inner {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  width: 100%;
+  max-width: 500px;
+  margin-inline: auto;
+  min-width: 0;
+}
+.store-page[data-design='calzado'][data-theme] .ec-auth .ec-auth-back {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  width: fit-content;
+  min-height: 44px;
+  margin-bottom: clamp(18px, 2.6vw, 30px);
+  padding: 4px 0;
+  font: 700 9.5px/1 var(--dz-mono);
+  letter-spacing: .22em; text-transform: uppercase;
+  color: var(--dz-muted);
+  text-decoration: none;
+  transition: color .2s var(--ca-ease), transform .2s var(--ca-ease);
+}
+.store-page[data-design='calzado'][data-theme] .ec-auth .ec-auth-back:hover {
+  color: var(--dz-accent-text);
+  transform: translate3d(-2px, 0, 0);
+}
+.store-page[data-design='calzado'][data-theme] .ec-auth .ec-auth-head {
+  display: grid;
+  gap: 9px;
+  margin-bottom: clamp(20px, 2.6vw, 28px);
+  padding-bottom: clamp(16px, 2.2vw, 22px);
+  border-bottom: 1px solid var(--dz-line);
+}
+.store-page[data-design='calzado'][data-theme] :is(.ec-auth, .ec-auth-card) .ec-auth-badge {
+  width: 46px; height: 46px;
+  margin-bottom: 2px;
+  display: grid; place-items: center;
+  border: 1px solid var(--dz-ink);
+  border-radius: 0;
+  background: transparent;
+  color: var(--dz-accent-text);
+}
+.store-page[data-design='calzado'][data-theme] .ec-auth .ec-auth-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 9px;
+  font: 700 9px/1 var(--dz-mono);
+  letter-spacing: .26em; text-transform: uppercase;
+  color: var(--dz-accent-text);
+}
+.store-page[data-design='calzado'][data-theme] .ec-auth .ec-auth-tag::before {
+  content: "";
+  width: 8px; height: 8px; flex: none;
+  background: var(--dz-accent);
+}
+.store-page[data-design='calzado'][data-theme] .ec-auth .ec-auth-title {
+  font-family: var(--dz-display); font-weight: 300;
+  font-size: clamp(26px, 3vw, 38px); line-height: 1.02; letter-spacing: .02em;
+  text-transform: uppercase;
+  color: var(--dz-ink);
+  text-wrap: balance;
+}
+.store-page[data-design='calzado'][data-theme] .ec-auth .ec-auth-sub {
+  font-family: var(--dz-body); font-size: 13.5px; font-weight: 400; line-height: 1.6;
+  color: var(--dz-muted);
+  max-width: 46ch;
+}
+.store-page[data-design='calzado'][data-theme] .ec-auth .ec-auth-loading {
+  min-height: 300px;
+  color: var(--dz-muted);
+  font-family: var(--dz-body);
+}
+.store-page[data-design='calzado'][data-theme] .ec-auth .ec-auth-spin { color: var(--dz-accent-text); }
+/* Línea de confianza al pie de la hoja. */
+.store-page[data-design='calzado'][data-theme] .ec-auth .ec-auth-trust {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: clamp(20px, 2.6vw, 28px) 0 0;
+  padding-top: 15px;
+  border-top: 1px solid var(--dz-line);
+  font: 700 9px/1.6 var(--dz-mono);
+  letter-spacing: .2em; text-transform: uppercase;
+  color: var(--dz-muted);
+}
+.store-page[data-design='calzado'][data-theme] .ec-auth .ec-auth-trust .icon { color: var(--dz-accent-text); flex: none; }
+
+/* ==========================================================================
+   5. Formulario compartido (StoreAuthForm) — página y modal
+   ========================================================================== */
+.store-page[data-design='calzado'][data-theme] :is(.ec-auth, .ec-auth-card) .ecaf { gap: 16px; }
+.store-page[data-design='calzado'][data-theme] :is(.ec-auth, .ec-auth-card) .ecaf-form { gap: 14px; }
+.store-page[data-design='calzado'][data-theme] :is(.ec-auth, .ec-auth-card) .ecaf-grid {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+
+/* Control segmentado del modo: talle tabs con bloque señal deslizante.
+   Nace display:none en el componente — esta piel lo enciende. */
+.store-page[data-design='calzado'][data-theme] :is(.ec-auth, .ec-auth-card) .ecaf-switch {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  position: relative;
+  isolation: isolate;
+  margin-bottom: 8px;
+  padding: 4px;
+  border: 1px solid var(--dz-line);
+  border-radius: 0;
+  background: color-mix(in srgb, var(--dz-line) 22%, var(--dz-surface));
+}
+.store-page[data-design='calzado'][data-theme] :is(.ec-auth, .ec-auth-card) .ecaf-switch-pill {
+  position: absolute;
+  z-index: 0;
+  top: 4px; bottom: 4px; left: 4px;
+  width: calc((100% - 8px) / 3);
+  background: var(--dz-accent);
+  transform: translate3d(calc(var(--ecaf-switch-i, 0) * 100%), 0, 0);
+  transition: transform .4s var(--ca-ease);
+  pointer-events: none;
+}
+.store-page[data-design='calzado'][data-theme] :is(.ec-auth, .ec-auth-card) .ecaf-switch-btn {
+  position: relative;
+  z-index: 1;
+  min-height: 46px;
+  padding: 10px 4px;
+  border: 0;
+  border-radius: 0;
+  background: none;
+  cursor: pointer;
+  font-family: var(--dz-display); font-size: 11px; font-weight: 700;
+  letter-spacing: .12em; text-transform: uppercase;
+  color: var(--dz-muted);
+  transition: color .25s var(--ca-ease);
+}
+.store-page[data-design='calzado'][data-theme] :is(.ec-auth, .ec-auth-card) .ecaf-switch-btn.is-on { color: var(--dz-accent-ink); }
+.store-page[data-design='calzado'][data-theme] :is(.ec-auth, .ec-auth-card) .ecaf-switch-btn:hover:not(.is-on) { color: var(--dz-ink); }
+.store-page[data-design='calzado'][data-theme] :is(.ec-auth, .ec-auth-card) .ecaf-switch-btn:focus-visible {
+  outline: 2px solid var(--dz-accent);
+  outline-offset: -2px;
+}
+
+/* Campos: etiqueta mono + input de esquina viva con filete inferior. */
+.store-page[data-design='calzado'][data-theme] :is(.ec-auth, .ec-auth-card) .sp-field { gap: 9px; }
+.store-page[data-design='calzado'][data-theme] :is(.ec-auth, .ec-auth-card) .sp-field-label {
+  font: 700 9.5px/1.4 var(--dz-mono);
+  letter-spacing: .24em; text-transform: uppercase;
+  color: var(--dz-muted);
+  transition: color .2s var(--ca-ease);
+}
+.store-page[data-design='calzado'][data-theme] :is(.ec-auth, .ec-auth-card) .sp-field:focus-within .sp-field-label {
+  color: var(--dz-accent-text);
+}
+.store-page[data-design='calzado'][data-theme] :is(.ec-auth, .ec-auth-card) .sp-input {
+  min-height: 50px;
+  padding: 13px 15px;
+  border: 1px solid var(--dz-line);
+  border-radius: var(--dz-radius);
+  background: var(--dz-soft);
+  color: var(--dz-ink);
+  font-family: var(--dz-body); font-size: 16px; line-height: 1.4;
+  transition: border-color .18s var(--ca-ease), box-shadow .18s var(--ca-ease);
+}
+.store-page[data-design='calzado'][data-theme] :is(.ec-auth, .ec-auth-card) .sp-input:hover {
+  border-color: color-mix(in srgb, var(--dz-ink) 42%, var(--dz-line));
+}
+.store-page[data-design='calzado'][data-theme] :is(.ec-auth, .ec-auth-card) .sp-input:focus {
+  border-color: var(--dz-accent);
+  box-shadow: inset 0 -2px 0 var(--dz-accent);
+  outline: none;
+}
+.store-page[data-design='calzado'][data-theme] :is(.ec-auth, .ec-auth-card) .sp-input:focus-visible {
+  outline: 2px solid var(--dz-accent);
+  outline-offset: 2px;
+}
+.store-page[data-design='calzado'][data-theme] :is(.ec-auth, .ec-auth-card) .sp-input::placeholder {
+  color: var(--dz-muted); opacity: 1;
+}
+.store-page[data-design='calzado'][data-theme] :is(.ec-auth, .ec-auth-card) .sp-input:disabled {
+  background: color-mix(in srgb, var(--dz-line) 30%, var(--dz-soft));
+  color: var(--dz-ink-2);
+  cursor: not-allowed;
+}
+/* Autofill: el inset shadow pinta el fondo (Chrome lo fuerza) y el foco
+   conserva filete + tinte juntos. */
+.store-page[data-design='calzado'][data-theme] :is(.ec-auth, .ec-auth-card) .sp-input:-webkit-autofill {
+  -webkit-text-fill-color: var(--dz-ink);
+  box-shadow: inset 0 0 0 50px var(--dz-soft);
+}
+.store-page[data-design='calzado'][data-theme] :is(.ec-auth, .ec-auth-card) .sp-input:-webkit-autofill:focus {
+  box-shadow: inset 0 -2px 0 var(--dz-accent), inset 0 0 0 50px var(--dz-soft);
+}
+.store-page[data-design='calzado'][data-theme] :is(.ec-auth, .ec-auth-card) .sp-form-error {
+  font-family: var(--dz-body); font-size: 12.5px; font-weight: 600; line-height: 1.45;
+  color: var(--dz-danger);
+  animation: cal-auth-rise .3s var(--ca-ease) both;
+}
+
+/* Ojo de la contraseña: target táctil 44px. */
+.store-page[data-design='calzado'][data-theme] :is(.ec-auth, .ec-auth-card) .ecaf-pass { position: relative; display: block; }
+.store-page[data-design='calzado'][data-theme] :is(.ec-auth, .ec-auth-card) .ecaf-pass .sp-input { padding-right: 56px; }
+.store-page[data-design='calzado'][data-theme] :is(.ec-auth, .ec-auth-card) .ecaf-pass-toggle {
+  right: 5px;
+  width: 44px; height: 44px;
+  border-radius: 0;
+  color: var(--dz-muted);
+  transition: color .2s var(--ca-ease), background-color .2s var(--ca-ease), transform .15s var(--ca-ease);
+}
+.store-page[data-design='calzado'][data-theme] :is(.ec-auth, .ec-auth-card) .ecaf-pass-toggle:hover {
+  color: var(--dz-accent-text);
+  background: color-mix(in srgb, var(--dz-accent) 9%, transparent);
+}
+.store-page[data-design='calzado'][data-theme] :is(.ec-auth, .ec-auth-card) .ecaf-pass-toggle:active {
+  transform: translateY(-50%) scale(.88);
+}
+
+/* CTA único: bloque de tinta con sombra desplazada; al hover se enciende
+   el acento señal y despega. */
+.store-page[data-design='calzado'][data-theme] :is(.ec-auth, .ec-auth-card) .ecaf-submit {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  width: 100%;
+  min-height: 54px;
+  margin-top: 6px;
+  padding: 14px 20px;
+  border: 1px solid var(--dz-btn);
+  border-radius: 0;
+  background: var(--dz-btn);
+  color: var(--dz-btn-ink);
+  font-family: var(--dz-display); font-size: 12px; font-weight: 700;
+  letter-spacing: .22em; text-transform: uppercase;
+  box-shadow: 5px 5px 0 0 color-mix(in srgb, var(--dz-ink) 14%, transparent);
+  transition: transform .18s var(--ca-ease), box-shadow .18s var(--ca-ease),
+    background-color .2s, color .2s, border-color .2s;
+}
+.store-page[data-design='calzado'][data-theme] :is(.ec-auth, .ec-auth-card) .ecaf-submit:hover:not(:disabled) {
+  background: var(--dz-accent);
+  border-color: var(--dz-accent);
+  color: var(--dz-accent-ink);
+  transform: translate3d(-2px, -2px, 0);
+  box-shadow: 7px 7px 0 0 color-mix(in srgb, var(--dz-ink) 18%, transparent);
+}
+.store-page[data-design='calzado'][data-theme] :is(.ec-auth, .ec-auth-card) .ecaf-submit:active:not(:disabled) {
+  transform: translate3d(1px, 1px, 0);
+  box-shadow: 3px 3px 0 0 color-mix(in srgb, var(--dz-ink) 14%, transparent);
+}
+.store-page[data-design='calzado'][data-theme] :is(.ec-auth, .ec-auth-card) .ecaf-submit:disabled {
+  background: var(--dz-line);
+  border-color: var(--dz-line);
+  color: var(--dz-muted);
+  box-shadow: none;
+  opacity: 1;
+  cursor: not-allowed;
+}
+
+/* Avisos: filete lateral + entrada suave (solo transform/opacity). */
+.store-page[data-design='calzado'][data-theme] :is(.ec-auth, .ec-auth-card) .ecaf-notice,
+.store-page[data-design='calzado'][data-theme] :is(.ec-auth, .ec-auth-card) .ecaf-error {
+  margin: 0;
+  padding: 12px 15px;
+  border: 1px solid;
+  border-radius: 0;
+  font-family: var(--dz-body); font-size: 13px; font-weight: 400; line-height: 1.5;
+  color: var(--dz-ink);
+  animation: cal-auth-rise .32s var(--ca-ease) both;
+}
+.store-page[data-design='calzado'][data-theme] :is(.ec-auth, .ec-auth-card) .ecaf-notice {
+  background: color-mix(in srgb, var(--dz-ok) 9%, var(--dz-surface));
+  border-color: color-mix(in srgb, var(--dz-ok) 34%, transparent);
+  border-left: 3px solid var(--dz-ok);
+}
+.store-page[data-design='calzado'][data-theme] :is(.ec-auth, .ec-auth-card) .ecaf-error {
+  background: color-mix(in srgb, var(--dz-danger) 8%, var(--dz-surface));
+  border-color: color-mix(in srgb, var(--dz-danger) 32%, transparent);
+  border-left: 3px solid var(--dz-danger);
+}
+@keyframes cal-auth-rise {
+  from { opacity: 0; transform: translate3d(0, -6px, 0); }
+  to   { opacity: 1; transform: none; }
+}
+
+/* Separador + Google: el botón GIS queda enmarcado en tinta, esquinas
+   vivas (el iframe se recorta a cuadrado). */
+.store-page[data-design='calzado'][data-theme] :is(.ec-auth, .ec-auth-card) .ecaf-divider {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin: 4px 0 12px;
+  font: 700 9px/1 var(--dz-mono);
+  letter-spacing: .26em; text-transform: uppercase;
+  color: var(--dz-muted);
+}
+.store-page[data-design='calzado'][data-theme] :is(.ec-auth, .ec-auth-card) .ecaf-divider::before,
+.store-page[data-design='calzado'][data-theme] :is(.ec-auth, .ec-auth-card) .ecaf-divider::after {
+  content: "";
+  flex: 1;
+  height: 1px;
+  background: var(--dz-line);
+  opacity: 1;
+}
+.store-page[data-design='calzado'][data-theme] :is(.ec-auth, .ec-auth-card) .ecaf-google { margin-top: 6px; }
+.store-page[data-design='calzado'][data-theme] :is(.ec-auth, .ec-auth-card) .ecaf-google-btn { min-height: 48px; }
+.store-page[data-design='calzado'][data-theme] :is(.ec-auth, .ec-auth-card) .ecaf-google-btn iframe {
+  border: 1px solid var(--dz-ink);
+  border-radius: 0;
+}
+
+/* Pie del formulario: el switch ya cubre el cambio de modo — solo
+   sobrevive el reenvío de verificación. */
+.store-page[data-design='calzado'][data-theme] :is(.ec-auth, .ec-auth-card) .ecaf-foot { gap: 4px 14px; }
+.store-page[data-design='calzado'][data-theme] :is(.ec-auth, .ec-auth-card) .ecaf-foot:not(:has(.ecaf-link-resend)) { display: none; }
+.store-page[data-design='calzado'][data-theme] :is(.ec-auth, .ec-auth-card) .ecaf-foot .ecaf-link:not(.ecaf-link-resend) { display: none; }
+.store-page[data-design='calzado'][data-theme] :is(.ec-auth, .ec-auth-card) .ecaf-link {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  padding: 8px 0;
+  font-family: var(--dz-body); font-size: 12.5px; font-weight: 700; letter-spacing: .02em;
+  color: var(--dz-accent-text);
+  text-decoration: underline;
+  text-decoration-color: color-mix(in srgb, var(--dz-accent) 38%, transparent);
+  text-underline-offset: 4px;
+  transition: color .2s var(--ca-ease), text-decoration-color .2s var(--ca-ease);
+}
+.store-page[data-design='calzado'][data-theme] :is(.ec-auth, .ec-auth-card) .ecaf-link:hover {
+  color: var(--dz-ink);
+  text-decoration-color: currentColor;
+}
+.store-page[data-design='calzado'][data-theme] :is(.ec-auth, .ec-auth-card) .ecaf-link:disabled { opacity: .55; cursor: default; }
+
+/* ==========================================================================
+   6. Modal de auth (.ec-auth-card teletransporta dentro de .store-page)
+   ========================================================================== */
+.store-page[data-design='calzado'][data-theme] .ec-auth-backdrop {
+  background: color-mix(in srgb, var(--dz-panel) 62%, transparent);
+  -webkit-backdrop-filter: blur(6px);
+  backdrop-filter: blur(6px);
+}
+.store-page[data-design='calzado'][data-theme] .ec-auth-card {
+  width: min(480px, 100%);
+  max-height: min(92vh, 800px);
+  overflow-y: auto;
+  padding: clamp(24px, 4vw, 36px);
+  border: 1px solid var(--dz-ink);
+  border-radius: 0;
+  background: var(--dz-surface);
+  color: var(--dz-ink);
+  box-shadow: 8px 8px 0 0 color-mix(in srgb, var(--dz-ink) 14%, transparent);
+}
+.store-page[data-design='calzado'][data-theme] .ec-auth-card .ec-auth-close {
+  top: 12px; right: 12px;
+  width: 44px; height: 44px;
+  border: 1px solid var(--dz-line);
+  border-radius: 0;
+  background: var(--dz-surface);
+  color: var(--dz-muted);
+  transition: color .2s var(--ca-ease), border-color .2s var(--ca-ease), background-color .2s var(--ca-ease);
+}
+.store-page[data-design='calzado'][data-theme] .ec-auth-card .ec-auth-close:hover {
+  color: var(--dz-accent-text);
+  border-color: var(--dz-accent);
+  background: color-mix(in srgb, var(--dz-accent) 8%, transparent);
+}
+.store-page[data-design='calzado'][data-theme] .ec-auth-card .ec-auth-head {
+  display: grid;
+  gap: 8px;
+  margin-bottom: 20px;
+  padding-right: 40px;
+}
+.store-page[data-design='calzado'][data-theme] .ec-auth-card .ec-auth-title {
+  margin: 0;
+  font-family: var(--dz-display); font-weight: 600;
+  font-size: 20px; letter-spacing: .05em; text-transform: uppercase;
+  color: var(--dz-ink);
+}
+.store-page[data-design='calzado'][data-theme] .ec-auth-card .ec-auth-sub {
+  margin: 0;
+  font-family: var(--dz-body); font-size: 13px; line-height: 1.55;
+  color: var(--dz-muted);
+}
+
+/* ==========================================================================
+   7. Responsive — 1024 / 640 / 390
+   ========================================================================== */
+@media (max-width: 1024px) {
+  /* Split → banda: la marca colapsa a cabecera tinta sobre el formulario. */
+  .store-page[data-design='calzado'][data-theme] .ec-auth .ec-auth-shell {
+    grid-template-columns: minmax(0, 1fr);
+    margin-block: 14px clamp(32px, 5vw, 56px);
+  }
+  .store-page[data-design='calzado'][data-theme] .ec-auth .ec-auth-brand {
+    min-height: 0;
+    padding: clamp(22px, 3.4vw, 32px) clamp(22px, 3.6vw, 36px);
+  }
+  .store-page[data-design='calzado'][data-theme] .ec-auth .ec-auth-brand-inner {
+    grid-template-rows: auto auto;
+    gap: 12px;
+    height: auto;
+  }
+  .store-page[data-design='calzado'][data-theme] .ec-auth .ec-auth-brand-copy { gap: 8px; max-width: none; }
+  .store-page[data-design='calzado'][data-theme] .ec-auth .ec-auth-rail,
+  .store-page[data-design='calzado'][data-theme] .ec-auth .ec-auth-brand-text,
+  .store-page[data-design='calzado'][data-theme] .ec-auth .ec-auth-perks,
+  .store-page[data-design='calzado'][data-theme] .ec-auth .ec-auth-brand-foot { display: none; }
+  .store-page[data-design='calzado'][data-theme] .ec-auth .ec-auth-brand-title {
+    font-size: clamp(26px, 5vw, 38px);
+  }
+  .store-page[data-design='calzado'][data-theme] .ec-auth .ec-auth-panel {
+    border-left: 0;
+    border-top: 1px solid var(--dz-line);
+    padding: clamp(26px, 4vw, 44px) clamp(22px, 4vw, 48px);
+  }
+  .store-page[data-design='calzado'][data-theme] .ec-auth .ec-auth-panel-inner { max-width: 540px; }
+}
+
+@media (max-width: 640px) {
+  .store-page[data-design='calzado'][data-theme] .ec-auth { padding-inline: 12px; }
+  .store-page[data-design='calzado'][data-theme] .ec-auth .ec-auth-shell {
+    box-shadow: 6px 6px 0 0 color-mix(in srgb, var(--dz-ink) 8%, transparent);
+  }
+  .store-page[data-design='calzado'][data-theme] .ec-auth .ec-auth-brand { padding: 18px 18px 16px; }
+  .store-page[data-design='calzado'][data-theme] .ec-auth .ec-auth-brand-top { padding-bottom: 12px; }
+  .store-page[data-design='calzado'][data-theme] .ec-auth .ec-auth-logo { width: 38px; height: 38px; font-size: 14px; }
+  .store-page[data-design='calzado'][data-theme] .ec-auth .ec-auth-brand-name { font-size: 9.5px; letter-spacing: .2em; }
+  .store-page[data-design='calzado'][data-theme] .ec-auth .ec-auth-brand-kicker { font-size: 9px; }
+  .store-page[data-design='calzado'][data-theme] .ec-auth .ec-auth-brand-title { font-size: 20px; }
+  .store-page[data-design='calzado'][data-theme] .ec-auth .ec-auth-panel { padding: 22px 18px 30px; }
+  .store-page[data-design='calzado'][data-theme] .ec-auth .ec-auth-head { margin-bottom: 18px; padding-bottom: 16px; }
+  .store-page[data-design='calzado'][data-theme] .ec-auth .ec-auth-badge { width: 40px; height: 40px; }
+  .store-page[data-design='calzado'][data-theme] .ec-auth .ec-auth-title { font-size: 23px; }
+  .store-page[data-design='calzado'][data-theme] .ec-auth .ec-auth-sub { font-size: 13px; }
+  .store-page[data-design='calzado'][data-theme] :is(.ec-auth, .ec-auth-card) .ecaf-grid { grid-template-columns: minmax(0, 1fr); }
+  .store-page[data-design='calzado'][data-theme] :is(.ec-auth, .ec-auth-card) .ecaf-switch-btn {
+    font-size: 10.5px; padding: 9px 2px; letter-spacing: .08em;
+  }
+  .store-page[data-design='calzado'][data-theme] .ec-auth .ec-auth-trust { font-size: 8.5px; letter-spacing: .14em; }
+}
+
+@media (max-width: 390px) {
+  .store-page[data-design='calzado'][data-theme] .ec-auth { padding-inline: 10px; }
+  .store-page[data-design='calzado'][data-theme] .ec-auth .ec-auth-brand-title { font-size: 18px; }
+  .store-page[data-design='calzado'][data-theme] .ec-auth .ec-auth-title { font-size: 21px; }
+  .store-page[data-design='calzado'][data-theme] :is(.ec-auth, .ec-auth-card) .ecaf-switch { padding: 3px; }
+  .store-page[data-design='calzado'][data-theme] :is(.ec-auth, .ec-auth-card) .ecaf-switch-pill {
+    top: 3px; bottom: 3px; left: 3px;
+    width: calc((100% - 6px) / 3);
+  }
+  .store-page[data-design='calzado'][data-theme] :is(.ec-auth, .ec-auth-card) .ecaf-switch-btn {
+    font-size: 10px; letter-spacing: .05em;
+  }
+}
+/* Tab bar inferior de la tienda (mobile.nav = bottom). */
+@media (max-width: 768px) {
+  .store-page[data-design='calzado'][data-theme] .ec-auth {
+    padding-bottom: calc(26px + env(safe-area-inset-bottom));
+  }
+}
+
+/* ==========================================================================
+   8. Movimiento reducido — se apagan entradas y transiciones propias
+   ========================================================================== */
+@media (prefers-reduced-motion: reduce) {
+  .store-page[data-design='calzado'][data-theme] .ec-auth .ec-auth-shell { animation: none; }
+  .store-page[data-design='calzado'][data-theme] :is(.ec-auth, .ec-auth-card) .ecaf-switch-pill,
+  .store-page[data-design='calzado'][data-theme] :is(.ec-auth, .ec-auth-card) .ecaf-submit,
+  .store-page[data-design='calzado'][data-theme] .ec-auth .ec-auth-back,
+  .store-page[data-design='calzado'][data-theme] :is(.ec-auth, .ec-auth-card) .ecaf-pass-toggle { transition: none; }
+  .store-page[data-design='calzado'][data-theme] :is(.ec-auth, .ec-auth-card) .ecaf-notice,
+  .store-page[data-design='calzado'][data-theme] :is(.ec-auth, .ec-auth-card) .ecaf-error,
+  .store-page[data-design='calzado'][data-theme] :is(.ec-auth, .ec-auth-card) .sp-form-error { animation: none; }
+}

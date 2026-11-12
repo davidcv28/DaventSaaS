@@ -481,6 +481,9 @@ watch(designId, (id) => {
   // el modal de auth puede abrirse desde cualquier página de la tienda, así
   // que la hoja se carga on-demand junto a la base, no solo en /ingresar.
   if (id === 'esencial') import('../assets/store-design-esencial-auth.css').catch(() => {})
+  // Calzado también parte su auth en hoja propia (misma razón: el modal de
+  // auth puede abrirse desde cualquier página de la tienda).
+  if (id === 'calzado') import('../assets/store-design-calzado-auth.css').catch(() => {})
 }, { immediate: true })
 watch(pageTemplate, (tpl) => {
   const loaded = TEMPLATE_CSS[tpl]?.()

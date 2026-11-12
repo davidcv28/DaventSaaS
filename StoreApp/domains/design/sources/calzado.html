@@ -43,6 +43,9 @@
   --panel-ink:#F5F3EF;
   --btn:#141414;
   --btn-ink:#FFFFFF;
+  /* Acento legible sobre --panel (tinta/papel oscuro): el rojo crudo da
+     ~3.9:1 ahí; mezclado con la tinta del panel sube a AA para texto. */
+  --accent-hi:color-mix(in srgb,var(--accent) 55%,var(--panel-ink));
   --radius:var(--ds-radius,2px);
   --radius-btn:var(--ds-radius-btn,0px);
   --font-display:"Montserrat","Arial Narrow",system-ui,sans-serif;
@@ -71,6 +74,10 @@ html[data-ds-theme="dark"],html[data-ds-style="calzado-noche"]{
 html:not([data-ds-theme="dark"]):not([data-ds-style="calzado-noche"]){color-scheme:light}
 
 *{box-sizing:border-box}
+/* El puente alterna la propiedad `hidden` (chips, no-results, paneles de
+   filtro, badges): sin este guard cualquier `display` de autor (.ds-empty
+   es flex) lo pisaba y el mensaje vacío quedaba siempre visible. */
+[hidden]{display:none!important}
 ::selection{background:var(--accent);color:var(--accent-ink)}
 body{
   margin:0;background:var(--bg);color:var(--ink);
@@ -152,27 +159,35 @@ html[data-ds-surface="services"] .site-header:not(.is-stuck){
   background:color-mix(in srgb,var(--bg) 94%,transparent)
 }
 .head-inner{display:flex;align-items:center;gap:22px}
-.brand{display:inline-flex;align-items:stretch;flex:none;
+.brand{display:inline-flex;align-items:stretch;flex:0 1 auto;min-width:0;
   font-family:var(--font-display);font-size:16px;letter-spacing:.16em;text-transform:uppercase}
 .brand .mark{position:relative;display:grid;place-items:center;min-width:44px;padding:10px 12px;
-  background:var(--mbg);color:var(--mink);font-weight:700;transition:background .3s,color .3s}
+  flex:none;background:var(--mbg);color:var(--mink);font-weight:700;
+  transition:background .3s,color .3s}
 .brand .mark img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
-.brand-name{display:grid;place-items:center;padding:10px 15px;
+/* La marca cede ancho antes que los íconos del header: en pantallas
+   angostas el nombre se recorta (min-width:0 + overflow) en lugar de
+   empujar la fila y generar scroll horizontal. */
+.brand-name{display:grid;place-items:center;padding:10px 15px;min-width:0;overflow:hidden;
   border:1px solid var(--hcl);border-left:0;background:var(--hcb);
   color:var(--hc);font-weight:600;white-space:nowrap;
   transition:background .3s,color .3s,border-color .3s}
 .head-nav{display:flex;align-items:center;gap:2px;margin-inline:auto}
-.head-nav a{position:relative;padding:10px 13px;
+.head-nav a{position:relative;padding:12px 13px;min-height:44px;
   font-family:var(--font-display);font-size:12.5px;font-weight:600;
   letter-spacing:.18em;text-transform:uppercase;color:var(--hc);opacity:.82;
   transition:opacity .2s,color .2s}
 .head-nav a::after{content:"";position:absolute;left:13px;right:13px;bottom:4px;height:2px;
   background:var(--accent);transform:scaleX(0);transform-origin:left;
   transition:transform .3s var(--ease)}
-.head-nav a:hover{opacity:1;color:var(--accent)}
+/* Hover sin cambiar el color del texto: --accent-text es tinta para
+   superficies claras y sobre el héroe oscuro de la landing (header no
+   condensado) quedaba por debajo de AA. La señal de hover la dan la
+   opacidad y la barra de acento del ::after. */
+.head-nav a:hover{opacity:1}
 .head-nav a:hover::after{transform:scaleX(1)}
-.head-icons{display:flex;align-items:center;gap:8px;flex:none}
-.h-ico,.nav-toggle{display:grid;place-items:center;width:38px;height:38px;
+.head-icons{display:flex;align-items:center;gap:8px;flex:none;min-width:0}
+.h-ico,.nav-toggle{display:grid;place-items:center;width:44px;height:44px;
   background:var(--hcb);border:1px solid var(--hcl);color:var(--hc);
   transition:background .2s,color .2s,border-color .2s,transform .2s var(--ease)}
 .h-ico:hover,.nav-toggle:hover{background:var(--accent);border-color:var(--accent);
@@ -180,24 +195,30 @@ html[data-ds-surface="services"] .site-header:not(.is-stuck){
 .h-ico .icon{width:16px;height:16px}
 .h-ico[href=""]{display:none}
 .nav-toggle{display:none}
+/* El ícono de catálogo del header es redundante: en escritorio lo cubre
+   el link "Catálogo" del nav y en teléfono el menú hamburguesa — con los
+   targets de 44px la fila no entra en 320px con seis mandos. */
+.h-ico[data-ds-route="catalog"]{display:none}
 /* Interruptor de tema que inyecta el puente: cuadrado, como el resto. */
-.site-header .ds-theme-toggle{margin-inline-start:0;width:38px;height:38px;border-radius:0;
+.site-header .ds-theme-toggle{margin-inline-start:0;width:44px;height:44px;border-radius:0;
   border:1px solid var(--hcl);background:var(--hcb);color:var(--hc);opacity:1;
   transition:background .2s,color .2s,border-color .2s,transform .2s var(--ease)}
 .site-header .ds-theme-toggle:hover{opacity:1;transform:translateY(-2px);
   background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
-/* Cuenta del puente: se monta dentro de .head-icons (slot explícito) como
-   un ícono más de la cabecera condensada. */
-.site-header .dsx-account{
-  margin-inline-start:0;flex:none;
+/* Cuenta y carrito del puente: se montan dentro de .head-icons (slot
+   explícito) como íconos más de la cabecera condensada — mismo par de
+   tokens --hc/--hcb/--hcl que el resto del chrome. */
+.site-header .dsx-account,.site-header .dsx-cart{
+  margin-inline-start:0;flex:none;position:relative;
   display:inline-flex;align-items:center;justify-content:center;gap:7px;
-  min-height:38px;padding:0 13px;border:1px solid var(--hcl);border-radius:var(--radius-btn);
+  min-height:44px;padding:0 13px;border:1px solid var(--hcl);border-radius:var(--radius-btn);
   background:var(--hcb);color:var(--hc);cursor:pointer;
   font-family:var(--font-display);font-size:12px;font-weight:600;
   letter-spacing:.12em;text-transform:uppercase;white-space:nowrap;
   transition:background .2s,color .2s,border-color .2s,transform .2s var(--ease)}
-.site-header .dsx-account:hover{background:var(--accent);border-color:var(--accent);
-  color:var(--accent-ink);transform:translateY(-2px)}
+.site-header .dsx-cart{width:44px;padding:0}
+.site-header .dsx-account:hover,.site-header .dsx-cart:hover{background:var(--accent);
+  border-color:var(--accent);color:var(--accent-ink);transform:translateY(-2px)}
 /* Progreso de lectura sobre el filo inferior. */
 .head-progress{position:absolute;left:0;right:0;bottom:-1px;height:2px;
   background:var(--accent);transform:scaleX(var(--progress,0));transform-origin:left;
@@ -210,13 +231,22 @@ html[data-ds-surface="services"] .site-header:not(.is-stuck){
 @media(max-width:560px){
   .site-header{--head:64px;padding:10px 0}
   .brand{font-size:14px;letter-spacing:.1em}
-  .brand-name{max-width:42vw;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-  .head-inner{gap:12px}
-  .head-icons{gap:6px}
-  .h-ico,.nav-toggle,.site-header .ds-theme-toggle,.site-header .dsx-account{width:34px;height:34px}
+  .brand .mark{min-width:40px;padding:8px 9px}
+  /* En el teléfono la marca queda en el isotipo (la inicial): con cinco
+     mandos de 40px + la píldora de cuenta no entra el nombre en 320px. */
+  .brand-name{display:none}
+  .head-inner{gap:8px}
+  .head-icons{gap:4px}
+  /* Glifo de 40px pero objetivo real de 44px: el ::after extiende el área
+     táctil 2px por lado sin robar ancho a la cabecera (WCAG 2.5.5). */
+  .h-ico,.nav-toggle,.site-header .ds-theme-toggle,
+  .site-header .dsx-account,.site-header .dsx-cart{
+    width:40px;height:40px;min-height:40px;padding:0;position:relative}
+  .h-ico::after,.nav-toggle::after,.site-header .ds-theme-toggle::after,
+  .site-header .dsx-account::after,.site-header .dsx-cart::after{
+    content:"";position:absolute;inset:-2px;display:block}
   /* En el teléfono la cuenta colapsa a ícono: la cabecera ya lleva cuatro
      mandos y la etiqueta queda en el aria-label. */
-  .site-header .dsx-account{padding:0;min-height:34px}
   .site-header .dsx-account [data-dsx-account-label]{display:none}
 }
 
@@ -238,13 +268,14 @@ html[data-ds-surface="services"] .site-header:not(.is-stuck){
 .m-sheet-brand .mark img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
 .m-sheet-brand strong{display:grid;place-items:center;padding:7px 10px;background:var(--soft);
   white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.m-close{margin-left:auto;background:none;border:0;font-size:28px;line-height:1;color:var(--ink)}
+.m-close{margin-left:auto;background:none;border:0;font-size:26px;line-height:1;color:var(--ink);
+  min-width:44px;min-height:44px;display:grid;place-items:center}
 .m-sheet-nav{display:flex;flex-direction:column;overflow:auto;padding:6px 0}
 .m-sheet-nav a{display:flex;justify-content:space-between;align-items:center;gap:12px;
   padding:15px 20px;border-bottom:1px solid var(--line);
   font-family:var(--font-display);font-size:16px;letter-spacing:.12em;text-transform:uppercase;
   transition:color .2s,transform .25s var(--ease)}
-.m-sheet-nav a:hover{color:var(--accent);transform:translateX(6px)}
+.m-sheet-nav a:hover{color:var(--accent-text);transform:translateX(6px)}
 .m-sheet-nav a span:last-child{font-family:var(--font-body);font-size:12.5px;
   letter-spacing:.1em;color:var(--muted)}
 .m-sheet-foot{margin-top:auto;padding:18px 20px;border-top:1px solid var(--line);
@@ -289,7 +320,7 @@ html.m-lock,html.m-lock body,body.filters-open{overflow:hidden}
 .hero-cta .btn.ghost{background:transparent;border-color:rgba(255,255,255,.6);color:var(--panel-ink)}
 .hero-cta .btn.ghost:hover{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
 .hero-social{display:flex;gap:8px;margin-top:26px}
-.hero-social a{display:grid;place-items:center;width:38px;height:38px;
+.hero-social a{display:grid;place-items:center;width:40px;height:40px;
   border:1px solid rgba(255,255,255,.42);color:var(--panel-ink);
   transition:background .2s,border-color .2s,transform .2s var(--ease)}
 .hero-social a .icon{width:16px;height:16px}
@@ -423,7 +454,7 @@ html.m-lock,html.m-lock body,body.filters-open{overflow:hidden}
 .panel .addr{font-family:var(--font-display);font-size:14px;font-weight:600;
   letter-spacing:.04em;line-height:1.5;opacity:1}
 .panel-link{display:inline-flex;align-items:center;gap:8px;align-self:flex-start;margin-top:4px;
-  padding-bottom:4px;border-bottom:2px solid currentColor;
+  min-height:44px;padding-bottom:4px;border-bottom:2px solid currentColor;
   font-family:var(--font-display);font-size:12.5px;font-weight:700;
   letter-spacing:.18em;text-transform:uppercase;
   transition:gap .25s var(--ease),opacity .2s}
@@ -494,12 +525,12 @@ html.m-lock,html.m-lock body,body.filters-open{overflow:hidden}
 .head h2{font-size:clamp(26px,3.4vw,40px);font-weight:300;letter-spacing:-.02em;
   line-height:1.06;margin-top:12px;text-wrap:balance}
 .head .lead{color:var(--muted);margin-top:10px;font-size:15.5px;font-weight:300;max-width:58ch}
-.head-link{display:inline-flex;align-items:center;gap:8px;padding-bottom:5px;
+.head-link{display:inline-flex;align-items:center;gap:8px;min-height:44px;padding-bottom:5px;
   border-bottom:2px solid var(--accent);
   font-family:var(--font-display);font-size:12.5px;font-weight:700;
   letter-spacing:.18em;text-transform:uppercase;
   transition:color .2s,gap .25s var(--ease)}
-.head-link:hover{color:var(--accent);gap:13px}
+.head-link:hover{color:var(--accent-text);gap:13px}
 .head-link .icon{width:14px;height:14px}
 
 /* ── categorías: muro de departamentos numerado ── */
@@ -514,13 +545,13 @@ html.m-lock,html.m-lock body,body.filters-open{overflow:hidden}
   transition:background .22s,color .22s}
 .cats .ds-cat::before{counter-increment:cat;content:counter(cat,decimal-leading-zero);
   font-family:var(--font-body);font-size:12px;font-weight:700;letter-spacing:.14em;
-  color:var(--accent);flex:none;transition:color .22s}
+  color:var(--accent-text);flex:none;transition:color .22s}
 .cats .ds-cat::after{content:"→";margin-left:auto;font-size:16px;color:var(--accent);
   transform:translateX(-6px);opacity:0;transition:transform .28s var(--ease),opacity .2s,color .22s}
 .cats .ds-cat span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .cats .ds-cat:hover{background:var(--panel);color:var(--panel-ink)}
-.cats .ds-cat:hover::after{transform:none;opacity:1;color:var(--accent)}
-.cats .ds-cat:hover::before{color:var(--accent)}
+.cats .ds-cat:hover::after{transform:none;opacity:1;color:var(--accent-hi)}
+.cats .ds-cat:hover::before{color:var(--accent-hi)}
 
 /* Marcas (fragmento ds-brand): logo o inicial + nombre; cada item
    enlaza al catálogo filtrado por esa marca. */
@@ -552,7 +583,7 @@ html.m-lock,html.m-lock body,body.filters-open{overflow:hidden}
   letter-spacing:-.02em}
 .rail-side p{font-size:14px;font-weight:300;line-height:1.6;opacity:.88;max-width:24ch}
 .rail-nav{display:flex;gap:8px;margin-top:auto}
-.rail-nav button{display:grid;place-items:center;width:38px;height:38px;
+.rail-nav button{display:grid;place-items:center;width:44px;height:44px;
   border:1.5px solid currentColor;background:none;color:inherit;font-size:18px;
   transition:background .2s,color .2s,opacity .2s}
 .rail-nav button:hover{background:var(--accent-ink);color:var(--accent)}
@@ -606,7 +637,7 @@ span.ds-product-img.is-empty{display:block}
   letter-spacing:.06em;text-transform:uppercase;line-height:1.35;
   display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;
   transition:color .2s}
-.ds-product:hover .ds-product-name{color:var(--accent)}
+.ds-product:hover .ds-product-name{color:var(--accent-text)}
 .ds-product-desc{display:block;margin-top:5px;font-size:13.5px;font-weight:300;color:var(--muted);
   display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
 .ds-product-cat{display:block;margin:9px 14px 0;font-size:11px;font-weight:700;
@@ -632,20 +663,14 @@ span.ds-product-img.is-empty{display:block}
   background:var(--accent);color:var(--accent-ink);
   font-family:var(--font-display);font-size:12px;font-weight:800;letter-spacing:.06em;
   padding:4px 9px;box-shadow:0 6px 14px -8px rgba(0,0,0,.6)}
-/* CTA de compra que inyecta el puente: cierra la ficha dentro del marco,
-   alineado a la retícula de 14px de la tarjeta. En la fila densa se
-   compacta a la derecha, como el precio. */
-.article.ds-product>.dsx-buy{
-  width:auto;min-width:0;margin:10px 14px 14px;padding:0;
-  display:flex;align-items:center;justify-content:center;gap:9px;
-  min-height:46px;border:1px solid var(--accent);border-radius:var(--radius-btn);
-  background:var(--accent);color:var(--accent-ink);cursor:pointer;
-  font-family:var(--font-display);font-size:12.5px;font-weight:700;
-  letter-spacing:.14em;text-transform:uppercase;
-  transition:transform .2s var(--ease),background .2s,border-color .2s,color .2s,box-shadow .2s}
-.article.ds-product>.dsx-buy:hover{transform:translateY(-2px);filter:brightness(1.06)}
-[data-ds-view-mode="list"] .article.ds-product>.dsx-buy{
-  width:fit-content;min-width:0;margin:0 0 16px auto;padding:0 22px;min-height:42px}
+/* El puente inyecta `.dsx-buy-wrap>.dsx-buy` ("Agregar al carrito") en
+   TODAS las .ds-product del documento cuando la tienda vende online —
+   grilla, lista, riel de destacados y relacionados de ficha. Acá se
+   apaga el CTA de tarjeta: la ficha conserva sus botones propios
+   (.pdp-actions), que viven fuera de .ds-product. La tarjeta entera
+   sigue llevando a la ficha por [data-ds-product] y el precio queda
+   anclado al pie por su margin-top:auto. */
+.ds-product .dsx-buy-wrap,.ds-product .dsx-buy{display:none}
 .ds-empty{display:flex;align-items:center;gap:14px;margin-top:4px;
   padding:26px 22px;border:1px dashed var(--line);background:var(--surface);
   color:var(--muted);font-size:15px}
@@ -662,7 +687,7 @@ span.ds-product-img.is-empty{display:block}
   transition:background .25s,color .25s}
 .ds-service::before{content:counter(svc,decimal-leading-zero);
   font-family:var(--font-body);font-size:12px;font-weight:700;letter-spacing:.18em;
-  color:var(--accent)}
+  color:var(--accent-text)}
 .ds-service::after{content:"";position:absolute;left:0;right:0;top:0;height:2px;
   background:var(--accent);transform:scaleX(0);transform-origin:left;
   transition:transform .4s var(--ease)}
@@ -771,7 +796,7 @@ span.ds-product-img.is-empty{display:block}
   background:var(--surface);counter-increment:plan;transition:background .25s}
 .ds-plan::before{content:counter(plan,decimal-leading-zero);position:absolute;
   top:24px;right:24px;font-family:var(--font-body);font-size:11.5px;font-weight:700;
-  letter-spacing:.18em;color:var(--accent);opacity:.75}
+  letter-spacing:.18em;color:var(--accent-text)}
 .ds-plan::after{content:"";position:absolute;left:0;right:0;top:0;height:3px;
   background:var(--accent);transform:scaleX(0);transform-origin:left;
   transition:transform .4s var(--ease)}
@@ -817,7 +842,7 @@ span.ds-product-img.is-empty{display:block}
 .ds-faq-q::-webkit-details-marker{display:none}
 .ds-faq-q::after{content:"+";flex:none;display:grid;place-items:center;
   width:26px;height:26px;border:1px solid var(--line);
-  font-family:var(--font-display);font-size:18px;font-weight:300;color:var(--accent);
+  font-family:var(--font-display);font-size:18px;font-weight:300;color:var(--accent-text);
   transition:transform .3s var(--ease),background .2s,color .2s}
 .ds-faq[open] .ds-faq-q::after{content:"–";background:var(--accent);
   border-color:var(--accent);color:var(--accent-ink);transform:rotate(180deg)}
@@ -841,7 +866,7 @@ span.ds-product-img.is-empty{display:block}
 .cta-band p{margin:14px auto 26px;max-width:54ch;font-size:15.5px;font-weight:300;opacity:.9}
 .cta-band p:empty{display:none}
 .cta-band .btn{background:var(--panel);border-color:var(--panel);color:var(--panel-ink)}
-.cta-band .btn:hover{background:var(--accent-ink);border-color:var(--accent-ink);color:var(--accent)}
+.cta-band .btn:hover{background:var(--accent-ink);border-color:var(--accent-ink);color:var(--accent-text)}
 .cta-band:has(h2:empty){display:none}
 .cta-band .btn:has(>.cta-label:empty){display:none}
 
@@ -863,7 +888,7 @@ span.ds-product-img.is-empty{display:block}
   border-bottom:1px solid var(--line);font-size:15.5px;
   transition:background .2s,color .2s}
 .contact-row:last-child{border-bottom:0}
-a.contact-row:hover{background:var(--soft);color:var(--accent)}
+a.contact-row:hover{background:var(--soft);color:var(--accent-text)}
 .contact-row .icon{width:16px;height:16px;color:var(--accent);flex:none}
 /* Formulario del puente ([data-ds-contact]): la piel es responsable de sus
    clases, si no los campos salen con el estilo del navegador. */
@@ -871,15 +896,15 @@ a.contact-row:hover{background:var(--soft);color:var(--accent)}
 .ds-contact:empty{display:none}
 .ds-contact-fields{display:grid;gap:12px}
 .ds-contact-row{display:grid;grid-template-columns:1fr 1fr;gap:12px}
-.ds-contact-input{width:100%;border:1px solid var(--line);background:var(--bg);color:var(--ink);
+.ds-contact-input{width:100%;min-height:44px;border:1px solid var(--line);background:var(--bg);color:var(--ink);
   font:inherit;font-size:15.5px;padding:12px 13px;
   transition:border-color .2s,background .2s}
 .ds-contact-input:focus{outline:none;border-color:var(--accent);
   background:color-mix(in srgb,var(--accent) 4%,var(--bg))}
 .ds-contact-area{resize:vertical;min-height:112px}
-.ds-contact-cap{display:grid;grid-template-columns:1fr 110px 42px;gap:10px;align-items:center}
+.ds-contact-cap{display:grid;grid-template-columns:1fr 110px 44px;gap:10px;align-items:center}
 .ds-contact-q{font-size:14.5px;font-weight:600}
-.ds-contact-reload{border:1px solid var(--line);background:none;height:42px;font-size:18px;
+.ds-contact-reload{border:1px solid var(--line);background:none;height:44px;min-width:44px;font-size:18px;
   transition:background .2s,color .2s}
 .ds-contact-reload:hover{background:var(--soft);color:var(--accent)}
 .ds-contact-status{font-size:14px;color:var(--muted);min-height:1em}
@@ -903,7 +928,7 @@ a.contact-row:hover{background:var(--soft);color:var(--accent)}
 .foot-tag{margin-top:10px;max-width:38ch;font-size:14.5px;font-weight:300;
   opacity:.68;line-height:1.65}
 .social{display:flex;gap:8px;margin-top:18px}
-.social a{display:grid;place-items:center;width:34px;height:34px;
+.social a{display:grid;place-items:center;width:38px;height:38px;
   border:1px solid rgba(255,255,255,.22);color:inherit;
   transition:background .2s,border-color .2s,color .2s,transform .2s var(--ease)}
 .social a .icon{width:15px;height:15px}
@@ -915,7 +940,7 @@ a.contact-row:hover{background:var(--soft);color:var(--accent)}
 .foot-nav{display:grid;gap:9px;font-size:14.5px}
 .foot-nav a{display:inline-flex;align-items:center;gap:8px;width:fit-content;
   opacity:.78;transition:opacity .2s,color .2s,gap .25s var(--ease)}
-.foot-nav a:hover{opacity:1;color:var(--accent);gap:13px}
+.foot-nav a:hover{opacity:1;color:var(--accent-hi);gap:13px}
 .foot-info{display:grid;gap:11px;font-size:14.5px}
 .foot-info .row{display:flex;gap:10px;align-items:flex-start;opacity:.8}
 .foot-info .icon{width:15px;height:15px;color:var(--accent);margin-top:2px}
@@ -935,7 +960,7 @@ a.contact-row:hover{background:var(--soft);color:var(--accent)}
 .foot-base .wrap{display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;
   padding-block:15px}
 .foot-top{display:inline-flex;align-items:center;gap:7px;transition:color .2s}
-.foot-top:hover{color:var(--accent);opacity:1}
+.foot-top:hover{color:var(--accent-hi);opacity:1}
 @media(max-width:900px){.foot-grid{grid-template-columns:1fr 1fr}}
 @media(max-width:560px){.foot-grid{grid-template-columns:1fr}}
 
@@ -954,7 +979,7 @@ a.contact-row:hover{background:var(--soft);color:var(--accent)}
   font-family:var(--font-display);font-size:12.5px;font-weight:700;
   letter-spacing:.18em;text-transform:uppercase}
 .crumbs a{color:rgba(255,255,255,.72);transition:color .2s}
-.crumbs a:hover{color:var(--accent)}
+.crumbs a:hover{color:var(--accent-hi)}
 .crumbs .sep{color:rgba(255,255,255,.4)}
 .crumbs strong{color:var(--panel-ink);font-weight:700}
 .page-title{margin-top:14px;font-family:var(--font-display);font-size:clamp(24px,3.6vw,42px);
@@ -981,14 +1006,14 @@ a.contact-row:hover{background:var(--soft);color:var(--accent)}
 .suggest-item{display:flex;align-items:center;gap:10px;width:100%;padding:8px 10px;
   border:0;background:none;text-align:left;font-size:14px;
   transition:background .16s,color .16s}
-.suggest-item:hover,.suggest-item.is-active{background:var(--soft);color:var(--accent)}
+.suggest-item:hover,.suggest-item.is-active{background:var(--soft);color:var(--accent-text)}
 .suggest-thumb{display:grid;place-items:center;flex:none;width:34px;height:34px;
   background:var(--soft);color:var(--muted);font-size:14px;overflow:hidden}
 .suggest-thumb img{width:100%;height:100%;object-fit:cover}
 .suggest-copy{display:grid;min-width:0;line-height:1.35}
 .suggest-copy strong{font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .suggest-copy small{font-size:12.5px;color:var(--muted)}
-.f-search input{flex:1;min-width:0;border:1px solid var(--line);border-right:0;
+.f-search input{flex:1;min-width:0;min-height:44px;border:1px solid var(--line);border-right:0;
   background:var(--bg);color:var(--ink);font:inherit;font-size:15px;padding:11px 12px;
   transition:border-color .2s}
 .f-search input:focus{outline:none;border-color:var(--accent)}
@@ -998,7 +1023,8 @@ a.contact-row:hover{background:var(--soft);color:var(--accent)}
 .f-list{display:grid;gap:2px}
 /* Filtros de categoría en modo lista: los arma el puente como
    `button.f-cat` con `<span>` y conteo `<em>`. */
-.f-list .f-cat{display:flex;align-items:center;gap:9px;width:100%;padding:8px 10px;
+.f-list .f-cat{display:flex;align-items:center;gap:9px;width:100%;min-height:44px;
+  padding:8px 10px;
   border:1px solid transparent;background:none;text-align:left;
   font-size:14.5px;color:var(--muted);
   transition:background .2s,color .2s,border-color .2s}
@@ -1011,35 +1037,37 @@ a.contact-row:hover{background:var(--soft);color:var(--accent)}
   background:var(--soft);border-color:var(--line)}
 .f-list .f-cat.is-active::before,.f-list .f-cat[aria-pressed="true"]::before{
   background:var(--accent);border-color:var(--accent)}
-.f-list .f-cat.is-active em,.f-list .f-cat[aria-pressed="true"] em{color:var(--accent)}
-.f-list .ds-cat{display:flex;align-items:center;gap:9px;padding:0;border:0;
+.f-list .f-cat.is-active em,.f-list .f-cat[aria-pressed="true"] em{color:var(--accent-text)}
+.f-list .ds-cat{display:flex;align-items:center;gap:9px;width:100%;min-height:44px;
+  padding:8px 10px;border:0;
   background:none;font-size:14.5px;font-weight:400;text-transform:none;
-  letter-spacing:0;color:var(--muted)}
+  letter-spacing:0;color:var(--muted);text-align:left}
 .f-list .ds-cat:hover{color:var(--ink)}
-.f-more{margin-top:10px;padding:0;border:0;background:none;color:var(--accent);
+.f-more{margin-top:10px;padding:0;border:0;background:none;color:var(--accent-text);
+  min-height:44px;display:inline-flex;align-items:center;
   font-family:var(--font-display);font-size:12px;font-weight:700;
   letter-spacing:.14em;text-transform:uppercase}
 .f-price{display:flex;align-items:center;gap:8px}
 .f-price-field{flex:1;min-width:0}
 .f-price-field input{width:100%;border:1px solid var(--line);background:var(--bg);
-  color:var(--ink);font:inherit;font-size:14.5px;padding:10px;
+  color:var(--ink);font:inherit;font-size:14.5px;padding:10px;min-height:44px;
   transition:border-color .2s}
 .f-price-field input:focus{outline:none;border-color:var(--accent)}
 .f-price-dash{color:var(--muted)}
-.f-apply{margin-top:10px;width:100%;min-height:40px;border:0;
+.f-apply{margin-top:10px;width:100%;min-height:44px;border:0;
   background:var(--btn);color:var(--btn-ink);
   font-family:var(--font-display);font-size:12px;font-weight:700;
   letter-spacing:.16em;text-transform:uppercase;
   transition:background .2s,color .2s}
 .f-apply:hover{background:var(--accent);color:var(--accent-ink)}
-.f-check{display:flex;align-items:center;gap:9px;padding:7px 0;font-size:14.5px;
+.f-check{display:flex;align-items:center;gap:9px;min-height:44px;padding:7px 0;font-size:14.5px;
   color:var(--muted);cursor:pointer}
 .f-check input{accent-color:var(--accent);width:15px;height:15px;flex:none}
 .f-check em{margin-left:auto;font-style:normal;font-size:12px;font-weight:700;
   color:var(--muted);opacity:.75}
 .f-check span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 [data-ds-brands][data-collapsed] .f-check:nth-child(n+7){display:none}
-.f-clear,.f-done{width:100%;min-height:42px;border:1px solid var(--line);
+.f-clear,.f-done{width:100%;min-height:44px;border:1px solid var(--line);
   background:none;font-family:var(--font-display);font-size:12px;font-weight:700;
   letter-spacing:.14em;text-transform:uppercase;transition:background .2s,color .2s}
 .f-clear:hover{background:var(--soft)}
@@ -1049,7 +1077,7 @@ a.contact-row:hover{background:var(--soft);color:var(--accent)}
 .cat-filters-toggle{display:none}
 @media(max-width:960px){
   .cat-layout{grid-template-columns:1fr}
-  .cat-filters-toggle{display:inline-flex;align-items:center;gap:9px;min-height:42px;
+  .cat-filters-toggle{display:inline-flex;align-items:center;gap:9px;min-height:44px;
     padding:0 16px;margin-bottom:16px;border:0;background:var(--btn);color:var(--btn-ink);
     font-family:var(--font-display);font-size:12px;font-weight:700;
     letter-spacing:.16em;text-transform:uppercase}
@@ -1065,7 +1093,8 @@ a.contact-row:hover{background:var(--soft);color:var(--accent)}
     padding-bottom:10px}
   .cat-aside-head strong{font-family:var(--font-display);font-size:13px;
     letter-spacing:.2em;text-transform:uppercase}
-  .cat-aside-close{background:none;border:0;color:var(--ink)}
+  .cat-aside-close{background:none;border:0;color:var(--ink);
+    min-width:44px;min-height:44px;display:grid;place-items:center}
   .cat-aside-foot{display:grid;gap:8px}
 }
 /* Franja de marca del catálogo (tipográfica, sin fotos duplicadas). */
@@ -1082,42 +1111,67 @@ a.contact-row:hover{background:var(--soft);color:var(--accent)}
 .cat-brandbar b::before{content:"";width:9px;height:9px;background:var(--accent);flex:none}
 .cat-brandbar span{position:relative;min-width:0;font-size:14px;font-weight:300;
   opacity:.72;max-width:52ch;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.cat-bar{display:flex;align-items:center;justify-content:space-between;gap:14px;
+.cat-bar{display:flex;align-items:center;justify-content:space-between;gap:10px 14px;
   flex-wrap:wrap;padding:10px 14px;margin-bottom:14px;
   border:1px solid var(--line);background:var(--surface)}
 .cat-count{font-family:var(--font-display);font-size:12px;font-weight:700;
   letter-spacing:.2em;text-transform:uppercase;color:var(--muted)}
+.cat-count:empty{display:none}
 .cat-view{display:inline-flex;border:1px solid var(--line)}
-.cat-view button{display:grid;place-items:center;width:36px;height:34px;border:0;
+.cat-view button{display:grid;place-items:center;width:44px;height:44px;border:0;
   background:var(--surface);color:var(--muted);
   transition:background .2s,color .2s}
 .cat-view button[aria-pressed="true"]{background:var(--btn);color:var(--btn-ink)}
-.cat-sort{display:inline-flex;align-items:center;gap:8px;
+.cat-sort{display:inline-flex;align-items:center;gap:8px;flex-wrap:wrap;max-width:100%;
   font-family:var(--font-display);font-size:12px;font-weight:700;
   letter-spacing:.16em;text-transform:uppercase;color:var(--muted)}
-.cat-sort select{font-family:var(--font-body);font-size:14.5px;font-weight:400;
-  letter-spacing:0;text-transform:none;padding:8px 10px;border:1px solid var(--line);
-  background:var(--bg);color:var(--ink)}
+/* Select propio: sin apariencia nativa, chevron en data-uri y tokens del
+   diseño en todos los estados (option incluido — en oscuro el SO la
+   pintaría clara si no se declara). */
+.cat-sort select{
+  appearance:none;-webkit-appearance:none;cursor:pointer;
+  min-height:44px;max-width:100%;min-width:0;
+  padding:9px 38px 9px 13px;
+  border:1px solid var(--line);border-radius:var(--radius-btn);
+  background-color:var(--bg);color:var(--ink);
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%236E6B64' stroke-width='2.6' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
+  background-repeat:no-repeat;background-position:right 13px center;background-size:12px 12px;
+  font-family:var(--font-body);font-size:14.5px;font-weight:400;
+  letter-spacing:0;text-transform:none;
+  transition:border-color .2s,background-color .2s}
+.cat-sort select:hover{border-color:color-mix(in srgb,var(--ink) 38%,var(--line))}
+.cat-sort select:focus{border-color:var(--accent);
+  background-color:color-mix(in srgb,var(--accent) 5%,var(--bg))}
+.cat-sort select option{background:var(--surface);color:var(--ink)}
+html[data-ds-theme="dark"] .cat-sort select,
+html[data-ds-style="calzado-noche"] .cat-sort select{
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%239E9B95' stroke-width='2.6' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E")}
 .cat-chips{display:flex;flex-wrap:wrap;gap:7px;margin-bottom:14px}
 .cat-chips:empty{display:none}
 .cat-chips .cat-chip,.cat-chips [data-ds-chip]{display:inline-flex;align-items:center;gap:7px;
   padding:6px 11px;border:1px solid var(--line);background:var(--soft);
   font-size:13px;transition:border-color .2s,background .2s}
 .cat-chips .cat-chip b{font-family:var(--font-display);font-size:10.5px;font-weight:700;
-  letter-spacing:.18em;text-transform:uppercase;color:var(--accent)}
+  letter-spacing:.18em;text-transform:uppercase;color:var(--accent-text)}
 .cat-chips .cat-chip i{font-style:normal;color:var(--muted);font-size:15px;line-height:1}
 .cat-chips .cat-chip:hover{border-color:var(--accent)}
 .cat-chips .cat-chip-clear{padding:6px 10px;border:1px solid var(--accent);
-  background:none;color:var(--accent);font-family:var(--font-display);font-size:11px;
+  background:none;color:var(--accent-text);font-family:var(--font-display);font-size:11px;
   font-weight:700;letter-spacing:.16em;text-transform:uppercase}
 .cat-chips .cat-chip-clear:hover{background:var(--accent);color:var(--accent-ink)}
 .m-scrim-cat{position:fixed;top:0;left:0;right:0;height:var(--fr-h,100vh);z-index:60;background:rgba(0,0,0,.5);
   opacity:0;visibility:hidden;transition:opacity .25s}
 .cat-aside.is-open~.m-scrim-cat{opacity:1;visibility:visible}
 
-/* Resultados: grilla (tarjetas) o lista (filas densas). */
-.catalog-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:1px;
+/* Resultados: grilla (tarjetas) o lista (filas densas). La grilla es
+   fluida de 320 a 1920: auto-fill con piso de 232px — ~5 columnas en el
+   wrap de 1200, 3 en tablet, 2 en móvil ancho y 1 en 320px. Las líneas
+   las dibuja cada celda (ver "rejillas de filo"), así que el conteo de
+   columnas variable no rompe el marco. */
+.catalog-grid{display:grid;
+  grid-template-columns:repeat(auto-fill,minmax(min(100%,232px),1fr));gap:1px;
   background:var(--line);border:1px solid var(--line);counter-reset:prod}
+.cat-results{min-width:0}
 [data-ds-products][data-ds-view-mode="list"]{display:block;background:none;border:0;
   counter-reset:prod}
 [data-ds-view-mode="list"] .ds-product{border:0;border-bottom:1px solid var(--line);
@@ -1145,10 +1199,9 @@ a.contact-row:hover{background:var(--soft);color:var(--accent)}
 [data-ds-view-mode="list"] .ds-product-amount{font-size:18px}
 [data-ds-view-mode="list"] .ds-product-price[data-off]::before{top:auto;bottom:12px;
   left:12px;right:auto}
-@media(max-width:1180px){.catalog-grid{grid-template-columns:repeat(3,1fr)}}
-@media(max-width:820px){.catalog-grid{grid-template-columns:repeat(2,1fr)}}
+/* Los breakpoints de columnas fijos se fueron: auto-fill resuelve el
+   conteo solo. Quedan los ajustes de la vista lista en móvil. */
 @media(max-width:560px){
-  .catalog-grid{grid-template-columns:repeat(2,1fr)}
   [data-ds-view-mode="list"] .ds-product-link{grid-template-columns:92px minmax(0,1fr);
     grid-template-areas:"img copy" "img price";column-gap:13px;row-gap:8px;padding:12px 2px}
   [data-ds-view-mode="list"] .ds-product-img{width:92px;height:92px}
@@ -1156,16 +1209,17 @@ a.contact-row:hover{background:var(--soft);color:var(--accent)}
     align-items:center;padding:0;min-width:0}
   [data-ds-view-mode="list"] .ds-product-cat,[data-ds-view-mode="list"] .ds-stock{display:none}
 }
-@media(max-width:420px){
-  .catalog-grid{grid-template-columns:repeat(2,1fr)}
-  .ds-product-copy{padding:11px 10px 0}
-  .ds-product-name{font-size:13.5px}
-  .ds-product-desc{display:none}
-}
 
 /* ── ficha de producto ── */
 .pdp-layout{display:grid;grid-template-columns:1.02fr 1fr;gap:clamp(26px,4vw,52px);
   align-items:start}
+/* El panel de compra se "pega" bajo el header en escritorio — el iframe
+   va estirado al alto del documento (no hay scroll interno), así que el
+   cling real lo hace el script con translateY contra davent:ds-frame;
+   .is-stuck solo le da fondo y sombra para que no se lea texto encima. */
+.pdp-info{position:relative}
+.pdp-info.is-stuck{z-index:3;background:var(--bg);
+  box-shadow:inset 3px 0 0 var(--accent),0 24px 48px -26px rgba(0,0,0,.45)}
 .pdp-gallery{position:relative;margin:0;border:1px solid var(--line);background:var(--soft)}
 /* Escuadras de registro: marco técnico deportivo sobre la foto principal. */
 .pdp-gallery::before,.pdp-gallery::after{content:"";position:absolute;z-index:2;
@@ -1201,17 +1255,22 @@ a.contact-row:hover{background:var(--soft);color:var(--accent)}
 .pdp-ref-code:empty{display:none}
 .pdp-ref-code:not(:empty)::before{content:"Ref. "}
 .pdp-actions{display:flex;flex-wrap:wrap;gap:10px;margin-top:22px}
-/* Compra online: el puente inserta .dsx-buy antes de .pdp-actions; es el CTA
-   primario y el de WhatsApp pasa a secundario solo en modo tienda. */
-.pdp-info>.dsx-buy{
-  width:100%;min-width:0;margin:0 0 14px;padding:0;
+.pdp-actions>.btn{flex:1 1 auto;min-width:0}
+/* Compra online: el puente inserta .dsx-buy como primer hijo de
+   .pdp-actions (o directo en .pdp-info como fallback). Es el CTA
+   primario a todo lo ancho y el de WhatsApp pasa a secundario solo en
+   modo tienda. La especificidad alta gana al ancho del puente. */
+[data-surface="product"] .pdp-actions>.dsx-buy[data-ds-buy-slot="pdp"],
+[data-surface="product"] .pdp-info>.dsx-buy{
+  flex:0 0 100%;width:100%;min-width:0;margin:0 0 14px;padding:0;
   display:flex;align-items:center;justify-content:center;gap:9px;
   min-height:48px;border:1px solid var(--accent);border-radius:var(--radius-btn);
   background:var(--accent);color:var(--accent-ink);cursor:pointer;
   font-family:var(--font-display);font-size:13px;font-weight:700;
   letter-spacing:.14em;text-transform:uppercase;
   transition:transform .2s var(--ease),background .2s,box-shadow .2s}
-.pdp-info>.dsx-buy:hover{transform:translateY(-2px);filter:brightness(1.06);
+[data-surface="product"] .pdp-actions>.dsx-buy[data-ds-buy-slot="pdp"]:hover,
+[data-surface="product"] .pdp-info>.dsx-buy:hover{transform:translateY(-2px);filter:brightness(1.06);
   box-shadow:0 14px 30px -18px color-mix(in srgb,var(--accent) 70%,transparent)}
 html[data-ds-commerce="1"] .pdp-actions .btn.accent{
   background:transparent;color:inherit;border-color:currentColor}
@@ -1269,7 +1328,7 @@ html[data-ds-commerce="1"] [data-surface="product"] .pdp-actions>.dsx-buy-now:fo
 .pdp-share{display:flex;align-items:center;gap:8px;margin-top:24px;
   font-family:var(--font-display);font-size:11px;font-weight:700;
   letter-spacing:.2em;text-transform:uppercase;color:var(--muted)}
-.pdp-share a{display:grid;place-items:center;width:32px;height:32px;
+.pdp-share a{display:grid;place-items:center;width:40px;height:40px;
   border:1px solid var(--line);color:var(--ink);
   transition:background .2s,color .2s,border-color .2s,transform .2s var(--ease)}
 .pdp-share a .icon{width:14px;height:14px}
@@ -1328,7 +1387,7 @@ html[data-ds-commerce="1"] [data-surface="product"] .pdp-actions>.dsx-buy-now:fo
    [data-ds-rev-form] — mismas clases que el resto de los diseños. */
 .ds-rev-fields{display:grid;gap:12px}
 .ds-rev-votes{display:flex;gap:8px;flex-wrap:wrap}
-.ds-rev-pick{display:inline-flex;align-items:center;gap:7px;padding:9px 13px;
+.ds-rev-pick{display:inline-flex;align-items:center;gap:7px;min-height:44px;padding:9px 13px;
   border:1px solid var(--line);background:var(--surface);color:var(--muted);
   font-family:var(--font-display);font-size:11px;font-weight:700;
   letter-spacing:.14em;text-transform:uppercase;
@@ -1338,7 +1397,7 @@ html[data-ds-commerce="1"] [data-surface="product"] .pdp-actions>.dsx-buy-now:fo
 .ds-rev-pick[aria-checked="true"],.ds-rev-pick.is-on{border-color:var(--accent);
   background:var(--accent);color:var(--accent-ink)}
 .ds-rev-row{display:grid;grid-template-columns:1fr 1fr;gap:10px}
-.ds-rev-input{width:100%;padding:11px 13px;border:1px solid var(--line);
+.ds-rev-input{width:100%;min-height:44px;padding:11px 13px;border:1px solid var(--line);
   background:var(--bg);color:var(--ink);font:inherit;font-size:14.5px}
 .ds-rev-input::placeholder{color:var(--muted)}
 .ds-rev-input:focus{outline:none;border-color:var(--accent)}
@@ -1347,7 +1406,7 @@ html[data-ds-commerce="1"] [data-surface="product"] .pdp-actions>.dsx-buy-now:fo
 .ds-rev-q{font-family:var(--font-display);font-size:11px;font-weight:700;
   letter-spacing:.14em;text-transform:uppercase;color:var(--muted)}
 .ds-rev-cap .ds-rev-input{width:120px;flex:none}
-.ds-rev-reload{width:38px;height:38px;flex:none;border:1px solid var(--line);
+.ds-rev-reload{width:44px;height:44px;flex:none;border:1px solid var(--line);
   background:var(--surface);color:var(--muted);font-size:15px;line-height:1;
   transition:border-color .2s,color .2s}
 .ds-rev-reload:hover{border-color:var(--accent);color:var(--accent)}
@@ -1365,7 +1424,7 @@ html[data-ds-commerce="1"] [data-surface="product"] .pdp-actions>.dsx-buy-now:fo
   font-size:13.5px;color:var(--muted)}
 .ds-rev-reply strong{display:block;font-family:var(--font-display);font-size:10.5px;
   font-weight:700;letter-spacing:.14em;text-transform:uppercase;
-  color:var(--accent);margin-bottom:3px}
+  color:var(--accent-text);margin-bottom:3px}
 .ds-rev-reply span{display:block}
 /* Honeypot del captcha: nunca visible. */
 .ds-rev-hp{position:absolute;left:-9999px;width:1px;height:1px;overflow:hidden}
@@ -1381,6 +1440,35 @@ html[data-ds-commerce="1"] [data-surface="product"] .pdp-actions>.dsx-buy-now:fo
 @media(max-width:900px){
   .pdp-layout{grid-template-columns:1fr}
   .pdp-rel-grid{grid-template-columns:repeat(2,1fr)}
+  /* CTA de compra fijo al pie en la ficha: .pdp-actions sale del flujo y
+     el pin del puente (data-ds-pin="bottom") lo ancla al marco visible —
+     igual que la tab bar de otros diseños. El chatbot se levanta solo:
+     bottomChromePx cuenta la barra como chrome inferior. */
+  [data-surface="product"] .pdp-actions{
+    position:fixed;left:0;right:0;bottom:0;z-index:56;
+    display:flex;flex-wrap:wrap;align-items:stretch;gap:8px;
+    padding:10px max(14px,env(safe-area-inset-right,0px))
+      calc(10px + env(safe-area-inset-bottom,0px))
+      max(14px,env(safe-area-inset-left,0px));
+    background:color-mix(in srgb,var(--bg) 94%,transparent);
+    -webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px);
+    border-top:1px solid var(--line)}
+  /* La fila principal: "Agregar al carrito" a todo lo ancho arriba;
+     debajo "Comprar ahora" (chip) y WhatsApp reparten el ancho.
+     "Volver al catálogo" no hace falta en la barra (breadcrumb y header
+     ya lo dan). */
+  [data-surface="product"] .pdp-actions>.dsx-buy[data-ds-buy-slot="pdp"]{flex:1 1 100%}
+  [data-surface="product"] .pdp-actions>.btn.accent{flex:1 1 0;min-width:0}
+  [data-surface="product"] .pdp-actions>.btn.ghost{display:none}
+  [data-surface="product"] .pdp-actions>.dsx-buy-now{flex:0 0 auto;align-self:center;margin:0}
+  /* Aire al final del detalle para que la barra no tape opiniones ni
+     relacionados. */
+  [data-surface="product"] .pdp-surface{padding-bottom:calc(120px + env(safe-area-inset-bottom,0px))}
+  /* La barra fija también tapa el pie del documento: solo en la ficha se
+     le da aire extra al footer para que copyright y "volver arriba"
+     queden siempre visibles por encima de ella. */
+  html[data-ds-surface="product"] .site-footer{
+    padding-bottom:calc(180px + env(safe-area-inset-bottom,0px))}
 }
 
 /* ── rejillas de filo ───────────────────────────────────────────────────
@@ -2001,7 +2089,7 @@ html[data-ds-commerce="1"] [data-surface="product"] .pdp-actions>.dsx-buy-now:fo
         <p class="pdp-kicker"><span>{{product_category}}</span><span>{{product_brand}}</span></p>
         <p class="pdp-desc-short">{{product_description}}</p>
         <p class="pdp-ref"><span class="pdp-ref-code">{{product_ref}}</span><span>Vendido por {{store_name}}</span></p>
-        <div class="pdp-actions">
+        <div class="pdp-actions" data-ds-pin="bottom">
           <a class="btn accent" href="{{product_whatsapp_url}}" rel="noopener">Consultar por WhatsApp
             <svg class="icon" viewBox="0 0 24 24"><path d="M5 12h14M13 6l6 6-6 6"/></svg></a>
           <a class="btn ghost" href="#catalogo" data-ds-route="catalog">Volver al catálogo</a>
@@ -2180,6 +2268,7 @@ html[data-ds-commerce="1"] [data-surface="product"] .pdp-actions>.dsx-buy-now:fo
      manda el host (dentro del iframe estirado no hay scroll propio). */
   var header = document.getElementById('site-header');
   var frameBox = null;
+  var headH = 76;
   function paintFrame(d){
     if (!header) return;
     frameBox = { top: Number(d.top) || 0, bottom: Number(d.bottom) || 0, vh: Number(d.vh) || 0 };
@@ -2198,12 +2287,85 @@ html[data-ds-commerce="1"] [data-surface="product"] .pdp-actions>.dsx-buy-now:fo
     /* data-ds-offset exacto: el header se compacta al scrollear y el
        offset fijo de 76px dejaba los anchors tapados por el chrome. */
     var off = Math.round(header.getBoundingClientRect().height);
-    if (off > 0) header.setAttribute('data-ds-offset', String(off));
+    if (off > 0) { header.setAttribute('data-ds-offset', String(off)); headH = off; }
   }
+  /* Ficha: el panel de compra se "pega" bajo el header mientras se recorre
+     la galería/detalle en escritorio. El iframe va estirado al alto del
+     documento (no hay scroll interno), así que position:sticky no engancha:
+     el cling se hace con translateY calculado contra el marco visible —
+     el mismo datum que el pin de barras (frameBox de davent:ds-frame).
+     Solo ≥901px (layout a dos columnas) y solo en la superficie product;
+     si algo falla el panel queda en flujo normal, sin transform. */
+  var pdpInfo = document.querySelector('.pdp-info');
+  var pdpLayout = document.querySelector('.pdp-layout');
+  var pdpStickyMQ = window.matchMedia('(min-width: 901px)');
+  var pdpNat = null; /* {top,height,bottom} del panel en coords del doc */
+  var pdpTry = 0;    /* throttle de re-medición (getBoundingClientRect) */
+  function pdpStickyOn(){
+    return !!(pdpInfo && pdpLayout && frameBox && pdpStickyMQ.matches &&
+      document.documentElement.getAttribute('data-ds-surface') === 'product');
+  }
+  function measurePdp(){
+    pdpNat = null;
+    if (!pdpStickyOn()) return;
+    /* Si quedó un translateY de un frame anterior se suelta antes de
+       medir: si no, el rect ya viene desplazado y el cálculo se realimenta. */
+    pdpInfo.style.transform = '';
+    pdpInfo.classList.remove('is-stuck');
+    var ir = pdpInfo.getBoundingClientRect();
+    var lr = pdpLayout.getBoundingClientRect();
+    if (ir.height < 10 || lr.height < 10) return;
+    pdpNat = { top: ir.top, height: ir.height, bottom: lr.bottom };
+  }
+  function paintPdpSticky(){
+    if (!pdpInfo) return;
+    if (!pdpStickyOn()) {
+      pdpInfo.style.transform = '';
+      pdpInfo.classList.remove('is-stuck');
+      return;
+    }
+    if (!pdpNat) {
+      /* Si la medición falla (p. ej. ficha vacía) no se reintenta en cada
+         frame: los getBoundingClientRect forzarían layout por mensaje. */
+      var now = (window.performance && performance.now) ? performance.now() : Date.now();
+      if (now - pdpTry < 400) return;
+      pdpTry = now;
+      measurePdp();
+      if (!pdpNat) return;
+    }
+    /* viewTop = coordenada-y del documento que muestra el borde superior
+       del marco (mismo -frameBox.top que usa el pin de barras). */
+    var viewTop = Math.max(0, -frameBox.top);
+    var stickTop = viewTop + headH + 14;
+    /* El panel se suelta antes de pasarse del pie del layout: nunca tapa
+       el final de la galería ni se monta sobre .pdp-detail. */
+    var maxTop = pdpNat.bottom - pdpNat.height - 14;
+    var target = Math.min(Math.max(stickTop, pdpNat.top), Math.max(pdpNat.top, maxTop));
+    var delta = target - pdpNat.top;
+    if (delta > 4) {
+      pdpInfo.style.transform = 'translateY(' + Math.round(delta) + 'px)';
+      pdpInfo.classList.add('is-stuck');
+    } else {
+      pdpInfo.style.transform = '';
+      pdpInfo.classList.remove('is-stuck');
+    }
+  }
+  /* Re-medición perezosa: el layout cambia al cambiar de superficie, al
+     redimensionar o cuando cruzan el breakpoint de dos columnas. */
+  if (pdpStickyMQ.addEventListener) {
+    pdpStickyMQ.addEventListener('change', function(){ pdpNat = null; });
+  } else if (pdpStickyMQ.addListener) {
+    pdpStickyMQ.addListener(function(){ pdpNat = null; });
+  }
+  window.addEventListener('resize', function(){ pdpNat = null; });
+  window.addEventListener('load', function(){ pdpNat = null; });
   window.addEventListener('message', function(e){
     if (e.source !== window.parent) return;
     var d = e.data || {};
-    if (d.type === 'davent:ds-frame') paintFrame(d);
+    if (d.type === 'davent:ds-frame') { paintFrame(d); paintPdpSticky(); }
+    /* Cambio de superficie: el layout de la ficha cambia — se re-mide el
+       panel en el próximo frame (pdpNat en null = medición perezosa). */
+    if (d.type === 'davent:ds-surface') pdpNat = null;
   });
 
   /* Menú móvil: hoja lateral, cierra con fondo, cruz, Esc o al navegar. */
