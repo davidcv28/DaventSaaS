@@ -438,10 +438,12 @@ const pageStyle = computed(() => {
   const id = custom.value?.site_theme?.style?.id
   return typeof id === 'string' && id ? id : 'base'
 })
-// Masthead tipo marketplace: solo existía con 'mercado'/'shop' (retirados a
-// 'raiz' — el único diseño). Queda como flag apagado por compatibilidad del
-// template.
-const isShop = computed(() => false)
+// Masthead tipo marketplace (buscador + meta bajo la marca + fila de
+// secciones .sp-shop-nav): lo usa 'mercado'. Su documento de patrón pinta
+// la portada/catálogo con un masthead equivalente — activarlo acá hace que
+// las páginas de comercio (ingresar, cuenta, carrito) compartan el mismo
+// chrome en vez del genérico.
+const isShop = computed(() => pageTemplate.value === 'mercado')
 
 // Hoja propia del diseño: tiñe también el chrome (barra, pie, dock) en
 // páginas que no montan la portada (servicios, ficha). Se carga on-demand y
@@ -1413,11 +1415,12 @@ onBeforeUnmount(() => {
                fiscal del backend). -->
           <RouterLink
             v-if="status === 'success' && customerAuthEnabled"
-            :to="accountTo" class="sp-icon-btn"
+            :to="accountTo" class="sp-icon-btn" :class="{ 'sp-shop-account': isShop }"
             :aria-label="customerStore.isAuthenticated ? `Mi cuenta — ${customerStore.displayName}` : 'Ingresar a mi cuenta'"
-            title="Mi cuenta"
+            :title="customerStore.isAuthenticated ? 'Mi cuenta' : 'Ingresar'"
           >
             <AppIcon name="user" :size="17" />
+            <span v-if="isShop" class="sp-shop-account-label">{{ customerStore.isAuthenticated ? 'Mi cuenta' : 'Ingresar' }}</span>
           </RouterLink>
           <button
             v-if="status === 'success' && ordersEnabled"

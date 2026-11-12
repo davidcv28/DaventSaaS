@@ -210,6 +210,18 @@
   border-color: transparent;
   color: var(--mc-on-band);
 }
+/* Entrada de cuenta del masthead: píldora fantasma con filete (misma mano
+   que la .dsx-account del documento del patrón), no el botón circular. */
+.store-page[data-template='mercado'] .sp-top .sp-shop-account {
+  height: 40px;
+  border-radius: 6px;
+  background: transparent;
+  border-color: color-mix(in srgb, var(--mc-on-band) 45%, transparent);
+}
+.store-page[data-template='mercado'] .sp-top .sp-shop-account:hover {
+  background: color-mix(in srgb, var(--mc-on-band) 14%, transparent);
+  border-color: color-mix(in srgb, var(--mc-on-band) 45%, transparent);
+}
 .store-page[data-template='mercado'] .sp-top .sp-burger {
   background: color-mix(in srgb, var(--mc-on-band) 8%, transparent);
   border-color: transparent;
