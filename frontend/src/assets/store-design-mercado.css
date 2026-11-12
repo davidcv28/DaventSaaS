@@ -57,6 +57,76 @@
   --dz-warn: #FBBF24;
 }
 
+/* ---------- Variantes de estilo (data-style = slug del DesignStyle) ----------
+   Mismo mostrador, otra paleta: cada estilo repuntea los --dz-* y toda la
+   sección de comercio (auth, cuenta, track, checkout) lo sigue sin tocar
+   reglas. Los estilos claros van con guard de tema para no pisar el modo
+   noche del toggle; noche no lleva guard — ese estilo ES oscuro. */
+[data-design='mercado'][data-style='mercado-oferta'][data-theme='light'] {
+  --dz-bg: #f7f3ee;
+  --dz-surface: #ffffff;
+  --dz-ink: #2b2320;
+  --dz-ink-2: #453b36;
+  --dz-muted: #6b625c;
+  --dz-line: #e7dfd8;
+  --dz-accent: #ff6a00;
+  --dz-accent-ink: #2b1600;
+  --dz-link: #9f1239;
+  --dz-blue: #c81e1e;
+  --dz-blue-ink: #ffffff;
+  --dz-ok: #007a3d;
+  --dz-danger: #b42318;
+  --dz-warn: #B45309;
+}
+[data-design='mercado'][data-style='mercado-tierra'][data-theme='light'] {
+  --dz-bg: #f5efe6;
+  --dz-surface: #ffffff;
+  --dz-ink: #2b2118;
+  --dz-ink-2: #4a3d2e;
+  --dz-muted: #6b5d4f;
+  --dz-line: #e5dccb;
+  --dz-accent: #f59e0b;
+  --dz-accent-ink: #2b2118;
+  --dz-link: #92400e;
+  --dz-blue: #b45309;
+  --dz-blue-ink: #ffffff;
+  --dz-ok: #1e7a3d;
+  --dz-danger: #d92d20;
+  --dz-warn: #92400e;
+}
+[data-design='mercado'][data-style='mercado-urbano'][data-theme='light'] {
+  --dz-bg: #eef1f4;
+  --dz-surface: #ffffff;
+  --dz-ink: #1f2937;
+  --dz-ink-2: #374452;
+  --dz-muted: #5b6b7c;
+  --dz-line: #d9e0e7;
+  --dz-accent: #38bdf8;
+  --dz-accent-ink: #0b2838;
+  --dz-link: #0369a1;
+  --dz-blue: #334155;
+  --dz-blue-ink: #ffffff;
+  --dz-ok: #0e8a5f;
+  --dz-danger: #dc2626;
+  --dz-warn: #B45309;
+}
+[data-design='mercado'][data-style='mercado-noche'] {
+  --dz-bg: #121418;
+  --dz-surface: #1c1f24;
+  --dz-ink: #f2f3f5;
+  --dz-ink-2: #d6d8dd;
+  --dz-muted: #a0a5ae;
+  --dz-line: #30343b;
+  --dz-accent: #ffc400;
+  --dz-accent-ink: #2d2a00;
+  --dz-link: color-mix(in srgb, #3b82f6 55%, #ffffff);
+  --dz-blue: #3b82f6;
+  --dz-blue-ink: #0b1220;
+  --dz-ok: #4ade80;
+  --dz-danger: #ff6b6b;
+  --dz-warn: #FBBF24;
+}
+
 /* ---------- Marco común ---------- */
 [data-design='mercado'][data-theme] :is(.ec-auth, .ec-auth-card, .ec-account, .ec-track, .ec-cartpg, .ec-checkout, .ec-receiptpg, .ec-legal) :is(a, button, input, select, textarea):focus-visible {
   outline: 2px solid var(--dz-link);
