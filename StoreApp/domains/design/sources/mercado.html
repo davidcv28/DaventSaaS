@@ -70,6 +70,9 @@
     --shadow:var(--ds-shadow,0 1px 2px rgba(0,0,0,.08));
     --shadow-lift:0 22px 42px -28px rgba(0,0,0,.55);
     --font:"Inter","Helvetica Neue",system-ui,-apple-system,sans-serif;
+    /* Precio con la pila de MercadoLibre (Proxima Nova; Helvetica/Arial
+       como sustituto libre cuando no está instalada). */
+    --price-font:"Proxima Nova","Helvetica Neue",Helvetica,Arial,sans-serif;
     --mono:ui-monospace,"SF Mono","JetBrains Mono","Cascadia Mono",Menlo,Consolas,monospace;
     --dur:420ms; --ease:cubic-bezier(.22,1,.36,1);
     color-scheme:light;
@@ -481,7 +484,7 @@
   .ds-product .ds-product-price{
     grid-area:price;display:grid;grid-template-columns:minmax(0,1fr) auto;
     grid-template-areas:"old old" "amount off";align-items:end;column-gap:8px;min-width:0;
-    padding:8px 14px 4px;font:700 23px/1.15 var(--font);letter-spacing:-.02em;
+    padding:8px 14px 4px;font:700 23px/1.15 var(--price-font);letter-spacing:0;font-variant-numeric:normal;
     font-variant-numeric:tabular-nums;color:var(--ink);overflow-wrap:anywhere;
   }
   .ds-product-amount{position:relative;grid-area:amount;min-width:0;white-space:nowrap}
@@ -815,7 +818,7 @@
     display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;
   }
   .cat-surface .grid[data-ds-view-mode="list"] .ds-product-price{
-    grid-area:price;margin-top:10px;padding:0;font-size:24px;font-weight:700;letter-spacing:-.02em;
+    grid-area:price;margin-top:10px;padding:0;font-family:var(--price-font);font-size:24px;font-weight:700;letter-spacing:0;
   }
   .cat-surface .grid[data-ds-view-mode="list"] .ds-product-price s{font-size:12px}
   .cat-surface .grid[data-ds-view-mode="list"] .ds-stock{display:none}
@@ -823,7 +826,7 @@
   .cat-surface .grid[data-ds-view-mode="grid"] .ds-product-link{display:grid;grid-template-areas:"media" "copy" "cat" "brand" "rate" "price" "stock";grid-template-rows:auto auto auto auto auto 1fr auto;height:100%;min-width:0;color:inherit}
   .cat-surface .grid[data-ds-view-mode="grid"] .ds-product-cat{grid-area:cat;min-height:1.2em;margin:12px 14px 0;font-size:10px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--muted)}
   .cat-surface .grid[data-ds-view-mode="grid"] .ds-product-name{margin:0;font-size:19px;font-weight:400;line-height:1.3;min-height:2.6em;max-height:2.6em;max-height:2.6em;letter-spacing:0;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;overflow-wrap:anywhere}
-  .cat-surface .grid[data-ds-view-mode="grid"] .ds-product-price{grid-area:price;padding:8px 14px 4px;font-size:22px;font-weight:700}
+  .cat-surface .grid[data-ds-view-mode="grid"] .ds-product-price{grid-area:price;padding:8px 14px 4px;font-family:var(--price-font);font-size:22px;font-weight:700;letter-spacing:0}
   .cat-surface .grid[data-ds-view-mode="grid"] .ds-product:hover{box-shadow:var(--shadow-lift)}
 
   .cat-surface .ds-empty{margin:18px 0 4px;padding:0;color:var(--muted);font-size:14px}
