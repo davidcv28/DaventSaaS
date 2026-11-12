@@ -220,7 +220,7 @@
 /* Trama: papel con pasadas horizontales y filete de cuero al borde. */
 [data-design='sastreria'] .ec-auth .ec-auth-panel {
   position: relative;
-  padding: 32px 22px 30px;
+  padding: 26px 22px 26px;
   background:
     repeating-linear-gradient(0deg, transparent 0 27px, color-mix(in srgb, var(--dz-line) 45%, transparent) 27px 28px),
     var(--dz-surface);
@@ -237,7 +237,7 @@
   border-bottom: 1px dashed var(--dz-line-strong);
 }
 [data-design='sastreria'] .ec-auth .ec-auth-back {
-  gap: 9px; margin-bottom: clamp(20px, 3vw, 30px);
+  gap: 9px; margin-bottom: 14px;
   padding-bottom: 6px;
   border-bottom: 1px solid transparent;
   font: 400 9px/1 var(--dz-mono); letter-spacing: .2em; text-transform: uppercase;
@@ -248,14 +248,11 @@
   color: var(--dz-accent-text); border-bottom-color: var(--dz-accent);
 }
 [data-design='sastreria'] .ec-auth .ec-auth-head {
-  gap: 10px; margin-bottom: 26px; padding-bottom: 20px;
+  gap: 8px; margin-bottom: 20px; padding-bottom: 14px;
   border-bottom: 1px dashed var(--dz-line-strong);
 }
-[data-design='sastreria'] .ec-auth .ec-auth-badge {
-  width: 44px; height: 44px; margin-bottom: 4px;
-  border: 1px dashed var(--dz-line-strong); border-radius: var(--dz-radius);
-  background: var(--dz-accent-soft); color: var(--dz-accent-text);
-}
+/* Sin medallón de ícono: la cabecera va directa al tag + titular. */
+[data-design='sastreria'] .ec-auth .ec-auth-badge { display: none; }
 [data-design='sastreria'] .ec-auth .ec-auth-tag {
   display: inline-flex; align-items: center; gap: 9px;
   font: 400 9px/1 var(--dz-mono); letter-spacing: .24em; text-transform: uppercase;
