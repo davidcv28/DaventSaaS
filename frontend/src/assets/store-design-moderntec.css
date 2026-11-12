@@ -1416,7 +1416,7 @@
    Las secciones pasan de hairlines a tarjetas suaves y los metadatos en
    mono suben de 9-10px a un piso legible para cualquier comprador. */
 .store-page[data-design='moderntec'][data-tracking='tracking-minimal'] .ec-track {
-  max-width: min(1100px, 100%);
+  max-width: min(1440px, 100%);
   margin-inline: auto;
   gap: 14px;
 }
