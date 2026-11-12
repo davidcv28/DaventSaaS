@@ -779,7 +779,7 @@ const tabLinks = computed(() => {
     .map((label) => ({ ...byLabel.get(label), icon: TAB_ICONS[label] }))
 })
 const moreLinks = computed(() => navMenuLinks.value.filter((l) => !tabLinks.value.some((t) => t.label === l.label)))
-const showTabbar = computed(() => status.value === 'success' && mobileNav.value === 'bottom' && tabLinks.value.length > 0)
+const showTabbar = computed(() => status.value === 'success' && !usePattern.value && mobileNav.value === 'bottom' && tabLinks.value.length > 0)
 function isTabActive(label) {
   return (label === 'Inicio' && shopCurrent.value === 'home')
     || (label === 'Catálogo' && shopCurrent.value === 'catalog')
