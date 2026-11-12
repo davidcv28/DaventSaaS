@@ -2218,7 +2218,10 @@
       var link = links[i]
       var v = stockOf(link.getAttribute('data-ds-product'))
       if (v === undefined) continue
-      var card = link.closest('.ds-product') || link.parentNode
+      //Sin tarjeta .ds-product no hay tag/CTA propios que pintar — el
+      //parentNode podía ser un contenedor y querySelector agarraba el
+      //.ds-stock de OTRA tarjeta.
+      var card = link.closest('.ds-product')
       if (!card) continue
       var tag = card.querySelector('.ds-stock')
       if (tag) paintStockTag(tag, stockTagLabel(v), v === 0)

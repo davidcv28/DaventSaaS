@@ -61,7 +61,9 @@ const ordersOn = computed(() => Boolean(storeCtx?.ordersEnabled?.value ?? storeC
 const stockMap = ref(null)
 let stockReq = null
 function postStock() {
-  if (stockMap.value) post('davent:ds-stock', { stock: stockMap.value })
+  /* {...map}: stockMap es ref() — el proxy reactivo de Vue no cruza
+   * postMessage (DataCloneError); el spread deja un objeto plano. */
+  if (stockMap.value) post('davent:ds-stock', { stock: { ...stockMap.value } })
 }
 function loadStock() {
   if (!ordersOn.value || stockReq || typeof storeCtx?.loadPublicCatalog !== 'function') return
