@@ -322,10 +322,11 @@ onUnmounted(() => resizeObs?.disconnect())
       <template v-if="mode === 'register'">
         <div class="ecaf-grid">
           <label class="sp-field">
+            <span class="ecaf-ico" aria-hidden="true"><AppIcon name="user" :size="16" /></span>
             <span id="ec-auth-first-name-label" class="sp-field-label">Nombre</span>
             <input
               ref="firstNameInput" v-model="form.first_name" name="first_name" class="sp-input"
-              type="text" autocomplete="given-name" placeholder="Nombre" enterkeyhint="next" :disabled="busy"
+              type="text" autocomplete="given-name" placeholder="María" enterkeyhint="next" :disabled="busy"
               aria-labelledby="ec-auth-first-name-label"
               :aria-invalid="fieldError('first_name') ? 'true' : undefined"
               :aria-describedby="describedBy('first_name')"
@@ -333,10 +334,11 @@ onUnmounted(() => resizeObs?.disconnect())
             <span v-if="fieldError('first_name')" :id="fieldErrorId('first_name')" class="sp-form-error">{{ fieldError('first_name') }}</span>
           </label>
           <label class="sp-field">
+            <span class="ecaf-ico" aria-hidden="true"><AppIcon name="user" :size="16" /></span>
             <span id="ec-auth-last-name-label" class="sp-field-label">Apellido</span>
             <input
               ref="lastNameInput" v-model="form.last_name" name="last_name" class="sp-input"
-              type="text" autocomplete="family-name" placeholder="Apellido" enterkeyhint="next" :disabled="busy"
+              type="text" autocomplete="family-name" placeholder="Pérez" enterkeyhint="next" :disabled="busy"
               aria-labelledby="ec-auth-last-name-label"
               :aria-invalid="fieldError('last_name') ? 'true' : undefined"
               :aria-describedby="describedBy('last_name')"
@@ -348,11 +350,12 @@ onUnmounted(() => resizeObs?.disconnect())
 
       <template v-if="mode === 'forgot'">
         <label class="sp-field">
+          <span class="ecaf-ico" aria-hidden="true"><AppIcon name="mail" :size="16" /></span>
           <span id="ec-auth-forgot-email-label" class="sp-field-label">Email</span>
           <input
             ref="forgotInput" v-model="form.forgot_email" name="email" class="sp-input"
             type="email" autocomplete="email" inputmode="email" required :disabled="busy"
-            placeholder="Correo electrónico"
+            placeholder="nombre@correo.com"
             autocapitalize="none" autocorrect="off" spellcheck="false" enterkeyhint="go"
             aria-labelledby="ec-auth-forgot-email-label"
             :aria-invalid="isInvalid('email') ? 'true' : undefined"
@@ -365,11 +368,12 @@ onUnmounted(() => resizeObs?.disconnect())
 
       <template v-else>
         <label class="sp-field">
+          <span class="ecaf-ico" aria-hidden="true"><AppIcon name="mail" :size="16" /></span>
           <span id="ec-auth-email-label" class="sp-field-label">Email</span>
           <input
             ref="emailInput" id="ec-auth-email" v-model="form.email" name="email" class="sp-input"
             type="email" autocomplete="email" inputmode="email" required :disabled="busy"
-            placeholder="Correo electrónico"
+            placeholder="nombre@correo.com"
             autocapitalize="none" autocorrect="off" spellcheck="false" enterkeyhint="next"
             aria-labelledby="ec-auth-email-label"
             :aria-invalid="isInvalid('email') ? 'true' : undefined"
@@ -381,10 +385,11 @@ onUnmounted(() => resizeObs?.disconnect())
         <label class="sp-field">
           <span id="ec-auth-password-label" class="sp-field-label">Contraseña</span>
           <span class="ecaf-pass">
+            <span class="ecaf-ico" aria-hidden="true"><AppIcon name="lock" :size="16" /></span>
             <input
               ref="passwordInput" id="ec-auth-password" v-model="form.password" name="password" class="sp-input"
               :type="showPassword ? 'text' : 'password'"
-              placeholder="Contraseña"
+              placeholder="Mínimo 8 caracteres"
               :autocomplete="mode === 'login' ? 'current-password' : 'new-password'"
               required minlength="8" :disabled="busy"
               spellcheck="false" autocapitalize="none"
@@ -408,10 +413,11 @@ onUnmounted(() => resizeObs?.disconnect())
         <label v-if="mode === 'register'" class="sp-field">
           <span id="ec-auth-confirm-label" class="sp-field-label">Repetir contraseña</span>
           <span class="ecaf-pass">
+            <span class="ecaf-ico" aria-hidden="true"><AppIcon name="lock" :size="16" /></span>
             <input
               ref="confirmInput" id="ec-auth-confirm" v-model="form.password2" name="password2" class="sp-input"
               :type="showPassword2 ? 'text' : 'password'"
-              placeholder="Repetir contraseña"
+              placeholder="Repetí tu contraseña"
               autocomplete="new-password"
               required minlength="8" :disabled="busy"
               spellcheck="false" autocapitalize="none"
@@ -516,6 +522,10 @@ onUnmounted(() => resizeObs?.disconnect())
 .ecaf-form { display: grid; gap: 13px; }
 .ecaf-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
 .ecaf-pass { position: relative; display: block; }
+/* Icono líder del campo: el markup nace oculto (convención .ecaf-switch)
+   y cada hoja de diseño lo enciende (p. ej. portico lo posiciona
+   absolute sobre el input con su padding). */
+.ecaf-ico { display: none; }
 .ecaf-pass .sp-input { padding-right: 46px; }
 .ecaf-pass-toggle {
   position: absolute; right: 5px; top: 50%; transform: translateY(-50%);

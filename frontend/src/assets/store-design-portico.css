@@ -4,11 +4,10 @@
    data-design="portico". No edita las hojas scoped de las vistas: las
    reemplaza con más especificidad (0,3,0 mínimo).
 
-   Composición propia: la auth es una SALA DE MUSEO en dos alas — el ala de
-   marca es tinta verde-negra con retícula de cobre, número de sala y
-   cédulas numeradas con línea de puntos; el ala del formulario es papel con
-   filete superior de cobre y campos de esquina recta (2px). La cuenta es el
-   ÍNDICE DE LA SALA: barra lateral de filetes con numerales mono, sin
+   Composición propia: la auth es una CÉDULA DE ACCESO — una sola tarjeta
+   centrada sobre el papel con guías de galería de fondo, la marca reducida
+   a una fila (logo + nombre) y el kicker mono indexado por modo. La cuenta
+   es el ÍNDICE DE LA SALA: barra lateral de filetes con numerales mono, sin
    tarjetas redondeadas, paneles con borde de 1px y títulos en serif.
    =========================================================================== */
 
@@ -87,180 +86,88 @@
 }
 
 /* ---------- Marco común ---------- */
-[data-design='portico'][data-theme] :is(.ec-auth, .ec-account, .ec-track, .ec-cartpg, .ec-checkout, .ec-receiptpg, .ec-legal) :is(a, button, input, select, textarea):focus-visible {
+[data-design='portico'][data-theme] :is(.ec-auth, .ec-account, .ec-track, .ec-cartpg, .ec-checkout, .ec-receiptpg, .ec-legal, .ec-auth-card) :is(a, button, input, select, textarea):focus-visible {
   outline: 2px solid var(--dz-accent);
   outline-offset: 3px;
 }
-[data-design='portico'][data-theme] :is(.ec-auth, .ec-account, .ec-track, .ec-cartpg, .ec-checkout, .ec-receiptpg, .ec-legal) ::selection {
+[data-design='portico'][data-theme] :is(.ec-auth, .ec-account, .ec-track, .ec-cartpg, .ec-checkout, .ec-receiptpg, .ec-legal, .ec-auth-card) ::selection {
   background: var(--store-accent-ink);
   color: var(--sp-on-band, #fff);
 }
 
 /* ===========================================================================
-   AUTH — sala en dos alas
+   AUTH — cédula de acceso
+   ---------------------------------------------------------------------------
+   Una sola tarjeta centrada sobre el papel. La marca se reduce a una fila
+   (logo + nombre) cosida al formulario por el filete de cobre; el encabezado
+   lleva el kicker mono indexado por modo ("01 · ACCESO") y un solo CTA de
+   cobre cierra. Los ornamentos de sala (copy editorial, perks, sello,
+   hatch) nacen ocultos en la vista y acá se apagan explícito: ninguna regla
+   estila markup invisible.
    =========================================================================== */
 [data-design='portico'] .ec-auth {
-  padding-inline: clamp(0px, 3vw, 26px);
+  padding-inline: clamp(12px, 3vw, 26px);
+  /* Guías de galería: dos filetes verticales tenues a cuarto y tres cuartos
+     del ancho — la "columna" del pórtico sin ruido. */
+  background-image:
+    linear-gradient(90deg, transparent calc(25% - .5px), color-mix(in srgb, var(--dz-line) 60%, transparent) 25%, transparent calc(25% + .5px)),
+    linear-gradient(90deg, transparent calc(75% - .5px), color-mix(in srgb, var(--dz-line) 60%, transparent) 75%, transparent calc(75% + .5px));
 }
 [data-design='portico'] .ec-auth .ec-auth-shell {
-  width: min(1120px, 100%);
-  grid-template-columns: minmax(0, 1fr) minmax(0, 1.08fr);
-  margin-block: clamp(16px, 3.4vw, 44px) clamp(40px, 6vw, 80px);
+  width: min(432px, 100%);
+  grid-template-columns: minmax(0, 1fr);
+  margin-block: clamp(20px, 4vw, 52px) clamp(44px, 7vw, 84px);
   border: 1px solid var(--dz-line);
   border-radius: var(--dz-radius);
   background: var(--dz-surface);
-  box-shadow: 0 44px 84px -60px rgba(46, 34, 16, .55);
+  box-shadow: 0 34px 64px -52px rgba(46, 34, 16, .5);
 }
 
-/* Ala de marca: tinta + retícula de galería + luz de cobre. */
+/* Fila de marca: logo + nombre sobre papel. El velo de portada y la tinta
+   del ala quedan fuera — la cédula es una sola superficie. */
 [data-design='portico'] .ec-auth .ec-auth-brand {
-  isolation: isolate;
-  padding: clamp(24px, 3.6vw, 44px);
-  color: var(--dz-on-band);
-  background: var(--dz-ink-band);
+  padding: 0;
+  color: var(--dz-ink);
+  background: transparent;
 }
-[data-design='portico'] .ec-auth .ec-auth-brand::before {
-  opacity: .2;
-  mix-blend-mode: luminosity;
-}
-[data-design='portico'] .ec-auth .ec-auth-brand::after {
-  background:
-    linear-gradient(color-mix(in srgb, #f4efe4 7%, transparent) 1px, transparent 1px) 0 0 / 100% 76px,
-    linear-gradient(90deg, color-mix(in srgb, #f4efe4 7%, transparent) 1px, transparent 1px) 0 0 / 76px 100%,
-    radial-gradient(88% 64% at 88% -8%, color-mix(in srgb, var(--dz-accent) 40%, transparent), transparent 70%),
-    linear-gradient(162deg, color-mix(in srgb, #000 16%, transparent), color-mix(in srgb, #000 62%, transparent));
-}
+[data-design='portico'] .ec-auth .ec-auth-brand::before,
+[data-design='portico'] .ec-auth .ec-auth-brand::after { display: none; }
 [data-design='portico'] .ec-auth .ec-auth-brand-inner {
-  display: grid;
-  grid-template-rows: auto 1fr auto;
-  align-content: stretch;
-  gap: clamp(20px, 3vw, 34px);
-  padding-right: 0;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 15px 20px;
+  min-height: 0;
 }
 [data-design='portico'] .ec-auth .ec-auth-brand-top {
-  gap: 14px;
-  padding-bottom: 16px;
-  border-bottom: 1px solid color-mix(in srgb, #f4efe4 16%, transparent);
+  gap: 10px;
+  padding-bottom: 0;
+  border-bottom: 0;
 }
 [data-design='portico'] .ec-auth .ec-auth-logo {
-  width: 44px; height: 44px;
+  width: 34px; height: 34px;
   border-radius: var(--dz-radius);
-  background: transparent;
-  border: 1px solid color-mix(in srgb, #f4efe4 30%, transparent);
+  background: var(--dz-ink-band);
+  border: 1px solid color-mix(in srgb, var(--dz-on-band) 18%, transparent);
   color: var(--dz-on-band);
-  font-family: var(--dz-display); font-size: 24px; font-weight: 400; letter-spacing: 0;
+  font-family: var(--dz-display); font-size: 17px; font-weight: 400; letter-spacing: 0;
 }
 [data-design='portico'] .ec-auth .ec-auth-brand-name {
-  font-family: var(--dz-body); font-size: 11.5px; font-weight: 600;
-  letter-spacing: .18em; text-transform: uppercase; color: var(--dz-on-band);
+  font-family: var(--dz-mono); font-size: 10.5px; font-weight: 500;
+  letter-spacing: .22em; text-transform: uppercase;
+  color: var(--dz-ink);
 }
-[data-design='portico'] .ec-auth .ec-auth-brand-copy {
-  display: grid; gap: 13px; max-width: 44ch; min-width: 0;
-}
-/* Número de sala: "01 ———" en mono cobre. La mezcla con hueso sube el
-   cobre hasta AA sobre el velo de la portada (el acento crudo queda en
-   ~4.4:1 cuando la foto aclara la banda). */
-[data-design='portico'] .ec-auth .ec-auth-rail {
-  display: inline-flex; align-items: center; gap: 12px;
-  font: 400 9px/1 var(--dz-mono); letter-spacing: .34em; text-transform: uppercase;
-  color: color-mix(in srgb, var(--dz-accent) 74%, #f4efe4);
-}
-[data-design='portico'] .ec-auth .ec-auth-rail::after {
-  content: ""; width: 54px; height: 1px;
-  background: color-mix(in srgb, var(--dz-accent) 62%, transparent);
-}
-[data-design='portico'] .ec-auth .ec-auth-brand-kicker {
-  font: 400 9px/1 var(--dz-mono); letter-spacing: .24em; text-transform: uppercase;
-  color: color-mix(in srgb, #f4efe4 74%, transparent);
-}
-[data-design='portico'] .ec-auth .ec-auth-brand-title {
-  font-family: var(--dz-display); font-weight: 400;
-  font-size: clamp(30px, 3.5vw, 46px); line-height: 1.03; letter-spacing: -.02em;
-  color: #f8f4eb;
-  /* El título nunca desborda la cédula: parte palabras largas y balancea
-     las dos líneas en vez de dejar una huérfana. */
-  text-wrap: balance; overflow-wrap: anywhere; min-width: 0;
-}
-[data-design='portico'] .ec-auth .ec-auth-brand-text {
-  font-family: var(--dz-body); font-size: 13.5px; line-height: 1.7;
-  color: color-mix(in srgb, #f4efe4 80%, transparent);
-}
-/* Cédulas numeradas con línea de puntos (catálogo de museo). */
-[data-design='portico'] .ec-auth .ec-auth-perks {
-  counter-reset: dzperk; gap: 0; margin-top: 6px;
-}
-[data-design='portico'] .ec-auth .ec-auth-perks li {
-  counter-increment: dzperk;
-  display: flex; align-items: center; gap: 10px;
-  padding: 11px 0;
-  border-bottom: 1px solid color-mix(in srgb, #f4efe4 14%, transparent);
-  font-family: var(--dz-body); font-size: 12.5px; font-weight: 500;
-  color: color-mix(in srgb, #f4efe4 92%, transparent);
-}
-[data-design='portico'] .ec-auth .ec-auth-perks li::before {
-  content: counter(dzperk, decimal-leading-zero);
-  flex: none;
-  font: 400 8.5px/1 var(--dz-mono); letter-spacing: .18em;
-  color: color-mix(in srgb, var(--dz-accent) 86%, #f4efe4);
-}
-[data-design='portico'] .ec-auth .ec-auth-perks li > span { flex: 1 1 auto; min-width: 0; }
-[data-design='portico'] .ec-auth .ec-auth-perks li::after {
-  content: ""; flex: none; width: 22px; height: 1px;
-  background: color-mix(in srgb, #f4efe4 26%, transparent);
-}
-[data-design='portico'] .ec-auth .ec-auth-perks svg {
-  flex: none; color: color-mix(in srgb, var(--dz-accent) 78%, #f4efe4);
-}
-[data-design='portico'] .ec-auth .ec-auth-brand-foot {
-  font: 400 8.5px/1.5 var(--dz-mono); letter-spacing: .2em; text-transform: uppercase;
-  color: color-mix(in srgb, #f4efe4 66%, transparent);
-  padding-top: 14px;
-  border-top: 1px solid color-mix(in srgb, #f4efe4 14%, transparent);
-}
+/* Apagado explícito: el ala editorial no existe en esta composición. */
+[data-design='portico'] .ec-auth :is(
+  .ec-auth-brand-copy, .ec-auth-brand-foot, .ec-auth-seal, .ec-auth-hatch
+) { display: none; }
 
-/* Sello de sala: el markup ya trae el textPath con el nombre de la tienda y
-   nace oculto para el resto de los diseños. Acá es el único círculo legítimo
-   del ala (es un sello), arriba a la derecha, y se apaga con reduced-motion.
-   Solo en las dos alas (≥1025px): en la cédula apilada no hay esquina libre. */
-@media (min-width: 1025px) {
-  [data-design='portico'] .ec-auth .ec-auth-seal {
-    display: grid;
-    place-items: center;
-    position: absolute;
-    top: clamp(16px, 2.2vw, 26px);
-    right: clamp(16px, 2.2vw, 26px);
-    width: clamp(92px, 7.6vw, 104px);
-    height: clamp(92px, 7.6vw, 104px);
-    z-index: 2;
-    border-radius: 50%;
-    border: 1px solid color-mix(in srgb, var(--dz-accent) 52%, transparent);
-    background: color-mix(in srgb, #0b0e0b 34%, transparent);
-    color: color-mix(in srgb, var(--dz-accent) 74%, #f4efe4);
-    pointer-events: none;
-  }
-  [data-design='portico'] .ec-auth .ec-auth-seal-ring {
-    position: absolute; inset: 0;
-    width: 100%; height: 100%;
-    transform-origin: 50% 50%;
-    animation: dz-seal-spin 40s linear infinite;
-  }
-  [data-design='portico'] .ec-auth .ec-auth-seal-ring text {
-    font-family: var(--dz-mono); font-size: 8px; letter-spacing: .1em;
-    fill: currentColor;
-  }
-  [data-design='portico'] .ec-auth .ec-auth-seal > .icon { color: currentColor; }
-  /* El bloque de marca no puede pasar por debajo del sello. */
-  [data-design='portico'] .ec-auth .ec-auth-brand-top { max-width: calc(100% - 116px); }
-}
-@keyframes dz-seal-spin { to { transform: rotate(1turn); } }
-
-/* Ala del formulario: papel, filete superior de cobre. */
+/* Panel del formulario: papel, costura de cobre bajo la fila de marca. */
 [data-design='portico'] .ec-auth .ec-auth-panel {
   position: relative;
   padding: clamp(24px, 3.4vw, 46px) clamp(22px, 3.4vw, 46px) clamp(28px, 4vw, 48px);
   background: var(--dz-surface);
   color: var(--dz-ink);
-  border-left: 1px solid var(--dz-line);
 }
 [data-design='portico'] .ec-auth .ec-auth-panel::before {
   content: ""; position: absolute; inset: 0 0 auto; height: 2px;
@@ -287,14 +194,20 @@
   background: transparent; color: var(--dz-accent-text);
 }
 [data-design='portico'] .ec-auth .ec-auth-tag {
-  display: inline-flex; align-items: center; gap: 9px;
+  display: inline-flex; align-items: center; gap: 7px;
   font: 400 9px/1 var(--dz-mono); letter-spacing: .24em; text-transform: uppercase;
+  color: var(--dz-muted);
+}
+/* Kicker indexado por modo: "01 · ACCESO" / "02 · REGISTRO" / "03 · …". El
+   folio sale de .ecaf[data-mode] con :has(); sin soporte queda "01". */
+[data-design='portico'] .ec-auth .ec-auth-tag::before {
+  content: "01 ·";
+  flex: none; width: auto; height: auto;
+  background: none; transform: none;
   color: var(--dz-accent-text);
 }
-[data-design='portico'] .ec-auth .ec-auth-tag::before {
-  content: ""; width: 7px; height: 7px; flex: none;
-  background: var(--dz-accent); transform: rotate(45deg);
-}
+[data-design='portico'] .ec-auth:has(.ecaf[data-mode='register']) .ec-auth-tag::before { content: "02 ·"; }
+[data-design='portico'] .ec-auth:has(.ecaf[data-mode='forgot']) .ec-auth-tag::before { content: "03 ·"; }
 [data-design='portico'] .ec-auth .ec-auth-title {
   font-family: var(--dz-display); font-weight: 400;
   font-size: clamp(26px, 3.1vw, 38px); line-height: 1.05; letter-spacing: -.018em;
@@ -307,12 +220,12 @@
 [data-design='portico'] .ec-auth .ec-auth-spin { color: var(--dz-accent-text); }
 
 /* ---------- Controles (compartidos auth + cuenta) ---------- */
-[data-design='portico'][data-theme] :is(.ec-auth, .ec-account, .ec-track, .ec-cartpg, .ec-checkout, .ec-receiptpg, .ec-legal) .sp-field { gap: 8px; }
-[data-design='portico'][data-theme] :is(.ec-auth, .ec-account, .ec-track, .ec-cartpg, .ec-checkout, .ec-receiptpg, .ec-legal) .sp-field-label {
+[data-design='portico'][data-theme] :is(.ec-auth, .ec-account, .ec-track, .ec-cartpg, .ec-checkout, .ec-receiptpg, .ec-legal, .ec-auth-card) .sp-field { gap: 8px; }
+[data-design='portico'][data-theme] :is(.ec-auth, .ec-account, .ec-track, .ec-cartpg, .ec-checkout, .ec-receiptpg, .ec-legal, .ec-auth-card) .sp-field-label {
   font: 400 9px/1 var(--dz-mono); letter-spacing: .2em; text-transform: uppercase;
   color: var(--dz-muted);
 }
-[data-design='portico'][data-theme] :is(.ec-auth, .ec-account, .ec-track, .ec-cartpg, .ec-checkout, .ec-receiptpg, .ec-legal) .sp-input {
+[data-design='portico'][data-theme] :is(.ec-auth, .ec-account, .ec-track, .ec-cartpg, .ec-checkout, .ec-receiptpg, .ec-legal, .ec-auth-card) .sp-input {
   min-height: 48px;
   padding: 12px 14px;
   border: 1px solid var(--dz-line);
@@ -323,42 +236,42 @@
   box-shadow: none;
   transition: border-color .2s, box-shadow .2s, background .2s;
 }
-[data-design='portico'][data-theme] :is(.ec-auth, .ec-account, .ec-track, .ec-cartpg, .ec-checkout, .ec-receiptpg, .ec-legal) .sp-input:hover { border-color: color-mix(in srgb, var(--dz-ink) 34%, var(--dz-line)); }
-[data-design='portico'][data-theme] :is(.ec-auth, .ec-account, .ec-track, .ec-cartpg, .ec-checkout, .ec-receiptpg, .ec-legal) .sp-input:focus {
+[data-design='portico'][data-theme] :is(.ec-auth, .ec-account, .ec-track, .ec-cartpg, .ec-checkout, .ec-receiptpg, .ec-legal, .ec-auth-card) .sp-input:hover { border-color: color-mix(in srgb, var(--dz-ink) 34%, var(--dz-line)); }
+[data-design='portico'][data-theme] :is(.ec-auth, .ec-account, .ec-track, .ec-cartpg, .ec-checkout, .ec-receiptpg, .ec-legal, .ec-auth-card) .sp-input:focus {
   border-color: var(--dz-accent);
   background: var(--dz-surface);
   box-shadow: 0 0 0 3px color-mix(in srgb, var(--dz-accent) 16%, transparent);
 }
-[data-design='portico'][data-theme] :is(.ec-auth, .ec-account, .ec-track, .ec-cartpg, .ec-checkout, .ec-receiptpg, .ec-legal) .sp-input::placeholder {
+[data-design='portico'][data-theme] :is(.ec-auth, .ec-account, .ec-track, .ec-cartpg, .ec-checkout, .ec-receiptpg, .ec-legal, .ec-auth-card) .sp-input::placeholder {
   color: var(--dz-muted); opacity: 1;
 }
-[data-design='portico'][data-theme] :is(.ec-auth, .ec-account, .ec-track, .ec-cartpg, .ec-checkout, .ec-receiptpg, .ec-legal) .sp-input:disabled {
+[data-design='portico'][data-theme] :is(.ec-auth, .ec-account, .ec-track, .ec-cartpg, .ec-checkout, .ec-receiptpg, .ec-legal, .ec-auth-card) .sp-input:disabled {
   background: color-mix(in srgb, var(--dz-line) 30%, var(--dz-bg));
   color: var(--dz-ink-2);
   cursor: not-allowed;
 }
-[data-design='portico'][data-theme] :is(.ec-auth, .ec-account, .ec-track, .ec-cartpg, .ec-checkout, .ec-receiptpg, .ec-legal) .sp-form-error {
+[data-design='portico'][data-theme] :is(.ec-auth, .ec-account, .ec-track, .ec-cartpg, .ec-checkout, .ec-receiptpg, .ec-legal, .ec-auth-card) .sp-form-error {
   color: var(--dz-danger); font-family: var(--dz-body); font-size: 12.5px;
 }
-[data-design='portico'][data-theme] :is(.ec-auth, .ec-account, .ec-track, .ec-cartpg, .ec-checkout, .ec-receiptpg, .ec-legal) .sp-input:-webkit-autofill {
+[data-design='portico'][data-theme] :is(.ec-auth, .ec-account, .ec-track, .ec-cartpg, .ec-checkout, .ec-receiptpg, .ec-legal, .ec-auth-card) .sp-input:-webkit-autofill {
   -webkit-text-fill-color: var(--dz-ink);
   box-shadow: inset 0 0 0 40px var(--dz-bg);
 }
 /* Campo inválido: el filete de peligro va por dentro del box-shadow para
    duplicar el grosor sin mover el layout al validar (el borde sigue en 1px)
    y para no pisar el anillo de foco. */
-[data-design='portico'][data-theme] :is(.ec-auth, .ec-account, .ec-track, .ec-cartpg, .ec-checkout, .ec-receiptpg, .ec-legal) :is(.sp-input[aria-invalid='true'], .sp-input:user-invalid) {
+[data-design='portico'][data-theme] :is(.ec-auth, .ec-account, .ec-track, .ec-cartpg, .ec-checkout, .ec-receiptpg, .ec-legal, .ec-auth-card) :is(.sp-input[aria-invalid='true'], .sp-input:user-invalid) {
   border-color: var(--dz-danger);
   box-shadow: inset 0 0 0 1px var(--dz-danger);
 }
-[data-design='portico'][data-theme] :is(.ec-auth, .ec-account, .ec-track, .ec-cartpg, .ec-checkout, .ec-receiptpg, .ec-legal) :is(.sp-input[aria-invalid='true'], .sp-input:user-invalid):focus {
+[data-design='portico'][data-theme] :is(.ec-auth, .ec-account, .ec-track, .ec-cartpg, .ec-checkout, .ec-receiptpg, .ec-legal, .ec-auth-card) :is(.sp-input[aria-invalid='true'], .sp-input:user-invalid):focus {
   box-shadow:
     inset 0 0 0 1px var(--dz-danger),
     0 0 0 3px color-mix(in srgb, var(--dz-danger) 20%, transparent);
 }
 
 /* Botón principal: pastilla mono de cobre, esquina recta. */
-[data-design='portico'][data-theme] :is(.ec-auth, .ec-account, .ec-track, .ec-cartpg, .ec-checkout, .ec-receiptpg, .ec-legal) :is(.ecaf-submit, .ec-btn-primary) {
+[data-design='portico'][data-theme] :is(.ec-auth, .ec-account, .ec-track, .ec-cartpg, .ec-checkout, .ec-receiptpg, .ec-legal, .ec-auth-card) :is(.ecaf-submit, .ec-btn-primary) {
   min-height: 50px;
   border: 1px solid transparent;
   border-radius: var(--dz-radius);
@@ -368,56 +281,161 @@
   filter: none;
   transition: transform .3s cubic-bezier(.22, 1, .36, 1), box-shadow .3s, background .3s;
 }
-[data-design='portico'][data-theme] :is(.ec-auth, .ec-account, .ec-track, .ec-cartpg, .ec-checkout, .ec-receiptpg, .ec-legal) :is(.ecaf-submit, .ec-btn-primary):hover:not(:disabled) {
+[data-design='portico'][data-theme] :is(.ec-auth, .ec-account, .ec-track, .ec-cartpg, .ec-checkout, .ec-receiptpg, .ec-legal, .ec-auth-card) :is(.ecaf-submit, .ec-btn-primary):hover:not(:disabled) {
   transform: translateY(-2px);
   box-shadow: 0 20px 34px -26px color-mix(in srgb, var(--dz-accent) 80%, transparent);
   filter: none;
 }
-[data-design='portico'][data-theme] :is(.ec-auth, .ec-account, .ec-track, .ec-cartpg, .ec-checkout, .ec-receiptpg, .ec-legal) :is(.ecaf-submit, .ec-btn-primary):active:not(:disabled) {
+[data-design='portico'][data-theme] :is(.ec-auth, .ec-account, .ec-track, .ec-cartpg, .ec-checkout, .ec-receiptpg, .ec-legal, .ec-auth-card) :is(.ecaf-submit, .ec-btn-primary):active:not(:disabled) {
   transform: translateY(0) scale(.995);
 }
-[data-design='portico'][data-theme] :is(.ec-auth, .ec-account, .ec-track, .ec-cartpg, .ec-checkout, .ec-receiptpg, .ec-legal) :is(.ecaf-submit, .ec-btn-primary):disabled {
+[data-design='portico'][data-theme] :is(.ec-auth, .ec-account, .ec-track, .ec-cartpg, .ec-checkout, .ec-receiptpg, .ec-legal, .ec-auth-card) :is(.ecaf-submit, .ec-btn-primary):disabled {
   background: var(--dz-line); color: var(--dz-ink-2); opacity: 1; cursor: not-allowed;
 }
-[data-design='portico'][data-theme] :is(.ec-auth, .ec-account, .ec-track, .ec-cartpg, .ec-checkout, .ec-receiptpg, .ec-legal) .ec-btn-ghost {
+[data-design='portico'][data-theme] :is(.ec-auth, .ec-account, .ec-track, .ec-cartpg, .ec-checkout, .ec-receiptpg, .ec-legal, .ec-auth-card) .ec-btn-ghost {
   min-height: 46px;
   border: 1px solid color-mix(in srgb, var(--dz-ink) 40%, transparent);
   border-radius: var(--dz-radius);
   background: transparent; color: var(--dz-ink);
   font: 500 9.5px/1 var(--dz-mono); letter-spacing: .2em; text-transform: uppercase;
 }
-[data-design='portico'][data-theme] :is(.ec-auth, .ec-account, .ec-track, .ec-cartpg, .ec-checkout, .ec-receiptpg, .ec-legal) .ec-btn-ghost:hover {
+[data-design='portico'][data-theme] :is(.ec-auth, .ec-account, .ec-track, .ec-cartpg, .ec-checkout, .ec-receiptpg, .ec-legal, .ec-auth-card) .ec-btn-ghost:hover {
   background: var(--dz-ink); color: var(--dz-surface); border-color: var(--dz-ink);
 }
 
-/* Formulario compartido (StoreAuthForm). */
-[data-design='portico'] .ec-auth .ecaf { gap: 15px; }
-[data-design='portico'] .ec-auth .ecaf-pass-toggle { color: var(--dz-muted); border-radius: var(--dz-radius); }
-[data-design='portico'] .ec-auth .ecaf-pass-toggle:hover {
+/* Formulario compartido (StoreAuthForm): mismo lenguaje en página y modal. */
+[data-design='portico'] :is(.ec-auth, .ec-auth-card) .ecaf { gap: 15px; }
+
+/* Control segmentado del modo: filete de papel con la celda activa en
+   tinta (texto papel) — una píldora limpia de tres modos. */
+[data-design='portico'] :is(.ec-auth, .ec-auth-card) .ecaf-switch {
+  padding: 3px;
+  border: 1px solid var(--dz-line);
+  border-radius: var(--dz-radius);
+  background: var(--dz-bg);
+}
+[data-design='portico'] :is(.ec-auth, .ec-auth-card) .ecaf-switch-pill {
+  top: 3px; bottom: 3px; left: 3px;
+  width: calc((100% - 6px) / 3);
+  border-radius: var(--dz-radius);
+  background: var(--dz-ink);
+}
+[data-design='portico'] :is(.ec-auth, .ec-auth-card) .ecaf-switch-btn {
+  min-height: 38px;
+  border-radius: var(--dz-radius);
+  font: 500 9px/1 var(--dz-mono); letter-spacing: .16em; text-transform: uppercase;
+  color: var(--dz-muted);
+}
+[data-design='portico'] :is(.ec-auth, .ec-auth-card) .ecaf-switch-btn:hover:not(.is-on) { color: var(--dz-ink); }
+[data-design='portico'] :is(.ec-auth, .ec-auth-card) .ecaf-switch-btn.is-on { color: var(--dz-surface); }
+
+/* Icono líder de campo (.ecaf-ico del formulario compartido): dentro del
+   label el centro del input cae a 41px (etiqueta 9px + gap 8px + 24px);
+   dentro de .ecaf-pass el propio envoltorio centra. El ojo conserva la
+   derecha — el icono ocupa la izquierda. */
+[data-design='portico'] :is(.ec-auth, .ec-auth-card) .sp-field { position: relative; }
+[data-design='portico'] :is(.ec-auth, .ec-auth-card) .sp-field .sp-input { padding-left: 46px; }
+[data-design='portico'] :is(.ec-auth, .ec-auth-card) .ecaf-ico {
+  display: inline-flex;
+  align-items: center; justify-content: center;
+  position: absolute;
+  left: 15px; top: 41px;
+  translate: 0 -50%;
+  width: 18px; height: 18px;
+  color: var(--dz-muted);
+  pointer-events: none;
+  transition: color .2s;
+}
+[data-design='portico'] :is(.ec-auth, .ec-auth-card) .ecaf-ico :is(svg, .icon) {
+  width: 16px; height: 16px; flex: none;
+}
+[data-design='portico'] :is(.ec-auth, .ec-auth-card) .ecaf-pass .ecaf-ico { top: 50%; }
+[data-design='portico'] :is(.ec-auth, .ec-auth-card) .sp-field:focus-within .ecaf-ico {
+  color: var(--dz-accent-text);
+}
+[data-design='portico'] :is(.ec-auth, .ec-auth-card) .ecaf-pass .sp-input { padding-right: 46px; }
+
+[data-design='portico'] :is(.ec-auth, .ec-auth-card) .ecaf-pass-toggle { color: var(--dz-muted); border-radius: var(--dz-radius); }
+[data-design='portico'] :is(.ec-auth, .ec-auth-card) .ecaf-pass-toggle:hover {
   color: var(--dz-accent-text); background: color-mix(in srgb, var(--dz-accent) 10%, transparent);
 }
-[data-design='portico'] .ec-auth .ecaf-divider {
+[data-design='portico'] :is(.ec-auth, .ec-auth-card) .ecaf-divider {
   font: 400 9px/1 var(--dz-mono); letter-spacing: .2em; text-transform: uppercase;
   color: var(--dz-muted);
 }
-[data-design='portico'] .ec-auth .ecaf-divider::before,
-[data-design='portico'] .ec-auth .ecaf-divider::after { background: var(--dz-line); opacity: 1; }
-[data-design='portico'] .ec-auth .ecaf-link {
-  color: var(--dz-accent-text); font-family: var(--dz-body); font-weight: 600;
+[data-design='portico'] :is(.ec-auth, .ec-auth-card) .ecaf-divider::before,
+[data-design='portico'] :is(.ec-auth, .ec-auth-card) .ecaf-divider::after { background: var(--dz-line); opacity: 1; }
+/* Links secundarios: texto subrayado muted, sin cajas ni píldoras. */
+[data-design='portico'] :is(.ec-auth, .ec-auth-card) .ecaf-foot {
+  gap: 4px 18px;
+  padding-top: 14px;
+  border-top: 1px solid var(--dz-line);
+}
+[data-design='portico'] :is(.ec-auth, .ec-auth-card) .ecaf-link {
+  color: var(--dz-muted); font-family: var(--dz-body); font-weight: 600;
   text-underline-offset: 4px;
 }
-[data-design='portico'] .ec-auth .ecaf-link:hover { color: var(--dz-ink); }
-[data-design='portico'] .ec-auth .ecaf-notice {
+[data-design='portico'] :is(.ec-auth, .ec-auth-card) .ecaf-link:hover { color: var(--dz-accent-text); }
+[data-design='portico'] :is(.ec-auth, .ec-auth-card) .ecaf-notice {
   border-radius: var(--dz-radius);
   background: color-mix(in srgb, var(--dz-ok) 10%, var(--dz-surface));
   border: 1px solid color-mix(in srgb, var(--dz-ok) 36%, transparent);
   color: var(--dz-ink);
 }
-[data-design='portico'] .ec-auth .ecaf-error {
+[data-design='portico'] :is(.ec-auth, .ec-auth-card) .ecaf-error {
   border-radius: var(--dz-radius);
   background: color-mix(in srgb, var(--dz-danger) 9%, var(--dz-surface));
   border: 1px solid color-mix(in srgb, var(--dz-danger) 34%, transparent);
   color: var(--dz-ink);
+}
+/* Línea de confianza del pie de la cédula: nace oculta en la vista; acá es
+   la firma quieta del formulario. */
+[data-design='portico'] .ec-auth .ec-auth-trust {
+  display: flex; align-items: center; justify-content: center; gap: 7px;
+  margin: 4px 0 0;
+  font: 400 8.5px/1.6 var(--dz-mono); letter-spacing: .18em; text-transform: uppercase;
+  color: var(--dz-muted);
+}
+
+/* Modal de auth (StoreAuthModal): la misma cédula en versión compacta —
+   papel, filete de cobre superior, serif y esquina recta. Los campos,
+   el switch y los CTAs salen de las reglas compartidas de arriba. */
+[data-design='portico'] .ec-auth-backdrop {
+  background: color-mix(in srgb, var(--dz-ink-band) 64%, transparent);
+}
+[data-design='portico'] .ec-auth-card {
+  padding: 26px 24px 22px;
+  border: 1px solid var(--dz-line);
+  border-top: 2px solid var(--dz-accent);
+  border-radius: var(--dz-radius);
+  background: var(--dz-surface);
+  color: var(--dz-ink);
+  box-shadow: 0 36px 72px -40px rgb(0 0 0 / .5);
+}
+[data-design='portico'] .ec-auth-card .ec-auth-close {
+  border-radius: var(--dz-radius);
+  color: var(--dz-muted);
+}
+[data-design='portico'] .ec-auth-card .ec-auth-close:hover {
+  background: color-mix(in srgb, var(--dz-accent) 10%, transparent);
+  color: var(--dz-accent-text);
+}
+[data-design='portico'] .ec-auth-card .ec-auth-head { gap: 8px; }
+[data-design='portico'] .ec-auth-card .ec-auth-badge {
+  width: 40px; height: 40px;
+  border: 1px solid var(--dz-line);
+  border-radius: var(--dz-radius);
+  background: transparent;
+  color: var(--dz-accent-text);
+}
+[data-design='portico'] .ec-auth-card .ec-auth-title {
+  font-family: var(--dz-display); font-weight: 400;
+  font-size: 24px; letter-spacing: -.015em; line-height: 1.06;
+  color: var(--dz-ink);
+}
+[data-design='portico'] .ec-auth-card .ec-auth-sub {
+  font-family: var(--dz-body); font-size: 13px; line-height: 1.55;
+  color: var(--dz-muted);
 }
 
 /* ===========================================================================
@@ -770,70 +788,21 @@
 
 /* ---------- Responsive ---------- */
 @media (max-width: 1024px) {
+  /* La cédula ya es una sola columna: solo se ajusta el margen. */
   [data-design='portico'] .ec-auth .ec-auth-shell {
-    grid-template-columns: minmax(0, 1fr);
     margin-block: 12px clamp(28px, 5vw, 48px);
-  }
-  /* Cédula de sala: la banda deja de ser un hero recortado. El velo sube
-     (la foto de portada queda de fondo, no de protagonista) para que el
-     texto siga en AA, y el riel + kicker comparten una sola línea mono. */
-  [data-design='portico'] .ec-auth .ec-auth-brand { padding: 20px 20px 24px; }
-  [data-design='portico'] .ec-auth .ec-auth-brand::after {
-    background:
-      radial-gradient(120% 90% at 94% -18%, color-mix(in srgb, var(--dz-accent) 26%, transparent), transparent 64%),
-      linear-gradient(168deg, color-mix(in srgb, #000 42%, transparent), color-mix(in srgb, #000 76%, transparent));
-  }
-  [data-design='portico'] .ec-auth .ec-auth-brand-inner {
-    grid-template-rows: auto auto;
-    gap: 12px;
-    min-width: 0;
-  }
-  [data-design='portico'] .ec-auth .ec-auth-brand-top { padding-bottom: 12px; }
-  [data-design='portico'] .ec-auth .ec-auth-brand-copy {
-    display: flex; flex-wrap: wrap; align-items: baseline;
-    gap: 8px 12px; max-width: none; min-width: 0;
-  }
-  [data-design='portico'] .ec-auth .ec-auth-brand-copy > * { min-width: 0; }
-  [data-design='portico'] .ec-auth .ec-auth-brand-title { flex: 1 1 100%; }
-  [data-design='portico'] .ec-auth .ec-auth-brand-text,
-  [data-design='portico'] .ec-auth .ec-auth-perks,
-  [data-design='portico'] .ec-auth .ec-auth-brand-foot { display: none; }
-  [data-design='portico'] .ec-auth .ec-auth-brand-title { font-size: clamp(21px, 4.4vw, 27px); }
-  [data-design='portico'] .ec-auth .ec-auth-panel {
-    padding: 24px 22px 30px;
-    border-left: 0;
-    border-top: 1px solid var(--dz-line);
   }
 }
 
-/* Formulario: a partir de tablet el panel es ancho y los campos quedaban
-   larguísimos (676px de input). El contenido se limita a 30rem y se centra;
-   el filete superior de cobre sigue corriendo por todo el panel. El
-   envoltorio del markup es display:contents, así que hay que alcanzar a sus
-   hijos (son los ítems reales del flex del panel). */
-@media (min-width: 641px) {
-  [data-design='portico'] .ec-auth .ec-auth-panel > *,
-  [data-design='portico'] .ec-auth .ec-auth-panel-inner > * {
-    width: 100%;
-    max-width: min(100%, 30rem);
-    margin-inline: auto;
-  }
-}
 @media (max-width: 860px) {
   [data-design='portico'][data-theme] .ec-account .acc-mhead-meta strong { font-size: 17px; }
   [data-design='portico'][data-theme] .ec-account .acc-panel-title { font-size: 22px; }
 }
 @media (max-width: 640px) {
   [data-design='portico'] .ec-auth { padding-inline: 12px; }
-  [data-design='portico'] .ec-auth .ec-auth-shell { border-radius: var(--dz-radius); }
   /* En el teléfono el panel ya cierra la lectura: 28px de margen más el aire
      del pie dejaban una franja de papel vacía. Mismo margen que arriba. */
   [data-design='portico'] .ec-auth .ec-auth-shell { margin-block-end: 12px; }
-  [data-design='portico'] .ec-auth .ec-auth-brand { padding: 18px 16px 20px; }
-  [data-design='portico'] .ec-auth .ec-auth-brand-top { padding-bottom: 12px; }
-  [data-design='portico'] .ec-auth .ec-auth-logo { width: 38px; height: 38px; font-size: 20px; }
-  [data-design='portico'] .ec-auth .ec-auth-brand-name { font-size: 10.5px; letter-spacing: .14em; }
-  [data-design='portico'] .ec-auth .ec-auth-brand-title { font-size: 20px; }
   [data-design='portico'] .ec-auth .ec-auth-panel { padding: 18px 16px 26px; }
   [data-design='portico'] .ec-auth .ec-auth-head { margin-bottom: 20px; padding-bottom: 16px; }
   [data-design='portico'] .ec-auth .ec-auth-title { font-size: 24px; }
@@ -844,41 +813,9 @@
   [data-design='portico'][data-theme] .ec-account .acc-panel,
   [data-design='portico'][data-theme] .ec-account .acc-auth-card,
   [data-design='portico'][data-theme] .ec-account .acc-gate-card { padding: 18px 16px; }
-  /* Índice de modos (01/02/03) bajo el título: fila mono de tres celdas con
-     filete; el modo activo enciende el filete de cobre. */
-  [data-design='portico'] .ec-auth .ec-auth-index {
-    display: grid;
-    flex: 1 1 100%;
-    grid-template-columns: repeat(3, minmax(0, 1fr));
-    gap: 0;
-    margin: 4px 0 0;
-    padding: 0;
-    list-style: none;
-    border-top: 1px solid color-mix(in srgb, #f4efe4 20%, transparent);
-  }
-  [data-design='portico'] .ec-auth .ec-auth-index li {
-    display: grid; gap: 5px;
-    margin-top: -1px;
-    padding: 9px 0 0;
-    border-top: 2px solid transparent;
-  }
-  [data-design='portico'] .ec-auth .ec-auth-index-n {
-    font: 400 8.5px/1 var(--dz-mono); letter-spacing: .18em;
-    color: color-mix(in srgb, #f4efe4 64%, transparent);
-  }
-  [data-design='portico'] .ec-auth .ec-auth-index-l {
-    font: 400 8px/1 var(--dz-mono); letter-spacing: .12em; text-transform: uppercase;
-    color: color-mix(in srgb, #f4efe4 62%, transparent);
-  }
-  [data-design='portico'] .ec-auth .ec-auth-index li.is-on { border-top-color: var(--dz-accent); }
-  [data-design='portico'] .ec-auth .ec-auth-index li.is-on .ec-auth-index-n {
-    color: color-mix(in srgb, var(--dz-accent) 74%, #f4efe4);
-  }
-  [data-design='portico'] .ec-auth .ec-auth-index li.is-on .ec-auth-index-l { color: var(--dz-on-band); }
 }
 @media (max-width: 390px) {
   [data-design='portico'] .ec-auth { padding-inline: 8px; }
-  [data-design='portico'] .ec-auth .ec-auth-brand-title { font-size: 18px; }
   [data-design='portico'] .ec-auth .ec-auth-title { font-size: 21px; }
   [data-design='portico'][data-theme] .ec-account { padding-inline: 10px; }
   [data-design='portico'][data-theme] .ec-account .acc-mhead { grid-template-columns: 40px minmax(0, 1fr) 40px; gap: 10px; }
@@ -905,21 +842,21 @@
   [data-design='portico'] .sp-top .sp-name { max-width: none; }
   /* Pie del formulario: dos filas de 44px en mono 9px con hairline entre
      ellas, en vez de dos enlaces amontonados que se cortaban. */
-  [data-design='portico'] .ec-auth .ecaf-foot {
+  [data-design='portico'] :is(.ec-auth, .ec-auth-card) .ecaf-foot {
     display: grid;
     grid-template-columns: minmax(0, 1fr);
     gap: 0;
     margin-top: 6px;
     border-top: 1px solid var(--dz-line);
   }
-  [data-design='portico'] .ec-auth .ecaf-foot .ecaf-link {
+  [data-design='portico'] :is(.ec-auth, .ec-auth-card) .ecaf-foot .ecaf-link {
     display: flex; align-items: center;
     width: 100%; min-height: 44px;
     padding: 6px 0;
     font: 400 9px/1.35 var(--dz-mono); letter-spacing: .16em; text-transform: uppercase;
     text-align: left; text-decoration-thickness: 1px; text-underline-offset: 3px;
   }
-  [data-design='portico'] .ec-auth .ecaf-foot .ecaf-link + .ecaf-link {
+  [data-design='portico'] :is(.ec-auth, .ec-auth-card) .ecaf-foot .ecaf-link + .ecaf-link {
     border-top: 1px solid var(--dz-line);
   }
 }
@@ -935,15 +872,13 @@
   }
 }
 @media (prefers-reduced-motion: reduce) {
-  [data-design='portico'] :is(.ec-auth, .ec-account, .ec-track, .ec-cartpg, .ec-checkout, .ec-receiptpg, .ec-legal) * {
+  [data-design='portico'] :is(.ec-auth, .ec-account, .ec-track, .ec-cartpg, .ec-checkout, .ec-receiptpg, .ec-legal, .ec-auth-card) * {
     transition-duration: .001ms !important;
     animation-duration: .001ms !important;
   }
   /* El velo de las tabs no es movimiento: lo gobierna el scroll, así que
      conserva su rango completo también con movimiento reducido. */
   [data-design='portico'][data-theme] .ec-account .acc-tabs { animation-duration: auto !important; }
-  /* El sello es decorativo y gira sin parar: acá se detiene del todo. */
-  [data-design='portico'] .ec-auth .ec-auth-seal-ring { animation: none !important; }
 }
 
 /* ==========================================================================
@@ -1270,4 +1205,290 @@
   .store-page[data-design='portico'][data-nav='editorial-index'] .sp-shop-nav .sp-shop-nav-links a::after {
     transition: none;
   }
+}
+
+/* ==========================================================================
+   CATÁLOGO — piel Pórtico sobre la vista Raíz
+   --------------------------------------------------------------------------
+   Pórtico renderiza el template raíz (STORE_TEMPLATE_RENDER: portico→raiz),
+   así que el catálogo público monta el markup .rz-cat-* de la vista Raíz y
+   las tarjetas .tpc de TplProductCard. Acá se remapean los tokens --rz-* a
+   la paleta del museo y se re-tintan cabecera, riel de filtros, tira de
+   promos, tags y "Ver más" — sin tocar layout ni colapso responsive.
+   Prefijo .store-page[data-design='portico'][data-template] = (0,4,0) por
+   regla: gana a .store-page[data-template='raiz'] (0,3,0) sin !important.
+   ========================================================================== */
+.store-page[data-design='portico'][data-template] {
+  --rz-bg: var(--dz-bg);
+  --rz-surface: var(--dz-surface);
+  --rz-surface-2: color-mix(in srgb, var(--dz-line) 30%, var(--dz-bg));
+  --rz-surface-3: color-mix(in srgb, var(--dz-line) 52%, var(--dz-bg));
+  --rz-line: var(--dz-line);
+  --rz-line-strong: color-mix(in srgb, var(--dz-line) 62%, var(--dz-ink));
+  --rz-line-ui: color-mix(in srgb, var(--dz-line) 46%, var(--dz-ink));
+  --rz-ink: var(--dz-ink);
+  --rz-ink-2: var(--dz-ink-2);
+  --rz-muted: var(--dz-muted);
+  --rz-accent: var(--dz-accent);
+  --rz-accent-text: var(--dz-accent-text);
+  --rz-accent-soft: color-mix(in srgb, var(--dz-accent) 9%, var(--dz-surface));
+  /* CTAs: cobre profundo que conserva AA con tinta papel en los dos temas
+     (el acento crudo queda en ~3.9:1 con blanco; al 84% hacia la tinta pasa
+     de 4.5:1 y sigue leyéndose cobre sobre grafito en noche). */
+  --rz-accent-deep: color-mix(in srgb, var(--store-accent, #a75e3c) 84%, var(--dz-ink-band));
+  --rz-accent-deep-2: color-mix(in srgb, var(--store-accent, #a75e3c) 72%, var(--dz-ink-band));
+  --rz-on-band: var(--dz-accent-ink);
+  --rz-ok: var(--dz-ok);
+  --rz-danger: var(--dz-danger);
+  --rz-focus: var(--dz-accent);
+  --rz-inverse-bg: var(--dz-ink-band);
+  --rz-inverse-bg-2: color-mix(in srgb, var(--dz-ink-band) 84%, #000);
+  --rz-inverse-ink: var(--dz-on-band);
+  --rz-inverse-ink-2: color-mix(in srgb, var(--dz-on-band) 78%, transparent);
+  --rz-inverse-muted: color-mix(in srgb, var(--dz-on-band) 62%, transparent);
+  --rz-inverse-line: color-mix(in srgb, var(--dz-on-band) 16%, transparent);
+  --rz-display: var(--dz-display);
+  --rz-body: var(--dz-body);
+  --rz-rad-sm: var(--dz-radius);
+  --rz-rad-md: 4px;
+  --rz-rad-lg: 8px;
+  --rz-btn-inset: none;
+  --rz-shadow-1: 0 1px 2px rgb(30 42 34 / .05), 0 18px 38px -30px rgb(30 42 34 / .4);
+  --rz-shadow-2: 0 2px 6px -2px rgb(30 42 34 / .07), 0 40px 72px -44px rgb(30 42 34 / .46);
+}
+.store-page[data-design='portico'][data-template][data-theme='dark'] {
+  --rz-surface-2: color-mix(in srgb, var(--dz-line) 42%, var(--dz-surface));
+  --rz-surface-3: color-mix(in srgb, var(--dz-line) 72%, var(--dz-surface));
+  --rz-line-strong: color-mix(in srgb, var(--dz-line) 60%, var(--dz-ink));
+  --rz-line-ui: color-mix(in srgb, var(--dz-line) 50%, var(--dz-ink));
+  --rz-shadow-1: 0 1px 2px rgb(0 0 0 / .4), 0 18px 38px -28px rgb(0 0 0 / .6);
+  --rz-shadow-2: 0 2px 8px -2px rgb(0 0 0 / .5), 0 42px 74px -42px rgb(0 0 0 / .7);
+}
+
+/* --- Eyebrow: la misma firma del índice de sala (folio cobre + mono) --- */
+.store-page[data-design='portico'][data-template] .rz-eyebrow {
+  font-family: var(--dz-mono);
+  font-size: 9.5px;
+  font-weight: 400;
+  letter-spacing: .24em;
+  color: var(--dz-muted);
+}
+.store-page[data-design='portico'][data-template] .rz-eyebrow-num {
+  color: var(--dz-accent-text);
+}
+.store-page[data-design='portico'][data-template] .rz-eyebrow::after {
+  background: var(--dz-line);
+}
+
+/* --- Cabecera editorial: migas mono, h1 Italiana, contadores serif --- */
+.store-page[data-design='portico'][data-template] .rz-cat-crumbs {
+  font-family: var(--dz-mono);
+  font-size: 9.5px;
+  font-weight: 400;
+  letter-spacing: .2em;
+}
+.store-page[data-design='portico'][data-template] .rz-cat-title {
+  font-weight: 400;
+  letter-spacing: -.02em;
+}
+.store-page[data-design='portico'][data-template] .rz-cat-counts dt {
+  font-family: var(--dz-mono);
+  font-weight: 400;
+  letter-spacing: .18em;
+}
+.store-page[data-design='portico'][data-template] .rz-cat-counts dd { font-weight: 400; }
+.store-page[data-design='portico'][data-template] .rz-cat-res-head h2 { font-weight: 400; }
+.store-page[data-design='portico'][data-template] .rz-cat-empty strong { font-weight: 400; }
+.store-page[data-design='portico'][data-template] .rz-cat-empty-ico {
+  border-radius: var(--dz-radius);
+  color: var(--dz-accent-text);
+}
+
+/* --- Tira de promociones: label mono cobre sobre papel --- */
+.store-page[data-design='portico'][data-template] .rz-cat-promos-label {
+  font-family: var(--dz-mono);
+  font-weight: 400;
+  letter-spacing: .2em;
+}
+
+/* --- Riel de filtros: secciones de filete, leyendas mono, checks sobrios --- */
+.store-page[data-design='portico'][data-template] .rz-cat-group legend {
+  font-family: var(--dz-mono);
+  font-weight: 400;
+  letter-spacing: .2em;
+  color: var(--dz-muted);
+}
+.store-page[data-design='portico'][data-template] .rz-cat-check input {
+  width: 18px; height: 18px;
+  accent-color: var(--dz-accent);
+}
+.store-page[data-design='portico'][data-template] .rz-cat-check em {
+  font-family: var(--dz-mono);
+  font-weight: 400;
+  font-size: 10px;
+}
+.store-page[data-design='portico'][data-template] .rz-cat-pricetag {
+  font-family: var(--dz-mono);
+  font-weight: 400;
+  letter-spacing: .14em;
+}
+.store-page[data-design='portico'][data-template] .rz-cat-hint { font-family: var(--dz-body); }
+.store-page[data-design='portico'][data-template] .rz-cat-linkbtn { color: var(--dz-accent-text); }
+.store-page[data-design='portico'][data-template] .rz-cat-linkbtn:hover { color: var(--dz-ink); }
+.store-page[data-design='portico'][data-template] .rz-cat-sort {
+  font-family: var(--dz-mono);
+  font-weight: 400;
+  letter-spacing: .16em;
+}
+.store-page[data-design='portico'][data-template] .rz-cat-sort select {
+  border-radius: var(--dz-radius);
+  background: var(--dz-bg);
+}
+/* Buscador del listado: caja de filete con foco en cobre. */
+.store-page[data-design='portico'][data-template] .rz-cat-search {
+  border-radius: var(--dz-radius);
+  background: var(--dz-bg);
+}
+.store-page[data-design='portico'][data-template] .rz-cat-search:focus-within {
+  border-color: var(--dz-accent);
+}
+/* Tags de filtros activos: cédulas de filete, no píldoras. */
+.store-page[data-design='portico'][data-template] .rz-cat-tags button {
+  border-radius: var(--dz-radius);
+}
+.store-page[data-design='portico'][data-template] .rz-cat-tags button:hover {
+  border-color: var(--dz-accent);
+  color: var(--dz-accent-text);
+}
+
+/* --- CTA sobrio: cobre macizo, rotulación mono, esquina casi recta --- */
+.store-page[data-design='portico'][data-template] .rz-cat-page .rz-btn {
+  padding: 0 20px;
+  border-radius: var(--dz-radius);
+  box-shadow: none;
+  font-family: var(--dz-mono);
+  font-size: 10px;
+  font-weight: 500;
+  letter-spacing: .2em;
+  text-transform: uppercase;
+}
+.store-page[data-design='portico'][data-template] .rz-cat-page .rz-btn:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 14px 26px -20px color-mix(in srgb, var(--dz-accent) 80%, transparent);
+}
+.store-page[data-design='portico'][data-template] .rz-cat-page .rz-btn--ghost {
+  border-color: color-mix(in srgb, var(--dz-ink) 36%, transparent);
+}
+.store-page[data-design='portico'][data-template] .rz-cat-page .rz-btn--ghost:hover {
+  background: var(--dz-ink);
+  color: var(--dz-surface);
+  border-color: var(--dz-ink);
+}
+.store-page[data-design='portico'][data-template] .rz-cat-more-label {
+  font-family: var(--dz-mono);
+  font-weight: 400;
+  letter-spacing: .2em;
+}
+
+/* --- Tarjetas .tpc: cédula de filete, sello de oferta en cobre --- */
+.store-page[data-design='portico'][data-template] .rz-cat-card {
+  --tpc-bg: var(--dz-surface);
+  --tpc-border: 1px solid var(--dz-line);
+  --tpc-radius: var(--dz-radius);
+  --tpc-pad: 13px 14px 14px;
+  --tpc-gap: 6px;
+  --tpc-media-bg: var(--rz-surface-2);
+  --tpc-name-font: var(--dz-body);
+  --tpc-name-size: 15px;
+  --tpc-name-weight: 600;
+  --tpc-name-ink: var(--dz-ink);
+  --tpc-eyebrow-size: 9.5px;
+  --tpc-eyebrow-weight: 500;
+  --tpc-eyebrow-track: .18em;
+  --tpc-eyebrow-ink: var(--dz-accent-text);
+  --tpc-price-font: var(--dz-display);
+  --tpc-price-size: 18px;
+  --tpc-price-weight: 400;
+  --tpc-price-ink: var(--dz-ink);
+  --tpc-old-ink: var(--dz-muted);
+  --tpc-go-ink: var(--dz-accent-text);
+  --tpc-flag-radius: var(--dz-radius);
+  --tpc-flag-bg: var(--dz-surface);
+  --tpc-flag-ink: var(--dz-ink-2);
+  --tpc-flag-border: 1px solid var(--dz-line);
+  --tpc-offer-bg: var(--dz-accent);
+  --tpc-offer-ink: var(--dz-accent-ink);
+  --tpc-event-bg: var(--dz-ink);
+  --tpc-event-ink: var(--dz-surface);
+  --tpc-event-radius: var(--dz-radius);
+  --tpc-quick-bg: var(--dz-ink);
+  --tpc-quick-ink: var(--dz-surface);
+  --tpc-idx-font: var(--dz-mono);
+  --tpc-idx-ink: var(--dz-accent-text);
+  --tpc-save-ink: var(--dz-accent-text);
+  --tpc-focus: var(--dz-accent);
+  transition: translate .25s var(--rz-ease-out, ease), border-color .2s ease;
+}
+.store-page[data-design='portico'][data-template] .rz-cat-card .tpc-media {
+  border-radius: 0;
+}
+.store-page[data-design='portico'][data-template] .rz-cat-card .tpc-quick {
+  border-radius: var(--dz-radius);
+  font-family: var(--dz-mono);
+  font-size: 9.5px;
+  font-weight: 500;
+  letter-spacing: .18em;
+}
+@media (hover: hover) and (pointer: fine) {
+  .store-page[data-design='portico'][data-template] .rz-cat-card:hover {
+    translate: 0 -3px;
+    border-color: color-mix(in srgb, var(--dz-ink) 42%, var(--dz-line));
+  }
+}
+.store-page[data-design='portico'][data-template] .rz-cat-card:hover .tpc-name,
+.store-page[data-design='portico'][data-template] .rz-cat-card:focus-visible .tpc-name {
+  color: var(--dz-accent-text);
+}
+.store-page[data-design='portico'][data-template] .rz-cat-card-promo {
+  font-family: var(--dz-mono);
+  font-size: 10px;
+  font-weight: 500;
+  letter-spacing: .1em;
+  text-transform: uppercase;
+}
+/* Skeletons con la misma esquina recta de la cédula. */
+.store-page[data-design='portico'][data-template] .rz-cat-skel-media {
+  border-radius: var(--dz-radius);
+}
+
+/* --- Colapso del riel (≤1024px): el toggle es una celda mono de filete --- */
+@media (max-width: 1024px) {
+  .store-page[data-design='portico'][data-template] .rz-cat-filters-toggle {
+    border-radius: var(--dz-radius);
+    border-color: var(--dz-line);
+    box-shadow: none;
+    font-family: var(--dz-mono);
+    font-size: 9.5px;
+    font-weight: 500;
+    letter-spacing: .2em;
+  }
+  .store-page[data-design='portico'][data-template] .rz-cat-filters-count {
+    border-radius: var(--dz-radius);
+    background: var(--dz-accent);
+    color: var(--dz-accent-ink);
+    font-family: var(--dz-mono);
+  }
+  .store-page[data-design='portico'][data-template] .rz-cat-rail {
+    border-radius: var(--dz-radius);
+  }
+  .store-page[data-design='portico'][data-template] .rz-cat-rail-close {
+    border-radius: var(--dz-radius);
+  }
+}
+
+/* El lift de la tarjeta es movimiento: con reduce se apaga (la regla de
+   Raíz no alcanza — la mía gana por especificidad y hay que pisarla acá). */
+@media (prefers-reduced-motion: reduce) {
+  .store-page[data-design='portico'][data-template] .rz-cat-card { transition: none; }
+  .store-page[data-design='portico'][data-template] .rz-cat-card:hover { translate: none; }
 }

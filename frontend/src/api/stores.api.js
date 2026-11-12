@@ -911,12 +911,21 @@ export function allowedTemplatesFor(benefits = {}) {
 // Normaliza un diseño guardado contra la whitelist: 'raiz' si el valor no
 // existe en el catálogo o quedó fuera del nivel del plan. Un id retirado se
 // remapea a su equivalente antes de validar.
-// Diseños que reusan el chrome de otra plantilla: el documento del patrón
-// se resuelve igual por slug en el backend (pattern_for_template), pero el
-// chrome, la piel y las vistas Vue del fallback son las del template base.
+// Diseños-patrón que reusan el chrome de otra plantilla: el documento del
+// patrón se resuelve igual por slug en el backend (pattern_for_template),
+// pero el chrome, la piel y las vistas Vue del fallback son las del
+// template base. Cubre TODO id de STORE_TEMPLATES que no está en
+// TEMPLATE_DEFS (esencial, autoservicio, showroom, aurum, portico, neon y
+// ruta): sin la entrada el pageTemplate quedaba en un id sin vistas ni
+// TEMPLATE_CSS y el catálogo se renderizaba sin hoja de estilo.
 export const STORE_TEMPLATE_RENDER = {
+  esencial: 'raiz',
+  autoservicio: 'raiz',
+  showroom: 'raiz',
   ruta: 'raiz',
-  aurum: 'raiz'
+  aurum: 'raiz',
+  portico: 'raiz',
+  neon: 'raiz'
 }
 export function resolveStoreTemplate(value, allowed) {
   const list = Array.isArray(allowed) && allowed.length ? allowed : ['raiz']
