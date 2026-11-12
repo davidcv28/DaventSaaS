@@ -472,12 +472,12 @@
      El grid reordena el markup (amount antes que el <s>) sin tocar el
      fragmento compartido de pattern_render. */
   .ds-product .ds-product-price{
-    grid-area:price;display:grid;grid-template-columns:auto 1fr;
+    grid-area:price;display:grid;grid-template-columns:minmax(0,1fr) auto;
     grid-template-areas:"old old" "amount off";align-items:end;column-gap:8px;min-width:0;
     padding:8px 14px 4px;font:500 22px/1.15 var(--font);letter-spacing:-.02em;
     font-variant-numeric:tabular-nums;color:var(--ink);overflow-wrap:anywhere;
   }
-  .ds-product-amount{position:relative;grid-area:amount;min-width:0}
+  .ds-product-amount{position:relative;grid-area:amount;min-width:0;white-space:nowrap}
   .ds-product .ds-product-old{
     grid-area:old;font:400 12px var(--font);color:var(--muted);
     text-decoration:line-through;letter-spacing:0;
@@ -486,7 +486,7 @@
   .ds-product .ds-product-price[data-off]::after{
     content:attr(data-off) "% OFF";grid-area:off;align-self:end;justify-self:start;
     padding:2px 5px;margin:0 0 3px;background:var(--green-badge,#00a650);border-radius:3px;transform:none;
-    color:#fff;font:800 11.5px/1.2 var(--font);letter-spacing:0;
+    color:#fff;font:800 11.5px/1.2 var(--font);letter-spacing:0;white-space:nowrap;
   }
   /* Fila de señal positiva bajo el precio (equivalente al "Envío gratis"). */
   .ds-product .ds-stock{
@@ -809,7 +809,7 @@
   .cat-surface .grid[data-ds-view-mode="list"] .ds-product-price s{font-size:12px}
   .cat-surface .grid[data-ds-view-mode="list"] .ds-stock{display:none}
   .cat-surface .grid[data-ds-view-mode="grid"] .ds-product{background:var(--surface);border:1px solid var(--line-strong);border-radius:var(--radius);box-shadow:var(--shadow);overflow:hidden;height:100%;min-width:0}
-  .cat-surface .grid[data-ds-view-mode="grid"] .ds-product-link{display:grid;grid-template-areas:"media" "cat" "copy" "price" "stock";grid-template-rows:auto auto 1fr auto auto;height:100%;min-width:0;color:inherit}
+  .cat-surface .grid[data-ds-view-mode="grid"] .ds-product-link{display:grid;grid-template-areas:"media" "cat" "copy" "brand" "rate" "price" "stock";grid-template-rows:auto auto 1fr auto auto auto auto;height:100%;min-width:0;color:inherit}
   .cat-surface .grid[data-ds-view-mode="grid"] .ds-product-cat{grid-area:cat;min-height:1.2em;margin:12px 14px 0;font-size:10px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--muted)}
   .cat-surface .grid[data-ds-view-mode="grid"] .ds-product-name{margin:0;font-size:13.5px;font-weight:500;line-height:1.4;min-height:2.8em;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;overflow-wrap:anywhere}
   .cat-surface .grid[data-ds-view-mode="grid"] .ds-product-price{grid-area:price;padding:8px 14px 4px;font-size:21px}
