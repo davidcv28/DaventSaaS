@@ -2156,6 +2156,14 @@
     return v + (v === 1 ? ' unidad disponible' : ' unidades disponibles')
   }
   function paintStockTag(el, label, out) {
+    /* Idempotente: reescribir el tag con el mismo texto emite childList
+     * igual (textContent='' + nodo nuevo) y el observer del PDP
+     * (initCommerce) escucha childList en todo el body: applyStock →
+     * observer → applyStock... congelaba la web (microtask infinito) en
+     * tiendas con venta online y superficie de producto en el documento. */
+    var key = (out ? '1' : '0') + '|' + label
+    if (el.getAttribute('data-ds-stock-key') === key) return
+    el.setAttribute('data-ds-stock-key', key)
     el.classList.toggle('is-out', out)
     var dot = el.querySelector('i')
     el.textContent = ''
