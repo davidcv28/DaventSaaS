@@ -1691,8 +1691,8 @@
   border-color: var(--mv-line-strong);
   transform: translateY(-3px);
 }
-.store-page[data-template='movimiento'] .mv-skin .rz-cat-card:hover .tpc-go,
-.store-page[data-template='movimiento'] .mv-skin .rz-pdp-rel-card:hover .tpc-go { color: var(--mv-accent); }
+/* (.tpc-go ya no se renderiza desde track-j: la tarjeta es un solo link —
+   sus reglas de hover/tipografía se retiraron.) */
 /* Flags de la media: "Nuevo" como ficha de papel y la oferta (-X%) en
    placa acento — mismo reparto que .mv-card-index/.mv-card-flag. */
 .store-page[data-template='movimiento'] .mv-skin .tpc .tpc-flag {
@@ -1716,11 +1716,6 @@
   /* .tpc-quick trae color:#fff fijo: en tema oscuro el acento es claro y
      quedaba ilegible — el par accent/on-accent invierte solo. */
   color: var(--mv-on-accent);
-}
-.store-page[data-template='movimiento'] .mv-skin .rz-cat-card .tpc-go,
-.store-page[data-template='movimiento'] .mv-skin .rz-pdp-rel-card .tpc-go {
-  font-family: var(--mv-mono);
-  letter-spacing: .12em;
 }
 .store-page[data-template='movimiento'] .mv-skin .rz-cat-card-promo {
   font-family: var(--mv-mono);

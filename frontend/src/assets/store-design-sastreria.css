@@ -90,8 +90,10 @@
   padding-inline: clamp(0px, 3vw, 26px);
 }
 [data-design='sastreria'] .ec-auth .ec-auth-shell {
-  width: min(1120px, 100%);
-  grid-template-columns: minmax(0, .92fr) minmax(0, 1.08fr);
+  /* Tarjeta única (contrato minimalista de track-k): la ficha del taller
+     va como banda superior, no como columna lateral. */
+  width: min(680px, 100%);
+  grid-template-columns: minmax(0, 1fr);
   margin-block: clamp(16px, 3.4vw, 44px) clamp(40px, 6vw, 80px);
   border: 1px solid var(--dz-line-strong);
   border-radius: var(--dz-radius);
@@ -103,13 +105,13 @@
 /* Urdimbre: papel con pasadas verticales de hilo y velo de cuero. */
 [data-design='sastreria'] .ec-auth .ec-auth-brand {
   isolation: isolate;
-  padding: clamp(24px, 3.6vw, 44px);
+  padding: 22px 22px 20px;
   color: var(--dz-ink);
   background:
     repeating-linear-gradient(90deg, transparent 0 15px, color-mix(in srgb, var(--dz-line-strong) 38%, transparent) 15px 16px),
     radial-gradient(90% 70% at 88% -10%, color-mix(in srgb, var(--dz-accent) 16%, transparent), transparent 68%),
     var(--dz-surface-2);
-  border-right: 1px dashed color-mix(in srgb, var(--dz-accent) 72%, var(--dz-line));
+  border-bottom: 1px dashed color-mix(in srgb, var(--dz-accent) 72%, var(--dz-line));
 }
 [data-design='sastreria'] .ec-auth .ec-auth-brand::before {
   opacity: .16;
@@ -120,9 +122,9 @@
 }
 [data-design='sastreria'] .ec-auth .ec-auth-brand-inner {
   display: grid;
-  grid-template-rows: auto 1fr auto;
+  grid-template-rows: auto auto;
   align-content: stretch;
-  gap: clamp(20px, 3vw, 34px);
+  gap: 14px;
   padding-right: 0;
 }
 [data-design='sastreria'] .ec-auth .ec-auth-brand-top {
@@ -144,8 +146,12 @@
   letter-spacing: .2em; text-transform: uppercase; color: var(--dz-muted);
 }
 [data-design='sastreria'] .ec-auth .ec-auth-brand-copy {
-  display: grid; gap: 13px; max-width: 44ch;
+  display: grid; gap: 8px; max-width: none;
 }
+/* En la tarjeta única el texto largo y los perks quedan fuera — la
+   firma es la cota + el titular, como en ≤1024px. */
+[data-design='sastreria'] .ec-auth .ec-auth-brand-text,
+[data-design='sastreria'] .ec-auth .ec-auth-perks { display: none; }
 /* Cota del taller: mono con hilo de cuero punteado. */
 [data-design='sastreria'] .ec-auth .ec-auth-rail {
   display: inline-flex; align-items: center; gap: 12px;
@@ -162,7 +168,7 @@
 }
 [data-design='sastreria'] .ec-auth .ec-auth-brand-title {
   font-family: var(--dz-display); font-weight: 300;
-  font-size: clamp(30px, 3.5vw, 46px); line-height: 1.04; letter-spacing: -.015em;
+  font-size: clamp(21px, 4.4vw, 27px); line-height: 1.04; letter-spacing: -.015em;
   color: var(--dz-ink);
 }
 [data-design='sastreria'] .ec-auth .ec-auth-brand-text {
@@ -195,7 +201,7 @@
 /* Trama: papel con pasadas horizontales y filete de cuero al borde. */
 [data-design='sastreria'] .ec-auth .ec-auth-panel {
   position: relative;
-  padding: clamp(24px, 3.4vw, 46px) clamp(22px, 3.4vw, 46px) clamp(28px, 4vw, 48px);
+  padding: 24px 22px 30px;
   background:
     repeating-linear-gradient(0deg, transparent 0 27px, color-mix(in srgb, var(--dz-line) 45%, transparent) 27px 28px),
     var(--dz-surface);

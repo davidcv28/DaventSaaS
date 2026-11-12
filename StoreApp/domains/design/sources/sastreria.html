@@ -179,8 +179,21 @@
   .ds-product-desc{font-size:12.5px;color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
   .ds-product-desc:empty{display:none}
   .ds-product-cat{grid-column:2;font:500 9px var(--mono);letter-spacing:.18em;text-transform:uppercase;color:var(--muted)}
-  .ds-product-price{grid-column:3;grid-row:1 / span 2;align-self:center;display:flex;flex-direction:column;align-items:flex-end;gap:2px;font:500 17px var(--display);white-space:nowrap}
+  .ds-product-cat:empty{display:none}
+  /* Tag de stock del fragmento ("3 disponibles" / "Agotado"): sin celda
+     propia caía en auto-placement y se montaba sobre la foto o el precio.
+     Va bajo la categoría, en la columna de la ficha; el precio abarca las
+     tres filas para seguir centrado en la tarjeta. */
+  .ds-stock{grid-column:2;align-self:start;display:inline-flex;align-items:center;gap:6px;font:500 9px var(--mono);letter-spacing:.14em;text-transform:uppercase}
+  .ds-stock i{width:5px;height:5px;border-radius:50%;background:currentColor;flex:none}
+  .ds-product-price{grid-column:3;grid-row:1 / span 3;align-self:center;display:flex;flex-direction:column;align-items:flex-end;gap:2px;font:500 17px var(--display);white-space:nowrap}
   .ds-product-old{font:400 11px var(--mono);color:var(--muted);text-decoration:line-through}
+  /* Badge de descuento (-X%) del fragmento: tag de cuero al pie de la
+     columna de precio — la etiqueta de campaña queda anclada por la hoja
+     del host sobre la foto (esquina sup. izquierda). */
+  .ds-product-price[data-off]::before{content:"−" attr(data-off) "%";order:1;align-self:flex-end;margin-top:3px;
+    font:600 9px var(--mono);letter-spacing:.14em;text-transform:uppercase;color:var(--leather-ink);
+    border:1px solid var(--leather);border-radius:var(--radius-btn);padding:3px 8px}
   .ds-product:hover .ds-product-img{border-color:var(--leather)}
   .ds-product:hover .ds-product-name{color:var(--leather-ink)}
   /* CTA de compra del puente (commerce): el wrap se apenda dentro de la

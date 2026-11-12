@@ -74,8 +74,10 @@
    AUTH — tres bandas + ficha técnica
    ========================================================================== */
 [data-design='showroom'] .ec-auth .ec-auth-shell {
-  grid-template-columns: minmax(0, 1fr) minmax(0, 380px);
-  width: min(1120px, 100%);
+  /* Tarjeta única (contrato minimalista de track-k): la ficha técnica va
+     como banda inferior, no como columna lateral. */
+  grid-template-columns: minmax(0, 1fr);
+  width: min(760px, 100%);
   margin-top: clamp(14px, 2.6vw, 32px);
   border: 1px solid var(--dz-ink);
   border-top-width: 3px;
@@ -270,10 +272,10 @@
   outline-offset: 2px;
 }
 
-/* ---- ficha técnica del negocio (columna derecha) ---- */
+/* ---- ficha técnica del negocio (banda inferior de la tarjeta) ---- */
 [data-design='showroom'] .ec-auth .ec-auth-brand {
   padding: 0;
-  border-left: 1px solid var(--dz-ink);
+  border-top: 1px solid var(--dz-ink);
   background: var(--dz-surface);
   color: var(--dz-ink);
 }

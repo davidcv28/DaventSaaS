@@ -228,13 +228,27 @@ html:not([data-ds-surface="landing"]) main{padding-top:var(--head-h)}
 .ds-product-name{margin:0;font:700 11px/1.5 var(--sans);letter-spacing:.14em;text-transform:uppercase;overflow-wrap:anywhere}
 .ds-product-desc{display:none}
 .ds-product-cat{display:none}
-/* Corazón de la ficha (wishlist local — la tienda no tiene cuentas). */
-.p-heart{flex:none;width:40px;height:40px;margin:-12px -8px -12px -4px;padding:0;border:0;background:none;color:var(--muted);display:grid;place-items:center;transition:color var(--tr);align-self:center}
-.p-heart:hover{color:var(--ink)}
+/* Corazón de la ficha (wishlist local — la tienda no tiene cuentas).
+   Vive FUERA del <a class="ds-product-link"> (contrato de tarjeta: la
+   tarjeta entera es el único link, nada interactivo adentro del anchor):
+   el JS lo apenda a .ds-product y acá se superpone a la esquina sup.
+   derecha de la foto, bajo la etiqueta OFF. */
+.ds-product{position:relative}
+.p-heart{position:absolute;top:44px;right:12px;z-index:5;width:40px;height:40px;margin:0;padding:0;border:1px solid var(--line);border-radius:0;background:var(--bg);color:var(--muted);display:grid;place-items:center;transition:color var(--tr),transform var(--tr);cursor:pointer}
+.p-heart:hover{color:var(--ink);transform:translateY(-1px)}
 .p-heart svg{width:16px;height:16px;fill:none;stroke:currentColor;stroke-width:1.6}
 .p-heart.is-on{color:var(--ink)}
 .p-heart.is-on svg{fill:currentColor}
-.ds-stock{display:none}
+/* En vista lista la tarjeta es una fila baja: el corazón sube a la
+   esquina sup. derecha de la celda. */
+.cat-grid[data-ds-view-mode="list"] .p-heart{top:10px;right:10px}
+.ds-stock{display:inline-flex;align-items:center;gap:6px;margin-top:8px;font:600 9px/1 var(--sans);letter-spacing:.16em;text-transform:uppercase;color:var(--muted)}
+.ds-stock i{width:5px;height:5px;border-radius:50%;background:currentColor;flex:none}
+/* Vista lista: la fila es baja — el stock se oculta salvo "Agotado"
+   (.is-out lo fuerza visible el puente con !important), que cae bajo el
+   nombre en la columna de texto. */
+.cat-grid[data-ds-view-mode="list"] .ds-stock:not(.is-out){display:none}
+.cat-grid[data-ds-view-mode="list"] .ds-stock.is-out{grid-column:2;align-self:start;margin-top:4px;font-size:8.5px}
 .ds-product-price{display:flex;align-items:baseline;gap:8px;margin-top:6px}
 .ds-product-amount{font-size:13px;font-weight:700}
 .ds-product-old{font-size:12px;color:var(--muted);font-weight:400;text-decoration:line-through}
@@ -1066,15 +1080,18 @@ header.top .dsx-account,header.top .dsx-cart{min-height:40px}
       link.insertBefore(media, img);
       media.appendChild(img);
     }
-    /* Corazón al costado del nombre (wishlist local por id de producto). */
-    var copy = link.querySelector('.ds-product-copy');
-    if (copy && !copy.querySelector('.p-heart')) {
+    /* Corazón sobre la foto (wishlist local por id de producto). Va como
+       hermano del link dentro de .ds-product — nunca dentro del <a>:
+       un <button> anidado en el anchor rompe el contrato "la tarjeta
+       entera es el link" y el HTML interactivo válido. */
+    var card = link.closest('.ds-product');
+    if (card && !card.querySelector('.p-heart')) {
       var b = document.createElement('button');
       b.type = 'button';
       b.className = 'p-heart';
       b.setAttribute('aria-label', 'Guardar en favoritos');
       b.innerHTML = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M19.5 4.6a5 5 0 0 0-7.1 0l-.4.4-.4-.4a5 5 0 1 0-7.1 7.1l7.5 7.5 7.5-7.5a5 5 0 0 0 0-7.1z"/></svg>';
-      copy.appendChild(b);
+      card.appendChild(b);
     }
   });
 
@@ -1083,7 +1100,8 @@ header.top .dsx-account,header.top .dsx-cart{min-height:40px}
   var wl = {};
   try { wl = JSON.parse(localStorage.getItem(WL_KEY) || '{}') || {}; } catch (e) { wl = {}; }
   ;[].forEach.call(document.querySelectorAll('[data-ds-product]'), function(link){
-    var heart = link.querySelector('.p-heart');
+    var card = link.closest('.ds-product');
+    var heart = card ? card.querySelector('.p-heart') : null;
     var id = link.getAttribute('data-ds-product');
     if (heart && id && wl[id]) heart.classList.add('is-on');
   });
@@ -1092,7 +1110,8 @@ header.top .dsx-account,header.top .dsx-cart{min-height:40px}
     if (!h) return;
     e.preventDefault();
     e.stopPropagation();
-    var link = h.closest('[data-ds-product]');
+    var card = h.closest('.ds-product');
+    var link = card ? card.querySelector('[data-ds-product]') : null;
     var id = link ? link.getAttribute('data-ds-product') : '';
     h.classList.toggle('is-on');
     try {

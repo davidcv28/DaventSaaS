@@ -66,8 +66,10 @@
    =========================================================================== */
 [data-design='autoservicio'] .ec-auth { padding-inline: clamp(10px, 3vw, 24px); }
 [data-design='autoservicio'] .ec-auth .ec-auth-shell {
-  width: min(1040px, 100%);
-  grid-template-columns: minmax(0, 1.06fr) minmax(0, .94fr);
+  /* Tarjeta única (contrato minimalista de track-k): el resumen va como
+     banda de ticket superior, no como columna lateral. */
+  width: min(680px, 100%);
+  grid-template-columns: minmax(0, 1fr);
   margin-block: clamp(12px, 2.6vw, 32px) clamp(36px, 6vw, 72px);
   border: 1px solid var(--dz-line);
   border-radius: var(--dz-radius);
@@ -79,7 +81,7 @@
 [data-design='autoservicio'] .ec-auth .ec-auth-panel {
   order: 1;
   position: relative;
-  padding: clamp(22px, 3.2vw, 42px) clamp(20px, 3.4vw, 42px) clamp(26px, 3.8vw, 44px);
+  padding: 22px 20px 28px;
   background: var(--dz-surface);
   color: var(--dz-ink);
 }
@@ -126,11 +128,11 @@
 
 /* Resumen de la compra (ala de marca, a la derecha). */
 [data-design='autoservicio'] .ec-auth .ec-auth-brand {
-  order: 2;
-  padding: clamp(20px, 3vw, 34px);
+  order: 0;
+  padding: 16px 18px;
   color: var(--dz-ink);
   background: color-mix(in srgb, var(--dz-accent) 7%, var(--dz-bg));
-  border-left: 1px dashed color-mix(in srgb, var(--dz-ink) 20%, transparent);
+  border-bottom: 1px dashed color-mix(in srgb, var(--dz-ink) 20%, transparent);
 }
 [data-design='autoservicio'] .ec-auth .ec-auth-brand::before { opacity: .1; mix-blend-mode: luminosity; }
 [data-design='autoservicio'] .ec-auth .ec-auth-brand::after {
@@ -140,8 +142,8 @@
 }
 [data-design='autoservicio'] .ec-auth .ec-auth-brand-inner {
   display: grid;
-  grid-template-rows: auto 1fr auto;
-  gap: clamp(16px, 2.4vw, 26px);
+  grid-template-rows: auto auto;
+  gap: 10px;
 }
 [data-design='autoservicio'] .ec-auth .ec-auth-brand-top {
   gap: 10px;
@@ -170,7 +172,11 @@
   letter-spacing: .16em; text-transform: uppercase;
   color: var(--dz-ink-2);
 }
-[data-design='autoservicio'] .ec-auth .ec-auth-brand-copy { gap: 10px; max-width: 40ch; }
+[data-design='autoservicio'] .ec-auth .ec-auth-brand-copy { gap: 6px; max-width: none; }
+/* En la tarjeta única el texto largo y las filas de resumen quedan
+   fuera — la firma es la cabecera del ticket, como en ≤1024px. */
+[data-design='autoservicio'] .ec-auth .ec-auth-brand-text,
+[data-design='autoservicio'] .ec-auth .ec-auth-perks { display: none; }
 [data-design='autoservicio'] .ec-auth .ec-auth-brand-kicker {
   font-family: var(--dz-mono); font-size: 9.5px; font-weight: 600;
   letter-spacing: .16em; text-transform: uppercase;
@@ -178,7 +184,7 @@
 }
 [data-design='autoservicio'] .ec-auth .ec-auth-brand-title {
   font-family: var(--dz-display); font-weight: 800;
-  font-size: clamp(23px, 2.8vw, 33px); line-height: 1.08; letter-spacing: -.03em;
+  font-size: clamp(19px, 3.8vw, 24px); line-height: 1.08; letter-spacing: -.03em;
   color: var(--dz-ink);
 }
 [data-design='autoservicio'] .ec-auth .ec-auth-brand-text {
