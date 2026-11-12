@@ -209,6 +209,10 @@ function onMessage(e) {
      * de la página, así que el candado viaja por postMessage. Se guarda el
      * overflow previo para no pisar un bloqueo que ya existiera. */
     chromeLocked.value = !!e.data.locked
+    /* En modo chrome la tira cambia de alto (tira ↔ 100vh) con el lock:
+     * hay que re-enviar el rectángulo del marco o el puente posiciona la
+     * hoja/barras fijas contra el borde inferior del frame VIEJO. */
+    postFrame()
     if (e.data.locked) {
       if (docOverflow == null) {
         docOverflow = document.documentElement.style.overflow
@@ -374,7 +378,7 @@ onBeforeUnmount(() => {
   <iframe
     ref="frame"
     class="ds-surface"
-    :class="{ 'ds-chrome': chrome }"
+    :class="{ 'ds-chrome': chrome, 'ds-locked': chromeLocked }"
     :src="src"
     :title="title || 'Diseño de la web'"
     :style="frameStyle"
@@ -406,5 +410,12 @@ onBeforeUnmount(() => {
   right: 0;
   z-index: 24;
   min-height: 0;
+}
+
+/* Con la hoja del diseño abierta la tira cubre el viewport: sube sobre
+ * los fijos propios de la página (bot 44 / lightbox 45 / más-sheet 47 /
+ * barra de compra 25) pero queda bajo drawer, modal y toast del host. */
+.ds-surface.ds-chrome.ds-locked {
+  z-index: 60;
 }
 </style>
