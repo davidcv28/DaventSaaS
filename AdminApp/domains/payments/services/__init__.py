@@ -9,6 +9,7 @@ from .services import (
     CreatePaymentQuery,
     CreatePreapprovalQuery,
     GetPreapproval,
+    MercadoPagoNotFound,
     PaymentWebhookQuery,
     PreapprovalWebhookQuery,
     SyncPreapprovalQuery,

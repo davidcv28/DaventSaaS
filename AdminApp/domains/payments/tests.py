@@ -875,9 +875,13 @@ class CancelRenewalOwnershipTests(TestCase):
         response        =   client.post(
             '/api/payments/cancel-renewal/', {'suscription': foreign.pk}, format = 'json')
         self.assertEqual(response.status_code, 200)
-        cancel_query.assert_called_once()
-        #El target resuelto es la suscripción PROPIA: el id del body se ignora.
-        self.assertEqual(cancel_query.call_args[0][0].user, profile_a)
+        #Sin preapproval propio la baja es solo local: no hay nada que
+        #cancelar en MP y el débito ajeno jamás se toca.
+        cancel_query.assert_not_called()
+        own             =   profile_a.suscription
+        own.refresh_from_db()
+        self.assertFalse(own.auto_renew)
+        self.assertIsNotNone(own.cancelled_at)
         foreign.refresh_from_db()
         self.assertTrue(foreign.auto_renew)
         self.assertIsNone(foreign.cancelled_at)
@@ -1180,3 +1184,136 @@ class AuditOrphanPaymentsTests(TestCase):
         results        =   [{'id': 6001, 'external_reference': str(suscription.id), 'transaction_amount': 1000, 'live_mode': False}]
         self.assertIn('huérfanos: 0', self._run(results))
         self.assertIn('huérfanos: 1', self._run(results, include_test = True))
+
+
+class PaymentIdempotencyRegressionTests(TestCase):
+    """Regresiones de la auditoría de pagos: un pago ya approved jamás
+    re-aplica el plan pendiente ni reinicia el período; un débito MP al
+    precio viejo se registra igual; cancel-renewal siempre reaches MP."""
+
+    def _mp(self, suscription, status = 'approved', amount = None, pid = '999001', days_ago = 0):
+        approved_at  =   timezone.now() - timedelta(days = days_ago) if status == 'approved' else None
+        return {
+            'id'                :   pid,
+            'external_reference':   str(suscription.id),
+            'transaction_amount':   str(amount if amount is not None else suscription.plan_suscription.price),
+            'currency_id'       :   'ARS',
+            'status'            :   status,
+            'live_mode'         :   True,
+            'date_approved'     :   approved_at.isoformat() if approved_at else None,
+        }
+
+    def test_replay_of_approved_payment_never_reapplies_pending_plan(self):
+        #Replay de webhook /sync/POST con un pago ya approved y un cambio
+        #de plan pendiente SIN pagar: no puede aplicar el plan ni regalar
+        #un período nuevo — no hubo cobro.
+        new_plan        =   SuscriptionPlan.objects.create(name = 'Plan premium X', price = 2000)
+        suscription     =   _make_suscription(auto_renew = False, preapproval_id = None)
+        suscription.pending_plan_suscription    =   new_plan
+        suscription.pending_charge              =   500
+        suscription.save(update_fields = ['pending_plan_suscription', 'pending_charge'])
+        end_date        =   suscription.end_date
+        payment         =   Payment.objects.create(
+            user = suscription.user, suscription = suscription, amount = 1000,
+            status = Payment.Status.APPROVED, external_reference = 'replay-1',
+            paid_at = timezone.now() - timedelta(days = 5))
+        #Vía webhook replay (otro x-request-id): MP devuelve el mismo pago.
+        with patch(f'{SERVICES_MODULE}.GetMercadoPagoPayment', return_value = self._mp(suscription, pid = 'replay-1')):
+            PaymentWebhookQuery('replay-1')
+        #Vía CreatePaymentQuery (POST /payments/ o /sync/?payment_id=).
+        result          =   CreatePaymentQuery(
+            {'user': suscription.user, 'suscription': suscription, 'payment_id': 'replay-1'},
+            mp_payment = self._mp(suscription, pid = 'replay-1'))
+        self.assertEqual(result.pk, payment.pk)
+        suscription.refresh_from_db()
+        self.assertEqual(suscription.plan_suscription.price, 1000)
+        self.assertEqual(suscription.pending_plan_suscription, new_plan)
+        self.assertEqual(suscription.pending_charge, 500)
+        self.assertEqual(suscription.end_date, end_date)
+
+    def test_late_registered_old_payment_never_shortens_paid_period(self):
+        #Un pago approved viejo que el barrido registra tarde NO puede
+        #recortar un end_date ya pago más largo (cupón, renovación futura).
+        suscription     =   _make_suscription(auto_renew = False, preapproval_id = None)
+        long_end        =   timezone.now() + timedelta(days = 60)
+        suscription.end_date    =   long_end
+        suscription.save(update_fields = ['end_date'])
+        CreatePaymentQuery(
+            {'user': suscription.user, 'suscription': suscription, 'payment_id': 999001},
+            mp_payment = self._mp(suscription, pid = '999001', days_ago = 60),
+        )
+        suscription.refresh_from_db()
+        self.assertEqual(suscription.end_date, long_end)
+
+    def test_debit_at_previous_plan_price_is_registered(self):
+        #Si el realineo de la preapproval falló, MP debita el precio VIEJO:
+        #antes el check de monto lo rechazaba -> webhook 500 -> reintentos
+        #eternos -> plata cobrada sin Payment. Ahora se registra y renueva.
+        cheap           =   SuscriptionPlan.objects.create(name = 'Plan barato', price = 500)
+        suscription     =   _make_suscription(auto_renew = False, preapproval_id = None)
+        suscription.pending_plan_suscription    =   cheap
+        suscription.save(update_fields = ['pending_plan_suscription'])
+        payment         =   CreatePaymentQuery(
+            {'user': suscription.user, 'suscription': suscription, 'payment_id': 999002},
+            #Débito al precio del plan VIGENTE (1000), no del pendiente (500).
+            mp_payment = self._mp(suscription, amount = '1000', pid = '999002'),
+        )
+        self.assertEqual(payment.status, Payment.Status.APPROVED)
+        suscription.refresh_from_db()
+        self.assertEqual(suscription.plan_suscription, cheap)
+        self.assertIsNone(suscription.pending_plan_suscription)
+
+    def test_arbitrary_amount_still_rejected(self):
+        suscription     =   _make_suscription(auto_renew = False, preapproval_id = None)
+        with self.assertRaises(serializers.ValidationError):
+            CreatePaymentQuery(
+                {'user': suscription.user, 'suscription': suscription, 'payment_id': 999003},
+                mp_payment = self._mp(suscription, amount = '777', pid = '999003'),
+            )
+
+    def test_mp_cancelled_status_is_terminal_rejected(self):
+        suscription     =   _make_suscription(auto_renew = False, preapproval_id = None)
+        payment         =   CreatePaymentQuery(
+            {'user': suscription.user, 'suscription': suscription, 'payment_id': 999004},
+            mp_payment = self._mp(suscription, status = 'cancelled', pid = '999004'),
+        )
+        self.assertEqual(payment.status, Payment.Status.REJECTED)
+
+    @patch('AdminApp.domains.payments.views.viewset.CancelPreapprovalQuery')
+    def test_cancel_renewal_reaches_mp_despite_stale_cancelled_at(self, cancel_query):
+        #Regresión: tras re-alta, un cancelled_at viejo hacía que el endpoint
+        #respondiera "ya desactivada" SIN cancelar el preapproval nuevo —
+        #MP seguía debitando sin que el sistema lo reflejara.
+        suscription                     =   _make_suscription(
+            auto_renew = False, preapproval_id = 'pre-new', cancelled_at = timezone.now())
+        profile         =   suscription.user
+        client          =   APIClient()
+        client.force_authenticate(user = profile.user)
+        response        =   client.post('/api/payments/cancel-renewal/', {}, format = 'json')
+        self.assertEqual(response.status_code, 200)
+        cancel_query.assert_called_once()
+        self.assertEqual(cancel_query.call_args[0][0].preapproval_id, 'pre-new')
+
+    def test_admin_approve_of_prorated_payment_keeps_period(self):
+        #El approve manual no pasaba paid_amount: un cobro prorrateado
+        #reseteaba el período como si fuera pago pleno (mes gratis).
+        new_plan        =   SuscriptionPlan.objects.create(name = 'Plan ecommerce', price = 2000)
+        suscription     =   _make_suscription(auto_renew = False, preapproval_id = None)
+        suscription.pending_plan_suscription    =   new_plan
+        suscription.pending_charge              =   666.67
+        suscription.end_date                    =   timezone.now() + timedelta(days = 20)
+        suscription.save(update_fields = ['pending_plan_suscription', 'pending_charge', 'end_date'])
+        payment         =   Payment.objects.create(
+            user = suscription.user, suscription = suscription, amount = 666.67,
+            status = Payment.Status.PENDING, external_reference = 'prorated-1')
+        staff           =   User.objects.create_user(username = 'adminx', email = 'a@x.com', password = 'X', is_staff = True)
+        client          =   APIClient()
+        client.force_authenticate(user = staff)
+        response        =   client.post(f'/api/payments/{payment.pk}/approve/', {}, format = 'json')
+        self.assertEqual(response.status_code, 200)
+        suscription.refresh_from_db()
+        self.assertEqual(suscription.plan_suscription, new_plan)
+        self.assertIsNone(suscription.pending_charge)
+        #Período intacto: el prorrateo no reinicia la facturación.
+        self.assertAlmostEqual(
+            (suscription.end_date - timezone.now()).total_seconds() / 86400, 20, delta = 0.2)

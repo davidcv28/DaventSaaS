@@ -17,7 +17,7 @@ from rest_framework import serializers
 
 from AdminApp.domains.invoices.services import IssueInvoiceQuery
 from AdminApp.domains.payments.models import DailyRevenue, MonthlyRevenue, Payment
-from AdminApp.domains.suscriptions.models import Suscription
+from AdminApp.domains.suscriptions.models import Suscription, SuscriptionPlan
 
 logger          =   logging.getLogger(__name__)
 sdk             =   mercadopago.SDK(config('SECRET_MP_KEY'))
@@ -33,7 +33,15 @@ MP_STATUS_MAP   =   {
     'rejected'      :   Payment.Status.REJECTED,
     'refunded'      :   Payment.Status.REFUNDED,
     'charged_back'  :   Payment.Status.REFUNDED,
+    #'cancelled' (MP) = cobro anulado antes de procesarse: estado terminal,
+    #sin él el pago quedaba PENDING para siempre y el barrido lo salteaba.
+    'cancelled'     :   Payment.Status.REJECTED,
 }
+#El preapproval no existe (o ya no existe) en MP: es el ÚNICO error que
+#justifica recrear el débito — un 5xx/timeout es transitorio y tratarlo
+#como "inválido" pisaba preapproval_id y podía dejar dos débitos vivos.
+class MercadoPagoNotFound(Exception):
+    pass
 #ESTADOS DE SUSCRIPCIÓN (fuente de verdad: constantes del modelo)
 SUSCRIPTION_STATUS_ACTIVE           =   Suscription.STATUS_ACTIVE
 SUSCRIPTION_STATUS_PENDING_PAYMENT  =   Suscription.STATUS_PENDING_PAYMENT
@@ -70,11 +78,10 @@ def CreatePaymentQuery(validated_data : dict, mp_payment : dict = None) -> Payme
         #el objeto ajeno (IDOR mínimo) ni se le aplica el plan pendiente.
         if payment_exists.suscription_id != suscription.id:
             raise serializers.ValidationError({'payment_id': 'El pago no corresponde a esta suscripción.'})
-        if payment_exists.status == Payment.Status.APPROVED:
-            #Dentro de atomic: ApplyPendingPlanQuery bloquea la suscripción
-            #(select_for_update) y autocommit reventaría fuera de transacción.
-            with transaction.atomic():
-                ApplyPendingPlanQuery(payment_exists.suscription, paid_amount = payment_exists.amount)
+        #El pago ya está aprobado: NO se re-aplica el plan pendiente ni se
+        #reinicia el período — este camino también lo alcanzan replays del
+        #webhook, /sync/ con payment_id y POST /payments/ con un pago ya
+        #acreditado, y ninguno implica un cobro nuevo.
         return payment_exists
     if mp_payment is None:
         mp_payment      =   GetMercadoPagoPayment(payment_id)
@@ -97,7 +104,20 @@ def CreatePaymentQuery(validated_data : dict, mp_payment : dict = None) -> Payme
     pending_plan        =   suscription.pending_plan_suscription
     plan_price          =   (pending_plan or suscription.plan_suscription).price
     expected_amount     =   suscription.pending_charge if suscription.pending_charge is not None else plan_price
-    if amount != expected_amount and amount != plan_price:
+    #Montos legítimos: el esperado (prorrateo o plan pendiente/vigente), el
+    #precio del plan vigente (un débito MP realineado tarde sale al monto
+    #viejo) y CUALQUIER precio de plan pago — una preferencia o débito
+    #emitido antes de un cambio de plan queda con el monto viejo y
+    #rechazarlo dejaba un cobro real de MP sin registrar (webhook 500 ->
+    #reintentos eternos -> plata cobrada sin Payment ni plan).
+    accepted_amounts    =   {
+        plan_price,
+        suscription.plan_suscription.price,
+        *(SuscriptionPlan.objects.filter(is_trial = False).values_list('price', flat = True)),
+    }
+    if suscription.pending_charge is not None:
+        accepted_amounts.add(suscription.pending_charge)
+    if amount not in accepted_amounts:
         raise serializers.ValidationError({
             'payment_id':   f'El monto del pago (${amount}) no coincide con el importe esperado (${expected_amount})'
         })
@@ -148,7 +168,8 @@ def PaymentWebhookQuery(payment_id):
             mp_payment = mp_payment
         )
     new_status          =   MP_STATUS_MAP.get(mp_payment.get('status'), payment.status)
-    paid_at             =   parse_datetime(mp_payment['date_approved']) if mp_payment.get('date_approved') else payment.paid_at
+    paid_at             =   parse_datetime(mp_payment['date_approved']) if mp_payment.get('date_approved') else None
+    paid_at             =   paid_at or payment.paid_at
     with transaction.atomic():
         #Bloqueo pesimista + relectura del estado: dos webhooks concurrentes
         #del MISMO pago leían old_status PENDING los dos y duplicaban rollups
@@ -165,10 +186,11 @@ def PaymentWebhookQuery(payment_id):
         if mp_payment.get('status_detail'):
             payment.mp_status_detail    =   str(mp_payment.get('status_detail'))[:255]
         payment.save(update_fields = ['status', 'paid_at', 'live_mode', 'mp_status_detail', 'updated_at'])
-        #PLAN PENDIENTE: se establece la suscripción cuando el pago se acredita
-        #renew solo si el pago entra a approved ahora: un webhook repetido no vuelve a extender
-        if new_status == Payment.Status.APPROVED:
-            ApplyPendingPlanQuery(payment.suscription, renew = old_status != Payment.Status.APPROVED, paid_amount = payment.amount)
+        #PLAN PENDIENTE: solo en la transición real a approved — un replay
+        #del webhook sobre un pago ya aprobado no puede re-aplicar el plan
+        #ni reiniciar el período (sería un upgrade gratis).
+        if new_status == Payment.Status.APPROVED and old_status != Payment.Status.APPROVED:
+            ApplyPendingPlanQuery(payment.suscription, renew = True, paid_amount = payment.amount)
         #ROLLUPS: solo se suma cuando el pago entra en approved; se descuenta si sale de approved
         if new_status == Payment.Status.APPROVED and old_status != Payment.Status.APPROVED:
             UpdateRevenueRollupsQuery(payment, sign = 1)
@@ -227,11 +249,16 @@ def ApplyPendingPlanQuery(suscription, renew = False, paid_amount = None):
         suscription.pending_plan_suscription    =   None
         update_fields                          +=   ['plan_suscription', 'pending_plan_suscription']
     suscription.pending_charge    =   None
-    #Todo cobro aprobado a precio completo reinicia el período: 30 días
-    #desde el cobro (máx. 30). El prorrateado de upgrade no toca las fechas.
+    #Todo cobro aprobado a precio completo renueva por 30 días desde el
+    #cobro (máx. 30). max() con el end_date vigente: un pago viejo
+    #registrado tarde por el barrido o una renovación anticipada nunca
+    #recorta días ya pagos. El prorrateado de upgrade no toca las fechas.
     if not prorated:
         suscription.start_date  =   now
-        suscription.end_date    =   now + timedelta(days = 30)
+        period_end              =   now + timedelta(days = 30)
+        if suscription.end_date and suscription.end_date > period_end:
+            period_end          =   suscription.end_date
+        suscription.end_date    =   period_end
     suscription.status      =   SUSCRIPTION_STATUS_ACTIVE
     suscription.save(update_fields = update_fields)
     return suscription
@@ -330,7 +357,14 @@ def CreateCheckoutPreferenceQuery(suscription):
 #GET PREAPPROVAL (estado real de la suscripción en MP)
 def GetPreapproval(preapproval_id) -> dict:
     mp_result       =   sdk.preapproval().get(preapproval_id)
-    if mp_result.get('status') != 200:
+    status_code     =   mp_result.get('status')
+    if status_code == 404:
+        raise MercadoPagoNotFound(f'Preapproval {preapproval_id} no existe en Mercado Pago')
+    if status_code != 200:
+        #Errores transitorios (5xx, timeout, rate limit) NO son "preapproval
+        #inválido": propagarlos como ValidationError hacía que el action
+        #subscription recreara el débito y dejara el viejo huérfano —
+        #posible doble débito mensual.
         raise serializers.ValidationError({'preapproval_id': 'No se pudo verificar el débito automático en Mercado Pago'})
     return mp_result['response']
 
@@ -380,8 +414,12 @@ def CreatePreapprovalQuery(suscription) -> dict:
         raise serializers.ValidationError({'suscription': 'No se pudo iniciar el débito automático en Mercado Pago'})
     response                    =   mp_result['response']
     suscription.preapproval_id  =   response.get('id')
+    #Un débito nuevo deja sin efecto la baja anterior: cancelled_at viejo
+    #habilitaba el early-return de cancel-renewal (no cancelaba ESTE
+    #preapproval) y bloqueaba el realineo de monto en checkout/subscription.
+    suscription.cancelled_at    =   None
     try:
-        suscription.save(update_fields = ['preapproval_id'])
+        suscription.save(update_fields = ['preapproval_id', 'cancelled_at'])
     except Exception:
         #Compensación (saga mínima): el alta remota ya existe en MP — si la
         #escritura local falla se cancela el preapproval para no dejar un
@@ -420,6 +458,12 @@ def SyncPreapprovalQuery(suscription):
     if mp_status == 'cancelled' and suscription.cancelled_at is None:
         suscription.cancelled_at    =   timezone.now()
         update_fields.append('cancelled_at')
+    elif mp_status == 'authorized' and suscription.cancelled_at is not None:
+        #Un débito authorized en MP no tiene baja vigente: limpia un
+        #cancelled_at residual (p.ej. escrito por una sync que leyó MP
+        #antes de que el alta nueva confirmara).
+        suscription.cancelled_at    =   None
+        update_fields.append('cancelled_at')
     if update_fields:
         suscription.save(update_fields = update_fields)
     return mp_status
@@ -451,10 +495,14 @@ def CancelPreapprovalByIdQuery(preapproval_id) -> None:
 
 #PREAPPROVAL WEBHOOK QUERY (topic subscription_preapproval: alta/pausa/baja del débito)
 def PreapprovalWebhookQuery(preapproval_id):
-    suscription     =   Suscription.objects.filter(preapproval_id = str(preapproval_id)).first()
-    if not suscription:
-        return None
-    return SyncPreapprovalQuery(suscription)
+    #Lock de fila: sin él un webhook/sync podía commitear auto_renew=True
+    #con el estado MP pre-cancel DESPUÉS del commit de cancel-renewal
+    #(re-activaba el débito recién dado de baja).
+    with transaction.atomic():
+        suscription     =   Suscription.objects.select_for_update(of = ('self',)).filter(preapproval_id = str(preapproval_id)).first()
+        if not suscription:
+            return None
+        return SyncPreapprovalQuery(suscription)
 
 #GET AUTHORIZED PAYMENT (el SDK no cubre /authorized_payments: consulta directa con el access token)
 def GetAuthorizedPayment(authorized_payment_id) -> dict:

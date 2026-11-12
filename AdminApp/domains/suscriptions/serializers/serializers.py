@@ -73,16 +73,21 @@ class SuscriptionSerializer(SuscriptionCreateMixin, serializers.ModelSerializer)
             return instance
         if instance.status == Suscription.STATUS_PENDING_PAYMENT:
             #Suscripción impaga: el plan elegido se corrige libremente (no
-            #otorga acceso hasta que el pago se acredite).
-            instance.plan_suscription   =   plan
-            instance.save(update_fields = ['plan_suscription'])
+            #otorga acceso hasta que el pago se acredite). También se limpian
+            #los pendientes: un resto de un flujo anterior quedaría cobrando
+            #un monto que ya no corresponde al plan corregido.
+            instance.plan_suscription           =   plan
+            instance.pending_plan_suscription   =   None
+            instance.pending_charge             =   None
+            instance.save(update_fields = ['plan_suscription', 'pending_plan_suscription', 'pending_charge'])
             return instance
         #Suscripción vigente o pagada: el cambio queda pendiente y se aplica
         #recién cuando el cobro se acredita (checkout o débito automático).
         #Modelo Netflix: upgrade = cargo prorrateado inmediato, downgrade =
         #se aplica en la próxima facturación al precio nuevo.
         from AdminApp.domains.suscriptions.services import RequestPlanChangeQuery
-        RequestPlanChangeQuery(instance, plan)
+        #El query devuelve la instancia lockeada (la nuestra quedó stale).
+        instance    =   RequestPlanChangeQuery(instance, plan)
         return instance
 
 #=========================================

@@ -93,10 +93,26 @@ class SuscriptionViewSet(SuscriptionBaseViewSet):
         suscription.start_date                  =   now
         suscription.end_date                    =   now + timedelta(days = 30)
         suscription.save()
+        #Débito MP vivo: el próximo cobro tiene que salir al plan asignado.
+        #Sin realineo, MP seguía debitando el monto del plan viejo y cada
+        #cargo quedaba huérfano (cobrado sin servicio ni registro claro).
+        warning     =   None
+        if suscription.preapproval_id and not suscription.cancelled_at:
+            from AdminApp.domains.payments.services import CancelPreapprovalQuery, UpdatePreapprovalPlanQuery
+            try:
+                UpdatePreapprovalPlanQuery(suscription)
+            except Exception:
+                try:
+                    CancelPreapprovalQuery(suscription)
+                    warning =   'No se pudo actualizar el débito automático: se dio de baja en Mercado Pago.'
+                except Exception:
+                    self.logger.exception('assign: falló realinear/cancelar el preapproval %s', suscription.preapproval_id)
+                    warning =   'Plan asignado, pero el débito automático de Mercado Pago no se pudo actualizar — revisalo a mano.'
         self.logger.info('Plan asignado manualmente: plan=%s target_user=%s admin=%s', plan.name, user_pk, request.user.pk)
         return Response(
             {
                 'Exito'         : f'Plan {plan.name} asignado a {profile.user.username} por 30 días.',
+                'warning'       : warning,
                 'suscription'   : SuscriptionSerializerList(suscription).data,
             },
             status = status.HTTP_200_OK,

@@ -27,6 +27,7 @@ from AdminApp.domains.payments.services import (
     CreateCheckoutPreferenceQuery,
     CreatePreapprovalQuery,
     GetPreapproval,
+    MercadoPagoNotFound,
     PaymentWebhookQuery,
     PreapprovalWebhookQuery,
     SyncPreapprovalQuery,
@@ -119,8 +120,11 @@ class PaymentViewSet(PaymentBaseViewSet):
             instance        =   self.get_object()
             was_approved    =   instance.status == Payment.Status.APPROVED
             instance.approve()
-            ApplyPendingPlanQuery(instance.suscription, renew = not was_approved)
             if not was_approved:
+                #paid_amount: un cobro prorrateado (pending_charge) no debe
+                #reiniciar el período — sin él ApplyPendingPlanQuery lo
+                #tomaba como pago pleno y regalaba un mes.
+                ApplyPendingPlanQuery(instance.suscription, renew = True, paid_amount = instance.amount)
                 UpdateRevenueRollupsQuery(instance)
                 IssueInvoiceQuery(instance)
                 logger.info('Pago aprobado manualmente: payment=%s admin=%s', instance.pk, request.user.pk)
@@ -254,7 +258,9 @@ class PaymentViewSet(PaymentBaseViewSet):
             #prorrateado inmediato, downgrade = se aplica en la próxima
             #facturación; re-elegir el plan vigente cancela el pendiente.
             from AdminApp.domains.suscriptions.services import RequestPlanChangeQuery
-            RequestPlanChangeQuery(suscription, target_plan)
+            #Devuelve la instancia lockeada: la que teníamos quedó stale
+            #respecto de pending_plan/pending_charge recién escritos.
+            suscription =   RequestPlanChangeQuery(suscription, target_plan)
         #DATOS FISCALES: el alta ya no los pide — se exigen recién al iniciar
         #un cobro porque la factura se emite sobre este perfil (ARCA + PDF).
         #El frontend usa 'billing_required' para abrir el form de facturación.
@@ -316,8 +322,11 @@ class PaymentViewSet(PaymentBaseViewSet):
                 previous_preapproval_id =   suscription.preapproval_id
                 try:
                     mp_status   =   SyncPreapprovalQuery(suscription)
-                except serializers.ValidationError:
-                    #Preapproval_id viejo/inválido en MP: se descarta y se crea uno nuevo
+                except MercadoPagoNotFound:
+                    #Solo un 404 de MP justifica descartar el id viejo y
+                    #crear un preapproval nuevo: un error transitorio
+                    #propagado como ValidationError pisaba preapproval_id
+                    #y podía dejar DOS débitos vivos cobrando en paralelo.
                     mp_status   =   None
                 #Ya autorizado: si hay plan pendiente nuevo, se actualiza el monto del próximo débito
                 if mp_status == 'authorized':
@@ -370,12 +379,22 @@ class PaymentViewSet(PaymentBaseViewSet):
             suscription =   Suscription.objects.select_for_update(of = ('self',)).filter(user__user = request.user).first()
             if not suscription:
                 raise serializers.ValidationError({'suscription': 'No tenés una suscripción para dar de baja'})
-            if not suscription.auto_renew and suscription.cancelled_at:
-                return Response({'Exito': 'La renovación automática ya estaba desactivada', 'auto_renew': False}, status = status.HTTP_200_OK)
-            CancelPreapprovalQuery(suscription)
+            already_off =   not suscription.auto_renew and suscription.cancelled_at is not None
+            if not suscription.preapproval_id:
+                #Sin débito registrado la baja es solo local (idempotente):
+                #cubre estados sin preapproval o con cancelled_at residual.
+                if not already_off:
+                    suscription.auto_renew      =   False
+                    suscription.cancelled_at    =   suscription.cancelled_at or timezone.now()
+                    suscription.save(update_fields = ['auto_renew', 'cancelled_at'])
+            else:
+                #Siempre pasa por MP aunque haya cancelled_at: un preapproval
+                #nuevo (re-alta tras la baja) dejaba el early-return viejo
+                #saltarse la cancelación y seguir debitando.
+                CancelPreapprovalQuery(suscription)
         return Response(
             {
-                'Exito'     :   'Renovación automática desactivada. Tu plan sigue vigente hasta el fin del período ya pago.',
+                'Exito'     :   'La renovación automática ya estaba desactivada' if already_off else 'Renovación automática desactivada. Tu plan sigue vigente hasta el fin del período ya pago.',
                 'auto_renew':   False,
                 'end_date'  :   suscription.end_date,
             }, status = status.HTTP_200_OK)
@@ -405,9 +424,16 @@ class PaymentViewSet(PaymentBaseViewSet):
                     'throttled'         :   True,
                 }, status = status.HTTP_200_OK)
         payments    =   SyncSuscriptionPaymentsQuery(suscription, payment_id = payment_id) if suscription else []
-        #El débito automático también se sincroniza acá: cubre los casos en que
-        #el webhook de MP no puede llegar (localhost, red privada).
-        mp_status   =   SyncPreapprovalQuery(suscription)
+        #El débito automático también se sincroniza acá: cubre los casos en
+        #que el webhook de MP no puede llegar (localhost, red privada).
+        #Lock de fila: serializa contra cancel-renewal/subscription — sin
+        #él un sync podía commitear auto_renew=True con el estado MP
+        #pre-cancel después de la baja.
+        mp_status   =   None
+        if suscription:
+            with transaction.atomic():
+                locked      =   Suscription.objects.select_for_update(of = ('self',)).get(pk = suscription.pk)
+                mp_status   =   SyncPreapprovalQuery(locked)
         return Response(
             {
                 'Exito'             :   'Pagos sincronizados',

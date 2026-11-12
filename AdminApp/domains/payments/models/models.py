@@ -55,9 +55,13 @@ class Payment(models.Model):
         return f'{self.user} - {self.amount} - {self.status}'
 
     def approve(self):
-        """Marca el pago como aprobado y sella la fecha efectiva de cobro."""
+        """Marca el pago como aprobado y sella la fecha efectiva de cobro.
+        Si ya tenía paid_at (p.ej. vino de date_approved de MP) se conserva:
+        pisarlo movía el cobro de día/mes en los rollups y en un refund
+        posterior descontaba de la ventana equivocada."""
         self.status             =   self.Status.APPROVED
-        self.paid_at            =   timezone.now()
+        if not self.paid_at:
+            self.paid_at        =   timezone.now()
         self.save(update_fields = ['status', 'paid_at', 'updated_at'])
 
 #=========================================

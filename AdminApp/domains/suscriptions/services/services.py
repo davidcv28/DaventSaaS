@@ -114,19 +114,25 @@ def RequestPlanChangeQuery(suscription, target_plan):
     objetivo (best-effort: si MP falla no se bloquea el cambio local — el
     checkout/subscription lo reintenta).
     """
-    if target_plan.id == suscription.plan_suscription_id:
-        suscription.pending_plan_suscription    =   None
-        suscription.pending_charge              =   None
+    #Lock de fila + recarga: dos cambios concurrentes (o uno contra
+    #ApplyPendingPlanQuery) leían plan/pending stale y commiteaban
+    #pending_charge calculado sobre el plan equivocado.
+    with transaction.atomic():
+        suscription =   Suscription.objects.select_for_update(of = ('self',)).select_related(
+            'plan_suscription', 'pending_plan_suscription').get(pk = suscription.pk)
+        if target_plan.id == suscription.plan_suscription_id:
+            suscription.pending_plan_suscription    =   None
+            suscription.pending_charge              =   None
+            suscription.save(update_fields = ['pending_plan_suscription', 'pending_charge'])
+            return suscription
+        is_upgrade      =   target_plan.price > (suscription.plan_suscription.price or Decimal('0'))
+        suscription.pending_plan_suscription    =   target_plan
+        suscription.pending_charge              =   _upgrade_charge(suscription, target_plan) if is_upgrade else None
         suscription.save(update_fields = ['pending_plan_suscription', 'pending_charge'])
+        if suscription.preapproval_id and not suscription.cancelled_at:
+            try:
+                from AdminApp.domains.payments.services import UpdatePreapprovalPlanQuery
+                UpdatePreapprovalPlanQuery(suscription)
+            except Exception:
+                logger.warning('No se pudo realinear el débito MP del plan pendiente (suscription=%s)', suscription.pk)
         return suscription
-    is_upgrade      =   target_plan.price > (suscription.plan_suscription.price or Decimal('0'))
-    suscription.pending_plan_suscription    =   target_plan
-    suscription.pending_charge              =   _upgrade_charge(suscription, target_plan) if is_upgrade else None
-    suscription.save(update_fields = ['pending_plan_suscription', 'pending_charge'])
-    if suscription.preapproval_id and not suscription.cancelled_at:
-        try:
-            from AdminApp.domains.payments.services import UpdatePreapprovalPlanQuery
-            UpdatePreapprovalPlanQuery(suscription)
-        except Exception:
-            logger.warning('No se pudo realinear el débito MP del plan pendiente (suscription=%s)', suscription.pk)
-    return suscription
