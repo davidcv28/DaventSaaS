@@ -76,6 +76,11 @@ class Suscription(models.Model):
     auto_renew                  =   models.BooleanField(default = False, verbose_name = 'Renovación automática')
     preapproval_id              =   models.CharField(max_length = 64, null = True, blank = True, unique = True, verbose_name = 'Suscripción en Mercado Pago')
     cancelled_at                =   models.DateTimeField(null = True, blank = True, verbose_name = 'Fecha de baja de la renovación')
+    #Id del Payment que abrió el período vigente (lo escribe
+    #ApplyPendingPlanQuery). Entero plano, no FK: un refund/chargeback de
+    #ESE pago revoca el acceso; el de un pago más viejo o de un prorrateo
+    #no toca el período. Lo limpian cupón/assign (período sin cobro).
+    period_payment_id           =   models.PositiveIntegerField(null = True, blank = True, verbose_name = 'Pago que abrió el período')
     objects                     =   SuscriptionQuerySet.as_manager()
     class Meta:
         app_label               =   'suscriptions'

@@ -110,13 +110,17 @@ def CreatePaymentQuery(validated_data : dict, mp_payment : dict = None) -> Payme
     #emitido antes de un cambio de plan queda con el monto viejo y
     #rechazarlo dejaba un cobro real de MP sin registrar (webhook 500 ->
     #reintentos eternos -> plata cobrada sin Payment ni plan).
+    #Decimal(str(...)): una instancia en memoria puede tener precios como
+    #float y Decimal('666.67') != 666.67 (float no es exacto en decimal).
     accepted_amounts    =   {
-        plan_price,
-        suscription.plan_suscription.price,
-        *(SuscriptionPlan.objects.filter(is_trial = False).values_list('price', flat = True)),
+        Decimal(str(plan_price)),
+        Decimal(str(suscription.plan_suscription.price)),
+        *(Decimal(str(p)) for p in SuscriptionPlan.objects.filter(is_trial = False).values_list('price', flat = True)),
     }
     if suscription.pending_charge is not None:
-        accepted_amounts.add(suscription.pending_charge)
+        #str()->Decimal: una instancia en memoria puede tener el campo como
+        #float y Decimal('666.67') != 666.67 (comparación exacto vs float).
+        accepted_amounts.add(Decimal(str(suscription.pending_charge)))
     if amount not in accepted_amounts:
         raise serializers.ValidationError({
             'payment_id':   f'El monto del pago (${amount}) no coincide con el importe esperado (${expected_amount})'
@@ -139,7 +143,7 @@ def CreatePaymentQuery(validated_data : dict, mp_payment : dict = None) -> Payme
             )
             #PLAN PENDIENTE: se establece la suscripción cuando el pago se acredita
             if status == Payment.Status.APPROVED:
-                ApplyPendingPlanQuery(suscription, renew = True, paid_amount = new_payment.amount)
+                ApplyPendingPlanQuery(suscription, renew = True, paid_amount = new_payment.amount, payment = new_payment)
                 UpdateRevenueRollupsQuery(new_payment)
                 #FACTURA: se emite dentro de la misma transacción que el cobro
                 IssueInvoiceQuery(new_payment)
@@ -190,7 +194,7 @@ def PaymentWebhookQuery(payment_id):
         #del webhook sobre un pago ya aprobado no puede re-aplicar el plan
         #ni reiniciar el período (sería un upgrade gratis).
         if new_status == Payment.Status.APPROVED and old_status != Payment.Status.APPROVED:
-            ApplyPendingPlanQuery(payment.suscription, renew = True, paid_amount = payment.amount)
+            ApplyPendingPlanQuery(payment.suscription, renew = True, paid_amount = payment.amount, payment = payment)
         #ROLLUPS: solo se suma cuando el pago entra en approved; se descuenta si sale de approved
         if new_status == Payment.Status.APPROVED and old_status != Payment.Status.APPROVED:
             UpdateRevenueRollupsQuery(payment, sign = 1)
@@ -198,7 +202,25 @@ def PaymentWebhookQuery(payment_id):
             IssueInvoiceQuery(payment)
         elif old_status == Payment.Status.APPROVED and new_status != Payment.Status.APPROVED:
             UpdateRevenueRollupsQuery(payment, sign = -1)
+            #REFUND/CHARGEBACK del pago que abrió el período vigente: la
+            #plata ya no está -> el acceso se revoca. Si el refund es de
+            #un pago más viejo (período ya superado) o de un prorrateo,
+            #period_payment_id no matchea y el acceso queda intacto.
+            _revoke_period_if_granted(payment)
     return payment
+
+def _revoke_period_if_granted(payment):
+    with transaction.atomic():
+        suscription =   Suscription.objects.select_for_update().filter(pk = payment.suscription_id).first()
+        if not suscription or suscription.period_payment_id != payment.pk:
+            return
+        revoke_at   =   payment.paid_at or (timezone.now() - timedelta(seconds = 1))
+        if suscription.end_date and suscription.end_date > revoke_at:
+            suscription.end_date                =   revoke_at
+            suscription.pending_plan_suscription=   None
+            suscription.pending_charge          =   None
+            suscription.period_payment_id       =   None
+            suscription.save(update_fields = ['end_date', 'pending_plan_suscription', 'pending_charge', 'period_payment_id'])
 
 #REVENUE ROLLUPS QUERY (mantiene DailyRevenue / MonthlyRevenue materializados para dashboards)
 def UpdateRevenueRollupsQuery(payment, sign = 1):
@@ -226,7 +248,7 @@ def UpdateRevenueRollupsQuery(payment, sign = 1):
 #APPLY PENDING PLAN QUERY (establece el plan una vez acreditado el pago)
 #PRECONDICIÓN: llamar dentro de transaction.atomic — la fila se bloquea con
 #select_for_update para serializar extensiones concurrentes del plan.
-def ApplyPendingPlanQuery(suscription, renew = False, paid_amount = None):
+def ApplyPendingPlanQuery(suscription, renew = False, paid_amount = None, payment = None):
     suscription         =   Suscription.objects.select_for_update().get(pk = suscription.pk)
     pending_plan        =   suscription.pending_plan_suscription
     is_pending_payment  =   suscription.status == SUSCRIPTION_STATUS_PENDING_PAYMENT
@@ -259,6 +281,12 @@ def ApplyPendingPlanQuery(suscription, renew = False, paid_amount = None):
         if suscription.end_date and suscription.end_date > period_end:
             period_end          =   suscription.end_date
         suscription.end_date    =   period_end
+        #Trazabilidad del cobro que abrió el período: un refund/chargeback
+        #de ESTE pago revoca el acceso (_revoke_period_if_granted). El
+        #prorrateado no pasa por acá: no abre período nuevo. Sin payment
+        # identifiable el período queda no revocable (None), nunca stale.
+        suscription.period_payment_id   =   payment.pk if payment is not None else None
+        update_fields                  +=   ['period_payment_id']
     suscription.status      =   SUSCRIPTION_STATUS_ACTIVE
     suscription.save(update_fields = update_fields)
     return suscription

@@ -124,7 +124,7 @@ class PaymentViewSet(PaymentBaseViewSet):
                 #paid_amount: un cobro prorrateado (pending_charge) no debe
                 #reiniciar el período — sin él ApplyPendingPlanQuery lo
                 #tomaba como pago pleno y regalaba un mes.
-                ApplyPendingPlanQuery(instance.suscription, renew = True, paid_amount = instance.amount)
+                ApplyPendingPlanQuery(instance.suscription, renew = True, paid_amount = instance.amount, payment = instance)
                 UpdateRevenueRollupsQuery(instance)
                 IssueInvoiceQuery(instance)
                 logger.info('Pago aprobado manualmente: payment=%s admin=%s', instance.pk, request.user.pk)
@@ -250,9 +250,13 @@ class PaymentViewSet(PaymentBaseViewSet):
                 end_date            =   timezone.now(),
             )
         elif target_plan and suscription.status == SUSCRIPTION_STATUS_PENDING_PAYMENT:
-            #Reintento de checkout: solo se corrige el plan elegido, sigue pendiente
-            suscription.plan_suscription    =   target_plan
-            suscription.save(update_fields = ['plan_suscription'])
+            #Reintento de checkout: solo se corrige el plan elegido, sigue pendiente.
+            #También se limpian los pendientes: un resto de un flujo anterior
+            #quedaría cobrando un monto que ya no corresponde al plan corregido.
+            suscription.plan_suscription           =   target_plan
+            suscription.pending_plan_suscription   =   None
+            suscription.pending_charge             =   None
+            suscription.save(update_fields = ['plan_suscription', 'pending_plan_suscription', 'pending_charge'])
         elif target_plan:
             #Modelo Netflix (RequestPlanChangeQuery): upgrade = cargo
             #prorrateado inmediato, downgrade = se aplica en la próxima

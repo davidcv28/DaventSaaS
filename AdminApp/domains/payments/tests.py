@@ -1317,3 +1317,107 @@ class PaymentIdempotencyRegressionTests(TestCase):
         #Período intacto: el prorrateo no reinicia la facturación.
         self.assertAlmostEqual(
             (suscription.end_date - timezone.now()).total_seconds() / 86400, 20, delta = 0.2)
+
+
+class RefundRevocationTests(TestCase):
+    """Un refund/chargeback del pago que abrió el período vigente revoca el
+    acceso; el de un pago más viejo o de un prorrateo no toca nada."""
+
+    def _mp(self, suscription, status, pid, amount = None):
+        return {
+            'id'                :   pid,
+            'external_reference':   str(suscription.id),
+            'transaction_amount':   str(amount if amount is not None else suscription.plan_suscription.price),
+            'currency_id'       :   'ARS',
+            'status'            :   status,
+            'live_mode'         :   True,
+            'date_approved'     :   None,
+        }
+
+    def _refund(self, pid, suscription, status = 'refunded'):
+        with patch(f'{SERVICES_MODULE}.GetMercadoPagoPayment',
+                   return_value = self._mp(suscription, status, pid)):
+            PaymentWebhookQuery(pid)
+
+    def test_refund_of_period_payment_revokes_access(self):
+        suscription     =   _make_suscription(auto_renew = False, preapproval_id = None)
+        paid            =   CreatePaymentQuery(
+            {'user': suscription.user, 'suscription': suscription, 'payment_id': 'per-1'},
+            mp_payment = {
+                'id': 'per-1', 'external_reference': str(suscription.id),
+                'transaction_amount': '1000', 'currency_id': 'ARS',
+                'status': 'approved', 'live_mode': True,
+                'date_approved': (timezone.now() - timedelta(hours = 2)).isoformat(),
+            })
+        suscription.refresh_from_db()
+        self.assertEqual(suscription.period_payment_id, paid.pk)
+        self.assertTrue(suscription.grants_access())
+        self._refund('per-1', suscription)
+        suscription.refresh_from_db()
+        paid.refresh_from_db()
+        self.assertEqual(paid.status, Payment.Status.REFUNDED)
+        #end_date retrocede a la fecha del cobro (ya pasada): sin acceso.
+        self.assertFalse(suscription.grants_access())
+        self.assertIsNone(suscription.period_payment_id)
+
+    def test_refund_of_superseded_payment_keeps_access(self):
+        suscription     =   _make_suscription(auto_renew = False, preapproval_id = None)
+        old             =   CreatePaymentQuery(
+            {'user': suscription.user, 'suscription': suscription, 'payment_id': 'old-1'},
+            mp_payment = {
+                'id': 'old-1', 'external_reference': str(suscription.id),
+                'transaction_amount': '1000', 'currency_id': 'ARS',
+                'status': 'approved', 'live_mode': True,
+                'date_approved': (timezone.now() - timedelta(days = 40)).isoformat(),
+            })
+        new             =   CreatePaymentQuery(
+            {'user': suscription.user, 'suscription': suscription, 'payment_id': 'new-1'},
+            mp_payment = {
+                'id': 'new-1', 'external_reference': str(suscription.id),
+                'transaction_amount': '1000', 'currency_id': 'ARS',
+                'status': 'approved', 'live_mode': True,
+                'date_approved': (timezone.now() - timedelta(days = 2)).isoformat(),
+            })
+        suscription.refresh_from_db()
+        self.assertEqual(suscription.period_payment_id, new.pk)
+        end_date        =   suscription.end_date
+        #El refund del pago VIEJO (período ya superado por el nuevo) no
+        #puede revocar el acceso del período vigente.
+        self._refund('old-1', suscription)
+        suscription.refresh_from_db()
+        self.assertEqual(suscription.end_date, end_date)
+        self.assertTrue(suscription.grants_access())
+
+    def test_refund_of_prorated_upgrade_keeps_period(self):
+        #El prorrateo no abre período: period_payment_id sigue apuntando al
+        #pago original — su refund no puede tumbar el acceso.
+        new_plan        =   SuscriptionPlan.objects.create(name = 'Plan ecommerce', price = 2000)
+        suscription     =   _make_suscription(auto_renew = False, preapproval_id = None)
+        base            =   CreatePaymentQuery(
+            {'user': suscription.user, 'suscription': suscription, 'payment_id': 'base-1'},
+            mp_payment = {
+                'id': 'base-1', 'external_reference': str(suscription.id),
+                'transaction_amount': '1000', 'currency_id': 'ARS',
+                'status': 'approved', 'live_mode': True,
+                'date_approved': timezone.now().isoformat(),
+            })
+        suscription.pending_plan_suscription    =   new_plan
+        suscription.pending_charge              =   666.67
+        suscription.save(update_fields = ['pending_plan_suscription', 'pending_charge'])
+        suscription.refresh_from_db()
+        prorated        =   CreatePaymentQuery(
+            {'user': suscription.user, 'suscription': suscription, 'payment_id': 'pro-1'},
+            mp_payment = {
+                'id': 'pro-1', 'external_reference': str(suscription.id),
+                'transaction_amount': '666.67', 'currency_id': 'ARS',
+                'status': 'approved', 'live_mode': True,
+                'date_approved': timezone.now().isoformat(),
+            })
+        suscription.refresh_from_db()
+        self.assertEqual(suscription.plan_suscription, new_plan)
+        self.assertEqual(suscription.period_payment_id, base.pk)
+        end_date        =   suscription.end_date
+        self._refund('pro-1', suscription)
+        suscription.refresh_from_db()
+        self.assertEqual(suscription.end_date, end_date)
+        self.assertTrue(suscription.grants_access())

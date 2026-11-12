@@ -64,6 +64,8 @@ def RedeemCouponQuery(profile, code : str) -> tuple:
         suscription.auto_renew                  =   False
         suscription.preapproval_id              =   None
         suscription.cancelled_at                =   None
+        #El cupón abre un período sin cobro: ningún Payment puede revocarlo.
+        suscription.period_payment_id           =   None
         suscription.save()
         CouponRedemption.objects.create(coupon = coupon, user = profile, suscription = suscription)
     logger.info('Cupón canjeado: coupon=%s user=%s', coupon.code, profile.pk)

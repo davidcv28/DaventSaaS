@@ -92,6 +92,8 @@ class SuscriptionViewSet(SuscriptionBaseViewSet):
         suscription.status                      =   Suscription.STATUS_ACTIVE
         suscription.start_date                  =   now
         suscription.end_date                    =   now + timedelta(days = 30)
+        #Período cortesía: ningún Payment puede revocarlo.
+        suscription.period_payment_id           =   None
         suscription.save()
         #Débito MP vivo: el próximo cobro tiene que salir al plan asignado.
         #Sin realineo, MP seguía debitando el monto del plan viejo y cada
