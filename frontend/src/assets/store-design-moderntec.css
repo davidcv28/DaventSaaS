@@ -1429,7 +1429,7 @@
 .store-page[data-design='moderntec'][data-tracking='tracking-minimal'] .ec-track-title {
   font-family: var(--st-f-display-family, 'Outfit', 'Space Grotesk', system-ui, sans-serif);
   font-weight: 700;
-  font-size: clamp(26px, 3.4vw, 38px);
+  font-size: clamp(30px, 4vw, 44px);
   letter-spacing: -.03em;
   line-height: 1.05;
 }
@@ -1451,7 +1451,7 @@
 }
 .store-page[data-design='moderntec'][data-tracking='tracking-minimal'] .ec-track-h2 {
   font-family: var(--st-f-eyebrow-family, 'JetBrains Mono', ui-monospace, monospace);
-  font-size: 12px; font-weight: 700;
+  font-size: 13px; font-weight: 700;
   letter-spacing: .16em; text-transform: uppercase;
   color: var(--sp-muted, inherit);
 }
@@ -1460,9 +1460,9 @@
 }
 .store-page[data-design='moderntec'][data-tracking='tracking-minimal'] .ec-track-status {
   border-radius: 7px;
-  padding: 7px 13px;
+  padding: 8px 14px;
   font-family: var(--st-f-eyebrow-family, 'JetBrains Mono', ui-monospace, monospace);
-  font-size: 12px; font-weight: 700;
+  font-size: 13px; font-weight: 700;
   letter-spacing: .12em; text-transform: uppercase;
 }
 .store-page[data-design='moderntec'][data-tracking='tracking-minimal'] .ec-track-exp {
@@ -1473,7 +1473,9 @@
   font-family: var(--st-f-body-family, 'Inter', system-ui, sans-serif);
   font-size: 14px;
 }
-/* Stepper → barra de progreso: una línea fina con marcas por etapa. */
+/* Stepper → riel de progreso con nodos de icono: línea fina arriba, casilla
+   con check (cumplido) o número (pendiente) debajo. El paso actual lleva
+   un anillo que pulsa y su tramo de riel corre un brillo en loop. */
 .store-page[data-design='moderntec'][data-tracking='tracking-minimal'] .ec-stepper {
   display: flex;
   gap: 0;
@@ -1482,32 +1484,63 @@
 .store-page[data-design='moderntec'][data-tracking='tracking-minimal'] .ec-step {
   flex: 1 1 0;
   display: flex; flex-direction: column; align-items: flex-start;
-  gap: 8px;
+  gap: 9px;
   min-width: 0;
   position: relative;
-  padding-top: 14px;
+  padding-top: 18px;
 }
 .store-page[data-design='moderntec'][data-tracking='tracking-minimal'] .ec-step::before {
   content: '';
   position: absolute;
   top: 0; left: 0; right: 0;
-  height: 2px;
+  height: 3px; border-radius: 3px;
   background: var(--sp-line, rgba(255,255,255,.14));
 }
 .store-page[data-design='moderntec'][data-tracking='tracking-minimal'] .ec-step.is-done::before {
   background: var(--sp-success, #34E0A1);
 }
 .store-page[data-design='moderntec'][data-tracking='tracking-minimal'] .ec-step.is-current::before {
-  background: var(--store-accent, #3dd6ff);
+  background: linear-gradient(90deg,
+    var(--store-accent, #3dd6ff) 0%,
+    color-mix(in srgb, var(--store-accent, #3dd6ff) 40%, #fff) 50%,
+    var(--store-accent, #3dd6ff) 100%);
+  background-size: 200% 100%;
+  animation: mt-step-shine 2.2s linear infinite;
+}
+@keyframes mt-step-shine {
+  from { background-position: 200% 0; }
+  to { background-position: 0 0; }
 }
 .store-page[data-design='moderntec'][data-tracking='tracking-minimal'] .ec-step::after { display: none; }
 .store-page[data-design='moderntec'][data-tracking='tracking-minimal'] .ec-step-dot {
-  display: none;
+  display: grid; place-items: center;
+  width: 32px; height: 32px;
+  border-radius: 9px;
+  border: 2px solid var(--sp-line, rgba(255,255,255,.16));
+  background: color-mix(in srgb, var(--sp-card, #fff) 5%, transparent);
+  font-family: var(--st-f-eyebrow-family, 'JetBrains Mono', ui-monospace, monospace);
+  font-size: 12px; font-weight: 700;
+  color: var(--sp-muted, inherit);
+}
+.store-page[data-design='moderntec'][data-tracking='tracking-minimal'] .ec-step.is-done .ec-step-dot {
+  border-color: var(--sp-success, #34E0A1);
+  background: var(--sp-success, #34E0A1);
+  color: #08110d;
+}
+.store-page[data-design='moderntec'][data-tracking='tracking-minimal'] .ec-step.is-current .ec-step-dot {
+  border-color: var(--store-accent, #3dd6ff);
+  color: var(--store-accent, #3dd6ff);
+  background: color-mix(in srgb, var(--store-accent, #3dd6ff) 12%, transparent);
+  animation: mt-step-pulse 2.2s ease-in-out infinite;
+}
+@keyframes mt-step-pulse {
+  0%, 100% { box-shadow: 0 0 0 0 color-mix(in srgb, var(--store-accent, #3dd6ff) 45%, transparent); }
+  50% { box-shadow: 0 0 0 8px transparent; }
 }
 .store-page[data-design='moderntec'][data-tracking='tracking-minimal'] .ec-step-label {
   font-family: var(--st-f-eyebrow-family, 'JetBrains Mono', ui-monospace, monospace);
-  font-size: 10.5px; font-weight: 600;
-  letter-spacing: .12em; text-transform: uppercase;
+  font-size: 11.5px; font-weight: 600;
+  letter-spacing: .11em; text-transform: uppercase;
   text-align: left;
   color: var(--sp-muted, inherit);
 }
@@ -1517,16 +1550,19 @@
 }
 .store-page[data-design='moderntec'][data-tracking='tracking-minimal'] .ec-track-step-date {
   font-family: var(--st-f-eyebrow-family, 'JetBrains Mono', ui-monospace, monospace);
-  font-size: 10.5px; letter-spacing: .06em;
+  font-size: 11px; letter-spacing: .05em;
 }
 .store-page[data-design='moderntec'][data-tracking='tracking-minimal'] .ec-track-chips {
   display: flex; flex-wrap: wrap; gap: 6px;
 }
 .store-page[data-design='moderntec'][data-tracking='tracking-minimal'] .ec-track-chip {
-  border-radius: 6px;
+  border-radius: 7px;
   font-family: var(--st-f-eyebrow-family, 'JetBrains Mono', ui-monospace, monospace);
-  font-size: 10.5px; font-weight: 600;
-  letter-spacing: .1em; text-transform: uppercase;
+  font-size: 11px; font-weight: 600;
+  letter-spacing: .09em; text-transform: uppercase;
+}
+.store-page[data-design='moderntec'][data-tracking='tracking-minimal'] .ec-track-chip svg {
+  color: var(--store-accent, #3dd6ff);
 }
 .store-page[data-design='moderntec'][data-tracking='tracking-minimal'] .ec-timeline {
   border-left: 1px solid var(--sp-line, rgba(255,255,255,.14));
@@ -1540,7 +1576,7 @@
 }
 .store-page[data-design='moderntec'][data-tracking='tracking-minimal'] .ec-tl-date {
   font-family: var(--st-f-eyebrow-family, 'JetBrains Mono', ui-monospace, monospace);
-  font-size: 10.5px; letter-spacing: .08em; text-transform: uppercase;
+  font-size: 11px; letter-spacing: .08em; text-transform: uppercase;
 }
 .store-page[data-design='moderntec'][data-tracking='tracking-minimal'] .ec-receipt {
   border-radius: 8px;
@@ -1557,11 +1593,15 @@
   .store-page[data-design='moderntec'][data-tracking='tracking-minimal'] .ec-track-card {
     padding: 16px 14px;
   }
+  .store-page[data-design='moderntec'][data-tracking='tracking-minimal'] .ec-step { padding-top: 14px; }
+  .store-page[data-design='moderntec'][data-tracking='tracking-minimal'] .ec-step-dot {
+    width: 28px; height: 28px; border-radius: 8px; font-size: 11px;
+  }
   .store-page[data-design='moderntec'][data-tracking='tracking-minimal'] .ec-step-label {
-    font-size: 9px; letter-spacing: .08em;
+    font-size: 10px; letter-spacing: .07em;
   }
   .store-page[data-design='moderntec'][data-tracking='tracking-minimal'] .ec-track-step-date {
-    font-size: 9.5px;
+    font-size: 10px;
   }
 }
 
