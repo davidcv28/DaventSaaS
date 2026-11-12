@@ -389,6 +389,27 @@
   outline: 2px solid var(--dz-accent-text);
   outline-offset: 2px;
 }
+[data-design='silicio'] .ec-auth .ecaf-switch {
+  border-radius: 6px;
+  border-color: var(--dz-line-strong);
+  background: var(--dz-surface-2);
+}
+[data-design='silicio'] .ec-auth .ecaf-switch-pill { border-radius: 5px; background: var(--dz-accent); }
+[data-design='silicio'] .ec-auth .ecaf-switch-btn {
+  border-radius: 5px;
+  font-family: var(--dz-mono);
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: .12em;
+  text-transform: uppercase;
+  color: var(--dz-muted);
+}
+[data-design='silicio'] .ec-auth .ecaf-switch-btn.is-on { color: var(--dz-accent-ink); }
+[data-design='silicio'] .ec-auth .ecaf-switch-btn:hover:not(.is-on) { color: var(--dz-accent-text); }
+[data-design='silicio'] .ec-auth .ecaf-switch-btn:focus-visible {
+  outline: 2px solid var(--dz-accent-text);
+  outline-offset: 2px;
+}
 
 /* ==========================================================================
    CUENTA — consola con árbol de sistema

@@ -245,6 +245,16 @@
 [data-design='guardia'] .ec-auth .ecaf .ecaf-error{
   border-radius:0; color:var(--dz-ink);
 }
+[data-design='guardia'] .ec-auth .ecaf .ecaf-switch{
+  border-radius:0;border-color:var(--dz-line-2);background:var(--dz-panel-2);
+}
+[data-design='guardia'] .ec-auth .ecaf .ecaf-switch-pill{border-radius:0}
+[data-design='guardia'] .ec-auth .ecaf .ecaf-switch-btn{
+  border-radius:0;font:500 9.5px/1 var(--dz-mono);letter-spacing:.18em;text-transform:uppercase;color:var(--dz-muted);
+}
+[data-design='guardia'] .ec-auth .ecaf .ecaf-switch-btn.is-on{color:var(--sp-on-band,#fff)}
+[data-design='guardia'] .ec-auth .ecaf .ecaf-switch-btn:hover:not(.is-on){color:var(--dz-accent-text)}
+[data-design='guardia'] .ec-auth .ecaf .ecaf-switch-btn:focus-visible{outline:2px solid var(--dz-accent);outline-offset:2px}
 
 /* ==========================================================================
    2. CUENTA — sala de control (contenido a la izquierda, riel a la derecha)

@@ -265,6 +265,17 @@
 [data-design='olivium'] .ec-auth .ecaf .ecaf-pass-toggle:hover{
   color:var(--dz-accent-text); background:var(--dz-accent-soft);
 }
+[data-design='olivium'] .ec-auth .ecaf .ecaf-switch{
+  border-radius:var(--dz-r-2);border-color:var(--dz-line);background:var(--dz-accent-soft);
+}
+[data-design='olivium'] .ec-auth .ecaf .ecaf-switch-pill{border-radius:var(--dz-r-2)}
+[data-design='olivium'] .ec-auth .ecaf .ecaf-switch-btn{
+  border-radius:var(--dz-r-2);font:600 10px/1 var(--dz-mono);letter-spacing:.14em;text-transform:uppercase;
+  color:var(--dz-muted);
+}
+[data-design='olivium'] .ec-auth .ecaf .ecaf-switch-btn.is-on{color:var(--sp-on-band,#fff)}
+[data-design='olivium'] .ec-auth .ecaf .ecaf-switch-btn:hover:not(.is-on){color:var(--dz-accent-text)}
+[data-design='olivium'] .ec-auth .ecaf .ecaf-switch-btn:focus-visible{outline:2px solid var(--dz-accent);outline-offset:2px}
 
 /* ==========================================================================
    2. CUENTA — libro mayor

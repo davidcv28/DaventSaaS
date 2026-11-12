@@ -458,7 +458,11 @@ html[data-ds-surface="landing"] header.top:not(.solid):not(.menu-open){
   font-weight:700;font-size:15px;line-height:1.28;text-transform:uppercase;
   letter-spacing:.005em;overflow-wrap:anywhere;
 }
-.ds-product-desc{display:none}
+.ds-product-desc{
+  margin-top:5px;font-size:11.5px;line-height:1.45;color:var(--mut);
+  display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;
+}
+.ds-product-desc:empty{display:none}
 .ds-stock{
   grid-area:stock;justify-self:start;align-self:center;white-space:nowrap;
   display:inline-flex;align-items:center;gap:6px;padding:0 16px 14px;
@@ -1027,10 +1031,17 @@ html[data-motion="on"] .rv.in{
   .pdp-media img{aspect-ratio:1/1}
   .word-ribbon{opacity:.1}
 }
+@media(max-width:560px){
+  .top-inner{gap:8px}
+  .brand .badge{width:30px;height:30px;font-size:12px}
+  .brand .brand-txt{max-width:30vw;font-size:14px}
+  .burger,.top-inner .dsx-account,.top-inner .dsx-cart{width:36px;height:36px}
+  .top-inner .ds-theme-toggle{width:36px!important;height:36px!important}
+}
 @media(max-width:400px){
-  .ds-stock{display:none}
-  .ds-product-price{grid-column:1/-1;justify-self:start;text-align:left}
-  .ds-product-link{grid-template-areas:"img img" "cat cat" "copy copy" "price price"}
+  .ds-product-price{grid-column:1/-1;justify-self:start;justify-content:flex-start;text-align:left}
+  .ds-product-price > *{text-align:left}
+  .ds-product-link{grid-template-areas:"img img" "cat cat" "copy copy" "stock stock" "price price"}
 }
 
 /* ==========================================================================

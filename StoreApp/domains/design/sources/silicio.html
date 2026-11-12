@@ -208,6 +208,7 @@ html[data-ds-theme="dark"] .btn-ghost:hover{border-color:var(--volt);color:var(-
   border-bottom:1px solid var(--line);
 }
 .brand{display:flex;align-items:center;gap:12px;min-width:0}
+.brand>span{min-width:0;display:flex;flex-direction:column}
 .brand-mark{
   flex:none;width:34px;height:34px;display:grid;place-items:center;position:relative;
   font:400 17px/1 var(--display);letter-spacing:.02em;color:var(--band-ink);
@@ -217,7 +218,7 @@ html[data-ds-theme="dark"] .btn-ghost:hover{border-color:var(--volt);color:var(-
   background:var(--volt);border:2px solid var(--paper)}
 html[data-ds-theme="light"] .brand-mark::after{background:var(--accent)}
 .brand-mark img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
-.brand-word{font:400 clamp(19px,2vw,23px)/1 var(--display);letter-spacing:.02em;text-transform:uppercase;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.brand-word{display:block;max-width:100%;font:400 clamp(19px,2vw,23px)/1 var(--display);letter-spacing:.02em;text-transform:uppercase;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .brand-meta{display:block;font:500 9.5px/1 var(--mono);letter-spacing:.22em;text-transform:uppercase;color:var(--muted);margin-top:4px}
 .nav{display:flex;gap:4px;margin-left:auto}
 .nav a{
@@ -237,7 +238,7 @@ html[data-ds-theme="dark"] .nav a::after{background:var(--volt)}
 .m-open-btn svg{width:20px;height:20px;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round}
 /* Cuenta y tema que inyecta el puente al final de .top-inner: sin margen
    auto propio para no repintar la simetría del nav (que ya lleva el suyo). */
-.top-inner .dsx-account,.top-inner .ds-theme-toggle{margin-inline-start:0}
+.top-inner .dsx-account,.top-inner .dsx-cart,.top-inner .ds-theme-toggle{margin-inline-start:0}
 .top-inner .dsx-account{
   display:inline-flex;align-items:center;gap:8px;flex:none;
   min-height:42px;padding:0 16px;border:1px solid var(--line);border-radius:var(--r-btn);
@@ -247,6 +248,16 @@ html[data-ds-theme="dark"] .nav a::after{background:var(--volt)}
 .top-inner .dsx-account:hover{border-color:var(--accent);color:var(--accent-deep);
   background:var(--accent-soft);transform:translateY(-2px)}
 html[data-ds-theme="dark"] .top-inner .dsx-account:hover{color:var(--volt);border-color:color-mix(in srgb,var(--volt) 50%,var(--line))}
+.top-inner .dsx-cart{
+  position:relative;display:inline-flex;align-items:center;justify-content:center;flex:none;
+  width:42px;height:42px;min-height:0;padding:0;border:1px solid var(--line);border-radius:var(--r-btn);
+  background:transparent;color:var(--ink);cursor:pointer;opacity:.9;
+  transition:border-color .18s,color .18s,background .18s,transform .18s var(--ease)}
+.top-inner .dsx-cart:hover{border-color:var(--accent);color:var(--accent-deep);
+  background:var(--accent-soft);transform:translateY(-2px)}
+html[data-ds-theme="dark"] .top-inner .dsx-cart:hover{color:var(--volt);border-color:color-mix(in srgb,var(--volt) 50%,var(--line))}
+.top-inner .dsx-cart svg{width:17px;height:17px}
+.top-inner .dsx-cart .dsx-cart-badge{top:-7px;right:-7px}
 @media(max-width:960px){.nav,.top-cta{display:none}.m-open-btn{display:grid}}
 .head-progress{position:absolute;left:0;right:0;bottom:-1px;height:2px;background:transparent}
 .head-progress i{display:block;height:100%;width:0;background:var(--accent)}
@@ -684,13 +695,17 @@ html[data-ds-theme="dark"] .ds-product-price[data-off]::before{background:var(--
 .ds-product-old{font:400 12px/1 var(--mono);color:var(--muted);text-decoration:line-through}
 .ds-product-amount{font-family:var(--display);font-size:19px;letter-spacing:.02em;font-variant-numeric:tabular-nums}
 .ds-campaign-label{height:20px;width:auto;object-fit:contain}
-/* CTA de compra que inyecta el puente: cierra la ficha dentro del marco,
-   con la misma retícula de 16px que el precio. La tarjeta pasa a flex para
-   que el enlace ceda alto al botón sin despegar el precio del nombre. */
+/* El sticker de campaña y el chip de categoría comparten la esquina sup.
+   izq.: con campaña presente la categoría baja un peldaño para no montarse. */
+.ds-product:has(.ds-campaign-label) .ds-product-cat{top:42px}
+/* CTA de compra que inyecta el puente: viaja en .dsx-buy-wrap (hermano del
+   enlace) y cierra la ficha dentro del marco, con la retícula de 16px del
+   precio. La tarjeta pasa a flex para que el enlace ceda alto al botón. */
 .ds-product{display:flex;flex-direction:column}
 .ds-product-link{height:auto;flex:1 1 auto;min-height:0}
-.article.ds-product>.dsx-buy{
-  width:auto;min-width:0;margin:0 16px 16px;padding:0;
+.ds-product>.dsx-buy-wrap{margin:0 16px 16px}
+.ds-product>.dsx-buy-wrap>.dsx-buy{
+  width:100%;min-width:0;margin:0;padding:0;
   display:flex;align-items:center;justify-content:center;gap:8px;
   min-height:44px;border:0;cursor:pointer;
   clip-path:polygon(0 0,calc(100% - 10px) 0,100% 10px,100% 100%,0 100%);
@@ -698,11 +713,12 @@ html[data-ds-theme="dark"] .ds-product-price[data-off]::before{background:var(--
   color:var(--on-accent);
   font:600 11.5px/1 var(--mono);letter-spacing:.16em;text-transform:uppercase;
   transition:transform .18s var(--ease),box-shadow .25s var(--ease),filter .15s ease}
-.article.ds-product>.dsx-buy:hover{transform:translateY(-2px);filter:brightness(1.06);
+.ds-product>.dsx-buy-wrap>.dsx-buy:hover{transform:translateY(-2px);filter:brightness(1.06);
   box-shadow:0 0 0 1px color-mix(in srgb,var(--accent) 55%,transparent),
     0 14px 30px -16px color-mix(in srgb,var(--accent) 65%,transparent)}
 /* En la fila densa el CTA se compacta a la derecha, como el precio. */
-[data-ds-view-mode="list"] .article.ds-product>.dsx-buy{
+.grid-products[data-ds-view-mode="list"]>.ds-product>.dsx-buy-wrap{margin:0}
+.grid-products[data-ds-view-mode="list"]>.ds-product>.dsx-buy-wrap>.dsx-buy{
   width:fit-content;min-width:0;margin:0 0 14px auto;padding:0 24px;min-height:42px}
 .ds-empty{
   position:relative;border:1px dashed var(--line);padding:44px 22px 34px;text-align:center;
@@ -1749,6 +1765,16 @@ html[data-ds-theme="dark"] .foot-col a:hover{color:var(--volt)}
   .cat-count{margin-left:0}
   .cat-view,.cat-sort{align-self:flex-start}
   .cta-inner{flex-direction:column;align-items:flex-start}
+}
+@media(max-width:560px){
+  .top-inner{gap:12px}
+  .brand-mark{width:30px;height:30px;font-size:15px}
+  .brand-meta{display:none}
+  .brand-word{font-size:16px}
+  .m-open-btn,.top-inner .dsx-account,.top-inner .dsx-cart{width:38px;height:38px;min-height:0}
+  .top-inner .dsx-account{padding:0;justify-content:center}
+  .top-inner .dsx-account [data-dsx-account-label]{display:none}
+  .top-inner .ds-theme-toggle{width:38px!important;height:38px!important}
 }
 @media(max-width:420px){
   .grid-products{grid-template-columns:minmax(0,1fr)}

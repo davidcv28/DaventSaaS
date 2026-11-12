@@ -544,7 +544,11 @@ html[data-ds-theme="dark"] .grid-products .ds-product-cat,html[data-ds-style="ol
   color:var(--ink);padding:6px 10px;border-radius:999px;
 }
 .grid-products .ds-stock i{width:6px;height:6px;border-radius:50%;background:var(--ok)}
-.grid-products .ds-stock{display:none}
+.grid-products .ds-stock.is-out{color:var(--danger)}
+.grid-products .ds-stock.is-out i{background:currentColor}
+/* La etiqueta de campaña ocupa la misma esquina: el stock baja un peldaño
+   solo cuando hay sticker para no montar las dos marcas una sobre otra. */
+.grid-products .ds-product-link:has(.ds-campaign-label) .ds-stock{top:44px}
 .grid-products .ds-product-price{
   font-variant-numeric:tabular-nums;
   grid-area:price;margin:0 18px;padding:12px 0 15px;border-top:1px dashed var(--line);
@@ -1339,6 +1343,10 @@ html[data-ds-theme="dark"] .services-list .ds-service::before,html[data-ds-style
 @media (max-width:640px){
   .brand-year{display:none}
   .brand-meta{letter-spacing:.18em;font-size:8.5px}
+  .head-inner{gap:14px}
+  .brand-mark{width:38px;height:38px}
+  .brand-txt{display:flex;flex-direction:column;min-width:0}
+  .brand-word{display:block;max-width:100%;overflow:hidden;text-overflow:ellipsis;font-size:19px}
   .dest-grid,.plans{grid-template-columns:minmax(0,1fr)}
   .grid-products{grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:12px}
   .grid-products[data-ds-view-mode="list"] .ds-product-img{width:110px}
@@ -1356,6 +1364,14 @@ html[data-ds-theme="dark"] .services-list .ds-service::before,html[data-ds-style
   .hero-meta li{padding:0;border-left:0;font-size:9.5px}
   .foot-top{grid-template-columns:minmax(0,1fr)}
   .cta-inner{padding-block:52px}
+}
+@media (max-width:560px){
+  .head-inner{gap:10px}
+  .brand-mark{width:34px;height:34px;font-size:16px}
+  .brand-meta{display:none}
+  .brand-word{font-size:17px}
+  .head-inner .dsx-account,.head-inner .dsx-cart{width:38px;height:38px}
+  .head-inner .ds-theme-toggle{width:38px;height:38px}
 }
 @media (max-width:420px){
   .grid-products{grid-template-columns:minmax(0,1fr)}

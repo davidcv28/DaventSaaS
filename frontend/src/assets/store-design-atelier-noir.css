@@ -269,6 +269,16 @@
 [data-design='atelier-noir'] .ec-auth .ecaf .ecaf-pass-toggle:hover{
   color:var(--dz-accent-text); background:var(--dz-accent-soft);
 }
+[data-design='atelier-noir'] .ec-auth .ecaf .ecaf-switch{
+  border-radius:0;border-color:var(--dz-line-strong);background:color-mix(in srgb,var(--dz-ink) 4%,transparent);
+}
+[data-design='atelier-noir'] .ec-auth .ecaf .ecaf-switch-pill{border-radius:0;background:var(--dz-band)}
+[data-design='atelier-noir'] .ec-auth .ecaf .ecaf-switch-btn{
+  border-radius:0;font:500 9.5px/1 var(--dz-mono);letter-spacing:.2em;text-transform:uppercase;color:var(--dz-muted);
+}
+[data-design='atelier-noir'] .ec-auth .ecaf .ecaf-switch-btn.is-on{color:var(--dz-band-ink)}
+[data-design='atelier-noir'] .ec-auth .ecaf .ecaf-switch-btn:hover:not(.is-on){color:var(--dz-ink)}
+[data-design='atelier-noir'] .ec-auth .ecaf .ecaf-switch-btn:focus-visible{outline:2px solid var(--dz-accent);outline-offset:2px}
 
 /* ==========================================================================
    2. CUENTA — mesa de corte

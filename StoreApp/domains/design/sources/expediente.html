@@ -436,7 +436,13 @@ html[data-ds-theme="dark"] .grid-products .ds-product-link::after{background:lin
   font:600 10px/1 var(--mono);letter-spacing:.1em;color:var(--on-stamp);
   background:var(--stamp);padding:5px 8px;transform:rotate(-1.5deg);
 }
-.ds-campaign-label{position:absolute;right:0;top:-8px;height:22px;width:auto;max-width:60%;object-fit:contain}
+/* La etiqueta de campaña se ancla a la ficha (no a la fila de precio): con
+   el precio estático el sticker cae bajo el folio F-xx, sobre la imagen. */
+.grid-products .ds-product-price{position:static}
+.grid-products .ds-campaign-label{
+  position:absolute;top:44px;right:14px;left:auto;height:22px;width:auto;max-width:56%;
+  object-fit:contain;transform:rotate(2deg);
+}
 
 /* ---------- E-commerce (CTA inyectado por el puente) ----------
    La ficha visual es .ds-product-link; el botón viaja en .dsx-buy-wrap
@@ -1003,7 +1009,8 @@ html[data-ds-commerce="1"] [data-surface="product"] .pdp-buy > .dsx-buy-now:focu
 .grid-products[data-ds-view-mode="list"] .ds-product-link::before{display:none}
 .grid-products[data-ds-view-mode="list"] .ds-product-img{height:100%;aspect-ratio:auto;min-height:130px}
 .grid-products[data-ds-view-mode="list"] .ds-product-name{font-size:20px}
-.grid-products[data-ds-view-mode="list"] .ds-product-price{justify-content:flex-end}
+.grid-products[data-ds-view-mode="list"] .ds-product-price{position:relative;justify-content:flex-end}
+.grid-products[data-ds-view-mode="list"] .ds-campaign-label{top:-8px;right:0;left:auto}
 .ds-empty{
   border:1.5px dashed var(--line);padding:clamp(40px,6vw,70px);text-align:center;
   font-size:12.5px;color:var(--muted);background:var(--surface);

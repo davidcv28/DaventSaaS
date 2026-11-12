@@ -341,14 +341,26 @@ body.m-open .m-sheet{transform:none}
   content:"SIN FOTO";font:500 10px/1 var(--mono);letter-spacing:.22em;color:var(--muted);
   border:1px dashed var(--line);padding:10px 12px;
 }
-.ds-product-copy{position:absolute;left:20px;right:120px;bottom:20px;z-index:2;display:block}
+.ds-product-copy{position:absolute;left:20px;right:120px;bottom:20px;z-index:2;display:grid;gap:5px;align-content:end}
 .ds-product-name{
   font:400 24px/1.1 var(--display);letter-spacing:.04em;text-transform:uppercase;
   color:var(--band-ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
 }
 .ds-product:hover .ds-product-name{color:var(--accent-soft)}
-.ds-product-desc{display:none}
-.ds-product-cat{display:none}
+.ds-product-desc{
+  font:400 11px/1.4 var(--sans);color:color-mix(in srgb,var(--band-ink) 74%,transparent);
+  display:-webkit-box;-webkit-line-clamp:1;-webkit-box-orient:vertical;overflow:hidden;
+}
+.ds-product-desc:empty{display:none}
+/* Categoría y stock viajan como fichas sobre la foto: la categoría se corre
+   bajo la etiqueta de campaña cuando el descuento la trae. */
+.ds-product-cat{
+  position:absolute;top:14px;left:20px;z-index:3;margin:0;
+  font:500 9px/1 var(--mono);letter-spacing:.2em;text-transform:uppercase;
+  color:color-mix(in srgb,var(--band-ink) 72%,transparent);
+}
+.ds-product-link:has(.ds-campaign-label) .ds-product-cat{top:42px}
+.ds-product-cat:empty{display:none}
 .ds-product-price{
   position:absolute;inset:0;z-index:2;margin:0;padding:0 20px 24px;border:0;
   display:flex;flex-direction:column;align-items:flex-end;justify-content:flex-end;gap:3px;
@@ -365,7 +377,17 @@ body.m-open .m-sheet{transform:none}
   position:absolute;top:14px;left:20px;z-index:3;height:20px;width:auto;max-width:110px;
   border-radius:1px;box-shadow:0 6px 14px -8px rgba(0,0,0,.6);
 }
-.ds-stock{display:none}
+.ds-stock{
+  position:absolute;left:20px;bottom:74px;z-index:3;
+  display:inline-flex;align-items:center;gap:6px;white-space:nowrap;
+  font:500 9px/1 var(--mono);letter-spacing:.16em;text-transform:uppercase;
+  color:color-mix(in srgb,var(--band-ink) 72%,transparent);
+}
+.ds-stock i{width:6px;height:6px;border-radius:50%;background:var(--accent-soft);flex:none}
+.ds-stock.is-out{color:var(--ds-danger,#FF8A8A)}
+.ds-stock.is-out i{background:currentColor}
+/* La vitrina editorial sigue siendo foto + CTA: no le metemos fichas. */
+.sec.featured .ds-product-cat,.sec.featured .ds-stock{display:none}
 .ds-empty{
   grid-column:1/-1;padding:36px 20px;text-align:center;color:var(--muted);
   border:1px dashed var(--line);font:500 12.5px/1.7 var(--mono);letter-spacing:.1em;text-transform:uppercase;
@@ -698,13 +720,16 @@ body.m-open .m-sheet{transform:none}
 .grid-products[data-ds-view-mode="list"] .ds-product{border-top:1px solid var(--line);padding:14px 0}
 .grid-products[data-ds-view-mode="list"] .ds-product-link{
   display:grid;grid-template-columns:130px minmax(0,1fr) 120px;gap:6px 18px;align-items:center;overflow:visible;
-  grid-template-areas:"img cat price" "img copy price";
+  grid-template-areas:"img cat price" "img copy price" "img stock price";
 }
 .grid-products[data-ds-view-mode="list"] .ds-product-link::before{display:none}
 .grid-products[data-ds-view-mode="list"] .ds-product-img{grid-area:img;width:130px;height:162px;aspect-ratio:auto;align-self:stretch}
-.grid-products[data-ds-view-mode="list"] .ds-product-cat{grid-area:cat;align-self:end;display:block;margin:0;order:0}
+.grid-products[data-ds-view-mode="list"] .ds-product-cat{grid-area:cat;align-self:end;display:block;position:static;margin:0;order:0}
+.grid-products[data-ds-view-mode="list"] .ds-stock{grid-area:stock;position:static;display:inline-flex;align-self:start;margin:0;color:var(--muted)}
+.grid-products[data-ds-view-mode="list"] .ds-stock i{background:var(--accent)}
 .grid-products[data-ds-view-mode="list"] .ds-product-copy{grid-area:copy;position:static;right:auto;bottom:auto;align-self:start;margin:0;order:0;display:grid;gap:4px}
 .grid-products[data-ds-view-mode="list"] .ds-product-name{font:400 24px/1.1 var(--display);white-space:normal;text-overflow:clip}
+.grid-products[data-ds-view-mode="list"] .ds-product-desc{-webkit-line-clamp:2}
 .grid-products[data-ds-view-mode="list"] .ds-product-price{grid-area:price;position:static;inset:auto;margin:0;padding:0;border:0;flex-direction:row;align-items:baseline;justify-content:flex-end;min-width:110px;order:0}
 .grid-products[data-ds-view-mode="list"] .ds-product-old{order:0;font-size:11px}
 .grid-products[data-ds-view-mode="list"] .ds-product-price::after{display:none}
@@ -874,7 +899,8 @@ body.m-open .m-sheet{transform:none}
 @media (max-width:720px){
   :root{--head-h:88px}
   .top-inner{min-height:62px;gap:10px}
-  .brand-word{font-size:19px;max-width:48vw}
+  .brand-word{font-size:17px;max-width:38vw}
+  .brand-meta{display:none}
   .nav-wa{display:none}
   .hero{height:clamp(560px,100svh,780px);min-height:560px}
   .hero-inner{padding-top:calc(var(--head-h,88px) + 30px)}
@@ -911,8 +937,9 @@ body.m-open .m-sheet{transform:none}
   .cat-count{grid-column:1}
   .cat-view{grid-column:2;margin-left:0;justify-self:start}
   .cat-sort{grid-column:3;width:auto;justify-content:flex-end}
-  .grid-products[data-ds-view-mode="list"] .ds-product-link{grid-template-columns:96px minmax(0,1fr);grid-template-areas:"img cat" "img copy" "price price";gap:4px 12px}
+  .grid-products[data-ds-view-mode="list"] .ds-product-link{grid-template-columns:96px minmax(0,1fr);grid-template-areas:"img cat" "img copy" "img stock" "price price";gap:4px 12px}
   .grid-products[data-ds-view-mode="list"] .ds-product-img{width:96px;height:120px}
+  .grid-products[data-ds-view-mode="list"] .ds-stock{align-self:start}
   .grid-products[data-ds-view-mode="list"] .ds-product-price{justify-content:flex-start;margin-top:8px}
   .pdp-info h1{font-size:clamp(2rem,8.4vw,2.8rem)}
   .pdp-related h2{font-size:28px}
@@ -921,7 +948,11 @@ body.m-open .m-sheet{transform:none}
   .ds-faq-a{padding-left:30px}
 }
 @media (max-width:460px){
-  .brand-word{max-width:42vw;font-size:17px}
+  .top-inner{gap:8px}
+  .brand-word{max-width:34vw;font-size:16px}
+  .burger,.top-inner .dsx-account,.top-inner .dsx-cart{width:36px;height:36px;min-height:0;padding:0}
+  .top-inner .dsx-account [data-dsx-account-label]{display:none}
+  .top-inner .ds-theme-toggle{width:36px!important;height:36px!important}
   .hero{height:clamp(520px,100svh,720px);min-height:520px}
   .hero-title{font-size:clamp(2.2rem,12.4vw,3.2rem)}
   .hero-title em{font-size:.55em}
