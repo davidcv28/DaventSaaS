@@ -693,3 +693,422 @@
     animation-duration: .001ms !important;
   }
 }
+
+/* ==========================================================================
+   ARQUETIPOS — navbar 'announcement-rotator' · cuenta 'account-tabs-only' ·
+   seguimiento 'tracking-feed' (matriz docs/_tmp-nav-catalog.md).
+   ========================================================================== */
+
+/* ---------- NAV 'announcement-rotator' — filete de señal en movimiento ----
+   Fila utilitaria superior como ticker: una cinta de señal que corre bajo
+   el borde superior del header (misma firma que las marquesinas del
+   diseño). En móvil queda una línea igual de fina. */
+.store-page[data-design='impacto'][data-nav='announcement-rotator'] .sp-top {
+  border-bottom: 2px solid var(--dz-line-strong);
+}
+.store-page[data-design='impacto'][data-nav='announcement-rotator'] .sp-top::before {
+  content: "";
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 4px;
+  background: repeating-linear-gradient(90deg, var(--dz-accent) 0 18px, transparent 18px 36px);
+  animation: mi-rotator 1.1s linear infinite;
+  pointer-events: none;
+}
+@keyframes mi-rotator {
+  to { background-position: 36px 0; }
+}
+.store-page[data-design='impacto'][data-nav='announcement-rotator'] .sp-top .sp-brand,
+.store-page[data-design='impacto'][data-nav='announcement-rotator'] .sp-top .sp-name {
+  color: var(--dz-ink);
+}
+.store-page[data-design='impacto'][data-nav='announcement-rotator'] .sp-top .sp-name {
+  font-family: var(--dz-display);
+  font-weight: 400;
+  letter-spacing: .02em;
+  text-transform: uppercase;
+}
+.store-page[data-design='impacto'][data-nav='announcement-rotator'] .sp-top .sp-mono,
+.store-page[data-design='impacto'][data-nav='announcement-rotator'] .sp-top .sp-logo.sm {
+  border: 2px solid var(--dz-ink);
+  border-radius: var(--dz-radius);
+}
+.store-page[data-design='impacto'][data-nav='announcement-rotator'] .sp-top-links a {
+  font-weight: 700;
+  font-size: 11px;
+  letter-spacing: .1em;
+  text-transform: uppercase;
+  color: var(--dz-ink-2);
+  border-radius: var(--dz-radius);
+}
+.store-page[data-design='impacto'][data-nav='announcement-rotator'] .sp-top-links a:hover {
+  color: var(--dz-ink);
+  background: color-mix(in srgb, var(--dz-accent) 14%, transparent);
+}
+.store-page[data-design='impacto'][data-nav='announcement-rotator'] .sp-top-links a.router-link-exact-active {
+  background: var(--dz-accent);
+  color: var(--dz-accent-ink);
+}
+.store-page[data-design='impacto'][data-nav='announcement-rotator'] .sp-top .sp-icon-btn {
+  border: 1.5px solid var(--dz-line-strong);
+  border-radius: var(--dz-radius);
+  background: var(--dz-card);
+  color: var(--dz-ink-2);
+}
+.store-page[data-design='impacto'][data-nav='announcement-rotator'] .sp-top .sp-icon-btn:hover {
+  border-color: var(--dz-accent);
+  color: var(--dz-accent-text);
+  background: color-mix(in srgb, var(--dz-accent) 8%, var(--dz-card));
+}
+.store-page[data-design='impacto'][data-nav='announcement-rotator'] .sp-top .sp-burger {
+  border: 2px solid var(--dz-line-strong);
+  border-radius: var(--dz-radius);
+  background: var(--dz-card);
+  color: var(--dz-ink);
+}
+.store-page[data-design='impacto'][data-nav='announcement-rotator'] .sp-top-cta {
+  border-radius: var(--dz-radius);
+  border: 2px solid var(--dz-ink);
+  background: var(--dz-accent);
+  color: var(--dz-accent-ink);
+  box-shadow: 3px 3px 0 color-mix(in srgb, var(--dz-ink) 85%, transparent);
+}
+.store-page[data-design='impacto'][data-nav='announcement-rotator'] .sp-top-cta:hover {
+  transform: translate(1px, 1px);
+  box-shadow: 2px 2px 0 color-mix(in srgb, var(--dz-ink) 85%, transparent);
+}
+.store-page[data-design='impacto'][data-nav='announcement-rotator'] .sp-drawer.sp-navdrawer {
+  border-color: var(--dz-line-strong);
+  border-width: 2px;
+  border-radius: var(--dz-radius);
+}
+.store-page[data-design='impacto'][data-nav='announcement-rotator'] .sp-drawer.sp-navdrawer .sp-nav-item {
+  border-radius: var(--dz-radius);
+  color: var(--dz-ink-2);
+}
+.store-page[data-design='impacto'][data-nav='announcement-rotator'] .sp-drawer.sp-navdrawer .sp-nav-item:hover {
+  background: color-mix(in srgb, var(--dz-accent) 10%, transparent);
+  color: var(--dz-ink);
+}
+.store-page[data-design='impacto'][data-nav='announcement-rotator'] .sp-drawer.sp-navdrawer .sp-nav-item.active {
+  background: var(--dz-accent);
+  color: var(--dz-accent-ink);
+}
+.store-page[data-design='impacto'][data-nav='announcement-rotator'] .sp-shop-nav {
+  background: var(--dz-card);
+  border-bottom: 2px solid var(--dz-line-strong);
+}
+.store-page[data-design='impacto'][data-nav='announcement-rotator'] .sp-shop-nav-links a {
+  font-family: var(--dz-mono);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: .14em;
+  text-transform: uppercase;
+  color: var(--dz-muted);
+  border-radius: var(--dz-radius);
+}
+.store-page[data-design='impacto'][data-nav='announcement-rotator'] .sp-shop-nav-links a:hover {
+  color: var(--dz-ink);
+  background: color-mix(in srgb, var(--dz-accent) 12%, transparent);
+}
+.store-page[data-design='impacto'][data-nav='announcement-rotator'] .sp-shop-nav-links a.is-current {
+  color: var(--dz-ink);
+  background: var(--dz-accent);
+}
+.store-page[data-design='impacto'][data-nav='announcement-rotator'] .sp-top :is(a, button, input, summary):focus-visible,
+.store-page[data-design='impacto'][data-nav='announcement-rotator'] .sp-drawer.sp-navdrawer :is(a, button):focus-visible {
+  outline: 2px solid var(--dz-accent-text);
+  outline-offset: 2px;
+}
+
+/* ---------- CUENTA 'account-tabs-only' — el índice ES la navegación ------
+   Sin sidebar en escritorio: la identidad va en la cabecera compacta y
+   las tabs horizontales son la única navegación primaria (Anton, filetes
+   duros, subrayado de señal en la activa). */
+@media (min-width: 1024px) {
+  .store-page[data-design='impacto'][data-account='account-tabs-only'] .ec-account .acc-side {
+    display: none;
+  }
+  .store-page[data-design='impacto'][data-account='account-tabs-only'] .ec-account .acc-shell {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .store-page[data-design='impacto'][data-account='account-tabs-only'] .ec-account .acc-mhead {
+    display: grid;
+    grid-template-columns: 44px minmax(0, 1fr) 44px;
+    align-items: center;
+    gap: 12px;
+    padding: 14px 18px;
+    border: 2px solid var(--dz-line-strong);
+    border-radius: var(--dz-radius);
+    background: var(--dz-band);
+    color: var(--dz-on-band);
+  }
+  .store-page[data-design='impacto'][data-account='account-tabs-only'] .ec-account .acc-mhead .acc-tele {
+    color: color-mix(in srgb, var(--dz-on-band) 62%, transparent);
+  }
+  .store-page[data-design='impacto'][data-account='account-tabs-only'] .ec-account .acc-mhead .acc-avatar {
+    border-color: var(--dz-on-band);
+    background: transparent;
+    color: var(--dz-on-band);
+  }
+  .store-page[data-design='impacto'][data-account='account-tabs-only'] .ec-account .acc-mhead-meta strong {
+    color: var(--dz-on-band);
+  }
+  .store-page[data-design='impacto'][data-account='account-tabs-only'] .ec-account .acc-mhead-meta small {
+    color: color-mix(in srgb, var(--dz-on-band) 66%, transparent);
+  }
+  .store-page[data-design='impacto'][data-account='account-tabs-only'] .ec-account .acc-mhead-meta .acc-verify {
+    color: color-mix(in srgb, var(--dz-on-band) 80%, transparent);
+  }
+  .store-page[data-design='impacto'][data-account='account-tabs-only'] .ec-account .acc-mhead .acc-stats {
+    margin-top: 8px;
+  }
+  .store-page[data-design='impacto'][data-account='account-tabs-only'] .ec-account .acc-mhead .acc-stat {
+    color: color-mix(in srgb, var(--dz-on-band) 78%, transparent);
+  }
+  .store-page[data-design='impacto'][data-account='account-tabs-only'] .ec-account .acc-mhead .acc-stat svg {
+    color: var(--dz-accent);
+  }
+  .store-page[data-design='impacto'][data-account='account-tabs-only'] .ec-account .acc-icon-btn {
+    border-color: color-mix(in srgb, var(--dz-on-band) 45%, transparent);
+    background: transparent;
+    color: var(--dz-on-band);
+  }
+  .store-page[data-design='impacto'][data-account='account-tabs-only'] .ec-account .acc-icon-btn:hover {
+    border-color: var(--dz-accent);
+    color: var(--dz-accent);
+    background: color-mix(in srgb, var(--dz-accent) 14%, transparent);
+  }
+  .store-page[data-design='impacto'][data-account='account-tabs-only'] .ec-account .acc-tabs {
+    display: flex;
+    position: sticky;
+    top: calc(var(--sp-top-h, 64px) + 12px);
+    z-index: 5;
+    gap: 0;
+    margin-top: 14px;
+    padding: 0 4px;
+    border-bottom: 2px solid var(--dz-line-strong);
+    background: var(--dz-bg);
+  }
+  .store-page[data-design='impacto'][data-account='account-tabs-only'] .ec-account .acc-tab {
+    min-height: 48px;
+    padding: 10px 18px;
+    font-family: var(--dz-display);
+    font-size: 13px;
+    font-weight: 400;
+    letter-spacing: .05em;
+    text-transform: uppercase;
+    color: var(--dz-muted);
+    border-bottom: 3px solid transparent;
+  }
+  .store-page[data-design='impacto'][data-account='account-tabs-only'] .ec-account .acc-tab:hover {
+    color: var(--dz-ink);
+  }
+  .store-page[data-design='impacto'][data-account='account-tabs-only'] .ec-account .acc-tab.is-on {
+    color: var(--dz-ink);
+    border-bottom-color: var(--dz-accent);
+  }
+  .store-page[data-design='impacto'][data-account='account-tabs-only'] .ec-account .acc-tab.is-on .acc-idx {
+    color: var(--dz-accent-text);
+  }
+}
+/* Móvil/tablet: el diseño ya usa mhead+tabs — se refuerza la lectura de
+   índice primario con filete duro bajo las tabs. */
+.store-page[data-design='impacto'][data-account='account-tabs-only'] .ec-account .acc-tabs {
+  border-bottom: 2px solid var(--dz-line-strong);
+}
+
+/* ---------- SEGUIMIENTO 'tracking-feed' — el feed abre la página ----------
+   La card de Movimientos encabeza el flujo (después de título y ayuda):
+   feed cronológico con filetes duros y el stepper queda como línea
+   secundaria dentro de la card de estado. */
+.store-page[data-design='impacto'][data-tracking='tracking-feed'] .ec-track {
+  gap: 14px;
+}
+.store-page[data-design='impacto'][data-tracking='tracking-feed'] .ec-track > .ec-track-head {
+  order: -3;
+  padding: 4px 2px 0;
+}
+.store-page[data-design='impacto'][data-tracking='tracking-feed'] .ec-track > .ec-track-help {
+  order: -2;
+}
+.store-page[data-design='impacto'][data-tracking='tracking-feed'] .ec-track > .ec-track-card:has(.ec-timeline) {
+  order: -1;
+}
+.store-page[data-design='impacto'][data-tracking='tracking-feed'] .ec-track .ec-track-title {
+  font-family: var(--dz-display);
+  font-weight: 400;
+  font-size: clamp(26px, 3.4vw, 40px);
+  letter-spacing: .01em;
+  text-transform: uppercase;
+  line-height: .95;
+  color: var(--dz-ink);
+}
+.store-page[data-design='impacto'][data-tracking='tracking-feed'] .ec-track .ec-track-code {
+  font-family: var(--dz-mono);
+  font-size: 10.5px;
+  letter-spacing: .16em;
+  text-transform: uppercase;
+  color: var(--dz-muted);
+}
+.store-page[data-design='impacto'][data-tracking='tracking-feed'] .ec-track > .ec-track-card {
+  border: 2px solid var(--dz-line-strong);
+  border-radius: var(--dz-radius);
+  background: var(--dz-card);
+  box-shadow: 5px 5px 0 color-mix(in srgb, var(--dz-ink) 10%, transparent);
+}
+.store-page[data-design='impacto'][data-tracking='tracking-feed'] .ec-track > .ec-track-card:has(.ec-timeline) {
+  border-top: 6px solid var(--dz-accent);
+  padding: clamp(20px, 3vw, 32px);
+}
+.store-page[data-design='impacto'][data-tracking='tracking-feed'] .ec-track .ec-track-h2 {
+  font-family: var(--dz-display);
+  font-weight: 400;
+  font-size: 17px;
+  letter-spacing: .04em;
+  text-transform: uppercase;
+  color: var(--dz-ink);
+}
+.store-page[data-design='impacto'][data-tracking='tracking-feed'] .ec-track .ec-track-card:has(.ec-timeline) .ec-track-h2 {
+  font-family: var(--dz-mono);
+  font-size: 10.5px;
+  font-weight: 700;
+  letter-spacing: .24em;
+  color: var(--dz-accent-text);
+}
+.store-page[data-design='impacto'][data-tracking='tracking-feed'] .ec-track .ec-track-status {
+  font-family: var(--dz-mono);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: .14em;
+  text-transform: uppercase;
+  padding: 8px 14px;
+  border: 2px solid var(--dz-line-strong);
+  border-radius: var(--dz-radius);
+  background: var(--dz-surface);
+  color: var(--dz-ink);
+}
+.store-page[data-design='impacto'][data-tracking='tracking-feed'] .ec-track .ec-track-status.is-pending_payment {
+  border-color: var(--dz-warning);
+  color: var(--dz-warning);
+}
+.store-page[data-design='impacto'][data-tracking='tracking-feed'] .ec-track .ec-track-status.is-delivered {
+  border-color: var(--dz-ok);
+  color: var(--dz-ok);
+}
+.store-page[data-design='impacto'][data-tracking='tracking-feed'] .ec-track .ec-track-status.is-cancelled,
+.store-page[data-design='impacto'][data-tracking='tracking-feed'] .ec-track .ec-track-status.is-expired,
+.store-page[data-design='impacto'][data-tracking='tracking-feed'] .ec-track .ec-track-status.is-refunded {
+  border-color: var(--dz-danger);
+  color: var(--dz-danger);
+}
+/* Feed: filas con filete duro entre eventos, punto de señal y hora mono. */
+.store-page[data-design='impacto'][data-tracking='tracking-feed'] .ec-timeline {
+  border-top: 2px solid var(--dz-line-strong);
+}
+.store-page[data-design='impacto'][data-tracking='tracking-feed'] .ec-timeline li {
+  padding: 13px 0;
+  border-bottom: 1px solid var(--dz-line);
+  gap: 14px;
+}
+.store-page[data-design='impacto'][data-tracking='tracking-feed'] .ec-timeline li:last-child {
+  border-bottom: 0;
+}
+.store-page[data-design='impacto'][data-tracking='tracking-feed'] .ec-timeline li:not(:last-child)::before {
+  display: none;
+}
+.store-page[data-design='impacto'][data-tracking='tracking-feed'] .ec-tl-dot {
+  width: 12px;
+  height: 12px;
+  margin-top: 5px;
+  border-radius: var(--dz-radius);
+  border: 2px solid var(--dz-ink);
+  background: var(--dz-card);
+}
+.store-page[data-design='impacto'][data-tracking='tracking-feed'] .ec-timeline li:first-child .ec-tl-dot {
+  background: var(--dz-accent);
+  border-color: var(--dz-ink);
+}
+.store-page[data-design='impacto'][data-tracking='tracking-feed'] .ec-timeline strong {
+  font-family: var(--dz-body);
+  font-weight: 700;
+  font-size: 13.5px;
+  color: var(--dz-ink);
+}
+.store-page[data-design='impacto'][data-tracking='tracking-feed'] .ec-timeline small {
+  font-family: var(--dz-mono);
+  font-size: 10px;
+  letter-spacing: .1em;
+  text-transform: uppercase;
+}
+/* Stepper secundario: línea de pliegos con celdas duras. */
+.store-page[data-design='impacto'][data-tracking='tracking-feed'] .ec-step::after {
+  top: 15px;
+  height: 2px;
+  background: var(--dz-line);
+}
+.store-page[data-design='impacto'][data-tracking='tracking-feed'] .ec-step.is-done::after {
+  background: var(--dz-ok);
+}
+.store-page[data-design='impacto'][data-tracking='tracking-feed'] .ec-step-dot {
+  width: 30px;
+  height: 30px;
+  border: 2px solid var(--dz-line-strong);
+  border-radius: var(--dz-radius);
+  background: var(--dz-surface);
+  color: var(--dz-muted);
+  font-family: var(--dz-mono);
+  font-size: 11px;
+  font-weight: 700;
+}
+.store-page[data-design='impacto'][data-tracking='tracking-feed'] .ec-step.is-done .ec-step-dot {
+  border-color: var(--dz-ok);
+  background: var(--dz-ok);
+  color: #fff;
+}
+.store-page[data-design='impacto'][data-tracking='tracking-feed'] .ec-step.is-current .ec-step-dot {
+  border-color: var(--dz-ink);
+  background: var(--dz-accent);
+  color: var(--dz-accent-ink);
+  box-shadow: 3px 3px 0 color-mix(in srgb, var(--dz-ink) 80%, transparent);
+}
+.store-page[data-design='impacto'][data-tracking='tracking-feed'] .ec-step-label {
+  font-family: var(--dz-mono);
+  font-size: 8.5px;
+  font-weight: 700;
+  letter-spacing: .1em;
+  text-transform: uppercase;
+  color: var(--dz-muted);
+}
+.store-page[data-design='impacto'][data-tracking='tracking-feed'] .ec-track .ec-track-chip {
+  border: 1.5px solid var(--dz-line-strong);
+  border-radius: var(--dz-radius);
+  background: var(--dz-surface);
+  font-family: var(--dz-mono);
+  font-size: 10px;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+}
+.store-page[data-design='impacto'][data-tracking='tracking-feed'] .ec-track :is(.ec-track-card, .ec-track-help, .ec-btn-primary, .ec-btn-ghost, .ec-track-receipt-btn, .ec-proof-drop, .ec-track-help-summary):focus-visible {
+  outline: 2px solid var(--dz-accent-text);
+  outline-offset: 2px;
+}
+@media (max-width: 640px) {
+  .store-page[data-design='impacto'][data-tracking='tracking-feed'] .ec-track > .ec-track-card {
+    padding: 18px 14px;
+  }
+  .store-page[data-design='impacto'][data-tracking='tracking-feed'] .ec-track .ec-track-title {
+    font-size: 24px;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .store-page[data-design='impacto'][data-nav='announcement-rotator'] .sp-top::before {
+    animation: none;
+  }
+  .store-page[data-design='impacto'][data-nav='announcement-rotator'] .sp-top,
+  .store-page[data-design='impacto'][data-nav='announcement-rotator'] .sp-top-cta,
+  .store-page[data-design='impacto'][data-account='account-tabs-only'] .ec-account .acc-shell,
+  .store-page[data-design='impacto'][data-tracking='tracking-feed'] .ec-track * {
+    transition: none;
+  }
+}

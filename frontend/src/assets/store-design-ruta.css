@@ -850,3 +850,396 @@
     animation-duration: .001ms !important;
   }
 }
+
+/* ==========================================================================
+   ARQUETIPOS — navbar 'breadcrumb-bar' · cuenta 'account-card' ·
+   seguimiento 'tracking-stepper' (matriz docs/_tmp-nav-catalog.md).
+   Selectores .store-page[data-design][data-*]: especificidad (0,4,0)+ para
+   ganarle a las pieles de plantilla sin depender del orden de carga.
+   ========================================================================== */
+
+/* Tokens del diseño a nivel .store-page: el chrome Vue (.sp-top, drawer,
+   tabbar, sheet "Más") consume los mismos --dz-* que las páginas .ec-*.
+   Antes solo existían bajo .ec-*, así el header caía al look neutro. */
+.store-page[data-design='ruta'] {
+  --dz-bg: #f4ecdc;
+  --dz-surface: #fbf6ea;
+  --dz-surface-2: #ece0c6;
+  --dz-card: #fbf6ea;
+  --dz-ink: #1f332c;
+  --dz-ink-2: #33463d;
+  --dz-muted: #55665b;
+  --dz-line: #d8cbb0;
+  --dz-line-strong: #b9a98c;
+  --dz-pine: #14443b;
+  --dz-pine-soft: color-mix(in srgb, #14443b 12%, #fbf6ea);
+  --dz-sun: #e8a33d;
+  --dz-sun-hi: #f8cd70;
+  --dz-coral: #b4462b;
+  --dz-coral-text: color-mix(in srgb, #b4462b 80%, #1f332c);
+  --dz-on-pine: #f2f7f3;
+  --dz-on-sun: #1b2a23;
+  --dz-accent: var(--dz-pine);
+  --dz-accent-ink: var(--dz-on-pine);
+  --dz-accent-text: var(--dz-pine);
+  --dz-radius: 18px;
+  --dz-radius-sm: 12px;
+  --dz-display: var(--st-f-display-family, 'Fraunces', Georgia, 'Times New Roman', serif);
+  --dz-body: var(--st-f-body-family, 'Instrument Sans', 'Manrope', system-ui, sans-serif);
+  --dz-mono: var(--st-f-eyebrow-family, 'JetBrains Mono', ui-monospace, Menlo, monospace);
+}
+.store-page[data-design='ruta'][data-theme='dark'] {
+  --dz-bg: #0e241f;
+  --dz-surface: #16332b;
+  --dz-surface-2: #143029;
+  --dz-card: #16332b;
+  --dz-ink: #f1ead9;
+  --dz-ink-2: #d8d2c2;
+  --dz-muted: #a9b9ad;
+  --dz-line: #2a4a3f;
+  --dz-line-strong: #3d5f52;
+  --dz-pine: #1d4d41;
+  --dz-pine-soft: color-mix(in srgb, #1d4d41 30%, #16332b);
+  --dz-sun: #f0b95a;
+  --dz-sun-hi: #f8cd70;
+  --dz-coral: #e5735c;
+  --dz-coral-text: color-mix(in srgb, #e5735c 70%, #f1ead9);
+  --dz-on-pine: #f3ecda;
+  --dz-accent: color-mix(in srgb, var(--store-accent, #f0b95a) 55%, #f0e9d8);
+  --dz-accent-ink: #14251f;
+  --dz-accent-text: color-mix(in srgb, var(--store-accent, #f0b95a) 60%, #f1ead9);
+}
+
+/* ---------- NAV 'breadcrumb-bar' — la taquilla como barra de ruta ----------
+   Filete discontinua bajo el header (el "trazo" del itinerario) + links
+   numerados como paradas + la fila de secciones de Tienda Pro como
+   sub-barra contextual con sus propios números de tramo. */
+.store-page[data-design='ruta'][data-nav='breadcrumb-bar'] .sp-top {
+  background: var(--dz-surface);
+  color: var(--dz-ink);
+  border-bottom-color: var(--dz-line);
+}
+.store-page[data-design='ruta'][data-nav='breadcrumb-bar'] .sp-top::after {
+  content: "";
+  position: absolute;
+  left: 0; right: 0; bottom: -1px;
+  height: 0;
+  border-bottom: 2px dashed color-mix(in srgb, var(--dz-line-strong) 75%, transparent);
+  pointer-events: none;
+}
+.store-page[data-design='ruta'][data-nav='breadcrumb-bar'] .sp-top .sp-progress {
+  bottom: 3px;
+  border-radius: 99px;
+}
+.store-page[data-design='ruta'][data-nav='breadcrumb-bar'] .sp-top .sp-brand,
+.store-page[data-design='ruta'][data-nav='breadcrumb-bar'] .sp-top .sp-name {
+  color: var(--dz-ink);
+}
+.store-page[data-design='ruta'][data-nav='breadcrumb-bar'] .sp-top .sp-name {
+  font-family: var(--dz-display);
+  font-weight: 600;
+}
+.store-page[data-design='ruta'][data-nav='breadcrumb-bar'] .sp-top .sp-mono,
+.store-page[data-design='ruta'][data-nav='breadcrumb-bar'] .sp-top .sp-logo.sm {
+  border: 1.5px solid var(--dz-line-strong);
+  border-radius: 50%;
+}
+/* Paradas numeradas en el menú desktop. */
+.store-page[data-design='ruta'][data-nav='breadcrumb-bar'] .sp-top-links {
+  counter-reset: ruta-parada;
+}
+.store-page[data-design='ruta'][data-nav='breadcrumb-bar'] .sp-top-links a {
+  counter-increment: ruta-parada;
+  color: var(--dz-ink-2);
+  border-radius: var(--dz-radius-sm);
+}
+.store-page[data-design='ruta'][data-nav='breadcrumb-bar'] .sp-top-links a::before {
+  content: counter(ruta-parada, decimal-leading-zero);
+  margin-right: 6px;
+  font: 700 9px/1 var(--dz-mono);
+  letter-spacing: .1em;
+  color: var(--dz-muted);
+  align-self: center;
+}
+.store-page[data-design='ruta'][data-nav='breadcrumb-bar'] .sp-top-links a:hover {
+  color: var(--dz-ink);
+  background: var(--dz-pine-soft);
+}
+.store-page[data-design='ruta'][data-nav='breadcrumb-bar'] .sp-top-links a.router-link-exact-active {
+  color: var(--dz-accent-text);
+  background: var(--dz-pine-soft);
+}
+.store-page[data-design='ruta'][data-nav='breadcrumb-bar'] .sp-top .sp-icon-btn {
+  border-radius: var(--dz-radius-sm);
+  border-color: var(--dz-line);
+  background: var(--dz-card);
+  color: var(--dz-ink-2);
+}
+.store-page[data-design='ruta'][data-nav='breadcrumb-bar'] .sp-top .sp-icon-btn:hover {
+  border-color: var(--dz-line-strong);
+  color: var(--dz-accent-text);
+  background: var(--dz-pine-soft);
+}
+.store-page[data-design='ruta'][data-nav='breadcrumb-bar'] .sp-top .sp-burger {
+  border: 1.5px solid var(--dz-line-strong);
+  border-radius: var(--dz-radius-sm);
+  background: var(--dz-card);
+  color: var(--dz-ink-2);
+}
+.store-page[data-design='ruta'][data-nav='breadcrumb-bar'] .sp-top-cta {
+  background: var(--dz-accent);
+  color: var(--dz-accent-ink);
+  border-radius: 999px;
+}
+/* Sub-barra contextual de Tienda Pro: tramos numerados en mono. */
+.store-page[data-design='ruta'][data-nav='breadcrumb-bar'] .sp-shop-nav {
+  background: color-mix(in srgb, var(--dz-surface-2) 60%, var(--dz-surface));
+  border-bottom: 1px dashed var(--dz-line-strong);
+}
+.store-page[data-design='ruta'][data-nav='breadcrumb-bar'] .sp-shop-nav-links {
+  counter-reset: ruta-tramo;
+}
+.store-page[data-design='ruta'][data-nav='breadcrumb-bar'] .sp-shop-nav-links a {
+  counter-increment: ruta-tramo;
+  font-family: var(--dz-mono);
+  font-size: 10.5px;
+  font-weight: 700;
+  letter-spacing: .1em;
+  text-transform: uppercase;
+  color: var(--dz-muted);
+}
+.store-page[data-design='ruta'][data-nav='breadcrumb-bar'] .sp-shop-nav-links a::before {
+  content: counter(ruta-tramo, decimal-leading-zero) "·";
+  margin-right: 5px;
+  color: var(--dz-sun);
+  text-shadow: 0 1px 0 color-mix(in srgb, var(--dz-ink) 30%, transparent);
+}
+.store-page[data-design='ruta'][data-nav='breadcrumb-bar'] .sp-shop-nav-links a:hover {
+  color: var(--dz-ink);
+  background: var(--dz-pine-soft);
+}
+.store-page[data-design='ruta'][data-nav='breadcrumb-bar'] .sp-shop-nav-links a.is-current {
+  color: var(--dz-accent-text);
+  background: var(--dz-pine-soft);
+}
+.store-page[data-design='ruta'][data-nav='breadcrumb-bar'] .sp-shop-nav-note {
+  font-family: var(--dz-mono);
+  font-size: 9.5px;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+}
+/* Drawer móvil: cada destino como ficha de tramo con filete discontinuo. */
+.store-page[data-design='ruta'][data-nav='breadcrumb-bar'] .sp-drawer.sp-navdrawer {
+  border-color: var(--dz-line-strong);
+}
+.store-page[data-design='ruta'][data-nav='breadcrumb-bar'] .sp-drawer.sp-navdrawer .sp-nav-item {
+  border: 1px dashed var(--dz-line-strong);
+  border-radius: var(--dz-radius-sm);
+  background: var(--dz-card);
+  color: var(--dz-ink-2);
+}
+.store-page[data-design='ruta'][data-nav='breadcrumb-bar'] .sp-drawer.sp-navdrawer .sp-nav-item svg {
+  color: var(--dz-muted);
+}
+.store-page[data-design='ruta'][data-nav='breadcrumb-bar'] .sp-drawer.sp-navdrawer .sp-nav-item:hover {
+  border-color: var(--dz-accent-text);
+  background: var(--dz-pine-soft);
+  color: var(--dz-accent-text);
+}
+.store-page[data-design='ruta'][data-nav='breadcrumb-bar'] .sp-drawer.sp-navdrawer .sp-nav-item.active {
+  border-color: var(--dz-pine);
+  border-style: solid;
+  background: var(--dz-pine-soft);
+  color: var(--dz-ink);
+}
+.store-page[data-design='ruta'][data-nav='breadcrumb-bar'] .sp-drawer.sp-navdrawer :is(.sp-drawer-action, .sp-drawer-close):focus-visible,
+.store-page[data-design='ruta'][data-nav='breadcrumb-bar'] .sp-top :is(a, button, input, summary):focus-visible {
+  outline: 2px solid var(--dz-coral);
+  outline-offset: 2px;
+}
+
+/* ---------- CUENTA 'account-card' — la bitácora como tarjeta de viaje ----
+   .acc-shell se convierte en UNA ficha centrada: la hoja de ruta lateral
+   y los paneles quedan dentro del mismo marco (los paneles pierden su
+   tarjeta propia para no anidar marcos). */
+.store-page[data-design='ruta'][data-account='account-card'] .ec-account .acc-shell {
+  width: min(1080px, 100%);
+  margin-inline: auto;
+  padding: clamp(16px, 2.6vw, 30px);
+  border: 1px solid var(--dz-line-strong);
+  border-radius: var(--dz-radius);
+  background: var(--dz-surface);
+  box-shadow: 0 26px 60px -34px color-mix(in srgb, var(--dz-pine) 60%, transparent);
+}
+.store-page[data-design='ruta'][data-account='account-card'] .ec-account .acc-shell .acc-side {
+  border: 1px dashed var(--dz-line-strong);
+  border-radius: var(--dz-radius);
+  background: color-mix(in srgb, var(--dz-surface-2) 55%, var(--dz-surface));
+}
+.store-page[data-design='ruta'][data-account='account-card'] .ec-account .acc-shell .acc-panel,
+.store-page[data-design='ruta'][data-account='account-card'] .ec-account .acc-shell .acc-auth-card,
+.store-page[data-design='ruta'][data-account='account-card'] .ec-account .acc-shell .acc-gate-card,
+.store-page[data-design='ruta'][data-account='account-card'] .ec-account .acc-shell .acc-skelpanel {
+  border: 0;
+  border-top: 1.5px dashed var(--dz-line-strong);
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+}
+.store-page[data-design='ruta'][data-account='account-card'] .ec-account .acc-shell .acc-panel::before {
+  display: none;
+}
+@media (max-width: 640px) {
+  .store-page[data-design='ruta'][data-account='account-card'] .ec-account .acc-shell {
+    padding: 14px 12px;
+    border-radius: var(--dz-radius-sm);
+  }
+}
+
+/* ---------- SEGUIMIENTO 'tracking-stepper' — paradas con trazo -----------
+   El stepper horizontal se vuelve el itinerario del pedido: conectores
+   discontinuos (la ruta), mojones cuadrados y la parada actual en sol. */
+.store-page[data-design='ruta'][data-tracking='tracking-stepper'] .ec-track .ec-track-head {
+  padding-bottom: 4px;
+}
+.store-page[data-design='ruta'][data-tracking='tracking-stepper'] .ec-track .ec-track-title {
+  font-family: var(--dz-display);
+  font-weight: 600;
+  letter-spacing: -.01em;
+  color: var(--dz-ink);
+}
+.store-page[data-design='ruta'][data-tracking='tracking-stepper'] .ec-track .ec-track-code {
+  font-family: var(--dz-mono);
+  font-size: 10.5px;
+  letter-spacing: .12em;
+  text-transform: uppercase;
+  color: var(--dz-muted);
+}
+.store-page[data-design='ruta'][data-tracking='tracking-stepper'] .ec-track .ec-track-help {
+  border: 1px dashed var(--dz-line-strong);
+  border-radius: var(--dz-radius);
+  background: var(--dz-card);
+}
+.store-page[data-design='ruta'][data-tracking='tracking-stepper'] .ec-track > .ec-track-card {
+  border: 1px solid var(--dz-line);
+  border-radius: var(--dz-radius);
+  background: var(--dz-surface);
+  box-shadow: 0 16px 36px -30px color-mix(in srgb, var(--dz-pine) 55%, transparent);
+}
+.store-page[data-design='ruta'][data-tracking='tracking-stepper'] .ec-track > .ec-track-card:has(.ec-stepper) {
+  border: 1.5px solid var(--dz-line-strong);
+}
+.store-page[data-design='ruta'][data-tracking='tracking-stepper'] .ec-track .ec-track-h2 {
+  font-family: var(--dz-display);
+  font-weight: 600;
+  letter-spacing: -.01em;
+  color: var(--dz-ink);
+}
+.store-page[data-design='ruta'][data-tracking='tracking-stepper'] .ec-track .ec-track-status {
+  font-family: var(--dz-body);
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: .04em;
+  text-transform: uppercase;
+  padding: 8px 16px;
+  border-radius: 999px;
+  background: var(--dz-pine-soft);
+  color: var(--dz-accent-text);
+  border: 1px solid color-mix(in srgb, var(--dz-pine) 35%, transparent);
+}
+.store-page[data-design='ruta'][data-tracking='tracking-stepper'] .ec-track .ec-stepper { gap: 8px; }
+.store-page[data-design='ruta'][data-tracking='tracking-stepper'] .ec-track .ec-step::after {
+  top: 16px;
+  height: 2px;
+  background: repeating-linear-gradient(90deg, var(--dz-line-strong) 0 5px, transparent 5px 11px);
+}
+.store-page[data-design='ruta'][data-tracking='tracking-stepper'] .ec-track .ec-step.is-done::after {
+  background: repeating-linear-gradient(90deg, var(--dz-pine) 0 5px, transparent 5px 11px);
+}
+.store-page[data-design='ruta'][data-tracking='tracking-stepper'] .ec-track .ec-step-dot {
+  width: 34px;
+  height: 34px;
+  border-radius: 11px;
+  border: 2px solid var(--dz-line-strong);
+  background: var(--dz-surface);
+  color: var(--dz-muted);
+  font-family: var(--dz-mono);
+  font-size: 11px;
+  font-weight: 700;
+}
+.store-page[data-design='ruta'][data-tracking='tracking-stepper'] .ec-track .ec-step.is-done .ec-step-dot {
+  border-color: var(--dz-pine);
+  background: var(--dz-pine);
+  color: var(--dz-on-pine);
+}
+.store-page[data-design='ruta'][data-tracking='tracking-stepper'] .ec-track .ec-step.is-current .ec-step-dot {
+  border-color: var(--dz-sun);
+  background: var(--dz-sun);
+  color: var(--dz-on-sun);
+  box-shadow: 0 0 0 5px color-mix(in srgb, var(--dz-sun) 32%, transparent);
+}
+.store-page[data-design='ruta'][data-tracking='tracking-stepper'] .ec-track .ec-step-label {
+  font-family: var(--dz-mono);
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+  color: var(--dz-muted);
+}
+.store-page[data-design='ruta'][data-tracking='tracking-stepper'] .ec-track .ec-step.is-done .ec-step-label,
+.store-page[data-design='ruta'][data-tracking='tracking-stepper'] .ec-track .ec-step.is-current .ec-step-label {
+  color: var(--dz-ink);
+}
+.store-page[data-design='ruta'][data-tracking='tracking-stepper'] .ec-track .ec-track-step-date {
+  font-family: var(--dz-mono);
+  font-size: 9px;
+  letter-spacing: .04em;
+}
+.store-page[data-design='ruta'][data-tracking='tracking-stepper'] .ec-track .ec-track-chip {
+  border-color: var(--dz-line);
+  border-radius: var(--dz-radius-sm);
+  background: var(--dz-card);
+  font-family: var(--dz-mono);
+  font-size: 10px;
+  letter-spacing: .04em;
+  text-transform: uppercase;
+  color: var(--dz-muted);
+}
+.store-page[data-design='ruta'][data-tracking='tracking-stepper'] .ec-track .ec-timeline li:not(:last-child)::before {
+  background: repeating-linear-gradient(180deg, var(--dz-line-strong) 0 4px, transparent 4px 9px);
+}
+.store-page[data-design='ruta'][data-tracking='tracking-stepper'] .ec-track .ec-tl-dot {
+  background: var(--dz-pine);
+  border-radius: 4px;
+}
+.store-page[data-design='ruta'][data-tracking='tracking-stepper'] .ec-track .ec-timeline strong {
+  font-family: var(--dz-body);
+  font-weight: 700;
+  color: var(--dz-ink);
+}
+.store-page[data-design='ruta'][data-tracking='tracking-stepper'] .ec-track .ec-timeline small {
+  font-family: var(--dz-mono);
+  font-size: 9.5px;
+  letter-spacing: .05em;
+}
+.store-page[data-design='ruta'][data-tracking='tracking-stepper'] .ec-track :is(.ec-track-card, .ec-track-help, .ec-btn-primary, .ec-btn-ghost, .ec-track-receipt-btn, .ec-proof-drop, .ec-track-help-summary):focus-visible {
+  outline: 2px solid var(--dz-coral);
+  outline-offset: 2px;
+}
+@media (max-width: 640px) {
+  .store-page[data-design='ruta'][data-tracking='tracking-stepper'] .ec-track > .ec-track-card {
+    padding: 16px 14px;
+  }
+  .store-page[data-design='ruta'][data-tracking='tracking-stepper'] .ec-track .ec-step-dot {
+    width: 30px;
+    height: 30px;
+    font-size: 10px;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .store-page[data-design='ruta'][data-nav='breadcrumb-bar'] .sp-top,
+  .store-page[data-design='ruta'][data-account='account-card'] .ec-account .acc-shell,
+  .store-page[data-design='ruta'][data-tracking='tracking-stepper'] .ec-track * {
+    transition: none;
+  }
+}

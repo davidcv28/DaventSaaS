@@ -1236,3 +1236,389 @@
     animation: none !important;
   }
 }
+
+/* ==========================================================================
+   ARQUETIPOS — navbar 'floating-pill' · cuenta 'account-rail' ·
+   seguimiento 'tracking-status-hero' (matriz docs/_tmp-nav-catalog.md).
+   ========================================================================== */
+
+/* ---------- NAV 'floating-pill' — el header flota como píldora de vitrina -
+   Tarjeta redonda centrada con blur y sombra; cuando Tienda Pro agrega su
+   fila de secciones el contenedor pasa a cápsula (radio contenido) y la
+   fila se integra como segunda línea interna. */
+.store-page[data-design='aurum'][data-nav='floating-pill'] .sp-top {
+  top: 14px;
+  left: 50%;
+  right: auto;
+  transform: translateX(-50%);
+  width: min(1140px, calc(100% - 28px));
+  border: 1px solid var(--dz-line);
+  border-radius: 28px;
+  background: color-mix(in srgb, var(--dz-surface) 84%, transparent);
+  -webkit-backdrop-filter: blur(14px) saturate(1.35);
+  backdrop-filter: blur(14px) saturate(1.35);
+  box-shadow: 0 20px 44px -24px color-mix(in srgb, var(--dz-ink) 55%, transparent);
+}
+.store-page[data-design='aurum'][data-nav='floating-pill'] .sp-top:not(:has(.sp-shop-nav)) {
+  border-radius: 999px;
+}
+.store-page[data-design='aurum'][data-nav='floating-pill'] .sp-top.scrolled {
+  box-shadow: 0 22px 48px -22px color-mix(in srgb, var(--dz-ink) 62%, transparent);
+}
+.store-page[data-design='aurum'][data-nav='floating-pill'] .sp-top .sp-progress {
+  left: 18px;
+  right: 18px;
+  bottom: 7px;
+  border-radius: 99px;
+}
+.store-page[data-design='aurum'][data-nav='floating-pill'] .sp-top .sp-brand,
+.store-page[data-design='aurum'][data-nav='floating-pill'] .sp-top .sp-name {
+  color: var(--dz-ink);
+}
+.store-page[data-design='aurum'][data-nav='floating-pill'] .sp-top .sp-name {
+  font-family: var(--dz-display);
+  font-weight: 400;
+}
+.store-page[data-design='aurum'][data-nav='floating-pill'] .sp-top .sp-mono,
+.store-page[data-design='aurum'][data-nav='floating-pill'] .sp-top .sp-logo.sm {
+  border: 1px solid color-mix(in srgb, var(--dz-accent) 55%, var(--dz-line));
+  border-radius: 50%;
+}
+.store-page[data-design='aurum'][data-nav='floating-pill'] .sp-top-links a {
+  color: var(--dz-ink-2);
+  border-radius: 999px;
+}
+.store-page[data-design='aurum'][data-nav='floating-pill'] .sp-top-links a:hover {
+  color: var(--dz-ink);
+  background: color-mix(in srgb, var(--dz-accent) 10%, transparent);
+}
+.store-page[data-design='aurum'][data-nav='floating-pill'] .sp-top-links a.router-link-exact-active {
+  color: var(--dz-ink);
+  background: color-mix(in srgb, var(--dz-accent) 16%, var(--dz-surface));
+  box-shadow: inset 0 -2px 0 var(--dz-accent);
+}
+.store-page[data-design='aurum'][data-nav='floating-pill'] .sp-top .sp-icon-btn {
+  border-radius: 50%;
+  border-color: var(--dz-line);
+  background: var(--dz-card);
+  color: var(--dz-ink-2);
+}
+.store-page[data-design='aurum'][data-nav='floating-pill'] .sp-top .sp-icon-btn:hover {
+  border-color: color-mix(in srgb, var(--dz-accent) 60%, var(--dz-line));
+  color: var(--dz-accent-text);
+  background: color-mix(in srgb, var(--dz-accent) 10%, var(--dz-surface));
+}
+.store-page[data-design='aurum'][data-nav='floating-pill'] .sp-top .sp-burger {
+  border-radius: 50%;
+  border-color: var(--dz-line);
+  background: var(--dz-card);
+  color: var(--dz-ink-2);
+}
+.store-page[data-design='aurum'][data-nav='floating-pill'] .sp-top-cta {
+  border-radius: 999px;
+  background: var(--dz-accent);
+  color: var(--dz-accent-ink);
+}
+/* Fila de secciones de Tienda Pro: segunda línea dentro de la cápsula. */
+.store-page[data-design='aurum'][data-nav='floating-pill'] .sp-shop-nav {
+  background: color-mix(in srgb, var(--dz-surface-2) 45%, transparent);
+  border-bottom: 0;
+  border-top: 1px solid color-mix(in srgb, var(--dz-line) 80%, transparent);
+  border-radius: 0 0 27px 27px;
+}
+.store-page[data-design='aurum'][data-nav='floating-pill'] .sp-shop-nav-links a {
+  font-family: var(--dz-mono);
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: .14em;
+  text-transform: uppercase;
+  border-radius: 999px;
+  color: var(--dz-muted);
+}
+.store-page[data-design='aurum'][data-nav='floating-pill'] .sp-shop-nav-links a:hover {
+  color: var(--dz-ink);
+  background: color-mix(in srgb, var(--dz-accent) 12%, transparent);
+}
+.store-page[data-design='aurum'][data-nav='floating-pill'] .sp-shop-nav-links a.is-current {
+  color: var(--dz-ink);
+  background: color-mix(in srgb, var(--dz-accent) 16%, var(--dz-surface));
+}
+.store-page[data-design='aurum'][data-nav='floating-pill'] .sp-shop-nav-note {
+  font-family: var(--dz-mono);
+  font-size: 9px;
+  letter-spacing: .1em;
+  text-transform: uppercase;
+}
+.store-page[data-design='aurum'][data-nav='floating-pill'] .sp-drawer.sp-navdrawer .sp-nav-item {
+  border-radius: 12px;
+}
+.store-page[data-design='aurum'][data-nav='floating-pill'] .sp-top :is(a, button, input, summary):focus-visible,
+.store-page[data-design='aurum'][data-nav='floating-pill'] .sp-drawer.sp-navdrawer :is(a, button):focus-visible {
+  outline: 2px solid var(--dz-accent);
+  outline-offset: 2px;
+}
+/* Móvil/tablet (≤1100px .sp-top pasa a fixed): la píldora flota con aire y
+   la página reserva su alto + el offset. */
+@media (max-width: 1100px) {
+  .store-page[data-design='aurum'][data-nav='floating-pill']:not(.has-pattern) {
+    padding-top: calc(var(--sp-top-h, 64px) + var(--sp-shopnav-h, 0px) + 16px);
+  }
+  .store-page[data-design='aurum'][data-nav='floating-pill'] .sp-top {
+    border-radius: 26px;
+  }
+  .store-page[data-design='aurum'][data-nav='floating-pill'] .sp-top:not(:has(.sp-shop-nav)) {
+    border-radius: 999px;
+  }
+  .store-page[data-design='aurum'][data-nav='floating-pill'] .sp-shop-nav {
+    border-radius: 0 0 25px 25px;
+  }
+}
+@media (max-width: 640px) {
+  .store-page[data-design='aurum'][data-nav='floating-pill'] .sp-top {
+    width: calc(100% - 20px);
+    border-radius: 24px;
+  }
+  .store-page[data-design='aurum'][data-nav='floating-pill'] .sp-top:not(:has(.sp-shop-nav)) {
+    border-radius: 999px;
+  }
+}
+
+/* ---------- CUENTA 'account-rail' — la carta lateral colapsa a riel ------
+   Solo escritorio (≥1024): .acc-side se angosta a columna de íconos con
+   tooltips por title; la identidad se reduce al monograma y el logout a
+   su ícono. En móvil queda el layout de tabs píldora del diseño. */
+@media (min-width: 1024px) {
+  .store-page[data-design='aurum'][data-account='account-rail'] .ec-account .acc-shell {
+    grid-template-columns: 92px minmax(0, 1fr);
+    gap: 22px;
+  }
+  .store-page[data-design='aurum'][data-account='account-rail'] .ec-account .acc-side {
+    padding: 14px 10px;
+    border-radius: var(--dz-radius);
+  }
+  .store-page[data-design='aurum'][data-account='account-rail'] .ec-account .acc-id {
+    grid-template-columns: 1fr;
+    justify-items: center;
+    gap: 8px;
+    padding: 0 0 14px;
+  }
+  .store-page[data-design='aurum'][data-account='account-rail'] .ec-account .acc-id .acc-tele,
+  .store-page[data-design='aurum'][data-account='account-rail'] .ec-account .acc-id-meta {
+    display: none;
+  }
+  .store-page[data-design='aurum'][data-account='account-rail'] .ec-account .acc-avatar {
+    width: 48px;
+    height: 48px;
+    font-size: 18px;
+  }
+  .store-page[data-design='aurum'][data-account='account-rail'] .ec-account .acc-nav {
+    gap: 4px;
+    margin-top: 6px;
+  }
+  .store-page[data-design='aurum'][data-account='account-rail'] .ec-account .acc-navitem {
+    flex-direction: column;
+    gap: 5px;
+    min-height: 58px;
+    padding: 9px 4px;
+    justify-content: center;
+    border-radius: 14px;
+  }
+  .store-page[data-design='aurum'][data-account='account-rail'] .ec-account .acc-navitem > span:not(.acc-idx) {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip: rect(0 0 0 0);
+    white-space: nowrap;
+  }
+  .store-page[data-design='aurum'][data-account='account-rail'] .ec-account .acc-navitem .acc-idx {
+    display: none;
+  }
+  .store-page[data-design='aurum'][data-account='account-rail'] .ec-account .acc-navitem svg {
+    width: 19px;
+    height: 19px;
+  }
+  .store-page[data-design='aurum'][data-account='account-rail'] .ec-account .acc-navitem.is-on {
+    box-shadow: inset 3px 0 0 var(--dz-accent);
+  }
+  .store-page[data-design='aurum'][data-account='account-rail'] .ec-account .acc-logout {
+    font-size: 0;
+    justify-content: center;
+    gap: 0;
+    min-height: 48px;
+    margin-top: 12px;
+    padding: 0;
+  }
+  .store-page[data-design='aurum'][data-account='account-rail'] .ec-account .acc-logout svg {
+    width: 18px;
+    height: 18px;
+  }
+}
+
+/* ---------- SEGUIMIENTO 'tracking-status-hero' — el estado manda ---------
+   La card de estado crece a héroe: pastilla de estado en serif grande,
+   stepper segmentado con dots amplios y chips como fichas de vitrina. */
+.store-page[data-design='aurum'][data-tracking='tracking-status-hero'] .ec-track .ec-track-head {
+  padding-bottom: 6px;
+}
+.store-page[data-design='aurum'][data-tracking='tracking-status-hero'] .ec-track .ec-track-title {
+  font-family: var(--dz-display);
+  font-weight: 400;
+  letter-spacing: -.015em;
+  color: var(--dz-ink);
+}
+.store-page[data-design='aurum'][data-tracking='tracking-status-hero'] .ec-track .ec-track-code {
+  font-family: var(--dz-mono);
+  font-size: 10.5px;
+  letter-spacing: .14em;
+  text-transform: uppercase;
+  color: var(--dz-muted);
+}
+.store-page[data-design='aurum'][data-tracking='tracking-status-hero'] .ec-track > .ec-track-card {
+  border: 1px solid var(--dz-line);
+  border-radius: var(--dz-radius);
+  background: var(--dz-surface);
+  box-shadow: 0 26px 56px -42px rgba(30, 22, 6, .5);
+}
+.store-page[data-design='aurum'][data-tracking='tracking-status-hero'] .ec-track > .ec-track-card:has(.ec-stepper) {
+  padding: clamp(24px, 3.6vw, 42px);
+  border-color: color-mix(in srgb, var(--dz-accent) 45%, var(--dz-line));
+  background:
+    radial-gradient(120% 140% at 100% 0%, color-mix(in srgb, var(--dz-accent) 10%, transparent), transparent 55%),
+    var(--dz-surface);
+}
+.store-page[data-design='aurum'][data-tracking='tracking-status-hero'] .ec-track .ec-track-h2 {
+  font-family: var(--dz-display);
+  font-weight: 400;
+  letter-spacing: -.01em;
+  color: var(--dz-ink);
+}
+.store-page[data-design='aurum'][data-tracking='tracking-status-hero'] .ec-track .ec-track-status {
+  font-family: var(--dz-display);
+  font-weight: 400;
+  font-size: clamp(20px, 3vw, 30px);
+  letter-spacing: -.01em;
+  line-height: 1.15;
+  padding: 12px 26px;
+  border-radius: 999px;
+  border: 1px solid color-mix(in srgb, var(--dz-accent) 50%, var(--dz-line));
+  background: color-mix(in srgb, var(--dz-accent) 13%, var(--dz-surface));
+  color: var(--dz-ink);
+}
+.store-page[data-design='aurum'][data-tracking='tracking-status-hero'] .ec-track .ec-track-status.is-pending_payment {
+  border-color: color-mix(in srgb, var(--sp-warning, #B45309) 45%, var(--dz-line));
+  background: color-mix(in srgb, var(--sp-warning, #B45309) 12%, var(--dz-surface));
+}
+.store-page[data-design='aurum'][data-tracking='tracking-status-hero'] .ec-track .ec-track-status.is-delivered {
+  border-color: color-mix(in srgb, var(--dz-ok) 45%, var(--dz-line));
+  background: color-mix(in srgb, var(--dz-ok) 12%, var(--dz-surface));
+}
+.store-page[data-design='aurum'][data-tracking='tracking-status-hero'] .ec-track .ec-track-status.is-cancelled,
+.store-page[data-design='aurum'][data-tracking='tracking-status-hero'] .ec-track .ec-track-status.is-expired,
+.store-page[data-design='aurum'][data-tracking='tracking-status-hero'] .ec-track .ec-track-status.is-refunded {
+  border-color: color-mix(in srgb, var(--dz-danger) 45%, var(--dz-line));
+  background: color-mix(in srgb, var(--dz-danger) 10%, var(--dz-surface));
+}
+.store-page[data-design='aurum'][data-tracking='tracking-status-hero'] .ec-track .ec-track-exp {
+  font-family: var(--dz-mono);
+  font-size: 11px;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+}
+.store-page[data-design='aurum'][data-tracking='tracking-status-hero'] .ec-track .ec-stepper { gap: 10px; margin-top: 8px; }
+.store-page[data-design='aurum'][data-tracking='tracking-status-hero'] .ec-track .ec-step::after {
+  top: 22px;
+  height: 1px;
+  background: var(--dz-line);
+}
+.store-page[data-design='aurum'][data-tracking='tracking-status-hero'] .ec-track .ec-step.is-done::after {
+  background: linear-gradient(90deg, var(--dz-accent), var(--dz-line));
+}
+.store-page[data-design='aurum'][data-tracking='tracking-status-hero'] .ec-track .ec-step-dot {
+  width: 44px;
+  height: 44px;
+  border: 1px solid var(--dz-line);
+  border-radius: 50%;
+  background: var(--dz-surface);
+  color: var(--dz-muted);
+  font-family: var(--dz-mono);
+  font-size: 13px;
+  font-weight: 600;
+  box-shadow: 0 10px 22px -14px rgba(30, 22, 6, .5);
+}
+.store-page[data-design='aurum'][data-tracking='tracking-status-hero'] .ec-track .ec-step.is-done .ec-step-dot {
+  border-color: transparent;
+  background: var(--dz-accent);
+  color: var(--dz-accent-ink);
+}
+.store-page[data-design='aurum'][data-tracking='tracking-status-hero'] .ec-track .ec-step.is-current .ec-step-dot {
+  width: 52px;
+  height: 52px;
+  border-color: var(--dz-accent);
+  color: var(--dz-accent-text);
+  background: var(--dz-surface);
+  box-shadow: 0 0 0 6px color-mix(in srgb, var(--dz-accent) 16%, transparent), 0 14px 26px -14px rgba(30, 22, 6, .5);
+}
+.store-page[data-design='aurum'][data-tracking='tracking-status-hero'] .ec-track .ec-step-label {
+  font-family: var(--dz-mono);
+  font-size: 9px;
+  font-weight: 600;
+  letter-spacing: .14em;
+  text-transform: uppercase;
+  color: var(--dz-muted);
+}
+.store-page[data-design='aurum'][data-tracking='tracking-status-hero'] .ec-track .ec-step.is-done .ec-step-label,
+.store-page[data-design='aurum'][data-tracking='tracking-status-hero'] .ec-track .ec-step.is-current .ec-step-label {
+  color: var(--dz-ink);
+}
+.store-page[data-design='aurum'][data-tracking='tracking-status-hero'] .ec-track .ec-track-step-date {
+  font-family: var(--dz-mono);
+  font-size: 9.5px;
+  letter-spacing: .06em;
+}
+.store-page[data-design='aurum'][data-tracking='tracking-status-hero'] .ec-track .ec-track-chip {
+  border-color: var(--dz-line);
+  border-radius: 999px;
+  background: var(--dz-card);
+  font-family: var(--dz-mono);
+  font-size: 10px;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+  color: var(--dz-muted);
+}
+.store-page[data-design='aurum'][data-tracking='tracking-status-hero'] .ec-track .ec-timeline li:not(:last-child)::before {
+  background: linear-gradient(180deg, color-mix(in srgb, var(--dz-accent) 55%, transparent), var(--dz-line));
+}
+.store-page[data-design='aurum'][data-tracking='tracking-status-hero'] .ec-track .ec-tl-dot {
+  background: var(--dz-accent);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--dz-accent) 18%, transparent);
+}
+.store-page[data-design='aurum'][data-tracking='tracking-status-hero'] .ec-track :is(.ec-track-card, .ec-track-help, .ec-btn-primary, .ec-btn-ghost, .ec-track-receipt-btn, .ec-proof-drop, .ec-track-help-summary):focus-visible {
+  outline: 2px solid var(--dz-accent);
+  outline-offset: 2px;
+}
+@media (max-width: 640px) {
+  .store-page[data-design='aurum'][data-tracking='tracking-status-hero'] .ec-track > .ec-track-card:has(.ec-stepper) {
+    padding: 20px 16px;
+  }
+  .store-page[data-design='aurum'][data-tracking='tracking-status-hero'] .ec-track .ec-track-status {
+    font-size: 19px;
+    padding: 10px 18px;
+  }
+  .store-page[data-design='aurum'][data-tracking='tracking-status-hero'] .ec-track .ec-step-dot {
+    width: 36px;
+    height: 36px;
+    font-size: 11px;
+  }
+  .store-page[data-design='aurum'][data-tracking='tracking-status-hero'] .ec-track .ec-step.is-current .ec-step-dot {
+    width: 42px;
+    height: 42px;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .store-page[data-design='aurum'][data-nav='floating-pill'] .sp-top,
+  .store-page[data-design='aurum'][data-account='account-rail'] .ec-account .acc-shell,
+  .store-page[data-design='aurum'][data-tracking='tracking-status-hero'] .ec-track * {
+    transition: none;
+  }
+}

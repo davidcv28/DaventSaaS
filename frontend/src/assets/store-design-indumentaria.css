@@ -661,3 +661,335 @@
     animation-duration: .001ms !important;
   }
 }
+
+/* ==========================================================================
+   ARQUETIPOS — navbar 'card-menu-flyout' · cuenta 'account-split' ·
+   seguimiento 'tracking-timeline' (matriz docs/_tmp-nav-catalog.md).
+   ========================================================================== */
+
+/* ---------- NAV 'card-menu-flyout' — el menú como fichas de lookbook ------
+   Aproximación CSS: los items del menú desktop y del drawer se visten como
+   tarjetas de ficha (marco duro, esquinas rectas, hilván punteado arriba)
+   con elevación al hover; la fila de Tienda Pro repite el lenguaje. */
+.store-page[data-design='indumentaria'][data-nav='card-menu-flyout'] .sp-top {
+  border-bottom: 1px solid var(--dz-line-strong);
+}
+.store-page[data-design='indumentaria'][data-nav='card-menu-flyout'] .sp-top .sp-brand,
+.store-page[data-design='indumentaria'][data-nav='card-menu-flyout'] .sp-top .sp-name {
+  color: var(--dz-ink);
+}
+.store-page[data-design='indumentaria'][data-nav='card-menu-flyout'] .sp-top .sp-name {
+  font-family: var(--dz-display);
+  font-weight: 400;
+}
+.store-page[data-design='indumentaria'][data-nav='card-menu-flyout'] .sp-top .sp-mono,
+.store-page[data-design='indumentaria'][data-nav='card-menu-flyout'] .sp-top .sp-logo.sm {
+  border: 1.5px solid var(--dz-ink);
+  border-radius: 0;
+}
+.store-page[data-design='indumentaria'][data-nav='card-menu-flyout'] .sp-top-links {
+  gap: 8px;
+}
+.store-page[data-design='indumentaria'][data-nav='card-menu-flyout'] .sp-top-links a {
+  padding: 8px 14px;
+  min-height: 44px;
+  border: 1px solid var(--dz-line);
+  border-top: 3px double var(--dz-line-strong);
+  border-radius: 0;
+  background: var(--dz-card);
+  color: var(--dz-ink-2);
+  font-size: 12.5px;
+  font-weight: 600;
+  transition: transform .2s var(--dz-ease, ease), border-color .2s, box-shadow .2s, color .2s;
+}
+.store-page[data-design='indumentaria'][data-nav='card-menu-flyout'] .sp-top-links a::after {
+  display: none;
+}
+.store-page[data-design='indumentaria'][data-nav='card-menu-flyout'] .sp-top-links a:hover {
+  border-color: var(--dz-ink);
+  color: var(--dz-ink);
+  transform: translateY(-2px);
+  box-shadow: 3px 3px 0 color-mix(in srgb, var(--dz-ink) 16%, transparent);
+}
+.store-page[data-design='indumentaria'][data-nav='card-menu-flyout'] .sp-top-links a.router-link-exact-active {
+  border-color: var(--dz-ink);
+  background: var(--dz-ink);
+  color: var(--dz-surface);
+  box-shadow: 3px 3px 0 color-mix(in srgb, var(--dz-ink) 22%, transparent);
+}
+.store-page[data-design='indumentaria'][data-nav='card-menu-flyout'] .sp-top .sp-icon-btn {
+  border: 1px solid var(--dz-line);
+  border-radius: 0;
+  background: var(--dz-card);
+  color: var(--dz-ink-2);
+}
+.store-page[data-design='indumentaria'][data-nav='card-menu-flyout'] .sp-top .sp-icon-btn:hover {
+  border-color: var(--dz-ink);
+  color: var(--dz-accent-text);
+  background: color-mix(in srgb, var(--dz-accent-raw) 8%, var(--dz-card));
+}
+.store-page[data-design='indumentaria'][data-nav='card-menu-flyout'] .sp-top .sp-burger {
+  border: 1.5px solid var(--dz-ink);
+  border-radius: 0;
+  background: var(--dz-card);
+  color: var(--dz-ink);
+}
+.store-page[data-design='indumentaria'][data-nav='card-menu-flyout'] .sp-top-cta {
+  border-radius: 0;
+  border: 1.5px solid var(--dz-ink);
+  background: var(--dz-accent);
+  color: var(--dz-accent-ink);
+  box-shadow: 3px 3px 0 color-mix(in srgb, var(--dz-ink) 85%, transparent);
+}
+.store-page[data-design='indumentaria'][data-nav='card-menu-flyout'] .sp-top-cta:hover {
+  transform: translate(1px, 1px);
+  box-shadow: 2px 2px 0 color-mix(in srgb, var(--dz-ink) 85%, transparent);
+}
+/* Drawer móvil: cada sección como ficha cosida. */
+.store-page[data-design='indumentaria'][data-nav='card-menu-flyout'] .sp-drawer.sp-navdrawer {
+  border-color: var(--dz-line-strong);
+  border-radius: 0;
+}
+.store-page[data-design='indumentaria'][data-nav='card-menu-flyout'] .sp-drawer.sp-navdrawer .sp-nav-item {
+  border: 1px solid var(--dz-line);
+  border-top: 3px double var(--dz-line-strong);
+  border-radius: 0;
+  background: var(--dz-card);
+  color: var(--dz-ink-2);
+  transition: border-color .2s, transform .2s var(--dz-ease, ease), box-shadow .2s;
+}
+.store-page[data-design='indumentaria'][data-nav='card-menu-flyout'] .sp-drawer.sp-navdrawer .sp-nav-item:hover {
+  border-color: var(--dz-ink);
+  transform: translateX(3px);
+  box-shadow: 3px 3px 0 color-mix(in srgb, var(--dz-ink) 14%, transparent);
+  color: var(--dz-ink);
+}
+.store-page[data-design='indumentaria'][data-nav='card-menu-flyout'] .sp-drawer.sp-navdrawer .sp-nav-item.active {
+  border-color: var(--dz-ink);
+  background: var(--dz-ink);
+  color: var(--dz-surface);
+}
+.store-page[data-design='indumentaria'][data-nav='card-menu-flyout'] .sp-drawer.sp-navdrawer :is(.sp-nav-item, .sp-drawer-action, .sp-drawer-close):focus-visible,
+.store-page[data-design='indumentaria'][data-nav='card-menu-flyout'] .sp-top :is(a, button, input, summary):focus-visible {
+  outline: 2px solid var(--dz-accent);
+  outline-offset: 2px;
+}
+/* Fila de secciones de Tienda Pro: mini fichas. */
+.store-page[data-design='indumentaria'][data-nav='card-menu-flyout'] .sp-shop-nav {
+  background: var(--dz-card);
+  border-bottom: 1px solid var(--dz-line-strong);
+}
+.store-page[data-design='indumentaria'][data-nav='card-menu-flyout'] .sp-shop-nav-links a {
+  font-family: var(--dz-mono);
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: .14em;
+  text-transform: uppercase;
+  color: var(--dz-muted);
+  border-radius: 0;
+  border: 1px solid transparent;
+}
+.store-page[data-design='indumentaria'][data-nav='card-menu-flyout'] .sp-shop-nav-links a:hover {
+  border-color: var(--dz-line-strong);
+  color: var(--dz-ink);
+  background: var(--dz-surface);
+}
+.store-page[data-design='indumentaria'][data-nav='card-menu-flyout'] .sp-shop-nav-links a.is-current {
+  border-color: var(--dz-ink);
+  color: var(--dz-ink);
+  background: var(--dz-surface);
+  box-shadow: inset 0 -3px 0 var(--dz-accent);
+}
+
+/* ---------- CUENTA 'account-split' — la percha a la derecha --------------
+   Solo escritorio (≥1024): .acc-main pasa a grilla con el índice de
+   secciones como rail vertical a la derecha (content | side). En móvil
+   queda el stack de tabs del diseño. */
+@media (min-width: 1024px) {
+  .store-page[data-design='indumentaria'][data-account='account-split'] .ec-account .acc-shell {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .store-page[data-design='indumentaria'][data-account='account-split'] .ec-account .acc-main {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 300px;
+    gap: 28px;
+    align-items: start;
+  }
+  .store-page[data-design='indumentaria'][data-account='account-split'] .ec-account .acc-mhead {
+    grid-column: 1 / -1;
+  }
+  .store-page[data-design='indumentaria'][data-account='account-split'] .ec-account .acc-tabs {
+    grid-column: 2;
+    grid-row: 2;
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+    padding: 0;
+    border: 1px solid var(--dz-line-strong);
+    border-radius: 0;
+    background: var(--dz-card);
+    position: sticky;
+    top: calc(var(--sp-top-h, 64px) + 18px);
+    max-height: calc(100vh - 120px);
+    overflow-y: auto;
+    scrollbar-width: none;
+    -webkit-overflow-scrolling: touch;
+  }
+  .store-page[data-design='indumentaria'][data-account='account-split'] .ec-account .acc-tabs::-webkit-scrollbar { display: none; }
+  .store-page[data-design='indumentaria'][data-account='account-split'] .ec-account .acc-tabs-ink { display: none; }
+  .store-page[data-design='indumentaria'][data-account='account-split'] .ec-account .acc-tab {
+    width: 100%;
+    min-height: 48px;
+    padding: 11px 14px;
+    border: 0;
+    border-bottom: 1px dashed var(--dz-line);
+    border-radius: 0;
+    justify-content: flex-start;
+    font-size: 10px;
+    letter-spacing: .14em;
+  }
+  .store-page[data-design='indumentaria'][data-account='account-split'] .ec-account .acc-tab:last-child { border-bottom: 0; }
+  .store-page[data-design='indumentaria'][data-account='account-split'] .ec-account .acc-body {
+    grid-column: 1;
+    grid-row: 2;
+  }
+  .store-page[data-design='indumentaria'][data-account='account-split'] .ec-account .acc-side {
+    display: none;
+  }
+}
+
+/* ---------- SEGUIMIENTO 'tracking-timeline' — la línea protagonista -------
+   La card de Movimientos encabeza la página (tras título y ayuda) y crece
+   como pliego de historial: puntos cuadrados, hilván y fechas en mono. */
+.store-page[data-design='indumentaria'][data-tracking='tracking-timeline'] .ec-track {
+  gap: 16px;
+}
+.store-page[data-design='indumentaria'][data-tracking='tracking-timeline'] .ec-track > .ec-track-head {
+  order: -3;
+  padding-bottom: 4px;
+}
+.store-page[data-design='indumentaria'][data-tracking='tracking-timeline'] .ec-track > .ec-track-help {
+  order: -2;
+}
+.store-page[data-design='indumentaria'][data-tracking='tracking-timeline'] .ec-track > .ec-track-card:has(.ec-timeline) {
+  order: -1;
+}
+.store-page[data-design='indumentaria'][data-tracking='tracking-timeline'] .ec-track .ec-track-title {
+  font-family: var(--dz-display);
+  font-weight: 400;
+  letter-spacing: -.015em;
+  color: var(--dz-ink);
+}
+.store-page[data-design='indumentaria'][data-tracking='tracking-timeline'] .ec-track .ec-track-code {
+  font-family: var(--dz-mono);
+  font-size: 10px;
+  letter-spacing: .16em;
+  text-transform: uppercase;
+  color: var(--dz-muted);
+}
+.store-page[data-design='indumentaria'][data-tracking='tracking-timeline'] .ec-track > .ec-track-card {
+  border: 1px solid var(--dz-line);
+  border-radius: 0;
+  background: var(--dz-surface);
+}
+.store-page[data-design='indumentaria'][data-tracking='tracking-timeline'] .ec-track > .ec-track-card:has(.ec-timeline) {
+  border: 1px solid var(--dz-line-strong);
+  border-top: 4px solid var(--dz-accent);
+  padding: clamp(20px, 3vw, 32px);
+}
+.store-page[data-design='indumentaria'][data-tracking='tracking-timeline'] .ec-track .ec-track-h2 {
+  font-family: var(--dz-display);
+  font-weight: 400;
+  letter-spacing: -.01em;
+  color: var(--dz-ink);
+}
+.store-page[data-design='indumentaria'][data-tracking='tracking-timeline'] .ec-track .ec-track-card:has(.ec-timeline) .ec-track-h2 {
+  font-family: var(--dz-mono);
+  font-size: 10.5px;
+  font-weight: 700;
+  letter-spacing: .22em;
+  text-transform: uppercase;
+  color: var(--dz-accent-text);
+}
+.store-page[data-design='indumentaria'][data-tracking='tracking-timeline'] .ec-track .ec-track-status {
+  font-family: var(--dz-mono);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: .14em;
+  text-transform: uppercase;
+  border: 1px solid var(--dz-line-strong);
+  border-radius: 0;
+  background: var(--dz-card);
+  color: var(--dz-ink);
+}
+.store-page[data-design='indumentaria'][data-tracking='tracking-timeline'] .ec-track .ec-step-dot {
+  border-radius: 4px;
+  border: 1.5px solid var(--dz-line-strong);
+}
+.store-page[data-design='indumentaria'][data-tracking='tracking-timeline'] .ec-track .ec-step.is-current .ec-step-dot {
+  border-color: var(--dz-accent);
+  box-shadow: 0 0 0 4px color-mix(in srgb, var(--dz-accent-raw) 18%, transparent);
+}
+/* Timeline protagonista: pasos más generosos, puntos de sastre y fechas mono. */
+.store-page[data-design='indumentaria'][data-tracking='tracking-timeline'] .ec-track .ec-timeline li {
+  padding: 13px 0;
+  gap: 14px;
+}
+.store-page[data-design='indumentaria'][data-tracking='tracking-timeline'] .ec-track .ec-timeline li:not(:last-child)::before {
+  left: 5px;
+  top: 32px;
+  bottom: -8px;
+  width: 1.5px;
+  background: repeating-linear-gradient(180deg, var(--dz-line-strong) 0 4px, transparent 4px 9px);
+}
+.store-page[data-design='indumentaria'][data-tracking='tracking-timeline'] .ec-track .ec-tl-dot {
+  width: 12px;
+  height: 12px;
+  margin-top: 5px;
+  border-radius: 3px;
+  border: 1.5px solid var(--dz-ink);
+  background: var(--dz-card);
+}
+.store-page[data-design='indumentaria'][data-tracking='tracking-timeline'] .ec-track .ec-timeline li:first-child .ec-tl-dot {
+  background: var(--dz-accent);
+  border-color: var(--dz-accent);
+}
+.store-page[data-design='indumentaria'][data-tracking='tracking-timeline'] .ec-track .ec-timeline strong {
+  font-family: var(--dz-body);
+  font-weight: 700;
+  font-size: 14px;
+  color: var(--dz-ink);
+}
+.store-page[data-design='indumentaria'][data-tracking='tracking-timeline'] .ec-track .ec-timeline small {
+  font-family: var(--dz-mono);
+  font-size: 10px;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+}
+.store-page[data-design='indumentaria'][data-tracking='tracking-timeline'] .ec-track .ec-track-chip {
+  border: 1px dashed var(--dz-line-strong);
+  border-radius: 0;
+  background: var(--dz-card);
+  font-family: var(--dz-mono);
+  font-size: 10px;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+}
+.store-page[data-design='indumentaria'][data-tracking='tracking-timeline'] .ec-track :is(.ec-track-card, .ec-track-help, .ec-btn-primary, .ec-btn-ghost, .ec-track-receipt-btn, .ec-proof-drop, .ec-track-help-summary):focus-visible {
+  outline: 2px solid var(--dz-accent);
+  outline-offset: 2px;
+}
+@media (max-width: 640px) {
+  .store-page[data-design='indumentaria'][data-tracking='tracking-timeline'] .ec-track > .ec-track-card:has(.ec-timeline) {
+    padding: 18px 14px;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .store-page[data-design='indumentaria'][data-nav='card-menu-flyout'] .sp-top,
+  .store-page[data-design='indumentaria'][data-nav='card-menu-flyout'] .sp-top-links a,
+  .store-page[data-design='indumentaria'][data-nav='card-menu-flyout'] .sp-drawer.sp-navdrawer .sp-nav-item,
+  .store-page[data-design='indumentaria'][data-account='account-split'] .ec-account .acc-shell,
+  .store-page[data-design='indumentaria'][data-tracking='tracking-timeline'] .ec-track * {
+    transition: none;
+  }
+}

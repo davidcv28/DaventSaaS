@@ -800,18 +800,27 @@
     .m-tab.is-on{color:var(--hazard-on-band)}
     .m-scrim{display:block;position:fixed;left:0;right:0;top:0;height:var(--fr-h,100vh);z-index:54;background:rgba(10,9,6,.55);opacity:0;pointer-events:none;transition:opacity .25s var(--ease)}
     .m-scrim.open{opacity:1;pointer-events:auto}
-    .m-sheet{display:block;position:fixed;left:0;right:0;bottom:0;z-index:56;background:var(--surface);border-top:3px solid var(--hazard);transform:translateY(105%);transition:transform .32s var(--ease);max-height:min(calc(var(--fr-h,100vh) * .82),640px);overflow-y:auto;padding-bottom:env(safe-area-inset-bottom)}
+    /* Drawer derecho (side-drawer-right): la hoja móvil se ancla al borde
+       derecho a todo lo alto en vez de subir desde abajo. */
+    .m-sheet{display:block;position:fixed;top:0;right:0;bottom:0;left:auto;z-index:56;width:min(360px,88vw);background:var(--surface);border-left:3px solid var(--hazard);box-shadow:-18px 0 50px -22px rgba(10,9,6,.55);transform:translateX(105%);transition:transform .32s var(--ease);overflow-y:auto;padding-bottom:env(safe-area-inset-bottom)}
     .m-sheet.open{transform:none}
     .m-sheet-head{position:relative;display:flex;align-items:center;gap:12px;padding:18px 18px 16px;border-bottom:1.5px solid var(--frame)}
-    .m-grab{position:absolute;top:8px;left:50%;transform:translateX(-50%);width:38px;height:4px;background:var(--line)}
+    .m-grab{display:none}
     .m-sheet-brand{display:flex;align-items:center;gap:10px}
     .m-sheet-brand .mark{display:grid;place-items:center;width:32px;height:32px;background:var(--hazard);color:var(--hazard-ink);font:800 13px/1 var(--font-d)}
     .m-sheet-brand strong{font:800 14px/1 var(--font-d)}
     .m-close{margin-left:auto;display:grid;place-items:center;width:40px;height:40px;background:var(--surface-2);border:1.5px solid var(--frame);font-size:18px;color:var(--ink);cursor:pointer}
+    /* Filas tipo acordeón: cada destino es una celda con filete y una
+       cresta de peligro que marca la sección activa (is-active del spy
+       o de la ruta de superficie). */
     .m-sheet-nav{display:flex;flex-direction:column;padding:8px 0}
-    .m-sheet-nav a{display:flex;align-items:center;justify-content:space-between;padding:15px 20px;font:800 15px/1 var(--font-d);border-bottom:1px solid var(--line)}
+    .m-sheet-nav a{position:relative;display:flex;align-items:center;justify-content:space-between;padding:16px 20px 16px 26px;font:800 15px/1 var(--font-d);border-bottom:1px solid var(--line)}
+    .m-sheet-nav a::before{content:"";position:absolute;left:0;top:0;bottom:0;width:4px;background:var(--hazard);transform:scaleY(0);transition:transform .2s var(--ease)}
+    .m-sheet-nav a:hover::before,.m-sheet-nav a:focus-visible::before,.m-sheet-nav a.is-active::before{transform:scaleY(1)}
+    .m-sheet-nav a.is-active{background:var(--hazard-soft)}
     .m-sheet-nav a:last-child{border-bottom:0}
     .m-sheet-nav a span:last-child{font:700 10px/1 var(--font-m);color:var(--muted)}
+    .m-sheet-nav a.is-active span:last-child{color:var(--hazard-ink)}
     .m-sheet-cta{margin:6px 18px 20px;justify-content:center}
     html.m-lock,html.m-lock body{overflow:hidden}
     body{padding-bottom:calc(62px + env(safe-area-inset-bottom))}
@@ -1190,12 +1199,12 @@
       <button class="m-close" type="button" aria-label="Cerrar menú" data-m-close>×</button>
     </div>
     <nav class="m-sheet-nav" aria-label="Todas las secciones">
-      <a href="#inicio" data-ds-route="home" data-m-close><span>Inicio</span><span aria-hidden="true">01</span></a>
+      <a href="#inicio" data-ds-route="home" data-spy="inicio" data-m-close><span>Inicio</span><span aria-hidden="true">01</span></a>
       <a href="#catalogo" data-ds-route="catalog" data-flag="catalog" data-m-close><span>Equipamiento</span><span aria-hidden="true">02</span></a>
       <a href="#servicios" data-ds-route="services" data-flag="services" data-m-close><span>Servicios</span><span aria-hidden="true">03</span></a>
-      <a href="#empresa" data-ds-anchor data-ds-route="home" data-flag="about" data-m-close><span>La empresa</span><span aria-hidden="true">04</span></a>
+      <a href="#empresa" data-ds-anchor data-ds-route="home" data-flag="about" data-spy="empresa" data-m-close><span>La empresa</span><span aria-hidden="true">04</span></a>
       <a href="#registro" data-ds-anchor data-ds-route="home" data-flag="gallery" data-m-close><span>Registro</span><span aria-hidden="true">05</span></a>
-      <a href="#contacto" data-ds-anchor data-ds-route="home" data-flag="contact" data-m-close><span>Contacto</span><span aria-hidden="true">06</span></a>
+      <a href="#contacto" data-ds-anchor data-ds-route="home" data-flag="contact" data-spy="contacto" data-m-close><span>Contacto</span><span aria-hidden="true">06</span></a>
     </nav>
     <a class="btn btn-primary m-sheet-cta" href="{{store_whatsapp_url}}">Pedir cotización</a>
   </div>
@@ -1695,7 +1704,7 @@
   var progress = document.querySelector('.sp-progress');
   var reveals = [].slice.call(document.querySelectorAll('.reveal'));
   var spySections = [].slice.call(document.querySelectorAll('[data-spy-section]'));
-  var spyLinks = [].slice.call(document.querySelectorAll('.top-nav a[data-spy]'));
+  var spyLinks = [].slice.call(document.querySelectorAll('.top-nav a[data-spy],.m-sheet-nav a[data-spy]'));
   var reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
   /* imgs sin src piden el propio documento (~100 KB c/u): se quitan del
@@ -1775,7 +1784,7 @@
     });
     /* Barra superior: en catálogo/servicios el ítem activo es la ruta de la
        superficie; en la portada el spy vuelve a marcar su sección. */
-    [].forEach.call(document.querySelectorAll('.top-nav a[data-ds-route]'), function(a){
+    [].forEach.call(document.querySelectorAll('.top-nav a[data-ds-route],.m-sheet-nav a[data-ds-route]'), function(a){
       var route = a.getAttribute('data-ds-route');
       var on = surface !== 'landing' && ((surface === 'catalog' && route === 'catalog') || (surface === 'services' && route === 'services'));
       a.classList.toggle('is-active', on);
