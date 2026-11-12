@@ -1802,3 +1802,424 @@
   .store-page[data-template='mercado'] .mc-card.tpc:hover { transform: none; box-shadow: 0 1px 2px rgba(0, 0, 0, .1); }
   .store-page[data-template='mercado'] .mc-cat-list[data-view='grid'] .mc-cat-card:hover { box-shadow: 0 1px 2px rgba(0, 0, 0, .06); }
 }
+
+/* --- Ficha de producto (mc-pdp) --- */
+.store-page[data-template='mercado'] .mc-pdp-page {
+  background: var(--mc-bg);
+  padding-block: 18px 56px;
+}
+.store-page[data-template='mercado'] .mc-pdp-wrap {
+  max-width: var(--mc-container);
+  margin-inline: auto;
+  padding-inline: var(--mc-gutter);
+}
+.store-page[data-template='mercado'] .mc-pdp-crumbs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  font-size: 13px;
+  color: var(--mc-muted);
+  margin-bottom: 12px;
+}
+.store-page[data-template='mercado'] .mc-pdp-crumbs a { color: var(--mc-link); text-decoration: none; }
+.store-page[data-template='mercado'] .mc-pdp-crumbs a:hover { text-decoration: underline; }
+
+.store-page[data-template='mercado'] .mc-pdp-sheet {
+  background: var(--mc-surface);
+  border: 1px solid var(--mc-line);
+  border-radius: var(--mc-radius);
+  padding: 20px;
+}
+.store-page[data-template='mercado'] .mc-pdp-top {
+  display: grid;
+  grid-template-columns: 64px minmax(0, 1fr) minmax(280px, 340px);
+  gap: 20px;
+  align-items: start;
+}
+
+/* Rail de miniaturas */
+.store-page[data-template='mercado'] .mc-pdp-rail {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.store-page[data-template='mercado'] .mc-pdp-thumb {
+  width: 52px;
+  height: 52px;
+  padding: 3px;
+  border: 1px solid var(--mc-line);
+  border-radius: 6px;
+  background: var(--mc-surface);
+  cursor: pointer;
+  display: grid;
+  place-items: center;
+  transition: border-color .15s ease, box-shadow .15s ease;
+}
+.store-page[data-template='mercado'] .mc-pdp-thumb img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+.store-page[data-template='mercado'] .mc-pdp-thumb.is-on {
+  border: 2px solid var(--mc-blue);
+  box-shadow: 0 1px 4px rgba(0, 0, 0, .12);
+}
+
+/* Media principal */
+.store-page[data-template='mercado'] .mc-pdp-media {
+  position: relative;
+  margin: 0;
+  background: var(--mc-surface);
+  display: grid;
+  place-items: center;
+  min-height: 320px;
+}
+.store-page[data-template='mercado'] .mc-pdp-media img {
+  max-width: 100%;
+  max-height: 480px;
+  object-fit: contain;
+  display: block;
+}
+.store-page[data-template='mercado'] .mc-pdp-ph {
+  width: 100%;
+  height: 480px;
+  display: grid;
+  place-items: center;
+  background: var(--mc-soft);
+  color: var(--mc-muted);
+  border-radius: 6px;
+}
+.store-page[data-template='mercado'] .mc-pdp-fav {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  border: 1px solid var(--mc-line);
+  background: var(--mc-surface);
+  color: var(--mc-link);
+  display: grid;
+  place-items: center;
+  cursor: pointer;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, .1);
+  transition: border-color .15s ease, transform .15s ease;
+}
+.store-page[data-template='mercado'] .mc-pdp-fav:hover { border-color: var(--mc-blue); }
+.store-page[data-template='mercado'] .mc-pdp-zoom-hint {
+  position: absolute;
+  bottom: 10px;
+  left: 50%;
+  transform: translateX(-50%);
+  font-size: 11.5px;
+  color: var(--mc-muted);
+  pointer-events: none;
+}
+
+/* Columna de compra */
+.store-page[data-template='mercado'] .mc-pdp-buy {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  min-width: 0;
+}
+.store-page[data-template='mercado'] .mc-pdp-card {
+  background: var(--mc-surface);
+  border: 1px solid var(--mc-line);
+  border-radius: var(--mc-radius);
+  padding: 16px 18px;
+}
+.store-page[data-template='mercado'] .mc-pdp-name {
+  margin: 0 0 6px;
+  font-size: 20px;
+  font-weight: 600;
+  line-height: 1.3;
+  color: var(--mc-ink);
+}
+.store-page[data-template='mercado'] .mc-pdp-stars {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 13px;
+  color: var(--mc-muted);
+  margin-bottom: 8px;
+}
+.store-page[data-template='mercado'] .mc-pdp-price-card s {
+  display: block;
+  color: var(--mc-muted);
+  font-size: 14px;
+}
+.store-page[data-template='mercado'] .mc-pdp-price {
+  font-size: 28px;
+  font-weight: 600;
+  color: var(--mc-ink);
+  line-height: 1.15;
+}
+.store-page[data-template='mercado'] .mc-pdp-off {
+  display: inline-block;
+  margin-left: 8px;
+  padding: 2px 6px;
+  background: var(--mc-green);
+  color: var(--mc-on-green);
+  font-size: 12px;
+  font-weight: 700;
+  border-radius: 3px;
+  vertical-align: middle;
+}
+.store-page[data-template='mercado'] .mc-pdp-promo {
+  margin-top: 6px;
+  font-size: 13px;
+  color: var(--mc-green-ink);
+  font-weight: 600;
+}
+.store-page[data-template='mercado'] .mc-pdp-campaign {
+  display: block;
+  max-width: 100%;
+  margin-top: 10px;
+  border-radius: 6px;
+}
+.store-page[data-template='mercado'] .mc-pdp-pay-line {
+  margin-top: 8px;
+  font-size: 13.5px;
+  color: var(--mc-ink);
+}
+.store-page[data-template='mercado'] .mc-pdp-pay-line a,
+.store-page[data-template='mercado'] .mc-pdp-seller a { color: var(--mc-link); text-decoration: none; }
+.store-page[data-template='mercado'] .mc-pdp-pay-line a:hover,
+.store-page[data-template='mercado'] .mc-pdp-seller a:hover { text-decoration: underline; }
+.store-page[data-template='mercado'] .mc-pdp-seller {
+  margin-top: 8px;
+  font-size: 13px;
+  color: var(--mc-muted);
+}
+.store-page[data-template='mercado'] .mc-pdp-ship {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--mc-green-ink);
+}
+.store-page[data-template='mercado'] .mc-pdp-ship svg { flex: 0 0 auto; }
+.store-page[data-template='mercado'] .mc-pdp-ship small {
+  display: block;
+  font-weight: 400;
+  color: var(--mc-muted);
+  font-size: 12.5px;
+}
+.store-page[data-template='mercado'] .mc-pdp-stock {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--mc-ink);
+}
+.store-page[data-template='mercado'] .mc-pdp-stock.is-out { color: var(--sp-danger); }
+
+/* Cantidad */
+.store-page[data-template='mercado'] .mc-pdp-qty {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 14px;
+  color: var(--mc-ink);
+  flex-wrap: wrap;
+}
+.store-page[data-template='mercado'] .mc-pdp-qty-stepper {
+  display: inline-flex;
+  align-items: stretch;
+  border: 1px solid var(--mc-line);
+  border-radius: 6px;
+  overflow: hidden;
+}
+.store-page[data-template='mercado'] .mc-pdp-qty-stepper button {
+  width: 34px;
+  min-height: 34px;
+  border: 0;
+  background: var(--mc-surface);
+  color: var(--mc-link);
+  font-size: 18px;
+  cursor: pointer;
+  transition: background .15s ease;
+}
+.store-page[data-template='mercado'] .mc-pdp-qty-stepper button:hover { background: var(--mc-soft); }
+.store-page[data-template='mercado'] .mc-pdp-qty-stepper output,
+.store-page[data-template='mercado'] .mc-pdp-qty-stepper input {
+  min-width: 40px;
+  display: grid;
+  place-items: center;
+  text-align: center;
+  border: 0;
+  border-inline: 1px solid var(--mc-line);
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--mc-ink);
+  background: var(--mc-surface);
+}
+.store-page[data-template='mercado'] .mc-pdp-qty select {
+  min-height: 34px;
+  padding: 0 10px;
+  border: 1px solid var(--mc-line);
+  border-radius: 6px;
+  background: var(--mc-surface);
+  color: var(--mc-ink);
+  font-size: 14px;
+}
+
+/* Botones */
+.store-page[data-template='mercado'] .mc-pdp-btn {
+  display: block;
+  width: 100%;
+  min-height: 46px;
+  padding: 0 16px;
+  border-radius: 6px;
+  font-size: 15px;
+  font-weight: 600;
+  text-align: center;
+  cursor: pointer;
+  text-decoration: none;
+  line-height: 46px;
+  transition: filter .15s ease, background .15s ease, border-color .15s ease;
+}
+.store-page[data-template='mercado'] .mc-pdp-btn-primary {
+  background: var(--mc-blue);
+  color: var(--mc-on-blue);
+  border: 1px solid var(--mc-blue);
+}
+.store-page[data-template='mercado'] .mc-pdp-btn-primary:hover { background: var(--mc-blue-deep); border-color: var(--mc-blue-deep); }
+.store-page[data-template='mercado'] .mc-pdp-btn-soft {
+  background: color-mix(in srgb, var(--mc-blue) 12%, var(--mc-surface));
+  color: var(--mc-link);
+  border: 1px solid transparent;
+}
+.store-page[data-template='mercado'] .mc-pdp-btn-soft:hover { background: color-mix(in srgb, var(--mc-blue) 20%, var(--mc-surface)); }
+.store-page[data-template='mercado'] .mc-pdp-btn-ghost {
+  background: transparent;
+  color: var(--mc-link);
+  border: 1px solid var(--mc-line);
+}
+.store-page[data-template='mercado'] .mc-pdp-btn-ghost:hover { border-color: var(--mc-blue); }
+.store-page[data-template='mercado'] .mc-pdp-btn:disabled { opacity: .55; cursor: not-allowed; }
+
+/* Tarjeta de tienda */
+.store-page[data-template='mercado'] .mc-pdp-store-head {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.store-page[data-template='mercado'] .mc-pdp-store-head img,
+.store-page[data-template='mercado'] .mc-pdp-store-mono {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 1px solid var(--mc-line);
+  flex: 0 0 auto;
+}
+.store-page[data-template='mercado'] .mc-pdp-store-mono {
+  display: grid;
+  place-items: center;
+  background: var(--mc-soft);
+  color: var(--mc-muted);
+  font-weight: 700;
+  font-size: 16px;
+}
+.store-page[data-template='mercado'] .mc-pdp-store-head strong {
+  font-size: 14.5px;
+  color: var(--mc-ink);
+}
+.store-page[data-template='mercado'] .mc-pdp-store-check { color: var(--mc-green-ink); }
+.store-page[data-template='mercado'] .mc-pdp-share {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 10px;
+  font-size: 13px;
+  color: var(--mc-link);
+  background: none;
+  border: 0;
+  padding: 0;
+  cursor: pointer;
+}
+.store-page[data-template='mercado'] .mc-pdp-share:hover { text-decoration: underline; }
+
+/* Lo que tenés que saber / specs / reviews / relacionados */
+.store-page[data-template='mercado'] .mc-pdp-know {
+  margin-top: 20px;
+  border-top: 1px solid var(--mc-line);
+  padding-top: 18px;
+}
+.store-page[data-template='mercado'] .mc-pdp-know h2,
+.store-page[data-template='mercado'] .mc-pdp-specs h2,
+.store-page[data-template='mercado'] .mc-pdp-reviews h2,
+.store-page[data-template='mercado'] .mc-pdp-related h2 {
+  margin: 0 0 12px;
+  font-size: 18px;
+  font-weight: 600;
+  color: var(--mc-ink);
+}
+.store-page[data-template='mercado'] .mc-pdp-know ul {
+  margin: 0;
+  padding-left: 18px;
+  display: grid;
+  gap: 8px;
+  font-size: 14px;
+  color: var(--mc-ink);
+}
+.store-page[data-template='mercado'] .mc-pdp-know a { color: var(--mc-link); text-decoration: none; }
+.store-page[data-template='mercado'] .mc-pdp-know a:hover { text-decoration: underline; }
+.store-page[data-template='mercado'] .mc-pdp-specs { margin-top: 20px; }
+.store-page[data-template='mercado'] .mc-pdp-specs dl {
+  margin: 0;
+  border: 1px solid var(--mc-line);
+  border-radius: var(--mc-radius);
+  overflow: hidden;
+}
+.store-page[data-template='mercado'] .mc-pdp-specs dl > div {
+  display: flex;
+  padding: 10px 14px;
+  font-size: 14px;
+}
+.store-page[data-template='mercado'] .mc-pdp-specs dl > div:nth-child(odd) { background: var(--mc-soft); }
+.store-page[data-template='mercado'] .mc-pdp-specs dt {
+  flex: 0 0 40%;
+  font-weight: 600;
+  color: var(--mc-ink);
+}
+.store-page[data-template='mercado'] .mc-pdp-specs dd {
+  flex: 1;
+  margin: 0;
+  color: var(--mc-ink);
+}
+.store-page[data-template='mercado'] .mc-pdp-reviews { margin-top: 20px; }
+.store-page[data-template='mercado'] .mc-pdp-related { margin-top: 28px; }
+.store-page[data-template='mercado'] .mc-pdp-rel-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(190px, 260px));
+  gap: 14px;
+}
+
+@media (max-width: 980px) {
+  .store-page[data-template='mercado'] .mc-pdp-top { grid-template-columns: 56px 1fr; }
+  .store-page[data-template='mercado'] .mc-pdp-buy { grid-column: 1 / -1; }
+}
+@media (max-width: 600px) {
+  .store-page[data-template='mercado'] .mc-pdp-sheet { padding: 14px; }
+  .store-page[data-template='mercado'] .mc-pdp-top { grid-template-columns: 1fr; }
+  .store-page[data-template='mercado'] .mc-pdp-rail {
+    grid-column: 1 / -1;
+    flex-direction: row;
+    order: 2;
+    overflow-x: auto;
+  }
+  .store-page[data-template='mercado'] .mc-pdp-thumb { width: 56px; height: 56px; flex: 0 0 auto; }
+  .store-page[data-template='mercado'] .mc-pdp-media { min-height: 0; }
+  .store-page[data-template='mercado'] .mc-pdp-media img { max-height: 340px; width: 100%; }
+  .store-page[data-template='mercado'] .mc-pdp-ph { height: 300px; }
+  .store-page[data-template='mercado'] .mc-pdp-name { font-size: 18px; }
+  .store-page[data-template='mercado'] .mc-pdp-specs dt { flex-basis: 46%; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .store-page[data-template='mercado'] .mc-pdp-thumb,
+  .store-page[data-template='mercado'] .mc-pdp-fav,
+  .store-page[data-template='mercado'] .mc-pdp-qty-stepper button,
+  .store-page[data-template='mercado'] .mc-pdp-btn { transition: none; }
+}

@@ -137,6 +137,21 @@ const patternSurface = computed(() => {
           : 'landing'
   )
 })
+// Plantilla efectiva de la tienda (definida antes de usePattern: el watcher
+// inmediato de studioTheme evalúa usePattern antes de llegar a la línea
+// original y pageTemplate en TDZ rompía el setup → página en blanco).
+// Marca el nivel del plan (Básico: Raíz/Esencial; Estándar suma los diseños
+// de rubro). Si el guardado quedó fuera — baja de plan o plantilla retirada
+// — se fuerza 'raiz'. En modo Studio la plantilla en ensayo se resuelve
+// contra el catálogo completo (los presets bloqueados también se pueden
+// probar — el gate de allowed_templates solo corre al guardar). Fuera del
+// Studio manda la whitelist del plan como siempre.
+const pageTemplate = computed(() => {
+  if (studioMode.value && studioTemplate.value) {
+    return resolveStoreTemplate(studioTemplate.value, [...Object.keys(STORE_TEMPLATES), ...AI_EXTRA_TEMPLATES])
+  }
+  return resolveStoreTemplate(custom.value.template, store.value?.allowed_templates)
+})
 const usePattern = computed(() => Boolean(
   //Sin el payload de la tienda no se conoce el tema/identidad: montar antes
   //cargaba el documento en claro y el cambio a oscuro se veía como flash.
@@ -149,7 +164,10 @@ const usePattern = computed(() => Boolean(
   //El catálogo es siempre la plantilla Vue (TplProductCard): la tarjeta es
   //la misma en TODAS las tiendas y pagina contra la API — el documento del
   //diseño solo cubre portada, ficha y servicios.
-  patternSurface.value !== 'catalog'
+  patternSurface.value !== 'catalog' &&
+  //La ficha de MERCADO también es la vista Vue propia (mc-pdp, estilo
+  //marketplace); el resto de diseños conserva la ficha de su documento.
+  (patternSurface.value !== 'product' || pageTemplate.value !== 'mercado')
 ))
 // Navbar del diseño en las rutas que el documento no pinta (auth, cuenta,
 // carrito, checkout, seguimiento, legales y las que caen a la plantilla
@@ -444,19 +462,6 @@ const pageAttrs = computed(() => ({ ...publishedThemeAttrs.value, ...studioAttrs
 // destacados o, en su lugar, un botón de modo claro/oscuro en el nav.
 const hasDesignAdvanced = computed(() => Boolean(store.value?.has_design_advanced))
 // Diseño de la web (template): la whitelist allowed_templates del payload
-// marca el nivel del plan (Básico: Raíz/Esencial; Estándar suma los diseños
-// de rubro). Si el guardado quedó fuera — baja de
-// plan o plantilla retirada — se fuerza 'raiz'.
-// En modo Studio la plantilla en ensayo se resuelve contra el catálogo
-// completo (los presets bloqueados también se pueden probar — el gate de
-// allowed_templates solo corre al guardar). Fuera del Studio manda la
-// whitelist del plan como siempre.
-const pageTemplate = computed(() => {
-  if (studioMode.value && studioTemplate.value) {
-    return resolveStoreTemplate(studioTemplate.value, [...Object.keys(STORE_TEMPLATES), ...AI_EXTRA_TEMPLATES])
-  }
-  return resolveStoreTemplate(custom.value.template, store.value?.allowed_templates)
-})
 // Estilo del catálogo (DesignStyle) aplicado a la tienda: alimenta el menú
 // y la firma de movimiento propios de cada estilo. Sin estilo elegido cae
 // en `base` (la barra neutra de la plataforma).
