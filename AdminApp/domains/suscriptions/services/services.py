@@ -1,5 +1,6 @@
 import logging
 from datetime import timedelta
+from decimal import Decimal, ROUND_HALF_UP
 
 from django.db import transaction
 from django.utils import timezone
@@ -56,6 +57,7 @@ def RedeemCouponQuery(profile, code : str) -> tuple:
             raise serializers.ValidationError({'detail': 'Primero tenés que dar de baja el débito automático para canjear un cupón.'})
         suscription.plan_suscription            =   coupon.plan
         suscription.pending_plan_suscription    =   None
+        suscription.pending_charge              =   None
         suscription.status                      =   Suscription.STATUS_ACTIVE
         suscription.start_date                  =   now
         suscription.end_date                    =   now + timedelta(days = coupon.days)
@@ -66,3 +68,65 @@ def RedeemCouponQuery(profile, code : str) -> tuple:
         CouponRedemption.objects.create(coupon = coupon, user = profile, suscription = suscription)
     logger.info('Cupón canjeado: coupon=%s user=%s', coupon.code, profile.pk)
     return suscription, coupon
+
+#=================================
+# PLAN CHANGE QUERY (modelo Netflix)
+#=================================
+def _upgrade_charge(suscription, target_plan):
+    """
+    Cargo prorrateado de un upgrade: (plan_nuevo - plan_vigente) ×
+    días_restantes / días_del_período. Solo aplica con suscripción paga
+    vigente — un plan trial ($0) o un período vencido no prorratea: el
+    cambio se cobra a precio completo y reinicia el período al acreditarse.
+    """
+    current         =   suscription.plan_suscription
+    now             =   timezone.now()
+    if (
+        suscription.status != Suscription.STATUS_ACTIVE
+        or not current or current.is_trial or current.price <= 0
+        or target_plan.price <= current.price
+        or not suscription.end_date or suscription.end_date <= now
+        or not suscription.start_date or suscription.start_date >= suscription.end_date
+    ):
+        return None
+    period_s        =   Decimal(str((suscription.end_date - suscription.start_date).total_seconds()))
+    remain_s        =   Decimal(str((suscription.end_date - now).total_seconds()))
+    charge          =   (target_plan.price - current.price) * remain_s / period_s
+    charge          =   charge.quantize(Decimal('0.01'), rounding = ROUND_HALF_UP)
+    return max(charge, Decimal('0.01'))
+
+def RequestPlanChangeQuery(suscription, target_plan):
+    """
+    Cambio de plan del cliente (modelo Netflix):
+
+    - UPGRADE (plan más caro): queda pendiente con `pending_charge`
+      prorrateado — el checkout cobra solo la diferencia por los días
+      restantes y al acreditarse el plan cambia SIN reiniciar el período
+      (la fecha de facturación se mantiene y el próximo débito sale al
+      precio nuevo).
+    - DOWNGRADE (plan más barato) o lateral: queda `pending_plan` sin
+      cargo — en la próxima facturación se cobra el precio nuevo y recién
+      ahí se aplica el plan (el usuario conserva el plan actual hasta
+      end_date).
+    - Mismo plan: cancela el cambio pendiente.
+
+    Con débito MP vivo se realinea el monto del próximo débito al plan
+    objetivo (best-effort: si MP falla no se bloquea el cambio local — el
+    checkout/subscription lo reintenta).
+    """
+    if target_plan.id == suscription.plan_suscription_id:
+        suscription.pending_plan_suscription    =   None
+        suscription.pending_charge              =   None
+        suscription.save(update_fields = ['pending_plan_suscription', 'pending_charge'])
+        return suscription
+    is_upgrade      =   target_plan.price > (suscription.plan_suscription.price or Decimal('0'))
+    suscription.pending_plan_suscription    =   target_plan
+    suscription.pending_charge              =   _upgrade_charge(suscription, target_plan) if is_upgrade else None
+    suscription.save(update_fields = ['pending_plan_suscription', 'pending_charge'])
+    if suscription.preapproval_id and not suscription.cancelled_at:
+        try:
+            from AdminApp.domains.payments.services import UpdatePreapprovalPlanQuery
+            UpdatePreapprovalPlanQuery(suscription)
+        except Exception:
+            logger.warning('No se pudo realinear el débito MP del plan pendiente (suscription=%s)', suscription.pk)
+    return suscription

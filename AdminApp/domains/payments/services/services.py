@@ -74,7 +74,7 @@ def CreatePaymentQuery(validated_data : dict, mp_payment : dict = None) -> Payme
             #Dentro de atomic: ApplyPendingPlanQuery bloquea la suscripción
             #(select_for_update) y autocommit reventaría fuera de transacción.
             with transaction.atomic():
-                ApplyPendingPlanQuery(payment_exists.suscription)
+                ApplyPendingPlanQuery(payment_exists.suscription, paid_amount = payment_exists.amount)
         return payment_exists
     if mp_payment is None:
         mp_payment      =   GetMercadoPagoPayment(payment_id)
@@ -89,12 +89,17 @@ def CreatePaymentQuery(validated_data : dict, mp_payment : dict = None) -> Payme
     #no debe acreditar el plan.
     if (mp_payment.get('currency_id') or 'ARS') != 'ARS':
         raise serializers.ValidationError({'payment_id': 'La moneda del pago no es ARS.'})
-    #VERIFICACIÓN DE MONTO: debe coincidir con el precio del plan (pendiente si existe)
+    #VERIFICACIÓN DE MONTO: precio completo del plan (pendiente si existe)
+    #o el cargo prorrateado de un upgrade (pending_charge). Un pago a
+    #precio completo con upgrade pendiente también es válido: cubre el
+    #cambio a período completo y ApplyPendingPlanQuery reinicia las fechas.
     amount              =   Decimal(str(mp_payment.get('transaction_amount', '0')))
-    plan_price          =   (suscription.pending_plan_suscription or suscription.plan_suscription).price
-    if amount != plan_price:
+    pending_plan        =   suscription.pending_plan_suscription
+    plan_price          =   (pending_plan or suscription.plan_suscription).price
+    expected_amount     =   suscription.pending_charge if suscription.pending_charge is not None else plan_price
+    if amount != expected_amount and amount != plan_price:
         raise serializers.ValidationError({
-            'payment_id':   f'El monto del pago (${amount}) no coincide con el precio del plan (${plan_price})'
+            'payment_id':   f'El monto del pago (${amount}) no coincide con el importe esperado (${expected_amount})'
         })
     status              =   MP_STATUS_MAP.get(mp_payment.get('status'), Payment.Status.PENDING)
     paid_at             =   parse_datetime(mp_payment['date_approved']) if status == Payment.Status.APPROVED and mp_payment.get('date_approved') else None
@@ -114,7 +119,7 @@ def CreatePaymentQuery(validated_data : dict, mp_payment : dict = None) -> Payme
             )
             #PLAN PENDIENTE: se establece la suscripción cuando el pago se acredita
             if status == Payment.Status.APPROVED:
-                ApplyPendingPlanQuery(suscription, renew = True)
+                ApplyPendingPlanQuery(suscription, renew = True, paid_amount = new_payment.amount)
                 UpdateRevenueRollupsQuery(new_payment)
                 #FACTURA: se emite dentro de la misma transacción que el cobro
                 IssueInvoiceQuery(new_payment)
@@ -163,7 +168,7 @@ def PaymentWebhookQuery(payment_id):
         #PLAN PENDIENTE: se establece la suscripción cuando el pago se acredita
         #renew solo si el pago entra a approved ahora: un webhook repetido no vuelve a extender
         if new_status == Payment.Status.APPROVED:
-            ApplyPendingPlanQuery(payment.suscription, renew = old_status != Payment.Status.APPROVED)
+            ApplyPendingPlanQuery(payment.suscription, renew = old_status != Payment.Status.APPROVED, paid_amount = payment.amount)
         #ROLLUPS: solo se suma cuando el pago entra en approved; se descuenta si sale de approved
         if new_status == Payment.Status.APPROVED and old_status != Payment.Status.APPROVED:
             UpdateRevenueRollupsQuery(payment, sign = 1)
@@ -199,22 +204,35 @@ def UpdateRevenueRollupsQuery(payment, sign = 1):
 #APPLY PENDING PLAN QUERY (establece el plan una vez acreditado el pago)
 #PRECONDICIÓN: llamar dentro de transaction.atomic — la fila se bloquea con
 #select_for_update para serializar extensiones concurrentes del plan.
-def ApplyPendingPlanQuery(suscription, renew = False):
+def ApplyPendingPlanQuery(suscription, renew = False, paid_amount = None):
     suscription         =   Suscription.objects.select_for_update().get(pk = suscription.pk)
     pending_plan        =   suscription.pending_plan_suscription
     is_pending_payment  =   suscription.status == SUSCRIPTION_STATUS_PENDING_PAYMENT
     if not pending_plan and not is_pending_payment and not renew:
         return suscription
     now                 =   timezone.now()
-    update_fields       =   ['status', 'start_date', 'end_date']
+    update_fields       =   ['status', 'start_date', 'end_date', 'pending_charge']
+    #UPGRADE PRORRATEADO (pending_charge): el cobro fue solo la diferencia
+    #del plan por los días restantes — el plan cambia pero el período NO se
+    #reinicia: la fecha de facturación se mantiene y el próximo débito ya
+    #sale al precio nuevo (la preapproval se realineó al pedir el cambio).
+    prorated            =   (
+        pending_plan is not None
+        and suscription.pending_charge is not None
+        and paid_amount is not None
+        and Decimal(str(paid_amount)) == suscription.pending_charge
+    )
     if pending_plan:
         suscription.plan_suscription            =   pending_plan
         suscription.pending_plan_suscription    =   None
         update_fields                          +=   ['plan_suscription', 'pending_plan_suscription']
-    #Todo cobro aprobado reinicia el período: 30 días desde el cobro (máx. 30).
+    suscription.pending_charge    =   None
+    #Todo cobro aprobado a precio completo reinicia el período: 30 días
+    #desde el cobro (máx. 30). El prorrateado de upgrade no toca las fechas.
+    if not prorated:
+        suscription.start_date  =   now
+        suscription.end_date    =   now + timedelta(days = 30)
     suscription.status      =   SUSCRIPTION_STATUS_ACTIVE
-    suscription.start_date  =   now
-    suscription.end_date    =   now + timedelta(days = 30)
     suscription.save(update_fields = update_fields)
     return suscription
 
@@ -275,13 +293,17 @@ def SyncSuscriptionPaymentsQuery(suscription, payment_id = None):
 
 #CHECKOUT PREFERENCE QUERY (crea la preferencia de Checkout Pro para la suscripción)
 def CreateCheckoutPreferenceQuery(suscription):
-    #Cobra el plan pendiente si existe; el plan vigente solo cambia al acreditarse el pago
+    #Cobra el plan pendiente si existe; el plan vigente solo cambia al acreditarse el pago.
+    #Con upgrade pendiente (pending_charge) el checkout cobra solo la
+    #diferencia prorrateada — el plan cambia al acreditarse sin mover la
+    #fecha de facturación (modelo Netflix).
     plan                =   suscription.pending_plan_suscription or suscription.plan_suscription
+    charge              =   suscription.pending_charge if suscription.pending_charge is not None else plan.price
     preference_data     =   {
         'items'             :   [{
             'title'         :   f'DAVENT · {plan.name}',
             'quantity'      :   1,
-            'unit_price'    :   float(plan.price),
+            'unit_price'    :   float(charge),
             'currency_id'   :   'ARS',
         }],
         'external_reference':   str(suscription.id),

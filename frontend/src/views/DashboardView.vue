@@ -639,7 +639,13 @@ const alertQueue = computed(() => {
   if (plan.value && !plan.value.isCurrent && plan.value.status !== 'Pendiente de pago') list.push({ id: 'expired', kind: 'danger', title: 'Tu suscripción venció', text: 'Tu web pública está pausada. Renová el plan para reactivarla al instante.', cta: 'Renovar', run: go('plans') })
   else if (inGrace.value) list.push({ id: 'grace', kind: 'warn', title: 'Estamos reintentando el débito', text: 'Mercado Pago reintenta la renovación durante unos días; tu plan sigue activo mientras tanto.', cta: 'Ver mi plan', run: go('plans') })
   if (plan.value?.isCurrent && !plan.value.autoRenew && plan.value.remaining !== null && plan.value.remaining <= 5) list.push({ id: 'expiring', kind: 'warn', title: `Tu plan vence en ${plan.value.remaining} ${plan.value.remaining === 1 ? 'día' : 'días'}`, text: 'Renová antes del vencimiento para no perder tu web ni tu catálogo.', cta: 'Renovar', run: go('plans') })
-  if (billing.subscription?.pending_plan_name) list.push({ id: 'pending', kind: 'info', title: `Cambio a ${billing.subscription.pending_plan_name} pendiente`, text: 'Se aplica solo cuando se acredite el pago.', cta: 'Ver pagos', run: go('payments') })
+  if (billing.subscription?.pending_plan_name) {
+    const charge = billing.subscription.pending_charge
+    const text = charge != null
+      ? `Pagá solo la diferencia prorrateada ($${Number(charge).toLocaleString('es-AR')}) y el plan cambia al instante, sin mover tu fecha de facturación.`
+      : 'Se aplica en tu próxima facturación, al precio del plan nuevo.'
+    list.push({ id: 'pending', kind: 'info', title: `Cambio a ${billing.subscription.pending_plan_name} pendiente`, text, cta: 'Ver pagos', run: go('payments') })
+  }
   if (storagePct.value >= 80) list.push({ id: 'storage', kind: 'warn', title: `Almacenamiento al ${storagePct.value}%`, text: 'Te estás quedando sin espacio para imágenes: borrá fotos viejas o ampliá el plan.', cta: 'Revisar', run: go('design') })
   if (chatUnread.value) list.push({ id: 'chat', kind: 'info', title: chatUnread.value === 1 ? 'Tenés un mensaje sin leer' : `Tenés ${chatUnread.value} mensajes sin leer`, text: 'El equipo de soporte te respondió.', cta: 'Responder', run: onBellClick })
   return list

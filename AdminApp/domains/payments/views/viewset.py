@@ -249,10 +249,12 @@ class PaymentViewSet(PaymentBaseViewSet):
             #Reintento de checkout: solo se corrige el plan elegido, sigue pendiente
             suscription.plan_suscription    =   target_plan
             suscription.save(update_fields = ['plan_suscription'])
-        elif target_plan and target_plan.id != suscription.plan_suscription_id:
-            #El plan se aplica recién cuando el pago se acredita
-            suscription.pending_plan_suscription    =   target_plan
-            suscription.save(update_fields = ['pending_plan_suscription'])
+        elif target_plan:
+            #Modelo Netflix (RequestPlanChangeQuery): upgrade = cargo
+            #prorrateado inmediato, downgrade = se aplica en la próxima
+            #facturación; re-elegir el plan vigente cancela el pendiente.
+            from AdminApp.domains.suscriptions.services import RequestPlanChangeQuery
+            RequestPlanChangeQuery(suscription, target_plan)
         #DATOS FISCALES: el alta ya no los pide — se exigen recién al iniciar
         #un cobro porque la factura se emite sobre este perfil (ARCA + PDF).
         #El frontend usa 'billing_required' para abrir el form de facturación.

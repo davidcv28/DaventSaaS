@@ -88,6 +88,7 @@ class SuscriptionViewSet(SuscriptionBaseViewSet):
         suscription =   Suscription.objects.filter(user = profile).first() or Suscription(user = profile)
         suscription.plan_suscription            =   plan
         suscription.pending_plan_suscription    =   None
+        suscription.pending_charge              =   None
         suscription.status                      =   Suscription.STATUS_ACTIVE
         suscription.start_date                  =   now
         suscription.end_date                    =   now + timedelta(days = 30)

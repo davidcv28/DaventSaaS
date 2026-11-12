@@ -63,6 +63,11 @@ class Suscription(models.Model):
     user                        =   models.OneToOneField(UserProfile, on_delete = models.CASCADE, related_name = 'suscription')
     plan_suscription            =   models.ForeignKey(SuscriptionPlan, on_delete = models.RESTRICT, verbose_name = 'Suscripción', db_index = False)
     pending_plan_suscription    =   models.ForeignKey(SuscriptionPlan, on_delete = models.SET_NULL, null = True, blank = True, related_name = 'pending_suscriptions', verbose_name = 'Plan pendiente de pago', db_index = False)
+    #Cargo prorrateado de un UPGRADE (modelo Netflix): cuando el plan
+    #pendiente es más caro que el vigente, el cobro inmediato es solo la
+    #diferencia por los días restantes del período — no el precio entero.
+    #NULL = el cambio se cobra a precio completo (downgrade/plan nuevo).
+    pending_charge              =   models.DecimalField(max_digits = 12, decimal_places = 2, null = True, blank = True, verbose_name = 'Cargo prorrateado pendiente')
     start_date                  =   models.DateTimeField(default = timezone.now, verbose_name = 'Fecha de inicio')
     end_date                    =   models.DateTimeField(verbose_name = 'Fecha de caducidad')
     status                      =   models.CharField(default = 'Suscripción activa', max_length = 30, null = False, blank = False, verbose_name = 'Estado de suscripción')

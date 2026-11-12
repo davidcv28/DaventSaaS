@@ -544,9 +544,10 @@ class CheckoutResolutionTests(TestCase):
         suscription     =   Suscription.objects.get(user = profile)
         self.assertEqual(suscription.status, Suscription.STATUS_PENDING_PAYMENT)
 
+    @patch('AdminApp.domains.payments.services.UpdatePreapprovalPlanQuery')
     @patch('AdminApp.domains.payments.views.viewset.UpdatePreapprovalPlanQuery')
     @patch('AdminApp.domains.payments.views.viewset.CreateCheckoutPreferenceQuery')
-    def test_checkout_with_live_debit_aligns_pending_plan_amount(self, preference, update_preapproval):
+    def test_checkout_with_live_debit_aligns_pending_plan_amount(self, preference, update_preapproval, update_preapproval_svc):
         #Cambio de plan por checkout con débito vivo: la preapproval de MP
         #también debe cargar el plan pendiente — si no, el próximo débito
         #cobra el monto viejo y el webhook lo rechaza (cobro huérfano).
@@ -675,6 +676,124 @@ class CreatePaymentSecurityTests(TestCase):
             mp_payment = self._mp(suscription, status = 'rejected'),
         )
         self.assertEqual(payment.status, Payment.Status.REJECTED)
+
+
+class PlanChangeBillingTests(TestCase):
+    """Cambio de plan modelo Netflix: upgrade = cargo prorrateado inmediato
+    que no mueve la fecha de facturación; downgrade = se aplica en la
+    próxima facturación al precio nuevo."""
+
+    def _suscription(self, plan_price = 1000):
+        #Período de 30 días: empezado hace 10, vencen en 20 → prorrateo ×20/30.
+        suscription                     =   _make_suscription(
+            auto_renew = False, preapproval_id = None,
+            start_date = timezone.now() - timedelta(days = 10),
+            end_date   = timezone.now() + timedelta(days = 20),
+        )
+        suscription.plan_suscription.price  =   plan_price
+        suscription.plan_suscription.save(update_fields = ['price'])
+        return suscription
+
+    def test_upgrade_sets_prorated_pending_charge(self):
+        from AdminApp.domains.suscriptions.services import RequestPlanChangeQuery
+        suscription     =   self._suscription(plan_price = 1000)
+        premium         =   SuscriptionPlan.objects.create(name = 'Plan ecommerce', price = 2000)
+        old_end         =   suscription.end_date
+        RequestPlanChangeQuery(suscription, premium)
+        suscription.refresh_from_db()
+        #Plan vigente intacto: el upgrade solo se aplica al acreditarse el cargo.
+        self.assertEqual(suscription.plan_suscription.price, 1000)
+        self.assertEqual(suscription.pending_plan_suscription, premium)
+        #Diferencia (2000-1000) × 20/30 días restantes ≈ 666.67
+        self.assertIsNotNone(suscription.pending_charge)
+        self.assertAlmostEqual(float(suscription.pending_charge), 666.67, places = 1)
+        self.assertEqual(suscription.end_date, old_end)
+
+    def test_downgrade_has_no_pending_charge(self):
+        from AdminApp.domains.suscriptions.services import RequestPlanChangeQuery
+        suscription     =   self._suscription(plan_price = 2000)
+        basic           =   SuscriptionPlan.objects.create(name = 'Plan basico', price = 1000)
+        RequestPlanChangeQuery(suscription, basic)
+        suscription.refresh_from_db()
+        self.assertEqual(suscription.pending_plan_suscription, basic)
+        self.assertIsNone(suscription.pending_charge)
+        self.assertEqual(suscription.plan_suscription.price, 2000)
+
+    def test_same_plan_cancels_pending_change(self):
+        from AdminApp.domains.suscriptions.services import RequestPlanChangeQuery
+        suscription     =   self._suscription(plan_price = 1000)
+        other           =   SuscriptionPlan.objects.create(name = 'Plan lateral', price = 1500)
+        RequestPlanChangeQuery(suscription, other)
+        suscription.refresh_from_db()
+        self.assertIsNotNone(suscription.pending_plan_suscription)
+        #Re-elegir el plan vigente cancela el cambio pendiente.
+        RequestPlanChangeQuery(suscription, suscription.plan_suscription)
+        suscription.refresh_from_db()
+        self.assertIsNone(suscription.pending_plan_suscription)
+        self.assertIsNone(suscription.pending_charge)
+
+    def test_trial_upgrade_not_prorated(self):
+        #La trial ($0, 1 día) no prorratea: el plan pago se cobra completo.
+        from AdminApp.domains.suscriptions.services import RequestPlanChangeQuery
+        suscription     =   _make_suscription(
+            auto_renew = False, preapproval_id = None,
+            start_date = timezone.now() - timedelta(hours = 12),
+            end_date   = timezone.now() + timedelta(hours = 12),
+        )
+        suscription.plan_suscription.is_trial    =   True
+        suscription.plan_suscription.price       =   0
+        suscription.plan_suscription.save(update_fields = ['is_trial', 'price'])
+        premium         =   SuscriptionPlan.objects.create(name = 'Plan pago trial', price = 1000)
+        RequestPlanChangeQuery(suscription, premium)
+        suscription.refresh_from_db()
+        self.assertIsNone(suscription.pending_charge)
+
+    def test_prorated_payment_applies_plan_keeping_period(self):
+        #El cobro del cargo prorrateado acredita el upgrade SIN mover end_date.
+        from AdminApp.domains.suscriptions.services import RequestPlanChangeQuery
+        suscription     =   self._suscription(plan_price = 1000)
+        premium         =   SuscriptionPlan.objects.create(name = 'Plan ecommerce', price = 2000)
+        RequestPlanChangeQuery(suscription, premium)
+        suscription.refresh_from_db()
+        charge          =   suscription.pending_charge
+        old_end         =   suscription.end_date
+        payment         =   CreatePaymentQuery(
+            {'user': suscription.user, 'suscription': suscription, 'payment_id': 999002},
+            mp_payment = {
+                'id': '999002', 'external_reference': str(suscription.id),
+                'transaction_amount': str(charge), 'currency_id': 'ARS',
+                'status': 'approved', 'date_approved': timezone.now().isoformat(),
+            },
+        )
+        suscription.refresh_from_db()
+        self.assertEqual(payment.status, Payment.Status.APPROVED)
+        self.assertEqual(suscription.plan_suscription, premium)
+        self.assertIsNone(suscription.pending_plan_suscription)
+        self.assertIsNone(suscription.pending_charge)
+        #Período intacto: la facturación sigue en la fecha original.
+        self.assertEqual(suscription.end_date, old_end)
+        self.assertEqual(suscription.status, Suscription.STATUS_ACTIVE)
+
+    def test_full_price_payment_resets_period(self):
+        #Si entra un cobro a precio completo con upgrade pendiente (p. ej.
+        #el débito de renovación), cubre el cambio a período completo:
+        #se aplica el plan y el período se reinicia a now+30d.
+        from AdminApp.domains.suscriptions.services import RequestPlanChangeQuery
+        suscription     =   self._suscription(plan_price = 1000)
+        premium         =   SuscriptionPlan.objects.create(name = 'Plan ecommerce', price = 2000)
+        RequestPlanChangeQuery(suscription, premium)
+        CreatePaymentQuery(
+            {'user': suscription.user, 'suscription': suscription, 'payment_id': 999003},
+            mp_payment = {
+                'id': '999003', 'external_reference': str(suscription.id),
+                'transaction_amount': '2000', 'currency_id': 'ARS',
+                'status': 'approved', 'date_approved': timezone.now().isoformat(),
+            },
+        )
+        suscription.refresh_from_db()
+        self.assertEqual(suscription.plan_suscription, premium)
+        self.assertIsNone(suscription.pending_charge)
+        self.assertGreater(suscription.end_date, timezone.now() + timedelta(days = 25))
 
 
 class RevenueRollupTests(TestCase):

@@ -79,8 +79,10 @@ class SuscriptionSerializer(SuscriptionCreateMixin, serializers.ModelSerializer)
             return instance
         #Suscripción vigente o pagada: el cambio queda pendiente y se aplica
         #recién cuando el cobro se acredita (checkout o débito automático).
-        instance.pending_plan_suscription   =   plan
-        instance.save(update_fields = ['pending_plan_suscription'])
+        #Modelo Netflix: upgrade = cargo prorrateado inmediato, downgrade =
+        #se aplica en la próxima facturación al precio nuevo.
+        from AdminApp.domains.suscriptions.services import RequestPlanChangeQuery
+        RequestPlanChangeQuery(instance, plan)
         return instance
 
 #=========================================
@@ -92,6 +94,7 @@ class SuscriptionSerializerList(serializers.ModelSerializer):
     plan_price          =   serializers.DecimalField(source = 'plan_suscription.price', max_digits = 12, decimal_places = 2, read_only = True)
     is_trial            =   serializers.BooleanField(source = 'plan_suscription.is_trial', read_only = True)
     pending_plan_name   =   serializers.CharField(source = 'pending_plan_suscription.name', read_only = True)
+    pending_charge      =   serializers.DecimalField(max_digits = 12, decimal_places = 2, read_only = True)
     user_name           =   serializers.CharField(source = 'user.user.username', read_only = True)
     user_email          =   serializers.CharField(source = 'user.user.email', read_only = True)
     first_name          =   serializers.CharField(source = 'user.first_name', read_only = True)
@@ -105,7 +108,7 @@ class SuscriptionSerializerList(serializers.ModelSerializer):
     is_current          =   serializers.SerializerMethodField()
     class Meta:
         model           =   Suscription
-        fields          =   ['id', 'user', 'auth_user_id', 'user_name', 'user_email', 'first_name', 'last_name', 'business_name', 'plan_suscription', 'plan_name', 'plan_price', 'is_trial', 'pending_plan_name', 'start_date', 'end_date', 'status', 'auto_renew', 'cancelled_at', 'access_until', 'has_preapproval', 'is_current']
+        fields          =   ['id', 'user', 'auth_user_id', 'user_name', 'user_email', 'first_name', 'last_name', 'business_name', 'plan_suscription', 'plan_name', 'plan_price', 'is_trial', 'pending_plan_name', 'pending_charge', 'start_date', 'end_date', 'status', 'auto_renew', 'cancelled_at', 'access_until', 'has_preapproval', 'is_current']
     def get_access_until(self, obj):
         return obj.access_until()
     def get_has_preapproval(self, obj):
