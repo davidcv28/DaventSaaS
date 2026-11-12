@@ -88,7 +88,13 @@
        * host aún no haya mandado `davent:ds-frame`: sin esa compensación
        * la barra de abajo se dibujaba SOLAPADA sobre el topbar. */
       if (root.getAttribute('data-ds-surface') === 'chrome') {
+        /* En "chrome" NO hay contenido: scrollHeight devuelve el alto del
+         * propio iframe (que el host agranda con cada reporte) y sumarlo
+         * creaba un bucle de realimentación con centenares de px de
+         * franja vacía. El alto es SOLO el cromo: borde inferior del pin
+         * superior + alto del chrome inferior. */
         if (!pinned) collectFixed()
+        h = 0
         ;(pinned || []).forEach(function (p) {
           if (p.prop !== 'top') return
           var cs3 = getComputedStyle(p.el)
@@ -364,9 +370,18 @@
         : (window.innerHeight || 0)
       if (docBot) {
         var r = p.el.getBoundingClientRect()
-        if (r.top > docBot + 4) return
+        /* Una barra pegada abajo TERMINA en el borde visible del marco
+         * (r.bottom ≈ docBot). Una hoja cerrada por translateY conserva
+         * layout pero su rect entero cae debajo del borde: contarla
+         * inflaba el alto del chrome con centenares de px fantasma. */
+        if (r.bottom > docBot + 4) return
       }
-      max = Math.max(max, p.el.offsetHeight + (p.base || 0))
+      /* El `base` (margen CSS entre la barra y el borde) se mide en un
+       * viewport transitorio mientras el host estira el iframe: una
+       * medición temprana devolvía cientos de px fantasma y el chrome
+       * quedaba con una franja vacía gigante. Un margen real de barra
+       * fija nunca pasa de ~24px (safe-area + respiro del diseño). */
+      max = Math.max(max, p.el.offsetHeight + Math.min(p.base || 0, 24))
     })
     return max
   }
