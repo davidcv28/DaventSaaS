@@ -1522,6 +1522,10 @@
   font-size: 12px; font-weight: 700;
   color: var(--sp-muted, inherit);
 }
+.store-page[data-design='moderntec'][data-tracking='tracking-minimal'] .ec-step-num { display: none; }
+.store-page[data-design='moderntec'][data-tracking='tracking-minimal'] .ec-step-ico {
+  display: block;
+}
 .store-page[data-design='moderntec'][data-tracking='tracking-minimal'] .ec-step.is-done .ec-step-dot {
   border-color: var(--sp-success, #34E0A1);
   background: var(--sp-success, #34E0A1);

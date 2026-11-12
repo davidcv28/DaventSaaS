@@ -85,11 +85,11 @@ const isTerminalBad = computed(() => TERMINAL_BAD.has(order.value?.status))
 // Stepper: pasos visibles según estado (los terminales muestran todos
 // marcados hasta donde llegó + banner del desenlace).
 const STEPS = [
-  { key: 'PENDING_PAYMENT', label: 'Pedido recibido' },
-  { key: 'PAID', label: 'Pago acreditado' },
-  { key: 'PACKING', label: 'Preparando' },
-  { key: 'SHIPPED', label: 'Enviado' },
-  { key: 'DELIVERED', label: 'Entregado' },
+  { key: 'PENDING_PAYMENT', label: 'Pedido recibido', icon: 'receipt' },
+  { key: 'PAID', label: 'Pago acreditado', icon: 'credit-card' },
+  { key: 'PACKING', label: 'Preparando', icon: 'package' },
+  { key: 'SHIPPED', label: 'Enviado', icon: 'truck' },
+  { key: 'DELIVERED', label: 'Entregado', icon: 'flag' },
 ]
 const stepIndex = computed(() => {
   const s = order.value?.status
@@ -328,7 +328,7 @@ onUnmounted(() => {
           <li v-for="(step, i) in STEPS" :key="step.key" class="ec-step"
               :class="{ 'is-done': i < stepIndex || order.status === 'DELIVERED', 'is-current': i === stepIndex && order.status !== 'DELIVERED' }"
               :aria-current="i === stepIndex && order.status !== 'DELIVERED' ? 'step' : undefined">
-            <span class="ec-step-dot"><AppIcon v-if="i < stepIndex || order.status === 'DELIVERED'" name="check" :size="12" /><template v-else>{{ i + 1 }}</template></span>
+            <span class="ec-step-dot"><AppIcon v-if="i < stepIndex || order.status === 'DELIVERED'" name="check" :size="12" /><template v-else><span class="ec-step-num">{{ i + 1 }}</span><AppIcon class="ec-step-ico" :name="step.icon" :size="14" aria-hidden="true" /></template></span>
             <span class="ec-step-label">{{ step.label }}</span>
             <small v-if="stepDate(step.key)" class="ec-track-step-date">{{ stepDate(step.key) }}</small>
           </li>
@@ -513,6 +513,7 @@ onUnmounted(() => {
 .ec-step-dot { display: grid; place-items: center; width: 30px; height: 30px; border-radius: 50%; border: 2px solid var(--sp-line, rgba(0,0,0,.18)); font-size: 12px; font-weight: 800; color: var(--sp-muted, inherit); background: var(--sp-card, transparent); }
 .ec-step.is-done .ec-step-dot { border-color: var(--sp-success, #0E7A55); background: var(--sp-success, #0E7A55); color: #fff; }
 .ec-step.is-current .ec-step-dot { border-color: var(--store-accent, #111); color: var(--store-accent, #111); box-shadow: 0 0 0 4px color-mix(in srgb, var(--store-accent, #111) 15%, transparent); }
+.ec-step-ico { display: none; }
 .ec-step-label { font-size: 11px; line-height: 1.25; color: var(--sp-muted, inherit); }
 .ec-step.is-done .ec-step-label, .ec-step.is-current .ec-step-label { color: inherit; font-weight: 600; }
 
