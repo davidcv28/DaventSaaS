@@ -20,7 +20,7 @@ import { STORE_THEME_KEY, readVisitorTheme, persistVisitorTheme, resolveStoreThe
 import { schemaHours } from '../utils/storeHours.js'
 import { templateFonts, normalizeLayoutConfig, templatePages, templateBlocks, templateOf } from '../templates/index.js'
 import { useDesignCatalog } from '../composables/useDesignCatalog.js'
-import { useStoreArchetypes } from '../composables/storeArchetypes.js'
+import { archetypeForDesign } from '../composables/storeArchetypes.js'
 import { STUDIO_MSG, isStudioMessage, studioReady } from '../studio/contract.js'
 import { familyOf } from '../utils/styleIcons.js'
 import {
@@ -479,7 +479,9 @@ const designId = computed(() => {
 // como data-nav / data-account / data-tracking en .store-page; el look por
 // arquetipo vive en CSS keyed en esos atributos (matriz en
 // composables/storeArchetypes.js).
-const arch = useStoreArchetypes()
+// archetypeForDesign directo sobre designId local: inject('storePage') no
+// funciona acá (el layout ES quien provee el contexto a sus hijas).
+const arch = computed(() => archetypeForDesign(designId.value))
 watch(designId, (id) => {
   const load = DESIGN_EC_CSS[`../assets/store-design-${id}.css`]
   if (load) load().catch(() => {})
