@@ -1624,9 +1624,11 @@
   border-radius: var(--tpc-radius);
   box-shadow: var(--tpc-shadow);
 }
+/* La foto toca el borde superior de la tarjeta (la propia tarjeta recorta
+   las esquinas con overflow:hidden). */
 .store-page[data-template='mercado'] .mc-cat-list[data-view='grid'] .mc-cat-card .tpc-media {
-  margin: 12px 12px 0;
-  border-radius: 6px;
+  margin: 0;
+  border-radius: 0;
   overflow: hidden;
 }
 .store-page[data-template='mercado'] .mc-cat-list[data-view='grid'] .mc-cat-card .tpc-body { padding-top: 10px; }
