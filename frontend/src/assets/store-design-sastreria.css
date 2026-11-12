@@ -100,6 +100,24 @@
   background: var(--dz-surface);
   box-shadow: 0 30px 60px -46px rgba(27, 26, 23, .5);
   overflow: hidden;
+  position: relative;
+}
+/* Marcas de corte: escuadras de trazador en las cuatro esquinas de la
+   ficha, como en el papel de patrones. */
+[data-design='sastreria'] .ec-auth .ec-auth-shell::after {
+  content: ""; position: absolute; inset: 10px; z-index: 3;
+  pointer-events: none;
+  --ec-cut: color-mix(in srgb, var(--dz-accent-text) 62%, transparent);
+  background:
+    linear-gradient(var(--ec-cut), var(--ec-cut)) top left / 16px 1px,
+    linear-gradient(var(--ec-cut), var(--ec-cut)) top left / 1px 16px,
+    linear-gradient(var(--ec-cut), var(--ec-cut)) top right / 16px 1px,
+    linear-gradient(var(--ec-cut), var(--ec-cut)) top right / 1px 16px,
+    linear-gradient(var(--ec-cut), var(--ec-cut)) bottom left / 16px 1px,
+    linear-gradient(var(--ec-cut), var(--ec-cut)) bottom left / 1px 16px,
+    linear-gradient(var(--ec-cut), var(--ec-cut)) bottom right / 16px 1px,
+    linear-gradient(var(--ec-cut), var(--ec-cut)) bottom right / 1px 16px;
+  background-repeat: no-repeat;
 }
 
 /* Urdimbre: papel con pasadas verticales de hilo y velo de cuero. */
@@ -192,6 +210,7 @@
   flex: none; color: var(--dz-accent-text);
 }
 [data-design='sastreria'] .ec-auth .ec-auth-brand-foot {
+  display: block;
   font: 400 8.5px/1.5 var(--dz-mono); letter-spacing: .2em; text-transform: uppercase;
   color: var(--dz-muted);
   padding-top: 14px;
@@ -201,15 +220,21 @@
 /* Trama: papel con pasadas horizontales y filete de cuero al borde. */
 [data-design='sastreria'] .ec-auth .ec-auth-panel {
   position: relative;
-  padding: 24px 22px 30px;
+  padding: 32px 22px 30px;
   background:
     repeating-linear-gradient(0deg, transparent 0 27px, color-mix(in srgb, var(--dz-line) 45%, transparent) 27px 28px),
     var(--dz-surface);
   color: var(--dz-ink);
 }
+/* Cinta métrica al filo de la trama: regla con milimetrados cortos y
+   centimetrados largos sobre la pasada de cuero. */
 [data-design='sastreria'] .ec-auth .ec-auth-panel::before {
-  content: ""; position: absolute; inset: 0 0 auto; height: 3px;
-  background: var(--dz-accent);
+  content: ""; position: absolute; inset: 0 0 auto; height: 12px;
+  background:
+    repeating-linear-gradient(90deg, transparent 0 7px, color-mix(in srgb, var(--dz-accent-text) 55%, transparent) 7px 8px) left top / 100% 5px repeat-x,
+    repeating-linear-gradient(90deg, transparent 0 39px, var(--dz-accent-text) 39px 40px) left bottom / 100% 11px repeat-x,
+    var(--dz-accent-soft);
+  border-bottom: 1px dashed var(--dz-line-strong);
 }
 [data-design='sastreria'] .ec-auth .ec-auth-back {
   gap: 9px; margin-bottom: clamp(20px, 3vw, 30px);
@@ -334,6 +359,84 @@
 
 /* Formulario compartido (StoreAuthForm). */
 [data-design='sastreria'] .ec-auth .ecaf { gap: 15px; }
+
+/* Selector de modo: ficha de patrones — celda cuadrada con índice 01/02/03
+   y separadores de hilván; la celda activa es la placa de tinta. */
+[data-design='sastreria'] .ec-auth .ecaf-switch {
+  counter-reset: ecafTab;
+  padding: 3px;
+  border: 1px solid var(--dz-line-strong);
+  border-radius: var(--dz-radius);
+  background: var(--dz-bg);
+}
+[data-design='sastreria'] .ec-auth .ecaf-switch-pill {
+  top: 3px; bottom: 3px; left: 3px;
+  width: calc((100% - 6px) / 3);
+  border-radius: 1px;
+  background: var(--dz-ink);
+  transition: transform .32s cubic-bezier(.22, 1, .36, 1);
+}
+[data-design='sastreria'] .ec-auth .ecaf-switch-btn {
+  counter-increment: ecafTab;
+  min-height: 40px;
+  border-radius: 1px;
+  font: 500 8.5px/1.3 var(--dz-mono); letter-spacing: .16em; text-transform: uppercase;
+  color: var(--dz-muted);
+}
+[data-design='sastreria'] .ec-auth .ecaf-switch-btn::before {
+  content: "0" counter(ecafTab);
+  display: block; margin-bottom: 4px;
+  font-size: 7.5px; letter-spacing: .3em;
+  color: var(--dz-accent-text);
+}
+[data-design='sastreria'] .ec-auth .ecaf-switch-btn + .ecaf-switch-btn {
+  border-left: 1px dashed var(--dz-line);
+}
+[data-design='sastreria'] .ec-auth .ecaf-switch-btn:hover:not(.is-on) { color: var(--dz-ink); }
+[data-design='sastreria'] .ec-auth .ecaf-switch-btn.is-on { color: var(--dz-bg); }
+[data-design='sastreria'] .ec-auth .ecaf-switch-btn.is-on::before { color: color-mix(in srgb, var(--dz-bg) 62%, transparent); }
+[data-design='sastreria'] .ec-auth .ecaf-switch-btn:focus-visible {
+  outline: 2px solid var(--dz-accent); outline-offset: 2px;
+}
+
+/* Icono líder del campo: centrado sobre el input (label 9px + gap 8px +
+   media altura del control de 48px ≈ 41px). */
+[data-design='sastreria'] .ec-auth .sp-field { position: relative; }
+[data-design='sastreria'] .ec-auth .sp-field .sp-input { padding-left: 46px; }
+[data-design='sastreria'] .ec-auth .ecaf-ico {
+  display: inline-flex; align-items: center; justify-content: center;
+  position: absolute; left: 15px; top: 41px; translate: 0 -50%;
+  width: 18px; height: 18px;
+  color: var(--dz-muted); pointer-events: none;
+  transition: color .2s;
+}
+[data-design='sastreria'] .ec-auth .ecaf-ico :is(svg, .icon) { width: 16px; height: 16px; flex: none; }
+[data-design='sastreria'] .ec-auth .ecaf-pass .ecaf-ico { top: 50%; }
+[data-design='sastreria'] .ec-auth .sp-field:focus-within .ecaf-ico { color: var(--dz-accent-text); }
+[data-design='sastreria'] .ec-auth .ecaf-pass .sp-input { padding-right: 46px; }
+
+/* Placa de tinta con hilván interior: el borde punteado a 5px del filo es
+   la costura de terminación del botón. */
+[data-design='sastreria'] .ec-auth .ecaf-submit {
+  outline: 1px dashed color-mix(in srgb, var(--dz-bg) 42%, transparent);
+  outline-offset: -6px;
+}
+[data-design='sastreria'] .ec-auth .ecaf-submit:hover:not(:disabled) {
+  outline-color: color-mix(in srgb, var(--sp-on-band, #fff) 45%, transparent);
+}
+
+/* Links secundarios bajo un hilván: mono con marcador de escuadra. */
+[data-design='sastreria'] .ec-auth .ecaf-foot {
+  gap: 6px 18px;
+  padding-top: 16px;
+  border-top: 1px dashed var(--dz-line-strong);
+}
+[data-design='sastreria'] .ec-auth .ecaf-link {
+  font: 500 9px/1.6 var(--dz-mono); letter-spacing: .16em; text-transform: uppercase;
+  color: var(--dz-accent-text);
+  text-decoration: underline; text-underline-offset: 4px;
+}
+[data-design='sastreria'] .ec-auth .ecaf-link:hover { color: var(--dz-ink); }
 [data-design='sastreria'] .ec-auth .ecaf-pass-toggle {
   color: var(--dz-muted); border-radius: var(--dz-radius);
   min-width: 40px; min-height: 40px;
@@ -350,11 +453,6 @@
   background: repeating-linear-gradient(90deg, var(--dz-line-strong) 0 4px, transparent 4px 8px);
   opacity: 1;
 }
-[data-design='sastreria'] .ec-auth .ecaf-link {
-  color: var(--dz-accent-text); font-family: var(--dz-body); font-weight: 600;
-  text-underline-offset: 4px;
-}
-[data-design='sastreria'] .ec-auth .ecaf-link:hover { color: var(--dz-ink); }
 [data-design='sastreria'] .ec-auth .ecaf-notice {
   border-radius: var(--dz-radius);
   background: color-mix(in srgb, var(--dz-ok) 10%, var(--dz-surface));
@@ -643,6 +741,8 @@
   [data-design='sastreria'] .ec-auth .ec-auth-head { margin-bottom: 20px; padding-bottom: 16px; }
   [data-design='sastreria'] .ec-auth .ec-auth-title { font-size: 24px; }
   [data-design='sastreria'] .ec-auth .ecaf-grid { grid-template-columns: minmax(0, 1fr); }
+  [data-design='sastreria'] .ec-auth .ecaf-switch-btn { font-size: 7.5px; letter-spacing: .1em; }
+  [data-design='sastreria'] .ec-auth .ecaf-switch-btn::before { display: none; }
   [data-design='sastreria'][data-theme] .ec-account { padding-inline: 14px; }
   [data-design='sastreria'][data-theme] .ec-account .acc-tabs { padding-bottom: 0; gap: 6px; }
   [data-design='sastreria'][data-theme] .ec-account .acc-tab { padding: 10px 12px; letter-spacing: .12em; }
