@@ -350,11 +350,12 @@ def _product_fragment(store, products = None, flags = None):
             f' data-name="{_attr(product.name.lower())}"'
             f' data-price="{_attr(amount)}">'
             f'<a class="ds-product-link" href="#catalogo" data-ds-product="{product.pk}"'
-            f' aria-label="{_attr(product.name)}">'
+            f' aria-label="{_attr(product.name)}"'
+            #Marca/rating como data-attrs en el link (no como texto): el
+            #diseño decide si los pinta (mercado arma las filas ML con
+            #pseudoelementos en el grid); el resto de los patrones ni los ve.
+            f' data-brand-name="{_attr(brand)}"{rate_attr}>'
             f'{media}'
-            #Rating como data-attr (no como texto): el diseño decide si lo
-            #pinta (mercado lo muestra "★ 4.7" bajo el nombre); el resto de
-            #los patrones ni lo ve.
             f'<span class="ds-product-copy"{rate_attr}>'
             f'<h3 class="ds-product-name">{escape(_text(product.name, 120))}</h3>'
             f'<small class="ds-product-desc">{escape(_text(product.description, 110))}</small>'
