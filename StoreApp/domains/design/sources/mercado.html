@@ -418,7 +418,7 @@
      --line, que con el filete base nuevo habría aclarado el borde). */
   .ds-product:hover{transform:translateY(-4px);box-shadow:var(--shadow-lift);border-color:color-mix(in srgb,var(--ink) 55%,var(--line))}
   .ds-product:hover::after{transform:scaleX(1)}
-  .ds-product-link{display:grid;grid-template-areas:"media" "cat" "copy" "brand" "rate" "price" "stock";grid-template-rows:auto auto auto auto 1fr auto auto;height:100%;min-width:0;color:inherit}
+  .ds-product-link{display:grid;grid-template-areas:"media" "copy" "cat" "brand" "rate" "price" "stock";grid-template-rows:auto auto auto auto auto 1fr auto;height:100%;min-width:0;color:inherit}
   /* El CTA de compra del puente se apenda a la tarjeta: la fila pasa a
      columna flexible para que el botón ocupe su alto natural y no quede
      recortado por el overflow:hidden de .ds-product. */
@@ -774,7 +774,7 @@
   .cat-surface .grid[data-ds-view-mode="list"] .ds-product:hover{transform:none;box-shadow:none;border-color:var(--line)}
   .cat-surface .grid[data-ds-view-mode="list"] .ds-product-link{
     display:grid;grid-template-columns:168px minmax(0,1fr);
-    grid-template-areas:"media cat" "media copy" "media brand" "media price";
+    grid-template-areas:"media copy" "media cat" "media brand" "media price";
     grid-template-rows:auto auto auto;align-content:start;column-gap:20px;
     padding:16px 8px;border-radius:var(--radius);transition:background .15s;
   }
@@ -820,7 +820,7 @@
   .cat-surface .grid[data-ds-view-mode="list"] .ds-product-price s{font-size:12px}
   .cat-surface .grid[data-ds-view-mode="list"] .ds-stock{display:none}
   .cat-surface .grid[data-ds-view-mode="grid"] .ds-product{background:var(--surface);border:1px solid var(--line-strong);border-radius:var(--radius);box-shadow:var(--shadow);overflow:hidden;height:100%;min-width:0}
-  .cat-surface .grid[data-ds-view-mode="grid"] .ds-product-link{display:grid;grid-template-areas:"media" "cat" "copy" "brand" "rate" "price" "stock";grid-template-rows:auto auto 1fr auto auto auto auto;height:100%;min-width:0;color:inherit}
+  .cat-surface .grid[data-ds-view-mode="grid"] .ds-product-link{display:grid;grid-template-areas:"media" "copy" "cat" "brand" "rate" "price" "stock";grid-template-rows:auto auto auto auto auto 1fr auto;height:100%;min-width:0;color:inherit}
   .cat-surface .grid[data-ds-view-mode="grid"] .ds-product-cat{grid-area:cat;min-height:1.2em;margin:12px 14px 0;font-size:10px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--muted)}
   .cat-surface .grid[data-ds-view-mode="grid"] .ds-product-name{margin:0;font-size:19px;font-weight:400;line-height:1.3;min-height:2.6em;max-height:2.6em;max-height:2.6em;letter-spacing:0;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;overflow-wrap:anywhere}
   .cat-surface .grid[data-ds-view-mode="grid"] .ds-product-price{grid-area:price;padding:8px 14px 4px;font-size:22px;font-weight:700}
