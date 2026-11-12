@@ -964,29 +964,42 @@
   .store-page[data-design='mercado'][data-account='account-stack'] .ec-account .acc-side::-webkit-scrollbar { display: none; }
   .store-page[data-design='mercado'][data-account='account-stack'] .ec-account .acc-id {
     display: flex; align-items: center; gap: 10px;
-    flex: none;
-    padding: 0; border: 0;
+    flex: 0 1 auto; min-width: 0;
+    flex-wrap: nowrap;
+    padding: 0; border: 0; border-bottom: 0;
   }
   .store-page[data-design='mercado'][data-account='account-stack'] .ec-account .acc-id .acc-tele { display: none; }
   .store-page[data-design='mercado'][data-account='account-stack'] .ec-account .acc-id-meta {
-    display: grid; gap: 1px; min-width: 0;
+    display: flex; align-items: center; gap: 4px 10px; min-width: 0;
+  }
+  .store-page[data-design='mercado'][data-account='account-stack'] .ec-account .acc-verify {
+    padding: 3px 8px; align-items: center;
+  }
+  .store-page[data-design='mercado'][data-account='account-stack'] .ec-account .acc-verify-resend {
+    padding: 2px 5px; font-size: 10.5px; line-height: 1.2; align-self: center;
   }
   .store-page[data-design='mercado'][data-account='account-stack'] .ec-account .acc-id-name {
     font-family: var(--dz-display, inherit); font-size: 14px; font-weight: 800;
     letter-spacing: -.02em; color: var(--dz-accent-ink, #2d2a00);
     white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 180px;
+    flex: 0 1 auto; min-width: 0;
   }
   .store-page[data-design='mercado'][data-account='account-stack'] .ec-account .acc-id-email {
     font-family: var(--dz-mono, ui-monospace, monospace); font-size: 10px;
     color: color-mix(in srgb, var(--dz-accent-ink, #2d2a00) 78%, transparent);
     white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 180px;
+    flex: 0 1 auto; min-width: 0;
   }
   .store-page[data-design='mercado'][data-account='account-stack'] .ec-account .acc-nav {
-    display: flex; gap: 6px; flex: none;
+    display: flex; gap: 6px;
+    flex: 1 1 auto; min-width: 0;
+    overflow-x: auto; scrollbar-width: none;
   }
+  .store-page[data-design='mercado'][data-account='account-stack'] .ec-account .acc-nav::-webkit-scrollbar { display: none; }
   .store-page[data-design='mercado'][data-account='account-stack'] .ec-account .acc-navitem {
     display: inline-flex; align-items: center; gap: 8px;
     flex: none;
+    width: auto; max-width: none;
     min-height: 40px;
     padding: 8px 13px;
     border: 1px solid color-mix(in srgb, var(--dz-accent-ink, #2d2a00) 38%, transparent);
@@ -1009,6 +1022,7 @@
   }
   .store-page[data-design='mercado'][data-account='account-stack'] .ec-account .acc-logout {
     flex: none;
+    width: auto; max-width: none;
     margin: 0 0 0 auto;
     min-height: 40px;
     padding: 8px 14px;
