@@ -391,11 +391,31 @@ class PaymentViewSet(PaymentBaseViewSet):
                     suscription.auto_renew      =   False
                     suscription.cancelled_at    =   suscription.cancelled_at or timezone.now()
                     suscription.save(update_fields = ['auto_renew', 'cancelled_at'])
-            else:
-                #Siempre pasa por MP aunque haya cancelled_at: un preapproval
-                #nuevo (re-alta tras la baja) dejaba el early-return viejo
-                #saltarse la cancelación y seguir debitando.
-                CancelPreapprovalQuery(suscription)
+                return Response(
+                    {
+                        'Exito'     :   'La renovación automática ya estaba desactivada' if already_off else 'Renovación automática desactivada. Tu plan sigue vigente hasta el fin del período ya pago.',
+                        'auto_renew':   False,
+                        'end_date'  :   suscription.end_date,
+                    }, status = status.HTTP_200_OK)
+            #Intención de baja durable ANTES de llamar a MP: si el update
+            #falla (timeout, 5xx), cancel_requested_at queda persistido y el
+            #comando reconcile_preapprovals reintenta — sin esto una baja
+            #fallida era indistinguible de "nunca se pidió" y MP seguía
+            #cobrando en silencio.
+            if suscription.cancel_requested_at is None:
+                suscription.cancel_requested_at =   timezone.now()
+                suscription.save(update_fields = ['cancel_requested_at'])
+        #La llamada a MP va fuera del atomic de intención: puede tardar o
+        #fallar sin arrastrar la marca. Lock nuevo para serializar contra
+        #un alta/sync concurrente.
+        try:
+            with transaction.atomic():
+                locked      =   Suscription.objects.select_for_update(of = ('self',)).get(pk = suscription.pk)
+                CancelPreapprovalQuery(locked)
+        except serializers.ValidationError as exc:
+            #La intención ya quedó guardada: se responde el error pero la
+            #baja sigue pendiente de confirmación remota.
+            return Response(exc.detail, status = status.HTTP_400_BAD_REQUEST)
         return Response(
             {
                 'Exito'     :   'La renovación automática ya estaba desactivada' if already_off else 'Renovación automática desactivada. Tu plan sigue vigente hasta el fin del período ya pago.',

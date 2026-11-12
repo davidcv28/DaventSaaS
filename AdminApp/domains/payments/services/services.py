@@ -446,8 +446,9 @@ def CreatePreapprovalQuery(suscription) -> dict:
     #habilitaba el early-return de cancel-renewal (no cancelaba ESTE
     #preapproval) y bloqueaba el realineo de monto en checkout/subscription.
     suscription.cancelled_at    =   None
+    suscription.cancel_requested_at =   None
     try:
-        suscription.save(update_fields = ['preapproval_id', 'cancelled_at'])
+        suscription.save(update_fields = ['preapproval_id', 'cancelled_at', 'cancel_requested_at'])
     except Exception:
         #Compensación (saga mínima): el alta remota ya existe en MP — si la
         #escritura local falla se cancela el preapproval para no dejar un
@@ -483,9 +484,17 @@ def SyncPreapprovalQuery(suscription):
     if suscription.auto_renew != auto_renew:
         suscription.auto_renew  =   auto_renew
         update_fields.append('auto_renew')
-    if mp_status == 'cancelled' and suscription.cancelled_at is None:
+    #paused también corta el débito: MP lo reactiva solo si el emisor lo
+    #pide, pero localmente no hay débito vivo — sin cancelled_at los call
+    #sites (checkout, cupón, assign) seguían tratándolo como activo y el
+    #update de plan pegaba 400 contra un preapproval pausado.
+    if mp_status in ('cancelled', 'paused') and suscription.cancelled_at is None:
         suscription.cancelled_at    =   timezone.now()
         update_fields.append('cancelled_at')
+    if mp_status == 'cancelled' and suscription.cancel_requested_at is not None:
+        #La baja solicitada quedó confirmada por MP: la intención se limpia.
+        suscription.cancel_requested_at =   None
+        update_fields.append('cancel_requested_at')
     elif mp_status == 'authorized' and suscription.cancelled_at is not None:
         #Un débito authorized en MP no tiene baja vigente: limpia un
         #cancelled_at residual (p.ej. escrito por una sync que leyó MP
@@ -500,14 +509,35 @@ def SyncPreapprovalQuery(suscription):
 def CancelPreapprovalQuery(suscription):
     if not suscription.preapproval_id:
         raise serializers.ValidationError({'suscription': 'No hay débito automático para cancelar'})
-    if SyncPreapprovalQuery(suscription) == 'cancelled':
+    try:
+        mp_status   =   SyncPreapprovalQuery(suscription)
+    except MercadoPagoNotFound:
+        #404 en MP = el débito ya no existe: no puede volver a cobrar. Se
+        #consolida la baja local igual que si MP hubiera confirmado.
+        mp_status   =   'cancelled'
+    if mp_status == 'cancelled':
+        suscription.auto_renew          =   False
+        suscription.cancelled_at        =   suscription.cancelled_at or timezone.now()
+        suscription.cancel_requested_at =   None
+        suscription.save(update_fields = ['auto_renew', 'cancelled_at', 'cancel_requested_at'])
         return suscription
-    mp_result   =   sdk.preapproval().update(suscription.preapproval_id, {'status': 'cancelled'})
+    try:
+        mp_result   =   sdk.preapproval().update(suscription.preapproval_id, {'status': 'cancelled'})
+    except MercadoPagoNotFound:
+        mp_result   =   {'status': 404}
+    if mp_result.get('status') == 404:
+        #Mismo caso: el preapproval desapareció entre el sync y el update.
+        suscription.auto_renew          =   False
+        suscription.cancelled_at        =   suscription.cancelled_at or timezone.now()
+        suscription.cancel_requested_at =   None
+        suscription.save(update_fields = ['auto_renew', 'cancelled_at', 'cancel_requested_at'])
+        return suscription
     if mp_result.get('status') not in (200, 201):
         raise serializers.ValidationError({'suscription': 'No se pudo cancelar el débito automático en Mercado Pago'})
-    suscription.auto_renew      =   False
-    suscription.cancelled_at    =   timezone.now()
-    suscription.save(update_fields = ['auto_renew', 'cancelled_at'])
+    suscription.auto_renew          =   False
+    suscription.cancelled_at        =   timezone.now()
+    suscription.cancel_requested_at =   None
+    suscription.save(update_fields = ['auto_renew', 'cancelled_at', 'cancel_requested_at'])
     return suscription
 
 #CANCEL PREAPPROVAL BY ID (post-commit del canje de cupón y compensación de

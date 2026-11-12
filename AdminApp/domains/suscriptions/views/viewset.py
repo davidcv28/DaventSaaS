@@ -1,6 +1,7 @@
 import logging
 from datetime import timedelta
 
+from django.db import transaction
 from django.shortcuts import get_object_or_404
 from django.utils import timezone
 from rest_framework import status
@@ -85,16 +86,20 @@ class SuscriptionViewSet(SuscriptionBaseViewSet):
         #El plan de prueba (is_trial) no se puede reasignar: 404 como si no existiera
         plan        =   get_object_or_404(SuscriptionPlan, pk = plan_pk, is_trial = False)
         now         =   timezone.now()
-        suscription =   Suscription.objects.filter(user = profile).first() or Suscription(user = profile)
-        suscription.plan_suscription            =   plan
-        suscription.pending_plan_suscription    =   None
-        suscription.pending_charge              =   None
-        suscription.status                      =   Suscription.STATUS_ACTIVE
-        suscription.start_date                  =   now
-        suscription.end_date                    =   now + timedelta(days = 30)
-        #Período cortesía: ningún Payment puede revocarlo.
-        suscription.period_payment_id           =   None
-        suscription.save()
+        #Lock de fila: sin él un assign concurrente con cancel-renewal leía
+        #el estado pre-commit y el realineo del débito podía pegar contra un
+        #preapproval recién cancelado (o pisar una baja en curso).
+        with transaction.atomic():
+            suscription =   Suscription.objects.select_for_update(of = ('self',)).filter(user = profile).first() or Suscription(user = profile)
+            suscription.plan_suscription            =   plan
+            suscription.pending_plan_suscription    =   None
+            suscription.pending_charge              =   None
+            suscription.status                      =   Suscription.STATUS_ACTIVE
+            suscription.start_date                  =   now
+            suscription.end_date                    =   now + timedelta(days = 30)
+            #Período cortesía: ningún Payment puede revocarlo.
+            suscription.period_payment_id           =   None
+            suscription.save()
         #Débito MP vivo: el próximo cobro tiene que salir al plan asignado.
         #Sin realineo, MP seguía debitando el monto del plan viejo y cada
         #cargo quedaba huérfano (cobrado sin servicio ni registro claro).

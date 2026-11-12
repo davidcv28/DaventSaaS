@@ -157,22 +157,20 @@
   box-shadow: 0 1px 2px rgba(0, 0, 0, .07), 0 32px 64px -52px rgba(0, 0, 0, .5);
   overflow: hidden;
 }
-/* Filete de marca: el toldo reducido a una línea. */
+/* Filete de marca: el toldo reducido a una línea, sólida. */
 [data-design='mercado'] .ec-auth .ec-auth-shell::before {
   content: ""; display: block; height: 4px;
-  background:
-    repeating-linear-gradient(90deg, var(--dz-accent-ink) 0 10px, transparent 10px 20px) bottom/100% 1px no-repeat,
-    var(--dz-accent);
+  background: var(--dz-accent);
 }
 
 /* Encabezado de marca compacto: toldo amarillo con logo + nombre en una
-   línea, separado del formulario por la línea troquelada del ticket. El
-   copy editorial, los perks, el pie y la foto fantasma no existen acá. */
+   línea, separado del formulario por una hairline. El copy editorial, los
+   perks, el pie y la foto fantasma no existen acá. */
 [data-design='mercado'] .ec-auth .ec-auth-brand {
   padding: 15px clamp(20px, 4vw, 30px);
   color: var(--dz-accent-ink);
   background: var(--dz-accent);
-  border-bottom: 1px dashed color-mix(in srgb, var(--dz-accent-ink) 34%, transparent);
+  border-bottom: 1px solid color-mix(in srgb, var(--dz-accent-ink) 24%, transparent);
 }
 [data-design='mercado'] .ec-auth .ec-auth-brand::before,
 [data-design='mercado'] .ec-auth .ec-auth-brand::after { content: none; }

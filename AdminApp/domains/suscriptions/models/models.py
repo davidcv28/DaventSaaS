@@ -76,6 +76,12 @@ class Suscription(models.Model):
     auto_renew                  =   models.BooleanField(default = False, verbose_name = 'Renovación automática')
     preapproval_id              =   models.CharField(max_length = 64, null = True, blank = True, unique = True, verbose_name = 'Suscripción en Mercado Pago')
     cancelled_at                =   models.DateTimeField(null = True, blank = True, verbose_name = 'Fecha de baja de la renovación')
+    #Intención de baja durable: se escribe ANTES de llamar a MP y solo se
+    #limpia cuando MP confirma la cancelación (o hay un débito nuevo). Si el
+    #update remoto falla, reconcile_preapprovals reintenta — sin este campo
+    #una baja fallida era indistinguible de "nunca se pidió" y MP seguía
+    #cobrando en silencio.
+    cancel_requested_at         =   models.DateTimeField(null = True, blank = True, verbose_name = 'Baja de renovación solicitada')
     #Id del Payment que abrió el período vigente (lo escribe
     #ApplyPendingPlanQuery). Entero plano, no FK: un refund/chargeback de
     #ESE pago revoca el acceso; el de un pago más viejo o de un prorrateo

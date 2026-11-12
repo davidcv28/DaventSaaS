@@ -96,16 +96,8 @@
      buscador blanco y botón azul.
      ========================================================== */
   .topbar{position:fixed;top:0;left:0;right:0;z-index:60;box-shadow:0 10px 30px -24px rgba(0,0,0,.6)}
+  /* Toldo sólido, sin tramas ni dobladillo: solo la banda y su filete. */
   .top{position:relative;background:var(--yellow);border-bottom:1px solid var(--yellow-deep)}
-  .top::before{
-    content:"";position:absolute;inset:0;pointer-events:none;opacity:.42;
-    background:repeating-linear-gradient(135deg,color-mix(in srgb,var(--ink) 7%,transparent) 0 10px,transparent 10px 22px);
-    mask-image:linear-gradient(180deg,#000,transparent 85%);
-  }
-  .top::after{
-    content:"";position:absolute;left:0;right:0;bottom:0;height:5px;pointer-events:none;
-    background:repeating-linear-gradient(90deg,var(--yellow-deep) 0 10px,transparent 10px 20px);
-  }
   .top-in{position:relative;display:flex;align-items:center;gap:18px;min-height:68px}
   .brand{display:flex;align-items:center;gap:11px;font-weight:800;font-size:19px;letter-spacing:-.03em;color:var(--yellow-ink);white-space:nowrap;min-width:0}
   .brand .mark{
