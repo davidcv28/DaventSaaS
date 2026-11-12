@@ -107,8 +107,6 @@
   .top-in:has(.dsx-account) .ds-theme-toggle,
   html[data-ds-style] .top-in:has(.dsx-account) .ds-theme-toggle{margin-inline-start:0}
   .top-in .dsx-account,.top-in .dsx-cart{font:500 10px var(--mono);letter-spacing:.14em;text-transform:uppercase}
-  .top-meta{font:500 10px var(--mono);letter-spacing:.14em;text-transform:uppercase;color:var(--muted);white-space:nowrap}
-  .top-meta:empty{display:none}
 
   /* Etiqueta vertical de temporada (escritorio). */
   .season{position:fixed;left:12px;top:50%;transform:translateY(-50%) rotate(180deg);writing-mode:vertical-rl;z-index:2;font:500 9.5px var(--mono);letter-spacing:.42em;text-transform:uppercase;color:var(--muted);pointer-events:none}
@@ -366,7 +364,6 @@
     html[data-ds-style] .top-nav{display:none}
     html[data-ds-style] .top-in{flex-wrap:nowrap}
     html[data-ds-style] .top-in .ds-theme-toggle{order:2;margin-inline-start:auto}
-    html[data-ds-style] .top-meta{display:none}
 
     /* Cabecera fija: el documento se sirve en un iframe estirado y el
        puente solo re-ancla lo position:fixed — sin esto la barra (y el
@@ -497,7 +494,6 @@
     .trust{grid-template-columns:repeat(2,minmax(0,1fr))}
     .trust-item:nth-child(3){border-left:0;border-top:1px solid var(--line)}
     .trust-item:nth-child(4){border-top:1px solid var(--line)}
-    .top-meta{display:none}
   }
   @media(max-width:680px){
     .shell{padding:0 18px}
@@ -665,7 +661,6 @@
       <a href="#catalogo" data-ds-route="catalog" data-flag="catalog"><i>02</i> Catálogo</a>
       <a href="#servicios" data-ds-route="services" data-flag="services"><i>03</i> Servicios</a>
     </nav>
-    <div class="top-meta">{{store_hours}}</div>
   </div>
 </header>
 
