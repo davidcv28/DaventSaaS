@@ -224,6 +224,12 @@ export function adaptPalette(palette, mode) {
   const bg = hex(p.bg, '#f4f6fb')
   const accent = hex(p.accent || p.primary, '#4f46e5')
   const [h, s] = hexHsl(bg)
+  // Roles distintos del acento (p. ej. primario celeste + acento amarillo de
+  // marca) se conservan entre modos: adaptarlos al acento repintaría los
+  // botones con el color de identidad.
+  const norm = (v) => (isHex(v) ? v.toLowerCase() : null)
+  const keepPrimary = norm(p.primary) && norm(p.primary) !== norm(accent)
+  const keepSecondary = isHex(p.secondary)
   if (mode === 'dark') {
     const surfaceDark = hslToHex(h, Math.min(s, 0.4), 0.11)
     const accentDark = onDark(accent, surfaceDark, 4.5)
@@ -233,9 +239,9 @@ export function adaptPalette(palette, mode) {
       text: '#f1f5fb',
       muted: hslToHex(h, Math.min(s, 0.2), 0.68),
       border: hslToHex(h, Math.min(s, 0.3), 0.22),
-      primary: accentDark,
+      primary: keepPrimary ? norm(p.primary) : accentDark,
       accent: accentDark,
-      secondary: deriveAccent(accentDark).ink
+      secondary: keepSecondary ? norm(p.secondary) : deriveAccent(accentDark).ink
     }
   }
   const surfaceLight = '#ffffff'
@@ -246,9 +252,9 @@ export function adaptPalette(palette, mode) {
     text: '#0f172a',
     muted: '#5b6678',
     border: hslToHex(h, Math.min(s, 0.3), 0.88),
-    primary: accentLight,
+    primary: keepPrimary ? norm(p.primary) : accentLight,
     accent: accentLight,
-    secondary: deriveAccent(accentLight).ink
+    secondary: keepSecondary ? norm(p.secondary) : deriveAccent(accentLight).ink
   }
 }
 
