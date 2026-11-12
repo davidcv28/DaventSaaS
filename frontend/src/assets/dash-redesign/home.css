@@ -20,6 +20,7 @@
 .app .ovh-hero {
   display: flex;
   flex-direction: column;
+  gap: 0;
   padding: 20px 22px;
   margin-bottom: 12px;
   background: var(--card);
@@ -40,6 +41,7 @@
   letter-spacing: -.025em;
   line-height: 1.15;
   color: var(--ink);
+  text-wrap: balance;
 }
 .app .ovh-pill {
   flex: none;
@@ -53,7 +55,8 @@
   font-variant-numeric: tabular-nums;
   white-space: nowrap;
 }
-.app .ovh-sub { margin: 0; font-size: 13.5px; max-width: 58ch; color: var(--muted); }
+.app .ovh-sub { margin: 0; font-size: 13.5px; max-width: 72ch; color: var(--muted); text-wrap: pretty; }
+.app .ovh-hero-actions .btn { text-decoration: none; }
 .app .ovh-hero-actions {
   display: flex;
   gap: 8px;
@@ -70,8 +73,8 @@
   align-items: center;
   gap: 12px 18px;
   flex-wrap: wrap;
-  margin-top: 14px;
-  padding: 14px 0 0;
+  margin-top: 16px;
+  padding: 16px 0 0;
   border: 0;
   border-top: 1px solid var(--line-soft);
   border-radius: 0;
@@ -92,6 +95,7 @@
 .app .ovh-site-cover:hover { border-color: color-mix(in srgb, var(--brand-500) 35%, var(--line)); }
 .app .ovh-site-cover:focus-visible { outline: none; box-shadow: var(--ring); }
 .app .ovh-site-cover img { display: block; width: 100%; height: 100%; object-fit: cover; }
+.app .ovh-site-cover:has(.ovh-site-cover-empty) { border-style: dashed; border-color: var(--line); }
 .app .ovh-site-cover-empty {
   position: absolute;
   inset: 0;
@@ -109,15 +113,40 @@
 }
 .app .ovh-site-urlrow { display: flex; align-items: center; gap: 8px; min-width: 0; }
 .app .ovh-site-url {
-  flex: 1;
+  flex: 0 1 auto;
   min-width: 0;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
   font-family: var(--dv-mono);
-  font-size: 12px;
-  color: var(--muted);
+  font-size: 12.5px;
+  color: var(--ink-2);
 }
+/* Estado público de la web: punto + texto (no solo color). */
+.app .ovh-site-live {
+  flex: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 2px 8px 2px 7px;
+  border: 1px solid var(--ok-line, var(--line-soft));
+  border-radius: 99px;
+  background: var(--ok-bg, var(--surface));
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--ok-ink);
+}
+.app .ovh-site-live::before {
+  content: '';
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: currentColor;
+  animation: ovh-live 2.4s ease-in-out infinite;
+}
+.app .ovh-site-live.off { border-color: var(--line); background: var(--surface); color: var(--muted); }
+.app .ovh-site-live.off::before { animation: none; }
+@keyframes ovh-live { 50% { opacity: .35; } }
 .app .ovh-icon-btn {
   flex: none;
   display: grid;
@@ -144,6 +173,7 @@
   border-bottom: 0;
 }
 .app .ovh-site-stats > div { display: flex; flex-direction: row; align-items: baseline; gap: 6px; min-width: 0; }
+.app .ovh-site-stats > div + div { padding-left: 24px; border-left: 1px solid var(--line-soft); }
 .app .ovh-site-stats dt {
   font-size: 15px;
   font-weight: 700;
@@ -262,10 +292,15 @@
 .app .ovh-bars { gap: 6px; flex: 1 1 0; height: auto; min-height: 112px; }
 .app .ovh-bar { gap: 5px; }
 .app .ovh-bar-fill {
+  min-height: 3px;
   border-radius: 4px 4px 2px 2px;
   background: color-mix(in srgb, var(--brand-500) 40%, transparent);
+  transform-origin: bottom;
   transition: background-color .18s ease;
+  animation: ovh-grow .55s var(--ease-out) both;
+  animation-delay: calc(var(--i, 0) * 28ms + 120ms);
 }
+@keyframes ovh-grow { from { transform: scaleY(0); } }
 .app .ovh-bar:hover .ovh-bar-fill {
   background: color-mix(in srgb, var(--brand-500) 62%, transparent);
 }
@@ -287,7 +322,17 @@
 .app .ovh-item-body small { font-size: 12px; }
 .app .ovh-empty { font-size: 13px; }
 .app .ovh-done { font-size: 13px; color: var(--ok-ink); }
-.app .ovh-storage { margin-top: 12px; padding-top: 12px; border-top-color: var(--line-soft); }
+/* El medidor se ancla al pie: la tarjeta se estira a la altura de Atajos y
+   el hueco queda entre lista y medidor, no debajo. */
+.app .ovh-card > :is(.ovh-list, .ovh-empty):has(+ .ovh-storage) { margin-bottom: 14px; }
+.app .ovh-storage { margin-top: auto; padding-top: 12px; border-top-color: var(--line-soft); }
+.app .ovh-storage .storage-meter-track { background: var(--line-soft); }
+
+/* Calidad de la web: score como columna propia con divisor. */
+.app .ovh.wqc { margin-bottom: 12px; }
+.app .ovh.wqc .wqc-score { align-self: stretch; padding-right: 22px; border-right: 1px solid var(--line-soft); }
+.app .ovh.wqc .wqc-num { font-size: 32px; font-weight: 700; }
+.app .ovh.wqc .wqc-body strong { white-space: normal; text-wrap: pretty; }
 
 /* Atajos: mosaico 2 col que se estira parejo dentro de la tarjeta. */
 .app .ovh-quick { gap: 8px; flex: 1; grid-auto-rows: minmax(46px, 1fr); }
@@ -325,7 +370,7 @@
   max-width: 200px;
   height: 4px;
   border-radius: 99px;
-  background: var(--line-soft);
+  background: var(--line);
   box-shadow: none;
 }
 .app .ps-bar span { background: var(--brand-500); box-shadow: none; }
@@ -377,6 +422,7 @@
   min-height: 38px;
   padding: 0 15px;
   font-size: 13.5px;
+  white-space: nowrap;
 }
 
 /* ---------- Hovers con lift solo en puntero fino ---------- */
@@ -411,14 +457,31 @@
   .app .aq-more { min-height: 40px; }
   .app .plan-strip .ps-actions .chip-btn { min-height: 44px; }
 }
+/* Mismo corte que WebQualityCard (pasa a columna a 900px). */
+@media (max-width: 900px) {
+  .app .ovh.wqc .wqc-score { padding: 0 0 12px; border-right: 0; border-bottom: 1px solid var(--line-soft); }
+}
 @media (max-width: 640px) {
   .app .ovh-site-empty .btn { width: 100%; justify-content: center; }
   .app .oh-help-actions { width: 100%; }
-  .app .oh-help-actions .btn { flex: 1 1 0; min-height: 44px; }
+  .app .oh-help-actions .btn { flex: 1 1 auto; min-height: 44px; }
 }
 @media (max-width: 480px) {
   .app .ovh-bars { min-height: 96px; gap: 4px; }
-  .app .ovh-site-stats { gap: 3px 16px; }
+  /* Cifras en 3 columnas fijas (número arriba, etiqueta abajo): el wrap
+     dejaba "opiniones" sola en otra línea con el divisor colgando. */
+  .app .ovh-site-stats { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 0; }
+  .app .ovh-site-stats > div { flex-direction: column; align-items: flex-start; gap: 0; }
+  .app .ovh-site-stats > div + div { padding-left: 12px; }
+  /* Sin portada en móvil: la URL y las cifras ganan el ancho completo. */
+  .app .ovh-site-cover { display: none; }
+  .app .ovh-site-info { min-width: 0; flex-basis: 100%; }
+  .app .ovh-site-edit { margin-left: 0; }
+  /* Atajos en 2 columnas compactas: 6 filas altas eran demasiado scroll. */
+  .app .ovh-quick { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .app .ovh-quick-item { min-height: 52px; padding: 10px; }
+  .app .ovh-quick-txt small,
+  .app .ovh-quick-go { display: none; }
 }
 
 /* ---------- Movimiento reducido ---------- */
@@ -429,4 +492,6 @@
   .app .ovh-quick-go,
   .app .ovh-icon-btn,
   .app .ovh-site-cover { transition: none !important; }
+  .app .ovh-bar-fill,
+  .app .ovh-site-live::before { animation: none !important; }
 }

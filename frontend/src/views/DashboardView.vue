@@ -4083,6 +4083,7 @@ async function changePassword() {
           </a>
           <div class="ovh-site-info">
             <div class="ovh-site-urlrow">
+              <span class="ovh-site-live" :class="{ off: !store.store?.is_published }">{{ store.store?.is_published ? 'En línea' : 'Pausada' }}</span>
               <span class="ovh-site-url" :title="publicUrl">{{ publicUrl }}</span>
               <button type="button" class="ovh-icon-btn" aria-label="Copiar link" title="Copiar link" @click="copyLink"><AppIcon name="copy" :size="14" /></button>
             </div>
@@ -4174,7 +4175,7 @@ async function changePassword() {
           </header>
           <div v-if="visitBars.length" class="ovh-bars" role="img" :aria-label="`Visitas de los últimos ${visitBars.length} días`">
             <div v-for="(b, i) in visitBars" :key="i" class="ovh-bar" :title="`${b.count} ${b.count === 1 ? 'visita' : 'visitas'} · ${fmtDate(b.date)}`">
-              <span class="ovh-bar-track"><span class="ovh-bar-fill" :class="{ today: i === visitBars.length - 1 }" :style="{ height: `${b.h}%` }"></span></span>
+              <span class="ovh-bar-track"><span class="ovh-bar-fill" :class="{ today: i === visitBars.length - 1 }" :style="{ height: `${b.h}%`, '--i': i }"></span></span>
               <small :class="{ today: i === visitBars.length - 1 }">{{ b.label }}</small>
             </div>
           </div>
