@@ -684,3 +684,518 @@
     animation-duration: .001ms !important;
   }
 }
+
+/* ==========================================================================
+   ARQUETIPOS — chrome del diseño en TODAS las páginas públicas
+   (nav 'minimal-floating' · cuenta 'account-stack' · tracking
+   'tracking-status-hero').
+   Los tokens --dz-* ya viven en .store-page[data-design='umbral'] raíz
+   (claro y oscuro), así que .sp-top/.acc-shell/.ec-track los heredan.
+   Identidad: papel hueso, tinta, acento cobalto, arco umbral
+   (border-radius 999px 999px 0 0) como firma en botones y avatar.
+   ========================================================================== */
+
+/* ---------- NAV 'minimal-floating' ----------
+   Espejo del documento: píldora de vidrio que flota, marca reducida a la
+   palabra, links de texto dispersos y CTA fantasma. */
+.store-page[data-design='umbral'][data-nav='minimal-floating'] .sp-top{
+  top: 14px;
+  background: transparent;
+  border-bottom: 0;
+  box-shadow: none;
+}
+.store-page[data-design='umbral'][data-nav='minimal-floating'] .sp-top .sp-top-inner{
+  height: 64px;
+  min-height: 64px;
+  gap: clamp(18px, 3vw, 40px);
+  border: 1px solid var(--dz-line, rgba(37,33,25,.16));
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--dz-bg, #f4f1e8) 72%, transparent);
+  -webkit-backdrop-filter: blur(16px) saturate(1.15);
+  backdrop-filter: blur(16px) saturate(1.15);
+  padding-inline: clamp(18px, 3vw, 40px);
+}
+.store-page[data-design='umbral'][data-nav='minimal-floating'] .sp-top.scrolled .sp-top-inner{
+  background: color-mix(in srgb, var(--dz-bg, #f4f1e8) 92%, transparent);
+  border-color: color-mix(in srgb, var(--dz-ink, #252119) 22%, var(--dz-line, rgba(37,33,25,.16)));
+}
+.store-page[data-design='umbral'][data-nav='minimal-floating'] .sp-top .sp-name{
+  font-family: var(--dz-display);
+  font-weight: 500;
+  font-size: 19px;
+  letter-spacing: .02em;
+  color: var(--dz-ink, #252119);
+}
+.store-page[data-design='umbral'][data-nav='minimal-floating'] .sp-top .sp-brand :is(.sp-logo, .sp-mono),
+.store-page[data-design='umbral'][data-nav='minimal-floating'] .sp-top .sp-shop-brand-meta{ display: none; }
+.store-page[data-design='umbral'][data-nav='minimal-floating'] .sp-top-links{
+  gap: clamp(12px, 2vw, 30px);
+}
+.store-page[data-design='umbral'][data-nav='minimal-floating'] .sp-top-links a{
+  position: relative;
+  border-radius: 0;
+  padding: 8px 4px;
+  font-family: var(--dz-mono, monospace);
+  font-size: 10.5px;
+  font-weight: 600;
+  letter-spacing: .14em;
+  text-transform: uppercase;
+  color: var(--dz-ink-2, #4a463c);
+}
+.store-page[data-design='umbral'][data-nav='minimal-floating'] .sp-top-links a::after{
+  content: '';
+  position: absolute;
+  left: 4px; right: 4px; bottom: 2px;
+  height: 1px;
+  background: var(--store-accent-ink, #1f3a73);
+  transform: scaleX(0);
+  transform-origin: left;
+  transition: transform .24s var(--sp-ease, cubic-bezier(.22,1,.36,1));
+}
+.store-page[data-design='umbral'][data-nav='minimal-floating'] .sp-top-links a:hover::after{ transform: scaleX(1); }
+.store-page[data-design='umbral'][data-nav='minimal-floating'] .sp-top-links a.router-link-exact-active{
+  background: transparent;
+  color: var(--dz-ink, #252119);
+  box-shadow: none;
+}
+.store-page[data-design='umbral'][data-nav='minimal-floating'] .sp-top .sp-icon-btn{
+  border-radius: 999px;
+  border: 1px solid var(--dz-line, rgba(37,33,25,.16));
+  background: transparent;
+  color: var(--dz-ink-2, #4a463c);
+}
+.store-page[data-design='umbral'][data-nav='minimal-floating'] .sp-top .sp-icon-btn:hover{
+  border-color: var(--store-accent-ink, #1f3a73);
+  color: var(--store-accent-ink, #1f3a73);
+  background: var(--dz-accent-soft, transparent);
+}
+/* CTA fantasma con el arco umbral. */
+.store-page[data-design='umbral'][data-nav='minimal-floating'] .sp-top-cta{
+  border-radius: 999px 999px 0 0;
+  border: 1px solid var(--dz-line-strong, rgba(37,33,25,.3));
+  background: transparent;
+  color: var(--dz-ink, #252119);
+  font-family: var(--dz-mono, monospace);
+  font-size: 10.5px;
+  font-weight: 600;
+  letter-spacing: .14em;
+  text-transform: uppercase;
+  min-height: 42px;
+}
+.store-page[data-design='umbral'][data-nav='minimal-floating'] .sp-top-cta:hover{
+  border-color: var(--store-accent-ink, #1f3a73);
+  color: var(--store-accent-text, #1f3a73);
+  background: var(--dz-accent-soft, transparent);
+}
+.store-page[data-design='umbral'][data-nav='minimal-floating'] .sp-shop-nav{
+  background: transparent;
+  border-bottom: 0;
+}
+.store-page[data-design='umbral'][data-nav='minimal-floating'] .sp-shop-nav-inner{
+  border: 1px solid var(--dz-line, rgba(37,33,25,.16));
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--dz-bg, #f4f1e8) 72%, transparent);
+  -webkit-backdrop-filter: blur(16px) saturate(1.15);
+  backdrop-filter: blur(16px) saturate(1.15);
+  margin-top: 8px;
+}
+.store-page[data-design='umbral'][data-nav='minimal-floating'] .sp-shop-nav-links a{
+  border-radius: 999px;
+  font-family: var(--dz-mono, monospace);
+  font-size: 10.5px;
+  font-weight: 600;
+  letter-spacing: .12em;
+  text-transform: uppercase;
+}
+.store-page[data-design='umbral'][data-nav='minimal-floating'] .sp-shop-nav-links a.is-current{
+  background: var(--dz-ink, #252119);
+  color: var(--dz-bg, #f4f1e8);
+}
+.store-page[data-design='umbral'][data-nav='minimal-floating'] .sp-drawer .sp-nav-item{
+  border-radius: 999px 999px 0 0;
+  font-family: var(--dz-mono, monospace);
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: .12em;
+  text-transform: uppercase;
+}
+.store-page[data-design='umbral'][data-nav='minimal-floating'] .sp-drawer .sp-nav-item.active{
+  background: var(--dz-ink, #252119);
+  color: var(--dz-bg, #f4f1e8);
+  box-shadow: none;
+}
+.store-page[data-design='umbral'][data-nav='minimal-floating'] .sp-more-sheet{
+  border-radius: 999px 999px 0 0;
+  border-top: 1px solid var(--dz-line-strong, rgba(37,33,25,.3));
+}
+@media (max-width: 640px){
+  .store-page[data-design='umbral'][data-nav='minimal-floating'] .sp-top{ top: 10px; }
+  .store-page[data-design='umbral'][data-nav='minimal-floating'] .sp-top .sp-top-inner{
+    height: 56px;
+    min-height: 56px;
+    gap: 10px;
+    padding-inline: 14px;
+  }
+  .store-page[data-design='umbral'][data-nav='minimal-floating'] .sp-top .sp-name{ font-size: 17px; }
+  .store-page[data-design='umbral'][data-nav='minimal-floating'] .sp-top-cta{ display: none; }
+}
+
+/* ---------- CUENTA 'account-stack' ----------
+   mhead + tabs + panel apilados a todo lo ancho; la identidad del mhead
+   lleva el arco umbral y las tabs son fichas cuadradas con índice mono. */
+.store-page[data-design='umbral'][data-account='account-stack'] .ec-account .acc-shell{
+  grid-template-columns: minmax(0, 1fr);
+  gap: 14px;
+  max-width: 980px;
+  margin-inline: auto;
+  width: 100%;
+}
+.store-page[data-design='umbral'][data-account='account-stack'] .ec-account .acc-side{ display: none; }
+.store-page[data-design='umbral'][data-account='account-stack'] .ec-account .acc-mhead{
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 16px 20px;
+  border: 1px solid var(--dz-line, rgba(37,33,25,.16));
+  border-radius: 0;
+  background: var(--dz-surface, #ebe7d8);
+}
+.store-page[data-design='umbral'][data-account='account-stack'] .ec-account .acc-avatar{
+  border-radius: 999px 999px 0 0;
+  background: var(--dz-band, #252119);
+  color: var(--dz-band-ink, #f4f1e8);
+}
+.store-page[data-design='umbral'][data-account='account-stack'] .ec-account .acc-mhead-meta{ flex: 1; }
+.store-page[data-design='umbral'][data-account='account-stack'] .ec-account .acc-kicker{
+  display: block;
+  font-family: var(--dz-mono, monospace);
+  font-size: 9.5px;
+  font-weight: 600;
+  letter-spacing: .2em;
+  text-transform: uppercase;
+  color: var(--dz-muted, #6e6858);
+}
+.store-page[data-design='umbral'][data-account='account-stack'] .ec-account .acc-greet{
+  display: block;
+  margin: 0;
+  font-family: var(--dz-display);
+  font-size: clamp(20px, 2.6vw, 26px);
+  font-weight: 500;
+  letter-spacing: .01em;
+  color: var(--dz-ink, #252119);
+}
+.store-page[data-design='umbral'][data-account='account-stack'] .ec-account .acc-mhead-meta strong,
+.store-page[data-design='umbral'][data-account='account-stack'] .ec-account .acc-mhead-meta small{ display: none; }
+.store-page[data-design='umbral'][data-account='account-stack'] .ec-account .acc-tabs{
+  display: flex;
+  gap: 0;
+  padding: 0;
+  border: 1px solid var(--dz-line, rgba(37,33,25,.16));
+  border-top: 0;
+  background: var(--dz-bg, #f4f1e8);
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+.store-page[data-design='umbral'][data-account='account-stack'] .ec-account .acc-tabs::-webkit-scrollbar{ display: none; }
+.store-page[data-design='umbral'][data-account='account-stack'] .ec-account .acc-tab{
+  flex: 1 1 auto;
+  justify-content: center;
+  min-height: 46px;
+  padding: 10px 12px;
+  border: 0;
+  border-right: 1px solid var(--dz-line-soft, rgba(37,33,25,.09));
+  border-radius: 0;
+  background: transparent;
+  font-family: var(--dz-mono, monospace);
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: .14em;
+  text-transform: uppercase;
+  color: var(--dz-ink-2, #4a463c);
+}
+.store-page[data-design='umbral'][data-account='account-stack'] .ec-account .acc-tab:last-child{ border-right: 0; }
+.store-page[data-design='umbral'][data-account='account-stack'] .ec-account .acc-tab:hover{
+  background: var(--dz-surface, #ebe7d8);
+  color: var(--dz-ink, #252119);
+}
+.store-page[data-design='umbral'][data-account='account-stack'] .ec-account .acc-tab.is-on{
+  background: var(--dz-band, #252119);
+  color: var(--dz-band-ink, #f4f1e8);
+}
+.store-page[data-design='umbral'][data-account='account-stack'] .ec-account .acc-tab .acc-idx{
+  font-family: var(--dz-mono, monospace);
+  font-size: 9px;
+  color: var(--dz-muted, #6e6858);
+}
+.store-page[data-design='umbral'][data-account='account-stack'] .ec-account .acc-tab.is-on .acc-idx{
+  color: color-mix(in srgb, var(--dz-band-ink, #f4f1e8) 60%, transparent);
+}
+.store-page[data-design='umbral'][data-account='account-stack'] .ec-account .acc-icon-btn{
+  border-radius: 999px 999px 0 0;
+  border-color: var(--dz-line-strong, rgba(37,33,25,.3));
+}
+.store-page[data-design='umbral'][data-account='account-stack'] .ec-account .acc-icon-btn:hover{
+  border-color: var(--store-accent-ink, #1f3a73);
+  color: var(--store-accent-text, #1f3a73);
+  background: var(--dz-accent-soft, transparent);
+}
+.store-page[data-design='umbral'][data-account='account-stack'] .ec-account .acc-body{
+  border: 1px solid var(--dz-line, rgba(37,33,25,.16));
+  border-top: 0;
+  border-radius: 0 0 0 0;
+  background: var(--dz-bg, #f4f1e8);
+  padding: 18px;
+}
+@media (min-width: 1024px){
+  .store-page[data-design='umbral'][data-account='account-stack'] .ec-account .acc-mhead{ display: flex; }
+  .store-page[data-design='umbral'][data-account='account-stack'] .ec-account .acc-tabs{ display: flex; }
+}
+@media (max-width: 640px){
+  .store-page[data-design='umbral'][data-account='account-stack'] .ec-account .acc-mhead{
+    padding: 13px 14px;
+    gap: 10px;
+  }
+  .store-page[data-design='umbral'][data-account='account-stack'] .ec-account .acc-tab{ padding: 10px 8px; font-size: 9px; letter-spacing: .08em; }
+  .store-page[data-design='umbral'][data-account='account-stack'] .ec-account .acc-body{ padding: 14px; }
+}
+
+/* ---------- SEGUIMIENTO 'tracking-status-hero' ----------
+   La card de estado es el héroe: sello de estado grande en display,
+   chips de datos debajo y el stepper como segmentos de progreso
+   (tiras redondeadas, no dots). */
+.store-page[data-design='umbral'][data-tracking='tracking-status-hero'] .ec-track{
+  gap: 16px;
+}
+.store-page[data-design='umbral'][data-tracking='tracking-status-hero'] .ec-track-title{
+  font-family: var(--dz-display);
+  font-size: clamp(24px, 3.4vw, 34px);
+  font-weight: 500;
+  letter-spacing: .01em;
+  color: var(--dz-ink, #252119);
+}
+.store-page[data-design='umbral'][data-tracking='tracking-status-hero'] .ec-track-code{
+  font-family: var(--dz-mono, monospace);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: .16em;
+  text-transform: uppercase;
+  color: var(--dz-muted, #6e6858);
+}
+.store-page[data-design='umbral'][data-tracking='tracking-status-hero'] .ec-track-card,
+.store-page[data-design='umbral'][data-tracking='tracking-status-hero'] .ec-track-help{
+  border: 1px solid var(--dz-line, rgba(37,33,25,.16));
+  border-radius: 0;
+  background: var(--dz-surface, #ebe7d8);
+  box-shadow: var(--dz-shadow-soft, none);
+}
+/* Héroe de estado: la primera card crece y el sello se vuelve display. */
+.store-page[data-design='umbral'][data-tracking='tracking-status-hero'] .ec-track > .ec-track-card:first-of-type{
+  border-top: 4px solid var(--dz-accent, #1f3a73);
+  padding: clamp(20px, 3vw, 30px);
+}
+.store-page[data-design='umbral'][data-tracking='tracking-status-hero'] .ec-track-status-row{
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 14px 18px;
+  padding-bottom: 16px;
+  border-bottom: 1px solid var(--dz-line-soft, rgba(37,33,25,.09));
+}
+.store-page[data-design='umbral'][data-tracking='tracking-status-hero'] .ec-track-status{
+  display: inline-flex;
+  align-items: center;
+  font-family: var(--dz-display);
+  font-size: clamp(20px, 2.6vw, 28px);
+  font-weight: 500;
+  letter-spacing: .02em;
+  text-transform: none;
+  border: 0;
+  border-radius: 999px 999px 0 0;
+  background: var(--dz-band, #252119);
+  color: var(--dz-band-ink, #f4f1e8);
+  padding: 14px 30px 12px;
+}
+.store-page[data-design='umbral'][data-tracking='tracking-status-hero'] .ec-track-status.is-delivered{
+  background: var(--dz-ok, #3e7c4f);
+  color: #fff;
+}
+.store-page[data-design='umbral'][data-tracking='tracking-status-hero'] .ec-track-status.is-cancelled,
+.store-page[data-design='umbral'][data-tracking='tracking-status-hero'] .ec-track-status.is-expired,
+.store-page[data-design='umbral'][data-tracking='tracking-status-hero'] .ec-track-status.is-refunded{
+  background: var(--dz-danger, #a63d2f);
+  color: #fff;
+}
+.store-page[data-design='umbral'][data-tracking='tracking-status-hero'] .ec-track-exp{
+  font-family: var(--dz-mono, monospace);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: .1em;
+  text-transform: uppercase;
+  color: var(--dz-danger, #a63d2f);
+}
+/* Stepper segmento: cada paso es una tira; el estado se lee por llenado. */
+.store-page[data-design='umbral'][data-tracking='tracking-status-hero'] .ec-stepper{
+  display: flex;
+  gap: 6px;
+  margin: 18px 0 6px;
+}
+.store-page[data-design='umbral'][data-tracking='tracking-status-hero'] .ec-step{
+  flex: 1;
+  position: relative;
+  display: block;
+  padding-top: 16px;
+  text-align: center;
+}
+.store-page[data-design='umbral'][data-tracking='tracking-status-hero'] .ec-step::before{
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 7px;
+  border-radius: 999px;
+  background: var(--dz-surface-2, #e3decd);
+}
+.store-page[data-design='umbral'][data-tracking='tracking-status-hero'] .ec-step::after{ display: none; }
+.store-page[data-design='umbral'][data-tracking='tracking-status-hero'] .ec-step.is-done::before,
+.store-page[data-design='umbral'][data-tracking='tracking-status-hero'] .ec-step.is-current::before{
+  background: var(--dz-accent, #1f3a73);
+}
+.store-page[data-design='umbral'][data-tracking='tracking-status-hero'] .ec-step-dot{ display: none; }
+.store-page[data-design='umbral'][data-tracking='tracking-status-hero'] .ec-step-label{
+  display: block;
+  font-family: var(--dz-mono, monospace);
+  font-size: 9px;
+  font-weight: 600;
+  letter-spacing: .12em;
+  text-transform: uppercase;
+  line-height: 1.5;
+  color: var(--dz-muted, #6e6858);
+}
+.store-page[data-design='umbral'][data-tracking='tracking-status-hero'] .ec-step.is-done .ec-step-label,
+.store-page[data-design='umbral'][data-tracking='tracking-status-hero'] .ec-step.is-current .ec-step-label{
+  color: var(--dz-ink, #252119);
+  font-weight: 700;
+}
+.store-page[data-design='umbral'][data-tracking='tracking-status-hero'] .ec-track-step-date{
+  display: block;
+  font-family: var(--dz-mono, monospace);
+  font-size: 9px;
+  letter-spacing: .06em;
+  color: var(--dz-muted, #6e6858);
+}
+.store-page[data-design='umbral'][data-tracking='tracking-status-hero'] .ec-track-chips{
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  padding-top: 16px;
+  border-top: 1px solid var(--dz-line-soft, rgba(37,33,25,.09));
+}
+.store-page[data-design='umbral'][data-tracking='tracking-status-hero'] .ec-track-chip{
+  border: 1px solid var(--dz-line, rgba(37,33,25,.16));
+  border-radius: 999px 999px 0 0;
+  background: var(--dz-bg, #f4f1e8);
+  font-family: var(--dz-mono, monospace);
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: .1em;
+  text-transform: uppercase;
+  color: var(--dz-ink-2, #4a463c);
+  padding: 8px 14px;
+}
+.store-page[data-design='umbral'][data-tracking='tracking-status-hero'] .ec-track-h2{
+  font-family: var(--dz-display);
+  font-size: 19px;
+  font-weight: 500;
+  letter-spacing: .01em;
+  color: var(--dz-ink, #252119);
+}
+.store-page[data-design='umbral'][data-tracking='tracking-status-hero'] .ec-timeline li{ padding: 12px 0; }
+.store-page[data-design='umbral'][data-tracking='tracking-status-hero'] .ec-timeline li:not(:last-child)::before{
+  background: linear-gradient(180deg, var(--dz-accent, #1f3a73), var(--dz-line, rgba(37,33,25,.16)));
+}
+.store-page[data-design='umbral'][data-tracking='tracking-status-hero'] .ec-tl-dot{
+  border-radius: 999px 999px 0 0;
+  background: var(--dz-band, #252119);
+}
+.store-page[data-design='umbral'][data-tracking='tracking-status-hero'] .ec-timeline strong{
+  font-family: var(--dz-body);
+  font-weight: 700;
+  color: var(--dz-ink, #252119);
+}
+.store-page[data-design='umbral'][data-tracking='tracking-status-hero'] .ec-timeline small{
+  font-family: var(--dz-mono, monospace);
+  font-size: 10px;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+  color: var(--dz-muted, #6e6858);
+}
+.store-page[data-design='umbral'][data-tracking='tracking-status-hero'] .ec-receipt{
+  border: 1px solid var(--dz-line, rgba(37,33,25,.16));
+  border-radius: 0;
+  background: var(--dz-bg, #f4f1e8);
+}
+.store-page[data-design='umbral'][data-tracking='tracking-status-hero'] .ec-btn-primary{
+  border-radius: 999px 999px 0 0;
+  background: var(--dz-band, #252119);
+  border: 1px solid var(--dz-band, #252119);
+  color: var(--dz-band-ink, #f4f1e8);
+  font-family: var(--dz-mono, monospace);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: .14em;
+  text-transform: uppercase;
+}
+.store-page[data-design='umbral'][data-tracking='tracking-status-hero'] .ec-btn-primary:hover{
+  background: var(--store-accent-ink, #1f3a73);
+  border-color: var(--store-accent-ink, #1f3a73);
+}
+.store-page[data-design='umbral'][data-tracking='tracking-status-hero'] .ec-btn-ghost,
+.store-page[data-design='umbral'][data-tracking='tracking-status-hero'] .ec-track-receipt-btn{
+  border-radius: 999px 999px 0 0;
+  border: 1px solid var(--dz-line-strong, rgba(37,33,25,.3));
+  font-family: var(--dz-mono, monospace);
+  font-size: 10.5px;
+  font-weight: 600;
+  letter-spacing: .12em;
+  text-transform: uppercase;
+}
+.store-page[data-design='umbral'][data-tracking='tracking-status-hero'] .ec-track-legal{
+  border-top: 1px solid var(--dz-line-soft, rgba(37,33,25,.09));
+  font-family: var(--dz-mono, monospace);
+  font-size: 10px;
+  letter-spacing: .08em;
+}
+.store-page[data-design='umbral'][data-tracking='tracking-status-hero'] :is(.ec-track-card, .ec-track-help, .ec-track-status, .ec-btn-primary, .ec-btn-ghost, .ec-track-receipt-btn, .ec-proof-drop, .ec-track-help-summary, .ec-track-legal a, .ec-track-chip):focus-visible{
+  outline: 2px solid var(--store-accent-ink, #1f3a73);
+  outline-offset: 2px;
+}
+@media (max-width: 560px){
+  /* Segmentos apilados: tira vertical + label inline. */
+  .store-page[data-design='umbral'][data-tracking='tracking-status-hero'] .ec-stepper{
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: 10px;
+  }
+  .store-page[data-design='umbral'][data-tracking='tracking-status-hero'] .ec-step{
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding-top: 0;
+    text-align: left;
+  }
+  .store-page[data-design='umbral'][data-tracking='tracking-status-hero'] .ec-step::before{
+    position: static;
+    flex: none;
+    width: 7px;
+    height: 30px;
+    border-radius: 999px;
+  }
+  .store-page[data-design='umbral'][data-tracking='tracking-status-hero'] .ec-step-label{ font-size: 10px; }
+  .store-page[data-design='umbral'][data-tracking='tracking-status-hero'] .ec-track-status{
+    font-size: 20px;
+    padding: 12px 22px 10px;
+  }
+}
+@media (prefers-reduced-motion: reduce){
+  .store-page[data-design='umbral'][data-nav='minimal-floating'] .sp-top .sp-top-inner,
+  .store-page[data-design='umbral'][data-nav='minimal-floating'] .sp-top-links a::after{ transition: none !important; }
+}

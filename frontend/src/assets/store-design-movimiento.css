@@ -838,3 +838,584 @@
     animation-duration: .001ms !important;
   }
 }
+
+/* <=560px el stepper base pasa a lista vertical con ::before; acá la
+   tira de sellos se apila como filas (flex-column por step). */
+@media (max-width: 560px){
+  .store-page[data-design='movimiento'][data-tracking='tracking-timeline'] .ec-stepper{
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: 8px;
+  }
+  .store-page[data-design='movimiento'][data-tracking='tracking-timeline'] .ec-step{
+    display: grid;
+    grid-template-columns: 34px minmax(0, 1fr) auto;
+    align-items: center;
+    column-gap: 12px;
+    text-align: left;
+    padding: 8px 6px;
+    border: 1px solid var(--dz-line, #D5CFC0);
+    background: var(--dz-surface, #FAF7F0);
+  }
+  .store-page[data-design='movimiento'][data-tracking='tracking-timeline'] .ec-step::after,
+  .store-page[data-design='movimiento'][data-tracking='tracking-timeline'] .ec-step::before{ display: none; }
+  .store-page[data-design='movimiento'][data-tracking='tracking-timeline'] .ec-step-label{ font-size: 10px; }
+  .store-page[data-design='movimiento'][data-tracking='tracking-timeline'] .ec-track-step-date{ font-size: 9px; }
+}
+
+/* ==========================================================================
+   ARQUETIPOS — chrome del diseño en TODAS las páginas públicas
+   (nav 'utility-plus-primary' · cuenta 'account-topbar' · tracking
+   'tracking-timeline').
+
+   Los tokens --dz-* de este archivo viven solo en .ec-auth/.ec-account;
+   acá se replican a nivel página (papel/registro Movimiento) para que
+   .sp-top, .ec-track y las superficies de tracking hereden la misma
+   paleta. --sp-* ya los fija la piel store-movimiento.css.
+   ========================================================================== */
+.store-page[data-design='movimiento']{
+  --dz-bg: #F3EFE6;
+  --dz-surface: #FAF7F0;
+  --dz-surface-2: #EAE4D7;
+  --dz-surface-3: #E0D9C9;
+  --dz-ink: #111310;
+  --dz-ink-2: #383B34;
+  --dz-muted: #6B6E64;
+  --dz-line: #D5CFC0;
+  --dz-line-strong: #B7B09F;
+  --dz-accent: var(--store-accent-ink, #B23A18);
+  --dz-accent-ink: #FFF8F0;
+  --dz-accent-text: var(--store-accent-ink, #B23A18);
+  --dz-accent-soft: color-mix(in srgb, var(--store-accent-ink, #B23A18) 9%, var(--dz-surface));
+  --dz-accent-line: color-mix(in srgb, var(--store-accent-ink, #B23A18) 42%, transparent);
+  --dz-ok: #2E7D54;
+  --dz-danger: #B23A18;
+  --dz-display: var(--st-f-display-family, 'Bricolage Grotesque', 'Arial Narrow', sans-serif);
+  --dz-body: var(--st-f-body-family, 'Instrument Sans', 'Inter', system-ui, sans-serif);
+  --dz-mono: var(--st-f-eyebrow-family, 'JetBrains Mono', ui-monospace, Consolas, monospace);
+  --dz-radius: 0px;
+}
+.store-page[data-design='movimiento'][data-theme='dark']{
+  --dz-bg: #141511;
+  --dz-surface: #1B1D17;
+  --dz-surface-2: #23261E;
+  --dz-surface-3: #2B2E25;
+  --dz-ink: #F3EFE6;
+  --dz-ink-2: #D6D2C6;
+  --dz-muted: #A7A599;
+  --dz-line: #2E3128;
+  --dz-line-strong: #4A4D42;
+  --dz-accent: color-mix(in srgb, var(--store-accent, #E4572E) 78%, #F3EFE6);
+  --dz-accent-ink: #141511;
+  --dz-accent-text: color-mix(in srgb, var(--store-accent, #E4572E) 80%, #F3EFE6);
+  --dz-accent-soft: color-mix(in srgb, var(--store-accent, #E4572E) 14%, var(--dz-surface));
+  --dz-accent-line: color-mix(in srgb, var(--store-accent, #E4572E) 48%, transparent);
+  --dz-ok: #5FCB9B;
+  --dz-danger: #F08A7A;
+}
+
+/* ---------- NAV 'utility-plus-primary' ----------
+   Doble barra: franja utility fina (mono, datos duros de la sesión) +
+   barra principal con wordmark en display y filetes de registro.
+   El markup ya existe (.sp-top-utility solo en template movimiento);
+   acá solo se viste. */
+.store-page[data-design='movimiento'][data-nav='utility-plus-primary'] .sp-top-utility{
+  background: var(--dz-surface, #FAF7F0);
+  border-bottom: 1px solid var(--dz-line, #D5CFC0);
+  color: var(--dz-muted, #6B6E64);
+  font-family: var(--dz-mono, monospace);
+}
+.store-page[data-design='movimiento'][data-nav='utility-plus-primary'] .sp-top-utility-inner{
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  min-height: 34px;
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: .14em;
+  text-transform: uppercase;
+}
+.store-page[data-design='movimiento'][data-nav='utility-plus-primary'] .sp-top-utility-item{
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  white-space: nowrap;
+}
+.store-page[data-design='movimiento'][data-nav='utility-plus-primary'] .sp-top-utility-item svg{ color: var(--dz-accent-text, #B23A18); }
+.store-page[data-design='movimiento'][data-nav='utility-plus-primary'] .sp-top-utility-item.is-right{
+  margin-left: auto;
+  color: var(--dz-ink-2, #383B34);
+}
+@media (max-width: 640px){
+  /* En mobile la utility colapsa a una sola línea de datos (el resto se
+     oculta por overflow, sin scroll horizontal). */
+  .store-page[data-design='movimiento'][data-nav='utility-plus-primary'] .sp-top-utility-inner{
+    gap: 10px;
+    min-height: 30px;
+    font-size: 9px;
+    letter-spacing: .1em;
+  }
+  .store-page[data-design='movimiento'][data-nav='utility-plus-primary'] .sp-top-utility-item:nth-child(2){ display: none; }
+}
+/* Barra principal: registro de planilla — filete de tinta abajo, wordmark
+   en Bricolage mayúscula, links mono con índice implícito. */
+.store-page[data-design='movimiento'][data-nav='utility-plus-primary'] .sp-top{
+  border-bottom: 2px solid var(--dz-ink, #111310);
+  background: var(--dz-bg, #F3EFE6);
+}
+.store-page[data-design='movimiento'][data-nav='utility-plus-primary'] .sp-top .sp-name{
+  font-family: var(--dz-display);
+  font-weight: 800;
+  font-size: 17px;
+  letter-spacing: .02em;
+  text-transform: uppercase;
+  color: var(--dz-ink, #111310);
+}
+.store-page[data-design='movimiento'][data-nav='utility-plus-primary'] .sp-top-links{
+  gap: 2px;
+}
+.store-page[data-design='movimiento'][data-nav='utility-plus-primary'] .sp-top-links a{
+  border-radius: 0;
+  font-family: var(--dz-mono, monospace);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: .12em;
+  text-transform: uppercase;
+  color: var(--dz-ink-2, #383B34);
+}
+.store-page[data-design='movimiento'][data-nav='utility-plus-primary'] .sp-top-links a.router-link-exact-active{
+  background: var(--dz-ink, #111310);
+  color: var(--dz-bg, #F3EFE6);
+  box-shadow: none;
+}
+.store-page[data-design='movimiento'][data-nav='utility-plus-primary'] .sp-top .sp-icon-btn{
+  border-radius: 0;
+  border: 1px solid var(--dz-line-strong, #B7B09F);
+  background: transparent;
+  color: var(--dz-ink-2, #383B34);
+}
+.store-page[data-design='movimiento'][data-nav='utility-plus-primary'] .sp-top .sp-icon-btn:hover{
+  border-color: var(--dz-ink, #111310);
+  background: var(--dz-ink, #111310);
+  color: var(--dz-bg, #F3EFE6);
+}
+.store-page[data-design='movimiento'][data-nav='utility-plus-primary'] .sp-top-cta{
+  border-radius: 0;
+  background: var(--dz-accent-text, #B23A18);
+  color: var(--dz-accent-ink, #FFF8F0);
+  font-family: var(--dz-mono, monospace);
+  font-size: 10.5px;
+  font-weight: 700;
+  letter-spacing: .14em;
+  text-transform: uppercase;
+}
+.store-page[data-design='movimiento'][data-nav='utility-plus-primary'] .sp-top-cta:hover{
+  background: var(--dz-ink, #111310);
+}
+.store-page[data-design='movimiento'][data-nav='utility-plus-primary'] .sp-shop-nav{
+  background: var(--dz-bg, #F3EFE6);
+  border-bottom: 1px solid var(--dz-line, #D5CFC0);
+}
+.store-page[data-design='movimiento'][data-nav='utility-plus-primary'] .sp-shop-nav-links a{
+  border-radius: 0;
+  font-family: var(--dz-mono, monospace);
+  font-size: 10.5px;
+  font-weight: 600;
+  letter-spacing: .14em;
+  text-transform: uppercase;
+}
+.store-page[data-design='movimiento'][data-nav='utility-plus-primary'] .sp-shop-nav-links a.is-current{
+  background: var(--dz-ink, #111310);
+  color: var(--dz-bg, #F3EFE6);
+}
+.store-page[data-design='movimiento'][data-nav='utility-plus-primary'] .sp-shop-nav-links a.is-current:hover{
+  background: var(--dz-ink, #111310);
+  color: var(--dz-bg, #F3EFE6);
+}
+.store-page[data-design='movimiento'][data-nav='utility-plus-primary'] .sp-drawer .sp-nav-item{
+  border-radius: 0;
+  border-bottom: 1px solid var(--dz-line, #D5CFC0);
+  font-family: var(--dz-mono, monospace);
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: .1em;
+  text-transform: uppercase;
+}
+.store-page[data-design='movimiento'][data-nav='utility-plus-primary'] .sp-drawer .sp-nav-item.active{
+  background: var(--dz-ink, #111310);
+  color: var(--dz-bg, #F3EFE6);
+  box-shadow: none;
+}
+.store-page[data-design='movimiento'][data-nav='utility-plus-primary'] .sp-drawer .sp-nav-item.active::before{ display: none; }
+.store-page[data-design='movimiento'][data-nav='utility-plus-primary'] .sp-more-sheet{
+  border-radius: 0;
+  border-top: 2px solid var(--dz-ink, #111310);
+}
+@media (max-width: 640px){
+  .store-page[data-design='movimiento'][data-nav='utility-plus-primary'] .sp-top .sp-top-inner{ min-height: 56px; }
+  .store-page[data-design='movimiento'][data-nav='utility-plus-primary'] .sp-top-links a{ font-size: 10px; }
+}
+
+/* ---------- CUENTA 'account-topbar' ----------
+   Identidad en barra superior + tabs debajo; el sidebar queda oculto en
+   todos los tamaños (el rail desktop de la vista base se apaga y el
+   mhead pasa a ser la barra de identidad permanente). */
+.store-page[data-design='movimiento'][data-account='account-topbar'] .ec-account .acc-side{ display: none !important; }
+.store-page[data-design='movimiento'][data-account='account-topbar'] .ec-account .acc-shell{
+  grid-template-columns: minmax(0, 1fr);
+  gap: 0;
+}
+.store-page[data-design='movimiento'][data-account='account-topbar'] .ec-account .acc-mhead{
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 16px 18px;
+  border: 1.5px solid var(--dz-ink, #111310);
+  border-radius: var(--dz-radius, 0px);
+  background: var(--dz-surface, #FAF7F0);
+}
+.store-page[data-design='movimiento'][data-account='account-topbar'] .ec-account .acc-mhead .acc-tele{
+  display: block;
+  font-family: var(--dz-mono, monospace);
+  font-size: 9px;
+  font-weight: 600;
+  letter-spacing: .22em;
+  text-transform: uppercase;
+  color: var(--dz-muted, #6B6E64);
+}
+.store-page[data-design='movimiento'][data-account='account-topbar'] .ec-account .acc-avatar{
+  border-radius: var(--dz-radius, 0px);
+  background: var(--dz-ink, #111310);
+  color: var(--dz-bg, #F3EFE6);
+}
+.store-page[data-design='movimiento'][data-account='account-topbar'] .ec-account .acc-greet{
+  font-family: var(--dz-display);
+  font-weight: 800;
+  font-size: clamp(19px, 2.4vw, 24px);
+  letter-spacing: -.01em;
+  text-transform: uppercase;
+  color: var(--dz-ink, #111310);
+}
+.store-page[data-design='movimiento'][data-account='account-topbar'] .ec-account .acc-mhead-meta strong,
+.store-page[data-design='movimiento'][data-account='account-topbar'] .ec-account .acc-mhead-meta small{ display: none; }
+.store-page[data-design='movimiento'][data-account='account-topbar'] .ec-account .acc-tabs{
+  display: flex;
+  gap: 0;
+  margin-top: 12px;
+  padding: 0;
+  border: 1.5px solid var(--dz-ink, #111310);
+  border-top-width: 1px;
+  border-radius: var(--dz-radius, 0px);
+  background: var(--dz-surface, #FAF7F0);
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+.store-page[data-design='movimiento'][data-account='account-topbar'] .ec-account .acc-tabs::-webkit-scrollbar{ display: none; }
+.store-page[data-design='movimiento'][data-account='account-topbar'] .ec-account .acc-tab{
+  flex: 1 1 auto;
+  justify-content: center;
+  min-height: 48px;
+  padding: 10px 12px;
+  border: 0;
+  border-right: 1px solid var(--dz-line, #D5CFC0);
+  border-radius: 0;
+  background: transparent;
+  font-family: var(--dz-mono, monospace);
+  font-size: 10.5px;
+  font-weight: 600;
+  letter-spacing: .1em;
+  text-transform: uppercase;
+  color: var(--dz-ink-2, #383B34);
+}
+.store-page[data-design='movimiento'][data-account='account-topbar'] .ec-account .acc-tab:last-child{ border-right: 0; }
+.store-page[data-design='movimiento'][data-account='account-topbar'] .ec-account .acc-tab.is-on{
+  background: var(--dz-ink, #111310);
+  color: var(--dz-bg, #F3EFE6);
+}
+.store-page[data-design='movimiento'][data-account='account-topbar'] .ec-account .acc-tab .acc-idx{
+  font-family: var(--dz-mono, monospace);
+  font-size: 9px;
+  color: var(--dz-muted, #6B6E64);
+}
+.store-page[data-design='movimiento'][data-account='account-topbar'] .ec-account .acc-tab.is-on .acc-idx{
+  color: color-mix(in srgb, var(--dz-bg, #F3EFE6) 65%, transparent);
+}
+.store-page[data-design='movimiento'][data-account='account-topbar'] .ec-account .acc-icon-btn{
+  border-radius: var(--dz-radius, 0px);
+  border: 1px solid var(--dz-line-strong, #B7B09F);
+}
+.store-page[data-design='movimiento'][data-account='account-topbar'] .ec-account .acc-icon-btn:hover{
+  border-color: var(--dz-ink, #111310);
+  background: var(--dz-ink, #111310);
+  color: var(--dz-bg, #F3EFE6);
+}
+.store-page[data-design='movimiento'][data-account='account-topbar'] .ec-account .acc-body{
+  padding-top: 16px;
+  display: grid;
+  gap: 14px;
+}
+@media (min-width: 1024px){
+  /* En desktop la barra de identidad y los tabs también mandan: se
+     re-muestran dentro de la columna única (pisan la vista "libro"). */
+  .store-page[data-design='movimiento'][data-account='account-topbar'] .ec-account .acc-mhead{ display: flex; }
+  .store-page[data-design='movimiento'][data-account='account-topbar'] .ec-account .acc-tabs{ display: flex; }
+}
+@media (max-width: 640px){
+  .store-page[data-design='movimiento'][data-account='account-topbar'] .ec-account .acc-mhead{
+    padding: 13px 14px;
+    gap: 10px;
+  }
+  .store-page[data-design='movimiento'][data-account='account-topbar'] .ec-account .acc-tab{ padding: 10px 8px; font-size: 9px; letter-spacing: .06em; }
+}
+
+/* ---------- SEGUIMIENTO 'tracking-timeline' ----------
+   La línea temporal es la protagonista: la card de "Movimientos" se
+   eleva como placa de registro (índice mono, filetes de tinta) y el
+   stepper queda como tira de sellos compacta arriba. */
+.store-page[data-design='movimiento'][data-tracking='tracking-timeline'] .ec-track{
+  gap: 16px;
+}
+.store-page[data-design='movimiento'][data-tracking='tracking-timeline'] .ec-track-title{
+  font-family: var(--dz-display);
+  font-weight: 800;
+  letter-spacing: -.02em;
+  text-transform: uppercase;
+  color: var(--dz-ink, #111310);
+}
+.store-page[data-design='movimiento'][data-tracking='tracking-timeline'] .ec-track-code{
+  font-family: var(--dz-mono, monospace);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: .14em;
+  text-transform: uppercase;
+  color: var(--dz-muted, #6B6E64);
+}
+.store-page[data-design='movimiento'][data-tracking='tracking-timeline'] .ec-track-card,
+.store-page[data-design='movimiento'][data-tracking='tracking-timeline'] .ec-track-help{
+  border: 1.5px solid var(--dz-ink, #111310);
+  border-radius: var(--dz-radius, 0px);
+  background: var(--dz-surface, #FAF7F0);
+  box-shadow: none;
+}
+.store-page[data-design='movimiento'][data-tracking='tracking-timeline'] .ec-track-status{
+  font-family: var(--dz-mono, monospace);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: .16em;
+  text-transform: uppercase;
+  border: 1px solid var(--dz-ink, #111310);
+  border-radius: var(--dz-radius, 0px);
+  background: transparent;
+  color: var(--dz-ink, #111310);
+  padding: 6px 12px;
+}
+.store-page[data-design='movimiento'][data-tracking='tracking-timeline'] .ec-track-status.is-delivered{
+  border-color: var(--dz-ok, #2E7D54);
+  color: var(--dz-ok, #2E7D54);
+}
+.store-page[data-design='movimiento'][data-tracking='tracking-timeline'] .ec-track-status.is-cancelled,
+.store-page[data-design='movimiento'][data-tracking='tracking-timeline'] .ec-track-status.is-expired,
+.store-page[data-design='movimiento'][data-tracking='tracking-timeline'] .ec-track-status.is-refunded{
+  border-color: var(--dz-danger, #B23A18);
+  color: var(--dz-danger, #B23A18);
+}
+/* Stepper = tira de sellos (sellos cuadrados, sin conectores largos). */
+.store-page[data-design='movimiento'][data-tracking='tracking-timeline'] .ec-stepper{
+  display: flex;
+  gap: 6px;
+  margin: 14px 0 4px;
+}
+.store-page[data-design='movimiento'][data-tracking='tracking-timeline'] .ec-step{
+  flex: 1;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  padding: 10px 4px;
+}
+.store-page[data-design='movimiento'][data-tracking='tracking-timeline'] .ec-step::after{
+  top: 15px;
+  left: calc(50% + 16px);
+  right: calc(-50% + 16px);
+  height: 2px;
+  background: var(--dz-line, #D5CFC0);
+}
+.store-page[data-design='movimiento'][data-tracking='tracking-timeline'] .ec-step-dot{
+  width: 30px;
+  height: 30px;
+  border-radius: var(--dz-radius, 0px);
+  border: 1.5px solid var(--dz-line-strong, #B7B09F);
+  background: var(--dz-surface, #FAF7F0);
+  color: var(--dz-muted, #6B6E64);
+  font-family: var(--dz-mono, monospace);
+  font-size: 11px;
+}
+.store-page[data-design='movimiento'][data-tracking='tracking-timeline'] .ec-step.is-done .ec-step-dot{
+  border-color: var(--dz-ink, #111310);
+  background: var(--dz-ink, #111310);
+  color: var(--dz-bg, #F3EFE6);
+}
+.store-page[data-design='movimiento'][data-tracking='tracking-timeline'] .ec-step.is-done::after{ background: var(--dz-ink, #111310); }
+.store-page[data-design='movimiento'][data-tracking='tracking-timeline'] .ec-step.is-current .ec-step-dot{
+  border-color: var(--dz-accent-text, #B23A18);
+  color: var(--dz-accent-text, #B23A18);
+  box-shadow: inset 0 0 0 3px var(--dz-surface, #FAF7F0), inset 0 0 0 5px var(--dz-accent-text, #B23A18);
+}
+.store-page[data-design='movimiento'][data-tracking='tracking-timeline'] .ec-step-label{
+  font-family: var(--dz-mono, monospace);
+  font-size: 9px;
+  font-weight: 600;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+  text-align: center;
+  color: var(--dz-muted, #6B6E64);
+}
+.store-page[data-design='movimiento'][data-tracking='tracking-timeline'] .ec-step.is-done .ec-step-label,
+.store-page[data-design='movimiento'][data-tracking='tracking-timeline'] .ec-step.is-current .ec-step-label{
+  color: var(--dz-ink, #111310);
+}
+.store-page[data-design='movimiento'][data-tracking='tracking-timeline'] .ec-track-step-date{
+  font-family: var(--dz-mono, monospace);
+  font-size: 9px;
+  letter-spacing: .04em;
+  color: var(--dz-muted, #6B6E64);
+}
+/* La card de movimientos: índice "REGISTRO" y timeline con regla de tinta. */
+.store-page[data-design='movimiento'][data-tracking='tracking-timeline'] .ec-track-card:has(.ec-timeline){
+  border-top: 4px solid var(--dz-ink, #111310);
+}
+.store-page[data-design='movimiento'][data-tracking='tracking-timeline'] .ec-track-card:has(.ec-timeline) .ec-track-h2{
+  font-family: var(--dz-mono, monospace);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: .22em;
+  text-transform: uppercase;
+  color: var(--dz-muted, #6B6E64);
+}
+.store-page[data-design='movimiento'][data-tracking='tracking-timeline'] .ec-timeline li{ padding: 12px 0; }
+.store-page[data-design='movimiento'][data-tracking='tracking-timeline'] .ec-timeline li:not(:last-child)::before{
+  left: 6px;
+  top: 30px;
+  bottom: -6px;
+  width: 2px;
+  background: repeating-linear-gradient(180deg, var(--dz-ink, #111310) 0 6px, transparent 6px 11px);
+}
+.store-page[data-design='movimiento'][data-tracking='tracking-timeline'] .ec-tl-dot{
+  width: 14px;
+  height: 14px;
+  margin-top: 3px;
+  border-radius: var(--dz-radius, 0px);
+  background: var(--dz-surface, #FAF7F0);
+  border: 2px solid var(--dz-ink, #111310);
+}
+.store-page[data-design='movimiento'][data-tracking='tracking-timeline'] .ec-timeline strong{
+  font-family: var(--dz-body);
+  font-weight: 700;
+  font-size: 14px;
+  color: var(--dz-ink, #111310);
+}
+.store-page[data-design='movimiento'][data-tracking='tracking-timeline'] .ec-timeline small{
+  font-family: var(--dz-mono, monospace);
+  font-size: 10.5px;
+  letter-spacing: .06em;
+  color: var(--dz-muted, #6B6E64);
+}
+.store-page[data-design='movimiento'][data-tracking='tracking-timeline'] .ec-track-chips{
+  padding-top: 14px;
+  border-top: 1px solid var(--dz-line, #D5CFC0);
+}
+.store-page[data-design='movimiento'][data-tracking='tracking-timeline'] .ec-track-chip{
+  border: 1px solid var(--dz-line-strong, #B7B09F);
+  border-radius: var(--dz-radius, 0px);
+  background: var(--dz-surface, #FAF7F0);
+  font-family: var(--dz-mono, monospace);
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: .1em;
+  text-transform: uppercase;
+  color: var(--dz-ink-2, #383B34);
+}
+.store-page[data-design='movimiento'][data-tracking='tracking-timeline'] .ec-track-h2{
+  font-family: var(--dz-display);
+  font-weight: 800;
+  letter-spacing: -.01em;
+  text-transform: uppercase;
+  color: var(--dz-ink, #111310);
+}
+.store-page[data-design='movimiento'][data-tracking='tracking-timeline'] .ec-timeline{ margin-top: 4px; }
+.store-page[data-design='movimiento'][data-tracking='tracking-timeline'] .ec-receipt{
+  border: 1.5px solid var(--dz-ink, #111310);
+  border-radius: var(--dz-radius, 0px);
+  background: var(--dz-bg, #F3EFE6);
+}
+.store-page[data-design='movimiento'][data-tracking='tracking-timeline'] .ec-btn-primary{
+  border-radius: var(--dz-radius, 0px);
+  background: var(--dz-ink, #111310);
+  border: 1px solid var(--dz-ink, #111310);
+  color: var(--dz-bg, #F3EFE6);
+  font-family: var(--dz-mono, monospace);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: .12em;
+  text-transform: uppercase;
+}
+.store-page[data-design='movimiento'][data-tracking='tracking-timeline'] .ec-btn-primary:hover{
+  background: var(--dz-accent-text, #B23A18);
+  border-color: var(--dz-accent-text, #B23A18);
+}
+.store-page[data-design='movimiento'][data-tracking='tracking-timeline'] .ec-btn-ghost,
+.store-page[data-design='movimiento'][data-tracking='tracking-timeline'] .ec-track-receipt-btn{
+  border-radius: var(--dz-radius, 0px);
+  border: 1px solid var(--dz-line-strong, #B7B09F);
+  font-family: var(--dz-mono, monospace);
+  font-size: 10.5px;
+  font-weight: 600;
+  letter-spacing: .12em;
+  text-transform: uppercase;
+}
+.store-page[data-design='movimiento'][data-tracking='tracking-timeline'] .ec-track-legal{
+  border-top: 1px solid var(--dz-line, #D5CFC0);
+  font-family: var(--dz-mono, monospace);
+  font-size: 10px;
+  letter-spacing: .06em;
+}
+.store-page[data-design='movimiento'][data-tracking='tracking-timeline'] :is(.ec-track-card, .ec-track-help, .ec-step, .ec-btn-primary, .ec-btn-ghost, .ec-track-receipt-btn, .ec-proof-drop, .ec-track-help-summary, .ec-track-legal a):focus-visible{
+  outline: 2px solid var(--dz-accent-text, #B23A18);
+  outline-offset: 2px;
+}
+@media (max-width: 560px){
+  .store-page[data-design='movimiento'][data-tracking='tracking-timeline'] .ec-stepper{ gap: 3px; }
+  .store-page[data-design='movimiento'][data-tracking='tracking-timeline'] .ec-step{ padding: 8px 2px; }
+  .store-page[data-design='movimiento'][data-tracking='tracking-timeline'] .ec-step-label{ font-size: 8px; letter-spacing: .04em; }
+}
+/* NOTA: el bloque <=560px definitivo (stepper apilado como filas) ya está
+   al final de store-design-movimiento.css — este temporal no lo repite. */
+@media (prefers-reduced-motion: reduce){
+  .store-page[data-design='movimiento'][data-nav='utility-plus-primary'] *{ transition: none !important; }
+}
+
+/* <=560px (repetido al final para ganar la cascada tras el bloque base):
+   el stepper apila como filas de registro; el conector ::before base se
+   apaga porque cada fila ya es una celda. */
+@media (max-width: 560px){
+  .store-page[data-design='movimiento'][data-tracking='tracking-timeline'] .ec-stepper{
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: 8px;
+  }
+  .store-page[data-design='movimiento'][data-tracking='tracking-timeline'] .ec-step{
+    display: grid;
+    grid-template-columns: 34px minmax(0, 1fr) auto;
+    align-items: center;
+    column-gap: 12px;
+    text-align: left;
+    padding: 8px 6px;
+    border: 1px solid var(--dz-line, #D5CFC0);
+    background: var(--dz-surface, #FAF7F0);
+  }
+  .store-page[data-design='movimiento'][data-tracking='tracking-timeline'] .ec-step::after,
+  .store-page[data-design='movimiento'][data-tracking='tracking-timeline'] .ec-step::before{ display: none; }
+  .store-page[data-design='movimiento'][data-tracking='tracking-timeline'] .ec-step-label{ font-size: 10px; }
+  .store-page[data-design='movimiento'][data-tracking='tracking-timeline'] .ec-track-step-date{ font-size: 9px; }
+}

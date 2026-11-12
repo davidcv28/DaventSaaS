@@ -676,3 +676,413 @@
     animation-duration: .001ms !important;
   }
 }
+
+/* ==========================================================================
+   ARQUETIPOS — chrome del diseño en TODAS las páginas públicas
+   (nav 'ticket-menu' · cuenta 'account-card' · tracking 'tracking-stepcard').
+   Los tokens --dz-* de sastreria viven en .store-page[data-design] raíz, así
+   que .sp-top/.acc-shell/.ec-track los heredan directo. Identidad: papel,
+   tinta, cuero; filetes dashed como guía de corte y JetBrains Mono en todo
+   metadato. Aquí account-card reemplaza la vista "cuaderno" (sidebar cosido)
+   por una única tarjeta centrada con tabs internas.
+   ========================================================================== */
+
+/* ---------- NAV 'ticket-menu' ---------- */
+.store-page[data-design='sastreria'][data-nav='ticket-menu'] .sp-top{
+  border-bottom: 1px dashed var(--dz-line-strong, #b3a98f);
+  background: var(--sp-bg, var(--dz-bg));
+}
+.store-page[data-design='sastreria'][data-nav='ticket-menu'] .sp-top-links{
+  gap: 0;
+  border-left: 1px dashed var(--dz-line-strong, #b3a98f);
+}
+.store-page[data-design='sastreria'][data-nav='ticket-menu'] .sp-top-links a{
+  border-right: 1px dashed var(--dz-line-strong, #b3a98f);
+  border-radius: 0;
+  font-family: var(--dz-mono, monospace);
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: .12em;
+  text-transform: uppercase;
+  color: var(--sp-ink-2, var(--dz-ink-2));
+}
+.store-page[data-design='sastreria'][data-nav='ticket-menu'] .sp-top-links a.router-link-exact-active{
+  background: var(--sp-ink, var(--dz-ink));
+  color: var(--sp-bg, var(--dz-bg));
+  box-shadow: none;
+}
+.store-page[data-design='sastreria'][data-nav='ticket-menu'] .sp-name{
+  font-family: var(--dz-display);
+}
+.store-page[data-design='sastreria'][data-nav='ticket-menu'] .sp-search-top{
+  border-radius: var(--dz-radius, 2px);
+  border-bottom-style: dashed;
+}
+.store-page[data-design='sastreria'][data-nav='ticket-menu'] .sp-icon-btn{
+  border-radius: var(--dz-radius, 2px);
+  border-color: var(--dz-line-strong, #b3a98f);
+}
+.store-page[data-design='sastreria'][data-nav='ticket-menu'] .sp-icon-btn:hover{
+  border-color: var(--store-accent-ink, #6e4a2f);
+  color: var(--store-accent-ink, #6e4a2f);
+  background: var(--dz-accent-soft, transparent);
+}
+.store-page[data-design='sastreria'][data-nav='ticket-menu'] .sp-top-cta{
+  border-radius: var(--dz-radius, 2px);
+  border: 1px dashed currentColor;
+  background: transparent;
+  font-family: var(--dz-mono, monospace);
+  font-size: 10.5px;
+  font-weight: 600;
+  letter-spacing: .16em;
+  text-transform: uppercase;
+}
+.store-page[data-design='sastreria'][data-nav='ticket-menu'] .sp-shop-nav{
+  border-bottom: 1px dashed var(--dz-line-strong, #b3a98f);
+  background: var(--sp-bg, var(--dz-bg));
+}
+.store-page[data-design='sastreria'][data-nav='ticket-menu'] .sp-shop-nav-links a{
+  border-radius: 0;
+  font-family: var(--dz-mono, monospace);
+  font-size: 11px;
+  letter-spacing: .12em;
+  text-transform: uppercase;
+}
+.store-page[data-design='sastreria'][data-nav='ticket-menu'] .sp-shop-nav-links a.is-current{
+  background: var(--sp-ink, var(--dz-ink));
+  color: var(--sp-bg, var(--dz-bg));
+}
+.store-page[data-design='sastreria'][data-nav='ticket-menu'] .sp-shop-nav-links a.is-current:hover{
+  background: var(--sp-ink, var(--dz-ink));
+  color: var(--sp-bg, var(--dz-bg));
+}
+/* Drawer móvil = hoja de la ficha: separadores dashed y renglones mono. */
+.store-page[data-design='sastreria'][data-nav='ticket-menu'] .sp-drawer .sp-nav-item{
+  border-radius: 0;
+  border-bottom: 1px dashed var(--dz-line, #d8d2c4);
+  font-family: var(--dz-mono, monospace);
+  font-size: 12px;
+  letter-spacing: .1em;
+  text-transform: uppercase;
+}
+.store-page[data-design='sastreria'][data-nav='ticket-menu'] .sp-drawer .sp-nav-item.active{
+  background: transparent;
+  color: var(--sp-ink, var(--dz-ink));
+  box-shadow: inset 2px 0 0 var(--store-accent-ink, #6e4a2f);
+}
+.store-page[data-design='sastreria'][data-nav='ticket-menu'] .sp-drawer .sp-nav-item.active::before{ display: none; }
+.store-page[data-design='sastreria'][data-nav='ticket-menu'] .sp-more-sheet{
+  border-radius: var(--dz-radius, 2px);
+  border-top: 1px dashed var(--dz-line-strong, #b3a98f);
+}
+@media (max-width: 640px){
+  .store-page[data-design='sastreria'][data-nav='ticket-menu'] .sp-top .sp-top-inner{ min-height: 56px; }
+  .store-page[data-design='sastreria'][data-nav='ticket-menu'] .sp-top-cta{ font-size: 9.5px; padding: 8px 12px; }
+}
+
+/* ---------- CUENTA 'account-card' ----------
+   Sustituye la vista "cuaderno" (acc-side cosido) por UNA tarjeta centrada:
+   header compacto + fila de tabs tipo muestras + paneles apilados dentro
+   del mismo marco. */
+.store-page[data-design='sastreria'][data-account='account-card'] .ec-account{
+  width: min(880px, 100%);
+}
+.store-page[data-design='sastreria'][data-account='account-card'] .ec-account .acc-shell{
+  grid-template-columns: minmax(0, 1fr);
+  gap: 0;
+  padding: clamp(18px, 3vw, 32px);
+  border: 1px solid var(--dz-line, #d8d2c4);
+  border-top: 3px solid var(--store-accent-ink, #6e4a2f);
+  border-radius: var(--dz-radius, 2px);
+  background: var(--dz-surface, #fbf8f2);
+}
+.store-page[data-design='sastreria'][data-account='account-card'] .ec-account .acc-side{ display: none; }
+.store-page[data-design='sastreria'][data-account='account-card'] .ec-account .acc-main{
+  gap: 0;
+  min-width: 0;
+}
+.store-page[data-design='sastreria'][data-account='account-card'] .ec-account .acc-mhead{
+  display: grid;
+  grid-template-columns: 44px minmax(0, 1fr) 44px;
+  align-items: center;
+  gap: 12px;
+  padding: 0 0 14px;
+  border-bottom: 1px dashed var(--dz-line-strong, #b3a98f);
+}
+.store-page[data-design='sastreria'][data-account='account-card'] .ec-account .acc-mhead .acc-tele{ grid-column: 1 / -1; }
+.store-page[data-design='sastreria'][data-account='account-card'] .ec-account .acc-tabs{
+  display: flex;
+  gap: 8px;
+  padding: 14px 0;
+  border-bottom: 1px dashed var(--dz-line-strong, #b3a98f);
+  scrollbar-width: none;
+}
+.store-page[data-design='sastreria'][data-account='account-card'] .ec-account .acc-tab{
+  min-height: 44px;
+  border: 1px dashed var(--dz-line-strong, #b3a98f);
+  border-radius: var(--dz-radius, 2px);
+  background: transparent;
+}
+.store-page[data-design='sastreria'][data-account='account-card'] .ec-account .acc-tab.is-on{
+  border-style: solid;
+  border-color: var(--dz-ink, #1b1a17);
+  background: var(--dz-ink, #1b1a17);
+  color: var(--dz-bg, #f3efe7);
+}
+.store-page[data-design='sastreria'][data-account='account-card'] .ec-account .acc-body{
+  padding-top: 18px;
+  display: grid;
+  gap: 16px;
+}
+/* Los paneles internos quedan "ligeros": la tarjeta madre ya es la ficha. */
+.store-page[data-design='sastreria'][data-account='account-card'] .ec-account .acc-panel,
+.store-page[data-design='sastreria'][data-account='account-card'] .ec-account .acc-auth-card,
+.store-page[data-design='sastreria'][data-account='account-card'] .ec-account .acc-gate-card{
+  border: 1px solid var(--dz-line, #d8d2c4);
+  border-top: 0;
+  border-left: 0;
+  border-right: 0;
+  border-bottom: 1px dashed var(--dz-line-strong, #b3a98f);
+  border-radius: 0;
+  background: transparent;
+}
+.store-page[data-design='sastreria'][data-account='account-card'] .ec-account .acc-panel:last-child,
+.store-page[data-design='sastreria'][data-account='account-card'] .ec-account .acc-gate-card:last-child{
+  border-bottom: 0;
+}
+.store-page[data-design='sastreria'][data-account='account-card'] .ec-account .acc-panel-head{
+  border-bottom: 1px dashed var(--dz-line-strong, #b3a98f);
+}
+/* Escritorio: mhead + tabs visibles dentro de la tarjeta (pisan el "cuaderno"). */
+@media (min-width: 1024px){
+  .store-page[data-design='sastreria'][data-account='account-card'] .ec-account .acc-mhead{ display: grid; }
+  .store-page[data-design='sastreria'][data-account='account-card'] .ec-account .acc-tabs{ display: flex; }
+}
+@media (max-width: 640px){
+  .store-page[data-design='sastreria'][data-account='account-card'] .ec-account .acc-shell{
+    padding: 16px 14px;
+    border-top-width: 3px;
+  }
+  .store-page[data-design='sastreria'][data-account='account-card'] .ec-account .acc-tabs{
+    padding: 12px 0;
+    gap: 6px;
+  }
+  .store-page[data-design='sastreria'][data-account='account-card'] .ec-account .acc-tab{
+    padding: 10px 12px;
+    letter-spacing: .1em;
+  }
+}
+@media (max-width: 390px){
+  .store-page[data-design='sastreria'][data-account='account-card'] .ec-account .acc-mhead{
+    grid-template-columns: 40px minmax(0, 1fr) 40px;
+    gap: 10px;
+  }
+}
+
+/* ---------- SEGUIMIENTO 'tracking-stepcard' ----------
+   El stepper se convierte en una fila de fichas de paso (dot + estado +
+   fecha) separadas por dashed; las cards de contenido adoptan la ficha
+   de sastre (filete de cuero superior, costuras dashed). */
+.store-page[data-design='sastreria'][data-tracking='tracking-stepcard'] .ec-track{
+  gap: 18px;
+}
+.store-page[data-design='sastreria'][data-tracking='tracking-stepcard'] .ec-track-title{
+  font-family: var(--dz-display);
+  font-weight: 300;
+  letter-spacing: -.015em;
+  color: var(--dz-ink, #1b1a17);
+}
+.store-page[data-design='sastreria'][data-tracking='tracking-stepcard'] .ec-track-code{
+  font-family: var(--dz-mono, monospace);
+  font-size: 10.5px;
+  letter-spacing: .16em;
+  text-transform: uppercase;
+  color: var(--dz-muted, #6b655a);
+}
+.store-page[data-design='sastreria'][data-tracking='tracking-stepcard'] .ec-track-card,
+.store-page[data-design='sastreria'][data-tracking='tracking-stepcard'] .ec-track-help{
+  border: 1px solid var(--dz-line, #d8d2c4);
+  border-top: 3px solid var(--store-accent-ink, #6e4a2f);
+  border-radius: var(--dz-radius, 2px);
+  background: var(--dz-surface, #fbf8f2);
+  box-shadow: none;
+}
+.store-page[data-design='sastreria'][data-tracking='tracking-stepcard'] .ec-track-status-row{
+  padding-bottom: 14px;
+  border-bottom: 1px dashed var(--dz-line-strong, #b3a98f);
+}
+.store-page[data-design='sastreria'][data-tracking='tracking-stepcard'] .ec-track-status{
+  font-family: var(--dz-mono, monospace);
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: .16em;
+  text-transform: uppercase;
+  border: 1px solid var(--dz-ink, #1b1a17);
+  border-radius: var(--dz-radius, 2px);
+  background: transparent;
+  color: var(--dz-ink, #1b1a17);
+  padding: 6px 12px;
+}
+.store-page[data-design='sastreria'][data-tracking='tracking-stepcard'] .ec-track-status.is-delivered{
+  border-color: var(--dz-ok, #5e6b57);
+  color: var(--dz-ok, #5e6b57);
+}
+.store-page[data-design='sastreria'][data-tracking='tracking-stepcard'] .ec-track-status.is-cancelled,
+.store-page[data-design='sastreria'][data-tracking='tracking-stepcard'] .ec-track-status.is-expired,
+.store-page[data-design='sastreria'][data-tracking='tracking-stepcard'] .ec-track-status.is-refunded{
+  border-color: var(--dz-danger, #8a4b3a);
+  color: var(--dz-danger, #8a4b3a);
+}
+/* Stepper → fichas de paso. */
+.store-page[data-design='sastreria'][data-tracking='tracking-stepcard'] .ec-stepper{
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 10px;
+  margin: 16px 0 4px;
+}
+.store-page[data-design='sastreria'][data-tracking='tracking-stepcard'] .ec-step{
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  padding: 14px 8px 12px;
+  border: 1px dashed var(--dz-line-strong, #b3a98f);
+  border-radius: var(--dz-radius, 2px);
+  background: var(--dz-bg, #f3efe7);
+}
+.store-page[data-design='sastreria'][data-tracking='tracking-stepcard'] .ec-step::after{ display: none; }
+.store-page[data-design='sastreria'][data-tracking='tracking-stepcard'] .ec-step-dot{
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  border: 1px solid var(--dz-line-strong, #b3a98f);
+  background: var(--dz-surface, #fbf8f2);
+  color: var(--dz-muted, #6b655a);
+  font-family: var(--dz-mono, monospace);
+  font-size: 10px;
+}
+.store-page[data-design='sastreria'][data-tracking='tracking-stepcard'] .ec-step.is-done .ec-step-dot{
+  border-color: var(--store-accent-ink, #6e4a2f);
+  background: var(--store-accent-ink, #6e4a2f);
+  color: var(--dz-accent-ink, #fffdf8);
+}
+.store-page[data-design='sastreria'][data-tracking='tracking-stepcard'] .ec-step.is-current{
+  border-style: solid;
+  border-color: var(--dz-ink, #1b1a17);
+}
+.store-page[data-design='sastreria'][data-tracking='tracking-stepcard'] .ec-step.is-current .ec-step-dot{
+  border-color: var(--dz-ink, #1b1a17);
+  color: var(--dz-ink, #1b1a17);
+  box-shadow: inset 0 0 0 3px var(--dz-bg, #f3efe7), inset 0 0 0 4.5px var(--dz-ink, #1b1a17);
+}
+.store-page[data-design='sastreria'][data-tracking='tracking-stepcard'] .ec-step-label{
+  font-family: var(--dz-mono, monospace);
+  font-size: 9px;
+  font-weight: 600;
+  letter-spacing: .1em;
+  text-transform: uppercase;
+  text-align: center;
+  color: var(--dz-muted, #6b655a);
+}
+.store-page[data-design='sastreria'][data-tracking='tracking-stepcard'] .ec-step.is-done .ec-step-label,
+.store-page[data-design='sastreria'][data-tracking='tracking-stepcard'] .ec-step.is-current .ec-step-label{
+  color: var(--dz-ink, #1b1a17);
+}
+.store-page[data-design='sastreria'][data-tracking='tracking-stepcard'] .ec-track-step-date{
+  font-family: var(--dz-mono, monospace);
+  font-size: 9px;
+  letter-spacing: .04em;
+}
+.store-page[data-design='sastreria'][data-tracking='tracking-stepcard'] .ec-track-chips{
+  padding-top: 14px;
+  border-top: 1px dashed var(--dz-line-strong, #b3a98f);
+}
+.store-page[data-design='sastreria'][data-tracking='tracking-stepcard'] .ec-track-chip{
+  border: 1px dashed var(--dz-line-strong, #b3a98f);
+  border-radius: var(--dz-radius, 2px);
+  background: transparent;
+  font-family: var(--dz-mono, monospace);
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: .12em;
+  text-transform: uppercase;
+  color: var(--dz-ink-2, #3b352c);
+}
+.store-page[data-design='sastreria'][data-tracking='tracking-stepcard'] .ec-track-h2{
+  font-family: var(--dz-display);
+  font-weight: 400;
+  letter-spacing: -.01em;
+  color: var(--dz-ink, #1b1a17);
+}
+.store-page[data-design='sastreria'][data-tracking='tracking-stepcard'] .ec-timeline li{ padding: 12px 0; }
+.store-page[data-design='sastreria'][data-tracking='tracking-stepcard'] .ec-timeline li:not(:last-child)::before{
+  background: repeating-linear-gradient(180deg, var(--dz-line-strong, #b3a98f) 0 4px, transparent 4px 8px);
+}
+.store-page[data-design='sastreria'][data-tracking='tracking-stepcard'] .ec-tl-dot{
+  border-radius: 0;
+  background: var(--store-accent-ink, #6e4a2f);
+}
+.store-page[data-design='sastreria'][data-tracking='tracking-stepcard'] .ec-timeline strong{
+  font-family: var(--dz-body);
+  font-weight: 600;
+  color: var(--dz-ink, #1b1a17);
+}
+.store-page[data-design='sastreria'][data-tracking='tracking-stepcard'] .ec-receipt{
+  border: 1px dashed var(--dz-line-strong, #b3a98f);
+  border-radius: var(--dz-radius, 2px);
+  background: var(--dz-bg, #f3efe7);
+}
+.store-page[data-design='sastreria'][data-tracking='tracking-stepcard'] .ec-track-receipt-btn,
+.store-page[data-design='sastreria'][data-tracking='tracking-stepcard'] .ec-btn-ghost{
+  border-radius: var(--dz-radius, 2px);
+  border: 1px dashed var(--dz-line-strong, #b3a98f);
+  font-family: var(--dz-mono, monospace);
+  font-size: 10.5px;
+  font-weight: 600;
+  letter-spacing: .14em;
+  text-transform: uppercase;
+}
+.store-page[data-design='sastreria'][data-tracking='tracking-stepcard'] .ec-btn-primary{
+  border-radius: var(--dz-radius, 2px);
+  background: var(--store-accent-ink, #6e4a2f);
+  border: 1px solid var(--store-accent-ink, #6e4a2f);
+  font-family: var(--dz-mono, monospace);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: .14em;
+  text-transform: uppercase;
+}
+.store-page[data-design='sastreria'][data-tracking='tracking-stepcard'] .ec-track-legal{
+  border-top: 1px dashed var(--dz-line-strong, #b3a98f);
+  font-family: var(--dz-mono, monospace);
+  font-size: 10px;
+  letter-spacing: .08em;
+}
+.store-page[data-design='sastreria'][data-tracking='tracking-stepcard'] :is(.ec-track-card, .ec-track-help, .ec-step, .ec-btn-primary, .ec-btn-ghost, .ec-track-receipt-btn, .ec-proof-drop, .ec-track-help-summary, .ec-track-legal a):focus-visible{
+  outline: 2px solid var(--store-accent-ink, #6e4a2f);
+  outline-offset: 2px;
+}
+@media (max-width: 720px){
+  .store-page[data-design='sastreria'][data-tracking='tracking-stepcard'] .ec-stepper{
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .store-page[data-design='sastreria'][data-tracking='tracking-stepcard'] .ec-step{ padding: 12px 8px; }
+}
+@media (max-width: 420px){
+  .store-page[data-design='sastreria'][data-tracking='tracking-stepcard'] .ec-stepper{
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+@media (prefers-reduced-motion: reduce){
+  .store-page[data-design='sastreria'][data-nav='ticket-menu'] *{
+    transition: none !important;
+  }
+}
+
+/* Stepper base vuelve a lista vertical <=560px con conector ::before;
+   en stepcard las fichas no llevan conector. */
+@media (max-width: 560px){
+  .store-page[data-design='sastreria'][data-tracking='tracking-stepcard'] .ec-step::before{ display: none; }
+  .store-page[data-design='sastreria'][data-tracking='tracking-stepcard'] .ec-step{ padding: 12px 10px; }
+}

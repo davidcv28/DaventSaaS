@@ -162,11 +162,20 @@ a:focus-visible,button:focus-visible,input:focus-visible,select:focus-visible,te
 .btn-lg{padding:16px 30px;font-size:15px}
 .btn-sm{padding:9px 16px;font-size:12.5px;min-height:40px}
 
-/* ---------- Chrome superior ---------- */
-.top{position:fixed;top:0;left:0;right:0;z-index:50;
-  background:color-mix(in srgb,var(--bg) 96%,transparent);
-  border-bottom:1px solid var(--line-soft)}
-.top-in{display:flex;align-items:center;gap:26px;height:66px}
+/* ==========================================================================
+   CHROME SUPERIOR — arquetipo "dock": píldora flotante inferior con las
+   acciones clave (marca, secciones, CTA, cuenta/carrito del puente).
+   El puente la re-ancla abajo del marco (data-ds-pin="bottom"); en móvil el
+   menú sigue siendo el overlay .mmenu de pantalla completa.
+   ========================================================================== */
+.top{position:fixed;left:50%;right:auto;bottom:calc(14px + env(safe-area-inset-bottom));transform:translateX(-50%);z-index:50;
+  width:max-content;max-width:calc(100vw - 28px);
+  background:color-mix(in srgb,var(--panel) 78%,transparent);
+  border:1px solid var(--accent-line);border-radius:999px;
+  box-shadow:var(--glow-a),0 18px 44px -20px rgba(0,0,0,.7);
+  -webkit-backdrop-filter:blur(14px) saturate(1.3);backdrop-filter:blur(14px) saturate(1.3)}
+.top .wrap{max-width:none;margin:0;padding:0}
+.top .top-in{display:flex;align-items:center;gap:12px;height:58px;padding:0 8px 0 14px}
 .brand{display:flex;align-items:center;gap:11px;min-width:0}
 .brand-mark{width:32px;height:32px;flex:none;border-radius:9px;position:relative;overflow:hidden;
   background:var(--accent);color:var(--accent-ink);
@@ -181,10 +190,29 @@ a:focus-visible,button:focus-visible,input:focus-visible,select:focus-visible,te
 .nav-cta{margin-left:10px}
 .m-burger{display:none;margin-left:auto;width:42px;height:42px;border-radius:10px;border:1px solid var(--line);place-items:center}
 .m-burger svg{width:20px;height:20px}
+/* Dock: la marca cede el wordmark en angosto y las acciones del puente
+   (cuenta/carrito) se pegan a la píldora sin desbordar 320px. */
+.top .brand-word{font-size:15px}
+.top .brand-meta{display:none}
+.top .nav-links a{padding:8px 11px;min-height:42px}
+.top .nav-cta{margin-left:4px}
+.top-in .dsx-account,.top-in .dsx-cart{min-height:40px}
+@media(max-width:1100px){
+  .top .brand-copy{display:none}
+  .top .brand{gap:0}
+}
 @media(max-width:960px){
   .nav-links{display:none}
   .m-burger{display:grid}
+  .top{bottom:calc(12px + env(safe-area-inset-bottom));max-width:calc(100vw - 20px)}
+  .top .top-in{height:54px;gap:8px;padding:0 6px 0 10px}
+  .top-in .dsx-account{padding:0 10px;font-size:0;gap:0}
+  .top-in .dsx-account svg,.top-in .dsx-cart svg{width:17px;height:17px}
 }
+/* El dock vive abajo: la página reserva su alto al final y los anclajes
+   dejan aire arriba y abajo para no quedar tapados por la píldora. */
+body{padding-bottom:calc(92px + env(safe-area-inset-bottom))}
+[id]{scroll-margin-top:28px;scroll-margin-bottom:110px}
 .mmenu{position:fixed;top:0;left:0;right:0;height:var(--fr-h,100vh);z-index:60;overflow-y:auto;
   background:color-mix(in srgb,var(--bg) 96%,transparent);
   display:flex;flex-direction:column;padding:26px 26px 40px;
@@ -236,7 +264,7 @@ a:focus-visible,button:focus-visible,input:focus-visible,select:focus-visible,te
 @media(min-width:1320px){.mq-v{display:block}}
 
 /* ---------- Hero: copia + vidriera ---------- */
-.hero{padding:150px 0 80px;position:relative}
+.hero{padding:72px 0 80px;position:relative}
 .hero-grid{display:grid;grid-template-columns:minmax(0,1.12fr) minmax(0,.88fr);gap:60px;align-items:center}
 .hero-copy,.hero-scene{min-width:0}
 @media(max-width:980px){.hero-grid{grid-template-columns:minmax(0,1fr);gap:48px}}
@@ -596,7 +624,7 @@ a:focus-visible,button:focus-visible,input:focus-visible,select:focus-visible,te
 /* ==========================================================================
    CATÁLOGO (superficie catalog)
    ========================================================================== */
-.cat-hero{padding:140px 0 56px;border-bottom:1px solid var(--line-soft);position:relative;
+.cat-hero{padding:64px 0 56px;border-bottom:1px solid var(--line-soft);position:relative;
   background:radial-gradient(700px 340px at 50% -60px,var(--accent-dim),transparent 70%)}
 .cat-hero::before{content:"";position:absolute;inset:0;pointer-events:none;
   background-image:
@@ -716,7 +744,7 @@ body.filters-open .cat-scrim{opacity:1;pointer-events:auto}
 /* ==========================================================================
    FICHA DE PRODUCTO (superficie product)
    ========================================================================== */
-.pdp{padding:124px 0 80px}
+.pdp{padding:56px 0 80px}
 .pdp-crumbs{display:flex;gap:10px;align-items:center;font:500 11px/1 var(--mono);letter-spacing:.12em;text-transform:uppercase;color:var(--mut);margin-bottom:30px;flex-wrap:wrap}
 .pdp-crumbs a{display:inline-flex;align-items:center;min-height:40px}
 .pdp-crumbs a:hover{color:var(--accent)}
@@ -1082,7 +1110,7 @@ html[data-ds-commerce="1"] [data-surface="product"] .pdp-buy>.dsx-buy-now:focus-
 </div>
 
 <!-- ============================ CHROME ============================ -->
-<header class="top" data-ds-pin="top" data-ds-offset="66">
+<header class="top" data-ds-pin="bottom" data-ds-offset="24">
   <div class="wrap top-in">
     <a class="brand" href="#inicio" data-ds-route="home" aria-label="{{store_name}} — Inicio">
       <span class="brand-mark"><img src="{{store_logo}}" alt=""><span>{{store_initial}}</span></span>
@@ -1543,7 +1571,7 @@ html[data-ds-commerce="1"] [data-surface="product"] .pdp-buy>.dsx-buy-now:focus-
 <section class="svc" data-surface="services" id="servicios-pagina" data-flag="services">
 <main>
   <div class="wrap">
-    <header class="cat-hero" style="padding:110px 0 44px">
+    <header class="cat-hero" style="padding:56px 0 44px">
       <div class="wrap" style="padding:0">
         <nav class="crumbs" aria-label="Ruta"><a href="#inicio" data-ds-route="home">Inicio</a><span>/</span><strong>Servicios</strong></nav>
         <h1>{{offerings_title}}</h1>

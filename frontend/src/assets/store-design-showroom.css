@@ -872,3 +872,511 @@
 @media (prefers-reduced-motion: reduce) {
   [data-design='showroom'] .ec-auth .ecaf-submit { transition: none; }
 }
+
+/* ==========================================================================
+   ARQUETIPOS — chrome del diseño en TODAS las páginas públicas
+   (nav 'sticky-condensed' · cuenta 'account-stack' · tracking 'tracking-ticket').
+   Los tokens --dz-* viven en .ec-auth/.ec-account; acá se replican a nivel
+   página para que .sp-top, .acc-shell y .ec-track los hereden igual.
+   Showroom = filetes de 1px, radio 0, cero sombra, mono para metadatos.
+   ========================================================================== */
+.store-page[data-design='showroom']{
+  --dz-bg: #FFFFFF;
+  --dz-surface: #F4F4F4;
+  --dz-media: #EFEFEF;
+  --dz-ink: #111111;
+  --dz-ink-2: #3A3A3A;
+  --dz-muted: #666666;
+  --dz-line: #E5E5E5;
+  --dz-line-strong: #C9C9C9;
+  --dz-accent: #111111;
+  --dz-accent-ink: #FFFFFF;
+  --dz-accent-text: #111111;
+  --dz-accent-soft: color-mix(in srgb, #111111 6%, transparent);
+  --dz-card: #FFFFFF;
+  --dz-soft: color-mix(in srgb, #111111 6%, transparent);
+  --dz-ok: #1E7F4F;
+  --dz-danger: #B42318;
+  --dz-display: var(--st-f-display-family, "Archivo", "Arial Narrow", system-ui, sans-serif);
+  --dz-body: var(--st-f-body-family, "Inter", "Helvetica Neue", system-ui, sans-serif);
+  --dz-mono: var(--st-f-eyebrow-family, "JetBrains Mono", "SFMono-Regular", monospace);
+  --dz-r: 0px;
+  --sp-ink: var(--dz-ink);
+  --sp-ink-2: var(--dz-ink-2);
+  --sp-muted: var(--dz-muted);
+  --sp-line: var(--dz-line-strong);
+  --sp-card: var(--dz-bg);
+  --sp-card-solid: var(--dz-bg);
+  --sp-surface: var(--dz-surface);
+  --sp-radius: 0px;
+  --sp-accent-text: var(--dz-ink);
+  --sp-on-band: var(--dz-accent-ink);
+  --sp-soft: var(--dz-soft);
+  --sp-success: var(--dz-ok);
+  --sp-warning: #8A5A0B;
+  --sp-danger: var(--dz-danger);
+  --sp-shadow-sm: none;
+  --sp-shadow-md: none;
+  color-scheme: light;
+}
+.store-page[data-design='showroom'][data-theme='dark']{
+  --dz-bg: #0A0A0A;
+  --dz-surface: #141414;
+  --dz-media: #1B1B1B;
+  --dz-ink: #F5F5F5;
+  --dz-ink-2: #C9C9C9;
+  --dz-muted: #8B8B8B;
+  --dz-line: #262626;
+  --dz-line-strong: #3D3D3D;
+  --dz-accent: #F5F5F5;
+  --dz-accent-ink: #0A0A0A;
+  --dz-accent-text: #F5F5F5;
+  --dz-accent-soft: color-mix(in srgb, #F5F5F5 10%, transparent);
+  --dz-card: #141414;
+  --dz-soft: color-mix(in srgb, #F5F5F5 8%, transparent);
+  --dz-ok: #4CC38A;
+  --dz-danger: #FF9B9B;
+  --sp-warning: #E3B341;
+  --sp-shadow-sm: none;
+  --sp-shadow-md: none;
+  color-scheme: dark;
+}
+
+/* ==========================================================================
+   NAV 'sticky-condensed' — la barra ya compacta con .scrolled (alto 56px);
+   showroom le suma la condensación editorial: la búsqueda se angosta, los
+   links de sección se recogen y el wordmark baja de cuerpo. Filetes, no
+   sombras: el único depth es el filete inferior.
+   ========================================================================== */
+.store-page[data-design='showroom'][data-nav='sticky-condensed'] .sp-top{
+  border-bottom: 1px solid var(--dz-line);
+  background: var(--dz-bg);
+  transition: box-shadow .3s var(--sp-ease, ease), border-color .3s var(--sp-ease, ease);
+}
+.store-page[data-design='showroom'][data-nav='sticky-condensed'] .sp-top.scrolled{
+  box-shadow: none;
+  border-bottom-color: var(--dz-line-strong);
+}
+.store-page[data-design='showroom'][data-nav='sticky-condensed'] .sp-top .sp-top-inner{ transition: height .25s var(--sp-ease, ease); }
+.store-page[data-design='showroom'][data-nav='sticky-condensed'] .sp-top.scrolled .sp-top-inner{ height: 56px; }
+.store-page[data-design='showroom'][data-nav='sticky-condensed'] .sp-top.scrolled .sp-search-top{ flex-basis: 280px; min-width: 0; }
+.store-page[data-design='showroom'][data-nav='sticky-condensed'] .sp-top.scrolled .sp-top-links a{ padding: 6px 8px; font-size: 12.5px; }
+.store-page[data-design='showroom'][data-nav='sticky-condensed'] .sp-top.scrolled .sp-name{ font-size: 15px; letter-spacing: .04em; text-transform: uppercase; }
+.store-page[data-design='showroom'][data-nav='sticky-condensed'] .sp-top .sp-name{ font-family: var(--dz-display); font-weight: 800; letter-spacing: .12em; text-transform: uppercase; }
+.store-page[data-design='showroom'][data-nav='sticky-condensed'] .sp-top-links a{ font-family: var(--dz-mono); font-size: 10.5px; font-weight: 600; letter-spacing: .18em; text-transform: uppercase; }
+.store-page[data-design='showroom'][data-nav='sticky-condensed'] .sp-top-links a.router-link-exact-active{
+  background: transparent;
+  color: var(--dz-ink);
+  box-shadow: inset 0 -1px 0 var(--dz-ink);
+}
+.store-page[data-design='showroom'][data-nav='sticky-condensed'] .sp-top .sp-icon-btn{
+  border-radius: 0;
+  border-color: var(--dz-line-strong);
+  background: transparent;
+  color: var(--dz-ink-2);
+}
+.store-page[data-design='showroom'][data-nav='sticky-condensed'] .sp-top .sp-icon-btn:hover{
+  background: var(--dz-ink);
+  border-color: var(--dz-ink);
+  color: var(--dz-accent-ink);
+}
+.store-page[data-design='showroom'][data-nav='sticky-condensed'] .sp-top-cta{
+  border-radius: 0;
+  background: var(--dz-ink);
+  color: var(--dz-accent-ink);
+  font-family: var(--dz-mono);
+  font-size: 10.5px;
+  font-weight: 700;
+  letter-spacing: .16em;
+  text-transform: uppercase;
+}
+.store-page[data-design='showroom'][data-nav='sticky-condensed'] .sp-top-cta:hover{
+  background: var(--dz-ink-2);
+  color: var(--dz-accent-ink);
+}
+.store-page[data-design='showroom'][data-nav='sticky-condensed'] .sp-top .sp-burger{ border-radius: 0; }
+.store-page[data-design='showroom'][data-nav='sticky-condensed'] .sp-shop-nav{ background: var(--dz-bg); border-bottom: 1px solid var(--dz-line); }
+.store-page[data-design='showroom'][data-nav='sticky-condensed'] .sp-shop-nav-links a{ font-family: var(--dz-mono); letter-spacing: .18em; border-radius: 0; }
+.store-page[data-design='showroom'][data-nav='sticky-condensed'] .sp-shop-nav-links a.is-current{
+  background: transparent;
+  color: var(--dz-ink);
+  box-shadow: inset 0 -1px 0 var(--dz-ink);
+}
+.store-page[data-design='showroom'][data-nav='sticky-condensed'] .sp-shop-nav-links a:hover{ background: var(--dz-soft); }
+/* Drawer móvil = hoja de catálogo: filetes duros, índice mono. */
+.store-page[data-design='showroom'][data-nav='sticky-condensed'] .sp-drawer.sp-navdrawer{
+  border-radius: 0;
+  border-right: 1px solid var(--dz-line-strong);
+}
+.store-page[data-design='showroom'][data-nav='sticky-condensed'] .sp-drawer.sp-navdrawer .sp-nav-item{ border-radius: 0; }
+.store-page[data-design='showroom'][data-nav='sticky-condensed'] .sp-drawer.sp-navdrawer .sp-nav-item.active{
+  background: transparent;
+  color: var(--dz-ink);
+  box-shadow: inset 2px 0 0 var(--dz-ink);
+}
+.store-page[data-design='showroom'][data-nav='sticky-condensed'] .sp-drawer.sp-navdrawer .sp-nav-item.active::before{ display: none; }
+.store-page[data-design='showroom'][data-nav='sticky-condensed'] .sp-more-sheet{ border-radius: 0; border-top: 1px solid var(--dz-line-strong); }
+.store-page[data-design='showroom'][data-nav='sticky-condensed'] .sp-more-link{ border-radius: 0; }
+@media (max-width: 640px){
+  .store-page[data-design='showroom'][data-nav='sticky-condensed'] .sp-top .sp-top-inner{ height: 58px; }
+  .store-page[data-design='showroom'][data-nav='sticky-condensed'] .sp-top.scrolled .sp-top-inner{ height: 52px; }
+}
+
+/* ==========================================================================
+   CUENTA 'account-stack' — mhead + tabs + panel apilados a todo lo ancho;
+   el sidebar se convierte en fila de chips (los .acc-tab) arriba.
+   ========================================================================== */
+.store-page[data-design='showroom'][data-account='account-stack'] .ec-account .acc-shell{
+  grid-template-columns: minmax(0, 1fr);
+  gap: 14px;
+  max-width: 1080px;
+  margin-inline: auto;
+  width: 100%;
+}
+.store-page[data-design='showroom'][data-account='account-stack'] .ec-account .acc-side{ display: none; }
+.store-page[data-design='showroom'][data-account='account-stack'] .ec-account .acc-mhead{ display: flex; }
+.store-page[data-design='showroom'][data-account='account-stack'] .ec-account .acc-tabs{ display: flex; }
+.store-page[data-design='showroom'][data-account='account-stack'] .ec-account .acc-mhead{
+  align-items: center;
+  gap: 14px;
+  padding: 14px 16px;
+  border: 1px solid var(--dz-line-strong);
+  border-radius: 0;
+  background: var(--dz-bg);
+}
+.store-page[data-design='showroom'][data-account='account-stack'] .ec-account .acc-avatar{
+  border-radius: 0;
+  background: var(--dz-ink);
+  color: var(--dz-accent-ink);
+}
+.store-page[data-design='showroom'][data-account='account-stack'] .ec-account .acc-mhead-meta{ flex: 1; }
+.store-page[data-design='showroom'][data-account='account-stack'] .ec-account .acc-kicker{
+  display: block;
+  font-family: var(--dz-mono);
+  font-size: 9.5px;
+  font-weight: 600;
+  letter-spacing: .18em;
+  text-transform: uppercase;
+  color: var(--dz-muted);
+}
+.store-page[data-design='showroom'][data-account='account-stack'] .ec-account .acc-greet{
+  display: block;
+  margin: 0;
+  font-family: var(--dz-display);
+  font-size: clamp(20px, 2.6vw, 26px);
+  font-weight: 800;
+  letter-spacing: -.01em;
+  color: var(--dz-ink);
+}
+.store-page[data-design='showroom'][data-account='account-stack'] .ec-account .acc-mhead-meta strong,
+.store-page[data-design='showroom'][data-account='account-stack'] .ec-account .acc-mhead-meta small{ display: none; }
+/* Fila de chips = la navegación (los tabs con índice mono). */
+.store-page[data-design='showroom'][data-account='account-stack'] .ec-account .acc-tabs{
+  gap: 0;
+  padding: 0;
+  border: 1px solid var(--dz-line-strong);
+  border-radius: 0;
+  background: var(--dz-surface);
+  overflow-x: auto;
+}
+.store-page[data-design='showroom'][data-account='account-stack'] .ec-account .acc-tab{
+  flex: 1 1 auto;
+  justify-content: center;
+  min-height: 46px;
+  padding: 10px 14px;
+  border: 0;
+  border-right: 1px solid var(--dz-line);
+  border-radius: 0;
+  background: transparent;
+  font-family: var(--dz-mono);
+  font-size: 10.5px;
+  font-weight: 600;
+  letter-spacing: .14em;
+  text-transform: uppercase;
+  color: var(--dz-ink-2);
+}
+.store-page[data-design='showroom'][data-account='account-stack'] .ec-account .acc-tab:last-child{ border-right: 0; }
+.store-page[data-design='showroom'][data-account='account-stack'] .ec-account .acc-tab:hover{
+  background: var(--dz-bg);
+  color: var(--dz-ink);
+}
+.store-page[data-design='showroom'][data-account='account-stack'] .ec-account .acc-tab.is-on{
+  background: var(--dz-ink);
+  color: var(--dz-accent-ink);
+}
+.store-page[data-design='showroom'][data-account='account-stack'] .ec-account .acc-tab .acc-idx{ font-family: var(--dz-mono); font-size: 9px; color: var(--dz-muted); }
+.store-page[data-design='showroom'][data-account='account-stack'] .ec-account .acc-tab.is-on .acc-idx{ color: color-mix(in srgb, var(--dz-accent-ink) 60%, transparent); }
+.store-page[data-design='showroom'][data-account='account-stack'] .ec-account .acc-icon-btn{
+  border-radius: 0;
+  border-color: var(--dz-line-strong);
+  background: transparent;
+}
+.store-page[data-design='showroom'][data-account='account-stack'] .ec-account .acc-icon-btn:hover{
+  background: var(--dz-ink);
+  border-color: var(--dz-ink);
+  color: var(--dz-accent-ink);
+}
+.store-page[data-design='showroom'][data-account='account-stack'] .ec-account .acc-body{
+  border: 1px solid var(--dz-line);
+  border-radius: 0;
+  background: var(--dz-bg);
+  padding: 18px;
+}
+@media (max-width: 1023px){
+  .store-page[data-design='showroom'][data-account='account-stack'] .ec-account .acc-mhead{
+    border: 1px solid var(--dz-line-strong);
+    border-radius: 0;
+    background: var(--dz-bg);
+  }
+  .store-page[data-design='showroom'][data-account='account-stack'] .ec-account .acc-body{ padding: 14px; }
+}
+@media (max-width: 640px){
+  .store-page[data-design='showroom'][data-account='account-stack'] .ec-account .acc-tab{ padding: 10px 10px; font-size: 9.5px; letter-spacing: .08em; }
+}
+
+/* ==========================================================================
+   SEGUIMIENTO 'tracking-ticket' — la card de estado es un ticket/ficha:
+   filetes, código de pedido en mono grande, separadores dashed y el
+   stepper compacto en una sola fila. Las muescas laterales simulan la
+   perforación del ticket.
+   ========================================================================== */
+.store-page[data-design='showroom'][data-tracking='tracking-ticket'] .ec-track{ gap: 16px; }
+.store-page[data-design='showroom'][data-tracking='tracking-ticket'] .ec-track-title{
+  font-family: var(--dz-display);
+  font-size: clamp(22px, 3vw, 28px);
+  font-weight: 800;
+  letter-spacing: .02em;
+  text-transform: uppercase;
+  color: var(--dz-ink);
+}
+.store-page[data-design='showroom'][data-tracking='tracking-ticket'] .ec-track-code{
+  font-family: var(--dz-mono);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: .14em;
+  text-transform: uppercase;
+  color: var(--dz-muted);
+}
+.store-page[data-design='showroom'][data-tracking='tracking-ticket'] .ec-track-help{
+  border: 1px solid var(--dz-line-strong);
+  border-radius: 0;
+  background: var(--dz-bg);
+}
+.store-page[data-design='showroom'][data-tracking='tracking-ticket'] .ec-track-card{
+  position: relative;
+  border: 1px solid var(--dz-line-strong);
+  border-radius: 0;
+  background: var(--dz-bg);
+  box-shadow: none;
+}
+/* Ticket: la primera card (estado) lleva las muescas de la perforación. */
+.store-page[data-design='showroom'][data-tracking='tracking-ticket'] .ec-track > .ec-track-card:first-of-type{
+  border-left: 0;
+  border-right: 0;
+}
+.store-page[data-design='showroom'][data-tracking='tracking-ticket'] .ec-track > .ec-track-card:first-of-type::before,
+.store-page[data-design='showroom'][data-tracking='tracking-ticket'] .ec-track > .ec-track-card:first-of-type::after{
+  content: '';
+  position: absolute;
+  top: 50%;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: var(--sp-bg, var(--dz-surface));
+  border: 1px solid var(--dz-line-strong);
+  transform: translateY(-50%);
+}
+.store-page[data-design='showroom'][data-tracking='tracking-ticket'] .ec-track > .ec-track-card:first-of-type::before{ left: -10px; }
+.store-page[data-design='showroom'][data-tracking='tracking-ticket'] .ec-track > .ec-track-card:first-of-type::after{ right: -10px; }
+.store-page[data-design='showroom'][data-tracking='tracking-ticket'] .ec-track-status-row{
+  padding-bottom: 12px;
+  border-bottom: 1px dashed var(--dz-line-strong);
+}
+.store-page[data-design='showroom'][data-tracking='tracking-ticket'] .ec-track-status{
+  font-family: var(--dz-mono);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: .16em;
+  text-transform: uppercase;
+  border: 1px solid var(--dz-ink);
+  border-radius: 0;
+  background: transparent;
+  color: var(--dz-ink);
+  padding: 6px 12px;
+}
+.store-page[data-design='showroom'][data-tracking='tracking-ticket'] .ec-track-status.is-delivered{
+  border-color: var(--dz-ok);
+  color: var(--dz-ok);
+}
+.store-page[data-design='showroom'][data-tracking='tracking-ticket'] .ec-track-status.is-pending_payment,
+.store-page[data-design='showroom'][data-tracking='tracking-ticket'] .ec-track-status.is-paid,
+.store-page[data-design='showroom'][data-tracking='tracking-ticket'] .ec-track-status.is-packing,
+.store-page[data-design='showroom'][data-tracking='tracking-ticket'] .ec-track-status.is-shipped{
+  border-color: var(--dz-ink-2);
+  color: var(--dz-ink-2);
+}
+.store-page[data-design='showroom'][data-tracking='tracking-ticket'] .ec-track-status.is-cancelled,
+.store-page[data-design='showroom'][data-tracking='tracking-ticket'] .ec-track-status.is-expired,
+.store-page[data-design='showroom'][data-tracking='tracking-ticket'] .ec-track-status.is-refunded{
+  border-color: var(--dz-danger);
+  color: var(--dz-danger);
+}
+/* Stepper compacto de ticket: una fila, dots cuadrados, mono. */
+.store-page[data-design='showroom'][data-tracking='tracking-ticket'] .ec-stepper{
+  margin: 14px 0 4px;
+  gap: 4px;
+}
+.store-page[data-design='showroom'][data-tracking='tracking-ticket'] .ec-step{ gap: 5px; }
+.store-page[data-design='showroom'][data-tracking='tracking-ticket'] .ec-step-dot{
+  width: 24px;
+  height: 24px;
+  border-radius: 0;
+  border: 1.5px solid var(--dz-line-strong);
+  background: var(--dz-bg);
+  color: var(--dz-muted);
+  font-family: var(--dz-mono);
+  font-size: 10px;
+}
+.store-page[data-design='showroom'][data-tracking='tracking-ticket'] .ec-step::after{
+  top: 11px;
+  left: calc(50% + 14px);
+  right: calc(-50% + 14px);
+  height: 1.5px;
+  background: var(--dz-line);
+}
+.store-page[data-design='showroom'][data-tracking='tracking-ticket'] .ec-step.is-done .ec-step-dot{
+  border-color: var(--dz-ink);
+  background: var(--dz-ink);
+  color: var(--dz-accent-ink);
+}
+.store-page[data-design='showroom'][data-tracking='tracking-ticket'] .ec-step.is-done::after{ background: var(--dz-ink); }
+.store-page[data-design='showroom'][data-tracking='tracking-ticket'] .ec-step.is-current .ec-step-dot{
+  border-color: var(--dz-ink);
+  color: var(--dz-ink);
+  box-shadow: inset 0 0 0 2px var(--dz-bg), inset 0 0 0 3.5px var(--dz-ink);
+}
+.store-page[data-design='showroom'][data-tracking='tracking-ticket'] .ec-step-label{
+  font-family: var(--dz-mono);
+  font-size: 9px;
+  font-weight: 600;
+  letter-spacing: .1em;
+  text-transform: uppercase;
+  color: var(--dz-muted);
+}
+.store-page[data-design='showroom'][data-tracking='tracking-ticket'] .ec-track-step-date{
+  font-family: var(--dz-mono);
+  font-size: 9px;
+  letter-spacing: .06em;
+}
+.store-page[data-design='showroom'][data-tracking='tracking-ticket'] .ec-track-chips{
+  padding-top: 12px;
+  border-top: 1px dashed var(--dz-line-strong);
+}
+.store-page[data-design='showroom'][data-tracking='tracking-ticket'] .ec-track-chip{
+  border: 1px solid var(--dz-line);
+  border-radius: 0;
+  background: transparent;
+  font-family: var(--dz-mono);
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: .1em;
+  text-transform: uppercase;
+  color: var(--dz-ink-2);
+}
+.store-page[data-design='showroom'][data-tracking='tracking-ticket'] .ec-track-h2{
+  font-family: var(--dz-display);
+  font-size: 15px;
+  font-weight: 800;
+  letter-spacing: .06em;
+  text-transform: uppercase;
+  color: var(--dz-ink);
+}
+.store-page[data-design='showroom'][data-tracking='tracking-ticket'] .ec-track-card:has(.ec-timeline) .ec-track-h2{
+  border-bottom: 1px dashed var(--dz-line-strong);
+  padding-bottom: 10px;
+}
+.store-page[data-design='showroom'][data-tracking='tracking-ticket'] .ec-timeline li{ padding: 10px 0; }
+.store-page[data-design='showroom'][data-tracking='tracking-ticket'] .ec-timeline li:not(:last-child)::before{
+  left: 4px;
+  width: 1.5px;
+  background: repeating-linear-gradient(180deg, var(--dz-line-strong) 0 4px, transparent 4px 8px);
+}
+.store-page[data-design='showroom'][data-tracking='tracking-ticket'] .ec-tl-dot{
+  width: 10px;
+  height: 10px;
+  margin-top: 5px;
+  border-radius: 0;
+  background: var(--dz-ink);
+}
+.store-page[data-design='showroom'][data-tracking='tracking-ticket'] .ec-timeline strong{
+  font-family: var(--dz-mono);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+}
+.store-page[data-design='showroom'][data-tracking='tracking-ticket'] .ec-timeline small{
+  font-family: var(--dz-mono);
+  font-size: 10px;
+  letter-spacing: .04em;
+}
+.store-page[data-design='showroom'][data-tracking='tracking-ticket'] .ec-receipt{
+  border: 1px dashed var(--dz-line-strong);
+  border-radius: 0;
+  background: var(--dz-surface);
+}
+.store-page[data-design='showroom'][data-tracking='tracking-ticket'] .ec-track-receipt-btn{
+  border-radius: 0;
+  border-color: var(--dz-line-strong);
+  font-family: var(--dz-mono);
+  font-size: 10.5px;
+  font-weight: 700;
+  letter-spacing: .14em;
+  text-transform: uppercase;
+}
+.store-page[data-design='showroom'][data-tracking='tracking-ticket'] .ec-btn-primary{
+  border-radius: 0;
+  background: var(--dz-ink);
+  color: var(--dz-accent-ink);
+  font-family: var(--dz-mono);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: .14em;
+  text-transform: uppercase;
+}
+.store-page[data-design='showroom'][data-tracking='tracking-ticket'] .ec-btn-ghost{
+  border-radius: 0;
+  border-color: var(--dz-line-strong);
+  font-family: var(--dz-mono);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: .12em;
+  text-transform: uppercase;
+}
+.store-page[data-design='showroom'][data-tracking='tracking-ticket'] .ec-track-note-ico{ border-radius: 0; }
+.store-page[data-design='showroom'][data-tracking='tracking-ticket'] .ec-track-legal{
+  border-top: 1px dashed var(--dz-line-strong);
+  font-family: var(--dz-mono);
+  font-size: 10.5px;
+  letter-spacing: .04em;
+}
+.store-page[data-design='showroom'][data-tracking='tracking-ticket'] :is(.ec-track-card, .ec-track-help, .ec-btn-primary, .ec-btn-ghost, .ec-track-receipt-btn, .ec-proof-drop, .ec-track-help-summary, .ec-track-legal a, .ec-track-receipt-link):focus-visible{
+  outline: 2px solid var(--dz-ink);
+  outline-offset: 2px;
+}
+@media (max-width: 640px){
+  .store-page[data-design='showroom'][data-tracking='tracking-ticket'] .ec-track > .ec-track-card:first-of-type::before,
+  .store-page[data-design='showroom'][data-tracking='tracking-ticket'] .ec-track > .ec-track-card:first-of-type::after{ display: none; }
+}
+@media (prefers-reduced-motion: reduce){
+  .store-page[data-design='showroom'][data-nav='sticky-condensed'] .sp-top .sp-top-inner,
+  .store-page[data-design='showroom'][data-nav='sticky-condensed'] .sp-top .sp-name{ transition: none; }
+}
+
+/* <=560px el stepper base apila con conector ::before; en el ticket va
+   punteado para seguir la perforación. */
+@media (max-width: 560px){
+  .store-page[data-design='showroom'][data-tracking='tracking-ticket'] .ec-step::before{
+    background: repeating-linear-gradient(180deg, var(--dz-line-strong, #3D3D3D) 0 4px, transparent 4px 8px);
+  }
+}

@@ -80,18 +80,19 @@
   @keyframes drift-b{from{transform:translate3d(0,-28px,0)}to{transform:translate3d(0,28px,0)}}
   header,main,[data-surface],footer,.season{position:relative;z-index:1}
 
-  /* Cabecera partida: marca + índice numerado. */
-  .top{background:color-mix(in srgb,var(--paper) 96%,transparent);border-bottom:1px solid var(--line)}
+  /* Cabecera = ficha/ticket: filetes dashed y mono. La línea punteada
+     inferior es la guía de corte del papel. */
+  .top{background:color-mix(in srgb,var(--paper) 96%,transparent);border-bottom:1px dashed var(--line-strong)}
   .top-in{display:flex;align-items:center;gap:26px;min-height:78px}
   .brand{display:flex;align-items:center;gap:12px;min-width:0}
-  .brand .mark{position:relative;display:grid;place-items:center;flex:none;width:42px;height:42px;border:1px solid var(--ink);border-radius:50%;font:600 15px var(--display);overflow:hidden}
+  .brand .mark{position:relative;display:grid;place-items:center;flex:none;width:42px;height:42px;border:1px dashed var(--ink);border-radius:50%;font:600 15px var(--display);overflow:hidden}
   .brand .mark img{position:absolute;inset:0;width:100%;height:100%;object-fit:contain;background:var(--card)}
   .brand-copy{display:grid;min-width:0;line-height:1.15}
   .brand-copy strong{font:500 18px/1.1 var(--display);letter-spacing:-.01em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
   .brand-copy small{font:500 9.5px var(--mono);letter-spacing:.2em;text-transform:uppercase;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-  .top-nav{display:flex;align-items:stretch;gap:0;margin-left:auto;border-left:1px solid var(--line)}
-  .top-nav a{display:flex;align-items:baseline;gap:7px;padding:0 20px;min-height:78px;border-right:1px solid var(--line);font-size:13px;color:var(--ink-2);transition:background .2s,color .2s}
-  .top-nav a i{font:500 9.5px var(--mono);font-style:normal;letter-spacing:.08em;color:var(--muted)}
+  .top-nav{display:flex;align-items:stretch;gap:0;margin-left:auto;border-left:1px dashed var(--line-strong)}
+  .top-nav a{display:flex;align-items:baseline;gap:7px;padding:0 20px;min-height:78px;border-right:1px dashed var(--line-strong);font:500 12px var(--mono);letter-spacing:.1em;text-transform:uppercase;color:var(--ink-2);transition:background .2s,color .2s}
+  .top-nav a i{font:500 9.5px var(--mono);font-style:normal;letter-spacing:.08em;color:var(--leather-ink)}
   .top-nav a:hover{background:var(--card);color:var(--ink)}
   html[data-ds-surface="landing"] .top-nav a[data-ds-route="home"],
   html[data-ds-surface="catalog"] .top-nav a[data-ds-route="catalog"],
@@ -382,14 +383,14 @@
       box-shadow:0 -18px 50px -18px rgba(0,0,0,.45);
     }
     html[data-ds-style] .m-sheet.open{visibility:visible;transform:none}
-    html[data-ds-style] .m-sheet-head{position:relative;display:grid;gap:6px;padding:10px 16px 8px;border-bottom:1px solid var(--line)}
+    html[data-ds-style] .m-sheet-head{position:relative;display:grid;gap:6px;padding:10px 16px 8px;border-bottom:1px dashed var(--line-strong)}
     html[data-ds-style] .m-grab{justify-self:center;width:38px;height:4px;border-radius:4px;background:var(--line)}
     html[data-ds-style] .m-sheet-brand{display:flex;align-items:center;gap:10px;min-width:0;padding-right:44px}
-    html[data-ds-style] .m-sheet-brand .mark.sm{display:grid;place-items:center;width:30px;height:30px;border:1px solid var(--ink);border-radius:50%;font:500 12px var(--display)}
+    html[data-ds-style] .m-sheet-brand .mark.sm{display:grid;place-items:center;width:30px;height:30px;border:1px dashed var(--ink);border-radius:50%;font:500 12px var(--display)}
     html[data-ds-style] .m-sheet-brand strong{font:500 16px var(--display);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
     html[data-ds-style] .m-close{position:absolute;top:14px;right:12px;display:grid;place-items:center;width:40px;height:40px;border:0;border-radius:50%;background:var(--paper);color:var(--ink);font-size:22px;line-height:1;cursor:pointer}
     html[data-ds-style] .m-sheet-nav{display:grid;gap:0;padding:8px 12px calc(12px + env(safe-area-inset-bottom));overflow-y:auto}
-    html[data-ds-style] .m-sheet-nav a{display:flex;align-items:center;justify-content:space-between;gap:12px;min-height:48px;padding:8px 12px;border-bottom:1px solid var(--line);font-size:15px}
+    html[data-ds-style] .m-sheet-nav a{display:flex;align-items:center;justify-content:space-between;gap:12px;min-height:48px;padding:8px 12px;border-bottom:1px dashed var(--line);font:500 11px var(--mono);letter-spacing:.14em;text-transform:uppercase}
     html[data-ds-style] .m-sheet-nav a span:last-child{font:500 9.5px var(--mono);letter-spacing:.14em;color:var(--muted)}
     html[data-ds-style] .m-sheet-nav a:hover{color:var(--leather-ink)}
     html[data-ds-style] .m-scrim.open{display:block;position:fixed;inset:0;z-index:69;background:rgba(8,7,6,.55)}
@@ -400,7 +401,7 @@
     html[data-ds-style='sastreria'] .m-tabs{
       position:fixed;left:0;right:0;bottom:0;z-index:68;display:flex;align-items:stretch;justify-content:space-around;
       background:color-mix(in srgb,var(--paper) 96%,transparent);
-      border-top:1px solid var(--line);
+      border-top:1px dashed var(--line-strong);
       padding:6px calc(6px + env(safe-area-inset-right)) calc(6px + env(safe-area-inset-bottom)) calc(6px + env(safe-area-inset-left));
     }
     html[data-ds-style='sastreria'] .m-tab{

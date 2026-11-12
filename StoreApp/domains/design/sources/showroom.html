@@ -150,6 +150,23 @@ main{min-height:480px}
 html[data-ds-surface="landing"] main{padding-top:0}
 html:not([data-ds-surface="landing"]) main{padding-top:var(--head-h)}
 
+/* sticky-condensed: al hacer scroll la cabecera se compacta a una sola
+   banda — la fila de búsqueda se angosta, los enlaces de texto se retiran
+   y el wordmark baja de cuerpo. El JS alterna .is-condensed/.is-solid. */
+header.top .top-inner{transition:min-height var(--tr)}
+header.top .nav{transition:padding var(--tr)}
+header.top.is-condensed .top-inner{min-height:56px}
+header.top.is-condensed .brand{font-size:20px}
+header.top.is-condensed .top-search input{width:110px}
+header.top.is-condensed .top-right .mono-link,
+header.top.is-condensed .top-right .sep{display:none}
+header.top.is-condensed .nav{padding-top:7px;padding-bottom:8px}
+@media (max-width:960px){
+  header.top.is-condensed .top-inner{min-height:54px}
+  header.top.is-condensed .top-search input{width:96px}
+  header.top.is-condensed .brand{font-size:17px}
+}
+
 /* Menú móvil */
 .m-open{display:none;width:40px;height:40px;padding:0;border:0;background:none;color:var(--ink);place-items:center}
 .m-open svg{width:18px;height:18px}
@@ -1056,11 +1073,35 @@ header.top .dsx-account,header.top .dsx-cart{min-height:40px}
   function measureTop(){
     if (!header) return;
     var h = header.offsetHeight || 0;
-    if (h) header.setAttribute('data-ds-offset', String(Math.round(h) + 10));
+    if (h) {
+      header.setAttribute('data-ds-offset', String(Math.round(h) + 10));
+      /* --head-h es el alto que reservan main y los sticky del documento:
+         se actualiza con la altura real para que la versión compactada
+         no deje una banda vacía ni tape anclas. */
+      document.documentElement.style.setProperty('--head-h', Math.round(h) + 'px');
+    }
   }
   measureTop();
   window.addEventListener('resize', measureTop, {passive:true});
   if ('ResizeObserver' in window && header) new ResizeObserver(measureTop).observe(header);
+
+  /* sticky-condensed: .is-condensed compacta la barra al bajar y .is-solid
+     la vuelve opaca sobre el héroe transparente de la landing. */
+  var scrollTick = false;
+  function onScroll(){
+    if (scrollTick || !header) return;
+    scrollTick = true;
+    requestAnimationFrame(function(){
+      scrollTick = false;
+      var y = window.scrollY || 0;
+      header.classList.toggle('is-condensed', y > 24);
+      if (html.getAttribute('data-ds-surface') === 'landing') {
+        header.classList.toggle('is-solid', y > 8);
+      }
+    });
+  }
+  window.addEventListener('scroll', onScroll, {passive:true});
+  onScroll();
 
   /* Enlaces sin destino (placeholder vacío o "#" pelado): no navegar. */
   document.addEventListener('click', function(e){

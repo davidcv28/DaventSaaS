@@ -820,3 +820,460 @@
   [data-design='neon'] .ec-auth .ecaf-submit { transition: none; }
   [data-design='neon'] .ec-auth .ecaf-submit:active:not(:disabled) { transform: none; }
 }
+
+/* ==========================================================================
+   ARQUETIPOS — chrome del diseño en TODAS las páginas públicas
+   (nav 'dock' · cuenta 'account-topbar' · seguimiento 'tracking-feed').
+   Los tokens --dz-* viven en .ec-auth/.ec-account; acá se replican a nivel
+   página para que .sp-top, .acc-shell y .ec-track los hereden igual.
+   ========================================================================== */
+.store-page[data-design='neon']{
+  --dz-bg: #0A0C10;
+  --dz-surface: #12161F;
+  --dz-surface-2: #1B2130;
+  --dz-ink: #F2F5EC;
+  --dz-ink-2: #C6CBD5;
+  --dz-muted: #8B95A7;
+  --dz-line: #232B3A;
+  --dz-line-strong: #38445C;
+  --dz-accent: #BBF351;
+  --dz-accent-text: #BBF351;
+  --dz-accent-ink: #0A0C10;
+  --dz-accent-dim: color-mix(in srgb, #BBF351 12%, transparent);
+  --dz-accent-line: color-mix(in srgb, #BBF351 45%, transparent);
+  --dz-sec: #00BCFF;
+  --dz-sec-text: #00BCFF;
+  --dz-ok: #16A34A;
+  --dz-danger: #FF6B6B;
+  --dz-display: var(--st-f-display-family, "STIX Two Text", Georgia, serif);
+  --dz-body: var(--st-f-body-family, "Roboto", system-ui, sans-serif);
+  --dz-mono: var(--st-f-eyebrow-family, "JetBrains Mono", ui-monospace, monospace);
+  --dz-r: 12px;
+  --dz-glow: 0 0 26px -8px color-mix(in srgb, #BBF351 40%, transparent);
+  /* La piel completa de comercio es oscura siempre (el diseño no tiene
+     variante clara): mapeo --sp-* para chrome, cuenta y seguimiento. */
+  --sp-bg: var(--dz-bg);
+  --sp-card: var(--dz-surface);
+  --sp-card-solid: var(--dz-surface);
+  --sp-surface: var(--dz-surface-2);
+  --sp-ink: var(--dz-ink);
+  --sp-ink-2: var(--dz-ink-2);
+  --sp-muted: var(--dz-muted);
+  --sp-line: var(--dz-line);
+  --sp-soft: color-mix(in srgb, var(--dz-ink) 8%, transparent);
+  --sp-radius: var(--dz-r);
+  --sp-accent-text: var(--dz-accent-text);
+  --sp-on-band: var(--dz-accent-ink);
+  --sp-success: var(--dz-ok);
+  --sp-warning: #E3B341;
+  --sp-danger: var(--dz-danger);
+  --sp-shadow-sm: none;
+  --sp-shadow-md: none;
+  color-scheme: dark;
+}
+.store-page[data-design='neon'][data-theme='dark']{
+  --dz-bg: #080A0E;
+  --dz-glow: 0 0 34px -8px color-mix(in srgb, #BBF351 46%, transparent);
+}
+
+/* ==========================================================================
+   NAV 'dock' — la barra superior se convierte en píldora flotante inferior
+   (misma firma que el doc del patrón: vidrio + borde neón + glow).
+   ========================================================================== */
+.store-page[data-design='neon'][data-nav='dock']{
+  padding-bottom: calc(96px + env(safe-area-inset-bottom));
+}
+.store-page[data-design='neon'][data-nav='dock'] .sp-top{
+  position: fixed;
+  top: auto;
+  bottom: calc(14px + env(safe-area-inset-bottom));
+  left: 50%;
+  right: auto;
+  transform: translateX(-50%);
+  width: max-content;
+  max-width: calc(100vw - 28px);
+  background: color-mix(in srgb, var(--dz-surface) 80%, transparent);
+  border: 1px solid var(--dz-accent-line);
+  border-radius: 999px;
+  box-shadow: var(--dz-glow), 0 18px 44px -20px rgba(0, 0, 0, .7);
+  -webkit-backdrop-filter: blur(14px) saturate(1.3);
+  backdrop-filter: blur(14px) saturate(1.3);
+}
+.store-page[data-design='neon'][data-nav='dock'] .sp-top .sp-top-inner{
+  height: 58px;
+  gap: 10px;
+  padding-inline: 10px;
+}
+.store-page[data-design='neon'][data-nav='dock'] .sp-top .sp-container{ max-width: none; }
+.store-page[data-design='neon'][data-nav='dock'] .sp-top .sp-brand{ flex: 0 0 auto; }
+.store-page[data-design='neon'][data-nav='dock'] .sp-top .sp-brand-copy{ display: none; }
+.store-page[data-design='neon'][data-nav='dock'] .sp-top .sp-name{ display: none; }
+.store-page[data-design='neon'][data-nav='dock'] .sp-top .sp-mono,
+.store-page[data-design='neon'][data-nav='dock'] .sp-top .sp-logo.sm{
+  border: 1px solid var(--dz-accent-line);
+  box-shadow: 0 0 14px -4px color-mix(in srgb, var(--dz-accent) 55%, transparent);
+}
+.store-page[data-design='neon'][data-nav='dock'] .sp-top-links{ gap: 2px; }
+.store-page[data-design='neon'][data-nav='dock'] .sp-top-links a{
+  padding: 8px 11px;
+  min-height: 42px;
+  border-radius: 999px;
+  font-size: 12.5px;
+  color: var(--dz-ink-2);
+}
+.store-page[data-design='neon'][data-nav='dock'] .sp-top-links a:hover{
+  background: var(--dz-accent-dim);
+  color: var(--dz-accent-text);
+  text-shadow: 0 0 14px color-mix(in srgb, var(--dz-accent) 55%, transparent);
+}
+.store-page[data-design='neon'][data-nav='dock'] .sp-top-links a.router-link-exact-active{
+  background: var(--dz-accent-dim);
+  color: var(--dz-accent-text);
+}
+.store-page[data-design='neon'][data-nav='dock'] .sp-top .sp-icon-btn{
+  background: color-mix(in srgb, var(--dz-panel-2, var(--dz-surface-2)) 60%, transparent);
+  border-color: var(--dz-accent-line);
+  color: var(--dz-ink-2);
+  -webkit-backdrop-filter: blur(8px);
+  backdrop-filter: blur(8px);
+}
+.store-page[data-design='neon'][data-nav='dock'] .sp-top .sp-icon-btn:hover{
+  border-color: var(--dz-accent);
+  color: var(--dz-accent-text);
+  background: var(--dz-accent-dim);
+  box-shadow: 0 0 18px color-mix(in srgb, var(--dz-accent) 35%, transparent);
+}
+.store-page[data-design='neon'][data-nav='dock'] .sp-top .sp-burger{
+  background: color-mix(in srgb, var(--dz-surface-2) 60%, transparent);
+  border-color: var(--dz-accent-line);
+  color: var(--dz-ink-2);
+  border-radius: 999px;
+}
+.store-page[data-design='neon'][data-nav='dock'] .sp-top .sp-burger:hover{
+  border-color: var(--dz-accent);
+  color: var(--dz-accent-text);
+}
+.store-page[data-design='neon'][data-nav='dock'] .sp-top-cta{
+  background: var(--dz-accent);
+  color: var(--dz-accent-ink);
+  border-radius: 999px;
+  box-shadow: 0 0 18px -6px color-mix(in srgb, var(--dz-accent) 60%, transparent);
+}
+.store-page[data-design='neon'][data-nav='dock'] .sp-top-cta:hover{
+  background: var(--dz-accent);
+  color: var(--dz-accent-ink);
+  filter: brightness(1.08);
+  box-shadow: 0 0 26px -4px color-mix(in srgb, var(--dz-accent) 70%, transparent);
+}
+.store-page[data-design='neon'][data-nav='dock'] .sp-progress{ display: none; }
+/* Tienda Pro: la fila de secciones vive dentro de la píldora como segunda
+   línea con scroll horizontal propio. */
+.store-page[data-design='neon'][data-nav='dock'] .sp-shop-nav{
+  background: transparent;
+  border-bottom: 0;
+}
+.store-page[data-design='neon'][data-nav='dock'] .sp-shop-nav-inner{ min-height: 40px; gap: 8px; }
+.store-page[data-design='neon'][data-nav='dock'] .sp-shop-nav-links{ justify-content: center; }
+.store-page[data-design='neon'][data-nav='dock'] .sp-shop-nav-links a{
+  padding: 6px 10px;
+  font-size: 11px;
+  letter-spacing: .08em;
+  border-radius: 999px;
+  color: var(--dz-ink-2);
+}
+.store-page[data-design='neon'][data-nav='dock'] .sp-shop-nav-links a:hover{ background: var(--dz-accent-dim); color: var(--dz-accent-text); }
+.store-page[data-design='neon'][data-nav='dock'] .sp-shop-nav-links a.is-current{
+  background: var(--dz-accent-dim);
+  color: var(--dz-accent-text);
+}
+.store-page[data-design='neon'][data-nav='dock'] .sp-shop-nav-note{ display: none; }
+/* La home de plantilla esconde .sp-top en desktop (el hero hace de entrada);
+   con dock la píldora ES la navegación y tiene que quedar visible. */
+@media (min-width: 1101px){
+  .store-page[data-design='neon'][data-nav='dock'].is-home{ --sp-top-h: 0px; }
+  .store-page[data-design='neon'][data-nav='dock'].is-home .sp-top{ display: block; }
+}
+/* Móvil: el menú lateral se vuelve hoja inferior que flota sobre el dock. */
+@media (max-width: 1100px){
+  .store-page[data-design='neon'][data-nav='dock'] .sp-drawer.sp-navdrawer{
+    top: auto;
+    left: 14px;
+    right: 14px;
+    bottom: calc(92px + env(safe-area-inset-bottom));
+    width: auto;
+    max-height: min(68dvh, 560px);
+    border: 1px solid var(--dz-accent-line);
+    border-radius: 20px;
+    transform: translateY(40px);
+    box-shadow: var(--dz-glow), 0 24px 50px -20px rgba(0, 0, 0, .7);
+  }
+  .store-page[data-design='neon'][data-nav='dock'] .sp-drawer.sp-navdrawer.open{ transform: none; }
+}
+/* Con tab bar de tema (mobile.nav='bottom') el dock sube para no pisarla. */
+@media (max-width: 768px){
+  .store-page[data-design='neon'][data-nav='dock'][data-st-tabbar] .sp-top{
+    bottom: calc(74px + env(safe-area-inset-bottom));
+  }
+  .store-page[data-design='neon'][data-nav='dock'][data-st-tabbar]{ padding-bottom: calc(170px + env(safe-area-inset-bottom)); }
+}
+
+/* ==========================================================================
+   CUENTA 'account-topbar' — identidad en barra superior + tabs debajo;
+   el sidebar queda oculto en desktop (en móvil ya es mhead+tabs).
+   ========================================================================== */
+@media (min-width: 1024px){
+  .store-page[data-design='neon'][data-account='account-topbar'] .ec-account .acc-shell{
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .store-page[data-design='neon'][data-account='account-topbar'] .ec-account .acc-side{ display: none; }
+  .store-page[data-design='neon'][data-account='account-topbar'] .ec-account .acc-mhead{ display: flex; }
+  .store-page[data-design='neon'][data-account='account-topbar'] .ec-account .acc-tabs{ display: flex; }
+  .store-page[data-design='neon'][data-account='account-topbar'] .ec-account .acc-mhead{
+    align-items: center;
+    gap: 14px;
+    padding: 12px 16px;
+    border: 1px solid var(--dz-line);
+    border-radius: var(--dz-r);
+    background: linear-gradient(90deg, var(--dz-accent-dim), var(--dz-surface) 55%);
+  }
+  .store-page[data-design='neon'][data-account='account-topbar'] .ec-account .acc-mhead-meta{ flex: 1; }
+  .store-page[data-design='neon'][data-account='account-topbar'] .ec-account .acc-greet{
+    display: block;
+    margin: 0;
+    font-family: var(--dz-display);
+    font-size: 19px;
+    font-weight: 600;
+    color: var(--dz-ink);
+  }
+  .store-page[data-design='neon'][data-account='account-topbar'] .ec-account .acc-greet em{ font-style: italic; color: var(--dz-accent-text); }
+  .store-page[data-design='neon'][data-account='account-topbar'] .ec-account .acc-kicker{
+    display: block;
+    font-family: var(--dz-mono);
+    font-size: 9.5px;
+    font-weight: 700;
+    letter-spacing: .16em;
+    text-transform: uppercase;
+    color: var(--dz-muted);
+  }
+  .store-page[data-design='neon'][data-account='account-topbar'] .ec-account .acc-mhead-meta strong,
+  .store-page[data-design='neon'][data-account='account-topbar'] .ec-account .acc-mhead-meta small{ display: none; }
+  .store-page[data-design='neon'][data-account='account-topbar'] .ec-account .acc-tabs{
+    position: sticky;
+    top: 84px;
+    z-index: 5;
+    gap: 6px;
+    padding: 8px;
+    border: 1px solid var(--dz-line);
+    border-radius: 999px;
+    background: color-mix(in srgb, var(--dz-surface) 88%, transparent);
+    -webkit-backdrop-filter: blur(10px);
+    backdrop-filter: blur(10px);
+  }
+  .store-page[data-design='neon'][data-account='account-topbar'] .ec-account .acc-tab{
+    flex: 1 1 0;
+    justify-content: center;
+    min-height: 42px;
+    padding: 9px 12px;
+    border-color: transparent;
+    border-radius: 999px;
+    background: transparent;
+    font-size: 11.5px;
+  }
+  .store-page[data-design='neon'][data-account='account-topbar'] .ec-account .acc-tab:hover{
+    background: var(--dz-accent-dim);
+    color: var(--dz-accent-text);
+  }
+  .store-page[data-design='neon'][data-account='account-topbar'] .ec-account .acc-tab.is-on{
+    background: var(--dz-accent);
+    color: var(--dz-accent-ink);
+    box-shadow: var(--dz-glow);
+  }
+  .store-page[data-design='neon'][data-account='account-topbar'] .ec-account .acc-tab.is-on .acc-idx{ color: var(--dz-accent-ink); }
+}
+/* Móvil: la barra superior se mantiene compacta sobre los tabs. */
+@media (max-width: 1023px){
+  .store-page[data-design='neon'][data-account='account-topbar'] .ec-account .acc-mhead{
+    border: 1px solid var(--dz-line);
+    border-radius: var(--dz-r);
+    background: var(--dz-surface);
+  }
+}
+
+/* ==========================================================================
+   SEGUIMIENTO 'tracking-feed' — el feed de movimientos abre la página;
+   el stepper queda dentro de la card de estado, más abajo en el flujo.
+   ========================================================================== */
+.store-page[data-design='neon'][data-tracking='tracking-feed'] .ec-track{ gap: 14px; }
+.store-page[data-design='neon'][data-tracking='tracking-feed'] .ec-track-head{
+  padding: 4px 6px 0;
+}
+.store-page[data-design='neon'][data-tracking='tracking-feed'] .ec-track-title{
+  font-family: var(--dz-display);
+  font-size: clamp(24px, 3vw, 30px);
+  font-weight: 600;
+  letter-spacing: -.01em;
+  color: var(--dz-ink);
+}
+.store-page[data-design='neon'][data-tracking='tracking-feed'] .ec-track-code{
+  font-family: var(--dz-mono);
+  font-size: 11px;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+  color: var(--dz-muted);
+}
+.store-page[data-design='neon'][data-tracking='tracking-feed'] .ec-track-help{
+  border-color: var(--dz-line);
+  border-radius: var(--dz-r);
+  background: var(--dz-surface);
+}
+.store-page[data-design='neon'][data-tracking='tracking-feed'] .ec-track-card{
+  border: 1px solid var(--dz-line);
+  border-radius: var(--dz-r);
+  background: var(--dz-surface);
+  box-shadow: none;
+}
+/* La card de movimientos (timeline) encabeza el feed, debajo del título. */
+.store-page[data-design='neon'][data-tracking='tracking-feed'] .ec-track > .ec-track-head{ order: -3; }
+.store-page[data-design='neon'][data-tracking='tracking-feed'] .ec-track > .ec-track-help{ order: -2; }
+.store-page[data-design='neon'][data-tracking='tracking-feed'] .ec-track > .ec-track-card:has(.ec-timeline){ order: -1; }
+.store-page[data-design='neon'][data-tracking='tracking-feed'] .ec-track-card:has(.ec-timeline) .ec-track-h2{
+  font-family: var(--dz-mono);
+  font-size: 10.5px;
+  font-weight: 700;
+  letter-spacing: .16em;
+  text-transform: uppercase;
+  color: var(--dz-accent-text);
+}
+/* Timeline como feed: línea de neón, puntos con glow, hora en mono. */
+.store-page[data-design='neon'][data-tracking='tracking-feed'] .ec-timeline{ gap: 0; }
+.store-page[data-design='neon'][data-tracking='tracking-feed'] .ec-timeline li{ padding: 12px 0; }
+.store-page[data-design='neon'][data-tracking='tracking-feed'] .ec-timeline li:not(:last-child)::before{
+  left: 5px;
+  top: 30px;
+  bottom: -6px;
+  width: 2px;
+  background: linear-gradient(180deg, var(--dz-accent-line), var(--dz-line));
+}
+.store-page[data-design='neon'][data-tracking='tracking-feed'] .ec-tl-dot{
+  width: 12px;
+  height: 12px;
+  margin-top: 5px;
+  background: var(--dz-accent);
+  box-shadow: 0 0 10px color-mix(in srgb, var(--dz-accent) 65%, transparent);
+}
+.store-page[data-design='neon'][data-tracking='tracking-feed'] .ec-timeline strong{
+  font-family: var(--dz-body);
+  font-size: 13.5px;
+  font-weight: 700;
+  color: var(--dz-ink);
+}
+.store-page[data-design='neon'][data-tracking='tracking-feed'] .ec-timeline small{
+  font-family: var(--dz-mono);
+  font-size: 10.5px;
+  letter-spacing: .04em;
+  color: var(--dz-muted);
+}
+/* El stepper baja con su card de estado: dots de neón, conectores sutiles. */
+.store-page[data-design='neon'][data-tracking='tracking-feed'] .ec-step-dot{
+  border-color: var(--dz-line-strong);
+  background: var(--dz-surface-2);
+  color: var(--dz-muted);
+}
+.store-page[data-design='neon'][data-tracking='tracking-feed'] .ec-step.is-done .ec-step-dot{
+  border-color: var(--dz-ok);
+  background: var(--dz-ok);
+  color: #fff;
+}
+.store-page[data-design='neon'][data-tracking='tracking-feed'] .ec-step.is-current .ec-step-dot{
+  border-color: var(--dz-accent);
+  color: var(--dz-accent-ink);
+  background: var(--dz-accent);
+  box-shadow: 0 0 0 4px var(--dz-accent-dim), var(--dz-glow);
+}
+.store-page[data-design='neon'][data-tracking='tracking-feed'] .ec-step::after{ background: var(--dz-line); }
+.store-page[data-design='neon'][data-tracking='tracking-feed'] .ec-step.is-done::after{ background: var(--dz-ok); }
+.store-page[data-design='neon'][data-tracking='tracking-feed'] .ec-track-status{
+  font-family: var(--dz-mono);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: .12em;
+  text-transform: uppercase;
+  border: 1px solid var(--dz-accent-line);
+}
+.store-page[data-design='neon'][data-tracking='tracking-feed'] .ec-track-chip{
+  border-color: var(--dz-line);
+  background: var(--dz-surface-2);
+  color: var(--dz-ink-2);
+  font-family: var(--dz-mono);
+  font-size: 10.5px;
+  letter-spacing: .04em;
+}
+.store-page[data-design='neon'][data-tracking='tracking-feed'] .ec-track-chip svg{ color: var(--dz-accent-text); }
+.store-page[data-design='neon'][data-tracking='tracking-feed'] .ec-track-h2{
+  font-family: var(--dz-display);
+  font-size: 17px;
+  font-weight: 600;
+  color: var(--dz-ink);
+}
+.store-page[data-design='neon'][data-tracking='tracking-feed'] .ec-track-muted{ color: var(--dz-muted); }
+.store-page[data-design='neon'][data-tracking='tracking-feed'] .ec-track-legal{
+  border-top-color: var(--dz-line);
+  color: var(--dz-muted);
+}
+.store-page[data-design='neon'][data-tracking='tracking-feed'] .ec-track-legal a{ color: var(--dz-accent-text); }
+.store-page[data-design='neon'][data-tracking='tracking-feed'] .ec-receipt{
+  border-color: var(--dz-line-strong);
+  border-style: dashed;
+  background: var(--dz-surface-2);
+}
+.store-page[data-design='neon'][data-tracking='tracking-feed'] .ec-proof-drop{
+  border-color: var(--dz-line-strong);
+  background: var(--dz-surface-2);
+}
+.store-page[data-design='neon'][data-tracking='tracking-feed'] .ec-proof-drop:hover{
+  border-color: var(--dz-accent);
+  background: var(--dz-accent-dim);
+}
+.store-page[data-design='neon'][data-tracking='tracking-feed'] .ec-btn-primary{
+  background: var(--dz-accent);
+  color: var(--dz-accent-ink);
+  font-family: var(--dz-body);
+  font-size: 11.5px;
+  font-weight: 700;
+  letter-spacing: .12em;
+  text-transform: uppercase;
+  border-radius: 9px;
+  box-shadow: 0 4px 0 -1px color-mix(in srgb, var(--dz-accent) 30%, #000);
+}
+.store-page[data-design='neon'][data-tracking='tracking-feed'] .ec-btn-ghost{
+  border-color: var(--dz-line-strong);
+  border-radius: 9px;
+  color: var(--dz-ink);
+  font-family: var(--dz-body);
+  font-size: 11.5px;
+  font-weight: 600;
+  letter-spacing: .1em;
+  text-transform: uppercase;
+}
+.store-page[data-design='neon'][data-tracking='tracking-feed'] .ec-btn-ghost:hover{
+  border-color: var(--dz-accent-line);
+  color: var(--dz-accent-text);
+}
+.store-page[data-design='neon'][data-tracking='tracking-feed'] .ec-track-note-ico{
+  background: var(--dz-accent-dim);
+  color: var(--dz-accent-text);
+}
+.store-page[data-design='neon'][data-tracking='tracking-feed'] :is(.ec-track-card, .ec-track-help, .ec-btn-primary, .ec-btn-ghost, .ec-track-receipt-btn, .ec-proof-drop, .ec-track-help-summary, .ec-track-legal a):focus-visible{
+  outline: 2px solid var(--dz-accent-text);
+  outline-offset: 2px;
+}
+@media (max-width: 640px){
+  .store-page[data-design='neon'][data-nav='dock'] .sp-top{ max-width: calc(100vw - 20px); }
+  .store-page[data-design='neon'][data-nav='dock'] .sp-top .sp-top-inner{ height: 52px; gap: 6px; padding-inline: 6px; }
+  .store-page[data-design='neon'][data-nav='dock'] .sp-top-cta-label{ display: none; }
+  .store-page[data-design='neon'][data-nav='dock'] .sp-top-cta{ padding: 0 10px; }
+  .store-page[data-design='neon'][data-account='account-topbar'] .ec-account .acc-tab{ font-size: 10px; padding: 8px 10px; }
+}
+@media (prefers-reduced-motion: reduce){
+  .store-page[data-design='neon'][data-nav='dock'] .sp-top{ transition: none; }
+}

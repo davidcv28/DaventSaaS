@@ -638,3 +638,420 @@
     animation-duration: .001ms !important;
   }
 }
+
+/* ==========================================================================
+   ARQUETIPOS — chrome del diseño en TODAS las páginas públicas
+   (nav 'swipe-tabs' · cuenta 'account-rail' · tracking 'tracking-feed').
+   Los tokens --dz-* viven en .store-page[data-design='autoservicio'] raíz.
+   Identidad: verde de marca, mono para códigos, dashed como corte de ticket.
+   ========================================================================== */
+
+/* ---------- NAV 'swipe-tabs' ----------
+   La navegación de secciones es una fila de tabs con filete inferior que
+   desliza: snap horizontal, fundido en el borde derecho e indicador de
+   marca animado bajo el activo. */
+.store-page[data-design='autoservicio'][data-nav='swipe-tabs'] .sp-top{
+  border-bottom: 1px solid var(--dz-line, #e2e5dc);
+  background: var(--sp-card, var(--dz-surface));
+}
+.store-page[data-design='autoservicio'][data-nav='swipe-tabs'] .sp-top-links{
+  overflow-x: auto;
+  scrollbar-width: none;
+  scroll-snap-type: x proximity;
+  -webkit-mask-image: linear-gradient(90deg, #000 88%, transparent);
+  mask-image: linear-gradient(90deg, #000 88%, transparent);
+}
+.store-page[data-design='autoservicio'][data-nav='swipe-tabs'] .sp-top-links::-webkit-scrollbar{ display: none; }
+.store-page[data-design='autoservicio'][data-nav='swipe-tabs'] .sp-top-links a{
+  scroll-snap-align: start;
+  position: relative;
+  border-radius: 0;
+  font-family: var(--dz-mono, monospace);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+  color: var(--sp-ink-2, var(--dz-ink-2));
+}
+.store-page[data-design='autoservicio'][data-nav='swipe-tabs'] .sp-top-links a::after{
+  content: '';
+  position: absolute;
+  left: 8px; right: 8px; bottom: -1px;
+  height: 2px;
+  background: var(--store-accent-ink, #17794b);
+  transform: scaleX(0);
+  transform-origin: left;
+  transition: transform .28s cubic-bezier(.2,.7,.2,1);
+}
+.store-page[data-design='autoservicio'][data-nav='swipe-tabs'] .sp-top-links a:hover::after{ transform: scaleX(1); }
+.store-page[data-design='autoservicio'][data-nav='swipe-tabs'] .sp-top-links a.router-link-exact-active{
+  background: transparent;
+  color: var(--sp-ink, var(--dz-ink));
+  box-shadow: none;
+  font-weight: 700;
+}
+.store-page[data-design='autoservicio'][data-nav='swipe-tabs'] .sp-top-links a.router-link-exact-active::after{ transform: scaleX(1); }
+.store-page[data-design='autoservicio'][data-nav='swipe-tabs'] .sp-name{
+  font-family: var(--dz-display);
+  font-weight: 800;
+}
+.store-page[data-design='autoservicio'][data-nav='swipe-tabs'] .sp-icon-btn{
+  border-radius: var(--dz-radius, 4px);
+  border-color: var(--dz-line, #e2e5dc);
+}
+.store-page[data-design='autoservicio'][data-nav='swipe-tabs'] .sp-icon-btn:hover{
+  border-color: var(--store-accent-ink, #17794b);
+  color: var(--store-accent-ink, #17794b);
+}
+.store-page[data-design='autoservicio'][data-nav='swipe-tabs'] .sp-top-cta{
+  border-radius: var(--dz-radius, 4px);
+  background: var(--store-accent-ink, #17794b);
+  font-family: var(--dz-mono, monospace);
+  font-size: 10.5px;
+  font-weight: 700;
+  letter-spacing: .12em;
+  text-transform: uppercase;
+}
+/* La barra de secciones (sp-shop-nav) hereda el mismo patrón swipe. */
+.store-page[data-design='autoservicio'][data-nav='swipe-tabs'] .sp-shop-nav{
+  border-bottom: 1px solid var(--dz-line, #e2e5dc);
+  background: var(--sp-card, var(--dz-surface));
+}
+.store-page[data-design='autoservicio'][data-nav='swipe-tabs'] .sp-shop-nav-links{
+  overflow-x: auto;
+  scrollbar-width: none;
+  scroll-snap-type: x proximity;
+}
+.store-page[data-design='autoservicio'][data-nav='swipe-tabs'] .sp-shop-nav-links::-webkit-scrollbar{ display: none; }
+.store-page[data-design='autoservicio'][data-nav='swipe-tabs'] .sp-shop-nav-links a{
+  scroll-snap-align: start;
+  border-radius: 0;
+  font-family: var(--dz-mono, monospace);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+}
+.store-page[data-design='autoservicio'][data-nav='swipe-tabs'] .sp-shop-nav-links a.is-current{
+  background: transparent;
+  color: var(--sp-ink, var(--dz-ink));
+  box-shadow: inset 0 -2px 0 var(--store-accent-ink, #17794b);
+}
+.store-page[data-design='autoservicio'][data-nav='swipe-tabs'] .sp-drawer .sp-nav-item{
+  border-radius: var(--dz-radius, 4px);
+  font-family: var(--dz-mono, monospace);
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+}
+.store-page[data-design='autoservicio'][data-nav='swipe-tabs'] .sp-drawer .sp-nav-item.active{
+  background: var(--dz-accent-soft, transparent);
+  color: var(--store-accent-ink, #17794b);
+  box-shadow: inset 3px 0 0 var(--store-accent-ink, #17794b);
+}
+.store-page[data-design='autoservicio'][data-nav='swipe-tabs'] .sp-more-sheet{
+  border-radius: var(--dz-radius, 4px) var(--dz-radius, 4px) 0 0;
+}
+@media (max-width: 640px){
+  .store-page[data-design='autoservicio'][data-nav='swipe-tabs'] .sp-top .sp-top-inner{ min-height: 56px; }
+  .store-page[data-design='autoservicio'][data-nav='swipe-tabs'] .sp-top-links a{ font-size: 10px; padding: 8px 10px; }
+}
+
+/* ---------- CUENTA 'account-rail' ----------
+   La navegación lateral se convierte en un RIEL horizontal arriba del
+   contenido: la identidad compacta a la izquierda y los ítems como chips
+   de departamento deslizables (mosaicos → pills de riel). */
+.store-page[data-design='autoservicio'][data-account='account-rail'] .ec-account{
+  width: min(1080px, 100%);
+}
+.store-page[data-design='autoservicio'][data-account='account-rail'] .ec-account .acc-shell{
+  grid-template-columns: minmax(0, 1fr);
+  gap: 14px;
+}
+.store-page[data-design='autoservicio'][data-account='account-rail'] .ec-account .acc-side{
+  display: block;
+  position: static;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  box-shadow: none;
+}
+.store-page[data-design='autoservicio'][data-account='account-rail'] .ec-account .acc-id{
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 16px;
+  border: 1px solid var(--dz-line, #e2e5dc);
+  border-radius: var(--dz-radius, 4px);
+  background: var(--dz-surface, #fff);
+}
+.store-page[data-design='autoservicio'][data-account='account-rail'] .ec-account .acc-id .acc-tele{ display: none; }
+.store-page[data-design='autoservicio'][data-account='account-rail'] .ec-account .acc-id-name{
+  font-family: var(--dz-display);
+  font-weight: 800;
+  font-size: 15px;
+  letter-spacing: -.02em;
+  color: var(--dz-ink, #15211a);
+}
+.store-page[data-design='autoservicio'][data-account='account-rail'] .ec-account .acc-nav{
+  display: flex;
+  gap: 8px;
+  overflow-x: auto;
+  scrollbar-width: none;
+  scroll-snap-type: x proximity;
+  padding: 4px 0;
+}
+.store-page[data-design='autoservicio'][data-account='account-rail'] .ec-account .acc-nav::-webkit-scrollbar{ display: none; }
+.store-page[data-design='autoservicio'][data-account='account-rail'] .ec-account .acc-navitem{
+  position: relative;
+  flex: 0 0 auto;
+  display: inline-flex;
+  align-items: center;
+  gap: 9px;
+  min-height: 46px;
+  padding: 10px 16px;
+  border: 1px solid var(--dz-line, #e2e5dc);
+  border-radius: 999px;
+  background: var(--dz-surface, #fff);
+  color: var(--dz-ink-2, #33413a);
+  font-family: var(--dz-mono, monospace);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+  white-space: nowrap;
+  scroll-snap-align: start;
+  transition: border-color .16s, background .16s, color .16s;
+}
+.store-page[data-design='autoservicio'][data-account='account-rail'] .ec-account .acc-navitem .acc-idx{
+  position: static;
+  margin: 0;
+  font-size: 9px;
+  opacity: .65;
+}
+.store-page[data-design='autoservicio'][data-account='account-rail'] .ec-account .acc-navitem:hover{
+  border-color: color-mix(in srgb, var(--store-accent-ink, #17794b) 55%, var(--dz-line, #e2e5dc));
+  background: var(--dz-accent-soft, transparent);
+  color: var(--store-accent-ink, #17794b);
+}
+.store-page[data-design='autoservicio'][data-account='account-rail'] .ec-account .acc-navitem.is-on{
+  background: var(--store-accent-ink, #17794b);
+  border-color: var(--store-accent-ink, #17794b);
+  color: var(--sp-on-band, #fff);
+  font-weight: 700;
+}
+.store-page[data-design='autoservicio'][data-account='account-rail'] .ec-account .acc-navitem.is-on svg{ color: var(--sp-on-band, #fff); }
+.store-page[data-design='autoservicio'][data-account='account-rail'] .ec-account .acc-navitem.is-on .acc-idx{ color: color-mix(in srgb, var(--sp-on-band, #fff) 80%, transparent); }
+.store-page[data-design='autoservicio'][data-account='account-rail'] .ec-account .acc-logout{
+  justify-self: start;
+  min-height: 44px;
+  padding: 0 18px;
+  border: 1px dashed color-mix(in srgb, var(--dz-ink, #15211a) 26%, transparent);
+  border-radius: 999px;
+  background: transparent;
+  color: var(--dz-ink-2, #33413a);
+  font-family: var(--dz-mono, monospace);
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: .12em;
+  text-transform: uppercase;
+}
+.store-page[data-design='autoservicio'][data-account='account-rail'] .ec-account .acc-logout:hover{
+  color: var(--dz-danger, #a3231c);
+  border-color: color-mix(in srgb, var(--dz-danger, #a3231c) 52%, transparent);
+}
+.store-page[data-design='autoservicio'][data-account='account-rail'] .ec-account .acc-mhead,
+.store-page[data-design='autoservicio'][data-account='account-rail'] .ec-account .acc-tabs{ display: none !important; }
+/* Paneles: ticket con separadores punteados (identidad autoservicio). */
+.store-page[data-design='autoservicio'][data-account='account-rail'] .ec-account .acc-panel,
+.store-page[data-design='autoservicio'][data-account='account-rail'] .ec-account .acc-auth-card,
+.store-page[data-design='autoservicio'][data-account='account-rail'] .ec-account .acc-gate-card{
+  border: 1px solid var(--dz-line, #e2e5dc);
+  border-radius: var(--dz-radius, 4px);
+  background: var(--dz-surface, #fff);
+}
+@media (max-width: 640px){
+  .store-page[data-design='autoservicio'][data-account='account-rail'] .ec-account .acc-id{ padding: 10px 12px; }
+  .store-page[data-design='autoservicio'][data-account='account-rail'] .ec-account .acc-navitem{
+    padding: 9px 14px;
+    font-size: 10px;
+  }
+}
+
+/* ---------- SEGUIMIENTO 'tracking-feed' ----------
+   Feed de eventos: cada hito es una fila con hora mono y filete dashed;
+   la card de estado queda como encabezado del feed. */
+.store-page[data-design='autoservicio'][data-tracking='tracking-feed'] .ec-track{
+  gap: 14px;
+}
+.store-page[data-design='autoservicio'][data-tracking='tracking-feed'] .ec-track-title{
+  font-family: var(--dz-display);
+  font-weight: 800;
+  letter-spacing: -.03em;
+  color: var(--dz-ink, #15211a);
+}
+.store-page[data-design='autoservicio'][data-tracking='tracking-feed'] .ec-track-code{
+  font-family: var(--dz-mono, monospace);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: .1em;
+  text-transform: uppercase;
+  color: var(--dz-muted, #56645c);
+}
+.store-page[data-design='autoservicio'][data-tracking='tracking-feed'] .ec-track-card,
+.store-page[data-design='autoservicio'][data-tracking='tracking-feed'] .ec-track-help{
+  border: 1px solid var(--dz-line, #e2e5dc);
+  border-radius: var(--dz-radius, 4px);
+  background: var(--dz-surface, #fff);
+  box-shadow: 0 1px 2px rgba(21, 33, 26, .05);
+}
+.store-page[data-design='autoservicio'][data-tracking='tracking-feed'] .ec-track-status{
+  font-family: var(--dz-mono, monospace);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: .12em;
+  text-transform: uppercase;
+  border-radius: var(--dz-radius, 4px);
+  padding: 6px 12px;
+}
+/* Feed: el stepper se convierte en lista de eventos con timestamp. */
+.store-page[data-design='autoservicio'][data-tracking='tracking-feed'] .ec-stepper{
+  display: grid;
+  gap: 0;
+  margin: 8px 0 4px;
+}
+.store-page[data-design='autoservicio'][data-tracking='tracking-feed'] .ec-step{
+  position: relative;
+  display: grid;
+  grid-template-columns: 30px minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 4px;
+  border-bottom: 1px dashed color-mix(in srgb, var(--dz-ink, #15211a) 18%, transparent);
+}
+.store-page[data-design='autoservicio'][data-tracking='tracking-feed'] .ec-step:last-child{ border-bottom: 0; }
+.store-page[data-design='autoservicio'][data-tracking='tracking-feed'] .ec-step::after{ display: none; }
+.store-page[data-design='autoservicio'][data-tracking='tracking-feed'] .ec-step-dot{
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  border: 1.5px solid var(--dz-line, #e2e5dc);
+  background: var(--dz-surface, #fff);
+  color: var(--dz-muted, #56645c);
+  font-family: var(--dz-mono, monospace);
+  font-size: 10px;
+}
+.store-page[data-design='autoservicio'][data-tracking='tracking-feed'] .ec-step.is-done .ec-step-dot{
+  border-color: var(--store-accent-ink, #17794b);
+  background: var(--store-accent-ink, #17794b);
+  color: var(--sp-on-band, #fff);
+}
+.store-page[data-design='autoservicio'][data-tracking='tracking-feed'] .ec-step.is-current .ec-step-dot{
+  border-color: var(--store-accent-ink, #17794b);
+  color: var(--store-accent-ink, #17794b);
+  box-shadow: 0 0 0 3px var(--dz-accent-soft, transparent);
+}
+.store-page[data-design='autoservicio'][data-tracking='tracking-feed'] .ec-step-label{
+  font-family: var(--dz-body);
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--dz-ink, #15211a);
+  text-transform: none;
+  letter-spacing: 0;
+}
+.store-page[data-design='autoservicio'][data-tracking='tracking-feed'] .ec-step:not(.is-done):not(.is-current) .ec-step-label{
+  color: var(--dz-muted, #56645c);
+  font-weight: 500;
+}
+.store-page[data-design='autoservicio'][data-tracking='tracking-feed'] .ec-track-step-date{
+  font-family: var(--dz-mono, monospace);
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: .06em;
+  color: var(--dz-muted, #56645c);
+  white-space: nowrap;
+}
+.store-page[data-design='autoservicio'][data-tracking='tracking-feed'] .ec-track-chips{
+  padding-top: 14px;
+  border-top: 1px dashed color-mix(in srgb, var(--dz-ink, #15211a) 18%, transparent);
+}
+.store-page[data-design='autoservicio'][data-tracking='tracking-feed'] .ec-track-chip{
+  border: 1px solid var(--dz-line, #e2e5dc);
+  border-radius: 999px;
+  background: var(--dz-surface, #fff);
+  font-family: var(--dz-mono, monospace);
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: .1em;
+  text-transform: uppercase;
+  color: var(--dz-ink-2, #33413a);
+}
+.store-page[data-design='autoservicio'][data-tracking='tracking-feed'] .ec-track-h2{
+  font-family: var(--dz-display);
+  font-weight: 800;
+  letter-spacing: -.02em;
+  color: var(--dz-ink, #15211a);
+}
+.store-page[data-design='autoservicio'][data-tracking='tracking-feed'] .ec-timeline li{ padding: 10px 0; }
+.store-page[data-design='autoservicio'][data-tracking='tracking-feed'] .ec-timeline strong{
+  font-family: var(--dz-body);
+  font-weight: 700;
+}
+.store-page[data-design='autoservicio'][data-tracking='tracking-feed'] .ec-timeline small{
+  font-family: var(--dz-mono, monospace);
+  font-size: 10px;
+  letter-spacing: .04em;
+}
+.store-page[data-design='autoservicio'][data-tracking='tracking-feed'] .ec-receipt{
+  border: 1px dashed color-mix(in srgb, var(--dz-ink, #15211a) 22%, transparent);
+  border-radius: var(--dz-radius, 4px);
+  background: var(--dz-bg, #f5f6f2);
+}
+.store-page[data-design='autoservicio'][data-tracking='tracking-feed'] .ec-btn-primary{
+  border-radius: var(--dz-radius, 4px);
+  background: var(--store-accent-ink, #17794b);
+  font-family: var(--dz-mono, monospace);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: .1em;
+  text-transform: uppercase;
+}
+.store-page[data-design='autoservicio'][data-tracking='tracking-feed'] .ec-btn-ghost,
+.store-page[data-design='autoservicio'][data-tracking='tracking-feed'] .ec-track-receipt-btn{
+  border-radius: var(--dz-radius, 4px);
+  border: 1px solid var(--dz-line, #e2e5dc);
+  font-family: var(--dz-mono, monospace);
+  font-size: 10.5px;
+  font-weight: 600;
+  letter-spacing: .1em;
+  text-transform: uppercase;
+}
+.store-page[data-design='autoservicio'][data-tracking='tracking-feed'] .ec-track-legal{
+  font-family: var(--dz-mono, monospace);
+  font-size: 10px;
+  letter-spacing: .06em;
+}
+.store-page[data-design='autoservicio'][data-tracking='tracking-feed'] :is(.ec-track-card, .ec-track-help, .ec-step, .ec-btn-primary, .ec-btn-ghost, .ec-track-receipt-btn, .ec-proof-drop, .ec-track-help-summary, .ec-track-legal a):focus-visible{
+  outline: 2px solid var(--store-accent-ink, #17794b);
+  outline-offset: 2px;
+}
+@media (max-width: 560px){
+  .store-page[data-design='autoservicio'][data-tracking='tracking-feed'] .ec-step{
+    grid-template-columns: 30px minmax(0, 1fr);
+  }
+  .store-page[data-design='autoservicio'][data-tracking='tracking-feed'] .ec-track-step-date{
+    grid-column: 2;
+    justify-self: start;
+  }
+}
+@media (prefers-reduced-motion: reduce){
+  .store-page[data-design='autoservicio'][data-nav='swipe-tabs'] .sp-top-links a::after,
+  .store-page[data-design='autoservicio'][data-nav='swipe-tabs'] .sp-shop-nav-links a{ transition: none !important; }
+}
+
+/* En el feed el conector vertical base (::before <=560px) estorba: las
+   filas ya se separan con filetes dashed. */
+@media (max-width: 560px){
+  .store-page[data-design='autoservicio'][data-tracking='tracking-feed'] .ec-step::before{ display: none; }
+}

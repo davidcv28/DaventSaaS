@@ -160,15 +160,16 @@ h1:empty,h2:empty,h3:empty,p:empty{display:none}
 .top-meta span:first-child:empty + span::before{display:none}
 
 .tabs{background:var(--surface);border-top:1px solid var(--line)}
-.tabs-in{display:flex;align-items:center;gap:2px;min-height:44px;overflow-x:auto;scrollbar-width:none}
+/* swipe-tabs: snap + fundido en el borde que insinúa más departamentos. */
+.tabs-in{display:flex;align-items:center;gap:2px;min-height:44px;overflow-x:auto;scrollbar-width:none;scroll-snap-type:x proximity;-webkit-mask-image:linear-gradient(90deg,#000 90%,transparent);mask-image:linear-gradient(90deg,#000 90%,transparent)}
 .tabs-in::-webkit-scrollbar{display:none}
 .tabs a{
   position:relative;display:inline-flex;align-items:center;min-height:44px;padding:0 14px;
-  font-size:12.5px;font-weight:600;color:var(--ink-2);white-space:nowrap;
+  font-size:12.5px;font-weight:600;color:var(--ink-2);white-space:nowrap;scroll-snap-align:start;
 }
-.tabs a::after{content:"";position:absolute;left:14px;right:14px;bottom:0;height:2px;background:var(--brand)}
+.tabs a::after{content:"";position:absolute;left:14px;right:14px;bottom:0;height:2px;background:var(--brand);transform:scaleX(0);transition:transform .28s cubic-bezier(.2,.7,.2,1)}
 .tabs a.on{color:var(--ink);font-weight:700}
-.tabs a:not(.on)::after{transform:scaleX(0)}
+.tabs a.on::after{transform:scaleX(1)}
 .tabs-wa{margin-inline-start:auto;display:inline-flex;align-items:center;gap:6px;min-height:44px;padding:0 14px;font-size:12.5px;font-weight:700;color:var(--link)}
 .tabs-wa svg{width:14px;height:14px}
 
