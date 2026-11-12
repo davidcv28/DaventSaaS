@@ -290,6 +290,31 @@ body.m-open .mmenu{transform:none}
 .mmenu-foot{margin-top:auto;padding:20px clamp(18px,4vw,56px) 30px;font:500 11px/1.7 var(--mono);letter-spacing:.1em;color:color-mix(in srgb,var(--band-ink) 60%,transparent)}
 
 /* ==========================================================================
+   STATEMENT-BAR — la cabecera es una sola línea tipográfica oversized:
+   marca en display grande, menú siempre en el drawer (.mmenu) y la nav
+   horizontal retirada en todos los anchos.
+   ========================================================================== */
+:root{--head-h:104px}
+.top-inner{height:var(--head-h);min-height:var(--head-h);gap:clamp(14px,2.4vw,30px);padding-inline:clamp(18px,3vw,48px)}
+.brand-word{
+  font-size:clamp(30px,5.4vw,72px);line-height:.95;letter-spacing:-.01em;
+  text-transform:uppercase;white-space:nowrap;
+}
+.brand-meta{display:none}
+/* La nav de texto sale del chrome: el menú vive en .mmenu (data-m-open). */
+.nav{display:none}
+.top-cta{margin-left:auto}
+.m-open-btn{display:grid;margin:0}
+@media(max-width:640px){
+  :root{--head-h:92px}
+  .brand-word{font-size:clamp(24px,8.4vw,34px)}
+  .top-inner{gap:12px}
+}
+@media (prefers-reduced-motion:reduce){
+  .top,.top-inner{transition:none}
+}
+
+/* ==========================================================================
    HERO — copia de instrumento + visor carrusel.
    ========================================================================== */
 .hero{

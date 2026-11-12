@@ -538,3 +538,190 @@
 @media (prefers-reduced-motion:reduce){
   [data-design='olivium'] .ec-account .acc-navitem::after{ transition:none; }
 }
+
+/* ==========================================================================
+   3. NAV — glassmorphism-overlay (arquetipo único del diseño)
+   Cromo de comercio: transparente sobre el contenido → vidrio esmerilado
+   sólido al hacer scroll (.sp-top.scrolled ya lo alterna el layout).
+   ========================================================================== */
+.store-page[data-design='olivium'][data-nav='glassmorphism-overlay'] .sp-top{
+  background:transparent;
+  border-bottom-color:transparent;
+  box-shadow:none;
+  -webkit-backdrop-filter:none;
+  backdrop-filter:none;
+  color:var(--dz-ink,#202A12);
+  transition:background .3s ease,backdrop-filter .3s ease,-webkit-backdrop-filter .3s ease,border-color .3s ease,box-shadow .3s ease;
+}
+.store-page[data-design='olivium'][data-nav='glassmorphism-overlay'] .sp-top.scrolled{
+  background:color-mix(in srgb,var(--dz-surface,#FBF7E9) 72%,transparent);
+  -webkit-backdrop-filter:blur(18px) saturate(1.2);
+  backdrop-filter:blur(18px) saturate(1.2);
+  border-bottom-color:var(--dz-line,#DCD1AE);
+  box-shadow:0 14px 44px -24px rgba(32,42,18,.4);
+}
+.store-page[data-design='olivium'][data-nav='glassmorphism-overlay'] .sp-top .sp-name{ color:var(--dz-ink,#202A12); }
+.store-page[data-design='olivium'][data-nav='glassmorphism-overlay'] .sp-top .sp-mono.sm{
+  background:var(--dz-accent,#5C6B22); color:var(--dz-accent-ink,#FBF7E4);
+}
+.store-page[data-design='olivium'][data-nav='glassmorphism-overlay'] .sp-top .sp-logo.sm{ border-color:var(--dz-line,#DCD1AE); }
+.store-page[data-design='olivium'][data-nav='glassmorphism-overlay'] .sp-top .sp-icon-btn{
+  background:color-mix(in srgb,var(--dz-surface,#FBF7E9) 74%,transparent);
+  border-color:var(--dz-line,#DCD1AE);
+  color:var(--dz-ink-2,#3C4623);
+  -webkit-backdrop-filter:blur(8px); backdrop-filter:blur(8px);
+  box-shadow:none;
+}
+.store-page[data-design='olivium'][data-nav='glassmorphism-overlay'] .sp-top .sp-icon-btn:hover{
+  border-color:var(--dz-accent,#5C6B22); color:var(--dz-accent-text,#46521A);
+  background:color-mix(in srgb,var(--dz-surface,#FBF7E9) 90%,transparent);
+}
+.store-page[data-design='olivium'][data-nav='glassmorphism-overlay'] .sp-top .sp-icon-btn.primary{
+  background:var(--dz-accent,#5C6B22); border-color:transparent; color:var(--dz-accent-ink,#FBF7E4);
+}
+.store-page[data-design='olivium'][data-nav='glassmorphism-overlay'] .sp-top .sp-burger{
+  background:color-mix(in srgb,var(--dz-surface,#FBF7E9) 74%,transparent);
+  border-color:var(--dz-line,#DCD1AE); color:var(--dz-ink,#202A12);
+}
+.store-page[data-design='olivium'][data-nav='glassmorphism-overlay'] .sp-top .sp-burger:hover{
+  border-color:var(--dz-accent,#5C6B22); color:var(--dz-accent-text,#46521A);
+}
+.store-page[data-design='olivium'][data-nav='glassmorphism-overlay'] .sp-top-links a{ color:var(--dz-ink-2,#3C4623); }
+.store-page[data-design='olivium'][data-nav='glassmorphism-overlay'] .sp-top-links a:hover,
+.store-page[data-design='olivium'][data-nav='glassmorphism-overlay'] .sp-top-links a.router-link-exact-active{
+  color:var(--dz-accent-text,#46521A); background:var(--dz-accent-soft,color-mix(in srgb,var(--dz-accent,#5C6B22) 12%,var(--dz-bg,#F3EFE0)));
+}
+.store-page[data-design='olivium'][data-nav='glassmorphism-overlay'] .sp-top .sp-search{
+  background:color-mix(in srgb,var(--dz-surface,#FBF7E9) 82%,transparent);
+  border-color:var(--dz-line,#DCD1AE);
+}
+.store-page[data-design='olivium'][data-nav='glassmorphism-overlay'] .sp-top .sp-search input{ color:var(--dz-ink,#202A12); }
+.store-page[data-design='olivium'][data-nav='glassmorphism-overlay'] .sp-top .sp-search input::placeholder{ color:var(--dz-muted,#55602F); }
+.store-page[data-design='olivium'][data-nav='glassmorphism-overlay'] .sp-top-cta{
+  background:var(--dz-band,#202A12); color:var(--dz-band-ink,#F3EFE0);
+}
+.store-page[data-design='olivium'][data-nav='glassmorphism-overlay'] .sp-top-cta:hover{ background:var(--dz-band,#202A12); color:var(--dz-band-ink,#F3EFE0); opacity:.88; }
+.store-page[data-design='olivium'][data-nav='glassmorphism-overlay'] .sp-shop-nav{
+  background:transparent; border-top-color:var(--dz-line,#DCD1AE);
+}
+.store-page[data-design='olivium'][data-nav='glassmorphism-overlay'] .sp-shop-nav-links a{ color:var(--dz-ink-2,#3C4623); }
+.store-page[data-design='olivium'][data-nav='glassmorphism-overlay'] .sp-shop-nav-links a.is-current{ color:var(--dz-accent-text,#46521A); }
+.store-page[data-design='olivium'][data-nav='glassmorphism-overlay'] .sp-shop-nav-note{ color:var(--dz-muted,#55602F); }
+/* Drawer móvil: mismo aire de etiqueta con índice mono antepuesto. */
+.store-page[data-design='olivium'][data-nav='glassmorphism-overlay'] .sp-drawer{
+  border:1.5px solid var(--dz-line,#DCD1AE); border-radius:var(--dz-r,14px);
+}
+.store-page[data-design='olivium'][data-nav='glassmorphism-overlay'] .sp-drawer .sp-nav-group{ counter-reset:olvnav; }
+.store-page[data-design='olivium'][data-nav='glassmorphism-overlay'] .sp-drawer .sp-nav-item{ counter-increment:olvnav; }
+.store-page[data-design='olivium'][data-nav='glassmorphism-overlay'] .sp-drawer .sp-nav-item > span::before{
+  content:counter(olvnav,decimal-leading-zero) " · ";
+  font:600 10px/1 var(--dz-mono,monospace); letter-spacing:.14em; color:var(--dz-honey-text,#8A5E0C);
+}
+.store-page[data-design='olivium'][data-nav='glassmorphism-overlay'] .sp-tabbar{
+  background:color-mix(in srgb,var(--dz-surface,#FBF7E9) 88%,transparent);
+  -webkit-backdrop-filter:blur(16px) saturate(1.1);
+  backdrop-filter:blur(16px) saturate(1.1);
+  border-top:1px solid var(--dz-line,#DCD1AE);
+}
+@media (prefers-reduced-motion:reduce){
+  .store-page[data-design='olivium'][data-nav='glassmorphism-overlay'] .sp-top{ transition:none; }
+}
+
+/* ==========================================================================
+   4. CUENTA — account-bento: stats como tiles + tabs en mosaico de fichas
+   ========================================================================== */
+.store-page[data-design='olivium'][data-account='account-bento'] .ec-account .acc-stats{
+  display:grid; grid-template-columns:repeat(auto-fill,minmax(132px,1fr));
+  gap:8px; list-style:none; margin:12px 0 0; padding:0;
+}
+.store-page[data-design='olivium'][data-account='account-bento'] .ec-account .acc-stat{
+  display:flex; align-items:center; gap:9px; min-height:54px;
+  padding:10px 13px; box-sizing:border-box;
+  border:1px solid var(--dz-line,#DCD1AE); border-radius:var(--dz-r-2,10px);
+  background:var(--dz-surface,#FBF7E9);
+  font:600 10.5px/1.3 var(--dz-mono,monospace); letter-spacing:.08em; text-transform:uppercase;
+  color:var(--dz-ink-2,#3C4623);
+}
+.store-page[data-design='olivium'][data-account='account-bento'] .ec-account .acc-stat svg{ color:var(--dz-honey-text,#8A5E0C); flex:none; }
+.store-page[data-design='olivium'][data-account='account-bento'] .ec-account .acc-tabs{
+  display:grid; grid-template-columns:repeat(auto-fill,minmax(148px,1fr));
+  gap:8px; overflow:visible; padding:0; scrollbar-width:auto;
+}
+.store-page[data-design='olivium'][data-account='account-bento'] .ec-account .acc-tabs-ink{ display:none; }
+.store-page[data-design='olivium'][data-account='account-bento'] .ec-account .acc-tab{
+  display:flex; flex-direction:column; align-items:flex-start; justify-content:flex-start;
+  gap:8px; min-height:66px; padding:12px 13px; box-sizing:border-box;
+  border:1px solid var(--dz-line,#DCD1AE); border-radius:var(--dz-r-2,10px);
+  background:var(--dz-surface,#FBF7E9); white-space:normal;
+}
+.store-page[data-design='olivium'][data-account='account-bento'] .ec-account .acc-tab-ico{ display:grid; place-items:center; color:var(--dz-accent-text,#46521A); }
+.store-page[data-design='olivium'][data-account='account-bento'] .ec-account .acc-tab:hover{
+  border-color:var(--dz-accent,#5C6B22); color:var(--dz-accent-text,#46521A);
+  transform:translateY(-2px); box-shadow:0 10px 24px -14px rgba(32,42,18,.5);
+}
+.store-page[data-design='olivium'][data-account='account-bento'] .ec-account .acc-tab.is-on{
+  background:var(--dz-band,#202A12); border-color:var(--dz-band,#202A12);
+  color:var(--dz-band-ink,#F3EFE0);
+}
+.store-page[data-design='olivium'][data-account='account-bento'] .ec-account .acc-tab.is-on .acc-tab-ico{ color:var(--dz-honey,#C08A1E); }
+/* Bento: la portada lateral cede a la cabecera-mosaico (identidad + tiles)
+   en todos los anchos — .acc-mhead ya trae avatar, nombre, stats y logout. */
+.store-page[data-design='olivium'][data-account='account-bento'] .ec-account .acc-side{ display:none; }
+.store-page[data-design='olivium'][data-account='account-bento'] .ec-account .acc-mhead{
+  display:flex; padding:14px 16px; border:1px solid var(--dz-line,#DCD1AE);
+  border-radius:var(--dz-r,14px); background:var(--dz-surface,#FBF7E9);
+}
+@media (prefers-reduced-motion:reduce){
+  .store-page[data-design='olivium'][data-account='account-bento'] .ec-account .acc-tab{ transition:none; }
+}
+
+.store-page[data-design='olivium'][data-tracking='tracking-ticket'] .ec-track{
+  max-width:720px; gap:14px;
+}
+.store-page[data-design='olivium'][data-tracking='tracking-ticket'] .ec-track-code{
+  display:grid; justify-items:center; gap:8px; text-align:center;
+  font:500 10.5px/1.7 var(--dz-mono,monospace); letter-spacing:.2em;
+  text-transform:uppercase; color:var(--dz-muted,#55602F);
+}
+.store-page[data-design='olivium'][data-tracking='tracking-ticket'] .ec-track-code strong{
+  padding:5px 14px; border:1.5px dashed var(--dz-line,#DCD1AE);
+  font:700 15px/1 var(--dz-mono,monospace); letter-spacing:.26em;
+  color:var(--dz-ink,#202A12); font-variant-numeric:tabular-nums;
+}
+.store-page[data-design='olivium'][data-tracking='tracking-ticket'] .ec-track-code::after{
+  content:""; display:block; width:190px; height:32px; margin-top:2px;
+  background:repeating-linear-gradient(90deg,var(--dz-ink,#202A12) 0 2px,transparent 2px 4px,var(--dz-ink,#202A12) 4px 7px,transparent 7px 10px);
+  opacity:.8;
+}
+.store-page[data-design='olivium'][data-tracking='tracking-ticket'] .ec-track-card{
+  border:1.5px dashed var(--dz-line,#DCD1AE); border-radius:var(--dz-r-2,10px);
+  background:var(--dz-surface,#FBF7E9);
+}
+.store-page[data-design='olivium'][data-tracking='tracking-ticket'] .ec-track-card:has(.ec-stepper){
+  border:1.5px solid var(--dz-ink,#202A12); border-radius:10px;
+  background:var(--dz-bg,#F3EFE0);
+  box-shadow:0 18px 40px -26px rgba(32,42,18,.45);
+}
+.store-page[data-design='olivium'][data-tracking='tracking-ticket'] .ec-track-status-row{
+  padding-bottom:14px; border-bottom:2px dashed var(--dz-line,#DCD1AE);
+}
+.store-page[data-design='olivium'][data-tracking='tracking-ticket'] .ec-stepper{ gap:4px; }
+.store-page[data-design='olivium'][data-tracking='tracking-ticket'] .ec-step::after{ top:13px; left:calc(50% + 15px); right:calc(-50% + 15px); }
+.store-page[data-design='olivium'][data-tracking='tracking-ticket'] .ec-step-dot{
+  width:26px; height:26px; font-size:10.5px;
+  font-family:var(--dz-mono,monospace); border-radius:4px;
+}
+.store-page[data-design='olivium'][data-tracking='tracking-ticket'] .ec-step-label{
+  font:600 9px/1.3 var(--dz-mono,monospace); letter-spacing:.1em; text-transform:uppercase;
+}
+.store-page[data-design='olivium'][data-tracking='tracking-ticket'] .ec-step.is-done .ec-step-dot{ border-radius:4px; }
+.store-page[data-design='olivium'][data-tracking='tracking-ticket'] .ec-track-grand dd{
+  font-family:var(--dz-mono,monospace); font-variant-numeric:tabular-nums;
+}
+.store-page[data-design='olivium'][data-tracking='tracking-ticket'] .ec-receipt{
+  border:1.5px dashed var(--dz-line,#DCD1AE); border-radius:var(--dz-r-2,10px);
+  background:var(--dz-bg,#F3EFE0); font-family:var(--dz-mono,monospace);
+}
+@media (max-width:560px){
+  .store-page[data-design='olivium'][data-tracking='tracking-ticket'] .ec-track-code::after{ width:140px; }
+}

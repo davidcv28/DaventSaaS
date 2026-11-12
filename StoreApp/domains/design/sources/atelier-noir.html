@@ -193,6 +193,41 @@ html[data-ds-surface="services"] .nav a[data-ds-route="services"]::after{transfo
 .scroll-line{position:absolute;left:0;right:0;bottom:-1px;height:2px;background:transparent;pointer-events:none}
 .scroll-line i{display:block;width:100%;height:100%;background:var(--accent);transform:scaleX(0);transform-origin:left;will-change:transform}
 
+/* ---------- Índice lateral (index-rail) ----------
+   Riel fijo a la izquierda con el índice numerado de secciones: en pantallas
+   anchas reemplaza al .nav horizontal; por debajo de 1280px vuelve la barra
+   clásica y el menú móvil sigue en .m-sheet. */
+.idx-rail{display:none}
+@media (min-width:1280px){
+  .idx-rail{
+    display:flex;flex-direction:column;gap:2px;
+    position:fixed;left:0;top:50%;transform:translateY(-50%);z-index:80;
+    padding:16px 8px;background:var(--band);border-right:1px solid var(--band-line);
+    color:var(--band-ink);
+  }
+  .idx-rail a{
+    display:flex;flex-direction:column;align-items:center;gap:6px;
+    min-width:72px;min-height:44px;padding:10px 8px;text-decoration:none;
+    color:color-mix(in srgb,var(--band-ink) 60%,transparent);
+    transition:color .25s var(--ease-soft),background .25s var(--ease-soft);
+  }
+  .idx-rail a i{font:400 21px/1 var(--display);font-style:normal;letter-spacing:.02em}
+  .idx-rail a span{font:500 8.5px/1 var(--mono);letter-spacing:.24em;text-transform:uppercase}
+  .idx-rail a:hover{color:var(--accent-on-ink);background:color-mix(in srgb,var(--band-ink) 6%,transparent)}
+  .idx-rail a:focus-visible{outline:2px solid var(--accent-on-ink);outline-offset:-2px}
+  html[data-ds-surface="landing"] .idx-rail a[data-ds-route="home"],
+  html[data-ds-surface="catalog"] .idx-rail a[data-ds-route="catalog"],
+  html[data-ds-surface="product"] .idx-rail a[data-ds-route="catalog"],
+  html[data-ds-surface="services"] .idx-rail a[data-ds-route="services"]{color:var(--accent-on-ink)}
+  /* El índice se hace cargo de la navegación: el menú horizontal se retira
+     y el contenido cede el carril del riel. */
+  .nav{display:none}
+  main.site{padding-left:104px}
+}
+@media (prefers-reduced-motion:reduce){
+  .idx-rail a{transition:none}
+}
+
 /* ---------- Menú móvil ---------- */
 .m-scrim{position:fixed;top:0;right:0;bottom:auto;left:0;height:var(--fr-h,100vh);z-index:94;background:rgba(8,6,4,.62);opacity:0;pointer-events:none;transition:opacity .25s}
 .m-sheet{
@@ -1196,6 +1231,15 @@ body.m-open .m-sheet{transform:none}
   </div>
   <span class="scroll-line" aria-hidden="true"><i data-progress></i></span>
 </header>
+
+<!-- Índice lateral (index-rail): solo ≥1280px; debajo manda .nav/.m-sheet. -->
+<nav class="idx-rail" aria-label="Índice de secciones">
+  <a href="#inicio" data-ds-route="home"><i>01</i><span>Inicio</span></a>
+  <a href="#catalogo" data-ds-route="catalog" data-flag="catalog"><i>02</i><span>Catálogo</span></a>
+  <a href="#servicios" data-ds-route="services" data-flag="services"><i>03</i><span>Servicios</span></a>
+  <a href="#atelier" data-ds-anchor data-ds-route="home" data-flag="about"><i>04</i><span>Atelier</span></a>
+  <a href="#contacto" data-ds-anchor data-ds-route="home" data-flag="contact"><i>05</i><span>Contacto</span></a>
+</nav>
 
 <div class="m-scrim" data-m-close aria-hidden="true"></div>
 <aside class="m-sheet" id="an-menu" role="dialog" aria-modal="true" aria-label="Menú" aria-hidden="true">

@@ -10,8 +10,7 @@
    ========================================================================== */
 
 /* ---------------------------------------------------------------- tokens -- */
-[data-design='expediente'] .ec-auth,
-[data-design='expediente'] .ec-account {
+[data-design='expediente'] :is(.ec-auth, .ec-account, .ec-track, .ec-cartpg, .ec-checkout, .ec-receiptpg, .ec-legal, .sp-top, .sp-drawer, .sp-tabbar, .sp-shop-nav) {
   --dz-bg: #E9E1CB;
   --dz-surface: #F2ECDA;
   --dz-surface-2: #F8F3E5;
@@ -52,8 +51,7 @@
   color-scheme: light;
 }
 
-[data-design='expediente'][data-theme='dark'] .ec-auth,
-[data-design='expediente'][data-theme='dark'] .ec-account {
+[data-design='expediente'][data-theme='dark'] :is(.ec-auth, .ec-account, .ec-track, .ec-cartpg, .ec-checkout, .ec-receiptpg, .ec-legal, .sp-top, .sp-drawer, .sp-tabbar, .sp-shop-nav) {
   --dz-bg: #12100C;
   --dz-surface: #1C1813;
   --dz-surface-2: #241F17;
@@ -898,3 +896,202 @@
   [data-design='expediente'] .ec-auth .ecaf-submit,
   [data-design='expediente'] .ec-auth .ec-auth-spin { transition: none; animation: none; }
 }
+
+/* ==========================================================================
+   ARQUETIPOS — nav icon-rail-top · cuenta account-card · tracking
+   tracking-bento
+   ========================================================================== */
+/* ---------- NAV: icon-rail-top ------------------------------------------
+   Riel vertical de puro ícono a la izquierda en escritorio (carpetas del
+   expediente): marca + burger + acciones. La navegación de secciones vive
+   en el drawer; en móvil manda la tabbar inferior. */
+@media(min-width:1101px){
+  .store-page[data-design='expediente'][data-nav='icon-rail-top']:not(.is-home){ padding-left:72px; }
+  .store-page[data-design='expediente'][data-nav='icon-rail-top'] .sp-top{
+    position:fixed; top:0; bottom:0; left:0; width:72px; height:auto;
+    display:flex; flex-direction:column;
+    background:var(--dz-ink,#1D1A12); color:var(--dz-band-ink,#E8E0CB);
+    border-bottom:0; border-right:3px double var(--dz-line,#C9BFA1);
+    box-shadow:none;
+  }
+  .store-page[data-design='expediente'][data-nav='icon-rail-top'] .sp-top.scrolled{ box-shadow:none; }
+  .store-page[data-design='expediente'][data-nav='icon-rail-top'] .sp-top-inner{
+    flex-direction:column; align-items:center; justify-content:flex-start;
+    gap:10px; height:100%; min-height:0; padding:16px 6px; flex:none;
+  }
+  .store-page[data-design='expediente'][data-nav='icon-rail-top'] .sp-brand{
+    flex-direction:column; gap:6px; min-height:44px; align-items:center;
+  }
+  .store-page[data-design='expediente'][data-nav='icon-rail-top'] .sp-brand-copy{ display:none; }
+  .store-page[data-design='expediente'][data-nav='icon-rail-top'] .sp-mono.sm{
+    width:40px; height:40px; font-size:15px; transform:skewX(-8deg);
+    background:var(--dz-accent,#B3352C); color:var(--dz-accent-ink,#FFF3E2);
+  }
+  .store-page[data-design='expediente'][data-nav='icon-rail-top'] .sp-top-links{ display:none; }
+  .store-page[data-design='expediente'][data-nav='icon-rail-top'] .sp-search.sp-search-top{ display:none; }
+  .store-page[data-design='expediente'][data-nav='icon-rail-top'] .sp-top-cta{ display:none; }
+  /* Burger siempre visible: abre el drawer con las secciones. */
+  .store-page[data-design='expediente'][data-nav='icon-rail-top'] .sp-burger{
+    display:grid; width:44px; height:44px; order:2;
+    background:transparent; border:1.5px solid var(--dz-line,#C9BFA1);
+    color:var(--dz-band-ink,#E8E0CB); border-radius:0;
+  }
+  .store-page[data-design='expediente'][data-nav='icon-rail-top'] .sp-burger:hover{
+    border-color:var(--dz-accent,#B3352C); color:var(--dz-accent,#B3352C);
+  }
+  .store-page[data-design='expediente'][data-nav='icon-rail-top'] .sp-top-end{
+    flex-direction:column; align-items:center; gap:8px; flex:none; order:3;
+  }
+  .store-page[data-design='expediente'][data-nav='icon-rail-top'] .sp-top-end .sp-icon-btn{
+    width:44px; height:44px; border-radius:0;
+    background:transparent; border:1.5px solid var(--dz-line,#C9BFA1);
+    color:var(--dz-band-ink,#E8E0CB); box-shadow:none;
+  }
+  .store-page[data-design='expediente'][data-nav='icon-rail-top'] .sp-top-end .sp-icon-btn:hover{
+    border-color:var(--dz-accent,#B3352C); color:var(--dz-accent,#B3352C);
+    background:color-mix(in srgb,var(--dz-accent,#B3352C) 12%,transparent);
+  }
+  .store-page[data-design='expediente'][data-nav='icon-rail-top'] .sp-shop-nav{
+    margin-top:auto; background:transparent;
+    border-top:1px solid var(--dz-line,#C9BFA1);
+  }
+  .store-page[data-design='expediente'][data-nav='icon-rail-top'] .sp-shop-nav-inner{ display:block; min-height:0; padding:10px 4px; }
+  .store-page[data-design='expediente'][data-nav='icon-rail-top'] .sp-shop-nav-links{
+    flex-direction:column; align-items:stretch; overflow:visible; gap:4px;
+  }
+  .store-page[data-design='expediente'][data-nav='icon-rail-top'] .sp-shop-nav-links a{
+    display:flex; align-items:center; justify-content:center; gap:8px;
+    padding:9px 2px; border:1px solid var(--dz-line,#C9BFA1); border-radius:0;
+    font:600 9px/1 var(--dz-mono,monospace); letter-spacing:.12em; text-transform:uppercase;
+    color:color-mix(in srgb,var(--dz-band-ink,#E8E0CB) 70%,transparent);
+  }
+  .store-page[data-design='expediente'][data-nav='icon-rail-top'] .sp-shop-nav-links a.is-current{
+    background:var(--dz-accent,#B3352C); border-color:var(--dz-accent,#B3352C);
+    color:var(--dz-accent-ink,#FFF3E2);
+  }
+  .store-page[data-design='expediente'][data-nav='icon-rail-top'] .sp-shop-nav-note{ display:none; }
+}
+/* Móvil: drawer como ficha con separadores de expediente. */
+.store-page[data-design='expediente'][data-nav='icon-rail-top'] .sp-drawer{
+  border-right:3px double var(--dz-accent,#B3352C); border-radius:0;
+}
+.store-page[data-design='expediente'][data-nav='icon-rail-top'] .sp-drawer .sp-nav-item{
+  border-radius:0; border-bottom:1px solid var(--dz-line,#C9BFA1);
+}
+.store-page[data-design='expediente'][data-nav='icon-rail-top'] .sp-tabbar{
+  background:var(--dz-ink,#1D1A12); border-top:3px double var(--dz-line,#C9BFA1);
+}
+.store-page[data-design='expediente'][data-nav='icon-rail-top'] .sp-tabbar .sp-tab{ color:color-mix(in srgb,var(--dz-band-ink,#E8E0CB) 60%,transparent); }
+.store-page[data-design='expediente'][data-nav='icon-rail-top'] .sp-tabbar .sp-tab.active{ color:var(--dz-accent,#B3352C); }
+
+/* ---------- CUENTA: account-card — dossier como tarjeta centrada ------ */
+.store-page[data-design='expediente'][data-account='account-card'] .ec-account .acc-shell{
+  display:block; width:min(880px,100%); margin-inline:auto;
+}
+.store-page[data-design='expediente'][data-account='account-card'] .ec-account .acc-side{
+  display:none;
+}
+.store-page[data-design='expediente'][data-account='account-card'] .ec-account .acc-main{
+  border:1.5px solid var(--dz-ink,#1D1A12);
+  border-radius:var(--dz-r,3px);
+  background:var(--dz-surface,#F2ECDA);
+  box-shadow:6px 6px 0 color-mix(in srgb,var(--dz-ink,#1D1A12) 14%,transparent);
+  overflow:hidden;
+}
+.store-page[data-design='expediente'][data-account='account-card'] .ec-account .acc-mhead{
+  display:flex; align-items:center; gap:12px;
+  padding:14px 18px; border-bottom:3px double var(--dz-line,#C9BFA1);
+  background:var(--dz-surface-2,#F8F3E5);
+}
+.store-page[data-design='expediente'][data-account='account-card'] .ec-account .acc-mhead-meta strong{
+  font:600 15px/1.2 var(--dz-display,"Bricolage Grotesque",system-ui,sans-serif);
+  letter-spacing:.04em; text-transform:uppercase;
+}
+.store-page[data-design='expediente'][data-account='account-card'] .ec-account .acc-tabs{
+  display:flex; gap:0; overflow-x:auto; padding:0;
+  border-bottom:1.5px solid var(--dz-ink,#1D1A12);
+  background:var(--dz-surface-2,#F8F3E5); scrollbar-width:none;
+}
+.store-page[data-design='expediente'][data-account='account-card'] .ec-account .acc-tabs::-webkit-scrollbar{ display:none; }
+.store-page[data-design='expediente'][data-account='account-card'] .ec-account .acc-tabs-ink{ display:none; }
+.store-page[data-design='expediente'][data-account='account-card'] .ec-account .acc-tab{
+  flex:1 0 auto; justify-content:center; min-height:48px;
+  padding:10px 12px; border:0; border-right:1px solid var(--dz-line,#C9BFA1);
+  border-radius:0; background:transparent;
+  font:500 10.5px/1 var(--dz-mono,monospace); letter-spacing:.12em; text-transform:uppercase;
+  color:var(--dz-muted,#6B6250);
+}
+.store-page[data-design='expediente'][data-account='account-card'] .ec-account .acc-tab:last-child{ border-right:0; }
+.store-page[data-design='expediente'][data-account='account-card'] .ec-account .acc-tab.is-on{
+  background:var(--dz-ink,#1D1A12); color:var(--dz-band-ink,#E8E0CB);
+  box-shadow:inset 0 -3px 0 var(--dz-accent,#B3352C);
+}
+.store-page[data-design='expediente'][data-account='account-card'] .ec-account .acc-tab-ico{ display:none; }
+.store-page[data-design='expediente'][data-account='account-card'] .ec-account .acc-idx{
+  font-size:8.5px; color:var(--dz-accent-text,#A62F27);
+}
+.store-page[data-design='expediente'][data-account='account-card'] .ec-account .acc-tab.is-on .acc-idx{ color:var(--dz-accent,#B3352C); }
+.store-page[data-design='expediente'][data-account='account-card'] .ec-account .acc-body{ padding:18px; }
+.store-page[data-design='expediente'][data-account='account-card'] .ec-account .acc-panel{
+  border:1.5px solid var(--dz-ink,#1D1A12); border-radius:0;
+  background:var(--dz-surface-2,#F8F3E5);
+  box-shadow:4px 4px 0 color-mix(in srgb,var(--dz-ink,#1D1A12) 10%,transparent);
+}
+.store-page[data-design='expediente'][data-account='account-card'] .ec-account .acc-panel-title{
+  font-family:var(--dz-mono,monospace); font-size:12px; letter-spacing:.12em; text-transform:uppercase;
+}
+.store-page[data-design='expediente'][data-account='account-card'] .ec-account .acc-icon-btn{ border-radius:0; }
+
+/* ---------- SEGUIMIENTO: tracking-bento — dossier en mosaico ----------- */
+.store-page[data-design='expediente'][data-tracking='tracking-bento'] .ec-track{ gap:14px; }
+@media(min-width:900px){
+  .store-page[data-design='expediente'][data-tracking='tracking-bento'] .ec-track{
+    grid-template-columns:repeat(12,minmax(0,1fr)); align-items:start;
+  }
+  .store-page[data-design='expediente'][data-tracking='tracking-bento'] .ec-track-head{ grid-column:1 / -1; }
+  .store-page[data-design='expediente'][data-tracking='tracking-bento'] .ec-track-help{ grid-column:1 / -1; }
+  /* Estado protagonista: ficha angular que ocupa dos tercios. */
+  .store-page[data-design='expediente'][data-tracking='tracking-bento'] .ec-track-card:has(.ec-stepper){
+    grid-column:span 8; border:1.5px solid var(--dz-ink,#1D1A12); border-radius:0;
+    background:var(--dz-surface-2,#F8F3E5);
+    box-shadow:6px 6px 0 color-mix(in srgb,var(--dz-ink,#1D1A12) 12%,transparent);
+  }
+  .store-page[data-design='expediente'][data-tracking='tracking-bento'] .ec-track-card:has(.ec-track-items){ grid-column:span 4; }
+  .store-page[data-design='expediente'][data-tracking='tracking-bento'] .ec-track-card:has(.ec-timeline){ grid-column:1 / -1; }
+  .store-page[data-design='expediente'][data-tracking='tracking-bento'] .ec-track-card:has(.ec-track-receipt-row){ grid-column:span 5; }
+  .store-page[data-design='expediente'][data-tracking='tracking-bento'] .ec-track-card:has(.ec-proof){ grid-column:span 7; }
+  .store-page[data-design='expediente'][data-tracking='tracking-bento'] .ec-track-card:not(:has(.ec-stepper)):not(:has(.ec-track-items)):not(:has(.ec-timeline)):not(:has(.ec-track-receipt-row)):not(:has(.ec-proof)){ grid-column:1 / -1; }
+}
+.store-page[data-design='expediente'][data-tracking='tracking-bento'] .ec-track-card{
+  border:1.5px solid var(--dz-line,#C9BFA1); border-radius:0;
+  background:var(--dz-surface,#F2ECDA);
+}
+.store-page[data-design='expediente'][data-tracking='tracking-bento'] .ec-track-card:has(.ec-timeline){
+  border-left:3px double var(--dz-accent,#B3352C);
+}
+.store-page[data-design='expediente'][data-tracking='tracking-bento'] .ec-track-status{
+  border-radius:0; font-family:var(--dz-mono,monospace); font-size:10px;
+  letter-spacing:.14em; text-transform:uppercase;
+  border:1.5px solid currentColor;
+}
+.store-page[data-design='expediente'][data-tracking='tracking-bento'] .ec-step-dot{ border-radius:0; }
+.store-page[data-design='expediente'][data-tracking='tracking-bento'] .ec-step.is-done .ec-step-dot{ border-radius:0; }
+.store-page[data-design='expediente'][data-tracking='tracking-bento'] .ec-step-label{
+  font-family:var(--dz-mono,monospace); font-size:9px; letter-spacing:.1em; text-transform:uppercase;
+}
+.store-page[data-design='expediente'][data-tracking='tracking-bento'] .ec-tl-dot{
+  border-radius:0; background:var(--dz-accent,#B3352C);
+  transform:rotate(45deg) scale(.8);
+}
+.store-page[data-design='expediente'][data-tracking='tracking-bento'] .ec-timeline strong{
+  font-family:var(--dz-mono,monospace); font-size:12px; letter-spacing:.05em; text-transform:uppercase;
+}
+.store-page[data-design='expediente'][data-tracking='tracking-bento'] .ec-track-h2{
+  font-family:var(--dz-mono,monospace); font-size:11.5px; letter-spacing:.14em; text-transform:uppercase;
+  color:var(--dz-accent-text,#A62F27);
+}
+.store-page[data-design='expediente'][data-tracking='tracking-bento'] .ec-track-code strong{
+  font-family:var(--dz-mono,monospace); letter-spacing:.2em;
+  border:1.5px solid var(--dz-ink,#1D1A12); border-radius:0;
+}
+.store-page[data-design='expediente'][data-tracking='tracking-bento'] .ec-track-chip{ border-radius:0; }

@@ -552,3 +552,167 @@
   [data-design='guardia'] .ec-auth .ecaf .ecaf-submit:hover:not(:disabled),
   [data-design='guardia'] :is(.ec-account, .ec-cartpg, .ec-checkout, .ec-receiptpg, .ec-legal) .ec-btn-primary:hover{ transition:none; }
 }
+
+/* ==========================================================================
+   ARQUETIPOS — nav contextual-sticky · cuenta account-topbar · tracking
+   tracking-bento
+   ========================================================================== */
+/* ---------- NAV: contextual-sticky --------------------------------------
+   Barra fija que declara el contexto de la página (chip mono) y se compacta
+   visualmente al fijarse (.scrolled). En móvil el chip se oculta <640px. */
+.store-page[data-design='guardia'][data-nav='contextual-sticky'] .sp-top{
+  background:var(--dz-panel,#151D28);
+  border-bottom:1px solid var(--dz-line,rgba(226,232,240,.14));
+  box-shadow:none;
+}
+.store-page[data-design='guardia'][data-nav='contextual-sticky'] .sp-top.scrolled{
+  box-shadow:0 18px 40px -24px rgba(0,0,0,.8);
+}
+.store-page[data-design='guardia'][data-nav='contextual-sticky'] .sp-top-inner::before{
+  content:"TIENDA"; flex:none; align-self:center;
+  padding:6px 9px; border:1px solid var(--dz-line-2,rgba(226,232,240,.26));
+  font:700 9.5px/1 var(--dz-mono,monospace); letter-spacing:.22em; text-transform:uppercase;
+  color:var(--dz-accent-text,#FF8A5C); white-space:nowrap;
+}
+.store-page[data-design='guardia'][data-nav='contextual-sticky']:has(.ec-account) .sp-top-inner::before{ content:"CUENTA"; }
+.store-page[data-design='guardia'][data-nav='contextual-sticky']:has(.ec-track) .sp-top-inner::before{ content:"PEDIDO"; }
+.store-page[data-design='guardia'][data-nav='contextual-sticky']:has(.ec-auth) .sp-top-inner::before{ content:"ACCESO"; }
+.store-page[data-design='guardia'][data-nav='contextual-sticky']:has(.ec-cartpg) .sp-top-inner::before,
+.store-page[data-design='guardia'][data-nav='contextual-sticky']:has(.ec-checkout) .sp-top-inner::before{ content:"COMPRA"; }
+.store-page[data-design='guardia'][data-nav='contextual-sticky'] .sp-top .sp-name{ color:var(--dz-ink,#E8EDF4); }
+.store-page[data-design='guardia'][data-nav='contextual-sticky'] .sp-top .sp-mono.sm{
+  background:var(--dz-accent,#E8481F); color:var(--dz-accent-ink,#0D1117);
+}
+.store-page[data-design='guardia'][data-nav='contextual-sticky'] .sp-top .sp-icon-btn{
+  background:transparent; border-color:var(--dz-line-2,rgba(226,232,240,.26));
+  color:var(--dz-ink-2,#BAC7D6); box-shadow:none; border-radius:0;
+}
+.store-page[data-design='guardia'][data-nav='contextual-sticky'] .sp-top .sp-icon-btn:hover{
+  border-color:var(--dz-accent,#E8481F); color:var(--dz-accent-text,#FF8A5C);
+  background:color-mix(in srgb,var(--dz-accent,#E8481F) 10%,transparent);
+}
+.store-page[data-design='guardia'][data-nav='contextual-sticky'] .sp-top .sp-burger{
+  background:transparent; border-color:var(--dz-line-2,rgba(226,232,240,.26));
+  color:var(--dz-ink,#E8EDF4); border-radius:0;
+}
+.store-page[data-design='guardia'][data-nav='contextual-sticky'] .sp-top-links a{
+  font-family:var(--dz-mono,monospace); font-size:11px; letter-spacing:.16em;
+  text-transform:uppercase; color:var(--dz-muted,#93A0B4); border-radius:0;
+}
+.store-page[data-design='guardia'][data-nav='contextual-sticky'] .sp-top-links a:hover,
+.store-page[data-design='guardia'][data-nav='contextual-sticky'] .sp-top-links a.router-link-exact-active{
+  color:var(--dz-accent-text,#FF8A5C); background:color-mix(in srgb,var(--dz-accent,#E8481F) 12%,transparent);
+}
+.store-page[data-design='guardia'][data-nav='contextual-sticky'] .sp-top .sp-search{
+  background:var(--dz-bg-2,#111823); border-color:var(--dz-line,rgba(226,232,240,.14));
+  border-radius:0;
+}
+.store-page[data-design='guardia'][data-nav='contextual-sticky'] .sp-top .sp-search input{ color:var(--dz-ink,#E8EDF4); }
+.store-page[data-design='guardia'][data-nav='contextual-sticky'] .sp-top-cta{
+  border-radius:0; background:var(--dz-accent,#E8481F); color:var(--dz-accent-ink,#0D1117);
+}
+.store-page[data-design='guardia'][data-nav='contextual-sticky'] .sp-shop-nav{
+  background:var(--dz-bg-2,#111823); border-top-color:var(--dz-line,rgba(226,232,240,.14));
+}
+.store-page[data-design='guardia'][data-nav='contextual-sticky'] .sp-shop-nav-links a{
+  font-family:var(--dz-mono,monospace); font-size:10.5px; letter-spacing:.14em; text-transform:uppercase;
+}
+.store-page[data-design='guardia'][data-nav='contextual-sticky'] .sp-drawer{
+  border-right:3px solid var(--dz-accent,#E8481F); border-radius:0;
+}
+.store-page[data-design='guardia'][data-nav='contextual-sticky'] .sp-drawer .sp-nav-item{ border-radius:0; }
+@media(max-width:640px){
+  .store-page[data-design='guardia'][data-nav='contextual-sticky'] .sp-top-inner::before{ display:none; }
+}
+
+/* ---------- CUENTA: account-topbar — identidad arriba + tabs ---------- */
+.store-page[data-design='guardia'][data-account='account-topbar'] .ec-account .acc-mhead{
+  display:flex; align-items:center; gap:14px;
+  padding:14px 18px; border:1px solid var(--dz-line,rgba(226,232,240,.14));
+  border-left:3px solid var(--dz-accent,#E8481F); border-radius:0;
+  background:var(--dz-panel,#151D28);
+}
+.store-page[data-design='guardia'][data-account='account-topbar'] .ec-account .acc-mhead-meta{ flex:1; }
+.store-page[data-design='guardia'][data-account='account-topbar'] .ec-account .acc-mhead-meta strong{
+  font-family:var(--dz-mono,monospace); font-size:15px; letter-spacing:.06em; text-transform:uppercase;
+}
+.store-page[data-design='guardia'][data-account='account-topbar'] .ec-account .acc-tabs{
+  display:flex; gap:6px;
+  border:1px solid var(--dz-line,rgba(226,232,240,.14)); border-top:0;
+  background:var(--dz-bg-2,#111823); padding:8px; border-radius:0;
+}
+.store-page[data-design='guardia'][data-account='account-topbar'] .ec-account .acc-tab{
+  border:1px solid var(--dz-line,rgba(226,232,240,.14)); border-radius:0;
+  font-family:var(--dz-mono,monospace); font-size:10.5px; letter-spacing:.14em; text-transform:uppercase;
+  color:var(--dz-muted,#93A0B4);
+}
+.store-page[data-design='guardia'][data-account='account-topbar'] .ec-account .acc-tab.is-on{
+  background:var(--dz-accent,#E8481F); border-color:var(--dz-accent,#E8481F);
+  color:var(--dz-accent-ink,#0D1117);
+}
+.store-page[data-design='guardia'][data-account='account-topbar'] .ec-account .acc-tab-ico{ display:grid; }
+.store-page[data-design='guardia'][data-account='account-topbar'] .ec-account .acc-tabs-ink{ display:none; }
+.store-page[data-design='guardia'][data-account='account-topbar'] .ec-account .acc-icon-btn{
+  border-radius:0; border-color:var(--dz-line-2,rgba(226,232,240,.26));
+}
+/* account-topbar: la columna lateral se retira en todos los anchos — la
+   identidad vive en .acc-mhead y la navegación en .acc-tabs. */
+.store-page[data-design='guardia'][data-account='account-topbar'] .ec-account .acc-shell{
+  grid-template-columns:minmax(0,1fr);
+}
+.store-page[data-design='guardia'][data-account='account-topbar'] .ec-account .acc-side{ display:none; }
+.store-page[data-design='guardia'][data-account='account-topbar'] .ec-account .acc-panel{
+  border-radius:0; border-color:var(--dz-line,rgba(226,232,240,.14));
+  background:var(--dz-panel,#151D28);
+}
+.store-page[data-design='guardia'][data-account='account-topbar'] .ec-account .acc-panel-title{
+  font-family:var(--dz-mono,monospace); font-size:13px; letter-spacing:.12em; text-transform:uppercase;
+}
+
+/* ---------- SEGUIMIENTO: tracking-bento — grid asimétrico ------------- */
+.store-page[data-design='guardia'][data-tracking='tracking-bento'] .ec-track{ gap:14px; }
+@media(min-width:900px){
+  .store-page[data-design='guardia'][data-tracking='tracking-bento'] .ec-track{
+    grid-template-columns:repeat(12,minmax(0,1fr)); align-items:start;
+  }
+  .store-page[data-design='guardia'][data-tracking='tracking-bento'] .ec-track-head,
+  .store-page[data-design='guardia'][data-tracking='tracking-bento'] .ec-track-help{ grid-column:1 / -1; }
+  .store-page[data-design='guardia'][data-tracking='tracking-bento'] .ec-track-card:has(.ec-stepper){ grid-column:span 8; }
+  .store-page[data-design='guardia'][data-tracking='tracking-bento'] .ec-track-card:has(.ec-track-items){ grid-column:span 4; }
+  .store-page[data-design='guardia'][data-tracking='tracking-bento'] .ec-track-card:has(.ec-timeline){ grid-column:1 / -1; }
+  .store-page[data-design='guardia'][data-tracking='tracking-bento'] .ec-track-card:has(.ec-track-receipt-row){ grid-column:span 5; }
+  .store-page[data-design='guardia'][data-tracking='tracking-bento'] .ec-track-card:has(.ec-proof){ grid-column:span 7; }
+  .store-page[data-design='guardia'][data-tracking='tracking-bento'] .ec-track-card:not(:has(.ec-stepper)):not(:has(.ec-track-items)):not(:has(.ec-timeline)):not(:has(.ec-track-receipt-row)):not(:has(.ec-proof)){ grid-column:1 / -1; }
+}
+.store-page[data-design='guardia'][data-tracking='tracking-bento'] .ec-track-card{
+  border-radius:0; border-color:var(--dz-line,rgba(226,232,240,.14));
+  background:var(--dz-panel,#151D28);
+}
+.store-page[data-design='guardia'][data-tracking='tracking-bento'] .ec-track-card:has(.ec-stepper){
+  border-top:3px solid var(--dz-accent,#E8481F);
+}
+.store-page[data-design='guardia'][data-tracking='tracking-bento'] .ec-track-card:has(.ec-timeline){
+  border-left:3px solid var(--dz-accent,#E8481F);
+}
+.store-page[data-design='guardia'][data-tracking='tracking-bento'] .ec-track-status{
+  border-radius:0; font-family:var(--dz-mono,monospace); font-size:10.5px;
+  letter-spacing:.16em; text-transform:uppercase;
+}
+.store-page[data-design='guardia'][data-tracking='tracking-bento'] .ec-step-dot{ border-radius:0; }
+.store-page[data-design='guardia'][data-tracking='tracking-bento'] .ec-step.is-done .ec-step-dot{ border-radius:0; }
+.store-page[data-design='guardia'][data-tracking='tracking-bento'] .ec-step-label{
+  font-family:var(--dz-mono,monospace); font-size:9px; letter-spacing:.1em; text-transform:uppercase;
+}
+.store-page[data-design='guardia'][data-tracking='tracking-bento'] .ec-tl-dot{
+  border-radius:0; background:var(--dz-accent,#E8481F);
+}
+.store-page[data-design='guardia'][data-tracking='tracking-bento'] .ec-timeline strong{
+  font-family:var(--dz-mono,monospace); font-size:12px; letter-spacing:.06em; text-transform:uppercase;
+}
+.store-page[data-design='guardia'][data-tracking='tracking-bento'] .ec-track-chip{ border-radius:0; }
+.store-page[data-design='guardia'][data-tracking='tracking-bento'] .ec-track-h2{
+  font-family:var(--dz-mono,monospace); font-size:12px; letter-spacing:.14em; text-transform:uppercase;
+}
+@media(max-width:899px){
+  .store-page[data-design='guardia'][data-tracking='tracking-bento'] .ec-track{ display:grid; }
+}

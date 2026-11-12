@@ -176,6 +176,39 @@ html[data-ds-surface="services"] .top-nav a[data-ds-route="services"]{color:var(
 .stamp-mini:hover{background:var(--stamp);color:var(--on-stamp);transform:rotate(-2deg) scale(1.04)}
 .top .ds-theme-toggle{margin-inline-start:0;width:42px;height:42px;flex:none;border-radius:50%;border-color:color-mix(in srgb,var(--band-ink) 30%,transparent)}
 
+/* ---------- Riel de íconos (icon-rail-top) ----------
+   Solo íconos verticales a la izquierda, sin labels: en escritorio ancho
+   reemplaza a .top-nav; el tabbar inferior ya cubre el móvil. */
+.icon-rail{display:none}
+@media(min-width:1280px){
+  .icon-rail{
+    display:flex;flex-direction:column;align-items:center;gap:6px;
+    position:fixed;left:0;top:50%;transform:translateY(-50%);z-index:55;
+    padding:10px 6px;background:var(--band);border-right:3px double var(--band-line);
+    border-top:1px solid var(--band-line);border-bottom:1px solid var(--band-line);
+  }
+  .icon-rail a{
+    display:grid;place-items:center;width:44px;height:44px;
+    color:color-mix(in srgb,var(--band-ink) 62%,transparent);
+    transition:color .25s var(--ease),background .25s var(--ease);
+  }
+  .icon-rail a svg{width:19px;height:19px;stroke:currentColor;fill:none;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}
+  .icon-rail a:hover{color:var(--stamp-bright);background:color-mix(in srgb,var(--band-ink) 8%,transparent)}
+  .icon-rail a:focus-visible{outline:2px solid var(--stamp-bright);outline-offset:2px}
+  html[data-ds-surface="landing"] .icon-rail a[data-ds-route="home"],
+  html[data-ds-surface="catalog"] .icon-rail a[data-ds-route="catalog"],
+  html[data-ds-surface="product"] .icon-rail a[data-ds-route="catalog"],
+  html[data-ds-surface="services"] .icon-rail a[data-ds-route="services"]{color:var(--stamp-bright)}
+  /* El riel absorbe la navegación: la fila de texto se retira y el contenido
+     cede el carril izquierdo. */
+  .top-nav{display:none}
+  .stamp-mini{margin-left:auto}
+  main{padding-left:64px}
+}
+@media (prefers-reduced-motion:reduce){
+  .icon-rail a{transition:none}
+}
+
 /* Tab bar inferior (solo móvil): 5 destinos con icono y estado activo. */
 .tabbar{
   display:none;position:fixed;left:0;right:0;bottom:0;z-index:70;
@@ -1361,6 +1394,16 @@ html[data-ds-style="expediente-noche"] .top-cta{
     <a class="stamp-mini" href="{{store_whatsapp_url}}">+ Contacto</a>
   </div>
 </header>
+
+<!-- Riel de íconos (icon-rail-top): solo ≥1280px, sin labels; el tabbar
+     inferior cubre el móvil. Estado activo por html[data-ds-surface]. -->
+<nav class="icon-rail" aria-label="Secciones">
+  <a href="#inicio" data-ds-route="home" aria-label="Inicio"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 11l9-8 9 8v9a1 1 0 0 1-1 1h-5v-6h-6v6H4a1 1 0 0 1-1-1z"/></svg></a>
+  <a href="#catalogo" data-ds-route="catalog" data-flag="catalog" aria-label="Catálogo"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="3" width="8" height="8"/><rect x="13" y="3" width="8" height="8"/><rect x="3" y="13" width="8" height="8"/><rect x="13" y="13" width="8" height="8"/></svg></a>
+  <a href="#servicios" data-ds-route="services" data-flag="services" aria-label="Servicios"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/><path d="M9 13h6M9 17h4"/></svg></a>
+  <a href="#contacto" data-ds-route="home" data-ds-anchor="contacto" data-flag="contact" aria-label="Contacto"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="5" width="18" height="14" rx="1"/><path d="M3 7l9 6 9-6"/></svg></a>
+  <a href="{{store_whatsapp_url}}" aria-label="WhatsApp"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M21 11.5a8.4 8.4 0 0 1-8.5 8.4 8.6 8.6 0 0 1-3.8-.9L3 21l2-5.3a8.3 8.3 0 0 1-1-4A8.4 8.4 0 0 1 12.5 3.2 8.4 8.4 0 0 1 21 11.5Z"/></svg></a>
+</nav>
 
 <nav class="tabbar" data-ds-pin="bottom" aria-label="Navegación rápida">
   <a href="#inicio" data-ds-route="home" data-tab="home" aria-current="page">

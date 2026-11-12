@@ -229,21 +229,34 @@ html[data-ds-theme="dark"] .ribbon-track>*+*::before,html[data-ds-style="olivium
 /* ---------- Header ---------- */
 .head{
   position:fixed;top:0;left:0;right:0;z-index:60;
-  transition:background .3s var(--ease-soft),box-shadow .3s var(--ease-soft);
+  transition:background .3s var(--ease-soft),box-shadow .3s var(--ease-soft),backdrop-filter .3s var(--ease-soft),-webkit-backdrop-filter .3s var(--ease-soft);
 }
 /* OJO: el mínimo NO puede leer --head-h (se mide desde este alto y cada
    medición sumaría el padding → cabecera creciendo sin fin). */
 .head-inner{display:flex;align-items:center;gap:28px;min-height:var(--head-base);padding-block:14px}
-.head.is-scrolled{background:color-mix(in srgb,var(--paper) 96%,transparent);box-shadow:0 1px 0 var(--line)}
-.head:not(.is-scrolled){color:var(--media-ink)}
-/* En portada el header flota sobre la foto: un velo superior mantiene la
-   marca y el menú legibles sin volver opaco el chrome. */
-html[data-ds-surface="landing"] .head:not(.is-scrolled){
-  background:linear-gradient(180deg,rgba(20,26,10,.6) 0%,rgba(20,26,10,.22) 72%,transparent 100%);
+/* glassmorphism-overlay: transparente sobre el hero → vidrio esmerilado
+   sólido al hacer scroll (.is-scrolled lo alterna el script del doc). */
+.head.is-scrolled{
+  background:color-mix(in srgb,var(--paper) 74%,transparent);
+  -webkit-backdrop-filter:blur(18px) saturate(1.2);
+  backdrop-filter:blur(18px) saturate(1.2);
+  box-shadow:0 1px 0 var(--line),0 14px 44px -22px rgba(32,42,10,.4);
 }
-/* Fuera de la portada no hay foto detrás: el chrome vuelve a papel para que
-   la marca y el menú sigan legibles sobre la crema. */
-html:not([data-ds-surface="landing"]) .head:not(.is-scrolled){color:var(--ink);background:color-mix(in srgb,var(--paper) 96%,transparent);box-shadow:0 1px 0 var(--line)}
+.head:not(.is-scrolled){color:var(--media-ink)}
+/* En portada el header flota sobre la foto: un velo superior apenas tinta
+   mantiene la marca y el menú legibles sin volver opaco el chrome. */
+html[data-ds-surface="landing"] .head:not(.is-scrolled){
+  background:linear-gradient(180deg,rgba(20,26,10,.5) 0%,rgba(20,26,10,.16) 74%,transparent 100%);
+}
+/* Fuera de la portada no hay foto detrás: el mismo vidrio del estado
+   scrolled, pero desde el primer pixel (sin salto de cromo). */
+html:not([data-ds-surface="landing"]) .head:not(.is-scrolled){
+  color:var(--ink);
+  background:color-mix(in srgb,var(--paper) 78%,transparent);
+  -webkit-backdrop-filter:blur(16px) saturate(1.15);
+  backdrop-filter:blur(16px) saturate(1.15);
+  box-shadow:0 1px 0 var(--line);
+}
 .head-progress{position:absolute;left:0;right:0;bottom:0;height:2px;pointer-events:none;background:transparent}
 .head-progress i{display:block;height:100%;width:0;background:var(--accent);transition:width .12s linear}
 .brand{display:inline-flex;align-items:center;gap:13px;min-width:0}

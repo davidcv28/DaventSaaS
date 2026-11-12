@@ -172,6 +172,21 @@ html[data-ds-surface="landing"] header.top:not(.solid):not(.menu-open){
 }
 .nav-cta::after{display:none}
 .nav-cta:hover{background:var(--accent-text);border-color:var(--accent-text);color:var(--on-accent)!important}
+/* contextual-sticky: chip de contexto dentro de la barra — cambia de texto
+   por superficie (portada/catálogo/ficha/servicios) y la barra se compacta
+   al fijarse (.solid lo activa el scroll del documento). */
+.ctx{
+  display:inline-flex;align-items:center;flex:none;min-height:26px;
+  padding:4px 10px;border:1px solid var(--line-2);
+  font-family:var(--mono);font-size:9.5px;letter-spacing:.22em;text-transform:uppercase;
+  color:var(--hdr-mut);white-space:nowrap;
+}
+.ctx::before{content:"VIGÍA"}
+html[data-ds-surface="landing"] .ctx::before{content:"VIGÍA · PORTADA"}
+html[data-ds-surface="catalog"] .ctx::before{content:"VIGÍA · CATÁLOGO"}
+html[data-ds-surface="product"] .ctx::before{content:"VIGÍA · FICHA"}
+html[data-ds-surface="services"] .ctx::before{content:"VIGÍA · SERVICIOS"}
+header.top.solid .ctx{border-color:var(--accent);color:var(--accent-text)}
 .burger{
   display:none;background:none;border:1px solid var(--line-2);color:var(--hdr-ink);
   cursor:pointer;width:42px;height:42px;flex:none;line-height:1;
@@ -221,6 +236,10 @@ html[data-ds-surface="landing"] header.top:not(.solid):not(.menu-open){
   .m-menu a:active{color:var(--accent-text);padding-left:6px}
   .m-menu .m-foot{margin-top:auto;padding-top:28px;color:var(--mut);display:flex;flex-direction:column;gap:10px}
   .m-menu .m-foot a{padding:0;border:0;font-size:12px;font-weight:400;font-family:var(--mono);letter-spacing:.16em;color:var(--mut)}
+}
+@media(max-width:640px){
+  /* El chip de contexto no entra junto a marca+burger+tema en 320px. */
+  .ctx{display:none}
 }
 
 /* ---------- hero ---------- */
@@ -1217,6 +1236,9 @@ html[data-ds-commerce="1"] [data-surface="product"] .pdp-ctas>.dsx-buy-now:focus
       <span class="brand-txt">{{store_name}}</span>
       <span class="brand-code">SEC/{{year}}</span>
     </a>
+    <!-- contextual-sticky: la barra declara el contexto/página activa;
+         el texto lo fija el CSS según html[data-ds-surface]. -->
+    <span class="ctx" aria-hidden="true"></span>
     <nav class="nav-links" aria-label="Secciones">
       <a href="#categorias" data-ds-anchor data-ds-route="home">Categorías</a>
       <a href="#productos" data-ds-anchor data-ds-route="home">Productos</a>

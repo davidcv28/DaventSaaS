@@ -588,3 +588,194 @@
   [data-design='atelier-noir'] .ec-auth .ecaf .ecaf-submit:hover:not(:disabled),
   [data-design='atelier-noir'] :is(.ec-account, .ec-cartpg, .ec-checkout, .ec-receiptpg, .ec-legal) .ec-btn-primary:hover{ transition:none; }
 }
+
+/* ==========================================================================
+   ARQUETIPOS — nav index-rail · cuenta account-split · tracking tracking-feed
+   ========================================================================== */
+/* ---------- NAV: index-rail ----------
+   Riel vertical fijo a la izquierda en escritorio: marca + índice de
+   secciones + acciones, todo en columna sobre banda tinta. En móvil queda
+   la barra superior con drawer (ítems numerados). */
+@media(min-width:1101px){
+  .store-page[data-design='atelier-noir'][data-nav='index-rail']:not(.is-home){ padding-left:96px; }
+  .store-page[data-design='atelier-noir'][data-nav='index-rail'] .sp-top{
+    position:fixed; top:0; bottom:0; left:0; width:96px; height:auto;
+    display:flex; flex-direction:column;
+    background:var(--dz-band,#0E0C0A); color:var(--dz-band-ink,#F4EFE6);
+    border-bottom:0; border-right:1px solid var(--dz-band-line,rgba(244,239,230,.14));
+    box-shadow:none;
+  }
+  .store-page[data-design='atelier-noir'][data-nav='index-rail'] .sp-top.scrolled{ box-shadow:none; }
+  .store-page[data-design='atelier-noir'][data-nav='index-rail'] .sp-top-inner{
+    flex-direction:column; align-items:stretch; justify-content:flex-start;
+    gap:20px; height:100%; min-height:0; padding:22px 10px; flex:none;
+  }
+  .store-page[data-design='atelier-noir'][data-nav='index-rail'] .sp-brand{
+    flex-direction:column; align-items:center; gap:8px; min-height:44px;
+  }
+  .store-page[data-design='atelier-noir'][data-nav='index-rail'] .sp-brand-copy{ display:grid; justify-items:center; gap:4px; }
+  .store-page[data-design='atelier-noir'][data-nav='index-rail'] .sp-mono.sm{ width:42px; height:42px; font-size:16px; }
+  .store-page[data-design='atelier-noir'][data-nav='index-rail'] .sp-name{
+    font:600 10px/1.3 var(--dz-mono,monospace); letter-spacing:.24em;
+    text-transform:uppercase; text-align:center; white-space:normal;
+    overflow-wrap:anywhere; max-width:76px; color:var(--dz-band-ink,#F4EFE6);
+  }
+  .store-page[data-design='atelier-noir'][data-nav='index-rail'] .sp-top-links{
+    flex-direction:column; align-items:stretch; gap:2px; flex:none;
+  }
+  .store-page[data-design='atelier-noir'][data-nav='index-rail'] .sp-top-links a{
+    justify-content:center; text-align:center; padding:9px 4px; min-height:44px;
+    font:600 10px/1.2 var(--dz-mono,monospace); letter-spacing:.18em; text-transform:uppercase;
+    color:color-mix(in srgb,var(--dz-band-ink,#F4EFE6) 66%,transparent);
+    border-radius:0;
+  }
+  .store-page[data-design='atelier-noir'][data-nav='index-rail'] .sp-top-links a:hover,
+  .store-page[data-design='atelier-noir'][data-nav='index-rail'] .sp-top-links a.router-link-exact-active{
+    color:var(--dz-accent-on-band,#CE8F7B);
+    background:color-mix(in srgb,var(--dz-band-ink,#F4EFE6) 7%,transparent);
+  }
+  .store-page[data-design='atelier-noir'][data-nav='index-rail'] .sp-search.sp-search-top{ display:none; }
+  .store-page[data-design='atelier-noir'][data-nav='index-rail'] .sp-top-cta{ display:none; }
+  .store-page[data-design='atelier-noir'][data-nav='index-rail'] .sp-top-end{
+    flex-direction:column; align-items:center; gap:10px; flex:none;
+  }
+  .store-page[data-design='atelier-noir'][data-nav='index-rail'] .sp-top-end .sp-icon-btn{
+    width:42px; height:42px; border-radius:0;
+    background:transparent; border-color:var(--dz-band-line,rgba(244,239,230,.2));
+    color:var(--dz-band-ink,#F4EFE6); box-shadow:none;
+  }
+  .store-page[data-design='atelier-noir'][data-nav='index-rail'] .sp-top-end .sp-icon-btn:hover{
+    border-color:var(--dz-accent,#B34A2E); color:var(--dz-accent-on-band,#CE8F7B);
+    background:color-mix(in srgb,var(--dz-band-ink,#F4EFE6) 7%,transparent);
+  }
+  .store-page[data-design='atelier-noir'][data-nav='index-rail'] .sp-top-end .ec-badge{
+    border-color:var(--dz-band,#0E0C0A);
+  }
+  /* Fila de secciones de Tienda Pro: también vive dentro del riel. */
+  .store-page[data-design='atelier-noir'][data-nav='index-rail'] .sp-shop-nav{
+    margin-top:auto; border-top:1px solid var(--dz-band-line,rgba(244,239,230,.14));
+    background:transparent;
+  }
+  .store-page[data-design='atelier-noir'][data-nav='index-rail'] .sp-shop-nav-inner{
+    display:block; min-height:0; padding:10px 6px;
+  }
+  .store-page[data-design='atelier-noir'][data-nav='index-rail'] .sp-shop-nav-links{
+    flex-direction:column; align-items:stretch; overflow:visible;
+  }
+  .store-page[data-design='atelier-noir'][data-nav='index-rail'] .sp-shop-nav-links a{
+    padding:9px 4px; text-align:center; border-radius:0;
+    font:600 10px/1.2 var(--dz-mono,monospace); letter-spacing:.16em;
+    color:color-mix(in srgb,var(--dz-band-ink,#F4EFE6) 60%,transparent);
+  }
+  .store-page[data-design='atelier-noir'][data-nav='index-rail'] .sp-shop-nav-links a.is-current{
+    color:var(--dz-accent-on-band,#CE8F7B);
+    background:color-mix(in srgb,var(--dz-band-ink,#F4EFE6) 7%,transparent);
+  }
+  .store-page[data-design='atelier-noir'][data-nav='index-rail'] .sp-shop-nav-note{ display:none; }
+}
+/* Móvil: drawer con índice numerado (firma del arquetipo). */
+.store-page[data-design='atelier-noir'][data-nav='index-rail'] .sp-drawer{
+  border-right:3px solid var(--dz-accent,#B34A2E);
+}
+.store-page[data-design='atelier-noir'][data-nav='index-rail'] .sp-drawer .sp-nav-group{ counter-reset:anrail; }
+.store-page[data-design='atelier-noir'][data-nav='index-rail'] .sp-drawer .sp-nav-item{ counter-increment:anrail; }
+.store-page[data-design='atelier-noir'][data-nav='index-rail'] .sp-drawer .sp-nav-item > span::before{
+  content:counter(anrail,decimal-leading-zero); flex:none;
+  font:500 10px/1 var(--dz-mono,monospace); letter-spacing:.18em;
+  color:var(--dz-accent-text,#8E3520);
+}
+.store-page[data-design='atelier-noir'][data-nav='index-rail'] .sp-nav-item > span{ flex:1; }
+
+/* ---------- CUENTA: account-split — panel derecho, contenido izquierdo -- */
+.store-page[data-design='atelier-noir'][data-account='account-split'] .ec-account .acc-mhead{ display:flex; }
+.store-page[data-design='atelier-noir'][data-account='account-split'] .ec-account .acc-tabs{
+  gap:6px; padding-bottom:6px;
+}
+.store-page[data-design='atelier-noir'][data-account='account-split'] .ec-account .acc-tab{
+  border-radius:0; border-color:var(--dz-line,rgba(14,12,10,.18));
+  font:600 10.5px/1 var(--dz-mono,monospace); letter-spacing:.16em; text-transform:uppercase;
+}
+.store-page[data-design='atelier-noir'][data-account='account-split'] .ec-account .acc-tab.is-on{
+  background:var(--dz-band,#0E0C0A); border-color:var(--dz-band,#0E0C0A);
+  color:var(--dz-band-ink,#F4EFE6);
+}
+@media(min-width:1024px){
+  .store-page[data-design='atelier-noir'][data-account='account-split'] .ec-account .acc-shell{
+    grid-template-columns:minmax(0,1fr) 300px; gap:22px; align-items:start;
+  }
+  .store-page[data-design='atelier-noir'][data-account='account-split'] .ec-account .acc-side{
+    order:2; display:grid; gap:14px; align-content:start;
+    position:sticky; top:92px;
+    padding:20px; border:1px solid var(--dz-line,rgba(14,12,10,.18));
+    border-left:3px solid var(--dz-accent,#B34A2E);
+    border-radius:0; background:var(--dz-surface-2,#F4EFE6);
+  }
+  .store-page[data-design='atelier-noir'][data-account='account-split'] .ec-account .acc-mhead,
+  .store-page[data-design='atelier-noir'][data-account='account-split'] .ec-account .acc-tabs{ display:none; }
+}
+.store-page[data-design='atelier-noir'][data-account='account-split'] .ec-account .acc-navitem{
+  border-radius:0;
+}
+.store-page[data-design='atelier-noir'][data-account='account-split'] .ec-account .acc-navitem.is-on{
+  background:var(--dz-band,#0E0C0A); color:var(--dz-band-ink,#F4EFE6);
+}
+.store-page[data-design='atelier-noir'][data-account='account-split'] .ec-account .acc-idx{
+  font-family:var(--dz-mono,monospace); font-size:9.5px; letter-spacing:.14em;
+  color:var(--dz-accent-text,#8E3520);
+}
+.store-page[data-design='atelier-noir'][data-account='account-split'] .ec-account .acc-logout{
+  border-radius:0; font-family:var(--dz-mono,monospace); font-size:11px; letter-spacing:.14em; text-transform:uppercase;
+}
+.store-page[data-design='atelier-noir'][data-account='account-split'] .ec-account .acc-panel{
+  border-radius:0; border-color:var(--dz-line,rgba(14,12,10,.18));
+}
+
+/* ---------- SEGUIMIENTO: tracking-feed — feed cronológico primero ----- */
+.store-page[data-design='atelier-noir'][data-tracking='tracking-feed'] .ec-track{ gap:14px; }
+.store-page[data-design='atelier-noir'][data-tracking='tracking-feed'] .ec-track-head{ order:0; }
+.store-page[data-design='atelier-noir'][data-tracking='tracking-feed'] .ec-track-help{ order:1; }
+.store-page[data-design='atelier-noir'][data-tracking='tracking-feed'] .ec-track-card:has(.ec-timeline){ order:2; }
+.store-page[data-design='atelier-noir'][data-tracking='tracking-feed'] .ec-track-card{ order:3; }
+.store-page[data-design='atelier-noir'][data-tracking='tracking-feed'] .ec-track-card:has(.ec-stepper){ order:9; }
+/* El feed manda: tarjeta de movimientos como columna editorial. */
+.store-page[data-design='atelier-noir'][data-tracking='tracking-feed'] .ec-track-card:has(.ec-timeline){
+  border-left:3px solid var(--dz-accent,#B34A2E); border-radius:0;
+  background:var(--dz-surface-2,#F4EFE6);
+}
+.store-page[data-design='atelier-noir'][data-tracking='tracking-feed'] .ec-track-card:has(.ec-timeline) .ec-track-h2{
+  font:400 clamp(18px,2.4vw,24px)/1.1 var(--dz-display,"Italiana",Georgia,serif);
+  letter-spacing:.02em;
+}
+.store-page[data-design='atelier-noir'][data-tracking='tracking-feed'] .ec-timeline li{ padding:12px 0; }
+.store-page[data-design='atelier-noir'][data-tracking='tracking-feed'] .ec-timeline li:not(:last-child)::before{
+  left:6px; top:30px; bottom:-6px; width:1px;
+  background:color-mix(in srgb,var(--dz-ink,#0E0C0A) 22%,transparent);
+}
+.store-page[data-design='atelier-noir'][data-tracking='tracking-feed'] .ec-tl-dot{
+  width:13px; height:13px; margin-top:5px; border-radius:0;
+  border:2px solid var(--dz-accent,#B34A2E); background:var(--dz-surface-2,#F4EFE6);
+}
+.store-page[data-design='atelier-noir'][data-tracking='tracking-feed'] .ec-timeline strong{
+  font:600 13px/1.3 var(--dz-mono,monospace); letter-spacing:.04em; text-transform:uppercase;
+}
+.store-page[data-design='atelier-noir'][data-tracking='tracking-feed'] .ec-timeline small{
+  font-family:var(--dz-mono,monospace); font-size:10.5px; letter-spacing:.1em;
+}
+/* El stepper queda abajo como resumen de estado compacto. */
+.store-page[data-design='atelier-noir'][data-tracking='tracking-feed'] .ec-track-card:has(.ec-stepper){
+  border-top:3px solid var(--dz-band,#0E0C0A); border-radius:0;
+}
+.store-page[data-design='atelier-noir'][data-tracking='tracking-feed'] .ec-step-dot{ border-radius:0; }
+.store-page[data-design='atelier-noir'][data-tracking='tracking-feed'] .ec-step.is-done .ec-step-dot{ border-radius:0; }
+.store-page[data-design='atelier-noir'][data-tracking='tracking-feed'] .ec-step-label{
+  font:600 9.5px/1.3 var(--dz-mono,monospace); letter-spacing:.12em; text-transform:uppercase;
+}
+.store-page[data-design='atelier-noir'][data-nav='index-rail'] .sp-tabbar{
+  background:var(--dz-band,#0E0C0A); border-top:1px solid var(--dz-band-line,rgba(244,239,230,.14));
+}
+.store-page[data-design='atelier-noir'][data-nav='index-rail'] .sp-tabbar .sp-tab{
+  color:color-mix(in srgb,var(--dz-band-ink,#F4EFE6) 62%,transparent);
+}
+.store-page[data-design='atelier-noir'][data-nav='index-rail'] .sp-tabbar .sp-tab.active{
+  color:var(--dz-accent-on-band,#CE8F7B);
+}
