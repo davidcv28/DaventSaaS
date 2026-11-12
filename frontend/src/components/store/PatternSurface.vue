@@ -42,11 +42,28 @@ const props = defineProps({
   //Sesión del comprador: el documento es origen opaco (no lee cookies) —
   //el host se la empuja por `davent:ds-account-state` y el botón del
   //puente cambia de "Ingresar" a "Mi cuenta".
-  account: { type: Boolean, default: false }
+  account: { type: Boolean, default: false },
+  //Modo "chrome": el documento se fija arriba de la página como una tira
+  //del alto de su cromo (header + barras fijas) sobre las rutas que el
+  //diseño no pinta (auth, cuenta, carrito, checkout, seguimiento). Las
+  //superficies de contenido quedan ocultas en el propio documento y el
+  //iframe crece a pantalla completa solo mientras el diseño tenga una
+  //hoja modal abierta (ds-lock) para que el menú sea usable.
+  chrome: { type: Boolean, default: false }
 })
 
 const frame = ref(null)
 const height = ref(0)
+//Hoja modal del diseño abierta (ds-lock): en modo chrome la tira crece a
+//viewport completo para que el menú/hoja del diseño sea usable.
+const chromeLocked = ref(false)
+const frameStyle = computed(() => {
+  if (props.chrome) {
+    if (chromeLocked.value) return { height: '100vh' }
+    return { height: `${height.value || 72}px` }
+  }
+  return height.value ? { height: `${height.value}px` } : null
+})
 const router = useRouter()
 const cartStore = useCartStore()
 //Contexto de la tienda que provee StorePublicLayout: venta online y el
@@ -119,7 +136,7 @@ const src = computed(() => {
   return `/api/stores/public/${encodeURIComponent(props.slug)}/pattern/document/?${params}`
 })
 
-const emit = defineEmits(['navigate', 'toggle-theme', 'load', 'buy', 'buy-now', 'account'])
+const emit = defineEmits(['navigate', 'toggle-theme', 'load', 'buy', 'buy-now', 'account', 'chrome-height'])
 
 //El iframe va sin `allow-same-origin` (origen opaco): el JS del diseño no
 //puede tocar el DOM ni las cookies de la app. Los datos que necesita de la
@@ -191,6 +208,7 @@ function onMessage(e) {
     /* Hoja modal del diseño abierta (m-lock en el documento): el scroll es
      * de la página, así que el candado viaja por postMessage. Se guarda el
      * overflow previo para no pisar un bloqueo que ya existiera. */
+    chromeLocked.value = !!e.data.locked
     if (e.data.locked) {
       if (docOverflow == null) {
         docOverflow = document.documentElement.style.overflow
@@ -251,7 +269,12 @@ function onMessage(e) {
    * iframe 0.5px más bajo que el documento gana scroll interno — la rueda
    * encadena iframe↔página en el borde y los fijos del diseño se
    * desalinean: se siente como vibración al llegar al fondo. */
-  if (next > 0) height.value = Math.ceil(next)
+  if (next > 0) {
+    height.value = Math.ceil(next)
+    /* En modo chrome el alto de la tira sale del propio documento: el
+     * host lo usa para reservar el hueco del navbar sobre el contenido. */
+    if (props.chrome) emit('chrome-height', height.value)
+  }
   /* El iframe cambió de alto: el rectángulo del marco quedó viejo y las
    * barras fijas del documento se posicionan con datos de otro alto —
    * repostear el frame para que el puente re-mida con el tamaño real. */
@@ -351,9 +374,10 @@ onBeforeUnmount(() => {
   <iframe
     ref="frame"
     class="ds-surface"
+    :class="{ 'ds-chrome': chrome }"
     :src="src"
     :title="title || 'Diseño de la web'"
-    :style="height ? { height: `${height}px` } : null"
+    :style="frameStyle"
     sandbox="allow-scripts allow-popups allow-popups-to-escape-sandbox allow-forms"
     @load="onLoad"
   ></iframe>
@@ -369,5 +393,18 @@ onBeforeUnmount(() => {
   /* Si el documento llega a tener overflow propio, la rueda no debe
    * rebotar entre el scroll interno del iframe y el de la página. */
   overscroll-behavior: contain;
+}
+
+/* Modo chrome: tira fija con el navbar del diseño sobre las páginas que el
+ * documento no pinta. z-index bajo el drawer/modales del chrome Vue
+ * (.sp-overlay 30 / .sp-modal-overlay 40) pero sobre el contenido; al
+ * abrir una hoja del diseño (ds-lock) crece a viewport completo. */
+.ds-surface.ds-chrome {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 24;
+  min-height: 0;
 }
 </style>

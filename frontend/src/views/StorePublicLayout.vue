@@ -151,6 +151,20 @@ const usePattern = computed(() => Boolean(
   (patternSurface.value !== 'catalog' ||
     (patternDoc.value.products_total || 0) <= (patternDoc.value.products_shown || 24))
 ))
+// Navbar del diseño en las rutas que el documento no pinta (auth, cuenta,
+// carrito, checkout, seguimiento, legales y las que caen a la plantilla
+// Vue por no cubrir la superficie): el documento se monta en modo "chrome"
+// (solo su cromo fijo) para que el navbar sea EL MISMO en toda la web.
+const usePatternChrome = computed(() => Boolean(
+  store.value &&
+  !studioMode.value &&
+  !usePattern.value &&
+  patternDoc.value?.ready && (patternDoc.value?.has_html || patternDoc.value?.html) &&
+  (patternDoc.value?.surfaces || []).length
+))
+// Alto de la tira del chrome del diseño (lo reporta el documento): se
+// reserva como padding del contenido para que nada quede bajo el navbar.
+const patternChromeH = ref(72)
 const custom = computed(() => {
   const raw = store.value?.customization || {}
   const merged = {
@@ -1208,16 +1222,15 @@ async function loadStore() {
   // payload público de la tienda (service_items).
   // El documento del diseño viaja en paralelo con la ficha: si el patrón
   // todavía no tiene contrato de datos vuelve `{}` y se usa la plantilla Vue.
-  let patternReq = Promise.resolve()
-  if (isHome.value || isCatalog.value || isServices.value || isProduct.value) {
-    const metaParams = { preview: previewToken.value, meta: true }
-    //Reintento único: un fallo transitorio del meta dejaba a la web (y a la
-    //vista previa) con la plantilla Vue aunque el diseño tenga documento.
-    patternReq = storesApi.publicPattern(slug.value, metaParams)
-      .catch(() => storesApi.publicPattern(slug.value, metaParams))
-      .then((doc) => { patternMetaDone.value = true; patternDoc.value = doc && (doc.has_html || doc.html) ? doc : null })
-      .catch(() => { patternDoc.value = null })
-  }
+  // Se pide en TODAS las rutas (también auth/cuenta/carrito): el navbar del
+  // diseño se monta como "chrome" aunque la página no sea del documento.
+  const metaParams = { preview: previewToken.value, meta: true }
+  //Reintento único: un fallo transitorio del meta dejaba a la web (y a la
+  //vista previa) con la plantilla Vue aunque el diseño tenga documento.
+  const patternReq = storesApi.publicPattern(slug.value, metaParams)
+    .catch(() => storesApi.publicPattern(slug.value, metaParams))
+    .then((doc) => { patternMetaDone.value = true; patternDoc.value = doc && (doc.has_html || doc.html) ? doc : null })
+    .catch(() => { patternDoc.value = null })
   try {
     store.value = await storesApi.publicStore(slug.value, { preview: previewToken.value })
     // Sin esperar el meta, status='success' montaba la plantilla Vue con el
@@ -1311,7 +1324,7 @@ onBeforeUnmount(() => {
 </script>
 
 <template>
-  <div ref="pageRoot" class="store-page" :class="{ 'is-home': isHome, 'is-scrolled': scrolled, 'has-pattern': usePattern, 'has-bot': botConfig && !usePattern }" :data-store-theme="pageTheme" :data-theme="pageTheme" :data-template="pageTemplate" :data-store-template="pageTemplate" :data-design="designId" :data-nav="arch.nav" :data-account="arch.account" :data-tracking="arch.tracking" :data-style="pageStyle" :data-skin="storeSkinOf(pageTemplate)" :data-logo-mode="custom.logo_mode" :data-has-logo="custom.logo ? '' : null" :data-mono="custom.mono_style" :data-st-tabbar="showTabbar && !usePattern && !patternWaiting ? '' : null" :style="[themeVars, publishedThemeVars, studioVars]" v-bind="pageAttrs">
+  <div ref="pageRoot" class="store-page" :class="{ 'is-home': isHome, 'is-scrolled': scrolled, 'has-pattern': usePattern, 'has-pattern-chrome': usePatternChrome, 'has-bot': botConfig && !usePattern }" :data-store-theme="pageTheme" :data-theme="pageTheme" :data-template="pageTemplate" :data-store-template="pageTemplate" :data-design="designId" :data-nav="arch.nav" :data-account="arch.account" :data-tracking="arch.tracking" :data-style="pageStyle" :data-skin="storeSkinOf(pageTemplate)" :data-logo-mode="custom.logo_mode" :data-has-logo="custom.logo ? '' : null" :data-mono="custom.mono_style" :data-st-tabbar="showTabbar && !usePattern && !patternWaiting && !usePatternChrome ? '' : null" :style="[themeVars, publishedThemeVars, studioVars]" v-bind="pageAttrs">
     <button type="button" class="sp-skip" @click="skipToContent">Saltar al contenido</button>
     <span v-if="previewMode" class="sp-preview-badge" role="status">Vista previa — el diseño todavía no se publicó</span>
     <!-- Diseño del catálogo con contrato de datos: se pinta el documento
@@ -1352,9 +1365,33 @@ onBeforeUnmount(() => {
         <div v-for="n in 4" :key="n" class="sp-boot-card"><span class="sp-sk-line sp-boot-img"></span><span class="sp-sk-line"></span><span class="sp-sk-line short"></span></div>
       </div>
     </div>
-    <div v-if="!usePattern && !patternWaiting && !patternMetaLoading" class="sp-vue-page">
+    <div v-if="!usePattern && !patternWaiting && !patternMetaLoading" class="sp-vue-page" :style="usePatternChrome ? { paddingTop: `${patternChromeH}px` } : null">
+    <!-- Chrome del diseño sobre las páginas que el documento no pinta:
+         la tira fija trae el navbar propio del patrón (misma marca, mismos
+         controles, misma piel) en vez del header genérico. -->
+    <PatternSurface
+      v-if="usePatternChrome"
+      chrome
+      :slug="slug"
+      :preview="previewToken"
+      :revision="patternRevision"
+      :theme="pageTheme"
+      surface="chrome"
+      :title="shopName"
+      :account="customerStore.isAuthenticated"
+      @navigate="onPatternNavigate"
+      @buy="onPatternBuy"
+      @buy-now="onPatternBuyNow"
+      @account="onPatternAccount"
+      @toggle-theme="togglePageTheme"
+      @chrome-height="(h) => (patternChromeH = h)"
+    />
     <!-- ===== Barra superior ===== -->
-    <header class="sp-top" :class="{ scrolled, 'is-hidden': navHidden }">
+    <!-- El meta del patrón viaja en paralelo a la ficha: mientras carga no
+         sabemos si la página lleva el navbar del diseño (chrome) — pintar
+         la barra genérica y cambiarla por la tira era un "flash" de navbar
+         distinto, el problema original. -->
+    <header v-if="!usePatternChrome && (status !== 'loading' || patternMetaDone || patternDoc)" class="sp-top" :class="{ scrolled, 'is-hidden': navHidden }">
       <span class="sp-progress" aria-hidden="true" :style="{ transform: `scaleX(${progress})` }"></span>
       <!-- Movimiento: fila utilitaria fina sobre la barra principal —
            contacto/horarios en mono (el header partido en dos filas es la
@@ -1481,8 +1518,8 @@ onBeforeUnmount(() => {
 
     <!-- Menú móvil (solo navegación): los filtros del catálogo NO viven
          acá — van en CatalogFilters (bottom sheet propio). -->
-    <div v-if="hasNavMenu" class="sp-overlay" :class="{ open: ui.menuOpen }" aria-hidden="true" @click="ui.menuOpen = false"></div>
-    <nav v-if="hasNavMenu" ref="menuDrawer" id="sp-drawer" class="sp-drawer sp-navdrawer" :class="{ open: ui.menuOpen }" role="dialog" aria-modal="true" aria-label="Menú de la tienda">
+    <div v-if="hasNavMenu && !usePatternChrome" class="sp-overlay" :class="{ open: ui.menuOpen }" aria-hidden="true" @click="ui.menuOpen = false"></div>
+    <nav v-if="hasNavMenu && !usePatternChrome" ref="menuDrawer" id="sp-drawer" class="sp-drawer sp-navdrawer" :class="{ open: ui.menuOpen }" role="dialog" aria-modal="true" aria-label="Menú de la tienda">
       <div class="sp-drawer-head">
         <strong>{{ shopName }}</strong>
         <button type="button" class="sp-drawer-close" aria-label="Cerrar menú" @click="ui.menuOpen = false">
@@ -1516,7 +1553,7 @@ onBeforeUnmount(() => {
 
     <!-- Tab bar móvil (tema mobile.nav = 'bottom'): 4 destinos + "Más",
          calcada del .tabbar del dashboard y por encima del dock de CTA. -->
-    <nav v-if="showTabbar" class="sp-tabbar" aria-label="Secciones principales">
+    <nav v-if="showTabbar && !usePatternChrome" class="sp-tabbar" aria-label="Secciones principales">
       <RouterLink
         v-for="t in tabLinks" :key="t.label" :to="t.to" class="sp-tab"
         :class="{ active: isTabActive(t.label) }"
@@ -1537,7 +1574,7 @@ onBeforeUnmount(() => {
     </nav>
 
     <!-- Sheet "Más": el resto del menú, contacto y tema -->
-    <template v-if="showTabbar">
+    <template v-if="showTabbar && !usePatternChrome">
       <div v-if="ui.moreOpen" class="sp-more-scrim" aria-hidden="true" @click="ui.moreOpen = false"></div>
       <Transition name="sp-msheet">
       <div

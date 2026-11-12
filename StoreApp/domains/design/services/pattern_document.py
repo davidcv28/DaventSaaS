@@ -111,6 +111,22 @@ html[data-ds-surface="catalog"] [data-surface]:not([data-surface="catalog"]),
 html[data-ds-surface="services"] [data-surface]:not([data-surface="services"]),
 html[data-ds-surface="product"] [data-surface]:not([data-surface="product"]){display:none!important}
 [hidden]{display:none!important}
+
+/* Superficie "chrome": el documento se monta fijo sobre las páginas que NO
+   son del diseño (cuenta, auth, carrito, checkout, seguimiento) solo para
+   darles el navbar/cromo del patrón. El contenido (superficies, pie en
+   flujo, chatbot del puente) se apaga y los wrappers dejan de pedir 100vh:
+   el alto que reporta el puente queda en el cromo superior + las barras
+   fijas de abajo. */
+html[data-ds-surface="chrome"],
+html[data-ds-surface="chrome"] body{overflow:hidden}
+html[data-ds-surface="chrome"] [data-surface],
+html[data-ds-surface="chrome"] footer,
+html[data-ds-surface="chrome"] .foot,
+html[data-ds-surface="chrome"] .footer,
+html[data-ds-surface="chrome"] .ds-chat{display:none!important}
+html[data-ds-surface="chrome"] body,
+html[data-ds-surface="chrome"] body>*:not([data-ds-pin]){min-height:0!important}
 /* Contenedores de CTA de la ficha que quedaron sin hijos visibles: sin
    WhatsApp ni venta online el diseño deja `.pdp-buy`/`.pdp-ctas` vacío o
    con solo el anchor `href=""` (oculto por la regla propia del diseño) y

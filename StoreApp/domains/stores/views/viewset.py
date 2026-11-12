@@ -794,7 +794,9 @@ class StoreViewSet(StoreBaseViewSet):
             raise Http404
         theme               =   'dark' if request.query_params.get('theme') == 'dark' else 'light'
         surface             =   request.query_params.get('surface') or 'landing'
-        if surface not in (data.get('surfaces') or []):
+        #'chrome' no es superficie del documento: es el modo cromo (solo el
+        #navbar del diseño) que el host monta sobre las páginas Vue.
+        if surface != 'chrome' and surface not in (data.get('surfaces') or []):
             surface         =   'landing'
         #Nonce por respuesta: único autorizador del JS del documento.
         nonce               =   secrets.token_urlsafe(16)

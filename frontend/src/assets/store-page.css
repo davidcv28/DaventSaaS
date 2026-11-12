@@ -405,6 +405,10 @@ html.sp-lock body{ overflow: hidden; overscroll-behavior: none; }
   /* Con el documento del diseño no se pinta la barra Vue: su cabecera fija
      vive dentro del iframe y el hueco reservado quedaba como banda vacía. */
   .store-page.has-pattern{ padding-top: 0; }
+  /* El documento en superficie "chrome" (páginas que no pinta el patrón:
+     auth, cuenta, carrito…) tampoco monta .sp-top — el hueco del navbar lo
+     reserva el layout con el alto real que reporta el documento. */
+  .store-page.has-pattern-chrome{ padding-top: 0; }
   .store-page:has(.sp-shop-nav){ --sp-shopnav-h: 44px; }
   .sp-top-links{ display: none; }
   /* El burger y su drawer de navegación cubren el hueco 961–1100px: sin

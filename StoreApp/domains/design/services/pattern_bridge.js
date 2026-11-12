@@ -74,6 +74,23 @@
         if (!h) h = document.body.scrollHeight
       }
       if (!h) h = root.scrollHeight
+      /* Superficie "chrome" (navbar del diseño sobre las páginas que no
+       * son del documento): el alto no es el del contenido — las
+       * superficies están ocultas — sino el cromo: el borde inferior del
+       * chrome fijo de arriba más las barras fijas de abajo (tab bar
+       * móvil, píldora de carrito), que el pin apoya en la base de la
+       * tira. Las hojas cerradas (translateY fuera del marco) no cuentan:
+       * bottomChromePx ya las descarta contra docBot. */
+      if (root.getAttribute('data-ds-surface') === 'chrome') {
+        ;(pinned || []).forEach(function (p) {
+          if (p.prop !== 'top') return
+          var cs3 = getComputedStyle(p.el)
+          if (cs3.display === 'none' || cs3.visibility === 'hidden') return
+          var r3 = p.el.getBoundingClientRect()
+          if (r3.bottom > h) h = r3.bottom
+        })
+        if (frameBox) h += bottomChromePx()
+      }
       syncChatMetrics()
       parent.postMessage({ type: 'davent:ds-height', height: h }, '*')
     })
@@ -195,6 +212,9 @@
    * transform, para no romper las hojas que animan translateY (.m-sheet).
    * Se cachea la lista y se re-mide si el documento cambia de tamaño. */
   var frameBox = null
+  /* Último alto de chrome inferior reportado en superficie 'chrome':
+   * evita re-enviar ds-height en cada frame de scroll. */
+  var chromeLift = -1
   var pinned = null
   var pinnedIh = 0
   function collectFixed() {
@@ -290,6 +310,14 @@
       }
     })
     syncChatMetrics()
+    /* En superficie "chrome" el alto reportado incluye las barras de
+     * abajo: la primera medición (pinned recién recolectado) o la
+     * apertura/cierre de una hoja cambia el alto de la tira — hay que
+     * re-enviarlo o el iframe queda mal cortado. */
+    if (root.getAttribute('data-ds-surface') === 'chrome') {
+      var liftNow = frameBox ? bottomChromePx() : 0
+      if (liftNow !== chromeLift) { chromeLift = liftNow; send() }
+    }
   }
   /* Alto del chrome pegado abajo del diseño (tab bar móvil, FAB propio):
    * el chatbot del documento se levanta para no quedar debajo. El propio
@@ -1713,6 +1741,10 @@
     syncChatMetrics()
   }
   function initChatbot() {
+    /* Superficie "chrome": el documento solo presta su navbar — el bot de
+     * la tienda lo monta el host (StoreBot), y se ahorra el fetch del
+     * payload público. */
+    if (root.getAttribute('data-ds-surface') === 'chrome') return
     /* El slug sale de la propia URL del documento
      * (/api/stores/public/<slug>/pattern/document/): el payload público
      * ya filtra `chatbot` por beneficio + switch del dueño. */
