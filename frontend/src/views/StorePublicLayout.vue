@@ -20,6 +20,7 @@ import { STORE_THEME_KEY, readVisitorTheme, persistVisitorTheme, resolveStoreThe
 import { schemaHours } from '../utils/storeHours.js'
 import { templateFonts, normalizeLayoutConfig, templatePages, templateBlocks, templateOf } from '../templates/index.js'
 import { useDesignCatalog } from '../composables/useDesignCatalog.js'
+import { useStoreArchetypes } from '../composables/storeArchetypes.js'
 import { STUDIO_MSG, isStudioMessage, studioReady } from '../studio/contract.js'
 import { familyOf } from '../utils/styleIcons.js'
 import {
@@ -474,6 +475,11 @@ const designId = computed(() => {
   if (!raw || raw === 'raiz') return 'esencial'
   return raw
 })
+// Arquetipos visuales por diseño (navbar / cuenta / seguimiento): se exponen
+// como data-nav / data-account / data-tracking en .store-page; el look por
+// arquetipo vive en CSS keyed en esos atributos (matriz en
+// composables/storeArchetypes.js).
+const arch = useStoreArchetypes()
 watch(designId, (id) => {
   const load = DESIGN_EC_CSS[`../assets/store-design-${id}.css`]
   if (load) load().catch(() => {})
@@ -906,14 +912,27 @@ watch([status, () => route.fullPath], () => { nextTick(watchContentMounted) }, {
 // Barra de progreso de lectura y estado "scrolled" de la barra superior.
 const scrolled = ref(false)
 const progress = ref(0)
+// Solo aplica al arquetipo nav 'hide-on-scroll' (calzado): la barra se
+// oculta al bajar y reaparece al subir o al llegar arriba. El resto de los
+// diseños no toca este estado.
+const navHidden = ref(false)
+let lastScrollY = 0
 let ticking = false
 function onScroll() {
   if (ticking) return
   ticking = true
   requestAnimationFrame(() => {
+    const y = window.scrollY
     const max = document.documentElement.scrollHeight - window.innerHeight
-    scrolled.value = window.scrollY > 8
-    progress.value = max > 0 ? Math.min(1, window.scrollY / max) : 0
+    scrolled.value = y > 8
+    progress.value = max > 0 ? Math.min(1, y / max) : 0
+    if (arch.nav === 'hide-on-scroll') {
+      const dy = y - lastScrollY
+      if (y < 8) navHidden.value = false
+      else if (dy > 8) navHidden.value = true
+      else if (dy < -8) navHidden.value = false
+    }
+    lastScrollY = y
     ticking = false
   })
 }
@@ -1288,7 +1307,7 @@ onBeforeUnmount(() => {
 </script>
 
 <template>
-  <div ref="pageRoot" class="store-page" :class="{ 'is-home': isHome, 'is-scrolled': scrolled, 'has-pattern': usePattern, 'has-bot': botConfig && !usePattern }" :data-store-theme="pageTheme" :data-theme="pageTheme" :data-template="pageTemplate" :data-store-template="pageTemplate" :data-design="designId" :data-style="pageStyle" :data-skin="storeSkinOf(pageTemplate)" :data-logo-mode="custom.logo_mode" :data-has-logo="custom.logo ? '' : null" :data-mono="custom.mono_style" :data-st-tabbar="showTabbar && !usePattern && !patternWaiting ? '' : null" :style="[themeVars, publishedThemeVars, studioVars]" v-bind="pageAttrs">
+  <div ref="pageRoot" class="store-page" :class="{ 'is-home': isHome, 'is-scrolled': scrolled, 'has-pattern': usePattern, 'has-bot': botConfig && !usePattern }" :data-store-theme="pageTheme" :data-theme="pageTheme" :data-template="pageTemplate" :data-store-template="pageTemplate" :data-design="designId" :data-nav="arch.nav" :data-account="arch.account" :data-tracking="arch.tracking" :data-style="pageStyle" :data-skin="storeSkinOf(pageTemplate)" :data-logo-mode="custom.logo_mode" :data-has-logo="custom.logo ? '' : null" :data-mono="custom.mono_style" :data-st-tabbar="showTabbar && !usePattern && !patternWaiting ? '' : null" :style="[themeVars, publishedThemeVars, studioVars]" v-bind="pageAttrs">
     <button type="button" class="sp-skip" @click="skipToContent">Saltar al contenido</button>
     <span v-if="previewMode" class="sp-preview-badge" role="status">Vista previa — el diseño todavía no se publicó</span>
     <!-- Diseño del catálogo con contrato de datos: se pinta el documento
@@ -1331,7 +1350,7 @@ onBeforeUnmount(() => {
     </div>
     <div v-if="!usePattern && !patternWaiting && !patternMetaLoading" class="sp-vue-page">
     <!-- ===== Barra superior ===== -->
-    <header class="sp-top" :class="{ scrolled }">
+    <header class="sp-top" :class="{ scrolled, 'is-hidden': navHidden }">
       <span class="sp-progress" aria-hidden="true" :style="{ transform: `scaleX(${progress})` }"></span>
       <!-- Movimiento: fila utilitaria fina sobre la barra principal —
            contacto/horarios en mono (el header partido en dos filas es la

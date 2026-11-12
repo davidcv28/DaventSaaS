@@ -507,6 +507,12 @@ html.sp-lock body{ overflow: hidden; overscroll-behavior: none; }
 .sp-top.scrolled .sp-top-inner{ height: 56px; }
 .sp-progress{ position: absolute; left: 0; right: 0; bottom: -1px; height: 2px; background: linear-gradient(90deg, rgba(255, 255, 255, .35), #fff); transform-origin: 0 50%; transform: scaleX(0); pointer-events: none; }
 
+/* Arquetipo nav 'hide-on-scroll' (calzado): la barra se desliza fuera al
+   bajar y vuelve al subir o al llegar arriba. Solo existe cuando
+   .store-page[data-nav='hide-on-scroll'] — los demás diseños no la ven. */
+.store-page[data-nav='hide-on-scroll'] .sp-top{ transition: box-shadow .3s var(--sp-ease), transform .3s var(--sp-ease); }
+.store-page[data-nav='hide-on-scroll'] .sp-top.is-hidden{ transform: translateY(-100%); }
+
 /* Estados de carga y entrada */
 .sp-state{ animation: sp-fade-up .6s var(--sp-ease) both; }
 .sp-state-icon, .sp-empty-icon{ animation: sp-float 4s ease-in-out infinite; }
