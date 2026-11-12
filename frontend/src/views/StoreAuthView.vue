@@ -249,22 +249,34 @@ const sealText = computed(() => {
    cualquier diseño (los hijos siguen siendo ítems directos del panel). */
 .ec-auth-panel-inner { display: contents; }
 
+/* ===== Base minimalista =====
+   Tarjeta única centrada: una columna, una sola superficie, un solo CTA
+   (el submit del formulario). Las hojas store-design-*-auth.css y
+   store-design-*.css redefinen columnas/colores con más especificidad —
+   esta base es el fallback profesional y el contrato de espaciado. */
 .ec-auth-shell {
-  flex: 1; width: min(1060px, 100%);
-  margin: clamp(14px, 3vw, 36px) auto clamp(48px, 7vw, 96px);
-  display: grid; grid-template-columns: minmax(0, 5fr) minmax(0, 6fr);
-  border-radius: calc(var(--sp-radius, 16px) * 1.3);
+  flex: 1; width: min(470px, 100%);
+  margin: clamp(16px, 4vw, 48px) auto clamp(48px, 7vw, 96px);
+  display: grid; grid-template-columns: minmax(0, 1fr);
+  border-radius: calc(var(--sp-radius, 16px) * 1.2);
   overflow: hidden;
-  border: 1px solid var(--sp-line, rgba(255, 255, 255, .14));
+  border: 1px solid var(--sp-line, rgba(127, 127, 127, .22));
   background: var(--sp-card-solid, var(--sp-card, #fff));
+  color: var(--sp-ink, #0f172a);
   box-shadow: var(--sp-shadow-md, 0 18px 50px -18px rgba(15, 23, 42, .35));
 }
 
-/* ===== Panel de marca ===== */
+/* ===== Cabecera de marca compacta =====
+   En la base minimalista el panel de marca se reduce a una banda superior
+   con logo + nombre de la tienda (identidad mínima, como el auth de un
+   competidor). El copy editorial (.ec-auth-brand-copy: kicker/título/
+   texto/índice/perks) y el pie (.ec-auth-brand-foot) nacen OCULTOS: las
+   pieles que los usan los re-muestran declarando `display` con más
+   especificidad (esencial, calzado, moda, etc.). */
 .ec-auth-brand {
   position: relative; overflow: hidden;
   display: flex; flex-direction: column;
-  padding: clamp(26px, 4vw, 48px);
+  padding: clamp(20px, 3vw, 36px);
   color: var(--sp-on-band, #fff);
   background:
     radial-gradient(120% 90% at 85% -10%, color-mix(in srgb, var(--store-accent, #4f46e5) 55%, transparent), transparent 60%),
@@ -290,11 +302,11 @@ const sealText = computed(() => {
   width: fit-content; text-decoration: none; color: inherit;
 }
 .ec-auth-logo {
-  display: grid; place-items: center; width: 46px; height: 46px;
-  border-radius: 13px; overflow: hidden; flex: none;
+  display: grid; place-items: center; width: 44px; height: 44px;
+  border-radius: 12px; overflow: hidden; flex: none;
   background: color-mix(in srgb, var(--sp-on-band, #fff) 16%, transparent);
   border: 1px solid color-mix(in srgb, var(--sp-on-band, #fff) 26%, transparent);
-  font-weight: 800; font-size: 20px; letter-spacing: -.02em;
+  font-weight: 800; font-size: 19px; letter-spacing: -.02em;
 }
 .ec-auth-logo img { width: 100%; height: 100%; object-fit: cover; }
 .ec-auth-brand-name {
@@ -328,22 +340,34 @@ const sealText = computed(() => {
   margin: 0; font-size: 11.5px; letter-spacing: .04em;
   color: var(--sp-on-band-muted, color-mix(in srgb, var(--sp-on-band, #fff) 78%, transparent));
 }
+/* Copy editorial y pie de marca: OCULTOS en la base minimalista — la banda
+   de marca se reduce a logo + nombre. Las pieles que los usan los
+   re-muestran declarando `display` con más especificidad (esencial,
+   calzado, moda, etc.). Los estilos de arriba quedan intactos para esas
+   pieles y para cualquier hoja que encienda el copy sin redecorarlo. */
+.ec-auth-brand-copy,
+.ec-auth-brand-foot { display: none; }
+.ec-auth-rail, .ec-auth-tag { display: none; }
 
 /* ===== Panel del formulario ===== */
 .ec-auth-panel {
   display: flex; flex-direction: column; min-width: 0;
-  padding: clamp(22px, 3.5vw, 44px) clamp(22px, 4vw, 48px) clamp(26px, 4vw, 48px);
+  padding: clamp(22px, 5vw, 32px) clamp(20px, 5vw, 32px) clamp(24px, 5vw, 32px);
   background: var(--sp-card-solid, var(--sp-card, #fff));
   color: var(--sp-ink, #0f172a);
 }
 .ec-auth-back {
   display: inline-flex; align-items: center; gap: 7px; width: fit-content;
-  margin-bottom: clamp(18px, 3vw, 30px);
+  margin-bottom: clamp(16px, 3vw, 24px);
   font-size: 12.5px; font-weight: 600; text-decoration: none;
   color: var(--sp-muted, #5b6678);
 }
 .ec-auth-back:hover { color: var(--sp-accent-text, var(--store-accent-ink, #111)); }
-.ec-auth-head { display: grid; gap: 8px; margin-bottom: 22px; }
+.ec-auth-back:focus-visible {
+  outline: 2px solid var(--sp-accent-text, var(--store-accent-ink, #111));
+  outline-offset: 3px; border-radius: 4px;
+}
+.ec-auth-head { display: grid; gap: 8px; margin-bottom: 20px; }
 .ec-auth-badge {
   display: grid; place-items: center; width: 42px; height: 42px;
   border-radius: 12px; margin-bottom: 4px;
@@ -352,7 +376,7 @@ const sealText = computed(() => {
 }
 .ec-auth-title {
   margin: 0; font-family: var(--store-font, inherit);
-  font-size: clamp(22px, 2.4vw, 28px); font-weight: 800; letter-spacing: -.02em;
+  font-size: clamp(21px, 2.4vw, 25px); font-weight: 800; letter-spacing: -.02em;
   color: var(--sp-ink, #0f172a);
 }
 .ec-auth-sub { margin: 0; font-size: 13.5px; line-height: 1.55; color: var(--sp-muted, #5b6678); }
@@ -363,28 +387,21 @@ const sealText = computed(() => {
 .ec-auth-spin { animation: ec-auth-rotate 1s linear infinite; color: var(--sp-accent-text, var(--store-accent-ink, #111)); }
 @keyframes ec-auth-rotate { to { transform: rotate(360deg); } }
 
-/* ===== Breakpoints ===== */
-@media (max-width: 1024px) {
-  .ec-auth-shell { grid-template-columns: 1fr; }
-  .ec-auth-brand { padding: 24px 24px 22px; }
-  .ec-auth-brand-inner { flex-direction: row; align-items: center; flex-wrap: wrap; gap: 14px 18px; }
-  .ec-auth-brand-copy { flex: 1 1 100%; gap: 8px; }
-  .ec-auth-brand-text, .ec-auth-perks, .ec-auth-brand-foot { display: none; }
-  .ec-auth-brand-title { font-size: clamp(20px, 4.5vw, 26px); }
-  .ec-auth-panel { padding: 24px 22px 30px; }
-}
+/* ===== Breakpoints =====
+   La base ya es una sola columna: los cortes solo ajustan aire y el
+   encabezado de marca. Las hojas de diseño conservan sus propios
+   breakpoints con más especificidad. */
 @media (max-width: 720px) {
   .ec-auth-shell { margin-top: 8px; border-radius: calc(var(--sp-radius, 16px) * 1.1); }
-  .ec-auth-brand { padding: 18px 18px 16px; }
+  .ec-auth-brand { padding: 14px 18px; }
   .ec-auth-brand-name { font-size: 16px; }
-  .ec-auth-logo { width: 38px; height: 38px; border-radius: 11px; font-size: 17px; }
-  .ec-auth-brand-title { font-size: 19px; }
-  .ec-auth-panel { padding: 18px 16px 26px; }
-  .ec-auth-head { margin-bottom: 18px; }
+  .ec-auth-logo { width: 38px; height: 38px; border-radius: 11px; font-size: 16px; }
+  .ec-auth-panel { padding: 18px 16px 24px; }
+  .ec-auth-head { margin-bottom: 16px; }
 }
 @media (max-width: 480px) {
   .ec-auth-shell { width: 100%; border-radius: 0; border-inline: 0; }
-  .ec-auth-brand-kicker { font-size: 10.5px; }
+  .ec-auth-brand { border-bottom-width: 1px; }
 }
 @media (prefers-reduced-motion: reduce) {
   .ec-auth-spin { animation: none; }

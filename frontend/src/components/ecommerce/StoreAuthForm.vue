@@ -413,9 +413,44 @@ onUnmounted(() => resizeObs?.disconnect())
 </template>
 
 <style scoped>
-/* Control segmentado: oculto por defecto (lo enciende la piel esencial con
-   más especificidad). El resto de los diseños sigue usando los links del pie. */
-.ecaf-switch { display: none; }
+/* Control segmentado del modo (ingresar/registro/recuperar): visible en la
+   base minimalista — es el selector de modo accesible (grupo con
+   aria-pressed por botón, un solo CTA primario abajo). Las pieles que ya
+   lo estilizan (esencial, aurum, calzado, impacto, moderntec) lo
+   redefinen con más especificidad; el resto hereda esta versión neutra. */
+.ecaf-switch {
+  display: grid; grid-template-columns: repeat(3, minmax(0, 1fr));
+  position: relative; isolation: isolate;
+  padding: 4px;
+  border: 1px solid var(--sp-line, rgba(127, 127, 127, .28));
+  border-radius: 999px;
+  background: var(--sp-soft, rgba(127, 127, 127, .12));
+}
+.ecaf-switch-pill {
+  position: absolute; z-index: 0;
+  top: 4px; bottom: 4px; left: 4px;
+  width: calc((100% - 8px) / 3);
+  border-radius: 999px;
+  background: var(--store-accent-ink, #111);
+  transform: translate3d(calc(var(--ecaf-switch-i, 0) * 100%), 0, 0);
+  transition: transform .3s ease;
+  pointer-events: none;
+}
+.ecaf-switch-btn {
+  position: relative; z-index: 1;
+  min-height: 42px; padding: 8px 4px;
+  border: 0; border-radius: 999px; background: none;
+  font: inherit; font-size: 13px; font-weight: 600; letter-spacing: .01em;
+  color: var(--sp-ink-2, var(--sp-muted, #5b6678));
+  cursor: pointer;
+  transition: color .2s ease;
+}
+.ecaf-switch-btn.is-on { color: var(--sp-on-band, #fff); }
+.ecaf-switch-btn:hover:not(.is-on) { color: var(--sp-ink, #0f172a); }
+.ecaf-switch-btn:focus-visible {
+  outline: 2px solid var(--sp-accent-text, var(--store-accent-ink, #111));
+  outline-offset: 2px;
+}
 .ecaf { display: grid; gap: 14px; }
 .ecaf-notice {
   margin: 0; padding: 11px 14px; border-radius: 12px; font-size: 13.5px; line-height: 1.45;
@@ -440,6 +475,10 @@ onUnmounted(() => resizeObs?.disconnect())
   color: var(--sp-muted, #5b6678); cursor: pointer;
 }
 .ecaf-pass-toggle:hover { color: var(--sp-accent-text, var(--store-accent-ink, #111)); background: var(--sp-soft, rgba(127, 127, 127, .12)); }
+.ecaf-pass-toggle:focus-visible {
+  outline: 2px solid var(--sp-accent-text, var(--store-accent-ink, #111));
+  outline-offset: 2px;
+}
 .ecaf-submit {
   display: inline-flex; align-items: center; justify-content: center; gap: 9px;
   margin-top: 4px; padding: 13px 18px; border: none; border-radius: 12px;
@@ -450,6 +489,11 @@ onUnmounted(() => resizeObs?.disconnect())
 .ecaf-submit:hover:not(:disabled) { filter: brightness(1.1); }
 .ecaf-submit:active:not(:disabled) { transform: translateY(1px); }
 .ecaf-submit:disabled { opacity: .55; cursor: default; }
+.ecaf-submit:focus-visible,
+.ecaf-link:focus-visible {
+  outline: 2px solid var(--sp-accent-text, var(--store-accent-ink, #111));
+  outline-offset: 2px;
+}
 .ecaf-spin { animation: ecaf-rotate 1s linear infinite; }
 @keyframes ecaf-rotate { to { transform: rotate(360deg); } }
 .ecaf-google { margin-top: 4px; }
@@ -469,6 +513,9 @@ onUnmounted(() => resizeObs?.disconnect())
 }
 .ecaf-link:hover { text-decoration-thickness: 2px; }
 .ecaf-link:disabled { opacity: .55; cursor: default; }
-@media (prefers-reduced-motion: reduce) { .ecaf-spin { animation: none; } }
+@media (prefers-reduced-motion: reduce) {
+  .ecaf-spin,
+  .ecaf-switch-pill { animation: none; transition: none; }
+}
 @media (max-width: 480px) { .ecaf-grid { grid-template-columns: 1fr; } }
 </style>

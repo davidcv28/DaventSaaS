@@ -8,7 +8,7 @@
 // (StoreAuthView): un solo comportamiento, dos envoltorios. El modal queda
 // para pendientes de ACCIÓN ({action}) que no pueden cruzar una
 // navegación; los {route} ya pueden usar authRoute → /ingresar.
-import { ref, computed, watch, onUnmounted } from 'vue'
+import { ref, computed, watch, nextTick, onUnmounted } from 'vue'
 import { useCartStore } from '../../stores/cart.store.js'
 import StoreAuthForm from './StoreAuthForm.vue'
 import AppIcon from '../AppIcon.vue'
@@ -33,22 +33,64 @@ const subtitle = computed(() => {
 })
 const modeIcon = computed(() => (mode.value === 'forgot' ? 'lock' : 'user'))
 
+// Foco: al abrir se guarda el elemento activo (el CTA que disparó el modal)
+// para devolvérselo al cerrar; el primer campo lo enfoca StoreAuthForm
+// (autofocus). Al cerrar con éxito también se restaura — si ese elemento
+// ya no está en el DOM, focus() es un no-op seguro.
+const cardRef = ref(null)
+let lastFocus = null
+function focusablesIn(card) {
+  return [...card.querySelectorAll(
+    'a[href], button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])'
+  )].filter((el) => el.offsetParent !== null || el === document.activeElement)
+}
+function onKey(e) {
+  if (e.key === 'Escape') { close(); return }
+  // Focus trap razonable: Tab/Shift+Tab ciclan dentro de la tarjeta.
+  if (e.key !== 'Tab') return
+  const card = cardRef.value
+  if (!card) return
+  const items = focusablesIn(card)
+  if (!items.length) return
+  const first = items[0]
+  const last = items[items.length - 1]
+  const active = document.activeElement
+  if (e.shiftKey && (active === first || !card.contains(active))) {
+    last.focus(); e.preventDefault()
+  } else if (!e.shiftKey && (active === last || !card.contains(active))) {
+    first.focus(); e.preventDefault()
+  }
+}
+
 watch(() => cart.authMode, (m) => { if (m) mode.value = m })
 watch(() => cart.authOpen, (open) => {
-  if (open) mode.value = cart.authMode || 'login'
-  // Escape a nivel window: el @keydown del backdrop solo recibe teclas si el
-  // foco está dentro del diálogo; con el listener global cierra siempre.
-  if (open) window.addEventListener('keydown', onKey)
-  else window.removeEventListener('keydown', onKey)
+  if (open) {
+    lastFocus = document.activeElement instanceof HTMLElement ? document.activeElement : null
+    mode.value = cart.authMode || 'login'
+    // Escape a nivel window: el @keydown del backdrop solo recibe teclas si el
+    // foco está dentro del diálogo; con el listener global cierra siempre.
+    window.addEventListener('keydown', onKey)
+    // Si el foco quedó fuera de la tarjeta (p.ej. el autofocus del form no
+    // corrió), el trap lo reincorpora en el próximo Tab; además se enfoca la
+    // tarjeta para lectores de pantalla hasta que el form tome el foco.
+    nextTick(() => {
+      const card = cardRef.value
+      if (card && !card.contains(document.activeElement)) card.focus()
+    })
+  } else {
+    window.removeEventListener('keydown', onKey)
+    if (lastFocus?.isConnected) lastFocus.focus()
+    lastFocus = null
+  }
 }, { immediate: true })
 onUnmounted(() => window.removeEventListener('keydown', onKey))
 
 function switchMode(m) { mode.value = m }
 function close() { emit('close'); cart.closeAuth() }
 function onBackdrop(e) { if (e.target === e.currentTarget) close() }
-function onKey(e) { if (e.key === 'Escape') close() }
 // Auth OK (login/register/google): cerrar el modal y correr la continuación
-// pendiente del layout (acción o ruta).
+// pendiente del layout (acción o ruta). El watch de authOpen devuelve el
+// foco al elemento que lo abrió.
 function onDone() { cart.closeAuth(); emit('done') }
 </script>
 
@@ -61,7 +103,11 @@ function onDone() { cart.closeAuth(); emit('done') }
        del montaje: .store-page existe como el raíz del mismo ciclo. -->
   <Teleport defer to=".store-page">
     <div v-if="cart.authOpen" class="ec-auth-backdrop" @click="onBackdrop">
-      <div class="ec-auth-card" role="dialog" aria-modal="true" aria-labelledby="ec-auth-modal-title">
+      <div
+        ref="cardRef" class="ec-auth-card" role="dialog" aria-modal="true"
+        aria-labelledby="ec-auth-modal-title" aria-describedby="ec-auth-modal-sub"
+        tabindex="-1"
+      >
         <button type="button" class="ec-auth-close" aria-label="Cerrar" @click="close">
           <AppIcon name="x" :size="18" />
         </button>
@@ -71,7 +117,7 @@ function onDone() { cart.closeAuth(); emit('done') }
             <AppIcon :name="modeIcon" :size="18" />
           </span>
           <h2 id="ec-auth-modal-title" class="ec-auth-title">{{ title }}</h2>
-          <p class="ec-auth-sub">{{ subtitle }}</p>
+          <p id="ec-auth-modal-sub" class="ec-auth-sub">{{ subtitle }}</p>
         </header>
 
         <StoreAuthForm :slug="slug" :mode="mode" @done="onDone" @mode="switchMode" />
@@ -95,12 +141,25 @@ function onDone() { cart.closeAuth(); emit('done') }
   background: var(--sp-card-solid, var(--sp-card, #fff)); color: var(--sp-ink, #0f172a);
   box-shadow: 0 24px 60px rgba(0, 0, 0, .3);
 }
+/* La tarjeta recibe foco programático (tabindex=-1) solo como fallback del
+   focus trap: sin outline propio. */
+.ec-auth-card:focus { outline: none; }
+.ec-auth-card:focus-visible { outline: none; }
+@keyframes ec-auth-card-in {
+  from { opacity: 0; transform: translate3d(0, 10px, 0) scale(.985); }
+  to   { opacity: 1; transform: none; }
+}
+.ec-auth-card { animation: ec-auth-card-in .22s ease-out both; }
 .ec-auth-close {
   position: absolute; top: 12px; right: 12px; z-index: 2;
-  display: grid; place-items: center; width: 34px; height: 34px;
+  display: grid; place-items: center; width: 36px; height: 36px;
   border: none; border-radius: calc(var(--sp-radius, 16px) * .65); background: transparent; color: inherit; cursor: pointer;
 }
 .ec-auth-close:hover { background: var(--sp-soft, rgba(127, 127, 127, .12)); }
+.ec-auth-close:focus-visible {
+  outline: 2px solid var(--sp-accent-text, var(--store-accent-ink, #111));
+  outline-offset: 2px;
+}
 .ec-auth-head { display: grid; gap: 8px; margin-bottom: 18px; padding-right: 30px; }
 .ec-auth-badge {
   display: grid; place-items: center; width: 42px; height: 42px;
@@ -112,5 +171,8 @@ function onDone() { cart.closeAuth(); emit('done') }
 .ec-auth-sub { margin: 0; font-size: 13px; line-height: 1.5; color: var(--sp-muted, #5b6678); }
 @media (max-width: 480px) {
   .ec-auth-card { padding: 24px 20px 20px; border-radius: calc(var(--sp-radius, 16px) * 1.05); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .ec-auth-card { animation: none; }
 }
 </style>
