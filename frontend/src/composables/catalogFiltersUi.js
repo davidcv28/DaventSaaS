@@ -12,13 +12,14 @@ export const closeFilters = () => { filtersUi.open = false }
 // ¿Hay algo filtrable en este catálogo? Espeja lo que CatalogFilters usa
 // para decidir si monta la sidebar: sin categorías, marcas, precio, estado
 // ni facetas no hay panel ni botón (la grilla queda a todo lo ancho).
-export function hasAnyFilterGroup(catalog, priceCeiling, offerTotal, newTotal) {
+export function hasAnyFilterGroup(catalog, priceCeiling, offerTotal, newTotal, eventTotal = 0) {
   return computed(() => Boolean(
     catalog.value.categories?.length
     || catalog.value.brands?.length
     || priceCeiling.value > 0
     || offerTotal.value > 0
     || newTotal.value > 0
+    || eventTotal.value > 0
     || (catalog.value.facets || []).length
   ))
 }

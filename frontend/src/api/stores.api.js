@@ -124,7 +124,7 @@ function unwrap(data) {
 // filtros (ids ordenados, features con claves/valores ordenados, vacíos en
 // undefined) — la usa publicCatalog para la request y StorePublicLayout
 // para la clave del cache compartido.
-export function normalizeCatalogParams({ q = '', category = '', brand = '', min_price = '', max_price = '', sort = '', features = null, offer = false, is_new = false } = {}) {
+export function normalizeCatalogParams({ q = '', category = '', brand = '', min_price = '', max_price = '', sort = '', features = null, offer = false, is_new = false, event = false } = {}) {
   const ids = (v) => [...new Set([].concat(v || []).map((x) => Number(x)).filter((n) => Number.isInteger(n) && n > 0))].sort((a, b) => a - b).join(',')
   const feats = {}
   if (features && typeof features === 'object') {
@@ -142,7 +142,8 @@ export function normalizeCatalogParams({ q = '', category = '', brand = '', min_
     sort: sort || undefined,
     features: Object.keys(feats).length ? JSON.stringify(feats) : undefined,
     offer: offer ? '1' : undefined,
-    new: is_new ? '1' : undefined
+    new: is_new ? '1' : undefined,
+    event: event ? '1' : undefined
   }
 }
 

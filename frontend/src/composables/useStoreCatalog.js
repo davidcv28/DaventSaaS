@@ -86,6 +86,9 @@ function buildCatalogState(ctx, { pageSize }) {
   const featureFilters = reactive(parseFeatureQuery(route.query.features))
   const onlyOffer = ref(route.query.offer === '1')
   const onlyNew = ref(route.query.new === '1')
+  // ?event=1: solo productos con descuento programado vigente (eventos
+  // especiales del comercio). El control se muestra solo si eventTotal>0.
+  const onlyEvent = ref(route.query.event === '1')
   const priceMin = ref('')
   const priceMax = ref('')
   const sort = ref(SORTS.includes(route.query.sort) ? route.query.sort : 'name')
@@ -114,6 +117,7 @@ function buildCatalogState(ctx, { pageSize }) {
         features: featureFilters,
         offer: onlyOffer.value,
         is_new: onlyNew.value,
+        event: onlyEvent.value,
         min_price: min,
         max_price: max,
         sort: sort.value
@@ -173,12 +177,14 @@ function buildCatalogState(ctx, { pageSize }) {
   }
   const toggleOffer = () => { onlyOffer.value = !onlyOffer.value; loadCatalog() }
   const toggleNew = () => { onlyNew.value = !onlyNew.value; loadCatalog() }
+  const toggleEvent = () => { onlyEvent.value = !onlyEvent.value; loadCatalog() }
   function clearFilters() {
     activeCategories.value = []
     activeBrands.value = []
     Object.keys(featureFilters).forEach((k) => delete featureFilters[k])
     onlyOffer.value = false
     onlyNew.value = false
+    onlyEvent.value = false
     ui.search = ''
     priceMin.value = ''
     priceMax.value = ''
@@ -200,7 +206,7 @@ function buildCatalogState(ctx, { pageSize }) {
   const featureFilterCount = computed(() => Object.values(featureFilters).reduce((n, v) => n + v.length, 0))
   const hasFilters = computed(() => Boolean(
     activeCategories.value.length || activeBrands.value.length || featureFilterCount.value
-    || onlyOffer.value || onlyNew.value || ui.search || hasPriceFilter.value
+    || onlyOffer.value || onlyNew.value || onlyEvent.value || ui.search || hasPriceFilter.value
   ))
   const hasCatalogNav = computed(() => Boolean(catalog.value.categories.length || catalog.value.brands.length))
   const categoryNameOf = (p) => catalog.value.categories.find((c) => c.id === p.category)?.name || ''
@@ -213,7 +219,7 @@ function buildCatalogState(ctx, { pageSize }) {
   const activeBrandName = computed(() => activeBrandNames.value.join(' · ') || '')
   const activeFilterCount = computed(() =>
     activeCategories.value.length + activeBrands.value.length + featureFilterCount.value
-    + (onlyOffer.value ? 1 : 0) + (onlyNew.value ? 1 : 0)
+    + (onlyOffer.value ? 1 : 0) + (onlyNew.value ? 1 : 0) + (onlyEvent.value ? 1 : 0)
     + (ui.search.trim() ? 1 : 0) + (hasPriceFilter.value ? 1 : 0)
   )
   const total = computed(() => catalog.value.products.length)
@@ -235,6 +241,9 @@ function buildCatalogState(ctx, { pageSize }) {
   const priceCeiling = computed(() => Math.ceil(Number(catalog.value.price_max || 0)))
   const offerTotal = computed(() => Number(catalog.value.offer_count || 0))
   const newTotal = computed(() => Number(catalog.value.new_count || 0))
+  // Productos con descuento programado vigente — alimenta el filtro
+  // "Eventos", que solo se muestra cuando hay algo que filtrar.
+  const eventTotal = computed(() => Number(catalog.value.event_count || 0))
 
   // Tags removibles de los filtros activos (una por valor elegido): cada
   // plantilla las dibuja con su propio estilo sobre la misma lista.
@@ -254,6 +263,7 @@ function buildCatalogState(ctx, { pageSize }) {
     })
     if (onlyOffer.value) tags.push({ key: 'offer', label: 'En oferta', remove: toggleOffer })
     if (onlyNew.value) tags.push({ key: 'new', label: 'Novedades', remove: toggleNew })
+    if (onlyEvent.value) tags.push({ key: 'event', label: 'En evento', remove: toggleEvent })
     if (hasPriceFilter.value) tags.push({ key: 'price', label: priceRangeLabel.value, remove: clearPrice })
     return tags
   })
@@ -273,12 +283,12 @@ function buildCatalogState(ctx, { pageSize }) {
   return {
     ctx, slug, ui, custom, shopName, pageTemplate, hasDesignAdvanced, year, homeTo,
     catalog, catalogStatus, loadCatalog,
-    activeCategories, activeBrands, featureFilters, onlyOffer, onlyNew, priceMin, priceMax, sort,
+    activeCategories, activeBrands, featureFilters, onlyOffer, onlyNew, onlyEvent, priceMin, priceMax, sort,
     visibleCount, visibleProducts, hasMoreProducts, showMore,
-    catThumbs, pickCategory, pickBrand, pickFeature, isFeatureOn, toggleOffer, toggleNew, clearFilters, clearPrice, clearCategories, clearBrands,
+    catThumbs, pickCategory, pickBrand, pickFeature, isFeatureOn, toggleOffer, toggleNew, toggleEvent, clearFilters, clearPrice, clearCategories, clearBrands,
     hasPriceFilter, priceRangeLabel, hasFilters, hasCatalogNav,
     activeCategoryName, activeBrandName, activeCategoryNames, activeBrandNames, activeFilterCount,
-    total, productCount, facets, priceCeiling, offerTotal, newTotal, activeTags,
+    total, productCount, facets, priceCeiling, offerTotal, newTotal, eventTotal, activeTags,
     brandNameOf, categoryNameOf, offerCount, shownLabel, shownPct,
     productTo, openProduct, whatsappUrl, askUrl
   }

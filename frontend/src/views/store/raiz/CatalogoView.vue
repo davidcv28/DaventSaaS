@@ -22,11 +22,11 @@ const homeTo = computed(() => ({ path: storeHostSlug ? '/' : `/${slug.value}` })
 const c = useStoreCatalog({ pageSize: 12 })
 const {
   catalog, catalogStatus, loadCatalog, activeCategories, activeBrands,
-  onlyOffer, onlyNew, priceMin, priceMax, sort,
+  onlyOffer, onlyNew, onlyEvent, priceMin, priceMax, sort,
   visibleProducts, hasMoreProducts, showMore, pickCategory, pickBrand, pickFeature, isFeatureOn,
-  toggleOffer, toggleNew, clearFilters, hasFilters, activeTags, facets,
+  toggleOffer, toggleNew, toggleEvent, clearFilters, hasFilters, activeTags, facets,
   brandNameOf, categoryNameOf, openProduct, shownLabel, shownPct,
-  offerTotal, newTotal
+  offerTotal, newTotal, eventTotal
 } = c
 
 // Panel de filtros plegable (móvil/tablet): conserva los mismos controles
@@ -171,6 +171,11 @@ const toggleFeature = (name, value) => pickFeature(name, value)
               <span class="rz-cat-check-label">Novedades (7 días)</span>
               <em v-if="newTotal">{{ newTotal }}</em>
             </label>
+            <label v-if="eventTotal" class="rz-cat-check">
+              <input type="checkbox" :checked="onlyEvent" @change="toggleEvent" />
+              <span class="rz-cat-check-label">En evento</span>
+              <em>{{ eventTotal }}</em>
+            </label>
           </fieldset>
 
           <fieldset v-for="facet in facets" :key="facet.name" class="rz-cat-group">
@@ -237,7 +242,7 @@ const toggleFeature = (name, value) => pickFeature(name, value)
               v-for="(p, i) in visibleProducts" :key="p.id" v-reveal="(i % 3) * 60"
               class="rz-cat-card" :p="p" :cat="categoryNameOf(p)" :brand="brandNameOf(p)"
               :stars="custom.show_reviews" stars-icon="star" quick="Ver producto"
-              go-label="Ver producto" seal-shape="" @open="openProduct"
+              seal-shape="" @open="openProduct"
             >
               <template v-if="productDiscount(p)" #tags>
                 <p class="rz-cat-card-promo">{{ productDiscount(p).name }}<span v-if="offerEndsLabel(productDiscount(p))"> · {{ offerEndsLabel(productDiscount(p)) }}</span></p>

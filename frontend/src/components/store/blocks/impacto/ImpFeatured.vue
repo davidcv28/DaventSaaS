@@ -64,7 +64,7 @@ const headerLines = computed(() => [
           class="sp-card" :p="p" :cat="shopCatOf(p)" :brand="shopBrandOf(p)"
           :stars="custom.show_reviews" stars-icon="star" seal-shape=""
           :index="String(i + 1).padStart(2, '0')"
-          quick="Ver producto" go-label="Ver producto" @open="openProduct"
+          quick="Ver producto" @open="openProduct"
         />
       </div>
 

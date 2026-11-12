@@ -491,7 +491,7 @@ onBeforeUnmount(() => {
             <TplProductCard
               v-for="r in related" :key="r.id" class="rz-pdp-rel-card" :p="r"
               :cat="catNameOf(r)" :brand="brandNameOf(r)"
-              seal-shape="" :ph-size="24" :go="false" @open="(r2) => router.push(productTo(r2))"
+              seal-shape="" :ph-size="24" @open="(r2) => router.push(productTo(r2))"
             />
           </div>
         </section>

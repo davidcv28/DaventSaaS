@@ -24,8 +24,9 @@
 //   - Placeholder: icono por categoría (CAT_ICON_RULES → AppIcon, con
 //     'lucide:<name>' del set bundleado) y fallback 'package'.
 //   - Slot #foot se mantiene SOLO para que las pieles personalicen la
-//     fila de precio; sus props se redujeron a { p, price, oldPrice,
-//     offer }. track-m elimina los overrides que aún rendericen botones.
+//     fila de precio; sus props son { p, price, oldPrice, offer }.
+//     Las antiguas props de CTA (go/goLabel/addHref/addLabel/ordersEnabled)
+//     se eliminaron en track-m junto con todos sus call sites.
 // Estructura fija:
 //   .tpc > .tpc-media(img | .tpc-ph, .tpc-flags, OfferSeal, .tpc-campaign,
 //                    .tpc-event, .tpc-idx, .tpc-quick, media-extra)
@@ -57,16 +58,6 @@ const props = defineProps({
   offerNew: { type: Boolean, default: false },    // mostrar new SOLO si no hay oferta
   save: { type: String, default: '' },            // línea "Ahorrás $X · termina…"
   quick: { type: String, default: '' },           // chip hover sobre la media (aria-hidden)
-  // DEPRECADAS (track-j): ya no se usan en el render — la tarjeta entera es
-  // el link y no tiene CTAs propios. Declaradas solo para no romper call
-  // sites; track-m las elimina junto con sus usos.
-  go: { type: Boolean, default: true },
-  goLabel: { type: String, default: 'Ver producto' },
-  addHref: { type: String, default: '' },
-  addLabel: { type: String, default: '' },
-  // override opcional del gate de venta online — DEPRECADA junto con el
-  // botón de carrito (track-j); se mantiene declarada hasta track-m.
-  ordersEnabled: { type: Boolean, default: null }
 })
 const emit = defineEmits(['open'])
 

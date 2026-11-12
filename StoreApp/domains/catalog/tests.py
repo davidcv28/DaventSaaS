@@ -859,6 +859,31 @@ class PublicCatalogFilterTests(TestCase):
         response        =   self._catalog(new = '1')
         self.assertEqual(sorted(p['name'] for p in response.data['products']), ['Oferta', 'Vieja'])
 
+    def test_event_flag_and_count(self):
+        #?event=1 deja solo los productos cuyo descuento programado vigente
+        #firma su oferta (effective_discount). event_count es el total sin
+        #filtrar — alimenta el checkbox "En evento", que la web solo muestra
+        #cuando hay algo que filtrar. Una oferta manual no cuenta como evento.
+        #has_discounts es premium: sin él running_discounts_of devuelve
+        #vacío y no habría evento que filtrar — va en el mismo _grant.
+        _, profile      =   _make_user('duenio-evento')
+        _grant(profile, has_public_link = True, has_discounts = True)
+        store           =   Store.objects.create(user = profile, slug = 'mi-tienda', is_published = True)
+        Product.objects.create(store = store, name = 'Evento', price = 100)
+        Product.objects.create(store = store, name = 'Manual', price = 100, offer_price = 60)
+        Product.objects.create(store = store, name = 'Llano', price = 100)
+        Discount.objects.create(
+            store = store, name = 'Hot Sale', percent = 25, scope = 'products',
+            starts_at = timezone.now() - timedelta(hours = 1),
+        ).products.add(Product.objects.get(store = store, name = 'Evento'))
+        response        =   self._catalog()
+        self.assertEqual(response.data['event_count'], 1)
+        response        =   self._catalog(event = '1')
+        self.assertEqual([p['name'] for p in response.data['products']], ['Evento'])
+        #El evento convive con el resto de filtros: ?offer=1 también lo ve.
+        response        =   self._catalog(offer = '1', event = '1')
+        self.assertEqual([p['name'] for p in response.data['products']], ['Evento'])
+
     def test_inactive_and_exclusive_products_never_listed(self):
         #Contrato de la ficha pública (/tienda/:slug/producto/:id): el front
         #resuelve el producto dentro de products[] — uno inactivo, exclusivo

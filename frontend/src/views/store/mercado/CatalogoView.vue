@@ -7,7 +7,7 @@
 // catálogo público llega completo en una sola respuesta.
 import { ref, computed, inject, nextTick, watch } from 'vue'
 import { storeHostSlug } from '../../../config/env.js'
-import { productDiscount, offerEndsLabel, offerPct } from '../../../api/catalog.api.js'
+import { productDiscount, offerEndsLabel } from '../../../api/catalog.api.js'
 import { useStoreCatalog, SORT_OPTIONS } from '../../../composables/useStoreCatalog.js'
 import { templateBlock } from '../../../templates/index.js'
 import TplProductCard from '../../../components/store/TplProductCard.vue'
@@ -22,9 +22,9 @@ const homeTo = computed(() => ({ path: storeHostSlug ? '/' : `/${slug.value}` })
 const c = useStoreCatalog({ pageSize: 24 })
 const {
   catalog, catalogStatus, loadCatalog, activeCategories, activeBrands,
-  onlyOffer, priceMin, priceMax, sort, hasFilters,
-  pickCategory, pickBrand, toggleOffer, clearFilters, clearCategories,
-  brandNameOf, categoryNameOf, openProduct, activeCategoryName
+  onlyOffer, onlyNew, onlyEvent, priceMin, priceMax, sort, hasFilters,
+  pickCategory, pickBrand, toggleOffer, toggleNew, toggleEvent, clearFilters, clearCategories,
+  brandNameOf, categoryNameOf, openProduct, activeCategoryName, eventTotal
 } = c
 
 const pageEl = ref(null)
@@ -39,7 +39,7 @@ const totalPages = computed(() => Math.max(1, Math.ceil(total.value / perPage)))
 const pagedProducts = computed(() => catalog.value.products.slice((page.value - 1) * perPage, page.value * perPage))
 const countLabel = computed(() => `${total.value} ${total.value === 1 ? 'resultado' : 'resultados'}`)
 watch(() => catalog.value, () => { page.value = 1 })
-watch([activeCategories, activeBrands, onlyOffer], () => { page.value = 1 })
+watch([activeCategories, activeBrands, onlyOffer, onlyNew, onlyEvent], () => { page.value = 1 })
 const pageItems = computed(() => {
   const n = totalPages.value
   if (n <= 7) return Array.from({ length: n }, (_, i) => i + 1)
@@ -76,6 +76,7 @@ const filtersOpen = ref(false)
 const filtersToggle = ref(null)
 const filtersCount = computed(() =>
   activeCategories.value.length + activeBrands.value.length + (onlyOffer.value ? 1 : 0) +
+  (onlyNew.value ? 1 : 0) + (onlyEvent.value ? 1 : 0) +
   ((priceMin.value !== '' || priceMax.value !== '') ? 1 : 0) + (ui.search.trim() ? 1 : 0)
 )
 function closeFilters() {
@@ -113,6 +114,8 @@ const activeChips = computed(() => {
     chips.push({ key: `b-${id}`, tag: 'Marca', label: brand?.name || 'Marca', remove: () => pickBrand(id) })
   }
   if (onlyOffer.value) chips.push({ key: 'offer', tag: 'Oferta', label: 'Solo ofertas', remove: () => toggleOffer() })
+  if (onlyNew.value) chips.push({ key: 'new', tag: 'Novedad', label: 'Novedades', remove: () => toggleNew() })
+  if (onlyEvent.value) chips.push({ key: 'event', tag: 'Evento', label: 'En evento', remove: () => toggleEvent() })
   if (priceMin.value !== '' || priceMax.value !== '') {
     chips.push({
       key: 'price', tag: 'Precio',
@@ -210,6 +213,10 @@ const activeChips = computed(() => {
               <input type="checkbox" :checked="onlyOffer" @change="toggleOffer" />
               <span>Solo ofertas</span>
             </label>
+            <label v-if="eventTotal" class="mc-f-check">
+              <input type="checkbox" :checked="onlyEvent" @change="toggleEvent" />
+              <span>En evento<em v-if="eventTotal">{{ eventTotal }}</em></span>
+            </label>
           </section>
 
           <div class="mc-cat-aside-foot">
@@ -271,27 +278,8 @@ const activeChips = computed(() => {
               :p="p" :cat="categoryNameOf(p)" :brand="brandNameOf(p)" :desc="p.description || ''"
               :layout="view === 'list' ? 'row' : 'card'"
               :stars="custom.show_reviews" stars-icon="star"
-              seal-shape="" go-label="Ver producto" @open="openProduct"
+              seal-shape="" @open="openProduct"
             >
-              <template #foot="{ price, oldPrice, offer, canBuy, added, adding, buy }">
-                <span class="tpc-price-wrap">
-                  <span class="tpc-price">
-                    <strong>{{ price }}</strong>
-                    <span v-if="offer != null" class="mc-cat-off">-{{ offerPct(p) }}%</span>
-                    <s v-if="offer != null">{{ oldPrice }}</s>
-                  </span>
-                </span>
-                <button
-                  v-if="canBuy" type="button" class="tpc-add tpc-cart"
-                  :class="{ 'is-added': added }" :disabled="adding"
-                  :aria-label="added ? `${p.name} agregado al carrito` : `Agregar ${p.name} al carrito`"
-                  :title="added ? 'Agregado' : 'Agregar al carrito'"
-                  @click.stop="buy()"
-                >
-                  <AppIcon :name="added ? 'check' : 'shopping-cart'" :size="20" />
-                </button>
-                <span v-if="view === 'grid'" class="tpc-go" aria-hidden="true">Ver producto<AppIcon name="arrow-right" :size="15" /></span>
-              </template>
               <template v-if="promoOf(p) && blkOn('promo')" #tags>
                 <p class="mc-cat-promo">{{ promoOf(p).name }}<span v-if="offerEndsLabel(promoOf(p))"> · {{ offerEndsLabel(promoOf(p)) }}</span></p>
               </template>

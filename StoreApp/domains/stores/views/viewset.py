@@ -292,7 +292,7 @@ def _refresh_cached_catalog_stock(data, store):
 #Solo estos params cambian el payload del catálogo público. Cualquier otro
 #(?x=<aleatorio>) se ignora en la huella: sin la whitelist cada query string
 #arbitraria creaba una entrada nueva del payload completo (cache flooding).
-CATALOG_FINGERPRINT_PARAMS = ('category', 'brand', 'q', 'features', 'offer', 'new', 'min_price', 'max_price', 'sort')
+CATALOG_FINGERPRINT_PARAMS = ('category', 'brand', 'q', 'features', 'offer', 'new', 'event', 'min_price', 'max_price', 'sort')
 
 def _params_fingerprint(request):
     #Huella estable de la querystring para el cache del catálogo público:
@@ -311,7 +311,7 @@ def _params_fingerprint(request):
         if name == 'features':
             parsed  =   _feature_filters(raw)
             return tuple(sorted((key.casefold(), tuple(sorted(values))) for key, values in parsed.items()))
-        if name in ('offer', 'new'):
+        if name in ('offer', 'new', 'event'):
             return _flag(raw)
         if name in ('min_price', 'max_price'):
             bound   =   _price_bound(raw)
@@ -1012,7 +1012,7 @@ class StoreViewSet(StoreBaseViewSet):
         #  ?category=1,2 / ?brand=3,4   taxonomías multi-selección (OR entre ids)
         #  ?q=texto                     nombre + descripción + categoría + marca + características
         #  ?features={"Talle":["M"]}    atributos dinámicos (OR dentro, AND entre grupos)
-        #  ?offer=1 / ?new=1            solo ofertas efectivas / solo novedades (7 días)
+        #  ?offer=1 / ?new=1 / ?event=1  solo ofertas efectivas / novedades (7 días) / productos con descuento programado vigente
         #  ?min_price / ?max_price      rango sobre el precio efectivo
         #  ?sort=name|recent|price_asc|price_desc
         category_ids    =   _id_list(request.query_params.get('category'))
@@ -1027,6 +1027,10 @@ class StoreViewSet(StoreBaseViewSet):
         feature_filters =   _feature_filters(request.query_params.get('features'))
         only_offer      =   _flag(request.query_params.get('offer'))
         only_new        =   _flag(request.query_params.get('new'))
+        #?event=1: solo productos alcanzados por un Discount programado
+        #vigente (el que "firma" la oferta pública). Distinto de ?offer=1,
+        #que ya cubre cualquier oferta efectiva (manual o programada).
+        only_event      =   _flag(request.query_params.get('event'))
         sort            =   (request.query_params.get('sort') or '').strip()
         ordering        =   CATALOG_SORTS.get(sort)
         if ordering and sort not in ('price_asc', 'price_desc'):
@@ -1050,6 +1054,7 @@ class StoreViewSet(StoreBaseViewSet):
         items           =   []
         offer_count     =   0
         new_count       =   0
+        event_count     =   0
         price_max       =   None
         for product in products:
             #El descuento solo firma la oferta cuando realmente gana — si la
@@ -1058,6 +1063,8 @@ class StoreViewSet(StoreBaseViewSet):
             product.effective_price       =   product.effective_offer if product.effective_offer is not None else product.price
             if product.effective_offer is not None:
                 offer_count +=  1
+            if product.effective_discount is not None:
+                event_count +=  1
             if product.created_at >= new_cutoff:
                 new_count   +=  1
             if price_max is None or product.effective_price > price_max:
@@ -1086,6 +1093,8 @@ class StoreViewSet(StoreBaseViewSet):
             if only_new and product.created_at < new_cutoff:
                 continue
             if only_offer and product.effective_offer is None:
+                continue
+            if only_event and product.effective_discount is None:
                 continue
             if min_price is not None and product.effective_price < min_price:
                 continue
@@ -1148,6 +1157,7 @@ class StoreViewSet(StoreBaseViewSet):
             'facets'        :   facet_list,
             'offer_count'   :   offer_count,
             'new_count'     :   new_count,
+            'event_count'   :   event_count,
             'price_max'     :   price_max,
         }
     #=========================================
