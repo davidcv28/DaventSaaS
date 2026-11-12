@@ -155,10 +155,15 @@ const usePattern = computed(() => Boolean(
 // carrito, checkout, seguimiento, legales y las que caen a la plantilla
 // Vue por no cubrir la superficie): el documento se monta en modo "chrome"
 // (solo su cromo fijo) para que el navbar sea EL MISMO en toda la web.
+// El documento no confirma modo "chrome" en su ds-height (backend viejo
+// que sirve la landing entera): se corta la tira y la página cae a la
+// barra Vue, nunca queda un iframe enorme tapando todo.
+const patternChromeBroken = ref(false)
 const usePatternChrome = computed(() => Boolean(
   store.value &&
   !studioMode.value &&
   !usePattern.value &&
+  !patternChromeBroken.value &&
   patternDoc.value?.ready && (patternDoc.value?.has_html || patternDoc.value?.html) &&
   (patternDoc.value?.surfaces || []).length
 ))
@@ -218,13 +223,20 @@ const patternStyleOverride = computed(() => {
 })
 // Navegación del documento del patrón: sus enlaces de chrome viajan como
 // rutas (home/catalog/services) y acá se resuelven con el router de la app.
-function onPatternNavigate({ route, id } = {}) {
+function onPatternNavigate({ route, id, q, cat } = {}) {
   if (route === 'product' && id) {
     router.push({ name: 'store-product', params: { slug: slug.value, productId: id } })
     return
   }
   const target = { home: homeTo.value, catalog: catalogTo.value, services: servicesTo.value }[route]
-  if (target) router.push(target)
+  if (!target) return
+  // Buscador/sugerencias del chrome del diseño: q = texto, cat = categoría
+  // (mismas claves de query que ya lee el catálogo: ?q= y ?category=).
+  if (route === 'catalog' && (q || cat)) {
+    router.push({ ...target, query: { ...(q ? { q } : {}), ...(cat ? { category: cat } : {}) } })
+    return
+  }
+  router.push(target)
 }
 // "Agregar al carrito" del documento del patrón (postMessage ds-buy): el
 // iframe es origen opaco y no puede llamar a la API — acá sí hay sesión
@@ -1385,6 +1397,7 @@ onBeforeUnmount(() => {
       @account="onPatternAccount"
       @toggle-theme="togglePageTheme"
       @chrome-height="(h) => (patternChromeH = h)"
+      @chrome-invalid="patternChromeBroken = true"
     />
     <!-- ===== Barra superior ===== -->
     <!-- El meta del patrón viaja en paralelo a la ficha: mientras carga no

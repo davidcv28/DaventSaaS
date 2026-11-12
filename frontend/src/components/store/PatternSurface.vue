@@ -136,7 +136,7 @@ const src = computed(() => {
   return `/api/stores/public/${encodeURIComponent(props.slug)}/pattern/document/?${params}`
 })
 
-const emit = defineEmits(['navigate', 'toggle-theme', 'load', 'buy', 'buy-now', 'account', 'chrome-height'])
+const emit = defineEmits(['navigate', 'toggle-theme', 'load', 'buy', 'buy-now', 'account', 'chrome-height', 'chrome-invalid'])
 
 //El iframe va sin `allow-same-origin` (origen opaco): el JS del diseño no
 //puede tocar el DOM ni las cookies de la app. Los datos que necesita de la
@@ -261,13 +261,23 @@ function onMessage(e) {
   if (e.data?.type === 'davent:ds-route') {
     const route = String(e.data.route || '')
     if (['home', 'catalog', 'services'].includes(route)) {
-      emit('navigate', { route })
+      /* El buscador/sugerencias del chrome adjuntan q (texto) y cat
+       * (categoría) a la misma señal — el host los vuelca en la query
+       * del catálogo (origen opaco: no comparten sessionStorage). */
+      emit('navigate', { route, q: e.data.q ? String(e.data.q) : '', cat: e.data.cat ? String(e.data.cat) : '' })
     } else if (route === 'product' && e.data.id) {
       emit('navigate', { route, id: String(e.data.id) })
     }
     return
   }
   if (e.data?.type !== 'davent:ds-height') return
+  /* El documento confirma su superficie en cada ds-height. Un backend
+   * viejo no conoce 'chrome' y sirve la landing entera: sin el chequeo la
+   * tira crecía al alto de la portada y tapaba la página completa. */
+  if (props.chrome && e.data.surface !== 'chrome') {
+    emit('chrome-invalid')
+    return
+  }
   const next = Number(e.data.height) || 0
   /* `Math.ceil`: el alto viaja fraccionario (getBoundingClientRect) y un
    * iframe 0.5px más bajo que el documento gana scroll interno — la rueda

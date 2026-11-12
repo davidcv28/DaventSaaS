@@ -99,7 +99,11 @@
         h += bottomChromePx()
       }
       syncChatMetrics()
-      parent.postMessage({ type: 'davent:ds-height', height: h }, '*')
+      /* `surface` va en el alto: el host la usa para confirmar que el
+       * documento realmente vino en modo "chrome" — un backend viejo
+       * sirve la landing completa y la tira crecería hasta tapar la
+       * página entera. */
+      parent.postMessage({ type: 'davent:ds-height', height: h, surface: root.getAttribute('data-ds-surface') }, '*')
     })
   }
   function go(route, id, extra) {
