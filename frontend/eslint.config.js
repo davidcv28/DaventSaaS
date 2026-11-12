@@ -17,7 +17,7 @@ const browserGlobals = {
   AudioContext: 'readonly', Audio: 'readonly', CanvasRenderingContext2D: 'readonly',
   process: 'readonly', globalThis: 'readonly', structuredClone: 'readonly',
   Buffer: 'readonly', FileReader: 'readonly', XMLSerializer: 'readonly',
-  KeyboardEvent: 'readonly',
+  KeyboardEvent: 'readonly', EventSource: 'readonly',
 }
 
 export default [

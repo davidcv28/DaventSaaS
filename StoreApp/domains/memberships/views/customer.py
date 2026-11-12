@@ -243,6 +243,14 @@ class CustomerStorePlansView(APIView):
                 },
                 status = status.HTTP_409_CONFLICT,
             )
+        #Campana del comprador: la suscripción quedó pendiente de pago
+        #(best-effort — nunca rompe el alta ya persistida).
+        try:
+            from StoreApp.domains.customers.services.notifications import notify_customer_subscription
+            notify_customer_subscription(subscription, StoreSubscription.STATUS_PENDING)
+        except Exception:                                   # noqa: BLE001
+            import logging
+            logging.getLogger(__name__).exception('memberships customer: notification falló (sub=%s)', getattr(subscription, 'pk', None))
         return Response(
             {
                 'Exito'         :   'Suscripción creada. Completá el pago con los datos de la tienda para activarla.',

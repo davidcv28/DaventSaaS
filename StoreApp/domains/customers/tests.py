@@ -30,6 +30,7 @@ from AdminApp.domains.users.models.fields import digest_for
 from StoreApp.domains.customers.models import (
     Customer,
     CustomerAddress,
+    CustomerNotification,
     StoreMembership,
 )
 from StoreApp.domains.customers.services.customers import (
@@ -56,6 +57,10 @@ RESET_CONFIRM    =   '/api/customer-auth/password-reset/confirm/'
 GOOGLE_URL       =   '/api/customer-auth/google/'
 GOOGLE_CONFIG    =   '/api/customer-auth/google-config/{slug}/'
 DAVENT_USER_URL  =   '/api/user/'
+NOTIFS_URL       =   '/api/customer/notifications/'
+NOTIFS_READ      =   '/api/customer/notifications/read/'
+NOTIFS_TICKET    =   '/api/customer/notifications/stream-ticket/'
+NOTIFS_STREAM    =   '/api/customer/notifications/stream/'
 
 PASSWORD         =   'Comprador#2026'
 
@@ -773,3 +778,100 @@ class CustomerModelTests(TestCase):
         c.set_unusable_password()
         c.save()
         self.assertFalse(c.check_password('cualquiera'))
+
+
+class CustomerNotificationTests(TestCase):
+    """
+    Campana del comprador: list/read scopeados al request.customer
+    (IDOR) y el ticket firmado del stream SSE.
+    """
+    def setUp(self):
+        cache.clear()
+        self.a          =   _make_customer('a@example.com')
+        self.b          =   _make_customer('b@example.com')
+        self.store      =   _make_store()
+        self.other      =   _make_store('otra')
+        self.client_a   =   APIClient()
+        _bearer(self.client_a, self.a)
+
+    def _notif(self, customer, store, **kw):
+        return CustomerNotification.objects.create(
+            customer = customer, store = store,
+            kind = CustomerNotification.KIND_ORDER, title = 'Aviso', **kw,
+        )
+
+    def test_list_requires_customer_auth(self):
+        self.assertEqual(APIClient().get(NOTIFS_URL).status_code, 401)
+
+    def test_list_only_own_and_store_filter(self):
+        self._notif(self.a, self.store)
+        self._notif(self.a, self.other, dedupe_key = 'x2')
+        self._notif(self.b, self.store, dedupe_key = 'x3')
+        response    =   self.client_a.get(NOTIFS_URL, {'store': self.store.slug})
+        self.assertEqual(response.status_code, 200)
+        data    =   response.json()
+        self.assertEqual(len(data['notifications']), 1)
+        self.assertEqual(data['unread'], 1)
+        #Sin filtro: las dos tiendas del comprador, nunca la del otro.
+        data    =   self.client_a.get(NOTIFS_URL).json()
+        self.assertEqual(len(data['notifications']), 2)
+
+    def test_read_idor_404(self):
+        foreign =   self._notif(self.b, self.store)
+        response    =   self.client_a.post(NOTIFS_READ, {'id': foreign.pk}, format = 'json')
+        self.assertEqual(response.status_code, 404)
+        foreign.refresh_from_db()
+        self.assertIsNone(foreign.read_at)
+
+    def test_read_marks_own_and_updates_unread(self):
+        n1  =   self._notif(self.a, self.store)
+        self._notif(self.a, self.store, dedupe_key = 'x4')
+        response    =   self.client_a.post(NOTIFS_READ, {'id': n1.pk}, format = 'json')
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.json()['unread'], 1)
+        n1.refresh_from_db()
+        self.assertIsNotNone(n1.read_at)
+
+    def test_read_all_scoped_by_store(self):
+        self._notif(self.a, self.store)
+        self._notif(self.a, self.other, dedupe_key = 'x5')
+        response    =   self.client_a.post(NOTIFS_READ, {'all': True, 'store': self.store.slug}, format = 'json')
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.json()['unread'], 1)
+        self.assertEqual(CustomerNotification.objects.filter(customer = self.a, read_at__isnull = True).count(), 1)
+
+    def test_stream_ticket_and_bad_ticket(self):
+        self.assertEqual(APIClient().post(NOTIFS_TICKET, {}, format = 'json').status_code, 401)
+        response    =   self.client_a.post(NOTIFS_TICKET, {'store': self.store.slug}, format = 'json')
+        self.assertEqual(response.status_code, 200)
+        self.assertTrue(response.json()['ticket'])
+        #Ticket trucho → 401; Accept de EventSource ya no da 406.
+        bad     =   APIClient().get(NOTIFS_STREAM, {'ticket': 'trucho', 'store': self.store.slug}, HTTP_ACCEPT = 'text/event-stream')
+        self.assertEqual(bad.status_code, 401)
+        bad     =   APIClient().get(NOTIFS_STREAM, {
+            'ticket': response.json()['ticket'], 'store': 'otra-tienda',
+        }, HTTP_ACCEPT = 'text/event-stream')
+        self.assertEqual(bad.status_code, 401)
+
+    def test_stream_opens_event_stream(self):
+        from StoreApp.domains.customers.views.notification_views import (
+            CustomerNotificationStreamView,
+        )
+        #El GET vía test client cierra la conexión atómica del TestCase al
+        #consumir el StreamingHttpResponse — se prueba el generador directo
+        #y solo hasta el primer yield (el loop de polling hace
+        #close_old_connections, rompe el atomic del test).
+        gen     =   CustomerNotificationStreamView()._events(self.a.pk, self.store.pk, 0)
+        first   =   next(iter(gen))
+        self.assertIn('conectado', first)
+        gen.close()
+
+    def test_dedupe_upsert_revives_unread(self):
+        from StoreApp.domains.customers.services.notifications import upsert_customer_notification
+        n1  =   upsert_customer_notification(self.a, self.store, 'order', 'v1', dedupe_key = 'k1')
+        self.client_a.post(NOTIFS_READ, {'id': n1.pk}, format = 'json')
+        n2  =   upsert_customer_notification(self.a, self.store, 'order', 'v2', dedupe_key = 'k1')
+        self.assertEqual(n1.pk, n2.pk)
+        self.assertIsNone(n2.read_at)
+        self.assertEqual(n2.title, 'v2')
+        self.assertEqual(CustomerNotification.objects.filter(customer = self.a).count(), 1)

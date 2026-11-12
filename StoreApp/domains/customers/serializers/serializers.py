@@ -24,6 +24,7 @@ from rest_framework import serializers
 from StoreApp.domains.customers.models import (
     Customer,
     CustomerAddress,
+    CustomerNotification,
     StoreMembership,
 )
 from StoreApp.domains.customers.services.customers import (
@@ -239,3 +240,18 @@ class CustomerMembershipSerializer(serializers.ModelSerializer):
     def get_store_name(self, obj):
         profile =   getattr(getattr(obj.store, 'user', None), 'business_name', '') or ''
         return profile or obj.store.slug
+
+
+#=====================================
+# NOTIFICATIONS (lectura — campana + /cuenta)
+#=====================================
+class CustomerNotificationSerializer(serializers.ModelSerializer):
+    """Aviso in-app del comprador (solo lectura — escribir es del backend)."""
+    store_slug      =   serializers.CharField(source = 'store.slug', read_only = True)
+    class Meta:
+        model       =   CustomerNotification
+        fields      =   [
+            'id', 'store_slug', 'kind', 'title', 'body', 'target',
+            'read_at', 'created_at',
+        ]
+        read_only_fields =   fields

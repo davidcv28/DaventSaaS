@@ -156,6 +156,14 @@ def post_message(thread, *, sender, body):
     if sender == SupportMessage.Sender.CUSTOMER:
         notify_owner_message(thread, message)
         enqueue_support_email(thread, message)
+    else:
+        #Respuesta del dueño → campana del comprador (CustomerNotification
+        #'support', dedupe por hilo). Best-effort como los avisos al dueño.
+        try:
+            from StoreApp.domains.customers.services.notifications import notify_customer_support
+            notify_customer_support(thread, message)
+        except Exception:
+            logger.exception('No se pudo crear la notificación del comprador %s', thread.pk)
     return message
 
 def set_thread_status(thread, status):

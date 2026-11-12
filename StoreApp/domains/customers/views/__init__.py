@@ -12,6 +12,12 @@ from .auth_views import (
     CustomerVerifyEmailView,
 )
 from .membership_views import CustomerMembershipListView
+from .notification_views import (
+    CustomerNotificationListView,
+    CustomerNotificationReadView,
+    CustomerNotificationStreamTicketView,
+    CustomerNotificationStreamView,
+)
 from .profile_views import (
     CustomerAddressDetailView,
     CustomerAddressListCreateView,

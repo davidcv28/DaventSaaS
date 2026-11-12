@@ -9,6 +9,10 @@ from StoreApp.domains.customers.views import (
     CustomerLogoutView,
     CustomerMembershipListView,
     CustomerMeView,
+    CustomerNotificationListView,
+    CustomerNotificationReadView,
+    CustomerNotificationStreamTicketView,
+    CustomerNotificationStreamView,
     CustomerPasswordResetConfirmView,
     CustomerPasswordResetRequestView,
     CustomerProfileView,
@@ -46,4 +50,11 @@ urlpatterns = [
     path('customer/addresses/',                      CustomerAddressListCreateView.as_view(),        name = 'customer_addresses'),
     path('customer/addresses/<int:pk>/',             CustomerAddressDetailView.as_view(),            name = 'customer_address_detail'),
     path('customer/memberships/',                    CustomerMembershipListView.as_view(),           name = 'customer_memberships'),
+    #NOTIFICACIONES del comprador (campana del header + /cuenta) — el
+    #stream SSE se autentica por ticket firmado (EventSource no manda
+    #Authorization): primero POST stream-ticket con el Bearer.
+    path('customer/notifications/',                  CustomerNotificationListView.as_view(),         name = 'customer_notifications'),
+    path('customer/notifications/read/',             CustomerNotificationReadView.as_view(),         name = 'customer_notifications_read'),
+    path('customer/notifications/stream-ticket/',    CustomerNotificationStreamTicketView.as_view(), name = 'customer_notifications_ticket'),
+    path('customer/notifications/stream/',           CustomerNotificationStreamView.as_view(),       name = 'customer_notifications_stream'),
 ]

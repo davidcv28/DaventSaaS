@@ -92,6 +92,14 @@ class Command(BaseCommand):
                 logger.exception('membership_expiry_notices: encolado falló (subscription=%s)', sub.pk)
                 StoreSubscription.objects.filter(pk = sub.pk).update(expiry_notified_until = None)
                 continue
+            #Campana del comprador: mismo aviso "por vencer" in-app
+            #(best-effort — el mail ya quedó encolado; una falla acá no
+            #revierte el claim ni corta el lote).
+            try:
+                from StoreApp.domains.customers.services.notifications import notify_customer_subscription_expiring
+                notify_customer_subscription_expiring(sub)
+            except Exception:                                   # noqa: BLE001
+                logger.exception('membership_expiry_notices: notification falló (subscription=%s)', sub.pk)
             sent    +=  1
         if dry_run:
             self.stdout.write(self.style.WARNING(

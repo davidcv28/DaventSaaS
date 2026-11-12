@@ -163,6 +163,7 @@ class StoreSubscriptionViewSet(_OwnerStoreMixin, mixins.ListModelMixin, mixins.R
             grant_period(subscription, actor = request.user)
         #La suscripción vigente cambia la visibilidad de los exclusivos.
         bump_public_store(subscription.membership.store_id)
+        _notify_customer(subscription, StoreSubscription.STATUS_ACTIVE)
         return Response(
             {'Exito': 'La suscripción se activó y el plan quedó vigente.', 'item': StoreSubscriptionOwnerSerializer(subscription).data},
             status = status.HTTP_200_OK,
@@ -183,6 +184,7 @@ class StoreSubscriptionViewSet(_OwnerStoreMixin, mixins.ListModelMixin, mixins.R
             subscription.status     =   StoreSubscription.STATUS_CANCELLED
             subscription.save(update_fields = ['status', 'updated_at'])
         bump_public_store(subscription.membership.store_id)
+        _notify_customer(subscription, StoreSubscription.STATUS_CANCELLED)
         return Response(
             {'Exito': 'La suscripción se canceló.', 'item': StoreSubscriptionOwnerSerializer(subscription).data},
             status = status.HTTP_200_OK,
@@ -209,7 +211,22 @@ class StoreSubscriptionViewSet(_OwnerStoreMixin, mixins.ListModelMixin, mixins.R
             subscription.status     =   StoreSubscription.STATUS_EXPIRED
             subscription.save(update_fields = ['status', 'updated_at'])
         bump_public_store(subscription.membership.store_id)
+        _notify_customer(subscription, StoreSubscription.STATUS_EXPIRED)
         return Response(
             {'Exito': 'La suscripción quedó vencida.', 'item': StoreSubscriptionOwnerSerializer(subscription).data},
             status = status.HTTP_200_OK,
         )
+
+
+def _notify_customer(subscription, status_to):
+    """
+    Campana del comprador (CustomerNotification 'membership'): aviso del
+    cambio de estado de SU suscripción. Best-effort — nunca rompe la
+    acción del dueño (el estado ya quedó persistido).
+    """
+    try:
+        from StoreApp.domains.customers.services.notifications import notify_customer_subscription
+        notify_customer_subscription(subscription, status_to)
+    except Exception:                                   # noqa: BLE001
+        import logging
+        logging.getLogger(__name__).exception('memberships owner: notification del comprador falló (sub=%s)', getattr(subscription, 'pk', None))

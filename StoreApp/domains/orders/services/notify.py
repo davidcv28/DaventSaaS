@@ -7,10 +7,13 @@ best-effort e independientes:
 
 1. NOTIFICATION in-app al DUEÑO (AdminApp notifications, kind='order'):
    síncrona — viaja en la misma transacción del evento (si el pedido
-   hace rollback, el aviso también). El comprador nunca recibe
-   notificación in-app: es Customer, no auth.User.
+   hace rollback, el aviso también).
 2. EMAIL por Celery: `transaction.on_commit` + `.delay()` — un rollback
    no manda correos y el SMTP jamás corre dentro del request.
+3. CustomerNotification al COMPRADOR registrado (dominio customers,
+   kind='order' — campana + /cuenta de la web de tienda): también
+   síncrona. Solo cuando el pedido tiene Customer vinculado — el
+   comprador invitado no tiene campana y queda cubierto por el mail.
 
 El mapa kind→audiencia vive en services/mails.py
 (CUSTOMER_EVENT_KINDS / OWNER_EVENT_KINDS): un kind no listado (note,
@@ -52,6 +55,20 @@ def dispatch_order_event(order, event):
             transaction.on_commit(lambda: _enqueue_order_email(order.pk, event.pk))
         except Exception:                                   # noqa: BLE001 — best-effort
             logger.warning('notify_order_event: encolado de mail falló (order=%s kind=%s)', getattr(order, 'pk', None), kind, exc_info = True)
+    #3) Notification in-app al COMPRADOR registrado (campana + /cuenta):
+    #   mismo canal sync que el aviso al dueño — el comprador invitado
+    #   (order.customer None) solo recibe el mail del canal 2.
+    if kind in CUSTOMER_EVENT_KINDS and getattr(order, 'customer_id', None):
+        try:
+            _notify_customer(order, event)
+        except Exception:                                   # noqa: BLE001 — best-effort
+            logger.warning('notify_order_event: notification del comprador falló (order=%s kind=%s)', getattr(order, 'pk', None), kind, exc_info = True)
+
+
+def _notify_customer(order, event):
+    """CustomerNotification 'order' (seguimiento) para el comprador."""
+    from StoreApp.domains.customers.services.notifications import notify_customer_order
+    notify_customer_order(order, event)
 
 
 def _notify_owner(order, event):

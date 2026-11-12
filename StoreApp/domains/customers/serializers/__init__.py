@@ -2,6 +2,7 @@ from .serializers import (
     CustomerAddressSerializer,
     CustomerLoginSerializer,
     CustomerMembershipSerializer,
+    CustomerNotificationSerializer,
     CustomerPasswordResetConfirmSerializer,
     CustomerPasswordResetRequestSerializer,
     CustomerProfileUpdateSerializer,

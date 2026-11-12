@@ -1,5 +1,6 @@
 import csv
 import io
+import logging
 from decimal import Decimal
 
 from django.db import transaction
@@ -146,11 +147,34 @@ class DiscountViewSet(CatalogGateMixin, CatalogBaseViewSet):
     def create(self, request):
         denied  =   self._deny_without_discounts()
         if denied: return denied
-        return self._swap_item(request, super().create(request))
+        response    =   self._swap_item(request, super().create(request))
+        if response.status_code == status.HTTP_201_CREATED:
+            self._broadcast_offer(response.data.get('item', {}).get('id'))
+        return response
     def update(self, request, pk = None):
         denied  =   self._deny_without_discounts()
         if denied: return denied
-        return self._swap_item(request, super().update(request, pk))
+        #Re-activación (pausado → activo) también se anuncia a los
+        #miembros — el alta ya notificó y el dedupe por descuento corta
+        #el doble aviso en updates inocuos.
+        was_active  =   self.get_object().is_active
+        response    =   self._swap_item(request, super().update(request, pk))
+        if response.status_code == status.HTTP_200_OK and not was_active:
+            self._broadcast_offer(response.data.get('item', {}).get('id'))
+        return response
+    def _broadcast_offer(self, discount_pk):
+        """
+        Campana de compradores: CustomerNotification 'offer' a los
+        miembros activos de la tienda (ofertas y ofertas especiales con
+        campaña). Best-effort — el descuento ya quedó guardado.
+        """
+        try:
+            from StoreApp.domains.customers.services.notifications import notify_store_discount
+            discount    =   self.get_queryset().select_related('campaign').filter(pk = discount_pk).first()
+            if discount is not None and discount.is_active:
+                notify_store_discount(self.my_store(), discount)
+        except Exception:                                   # noqa: BLE001
+            logging.getLogger(__name__).exception('DiscountViewSet: broadcast de oferta falló (discount=%s)', discount_pk)
     def partial_update(self, request, pk = None):
         return self.update(request, pk)
     def destroy(self, request, pk = None):

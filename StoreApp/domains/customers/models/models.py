@@ -155,6 +155,61 @@ class CustomerAddress(models.Model):
     def __str__(self):
         return f'{self.label} — {self.customer_id}'
 #=========================================
+# CUSTOMER NOTIFICATION (avisos in-app del comprador en la web de tienda)
+#=========================================
+class CustomerNotification(models.Model):
+    """
+    Aviso in-app para un comprador registrado en la web de UNA tienda
+    (campana del header + sección Notificaciones de /cuenta). No es un
+    mail ni un mensaje de soporte: el click solo marca leído y navega a
+    `target` (vista de /cuenta o el catálogo; '' = solo se lee).
+
+    Kinds: 'order' (estado de seguimiento del pedido), 'offer' (ofertas
+    y ofertas especiales del dueño), 'support' (respuesta del comercio
+    en un hilo), 'membership' (ciclo de la suscripción a la tienda).
+    Los avisos recurrentes usan `dedupe_key` para ser UNO solo que se
+    actualiza y vuelve a no-leído (pedido, hilo, suscripción); el
+    broadcast de ofertas deduplica por (descuento, comprador).
+    """
+    KIND_ORDER          =   'order'
+    KIND_OFFER          =   'offer'
+    KIND_SUPPORT        =   'support'
+    KIND_MEMBERSHIP     =   'membership'
+    KIND_CHOICES        =   [
+        (KIND_ORDER,      'Estado del pedido'),
+        (KIND_OFFER,      'Oferta'),
+        (KIND_SUPPORT,    'Mensaje del comercio'),
+        (KIND_MEMBERSHIP, 'Suscripción'),
+    ]
+    customer                =   models.ForeignKey(Customer, on_delete = models.CASCADE, related_name = 'notifications')
+    store                   =   models.ForeignKey('stores.Store', on_delete = models.CASCADE, related_name = 'customer_notifications')
+    kind                    =   models.CharField(max_length = 20, choices = KIND_CHOICES, db_index = True, verbose_name = 'Tipo')
+    dedupe_key              =   models.CharField(max_length = 80, blank = True, default = '', verbose_name = 'Clave de deduplicación')
+    title                   =   models.CharField(max_length = 200, verbose_name = 'Título')
+    body                    =   models.CharField(max_length = 500, blank = True, default = '', verbose_name = 'Detalle')
+    #Destino del click: vista de /cuenta ('pedidos', 'suscripciones',
+    #'soporte') o 'catalogo'; '' = el click solo marca leído.
+    target                  =   models.CharField(max_length = 40, blank = True, default = '', verbose_name = 'Destino')
+    #null = sin leer; al actualizar un aviso deduplicado vuelve a null.
+    read_at                 =   models.DateTimeField(null = True, blank = True, verbose_name = 'Leído')
+    created_at              =   models.DateTimeField(auto_now_add = True)
+    updated_at              =   models.DateTimeField(auto_now = True)
+    class Meta:
+        app_label           =   'customers'
+        verbose_name        =   'Notificación de cliente'
+        verbose_name_plural =   'Notificaciones de clientes'
+        ordering            =   ['-created_at', '-id']
+        constraints         =   [
+            models.UniqueConstraint(fields = ['customer', 'kind', 'dedupe_key'], name = 'uniq_cnotif_cust_kind_key'),
+        ]
+        indexes             =   [
+            #La campana y /cuenta leen los avisos de ESTA tienda del
+            #comprador (no leídos primero vía read_at IS NULL).
+            models.Index(fields = ['customer', 'store', 'read_at'], name = 'idx_cnotif_cust_store_read'),
+        ]
+    def __str__(self):
+        return f'{self.get_kind_display()} → {self.customer_id}@{self.store_id}'
+#=========================================
 # STORE MEMBERSHIP (customer × store — contrato con track D)
 #=========================================
 class StoreMembership(models.Model):

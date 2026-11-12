@@ -25,6 +25,14 @@ from .google import (
     store_google_client_id,
     verify_google_credential,
 )
+from .notifications import (
+    notify_customer_order,
+    notify_customer_subscription,
+    notify_customer_subscription_expiring,
+    notify_customer_support,
+    notify_store_discount,
+    upsert_customer_notification,
+)
 from .tokens import (
     CUSTOMER_ACCESS_LIFETIME,
     CUSTOMER_REFRESH_LIFETIME,

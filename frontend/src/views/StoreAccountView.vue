@@ -22,6 +22,8 @@ import AccountOrders from '../components/ecommerce/account/AccountOrders.vue'
 import AccountSubscriptions from '../components/ecommerce/account/AccountSubscriptions.vue'
 import AccountAddresses from '../components/ecommerce/account/AccountAddresses.vue'
 import AccountProfile from '../components/ecommerce/account/AccountProfile.vue'
+import AccountNotifications from '../components/ecommerce/account/AccountNotifications.vue'
+import { useCustomerNotifications } from '../composables/useCustomerNotifications.js'
 import '../assets/store-design-esencial-account.css'
 
 const ctx = inject('storePage')
@@ -32,6 +34,8 @@ const route = useRoute()
 const router = useRouter()
 const customer = useCustomerStore()
 const cart = useCartStore()
+// Avisos de la tienda (estado compartido con la campana del header).
+const notif = useCustomerNotifications()
 
 // Sub-vistas por path (los mails apuntan a /cuenta/verificar?token= y
 // /cuenta/restablecer?uid=&token=).
@@ -43,13 +47,14 @@ const subView = computed(() => {
 })
 const view = computed(() => {
   const v = String(route.query.view || 'pedidos')
-  return ['pedidos', 'suscripciones', 'direcciones', 'soporte', 'perfil'].includes(v) ? v : 'pedidos'
+  return ['pedidos', 'suscripciones', 'direcciones', 'soporte', 'notificaciones', 'perfil'].includes(v) ? v : 'pedidos'
 })
 const TABS = [
   { key: 'pedidos', label: 'Pedidos', icon: 'package' },
   { key: 'suscripciones', label: 'Suscripciones', icon: 'crown' },
   { key: 'direcciones', label: 'Direcciones', icon: 'map-pin' },
   { key: 'soporte', label: 'Soporte', icon: 'circle-help' },
+  { key: 'notificaciones', label: 'Avisos', icon: 'bell' },
   { key: 'perfil', label: 'Perfil', icon: 'user' },
 ]
 function setView(v) { return router.replace({ query: { ...route.query, view: v } }) }
@@ -310,6 +315,7 @@ const panelBusy = computed(() => {
   if (view.value === 'pedidos') return ordersLoading.value
   if (view.value === 'suscripciones') return subLoading.value || cardLoading.value
   if (view.value === 'direcciones') return addrLoading.value
+  if (view.value === 'notificaciones') return notif.loading.value
   return false
 })
 const panelError = computed(() => {
@@ -338,6 +344,9 @@ watch([subView, view, sessionChecked], async ([sv, v, checked]) => {
   if (v === 'pedidos' && !orders.value.length && !ordersLoading.value) loadOrders()
   if (v === 'suscripciones' && !subData.value && !subLoading.value) loadSubs()
   if (v === 'direcciones' && !addresses.value.length && !addrLoading.value) loadAddresses()
+  // Los avisos se recargan en cada apertura: el SSE cubre el push, pero
+  // una lectura REST garantiza la lista completa (≤50) al entrar al tab.
+  if (v === 'notificaciones' && !notif.loading.value) notif.load(slug.value)
   // perfil: AccountProfile se auto-carga al montar (v-if del tab).
 })
 
@@ -602,6 +611,13 @@ watch([view, subView, sessionChecked], () => scheduleInk(true))
               </header>
               <SupportPanel ref="supportRef" :slug="slug" />
             </section>
+
+            <!-- NOTIFICACIONES -->
+            <AccountNotifications
+              v-else-if="view === 'notificaciones'"
+              :slug="slug"
+              :shop-name="shopName"
+            />
 
             <!-- PERFIL -->
             <AccountProfile v-else-if="view === 'perfil'" :email="customer.customer?.email || ''" />

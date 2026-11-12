@@ -12,8 +12,10 @@ import StoreBot from '../components/StoreBot.vue'
 import PatternSurface from '../components/store/PatternSurface.vue'
 import StoreCartDrawer from '../components/ecommerce/StoreCartDrawer.vue'
 import StoreAuthModal from '../components/ecommerce/StoreAuthModal.vue'
+import CustomerNotificationsBell from '../components/ecommerce/CustomerNotificationsBell.vue'
 import { useCartStore } from '../stores/cart.store.js'
 import { useCustomerStore } from '../stores/customer.store.js'
+import { useCustomerNotifications } from '../composables/useCustomerNotifications.js'
 import { vReveal } from '../directives/reveal.js'
 import { applySeo } from '../utils/seo.js'
 import { STORE_THEME_KEY, readVisitorTheme, persistVisitorTheme, resolveStoreTheme } from '../utils/storeTheme.js'
@@ -71,6 +73,9 @@ const appUrl = env.appUrl
 // sola vez acá y los usan el header, las tarjetas y las vistas hijas. ----
 const cartStore = useCartStore()
 const customerStore = useCustomerStore()
+// Avisos del comprador (campana + /cuenta): SSE scoped por tienda — arranca
+// con sesión y para al salir/expirar (ver watch más abajo).
+const notif = useCustomerNotifications()
 // Gate efectivo de venta online: lo calcula el backend en el payload
 // público (ecommerce_enabled + perfil fiscal completo) — el front solo
 // lo expone, nunca lo recalcula.
@@ -1043,6 +1048,13 @@ provide('storePage', {
 // (path /<slug> o subdominio/dominio propio resuelto async).
 watch(slug, (s) => cartStore.bindStore(s), { immediate: true })
 
+// Stream SSE de avisos: solo con sesión de comprador y el beneficio de
+// cuentas habilitado; re-bindea al cambiar de tienda y corta al salir.
+watch([slug, () => customerStore.isAuthenticated, customerAuthEnabled], ([s, authed, enabled]) => {
+  if (authed && enabled) notif.start(s)
+  else notif.stop()
+}, { immediate: true })
+
 // Sesión del comprador expirada (customer.http la emite una sola vez por
 // refresh fallido): se limpia el estado local y se avisa — la compra en
 // curso pide login de nuevo vía el modal.
@@ -1334,6 +1346,7 @@ onBeforeUnmount(() => {
   window.removeEventListener('message', onLayoutMessage)
   window.removeEventListener('message', onStudioMessage)
   window.removeEventListener('davent:customer-session-expired', onCustomerSessionExpired)
+  notif.stop()
   removeStudioGuard?.()
   contentObserver?.disconnect()
   clearTimeout(contentFallback)
@@ -1472,6 +1485,13 @@ onBeforeUnmount(() => {
           <!-- E-commerce: cuenta del comprador con customer_auth_enabled;
                carrito solo con orders_enabled efectivo (ecommerce +
                fiscal del backend). -->
+          <!-- Campana de avisos: solo con sesión de comprador (el visitante
+               sin cuenta no tiene notificaciones que mostrar). -->
+          <CustomerNotificationsBell
+            v-if="status === 'success' && customerAuthEnabled && customerStore.isAuthenticated"
+            :account-to="accountTo"
+            :catalog-to="catalogTo"
+          />
           <RouterLink
             v-if="status === 'success' && customerAuthEnabled"
             :to="accountTo" class="sp-icon-btn" :class="{ 'sp-shop-account': isShop }"
@@ -1537,6 +1557,17 @@ onBeforeUnmount(() => {
         </div>
       </nav>
     </header>
+
+    <!-- Campana flotante para tiendas con chrome del diseño (iframe del
+         patrón reemplaza .sp-top): su navbar no es inyectable, así que el
+         acceso a los avisos va en una píldora fija en la esquina opuesta
+         al dock del chat. -->
+    <div
+      v-if="status === 'success' && usePatternChrome && customerAuthEnabled && customerStore.isAuthenticated"
+      class="sp-notif-float"
+    >
+      <CustomerNotificationsBell :account-to="accountTo" :catalog-to="catalogTo" />
+    </div>
 
     <!-- Menú móvil (solo navegación): los filtros del catálogo NO viven
          acá — van en CatalogFilters (bottom sheet propio). -->
@@ -1776,6 +1807,22 @@ onBeforeUnmount(() => {
 }
 .ec-toast.ok { background: var(--sp-success, #15803d); }
 .ec-toast.err { background: var(--sp-danger, #b91c1c); }
+/* Campana flotante (tiendas con chrome del diseño): espejo del dock del
+   chat pero en la esquina inferior izquierda, por encima del iframe del
+   patrón y por debajo de drawers/modales (z 31+). */
+.sp-notif-float {
+  position: fixed; left: 18px; bottom: calc(18px + env(safe-area-inset-bottom));
+  z-index: 30;
+}
+/* El panel abre hacia ARRIBA anclado a la izquierda de la píldora (la
+   regla base del componente asume la campana del header a la derecha). */
+.sp-notif-float :deep(.sp-notif-panel) { top: auto; bottom: calc(100% + 10px); left: 0; right: auto; max-height: calc(100dvh - 96px); }
+.store-page[data-st-tabbar] .sp-notif-float { bottom: calc(var(--sp-tabbar-h, 64px) + 16px + env(safe-area-inset-bottom)); }
+.store-page[data-st-tabbar] .sp-notif-float :deep(.sp-notif-panel) { max-height: calc(100dvh - var(--sp-tabbar-h, 64px) - 120px); }
+@media (max-width: 520px) {
+  /* En móvil el panel es hoja fija: restaurar su anclaje al viewport. */
+  .sp-notif-float :deep(.sp-notif-panel) { top: auto; bottom: 14px; left: 12px; right: 12px; }
+}
 .ec-toast-enter-active, .ec-toast-leave-active { transition: opacity .2s ease, transform .2s ease; }
 .ec-toast-enter-from, .ec-toast-leave-to { opacity: 0; transform: translate(-50%, 8px); }
 </style>

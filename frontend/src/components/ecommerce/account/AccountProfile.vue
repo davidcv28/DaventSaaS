@@ -50,7 +50,7 @@ onMounted(loadProfile)
   <section class="acc-panel" aria-label="Mi perfil">
     <header class="acc-panel-head">
       <div class="acc-panel-headtxt">
-        <span class="acc-panel-kicker" aria-hidden="true">05 · Tus datos</span>
+        <span class="acc-panel-kicker" aria-hidden="true">06 · Tus datos</span>
         <h2 class="acc-panel-title">Mi perfil</h2>
         <p class="acc-panel-sub">Datos que ve el comercio al preparar tu pedido.</p>
       </div>
