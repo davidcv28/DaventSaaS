@@ -164,14 +164,14 @@
     var(--dz-accent);
 }
 
-/* Encabezado de marca compacto: logo + nombre en una línea, separado del
-   formulario por una hairline. El copy editorial, los perks, el pie y la
-   foto fantasma no existen acá. */
+/* Encabezado de marca compacto: toldo amarillo con logo + nombre en una
+   línea, separado del formulario por la línea troquelada del ticket. El
+   copy editorial, los perks, el pie y la foto fantasma no existen acá. */
 [data-design='mercado'] .ec-auth .ec-auth-brand {
   padding: 15px clamp(20px, 4vw, 30px);
-  color: var(--dz-ink);
-  background: var(--dz-surface);
-  border-bottom: 1px solid var(--dz-line);
+  color: var(--dz-accent-ink);
+  background: var(--dz-accent);
+  border-bottom: 1px dashed color-mix(in srgb, var(--dz-accent-ink) 34%, transparent);
 }
 [data-design='mercado'] .ec-auth .ec-auth-brand::before,
 [data-design='mercado'] .ec-auth .ec-auth-brand::after { content: none; }
@@ -184,14 +184,14 @@
 [data-design='mercado'] .ec-auth .ec-auth-logo {
   width: 34px; height: 34px;
   border-radius: 7px;
-  background: var(--dz-accent);
-  border: 1px solid color-mix(in srgb, var(--dz-accent-ink) 22%, transparent);
-  color: var(--dz-accent-ink);
+  background: var(--dz-accent-ink);
+  border: 1px solid var(--dz-accent-ink);
+  color: var(--dz-accent);
   font-family: var(--dz-display); font-size: 16px; font-weight: 800; letter-spacing: -.02em;
 }
 [data-design='mercado'] .ec-auth .ec-auth-brand-name {
   font-family: var(--dz-display); font-size: 15.5px; font-weight: 800;
-  letter-spacing: -.02em; color: var(--dz-ink);
+  letter-spacing: -.02em; color: var(--dz-accent-ink);
 }
 [data-design='mercado'] .ec-auth .ec-auth-brand-copy,
 [data-design='mercado'] .ec-auth .ec-auth-brand-foot,
@@ -240,8 +240,8 @@
 [data-design='mercado'] .ec-auth .ec-auth-loading { color: var(--dz-muted); font-family: var(--dz-body); }
 [data-design='mercado'] .ec-auth .ec-auth-spin { color: var(--dz-link); }
 
-/* Switch de modos: riel gris del papel + píldora blanca elevada (en noche
-   la píldora sube un tono sobre el riel). */
+/* Switch de modos: riel del papel con botones de borde sutil y el activo
+   en azul del diseño con tinta blanca (la píldora deslizante lo pinta). */
 [data-design='mercado'][data-theme] :is(.ec-auth, .ec-auth-card) .ecaf-switch {
   padding: 3px;
   border: 1px solid var(--dz-line);
@@ -252,18 +252,25 @@
   top: 3px; bottom: 3px; left: 3px;
   width: calc((100% - 6px) / 3);
   border-radius: 6px;
-  background: var(--dz-surface);
-  border: 1px solid var(--dz-line);
-  box-shadow: 0 1px 3px rgba(0, 0, 0, .14);
+  background: var(--dz-blue);
+  border: 1px solid var(--dz-blue);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, .16);
 }
 [data-design='mercado'][data-theme] :is(.ec-auth, .ec-auth-card) .ecaf-switch-btn {
   min-height: 38px;
+  border: 1px solid color-mix(in srgb, var(--dz-ink) 14%, transparent);
   border-radius: 6px;
   font-family: var(--dz-body); font-size: 12.5px; font-weight: 600;
   color: var(--dz-muted);
 }
-[data-design='mercado'][data-theme] :is(.ec-auth, .ec-auth-card) .ecaf-switch-btn.is-on { color: var(--dz-ink); }
-[data-design='mercado'][data-theme] :is(.ec-auth, .ec-auth-card) .ecaf-switch-btn:hover:not(.is-on) { color: var(--dz-ink-2); }
+[data-design='mercado'][data-theme] :is(.ec-auth, .ec-auth-card) .ecaf-switch-btn.is-on {
+  color: var(--dz-blue-ink);
+  border-color: transparent;
+}
+[data-design='mercado'][data-theme] :is(.ec-auth, .ec-auth-card) .ecaf-switch-btn:hover:not(.is-on) {
+  color: var(--dz-ink-2);
+  border-color: color-mix(in srgb, var(--dz-ink) 26%, transparent);
+}
 
 /* Modal (StoreAuthModal, teleport dentro de .store-page): mismo lenguaje
    que la página — backdrop quieto, card con el filete de marca. */
@@ -406,6 +413,24 @@
   background: color-mix(in srgb, var(--dz-danger) 10%, var(--dz-surface));
   border: 1px solid color-mix(in srgb, var(--dz-danger) 32%, transparent);
   color: var(--dz-ink);
+}
+
+/* Iconos de referencia en credenciales: user en email, key en password —
+   SVG embebido como background del input (sin tocar el markup compartido).
+   En noche el trazo se aclara al muted oscuro. */
+[data-design='mercado'] :is(.ec-auth, .ec-auth-card) .sp-input[type='email'] {
+  padding-left: 40px;
+  background: var(--dz-surface) url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%236b6b6b' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2'/%3E%3Ccircle cx='12' cy='7' r='4'/%3E%3C/svg%3E") left 12px center / 17px 17px no-repeat;
+}
+[data-design='mercado'] :is(.ec-auth, .ec-auth-card) .ecaf-pass .sp-input {
+  padding-left: 40px;
+  background: var(--dz-surface) url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%236b6b6b' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='7.5' cy='15.5' r='4.5'/%3E%3Cpath d='m10.8 12.2 8.7-8.7'/%3E%3Cpath d='m15.5 7.5 3 3 3.5-3.5-3-3'/%3E%3C/svg%3E") left 12px center / 17px 17px no-repeat;
+}
+[data-design='mercado'][data-theme='dark'] :is(.ec-auth, .ec-auth-card) .sp-input[type='email'] {
+  background-image: url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23a0a5ae' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2'/%3E%3Ccircle cx='12' cy='7' r='4'/%3E%3C/svg%3E");
+}
+[data-design='mercado'][data-theme='dark'] :is(.ec-auth, .ec-auth-card) .ecaf-pass .sp-input {
+  background-image: url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23a0a5ae' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='7.5' cy='15.5' r='4.5'/%3E%3Cpath d='m10.8 12.2 8.7-8.7'/%3E%3Cpath d='m15.5 7.5 3 3 3.5-3.5-3-3'/%3E%3C/svg%3E");
 }
 
 /* ===========================================================================

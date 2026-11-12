@@ -333,6 +333,7 @@ onUnmounted(() => resizeObs?.disconnect())
           <input
             ref="forgotInput" v-model="form.forgot_email" name="email" class="sp-input"
             type="email" autocomplete="email" inputmode="email" required :disabled="busy"
+            placeholder="Correo electrónico"
             autocapitalize="none" autocorrect="off" spellcheck="false" enterkeyhint="go"
             aria-labelledby="ec-auth-forgot-email-label"
             :aria-invalid="isInvalid('email') ? 'true' : undefined"
@@ -349,6 +350,7 @@ onUnmounted(() => resizeObs?.disconnect())
           <input
             ref="emailInput" id="ec-auth-email" v-model="form.email" name="email" class="sp-input"
             type="email" autocomplete="email" inputmode="email" required :disabled="busy"
+            placeholder="Correo electrónico"
             autocapitalize="none" autocorrect="off" spellcheck="false" enterkeyhint="next"
             aria-labelledby="ec-auth-email-label"
             :aria-invalid="isInvalid('email') ? 'true' : undefined"
@@ -363,6 +365,7 @@ onUnmounted(() => resizeObs?.disconnect())
             <input
               ref="passwordInput" id="ec-auth-password" v-model="form.password" name="password" class="sp-input"
               :type="showPassword ? 'text' : 'password'"
+              placeholder="Contraseña"
               :autocomplete="mode === 'login' ? 'current-password' : 'new-password'"
               required minlength="8" :disabled="busy"
               spellcheck="false" autocapitalize="none"
