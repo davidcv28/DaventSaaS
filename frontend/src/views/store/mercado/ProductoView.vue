@@ -1,7 +1,7 @@
 <script setup>
 // Ficha de producto estilo MercadoLibre (/<slug>/producto/<id>): galería con
 // riel de miniaturas, columna de compra en tarjetas (precio / envío / stock /
-// tienda), "lo que tenés que saber", ficha técnica cebra, opiniones y
+// tienda), ficha técnica cebra, opiniones y
 // relacionados. Los datos salen del catálogo público (el backend solo
 // devuelve productos activos de la tienda). Los estilos mc-pdp-* viven en
 // la piel Mercado (otro archivo).
@@ -186,7 +186,6 @@ const featureRows = computed(() => {
     (a, b) => (order.get(a[0].toLowerCase()) ?? schema.length) - (order.get(b[0].toLowerCase()) ?? schema.length)
   )
 })
-const knowRows = computed(() => featureRows.value.slice(0, 6))
 // Relacionados: primero los de la misma categoría, luego la misma marca y
 // después el resto, hasta 4 — mismo criterio de sugerencia de un marketplace.
 const related = computed(() => {
@@ -222,11 +221,6 @@ async function share() {
 
 // Monograma de la tienda: si no hay logo, la inicial del nombre.
 const storeMonogram = computed(() => (shopName.value || '?').trim().charAt(0).toUpperCase())
-
-// "Ver características": scroll suave a la ficha técnica.
-function scrollToSpecs() {
-  document.getElementById('mc-pdp-specs')?.scrollIntoView({ behavior: 'smooth', block: 'start' })
-}
 
 async function load() {
   status.value = 'loading'
@@ -451,15 +445,6 @@ onBeforeUnmount(() => {
                 </section>
               </aside>
             </div>
-
-            <!-- Lo que tenés que saber: primeras 6 características -->
-            <section v-if="knowRows.length" class="mc-pdp-know" aria-labelledby="mc-pdp-know-title">
-              <h2 id="mc-pdp-know-title">Lo que tenés que saber de este producto</h2>
-              <ul>
-                <li v-for="[key, value] in knowRows" :key="key">{{ key }}: {{ value }}</li>
-              </ul>
-              <button type="button" class="mc-pdp-know-link" @click="scrollToSpecs">Ver características</button>
-            </section>
 
             <!-- Ficha técnica cebra: nombre / valor de todas las features -->
             <section v-if="featureRows.length" id="mc-pdp-specs" class="mc-pdp-specs" aria-labelledby="mc-pdp-specs-title">

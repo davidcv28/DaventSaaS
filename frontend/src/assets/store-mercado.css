@@ -2151,12 +2151,6 @@
 .store-page[data-template='mercado'] .mc-pdp-share:hover { text-decoration: underline; }
 
 /* Lo que tenés que saber / specs / reviews / relacionados */
-.store-page[data-template='mercado'] .mc-pdp-know {
-  margin-top: 20px;
-  border-top: 1px solid var(--mc-line);
-  padding-top: 18px;
-}
-.store-page[data-template='mercado'] .mc-pdp-know h2,
 .store-page[data-template='mercado'] .mc-pdp-specs h2,
 .store-page[data-template='mercado'] .mc-pdp-reviews h2,
 .store-page[data-template='mercado'] .mc-pdp-related h2 {
@@ -2165,16 +2159,6 @@
   font-weight: 600;
   color: var(--mc-ink);
 }
-.store-page[data-template='mercado'] .mc-pdp-know ul {
-  margin: 0;
-  padding-left: 18px;
-  display: grid;
-  gap: 8px;
-  font-size: 14px;
-  color: var(--mc-ink);
-}
-.store-page[data-template='mercado'] .mc-pdp-know a { color: var(--mc-link); text-decoration: none; }
-.store-page[data-template='mercado'] .mc-pdp-know a:hover { text-decoration: underline; }
 .store-page[data-template='mercado'] .mc-pdp-specs { margin-top: 20px; }
 .store-page[data-template='mercado'] .mc-pdp-specs dl {
   margin: 0;
@@ -2293,17 +2277,6 @@
 }
 .store-page[data-template='mercado'] .mc-pdp-store-loc { margin: 2px 0 0; font-size: 12.5px; color: var(--mc-muted); }
 
-.store-page[data-template='mercado'] .mc-pdp-know-link {
-  margin-top: 10px;
-  padding: 0;
-  border: 0;
-  background: none;
-  color: var(--mc-link);
-  font-size: 13.5px;
-  font-weight: 600;
-  cursor: pointer;
-  text-decoration: underline;
-}
 .store-page[data-template='mercado'] .mc-pdp-desc { margin-top: 20px; }
 .store-page[data-template='mercado'] .mc-pdp-desc h2 { margin: 0 0 10px; font-size: 18px; font-weight: 600; color: var(--mc-ink); }
 .store-page[data-template='mercado'] .mc-pdp-desc p {
