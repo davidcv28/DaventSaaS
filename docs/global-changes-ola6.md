@@ -46,7 +46,10 @@ Archivos tocados (commits ola6):
 - portico, esencial, mercado, moderntec (DS1)
 - sastreria, showroom (DS5)
 - atelier-noir, expediente, guardia, olivium, silicio (DS4)
-- (DS2: ruta/aurum/brigada si los toca — pendiente de su informe)
+- DS2 (ruta/aurum/brigada/indumentaria/impacto): NO tocó sources → sin
+  resync para esos slugs. Reportó además: padding-bottom de tab-bar en
+  `/seguimiento` ya lo cubre el global `store-page.css:3935`
+  (`[data-st-tabbar]`) — opcional, solo si track-w detecta solape.
 
 ## 4. `.ec-cartpg`, `.ec-checkout`, `.ec-receiptpg`, `.ec-legal` — mismo
    hueco de piel neutra que tenía `.ec-track` (reporta DS1)
