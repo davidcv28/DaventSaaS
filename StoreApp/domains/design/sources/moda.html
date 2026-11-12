@@ -163,7 +163,7 @@ ul,ol{margin:0;padding:0;list-style:none}
 }
 .brand-meta{font:500 8.5px/1 var(--mono);letter-spacing:.22em;text-transform:uppercase;color:var(--muted)}
 .brand-meta:empty{display:none}
-.nav{margin-left:auto;display:flex;align-items:center;gap:2px}
+.nav{margin-left:auto;display:none;align-items:center;gap:2px}
 .nav a{
   position:relative;padding:9px 11px;font:500 10px/1 var(--mono);letter-spacing:.16em;text-transform:uppercase;
   color:var(--ink-2);transition:color .2s;
@@ -183,7 +183,7 @@ html[data-ds-surface="services"] .nav a[data-ds-route="services"]::after{transfo
 }
 .nav-wa svg{width:15px;height:15px}
 .nav-wa:hover{background:var(--accent-deep);transform:translateY(-1px)}
-.burger{display:none;order:3;width:42px;height:42px;border:1px solid var(--line);background:var(--surface);cursor:pointer;place-items:center;border-radius:var(--r)}
+.burger{display:grid;order:3;width:42px;height:42px;border:1px solid var(--line);background:var(--surface);cursor:pointer;place-items:center;border-radius:var(--r)}
 .burger svg{width:20px;height:20px}
 /* El puente inyecta margin-inline-start:auto en el toggle: sin este margen
    fijo los dos auto-margins reparten el header en dos islas. */
@@ -196,10 +196,10 @@ html[data-ds-surface="services"] .nav a[data-ds-route="services"]::after{transfo
    --fr-h es el alto de la ventana que publica el script con ds-frame. */
 .m-scrim{position:fixed;top:0;left:0;right:0;height:var(--fr-h,100vh);z-index:94;background:rgba(10,8,6,.5);opacity:0;pointer-events:none;transition:opacity .25s}
 .m-sheet{
-  position:fixed;top:0;right:0;height:var(--fr-h,100vh);z-index:95;width:min(360px,88vw);
-  display:flex;flex-direction:column;background:var(--paper);border-left:1px solid var(--line);
+  position:fixed;top:0;left:0;right:0;height:var(--fr-h,100vh);z-index:95;
+  display:flex;flex-direction:column;background:var(--paper);
   transform:translateX(102%);visibility:hidden;
-  transition:transform .35s var(--ease),visibility 0s linear .35s;overflow:auto;
+  transition:transform .38s var(--ease),visibility 0s linear .38s;overflow:auto;
 }
 body.m-open .m-scrim{opacity:1;pointer-events:auto}
 body.m-open .m-sheet{transform:none;visibility:visible;transition:transform .35s var(--ease),visibility 0s}
@@ -209,12 +209,14 @@ body.m-open .m-sheet{transform:none;visibility:visible;transition:transform .35s
 .m-close{margin-left:auto;width:38px;height:38px;border:1px solid var(--line);background:transparent;cursor:pointer;border-radius:var(--r);font-size:20px}
 .m-nav{display:grid;padding:12px 0}
 .m-nav a{
-  display:flex;align-items:center;justify-content:space-between;gap:12px;padding:16px 20px;
-  border-bottom:1px solid var(--line);font:400 22px/1 var(--display);letter-spacing:.02em;
-  transition:color .2s,background .2s,transform .2s;
+  display:flex;align-items:center;justify-content:space-between;gap:12px;
+  padding:clamp(14px,2.4vh,26px) clamp(20px,7vw,96px);
+  border-bottom:1px solid var(--line);
+  font:400 clamp(26px,4.6vw,52px)/1.06 var(--display);letter-spacing:-.01em;
+  transition:color .2s,background .2s,transform .2s,padding-left .25s var(--ease);
 }
-.m-nav a span:last-child{font:500 9px/1 var(--mono);letter-spacing:.2em;color:var(--muted)}
-.m-nav a:hover{color:var(--accent);background:var(--surface);transform:translateX(6px)}
+.m-nav a span:last-child{font:500 10px/1 var(--mono);letter-spacing:.2em;color:var(--muted)}
+.m-nav a:hover{color:var(--accent);background:var(--surface);padding-left:clamp(28px,8vw,110px)}
 .m-foot{margin-top:auto;padding:20px calc(20px + env(safe-area-inset-right,0px)) calc(20px + env(safe-area-inset-bottom,0px)) calc(20px + env(safe-area-inset-left,0px));display:grid;gap:10px;border-top:1px solid var(--line)}
 .m-foot .btn{width:100%}
 
@@ -1787,7 +1789,8 @@ html[data-ds-commerce="1"] [data-surface="product"] .pdp-buy > .dsx-buy-now:focu
     if (e.key === 'Escape') setMenu(false)
   })
   window.addEventListener('resize', function () {
-    if (window.innerWidth > 980) setMenu(false)
+    /* hamburger-overlay: la hoja es fullscreen en TODOS los anchos — ya no
+       hace falta cerrarla al crecer el viewport. */
     syncHead()
     qsa('[data-marquee]').forEach(fillMarquee)
   })

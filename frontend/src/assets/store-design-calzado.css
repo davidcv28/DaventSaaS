@@ -692,3 +692,59 @@
     animation-duration: .001ms !important;
   }
 }
+
+/* ==========================================================================
+   ARQUETIPOS (FASE 4) — navbar hide-on-scroll · cuenta account-split ·
+   seguimiento tracking-bento. Selectores keyed en data-nav / data-account /
+   data-tracking que expone .store-page (composables/storeArchetypes.js).
+   ========================================================================== */
+
+/* --- Navbar: hide-on-scroll ------------------------------------------------
+   El chrome compartido toggles .is-hidden en .sp-top (StorePublicLayout).
+   Para que no quede una banda vacía donde estaba la barra, el header pasa
+   a fixed y el aire que ocupaba se cierra animado junto con el slide-out:
+   la página sube con el header y vuelve a bajar cuando reaparece. */
+.store-page[data-design='calzado'][data-nav='hide-on-scroll']{ transition: padding-top .34s var(--sp-ease, ease); }
+.store-page[data-design='calzado'][data-nav='hide-on-scroll']:has(.sp-top.is-hidden){ padding-top: 0; }
+.store-page[data-design='calzado'][data-nav='hide-on-scroll'] .sp-top{ position: fixed; left: 0; right: 0; will-change: transform; }
+@media (min-width: 1101px){
+  .store-page[data-design='calzado'][data-nav='hide-on-scroll']:not(.is-home){ padding-top: calc(var(--sp-top-h, 64px) + var(--sp-shopnav-h, 0px)); }
+  .store-page[data-design='calzado'][data-nav='hide-on-scroll']:has(.sp-shop-nav){ --sp-shopnav-h: 44px; }
+}
+
+/* --- Cuenta: account-split (marcador con dorsal a la DERECHA) -------------- */
+@media (min-width: 1024px){
+  [data-design='calzado'][data-account='account-split'][data-theme] .ec-account .acc-shell{
+    grid-template-columns: minmax(0, 1fr) 296px;
+    gap: 30px;
+  }
+  [data-design='calzado'][data-account='account-split'][data-theme] .ec-account .acc-main{ order: -1; }
+  [data-design='calzado'][data-account='account-split'][data-theme] .ec-account .acc-side{
+    border-left: 4px solid var(--dz-accent);
+    padding-left: 22px;
+  }
+}
+
+/* --- Seguimiento: tracking-bento (grilla de tarjetas asimétrica) ----------- */
+@media (min-width: 1024px){
+  [data-design='calzado'][data-tracking='tracking-bento'][data-theme] .ec-track{
+    display: grid;
+    grid-template-columns: repeat(12, minmax(0, 1fr));
+    gap: 18px;
+    align-items: start;
+    grid-auto-flow: dense;
+  }
+  [data-design='calzado'][data-tracking='tracking-bento'][data-theme] .ec-track > *{ grid-column: 1 / -1; }
+  /* Estado: tarjeta ancha; pago/instrucciones: lateral. */
+  [data-design='calzado'][data-tracking='tracking-bento'][data-theme] .ec-track > .ec-track-card:first-of-type{ grid-column: span 8; }
+  [data-design='calzado'][data-tracking='tracking-bento'][data-theme] .ec-track > .ec-track-card:has(.ec-pay){ grid-column: span 4; }
+  /* Prueba + detalle: media columna cada una. */
+  [data-design='calzado'][data-tracking='tracking-bento'][data-theme] .ec-track > .ec-track-card:has(.ec-proof){ grid-column: span 6; }
+  [data-design='calzado'][data-tracking='tracking-bento'][data-theme] .ec-track > .ec-track-card:has(.ec-track-items){ grid-column: span 6; }
+  /* Recibo + Movimientos cierran la última fila (4 + 8). */
+  [data-design='calzado'][data-tracking='tracking-bento'][data-theme] .ec-track > .ec-track-card:has(.ec-track-receipt-btn){ grid-column: span 4; }
+  [data-design='calzado'][data-tracking='tracking-bento'][data-theme] .ec-track > .ec-track-card:last-of-type{ grid-column: span 8; }
+  /* Estados de un solo mensaje (link faltante / error / carga): la tarjeta
+     única ocupa la banda entera. */
+  [data-design='calzado'][data-tracking='tracking-bento'][data-theme] .ec-track > .ec-track-card:first-of-type:last-of-type{ grid-column: 1 / -1; }
+}

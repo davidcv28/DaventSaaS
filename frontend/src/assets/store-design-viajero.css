@@ -573,3 +573,180 @@
   [data-design='viajero'] .ec-auth .ecaf .ecaf-submit:hover:not(:disabled),
   [data-design='viajero'] .ec-account .ec-btn-primary:hover{ filter:none; }
 }
+
+/* ==========================================================================
+   ARQUETIPOS (FASE 4) — navbar sidebar-rail · cuenta account-rail ·
+   seguimiento tracking-ticket. Selectores keyed en data-nav /
+   data-account / data-tracking (.store-page, storeArchetypes.js).
+   ========================================================================== */
+
+/* --- Navbar: sidebar-rail ---------------------------------------------------
+   Riel vertical de iconos anclado al borde izquierdo en escritorio: la
+   .sp-tabbar del chrome (icono + etiqueta por destino) se re-ubica como
+   columna fija de 68px — solo iconos, etiquetas ocultas para lectores de
+   pantalla. En móvil la misma tabbar queda abajo (patrón propio del
+   diseño: destinos + hoja "Más", sin drawer lateral). */
+@media (min-width: 1024px){
+  .store-page[data-design='viajero'][data-nav='sidebar-rail']:has(.sp-tabbar){
+    padding-left: 68px;
+  }
+  .store-page[data-design='viajero'][data-nav='sidebar-rail']:has(.sp-tabbar) .sp-tabbar{
+    display: flex;
+    top: 0; right: auto; bottom: 0; left: 0;
+    width: 68px; height: auto;
+    flex-direction: column; align-items: stretch; justify-content: flex-start;
+    gap: 4px;
+    padding: 16px 0 calc(16px + env(safe-area-inset-bottom));
+    background: var(--dz-ink);
+    border-top: 0; border-right: 1px solid color-mix(in srgb, var(--dz-bg) 16%, transparent);
+    border-bottom: 0; border-left: 0;
+    backdrop-filter: none; -webkit-backdrop-filter: none;
+    box-shadow: none;
+    overflow-y: auto; overscroll-behavior: contain;
+  }
+  .store-page[data-design='viajero'][data-nav='sidebar-rail']:has(.sp-tabbar) .sp-tab{
+    flex: none; min-height: 52px; padding: 8px 2px; border-radius: 0;
+    color: color-mix(in srgb, var(--dz-bg) 62%, transparent);
+  }
+  .store-page[data-design='viajero'][data-nav='sidebar-rail']:has(.sp-tabbar) .sp-tab span{
+    position: absolute; width: 1px; height: 1px; overflow: hidden;
+    clip-path: inset(50%); white-space: nowrap;
+  }
+  .store-page[data-design='viajero'][data-nav='sidebar-rail']:has(.sp-tabbar) .sp-tab.active{
+    color: var(--dz-bg);
+    background: color-mix(in srgb, var(--dz-accent) 30%, transparent);
+  }
+  .store-page[data-design='viajero'][data-nav='sidebar-rail']:has(.sp-tabbar) .sp-tab.active::before{
+    top: auto; bottom: 4px; left: 6px; right: 6px; width: auto; height: 3px;
+    transform: none; border-radius: 3px;
+    background: var(--dz-accent);
+  }
+  .store-page[data-design='viajero'][data-nav='sidebar-rail']:has(.sp-tabbar) .sp-tab:focus-visible{
+    outline: 2px solid var(--dz-accent); outline-offset: -2px;
+  }
+  /* "Más" abre la hoja móvil — en el riel de escritorio estorba: los
+     destinos extra ya viven en .sp-top-links. */
+  .store-page[data-design='viajero'][data-nav='sidebar-rail']:has(.sp-tabbar) .sp-tabbar .sp-tab:last-child{ display: none; }
+  /* Con riel, los links inline del header se ocultan: el riel los cubre. */
+  .store-page[data-design='viajero'][data-nav='sidebar-rail']:has(.sp-tabbar) .sp-top-links{ display: none; }
+  .store-page[data-design='viajero'][data-nav='sidebar-rail']:has(.sp-tabbar) .sp-brand .sp-name{ max-width: 150px; }
+}
+/* Móvil (≤768px la tabbar ya es bottom por defecto del chrome): piel del
+   diseño — papel, tinta y terracota; el botón "Más" conserva la hoja. */
+@media (max-width: 768px){
+  .store-page[data-design='viajero'][data-nav='sidebar-rail'] .sp-tabbar{
+    background: var(--dz-surface);
+    border-top: 1px solid var(--dz-line);
+  }
+  .store-page[data-design='viajero'][data-nav='sidebar-rail'] .sp-tab{ color: var(--dz-muted); }
+  .store-page[data-design='viajero'][data-nav='sidebar-rail'] .sp-tab.active{ color: var(--dz-accent); }
+  .store-page[data-design='viajero'][data-nav='sidebar-rail'] .sp-tab.active::before{ background: var(--dz-accent); }
+  .store-page[data-design='viajero'][data-nav='sidebar-rail'] .sp-more-sheet{
+    background: var(--dz-surface); color: var(--dz-ink);
+    border-top: 1px solid var(--dz-line);
+  }
+  .store-page[data-design='viajero'][data-nav='sidebar-rail'] .sp-more-head{ border-bottom-color: var(--dz-line); }
+  .store-page[data-design='viajero'][data-nav='sidebar-rail'] .sp-more-foot{ border-top-color: var(--dz-line); }
+}
+
+/* --- Cuenta: account-rail (riel de iconos vertical en escritorio) ---------- */
+@media (min-width: 1024px){
+  [data-design='viajero'][data-account='account-rail'][data-theme] .ec-account .acc-shell{
+    grid-template-columns: 84px minmax(0, 1fr);
+    gap: 26px;
+  }
+  [data-design='viajero'][data-account='account-rail'][data-theme] .ec-account .acc-side{
+    display: flex; flex-direction: column; align-items: center; gap: 6px;
+    position: sticky; top: 88px; align-self: start;
+    width: 84px; padding: 14px 6px;
+    border: 1px solid var(--dz-line);
+    border-radius: var(--dz-r);
+    background: var(--dz-surface);
+  }
+  /* Identidad: solo el avatar; nombre/email quedan para el header móvil. */
+  [data-design='viajero'][data-account='account-rail'][data-theme] .ec-account .acc-id{
+    display: grid; justify-items: center; gap: 6px;
+    padding: 0 0 10px; margin-bottom: 4px;
+    border-bottom: 1px solid var(--dz-line);
+  }
+  [data-design='viajero'][data-account='account-rail'][data-theme] .ec-account .acc-id-meta{ display: none; }
+  [data-design='viajero'][data-account='account-rail'][data-theme] .ec-account .acc-tele{ display: none; }
+  [data-design='viajero'][data-account='account-rail'][data-theme] .ec-account .acc-nav{
+    display: grid; gap: 4px; width: 100%; margin-top: 0;
+  }
+  /* Labels ocultos visualmente (siguen en el árbol de accesibilidad). */
+  [data-design='viajero'][data-account='account-rail'][data-theme] .ec-account .acc-navitem{
+    position: relative;
+    flex-direction: column; justify-content: center;
+    gap: 4px; width: 100%;
+    padding: 10px 2px;
+    border-radius: 10px;
+    font-size: 9px; letter-spacing: .04em; text-align: center;
+  }
+  [data-design='viajero'][data-account='account-rail'][data-theme] .ec-account .acc-navitem > span:not(.acc-idx){
+    position: absolute; width: 1px; height: 1px; overflow: hidden;
+    clip-path: inset(50%); white-space: nowrap;
+  }
+  [data-design='viajero'][data-account='account-rail'][data-theme] .ec-account .acc-navitem .acc-idx{ display: none; }
+  [data-design='viajero'][data-account='account-rail'][data-theme] .ec-account .acc-navitem.is-on{
+    background: var(--dz-ink); color: var(--dz-bg);
+  }
+  [data-design='viajero'][data-account='account-rail'][data-theme] .ec-account .acc-logout{
+    width: 44px; height: 44px; margin-top: auto; padding: 0;
+    justify-content: center; font-size: 0;
+    border-radius: 10px;
+  }
+}
+
+/* --- Seguimiento: tracking-ticket (recibo con líneas perforadas) ----------- */
+[data-design='viajero'][data-tracking='tracking-ticket'][data-theme] .ec-track{ gap: 0; }
+[data-design='viajero'][data-tracking='tracking-ticket'][data-theme] .ec-track-head{
+  padding-bottom: 16px; margin-bottom: 4px;
+  border-bottom: 2px dashed var(--dz-line);
+}
+[data-design='viajero'][data-tracking='tracking-ticket'][data-theme] .ec-track-title{
+  font-family: var(--dz-display); font-weight: 600;
+}
+[data-design='viajero'][data-tracking='tracking-ticket'][data-theme] .ec-track-code strong{
+  font-family: var(--dz-mono); letter-spacing: .14em;
+}
+/* Las tarjetas se convierten en talones separados por la línea de
+   perforación; el estado queda como sello de tinta. */
+[data-design='viajero'][data-tracking='tracking-ticket'][data-theme] .ec-track > .ec-track-card{
+  border: 0; border-top: 2px dashed var(--dz-line);
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+}
+[data-design='viajero'][data-tracking='tracking-ticket'][data-theme] .ec-track > .ec-track-card:first-of-type{ border-top: 0; }
+[data-design='viajero'][data-tracking='tracking-ticket'][data-theme] .ec-track-status{
+  font-family: var(--dz-mono); font-size: 11px; font-weight: 600;
+  letter-spacing: .16em; text-transform: uppercase;
+  border: 1.5px dashed currentColor; border-radius: 6px;
+}
+/* Stepper compacto tipo ticket: puntos chicos unidos por línea fina. */
+[data-design='viajero'][data-tracking='tracking-ticket'][data-theme] .ec-stepper{ gap: 4px; }
+[data-design='viajero'][data-tracking='tracking-ticket'][data-theme] .ec-step::after{
+  top: 11px; left: calc(50% + 14px); right: calc(-50% + 14px); height: 1.5px;
+  background: repeating-linear-gradient(90deg, var(--sp-line, var(--dz-line)) 0 4px, transparent 4px 8px);
+}
+[data-design='viajero'][data-tracking='tracking-ticket'][data-theme] .ec-step.is-done::after{ background: var(--sp-success, var(--dz-accent)); }
+[data-design='viajero'][data-tracking='tracking-ticket'][data-theme] .ec-step-dot{
+  width: 24px; height: 24px; font-size: 10px;
+  border-width: 1.5px;
+}
+[data-design='viajero'][data-tracking='tracking-ticket'][data-theme] .ec-step-label{ font-size: 9.5px; }
+/* Filas de totales y recibo con separadores de talón. */
+[data-design='viajero'][data-tracking='tracking-ticket'][data-theme] .ec-track-totals > div,
+[data-design='viajero'][data-tracking='tracking-ticket'][data-theme] .ec-rc-totals > div{
+  border-top: 1px dashed var(--dz-line);
+}
+/* Código de barras decorativo al pie del bloque de estado. */
+[data-design='viajero'][data-tracking='tracking-ticket'][data-theme] .ec-track > .ec-track-card:first-of-type::after{
+  content: ""; display: block; height: 34px; margin-top: 14px;
+  background: repeating-linear-gradient(90deg,
+    var(--dz-ink) 0 2px, transparent 2px 5px,
+    var(--dz-ink) 5px 6px, transparent 6px 10px,
+    var(--dz-ink) 10px 13px, transparent 13px 16px);
+  opacity: .8;
+}

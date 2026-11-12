@@ -110,7 +110,7 @@ html[data-ds-theme="dark"] .ribbon{background:var(--accent);color:var(--on-accen
 .scroll-line{position:absolute;left:0;right:0;bottom:-1px;height:2px;pointer-events:none}
 .scroll-line i{display:block;width:100%;height:100%;background:var(--ink);transform:scaleX(0);transform-origin:left;will-change:transform}
 html[data-ds-theme="dark"] .scroll-line i{background:var(--accent)}
-.top-in{position:relative;display:flex;align-items:center;gap:28px;padding:16px 0}
+.top-in{position:relative;display:flex;align-items:center;flex-wrap:wrap;gap:12px 28px;row-gap:14px;padding:16px 0}
 .brand{display:flex;align-items:center;gap:10px;font-weight:900;font-size:22px;letter-spacing:-.03em;text-transform:uppercase;min-width:0}
 .brand>span:last-child{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .brand .mark{position:relative;display:flex;align-items:center;justify-content:center;width:34px;height:34px;flex:none;overflow:hidden;background:var(--ink);color:var(--paper);border-radius:50%;font:900 15px var(--sans);transition:transform .4s var(--ease)}
@@ -123,8 +123,26 @@ html[data-ds-theme="dark"] .brand .mark{background:var(--accent);color:var(--on-
 html[data-ds-theme="dark"] .top-nav a::after{background:var(--accent)}
 .top-nav a:hover,.top-nav a.is-on{opacity:1}
 .top-nav a:hover::after,.top-nav a.is-on::after{transform:scaleX(1)}
-.top-search{flex:1;display:flex;align-items:center;gap:10px;background:var(--card);border:1px solid var(--line);border-radius:var(--pill);padding:10px 18px;color:var(--muted);font:500 13px var(--sans);min-width:0;transition:border-color .2s,color .2s}
-.top-search:hover{border-color:var(--ink);color:var(--ink)}
+/* search-first-command: el buscador es el protagonista — fila propia a
+   todo lo ancho bajo marca+nav, píldora alta con sombra y chip de tecla
+   como una paleta de comandos. */
+.top-search{
+  order:6;flex:1 1 100%;max-width:none;height:56px;
+  display:flex;align-items:center;gap:12px;
+  background:var(--card);border:1.5px solid var(--line);border-radius:var(--pill);
+  padding:0 22px;color:var(--muted);font:500 14.5px var(--sans);min-width:0;
+  box-shadow:0 16px 38px -22px rgba(0,0,0,.4);
+  transition:border-color .2s,color .2s,box-shadow .25s var(--ease),transform .25s var(--ease);
+}
+.top-search::after{
+  content:"↵";flex:none;margin-left:auto;
+  display:grid;place-items:center;min-width:30px;height:30px;padding:0 9px;
+  border:1px solid var(--line);border-radius:var(--pill);
+  font:700 12px var(--mono);color:var(--muted);
+}
+.top-search:hover{border-color:var(--ink);color:var(--ink);transform:translateY(-1px)}
+.top-search:focus-visible{outline:2px solid var(--ink);outline-offset:3px}
+html[data-ds-theme="dark"] .top-search:focus-visible{outline-color:var(--accent)}
 .top-cta{display:flex;align-items:center;gap:12px}
 /* Cuenta/carrito/tema del puente: la píldora de cuenta conserva el
    auto-margin y empuja el grupo a la derecha; carrito y toggle compensan
@@ -625,7 +643,11 @@ html[data-ds-theme="dark"] .ds-rev-send,html[data-ds-theme="dark"] .ds-contact-s
   /* Reserva para la píldora .m-tabs: sin ella tapa la última fila del pie. */
   body{padding-bottom:calc(76px + env(safe-area-inset-bottom))}
   .hero-grid,.about,.contact-2,.pdp-layout,.cat-layout{grid-template-columns:1fr}
-  .top-nav,.top-search{display:none}
+  /* search-first-command también en móvil: la píldora-buscador sigue
+     como segunda fila a todo lo ancho (la nav inline se va, las .m-tabs
+     quedan abajo). */
+  .top-nav{display:none}
+  .top-search{height:50px;font-size:14px}
   .cats-grid,.contact-grid{grid-template-columns:1fr}
   .foot{grid-template-columns:1fr 1fr;gap:28px}
   .sec-head p{display:none}

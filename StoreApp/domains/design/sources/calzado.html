@@ -137,8 +137,13 @@ html.rv-off .rv{animation:none!important;opacity:1!important;transform:none!impo
   --mbg:#fff;--mink:#111;
   padding:16px 0;color:var(--hc);border-bottom:1px solid transparent;
   background:linear-gradient(180deg,rgba(0,0,0,.42),transparent);
-  transition:background .3s var(--ease),color .3s var(--ease),border-color .3s var(--ease)
+  transition:background .3s var(--ease),color .3s var(--ease),border-color .3s var(--ease),
+    transform .34s var(--ease)
 }
+/* hide-on-scroll: el script alterna .is-hidden según la dirección del
+   marco (ds-frame). El header se escapa hacia arriba y vuelve al subir;
+   nunca queda accesible a medias porque el toggle es binario por frame. */
+.site-header.is-hidden{transform:translateY(-104%)}
 .site-header.is-stuck{
   --hc:var(--ink);--hcb:var(--soft);--hcl:var(--line);
   --mbg:var(--ink);--mink:var(--bg);
@@ -2272,11 +2277,24 @@ html[data-ds-commerce="1"] [data-surface="product"] .pdp-actions>.dsx-buy-now:fo
   var header = document.getElementById('site-header');
   var frameBox = null;
   var headH = 76;
+  var lastTop = null;
   function paintFrame(d){
     if (!header) return;
     frameBox = { top: Number(d.top) || 0, bottom: Number(d.bottom) || 0, vh: Number(d.vh) || 0 };
     var top = frameBox.top;
     header.classList.toggle('is-stuck', top < -12);
+    /* hide-on-scroll: frameBox.top baja al bajar (scroll hacia abajo) y
+       sube al subir. Se esconde solo con recorrido real hacia abajo y
+       cuando el header ya no tapa el inicio; al revertir o volver arriba
+       reaparece. lastTop=null en el primer frame = sin salto inicial. */
+    if (lastTop !== null) {
+      var dy = top - lastTop;
+      if (top < -headH - 16) {
+        header.classList.toggle('is-hidden', dy < -1.5);
+      } else {
+        header.classList.remove('is-hidden');
+      }
+    }
     var span = Math.max(1, frameBox.bottom - top - frameBox.vh);
     var p = Math.min(1, Math.max(0, -top / span));
     header.style.setProperty('--progress', p.toFixed(4));
@@ -2291,6 +2309,7 @@ html[data-ds-commerce="1"] [data-surface="product"] .pdp-actions>.dsx-buy-now:fo
        offset fijo de 76px dejaba los anchors tapados por el chrome. */
     var off = Math.round(header.getBoundingClientRect().height);
     if (off > 0) { header.setAttribute('data-ds-offset', String(off)); headH = off; }
+    lastTop = top;
   }
   /* Ficha: el panel de compra se "pega" bajo el header mientras se recorre
      la galería/detalle en escritorio. El iframe va estirado al alto del

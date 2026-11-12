@@ -224,7 +224,19 @@ html[data-ds-theme="dark"] .bg-live .silk{mix-blend-mode:screen;opacity:.3}
   white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:34vw;
 }
 .brand-meta{font:500 8.5px/1 var(--mono);letter-spacing:.22em;text-transform:uppercase;color:var(--muted)}
-.nav{margin-left:auto;display:flex;align-items:center;gap:2px}
+.nav{margin-left:auto;display:none;align-items:center;gap:2px}
+/* fullscreen-sheet: la navegación ya no vive inline — el botón de la
+   cabecera abre la hoja inferior casi total (misma .m-sheet del tabbar
+   móvil). Solo escritorio: en ≤980px manda la tabbar flotante. */
+.burger{
+  margin-left:auto;order:3;flex:none;display:none;place-items:center;
+  width:42px;height:42px;border:1px solid var(--line);border-radius:50%;
+  background:var(--surface);color:var(--ink-2);cursor:pointer;
+  transition:color .2s,border-color .2s,background .2s,transform .2s var(--ease-soft);
+}
+.burger svg{width:18px;height:18px}
+.burger:hover{color:var(--accent-text);border-color:var(--accent);background:var(--accent-soft);transform:translateY(-1px)}
+@media (min-width:981px){ .burger{display:grid} }
 .nav a{
   position:relative;padding:9px 11px;font:500 10px/1 var(--mono);letter-spacing:.16em;text-transform:uppercase;
   color:var(--ink-2);transition:color .2s;
@@ -317,13 +329,25 @@ html[data-ds-surface="services"] .nav a[data-ds-route="services"]::after{transfo
   es el alto de la ventana que publica el script con davent:ds-frame.*/
 .m-scrim{position:fixed;left:0;right:0;top:0;z-index:94;height:var(--fr-h,100vh);background:rgba(20,14,30,.5);opacity:0;pointer-events:none;transition:opacity .25s}
 .m-sheet{
-  position:fixed;left:0;right:0;bottom:0;z-index:95;max-height:min(calc(var(--fr-h,100vh) * .86),640px);
+  position:fixed;left:0;right:0;bottom:0;z-index:95;max-height:min(calc(var(--fr-h,100vh) * .94),880px);
   display:flex;flex-direction:column;background:var(--paper);border-top:1px solid var(--line);
   border-radius:var(--r) var(--r) 0 0;box-shadow:0 -18px 50px -20px rgba(20,14,30,.5);
-  transform:translateY(102%);transition:transform .35s var(--ease);overflow:hidden;
+  transform:translateY(102%);transition:transform .38s var(--ease);overflow:hidden;
+}
+/* Escritorio: la hoja se vuelve casi pantalla completa — panel centrado
+   anclado abajo, con aire a los lados (firma distinta del overlay
+   edge-to-edge de moda y del sheet lateral de calzado). */
+@media (min-width:981px){
+  .m-sheet{left:50%;right:auto;width:min(960px,94vw);transform:translate(-50%,102%)}
+  body.m-open .m-sheet{transform:translate(-50%,0)}
+  .m-nav a{font-size:clamp(26px,3vw,40px);padding:18px 28px}
 }
 body.m-open .m-scrim{opacity:1;pointer-events:auto}
 body.m-open .m-sheet{transform:none}
+/* Debe ir DESPUÉS de la regla base: misma especificidad, gana por orden. */
+@media (min-width:981px){
+  body.m-open .m-sheet{transform:translate(-50%,0)}
+}
 .sheet-grab{flex:none;width:38px;height:4px;margin:10px auto 0;border-radius:4px;background:var(--line)}
 .m-head{display:flex;align-items:center;gap:12px;padding:16px 20px;border-bottom:1px dashed var(--line)}
 .m-head .brand-mark{width:36px;height:36px;font-size:14px}
@@ -1459,6 +1483,9 @@ a.contact-row:hover{color:var(--accent-text);padding-left:8px}
       <a href="#taller" data-ds-anchor data-ds-route="home" data-flag="about">Taller</a>
       <a href="#contacto" data-ds-anchor data-ds-route="home" data-flag="contact">Contacto</a>
     </nav>
+    <button class="burger" type="button" aria-label="Abrir menú" aria-expanded="false" aria-controls="modista-sheet" data-m-open>
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h10"/></svg>
+    </button>
     <a class="nav-wa" href="{{store_whatsapp_url}}" aria-label="Consultar por WhatsApp">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 11.5a8.4 8.4 0 0 1-8.5 8.4 8.6 8.6 0 0 1-3.8-.9L3 21l2-5.3a8.3 8.3 0 0 1-1-4A8.4 8.4 0 0 1 12.5 3.2 8.4 8.4 0 0 1 21 11.5Z"/></svg>
       WhatsApp
@@ -2021,14 +2048,16 @@ a.contact-row:hover{color:var(--accent-text);padding-left:8px}
      El puente (pattern_bridge) mide los fijos con data-ds-pin y el
      scroll-lock lo da la clase m-lock en <html> + overflow:hidden. */
   var sheet = document.getElementById('modista-sheet')
-  var menuOpener = document.querySelector('[data-m-open]')
+  /* fullscreen-sheet: hay dos abre-olas — el "Más" de la tabbar móvil y el
+     botón .burger del header en escritorio. aria-expanded va a todos. */
+  var menuOpeners = qsa('[data-m-open]')
   var menuCloser = sheet ? sheet.querySelector('.m-close') : null
   var menuTrigger = null
   function setMenu(open) {
     var wasOpen = body.classList.contains('m-open')
     body.classList.toggle('m-open', open)
     document.documentElement.classList.toggle('m-lock', open)
-    if (menuOpener) menuOpener.setAttribute('aria-expanded', open ? 'true' : 'false')
+    menuOpeners.forEach(function (b) { b.setAttribute('aria-expanded', open ? 'true' : 'false') })
     if (sheet) {
       sheet.setAttribute('aria-hidden', open ? 'false' : 'true')
       if ('inert' in sheet) sheet.inert = !open
@@ -2062,7 +2091,8 @@ a.contact-row:hover{color:var(--accent-text);padding-left:8px}
   })
   window.addEventListener('resize', function () {
     if (window.innerWidth > 980) {
-      setMenu(false)
+      /* fullscreen-sheet: la hoja es casi total también en escritorio —
+         ya no se cierra al crecer el viewport. */
       /*La hoja de filtros queda fuera de su media query: cerrarla
         despachando Escape (el puente escucha keydown en el panel).*/
       var fpanel = document.querySelector('[data-ds-filters-panel]')

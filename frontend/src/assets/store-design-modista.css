@@ -696,3 +696,140 @@
     animation-duration: .001ms !important;
   }
 }
+
+/* ==========================================================================
+   ARQUETIPOS (FASE 4) — navbar fullscreen-sheet · cuenta account-tabs-only ·
+   seguimiento tracking-status-hero. Selectores keyed en data-nav /
+   data-account / data-tracking (.store-page, storeArchetypes.js).
+   ========================================================================== */
+
+/* --- Navbar: fullscreen-sheet ----------------------------------------------
+   La navegación vive en una hoja inferior casi total (espejo del
+   .m-sheet del documento del patrón): burger siempre visible, links
+   inline fuera, drawer compartido anclado abajo con cabecera y agarre. */
+.store-page[data-design='modista'][data-nav='fullscreen-sheet'] .sp-burger{ display: grid; }
+.store-page[data-design='modista'][data-nav='fullscreen-sheet'] .sp-top-links{ display: none; }
+/* Burger + hoja inferior es LA navegación también en móvil: la tabbar
+   del tema se apaga para no duplicar menús. */
+.store-page[data-design='modista'][data-nav='fullscreen-sheet'] .sp-tabbar{ display: none; }
+.store-page[data-design='modista'][data-nav='fullscreen-sheet'][data-st-tabbar]{ padding-bottom: 0; }
+.store-page[data-design='modista'][data-nav='fullscreen-sheet'] .sp-overlay{
+  display: block; position: fixed; inset: 0; z-index: 30;
+  background: rgba(20, 14, 30, .5);
+  opacity: 0; visibility: hidden;
+  transition: opacity .28s var(--sp-ease, ease), visibility .28s;
+}
+.store-page[data-design='modista'][data-nav='fullscreen-sheet'] .sp-overlay.open{ opacity: 1; visibility: visible; }
+.store-page[data-design='modista'][data-nav='fullscreen-sheet'] .sp-drawer.sp-navdrawer{
+  display: flex; position: fixed; left: 0; right: 0; top: auto; bottom: 0;
+  z-index: 31; width: auto; max-width: none;
+  height: min(90vh, 760px); max-height: none;
+  padding: 0; border: 0; border-top: 1px solid var(--dz-line);
+  border-radius: var(--dz-radius) var(--dz-radius) 0 0;
+  background: var(--dz-bg); color: var(--dz-ink);
+  box-shadow: 0 -24px 60px -30px rgba(20, 14, 30, .55);
+  transform: translateY(102%); visibility: hidden;
+  transition: transform .4s var(--sp-ease, ease), visibility .4s;
+  overflow-y: auto; overscroll-behavior: contain;
+}
+.store-page[data-design='modista'][data-nav='fullscreen-sheet'] .sp-drawer.sp-navdrawer.open{
+  transform: none; visibility: visible;
+}
+/* Agarre de la hoja. */
+.store-page[data-design='modista'][data-nav='fullscreen-sheet'] .sp-drawer.sp-navdrawer::before{
+  content: ""; flex: none; width: 44px; height: 5px; margin: 12px auto 0;
+  border-radius: 99px; background: var(--dz-line);
+}
+.store-page[data-design='modista'][data-nav='fullscreen-sheet'] .sp-drawer.sp-navdrawer .sp-drawer-head{
+  display: flex; padding: 12px clamp(18px, 4vw, 40px) 10px;
+}
+.store-page[data-design='modista'][data-nav='fullscreen-sheet'] .sp-drawer.sp-navdrawer .sp-drawer-head strong{
+  font-family: var(--dz-serif); font-style: italic; font-weight: 500;
+  font-size: clamp(20px, 2.6vw, 28px); letter-spacing: .01em;
+}
+.store-page[data-design='modista'][data-nav='fullscreen-sheet'] .sp-drawer.sp-navdrawer .sp-drawer-close{
+  width: 44px; height: 44px; border-radius: 50%;
+  border: 1px solid var(--dz-line); color: var(--dz-ink-2);
+}
+.store-page[data-design='modista'][data-nav='fullscreen-sheet'] .sp-drawer.sp-navdrawer .sp-nav-group{
+  padding: 8px clamp(18px, 4vw, 40px) 20px;
+}
+.store-page[data-design='modista'][data-nav='fullscreen-sheet'] .sp-drawer.sp-navdrawer .sp-nav-item{
+  padding: 12px 4px;
+  border: 0; border-bottom: 1px dashed var(--dz-line); border-radius: 0;
+  font-family: var(--dz-serif); font-style: italic; font-weight: 400;
+  font-size: clamp(24px, 4vw, 40px); line-height: 1.1; letter-spacing: .005em;
+  color: var(--dz-ink);
+}
+.store-page[data-design='modista'][data-nav='fullscreen-sheet'] .sp-drawer.sp-navdrawer .sp-nav-item svg{ color: var(--dz-muted); }
+.store-page[data-design='modista'][data-nav='fullscreen-sheet'] .sp-drawer.sp-navdrawer .sp-nav-item:hover,
+.store-page[data-design='modista'][data-nav='fullscreen-sheet'] .sp-drawer.sp-navdrawer .sp-nav-item.active{
+  background: transparent; color: var(--dz-accent-text); padding-left: 12px;
+}
+.store-page[data-design='modista'][data-nav='fullscreen-sheet'] .sp-drawer.sp-navdrawer .sp-nav-item.active::before{ display: none; }
+.store-page[data-design='modista'][data-nav='fullscreen-sheet'] .sp-drawer.sp-navdrawer .sp-drawer-foot{
+  position: sticky; bottom: 0;
+  padding: 14px clamp(18px, 4vw, 40px) calc(14px + env(safe-area-inset-bottom));
+  border-top: 1px dashed var(--dz-line);
+  background: var(--dz-bg);
+}
+.store-page[data-design='modista'][data-nav='fullscreen-sheet'] .sp-drawer.sp-navdrawer .sp-drawer-action{
+  min-height: 44px;
+  font-family: var(--dz-mono); font-size: 10px; letter-spacing: .18em; text-transform: uppercase;
+}
+
+/* --- Cuenta: account-tabs-only (sin lateral: tabs primarias en desktop) --- */
+@media (min-width: 1024px){
+  [data-design='modista'][data-account='account-tabs-only'][data-theme] .ec-account .acc-side{ display: none; }
+  [data-design='modista'][data-account='account-tabs-only'][data-theme] .ec-account .acc-shell{ grid-template-columns: minmax(0, 1fr); }
+  /* El header compacto + tabs (patrón móvil) se vuelven la navegación
+     primaria del escritorio también. */
+  [data-design='modista'][data-account='account-tabs-only'][data-theme] .ec-account .acc-mhead{ display: grid; }
+  [data-design='modista'][data-account='account-tabs-only'][data-theme] .ec-account .acc-tabs{ display: flex; }
+}
+
+/* --- Seguimiento: tracking-status-hero (estado gigante + stepper segmento) -- */
+[data-design='modista'][data-tracking='tracking-status-hero'][data-theme] .ec-track{ gap: 18px; }
+[data-design='modista'][data-tracking='tracking-status-hero'][data-theme] .ec-track > .ec-track-card:first-of-type{
+  background: var(--dz-band);
+  color: var(--dz-on-band);
+  border-color: var(--dz-band);
+  border-radius: var(--dz-radius);
+  padding: clamp(24px, 3.4vw, 38px);
+  box-shadow: var(--dz-shadow, 0 30px 60px -40px rgba(38, 32, 51, .55));
+}
+[data-design='modista'][data-tracking='tracking-status-hero'][data-theme] .ec-track > .ec-track-card:first-of-type .ec-track-status{
+  font-family: var(--dz-mono); font-size: clamp(13px, 1.6vw, 16px);
+  letter-spacing: .18em; text-transform: uppercase;
+  padding: 10px 18px; border-radius: 99px;
+}
+[data-design='modista'][data-tracking='tracking-status-hero'][data-theme] .ec-track > .ec-track-card:first-of-type :is(.ec-track-muted, .ec-track-chip){
+  color: color-mix(in srgb, var(--dz-on-band) 72%, transparent);
+}
+[data-design='modista'][data-tracking='tracking-status-hero'][data-theme] .ec-track > .ec-track-card:first-of-type .ec-track-chip{
+  border-color: color-mix(in srgb, var(--dz-on-band) 30%, transparent);
+}
+[data-design='modista'][data-tracking='tracking-status-hero'][data-theme] .ec-track > .ec-track-card:first-of-type .ec-step-label{
+  color: color-mix(in srgb, var(--dz-on-band) 78%, transparent);
+}
+[data-design='modista'][data-tracking='tracking-status-hero'][data-theme] .ec-track > .ec-track-card:first-of-type .ec-step.is-done .ec-step-label,
+[data-design='modista'][data-tracking='tracking-status-hero'][data-theme] .ec-track > .ec-track-card:first-of-type .ec-step.is-current .ec-step-label{ color: var(--dz-on-band); }
+[data-design='modista'][data-tracking='tracking-status-hero'][data-theme] .ec-track > .ec-track-card:first-of-type .ec-step::after{
+  background: color-mix(in srgb, var(--dz-on-band) 26%, transparent);
+}
+[data-design='modista'][data-tracking='tracking-status-hero'][data-theme] .ec-track > .ec-track-card:first-of-type .ec-step.is-done::after{ background: var(--dz-accent); }
+[data-design='modista'][data-tracking='tracking-status-hero'][data-theme] .ec-track > .ec-track-card:first-of-type .ec-step-dot{
+  border-color: color-mix(in srgb, var(--dz-on-band) 45%, transparent);
+  color: color-mix(in srgb, var(--dz-on-band) 80%, transparent);
+  background: transparent;
+}
+[data-design='modista'][data-tracking='tracking-status-hero'][data-theme] .ec-track > .ec-track-card:first-of-type .ec-step.is-done .ec-step-dot{
+  border-color: var(--dz-accent); background: var(--dz-accent); color: var(--dz-accent-ink);
+}
+[data-design='modista'][data-tracking='tracking-status-hero'][data-theme] .ec-track > .ec-track-card:first-of-type .ec-step.is-current .ec-step-dot{
+  border-color: var(--dz-on-band); color: var(--dz-on-band);
+  box-shadow: 0 0 0 4px color-mix(in srgb, var(--dz-on-band) 22%, transparent);
+}
+[data-design='modista'][data-tracking='tracking-status-hero'][data-theme] .ec-track > .ec-track-card:first-of-type .ec-track-step-date{
+  color: color-mix(in srgb, var(--dz-on-band) 66%, transparent);
+}

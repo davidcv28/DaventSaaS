@@ -683,3 +683,168 @@
     animation-duration: .001ms !important;
   }
 }
+
+/* ==========================================================================
+   ARQUETIPOS (FASE 4) — navbar hamburger-overlay · cuenta account-card ·
+   seguimiento tracking-timeline. Selectores keyed en data-nav /
+   data-account / data-tracking (.store-page, storeArchetypes.js).
+   ========================================================================== */
+
+/* --- Navbar: hamburger-overlay ---------------------------------------------
+   Sin menú inline en ningún ancho: la hamburguesa abre un overlay
+   fullscreen con índice tipográfico grande (espejo del .m-sheet del
+   documento del patrón). El drawer compartido .sp-drawer se convierte en
+   esa hoja en TODOS los anchos — no solo en móvil. */
+.store-page[data-design='moda'][data-nav='hamburger-overlay'] .sp-burger{ display: grid; }
+.store-page[data-design='moda'][data-nav='hamburger-overlay'] .sp-top-links{ display: none; }
+/* La hamburguesa + overlay es LA navegación también en móvil: si el tema
+   trae tabbar inferior se apaga para no duplicar menús. */
+.store-page[data-design='moda'][data-nav='hamburger-overlay'] .sp-tabbar{ display: none; }
+.store-page[data-design='moda'][data-nav='hamburger-overlay'][data-st-tabbar]{ padding-bottom: 0; }
+.store-page[data-design='moda'][data-nav='hamburger-overlay'] .sp-overlay{
+  display: block; position: fixed; inset: 0; z-index: 30;
+  background: rgba(12, 10, 8, .55);
+  backdrop-filter: blur(3px); -webkit-backdrop-filter: blur(3px);
+  opacity: 0; visibility: hidden;
+  transition: opacity .28s var(--sp-ease, ease), visibility .28s;
+}
+.store-page[data-design='moda'][data-nav='hamburger-overlay'] .sp-overlay.open{ opacity: 1; visibility: visible; }
+.store-page[data-design='moda'][data-nav='hamburger-overlay'] .sp-drawer.sp-navdrawer{
+  display: flex; position: fixed; top: 0; right: 0; bottom: 0; left: 0;
+  z-index: 31; width: auto; max-width: none; height: auto; max-height: none;
+  padding: 0; border: 0; border-radius: 0;
+  background: var(--dz-bg); color: var(--dz-ink);
+  box-shadow: none; overflow-y: auto; overscroll-behavior: contain;
+  transform: translateX(102%); visibility: hidden;
+  transition: transform .4s var(--sp-ease, ease), visibility .4s;
+}
+.store-page[data-design='moda'][data-nav='hamburger-overlay'] .sp-drawer.sp-navdrawer.open{
+  transform: none; visibility: visible;
+}
+.store-page[data-design='moda'][data-nav='hamburger-overlay'] .sp-drawer.sp-navdrawer .sp-drawer-head{
+  display: flex; position: sticky; top: 0; z-index: 2;
+  padding: 18px clamp(18px, 4vw, 56px);
+  border-bottom: 1px solid var(--dz-line);
+  background: var(--dz-bg);
+}
+.store-page[data-design='moda'][data-nav='hamburger-overlay'] .sp-drawer.sp-navdrawer .sp-drawer-head strong{
+  font-family: var(--dz-display); font-weight: 400;
+  font-size: clamp(18px, 2.4vw, 26px); letter-spacing: .02em;
+}
+.store-page[data-design='moda'][data-nav='hamburger-overlay'] .sp-drawer.sp-navdrawer .sp-drawer-close{
+  width: 44px; height: 44px; border: 1px solid var(--dz-line);
+  border-radius: var(--dz-radius); color: var(--dz-ink-2);
+}
+.store-page[data-design='moda'][data-nav='hamburger-overlay'] .sp-drawer.sp-navdrawer .sp-nav-group{
+  padding: 10px clamp(18px, 4vw, 56px) 26px;
+}
+.store-page[data-design='moda'][data-nav='hamburger-overlay'] .sp-drawer.sp-navdrawer .sp-nav-item{
+  display: flex; align-items: baseline; gap: 18px;
+  padding: 10px 4px;
+  border: 0; border-bottom: 1px solid var(--dz-line); border-radius: 0;
+  background: transparent;
+  font-family: var(--dz-display); font-weight: 400;
+  font-size: clamp(26px, 4.6vw, 48px); line-height: 1.08; letter-spacing: -.01em;
+  color: var(--dz-ink);
+}
+.store-page[data-design='moda'][data-nav='hamburger-overlay'] .sp-drawer.sp-navdrawer .sp-nav-item svg{
+  width: 22px; height: 22px; align-self: center;
+  color: var(--dz-muted);
+}
+.store-page[data-design='moda'][data-nav='hamburger-overlay'] .sp-drawer.sp-navdrawer .sp-nav-item:hover,
+.store-page[data-design='moda'][data-nav='hamburger-overlay'] .sp-drawer.sp-navdrawer .sp-nav-item.active{
+  background: transparent; color: var(--dz-accent-text); padding-left: 10px;
+}
+.store-page[data-design='moda'][data-nav='hamburger-overlay'] .sp-drawer.sp-navdrawer .sp-nav-item.active::before{ display: none; }
+.store-page[data-design='moda'][data-nav='hamburger-overlay'] .sp-drawer.sp-navdrawer .sp-drawer-foot{
+  position: sticky; bottom: 0;
+  padding: 16px clamp(18px, 4vw, 56px) calc(18px + env(safe-area-inset-bottom));
+  border-top: 1px solid var(--dz-line);
+  background: var(--dz-bg);
+}
+.store-page[data-design='moda'][data-nav='hamburger-overlay'] .sp-drawer.sp-navdrawer .sp-drawer-action{
+  min-height: 44px;
+  font-family: var(--dz-mono); font-size: 10px; letter-spacing: .18em; text-transform: uppercase;
+}
+
+/* --- Cuenta: account-card (cartilla centrada con índice interno) ---------- */
+[data-design='moda'][data-account='account-card'][data-theme] .ec-account .acc-shell{
+  width: min(960px, 100%);
+  margin-inline: auto;
+  border: 1px solid var(--dz-line);
+  border-radius: var(--dz-radius);
+  background: var(--dz-card);
+  box-shadow: var(--dz-shadow, 0 30px 60px -44px rgba(23, 20, 16, .5));
+  padding: clamp(16px, 2.6vw, 28px);
+  gap: 0;
+}
+[data-design='moda'][data-account='account-card'][data-theme] .ec-account .acc-main{ gap: 14px; }
+[data-design='moda'][data-account='account-card'][data-theme] .ec-account .acc-panel{ box-shadow: none; }
+@media (min-width: 1024px){
+  [data-design='moda'][data-account='account-card'][data-theme] .ec-account .acc-shell{ grid-template-columns: minmax(0, 1fr); }
+  /* La barra lateral se vuelve la cabecera de la cartilla: identidad +
+     índice de secciones en píldoras, todo dentro de la misma tarjeta. */
+  [data-design='moda'][data-account='account-card'][data-theme] .ec-account .acc-side{
+    display: flex; flex-wrap: wrap; align-items: center; gap: 10px 18px;
+    position: static;
+    padding: 0 0 18px;
+    border: 0; border-bottom: 1px solid var(--dz-line);
+    border-radius: 0;
+    background: transparent;
+    box-shadow: none;
+  }
+  [data-design='moda'][data-account='account-card'][data-theme] .ec-account .acc-id{
+    display: flex; align-items: center; gap: 12px;
+    padding: 0; border: 0; flex: none;
+  }
+  [data-design='moda'][data-account='account-card'][data-theme] .ec-account .acc-nav{
+    display: flex; flex-wrap: wrap; gap: 6px;
+    flex: 1 1 auto; margin-top: 0;
+  }
+  [data-design='moda'][data-account='account-card'][data-theme] .ec-account .acc-navitem{
+    padding: 9px 14px;
+    border: 1px solid var(--dz-line); border-radius: var(--dz-radius);
+    background: transparent;
+    font-family: var(--dz-mono); font-size: 9.5px; font-weight: 500;
+    letter-spacing: .16em; text-transform: uppercase;
+  }
+  [data-design='moda'][data-account='account-card'][data-theme] .ec-account .acc-navitem:hover{
+    border-color: var(--dz-accent); color: var(--dz-accent-text);
+    background: color-mix(in srgb, var(--dz-accent) 7%, transparent);
+  }
+  [data-design='moda'][data-account='account-card'][data-theme] .ec-account .acc-navitem.is-on{
+    background: var(--dz-band); border-color: var(--dz-band); color: var(--dz-on-band);
+  }
+  [data-design='moda'][data-account='account-card'][data-theme] .ec-account .acc-logout{ margin-left: auto; }
+  [data-design='moda'][data-account='account-card'][data-theme] .ec-account .acc-main{ padding-top: 18px; }
+}
+
+/* --- Seguimiento: tracking-timeline (movimientos primero, línea real) ----- */
+[data-design='moda'][data-tracking='tracking-timeline'][data-theme] .ec-track{ gap: 20px; }
+/* La última tarjeta es "Movimientos": sube al tope como línea temporal
+   protagonista del diseño. */
+[data-design='moda'][data-tracking='tracking-timeline'][data-theme] .ec-track > .ec-track-card:last-of-type{
+  order: -1;
+  border-left: 3px solid var(--dz-accent);
+}
+[data-design='moda'][data-tracking='tracking-timeline'][data-theme] .ec-track > .ec-track-card:last-of-type .ec-track-h2{
+  font-family: var(--dz-display); font-weight: 400;
+  font-size: clamp(19px, 2.2vw, 25px); letter-spacing: -.01em;
+}
+[data-design='moda'][data-tracking='tracking-timeline'][data-theme] .ec-timeline{ gap: 2px; }
+[data-design='moda'][data-tracking='tracking-timeline'][data-theme] .ec-timeline li{ padding: 12px 0; gap: 14px; }
+[data-design='moda'][data-tracking='tracking-timeline'][data-theme] .ec-tl-dot{
+  width: 12px; height: 12px; margin-top: 5px;
+  border: 2px solid var(--dz-accent); background: var(--dz-card);
+  box-shadow: 0 0 0 4px color-mix(in srgb, var(--dz-accent) 14%, transparent);
+}
+[data-design='moda'][data-tracking='tracking-timeline'][data-theme] .ec-timeline strong{
+  font-family: var(--dz-display); font-weight: 400; font-size: 16.5px; letter-spacing: .01em;
+}
+[data-design='moda'][data-tracking='tracking-timeline'][data-theme] .ec-timeline small{
+  font-family: var(--dz-mono); font-size: 10px; letter-spacing: .1em; text-transform: uppercase;
+}
+/* Stepper compacto: la timeline manda, el stepper queda como resumen. */
+[data-design='moda'][data-tracking='tracking-timeline'][data-theme] .ec-step-dot{ width: 26px; height: 26px; font-size: 11px; }
+[data-design='moda'][data-tracking='tracking-timeline'][data-theme] .ec-step::after{ top: 12px; }
+[data-design='moda'][data-tracking='tracking-timeline'][data-theme] .ec-step-label{ font-size: 10px; }

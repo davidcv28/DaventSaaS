@@ -679,3 +679,112 @@
     animation-duration: .001ms !important;
   }
 }
+
+/* ==========================================================================
+   ARQUETIPOS (FASE 4) — navbar search-first-command · cuenta account-stack ·
+   seguimiento tracking-stepcard. Selectores keyed en data-nav /
+   data-account / data-tracking (.store-page, storeArchetypes.js).
+   ========================================================================== */
+
+/* --- Navbar: search-first-command ------------------------------------------
+   El buscador es el protagonista de la barra: píldora ancha, alta y con
+   sombra propia; en móvil ocupa una fila completa bajo la cabecera (el
+   catálogo conserva su filtro, la entrada siempre queda a un toque). */
+.store-page[data-design='topmodern'][data-nav='search-first-command'] .sp-search.sp-search-top{
+  flex: 1 1 auto; max-width: 620px; height: 50px;
+  border-width: 1.5px; border-radius: var(--dz-pill, 999px);
+  background: var(--dz-card, #fff);
+  box-shadow: 0 14px 34px -20px rgba(10, 10, 10, .35);
+  transition: border-color .2s, box-shadow .25s, transform .25s var(--sp-ease, ease);
+}
+.store-page[data-design='topmodern'][data-nav='search-first-command'] .sp-search.sp-search-top:hover{
+  border-color: var(--dz-ink); transform: translateY(-1px);
+}
+.store-page[data-design='topmodern'][data-nav='search-first-command'] .sp-search.sp-search-top:focus-within{
+  border-color: var(--dz-accent);
+  box-shadow: 0 0 0 4px color-mix(in srgb, var(--dz-accent) 16%, transparent), 0 14px 34px -20px rgba(10, 10, 10, .35);
+}
+.store-page[data-design='topmodern'][data-nav='search-first-command'] .sp-search.sp-search-top input{ font-size: 14.5px; font-weight: 500; }
+@media (max-width: 960px){
+  .store-page[data-design='topmodern'][data-nav='search-first-command'] .sp-top-inner{ flex-wrap: wrap; row-gap: 10px; }
+  .store-page[data-design='topmodern'][data-nav='search-first-command'] .sp-search.sp-search-top{
+    /* ≤768px la base lo vuelve dropdown absoluto tras la lupa: acá vuelve
+       al flujo como fila completa — el buscador ES el patrón. */
+    display: flex; position: static; flex: 1 1 100%; order: 6;
+    max-width: none; height: 48px; margin: 0;
+  }
+  .store-page[data-design='topmodern'][data-nav='search-first-command'] .sp-search-toggle{ display: none; }
+}
+
+/* --- Cuenta: account-stack (side → fila de chips arriba, todo apilado) ---- */
+@media (min-width: 1024px){
+  [data-design='topmodern'][data-account='account-stack'][data-theme] .ec-account .acc-shell{ grid-template-columns: minmax(0, 1fr); }
+  [data-design='topmodern'][data-account='account-stack'][data-theme] .ec-account .acc-side{
+    display: flex; flex-wrap: wrap; align-items: center; gap: 10px 16px;
+    position: static;
+    padding: 0 0 16px;
+    border: 0; border-bottom: 1px solid var(--dz-line);
+    border-radius: 0;
+    background: transparent;
+    box-shadow: none;
+  }
+  [data-design='topmodern'][data-account='account-stack'][data-theme] .ec-account .acc-id{
+    display: flex; align-items: center; gap: 12px;
+    padding: 0; border: 0; flex: none;
+  }
+  [data-design='topmodern'][data-account='account-stack'][data-theme] .ec-account .acc-nav{
+    display: flex; flex-wrap: wrap; gap: 8px;
+    flex: 1 1 auto; margin-top: 0;
+  }
+  [data-design='topmodern'][data-account='account-stack'][data-theme] .ec-account .acc-navitem{
+    padding: 10px 16px;
+    border: 1px solid var(--dz-line); border-radius: var(--dz-pill);
+    background: var(--dz-card);
+    font-family: var(--dz-body); font-size: 11px; font-weight: 600;
+    letter-spacing: .1em; text-transform: uppercase;
+  }
+  [data-design='topmodern'][data-account='account-stack'][data-theme] .ec-account .acc-navitem:hover{
+    border-color: var(--dz-ink); color: var(--dz-ink);
+  }
+  [data-design='topmodern'][data-account='account-stack'][data-theme] .ec-account .acc-navitem.is-on{
+    background: var(--dz-ink); border-color: var(--dz-ink); color: var(--dz-bg);
+  }
+  [data-design='topmodern'][data-account='account-stack'][data-theme] .ec-account .acc-logout{ margin-left: auto; }
+}
+
+/* --- Seguimiento: tracking-stepcard (cada paso como tarjeta) --------------- */
+[data-design='topmodern'][data-tracking='tracking-stepcard'][data-theme] .ec-track .ec-stepper{
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(128px, 1fr));
+  gap: 10px;
+}
+[data-design='topmodern'][data-tracking='tracking-stepcard'][data-theme] .ec-track .ec-step{
+  position: relative;
+  justify-items: start; text-align: left;
+  gap: 8px;
+  padding: 14px 14px 12px;
+  border: 1px solid var(--dz-line);
+  border-radius: var(--dz-radius);
+  background: var(--dz-card);
+}
+[data-design='topmodern'][data-tracking='tracking-stepcard'][data-theme] .ec-track .ec-step::after,
+[data-design='topmodern'][data-tracking='tracking-stepcard'][data-theme] .ec-track .ec-step::before{ display: none; }
+[data-design='topmodern'][data-tracking='tracking-stepcard'][data-theme] .ec-track .ec-step-dot{
+  width: 34px; height: 34px; font-size: 13px;
+  border-radius: var(--dz-pill);
+}
+[data-design='topmodern'][data-tracking='tracking-stepcard'][data-theme] .ec-track .ec-step-label{
+  font-family: var(--dz-body); font-weight: 700;
+  font-size: 11.5px; letter-spacing: .08em; text-transform: uppercase;
+}
+[data-design='topmodern'][data-tracking='tracking-stepcard'][data-theme] .ec-track .ec-track-step-date{
+  font-family: var(--dz-mono); font-size: 10px; letter-spacing: .06em;
+}
+[data-design='topmodern'][data-tracking='tracking-stepcard'][data-theme] .ec-track .ec-step.is-done{
+  border-color: color-mix(in srgb, var(--dz-accent) 45%, var(--dz-line));
+  background: color-mix(in srgb, var(--dz-accent) 6%, var(--dz-card));
+}
+[data-design='topmodern'][data-tracking='tracking-stepcard'][data-theme] .ec-track .ec-step.is-current{
+  border-color: var(--dz-accent);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--dz-accent) 14%, transparent);
+}
