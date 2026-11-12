@@ -121,7 +121,7 @@
   /* Sin alfa: el tag a 68% de tinta quedaba a ~3.4:1 sobre el toldo. */
   .brand-tag{font:700 9px var(--mono);letter-spacing:.22em;text-transform:uppercase;color:var(--yellow-ink)}
 
-  .search{position:relative;display:flex;align-items:center;flex:1 1 560px;height:44px;background:var(--surface);border-radius:6px;box-shadow:0 1px 2px rgba(0,0,0,.2),0 0 0 1px color-mix(in srgb,var(--ink) 8%,transparent);color:var(--ink);cursor:text}
+  .search{position:relative;display:flex;align-items:center;flex:1 1 560px;min-width:180px;height:44px;background:var(--surface);border-radius:6px;box-shadow:0 1px 2px rgba(0,0,0,.2),0 0 0 1px color-mix(in srgb,var(--ink) 8%,transparent);color:var(--ink);cursor:text}
   .search:focus-within{box-shadow:0 0 0 2px var(--link),0 1px 2px rgba(0,0,0,.2)}
   .search::before{
     content:"";flex:none;width:17px;height:17px;margin-left:14px;opacity:.6;
@@ -158,7 +158,6 @@
   .suggest-empty{padding:12px 10px;font-size:13px;color:var(--muted)}
   .suggest-more{display:flex;align-items:center;justify-content:center;width:100%;min-height:44px;margin-top:4px;border:1px solid var(--line-strong);border-radius:6px;background:transparent;color:var(--link);font:inherit;font-size:13px;font-weight:700;cursor:pointer}
   .suggest-more:hover{background:var(--soft)}
-  .top-meta{display:flex;align-items:center;gap:14px;font-size:12px;font-weight:700;color:var(--yellow-ink)}
   /* El toggle del puente hereda el --ink del body (claro en noche) y se
      perdía sobre la banda amarilla: tinta del toldo en ambos temas. */
   .top .ds-theme-toggle{color:var(--yellow-ink);border-color:color-mix(in srgb,var(--yellow-ink) 45%,transparent);opacity:.9}
@@ -171,10 +170,13 @@
      y empuja el par a la derecha; cuando está presente el toggle pierde el
      suyo para que queden pegados (sin cuenta, el toggle se banca solo). */
   .top-in:has(.dsx-account) .ds-theme-toggle{margin-inline-start:0}
-  .top-meta span{display:inline-flex;align-items:center;gap:5px;white-space:nowrap;font-family:var(--mono);letter-spacing:-.02em}
-  .top-meta span:empty{display:none}
-  .top-meta:not(:has(span:not(:empty))){display:none}
-  .top-meta span:not(:empty) + span::before{content:"";width:4px;height:4px;border-radius:50%;background:currentColor;opacity:.5}
+  /* Ubicación + horarios viven en la fila de pestañas (scrollea en X):
+     con datos largos dejaban de entrar en la banda y rompían la fila. */
+  .tabs-meta{display:flex;align-items:center;gap:12px;margin-inline-start:auto;padding-inline:8px 10px;flex:none;font:600 10.5px var(--mono);letter-spacing:.05em;text-transform:uppercase;color:var(--muted);white-space:nowrap}
+  .tabs-meta span{display:inline-flex;align-items:center;gap:5px;max-width:34ch;overflow:hidden;text-overflow:ellipsis}
+  .tabs-meta span:empty{display:none}
+  .tabs-meta:not(:has(span:not(:empty))){display:none}
+  .tabs-meta span:not(:empty) + span::before{content:"";flex:none;width:4px;height:4px;border-radius:50%;background:currentColor;opacity:.5}
 
   .tabs{background:var(--surface);border-bottom:1px solid var(--line)}
   .tabs-in{display:flex;align-items:center;gap:2px;min-height:46px;overflow-x:auto;scrollbar-width:none}
@@ -188,7 +190,7 @@
   .tabs a:hover{color:var(--ink);background:var(--soft)}
   .tabs a.on{color:var(--ink);font-weight:800}
   .tabs a.on::after{transform:scaleX(1)}
-  .tabs-note{margin-inline-start:auto;padding-inline:10px;font:600 10px var(--mono);letter-spacing:.14em;text-transform:uppercase;color:var(--muted);white-space:nowrap}
+  .tabs-note{padding-inline:10px;font:600 10px var(--mono);letter-spacing:.14em;text-transform:uppercase;color:var(--muted);white-space:nowrap}
   .tabs-wa{display:none;align-items:center;gap:6px;min-height:46px;padding:0 14px;font-size:13px;font-weight:800;color:var(--link)}
   .tabs-wa[href]:not([href=""]){display:inline-flex}
   .tabs-wa svg{width:15px;height:15px}
@@ -1013,9 +1015,6 @@
   @media(max-width:1180px){
     .cat-surface .grid[data-ds-view-mode="grid"]{grid-template-columns:repeat(3,minmax(0,1fr))}
     .cats{grid-template-columns:repeat(3,minmax(0,1fr))}
-    /* Marca + buscador + meta de contacto no entran cómodos por debajo de
-       ~1180: la meta se oculta un escalón antes (960–1180 quedaba justa). */
-    .top-meta{display:none}
   }
   @media(max-width:980px){
     .hero-grid{grid-template-columns:1fr;gap:32px}
@@ -1024,7 +1023,8 @@
     .grid{grid-template-columns:repeat(2,minmax(0,1fr))}
     .trust-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:18px 0}
     .trust-item:nth-child(3){border-left:0}
-    .top-meta{display:none}
+    /* La fila de pestañas se llena: la meta cede su lugar a los links. */
+    .tabs-meta{display:none}
     .foot-grid{grid-template-columns:repeat(auto-fit,minmax(210px,1fr))}
     .cat-layout{grid-template-columns:minmax(0,1fr);gap:12px}
     .cat-aside{
@@ -1226,7 +1226,6 @@
         </button>
         <div class="search-suggest" data-ds-suggest role="listbox" aria-label="Sugerencias de búsqueda" hidden></div>
       </form>
-      <div class="top-meta"><span data-flag="location">{{store_location}}</span><span data-flag="hours">{{store_hours}}</span></div>
     </div>
   </header>
   <nav class="tabs" aria-label="Secciones">
@@ -1238,6 +1237,7 @@
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 11.5a8.4 8.4 0 0 1-8.5 8.4 8.6 8.6 0 0 1-3.8-.9L3 21l2-5.3a8.3 8.3 0 0 1-1-4A8.4 8.4 0 0 1 12.5 3.2 8.4 8.4 0 0 1 21 11.5Z"/></svg>
         WhatsApp
       </a>
+      <div class="tabs-meta"><span data-flag="location">{{store_location}}</span><span data-flag="hours">{{store_hours}}</span></div>
       <span class="tabs-note">Precios en pesos argentinos</span>
     </div>
   </nav>
