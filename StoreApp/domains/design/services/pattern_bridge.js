@@ -76,12 +76,19 @@
       if (!h) h = root.scrollHeight
       /* Superficie "chrome" (navbar del diseño sobre las páginas que no
        * son del documento): el alto no es el del contenido — las
-       * superficies están ocultas — sino el cromo: el borde inferior del
-       * chrome fijo de arriba más las barras fijas de abajo (tab bar
-       * móvil, píldora de carrito), que el pin apoya en la base de la
-       * tira. Las hojas cerradas (translateY fuera del marco) no cuentan:
-       * bottomChromePx ya las descarta contra docBot. */
+       * superficies están ocultas — sino el cromo. Contrato con el host:
+       * `ds-height` = borde inferior del chrome fijo de arriba + el alto
+       * del chrome fijo de abajo (tab bar móvil, píldora de carrito), que
+       * el pin apoya en la base de la tira como SEGUNDA FILA — el iframe
+       * no cubre el viewport, así que una barra inferior nunca puede ir
+       * al pie de la página; apilarla es lo que la deja visible (diseños
+       * con todo el nav en pin=bottom, p. ej. neon, dependen de esto).
+       * Las hojas cerradas (translateY fuera del marco) no cuentan:
+       * bottomChromePx ya las descarta contra docBot. Se mide aunque el
+       * host aún no haya mandado `davent:ds-frame`: sin esa compensación
+       * la barra de abajo se dibujaba SOLAPADA sobre el topbar. */
       if (root.getAttribute('data-ds-surface') === 'chrome') {
+        if (!pinned) collectFixed()
         ;(pinned || []).forEach(function (p) {
           if (p.prop !== 'top') return
           var cs3 = getComputedStyle(p.el)
@@ -89,14 +96,19 @@
           var r3 = p.el.getBoundingClientRect()
           if (r3.bottom > h) h = r3.bottom
         })
-        if (frameBox) h += bottomChromePx()
+        h += bottomChromePx()
       }
       syncChatMetrics()
       parent.postMessage({ type: 'davent:ds-height', height: h }, '*')
     })
   }
-  function go(route, id) {
-    parent.postMessage({ type: 'davent:ds-route', route: route, id: id || '' }, '*')
+  function go(route, id, extra) {
+    var msg = { type: 'davent:ds-route', route: route, id: id || '' }
+    /* Contexto extra para el host (p. ej. q/cat de la búsqueda): el
+     * documento es origen opaco y su estado no sobrevive a la navegación,
+     * así que lo que el host necesita reconstruir viaja en el mensaje. */
+    if (extra) for (var k in extra) msg[k] = extra[k]
+    parent.postMessage(msg, '*')
   }
   /* Alto del chrome fijo del diseño (masthead + pestañas) para que el
    * host deje el destino debajo y no tapado. Opt-in: sin atributo, 72. */
@@ -162,10 +174,13 @@
   }
   function paintThemeToggle() {
     if (!themeToggle) return
+    /* El icono representa el modo ACTIVO (luna en noche, sol en día), no
+     * el destino del clic: la acción la anuncian aria-label/title y el
+     * host alterna data-ds-theme por davent:ds-theme. */
     var dark = currentTheme() === 'dark'
-    themeToggle.innerHTML = dark ? SUN : MOON
+    themeToggle.innerHTML = dark ? MOON : SUN
     themeToggle.setAttribute('aria-label', dark ? 'Cambiar a modo claro' : 'Cambiar a modo oscuro')
-    themeToggle.setAttribute('title', dark ? 'Modo claro' : 'Modo oscuro')
+    themeToggle.setAttribute('title', dark ? 'Modo oscuro activo — cambiar a claro' : 'Modo claro activo — cambiar a oscuro')
     themeToggle.setAttribute('aria-pressed', dark ? 'true' : 'false')
   }
   function mountThemeToggle() {
@@ -176,10 +191,14 @@
      * cualquier elemento del fragmento. */
     if (root.hasAttribute('data-ds-theme-lock') || document.querySelector('[data-ds-theme-lock]')) return
     if (themeToggle || document.querySelector('.ds-theme-toggle')) return
+    /* El slot preferido es el chrome pineado arriba: un <header> genérico
+     * puede ser el encabezado de una superficie oculta (.cat-hero,
+     * .svc-head) y el botón quedaría montado donde nadie lo ve. */
     var host =
       document.querySelector('header.top .top-inner') ||
       document.querySelector('header.top .top-in') ||
       document.querySelector('header.top') ||
+      document.querySelector('[data-ds-pin="top"]') ||
       document.querySelector('header')
     if (!host) return
     var st = document.createElement('style')
@@ -326,12 +345,20 @@
     var max = 0
     ;(pinned || []).forEach(function (p) {
       if (p.prop !== 'bottom' || !p.el.offsetHeight) return
+      /* visibility:hidden conserva layout (offsetHeight>0): una hoja
+       * cerrada sin translate no puede contar alto fantasma. */
+      var csB = getComputedStyle(p.el)
+      if (csB.display === 'none' || csB.visibility === 'hidden') return
       if (p.el.closest && p.el.closest('.ds-chat')) return
       /* Hojas cerradas (translateY(102%)) conservan layout: su rect queda
        * debajo del borde visible del marco y no son chrome real — contarlas
-       * inflaba --ds-chat-lift y desplazaba el FAB a media pantalla. */
-      if (frameBox) {
-        var docBot = Math.min(frameBox.vh - frameBox.top, frameBox.bottom - frameBox.top)
+       * inflaba --ds-chat-lift y desplazaba el FAB a media pantalla. Sin
+       * frameBox (host que todavía no manda ds-frame) el borde visible es
+       * el viewport del iframe. */
+      var docBot = frameBox
+        ? Math.min(frameBox.vh - frameBox.top, frameBox.bottom - frameBox.top)
+        : (window.innerHeight || 0)
+      if (docBot) {
         var r = p.el.getBoundingClientRect()
         if (r.top > docBot + 4) return
       }
@@ -1165,7 +1192,7 @@
     if (cat != null) {
       setCategory(cat)
       closeSuggest()
-      if (root.getAttribute('data-ds-surface') !== 'catalog') go('catalog')
+      if (root.getAttribute('data-ds-surface') !== 'catalog') go('catalog', '', { cat: cat })
     }
   }
   function renderSuggest() {
@@ -1231,7 +1258,10 @@
     state.q = input ? input.value.trim() : ''
     saveState()
     closeSuggest()
-    if (root.getAttribute('data-ds-surface') !== 'catalog') go('catalog')
+    /* La query viaja en el mensaje: en superficie "chrome" el host navega
+     * a su catálogo (página Vue, otro documento) y el state del documento
+     * —origen opaco, sessionStorage no persiste— se pierde en el salto. */
+    if (root.getAttribute('data-ds-surface') !== 'catalog') go('catalog', '', { q: state.q })
     applyCatalog()
   }
   function initSearch() {
@@ -2118,6 +2148,7 @@
       document.querySelector('header.top .top-inner') ||
       document.querySelector('header.top .top-in') ||
       document.querySelector('header.top') ||
+      document.querySelector('[data-ds-pin="top"]') ||
       document.querySelector('header')
     accountBtn = document.createElement('button')
     accountBtn.type = 'button'
@@ -2182,6 +2213,7 @@
       document.querySelector('header.top .top-inner') ||
       document.querySelector('header.top .top-in') ||
       document.querySelector('header.top') ||
+      document.querySelector('[data-ds-pin="top"]') ||
       document.querySelector('header')
     cartBtn = document.createElement('button')
     cartBtn.type = 'button'
@@ -2385,6 +2417,11 @@
     if (locked === lastLock) return
     lastLock = locked
     parent.postMessage({ type: 'davent:ds-lock', locked: locked }, '*')
+    /* En "chrome" abrir una hoja (m-sheet, hoja de filtros) suma chrome
+     * inferior: la tira debe crecer para alojarla o queda recortada. Se
+     * re-mide ahora y al cerrar la transición (~300ms). */
+    send()
+    setTimeout(send, 340)
   }
   if ('MutationObserver' in window) {
     var lockObs = new MutationObserver(syncLock)
