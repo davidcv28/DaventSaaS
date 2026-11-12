@@ -22,9 +22,9 @@ const homeTo = computed(() => ({ path: storeHostSlug ? '/' : `/${slug.value}` })
 const c = useStoreCatalog({ pageSize: 24 })
 const {
   catalog, catalogStatus, loadCatalog, activeCategories, activeBrands,
-  onlyOffer, onlyNew, onlyEvent, priceMin, priceMax, sort, hasFilters,
-  pickCategory, pickBrand, toggleOffer, toggleNew, toggleEvent, clearFilters, clearCategories,
-  brandNameOf, categoryNameOf, openProduct, activeCategoryName, eventTotal
+  onlyOffer, onlyNew, onlyEvent, activeCampaign, priceMin, priceMax, sort, hasFilters,
+  pickCategory, pickBrand, toggleOffer, toggleNew, toggleEvent, toggleCampaign, clearFilters, clearCategories,
+  brandNameOf, categoryNameOf, openProduct, activeCategoryName, eventTotal, eventCampaigns
 } = c
 
 const pageEl = ref(null)
@@ -216,7 +216,12 @@ const activeChips = computed(() => {
             </label>
             <label v-if="eventTotal" class="mc-f-check">
               <input type="checkbox" :checked="onlyEvent" @change="toggleEvent" />
-              <span>En evento<em v-if="eventTotal">{{ eventTotal }}</em></span>
+              <span>Ofertas<em v-if="eventTotal">{{ eventTotal }}</em></span>
+            </label>
+            <label v-for="camp in eventCampaigns" :key="camp.slug" class="mc-f-check mc-f-check--campaign">
+              <input type="checkbox" :checked="activeCampaign === camp.slug" @change="toggleCampaign(camp.slug)" />
+              <span>{{ camp.name }}</span>
+              <img v-if="camp.label_url" class="mc-campaign-label" :src="camp.label_url" :alt="camp.label_alt || camp.name" loading="lazy" />
             </label>
           </section>
 

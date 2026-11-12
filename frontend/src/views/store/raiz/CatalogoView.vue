@@ -22,11 +22,11 @@ const homeTo = computed(() => ({ path: storeHostSlug ? '/' : `/${slug.value}` })
 const c = useStoreCatalog({ pageSize: 12 })
 const {
   catalog, catalogStatus, loadCatalog, activeCategories, activeBrands,
-  onlyOffer, onlyNew, onlyEvent, priceMin, priceMax, sort,
+  onlyOffer, onlyNew, onlyEvent, activeCampaign, priceMin, priceMax, sort,
   visibleProducts, hasMoreProducts, showMore, pickCategory, pickBrand, pickFeature, isFeatureOn,
-  toggleOffer, toggleNew, toggleEvent, clearFilters, hasFilters, activeTags, facets,
+  toggleOffer, toggleNew, toggleEvent, toggleCampaign, clearFilters, hasFilters, activeTags, facets,
   brandNameOf, categoryNameOf, openProduct, shownLabel, shownPct,
-  offerTotal, newTotal, eventTotal
+  offerTotal, newTotal, eventTotal, eventCampaigns
 } = c
 
 // Panel de filtros plegable (móvil/tablet): conserva los mismos controles
@@ -173,8 +173,13 @@ const toggleFeature = (name, value) => pickFeature(name, value)
             </label>
             <label v-if="eventTotal" class="rz-cat-check">
               <input type="checkbox" :checked="onlyEvent" @change="toggleEvent" />
-              <span class="rz-cat-check-label">En evento</span>
+              <span class="rz-cat-check-label">Ofertas</span>
               <em>{{ eventTotal }}</em>
+            </label>
+            <label v-for="camp in eventCampaigns" :key="camp.slug" class="rz-cat-check rz-cat-check--campaign">
+              <input type="checkbox" :checked="activeCampaign === camp.slug" @change="toggleCampaign(camp.slug)" />
+              <span class="rz-cat-check-label">{{ camp.name }}</span>
+              <img v-if="camp.label_url" class="rz-cat-campaign-label" :src="camp.label_url" :alt="camp.label_alt || camp.name" loading="lazy" />
             </label>
           </fieldset>
 

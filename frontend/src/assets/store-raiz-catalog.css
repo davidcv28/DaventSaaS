@@ -172,7 +172,19 @@
   margin: 0;
   accent-color: var(--rz-ink);
   cursor: pointer;
-}.store-page[data-template='raiz'] .rz-cat-check-label{ min-width: 0; overflow-wrap: anywhere; }.store-page[data-template='raiz'] .rz-cat-check:hover .rz-cat-check-label{ color: var(--rz-ink); }.store-page[data-template='raiz'] .rz-cat-check em{
+}.store-page[data-template='raiz'] .rz-cat-check-label{ min-width: 0; overflow-wrap: anywhere; }.store-page[data-template='raiz'] .rz-cat-check:hover .rz-cat-check-label{ color: var(--rz-ink); }.store-page[data-template='raiz'] .rz-cat-check--campaign{
+  /* La etiqueta (dibujo) de la campaña se ve antes del conteo. */
+  flex-wrap: wrap;
+}.store-page[data-template='raiz'] .rz-cat-campaign-label{
+  margin-left: auto;
+  flex: none;
+  display: block;
+  max-height: 26px;
+  max-width: 90px;
+  width: auto;
+  height: auto;
+  object-fit: contain;
+}.store-page[data-template='raiz'] .rz-cat-check em{
   margin-left: auto;
   flex: none;
   font-style: normal;

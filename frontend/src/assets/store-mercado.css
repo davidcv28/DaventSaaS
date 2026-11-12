@@ -1255,6 +1255,16 @@
   cursor: pointer;
 }
 .store-page[data-template='mercado'] .mc-f-check:hover { color: var(--mc-ink); }
+.store-page[data-template='mercado'] .mc-campaign-label {
+  margin-left: auto;
+  flex: none;
+  display: block;
+  max-height: 26px;
+  max-width: 90px;
+  width: auto;
+  height: auto;
+  object-fit: contain;
+}
 .store-page[data-template='mercado'] .mc-f-check input {
   appearance: none;
   -webkit-appearance: none;

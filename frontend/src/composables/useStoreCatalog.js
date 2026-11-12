@@ -89,14 +89,23 @@ function buildCatalogState(ctx, { pageSize }) {
   // ?event=1: solo productos con descuento programado vigente (eventos
   // especiales del comercio). El control se muestra solo si eventTotal>0.
   const onlyEvent = ref(route.query.event === '1')
+  // ?campaign=<slug>: solo productos cuya oferta la firma UNA campaña del
+  // calendario (ej. black-friday). El backend no conoce el parámetro: la
+  // marca viaja en product.discount.campaign.slug y el recorte fino es
+  // client-side — al activarlo se pide event=1, que ya trae todo lo de la
+  // campaña.
+  const activeCampaign = ref(String(route.query.campaign || ''))
   const priceMin = ref('')
   const priceMax = ref('')
   const sort = ref(SORTS.includes(route.query.sort) ? route.query.sort : 'name')
   let searchTimer = null
 
   const visibleCount = ref(pageSize)
-  const visibleProducts = computed(() => catalog.value.products.slice(0, visibleCount.value))
-  const hasMoreProducts = computed(() => catalog.value.products.length > visibleCount.value)
+  const campaignProducts = computed(() => (activeCampaign.value
+    ? catalog.value.products.filter((p) => p.discount?.campaign?.slug === activeCampaign.value)
+    : catalog.value.products))
+  const visibleProducts = computed(() => campaignProducts.value.slice(0, visibleCount.value))
+  const hasMoreProducts = computed(() => campaignProducts.value.length > visibleCount.value)
   const showMore = () => { visibleCount.value += pageSize }
 
   // Miniatura por categoría (primer producto con foto). Se acumula entre
@@ -117,7 +126,7 @@ function buildCatalogState(ctx, { pageSize }) {
         features: featureFilters,
         offer: onlyOffer.value,
         is_new: onlyNew.value,
-        event: onlyEvent.value,
+        event: onlyEvent.value || !!activeCampaign.value,
         min_price: min,
         max_price: max,
         sort: sort.value
@@ -178,6 +187,7 @@ function buildCatalogState(ctx, { pageSize }) {
   const toggleOffer = () => { onlyOffer.value = !onlyOffer.value; loadCatalog() }
   const toggleNew = () => { onlyNew.value = !onlyNew.value; loadCatalog() }
   const toggleEvent = () => { onlyEvent.value = !onlyEvent.value; loadCatalog() }
+  const toggleCampaign = (campaignSlug) => { activeCampaign.value = activeCampaign.value === campaignSlug ? '' : campaignSlug; loadCatalog() }
   function clearFilters() {
     activeCategories.value = []
     activeBrands.value = []
@@ -185,6 +195,7 @@ function buildCatalogState(ctx, { pageSize }) {
     onlyOffer.value = false
     onlyNew.value = false
     onlyEvent.value = false
+    activeCampaign.value = ''
     ui.search = ''
     priceMin.value = ''
     priceMax.value = ''
@@ -206,7 +217,7 @@ function buildCatalogState(ctx, { pageSize }) {
   const featureFilterCount = computed(() => Object.values(featureFilters).reduce((n, v) => n + v.length, 0))
   const hasFilters = computed(() => Boolean(
     activeCategories.value.length || activeBrands.value.length || featureFilterCount.value
-    || onlyOffer.value || onlyNew.value || onlyEvent.value || ui.search || hasPriceFilter.value
+    || onlyOffer.value || onlyNew.value || onlyEvent.value || activeCampaign.value || ui.search || hasPriceFilter.value
   ))
   const hasCatalogNav = computed(() => Boolean(catalog.value.categories.length || catalog.value.brands.length))
   const categoryNameOf = (p) => catalog.value.categories.find((c) => c.id === p.category)?.name || ''
@@ -219,16 +230,16 @@ function buildCatalogState(ctx, { pageSize }) {
   const activeBrandName = computed(() => activeBrandNames.value.join(' · ') || '')
   const activeFilterCount = computed(() =>
     activeCategories.value.length + activeBrands.value.length + featureFilterCount.value
-    + (onlyOffer.value ? 1 : 0) + (onlyNew.value ? 1 : 0) + (onlyEvent.value ? 1 : 0)
+    + (onlyOffer.value ? 1 : 0) + (onlyNew.value ? 1 : 0) + (onlyEvent.value ? 1 : 0) + (activeCampaign.value ? 1 : 0)
     + (ui.search.trim() ? 1 : 0) + (hasPriceFilter.value ? 1 : 0)
   )
-  const total = computed(() => catalog.value.products.length)
+  const total = computed(() => campaignProducts.value.length)
   const productCount = computed(() => {
     const n = total.value
     const base = `${n} ${n === 1 ? 'producto' : 'productos'}`
     return hasFilters.value ? `${base}, ${activeFilterCount.value} ${activeFilterCount.value === 1 ? 'filtro' : 'filtros'}` : base
   })
-  const offerCount = computed(() => catalog.value.products.filter((p) => productOffer(p) != null).length)
+  const offerCount = computed(() => campaignProducts.value.filter((p) => productOffer(p) != null).length)
   const shownLabel = computed(() => `Mostrando ${Math.min(visibleCount.value, total.value)} de ${total.value}`)
   const shownPct = computed(() => `${Math.round((Math.min(visibleCount.value, total.value) / Math.max(1, total.value)) * 100)}%`)
 
@@ -244,6 +255,19 @@ function buildCatalogState(ctx, { pageSize }) {
   // Productos con descuento programado vigente — alimenta el filtro
   // "Eventos", que solo se muestra cuando hay algo que filtrar.
   const eventTotal = computed(() => Number(catalog.value.event_count || 0))
+  // Campañas vigentes firmando descuentos (ej. Black Friday): cada una da
+  // una fila de filtro con su etiqueta (dibujo). El payload ya trae
+  // label_url/label_alt/accent — `promotions` solo lista descuentos que
+  // corren, así que su campaña está vigente por definición.
+  const eventCampaigns = computed(() => {
+    const seen = new Map()
+    for (const promo of catalog.value.promotions || []) {
+      const camp = promo.campaign
+      if (camp?.slug && camp.is_running !== false && !seen.has(camp.slug)) seen.set(camp.slug, camp)
+    }
+    return [...seen.values()]
+  })
+  const campaignName = (slugParam) => eventCampaigns.value.find((c) => c.slug === slugParam)?.name || slugParam
 
   // Tags removibles de los filtros activos (una por valor elegido): cada
   // plantilla las dibuja con su propio estilo sobre la misma lista.
@@ -263,7 +287,8 @@ function buildCatalogState(ctx, { pageSize }) {
     })
     if (onlyOffer.value) tags.push({ key: 'offer', label: 'En oferta', remove: toggleOffer })
     if (onlyNew.value) tags.push({ key: 'new', label: 'Novedades', remove: toggleNew })
-    if (onlyEvent.value) tags.push({ key: 'event', label: 'En evento', remove: toggleEvent })
+    if (onlyEvent.value) tags.push({ key: 'event', label: 'Ofertas', remove: toggleEvent })
+    if (activeCampaign.value) tags.push({ key: 'campaign', label: campaignName(activeCampaign.value), remove: () => toggleCampaign(activeCampaign.value) })
     if (hasPriceFilter.value) tags.push({ key: 'price', label: priceRangeLabel.value, remove: clearPrice })
     return tags
   })
@@ -283,12 +308,12 @@ function buildCatalogState(ctx, { pageSize }) {
   return {
     ctx, slug, ui, custom, shopName, pageTemplate, hasDesignAdvanced, year, homeTo,
     catalog, catalogStatus, loadCatalog,
-    activeCategories, activeBrands, featureFilters, onlyOffer, onlyNew, onlyEvent, priceMin, priceMax, sort,
+    activeCategories, activeBrands, featureFilters, onlyOffer, onlyNew, onlyEvent, activeCampaign, priceMin, priceMax, sort,
     visibleCount, visibleProducts, hasMoreProducts, showMore,
-    catThumbs, pickCategory, pickBrand, pickFeature, isFeatureOn, toggleOffer, toggleNew, toggleEvent, clearFilters, clearPrice, clearCategories, clearBrands,
+    catThumbs, pickCategory, pickBrand, pickFeature, isFeatureOn, toggleOffer, toggleNew, toggleEvent, toggleCampaign, clearFilters, clearPrice, clearCategories, clearBrands,
     hasPriceFilter, priceRangeLabel, hasFilters, hasCatalogNav,
     activeCategoryName, activeBrandName, activeCategoryNames, activeBrandNames, activeFilterCount,
-    total, productCount, facets, priceCeiling, offerTotal, newTotal, eventTotal, activeTags,
+    total, productCount, facets, priceCeiling, offerTotal, newTotal, eventTotal, eventCampaigns, campaignName, activeTags,
     brandNameOf, categoryNameOf, offerCount, shownLabel, shownPct,
     productTo, openProduct, whatsappUrl, askUrl
   }
