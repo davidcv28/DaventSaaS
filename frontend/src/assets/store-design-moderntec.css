@@ -1548,6 +1548,10 @@
   0%, 100% { transform: scale(1); }
   50% { transform: scale(1.14); }
 }
+/* CTA de pago: blanco sobre verde WhatsApp (el base trae tinta oscura). */
+.store-page[data-design='moderntec'][data-tracking='tracking-minimal'] .ec-pay-btn.is-wa {
+  color: #fff;
+}
 /* Badge de estado: punto que late (el "ahora" del pedido). */
 .store-page[data-design='moderntec'][data-tracking='tracking-minimal'] .ec-track-status {
   display: inline-flex;
