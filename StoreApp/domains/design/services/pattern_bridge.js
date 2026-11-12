@@ -1881,14 +1881,14 @@
     '.dsx-buy-wrap{display:flex;flex-direction:column;min-width:0}' +
     '.dsx-buy{box-sizing:border-box;display:block;width:calc(100% - 24px);margin:10px 12px 12px;padding:12px 14px;' +
     'border:0;border-radius:var(--ds-radius-btn,var(--ds-radius,10px));cursor:pointer;' +
-    'background:var(--ds-accent,#111);color:var(--ds-accent-ink,#fff);' +
+    'background:var(--ds-primary,var(--ds-accent,#111));color:var(--ds-primary-ink,var(--ds-accent-ink,#fff));' +
     'font:inherit;font-size:12px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;' +
     'box-shadow:0 1px 2px rgba(0,0,0,.10);' +
     'transition:transform .16s ease,box-shadow .22s ease,background-color .2s ease,filter .2s ease}' +
     '.dsx-buy:hover{transform:translateY(-1px);' +
-    'box-shadow:0 10px 22px -10px color-mix(in srgb,var(--ds-accent,#111) 60%,transparent)}' +
+    'box-shadow:0 10px 22px -10px color-mix(in srgb,var(--ds-primary,var(--ds-accent,#111)) 60%,transparent)}' +
     '.dsx-buy:active{transform:translateY(0) scale(.985);filter:brightness(.96)}' +
-    '.dsx-buy:focus-visible{outline:2px solid var(--ds-accent,#111);outline-offset:2px}' +
+    '.dsx-buy:focus-visible{outline:2px solid var(--ds-primary,var(--ds-accent,#111));outline-offset:2px}' +
     '.dsx-buy[disabled]{opacity:.55;cursor:default;transform:none;box-shadow:none;filter:none}' +
     '.dsx-buy.is-added{background:var(--ds-success,#0f9d58);' +
     'color:var(--ds-success-ink,var(--ds-accent-ink,#fff))}' +

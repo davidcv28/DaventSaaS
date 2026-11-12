@@ -770,6 +770,13 @@
   border-radius: 6px;
   color: var(--mc-on-blue);
 }
+/* Todo botón relleno del diseño es acción primaria: celeste del tema con
+   tinta blanca en claro y noche. Los ghost/outline quedan como están. */
+.store-page[data-template='mercado'] :is(.sp-btn, .sp-icon-btn.primary, .sp-skip):not(.ghost):not(.sp-hero-ghost) {
+  background: var(--mc-blue);
+  border-color: var(--mc-blue);
+  color: var(--mc-on-blue);
+}
 .store-page[data-template='mercado'] .sp-benefit,
 .store-page[data-template='mercado'] .sp-service-card,
 .store-page[data-template='mercado'] .sp-faq-item,

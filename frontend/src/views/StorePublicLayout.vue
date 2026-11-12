@@ -517,7 +517,11 @@ const designId = computed(() => {
 const arch = computed(() => archetypeForDesign(designId.value))
 watch(designId, (id) => {
   const load = DESIGN_EC_CSS[`../assets/store-design-${id}.css`]
-  if (load) load().catch(() => {})
+  const base = load ? load() : Promise.resolve()
+  if (load) base.catch(() => {})
+  // Mercado parte su panel de cuenta en hoja propia: se encadena DESPUÉS de
+  // la base para que sus reglas resuelvan el empate por orden de carga.
+  if (id === 'mercado') base.then(() => import('../assets/store-design-mercado-account.css')).catch(() => {})
   // Esencial parte su piel de auth en hoja propia (split con la de cuenta):
   // el modal de auth puede abrirse desde cualquier página de la tienda, así
   // que la hoja se carga on-demand junto a la base, no solo en /ingresar.

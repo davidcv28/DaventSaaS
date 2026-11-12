@@ -1,0 +1,966 @@
+/* ===========================================================================
+   MERCADO (Bazar) — PANEL DE CUENTA (/cuenta).
+   Hoja propia, encadenada después de store-design-mercado.css para el diseño
+   `mercado` (ver StorePublicLayout: DESIGN_EC_CSS + import encadenado). La
+   base define tokens --dz-* y el mostrador; acá vive el panel del comprador
+   (cabecera, navegación de secciones, paneles y estados) con su adaptación a
+   móvil.
+
+   Composición: en escritorio el panel es un MOSTRADOR DE DOS PIEZAS — un riel
+   de papel con la identidad bajo un toldo amarillo (avatar, nombre, correo,
+   secciones numeradas y salir) y la columna de contenido, que encabeza cada
+   sección con una etiqueta mono y un filete punteado de ticket. En tablet y
+   móvil la identidad pasa a una tarjeta compacta y las secciones a una tira
+   de chips con scroll y desvanecido en el borde. El amarillo es SIEMPRE
+   acento (toldo, filetes, chips activos), nunca texto: el texto de acento va
+   en --dz-link, que pasa AA en los dos modos.
+   =========================================================================== */
+
+/* ---------------------------------------------------------------------------
+   Ganchos locales
+   --------------------------------------------------------------------------- */
+/* El chrome del diseño lo pinta el patrón y es FIJO de ~116px, pero
+   --sp-top-h solo declara 64: con el offset de la base el riel sticky se
+   metía debajo del navbar al scrollear. */
+[data-design='mercado'] { --dz-acc-chrome: 116px; }
+
+/* ===========================================================================
+   1. MARCO — la grilla del panel
+   =========================================================================== */
+/* La base resuelve el panel en una sola columna y el arquetipo `account-stack`
+   (fijo para mercado, ver storeArchetypes.js) convierte el riel en una franja
+   horizontal que se corta a 1280. Acá se vuelve a la columna: el prefijo
+   .store-page llega a (0,6,0) y gana sobre el arquetipo (0,5,0). */
+@media (min-width: 1024px) {
+  .store-page[data-design='mercado'][data-theme] .ec-account .acc-shell {
+    grid-template-columns: 296px minmax(0, 1fr);
+    gap: 22px;
+    align-items: start;
+  }
+  /* La identidad vive en el riel: la cabecera compacta duplicaba avatar,
+     nombre, correo y badge justo debajo del toldo. */
+  .store-page[data-design='mercado'][data-theme] .ec-account .acc-mhead,
+  .store-page[data-design='mercado'][data-theme] .ec-account .acc-tabs { display: none; }
+  .store-page[data-design='mercado'][data-theme] .ec-account .acc-main { gap: 0; }
+}
+
+/* ===========================================================================
+   2. RIEL DE MOSTRADOR (escritorio)
+   =========================================================================== */
+@media (min-width: 1024px) {
+  .store-page[data-design='mercado'][data-theme] .ec-account .acc-side {
+    display: grid;
+    gap: 0;
+    align-content: start;
+    position: sticky;
+    top: calc(var(--dz-acc-chrome, 116px) + 18px);
+    padding: 0;
+    border: 1px solid var(--dz-line);
+    border-radius: var(--dz-radius);
+    background: var(--dz-surface);
+    color: var(--dz-ink);
+    box-shadow: 0 1px 2px rgba(0, 0, 0, .06);
+    overflow: hidden;
+  }
+
+  /* Toldo: la identidad va sobre el amarillo, con perforación de ticket
+     abajo. Es el único bloque grande de color del panel. */
+  .store-page[data-design='mercado'][data-theme] .ec-account .acc-side .acc-id {
+    display: grid;
+    grid-template-columns: 46px minmax(0, 1fr);
+    align-items: center;
+    gap: 2px 11px;
+    padding: 13px 14px 14px;
+    background: var(--dz-accent);
+    color: var(--dz-accent-ink);
+    border-bottom: 1px dashed color-mix(in srgb, var(--dz-accent-ink) 34%, transparent);
+  }
+  .store-page[data-design='mercado'][data-theme] .ec-account .acc-side .acc-tele {
+    grid-column: 1 / -1;
+    margin-bottom: 3px;
+    font-size: 8.5px;
+    letter-spacing: .16em;
+    color: color-mix(in srgb, var(--dz-accent-ink) 72%, transparent);
+  }
+  .store-page[data-design='mercado'][data-theme] .ec-account .acc-side .acc-avatar {
+    width: 46px;
+    height: 46px;
+    border-radius: 8px;
+    background: var(--dz-accent-ink);
+    color: var(--dz-accent);
+    font-size: 16px;
+    letter-spacing: .01em;
+  }
+  .store-page[data-design='mercado'][data-theme] .ec-account .acc-side .acc-id-meta {
+    display: grid;
+    gap: 3px;
+    min-width: 0;
+  }
+  .store-page[data-design='mercado'][data-theme] .ec-account .acc-side .acc-id-name {
+    font-family: var(--dz-display);
+    font-size: 15px;
+    font-weight: 800;
+    letter-spacing: -.02em;
+    color: var(--dz-accent-ink);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .store-page[data-design='mercado'][data-theme] .ec-account .acc-side .acc-id-email {
+    font-family: var(--dz-mono);
+    font-size: 10px;
+    line-height: 1.3;
+    color: color-mix(in srgb, var(--dz-accent-ink) 82%, transparent);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  /* Sobre el amarillo el chip semántico (verde/ámbar translúcido) se lavaba:
+     pasa a sello de papel, que además aguanta el modo noche. */
+  .store-page[data-design='mercado'][data-theme] .ec-account .acc-side .acc-verify {
+    margin-top: 2px;
+    padding: 4px 7px;
+    border-radius: 4px;
+    background: var(--dz-surface);
+    font-family: var(--dz-mono);
+    font-size: 8.5px;
+    font-weight: 700;
+    letter-spacing: .1em;
+    text-transform: uppercase;
+  }
+  .store-page[data-design='mercado'][data-theme] .ec-account .acc-side .acc-verify.is-ok { color: var(--dz-ok); }
+  .store-page[data-design='mercado'][data-theme] .ec-account .acc-side .acc-verify.is-warn { color: var(--dz-warn); }
+  .store-page[data-design='mercado'][data-theme] .ec-account .acc-side .acc-verify-resend {
+    display: inline-flex;
+    align-items: center;
+    min-height: 26px;
+    padding: 2px 0;
+    font-family: var(--dz-mono);
+    font-size: 9px;
+    font-weight: 700;
+    letter-spacing: .06em;
+    text-transform: uppercase;
+    color: var(--dz-accent-ink);
+  }
+  .store-page[data-design='mercado'][data-theme] .ec-account .acc-side .acc-verify-note {
+    font-family: var(--dz-body);
+    font-size: 10.5px;
+    line-height: 1.4;
+    color: color-mix(in srgb, var(--dz-accent-ink) 86%, transparent);
+  }
+
+  /* Secciones: filas de tinta con índice mono; la activa se lleva el toldo. */
+  .store-page[data-design='mercado'][data-theme] .ec-account .acc-side .acc-nav {
+    display: grid;
+    gap: 2px;
+    padding: 9px 9px 10px;
+    border-bottom: 1px dashed var(--dz-line);
+  }
+  .store-page[data-design='mercado'][data-theme] .ec-account .acc-side .acc-navitem {
+    display: grid;
+    grid-template-columns: 17px minmax(0, 1fr) auto;
+    align-items: center;
+    gap: 10px;
+    width: 100%;
+    min-height: 44px;
+    padding: 9px 11px;
+    border: 1px solid transparent;
+    border-radius: 7px;
+    background: transparent;
+    color: var(--dz-ink-2);
+    font-family: var(--dz-body);
+    font-size: 13.5px;
+    font-weight: 600;
+    text-align: left;
+    cursor: pointer;
+    transition: background .16s, color .16s, border-color .16s;
+  }
+  .store-page[data-design='mercado'][data-theme] .ec-account .acc-side .acc-navitem > span:not(.acc-idx) {
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .store-page[data-design='mercado'][data-theme] .ec-account .acc-side .acc-navitem .acc-idx {
+    font-size: 9px;
+    letter-spacing: .1em;
+    opacity: .5;
+  }
+  .store-page[data-design='mercado'][data-theme] .ec-account .acc-side .acc-navitem:hover {
+    background: color-mix(in srgb, var(--dz-ink) 6%, transparent);
+    color: var(--dz-ink);
+  }
+  .store-page[data-design='mercado'][data-theme] .ec-account .acc-side .acc-navitem.is-on {
+    background: var(--dz-accent);
+    border-color: color-mix(in srgb, var(--dz-accent-ink) 34%, transparent);
+    color: var(--dz-accent-ink);
+    font-weight: 800;
+  }
+  .store-page[data-design='mercado'][data-theme] .ec-account .acc-side .acc-navitem.is-on .acc-idx { opacity: .7; }
+
+  .store-page[data-design='mercado'][data-theme] .ec-account .acc-side .acc-logout {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    min-height: 44px;
+    margin: 10px;
+    padding: 9px 12px;
+    border: 1px solid var(--dz-line);
+    border-radius: 7px;
+    background: transparent;
+    color: var(--dz-ink-2);
+    font-family: var(--dz-body);
+    font-size: 12.5px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: background .16s, color .16s, border-color .16s;
+  }
+  .store-page[data-design='mercado'][data-theme] .ec-account .acc-side .acc-logout:hover {
+    border-color: color-mix(in srgb, var(--dz-danger) 45%, var(--dz-line));
+    background: color-mix(in srgb, var(--dz-danger) 8%, transparent);
+    color: var(--dz-danger);
+  }
+}
+
+/* ===========================================================================
+   3. CABECERA COMPACTA (tablet / móvil)
+   =========================================================================== */
+@media (max-width: 1023px) {
+  .store-page[data-design='mercado'][data-theme] .ec-account .acc-main { gap: 12px; }
+  .store-page[data-design='mercado'][data-theme] .ec-account .acc-mhead {
+    display: grid;
+    grid-template-columns: 44px minmax(0, 1fr) 44px;
+    align-items: center;
+    gap: 11px;
+    padding: 11px 11px 11px 12px;
+    border: 1px solid var(--dz-line);
+    border-top: 3px solid var(--dz-accent);
+    border-radius: var(--dz-radius);
+    background: var(--dz-surface);
+    color: var(--dz-ink);
+    box-shadow: 0 1px 2px rgba(0, 0, 0, .05);
+  }
+  .store-page[data-design='mercado'][data-theme] .ec-account .acc-mhead .acc-tele { display: none; }
+  /* En papel el avatar se invierte respecto del riel: tile amarillo, tinta
+     adentro (sobre el toldo iba al revés). */
+  .store-page[data-design='mercado'][data-theme] .ec-account .acc-mhead .acc-avatar--sm {
+    width: 44px;
+    height: 44px;
+    border-radius: 8px;
+    background: var(--dz-accent);
+    color: var(--dz-accent-ink);
+    border: 1px solid color-mix(in srgb, var(--dz-accent-ink) 30%, transparent);
+    font-family: var(--dz-display);
+    font-size: 14.5px;
+  }
+  .store-page[data-design='mercado'][data-theme] .ec-account .acc-mhead-meta {
+    display: grid;
+    gap: 1px;
+    min-width: 0;
+  }
+  .store-page[data-design='mercado'][data-theme] .ec-account .acc-mhead-meta strong {
+    font-family: var(--dz-display);
+    font-size: 15.5px;
+    font-weight: 800;
+    letter-spacing: -.02em;
+    color: var(--dz-ink);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .store-page[data-design='mercado'][data-theme] .ec-account .acc-mhead-meta small {
+    font-family: var(--dz-mono);
+    font-size: 10.5px;
+    line-height: 1.35;
+    color: var(--dz-muted);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .store-page[data-design='mercado'][data-theme] .ec-account .acc-mhead .acc-verify {
+    display: inline-flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 4px 6px;
+    width: fit-content;
+    max-width: 100%;
+    margin-top: 3px;
+    padding: 4px 7px;
+    border-radius: 4px;
+    font-family: var(--dz-mono);
+    font-size: 8.5px;
+    font-weight: 700;
+    letter-spacing: .09em;
+    text-transform: uppercase;
+  }
+  /* Sin verificar el chip lleva el "Reenviar" adentro: en vez de apretarlo
+     contra el badge, el botón cae a su propia línea del chip. */
+  .store-page[data-design='mercado'][data-theme] .ec-account .acc-mhead .acc-verify-resend {
+    flex: 1 0 100%;
+    min-height: 26px;
+    padding: 2px 0 0;
+    font-family: var(--dz-mono);
+    font-size: 9px;
+    font-weight: 700;
+    letter-spacing: .06em;
+    text-align: left;
+  }
+  .store-page[data-design='mercado'][data-theme] .ec-account .acc-mhead .acc-verify-note {
+    font-family: var(--dz-body);
+    font-size: 10.5px;
+    line-height: 1.4;
+  }
+  .store-page[data-design='mercado'][data-theme] .ec-account .acc-mhead .acc-icon-btn {
+    width: 44px;
+    height: 44px;
+    border: 1px solid var(--dz-line);
+    border-radius: 8px;
+    background: transparent;
+    color: var(--dz-ink-2);
+  }
+  .store-page[data-design='mercado'][data-theme] .ec-account .acc-mhead .acc-icon-btn:hover {
+    border-color: color-mix(in srgb, var(--dz-danger) 45%, var(--dz-line));
+    background: color-mix(in srgb, var(--dz-danger) 8%, transparent);
+    color: var(--dz-danger);
+  }
+}
+
+/* ===========================================================================
+   4. TIRA DE SECCIONES (tablet / móvil)
+   =========================================================================== */
+/* Scroll horizontal con snap y desvanecido en los dos bordes. El padding
+   derecho (30px) es el mismo ancho del fade: al llegar al final el último
+   chip queda entero y el desvanecido cae sobre aire, no sobre texto. El
+   margen negativo de la izquierda compensa el padding del fade para que el
+   primer chip siga alineado con la tarjeta de identidad. */
+@media (max-width: 1023px) {
+  .store-page[data-design='mercado'][data-theme] .ec-account .acc-main .acc-tabs {
+    display: flex;
+    gap: 6px;
+    margin-left: -12px;
+    padding: 3px 30px 9px 12px;
+    overflow-x: auto;
+    overflow-y: hidden;
+    scroll-snap-type: x proximity;
+    scroll-padding-inline: 12px 30px;
+    scrollbar-width: none;
+    -webkit-overflow-scrolling: touch;
+    -webkit-mask-image: linear-gradient(to right, transparent 0, #000 12px, #000 calc(100% - 30px), transparent 100%);
+    mask-image: linear-gradient(to right, transparent 0, #000 12px, #000 calc(100% - 30px), transparent 100%);
+  }
+  .store-page[data-design='mercado'][data-theme] .ec-account .acc-main .acc-tabs::-webkit-scrollbar { display: none; }
+  .store-page[data-design='mercado'][data-theme] .ec-account .acc-main .acc-tab {
+    flex: none;
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    min-height: 44px;
+    padding: 9px 12px;
+    border: 1px solid var(--dz-line);
+    border-radius: 7px;
+    background: var(--dz-surface);
+    color: var(--dz-ink-2);
+    font-family: var(--dz-body);
+    font-size: 13px;
+    font-weight: 600;
+    white-space: nowrap;
+    cursor: pointer;
+    scroll-snap-align: start;
+    transition: background .16s, border-color .16s, color .16s;
+  }
+  .store-page[data-design='mercado'][data-theme] .ec-account .acc-main .acc-tab .acc-idx {
+    font-size: 9px;
+    letter-spacing: .1em;
+    opacity: .5;
+  }
+  .store-page[data-design='mercado'][data-theme] .ec-account .acc-main .acc-tab:hover {
+    border-color: color-mix(in srgb, var(--dz-ink) 28%, var(--dz-line));
+    color: var(--dz-ink);
+  }
+  .store-page[data-design='mercado'][data-theme] .ec-account .acc-main .acc-tab.is-on {
+    background: var(--dz-accent);
+    border-color: color-mix(in srgb, var(--dz-accent-ink) 34%, transparent);
+    color: var(--dz-accent-ink);
+    font-weight: 800;
+  }
+  .store-page[data-design='mercado'][data-theme] .ec-account .acc-main .acc-tab.is-on .acc-idx { opacity: .7; }
+}
+
+/* ===========================================================================
+   5. TARJETAS DE SECCIÓN — el ticket del mostrador
+   =========================================================================== */
+.store-page[data-design='mercado'][data-theme] .ec-account :is(.acc-panel, .acc-skelpanel) {
+  padding: clamp(15px, 2.2vw, 24px);
+  border: 1px solid var(--dz-line);
+  border-top: 3px solid var(--dz-accent);
+  border-radius: var(--dz-radius);
+  background: var(--dz-surface);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, .06);
+  gap: 15px;
+  color: var(--dz-ink);
+  min-width: 0;
+}
+/* Encabezado de ticket: etiqueta mono, título display, subtítulo y
+   perforación punteada antes del contenido. */
+.store-page[data-design='mercado'][data-theme] .ec-account .acc-panel-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 10px 14px;
+  padding-bottom: 13px;
+  border-bottom: 1px dashed var(--dz-line);
+}
+.store-page[data-design='mercado'][data-theme] .ec-account .acc-panel-headtxt {
+  display: grid;
+  gap: 3px;
+  min-width: 0;
+  flex: 1 1 240px;
+}
+.store-page[data-design='mercado'][data-theme] .ec-account .acc-panel-kicker {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  font-family: var(--dz-mono);
+  font-size: 9.5px;
+  font-weight: 700;
+  letter-spacing: .14em;
+  text-transform: uppercase;
+  color: var(--dz-muted);
+}
+.store-page[data-design='mercado'][data-theme] .ec-account .acc-panel-kicker::before {
+  content: '';
+  width: 7px;
+  height: 7px;
+  flex: none;
+  background: var(--dz-accent);
+  border: 1px solid color-mix(in srgb, var(--dz-accent-ink) 40%, transparent);
+  border-radius: 1px;
+}
+.store-page[data-design='mercado'][data-theme] .ec-account .acc-panel-title {
+  margin: 0;
+  font-family: var(--dz-display);
+  font-size: clamp(20px, 2.3vw, 26px);
+  font-weight: 800;
+  letter-spacing: -.03em;
+  line-height: 1.12;
+  color: var(--dz-ink);
+}
+.store-page[data-design='mercado'][data-theme] .ec-account .acc-panel-sub {
+  margin: 0;
+  max-width: 64ch;
+  font-family: var(--dz-body);
+  font-size: 12.5px;
+  line-height: 1.55;
+  color: var(--dz-muted);
+  overflow-wrap: anywhere;
+}
+.store-page[data-design='mercado'][data-theme] .ec-account .acc-panel-headtxt { gap: 4px; }
+
+/* Botones: la base fija 50px de alto (es la medida del CTA de auth) y dentro
+   de un panel eso desborda el ritmo. Acá 44 (target) y 38 en la variante
+   chica de las cabeceras. */
+.store-page[data-design='mercado'][data-theme] .ec-account .acc-panel .ec-btn-primary,
+.store-page[data-design='mercado'][data-theme] .ec-account .acc-panel .ec-btn-ghost {
+  min-height: 44px;
+  font-size: 13.5px;
+}
+.store-page[data-design='mercado'][data-theme] .ec-account .acc-panel .acc-btn-sm {
+  min-height: 38px;
+  padding: 7px 12px;
+  font-size: 12.5px;
+  white-space: nowrap;
+}
+
+/* ===========================================================================
+   6. PEDIDOS · filas de ticket
+   =========================================================================== */
+.store-page[data-design='mercado'][data-theme] .ec-account .acc-orders { gap: 10px; }
+.store-page[data-design='mercado'][data-theme] .ec-account .acc-order {
+  padding: 13px 15px;
+  border: 1px solid var(--dz-line);
+  border-radius: var(--dz-radius-sm);
+  background: var(--dz-bg);
+  gap: 11px;
+}
+.store-page[data-design='mercado'][data-theme] .ec-account .acc-order:hover {
+  border-color: color-mix(in srgb, var(--dz-accent-ink) 32%, var(--dz-line));
+}
+.store-page[data-design='mercado'][data-theme] .ec-account .acc-order-code {
+  font-family: var(--dz-mono);
+  font-size: 13.5px;
+  font-weight: 700;
+  letter-spacing: .01em;
+}
+.store-page[data-design='mercado'][data-theme] .ec-account .acc-order-meta {
+  font-family: var(--dz-mono);
+  font-size: 10.5px;
+  letter-spacing: .02em;
+  color: var(--dz-muted);
+}
+.store-page[data-design='mercado'][data-theme] .ec-account .acc-order-foot {
+  padding-top: 11px;
+  border-top: 1px dashed var(--dz-line);
+}
+.store-page[data-design='mercado'][data-theme] .ec-account .acc-order-total {
+  font-family: var(--dz-display);
+  font-size: 17px;
+  font-weight: 800;
+  letter-spacing: -.02em;
+}
+.store-page[data-design='mercado'][data-theme] .ec-account .acc-order-actions { gap: 14px; }
+.store-page[data-design='mercado'][data-theme] .ec-account .acc-order-link {
+  min-height: 32px;
+  align-items: center;
+  font-family: var(--dz-body);
+  font-size: 12.5px;
+  font-weight: 700;
+  color: var(--dz-link);
+}
+.store-page[data-design='mercado'][data-theme] .ec-account .acc-order-na {
+  font-family: var(--dz-mono);
+  font-size: 10px;
+  letter-spacing: .04em;
+  text-transform: uppercase;
+  color: var(--dz-muted);
+}
+
+/* ===========================================================================
+   7. ESTADOS VACÍOS, NOTAS Y SKELETONS
+   =========================================================================== */
+.store-page[data-design='mercado'][data-theme] .ec-account .acc-empty {
+  gap: 7px;
+  padding: 30px 14px 32px;
+}
+/* Inversión del sello del gate: adentro del panel el ícono es el toldo con
+   la tinta adentro. */
+.store-page[data-design='mercado'][data-theme] .ec-account :is(.acc-empty-ico, .acc-support-empty-ico) {
+  width: 56px;
+  height: 56px;
+  margin-bottom: 6px;
+  border: 1px solid color-mix(in srgb, var(--dz-accent-ink) 30%, transparent);
+  border-radius: 10px;
+  background: var(--dz-accent);
+  color: var(--dz-accent-ink);
+}
+.store-page[data-design='mercado'][data-theme] .ec-account .acc-empty-title {
+  font-family: var(--dz-display);
+  font-size: 17px;
+  font-weight: 800;
+  letter-spacing: -.02em;
+  color: var(--dz-ink);
+}
+.store-page[data-design='mercado'][data-theme] .ec-account .acc-empty-sub {
+  max-width: 46ch;
+  margin-bottom: 6px;
+  font-size: 13px;
+  line-height: 1.55;
+  color: var(--dz-muted);
+}
+.store-page[data-design='mercado'][data-theme] .ec-account .acc-empty .ec-btn-primary { min-height: 44px; }
+
+.store-page[data-design='mercado'][data-theme] .ec-account .acc-note {
+  padding: 12px 14px;
+  border-radius: var(--dz-radius-sm);
+  font-size: 13px;
+  line-height: 1.5;
+}
+.store-page[data-design='mercado'][data-theme] .ec-account .acc-inline-error,
+.store-page[data-design='mercado'][data-theme] .ec-account .ec-support-error {
+  font-family: var(--dz-body);
+  font-size: 12.5px;
+}
+
+.store-page[data-design='mercado'][data-theme] .ec-account .acc-sk {
+  border-radius: 5px;
+  background: color-mix(in srgb, var(--dz-muted) 18%, transparent);
+}
+.store-page[data-design='mercado'][data-theme] .ec-account .acc-skelpanel { gap: 14px; }
+.store-page[data-design='mercado'][data-theme] .ec-account .acc-sk-tabs { height: 44px; border-radius: 7px; }
+.store-page[data-design='mercado'][data-theme] .ec-account .acc-sk-pill { border-radius: 5px; }
+.store-page[data-design='mercado'][data-theme] .ec-account .acc-order--skel { background: var(--dz-bg); }
+
+/* ===========================================================================
+   8. SUSCRIPCIONES · tarjeta de miembro y planes
+   =========================================================================== */
+.store-page[data-design='mercado'][data-theme] .ec-account .acc-sub-now {
+  padding: 14px 15px;
+  border: 1px solid color-mix(in srgb, var(--dz-accent-ink) 24%, var(--dz-line));
+  border-radius: var(--dz-radius-sm);
+  background: color-mix(in srgb, var(--dz-accent) 18%, var(--dz-surface));
+  gap: 12px;
+}
+.store-page[data-design='mercado'][data-theme] .ec-account .acc-sub-now-ico {
+  width: 40px;
+  height: 40px;
+  border-radius: 8px;
+  background: var(--dz-accent);
+  border: 1px solid color-mix(in srgb, var(--dz-accent-ink) 30%, transparent);
+  color: var(--dz-accent-ink);
+}
+.store-page[data-design='mercado'][data-theme] .ec-account .acc-sub-now-txt strong {
+  font-family: var(--dz-display);
+  font-size: 16px;
+  font-weight: 800;
+  letter-spacing: -.02em;
+}
+.store-page[data-design='mercado'][data-theme] .ec-account .acc-sub-now-txt small {
+  font-family: var(--dz-mono);
+  font-size: 10.5px;
+  letter-spacing: .02em;
+  color: var(--dz-muted);
+}
+.store-page[data-design='mercado'][data-theme] .ec-account .acc-sub-plans-title {
+  font-family: var(--dz-mono);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: .14em;
+  text-transform: uppercase;
+  color: var(--dz-muted);
+}
+.store-page[data-design='mercado'][data-theme] .ec-account .acc-plan {
+  border: 1px solid var(--dz-line);
+  border-radius: var(--dz-radius-sm);
+  background: var(--dz-bg);
+}
+.store-page[data-design='mercado'][data-theme] .ec-account .acc-plan-name {
+  font-family: var(--dz-display);
+  font-size: 15.5px;
+  font-weight: 800;
+  letter-spacing: -.02em;
+}
+.store-page[data-design='mercado'][data-theme] .ec-account .acc-plan.is-current {
+  border-color: color-mix(in srgb, var(--dz-accent-ink) 30%, var(--dz-line));
+  background: color-mix(in srgb, var(--dz-accent) 14%, var(--dz-bg));
+}
+.store-page[data-design='mercado'][data-theme] .ec-account .acc-chips { gap: 6px; }
+/* Sin planes la sección quedaba en una línea suelta: pasa a aviso de
+   mostrador (caja punteada centrada). */
+.store-page[data-design='mercado'][data-theme] .ec-account .acc-muted--plans {
+  display: grid;
+  justify-items: center;
+  gap: 6px;
+  padding: 24px 16px;
+  border: 1px dashed var(--dz-line);
+  border-radius: var(--dz-radius-sm);
+  background: var(--dz-bg);
+  font-size: 13px;
+  line-height: 1.55;
+  text-align: center;
+  color: var(--dz-muted);
+}
+
+/* ===========================================================================
+   9. DIRECCIONES · fichas de domicilio
+   =========================================================================== */
+.store-page[data-design='mercado'][data-theme] .ec-account .acc-addr {
+  padding: 13px 15px;
+  border: 1px solid var(--dz-line);
+  border-radius: var(--dz-radius-sm);
+  background: var(--dz-bg);
+}
+.store-page[data-design='mercado'][data-theme] .ec-account .acc-addr.is-default {
+  border-color: color-mix(in srgb, var(--dz-accent-ink) 28%, var(--dz-line));
+  background: color-mix(in srgb, var(--dz-accent) 12%, var(--dz-bg));
+}
+.store-page[data-design='mercado'][data-theme] .ec-account .acc-addr-head strong {
+  font-family: var(--dz-display);
+  font-size: 14.5px;
+  font-weight: 800;
+  letter-spacing: -.01em;
+}
+.store-page[data-design='mercado'][data-theme] .ec-account .acc-addr-body {
+  font-family: var(--dz-body);
+  font-size: 12.5px;
+  line-height: 1.55;
+  color: var(--dz-ink-2);
+}
+.store-page[data-design='mercado'][data-theme] .ec-account .acc-addrform {
+  padding: 15px;
+  border: 1px dashed color-mix(in srgb, var(--dz-accent-ink) 34%, var(--dz-line));
+  border-radius: var(--dz-radius-sm);
+  background: var(--dz-bg);
+}
+.store-page[data-design='mercado'][data-theme] .ec-account .acc-check {
+  font-family: var(--dz-body);
+  font-size: 12.5px;
+  color: var(--dz-ink-2);
+}
+.store-page[data-design='mercado'][data-theme] .ec-account .acc-form-actions { gap: 10px; }
+
+/* ===========================================================================
+   10. PERFIL · camposets numerados
+   =========================================================================== */
+.store-page[data-design='mercado'][data-theme] .ec-account .acc-profile { gap: 16px; }
+.store-page[data-design='mercado'][data-theme] .ec-account .acc-fieldset {
+  gap: 12px;
+  padding: 0;
+  border: 0;
+}
+.store-page[data-design='mercado'][data-theme] .ec-account .acc-fieldset + .acc-fieldset {
+  padding-top: 16px;
+  border-top: 1px dashed var(--dz-line);
+}
+.store-page[data-design='mercado'][data-theme] .ec-account .acc-fieldset legend {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 0 0 2px;
+  font-family: var(--dz-mono);
+  font-size: 9.5px;
+  font-weight: 700;
+  letter-spacing: .14em;
+  text-transform: uppercase;
+  color: var(--dz-muted);
+}
+.store-page[data-design='mercado'][data-theme] .ec-account .acc-hint {
+  font-family: var(--dz-body);
+  font-size: 11px;
+  line-height: 1.45;
+  color: var(--dz-muted);
+}
+.store-page[data-design='mercado'][data-theme] .ec-account .acc-msg {
+  padding: 10px 12px;
+  border-radius: var(--dz-radius-sm);
+  font-size: 12.5px;
+  font-weight: 600;
+}
+.store-page[data-design='mercado'][data-theme] .ec-account .acc-msg.is-ok {
+  border: 1px solid color-mix(in srgb, var(--dz-ok) 35%, transparent);
+  background: color-mix(in srgb, var(--dz-ok) 10%, transparent);
+  color: var(--dz-ok);
+}
+.store-page[data-design='mercado'][data-theme] .ec-account .acc-msg.is-err {
+  border: 1px solid color-mix(in srgb, var(--dz-danger) 35%, transparent);
+  background: color-mix(in srgb, var(--dz-danger) 9%, transparent);
+  color: var(--dz-danger);
+}
+
+/* ===========================================================================
+   11. SOPORTE · bandeja e hilo
+   =========================================================================== */
+.store-page[data-design='mercado'][data-theme] .ec-account .ec-support { gap: 13px; }
+.store-page[data-design='mercado'][data-theme] .ec-account .ec-support-bar { justify-content: flex-start; }
+.store-page[data-design='mercado'][data-theme] .ec-account .ec-compose {
+  padding: 15px;
+  border: 1px dashed color-mix(in srgb, var(--dz-accent-ink) 34%, var(--dz-line));
+  border-radius: var(--dz-radius-sm);
+  background: var(--dz-bg);
+}
+.store-page[data-design='mercado'][data-theme] .ec-account .ec-compose-title {
+  font-family: var(--dz-mono);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: .14em;
+  text-transform: uppercase;
+  color: var(--dz-muted);
+}
+.store-page[data-design='mercado'][data-theme] .ec-account .ec-thread-row {
+  padding: 12px 14px;
+  border: 1px solid var(--dz-line);
+  border-radius: var(--dz-radius-sm);
+  background: var(--dz-bg);
+}
+.store-page[data-design='mercado'][data-theme] .ec-account .ec-thread-row:hover {
+  border-color: color-mix(in srgb, var(--dz-accent-ink) 32%, var(--dz-line));
+  background: var(--dz-bg);
+}
+.store-page[data-design='mercado'][data-theme] .ec-account .ec-thread-row-main strong {
+  font-family: var(--dz-display);
+  font-size: 14px;
+  font-weight: 800;
+  letter-spacing: -.01em;
+}
+.store-page[data-design='mercado'][data-theme] .ec-account .ec-thread-row-main small {
+  font-family: var(--dz-mono);
+  font-size: 10.5px;
+}
+.store-page[data-design='mercado'][data-theme] .ec-account .ec-support-empty {
+  padding: 30px 12px;
+  font-size: 13px;
+}
+.store-page[data-design='mercado'][data-theme] .ec-account .ec-support-empty strong {
+  font-family: var(--dz-display);
+  font-size: 16px;
+  letter-spacing: -.02em;
+}
+.store-page[data-design='mercado'][data-theme] .ec-account .ec-thread-subject {
+  font-family: var(--dz-display);
+  font-size: 17px;
+  font-weight: 800;
+  letter-spacing: -.02em;
+}
+.store-page[data-design='mercado'][data-theme] .ec-account .ec-thread-store {
+  font-family: var(--dz-mono);
+  font-size: 10.5px;
+  letter-spacing: .02em;
+}
+.store-page[data-design='mercado'][data-theme] .ec-account .ec-thread-msgs { padding: 4px 0 6px; }
+.store-page[data-design='mercado'][data-theme] .ec-account .ec-msg {
+  border: 1px solid var(--dz-line);
+  border-radius: 10px 10px 10px 3px;
+  background: var(--dz-bg);
+}
+.store-page[data-design='mercado'][data-theme] .ec-account .ec-msg.is-mine {
+  border-color: color-mix(in srgb, var(--dz-accent-ink) 22%, var(--dz-line));
+  border-radius: 10px 10px 3px 10px;
+  background: color-mix(in srgb, var(--dz-accent) 16%, var(--dz-bg));
+}
+.store-page[data-design='mercado'][data-theme] .ec-account .ec-msg-meta {
+  font-family: var(--dz-mono);
+  font-size: 9px;
+  letter-spacing: .1em;
+}
+.store-page[data-design='mercado'][data-theme] .ec-account .ec-reply-hint {
+  font-family: var(--dz-mono);
+  font-size: 9.5px;
+  letter-spacing: .04em;
+  color: var(--dz-muted);
+}
+.store-page[data-design='mercado'][data-theme] .ec-account .ec-thread-closed {
+  font-size: 12.5px;
+  color: var(--dz-muted);
+}
+
+/* ===========================================================================
+   12. GATE SIN SESIÓN y sub-vistas de mail
+   =========================================================================== */
+.store-page[data-design='mercado'][data-theme] .ec-account .acc-gate { padding: 22px 0 28px; }
+.store-page[data-design='mercado'][data-theme] .ec-account :is(.acc-gate-card, .acc-auth-card) {
+  padding: clamp(24px, 4vw, 38px) clamp(16px, 3.4vw, 30px);
+  border: 1px solid var(--dz-line);
+  border-top: 3px solid var(--dz-accent);
+  border-radius: var(--dz-radius);
+  background: var(--dz-surface);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, .06);
+  gap: 13px;
+  color: var(--dz-ink);
+}
+.store-page[data-design='mercado'][data-theme] .ec-account .acc-gate-card .acc-kicker {
+  display: block;
+  font-family: var(--dz-mono);
+  font-size: 9.5px;
+  font-weight: 700;
+  letter-spacing: .16em;
+  text-transform: uppercase;
+  color: var(--dz-muted);
+}
+.store-page[data-design='mercado'][data-theme] .ec-account :is(.acc-gate-title, .acc-auth-title) {
+  margin: 0;
+  font-family: var(--dz-display);
+  font-size: clamp(21px, 3vw, 27px);
+  font-weight: 800;
+  letter-spacing: -.03em;
+  line-height: 1.15;
+  color: var(--dz-ink);
+}
+.store-page[data-design='mercado'][data-theme] .ec-account :is(.acc-gate-sub, .acc-auth-msg) {
+  max-width: 46ch;
+  font-family: var(--dz-body);
+  font-size: 13.5px;
+  line-height: 1.6;
+  color: var(--dz-muted);
+}
+/* Lista de lo que hay adentro: filas de ticket con el número en sello. */
+.store-page[data-design='mercado'][data-theme] .ec-account .acc-gate-list {
+  width: 100%;
+  max-width: 430px;
+  margin: 2px 0 6px;
+  padding: 4px 16px;
+  gap: 0;
+  border: 1px solid var(--dz-line);
+  border-radius: var(--dz-radius-sm);
+  background: var(--dz-bg);
+}
+.store-page[data-design='mercado'][data-theme] .ec-account .acc-gate-list li {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 11px 0;
+  border-bottom: 1px dashed var(--dz-line);
+  font-size: 13px;
+  font-weight: 600;
+  line-height: 1.4;
+  color: var(--dz-ink-2);
+}
+.store-page[data-design='mercado'][data-theme] .ec-account .acc-gate-list li:last-child { border-bottom: 0; }
+.store-page[data-design='mercado'][data-theme] .ec-account .acc-gate-cta {
+  min-width: 0;
+  width: min(300px, 100%);
+}
+.store-page[data-design='mercado'][data-theme] .ec-account .acc-gate-link,
+.store-page[data-design='mercado'][data-theme] .ec-account .acc-auth-link {
+  font-size: 12.5px;
+  font-weight: 700;
+  color: var(--dz-link);
+}
+.store-page[data-design='mercado'][data-theme] .ec-account .acc-auth-form { gap: 11px; }
+.store-page[data-design='mercado'][data-theme] .ec-account .acc-auth-actions { gap: 10px; }
+
+/* ===========================================================================
+   13. OSCURO — el amarillo sigue siendo el toldo; el papel cambia de tono
+   =========================================================================== */
+/* En noche las filas internas (--dz-bg #141518) quedan casi negras sobre la
+   tarjeta (#1e2024): se levantan un punto para que el ticket se lea. */
+[data-design='mercado'][data-theme='dark'] .ec-account .acc-order,
+[data-design='mercado'][data-theme='dark'] .ec-account .acc-addr,
+[data-design='mercado'][data-theme='dark'] .ec-account .acc-plan,
+[data-design='mercado'][data-theme='dark'] .ec-account .ec-thread-row,
+[data-design='mercado'][data-theme='dark'] .ec-account .ec-msg,
+[data-design='mercado'][data-theme='dark'] .ec-account .acc-addrform,
+[data-design='mercado'][data-theme='dark'] .ec-account .ec-compose,
+[data-design='mercado'][data-theme='dark'] .ec-account .acc-gate-list {
+  background: color-mix(in srgb, var(--dz-ink) 7%, var(--dz-surface));
+}
+[data-design='mercado'][data-theme='dark'] .ec-account .acc-msg.is-mine {
+  background: color-mix(in srgb, var(--dz-accent) 16%, var(--dz-surface));
+}
+/* La tarjeta de miembro y el plan vigente pierden el tinte amarillo (sobre
+   grafito el amarillo translúcido se ensucia): queda el filete. */
+[data-design='mercado'][data-theme='dark'] .ec-account .acc-sub-now {
+  background: color-mix(in srgb, var(--dz-accent) 10%, var(--dz-surface));
+}
+[data-design='mercado'][data-theme='dark'] .ec-account .acc-plan.is-current,
+[data-design='mercado'][data-theme='dark'] .ec-account .acc-addr.is-default {
+  background: color-mix(in srgb, var(--dz-accent) 12%, var(--dz-surface));
+}
+
+/* ===========================================================================
+   14. RESPONSIVE
+   =========================================================================== */
+@media (max-width: 860px) {
+  .store-page[data-design='mercado'][data-theme] .ec-account .acc-panel-title { font-size: 19px; }
+  .store-page[data-design='mercado'][data-theme] .ec-account :is(.acc-panel, .acc-skelpanel) { gap: 13px; }
+}
+@media (max-width: 560px) {
+  .store-page[data-design='mercado'][data-theme] .ec-account :is(.acc-panel, .acc-skelpanel) {
+    padding: 14px 13px 16px;
+    border-radius: var(--dz-radius-sm);
+  }
+  .store-page[data-design='mercado'][data-theme] .ec-account .acc-panel-title { font-size: 18px; }
+  .store-page[data-design='mercado'][data-theme] .ec-account .acc-panel-sub { font-size: 12px; }
+  .store-page[data-design='mercado'][data-theme] .ec-account .acc-main .acc-tab {
+    padding: 9px 10px;
+    font-size: 12.5px;
+    gap: 6px;
+  }
+  .store-page[data-design='mercado'][data-theme] .ec-account .acc-order-foot { align-items: flex-start; }
+  .store-page[data-design='mercado'][data-theme] .ec-account .acc-order-actions { gap: 10px 14px; }
+  .store-page[data-design='mercado'][data-theme] .ec-account .acc-empty { padding: 26px 10px 28px; }
+  .store-page[data-design='mercado'][data-theme] .ec-account .acc-gate { padding: 14px 0 22px; }
+  .store-page[data-design='mercado'][data-theme] .ec-account .acc-gate-list { padding: 2px 13px; }
+  .store-page[data-design='mercado'][data-theme] .ec-account .acc-gate-list li { font-size: 12.5px; gap: 9px; }
+}
+@media (max-width: 400px) {
+  .store-page[data-design='mercado'][data-theme] .ec-account .acc-mhead { gap: 9px; padding: 10px; }
+  .store-page[data-design='mercado'][data-theme] .ec-account .acc-mhead-meta strong { font-size: 14.5px; }
+  .store-page[data-design='mercado'][data-theme] .ec-account .acc-mhead-meta small { font-size: 10px; }
+}
+/* Barra inferior fija de la tienda: el panel reserva el alto de la barra más
+   el safe-area del teléfono para que ningún botón quede debajo. */
+@media (max-width: 768px) {
+  .store-page[data-design='mercado'][data-theme][data-st-tabbar] .ec-account {
+    padding-bottom: calc(28px + env(safe-area-inset-bottom));
+  }
+}
