@@ -2365,9 +2365,14 @@
    * comprador puede tener cuenta con el carrito apagado (el dueño todavía
    * no activó e-commerce). Antes vivía dentro de initCommerce y la píldora
    * desaparecía de toda la web hasta habilitar el checkout. En la vista
-   * previa del Studio no se monta (el documento llega con ?preview=). */
+   * previa del Studio no se monta (el documento llega con ?preview=).
+   * Solo con `data-ds-customer-auth` (has_customer_auth del plan del
+   * dueño): sin el beneficio el host ya rebota /ingresar+/cuenta, así que
+   * la píldora no se monta — un documento cacheado sin el atributo (cache
+   * 30 s) cae en el mismo caso y el host la ignora igual. */
   function initAccount() {
     if (/(?:\?|&)preview=/.test(location.search || '')) return
+    if (root.getAttribute('data-ds-customer-auth') !== '1') return
     injectCommerceCss()
     mountAccount()
   }

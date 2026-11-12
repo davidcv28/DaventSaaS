@@ -313,7 +313,7 @@ def sanitize_css(css):
     return STYLE_CLOSE_RE.sub('', css or '')
 
 
-def pattern_document(html, css, theme, surface, preview = '', style = '', nonce = '', preload = None, template = '', commerce = False, events = 0):
+def pattern_document(html, css, theme, surface, preview = '', style = '', nonce = '', preload = None, template = '', commerce = False, events = 0, customer_auth = False):
     """
     Documento completo listo para servir como `text/html`.
     `html` ya viene renderizado contra la tienda y `css` ya trae el tema del
@@ -327,6 +327,8 @@ def pattern_document(html, css, theme, surface, preview = '', style = '', nonce 
     al host por postMessage. `events` es el conteo global de productos con
     descuento programado vigente: viaja como `data-ds-events` y el puente
     muestra el filtro "Eventos" del catálogo solo cuando hay eventos.
+    `customer_auth` marca `data-ds-customer-auth`: sin el beneficio
+    has_customer_auth del plan el puente no monta la entrada de cuenta.
     """
     query = {'surface': surface, 'theme': theme}
     if preview:
@@ -351,6 +353,7 @@ def pattern_document(html, css, theme, surface, preview = '', style = '', nonce 
     except (TypeError, ValueError):
         events_n = 0
     events_attr = f' data-ds-events="{events_n}"' if events_n else ''
+    customer_auth_attr = ' data-ds-customer-auth="1"' if customer_auth else ''
     #Los dos `<script>` son los únicos ejecutables del documento: el nonce
     #(CSP `script-src 'nonce-…'`) los autoriza sin depender del origen.
     nonce   =   str(nonce or '')
@@ -360,7 +363,7 @@ def pattern_document(html, css, theme, surface, preview = '', style = '', nonce 
         for url in (preload or [])[:2] if url
     )
     return (
-        f'<!doctype html><html lang="es" data-ds-theme="{theme}" data-ds-surface="{surface}"{style_attr}{commerce_attr}{events_attr}>'
+        f'<!doctype html><html lang="es" data-ds-theme="{theme}" data-ds-surface="{surface}"{style_attr}{commerce_attr}{events_attr}{customer_auth_attr}>'
         '<head><meta charset="utf-8">'
         '<meta name="viewport" content="width=device-width,initial-scale=1">'
         f'{preload_links}'

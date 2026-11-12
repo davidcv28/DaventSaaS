@@ -802,7 +802,7 @@ class StoreViewSet(StoreBaseViewSet):
         nonce               =   secrets.token_urlsafe(16)
         #Venta online efectiva (ecommerce + fiscal): el puente del documento
         #inyecta los CTA de carrito solo cuando la tienda realmente vende.
-        from StoreApp.domains.stores.services.commerce import orders_enabled
+        from StoreApp.domains.stores.services.commerce import orders_enabled, store_has_customer_auth
         html                =   pattern_document(
             data['html'], data.get('css') or '', theme, surface,
             request.query_params.get('preview') or '', data.get('style') or '',
@@ -810,6 +810,9 @@ class StoreViewSet(StoreBaseViewSet):
             preload =   data.get('preload') or [],
             template    =   request.query_params.get('template') or '',
             commerce    =   orders_enabled(store),
+            #Cuentas de comprador (has_customer_auth): sin el beneficio el
+            #puente no monta la entrada "Ingresar"/"Mi cuenta" del diseño.
+            customer_auth   =   store_has_customer_auth(store),
             #Descuentos programados vigentes: `data-ds-events` en <html> —
             #el puente muestra el filtro "Eventos" del catálogo solo si hay.
             events      =   data.get('event_count') or 0,
