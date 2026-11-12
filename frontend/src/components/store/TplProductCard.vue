@@ -51,6 +51,7 @@ const props = defineProps({
   starsIcon: { type: String, default: 'star' },
   starsSize: { type: Number, default: 12 },
   starsValue: { type: Boolean, default: false },  // muestra el promedio "4.7" junto a las estrellas
+  starsAlways: { type: Boolean, default: false }, // pinta la fila vacía aunque no haya votos
   index: { type: [String, Number], default: null }, // preformateado ('#01', 'Nº 3')
   phIcon: { type: String, default: '' },          // '' = icono por categoría
   phSize: { type: Number, default: 28 },
@@ -173,7 +174,7 @@ onMounted(() => {
     <span class="tpc-body">
       <span v-if="eyebrow" class="tpc-eyebrow">{{ eyebrow }}</span>
       <h2 class="tpc-name" :title="p.name">{{ p.name }}</h2>
-      <ProductStars v-if="stars && p.rating_count" :avg="p.rating_avg" :count="p.rating_count" :icon="starsIcon" :size="starsSize" :show-value="starsValue" />
+      <ProductStars v-if="stars && (p.rating_count || starsAlways)" :avg="p.rating_avg" :count="p.rating_count" :icon="starsIcon" :size="starsSize" :show-value="starsValue" />
       <span v-if="desc" class="tpc-desc" :title="desc">{{ desc }}</span>
       <slot name="tags" :p="p" />
       <span v-if="stockLabel" class="tpc-stock" :class="{ 'is-out': p.available_stock === 0 }">

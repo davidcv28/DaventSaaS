@@ -278,7 +278,7 @@ const activeChips = computed(() => {
               v-for="p in pagedProducts" :key="p.id" class="mc-cat-card"
               :p="p" :cat="categoryNameOf(p)" :brand="brandNameOf(p)" :desc="p.description || ''"
               :layout="view === 'list' ? 'row' : 'card'"
-              :stars="custom.show_reviews" stars-icon="star" stars-value
+              :stars="custom.show_reviews" stars-icon="star" stars-value stars-always
               seal-shape="" @open="openProduct"
             >
               <template #foot="{ p, price, oldPrice, offer }">
@@ -292,7 +292,6 @@ const activeChips = computed(() => {
               </template>
               <template #tags="{ p }">
                 <span v-if="brandNameOf(p)" class="mc-brand">{{ brandNameOf(p) }} <i aria-hidden="true">✓</i></span>
-                <span v-if="custom.show_reviews && !p.rating_count" class="mc-rate-empty">Sin valoraciones</span>
                 <p v-if="promoOf(p) && blkOn('promo')" class="mc-cat-promo">{{ promoOf(p).name }}<span v-if="offerEndsLabel(promoOf(p))"> · {{ offerEndsLabel(promoOf(p)) }}</span></p>
               </template>
             </TplProductCard>
