@@ -335,6 +335,8 @@ const mpWebhooksOk = computed(() => Boolean(mpStatus.value?.webhook_configured))
             <small>{{ ecomHint }}</small>
           </span>
         </label>
+        <AlertMessage v-if="ecomEnabled && ordersEnabled === false" kind="warn"
+          message="Tu web no muestra carrito, checkout ni medios de pago hasta que completes los datos fiscales de más abajo." />
         <div v-if="!ecomAllowed" class="btn-row" style="margin-top:10px">
           <button type="button" class="btn ghost btn-auto" @click="onEcomLocked"><AppIcon name="lock" :size="14" /> Ver el plan Ecommerce</button>
         </div>
