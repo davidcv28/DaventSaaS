@@ -108,12 +108,13 @@ class SuscriptionSerializerList(serializers.ModelSerializer):
     status              =   serializers.CharField(read_only = True)
     auto_renew          =   serializers.BooleanField(read_only = True)
     cancelled_at        =   serializers.DateTimeField(read_only = True)
+    cancel_requested_at =   serializers.DateTimeField(read_only = True)
     access_until        =   serializers.SerializerMethodField()
     has_preapproval     =   serializers.SerializerMethodField()
     is_current          =   serializers.SerializerMethodField()
     class Meta:
         model           =   Suscription
-        fields          =   ['id', 'user', 'auth_user_id', 'user_name', 'user_email', 'first_name', 'last_name', 'business_name', 'plan_suscription', 'plan_name', 'plan_price', 'is_trial', 'pending_plan_name', 'pending_charge', 'start_date', 'end_date', 'status', 'auto_renew', 'cancelled_at', 'access_until', 'has_preapproval', 'is_current']
+        fields          =   ['id', 'user', 'auth_user_id', 'user_name', 'user_email', 'first_name', 'last_name', 'business_name', 'plan_suscription', 'plan_name', 'plan_price', 'is_trial', 'pending_plan_name', 'pending_charge', 'start_date', 'end_date', 'status', 'auto_renew', 'cancelled_at', 'cancel_requested_at', 'access_until', 'has_preapproval', 'is_current']
     def get_access_until(self, obj):
         return obj.access_until()
     def get_has_preapproval(self, obj):

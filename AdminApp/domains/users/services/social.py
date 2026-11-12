@@ -17,6 +17,7 @@ from decouple import config
 from django.contrib.auth.models import User
 from django.db import IntegrityError, transaction
 from django.utils import timezone
+from rest_framework import serializers
 
 from AdminApp.domains.users.models import TERMS_VERSION, UserProfile
 
@@ -81,7 +82,7 @@ def _social_username(email : str) -> str:
     return candidate
 
 
-def SocialLoginQuery(info : dict) -> tuple:
+def SocialLoginQuery(info : dict, coupon_code : str = '') -> tuple:
     """
     Find-or-create por email VERIFICADO del provider. Devuelve (user, is_new).
 
@@ -144,4 +145,20 @@ def SocialLoginQuery(info : dict) -> tuple:
         update_fields.append('last_name')
     if update_fields:
         profile.save(update_fields = update_fields)
-    return user, is_new
+    #Cupón del alta social (mismo contrato que RegisterUserQuery): solo en
+    #cuenta nueva — un correo ya registrado canjea desde el dashboard. Si el
+    #canje falla por carrera (max_uses) la cuenta queda creada sin plan.
+    coupon_result   =   None
+    if is_new and coupon_code:
+        from AdminApp.domains.suscriptions.services import RedeemCouponQuery
+        try:
+            _, coupon   =   RedeemCouponQuery(profile, coupon_code)
+            coupon_result   =   {
+                'code'          :   coupon.code,
+                'plan_name'     :   coupon.plan.name,
+                'days'          :   coupon.days,
+            }
+        except serializers.ValidationError as exc:
+            logger.info('Cupón de alta social no canjeado: user=%s detail=%s', user.pk, exc.detail)
+            coupon_result   =   {'error': 'El cupón no pudo canjearse.'}
+    return user, is_new, coupon_result

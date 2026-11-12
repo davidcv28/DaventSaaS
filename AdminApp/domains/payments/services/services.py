@@ -214,13 +214,31 @@ def _revoke_period_if_granted(payment):
         suscription =   Suscription.objects.select_for_update().filter(pk = payment.suscription_id).first()
         if not suscription or suscription.period_payment_id != payment.pk:
             return
-        revoke_at   =   payment.paid_at or (timezone.now() - timedelta(seconds = 1))
-        if suscription.end_date and suscription.end_date > revoke_at:
-            suscription.end_date                =   revoke_at
-            suscription.pending_plan_suscription=   None
-            suscription.pending_charge          =   None
+        now         =   timezone.now()
+        update_fields   =   ['period_payment_id', 'period_end_before']
+        #Período ya vencido: el refund no puede revocar un acceso que ya no
+        #existe ni pisar el pending_plan del próximo ciclo — solo se limpia
+        #el puntero para que un segundo evento no lo reprocese.
+        if not (suscription.end_date and suscription.end_date > now):
             suscription.period_payment_id       =   None
-            suscription.save(update_fields = ['end_date', 'pending_plan_suscription', 'pending_charge', 'period_payment_id'])
+            suscription.period_end_before       =   None
+            suscription.save(update_fields = update_fields)
+            return
+        #Restaura los días que OTRO cobro/cupón ya había pago (period_end_before)
+        #si el pago devuelto fue un stacked sobre un período vigente. Si no
+        #hay previos, el acceso corta AHORA: end_date = now - GRACE_DAYS hace
+        #que access_until() (que suma gracia mientras auto_renew) dé exactly
+        #now — un refund no puede dejar días de gracia de un cobro devuelto.
+        previous    =   suscription.period_end_before
+        if previous and previous > now:
+            suscription.end_date    =   previous
+        else:
+            suscription.end_date    =   now - timedelta(days = Suscription.GRACE_DAYS)
+        suscription.pending_plan_suscription    =   None
+        suscription.pending_charge              =   None
+        suscription.period_payment_id           =   None
+        suscription.period_end_before           =   None
+        suscription.save(update_fields = update_fields + ['end_date', 'pending_plan_suscription', 'pending_charge'])
 
 #REVENUE ROLLUPS QUERY (mantiene DailyRevenue / MonthlyRevenue materializados para dashboards)
 def UpdateRevenueRollupsQuery(payment, sign = 1):
@@ -278,15 +296,20 @@ def ApplyPendingPlanQuery(suscription, renew = False, paid_amount = None, paymen
     if not prorated:
         suscription.start_date  =   now
         period_end              =   now + timedelta(days = 30)
-        if suscription.end_date and suscription.end_date > period_end:
-            period_end          =   suscription.end_date
+        previous_end            =   suscription.end_date
+        if previous_end and previous_end > period_end:
+            period_end          =   previous_end
         suscription.end_date    =   period_end
-        #Trazabilidad del cobro que abrió el período: un refund/chargeback
-        #de ESTE pago revoca el acceso (_revoke_period_if_granted). El
-        #prorrateado no pasa por acá: no abre período nuevo. Sin payment
-        # identifiable el período queda no revocable (None), nunca stale.
-        suscription.period_payment_id   =   payment.pk if payment is not None else None
-        update_fields                  +=   ['period_payment_id']
+        #El pago solo pasa a ser dueño del período si REALMENTE lo extendió:
+        #un cobro que cae dentro de días ya pagos (renovación anticipada,
+        #período largo de cupón) no mueve end_date y su refund no puede
+        #revocar lo que otro pago/cupón otorgó — el puntero queda donde
+        #estaba. Cuando sí extiende, period_end_before guarda el fin
+        #previo para que el revoke restaure esos días.
+        if previous_end is None or period_end > previous_end:
+            suscription.period_end_before       =   previous_end
+            suscription.period_payment_id       =   payment.pk if payment is not None else None
+            update_fields                      +=   ['period_payment_id', 'period_end_before']
     suscription.status      =   SUSCRIPTION_STATUS_ACTIVE
     suscription.save(update_fields = update_fields)
     return suscription
@@ -330,7 +353,11 @@ def SyncSuscriptionPaymentsQuery(suscription, payment_id = None):
         if results:
             break
     registered      =   []
-    for mp_payment in results:
+    #MP devuelve desc por fecha: se procesan del más viejo al más nuevo para
+    #que el ÚLTIMO pago aprobado del lote sea el dueño final del período —
+    #en orden desc el puntero quedaba en el pago más viejo y un refund del
+    #cargo real (el más reciente) no revocaba nada.
+    for mp_payment in reversed(results):
         payment_id  =   mp_payment.get('id')
         if not payment_id or str(mp_payment.get('external_reference')) != str(suscription.id):
             continue

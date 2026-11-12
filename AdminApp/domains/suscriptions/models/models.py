@@ -87,6 +87,10 @@ class Suscription(models.Model):
     #ESE pago revoca el acceso; el de un pago más viejo o de un prorrateo
     #no toca el período. Lo limpian cupón/assign (período sin cobro).
     period_payment_id           =   models.PositiveIntegerField(null = True, blank = True, verbose_name = 'Pago que abrió el período')
+    #end_date que había ANTES del pago que abrió el período: si ese pago se
+    #devuelve, el revoke restaura estos días (pagados por un cobro anterior
+    #o por cupón) en vez de borrarlos junto con los del pago devuelto.
+    period_end_before           =   models.DateTimeField(null = True, blank = True, verbose_name = 'Fin de período previo al cobro')
     objects                     =   SuscriptionQuerySet.as_manager()
     class Meta:
         app_label               =   'suscriptions'

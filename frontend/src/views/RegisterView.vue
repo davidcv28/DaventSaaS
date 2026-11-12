@@ -66,7 +66,9 @@ async function onSubmit() {
   if (res.ok) {
     const couponMsg = res.coupon?.plan_name
       ? ` Cupón aplicado: ${res.coupon.days} días de ${res.coupon.plan_name}.`
-      : ''
+      : res.coupon?.error
+        ? ` ${res.coupon.error}`
+        : ''
     successMsg.value = `${res.message}${couponMsg}`
     setTimeout(() => router.push({ name: 'login', query: { registered: '1' } }), 1400)
   }

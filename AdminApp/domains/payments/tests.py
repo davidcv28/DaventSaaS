@@ -26,6 +26,7 @@ from AdminApp.domains.payments.services.services import (
     CreatePreapprovalQuery,
     PaymentWebhookQuery,
     SyncPreapprovalQuery,
+    SyncSuscriptionPaymentsQuery,
     UpdateRevenueRollupsQuery,
 )
 from AdminApp.domains.suscriptions.models import Suscription, SuscriptionPlan
@@ -1340,7 +1341,11 @@ class RefundRevocationTests(TestCase):
             PaymentWebhookQuery(pid)
 
     def test_refund_of_period_payment_revokes_access(self):
-        suscription     =   _make_suscription(auto_renew = False, preapproval_id = None)
+        #Período previo ya vencido: el pago es el único sostén del acceso —
+        #su refund lo corta sin gracia (end_date = now - GRACE_DAYS).
+        suscription     =   _make_suscription(
+            auto_renew = False, preapproval_id = None,
+            end_date    =   timezone.now() - timedelta(days = 1))
         paid            =   CreatePaymentQuery(
             {'user': suscription.user, 'suscription': suscription, 'payment_id': 'per-1'},
             mp_payment = {
@@ -1421,3 +1426,163 @@ class RefundRevocationTests(TestCase):
         suscription.refresh_from_db()
         self.assertEqual(suscription.end_date, end_date)
         self.assertTrue(suscription.grants_access())
+
+
+class CancelIntentAndEdgeTests(TestCase):
+    """Baja durable: MP 404 consolida la baja local, 'paused' corta el
+    débito, y una falla remota deja cancel_requested_at persistido para
+    que reconcile_preapprovals reintente."""
+
+    @patch(f'{SERVICES_MODULE}.sdk')
+    @patch(f'{SERVICES_MODULE}.GetPreapproval')
+    def test_cancel_mp_404_finalizes_local_cancel(self, get_preapproval, sdk):
+        #404 en MP = el débito ya no existe: no puede volver a cobrar.
+        #Antes el 404 explotaba como 500 y la baja quedaba pendiente eterno.
+        from AdminApp.domains.payments.services.services import MercadoPagoNotFound
+        suscription                     =   _make_suscription()
+        get_preapproval.side_effect      =   MercadoPagoNotFound('gone')
+        CancelPreapprovalQuery(suscription)
+        suscription.refresh_from_db()
+        self.assertFalse(suscription.auto_renew)
+        self.assertIsNotNone(suscription.cancelled_at)
+
+    @patch(f'{SERVICES_MODULE}.GetPreapproval')
+    def test_sync_paused_marks_cancelled_at(self, get_preapproval):
+        #MP paused = débito sin cobrar pero vivo en papel: localmente no
+        #hay débito activo — cancelled_at evita que checkout/cupón traten
+        #de actualizar un preapproval pausado.
+        suscription                     =   _make_suscription()
+        get_preapproval.return_value    =   {'status': 'paused'}
+        SyncPreapprovalQuery(suscription)
+        suscription.refresh_from_db()
+        self.assertFalse(suscription.auto_renew)
+        self.assertIsNotNone(suscription.cancelled_at)
+
+    @patch('AdminApp.domains.payments.views.viewset.CancelPreapprovalQuery')
+    def test_cancel_renewal_failure_keeps_durable_intent(self, cancel_query):
+        #Si MP falla, la respuesta es 400 PERO cancel_requested_at queda
+        #persistido: reconcile_preapprovals reintenta la baja — antes la
+        #intención se perdía con el rollback y MP seguía cobrando.
+        cancel_query.side_effect    =   serializers.ValidationError({'suscription': 'MP caído'})
+        suscription                 =   _make_suscription()
+        client                      =   APIClient()
+        client.force_authenticate(user = suscription.user.user)
+        response                    =   client.post('/api/payments/cancel-renewal/', {}, format = 'json')
+        self.assertEqual(response.status_code, 400)
+        suscription.refresh_from_db()
+        self.assertIsNotNone(suscription.cancel_requested_at)
+
+
+class RefundRestoreTests(TestCase):
+    """El revoke restaura los días que OTRO pago/cupón ya había otorgado
+    (period_end_before) y no regala gracia sobre un cobro devuelto."""
+
+    def _pay(self, suscription, pid, amount = '1000', days_ago = 0):
+        return CreatePaymentQuery(
+            {'user': suscription.user, 'suscription': suscription, 'payment_id': pid},
+            mp_payment = {
+                'id': pid, 'external_reference': str(suscription.id),
+                'transaction_amount': amount, 'currency_id': 'ARS',
+                'status': 'approved', 'live_mode': True,
+                'date_approved': (timezone.now() - timedelta(days = days_ago)).isoformat(),
+            })
+
+    def _refund(self, pid, suscription):
+        mp  =   {
+            'id': pid, 'external_reference': str(suscription.id),
+            'transaction_amount': '1000', 'currency_id': 'ARS',
+            'status': 'refunded', 'live_mode': True,
+            'date_approved': None,
+        }
+        with patch(f'{SERVICES_MODULE}.GetMercadoPagoPayment', return_value = mp):
+            PaymentWebhookQuery(pid)
+
+    def test_refund_restores_days_paid_by_previous_payment(self):
+        #Pago 1 abre el período; pago 2 (stacked) lo extiende. El refund
+        #del pago 2 restaura el end_date que dejó el pago 1 — no borra
+        #días que el pago 1 sí pagó.
+        suscription                     =   _make_suscription(auto_renew = False, preapproval_id = None)
+        first                           =   self._pay(suscription, 'stack-1')
+        suscription.refresh_from_db()
+        end_after_first                 =   suscription.end_date
+        second                          =   self._pay(suscription, 'stack-2')
+        suscription.refresh_from_db()
+        self.assertEqual(suscription.period_payment_id, second.pk)
+        self._refund('stack-2', suscription)
+        suscription.refresh_from_db()
+        #Vuelve el fin que dejó el primer pago (no now-5d, no paid_at).
+        self.assertEqual(suscription.end_date, end_after_first)
+        self.assertTrue(suscription.grants_access())
+        self.assertIsNone(suscription.period_payment_id)
+
+    def test_refund_gives_no_grace_on_returned_charge(self):
+        #auto_renew=True: sin el ajuste, access_until sumaba GRACE_DAYS y
+        #el refund dejaba ~5 días de acceso sobre plata devuelta.
+        suscription                     =   _make_suscription(
+            auto_renew = True, preapproval_id = 'pre-x',
+            end_date    =   timezone.now() - timedelta(days = 1))
+        payment                         =   self._pay(suscription, 'grace-1')
+        suscription.refresh_from_db()
+        self.assertTrue(suscription.grants_access())
+        self._refund('grace-1', suscription)
+        suscription.refresh_from_db()
+        self.assertFalse(suscription.grants_access())
+
+    def test_refund_after_expiry_keeps_pending_plan(self):
+        #Período ya vencido: el refund no puede pisar el pending_plan del
+        #próximo ciclo — solo limpia el puntero.
+        new_plan                        =   SuscriptionPlan.objects.create(name = 'Plan básico', price = 500)
+        suscription                     =   _make_suscription(
+            auto_renew = False, preapproval_id = None,
+            end_date    =   timezone.now() - timedelta(days = 2))
+        suscription.pending_plan_suscription    =   new_plan
+        suscription.save(update_fields = ['pending_plan_suscription'])
+        payment                         =   Payment.objects.create(
+            user = suscription.user, suscription = suscription, amount = 1000,
+            status = Payment.Status.APPROVED, external_reference = 'old-pay',
+            paid_at = timezone.now() - timedelta(days = 40))
+        suscription.period_payment_id           =   payment.pk
+        suscription.save(update_fields = ['period_payment_id'])
+        #El refund entra por el webhook: external_reference='old-pay' es el
+        #id de MP que GetMercadoPagoPayment devuelve.
+        mp  =   {
+            'id': 'old-pay', 'external_reference': str(suscription.id),
+            'transaction_amount': '1000', 'currency_id': 'ARS',
+            'status': 'refunded', 'live_mode': True,
+            'date_approved': None,
+        }
+        with patch(f'{SERVICES_MODULE}.GetMercadoPagoPayment', return_value = mp):
+            PaymentWebhookQuery('old-pay')
+        suscription.refresh_from_db()
+        self.assertEqual(suscription.pending_plan_suscription, new_plan)
+        self.assertIsNone(suscription.period_payment_id)
+        self.assertLess(suscription.end_date, timezone.now())
+
+
+class SyncOrderingTests(TestCase):
+    """El barrido de sync procesa del más viejo al más nuevo: el ÚLTIMO
+    pago aprobado del lote es el dueño del período (un refund del cargo
+    real revoca; en orden desc el puntero quedaba en el más viejo)."""
+
+    @patch(f'{SERVICES_MODULE}.sdk')
+    def test_sync_batch_newest_payment_owns_period(self, sdk):
+        suscription     =   _make_suscription(
+            auto_renew = False, preapproval_id = None,
+            end_date    =   timezone.now() - timedelta(days = 40))
+
+        def _mp(pid, days_ago):
+            return {
+                'id': pid, 'external_reference': str(suscription.id),
+                'transaction_amount': '1000', 'currency_id': 'ARS',
+                'status': 'approved', 'live_mode': True,
+                'date_approved': (timezone.now() - timedelta(days = days_ago)).isoformat(),
+            }
+        #MP devuelve desc por date_created: el más nuevo primero.
+        sdk.payment.return_value.search.return_value   =   {
+            'status': 200,
+            'response': {'results': [_mp('sync-new', 1), _mp('sync-old', 35)]},
+        }
+        SyncSuscriptionPaymentsQuery(suscription)
+        suscription.refresh_from_db()
+        newest  =   Payment.objects.get(external_reference = 'sync-new')
+        self.assertEqual(suscription.period_payment_id, newest.pk)

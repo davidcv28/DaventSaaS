@@ -380,7 +380,8 @@ const navLocks = computed(() => {
   for (const id of ['catalogs', 'services', 'pos', 'reviews', 'support', 'bot', 'tools', 'stats', 'design_assisted', 'design_studio', 'flyer_editor', 'selling', 'accounts']) {
     // El asistente/soporte es para planes pagos (gate mcp_user_access en
     // el backend): el trial queda con candado de upgrade aunque esté vigente.
-    map[id] = !hasAccess ? 'expired' : (id === 'support' && plan.value?.isTrial) ? 'upgrade' : gated(id) ? 'upgrade' : null
+    // Sin suscripción (plan null) no es "venció": es que nunca eligió plan.
+    map[id] = !plan.value ? 'none' : !hasAccess ? 'expired' : (id === 'support' && plan.value?.isTrial) ? 'upgrade' : gated(id) ? 'upgrade' : null
   }
   return map
 })
@@ -7102,6 +7103,7 @@ async function changePassword() {
             <p class="lock-tag">
               <AppIcon name="lock" :size="12" />
               <span v-if="lockedFeature.reason === 'expired'">Tu plan venció — renová para volver a usarla</span>
+              <span v-else-if="lockedFeature.reason === 'none'">Elegí un plan para usarla</span>
               <span v-else>Disponible en {{ lockedFeature.planName || 'planes superiores' }}</span>
             </p>
             <h3>{{ lockedFeature.title }}</h3>

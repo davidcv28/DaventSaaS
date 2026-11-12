@@ -432,7 +432,7 @@ class VerifyEmailResendView(APIView):
 # backend la verifica contra el provider (services/social.py) y emite la
 # MISMA sesión del login por contraseña: access en body + refresh en cookie
 # httpOnly + CSRF doble-submit. Sin env vars configuradas responde 503.
-def _social_session_response(request, user, is_new):
+def _social_session_response(request, user, is_new, coupon_result = None):
     #Misma salida que CustomTokenObtainPairView: el refresh se setea como
     #cookie y solo viaja a /api/token/. 'remember' respeta el mismo flag del
     #login (cookie persistente 30d vs cookie de sesión del navegador).
@@ -448,6 +448,8 @@ def _social_session_response(request, user, is_new):
         #completarlo antes de seguir (el claim de la web lo exige).
         'requires_phone'    :   not bool(getattr(profile, 'phone', None)),
     }, status = status.HTTP_200_OK)
+    if coupon_result:
+        response.data['coupon'] =   coupon_result
     if _is_native_app(request):
         response.data['refresh']    =   str(refresh)
     else:
@@ -529,8 +531,8 @@ class GoogleAuthView(APIView):
             return Response({'detail': 'El ingreso con Google no está disponible por el momento.'}, status = status.HTTP_503_SERVICE_UNAVAILABLE)
         try:
             info            =   VerifyGoogleCredentialQuery(request.data.get('credential', ''))
-            user, is_new    =   SocialLoginQuery(info)
+            user, is_new, coupon_result    =   SocialLoginQuery(info, request.data.get('coupon', ''))
         except SocialAuthError as e:
             logger.warning('Login Google rechazado (code=%s ip=%s)', e.code, _client_ip(request))
             return _social_error(e, 'Google')
-        return _social_session_response(request, user, is_new)
+        return _social_session_response(request, user, is_new, coupon_result)

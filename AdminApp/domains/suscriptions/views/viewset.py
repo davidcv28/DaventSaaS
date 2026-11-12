@@ -99,6 +99,10 @@ class SuscriptionViewSet(SuscriptionBaseViewSet):
             suscription.end_date                    =   now + timedelta(days = 30)
             #Período cortesía: ningún Payment puede revocarlo.
             suscription.period_payment_id           =   None
+            suscription.period_end_before           =   None
+            #cancel_requested_at NO se limpia: si el usuario pidió la baja
+            #y MP no confirmó, reconcile_preapprovals la concreta — assign
+            #no puede revivir un débito que el cliente ya mandó a cancelar.
             suscription.save()
         #Débito MP vivo: el próximo cobro tiene que salir al plan asignado.
         #Sin realineo, MP seguía debitando el monto del plan viejo y cada

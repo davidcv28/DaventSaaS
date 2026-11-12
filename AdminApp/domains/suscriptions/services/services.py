@@ -37,7 +37,7 @@ def RedeemCouponQuery(profile, code : str) -> tuple:
     #para que max_uses no se supere en una carrera.
     with transaction.atomic():
         coupon      =   Coupon.objects.select_for_update().filter(code__iexact = code).first()
-        if coupon is None or not coupon.is_active:
+        if coupon is None or not coupon.is_active or coupon.plan.is_trial:
             raise serializers.ValidationError({'code': 'El cupón no es válido.'})
         now         =   timezone.now()
         if coupon.expires_at and coupon.expires_at <= now:
@@ -64,8 +64,10 @@ def RedeemCouponQuery(profile, code : str) -> tuple:
         suscription.auto_renew                  =   False
         suscription.preapproval_id              =   None
         suscription.cancelled_at                =   None
+        suscription.cancel_requested_at         =   None
         #El cupón abre un período sin cobro: ningún Payment puede revocarlo.
         suscription.period_payment_id           =   None
+        suscription.period_end_before           =   None
         suscription.save()
         CouponRedemption.objects.create(coupon = coupon, user = profile, suscription = suscription)
     logger.info('Cupón canjeado: coupon=%s user=%s', coupon.code, profile.pk)

@@ -118,6 +118,10 @@ class PaymentViewSet(PaymentBaseViewSet):
         #ATOMICIDAD: la acreditación se sella junto con el plan, los rollups y la factura
         with transaction.atomic():
             instance        =   self.get_object()
+            #Un pago REFUNDED es terminal: re-aprobarlo resucitaba la plata
+            #devuelta como un período pago nuevo (plan + rollups + factura).
+            if instance.status == Payment.Status.REFUNDED:
+                return Response({'detail': 'No se puede aprobar un pago reembolsado.'}, status = status.HTTP_400_BAD_REQUEST)
             was_approved    =   instance.status == Payment.Status.APPROVED
             instance.approve()
             if not was_approved:

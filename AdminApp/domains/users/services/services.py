@@ -126,8 +126,8 @@ def RegisterUserQuery(validated_data : dict) -> tuple:
             password            =   data.pop('password')
             accept_terms        =   data.pop('accept_terms', False)
             #Cupón promocional del alta (QR/folletos): no es campo del perfil,
-            #se canjea después de crear la trial — si falla la cuenta igual
-            #queda creada con el plan de prueba.
+            #se canjea acá mismo — si falla la cuenta igual queda creada
+            #sin plan (nunca se pierde el registro).
             coupon_code         =   (data.pop('coupon', '') or '').strip()
             #USER REGISTER
             new_user = User.objects.create_user(
