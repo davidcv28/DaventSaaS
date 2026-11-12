@@ -1609,7 +1609,7 @@
   --tpc-border: 1px solid var(--mc-line);
   --tpc-shadow: 0 1px 2px rgba(0, 0, 0, .08);
   --tpc-media-bg: var(--mc-soft);
-  --tpc-fit: contain;
+  --tpc-fit: cover;
   --tpc-pad: 0 12px 14px;
   --tpc-gap: 4px;
   --tpc-name-size: 19px;
