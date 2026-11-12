@@ -62,10 +62,10 @@ export const DESIGN_ARCHETYPES = {
   modista:       { nav: 'fullscreen-sheet',       account: 'account-tabs-only', tracking: 'tracking-status-hero' },
   topmodern:     { nav: 'search-first-command',   account: 'account-stack',   tracking: 'tracking-stepcard' },
   viajero:       { nav: 'sidebar-rail',           account: 'account-rail',    tracking: 'tracking-ticket' },
-  olivium:       { nav: 'glassmorphism-overlay',  account: 'account-bento',   tracking: 'tracking-minimal' },
+  olivium:       { nav: 'glassmorphism-overlay',  account: 'account-bento',   tracking: 'tracking-ticket' },
   'atelier-noir': { nav: 'index-rail',            account: 'account-split',   tracking: 'tracking-feed' },
   guardia:       { nav: 'contextual-sticky',      account: 'account-topbar',  tracking: 'tracking-bento' },
-  expediente:    { nav: 'icon-rail-top',         account: 'account-card',    tracking: 'tracking-stepcard' },
+  expediente:    { nav: 'icon-rail-top',         account: 'account-card',    tracking: 'tracking-bento' },
   silicio:       { nav: 'statement-bar',          account: 'account-tabs-only', tracking: 'tracking-timeline' },
   umbral:        { nav: 'minimal-floating',       account: 'account-stack',   tracking: 'tracking-status-hero' }
 }

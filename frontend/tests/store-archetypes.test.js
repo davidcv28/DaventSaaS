@@ -39,14 +39,9 @@ describe('matriz diseño → arquetipos', () => {
     for (const nav of navs) expect(NAV_SET.has(nav)).toBe(true)
   })
 
-  it('los pares cuenta+seguimiento: 24 únicos (colisiones documentadas)', () => {
-    // La matriz del catálogo produce 24 pares distintos sobre 26 diseños:
-    // sastreria/expediente comparten account-card|tracking-stepcard y
-    // brigada/olivium comparten account-bento|tracking-minimal (el doc lo
-    // verifica: "24 pares distintos"). La unicidad estructural la completa
-    // el CSS propio de cada diseño.
+  it('los pares cuenta+seguimiento: 26 únicos', () => {
     const pairs = Object.values(DESIGN_ARCHETYPES).map((a) => `${a.account}|${a.tracking}`)
-    expect(new Set(pairs).size).toBe(24)
+    expect(new Set(pairs).size).toBe(26)
   })
 })
 

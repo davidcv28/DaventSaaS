@@ -99,17 +99,15 @@ la plantilla móvil de cuenta/track se define dentro del CSS de cada diseño.
 | modista       | fullscreen-sheet        | account-tabs-only   | tracking-status-hero|
 | topmodern     | search-first-command    | account-stack       | tracking-stepcard  |
 | viajero       | sidebar-rail            | account-rail        | tracking-ticket    |
-| olivium       | glassmorphism-overlay   | account-bento       | tracking-minimal   |
+| olivium       | glassmorphism-overlay   | account-bento       | tracking-ticket    |
 | atelier-noir  | index-rail              | account-split       | tracking-feed      |
 | guardia       | contextual-sticky       | account-topbar      | tracking-bento     |
-| expediente    | icon-rail-top           | account-card        | tracking-stepcard  |
+| expediente    | icon-rail-top           | account-card        | tracking-bento     |
 | silicio       | statement-bar           | account-tabs-only   | tracking-timeline  |
 | umbral        | minimal-floating        | account-stack       | tracking-status-hero|
 
-Pares (cuenta, seguimiento) verificados únicos: sí (24 pares distintos;
-account-tabs-only aparece 4× pero siempre con tracking distinto y móvil
-distinto por diseño — la combinación estructura×nav móvil queda única
-porque cada diseño define su propio CSS de tabs/rail).
+Pares (cuenta, seguimiento): 26/26 únicos tras reasignar
+expediente→tracking-bento y olivium→tracking-ticket.
 
 ## Notas de implementación por agente (FASE 4)
 
