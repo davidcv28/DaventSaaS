@@ -148,6 +148,19 @@
    la banda, no en una pared. El modal (.ec-auth-card) hereda la misma piel
    por la lista :is() compartida.
    =========================================================================== */
+/* El par de acción no puede seguir a --st-primary a ciegas: en esta tienda el
+   primario del tema oscuro es el amarillo del toldo (1.2:1 con la tinta
+   blanca) y el celeste del estilo base queda en 3.6:1. El azul del diseño
+   sostiene AA en los dos modos, así que el CTA, el foco y los enlaces de
+   acción lo usan acá. */
+[data-design='mercado'][data-theme] :is(.ec-auth, .ec-auth-card) {
+  --dz-blue: #2563eb;
+  --dz-blue-ink: #ffffff;
+}
+[data-design='mercado'][data-theme='dark'] :is(.ec-auth, .ec-auth-card) {
+  --dz-blue: #3b82f6;
+  --dz-blue-ink: #0b1220;
+}
 [data-design='mercado'] .ec-auth { padding: clamp(12px, 2.4vw, 26px) clamp(12px, 3vw, 22px); }
 /* `margin-block:auto` centra la tarjeta sin recortar el borde superior cuando
    el formulario es más alto que el viewport (justify-content:center sí lo
@@ -314,7 +327,12 @@
   color: var(--dz-ink);
   background: color-mix(in srgb, var(--dz-ink) 7%, transparent);
 }
-[data-design='mercado'][data-theme] .ec-auth-card .ec-auth-head { gap: 8px; margin-bottom: 20px; }
+[data-design='mercado'][data-theme] .ec-auth-card .ec-auth-head {
+  gap: 8px;
+  padding-bottom: 14px;
+  margin-bottom: 16px;
+  border-bottom: 1px solid var(--dz-line);
+}
 [data-design='mercado'][data-theme] .ec-auth-card .ec-auth-badge {
   width: 38px; height: 38px; margin-bottom: 4px;
   border-radius: 9px;
@@ -334,8 +352,10 @@
 /* ---------- Controles (compartidos auth + cuenta) ---------- */
 [data-design='mercado'][data-theme] :is(.ec-auth, .ec-auth-card, .ec-account, .ec-track, .ec-cartpg, .ec-checkout, .ec-receiptpg, .ec-legal) .sp-field { gap: 7px; }
 [data-design='mercado'][data-theme] :is(.ec-auth, .ec-auth-card, .ec-account, .ec-track, .ec-cartpg, .ec-checkout, .ec-receiptpg, .ec-legal) .sp-field-label {
-  font-family: var(--dz-mono); font-size: 9.5px; font-weight: 600;
-  letter-spacing: .14em; text-transform: uppercase;
+  /* Etiqueta de campo: mono en caja alta como el resto del ticket, pero a
+     10.5px (a 9.5px un label de formulario se lee mal en móvil). */
+  font-family: var(--dz-mono); font-size: 10.5px; font-weight: 600;
+  letter-spacing: .12em; text-transform: uppercase;
   color: var(--dz-muted);
 }
 [data-design='mercado'][data-theme] :is(.ec-auth, .ec-auth-card, .ec-account, .ec-track, .ec-cartpg, .ec-checkout, .ec-receiptpg, .ec-legal) .sp-input {
@@ -351,11 +371,12 @@
   transition: border-color .16s, box-shadow .16s;
 }
 [data-design='mercado'][data-theme] :is(.ec-auth, .ec-auth-card, .ec-account, .ec-track, .ec-cartpg, .ec-checkout, .ec-receiptpg, .ec-legal) .sp-input:hover { border-color: color-mix(in srgb, var(--dz-ink) 26%, var(--dz-line)); }
-/* Un solo indicador de foco: borde azul + halo de 1px. El outline del marco
-   común se sumaba a este anillo y el campo enfocado leía con doble aro. */
+/* Un solo indicador de foco: el borde azul ES el anillo y el halo lo suaviza.
+   El outline de 2px del marco común se sumaba a este anillo y el campo
+   enfocado leía con doble aro. */
 [data-design='mercado'][data-theme] :is(.ec-auth, .ec-auth-card, .ec-account, .ec-track, .ec-cartpg, .ec-checkout, .ec-receiptpg, .ec-legal) .sp-input:focus {
   border-color: var(--dz-blue);
-  box-shadow: 0 0 0 1px var(--dz-blue), 0 0 0 4px color-mix(in srgb, var(--dz-blue) 18%, transparent);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--dz-blue) 16%, transparent);
 }
 [data-design='mercado'][data-theme] :is(.ec-auth, .ec-auth-card, .ec-account, .ec-track, .ec-cartpg, .ec-checkout, .ec-receiptpg, .ec-legal) .sp-input:focus-visible { outline: none; }
 [data-design='mercado'][data-theme] :is(.ec-auth, .ec-auth-card, .ec-account, .ec-track, .ec-cartpg, .ec-checkout, .ec-receiptpg, .ec-legal) .sp-input::placeholder { color: var(--dz-muted); opacity: 1; }
@@ -429,7 +450,7 @@
 [data-design='mercado'] :is(.ec-auth, .ec-auth-card) .ecaf-divider::before,
 [data-design='mercado'] :is(.ec-auth, .ec-auth-card) .ecaf-divider::after { background: var(--dz-line); opacity: 1; }
 /* Acciones secundarias: fila propia separada por hairline, links sin
-   subrayado y target de 44px (en móvil van en columna). */
+   subrayado y target de 44px. */
 [data-design='mercado'] :is(.ec-auth, .ec-auth-card) .ecaf-foot {
   display: flex; flex-wrap: wrap;
   align-items: center; justify-content: space-between;
@@ -473,7 +494,6 @@
   color: var(--dz-muted);
 }
 
-
 /* ---------- Aire por ancho (390 / 768 / 1280) ---------- */
 @media (max-width: 720px) {
   [data-design='mercado'] .ec-auth { padding-inline: 12px; }
@@ -508,10 +528,7 @@
   /* Los dos links entran en una fila a 12px (334px de 346): con el tamaño
      de escritorio se apretaban y el de la derecha tocaba el borde. wrap por
      si el texto crece. */
-  [data-design='mercado'] :is(.ec-auth, .ec-auth-card) .ecaf-foot {
-    justify-content: space-between;
-    gap: 0 10px;
-  }
+  [data-design='mercado'] :is(.ec-auth, .ec-auth-card) .ecaf-foot { gap: 0 10px; }
   [data-design='mercado'] :is(.ec-auth, .ec-auth-card) .ecaf-link { font-size: 12px; }
 }
 

@@ -80,7 +80,7 @@
     margin-bottom: 3px;
     font-size: 8.5px;
     letter-spacing: .16em;
-    color: color-mix(in srgb, var(--dz-accent-ink) 72%, transparent);
+    color: color-mix(in srgb, var(--dz-accent-ink) 88%, transparent);
   }
   .store-page[data-design='mercado'][data-theme] .ec-account .acc-side .acc-avatar {
     width: 46px;
@@ -110,7 +110,7 @@
     font-family: var(--dz-mono);
     font-size: 10px;
     line-height: 1.3;
-    color: color-mix(in srgb, var(--dz-accent-ink) 82%, transparent);
+    color: color-mix(in srgb, var(--dz-accent-ink) 88%, transparent);
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
@@ -146,7 +146,7 @@
     font-family: var(--dz-body);
     font-size: 10.5px;
     line-height: 1.4;
-    color: color-mix(in srgb, var(--dz-accent-ink) 86%, transparent);
+    color: color-mix(in srgb, var(--dz-accent-ink) 90%, transparent);
   }
 
   /* Secciones: filas de tinta con índice mono; la activa se lleva el toldo. */
@@ -182,9 +182,12 @@
     white-space: nowrap;
   }
   .store-page[data-design='mercado'][data-theme] .ec-account .acc-side .acc-navitem .acc-idx {
+    /* El arquetipo apaga el índice mono del riel; acá vuelve como número de
+       sección del ticket. */
+    display: inline;
     font-size: 9px;
     letter-spacing: .1em;
-    opacity: .5;
+    color: var(--dz-muted);
   }
   .store-page[data-design='mercado'][data-theme] .ec-account .acc-side .acc-navitem:hover {
     background: color-mix(in srgb, var(--dz-ink) 6%, transparent);
@@ -196,7 +199,7 @@
     color: var(--dz-accent-ink);
     font-weight: 800;
   }
-  .store-page[data-design='mercado'][data-theme] .ec-account .acc-side .acc-navitem.is-on .acc-idx { opacity: .7; }
+  .store-page[data-design='mercado'][data-theme] .ec-account .acc-side .acc-navitem.is-on .acc-idx { color: color-mix(in srgb, var(--dz-accent-ink) 80%, transparent); }
 
   .store-page[data-design='mercado'][data-theme] .ec-account .acc-side .acc-logout {
     display: flex;
@@ -372,7 +375,7 @@
   .store-page[data-design='mercado'][data-theme] .ec-account .acc-main .acc-tab .acc-idx {
     font-size: 9px;
     letter-spacing: .1em;
-    opacity: .5;
+    color: var(--dz-muted);
   }
   .store-page[data-design='mercado'][data-theme] .ec-account .acc-main .acc-tab:hover {
     border-color: color-mix(in srgb, var(--dz-ink) 28%, var(--dz-line));
@@ -384,13 +387,14 @@
     color: var(--dz-accent-ink);
     font-weight: 800;
   }
-  .store-page[data-design='mercado'][data-theme] .ec-account .acc-main .acc-tab.is-on .acc-idx { opacity: .7; }
+  .store-page[data-design='mercado'][data-theme] .ec-account .acc-main .acc-tab.is-on .acc-idx { color: color-mix(in srgb, var(--dz-accent-ink) 80%, transparent); }
 }
 
 /* ===========================================================================
    5. TARJETAS DE SECCIÓN — el ticket del mostrador
    =========================================================================== */
-.store-page[data-design='mercado'][data-theme] .ec-account :is(.acc-panel, .acc-skelpanel) {
+.store-page[data-design='mercado'][data-theme] .ec-account .acc-panel,
+.store-page[data-design='mercado'][data-theme] .ec-account .acc-skelpanel {
   padding: clamp(15px, 2.2vw, 24px);
   border: 1px solid var(--dz-line);
   border-top: 3px solid var(--dz-accent);
@@ -458,14 +462,42 @@
 }
 .store-page[data-design='mercado'][data-theme] .ec-account .acc-panel-headtxt { gap: 4px; }
 
-/* Botones: la base fija 50px de alto (es la medida del CTA de auth) y dentro
-   de un panel eso desborda el ritmo. Acá 44 (target) y 38 en la variante
-   chica de las cabeceras. */
-.store-page[data-design='mercado'][data-theme] .ec-account .acc-panel .ec-btn-primary,
-.store-page[data-design='mercado'][data-theme] .ec-account .acc-panel .ec-btn-ghost {
+/* CTA del panel: bloque de TINTA con el papel adentro. La base lo pintaba con
+   --dz-blue, que el diseño repuntea al primario de la tienda: el botón salía
+   amarillo con texto blanco (~1.2:1). Tinta/papel es seguro en los dos modos
+   y es el lenguaje del mostrador (el amarillo queda para el toldo). */
+.store-page[data-design='mercado'][data-theme] .ec-account .ec-btn-primary {
   min-height: 44px;
+  border: 1px solid var(--dz-ink);
+  border-radius: var(--dz-radius-sm);
+  background: var(--dz-ink);
+  color: var(--dz-surface);
+  font-family: var(--dz-body);
+  font-size: 13.5px;
+  font-weight: 700;
+  letter-spacing: .01em;
+  filter: none;
+}
+.store-page[data-design='mercado'][data-theme] .ec-account .ec-btn-primary:hover:not(:disabled) {
+  background: color-mix(in srgb, var(--dz-ink) 88%, var(--dz-surface));
+  filter: none;
+  box-shadow: 0 12px 22px -18px color-mix(in srgb, var(--dz-ink) 70%, transparent);
+}
+.store-page[data-design='mercado'][data-theme] .ec-account .ec-btn-primary:disabled {
+  border-color: transparent;
+  background: color-mix(in srgb, var(--dz-muted) 24%, var(--dz-surface));
+  color: var(--dz-ink-2);
+  opacity: 1;
+  cursor: not-allowed;
+}
+.store-page[data-design='mercado'][data-theme] .ec-account .ec-btn-ghost {
+  min-height: 44px;
+  border-radius: var(--dz-radius-sm);
+  font-family: var(--dz-body);
   font-size: 13.5px;
 }
+/* La variante chica de las cabeceras ("Nueva") no debe perder su medida
+   contra el min-height del CTA: se declara un paso más arriba. */
 .store-page[data-design='mercado'][data-theme] .ec-account .acc-panel .acc-btn-sm {
   min-height: 38px;
   padding: 7px 12px;
@@ -535,7 +567,8 @@
 }
 /* Inversión del sello del gate: adentro del panel el ícono es el toldo con
    la tinta adentro. */
-.store-page[data-design='mercado'][data-theme] .ec-account :is(.acc-empty-ico, .acc-support-empty-ico) {
+.store-page[data-design='mercado'][data-theme] .ec-account .acc-empty-ico,
+.store-page[data-design='mercado'][data-theme] .ec-account .ec-support-empty-ico {
   width: 56px;
   height: 56px;
   margin-bottom: 6px;
@@ -558,7 +591,6 @@
   line-height: 1.55;
   color: var(--dz-muted);
 }
-.store-page[data-design='mercado'][data-theme] .ec-account .acc-empty .ec-btn-primary { min-height: 44px; }
 
 .store-page[data-design='mercado'][data-theme] .ec-account .acc-note {
   padding: 12px 14px;
@@ -579,7 +611,6 @@
 .store-page[data-design='mercado'][data-theme] .ec-account .acc-skelpanel { gap: 14px; }
 .store-page[data-design='mercado'][data-theme] .ec-account .acc-sk-tabs { height: 44px; border-radius: 7px; }
 .store-page[data-design='mercado'][data-theme] .ec-account .acc-sk-pill { border-radius: 5px; }
-.store-page[data-design='mercado'][data-theme] .ec-account .acc-order--skel { background: var(--dz-bg); }
 
 /* ===========================================================================
    8. SUSCRIPCIONES · tarjeta de miembro y planes
@@ -827,7 +858,8 @@
    12. GATE SIN SESIÓN y sub-vistas de mail
    =========================================================================== */
 .store-page[data-design='mercado'][data-theme] .ec-account .acc-gate { padding: 22px 0 28px; }
-.store-page[data-design='mercado'][data-theme] .ec-account :is(.acc-gate-card, .acc-auth-card) {
+.store-page[data-design='mercado'][data-theme] .ec-account .acc-gate-card,
+.store-page[data-design='mercado'][data-theme] .ec-account .acc-auth-card {
   padding: clamp(24px, 4vw, 38px) clamp(16px, 3.4vw, 30px);
   border: 1px solid var(--dz-line);
   border-top: 3px solid var(--dz-accent);
@@ -846,7 +878,8 @@
   text-transform: uppercase;
   color: var(--dz-muted);
 }
-.store-page[data-design='mercado'][data-theme] .ec-account :is(.acc-gate-title, .acc-auth-title) {
+.store-page[data-design='mercado'][data-theme] .ec-account .acc-gate-title,
+.store-page[data-design='mercado'][data-theme] .ec-account .acc-auth-title {
   margin: 0;
   font-family: var(--dz-display);
   font-size: clamp(21px, 3vw, 27px);
@@ -855,7 +888,8 @@
   line-height: 1.15;
   color: var(--dz-ink);
 }
-.store-page[data-design='mercado'][data-theme] .ec-account :is(.acc-gate-sub, .acc-auth-msg) {
+.store-page[data-design='mercado'][data-theme] .ec-account .acc-gate-sub,
+.store-page[data-design='mercado'][data-theme] .ec-account .acc-auth-msg {
   max-width: 46ch;
   font-family: var(--dz-body);
   font-size: 13.5px;
@@ -931,10 +965,12 @@
    =========================================================================== */
 @media (max-width: 860px) {
   .store-page[data-design='mercado'][data-theme] .ec-account .acc-panel-title { font-size: 19px; }
-  .store-page[data-design='mercado'][data-theme] .ec-account :is(.acc-panel, .acc-skelpanel) { gap: 13px; }
+  .store-page[data-design='mercado'][data-theme] .ec-account .acc-panel,
+  .store-page[data-design='mercado'][data-theme] .ec-account .acc-skelpanel { gap: 13px; }
 }
 @media (max-width: 560px) {
-  .store-page[data-design='mercado'][data-theme] .ec-account :is(.acc-panel, .acc-skelpanel) {
+  .store-page[data-design='mercado'][data-theme] .ec-account .acc-panel,
+  .store-page[data-design='mercado'][data-theme] .ec-account .acc-skelpanel {
     padding: 14px 13px 16px;
     border-radius: var(--dz-radius-sm);
   }
@@ -955,12 +991,13 @@
 @media (max-width: 400px) {
   .store-page[data-design='mercado'][data-theme] .ec-account .acc-mhead { gap: 9px; padding: 10px; }
   .store-page[data-design='mercado'][data-theme] .ec-account .acc-mhead-meta strong { font-size: 14.5px; }
-  .store-page[data-design='mercado'][data-theme] .ec-account .acc-mhead-meta small { font-size: 10px; }
 }
 /* Barra inferior fija de la tienda: el panel reserva el alto de la barra más
-   el safe-area del teléfono para que ningún botón quede debajo. */
+   el safe-area del teléfono para que ningún botón quede debajo. Sin el
+   atributo [data-st-tabbar] (no siempre está en el DOM) la barra igual tapa
+   el gate, así que el aire se reserva por ancho, no por atributo. */
 @media (max-width: 768px) {
-  .store-page[data-design='mercado'][data-theme][data-st-tabbar] .ec-account {
-    padding-bottom: calc(28px + env(safe-area-inset-bottom));
+  .store-page[data-design='mercado'][data-theme] .ec-account {
+    padding-bottom: calc(var(--sp-tabbar-h, 64px) + 12px + env(safe-area-inset-bottom, 0px));
   }
 }
