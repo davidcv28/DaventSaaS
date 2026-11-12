@@ -146,13 +146,10 @@ const usePattern = computed(() => Boolean(
   //publicada rompía).
   patternDoc.value?.ready && (patternDoc.value?.has_html || patternDoc.value?.html) &&
   (patternDoc.value?.surfaces || []).includes(patternSurface.value) &&
-  //El documento hornea la primera página del catálogo; si la tienda tiene
-  //más productos y el markup trae [data-ds-products] (products_lazy), el
-  //puente pide el resto a /pattern/products/ y las injerta — misma tarjeta.
-  //Sin ese contenedor (diseño viejo) sigue el fallback a la plantilla Vue.
-  (patternSurface.value !== 'catalog' ||
-    (patternDoc.value.products_total || 0) <= (patternDoc.value.products_shown || 24) ||
-    patternDoc.value.products_lazy)
+  //El catálogo es siempre la plantilla Vue (TplProductCard): la tarjeta es
+  //la misma en TODAS las tiendas y pagina contra la API — el documento del
+  //diseño solo cubre portada, ficha y servicios.
+  patternSurface.value !== 'catalog'
 ))
 // Navbar del diseño en las rutas que el documento no pinta (auth, cuenta,
 // carrito, checkout, seguimiento, legales y las que caen a la plantilla

@@ -972,6 +972,9 @@
   var restDone = false
   function loadRest() {
     if (restLoading || restDone || !wrap) return
+    /* Solo con la superficie catalog activa: en landing/chrome el wrap
+     * existe oculto y sería bajar tarjetas que nadie ve. */
+    if (root.getAttribute('data-ds-surface') !== 'catalog') return
     var total = parseInt(root.getAttribute('data-ds-products-total') || '0', 10) || 0
     if (total <= cards.length) { restDone = true; return }
     var m = /\/api\/stores\/public\/([a-z0-9-]+)\/pattern\//.exec(location.pathname || '')
