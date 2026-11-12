@@ -205,20 +205,11 @@
   color: var(--dz-ink);
 }
 [data-design='mercado'] .ec-auth .ec-auth-panel::before { content: none; }
-[data-design='mercado'] .ec-auth .ec-auth-back {
-  gap: 6px; margin-bottom: 16px;
-  font-family: var(--dz-body); font-size: 12.5px; font-weight: 600;
-  color: var(--dz-muted);
-}
-[data-design='mercado'] .ec-auth .ec-auth-back:hover { color: var(--dz-link); }
+/* Sin "volver a la tienda" ni icono de acceso: la cabecera arranca en el
+   kicker del modo (el logo del toldo ya es la puerta de regreso). */
+[data-design='mercado'] .ec-auth .ec-auth-back,
+[data-design='mercado'] .ec-auth .ec-auth-badge { display: none; }
 [data-design='mercado'] .ec-auth .ec-auth-head { gap: 8px; margin-bottom: 20px; }
-[data-design='mercado'] .ec-auth .ec-auth-badge {
-  width: 38px; height: 38px; margin-bottom: 4px;
-  border-radius: 9px;
-  background: color-mix(in srgb, var(--dz-blue) 10%, var(--dz-surface));
-  border: 1px solid color-mix(in srgb, var(--dz-blue) 22%, transparent);
-  color: var(--dz-link);
-}
 /* Kicker de modo: etiqueta mono sin relleno (el chip azul a ancho completo
    leía como barra rota, no como tag). */
 [data-design='mercado'] .ec-auth .ec-auth-tag {
