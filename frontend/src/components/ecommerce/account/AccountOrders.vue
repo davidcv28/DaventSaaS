@@ -108,9 +108,12 @@ const itemNoun = (n) => (n === 1 ? 'producto' : 'productos')
         <div class="acc-order-foot">
           <strong class="acc-order-total">{{ money(o.total) }}</strong>
           <span class="acc-order-actions">
-            <RouterLink :to="seguimientoTo(o.tracking_token)" class="acc-order-link">
+            <!-- tracking_token es la credencial pública del pedido: si por
+                 algún motivo no viaja, no linkeamos a /seguimiento vacío. -->
+            <RouterLink v-if="o.tracking_token" :to="seguimientoTo(o.tracking_token)" class="acc-order-link">
               Seguir <AppIcon name="arrow-right" :size="13" aria-hidden="true" />
             </RouterLink>
+            <span v-else class="acc-order-na" title="El comercio todavía no habilitó el seguimiento">Sin seguimiento</span>
             <RouterLink v-if="o.tracking_token" :to="comprobanteTo(o.tracking_token)" class="acc-order-link" target="_blank">
               <AppIcon name="receipt" :size="13" aria-hidden="true" /> Comprobante
             </RouterLink>
@@ -151,6 +154,7 @@ const itemNoun = (n) => (n === 1 ? 'producto' : 'productos')
 .acc-order-actions { display: inline-flex; align-items: center; gap: 16px; flex-wrap: wrap; }
 .acc-order-link { display: inline-flex; align-items: center; gap: 5px; font-size: 13px; font-weight: 700; color: var(--sp-accent-text, var(--store-accent, inherit)); text-decoration: none; }
 .acc-order-link:hover { text-decoration: underline; text-underline-offset: 3px; }
+.acc-order-na { font-size: 12.5px; color: var(--sp-muted, inherit); }
 
 /* Pill de estado: tono semántico por token (--tone la fija cada estado) */
 .acc-status { --tone: var(--sp-muted, #64748b); display: inline-flex; align-items: center; gap: 5px; font-size: 11.5px; font-weight: 700; line-height: 1; padding: 6px 11px; border-radius: 999px; background: color-mix(in srgb, var(--tone) 14%, transparent); color: var(--tone); white-space: nowrap; }

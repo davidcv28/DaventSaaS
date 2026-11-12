@@ -109,6 +109,24 @@ const initials = computed(() => {
   return clean.slice(0, 2).toUpperCase()
 })
 
+// Estado de verificación del correo (campo read-only del serializer de
+// customer). undefined = el payload no lo trae → no se muestra badge.
+const emailVerified = computed(() => customer.customer?.email_verified)
+const resendNote = ref('')
+const resendBusy = ref(false)
+async function resendMain() {
+  if (resendBusy.value) return
+  resendBusy.value = true; resendNote.value = ''
+  try {
+    await customerApi.resendVerification()
+    resendNote.value = 'Te reenviamos el correo de verificación.'
+  } catch (err) {
+    resendNote.value = extractApiError(err).nonField || 'No pudimos reenviar el correo. Probá más tarde.'
+  } finally {
+    resendBusy.value = false
+  }
+}
+
 // ---------- navegación: píldora deslizante ----------
 // La píldora (.acc-tabs-ink) es un adorno de la piel "esencial": mide el tab
 // activo y se desliza con transform. En el resto de los diseños está
@@ -354,8 +372,8 @@ watch([view, subView, sessionChecked], () => scheduleInk(true))
         <span class="acc-auth-ico" aria-hidden="true"><AppIcon name="mail" :size="26" /></span>
         <span class="acc-tele" aria-hidden="true">VERIFICACIÓN · {{ verifyState === 'ok' ? 'OK' : verifyState === 'error' ? 'ERROR' : 'EN CURSO' }}</span>
         <h1 class="acc-auth-title">Verificar tu correo</h1>
-        <p v-if="verifyState === 'busy'" class="acc-auth-msg"><span class="acc-spin" aria-hidden="true"></span> Verificando tu correo…</p>
-        <p v-else-if="verifyState === 'ok'" class="acc-auth-ok">{{ verifyMsg }}</p>
+        <p v-if="verifyState === 'busy'" class="acc-auth-msg" role="status"><span class="acc-spin" aria-hidden="true"></span> Verificando tu correo…</p>
+        <p v-else-if="verifyState === 'ok'" class="acc-auth-ok" role="status"><AppIcon name="badge-check" :size="16" aria-hidden="true" /> {{ verifyMsg }}</p>
         <template v-else>
           <p class="acc-auth-msg">{{ verifyMsg || 'Estamos confirmando tu correo electrónico para activar tu cuenta.' }}</p>
           <div class="acc-auth-actions">
@@ -372,22 +390,25 @@ watch([view, subView, sessionChecked], () => scheduleInk(true))
         <span class="acc-auth-ico" aria-hidden="true"><AppIcon name="lock" :size="26" /></span>
         <span class="acc-tele" aria-hidden="true">CLAVE · {{ resetState === 'ok' ? 'ACTUALIZADA' : 'RESTABLECER' }}</span>
         <h1 class="acc-auth-title">Restablecer contraseña</h1>
-        <p v-if="resetState === 'ok'" class="acc-auth-ok">{{ resetMsg }}</p>
+        <p v-if="resetState === 'ok'" class="acc-auth-ok" role="status"><AppIcon name="badge-check" :size="16" aria-hidden="true" /> {{ resetMsg }}</p>
         <form v-else class="acc-auth-form" @submit.prevent="doReset">
           <label class="sp-field">
             <span class="sp-field-label">Nueva contraseña</span>
-            <input v-model="resetForm.password" class="sp-input" type="password" autocomplete="new-password" minlength="8" required />
+            <input v-model="resetForm.password" class="sp-input" type="password" autocomplete="new-password" minlength="8" required enterkeyhint="next" />
           </label>
           <label class="sp-field">
             <span class="sp-field-label">Repetí la contraseña</span>
-            <input v-model="resetForm.confirm" class="sp-input" type="password" autocomplete="new-password" minlength="8" required />
+            <input v-model="resetForm.confirm" class="sp-input" type="password" autocomplete="new-password" minlength="8" required enterkeyhint="done" />
           </label>
           <p v-if="resetState === 'error'" class="sp-form-error" role="alert">{{ resetMsg }}</p>
           <button type="submit" class="ec-btn-primary" :disabled="resetState === 'busy'">
             {{ resetState === 'busy' ? 'Guardando…' : 'Cambiar contraseña' }}
           </button>
         </form>
-        <RouterLink :to="loginTo" class="acc-auth-link">Volver a ingresar</RouterLink>
+        <div v-if="resetState === 'ok'" class="acc-auth-actions">
+          <RouterLink :to="loginTo" class="ec-btn-primary">Ir a ingresar</RouterLink>
+        </div>
+        <RouterLink :to="loginTo" class="acc-auth-link">{{ resetState === 'ok' ? 'Volver al inicio' : 'Volver a ingresar' }}</RouterLink>
       </section>
     </div>
 
@@ -443,6 +464,14 @@ watch([view, subView, sessionChecked], () => scheduleInk(true))
             <div class="acc-id-meta">
               <strong class="acc-id-name">{{ customer.displayName || 'Mi cuenta' }}</strong>
               <small class="acc-id-email">{{ customer.customer?.email || '' }}</small>
+              <span v-if="emailVerified !== undefined" class="acc-verify" :class="emailVerified ? 'is-ok' : 'is-warn'">
+                <AppIcon :name="emailVerified ? 'badge-check' : 'mail'" :size="12" aria-hidden="true" />
+                {{ emailVerified ? 'Correo verificado' : 'Correo sin verificar' }}
+              </span>
+              <button v-if="emailVerified === false" type="button" class="acc-verify-resend" :disabled="resendBusy" @click="resendMain">
+                {{ resendBusy ? 'Enviando…' : 'Reenviar correo' }}
+              </button>
+              <small v-if="resendNote" class="acc-verify-note" role="status">{{ resendNote }}</small>
             </div>
           </div>
           <nav class="acc-nav" aria-label="Secciones de tu cuenta">
@@ -467,6 +496,14 @@ watch([view, subView, sessionChecked], () => scheduleInk(true))
               <h1 class="acc-greet">hola, <em>{{ displayFirst }}</em></h1>
               <strong>{{ displayFirst }}</strong>
               <small>{{ customer.customer?.email || '' }}</small>
+              <span v-if="emailVerified !== undefined" class="acc-verify" :class="emailVerified ? 'is-ok' : 'is-warn'">
+                <AppIcon :name="emailVerified ? 'badge-check' : 'mail'" :size="12" aria-hidden="true" />
+                {{ emailVerified ? 'Correo verificado' : 'Correo sin verificar' }}
+                <button v-if="emailVerified === false" type="button" class="acc-verify-resend" :disabled="resendBusy" @click="resendMain">
+                  {{ resendBusy ? 'Enviando…' : 'Reenviar' }}
+                </button>
+              </span>
+              <small v-if="resendNote" class="acc-verify-note" role="status">{{ resendNote }}</small>
               <ul v-if="statsChips.length" class="acc-stats">
                 <li v-for="c in statsChips" :key="c.key" class="acc-stat">
                   <AppIcon :name="c.icon" :size="13" aria-hidden="true" />
@@ -598,7 +635,7 @@ watch([view, subView, sessionChecked], () => scheduleInk(true))
 .acc-auth-ico { display: grid; place-items: center; width: 60px; height: 60px; border-radius: 50%; background: color-mix(in srgb, var(--store-accent, #111) 10%, transparent); color: var(--sp-accent-text, var(--store-accent, inherit)); }
 .acc-auth-title { margin: 0; font-size: 22px; font-weight: 800; letter-spacing: -.02em; }
 .acc-auth-msg { display: flex; align-items: center; justify-content: center; gap: 10px; margin: 0; font-size: 14px; color: var(--sp-muted, inherit); }
-.acc-auth-ok { margin: 0; font-size: 14.5px; font-weight: 700; color: var(--sp-success, #0E7A55); }
+.acc-auth-ok { display: inline-flex; align-items: center; justify-content: center; gap: 7px; margin: 0; font-size: 14.5px; font-weight: 700; color: var(--sp-success, #0E7A55); }
 .acc-auth-form { width: 100%; display: grid; gap: 12px; text-align: left; }
 .acc-auth-actions { display: flex; gap: 10px; flex-wrap: wrap; justify-content: center; }
 .acc-auth-link { font-size: 13px; font-weight: 700; color: var(--sp-accent-text, var(--store-accent, inherit)); }
@@ -644,6 +681,14 @@ watch([view, subView, sessionChecked], () => scheduleInk(true))
 .acc-avatar { display: grid; place-items: center; width: 52px; height: 52px; flex: none; border-radius: 50%; background: linear-gradient(135deg, var(--store-accent, #111), var(--store-accent-ink, #111)); color: var(--sp-on-band, #fff); font-weight: 800; font-size: 17px; letter-spacing: .02em; }
 .acc-avatar--sm { width: 42px; height: 42px; font-size: 14px; }
 
+/* Badge de verificación del correo (header de cuenta) */
+.acc-verify { display: inline-flex; align-items: center; gap: 5px; width: fit-content; max-width: 100%; padding: 4px 9px; border-radius: 999px; font-size: 11px; font-weight: 700; line-height: 1; }
+.acc-verify.is-ok { background: color-mix(in srgb, var(--sp-success, #0E7A55) 13%, transparent); color: var(--sp-success, #0E7A55); }
+.acc-verify.is-warn { background: color-mix(in srgb, var(--sp-warning, #B45309) 13%, transparent); color: var(--sp-warning, #B45309); }
+.acc-verify-resend { border: none; background: transparent; padding: 0; font: inherit; font-weight: 800; color: inherit; text-decoration: underline; text-underline-offset: 2px; cursor: pointer; }
+.acc-verify-resend:disabled { opacity: .55; cursor: default; }
+.acc-verify-note { font-size: 11.5px !important; }
+
 .acc-mhead { display: flex; align-items: center; gap: 12px; min-width: 0; }
 .acc-mhead-meta { display: grid; gap: 1px; min-width: 0; flex: 1; }
 .acc-mhead-meta strong { font-size: 15px; font-weight: 800; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
@@ -686,7 +731,7 @@ watch([view, subView, sessionChecked], () => scheduleInk(true))
 .ec-btn-primary:disabled { opacity: .55; cursor: default; }
 .ec-btn-ghost { display: inline-flex; align-items: center; justify-content: center; gap: 8px; padding: 10px 14px; border: 1px solid var(--sp-line, currentColor); border-radius: calc(var(--sp-radius) * .7); background: transparent; color: inherit; font-size: 13px; font-weight: 600; cursor: pointer; text-decoration: none; }
 
-.acc-auth-card :focus-visible, .acc-gate-card :focus-visible, .acc-side :focus-visible, .acc-mhead :focus-visible, .acc-tabs :focus-visible, .acc-panel :focus-visible, .ec-btn-primary:focus-visible, .ec-btn-ghost:focus-visible, .acc-icon-btn:focus-visible {
+.acc-auth-card :focus-visible, .acc-gate-card :focus-visible, .acc-side :focus-visible, .acc-mhead :focus-visible, .acc-tabs :focus-visible, .acc-panel :focus-visible, .acc-verify-resend:focus-visible, .ec-btn-primary:focus-visible, .ec-btn-ghost:focus-visible, .acc-icon-btn:focus-visible {
   outline: 2px solid var(--store-accent, #111); outline-offset: 2px;
 }
 @media (max-width: 560px) {

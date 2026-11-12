@@ -152,7 +152,11 @@ const memberInitials = computed(() => {
       </p>
     </template>
 
-    <p v-else class="acc-muted">No pudimos cargar la información de suscripciones.</p>
+    <div v-else class="acc-note">
+      <AppIcon name="circle-alert" :size="18" aria-hidden="true" />
+      <p>No pudimos cargar la información de suscripciones.</p>
+      <button type="button" class="ec-btn-ghost acc-btn-sm" @click="emit('retry')">Reintentar</button>
+    </div>
   </section>
 </template>
 

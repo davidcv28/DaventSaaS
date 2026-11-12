@@ -63,8 +63,8 @@ onMounted(loadProfile)
           <label class="sp-field"><span class="sp-field-label">Nombre</span><input v-model="profile.first_name" class="sp-input" type="text" maxlength="150" autocomplete="given-name" /></label>
           <label class="sp-field"><span class="sp-field-label">Apellido</span><input v-model="profile.last_name" class="sp-input" type="text" maxlength="150" autocomplete="family-name" /></label>
         </div>
-        <label class="sp-field"><span class="sp-field-label">Email</span><input class="sp-input" type="email" :value="email" disabled /><small class="acc-hint">El email no se cambia desde acá — escribinos si necesitás actualizarlo.</small></label>
-        <label class="sp-field"><span class="sp-field-label">Teléfono</span><input v-model="profile.phone" class="sp-input" type="tel" maxlength="24" autocomplete="tel" /></label>
+        <label class="sp-field"><span class="sp-field-label">Email</span><input class="sp-input" type="email" :value="email" disabled aria-describedby="acc-email-hint" /><small id="acc-email-hint" class="acc-hint">El email no se cambia desde acá — escribinos si necesitás actualizarlo.</small></label>
+        <label class="sp-field"><span class="sp-field-label">Teléfono</span><input v-model="profile.phone" class="sp-input" type="tel" maxlength="24" autocomplete="tel" enterkeyhint="next" /></label>
       </fieldset>
 
       <fieldset class="acc-fieldset">
@@ -75,7 +75,7 @@ onMounted(loadProfile)
               <option value="">—</option><option value="DNI">DNI</option><option value="CUIT">CUIT / CUIL</option>
             </select>
           </label>
-          <label class="sp-field"><span class="sp-field-label">Número</span><input v-model="profile.document" class="sp-input" type="text" maxlength="11" inputmode="numeric" /></label>
+          <label class="sp-field"><span class="sp-field-label">Número</span><input v-model="profile.document" class="sp-input" type="text" maxlength="11" inputmode="numeric" enterkeyhint="done" /></label>
         </div>
       </fieldset>
 

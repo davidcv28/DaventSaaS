@@ -76,15 +76,15 @@ async function remove(a) {
     <form v-if="form" class="acc-addrform" @submit.prevent="save">
       <div class="acc-grid2">
         <label class="sp-field"><span class="sp-field-label">Etiqueta</span><input v-model="form.label" class="sp-input" type="text" maxlength="40" placeholder="Casa, Oficina…" /></label>
-        <label class="sp-field"><span class="sp-field-label">País</span><input v-model="form.country" class="sp-input" type="text" maxlength="2" /></label>
+        <label class="sp-field"><span class="sp-field-label">País</span><input v-model="form.country" class="sp-input" type="text" maxlength="2" autocomplete="country" /></label>
       </div>
-      <label class="sp-field"><span class="sp-field-label">Calle y número *</span><input v-model="form.line1" class="sp-input" type="text" maxlength="160" required /></label>
-      <label class="sp-field"><span class="sp-field-label">Depto / piso / referencia</span><input v-model="form.line2" class="sp-input" type="text" maxlength="160" /></label>
+      <label class="sp-field"><span class="sp-field-label">Calle y número *</span><input v-model="form.line1" class="sp-input" type="text" maxlength="160" required autocomplete="address-line1" /></label>
+      <label class="sp-field"><span class="sp-field-label">Depto / piso / referencia</span><input v-model="form.line2" class="sp-input" type="text" maxlength="160" autocomplete="address-line2" /></label>
       <div class="acc-grid2">
-        <label class="sp-field"><span class="sp-field-label">Ciudad *</span><input v-model="form.city" class="sp-input" type="text" maxlength="120" required /></label>
-        <label class="sp-field"><span class="sp-field-label">Provincia *</span><input v-model="form.province" class="sp-input" type="text" maxlength="120" required /></label>
+        <label class="sp-field"><span class="sp-field-label">Ciudad *</span><input v-model="form.city" class="sp-input" type="text" maxlength="120" required autocomplete="address-level2" /></label>
+        <label class="sp-field"><span class="sp-field-label">Provincia *</span><input v-model="form.province" class="sp-input" type="text" maxlength="120" required autocomplete="address-level1" /></label>
       </div>
-      <label class="sp-field"><span class="sp-field-label">Código postal</span><input v-model="form.postal_code" class="sp-input" type="text" maxlength="20" /></label>
+      <label class="sp-field"><span class="sp-field-label">Código postal</span><input v-model="form.postal_code" class="sp-input" type="text" maxlength="20" autocomplete="postal-code" inputmode="numeric" /></label>
       <label class="acc-check"><input v-model="form.is_default" type="checkbox" /> Usar como dirección principal</label>
       <p v-if="formError" class="acc-inline-error" role="alert">{{ formError }}</p>
       <div class="acc-form-actions">

@@ -101,8 +101,19 @@ const stepIndex = computed(() => {
 })
 
 const eventsDesc = computed(() => [...(order.value?.events || [])].sort((a, b) => String(b.created_at).localeCompare(String(a.created_at))))
+// Fecha/hora del último movimiento (el payload ya trae events[].created_at).
+const lastChangeAt = computed(() => eventsDesc.value[0]?.created_at || '')
+// Fecha del evento que dejó el pedido en cada paso del stepper: se busca
+// el evento más reciente cuyo status_to coincide con el paso.
+function stepDate(stepKey) {
+  const ev = eventsDesc.value.find((e) => e.status_to === stepKey)
+  return ev ? fmtDateTime(ev.created_at) : ''
+}
 
 const cuentaTo = computed(() => ({ path: storeHostSlug ? '/cuenta' : `/${slug.value}/cuenta`, query: { view: 'soporte', order: token.value } }))
+// "Mis pedidos" sin el token del pedido actual: es el destino cuando el
+// link no llega o el pedido no aparece (la lista ya linkea cada pedido).
+const cuentaPedidosTo = computed(() => ({ path: storeHostSlug ? '/cuenta' : `/${slug.value}/cuenta`, query: { view: 'pedidos' } }))
 const comprobanteTo = computed(() => ({
   path: storeHostSlug ? `/pedido/${token.value}/comprobante` : `/${slug.value}/pedido/${token.value}/comprobante`
 }))
@@ -235,16 +246,37 @@ onUnmounted(() => {
       <p v-if="order?.code" class="ec-track-code">Pedido <strong>{{ order.code }}</strong> · {{ shopName }}</p>
     </header>
 
+    <!-- Mini-explicación para el comprador: <details> nativo (acordeón sin
+         JS, summary como primer hijo, sin interactivos adentro). -->
+    <details class="ec-track-help">
+      <summary class="ec-track-help-summary">
+        <AppIcon name="circle-help" :size="16" aria-hidden="true" />
+        <span>¿Cómo funciona el seguimiento?</span>
+        <AppIcon name="chevron-down" :size="15" class="ec-track-help-caret" aria-hidden="true" />
+      </summary>
+      <div class="ec-track-help-body">
+        <ul class="ec-track-help-list">
+          <li><AppIcon name="key" :size="14" aria-hidden="true" /><span>El link que recibiste al comprar <strong>es tu credencial</strong>: no lo compartas ni lo publiques.</span></li>
+          <li><AppIcon name="route" :size="14" aria-hidden="true" /><span>El paso a paso muestra por dónde va tu pedido: recibido → pago acreditado → preparando → enviado → entregado.</span></li>
+          <li><AppIcon name="package" :size="14" aria-hidden="true" /><span>Si tu pedido no aparece acá, revisá <RouterLink :to="cuentaPedidosTo">Mis pedidos</RouterLink> en tu cuenta: cada uno tiene su propio link.</span></li>
+          <li><AppIcon name="clock" :size="14" aria-hidden="true" /><span>Los tiempos de cada estado los confirma el comercio — acá ves cuándo cambió, no una fecha prometida.</span></li>
+        </ul>
+      </div>
+    </details>
+
     <div v-if="phase === 'missing'" class="ec-track-card ec-track-note">
       <span class="ec-track-note-ico" aria-hidden="true"><AppIcon name="file-text" :size="22" /></span>
       <div>
         <h2 class="ec-track-h2">Nos falta el link de seguimiento</h2>
-        <p class="ec-track-muted">Necesitás el link de seguimiento que recibiste al crear el pedido.</p>
+        <p class="ec-track-muted">Necesitás el link que recibiste al crear el pedido. Si lo perdiste, podés encontrarlo en Mis pedidos de tu cuenta.</p>
       </div>
-      <RouterLink :to="cuentaTo" class="ec-btn-primary">Ver mis pedidos</RouterLink>
+      <div class="ec-track-note-acts">
+        <RouterLink :to="cuentaPedidosTo" class="ec-btn-primary">Ver mis pedidos</RouterLink>
+        <RouterLink :to="catalogoTo" class="ec-btn-ghost">Volver al catálogo</RouterLink>
+      </div>
     </div>
 
-    <div v-else-if="phase === 'loading'" class="ec-track-card ec-track-skel" aria-busy="true" aria-label="Buscando tu pedido">
+    <div v-else-if="phase === 'loading'" class="ec-track-card ec-track-skel" role="status" aria-busy="true" aria-label="Buscando tu pedido">
       <span class="ec-sk-line ec-sk-title"></span>
       <span class="ec-sk-line"></span>
       <div class="ec-sk-steps"><span v-for="n in 5" :key="n" class="ec-sk-dot"></span></div>
@@ -259,6 +291,7 @@ onUnmounted(() => {
       </div>
       <div class="ec-track-note-acts">
         <button type="button" class="ec-btn-primary" @click="load">Reintentar</button>
+        <RouterLink :to="cuentaPedidosTo" class="ec-btn-ghost">Ver mis pedidos</RouterLink>
         <RouterLink :to="catalogoTo" class="ec-btn-ghost">Volver al catálogo</RouterLink>
       </div>
     </div>
@@ -279,6 +312,16 @@ onUnmounted(() => {
           <span v-else-if="order.status === 'CANCELLED'">Este pedido fue cancelado.</span>
           <span v-else>Este pedido fue reembolsado.</span>
         </div>
+        <!-- CTA del desenlace terminal: reintentar la compra o hablar con
+             el comercio según el motivo. -->
+        <div v-if="isTerminalBad" class="ec-track-banner-acts">
+          <RouterLink v-if="order.status === 'EXPIRED'" :to="catalogoTo" class="ec-btn-primary">
+            <AppIcon name="shopping-bag" :size="15" aria-hidden="true" /> Hacer el pedido de nuevo
+          </RouterLink>
+          <RouterLink :to="cuentaTo" class="ec-btn-ghost">
+            <AppIcon name="message-circle" :size="15" aria-hidden="true" /> Escribinos sobre este pedido
+          </RouterLink>
+        </div>
 
         <!-- Stepper -->
         <ol v-if="!isTerminalBad" class="ec-stepper" aria-label="Estado del pedido">
@@ -287,6 +330,7 @@ onUnmounted(() => {
               :aria-current="i === stepIndex && order.status !== 'DELIVERED' ? 'step' : undefined">
             <span class="ec-step-dot"><AppIcon v-if="i < stepIndex || order.status === 'DELIVERED'" name="check" :size="12" /><template v-else>{{ i + 1 }}</template></span>
             <span class="ec-step-label">{{ step.label }}</span>
+            <small v-if="stepDate(step.key)" class="ec-track-step-date">{{ stepDate(step.key) }}</small>
           </li>
         </ol>
 
@@ -295,6 +339,7 @@ onUnmounted(() => {
           <div class="ec-track-chip"><AppIcon name="calendar" :size="13" aria-hidden="true" /><span>Realizado el {{ fmtDate(order.created_at) }}</span></div>
           <div v-if="order.payment_method" class="ec-track-chip"><AppIcon name="credit-card" :size="13" aria-hidden="true" /><span>{{ PAYMENT_LABELS[order.payment_method] || order.payment_method }}</span></div>
           <div v-if="order.shipping_method" class="ec-track-chip"><AppIcon :name="order.shipping_method === 'home' ? 'truck' : 'store'" :size="13" aria-hidden="true" /><span>{{ shipLabel }}</span></div>
+          <div v-if="lastChangeAt" class="ec-track-chip"><AppIcon name="clock" :size="13" aria-hidden="true" /><span>Último movimiento · {{ fmtDateTime(lastChangeAt) }}</span></div>
         </dl>
       </section>
 
@@ -471,6 +516,25 @@ onUnmounted(() => {
 .ec-step-label { font-size: 11px; line-height: 1.25; color: var(--sp-muted, inherit); }
 .ec-step.is-done .ec-step-label, .ec-step.is-current .ec-step-label { color: inherit; font-weight: 600; }
 
+/* Mini-explicación "¿Cómo funciona el seguimiento?" (<details> nativo) */
+.ec-track-help { border: 1px solid var(--sp-line, rgba(0,0,0,.1)); border-radius: calc(var(--sp-radius) * .8); background: var(--sp-card, transparent); overflow: hidden; }
+.ec-track-help-summary { display: flex; align-items: center; gap: 9px; padding: 13px 16px; font-size: 13.5px; font-weight: 700; color: var(--sp-ink-2, inherit); cursor: pointer; list-style: none; min-height: 44px; }
+.ec-track-help-summary::-webkit-details-marker { display: none; }
+.ec-track-help-summary svg:first-child { color: var(--store-accent, inherit); flex: none; }
+.ec-track-help-caret { margin-left: auto; color: var(--sp-muted, inherit); transition: transform .18s ease; }
+.ec-track-help[open] .ec-track-help-caret { transform: rotate(180deg); }
+.ec-track-help-body { padding: 0 16px 14px; }
+.ec-track-help-list { list-style: none; margin: 0; padding: 0; display: grid; gap: 10px; }
+.ec-track-help-list li { display: flex; align-items: flex-start; gap: 9px; font-size: 13px; line-height: 1.5; color: var(--sp-muted, inherit); }
+.ec-track-help-list svg { flex: none; margin-top: 2px; color: var(--store-accent, inherit); }
+.ec-track-help-list strong { color: var(--sp-ink-2, inherit); }
+.ec-track-help-list a { color: var(--sp-accent-text, var(--store-accent, inherit)); font-weight: 700; }
+
+/* Fecha del paso en el stepper + acciones del estado terminal */
+.ec-track-step-date { font-size: 10.5px; font-weight: 600; color: var(--sp-muted, inherit); font-variant-numeric: tabular-nums; }
+.ec-step.is-done .ec-track-step-date, .ec-step.is-current .ec-track-step-date { color: inherit; }
+.ec-track-banner-acts { display: flex; gap: 10px; flex-wrap: wrap; }
+
 .ec-track-ok { display: flex; align-items: center; gap: 7px; margin: 0; font-size: 13.5px; font-weight: 600; color: var(--sp-success, #0E7A55); }
 .ec-proof { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
 .ec-proof-drop { display: grid; place-items: center; min-width: 120px; min-height: 90px; border: 2px dashed var(--sp-line, rgba(0,0,0,.2)); border-radius: calc(var(--sp-radius) * .85); cursor: pointer; overflow: hidden; transition: border-color .15s, background .15s; }
@@ -537,8 +601,13 @@ onUnmounted(() => {
 
 .ec-track-note .ec-btn-primary:focus-visible, .ec-track-note .ec-btn-ghost:focus-visible,
 .ec-track-receipt-btn:focus-visible, .ec-track-receipt-link:focus-visible,
-.ec-proof-drop:focus-within, .ec-track-legal a:focus-visible {
+.ec-proof-drop:focus-within, .ec-track-legal a:focus-visible,
+.ec-track-help-summary:focus-visible, .ec-track-help-list a:focus-visible,
+.ec-track-banner-acts .ec-btn-primary:focus-visible, .ec-track-banner-acts .ec-btn-ghost:focus-visible {
   outline: 2px solid var(--store-accent, #111); outline-offset: 2px;
+}
+@media (prefers-reduced-motion: reduce) {
+  .ec-track-help-caret { transition: none; }
 }
 
 @media (max-width: 560px) {
@@ -548,6 +617,7 @@ onUnmounted(() => {
   .ec-step::before { content: ''; position: absolute; left: 14px; top: 32px; bottom: -9px; width: 2px; background: var(--sp-line, rgba(0,0,0,.16)); }
   .ec-step.is-done::before { background: var(--sp-success, #0E7A55); }
   .ec-step:last-child::before { display: none; }
+  .ec-track-step-date { grid-column: 2; justify-self: start; }
   .ec-track-note { grid-template-columns: 1fr; justify-items: start; }
   .ec-track-note-acts { grid-column: auto; }
 }
