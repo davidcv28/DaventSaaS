@@ -67,9 +67,7 @@
   position: relative;
   display: grid;
   grid-template-columns: auto minmax(0, 1fr) auto;
-  grid-template-areas:
-    'kick kick kick'
-    'seal meta act';
+  grid-template-areas: 'seal meta act';
   align-items: center;
   gap: 8px clamp(14px, 2vw, 22px);
   padding: 4px 0 clamp(16px, 2.4vw, 22px);
@@ -80,8 +78,11 @@
   box-shadow: none;
 }
 [data-design='esencial'][data-theme] .ec-account .acc-mhead .acc-tele { display: none; }
+/* El kicker vive DENTRO de .acc-mhead-meta, no del grid de .acc-mhead:
+   grid-area:kick apuntaba a un área del grid externo y el navegador creaba
+   una pista implícita fantasma en meta — texto en vertical a una letra por
+   renglón y la píldora de verificación estirada a cápsula gigante. */
 [data-design='esencial'][data-theme] .ec-account .acc-kicker {
-  grid-area: kick;
   display: flex; align-items: center; gap: 10px;
   font-family: var(--dz-mono); font-size: 10px; font-weight: 700;
   letter-spacing: .18em; text-transform: uppercase; color: var(--dz-muted);

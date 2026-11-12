@@ -244,7 +244,10 @@
     border: 1px solid var(--dz-line, rgba(0,0,0,.1));
     border-radius: 999px;
     background: color-mix(in srgb, var(--dz-paper, var(--dz-bg, #f4f5f0)) 82%, var(--dz-surface, #fff));
-    position: static;
+    /* relative, no static: la píldora deslizante (.acc-tabs-ink, absoluta)
+       necesita las tabs como contenedor — con static se ancla a la página
+       y se estira en una cápsula verde gigante al borde izquierdo. */
+    position: relative;
     top: auto;
     box-shadow: none;
   }
