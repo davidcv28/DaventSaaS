@@ -1411,13 +1411,14 @@
 }
 
 /* ---------- SEGUIMIENTO · tracking-minimal ----------
-   Lectura de consola: una sola columna angosta, hairlines en vez de
-   tarjetas, metadatos en mono y el stepper como línea de progreso fina.
-   La card de estado va primero y sin marco — solo tipografía y datos. */
+   Lectura de consola ampliada: la columna de 720px dejaba media pantalla
+   vacía en escritorio — ahora respira al ancho del contenido del diseño.
+   Las secciones pasan de hairlines a tarjetas suaves y los metadatos en
+   mono suben de 9-10px a un piso legible para cualquier comprador. */
 .store-page[data-design='moderntec'][data-tracking='tracking-minimal'] .ec-track {
-  max-width: 720px;
+  max-width: min(1100px, 100%);
   margin-inline: auto;
-  gap: 0;
+  gap: 14px;
 }
 .store-page[data-design='moderntec'][data-tracking='tracking-minimal'] .ec-track > * { margin-block: 0; }
 .store-page[data-design='moderntec'][data-tracking='tracking-minimal'] .ec-track-head {
@@ -1434,47 +1435,43 @@
 }
 .store-page[data-design='moderntec'][data-tracking='tracking-minimal'] .ec-track-code {
   font-family: var(--st-f-eyebrow-family, 'JetBrains Mono', ui-monospace, monospace);
-  font-size: 10.5px; letter-spacing: .14em; text-transform: uppercase;
+  font-size: 12px; letter-spacing: .12em; text-transform: uppercase;
 }
 .store-page[data-design='moderntec'][data-tracking='tracking-minimal'] .ec-track-help {
   font-family: var(--st-f-eyebrow-family, 'JetBrains Mono', ui-monospace, monospace);
-  font-size: 10.5px; letter-spacing: .06em;
+  font-size: 11.5px; letter-spacing: .06em;
 }
 .store-page[data-design='moderntec'][data-tracking='tracking-minimal'] .ec-track-card {
-  border: 0;
-  border-bottom: 1px solid var(--sp-line, rgba(255,255,255,.1));
-  border-radius: 0;
-  background: transparent;
+  border: 1px solid var(--sp-line, rgba(255,255,255,.1));
+  border-radius: 12px;
+  background: color-mix(in srgb, var(--sp-card, #fff) 4%, transparent);
   box-shadow: none;
-  padding: clamp(18px, 2.4vw, 26px) 0;
-  gap: 12px;
-}
-.store-page[data-design='moderntec'][data-tracking='tracking-minimal'] .ec-track-card:last-child {
-  border-bottom: 0;
+  padding: clamp(18px, 2.4vw, 26px) clamp(16px, 2.4vw, 26px);
+  gap: 14px;
 }
 .store-page[data-design='moderntec'][data-tracking='tracking-minimal'] .ec-track-h2 {
   font-family: var(--st-f-eyebrow-family, 'JetBrains Mono', ui-monospace, monospace);
-  font-size: 10.5px; font-weight: 700;
-  letter-spacing: .2em; text-transform: uppercase;
+  font-size: 12px; font-weight: 700;
+  letter-spacing: .16em; text-transform: uppercase;
   color: var(--sp-muted, inherit);
 }
 .store-page[data-design='moderntec'][data-tracking='tracking-minimal'] .ec-track-status-row {
   gap: 12px;
 }
 .store-page[data-design='moderntec'][data-tracking='tracking-minimal'] .ec-track-status {
-  border-radius: 6px;
-  padding: 6px 12px;
+  border-radius: 7px;
+  padding: 7px 13px;
   font-family: var(--st-f-eyebrow-family, 'JetBrains Mono', ui-monospace, monospace);
-  font-size: 10.5px; font-weight: 700;
-  letter-spacing: .14em; text-transform: uppercase;
+  font-size: 12px; font-weight: 700;
+  letter-spacing: .12em; text-transform: uppercase;
 }
 .store-page[data-design='moderntec'][data-tracking='tracking-minimal'] .ec-track-exp {
   font-family: var(--st-f-eyebrow-family, 'JetBrains Mono', ui-monospace, monospace);
-  font-size: 11px; letter-spacing: .08em;
+  font-size: 12px; letter-spacing: .06em;
 }
 .store-page[data-design='moderntec'][data-tracking='tracking-minimal'] .ec-track-muted {
   font-family: var(--st-f-body-family, 'Inter', system-ui, sans-serif);
-  font-size: 13px;
+  font-size: 14px;
 }
 /* Stepper → barra de progreso: una línea fina con marcas por etapa. */
 .store-page[data-design='moderntec'][data-tracking='tracking-minimal'] .ec-stepper {
@@ -1509,8 +1506,8 @@
 }
 .store-page[data-design='moderntec'][data-tracking='tracking-minimal'] .ec-step-label {
   font-family: var(--st-f-eyebrow-family, 'JetBrains Mono', ui-monospace, monospace);
-  font-size: 9px; font-weight: 600;
-  letter-spacing: .14em; text-transform: uppercase;
+  font-size: 10.5px; font-weight: 600;
+  letter-spacing: .12em; text-transform: uppercase;
   text-align: left;
   color: var(--sp-muted, inherit);
 }
@@ -1520,16 +1517,16 @@
 }
 .store-page[data-design='moderntec'][data-tracking='tracking-minimal'] .ec-track-step-date {
   font-family: var(--st-f-eyebrow-family, 'JetBrains Mono', ui-monospace, monospace);
-  font-size: 9px; letter-spacing: .06em;
+  font-size: 10.5px; letter-spacing: .06em;
 }
 .store-page[data-design='moderntec'][data-tracking='tracking-minimal'] .ec-track-chips {
   display: flex; flex-wrap: wrap; gap: 6px;
 }
 .store-page[data-design='moderntec'][data-tracking='tracking-minimal'] .ec-track-chip {
-  border-radius: 5px;
+  border-radius: 6px;
   font-family: var(--st-f-eyebrow-family, 'JetBrains Mono', ui-monospace, monospace);
-  font-size: 9.5px; font-weight: 600;
-  letter-spacing: .12em; text-transform: uppercase;
+  font-size: 10.5px; font-weight: 600;
+  letter-spacing: .1em; text-transform: uppercase;
 }
 .store-page[data-design='moderntec'][data-tracking='tracking-minimal'] .ec-timeline {
   border-left: 1px solid var(--sp-line, rgba(255,255,255,.14));
@@ -1543,7 +1540,7 @@
 }
 .store-page[data-design='moderntec'][data-tracking='tracking-minimal'] .ec-tl-date {
   font-family: var(--st-f-eyebrow-family, 'JetBrains Mono', ui-monospace, monospace);
-  font-size: 9.5px; letter-spacing: .1em; text-transform: uppercase;
+  font-size: 10.5px; letter-spacing: .08em; text-transform: uppercase;
 }
 .store-page[data-design='moderntec'][data-tracking='tracking-minimal'] .ec-receipt {
   border-radius: 8px;
@@ -1557,8 +1554,14 @@
   .store-page[data-design='moderntec'][data-tracking='tracking-minimal'] .ec-track {
     max-width: none;
   }
+  .store-page[data-design='moderntec'][data-tracking='tracking-minimal'] .ec-track-card {
+    padding: 16px 14px;
+  }
   .store-page[data-design='moderntec'][data-tracking='tracking-minimal'] .ec-step-label {
-    font-size: 8px; letter-spacing: .08em;
+    font-size: 9px; letter-spacing: .08em;
+  }
+  .store-page[data-design='moderntec'][data-tracking='tracking-minimal'] .ec-track-step-date {
+    font-size: 9.5px;
   }
 }
 
