@@ -147,7 +147,7 @@ const emit = defineEmits(['navigate', 'toggle-theme', 'load', 'buy', 'buy-now', 
 //de la tienda que embebe, y siempre con su slug (nunca el de otra). La
 //raíz (`<slug>/`) es el payload público completo: de ahí el chatbot del
 //diseño saca {greeting, qa} (ya viene filtrado por beneficio + switch).
-const PUBLIC_API_RE = /^\/api\/stores\/public\/[a-z0-9-]+\/(?:contact\/captcha|contact|products\/\d+\/reviews)?\/?$/
+const PUBLIC_API_RE = /^\/api\/stores\/public\/[a-z0-9-]+\/(?:contact\/captcha|contact|products\/\d+\/reviews|pattern\/products)?\/?(\?[^\s"'<>]*)?$/
 //El POST de opiniones exige sesión de comprador (Bearer customer_access):
 //pasa por customerHttp — adjunta el access en memoria y renueva la sesión
 //por la cookie refresh igual que el resto de la API del comprador.

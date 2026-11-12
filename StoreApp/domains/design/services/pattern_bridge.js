@@ -961,6 +961,60 @@
     })
     buildFilters()
     applyCatalog()
+    loadRest()
+  }
+  /* Catálogo mayor al fragmento horneado (data-ds-products-total del
+   * <html>): el documento trae solo la primera página; el resto se pide
+   * al host por ds-api (/pattern/products/?offset=) y se injerta con las
+   * MISMAS tarjetas .ds-product que renderiza el backend. Sin puente (o
+   * sin el atributo) queda lo horneado — nunca menos que antes. */
+  var restLoading = false
+  var restDone = false
+  function loadRest() {
+    if (restLoading || restDone || !wrap) return
+    var total = parseInt(root.getAttribute('data-ds-products-total') || '0', 10) || 0
+    if (total <= cards.length) { restDone = true; return }
+    var m = /\/api\/stores\/public\/([a-z0-9-]+)\/pattern\//.exec(location.pathname || '')
+    if (!m) { restDone = true; return }
+    restLoading = true
+    var base = '/api/stores/public/' + m[1] + '/pattern/products/'
+    function finish() {
+      restLoading = false
+      restDone = true
+      /* Los filtros se armaron con la primera página: se reconstruyen con
+       * el catálogo completo o faltan categorías/marcas que solo existían
+       * en las páginas siguientes. */
+      var filters = document.querySelector('[data-ds-filters]')
+      if (filters) {
+        filters.removeAttribute('data-built')
+        ;[].forEach.call(filters.querySelectorAll('button[data-cat]'), function (b) {
+          if (b.parentNode) b.parentNode.removeChild(b)
+        })
+      }
+      var brandsHost = document.querySelector('[data-ds-brands]')
+      if (brandsHost) {
+        brandsHost.removeAttribute('data-built')
+        brandsHost.innerHTML = ''
+      }
+      buildFilters()
+      applyCatalog()
+      applyStock()
+      send()
+    }
+    ;(function next() {
+      var shown = wrap.querySelectorAll('.ds-product').length
+      if (shown >= total) { finish(); return }
+      api(base + '?offset=' + shown).then(function (out) {
+        var html = out && out.ok && out.data && typeof out.data.html === 'string' ? out.data.html : ''
+        if (!html) { finish(); return }
+        wrap.insertAdjacentHTML('beforeend', html)
+        cards = [].slice.call(wrap.querySelectorAll('.ds-product'))
+        cards.forEach(function (card, i) {
+          if (!card.hasAttribute('data-order')) card.setAttribute('data-order', i)
+        })
+        next()
+      })
+    })()
   }
   function scheduleApply() {
     if (applyTimer) clearTimeout(applyTimer)

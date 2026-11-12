@@ -400,7 +400,7 @@ class AiDesignImageThrottle(UserRateThrottle):
 class StoreViewSet(StoreBaseViewSet):
     viewset_config  =   StoreConfigs
     #Acciones que atienden visitantes anónimos (web pública, contacto, reseñas).
-    PUBLIC_ACTIONS  =   ('public', 'public_catalog', 'public_pattern', 'public_pattern_document', 'public_pattern_bridge', 'public_pattern_script', 'public_contact', 'public_resolve', 'tls_ask', 'contact_captcha', 'contact', 'product_reviews')
+    PUBLIC_ACTIONS  =   ('public', 'public_catalog', 'public_pattern', 'public_pattern_document', 'public_pattern_bridge', 'public_pattern_script', 'public_pattern_products', 'public_contact', 'public_resolve', 'tls_ask', 'contact_captcha', 'contact', 'product_reviews')
 
     def initialize_request(self, request, *args, **kwargs):
         #get_authenticators() corre dentro de super().initialize_request(),
@@ -777,7 +777,7 @@ class StoreViewSet(StoreBaseViewSet):
         #superficies cubre: pedir el documento completo (HTML+CSS+JS) acá
         #duplicaba ~100 KB por carga. `?meta=1` devuelve el sobre liviano.
         if request.query_params.get('meta'):
-            keys        =   ('slug', 'nombre', 'style', 'ready', 'surfaces', 'products_total', 'products_shown', 'dark', 'event_count')
+            keys        =   ('slug', 'nombre', 'style', 'ready', 'surfaces', 'products_total', 'products_shown', 'products_lazy', 'dark', 'event_count')
             payload     =   {key: data.get(key) for key in keys}
             payload['has_html'] = bool(data.get('html'))
             revision_source = '\0'.join(str(data.get(key) or '') for key in ('html', 'css', 'js'))
@@ -828,6 +828,9 @@ class StoreViewSet(StoreBaseViewSet):
             #Descuentos programados vigentes: `data-ds-events` en <html> —
             #el puente muestra el filtro "Eventos" del catálogo solo si hay.
             events      =   data.get('event_count') or 0,
+            #Total del catálogo: el puente del documento pide las páginas
+            #que no entraron horneadas (FRAGMENT_LIMIT) a /pattern/products/.
+            products_total  =   data.get('products_total') or 0,
         )
         response            =   HttpResponse(html, content_type = 'text/html; charset=utf-8')
         #El documento se embebe en la web (iframe same-origin): el default
@@ -844,6 +847,24 @@ class StoreViewSet(StoreBaseViewSet):
             patch_cache_control(response, private = True, no_store = True)
         else:
             patch_cache_control(response, private = True, max_age = 30)
+        return response
+
+    @action(detail = False, methods = ['get'], url_path = r'public/(?P<slug>[a-z0-9-]+)/pattern/products', throttle_classes = [PublicReadThrottle])
+    def public_pattern_products(self, request, slug = None):
+        #Página siguiente de tarjetas `.ds-product` para el catálogo del
+        #documento: el puente la pide por ds-api cuando la tienda tiene
+        #más productos de los que entran horneados (FRAGMENT_LIMIT). El
+        #fragmento es el mismo que render_store_pattern hornea — misma
+        #tarjeta, misma piel.
+        from StoreApp.domains.design.services.pattern_render import product_cards_fragment
+
+        store               =   self._pattern_store(slug)
+        try:
+            offset          =   max(0, min(10000, int(request.query_params.get('offset') or 0)))
+        except (TypeError, ValueError):
+            offset          =   0
+        response            =   Response(product_cards_fragment(store, offset = offset), status = status.HTTP_200_OK)
+        patch_cache_control(response, public = True, max_age = 30)
         return response
 
     @action(detail = False, methods = ['get'], url_path = r'public/(?P<slug>[a-z0-9-]+)/pattern/bridge.js', throttle_classes = [PublicReadThrottle])

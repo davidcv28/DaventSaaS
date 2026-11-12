@@ -146,10 +146,13 @@ const usePattern = computed(() => Boolean(
   //publicada rompía).
   patternDoc.value?.ready && (patternDoc.value?.has_html || patternDoc.value?.html) &&
   (patternDoc.value?.surfaces || []).includes(patternSurface.value) &&
-  //El documento trae los productos ya pintados: si no entran todos, el
-  //catálogo sigue en la plantilla Vue (que pagina y filtra contra la API).
+  //El documento hornea la primera página del catálogo; si la tienda tiene
+  //más productos y el markup trae [data-ds-products] (products_lazy), el
+  //puente pide el resto a /pattern/products/ y las injerta — misma tarjeta.
+  //Sin ese contenedor (diseño viejo) sigue el fallback a la plantilla Vue.
   (patternSurface.value !== 'catalog' ||
-    (patternDoc.value.products_total || 0) <= (patternDoc.value.products_shown || 24))
+    (patternDoc.value.products_total || 0) <= (patternDoc.value.products_shown || 24) ||
+    patternDoc.value.products_lazy)
 ))
 // Navbar del diseño en las rutas que el documento no pinta (auth, cuenta,
 // carrito, checkout, seguimiento, legales y las que caen a la plantilla

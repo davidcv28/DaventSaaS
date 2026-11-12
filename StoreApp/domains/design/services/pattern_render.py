@@ -275,8 +275,33 @@ def _zone_flags(flags, customization):
         return flags
     return {name: enabled and name not in off for name, enabled in flags.items()}
 
-def _product_fragment(store, products = None, flags = None):
+def _product_queryset(store):
+    #is_exclusive=False: el documento es anónimo — los productos de
+    #miembros ni siquiera deben saber que existen (misma regla que el
+    #catálogo público y el resolver ?product=).
     from StoreApp.domains.catalog.models import Product
+
+    return (
+        Product.objects.filter(store = store, is_active = True, is_exclusive = False)
+        .select_related('category', 'brand')
+        .prefetch_related('reviews')
+        .order_by('-created_at')
+    )
+
+def product_cards_fragment(store, offset = 0):
+    """
+    Página de tarjetas `.ds-product` para el catálogo del documento: el
+    puente pide los productos que no entraron en el HTML (FRAGMENT_LIMIT)
+    y los injerta en `[data-ds-products]` — la tarjeta es la MISMA que la
+    que hornea el documento porque sale del mismo `_product_fragment`.
+    """
+    qs      =   _product_queryset(store)
+    total   =   qs.count()
+    offset  =   max(0, int(offset or 0))
+    html    =   _product_fragment(store, products = qs[offset:offset + FRAGMENT_LIMIT]) if offset < total else ''
+    return {'html': html, 'total': total}
+
+def _product_fragment(store, products = None, flags = None):
     from StoreApp.domains.stores.services.storage import object_url
 
     if flags is None:
@@ -284,15 +309,7 @@ def _product_fragment(store, products = None, flags = None):
     if not flags.get('catalog', True):
         return ''
     if products is None:
-        #is_exclusive=False: el documento es anónimo — los productos de
-        #miembros ni siquiera deben saber que existen (misma regla que el
-        #catálogo público y el resolver ?product=).
-        products = (
-            Product.objects.filter(store = store, is_active = True, is_exclusive = False)
-            .select_related('category', 'brand')
-            .prefetch_related('reviews')
-            .order_by('-created_at')[:FRAGMENT_LIMIT]
-        )
+        products = _product_queryset(store)[:FRAGMENT_LIMIT]
     from StoreApp.domains.catalog.services.services import (
         effective_pricing_of,
         running_discounts_of,
@@ -1763,11 +1780,14 @@ def render_store_pattern(store, customization = None, product = None, product_mi
         #Superficies que el documento sabe pintar (`data-surface`): el host
         #solo usa el patrón en las rutas que el diseño cubre.
         'surfaces': surfaces,
-        #El catálogo del diseño trae los productos ya renderizados: si la
-        #tienda tiene más de los que entran en el documento, esa ruta sigue
-        #con la plantilla Vue (que pagina) para no esconder productos.
+        #El documento hornea los primeros FRAGMENT_LIMIT productos; si la
+        #tienda tiene más, el puente pide las páginas siguientes al host
+        #(/pattern/products/) y las injerta en [data-ds-products] con las
+        #mismas tarjetas. `products_lazy` dice si el markup tiene ese
+        #contenedor: sin él el catálogo sigue cayendo a la plantilla Vue.
         'products_total': Product.objects.filter(store = store, is_active = True, is_exclusive = False).count(),
         'products_shown': FRAGMENT_LIMIT,
+        'products_lazy': 'data-ds-products' in (pattern.html or ''),
         #Descuentos programados vigentes sobre el catálogo entero: viaja al
         #documento como `data-ds-events` y el puente muestra el filtro
         #"Eventos" solo cuando hay algo que filtrar (contrato ola5/ola6).

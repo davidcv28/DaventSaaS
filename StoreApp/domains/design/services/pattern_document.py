@@ -319,7 +319,7 @@ def sanitize_css(css):
     return STYLE_CLOSE_RE.sub('', css or '')
 
 
-def pattern_document(html, css, theme, surface, preview = '', style = '', nonce = '', preload = None, template = '', commerce = False, events = 0, customer_auth = False):
+def pattern_document(html, css, theme, surface, preview = '', style = '', nonce = '', preload = None, template = '', commerce = False, events = 0, customer_auth = False, products_total = 0):
     """
     Documento completo listo para servir como `text/html`.
     `html` ya viene renderizado contra la tienda y `css` ya trae el tema del
@@ -360,6 +360,14 @@ def pattern_document(html, css, theme, surface, preview = '', style = '', nonce 
         events_n = 0
     events_attr = f' data-ds-events="{events_n}"' if events_n else ''
     customer_auth_attr = ' data-ds-customer-auth="1"' if customer_auth else ''
+    #Total de productos de la tienda: si supera a las tarjetas horneadas el
+    #puente pide las páginas siguientes (/pattern/products/) y las injerta
+    #en [data-ds-products] — el catálogo del diseño cubre cualquier tamaño.
+    try:
+        products_total_n = max(0, min(99999, int(products_total or 0)))
+    except (TypeError, ValueError):
+        products_total_n = 0
+    products_attr = f' data-ds-products-total="{products_total_n}"' if products_total_n else ''
     #Los dos `<script>` son los únicos ejecutables del documento: el nonce
     #(CSP `script-src 'nonce-…'`) los autoriza sin depender del origen.
     nonce   =   str(nonce or '')
@@ -369,7 +377,7 @@ def pattern_document(html, css, theme, surface, preview = '', style = '', nonce 
         for url in (preload or [])[:2] if url
     )
     return (
-        f'<!doctype html><html lang="es" data-ds-theme="{theme}" data-ds-surface="{surface}"{style_attr}{commerce_attr}{events_attr}{customer_auth_attr}>'
+        f'<!doctype html><html lang="es" data-ds-theme="{theme}" data-ds-surface="{surface}"{style_attr}{commerce_attr}{events_attr}{customer_auth_attr}{products_attr}>'
         '<head><meta charset="utf-8">'
         '<meta name="viewport" content="width=device-width,initial-scale=1">'
         f'{preload_links}'
