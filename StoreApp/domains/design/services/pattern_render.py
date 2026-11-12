@@ -290,6 +290,7 @@ def _product_fragment(store, products = None, flags = None):
         products = (
             Product.objects.filter(store = store, is_active = True, is_exclusive = False)
             .select_related('category', 'brand')
+            .prefetch_related('reviews')
             .order_by('-created_at')[:FRAGMENT_LIMIT]
         )
     from StoreApp.domains.catalog.services.services import (
@@ -297,6 +298,7 @@ def _product_fragment(store, products = None, flags = None):
         running_discounts_of,
     )
     discounts = running_discounts_of(store)
+    customization = getattr(store, 'customization', None)
     cards = []
     for product in products:
         image = object_url(product.image_key)
@@ -332,6 +334,8 @@ def _product_fragment(store, products = None, flags = None):
         )
         category = _text(getattr(product.category, 'name', ''), 40)
         brand = _text(getattr(product.brand, 'name', ''), 40)
+        rating_avg, rating_count = _rating_values(store, product, customization)
+        rate_attr = f' data-rate="{rating_avg}" data-rate-count="{rating_count}"' if rating_avg else ''
         off_attr = f' data-off="{off}"' if off else ''
         #`data-event`: la oferta la firma un descuento programado vigente
         #(effective_discount), no una oferta manual — es la marca que el
@@ -348,7 +352,10 @@ def _product_fragment(store, products = None, flags = None):
             f'<a class="ds-product-link" href="#catalogo" data-ds-product="{product.pk}"'
             f' aria-label="{_attr(product.name)}">'
             f'{media}'
-            '<span class="ds-product-copy">'
+            #Rating como data-attr (no como texto): el diseño decide si lo
+            #pinta (mercado lo muestra "★ 4.7" bajo el nombre); el resto de
+            #los patrones ni lo ve.
+            f'<span class="ds-product-copy"{rate_attr}>'
             f'<h3 class="ds-product-name">{escape(_text(product.name, 120))}</h3>'
             f'<small class="ds-product-desc">{escape(_text(product.description, 110))}</small>'
             '</span>'

@@ -457,6 +457,12 @@
     transition:color .18s;
   }
   .ds-product:hover .ds-product-name{color:var(--link)}
+  /* Valoración ML: estrella + promedio bajo el nombre (el fragmento la
+     emite como data-attrs — solo este diseño la pinta). */
+  .ds-product-copy[data-rate]::after{
+    content:"★ " attr(data-rate);
+    font:800 12.5px var(--font);color:#3483fa;letter-spacing:0;line-height:1;
+  }
   .ds-product .ds-product-desc{display:none}
   /* Precio estilo marketplace: tachado arriba, monto + %OFF verde inline.
      El grid reordena el markup (amount antes que el <s>) sin tocar el

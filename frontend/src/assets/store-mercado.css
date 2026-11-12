@@ -1577,6 +1577,20 @@
 .store-page[data-template='mercado'] .mc-catpage .tpc-price strong { order: 1; }
 .store-page[data-template='mercado'] .mc-catpage .tpc-price s { order: 3; }
 .store-page[data-template='mercado'] .mc-cat-promo { margin: 0; font-size: 12px; font-weight: 700; color: var(--mc-green-ink); }
+/* Precio estilo marketplace (misma lectura que la tarjeta del documento):
+   tachado arriba, monto grande + "NN% OFF" verde inline. */
+.store-page[data-template='mercado'] .mc-price { display: grid; gap: 2px; }
+.store-page[data-template='mercado'] .mc-price-old {
+  font-size: 12px; font-weight: 400; color: var(--mc-muted);
+  text-decoration: line-through;
+}
+.store-page[data-template='mercado'] .mc-price-line {
+  display: flex; align-items: baseline; gap: 8px; min-width: 0; flex-wrap: wrap;
+}
+.store-page[data-template='mercado'] .mc-off {
+  font-style: normal; font-size: 13px; font-weight: 800;
+  color: var(--mc-green-ink); letter-spacing: 0;
+}
 .store-page[data-template='mercado'] .mc-cat-list[data-view='grid'] .mc-cat-card {
   background: var(--mc-surface);
   border: 1px solid var(--mc-line);

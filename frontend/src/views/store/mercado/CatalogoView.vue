@@ -7,7 +7,7 @@
 // catálogo público llega completo en una sola respuesta.
 import { ref, computed, inject, nextTick, watch } from 'vue'
 import { storeHostSlug } from '../../../config/env.js'
-import { productDiscount, offerEndsLabel } from '../../../api/catalog.api.js'
+import { productDiscount, offerEndsLabel, offerPct } from '../../../api/catalog.api.js'
 import { useStoreCatalog, SORT_OPTIONS } from '../../../composables/useStoreCatalog.js'
 import { templateBlock } from '../../../templates/index.js'
 import TplProductCard from '../../../components/store/TplProductCard.vue'
@@ -101,6 +101,7 @@ const visibleBrands = computed(() => {
 const view = ref('list')
 const crumb = computed(() => activeCategoryName.value || ui.search.trim() || 'Todos los productos')
 const promoOf = (p) => productDiscount(p)
+const pctOf = (p) => offerPct(p)
 
 // ===== Chips de filtros activos (misma lectura que el documento del diseño) =====
 const activeChips = computed(() => {
@@ -277,9 +278,18 @@ const activeChips = computed(() => {
               v-for="p in pagedProducts" :key="p.id" class="mc-cat-card"
               :p="p" :cat="categoryNameOf(p)" :brand="brandNameOf(p)" :desc="p.description || ''"
               :layout="view === 'list' ? 'row' : 'card'"
-              :stars="custom.show_reviews" stars-icon="star"
+              :stars="custom.show_reviews" stars-icon="star" stars-value
               seal-shape="" @open="openProduct"
             >
+              <template #foot="{ p, price, oldPrice, offer }">
+                <span class="tpc-price-wrap mc-price">
+                  <s v-if="offer != null" class="mc-price-old">{{ oldPrice }}</s>
+                  <span class="mc-price-line">
+                    <strong :class="{ deal: offer != null }">{{ price }}</strong>
+                    <em v-if="offer != null" class="mc-off">{{ pctOf(p) }}% OFF</em>
+                  </span>
+                </span>
+              </template>
               <template v-if="promoOf(p) && blkOn('promo')" #tags>
                 <p class="mc-cat-promo">{{ promoOf(p).name }}<span v-if="offerEndsLabel(promoOf(p))"> · {{ offerEndsLabel(promoOf(p)) }}</span></p>
               </template>
