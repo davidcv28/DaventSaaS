@@ -93,6 +93,7 @@ import PaymentsConfigPanel from '../components/dashboard/commerce/PaymentsConfig
 import LegalPagesPanel from '../components/dashboard/commerce/LegalPagesPanel.vue'
 import PlansPanel from '../components/dashboard/commerce/PlansPanel.vue'
 import CustomerAuthPanel from '../components/dashboard/commerce/CustomerAuthPanel.vue'
+import SellingHub from '../components/dashboard/SellingHub.vue'
 
 const router = useRouter()
 const route = useRoute()
@@ -2110,14 +2111,22 @@ function mkSummary(key) {
   }
 }
 watch(mkOpen, (on) => {
-  document.body.style.overflow = on ? 'hidden' : ''
+  document.body.style.overflow = on || confirmCancel.value ? 'hidden' : ''
   //Video legado (video_url suelto): se migra a la lista la primera vez que
   //se abre el editor para que el dueño lo vea y pueda ampliarlo.
   if (on === 'video' && !(designForm.videos || []).length && designForm.video_url) {
     designForm.videos = [designForm.video_url]
   }
 })
-function onMkKey(e) { if (e.key === 'Escape' && mkOpen.value) mkOpen.value = null }
+// El modal de "Cancelar débito" (overview) usa el mismo bloqueo de scroll.
+watch(confirmCancel, (on) => {
+  document.body.style.overflow = on || mkOpen.value ? 'hidden' : ''
+})
+function onMkKey(e) {
+  if (e.key !== 'Escape') return
+  if (mkOpen.value) mkOpen.value = null
+  else if (confirmCancel.value) confirmCancel.value = false
+}
 onMounted(() => window.addEventListener('keydown', onMkKey))
 onUnmounted(() => {
   window.removeEventListener('keydown', onMkKey)
@@ -4048,49 +4057,50 @@ async function changePassword() {
 
     <!-- ================= RESUMEN ================= -->
     <div v-show="section === 'overview'" :class="{ 'sec-on': section === 'overview' }">
-      <!-- 1. Héroe: saludo + acciones + mini tarjeta de tu página -->
+      <!-- 1. Héroe: saludo + plan en una línea, acciones y franja "tu página" -->
       <section class="ovh ovh-hero">
-        <div class="ovh-hero-main">
-          <span v-if="plan" class="ovh-pill">
-            <span class="ovh-pill-dot" :class="{ ok: plan.isCurrent, warn: plan.status === 'Pendiente de pago', bad: !plan.isCurrent && plan.status !== 'Pendiente de pago' }" aria-hidden="true"></span>
-            {{ plan.name }}<template v-if="plan.isCurrent"> · vigente hasta {{ fmtDate(plan.end) }}</template><template v-else> · {{ plan.status }}</template>
-          </span>
-          <h1 class="ovh-title">Hola, {{ ownerName }}</h1>
-          <p class="ovh-sub">{{ heroSub }}</p>
+        <div class="ovh-hero-head">
+          <div class="ovh-hero-main">
+            <div class="ovh-hero-line">
+              <h1 class="ovh-title">Hola, {{ ownerName }}</h1>
+              <span v-if="plan" class="ovh-pill">
+                <span class="ovh-pill-dot" :class="{ ok: plan.isCurrent, warn: plan.status === 'Pendiente de pago', bad: !plan.isCurrent && plan.status !== 'Pendiente de pago' }" aria-hidden="true"></span>
+                {{ plan.name }}<template v-if="plan.isCurrent"> · vigente hasta {{ fmtDate(plan.end) }}</template><template v-else> · {{ plan.status }}</template>
+              </span>
+            </div>
+            <p class="ovh-sub">{{ heroSub }}</p>
+          </div>
           <div class="ovh-hero-actions">
             <a v-if="store.hasStore" class="btn btn-auto" :href="publicUrl" target="_blank" rel="noopener"><AppIcon name="external-link" :size="15" /> Ver mi página</a>
             <button v-else type="button" class="btn btn-auto" @click="section = 'store'"><AppIcon name="store" :size="15" /> Reservar mi link</button>
             <button type="button" class="btn ghost btn-auto" :disabled="!store.hasStore" @click="shareWhatsApp"><AppIcon name="whatsapp" :size="15" /> Compartir</button>
           </div>
         </div>
-        <div class="ovh-site">
-          <template v-if="store.hasStore">
-            <a class="ovh-site-cover" :href="publicUrl" target="_blank" rel="noopener" :aria-label="`Abrir ${publicUrl}`">
-              <img v-if="currentCover" :src="currentCover" alt="" />
-              <span v-else class="ovh-site-cover-empty"><AppIcon name="image" :size="22" /></span>
-              <span class="ovh-site-cover-cta"><AppIcon name="external-link" :size="13" /> Abrir</span>
-            </a>
-            <div class="ovh-site-info">
-              <div class="ovh-site-urlrow">
-                <span class="ovh-site-url" :title="publicUrl">{{ publicUrl }}</span>
-                <button type="button" class="ovh-icon-btn" aria-label="Copiar link" title="Copiar link" @click="copyLink"><AppIcon name="copy" :size="14" /></button>
-              </div>
-              <dl class="ovh-site-stats">
-                <div><dt>{{ visitWeek.now }}</dt><dd>visitas · 7 días</dd></div>
-                <div><dt>{{ productStats.visible }}</dt><dd>productos</dd></div>
-                <div><dt>{{ reviewStats.total }}</dt><dd>opiniones</dd></div>
-              </dl>
-              <button type="button" class="ovh-link ovh-site-edit" @click="section = designTarget">Editar diseño <AppIcon name="arrow-right" :size="13" /></button>
+        <div v-if="store.hasStore" class="ovh-site">
+          <a class="ovh-site-cover" :href="publicUrl" target="_blank" rel="noopener" :aria-label="`Abrir ${publicUrl}`">
+            <img v-if="currentCover" :src="currentCover" alt="" />
+            <span v-else class="ovh-site-cover-empty"><AppIcon name="image" :size="20" /></span>
+          </a>
+          <div class="ovh-site-info">
+            <div class="ovh-site-urlrow">
+              <span class="ovh-site-url" :title="publicUrl">{{ publicUrl }}</span>
+              <button type="button" class="ovh-icon-btn" aria-label="Copiar link" title="Copiar link" @click="copyLink"><AppIcon name="copy" :size="14" /></button>
             </div>
-          </template>
-          <div v-else class="ovh-site-empty">
-            <span class="ovh-site-empty-icon"><AppIcon name="store" :size="20" /></span>
-            <div class="ovh-site-empty-txt">
-              <strong>Tu página todavía no existe</strong>
-              <small>Reservá tu link público y empezá a vender hoy.</small>
-            </div>
-            <button type="button" class="btn btn-auto" @click="section = 'store'">Reservar link</button>
+            <dl class="ovh-site-stats">
+              <div><dt>{{ visitWeek.now }}</dt><dd>visitas · 7 días</dd></div>
+              <div><dt>{{ productStats.visible }}</dt><dd>productos</dd></div>
+              <div><dt>{{ reviewStats.total }}</dt><dd>opiniones</dd></div>
+            </dl>
           </div>
+          <button type="button" class="ovh-link ovh-site-edit" @click="section = designTarget">Editar diseño <AppIcon name="arrow-right" :size="13" /></button>
+        </div>
+        <div v-else class="ovh-site ovh-site-empty">
+          <span class="ovh-site-empty-icon"><AppIcon name="store" :size="18" /></span>
+          <div class="ovh-site-empty-txt">
+            <strong>Tu página todavía no existe</strong>
+            <small>Reservá tu link público y empezá a vender hoy.</small>
+          </div>
+          <button type="button" class="btn btn-auto" @click="section = 'store'">Reservar link</button>
         </div>
       </section>
 
@@ -4122,7 +4132,7 @@ async function changePassword() {
       <AlertMessage v-if="billing.notice" kind="success" :message="billing.notice" />
       <AlertMessage v-if="billing.lastError" kind="error" :message="billing.lastError" />
       <AlertMessage v-if="payments.notice" kind="success" :message="payments.notice" />
-      <AlertMessage v-if="payments.lastError" kind="error" :message="payments.lastError" />
+      <AlertMessage v-if="payments.lastError && !confirmCancel" kind="error" :message="payments.lastError" />
 
       <!-- 3. Números del día: una sola banda con divisores, no cuatro tarjetas -->
       <section class="ovh ovh-metrics" aria-label="Resumen de tu negocio">
@@ -4165,7 +4175,7 @@ async function changePassword() {
           <div v-if="visitBars.length" class="ovh-bars" role="img" :aria-label="`Visitas de los últimos ${visitBars.length} días`">
             <div v-for="(b, i) in visitBars" :key="i" class="ovh-bar" :title="`${b.count} ${b.count === 1 ? 'visita' : 'visitas'} · ${fmtDate(b.date)}`">
               <span class="ovh-bar-track"><span class="ovh-bar-fill" :class="{ today: i === visitBars.length - 1 }" :style="{ height: `${b.h}%` }"></span></span>
-              <small>{{ b.label }}</small>
+              <small :class="{ today: i === visitBars.length - 1 }">{{ b.label }}</small>
             </div>
           </div>
           <p v-else class="ovh-empty">{{ canStats ? 'Todavía no hay visitas registradas.' : 'Las estadísticas de visitas están disponibles en planes superiores.' }}</p>
@@ -4237,12 +4247,25 @@ async function changePassword() {
         </span>
       </div>
 
-      <div v-if="confirmCancel" class="card confirm-card">
-        <h3><AppIcon name="triangle-alert" :size="18" /> Cancelar la renovación automática</h3>
-        <p>Vas a dejar de pagar el débito mensual. Tu plan sigue vigente hasta el <strong>{{ fmtDate(plan?.end) }}</strong>; después tu web pública y tu catálogo se desactivan. Podés reactivar el débito cuando quieras.</p>
-        <div class="btn-row">
-          <button class="btn danger btn-auto" :disabled="renewBusy" @click="doCancelRenewal"><span v-if="renewBusy" class="spinner"></span>Sí, cancelar la renovación</button>
-          <button class="btn ghost btn-auto" :disabled="renewBusy" @click="confirmCancel = false">Mantener activa</button>
+      <!-- Confirmación de cancelar débito: modal real (mismo patrón mk-* que Diseño) -->
+      <div v-if="confirmCancel" class="mk-overlay" @click.self="confirmCancel = false">
+        <div class="mk-modal dvm-sm dvm-cancel" role="dialog" aria-modal="true" aria-label="Cancelar la renovación automática">
+          <header class="mk-modal-head">
+            <span class="mk-modal-ico"><AppIcon name="triangle-alert" :size="19" /></span>
+            <div class="mk-modal-txt">
+              <h2>Cancelar la renovación automática</h2>
+              <small>Débito mensual de Mercado Pago</small>
+            </div>
+            <button type="button" class="mk-modal-x" aria-label="Cerrar" @click="confirmCancel = false"><AppIcon name="x" :size="18" /></button>
+          </header>
+          <div class="mk-modal-body">
+            <p class="dvm-cancel-txt">Vas a dejar de pagar el débito mensual. Tu plan sigue vigente hasta el <strong>{{ fmtDate(plan?.end) }}</strong>; después tu web pública y tu catálogo se desactivan. Podés reactivar el débito cuando quieras.</p>
+            <AlertMessage v-if="payments.lastError" kind="error" :message="payments.lastError" />
+            <div class="dvm-cancel-actions">
+              <button class="btn danger btn-auto" :disabled="renewBusy" @click="doCancelRenewal"><span v-if="renewBusy" class="spinner"></span>Sí, cancelar la renovación</button>
+              <button class="btn ghost btn-auto" :disabled="renewBusy" @click="confirmCancel = false">Mantener activa</button>
+            </div>
+          </div>
         </div>
       </div>
 
@@ -6086,25 +6109,15 @@ async function changePassword() {
       </div>
     </div>
     <!-- ================= VENDER ONLINE (e-commerce del dueño) ================= -->
-    <div v-if="seen.selling" v-show="section === 'selling'" class="web-scope" :class="{ 'sec-on': section === 'selling' }">
-      <div class="page-head">
-        <div>
-          <h1>Vender online</h1>
-          <p>Tu tienda vende de verdad: pedidos, cobros, clientes y membresías en un solo lugar.</p>
-        </div>
-      </div>
-      <SectionTabs :tabs="tabGroups.selling" :active="''" @select="section = $event" />
-      <div class="grid-2">
-        <button v-for="t in tabGroups.selling" :key="t.id" type="button" class="card sell-entry" @click="section = t.id">
-          <span class="stat-icon"><AppIcon :name="t.icon" :size="18" /></span>
-          <span class="sell-entry-txt">
-            <strong>{{ t.label }}</strong>
-            <small>{{ t.hint }}</small>
-          </span>
-          <AppIcon name="chevron-right" :size="16" class="sell-entry-arrow" />
-        </button>
-      </div>
-    </div>
+    <SellingHub
+      v-if="seen.selling"
+      v-show="section === 'selling'"
+      class="web-scope"
+      :class="{ 'sec-on': section === 'selling' }"
+      :tabs="tabGroups.selling"
+      :locks="navLocks"
+      @select="section = $event"
+    />
 
     <!-- ================= PEDIDOS ================= -->
     <div v-if="seen.orders" v-show="section === 'orders'" class="web-scope" :class="{ 'sec-on': section === 'orders' }">

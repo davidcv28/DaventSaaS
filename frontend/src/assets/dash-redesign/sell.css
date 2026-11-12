@@ -1,0 +1,261 @@
+/* ===== dash-redesign/sell — Hub "Vender online" (e-commerce del dueño) =====
+   Modo Operate: superficies planas, hairlines --line-soft, un solo acento
+   --brand-500/--brand-ink, cero gradientes/glow/sombras en reposo.
+   Scope: .app .sell-hub — DashboardView le pasa web-scope + sec-on al root
+   del componente por fallthrough de attrs (misma mecánica que las demás
+   secciones del panel). */
+
+/* ---------- Header ---------- */
+.app .sell-hub .sell-head { margin-bottom: 18px; }
+.app .sell-hub .sell-head-actions { flex: none; }
+
+/* ---------- Tira de estado de la tienda ---------- */
+.app .sell-hub .sell-status {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin: 0 0 24px;
+  padding: 13px 16px;
+  background: var(--card);
+  border: 1px solid var(--line-soft);
+  border-radius: 14px;
+  box-shadow: var(--shadow-sm);
+}
+.app .sell-hub .sell-status-ico {
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: 40px;
+  height: 40px;
+  border-radius: 11px;
+  background: var(--surface);
+  border: 1px solid var(--line-soft);
+  color: var(--brand-ink);
+}
+.app .sell-hub .sell-status-txt {
+  flex: 1 1 200px;
+  min-width: 0;
+  display: grid;
+  gap: 2px;
+}
+.app .sell-hub .sell-status-txt strong {
+  font-size: 14px;
+  font-weight: 650;
+  letter-spacing: -.01em;
+  color: var(--ink);
+}
+.app .sell-hub .sell-status-txt > span:not(.sell-url) {
+  font-size: 13px;
+  color: var(--muted);
+}
+.app .sell-hub .sell-url {
+  font-family: var(--dv-mono, ui-monospace, 'Cascadia Code', Consolas, monospace);
+  font-size: 12.5px;
+  font-weight: 600;
+  color: var(--ink-2);
+  overflow-wrap: anywhere;
+  font-variant-numeric: tabular-nums;
+}
+.app .sell-hub .sell-status-actions { display: flex; gap: 8px; flex: none; }
+.app .sell-hub .sell-status-actions .icon-btn.done {
+  border-color: var(--ok-line);
+  color: var(--ok-ink);
+}
+
+/* ---------- Grupos de módulos ---------- */
+.app .sell-hub .sell-group + .sell-group { margin-top: 24px; }
+.app .sell-hub .sell-group-head {
+  display: grid;
+  gap: 2px;
+  margin: 0 4px 10px;
+}
+.app .sell-hub .sell-group-head h2 {
+  margin: 0;
+  font-size: 13.5px;
+  font-weight: 700;
+  letter-spacing: -.01em;
+  color: var(--ink);
+}
+.app .sell-hub .sell-group-head p {
+  margin: 0;
+  font-size: 12.5px;
+  color: var(--muted);
+}
+
+.app .sell-hub .sell-mod-card {
+  background: var(--card);
+  border: 1px solid var(--line-soft);
+  border-radius: 14px;
+  box-shadow: var(--shadow-sm);
+  overflow: hidden;
+}
+.app .sell-hub .sell-mod {
+  display: flex;
+  align-items: center;
+  gap: 13px;
+  width: 100%;
+  min-height: 60px;
+  padding: 11px 16px;
+  border: 0;
+  background: transparent;
+  font: inherit;
+  text-align: left;
+  color: var(--ink-2);
+  cursor: pointer;
+  transition: background-color .15s var(--ease-out);
+}
+.app .sell-hub .sell-mod + .sell-mod { border-top: 1px solid var(--line-soft); }
+.app .sell-hub .sell-mod-ico {
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: 38px;
+  height: 38px;
+  border-radius: 10px;
+  background: var(--surface);
+  border: 1px solid var(--line-soft);
+  color: var(--ink-2);
+  transition: color .15s var(--ease-out), border-color .15s var(--ease-out),
+              background-color .15s var(--ease-out);
+}
+.app .sell-hub .sell-mod-txt {
+  flex: 1;
+  min-width: 0;
+  display: grid;
+  gap: 2px;
+}
+.app .sell-hub .sell-mod-txt strong {
+  font-size: 14.5px;
+  font-weight: 600;
+  letter-spacing: -.01em;
+  color: var(--ink);
+}
+.app .sell-hub .sell-mod-txt small {
+  font-size: 12.5px;
+  color: var(--muted);
+}
+.app .sell-hub .sell-mod-go {
+  flex: none;
+  color: var(--muted);
+  transition: color .15s var(--ease-out), transform .15s var(--ease-out);
+}
+/* Bloqueado: la fila navega igual (el setter de section abre la vista
+   previa del beneficio); el candado lo delata sin deshabilitar nada. */
+.app .sell-hub .sell-mod.locked .sell-mod-txt strong { color: var(--ink-2); }
+.app .sell-hub .sell-mod.locked .sell-mod-go { color: var(--brand-ink); }
+
+/* Hover solo con puntero fino: en táctil el :active ya da el feedback. */
+@media (hover: hover) and (pointer: fine) {
+  .app .sell-hub .sell-mod:hover { background: var(--surface); }
+  .app .sell-hub .sell-mod:hover .sell-mod-ico {
+    color: var(--brand-ink);
+    border-color: var(--brand-soft-line);
+    background: var(--brand-soft);
+  }
+  .app .sell-hub .sell-mod:hover .sell-mod-go {
+    color: var(--brand-500);
+    transform: translateX(2px);
+  }
+}
+.app .sell-hub .sell-mod:active { background: var(--surface); }
+.app .sell-hub .sell-mod:focus-visible {
+  outline: 2px solid var(--brand-500);
+  outline-offset: -2px;
+}
+
+/* ---------- Modal "Compartí tu tienda" ---------- */
+.app .sell-hub .mk-modal.sell-share { width: min(430px, 100%); }
+.app .sell-hub .sell-share-body {
+  display: grid;
+  justify-items: center;
+  gap: 14px;
+  padding-bottom: 22px;
+  text-align: center;
+}
+.app .sell-hub .sell-qr {
+  width: 188px;
+  height: 188px;
+  display: grid;
+  place-items: center;
+  padding: 12px;
+  background: #fff;
+  border: 1px solid var(--line-soft);
+  border-radius: 14px;
+}
+.app .sell-hub .sell-qr img { width: 100%; height: 100%; display: block; }
+.app .sell-hub .sell-share-tip {
+  margin: 0;
+  max-width: 36ch;
+  font-size: 13px;
+  line-height: 1.45;
+  color: var(--muted);
+}
+.app .sell-hub .sell-urlbox {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  width: 100%;
+  min-height: 44px;
+  padding: 10px 13px;
+  border: 1px solid var(--line-soft);
+  border-radius: 11px;
+  background: var(--surface);
+  font: inherit;
+  cursor: pointer;
+  transition: border-color .15s var(--ease-out), background-color .15s var(--ease-out);
+}
+.app .sell-hub .sell-urlbox-ico { flex: none; color: var(--muted); }
+.app .sell-hub .sell-urlbox-text {
+  flex: 1;
+  min-width: 0;
+  font-family: var(--dv-mono, ui-monospace, 'Cascadia Code', Consolas, monospace);
+  font-size: 12.5px;
+  font-weight: 600;
+  color: var(--ink);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  text-align: left;
+}
+@media (hover: hover) and (pointer: fine) {
+  .app .sell-hub .sell-urlbox:hover {
+    border-color: var(--brand-soft-line);
+    background: var(--brand-soft);
+  }
+  .app .sell-hub .sell-urlbox:hover .sell-urlbox-ico { color: var(--brand-ink); }
+}
+.app .sell-hub .sell-urlbox:focus-visible {
+  outline: none;
+  border-color: var(--brand-500);
+  box-shadow: var(--ring);
+}
+.app .sell-hub .sell-share-actions {
+  display: flex;
+  gap: 10px;
+  width: 100%;
+}
+.app .sell-hub .sell-share-actions .btn { flex: 1; }
+
+/* ---------- Responsive ---------- */
+@media (max-width: 640px) {
+  /* .page-head se centra en móvil: las acciones van a ancho completo. */
+  .app .sell-hub .sell-head-actions { width: 100%; }
+  .app .sell-hub .sell-head-actions .btn { flex: 1; }
+  .app .sell-hub .sell-status { padding: 12px; gap: 10px; }
+  .app .sell-hub .sell-status-actions { margin-left: auto; }
+  .app .sell-hub .sell-mod { min-height: 56px; padding: 10px 14px; }
+  .app .sell-hub .sell-share-actions { flex-direction: column; }
+}
+
+/* ---------- Movimiento reducido ---------- */
+@media (prefers-reduced-motion: reduce) {
+  .app .sell-hub .sell-mod,
+  .app .sell-hub .sell-mod-ico,
+  .app .sell-hub .sell-mod-go,
+  .app .sell-hub .sell-urlbox,
+  .app .sell-hub .sell-urlbox-ico {
+    transition: none;
+  }
+  .app .sell-hub .sell-mod:hover .sell-mod-go { transform: none; }
+}
