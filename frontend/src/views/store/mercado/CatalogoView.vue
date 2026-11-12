@@ -292,6 +292,7 @@ const activeChips = computed(() => {
               </template>
               <template #tags="{ p }">
                 <span v-if="brandNameOf(p)" class="mc-brand">{{ brandNameOf(p) }} <i aria-hidden="true">✓</i></span>
+                <span v-if="custom.show_reviews && !p.rating_count" class="mc-rate-empty">Sin valoraciones</span>
                 <p v-if="promoOf(p) && blkOn('promo')" class="mc-cat-promo">{{ promoOf(p).name }}<span v-if="offerEndsLabel(promoOf(p))"> · {{ offerEndsLabel(promoOf(p)) }}</span></p>
               </template>
             </TplProductCard>

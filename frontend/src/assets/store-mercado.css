@@ -1511,7 +1511,7 @@
 
 /* --- Resultados: filas (lista) o grilla --- */
 .store-page[data-template='mercado'] .mc-cat-list { display: grid; gap: 0; }
-.store-page[data-template='mercado'] .mc-cat-list[data-view='grid'] { grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 14px; margin-top: 14px; }
+.store-page[data-template='mercado'] .mc-cat-list[data-view='grid'] { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 14px; margin-top: 14px; }
 .store-page[data-template='mercado'] .mc-cat-list .tpc-row {
   --tpc-bg: transparent;
   --tpc-border: 0;
@@ -1565,12 +1565,12 @@
 .store-page[data-template='mercado'] .mc-cat-off {
   order: 2;
   align-self: center;
-  padding: 2px 7px;
-  border-radius: 4px;
-  background: color-mix(in srgb, var(--mc-green) 13%, var(--mc-surface));
-  color: var(--mc-green-ink);
+  padding: 2px 6px;
+  border-radius: 3px;
+  background: #00a650;
+  color: #fff;
   font-size: 12px;
-  font-weight: 800;
+  font-weight: 400;
   letter-spacing: 0;
   line-height: 1.35;
 }
@@ -1587,10 +1587,14 @@
 .store-page[data-template='mercado'] .mc-price-line {
   display: flex; align-items: baseline; gap: 8px; min-width: 0; flex-wrap: wrap;
 }
+.store-page[data-template='mercado'] .mc-price-line strong {
+  font-size: 24px; font-weight: 700; letter-spacing: -.02em; color: var(--mc-ink);
+}
 .store-page[data-template='mercado'] .mc-off {
-  font-style: normal; font-size: 11.5px; font-weight: 800; line-height: 1.2;
+  font-style: normal; font-size: 12px; font-weight: 400; line-height: 1.2;
   padding: 2px 5px; border-radius: 3px;
-  background: var(--mc-green); color: #fff; letter-spacing: 0;
+  /* Verde fijo en ambos temas: la placa no cambia de fondo en noche. */
+  background: #00a650; color: #fff; letter-spacing: 0;
 }
 /* Tarjeta de grilla estilo MercadoLibre: foto inset sobre blanco, nombre
    chico (2 líneas), marca verificada, valoración, tachado + precio + % OFF
@@ -1607,8 +1611,8 @@
   --tpc-name-size: 15px;
   --tpc-name-weight: 500;
   --tpc-name-lh: 1.35;
-  --tpc-price-size: 23px;
-  --tpc-price-weight: 500;
+  --tpc-price-size: 24px;
+  --tpc-price-weight: 700;
   --tpc-old-size: 12px;
   --tpc-stock-size: 12.5px;
   background: var(--tpc-bg);
@@ -1655,6 +1659,11 @@
   font-style: normal;
   color: var(--mc-blue);
   font-size: 11px;
+}
+.store-page[data-template='mercado'] .mc-rate-empty {
+  font-size: 11.5px;
+  color: var(--mc-muted);
+  line-height: 1.3;
 }
 
 /* --- Paginado --- */

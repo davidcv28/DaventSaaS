@@ -467,6 +467,11 @@
     content:"★ " attr(data-rate);grid-area:rate;justify-self:start;
     padding:1px 14px 0;font:700 13px var(--font);color:#3483fa;letter-spacing:0;line-height:1.3;
   }
+  /* Sin votos pero con valoraciones habilitadas: la fila existe, apagada. */
+  .ds-product-link[data-rate-empty]::after{
+    content:"Sin valoraciones";grid-area:rate;justify-self:start;
+    padding:1px 14px 0;font:400 11.5px var(--font);color:var(--muted);letter-spacing:0;line-height:1.3;
+  }
   .ds-product .ds-product-desc{display:none}
   /* Precio estilo marketplace: tachado arriba, monto + %OFF verde inline.
      El grid reordena el markup (amount antes que el <s>) sin tocar el
@@ -474,7 +479,7 @@
   .ds-product .ds-product-price{
     grid-area:price;display:grid;grid-template-columns:minmax(0,1fr) auto;
     grid-template-areas:"old old" "amount off";align-items:end;column-gap:8px;min-width:0;
-    padding:8px 14px 4px;font:500 22px/1.15 var(--font);letter-spacing:-.02em;
+    padding:8px 14px 4px;font:700 23px/1.15 var(--font);letter-spacing:-.02em;
     font-variant-numeric:tabular-nums;color:var(--ink);overflow-wrap:anywhere;
   }
   .ds-product-amount{position:relative;grid-area:amount;min-width:0;white-space:nowrap}
@@ -485,8 +490,8 @@
   /* % de ahorro como placa verde junto al precio (ML), no sticker rotado. */
   .ds-product .ds-product-price[data-off]::after{
     content:attr(data-off) "% OFF";grid-area:off;align-self:end;justify-self:start;
-    padding:2px 5px;margin:0 0 3px;background:var(--green-badge,#00a650);border-radius:3px;transform:none;
-    color:#fff;font:800 11.5px/1.2 var(--font);letter-spacing:0;white-space:nowrap;
+    padding:2px 5px;margin:0 0 3px;background:#00a650;border-radius:3px;transform:none;
+    color:#fff;font:400 12px/1.2 var(--font);letter-spacing:0;white-space:nowrap;
   }
   /* Fila de señal positiva bajo el precio (equivalente al "Envío gratis"). */
   .ds-product .ds-stock{
@@ -757,7 +762,7 @@
 
   /* Resultados: filas (lista) o grilla de tarjetas. */
   .cat-surface .grid{display:grid;grid-template-columns:minmax(0,1fr);gap:0;margin-top:2px;counter-reset:bzprod}
-  .cat-surface .grid[data-ds-view-mode="grid"]{grid-template-columns:repeat(4,minmax(0,1fr));gap:14px;margin-top:14px}
+  .cat-surface .grid[data-ds-view-mode="grid"]{grid-template-columns:repeat(3,minmax(0,1fr));gap:14px;margin-top:14px}
   /* En lista el borde fuerte de la tarjeta se apaga: quedan solo los
      filetes --line entre filas (divisores, no contornos de control). */
   .cat-surface .grid[data-ds-view-mode="list"] .ds-product{background:transparent;border:0;border-top:1px solid var(--line);border-radius:0;box-shadow:none}
@@ -804,7 +809,7 @@
     display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;
   }
   .cat-surface .grid[data-ds-view-mode="list"] .ds-product-price{
-    grid-area:price;margin-top:10px;padding:0;font-size:23px;font-weight:600;letter-spacing:-.02em;
+    grid-area:price;margin-top:10px;padding:0;font-size:24px;font-weight:700;letter-spacing:-.02em;
   }
   .cat-surface .grid[data-ds-view-mode="list"] .ds-product-price s{font-size:12px}
   .cat-surface .grid[data-ds-view-mode="list"] .ds-stock{display:none}
@@ -812,7 +817,7 @@
   .cat-surface .grid[data-ds-view-mode="grid"] .ds-product-link{display:grid;grid-template-areas:"media" "cat" "copy" "brand" "rate" "price" "stock";grid-template-rows:auto auto 1fr auto auto auto auto;height:100%;min-width:0;color:inherit}
   .cat-surface .grid[data-ds-view-mode="grid"] .ds-product-cat{grid-area:cat;min-height:1.2em;margin:12px 14px 0;font-size:10px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--muted)}
   .cat-surface .grid[data-ds-view-mode="grid"] .ds-product-name{margin:0;font-size:13.5px;font-weight:500;line-height:1.4;min-height:2.8em;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;overflow-wrap:anywhere}
-  .cat-surface .grid[data-ds-view-mode="grid"] .ds-product-price{grid-area:price;padding:8px 14px 4px;font-size:21px}
+  .cat-surface .grid[data-ds-view-mode="grid"] .ds-product-price{grid-area:price;padding:8px 14px 4px;font-size:22px;font-weight:700}
   .cat-surface .grid[data-ds-view-mode="grid"] .ds-product:hover{box-shadow:var(--shadow-lift)}
 
   .cat-surface .ds-empty{margin:18px 0 4px;padding:0;color:var(--muted);font-size:14px}

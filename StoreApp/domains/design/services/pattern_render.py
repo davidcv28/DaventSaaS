@@ -335,7 +335,13 @@ def _product_fragment(store, products = None, flags = None):
         category = _text(getattr(product.category, 'name', ''), 40)
         brand = _text(getattr(product.brand, 'name', ''), 40)
         rating_avg, rating_count = _rating_values(store, product, customization)
-        rate_attr = f' data-rate="{rating_avg}" data-rate-count="{rating_count}"' if rating_avg else ''
+        if rating_avg:
+            rate_attr = f' data-rate="{rating_avg}" data-rate-count="{rating_count}"'
+        else:
+            #Sin votos: el diseño puede pintar la fila apagada ("Sin
+            #valoraciones") solo si la tienda tiene las opiniones activas.
+            can_rate, _ = _review_flags(store, customization)
+            rate_attr = ' data-rate-empty="1"' if can_rate else ''
         off_attr = f' data-off="{off}"' if off else ''
         #`data-event`: la oferta la firma un descuento programado vigente
         #(effective_discount), no una oferta manual — es la marca que el
