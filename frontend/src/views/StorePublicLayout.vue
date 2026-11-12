@@ -1336,7 +1336,7 @@ onBeforeUnmount(() => {
 </script>
 
 <template>
-  <div ref="pageRoot" class="store-page" :class="{ 'is-home': isHome, 'is-scrolled': scrolled, 'has-pattern': usePattern, 'has-pattern-chrome': usePatternChrome, 'has-bot': botConfig && !usePattern }" :data-store-theme="pageTheme" :data-theme="pageTheme" :data-template="pageTemplate" :data-store-template="pageTemplate" :data-design="designId" :data-nav="arch.nav" :data-account="arch.account" :data-tracking="arch.tracking" :data-style="pageStyle" :data-skin="storeSkinOf(pageTemplate)" :data-logo-mode="custom.logo_mode" :data-has-logo="custom.logo ? '' : null" :data-mono="custom.mono_style" :data-st-tabbar="showTabbar && !usePattern && !patternWaiting && !usePatternChrome ? '' : null" :style="[themeVars, publishedThemeVars, studioVars]" v-bind="pageAttrs">
+  <div ref="pageRoot" class="store-page" :class="{ 'is-home': isHome, 'is-scrolled': scrolled, 'has-pattern': usePattern, 'has-pattern-chrome': usePatternChrome, 'has-bot': botConfig && !usePattern }" :data-store-theme="pageTheme" :data-theme="pageTheme" :data-template="pageTemplate" :data-store-template="pageTemplate" :data-design="designId" :data-nav="arch.nav" :data-account="arch.account" :data-tracking="arch.tracking" :data-style="pageStyle" :data-skin="storeSkinOf(pageTemplate)" :data-logo-mode="custom.logo_mode" :data-has-logo="custom.logo ? '' : null" :data-mono="custom.mono_style" :data-st-tabbar="showTabbar && !usePattern && !patternWaiting ? '' : null" :style="[themeVars, publishedThemeVars, studioVars]" v-bind="pageAttrs">
     <button type="button" class="sp-skip" @click="skipToContent">Saltar al contenido</button>
     <span v-if="previewMode" class="sp-preview-badge" role="status">Vista previa — el diseño todavía no se publicó</span>
     <!-- Diseño del catálogo con contrato de datos: se pinta el documento
@@ -1566,7 +1566,7 @@ onBeforeUnmount(() => {
 
     <!-- Tab bar móvil (tema mobile.nav = 'bottom'): 4 destinos + "Más",
          calcada del .tabbar del dashboard y por encima del dock de CTA. -->
-    <nav v-if="showTabbar && !usePatternChrome" class="sp-tabbar" aria-label="Secciones principales">
+    <nav v-if="showTabbar" class="sp-tabbar" aria-label="Secciones principales">
       <RouterLink
         v-for="t in tabLinks" :key="t.label" :to="t.to" class="sp-tab"
         :class="{ active: isTabActive(t.label) }"
@@ -1587,7 +1587,7 @@ onBeforeUnmount(() => {
     </nav>
 
     <!-- Sheet "Más": el resto del menú, contacto y tema -->
-    <template v-if="showTabbar && !usePatternChrome">
+    <template v-if="showTabbar">
       <div v-if="ui.moreOpen" class="sp-more-scrim" aria-hidden="true" @click="ui.moreOpen = false"></div>
       <Transition name="sp-msheet">
       <div

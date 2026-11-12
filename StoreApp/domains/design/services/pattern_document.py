@@ -132,6 +132,12 @@ html[data-ds-surface="chrome"] body>*:not([data-ds-pin]){min-height:0!important}
    chrome no hay contenido que despejar y ese relleno inflaba el alto que
    reporta el puente — la tira quedaba con aire muerto bajo el cromo. */
 html[data-ds-surface="chrome"] body{padding:0!important}
+/* Los pines inferiores (tab bar móvil, hojas de menú, píldora de
+   carrito) no pueden ir al pie de la pantalla — el iframe es solo la
+   tira superior — y apilarlos como segunda fila dejaba el menú flotando
+   a media página con su hoja recortada. En chrome la navegación de abajo
+   la da el tab bar del host. */
+html[data-ds-surface="chrome"] [data-ds-pin="bottom"]{display:none!important}
 /* Contenedores de CTA de la ficha que quedaron sin hijos visibles: sin
    WhatsApp ni venta online el diseño deja `.pdp-buy`/`.pdp-ctas` vacío o
    con solo el anchor `href=""` (oculto por la regla propia del diseño) y
