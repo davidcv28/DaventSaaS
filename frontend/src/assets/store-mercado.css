@@ -1592,14 +1592,69 @@
   padding: 2px 5px; border-radius: 3px;
   background: var(--mc-green); color: #fff; letter-spacing: 0;
 }
+/* Tarjeta de grilla estilo MercadoLibre: foto inset sobre blanco, nombre
+   chico (2 líneas), marca verificada, valoración, tachado + precio + % OFF
+   y fila verde al pie. Sin categoría ni descripción. */
 .store-page[data-template='mercado'] .mc-cat-list[data-view='grid'] .mc-cat-card {
-  background: var(--mc-surface);
-  border: 1px solid var(--mc-line);
+  --tpc-bg: var(--mc-surface);
+  --tpc-radius: 8px;
+  --tpc-border: 1px solid var(--mc-line);
+  --tpc-shadow: 0 1px 2px rgba(0, 0, 0, .08);
+  --tpc-media-bg: var(--mc-soft);
+  --tpc-fit: contain;
+  --tpc-pad: 0 12px 14px;
+  --tpc-gap: 4px;
+  --tpc-name-size: 15px;
+  --tpc-name-weight: 500;
+  --tpc-name-lh: 1.35;
+  --tpc-price-size: 23px;
+  --tpc-price-weight: 500;
+  --tpc-old-size: 12px;
+  --tpc-stock-size: 12.5px;
+  background: var(--tpc-bg);
+  border: var(--tpc-border);
+  border-radius: var(--tpc-radius);
+  box-shadow: var(--tpc-shadow);
+}
+.store-page[data-template='mercado'] .mc-cat-list[data-view='grid'] .mc-cat-card .tpc-media {
+  margin: 12px 12px 0;
   border-radius: 6px;
-  box-shadow: 0 1px 2px rgba(0, 0, 0, .06);
+  overflow: hidden;
+}
+.store-page[data-template='mercado'] .mc-cat-list[data-view='grid'] .mc-cat-card .tpc-body { padding-top: 10px; }
+.store-page[data-template='mercado'] .mc-cat-list[data-view='grid'] .mc-cat-card .tpc-eyebrow,
+.store-page[data-template='mercado'] .mc-cat-list[data-view='grid'] .mc-cat-card .tpc-desc { display: none; }
+.store-page[data-template='mercado'] .mc-cat-list[data-view='grid'] .mc-cat-card .tpc-name {
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  /* La regla global de h2 del diseño (clamp 20–26px) le ganaba al token
+     del contrato: acá manda el tamaño de tarjeta. */
+  font-family: var(--mc-body);
+  font-size: 15px;
+  font-weight: 500;
+  line-height: 1.35;
+  letter-spacing: 0;
+  color: var(--mc-ink);
 }
 .store-page[data-template='mercado'] .mc-cat-list[data-view='grid'] .mc-cat-card:hover {
   box-shadow: 0 8px 20px -12px rgba(0, 0, 0, .35);
+}
+/* Marca + check verificado bajo el nombre (fila ML). */
+.store-page[data-template='mercado'] .mc-brand {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 12.5px;
+  font-weight: 500;
+  color: var(--mc-ink-2);
+  line-height: 1.3;
+}
+.store-page[data-template='mercado'] .mc-brand i {
+  font-style: normal;
+  color: var(--mc-blue);
+  font-size: 11px;
 }
 
 /* --- Paginado --- */

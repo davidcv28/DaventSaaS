@@ -98,7 +98,7 @@ const visibleBrands = computed(() => {
 })
 
 // ===== Vista lista / grilla =====
-const view = ref('list')
+const view = ref('grid')
 const crumb = computed(() => activeCategoryName.value || ui.search.trim() || 'Todos los productos')
 const promoOf = (p) => productDiscount(p)
 const pctOf = (p) => offerPct(p)
@@ -290,8 +290,9 @@ const activeChips = computed(() => {
                   </span>
                 </span>
               </template>
-              <template v-if="promoOf(p) && blkOn('promo')" #tags>
-                <p class="mc-cat-promo">{{ promoOf(p).name }}<span v-if="offerEndsLabel(promoOf(p))"> · {{ offerEndsLabel(promoOf(p)) }}</span></p>
+              <template #tags="{ p }">
+                <span v-if="brandNameOf(p)" class="mc-brand">{{ brandNameOf(p) }} <i aria-hidden="true">✓</i></span>
+                <p v-if="promoOf(p) && blkOn('promo')" class="mc-cat-promo">{{ promoOf(p).name }}<span v-if="offerEndsLabel(promoOf(p))"> · {{ offerEndsLabel(promoOf(p)) }}</span></p>
               </template>
             </TplProductCard>
           </div>
