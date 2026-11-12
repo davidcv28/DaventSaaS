@@ -1548,6 +1548,14 @@
   0%, 100% { transform: scale(1); }
   50% { transform: scale(1.14); }
 }
+/* Miniatura de producto más visible. */
+.store-page[data-design='moderntec'][data-tracking='tracking-minimal'] .ec-track-thumb {
+  width: 64px; height: 64px;
+  border-radius: 10px;
+}
+.store-page[data-design='moderntec'][data-tracking='tracking-minimal'] .ec-track-thumb.is-empty svg {
+  width: 26px; height: 26px;
+}
 /* CTA de pago: blanco sobre verde WhatsApp (el base trae tinta oscura). */
 .store-page[data-design='moderntec'][data-tracking='tracking-minimal'] .ec-pay-btn.is-wa {
   color: #fff;
