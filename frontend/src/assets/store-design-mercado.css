@@ -4,12 +4,12 @@
    data-design="mercado". No edita las hojas scoped de las vistas: las
    reemplaza con más especificidad (0,3,0 mínimo).
 
-   Composición propia: la auth es un MOSTRADOR CON TICKET — el ala de marca
-   es un ticket amarillo (perforado al medio, líneas mono con puntos guía y
-   código de barras al pie) y el ala del formulario es blanca con filete
-   azul y chip de modo. La cuenta usa la MISMA idea de mostrador: barra
-   lateral amarilla sólida en escritorio (ítem activo en tinta) y, en
-   tablet/mobile, cabecera amarilla + chips con scroll.
+   Composición propia: la auth es un MOSTRADOR LIMPIO — una sola tarjeta
+   centrada con filete amarillo de 4px arriba, encabezado de marca
+   compacto (logo + nombre, hairline abajo) y formulario debajo. La
+   cuenta usa la idea de mostrador: barra lateral amarilla sólida en
+   escritorio (ítem activo en tinta) y, en tablet/mobile, cabecera
+   amarilla + chips con scroll.
    =========================================================================== */
 
 [data-design='mercado'] {
@@ -58,157 +58,110 @@
 }
 
 /* ---------- Marco común ---------- */
-[data-design='mercado'][data-theme] :is(.ec-auth, .ec-account, .ec-track, .ec-cartpg, .ec-checkout, .ec-receiptpg, .ec-legal) :is(a, button, input, select, textarea):focus-visible {
+[data-design='mercado'][data-theme] :is(.ec-auth, .ec-auth-card, .ec-account, .ec-track, .ec-cartpg, .ec-checkout, .ec-receiptpg, .ec-legal) :is(a, button, input, select, textarea):focus-visible {
   outline: 2px solid var(--dz-link);
   outline-offset: 2px;
   border-radius: 4px;
 }
-[data-design='mercado'][data-theme] :is(.ec-auth, .ec-account, .ec-track, .ec-cartpg, .ec-checkout, .ec-receiptpg, .ec-legal) ::selection {
+[data-design='mercado'][data-theme] :is(.ec-auth, .ec-auth-card, .ec-account, .ec-track, .ec-cartpg, .ec-checkout, .ec-receiptpg, .ec-legal) ::selection {
   background: var(--dz-accent-ink);
   color: var(--dz-accent);
 }
 
 /* ===========================================================================
-   AUTH — mostrador con ticket
+   AUTH — mostrador limpio
+   Una sola tarjeta centrada: filete amarillo de marca arriba, encabezado
+   compacto con logo, y el formulario debajo. Nada de panel gemelo — el
+   amarillo queda como acento de 4px, no como pared. El modal (.ec-auth-card)
+   hereda la misma piel por la lista :is() compartida.
    =========================================================================== */
 [data-design='mercado'] .ec-auth { padding-inline: clamp(10px, 3vw, 22px); }
 [data-design='mercado'] .ec-auth .ec-auth-shell {
-  width: min(1080px, 100%);
-  grid-template-columns: minmax(0, .92fr) minmax(0, 1.08fr);
+  width: min(460px, 100%);
+  grid-template-columns: minmax(0, 1fr);
   margin-block: clamp(12px, 2.6vw, 32px) clamp(36px, 6vw, 72px);
   border: 1px solid var(--dz-line);
-  border-radius: var(--dz-radius);
+  border-radius: calc(var(--dz-radius) + 2px);
   background: var(--dz-surface);
-  box-shadow: 0 1px 2px rgba(0, 0, 0, .08), 0 30px 60px -50px rgba(0, 0, 0, .55);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, .07), 0 32px 64px -52px rgba(0, 0, 0, .5);
+  overflow: hidden;
+}
+/* Filete de marca: el toldo reducido a una línea. */
+[data-design='mercado'] .ec-auth .ec-auth-shell::before {
+  content: ""; display: block; height: 4px;
+  background:
+    repeating-linear-gradient(90deg, var(--dz-accent-ink) 0 10px, transparent 10px 20px) bottom/100% 1px no-repeat,
+    var(--dz-accent);
 }
 
-/* Ticket de marca. */
+/* Encabezado de marca compacto: logo + nombre en una línea, separado del
+   formulario por una hairline. El copy editorial, los perks, el pie y la
+   foto fantasma no existen acá. */
 [data-design='mercado'] .ec-auth .ec-auth-brand {
-  padding: clamp(20px, 3vw, 34px);
-  color: var(--dz-accent-ink);
-  background: var(--dz-accent);
+  padding: 15px clamp(20px, 4vw, 30px);
+  color: var(--dz-ink);
+  background: var(--dz-surface);
+  border-bottom: 1px solid var(--dz-line);
 }
-[data-design='mercado'] .ec-auth .ec-auth-brand::before { opacity: .12; mix-blend-mode: multiply; }
-[data-design='mercado'] .ec-auth .ec-auth-brand::after {
-  inset: 16px 0 16px auto;
-  width: 1px;
-  background: repeating-linear-gradient(180deg,
-    transparent 0 10px,
-    color-mix(in srgb, var(--dz-accent-ink) 34%, transparent) 10px 18px);
-}
+[data-design='mercado'] .ec-auth .ec-auth-brand::before,
+[data-design='mercado'] .ec-auth .ec-auth-brand::after { content: none; }
 [data-design='mercado'] .ec-auth .ec-auth-brand-inner {
-  display: grid;
-  grid-template-rows: auto 1fr auto;
-  gap: clamp(16px, 2.4vw, 26px);
-  padding-right: 14px;
+  display: flex; flex-direction: column;
+  gap: 0;
+  padding-right: 0;
 }
-[data-design='mercado'] .ec-auth .ec-auth-brand-top {
-  gap: 10px;
-  padding-bottom: 14px;
-  border-bottom: 1px dashed color-mix(in srgb, var(--dz-accent-ink) 34%, transparent);
-}
+[data-design='mercado'] .ec-auth .ec-auth-brand-top { gap: 10px; }
 [data-design='mercado'] .ec-auth .ec-auth-logo {
-  width: 40px; height: 40px;
-  border-radius: 6px;
-  background: var(--dz-accent-ink);
-  border: 1px solid var(--dz-accent-ink);
-  color: var(--dz-accent);
-  font-family: var(--dz-display); font-size: 19px; font-weight: 800; letter-spacing: -.02em;
+  width: 34px; height: 34px;
+  border-radius: 7px;
+  background: var(--dz-accent);
+  border: 1px solid color-mix(in srgb, var(--dz-accent-ink) 22%, transparent);
+  color: var(--dz-accent-ink);
+  font-family: var(--dz-display); font-size: 16px; font-weight: 800; letter-spacing: -.02em;
 }
 [data-design='mercado'] .ec-auth .ec-auth-brand-name {
-  font-family: var(--dz-display); font-size: clamp(15px, 1.7vw, 18px); font-weight: 800;
-  letter-spacing: -.02em; color: var(--dz-accent-ink);
+  font-family: var(--dz-display); font-size: 15.5px; font-weight: 800;
+  letter-spacing: -.02em; color: var(--dz-ink);
 }
+[data-design='mercado'] .ec-auth .ec-auth-brand-copy,
+[data-design='mercado'] .ec-auth .ec-auth-brand-foot,
 [data-design='mercado'] .ec-auth .ec-auth-rail { display: none; }
-[data-design='mercado'] .ec-auth .ec-auth-brand-copy { gap: 10px; max-width: 38ch; }
-[data-design='mercado'] .ec-auth .ec-auth-brand-kicker {
-  display: inline-flex; align-items: center; gap: 7px;
-  width: fit-content;
-  padding: 4px 9px;
-  border-radius: 999px;
-  background: var(--dz-accent-ink);
-  color: var(--dz-accent);
-  font-family: var(--dz-mono); font-size: 9.5px; font-weight: 600;
-  letter-spacing: .14em; text-transform: uppercase;
-}
-[data-design='mercado'] .ec-auth .ec-auth-brand-title {
-  font-family: var(--dz-display); font-weight: 800;
-  font-size: clamp(25px, 3vw, 36px); line-height: 1.06; letter-spacing: -.035em;
-  color: var(--dz-accent-ink);
-}
-[data-design='mercado'] .ec-auth .ec-auth-brand-text {
-  font-family: var(--dz-body); font-size: 13px; line-height: 1.55;
-  color: color-mix(in srgb, var(--dz-accent-ink) 86%, transparent);
-}
-/* Líneas de ticket con puntos guía. */
-[data-design='mercado'] .ec-auth .ec-auth-perks { gap: 0; margin-top: 2px; }
-[data-design='mercado'] .ec-auth .ec-auth-perks li {
-  display: flex; align-items: baseline; gap: 8px;
-  padding: 9px 0;
-  border-bottom: 1px dashed color-mix(in srgb, var(--dz-accent-ink) 28%, transparent);
-  font-family: var(--dz-mono); font-size: 10.5px; font-weight: 600;
-  letter-spacing: .04em; text-transform: uppercase;
-  color: var(--dz-accent-ink);
-}
-[data-design='mercado'] .ec-auth .ec-auth-perks svg { display: none; }
-[data-design='mercado'] .ec-auth .ec-auth-perks li > span { min-width: 0; }
-[data-design='mercado'] .ec-auth .ec-auth-perks li::after {
-  content: ""; flex: 1 1 auto; min-width: 12px;
-  border-bottom: 1px dotted color-mix(in srgb, var(--dz-accent-ink) 46%, transparent);
-  transform: translateY(-3px);
-}
-/* Pie: código de barras del ticket. */
-[data-design='mercado'] .ec-auth .ec-auth-brand-foot {
-  padding-top: 14px;
-  font-family: var(--dz-mono); font-size: 9px; letter-spacing: .16em; text-transform: uppercase;
-  color: color-mix(in srgb, var(--dz-accent-ink) 78%, transparent);
-}
-[data-design='mercado'] .ec-auth .ec-auth-brand-foot::before {
-  content: ""; display: block; height: 22px; margin-bottom: 8px;
-  background: repeating-linear-gradient(90deg,
-    var(--dz-accent-ink) 0 2px, transparent 2px 5px,
-    var(--dz-accent-ink) 5px 6px, transparent 6px 10px);
-  opacity: .62;
-}
 
-/* Ala del formulario. */
+/* Cuerpo del formulario. */
 [data-design='mercado'] .ec-auth .ec-auth-panel {
   position: relative;
-  padding: clamp(22px, 3.2vw, 42px) clamp(20px, 3.4vw, 44px) clamp(26px, 3.8vw, 44px);
+  padding: clamp(22px, 4vw, 32px) clamp(20px, 4vw, 30px) clamp(24px, 4vw, 30px);
   background: var(--dz-surface);
   color: var(--dz-ink);
-  border-left: 1px solid var(--dz-line);
 }
-[data-design='mercado'] .ec-auth .ec-auth-panel::before {
-  content: ""; position: absolute; inset: 0 0 auto; height: 4px;
-  background: var(--dz-blue);
-}
+[data-design='mercado'] .ec-auth .ec-auth-panel::before { content: none; }
 [data-design='mercado'] .ec-auth .ec-auth-back {
-  gap: 7px; margin-bottom: 18px;
+  gap: 6px; margin-bottom: 16px;
   font-family: var(--dz-body); font-size: 12.5px; font-weight: 600;
   color: var(--dz-muted);
 }
 [data-design='mercado'] .ec-auth .ec-auth-back:hover { color: var(--dz-link); }
-[data-design='mercado'] .ec-auth .ec-auth-head { gap: 9px; margin-bottom: 20px; }
+[data-design='mercado'] .ec-auth .ec-auth-head { gap: 8px; margin-bottom: 20px; }
 [data-design='mercado'] .ec-auth .ec-auth-badge {
-  width: 42px; height: 42px; margin-bottom: 2px;
-  border-radius: 8px;
-  background: color-mix(in srgb, var(--dz-blue) 12%, var(--dz-surface));
-  border: 1px solid color-mix(in srgb, var(--dz-blue) 26%, transparent);
+  width: 38px; height: 38px; margin-bottom: 4px;
+  border-radius: 9px;
+  background: color-mix(in srgb, var(--dz-blue) 10%, var(--dz-surface));
+  border: 1px solid color-mix(in srgb, var(--dz-blue) 22%, transparent);
   color: var(--dz-link);
 }
+/* Kicker de modo: etiqueta mono sin relleno (el chip azul a ancho completo
+   leía como barra rota, no como tag). */
 [data-design='mercado'] .ec-auth .ec-auth-tag {
-  display: inline-flex; align-items: center; gap: 6px;
+  display: inline-flex; align-items: center;
   align-self: start;
-  padding: 4px 9px;
-  border-radius: 5px;
-  background: var(--dz-blue); color: var(--dz-blue-ink);
-  font-family: var(--dz-mono); font-size: 9.5px; font-weight: 600;
-  letter-spacing: .14em; text-transform: uppercase;
+  padding: 0;
+  background: none; color: var(--dz-link);
+  font-family: var(--dz-mono); font-size: 10px; font-weight: 600;
+  letter-spacing: .16em; text-transform: uppercase;
 }
 [data-design='mercado'] .ec-auth .ec-auth-title {
   font-family: var(--dz-display); font-weight: 800;
-  font-size: clamp(22px, 2.5vw, 29px); line-height: 1.12; letter-spacing: -.035em;
+  font-size: clamp(22px, 2.5vw, 27px); line-height: 1.12; letter-spacing: -.03em;
   color: var(--dz-ink);
 }
 [data-design='mercado'] .ec-auth .ec-auth-sub {
@@ -217,14 +170,78 @@
 [data-design='mercado'] .ec-auth .ec-auth-loading { color: var(--dz-muted); font-family: var(--dz-body); }
 [data-design='mercado'] .ec-auth .ec-auth-spin { color: var(--dz-link); }
 
+/* Switch de modos: riel gris del papel + píldora blanca elevada (en noche
+   la píldora sube un tono sobre el riel). */
+[data-design='mercado'][data-theme] :is(.ec-auth, .ec-auth-card) .ecaf-switch {
+  padding: 3px;
+  border: 1px solid var(--dz-line);
+  border-radius: 9px;
+  background: var(--dz-bg);
+}
+[data-design='mercado'][data-theme] :is(.ec-auth, .ec-auth-card) .ecaf-switch-pill {
+  top: 3px; bottom: 3px; left: 3px;
+  width: calc((100% - 6px) / 3);
+  border-radius: 6px;
+  background: var(--dz-surface);
+  border: 1px solid var(--dz-line);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, .14);
+}
+[data-design='mercado'][data-theme] :is(.ec-auth, .ec-auth-card) .ecaf-switch-btn {
+  min-height: 38px;
+  border-radius: 6px;
+  font-family: var(--dz-body); font-size: 12.5px; font-weight: 600;
+  color: var(--dz-muted);
+}
+[data-design='mercado'][data-theme] :is(.ec-auth, .ec-auth-card) .ecaf-switch-btn.is-on { color: var(--dz-ink); }
+[data-design='mercado'][data-theme] :is(.ec-auth, .ec-auth-card) .ecaf-switch-btn:hover:not(.is-on) { color: var(--dz-ink-2); }
+
+/* Modal (StoreAuthModal, teleport dentro de .store-page): mismo lenguaje
+   que la página — backdrop quieto, card con el filete de marca. */
+[data-design='mercado'][data-theme] .ec-auth-backdrop {
+  background: color-mix(in srgb, var(--dz-ink) 34%, transparent);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+}
+[data-design='mercado'][data-theme] .ec-auth-card {
+  border: 1px solid var(--dz-line);
+  border-radius: calc(var(--dz-radius) + 2px);
+  background: var(--dz-surface);
+  color: var(--dz-ink);
+  box-shadow: 0 32px 64px -40px rgba(0, 0, 0, .55);
+}
+[data-design='mercado'][data-theme] .ec-auth-card .ec-auth-close {
+  color: var(--dz-muted);
+  border-radius: 8px;
+}
+[data-design='mercado'][data-theme] .ec-auth-card .ec-auth-close:hover {
+  color: var(--dz-ink);
+  background: color-mix(in srgb, var(--dz-ink) 7%, transparent);
+}
+[data-design='mercado'][data-theme] .ec-auth-card .ec-auth-head { gap: 8px; margin-bottom: 20px; }
+[data-design='mercado'][data-theme] .ec-auth-card .ec-auth-badge {
+  width: 38px; height: 38px; margin-bottom: 4px;
+  border-radius: 9px;
+  background: color-mix(in srgb, var(--dz-blue) 10%, var(--dz-surface));
+  border: 1px solid color-mix(in srgb, var(--dz-blue) 22%, transparent);
+  color: var(--dz-link);
+}
+[data-design='mercado'][data-theme] .ec-auth-card .ec-auth-title {
+  font-family: var(--dz-display); font-weight: 800;
+  font-size: 22px; line-height: 1.12; letter-spacing: -.03em;
+  color: var(--dz-ink);
+}
+[data-design='mercado'][data-theme] .ec-auth-card .ec-auth-sub {
+  font-family: var(--dz-body); font-size: 13.5px; line-height: 1.55; color: var(--dz-muted);
+}
+
 /* ---------- Controles (compartidos auth + cuenta) ---------- */
-[data-design='mercado'][data-theme] :is(.ec-auth, .ec-account, .ec-track, .ec-cartpg, .ec-checkout, .ec-receiptpg, .ec-legal) .sp-field { gap: 6px; }
-[data-design='mercado'][data-theme] :is(.ec-auth, .ec-account, .ec-track, .ec-cartpg, .ec-checkout, .ec-receiptpg, .ec-legal) .sp-field-label {
+[data-design='mercado'][data-theme] :is(.ec-auth, .ec-auth-card, .ec-account, .ec-track, .ec-cartpg, .ec-checkout, .ec-receiptpg, .ec-legal) .sp-field { gap: 6px; }
+[data-design='mercado'][data-theme] :is(.ec-auth, .ec-auth-card, .ec-account, .ec-track, .ec-cartpg, .ec-checkout, .ec-receiptpg, .ec-legal) .sp-field-label {
   font-family: var(--dz-mono); font-size: 10px; font-weight: 600;
   letter-spacing: .12em; text-transform: uppercase;
   color: var(--dz-muted);
 }
-[data-design='mercado'][data-theme] :is(.ec-auth, .ec-account, .ec-track, .ec-cartpg, .ec-checkout, .ec-receiptpg, .ec-legal) .sp-input {
+[data-design='mercado'][data-theme] :is(.ec-auth, .ec-auth-card, .ec-account, .ec-track, .ec-cartpg, .ec-checkout, .ec-receiptpg, .ec-legal) .sp-input {
   min-height: 46px;
   padding: 11px 13px;
   border: 1px solid var(--dz-line);
@@ -235,32 +252,32 @@
   box-shadow: inset 0 1px 2px rgba(0, 0, 0, .04);
   transition: border-color .16s, box-shadow .16s;
 }
-[data-design='mercado'][data-theme] :is(.ec-auth, .ec-account, .ec-track, .ec-cartpg, .ec-checkout, .ec-receiptpg, .ec-legal) .sp-input:hover { border-color: color-mix(in srgb, var(--dz-ink) 26%, var(--dz-line)); }
-[data-design='mercado'][data-theme] :is(.ec-auth, .ec-account, .ec-track, .ec-cartpg, .ec-checkout, .ec-receiptpg, .ec-legal) .sp-input:focus {
+[data-design='mercado'][data-theme] :is(.ec-auth, .ec-auth-card, .ec-account, .ec-track, .ec-cartpg, .ec-checkout, .ec-receiptpg, .ec-legal) .sp-input:hover { border-color: color-mix(in srgb, var(--dz-ink) 26%, var(--dz-line)); }
+[data-design='mercado'][data-theme] :is(.ec-auth, .ec-auth-card, .ec-account, .ec-track, .ec-cartpg, .ec-checkout, .ec-receiptpg, .ec-legal) .sp-input:focus {
   border-color: var(--dz-blue);
   box-shadow: 0 0 0 3px color-mix(in srgb, var(--dz-blue) 20%, transparent);
 }
-[data-design='mercado'][data-theme] :is(.ec-auth, .ec-account, .ec-track, .ec-cartpg, .ec-checkout, .ec-receiptpg, .ec-legal) .sp-input::placeholder { color: var(--dz-muted); opacity: 1; }
-[data-design='mercado'][data-theme] :is(.ec-auth, .ec-account, .ec-track, .ec-cartpg, .ec-checkout, .ec-receiptpg, .ec-legal) .sp-input:disabled {
+[data-design='mercado'][data-theme] :is(.ec-auth, .ec-auth-card, .ec-account, .ec-track, .ec-cartpg, .ec-checkout, .ec-receiptpg, .ec-legal) .sp-input::placeholder { color: var(--dz-muted); opacity: 1; }
+[data-design='mercado'][data-theme] :is(.ec-auth, .ec-auth-card, .ec-account, .ec-track, .ec-cartpg, .ec-checkout, .ec-receiptpg, .ec-legal) .sp-input:disabled {
   background: color-mix(in srgb, var(--dz-line) 40%, var(--dz-surface));
   color: var(--dz-ink-2); cursor: not-allowed;
 }
-[data-design='mercado'][data-theme] :is(.ec-auth, .ec-account, .ec-track, .ec-cartpg, .ec-checkout, .ec-receiptpg, .ec-legal) .sp-form-error {
+[data-design='mercado'][data-theme] :is(.ec-auth, .ec-auth-card, .ec-account, .ec-track, .ec-cartpg, .ec-checkout, .ec-receiptpg, .ec-legal) .sp-form-error {
   color: var(--dz-danger); font-family: var(--dz-body); font-size: 12.5px;
 }
-[data-design='mercado'][data-theme] :is(.ec-auth, .ec-account, .ec-track, .ec-cartpg, .ec-checkout, .ec-receiptpg, .ec-legal) .sp-input:-webkit-autofill {
+[data-design='mercado'][data-theme] :is(.ec-auth, .ec-auth-card, .ec-account, .ec-track, .ec-cartpg, .ec-checkout, .ec-receiptpg, .ec-legal) .sp-input:-webkit-autofill {
   -webkit-text-fill-color: var(--dz-ink);
   box-shadow: inset 0 0 0 40px var(--dz-surface);
 }
 /* El ojo de mostrar/ocultar (.ecaf-pass-toggle) es absolute a 46px del
    borde: el padding shorthand de .sp-input (0,4,0) pisaba el padding-right
    scoped del campo (0,2,0) y el texto quedaba debajo del ícono. */
-[data-design='mercado'][data-theme] :is(.ec-auth, .ec-account, .ec-track, .ec-cartpg, .ec-checkout, .ec-receiptpg, .ec-legal) .ecaf-pass .sp-input {
+[data-design='mercado'][data-theme] :is(.ec-auth, .ec-auth-card, .ec-account, .ec-track, .ec-cartpg, .ec-checkout, .ec-receiptpg, .ec-legal) .ecaf-pass .sp-input {
   padding-right: 48px;
 }
 
 /* CTA: azul del diseño (el amarillo queda para el mostrador). */
-[data-design='mercado'][data-theme] :is(.ec-auth, .ec-account, .ec-track, .ec-cartpg, .ec-checkout, .ec-receiptpg, .ec-legal) :is(.ecaf-submit, .ec-btn-primary) {
+[data-design='mercado'][data-theme] :is(.ec-auth, .ec-auth-card, .ec-account, .ec-track, .ec-cartpg, .ec-checkout, .ec-receiptpg, .ec-legal) :is(.ecaf-submit, .ec-btn-primary) {
   min-height: 46px;
   border: 1px solid transparent;
   border-radius: var(--dz-radius-sm);
@@ -271,50 +288,50 @@
   filter: none;
   transition: filter .16s, transform .12s, box-shadow .16s;
 }
-[data-design='mercado'][data-theme] :is(.ec-auth, .ec-account, .ec-track, .ec-cartpg, .ec-checkout, .ec-receiptpg, .ec-legal) :is(.ecaf-submit, .ec-btn-primary):hover:not(:disabled) {
+[data-design='mercado'][data-theme] :is(.ec-auth, .ec-auth-card, .ec-account, .ec-track, .ec-cartpg, .ec-checkout, .ec-receiptpg, .ec-legal) :is(.ecaf-submit, .ec-btn-primary):hover:not(:disabled) {
   filter: brightness(1.08);
   box-shadow: 0 12px 22px -16px color-mix(in srgb, var(--dz-blue) 80%, transparent);
 }
-[data-design='mercado'][data-theme] :is(.ec-auth, .ec-account, .ec-track, .ec-cartpg, .ec-checkout, .ec-receiptpg, .ec-legal) :is(.ecaf-submit, .ec-btn-primary):active:not(:disabled) {
+[data-design='mercado'][data-theme] :is(.ec-auth, .ec-auth-card, .ec-account, .ec-track, .ec-cartpg, .ec-checkout, .ec-receiptpg, .ec-legal) :is(.ecaf-submit, .ec-btn-primary):active:not(:disabled) {
   transform: translateY(1px);
 }
-[data-design='mercado'][data-theme] :is(.ec-auth, .ec-account, .ec-track, .ec-cartpg, .ec-checkout, .ec-receiptpg, .ec-legal) :is(.ecaf-submit, .ec-btn-primary):disabled {
+[data-design='mercado'][data-theme] :is(.ec-auth, .ec-auth-card, .ec-account, .ec-track, .ec-cartpg, .ec-checkout, .ec-receiptpg, .ec-legal) :is(.ecaf-submit, .ec-btn-primary):disabled {
   background: color-mix(in srgb, var(--dz-muted) 26%, var(--dz-surface));
   color: var(--dz-ink-2); opacity: 1; cursor: not-allowed;
 }
-[data-design='mercado'][data-theme] :is(.ec-auth, .ec-account, .ec-track, .ec-cartpg, .ec-checkout, .ec-receiptpg, .ec-legal) .ec-btn-ghost {
+[data-design='mercado'][data-theme] :is(.ec-auth, .ec-auth-card, .ec-account, .ec-track, .ec-cartpg, .ec-checkout, .ec-receiptpg, .ec-legal) .ec-btn-ghost {
   min-height: 44px;
   border: 1px solid var(--dz-line);
   border-radius: var(--dz-radius-sm);
   background: var(--dz-surface); color: var(--dz-ink);
   font-family: var(--dz-body); font-size: 13.5px; font-weight: 600;
 }
-[data-design='mercado'][data-theme] :is(.ec-auth, .ec-account, .ec-track, .ec-cartpg, .ec-checkout, .ec-receiptpg, .ec-legal) .ec-btn-ghost:hover {
+[data-design='mercado'][data-theme] :is(.ec-auth, .ec-auth-card, .ec-account, .ec-track, .ec-cartpg, .ec-checkout, .ec-receiptpg, .ec-legal) .ec-btn-ghost:hover {
   border-color: var(--dz-blue); color: var(--dz-link);
   background: color-mix(in srgb, var(--dz-blue) 8%, var(--dz-surface));
 }
 
-/* Formulario compartido (StoreAuthForm). */
-[data-design='mercado'] .ec-auth .ecaf { gap: 13px; }
-[data-design='mercado'] .ec-auth .ecaf-pass-toggle { color: var(--dz-muted); border-radius: 7px; }
-[data-design='mercado'] .ec-auth .ecaf-pass-toggle:hover {
+/* Formulario compartido (StoreAuthForm): página y modal. */
+[data-design='mercado'] :is(.ec-auth, .ec-auth-card) .ecaf { gap: 13px; }
+[data-design='mercado'] :is(.ec-auth, .ec-auth-card) .ecaf-pass-toggle { color: var(--dz-muted); border-radius: 7px; }
+[data-design='mercado'] :is(.ec-auth, .ec-auth-card) .ecaf-pass-toggle:hover {
   color: var(--dz-link); background: color-mix(in srgb, var(--dz-blue) 10%, var(--dz-surface));
 }
-[data-design='mercado'] .ec-auth .ecaf-divider { font-family: var(--dz-body); font-size: 12px; color: var(--dz-muted); }
-[data-design='mercado'] .ec-auth .ecaf-divider::before,
-[data-design='mercado'] .ec-auth .ecaf-divider::after { background: var(--dz-line); opacity: 1; }
-[data-design='mercado'] .ec-auth .ecaf-link {
+[data-design='mercado'] :is(.ec-auth, .ec-auth-card) .ecaf-divider { font-family: var(--dz-body); font-size: 12px; color: var(--dz-muted); }
+[data-design='mercado'] :is(.ec-auth, .ec-auth-card) .ecaf-divider::before,
+[data-design='mercado'] :is(.ec-auth, .ec-auth-card) .ecaf-divider::after { background: var(--dz-line); opacity: 1; }
+[data-design='mercado'] :is(.ec-auth, .ec-auth-card) .ecaf-link {
   color: var(--dz-link); font-family: var(--dz-body); font-weight: 600;
   text-underline-offset: 3px;
 }
-[data-design='mercado'] .ec-auth .ecaf-link:hover { color: var(--dz-ink); }
-[data-design='mercado'] .ec-auth .ecaf-notice {
+[data-design='mercado'] :is(.ec-auth, .ec-auth-card) .ecaf-link:hover { color: var(--dz-ink); }
+[data-design='mercado'] :is(.ec-auth, .ec-auth-card) .ecaf-notice {
   border-radius: var(--dz-radius-sm);
   background: color-mix(in srgb, var(--dz-ok) 10%, var(--dz-surface));
   border: 1px solid color-mix(in srgb, var(--dz-ok) 34%, transparent);
   color: var(--dz-ink);
 }
-[data-design='mercado'] .ec-auth .ecaf-error {
+[data-design='mercado'] :is(.ec-auth, .ec-auth-card) .ecaf-error {
   border-radius: var(--dz-radius-sm);
   background: color-mix(in srgb, var(--dz-danger) 10%, var(--dz-surface));
   border: 1px solid color-mix(in srgb, var(--dz-danger) 32%, transparent);
@@ -701,29 +718,7 @@
 /* ---------- Responsive ---------- */
 @media (max-width: 1024px) {
   [data-design='mercado'] .ec-auth .ec-auth-shell {
-    grid-template-columns: minmax(0, 1fr);
     margin-block: 10px clamp(26px, 5vw, 44px);
-  }
-  [data-design='mercado'] .ec-auth .ec-auth-brand { padding: 18px 18px 16px; }
-  [data-design='mercado'] .ec-auth .ec-auth-brand-inner {
-    grid-template-rows: auto auto;
-    gap: 12px;
-    padding-right: 0;
-  }
-  [data-design='mercado'] .ec-auth .ec-auth-brand::after {
-    inset: auto 16px 0 16px; width: auto; height: 1px;
-    background: repeating-linear-gradient(90deg,
-      transparent 0 10px,
-      color-mix(in srgb, var(--dz-accent-ink) 34%, transparent) 10px 18px);
-  }
-  [data-design='mercado'] .ec-auth .ec-auth-brand-copy { gap: 8px; max-width: none; }
-  [data-design='mercado'] .ec-auth .ec-auth-brand-text,
-  [data-design='mercado'] .ec-auth .ec-auth-perks,
-  [data-design='mercado'] .ec-auth .ec-auth-brand-foot { display: none; }
-  [data-design='mercado'] .ec-auth .ec-auth-brand-title { font-size: clamp(20px, 4vw, 25px); }
-  [data-design='mercado'] .ec-auth .ec-auth-panel {
-    padding: 22px 20px 28px;
-    border-left: 0;
   }
 }
 @media (max-width: 860px) {
@@ -732,10 +727,9 @@
 @media (max-width: 640px) {
   [data-design='mercado'] .ec-auth { padding-inline: 10px; }
   [data-design='mercado'] .ec-auth .ec-auth-shell { border-radius: var(--dz-radius-sm); }
-  [data-design='mercado'] .ec-auth .ec-auth-brand { padding: 15px 15px 13px; }
-  [data-design='mercado'] .ec-auth .ec-auth-logo { width: 36px; height: 36px; font-size: 17px; }
-  [data-design='mercado'] .ec-auth .ec-auth-brand-name { font-size: 15px; }
-  [data-design='mercado'] .ec-auth .ec-auth-brand-title { font-size: 19px; }
+  [data-design='mercado'] .ec-auth .ec-auth-brand { padding: 13px 15px; }
+  [data-design='mercado'] .ec-auth .ec-auth-logo { width: 32px; height: 32px; font-size: 15px; }
+  [data-design='mercado'] .ec-auth .ec-auth-brand-name { font-size: 14.5px; }
   [data-design='mercado'] .ec-auth .ec-auth-panel { padding: 18px 15px 24px; }
   [data-design='mercado'] .ec-auth .ec-auth-title { font-size: 21px; }
   [data-design='mercado'] .ec-auth .ecaf-grid { grid-template-columns: minmax(0, 1fr); }
@@ -747,7 +741,6 @@
 }
 @media (max-width: 390px) {
   [data-design='mercado'] .ec-auth { padding-inline: 6px; }
-  [data-design='mercado'] .ec-auth .ec-auth-brand-title { font-size: 17px; }
   [data-design='mercado'] .ec-auth .ec-auth-title { font-size: 19px; }
   [data-design='mercado'][data-theme] .ec-account { padding-inline: 8px; }
   [data-design='mercado'][data-theme] .ec-account .acc-mhead { padding: 9px 10px; gap: 9px; }
@@ -762,7 +755,7 @@
   }
 }
 @media (prefers-reduced-motion: reduce) {
-  [data-design='mercado'] :is(.ec-auth, .ec-account, .ec-track, .ec-cartpg, .ec-checkout, .ec-receiptpg, .ec-legal) * {
+  [data-design='mercado'] :is(.ec-auth, .ec-auth-card, .ec-account, .ec-track, .ec-cartpg, .ec-checkout, .ec-receiptpg, .ec-legal) * {
     transition-duration: .001ms !important;
     animation-duration: .001ms !important;
   }
