@@ -226,7 +226,8 @@
   box-shadow:0 0 0 3px var(--dz-accent-soft);
 }
 [data-design='viajero'] .ec-auth .sp-form-error,
-[data-design='viajero'] .ec-account .sp-form-error{ color:var(--dz-danger); font-weight:600; }
+[data-design='viajero'] .ec-account .sp-form-error,
+[data-design='viajero'] .ec-track .sp-form-error{ color:var(--dz-danger); font-weight:600; }
 [data-design='viajero'] .ec-auth .ecaf .ecaf-submit{
   min-height:50px; border-radius:var(--dz-r-2);
   background: var(--store-accent-ink); color: var(--sp-on-band, #fff);
@@ -371,20 +372,20 @@
   font:600 9.5px/1 var(--dz-mono); letter-spacing:.14em; color:var(--dz-muted);
 }
 
-/* --- Botones del sistema dentro de la cuenta --- */
-[data-design='viajero'] .ec-account .ec-btn-primary{
+/* --- Botones del sistema dentro de la cuenta y el seguimiento --- */
+[data-design='viajero'] :is(.ec-account, .ec-track) .ec-btn-primary{
   min-height:46px; border-radius:var(--dz-r-2);
   background: var(--store-accent-ink); color: var(--sp-on-band, #fff);
   font:700 13.5px/1 var(--dz-body);
 }
-[data-design='viajero'] .ec-account .ec-btn-primary:hover{ filter:brightness(1.06); }
-[data-design='viajero'] .ec-account .ec-btn-primary:disabled{ opacity:.5; }
-[data-design='viajero'] .ec-account .ec-btn-ghost{
+[data-design='viajero'] :is(.ec-account, .ec-track) .ec-btn-primary:hover{ filter:brightness(1.06); }
+[data-design='viajero'] :is(.ec-account, .ec-track) .ec-btn-primary:disabled{ opacity:.5; }
+[data-design='viajero'] :is(.ec-account, .ec-track) .ec-btn-ghost{
   min-height:44px; border-radius:var(--dz-r-2);
   border:1px solid var(--dz-line); color:var(--dz-ink-2);
   font:600 13px/1 var(--dz-body);
 }
-[data-design='viajero'] .ec-account .ec-btn-ghost:hover{
+[data-design='viajero'] :is(.ec-account, .ec-track) .ec-btn-ghost:hover{
   border-color:var(--dz-accent); color:var(--dz-accent-text);
 }
 [data-design='viajero'] .ec-account .acc-icon-btn{
@@ -462,7 +463,8 @@
 
 /* --- Foco visible en toda la página --- */
 [data-design='viajero'] .ec-auth :is(a,button,input,select,textarea):focus-visible,
-[data-design='viajero'] .ec-account :is(a,button,input,select,textarea):focus-visible{
+[data-design='viajero'] .ec-account :is(a,button,input,select,textarea):focus-visible,
+[data-design='viajero'] .ec-track :is(a,button,input,select,textarea):focus-visible{
   outline:2px solid var(--dz-accent); outline-offset:2px;
 }
 

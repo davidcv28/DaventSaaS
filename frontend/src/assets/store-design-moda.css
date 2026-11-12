@@ -63,8 +63,8 @@
 }
 
 /* Re-tema de las hojas internas (pedidos, planes, direcciones) al token del
-   diseño, solo dentro de auth/cuenta. */
-[data-design='moda'] :is(.ec-auth, .ec-account) {
+   diseño, solo dentro de auth/cuenta/seguimiento. */
+[data-design='moda'] :is(.ec-auth, .ec-account, .ec-track) {
   --sp-bg: var(--dz-bg);
   --sp-card: var(--dz-surface);
   --sp-card-solid: var(--dz-card);
@@ -85,11 +85,11 @@
   --store-accent: var(--dz-accent);
 }
 
-[data-design='moda'][data-theme] :is(.ec-auth, .ec-account) :is(a, button, input, select, textarea):focus-visible {
+[data-design='moda'][data-theme] :is(.ec-auth, .ec-account, .ec-track) :is(a, button, input, select, textarea):focus-visible {
   outline: 2px solid var(--dz-accent);
   outline-offset: 3px;
 }
-[data-design='moda'][data-theme] :is(.ec-auth, .ec-account) ::selection {
+[data-design='moda'][data-theme] :is(.ec-auth, .ec-account, .ec-track) ::selection {
   background: var(--store-accent-ink);
   color: var(--sp-on-band, #fff);
 }
@@ -254,12 +254,12 @@
 [data-design='moda'] .ec-auth .ec-auth-spin { color: var(--dz-accent-text); }
 
 /* ---------- Controles (compartidos auth + cuenta) ---------- */
-[data-design='moda'][data-theme] :is(.ec-auth, .ec-account) .sp-field { gap: 8px; }
-[data-design='moda'][data-theme] :is(.ec-auth, .ec-account) .sp-field-label {
+[data-design='moda'][data-theme] :is(.ec-auth, .ec-account, .ec-track) .sp-field { gap: 8px; }
+[data-design='moda'][data-theme] :is(.ec-auth, .ec-account, .ec-track) .sp-field-label {
   font: 500 9px/1 var(--dz-mono); letter-spacing: .24em; text-transform: uppercase;
   color: var(--dz-muted);
 }
-[data-design='moda'][data-theme] :is(.ec-auth, .ec-account) .sp-input {
+[data-design='moda'][data-theme] :is(.ec-auth, .ec-account, .ec-track) .sp-input {
   min-height: 48px;
   padding: 12px 14px;
   border: 1px solid var(--dz-line);
@@ -270,32 +270,32 @@
   box-shadow: none;
   transition: border-color .22s, box-shadow .22s, background .22s;
 }
-[data-design='moda'][data-theme] :is(.ec-auth, .ec-account) .sp-input:hover {
+[data-design='moda'][data-theme] :is(.ec-auth, .ec-account, .ec-track) .sp-input:hover {
   border-color: color-mix(in srgb, var(--dz-ink) 32%, var(--dz-line));
 }
-[data-design='moda'][data-theme] :is(.ec-auth, .ec-account) .sp-input:focus {
+[data-design='moda'][data-theme] :is(.ec-auth, .ec-account, .ec-track) .sp-input:focus {
   border-color: var(--dz-accent);
   background: var(--dz-card);
   box-shadow: 0 0 0 3px color-mix(in srgb, var(--dz-accent) 15%, transparent);
 }
-[data-design='moda'][data-theme] :is(.ec-auth, .ec-account) .sp-input::placeholder {
+[data-design='moda'][data-theme] :is(.ec-auth, .ec-account, .ec-track) .sp-input::placeholder {
   color: var(--dz-muted); opacity: 1;
 }
-[data-design='moda'][data-theme] :is(.ec-auth, .ec-account) .sp-input:disabled {
+[data-design='moda'][data-theme] :is(.ec-auth, .ec-account, .ec-track) .sp-input:disabled {
   background: color-mix(in srgb, var(--dz-line) 30%, var(--dz-bg));
   color: var(--dz-ink-2);
   cursor: not-allowed;
 }
-[data-design='moda'][data-theme] :is(.ec-auth, .ec-account) .sp-form-error {
+[data-design='moda'][data-theme] :is(.ec-auth, .ec-account, .ec-track) .sp-form-error {
   color: var(--dz-danger); font-family: var(--dz-body); font-size: 12.5px;
 }
-[data-design='moda'][data-theme] :is(.ec-auth, .ec-account) .sp-input:-webkit-autofill {
+[data-design='moda'][data-theme] :is(.ec-auth, .ec-account, .ec-track) .sp-input:-webkit-autofill {
   -webkit-text-fill-color: var(--dz-ink);
   box-shadow: inset 0 0 0 40px var(--dz-bg);
 }
 
 /* CTA bermellón, esquinas de salón. */
-[data-design='moda'][data-theme] :is(.ec-auth, .ec-account) :is(.ecaf-submit, .ec-btn-primary) {
+[data-design='moda'][data-theme] :is(.ec-auth, .ec-account, .ec-track) :is(.ecaf-submit, .ec-btn-primary) {
   min-height: 50px;
   border: 1px solid transparent;
   border-radius: var(--dz-radius);
@@ -304,18 +304,18 @@
   font: 600 10.5px/1 var(--dz-mono); letter-spacing: .24em; text-transform: uppercase;
   transition: transform .3s var(--dz-ease, cubic-bezier(.22, 1, .36, 1)), box-shadow .3s, background .3s, filter .3s;
 }
-[data-design='moda'][data-theme] :is(.ec-auth, .ec-account) :is(.ecaf-submit, .ec-btn-primary):hover:not(:disabled) {
+[data-design='moda'][data-theme] :is(.ec-auth, .ec-account, .ec-track) :is(.ecaf-submit, .ec-btn-primary):hover:not(:disabled) {
   transform: translateY(-2px);
   filter: brightness(1.06);
   box-shadow: 0 18px 32px -24px color-mix(in srgb, var(--dz-accent) 85%, transparent);
 }
-[data-design='moda'][data-theme] :is(.ec-auth, .ec-account) :is(.ecaf-submit, .ec-btn-primary):active:not(:disabled) {
+[data-design='moda'][data-theme] :is(.ec-auth, .ec-account, .ec-track) :is(.ecaf-submit, .ec-btn-primary):active:not(:disabled) {
   transform: translateY(0) scale(.995);
 }
-[data-design='moda'][data-theme] :is(.ec-auth, .ec-account) :is(.ecaf-submit, .ec-btn-primary):disabled {
+[data-design='moda'][data-theme] :is(.ec-auth, .ec-account, .ec-track) :is(.ecaf-submit, .ec-btn-primary):disabled {
   background: var(--dz-line); color: var(--dz-ink-2); opacity: 1; cursor: not-allowed;
 }
-[data-design='moda'][data-theme] :is(.ec-auth, .ec-account) .ec-btn-ghost {
+[data-design='moda'][data-theme] :is(.ec-auth, .ec-account, .ec-track) .ec-btn-ghost {
   min-height: 46px;
   border: 1px solid color-mix(in srgb, var(--dz-ink) 38%, transparent);
   border-radius: var(--dz-radius);
@@ -323,7 +323,7 @@
   font: 500 9.5px/1 var(--dz-mono); letter-spacing: .22em; text-transform: uppercase;
   transition: background .25s, color .25s, border-color .25s;
 }
-[data-design='moda'][data-theme] :is(.ec-auth, .ec-account) .ec-btn-ghost:hover {
+[data-design='moda'][data-theme] :is(.ec-auth, .ec-account, .ec-track) .ec-btn-ghost:hover {
   background: var(--dz-ink); color: var(--dz-card); border-color: var(--dz-ink);
 }
 
@@ -678,7 +678,7 @@
 }
 [data-design='moda'] .ec-account .acc-check input { accent-color: var(--dz-accent); }
 @media (prefers-reduced-motion: reduce) {
-  [data-design='moda'] :is(.ec-auth, .ec-account) * {
+  [data-design='moda'] :is(.ec-auth, .ec-account, .ec-track) * {
     transition-duration: .001ms !important;
     animation-duration: .001ms !important;
   }

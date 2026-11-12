@@ -477,7 +477,13 @@ html[data-ds-theme="dark"] .grid-products .ds-product-cat{color:var(--accent)}
   border:1px solid rgba(255,255,255,.2);color:var(--media-ink);padding:6px 10px;border-radius:999px;
 }
 .grid-products .ds-stock i{width:6px;height:6px;border-radius:50%;background:var(--ok)}
-.grid-products .ds-stock{display:none}
+/* El sello de stock sobre la foto solo aparece con venta online: ahí el
+   puente pinta las unidades reales; sin data-ds-commerce el "En stock"
+   genérico del fragmento sería una promesa vacía. Agotado lo fuerza el
+   puente con .is-out (display:inline-flex!important). */
+html:not([data-ds-commerce="1"]) .grid-products .ds-stock{display:none}
+html[data-ds-commerce="1"] .grid-products .ds-stock.is-out{color:#F2776B}
+html[data-ds-commerce="1"] .grid-products .ds-stock.is-out i{background:currentColor}
 .grid-products .ds-product-price{
   font-variant-numeric:tabular-nums;
   grid-area:price;margin:0 18px;padding:12px 0 15px;border-top:1px solid var(--line);

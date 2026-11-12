@@ -1191,8 +1191,11 @@ html[data-ds-style="calzado-noche"] .cat-sort select{
   -webkit-line-clamp:2}
 [data-ds-view-mode="list"] .ds-product-cat{grid-area:meta;margin:6px 0 0;
   align-self:start;text-align:left}
-/* En la fila densa "En stock" es ruido: la categoría ya ocupa la línea meta. */
-[data-ds-view-mode="list"] .ds-stock{display:none}
+/* En la fila densa "En stock" es ruido: la categoría ya ocupa la línea meta.
+   !important justificado: el puente fuerza .ds-stock.is-out con
+   !important y la fila es un grid de áreas — un "Agotado" visible crearía
+   una columna implícita y rompería la lista. */
+[data-ds-view-mode="list"] .ds-stock{display:none!important}
 [data-ds-view-mode="list"] .ds-product-price{grid-area:price;flex-direction:column;
   align-items:flex-end;gap:3px;padding:0 0 0 16px;border:0;min-width:132px}
 [data-ds-view-mode="list"] .ds-product-price::after{display:none}

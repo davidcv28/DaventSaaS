@@ -581,7 +581,17 @@ html[data-ds-theme="dark"] .tabbar .tab{color:color-mix(in srgb,var(--muted) 76%
   opacity:0;transition:opacity .3s var(--ease),transform .3s var(--ease);pointer-events:none;
 }
 .ds-product:hover .ds-product-link::after{opacity:1;transform:translate(-50%,-56%)}
+/* Sin venta online el "En stock" del fragmento sería una promesa vacía:
+   el tag solo existe cuando el puente pinta el stock real del catálogo
+   (data-ds-commerce) — misma línea de archivo, entre la ficha y el precio. */
 .ds-stock{display:none}
+html[data-ds-commerce="1"] .ds-stock{
+  display:inline-flex;align-items:center;gap:7px;align-self:flex-start;order:3;
+  margin-top:9px;font:500 8.5px/1 var(--mono);letter-spacing:.18em;
+  text-transform:uppercase;color:var(--muted);
+}
+html[data-ds-commerce="1"] .ds-stock i{width:5px;height:5px;border-radius:50%;background:var(--ok);flex:none}
+html[data-ds-commerce="1"] .ds-stock.is-out{color:var(--accent-text)}
 
 /* Vista lista del catálogo */
 .grid-products[data-ds-view-mode="list"]{grid-template-columns:1fr;gap:0;margin-top:20px;counter-reset:none}
@@ -597,6 +607,11 @@ html[data-ds-theme="dark"] .tabbar .tab{color:color-mix(in srgb,var(--muted) 76%
 .grid-products[data-ds-view-mode="list"] .ds-product-price{grid-area:price;margin:0;padding:8px 14px 8px 18px;justify-self:end;order:0;transform:none}
 .grid-products[data-ds-view-mode="list"] .ds-product-price[data-off]::before{top:14px;right:0}
 .grid-products[data-ds-view-mode="list"] .ds-product-link::after{display:none}
+/* La fila lista es un grid de áreas nombradas: el tag de stock (que solo
+   existe con venta online) no tiene área y crearía una columna implícita.
+   !important justificado: el puente fuerza .ds-stock.is-out con
+   !important y sin esto un "Agotado" rompería la fila. */
+.grid-products[data-ds-view-mode="list"] .ds-stock{display:none!important}
 
 /* ==========================================================================
    E-COMMERCE — el puente inyecta .dsx-buy al pie de cada .ds-product (fuera
