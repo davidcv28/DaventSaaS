@@ -1541,6 +1541,30 @@
   0%, 100% { box-shadow: 0 0 0 0 color-mix(in srgb, var(--store-accent, #3dd6ff) 45%, transparent); }
   50% { box-shadow: 0 0 0 8px transparent; }
 }
+.store-page[data-design='moderntec'][data-tracking='tracking-minimal'] .ec-step.is-current .ec-step-ico {
+  animation: mt-ico-breathe 2.2s ease-in-out infinite;
+}
+@keyframes mt-ico-breathe {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.14); }
+}
+/* Badge de estado: punto que late (el "ahora" del pedido). */
+.store-page[data-design='moderntec'][data-tracking='tracking-minimal'] .ec-track-status {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+.store-page[data-design='moderntec'][data-tracking='tracking-minimal'] .ec-track-status::before {
+  content: '';
+  width: 7px; height: 7px;
+  border-radius: 50%;
+  background: currentColor;
+  animation: mt-status-blink 1.6s ease-in-out infinite;
+}
+@keyframes mt-status-blink {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: .35; transform: scale(.7); }
+}
 .store-page[data-design='moderntec'][data-tracking='tracking-minimal'] .ec-step-label {
   font-family: var(--st-f-eyebrow-family, 'JetBrains Mono', ui-monospace, monospace);
   font-size: 11.5px; font-weight: 600;
