@@ -18,7 +18,11 @@
 
 [data-design='ruta'] .ec-auth,
 [data-design='ruta'] .ec-account,
-[data-design='ruta'] .ec-track {
+[data-design='ruta'] .ec-track,
+[data-design='ruta'] .ec-cartpg,
+[data-design='ruta'] .ec-checkout,
+[data-design='ruta'] .ec-receiptpg,
+[data-design='ruta'] .ec-legal {
   /* ---- Tokens (papel de ruta) ---- */
   --dz-bg: #f4ecdc;
   --dz-surface: #fbf6ea;
@@ -73,7 +77,11 @@
 /* Variante noche: la paleta del documento con data-ds-theme="dark". */
 [data-design='ruta'][data-theme='dark'] .ec-auth,
 [data-design='ruta'][data-theme='dark'] .ec-account,
-[data-design='ruta'][data-theme='dark'] .ec-track {
+[data-design='ruta'][data-theme='dark'] .ec-track,
+[data-design='ruta'][data-theme='dark'] .ec-cartpg,
+[data-design='ruta'][data-theme='dark'] .ec-checkout,
+[data-design='ruta'][data-theme='dark'] .ec-receiptpg,
+[data-design='ruta'][data-theme='dark'] .ec-legal {
   --dz-bg: #0e241f;
   --dz-surface: #16332b;
   --dz-surface-2: #143029;
@@ -107,11 +115,11 @@
 }
 
 /* ---------- Marco común ---------- */
-[data-design='ruta'][data-theme] :is(.ec-auth, .ec-account, .ec-track) :is(a, button, input, select, textarea):focus-visible {
+[data-design='ruta'][data-theme] :is(.ec-auth, .ec-account, .ec-track, .ec-cartpg, .ec-checkout, .ec-receiptpg, .ec-legal) :is(a, button, input, select, textarea):focus-visible {
   outline: 2px solid var(--dz-coral);
   outline-offset: 3px;
 }
-[data-design='ruta'][data-theme] :is(.ec-auth, .ec-account, .ec-track) ::selection {
+[data-design='ruta'][data-theme] :is(.ec-auth, .ec-account, .ec-track, .ec-cartpg, .ec-checkout, .ec-receiptpg, .ec-legal) ::selection {
   background: color-mix(in srgb, var(--dz-sun) 55%, transparent);
   color: var(--dz-ink);
 }
@@ -344,14 +352,14 @@
 [data-design='ruta'] .ec-auth .ec-auth-spin { color: var(--dz-coral-text); }
 
 /* ---------- Controles (compartidos auth + cuenta) ---------- */
-[data-design='ruta'][data-theme] :is(.ec-auth, .ec-account, .ec-track) .sp-field { gap: 8px; }
-[data-design='ruta'][data-theme] :is(.ec-auth, .ec-account, .ec-track) .sp-field-label {
+[data-design='ruta'][data-theme] :is(.ec-auth, .ec-account, .ec-track, .ec-cartpg, .ec-checkout, .ec-receiptpg, .ec-legal) .sp-field { gap: 8px; }
+[data-design='ruta'][data-theme] :is(.ec-auth, .ec-account, .ec-track, .ec-cartpg, .ec-checkout, .ec-receiptpg, .ec-legal) .sp-field-label {
   font: 700 9.5px/1 var(--dz-mono);
   letter-spacing: .18em;
   text-transform: uppercase;
   color: var(--dz-muted);
 }
-[data-design='ruta'][data-theme] :is(.ec-auth, .ec-account, .ec-track) .sp-input {
+[data-design='ruta'][data-theme] :is(.ec-auth, .ec-account, .ec-track, .ec-cartpg, .ec-checkout, .ec-receiptpg, .ec-legal) .sp-input {
   min-height: 48px;
   padding: 12px 15px;
   border: 1.5px solid var(--dz-line);
@@ -363,35 +371,35 @@
   box-shadow: none;
   transition: border-color .2s, box-shadow .2s, background .2s;
 }
-[data-design='ruta'][data-theme] :is(.ec-auth, .ec-account, .ec-track) .sp-input:hover {
+[data-design='ruta'][data-theme] :is(.ec-auth, .ec-account, .ec-track, .ec-cartpg, .ec-checkout, .ec-receiptpg, .ec-legal) .sp-input:hover {
   border-color: var(--dz-line-strong);
 }
-[data-design='ruta'][data-theme] :is(.ec-auth, .ec-account, .ec-track) .sp-input:focus {
+[data-design='ruta'][data-theme] :is(.ec-auth, .ec-account, .ec-track, .ec-cartpg, .ec-checkout, .ec-receiptpg, .ec-legal) .sp-input:focus {
   border-color: var(--dz-accent-text);
   background: var(--dz-bg);
   box-shadow: 0 0 0 3px color-mix(in srgb, var(--dz-sun) 30%, transparent);
 }
-[data-design='ruta'][data-theme] :is(.ec-auth, .ec-account, .ec-track) .sp-input::placeholder {
+[data-design='ruta'][data-theme] :is(.ec-auth, .ec-account, .ec-track, .ec-cartpg, .ec-checkout, .ec-receiptpg, .ec-legal) .sp-input::placeholder {
   color: color-mix(in srgb, var(--dz-muted) 80%, transparent);
   opacity: 1;
 }
-[data-design='ruta'][data-theme] :is(.ec-auth, .ec-account, .ec-track) .sp-input:disabled {
+[data-design='ruta'][data-theme] :is(.ec-auth, .ec-account, .ec-track, .ec-cartpg, .ec-checkout, .ec-receiptpg, .ec-legal) .sp-input:disabled {
   background: var(--dz-surface-2);
   color: var(--dz-muted);
   cursor: not-allowed;
 }
-[data-design='ruta'][data-theme] :is(.ec-auth, .ec-account, .ec-track) .sp-form-error {
+[data-design='ruta'][data-theme] :is(.ec-auth, .ec-account, .ec-track, .ec-cartpg, .ec-checkout, .ec-receiptpg, .ec-legal) .sp-form-error {
   color: var(--dz-danger);
   font-family: var(--dz-body);
   font-size: 12.5px;
 }
-[data-design='ruta'][data-theme] :is(.ec-auth, .ec-account, .ec-track) .sp-input:-webkit-autofill {
+[data-design='ruta'][data-theme] :is(.ec-auth, .ec-account, .ec-track, .ec-cartpg, .ec-checkout, .ec-receiptpg, .ec-legal) .sp-input:-webkit-autofill {
   -webkit-text-fill-color: var(--dz-ink);
   box-shadow: inset 0 0 0 40px var(--dz-surface);
 }
 
 /* Botón principal: píldora sol (la misma mano que .btn-sun del doc). */
-[data-design='ruta'][data-theme] :is(.ec-auth, .ec-account, .ec-track) :is(.ecaf-submit, .ec-btn-primary) {
+[data-design='ruta'][data-theme] :is(.ec-auth, .ec-account, .ec-track, .ec-cartpg, .ec-checkout, .ec-receiptpg, .ec-legal) :is(.ecaf-submit, .ec-btn-primary) {
   min-height: 50px;
   border: 1.5px solid transparent;
   border-radius: 999px;
@@ -405,23 +413,23 @@
   box-shadow: 0 14px 26px -16px rgba(0, 0, 0, .45);
   transition: transform .25s cubic-bezier(.22,1,.36,1), box-shadow .25s, background .2s;
 }
-[data-design='ruta'][data-theme] :is(.ec-auth, .ec-account, .ec-track) :is(.ecaf-submit, .ec-btn-primary):hover:not(:disabled) {
+[data-design='ruta'][data-theme] :is(.ec-auth, .ec-account, .ec-track, .ec-cartpg, .ec-checkout, .ec-receiptpg, .ec-legal) :is(.ecaf-submit, .ec-btn-primary):hover:not(:disabled) {
   transform: translateY(-2px);
   background: var(--dz-sun-hi);
   box-shadow: 0 18px 32px -16px rgba(0, 0, 0, .5);
   filter: none;
 }
-[data-design='ruta'][data-theme] :is(.ec-auth, .ec-account, .ec-track) :is(.ecaf-submit, .ec-btn-primary):active:not(:disabled) {
+[data-design='ruta'][data-theme] :is(.ec-auth, .ec-account, .ec-track, .ec-cartpg, .ec-checkout, .ec-receiptpg, .ec-legal) :is(.ecaf-submit, .ec-btn-primary):active:not(:disabled) {
   transform: translateY(0);
 }
-[data-design='ruta'][data-theme] :is(.ec-auth, .ec-account, .ec-track) :is(.ecaf-submit, .ec-btn-primary):disabled {
+[data-design='ruta'][data-theme] :is(.ec-auth, .ec-account, .ec-track, .ec-cartpg, .ec-checkout, .ec-receiptpg, .ec-legal) :is(.ecaf-submit, .ec-btn-primary):disabled {
   background: var(--dz-line);
   color: var(--dz-muted);
   opacity: 1;
   cursor: not-allowed;
   box-shadow: none;
 }
-[data-design='ruta'][data-theme] :is(.ec-auth, .ec-account, .ec-track) .ec-btn-ghost {
+[data-design='ruta'][data-theme] :is(.ec-auth, .ec-account, .ec-track, .ec-cartpg, .ec-checkout, .ec-receiptpg, .ec-legal) .ec-btn-ghost {
   min-height: 46px;
   border: 1.5px solid var(--dz-line);
   border-radius: 999px;
@@ -431,7 +439,7 @@
   font-size: 13.5px;
   font-weight: 700;
 }
-[data-design='ruta'][data-theme] :is(.ec-auth, .ec-account, .ec-track) .ec-btn-ghost:hover {
+[data-design='ruta'][data-theme] :is(.ec-auth, .ec-account, .ec-track, .ec-cartpg, .ec-checkout, .ec-receiptpg, .ec-legal) .ec-btn-ghost:hover {
   border-color: var(--dz-accent-text);
   background: color-mix(in srgb, var(--dz-sun) 10%, var(--dz-surface));
   color: var(--dz-ink);
@@ -837,7 +845,7 @@
   }
 }
 @media (prefers-reduced-motion: reduce) {
-  [data-design='ruta'] :is(.ec-auth, .ec-account, .ec-track) * {
+  [data-design='ruta'] :is(.ec-auth, .ec-account, .ec-track, .ec-cartpg, .ec-checkout, .ec-receiptpg, .ec-legal) * {
     transition-duration: .001ms !important;
     animation-duration: .001ms !important;
   }

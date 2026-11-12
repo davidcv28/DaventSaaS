@@ -46,7 +46,7 @@ const openProduct = (p) => router.push(productTo(p))
       <div class="mc-rail">
         <TplProductCard
           v-for="(p, i) in offers" :key="p.id" v-reveal="(i % 4) * 60"
-          class="mc-card" :p="p" :stars="custom.show_reviews" stars-icon="star"
+          class="mc-card" :p="p" :desc="p.description || ''" :stars="custom.show_reviews" stars-icon="star"
           seal-shape="" quick=""
           :save="endsOf(p) || ''" @open="openProduct"
         >

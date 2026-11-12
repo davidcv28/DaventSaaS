@@ -46,28 +46,28 @@
 }
 
 /* ---------- Marco común ---------- */
-[data-design='esencial'][data-theme] :is(.ec-auth, .ec-account, .ec-track) :is(a, button, input, select, textarea):focus-visible {
+[data-design='esencial'][data-theme] :is(.ec-auth, .ec-account, .ec-track, .ec-cartpg, .ec-checkout, .ec-receiptpg, .ec-legal) :is(a, button, input, select, textarea):focus-visible {
   outline: 2px solid var(--dz-accent);
   outline-offset: 3px;
   border-radius: 4px;
 }
-[data-design='esencial'][data-theme] :is(.ec-auth, .ec-account, .ec-track) ::selection {
+[data-design='esencial'][data-theme] :is(.ec-auth, .ec-account, .ec-track, .ec-cartpg, .ec-checkout, .ec-receiptpg, .ec-legal) ::selection {
   background: color-mix(in srgb, var(--dz-accent) 24%, transparent);
   color: var(--dz-ink);
 }
 
 /* Controles y botones compartidos (auth + cuenta). */
 /* ---------- Controles (compartidos auth + cuenta) ---------- */
-[data-design='esencial'][data-theme] :is(.ec-auth, .ec-account, .ec-track) .sp-field { gap: 7px; }
-[data-design='esencial'][data-theme] :is(.ec-auth, .ec-account, .ec-track) .sp-field-label {
+[data-design='esencial'][data-theme] :is(.ec-auth, .ec-account, .ec-track, .ec-cartpg, .ec-checkout, .ec-receiptpg, .ec-legal) .sp-field { gap: 7px; }
+[data-design='esencial'][data-theme] :is(.ec-auth, .ec-account, .ec-track, .ec-cartpg, .ec-checkout, .ec-receiptpg, .ec-legal) .sp-field-label {
   font-family: var(--dz-body); font-size: 11px; font-weight: 700;
   letter-spacing: .08em; text-transform: uppercase;
   color: var(--dz-muted);
 }
-[data-design='esencial'][data-theme] :is(.ec-auth, .ec-account, .ec-track) .sp-field:focus-within .sp-field-label {
+[data-design='esencial'][data-theme] :is(.ec-auth, .ec-account, .ec-track, .ec-cartpg, .ec-checkout, .ec-receiptpg, .ec-legal) .sp-field:focus-within .sp-field-label {
   color: var(--dz-accent-text);
 }
-[data-design='esencial'][data-theme] :is(.ec-auth, .ec-account, .ec-track) .sp-input {
+[data-design='esencial'][data-theme] :is(.ec-auth, .ec-account, .ec-track, .ec-cartpg, .ec-checkout, .ec-receiptpg, .ec-legal) .sp-input {
   min-height: 48px;
   padding: 12px 14px;
   border: 1px solid var(--dz-line);
@@ -78,32 +78,32 @@
   box-shadow: none;
   transition: border-color .18s, box-shadow .18s, background .18s;
 }
-[data-design='esencial'][data-theme] :is(.ec-auth, .ec-account, .ec-track) .sp-input:hover {
+[data-design='esencial'][data-theme] :is(.ec-auth, .ec-account, .ec-track, .ec-cartpg, .ec-checkout, .ec-receiptpg, .ec-legal) .sp-input:hover {
   border-color: color-mix(in srgb, var(--dz-accent) 34%, var(--dz-line));
 }
-[data-design='esencial'][data-theme] :is(.ec-auth, .ec-account, .ec-track) .sp-input:focus {
+[data-design='esencial'][data-theme] :is(.ec-auth, .ec-account, .ec-track, .ec-cartpg, .ec-checkout, .ec-receiptpg, .ec-legal) .sp-input:focus {
   border-color: var(--dz-accent);
   background: var(--dz-surface);
   box-shadow: 0 0 0 4px color-mix(in srgb, var(--dz-accent) 16%, transparent);
 }
-[data-design='esencial'][data-theme] :is(.ec-auth, .ec-account, .ec-track) .sp-input::placeholder {
+[data-design='esencial'][data-theme] :is(.ec-auth, .ec-account, .ec-track, .ec-cartpg, .ec-checkout, .ec-receiptpg, .ec-legal) .sp-input::placeholder {
   color: var(--dz-muted); opacity: 1;
 }
-[data-design='esencial'][data-theme] :is(.ec-auth, .ec-account, .ec-track) .sp-input:disabled {
+[data-design='esencial'][data-theme] :is(.ec-auth, .ec-account, .ec-track, .ec-cartpg, .ec-checkout, .ec-receiptpg, .ec-legal) .sp-input:disabled {
   background: color-mix(in srgb, var(--dz-line) 26%, var(--dz-surface));
   color: var(--dz-ink-2);
   cursor: not-allowed;
 }
-[data-design='esencial'][data-theme] :is(.ec-auth, .ec-account, .ec-track) .sp-form-error {
+[data-design='esencial'][data-theme] :is(.ec-auth, .ec-account, .ec-track, .ec-cartpg, .ec-checkout, .ec-receiptpg, .ec-legal) .sp-form-error {
   color: var(--dz-danger); font-family: var(--dz-body); font-size: 12.5px;
 }
-[data-design='esencial'][data-theme] :is(.ec-auth, .ec-account, .ec-track) .sp-input:-webkit-autofill {
+[data-design='esencial'][data-theme] :is(.ec-auth, .ec-account, .ec-track, .ec-cartpg, .ec-checkout, .ec-receiptpg, .ec-legal) .sp-input:-webkit-autofill {
   -webkit-text-fill-color: var(--dz-ink);
   box-shadow: inset 0 0 0 40px var(--dz-surface);
 }
 
 /* Botón principal. */
-[data-design='esencial'][data-theme] :is(.ec-auth, .ec-account, .ec-track) :is(.ecaf-submit, .ec-btn-primary) {
+[data-design='esencial'][data-theme] :is(.ec-auth, .ec-account, .ec-track, .ec-cartpg, .ec-checkout, .ec-receiptpg, .ec-legal) :is(.ecaf-submit, .ec-btn-primary) {
   min-height: 48px;
   border: 1px solid transparent;
   border-radius: var(--dz-radius-sm);
@@ -114,27 +114,27 @@
   filter: none;
   transition: transform .18s cubic-bezier(.2, .7, .2, 1), box-shadow .18s, filter .18s;
 }
-[data-design='esencial'][data-theme] :is(.ec-auth, .ec-account, .ec-track) :is(.ecaf-submit, .ec-btn-primary):hover:not(:disabled) {
+[data-design='esencial'][data-theme] :is(.ec-auth, .ec-account, .ec-track, .ec-cartpg, .ec-checkout, .ec-receiptpg, .ec-legal) :is(.ecaf-submit, .ec-btn-primary):hover:not(:disabled) {
   filter: brightness(1.07);
   transform: translateY(-1px);
   box-shadow: 0 14px 26px -18px color-mix(in srgb, var(--dz-accent) 78%, transparent);
 }
-[data-design='esencial'][data-theme] :is(.ec-auth, .ec-account, .ec-track) :is(.ecaf-submit, .ec-btn-primary):active:not(:disabled) {
+[data-design='esencial'][data-theme] :is(.ec-auth, .ec-account, .ec-track, .ec-cartpg, .ec-checkout, .ec-receiptpg, .ec-legal) :is(.ecaf-submit, .ec-btn-primary):active:not(:disabled) {
   transform: translateY(0) scale(.995);
 }
-[data-design='esencial'][data-theme] :is(.ec-auth, .ec-account, .ec-track) :is(.ecaf-submit, .ec-btn-primary):disabled {
+[data-design='esencial'][data-theme] :is(.ec-auth, .ec-account, .ec-track, .ec-cartpg, .ec-checkout, .ec-receiptpg, .ec-legal) :is(.ecaf-submit, .ec-btn-primary):disabled {
   background: color-mix(in srgb, var(--dz-muted) 26%, var(--dz-surface));
   color: var(--dz-ink-2);
   opacity: 1; cursor: not-allowed;
 }
-[data-design='esencial'][data-theme] :is(.ec-auth, .ec-account, .ec-track) .ec-btn-ghost {
+[data-design='esencial'][data-theme] :is(.ec-auth, .ec-account, .ec-track, .ec-cartpg, .ec-checkout, .ec-receiptpg, .ec-legal) .ec-btn-ghost {
   min-height: 44px;
   border: 1px solid var(--dz-line);
   border-radius: var(--dz-radius-sm);
   background: var(--dz-surface); color: var(--dz-ink);
   font-family: var(--dz-body); font-size: 13.5px; font-weight: 600;
 }
-[data-design='esencial'][data-theme] :is(.ec-auth, .ec-account, .ec-track) .ec-btn-ghost:hover {
+[data-design='esencial'][data-theme] :is(.ec-auth, .ec-account, .ec-track, .ec-cartpg, .ec-checkout, .ec-receiptpg, .ec-legal) .ec-btn-ghost:hover {
   border-color: var(--dz-accent); color: var(--dz-accent-text);
   background: var(--dz-accent-soft);
 }
@@ -163,7 +163,7 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
-  [data-design='esencial'] :is(.ec-auth, .ec-account, .ec-track) * {
+  [data-design='esencial'] :is(.ec-auth, .ec-account, .ec-track, .ec-cartpg, .ec-checkout, .ec-receiptpg, .ec-legal) * {
     transition-duration: .001ms !important;
     animation-duration: .001ms !important;
   }

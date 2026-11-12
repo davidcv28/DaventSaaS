@@ -195,31 +195,25 @@
 [data-design='guardia'] .ec-auth .ec-auth-spin{ color:var(--dz-accent-text); }
 
 /* --- Controles --- */
-[data-design='guardia'] .ec-auth .sp-field-label,
-[data-design='guardia'] .ec-account .sp-field-label{
+[data-design='guardia'] :is(.ec-auth, .ec-account, .ec-cartpg, .ec-checkout, .ec-receiptpg, .ec-legal) .sp-field-label{
   font:500 9px/1.4 var(--dz-mono); letter-spacing:.22em; text-transform:uppercase;
   color:var(--dz-muted);
 }
-[data-design='guardia'] .ec-auth .sp-field:focus-within .sp-field-label,
-[data-design='guardia'] .ec-account .sp-field:focus-within .sp-field-label{
+[data-design='guardia'] :is(.ec-auth, .ec-account, .ec-cartpg, .ec-checkout, .ec-receiptpg, .ec-legal) .sp-field:focus-within .sp-field-label{
   color:var(--dz-accent-text);
 }
-[data-design='guardia'] .ec-auth .sp-input,
-[data-design='guardia'] .ec-account .sp-input{
+[data-design='guardia'] :is(.ec-auth, .ec-account, .ec-cartpg, .ec-checkout, .ec-receiptpg, .ec-legal) .sp-input{
   min-height:46px; border-radius:0;
   border:1px solid var(--dz-line-2); box-shadow:none;
   background:var(--dz-panel-2); color:var(--dz-ink);
   font-family:var(--dz-body); font-size:14.5px;
 }
-[data-design='guardia'] .ec-auth .sp-input::placeholder,
-[data-design='guardia'] .ec-account .sp-input::placeholder{ color:var(--dz-muted); }
-[data-design='guardia'] .ec-auth .sp-input:focus,
-[data-design='guardia'] .ec-account .sp-input:focus{
+[data-design='guardia'] :is(.ec-auth, .ec-account, .ec-cartpg, .ec-checkout, .ec-receiptpg, .ec-legal) .sp-input::placeholder{ color:var(--dz-muted); }
+[data-design='guardia'] :is(.ec-auth, .ec-account, .ec-cartpg, .ec-checkout, .ec-receiptpg, .ec-legal) .sp-input:focus{
   border-color:var(--dz-accent); background:var(--dz-panel-2);
   box-shadow:inset 0 0 0 1px var(--dz-accent);
 }
-[data-design='guardia'] .ec-auth .sp-form-error,
-[data-design='guardia'] .ec-account .sp-form-error{ color:var(--dz-danger); font-weight:600; }
+[data-design='guardia'] :is(.ec-auth, .ec-account, .ec-cartpg, .ec-checkout, .ec-receiptpg, .ec-legal) .sp-form-error{ color:var(--dz-danger); font-weight:600; }
 [data-design='guardia'] .ec-auth .ecaf .ecaf-submit{
   min-height:50px; border-radius:0;
   background: var(--store-accent-ink); color: var(--sp-on-band, #fff);
@@ -391,21 +385,21 @@
 }
 [data-design='guardia'] .ec-account .acc-chip{ border-radius:0; }
 
-[data-design='guardia'] .ec-account .ec-btn-primary{
+[data-design='guardia'] :is(.ec-account, .ec-cartpg, .ec-checkout, .ec-receiptpg, .ec-legal) .ec-btn-primary{
   min-height:46px; border-radius:0;
   background: var(--store-accent-ink); color: var(--sp-on-band, #fff);
   font:500 10px/1 var(--dz-mono); letter-spacing:.18em; text-transform:uppercase;
 }
-[data-design='guardia'] .ec-account .ec-btn-primary:hover{
+[data-design='guardia'] :is(.ec-account, .ec-cartpg, .ec-checkout, .ec-receiptpg, .ec-legal) .ec-btn-primary:hover{
   background:var(--dz-accent-text); color:var(--dz-accent-ink);
 }
-[data-design='guardia'] .ec-account .ec-btn-primary:disabled{ opacity:.45; }
-[data-design='guardia'] .ec-account .ec-btn-ghost{
+[data-design='guardia'] :is(.ec-account, .ec-cartpg, .ec-checkout, .ec-receiptpg, .ec-legal) .ec-btn-primary:disabled{ opacity:.45; }
+[data-design='guardia'] :is(.ec-account, .ec-cartpg, .ec-checkout, .ec-receiptpg, .ec-legal) .ec-btn-ghost{
   min-height:44px; border-radius:0;
   border:1px solid var(--dz-line-2); color:var(--dz-ink-2);
   font:500 10px/1 var(--dz-mono); letter-spacing:.16em; text-transform:uppercase;
 }
-[data-design='guardia'] .ec-account .ec-btn-ghost:hover{
+[data-design='guardia'] :is(.ec-account, .ec-cartpg, .ec-checkout, .ec-receiptpg, .ec-legal) .ec-btn-ghost:hover{
   border-color:var(--dz-accent); color:var(--dz-accent-text);
 }
 [data-design='guardia'] .ec-account .acc-icon-btn{
@@ -556,5 +550,5 @@
 
 @media (prefers-reduced-motion:reduce){
   [data-design='guardia'] .ec-auth .ecaf .ecaf-submit:hover:not(:disabled),
-  [data-design='guardia'] .ec-account .ec-btn-primary:hover{ transition:none; }
+  [data-design='guardia'] :is(.ec-account, .ec-cartpg, .ec-checkout, .ec-receiptpg, .ec-legal) .ec-btn-primary:hover{ transition:none; }
 }

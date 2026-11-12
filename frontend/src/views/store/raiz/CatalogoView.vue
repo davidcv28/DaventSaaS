@@ -241,6 +241,7 @@ const toggleFeature = (name, value) => pickFeature(name, value)
             <TplProductCard
               v-for="(p, i) in visibleProducts" :key="p.id" v-reveal="(i % 3) * 60"
               class="rz-cat-card" :p="p" :cat="categoryNameOf(p)" :brand="brandNameOf(p)"
+              :desc="p.description || ''"
               :stars="custom.show_reviews" stars-icon="star" quick="Ver producto"
               seal-shape="" @open="openProduct"
             >

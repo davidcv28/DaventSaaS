@@ -61,7 +61,11 @@
 /* Seguimiento (/seguimiento): sus tarjetas y chips viven de los tokens
    --sp-* compartidos — se re-teman al papel/tinta del diseño (la cuenta
    ya los recibe por sus reglas .acc-* propias). */
-[data-design='calzado'][data-theme] .ec-track {
+[data-design='calzado'][data-theme] .ec-track,
+[data-design='calzado'][data-theme] .ec-cartpg,
+[data-design='calzado'][data-theme] .ec-checkout,
+[data-design='calzado'][data-theme] .ec-receiptpg,
+[data-design='calzado'][data-theme] .ec-legal {
   --sp-bg: var(--dz-bg);
   --sp-card: var(--dz-surface);
   --sp-card-solid: var(--dz-surface);
@@ -78,11 +82,11 @@
 }
 
 /* ---------- Marco común ---------- */
-[data-design='calzado'][data-theme] :is(.ec-auth, .ec-account, .ec-track) :is(a, button, input, select, textarea):focus-visible {
+[data-design='calzado'][data-theme] :is(.ec-auth, .ec-account, .ec-track, .ec-cartpg, .ec-checkout, .ec-receiptpg, .ec-legal) :is(a, button, input, select, textarea):focus-visible {
   outline: 2px solid var(--dz-accent);
   outline-offset: 3px;
 }
-[data-design='calzado'][data-theme] :is(.ec-auth, .ec-account, .ec-track) ::selection {
+[data-design='calzado'][data-theme] :is(.ec-auth, .ec-account, .ec-track, .ec-cartpg, .ec-checkout, .ec-receiptpg, .ec-legal) ::selection {
   background: var(--store-accent-ink);
   color: var(--sp-on-band, #fff);
 }
@@ -264,12 +268,12 @@
 [data-design='calzado'] .ec-auth .ec-auth-spin { color: var(--dz-accent-text); }
 
 /* ---------- Controles (compartidos auth + cuenta) ---------- */
-[data-design='calzado'][data-theme] :is(.ec-auth, .ec-account, .ec-track) .sp-field { gap: 8px; }
-[data-design='calzado'][data-theme] :is(.ec-auth, .ec-account, .ec-track) .sp-field-label {
+[data-design='calzado'][data-theme] :is(.ec-auth, .ec-account, .ec-track, .ec-cartpg, .ec-checkout, .ec-receiptpg, .ec-legal) .sp-field { gap: 8px; }
+[data-design='calzado'][data-theme] :is(.ec-auth, .ec-account, .ec-track, .ec-cartpg, .ec-checkout, .ec-receiptpg, .ec-legal) .sp-field-label {
   font: 700 9px/1 var(--dz-mono); letter-spacing: .24em; text-transform: uppercase;
   color: var(--dz-muted);
 }
-[data-design='calzado'][data-theme] :is(.ec-auth, .ec-account, .ec-track) .sp-input {
+[data-design='calzado'][data-theme] :is(.ec-auth, .ec-account, .ec-track, .ec-cartpg, .ec-checkout, .ec-receiptpg, .ec-legal) .sp-input {
   min-height: 48px;
   padding: 12px 14px;
   border: 1px solid var(--dz-line);
@@ -279,33 +283,33 @@
   font-family: var(--dz-body); font-size: 16px;
   transition: border-color .18s var(--dz-ease), box-shadow .18s var(--dz-ease);
 }
-[data-design='calzado'][data-theme] :is(.ec-auth, .ec-account, .ec-track) .sp-input:hover { border-color: color-mix(in srgb, var(--dz-ink) 40%, var(--dz-line)); }
-[data-design='calzado'][data-theme] :is(.ec-auth, .ec-account, .ec-track) .sp-input:focus {
+[data-design='calzado'][data-theme] :is(.ec-auth, .ec-account, .ec-track, .ec-cartpg, .ec-checkout, .ec-receiptpg, .ec-legal) .sp-input:hover { border-color: color-mix(in srgb, var(--dz-ink) 40%, var(--dz-line)); }
+[data-design='calzado'][data-theme] :is(.ec-auth, .ec-account, .ec-track, .ec-cartpg, .ec-checkout, .ec-receiptpg, .ec-legal) .sp-input:focus {
   border-color: var(--dz-ink);
   box-shadow: inset 0 -2px 0 var(--dz-accent);
   outline: none;
 }
-[data-design='calzado'][data-theme] :is(.ec-auth, .ec-account, .ec-track) .sp-input::placeholder {
+[data-design='calzado'][data-theme] :is(.ec-auth, .ec-account, .ec-track, .ec-cartpg, .ec-checkout, .ec-receiptpg, .ec-legal) .sp-input::placeholder {
   color: var(--dz-muted); opacity: 1;
 }
-[data-design='calzado'][data-theme] :is(.ec-auth, .ec-account, .ec-track) .sp-input:disabled {
+[data-design='calzado'][data-theme] :is(.ec-auth, .ec-account, .ec-track, .ec-cartpg, .ec-checkout, .ec-receiptpg, .ec-legal) .sp-input:disabled {
   background: color-mix(in srgb, var(--dz-line) 30%, var(--dz-bg));
   color: var(--dz-ink-2);
   cursor: not-allowed;
 }
-[data-design='calzado'][data-theme] :is(.ec-auth, .ec-account, .ec-track) .sp-form-error {
+[data-design='calzado'][data-theme] :is(.ec-auth, .ec-account, .ec-track, .ec-cartpg, .ec-checkout, .ec-receiptpg, .ec-legal) .sp-form-error {
   color: var(--dz-danger); font-family: var(--dz-body); font-size: 12.5px;
 }
 /* El ojo de contraseña (scoped .ecaf-pass .sp-input) necesita su aire:
    el padding propio del campo no puede pisar los 46px reservados. */
-[data-design='calzado'][data-theme] :is(.ec-auth, .ec-account, .ec-track) .ecaf-pass .sp-input { padding-right: 46px; }
-[data-design='calzado'][data-theme] :is(.ec-auth, .ec-account, .ec-track) .sp-input:-webkit-autofill {
+[data-design='calzado'][data-theme] :is(.ec-auth, .ec-account, .ec-track, .ec-cartpg, .ec-checkout, .ec-receiptpg, .ec-legal) .ecaf-pass .sp-input { padding-right: 46px; }
+[data-design='calzado'][data-theme] :is(.ec-auth, .ec-account, .ec-track, .ec-cartpg, .ec-checkout, .ec-receiptpg, .ec-legal) .sp-input:-webkit-autofill {
   -webkit-text-fill-color: var(--dz-ink);
   box-shadow: inset 0 0 0 40px var(--dz-bg);
 }
 
 /* Botón principal: bloque de tinta con filete señal al hover. */
-[data-design='calzado'][data-theme] :is(.ec-auth, .ec-account, .ec-track) :is(.ecaf-submit, .ec-btn-primary) {
+[data-design='calzado'][data-theme] :is(.ec-auth, .ec-account, .ec-track, .ec-cartpg, .ec-checkout, .ec-receiptpg, .ec-legal) :is(.ecaf-submit, .ec-btn-primary) {
   min-height: 50px;
   border: 1px solid var(--dz-btn);
   border-radius: 0;
@@ -316,7 +320,7 @@
   box-shadow: 4px 4px 0 0 color-mix(in srgb, var(--dz-ink) 16%, transparent);
   transition: transform .18s var(--dz-ease), box-shadow .18s var(--dz-ease), background .2s, color .2s;
 }
-[data-design='calzado'][data-theme] :is(.ec-auth, .ec-account, .ec-track) :is(.ecaf-submit, .ec-btn-primary):hover:not(:disabled) {
+[data-design='calzado'][data-theme] :is(.ec-auth, .ec-account, .ec-track, .ec-cartpg, .ec-checkout, .ec-receiptpg, .ec-legal) :is(.ecaf-submit, .ec-btn-primary):hover:not(:disabled) {
   background: var(--store-accent-ink);
   border-color: var(--dz-accent);
   color: var(--sp-on-band, #fff);
@@ -324,22 +328,22 @@
   box-shadow: 5px 5px 0 0 color-mix(in srgb, var(--dz-ink) 20%, transparent);
   filter: none;
 }
-[data-design='calzado'][data-theme] :is(.ec-auth, .ec-account, .ec-track) :is(.ecaf-submit, .ec-btn-primary):active:not(:disabled) {
+[data-design='calzado'][data-theme] :is(.ec-auth, .ec-account, .ec-track, .ec-cartpg, .ec-checkout, .ec-receiptpg, .ec-legal) :is(.ecaf-submit, .ec-btn-primary):active:not(:disabled) {
   transform: translate(2px, 2px);
   box-shadow: 1px 1px 0 0 color-mix(in srgb, var(--dz-ink) 16%, transparent);
 }
-[data-design='calzado'][data-theme] :is(.ec-auth, .ec-account, .ec-track) :is(.ecaf-submit, .ec-btn-primary):disabled {
+[data-design='calzado'][data-theme] :is(.ec-auth, .ec-account, .ec-track, .ec-cartpg, .ec-checkout, .ec-receiptpg, .ec-legal) :is(.ecaf-submit, .ec-btn-primary):disabled {
   background: var(--dz-line); color: var(--dz-muted); opacity: 1; cursor: not-allowed;
   border-color: var(--dz-line); box-shadow: none;
 }
-[data-design='calzado'][data-theme] :is(.ec-auth, .ec-account, .ec-track) .ec-btn-ghost {
+[data-design='calzado'][data-theme] :is(.ec-auth, .ec-account, .ec-track, .ec-cartpg, .ec-checkout, .ec-receiptpg, .ec-legal) .ec-btn-ghost {
   min-height: 46px;
   border: 1px solid var(--dz-ink);
   border-radius: 0;
   background: transparent; color: var(--dz-ink);
   font: 700 10.5px/1 var(--dz-display); letter-spacing: .16em; text-transform: uppercase;
 }
-[data-design='calzado'][data-theme] :is(.ec-auth, .ec-account, .ec-track) .ec-btn-ghost:hover {
+[data-design='calzado'][data-theme] :is(.ec-auth, .ec-account, .ec-track, .ec-cartpg, .ec-checkout, .ec-receiptpg, .ec-legal) .ec-btn-ghost:hover {
   background: var(--dz-ink); color: var(--dz-bg); border-color: var(--dz-ink);
 }
 
@@ -683,7 +687,7 @@
   }
 }
 @media (prefers-reduced-motion: reduce) {
-  [data-design='calzado'] :is(.ec-auth, .ec-account, .ec-track) * {
+  [data-design='calzado'] :is(.ec-auth, .ec-account, .ec-track, .ec-cartpg, .ec-checkout, .ec-receiptpg, .ec-legal) * {
     transition-duration: .001ms !important;
     animation-duration: .001ms !important;
   }

@@ -87,11 +87,11 @@
 }
 
 /* ---------- Marco común ---------- */
-[data-design='portico'][data-theme] :is(.ec-auth, .ec-account, .ec-track) :is(a, button, input, select, textarea):focus-visible {
+[data-design='portico'][data-theme] :is(.ec-auth, .ec-account, .ec-track, .ec-cartpg, .ec-checkout, .ec-receiptpg, .ec-legal) :is(a, button, input, select, textarea):focus-visible {
   outline: 2px solid var(--dz-accent);
   outline-offset: 3px;
 }
-[data-design='portico'][data-theme] :is(.ec-auth, .ec-account, .ec-track) ::selection {
+[data-design='portico'][data-theme] :is(.ec-auth, .ec-account, .ec-track, .ec-cartpg, .ec-checkout, .ec-receiptpg, .ec-legal) ::selection {
   background: var(--store-accent-ink);
   color: var(--sp-on-band, #fff);
 }
@@ -307,12 +307,12 @@
 [data-design='portico'] .ec-auth .ec-auth-spin { color: var(--dz-accent-text); }
 
 /* ---------- Controles (compartidos auth + cuenta) ---------- */
-[data-design='portico'][data-theme] :is(.ec-auth, .ec-account, .ec-track) .sp-field { gap: 8px; }
-[data-design='portico'][data-theme] :is(.ec-auth, .ec-account, .ec-track) .sp-field-label {
+[data-design='portico'][data-theme] :is(.ec-auth, .ec-account, .ec-track, .ec-cartpg, .ec-checkout, .ec-receiptpg, .ec-legal) .sp-field { gap: 8px; }
+[data-design='portico'][data-theme] :is(.ec-auth, .ec-account, .ec-track, .ec-cartpg, .ec-checkout, .ec-receiptpg, .ec-legal) .sp-field-label {
   font: 400 9px/1 var(--dz-mono); letter-spacing: .2em; text-transform: uppercase;
   color: var(--dz-muted);
 }
-[data-design='portico'][data-theme] :is(.ec-auth, .ec-account, .ec-track) .sp-input {
+[data-design='portico'][data-theme] :is(.ec-auth, .ec-account, .ec-track, .ec-cartpg, .ec-checkout, .ec-receiptpg, .ec-legal) .sp-input {
   min-height: 48px;
   padding: 12px 14px;
   border: 1px solid var(--dz-line);
@@ -323,42 +323,42 @@
   box-shadow: none;
   transition: border-color .2s, box-shadow .2s, background .2s;
 }
-[data-design='portico'][data-theme] :is(.ec-auth, .ec-account, .ec-track) .sp-input:hover { border-color: color-mix(in srgb, var(--dz-ink) 34%, var(--dz-line)); }
-[data-design='portico'][data-theme] :is(.ec-auth, .ec-account, .ec-track) .sp-input:focus {
+[data-design='portico'][data-theme] :is(.ec-auth, .ec-account, .ec-track, .ec-cartpg, .ec-checkout, .ec-receiptpg, .ec-legal) .sp-input:hover { border-color: color-mix(in srgb, var(--dz-ink) 34%, var(--dz-line)); }
+[data-design='portico'][data-theme] :is(.ec-auth, .ec-account, .ec-track, .ec-cartpg, .ec-checkout, .ec-receiptpg, .ec-legal) .sp-input:focus {
   border-color: var(--dz-accent);
   background: var(--dz-surface);
   box-shadow: 0 0 0 3px color-mix(in srgb, var(--dz-accent) 16%, transparent);
 }
-[data-design='portico'][data-theme] :is(.ec-auth, .ec-account, .ec-track) .sp-input::placeholder {
+[data-design='portico'][data-theme] :is(.ec-auth, .ec-account, .ec-track, .ec-cartpg, .ec-checkout, .ec-receiptpg, .ec-legal) .sp-input::placeholder {
   color: var(--dz-muted); opacity: 1;
 }
-[data-design='portico'][data-theme] :is(.ec-auth, .ec-account, .ec-track) .sp-input:disabled {
+[data-design='portico'][data-theme] :is(.ec-auth, .ec-account, .ec-track, .ec-cartpg, .ec-checkout, .ec-receiptpg, .ec-legal) .sp-input:disabled {
   background: color-mix(in srgb, var(--dz-line) 30%, var(--dz-bg));
   color: var(--dz-ink-2);
   cursor: not-allowed;
 }
-[data-design='portico'][data-theme] :is(.ec-auth, .ec-account, .ec-track) .sp-form-error {
+[data-design='portico'][data-theme] :is(.ec-auth, .ec-account, .ec-track, .ec-cartpg, .ec-checkout, .ec-receiptpg, .ec-legal) .sp-form-error {
   color: var(--dz-danger); font-family: var(--dz-body); font-size: 12.5px;
 }
-[data-design='portico'][data-theme] :is(.ec-auth, .ec-account, .ec-track) .sp-input:-webkit-autofill {
+[data-design='portico'][data-theme] :is(.ec-auth, .ec-account, .ec-track, .ec-cartpg, .ec-checkout, .ec-receiptpg, .ec-legal) .sp-input:-webkit-autofill {
   -webkit-text-fill-color: var(--dz-ink);
   box-shadow: inset 0 0 0 40px var(--dz-bg);
 }
 /* Campo inválido: el filete de peligro va por dentro del box-shadow para
    duplicar el grosor sin mover el layout al validar (el borde sigue en 1px)
    y para no pisar el anillo de foco. */
-[data-design='portico'][data-theme] :is(.ec-auth, .ec-account, .ec-track) :is(.sp-input[aria-invalid='true'], .sp-input:user-invalid) {
+[data-design='portico'][data-theme] :is(.ec-auth, .ec-account, .ec-track, .ec-cartpg, .ec-checkout, .ec-receiptpg, .ec-legal) :is(.sp-input[aria-invalid='true'], .sp-input:user-invalid) {
   border-color: var(--dz-danger);
   box-shadow: inset 0 0 0 1px var(--dz-danger);
 }
-[data-design='portico'][data-theme] :is(.ec-auth, .ec-account, .ec-track) :is(.sp-input[aria-invalid='true'], .sp-input:user-invalid):focus {
+[data-design='portico'][data-theme] :is(.ec-auth, .ec-account, .ec-track, .ec-cartpg, .ec-checkout, .ec-receiptpg, .ec-legal) :is(.sp-input[aria-invalid='true'], .sp-input:user-invalid):focus {
   box-shadow:
     inset 0 0 0 1px var(--dz-danger),
     0 0 0 3px color-mix(in srgb, var(--dz-danger) 20%, transparent);
 }
 
 /* Botón principal: pastilla mono de cobre, esquina recta. */
-[data-design='portico'][data-theme] :is(.ec-auth, .ec-account, .ec-track) :is(.ecaf-submit, .ec-btn-primary) {
+[data-design='portico'][data-theme] :is(.ec-auth, .ec-account, .ec-track, .ec-cartpg, .ec-checkout, .ec-receiptpg, .ec-legal) :is(.ecaf-submit, .ec-btn-primary) {
   min-height: 50px;
   border: 1px solid transparent;
   border-radius: var(--dz-radius);
@@ -368,25 +368,25 @@
   filter: none;
   transition: transform .3s cubic-bezier(.22, 1, .36, 1), box-shadow .3s, background .3s;
 }
-[data-design='portico'][data-theme] :is(.ec-auth, .ec-account, .ec-track) :is(.ecaf-submit, .ec-btn-primary):hover:not(:disabled) {
+[data-design='portico'][data-theme] :is(.ec-auth, .ec-account, .ec-track, .ec-cartpg, .ec-checkout, .ec-receiptpg, .ec-legal) :is(.ecaf-submit, .ec-btn-primary):hover:not(:disabled) {
   transform: translateY(-2px);
   box-shadow: 0 20px 34px -26px color-mix(in srgb, var(--dz-accent) 80%, transparent);
   filter: none;
 }
-[data-design='portico'][data-theme] :is(.ec-auth, .ec-account, .ec-track) :is(.ecaf-submit, .ec-btn-primary):active:not(:disabled) {
+[data-design='portico'][data-theme] :is(.ec-auth, .ec-account, .ec-track, .ec-cartpg, .ec-checkout, .ec-receiptpg, .ec-legal) :is(.ecaf-submit, .ec-btn-primary):active:not(:disabled) {
   transform: translateY(0) scale(.995);
 }
-[data-design='portico'][data-theme] :is(.ec-auth, .ec-account, .ec-track) :is(.ecaf-submit, .ec-btn-primary):disabled {
+[data-design='portico'][data-theme] :is(.ec-auth, .ec-account, .ec-track, .ec-cartpg, .ec-checkout, .ec-receiptpg, .ec-legal) :is(.ecaf-submit, .ec-btn-primary):disabled {
   background: var(--dz-line); color: var(--dz-ink-2); opacity: 1; cursor: not-allowed;
 }
-[data-design='portico'][data-theme] :is(.ec-auth, .ec-account, .ec-track) .ec-btn-ghost {
+[data-design='portico'][data-theme] :is(.ec-auth, .ec-account, .ec-track, .ec-cartpg, .ec-checkout, .ec-receiptpg, .ec-legal) .ec-btn-ghost {
   min-height: 46px;
   border: 1px solid color-mix(in srgb, var(--dz-ink) 40%, transparent);
   border-radius: var(--dz-radius);
   background: transparent; color: var(--dz-ink);
   font: 500 9.5px/1 var(--dz-mono); letter-spacing: .2em; text-transform: uppercase;
 }
-[data-design='portico'][data-theme] :is(.ec-auth, .ec-account, .ec-track) .ec-btn-ghost:hover {
+[data-design='portico'][data-theme] :is(.ec-auth, .ec-account, .ec-track, .ec-cartpg, .ec-checkout, .ec-receiptpg, .ec-legal) .ec-btn-ghost:hover {
   background: var(--dz-ink); color: var(--dz-surface); border-color: var(--dz-ink);
 }
 
@@ -935,7 +935,7 @@
   }
 }
 @media (prefers-reduced-motion: reduce) {
-  [data-design='portico'] :is(.ec-auth, .ec-account, .ec-track) * {
+  [data-design='portico'] :is(.ec-auth, .ec-account, .ec-track, .ec-cartpg, .ec-checkout, .ec-receiptpg, .ec-legal) * {
     transition-duration: .001ms !important;
     animation-duration: .001ms !important;
   }

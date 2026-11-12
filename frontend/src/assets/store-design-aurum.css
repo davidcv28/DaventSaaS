@@ -66,11 +66,11 @@
 }
 
 /* ---------- Marco común ---------- */
-[data-design='aurum'][data-theme] :is(.ec-auth, .ec-auth-card, .ec-account, .ec-track) :is(a, button, input, select, textarea):focus-visible {
+[data-design='aurum'][data-theme] :is(.ec-auth, .ec-auth-card, .ec-account, .ec-track, .ec-cartpg, .ec-checkout, .ec-receiptpg, .ec-legal) :is(a, button, input, select, textarea):focus-visible {
   outline: 2px solid var(--dz-accent);
   outline-offset: 3px;
 }
-[data-design='aurum'][data-theme] :is(.ec-auth, .ec-auth-card, .ec-account, .ec-track) ::selection {
+[data-design='aurum'][data-theme] :is(.ec-auth, .ec-auth-card, .ec-account, .ec-track, .ec-cartpg, .ec-checkout, .ec-receiptpg, .ec-legal) ::selection {
   background: var(--store-accent-ink);
   color: var(--sp-on-band, #fff);
 }
@@ -465,12 +465,12 @@
 }
 
 /* ---------- Controles de la cuenta ---------- */
-[data-design='aurum'][data-theme] :is(.ec-account, .ec-track) .sp-field { gap: 8px; }
-[data-design='aurum'][data-theme] :is(.ec-account, .ec-track) .sp-field-label {
+[data-design='aurum'][data-theme] :is(.ec-account, .ec-track, .ec-cartpg, .ec-checkout, .ec-receiptpg, .ec-legal) .sp-field { gap: 8px; }
+[data-design='aurum'][data-theme] :is(.ec-account, .ec-track, .ec-cartpg, .ec-checkout, .ec-receiptpg, .ec-legal) .sp-field-label {
   font: 400 9px/1 var(--dz-mono); letter-spacing: .2em; text-transform: uppercase;
   color: var(--dz-muted);
 }
-[data-design='aurum'][data-theme] :is(.ec-account, .ec-track) .sp-input {
+[data-design='aurum'][data-theme] :is(.ec-account, .ec-track, .ec-cartpg, .ec-checkout, .ec-receiptpg, .ec-legal) .sp-input {
   min-height: 48px;
   padding: 12px 16px;
   border: 1px solid var(--dz-line);
@@ -481,34 +481,34 @@
   box-shadow: inset 0 1px 0 color-mix(in srgb, var(--dz-ink) 4%, transparent);
   transition: border-color .2s var(--dz-ease), box-shadow .2s var(--dz-ease), background .2s;
 }
-[data-design='aurum'][data-theme] :is(.ec-account, .ec-track) .sp-input:hover { border-color: color-mix(in srgb, var(--dz-ink) 32%, var(--dz-line)); }
-[data-design='aurum'][data-theme] :is(.ec-account, .ec-track) .sp-input:focus {
+[data-design='aurum'][data-theme] :is(.ec-account, .ec-track, .ec-cartpg, .ec-checkout, .ec-receiptpg, .ec-legal) .sp-input:hover { border-color: color-mix(in srgb, var(--dz-ink) 32%, var(--dz-line)); }
+[data-design='aurum'][data-theme] :is(.ec-account, .ec-track, .ec-cartpg, .ec-checkout, .ec-receiptpg, .ec-legal) .sp-input:focus {
   border-color: var(--dz-accent);
   background: var(--dz-surface);
   box-shadow: 0 0 0 3px color-mix(in srgb, var(--dz-accent) 18%, transparent);
   outline: none;
 }
-[data-design='aurum'][data-theme] :is(.ec-account, .ec-track) .sp-input::placeholder {
+[data-design='aurum'][data-theme] :is(.ec-account, .ec-track, .ec-cartpg, .ec-checkout, .ec-receiptpg, .ec-legal) .sp-input::placeholder {
   color: var(--dz-muted); opacity: 1;
 }
-[data-design='aurum'][data-theme] :is(.ec-account, .ec-track) .sp-input:disabled {
+[data-design='aurum'][data-theme] :is(.ec-account, .ec-track, .ec-cartpg, .ec-checkout, .ec-receiptpg, .ec-legal) .sp-input:disabled {
   background: color-mix(in srgb, var(--dz-line) 26%, var(--dz-bg));
   color: var(--dz-ink-2);
   cursor: not-allowed;
 }
-[data-design='aurum'][data-theme] :is(.ec-account, .ec-track) .sp-form-error {
+[data-design='aurum'][data-theme] :is(.ec-account, .ec-track, .ec-cartpg, .ec-checkout, .ec-receiptpg, .ec-legal) .sp-form-error {
   color: var(--dz-danger); font-family: var(--dz-body); font-size: 12.5px;
 }
 /* El ojo de contraseña (scoped .ecaf-pass .sp-input) necesita su aire:
    el padding propio del campo no puede pisar los 46px reservados. */
-[data-design='aurum'][data-theme] :is(.ec-account, .ec-track) .ecaf-pass .sp-input { padding-right: 46px; }
-[data-design='aurum'][data-theme] :is(.ec-account, .ec-track) .sp-input:-webkit-autofill {
+[data-design='aurum'][data-theme] :is(.ec-account, .ec-track, .ec-cartpg, .ec-checkout, .ec-receiptpg, .ec-legal) .ecaf-pass .sp-input { padding-right: 46px; }
+[data-design='aurum'][data-theme] :is(.ec-account, .ec-track, .ec-cartpg, .ec-checkout, .ec-receiptpg, .ec-legal) .sp-input:-webkit-autofill {
   -webkit-text-fill-color: var(--dz-ink);
   box-shadow: inset 0 0 0 40px var(--dz-bg);
 }
 
 /* Botón principal: pastilla champagne con tinta profunda. */
-[data-design='aurum'][data-theme] :is(.ec-account, .ec-track) :is(.ecaf-submit, .ec-btn-primary) {
+[data-design='aurum'][data-theme] :is(.ec-account, .ec-track, .ec-cartpg, .ec-checkout, .ec-receiptpg, .ec-legal) :is(.ecaf-submit, .ec-btn-primary) {
   min-height: 50px;
   border: 1px solid transparent;
   border-radius: 999px;
@@ -519,26 +519,26 @@
   box-shadow: 0 14px 30px -18px color-mix(in srgb, var(--dz-accent) 90%, transparent);
   transition: transform .3s var(--dz-ease), box-shadow .3s var(--dz-ease), background .3s;
 }
-[data-design='aurum'][data-theme] :is(.ec-account, .ec-track) :is(.ecaf-submit, .ec-btn-primary):hover:not(:disabled) {
+[data-design='aurum'][data-theme] :is(.ec-account, .ec-track, .ec-cartpg, .ec-checkout, .ec-receiptpg, .ec-legal) :is(.ecaf-submit, .ec-btn-primary):hover:not(:disabled) {
   transform: translateY(-2px);
   box-shadow: 0 22px 40px -20px color-mix(in srgb, var(--dz-accent) 95%, transparent);
   filter: none;
 }
-[data-design='aurum'][data-theme] :is(.ec-account, .ec-track) :is(.ecaf-submit, .ec-btn-primary):active:not(:disabled) {
+[data-design='aurum'][data-theme] :is(.ec-account, .ec-track, .ec-cartpg, .ec-checkout, .ec-receiptpg, .ec-legal) :is(.ecaf-submit, .ec-btn-primary):active:not(:disabled) {
   transform: translateY(0) scale(.99);
 }
-[data-design='aurum'][data-theme] :is(.ec-account, .ec-track) :is(.ecaf-submit, .ec-btn-primary):disabled {
+[data-design='aurum'][data-theme] :is(.ec-account, .ec-track, .ec-cartpg, .ec-checkout, .ec-receiptpg, .ec-legal) :is(.ecaf-submit, .ec-btn-primary):disabled {
   background: color-mix(in srgb, var(--dz-line) 60%, var(--dz-bg));
   color: var(--dz-muted); opacity: 1; cursor: not-allowed; box-shadow: none;
 }
-[data-design='aurum'][data-theme] :is(.ec-account, .ec-track) .ec-btn-ghost {
+[data-design='aurum'][data-theme] :is(.ec-account, .ec-track, .ec-cartpg, .ec-checkout, .ec-receiptpg, .ec-legal) .ec-btn-ghost {
   min-height: 46px;
   border: 1px solid color-mix(in srgb, var(--dz-ink) 38%, transparent);
   border-radius: 999px;
   background: transparent; color: var(--dz-ink);
   font: 600 10.5px/1 var(--dz-body); letter-spacing: .14em; text-transform: uppercase;
 }
-[data-design='aurum'][data-theme] :is(.ec-account, .ec-track) .ec-btn-ghost:hover {
+[data-design='aurum'][data-theme] :is(.ec-account, .ec-track, .ec-cartpg, .ec-checkout, .ec-receiptpg, .ec-legal) .ec-btn-ghost:hover {
   background: var(--dz-ink); color: var(--dz-surface); border-color: var(--dz-ink);
 }
 
@@ -1213,7 +1213,7 @@
   }
 }
 @media (prefers-reduced-motion: reduce) {
-  [data-design='aurum'] :is(.ec-auth, .ec-account, .ec-auth-card, .ec-auth-backdrop, .ec-track) * {
+  [data-design='aurum'] :is(.ec-auth, .ec-account, .ec-auth-card, .ec-auth-backdrop, .ec-track, .ec-cartpg, .ec-checkout, .ec-receiptpg, .ec-legal) * {
     transition-duration: .001ms !important;
     animation-duration: .001ms !important;
     animation-iteration-count: 1 !important;

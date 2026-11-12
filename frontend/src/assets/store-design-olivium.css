@@ -222,29 +222,23 @@
 [data-design='olivium'] .ec-auth .ec-auth-spin{ color:var(--dz-accent-text); }
 
 /* --- Controles --- */
-[data-design='olivium'] .ec-auth .sp-field-label,
-[data-design='olivium'] .ec-account .sp-field-label{
+[data-design='olivium'] :is(.ec-auth, .ec-account, .ec-cartpg, .ec-checkout, .ec-receiptpg, .ec-legal) .sp-field-label{
   font:600 9.5px/1.4 var(--dz-mono); letter-spacing:.18em; text-transform:uppercase;
   color:var(--dz-muted);
 }
-[data-design='olivium'] .ec-auth .sp-field,
-[data-design='olivium'] .ec-account .sp-field{ text-align:left; }
-[data-design='olivium'] .ec-auth .sp-input,
-[data-design='olivium'] .ec-account .sp-input{
+[data-design='olivium'] :is(.ec-auth, .ec-account, .ec-cartpg, .ec-checkout, .ec-receiptpg, .ec-legal) .sp-field{ text-align:left; }
+[data-design='olivium'] :is(.ec-auth, .ec-account, .ec-cartpg, .ec-checkout, .ec-receiptpg, .ec-legal) .sp-input{
   min-height:46px; border-radius:var(--dz-r-2);
   border:1px solid var(--dz-line); box-shadow:none;
   background:var(--dz-surface-2); color:var(--dz-ink);
   font-family:var(--dz-body); font-size:15px;
 }
-[data-design='olivium'] .ec-auth .sp-input::placeholder,
-[data-design='olivium'] .ec-account .sp-input::placeholder{ color:var(--dz-muted); }
-[data-design='olivium'] .ec-auth .sp-input:focus,
-[data-design='olivium'] .ec-account .sp-input:focus{
+[data-design='olivium'] :is(.ec-auth, .ec-account, .ec-cartpg, .ec-checkout, .ec-receiptpg, .ec-legal) .sp-input::placeholder{ color:var(--dz-muted); }
+[data-design='olivium'] :is(.ec-auth, .ec-account, .ec-cartpg, .ec-checkout, .ec-receiptpg, .ec-legal) .sp-input:focus{
   border-color:var(--dz-accent); background:var(--dz-surface);
   box-shadow:0 0 0 3px var(--dz-accent-soft);
 }
-[data-design='olivium'] .ec-auth .sp-form-error,
-[data-design='olivium'] .ec-account .sp-form-error{ color:var(--dz-danger); font-weight:600; }
+[data-design='olivium'] :is(.ec-auth, .ec-account, .ec-cartpg, .ec-checkout, .ec-receiptpg, .ec-legal) .sp-form-error{ color:var(--dz-danger); font-weight:600; }
 [data-design='olivium'] .ec-auth .ecaf .ecaf-submit{
   min-height:50px; border-radius:var(--dz-r-2);
   background: var(--store-accent-ink); color: var(--sp-on-band, #fff);
@@ -398,19 +392,19 @@
 }
 [data-design='olivium'] .ec-account .acc-status{ font-family:var(--dz-body); }
 
-[data-design='olivium'] .ec-account .ec-btn-primary{
+[data-design='olivium'] :is(.ec-account, .ec-cartpg, .ec-checkout, .ec-receiptpg, .ec-legal) .ec-btn-primary{
   min-height:46px; border-radius:var(--dz-r-2);
   background: var(--store-accent-ink); color: var(--sp-on-band, #fff);
   font:700 13px/1 var(--dz-body);
 }
-[data-design='olivium'] .ec-account .ec-btn-primary:hover{ filter:brightness(1.08); }
-[data-design='olivium'] .ec-account .ec-btn-primary:disabled{ opacity:.5; }
-[data-design='olivium'] .ec-account .ec-btn-ghost{
+[data-design='olivium'] :is(.ec-account, .ec-cartpg, .ec-checkout, .ec-receiptpg, .ec-legal) .ec-btn-primary:hover{ filter:brightness(1.08); }
+[data-design='olivium'] :is(.ec-account, .ec-cartpg, .ec-checkout, .ec-receiptpg, .ec-legal) .ec-btn-primary:disabled{ opacity:.5; }
+[data-design='olivium'] :is(.ec-account, .ec-cartpg, .ec-checkout, .ec-receiptpg, .ec-legal) .ec-btn-ghost{
   min-height:44px; border-radius:var(--dz-r-2);
   border:1px solid var(--dz-line); color:var(--dz-ink-2);
   font:600 12.5px/1 var(--dz-body);
 }
-[data-design='olivium'] .ec-account .ec-btn-ghost:hover{
+[data-design='olivium'] :is(.ec-account, .ec-cartpg, .ec-checkout, .ec-receiptpg, .ec-legal) .ec-btn-ghost:hover{
   border-color:var(--dz-accent); color:var(--dz-accent-text);
 }
 [data-design='olivium'] .ec-account .acc-icon-btn{

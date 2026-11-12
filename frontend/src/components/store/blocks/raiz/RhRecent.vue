@@ -45,6 +45,7 @@ const openProduct = (p) => router.push(productTo(p))
         <TplProductCard
           v-for="(p, i) in products" :key="p.id" v-reveal="60 * i"
           class="rh-recent-card" :p="p" :cat="catOf(p)" :brand="brandOf(p)"
+          :desc="p.description || ''"
           :stars="custom.show_reviews" stars-icon="star" seal-shape=""
           quick="Ver producto" @open="openProduct"
         />

@@ -43,7 +43,7 @@ const openProduct = (p) => router.push(productTo(p))
       <div class="rh-offers-grid" :class="`rh-offers-grid--${offers.length}`">
         <TplProductCard
           v-for="(p, i) in offers" :key="p.id" v-reveal="60 * i"
-          class="rh-offers-card" :p="p" :stars="custom.show_reviews" stars-icon="star"
+          class="rh-offers-card" :p="p" :desc="p.description || ''" :stars="custom.show_reviews" stars-icon="star"
           seal-shape="" offer-new quick="Ver producto"
           :save="endsOf(p)" @open="openProduct"
         />

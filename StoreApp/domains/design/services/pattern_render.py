@@ -333,10 +333,15 @@ def _product_fragment(store, products = None, flags = None):
         category = _text(getattr(product.category, 'name', ''), 40)
         brand = _text(getattr(product.brand, 'name', ''), 40)
         off_attr = f' data-off="{off}"' if off else ''
+        #`data-event`: la oferta la firma un descuento programado vigente
+        #(effective_discount), no una oferta manual — es la marca que el
+        #puente usa para el filtro "Eventos" del catálogo del diseño.
+        event_attr = ' data-event="1"' if effective_discount is not None else ''
         #Los datos de la tarjeta viajan como atributos: el catálogo del
         #diseño filtra y ordena en el navegador sin volver al servidor.
         cards.append(
             f'<article class="ds-product" data-cat="{_attr(category)}"'
+            f'{event_attr}'
             f' data-brand="{_attr(brand)}"'
             f' data-name="{_attr(product.name.lower())}"'
             f' data-price="{_attr(amount)}">'
@@ -1658,6 +1663,30 @@ def _effective_site_theme(store, site_theme):
     except Exception:
         return site_theme if isinstance(site_theme, dict) else {}
 
+def _event_count(store):
+    """
+    Productos activos cuya oferta la firma un descuento programado vigente
+    (effective_discount) — espejo del `event_count` del catálogo público:
+    es el conteo GLOBAL (no solo las tarjetas que entran en el documento)
+    y gobierna si el diseño muestra el filtro "Eventos".
+    """
+    from StoreApp.domains.catalog.models import Product
+    from StoreApp.domains.catalog.services.services import (
+        effective_pricing_of,
+        running_discounts_of,
+    )
+    discounts = running_discounts_of(store)
+    if not discounts:
+        return 0
+    total = 0
+    for product in (
+        Product.objects.filter(store = store, is_active = True, is_exclusive = False)
+        .only('price', 'offer_price', 'category', 'brand')
+    ):
+        if effective_pricing_of(product, discounts)[1] is not None:
+            total += 1
+    return total
+
 def render_store_pattern(store, customization = None, product = None, product_missing = False):
     """
     Documento del patrón resuelto contra la tienda:
@@ -1725,6 +1754,10 @@ def render_store_pattern(store, customization = None, product = None, product_mi
         #con la plantilla Vue (que pagina) para no esconder productos.
         'products_total': Product.objects.filter(store = store, is_active = True, is_exclusive = False).count(),
         'products_shown': FRAGMENT_LIMIT,
+        #Descuentos programados vigentes sobre el catálogo entero: viaja al
+        #documento como `data-ds-events` y el puente muestra el filtro
+        #"Eventos" solo cuando hay algo que filtrar (contrato ola5/ola6).
+        'event_count': _event_count(store),
         'html': html,
         #theme_css con el tema efectivo + las reglas del Studio (superficies,
         #fotos, fondo, botones, roles) y las @font-face de las familias

@@ -74,11 +74,11 @@
 }
 
 /* ---------- Marco común ---------- */
-[data-design='sastreria'][data-theme] :is(.ec-auth, .ec-account) :is(a, button, input, select, textarea):focus-visible {
+[data-design='sastreria'][data-theme] :is(.ec-auth, .ec-account, .ec-cartpg, .ec-checkout, .ec-receiptpg, .ec-legal) :is(a, button, input, select, textarea):focus-visible {
   outline: 2px solid var(--dz-accent);
   outline-offset: 3px;
 }
-[data-design='sastreria'][data-theme] :is(.ec-auth, .ec-account) ::selection {
+[data-design='sastreria'][data-theme] :is(.ec-auth, .ec-account, .ec-cartpg, .ec-checkout, .ec-receiptpg, .ec-legal) ::selection {
   background: var(--store-accent-ink);
   color: var(--sp-on-band, #fff);
 }
@@ -252,12 +252,12 @@
 [data-design='sastreria'] .ec-auth .ec-auth-spin { color: var(--dz-accent-text); }
 
 /* ---------- Controles (compartidos auth + cuenta) ---------- */
-[data-design='sastreria'][data-theme] :is(.ec-auth, .ec-account) .sp-field { gap: 8px; }
-[data-design='sastreria'][data-theme] :is(.ec-auth, .ec-account) .sp-field-label {
+[data-design='sastreria'][data-theme] :is(.ec-auth, .ec-account, .ec-cartpg, .ec-checkout, .ec-receiptpg, .ec-legal) .sp-field { gap: 8px; }
+[data-design='sastreria'][data-theme] :is(.ec-auth, .ec-account, .ec-cartpg, .ec-checkout, .ec-receiptpg, .ec-legal) .sp-field-label {
   font: 400 9px/1 var(--dz-mono); letter-spacing: .2em; text-transform: uppercase;
   color: var(--dz-muted);
 }
-[data-design='sastreria'][data-theme] :is(.ec-auth, .ec-account) .sp-input {
+[data-design='sastreria'][data-theme] :is(.ec-auth, .ec-account, .ec-cartpg, .ec-checkout, .ec-receiptpg, .ec-legal) .sp-input {
   min-height: 48px;
   padding: 12px 14px;
   border: 1px solid var(--dz-line);
@@ -268,37 +268,37 @@
   box-shadow: none;
   transition: border-color .2s, box-shadow .2s, background .2s;
 }
-[data-design='sastreria'][data-theme] :is(.ec-auth, .ec-account) .sp-input:hover { border-color: var(--dz-line-strong); }
-[data-design='sastreria'][data-theme] :is(.ec-auth, .ec-account) .sp-input:focus {
+[data-design='sastreria'][data-theme] :is(.ec-auth, .ec-account, .ec-cartpg, .ec-checkout, .ec-receiptpg, .ec-legal) .sp-input:hover { border-color: var(--dz-line-strong); }
+[data-design='sastreria'][data-theme] :is(.ec-auth, .ec-account, .ec-cartpg, .ec-checkout, .ec-receiptpg, .ec-legal) .sp-input:focus {
   border-color: var(--dz-accent);
   background: var(--dz-surface);
   box-shadow: 0 0 0 3px color-mix(in srgb, var(--dz-accent) 15%, transparent);
 }
-[data-design='sastreria'][data-theme] :is(.ec-auth, .ec-account) .sp-input::placeholder {
+[data-design='sastreria'][data-theme] :is(.ec-auth, .ec-account, .ec-cartpg, .ec-checkout, .ec-receiptpg, .ec-legal) .sp-input::placeholder {
   color: var(--dz-muted); opacity: 1;
 }
-[data-design='sastreria'][data-theme] :is(.ec-auth, .ec-account) .sp-input:disabled {
+[data-design='sastreria'][data-theme] :is(.ec-auth, .ec-account, .ec-cartpg, .ec-checkout, .ec-receiptpg, .ec-legal) .sp-input:disabled {
   background: color-mix(in srgb, var(--dz-line) 30%, var(--dz-bg));
   color: var(--dz-ink-2);
   cursor: not-allowed;
 }
-[data-design='sastreria'][data-theme] :is(.ec-auth, .ec-account) select.sp-input {
+[data-design='sastreria'][data-theme] :is(.ec-auth, .ec-account, .ec-cartpg, .ec-checkout, .ec-receiptpg, .ec-legal) select.sp-input {
   color-scheme: light;
 }
-[data-design='sastreria'][data-theme='dark'] :is(.ec-auth, .ec-account) select.sp-input {
+[data-design='sastreria'][data-theme='dark'] :is(.ec-auth, .ec-account, .ec-cartpg, .ec-checkout, .ec-receiptpg, .ec-legal) select.sp-input {
   color-scheme: dark;
 }
-[data-design='sastreria'][data-theme] :is(.ec-auth, .ec-account) .sp-form-error {
+[data-design='sastreria'][data-theme] :is(.ec-auth, .ec-account, .ec-cartpg, .ec-checkout, .ec-receiptpg, .ec-legal) .sp-form-error {
   color: var(--dz-danger); font-family: var(--dz-body); font-size: 12.5px;
 }
-[data-design='sastreria'][data-theme] :is(.ec-auth, .ec-account) .sp-input:-webkit-autofill {
+[data-design='sastreria'][data-theme] :is(.ec-auth, .ec-account, .ec-cartpg, .ec-checkout, .ec-receiptpg, .ec-legal) .sp-input:-webkit-autofill {
   -webkit-text-fill-color: var(--dz-ink);
   box-shadow: inset 0 0 0 40px var(--dz-bg);
 }
 
 /* Botón principal: placa de tinta del taller, al pasar el puntero se tiñe
    de cuero (misma lógica que .btn-primary del patrón). */
-[data-design='sastreria'][data-theme] :is(.ec-auth, .ec-account) :is(.ecaf-submit, .ec-btn-primary) {
+[data-design='sastreria'][data-theme] :is(.ec-auth, .ec-account, .ec-cartpg, .ec-checkout, .ec-receiptpg, .ec-legal) :is(.ecaf-submit, .ec-btn-primary) {
   min-height: 50px;
   border: 1px solid transparent;
   border-radius: var(--dz-radius);
@@ -308,27 +308,27 @@
   filter: none;
   transition: transform .3s cubic-bezier(.22, 1, .36, 1), background .3s, color .3s, box-shadow .3s;
 }
-[data-design='sastreria'][data-theme] :is(.ec-auth, .ec-account) :is(.ecaf-submit, .ec-btn-primary):hover:not(:disabled) {
+[data-design='sastreria'][data-theme] :is(.ec-auth, .ec-account, .ec-cartpg, .ec-checkout, .ec-receiptpg, .ec-legal) :is(.ecaf-submit, .ec-btn-primary):hover:not(:disabled) {
   transform: translateY(-2px);
   background: var(--store-accent-ink);
   color: var(--sp-on-band, #fff);
   box-shadow: 0 18px 30px -26px color-mix(in srgb, var(--dz-accent) 80%, transparent);
   filter: none;
 }
-[data-design='sastreria'][data-theme] :is(.ec-auth, .ec-account) :is(.ecaf-submit, .ec-btn-primary):active:not(:disabled) {
+[data-design='sastreria'][data-theme] :is(.ec-auth, .ec-account, .ec-cartpg, .ec-checkout, .ec-receiptpg, .ec-legal) :is(.ecaf-submit, .ec-btn-primary):active:not(:disabled) {
   transform: translateY(0) scale(.995);
 }
-[data-design='sastreria'][data-theme] :is(.ec-auth, .ec-account) :is(.ecaf-submit, .ec-btn-primary):disabled {
+[data-design='sastreria'][data-theme] :is(.ec-auth, .ec-account, .ec-cartpg, .ec-checkout, .ec-receiptpg, .ec-legal) :is(.ecaf-submit, .ec-btn-primary):disabled {
   background: var(--dz-line); color: var(--dz-ink-2); opacity: 1; cursor: not-allowed;
 }
-[data-design='sastreria'][data-theme] :is(.ec-auth, .ec-account) .ec-btn-ghost {
+[data-design='sastreria'][data-theme] :is(.ec-auth, .ec-account, .ec-cartpg, .ec-checkout, .ec-receiptpg, .ec-legal) .ec-btn-ghost {
   min-height: 46px;
   border: 1px solid color-mix(in srgb, var(--dz-ink) 40%, transparent);
   border-radius: var(--dz-radius);
   background: transparent; color: var(--dz-ink);
   font: 500 9.5px/1 var(--dz-mono); letter-spacing: .2em; text-transform: uppercase;
 }
-[data-design='sastreria'][data-theme] :is(.ec-auth, .ec-account) .ec-btn-ghost:hover {
+[data-design='sastreria'][data-theme] :is(.ec-auth, .ec-account, .ec-cartpg, .ec-checkout, .ec-receiptpg, .ec-legal) .ec-btn-ghost:hover {
   background: var(--dz-ink); color: var(--dz-bg); border-color: var(--dz-ink);
 }
 
@@ -671,7 +671,7 @@
   }
 }
 @media (prefers-reduced-motion: reduce) {
-  [data-design='sastreria'] :is(.ec-auth, .ec-account) * {
+  [data-design='sastreria'] :is(.ec-auth, .ec-account, .ec-cartpg, .ec-checkout, .ec-receiptpg, .ec-legal) * {
     transition-duration: .001ms !important;
     animation-duration: .001ms !important;
   }

@@ -54,6 +54,7 @@ const viewAll = 'Ver todo el catálogo'
       <TplProductCard
         v-for="(p, i) in shopProducts" :key="p.id" v-reveal="(i % 4) * 80"
         class="sp-card" :p="p" :cat="shopCatOf(p)" :brand="shopBrandOf(p)"
+        :desc="p.description || ''"
         :stars="custom.show_reviews" stars-icon="star" seal-shape="" quick="Ver producto"
         @open="openProduct" />
     </div>
@@ -66,7 +67,7 @@ const viewAll = 'Ver todo el catálogo'
         <div class="sp-shop-rail">
           <TplProductCard
             v-for="(p, i) in g.items" :key="p.id" v-reveal="(i % 4) * 70"
-            class="sp-card" :p="p" :brand="shopBrandOf(p)"
+            class="sp-card" :p="p" :brand="shopBrandOf(p)" :desc="p.description || ''"
             :stars="custom.show_reviews" stars-icon="star" seal-shape="" quick="Ver producto"
             @open="openProduct" />
         </div>

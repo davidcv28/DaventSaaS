@@ -62,6 +62,7 @@ const headerLines = computed(() => [
         <TplProductCard
           v-for="(p, i) in products" :key="p.id" v-reveal="(i % 4) * 70"
           class="sp-card" :p="p" :cat="shopCatOf(p)" :brand="shopBrandOf(p)"
+          :desc="p.description || ''"
           :stars="custom.show_reviews" stars-icon="star" seal-shape=""
           :index="String(i + 1).padStart(2, '0')"
           quick="Ver producto" @open="openProduct"

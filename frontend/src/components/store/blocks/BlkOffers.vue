@@ -41,7 +41,7 @@ const openProduct = (p) => router.push(productTo(p))
       <div class="sp-shop-featured-grid">
         <TplProductCard
           v-for="(p, i) in offers" :key="p.id" v-reveal="(i % 4) * 80"
-          class="sp-card" :p="p" :stars="custom.show_reviews" stars-icon="star"
+          class="sp-card" :p="p" :desc="p.description || ''" :stars="custom.show_reviews" stars-icon="star"
           seal-shape="" offer-new quick="Ver producto"
           :save="endsOf(p)" @open="openProduct" />
       </div>

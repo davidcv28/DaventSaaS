@@ -8,8 +8,10 @@ import { JSDOM } from 'jsdom'
 // Regresión del puente de documentos patrón: el host empuja el mapa
 // {producto: unidades|null} del catálogo público por `davent:ds-stock` y el
 // puente repinta .ds-stock de las tarjetas, inyecta la línea .dsx-stock en
-// la ficha y apaga los CTA de lo agotado. jsdom no aplica CSS: se verifican
-// textos, clases y estados disabled/aria.
+// la ficha y apaga el CTA de la ficha de lo agotado. Las tarjetas son un
+// solo link (contrato tarjeta=link, ola6 §1): ya no llevan [data-ds-buy] —
+// el CTA de compra vive solo en la ficha. jsdom no aplica CSS: se
+// verifican textos, clases y estados disabled/aria.
 const here = dirname(fileURLToPath(import.meta.url))
 const bridge = readFileSync(
   join(here, '../../StoreApp/domains/design/services/pattern_bridge.js'),
@@ -77,19 +79,22 @@ describe('pattern bridge — disponibilidad de stock', () => {
     expect(cardState(272)?.tag).toContain('98 disponibles')
     expect(cardState(273)?.tag).toContain('1 disponible')
     expect(cardState(274)?.tag).toContain('Stock ilimitado')
-    expect(cardState(272)?.buyDisabled).toBe(false)
+    // Contrato tarjeta=link: ningún CTA dentro de .ds-product.
+    expect(cardState(272)?.buyDisabled).toBeNull()
+    expect($$('.ds-product [data-ds-buy]')).toHaveLength(0)
     const line = window.document.querySelector('.dsx-stock')
     expect(line?.textContent).toContain('98 unidades disponibles')
     expect(line?.classList.contains('is-out')).toBe(false)
   })
 
-  it('agotado apaga tag y CTAs de tarjeta y ficha sin tocar relacionados', () => {
+  it('agotado marca el tag y apaga el CTA de ficha sin tocar relacionados', () => {
     post({ type: 'davent:ds-stock', stock: { 272: 0, 273: 96, 274: null } })
     const z = cardState(272)
     expect(z?.tag).toContain('Agotado')
     expect(z?.tagOut).toBe(true)
-    expect(z?.buyDisabled).toBe(true)
-    expect(z?.buyAria).toBe('true')
+    // La tarjeta no tiene CTA propio (es un solo link): no hay nada que apagar.
+    expect(z?.buyDisabled).toBeNull()
+    expect(z?.buyAria).toBeUndefined()
     const line = window.document.querySelector('.dsx-stock')
     expect(line?.textContent).toContain('Agotado')
     expect(line?.classList.contains('is-out')).toBe(true)
@@ -100,7 +105,7 @@ describe('pattern bridge — disponibilidad de stock', () => {
     // La relacionada (274) conserva su propio stock
     const r = cardState(274)
     expect(r?.tag).toContain('ilimitado')
-    expect(r?.buyDisabled).toBe(false)
+    expect(r?.buyDisabled).toBeNull()
   })
 
   it('el click en un CTA agotado no postea davent:ds-buy', () => {

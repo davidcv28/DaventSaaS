@@ -292,7 +292,7 @@ def sanitize_css(css):
     return STYLE_CLOSE_RE.sub('', css or '')
 
 
-def pattern_document(html, css, theme, surface, preview = '', style = '', nonce = '', preload = None, template = '', commerce = False):
+def pattern_document(html, css, theme, surface, preview = '', style = '', nonce = '', preload = None, template = '', commerce = False, events = 0):
     """
     Documento completo listo para servir como `text/html`.
     `html` ya viene renderizado contra la tienda y `css` ya trae el tema del
@@ -303,7 +303,9 @@ def pattern_document(html, css, theme, surface, preview = '', style = '', nonce 
     `commerce` marca `data-ds-commerce` en <html>: la tienda vende online
     (orders_enabled) y el puente inyecta los CTA "Agregar al carrito" —
     el documento nunca toca la API de carrito (origen opaco), solo avisa
-    al host por postMessage.
+    al host por postMessage. `events` es el conteo global de productos con
+    descuento programado vigente: viaja como `data-ds-events` y el puente
+    muestra el filtro "Eventos" del catálogo solo cuando hay eventos.
     """
     query = {'surface': surface, 'theme': theme}
     if preview:
@@ -321,6 +323,13 @@ def pattern_document(html, css, theme, surface, preview = '', style = '', nonce 
     style = re.sub(r'[^a-z0-9-]', '', str(style or '').lower())[:80]
     style_attr = f' data-ds-style="{style}"' if style else ''
     commerce_attr = ' data-ds-commerce="1"' if commerce else ''
+    #Conteo de eventos del catálogo: entero acotado, saneado igual que el
+    #resto de los flags del <html>.
+    try:
+        events_n = max(0, min(9999, int(events or 0)))
+    except (TypeError, ValueError):
+        events_n = 0
+    events_attr = f' data-ds-events="{events_n}"' if events_n else ''
     #Los dos `<script>` son los únicos ejecutables del documento: el nonce
     #(CSP `script-src 'nonce-…'`) los autoriza sin depender del origen.
     nonce   =   str(nonce or '')
@@ -330,7 +339,7 @@ def pattern_document(html, css, theme, surface, preview = '', style = '', nonce 
         for url in (preload or [])[:2] if url
     )
     return (
-        f'<!doctype html><html lang="es" data-ds-theme="{theme}" data-ds-surface="{surface}"{style_attr}{commerce_attr}>'
+        f'<!doctype html><html lang="es" data-ds-theme="{theme}" data-ds-surface="{surface}"{style_attr}{commerce_attr}{events_attr}>'
         '<head><meta charset="utf-8">'
         '<meta name="viewport" content="width=device-width,initial-scale=1">'
         f'{preload_links}'

@@ -62,7 +62,7 @@
 /* Las hojas internas de cuenta (pedidos, planes, direcciones, miembro)
    consumen --sp-*: se re-teman al token del diseño solo dentro de auth/cuenta
    para no tocar el resto de la web pública. */
-[data-design='impacto'] :is(.ec-auth, .ec-account, .ec-track) {
+[data-design='impacto'] :is(.ec-auth, .ec-account, .ec-track, .ec-cartpg, .ec-checkout, .ec-receiptpg, .ec-legal) {
   --sp-bg: var(--dz-bg);
   --sp-card: var(--dz-surface);
   --sp-card-solid: var(--dz-card);
@@ -83,11 +83,11 @@
   --store-accent: var(--dz-accent);
 }
 
-[data-design='impacto'][data-theme] :is(.ec-auth, .ec-account, .ec-track) :is(a, button, input, select, textarea):focus-visible {
+[data-design='impacto'][data-theme] :is(.ec-auth, .ec-account, .ec-track, .ec-cartpg, .ec-checkout, .ec-receiptpg, .ec-legal) :is(a, button, input, select, textarea):focus-visible {
   outline: 2px solid var(--dz-accent);
   outline-offset: 3px;
 }
-[data-design='impacto'][data-theme] :is(.ec-auth, .ec-account, .ec-track) ::selection {
+[data-design='impacto'][data-theme] :is(.ec-auth, .ec-account, .ec-track, .ec-cartpg, .ec-checkout, .ec-receiptpg, .ec-legal) ::selection {
   background: var(--store-accent-ink);
   color: var(--sp-on-band, #fff);
 }
@@ -256,12 +256,12 @@
 [data-design='impacto'] .ec-auth .ec-auth-spin { color: var(--dz-accent-text); }
 
 /* ---------- Controles (compartidos auth + cuenta) ---------- */
-[data-design='impacto'][data-theme] :is(.ec-auth, .ec-account, .ec-track) .sp-field { gap: 8px; }
-[data-design='impacto'][data-theme] :is(.ec-auth, .ec-account, .ec-track) .sp-field-label {
+[data-design='impacto'][data-theme] :is(.ec-auth, .ec-account, .ec-track, .ec-cartpg, .ec-checkout, .ec-receiptpg, .ec-legal) .sp-field { gap: 8px; }
+[data-design='impacto'][data-theme] :is(.ec-auth, .ec-account, .ec-track, .ec-cartpg, .ec-checkout, .ec-receiptpg, .ec-legal) .sp-field-label {
   font: 700 9px/1 var(--dz-mono); letter-spacing: .22em; text-transform: uppercase;
   color: var(--dz-muted);
 }
-[data-design='impacto'][data-theme] :is(.ec-auth, .ec-account, .ec-track) .sp-input {
+[data-design='impacto'][data-theme] :is(.ec-auth, .ec-account, .ec-track, .ec-cartpg, .ec-checkout, .ec-receiptpg, .ec-legal) .sp-input {
   min-height: 48px;
   padding: 12px 14px;
   border: 1.5px solid var(--dz-line-strong);
@@ -272,33 +272,33 @@
   box-shadow: 3px 3px 0 color-mix(in srgb, var(--dz-ink) 10%, transparent);
   transition: border-color .18s, box-shadow .18s, background .18s;
 }
-[data-design='impacto'][data-theme] :is(.ec-auth, .ec-account, .ec-track) .sp-input:hover {
+[data-design='impacto'][data-theme] :is(.ec-auth, .ec-account, .ec-track, .ec-cartpg, .ec-checkout, .ec-receiptpg, .ec-legal) .sp-input:hover {
   border-color: var(--dz-accent);
 }
-[data-design='impacto'][data-theme] :is(.ec-auth, .ec-account, .ec-track) .sp-input:focus {
+[data-design='impacto'][data-theme] :is(.ec-auth, .ec-account, .ec-track, .ec-cartpg, .ec-checkout, .ec-receiptpg, .ec-legal) .sp-input:focus {
   border-color: var(--dz-ink);
   background: var(--dz-card);
   box-shadow: 0 0 0 3px color-mix(in srgb, var(--dz-accent) 22%, transparent);
 }
-[data-design='impacto'][data-theme] :is(.ec-auth, .ec-account, .ec-track) .sp-input::placeholder {
+[data-design='impacto'][data-theme] :is(.ec-auth, .ec-account, .ec-track, .ec-cartpg, .ec-checkout, .ec-receiptpg, .ec-legal) .sp-input::placeholder {
   color: var(--dz-muted); opacity: 1;
 }
-[data-design='impacto'][data-theme] :is(.ec-auth, .ec-account, .ec-track) .sp-input:disabled {
+[data-design='impacto'][data-theme] :is(.ec-auth, .ec-account, .ec-track, .ec-cartpg, .ec-checkout, .ec-receiptpg, .ec-legal) .sp-input:disabled {
   background: color-mix(in srgb, var(--dz-line) 34%, var(--dz-bg));
   color: var(--dz-ink-2);
   cursor: not-allowed;
   box-shadow: none;
 }
-[data-design='impacto'][data-theme] :is(.ec-auth, .ec-account, .ec-track) .sp-form-error {
+[data-design='impacto'][data-theme] :is(.ec-auth, .ec-account, .ec-track, .ec-cartpg, .ec-checkout, .ec-receiptpg, .ec-legal) .sp-form-error {
   color: var(--dz-danger); font-family: var(--dz-body); font-size: 12.5px;
 }
-[data-design='impacto'][data-theme] :is(.ec-auth, .ec-account, .ec-track) .sp-input:-webkit-autofill {
+[data-design='impacto'][data-theme] :is(.ec-auth, .ec-account, .ec-track, .ec-cartpg, .ec-checkout, .ec-receiptpg, .ec-legal) .sp-input:-webkit-autofill {
   -webkit-text-fill-color: var(--dz-ink);
   box-shadow: inset 0 0 0 40px var(--dz-bg);
 }
 
 /* CTA: bloque de tinta que se enciende en señal. */
-[data-design='impacto'][data-theme] :is(.ec-auth, .ec-account, .ec-track) :is(.ecaf-submit, .ec-btn-primary) {
+[data-design='impacto'][data-theme] :is(.ec-auth, .ec-account, .ec-track, .ec-cartpg, .ec-checkout, .ec-receiptpg, .ec-legal) :is(.ecaf-submit, .ec-btn-primary) {
   min-height: 50px;
   border: 2px solid var(--dz-ink);
   border-radius: var(--dz-radius);
@@ -308,22 +308,22 @@
   box-shadow: 4px 4px 0 var(--dz-accent);
   transition: transform .22s cubic-bezier(.22, 1, .36, 1), background .22s, color .22s, box-shadow .22s;
 }
-[data-design='impacto'][data-theme] :is(.ec-auth, .ec-account, .ec-track) :is(.ecaf-submit, .ec-btn-primary):hover:not(:disabled) {
+[data-design='impacto'][data-theme] :is(.ec-auth, .ec-account, .ec-track, .ec-cartpg, .ec-checkout, .ec-receiptpg, .ec-legal) :is(.ecaf-submit, .ec-btn-primary):hover:not(:disabled) {
   transform: translate(-2px, -2px);
   background: var(--store-accent-ink);
   color: var(--sp-on-band, #fff);
   box-shadow: 6px 6px 0 var(--dz-ink);
 }
-[data-design='impacto'][data-theme] :is(.ec-auth, .ec-account, .ec-track) :is(.ecaf-submit, .ec-btn-primary):active:not(:disabled) {
+[data-design='impacto'][data-theme] :is(.ec-auth, .ec-account, .ec-track, .ec-cartpg, .ec-checkout, .ec-receiptpg, .ec-legal) :is(.ecaf-submit, .ec-btn-primary):active:not(:disabled) {
   transform: translate(2px, 2px);
   box-shadow: 2px 2px 0 var(--dz-ink);
 }
-[data-design='impacto'][data-theme] :is(.ec-auth, .ec-account, .ec-track) :is(.ecaf-submit, .ec-btn-primary):disabled {
+[data-design='impacto'][data-theme] :is(.ec-auth, .ec-account, .ec-track, .ec-cartpg, .ec-checkout, .ec-receiptpg, .ec-legal) :is(.ecaf-submit, .ec-btn-primary):disabled {
   background: var(--dz-line); color: var(--dz-ink-2); opacity: 1; cursor: not-allowed;
   border-color: var(--dz-line-strong);
   box-shadow: none;
 }
-[data-design='impacto'][data-theme] :is(.ec-auth, .ec-account, .ec-track) .ec-btn-ghost {
+[data-design='impacto'][data-theme] :is(.ec-auth, .ec-account, .ec-track, .ec-cartpg, .ec-checkout, .ec-receiptpg, .ec-legal) .ec-btn-ghost {
   min-height: 46px;
   border: 1.5px solid var(--dz-line-strong);
   border-radius: var(--dz-radius);
@@ -331,7 +331,7 @@
   font: 700 10px/1 var(--dz-mono); letter-spacing: .2em; text-transform: uppercase;
   transition: background .2s, color .2s, border-color .2s;
 }
-[data-design='impacto'][data-theme] :is(.ec-auth, .ec-account, .ec-track) .ec-btn-ghost:hover {
+[data-design='impacto'][data-theme] :is(.ec-auth, .ec-account, .ec-track, .ec-cartpg, .ec-checkout, .ec-receiptpg, .ec-legal) .ec-btn-ghost:hover {
   background: var(--dz-ink); color: var(--dz-on-band); border-color: var(--dz-ink);
 }
 
@@ -688,7 +688,7 @@
   border-radius: var(--dz-radius);
 }
 @media (prefers-reduced-motion: reduce) {
-  [data-design='impacto'] :is(.ec-auth, .ec-account, .ec-track) * {
+  [data-design='impacto'] :is(.ec-auth, .ec-account, .ec-track, .ec-cartpg, .ec-checkout, .ec-receiptpg, .ec-legal) * {
     transition-duration: .001ms !important;
     animation-duration: .001ms !important;
   }

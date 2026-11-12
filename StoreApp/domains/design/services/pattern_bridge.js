@@ -523,7 +523,7 @@
    * data-name y acá se filtran por texto, categoría, rango de precio y
    * ofertas, se ordenan y se resuelven las sugerencias del buscador.
    * ------------------------------------------------------------------ */
-  var state = { q: '', cat: '', brands: [], min: '', max: '', offers: false }
+  var state = { q: '', cat: '', brands: [], min: '', max: '', offers: false, events: false }
   var cards = []
   var wrap = null
   var catNames = []
@@ -581,6 +581,7 @@
       if (typeof saved.min === 'string') state.min = saved.min
       if (typeof saved.max === 'string') state.max = saved.max
       state.offers = saved.offers === true
+      state.events = saved.events === true
     } catch (e) {}
   }
   function matchesQuery(card, query) {
@@ -599,6 +600,9 @@
       if (state.brands.indexOf(brand) < 0) return false
     }
     if (state.offers && !card.querySelector('.ds-product-old')) return false
+    //"Eventos" = la oferta la firma un descuento programado vigente: el
+    //fragmento marca la tarjeta con data-event="1" (pattern_render).
+    if (state.events && card.getAttribute('data-event') !== '1') return false
     var price = parseFloat(card.getAttribute('data-price')) || 0
     var min = numOrNull(state.min)
     var max = numOrNull(state.max)
@@ -608,12 +612,16 @@
   }
   function filterCount() {
     return (state.cat ? 1 : 0) + state.brands.length + (state.offers ? 1 : 0) +
-      (state.min !== '' || state.max !== '' ? 1 : 0) + (state.q.trim() ? 1 : 0)
+      (state.events ? 1 : 0) + (state.min !== '' || state.max !== '' ? 1 : 0) +
+      (state.q.trim() ? 1 : 0)
   }
   function syncFilterUI() {
     var filters = document.querySelector('[data-ds-filters]')
     if (filters) {
       ;[].forEach.call(filters.querySelectorAll('button'), function (btn) {
+        //El toggle de eventos (data-ds-event-toggle) no es una categoría:
+        //su aria-pressed lo maneja syncFilterUI más abajo, no el filtro cat.
+        if (btn.hasAttribute('data-ds-event-toggle')) return
         var on = btn.getAttribute('data-cat') === state.cat
         btn.setAttribute('aria-pressed', on ? 'true' : 'false')
         if (btn.classList.contains('f-cat')) btn.classList.toggle('is-active', on)
@@ -628,6 +636,8 @@
     var minInput = document.querySelector('[data-ds-price-min]')
     var maxInput = document.querySelector('[data-ds-price-max]')
     var offersInput = document.querySelector('[data-ds-offers]')
+    var eventsInput = document.querySelector('[data-ds-events]')
+    var eventToggle = document.querySelector('[data-ds-event-toggle]')
     // Con "Aplicar" el rango escrito queda pendiente hasta confirmarlo: no
     // se pisa al tocar otra sección del panel.
     if (!document.querySelector('[data-ds-price-apply]')) {
@@ -635,6 +645,8 @@
       if (maxInput) maxInput.value = state.max
     }
     if (offersInput) offersInput.checked = !!state.offers
+    if (eventsInput) eventsInput.checked = !!state.events
+    if (eventToggle) eventToggle.setAttribute('aria-pressed', state.events ? 'true' : 'false')
     var badge = document.querySelector('[data-ds-filter-count]')
     if (badge) {
       var n = filterCount()
@@ -654,6 +666,7 @@
       var i = state.brands.indexOf(value)
       if (i >= 0) state.brands.splice(i, 1)
     } else if (kind === 'offers') state.offers = false
+    else if (kind === 'events') state.events = false
     else if (kind === 'price') {
       state.min = ''
       state.max = ''
@@ -681,6 +694,7 @@
       chips.push({ kind: 'brand', value: brand, tag: 'Marca', label: brand })
     })
     if (state.offers) chips.push({ kind: 'offers', value: '', tag: 'Oferta', label: 'Solo ofertas' })
+    if (state.events) chips.push({ kind: 'events', value: '', tag: 'Evento', label: 'Solo en evento' })
     if (state.min !== '' || state.max !== '') {
       chips.push({
         kind: 'price', value: '', tag: 'Precio',
@@ -860,7 +874,7 @@
     if (noRes) {
       noRes.hidden = shown > 0
       if (shown === 0) {
-        var filtered = state.q.trim() || state.cat || state.offers || state.min !== '' || state.max !== '' || state.brands.length
+        var filtered = state.q.trim() || state.cat || state.offers || state.events || state.min !== '' || state.max !== '' || state.brands.length
         if (market) {
           noRes.textContent = filtered
             ? 'No hay publicaciones que coincidan con tu búsqueda. Probá con otras palabras o quitá algunos filtros.'
@@ -892,16 +906,67 @@
     if (applyTimer) clearTimeout(applyTimer)
     applyTimer = setTimeout(function () { applyTimer = 0; applyCatalog() }, 140)
   }
+  /* Filtro "Eventos" (ola6 §2): solo existe si el documento declara
+   * `data-ds-events` en <html> con conteo > 0 (descuentos programados
+   * vigentes sobre el catálogo). El control se monta acá — los diseños no
+   * lo traen en su markup— con dos estrategias según lo que tengan:
+   * 1. Checkbox clonado del label de "Solo ofertas" (`data-ds-offers`):
+   *    hereda la piel del diseño (f-check/cat-offers) y viaja en el mismo
+   *    panel, leído por readFilters como `data-ds-events`.
+   * 2. Sin control de ofertas (diseños de solo píldoras, p. ej. esencial):
+   *    botón `.ds-cat` con `data-ds-event-toggle` dentro de
+   *    `[data-ds-filters]`, al lado de las categorías que arma el puente.
+   * Corre ANTES de initFilters para que el input inyectado quede cableado
+   * por el mismo readFilters/syncFilterUI. */
+  function initEvents() {
+    var count = parseInt(root.getAttribute('data-ds-events') || '0', 10) || 0
+    if (count <= 0 || document.querySelector('[data-ds-events],[data-ds-event-toggle]')) return
+    var offers = document.querySelector('[data-ds-offers]')
+    var label = offers && offers.closest ? offers.closest('label') : null
+    if (label && label.parentNode) {
+      var clone = label.cloneNode(true)
+      var input = clone.querySelector('input')
+      if (input) {
+        input.removeAttribute('data-ds-offers')
+        input.setAttribute('data-ds-events', '')
+        input.checked = false
+        var span = clone.querySelector('span')
+        if (span) span.textContent = 'Solo en evento'
+        else clone.textContent = 'Solo en evento'
+        label.parentNode.insertBefore(clone, label.nextSibling)
+        return
+      }
+    }
+    var filters = document.querySelector('[data-ds-filters]')
+    if (!filters) return
+    var btn = document.createElement('button')
+    btn.type = 'button'
+    btn.className = 'ds-cat'
+    btn.setAttribute('data-ds-event-toggle', '')
+    btn.setAttribute('aria-pressed', 'false')
+    btn.textContent = 'En evento'
+    btn.addEventListener('click', function () {
+      state.events = !state.events
+      saveState()
+      syncFilterUI()
+      applyCatalog()
+    })
+    filters.appendChild(btn)
+  }
   function initFilters() {
     var toggle = document.querySelector('[data-ds-filters-toggle]')
     var panel = document.querySelector('[data-ds-filters-panel]')
     var minInput = document.querySelector('[data-ds-price-min]')
     var maxInput = document.querySelector('[data-ds-price-max]')
     var offersInput = document.querySelector('[data-ds-offers]')
+    var eventsInput = document.querySelector('[data-ds-events]')
     function readFilters() {
       state.min = minInput ? minInput.value.trim() : ''
       state.max = maxInput ? maxInput.value.trim() : ''
       state.offers = offersInput ? !!offersInput.checked : false
+      //Sin checkbox inyectado (fallback botón data-ds-event-toggle) el
+      //estado lo maneja su propio listener: no pisarlo al leer precio.
+      if (eventsInput) state.events = !!eventsInput.checked
       saveState()
       syncFilterUI()
       scheduleApply()
@@ -978,6 +1043,7 @@
       if (maxInput) maxInput.addEventListener('input', readFilters)
     }
     if (offersInput) offersInput.addEventListener('change', readFilters)
+    if (eventsInput) eventsInput.addEventListener('change', readFilters)
     ;[].forEach.call(document.querySelectorAll('[data-ds-clear]'), function (btn) {
       btn.addEventListener('click', resetFilters)
     })
@@ -999,6 +1065,7 @@
     state.min = ''
     state.max = ''
     state.offers = false
+    state.events = false
     state.q = ''
     var input = document.querySelector('[data-ds-search-input]')
     if (input) input.value = ''
@@ -1673,21 +1740,14 @@
    * Solo cuando el documento declara data-ds-commerce (la tienda vende
    * online — orders_enabled del backend). El botón nunca habla con la API:
    * postMessage 'davent:ds-buy' al host, que tiene la sesión del comprador.
-   * Se inyecta en las tarjetas .ds-product (marcado compartido del
-   * fragmento de catálogo) y en la ficha [data-surface="product"] antes de
-   * su CTA de WhatsApp — sin reescribir el HTML de ningún diseño.
+   * Se inyecta solo en la ficha [data-surface="product"] antes de su CTA
+   * de WhatsApp — las tarjetas .ds-product son un solo link (contrato
+   * tarjeta=link, ola6 §1); las reglas CSS de `.dsx-buy-wrap` quedan
+   * inertes para diseños que aún las declaran.
    *
-   * Anclaje del botón en tarjeta: va dentro de `.dsx-buy-wrap`, un flex
-   * column propio. `.ds-product>.dsx-buy-wrap{margin-top:auto}` absorbe el
-   * alto libre cuando la tarjeta es flex/grid (las tarjetas de una fila se
-   * estiran a la altura de la más alta y el CTA queda al pie, alineado en
-   * toda la fila); en flujo normal `auto` colapsa a 0 y el botón conserva
-   * su margen mínimo de 10px — el margen vive en el botón, no en el wrap,
-   * así que no hace falta flex forzado para que se vea bien. Cuando la
-   * tarjeta es block el puente le agrega `.dsx-col` (display:flex column)
-   * para que el auto-margin funcione: sin eso una card block con link
-   * `height:100%` dejaba el botón fuera de la caja (clipeado por
-   * overflow:hidden o desbordado sobre la fila siguiente). */
+   * Reglas de tarjeta (`.dsx-buy-wrap`/`.dsx-col`) inertes desde ola6 §1:
+   * se conservan por si un diseño monta wraps propios; `syncCardDock`
+   * solo reevalúa `.dsx-col` sobre los que existan. */
   var COMMERCE_CSS =
     '.ds-product>.dsx-buy-wrap{margin-top:auto}' +
     '.ds-product.dsx-col{display:flex;flex-direction:column}' +
@@ -1774,8 +1834,13 @@
      * tarjeta y la línea .dsx-stock de la ficha. .is-out fuerza visible
      * el "Agotado" aunque la piel oculte .ds-stock (viajero la apaga en
      * la grilla) y deja el CTA muerto con pointer-events + aria. */
-    '.ds-stock.is-out{display:inline-flex!important;color:var(--ds-danger,#dc2626)}' +
-    'html[data-ds-theme="dark"] .ds-stock.is-out{color:color-mix(in srgb,var(--ds-danger,#f87171) 60%,#fff)}' +
+    '.ds-product .ds-stock.is-out{display:inline-flex!important;color:var(--ds-danger,#dc2626)}' +
+    /* Especificidad sobre `.ds-product`: empata con hides intencionales de
+     * las pieles (`[data-ds-view-mode="list"] .ds-stock{display:none!
+     * important}` de calzado) y el puente va ANTES de la hoja del diseño —
+     * sin la clase extra el "Agotado" perdía la cascada justo en la vista
+     * donde más importa (QA ola7 M-3). */
+    'html[data-ds-theme="dark"] .ds-product .ds-stock.is-out{color:color-mix(in srgb,var(--ds-danger,#f87171) 60%,#fff)}' +
     '.dsx-stock{display:flex;align-items:center;gap:6px;margin:12px 0 0;font-size:12.5px;font-weight:600;line-height:1.45;color:var(--ds-text,var(--ink,currentColor));opacity:.85}' +
     '.dsx-stock i{width:6px;height:6px;border-radius:50%;background:var(--ds-success,#0f9d58);flex:none}' +
     '.dsx-stock.is-out{color:var(--ds-danger,#dc2626);opacity:1}' +
@@ -1822,23 +1887,13 @@
     b.textContent = 'Comprar ahora'
     return b
   }
+  /* Contrato de tarjeta (ola6 §1): la tarjeta es UN solo link — el CTA de
+   * compra vive solo en la ficha (`injectPdpBuy`). Ya no se monta
+   * `.dsx-buy-wrap`/`button.dsx-buy` dentro de `.ds-product`; la función se
+   * conserva porque los puntos de re-inyección (rAF, load, observer) la
+   * llaman junto a `injectPdpBuy` y `syncCardDock` sigue re-evaluando la
+   * clase `.dsx-col` si algún diseño deja wraps propios. */
   function injectCardBuys() {
-    var cards = document.querySelectorAll('.ds-product:not([data-ds-buy-done])')
-    for (var i = 0; i < cards.length; i++) {
-      var card = cards[i]
-      var link = card.querySelector('[data-ds-product]')
-      var pid = link ? link.getAttribute('data-ds-product') : ''
-      if (!pid) continue
-      card.setAttribute('data-ds-buy-done', '1')
-      /* El botón va en `.dsx-buy-wrap` (flex column propio): el
-       * `margin-top:auto` del wrap lo ancla al pie cuando la tarjeta es
-       * flex/grid — en flujo normal colapsa a 0 sin perder el margen
-       * mínimo del botón. */
-      var wrap = document.createElement('div')
-      wrap.className = 'dsx-buy-wrap'
-      wrap.appendChild(dsBuyButton(pid))
-      card.appendChild(wrap)
-    }
     syncCardDock()
   }
   /* `.ds-col` en la tarjeta: solo cuando su display computado NO es
@@ -2280,6 +2335,7 @@
   initCommerce()
   buildFilters()
   initSearch()
+  initEvents()
   initFilters()
   initView()
   initReviews()

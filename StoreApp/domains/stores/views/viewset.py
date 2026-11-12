@@ -765,7 +765,7 @@ class StoreViewSet(StoreBaseViewSet):
         #superficies cubre: pedir el documento completo (HTML+CSS+JS) acá
         #duplicaba ~100 KB por carga. `?meta=1` devuelve el sobre liviano.
         if request.query_params.get('meta'):
-            keys        =   ('slug', 'nombre', 'style', 'ready', 'surfaces', 'products_total', 'products_shown', 'dark')
+            keys        =   ('slug', 'nombre', 'style', 'ready', 'surfaces', 'products_total', 'products_shown', 'dark', 'event_count')
             payload     =   {key: data.get(key) for key in keys}
             payload['has_html'] = bool(data.get('html'))
             revision_source = '\0'.join(str(data.get(key) or '') for key in ('html', 'css', 'js'))
@@ -808,6 +808,9 @@ class StoreViewSet(StoreBaseViewSet):
             preload =   data.get('preload') or [],
             template    =   request.query_params.get('template') or '',
             commerce    =   orders_enabled(store),
+            #Descuentos programados vigentes: `data-ds-events` en <html> —
+            #el puente muestra el filtro "Eventos" del catálogo solo si hay.
+            events      =   data.get('event_count') or 0,
         )
         response            =   HttpResponse(html, content_type = 'text/html; charset=utf-8')
         #El documento se embebe en la web (iframe same-origin): el default
