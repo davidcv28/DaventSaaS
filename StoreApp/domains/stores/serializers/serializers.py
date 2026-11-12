@@ -26,6 +26,7 @@ from StoreApp.domains.stores.services import (
     plan_benefits_of,
     profile_has_benefit,
     storage_payload,
+    store_has_reviews,
 )
 from StoreApp.domains.stores.services.storage import object_url
 from StoreApp.domains.stores.site_theme import (
@@ -693,11 +694,11 @@ class StoreCustomizationPublicSerializer(StoreCustomizationSerializer):
         return bool((customization.facebook or '').strip())
     def to_representation(self, customization):
         data                =   super().to_representation(customization)
-        #Las opiniones (valoraciones y comentarios) son premium
-        #(has_product_comments): si la tienda bajó de plan la web pública
-        #no las muestra aunque los toggles quedaron en True (al volver a
-        #premium reaparecen solos).
-        if not profile_has_benefit(customization.store.user, 'has_product_comments'):
+        #Las opiniones (valoraciones y comentarios) son de tiendas
+        #ecommerce (store_has_reviews): si la tienda bajó de plan la web
+        #pública no las muestra aunque los toggles quedaron en True (al
+        #volver al plan ecommerce reaparecen solas).
+        if not store_has_reviews(customization.store):
             data['show_reviews']    =   False
             data['show_comments']   =   False
         #La identidad visual Premium nueva no se muestra si el plan bajó

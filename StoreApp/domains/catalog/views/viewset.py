@@ -37,6 +37,7 @@ from StoreApp.domains.stores.services import (
     profile_has_benefit,
     remove_background,
     storage_payload,
+    store_has_reviews,
     upload_brand_image,
     upload_product_image,
     validate_image_file,
@@ -230,11 +231,12 @@ class ReviewViewSet(CatalogGateMixin, CatalogBaseViewSet):
     viewset_config  =   ReviewConfigs
     http_method_names   =   ['get', 'patch', 'delete', 'head', 'options']
     def _deny_without_reviews(self):
-        #Las opiniones son premium ('has_product_comments'): sin el flag
-        #tampoco se moderan desde el panel (la web pública ya las cierra).
-        if not profile_has_benefit(self.my_store().user, 'has_product_comments'):
+        #Las opiniones son de tiendas ecommerce (store_has_reviews): sin
+        #el plan tampoco se moderan desde el panel (la web pública ya las
+        #cierra).
+        if not store_has_reviews(self.my_store()):
             return Response(
-                {'detail': 'Las valoraciones y comentarios están disponibles con el plan Premium.'},
+                {'detail': 'Las valoraciones y comentarios están disponibles con el plan Ecommerce.'},
                 status = status.HTTP_403_FORBIDDEN,
             )
         return None

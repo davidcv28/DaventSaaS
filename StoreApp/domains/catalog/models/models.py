@@ -250,19 +250,22 @@ class Discount(models.Model):
         moment  =   moment or timezone.now()
         return self.is_active and self.starts_at <= moment and (self.ends_at is None or self.ends_at > moment)
 #=========================================
-# PRODUCT REVIEW MODEL (valoraciones y comentarios de visitantes)
+# PRODUCT REVIEW MODEL (valoraciones y comentarios de compradores)
 #=========================================
 class ProductReview(models.Model):
     """
-    Opinión de un visitante sobre un producto de la web pública: like/dislike
-    (is_positive, solo si la tienda habilitó valoraciones) y/o texto (solo
-    con comentarios premium). Se publica directo — el dueño modera
-    borrando desde su panel (no hay pre-aprobación).
-    El alta pide nombre+apellido+email+captcha (fricción antispam); el
-    email nunca sale en la API pública (solo lo ve el dueño al moderar).
+    Opinión de un comprador registrado sobre un producto de la web
+    pública: like/dislike (is_positive, solo si la tienda habilitó
+    valoraciones) y/o texto (solo con comentarios). Se publica directo —
+    el dueño modera borrando desde su panel (no hay pre-aprobación).
+    El alta exige sesión de comprador (customer_access): la identidad se
+    copia de la cuenta (`customer` + name/surname/email snapshot — el
+    email nunca sale en la API pública, solo lo ve el dueño al moderar).
+    `customer` queda en NULL en las opiniones históricas anónimas.
     """
     store                       =   models.ForeignKey(Store, on_delete = models.CASCADE, related_name = 'product_reviews', db_index = False)
     product                     =   models.ForeignKey(Product, on_delete = models.CASCADE, related_name = 'reviews', db_index = False)
+    customer                    =   models.ForeignKey('customers.Customer', on_delete = models.SET_NULL, related_name = 'product_reviews', null = True, blank = True, db_index = False, verbose_name = 'Cliente')
     is_positive                 =   models.BooleanField(null = True, blank = True, verbose_name = 'Le gustó')
     text                        =   models.CharField(max_length = 600, blank = True, verbose_name = 'Comentario')
     #Respuesta pública del dueño (se escribe desde su panel, nunca el

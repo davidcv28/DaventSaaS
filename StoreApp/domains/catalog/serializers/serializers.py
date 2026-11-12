@@ -262,22 +262,17 @@ class ReviewPublicSerializer(serializers.ModelSerializer):
         surname =   (review.surname or '').strip()
         return f'{surname[0]}.' if surname else ''
 #=========================================
-# REVIEW CREATE SERIALIZER (escritura pública: rating según show_reviews,
-# texto según show_comments — el viewset pasa ambos flags en context)
+# REVIEW CREATE SERIALIZER (escritura del comprador autenticado: rating
+# según show_reviews, texto según show_comments — el viewset pasa ambos
+# flags en context; la identidad sale de request.customer, nunca del
+# payload)
 #=========================================
 class ReviewCreateSerializer(serializers.ModelSerializer):
     is_positive                 =   serializers.BooleanField(**ReviewFields['is_positive'])
     text                        =   serializers.CharField(**ReviewFields['text'])
-    name                        =   serializers.CharField(**ReviewFields['name'])
-    surname                     =   serializers.CharField(**ReviewFields['surname'])
-    email                       =   serializers.EmailField(**ReviewFields['email'])
-    #Honeypot + captcha firmado (mismo challenge del formulario de contacto).
-    website                     =   serializers.CharField(required = False, allow_blank = True, write_only = True)
-    challenge_id                =   serializers.CharField(write_only = True)
-    captcha_answer              =   serializers.CharField(max_length = 8, write_only = True)
     class Meta:
         model                   =   ProductReview
-        fields                  =   ['is_positive', 'text', 'name', 'surname', 'email', 'website', 'challenge_id', 'captcha_answer']
+        fields                  =   ['is_positive', 'text']
     def validate(self, attrs):
         can_rate                =   self.context.get('can_rate', False)
         can_comment             =   self.context.get('can_comment', False)

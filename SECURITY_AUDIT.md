@@ -429,6 +429,23 @@ positivo) antes de borrar el campo), los flags
 superficie: `GET .../reviews/captcha/`, `GET/POST
 .../products/<id>/reviews/` públicos y `GET/DELETE /api/reviews/` del dueño.
 
+**Actualización 2026-11-12 — opiniones solo de compradores registrados en
+tiendas ecommerce.** El alta anónima con captcha quedó eliminada: el POST
+exige `CustomerJWTAuthentication` + `IsCustomer` (Bearer `customer_access`)
+y la identidad se copia de `request.customer` (FK `ProductReview.customer`
+nullable + snapshot name/surname/email — las históricas anónimas quedan con
+`customer=NULL` y legibles). El endpoint `reviews/captcha` y los campos
+name/surname/email/honeypot del serializer ya no existen; el GET del
+listado sigue público. La función completa quedó gateada por
+`store_has_reviews` (`has_product_comments` + `has_ecommerce` +
+`has_customer_auth`): sin los 3 flags los endpoints responden 404, el
+PATCH de toggles los descarta y la moderación da 403. El antispam del
+formulario anónimo ya no aplica — la fricción la da la cuenta registrada
+(verificación de email + sesión), que es más fuerte que captcha+honeypot.
+En las webs con patrón, el POST viaja por el relay `davent:ds-api` y el
+host lo resuelve con `customerHttp` (Bearer del comprador; la whitelist
+`PUBLIC_API_RE` sigue atando la URL a la tienda que embebe).
+
 ### Controles aplicados (diseño)
 
 | Control | Dónde |

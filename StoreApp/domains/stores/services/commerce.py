@@ -43,6 +43,21 @@ def store_has_own_storage(store):
     """True si el plan del dueño habilita el bucket R2 propio (has_own_storage)."""
     from StoreApp.domains.stores.services.services import profile_has_benefit
     return profile_has_benefit(store.user, 'has_own_storage')
+
+
+def store_has_reviews(store):
+    """
+    True si el plan habilita las opiniones de producto (valoraciones +
+    comentarios): `has_product_comments` (la sección) + `has_ecommerce` y
+    `has_customer_auth` — las escriben compradores registrados de una
+    tienda que vende online, nunca un visitante anónimo.
+    """
+    from StoreApp.domains.stores import services as store_services
+    return (
+        store_services.profile_has_benefit(store.user, 'has_product_comments')
+        and store_services.profile_has_benefit(store.user, 'has_ecommerce')
+        and store_services.profile_has_benefit(store.user, 'has_customer_auth')
+    )
 #=========================================
 # ORDERS ENABLED (regla efectiva de venta online)
 #=========================================

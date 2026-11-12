@@ -429,6 +429,7 @@
     if (d.type === 'davent:ds-account-state') {
       accountAuthed = d.authed === true
       paintAccount()
+      if (typeof reviewsSync === 'function') reviewsSync()
     }
     /* Contador del carrito: también lo empuja el host (la sesión del
      * comprador vive afuera — el documento es origen opaco). Solo pinta
@@ -1338,26 +1339,30 @@
   }
   /* Opiniones de la ficha: el HTML del diseño ya trae `.ds-reviews` con
    * la lista renderizada + data-rate/data-comment (los toggles del dueño)
-   * y las URLs de la API pública. El puente arma el formulario, carga el
-   * captcha y publica por fetch — mismos endpoints que la vista Vue.
+   * y la URL de la API pública. El puente arma el formulario — el POST
+   * exige sesión de comprador (el host adjunta el Bearer customer_access
+   * al relay `ds-api`): sin sesión se muestra el acceso y el clic viaja
+   * por `davent:ds-account`; con sesión se publica voto/texto, nunca
+   * nombre/email/captcha (la identidad la fija el backend).
    * Cuando ambas opciones están apagadas el fragmento llega vacío y la
    * sección se oculta con CSS (:has/.ds-reviews ausente). */
   var REVIEW_THUMB = {
     up: '<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 10v12"/><path d="M15 5.88 14 10h5.83a2 2 0 0 1 1.92 2.56l-2.33 8A2 2 0 0 1 17.5 22H4a2 2 0 0 1-2-2v-8a2 2 0 0 1 2-2h2.76a2 2 0 0 0 1.79-1.11L12 2a3.13 3.13 0 0 1 3 3.88Z"/></svg>',
     down: '<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M17 14V2"/><path d="m9 18.12 1 4.88H4.17a2 2 0 0 1-1.92-2.56l2.33-8A2 2 0 0 1 6.5 2H20a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2h-2.76a2 2 0 0 0-1.79 1.11L12 22a3.13 3.13 0 0 1-3-3.88Z"/></svg>'
   }
+  /* La sesión la empuja el host por `davent:ds-account-state`: el gate
+   * del formulario de opiniones se repinta con cada cambio. */
+  var reviewsSync = null
   function initReviews() {
     var box = document.querySelector('.ds-reviews')
     var formHost = box ? box.querySelector('[data-ds-rev-form]') : null
     if (!box || !formHost || box.getAttribute('data-ds-rev-ready')) return
     box.setAttribute('data-ds-rev-ready', '1')
     var revUrl = box.getAttribute('data-rev-url') || ''
-    var capUrl = box.getAttribute('data-cap-url') || ''
     var canRate = box.getAttribute('data-rate') === '1'
     var canComment = box.getAttribute('data-comment') === '1'
     var list = box.querySelector('[data-ds-rev-list]')
     var vote = null
-    var challenge = null
     var busy = false
     var form = document.createElement('form')
     form.className = 'ds-rev-fields'
@@ -1369,42 +1374,36 @@
         '<button type="button" class="ds-rev-pick" data-v="down" role="radio" aria-checked="false">' + REVIEW_THUMB.down + '<span>No me gustó</span></button>' +
         '</div>'
     }
-    html += '<div class="ds-rev-row">' +
-      '<input class="ds-rev-input" name="name" maxlength="80" autocomplete="given-name" placeholder="Tu nombre" required>' +
-      '<input class="ds-rev-input" name="surname" maxlength="80" autocomplete="family-name" placeholder="Tu apellido" required>' +
-      '</div>' +
-      '<input class="ds-rev-input" name="email" type="email" autocomplete="email" placeholder="nombre@correo.com" required>'
     if (canComment) {
       html += '<textarea class="ds-rev-input ds-rev-area" name="text" rows="3" maxlength="600" placeholder="Contale a otros qué te pareció este producto"></textarea>'
     }
-    html += '<div class="ds-rev-cap">' +
-      '<span class="ds-rev-q" data-rev-question>Cargando…</span>' +
-      '<input class="ds-rev-input" name="captcha_answer" inputmode="numeric" autocomplete="off" placeholder="Respuesta" required>' +
-      '<button type="button" class="ds-rev-reload" data-rev-reload aria-label="Nueva pregunta" title="Nueva pregunta">↻</button>' +
-      '</div>' +
-      '<div class="ds-rev-hp" aria-hidden="true"><label>Website <input name="website" tabindex="-1" autocomplete="off"></label></div>' +
-      '<p class="ds-rev-status" data-rev-status role="status" aria-live="polite"></p>' +
+    html += '<p class="ds-rev-status" data-rev-status role="status" aria-live="polite"></p>' +
       '<button type="submit" class="ds-rev-send">Publicar opinión</button>'
     form.innerHTML = html
+    var gate = document.createElement('div')
+    gate.className = 'ds-rev-gate'
+    gate.innerHTML = '<p class="ds-rev-gate-t">Iniciá sesión para dejar tu opinión.</p>' +
+      '<button type="button" class="ds-rev-send" data-rev-login>Ingresar o crear cuenta</button>'
+    gate.querySelector('[data-rev-login]').addEventListener('click', function () {
+      parent.postMessage({ type: 'davent:ds-account' }, '*')
+    })
+    formHost.appendChild(gate)
     formHost.appendChild(form)
+    function syncAuth() {
+      var authed = accountAuthed === true
+      /* display inline: el CSS del diseño puede pisar `hidden` con un
+       * display propio sobre .ds-rev-fields/.ds-rev-gate. */
+      form.style.display = authed ? '' : 'none'
+      gate.style.display = authed ? 'none' : ''
+      send()
+    }
+    reviewsSync = syncAuth
+    syncAuth()
     var status = form.querySelector('[data-rev-status]')
-    var question = form.querySelector('[data-rev-question]')
     function say(msg, ok) {
       if (!status) return
       status.textContent = msg || ''
       status.setAttribute('data-ok', ok ? '1' : '0')
-    }
-    function loadCaptcha() {
-      challenge = null
-      if (question) question.textContent = 'Cargando…'
-      if (!capUrl) { if (question) question.textContent = '—'; return }
-      api(capUrl).then(function (out) {
-        var data = out && out.ok ? out.data : null
-        challenge = data || null
-        if (question) question.textContent = (data && data.question) ? data.question : '—'
-        var capInput = form.querySelector('[name="captcha_answer"]')
-        if (capInput) capInput.value = ''
-      })
     }
     function reviewItem(r) {
       var li = document.createElement('li')
@@ -1442,21 +1441,14 @@
         })
       })
     })
-    var reloadBtn = form.querySelector('[data-rev-reload]')
-    if (reloadBtn) reloadBtn.addEventListener('click', loadCaptcha)
     form.addEventListener('submit', function (e) {
       e.preventDefault()
       if (busy || !revUrl) return
+      if (accountAuthed !== true) { syncAuth(); return }
       var fd = new FormData(form)
       var payload = {
         is_positive: canRate && vote ? (vote === 'up') : null,
-        text: canComment ? String(fd.get('text') || '').trim() : '',
-        name: String(fd.get('name') || '').trim(),
-        surname: String(fd.get('surname') || '').trim(),
-        email: String(fd.get('email') || '').trim(),
-        website: String(fd.get('website') || ''),
-        challenge_id: challenge ? challenge.challenge_id : '',
-        captcha_answer: String(fd.get('captcha_answer') || '').trim()
+        text: canComment ? String(fd.get('text') || '').trim() : ''
       }
       if (canRate && payload.is_positive === null && !(canComment && payload.text)) { say('Elegí si te gustó o escribí un comentario.'); return }
       if (canComment && !canRate && !payload.text) { say('Escribí un comentario para publicar.'); return }
@@ -1474,7 +1466,6 @@
               return !!msg
             })
             say(msg || 'No se pudo publicar. Probá de nuevo.')
-            loadCaptcha()
             return
           }
           form.reset()
@@ -1484,12 +1475,10 @@
             b.classList.remove('is-on')
           })
           say('Tu opinión fue publicada. ¡Gracias!', true)
-          loadCaptcha()
           refreshList()
         })
         .finally(function () { busy = false; send() })
     })
-    loadCaptcha()
   }
   /* Formulario "Contáctanos": el diseño marca una zona con
    * `[data-ds-contact]` + data-url/data-cap-url (mismos endpoints que el

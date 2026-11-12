@@ -1,4 +1,5 @@
 import { http, publicHttp } from './http.js'
+import { customerHttp } from './customer.http.js'
 import { apiUrl, storeUrl } from '../config/env.js'
 import { isHex, deriveAccent, bandPalette, onDark } from '../utils/colorTools.js'
 
@@ -42,13 +43,13 @@ import { isHex, deriveAccent, bandPalette, onDark } from '../utils/colorTools.js
 // POST /api/stores/public/<slug>/contact/       público {name, email, message, website (honeypot),
 //                                                        challenge_id, captcha_answer} -> envía el
 //                                                        mensaje por email al dueño (throttle 10/h por IP)
-// GET  /api/stores/public/<slug>/reviews/captcha/ público -> {challenge_id, question} (mismo captcha)
 // GET  /api/stores/public/<slug>/products/<id>/reviews/ público -> [{is_positive, text, name, surname_initial, created_at}]
-// POST /api/stores/public/<slug>/products/<id>/reviews/ público {is_positive? (like/dislike), text?, name, surname, email,
-//                                                        website (honeypot), challenge_id, captcha_answer}
-//                                                        -> 404 si la tienda apagó valoraciones y comentarios;
-//                                                        el texto solo viaja con show_comments (premium,
-//                                                        has_product_comments); throttle 10/h por IP
+// POST /api/stores/public/<slug>/products/<id>/reviews/ Bearer customer_access {is_positive?, text?}
+//                                                        -> la opinión la escribe un comprador
+//                                                        registrado (la identidad sale de la
+//                                                        sesión, nunca del payload); 404 si la
+//                                                        tienda no es ecommerce o apagó las
+//                                                        opiniones; throttle por IP
 // GET  /api/stores/customization/        Bearer   -> mi diseño web (get_or_create con defaults)
 // PATCH /api/stores/customization/       Bearer {display_name?, name_font?, name_font_size?, headline?, description?,
 //                                                about_title?, about_text?, show_about?, contact_email?, show_contact?,
@@ -259,20 +260,16 @@ export const storesApi = {
     return data
   },
 
-  // Opiniones de producto (valoraciones/comentarios de visitantes): mismo
-  // captcha firmado que el contacto + honeypot 'website' en el payload.
-  async reviewCaptcha(slug) {
-    const { data } = await publicHttp.get(`/stores/public/${slug}/reviews/captcha/`)
-    return data
-  },
-
+  // Opiniones de producto: el listado es público; el alta exige sesión de
+  // comprador (customerHttp adjunta el Bearer customer_access y renueva
+  // la sesión solo — la identidad nunca viaja en el payload).
   async productReviews(slug, productId) {
     const { data } = await publicHttp.get(`/stores/public/${slug}/products/${productId}/reviews/`)
     return data
   },
 
   async sendProductReview(slug, productId, payload) {
-    const { data } = await publicHttp.post(`/stores/public/${slug}/products/${productId}/reviews/`, payload)
+    const { data } = await customerHttp.post(`/stores/public/${slug}/products/${productId}/reviews/`, payload)
     return data
   },
 

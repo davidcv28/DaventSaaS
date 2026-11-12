@@ -786,10 +786,11 @@ THUMB_DOWN_SVG = (
 
 def _review_flags(store, customization):
     """(can_rate, can_comment): mismas reglas que `product_reviews` —
-    el toggle del dueño Y el beneficio `has_product_comments` del plan."""
-    from StoreApp.domains.stores.services import profile_has_benefit
+    los toggles del dueño Y `store_has_reviews` (plan ecommerce: las
+    opiniones las escriben compradores registrados)."""
+    from StoreApp.domains.stores.services import store_has_reviews
 
-    has_reviews = profile_has_benefit(store.user, 'has_product_comments')
+    has_reviews = store_has_reviews(store)
     can_rate = bool(getattr(customization, 'show_reviews', False) and has_reviews)
     can_comment = bool(getattr(customization, 'show_comments', False) and has_reviews)
     return can_rate, can_comment
@@ -839,7 +840,6 @@ def _reviews_fragment(store, product, customization):
         )
     return (
         f'<div class="ds-reviews" data-rev-url="/api/stores/public/{store.slug}/products/{product.pk}/reviews/"'
-        f' data-cap-url="/api/stores/public/{store.slug}/reviews/captcha/"'
         f' data-rate="{1 if can_rate else 0}" data-comment="{1 if can_comment else 0}">'
         f'<ul class="ds-rev-list" data-ds-rev-list>{"".join(items)}</ul>'
         '<div class="ds-rev-form" data-ds-rev-form></div>'

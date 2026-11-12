@@ -64,6 +64,7 @@ from StoreApp.domains.stores.services import (
     send_contact_message,
     serialize_domain,
     storage_payload,
+    store_has_reviews,
     upload_carousel_image,
     upload_cover,
     upload_gallery_image,
@@ -72,6 +73,7 @@ from StoreApp.domains.stores.services import (
     visit_stats_of,
     web_quality_report,
 )
+from StoreApp.domains.customers.authentication import CustomerJWTAuthentication, IsCustomer
 from StoreApp.domains.stores.services.ai_design import (
     AiDesignError,
     design_image_url,
@@ -111,8 +113,9 @@ DESIGN_ADVANCED_FIELDS  =   ('name_font', 'name_font_size', 'accent', 'accent_cu
 #El mapa de ubicación tiene su propio beneficio (has_location_map: Estándar
 #y Premium): se descarta igual que los campos premium, por separado.
 LOCATION_FIELDS         =   ('show_location',)
-#Las opiniones de producto (valoraciones + comentarios) son premium
-#(has_product_comments): sin el flag ambos toggles se descartan del PATCH.
+#Las opiniones de producto (valoraciones + comentarios) son de tiendas
+#ecommerce (store_has_reviews): sin el plan ambos toggles se descartan
+#del PATCH.
 REVIEW_FIELDS           =   ('show_reviews', 'show_comments')
 #La transmisión en vivo es Premium (has_live_stream): sin el flag el link
 #se descarta del PATCH como los campos premium y lo guardado queda intacto.
@@ -397,13 +400,15 @@ class AiDesignImageThrottle(UserRateThrottle):
 class StoreViewSet(StoreBaseViewSet):
     viewset_config  =   StoreConfigs
     #Acciones que atienden visitantes anónimos (web pública, contacto, reseñas).
-    PUBLIC_ACTIONS  =   ('public', 'public_catalog', 'public_pattern', 'public_pattern_document', 'public_pattern_bridge', 'public_pattern_script', 'public_contact', 'public_resolve', 'tls_ask', 'contact_captcha', 'contact', 'review_captcha', 'product_reviews')
+    PUBLIC_ACTIONS  =   ('public', 'public_catalog', 'public_pattern', 'public_pattern_document', 'public_pattern_bridge', 'public_pattern_script', 'public_contact', 'public_resolve', 'tls_ask', 'contact_captcha', 'contact', 'product_reviews')
 
     def initialize_request(self, request, *args, **kwargs):
         #get_authenticators() corre dentro de super().initialize_request(),
-        #antes de que ViewSetMixin resuelva self.action: lo dejamos listo acá
-        #para poder desactivar la autenticación en las acciones públicas.
+        #antes de que ViewSetMixin resuelva self.action y antes de que
+        #self.request exista: método y acción quedan listos acá para poder
+        #desactivar la autenticación en las acciones públicas.
         self.action =   self.action_map.get(request.method.lower())
+        self._request_method =   request.method
         return super().initialize_request(request, *args, **kwargs)
 
     def get_authenticators(self):
@@ -411,11 +416,18 @@ class StoreViewSet(StoreBaseViewSet):
         #zombie tras expirar la sesión) el 401 se disparaba igual en endpoints
         #AllowAny y la consola se llenaba de errores en la web pública. Las
         #acciones públicas no necesitan identidad: cero autenticadores.
+        #Excepción: el POST de opiniones exige sesión de comprador
+        #(customer_access) — el GET del listado sigue anónimo porque la
+        #acción entera está en PUBLIC_ACTIONS y el método decide acá.
+        if self.action == 'product_reviews' and self._request_method == 'POST':
+            return [CustomerJWTAuthentication()]
         if self.action in self.PUBLIC_ACTIONS:
             return []
         return super().get_authenticators()
 
     def get_permissions(self):
+        if self.action == 'product_reviews' and self._request_method == 'POST':
+            return [IsCustomer()]
         if self.action in self.PUBLIC_ACTIONS:
             return [AllowAny()]
         if self.action in ('block', 'unblock'):
@@ -992,10 +1004,11 @@ class StoreViewSet(StoreBaseViewSet):
             pending_stock = _pending_stock_subquery(),
         )
         #La valoración solo se anota si el dueño habilitó opiniones y el
-        #plan las incluye (has_product_comments, premium): score 0-5 =
-        #5 × likes/votos (is_positive binario — el promedio sale del ratio
-        #de likes); sin el flag viaja rating_avg/count en None.
-        if customization is not None and customization.show_reviews and profile_has_benefit(store.user, 'has_product_comments'):
+        #plan las incluye (store_has_reviews: plan ecommerce — las escriben
+        #compradores registrados): score 0-5 = 5 × likes/votos
+        #(is_positive binario — el promedio sale del ratio de likes); sin
+        #el flag viaja rating_avg/count en None.
+        if customization is not None and customization.show_reviews and store_has_reviews(store):
             from django.db.models import (
                 Avg,
                 Case,
@@ -1229,9 +1242,10 @@ class StoreViewSet(StoreBaseViewSet):
         if not profile_has_benefit(store.user, 'has_public_link'):
             raise Http404
         customization   =   getattr(store, 'customization', None)
-        #Las opiniones (valoraciones y comentarios) son premium: sin el
-        #flag la tienda no las recibe aunque los toggles quedaran en True.
-        has_reviews     =   profile_has_benefit(store.user, 'has_product_comments')
+        #Las opiniones son de tiendas ecommerce (store_has_reviews): sin
+        #el plan la tienda no las recibe aunque los toggles quedaran en
+        #True.
+        has_reviews     =   store_has_reviews(store)
         can_rate        =   bool(customization and customization.show_reviews and has_reviews)
         can_comment     =   bool(customization and customization.show_comments and has_reviews)
         if not (can_rate or can_comment):
@@ -1244,11 +1258,6 @@ class StoreViewSet(StoreBaseViewSet):
         #anónimo (no hay customer auth) y un 404 no revela que el
         #producto existe — mismo criterio que el catálogo.
         return get_object_or_404(Product, pk = product_id, store = store, is_active = True, is_exclusive = False)
-
-    @action(detail = False, methods = ['get'], url_path = r'public/(?P<slug>[a-z0-9-]+)/reviews/captcha', throttle_classes = [PublicReadThrottle])
-    def review_captcha(self, request, slug = None):
-        self._review_store(slug)
-        return Response(issue_captcha(slug), status = status.HTTP_200_OK)
 
     @action(detail = False, methods = ['get', 'post'], url_path = r'public/(?P<slug>[a-z0-9-]+)/products/(?P<product_id>[0-9]+)/reviews', throttle_classes = [StoreReviewThrottle])
     def product_reviews(self, request, slug = None, product_id = None):
@@ -1263,28 +1272,25 @@ class StoreViewSet(StoreBaseViewSet):
         if request.method == 'GET':
             reviews     =   product.reviews.all()[:ReviewLimits['list_max']]
             return Response(ReviewPublicSerializer(reviews, many = True).data, status = status.HTTP_200_OK)
+        #POST: el comprador autenticado (CustomerJWTAuthentication +
+        #IsCustomer en get_authenticators/get_permissions) — la identidad
+        #se copia de request.customer, nunca del payload.
+        customer    =   request.customer
         serializer  =   ReviewCreateSerializer(
             data        =   request.data,
             context     =   {'can_rate': can_rate, 'can_comment': can_comment},
         )
         serializer.is_valid(raise_exception = True)
         data        =   serializer.validated_data
-        #Honeypot como en contact: éxito falso sin guardar nada.
-        if data.get('website'):
-            return Response({'Exito': 'Tu opinión fue publicada.'}, status = status.HTTP_200_OK)
-        if not verify_captcha(slug, data['challenge_id'], data['captcha_answer']):
-            return Response(
-                {'captcha_answer': 'El captcha venció o la respuesta no es correcta. Probá de nuevo.'},
-                status = status.HTTP_400_BAD_REQUEST,
-            )
         ProductReview.objects.create(
             store       =   store,
             product     =   product,
+            customer    =   customer,
             is_positive =   data.get('is_positive') if can_rate else None,
             text        =   data.get('text') or '',
-            name        =   data['name'],
-            surname     =   data['surname'],
-            email       =   data['email'],
+            name        =   (customer.first_name or customer.email.split('@')[0] or 'Cliente')[:80],
+            surname     =   (customer.last_name or '')[:80],
+            email       =   customer.email,
         )
         #Aviso del sistema al dueño (notificación deduplicada, no chat).
         from AdminApp.domains.notifications.services import notify_product_review
@@ -1310,7 +1316,7 @@ class StoreViewSet(StoreBaseViewSet):
             discard.extend(DESIGN_ADVANCED_FIELDS)
         if not profile_has_benefit(store.user, 'has_location_map'):
             discard.extend(LOCATION_FIELDS)
-        if not profile_has_benefit(store.user, 'has_product_comments'):
+        if not store_has_reviews(store):
             discard.extend(REVIEW_FIELDS)
         if not profile_has_benefit(store.user, 'has_live_stream'):
             discard.extend(LIVE_STREAM_FIELDS)

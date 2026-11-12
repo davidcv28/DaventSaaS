@@ -622,7 +622,7 @@ class ExclusiveCatalogTests(TestCase):
 
     def setUp(self):
         cache.clear()
-        self.client_owner, self.store   =   _owner('duenio-x', 'tienda-x', has_product_comments = True)
+        self.client_owner, self.store   =   _owner('duenio-x', 'tienda-x', has_product_comments = True, has_customer_auth = True)
         StoreCustomization.objects.create(store = self.store, show_reviews = True, show_comments = True)
         self.normal     =   Product.objects.create(store = self.store, name = 'Normal', price = Decimal('10'), is_active = True)
         self.exclusive  =   Product.objects.create(store = self.store, name = 'Exclusivo', price = Decimal('20'), is_active = True, is_exclusive = True)

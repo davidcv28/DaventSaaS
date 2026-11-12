@@ -3,6 +3,7 @@ import { computed, inject, onBeforeUnmount, ref, watch } from 'vue'
 import { useRouter } from 'vue-router'
 
 import { useCartStore } from '../../stores/cart.store.js'
+import { customerHttp } from '../../api/customer.http.js'
 import { storeHostSlug } from '../../config/env.js'
 
 // Documento real de un diseño del catálogo (DesignPattern):
@@ -146,7 +147,11 @@ const emit = defineEmits(['navigate', 'toggle-theme', 'load', 'buy', 'buy-now', 
 //de la tienda que embebe, y siempre con su slug (nunca el de otra). La
 //raíz (`<slug>/`) es el payload público completo: de ahí el chatbot del
 //diseño saca {greeting, qa} (ya viene filtrado por beneficio + switch).
-const PUBLIC_API_RE = /^\/api\/stores\/public\/[a-z0-9-]+\/(?:reviews\/captcha|contact\/captcha|contact|products\/\d+\/reviews)?\/?$/
+const PUBLIC_API_RE = /^\/api\/stores\/public\/[a-z0-9-]+\/(?:contact\/captcha|contact|products\/\d+\/reviews)?\/?$/
+//El POST de opiniones exige sesión de comprador (Bearer customer_access):
+//pasa por customerHttp — adjunta el access en memoria y renueva la sesión
+//por la cookie refresh igual que el resto de la API del comprador.
+const REVIEW_POST_RE = /\/products\/\d+\/reviews\/?$/
 
 function publicApiUrl(raw) {
   const url = String(raw || '')
@@ -161,18 +166,23 @@ async function relayApi(event) {
   let result = null
   if (url) {
     try {
-      const options = event.data.method === 'POST'
-        ? {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(event.data.body || {}),
-          }
-        : undefined
-      const res = await fetch(url, options)
-      const data = await res.json().catch(() => null)
-      result = { ok: res.ok, data }
-    } catch {
-      result = { ok: false, data: null }
+      if (event.data.method === 'POST' && REVIEW_POST_RE.test(url)) {
+        const { data } = await customerHttp.post(url.replace(/^\/api(?=\/)/, ''), event.data.body || {})
+        result = { ok: true, data }
+      } else {
+        const options = event.data.method === 'POST'
+          ? {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify(event.data.body || {}),
+            }
+          : undefined
+        const res = await fetch(url, options)
+        const data = await res.json().catch(() => null)
+        result = { ok: res.ok, data }
+      }
+    } catch (err) {
+      result = { ok: false, data: err?.response?.data ?? null }
     }
   }
   frame.value?.contentWindow?.postMessage({ type: 'davent:ds-api-result', id, result }, '*')

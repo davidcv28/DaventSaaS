@@ -281,9 +281,6 @@ class PublicEndpointsIgnoreStaleTokenTests(TestCase):
     def test_contact_captcha_ok_with_stale_bearer(self):
         self.assertEqual(self._get(f'{STORES_URL}public/mi-tienda/contact/captcha/').status_code, 200)
 
-    def test_review_captcha_ok_with_stale_bearer(self):
-        self.assertEqual(self._get(f'{STORES_URL}public/mi-tienda/reviews/captcha/').status_code, 200)
-
     def test_protected_endpoint_still_rejects_stale_bearer(self):
         #El corte de auth es solo para acciones públicas: el panel sigue 401.
         self.assertEqual(self._get(f'{STORES_URL}stats/').status_code, 401)

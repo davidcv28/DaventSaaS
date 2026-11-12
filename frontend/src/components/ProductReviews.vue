@@ -2,14 +2,16 @@
 import { ref, reactive, computed, onMounted } from 'vue'
 import { storesApi } from '../api/stores.api.js'
 import { extractApiError } from '../api/http.js'
+import { useCustomerStore } from '../stores/customer.store.js'
+import { useCartStore } from '../stores/cart.store.js'
 import AppIcon from './AppIcon.vue'
 import ProductStars from './ProductStars.vue'
 
-// Opiniones de un producto en la web pública (ficha): lista las últimas y
-// publica nuevas — voto like/dislike (canRate) y/o texto (canComment,
-// premium). El alta pide nombre+apellido+email+captcha firmado (fricción
-// antispam, mismo challenge que el contacto) y un honeypot 'website'; tras
-// enviar, todos los campos se limpian y el captcha se renueva.
+// Opiniones de un producto en la web pública (ficha): el listado es
+// público; el alta exige sesión de comprador (tiendas ecommerce) — voto
+// like/dislike (canRate) y/o texto (canComment). La identidad sale de la
+// cuenta autenticada, nunca del formulario; sin sesión se ofrece el
+// acceso y el modal de auth del layout completa el ingreso.
 const props = defineProps({
   slug: { type: String, required: true },
   productId: { type: [Number, String], required: true },
@@ -20,22 +22,35 @@ const props = defineProps({
   icon: { type: String, default: 'star' },
 })
 
+const customerStore = useCustomerStore()
+const cartStore = useCartStore()
+
 const reviews = ref([])
 const listStatus = ref('loading') // loading | ready | error
+const sessionReady = ref(false)
 
-const form = reactive({ name: '', surname: '', email: '', vote: null, text: '', website: '', captcha_answer: '' })
-const captcha = ref(null)
-const captchaLoading = ref(false)
+const form = reactive({ vote: null, text: '' })
 const formStatus = ref('idle') // idle | loading | success | error
 const formError = ref('')
 
-// El texto publicado queda visible solo con comentarios (premium); los votos
+// El texto publicado queda visible solo con comentarios; los votos
 // siempre. La lista mezcla ambos tipos.
 const shownReviews = computed(() => reviews.value.filter((r) => r.is_positive != null || (props.canComment && r.text)))
 const shownCount = computed(() => props.count + reviews.value.filter((r) => r.local && r.is_positive != null).length)
 const canSubmit = computed(() =>
   (props.canRate && form.vote !== null) || (props.canComment && form.text.trim().length > 0)
 )
+
+// Mismo snapshot que arma el backend: nombre de la cuenta (o prefijo del
+// email) y apellido reducido a inicial — el email jamás se muestra.
+const reviewAuthorName = computed(() => {
+  const c = customerStore.customer
+  return c?.first_name || c?.email?.split('@')[0] || 'Cliente'
+})
+const reviewAuthorInitial = computed(() => {
+  const l = (customerStore.customer?.last_name || '').trim()
+  return l ? `${l[0]}.` : ''
+})
 
 const dateLabel = (iso) => {
   const d = new Date(iso || '')
@@ -52,58 +67,45 @@ async function loadReviews() {
   }
 }
 
-async function loadCaptcha() {
-  captchaLoading.value = true
-  try {
-    captcha.value = await storesApi.reviewCaptcha(props.slug)
-    form.captcha_answer = ''
-  } catch {
-    captcha.value = null
-  } finally {
-    captchaLoading.value = false
-  }
+function openAuth() {
+  cartStore.openAuth('login')
 }
 
 async function submit() {
-  if (formStatus.value === 'loading') return
+  if (formStatus.value === 'loading' || !customerStore.isAuthenticated) return
   formError.value = ''
   formStatus.value = 'loading'
   try {
     await storesApi.sendProductReview(props.slug, props.productId, {
       is_positive: props.canRate ? form.vote : null,
-      text: props.canComment ? form.text.trim() : '',
-      name: form.name.trim(),
-      surname: form.surname.trim(),
-      email: form.email.trim(),
-      website: form.website,
-      challenge_id: captcha.value?.challenge_id || '',
-      captcha_answer: form.captcha_answer.trim()
+      text: props.canComment ? form.text.trim() : ''
     })
     formStatus.value = 'success'
     // Aparece al instante en la lista (local) mientras el backend la sirve.
     reviews.value.unshift({
       is_positive: props.canRate ? form.vote : null,
       text: props.canComment ? form.text.trim() : '',
-      name: form.name.trim(),
-      surname_initial: form.surname.trim() ? `${form.surname.trim()[0]}.` : '',
+      name: reviewAuthorName.value,
+      surname_initial: reviewAuthorInitial.value,
       created_at: new Date().toISOString(),
       local: true
     })
-    Object.assign(form, { name: '', surname: '', email: '', vote: null, text: '', website: '', captcha_answer: '' })
-    loadCaptcha()
+    Object.assign(form, { vote: null, text: '' })
   } catch (e) {
     formStatus.value = 'error'
     const parsed = extractApiError(e)
-    formError.value = parsed.captcha_answer || parsed.is_positive || parsed.text || parsed.name
-      || parsed.surname || parsed.email || parsed.detail || parsed.nonField
+    formError.value = parsed.is_positive || parsed.text || parsed.detail || parsed.nonField
       || 'No se pudo publicar tu opinión. Intentá de nuevo.'
-    loadCaptcha()
+    //Si la sesión murió, customer.http avisa y el layout limpia el store:
+    //el gate de acceso vuelve solo.
   }
 }
 
 onMounted(() => {
   loadReviews()
-  loadCaptcha()
+  customerStore.ensureSession()
+    .catch(() => {})
+    .finally(() => { sessionReady.value = true })
 })
 </script>
 
@@ -137,13 +139,30 @@ onMounted(() => {
       </li>
     </ul>
 
-    <!-- Formulario -->
-    <form class="sp-form spd-rev-form" novalidate @submit.prevent="submit">
+    <!-- Acceso: las opiniones las escriben compradores registrados -->
+    <div v-if="sessionReady && !customerStore.isAuthenticated" class="sp-form spd-rev-gate">
+      <div class="spd-rev-form-head">
+        <span class="sp-form-badge" aria-hidden="true"><AppIcon name="lock" :size="18" /></span>
+        <div>
+          <strong>Dejá tu opinión</strong>
+          <small>Iniciá sesión o creá tu cuenta para valorarla y comentarla.</small>
+        </div>
+      </div>
+      <div class="sp-form-foot">
+        <button type="button" class="sp-btn" @click="openAuth">
+          <AppIcon name="user" :size="16" />
+          Ingresar o crear cuenta
+        </button>
+      </div>
+    </div>
+
+    <!-- Formulario (solo con sesión de comprador) -->
+    <form v-else-if="customerStore.isAuthenticated" class="sp-form spd-rev-form" novalidate @submit.prevent="submit">
       <div class="spd-rev-form-head">
         <span class="sp-form-badge" aria-hidden="true"><AppIcon name="pencil" :size="18" /></span>
         <div>
           <strong>Dejá tu opinión</strong>
-          <small>Se publica con tu nombre. Tu email no se muestra.</small>
+          <small>Se publica a nombre de tu cuenta. Tu email no se muestra.</small>
         </div>
       </div>
 
@@ -163,45 +182,16 @@ onMounted(() => {
         </div>
       </div>
 
-      <div class="sp-form-row">
-        <div class="sp-field">
-          <label for="spd-rev-name">Nombre</label>
-          <input id="spd-rev-name" v-model="form.name" class="sp-input" type="text" maxlength="80" autocomplete="given-name" placeholder="Tu nombre" required />
-        </div>
-        <div class="sp-field">
-          <label for="spd-rev-surname">Apellido</label>
-          <input id="spd-rev-surname" v-model="form.surname" class="sp-input" type="text" maxlength="80" autocomplete="family-name" placeholder="Tu apellido" required />
-        </div>
-      </div>
-      <div class="sp-field">
-        <label for="spd-rev-email">Email</label>
-        <input id="spd-rev-email" v-model="form.email" class="sp-input" type="email" autocomplete="email" placeholder="nombre@correo.com" required />
-      </div>
       <div v-if="canComment" class="sp-field">
         <label for="spd-rev-text">Comentario</label>
         <textarea id="spd-rev-text" v-model="form.text" class="sp-input sp-textarea" rows="3" maxlength="600" placeholder="Contale a otros qué te pareció este producto"></textarea>
         <span class="sp-counter" aria-hidden="true">{{ form.text.length }} / 600</span>
       </div>
-      <div class="sp-field">
-        <label for="spd-rev-captcha">Verificación rápida</label>
-        <div class="sp-captcha-row">
-          <span class="sp-captcha-q"><AppIcon name="shield-check" :size="16" aria-hidden="true" /> {{ captcha?.question || 'Cargando…' }}</span>
-          <input id="spd-rev-captcha" v-model="form.captcha_answer" class="sp-input" type="text" inputmode="numeric" autocomplete="off" placeholder="Respuesta" required />
-          <button type="button" class="sp-icon-btn" :disabled="captchaLoading" aria-label="Nueva pregunta de verificación" title="Nueva pregunta" @click="loadCaptcha">
-            <AppIcon name="refresh" :size="15" />
-          </button>
-        </div>
-      </div>
-      <!-- Honeypot: invisible para personas; los bots lo completan y se descartan. -->
-      <div class="sp-hp" aria-hidden="true">
-        <label for="spd-rev-website">Website</label>
-        <input id="spd-rev-website" v-model="form.website" type="text" tabindex="-1" autocomplete="off" />
-      </div>
 
       <p v-if="formStatus === 'success'" class="sp-form-ok" role="status">Tu opinión fue publicada. ¡Gracias!</p>
       <p v-else-if="formError" class="sp-form-error" role="alert">{{ formError }}</p>
       <div class="sp-form-foot">
-        <button type="submit" class="sp-btn" :disabled="formStatus === 'loading' || !captcha || !canSubmit">
+        <button type="submit" class="sp-btn" :disabled="formStatus === 'loading' || !canSubmit">
           <span v-if="formStatus === 'loading'" class="sp-spinner" aria-hidden="true"></span>
           <AppIcon v-else name="check" :size="16" />
           Publicar opinión

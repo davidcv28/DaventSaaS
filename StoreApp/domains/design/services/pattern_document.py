@@ -263,6 +263,12 @@ html[data-ds-theme="dark"] .ds-stock{color:color-mix(in srgb,var(--ds-success-te
 .ds-rev-reply{margin-top:8px;padding:8px 10px;border-left:2px solid var(--ds-accent,var(--line,#bbb));background:color-mix(in srgb,var(--ds-accent,#888) 7%,transparent);border-radius:0 var(--ds-radius,4px) var(--ds-radius,4px) 0;font-size:12px;line-height:1.55;color:var(--ink-2,var(--ink,currentColor))}
 .ds-rev-reply strong{display:block;margin-bottom:2px;font-size:9px;letter-spacing:.12em;text-transform:uppercase;color:var(--ds-accent,var(--ink,currentColor))}
 .ds-rev-reply span{display:block;white-space:pre-wrap;overflow-wrap:anywhere}
+/* Gate de acceso del formulario de opiniones: sin sesión de comprador el
+   puente muestra este aviso en lugar del form (las escriben cuentas
+   registradas, nunca un visitante anónimo). El botón reusa .ds-rev-send
+   de cada patrón; acá solo va la estructura y el texto. */
+.ds-rev-gate{margin-top:14px;border-top:1px solid var(--line,#ccc);padding-top:14px;display:grid;gap:10px;justify-items:start}
+.ds-rev-gate-t{margin:0;font-size:13px;line-height:1.5;color:var(--ink-2,var(--ink,currentColor))}
 """
 
 #El puente vive junto a este módulo y se sirve desde la misma URL del

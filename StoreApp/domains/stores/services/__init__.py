@@ -23,6 +23,7 @@ from .commerce import (
     store_has_customer_auth,
     store_has_ecommerce,
     store_has_own_storage,
+    store_has_reviews,
 )
 from .imaging import remove_background
 from .services import (

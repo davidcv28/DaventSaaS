@@ -5,13 +5,10 @@ Todo objeto vive dentro de la tienda del dueño autenticado: los querysets
 están scopeados por owner, las taxonomías se validan por pertenencia y los
 cupos del plan se rechequean bajo lock en el create.
 """
-import secrets
-import time
 from datetime import UTC, timedelta
 from unittest.mock import patch
 
 from django.contrib.auth.models import User
-from django.core import signing
 from django.core.cache import cache
 from django.core.files.uploadedfile import SimpleUploadedFile
 from django.test import TestCase
@@ -31,7 +28,6 @@ from StoreApp.domains.catalog.models import (
 )
 from StoreApp.domains.stores.models import Store, StoreCustomization
 from StoreApp.domains.stores.services import storage as storage_service
-from StoreApp.domains.stores.services.contact import CAPTCHA_SALT, _answer_hash
 from SuscriptionApp.domains.benefits.models import Benefit, PlanBenefit
 
 CATEGORIES_URL    =   '/api/categories/'
@@ -972,23 +968,11 @@ class PublicCatalogFilterTests(TestCase):
         self.assertEqual(sorted(p['name'] for p in response.data['products']), ['A', 'B'])
 
 
-def _review_captcha(slug, answer = 7):
-    """
-    Challenge válido y envejecido (30s > CAPTCHA_MIN_SECONDS): pasa la
-    verificación real de firma + antigüedad + respuesta.
-    """
-    payload =   {'s': slug, 'h': _answer_hash(slug, answer), 't': time.time() - 30, 'n': secrets.token_urlsafe(16)}
-    return {
-        'challenge_id'  :   signing.dumps(payload, salt = CAPTCHA_SALT),
-        'captcha_answer':   str(answer),
-    }
-
-
 class ReviewTests(TestCase):
     """
-    Opiniones de visitantes: like/dislike (show_reviews, todos los planes) y
-    comentarios (show_comments, premium por has_product_comments). El alta
-    pública pide nombre+apellido+email+captcha; el dueño modera borrando.
+    Opiniones de compradores registrados (solo tiendas ecommerce): el
+    listado es público; el alta exige Bearer customer_access y la
+    identidad sale de la cuenta — el dueño modera borrando.
     """
 
     def setUp(self):
@@ -996,9 +980,17 @@ class ReviewTests(TestCase):
         #tests: sin limpiarla los POST acumulados devuelven 429 falsos.
         cache.clear()
 
-    def _setup(self, comments = True, reviews = True):
+    def _setup(self, comments = True, reviews = True, ecommerce = True):
         _, profile      =   _make_user('duenio')
-        _grant(profile, has_public_link = True, has_product_comments = True, has_customization = True)
+        benefits        =   {
+            'has_public_link'       :   True,
+            'has_product_comments'  :   True,
+            'has_customization'     :   True,
+        }
+        if ecommerce:
+            benefits['has_ecommerce']       =   True
+            benefits['has_customer_auth']   =   True
+        _grant(profile, **benefits)
         store           =   Store.objects.create(user = profile, slug = 'mi-tienda', is_published = True)
         StoreCustomization.objects.create(
             store = store, show_reviews = reviews, show_comments = comments,
@@ -1006,14 +998,27 @@ class ReviewTests(TestCase):
         product         =   Product.objects.create(store = store, name = 'Calza', price = 100)
         return store, product
 
-    def _post(self, product, **extra):
-        payload     =   {
-            'name'      :   'Maria', 'surname': 'Perez',
-            'email'     :   'maria@example.com',
-            **_review_captcha('mi-tienda'),
-            **extra,
-        }
-        return APIClient().post(PUBLIC_REVIEWS.format(slug = 'mi-tienda', pid = product.id), payload)
+    def _buyer(self):
+        """Cliente comprador autenticado (Bearer customer_access)."""
+        if getattr(self, '_buyer_ctx', None) is None:
+            from StoreApp.domains.customers.models import Customer
+            from StoreApp.domains.customers.services.tokens import issue_customer_tokens
+            customer    =   Customer.objects.create(
+                email       =   'maria@example.com',
+                password    =   'x',
+                first_name  =   'Maria',
+                last_name   =   'Perez',
+            )
+            access, _   =   issue_customer_tokens(customer)
+            client      =   APIClient()
+            client.credentials(HTTP_AUTHORIZATION = f'Bearer {access}')
+            self._buyer_ctx =   (client, customer)
+        return self._buyer_ctx
+
+    def _post(self, product, client = None, **extra):
+        if client is None:
+            client, _customer =   self._buyer()
+        return client.post(PUBLIC_REVIEWS.format(slug = 'mi-tienda', pid = product.id), extra)
 
     def test_review_create_vote_and_comment(self):
         _, product      =   self._setup()
@@ -1022,6 +1027,68 @@ class ReviewTests(TestCase):
         review          =   ProductReview.objects.get(product = product)
         self.assertTrue(review.is_positive)
         self.assertEqual(review.text, 'Excelente calidad')
+
+    def test_review_identity_comes_from_customer_account(self):
+        #La identidad la fija la sesión: name/email del payload se ignoran
+        #y la opinión queda ligada al Customer que la escribió.
+        _, product      =   self._setup()
+        client, customer    =   self._buyer()
+        response        =   client.post(
+            PUBLIC_REVIEWS.format(slug = 'mi-tienda', pid = product.id),
+            {'is_positive': True, 'text': 'Genial', 'name': 'Hackeado', 'email': 'otro@x.com'},
+        )
+        self.assertEqual(response.status_code, 201)
+        review          =   ProductReview.objects.get(product = product)
+        self.assertEqual(review.customer, customer)
+        self.assertEqual(review.name, 'Maria')
+        self.assertEqual(review.surname, 'Perez')
+        self.assertEqual(review.email, 'maria@example.com')
+
+    def test_review_post_requires_customer_session(self):
+        _, product      =   self._setup()
+        url             =   PUBLIC_REVIEWS.format(slug = 'mi-tienda', pid = product.id)
+        #Anónimo -> 401; el GET del listado sigue público.
+        self.assertEqual(APIClient().post(url, {'is_positive': True}).status_code, 401)
+        self.assertEqual(APIClient().get(url).status_code, 200)
+        #El JWT del dueño (SaaS) no es credencial de comprador -> 401.
+        from rest_framework_simplejwt.tokens import AccessToken
+        owner_token     =   AccessToken.for_user(product.store.user.user)
+        client          =   APIClient()
+        client.credentials(HTTP_AUTHORIZATION = f'Bearer {owner_token}')
+        self.assertEqual(client.post(url, {'is_positive': True}).status_code, 401)
+        self.assertEqual(ProductReview.objects.count(), 0)
+
+    def test_reviews_require_ecommerce_plan(self):
+        #Sin has_ecommerce (plan premium u otro) las opiniones no existen:
+        #ni el alta ni el listado — 404 como con los toggles apagados.
+        _, product      =   self._setup(ecommerce = False)
+        client, _       =   self._buyer()
+        url             =   PUBLIC_REVIEWS.format(slug = 'mi-tienda', pid = product.id)
+        self.assertEqual(client.post(url, {'is_positive': True}).status_code, 404)
+        self.assertEqual(APIClient().get(url).status_code, 404)
+
+    def test_reviews_require_ecommerce_flag(self):
+        #store_has_reviews exige has_ecommerce: quitarlo por separado
+        #cierra las opiniones por completo (404) aunque los toggles
+        #queden en True.
+        _, product      =   self._setup()
+        PlanBenefit.objects.filter(benefit__code = 'has_ecommerce').delete()
+        cache.clear()
+        client, _       =   self._buyer()
+        url             =   PUBLIC_REVIEWS.format(slug = 'mi-tienda', pid = product.id)
+        self.assertEqual(client.post(url, {'is_positive': True}).status_code, 404)
+        self.assertEqual(APIClient().get(url).status_code, 404)
+
+    def test_reviews_require_customer_auth_flag(self):
+        #Ídem con has_customer_auth: sin registro de compradores las
+        #opiniones no existen (404) aunque los toggles queden en True.
+        _, product      =   self._setup()
+        PlanBenefit.objects.filter(benefit__code = 'has_customer_auth').delete()
+        cache.clear()
+        client, _       =   self._buyer()
+        url             =   PUBLIC_REVIEWS.format(slug = 'mi-tienda', pid = product.id)
+        self.assertEqual(client.post(url, {'is_positive': True}).status_code, 404)
+        self.assertEqual(APIClient().get(url).status_code, 404)
 
     def test_review_list_public_privacy(self):
         _, product      =   self._setup()
@@ -1071,23 +1138,6 @@ class ReviewTests(TestCase):
         self.assertEqual(self._post(product, is_positive = 'quiza').status_code, 400)
         self.assertEqual(self._post(product, is_positive = False).status_code, 201)
 
-    def test_review_bad_captcha_rejected(self):
-        _, product      =   self._setup()
-        captcha         =   _review_captcha('mi-tienda', answer = 7)
-        captcha['captcha_answer']   =   '9'
-        response        =   APIClient().post(
-            PUBLIC_REVIEWS.format(slug = 'mi-tienda', pid = product.id),
-            {'name': 'Maria', 'surname': 'Perez', 'email': 'm@x.com', 'is_positive': True, **captcha},
-        )
-        self.assertEqual(response.status_code, 400)
-        self.assertEqual(ProductReview.objects.count(), 0)
-
-    def test_review_honeypot_fakes_success(self):
-        _, product      =   self._setup()
-        response        =   self._post(product, is_positive = True, website = 'http://spam')
-        self.assertEqual(response.status_code, 200)
-        self.assertEqual(ProductReview.objects.count(), 0)
-
     def test_public_catalog_rating_aggregates(self):
         store, product  =   self._setup()
         #1 like + 1 dislike: el score público es 5 × likes/votos = 2.5,
@@ -1131,7 +1181,7 @@ class ReviewTests(TestCase):
             name = 'X', surname = 'Y', email = 'x@x.com',
         )
         _, other        =   _make_user('otro')
-        _grant(other, has_public_link = True, has_product_comments = True)
+        _grant(other, has_public_link = True, has_product_comments = True, has_ecommerce = True, has_customer_auth = True)
         Store.objects.create(user = other, slug = 'otra-tienda', is_published = True)
         client          =   APIClient()
         client.force_authenticate(user = other.user)

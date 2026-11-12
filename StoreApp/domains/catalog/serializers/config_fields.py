@@ -171,39 +171,4 @@ ReviewFields              =   {
         'max_length'        :   ReviewLimits['text_max'],
         'error_messages'    :   {'max_length': 'El comentario admite hasta 600 caracteres'},
     },
-    'name'                  :   {
-        'label'             :   'Nombre',
-        'required'          :   True,
-        'trim_whitespace'   :   True,
-        'min_length'        :   2,
-        'max_length'        :   80,
-        'error_messages'    :   {
-            'required'      :   'Contanos tu nombre',
-            'blank'         :   'Contanos tu nombre',
-            'min_length'    :   'El nombre es demasiado corto',
-            'max_length'    :   'El nombre admite hasta 80 caracteres',
-        },
-    },
-    'surname'               :   {
-        'label'             :   'Apellido',
-        'required'          :   True,
-        'trim_whitespace'   :   True,
-        'min_length'        :   2,
-        'max_length'        :   80,
-        'error_messages'    :   {
-            'required'      :   'Contanos tu apellido',
-            'blank'         :   'Contanos tu apellido',
-            'min_length'    :   'El apellido es demasiado corto',
-            'max_length'    :   'El apellido admite hasta 80 caracteres',
-        },
-    },
-    'email'                 :   {
-        'label'             :   'Email',
-        'required'          :   True,
-        'error_messages'    :   {
-            'required'      :   'Contanos tu email',
-            'blank'         :   'Contanos tu email',
-            'invalid'       :   'Ingresá un email válido',
-        },
-    },
 }
