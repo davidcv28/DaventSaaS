@@ -41,51 +41,6 @@ dict_benefits = {
 }
 
 dict_plan_benefits = {
-    #Plan de prueba (is_trial): se otorga solo en el registro, dura
-    #SuscriptionPlan.TRIAL_DAYS y no es seleccionable ni reactivable.
-    #Beneficios full Premium salvo los topes de imágenes y almacenamiento.
-    'Plan de prueba':   {
-        'benefits'      :   {
-            'max_catalogs'      :   1,
-            'has_public_link'   :   True,
-            'has_qr'            :   True,
-            'max_products'      :   None,
-            'max_images'        :   50,
-            'max_storage_mb'    :   200,
-            'max_gallery_images':   15,
-            'max_videos'        :   15,
-            'has_live_stream'   :   True,
-            'has_stats'         :   True,
-            'has_flyers'        :   True,
-            'has_flyer_editor'  :   True,
-            'has_customization' :   True,
-            'has_location_map'  :   True,
-            'has_design_plus'   :   True,
-            'has_design_advanced':  True,
-            'has_advanced_menu' :   True,
-            'has_chatbot'       :   True,
-            'has_product_comments': True,
-            'has_discounts'     :   True,
-            'has_support_chat'  :   True,
-            'has_services_site' :   True,
-            'max_site_templates':   None,
-            'has_ai_design'     :   True,
-            'has_custom_domain' :   True,
-        },
-        'presentation'  :   {
-            'slug'          :   'prueba',
-            'tagline'       :   'Probá todo gratis por 1 día',
-            'cta_label'     :   'Incluido al registrarte',
-            'featured'      :   False,
-            'display_order' :   0,
-            'bullets'       :   [
-                '1 día gratis, sin tarjeta ni débito automático',
-                'Todas las funciones del plan Premium',
-                'Hasta 50 imágenes y 200 MB de almacenamiento',
-                'Al vencer, elegí un plan para seguir publicado',
-            ],
-        },
-    },
     'Plan basico'   :   {
         'benefits'      :   {
             'max_catalogs'      :   1,

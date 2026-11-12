@@ -181,7 +181,7 @@ export function buildRegisterPayload(form) {
     phone: form.phone?.trim() || null,
     accept_terms: form.accept_terms === true,
     //Cupón promocional opcional (QR/folletos): el backend lo canjea en el
-    //alta y pisa la trial de 1 día por los días del cupón.
+    //alta y crea la suscripción con el plan del cupón por sus días.
     coupon: form.coupon?.trim() || ''
   }
 }

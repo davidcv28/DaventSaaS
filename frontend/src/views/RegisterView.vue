@@ -32,7 +32,7 @@ const form = reactive({
   username: '', email: '', password: '', confirm_password: '',
   phone: '', accept_terms: false,
   //Cupón promocional: llega por ?coupon=CODE (o ?code=) desde el QR del
-  //folleto; también se puede tipear a mano. Vacío = alta normal con trial.
+  //folleto; también se puede tipear a mano. Vacío = alta sin plan (se elige después).
   coupon: String(route.query.coupon || route.query.code || '').trim()
 })
 const touched = reactive({})

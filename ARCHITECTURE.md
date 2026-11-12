@@ -86,11 +86,11 @@ RegisterSerializer (UsersValidatorsMixin + UserProfileValidatorsMixin)
 transaction.atomic()
         ├── User.objects.create_user(username, email, password)
         ├── UserProfile.objects.create(user, first_name, tax_condition, ...)
-        └── Suscription.objects.create(plan trial 1 día)
+        └── (sin suscripción: el acceso lo da un plan pago o un cupón)
         └── transaction.on_commit → SendVerificationEmailQuery(user)
 ```
 
-#### Verificación de email (anti-abuso del trial)
+#### Verificación de email (anti-abuso de cuentas)
 ```
 UserProfile.email_verified / email_verified_at (migration 0005)
 
@@ -128,7 +128,7 @@ POST /api/password-reset/confirm/  {uid, token, new_password, confirm_password}
 ---
 
 ### suscriptions
-Gestiona los planes y suscripciones de los usuarios. Los planes por defecto (prueba/básico/estándar/premium) se cargan con `manage.py suscriptions` (datos en `management/commands/seeds.py`; `get_or_create` por name, no pisa precios editados a mano pero sí corrige el flag `is_trial`).
+Gestiona los planes y suscripciones de los usuarios. Los planes por defecto (básico/estándar/premium/ecommerce) se cargan con `manage.py suscriptions` (datos en `management/commands/seeds.py`; `get_or_create` por name, no pisa precios editados a mano pero sí corrige el flag `is_trial`).
 
 ```
 suscriptions/
@@ -151,8 +151,8 @@ suscriptions/
 SuscriptionPlan
     ├── name (único)
     ├── price
-    ├── is_trial            (plan de prueba: solo se otorga en el registro)
-    └── TRIAL_DAYS = 1      (duración del trial; constante de clase)
+    ├── is_trial            (legado: planes trial históricos; ya no se otorgan ni se seedean)
+    └── TRIAL_DAYS = 1      (constante histórica del trial)
 
 Suscription
     ├── user                       ──OneToOne──► UserProfile
@@ -170,8 +170,8 @@ Suscription
                     → única fuente de verdad para el gating de beneficios
 ```
 
-#### Plan de prueba (trial)
-Toda cuenta nueva arranca con el plan `is_trial=True` ("Plan de prueba", $0): `RegisterUserQuery` crea la `Suscription` con `end_date = now + TRIAL_DAYS` (1 día) y `status='Suscripción activa'`. Vencido ese plazo `grants_access()` deja de dar acceso (web pública 404, gating de beneficios off) y **no hay forma de reactivarlo**: el flag `is_trial` lo excluye de todo flujo de elección — queryset de `plan_suscription` en `SuscriptionSerializer`, `_resolve_suscription` de payments (400 "no está disponible"), `assign` (404) y el listado `GET /api/suscription-plans/` (que alimenta el dropdown de asignación del admin). Sí viaja en `GET /api/plans/` (con `is_trial` en el payload) para que el frontend resuelva los beneficios del plan vigente y muestre la tarjeta informativa no seleccionable. Sus beneficios son los del plan Premium salvo `max_images=50` y `max_storage_mb=200`. Un usuario con trial vencido que paga un plan entra por el flujo estándar (`pending_plan_suscription` → `ApplyPendingPlanQuery`).
+#### Sin plan de prueba (trial eliminado)
+El registro ya NO crea suscripción: la cuenta arranca sin acceso y lo obtiene solo con un plan pago o un cupón canjeado en el alta (`coupon` opcional en `RegisterUserSerializer` → `RedeemCouponQuery` crea la `Suscription` con `end_date = now + coupon.days`). El flag `is_trial` queda solo para suscripciones trial históricas: vencen solas y **no son reactivables** — `is_trial` las excluye de todo flujo de elección (queryset de `plan_suscription`, `_resolve_suscription` de payments, `assign`, `GET /api/suscription-plans/`); sí viajan en `GET /api/plans/` para resolver beneficios del plan vigente (la grilla de precios del dashboard las filtra vía `paidPlans`). `manage.py suscriptions` ya no seedea el plan trial ni `seed_benefits` sus beneficios; el plan viejo queda inerte en DBs existentes. Los comandos `extend_trial`/`trial_leads` quedan como herramientas de soporte para cuentas trial aún vigentes.
 
 #### Asignación manual de plan (staff)
 `POST /api/suscriptions/assign/` (IsAdminUser) `{user_id, plan_id}`: upsert de la `Suscription` del usuario — crea la fila si no existe o la pisa: plan nuevo, `status='Suscripción activa'`, `start_date=now`, `end_date=now+30d`, `pending_plan_suscription=None`. No toca el débito automático de MP (si existe sigue su curso). `user_id` es el id del `User` de auth (requiere `UserProfile` cargado: 400 si no existe). Los planes `is_trial` devuelven 404 (no reactivables). La respuesta incluye la suscripción serializada con `auth_user_id` (mapea suscripción ↔ usuario en el panel admin).

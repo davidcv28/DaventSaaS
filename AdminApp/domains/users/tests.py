@@ -387,19 +387,17 @@ class RegisterSecurityTests(TestCase):
             username = 'NUEVO.CLIENTE', phone = '+5491100000002'), format = 'json')
         self.assertEqual(response.status_code, 400)
 
-    def test_register_grants_one_day_trial(self):
-        trial           =   SuscriptionPlan.objects.create(name = 'Plan de prueba', price = 0, is_trial = True)
+    def test_register_grants_no_subscription(self):
+        #Sin plan de prueba: el alta arranca sin suscripción — el acceso lo
+        #otorga un plan pago o un cupón canjeado en el alta.
+        SuscriptionPlan.objects.create(name = 'Plan de prueba', price = 0, is_trial = True)
         response        =   self.client.post(REGISTER_URL, self._payload(), format = 'json')
         self.assertEqual(response.status_code, 201)
-        suscription     =   Suscription.objects.get(user__user__username = 'nuevo.cliente')
-        self.assertEqual(suscription.plan_suscription, trial)
-        self.assertTrue(suscription.grants_access())
-        self.assertLess((suscription.end_date - suscription.start_date).days, 2)
+        self.assertFalse(Suscription.objects.filter(user__user__username = 'nuevo.cliente').exists())
 
-    def test_register_with_coupon_overrides_trial(self):
-        #QR/folletos: el alta acepta `coupon` y canjea el plan del cupón por
-        #sus días en vez de la trial de 1 día. La respuesta lo confirma.
-        SuscriptionPlan.objects.create(name = 'Plan de prueba', price = 0, is_trial = True)
+    def test_register_with_coupon_grants_plan(self):
+        #QR/folletos: el alta acepta `coupon` y crea la suscripción directo
+        #con el plan del cupón por sus días. La respuesta lo confirma.
         premium         =   SuscriptionPlan.objects.create(name = 'Plan premium', price = 40000)
         Coupon.objects.create(code = 'PROMO30', plan = premium, days = 30)
         response        =   self.client.post(REGISTER_URL, self._payload(coupon = 'promo30'), format = 'json')
@@ -618,8 +616,7 @@ class SocialAuthTests(TestCase):
              patch(f'{self.SOCIAL_MODULE}.GOOGLE_CLIENT_ID', env), \
              patch(f'{self.SOCIAL_MODULE}.requests.get', return_value = tokeninfo or self._tokeninfo()):
             return APIClient().post(GOOGLE_AUTH_URL, payload if payload is not None else {'credential': 'id-token'}, format = 'json')
-    def test_google_creates_account_with_trial_and_verified_email(self):
-        trial       =   SuscriptionPlan.objects.create(name = 'Plan de prueba', price = 0, is_trial = True)
+    def test_google_creates_account_without_subscription(self):
         response    =   self._post_google()
         self.assertEqual(response.status_code, 200)
         data        =   response.json()
@@ -636,9 +633,7 @@ class SocialAuthTests(TestCase):
         self.assertEqual(profile.last_name, 'Pereyra')
         self.assertIsNone(profile.phone)
         self.assertTrue(profile.terms_accepted)
-        suscription =   Suscription.objects.get(user = profile)
-        self.assertEqual(suscription.plan_suscription, trial)
-        self.assertTrue(suscription.grants_access())
+        self.assertFalse(Suscription.objects.filter(user = profile).exists())
 
     def test_google_links_existing_user_by_email(self):
         #Auto-link: el provider ya verificó el correo — si la cuenta lo tenía

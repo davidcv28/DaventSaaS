@@ -12,7 +12,7 @@
   /* Paleta: cada rol sale del tema guardado (--st-*), así el menú Diseño
      puede repintar el masthead, los CTAs y los contenedores. Sin tema
      aplicado quedan los colores firma del marketplace. */
-  --mc-yellow: var(--st-accent, #FFE600);
+  --mc-yellow: var(--st-accent, #A16A00);
   --mc-yellow-line: color-mix(in srgb, var(--mc-yellow) 84%, #000000);
   --mc-blue: var(--st-primary, #2563EB);
   --mc-blue-deep: var(--st-secondary, #1D4ED8);
@@ -30,9 +30,9 @@
   --mc-ink-2: color-mix(in srgb, var(--mc-ink) 84%, var(--mc-surface));
   /* #666 sobre #EBEBEB = 4.8:1 (AA); #737373 quedaba en 4.0. */
   --mc-muted: var(--st-muted, #666666);
-  --mc-on-band: var(--st-accent-ink, #2D2A00);
+  --mc-on-band: var(--st-accent-ink, #FFFFFF);
   /* Texto secundario del masthead/portada: tinta de marca a AA (4.5:1). */
-  --mc-on-band-2: var(--st-accent-ink-2, #5C5300);
+  --mc-on-band-2: var(--st-accent-ink-2, #F5EAD3);
   --mc-accent-raw: var(--st-primary, #2563EB);
   --mc-accent: var(--mc-blue-deep);
   /* Texto legible sobre cada relleno de marca (AA del tema). */

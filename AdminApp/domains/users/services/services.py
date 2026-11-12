@@ -1,5 +1,4 @@
 import logging
-from datetime import timedelta
 
 from decouple import config
 from django.conf import settings
@@ -25,7 +24,6 @@ from rest_framework_simplejwt.token_blacklist.models import (
     OutstandingToken,
 )
 
-from AdminApp.domains.suscriptions.models import Suscription, SuscriptionPlan
 from AdminApp.domains.users.models import TERMS_VERSION, UserProfile
 
 logger          =   logging.getLogger(__name__)
@@ -145,23 +143,12 @@ def RegisterUserQuery(validated_data : dict) -> tuple:
                 terms_version       =   TERMS_VERSION if accept_terms else None,
                 **data
             )
-            #PLAN DE PRUEBA: toda cuenta nueva arranca con el plan trial (is_trial),
-            #vigente SuscriptionPlan.TRIAL_DAYS días. Al vencer pierde el acceso y no
-            #se puede reactivar: el plan no es seleccionable en ningún flujo.
-            trial_plan  =   SuscriptionPlan.objects.filter(is_trial = True).first()
-            if trial_plan:
-                now =   timezone.now()
-                Suscription.objects.create(
-                    user                =   profile,
-                    plan_suscription    =   trial_plan,
-                    status              =   Suscription.STATUS_ACTIVE,
-                    start_date          =   now,
-                    end_date            =   now + timedelta(days = SuscriptionPlan.TRIAL_DAYS),
-                )
-            #CANJE DE CUPÓN: pisa la trial por los días del cupón. La
-            #validación del serializer ya filtró los códigos inválidos; acá
-            #solo puede fallar una carrera (max_uses, plan vigente) y en ese
-            #caso el alta sigue con la trial — nunca se pierde la cuenta.
+            #Sin plan de prueba: toda cuenta arranca SIN suscripción — el
+            #acceso lo otorga un plan pago o un cupón canjeado en el alta.
+            #CANJE DE CUPÓN: crea la suscripción directo con el plan del
+            #cupón. La validación del serializer ya filtró los códigos
+            #inválidos; acá solo puede fallar una carrera (max_uses) y en
+            #ese caso el alta sigue sin plan — nunca se pierde la cuenta.
             coupon_result   =   None
             if coupon_code:
                 from AdminApp.domains.suscriptions.services import RedeemCouponQuery
@@ -174,7 +161,7 @@ def RegisterUserQuery(validated_data : dict) -> tuple:
                     }
                 except serializers.ValidationError as exc:
                     logger.info('Cupón de registro no canjeado: user=%s detail=%s', new_user.pk, exc.detail)
-                    coupon_result   =   {'error': 'El cupón no pudo canjearse; tu cuenta quedó con el plan de prueba.'}
+                    coupon_result   =   {'error': 'El cupón no pudo canjearse.'}
             #VERIFICACIÓN DE EMAIL: se agenda post-commit — si la transacción
             #rollbackea el alta no existió y el mail no debe salir igual.
             #El envío va a Celery: el alta no espera al SMTP.

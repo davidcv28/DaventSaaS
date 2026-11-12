@@ -11,7 +11,6 @@
 #patcheen.
 import logging
 import re
-from datetime import timedelta
 
 import requests
 from decouple import config
@@ -19,7 +18,6 @@ from django.contrib.auth.models import User
 from django.db import IntegrityError, transaction
 from django.utils import timezone
 
-from AdminApp.domains.suscriptions.models import Suscription, SuscriptionPlan
 from AdminApp.domains.users.models import TERMS_VERSION, UserProfile
 
 logger                  =   logging.getLogger(__name__)
@@ -90,8 +88,9 @@ def SocialLoginQuery(info : dict) -> tuple:
     Alta nueva (is_new): password inutilizable (el login es solo social; si
     quiere clave después la setea por password-reset), email_verified=True —
     el provider ya lo verificó, por eso NO sale el mail de verificación —,
-    TyC sellados (consentimiento explícito bajo los botones) y plan trial,
-    mismas garantías que RegisterUserQuery.
+    TyC sellados (consentimiento explícito bajo los botones) y SIN plan de
+    prueba — el acceso lo otorga un plan pago o un cupón, mismas garantías
+    que RegisterUserQuery.
 
     Cuenta existente con ese email: se loguea directo (auto-link — Google
     garantiza la titularidad del correo) y se completa email_verified
@@ -119,15 +118,8 @@ def SocialLoginQuery(info : dict) -> tuple:
                     terms_accepted_at   =   now,
                     terms_version       =   TERMS_VERSION,
                 )
-                trial_plan  =   SuscriptionPlan.objects.filter(is_trial = True).first()
-                if trial_plan:
-                    Suscription.objects.create(
-                        user                =   user.profile,
-                        plan_suscription    =   trial_plan,
-                        status              =   Suscription.STATUS_ACTIVE,
-                        start_date          =   now,
-                        end_date            =   now + timedelta(days = SuscriptionPlan.TRIAL_DAYS),
-                    )
+                #Sin plan de prueba: la cuenta social arranca sin
+                #suscripción — el acceso lo da un plan pago o un cupón.
         except IntegrityError:
             #Carrera de dos altas con el mismo correo: gana la primera y la
             #segunda entra como login de la cuenta ya creada.

@@ -1259,7 +1259,7 @@
     "palette": {
      "primary": "#2563eb",
      "secondary": "#1d4ed8",
-     "accent": "#ffe600",
+     "accent": "#a16a00",
      "bg": "#ebebeb",
      "surface": "#ffffff",
      "text": "#333333",
@@ -1534,7 +1534,7 @@
     "palette": {
      "primary": "#2563eb",
      "secondary": "#1d4ed8",
-     "accent": "#ffc400",
+     "accent": "#a16a00",
      "bg": "#121418",
      "surface": "#1c1f24",
      "text": "#f2f3f5",
@@ -17055,9 +17055,9 @@
     ]
    },
    "tokens": {
-    "accent": "#ffe600",
+    "accent": "#a16a00",
     "palette": {
-     "accent": "#ffe600",
+     "accent": "#a16a00",
      "primary": "#2563eb",
      "secondary": "#1d4ed8",
      "bg": "#ebebeb",

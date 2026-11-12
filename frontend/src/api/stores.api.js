@@ -828,7 +828,7 @@ export const STORE_THEMES = {
 export const STORE_TEMPLATES = {
   raiz:        { label: 'Esencial',    rubro: 'general',      tier: 'base',     defaultAccent: '#0F766E', desc: 'Esencial: papel claro, tinta verde bosque y acento teal — generalista para cualquier rubro.' },
   esencial:    { label: 'Esencial',    rubro: 'general',      tier: 'base',     defaultAccent: '#0F766E', desc: 'Esencial: papel claro, tinta verde bosque y acento teal — generalista para cualquier rubro.' },
-  mercado:     { label: 'Bazar',       rubro: 'bazar',        tier: 'plus',     defaultAccent: '#FFE600', desc: 'Bazar: marketplace con masthead amarillo, buscador y grilla densa de productos.' },
+  mercado:     { label: 'Bazar',       rubro: 'bazar',        tier: 'plus',     defaultAccent: '#A16A00', desc: 'Bazar: marketplace con masthead ámbar, buscador y grilla densa de productos.' },
   autoservicio: { label: 'Autoservicio', rubro: 'bazar',       tier: 'plus',     defaultAccent: '#17794B', desc: 'Autoservicio: supermercado minimalista — índice de departamentos, precios protagonistas y datos de la tienda en ticket.' },
   gimnasio:    { label: 'Gimnasio',    rubro: 'gimnasio',     tier: 'plus',     defaultAccent: '#F97316', desc: 'Gimnasio: energía deportiva, planes y sedes.' },
   movimiento:  { label: 'Movimiento',  rubro: 'gimnasio',     tier: 'advanced', defaultAccent: '#E4572E', desc: 'Movimiento: editorial luminoso — papel, tinta y acento señal, numeración 01/02/03 y membresías.' },

@@ -19,10 +19,11 @@
   --dz-ink-2: #3d3d3d;
   --dz-muted: #5c5c5c;
   --dz-line: #e3e3de;
-  /* El ticket es amarillo por identidad del diseño: NO sigue al acento de la
-     tienda (con presets como 'sky' el par accent/accent-ink queda a ~1.4:1). */
-  --dz-accent: #ffe600;
-  --dz-accent-ink: #2d2a00;
+  /* El toldo es un ámbar cálido por identidad del diseño (#A16A00, 4.6:1
+     con blanco — la tinta del toldo pasa a ser blanca). NO sigue al acento
+     de la tienda (con presets como 'sky' el par queda a ~1.4:1). */
+  --dz-accent: #a16a00;
+  --dz-accent-ink: #ffffff;
   /* El amarillo como TEXTO no existe: los acentos tipográficos van en el
      azul del diseño (5.9:1 sobre blanco). */
   --dz-link: #1d4ed8;
@@ -47,8 +48,8 @@
   --dz-ink-2: #d6d8dd;
   --dz-muted: #a2a6ae;
   --dz-line: #33363c;
-  --dz-accent: #ffe600;
-  --dz-accent-ink: #2d2a00;
+  --dz-accent: #a16a00;
+  --dz-accent-ink: #ffffff;
   --dz-link: color-mix(in srgb, #2563eb 55%, #ffffff);
   --dz-blue: #3b82f6;
   --dz-blue-ink: #0b1220;
@@ -117,8 +118,8 @@
   --dz-ink-2: #d6d8dd;
   --dz-muted: #a0a5ae;
   --dz-line: #30343b;
-  --dz-accent: #ffc400;
-  --dz-accent-ink: #2d2a00;
+  --dz-accent: #a16a00;
+  --dz-accent-ink: #ffffff;
   --dz-link: color-mix(in srgb, #3b82f6 55%, #ffffff);
   --dz-blue: #3b82f6;
   --dz-blue-ink: #0b1220;

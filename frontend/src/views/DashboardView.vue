@@ -297,6 +297,9 @@ const displayName = computed(() => auth.user?.username || auth.user?.email || 'U
 // Plan vigente: declarado antes de navItems porque su watcher evalúa el
 // computed apenas se registra (TDZ si queda debajo).
 const plan = computed(() => billing.currentPlan)
+//Planes pagables para la grilla de precios: el plan de prueba (is_trial)
+//ya no se otorga en el registro — no se muestra como tarjeta.
+const paidPlans = computed(() => billing.plans.filter((p) => !p.is_trial))
 
 // Apartados agrupados (pestañas dentro de una misma sección): la navegación
 // apunta al primer apartado y las pestañas viven adentro.
@@ -6523,10 +6526,10 @@ async function changePassword() {
       </div>
       <div class="price-grid">
         <PlanCard
-          v-for="(p, i) in billing.plans"
+          v-for="(p, i) in paidPlans"
           :key="p.id"
           :plan="p"
-          :prev="i > 0 ? billing.plans[i - 1] : null"
+          :prev="i > 0 ? paidPlans[i - 1] : null"
           :current="billing.hasSubscription && plan?.pk === p.id"
           :busy="busyPlan === p.id"
           @select="planAction"

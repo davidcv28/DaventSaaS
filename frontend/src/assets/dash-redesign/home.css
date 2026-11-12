@@ -1,6 +1,6 @@
 /* ==========================================================================
    dash-redesign/home — Sección INICIO (overview)
-   Sobrescribe los .ovh-*/.aq/.plan-strip/.oh-help de dashboard-v3.css.
+   Sobrescribe los .ovh-*, .aq, .plan-strip y .oh-help de dashboard-v3.css.
    Dirección: SaaS sobrio — superficies --card, hairlines --line-soft,
    radios 12–14px, sombras --shadow-sm, acento único --brand-500, sin
    gradientes ni glow. Prefijo .app para igualar/ganar especificidad.

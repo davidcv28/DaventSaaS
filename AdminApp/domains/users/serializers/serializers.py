@@ -159,8 +159,8 @@ class RegisterUserSerializer(UsersValidatorsMixins,UserProfileValidatorsMixins, 
     phone               =   serializers.CharField(**UserProfileFieldsConfig['phone'])
     accept_terms        =   serializers.BooleanField(**UserFieldsConfig['accept_terms'])
     #Cupón promocional opcional (folletos/QR): se canjea dentro del alta y
-    #pisa la trial de 1 día por los días del cupón. Inválido = 400 con error
-    #de campo, así el usuario corrige o lo saca y reintenta.
+    #crea la suscripción con el plan del cupón por sus días. Inválido = 400
+    #con error de campo, así el usuario corrige o lo saca y reintenta.
     coupon              =   serializers.CharField(required = False, allow_blank = True, max_length = 40, write_only = True)
     class Meta:
         model           =   User
