@@ -140,7 +140,12 @@ export function useStudioDesign({
 
   async function saveDesign(asDraft = false, quiet = false) {
     Object.keys(designForm).forEach((k) => { designTouched[k] = true })
-    if (Object.keys(designErrors.value || {}).some((k) => !companyFields.includes(k))) return
+    if (Object.keys(designErrors.value || {}).some((k) => !companyFields.includes(k))) {
+      // Antes esto retornaba en silencio: el botón se veía habilitado, el
+      // click moría sin request y el usuario no veía qué campo bloqueaba.
+      if (!quiet) pushToast('Revisá los campos marcados: hay datos que no validan')
+      return false
+    }
     const savedStartMode = store.customization?.theme || CUSTOMIZATION_DEFAULTS.theme
     designBusy.value = true
     if (serverFlags) serverFlags.accept = true
@@ -204,6 +209,7 @@ export function useStudioDesign({
     const okDesign = await store.saveCustomization(payload)
     if (serverFlags) serverFlags.accept = false
     designBusy.value = false
+    if (!okDesign && !quiet) pushToast(store.lastError || 'No se pudo guardar el diseño. Probá de nuevo.')
     if (okDesign) {
       if (payload.theme !== savedStartMode) {
         clearVisitorTheme(
