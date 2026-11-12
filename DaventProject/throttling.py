@@ -19,8 +19,27 @@ class PublicReadThrottle(AnonRateThrottle):
     carriers móviles agrupan miles de usuarios por IP y la cuota se agota
     a los pocos minutos, devolviendo 429 a visitantes legítimos. Scope
     propio holgado (settings DEFAULT_THROTTLE_RATES['public_read']).
+
+    El bucket es POR ENDPOINT (action del view), no uno solo para todo el
+    scope: una página de tienda dispara ~8-12 lecturas públicas (ficha,
+    pattern meta/document/bridge/script, catálogo, reseñas, legales…) y
+    compartir un único contador hacía que ~100 pageviews/hora por IP
+    devolvieran 429 — la web del cliente caía en "La tienda está ocupada"
+    para todos los visitantes de esa IP (CGNAT, oficinas, QA masivo).
+    Con clave por acción cada endpoint conserva su cuota propia y la
+    página deja de competir consigo misma.
     """
     scope   =   'public_read'
+
+    def get_cache_key(self, request, view):
+        ident   =   self.get_ident(request)
+        if not ident:
+            return None
+        #`view.action` es el nombre del @action del ViewSet ('public',
+        # 'public_catalog', 'public_pattern_document'…); fuera de un
+        # ViewSet se usa la clase vista como bucket.
+        action  =   getattr(view, 'action', None) or view.__class__.__name__
+        return  'throttle_%s_%s_%s' % (self.scope, action, ident)
 
 
 class _ResilientThrottleMixin:

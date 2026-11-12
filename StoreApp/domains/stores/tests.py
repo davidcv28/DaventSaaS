@@ -33,6 +33,7 @@ from StoreApp.domains.stores.models import (
 )
 from StoreApp.domains.stores.services import contact as contact_service
 from StoreApp.domains.stores.services import storage
+from DaventProject.throttling import PublicReadThrottle
 from StoreApp.domains.stores.views.viewset import StoreVisitThrottle
 from SuscriptionApp.domains.benefits.models import Benefit, PlanBenefit
 
@@ -1210,6 +1211,36 @@ class VisitCounterTests(TestCase):
             response    =   APIClient().get(f'{STORES_URL}public/mi-tienda/')
         self.assertEqual(response.status_code, 200)
         self.assertEqual(StoreDailyVisit.objects.count(), 0)
+
+
+class PublicReadThrottleScopeTests(TestCase):
+    """
+    Regresión "La tienda está ocupada": el bucket public_read es POR
+    ENDPOINT — una página de tienda dispara ~10 lecturas públicas (ficha,
+    pattern, catálogo…) y compartir un solo contador saturaba la IP
+    (CGNAT, oficina, QA masivo) devolviendo 429 en todas las webs.
+    """
+
+    def setUp(self):
+        cache.clear()
+
+    def _setup(self):
+        _, profile      =   _make_user(verified = True)
+        _grant(profile, has_public_link = True)
+        Store.objects.create(user = profile, slug = 'mi-tienda')
+
+    def test_each_public_action_has_own_bucket(self):
+        self._setup()
+        with patch.object(PublicReadThrottle, 'THROTTLE_RATES', {'public_read': '1/minute'}):
+            client      =   APIClient()
+            first       =   client.get(f'{STORES_URL}public/mi-tienda/')
+            self.assertEqual(first.status_code, 200)
+            second      =   client.get(f'{STORES_URL}public/mi-tienda/')
+            self.assertEqual(second.status_code, 429)
+            #Otro endpoint público conserva su propia cuota: no cae con la
+            #del primero aunque sea la misma IP.
+            catalog     =   client.get(f'{STORES_URL}public/mi-tienda/catalog/')
+            self.assertEqual(catalog.status_code, 200)
 
 
 class ImageOrderTests(TestCase):
