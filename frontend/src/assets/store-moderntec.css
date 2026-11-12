@@ -108,6 +108,12 @@
   --tpc-add-radius: var(--mt-rad-pill);
   --tpc-stock-font: var(--mt-mono);
   --tpc-stock-size: 10px;
+  /* "En evento" (productDiscount programado): chip técnico — acento sobre
+     panel translúcido, mono compacto, esquinas pill. */
+  --tpc-event-bg: color-mix(in srgb, var(--mt-accent) 18%, var(--mt-panel));
+  --tpc-event-ink: var(--mt-accent-text);
+  --tpc-event-radius: var(--mt-rad-pill);
+  --tpc-event-size: 9.5px;
 
   /* Metadato del navegador (theme-color, hex explícito). --rz-theme-color
      es el hook que lee StorePublicLayout para <meta theme-color>. */

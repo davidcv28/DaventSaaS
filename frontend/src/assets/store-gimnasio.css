@@ -2256,6 +2256,12 @@
      modos y dentro de tarjetas repintadas). */
   --tpc-stock-font: var(--gy-mono);
   --tpc-stock-size: 10px;
+  /* "En evento" (productDiscount programado): placa lima invertida, la
+     misma lectura que el flag de oferta. */
+  --tpc-event-bg: var(--gy-lime);
+  --tpc-event-ink: var(--gy-on-lime);
+  --tpc-event-radius: 0;
+  --tpc-event-transform: uppercase;
   --tpc-img-hover: scale(1.05);
   transition: border-color .2s var(--gy-ease), transform .25s var(--gy-ease);
 }

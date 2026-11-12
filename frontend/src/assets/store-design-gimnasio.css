@@ -99,11 +99,11 @@
 }
 
 /* ---------- Marco común ---------- */
-[data-design='gimnasio'][data-theme] :is(.ec-auth, .ec-account) :is(a, button, input, select, textarea):focus-visible {
+[data-design='gimnasio'][data-theme] :is(.ec-auth, .ec-account, .ec-track) :is(a, button, input, select, textarea):focus-visible {
   outline: 2px solid var(--dz-accent);
   outline-offset: 3px;
 }
-[data-design='gimnasio'][data-theme] :is(.ec-auth, .ec-account) ::selection {
+[data-design='gimnasio'][data-theme] :is(.ec-auth, .ec-account, .ec-track) ::selection {
   background: var(--store-accent-ink);
   color: var(--sp-on-band, #fff);
 }
@@ -370,15 +370,15 @@
 [data-design='gimnasio'] .ec-auth .ec-auth-spin { color: var(--dz-accent-text); }
 
 /* ---------- Controles (compartidos auth + cuenta) ---------- */
-[data-design='gimnasio'][data-theme] :is(.ec-auth, .ec-account) .sp-field { gap: 8px; }
-[data-design='gimnasio'][data-theme] :is(.ec-auth, .ec-account) .sp-field-label {
+[data-design='gimnasio'][data-theme] :is(.ec-auth, .ec-account, .ec-track) .sp-field { gap: 8px; }
+[data-design='gimnasio'][data-theme] :is(.ec-auth, .ec-account, .ec-track) .sp-field-label {
   font: 600 9.5px/1 var(--dz-mono);
   letter-spacing: .22em;
   text-transform: uppercase;
   color: var(--dz-muted);
 }
 /* Campo-renglón: fondo placa, filete inferior que se enciende en lima. */
-[data-design='gimnasio'][data-theme] :is(.ec-auth, .ec-account) .sp-input {
+[data-design='gimnasio'][data-theme] :is(.ec-auth, .ec-account, .ec-track) .sp-input {
   min-height: 50px;
   padding: 13px 14px;
   border: 1px solid var(--dz-line);
@@ -391,39 +391,39 @@
   box-shadow: none;
   transition: border-color .2s, box-shadow .2s, background .2s;
 }
-[data-design='gimnasio'][data-theme] :is(.ec-auth, .ec-account) .sp-input:hover {
+[data-design='gimnasio'][data-theme] :is(.ec-auth, .ec-account, .ec-track) .sp-input:hover {
   border-color: var(--dz-line-strong);
 }
-[data-design='gimnasio'][data-theme] :is(.ec-auth, .ec-account) .sp-input:focus {
+[data-design='gimnasio'][data-theme] :is(.ec-auth, .ec-account, .ec-track) .sp-input:focus {
   border-color: var(--dz-accent);
   border-bottom-color: var(--dz-accent);
   background: var(--dz-surface-2);
   box-shadow: 0 3px 0 -1px color-mix(in srgb, var(--dz-accent) 45%, transparent);
   outline: none;
 }
-[data-design='gimnasio'][data-theme] :is(.ec-auth, .ec-account) .sp-input::placeholder {
+[data-design='gimnasio'][data-theme] :is(.ec-auth, .ec-account, .ec-track) .sp-input::placeholder {
   color: var(--dz-muted);
   opacity: 1;
 }
-[data-design='gimnasio'][data-theme] :is(.ec-auth, .ec-account) .sp-input:disabled {
+[data-design='gimnasio'][data-theme] :is(.ec-auth, .ec-account, .ec-track) .sp-input:disabled {
   background: var(--dz-surface-2);
   color: var(--dz-muted);
   border-color: var(--dz-line);
   cursor: not-allowed;
 }
-[data-design='gimnasio'][data-theme] :is(.ec-auth, .ec-account) .sp-form-error {
+[data-design='gimnasio'][data-theme] :is(.ec-auth, .ec-account, .ec-track) .sp-form-error {
   color: var(--dz-danger);
   font-family: var(--dz-body);
   font-size: 12.5px;
 }
-[data-design='gimnasio'][data-theme] :is(.ec-auth, .ec-account) .sp-input:-webkit-autofill {
+[data-design='gimnasio'][data-theme] :is(.ec-auth, .ec-account, .ec-track) .sp-input:-webkit-autofill {
   -webkit-text-fill-color: var(--dz-ink);
   box-shadow: inset 0 0 0 40px var(--dz-bg);
 }
 
 /* Botón principal: bloque lima, condensada en mayúsculas (la orden de la
    pizarra). Ghost: filete de línea fuerte. */
-[data-design='gimnasio'][data-theme] :is(.ec-auth, .ec-account) :is(.ecaf-submit, .ec-btn-primary) {
+[data-design='gimnasio'][data-theme] :is(.ec-auth, .ec-account, .ec-track) :is(.ecaf-submit, .ec-btn-primary) {
   min-height: 52px;
   border: 1px solid transparent;
   border-radius: var(--dz-radius);
@@ -437,22 +437,22 @@
   filter: none;
   transition: transform .18s var(--dz-ease, cubic-bezier(.2,.8,.2,1)), background .2s, box-shadow .2s;
 }
-[data-design='gimnasio'][data-theme] :is(.ec-auth, .ec-account) :is(.ecaf-submit, .ec-btn-primary):hover:not(:disabled) {
+[data-design='gimnasio'][data-theme] :is(.ec-auth, .ec-account, .ec-track) :is(.ecaf-submit, .ec-btn-primary):hover:not(:disabled) {
   transform: translateY(-2px);
   background: color-mix(in srgb, var(--dz-accent) 88%, #fff);
   box-shadow: 0 14px 26px -18px color-mix(in srgb, var(--dz-accent) 70%, transparent);
   filter: none;
 }
-[data-design='gimnasio'][data-theme] :is(.ec-auth, .ec-account) :is(.ecaf-submit, .ec-btn-primary):active:not(:disabled) {
+[data-design='gimnasio'][data-theme] :is(.ec-auth, .ec-account, .ec-track) :is(.ecaf-submit, .ec-btn-primary):active:not(:disabled) {
   transform: translateY(0) scale(.995);
 }
-[data-design='gimnasio'][data-theme] :is(.ec-auth, .ec-account) :is(.ecaf-submit, .ec-btn-primary):disabled {
+[data-design='gimnasio'][data-theme] :is(.ec-auth, .ec-account, .ec-track) :is(.ecaf-submit, .ec-btn-primary):disabled {
   background: var(--dz-line);
   color: var(--dz-muted);
   opacity: 1;
   cursor: not-allowed;
 }
-[data-design='gimnasio'][data-theme] :is(.ec-auth, .ec-account) .ec-btn-ghost {
+[data-design='gimnasio'][data-theme] :is(.ec-auth, .ec-account, .ec-track) .ec-btn-ghost {
   min-height: 48px;
   border: 1px solid var(--dz-line-strong);
   border-radius: var(--dz-radius);
@@ -462,7 +462,7 @@
   letter-spacing: .2em;
   text-transform: uppercase;
 }
-[data-design='gimnasio'][data-theme] :is(.ec-auth, .ec-account) .ec-btn-ghost:hover {
+[data-design='gimnasio'][data-theme] :is(.ec-auth, .ec-account, .ec-track) .ec-btn-ghost:hover {
   border-color: var(--dz-accent);
   color: var(--dz-accent-text);
   background: color-mix(in srgb, var(--dz-accent) 8%, transparent);
@@ -883,7 +883,7 @@
   }
 }
 @media (prefers-reduced-motion: reduce) {
-  [data-design='gimnasio'] :is(.ec-auth, .ec-account) * {
+  [data-design='gimnasio'] :is(.ec-auth, .ec-account, .ec-track) * {
     transition-duration: .001ms !important;
     animation-duration: .001ms !important;
   }

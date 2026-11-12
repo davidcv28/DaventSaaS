@@ -119,6 +119,11 @@
      gris del diseño (AA pide 4.5). El verde-tinta del diseño ya nace
      oscurecido/aclarecido por modo. */
   --tpc-stock-ink: var(--mc-green-ink);
+  /* "En evento" (productDiscount programado): píldora azul de oferta
+     oficial, misma mano que el CTA del marketplace. */
+  --tpc-event-bg: var(--mc-blue);
+  --tpc-event-ink: var(--mc-on-blue);
+  --tpc-event-radius: 6px;
   --tpc-quick-bg: var(--mc-blue);
   --tpc-add-radius: 8px;
   --tpc-add-bg: var(--mc-blue);

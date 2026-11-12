@@ -454,6 +454,11 @@ html[data-ds-commerce="1"] .ds-product .dsx-buy:active{transform:translateY(0) s
 html[data-ds-commerce="1"] .ds-product .dsx-buy.is-added{
   background:var(--warm);border-color:var(--warm);color:var(--warm-ink);
 }
+/* Contrato de tarjeta: la ficha es el único destino — sin CTA propio dentro
+   de .ds-product. El puente aún inyecta .dsx-buy-wrap en cada tarjeta cuando
+   la tienda vende online; se oculta acá (el CTA vive en la ficha, .pdp-*).
+   Cuando el bridge deje de inyectarlo esta regla queda inerte. */
+.ds-product > .dsx-buy-wrap{display:none}
 /* Ficha: .pdp-buy agrupa los CTAs (el puente inserta el suyo primero);
    cada botón ocupa su fila dentro del grid de .pdp-info. */
 .pdp-buy{display:grid;gap:12px;min-width:0}

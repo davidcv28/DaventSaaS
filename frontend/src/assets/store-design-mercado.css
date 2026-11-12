@@ -58,12 +58,12 @@
 }
 
 /* ---------- Marco común ---------- */
-[data-design='mercado'][data-theme] :is(.ec-auth, .ec-account) :is(a, button, input, select, textarea):focus-visible {
+[data-design='mercado'][data-theme] :is(.ec-auth, .ec-account, .ec-track) :is(a, button, input, select, textarea):focus-visible {
   outline: 2px solid var(--dz-link);
   outline-offset: 2px;
   border-radius: 4px;
 }
-[data-design='mercado'][data-theme] :is(.ec-auth, .ec-account) ::selection {
+[data-design='mercado'][data-theme] :is(.ec-auth, .ec-account, .ec-track) ::selection {
   background: var(--dz-accent-ink);
   color: var(--dz-accent);
 }
@@ -218,13 +218,13 @@
 [data-design='mercado'] .ec-auth .ec-auth-spin { color: var(--dz-link); }
 
 /* ---------- Controles (compartidos auth + cuenta) ---------- */
-[data-design='mercado'][data-theme] :is(.ec-auth, .ec-account) .sp-field { gap: 6px; }
-[data-design='mercado'][data-theme] :is(.ec-auth, .ec-account) .sp-field-label {
+[data-design='mercado'][data-theme] :is(.ec-auth, .ec-account, .ec-track) .sp-field { gap: 6px; }
+[data-design='mercado'][data-theme] :is(.ec-auth, .ec-account, .ec-track) .sp-field-label {
   font-family: var(--dz-mono); font-size: 10px; font-weight: 600;
   letter-spacing: .12em; text-transform: uppercase;
   color: var(--dz-muted);
 }
-[data-design='mercado'][data-theme] :is(.ec-auth, .ec-account) .sp-input {
+[data-design='mercado'][data-theme] :is(.ec-auth, .ec-account, .ec-track) .sp-input {
   min-height: 46px;
   padding: 11px 13px;
   border: 1px solid var(--dz-line);
@@ -235,32 +235,32 @@
   box-shadow: inset 0 1px 2px rgba(0, 0, 0, .04);
   transition: border-color .16s, box-shadow .16s;
 }
-[data-design='mercado'][data-theme] :is(.ec-auth, .ec-account) .sp-input:hover { border-color: color-mix(in srgb, var(--dz-ink) 26%, var(--dz-line)); }
-[data-design='mercado'][data-theme] :is(.ec-auth, .ec-account) .sp-input:focus {
+[data-design='mercado'][data-theme] :is(.ec-auth, .ec-account, .ec-track) .sp-input:hover { border-color: color-mix(in srgb, var(--dz-ink) 26%, var(--dz-line)); }
+[data-design='mercado'][data-theme] :is(.ec-auth, .ec-account, .ec-track) .sp-input:focus {
   border-color: var(--dz-blue);
   box-shadow: 0 0 0 3px color-mix(in srgb, var(--dz-blue) 20%, transparent);
 }
-[data-design='mercado'][data-theme] :is(.ec-auth, .ec-account) .sp-input::placeholder { color: var(--dz-muted); opacity: 1; }
-[data-design='mercado'][data-theme] :is(.ec-auth, .ec-account) .sp-input:disabled {
+[data-design='mercado'][data-theme] :is(.ec-auth, .ec-account, .ec-track) .sp-input::placeholder { color: var(--dz-muted); opacity: 1; }
+[data-design='mercado'][data-theme] :is(.ec-auth, .ec-account, .ec-track) .sp-input:disabled {
   background: color-mix(in srgb, var(--dz-line) 40%, var(--dz-surface));
   color: var(--dz-ink-2); cursor: not-allowed;
 }
-[data-design='mercado'][data-theme] :is(.ec-auth, .ec-account) .sp-form-error {
+[data-design='mercado'][data-theme] :is(.ec-auth, .ec-account, .ec-track) .sp-form-error {
   color: var(--dz-danger); font-family: var(--dz-body); font-size: 12.5px;
 }
-[data-design='mercado'][data-theme] :is(.ec-auth, .ec-account) .sp-input:-webkit-autofill {
+[data-design='mercado'][data-theme] :is(.ec-auth, .ec-account, .ec-track) .sp-input:-webkit-autofill {
   -webkit-text-fill-color: var(--dz-ink);
   box-shadow: inset 0 0 0 40px var(--dz-surface);
 }
 /* El ojo de mostrar/ocultar (.ecaf-pass-toggle) es absolute a 46px del
    borde: el padding shorthand de .sp-input (0,4,0) pisaba el padding-right
    scoped del campo (0,2,0) y el texto quedaba debajo del ícono. */
-[data-design='mercado'][data-theme] :is(.ec-auth, .ec-account) .ecaf-pass .sp-input {
+[data-design='mercado'][data-theme] :is(.ec-auth, .ec-account, .ec-track) .ecaf-pass .sp-input {
   padding-right: 48px;
 }
 
 /* CTA: azul del diseño (el amarillo queda para el mostrador). */
-[data-design='mercado'][data-theme] :is(.ec-auth, .ec-account) :is(.ecaf-submit, .ec-btn-primary) {
+[data-design='mercado'][data-theme] :is(.ec-auth, .ec-account, .ec-track) :is(.ecaf-submit, .ec-btn-primary) {
   min-height: 46px;
   border: 1px solid transparent;
   border-radius: var(--dz-radius-sm);
@@ -271,25 +271,25 @@
   filter: none;
   transition: filter .16s, transform .12s, box-shadow .16s;
 }
-[data-design='mercado'][data-theme] :is(.ec-auth, .ec-account) :is(.ecaf-submit, .ec-btn-primary):hover:not(:disabled) {
+[data-design='mercado'][data-theme] :is(.ec-auth, .ec-account, .ec-track) :is(.ecaf-submit, .ec-btn-primary):hover:not(:disabled) {
   filter: brightness(1.08);
   box-shadow: 0 12px 22px -16px color-mix(in srgb, var(--dz-blue) 80%, transparent);
 }
-[data-design='mercado'][data-theme] :is(.ec-auth, .ec-account) :is(.ecaf-submit, .ec-btn-primary):active:not(:disabled) {
+[data-design='mercado'][data-theme] :is(.ec-auth, .ec-account, .ec-track) :is(.ecaf-submit, .ec-btn-primary):active:not(:disabled) {
   transform: translateY(1px);
 }
-[data-design='mercado'][data-theme] :is(.ec-auth, .ec-account) :is(.ecaf-submit, .ec-btn-primary):disabled {
+[data-design='mercado'][data-theme] :is(.ec-auth, .ec-account, .ec-track) :is(.ecaf-submit, .ec-btn-primary):disabled {
   background: color-mix(in srgb, var(--dz-muted) 26%, var(--dz-surface));
   color: var(--dz-ink-2); opacity: 1; cursor: not-allowed;
 }
-[data-design='mercado'][data-theme] :is(.ec-auth, .ec-account) .ec-btn-ghost {
+[data-design='mercado'][data-theme] :is(.ec-auth, .ec-account, .ec-track) .ec-btn-ghost {
   min-height: 44px;
   border: 1px solid var(--dz-line);
   border-radius: var(--dz-radius-sm);
   background: var(--dz-surface); color: var(--dz-ink);
   font-family: var(--dz-body); font-size: 13.5px; font-weight: 600;
 }
-[data-design='mercado'][data-theme] :is(.ec-auth, .ec-account) .ec-btn-ghost:hover {
+[data-design='mercado'][data-theme] :is(.ec-auth, .ec-account, .ec-track) .ec-btn-ghost:hover {
   border-color: var(--dz-blue); color: var(--dz-link);
   background: color-mix(in srgb, var(--dz-blue) 8%, var(--dz-surface));
 }
@@ -762,7 +762,7 @@
   }
 }
 @media (prefers-reduced-motion: reduce) {
-  [data-design='mercado'] :is(.ec-auth, .ec-account) * {
+  [data-design='mercado'] :is(.ec-auth, .ec-account, .ec-track) * {
     transition-duration: .001ms !important;
     animation-duration: .001ms !important;
   }

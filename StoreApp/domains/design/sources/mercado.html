@@ -516,6 +516,11 @@
   .ds-product .dsx-buy:hover::before{background:var(--on-primary)}
   .ds-product .dsx-buy.is-added{background:var(--green-badge);border-color:var(--green-badge)}
   .ds-product .dsx-buy.is-added::before{background:var(--on-success)}
+  /* Contrato de tarjeta: la ficha es el único destino — sin CTA propio
+     dentro de .ds-product. El puente aún inyecta .dsx-buy-wrap en cada
+     tarjeta cuando la tienda vende online; se oculta acá (el CTA vive en
+     la ficha, .pdp-*). Cuando el bridge deje de inyectarlo queda inerte. */
+  .ds-product > .dsx-buy-wrap{display:none}
   /* Ficha: el CTA de compra va DIRECTO bajo el precio (.pdp-info pasa a
      flex column y el orden se fija explícito porque el puente lo inyecta
      recién antes del link de WhatsApp). Radio 1px: botón casi recto. */

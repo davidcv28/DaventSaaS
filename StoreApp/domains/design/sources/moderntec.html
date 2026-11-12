@@ -391,6 +391,11 @@ html[data-ds-surface="services"] .top-nav a[data-ds-route="services"]{color:var(
   mask-image:url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2.4' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M20 6.5 9.5 17l-5-5'/%3E%3C/svg%3E");
 }
 .ds-product .dsx-buy-wrap .dsx-buy:not([data-ds-buy-slot])[disabled]{opacity:.55;cursor:default;transform:none;box-shadow:none}
+/* Contrato de tarjeta: la ficha es el único destino — sin CTA propio dentro
+   de .ds-product. El puente aún inyecta .dsx-buy-wrap en cada tarjeta cuando
+   la tienda vende online; se oculta acá (el CTA vive en la ficha, .pdp-*).
+   Cuando el bridge deje de inyectarlo esta regla queda inerte. */
+.ds-product > .dsx-buy-wrap{display:none}
 .ds-empty{grid-column:1/-1;margin:24px 0 0;font-size:13px;color:var(--ink-3)}
 
 /* ── categorías (fragmento {{categories}}) ── */

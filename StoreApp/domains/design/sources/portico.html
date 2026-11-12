@@ -684,6 +684,11 @@ html[data-ds-theme="dark"] .band-tag{color:var(--muted)}
   background-color:color-mix(in srgb,var(--copper) 86%,var(--ink))}
 [data-ds-view-mode="list"] .ds-product .dsx-buy{
   width:fit-content;min-width:0;margin:10px 0 0 auto;padding:0 20px;min-height:40px}
+/* Contrato de tarjeta: la ficha es el único destino — sin CTA propio dentro
+   de .ds-product. El puente aún inyecta .dsx-buy-wrap en cada tarjeta cuando
+   la tienda vende online; se oculta acá (el CTA vive en la ficha, .pdp-*).
+   Cuando el bridge deje de inyectarlo esta regla queda inerte. */
+.ds-product > .dsx-buy-wrap{display:none}
 /* Mismo caso para el contador del carrito. */
 header.top .dsx-cart-badge{background:var(--copper);color:var(--ds-accent-ink,#fbf7ef)}
 .ds-empty{display:grid;place-items:center;gap:16px;min-height:220px;padding:40px 24px;
