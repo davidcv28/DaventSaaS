@@ -73,7 +73,7 @@ export const ownerOrdersApi = {
   },
   detail: (id) => http.get(`/store-orders/${id}/`).then((r) => r.data),
   confirmPayment: (id, reference = '') => http.post(`/store-orders/${id}/confirm-payment/`, { reference }).then((r) => r.data),
-  advance: (id, status) => http.post(`/store-orders/${id}/advance/`, { status }).then((r) => r.data),
+  advance: (id, payload) => http.post(`/store-orders/${id}/advance/`, typeof payload === 'string' ? { status: payload } : payload).then((r) => r.data),
   cancel: (id, reason = '') => http.post(`/store-orders/${id}/cancel/`, { reason }).then((r) => r.data),
   setInvoiceRef: (id, invoiceRef) => http.post(`/store-orders/${id}/invoice-ref/`, { invoice_ref: invoiceRef }).then((r) => r.data),
 }

@@ -199,7 +199,7 @@ def mark_order_refunded(order, *, actor = None):
         _apply_status(locked, Order.Status.REFUNDED, actor = actor)
         return locked
 
-def advance_order(order, target_status, *, actor = 'owner'):
+def advance_order(order, target_status, *, actor = 'owner', carrier = '', carrier_label = '', tracking_code = ''):
     """
     Avanza el pedido del dueño a un estado de OWNER_ADVANCE_TARGETS
     (PACKING/SHIPPED/DELIVERED/REFUNDED) validando TRANSITIONS.
@@ -223,6 +223,12 @@ def advance_order(order, target_status, *, actor = 'owner'):
             })
         if target not in Order.TRANSITIONS.get(locked.status, set()):
             raise _transition_error(locked)
+        #Al despachar el pedido el dueño adjunta correo + código (o el de
+        #la API del correo): viajan en el pedido y al comprador por track.
+        if target == Order.Status.SHIPPED:
+            locked.carrier          =   carrier
+            locked.carrier_label    =   carrier_label
+            locked.tracking_code    =   tracking_code
         _apply_status(locked, target, actor = actor)
         return locked
 

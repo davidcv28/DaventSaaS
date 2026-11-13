@@ -128,10 +128,25 @@ class StoreShippingConfigSerializer(serializers.ModelSerializer):
         max_digits      =   12,
         decimal_places  =   2,
     )
+    #Correo integrado (Andreani/OCA): credenciales write-only — se guardan
+    #cifradas y el GET solo informa si hay cargadas (carrier_configured).
+    carrier                 =   serializers.ChoiceField(choices = ['', 'andreani', 'oca'], required = False, allow_blank = True)
+    carrier_credentials     =   serializers.DictField(required = False, write_only = True)
+    carrier_configured      =   serializers.SerializerMethodField()
     class Meta:
         model       =   StoreShippingConfig
-        fields      =   ['home_price', 'updated_at']
-        read_only_fields    =   ['updated_at']
+        fields      =   ['home_price', 'carrier', 'carrier_credentials', 'carrier_configured', 'updated_at']
+        read_only_fields    =   ['updated_at', 'carrier_configured']
+    def get_carrier_configured(self, cfg):
+        return bool(cfg.carrier_creds_enc)
+    def update(self, cfg, validated):
+        creds = validated.pop('carrier_credentials', None)
+        for attr, value in validated.items():
+            setattr(cfg, attr, value)
+        if creds is not None:
+            cfg.set_carrier_credentials(creds)
+        cfg.save()
+        return cfg
     def validate_home_price(self, value):
         #'' del formulario = "sin precio" → NULL (a coordinar).
         return None if value in (None, '') else value

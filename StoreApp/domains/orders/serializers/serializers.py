@@ -66,13 +66,20 @@ class OrderOwnerConfirmSerializer(serializers.Serializer):
 
 
 class OrderOwnerAdvanceSerializer(serializers.Serializer):
-    """POST advance: estado destino (la máquina de estados valida)."""
+    """POST advance: estado destino (la máquina de estados valida). Al
+    marcar SHIPPED puede viajar el correo/código de seguimiento — manual
+    (el dueño lo pega de su panel OCA/Andreani) o `generate:true` para
+    crearlo por la API del correo configurado en Cobros → Envíos."""
     status                  =   serializers.ChoiceField(choices = [
         Order.Status.PACKING,
         Order.Status.SHIPPED,
         Order.Status.DELIVERED,
         Order.Status.REFUNDED,
     ])
+    carrier                 =   serializers.ChoiceField(choices = ['oca', 'andreani', 'correo_argentino', 'other'], required = False, allow_blank = True)
+    carrier_label           =   serializers.CharField(max_length = 60, required = False, allow_blank = True)
+    tracking_code           =   serializers.CharField(max_length = 80, required = False, allow_blank = True)
+    generate                =   serializers.BooleanField(required = False, default = False)
 
 
 class OrderOwnerCancelSerializer(serializers.Serializer):
@@ -133,11 +140,14 @@ class StoreOrderDetailSerializer(serializers.ModelSerializer):
     events                  =   StoreOrderEventSerializer(many = True, read_only = True)
     proof_image             =   serializers.SerializerMethodField()
     proof_uploaded          =   serializers.SerializerMethodField()
+    carrier_label           =   serializers.SerializerMethodField()
+    tracking_url            =   serializers.SerializerMethodField()
     class Meta:
         model               =   Order
         fields              =   [
             'id', 'number', 'code', 'status', 'payment_method', 'payment_ref', 'mp_payment_id',
-            'shipping_method', 'shipping_address', 'subtotal', 'discount_total', 'shipping_cost', 'shipping_priced', 'total',
+            'shipping_method', 'shipping_address', 'carrier', 'carrier_label', 'tracking_code', 'tracking_url',
+            'subtotal', 'discount_total', 'shipping_cost', 'shipping_priced', 'total',
             'expires_at', 'paid_at', 'created_at', 'updated_at', 'invoice_ref', 'proof_required', 'idempotency_key',
             'customer_first_name', 'customer_last_name', 'customer_email', 'customer_phone',
             'customer_document_type', 'customer_document',
@@ -145,6 +155,12 @@ class StoreOrderDetailSerializer(serializers.ModelSerializer):
         ]
     def get_proof_uploaded(self, order):
         return hasattr(order, 'proof')
+    def get_carrier_label(self, order):
+        from StoreApp.domains.orders.services.carriers import carrier_display
+        return carrier_display(order) or None
+    def get_tracking_url(self, order):
+        from StoreApp.domains.orders.services.carriers import tracking_url
+        return tracking_url(order.carrier, order.tracking_code) or None
     def get_proof_image(self, order):
         proof   =   getattr(order, 'proof', None)
         if proof is None:

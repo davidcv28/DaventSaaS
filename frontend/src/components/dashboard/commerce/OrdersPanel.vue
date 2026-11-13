@@ -136,12 +136,48 @@ async function doConfirmPayment() {
   }
 }
 
-async function doAdvance(target) {
+const CARRIERS = [
+  { id: 'oca',               label: 'OCA' },
+  { id: 'andreani',          label: 'Andreani' },
+  { id: 'correo_argentino',  label: 'Correo Argentino' },
+  { id: 'other',             label: 'Otro correo' },
+]
+const showShipForm = ref(false)
+const shipForm = reactive({ carrier: 'oca', label: '', code: '', generate: false })
+
+function onAdvanceClick(target) {
+  //Envío a domicilio pide correo + código de seguimiento antes de
+  //marcar enviado (CompraGamer-style); retiro en local avanza directo.
+  if (target === 'SHIPPED' && detail.value?.shipping_method === 'home') {
+    showShipForm.value = true
+    actionErr.value = ''
+    actionMsg.value = ''
+    return
+  }
+  doAdvance(target)
+}
+
+async function doShip() {
+  const payload = { status: 'SHIPPED' }
+  if (shipForm.generate) {
+    payload.generate = true
+  } else {
+    if (!shipForm.carrier) { actionErr.value = 'Elegí el correo.'; return }
+    if (!shipForm.code.trim()) { actionErr.value = 'Cargá el código de seguimiento (o activá "Generar con mi correo").'; return }
+    payload.carrier = shipForm.carrier
+    payload.tracking_code = shipForm.code.trim()
+    if (shipForm.carrier === 'other' && shipForm.label.trim()) payload.carrier_label = shipForm.label.trim()
+  }
+  await doAdvance('SHIPPED', payload)
+  if (!actionErr.value) { showShipForm.value = false; shipForm.code = ''; shipForm.generate = false }
+}
+
+async function doAdvance(target, payload) {
   actionBusy.value = target
   actionErr.value = ''
   actionMsg.value = ''
   try {
-    await ownerOrdersApi.advance(detail.value.id, target)
+    await ownerOrdersApi.advance(detail.value.id, payload || target)
     actionMsg.value = `Pedido marcado como "${statusMeta(ORDER_STATUS, target).label}".`
     await Promise.all([openDetail(detail.value.id), load(page.value)])
   } catch (e) {
@@ -367,10 +403,37 @@ function eventLabel(ev) {
                   <button type="button" class="btn ghost btn-auto" @click="showCancelForm = false">Volver</button>
                 </div>
 
-                <div v-if="nextAction" class="pf-actions">
-                  <button type="button" class="btn btn-auto" :disabled="actionBusy === nextAction.target" @click="doAdvance(nextAction.target)">
+                <div v-if="nextAction && !showShipForm" class="pf-actions">
+                  <button type="button" class="btn btn-auto" :disabled="actionBusy === nextAction.target" @click="onAdvanceClick(nextAction.target)">
                     {{ nextAction.label }}
                   </button>
+                </div>
+
+                <div v-if="showShipForm" class="pf-form" style="margin-top: 10px">
+                  <label class="chk" style="margin-bottom: 8px">
+                    <input type="checkbox" v-model="shipForm.generate" />
+                    <span>Generar etiqueta con mi correo (usa la integración configurada en Cobros → Envíos)</span>
+                  </label>
+                  <template v-if="!shipForm.generate">
+                    <label class="field">
+                      <span class="field-label">Correo</span>
+                      <select v-model="shipForm.carrier" class="input">
+                        <option v-for="c in CARRIERS" :key="c.id" :value="c.id">{{ c.label }}</option>
+                      </select>
+                    </label>
+                    <label v-if="shipForm.carrier === 'other'" class="field">
+                      <span class="field-label">Nombre del correo</span>
+                      <input v-model="shipForm.label" class="input" maxlength="60" placeholder="Ej: Moto mensajería" />
+                    </label>
+                    <label class="field">
+                      <span class="field-label">Código de seguimiento</span>
+                      <input v-model="shipForm.code" class="input" maxlength="80" placeholder="Ej: 425000012345" />
+                    </label>
+                  </template>
+                  <div class="pf-actions">
+                    <button type="button" class="btn btn-auto" :disabled="actionBusy === 'SHIPPED'" @click="doShip">Confirmar envío</button>
+                    <button type="button" class="btn ghost btn-auto" @click="showShipForm = false">Volver</button>
+                  </div>
                 </div>
 
                 <div v-if="canRefundMp || canRefundManual" class="pf-actions" style="margin-top: 10px">
@@ -393,6 +456,11 @@ function eventLabel(ev) {
                   <div><span>Vence</span><strong>{{ fmtDateTime(detail.expires_at) }}</strong></div>
                   <div><span>Pagado</span><strong>{{ fmtDateTime(detail.paid_at) }}</strong></div>
                   <div v-if="detail.payment_ref"><span>Ref. de pago</span><strong class="mono">{{ detail.payment_ref }}</strong></div>
+                  <div v-if="detail.carrier"><span>Correo</span><strong>{{ detail.carrier_label || detail.carrier }}</strong></div>
+                  <div v-if="detail.tracking_code"><span>Seguimiento</span><strong class="mono">
+                    <a v-if="detail.tracking_url" :href="detail.tracking_url" target="_blank" rel="noopener">{{ detail.tracking_code }}</a>
+                    <template v-else>{{ detail.tracking_code }}</template>
+                  </strong></div>
                   <div><span>Subtotal</span><strong>{{ money(detail.subtotal) }}</strong></div>
                   <div><span>Descuento</span><strong>{{ money(detail.discount_total) }}</strong></div>
                   <div><span>Costo de envío</span><strong>{{ shippingCostLabel }}</strong></div>

@@ -74,6 +74,7 @@ from StoreApp.domains.orders.models import (
     OrderSequence,
     new_tracking_token,
 )
+from StoreApp.domains.orders.services.carriers import carrier_display, tracking_url
 from StoreApp.domains.orders.services.events import append_event
 from StoreApp.domains.stores.models import Store, StoreShippingConfig
 from StoreApp.domains.stores.services.commerce import orders_enabled
@@ -508,6 +509,12 @@ def order_public_payload(order, store = None):
         'expires_at'        :   order.expires_at.isoformat() if order.expires_at else None,
         'proof_required'    :   order.proof_required,
         'proof_uploaded'    :   hasattr(order, 'proof'),
+        #Correo externo: el comprador sigue el paquete en la web del
+        #correo con este código (carrier_label = nombre custom).
+        'carrier'           :   order.carrier or None,
+        'carrier_label'     :   carrier_display(order) or None,
+        'tracking_code'     :   order.tracking_code or None,
+        'tracking_url'      :   tracking_url(order.carrier, order.tracking_code) or None,
         'customer_first_name': order.customer_first_name,
         'created_at'        :   order.created_at.isoformat() if order.created_at else None,
         'items'             :   [_item_public(item) for item in order.items.all()],

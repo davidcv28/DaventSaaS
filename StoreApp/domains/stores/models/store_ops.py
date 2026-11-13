@@ -1,3 +1,5 @@
+import json
+
 from django.db import models
 from django.utils import timezone
 
@@ -237,6 +239,11 @@ class StoreShippingConfig(models.Model):
     """
     store                       =   models.OneToOneField(Store, on_delete = models.CASCADE, related_name = 'shipping_config')
     home_price                  =   models.DecimalField(max_digits = 12, decimal_places = 2, null = True, blank = True, default = None, verbose_name = 'Precio de envío a domicilio')
+    #Correo integrado: el dueño carga las credenciales de SU cuenta
+    #andreani/oca (el contrato y el costo del envío los paga él) y el
+    #panel genera el código de seguimiento al marcar el pedido enviado.
+    carrier                     =   models.CharField(max_length = 20, blank = True, default = '', choices = [('', 'Ninguno'), ('andreani', 'Andreani'), ('oca', 'OCA')], verbose_name = 'Correo integrado')
+    carrier_creds_enc           =   models.TextField(blank = True, default = '', verbose_name = 'Credenciales del correo (cifradas)')
     updated_at                  =   models.DateTimeField(auto_now = True)
     class Meta:
         app_label               =   'stores'
@@ -244,6 +251,16 @@ class StoreShippingConfig(models.Model):
         verbose_name_plural     =   'Configuraciones de envíos'
     def __str__(self):
         return f'shipping:{self.store.slug}'
+    def set_carrier_credentials(self, creds):
+        payload =   json.dumps(creds or {}, separators = (',', ':')).encode()
+        self.carrier_creds_enc  =   encrypt_secret(payload, f'StoreShippingConfig.carrier:{self.store_id}')
+    def get_carrier_credentials(self):
+        if not self.carrier_creds_enc:
+            return {}
+        try:
+            return json.loads(decrypt_secret(self.carrier_creds_enc, f'StoreShippingConfig.carrier:{self.store_id}').decode())
+        except Exception:
+            return {}
 #=========================================
 # PUBLIC CACHE BUST (la tarifa de envío viaja en el payload público —
 # una edición del dueño se ve al instante, igual que el resto de la

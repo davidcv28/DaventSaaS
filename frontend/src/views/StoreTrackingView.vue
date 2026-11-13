@@ -342,6 +342,19 @@ onUnmounted(() => {
         </dl>
       </section>
 
+      <!-- Envío despachado: correo + código para seguir el paquete -->
+      <section v-if="order.tracking_code" class="ec-track-card">
+        <h2><AppIcon name="truck" :size="16" aria-hidden="true" /> Tu envío</h2>
+        <div class="ec-ship">
+          <span class="ec-ship-carrier">{{ order.carrier_label || 'Correo' }}</span>
+          <code class="ec-ship-code">{{ order.tracking_code }}</code>
+          <a v-if="order.tracking_url" :href="order.tracking_url" target="_blank" rel="noopener" class="ec-btn-primary">
+            Seguir en {{ order.carrier_label || 'el correo' }} <AppIcon name="external-link" :size="13" aria-hidden="true" />
+          </a>
+        </div>
+        <p class="ec-track-muted">Con este código seguís el paquete en la web del correo.</p>
+      </section>
+
       <!-- Instrucciones de pago -->
       <section v-if="order.status === 'PENDING_PAYMENT' && order.payment_instructions" class="ec-track-card">
         <PaymentInstructions :slug="slug" :instructions="order.payment_instructions" :order-token="token" :total="money(order.total)" />
@@ -485,6 +498,10 @@ onUnmounted(() => {
 .ec-track-card { display: grid; gap: 14px; padding: 18px; border: 1px solid var(--sp-line, rgba(0,0,0,.09)); border-radius: var(--sp-radius); background: var(--sp-card, transparent); }
 .ec-track-h2 { margin: 0; font-size: 15px; font-weight: 800; }
 .ec-track-muted { margin: 0; font-size: 13px; line-height: 1.5; color: var(--sp-muted, inherit); display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+.ec-ship { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin: 4px 0 10px; }
+.ec-ship-carrier { font-weight: 800; font-size: 15px; }
+.ec-ship-code { padding: 6px 10px; border-radius: 10px; border: 1.5px dashed var(--sp-line, rgba(17,17,17,.18)); background: var(--sp-chip, transparent); font-family: var(--st-mono, ui-monospace, monospace); font-size: 13.5px; font-weight: 700; }
+.ec-ship .ec-btn-primary { display: inline-flex; align-items: center; gap: 6px; padding: 9px 14px; font-size: 13px; }
 .ec-track-error { margin: 0; color: var(--sp-danger, #dc2626); }
 .ec-track-note { grid-template-columns: auto 1fr; align-items: center; }
 .ec-track-note > div { display: grid; gap: 4px; }

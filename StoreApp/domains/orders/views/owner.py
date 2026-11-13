@@ -132,7 +132,19 @@ class StoreOrderViewSet(viewsets.GenericViewSet):
         order       =   self.get_object()
         serializer  =   OrderOwnerAdvanceSerializer(data = request.data)
         serializer.is_valid(raise_exception = True)
-        advance_order(order, serializer.validated_data['status'], actor = 'owner')
+        data        =   serializer.validated_data
+        carrier, carrier_label, tracking_code = (
+            data.get('carrier') or '', data.get('carrier_label') or '', data.get('tracking_code') or '')
+        if data['status'] == 'SHIPPED' and data.get('generate'):
+            #Generación por API del correo del dueño (credenciales de su
+            #contrato en Cobros → Envíos): devuelve carrier+código.
+            from StoreApp.domains.orders.services.carriers import generate_shipment
+            carrier, tracking_code    =   generate_shipment(order.store, order)
+            carrier_label             =   ''
+        advance_order(
+            order, data['status'], actor = 'owner',
+            carrier = carrier, carrier_label = carrier_label, tracking_code = tracking_code,
+        )
         return Response(StoreOrderDetailSerializer(self._fresh_detail(order)).data, status = status.HTTP_200_OK)
     @action(detail = True, methods = ['post'])
     def cancel(self, request, pk = None):

@@ -140,6 +140,13 @@ class Order(models.Model):
     #(StoreShippingConfig.home_price no-NULL — incluye envío gratis $0);
     #False = "a coordinar" (shipping_cost=0 no significa gratis).
     shipping_priced             =   models.BooleanField(default = False, verbose_name = 'Envío con precio fijo')
+    #===== CORREO / TRACKING EXTERNO =====
+    #El dueño marca SHIPPED con la empresa y el código que el correo le
+    #dio (manual desde su panel OCA/Andreani o generado por la API del
+    #correo con sus propias credenciales — el contrato lo paga el dueño).
+    carrier                     =   models.CharField(max_length = 24, blank = True, verbose_name = 'Empresa de correo')
+    carrier_label               =   models.CharField(max_length = 60, blank = True, verbose_name = 'Nombre del correo (custom)')
+    tracking_code               =   models.CharField(max_length = 80, blank = True, verbose_name = 'Código de seguimiento')
     total                       =   models.DecimalField(max_digits = 12, decimal_places = 2, default = 0, verbose_name = 'Total')
     #===== CICLO DE VIDA =====
     status                      =   models.CharField(max_length = 20, choices = Status.choices, default = Status.PENDING_PAYMENT, verbose_name = 'Estado')

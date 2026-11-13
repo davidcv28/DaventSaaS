@@ -38,7 +38,11 @@ const payMsg = ref('')
 const payErr = ref('')
 
 // ----- Envío a domicilio (tarifa fija del checkout — PATCH merge) -----
-const shipForm = ref({ mode: 'coordinar', home_price: null })
+// + integración con el correo DEL DUEÑO (sus credenciales/contrato, él
+//   paga el flete): habilita "Generar etiqueta" al despachar el pedido.
+const shipForm = ref({ mode: 'coordinar', home_price: null, carrier: '' })
+const shipCreds = ref({ usuario: '', password: '', contrato: '', cp_origen: '', peso_kg: '' })
+const shipCredsConfigured = ref(false)
 const shipBusy = ref(false)
 const shipMsg = ref('')
 const shipErr = ref('')
@@ -97,6 +101,9 @@ async function loadAll() {
       const price = shipCfg.home_price
       shipForm.value.mode = (price === null || price === undefined || price === '') ? 'coordinar' : 'fijo'
       shipForm.value.home_price = (price === null || price === undefined || price === '') ? null : Number(price)
+      shipForm.value.carrier = shipCfg.carrier || ''
+      shipCredsConfigured.value = Boolean(shipCfg.carrier_configured)
+      // credenciales NUNCA vuelven del servidor: campos vacíos = conservar.
     }
     if (fiscal) {
       Object.assign(fiscalForm.value, fiscal)
@@ -192,9 +199,22 @@ async function saveShipping() {
         return
       }
     }
-    const data = await storePaymentsApi.updateShippingConfig({ home_price: price })
+    const patch = { home_price: price, carrier: shipForm.value.carrier || '' }
+    if (shipForm.value.carrier === 'andreani') {
+      const c = shipCreds.value
+      const filled = Object.values(c).some((v) => String(v || '').trim())
+      if (filled) patch.carrier_credentials = { ...c, peso_kg: c.peso_kg || '1' }
+      else if (!shipCredsConfigured.value) {
+        shipErr.value = 'Para generar etiquetas con Andreani cargá usuario, contraseña y contrato.'
+        shipBusy.value = false
+        return
+      }
+    }
+    const data = await storePaymentsApi.updateShippingConfig(patch)
     const p = data.home_price
     shipForm.value.home_price = (p === null || p === undefined || p === '') ? null : Number(p)
+    shipCredsConfigured.value = Boolean(data.carrier_configured)
+    shipCreds.value = { usuario: '', password: '', contrato: '', cp_origen: '', peso_kg: '' }
     shipMsg.value = 'Envíos guardados.'
   } catch (e) {
     shipErr.value = apiErr(e)
@@ -421,6 +441,28 @@ const mpWebhooksOk = computed(() => Boolean(mpStatus.value?.webhook_configured))
           <input v-model.number="shipForm.home_price" type="number" min="0" step="0.01" class="input" placeholder="Ej: 1500" :disabled="shipBusy" />
           <small class="hint">En pesos argentinos. 0 = envío gratis.</small>
         </label>
+        <div style="margin-top:16px;border-top:1px dashed var(--line,rgba(0,0,0,.12));padding-top:14px">
+          <p class="hint" style="margin:0 0 10px">
+            <strong>Correo integrado (opcional)</strong> — tus credenciales y tu contrato: VOS pagás el flete. Al marcar un pedido como enviado podés generar la etiqueta automáticamente, o pegar el código de seguimiento de cualquier correo a mano.
+          </p>
+          <label class="field" style="max-width:280px">
+            <span class="field-label">Correo</span>
+            <select v-model="shipForm.carrier" class="select" :disabled="shipBusy">
+              <option value="">Ninguno (código manual)</option>
+              <option value="andreani">Andreani (API)</option>
+              <option value="oca">OCA (código manual)</option>
+            </select>
+          </label>
+          <div v-if="shipForm.carrier === 'andreani'" class="grid-2" style="margin-top:10px">
+            <label class="field"><span class="field-label">Usuario Andreani</span><input v-model="shipCreds.usuario" class="input" maxlength="80" autocomplete="off" :placeholder="shipCredsConfigured ? '•••••• (guardado)' : ''" /></label>
+            <label class="field"><span class="field-label">Contraseña</span><input v-model="shipCreds.password" type="password" class="input" maxlength="80" autocomplete="new-password" :placeholder="shipCredsConfigured ? '•••••• (guardada)' : ''" /></label>
+            <label class="field"><span class="field-label">N° de contrato</span><input v-model="shipCreds.contrato" class="input" maxlength="40" :placeholder="shipCredsConfigured ? '•••••• (guardado)' : ''" /></label>
+            <label class="field"><span class="field-label">CP de origen (depósito)</span><input v-model="shipCreds.cp_origen" class="input" maxlength="8" placeholder="Ej: 1425" /></label>
+            <label class="field"><span class="field-label">Peso típico del bulto (kg)</span><input v-model="shipCreds.peso_kg" type="number" min="0" step="0.1" class="input" placeholder="1" /></label>
+            <p class="hint" style="grid-column:1/-1;margin:0">Se guardan cifradas y nunca se muestran de vuelta — dejá los campos vacíos para conservar las actuales.</p>
+          </div>
+          <p v-else-if="shipForm.carrier === 'oca'" class="hint" style="margin:8px 0 0">OCA no genera por API todavía — al despachar, generá la etiqueta en tu panel OCA y pegá el código de seguimiento.</p>
+        </div>
         <AlertMessage v-if="shipErr" kind="error" :message="shipErr" />
         <AlertMessage v-else-if="shipMsg" kind="success" :message="shipMsg" />
         <div class="btn-row">
