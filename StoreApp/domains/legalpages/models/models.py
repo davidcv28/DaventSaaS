@@ -132,7 +132,7 @@ class StoreLegalPage(models.Model):
     KIND_LABELS                =   {code: label for code, label in KIND_CHOICES}
     store                      =   models.ForeignKey('stores.Store', on_delete = models.CASCADE, related_name = 'legal_pages')
     kind                       =   models.CharField(max_length = 10, choices = KIND_CHOICES)
-    is_published               =   models.BooleanField(default = False, verbose_name = 'Publicada')
+    is_published               =   models.BooleanField(default = True, verbose_name = 'Publicada')
     #Sube en cada guardado: es la "última actualización" que la ley pide
     #mostrar en textos legales.
     version                    =   models.PositiveIntegerField(default = 1, verbose_name = 'Versión')
@@ -181,7 +181,7 @@ class StoreLegalPage(models.Model):
                 page    =   cls(
                     store           =   store,
                     kind            =   kind,
-                    is_published    =   False,
+                    is_published    =   True,
                     version         =   1,
                 )
             pages.append(page)

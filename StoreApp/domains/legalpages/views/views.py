@@ -163,7 +163,9 @@ class PublicLegalIndexView(APIView):
     throttle_classes        =   [LegalPublicReadThrottle]
     def get(self, request, slug):
         store   =   public_store_or_404(slug)
-        pages   =   {page.kind: page for page in StoreLegalPage.objects.filter(store = store, is_published = True)}
+        #Páginas efectivas (persistidas o default en memoria): las que no
+        #fueron despublicadas explícitamente salen publicadas por defecto.
+        pages   =   {page.kind: page for page in StoreLegalPage.get_or_create_defaults(store) if page.is_published}
         index   =   []
         for kind, _label in StoreLegalPage.KIND_CHOICES:
             page    =   pages.get(kind)
@@ -186,7 +188,12 @@ class PublicLegalPageView(APIView):
     throttle_classes        =   [LegalPublicReadThrottle]
     def get(self, request, slug, kind):
         store   =   public_store_or_404(slug)
-        page    =   get_object_or_404(StoreLegalPage, store = store, kind = kind, is_published = True)
+        page    =   next(
+            (p for p in StoreLegalPage.get_or_create_defaults(store) if p.kind == kind and p.is_published),
+            None,
+        )
+        if page is None:
+            raise Http404
         return Response(legal_detail_payload(page, store), status = status.HTTP_200_OK)
 
 class PublicLegalCaptchaView(APIView):

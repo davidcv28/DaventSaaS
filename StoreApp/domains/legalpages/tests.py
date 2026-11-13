@@ -127,7 +127,8 @@ class LegalPagesOwnerTests(TestCase):
         pages             =   response.json()['pages']
         self.assertEqual([p['kind'] for p in pages], ['terms', 'privacy', 'returns'])
         for page in pages:
-            self.assertFalse(page['is_published'])
+            #Opt-out estándar: publicadas por defecto, el dueño las oculta.
+            self.assertTrue(page['is_published'])
             self.assertFalse(page['persisted'])
             self.assertIsNone(page['updated_at'])
             #Contenido fijo de la plataforma, ya interpolado (sin perfil
@@ -194,10 +195,10 @@ class LegalPagesOwnerTests(TestCase):
         user_b, _, store_b   =   _make_owner(username = 'duenio-b', slug = 'tienda-b')
         _authed(user_a).put(f'{BASE_URL}terms/', {'is_published': True}, format = 'json')
         client_b         =   _authed(user_b)
-        #B no ve la publicación de A: su lista muestra defaults ocultas.
+        #B no ve la publicación de A: su lista muestra el default propio.
         listing          =   client_b.get(BASE_URL).json()['pages']
         terms_b          =   next(p for p in listing if p['kind'] == 'terms')
-        self.assertFalse(terms_b['is_published'])
+        self.assertTrue(terms_b['is_published'])
         self.assertFalse(terms_b['persisted'])
         #El PUT de B crea/edita SOLO su tienda.
         client_b.put(f'{BASE_URL}terms/', {'is_published': True}, format = 'json')
@@ -243,11 +244,13 @@ class PublicLegalPagesTests(TestCase):
         defaults.update(kwargs)
         return StoreLegalPage.objects.create(store = store, kind = kind, **defaults)
 
-    def test_index_empty_when_nothing_published(self):
+    def test_index_lists_defaults_when_nothing_persisted(self):
+        #Sin filas, las 3 páginas salen publicadas por defecto (opt-out).
         self._setup()
         response    =   APIClient().get(PUBLIC_URL)
         self.assertEqual(response.status_code, 200)
-        self.assertEqual(response.json()['pages'], [])
+        kinds       =   [p['kind'] for p in response.json()['pages']]
+        self.assertEqual(kinds, ['terms', 'privacy', 'returns'])
 
     def test_unpublished_store_returns_404(self):
         self._setup(published_store = False)
@@ -307,8 +310,8 @@ class PublicLegalPagesTests(TestCase):
         self._publish(store, 'terms')
         self._publish(store, 'privacy', is_published = False)
         data          =   APIClient().get(PUBLIC_URL).json()['pages']
-        self.assertEqual(len(data), 1)
-        self.assertEqual(data[0]['kind'], 'terms')
+        #privacy despublicada explícitamente; returns sale por defecto.
+        self.assertEqual([p['kind'] for p in data], ['terms', 'returns'])
         self.assertEqual(data[0]['title'], 'Términos y condiciones de venta')
         self.assertIn('version', data[0])
         self.assertIn('updated_at', data[0])
@@ -321,10 +324,10 @@ class PublicLegalPagesTests(TestCase):
         self.assertEqual(data['fiscal']['cuit'], '')
         self.assertIn('a completar', data['body'])
 
-    def test_default_page_never_published_stays_404(self):
-        #Aunque exista la tienda, sin fila publicada no hay página que servir.
+    def test_default_page_served_without_persisted_row(self):
+        #Publicada por defecto: sin fila persistida la página igual se sirve.
         self._setup()
-        self.assertEqual(APIClient().get(f'{PUBLIC_URL}returns/').status_code, 404)
+        self.assertEqual(APIClient().get(f'{PUBLIC_URL}returns/').status_code, 200)
 
     def test_custom_content_never_reaches_public(self):
         #Regresión: el dueño no puede inyectar texto — el PUT descarta

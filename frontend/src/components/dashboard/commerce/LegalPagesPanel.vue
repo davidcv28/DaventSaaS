@@ -120,7 +120,7 @@ watch(() => store.hasStore, (h) => { if (h) { loadPages(); loadReturns() } }, { 
       <!-- ===== Páginas legales (contenido fijo de la plataforma) ===== -->
       <section class="card">
         <h3><AppIcon name="file-text" :size="18" /> Páginas legales de tu web</h3>
-        <p class="hint" style="margin:-6px 0 12px">Texto legal estándar de DAVENT, completado automáticamente con los datos fiscales de tu tienda. No es editable: si necesitás un cambio, escribinos por soporte.</p>
+        <p class="hint" style="margin:-6px 0 12px">Texto legal estándar de DAVENT, completado automáticamente con los datos fiscales de tu tienda. Viene publicado por defecto — podés ocultarlo, pero tu tienda queda sin esa protección legal. No es editable: si necesitás un cambio, escribinos por soporte.</p>
 
         <nav class="dsg-tabs" role="tablist" aria-label="Página legal">
           <button v-for="k in KINDS" :key="k" type="button" role="tab" class="dsg-tab" :class="{ active: activeKind === k }" :aria-selected="activeKind === k" @click="selectKind(k)">

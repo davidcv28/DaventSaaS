@@ -134,7 +134,7 @@ def save_legal_page(store, kind, data):
     page, created  =   StoreLegalPage.objects.get_or_create(
         store           =   store,
         kind            =   kind,
-        defaults        =   {'is_published': bool(data.get('is_published', False))},
+        defaults        =   {'is_published': bool(data.get('is_published', True))},
     )
     if not created and 'is_published' in data:
         page.is_published   =   bool(data['is_published'])
