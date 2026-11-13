@@ -189,7 +189,7 @@ const patternChromeBroken = ref(false)
 // tab bar genéricas del host gobiernan todas las rutas, landing incluida.
 // (Se computa del template crudo para no depender de `designId`, que se
 // define más abajo y caería en TDZ si un watcher evalúa esto antes.)
-const PATTERN_NAV_OFF = new Set(['autoservicio'])
+const PATTERN_NAV_OFF = new Set(['autoservicio', 'umbral'])
 const patternNavOff = computed(() => {
   const raw = String(custom.value.template || custom.value?.site_theme?.style?.id || '').trim().toLowerCase()
   return PATTERN_NAV_OFF.has(raw)
