@@ -1813,6 +1813,7 @@ onBeforeUnmount(() => {
     <div
       v-if="status === 'success' && customerAuthEnabled && (usePattern || usePatternChrome)"
       class="sp-notif-float"
+      :style="usePatternChrome && patternDockH ? { bottom: `calc(${patternDockH}px + 12px + env(safe-area-inset-bottom))` } : null"
     >
       <CustomerNotificationsBell :account-to="accountTo" :catalog-to="catalogTo" />
     </div>
