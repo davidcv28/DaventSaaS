@@ -714,6 +714,11 @@
   .store-page[data-design='calzado'][data-nav='hide-on-scroll']:not(.is-home){ padding-top: calc(var(--sp-top-h, 64px) + var(--sp-shopnav-h, 0px)); }
   .store-page[data-design='calzado'][data-nav='hide-on-scroll']:has(.sp-shop-nav){ --sp-shopnav-h: 44px; }
 }
+/* Con Novedades en la fila las anclas de landing saturan: Nosotros y
+   Contacto quedan solo en el drawer móvil y el footer. */
+.store-page[data-design='calzado'] .sp-top-links a:is([data-anchor='nosotros'], [data-anchor='contacto']) {
+  display: none;
+}
 
 /* --- Cuenta: account-split (marcador con dorsal a la DERECHA) -------------- */
 @media (min-width: 1024px){
