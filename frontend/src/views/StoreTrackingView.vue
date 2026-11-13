@@ -173,7 +173,6 @@ const proofDone = ref(false)
 const canUploadProof = computed(() => (
   order.value?.status === 'PENDING_PAYMENT' &&
   order.value?.payment_method !== 'mp' &&
-  order.value?.proof_required !== false &&
   !order.value?.proof_uploaded
 ))
 
