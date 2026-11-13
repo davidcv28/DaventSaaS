@@ -64,6 +64,31 @@ def running_discounts_of(store, moment = None):
         )
         if discount.campaign_id is None or discount.campaign.is_running(moment)
     ]
+def running_discount_stamp(store, moment = None):
+    """
+    Huella corta del SET de descuentos vigentes ahora (ids ordenados):
+    entra a la cache key del catálogo/documento público para que la
+    entrada envejezca sola cuando un descuento arranca o vence por fecha —
+    esas transiciones no pasan por save() y el versionado no las ve (CC-02).
+    Una sola query liviana por request; la ventana se evalúa igual que en
+    running_discounts_of (incluida la vigencia recurrente de la campaña).
+    """
+    import hashlib
+
+    from StoreApp.domains.catalog.models import Discount
+    if not plan_benefits_of(store.user).get('has_discounts'):
+        return '-'
+    moment      =   moment or timezone.now()
+    running     =   sorted(
+        discount.pk
+        for discount in (
+            Discount.objects.filter(store = store, is_active = True, starts_at__lte = moment)
+            .filter(Q(ends_at__isnull = True) | Q(ends_at__gt = moment))
+            .select_related('campaign')
+        )
+        if discount.campaign_id is None or discount.campaign.is_running(moment)
+    )
+    return hashlib.md5(repr(running).encode(), usedforsecurity = False).hexdigest()[:12]
 def discount_covers(discount, product):
     """True si el producto entra en el alcance del descuento."""
     from StoreApp.domains.catalog.models import Discount

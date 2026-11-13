@@ -762,7 +762,11 @@ class StoreViewSet(StoreBaseViewSet):
         if preview:
             return render_store_pattern(store, customization, product, product_missing = product_missing) or {}
         epoch, ver      =   public_cache_stamp(store.pk)
-        cache_key       =   f'store:pattern:v2:{store.pk}:{epoch}:{ver}'
+        #Los descuentos programados arrancan/vencen solos por fecha, sin
+        #save() que bumpee la versión: la huella del set vigente entra a la
+        #key y la entrada envejece sola al cruzar el borde (CC-02).
+        from StoreApp.domains.catalog.services.services import running_discount_stamp
+        cache_key       =   f'store:pattern:v2:{store.pk}:{epoch}:{ver}:{running_discount_stamp(store)}'
         #Solo el pk resuelto entra a la clave: un ?product= inválido/ajeno
         #comparte una única entrada ':missing' (antes cada string único
         #generaba un miss + una entrada propia).
@@ -860,12 +864,13 @@ class StoreViewSet(StoreBaseViewSet):
         #se autoriza por nonce. El middleware no la pisa (solo rellena).
         response['Content-Security-Policy'] = document_csp(nonce)
         #El dueño ve su edición al instante: el preview no se cachea. La web
-        #pública sí puede reusar el documento 30 s (mismo TTL que el puente y
-        #el JSON): volver a una página ya visitada no re-baja 100 KB.
+        #pública reusa el documento solo 10 s: hornea precios/ofertas y la
+        #caché de navegador apilaba staleness sobre la ventana server-side
+        #(CC-03). Volver a una página ya visitada sigue sin re-bajar ~100 KB.
         if request.query_params.get('preview'):
             patch_cache_control(response, private = True, no_store = True)
         else:
-            patch_cache_control(response, private = True, max_age = 30)
+            patch_cache_control(response, private = True, max_age = 10)
         return response
 
     @action(detail = False, methods = ['get'], url_path = r'public/(?P<slug>[a-z0-9-]+)/pattern/products', throttle_classes = [PublicReadThrottle])
@@ -939,7 +944,10 @@ class StoreViewSet(StoreBaseViewSet):
             return Response({'detail': 'Todavía no tenés una web creada.'}, status = status.HTTP_404_NOT_FOUND)
         if not profile_has_benefit(profile, 'has_stats'):
             return Response({'detail': 'Las estadísticas de visitas están disponibles desde el plan Estándar.'}, status = status.HTTP_403_FORBIDDEN)
-        return Response(visit_stats_of(store), status = status.HTTP_200_OK)
+        response    =   Response(visit_stats_of(store), status = status.HTTP_200_OK)
+        #Datos privados del dueño: no-store explícito (CC-10).
+        patch_cache_control(response, private = True, no_store = True)
+        return response
     #=========================================
     # WEB QUALITY (checklist "Calidad de tu web" del dashboard)
     #=========================================
@@ -972,7 +980,10 @@ class StoreViewSet(StoreBaseViewSet):
             )
         cfg, _          =   StoreChatbot.objects.get_or_create(store = store)
         if request.method == 'GET':
-            return Response(StoreChatbotSerializer(cfg).data, status = status.HTTP_200_OK)
+            response        =   Response(StoreChatbotSerializer(cfg).data, status = status.HTTP_200_OK)
+            #Config privada del dueño: no-store explícito (CC-10).
+            patch_cache_control(response, private = True, no_store = True)
+            return response
         serializer      =   StoreChatbotSerializer(cfg, data = request.data, partial = True)
         serializer.is_valid(raise_exception = True)
         serializer.save()
@@ -1010,7 +1021,11 @@ class StoreViewSet(StoreBaseViewSet):
         #tienda, huella de la query) — cada filtro/búsqueda genera un payload
         #distinto y los kill-switches de arriba quedan vivos en cada request.
         epoch, ver  =   public_cache_stamp(store.pk)
-        cache_key   =   f'store:catalog:v1:{store.pk}:{epoch}:{ver}:{_params_fingerprint(request)}'
+        #Idem _pattern_doc: el set de descuentos vigentes entra a la key
+        #para que offer_price/event_count envejezcan al vencer/arrancar
+        #un descuento programado (CC-02 — esas transiciones no tienen save).
+        from StoreApp.domains.catalog.services.services import running_discount_stamp
+        cache_key   =   f'store:catalog:v1:{store.pk}:{epoch}:{ver}:{running_discount_stamp(store)}:{_params_fingerprint(request)}'
         data        =   cache_get(cache_key)
         if data is None:
             data    =   self._public_catalog_data(request, store, customization)

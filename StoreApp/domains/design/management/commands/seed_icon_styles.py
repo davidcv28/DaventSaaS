@@ -62,4 +62,8 @@ class Command(BaseCommand):
             DesignIconStyle.objects.exclude(slug__in = slugs).update(is_active = False)
         if default:
             DesignPattern.objects.filter(icon_style__isnull = True).update(icon_style = default)
+        #Los .update() de arriba no disparan post_save: bump explícito de la
+        #época para que el catálogo público se refresque al instante.
+        from StoreApp.domains.stores.public_cache import bump_public_epoch
+        bump_public_epoch()
         self.stdout.write(self.style.SUCCESS(f'{len(slugs)} estilos de iconos cargados.'))

@@ -1,6 +1,11 @@
 from django.db.models.signals import post_delete, post_save
 
-from StoreApp.domains.design.models import DesignIconStyle, DesignPattern, DesignStyle
+from StoreApp.domains.design.models import (
+    DesignCategory,
+    DesignIconStyle,
+    DesignPattern,
+    DesignStyle,
+)
 
 """
 El catálogo de diseño alimenta la web pública de TODAS las tiendas: un
@@ -17,7 +22,9 @@ def _bump_public_catalog(sender, **kwargs):
         pass
 
 
-for _model in (DesignPattern, DesignStyle, DesignIconStyle):
+#DesignCategory también: renombrar/ordenar rubros cambia el catálogo
+#público (design:catalog) igual que un patrón o estilo (CC-06).
+for _model in (DesignPattern, DesignStyle, DesignIconStyle, DesignCategory):
     post_save.connect(
         _bump_public_catalog, sender = _model,
         dispatch_uid = f'design:{_model.__name__}:save',

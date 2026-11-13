@@ -66,6 +66,11 @@ class Command(BaseCommand):
                     )
             self._link_styles()
             self._mark_defaults(styles, patterns)
+        #Los .update() de _link_styles/_mark_defaults y del vínculo pattern
+        #no disparan post_save: se bumpea la época una sola vez al final
+        #(mismo efecto que design/signals.py).
+        from StoreApp.domains.stores.public_cache import bump_public_epoch
+        bump_public_epoch()
         self.stdout.write(self.style.SUCCESS(
             f'Estilos: {style_count} · Patrones: {pattern_count} · '
             f'default: {DEFAULT_STYLE}/{DEFAULT_PATTERN}'

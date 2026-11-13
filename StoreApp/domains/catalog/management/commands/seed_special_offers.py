@@ -157,5 +157,9 @@ class Command(BaseCommand):
                 campaign.label_key  =   key
                 if old_key:
                     _delete_object(old_key)
+                #.update() no dispara el post_save que bumpea la época:
+                #la etiqueta nueva tiene que verse al instante (CC-01).
+                from StoreApp.domains.stores.public_cache import bump_public_epoch
+                bump_public_epoch()
             self.stdout.write(f'  {campaign.slug:<22} {"con" if campaign.label_key else "sin"} etiqueta')
         self.stdout.write(self.style.SUCCESS(f'Campañas cargadas: {len(campaigns)}'))

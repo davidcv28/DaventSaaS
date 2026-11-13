@@ -64,6 +64,12 @@ def parse_decimal(raw):
     return value
 def _norm(text):
     return ' '.join(str(text or '').split()).lower()
+def _bump_public(store):
+    #bulk_update() no dispara post_save: el bust del cache público que
+    #hace el signal de catalog/models/models.py hay que correrlo a mano,
+    #si no el precio nuevo queda oculto hasta el TTL (CC-01).
+    from StoreApp.domains.stores.public_cache import bump_public_store
+    bump_public_store(store.pk)
 #=========================================
 # BULK UPDATE (aumento/baja masiva)
 #=========================================
@@ -92,6 +98,8 @@ def bulk_update_prices(store, *, mode, value, field, scope, category_id = None, 
             changed.append(product)
         if changed:
             Product.objects.bulk_update(changed, [field])
+    if changed:
+        _bump_public(store)
     return len(changed)
 #=========================================
 # CSV PARSING (lista del proveedor)
@@ -210,6 +218,7 @@ def import_prices(store, rows, dry_run = False):
     if changed and not dry_run:
         with transaction.atomic():
             Product.objects.bulk_update(changed, ['price', 'offer_price'])
+        _bump_public(store)
     return {
         'updated'   :   len(changed),
         'matched'   :   len(matched),
