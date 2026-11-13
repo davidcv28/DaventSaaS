@@ -106,6 +106,10 @@ h1:empty,h2:empty,h3:empty,p:empty{display:none}
    al marco real (data-ds-pin) y mide el alto para el padding.
    ========================================================== */
 .topbar{position:fixed;top:0;left:0;right:0;z-index:60;background:var(--bg);border-bottom:1px solid var(--line)}
+/* Chrome apagado: este diseño usa la barra genérica del host en todas las
+   rutas (.store-page.pattern-nav-off); los nodos quedan por si el puente
+   los busca, pero no pintan ni se pinan. */
+.topbar,.m-tabs,.m-scrim,.m-sheet{display:none!important}
 .top-in{display:flex;align-items:center;gap:18px;min-height:64px}
 .brand{display:flex;align-items:center;gap:11px;flex:none;font-weight:800;font-size:18px;letter-spacing:-.02em;color:var(--ink);white-space:nowrap;min-width:0}
 .brand .mark{
@@ -1068,7 +1072,7 @@ html[data-ds-commerce="1"] [data-surface="product"] .pdp-info>.dsx-buy-now:focus
 <body>
 
 <!-- ============================ CHROME ============================ -->
-<div class="topbar" data-ds-pin="top" data-ds-offset="118">
+<div class="topbar" data-ds-pin="top" data-ds-offset="64">
   <header class="top">
     <div class="shell top-in">
       <a class="brand" href="#inicio" data-ds-route="home">

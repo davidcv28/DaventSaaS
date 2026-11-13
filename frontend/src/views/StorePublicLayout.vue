@@ -185,6 +185,15 @@ const usePattern = computed(() => Boolean(
 // que sirve la landing entera): se corta la tira y la página cae a la
 // barra Vue, nunca queda un iframe enorme tapando todo.
 const patternChromeBroken = ref(false)
+// Diseños cuyo documento NO trae navbar propio: en ellos la barra y la
+// tab bar genéricas del host gobiernan todas las rutas, landing incluida.
+// (Se computa del template crudo para no depender de `designId`, que se
+// define más abajo y caería en TDZ si un watcher evalúa esto antes.)
+const PATTERN_NAV_OFF = new Set(['autoservicio'])
+const patternNavOff = computed(() => {
+  const raw = String(custom.value.template || custom.value?.site_theme?.style?.id || '').trim().toLowerCase()
+  return PATTERN_NAV_OFF.has(raw)
+})
 /* El navbar del diseño gobierna las rutas funcionales en TODO viewport:
  * en móvil su barra inferior (data-ds-keep) va como segunda fila de la
  * tira. El navbar genérico del host no puede coexistir con él. */
@@ -192,6 +201,7 @@ const usePatternChrome = computed(() => Boolean(
   store.value &&
   !studioMode.value &&
   !usePattern.value &&
+  !patternNavOff.value &&
   !patternChromeBroken.value &&
   patternDoc.value?.ready && (patternDoc.value?.has_html || patternDoc.value?.html) &&
   (patternDoc.value?.surfaces || []).length
@@ -798,7 +808,7 @@ const moreLinks = computed(() => navMenuLinks.value.filter((l) => !tabLinks.valu
 // Bajo chrome del patrón la navegación inferior es la del diseño (sus
 // barras pineadas van como segunda fila de la tira): la tabbar del host
 // no puede coexistir.
-const showTabbar = computed(() => status.value === 'success' && !usePattern.value && !usePatternChrome.value && mobileNav.value === 'bottom' && tabLinks.value.length > 0)
+const showTabbar = computed(() => status.value === 'success' && (!usePattern.value || patternNavOff.value) && !usePatternChrome.value && mobileNav.value === 'bottom' && tabLinks.value.length > 0)
 function isTabActive(label) {
   return (label === 'Inicio' && shopCurrent.value === 'home')
     || (label === 'Catálogo' && shopCurrent.value === 'catalog')
@@ -1385,7 +1395,7 @@ onBeforeUnmount(() => {
 </script>
 
 <template>
-  <div ref="pageRoot" class="store-page" :class="{ 'is-home': isHome, 'is-scrolled': scrolled, 'has-pattern': usePattern, 'has-pattern-chrome': usePatternChrome, 'has-bot': botConfig && !usePattern }" :data-store-theme="pageTheme" :data-theme="pageTheme" :data-template="pageTemplate" :data-store-template="pageTemplate" :data-design="designId" :data-nav="arch.nav" :data-account="arch.account" :data-tracking="arch.tracking" :data-style="pageStyle" :data-skin="storeSkinOf(pageTemplate)" :data-logo-mode="custom.logo_mode" :data-has-logo="custom.logo ? '' : null" :data-mono="custom.mono_style" :data-st-tabbar="showTabbar && !usePattern && !patternWaiting ? '' : null" :style="[themeVars, publishedThemeVars, studioVars]" v-bind="pageAttrs">
+  <div ref="pageRoot" class="store-page" :class="{ 'is-home': isHome, 'is-scrolled': scrolled, 'has-pattern': usePattern, 'has-pattern-chrome': usePatternChrome, 'pattern-nav-off': patternNavOff, 'has-bot': botConfig && !usePattern }" :data-store-theme="pageTheme" :data-theme="pageTheme" :data-template="pageTemplate" :data-store-template="pageTemplate" :data-design="designId" :data-nav="arch.nav" :data-account="arch.account" :data-tracking="arch.tracking" :data-style="pageStyle" :data-skin="storeSkinOf(pageTemplate)" :data-logo-mode="custom.logo_mode" :data-has-logo="custom.logo ? '' : null" :data-mono="custom.mono_style" :data-st-tabbar="showTabbar && (!usePattern || patternNavOff) && !patternWaiting ? '' : null" :style="[themeVars, publishedThemeVars, studioVars]" v-bind="pageAttrs">
     <button type="button" class="sp-skip" @click="skipToContent">Saltar al contenido</button>
     <span v-if="previewMode" class="sp-preview-badge" role="status">Vista previa — el diseño todavía no se publicó</span>
     <!-- Diseño del catálogo con contrato de datos: se pinta el documento

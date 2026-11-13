@@ -395,6 +395,10 @@ html.sp-lock body{ overflow: hidden; overscroll-behavior: none; }
 @media (min-width: 1101px){
   .store-page.is-home{ --sp-top-h: 0px; }
   .store-page.is-home .sp-top{ display: none; }
+  /* Diseños sin chrome propio (pattern-nav-off): la barra genérica también
+     gobierna la landing — no se esconde ni en escritorio. */
+  .store-page.is-home.pattern-nav-off{ --sp-top-h: 64px; }
+  .store-page.is-home.pattern-nav-off .sp-top{ display: block; }
 }
 @media (max-width: 1100px){
   /* Móvil/tablet: la cabecera queda fija arriba (el sticky se perdía cuando
@@ -405,6 +409,9 @@ html.sp-lock body{ overflow: hidden; overscroll-behavior: none; }
   /* Con el documento del diseño no se pinta la barra Vue: su cabecera fija
      vive dentro del iframe y el hueco reservado quedaba como banda vacía. */
   .store-page.has-pattern{ padding-top: 0; }
+  /* Salvo los diseños sin chrome propio: ahí la barra fija del host sí va
+     encima del documento y hay que reservarle su hueco. */
+  .store-page.has-pattern.pattern-nav-off{ padding-top: calc(var(--sp-top-h) + var(--sp-shopnav-h, 0px)); }
   /* El documento en superficie "chrome" (páginas que no pinta el patrón:
      auth, cuenta, carrito…) tampoco monta .sp-top — el hueco del navbar lo
      reserva el layout con el alto real que reporta el documento. */
