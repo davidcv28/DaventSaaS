@@ -1091,7 +1091,9 @@ html[data-ds-commerce="1"] [data-surface="product"] .pdp-info>.dsx-buy-now:focus
         </button>
         <div class="search-suggest" data-ds-suggest role="listbox" aria-label="Sugerencias de búsqueda" hidden></div>
       </form>
-      <div class="top-meta"><span>{{store_location}}</span><span>{{store_hours}}</span></div>
+      <!-- La dirección larga de la tienda rompía la fila del header; queda
+           solo el horario (si no hay dato, el span vacío se oculta solo). -->
+      <div class="top-meta"><span>{{store_hours}}</span></div>
     </div>
   </header>
   <nav class="tabs" aria-label="Secciones">
