@@ -146,7 +146,7 @@ watch([status, ordersEnabled, () => customer.isAuthenticated], ([s, on]) => {
                   <span>{{ plan.discount_percent }}% de descuento de miembro</span>
                 </li>
               </ul>
-              <PlanSubscribe :slug="ctx.slug.value" :plan="plan" :payments="realPayments" :subscription="subFor(plan)" @subscribed="loadMySub" />
+              <PlanSubscribe :slug="ctx.slug.value" :plan="plan" :payments="realPayments" :subscription="subFor(plan)" hide-plan-details @subscribed="loadMySub" />
             </li>
           </ul>
         </div>

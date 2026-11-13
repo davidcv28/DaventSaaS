@@ -19,7 +19,8 @@ const props = defineProps({
   payments: { type: Object, default: null }, // payments del endpoint público
   // Suscripción del comprador en ESTE plan (StoreSubscriptionCustomer-
   // Serializer) o null — solo presentación: el server decide igual (409).
-  subscription: { type: Object, default: null }
+  subscription: { type: Object, default: null },
+  hidePlanDetails: { type: Boolean, default: false }
 })
 const emit = defineEmits(['subscribed'])
 
@@ -133,20 +134,22 @@ async function subscribe() {
         <span><strong>Ya tenés una suscripción a este plan</strong><small>Está en curso — seguíla y pagala desde tu cuenta.</small></span>
       </div>
 
-      <div class="ec-sub-price">
-        <strong>{{ money(plan.price) }}</strong>
-        <span v-if="plan.period_days"> / {{ plan.period_days }} días{{ periodLabel ? ` (${periodLabel})` : '' }}</span>
-      </div>
-      <ul v-if="plan.benefits?.length || plan.discount_percent" class="ec-sub-benefits">
-        <li v-for="b in plan.benefits || []" :key="b">
-          <AppIcon name="check" :size="13" :stroke="2.4" aria-hidden="true" />
-          <span>{{ benefitLabel(b) }}</span>
-        </li>
-        <li v-if="plan.discount_percent">
-          <AppIcon name="check" :size="13" :stroke="2.4" aria-hidden="true" />
-          <span>{{ plan.discount_percent }}% de descuento de miembro</span>
-        </li>
-      </ul>
+      <template v-if="!hidePlanDetails">
+        <div class="ec-sub-price">
+          <strong>{{ money(plan.price) }}</strong>
+          <span v-if="plan.period_days"> / {{ plan.period_days }} días{{ periodLabel ? ` (${periodLabel})` : '' }}</span>
+        </div>
+        <ul v-if="plan.benefits?.length || plan.discount_percent" class="ec-sub-benefits">
+          <li v-for="b in plan.benefits || []" :key="b">
+            <AppIcon name="check" :size="13" :stroke="2.4" aria-hidden="true" />
+            <span>{{ benefitLabel(b) }}</span>
+          </li>
+          <li v-if="plan.discount_percent">
+            <AppIcon name="check" :size="13" :stroke="2.4" aria-hidden="true" />
+            <span>{{ plan.discount_percent }}% de descuento de miembro</span>
+          </li>
+        </ul>
+      </template>
       <div v-if="methods.length && !subBlocked" class="ec-sub-methods">
         <label class="sp-field">
           <span class="sp-field-label">Medio de pago</span>
