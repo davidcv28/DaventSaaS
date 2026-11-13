@@ -262,6 +262,37 @@ class StoreShippingConfig(models.Model):
         except Exception:
             return {}
 #=========================================
+# STORE SYNC EVENT (bitácora de sincronización del panel "Sincronización")
+#=========================================
+class StoreSyncEvent(models.Model):
+    """
+    Evento de sincronización de la web pública del dueño: cada guardado
+    que afecta su tienda publicada (empresa, diseño, productos, cobros)
+    deja una fila, y el botón "Sincronizar" procesa lo pendiente
+    (status='pending' → 'done'). `detail` es texto corto para el log de
+    la sección — jamás lleva datos sensibles.
+    """
+    STATUS                      =   [
+        ('pending', 'Pendiente'),
+        ('done', 'Sincronizado'),
+        ('error', 'Error'),
+    ]
+    store                       =   models.ForeignKey(Store, on_delete = models.CASCADE, related_name = 'sync_events')
+    op                          =   models.CharField(max_length = 40, verbose_name = 'Operación')
+    status                      =   models.CharField(max_length = 10, choices = STATUS, default = 'done')
+    attempts                    =   models.PositiveIntegerField(default = 1)
+    detail                      =   models.CharField(max_length = 300, blank = True)
+    created_at                  =   models.DateTimeField(auto_now_add = True)
+    processed_at                =   models.DateTimeField(null = True, blank = True)
+    class Meta:
+        app_label               =   'stores'
+        ordering                =   ['-created_at']
+        indexes                 =   [models.Index(fields = ['store', 'created_at'])]
+        verbose_name            =   'Evento de sincronización'
+        verbose_name_plural     =   'Eventos de sincronización'
+    def __str__(self):
+        return f'sync:{self.store.slug}:{self.op}:{self.status}'
+#=========================================
 # PUBLIC CACHE BUST (la tarifa de envío viaja en el payload público —
 # una edición del dueño se ve al instante, igual que el resto de la
 # config de tienda; ver public_cache.py y el bloque de signals de

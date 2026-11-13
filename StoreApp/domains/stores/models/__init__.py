@@ -16,4 +16,5 @@ from .store_ops import (
     StorePaymentConfig,
     StoreShippingConfig,
     StoreStorageConfig,
+    StoreSyncEvent,
 )

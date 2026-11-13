@@ -53,19 +53,24 @@ from StoreApp.domains.stores.services import (
     delete_cover,
     delete_gallery_image,
     delete_logo,
+    design_draft_pending,
     is_platform_domain,
     issue_captcha,
     media_quality,
     new_verify_token,
     normalize_domain,
     profile_has_benefit,
+    publish_design_draft,
     record_store_visit,
+    record_sync_event,
     refresh_status,
     resolve_slug,
+    run_sync,
     send_contact_message,
     serialize_domain,
     storage_payload,
     store_has_reviews,
+    sync_state,
     upload_carousel_image,
     upload_cover,
     upload_gallery_image,
@@ -1426,6 +1431,12 @@ class StoreViewSet(StoreBaseViewSet):
         serializer        =   StoreCustomizationSerializer(customization, data = data, partial = (request.method == 'PATCH'))
         serializer.is_valid(raise_exception = True)
         serializer.save()
+        #Bitácora de sync: si el guardado dejó borrador de diseño sin
+        #publicar queda pendiente; si no, ya está en la web (done).
+        if design_draft_pending(store):
+            record_sync_event(store, 'update-diseno', 'Cambios de diseño sin publicar', status = 'pending')
+        else:
+            record_sync_event(store, 'update-empresa', 'Actualización de datos de la empresa')
         return Response(
             {
                 'Exito'         : 'El diseño de tu web se actualizó correctamente',
@@ -1594,29 +1605,7 @@ class StoreViewSet(StoreBaseViewSet):
                 {'detail': 'La personalización de tu web requiere una suscripción activa.'},
                 status = status.HTTP_403_FORBIDDEN,
             )
-        customization, _    =   StoreCustomization.objects.get_or_create(store = store)
-        note                =   str(request.data.get('note') or '').strip()[:140]
-        customization.layout_config =   copy.deepcopy(customization.layout_config_draft) or {}
-        customization.site_theme    =   copy.deepcopy(customization.site_theme_draft) or {}
-        #La plantilla del borrador publica solo si sigue en la whitelist
-        #del plan (una baja de plan no la re-habilita); si no aplica, el
-        #borrador queda resuelto al publicado — has_unpublished limpio.
-        if customization.template_draft in allowed_templates_of(store.user):
-            customization.template    =   customization.template_draft
-        customization.template_draft    =   customization.template
-        customization.save(update_fields = ['layout_config', 'site_theme', 'template', 'template_draft', 'updated_at'])
-        StudioVersion.objects.create(
-            store       =   store,
-            snapshot    =   {
-                'template'      :   customization.template,
-                'layout_config' :   customization.layout_config,
-                'site_theme'    :   customization.site_theme,
-            },
-            note        =   note,
-        )
-        stale               =   list(StudioVersion.objects.filter(store = store).values_list('pk', flat = True)[StudioVersion.MAX_PER_STORE:])
-        if stale:
-            StudioVersion.objects.filter(pk__in = stale).delete()
+        customization       =   publish_design_draft(store, note = str(request.data.get('note') or '').strip()[:140])
         return Response(
             {
                 'Exito'         : 'Publicaste los cambios de tu web',
@@ -1730,6 +1719,23 @@ class StoreViewSet(StoreBaseViewSet):
             },
             status = status.HTTP_200_OK,
         )
+
+    #=========================================
+    # SINCRONIZACIÓN (estado + corrida manual del panel "Sincronización")
+    #=========================================
+    @action(detail = False, methods = ['get'], url_path = 'sync')
+    def sync(self, request):
+        #Estado de la bitácora: pendientes, último sync y últimas
+        #operaciones de la web del dueño.
+        store               =   get_object_or_404(Store, user__user = request.user)
+        return Response(sync_state(store), status = status.HTTP_200_OK)
+
+    @action(detail = False, methods = ['post'], url_path = 'sync/run')
+    def sync_run(self, request):
+        #Sincronización manual: publica el borrador de diseño pendiente
+        #(misma función que customization/publish) y cierra lo 'pending'.
+        store               =   get_object_or_404(Store, user__user = request.user)
+        return Response(run_sync(store), status = status.HTTP_200_OK)
 
     def _preview_ok(self, request, store):
         #?preview=<token> válido solo si la firma es íntegra, no venció y

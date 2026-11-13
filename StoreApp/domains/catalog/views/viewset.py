@@ -36,6 +36,7 @@ from StoreApp.domains.stores.services import (
     delete_brand_image,
     delete_product_image,
     profile_has_benefit,
+    record_sync_event,
     remove_background,
     storage_payload,
     store_has_reviews,
@@ -476,6 +477,7 @@ class ProductViewSet(CatalogGateMixin, CatalogBaseViewSet):
             #descuentos vigentes viajan también en la respuesta de guardado.
             response.data['item']   =   ProductSerializerList(product, context = self.get_serializer_context()).data
             response.data['storage']    =   storage_payload(product.store, store.user)
+            record_sync_event(product.store, 'update-producto', 'Actualización de producto')
         return response
     def update(self, request, pk = None):
         store   =   self.my_store()
@@ -487,6 +489,7 @@ class ProductViewSet(CatalogGateMixin, CatalogBaseViewSet):
         if product is not None:
             response.data['item']   =   ProductSerializerList(product, context = self.get_serializer_context()).data
             response.data['storage']    =   storage_payload(product.store, store.user)
+            record_sync_event(product.store, 'update-producto', 'Actualización de producto')
         return response
     def destroy(self, request, pk = None):
         denied  =   self._deny_without_catalog()

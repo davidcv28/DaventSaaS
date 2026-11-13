@@ -92,6 +92,7 @@ import BuyerSupportPanel from '../components/dashboard/commerce/BuyerSupportPane
 import PaymentsConfigPanel from '../components/dashboard/commerce/PaymentsConfigPanel.vue'
 import LegalPagesPanel from '../components/dashboard/commerce/LegalPagesPanel.vue'
 import PlansPanel from '../components/dashboard/commerce/PlansPanel.vue'
+import SyncPanel from '../components/dashboard/commerce/SyncPanel.vue'
 import CustomerAuthPanel from '../components/dashboard/commerce/CustomerAuthPanel.vue'
 import SellingHub from '../components/dashboard/SellingHub.vue'
 import FeedPanel from '../components/dashboard/FeedPanel.vue'
@@ -334,7 +335,8 @@ const tabGroups = computed(() => {
     { id: 'inquiries', label: 'Consultas', icon: 'message-circle', hint: 'Preguntas de clientes' },
     { id: 'payconfig', label: 'Cobros', icon: 'wallet', hint: 'Métodos, fiscal y Mercado Pago' },
     { id: 'legal', label: 'Legal', icon: 'file-text', hint: 'Páginas y devoluciones' },
-    { id: 'memberships', label: 'Membresías', icon: 'crown', hint: 'Planes de tus clientes' }
+    { id: 'memberships', label: 'Membresías', icon: 'crown', hint: 'Planes de tus clientes' },
+    { id: 'sync', label: 'Sincronización', icon: 'refresh-cw', hint: 'Estado y cambios de tu web' }
   ]
   return { web, promo, billing: billingTabs, selling }
 })
@@ -476,7 +478,7 @@ const SECTION_SLUGS = {
   vender: 'selling', ventas: 'sales', pedidos: 'orders',
   clientes: 'customers', consultas: 'inquiries', cobros: 'payconfig',
   cuentas: 'accounts', acceso: 'accounts', accesos: 'accounts',
-  legal: 'legal', membresias: 'memberships',
+  legal: 'legal', membresias: 'memberships', sincronizacion: 'sync',
   pagina: 'web', direccion: 'store',
   diseno: 'design', fotos: 'photos', negocio: 'company',
   visitas: 'stats', promocionar: 'tools', qr: 'tools', folletos: 'tools',
@@ -6217,6 +6219,18 @@ async function changePassword() {
       </div>
       <SectionTabs :tabs="tabGroups.selling" active="memberships" @select="section = $event" />
       <PlansPanel />
+    </div>
+
+    <!-- ================= SINCRONIZACIÓN ================= -->
+    <div v-if="seen.sync" v-show="section === 'sync'" class="web-scope" :class="{ 'sec-on': section === 'sync' }">
+      <div class="page-head">
+        <div>
+          <h1>Sincronización</h1>
+          <p>El estado de tu web y los cambios que quedaron por subir.</p>
+        </div>
+      </div>
+      <SectionTabs :tabs="tabGroups.selling" active="sync" @select="section = $event" />
+      <SyncPanel />
     </div>
 
     <!-- ================= ACCESO DE CLIENTES (plan Ecommerce) ================= -->

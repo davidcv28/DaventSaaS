@@ -20,6 +20,7 @@ from StoreApp.domains.storepayments.serializers import (
     StoreShippingConfigSerializer,
 )
 from StoreApp.domains.stores.models import StorePaymentConfig, StoreShippingConfig
+from StoreApp.domains.stores.services import record_sync_event
 
 from .mp import owner_store, require_benefit
 
@@ -45,6 +46,8 @@ class StorePaymentConfigView(APIView):
         serializer  =   StorePaymentConfigSerializer(cfg, data = request.data, partial = True, context = {'store': store})
         serializer.is_valid(raise_exception = True)
         serializer.save()
+        #Bitácora de sync del panel "Sincronización".
+        record_sync_event(store, 'update-cobros', 'Actualización de métodos de cobro')
         return Response(serializer.data, status = status.HTTP_200_OK)
 
 
