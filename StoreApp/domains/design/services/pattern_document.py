@@ -112,6 +112,13 @@ html[data-ds-surface="services"] [data-surface]:not([data-surface="services"]),
 html[data-ds-surface="product"] [data-surface]:not([data-surface="product"]){display:none!important}
 [hidden]{display:none!important}
 
+/* Tarjetas de planes/membresías uniformes en todos los diseños: todas las
+   filas del grid toman la altura de la más alta y la ficha llena su celda
+   (sin esto, cada fila medía lo de su tarjeta más alta y con varias filas
+   quedaban tamaños desparejos; el CTA ya va anclado abajo por diseño). */
+*:has(> .ds-plan){grid-auto-rows:1fr}
+.ds-plan{height:100%}
+
 /* Superficie "chrome": el documento se monta fijo sobre las páginas que NO
    son del diseño (cuenta, auth, carrito, checkout, seguimiento) solo para
    darles el navbar/cromo del patrón. El contenido (superficies, pie en
