@@ -7317,7 +7317,8 @@
     },
     "mobile": {
      "cardStyle": "standard",
-     "heroHeight": "standard"
+     "heroHeight": "standard",
+     "nav": "top"
     },
     "preview": "",
     "icons": {
@@ -7429,7 +7430,8 @@
     },
     "mobile": {
      "cardStyle": "standard",
-     "heroHeight": "standard"
+     "heroHeight": "standard",
+     "nav": "top"
     },
     "preview": "",
     "icons": {
@@ -7542,7 +7544,8 @@
     },
     "mobile": {
      "cardStyle": "standard",
-     "heroHeight": "standard"
+     "heroHeight": "standard",
+     "nav": "top"
     },
     "preview": "",
     "icons": {
@@ -7655,7 +7658,8 @@
     },
     "mobile": {
      "cardStyle": "standard",
-     "heroHeight": "standard"
+     "heroHeight": "standard",
+     "nav": "top"
     },
     "preview": "",
     "icons": {
@@ -7768,7 +7772,8 @@
     },
     "mobile": {
      "cardStyle": "standard",
-     "heroHeight": "standard"
+     "heroHeight": "standard",
+     "nav": "top"
     },
     "preview": "",
     "icons": {
@@ -7882,7 +7887,8 @@
     },
     "mobile": {
      "cardStyle": "standard",
-     "heroHeight": "standard"
+     "heroHeight": "standard",
+     "nav": "top"
     },
     "preview": "",
     "icons": {
