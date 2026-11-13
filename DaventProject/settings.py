@@ -220,6 +220,7 @@ INSTALLED_APPS = [
     'StoreApp.domains.legalpages.apps.apps.LegalPagesAppConfig',
     'StoreApp.domains.support.apps.apps.SupportAppConfig',
     'StoreApp.domains.storeadmin.apps.apps.StoreAdminAppConfig',
+    'StoreApp.domains.feed.apps.apps.FeedAppConfig',
     #MCP APP (biblioteca de estilos de diseño para la IA; servidor MCP propio)
     'McpApp.domains.skills.apps.apps.SkillsAppConfig'
 ]

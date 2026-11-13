@@ -97,7 +97,10 @@ const ECOMMERCE_ROUTES = new Set([
   'store-checkout', 'store-tracking', 'store-cart', 'store-receipt',
   'store-auth', 'store-plans',
   'store-account', 'store-account-verify', 'store-account-reset',
-  'store-legal', 'store-legal-page'
+  'store-legal', 'store-legal-page',
+  //Novedades: página Vue propia — si cayera a 'landing' el iframe del
+  //diseño la taparía entera (el chrome del patrón sí la enmarca).
+  'store-feed'
 ])
 const isEcommerceRoute = computed(() => ECOMMERCE_ROUTES.has(route.name))
 
@@ -731,6 +734,9 @@ const showPlans = computed(() => status.value === 'success' && siteTemplates.val
 // apagó. Sin esto el prefetch de portada pegaba un 404 en tiendas sin
 // catálogo (patrones tipo ruta: landing + servicios nomás).
 const catalogPageOn = computed(() => showCatalog.value && siteTemplates.value.includes('catalog'))
+// Página "Novedades" (flag has_feed del plan — Estándar+): el serializer
+// público manda feed_enabled y el menú muestra el acceso.
+const showFeed = computed(() => status.value === 'success' && Boolean(store.value?.feed_enabled))
 // Web sin portada: el home redirige a la primera página disponible
 // (Servicios si existe, si no el catálogo) y el menú no ofrece Inicio ni
 // las secciones de marketing. Cubre el viejo "modo solo catálogo" y la
@@ -753,6 +759,7 @@ const navMenuLinks = computed(() => {
   if (!landingOff.value) links.push({ to: homeTo.value, label: 'Inicio' })
   if (showServices.value) links.push({ to: servicesTo.value, label: 'Servicios' })
   if (catalogPageOn.value) links.push({ to: catalogTo.value, label: 'Catálogo' })
+  if (showFeed.value) links.push({ to: feedTo.value, label: 'Novedades' })
   if (showPlans.value) links.push({ to: plansTo.value, label: 'Suscripciones' })
   if (hasAbout.value && !landingOff.value) links.push({ to: anchorTo('#nosotros'), label: 'Nosotros', anchor: true })
   if (showGallery.value && landingHasGallery.value && !landingOff.value) links.push({ to: anchorTo('#galeria'), label: 'Galería', anchor: true })
@@ -770,9 +777,9 @@ const hasNavMenu = computed(() => status.value === 'success' && !isShop.value &&
 // lateral): sin mobile.nav explícito en el tema, 'top' gana sobre 'bottom'.
 const mobileNav = computed(() => pageAttrs.value['data-st-nav']
   || (pageTemplate.value === 'impacto' ? 'top' : 'bottom'))
-// Prioridad de destinos en la tab bar: Inicio → Catálogo → Servicios → Suscripciones → Contacto.
-const TAB_PRIORITY = ['Inicio', 'Catálogo', 'Servicios', 'Suscripciones', 'Contacto']
-const TAB_ICONS = { Inicio: 'store', Catálogo: 'package', Servicios: 'wrench', Suscripciones: 'crown', Contacto: 'message-circle' }
+// Prioridad de destinos en la tab bar: Inicio → Catálogo → Novedades → Servicios → Suscripciones → Contacto.
+const TAB_PRIORITY = ['Inicio', 'Catálogo', 'Novedades', 'Servicios', 'Suscripciones', 'Contacto']
+const TAB_ICONS = { Inicio: 'store', Catálogo: 'package', Novedades: 'lucide:newspaper', Servicios: 'wrench', Suscripciones: 'crown', Contacto: 'message-circle' }
 const tabLinks = computed(() => {
   const byLabel = new Map(navMenuLinks.value.map((l) => [l.label, l]))
   return TAB_PRIORITY.filter((label) => byLabel.has(label)).slice(0, 4)
@@ -783,6 +790,7 @@ const showTabbar = computed(() => status.value === 'success' && !usePattern.valu
 function isTabActive(label) {
   return (label === 'Inicio' && shopCurrent.value === 'home')
     || (label === 'Catálogo' && shopCurrent.value === 'catalog')
+    || (label === 'Novedades' && shopCurrent.value === 'feed')
     || (label === 'Servicios' && shopCurrent.value === 'services')
     || (label === 'Suscripciones' && shopCurrent.value === 'plans')
     || (label === 'Contacto' && shopCurrent.value === 'contacto')
@@ -852,12 +860,14 @@ const isCatalog = computed(() => route.name === 'store-catalog')
 const isServices = computed(() => route.name === 'store-services')
 const isPlans = computed(() => route.name === 'store-plans')
 const isProduct = computed(() => route.name === 'store-product')
+const isFeed = computed(() => route.name === 'store-feed')
 const isHome = computed(() => route.name === 'store-public')
 // Sección activa del menú de Tienda Pro. No alcanza con router-link-active:
 // las anclas de la home (#nosotros, #galeria, #contacto) comparten el path y
 // quedarían todas marcadas a la vez.
 const shopCurrent = computed(() => {
   if (isCatalog.value || isProduct.value) return 'catalog'
+  if (isFeed.value) return 'feed'
   if (isServices.value) return 'services'
   if (isPlans.value) return 'plans'
   if (!isHome.value) return ''
@@ -868,6 +878,7 @@ const homeTo = computed(() => ({ path: storeHostSlug ? '/' : `/${slug.value}` })
 const catalogTo = computed(() => ({ path: storeHostSlug ? '/catalogo' : `/${slug.value}/catalogo` }))
 const servicesTo = computed(() => ({ path: storeHostSlug ? '/servicios' : `/${slug.value}/servicios` }))
 const plansTo = computed(() => ({ path: storeHostSlug ? '/suscripciones' : `/${slug.value}/suscripciones` }))
+const feedTo = computed(() => ({ path: storeHostSlug ? '/novedades' : `/${slug.value}/novedades` }))
 const accountTo = computed(() => ({ path: storeHostSlug ? '/cuenta' : `/${slug.value}/cuenta` }))
 // Deep link a /ingresar o /cuenta con el acceso de clientes apagado
 // (customer_auth_enabled === false): vuelve a la home de la tienda.

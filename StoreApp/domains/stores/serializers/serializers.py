@@ -782,9 +782,10 @@ class StorePublicSerializer(serializers.ModelSerializer):
     customer_auth_enabled       =   serializers.SerializerMethodField()
     shipping                    =   serializers.SerializerMethodField()
     payments                    =   serializers.SerializerMethodField()
+    feed_enabled                =   serializers.SerializerMethodField()
     class Meta:
         model                   =   Store
-        fields                  =   ['slug', 'business_name', 'city_name', 'province_name', 'customization', 'has_design_advanced', 'allowed_templates', 'location_address', 'chatbot', 'service_items', 'orders_enabled', 'customer_auth_enabled', 'shipping', 'payments']
+        fields                  =   ['slug', 'business_name', 'city_name', 'province_name', 'customization', 'has_design_advanced', 'allowed_templates', 'location_address', 'chatbot', 'service_items', 'orders_enabled', 'customer_auth_enabled', 'shipping', 'payments', 'feed_enabled']
     def get_has_design_advanced(self, store):
         #Solo premium: define si la web muestra portada (carrusel) o el
         #botón de modo claro/oscuro para el visitante en el nav.
@@ -825,6 +826,11 @@ class StorePublicSerializer(serializers.ModelSerializer):
         #no incluye autenticación de compradores.
         from StoreApp.domains.stores.services.commerce import store_has_customer_auth
         return store_has_customer_auth(store)
+    def get_feed_enabled(self, store):
+        #Flag has_feed del plan (Estándar+): la web muestra la página
+        #Novedades y su acceso en el menú solo si el plan lo incluye.
+        from StoreApp.domains.feed.services import feed_enabled
+        return feed_enabled(store.user)
     def get_shipping(self, store):
         #Tarifa de envío a domicilio para el checkout: home_price NULL =
         #"a coordinar" (sin precio online — el pedido lo pacta por

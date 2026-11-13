@@ -94,6 +94,7 @@ import LegalPagesPanel from '../components/dashboard/commerce/LegalPagesPanel.vu
 import PlansPanel from '../components/dashboard/commerce/PlansPanel.vue'
 import CustomerAuthPanel from '../components/dashboard/commerce/CustomerAuthPanel.vue'
 import SellingHub from '../components/dashboard/SellingHub.vue'
+import FeedPanel from '../components/dashboard/FeedPanel.vue'
 
 const router = useRouter()
 const route = useRoute()
@@ -347,6 +348,7 @@ const SECTION_BENEFITS = {
   design_assisted: ['has_ai_design'],
   design_studio: ['has_design_advanced'],
   services: ['has_services_site'],
+  feed: ['has_feed'],
   reviews: ['has_product_comments'],
   support: ['has_support_chat'],
   bot: ['has_chatbot'],
@@ -361,6 +363,7 @@ const LOCKED_FEATURES = {
   design_studio: { icon: 'layout-panel-left', title: 'Studio de diseño', text: 'El editor completo con vista previa en vivo: colores, tipografía, contenedores, portada y versión de prueba antes de publicar.' },
   catalogs: { icon: 'package', title: 'Tu catálogo de productos', text: 'Cargá productos con foto, precio y categorías: se publican solos en tu web.' },
   services: { icon: 'wrench', title: 'Página de servicios', text: 'Una página propia para mostrar lo que hacés, con duración, precio y botón de consulta directa a tu WhatsApp.' },
+  feed: { icon: 'lucide:newspaper', title: 'Novedades', text: 'Una página tipo feed en tu web: publicá fotos, videos, posts de TikTok/YouTube/Instagram y encuestas; tus clientes comentan, likean y votan.' },
   pos: { icon: 'monitor', title: 'Venta en persona', text: 'Cobrá en tu local usando el mismo catálogo de tu web. Llega muy pronto.' },
   reviews: { icon: 'star', title: 'Opiniones de clientes', text: 'Tus clientes valoran tus productos y dejan comentarios que se muestran en tu web; vos decidís qué se ve.' },
   support: { icon: 'message-circle', title: 'Tu Asistente', text: 'Te responde sobre tu cuenta: plan, tienda, productos, visitas, pagos y facturas.' },
@@ -378,7 +381,7 @@ const navLocks = computed(() => {
   const hasAccess = Boolean(plan.value?.isCurrent)
   const map = {}
   const gated = (id) => (SECTION_BENEFITS[id] || []).some((k) => !b[k])
-  for (const id of ['catalogs', 'services', 'pos', 'reviews', 'support', 'bot', 'tools', 'stats', 'design_assisted', 'design_studio', 'flyer_editor', 'selling', 'accounts']) {
+  for (const id of ['catalogs', 'services', 'pos', 'reviews', 'feed', 'support', 'bot', 'tools', 'stats', 'design_assisted', 'design_studio', 'flyer_editor', 'selling', 'accounts']) {
     // El asistente/soporte es para planes pagos (gate mcp_user_access en
     // el backend): el trial queda con candado de upgrade aunque esté vigente.
     // Sin suscripción (plan null) no es "venció": es que nunca eligió plan.
@@ -407,6 +410,7 @@ const navItems = computed(() => {
 
     { id: 'web', label: 'Mi página', icon: 'store', hint: 'Diseño, secciones y dirección' },
     { id: 'reviews', label: 'Opiniones', icon: 'star', hint: 'Lo que dicen de vos', locked: L.reviews, badge: unreadReviewsCount.value || null },
+    { id: 'feed', label: 'Novedades', icon: 'lucide:newspaper', hint: 'Posts, encuestas y comentarios', locked: L.feed },
     { id: 'tools', label: 'Promocionar', icon: 'megaphone', hint: 'QR, folletos y visitas', locked: L.tools },
     { id: 'support', label: 'Ayuda', icon: 'message-circle', hint: 'Te ayuda con tu cuenta', locked: L.support },
     { id: 'bot', label: 'Asistente virtual', icon: 'bot', hint: 'Responde por vos en tu web', locked: L.bot },
@@ -549,6 +553,7 @@ const searchCommands = computed(() => {
     overview: 'inicio resumen home panel hoy comienzo',
     catalogs: 'productos catalogo cargar subir precio foto stock mercaderia categoria marca articulo cosa vender',
     services: 'servicios trabajos ofrezco duracion turnos profesional',
+    feed: 'novedades publicaciones posts feed redes tiktok youtube instagram encuestas likes comentarios',
     selling: 'vender online ecommerce tienda online carrito checkout pedidos ventas clientes consultas soporte compradores cobros pagos fiscal mercado pago mp legal devoluciones terminos privacidad membresias suscripciones planes tienda',
     accounts: 'cuentas clientes acceso registro ingresar login google autenticacion compradores sesion perfil',
     pos: 'vender persona local fisico cobrar caja punto venta mostrador ticket',
@@ -5014,6 +5019,16 @@ async function changePassword() {
           </ul>
         </div>
       </template>
+    </div>
+    <!-- ================= NOVEDADES (feed social) ================= -->
+    <div v-if="seen.feed" v-show="section === 'feed'" class="sec-feed" :class="{ 'sec-on': section === 'feed' }">
+      <div class="page-head">
+        <div>
+          <h1>Novedades</h1>
+          <p>Tu feed en la web: publicá fotos, videos, posts de tus redes y encuestas. Tus clientes comentan, likean y votan con su cuenta.</p>
+        </div>
+      </div>
+      <FeedPanel />
     </div>
     <!-- ================= MI PÁGINA (índice de apartados) ================= -->
     <div v-if="seen.web" v-show="section === 'web'" class="web-scope" :class="{ 'sec-on': section === 'web' }">

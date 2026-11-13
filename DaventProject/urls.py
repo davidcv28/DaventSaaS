@@ -103,6 +103,7 @@ urlpatterns = [
     path('api/', include('StoreApp.domains.legalpages.urls.urls')),
     path('api/', include('StoreApp.domains.support.urls.urls')),
     path('api/', include('StoreApp.domains.storeadmin.urls.urls')),
+    path('api/', include('StoreApp.domains.feed.urls.urls')),
     #=================================
     # JWT
     #=================================

@@ -41,6 +41,7 @@ const StoreCartView = () => import('../views/StoreCartView.vue')
 const StoreAuthView = () => import('../views/StoreAuthView.vue')
 const StoreReceiptView = () => import('../views/StoreReceiptView.vue')
 const StoreLegalView = () => import('../views/StoreLegalView.vue')
+const StoreFeedView = () => import('../views/StoreFeedView.vue')
 const StoreFlyerView = () => import('../views/StoreFlyerView.vue')
 const DaventFlyerView = () => import('../views/DaventFlyerView.vue')
 const RobotQaView = () => import('../views/RobotQaView.vue')
@@ -157,6 +158,15 @@ const storeChildren = [
     name: 'store-product',
     component: StoreProductView,
     meta: { title: 'Producto' }
+  },
+  // Página "Novedades" (beneficio has_feed): feed social de la tienda —
+  // posts, fotos, videos, embeds de redes y encuestas; la interacción
+  // (like/comentario/voto) pide cuenta de comprador.
+  {
+    path: 'novedades',
+    name: 'store-feed',
+    component: StoreFeedView,
+    meta: { title: 'Novedades' }
   }
 ]
 
@@ -406,6 +416,10 @@ const routes = [
         {
           path: '/tienda/:slug/producto/:productId(\\d+)',
           redirect: (to) => ({ name: 'store-product', params: { slug: to.params.slug, productId: to.params.productId } })
+        },
+        {
+          path: '/tienda/:slug/novedades',
+          redirect: (to) => ({ name: 'store-feed', params: { slug: to.params.slug } })
         },
         {
           path: '/:slug([a-z0-9-]+)',
