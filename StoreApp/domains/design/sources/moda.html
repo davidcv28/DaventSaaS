@@ -953,22 +953,13 @@ html[data-ds-commerce="1"] [data-surface="product"] .pdp-buy > .dsx-buy-now:focu
 .pdp-desc:empty{display:none}
 .pdp-buy{display:flex;flex-wrap:wrap;gap:10px;margin-top:24px;padding:14px;border:1px solid var(--line);border-radius:var(--r-btn);background:#fff;box-shadow:none}
 /* Cada acción de la ficha respira en su propia fila: carrito, compra
-   directa, WhatsApp y volver — sin apretarse en una misma línea. */
+   directa y WhatsApp — sin apretarse en una misma línea. */
 .pdp-buy>:is(a,button){flex:1 1 100%;justify-content:center;align-items:center;text-align:center}
-/* Todos los CTAs de la ficha llevan su propia barra bermellón; el
-   contenedor queda transparente sobre el papel de la página. */
-.pdp-buy>.btn-line{background:var(--accent);color:var(--on-accent);border-color:var(--accent)}
-.pdp-buy>.btn-line::before{background:var(--accent-deep);transform:translateY(101%)}
-.pdp-buy>.btn-line:hover{color:var(--on-accent)}
 /* Iconos por máscara: toman currentColor del texto de cada CTA. */
 .pdp-buy>.dsx-buy{display:inline-flex;align-items:center;gap:9px}
 .pdp-buy>.dsx-buy::after{content:"";order:-1;width:16px;height:16px;flex:none;background:currentColor;
   -webkit-mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='9' cy='21' r='1'/%3E%3Ccircle cx='20' cy='21' r='1'/%3E%3Cpath d='M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6'/%3E%3C/svg%3E") center/contain no-repeat;
   mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='9' cy='21' r='1'/%3E%3Ccircle cx='20' cy='21' r='1'/%3E%3Cpath d='M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6'/%3E%3C/svg%3E") center/contain no-repeat}
-.pdp-buy>.btn-line::after{content:"";order:-1;width:15px;height:15px;flex:none;background:currentColor;
-  -webkit-mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M19 12H5M11 6l-6 6 6 6'/%3E%3C/svg%3E") center/contain no-repeat;
-  mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M19 12H5M11 6l-6 6 6 6'/%3E%3C/svg%3E") center/contain no-repeat}
-.pdp-buy>.btn-line{display:inline-flex;align-items:center;gap:9px}
 /* Datos de ficha con su propio glifo: ahorro (etiqueta), stock (tilde)
    y envíos (camión) — todos en mono versalita del diseño. */
 .pdp-save{align-items:center}
@@ -1667,7 +1658,6 @@ html[data-ds-commerce="1"] [data-surface="product"] .pdp-buy > .dsx-buy-now:focu
             <a class="btn btn-accent" href="{{product_whatsapp_url}}">Consultar por WhatsApp
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/></svg>
             </a>
-            <a class="btn btn-line" href="#catalogo" data-ds-route="catalog">Seguir mirando</a>
           </div>
           <p class="pdp-note">En stock · Envíos y retiros coordinados por WhatsApp</p>
           <table class="pdp-specs"><tbody>{{product_features}}</tbody></table>
