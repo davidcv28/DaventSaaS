@@ -72,6 +72,12 @@
 
 /* --- Barra superior --- */
 .sp-top{ position: sticky; top: 0; z-index: 20; background: linear-gradient(180deg, var(--store-accent-ink), color-mix(in srgb, var(--store-accent-ink) 82%, #000)); color: var(--sp-on-band, #fff); border-bottom: 1px solid rgba(0, 0, 0, .18); box-shadow: 0 1px 0 rgba(15, 23, 42, .03), 0 4px 16px -10px rgba(15, 23, 42, .25); }
+/* Diseños sin chrome propio (pattern-nav-off): la barra genérica gobierna
+   TODAS las rutas, incluida la landing del documento. El iframe del patrón
+   va antes que .sp-vue-page en el DOM, así que la barra viaja fija arriba
+   (el sticky moriría al final del wrapper) y la página le reserva el hueco. */
+.store-page.pattern-nav-off .sp-top{ position: fixed; top: 0; left: 0; right: 0; }
+.store-page.pattern-nav-off{ padding-top: calc(var(--sp-top-h) + var(--sp-shopnav-h, 0px)); }
 .sp-top-inner{ height: var(--sp-top-h); display: flex; align-items: center; gap: 16px; }
 .sp-top-end{ display: flex; justify-content: flex-end; align-items: center; gap: 8px; flex: 1 1 0; min-width: 0; }
 /* Botón de tema del visitante (webs sin diseño avanzado): círculo claro sobre

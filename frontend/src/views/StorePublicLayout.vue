@@ -1436,7 +1436,7 @@ onBeforeUnmount(() => {
         <div v-for="n in 4" :key="n" class="sp-boot-card"><span class="sp-sk-line sp-boot-img"></span><span class="sp-sk-line"></span><span class="sp-sk-line short"></span></div>
       </div>
     </div>
-    <div v-if="!usePattern && !patternWaiting && !patternMetaLoading" class="sp-vue-page" :style="usePatternChrome ? { paddingTop: `${patternChromeH}px`, paddingBottom: `${patternDockH}px` } : null">
+    <div v-if="(!usePattern || patternNavOff) && !patternWaiting && !patternMetaLoading" class="sp-vue-page" :style="usePatternChrome ? { paddingTop: `${patternChromeH}px`, paddingBottom: `${patternDockH}px` } : null">
     <!-- Chrome del diseño sobre las páginas que el documento no pinta:
          la tira fija trae el navbar propio del patrón (misma marca, mismos
          controles, misma piel) en vez del header genérico. -->
@@ -1748,7 +1748,7 @@ onBeforeUnmount(() => {
     </div>
 
     <!-- Página activa (Inicio / Catálogo) con transición suave entre ambas -->
-    <RouterView v-else v-slot="{ Component }">
+    <RouterView v-else-if="!usePattern" v-slot="{ Component }">
       <Transition name="sp-page" mode="out-in">
         <component :is="Component" :key="route.fullPath" />
       </Transition>
@@ -1759,7 +1759,7 @@ onBeforeUnmount(() => {
          skeleton y saltaba fuera del viewport al llegar el payload (CLS ~0.8
          medido en las 3 plantillas). Con el contenido ya resuelto se monta
          debajo, sin desplazar lo que el visitante está leyendo. -->
-    <footer v-if="status !== 'loading' && (contentReady || status === 'error')" class="sp-foot">
+    <footer v-if="status !== 'loading' && (contentReady || status === 'error') && !usePattern" class="sp-foot">
       <div v-reveal class="sp-container">
         <div class="sp-foot-grid">
           <div class="sp-foot-brand">
