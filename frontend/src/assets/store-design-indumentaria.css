@@ -539,7 +539,8 @@
     padding: 0 0 16px;
     border-bottom: 1px dashed var(--dz-line-strong);
   }
-  [data-design='indumentaria'][data-theme] .ec-account .acc-id .acc-tele { grid-column: 1 / -1; }
+  [data-design='indumentaria'][data-theme] .ec-account .acc-id .acc-tele,
+  [data-design='indumentaria'][data-theme] .ec-account .acc-mhead .acc-tele { grid-column: 1 / -1; }
   [data-design='indumentaria'][data-theme] .ec-account .acc-id-name {
     font-family: var(--dz-display); font-weight: 340; font-size: 19px; letter-spacing: -.015em;
     color: var(--dz-ink);

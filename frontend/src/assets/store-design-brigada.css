@@ -554,6 +554,9 @@
     border-bottom: 1.5px solid var(--dz-band-line);
   }
   [data-design='brigada'][data-theme] .ec-account .acc-id .acc-tele { grid-column: 1 / -1; color: var(--dz-band-muted); }
+  /* En mhead (4 hijos: tele + avatar + meta + botón) el tele ocupa su
+     propia fila — sin esto desplazaba la meta a una columna de 44px. */
+  [data-design='brigada'][data-theme] .ec-account .acc-mhead .acc-tele { grid-column: 1 / -1; }
   [data-design='brigada'][data-theme] .ec-account .acc-id-name {
     font-family: var(--dz-display); font-weight: 800; font-size: 18px; text-transform: uppercase; letter-spacing: 0;
     color: var(--dz-on-band);
