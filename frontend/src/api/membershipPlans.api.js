@@ -31,6 +31,9 @@ export const membershipPlansApi = {
     return Array.isArray(data) ? data : (data?.results || [])
   }),
   subscriptionCard: (slug) => customerHttp.get(`/customer/subscriptions/${slug}/card/`).then((r) => r.data),
+  // Catálogo exclusivo del comprador miembro — 404 si su plan no incluye
+  // acceso (o no tiene membresía): el front lo traduce a "sin acceso".
+  exclusiveProducts: (slug) => customerHttp.get(`/customer/stores/${slug}/exclusive-products/`).then((r) => r.data),
 }
 
 export const membershipCardApi = {

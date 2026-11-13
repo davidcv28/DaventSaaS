@@ -1,7 +1,7 @@
 import re
 from urllib.parse import parse_qs, quote, urlparse
 
-from django.db import IntegrityError
+from django.db import IntegrityError, models
 from rest_framework import serializers
 
 from StoreApp.domains.services.services import (
@@ -783,9 +783,10 @@ class StorePublicSerializer(serializers.ModelSerializer):
     shipping                    =   serializers.SerializerMethodField()
     payments                    =   serializers.SerializerMethodField()
     feed_enabled                =   serializers.SerializerMethodField()
+    exclusive_enabled           =   serializers.SerializerMethodField()
     class Meta:
         model                   =   Store
-        fields                  =   ['slug', 'business_name', 'city_name', 'province_name', 'customization', 'has_design_advanced', 'allowed_templates', 'location_address', 'chatbot', 'service_items', 'orders_enabled', 'customer_auth_enabled', 'shipping', 'payments', 'feed_enabled']
+        fields                  =   ['slug', 'business_name', 'city_name', 'province_name', 'customization', 'has_design_advanced', 'allowed_templates', 'location_address', 'chatbot', 'service_items', 'orders_enabled', 'customer_auth_enabled', 'shipping', 'payments', 'feed_enabled', 'exclusive_enabled']
     def get_has_design_advanced(self, store):
         #Solo premium: define si la web muestra portada (carrusel) o el
         #botón de modo claro/oscuro para el visitante en el nav.
@@ -831,6 +832,21 @@ class StorePublicSerializer(serializers.ModelSerializer):
         #Novedades y su acceso en el menú solo si el plan lo incluye.
         from StoreApp.domains.feed.services import feed_enabled
         return feed_enabled(store.user)
+    def get_exclusive_enabled(self, store):
+        #Hay productos is_exclusive activos Y algún plan de membresía que
+        #dé acceso (exclusive_access o exclusive_discounts): la web
+        #muestra el acceso "Exclusivos". El listado sigue gateado por
+        #membresía vigente en el endpoint del comprador — acá solo se
+        #revela que la sección existe (gancho de suscripción).
+        from StoreApp.domains.memberships.models import StorePlan
+        has_products  =   store.products.filter(is_active = True, is_exclusive = True).exists()
+        if not has_products:
+            return False
+        return StorePlan.objects.filter(
+            store = store, is_active = True,
+        ).filter(
+            models.Q(has_exclusive_access = True) | models.Q(has_exclusive_discounts = True)
+        ).exists()
     def get_shipping(self, store):
         #Tarifa de envío a domicilio para el checkout: home_price NULL =
         #"a coordinar" (sin precio online — el pedido lo pacta por

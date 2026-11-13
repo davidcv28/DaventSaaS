@@ -42,6 +42,7 @@ const StoreAuthView = () => import('../views/StoreAuthView.vue')
 const StoreReceiptView = () => import('../views/StoreReceiptView.vue')
 const StoreLegalView = () => import('../views/StoreLegalView.vue')
 const StoreFeedView = () => import('../views/StoreFeedView.vue')
+const ExclusivosView = () => import('../views/store/ExclusivosView.vue')
 const StoreFlyerView = () => import('../views/StoreFlyerView.vue')
 const DaventFlyerView = () => import('../views/DaventFlyerView.vue')
 const RobotQaView = () => import('../views/RobotQaView.vue')
@@ -167,6 +168,14 @@ const storeChildren = [
     name: 'store-feed',
     component: StoreFeedView,
     meta: { title: 'Novedades' }
+  },
+  // Página "Exclusivos": productos is_exclusive solo para miembros con
+  // acceso (memberships) — teaser + CTA a suscripciones sin sesión.
+  {
+    path: 'descuentos',
+    name: 'store-exclusive',
+    component: ExclusivosView,
+    meta: { title: 'Exclusivos' }
   }
 ]
 
@@ -422,6 +431,10 @@ const routes = [
           redirect: (to) => ({ name: 'store-feed', params: { slug: to.params.slug } })
         },
         {
+          path: '/tienda/:slug/descuentos',
+          redirect: (to) => ({ name: 'store-exclusive', params: { slug: to.params.slug } })
+        },
+        {
           path: '/:slug([a-z0-9-]+)',
           component: StorePublicLayout,
           children: storeChildren
@@ -474,7 +487,7 @@ router.beforeEach(async (to) => {
   // pública: cualquier ruta de plataforma (login, panel, legales) se
   // resuelve en el dominio principal.
   const STORE_HOST_ROUTES = [
-    'store-public', 'store-catalog', 'store-services', 'store-product', 'store-plans',
+    'store-public', 'store-catalog', 'store-services', 'store-product', 'store-plans', 'store-exclusive',
     'store-checkout', 'store-tracking', 'store-cart', 'store-receipt', 'store-auth', 'store-account', 'store-account-verify',
     'store-account-reset', 'store-legal', 'store-legal-page'
   ]

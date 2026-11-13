@@ -743,6 +743,8 @@ const catalogPageOn = computed(() => showCatalog.value && siteTemplates.value.in
 // Página "Novedades" (flag has_feed del plan — Premium+): el serializer
 // público manda feed_enabled y el menú muestra el acceso.
 const showFeed = computed(() => status.value === 'success' && Boolean(store.value?.feed_enabled))
+// Exclusivos para miembros (memberships: is_exclusive + plan con acceso).
+const showExclusive = computed(() => status.value === 'success' && Boolean(store.value?.exclusive_enabled))
 // Web sin portada: el home redirige a la primera página disponible
 // (Servicios si existe, si no el catálogo) y el menú no ofrece Inicio ni
 // las secciones de marketing. Cubre el viejo "modo solo catálogo" y la
@@ -767,6 +769,7 @@ const navMenuLinks = computed(() => {
   if (catalogPageOn.value) links.push({ to: catalogTo.value, label: 'Catálogo' })
   if (showFeed.value) links.push({ to: feedTo.value, label: 'Novedades' })
   if (showPlans.value) links.push({ to: plansTo.value, label: 'Suscripciones' })
+  if (showExclusive.value) links.push({ to: exclusivosTo.value, label: 'Exclusivos' })
   if (hasAbout.value && !landingOff.value) links.push({ to: anchorTo('#nosotros'), label: 'Nosotros', anchor: true })
   if (showGallery.value && landingHasGallery.value && !landingOff.value) links.push({ to: anchorTo('#galeria'), label: 'Galería', anchor: true })
   if (showContact.value && landingHasContact.value && !landingOff.value) links.push({ to: anchorTo('#contacto'), label: 'Contacto', anchor: true })
@@ -784,8 +787,8 @@ const hasNavMenu = computed(() => status.value === 'success' && !isShop.value &&
 const mobileNav = computed(() => pageAttrs.value['data-st-nav']
   || (pageTemplate.value === 'impacto' ? 'top' : 'bottom'))
 // Prioridad de destinos en la tab bar: Inicio → Catálogo → Novedades → Servicios → Suscripciones → Contacto.
-const TAB_PRIORITY = ['Inicio', 'Catálogo', 'Novedades', 'Servicios', 'Suscripciones', 'Contacto']
-const TAB_ICONS = { Inicio: 'store', Catálogo: 'package', Novedades: 'lucide:newspaper', Servicios: 'wrench', Suscripciones: 'crown', Contacto: 'message-circle' }
+const TAB_PRIORITY = ['Inicio', 'Catálogo', 'Novedades', 'Servicios', 'Suscripciones', 'Exclusivos', 'Contacto']
+const TAB_ICONS = { Inicio: 'store', Catálogo: 'package', Novedades: 'lucide:newspaper', Servicios: 'wrench', Suscripciones: 'crown', Exclusivos: 'percent', Contacto: 'message-circle' }
 const tabLinks = computed(() => {
   const byLabel = new Map(navMenuLinks.value.map((l) => [l.label, l]))
   return TAB_PRIORITY.filter((label) => byLabel.has(label)).slice(0, 4)
@@ -802,6 +805,7 @@ function isTabActive(label) {
     || (label === 'Novedades' && shopCurrent.value === 'feed')
     || (label === 'Servicios' && shopCurrent.value === 'services')
     || (label === 'Suscripciones' && shopCurrent.value === 'plans')
+    || (label === 'Exclusivos' && shopCurrent.value === 'exclusive')
     || (label === 'Contacto' && shopCurrent.value === 'contacto')
 }
 
@@ -870,6 +874,7 @@ const isServices = computed(() => route.name === 'store-services')
 const isPlans = computed(() => route.name === 'store-plans')
 const isProduct = computed(() => route.name === 'store-product')
 const isFeed = computed(() => route.name === 'store-feed')
+const isExclusive = computed(() => route.name === 'store-exclusive')
 const isHome = computed(() => route.name === 'store-public')
 // Sección activa del menú de Tienda Pro. No alcanza con router-link-active:
 // las anclas de la home (#nosotros, #galeria, #contacto) comparten el path y
@@ -879,6 +884,7 @@ const shopCurrent = computed(() => {
   if (isFeed.value) return 'feed'
   if (isServices.value) return 'services'
   if (isPlans.value) return 'plans'
+  if (isExclusive.value) return 'exclusive'
   if (!isHome.value) return ''
   const hash = route.hash.replace('#', '')
   return ['nosotros', 'galeria', 'contacto'].includes(hash) ? hash : 'home'
@@ -888,6 +894,7 @@ const catalogTo = computed(() => ({ path: storeHostSlug ? '/catalogo' : `/${slug
 const servicesTo = computed(() => ({ path: storeHostSlug ? '/servicios' : `/${slug.value}/servicios` }))
 const plansTo = computed(() => ({ path: storeHostSlug ? '/suscripciones' : `/${slug.value}/suscripciones` }))
 const feedTo = computed(() => ({ path: storeHostSlug ? '/novedades' : `/${slug.value}/novedades` }))
+const exclusivosTo = computed(() => ({ path: storeHostSlug ? '/descuentos' : `/${slug.value}/descuentos` }))
 const accountTo = computed(() => ({ path: storeHostSlug ? '/cuenta' : `/${slug.value}/cuenta` }))
 // Deep link a /ingresar o /cuenta con el acceso de clientes apagado
 // (customer_auth_enabled === false): vuelve a la home de la tienda.
@@ -1511,6 +1518,7 @@ onBeforeUnmount(() => {
           <RouterLink v-if="catalogPageOn" :to="catalogTo" :aria-current="shopCurrent === 'catalog' ? 'page' : undefined">Catálogo</RouterLink>
           <RouterLink v-if="showFeed" :to="feedTo" :aria-current="shopCurrent === 'feed' ? 'page' : undefined">Novedades</RouterLink>
           <RouterLink v-if="showPlans" :to="plansTo" :aria-current="shopCurrent === 'plans' ? 'page' : undefined">Suscripciones</RouterLink>
+          <RouterLink v-if="showExclusive" :to="exclusivosTo" :aria-current="shopCurrent === 'exclusive' ? 'page' : undefined">Exclusivos</RouterLink>
           <RouterLink v-if="hasAbout && !landingOff" :to="anchorTo('#nosotros')" data-anchor="nosotros" :aria-current="shopCurrent === 'nosotros' ? 'location' : undefined" active-class="sp-anchor" exact-active-class="sp-anchor">Nosotros</RouterLink>
           <RouterLink v-if="showGallery && landingHasGallery && !landingOff" :to="anchorTo('#galeria')" data-anchor="galeria" :aria-current="shopCurrent === 'galeria' ? 'location' : undefined" active-class="sp-anchor" exact-active-class="sp-anchor">Galería</RouterLink>
           <RouterLink v-if="showContact && landingHasContact && !landingOff" :to="anchorTo('#contacto')" data-anchor="contacto" :aria-current="shopCurrent === 'contacto' ? 'location' : undefined" active-class="sp-anchor" exact-active-class="sp-anchor">Contacto</RouterLink>
@@ -1591,6 +1599,7 @@ onBeforeUnmount(() => {
             <RouterLink v-if="showServices" :to="servicesTo" :class="{ 'is-current': shopCurrent === 'services' }" :aria-current="shopCurrent === 'services' ? 'page' : null">Servicios</RouterLink>
             <RouterLink v-if="catalogPageOn" :to="catalogTo" :class="{ 'is-current': shopCurrent === 'catalog' }" :aria-current="shopCurrent === 'catalog' ? 'page' : null">Catálogo</RouterLink>
             <RouterLink v-if="showPlans" :to="plansTo" :class="{ 'is-current': shopCurrent === 'plans' }" :aria-current="shopCurrent === 'plans' ? 'page' : null">Suscripciones</RouterLink>
+            <RouterLink v-if="showExclusive" :to="exclusivosTo" :class="{ 'is-current': shopCurrent === 'exclusive' }" :aria-current="shopCurrent === 'exclusive' ? 'page' : null">Exclusivos</RouterLink>
             <RouterLink v-if="hasAbout && !landingOff" :to="anchorTo('#nosotros')" :class="{ 'is-current': shopCurrent === 'nosotros' }" :aria-current="shopCurrent === 'nosotros' ? 'true' : null" active-class="sp-anchor" exact-active-class="sp-anchor">Nosotros</RouterLink>
             <RouterLink v-if="showGallery && landingHasGallery && !landingOff" :to="anchorTo('#galeria')" :class="{ 'is-current': shopCurrent === 'galeria' }" :aria-current="shopCurrent === 'galeria' ? 'true' : null" active-class="sp-anchor" exact-active-class="sp-anchor">Galería</RouterLink>
             <RouterLink v-if="showContact && landingHasContact && !landingOff" :to="anchorTo('#contacto')" :class="{ 'is-current': shopCurrent === 'contacto' }" :aria-current="shopCurrent === 'contacto' ? 'true' : null" active-class="sp-anchor" exact-active-class="sp-anchor">Contacto</RouterLink>
@@ -1764,6 +1773,7 @@ onBeforeUnmount(() => {
             <RouterLink v-if="showServices" :to="servicesTo">Servicios</RouterLink>
             <RouterLink v-if="catalogPageOn" :to="catalogTo">Catálogo</RouterLink>
             <RouterLink v-if="showPlans" :to="plansTo">Suscripciones</RouterLink>
+            <RouterLink v-if="showExclusive" :to="exclusivosTo">Exclusivos</RouterLink>
             <RouterLink v-if="hasAbout && !landingOff" :to="anchorTo('#nosotros')" active-class="sp-anchor" exact-active-class="sp-anchor">Nosotros</RouterLink>
             <RouterLink v-if="showGallery && landingHasGallery && !landingOff" :to="anchorTo('#galeria')" active-class="sp-anchor" exact-active-class="sp-anchor">Galería</RouterLink>
             <RouterLink v-if="showContact && landingHasContact && !landingOff" :to="anchorTo('#contacto')" active-class="sp-anchor" exact-active-class="sp-anchor">Contacto</RouterLink>
