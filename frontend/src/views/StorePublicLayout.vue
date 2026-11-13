@@ -199,6 +199,9 @@ const usePatternChrome = computed(() => Boolean(
 // Alto de la tira del chrome del diseño (lo reporta el documento): se
 // reserva como padding del contenido para que nada quede bajo el navbar.
 const patternChromeH = ref(72)
+// Alto del dock (barra inferior del diseño anclada al pie): la reserva
+// va como padding-bottom para que el contenido no quede tapado.
+const patternDockH = ref(0)
 const custom = computed(() => {
   const raw = store.value?.customization || {}
   const merged = {
@@ -1416,7 +1419,7 @@ onBeforeUnmount(() => {
         <div v-for="n in 4" :key="n" class="sp-boot-card"><span class="sp-sk-line sp-boot-img"></span><span class="sp-sk-line"></span><span class="sp-sk-line short"></span></div>
       </div>
     </div>
-    <div v-if="!usePattern && !patternWaiting && !patternMetaLoading" class="sp-vue-page" :style="usePatternChrome ? { paddingTop: `${patternChromeH}px` } : null">
+    <div v-if="!usePattern && !patternWaiting && !patternMetaLoading" class="sp-vue-page" :style="usePatternChrome ? { paddingTop: `${patternChromeH}px`, paddingBottom: `${patternDockH}px` } : null">
     <!-- Chrome del diseño sobre las páginas que el documento no pinta:
          la tira fija trae el navbar propio del patrón (misma marca, mismos
          controles, misma piel) en vez del header genérico. -->
@@ -1437,6 +1440,27 @@ onBeforeUnmount(() => {
       @toggle-theme="togglePageTheme"
       @chrome-height="(h) => (patternChromeH = h)"
       @chrome-invalid="patternChromeBroken = true"
+    />
+    <!-- Dock del diseño: la barra de secciones que el patrón pinea abajo
+         (tab bar móvil + hoja de menú) va en otra tira anclada al pie —
+         dentro del chrome superior no podía llegar al fondo real. -->
+    <PatternSurface
+      v-if="usePatternChrome"
+      chrome
+      dock
+      :slug="slug"
+      :preview="previewToken"
+      :revision="patternRevision"
+      :theme="pageTheme"
+      surface="dock"
+      :title="shopName"
+      :account="customerStore.isAuthenticated"
+      @navigate="onPatternNavigate"
+      @buy="onPatternBuy"
+      @buy-now="onPatternBuyNow"
+      @account="onPatternAccount"
+      @toggle-theme="togglePageTheme"
+      @chrome-height="(h) => (patternDockH = h)"
     />
     <!-- ===== Barra superior ===== -->
     <!-- El meta del patrón viaja en paralelo a la ficha: mientras carga no

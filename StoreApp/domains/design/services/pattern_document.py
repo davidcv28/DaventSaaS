@@ -132,13 +132,27 @@ html[data-ds-surface="chrome"] body>*:not([data-ds-pin]){min-height:0!important}
    chrome no hay contenido que despejar y ese relleno inflaba el alto que
    reporta el puente — la tira quedaba con aire muerto bajo el cromo. */
 html[data-ds-surface="chrome"] body{padding:0!important}
-/* Los pines inferiores de CONTENIDO (píldora de carrito, paneles de
-   filtros) no pueden ir al pie de la pantalla — el iframe es solo la
-   tira superior. Las barras y hojas de navegación del diseño sí se
-   conservan (`data-ds-keep`): el puente las re-ancla como segunda fila
-   bajo el cromo (bottomChromePx ya reserva su alto); sin ellas las
-   páginas funcionales quedaban sin navegación en móvil. */
-html[data-ds-surface="chrome"] [data-ds-pin="bottom"]:not([data-ds-keep]){display:none!important}
+/* Los pines inferiores no van en la tira superior: la barra móvil del
+   diseño viaja en el iframe "dock" anclado al pie de la página. */
+html[data-ds-surface="chrome"] [data-ds-pin="bottom"]{display:none!important}
+/* Superficie "dock" (barra inferior del diseño fijada al pie del host):
+   solo los pines bottom marcados data-ds-keep (tab bars, hojas de menú)
+   se pintan; el resto del documento queda oculto como en "chrome". Los
+   scrims pineados arriba (aria-hidden) se conservan: son el velo del
+   menú cuando la hoja se abre. */
+html[data-ds-surface="dock"],
+html[data-ds-surface="dock"] body{overflow:hidden}
+html[data-ds-surface="dock"] body{padding:0!important}
+/* Los pines del diseño suelen colgar de un .wrap sin data-ds-pin: si se
+   oculta el ancestro mueren con él — solo se les quita el alto. */
+html[data-ds-surface="dock"] body>*:not([data-ds-pin]){min-height:0!important}
+html[data-ds-surface="dock"] [data-surface],
+html[data-ds-surface="dock"] footer,
+html[data-ds-surface="dock"] .foot,
+html[data-ds-surface="dock"] .footer,
+html[data-ds-surface="dock"] .ds-chat{display:none!important}
+html[data-ds-surface="dock"] [data-ds-pin="top"]:not([aria-hidden="true"]),
+html[data-ds-surface="dock"] [data-ds-pin="bottom"]:not([data-ds-keep]){display:none!important}
 /* Contenedores de CTA de la ficha que quedaron sin hijos visibles: sin
    WhatsApp ni venta online el diseño deja `.pdp-buy`/`.pdp-ctas` vacío o
    con solo el anchor `href=""` (oculto por la regla propia del diseño) y

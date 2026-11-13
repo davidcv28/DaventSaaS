@@ -110,6 +110,13 @@
         })
         h += bottomChromePx()
       }
+      /* Superficie "dock" (barra inferior del diseño en iframe aparte al
+       * pie del host): el alto es SOLO la barra — las hojas cerradas y
+       * scrims no cuentan (bottomChromePx ya los descarta). */
+      if (root.getAttribute('data-ds-surface') === 'dock') {
+        if (!pinned) collectFixed()
+        h = bottomChromePx()
+      }
       syncChatMetrics()
       /* `surface` va en el alto: el host la usa para confirmar que el
        * documento realmente vino en modo "chrome" — un backend viejo
@@ -349,7 +356,8 @@
      * abajo: la primera medición (pinned recién recolectado) o la
      * apertura/cierre de una hoja cambia el alto de la tira — hay que
      * re-enviarlo o el iframe queda mal cortado. */
-    if (root.getAttribute('data-ds-surface') === 'chrome') {
+    var surfNow = root.getAttribute('data-ds-surface')
+    if (surfNow === 'chrome' || surfNow === 'dock') {
       var liftNow = frameBox ? bottomChromePx() : 0
       if (liftNow !== chromeLift) { chromeLift = liftNow; send() }
     }

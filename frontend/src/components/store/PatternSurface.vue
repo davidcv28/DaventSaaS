@@ -50,7 +50,11 @@ const props = defineProps({
   //superficies de contenido quedan ocultas en el propio documento y el
   //iframe crece a pantalla completa solo mientras el diseño tenga una
   //hoja modal abierta (ds-lock) para que el menú sea usable.
-  chrome: { type: Boolean, default: false }
+  chrome: { type: Boolean, default: false },
+  //Modo "dock" (con chrome): la tira se ancla al PIE del viewport y lleva
+  //la barra inferior del diseño — solo los pines data-ds-pin="bottom"
+  //marcados data-ds-keep se pintan en el documento.
+  dock: { type: Boolean, default: false }
 })
 
 const frame = ref(null)
@@ -61,6 +65,7 @@ const chromeLocked = ref(false)
 const frameStyle = computed(() => {
   if (props.chrome) {
     if (chromeLocked.value) return { height: '100vh' }
+    if (props.dock) return height.value ? { height: `${height.value}px` } : { height: '0px' }
     return { height: `${height.value || 72}px` }
   }
   return height.value ? { height: `${height.value}px` } : null
@@ -284,7 +289,7 @@ function onMessage(e) {
   /* El documento confirma su superficie en cada ds-height. Un backend
    * viejo no conoce 'chrome' y sirve la landing entera: sin el chequeo la
    * tira crecía al alto de la portada y tapaba la página completa. */
-  if (props.chrome && e.data.surface !== 'chrome') {
+  if (props.chrome && e.data.surface !== (props.dock ? 'dock' : 'chrome')) {
     emit('chrome-invalid')
     return
   }
@@ -398,7 +403,7 @@ onBeforeUnmount(() => {
   <iframe
     ref="frame"
     class="ds-surface"
-    :class="{ 'ds-chrome': chrome, 'ds-locked': chromeLocked }"
+    :class="{ 'ds-chrome': chrome, 'ds-dock': dock, 'ds-locked': chromeLocked }"
     :src="src"
     :title="title || 'Diseño de la web'"
     :style="frameStyle"
@@ -437,5 +442,12 @@ onBeforeUnmount(() => {
  * barra de compra 25) pero queda bajo drawer, modal y toast del host. */
 .ds-surface.ds-chrome.ds-locked {
   z-index: 60;
+}
+
+/* Modo dock: misma tira pero anclada al PIE del viewport — lleva la barra
+ * inferior del diseño (tab bar móvil) en las páginas con chrome. */
+.ds-surface.ds-chrome.ds-dock {
+  top: auto;
+  bottom: 0;
 }
 </style>
