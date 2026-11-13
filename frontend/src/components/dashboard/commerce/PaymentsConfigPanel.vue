@@ -692,6 +692,18 @@ const mpWebhooksOk = computed(() => Boolean(mpStatus.value?.webhook_configured))
 /* .mono está pensado para código inline (letra + fondo + padding chico):
    sobre .input dejaba los campos de credenciales diminutos y desalineados. */
 .input.mono { padding: 11px 14px; border-radius: var(--radius-sm); background: var(--card); }
+/* Tema oscuro: .input hereda --card (idéntico a la card que lo contiene) y
+   dentro de .paycfg-sub (--surface, más claro) queda como un pozo negro.
+   Se eleva el campo por encima de cualquier contenedor + borde visible. */
+[data-theme='dark'] .paycfg-panel .input,
+[data-theme='dark'] .paycfg-panel .select,
+[data-theme='dark'] .paycfg-panel .textarea { background: #212a4d; border-color: #39436e; box-shadow: none; }
+[data-theme='dark'] .paycfg-panel .input:hover,
+[data-theme='dark'] .paycfg-panel .select:hover,
+[data-theme='dark'] .paycfg-panel .textarea:hover { border-color: #4a568a; }
+[data-theme='dark'] .paycfg-panel .input::placeholder,
+[data-theme='dark'] .paycfg-panel .textarea::placeholder { color: #7f8bb0; }
+[data-theme='dark'] .paycfg-sub { border-color: var(--line); }
 .input-wrap { position: relative; }
 .input-wrap .input { padding-right: 42px; }
 .storage-guide { border: 1px solid var(--line); border-radius: var(--radius-sm); padding: 14px 16px; background: var(--surface); }
