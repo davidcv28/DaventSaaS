@@ -1387,7 +1387,7 @@ def theme_css(customization, pattern = None, site_theme = None):
 # header fijado, footer). Estos selectores son el puente: el Studio
 # (surfaces/images/background/buttons/typography.roles) escribe reglas
 # !important sobre ellos, igual que data-st-* lo hace en store-page.css.
-_STUDIO_BTN_SEL   =   '.btn, .svc-cta, .pdp-buy, .nav-cta, .top-cta, .rail-btn, .deck-btn'
+_STUDIO_BTN_SEL   =   '.btn, .svc-cta, .pdp-buy:is(a, button), .pdp-buy > :is(a, button), .nav-cta, .top-cta, .rail-btn, .deck-btn'
 _STUDIO_CARD_SEL  =   '.ds-product, .ds-cat, .ds-service, .ds-plan, .ds-faq, .ds-guar, .ds-offer, .ds-contact'
 _STUDIO_IMG_SEL   =   '.ds-product-img'
 #La barra superior se reconoce por el pin del puente (position:fixed) con
