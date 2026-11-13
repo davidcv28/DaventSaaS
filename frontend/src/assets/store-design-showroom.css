@@ -163,12 +163,67 @@
 }
 [data-design='showroom'] .ec-auth .ec-auth-spin { color: var(--dz-ink); }
 
+[data-design='showroom'] :is(.ec-auth, .ec-auth-card) .ecaf { gap: 16px; }
 [data-design='showroom'] .ec-auth .ecaf {
   padding: clamp(18px, 2.6vw, 26px) clamp(16px, 2.6vw, 28px) clamp(20px, 3vw, 30px);
-  gap: 16px;
 }
-[data-design='showroom'] .ec-auth .ecaf .sp-field { gap: 6px; min-width: 0; }
-[data-design='showroom'] .ec-auth .ecaf .sp-field-label {
+
+/* Selector de modo (Ingresar / Crear cuenta / Recuperar): índice de tres
+   celdas cuadradas numeradas 01/02/03; la activa es una placa de tinta.
+   Sin transición: showroom es deliberadamente quieto. */
+[data-design='showroom'] :is(.ec-auth, .ec-auth-card) .ecaf-switch {
+  counter-reset: ecafTab;
+  padding: 3px;
+  border: 1px solid var(--dz-line-strong);
+  border-radius: 0;
+  background: var(--dz-surface);
+}
+[data-design='showroom'] :is(.ec-auth, .ec-auth-card) .ecaf-switch-pill {
+  top: 3px;
+  bottom: 3px;
+  left: 3px;
+  width: calc((100% - 6px) / 3);
+  border-radius: 0;
+  background: var(--dz-ink);
+  box-shadow: none;
+  transition: none;
+}
+[data-design='showroom'] :is(.ec-auth, .ec-auth-card) .ecaf-switch-btn {
+  counter-increment: ecafTab;
+  min-height: 46px;
+  padding: 8px 4px;
+  border-radius: 0;
+  font-family: var(--dz-mono);
+  font-size: 9.5px;
+  font-weight: 600;
+  letter-spacing: .13em;
+  line-height: 1.35;
+  text-transform: uppercase;
+  color: var(--dz-muted);
+  transition: none;
+}
+[data-design='showroom'] :is(.ec-auth, .ec-auth-card) .ecaf-switch-btn::before {
+  content: "0" counter(ecafTab);
+  display: block;
+  margin-bottom: 3px;
+  font-size: 8px;
+  letter-spacing: .26em;
+  color: var(--dz-muted);
+}
+[data-design='showroom'] :is(.ec-auth, .ec-auth-card) .ecaf-switch-btn + .ecaf-switch-btn {
+  border-left: 1px solid var(--dz-line);
+}
+[data-design='showroom'] :is(.ec-auth, .ec-auth-card) .ecaf-switch-btn:hover:not(.is-on) { color: var(--dz-ink); }
+[data-design='showroom'] :is(.ec-auth, .ec-auth-card) .ecaf-switch-btn.is-on { color: var(--dz-accent-ink); }
+[data-design='showroom'] :is(.ec-auth, .ec-auth-card) .ecaf-switch-btn.is-on::before {
+  color: color-mix(in srgb, var(--dz-accent-ink) 62%, transparent);
+}
+[data-design='showroom'] :is(.ec-auth, .ec-auth-card) .ecaf-switch-btn:focus-visible {
+  outline: 2px solid var(--dz-ink);
+  outline-offset: 2px;
+}
+[data-design='showroom'] :is(.ec-auth, .ec-auth-card) .ecaf .sp-field { gap: 6px; min-width: 0; }
+[data-design='showroom'] :is(.ec-auth, .ec-auth-card) .ecaf .sp-field-label {
   font-family: var(--dz-mono);
   font-size: 9.5px;
   font-weight: 600;
@@ -176,7 +231,7 @@
   text-transform: uppercase;
   color: var(--dz-ink-2);
 }
-[data-design='showroom'] .ec-auth .ecaf .sp-input {
+[data-design='showroom'] :is(.ec-auth, .ec-auth-card) .ecaf .sp-input {
   min-height: 46px;
   padding: 11px 12px;
   border: 1px solid var(--dz-line-strong);
@@ -187,35 +242,85 @@
   font-size: 15px;
   box-shadow: none;
 }
-[data-design='showroom'] .ec-auth .ecaf .sp-input::placeholder { color: var(--dz-muted); }
-[data-design='showroom'] .ec-auth .ecaf .sp-input:hover { border-color: var(--dz-ink-2); }
-[data-design='showroom'] .ec-auth .ecaf .sp-input:focus,
-[data-design='showroom'] .ec-auth .ecaf .sp-input:focus-visible {
+[data-design='showroom'] :is(.ec-auth, .ec-auth-card) .ecaf .sp-input::placeholder { color: var(--dz-muted); }
+[data-design='showroom'] :is(.ec-auth, .ec-auth-card) .ecaf .sp-input:hover { border-color: var(--dz-ink-2); }
+[data-design='showroom'] :is(.ec-auth, .ec-auth-card) .ecaf .sp-input:focus,
+[data-design='showroom'] :is(.ec-auth, .ec-auth-card) .ecaf .sp-input:focus-visible {
   outline: 2px solid var(--dz-ink);
   outline-offset: 1px;
   border-color: var(--dz-ink);
   box-shadow: none;
 }
-[data-design='showroom'] .ec-auth .ecaf .sp-input:disabled {
+[data-design='showroom'] :is(.ec-auth, .ec-auth-card) .ecaf .sp-input:disabled {
   background: var(--dz-surface);
   color: var(--dz-ink-2);
   -webkit-text-fill-color: var(--dz-ink-2);
   opacity: 1;
 }
-[data-design='showroom'] .ec-auth .ecaf .sp-form-error {
+[data-design='showroom'] :is(.ec-auth, .ec-auth-card) .ecaf .sp-form-error {
   font-family: var(--dz-mono);
   font-size: 11px;
   color: var(--dz-danger);
 }
-[data-design='showroom'] .ec-auth .ecaf-pass-toggle {
+[data-design='showroom'] :is(.ec-auth, .ec-auth-card) .ecaf-pass-toggle {
   color: var(--dz-ink-2);
   border-radius: 0;
 }
-[data-design='showroom'] .ec-auth .ecaf-pass-toggle:hover {
+[data-design='showroom'] :is(.ec-auth, .ec-auth-card) .ecaf-pass-toggle:hover {
   color: var(--dz-ink);
   background: var(--dz-surface);
 }
-[data-design='showroom'] .ec-auth .ecaf-submit {
+
+/* Iconos líderes de campo (.ecaf-ico del markup compartido: user / mail /
+   lock): centrados sobre el borde izquierdo del input; el ojo conserva la
+   derecha. Mismo contrato que las demás pieles (p. ej. portico/sastreria):
+   el span nace display:none en el <style scoped> y la piel lo enciende. */
+[data-design='showroom'] :is(.ec-auth, .ec-auth-card) .ecaf .sp-field { position: relative; }
+[data-design='showroom'] :is(.ec-auth, .ec-auth-card) .ecaf .sp-field .sp-input { padding-left: 42px; }
+[data-design='showroom'] :is(.ec-auth, .ec-auth-card) .ecaf .ecaf-pass .sp-input { padding-right: 44px; }
+[data-design='showroom'] :is(.ec-auth, .ec-auth-card) .ecaf-ico {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  position: absolute;
+  left: 14px;
+  top: 41px;
+  translate: 0 -50%;
+  width: 16px;
+  height: 16px;
+  color: var(--dz-muted);
+  pointer-events: none;
+}
+[data-design='showroom'] :is(.ec-auth, .ec-auth-card) .ecaf-ico :is(svg, .icon) {
+  width: 16px;
+  height: 16px;
+  flex: none;
+}
+[data-design='showroom'] :is(.ec-auth, .ec-auth-card) .ecaf-pass .ecaf-ico { top: 50%; }
+[data-design='showroom'] :is(.ec-auth, .ec-auth-card) .sp-field:focus-within .ecaf-ico { color: var(--dz-ink); }
+[data-design='showroom'] :is(.ec-auth, .ec-auth-card) .ecaf-minilink {
+  font-family: var(--dz-mono);
+  font-size: 9.5px;
+  font-weight: 600;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+  color: var(--dz-muted);
+}
+[data-design='showroom'] :is(.ec-auth, .ec-auth-card) .ecaf-minilink:hover {
+  color: var(--dz-ink);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+[data-design='showroom'] :is(.ec-auth, .ec-auth-card) .ecaf-foot-text {
+  font-family: var(--dz-mono);
+  font-size: 10.5px;
+  letter-spacing: .04em;
+  color: var(--dz-muted);
+}
+[data-design='showroom'] :is(.ec-auth, .ec-auth-card) .ecaf-notice .ecaf-msg-ico { color: var(--dz-ok); }
+[data-design='showroom'] :is(.ec-auth, .ec-auth-card) .ecaf-error .ecaf-msg-ico { color: var(--dz-danger); }
+
+[data-design='showroom'] :is(.ec-auth, .ec-auth-card) .ecaf-submit {
   min-height: 48px;
   margin-top: 2px;
   border: 1px solid var(--dz-ink);
@@ -229,32 +334,32 @@
   text-transform: uppercase;
   box-shadow: none;
 }
-[data-design='showroom'] .ec-auth .ecaf-submit:hover:not(:disabled) { filter: brightness(1.15); }
-[data-design='showroom'] .ec-auth .ecaf-submit:active:not(:disabled) { transform: none; }
-[data-design='showroom'] .ec-auth .ecaf-notice {
+[data-design='showroom'] :is(.ec-auth, .ec-auth-card) .ecaf-submit:hover:not(:disabled) { filter: brightness(1.15); }
+[data-design='showroom'] :is(.ec-auth, .ec-auth-card) .ecaf-submit:active:not(:disabled) { transform: none; }
+[data-design='showroom'] :is(.ec-auth, .ec-auth-card) .ecaf-notice {
   border-radius: 0;
   border: 1px solid var(--dz-ok);
   border-left-width: 3px;
   background: color-mix(in srgb, var(--dz-ok) 10%, transparent);
   color: var(--dz-ink);
 }
-[data-design='showroom'] .ec-auth .ecaf-error {
+[data-design='showroom'] :is(.ec-auth, .ec-auth-card) .ecaf-error {
   border-radius: 0;
   border: 1px solid var(--dz-danger);
   border-left-width: 3px;
   background: color-mix(in srgb, var(--dz-danger) 8%, transparent);
   color: var(--dz-danger);
 }
-[data-design='showroom'] .ec-auth .ecaf-divider {
+[data-design='showroom'] :is(.ec-auth, .ec-auth-card) .ecaf-divider {
   font-family: var(--dz-mono);
   font-size: 9.5px;
   letter-spacing: .18em;
   text-transform: uppercase;
   color: var(--dz-muted);
 }
-[data-design='showroom'] .ec-auth .ecaf-divider::before,
-[data-design='showroom'] .ec-auth .ecaf-divider::after { background: var(--dz-line-strong); opacity: 1; }
-[data-design='showroom'] .ec-auth .ecaf-link {
+[data-design='showroom'] :is(.ec-auth, .ec-auth-card) .ecaf-divider::before,
+[data-design='showroom'] :is(.ec-auth, .ec-auth-card) .ecaf-divider::after { background: var(--dz-line-strong); opacity: 1; }
+[data-design='showroom'] :is(.ec-auth, .ec-auth-card) .ecaf-link {
   display: inline-flex;
   align-items: center;
   min-height: 40px;
@@ -266,10 +371,87 @@
   text-decoration: underline;
   text-underline-offset: 3px;
 }
-[data-design='showroom'] .ec-auth .ecaf-link:hover { text-decoration-thickness: 2px; }
-[data-design='showroom'] .ec-auth :is(.ecaf-link, .ecaf-submit, .ecaf-pass-toggle, .ec-auth-back):focus-visible {
+[data-design='showroom'] :is(.ec-auth, .ec-auth-card) .ecaf-link:hover { text-decoration-thickness: 2px; }
+[data-design='showroom'] :is(.ec-auth, .ec-auth-card) :is(.ecaf-link, .ecaf-submit, .ecaf-pass-toggle, .ecaf-minilink, .ec-auth-back, .ec-auth-close):focus-visible {
   outline: 2px solid var(--dz-ink);
   outline-offset: 2px;
+}
+
+/* Línea de confianza al pie del formulario (/ingresar): filete superior
+   con el candado en mono — firma de ficha técnica. */
+[data-design='showroom'] .ec-auth .ec-auth-trust {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  margin: 0;
+  padding: 10px 16px 14px;
+  border-top: 1px solid var(--dz-line);
+  font-family: var(--dz-mono);
+  font-size: 9px;
+  letter-spacing: .16em;
+  text-transform: uppercase;
+  color: var(--dz-muted);
+}
+[data-design='showroom'] .ec-auth .ec-auth-trust svg { flex: none; color: var(--dz-ink-2); }
+
+/* ---- modal global (StoreAuthModal): la misma tarjeta-ficha que /ingresar,
+   filete de 3px arriba, cabecera banda y cierre cuadrado. Sin entrada
+   animada (showroom es quieto). ---- */
+[data-design='showroom'] .ec-auth-card {
+  padding: 0;
+  border: 1px solid var(--dz-ink);
+  border-top-width: 3px;
+  border-radius: 0;
+  background: var(--dz-bg);
+  color: var(--dz-ink);
+  box-shadow: none;
+  animation: none;
+}
+[data-design='showroom'] .ec-auth-card .ec-auth-head {
+  gap: 8px;
+  margin: 0;
+  padding: 20px 56px 14px 20px;
+  border-bottom: 1px solid var(--dz-ink);
+}
+[data-design='showroom'] .ec-auth-card .ec-auth-badge {
+  width: 34px;
+  height: 34px;
+  margin: 0;
+  border: 1px solid var(--dz-ink);
+  border-radius: 0;
+  background: var(--dz-surface);
+  color: var(--dz-ink);
+}
+[data-design='showroom'] .ec-auth-card .ec-auth-title {
+  font-family: var(--dz-display);
+  font-size: 21px;
+  font-weight: 700;
+  line-height: 1.1;
+  letter-spacing: .04em;
+  text-transform: uppercase;
+  color: var(--dz-ink);
+}
+[data-design='showroom'] .ec-auth-card .ec-auth-sub {
+  font-family: var(--dz-body);
+  font-size: 12.5px;
+  line-height: 1.55;
+  color: var(--dz-ink-2);
+}
+[data-design='showroom'] .ec-auth-card .ecaf { padding: 18px 20px 20px; gap: 14px; }
+[data-design='showroom'] .ec-auth-card .ec-auth-close {
+  width: 34px;
+  height: 34px;
+  border: 1px solid var(--dz-line-strong);
+  border-radius: 0;
+  background: var(--dz-bg);
+  color: var(--dz-ink-2);
+  transition: none;
+}
+[data-design='showroom'] .ec-auth-card .ec-auth-close:hover {
+  background: var(--dz-ink);
+  border-color: var(--dz-ink);
+  color: var(--dz-accent-ink);
 }
 
 /* ---- ficha técnica del negocio (banda inferior de la tarjeta) ---- */
@@ -417,9 +599,17 @@
   font-size: 10.5px;
   color: var(--dz-muted);
 }
+/* Botón de salir del header compacto: se ensancha para mostrar la
+   etiqueta "SALIR" (.acc-icon-btn-txt nace display:none en el componente). */
 [data-design='showroom'] .ec-account .acc-icon-btn {
-  width: 40px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  width: auto;
+  min-width: 40px;
   height: 40px;
+  padding: 0 12px;
   border: 1px solid var(--dz-line-strong);
   border-radius: 0;
   background: var(--dz-bg);
@@ -429,10 +619,18 @@
   border-color: var(--dz-danger);
   color: var(--dz-danger);
 }
+[data-design='showroom'] .ec-account .acc-icon-btn-txt {
+  display: inline;
+  font-family: var(--dz-mono);
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: .14em;
+  text-transform: uppercase;
+}
 
 [data-design='showroom'] .ec-account .acc-tele {
   font-family: var(--dz-mono);
-  font-size: 9px;
+  font-size: 9.5px;
   font-weight: 600;
   letter-spacing: .2em;
   text-transform: uppercase;
@@ -464,11 +662,22 @@
   background: var(--dz-bg);
   color: var(--dz-ink-2);
   font-family: var(--dz-mono);
-  font-size: 10.5px;
+  font-size: 11px;
   font-weight: 600;
   letter-spacing: .1em;
   text-transform: uppercase;
 }
+/* El icono del tab nace oculto (solo lo enciende la piel): en showroom
+   acompaña al índice numerado — mismo orden que la nav del sidebar. */
+[data-design='showroom'] .ec-account .acc-tab-ico {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: none;
+  color: var(--dz-muted);
+}
+[data-design='showroom'] .ec-account .acc-tab:hover .acc-tab-ico { color: var(--dz-ink); }
+[data-design='showroom'] .ec-account .acc-tab.is-on .acc-tab-ico { color: var(--dz-accent-ink); }
 [data-design='showroom'] .ec-account .acc-tab:hover {
   border-color: var(--dz-ink);
   color: var(--dz-ink);
@@ -488,19 +697,33 @@
 [data-design='showroom'] .ec-account .acc-panel,
 [data-design='showroom'] .ec-account .acc-gate-card,
 [data-design='showroom'] .ec-account .acc-auth-card {
-  padding: 18px;
+  padding: 20px;
   border: 1px solid var(--dz-ink);
   border-radius: 0;
   background: var(--dz-bg);
   box-shadow: none;
 }
+/* Las tarjetas de gate/verificación llevan el filete de 3px de la ficha. */
+[data-design='showroom'] .ec-account :is(.acc-gate-card, .acc-auth-card) { border-top-width: 3px; }
 [data-design='showroom'] .ec-account .acc-panel-head {
   padding-bottom: 12px;
   border-bottom: 1px solid var(--dz-ink);
 }
+[data-design='showroom'] .ec-account .acc-panel-headtxt { gap: 5px; }
+/* Kicker de sección ("01 · Pedidos"…) — nace display:none en los paneles
+   compartidos; showroom lo muestra como metadato mono. */
+[data-design='showroom'] .ec-account .acc-panel-kicker {
+  display: block;
+  font-family: var(--dz-mono);
+  font-size: 9.5px;
+  font-weight: 600;
+  letter-spacing: .18em;
+  text-transform: uppercase;
+  color: var(--dz-muted);
+}
 [data-design='showroom'] .ec-account .acc-panel-title {
   font-family: var(--dz-display);
-  font-size: 18px;
+  font-size: 19px;
   font-weight: 700;
   letter-spacing: .06em;
   text-transform: uppercase;
@@ -508,7 +731,7 @@
 }
 [data-design='showroom'] .ec-account .acc-panel-sub {
   font-family: var(--dz-mono);
-  font-size: 11px;
+  font-size: 11.5px;
   line-height: 1.5;
   letter-spacing: .01em;
   color: var(--dz-muted);
@@ -538,7 +761,7 @@
 [data-design='showroom'] .ec-account .acc-gate-sub,
 [data-design='showroom'] .ec-account .acc-auth-msg {
   font-family: var(--dz-body);
-  font-size: 13px;
+  font-size: 13.5px;
   line-height: 1.6;
   color: var(--dz-ink-2);
 }
@@ -553,12 +776,83 @@
   padding: 9px 0;
   border-bottom: 1px solid var(--dz-line);
   font-family: var(--dz-mono);
-  font-size: 11px;
+  font-size: 11.5px;
   font-weight: 500;
   color: var(--dz-ink-2);
 }
 [data-design='showroom'] .ec-account .acc-gate-list li:last-child { border-bottom: 0; }
 [data-design='showroom'] .ec-account .acc-gate-list svg { color: var(--dz-ink); }
+/* Numeración del gate ("01 Pedidos…") — nace oculta en el componente. */
+[data-design='showroom'] .ec-account .acc-gate-num {
+  display: inline-block;
+  flex: none;
+  min-width: 20px;
+  font-family: var(--dz-mono);
+  font-size: 9.5px;
+  font-weight: 700;
+  letter-spacing: .06em;
+  color: var(--dz-muted);
+}
+
+/* Header compacto: kicker + saludo editorial en vez del nombre plano
+   (los <strong>/<small> quedan ocultos como en el arquetipo stack). */
+[data-design='showroom'] .ec-account .acc-kicker {
+  display: block;
+  font-family: var(--dz-mono);
+  font-size: 9px;
+  font-weight: 600;
+  letter-spacing: .16em;
+  text-transform: uppercase;
+  color: var(--dz-muted);
+}
+[data-design='showroom'] .ec-account .acc-greet {
+  display: block;
+  margin: 0;
+  font-family: var(--dz-display);
+  font-size: 19px;
+  font-weight: 700;
+  letter-spacing: .04em;
+  text-transform: uppercase;
+  color: var(--dz-ink);
+}
+[data-design='showroom'] .ec-account .acc-greet em { font-style: normal; }
+[data-design='showroom'] .ec-account .acc-mhead-meta > strong,
+[data-design='showroom'] .ec-account .acc-mhead-meta > small:not(.acc-verify-note) { display: none; }
+/* Telemetría real del comprador (pedidos/suscripción/direcciones): chips
+   cuadrados de catálogo. */
+[data-design='showroom'] .ec-account .acc-stats {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin: 8px 0 0;
+  padding: 0;
+  list-style: none;
+}
+[data-design='showroom'] .ec-account .acc-stat {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 9px;
+  border: 1px solid var(--dz-line-strong);
+  background: var(--dz-bg);
+  font-family: var(--dz-mono);
+  font-size: 9px;
+  font-weight: 600;
+  letter-spacing: .1em;
+  text-transform: uppercase;
+  color: var(--dz-ink-2);
+}
+[data-design='showroom'] .ec-account .acc-stat svg { flex: none; color: var(--dz-muted); }
+/* Badge de verificación del correo: chip cuadrado mono. */
+[data-design='showroom'] .ec-account .acc-verify {
+  border-radius: 0;
+  font-family: var(--dz-mono);
+  font-size: 9px;
+  font-weight: 600;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+}
+[data-design='showroom'] .ec-account .acc-verify-note { display: block; }
 [data-design='showroom'] .ec-account .acc-gate-link,
 [data-design='showroom'] .ec-account .acc-auth-link {
   display: inline-flex;
@@ -617,21 +911,28 @@
   border-radius: 0;
   background: var(--dz-bg);
 }
-[data-design='showroom'] .ec-account :is(.acc-order-code, .acc-order-meta, .acc-order-total, .acc-idx, .acc-hint, .acc-addr-body small) {
+[data-design='showroom'] .ec-account :is(.acc-order-code, .acc-order-meta, .acc-order-total, .acc-order-idx, .acc-idx, .acc-hint, .acc-addr-body small) {
   font-family: var(--dz-mono);
 }
 [data-design='showroom'] .ec-account .acc-order-code {
-  font-size: 12.5px;
+  font-size: 13px;
   font-weight: 700;
   letter-spacing: .06em;
   text-transform: uppercase;
+}
+[data-design='showroom'] .ec-account .acc-order-idx {
+  font-size: 9.5px;
+  font-weight: 600;
+  letter-spacing: .1em;
+  text-transform: uppercase;
+  color: var(--dz-muted);
 }
 [data-design='showroom'] .ec-account .acc-order-total { font-variant-numeric: tabular-nums; }
 [data-design='showroom'] .ec-account .acc-order-foot { border-top: 1px solid var(--dz-line-strong); }
 [data-design='showroom'] .ec-account .acc-status {
   border-radius: 0;
   font-family: var(--dz-mono);
-  font-size: 9.5px;
+  font-size: 10px;
   font-weight: 700;
   letter-spacing: .1em;
   text-transform: uppercase;
@@ -713,6 +1014,22 @@
   font-family: var(--dz-mono);
   font-size: 11px;
 }
+/* Estados vacíos: badge cuadrado fileteado + título en versalitas. */
+[data-design='showroom'] .ec-account .acc-empty-ico {
+  width: 54px;
+  height: 54px;
+  border-radius: 0;
+  border: 1px solid var(--dz-ink);
+  background: var(--dz-surface);
+  color: var(--dz-ink);
+}
+[data-design='showroom'] .ec-account .acc-empty-title {
+  font-family: var(--dz-display);
+  font-size: 16px;
+  font-weight: 700;
+  letter-spacing: .05em;
+  text-transform: uppercase;
+}
 [data-design='showroom'] .ec-account :is(.acc-panel, .acc-gate-card, .acc-auth-card, .acc-side) :focus-visible {
   outline: 2px solid var(--dz-ink);
   outline-offset: 2px;
@@ -742,14 +1059,14 @@
   [data-design='showroom'] .ec-account .acc-id .acc-tele { width: 100%; }
   [data-design='showroom'] .ec-account .acc-id-name {
     font-family: var(--dz-display);
-    font-size: 13px;
+    font-size: 14px;
     font-weight: 700;
     letter-spacing: .06em;
     text-transform: uppercase;
   }
   [data-design='showroom'] .ec-account .acc-id-email {
     font-family: var(--dz-mono);
-    font-size: 10.5px;
+    font-size: 11px;
     color: var(--dz-muted);
   }
   [data-design='showroom'] .ec-account .acc-nav { gap: 0; }
@@ -763,7 +1080,7 @@
     background: transparent;
     color: var(--dz-ink-2);
     font-family: var(--dz-mono);
-    font-size: 11px;
+    font-size: 11.5px;
     font-weight: 600;
     letter-spacing: .1em;
     text-transform: uppercase;
@@ -780,7 +1097,7 @@
   }
   [data-design='showroom'] .ec-account .acc-navitem svg { color: var(--dz-muted); }
   [data-design='showroom'] .ec-account .acc-navitem.is-on svg { color: var(--dz-accent-ink); }
-  [data-design='showroom'] .ec-account .acc-idx {
+  [data-design='showroom'] .ec-account .acc-navitem .acc-idx {
     margin-left: auto;
     font-family: var(--dz-mono);
     font-size: 9.5px;
@@ -795,7 +1112,7 @@
     border-radius: 0;
     color: var(--dz-ink-2);
     font-family: var(--dz-mono);
-    font-size: 10.5px;
+    font-size: 11px;
     font-weight: 600;
     letter-spacing: .12em;
     text-transform: uppercase;
@@ -851,10 +1168,11 @@
   [data-design='showroom'] .ec-auth .ec-auth-head { padding: 16px 14px 14px; }
   [data-design='showroom'] .ec-auth .ec-auth-back { padding: 11px 14px; }
   [data-design='showroom'] .ec-auth .ecaf { padding: 16px 14px 22px; }
+  [data-design='showroom'] .ec-auth-card .ecaf { padding: 15px 14px 18px; }
   [data-design='showroom'] .ec-auth .ec-auth-title { font-size: clamp(24px, 8vw, 32px); }
   [data-design='showroom'] .ec-auth .ec-auth-brand-copy { padding: 14px; }
   [data-design='showroom'] .ec-auth .ec-auth-brand-top { padding: 11px 14px; }
-  [data-design='showroom'] .ec-auth .ecaf .sp-input { font-size: 16px; }
+  [data-design='showroom'] :is(.ec-auth, .ec-auth-card) .ecaf .sp-input { font-size: 16px; }
   [data-design='showroom'] .ec-account .acc-panel { padding: 14px; }
   [data-design='showroom'] .ec-account .acc-gate-card,
   [data-design='showroom'] .ec-account .acc-auth-card { padding: 20px 15px; }
@@ -863,14 +1181,14 @@
 @media (max-width: 390px) {
   [data-design='showroom'] .ec-auth .ec-auth-title { font-size: 24px; letter-spacing: 0; }
   [data-design='showroom'] .ec-auth .ec-auth-brand-name { font-size: 12.5px; letter-spacing: .08em; }
-  [data-design='showroom'] .ec-auth .ecaf .sp-field-label { font-size: 9px; letter-spacing: .14em; }
+  [data-design='showroom'] :is(.ec-auth, .ec-auth-card) .ecaf .sp-field-label { font-size: 9px; letter-spacing: .14em; }
   [data-design='showroom'] .ec-account .acc-tab { font-size: 9.5px; padding: 8px 9px; }
   [data-design='showroom'] .ec-account .acc-gate-list { padding: 0 10px; }
   [data-design='showroom'] .ec-account .acc-gate-list li { font-size: 10.5px; }
 }
 
 @media (prefers-reduced-motion: reduce) {
-  [data-design='showroom'] .ec-auth .ecaf-submit { transition: none; }
+  [data-design='showroom'] :is(.ec-auth, .ec-auth-card) .ecaf-submit { transition: none; }
 }
 
 /* ==========================================================================
@@ -1063,13 +1381,15 @@
   display: block;
   margin: 0;
   font-family: var(--dz-display);
-  font-size: clamp(20px, 2.6vw, 26px);
+  font-size: clamp(21px, 2.8vw, 28px);
   font-weight: 800;
-  letter-spacing: -.01em;
+  letter-spacing: .02em;
+  text-transform: uppercase;
   color: var(--dz-ink);
 }
 .store-page[data-design='showroom'][data-account='account-stack'] .ec-account .acc-mhead-meta strong,
 .store-page[data-design='showroom'][data-account='account-stack'] .ec-account .acc-mhead-meta small{ display: none; }
+.store-page[data-design='showroom'][data-account='account-stack'] .ec-account .acc-mhead-meta .acc-verify-note{ display: block; }
 /* Fila de chips = la navegación (los tabs con índice mono). */
 .store-page[data-design='showroom'][data-account='account-stack'] .ec-account .acc-tabs{
   gap: 0;
@@ -1089,7 +1409,7 @@
   border-radius: 0;
   background: transparent;
   font-family: var(--dz-mono);
-  font-size: 10.5px;
+  font-size: 11px;
   font-weight: 600;
   letter-spacing: .14em;
   text-transform: uppercase;
@@ -1104,7 +1424,7 @@
   background: var(--dz-ink);
   color: var(--dz-accent-ink);
 }
-.store-page[data-design='showroom'][data-account='account-stack'] .ec-account .acc-tab .acc-idx{ font-family: var(--dz-mono); font-size: 9px; color: var(--dz-muted); }
+.store-page[data-design='showroom'][data-account='account-stack'] .ec-account .acc-tab .acc-idx{ font-family: var(--dz-mono); font-size: 9.5px; color: var(--dz-muted); }
 .store-page[data-design='showroom'][data-account='account-stack'] .ec-account .acc-tab.is-on .acc-idx{ color: color-mix(in srgb, var(--dz-accent-ink) 60%, transparent); }
 .store-page[data-design='showroom'][data-account='account-stack'] .ec-account .acc-icon-btn{
   border-radius: 0;
@@ -1130,8 +1450,75 @@
   }
   .store-page[data-design='showroom'][data-account='account-stack'] .ec-account .acc-body{ padding: 14px; }
 }
-@media (max-width: 640px){
-  .store-page[data-design='showroom'][data-account='account-stack'] .ec-account .acc-tab{ padding: 10px 10px; font-size: 9.5px; letter-spacing: .08em; }
+/* Móvil: la tira horizontal de tabs numerados se convierte en menú
+   vertical — filas de ancho completo (~50px de tap target), icono +
+   etiqueta a la izquierda e índice a la derecha, activo = placa de tinta
+   con marca lateral. Cubre el arquetipo account-stack y el contexto
+   genérico .ec-account por igual. */
+@media (max-width: 768px){
+  .store-page[data-design='showroom'][data-account='account-stack'] .ec-account .acc-tabs,
+  [data-design='showroom'] .ec-account .acc-tabs{
+    flex-direction: column;
+    gap: 0;
+    padding: 0;
+    overflow: visible;
+    border: 1px solid var(--dz-line-strong);
+    border-radius: 0;
+    background: var(--dz-surface);
+  }
+  .store-page[data-design='showroom'][data-account='account-stack'] .ec-account .acc-tabs-ink,
+  [data-design='showroom'] .ec-account .acc-tabs-ink{ display: none; }
+  .store-page[data-design='showroom'][data-account='account-stack'] .ec-account .acc-tab,
+  [data-design='showroom'] .ec-account .acc-tab{
+    justify-content: flex-start;
+    gap: 12px;
+    width: 100%;
+    min-height: 50px;
+    padding: 13px 16px;
+    border: 0;
+    border-bottom: 1px solid var(--dz-line);
+    border-radius: 0;
+    background: transparent;
+    text-align: left;
+    font-size: 11.5px;
+    letter-spacing: .1em;
+  }
+  .store-page[data-design='showroom'][data-account='account-stack'] .ec-account .acc-tab:last-child,
+  [data-design='showroom'] .ec-account .acc-tab:last-child{ border-bottom: 0; }
+  .store-page[data-design='showroom'][data-account='account-stack'] .ec-account .acc-tab .acc-tab-ico,
+  [data-design='showroom'] .ec-account .acc-tab .acc-tab-ico{
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex: none;
+    width: 20px;
+    color: var(--dz-muted);
+  }
+  .store-page[data-design='showroom'][data-account='account-stack'] .ec-account .acc-tab .acc-idx,
+  [data-design='showroom'] .ec-account .acc-tab .acc-idx{
+    order: 3;
+    margin-left: auto;
+    font-size: 9.5px;
+    font-variant-numeric: tabular-nums;
+  }
+  .store-page[data-design='showroom'][data-account='account-stack'] .ec-account .acc-tab:hover,
+  [data-design='showroom'] .ec-account .acc-tab:hover{
+    background: var(--dz-bg);
+    color: var(--dz-ink);
+  }
+  .store-page[data-design='showroom'][data-account='account-stack'] .ec-account .acc-tab.is-on,
+  [data-design='showroom'] .ec-account .acc-tab.is-on{
+    background: var(--dz-ink);
+    border-bottom-color: var(--dz-ink);
+    color: var(--dz-accent-ink);
+    box-shadow: inset 3px 0 0 var(--dz-accent-ink);
+  }
+  .store-page[data-design='showroom'][data-account='account-stack'] .ec-account .acc-tab.is-on .acc-tab-ico,
+  [data-design='showroom'] .ec-account .acc-tab.is-on .acc-tab-ico{ color: var(--dz-accent-ink); }
+  .store-page[data-design='showroom'][data-account='account-stack'] .ec-account .acc-tab.is-on .acc-idx,
+  [data-design='showroom'] .ec-account .acc-tab.is-on .acc-idx{
+    color: color-mix(in srgb, var(--dz-accent-ink) 62%, transparent);
+  }
 }
 
 /* ==========================================================================
@@ -1151,7 +1538,7 @@
 }
 .store-page[data-design='showroom'][data-tracking='tracking-ticket'] .ec-track-code{
   font-family: var(--dz-mono);
-  font-size: 11px;
+  font-size: 11.5px;
   font-weight: 600;
   letter-spacing: .14em;
   text-transform: uppercase;
@@ -1194,7 +1581,7 @@
 }
 .store-page[data-design='showroom'][data-tracking='tracking-ticket'] .ec-track-status{
   font-family: var(--dz-mono);
-  font-size: 10px;
+  font-size: 10.5px;
   font-weight: 700;
   letter-spacing: .16em;
   text-transform: uppercase;
@@ -1257,7 +1644,7 @@
 }
 .store-page[data-design='showroom'][data-tracking='tracking-ticket'] .ec-step-label{
   font-family: var(--dz-mono);
-  font-size: 9px;
+  font-size: 9.5px;
   font-weight: 600;
   letter-spacing: .1em;
   text-transform: uppercase;
@@ -1265,7 +1652,7 @@
 }
 .store-page[data-design='showroom'][data-tracking='tracking-ticket'] .ec-track-step-date{
   font-family: var(--dz-mono);
-  font-size: 9px;
+  font-size: 9.5px;
   letter-spacing: .06em;
 }
 .store-page[data-design='showroom'][data-tracking='tracking-ticket'] .ec-track-chips{
@@ -1277,7 +1664,7 @@
   border-radius: 0;
   background: transparent;
   font-family: var(--dz-mono);
-  font-size: 10px;
+  font-size: 10.5px;
   font-weight: 600;
   letter-spacing: .1em;
   text-transform: uppercase;
@@ -1285,7 +1672,7 @@
 }
 .store-page[data-design='showroom'][data-tracking='tracking-ticket'] .ec-track-h2{
   font-family: var(--dz-display);
-  font-size: 15px;
+  font-size: 16px;
   font-weight: 800;
   letter-spacing: .06em;
   text-transform: uppercase;
@@ -1310,14 +1697,14 @@
 }
 .store-page[data-design='showroom'][data-tracking='tracking-ticket'] .ec-timeline strong{
   font-family: var(--dz-mono);
-  font-size: 11px;
+  font-size: 11.5px;
   font-weight: 700;
   letter-spacing: .08em;
   text-transform: uppercase;
 }
 .store-page[data-design='showroom'][data-tracking='tracking-ticket'] .ec-timeline small{
   font-family: var(--dz-mono);
-  font-size: 10px;
+  font-size: 10.5px;
   letter-spacing: .04em;
 }
 .store-page[data-design='showroom'][data-tracking='tracking-ticket'] .ec-receipt{
@@ -1357,7 +1744,7 @@
 .store-page[data-design='showroom'][data-tracking='tracking-ticket'] .ec-track-legal{
   border-top: 1px dashed var(--dz-line-strong);
   font-family: var(--dz-mono);
-  font-size: 10.5px;
+  font-size: 11px;
   letter-spacing: .04em;
 }
 .store-page[data-design='showroom'][data-tracking='tracking-ticket'] :is(.ec-track-card, .ec-track-help, .ec-btn-primary, .ec-btn-ghost, .ec-track-receipt-btn, .ec-proof-drop, .ec-track-help-summary, .ec-track-legal a, .ec-track-receipt-link):focus-visible{
