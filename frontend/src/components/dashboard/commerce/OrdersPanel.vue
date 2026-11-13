@@ -304,7 +304,7 @@ function eventLabel(ev) {
     <template v-else>
       <div class="card">
         <div class="toolbar">
-          <select v-model="statusFilter" class="select" style="max-width: 220px">
+          <select v-model="statusFilter" class="select" style="max-width: 220px" aria-label="Filtrar por estado">
             <option value="">Todos los estados</option>
             <option v-for="s in ORDER_STATUSES" :key="s" :value="s">{{ ORDER_STATUS[s].label }}</option>
           </select>
@@ -333,12 +333,14 @@ function eventLabel(ev) {
               </tr>
             </thead>
             <tbody>
-              <tr v-for="o in rows" :key="o.id" class="clickable" @click="openDetail(o.id)">
+              <tr v-for="o in rows" :key="o.id" class="clickable" tabindex="0" @click="openDetail(o.id)" @keydown.enter.prevent="openDetail(o.id)">
                 <td data-label="Pedido"><strong class="mono">{{ o.code || `#${o.number}` }}</strong></td>
                 <td data-label="Fecha">{{ fmtDate(o.created_at) }}</td>
                 <td data-label="Cliente">
-                  <div>{{ o.customer_name || [o.customer_first_name, o.customer_last_name].filter(Boolean).join(' ') || '—' }}</div>
-                  <div class="hint">{{ o.customer_email }}</div>
+                  <div class="ord-client">
+                    <div>{{ o.customer_name || [o.customer_first_name, o.customer_last_name].filter(Boolean).join(' ') || '—' }}</div>
+                    <div class="hint">{{ o.customer_email }}</div>
+                  </div>
                 </td>
                 <td data-label="Pago">{{ PAYMENT_METHODS[o.payment_method]?.label || o.payment_method || '—' }}</td>
                 <td data-label="Envío">{{ SHIPPING_METHODS[o.shipping_method]?.label || o.shipping_method || '—' }}</td>
@@ -350,9 +352,9 @@ function eventLabel(ev) {
         </div>
 
         <div v-if="hasPrev || hasNext" class="toolbar" style="justify-content: flex-end; margin: 10px 0 0">
-          <button type="button" class="btn ghost btn-auto" :disabled="!hasPrev || loading" @click="load(page - 1)">← Anterior</button>
+          <button type="button" class="btn ghost btn-auto" :disabled="!hasPrev || loading" @click="load(page - 1)"><AppIcon name="chevron-left" :size="14" /> Anterior</button>
           <span class="hint">Página {{ page }}</span>
-          <button type="button" class="btn ghost btn-auto" :disabled="!hasNext || loading" @click="load(page + 1)">Siguiente →</button>
+          <button type="button" class="btn ghost btn-auto" :disabled="!hasNext || loading" @click="load(page + 1)">Siguiente <AppIcon name="chevron-right" :size="14" /></button>
         </div>
       </div>
     </template>
@@ -399,7 +401,7 @@ function eventLabel(ev) {
                     <span class="field-label">Motivo (opcional)</span>
                     <input v-model="cancelReason" class="input" placeholder="Ej: el cliente se arrepintió" maxlength="300" />
                   </label>
-                  <button type="button" class="btn danger btn-auto" :disabled="actionBusy === 'cancel'" @click="doCancel">Cancelar pedido</button>
+                  <button type="button" class="btn danger btn-auto" :disabled="actionBusy === 'cancel'" @click="doCancel">Sí, cancelar</button>
                   <button type="button" class="btn ghost btn-auto" @click="showCancelForm = false">Volver</button>
                 </div>
 
@@ -417,7 +419,7 @@ function eventLabel(ev) {
                   <template v-if="!shipForm.generate">
                     <label class="field">
                       <span class="field-label">Correo</span>
-                      <select v-model="shipForm.carrier" class="input">
+                      <select v-model="shipForm.carrier" class="select">
                         <option v-for="c in CARRIERS" :key="c.id" :value="c.id">{{ c.label }}</option>
                       </select>
                     </label>
@@ -558,13 +560,32 @@ function eventLabel(ev) {
 .dsg-confirm { z-index: 130; }
 .pf-actions { display: flex; gap: 10px; flex-wrap: wrap; align-items: flex-end; }
 .pf-actions .field { margin: 0; }
+.pf-actions .input { flex: 1 1 auto; min-width: 0; }
+/* Formularios inline del drawer (envío): campos apilados con aire parejo. */
+.pf-form { display: grid; gap: 12px; }
+.pf-form .field { margin: 0; }
+.chk { display: flex; align-items: flex-start; gap: 9px; font-size: 13.5px; line-height: 1.4; color: var(--ink-2); cursor: pointer; }
+.chk input { flex: none; margin: 2px 0 0; accent-color: var(--brand-500); }
+/* Cabecera del drawer: código largo con ellipsis, pill debajo. */
+.pf-drawer-head > div { min-width: 0; display: grid; gap: 6px; justify-items: start; }
+.pf-drawer-head h3 { max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .ord-items { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; }
 .ord-items li { display: flex; justify-content: space-between; gap: 10px; align-items: baseline; }
+.ord-items li > div { min-width: 0; }
+.ord-items li > .mono { flex: none; }
 .ord-events { list-style: none; margin: 0; padding: 0; display: grid; gap: 10px; }
 .ord-events li { display: flex; gap: 10px; align-items: flex-start; }
 .ord-event-dot { flex: none; width: 9px; height: 9px; border-radius: 50%; background: var(--brand-500); margin-top: 5px; }
 .ord-event-note { display: block; font-size: 13px; color: var(--ink-2); white-space: pre-line; }
 .clickable { cursor: pointer; }
+tr.clickable:focus-visible { outline: 2px solid var(--brand-500); outline-offset: -2px; }
 .hint { font-size: 12.5px; color: var(--muted); }
 .field-label { font-size: 12.5px; font-weight: 600; color: var(--ink-2); display: block; margin-bottom: 5px; }
+.ord-client { min-width: 0; overflow-wrap: anywhere; }
+/* Móvil: acciones del drawer a ancho completo y celdas apiladas prolijas. */
+@media (max-width: 640px) {
+  .pf-actions .btn { flex: 1 1 100%; justify-content: center; }
+  .pf-actions .field { flex: 1 1 100%; }
+  .ord-client { text-align: right; }
+}
 </style>

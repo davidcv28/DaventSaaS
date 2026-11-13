@@ -347,11 +347,11 @@ const mpWebhooksOk = computed(() => Boolean(mpStatus.value?.webhook_configured))
       <!-- ===== Venta online ===== -->
       <section class="card">
         <h3><AppIcon name="package" :size="18" /> Venta online</h3>
-        <label class="svc-switch">
-          <input type="checkbox" role="switch" :checked="ecomEnabled" :disabled="ecomBusy || !ecomAllowed" @change="toggleEcommerce($event.target.checked)" />
+        <label class="svc-switch" :class="{ disabled: ecomBusy || !ecomAllowed }">
+          <input type="checkbox" role="switch" :checked="ecomEnabled" :aria-checked="ecomEnabled" :disabled="ecomBusy || !ecomAllowed" @change="toggleEcommerce($event.target.checked)" />
           <span class="svc-switch-track" aria-hidden="true"><i></i></span>
           <span class="check-text">
-            <strong>Venta online</strong>
+            <strong>Carrito y checkout en tu web</strong>
             <small>{{ ecomHint }}</small>
           </span>
         </label>
@@ -367,7 +367,7 @@ const mpWebhooksOk = computed(() => Boolean(mpStatus.value?.webhook_configured))
       <!-- ===== Métodos de cobro manuales ===== -->
       <section class="card" style="margin-top:14px">
         <h3><AppIcon name="wallet" :size="18" /> Métodos de cobro</h3>
-        <p class="hint" style="margin:-6px 0 12px">Cómo te pueden pagar en tu checkout. Al menos un método tiene que quedar activo.</p>
+        <p class="hint">Cómo te pueden pagar en tu checkout. Al menos un método tiene que quedar activo.</p>
         <div class="check-list">
           <label class="check-item">
             <input v-model="payForm.accept_transfer" type="checkbox" />
@@ -406,11 +406,11 @@ const mpWebhooksOk = computed(() => Boolean(mpStatus.value?.webhook_configured))
           </label>
           <label class="field">
             <span class="field-label">WhatsApp para cobrar</span>
-            <input v-model="payForm.whatsapp_number" class="input" maxlength="20" placeholder="Ej: +54911XXXXXXXX" />
+            <input v-model="payForm.whatsapp_number" type="tel" inputmode="tel" autocomplete="off" class="input" maxlength="20" placeholder="Ej: +54911XXXXXXXX" />
           </label>
           <label class="field">
             <span class="field-label">Plazo para pagar (horas)</span>
-            <input v-model.number="payForm.payment_deadline_hours" type="number" min="1" max="720" class="input" placeholder="Ej: 48" />
+            <input v-model.number="payForm.payment_deadline_hours" type="number" inputmode="numeric" min="1" max="720" class="input" placeholder="Ej: 48" />
             <small class="hint">Entre 1 y 720. Vacío = sin vencimiento especial.</small>
           </label>
         </div>
@@ -425,7 +425,7 @@ const mpWebhooksOk = computed(() => Boolean(mpStatus.value?.webhook_configured))
       <!-- ===== Envíos ===== -->
       <section class="card" style="margin-top:14px">
         <h3><AppIcon name="truck" :size="18" /> Envíos</h3>
-        <p class="hint" style="margin:-6px 0 12px">Cómo se cobra el envío a domicilio en tu checkout. El retiro en el local siempre es sin cargo.</p>
+        <p class="hint">Cómo se cobra el envío a domicilio en tu checkout. El retiro en el local siempre es sin cargo.</p>
         <div class="check-list">
           <label class="check-item">
             <input v-model="shipForm.mode" type="radio" value="coordinar" :disabled="shipBusy" />
@@ -438,7 +438,7 @@ const mpWebhooksOk = computed(() => Boolean(mpStatus.value?.webhook_configured))
         </div>
         <label v-if="shipForm.mode === 'fijo'" class="field" style="margin-top:12px;max-width:240px">
           <span class="field-label">Precio del envío a domicilio</span>
-          <input v-model.number="shipForm.home_price" type="number" min="0" step="0.01" class="input" placeholder="Ej: 1500" :disabled="shipBusy" />
+          <input v-model.number="shipForm.home_price" type="number" inputmode="decimal" min="0" step="0.01" class="input" placeholder="Ej: 1500" :disabled="shipBusy" />
           <small class="hint">En pesos argentinos. 0 = envío gratis.</small>
         </label>
         <div style="margin-top:16px;border-top:1px dashed var(--line,rgba(0,0,0,.12));padding-top:14px">
@@ -457,8 +457,8 @@ const mpWebhooksOk = computed(() => Boolean(mpStatus.value?.webhook_configured))
             <label class="field"><span class="field-label">Usuario Andreani</span><input v-model="shipCreds.usuario" class="input" maxlength="80" autocomplete="off" :placeholder="shipCredsConfigured ? '•••••• (guardado)' : ''" /></label>
             <label class="field"><span class="field-label">Contraseña</span><input v-model="shipCreds.password" type="password" class="input" maxlength="80" autocomplete="new-password" :placeholder="shipCredsConfigured ? '•••••• (guardada)' : ''" /></label>
             <label class="field"><span class="field-label">N° de contrato</span><input v-model="shipCreds.contrato" class="input" maxlength="40" :placeholder="shipCredsConfigured ? '•••••• (guardado)' : ''" /></label>
-            <label class="field"><span class="field-label">CP de origen (depósito)</span><input v-model="shipCreds.cp_origen" class="input" maxlength="8" placeholder="Ej: 1425" /></label>
-            <label class="field"><span class="field-label">Peso típico del bulto (kg)</span><input v-model="shipCreds.peso_kg" type="number" min="0" step="0.1" class="input" placeholder="1" /></label>
+            <label class="field"><span class="field-label">CP de origen (depósito)</span><input v-model="shipCreds.cp_origen" inputmode="numeric" class="input" maxlength="8" placeholder="Ej: 1425" /></label>
+            <label class="field"><span class="field-label">Peso típico del bulto (kg)</span><input v-model="shipCreds.peso_kg" type="number" inputmode="decimal" min="0" step="0.1" class="input" placeholder="1" /></label>
             <p class="hint" style="grid-column:1/-1;margin:0">Se guardan cifradas y nunca se muestran de vuelta — dejá los campos vacíos para conservar las actuales.</p>
           </div>
           <p v-else-if="shipForm.carrier === 'oca'" class="hint" style="margin:8px 0 0">OCA no genera por API todavía — al despachar, generá la etiqueta en tu panel OCA y pegá el código de seguimiento.</p>
@@ -473,7 +473,7 @@ const mpWebhooksOk = computed(() => Boolean(mpStatus.value?.webhook_configured))
       <!-- ===== Datos fiscales ===== -->
       <section class="card" style="margin-top:14px">
         <h3><AppIcon name="file-text" :size="18" /> Datos fiscales</h3>
-        <p class="hint" style="margin:-6px 0 12px">
+        <p class="hint">
           Necesarios para facturar y habilitar el checkout.
           <span v-if="fiscalMeta.is_complete" class="pill ok" style="margin-left:6px">Completos</span>
           <span v-else class="pill warn" style="margin-left:6px">Incompletos</span>
@@ -491,12 +491,12 @@ const mpWebhooksOk = computed(() => Boolean(mpStatus.value?.webhook_configured))
           </label>
           <label class="field">
             <span class="field-label">CUIT</span>
-            <input v-model="fiscalForm.cuit" class="input" maxlength="32" placeholder="Ej: 20-12345678-9" />
+            <input v-model="fiscalForm.cuit" inputmode="numeric" class="input" maxlength="32" placeholder="Ej: 20-12345678-9" />
             <small class="hint">Se valida el dígito verificador.</small>
           </label>
           <label class="field">
             <span class="field-label">Punto de venta</span>
-            <input v-model="fiscalForm.point_of_sale" class="input" maxlength="8" placeholder="Ej: 0001" />
+            <input v-model="fiscalForm.point_of_sale" inputmode="numeric" class="input" maxlength="8" placeholder="Ej: 0001" />
           </label>
           <label class="field" style="grid-column:1/-1">
             <span class="field-label">Domicilio fiscal</span>
@@ -523,13 +523,13 @@ const mpWebhooksOk = computed(() => Boolean(mpStatus.value?.webhook_configured))
         </div>
 
         <template v-if="!mpConnected">
-          <p class="hint" style="margin-bottom:10px">Pegá tus credenciales de Mercado Pago (Access Token de producción o de prueba). DAVENT las valida contra MP y las guarda cifradas — nunca se muestran de vuelta.</p>
+          <p class="hint">Pegá tus credenciales de Mercado Pago (Access Token de producción o de prueba). DAVENT las valida contra MP y las guarda cifradas — nunca se muestran de vuelta.</p>
           <div class="grid-2">
             <label class="field">
               <span class="field-label">Access Token</span>
               <div class="input-wrap">
                 <input v-model="mpForm.access_token" :type="mpShowToken ? 'text' : 'password'" class="input mono" autocomplete="off" placeholder="APP_USR-… o TEST-…" />
-                <button type="button" class="icon-btn" style="position:absolute;right:8px;top:50%;transform:translateY(-50%)" @click="mpShowToken = !mpShowToken">
+                <button type="button" class="icon-btn" :aria-label="mpShowToken ? 'Ocultar access token' : 'Mostrar access token'" style="position:absolute;right:8px;top:50%;transform:translateY(-50%)" @click="mpShowToken = !mpShowToken">
                   <AppIcon :name="mpShowToken ? 'eye-off' : 'eye'" :size="15" />
                 </button>
               </div>
@@ -542,7 +542,7 @@ const mpWebhooksOk = computed(() => Boolean(mpStatus.value?.webhook_configured))
               <span class="field-label">Webhook secret (opcional)</span>
               <input v-model="mpForm.webhook_secret" type="password" class="input mono" autocomplete="off" placeholder="Firma de tus notificaciones" />
             </label>
-            <label class="check-item" style="align-self:end">
+            <label class="check-item" style="grid-column:1/-1">
               <input v-model="mpForm.live_mode" type="checkbox" />
               <span class="check-text"><strong>Modo producción</strong><small>Destildalo para probar con credenciales TEST.</small></span>
             </label>
@@ -560,7 +560,7 @@ const mpWebhooksOk = computed(() => Boolean(mpStatus.value?.webhook_configured))
       <!-- ===== Storage propio (R2) ===== -->
       <section class="card" style="margin-top:14px">
         <h3><AppIcon name="image" :size="18" /> Fotos y archivos en tu propio storage</h3>
-        <p class="hint" style="margin:-6px 0 12px">
+        <p class="hint">
           Opcional: usá tu bucket de Cloudflare R2 (compatible S3) para guardar las imágenes de tu tienda.
           <span v-if="storageMeta.is_configured" class="pill ok" style="margin-left:6px">Configurado</span>
           <span v-else class="pill muted" style="margin-left:6px">Sin configurar</span>
@@ -570,7 +570,7 @@ const mpWebhooksOk = computed(() => Boolean(mpStatus.value?.webhook_configured))
         <div class="grid-2">
           <label class="field">
             <span class="field-label">Endpoint</span>
-            <input v-model="storageForm.endpoint" class="input mono" maxlength="300" placeholder="https://&lt;account&gt;.r2.cloudflarestorage.com" />
+            <input v-model="storageForm.endpoint" type="url" inputmode="url" autocomplete="off" class="input mono" maxlength="300" placeholder="https://&lt;account&gt;.r2.cloudflarestorage.com" />
           </label>
           <label class="field">
             <span class="field-label">Bucket</span>
@@ -582,7 +582,7 @@ const mpWebhooksOk = computed(() => Boolean(mpStatus.value?.webhook_configured))
           </label>
           <label class="field">
             <span class="field-label">URL pública base</span>
-            <input v-model="storageForm.public_base_url" class="input mono" maxlength="500" placeholder="https://pub-&lt;hash&gt;.r2.dev" />
+            <input v-model="storageForm.public_base_url" type="url" inputmode="url" autocomplete="off" class="input mono" maxlength="500" placeholder="https://pub-&lt;hash&gt;.r2.dev" />
             <small class="hint">Dominio público del bucket. Sin esto las URLs se firman y vencen.</small>
           </label>
           <label class="field">
@@ -625,7 +625,14 @@ const mpWebhooksOk = computed(() => Boolean(mpStatus.value?.webhook_configured))
 <style scoped>
 .field-label { font-size: 12.5px; font-weight: 600; color: var(--ink-2); display: block; margin-bottom: 5px; }
 .hint { font-size: 12.5px; color: var(--muted); }
-.check-list { display: grid; gap: 4px; }
+/* El .hint que abre cada card queda pegado al título (los sueltos dentro de
+   grids/divs conservan su propio margen). */
+.card > .hint { margin: -6px 0 12px; }
+/* Switch de venta online bloqueado por plan o mientras guarda: que se note. */
+.svc-switch.disabled { opacity: .55; cursor: default; }
+/* .mono está pensado para código inline (letra + fondo + padding chico):
+   sobre .input dejaba los campos de credenciales diminutos y desalineados. */
+.input.mono { padding: 11px 14px; border-radius: var(--radius-sm); background: var(--card); }
 .input-wrap { position: relative; }
 .input-wrap .input { padding-right: 42px; }
 .storage-guide { border: 1px solid var(--line); border-radius: var(--radius-sm); padding: 14px 16px; background: var(--surface); }

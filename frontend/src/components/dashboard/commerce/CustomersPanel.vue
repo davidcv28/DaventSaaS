@@ -88,6 +88,9 @@ function membershipMetaOf(c) {
   const s = c?.membership_status
   return s ? statusMeta(MEMBERSHIP_STATUS, s) : null
 }
+function rowName(c) {
+  return [c?.first_name, c?.last_name].filter(Boolean).join(' ') || c?.email || 'Cliente'
+}
 </script>
 
 <template>
@@ -104,14 +107,14 @@ function membershipMetaOf(c) {
     <template v-else>
       <div class="card">
         <div class="toolbar">
-          <input v-model="q" class="input" style="flex: 1 1 220px" placeholder="Buscar por nombre, apellido o email…" />
-          <select v-model="membership" class="select" style="max-width: 200px">
+          <input v-model="q" class="input" type="search" aria-label="Buscar clientes" placeholder="Buscar por nombre, apellido o email…" />
+          <select v-model="membership" class="select" aria-label="Filtrar por membresía">
             <option value="">Toda membresía</option>
             <option value="active">Miembros activos</option>
             <option value="suspended">Suspendidos</option>
             <option value="none">Solo compradores</option>
           </select>
-          <select v-model="ordering" class="select" style="max-width: 210px">
+          <select v-model="ordering" class="select" aria-label="Ordenar clientes">
             <option value="-last_order_at">Última compra</option>
             <option value="-total_spent">Mayor gasto</option>
             <option value="-orders_count">Más pedidos</option>
@@ -138,19 +141,28 @@ function membershipMetaOf(c) {
               </tr>
             </thead>
             <tbody>
-              <tr v-for="c in rows" :key="c.id" class="clickable" @click="openDetail(c.id)">
+              <tr v-for="c in rows" :key="c.id" class="clickable" tabindex="0"
+                  :aria-label="`Ver detalle de ${rowName(c)}`"
+                  @click="openDetail(c.id)"
+                  @keydown.enter.prevent="openDetail(c.id)" @keydown.space.prevent="openDetail(c.id)">
                 <td data-label="Cliente">
-                  <div><strong>{{ [c.first_name, c.last_name].filter(Boolean).join(' ') || c.email || '—' }}</strong></div>
-                  <div v-if="c.is_active === false" class="hint">Cuenta inactiva</div>
+                  <div class="cell">
+                    <div><strong>{{ rowName(c) }}</strong></div>
+                    <div v-if="c.is_active === false" class="hint">Cuenta inactiva</div>
+                  </div>
                 </td>
                 <td data-label="Contacto">
-                  <div>{{ c.email }}</div>
-                  <div v-if="c.phone" class="hint">{{ c.phone }}</div>
+                  <div class="cell">
+                    <div>{{ c.email }}</div>
+                    <div v-if="c.phone" class="hint">{{ c.phone }}</div>
+                  </div>
                 </td>
                 <td data-label="Membresía">
-                  <span v-if="membershipMetaOf(c)" class="pill" :class="membershipMetaOf(c).kind">{{ membershipMetaOf(c).label }}</span>
-                  <span v-else class="hint">—</span>
-                  <div v-if="c.plan_name" class="hint">{{ c.plan_name }}</div>
+                  <div class="cell">
+                    <span v-if="membershipMetaOf(c)" class="pill" :class="membershipMetaOf(c).kind">{{ membershipMetaOf(c).label }}</span>
+                    <span v-else class="hint">—</span>
+                    <div v-if="c.plan_name" class="hint">{{ c.plan_name }}</div>
+                  </div>
                 </td>
                 <td data-label="Pedidos">{{ c.orders_count }}</td>
                 <td data-label="Total gastado"><strong>{{ money(c.total_spent) }}</strong></td>
@@ -160,7 +172,7 @@ function membershipMetaOf(c) {
           </table>
         </div>
 
-        <div v-if="hasPrev || hasNext" class="toolbar" style="justify-content: flex-end; margin: 10px 0 0">
+        <div v-if="hasPrev || hasNext" class="pager">
           <button type="button" class="btn ghost btn-auto" :disabled="!hasPrev || loading" @click="load(page - 1)">← Anterior</button>
           <span class="hint">Página {{ page }}</span>
           <button type="button" class="btn ghost btn-auto" :disabled="!hasNext || loading" @click="load(page + 1)">Siguiente →</button>
@@ -176,7 +188,7 @@ function membershipMetaOf(c) {
             <div class="pf-drawer-head">
               <div>
                 <h3>{{ customerName }}</h3>
-                <span v-if="membershipMeta" class="pill" :class="membershipMeta.kind" style="margin-top:4px;display:inline-flex">{{ membershipMeta.label }}</span>
+                <span v-if="membershipMeta" class="pill" :class="membershipMeta.kind">{{ membershipMeta.label }}</span>
               </div>
               <button type="button" class="icon-btn" aria-label="Cerrar" @click="closeDetail"><AppIcon name="x" :size="16" /></button>
             </div>
@@ -195,7 +207,7 @@ function membershipMetaOf(c) {
                 </div>
               </section>
 
-              <section v-if="detail.membership" class="card" style="margin-top:14px">
+              <section v-if="detail.membership" class="card">
                 <h3>Membresía</h3>
                 <div class="kv">
                   <div><span>Estado</span><strong>{{ membershipMeta?.label || detail.membership.status }}</strong></div>
@@ -207,9 +219,9 @@ function membershipMetaOf(c) {
                 </div>
               </section>
 
-              <section class="card" style="margin-top:14px">
+              <section class="card">
                 <h3>Últimos pedidos</h3>
-                <div v-if="detail.last_orders?.length" class="table-wrap" style="border:none;box-shadow:none">
+                <div v-if="detail.last_orders?.length" class="table-wrap">
                   <table class="pay-table">
                     <thead><tr><th>Pedido</th><th>Fecha</th><th>Pago</th><th>Total</th><th>Estado</th></tr></thead>
                     <tbody>
@@ -234,7 +246,36 @@ function membershipMetaOf(c) {
 </template>
 
 <style scoped>
-.field-label { font-size: 12.5px; font-weight: 600; color: var(--ink-2); display: block; margin-bottom: 5px; }
 .hint { font-size: 12.5px; color: var(--muted); }
 .clickable { cursor: pointer; }
+.clickable:focus-visible { outline: 2px solid var(--brand-500); outline-offset: -2px; }
+
+/* Celdas compuestas: en el modo tarjeta (<=640px, styles.css) el <td> pasa a
+   flex con el data-label a la izquierda; agrupar el contenido en .cell deja
+   dos ítems (etiqueta | valor) en vez de repartir cada div por la fila. */
+.cell { min-width: 0; }
+.cell > * + * { margin-top: 2px; }
+
+/* Selects con chevron propio (mismo patrón que .acc-sec .select). Slate-500
+   se lee tanto en tema claro como oscuro, así vale un solo color. */
+.toolbar .select {
+  appearance: none;
+  -webkit-appearance: none;
+  padding-right: 38px;
+  background-image: url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='%2364748b' stroke-width='2.4' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 13px center;
+}
+
+.pager { display: flex; align-items: center; justify-content: flex-end; gap: 10px; flex-wrap: wrap; margin: 10px 0 0; }
+
+/* Drawer de detalle */
+.pf-drawer-head .pill { margin-top: 4px; }
+.pf-drawer-body .card + .card { margin-top: 14px; }
+.pf-drawer .table-wrap { border: 0; box-shadow: none; }
+/* La mini-tabla de pedidos vive en un drawer de 480px: sin min-width no
+   desborda y las fechas cortas entran sin scroll lateral. */
+.pf-drawer .pay-table { min-width: 0; }
+.pf-drawer .pay-table th,
+.pf-drawer .pay-table td { padding: 10px 12px; }
 </style>

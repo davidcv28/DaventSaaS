@@ -83,7 +83,7 @@ async function saveOAuth(clearSecret = false) {
 </script>
 
 <template>
-  <div>
+  <div class="custauth-panel">
     <AlertMessage v-if="errMsg" kind="error" :message="errMsg" />
 
     <div v-if="store.status === 'loading' && !store.hasStore" class="card"><div class="empty-mini"><p>Cargando tu tienda…</p></div></div>
@@ -98,42 +98,51 @@ async function saveOAuth(clearSecret = false) {
     <template v-else>
       <!-- ===== Cuentas de clientes ===== -->
       <section class="card">
-        <h3><AppIcon name="lucide:id-card" :size="18" /> Cuentas de clientes</h3>
-        <p class="hint" style="margin:-6px 0 12px">
-          Con el plan Ecommerce tus compradores se registran e ingresan en tu web: ven sus pedidos, membresías y datos desde su perfil.
-          <span v-if="customerAuthEnabled === true" class="pill ok" style="margin-left:6px">Activo</span>
-          <span v-else-if="customerAuthEnabled === false" class="pill warn" style="margin-left:6px">Desactivado</span>
-        </p>
-        <p v-if="customerAuthEnabled === false" class="hint" style="margin-bottom:12px">
+        <div class="panel-head">
+          <div>
+            <h3><AppIcon name="lucide:id-card" :size="18" /> Cuentas de clientes</h3>
+            <p class="hint">Con el plan Ecommerce tus compradores se registran e ingresan en tu web: ven sus pedidos, membresías y datos desde su perfil.</p>
+          </div>
+          <span v-if="customerAuthEnabled === true" class="pill ok">Activo</span>
+          <span v-else-if="customerAuthEnabled === false" class="pill warn">Desactivado</span>
+        </div>
+        <p v-if="customerAuthEnabled === false" class="hint off-note">
           El acceso de clientes está apagado: la entrada de cuenta no se muestra en tu web y «Ingresar»/«Mi cuenta» vuelven al inicio.
         </p>
-        <div v-if="authUrl" class="kv">
-          <div><span>Página de ingreso</span><strong class="mono">{{ authUrl }}</strong></div>
-        </div>
-        <div class="btn-row">
-          <a v-if="authUrl" class="btn ghost btn-auto" :href="authUrl" target="_blank" rel="noopener"><AppIcon name="external-link" :size="15" /> Ver cómo ingresan tus clientes</a>
+        <div v-if="authUrl" class="field">
+          <span class="field-label">Página de ingreso</span>
+          <div class="link-bar">
+            <code class="mono link-url">{{ authUrl }}</code>
+            <a class="btn ghost btn-auto" :href="authUrl" target="_blank" rel="noopener"><AppIcon name="external-link" :size="15" /> Ver cómo ingresan</a>
+          </div>
         </div>
       </section>
 
       <!-- ===== Ingreso con Google ===== -->
-      <section class="card" style="margin-top:14px">
-        <h3><AppIcon name="shield-check" :size="18" /> Ingreso con Google</h3>
-        <p class="hint" style="margin:-6px 0 12px">Botón «Ingresar con Google» en la cuenta del cliente de tu web. Usá tus propias credenciales de Google Cloud (OAuth Client ID) o las de DAVENT si están disponibles.</p>
-        <label class="check-item" style="margin-bottom:12px">
-          <input v-model="oauthForm.enabled" type="checkbox" />
-          <span class="check-text"><strong>Ofrecer ingreso con Google</strong><small>El cliente entra a su cuenta de la tienda con su correo de Google.</small></span>
-        </label>
+      <section class="card">
+        <div class="panel-head">
+          <div>
+            <h3><AppIcon name="shield-check" :size="18" /> Ingreso con Google</h3>
+            <p class="hint">Botón «Ingresar con Google» en la cuenta del cliente de tu web. Usá tus propias credenciales de Google Cloud (OAuth Client ID) o las de DAVENT si están disponibles.</p>
+          </div>
+        </div>
+        <div class="check-list">
+          <label class="check-item">
+            <input v-model="oauthForm.enabled" type="checkbox" />
+            <span class="check-text"><strong>Ofrecer ingreso con Google</strong><small>El cliente entra a su cuenta de la tienda con su correo de Google.</small></span>
+          </label>
+        </div>
         <div class="grid-2">
           <label class="field">
             <span class="field-label">Google Client ID</span>
-            <input v-model="oauthForm.google_client_id" class="input mono" maxlength="200" placeholder="123456.apps.googleusercontent.com" />
+            <input v-model="oauthForm.google_client_id" class="input mono" maxlength="200" spellcheck="false" autocomplete="off" placeholder="123456.apps.googleusercontent.com" />
           </label>
           <label class="field">
             <span class="field-label">
               Google Client Secret
-              <span v-if="oauthMeta.has_client_secret" class="pill ok" style="margin-left:6px">Guardado</span>
+              <span v-if="oauthMeta.has_client_secret" class="pill ok">Guardado</span>
             </span>
-            <input v-model="oauthForm.google_client_secret" type="password" class="input mono" maxlength="200" autocomplete="off" :placeholder="oauthMeta.has_client_secret ? 'Dejalo vacío para conservar el guardado' : 'Pegá el secret de Google Cloud'" />
+            <input v-model="oauthForm.google_client_secret" type="password" class="input mono" maxlength="200" spellcheck="false" autocomplete="new-password" :placeholder="oauthMeta.has_client_secret ? 'Dejalo vacío para conservar el guardado' : 'Pegá el secret de Google Cloud'" />
           </label>
         </div>
         <AlertMessage v-if="oauthErr" kind="error" :message="oauthErr" />
@@ -145,9 +154,9 @@ async function saveOAuth(clearSecret = false) {
       </section>
 
       <!-- ===== Ayuda ===== -->
-      <section class="card" style="margin-top:14px">
+      <section class="card">
         <h3><AppIcon name="info" :size="18" /> Si tu plan vence</h3>
-        <p class="hint" style="margin:0">
+        <p class="hint">
           El acceso de clientes es parte del plan Ecommerce: si tu suscripción vence o cambiás a un plan que no lo incluye, tus clientes no pueden ingresar ni crear cuentas hasta que renueves. Sus datos no se pierden — vuelven a entrar apenas se reactive el beneficio.
         </p>
       </section>
@@ -155,7 +164,4 @@ async function saveOAuth(clearSecret = false) {
   </div>
 </template>
 
-<style scoped>
-.field-label { font-size: 12.5px; font-weight: 600; color: var(--ink-2); display: block; margin-bottom: 5px; }
-.hint { font-size: 12.5px; color: var(--muted); }
-</style>
+<!-- Estilos en assets/dash-redesign/sell.css (scope .app .custauth-panel). -->

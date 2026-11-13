@@ -39,6 +39,14 @@ function emptyPlanForm() {
 function planBenefits(p) {
   return PLAN_BENEFITS.filter((b) => p?.[b.key]).map((b) => b.label)
 }
+// Texto de ayuda por beneficio (el `code` de shared.js es interno).
+const BENEFIT_HELP = {
+  has_digital_card: 'El cliente muestra su tarjeta desde su cuenta.',
+  has_free_shipping: 'No paga envío mientras sea miembro.',
+  has_exclusive_discounts: 'Se aplica automáticamente en toda tu tienda.',
+  has_exclusive_access: 'Solo los miembros pueden comprar esos productos.',
+}
+function benefitHelp(b) { return BENEFIT_HELP[b.key] || b.code }
 function periodLabel(p) {
   if (p?.period === 'custom') return `${p.period_days} días`
   return PLAN_PERIODS[p?.period]?.label || p?.period || '—'
@@ -183,7 +191,7 @@ function customerName(s) {
 </script>
 
 <template>
-  <div>
+  <div class="plans-panel">
     <AlertMessage v-if="errMsg" kind="error" :message="errMsg" />
 
     <div v-if="store.status === 'loading' && !store.hasStore" class="card"><div class="empty-mini"><p>Cargando tu tienda…</p></div></div>
@@ -198,25 +206,25 @@ function customerName(s) {
     <template v-else>
       <!-- ===== Planes ===== -->
       <section class="card">
-        <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap">
+        <div class="panel-head">
           <div>
-            <h3 style="margin-bottom:2px"><AppIcon name="crown" :size="18" /> Planes de membresía</h3>
-            <p class="hint" style="margin:0">Los que ofrecés a tus clientes en tu web (membresías, clubes, packs).</p>
+            <h3><AppIcon name="crown" :size="18" /> Planes de membresía</h3>
+            <p class="hint">Los que ofrecés a tus clientes en tu web (membresías, clubes, packs).</p>
           </div>
           <button type="button" class="btn btn-auto" @click="openCreate"><AppIcon name="plus" :size="14" /> Nuevo plan</button>
         </div>
 
         <!-- Formulario crear/editar -->
-        <div v-if="formOpen" class="plan-form" style="margin-top:14px">
+        <div v-if="formOpen" class="plan-form">
           <h4>{{ editingId ? 'Editar plan' : 'Nuevo plan' }}</h4>
           <div class="grid-2">
             <label class="field">
               <span class="field-label">Nombre</span>
-              <input v-model="planForm.name" class="input" maxlength="120" placeholder="Ej: Miembro Oro" />
+              <input v-model="planForm.name" class="input" maxlength="120" placeholder="Ej: Miembro Oro" required autocomplete="off" />
             </label>
             <label class="field">
               <span class="field-label">Precio (ARS)</span>
-              <input v-model="planForm.price" type="number" min="0" step="0.01" class="input" placeholder="0.00" />
+              <input v-model="planForm.price" type="number" min="0" step="0.01" inputmode="decimal" class="input" placeholder="0.00" />
             </label>
             <label class="field">
               <span class="field-label">Período</span>
@@ -226,20 +234,20 @@ function customerName(s) {
             </label>
             <label v-if="planForm.period === 'custom'" class="field">
               <span class="field-label">Días del plan</span>
-              <input v-model.number="planForm.period_days" type="number" min="1" max="3650" class="input" />
+              <input v-model.number="planForm.period_days" type="number" min="1" max="3650" inputmode="numeric" class="input" />
               <small class="hint">Entre 1 y 3650 días.</small>
             </label>
             <label class="field">
               <span class="field-label">Posición</span>
-              <input v-model.number="planForm.position" type="number" min="0" class="input" />
+              <input v-model.number="planForm.position" type="number" min="0" inputmode="numeric" class="input" />
               <small class="hint">Orden en tu web (menor primero).</small>
             </label>
           </div>
 
-          <div class="check-list" style="margin-top:12px">
+          <div class="check-list">
             <label class="check-item" v-for="b in PLAN_BENEFITS" :key="b.key">
               <input v-model="planForm[b.key]" type="checkbox" />
-              <span class="check-text"><strong>{{ b.label }}</strong><small>{{ b.code }}</small></span>
+              <span class="check-text"><strong>{{ b.label }}</strong><small>{{ benefitHelp(b) }}</small></span>
             </label>
             <label class="check-item">
               <input v-model="planForm.is_active" type="checkbox" />
@@ -247,9 +255,9 @@ function customerName(s) {
             </label>
           </div>
 
-          <label v-if="planForm.has_exclusive_discounts" class="field" style="margin-top:12px;max-width:220px">
+          <label v-if="planForm.has_exclusive_discounts" class="field field-narrow">
             <span class="field-label">Descuento de miembro (%)</span>
-            <input v-model="planForm.discount_percent" type="number" min="1" max="100" class="input" placeholder="Ej: 10" />
+            <input v-model="planForm.discount_percent" type="number" min="1" max="100" inputmode="numeric" class="input" placeholder="Ej: 10" />
             <small class="hint">Obligatorio si ofrecés descuentos exclusivos.</small>
           </label>
 
@@ -262,10 +270,10 @@ function customerName(s) {
         </div>
 
         <!-- Listado -->
-        <div v-if="!plans.length && !formOpen" class="empty-mini" style="margin-top:14px">
+        <div v-if="!plans.length && !formOpen" class="empty-mini">
           <p>Todavía no creaste planes. Sumá una membresía para que tus clientes puedan suscribirse desde tu web.</p>
         </div>
-        <div v-else-if="plans.length" class="table-wrap" style="margin-top:14px">
+        <div v-else-if="plans.length" class="table-wrap">
           <table class="pay-table">
             <thead>
               <tr>
@@ -304,11 +312,11 @@ function customerName(s) {
       </section>
 
       <!-- ===== Suscripciones ===== -->
-      <section class="card" style="margin-top:14px">
-        <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap">
+      <section class="card">
+        <div class="panel-head">
           <div>
-            <h3 style="margin-bottom:2px"><AppIcon name="users" :size="18" /> Suscripciones de clientes</h3>
-            <p class="hint" style="margin:0">Quiénes tienen membresía activa en tu tienda.</p>
+            <h3><AppIcon name="users" :size="18" /> Suscripciones de clientes</h3>
+            <p class="hint">Quiénes tienen membresía activa en tu tienda.</p>
           </div>
           <div class="chip-row" role="group" aria-label="Estado">
             <button type="button" class="chip-btn" :class="{ strong: subsStatus === '' }" @click="subsStatus = ''; loadSubs()">Todas</button>
@@ -319,9 +327,9 @@ function customerName(s) {
         <AlertMessage v-if="subsErr" kind="error" :message="subsErr" />
         <AlertMessage v-if="subsMsg" kind="success" :message="subsMsg" />
 
-        <div v-if="subsLoading && !subs.length" class="empty-mini" style="margin-top:14px"><p>Cargando…</p></div>
-        <div v-else-if="!subs.length" class="empty-mini" style="margin-top:14px"><p>No hay suscripciones{{ subsStatus ? ' con ese estado' : '' }}.</p></div>
-        <div v-else class="table-wrap" style="margin-top:14px">
+        <div v-if="subsLoading && !subs.length" class="empty-mini"><p>Cargando…</p></div>
+        <div v-else-if="!subs.length" class="empty-mini"><p>No hay suscripciones{{ subsStatus ? ' con ese estado' : '' }}.</p></div>
+        <div v-else class="table-wrap">
           <table class="pay-table">
             <thead>
               <tr>
@@ -368,16 +376,4 @@ function customerName(s) {
   </div>
 </template>
 
-<style scoped>
-.field-label { font-size: 12.5px; font-weight: 600; color: var(--ink-2); display: block; margin-bottom: 5px; }
-.hint { font-size: 12.5px; color: var(--muted); }
-.check-list { display: grid; gap: 4px; }
-.check-item { display: flex; align-items: flex-start; gap: 10px; padding: 8px 10px; border: 1px solid var(--line); border-radius: 10px; cursor: pointer; }
-.check-item input { margin-top: 3px; }
-.check-text strong { display: block; font-size: 13.5px; }
-.check-text small { color: var(--muted); font-size: 12px; }
-.chip-row { display: flex; gap: 8px; flex-wrap: wrap; }
-.ret-actions { display: flex; gap: 6px; flex-wrap: wrap; }
-.plan-form { border: 1px solid var(--line); border-radius: var(--radius); padding: 14px 16px; background: var(--surface); }
-.plan-form h4 { margin: 0 0 10px; font-size: 14.5px; }
-</style>
+<!-- Estilos en assets/dash-redesign/sell.css (scope .app .plans-panel). -->

@@ -127,31 +127,31 @@ const statusRows = computed(() =>
     <template v-else>
       <!-- Filtros -->
       <div class="card">
-        <div class="toolbar">
-          <label class="field" style="flex: 0 1 160px; margin: 0">
+        <div class="toolbar sales-filters">
+          <label class="field">
             <span class="field-label">Desde</span>
-            <input v-model="filters.from" type="date" class="input" />
+            <input v-model="filters.from" type="date" class="input" :max="filters.to || undefined" />
           </label>
-          <label class="field" style="flex: 0 1 160px; margin: 0">
+          <label class="field">
             <span class="field-label">Hasta</span>
-            <input v-model="filters.to" type="date" class="input" />
+            <input v-model="filters.to" type="date" class="input" :min="filters.from || undefined" />
           </label>
-          <label class="field" style="flex: 0 1 190px; margin: 0">
+          <label class="field field-grow">
             <span class="field-label">Método de pago</span>
             <select v-model="filters.payment_method" class="select">
               <option value="">Todos</option>
               <option v-for="k in PAYMENT_METHOD_KEYS" :key="k" :value="k">{{ PAYMENT_METHODS[k].label }}</option>
             </select>
           </label>
-          <label class="field" style="flex: 0 1 190px; margin: 0">
+          <label class="field field-grow">
             <span class="field-label">Estado</span>
             <select v-model="filters.status" class="select">
               <option value="">Todos</option>
               <option v-for="s in ORDER_STATUSES" :key="s" :value="s">{{ ORDER_STATUS[s].label }}</option>
             </select>
           </label>
-          <button type="button" class="btn ghost btn-auto" style="align-self: flex-end" :disabled="exporting || loading" @click="exportCsv">
-            <AppIcon name="download" :size="14" /> {{ exporting ? 'Exportando…' : 'CSV' }}
+          <button type="button" class="btn ghost btn-auto" :disabled="exporting || loading" @click="exportCsv">
+            <AppIcon name="download" :size="14" /> {{ exporting ? 'Exportando…' : 'Exportar CSV' }}
           </button>
         </div>
       </div>
@@ -182,7 +182,7 @@ const statusRows = computed(() =>
           </div>
         </div>
 
-        <p class="hint" style="margin: -4px 0 14px">{{ summary.note }}</p>
+        <p v-if="summary.note" class="hint" style="margin: -4px 0 14px">{{ summary.note }}</p>
 
         <!-- Serie diaria -->
         <div class="card">
@@ -248,4 +248,20 @@ const statusRows = computed(() =>
 
 <style scoped>
 .field-label { font-size: 12.5px; font-weight: 600; color: var(--ink-2); display: block; margin-bottom: 5px; }
+/* Fila de filtros: campos parejos que crecen y el botón alineado abajo. */
+.sales-filters { align-items: flex-end; }
+.sales-filters .field { margin: 0; flex: 1 1 150px; }
+.sales-filters .field-grow { flex: 1 1 190px; }
+.sales-filters .btn { flex: none; }
+/* Serie diaria: rangos largos (hasta 366 días) scrollean en vez de desbordar la card. */
+.stats-chart { overflow-x: auto; padding-bottom: 4px; }
+@media (max-width: 640px) {
+  .sales-filters .field, .sales-filters .btn { flex: 1 1 100%; justify-content: center; }
+  /* Tablas de cortes dentro de cards: filas planas, sin doble "card" anidada. */
+  .grid-2 .pay-table tbody tr { box-shadow: none; border-color: var(--line-soft); }
+}
+@media (max-width: 480px) {
+  /* styles.css pone .grid-2 en gap:0 — acá las dos cards sí necesitan aire. */
+  .grid-2 { gap: 14px; }
+}
 </style>

@@ -240,9 +240,157 @@
   .app .sell-hub .sell-head-actions .btn { flex: 1; }
   .app .sell-hub .sell-status { padding: 12px; gap: 10px; }
   .app .sell-hub .sell-status-actions { margin-left: auto; }
+  .app .sell-hub .sell-status--empty .btn { width: 100%; }
   .app .sell-hub .sell-mod-grid { grid-template-columns: 1fr; }
   .app .sell-hub .sell-mod { min-height: 64px; padding: 12px 14px; }
   .app .sell-hub .sell-share-actions { flex-direction: column; }
+}
+
+/* ==========================================================================
+   Paneles del hub — Membresías (.plans-panel) y Acceso de clientes
+   (.custauth-panel). Se montan dentro de wrappers .web-scope de
+   DashboardView; el scope propio evita pisar a los otros paneles.
+   ========================================================================== */
+
+/* ---------- Cabecera de card con acción/estado a la derecha ---------- */
+.app .plans-panel .panel-head,
+.app .custauth-panel .panel-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 10px 14px;
+  flex-wrap: wrap;
+}
+.app .plans-panel .panel-head h3,
+.app .custauth-panel .panel-head h3 { margin: 0 0 3px; }
+.app .plans-panel .panel-head .hint,
+.app .custauth-panel .panel-head .hint { margin: 0; max-width: 62ch; }
+.app .plans-panel .panel-head > .btn,
+.app .custauth-panel .panel-head > .btn,
+.app .plans-panel .panel-head > .pill,
+.app .custauth-panel .panel-head > .pill { flex: none; margin-top: 2px; }
+
+/* ---------- Texto secundario ---------- */
+.app .plans-panel .hint,
+.app .custauth-panel .hint { font-size: 12.5px; line-height: 1.5; color: var(--muted); }
+
+/* ---------- Campos ---------- */
+.app .plans-panel .field,
+.app .custauth-panel .field { display: block; margin-bottom: 0; }
+.app .plans-panel .field-label,
+.app .custauth-panel .field-label {
+  display: block;
+  margin-bottom: 5px;
+  font-size: 12.5px;
+  font-weight: 600;
+  color: var(--ink-2);
+}
+.app .plans-panel .field-label .pill,
+.app .custauth-panel .field-label .pill { margin-left: 6px; vertical-align: 1px; }
+.app .plans-panel .field .hint,
+.app .custauth-panel .field .hint { display: block; margin: 5px 0 0; }
+.app .plans-panel .field-narrow { max-width: 240px; margin-top: 14px; }
+.app .plans-panel .input,
+.app .plans-panel .select,
+.app .custauth-panel .input,
+.app .custauth-panel .select { border-radius: 10px; }
+/* styles.css pone .grid-2{gap:0} a <=480px (pensado para grillas de cards);
+   acá los items son .field sin margen: el gap tiene que sobrevivir. */
+.app .plans-panel .grid-2,
+.app .custauth-panel .grid-2 { gap: 14px; }
+.app .custauth-panel .off-note { margin: 0 0 12px; }
+.app .custauth-panel .check-list + .grid-2 { margin-top: 14px; }
+.app .custauth-panel .card > .field { margin-top: 14px; }
+.app .custauth-panel .link-bar { margin: 0; }
+
+/* ---------- Formulario inline de plan ---------- */
+.app .plans-panel .plan-form {
+  padding: 16px 18px;
+  background: var(--surface);
+  border: 1px solid var(--line-soft);
+  border-radius: 14px;
+}
+.app .plans-panel .plan-form h4 {
+  margin: 0 0 12px;
+  font-size: 14.5px;
+  font-weight: 650;
+  letter-spacing: -.01em;
+}
+.app .plans-panel .plan-form .check-list { margin-top: 14px; }
+.app .plans-panel .plan-form .btn-row { margin-top: 16px; }
+
+/* ---------- Checklist Operate: tarjetas con hairline, no items sueltos ---------- */
+.app .plans-panel .check-list,
+.app .custauth-panel .check-list { display: grid; gap: 8px; }
+.app .plans-panel .check-item,
+.app .custauth-panel .check-item {
+  border: 1px solid var(--line-soft);
+  border-radius: 12px;
+  padding: 11px 14px;
+  background: var(--surface);
+  transition: border-color .15s var(--ease-out), background-color .15s var(--ease-out),
+              box-shadow .15s var(--ease-out);
+}
+.app .plans-panel .check-item + .check-item,
+.app .custauth-panel .check-item + .check-item { border-top: 1px solid var(--line-soft); }
+.app .plans-panel .check-item:hover,
+.app .custauth-panel .check-item:hover {
+  border-color: var(--brand-soft-line);
+  background: var(--brand-soft);
+}
+.app .plans-panel .check-item:has(input:checked),
+.app .custauth-panel .check-item:has(input:checked) {
+  border-color: var(--brand-soft-line);
+  background: var(--brand-soft);
+}
+.app .plans-panel .check-item:focus-within,
+.app .custauth-panel .check-item:focus-within {
+  border-color: var(--brand-500);
+  box-shadow: var(--ring);
+}
+
+/* ---------- Tablas Operate: hairline + sombra leve ---------- */
+.app .plans-panel .table-wrap,
+.app .custauth-panel .table-wrap {
+  border-color: var(--line-soft);
+  border-radius: 14px;
+  box-shadow: var(--shadow-sm);
+}
+/* Aire entre la cabecera de la card y el contenido; :not(:first-child) deja
+   intacto el estado de carga (empty-mini como único hijo). */
+.app .plans-panel .card > .table-wrap:not(:first-child),
+.app .plans-panel .card > .empty-mini:not(:first-child),
+.app .plans-panel .card > .plan-form:not(:first-child),
+.app .custauth-panel .card > .table-wrap:not(:first-child),
+.app .custauth-panel .card > .empty-mini:not(:first-child),
+.app .custauth-panel .card > .check-list:not(:first-child) { margin-top: 14px; }
+
+/* ---------- Filas de acciones ---------- */
+.app .plans-panel .chip-row { display: flex; gap: 8px; flex-wrap: wrap; }
+.app .plans-panel .ret-actions { display: flex; gap: 6px; flex-wrap: wrap; }
+.app .plans-panel .chip-row,
+.app .plans-panel .ret-actions { align-items: center; }
+
+/* ---------- Responsive ---------- */
+@media (max-width: 640px) {
+  /* Las tablas ya pasan a tarjetas vía styles.css: el wrap se deshace y
+     cada fila queda como card suelta con sombra leve (mismo patrón que acc.css). */
+  .app .plans-panel .table-wrap,
+  .app .custauth-panel .table-wrap {
+    border: 0;
+    background: transparent;
+    box-shadow: none;
+    overflow: visible;
+  }
+  .app .plans-panel .pay-table tbody tr,
+  .app .custauth-panel .pay-table tbody tr {
+    border-color: var(--line-soft);
+    border-radius: 14px;
+    box-shadow: var(--shadow-sm);
+  }
+  .app .plans-panel .panel-head > .btn,
+  .app .custauth-panel .panel-head > .btn { width: 100%; }
+  .app .custauth-panel .link-bar .btn { width: 100%; }
 }
 
 /* ---------- Movimiento reducido ---------- */
@@ -250,7 +398,9 @@
   .app .sell-hub .sell-mod,
   .app .sell-hub .sell-mod-go,
   .app .sell-hub .sell-urlbox,
-  .app .sell-hub .sell-urlbox-ico {
+  .app .sell-hub .sell-urlbox-ico,
+  .app .plans-panel .check-item,
+  .app .custauth-panel .check-item {
     transition: none;
   }
   .app .sell-hub .sell-mod:hover .sell-mod-go { transform: none; }

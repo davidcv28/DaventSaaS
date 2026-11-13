@@ -140,17 +140,17 @@ function senderLabel(m) {
       <div class="card">
         <div class="toolbar">
           <div class="chip-row" role="group" aria-label="Estado">
-            <button type="button" class="chip-btn" :class="{ strong: statusFilter === 'open' }" @click="statusFilter = 'open'">Abiertas</button>
-            <button type="button" class="chip-btn" :class="{ strong: statusFilter === 'closed' }" @click="statusFilter = 'closed'">Cerradas</button>
-            <button type="button" class="chip-btn" :class="{ strong: statusFilter === '' }" @click="statusFilter = ''">Todas</button>
+            <button type="button" class="chip-btn" :class="{ strong: statusFilter === 'open' }" :aria-pressed="statusFilter === 'open'" @click="statusFilter = 'open'">Abiertas</button>
+            <button type="button" class="chip-btn" :class="{ strong: statusFilter === 'closed' }" :aria-pressed="statusFilter === 'closed'" @click="statusFilter = 'closed'">Cerradas</button>
+            <button type="button" class="chip-btn" :class="{ strong: statusFilter === '' }" :aria-pressed="statusFilter === ''" @click="statusFilter = ''">Todas</button>
           </div>
-          <button type="button" class="chip-btn" :class="{ strong: onlyUnread }" @click="onlyUnread = !onlyUnread">
+          <button type="button" class="chip-btn" :class="{ strong: onlyUnread }" :aria-pressed="onlyUnread" @click="onlyUnread = !onlyUnread">
             <AppIcon name="mail" :size="13" /> Solo sin leer
           </button>
           <button type="button" class="btn ghost btn-auto" :disabled="loading" @click="load(page)">
             <AppIcon name="refresh" :size="14" /> Actualizar
           </button>
-          <span v-if="pageInfo.count" class="hint" style="margin-left:auto">{{ pageInfo.count }} consulta{{ pageInfo.count === 1 ? '' : 's' }}<template v-if="unreadTotal"> · {{ unreadTotal }} sin leer</template></span>
+          <span v-if="pageInfo.count" class="hint toolbar-count">{{ pageInfo.count }} consulta{{ pageInfo.count === 1 ? '' : 's' }}<template v-if="unreadTotal"> · {{ unreadTotal }} sin leer</template></span>
         </div>
 
         <div v-if="loading && !rows.length" class="empty-mini"><p>Cargando consultas…</p></div>
@@ -170,16 +170,23 @@ function senderLabel(m) {
               </tr>
             </thead>
             <tbody>
-              <tr v-for="t in rows" :key="t.id" class="clickable" :class="{ unread: t.unread_count > 0 }" @click="openThread(t.id)">
+              <tr v-for="t in rows" :key="t.id" class="clickable" :class="{ unread: t.unread_count > 0 }" tabindex="0"
+                  :aria-label="`Abrir consulta: ${t.subject || 'Consulta'}`"
+                  @click="openThread(t.id)"
+                  @keydown.enter.prevent="openThread(t.id)" @keydown.space.prevent="openThread(t.id)">
                 <td data-label="Consulta"><strong>{{ t.subject || 'Consulta' }}</strong></td>
                 <td data-label="Cliente">
-                  <div>{{ t.customer?.name || t.customer?.email || '—' }}</div>
-                  <div v-if="t.customer?.email && t.customer?.name" class="hint">{{ t.customer.email }}</div>
+                  <div class="cell">
+                    <div>{{ t.customer?.name || t.customer?.email || '—' }}</div>
+                    <div v-if="t.customer?.email && t.customer?.name" class="hint">{{ t.customer.email }}</div>
+                  </div>
                 </td>
                 <td data-label="Pedido"><span v-if="t.order" class="mono">{{ t.order.code || `#${t.order.id}` }}</span><span v-else class="hint">—</span></td>
                 <td data-label="Último mensaje">
-                  <div>{{ fmtDateTime(t.last_message_at || t.updated_at) }}</div>
-                  <div v-if="t.unread_count > 0" class="chat-badge">{{ t.unread_count }}</div>
+                  <div class="cell">
+                    <div>{{ fmtDateTime(t.last_message_at || t.updated_at) }}</div>
+                    <span v-if="t.unread_count > 0" class="chat-badge" :aria-label="`${t.unread_count} mensaje${t.unread_count === 1 ? '' : 's'} sin leer`">{{ t.unread_count }}</span>
+                  </div>
                 </td>
                 <td data-label="Estado"><span class="pill" :class="THREAD_STATUS[t.status]?.kind || 'muted'">{{ THREAD_STATUS[t.status]?.label || t.status }}</span></td>
               </tr>
@@ -187,7 +194,7 @@ function senderLabel(m) {
           </table>
         </div>
 
-        <div v-if="hasPrev || hasNext" class="toolbar" style="justify-content:flex-end;margin:10px 0 0">
+        <div v-if="hasPrev || hasNext" class="pager">
           <button type="button" class="btn ghost btn-auto" :disabled="!hasPrev || loading" @click="load(page - 1)">← Anterior</button>
           <span class="hint">Página {{ page }}</span>
           <button type="button" class="btn ghost btn-auto" :disabled="!hasNext || loading" @click="load(page + 1)">Siguiente →</button>
@@ -203,7 +210,7 @@ function senderLabel(m) {
             <div class="pf-drawer-head">
               <div>
                 <h3>{{ detail?.subject || 'Consulta' }}</h3>
-                <span v-if="detail" class="pill" :class="detailStatus.kind" style="margin-top:4px;display:inline-flex">{{ detailStatus.label }}</span>
+                <span v-if="detail" class="pill" :class="detailStatus.kind">{{ detailStatus.label }}</span>
               </div>
               <button type="button" class="icon-btn" aria-label="Cerrar" @click="closeDetail"><AppIcon name="x" :size="16" /></button>
             </div>
@@ -212,7 +219,7 @@ function senderLabel(m) {
               <AlertMessage v-if="actionErr" kind="error" :message="actionErr" />
               <AlertMessage v-else-if="actionMsg" kind="success" :message="actionMsg" />
 
-              <div class="kv" style="margin-bottom:14px">
+              <div class="kv thread-meta">
                 <div><span>Cliente</span><strong>{{ detail.customer?.name || detail.customer?.email || '—' }}</strong></div>
                 <div v-if="detail.order"><span>Pedido</span><strong class="mono">{{ detail.order.code || `#${detail.order.id}` }}</strong></div>
                 <div><span>Abierta</span><strong>{{ fmtDateTime(detail.created_at) }}</strong></div>
@@ -228,20 +235,20 @@ function senderLabel(m) {
               </ul>
 
               <!-- Respuesta / estado -->
-              <div v-if="!isClosed" style="margin-top:14px">
+              <div v-if="!isClosed" class="reply-box">
                 <label class="field">
                   <span class="field-label">Responder</span>
                   <textarea v-model="replyBody" class="textarea" rows="3" maxlength="2000" placeholder="Escribí tu respuesta…"></textarea>
                 </label>
-                <div class="pf-actions" style="margin-top:10px">
+                <div class="pf-actions">
                   <button type="button" class="btn btn-auto" :disabled="replyBusy || !replyBody.trim()" @click="sendReply">
                     <AppIcon name="send" :size="14" /> {{ replyBusy ? 'Enviando…' : 'Enviar' }}
                   </button>
                   <button type="button" class="btn ghost btn-auto" :disabled="actionBusy === 'status'" @click="toggleStatus">Cerrar consulta</button>
                 </div>
               </div>
-              <div v-else style="margin-top:14px">
-                <p class="hint" style="margin:0 0 10px">Esta consulta está cerrada. Reabrila si el cliente vuelve a escribir.</p>
+              <div v-else class="reply-box">
+                <p class="hint reply-note">Esta consulta está cerrada. Reabrila si el cliente vuelve a escribir.</p>
                 <button type="button" class="btn ghost btn-auto" :disabled="actionBusy === 'status'" @click="toggleStatus">Reabrir consulta</button>
               </div>
             </div>
@@ -254,11 +261,22 @@ function senderLabel(m) {
 
 <style scoped>
 .chip-row { display: flex; gap: 8px; flex-wrap: wrap; }
-.pf-actions { display: flex; gap: 10px; flex-wrap: wrap; }
+.toolbar-count { margin-left: auto; }
+.pager { display: flex; align-items: center; justify-content: flex-end; gap: 10px; flex-wrap: wrap; margin: 10px 0 0; }
+.pf-drawer-head .pill { margin-top: 4px; }
+.thread-meta { margin-bottom: 14px; }
+.reply-box { margin-top: 14px; }
+.reply-note { margin: 0 0 10px; }
+.pf-actions { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 10px; }
 .field-label { font-size: 12.5px; font-weight: 600; color: var(--ink-2); display: block; margin-bottom: 5px; }
 .hint { font-size: 12.5px; color: var(--muted); }
 .clickable { cursor: pointer; }
+.clickable:focus-visible { outline: 2px solid var(--brand-500); outline-offset: -2px; }
 .clickable.unread td { background: var(--brand-soft); }
+/* Celdas compuestas (ver CustomersPanel): en modo tarjeta el td es flex con
+   el data-label; .cell agrupa el valor para que quede etiqueta | contenido. */
+.cell { min-width: 0; }
+.cell > * + * { margin-top: 4px; }
 .sup-msgs { list-style: none; margin: 0; padding: 0; display: grid; gap: 10px; }
 .sup-msgs > li { max-width: 88%; }
 .sup-msgs > li.mine { justify-self: end; text-align: right; }
@@ -269,4 +287,12 @@ function senderLabel(m) {
   color: var(--ink); white-space: pre-line; overflow-wrap: anywhere;
 }
 .sup-msgs > li.mine .sup-msg-body { background: var(--brand-soft); border-color: var(--brand-soft-line, var(--line)); }
+
+/* <=640px: la fila pasa a tarjeta (styles.css). Teñir la tarjeta entera en
+   vez de cada celda para que el "sin leer" se lea como una sola superficie. */
+@media (max-width: 640px) {
+  .clickable.unread { background: var(--brand-soft); border-color: var(--brand-soft-line, var(--line)); }
+  .clickable.unread td { background: transparent; }
+  .sup-msgs > li { max-width: 100%; }
+}
 </style>

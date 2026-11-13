@@ -1316,7 +1316,7 @@
 }
 
 /* ===== Novedades (feed) =====
-   El diseño guarda sus tokens bajo .ec-*/ .ec-account: el feed los repite
+   El diseño guarda sus tokens bajo .ec-* y .ec-account: el feed los repite
    en su propio scope (noche por defecto, día con data-theme='light'). */
 [data-design='gimnasio'] .feed-page {
   font-family: var(--st-f-body-family, 'Inter', system-ui, sans-serif);

@@ -120,7 +120,7 @@ watch(() => store.hasStore, (h) => { if (h) { loadPages(); loadReturns() } }, { 
       <!-- ===== Páginas legales (contenido fijo de la plataforma) ===== -->
       <section class="card">
         <h3><AppIcon name="file-text" :size="18" /> Páginas legales de tu web</h3>
-        <p class="hint" style="margin:-6px 0 12px">Texto legal estándar de DAVENT, completado automáticamente con los datos fiscales de tu tienda. Viene publicado por defecto — podés ocultarlo, pero tu tienda queda sin esa protección legal. No es editable: si necesitás un cambio, escribinos por soporte.</p>
+        <p class="hint">Texto legal estándar de DAVENT, completado automáticamente con los datos fiscales de tu tienda. Viene publicado por defecto — podés ocultarlo, pero tu tienda queda sin esa protección legal. No es editable: si necesitás un cambio, escribinos por soporte.</p>
 
         <nav class="dsg-tabs" role="tablist" aria-label="Página legal">
           <button v-for="k in KINDS" :key="k" type="button" role="tab" class="dsg-tab" :class="{ active: activeKind === k }" :aria-selected="activeKind === k" @click="selectKind(k)">
@@ -146,7 +146,7 @@ watch(() => store.hasStore, (h) => { if (h) { loadPages(); loadReturns() } }, { 
       <!-- ===== Bandeja de devoluciones ===== -->
       <section class="card" style="margin-top:14px">
         <h3><AppIcon name="rotate-cw" :size="18" /> Solicitudes de devolución</h3>
-        <p class="hint" style="margin:-6px 0 12px">Las que dejan los compradores desde la página de devoluciones de tu web.</p>
+        <p class="hint">Las que dejan los compradores desde la página de devoluciones de tu web.</p>
 
         <div class="toolbar">
           <div class="chip-row" role="group" aria-label="Estado">
@@ -211,14 +211,22 @@ watch(() => store.hasStore, (h) => { if (h) { loadPages(); loadReturns() } }, { 
 <style scoped>
 .field-label { font-size: 12.5px; font-weight: 600; color: var(--ink-2); display: block; margin-bottom: 5px; }
 .hint { font-size: 12.5px; color: var(--muted); }
+/* El .hint que abre cada card queda pegado al título (los de las celdas de la
+   tabla conservan su propio margen). */
+.card > .hint { margin: -6px 0 12px; }
 .chip-row { display: flex; gap: 8px; flex-wrap: wrap; }
 .ret-actions { display: flex; gap: 6px; flex-wrap: wrap; }
 .legal-title { margin: 0 0 8px; font-size: 15px; font-weight: 700; }
 .legal-readonly {
   max-height: 340px; overflow: auto; padding: 14px 16px;
-  border: 1px solid var(--line, rgba(0,0,0,.1)); border-radius: 10px;
-  background: var(--card-2, rgba(0,0,0,.02));
+  border: 1px solid var(--line-soft, var(--line)); border-radius: 12px;
+  background: var(--surface);
   font-size: 13px; line-height: 1.65; white-space: pre-line;
-  color: var(--ink-2, inherit);
+  color: var(--ink-2);
+}
+@media (max-width: 640px) {
+  /* Filtros + actualizar: la barra apila y el botón ocupa todo el ancho. */
+  .toolbar { flex-direction: column; align-items: stretch; }
+  .toolbar .btn { width: 100%; }
 }
 </style>

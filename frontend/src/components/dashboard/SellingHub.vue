@@ -108,12 +108,11 @@ onUnmounted(() => {
         <h1>Vender online</h1>
         <p>Tu tienda vende de verdad: pedidos, cobros, clientes y membresías en un solo lugar.</p>
       </div>
-      <div class="page-head-actions sell-head-actions">
-        <template v-if="store.hasStore">
-          <button type="button" class="btn btn-auto" @click="openShare"><AppIcon name="share-2" :size="16" /> Compartir</button>
-          <button type="button" class="btn ghost btn-auto" @click="openStore"><AppIcon name="external-link" :size="16" /> Ver mi tienda</button>
-        </template>
-        <button v-else type="button" class="btn btn-auto" @click="go('store')"><AppIcon name="globe" :size="16" /> Reservar mi link</button>
+      <!-- Sin tienda no hay acciones de header: el CTA «Reservar» ya vive en
+           la tira de estado (sell-status--empty) y duplicarlo era redundante. -->
+      <div v-if="store.hasStore" class="page-head-actions sell-head-actions">
+        <button type="button" class="btn btn-auto" @click="openShare"><AppIcon name="share-2" :size="16" /> Compartir</button>
+        <button type="button" class="btn ghost btn-auto" @click="openStore"><AppIcon name="external-link" :size="16" /> Ver mi tienda</button>
       </div>
     </div>
 
@@ -175,7 +174,6 @@ onUnmounted(() => {
           <span class="mk-modal-ico"><AppIcon name="share-2" :size="20" /></span>
           <div class="mk-modal-txt">
             <h2>Compartí tu tienda</h2>
-            <small>{{ publicUrl }}</small>
           </div>
           <button type="button" class="mk-modal-x" aria-label="Cerrar" @click="closeShare"><AppIcon name="x" :size="18" /></button>
         </header>
@@ -189,9 +187,9 @@ onUnmounted(() => {
             <AppIcon :name="copied ? 'check' : 'copy'" :size="14" class="sell-urlbox-ico" />
             <span class="sell-urlbox-text">{{ publicUrl }}</span>
           </button>
+          <!-- «Ver mi tienda» ya está en el header: acá solo van acciones de compartir. -->
           <div class="sell-share-actions">
-            <button type="button" class="btn btn-auto" @click="shareWhatsApp"><AppIcon name="whatsapp" :size="16" /> WhatsApp</button>
-            <button type="button" class="btn ghost btn-auto" @click="openStore"><AppIcon name="external-link" :size="16" /> Ver mi tienda</button>
+            <button type="button" class="btn btn-auto" @click="shareWhatsApp"><AppIcon name="whatsapp" :size="16" /> Compartir por WhatsApp</button>
           </div>
         </div>
       </div>
