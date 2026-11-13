@@ -303,7 +303,7 @@
   border: 2px solid var(--dz-ink);
   border-radius: var(--dz-radius);
   background: var(--dz-ink);
-  color: var(--dz-on-band);
+  color: var(--dz-bg);
   font: 700 10.5px/1 var(--dz-mono); letter-spacing: .22em; text-transform: uppercase;
   box-shadow: 4px 4px 0 var(--dz-accent);
   transition: transform .22s cubic-bezier(.22, 1, .36, 1), background .22s, color .22s, box-shadow .22s;
@@ -332,7 +332,7 @@
   transition: background .2s, color .2s, border-color .2s;
 }
 [data-design='impacto'][data-theme] :is(.ec-auth, .ec-account, .ec-track, .ec-cartpg, .ec-checkout, .ec-receiptpg, .ec-legal) .ec-btn-ghost:hover {
-  background: var(--dz-ink); color: var(--dz-on-band); border-color: var(--dz-ink);
+  background: var(--dz-ink); color: var(--dz-bg); border-color: var(--dz-ink);
 }
 
 /* Formulario compartido (StoreAuthForm). */
@@ -393,7 +393,7 @@
 }
 [data-design='impacto'][data-theme] .ec-account .acc-avatar {
   border-radius: var(--dz-radius);
-  background: var(--dz-ink); color: var(--dz-on-band);
+  background: var(--dz-ink); color: var(--dz-bg);
   border: 2px solid var(--dz-ink);
   font-family: var(--dz-display); font-weight: 400; font-size: 20px; letter-spacing: .02em;
 }
