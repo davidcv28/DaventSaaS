@@ -553,17 +553,23 @@ html[data-ds-commerce="1"] [data-surface="product"] .pdp-info > .dsx-buy[data-ds
 }
 .pdp-info .ds-pay-chip svg{opacity:.6}
 html[data-ds-commerce="1"] [data-surface="product"] .pdp-buy > .dsx-buy-now{
-  align-self:center;margin:0;padding:6px 2px;min-height:0;
-  border:0;border-radius:0;background:none;box-shadow:none;
-  color:var(--accent-text);opacity:1;
-  font:600 9.5px/1 var(--mono);letter-spacing:.14em;text-transform:uppercase;
-  text-decoration:underline;text-underline-offset:5px;text-decoration-thickness:1px;
-  text-decoration-color:color-mix(in srgb,var(--accent) 40%,transparent);
-  transition:color .25s var(--ease-soft),text-decoration-color .25s var(--ease-soft),transform .2s var(--ease-soft);
+  position:relative;overflow:hidden;isolation:isolate;
+  display:inline-flex;align-items:center;justify-content:center;gap:9px;
+  margin:0;padding:0 22px;min-height:50px;width:100%;
+  border:1px solid var(--accent);border-radius:var(--r-btn);
+  background:var(--accent);color:var(--on-accent);opacity:1;box-shadow:none;
+  font:600 10.5px/1 var(--mono);letter-spacing:.18em;text-transform:uppercase;
+  text-decoration:none;
+  transition:transform .25s var(--ease-soft),box-shadow .25s var(--ease-soft),border-color .25s var(--ease-soft),filter .2s;
+}
+html[data-ds-commerce="1"] [data-surface="product"] .pdp-buy > .dsx-buy-now::before{
+  content:"";width:15px;height:15px;flex:none;background:currentColor;
+  -webkit-mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='black'%3E%3Cpath d='M13 2 3 14h9l-1 8 10-12h-9l1-8z'/%3E%3C/svg%3E") center/contain no-repeat;
+  mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='black'%3E%3Cpath d='M13 2 3 14h9l-1 8 10-12h-9l1-8z'/%3E%3C/svg%3E") center/contain no-repeat;
 }
 html[data-ds-commerce="1"] [data-surface="product"] .pdp-buy > .dsx-buy-now:hover{
-  color:var(--accent);opacity:1;transform:translateY(-1px);
-  text-decoration-color:var(--accent);
+  opacity:1;transform:translateY(-1px);border-color:var(--accent-deep);
+  box-shadow:0 16px 30px -18px var(--accent-deep);
 }
 html[data-ds-commerce="1"] [data-surface="product"] .pdp-buy > .dsx-buy-now:active{transform:translateY(0)}
 html[data-ds-commerce="1"] [data-surface="product"] .pdp-buy > .dsx-buy-now:focus-visible{
@@ -945,11 +951,38 @@ html[data-ds-commerce="1"] [data-surface="product"] .pdp-buy > .dsx-buy-now:focu
 .pdp-score b:empty,.pdp-score:has(b:empty){display:none}
 .pdp-desc{margin-top:20px;color:var(--ink-2);font-size:14.5px;line-height:1.7;max-width:58ch}
 .pdp-desc:empty{display:none}
-.pdp-buy{display:flex;flex-wrap:wrap;gap:10px;margin-top:24px}
+.pdp-buy{display:flex;flex-wrap:wrap;gap:10px;margin-top:24px;background:transparent;padding:0;border:0;box-shadow:none}
 /* Cada acción de la ficha respira en su propia fila: carrito, compra
    directa, WhatsApp y volver — sin apretarse en una misma línea. */
-.pdp-buy>:is(a,button){flex:1 1 100%;justify-content:center;text-align:center}
-.pdp-buy>.dsx-buy-now{margin:2px 0 4px}
+.pdp-buy>:is(a,button){flex:1 1 100%;justify-content:center;align-items:center;text-align:center}
+/* Todos los CTAs de la ficha llevan su propia barra bermellón; el
+   contenedor queda transparente sobre el papel de la página. */
+.pdp-buy>.btn-line{background:var(--accent);color:var(--on-accent);border-color:var(--accent)}
+.pdp-buy>.btn-line::before{background:var(--accent-deep);transform:translateY(101%)}
+.pdp-buy>.btn-line:hover{color:var(--on-accent)}
+/* Iconos por máscara: toman currentColor del texto de cada CTA. */
+.pdp-buy>.dsx-buy{display:inline-flex;align-items:center;gap:9px}
+.pdp-buy>.dsx-buy::after{content:"";order:-1;width:16px;height:16px;flex:none;background:currentColor;
+  -webkit-mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='9' cy='21' r='1'/%3E%3Ccircle cx='20' cy='21' r='1'/%3E%3Cpath d='M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6'/%3E%3C/svg%3E") center/contain no-repeat;
+  mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='9' cy='21' r='1'/%3E%3Ccircle cx='20' cy='21' r='1'/%3E%3Cpath d='M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6'/%3E%3C/svg%3E") center/contain no-repeat}
+.pdp-buy>.btn-line::after{content:"";order:-1;width:15px;height:15px;flex:none;background:currentColor;
+  -webkit-mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M19 12H5M11 6l-6 6 6 6'/%3E%3C/svg%3E") center/contain no-repeat;
+  mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M19 12H5M11 6l-6 6 6 6'/%3E%3C/svg%3E") center/contain no-repeat}
+.pdp-buy>.btn-line{display:inline-flex;align-items:center;gap:9px}
+/* Datos de ficha con su propio glifo: ahorro (etiqueta), stock (tilde)
+   y envíos (camión) — todos en mono versalita del diseño. */
+.pdp-save{align-items:center}
+.pdp-save::before{content:"";width:14px;height:14px;flex:none;align-self:center;background:var(--ok);
+  -webkit-mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='black'%3E%3Cpath d='M20.6 13.4 12 22 2 12V2h10l8.6 8.6a2 2 0 0 1 0 2.8z'/%3E%3Ccircle cx='7.5' cy='7.5' r='1.6' fill='white'/%3E%3C/svg%3E") center/contain no-repeat;
+  mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='black'%3E%3Cpath d='M20.6 13.4 12 22 2 12V2h10l8.6 8.6a2 2 0 0 1 0 2.8z'/%3E%3Ccircle cx='7.5' cy='7.5' r='1.6' fill='white'/%3E%3C/svg%3E") center/contain no-repeat}
+.pdp-note{display:flex;align-items:center;gap:8px}
+.pdp-note::before{content:"";width:14px;height:14px;flex:none;background:var(--ok);
+  -webkit-mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='12' cy='12' r='10'/%3E%3Cpath d='m8 12 3 3 5-6'/%3E%3C/svg%3E") center/contain no-repeat;
+  mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='12' cy='12' r='10'/%3E%3Cpath d='m8 12 3 3 5-6'/%3E%3C/svg%3E") center/contain no-repeat}
+.pdp-info .ds-ship{display:flex;align-items:center;gap:8px}
+.pdp-info .ds-ship::before{content:"";width:15px;height:15px;flex:none;background:var(--muted);
+  -webkit-mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='black'%3E%3Cpath d='M1 7h13v10H1zM14 10h4l4 4v3h-8z'/%3E%3Ccircle cx='6' cy='19' r='1.8'/%3E%3Ccircle cx='18' cy='19' r='1.8'/%3E%3C/svg%3E") center/contain no-repeat;
+  mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='black'%3E%3Cpath d='M1 7h13v10H1zM14 10h4l4 4v3h-8z'/%3E%3Ccircle cx='6' cy='19' r='1.8'/%3E%3Ccircle cx='18' cy='19' r='1.8'/%3E%3C/svg%3E") center/contain no-repeat}
 .pdp-specs{width:100%;margin-top:24px;border-collapse:collapse;font-size:12.5px}
 .pdp-specs:not(:has(tr)){display:none}
 .pdp-specs th,.pdp-specs td{padding:10px 0;border-bottom:1px solid var(--line);text-align:left;vertical-align:top}
@@ -1632,7 +1665,7 @@ html[data-ds-commerce="1"] [data-surface="product"] .pdp-buy > .dsx-buy-now:focu
           <p class="pdp-desc">{{product_description}}</p>
           <div class="pdp-buy">
             <a class="btn btn-accent" href="{{product_whatsapp_url}}">Consultar por WhatsApp
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/></svg>
             </a>
             <a class="btn btn-line" href="#catalogo" data-ds-route="catalog">Seguir mirando</a>
           </div>

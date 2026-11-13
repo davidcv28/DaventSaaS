@@ -9,7 +9,7 @@ import { STORE_FONTS } from '../api/stores.api.js'
 import { STUDIO_ROLE_KEYS, fixContrast, normalizeHex } from './contract.js'
 
 // Selectores — espejo de los _STUDIO_*_SEL de pattern_render.py.
-const BTN_SEL = '.btn, .svc-cta, .pdp-buy, .nav-cta, .top-cta, .rail-btn, .deck-btn'
+const BTN_SEL = '.btn:not(.pdp-buy *), .svc-cta, .pdp-buy:is(a, button), .nav-cta, .top-cta, .rail-btn, .deck-btn'
 const CARD_SEL = '.ds-product, .ds-cat, .ds-service, .ds-plan, .ds-faq, .ds-guar, .ds-offer, .ds-contact'
 const IMG_SEL = '.ds-product-img'
 const NAV_SEL = '[data-ds-pin="top"], header.top, header.head'
