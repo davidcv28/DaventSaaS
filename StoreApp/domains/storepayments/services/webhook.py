@@ -204,6 +204,21 @@ def StoreMpWebhookQuery(store, payment_id):
         #pago no duplican efectos (mismo patrón que PaymentWebhookQuery).
         record          =   MpPayment.objects.select_for_update(of = ('self',)).get(pk = record.pk)
         old_status      =   record.status
+        #Relectura BLOQUEADA del pedido: el `order` de afuera se fetcheó
+        #sin lock — con notificaciones desordenadas de MP (approved viejo
+        #llegando tras refunded, o un refund durante un approved) las
+        #ramas decidían con un status STALE y podían acreditar un pedido
+        #ya devuelto o perder el reembolso. Orden de locks
+        #MpPayment -> Order, el mismo que refunds.py. El `or order` solo
+        #cubre dobles de test sin fila persistida.
+        Order           =   orders_bridge.order_model()
+        order           =   (
+            Order.objects
+            .select_for_update()
+            .filter(pk = order.pk)
+            .first()
+            or   order
+        )
         order_status    =   str(getattr(order, 'status', '') or '')
         if mp_status == 'approved':
             #MONTO: si difiere del total del pedido NO se acredita — queda
@@ -225,7 +240,15 @@ def StoreMpWebhookQuery(store, payment_id):
                 #vencido/cancelado/reembolsado o ya pago por otro cobro.
                 #Jamás se fuerza la transición; queda OrderEvent para
                 #que el dueño revise y reembolse a mano si corresponde.
-                if order_status == 'PENDING_PAYMENT':
+                #Triple guard antes de acreditar: (a) el pedido sigue
+                #PENDING_PAYMENT (lectura fresca bajo lock), (b) el
+                #record no quedó REFUNDED por una notificación previa
+                #desordenada — un approved tardío jamás revive un cobro
+                #ya devuelto, y (c) el pedido fue creado para MP — un
+                #pago MP no puede acreditar un pedido transfer/efectivo.
+                if (order_status == 'PENDING_PAYMENT'
+                        and record.status != MpPayment.Status.REFUNDED
+                        and str(getattr(order, 'payment_method', '') or '') == 'mp'):
                     orders_bridge.mark_paid(
                         order,
                         source      =   'mp',

@@ -1,4 +1,5 @@
 import logging
+from urllib.parse import quote
 
 import requests
 from rest_framework import serializers
@@ -44,11 +45,15 @@ _TRACKING_URLS = {
 
 
 def tracking_url(carrier, code):
-    """URL pública del correo para que el comprador siga el paquete."""
+    """URL pública del correo para que el comprador siga el paquete.
+
+    El código se URL-encodea: lo pega el dueño a mano y sin quote un
+    `&`/`?`/`#` inyectaría parámetros extra en la query del correo.
+    """
     if not carrier or not code:
         return ''
     tpl = _TRACKING_URLS.get(carrier)
-    return tpl.format(code = code) if tpl else ''
+    return tpl.format(code = quote(str(code), safe = '')) if tpl else ''
 
 
 #=========================================

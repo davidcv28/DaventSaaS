@@ -27,8 +27,14 @@ class RefundError(Exception):
 def _mp_payment_id_for(order):
     """
     payment_id de MP del pedido: primero el MpPayment aprobado registrado
-    por el webhook; si no hay, el `mp_payment_id` que orders pueda haber
-    guardado en el pedido (contrato track B).
+    por el webhook; si no hay fila, `order.mp_payment_id` — campo que
+    SOLO escribe mark_order_paid con source='mp' (el webhook, con el id
+    que MP devolvió para ESTE pedido).
+
+    NUNCA `order.payment_ref`: ese campo lo completa el dueño al
+    confirmar pagos MANUALES (texto libre — alias, número de operación).
+    Usarlo como id de pago MP permitiría disparar un refund contra el
+    cobro de OTRO pedido copiando su referencia.
     """
     order_pk    =   getattr(order, 'pk', None) or getattr(order, 'id', None)
     record      =   (
@@ -41,7 +47,7 @@ def _mp_payment_id_for(order):
     )
     if record is not None and record.mp_payment_id:
         return record.mp_payment_id, record
-    ref         =   str(getattr(order, 'mp_payment_id', '') or getattr(order, 'payment_ref', '') or '')
+    ref         =   str(getattr(order, 'mp_payment_id', '') or '')
     return (ref or None), None
 
 

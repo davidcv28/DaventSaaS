@@ -39,8 +39,14 @@ logger  =   logging.getLogger(__name__)
 CUSTOMER_EVENT_KINDS    =   frozenset({
     'paid', 'packing', 'shipped', 'delivered', 'expired', 'cancelled', 'refunded',
 })
-#Alta del pedido + incidencias manuales → email al DUEÑO.
-OWNER_EVENT_KINDS       =   frozenset({'created', 'amount_mismatch', 'stock_conflict'})
+#Alta del pedido + incidencias manuales y de revisión de dinero → email
+#al DUEÑO. Los kinds de revisión (duplicate_payment, paid_after_close,
+#refund_after_delivery) son plata que entró/salió mal: mismo nivel de
+#alerta que amount_mismatch/stock_conflict — nunca pueden quedar mudos.
+OWNER_EVENT_KINDS       =   frozenset({
+    'created', 'amount_mismatch', 'stock_conflict',
+    'duplicate_payment', 'paid_after_close', 'refund_after_delivery',
+})
 #=========================================
 # COPY es-AR
 #=========================================
@@ -67,8 +73,11 @@ CUSTOMER_STATUS_PHRASES  =   {
     'refunded'      :   ('fue reembolsado', 'Tu pedido fue reembolsado por el comercio.'),
 }
 ISSUE_PHRASES           =   {
-    'stock_conflict'    :   'no alcanza el stock para completar el pago',
-    'amount_mismatch'   :   'el monto declarado no coincide con el total del pedido',
+    'stock_conflict'        :   'no alcanza el stock para completar el pago',
+    'amount_mismatch'       :   'el monto declarado no coincide con el total del pedido',
+    'duplicate_payment'     :   'se acreditó un segundo pago sobre un pedido ya pago',
+    'paid_after_close'      :   'llegó un pago sobre un pedido ya cerrado',
+    'refund_after_delivery' :   'hubo un reembolso/contracargo con el pedido ya entregado',
 }
 #=========================================
 # HELPERS

@@ -263,6 +263,10 @@ class PaymentProof(models.Model):
     """
     order                       =   models.OneToOneField(Order, on_delete = models.CASCADE, related_name = 'proof')
     image_key                   =   models.CharField(max_length = 200, verbose_name = 'Imagen (key en R2)')
+    #Bytes del WebP normalizado: la cuota de storage del plan los cuenta
+    #y los libera release_proof al borrar el comprobante de un pedido
+    #cerrado sin pago (EXPIRED/CANCELLED).
+    size                        =   models.PositiveIntegerField(default = 0, verbose_name = 'Tamaño en bytes')
     created_at                  =   models.DateTimeField(auto_now_add = True)
     class Meta:
         app_label               =   'orders'

@@ -718,6 +718,37 @@ class CustomerGoogleTests(TestCase):
         #Y el login por password queda cerrado.
         self.assertEqual(_login(self.client, email = 'google@example.com', password = PASSWORD).status_code, 401)
 
+    def test_google_race_path_applies_same_hardening(self):
+        """Carrera de altas (IntegrityError tras el INSERT): la cuenta
+        que 'gana' puede ser una pre-registrada con password usable —
+        el path del IntegrityError corre el MISMO hardening que el de
+        cuenta existente (invalida password + sella tokens_valid_after),
+        nunca devuelve la cuenta recién creada sin proteger."""
+        from django.contrib.auth.hashers import is_password_usable
+        from django.db import IntegrityError
+        from StoreApp.domains.customers.services import google as google_svc
+        existing    =   Customer(email = 'race@example.com')
+        existing.set_password('Password#1')
+        empty_qs    =   MagicMock()
+        empty_qs.first.return_value   =   None
+        found_qs    =   MagicMock()
+        found_qs.first.return_value   =   existing
+        new_customer    =   MagicMock()
+        new_customer.save.side_effect  =   IntegrityError('duplicate key')
+        with patch.object(google_svc, 'Customer') as MockCustomer, \
+             patch.object(google_svc, 'ensure_membership'), \
+             patch.object(existing, 'save') as existing_save:
+            MockCustomer.objects.filter.side_effect   =   [empty_qs, found_qs]
+            MockCustomer.return_value                 =   new_customer
+            customer, is_new  =   google_svc.google_customer_login(
+                {'email': 'race@example.com', 'first_name': 'Race'}, self.store)
+        self.assertFalse(is_new)
+        self.assertIs(customer, existing)
+        self.assertFalse(is_password_usable(existing.password))
+        self.assertIsNotNone(existing.tokens_valid_after)
+        self.assertTrue(existing.email_verified)
+        existing_save.assert_called_once()
+
 
 class CustomerThrottleTests(TestCase):
     def setUp(self):

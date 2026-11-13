@@ -143,7 +143,11 @@ def google_customer_login(info, store):
             if customer is None:
                 raise
             is_new  =   False
-    else:
+    if not is_new:
+        #La cuenta YA existía (o la creó la carrera de altas): mismo
+        #camino de hardening que el branch else original — el IntegrityError
+        #nunca debe devolver una cuenta recién creada sin invalidar la
+        #password utilizable ni sellar los tokens del pre-registrante.
         ensure_membership(customer, store)
         update_fields   =   []
         #Anti-pre-hijacking: Google probó la titularidad del EMAIL, no

@@ -15,14 +15,18 @@ acotado a la tienda — el id numérico jamás aparece en rutas públicas.
 import logging
 import uuid
 
+from django.db import transaction
 from django.http import Http404
 from rest_framework import serializers, status
 from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
-from rest_framework.throttling import AnonRateThrottle, UserRateThrottle
 from rest_framework.views import APIView
 
-from DaventProject.throttling import PublicReadThrottle
+from DaventProject.throttling import (
+    PublicReadThrottle,
+    ResilientAnonRateThrottle,
+    ResilientUserRateThrottle,
+)
 from StoreApp.domains.customers.authentication import (
     CustomerJWTAuthentication,
     IsCustomer,
@@ -31,6 +35,7 @@ from StoreApp.domains.customers.models import CustomerAddress
 from StoreApp.domains.orders.models import Order, PaymentProof
 from StoreApp.domains.orders.serializers import OrderCreateSerializer
 from StoreApp.domains.orders.services.checkout import (
+    INTERNAL_EVENT_KINDS,
     build_receipt_payload,
     create_order,
     find_order_by_token,
@@ -38,9 +43,13 @@ from StoreApp.domains.orders.services.checkout import (
     order_tracking_payload,
     public_store,
 )
+from StoreApp.domains.stores.models import Store
 from StoreApp.domains.stores.services import issue_captcha, verify_captcha
 from StoreApp.domains.stores.services.imaging import normalize_image
 from StoreApp.domains.stores.services.storage import (
+    _check_quota,
+    _consume_quota,
+    _delete_object,
     object_url,
     put_object,
     validate_image_file,
@@ -51,12 +60,12 @@ PROOF_MAX_BYTES  =   4 * 1024 * 1024   # mismo tope que el resto de imágenes
 #=========================================
 # THROTTLES (scopes propios con rate fija — no requieren tocar settings)
 #=========================================
-class OrderCreateThrottle(UserRateThrottle):
+class OrderCreateThrottle(ResilientUserRateThrottle):
     """Alta de pedidos por comprador autenticado (10/h — muy por encima
     de un checkout legítimo, corta el flood de pedidos falsos)."""
     scope   =   'store_order_create'
     rate    =   '10/hour'
-class OrderProofThrottle(AnonRateThrottle):
+class OrderProofThrottle(ResilientAnonRateThrottle):
     """Subida de comprobantes por IP (10/h — cada una escribe en R2)."""
     scope   =   'store_order_proof'
     rate    =   '10/hour'
@@ -188,6 +197,7 @@ class PublicOrderEventsView(APIView):
                 'created_at'    :   event.created_at.isoformat() if event.created_at else None,
             }
             for event in events
+            if event.kind not in INTERNAL_EVENT_KINDS
         ], status = status.HTTP_200_OK)
 
 
@@ -215,20 +225,45 @@ class PublicOrderProofView(APIView):
             body, _ext, content_type  =   normalize_image(upload, kind = 'chat')
         except Exception:
             return Response({'image': 'No pudimos procesar la imagen. Probá con otra.'}, status = status.HTTP_400_BAD_REQUEST)
+        #Los comprobantes ocupan cuota de storage del plan como
+        #cualquier imagen: fast-path sin lock antes de subir el objeto
+        #(descontando el comprobante previo si es un reemplazo).
+        size    =   len(body)
+        old_size    =   getattr(getattr(order, 'proof', None), 'size', 0) or 0
+        try:
+            _check_quota(store, size, replacing_bytes = old_size)
+        except ValueError as exc:
+            return Response({'image': str(exc)}, status = status.HTTP_400_BAD_REQUEST)
         key     =   f'stores/{store.id}/proofs/{uuid.uuid4().hex}.webp'
         try:
             put_object(key, body, content_type)
         except ValueError as exc:
             return Response({'image': str(exc)}, status = status.HTTP_400_BAD_REQUEST)
-        old_key =   getattr(getattr(order, 'proof', None), 'image_key', None)
-        PaymentProof.objects.update_or_create(
-            order       =   order,
-            defaults    =   {'image_key': key},
-        )
+        #Locks Store → Order (mismo orden que checkout/expire/cancel):
+        #serializan uploads concurrentes del mismo pedido (OneToOne) y
+        #el ajuste de cuota contra otras subidas de la tienda.
+        try:
+            with transaction.atomic():
+                locked_store    =   Store.objects.select_for_update().get(pk = store.pk)
+                Order.objects.select_for_update().filter(pk = order.pk).first()
+                locked_order    =   Order.objects.select_related('proof').get(pk = order.pk)
+                old_proof       =   getattr(locked_order, 'proof', None)
+                old_key         =   old_proof.image_key if old_proof else None
+                old_size        =   old_proof.size if old_proof else 0
+                new_used        =   _check_quota(locked_store, size, replacing_bytes = old_size)
+                PaymentProof.objects.update_or_create(
+                    order       =   locked_order,
+                    defaults    =   {'image_key': key, 'size': size},
+                )
+                _consume_quota(locked_store, new_used)
+        except ValueError as exc:
+            #El objeto ya subido quedaría huérfano si la cuota se agotó
+            #en la re-validación bajo lock: se borra antes de responder.
+            _delete_object(key)
+            return Response({'image': str(exc)}, status = status.HTTP_400_BAD_REQUEST)
         #Si ya había comprobante, el objeto viejo queda huérfano en R2:
         #se borra best-effort (la key nueva ya está persistida).
         if old_key and old_key != key:
-            from StoreApp.domains.stores.services.storage import _delete_object
             _delete_object(old_key)
         logger.info('Comprobante subido: order=%s store=%s', order.pk, store.slug)
         return Response({'proof_uploaded': True, 'image': object_url(key, private = True)}, status = status.HTTP_201_CREATED)

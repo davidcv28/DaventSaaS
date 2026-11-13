@@ -89,6 +89,13 @@ DEFAULT_DEADLINE_HOURS  =   48
 ADDRESS_FIELD_MAX       =   {'label': 40, 'line1': 160, 'line2': 160, 'city': 120, 'province': 120, 'postal_code': 20, 'country': 2}
 ADDRESS_REQUIRED        =   ('line1', 'city', 'province')
 MANUAL_PAYMENT_METHODS  =   {Order.PaymentMethod.TRANSFER, Order.PaymentMethod.WHATSAPP, Order.PaymentMethod.CASH}
+#Kinds internos de revisión de dinero/stock: JAMÁS salen por la API
+#pública — el comprador (poseedor del tracking_token) no tiene por qué
+#saber que su pago quedó flaggeado para revisión manual.
+INTERNAL_EVENT_KINDS    =   frozenset({
+    'stock_conflict', 'amount_mismatch', 'duplicate_payment',
+    'paid_after_close', 'refund_after_delivery',
+})
 #=========================================
 # STORE / ORDER LOOKUP
 #=========================================
@@ -333,12 +340,15 @@ def create_order(*, store, customer, items = None, address = None, shipping_meth
     if ship not in Order.ShippingMethod.values:
         raise serializers.ValidationError({'shipping_method': 'Método de entrega inválido.'})
     key         =   str(idempotency_key or '').strip()[:80]
-    #Idempotencia: replay → el MISMO pedido (200 en la vista, no 201).
+    #Idempotencia scopeada al COMPRADOR: la key es input del cliente —
+    #sin `customer` en el filtro, un POST con la key de otro cliente
+    #devolvía SU pedido (tracking_token + PII) en vez de crear el propio.
     if key:
-        existing    =   Order.objects.filter(store = store, idempotency_key = key).first()
+        existing    =   Order.objects.filter(store = store, idempotency_key = key, customer = customer).first()
         if existing is not None:
             return existing, False
-    merged      =   _merge_lines(items, cart)
+        if Order.objects.filter(store = store, idempotency_key = key).exists():
+            raise serializers.ValidationError({'idempotency_key': 'Esa clave de idempotencia ya fue usada por otra compra.'})
     #Validación de métodos ANTES del atomic (solo lecturas).
     if not _payment_method_allowed(store, method):
         raise serializers.ValidationError({'payment_method': 'Esta tienda no tiene habilitado ese método de pago.'})
@@ -348,6 +358,14 @@ def create_order(*, store, customer, items = None, address = None, shipping_meth
             #Serializa la numeración por tienda: dos checkouts simultáneos
             #no pueden leer el mismo last_number ni pisarse el unique.
             locked_store    =   Store.objects.select_for_update().get(pk = store.pk)
+            #El carrito se bloquea y se lee DENTRO del atomic: dos
+            #checkouts concurrentes del mismo carrito se serializan y un
+            #item agregado entre el fetch de la vista y el delete() no se
+            #pierde sin entrar al pedido.
+            if cart is not None:
+                from StoreApp.domains.cart.models import Cart
+                cart        =   Cart.objects.select_for_update().get(pk = cart.pk)
+            merged          =   _merge_lines(items, cart)
             lines           =   _resolve_lines(locked_store, customer, merged)
             priced, subtotal, discount_total   =   _price_lines(lines, locked_store, customer)
             config          =   _payment_config_of(locked_store)
@@ -410,11 +428,12 @@ def create_order(*, store, customer, items = None, address = None, shipping_meth
     except IntegrityError:
         #Carrera de idempotencia: dos requests con la misma key pasaron el
         #pre-check — el unique (store, idempotency_key) cortó al segundo;
-        #se devuelve el pedido ganador en vez de un 500.
+        #se devuelve el pedido ganador SOLO si es del mismo comprador.
         if key:
-            existing    =   Order.objects.filter(store = store, idempotency_key = key).first()
+            existing    =   Order.objects.filter(store = store, idempotency_key = key, customer = customer).first()
             if existing is not None:
                 return existing, False
+            raise serializers.ValidationError({'idempotency_key': 'Esa clave de idempotencia ya fue usada.'})
         raise
 
 
@@ -533,6 +552,10 @@ def order_tracking_payload(order):
     """
     store   =   order.store
     payload =   order_public_payload(order, store)
+    #Últimos 50 eventos, en orden cronológico, sin los kinds internos
+    #de revisión (INTERNAL_EVENT_KINDS): el payload es el que consume
+    #el seguimiento del comprador.
+    latest      =   list(order.events.order_by('-created_at', '-id')[:50])
     payload['events']   =   [
         {
             'kind'          :   event.kind,
@@ -540,7 +563,8 @@ def order_tracking_payload(order):
             'status_to'     :   event.status_to,
             'created_at'    :   event.created_at.isoformat() if event.created_at else None,
         }
-        for event in order.events.all()[:50]
+        for event in reversed(latest)
+        if event.kind not in INTERNAL_EVENT_KINDS
     ]
     payload['shipping_address'] =   order.shipping_address or {}
     payload['invoice_ref']       =   order.invoice_ref or None

@@ -138,9 +138,25 @@ class StoreOrderViewSet(viewsets.GenericViewSet):
         if data['status'] == 'SHIPPED' and data.get('generate'):
             #Generación por API del correo del dueño (credenciales de su
             #contrato en Cobros → Envíos): devuelve carrier+código.
+            #La transición se valida BAJO LOCK antes de pegarle a la API
+            #externa — un estado inválido ya no genera el envío (ni manda
+            #la PII del comprador) para después fallar en advance_order.
+            from django.db import transaction
+            from rest_framework import serializers
             from StoreApp.domains.orders.services.carriers import generate_shipment
-            carrier, tracking_code    =   generate_shipment(order.store, order)
-            carrier_label             =   ''
+            with transaction.atomic():
+                locked  =   Order.objects.select_for_update().get(pk = order.pk)
+                if Order.Status.SHIPPED not in Order.TRANSITIONS.get(locked.status, set()):
+                    raise serializers.ValidationError({
+                        'status': f'No se puede enviar un pedido en estado "{locked.status}".',
+                    })
+                carrier, tracking_code    =   generate_shipment(locked.store, locked)
+                carrier_label             =   ''
+                advance_order(
+                    locked, Order.Status.SHIPPED, actor = 'owner',
+                    carrier = carrier, carrier_label = carrier_label, tracking_code = tracking_code,
+                )
+            return Response(StoreOrderDetailSerializer(self._fresh_detail(order)).data, status = status.HTTP_200_OK)
         advance_order(
             order, data['status'], actor = 'owner',
             carrier = carrier, carrier_label = carrier_label, tracking_code = tracking_code,

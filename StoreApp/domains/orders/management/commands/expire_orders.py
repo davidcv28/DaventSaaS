@@ -20,6 +20,8 @@ from django.utils import timezone
 
 from StoreApp.domains.orders.models import Order
 from StoreApp.domains.orders.services.events import append_event
+from StoreApp.domains.orders.services.proofs import release_proof
+from StoreApp.domains.stores.models import Store
 
 
 class Command(BaseCommand):
@@ -46,6 +48,9 @@ class Command(BaseCommand):
         expired =   0
         for order in candidates:
             with transaction.atomic():
+                #Store antes que Order (mismo orden de locks que el
+                #upload de comprobantes): release_proof ajusta la cuota.
+                locked_store    =   Store.objects.select_for_update().get(pk = order.store_id)
                 locked  =   (Order.objects
                     .select_for_update()
                     .filter(pk = order.pk, status = Order.Status.PENDING_PAYMENT)
@@ -55,5 +60,8 @@ class Command(BaseCommand):
                 locked.status   =   Order.Status.EXPIRED
                 locked.save(update_fields = ['status', 'updated_at'])
                 append_event(locked, 'expired', actor = 'system', status_from = Order.Status.PENDING_PAYMENT, status_to = Order.Status.EXPIRED)
+                #El pedido vencido ya no admite pago: su comprobante
+                #queda sin función — se libera fila + objeto + cuota.
+                release_proof(locked, locked_store = locked_store)
             expired +=  1
         self.stdout.write(self.style.SUCCESS(f'Pedidos vencidos: {expired} (candidatos: {len(candidates)}).'))

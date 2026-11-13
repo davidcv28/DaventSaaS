@@ -29,8 +29,13 @@ from StoreApp.domains.orders.services.mails import (
 )
 
 logger  =   logging.getLogger(__name__)
-#Kinds que además de mail generan Notification in-app al dueño.
-OWNER_NOTIFY_KINDS   =   frozenset({'created', 'amount_mismatch', 'stock_conflict'})
+#Kinds que además de mail generan Notification in-app al dueño. Los de
+#revisión de dinero van incluidos: plata mal acreditada/devuelta es la
+#alerta más urgente del panel.
+OWNER_NOTIFY_KINDS   =   frozenset({
+    'created', 'amount_mismatch', 'stock_conflict',
+    'duplicate_payment', 'paid_after_close', 'refund_after_delivery',
+})
 
 
 def dispatch_order_event(order, event):

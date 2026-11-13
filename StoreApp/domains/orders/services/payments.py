@@ -225,10 +225,13 @@ def advance_order(order, target_status, *, actor = 'owner', carrier = '', carrie
             raise _transition_error(locked)
         #Al despachar el pedido el dueño adjunta correo + código (o el de
         #la API del correo): viajan en el pedido y al comprador por track.
+        #OJO: _apply_status guarda SOLO status/updated_at — sin este save
+        #explícito el carrier/tracking_code se perdía en el camino.
         if target == Order.Status.SHIPPED:
             locked.carrier          =   carrier
             locked.carrier_label    =   carrier_label
             locked.tracking_code    =   tracking_code
+            locked.save(update_fields = ['carrier', 'carrier_label', 'tracking_code', 'updated_at'])
         _apply_status(locked, target, actor = actor)
         return locked
 
@@ -241,8 +244,16 @@ def cancel_order(order, *, actor = 'owner', reason = ''):
     """
     reason  =   str(reason or '')[:300]
     with transaction.atomic():
+        #Store antes que Order (orden de locks Store → Order, igual que
+        #el upload de comprobantes): release_proof ajusta la cuota.
+        from StoreApp.domains.stores.models import Store
+        from StoreApp.domains.orders.services.proofs import release_proof
+        locked_store    =   Store.objects.select_for_update().get(pk = order.store_id)
         locked  =   _lock(order)
         if Order.Status.CANCELLED not in Order.TRANSITIONS.get(locked.status, set()):
             raise _transition_error(locked, 'cancelar')
         _apply_status(locked, Order.Status.CANCELLED, actor = actor, note = reason)
+        #Pedido cancelado sin pago: el comprobante queda sin función —
+        #se libera fila + objeto R2 + bytes de la cuota del plan.
+        release_proof(locked, locked_store = locked_store)
         return locked

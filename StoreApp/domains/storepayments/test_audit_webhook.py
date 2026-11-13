@@ -162,6 +162,18 @@ class WebhookClosedOrderTests(WebhookAuditBase):
         record  =   MpPayment.objects.get(mp_payment_id = '999')
         self.assertEqual(record.status, MpPayment.Status.APPROVED)
 
+    def test_approved_never_pays_non_mp_order(self):
+        #Un pago MP aprobado NO puede acreditar un pedido creado para
+        #transferencia/efectivo: el método del pedido se valida fresco
+        #bajo lock antes de mark_paid — si no, cualquier cobro MP
+        #registrado contra ese pedido lo "pagaba" sin transferencia.
+        order   =   _fake_order(self.store, status = 'PENDING_PAYMENT', payment_method = 'transfer')
+        response, mocks =   self._deliver(_mp_payment(), order = order)
+        self.assertEqual(response.status_code, 200)
+        mocks['mark_paid'].assert_not_called()
+        #Queda flagged para revisión manual (la plata MP existe).
+        self.assertIn('paid_after_close', self._event_kinds(mocks))
+
 
 #=========================================
 # REEMBOLSO / CONTRACARGO

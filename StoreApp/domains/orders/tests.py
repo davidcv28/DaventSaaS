@@ -75,14 +75,18 @@ CUIT_VALIDO   =   '20123456786'
 ADDRESS       =   {'line1': 'Calle Falsa 123', 'city': 'CABA', 'province': 'CABA', 'postal_code': '1000', 'country': 'AR'}
 
 
-def _grant(profile, *codes):
+def _grant(profile, *codes, **limits):
     """Plan DAVENT + suscripción vigente de 30 días (reusa la suscripción
-    existente si ya tiene una — user es OneToOne)."""
+    existente si ya tiene una — user es OneToOne). `limits` crea
+    beneficios kind=LIMIT (p.ej. max_storage_mb=None = ilimitado)."""
     suscription =   getattr(profile, 'suscription', None)
     plan    =   suscription.plan_suscription if suscription is not None else SuscriptionPlan.objects.create(name = f'Plan {profile.pk}')
     for code in codes:
         benefit =   Benefit.objects.get_or_create(code = code, defaults = {'label': code, 'kind': Benefit.FLAG})[0]
         PlanBenefit.objects.get_or_create(plan = plan, benefit = benefit, defaults = {'enabled': True})
+    for code, value in limits.items():
+        benefit =   Benefit.objects.get_or_create(code = code, defaults = {'label': code, 'kind': Benefit.LIMIT})[0]
+        PlanBenefit.objects.get_or_create(plan = plan, benefit = benefit, defaults = {'enabled': True, 'value': value})
     if suscription is None:
         Suscription.objects.create(
             user                =   profile,
@@ -100,7 +104,10 @@ def _make_owner(username, *, ecommerce = True):
     cache.delete(f'planben:{profile.pk}')
     if ecommerce:
         #has_ecommerce: el gate de plan de toda la superficie de venta.
-        _grant(profile, 'has_ecommerce')
+        #max_storage_mb ilimitado: los comprobantes de pago consumen la
+        #cuota de storage del plan (sin el beneficio la cuota es 0 y la
+        #subida de proof se rechaza — comportamiento real, no bug).
+        _grant(profile, 'has_ecommerce', max_storage_mb = None)
     return profile
 
 
@@ -235,6 +242,21 @@ class CreateOrderServiceTests(TestCase):
         self.assertFalse(created_3)
         self.assertEqual(third.pk, first.pk)
         self.assertEqual(OrderItem.objects.count(), 1)
+
+    def test_idempotency_key_is_scoped_to_customer(self):
+        #La key es input del cliente: otro comprador con la MISMA key no
+        #puede recibir el pedido ajeno (tracking_token + PII + proof) —
+        #se rechaza y no se crea nada. El replay del DUEÑO sigue igual.
+        other   =   _make_customer('beto@example.com')
+        kwargs  =   _order_kwargs(self.store, self.customer, self.product, qty = 1, idempotency_key = 'shared-key')
+        first, _created  =   create_order(**kwargs)
+        with self.assertRaises(drf_serializers.ValidationError):
+            create_order(**_order_kwargs(self.store, other, self.product, qty = 1, idempotency_key = 'shared-key'))
+        self.assertEqual(Order.objects.count(), 1)
+        replay, created  =   create_order(**kwargs)
+        self.assertFalse(created)
+        self.assertEqual(replay.pk, first.pk)
+        self.assertEqual(replay.tracking_token, first.tracking_token)
 
     def test_product_of_other_store_rejected(self):
         foreign =   _make_product(self.store_b, name = 'Ajeno')
@@ -847,6 +869,22 @@ class PublicOrderApiTests(TestCase):
         self.assertIn('paid', kinds)
         self.assertIn('packing', kinds)
 
+    def test_internal_event_kinds_hidden_from_public(self):
+        #Kinds de revisión de dinero/stock JAMÁS salen por la API pública:
+        #el comprador (poseedor del tracking_token) no tiene por qué
+        #saber que su pago quedó flaggeado para revisión manual.
+        data    =   self._create_via_api()
+        order   =   Order.objects.get()
+        for kind in ('duplicate_payment', 'paid_after_close', 'refund_after_delivery',
+                     'amount_mismatch', 'stock_conflict'):
+            append_event(order, kind, actor = 'system', note = 'interno')
+        track   =   self.client.get(f'{self.track_base}/{data["tracking_token"]}/')
+        self.assertEqual(track.status_code, 200)
+        self.assertEqual({e['kind'] for e in track.json()['events']}, {'created'})
+        events  =   self.client.get(f'{self.track_base}/{data["tracking_token"]}/events/')
+        self.assertEqual(events.status_code, 200)
+        self.assertEqual({e['kind'] for e in events.json()}, {'created'})
+
     #PROOF
     def test_proof_requires_pending_manual_order(self):
         data    =   self._create_via_api()
@@ -887,6 +925,55 @@ class PublicOrderApiTests(TestCase):
                 {'image': png}, format = 'multipart')
         self.assertEqual(response.status_code, 400)
         mock_put.assert_not_called()
+
+    def _upload_proof(self, token):
+        png = _tiny_png()
+        with patch('StoreApp.domains.orders.views.public.put_object', return_value = 'k'), \
+             patch('StoreApp.domains.orders.views.public.normalize_image', return_value = (b'webp-bytes', 'webp', 'image/webp')):
+            return self.client.post(
+                f'{self.track_base}/{token}/proof/',
+                {'image': png}, format = 'multipart')
+
+    def test_proof_release_on_expire_frees_quota(self):
+        #Pedido vencido sin pago: el comprobante queda sin función —
+        #expire_orders borra fila + objeto R2 y devuelve los bytes a la
+        #cuota de storage del plan.
+        data    =   self._create_via_api()
+        order   =   Order.objects.get()
+        response    =   self._upload_proof(data['tracking_token'])
+        self.assertEqual(response.status_code, 201)
+        self.store.refresh_from_db()
+        self.assertGreater(self.store.storage_used_bytes, 0)
+        Order.objects.filter(pk = order.pk).update(expires_at = timezone.now() - timedelta(hours = 1))
+        with patch('StoreApp.domains.orders.services.proofs._delete_object') as delete_mock:
+            call_command('expire_orders')
+        self.assertFalse(PaymentProof.objects.filter(order_id = order.pk).exists())
+        self.store.refresh_from_db()
+        self.assertEqual(self.store.storage_used_bytes, 0)
+        delete_mock.assert_called_once()
+
+    def test_proof_release_on_cancel_frees_quota(self):
+        #Misma regla al cancelar: pedido cerrado sin pago → comprobante
+        #liberado (fila + objeto + cuota).
+        data    =   self._create_via_api()
+        order   =   Order.objects.get()
+        response    =   self._upload_proof(data['tracking_token'])
+        self.assertEqual(response.status_code, 201)
+        with patch('StoreApp.domains.orders.services.proofs._delete_object'):
+            cancel_order(order, actor = 'owner', reason = 'test')
+        self.assertFalse(PaymentProof.objects.filter(order_id = order.pk).exists())
+        self.store.refresh_from_db()
+        self.assertEqual(self.store.storage_used_bytes, 0)
+
+    def test_paid_order_keeps_proof(self):
+        #Pedido PAGO: el comprobante es evidencia de la operación —
+        #ni advance ni refund lo tocan.
+        data    =   self._create_via_api()
+        order   =   Order.objects.get()
+        response    =   self._upload_proof(data['tracking_token'])
+        self.assertEqual(response.status_code, 201)
+        mark_order_paid(order)
+        self.assertTrue(PaymentProof.objects.filter(order_id = order.pk).exists())
 
     #RECEIPT
     def test_receipt_no_fiscal_payload(self):
@@ -1006,6 +1093,37 @@ class OwnerOrderApiTests(TestCase):
         self.assertEqual(response.status_code, 200)
         self.order_a.refresh_from_db()
         self.assertEqual(self.order_a.status, Order.Status.CANCELLED)
+
+    def test_advance_generate_never_calls_carrier_on_invalid_transition(self):
+        #generate=true con transición inválida NO puede pegarle a la API
+        #del correo (mandaría la PII del comprador y crearía un envío
+        #huérfano): la transición se valida bajo lock ANTES de la llamada
+        #externa.
+        order   =   mark_order_paid(self.order_a)
+        order   =   advance_order(order, Order.Status.SHIPPED, actor = 'owner')
+        order   =   advance_order(order, Order.Status.DELIVERED, actor = 'owner')
+        with patch('StoreApp.domains.orders.services.carriers.generate_shipment') as gen:
+            response    =   self.client.post(
+                f'{self.base}{order.pk}/advance/',
+                {'status': 'SHIPPED', 'generate': True}, format = 'json')
+        self.assertEqual(response.status_code, 400)
+        gen.assert_not_called()
+        order.refresh_from_db()
+        self.assertEqual(order.status, Order.Status.DELIVERED)
+
+    def test_advance_generate_calls_carrier_and_records_tracking(self):
+        order   =   mark_order_paid(self.order_a)
+        with patch('StoreApp.domains.orders.services.carriers.generate_shipment',
+                   return_value = ('andreani', 'ENV-999')) as gen:
+            response    =   self.client.post(
+                f'{self.base}{order.pk}/advance/',
+                {'status': 'SHIPPED', 'generate': True}, format = 'json')
+        self.assertEqual(response.status_code, 200)
+        gen.assert_called_once()
+        order.refresh_from_db()
+        self.assertEqual(order.status, Order.Status.SHIPPED)
+        self.assertEqual(order.carrier, 'andreani')
+        self.assertEqual(order.tracking_code, 'ENV-999')
 
     def test_list_status_filter(self):
         response    =   self.client.get(f'{self.base}?status=PENDING_PAYMENT')
@@ -1298,3 +1416,22 @@ class CustomerOrdersApiTests(TestCase):
         _bearer(other_client, self.other)
         response    =   other_client.get(f'{self.list_url}{self.order_a.tracking_token}/')
         self.assertEqual(response.status_code, 404)
+
+
+class CarrierTrackingUrlTests(TestCase):
+    """tracking_url: el código lo pega el dueño a mano — sin URL-quote un
+    `&`/`?`/`#` inyectaría parámetros extra en la query del correo."""
+
+    def test_tracking_code_is_url_quoted(self):
+        from StoreApp.domains.orders.services.carriers import tracking_url
+        url =   tracking_url('oca', 'ABC 123&x=1#frag')
+        self.assertTrue(url.startswith('https://www.oca.com.ar/seguimiento?numero='))
+        self.assertIn('ABC%20123%26x%3D1%23frag', url)
+        #Host fijo del carrier: el código jamás puede cambiarlo.
+        self.assertNotIn('evil', url)
+
+    def test_tracking_url_empty_inputs(self):
+        from StoreApp.domains.orders.services.carriers import tracking_url
+        self.assertEqual(tracking_url('', '123'), '')
+        self.assertEqual(tracking_url('oca', ''), '')
+        self.assertEqual(tracking_url('dhl', '123'), '')

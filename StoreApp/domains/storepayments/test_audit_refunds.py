@@ -299,6 +299,25 @@ class RefundEndpointAuditTests(TestCase):
         self.assertEqual(response.status_code, 200)
         refund_mp.assert_called_once()
 
+    def test_refund_never_uses_manual_payment_ref(self):
+        #Pedido MP "pagado" a mano por el dueño (confirm-payment) con una
+        #reference de texto libre: payment_ref guarda ESA referencia, no
+        #un payment_id de MP. Sin un MpPayment aprobado local el refund
+        #NO puede adivinar el id — antes caía al fallback payment_ref y
+        #podía reembolsar el cobro de OTRO pedido con solo copiar su
+        #número de operación.
+        order   =   _mp_order(self.store, _make_customer(), self.product, qty = 1)
+        mark_order_paid(order, source = 'manual', reference = 'OP-12345-AJENO', actor = 'owner')
+        order.refresh_from_db()
+        self.assertEqual(order.payment_ref, 'OP-12345-AJENO')
+        self.assertFalse(order.mp_payment_id)
+        self.client.force_authenticate(user = self.user)
+        response, refund_mp   =   self._refund(order.pk, user = self.user)
+        self.assertEqual(response.status_code, 400)
+        refund_mp.assert_not_called()
+        order.refresh_from_db()
+        self.assertEqual(order.status, Order.Status.PACKING)
+
     def test_refund_mp_rejected_keeps_order(self):
         self.client.force_authenticate(user = self.user)
         with patch(f'{MP_CLIENT}.refund_mp_payment', side_effect = MpApiError('rechazado', status_code = 400)):
