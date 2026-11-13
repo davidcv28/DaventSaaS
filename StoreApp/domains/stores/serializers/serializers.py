@@ -2,6 +2,7 @@ import re
 from urllib.parse import parse_qs, quote, urlparse
 
 from django.db import IntegrityError, models
+from django.utils.html import strip_tags
 from rest_framework import serializers
 
 from StoreApp.domains.services.services import (
@@ -902,3 +903,9 @@ class StoreContactSerializer(serializers.Serializer):
     website                     =   serializers.CharField(required = False, allow_blank = True, write_only = True)
     challenge_id                =   serializers.CharField(write_only = True)
     captcha_answer              =   serializers.CharField(max_length = 8, write_only = True)
+    def validate_name(self, value):
+        #FP-05: el nombre viaja al mail del vendedor — se despoja de tags
+        #HTML en la entrada para que ningún cliente de correo lo renderice.
+        return strip_tags(value).strip()
+    def validate_message(self, value):
+        return strip_tags(value).strip()

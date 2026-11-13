@@ -1683,6 +1683,18 @@ def pattern_for_template(template):
             return by_template
     return DesignPattern.objects.filter(is_default = True, is_active = True).first()
 
+def _allowed_templates_safe(store):
+    """
+    Whitelist de diseños del plan vigente (allowed_templates_of del PATCH).
+    None si la consulta falla: fail-open como _effective_site_theme — mejor
+    un diseño de más que un documento caído.
+    """
+    try:
+        from StoreApp.domains.stores.services.services import allowed_templates_of
+        return allowed_templates_of(getattr(store, 'user', None))
+    except Exception:
+        return None
+
 def _effective_site_theme(store, site_theme):
     """
     site_theme filtrado por el plan vigente de la tienda (espejo del
@@ -1739,6 +1751,13 @@ def render_store_pattern(store, customization = None, product = None, product_mi
     """
     customization = customization if customization is not None else getattr(store, 'customization', None)
     template = getattr(customization, 'template', '') if customization is not None else ''
+    #Gate de plan en el render (CP-01): el PATCH ya filtra por
+    #allowed_templates_of, pero un downgrade dejaba guardado un diseño
+    #premium y el documento lo seguía publicando. Fuera de la whitelist
+    #cae al patrón por defecto del catálogo (como la web Vue).
+    allowed = _allowed_templates_safe(store)
+    if allowed is not None and template and template not in allowed:
+        template = ''
     pattern = pattern_for_template(template)
     if pattern is None or not (pattern.html or '').strip():
         return None
@@ -1762,6 +1781,18 @@ def render_store_pattern(store, customization = None, product = None, product_mi
     #API pública de la plantilla Vue: sin has_design_advanced las secciones
     #premium del Studio no se publican en el documento.
     site_theme = _effective_site_theme(store, site_theme_raw)
+    #Estilo fuera del plan (mismo descarte que clean_site_theme): un
+    #style.id cuya plantilla ya no cubre el plan vigente no se publica —
+    #filter_site_theme recorta claves por flag pero no re-evalúa el tier.
+    if allowed is not None:
+        style_block =   site_theme.get('style')
+        if isinstance(style_block, dict) and style_block.get('id'):
+            from StoreApp.domains.stores.site_theme import _style_template_of
+            if _style_template_of(style_block['id']) not in allowed:
+                style_block.pop('id', None)
+                style_block.pop('palette', None)
+                if not style_block:
+                    site_theme.pop('style', None)
     style = site_theme.get('style') if isinstance(site_theme.get('style'), dict) else {}
     #Las páginas apagadas en "Qué mostrar" también se apagan en el
     #documento: se quita la superficie (la ruta sigue con la plantilla

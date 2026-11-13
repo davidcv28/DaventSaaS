@@ -16,6 +16,7 @@ Reglas transversales aplicadas:
 import re
 
 from django.contrib.auth.password_validation import validate_password
+from django.utils.html import strip_tags
 from django.core.exceptions import ValidationError as DjangoValidationError
 from django.utils.encoding import force_str
 from django.utils.http import urlsafe_base64_decode
@@ -54,6 +55,16 @@ def normalize_document(value):
     return re.sub(r'\D', '', (value or '').strip())
 
 
+def clean_free_text(value):
+    """
+    Texto libre del comprador (nombre, etiqueta, dirección): sin markup.
+    El front escapa con {{ }} pero el dato también viaja a mails/panel —
+    un payload `<img onerror>` no se persiste crudo (AC-05, defensa en
+    profundidad). strip_tags saca las etiquetas; strip limpia bordes.
+    """
+    return strip_tags(value or '').strip()
+
+
 #=====================================
 # LECTURA DE PERFIL
 #=====================================
@@ -89,6 +100,12 @@ class CustomerProfileUpdateSerializer(serializers.ModelSerializer):
     class Meta:
         model       =   Customer
         fields      =   ['first_name', 'last_name', 'phone', 'document_type', 'document']
+    def validate_first_name(self, value):
+        return clean_free_text(value)
+    def validate_last_name(self, value):
+        return clean_free_text(value)
+    def validate_document_type(self, value):
+        return clean_free_text(value).upper()
     def validate_phone(self, value):
         phone   =   normalize_phone(value)
         if phone and not _PHONE_RE.match(phone):
@@ -116,8 +133,24 @@ class CustomerRegisterSerializer(serializers.Serializer):
     first_name      =   serializers.CharField(required = False, allow_blank = True, max_length = 150)
     last_name       =   serializers.CharField(required = False, allow_blank = True, max_length = 150)
     store_slug      =   serializers.SlugField(required = False, allow_blank = True, max_length = 60)
+    def validate_first_name(self, value):
+        return clean_free_text(value)
+    def validate_last_name(self, value):
+        return clean_free_text(value)
     def validate_email(self, value):
         email   =   normalize_email(value)
+        local, _at, domain  =   email.rpartition('@')
+        #AC-03: la parte local debe ser ASCII — una 'а' cirílica (U+0430)
+        #genera un email visualmente idéntico a otra cuenta (homógrafo:
+        #en el panel del vendedor los dos compradores se ven iguales).
+        #El dominio se normaliza a IDNA (mismo criterio que
+        #stores.domains.normalize_domain); si no puede, se rechaza.
+        try:
+            local.encode('ascii')
+            domain  =   domain.encode('idna').decode('ascii')
+        except (UnicodeError, ValueError):
+            raise serializers.ValidationError('Ingresá un correo electrónico válido.')
+        email   =   f'{local}@{domain}'
         if Customer.objects.filter(email = email).exists():
             #Anti-enumeración: mensaje genérico (mismo criterio que users).
             raise serializers.ValidationError('Ya existe una cuenta con esos datos.')
@@ -219,8 +252,22 @@ class CustomerAddressSerializer(serializers.ModelSerializer):
             'postal_code', 'country', 'is_default', 'created_at',
         ]
         read_only_fields =   ['id', 'created_at']
+    #AC-05: los campos de dirección son texto libre que se muestra en el
+    #panel del vendedor y en etiquetas de envío — se persiste sin markup.
+    def validate_label(self, value):
+        return clean_free_text(value)
+    def validate_line1(self, value):
+        return clean_free_text(value)
+    def validate_line2(self, value):
+        return clean_free_text(value)
+    def validate_city(self, value):
+        return clean_free_text(value)
+    def validate_province(self, value):
+        return clean_free_text(value)
+    def validate_postal_code(self, value):
+        return clean_free_text(value)
     def validate_country(self, value):
-        value   =   (value or 'AR').strip().upper()
+        value   =   clean_free_text(value or 'AR').upper()
         if not re.fullmatch(r'[A-Z]{2}', value):
             raise serializers.ValidationError('Usá el código ISO de 2 letras del país (ej. AR).')
         return value

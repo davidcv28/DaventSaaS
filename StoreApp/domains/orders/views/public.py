@@ -215,6 +215,17 @@ class PublicOrderProofView(APIView):
         #solo por webhook y un pedido pago/cerrado no admite comprobante.
         if order.status != Order.Status.PENDING_PAYMENT or order.payment_method == Order.PaymentMethod.MP:
             return Response({'detail': 'Este pedido no admite comprobante de pago.'}, status = status.HTTP_400_BAD_REQUEST)
+        #First-write-wins: el tracking_token es una credencial pública
+        #(viaja en mails/WhatsApp) — si se permitiera reemplazar el
+        #comprobante, cualquier poseedor del link podría pisar la
+        #evidencia del comprador antes de que el dueño la revise.
+        #PaymentProof no tiene estado "revisado": aceptado = el pedido
+        #sale de PENDING_PAYMENT (gate de arriba) y un cierre sin pago
+        #libera la fila (release_proof), así que una re-subida legítima
+        #solo puede darse con un proof aún sin revisar — caso que no se
+        #puede distinguir del ataque anónimo. Se rechaza todo re-upload.
+        if hasattr(order, 'proof'):
+            return Response({'detail': 'Este pedido ya tiene un comprobante cargado.'}, status = status.HTTP_400_BAD_REQUEST)
         upload  =   request.FILES.get('image') or request.FILES.get('file')
         if upload is None:
             return Response({'image': 'Adjuntá la foto del comprobante.'}, status = status.HTTP_400_BAD_REQUEST)
@@ -227,11 +238,10 @@ class PublicOrderProofView(APIView):
             return Response({'image': 'No pudimos procesar la imagen. Probá con otra.'}, status = status.HTTP_400_BAD_REQUEST)
         #Los comprobantes ocupan cuota de storage del plan como
         #cualquier imagen: fast-path sin lock antes de subir el objeto
-        #(descontando el comprobante previo si es un reemplazo).
+        #(sin reemplazo posible — el proof es first-write-wins).
         size    =   len(body)
-        old_size    =   getattr(getattr(order, 'proof', None), 'size', 0) or 0
         try:
-            _check_quota(store, size, replacing_bytes = old_size)
+            _check_quota(store, size, replacing_bytes = 0)
         except ValueError as exc:
             return Response({'image': str(exc)}, status = status.HTTP_400_BAD_REQUEST)
         key     =   f'stores/{store.id}/proofs/{uuid.uuid4().hex}.webp'
@@ -247,13 +257,17 @@ class PublicOrderProofView(APIView):
                 locked_store    =   Store.objects.select_for_update().get(pk = store.pk)
                 Order.objects.select_for_update().filter(pk = order.pk).first()
                 locked_order    =   Order.objects.select_related('proof').get(pk = order.pk)
-                old_proof       =   getattr(locked_order, 'proof', None)
-                old_key         =   old_proof.image_key if old_proof else None
-                old_size        =   old_proof.size if old_proof else 0
-                new_used        =   _check_quota(locked_store, size, replacing_bytes = old_size)
-                PaymentProof.objects.update_or_create(
+                #Re-check bajo lock: dos uploads concurrentes del mismo
+                #pedido pasan el fast-path de arriba a la vez — el segundo
+                #espera el lock, ve el proof del primero y aborta (su
+                #objeto R2 se borra en el except de abajo).
+                if getattr(locked_order, 'proof', None) is not None:
+                    raise ValueError('Este pedido ya tiene un comprobante cargado.')
+                new_used        =   _check_quota(locked_store, size, replacing_bytes = 0)
+                PaymentProof.objects.create(
                     order       =   locked_order,
-                    defaults    =   {'image_key': key, 'size': size},
+                    image_key   =   key,
+                    size        =   size,
                 )
                 _consume_quota(locked_store, new_used)
         except ValueError as exc:
@@ -261,10 +275,6 @@ class PublicOrderProofView(APIView):
             #en la re-validación bajo lock: se borra antes de responder.
             _delete_object(key)
             return Response({'image': str(exc)}, status = status.HTTP_400_BAD_REQUEST)
-        #Si ya había comprobante, el objeto viejo queda huérfano en R2:
-        #se borra best-effort (la key nueva ya está persistida).
-        if old_key and old_key != key:
-            _delete_object(old_key)
         logger.info('Comprobante subido: order=%s store=%s', order.pk, store.slug)
         return Response({'proof_uploaded': True, 'image': object_url(key, private = True)}, status = status.HTTP_201_CREATED)
 

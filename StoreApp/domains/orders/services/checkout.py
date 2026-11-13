@@ -49,6 +49,7 @@ Decisiones documentadas:
   = no hay pedidos nuevos, pero el tracking de los ya emitidos sigue.
 """
 import logging
+import re
 from datetime import timedelta
 from decimal import Decimal
 from urllib.parse import quote
@@ -56,6 +57,7 @@ from urllib.parse import quote
 from django.db import IntegrityError, transaction
 from django.db.models import Max, Sum
 from django.utils import timezone
+from django.utils.html import strip_tags
 from rest_framework import serializers
 
 from StoreApp.domains.cart.services.benefits import (
@@ -148,11 +150,20 @@ def _merge_lines(items, cart = None):
     los errores son serializers.ValidationError → 400 en la vista.
     """
     merged  =   {}
+    def _strict_int(value):
+        #Entero estricto: int() a secas trunca floats ("1.9"→1, 817.5→817)
+        #silenciosamente — se acepta solo int o str de dígitos exactos.
+        if isinstance(value, bool):
+            return None
+        if isinstance(value, int):
+            return value
+        if isinstance(value, str) and re.fullmatch(r'\d+', value.strip()):
+            return int(value.strip())
+        return None
     def _add(raw_id, raw_qty, source):
-        try:
-            pid =   int(raw_id)
-            qty =   int(raw_qty)
-        except (TypeError, ValueError):
+        pid =   _strict_int(raw_id)
+        qty =   _strict_int(raw_qty)
+        if pid is None or qty is None:
             raise serializers.ValidationError({'items': f'Item inválido en {source}.'})
         if pid <= 0 or qty < 1:
             raise serializers.ValidationError({'items': f'Cantidad fuera de rango en {source}.'})
@@ -199,6 +210,12 @@ def _payment_method_allowed(store, method):
     return False
 
 
+_CONTROL_CHARS  =   re.compile(r'[\x00-\x08\x0b-\x1f\x7f]')
+def _clean_text(value):
+    """Texto plano para snapshots: sin tags HTML ni chars de control."""
+    return _CONTROL_CHARS.sub('', strip_tags(str(value or ''))).strip()
+
+
 def _address_snapshot(address):
     """
     Normaliza la dirección a un dict plano para el JSONField. Acepta
@@ -210,7 +227,10 @@ def _address_snapshot(address):
         return getattr(address, key, None)
     snapshot    =   {}
     for key, max_len in ADDRESS_FIELD_MAX.items():
-        value           =   str(_get(key) or '').strip()[:max_len]
+        #El snapshot se sirve crudo por tracking/receipt/panel (XSS
+        #latente si algún render lo mete como HTML): strip de tags y
+        #chars de control antes de persistir.
+        value           =   _clean_text(_get(key))[:max_len]
         if value:
             snapshot[key]   =   value
     return snapshot
@@ -227,13 +247,15 @@ def _require_home_address(address):
 
 def _customer_snapshot(customer):
     """Datos del comprador congelados al crear (perfil puede cambiar después)."""
+    #Mismo criterio que la dirección: el snapshot viaja crudo a
+    #tracking/receipt/panel — se guarda ya sanitizado.
     return {
-        'customer_first_name'       :   (customer.first_name or '').strip()[:150],
-        'customer_last_name'        :   (customer.last_name or '').strip()[:150],
-        'customer_email'            :   (customer.email or '').strip().lower()[:254],
-        'customer_phone'            :   str(customer.phone or '')[:24],
-        'customer_document_type'    :   (customer.document_type or '')[:4],
-        'customer_document'         :   str(customer.document or '')[:11],
+        'customer_first_name'       :   _clean_text(customer.first_name)[:150],
+        'customer_last_name'        :   _clean_text(customer.last_name)[:150],
+        'customer_email'            :   _clean_text(customer.email).lower()[:254],
+        'customer_phone'            :   _clean_text(customer.phone)[:24],
+        'customer_document_type'    :   _clean_text(customer.document_type)[:4],
+        'customer_document'         :   _clean_text(customer.document)[:11],
     }
 
 

@@ -11,6 +11,22 @@ Throttles compartidos entre dominios.
 logger = logging.getLogger(__name__)
 
 
+def _pinned_ident(ident, request):
+    """
+    Pinnea REMOTE_ADDR dentro del ident del throttle: con NUM_PROXIES=1
+    DRF toma el ÚLTIMO X-Forwarded-For — correcto tras nginx, pero un
+    cliente que llega directo al app (o un proxy que no reescribe XFF)
+    puede inyectar y rotar valores para renovar su cuota. Componiendo
+    `remote|ident` el bucket siempre incluye la IP de conexión real:
+    detrás del proxy es proxy|cliente y en acceso directo es la propia
+    IP del atacante — en ambos casos el spoof de XFF no suma cuota.
+    """
+    remote  =   (request.META.get('REMOTE_ADDR') or '').strip()
+    if remote and remote not in (ident or ''):
+        return f'{remote}|{ident}'
+    return ident
+
+
 class PublicReadThrottle(AnonRateThrottle):
     """
     Lecturas públicas (webs de clientes, catálogos, planes, locations).
@@ -30,6 +46,9 @@ class PublicReadThrottle(AnonRateThrottle):
     página deja de competir consigo misma.
     """
     scope   =   'public_read'
+
+    def get_ident(self, request):
+        return _pinned_ident(super().get_ident(request), request)
 
     def get_cache_key(self, request, view):
         ident   =   self.get_ident(request)
@@ -64,6 +83,9 @@ class _ResilientThrottleMixin:
             return super().wait()
         except Exception:                        # noqa: BLE001
             return None
+
+    def get_ident(self, request):
+        return _pinned_ident(super().get_ident(request), request)
 
 
 class ResilientAnonRateThrottle(_ResilientThrottleMixin, AnonRateThrottle):

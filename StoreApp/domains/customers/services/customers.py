@@ -11,6 +11,7 @@ Convenciones del proyecto replicadas:
 - Errores de negocio como `serializers.ValidationError` → 400 en la vista.
 """
 import logging
+import threading
 
 from django.conf import settings
 from django.contrib.auth.hashers import make_password
@@ -307,8 +308,14 @@ def SendCustomerPasswordResetEmailQuery(customer, store_slug = ''):
 def RequestCustomerPasswordResetQuery(email, store_slug = ''):
     customer    =   Customer.objects.filter(email__iexact = normalize_email(email)).first()
     if customer:
-        #Encolado post-commit: el tiempo de envío no delata si la cuenta existe.
-        transaction.on_commit(lambda: _enqueue_password_reset_email(customer.pk, store_slug))
+        #AC-01 (timing): el encolado va en un thread daemon — ni el broker
+        #ni el SMTP eager de dev estiran el request, así la respuesta
+        #tarda lo mismo exista o no la cuenta (oráculo de enumeración).
+        threading.Thread(
+            target  =   _enqueue_password_reset_email,
+            args    =   (customer.pk, store_slug),
+            daemon  =   True,
+        ).start()
 
 
 def ConfirmCustomerPasswordResetQuery(customer, new_password):

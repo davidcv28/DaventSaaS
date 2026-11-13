@@ -12,6 +12,7 @@ from django.http import Http404
 from django.shortcuts import get_object_or_404
 from django.utils import timezone
 from django.utils.cache import patch_cache_control
+from django.utils.html import strip_tags
 from rest_framework import status
 from rest_framework.decorators import action
 from rest_framework.permissions import AllowAny, IsAdminUser
@@ -152,6 +153,10 @@ CATALOG_NEW_DAYS        =   7
 #{nombre: [valores]} y nunca se evalúa más allá de estos límites.
 CATALOG_FEATURE_GROUPS  =   10
 CATALOG_FEATURE_VALUES  =   15
+#Tope de bytes del ?features= crudo: json.loads corre dos veces por
+#request (huella de cache + filtro) y un JSON patológico se parseaba
+#entero antes de recortar grupos/valores (CP-04).
+CATALOG_FEATURES_MAX    =   4096
 CATALOG_IDS_MAX         =   50
 #Topes de las facetas devueltas (un atributo con más valores se recorta a
 #los más frecuentes; los atributos con menos uso quedan fuera del panel).
@@ -378,6 +383,17 @@ class StoreReviewThrottle(AnonRateThrottle):
             self.rate                      =   self.THROTTLE_RATES.get('public_read')
             self.num_requests, self.duration =   self.parse_rate(self.rate)
         return super().allow_request(request, view)
+    def get_cache_key(self, request, view):
+        #El POST exige sesión de comprador: el bucket se cuenta por cuenta
+        #(además de la IP), así una sola IP/CGNAT no frena a otros clientes
+        #ni una cuenta con IPs rotativas infla el rating (FP-04).
+        customer    =   getattr(request, 'customer', None)
+        if request.method == 'POST' and customer is not None:
+            return self.cache_format % {
+                'scope' :   self.scope,
+                'ident' :   f'review-customer-{customer.pk}',
+            }
+        return super().get_cache_key(request, view)
 #=========================================
 # AI DESIGN THROTTLE (motor de diseño, rate en settings)
 #=========================================
@@ -728,7 +744,9 @@ class StoreViewSet(StoreBaseViewSet):
         #tocar la base ni entrar crudo a la cache key (cardinalidad
         #ilimitada = misses forzados + entradas de ~200 KB por request).
         product_id          =   (request.query_params.get('product') or '').strip()[:20]
-        if product_id.isdigit():
+        if product_id.isdigit() and int(product_id) <= 2 ** 63 - 1:
+            #Cota bigint: un id astronómico (p.ej. 10^20) desborda la
+            #columna en Postgres y devolvía un 500 público (CP-03).
             from StoreApp.domains.catalog.models import Product
             #is_exclusive queda fuera del documento público (este render
             #es anónimo): un id de exclusivo rinde con contexto vacío,
@@ -877,6 +895,10 @@ class StoreViewSet(StoreBaseViewSet):
         from django.http import HttpResponse
 
         from StoreApp.domains.design.services import pattern_document
+        #Mismo lookup que el resto de la familia pattern/*: un slug
+        #inexistente o una tienda no publicada/bloqueada devuelve 404 en
+        #vez de servir el puente bajo cualquier slug (CP-02).
+        self._pattern_store(slug)
         #Se lee el archivo en cada request: `BRIDGE_SCRIPT` queda cacheado al
         #importar el módulo y servía un puente viejo tras cada deploy/edición.
         script              =   Path(pattern_document.__file__).with_name('pattern_bridge.js').read_text(encoding = 'utf-8')
@@ -1304,12 +1326,20 @@ class StoreViewSet(StoreBaseViewSet):
         )
         serializer.is_valid(raise_exception = True)
         data        =   serializer.validated_data
+        #Una opinión por cliente-producto (FP-03): no hay endpoint de edición
+        #pública, así que el duplicado se rechaza con 409 en vez de inflar
+        #el rating con filas repetidas.
+        if product.reviews.filter(customer = customer).exists():
+            return Response(
+                {'detail': 'Ya publicaste tu opinión sobre este producto.'},
+                status = status.HTTP_409_CONFLICT,
+            )
         ProductReview.objects.create(
             store       =   store,
             product     =   product,
             customer    =   customer,
             is_positive =   data.get('is_positive') if can_rate else None,
-            text        =   data.get('text') or '',
+            text        =   strip_tags(data.get('text') or '').strip(),
             name        =   (customer.first_name or customer.email.split('@')[0] or 'Cliente')[:80],
             surname     =   (customer.last_name or '')[:80],
             email       =   customer.email,

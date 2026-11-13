@@ -257,8 +257,10 @@ class OrderEvent(models.Model):
 class PaymentProof(models.Model):
     """
     Comprobante de transferencia/depósito que el comprador adjunta al
-    pedido. OneToOne: re-subir REEMPLAZA la imagen (el service borra el
-    objeto viejo de R2). `image_key` apunta a un WebP normalizado
+    pedido. OneToOne y FIRST-WRITE-WINS: el endpoint público rechaza la
+    re-subida mientras exista una fila (el tracking_token es credencial
+    pública — un reemplazo anónimo podría pisar la evidencia antes de
+    que el dueño la revise). `image_key` apunta a un WebP normalizado
     (normalize_image → put_object, carpeta stores/<id>/proofs/).
     """
     order                       =   models.OneToOneField(Order, on_delete = models.CASCADE, related_name = 'proof')

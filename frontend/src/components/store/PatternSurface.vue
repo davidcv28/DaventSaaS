@@ -144,6 +144,19 @@ const src = computed(() => {
 
 const emit = defineEmits(['navigate', 'toggle-theme', 'load', 'buy', 'buy-now', 'account', 'chrome-height', 'chrome-invalid'])
 
+//URL absoluta del documento patrón servido por nosotros: el canal
+//postMessage solo la reconoce a ella. Un <a target="_self"> dentro del
+//documento puede navegar el iframe a otro origen (CSP del patrón no
+//cubre navigate-to) y ese documento heredaría e.source === contentWindow
+//— pudiendo pedir ds-api con la sesión del comprador o recibir el estado
+//de cuenta/carrito. src divergente = canal muerto.
+const expectedSrc = computed(() => (
+  typeof window === 'undefined' ? '' : new URL(src.value, window.location.origin).href
+))
+function isPatternDoc() {
+  return !!frame.value && frame.value.src === expectedSrc.value
+}
+
 //El iframe va sin `allow-same-origin` (origen opaco): el JS del diseño no
 //puede tocar el DOM ni las cookies de la app. Los datos que necesita de la
 //API pública (captcha y opiniones del producto) los pide por postMessage y
@@ -190,11 +203,16 @@ async function relayApi(event) {
       result = { ok: false, data: err?.response?.data ?? null }
     }
   }
-  frame.value?.contentWindow?.postMessage({ type: 'davent:ds-api-result', id, result }, '*')
+  if (isPatternDoc()) frame.value?.contentWindow?.postMessage({ type: 'davent:ds-api-result', id, result }, '*')
 }
 
 function onMessage(e) {
   if (e.source !== frame.value?.contentWindow) return
+  if (!isPatternDoc()) return
+  /* Forma del mensaje antes de despachar: solo objetos con type 'davent:*'
+   * (las ramas siguen chequeando el tipo exacto — esto corta ruido y
+   * payloads no-objeto del propio frame). */
+  if (!e.data || typeof e.data !== 'object' || typeof e.data.type !== 'string' || !e.data.type.startsWith('davent:')) return
   if (e.data?.type === 'davent:ds-api') {
     relayApi(e)
     return
@@ -311,6 +329,9 @@ function onMessage(e) {
 }
 
 function post(type, payload) {
+  /* Mismo gate que onMessage: no empujar estado de cuenta/carrito/stock
+   * a un documento que ya no es el patrón servido por nosotros. */
+  if (!isPatternDoc()) return
   frame.value?.contentWindow?.postMessage({ type, ...payload }, '*')
 }
 
