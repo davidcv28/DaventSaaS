@@ -130,16 +130,18 @@ function onDone() { cart.closeAuth(); emit('done') }
 .ec-auth-backdrop {
   position: fixed; inset: 0; z-index: 1200;
   display: grid; place-items: center; padding: 20px;
-  background: color-mix(in srgb, #000 55%, transparent);
-  backdrop-filter: blur(3px);
+  background: color-mix(in srgb, #000 58%, transparent);
+  backdrop-filter: blur(6px) saturate(1.05);
+  -webkit-backdrop-filter: blur(6px) saturate(1.05);
 }
 .ec-auth-card {
   position: relative; width: min(440px, 100%); max-height: min(90vh, 760px);
-  overflow-y: auto; padding: 28px 26px 24px;
+  overflow-y: auto; overscroll-behavior: contain;
+  padding: 30px 28px 26px;
   border-radius: calc(var(--sp-radius, 16px) * 1.2); border: 1px solid var(--sp-line, rgba(255, 255, 255, .12));
   /* Par bg+fg del MISMO scope de tokens: nunca card fija + color:inherit. */
   background: var(--sp-card-solid, var(--sp-card, #fff)); color: var(--sp-ink, #0f172a);
-  box-shadow: 0 24px 60px rgba(0, 0, 0, .3);
+  box-shadow: 0 32px 80px -16px rgba(0, 0, 0, .45), 0 8px 24px -12px rgba(0, 0, 0, .25);
 }
 /* La tarjeta recibe foco programático (tabindex=-1) solo como fallback del
    focus trap: sin outline propio. */
@@ -152,23 +154,27 @@ function onDone() { cart.closeAuth(); emit('done') }
 .ec-auth-card { animation: ec-auth-card-in .22s ease-out both; }
 .ec-auth-close {
   position: absolute; top: 12px; right: 12px; z-index: 2;
-  display: grid; place-items: center; width: 36px; height: 36px;
-  border: none; border-radius: calc(var(--sp-radius, 16px) * .65); background: transparent; color: inherit; cursor: pointer;
+  display: grid; place-items: center; width: 34px; height: 34px;
+  border: none; border-radius: 50%;
+  background: var(--sp-soft, rgba(127, 127, 127, .12));
+  color: var(--sp-muted, #5b6678); cursor: pointer;
+  transition: color .15s, background-color .15s;
 }
-.ec-auth-close:hover { background: var(--sp-soft, rgba(127, 127, 127, .12)); }
+.ec-auth-close:hover { color: var(--sp-ink, #0f172a); background: color-mix(in srgb, var(--sp-soft, rgba(127, 127, 127, .12)) 70%, var(--sp-line, rgba(127,127,127,.2))); }
 .ec-auth-close:focus-visible {
   outline: 2px solid var(--sp-accent-text, var(--store-accent-ink, #111));
   outline-offset: 2px;
 }
-.ec-auth-head { display: grid; gap: 8px; margin-bottom: 18px; padding-right: 30px; }
+.ec-auth-head { display: grid; gap: 8px; margin-bottom: 20px; padding-right: 32px; }
 .ec-auth-badge {
-  display: grid; place-items: center; width: 42px; height: 42px;
-  border-radius: 12px; margin-bottom: 4px;
+  display: grid; place-items: center; width: 44px; height: 44px;
+  border-radius: 14px; margin-bottom: 6px;
+  border: 1px solid color-mix(in srgb, var(--store-accent, #4f46e5) 22%, transparent);
   background: color-mix(in srgb, var(--store-accent, #4f46e5) 13%, var(--sp-card-solid, #fff));
   color: var(--sp-accent-text, var(--store-accent-ink, #111));
 }
-.ec-auth-title { margin: 0; font-size: 21px; font-weight: 800; letter-spacing: -.01em; color: var(--sp-ink, #0f172a); }
-.ec-auth-sub { margin: 0; font-size: 13px; line-height: 1.5; color: var(--sp-muted, #5b6678); }
+.ec-auth-title { margin: 0; font-size: 22px; font-weight: 800; letter-spacing: -.015em; line-height: 1.15; color: var(--sp-ink, #0f172a); }
+.ec-auth-sub { margin: 0; font-size: 13.5px; line-height: 1.55; color: var(--sp-muted, #5b6678); }
 @media (max-width: 480px) {
   .ec-auth-card { padding: 24px 20px 20px; border-radius: calc(var(--sp-radius, 16px) * 1.05); }
 }

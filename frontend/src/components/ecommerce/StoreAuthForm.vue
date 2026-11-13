@@ -315,8 +315,12 @@ onUnmounted(() => resizeObs?.disconnect())
       >{{ m.label }}</button>
     </div>
 
-    <p v-if="notice" id="ec-auth-notice" ref="msgRef" class="ecaf-notice" role="status" tabindex="-1">{{ notice }}</p>
-    <p v-else-if="formError" id="ec-auth-error" ref="msgRef" class="ecaf-error" role="alert" tabindex="-1">{{ formError }}</p>
+    <p v-if="notice" id="ec-auth-notice" ref="msgRef" class="ecaf-notice" role="status" tabindex="-1">
+      <AppIcon name="circle-check" :size="15" class="ecaf-msg-ico" aria-hidden="true" /><span>{{ notice }}</span>
+    </p>
+    <p v-else-if="formError" id="ec-auth-error" ref="msgRef" class="ecaf-error" role="alert" tabindex="-1">
+      <AppIcon name="circle-alert" :size="15" class="ecaf-msg-ico" aria-hidden="true" /><span>{{ formError }}</span>
+    </p>
 
     <form class="ecaf-form" novalidate :aria-busy="busy ? 'true' : undefined" @submit.prevent="submit">
       <template v-if="mode === 'register'">
@@ -383,7 +387,13 @@ onUnmounted(() => resizeObs?.disconnect())
           <span v-if="fieldError('email')" :id="fieldErrorId('email')" class="sp-form-error">{{ fieldError('email') }}</span>
         </label>
         <label class="sp-field">
-          <span id="ec-auth-password-label" class="sp-field-label">Contraseña</span>
+          <span class="ecaf-labelrow">
+            <span id="ec-auth-password-label" class="sp-field-label">Contraseña</span>
+            <button
+              v-if="mode === 'login'" type="button" class="ecaf-minilink" :disabled="busy"
+              @click="switchMode('forgot')"
+            >¿Olvidaste tu contraseña?</button>
+          </span>
           <span class="ecaf-pass">
             <span class="ecaf-ico" aria-hidden="true"><AppIcon name="lock" :size="16" /></span>
             <input
@@ -453,15 +463,18 @@ onUnmounted(() => resizeObs?.disconnect())
 
     <footer class="ecaf-foot">
       <template v-if="mode === 'login'">
-        <button type="button" class="ecaf-link" @click="switchMode('forgot')">¿Olvidaste tu contraseña?</button>
-        <button type="button" class="ecaf-link" @click="switchMode('register')">¿No tenés cuenta? Registrate</button>
+        <span class="ecaf-foot-text">¿No tenés cuenta?</span>
+        <button type="button" class="ecaf-link" @click="switchMode('register')">Registrate</button>
       </template>
       <template v-else-if="mode === 'register'">
-        <button type="button" class="ecaf-link" @click="switchMode('login')">¿Ya tenés cuenta? Ingresá</button>
+        <span class="ecaf-foot-text">¿Ya tenés cuenta?</span>
+        <button type="button" class="ecaf-link" @click="switchMode('login')">Ingresá</button>
         <button v-if="registeredPending" type="button" class="ecaf-link ecaf-link-resend" :disabled="resendBusy" @click="resendVerification">Reenviar correo de verificación</button>
       </template>
       <template v-else>
-        <button type="button" class="ecaf-link" @click="switchMode('login')">Volver a ingresar</button>
+        <button type="button" class="ecaf-link" @click="switchMode('login')">
+          <AppIcon name="arrow-left" :size="13" aria-hidden="true" /> Volver a ingresar
+        </button>
       </template>
     </footer>
   </div>
@@ -487,39 +500,97 @@ onUnmounted(() => resizeObs?.disconnect())
   width: calc((100% - 8px) / 3);
   border-radius: 999px;
   background: var(--store-accent-ink, #111);
+  box-shadow: 0 6px 14px -8px color-mix(in srgb, var(--store-accent-ink, #111) 70%, transparent);
   transform: translate3d(calc(var(--ecaf-switch-i, 0) * 100%), 0, 0);
   transition: transform .3s ease;
   pointer-events: none;
 }
 .ecaf-switch-btn {
   position: relative; z-index: 1;
-  min-height: 42px; padding: 8px 4px;
+  min-height: 40px; padding: 8px 4px;
   border: 0; border-radius: 999px; background: none;
   font: inherit; font-size: 13px; font-weight: 600; letter-spacing: .01em;
   color: var(--sp-ink-2, var(--sp-muted, #5b6678));
   cursor: pointer;
   transition: color .2s ease;
 }
-.ecaf-switch-btn.is-on { color: var(--sp-on-band, #fff); }
+.ecaf-switch-btn.is-on { color: var(--sp-on-band, #fff); font-weight: 700; }
 .ecaf-switch-btn:hover:not(.is-on) { color: var(--sp-ink, #0f172a); }
 .ecaf-switch-btn:focus-visible {
   outline: 2px solid var(--sp-accent-text, var(--store-accent-ink, #111));
   outline-offset: 2px;
 }
-.ecaf { display: grid; gap: 14px; }
+.ecaf { display: grid; gap: 16px; }
+/* Mensajes de estado: icono + texto en un solo plano (el <p> sigue siendo
+   el contenedor para que role/tabindex no cambien). */
+.ecaf-notice, .ecaf-error {
+  display: flex; align-items: flex-start; gap: 9px;
+  margin: 0; padding: 11px 14px; border-radius: 12px;
+  font-size: 13.5px; line-height: 1.45;
+}
+.ecaf-msg-ico { flex: none; margin-top: 2px; }
 .ecaf-notice {
-  margin: 0; padding: 11px 14px; border-radius: 12px; font-size: 13.5px; line-height: 1.45;
   background: color-mix(in srgb, var(--sp-success, #0E7A55) 13%, transparent);
   border: 1px solid color-mix(in srgb, var(--sp-success, #0E7A55) 32%, transparent);
   color: var(--sp-ink-2, inherit);
 }
+.ecaf-notice .ecaf-msg-ico { color: var(--sp-success, #0E7A55); }
 .ecaf-error {
-  margin: 0; padding: 11px 14px; border-radius: 12px; font-size: 13.5px; line-height: 1.45;
   background: color-mix(in srgb, var(--sp-danger, #B42318) 12%, transparent);
   border: 1px solid color-mix(in srgb, var(--sp-danger, #B42318) 30%, transparent);
   color: var(--sp-ink-2, inherit);
 }
-.ecaf-form { display: grid; gap: 13px; }
+.ecaf-error .ecaf-msg-ico { color: var(--sp-danger, #B42318); }
+.ecaf-form { display: grid; gap: 14px; }
+/* Campos (fallback neutro minimalista): las hojas store-design-*.css
+   redefinen .sp-field-label/.sp-input/.sp-form-error bajo selectores
+   [data-design] con más especificidad — esto solo gobierna la base. */
+.ecaf .sp-field { gap: 7px; }
+.ecaf .sp-field-label {
+  font-size: 12.5px; font-weight: 650; letter-spacing: .01em;
+  text-transform: none;
+  color: var(--sp-ink-2, var(--sp-ink, #0f172a));
+  transition: color .18s ease;
+}
+.ecaf .sp-field:focus-within .sp-field-label {
+  color: var(--sp-accent-text, var(--store-accent-ink, #111));
+}
+.ecaf-labelrow { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+.ecaf-minilink {
+  border: none; background: none; padding: 2px 0;
+  font: inherit; font-size: 12px; font-weight: 600;
+  color: var(--sp-muted, #5b6678); cursor: pointer;
+}
+.ecaf-minilink:hover { color: var(--sp-accent-text, var(--store-accent-ink, #111)); text-decoration: underline; text-underline-offset: 2px; }
+.ecaf-minilink:disabled { opacity: .55; cursor: default; }
+.ecaf .sp-input {
+  min-height: 46px; padding: 11px 14px;
+  border: 1px solid var(--sp-line, rgba(127, 127, 127, .32));
+  border-radius: calc(var(--sp-radius, 16px) * .75);
+  background: var(--sp-card-solid, var(--sp-card, #fff));
+  color: var(--sp-ink, #0f172a); font-size: 15px;
+  transition: border-color .16s, box-shadow .16s, background-color .16s;
+}
+.ecaf .sp-input:hover:not(:disabled):not(:focus) {
+  border-color: color-mix(in srgb, var(--sp-ink, #0f172a) 34%, var(--sp-line, rgba(127, 127, 127, .32)));
+}
+.ecaf .sp-input:focus {
+  outline: none;
+  border-color: var(--store-accent, #4f46e5);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--store-accent, #4f46e5) 16%, transparent);
+}
+.ecaf .sp-input:disabled { opacity: .6; }
+.ecaf .sp-input::placeholder { color: var(--sp-muted, #5b6678); opacity: .75; }
+.ecaf .sp-input[aria-invalid='true'] { border-color: var(--sp-danger, #B42318); }
+.ecaf .sp-input[aria-invalid='true']:focus {
+  border-color: var(--sp-danger, #B42318);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--sp-danger, #B42318) 16%, transparent);
+}
+.ecaf .sp-form-error {
+  display: flex; align-items: flex-start;
+  margin: -3px 0 0; font-size: 12.5px; font-weight: 550; line-height: 1.4;
+  color: var(--sp-danger, #B42318);
+}
 .ecaf-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
 .ecaf-pass { position: relative; display: block; }
 /* Icono líder del campo: el markup nace oculto (convención .ecaf-switch)
@@ -540,37 +611,49 @@ onUnmounted(() => resizeObs?.disconnect())
 }
 .ecaf-submit {
   display: inline-flex; align-items: center; justify-content: center; gap: 9px;
-  margin-top: 4px; padding: 13px 18px; border: none; border-radius: 12px;
+  margin-top: 4px; min-height: 48px; padding: 13px 18px;
+  border: none; border-radius: calc(var(--sp-radius, 16px) * .75);
   background: var(--store-accent-ink, #111); color: var(--sp-on-band, #fff);
-  font-size: 14.5px; font-weight: 700; cursor: pointer;
-  transition: filter .15s, transform .12s;
+  font-size: 14.5px; font-weight: 700; letter-spacing: .01em; cursor: pointer;
+  box-shadow: 0 12px 24px -14px color-mix(in srgb, var(--store-accent-ink, #111) 72%, transparent);
+  transition: filter .15s, transform .12s, box-shadow .2s;
 }
-.ecaf-submit:hover:not(:disabled) { filter: brightness(1.1); }
-.ecaf-submit:active:not(:disabled) { transform: translateY(1px); }
-.ecaf-submit:disabled { opacity: .55; cursor: default; }
+.ecaf-submit:hover:not(:disabled) { filter: brightness(1.08); transform: translateY(-1px); }
+.ecaf-submit:active:not(:disabled) { transform: translateY(0); }
+.ecaf-submit:disabled { opacity: .55; cursor: default; box-shadow: none; }
 .ecaf-submit:focus-visible,
-.ecaf-link:focus-visible {
+.ecaf-link:focus-visible,
+.ecaf-minilink:focus-visible {
   outline: 2px solid var(--sp-accent-text, var(--store-accent-ink, #111));
   outline-offset: 2px;
+  border-radius: 4px;
 }
+.ecaf-submit:focus-visible { border-radius: calc(var(--sp-radius, 16px) * .75); }
 .ecaf-spin { animation: ecaf-rotate 1s linear infinite; }
 @keyframes ecaf-rotate { to { transform: rotate(360deg); } }
-.ecaf-google { margin-top: 4px; }
+.ecaf-google { margin-top: 2px; }
 .ecaf-divider {
-  display: flex; align-items: center; gap: 10px; margin-bottom: 10px;
-  font-size: 12px; color: var(--sp-muted, #5b6678);
+  display: flex; align-items: center; gap: 12px; margin-bottom: 12px;
+  font-size: 11.5px; font-weight: 600; letter-spacing: .08em; text-transform: uppercase;
+  color: var(--sp-muted, #5b6678);
 }
-.ecaf-divider::before, .ecaf-divider::after { content: ''; flex: 1; height: 1px; background: var(--sp-line, currentColor); opacity: .45; }
+.ecaf-divider::before, .ecaf-divider::after { content: ''; flex: 1; height: 1px; background: var(--sp-line, currentColor); opacity: .5; }
 .ecaf-google-btn { display: grid; place-items: center; min-height: 46px; }
 .ecaf-google-btn.is-busy { opacity: .6; }
-.ecaf-foot { display: flex; flex-wrap: wrap; gap: 6px 16px; }
-.ecaf-link {
-  border: none; background: none; padding: 4px 0;
-  font-size: 13px; font-weight: 600; cursor: pointer;
-  color: var(--sp-accent-text, var(--store-accent-ink, #111));
-  text-decoration: underline; text-underline-offset: 2px;
+/* Pie: pregunta muted + acción en acento, centrado bajo el CTA. */
+.ecaf-foot {
+  display: flex; flex-wrap: wrap; align-items: center; justify-content: center;
+  gap: 4px 8px; padding-top: 2px;
 }
-.ecaf-link:hover { text-decoration-thickness: 2px; }
+.ecaf-foot-text { font-size: 13px; color: var(--sp-muted, #5b6678); }
+.ecaf-link {
+  display: inline-flex; align-items: center; gap: 5px;
+  border: none; background: none; padding: 4px 2px;
+  font-size: 13px; font-weight: 650; cursor: pointer;
+  color: var(--sp-accent-text, var(--store-accent-ink, #111));
+  text-decoration: none;
+}
+.ecaf-link:hover { text-decoration: underline; text-underline-offset: 3px; }
 .ecaf-link:disabled { opacity: .55; cursor: default; }
 @media (prefers-reduced-motion: reduce) {
   .ecaf-spin,

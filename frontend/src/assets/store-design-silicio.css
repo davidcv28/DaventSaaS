@@ -875,8 +875,8 @@
    tracking-timeline
    ========================================================================== */
 /* ---------- NAV: statement-bar ------------------------------------------
-   Una sola línea tipográfica oversized: la marca ES la declaración, el
-   menú vive en el drawer y la barra superior se reduce a marca + acciones. */
+   Cabecera alta con la marca como declaración, pero la nav de texto queda
+   visible en escritorio: el drawer (.sp-burger) es solo móvil/tablet. */
 .store-page[data-design='silicio'][data-nav='statement-bar'] .sp-top{
   background:var(--dz-bg,#F2F3EE);
   border-bottom:1px solid var(--dz-line,#D8DCD0);
@@ -893,7 +893,7 @@
 .store-page[data-design='silicio'][data-nav='statement-bar'] .sp-brand-copy{ display:flex; flex-direction:row; align-items:baseline; gap:12px; }
 .store-page[data-design='silicio'][data-nav='statement-bar'] .sp-name{
   font-family:var(--dz-display,"Anton","Arial Narrow",Impact,sans-serif);
-  font-size:clamp(26px,4.6vw,58px); font-weight:400; line-height:.95;
+  font-size:clamp(20px,2.4vw,32px); font-weight:400; line-height:.95;
   letter-spacing:.01em; text-transform:uppercase; white-space:nowrap;
   color:var(--dz-ink,#14171C); max-width:none;
 }
@@ -903,7 +903,11 @@
   background:var(--dz-band,#14171C); color:var(--dz-band-ink,#EDEFE6);
   border-radius:0;
 }
-.store-page[data-design='silicio'][data-nav='statement-bar'] .sp-top-links{ display:none; }
+/* Los links quedan en el chrome hasta 1100px: debajo la regla base de
+   store-page.css ya los oculta y muestra el burger. */
+@media (max-width: 1100px){
+  .store-page[data-design='silicio'][data-nav='statement-bar'] .sp-top-links{ display:none; }
+}
 .store-page[data-design='silicio'][data-nav='statement-bar'] .sp-search.sp-search-top,
 .store-page[data-design='silicio'][data-nav='statement-bar'] .sp-search-toggle{ display:none; }
 .store-page[data-design='silicio'][data-nav='statement-bar'] .sp-top-cta{
@@ -912,7 +916,7 @@
   font-family:var(--dz-mono,monospace); font-size:11px; letter-spacing:.16em; text-transform:uppercase;
 }
 .store-page[data-design='silicio'][data-nav='statement-bar'] .sp-burger{
-  display:grid; order:2; width:46px; height:46px; border-radius:0; margin-left:auto;
+  order:2; width:46px; height:46px; border-radius:0; margin-left:auto;
   background:var(--dz-band,#14171C); border-color:var(--dz-band,#14171C);
   color:var(--dz-band-ink,#EDEFE6);
 }

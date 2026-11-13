@@ -265,16 +265,19 @@ html[data-ds-theme="dark"] .head-progress i{background:var(--volt)}
 
 /* Menú móvil */
 .mmenu{
-  position:fixed;inset:0;z-index:70;display:flex;flex-direction:column;
+  /* z-90: por encima del velo y la hoja de filtros del catálogo (75/80) —
+     si ambos quedan abiertos a la vez, el menú no queda tapado. */
+  position:fixed;inset:0;z-index:90;display:flex;flex-direction:column;
   background:var(--band);color:var(--band-ink);
   /* El iframe llega estirado a todo el documento: inset:0 solo mediría el
      documento entero. --fr-h es el alto visible del marco (lo fija paint()
      con davent:ds-frame); el fallback 100vh aplica solo antes del primer
      pintado, cuando el menú sigue cerrado. */
   height:var(--fr-h,100vh);max-height:var(--fr-h,100vh);overflow-y:auto;
-  transform:translateY(-102%);transition:transform .38s var(--ease);
+  transform:translateY(-102%);transition:transform .38s var(--ease),visibility 0s .4s;
+  visibility:hidden;
 }
-body.m-open .mmenu{transform:none}
+body.m-open .mmenu{transform:none;visibility:visible;transition:transform .38s var(--ease)}
 .mmenu-top{display:flex;align-items:center;justify-content:space-between;padding:18px clamp(18px,4vw,56px);border-bottom:1px solid color-mix(in srgb,var(--band-ink) 14%,transparent)}
 .mmenu-brand{display:flex;align-items:center;gap:12px;font:400 20px/1 var(--display);text-transform:uppercase;letter-spacing:.02em}
 .mmenu-close{width:44px;height:44px;display:grid;place-items:center;background:none;border:1px solid color-mix(in srgb,var(--band-ink) 24%,transparent);color:var(--band-ink);cursor:pointer}
@@ -290,24 +293,22 @@ body.m-open .mmenu{transform:none}
 .mmenu-foot{margin-top:auto;padding:20px clamp(18px,4vw,56px) 30px;font:500 11px/1.7 var(--mono);letter-spacing:.1em;color:color-mix(in srgb,var(--band-ink) 60%,transparent)}
 
 /* ==========================================================================
-   STATEMENT-BAR — la cabecera es una sola línea tipográfica oversized:
-   marca en display grande, menú siempre en el drawer (.mmenu) y la nav
-   horizontal retirada en todos los anchos.
+   STATEMENT-BAR — cabecera alta con marca en display grande, pero con la
+   nav de texto visible en escritorio: el drawer (.mmenu) es solo móvil.
    ========================================================================== */
 :root{--head-h:104px}
 .top-inner{height:var(--head-h);min-height:var(--head-h);gap:clamp(14px,2.4vw,30px);padding-inline:clamp(18px,3vw,48px)}
 .brand-word{
-  font-size:clamp(30px,5.4vw,72px);line-height:.95;letter-spacing:-.01em;
+  font-size:clamp(20px,2.4vw,32px);line-height:.95;letter-spacing:-.01em;
   text-transform:uppercase;white-space:nowrap;
 }
 .brand-meta{display:none}
-/* La nav de texto sale del chrome: el menú vive en .mmenu (data-m-open). */
-.nav{display:none}
-.top-cta{margin-left:auto}
-.m-open-btn{display:grid;margin:0}
+/* La nav de texto queda en el chrome hasta 960px (la regla base de la
+   cabecera ya la oculta y muestra .m-open-btn debajo de ese ancho). */
+@media(max-width:1100px){.nav a{padding:10px 7px;font-size:11.5px}}
 @media(max-width:640px){
   :root{--head-h:92px}
-  .brand-word{font-size:clamp(24px,8.4vw,34px)}
+  .brand-word{font-size:clamp(22px,8.4vw,30px)}
   .top-inner{gap:12px}
 }
 @media (prefers-reduced-motion:reduce){
@@ -2669,16 +2670,21 @@ html[data-ds-theme="dark"] .pdp-buy>.dsx-buy-now:focus-visible{outline-color:var
 
   /* ---------- Menú móvil ---------- */
   function setMenu(open) {
+    var wasOpen = body.classList.contains('m-open')
     body.classList.toggle('m-open', open)
     var btn = document.querySelector('[data-m-open]')
     if (btn) btn.setAttribute('aria-expanded', open ? 'true' : 'false')
     document.documentElement.style.overflow = open ? 'hidden' : ''
+    /* Si la hoja de filtros del catálogo estaba abierta queda detrás del
+       menú con su velo por encima: al abrir el menú se cierra por la vía
+       del puente para no dejar dos estados de bloqueo superpuestos. */
+    if (open) closeFilters()
     /* Foco: al abrir entra al primer enlace del panel; al cerrar vuelve al
        disparador (el menú cerrado queda translateY fuera de pantalla). */
     if (open) {
       var first = document.querySelector('.mmenu a, .mmenu button')
       if (first) first.focus()
-    } else if (btn && document.activeElement && document.activeElement !== document.body) {
+    } else if (wasOpen && btn && document.activeElement && document.activeElement !== document.body) {
       btn.focus()
     }
   }
@@ -3090,6 +3096,10 @@ html[data-ds-theme="dark"] .pdp-buy>.dsx-buy-now:focus-visible{outline-color:var
       return
     }
     if (d.type === 'davent:ds-surface') {
+      /* Al cambiar de superficie por una vía que no pasa por data-m-close
+         (p. ej. el puente navegando), el menú se cierra igual: sin esto
+         body.m-open + overflow:hidden dejaban la página congelada. */
+      setMenu(false)
       setTimeout(function () { hideEmpty(); setupTitles(); setupDeck(); setupRails(); setupServices(); initReveal(); paint(); measure() }, 80)
     }
   })
