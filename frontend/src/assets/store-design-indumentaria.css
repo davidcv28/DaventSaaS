@@ -757,6 +757,11 @@
 .store-page[data-design='indumentaria'][data-nav='card-menu-flyout'] .sp-top .sp-search.sp-search-top.open {
   display: flex;
 }
+@media (max-width: 768px) {
+  /* Móvil: el monograma ocupa aire que necesitan las fichas/iconos — el
+     nombre solo ya identifica la marca. */
+  .store-page[data-design='indumentaria'] .sp-top .sp-brand .sp-mono { display: none; }
+}
 .store-page[data-design='indumentaria'][data-nav='card-menu-flyout'] .sp-top-cta {
   border-radius: 0;
   border: 1.5px solid var(--dz-ink);
