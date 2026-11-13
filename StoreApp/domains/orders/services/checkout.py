@@ -54,7 +54,7 @@ from decimal import Decimal
 from urllib.parse import quote
 
 from django.db import IntegrityError, transaction
-from django.db.models import Sum
+from django.db.models import Max, Sum
 from django.utils import timezone
 from rest_framework import serializers
 
@@ -384,7 +384,12 @@ def create_order(*, store, customer, items = None, address = None, shipping_meth
                 shipping_cost   =   shipping_cfg.home_price
                 shipping_priced =   True
             sequence, _     =   OrderSequence.objects.get_or_create(store = locked_store)
-            sequence.last_number    +=  1
+            #La secuencia puede quedar atrás del máximo real (pedidos que
+            #existían antes de crearla, o una fila recreada): sin el Max()
+            #el siguiente número choca contra uq_order_store_number y el
+            #except de abajo lo reportaba como "idempotencia ya usada".
+            last_real       =   Order.objects.filter(store = locked_store).aggregate(m = Max('number'))['m'] or 0
+            sequence.last_number    =   max(sequence.last_number, last_real) + 1
             sequence.save(update_fields = ['last_number'])
             now             =   timezone.now()
             order           =   Order.objects.create(
@@ -433,7 +438,11 @@ def create_order(*, store, customer, items = None, address = None, shipping_meth
             existing    =   Order.objects.filter(store = store, idempotency_key = key, customer = customer).first()
             if existing is not None:
                 return existing, False
-            raise serializers.ValidationError({'idempotency_key': 'Esa clave de idempotencia ya fue usada.'})
+            #Solo es idempotencia si la key realmente existe: cualquier
+            #otro IntegrityError (numeración, token, FK) re-levanta el
+            #error original en vez de mentir al comprador.
+            if Order.objects.filter(store = store, idempotency_key = key).exists():
+                raise serializers.ValidationError({'idempotency_key': 'Esa clave de idempotencia ya fue usada.'})
         raise
 
 
