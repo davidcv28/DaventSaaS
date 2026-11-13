@@ -216,7 +216,7 @@ function customerName(s) {
 
         <!-- Formulario crear/editar -->
         <div v-if="formOpen" class="plan-form">
-          <h4>{{ editingId ? 'Editar plan' : 'Nuevo plan' }}</h4>
+          <h4 class="plan-form-title"><AppIcon :name="editingId ? 'pencil' : 'plus'" :size="15" /> {{ editingId ? 'Editar plan' : 'Nuevo plan' }}</h4>
           <div class="grid-2">
             <label class="field">
               <span class="field-label">Nombre</span>
@@ -244,6 +244,7 @@ function customerName(s) {
             </label>
           </div>
 
+          <p class="plan-sub-label">Beneficios y visibilidad</p>
           <div class="check-list">
             <label class="check-item" v-for="b in PLAN_BENEFITS" :key="b.key">
               <input v-model="planForm[b.key]" type="checkbox" />
@@ -271,43 +272,36 @@ function customerName(s) {
 
         <!-- Listado -->
         <div v-if="!plans.length && !formOpen" class="empty-mini">
+          <AppIcon name="crown" :size="22" />
           <p>Todavía no creaste planes. Sumá una membresía para que tus clientes puedan suscribirse desde tu web.</p>
         </div>
-        <div v-else-if="plans.length" class="table-wrap">
-          <table class="pay-table">
-            <thead>
-              <tr>
-                <th>Plan</th>
-                <th>Precio</th>
-                <th>Período</th>
-                <th>Beneficios</th>
-                <th>Suscriptores</th>
-                <th>Estado</th>
-                <th>Acciones</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr v-for="p in plans" :key="p.id">
-                <td data-label="Plan"><strong>{{ p.name }}</strong><div v-if="p.discount_percent > 0" class="hint">{{ p.discount_percent }}% dto. miembros</div></td>
-                <td data-label="Precio">{{ money(p.price) }}</td>
-                <td data-label="Período">{{ periodLabel(p) }}</td>
-                <td data-label="Beneficios">
-                  <div v-if="planBenefits(p).length" class="hint">{{ planBenefits(p).join(' · ') }}</div>
-                  <span v-else class="hint">—</span>
-                </td>
-                <td data-label="Suscriptores">{{ p.active_subscriptions_count }}/{{ p.subscriptions_count }}</td>
-                <td data-label="Estado"><span class="pill" :class="p.is_active ? 'ok' : 'muted'">{{ p.is_active ? 'Activo' : 'Inactivo' }}</span></td>
-                <td data-label="Acciones">
-                  <div class="ret-actions">
-                    <button type="button" class="chip-btn" @click="openEdit(p)"><AppIcon name="pencil" :size="13" /> Editar</button>
-                    <button type="button" class="chip-btn" :class="{ strong: confirmDeleteId === p.id }" :disabled="deleteBusy === p.id" @click="deletePlan(p)">
-                      <AppIcon name="trash" :size="13" /> {{ confirmDeleteId === p.id ? '¿Seguro?' : 'Borrar' }}
-                    </button>
-                  </div>
-                </td>
-              </tr>
-            </tbody>
-          </table>
+        <div v-else-if="plans.length" class="plan-grid">
+          <article v-for="p in plans" :key="p.id" class="plan-card" :class="{ off: !p.is_active }">
+            <div class="plan-card-head">
+              <span class="plan-ico"><AppIcon name="crown" :size="15" /></span>
+              <h4 class="plan-name">{{ p.name }}</h4>
+              <span class="pill" :class="p.is_active ? 'ok' : 'muted'">{{ p.is_active ? 'Activo' : 'Inactivo' }}</span>
+            </div>
+            <p class="plan-price"><strong>{{ money(p.price) }}</strong><span>/ {{ periodLabel(p) }}</span></p>
+            <ul v-if="planBenefits(p).length" class="plan-benefits">
+              <template v-for="b in PLAN_BENEFITS" :key="b.key">
+                <li v-if="p[b.key]">
+                  <AppIcon :name="{ has_digital_card: 'lucide:id-card', has_free_shipping: 'truck', has_exclusive_discounts: 'percent', has_exclusive_access: 'lock' }[b.key]" :size="14" />
+                  <span>{{ b.label }}<template v-if="b.key === 'has_exclusive_discounts' && p.discount_percent > 0"> · {{ p.discount_percent }}%</template></span>
+                </li>
+              </template>
+            </ul>
+            <p v-else class="plan-benefits-empty">Sin beneficios extra — membresía simple.</p>
+            <div class="plan-foot">
+              <span class="plan-subs"><AppIcon name="users" :size="13" /> {{ p.active_subscriptions_count }}/{{ p.subscriptions_count }} suscriptores</span>
+              <div class="ret-actions">
+                <button type="button" class="chip-btn" @click="openEdit(p)"><AppIcon name="pencil" :size="13" /> Editar</button>
+                <button type="button" class="chip-btn" :class="{ strong: confirmDeleteId === p.id }" :disabled="deleteBusy === p.id" @click="deletePlan(p)">
+                  <AppIcon name="trash" :size="13" /> {{ confirmDeleteId === p.id ? '¿Seguro?' : 'Borrar' }}
+                </button>
+              </div>
+            </div>
+          </article>
         </div>
       </section>
 
@@ -377,3 +371,35 @@ function customerName(s) {
 </template>
 
 <!-- Estilos en assets/dash-redesign/sell.css (scope .app .plans-panel). -->
+<style scoped>
+.plan-form-title { display: flex; align-items: center; gap: 7px; }
+.plan-form-title .icon { color: var(--brand-ink); }
+.plan-sub-label { margin: 16px 0 0; font-size: 12.5px; font-weight: 600; color: var(--ink-2); }
+.plans-panel .plan-form .plan-sub-label + .check-list { margin-top: 8px; }
+
+.plan-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 14px; margin-top: 14px; }
+.plan-card { display: flex; flex-direction: column; padding: 16px 18px; border: 1px solid var(--line-soft); border-radius: 14px; background: var(--card); box-shadow: var(--shadow-sm); transition: border-color .15s var(--ease-out), box-shadow .15s var(--ease-out); }
+.plan-card:hover { border-color: var(--brand-soft-line); box-shadow: var(--shadow-md); }
+.plan-card.off { opacity: .72; background: var(--surface); }
+.plan-card-head { display: flex; align-items: center; gap: 9px; margin-bottom: 10px; }
+.plan-ico { flex: none; width: 28px; height: 28px; border-radius: 8px; display: grid; place-items: center; background: var(--brand-soft); color: var(--brand-ink); border: 1px solid var(--brand-soft-line); }
+.plan-name { flex: 1; min-width: 0; margin: 0; font-size: 14.5px; font-weight: 650; color: var(--ink); overflow-wrap: anywhere; }
+.plan-card-head .pill { flex: none; }
+.plan-price { display: flex; align-items: baseline; gap: 6px; margin: 0 0 12px; }
+.plan-price strong { font-size: 22px; font-weight: 700; letter-spacing: -.02em; color: var(--ink); font-variant-numeric: var(--acc-num); }
+.plan-price span { font-size: 12.5px; color: var(--muted); }
+.plan-benefits { flex: 1; list-style: none; margin: 0; padding: 12px 0; border-top: 1px solid var(--line-soft); display: grid; gap: 7px; align-content: start; }
+.plan-benefits li { display: flex; align-items: flex-start; gap: 8px; font-size: 13px; line-height: 1.45; color: var(--ink-2); }
+.plan-benefits .icon { flex: none; margin-top: 2px; color: var(--brand-ink); }
+.plan-benefits-empty { flex: 1; margin: 0; padding: 12px 0; border-top: 1px solid var(--line-soft); font-size: 12.5px; color: var(--muted); }
+.plan-foot { display: flex; align-items: center; justify-content: space-between; gap: 8px; flex-wrap: wrap; padding-top: 12px; border-top: 1px solid var(--line-soft); }
+.plan-subs { display: inline-flex; align-items: center; gap: 6px; font-size: 12.5px; color: var(--muted); }
+.plan-subs .icon { color: var(--brand-ink); }
+
+@media (max-width: 640px) {
+  .plan-grid { grid-template-columns: 1fr; }
+  .plan-foot { flex-direction: column; align-items: stretch; }
+  .plan-foot .ret-actions { display: flex; }
+  .plan-foot .chip-btn { flex: 1; justify-content: center; }
+}
+</style>

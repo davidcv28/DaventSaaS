@@ -103,8 +103,8 @@ async function saveOAuth(clearSecret = false) {
             <h3><AppIcon name="lucide:id-card" :size="18" /> Cuentas de clientes</h3>
             <p class="hint">Con el plan Ecommerce tus compradores se registran e ingresan en tu web: ven sus pedidos, membresías y datos desde su perfil.</p>
           </div>
-          <span v-if="customerAuthEnabled === true" class="pill ok">Activo</span>
-          <span v-else-if="customerAuthEnabled === false" class="pill warn">Desactivado</span>
+          <span v-if="customerAuthEnabled === true" class="pill ok"><AppIcon name="circle-check" :size="13" /> Activo</span>
+          <span v-else-if="customerAuthEnabled === false" class="pill warn"><AppIcon name="circle-alert" :size="13" /> Desactivado</span>
         </div>
         <p v-if="customerAuthEnabled === false" class="hint off-note">
           El acceso de clientes está apagado: la entrada de cuenta no se muestra en tu web y «Ingresar»/«Mi cuenta» vuelven al inicio.
@@ -126,24 +126,27 @@ async function saveOAuth(clearSecret = false) {
             <p class="hint">Botón «Ingresar con Google» en la cuenta del cliente de tu web. Usá tus propias credenciales de Google Cloud (OAuth Client ID) o las de DAVENT si están disponibles.</p>
           </div>
         </div>
-        <div class="check-list">
-          <label class="check-item">
-            <input v-model="oauthForm.enabled" type="checkbox" />
-            <span class="check-text"><strong>Ofrecer ingreso con Google</strong><small>El cliente entra a su cuenta de la tienda con su correo de Google.</small></span>
-          </label>
-        </div>
-        <div class="grid-2">
-          <label class="field">
-            <span class="field-label">Google Client ID</span>
-            <input v-model="oauthForm.google_client_id" class="input mono" maxlength="200" spellcheck="false" autocomplete="off" placeholder="123456.apps.googleusercontent.com" />
-          </label>
-          <label class="field">
-            <span class="field-label">
-              Google Client Secret
-              <span v-if="oauthMeta.has_client_secret" class="pill ok">Guardado</span>
-            </span>
-            <input v-model="oauthForm.google_client_secret" type="password" class="input mono" maxlength="200" spellcheck="false" autocomplete="new-password" :placeholder="oauthMeta.has_client_secret ? 'Dejalo vacío para conservar el guardado' : 'Pegá el secret de Google Cloud'" />
-          </label>
+        <label class="svc-switch ca-switch">
+          <input v-model="oauthForm.enabled" type="checkbox" />
+          <span class="svc-switch-track" aria-hidden="true"><i></i></span>
+          <span class="check-text"><strong>Ofrecer ingreso con Google</strong><small>El cliente entra a su cuenta de la tienda con su correo de Google.</small></span>
+        </label>
+        <div class="ca-sub">
+          <p class="ca-sub-title"><AppIcon name="key" :size="15" /> Credenciales de Google Cloud</p>
+          <div class="grid-2">
+            <label class="field">
+              <span class="field-label">Google Client ID</span>
+              <input v-model="oauthForm.google_client_id" class="input mono" maxlength="200" spellcheck="false" autocomplete="off" placeholder="123456.apps.googleusercontent.com" />
+            </label>
+            <label class="field">
+              <span class="field-label">
+                Google Client Secret
+                <span v-if="oauthMeta.has_client_secret" class="pill ok">Guardado</span>
+              </span>
+              <input v-model="oauthForm.google_client_secret" type="password" class="input mono" maxlength="200" spellcheck="false" autocomplete="new-password" :placeholder="oauthMeta.has_client_secret ? 'Dejalo vacío para conservar el guardado' : 'Pegá el secret de Google Cloud'" />
+            </label>
+          </div>
+          <p class="ca-sub-note">El Client Secret se guarda cifrado y nunca se muestra de vuelta: dejá el campo vacío para conservar el actual. Sin credenciales propias se usan las de DAVENT si están disponibles.</p>
         </div>
         <AlertMessage v-if="oauthErr" kind="error" :message="oauthErr" />
         <AlertMessage v-else-if="oauthMsg" kind="success" :message="oauthMsg" />
@@ -154,9 +157,9 @@ async function saveOAuth(clearSecret = false) {
       </section>
 
       <!-- ===== Ayuda ===== -->
-      <section class="card">
+      <section class="card ca-note">
         <h3><AppIcon name="info" :size="18" /> Si tu plan vence</h3>
-        <p class="hint">
+        <p class="ca-note-text">
           El acceso de clientes es parte del plan Ecommerce: si tu suscripción vence o cambiás a un plan que no lo incluye, tus clientes no pueden ingresar ni crear cuentas hasta que renueves. Sus datos no se pierden — vuelven a entrar apenas se reactive el beneficio.
         </p>
       </section>
@@ -165,3 +168,23 @@ async function saveOAuth(clearSecret = false) {
 </template>
 
 <!-- Estilos en assets/dash-redesign/sell.css (scope .app .custauth-panel). -->
+<style scoped>
+.svc-switch.ca-switch { margin-bottom: 0; }
+.ca-switch .check-text strong { display: block; font-size: 13.5px; font-weight: 600; color: var(--ink); }
+.ca-switch .check-text small { display: block; font-size: 12px; color: var(--muted); margin-top: 1px; line-height: 1.45; }
+
+.ca-sub { margin-top: 14px; padding: 14px 16px; border: 1px solid var(--line-soft); border-radius: 12px; background: var(--surface); }
+.ca-sub-title { display: flex; align-items: center; gap: 7px; margin: 0 0 12px; font-size: 12.5px; font-weight: 700; color: var(--ink-2); }
+.ca-sub-title .icon { color: var(--brand-ink); }
+.ca-sub-note { margin: 12px 0 0; font-size: 12.5px; line-height: 1.5; color: var(--muted); }
+
+.card.ca-note { background: var(--info-bg); border-color: var(--info-line); box-shadow: none; }
+.card.ca-note h3, .card.ca-note h3 .icon { color: var(--info-ink); }
+.ca-note-text { margin: 0; font-size: 13.5px; line-height: 1.6; color: var(--info-ink); }
+
+.custauth-panel .btn-row { flex-wrap: wrap; }
+
+@media (max-width: 640px) {
+  .custauth-panel .btn-row .btn { flex: 1 1 auto; min-width: 140px; }
+}
+</style>

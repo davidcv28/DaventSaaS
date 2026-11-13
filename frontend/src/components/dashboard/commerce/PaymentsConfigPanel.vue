@@ -331,7 +331,7 @@ const mpWebhooksOk = computed(() => Boolean(mpStatus.value?.webhook_configured))
 </script>
 
 <template>
-  <div>
+  <div class="paycfg-panel">
     <AlertMessage v-if="errMsg" kind="error" :message="errMsg" />
 
     <div v-if="store.status === 'loading' && !store.hasStore" class="card"><div class="empty-mini"><p>Cargando tu tienda…</p></div></div>
@@ -346,7 +346,13 @@ const mpWebhooksOk = computed(() => Boolean(mpStatus.value?.webhook_configured))
     <template v-else>
       <!-- ===== Venta online ===== -->
       <section class="card">
-        <h3><AppIcon name="package" :size="18" /> Venta online</h3>
+        <div class="paycfg-head">
+          <h3><AppIcon name="lucide:shopping-cart" :size="18" /> Venta online</h3>
+          <span v-if="ecomEnabled && ordersEnabled === true" class="pill ok"><AppIcon name="badge-check" :size="13" /> Vendiendo online</span>
+          <span v-else-if="ecomEnabled && ordersEnabled === false" class="pill warn"><AppIcon name="circle-alert" :size="13" /> Falta completar</span>
+          <span v-else-if="ecomEnabled" class="pill ok"><AppIcon name="circle-check" :size="13" /> Activa</span>
+          <span v-else class="pill muted">Apagada</span>
+        </div>
         <label class="svc-switch" :class="{ disabled: ecomBusy || !ecomAllowed }">
           <input type="checkbox" role="switch" :checked="ecomEnabled" :aria-checked="ecomEnabled" :disabled="ecomBusy || !ecomAllowed" @change="toggleEcommerce($event.target.checked)" />
           <span class="svc-switch-track" aria-hidden="true"><i></i></span>
@@ -371,48 +377,62 @@ const mpWebhooksOk = computed(() => Boolean(mpStatus.value?.webhook_configured))
         <div class="check-list">
           <label class="check-item">
             <input v-model="payForm.accept_transfer" type="checkbox" />
+            <span class="paycfg-ico"><AppIcon name="building-2" :size="16" /></span>
             <span class="check-text"><strong>Transferencia</strong><small>El cliente transfiere y sube el comprobante.</small></span>
           </label>
           <label class="check-item">
             <input v-model="payForm.accept_whatsapp" type="checkbox" />
+            <span class="paycfg-ico"><AppIcon name="whatsapp" :size="16" /></span>
             <span class="check-text"><strong>Coordinar por WhatsApp</strong><small>El cliente te escribe para pagar y coordinar.</small></span>
           </label>
           <label class="check-item">
             <input v-model="payForm.accept_cash" type="checkbox" />
+            <span class="paycfg-ico"><AppIcon name="wallet" :size="16" /></span>
             <span class="check-text"><strong>Efectivo / en el local</strong><small>Pago presencial o al retirar.</small></span>
           </label>
           <label class="check-item">
             <input v-model="payForm.mp_enabled" type="checkbox" />
+            <span class="paycfg-ico"><AppIcon name="credit-card" :size="16" /></span>
             <span class="check-text"><strong>Mercado Pago</strong><small>Solo si conectaste tu cuenta de MP más abajo.</small></span>
           </label>
           <label class="check-item">
             <input v-model="payForm.require_payment_proof" type="checkbox" />
+            <span class="paycfg-ico"><AppIcon name="receipt" :size="16" /></span>
             <span class="check-text"><strong>Pedir comprobante de pago</strong><small>El comprador sube captura del pago antes de confirmar.</small></span>
           </label>
         </div>
 
-        <div class="grid-2" style="margin-top:14px">
-          <label class="field">
-            <span class="field-label">Alias o CBU de transferencia</span>
-            <input v-model="payForm.transfer_alias" class="input" maxlength="120" placeholder="Ej: mi.negocio.mp o 0000003100012345678901" />
-          </label>
-          <label class="field">
-            <span class="field-label">Titular de la cuenta</span>
-            <input v-model="payForm.transfer_holder" class="input" maxlength="160" placeholder="Nombre y apellido o razón social" />
-          </label>
-          <label class="field" style="grid-column:1/-1">
-            <span class="field-label">Instrucciones para pagar</span>
-            <textarea v-model="payForm.transfer_instructions" class="textarea" rows="2" maxlength="2000" placeholder="Ej: Transferí el total y mandame el comprobante por WhatsApp al número de abajo."></textarea>
-          </label>
-          <label class="field">
-            <span class="field-label">WhatsApp para cobrar</span>
-            <input v-model="payForm.whatsapp_number" type="tel" inputmode="tel" autocomplete="off" class="input" maxlength="20" placeholder="Ej: +54911XXXXXXXX" />
-          </label>
-          <label class="field">
-            <span class="field-label">Plazo para pagar (horas)</span>
-            <input v-model.number="payForm.payment_deadline_hours" type="number" inputmode="numeric" min="1" max="720" class="input" placeholder="Ej: 48" />
-            <small class="hint">Entre 1 y 720. Vacío = sin vencimiento especial.</small>
-          </label>
+        <div class="paycfg-sub">
+          <p class="paycfg-sub-title"><AppIcon name="building-2" :size="15" /> Datos para transferencias</p>
+          <div class="grid-2">
+            <label class="field">
+              <span class="field-label">Alias o CBU de transferencia</span>
+              <input v-model="payForm.transfer_alias" class="input" maxlength="120" placeholder="Ej: mi.negocio.mp o 0000003100012345678901" />
+            </label>
+            <label class="field">
+              <span class="field-label">Titular de la cuenta</span>
+              <input v-model="payForm.transfer_holder" class="input" maxlength="160" placeholder="Nombre y apellido o razón social" />
+            </label>
+            <label class="field" style="grid-column:1/-1">
+              <span class="field-label">Instrucciones para pagar</span>
+              <textarea v-model="payForm.transfer_instructions" class="textarea" rows="2" maxlength="2000" placeholder="Ej: Transferí el total y mandame el comprobante por WhatsApp al número de abajo."></textarea>
+            </label>
+          </div>
+        </div>
+
+        <div class="paycfg-sub">
+          <p class="paycfg-sub-title"><AppIcon name="whatsapp" :size="15" /> Cobros por WhatsApp</p>
+          <div class="grid-2">
+            <label class="field">
+              <span class="field-label">WhatsApp para cobrar</span>
+              <input v-model="payForm.whatsapp_number" type="tel" inputmode="tel" autocomplete="off" class="input" maxlength="20" placeholder="Ej: +54911XXXXXXXX" />
+            </label>
+            <label class="field">
+              <span class="field-label">Plazo para pagar (horas)</span>
+              <input v-model.number="payForm.payment_deadline_hours" type="number" inputmode="numeric" min="1" max="720" class="input" placeholder="Ej: 48" />
+              <small class="hint">Entre 1 y 720. Vacío = sin vencimiento especial.</small>
+            </label>
+          </div>
         </div>
 
         <AlertMessage v-if="payErr" kind="error" :message="payErr" />
@@ -429,23 +449,26 @@ const mpWebhooksOk = computed(() => Boolean(mpStatus.value?.webhook_configured))
         <div class="check-list">
           <label class="check-item">
             <input v-model="shipForm.mode" type="radio" value="coordinar" :disabled="shipBusy" />
+            <span class="paycfg-ico"><AppIcon name="message-circle" :size="16" /></span>
             <span class="check-text"><strong>A coordinar con el comprador</strong><small>El envío se pacta por WhatsApp — el pedido no cobra envío online.</small></span>
           </label>
           <label class="check-item">
             <input v-model="shipForm.mode" type="radio" value="fijo" :disabled="shipBusy" />
+            <span class="paycfg-ico"><AppIcon name="tag" :size="16" /></span>
             <span class="check-text"><strong>Precio fijo</strong><small>Se suma al total del pedido. $0 = envío gratis.</small></span>
           </label>
         </div>
-        <label v-if="shipForm.mode === 'fijo'" class="field" style="margin-top:12px;max-width:240px">
+        <label v-if="shipForm.mode === 'fijo'" class="field paycfg-price">
           <span class="field-label">Precio del envío a domicilio</span>
           <input v-model.number="shipForm.home_price" type="number" inputmode="decimal" min="0" step="0.01" class="input" placeholder="Ej: 1500" :disabled="shipBusy" />
           <small class="hint">En pesos argentinos. 0 = envío gratis.</small>
         </label>
-        <div style="margin-top:16px;border-top:1px dashed var(--line,rgba(0,0,0,.12));padding-top:14px">
-          <p class="hint" style="margin:0 0 10px">
-            <strong>Correo integrado (opcional)</strong> — tus credenciales y tu contrato: VOS pagás el flete. Al marcar un pedido como enviado podés generar la etiqueta automáticamente, o pegar el código de seguimiento de cualquier correo a mano.
+        <div class="paycfg-sub">
+          <p class="paycfg-sub-title"><AppIcon name="truck" :size="15" /> Correo integrado (opcional)</p>
+          <p class="paycfg-sub-desc">
+            Tus credenciales y tu contrato: VOS pagás el flete. Al marcar un pedido como enviado podés generar la etiqueta automáticamente, o pegar el código de seguimiento de cualquier correo a mano.
           </p>
-          <label class="field" style="max-width:280px">
+          <label class="field paycfg-carrier">
             <span class="field-label">Correo</span>
             <select v-model="shipForm.carrier" class="select" :disabled="shipBusy">
               <option value="">Ninguno (código manual)</option>
@@ -453,7 +476,7 @@ const mpWebhooksOk = computed(() => Boolean(mpStatus.value?.webhook_configured))
               <option value="oca">OCA (código manual)</option>
             </select>
           </label>
-          <div v-if="shipForm.carrier === 'andreani'" class="grid-2" style="margin-top:10px">
+          <div v-if="shipForm.carrier === 'andreani'" class="grid-2 paycfg-creds">
             <label class="field"><span class="field-label">Usuario Andreani</span><input v-model="shipCreds.usuario" class="input" maxlength="80" autocomplete="off" :placeholder="shipCredsConfigured ? '•••••• (guardado)' : ''" /></label>
             <label class="field"><span class="field-label">Contraseña</span><input v-model="shipCreds.password" type="password" class="input" maxlength="80" autocomplete="new-password" :placeholder="shipCredsConfigured ? '•••••• (guardada)' : ''" /></label>
             <label class="field"><span class="field-label">N° de contrato</span><input v-model="shipCreds.contrato" class="input" maxlength="40" :placeholder="shipCredsConfigured ? '•••••• (guardado)' : ''" /></label>
@@ -472,12 +495,14 @@ const mpWebhooksOk = computed(() => Boolean(mpStatus.value?.webhook_configured))
 
       <!-- ===== Datos fiscales ===== -->
       <section class="card" style="margin-top:14px">
-        <h3><AppIcon name="file-text" :size="18" /> Datos fiscales</h3>
-        <p class="hint">
-          Necesarios para facturar y habilitar el checkout.
-          <span v-if="fiscalMeta.is_complete" class="pill ok" style="margin-left:6px">Completos</span>
-          <span v-else class="pill warn" style="margin-left:6px">Incompletos</span>
-        </p>
+        <div class="paycfg-head">
+          <div>
+            <h3><AppIcon name="receipt" :size="18" /> Datos fiscales</h3>
+            <p class="hint">Necesarios para facturar y habilitar el checkout.</p>
+          </div>
+          <span v-if="fiscalMeta.is_complete" class="pill ok"><AppIcon name="circle-check" :size="13" /> Completos</span>
+          <span v-else class="pill warn"><AppIcon name="circle-alert" :size="13" /> Incompletos</span>
+        </div>
         <div class="grid-2">
           <label class="field">
             <span class="field-label">Razón social / nombre legal</span>
@@ -512,18 +537,35 @@ const mpWebhooksOk = computed(() => Boolean(mpStatus.value?.webhook_configured))
 
       <!-- ===== Mercado Pago ===== -->
       <section class="card" style="margin-top:14px">
-        <h3><AppIcon name="credit-card" :size="18" /> Mercado Pago</h3>
-        <div class="kv" style="margin-bottom:12px">
-          <div><span>Estado</span><strong>
-            <span v-if="mpConnected" class="pill ok">{{ mpStatus.live_mode ? 'Conectado (producción)' : 'Conectado (pruebas)' }}</span>
-            <span v-else class="pill muted">Sin conectar</span>
-          </strong></div>
-          <div v-if="mpConnected"><span>Usuario MP</span><strong class="mono">{{ mpStatus.mp_user_id || '—' }}</strong></div>
-          <div v-if="mpConnected"><span>Webhook</span><strong>{{ mpWebhooksOk ? 'Configurado' : 'Pendiente' }}</strong></div>
+        <div class="paycfg-head">
+          <div>
+            <h3><AppIcon name="credit-card" :size="18" /> Mercado Pago</h3>
+            <p class="hint">Cobrá con tarjetas y billetera MP: el dinero acredita directo en tu cuenta.</p>
+          </div>
+          <span v-if="mpConnected" class="pill ok"><AppIcon name="badge-check" :size="13" /> {{ mpStatus.live_mode ? 'Conectado (producción)' : 'Conectado (pruebas)' }}</span>
+          <span v-else class="pill muted"><AppIcon name="info" :size="13" /> Sin conectar</span>
+        </div>
+
+        <div v-if="mpConnected" class="paycfg-status">
+          <span class="paycfg-status-ico"><AppIcon name="badge-check" :size="18" /></span>
+          <div class="paycfg-status-txt">
+            <strong>Tu cuenta de Mercado Pago está conectada.</strong>
+            <small>Ya podés ofrecer pagos online en el checkout de tu web.</small>
+          </div>
+        </div>
+        <div v-if="mpConnected" class="paycfg-mp-meta">
+          <span class="paycfg-meta-chip"><AppIcon name="user" :size="13" /> Usuario MP <strong class="mono">{{ mpStatus.mp_user_id || '—' }}</strong></span>
+          <span class="paycfg-meta-chip" :class="{ warn: !mpWebhooksOk }">
+            <AppIcon :name="mpWebhooksOk ? 'circle-check' : 'circle-alert'" :size="13" />
+            Webhook: {{ mpWebhooksOk ? 'Configurado' : 'Pendiente' }}
+          </span>
         </div>
 
         <template v-if="!mpConnected">
-          <p class="hint">Pegá tus credenciales de Mercado Pago (Access Token de producción o de prueba). DAVENT las valida contra MP y las guarda cifradas — nunca se muestran de vuelta.</p>
+          <div class="paycfg-callout">
+            <AppIcon name="key" :size="16" />
+            <p>Pegá tus credenciales de Mercado Pago (Access Token de producción o de prueba). DAVENT las valida contra MP y las guarda cifradas — nunca se muestran de vuelta.</p>
+          </div>
           <div class="grid-2">
             <label class="field">
               <span class="field-label">Access Token</span>
@@ -533,14 +575,17 @@ const mpWebhooksOk = computed(() => Boolean(mpStatus.value?.webhook_configured))
                   <AppIcon :name="mpShowToken ? 'eye-off' : 'eye'" :size="15" />
                 </button>
               </div>
+              <small class="hint">Lo copiás desde Mercado Pago Developers → tu aplicación → Credenciales.</small>
             </label>
             <label class="field">
               <span class="field-label">Refresh Token (opcional)</span>
               <input v-model="mpForm.refresh_token" type="password" class="input mono" autocomplete="off" placeholder="Solo si tu app MP lo emite" />
+              <small class="hint">No hace falta para cobrar — completalo solo si tu app lo emite.</small>
             </label>
             <label class="field">
               <span class="field-label">Webhook secret (opcional)</span>
               <input v-model="mpForm.webhook_secret" type="password" class="input mono" autocomplete="off" placeholder="Firma de tus notificaciones" />
+              <small class="hint">Verifica que las notificaciones de pago vengan de MP.</small>
             </label>
             <label class="check-item" style="grid-column:1/-1">
               <input v-model="mpForm.live_mode" type="checkbox" />
@@ -559,40 +604,54 @@ const mpWebhooksOk = computed(() => Boolean(mpStatus.value?.webhook_configured))
 
       <!-- ===== Storage propio (R2) ===== -->
       <section class="card" style="margin-top:14px">
-        <h3><AppIcon name="image" :size="18" /> Fotos y archivos en tu propio storage</h3>
-        <p class="hint">
-          Opcional: usá tu bucket de Cloudflare R2 (compatible S3) para guardar las imágenes de tu tienda.
-          <span v-if="storageMeta.is_configured" class="pill ok" style="margin-left:6px">Configurado</span>
-          <span v-else class="pill muted" style="margin-left:6px">Sin configurar</span>
-          <span v-if="storageMeta.has_credentials" class="pill muted" style="margin-left:6px">Credenciales cargadas</span>
-        </p>
+        <div class="paycfg-head">
+          <div>
+            <h3><AppIcon name="lucide:server" :size="18" /> Fotos y archivos en tu propio storage</h3>
+            <p class="hint">Opcional: usá tu bucket de Cloudflare R2 (compatible S3) para guardar las imágenes de tu tienda.</p>
+          </div>
+          <span v-if="storageMeta.is_configured" class="pill ok"><AppIcon name="circle-check" :size="13" /> Configurado</span>
+          <span v-else class="pill muted">Sin configurar</span>
+        </div>
 
-        <div class="grid-2">
-          <label class="field">
-            <span class="field-label">Endpoint</span>
-            <input v-model="storageForm.endpoint" type="url" inputmode="url" autocomplete="off" class="input mono" maxlength="300" placeholder="https://&lt;account&gt;.r2.cloudflarestorage.com" />
-          </label>
-          <label class="field">
-            <span class="field-label">Bucket</span>
-            <input v-model="storageForm.bucket" class="input mono" maxlength="120" placeholder="mi-bucket" />
-          </label>
-          <label class="field">
-            <span class="field-label">Región</span>
-            <input v-model="storageForm.region" class="input mono" maxlength="60" placeholder="auto" />
-          </label>
-          <label class="field">
-            <span class="field-label">URL pública base</span>
-            <input v-model="storageForm.public_base_url" type="url" inputmode="url" autocomplete="off" class="input mono" maxlength="500" placeholder="https://pub-&lt;hash&gt;.r2.dev" />
-            <small class="hint">Dominio público del bucket. Sin esto las URLs se firman y vencen.</small>
-          </label>
-          <label class="field">
-            <span class="field-label">Access Key {{ storageMeta.has_credentials ? '(guardada)' : '' }}</span>
-            <input v-model="storageForm.access_key" type="password" class="input mono" maxlength="200" autocomplete="off" :placeholder="storageMeta.has_credentials ? 'Dejalo vacío para conservar' : 'R2 Access Key ID'" />
-          </label>
-          <label class="field">
-            <span class="field-label">Secret Key {{ storageMeta.has_credentials ? '(guardada)' : '' }}</span>
-            <input v-model="storageForm.secret_key" type="password" class="input mono" maxlength="200" autocomplete="off" :placeholder="storageMeta.has_credentials ? 'Dejalo vacío para conservar' : 'R2 Secret Access Key'" />
-          </label>
+        <div class="paycfg-sub">
+          <p class="paycfg-sub-title"><AppIcon name="lucide:globe" :size="15" /> Conexión del bucket</p>
+          <div class="grid-2">
+            <label class="field">
+              <span class="field-label">Endpoint</span>
+              <input v-model="storageForm.endpoint" type="url" inputmode="url" autocomplete="off" class="input mono" maxlength="300" placeholder="https://&lt;account&gt;.r2.cloudflarestorage.com" />
+            </label>
+            <label class="field">
+              <span class="field-label">Bucket</span>
+              <input v-model="storageForm.bucket" class="input mono" maxlength="120" placeholder="mi-bucket" />
+            </label>
+            <label class="field">
+              <span class="field-label">Región</span>
+              <input v-model="storageForm.region" class="input mono" maxlength="60" placeholder="auto" />
+            </label>
+            <label class="field">
+              <span class="field-label">URL pública base</span>
+              <input v-model="storageForm.public_base_url" type="url" inputmode="url" autocomplete="off" class="input mono" maxlength="500" placeholder="https://pub-&lt;hash&gt;.r2.dev" />
+              <small class="hint">Dominio público del bucket. Sin esto las URLs se firman y vencen.</small>
+            </label>
+          </div>
+        </div>
+
+        <div class="paycfg-sub">
+          <p class="paycfg-sub-title">
+            <AppIcon name="key" :size="15" /> Credenciales R2
+            <span v-if="storageMeta.has_credentials" class="pill ok paycfg-sub-pill">Guardadas</span>
+          </p>
+          <div class="grid-2">
+            <label class="field">
+              <span class="field-label">Access Key {{ storageMeta.has_credentials ? '(guardada)' : '' }}</span>
+              <input v-model="storageForm.access_key" type="password" class="input mono" maxlength="200" autocomplete="off" :placeholder="storageMeta.has_credentials ? 'Dejalo vacío para conservar' : 'R2 Access Key ID'" />
+            </label>
+            <label class="field">
+              <span class="field-label">Secret Key {{ storageMeta.has_credentials ? '(guardada)' : '' }}</span>
+              <input v-model="storageForm.secret_key" type="password" class="input mono" maxlength="200" autocomplete="off" :placeholder="storageMeta.has_credentials ? 'Dejalo vacío para conservar' : 'R2 Secret Access Key'" />
+            </label>
+          </div>
+          <p class="paycfg-sub-note">Se guardan cifradas y nunca se muestran de vuelta — dejá los campos vacíos para conservar las actuales.</p>
         </div>
         <label class="check-item" style="margin-top:12px">
           <input v-model="storageForm.enabled" type="checkbox" />
@@ -640,4 +699,50 @@ const mpWebhooksOk = computed(() => Boolean(mpStatus.value?.webhook_configured))
 .storage-guide ol, .storage-guide ul { margin: 8px 0 0; padding-left: 20px; font-size: 13.5px; color: var(--ink-2); }
 .storage-guide li { margin-bottom: 4px; }
 .storage-warnings { color: var(--warn-ink, #92400e); }
+
+.paycfg-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 8px 14px; flex-wrap: wrap; margin-bottom: 14px; }
+.paycfg-head h3 { margin: 0; }
+.paycfg-head > div { min-width: 0; }
+.paycfg-head .hint { margin: 3px 0 0; max-width: 62ch; }
+.paycfg-head > .pill { flex: none; margin-top: 3px; }
+
+.paycfg-ico { flex: none; width: 30px; height: 30px; margin-top: -3px; border-radius: 8px; display: grid; place-items: center; background: var(--brand-soft); color: var(--brand-ink); border: 1px solid var(--brand-soft-line); }
+
+.paycfg-sub { margin-top: 14px; padding: 14px 16px; border: 1px solid var(--line-soft); border-radius: 12px; background: var(--surface); }
+.paycfg-sub .field { margin-bottom: 0; }
+.paycfg-sub-title { display: flex; align-items: center; gap: 7px; margin: 0 0 10px; font-size: 12.5px; font-weight: 700; color: var(--ink-2); }
+.paycfg-sub-title .icon { color: var(--brand-ink); }
+.paycfg-sub-pill { margin-left: auto; }
+.paycfg-sub-desc { margin: -4px 0 12px; font-size: 12.5px; line-height: 1.55; color: var(--muted); }
+.paycfg-sub-note { margin: 12px 0 0; font-size: 12.5px; line-height: 1.5; color: var(--muted); }
+.paycfg-price { margin-top: 12px; max-width: 260px; }
+.paycfg-carrier { max-width: 300px; }
+.paycfg-creds { margin-top: 12px; }
+
+.paycfg-status { display: flex; align-items: center; gap: 12px; padding: 12px 14px; margin-bottom: 10px; border: 1px solid var(--ok-line); border-radius: 12px; background: var(--ok-bg); }
+.paycfg-status-ico { flex: none; width: 36px; height: 36px; border-radius: 10px; display: grid; place-items: center; background: var(--card); color: var(--ok-ink); border: 1px solid var(--ok-line); }
+.paycfg-status-txt { min-width: 0; }
+.paycfg-status-txt strong { display: block; font-size: 13.5px; color: var(--ok-ink); }
+.paycfg-status-txt small { display: block; margin-top: 1px; font-size: 12.5px; line-height: 1.45; color: var(--ink-2); }
+
+.paycfg-mp-meta { display: flex; flex-wrap: wrap; gap: 8px; margin: 0 0 12px; }
+.paycfg-meta-chip { display: inline-flex; align-items: center; gap: 6px; padding: 5px 11px; border: 1px solid var(--line-soft); border-radius: 99px; background: var(--surface); font-size: 12.5px; color: var(--ink-2); }
+.paycfg-meta-chip .icon { color: var(--ok-ink); }
+.paycfg-meta-chip .mono { font-size: 11.5px; }
+.paycfg-meta-chip.warn { background: var(--warn-bg); border-color: var(--warn-line); color: var(--warn-ink); }
+.paycfg-meta-chip.warn .icon { color: var(--warn-ink); }
+
+.paycfg-callout { display: flex; align-items: flex-start; gap: 10px; padding: 12px 14px; margin-bottom: 14px; border: 1px solid var(--info-line); border-radius: 12px; background: var(--info-bg); }
+.paycfg-callout .icon { flex: none; margin-top: 1px; color: var(--info-ink); }
+.paycfg-callout p { margin: 0; font-size: 13px; line-height: 1.55; color: var(--info-ink); }
+
+.svc-switch .check-text strong { display: block; font-size: 13.5px; font-weight: 600; color: var(--ink); }
+.svc-switch .check-text small { display: block; font-size: 12px; color: var(--muted); margin-top: 1px; line-height: 1.45; }
+
+.paycfg-panel .btn-row { flex-wrap: wrap; }
+
+@media (max-width: 640px) {
+  .paycfg-head { gap: 8px; }
+  .paycfg-panel .btn-row .btn { flex: 1 1 auto; min-width: 140px; }
+}
 </style>

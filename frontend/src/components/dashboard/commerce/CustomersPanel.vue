@@ -2,8 +2,9 @@
 import { ref, computed, watch } from 'vue'
 import { storeAdminApi } from '../../../api/storeadmin.api.js'
 import { apiErr, money, fmtDate, statusMeta,
-         MEMBERSHIP_STATUS, isNotFound } from './shared.js'
+         MEMBERSHIP_STATUS, ORDER_STATUS, PAYMENT_METHODS, isNotFound } from './shared.js'
 import { useStoreStore } from '../../../stores/store.store.js'
+import { publicStoreUrl } from '../../../api/stores.api.js'
 import AppIcon from '../../AppIcon.vue'
 import AlertMessage from '../../AlertMessage.vue'
 
@@ -91,11 +92,41 @@ function membershipMetaOf(c) {
 function rowName(c) {
   return [c?.first_name, c?.last_name].filter(Boolean).join(' ') || c?.email || 'Cliente'
 }
+
+// Iconos de estado (label y color salen de shared.js).
+const ORDER_STATUS_ICON = {
+  PENDING_PAYMENT: 'clock',
+  PAID: 'badge-check',
+  PACKING: 'package',
+  SHIPPED: 'truck',
+  DELIVERED: 'circle-check',
+  CANCELLED: 'x',
+  REFUNDED: 'rotate-cw',
+  EXPIRED: 'timer',
+}
+function orderStatusIcon(s) { return ORDER_STATUS_ICON[s] || 'dot' }
+function membershipIcon(s) { return s === 'suspended' ? 'pause' : 'crown' }
+
+// CTA del estado vacío: copiar el link público (mismo patrón que SellingHub).
+const copiedLink = ref(false)
+async function copyStoreLink() {
+  const url = store.store?.slug ? publicStoreUrl(store.store.slug) : ''
+  if (!url) return
+  try {
+    await navigator.clipboard.writeText(url)
+    store.notice = 'Link copiado al portapapeles.'
+  } catch {
+    store.notice = `Tu link es ${url}`
+  }
+  copiedLink.value = true
+  setTimeout(() => { copiedLink.value = false }, 1600)
+}
 </script>
 
 <template>
   <div>
     <AlertMessage v-if="errMsg" kind="error" :message="errMsg" />
+    <AlertMessage v-else-if="store.notice" kind="success" :message="store.notice" />
 
     <div v-if="store.status === 'loading' && !store.hasStore" class="card"><div class="empty-mini"><p>Cargando tu tienda…</p></div></div>
     <div v-else-if="!store.hasStore" class="empty">
@@ -107,7 +138,10 @@ function rowName(c) {
     <template v-else>
       <div class="card">
         <div class="toolbar">
-          <input v-model="q" class="input" type="search" aria-label="Buscar clientes" placeholder="Buscar por nombre, apellido o email…" />
+          <div class="search-wrap">
+            <AppIcon name="search" :size="15" class="search-ico" />
+            <input v-model="q" class="input" type="search" aria-label="Buscar clientes" placeholder="Buscar por nombre, apellido o email…" />
+          </div>
           <select v-model="membership" class="select" aria-label="Filtrar por membresía">
             <option value="">Toda membresía</option>
             <option value="active">Miembros activos</option>
@@ -124,8 +158,16 @@ function rowName(c) {
         </div>
 
         <div v-if="loading && !rows.length" class="empty-mini"><p>Cargando clientes…</p></div>
-        <div v-else-if="!rows.length" class="empty-mini">
-          <p>{{ q || membership ? 'Ningún cliente coincide con el filtro.' : 'Todavía no hay clientes: aparecen cuando compran o se hacen miembros.' }}</p>
+        <div v-else-if="!rows.length" class="pnl-empty">
+          <span class="pnl-empty-ico"><AppIcon :name="q || membership ? 'search' : 'users'" :size="22" /></span>
+          <strong>{{ q || membership ? 'Sin resultados' : 'Todavía no hay clientes' }}</strong>
+          <p>{{ q || membership ? 'Ningún cliente coincide con la búsqueda o el filtro.' : 'Aparecen solos cuando alguien compra o se hace miembro de tu tienda.' }}</p>
+          <button v-if="q || membership" type="button" class="btn ghost btn-auto" @click="q = ''; membership = ''">
+            <AppIcon name="x" :size="14" /> Limpiar búsqueda
+          </button>
+          <button v-else type="button" class="btn btn-auto" @click="copyStoreLink">
+            <AppIcon :name="copiedLink ? 'check' : 'copy'" :size="14" /> {{ copiedLink ? 'Link copiado' : 'Copiar link de mi tienda' }}
+          </button>
         </div>
 
         <div v-else class="table-wrap">
@@ -146,9 +188,12 @@ function rowName(c) {
                   @click="openDetail(c.id)"
                   @keydown.enter.prevent="openDetail(c.id)" @keydown.space.prevent="openDetail(c.id)">
                 <td data-label="Cliente">
-                  <div class="cell">
-                    <div><strong>{{ rowName(c) }}</strong></div>
-                    <div v-if="c.is_active === false" class="hint">Cuenta inactiva</div>
+                  <div class="cust-name">
+                    <span class="cust-ava"><AppIcon name="user" :size="14" /></span>
+                    <div class="cell">
+                      <div><strong>{{ rowName(c) }}</strong></div>
+                      <div v-if="c.is_active === false" class="hint">Cuenta inactiva</div>
+                    </div>
                   </div>
                 </td>
                 <td data-label="Contacto">
@@ -159,7 +204,7 @@ function rowName(c) {
                 </td>
                 <td data-label="Membresía">
                   <div class="cell">
-                    <span v-if="membershipMetaOf(c)" class="pill" :class="membershipMetaOf(c).kind">{{ membershipMetaOf(c).label }}</span>
+                    <span v-if="membershipMetaOf(c)" class="pill" :class="membershipMetaOf(c).kind"><AppIcon :name="membershipIcon(c.membership_status)" :size="12" /> {{ membershipMetaOf(c).label }}</span>
                     <span v-else class="hint">—</span>
                     <div v-if="c.plan_name" class="hint">{{ c.plan_name }}</div>
                   </div>
@@ -173,9 +218,9 @@ function rowName(c) {
         </div>
 
         <div v-if="hasPrev || hasNext" class="pager">
-          <button type="button" class="btn ghost btn-auto" :disabled="!hasPrev || loading" @click="load(page - 1)">← Anterior</button>
+          <button type="button" class="btn ghost btn-auto" :disabled="!hasPrev || loading" @click="load(page - 1)"><AppIcon name="chevron-left" :size="14" /> Anterior</button>
           <span class="hint">Página {{ page }}</span>
-          <button type="button" class="btn ghost btn-auto" :disabled="!hasNext || loading" @click="load(page + 1)">Siguiente →</button>
+          <button type="button" class="btn ghost btn-auto" :disabled="!hasNext || loading" @click="load(page + 1)">Siguiente <AppIcon name="chevron-right" :size="14" /></button>
         </div>
       </div>
     </template>
@@ -188,14 +233,14 @@ function rowName(c) {
             <div class="pf-drawer-head">
               <div>
                 <h3>{{ customerName }}</h3>
-                <span v-if="membershipMeta" class="pill" :class="membershipMeta.kind">{{ membershipMeta.label }}</span>
+                <span v-if="membershipMeta" class="pill" :class="membershipMeta.kind"><AppIcon :name="membershipIcon(detail.membership?.status || detail.membership_status)" :size="12" /> {{ membershipMeta.label }}</span>
               </div>
               <button type="button" class="icon-btn" aria-label="Cerrar" @click="closeDetail"><AppIcon name="x" :size="16" /></button>
             </div>
             <div v-if="detailLoading" class="pf-drawer-body"><div class="empty-mini"><p>Cargando…</p></div></div>
             <div v-else-if="detail" class="pf-drawer-body">
               <section class="card">
-                <h3>Datos</h3>
+                <h3><AppIcon name="user" :size="16" /> Datos</h3>
                 <div class="kv">
                   <div><span>Email</span><strong>{{ detail.email || '—' }}</strong></div>
                   <div><span>Teléfono</span><strong>{{ detail.phone || '—' }}</strong></div>
@@ -208,7 +253,7 @@ function rowName(c) {
               </section>
 
               <section v-if="detail.membership" class="card">
-                <h3>Membresía</h3>
+                <h3><AppIcon name="crown" :size="16" /> Membresía</h3>
                 <div class="kv">
                   <div><span>Estado</span><strong>{{ membershipMeta?.label || detail.membership.status }}</strong></div>
                   <div v-if="detail.membership.plan_name"><span>Plan</span><strong>{{ detail.membership.plan_name }}</strong></div>
@@ -220,7 +265,7 @@ function rowName(c) {
               </section>
 
               <section class="card">
-                <h3>Últimos pedidos</h3>
+                <h3><AppIcon name="package" :size="16" /> Últimos pedidos</h3>
                 <div v-if="detail.last_orders?.length" class="table-wrap">
                   <table class="pay-table">
                     <thead><tr><th>Pedido</th><th>Fecha</th><th>Pago</th><th>Total</th><th>Estado</th></tr></thead>
@@ -228,9 +273,9 @@ function rowName(c) {
                       <tr v-for="o in detail.last_orders" :key="o.code + o.created_at">
                         <td data-label="Pedido"><strong class="mono">{{ o.code }}</strong></td>
                         <td data-label="Fecha">{{ fmtDate(o.created_at) }}</td>
-                        <td data-label="Pago">{{ o.payment_method || '—' }}</td>
+                        <td data-label="Pago">{{ PAYMENT_METHODS[o.payment_method]?.label || o.payment_method || '—' }}</td>
                         <td data-label="Total">{{ money(o.total) }}</td>
-                        <td data-label="Estado"><span class="pill muted">{{ o.status }}</span></td>
+                        <td data-label="Estado"><span class="pill" :class="ORDER_STATUS[o.status]?.kind || 'muted'"><AppIcon :name="orderStatusIcon(o.status)" :size="12" /> {{ ORDER_STATUS[o.status]?.label || o.status }}</span></td>
                       </tr>
                     </tbody>
                   </table>
@@ -269,6 +314,37 @@ function rowName(c) {
 
 .pager { display: flex; align-items: center; justify-content: flex-end; gap: 10px; flex-wrap: wrap; margin: 10px 0 0; }
 
+/* Buscador con lupa adentro del input. */
+.search-wrap { position: relative; flex: 1 1 240px; display: flex; }
+.search-wrap .input { flex: 1; padding-left: 37px; }
+.search-ico { position: absolute; left: 12px; top: 50%; transform: translateY(-50%); color: var(--muted); pointer-events: none; }
+
+/* Cliente: avatar + nombre para leer la fila de un vistazo. */
+.cust-name { display: flex; align-items: center; gap: 10px; min-width: 0; }
+.cust-ava {
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  background: var(--info-bg);
+  border: 1px solid var(--info-line);
+  color: var(--info-ink);
+}
+
+/* Icono de sección dentro del drawer (afuera del .web-scope: tile propio). */
+.pf-drawer .card h3 > .icon:first-child {
+  width: 28px;
+  height: 28px;
+  padding: 6px;
+  box-sizing: border-box;
+  border-radius: 8px;
+  background: var(--brand-soft);
+  color: var(--brand-ink);
+  box-shadow: inset 0 0 0 1px var(--brand-soft-line);
+}
+
 /* Drawer de detalle */
 .pf-drawer-head .pill { margin-top: 4px; }
 .pf-drawer-body .card + .card { margin-top: 14px; }
@@ -278,4 +354,10 @@ function rowName(c) {
 .pf-drawer .pay-table { min-width: 0; }
 .pf-drawer .pay-table th,
 .pf-drawer .pay-table td { padding: 10px 12px; }
+
+@media (max-width: 640px) {
+  .search-wrap { flex: 1 1 100%; }
+  /* En modo tarjeta la celda alinea el valor a la derecha. */
+  .cust-name { justify-content: flex-end; }
+}
 </style>

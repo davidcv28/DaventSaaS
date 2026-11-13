@@ -110,6 +110,21 @@ const statusRows = computed(() =>
   ORDER_STATUSES
     .map((k) => ({ key: k, ...summary.value?.by_status?.[k] }))
     .filter((r) => r.orders_count > 0))
+
+// Iconos de estado y método de pago (label y color salen de shared.js).
+const ORDER_STATUS_ICON = {
+  PENDING_PAYMENT: 'clock',
+  PAID: 'badge-check',
+  PACKING: 'package',
+  SHIPPED: 'truck',
+  DELIVERED: 'circle-check',
+  CANCELLED: 'x',
+  REFUNDED: 'rotate-cw',
+  EXPIRED: 'timer',
+}
+function orderStatusIcon(s) { return ORDER_STATUS_ICON[s] || 'dot' }
+const PAY_ICON = { transfer: 'building-2', whatsapp: 'whatsapp', cash: 'wallet', mp: 'credit-card' }
+function payIcon(k) { return PAY_ICON[k] || 'wallet' }
 </script>
 
 <template>
@@ -129,23 +144,23 @@ const statusRows = computed(() =>
       <div class="card">
         <div class="toolbar sales-filters">
           <label class="field">
-            <span class="field-label">Desde</span>
+            <span class="field-label"><AppIcon name="calendar" :size="13" /> Desde</span>
             <input v-model="filters.from" type="date" class="input" :max="filters.to || undefined" />
           </label>
           <label class="field">
-            <span class="field-label">Hasta</span>
+            <span class="field-label"><AppIcon name="calendar" :size="13" /> Hasta</span>
             <input v-model="filters.to" type="date" class="input" :min="filters.from || undefined" />
           </label>
           <label class="field field-grow">
-            <span class="field-label">Método de pago</span>
-            <select v-model="filters.payment_method" class="select">
+            <span class="field-label"><AppIcon name="wallet" :size="13" /> Método de pago</span>
+            <select v-model="filters.payment_method" class="select sel-chev">
               <option value="">Todos</option>
               <option v-for="k in PAYMENT_METHOD_KEYS" :key="k" :value="k">{{ PAYMENT_METHODS[k].label }}</option>
             </select>
           </label>
           <label class="field field-grow">
-            <span class="field-label">Estado</span>
-            <select v-model="filters.status" class="select">
+            <span class="field-label"><AppIcon name="filter" :size="13" /> Estado</span>
+            <select v-model="filters.status" class="select sel-chev">
               <option value="">Todos</option>
               <option v-for="s in ORDER_STATUSES" :key="s" :value="s">{{ ORDER_STATUS[s].label }}</option>
             </select>
@@ -161,7 +176,7 @@ const statusRows = computed(() =>
       <template v-else-if="summary">
         <div class="stats">
           <div class="stat">
-            <span class="stat-icon"><AppIcon name="trending-up" :size="20" /></span>
+            <span class="stat-icon tone-ok"><AppIcon name="trending-up" :size="20" /></span>
             <div><strong>{{ money(summary.gross_total) }}</strong><small>Cobrado · {{ summary.cobrado_count }} pedido{{ summary.cobrado_count === 1 ? '' : 's' }} pago</small></div>
           </div>
           <div class="stat">
@@ -169,15 +184,15 @@ const statusRows = computed(() =>
             <div><strong>{{ money(summary.avg_ticket) }}</strong><small>Ticket promedio por pedido cobrado</small></div>
           </div>
           <div class="stat">
-            <span class="stat-icon"><AppIcon name="clock" :size="20" /></span>
+            <span class="stat-icon tone-warn"><AppIcon name="clock" :size="20" /></span>
             <div><strong>{{ money(summary.pending_total) }}</strong><small>Pendiente de pago · {{ summary.pending_count }} pedido{{ summary.pending_count === 1 ? '' : 's' }}</small></div>
           </div>
           <div class="stat">
-            <span class="stat-icon"><AppIcon name="rotate-cw" :size="20" /></span>
+            <span class="stat-icon tone-danger"><AppIcon name="rotate-cw" :size="20" /></span>
             <div><strong>{{ money(summary.refunded_total) }}</strong><small>Reembolsado · {{ summary.refunded_count }} pedido{{ summary.refunded_count === 1 ? '' : 's' }}</small></div>
           </div>
           <div class="stat">
-            <span class="stat-icon"><AppIcon name="package" :size="20" /></span>
+            <span class="stat-icon tone-info"><AppIcon name="package" :size="20" /></span>
             <div><strong>{{ summary.orders_count }}</strong><small>Pedidos totales · {{ summary.from }} → {{ summary.to }}</small></div>
           </div>
         </div>
@@ -214,7 +229,7 @@ const statusRows = computed(() =>
                 <thead><tr><th>Método</th><th>Pedidos</th><th>Cobrado</th><th>Pendiente</th></tr></thead>
                 <tbody>
                   <tr v-for="r in pmRows.filter((x) => x.orders_count > 0)" :key="r.key">
-                    <td data-label="Método">{{ PAYMENT_METHODS[r.key]?.label || r.key }}</td>
+                    <td data-label="Método"><span class="pm-cell"><AppIcon :name="payIcon(r.key)" :size="14" /> {{ PAYMENT_METHODS[r.key]?.label || r.key }}</span></td>
                     <td data-label="Pedidos">{{ r.orders_count }}</td>
                     <td data-label="Cobrado">{{ money(r.total_cobrado) }}</td>
                     <td data-label="Pendiente">{{ money(r.total_pendiente) }}</td>
@@ -231,7 +246,7 @@ const statusRows = computed(() =>
                 <thead><tr><th>Estado</th><th>Pedidos</th><th>Total</th></tr></thead>
                 <tbody>
                   <tr v-for="r in statusRows" :key="r.key">
-                    <td data-label="Estado"><span class="pill" :class="statusMeta(ORDER_STATUS, r.key).kind">{{ statusMeta(ORDER_STATUS, r.key).label }}</span></td>
+                    <td data-label="Estado"><span class="pill" :class="statusMeta(ORDER_STATUS, r.key).kind"><AppIcon :name="orderStatusIcon(r.key)" :size="12" /> {{ statusMeta(ORDER_STATUS, r.key).label }}</span></td>
                     <td data-label="Pedidos">{{ r.orders_count }}</td>
                     <td data-label="Total">{{ money(r.total) }}</td>
                   </tr>
@@ -247,7 +262,14 @@ const statusRows = computed(() =>
 </template>
 
 <style scoped>
-.field-label { font-size: 12.5px; font-weight: 600; color: var(--ink-2); display: block; margin-bottom: 5px; }
+.field-label { font-size: 12.5px; font-weight: 600; color: var(--ink-2); display: flex; align-items: center; gap: 6px; margin-bottom: 5px; }
+/* Stat-icon con tinte semántico: cobrado verde, pendiente ámbar, etc. */
+.stat-icon.tone-ok { background: var(--ok-bg); color: var(--ok-ink); box-shadow: inset 0 0 0 1px var(--ok-line); }
+.stat-icon.tone-warn { background: var(--warn-bg); color: var(--warn-ink); box-shadow: inset 0 0 0 1px var(--warn-line); }
+.stat-icon.tone-danger { background: var(--danger-bg); color: var(--danger-ink); box-shadow: inset 0 0 0 1px var(--danger-line); }
+.stat-icon.tone-info { background: var(--info-bg); color: var(--info-ink); box-shadow: inset 0 0 0 1px var(--info-line); }
+.pm-cell { display: inline-flex; align-items: center; gap: 7px; }
+.pm-cell .icon { color: var(--muted); }
 /* Fila de filtros: campos parejos que crecen y el botón alineado abajo. */
 .sales-filters { align-items: flex-end; }
 .sales-filters .field { margin: 0; flex: 1 1 150px; }

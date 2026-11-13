@@ -104,7 +104,7 @@ watch(() => store.hasStore, (h) => { if (h) { loadPages(); loadReturns() } }, { 
 </script>
 
 <template>
-  <div>
+  <div class="legal-panel">
     <AlertMessage v-if="errMsg" kind="error" :message="errMsg" />
 
     <div v-if="store.status === 'loading' && !store.hasStore" class="card"><div class="empty-mini"><p>Cargando tu tienda…</p></div></div>
@@ -124,17 +124,28 @@ watch(() => store.hasStore, (h) => { if (h) { loadPages(); loadReturns() } }, { 
 
         <nav class="dsg-tabs" role="tablist" aria-label="Página legal">
           <button v-for="k in KINDS" :key="k" type="button" role="tab" class="dsg-tab" :class="{ active: activeKind === k }" :aria-selected="activeKind === k" @click="selectKind(k)">
+            <AppIcon :name="{ terms: 'file-text', privacy: 'shield-check', returns: 'rotate-cw' }[k]" :size="14" />
             {{ pages[k]?.kind_label || k }}
-            <span v-if="pages[k] && !pages[k].is_published" class="pill muted" style="margin-left:6px">Oculta</span>
+            <span v-if="pages[k] && !pages[k].is_published" class="pill muted legal-tab-pill">Oculta</span>
           </button>
         </nav>
 
-        <div v-if="activePage" style="margin-top:14px">
-          <h4 class="legal-title">{{ activePage.title }}</h4>
+        <div v-if="activePage" class="legal-viewer">
+          <div class="legal-viewer-head">
+            <div>
+              <h4 class="legal-title">{{ activePage.title }}</h4>
+              <p v-if="activePage.version || activePage.updated_at" class="legal-meta">Versión {{ activePage.version || '—' }} · Actualizada {{ fmtDateTime(activePage.updated_at) }}</p>
+            </div>
+            <span class="pill" :class="activePage.is_published ? 'ok' : 'muted'">
+              <AppIcon :name="activePage.is_published ? 'eye' : 'eye-off'" :size="13" />
+              {{ activePage.is_published ? 'Publicada' : 'Oculta' }}
+            </span>
+          </div>
           <div class="legal-readonly">{{ activePage.body }}</div>
 
-          <label class="check-item" style="margin-top:12px">
-            <input type="checkbox" :checked="activePage.is_published" :disabled="pubBusy" @change="togglePublish" />
+          <label class="svc-switch legal-publish">
+            <input type="checkbox" role="switch" :checked="activePage.is_published" :aria-checked="activePage.is_published" :disabled="pubBusy" @change="togglePublish" />
+            <span class="svc-switch-track" aria-hidden="true"><i></i></span>
             <span class="check-text"><strong>Publicada en tu web</strong><small>Si está apagada, la página no es visible para los compradores.</small></span>
           </label>
 
@@ -216,7 +227,16 @@ watch(() => store.hasStore, (h) => { if (h) { loadPages(); loadReturns() } }, { 
 .card > .hint { margin: -6px 0 12px; }
 .chip-row { display: flex; gap: 8px; flex-wrap: wrap; }
 .ret-actions { display: flex; gap: 6px; flex-wrap: wrap; }
-.legal-title { margin: 0 0 8px; font-size: 15px; font-weight: 700; }
+.legal-title { margin: 0; font-size: 15px; font-weight: 700; }
+.legal-meta { margin: 3px 0 0; font-size: 12px; color: var(--muted); }
+.legal-tab-pill { margin-left: 2px; padding: 1px 8px; font-size: 10.5px; }
+.legal-viewer { margin-top: 14px; }
+.legal-viewer-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 8px 14px; flex-wrap: wrap; margin-bottom: 10px; }
+.legal-viewer-head .pill { flex: none; margin-top: 1px; }
+.svc-switch.legal-publish { margin: 14px 0 0; }
+.svc-switch .check-text strong { display: block; font-size: 13.5px; font-weight: 600; color: var(--ink); }
+.svc-switch .check-text small { display: block; font-size: 12px; color: var(--muted); margin-top: 1px; line-height: 1.45; }
+.legal-panel .toolbar { align-items: center; }
 .legal-readonly {
   max-height: 340px; overflow: auto; padding: 14px 16px;
   border: 1px solid var(--line-soft, var(--line)); border-radius: 12px;

@@ -6,6 +6,7 @@ import { apiErr, money, fmtDate, fmtDateTime, statusMeta,
          ORDER_STATUS, ORDER_STATUSES, PAYMENT_METHODS, SHIPPING_METHODS,
          NEXT_ORDER_ACTION, isNotFound } from './shared.js'
 import { useStoreStore } from '../../../stores/store.store.js'
+import { publicStoreUrl } from '../../../api/stores.api.js'
 import AppIcon from '../../AppIcon.vue'
 import AlertMessage from '../../AlertMessage.vue'
 
@@ -37,6 +38,34 @@ const confirmDlg = ref(null) // {title, desc, danger, label, run}
 
 const hasPrev = computed(() => Boolean(pageInfo.value.previous))
 const hasNext = computed(() => Boolean(pageInfo.value.next))
+
+// Icono por estado del pedido (label y color salen de ORDER_STATUS).
+const ORDER_STATUS_ICON = {
+  PENDING_PAYMENT: 'clock',
+  PAID: 'badge-check',
+  PACKING: 'package',
+  SHIPPED: 'truck',
+  DELIVERED: 'circle-check',
+  CANCELLED: 'x',
+  REFUNDED: 'rotate-cw',
+  EXPIRED: 'timer',
+}
+function orderStatusIcon(s) { return ORDER_STATUS_ICON[s] || 'dot' }
+
+// CTA del estado vacío: copiar el link público (mismo patrón que SellingHub).
+const copiedLink = ref(false)
+async function copyStoreLink() {
+  const url = store.store?.slug ? publicStoreUrl(store.store.slug) : ''
+  if (!url) return
+  try {
+    await navigator.clipboard.writeText(url)
+    store.notice = 'Link copiado al portapapeles.'
+  } catch {
+    store.notice = `Tu link es ${url}`
+  }
+  copiedLink.value = true
+  setTimeout(() => { copiedLink.value = false }, 1600)
+}
 
 async function load(p = page.value) {
   loading.value = true
@@ -293,6 +322,7 @@ function eventLabel(ev) {
 <template>
   <div>
     <AlertMessage v-if="errMsg" kind="error" :message="errMsg" />
+    <AlertMessage v-else-if="store.notice" kind="success" :message="store.notice" />
 
     <div v-if="store.status === 'loading' && !store.hasStore" class="card"><div class="empty-mini"><p>Cargando tu tienda…</p></div></div>
     <div v-else-if="!store.hasStore" class="empty">
@@ -304,7 +334,8 @@ function eventLabel(ev) {
     <template v-else>
       <div class="card">
         <div class="toolbar">
-          <select v-model="statusFilter" class="select" style="max-width: 220px" aria-label="Filtrar por estado">
+          <span class="tb-ico" aria-hidden="true"><AppIcon name="filter" :size="15" /></span>
+          <select v-model="statusFilter" class="select sel-chev" style="max-width: 220px" aria-label="Filtrar por estado">
             <option value="">Todos los estados</option>
             <option v-for="s in ORDER_STATUSES" :key="s" :value="s">{{ ORDER_STATUS[s].label }}</option>
           </select>
@@ -315,8 +346,16 @@ function eventLabel(ev) {
         </div>
 
         <div v-if="loading && !rows.length" class="empty-mini"><p>Cargando pedidos…</p></div>
-        <div v-else-if="!rows.length" class="empty-mini">
-          <p>{{ statusFilter ? 'No hay pedidos con ese estado.' : 'Todavía no entró ningún pedido. Compartí tu link y empezá a vender.' }}</p>
+        <div v-else-if="!rows.length" class="pnl-empty">
+          <span class="pnl-empty-ico"><AppIcon :name="statusFilter ? 'filter' : 'package'" :size="22" /></span>
+          <strong>{{ statusFilter ? 'Sin resultados con ese estado' : 'Todavía no entró ningún pedido' }}</strong>
+          <p>{{ statusFilter ? 'Probá con otro estado o mirá todos los pedidos.' : 'Compartí el link de tu tienda: cada compra aparece acá en tiempo real.' }}</p>
+          <button v-if="statusFilter" type="button" class="btn ghost btn-auto" @click="statusFilter = ''">
+            <AppIcon name="x" :size="14" /> Limpiar filtro
+          </button>
+          <button v-else type="button" class="btn btn-auto" @click="copyStoreLink">
+            <AppIcon :name="copiedLink ? 'check' : 'copy'" :size="14" /> {{ copiedLink ? 'Link copiado' : 'Copiar link de mi tienda' }}
+          </button>
         </div>
 
         <div v-else class="table-wrap">
@@ -345,7 +384,7 @@ function eventLabel(ev) {
                 <td data-label="Pago">{{ PAYMENT_METHODS[o.payment_method]?.label || o.payment_method || '—' }}</td>
                 <td data-label="Envío">{{ SHIPPING_METHODS[o.shipping_method]?.label || o.shipping_method || '—' }}</td>
                 <td data-label="Total"><strong>{{ money(o.total) }}</strong></td>
-                <td data-label="Estado"><span class="pill" :class="ORDER_STATUS[o.status]?.kind || 'muted'">{{ ORDER_STATUS[o.status]?.label || o.status }}</span></td>
+                <td data-label="Estado"><span class="pill" :class="ORDER_STATUS[o.status]?.kind || 'muted'"><AppIcon :name="orderStatusIcon(o.status)" :size="12" /> {{ ORDER_STATUS[o.status]?.label || o.status }}</span></td>
               </tr>
             </tbody>
           </table>
@@ -367,7 +406,7 @@ function eventLabel(ev) {
             <div class="pf-drawer-head">
               <div>
                 <h3 class="mono">{{ detail?.code || 'Cargando…' }}</h3>
-                <span v-if="detail" class="pill" :class="detailStatus.kind">{{ detailStatus.label }}</span>
+                <span v-if="detail" class="pill" :class="detailStatus.kind"><AppIcon :name="orderStatusIcon(detail.status)" :size="12" /> {{ detailStatus.label }}</span>
               </div>
               <button type="button" class="icon-btn" aria-label="Cerrar" @click="closeDetail"><AppIcon name="x" :size="16" /></button>
             </div>
@@ -379,19 +418,19 @@ function eventLabel(ev) {
 
               <!-- Acciones del dueño -->
               <section class="card" style="margin-top: 14px">
-                <h3>Acciones</h3>
+                <h3><AppIcon name="zap" :size="16" /> Acciones</h3>
 
                 <div v-if="detail.status === 'PENDING_PAYMENT'" class="pf-actions">
                   <template v-if="!showPayForm">
-                    <button type="button" class="btn btn-auto" :disabled="actionBusy === 'pay'" @click="showPayForm = true">Confirmar pago</button>
-                    <button type="button" class="btn ghost btn-auto" @click="showCancelForm = !showCancelForm">Cancelar pedido</button>
+                    <button type="button" class="btn btn-auto" :disabled="actionBusy === 'pay'" @click="showPayForm = true"><AppIcon name="badge-check" :size="15" /> Confirmar pago</button>
+                    <button type="button" class="btn ghost btn-auto" @click="showCancelForm = !showCancelForm"><AppIcon name="x" :size="15" /> Cancelar pedido</button>
                   </template>
                   <template v-else>
                     <label class="field" style="flex:1;min-width:180px">
                       <span class="field-label">Referencia (opcional)</span>
                       <input v-model="payRef" class="input" placeholder="Ej: nro. de transferencia, alias que pagó" maxlength="120" />
                     </label>
-                    <button type="button" class="btn btn-auto" :disabled="actionBusy === 'pay'" @click="doConfirmPayment">Sí, confirmar</button>
+                    <button type="button" class="btn btn-auto" :disabled="actionBusy === 'pay'" @click="doConfirmPayment"><AppIcon name="check" :size="15" /> Sí, confirmar</button>
                     <button type="button" class="btn ghost btn-auto" @click="showPayForm = false">Volver</button>
                   </template>
                 </div>
@@ -401,13 +440,13 @@ function eventLabel(ev) {
                     <span class="field-label">Motivo (opcional)</span>
                     <input v-model="cancelReason" class="input" placeholder="Ej: el cliente se arrepintió" maxlength="300" />
                   </label>
-                  <button type="button" class="btn danger btn-auto" :disabled="actionBusy === 'cancel'" @click="doCancel">Sí, cancelar</button>
+                  <button type="button" class="btn danger btn-auto" :disabled="actionBusy === 'cancel'" @click="doCancel"><AppIcon name="x" :size="15" /> Sí, cancelar</button>
                   <button type="button" class="btn ghost btn-auto" @click="showCancelForm = false">Volver</button>
                 </div>
 
                 <div v-if="nextAction && !showShipForm" class="pf-actions">
                   <button type="button" class="btn btn-auto" :disabled="actionBusy === nextAction.target" @click="onAdvanceClick(nextAction.target)">
-                    {{ nextAction.label }}
+                    <AppIcon :name="orderStatusIcon(nextAction.target)" :size="15" /> {{ nextAction.label }}
                   </button>
                 </div>
 
@@ -433,24 +472,24 @@ function eventLabel(ev) {
                     </label>
                   </template>
                   <div class="pf-actions">
-                    <button type="button" class="btn btn-auto" :disabled="actionBusy === 'SHIPPED'" @click="doShip">Confirmar envío</button>
+                    <button type="button" class="btn btn-auto" :disabled="actionBusy === 'SHIPPED'" @click="doShip"><AppIcon name="truck" :size="15" /> Confirmar envío</button>
                     <button type="button" class="btn ghost btn-auto" @click="showShipForm = false">Volver</button>
                   </div>
                 </div>
 
                 <div v-if="canRefundMp || canRefundManual" class="pf-actions" style="margin-top: 10px">
                   <button v-if="canRefundMp" type="button" class="btn danger btn-auto" :disabled="mpRefundBusy || actionBusy === 'refund'" @click="doRefund('mp')">
-                    Reembolsar en Mercado Pago
+                    <AppIcon name="rotate-cw" :size="15" /> Reembolsar en Mercado Pago
                   </button>
                   <button v-if="canRefundManual" type="button" class="btn ghost btn-auto" :disabled="actionBusy === 'refund'" @click="doRefund('manual')">
-                    Marcar como reembolsado
+                    <AppIcon name="rotate-cw" :size="15" /> Marcar como reembolsado
                   </button>
                 </div>
               </section>
 
               <!-- Datos del pedido -->
               <section class="card" style="margin-top: 14px">
-                <h3>Pedido</h3>
+                <h3><AppIcon name="receipt" :size="16" /> Pedido</h3>
                 <div class="kv">
                   <div><span>Método de pago</span><strong>{{ PAYMENT_METHODS[detail.payment_method]?.label || detail.payment_method || '—' }}</strong></div>
                   <div><span>Envío</span><strong>{{ SHIPPING_METHODS[detail.shipping_method]?.label || detail.shipping_method || '—' }}</strong></div>
@@ -472,14 +511,14 @@ function eventLabel(ev) {
                   <span class="field-label">Factura / remito (referencia interna)</span>
                   <div class="pf-actions" style="margin-top: 0">
                     <input v-model="invoiceRef" class="input" placeholder="Ej: A-0001-00001234" maxlength="60" @input="invoiceDirty = invoiceRef !== (detail.invoice_ref || '')" />
-                    <button v-if="invoiceDirty" type="button" class="btn ghost btn-auto" :disabled="actionBusy === 'invoice'" @click="saveInvoiceRef">Guardar</button>
+                    <button v-if="invoiceDirty" type="button" class="btn ghost btn-auto" :disabled="actionBusy === 'invoice'" @click="saveInvoiceRef"><AppIcon name="check" :size="14" /> Guardar</button>
                   </div>
                 </label>
               </section>
 
               <!-- Cliente -->
               <section class="card" style="margin-top: 14px">
-                <h3>Cliente</h3>
+                <h3><AppIcon name="user" :size="16" /> Cliente</h3>
                 <div class="kv">
                   <div><span>Nombre</span><strong>{{ [detail.customer_first_name, detail.customer_last_name].filter(Boolean).join(' ') || '—' }}</strong></div>
                   <div><span>Email</span><strong>{{ detail.customer_email || '—' }}</strong></div>
@@ -490,7 +529,7 @@ function eventLabel(ev) {
 
               <!-- Dirección -->
               <section v-if="shippingRows.length" class="card" style="margin-top: 14px">
-                <h3>Dirección de envío</h3>
+                <h3><AppIcon name="map-pin" :size="16" /> Dirección de envío</h3>
                 <div class="kv">
                   <div v-for="r in shippingRows" :key="r.key"><span>{{ r.label }}</span><strong>{{ r.value }}</strong></div>
                 </div>
@@ -498,7 +537,7 @@ function eventLabel(ev) {
 
               <!-- Comprobante -->
               <section v-if="detail.proof_uploaded" class="card" style="margin-top: 14px">
-                <h3>Comprobante de pago</h3>
+                <h3><AppIcon name="file-text" :size="16" /> Comprobante de pago</h3>
                 <a v-if="detail.proof_image" :href="detail.proof_image" target="_blank" rel="noopener" class="btn ghost btn-auto">
                   <AppIcon name="external-link" :size="14" /> Abrir comprobante
                 </a>
@@ -507,7 +546,7 @@ function eventLabel(ev) {
 
               <!-- Productos -->
               <section class="card" style="margin-top: 14px">
-                <h3>Productos</h3>
+                <h3><AppIcon name="package" :size="16" /> Productos</h3>
                 <ul class="ord-items">
                   <li v-for="it in detail.items" :key="it.id">
                     <div>
@@ -521,7 +560,7 @@ function eventLabel(ev) {
 
               <!-- Bitácora -->
               <section v-if="detail.events?.length" class="card" style="margin-top: 14px">
-                <h3>Seguimiento</h3>
+                <h3><AppIcon name="history" :size="16" /> Seguimiento</h3>
                 <ul class="ord-events">
                   <li v-for="ev in detail.events" :key="ev.id">
                     <span class="ord-event-dot" />
@@ -558,6 +597,18 @@ function eventLabel(ev) {
 <style scoped>
 /* El drawer usa z-index 120 (.pf-overlay): la confirmación va encima. */
 .dsg-confirm { z-index: 130; }
+.tb-ico { align-self: center; flex: none; color: var(--muted); }
+/* Icono de sección dentro del drawer (afuera del .web-scope: tile propio). */
+.pf-drawer .card h3 > .icon:first-child {
+  width: 28px;
+  height: 28px;
+  padding: 6px;
+  box-sizing: border-box;
+  border-radius: 8px;
+  background: var(--brand-soft);
+  color: var(--brand-ink);
+  box-shadow: inset 0 0 0 1px var(--brand-soft-line);
+}
 .pf-actions { display: flex; gap: 10px; flex-wrap: wrap; align-items: flex-end; }
 .pf-actions .field { margin: 0; }
 .pf-actions .input { flex: 1 1 auto; min-width: 0; }
@@ -587,5 +638,7 @@ tr.clickable:focus-visible { outline: 2px solid var(--brand-500); outline-offset
   .pf-actions .btn { flex: 1 1 100%; justify-content: center; }
   .pf-actions .field { flex: 1 1 100%; }
   .ord-client { text-align: right; }
+  /* En móvil el select ya ocupa la línea entera: el icono decorativo sobra. */
+  .tb-ico { display: none; }
 }
 </style>

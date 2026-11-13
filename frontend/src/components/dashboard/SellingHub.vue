@@ -23,8 +23,8 @@ const publicUrl = computed(() => (store.store?.slug ? publicStoreUrl(store.store
 // Los 7 módulos de tabGroups.selling repartidos en dos clusters: lo que
 // pasa todos los días y lo que se configura una vez.
 const GROUPS = [
-  { id: 'ops', label: 'El día a día', hint: 'Pedidos, ventas, clientes y consultas', ids: ['orders', 'sales', 'customers', 'inquiries'] },
-  { id: 'setup', label: 'Tu tienda', hint: 'Cobros, papeles y membresías', ids: ['payconfig', 'legal', 'memberships'] }
+  { id: 'ops', label: 'El día a día', hint: 'Pedidos, ventas, clientes y consultas', icon: 'zap', ids: ['orders', 'sales', 'customers', 'inquiries'] },
+  { id: 'setup', label: 'Tu tienda', hint: 'Cobros, papeles y membresías', icon: 'sliders', ids: ['payconfig', 'legal', 'memberships'] }
 ]
 const groups = computed(() => GROUPS
   .map((g) => ({ ...g, items: g.ids.map((id) => props.tabs.find((t) => t.id === id)).filter(Boolean) }))
@@ -120,7 +120,7 @@ onUnmounted(() => {
 
     <!-- Estado de la tienda: la URL pública es la respuesta a "¿dónde vendo?" -->
     <div v-if="store.hasStore" class="sell-status">
-      <span class="sell-status-ico"><AppIcon name="globe" :size="18" /></span>
+      <span class="sell-status-ico"><AppIcon name="lucide:globe" :size="18" /></span>
       <div class="sell-status-txt">
         <strong>Tu tienda está en vivo</strong>
         <span class="sell-url" :title="publicUrl">{{ publicUrl }}</span>
@@ -137,7 +137,7 @@ onUnmounted(() => {
       </div>
     </div>
     <div v-else class="sell-status sell-status--empty">
-      <span class="sell-status-ico"><AppIcon name="globe" :size="18" /></span>
+      <span class="sell-status-ico"><AppIcon name="lucide:globe" :size="18" /></span>
       <div class="sell-status-txt">
         <strong>Todavía no tenés dirección web</strong>
         <span>Reservá tu link público para empezar a vender: es gratis y queda para siempre.</span>
@@ -148,8 +148,11 @@ onUnmounted(() => {
     <!-- Módulos del e-commerce, agrupados por intención -->
     <section v-for="g in groups" :key="g.id" class="sell-group">
       <header class="sell-group-head">
-        <h2>{{ g.label }}</h2>
-        <p>{{ g.hint }}</p>
+        <span class="sell-group-ico"><AppIcon :name="g.icon" :size="15" /></span>
+        <div class="sell-group-txt">
+          <h2>{{ g.label }}</h2>
+          <p>{{ g.hint }}</p>
+        </div>
       </header>
       <div class="sell-mod-grid">
         <button
@@ -162,7 +165,8 @@ onUnmounted(() => {
             <strong>{{ t.label }}</strong>
             <small>{{ t.hint }}</small>
           </span>
-          <AppIcon :name="isLocked(t) ? 'lock' : 'chevron-right'" :size="15" class="sell-mod-go" />
+          <span v-if="isLocked(t)" class="sell-mod-lock"><AppIcon name="lock" :size="11" /> Bloqueado</span>
+          <AppIcon v-else name="chevron-right" :size="15" class="sell-mod-go" />
         </button>
       </div>
     </section>

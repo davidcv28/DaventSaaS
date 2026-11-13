@@ -123,6 +123,9 @@ async function toggleStatus() {
 function senderLabel(m) {
   return m?.sender === 'owner' ? 'Vos' : 'Cliente'
 }
+
+// Icono por estado del hilo (label y color salen de THREAD_STATUS).
+function threadIcon(s) { return s === 'closed' ? 'circle-check' : 'message-circle' }
 </script>
 
 <template>
@@ -140,9 +143,9 @@ function senderLabel(m) {
       <div class="card">
         <div class="toolbar">
           <div class="chip-row" role="group" aria-label="Estado">
-            <button type="button" class="chip-btn" :class="{ strong: statusFilter === 'open' }" :aria-pressed="statusFilter === 'open'" @click="statusFilter = 'open'">Abiertas</button>
-            <button type="button" class="chip-btn" :class="{ strong: statusFilter === 'closed' }" :aria-pressed="statusFilter === 'closed'" @click="statusFilter = 'closed'">Cerradas</button>
-            <button type="button" class="chip-btn" :class="{ strong: statusFilter === '' }" :aria-pressed="statusFilter === ''" @click="statusFilter = ''">Todas</button>
+            <button type="button" class="chip-btn" :class="{ strong: statusFilter === 'open' }" :aria-pressed="statusFilter === 'open'" @click="statusFilter = 'open'"><AppIcon name="message-circle" :size="13" /> Abiertas</button>
+            <button type="button" class="chip-btn" :class="{ strong: statusFilter === 'closed' }" :aria-pressed="statusFilter === 'closed'" @click="statusFilter = 'closed'"><AppIcon name="circle-check" :size="13" /> Cerradas</button>
+            <button type="button" class="chip-btn" :class="{ strong: statusFilter === '' }" :aria-pressed="statusFilter === ''" @click="statusFilter = ''"><AppIcon name="inbox" :size="13" /> Todas</button>
           </div>
           <button type="button" class="chip-btn" :class="{ strong: onlyUnread }" :aria-pressed="onlyUnread" @click="onlyUnread = !onlyUnread">
             <AppIcon name="mail" :size="13" /> Solo sin leer
@@ -154,8 +157,13 @@ function senderLabel(m) {
         </div>
 
         <div v-if="loading && !rows.length" class="empty-mini"><p>Cargando consultas…</p></div>
-        <div v-else-if="!rows.length" class="empty-mini">
-          <p>{{ onlyUnread || statusFilter ? 'No hay consultas con ese filtro.' : 'Todavía no llegaron consultas de clientes.' }}</p>
+        <div v-else-if="!rows.length" class="pnl-empty">
+          <span class="pnl-empty-ico"><AppIcon :name="onlyUnread || statusFilter ? 'filter' : 'message-circle'" :size="22" /></span>
+          <strong>{{ onlyUnread || statusFilter ? 'Sin resultados con ese filtro' : 'Todavía no llegaron consultas' }}</strong>
+          <p>{{ onlyUnread || statusFilter ? 'Probá con otro filtro o mirá todas las consultas.' : 'Cuando un cliente te escriba desde tu tienda, la conversación aparece acá.' }}</p>
+          <button v-if="onlyUnread || statusFilter" type="button" class="btn ghost btn-auto" @click="statusFilter = ''; onlyUnread = false">
+            <AppIcon name="x" :size="14" /> Limpiar filtros
+          </button>
         </div>
 
         <div v-else class="table-wrap">
@@ -174,7 +182,12 @@ function senderLabel(m) {
                   :aria-label="`Abrir consulta: ${t.subject || 'Consulta'}`"
                   @click="openThread(t.id)"
                   @keydown.enter.prevent="openThread(t.id)" @keydown.space.prevent="openThread(t.id)">
-                <td data-label="Consulta"><strong>{{ t.subject || 'Consulta' }}</strong></td>
+                <td data-label="Consulta">
+                  <div class="sup-subj">
+                    <span v-if="t.unread_count > 0" class="sup-dot" aria-hidden="true" />
+                    <strong>{{ t.subject || 'Consulta' }}</strong>
+                  </div>
+                </td>
                 <td data-label="Cliente">
                   <div class="cell">
                     <div>{{ t.customer?.name || t.customer?.email || '—' }}</div>
@@ -188,16 +201,16 @@ function senderLabel(m) {
                     <span v-if="t.unread_count > 0" class="chat-badge" :aria-label="`${t.unread_count} mensaje${t.unread_count === 1 ? '' : 's'} sin leer`">{{ t.unread_count }}</span>
                   </div>
                 </td>
-                <td data-label="Estado"><span class="pill" :class="THREAD_STATUS[t.status]?.kind || 'muted'">{{ THREAD_STATUS[t.status]?.label || t.status }}</span></td>
+                <td data-label="Estado"><span class="pill" :class="THREAD_STATUS[t.status]?.kind || 'muted'"><AppIcon :name="threadIcon(t.status)" :size="12" /> {{ THREAD_STATUS[t.status]?.label || t.status }}</span></td>
               </tr>
             </tbody>
           </table>
         </div>
 
         <div v-if="hasPrev || hasNext" class="pager">
-          <button type="button" class="btn ghost btn-auto" :disabled="!hasPrev || loading" @click="load(page - 1)">← Anterior</button>
+          <button type="button" class="btn ghost btn-auto" :disabled="!hasPrev || loading" @click="load(page - 1)"><AppIcon name="chevron-left" :size="14" /> Anterior</button>
           <span class="hint">Página {{ page }}</span>
-          <button type="button" class="btn ghost btn-auto" :disabled="!hasNext || loading" @click="load(page + 1)">Siguiente →</button>
+          <button type="button" class="btn ghost btn-auto" :disabled="!hasNext || loading" @click="load(page + 1)">Siguiente <AppIcon name="chevron-right" :size="14" /></button>
         </div>
       </div>
     </template>
@@ -210,7 +223,7 @@ function senderLabel(m) {
             <div class="pf-drawer-head">
               <div>
                 <h3>{{ detail?.subject || 'Consulta' }}</h3>
-                <span v-if="detail" class="pill" :class="detailStatus.kind">{{ detailStatus.label }}</span>
+                <span v-if="detail" class="pill" :class="detailStatus.kind"><AppIcon :name="threadIcon(detail.status)" :size="12" /> {{ detailStatus.label }}</span>
               </div>
               <button type="button" class="icon-btn" aria-label="Cerrar" @click="closeDetail"><AppIcon name="x" :size="16" /></button>
             </div>
@@ -228,7 +241,7 @@ function senderLabel(m) {
               <!-- Mensajes (texto plano, pre-line) -->
               <ul class="sup-msgs">
                 <li v-for="m in detail.messages || []" :key="m.id" :class="{ mine: m.sender === 'owner' }">
-                  <div class="sup-msg-meta">{{ senderLabel(m) }} · {{ fmtDateTime(m.created_at) }}</div>
+                  <div class="sup-msg-meta"><strong>{{ senderLabel(m) }}</strong> · {{ fmtDateTime(m.created_at) }}</div>
                   <div class="sup-msg-body">{{ m.body }}</div>
                 </li>
                 <li v-if="!(detail.messages || []).length" class="empty-mini"><span>Sin mensajes todavía.</span></li>
@@ -237,19 +250,19 @@ function senderLabel(m) {
               <!-- Respuesta / estado -->
               <div v-if="!isClosed" class="reply-box">
                 <label class="field">
-                  <span class="field-label">Responder</span>
+                  <span class="field-label"><AppIcon name="send" :size="13" /> Responder al cliente</span>
                   <textarea v-model="replyBody" class="textarea" rows="3" maxlength="2000" placeholder="Escribí tu respuesta…"></textarea>
                 </label>
                 <div class="pf-actions">
                   <button type="button" class="btn btn-auto" :disabled="replyBusy || !replyBody.trim()" @click="sendReply">
                     <AppIcon name="send" :size="14" /> {{ replyBusy ? 'Enviando…' : 'Enviar' }}
                   </button>
-                  <button type="button" class="btn ghost btn-auto" :disabled="actionBusy === 'status'" @click="toggleStatus">Cerrar consulta</button>
+                  <button type="button" class="btn ghost btn-auto" :disabled="actionBusy === 'status'" @click="toggleStatus"><AppIcon name="check" :size="14" /> Cerrar consulta</button>
                 </div>
               </div>
               <div v-else class="reply-box">
-                <p class="hint reply-note">Esta consulta está cerrada. Reabrila si el cliente vuelve a escribir.</p>
-                <button type="button" class="btn ghost btn-auto" :disabled="actionBusy === 'status'" @click="toggleStatus">Reabrir consulta</button>
+                <p class="hint reply-note"><AppIcon name="info" :size="13" /> Esta consulta está cerrada. Reabrila si el cliente vuelve a escribir.</p>
+                <button type="button" class="btn ghost btn-auto" :disabled="actionBusy === 'status'" @click="toggleStatus"><AppIcon name="undo" :size="14" /> Reabrir consulta</button>
               </div>
             </div>
           </aside>
@@ -268,7 +281,13 @@ function senderLabel(m) {
 .reply-box { margin-top: 14px; }
 .reply-note { margin: 0 0 10px; }
 .pf-actions { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 10px; }
-.field-label { font-size: 12.5px; font-weight: 600; color: var(--ink-2); display: block; margin-bottom: 5px; }
+.field-label { font-size: 12.5px; font-weight: 600; color: var(--ink-2); display: flex; align-items: center; gap: 6px; margin-bottom: 5px; }
+/* No leído: punto + asunto para que la fila se entienda sin leer el badge. */
+.sup-subj { display: flex; align-items: center; gap: 8px; min-width: 0; }
+.sup-subj strong { min-width: 0; }
+.sup-dot { flex: none; width: 8px; height: 8px; border-radius: 50%; background: var(--brand-500); }
+.sup-msg-meta strong { color: var(--ink-2); font-weight: 650; }
+.reply-note { display: flex; align-items: center; gap: 6px; }
 .hint { font-size: 12.5px; color: var(--muted); }
 .clickable { cursor: pointer; }
 .clickable:focus-visible { outline: 2px solid var(--brand-500); outline-offset: -2px; }
