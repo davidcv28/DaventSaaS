@@ -737,6 +737,26 @@
   background: var(--dz-card);
   color: var(--dz-ink);
 }
+/* Descongestión: la búsqueda no compite con las fichas — siempre va como
+   lupa en la fila de iconos y la barra cuelga abierta bajo el header. */
+.store-page[data-design='indumentaria'][data-nav='card-menu-flyout'] .sp-top .sp-search-toggle {
+  display: grid;
+}
+.store-page[data-design='indumentaria'][data-nav='card-menu-flyout'] .sp-top .sp-search.sp-search-top {
+  position: absolute;
+  top: calc(100% + 8px);
+  left: 12px;
+  right: 12px;
+  flex: none;
+  display: none;
+  margin: 0;
+  z-index: 5;
+  border-radius: 0;
+  box-shadow: var(--sp-shadow-md, 0 12px 28px rgba(0, 0, 0, .18));
+}
+.store-page[data-design='indumentaria'][data-nav='card-menu-flyout'] .sp-top .sp-search.sp-search-top.open {
+  display: flex;
+}
 .store-page[data-design='indumentaria'][data-nav='card-menu-flyout'] .sp-top-cta {
   border-radius: 0;
   border: 1.5px solid var(--dz-ink);
