@@ -29,3 +29,14 @@
 .store-page[data-st-skin='brutal'] .sp-section-title { text-transform: uppercase; letter-spacing: -.01em; font-weight: 900; }
 .store-page[data-st-skin='brutal'] .sp-section-title::after { width: 64px; height: 6px; background: var(--store-accent); border: 2px solid var(--sp-line); }
 .store-page[data-st-skin='brutal'] .sp-container { padding-inline: clamp(16px, 4vw, 28px); }
+
+/* Novedades (feed): la card usa --sp-surface; acá hereda el tratamiento
+   brutal (papel sólido, borde duro, relieve). */
+.store-page[data-st-skin='brutal'] .feed-card { background: var(--sp-card-solid); border: 2px solid var(--sp-line); border-radius: 0; box-shadow: var(--sp-shadow-sm); }
+.store-page[data-st-skin='brutal'] .feed-head h1 { text-transform: uppercase; letter-spacing: -.01em; font-weight: 900; }
+.store-page[data-st-skin='brutal'] .feed-poll-option,
+.store-page[data-st-skin='brutal'] .feed-poll-result,
+.store-page[data-st-skin='brutal'] .feed-embed-link,
+.store-page[data-st-skin='brutal'] .feed-media { border-radius: 0; border-width: 2px; }
+.store-page[data-st-skin='brutal'] .feed-act { border-radius: 0; }
+.store-page[data-st-skin='brutal'] .feed-act.on { border: 2px solid var(--sp-line); }

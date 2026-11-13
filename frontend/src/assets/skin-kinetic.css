@@ -21,3 +21,11 @@
 .store-page[data-st-skin='kinetic'] .sp-btn > * { transform: skewX(6deg); }
 .store-page[data-st-skin='kinetic'] .sp-section-title::after { width: 72px; height: 5px; transform: skewX(-14deg); }
 .store-page[data-st-skin='kinetic'] .sp-eyebrow { text-transform: uppercase; letter-spacing: .2em; }
+
+/* Novedades (feed): la card usa --sp-surface; acá toma la línea cinética
+   (borde 2px de acento, relieve inclinado, mayúsculas en el título). */
+.store-page[data-st-skin='kinetic'] .feed-card { background: var(--sp-card-solid, var(--sp-surface)); border: 2px solid var(--sp-line); border-radius: 6px; box-shadow: var(--sp-shadow-md); }
+.store-page[data-st-skin='kinetic'] .feed-head h1 { text-transform: uppercase; font-weight: 900; letter-spacing: -.02em; }
+.store-page[data-st-skin='kinetic'] .feed-poll-option { border-radius: 4px; text-transform: uppercase; font-weight: 800; letter-spacing: .06em; transform: skewX(-6deg); }
+.store-page[data-st-skin='kinetic'] .feed-poll-option > * { transform: skewX(6deg); }
+.store-page[data-st-skin='kinetic'] .feed-cform .sp-btn { transform: skewX(-6deg); }

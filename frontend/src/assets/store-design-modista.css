@@ -833,3 +833,22 @@
 [data-design='modista'][data-tracking='tracking-status-hero'][data-theme] .ec-track > .ec-track-card:first-of-type .ec-track-step-date{
   color: color-mix(in srgb, var(--dz-on-band) 66%, transparent);
 }
+
+/* ===== Novedades (feed) ===== */
+[data-design='modista'] .feed-page {
+  font-family: var(--dz-body);
+  --sp-surface: var(--dz-card);
+  --sp-ink: var(--dz-ink); --sp-ink-2: var(--dz-ink-2); --sp-muted: var(--dz-muted);
+  --sp-line: var(--dz-line); --sp-radius: var(--dz-radius);
+  --sp-accent-text: var(--dz-accent-text);
+  --store-accent-soft: color-mix(in srgb, var(--dz-accent) 10%, var(--dz-card));
+}
+[data-design='modista'] .feed-head h1 { font-family: var(--dz-display); font-weight: 400; letter-spacing: .01em; }
+[data-design='modista'] .feed-card { background: var(--dz-card); border: 1px solid var(--dz-line); border-radius: var(--dz-radius); box-shadow: var(--dz-shadow); }
+[data-design='modista'] :is(.feed-media, .feed-embed-frame, .feed-embed-link, .feed-poll-option, .feed-poll-result) { border-radius: var(--dz-radius); border-color: var(--dz-line); }
+[data-design='modista'] :is(.feed-embed-link, .feed-state-icon, .feed-linklike, .feed-cava, .feed-act.on) { color: var(--dz-accent-text); }
+[data-design='modista'] :is(.feed-poll-option:hover, .feed-poll-result.voted, .feed-embed-link:hover) { border-color: var(--dz-accent); }
+[data-design='modista'] .feed-poll-option:hover, [data-design='modista'] .feed-act.on { background: var(--store-accent-soft); }
+[data-design='modista'] .feed-poll-bar { background: color-mix(in srgb, var(--dz-accent) 20%, transparent); }
+[data-design='modista'] .feed-cform :is(.sp-input, .sp-btn) { border-radius: var(--dz-radius); }
+[data-design='modista'] :is(.feed-when, .feed-cmeta, .feed-poll-total, .feed-poll-pct) { font-family: var(--dz-mono); font-size: 11px; letter-spacing: .06em; }

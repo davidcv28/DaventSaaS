@@ -1183,3 +1183,21 @@
   .store-page[data-design='sastreria'][data-tracking='tracking-stepcard'] .ec-step::before{ display: none; }
   .store-page[data-design='sastreria'][data-tracking='tracking-stepcard'] .ec-step{ padding: 12px 10px; }
 }
+
+/* ===== Novedades (feed) ===== */
+.store-page[data-design='sastreria'] .feed-head h1{ font-family:var(--dz-display); }
+.store-page[data-design='sastreria'] .feed-card{
+  background:var(--dz-surface); border:1px solid var(--dz-line-strong); border-radius:2px;
+}
+.store-page[data-design='sastreria'] .feed-media,
+.store-page[data-design='sastreria'] .feed-embed-frame,
+.store-page[data-design='sastreria'] .feed-embed-link,
+.store-page[data-design='sastreria'] .feed-poll-option,
+.store-page[data-design='sastreria'] .feed-poll-result{ border-radius:2px; }
+.store-page[data-design='sastreria'] .feed-act{ border-radius:2px; }
+.store-page[data-design='sastreria'] .feed-when,
+.store-page[data-design='sastreria'] .feed-cmeta{
+  font-family:var(--dz-mono); font-size:11px; text-transform:uppercase; letter-spacing:.08em;
+}
+.store-page[data-design='sastreria'] .feed-foot,
+.store-page[data-design='sastreria'] .feed-comments{ border-top-style:dashed; }

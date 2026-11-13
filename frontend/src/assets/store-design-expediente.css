@@ -1095,3 +1095,36 @@
   border:1.5px solid var(--dz-ink,#1D1A12); border-radius:0;
 }
 .store-page[data-design='expediente'][data-tracking='tracking-bento'] .ec-track-chip{ border-radius:0; }
+
+/* ===== Novedades (feed) ===== */
+[data-design='expediente'] .feed-page{
+  --dz-bg:#E9E1CB; --dz-surface:#F2ECDA; --dz-ink:#1D1A12; --dz-ink-2:#3A3427;
+  --dz-muted:#6B6250; --dz-line:#C9BFA1; --dz-line-strong:#A99C79;
+  --dz-accent:#B3352C; --dz-accent-text:#A62F27;
+  --dz-display:var(--st-f-display-family,"Bricolage Grotesque","Archivo Black",system-ui,sans-serif);
+  --dz-mono:var(--st-f-eyebrow-family,"JetBrains Mono",ui-monospace,monospace);
+  --sp-ink:var(--dz-ink); --sp-ink-2:var(--dz-ink-2); --sp-muted:var(--dz-muted);
+  --sp-line:var(--dz-line); --sp-surface:var(--dz-bg); --sp-radius:3px;
+  --store-accent:var(--dz-accent); --store-accent-ink:var(--dz-accent-text);
+  --store-accent-soft:color-mix(in srgb, var(--dz-accent) 12%, var(--dz-surface));
+}
+[data-design='expediente'][data-theme='dark'] .feed-page{
+  --dz-bg:#12100C; --dz-surface:#1C1813; --dz-ink:#E8E0CB; --dz-ink-2:#CFC6AE;
+  --dz-muted:#948A72; --dz-line:#3D362A; --dz-line-strong:#574D3C;
+  --dz-accent:#D05540; --dz-accent-text:#E0705A;
+}
+[data-design='expediente'] .feed-head h1{ font-family:var(--dz-display); }
+[data-design='expediente'] .feed-card{
+  background:var(--dz-surface); border:1px solid var(--dz-line-strong); border-radius:3px;
+  box-shadow:5px 5px 0 -1px color-mix(in srgb, var(--dz-line) 65%, transparent);
+}
+[data-design='expediente'] .feed-media,
+[data-design='expediente'] .feed-embed-frame,
+[data-design='expediente'] .feed-embed-link,
+[data-design='expediente'] .feed-poll-option,
+[data-design='expediente'] .feed-poll-result{ border-radius:3px; }
+[data-design='expediente'] .feed-when,
+[data-design='expediente'] .feed-cmeta,
+[data-design='expediente'] .feed-poll-total{
+  font-family:var(--dz-mono); font-size:11px; text-transform:uppercase; letter-spacing:.08em;
+}

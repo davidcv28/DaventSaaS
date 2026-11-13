@@ -1055,3 +1055,25 @@
 @media (max-width: 560px){
   .store-page[data-design='autoservicio'][data-tracking='tracking-feed'] .ec-step::before{ display: none; }
 }
+
+/* ===== Novedades (feed) ===== */
+.store-page[data-design='autoservicio'] .feed-page{
+  --sp-bg:var(--dz-bg); --sp-surface:var(--dz-surface); --sp-card:var(--dz-surface);
+  --sp-card-solid:var(--dz-surface); --sp-ink:var(--dz-ink); --sp-ink-2:var(--dz-ink-2);
+  --sp-muted:var(--dz-muted); --sp-line:var(--dz-line); --sp-radius:var(--dz-radius);
+  --sp-accent-text:var(--dz-accent-text); --sp-soft:var(--dz-accent-soft);
+}
+.store-page[data-design='autoservicio'] .feed-head h1{ font-family:var(--dz-display); }
+.store-page[data-design='autoservicio'] .feed-card{
+  background:var(--dz-surface); border:1px solid var(--dz-line); border-radius:var(--dz-radius);
+  box-shadow:0 1px 2px rgba(21,33,26,.06), 0 24px 48px -46px rgba(21,33,26,.5);
+}
+.store-page[data-design='autoservicio'] .feed-media,
+.store-page[data-design='autoservicio'] .feed-embed-frame,
+.store-page[data-design='autoservicio'] .feed-embed-link,
+.store-page[data-design='autoservicio'] .feed-poll-option,
+.store-page[data-design='autoservicio'] .feed-poll-result{ border-radius:var(--dz-radius); }
+.store-page[data-design='autoservicio'] .feed-act{ border-radius:var(--dz-radius); }
+.store-page[data-design='autoservicio'] .feed-when,
+.store-page[data-design='autoservicio'] .feed-cmeta,
+.store-page[data-design='autoservicio'] .feed-poll-total{ font-family:var(--dz-mono); font-size:11px; }

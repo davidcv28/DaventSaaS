@@ -1186,3 +1186,24 @@
     transition: none;
   }
 }
+
+/* ===== Novedades (feed) ===== */
+[data-design='brigada'] .feed-page {
+  font-family: var(--dz-body);
+  --sp-surface: var(--dz-surface);
+  --sp-ink: var(--dz-ink); --sp-ink-2: var(--dz-ink-2); --sp-muted: var(--dz-muted);
+  --sp-line: var(--dz-line); --sp-radius: var(--dz-radius);
+  --sp-accent-text: var(--dz-accent-text);
+  --store-accent-soft: color-mix(in srgb, var(--dz-accent) 14%, var(--dz-surface));
+}
+[data-design='brigada'] .feed-head h1 { font-family: var(--dz-display); text-transform: uppercase; letter-spacing: .01em; }
+[data-design='brigada'] .feed-card { background: var(--dz-surface); border: 1.5px solid var(--dz-frame); border-radius: var(--dz-radius); box-shadow: 8px 8px 0 0 color-mix(in srgb, var(--dz-frame) 88%, transparent); }
+[data-design='brigada'] :is(.feed-media, .feed-embed-frame, .feed-embed-link, .feed-poll-option, .feed-poll-result) { border-radius: var(--dz-radius); border-color: var(--dz-line); }
+[data-design='brigada'] :is(.feed-embed-link, .feed-state-icon, .feed-linklike, .feed-cava, .feed-act.on) { color: var(--dz-accent-text); }
+[data-design='brigada'] :is(.feed-poll-option:hover, .feed-poll-result.voted, .feed-embed-link:hover) { border-color: var(--dz-accent); }
+[data-design='brigada'] .feed-poll-option:hover, [data-design='brigada'] .feed-act.on { background: var(--store-accent-soft); }
+[data-design='brigada'] .feed-poll-option:hover { box-shadow: 3px 3px 0 0 color-mix(in srgb, var(--dz-accent) 45%, transparent); }
+[data-design='brigada'] .feed-poll-bar { background: color-mix(in srgb, var(--dz-accent) 26%, transparent); }
+[data-design='brigada'] .feed-act { border-radius: var(--dz-radius); }
+[data-design='brigada'] .feed-cform :is(.sp-input, .sp-btn) { border-radius: var(--dz-radius); }
+[data-design='brigada'] :is(.feed-when, .feed-cmeta, .feed-poll-total, .feed-poll-pct) { font-family: var(--dz-mono); font-size: 11px; text-transform: uppercase; }

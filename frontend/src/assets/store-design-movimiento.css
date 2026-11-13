@@ -1419,3 +1419,28 @@
   .store-page[data-design='movimiento'][data-tracking='tracking-timeline'] .ec-step-label{ font-size: 10px; }
   .store-page[data-design='movimiento'][data-tracking='tracking-timeline'] .ec-track-step-date{ font-size: 9px; }
 }
+
+/* ===== Novedades (feed) ===== */
+.store-page[data-design='movimiento'] .feed-page{
+  --sp-bg:var(--dz-bg); --sp-card:var(--dz-surface); --sp-card-solid:var(--dz-surface);
+  --sp-surface:var(--dz-surface-2); --sp-ink:var(--dz-ink); --sp-ink-2:var(--dz-ink-2);
+  --sp-muted:var(--dz-muted); --sp-line:var(--dz-line); --sp-radius:0;
+  --sp-soft:var(--dz-surface-2); --sp-accent-text:var(--dz-accent-text);
+  --store-accent:var(--dz-accent); --store-accent-soft:var(--dz-accent-soft);
+}
+.store-page[data-design='movimiento'] .feed-head h1{ font-family:var(--dz-display); }
+.store-page[data-design='movimiento'] .feed-card{
+  background:var(--dz-surface); border:1px solid var(--dz-line); border-radius:0;
+  border-top:2px solid var(--dz-ink);
+}
+.store-page[data-design='movimiento'] .feed-media,
+.store-page[data-design='movimiento'] .feed-embed-frame,
+.store-page[data-design='movimiento'] .feed-embed-link,
+.store-page[data-design='movimiento'] .feed-poll-option,
+.store-page[data-design='movimiento'] .feed-poll-result,
+.store-page[data-design='movimiento'] .feed-act{ border-radius:0; }
+.store-page[data-design='movimiento'] .feed-when,
+.store-page[data-design='movimiento'] .feed-cmeta,
+.store-page[data-design='movimiento'] .feed-poll-total{
+  font-family:var(--dz-mono); font-size:11px; text-transform:uppercase; letter-spacing:.08em;
+}

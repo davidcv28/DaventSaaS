@@ -716,3 +716,29 @@
 @media(max-width:899px){
   .store-page[data-design='guardia'][data-tracking='tracking-bento'] .ec-track{ display:grid; }
 }
+
+/* ===== Novedades (feed) ===== */
+.store-page[data-design='guardia'] .feed-page{
+  --store-accent:var(--dz-accent);
+  --store-accent-ink:var(--dz-accent-text);
+  --store-accent-soft:var(--dz-accent-soft);
+}
+.store-page[data-design='guardia'] .feed-head h1{
+  font-family:var(--dz-display); text-transform:uppercase; letter-spacing:.02em;
+}
+.store-page[data-design='guardia'] .feed-card{
+  background:var(--dz-panel); border:1px solid var(--dz-line-2); border-radius:0;
+}
+.store-page[data-design='guardia'] .feed-poll-option,
+.store-page[data-design='guardia'] .feed-poll-result{
+  background:var(--dz-panel-2); border-color:var(--dz-line); border-radius:0;
+}
+.store-page[data-design='guardia'] .feed-media,
+.store-page[data-design='guardia'] .feed-embed-frame,
+.store-page[data-design='guardia'] .feed-embed-link,
+.store-page[data-design='guardia'] .feed-act{ border-radius:0; }
+.store-page[data-design='guardia'] .feed-when,
+.store-page[data-design='guardia'] .feed-cmeta,
+.store-page[data-design='guardia'] .feed-poll-total{
+  font-family:var(--dz-mono); font-size:11px; text-transform:uppercase; letter-spacing:.08em;
+}

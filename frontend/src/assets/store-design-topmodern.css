@@ -788,3 +788,32 @@
   border-color: var(--dz-accent);
   box-shadow: 0 0 0 3px color-mix(in srgb, var(--dz-accent) 14%, transparent);
 }
+
+/* ===== Novedades (feed) ===== */
+[data-design='topmodern'] .feed-page {
+  --sp-bg: var(--dz-bg);
+  --sp-surface: var(--dz-surface);
+  --sp-card: var(--dz-card);
+  --sp-card-solid: var(--dz-card);
+  --sp-ink: var(--dz-ink);
+  --sp-ink-2: var(--dz-ink-2);
+  --sp-muted: var(--dz-muted);
+  --sp-line: var(--dz-line);
+  --sp-soft: color-mix(in srgb, var(--dz-accent) 10%, var(--dz-surface));
+  --sp-accent-text: var(--dz-accent-text);
+  --sp-radius: var(--dz-radius);
+}
+[data-design='topmodern'] .feed-head h1 { font-family: var(--dz-display); }
+[data-design='topmodern'] .feed-when,
+[data-design='topmodern'] .feed-cmeta { font-family: var(--dz-mono); }
+[data-design='topmodern'] .feed-card {
+  background: var(--dz-card);
+  border-color: var(--dz-line);
+  border-radius: var(--dz-radius);
+  box-shadow: var(--dz-shadow);
+}
+[data-design='topmodern'] .feed-media,
+[data-design='topmodern'] .feed-embed-frame,
+[data-design='topmodern'] .feed-embed-link,
+[data-design='topmodern'] .feed-poll-option,
+[data-design='topmodern'] .feed-poll-result { border-radius: 14px; }

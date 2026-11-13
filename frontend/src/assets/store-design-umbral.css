@@ -1199,3 +1199,20 @@
   .store-page[data-design='umbral'][data-nav='minimal-floating'] .sp-top .sp-top-inner,
   .store-page[data-design='umbral'][data-nav='minimal-floating'] .sp-top-links a::after{ transition: none !important; }
 }
+
+/* ===== Novedades (feed) ===== */
+.store-page[data-design='umbral'] .feed-head h1{ font-family:var(--dz-display); }
+.store-page[data-design='umbral'] .feed-card{
+  background:var(--dz-surface); border:1px solid var(--dz-line-strong); border-radius:0;
+  box-shadow:var(--dz-shadow-soft);
+}
+.store-page[data-design='umbral'] .feed-media,
+.store-page[data-design='umbral'] .feed-embed-frame,
+.store-page[data-design='umbral'] .feed-embed-link,
+.store-page[data-design='umbral'] .feed-poll-option,
+.store-page[data-design='umbral'] .feed-poll-result{ border-radius:0; }
+.store-page[data-design='umbral'] .feed-act{ border-radius:var(--dz-radius-btn); }
+.store-page[data-design='umbral'] .feed-when,
+.store-page[data-design='umbral'] .feed-cmeta{
+  font-family:var(--dz-mono); font-size:11px; text-transform:uppercase; letter-spacing:.08em;
+}

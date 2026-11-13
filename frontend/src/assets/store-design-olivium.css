@@ -725,3 +725,22 @@
 @media (max-width:560px){
   .store-page[data-design='olivium'][data-tracking='tracking-ticket'] .ec-track-code::after{ width:140px; }
 }
+
+/* ===== Novedades (feed) ===== */
+.store-page[data-design='olivium'] .feed-page{
+  --store-accent:var(--dz-accent);
+  --store-accent-ink:var(--dz-accent-text);
+  --store-accent-soft:var(--dz-accent-soft);
+}
+.store-page[data-design='olivium'] .feed-head h1{ font-family:var(--dz-display); }
+.store-page[data-design='olivium'] .feed-card{
+  background:var(--dz-surface); border-color:var(--dz-line);
+  border-radius:var(--dz-r); box-shadow:var(--sp-shadow-md);
+}
+.store-page[data-design='olivium'] .feed-media,
+.store-page[data-design='olivium'] .feed-embed-frame,
+.store-page[data-design='olivium'] .feed-embed-link,
+.store-page[data-design='olivium'] .feed-poll-option,
+.store-page[data-design='olivium'] .feed-poll-result{ border-radius:var(--dz-r-2); }
+.store-page[data-design='olivium'] .feed-when,
+.store-page[data-design='olivium'] .feed-cmeta{ font-family:var(--dz-mono); }
