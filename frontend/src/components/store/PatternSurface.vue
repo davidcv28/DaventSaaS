@@ -306,7 +306,13 @@ function onMessage(e) {
   if (e.data?.type !== 'davent:ds-height') return
   /* El documento confirma su superficie en cada ds-height. Un backend
    * viejo no conoce 'chrome' y sirve la landing entera: sin el chequeo la
-   * tira crecía al alto de la portada y tapaba la página completa. */
+   * tira crecía al alto de la portada y tapaba la página completa.
+   * Los mensajes SIN `surface` no son del puente: el propio JS de varios
+   * diseños reporta alto con el mismo `type` (umbral, atelier-noir, …) —
+   * sin este corte marcaban la tira como inválida y el host volvía a su
+   * navbar genérico. Su alto tampoco se toma: en modo chrome solo mide
+   * el puente, que conoce las barras fijadas. */
+  if (props.chrome && !e.data.surface) return
   if (props.chrome && e.data.surface !== (props.dock ? 'dock' : 'chrome')) {
     emit('chrome-invalid')
     return

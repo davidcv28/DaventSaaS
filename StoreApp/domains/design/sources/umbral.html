@@ -175,10 +175,6 @@ main{display:block}
    La barra flota como una píldora de vidrio: marca reducida a la
    palabra, nav dispersa, CTA fantasma y mucho aire alrededor. */
 .top{position:fixed;inset:14px 0 auto;z-index:50;transition:background .25s,border-color .25s}
-/* Chrome apagado: este diseño usa la barra genérica del host en todas las
-   rutas (.store-page.pattern-nav-off); los nodos quedan por si el puente
-   los busca, pero no pintan ni se pinan. */
-.top,.mmenu{display:none!important}
 .top-inner{
   display:flex;align-items:center;gap:clamp(20px,3vw,44px);
   height:64px;min-height:64px;
@@ -1795,7 +1791,7 @@ html[data-ds-commerce="1"] .pdp-buy .btn-accent:hover{
 </defs></svg>
 
 <!-- ============================ HEADER ============================ -->
-<header class="top" data-ds-pin="top" data-ds-offset="64">
+<header class="top" data-ds-pin="top" data-ds-offset="100">
   <div class="wrap top-inner">
     <a class="brand" href="#inicio" data-ds-route="home" aria-label="{{store_name}} — Inicio">
       <span class="brand-mark"><i>{{store_initial}}</i><img src="{{store_logo}}" alt=""></span>
