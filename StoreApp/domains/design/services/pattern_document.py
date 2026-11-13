@@ -132,12 +132,13 @@ html[data-ds-surface="chrome"] body>*:not([data-ds-pin]){min-height:0!important}
    chrome no hay contenido que despejar y ese relleno inflaba el alto que
    reporta el puente — la tira quedaba con aire muerto bajo el cromo. */
 html[data-ds-surface="chrome"] body{padding:0!important}
-/* Los pines inferiores (tab bar móvil, hojas de menú, píldora de
-   carrito) no pueden ir al pie de la pantalla — el iframe es solo la
-   tira superior — y apilarlos como segunda fila deformaba el chrome.
-   En móvil el host no monta el chrome del patrón (usa su propio
-   navbar), así que acá solo corre el cromo de escritorio. */
-html[data-ds-surface="chrome"] [data-ds-pin="bottom"]{display:none!important}
+/* Los pines inferiores de CONTENIDO (píldora de carrito, paneles de
+   filtros) no pueden ir al pie de la pantalla — el iframe es solo la
+   tira superior. Las barras y hojas de navegación del diseño sí se
+   conservan (`data-ds-keep`): el puente las re-ancla como segunda fila
+   bajo el cromo (bottomChromePx ya reserva su alto); sin ellas las
+   páginas funcionales quedaban sin navegación en móvil. */
+html[data-ds-surface="chrome"] [data-ds-pin="bottom"]:not([data-ds-keep]){display:none!important}
 /* Contenedores de CTA de la ficha que quedaron sin hijos visibles: sin
    WhatsApp ni venta online el diseño deja `.pdp-buy`/`.pdp-ctas` vacío o
    con solo el anchor `href=""` (oculto por la regla propia del diseño) y

@@ -185,18 +185,14 @@ const usePattern = computed(() => Boolean(
 // que sirve la landing entera): se corta la tira y la página cae a la
 // barra Vue, nunca queda un iframe enorme tapando todo.
 const patternChromeBroken = ref(false)
-/* En viewport angosto el chrome del patrón NO se monta: su navbar móvil
- * vive pineado abajo y apilarlo bajo la barra superior deformaba la tira.
- * La navegación móvil la da el host (.sp-top + drawer / sp-tabbar del
- * arquetipo) — una sola barra, la de siempre. */
-const narrowViewport = ref(false)
-let chromeMq = null
+/* El navbar del diseño gobierna las rutas funcionales en TODO viewport:
+ * en móvil su barra inferior (data-ds-keep) va como segunda fila de la
+ * tira. El navbar genérico del host no puede coexistir con él. */
 const usePatternChrome = computed(() => Boolean(
   store.value &&
   !studioMode.value &&
   !usePattern.value &&
   !patternChromeBroken.value &&
-  !narrowViewport.value &&
   patternDoc.value?.ready && (patternDoc.value?.has_html || patternDoc.value?.html) &&
   (patternDoc.value?.surfaces || []).length
 ))
@@ -670,14 +666,6 @@ applyPageCanvas()
 watch([pageTheme, status], () => applyPageCanvas(), { flush: 'post' })
 onMounted(() => applyPageCanvas())
 onMounted(() => loadDesignCatalog())
-onMounted(() => {
-  if (!window.matchMedia) return
-  chromeMq = window.matchMedia('(max-width: 880px)')
-  narrowViewport.value = chromeMq.matches
-  const onChromeMq = (e) => { narrowViewport.value = e.matches }
-  chromeMq.addEventListener?.('change', onChromeMq)
-  onBeforeUnmount(() => chromeMq?.removeEventListener?.('change', onChromeMq))
-})
 onBeforeUnmount(() => {
   clearCanvasSync()
   document.documentElement.style.backgroundColor = ''
