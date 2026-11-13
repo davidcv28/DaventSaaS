@@ -29,7 +29,9 @@ export default defineConfig({
       // En dev evitamos CORS pegando a Django por el mismo origen.
       // Ver src/config/env.js -> VITE_API_BASE_URL=/api en .env.development
       '/api': {
-        target: 'http://127.0.0.1:8000',
+        // VITE_API_TARGET permite correr contra otro puerto de Django en
+        // dev (p. ej. 8001 si el 8000 lo ocupa otro backend local).
+        target: process.env.VITE_API_TARGET || 'http://127.0.0.1:8000',
         changeOrigin: true
       }
     },

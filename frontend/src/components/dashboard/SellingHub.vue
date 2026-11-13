@@ -20,17 +20,17 @@ const store = useStoreStore()
 
 const publicUrl = computed(() => (store.store?.slug ? publicStoreUrl(store.store.slug) : ''))
 
-// Los 7 módulos de tabGroups.selling repartidos en dos clusters: lo que
+// Los módulos de tabGroups.selling repartidos en dos clusters: lo que
 // pasa todos los días y lo que se configura una vez.
 const GROUPS = [
   { id: 'ops', label: 'El día a día', hint: 'Pedidos, ventas, clientes y consultas', icon: 'zap', ids: ['orders', 'sales', 'customers', 'inquiries'] },
-  { id: 'setup', label: 'Tu tienda', hint: 'Cobros, papeles y membresías', icon: 'sliders', ids: ['payconfig', 'legal', 'memberships'] }
+  { id: 'setup', label: 'Tu tienda', hint: 'Cobros, papeles, membresías y sincronización', icon: 'sliders', ids: ['payconfig', 'legal', 'memberships', 'sync'] }
 ]
 const groups = computed(() => GROUPS
   .map((g) => ({ ...g, items: g.ids.map((id) => props.tabs.find((t) => t.id === id)).filter(Boolean) }))
   .filter((g) => g.items.length))
 
-const TONES = { orders: 'brand', sales: 'ok', customers: 'info', inquiries: 'warn', payconfig: 'ok', legal: 'info', memberships: 'warn' }
+const TONES = { orders: 'brand', sales: 'ok', customers: 'info', inquiries: 'warn', payconfig: 'ok', legal: 'info', memberships: 'warn', sync: 'brand' }
 function tone(t) { return TONES[t.id] || 'brand' }
 
 function go(id) { emit('select', id) }
