@@ -83,41 +83,46 @@
   color: var(--muted);
 }
 
-.app .sell-hub .sell-mod-card {
-  background: var(--card);
-  border: 1px solid var(--line-soft);
-  border-radius: 14px;
-  box-shadow: var(--shadow-sm);
-  overflow: hidden;
+.app .sell-hub .sell-mod-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: 12px;
 }
 .app .sell-hub .sell-mod {
+  --t-bg: var(--brand-soft);
+  --t-line: var(--brand-soft-line);
+  --t-ink: var(--brand-ink);
+  position: relative;
   display: flex;
   align-items: center;
   gap: 13px;
   width: 100%;
-  min-height: 60px;
-  padding: 11px 16px;
-  border: 0;
-  background: transparent;
+  min-height: 72px;
+  padding: 14px 16px;
+  border: 1px solid var(--line-soft);
+  border-radius: 14px;
+  background: var(--card);
+  box-shadow: var(--shadow-sm);
   font: inherit;
   text-align: left;
   color: var(--ink-2);
   cursor: pointer;
-  transition: background-color .15s var(--ease-out);
+  transition: border-color .15s var(--ease-out), background-color .15s var(--ease-out),
+              transform .15s var(--ease-out);
 }
-.app .sell-hub .sell-mod + .sell-mod { border-top: 1px solid var(--line-soft); }
+.app .sell-hub .sell-mod.tone-ok { --t-bg: var(--ok-bg); --t-line: var(--ok-line); --t-ink: var(--ok-ink); }
+.app .sell-hub .sell-mod.tone-info { --t-bg: var(--info-bg); --t-line: var(--info-line); --t-ink: var(--info-ink); }
+.app .sell-hub .sell-mod.tone-warn { --t-bg: var(--warn-bg); --t-line: var(--warn-line); --t-ink: var(--warn-ink); }
 .app .sell-hub .sell-mod-ico {
   flex: none;
   display: grid;
   place-items: center;
-  width: 38px;
-  height: 38px;
-  border-radius: 10px;
-  background: var(--surface);
-  border: 1px solid var(--line-soft);
-  color: var(--ink-2);
-  transition: color .15s var(--ease-out), border-color .15s var(--ease-out),
-              background-color .15s var(--ease-out);
+  width: 42px;
+  height: 42px;
+  border-radius: 12px;
+  background: var(--t-bg);
+  border: 1px solid var(--t-line);
+  color: var(--t-ink);
 }
 .app .sell-hub .sell-mod-txt {
   flex: 1;
@@ -127,12 +132,13 @@
 }
 .app .sell-hub .sell-mod-txt strong {
   font-size: 14.5px;
-  font-weight: 600;
+  font-weight: 650;
   letter-spacing: -.01em;
   color: var(--ink);
 }
 .app .sell-hub .sell-mod-txt small {
   font-size: 12.5px;
+  line-height: 1.35;
   color: var(--muted);
 }
 .app .sell-hub .sell-mod-go {
@@ -140,28 +146,18 @@
   color: var(--muted);
   transition: color .15s var(--ease-out), transform .15s var(--ease-out);
 }
-/* Bloqueado: la fila navega igual (el setter de section abre la vista
-   previa del beneficio); el candado lo delata sin deshabilitar nada. */
-.app .sell-hub .sell-mod.locked .sell-mod-txt strong { color: var(--ink-2); }
+/* Bloqueado: navega igual (abre la vista previa del beneficio); el candado lo delata. */
+.app .sell-hub .sell-mod.locked .sell-mod-ico { filter: grayscale(.7); opacity: .8; }
 .app .sell-hub .sell-mod.locked .sell-mod-go { color: var(--brand-ink); }
 
-/* Hover solo con puntero fino: en táctil el :active ya da el feedback. */
 @media (hover: hover) and (pointer: fine) {
-  .app .sell-hub .sell-mod:hover { background: var(--surface); }
-  .app .sell-hub .sell-mod:hover .sell-mod-ico {
-    color: var(--brand-ink);
-    border-color: var(--brand-soft-line);
-    background: var(--brand-soft);
-  }
-  .app .sell-hub .sell-mod:hover .sell-mod-go {
-    color: var(--brand-500);
-    transform: translateX(2px);
-  }
+  .app .sell-hub .sell-mod:hover { border-color: var(--t-line); background: var(--surface); }
+  .app .sell-hub .sell-mod:hover .sell-mod-go { color: var(--t-ink); transform: translateX(2px); }
 }
 .app .sell-hub .sell-mod:active { background: var(--surface); }
 .app .sell-hub .sell-mod:focus-visible {
   outline: 2px solid var(--brand-500);
-  outline-offset: -2px;
+  outline-offset: 2px;
 }
 
 /* ---------- Modal "Compartí tu tienda" ---------- */
@@ -244,14 +240,14 @@
   .app .sell-hub .sell-head-actions .btn { flex: 1; }
   .app .sell-hub .sell-status { padding: 12px; gap: 10px; }
   .app .sell-hub .sell-status-actions { margin-left: auto; }
-  .app .sell-hub .sell-mod { min-height: 56px; padding: 10px 14px; }
+  .app .sell-hub .sell-mod-grid { grid-template-columns: 1fr; }
+  .app .sell-hub .sell-mod { min-height: 64px; padding: 12px 14px; }
   .app .sell-hub .sell-share-actions { flex-direction: column; }
 }
 
 /* ---------- Movimiento reducido ---------- */
 @media (prefers-reduced-motion: reduce) {
   .app .sell-hub .sell-mod,
-  .app .sell-hub .sell-mod-ico,
   .app .sell-hub .sell-mod-go,
   .app .sell-hub .sell-urlbox,
   .app .sell-hub .sell-urlbox-ico {

@@ -30,6 +30,9 @@ const groups = computed(() => GROUPS
   .map((g) => ({ ...g, items: g.ids.map((id) => props.tabs.find((t) => t.id === id)).filter(Boolean) }))
   .filter((g) => g.items.length))
 
+const TONES = { orders: 'brand', sales: 'ok', customers: 'info', inquiries: 'warn', payconfig: 'ok', legal: 'info', memberships: 'warn' }
+function tone(t) { return TONES[t.id] || 'brand' }
+
 function go(id) { emit('select', id) }
 function isLocked(t) { return Boolean(props.locks?.[t.id]) }
 
@@ -149,10 +152,10 @@ onUnmounted(() => {
         <h2>{{ g.label }}</h2>
         <p>{{ g.hint }}</p>
       </header>
-      <div class="sell-mod-card">
+      <div class="sell-mod-grid">
         <button
           v-for="t in g.items" :key="t.id" type="button"
-          class="sell-mod" :class="{ locked: isLocked(t) }"
+          class="sell-mod" :class="[`tone-${tone(t)}`, { locked: isLocked(t) }]"
           @click="go(t.id)"
         >
           <span class="sell-mod-ico"><AppIcon :name="t.icon" :size="17" /></span>
