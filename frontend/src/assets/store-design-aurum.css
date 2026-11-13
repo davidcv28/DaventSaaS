@@ -921,6 +921,9 @@
   border-radius: var(--dz-radius);
   background: var(--dz-surface);
 }
+/* El tele es el 4to hijo del grid de 3 columnas: ocupa su propia fila o
+   la meta cae en la celda de 44px y queda cortada. */
+[data-design='aurum'][data-theme] .ec-account .acc-mhead .acc-tele { grid-column: 1 / -1; }
 [data-design='aurum'][data-theme] .ec-account .acc-mhead-meta strong {
   font-family: var(--dz-display); font-weight: 400; font-size: 19px; letter-spacing: -.01em;
   color: var(--dz-ink);
@@ -1065,8 +1068,7 @@
     padding: 0 0 18px;
     border-bottom: 1px solid var(--dz-line);
   }
-  [data-design='aurum'][data-theme] .ec-account .acc-id .acc-tele,
-  [data-design='aurum'][data-theme] .ec-account .acc-mhead .acc-tele { grid-column: 1 / -1; }
+  [data-design='aurum'][data-theme] .ec-account .acc-id .acc-tele { grid-column: 1 / -1; }
   [data-design='aurum'][data-theme] .ec-account .acc-id-name {
     font-family: var(--dz-display); font-weight: 400; font-size: 19px; letter-spacing: -.01em;
     color: var(--dz-ink);

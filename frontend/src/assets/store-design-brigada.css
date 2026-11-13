@@ -414,6 +414,9 @@
   background: var(--dz-surface);
   box-shadow: 4px 4px 0 0 color-mix(in srgb, var(--dz-frame) 30%, transparent);
 }
+/* El tele es el 4to hijo del grid de 3 columnas: ocupa su propia fila o
+   la meta cae en la celda de 44px y queda cortada. */
+[data-design='brigada'][data-theme] .ec-account .acc-mhead .acc-tele { grid-column: 1 / -1; }
 [data-design='brigada'][data-theme] .ec-account .acc-mhead-meta strong {
   font-family: var(--dz-display); font-weight: 800; font-size: 18px; letter-spacing: 0; text-transform: uppercase;
   color: var(--dz-ink);
@@ -554,9 +557,6 @@
     border-bottom: 1.5px solid var(--dz-band-line);
   }
   [data-design='brigada'][data-theme] .ec-account .acc-id .acc-tele { grid-column: 1 / -1; color: var(--dz-band-muted); }
-  /* En mhead (4 hijos: tele + avatar + meta + botón) el tele ocupa su
-     propia fila — sin esto desplazaba la meta a una columna de 44px. */
-  [data-design='brigada'][data-theme] .ec-account .acc-mhead .acc-tele { grid-column: 1 / -1; }
   [data-design='brigada'][data-theme] .ec-account .acc-id-name {
     font-family: var(--dz-display); font-weight: 800; font-size: 18px; text-transform: uppercase; letter-spacing: 0;
     color: var(--dz-on-band);
