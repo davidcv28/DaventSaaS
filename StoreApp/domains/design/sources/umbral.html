@@ -905,6 +905,15 @@ body.m-open{overflow:hidden}
 .ds-plan-feats li{display:flex;gap:10px;align-items:baseline;min-width:0}
 .ds-plan-feats li::before{content:"";flex:none;width:7px;height:7px;background:var(--accent);transform:rotate(45deg);align-self:center}
 .ds-plan-feats li{overflow-wrap:anywhere}
+.ds-plan-cta{
+  margin-top:auto;display:inline-flex;align-items:center;justify-content:center;gap:10px;
+  min-height:46px;padding:14px 26px;cursor:pointer;
+  border:1px solid var(--accent);background:var(--accent);color:var(--on-accent);
+  font:600 12px/1 var(--mono);letter-spacing:.18em;text-transform:uppercase;text-decoration:none;
+  transition:transform .18s var(--ease),box-shadow .25s var(--ease),background .2s,border-color .2s,color .2s;
+}
+.ds-plan-cta:hover{background:var(--accent-deep);border-color:var(--accent-deep);transform:translateY(-2px);box-shadow:0 14px 32px -18px color-mix(in srgb,var(--accent) 75%,transparent)}
+.ds-plan-cta:active{transform:translateY(1px)}
 
 /* ==========================================================================
    08 — VOCES: testimonios como citas editoriales

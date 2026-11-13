@@ -750,6 +750,14 @@ html[data-ds-commerce="1"] [data-surface="product"] .pdp-buy > .dsx-buy-now:focu
 .ds-plan-feats{margin-top:auto;padding-top:16px;border-top:1px dashed var(--line);display:grid;gap:8px}
 .ds-plan-feats li{font-size:11.5px;color:var(--ink-2);padding-left:18px;position:relative}
 .ds-plan-feats li::before{content:"";position:absolute;left:0;top:.55em;width:9px;height:1.5px;background:var(--tc,var(--stamp))}
+.ds-plan-cta{
+  align-self:flex-start;display:inline-flex;align-items:center;justify-content:center;gap:10px;
+  margin-top:18px;min-height:42px;padding:0 22px;
+  border:1.5px solid var(--stamp);color:var(--stamp-ink);background:none;cursor:pointer;
+  font:500 11px/1 var(--mono);letter-spacing:.18em;text-transform:uppercase;text-decoration:none;
+  transition:all .3s var(--ease);
+}
+.ds-plan-cta:hover{background:var(--stamp);color:var(--on-stamp)}
 
 .decls{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:clamp(18px,2.4vw,32px)}
 .ds-quote{

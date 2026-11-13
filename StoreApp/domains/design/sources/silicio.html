@@ -935,6 +935,20 @@ html[data-ds-theme="dark"] .ds-plan-price{color:var(--volt)}
 }
 .ds-plan-feats li::before{content:"";position:absolute;left:0;top:.55em;width:8px;height:2px;background:var(--accent)}
 html[data-ds-theme="dark"] .ds-plan-feats li::before{background:var(--volt)}
+.ds-plan-cta{
+  margin-top:auto;display:inline-flex;align-items:center;justify-content:center;gap:10px;
+  min-height:46px;padding:14px 26px;border:1px solid var(--accent);cursor:pointer;
+  clip-path:polygon(0 0,calc(100% - 12px) 0,100% 12px,100% 100%,0 100%);
+  background:var(--accent);color:var(--on-accent);
+  font:600 12px/1 var(--mono);letter-spacing:.18em;text-transform:uppercase;text-decoration:none;white-space:nowrap;
+  transition:transform .18s var(--ease),box-shadow .25s var(--ease),background .2s,border-color .2s,color .2s;
+}
+.ds-plan-cta:hover{
+  transform:translateY(-2px);background:var(--accent-deep);border-color:var(--accent-deep);
+  box-shadow:0 0 24px -10px color-mix(in srgb,var(--accent) 70%,transparent);
+}
+html[data-ds-theme="dark"] .ds-plan-cta:hover{background:var(--volt);border-color:var(--volt);color:#0A0D12}
+.ds-plan-cta:active{transform:translateY(1px) scale(.98)}
 
 /* Testimonios — riel */
 .rail-track>.ds-quote{flex:0 0 clamp(260px,30vw,380px)}

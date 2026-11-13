@@ -351,6 +351,10 @@ html[data-ds-theme="dark"] .ds-plan:hover::before{background:var(--accent);box-s
 .ds-plan-feats li{position:relative;padding-left:20px;font-size:13px;color:var(--ink-2)}
 .ds-plan-feats li::before{content:"";position:absolute;left:0;top:.48em;width:10px;height:10px;border-radius:50%;border:3px solid var(--ink)}
 html[data-ds-theme="dark"] .ds-plan-feats li::before{border-color:var(--accent)}
+.ds-plan-cta{display:inline-flex;align-items:center;justify-content:center;gap:10px;margin-top:14px;padding:13px 30px;background:var(--ink);color:var(--paper);border-radius:var(--pill);font:700 13px var(--sans);text-decoration:none;cursor:pointer;transition:transform .25s var(--ease),box-shadow .25s var(--ease),background .25s,color .25s}
+.ds-plan-cta:hover{transform:translateY(-2px);box-shadow:0 12px 28px -12px rgba(0,0,0,.45)}
+.ds-plan-cta:active{transform:translateY(0)}
+html[data-ds-theme="dark"] .ds-plan-cta{background:var(--accent);color:var(--on-accent)}
 
 .ds-quote{position:relative;display:grid;align-content:start;gap:14px;background:var(--card);border:1px solid var(--line);border-radius:var(--radius);padding:28px;transition:transform .3s var(--ease)}
 .ds-quote:hover{transform:translateY(-4px)}

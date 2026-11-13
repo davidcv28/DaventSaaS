@@ -275,7 +275,7 @@ function onMessage(e) {
   }
   if (e.data?.type === 'davent:ds-route') {
     const route = String(e.data.route || '')
-    if (['home', 'catalog', 'services', 'feed'].includes(route)) {
+    if (['home', 'catalog', 'services', 'feed', 'plans'].includes(route)) {
       /* El buscador/sugerencias del chrome adjuntan q (texto) y cat
        * (categoría) a la misma señal — el host los vuelca en la query
        * del catálogo (origen opaco: no comparten sessionStorage). */

@@ -903,6 +903,11 @@ html[data-ds-style="aurum-dia"]:not([data-ds-theme="dark"]) .pdp-shot{background
 .ds-plan-note:empty{display:none}
 .ds-plan-feats{list-style:none;margin:16px 0 0;padding:0;display:grid;gap:9px;color:var(--muted);font-size:13px}
 .ds-plan-feats li::before{content:"—";color:var(--gold-text);margin-right:8px}
+.ds-plan-cta{display:inline-block;margin-top:20px;padding:13px 26px;border-radius:var(--ds-radius-btn,99px);
+  background:var(--gold);color:var(--gold-ink);font-size:12.5px;font-weight:700;letter-spacing:.1em;
+  text-transform:uppercase;text-decoration:none;cursor:pointer;
+  transition:transform .3s var(--ease),background-color .25s,color .25s}
+.ds-plan-cta:hover{transform:translateY(-2px)}
 
 /* FAQ */
 .faqs-list{max-width:860px;display:grid;gap:10px;counter-reset:faq}

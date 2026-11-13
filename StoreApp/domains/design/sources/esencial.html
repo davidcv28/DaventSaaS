@@ -695,6 +695,15 @@ body:not(:has(.ds-plan)) a[href="#suscripciones"]{display:none}
 }
 .ds-plan-feats li{display:flex;gap:8px;align-items:baseline}
 .ds-plan-feats li::before{content:"✓";color:var(--accent);font-weight:700}
+.ds-plan-cta{
+  justify-self:start;display:inline-flex;align-items:center;justify-content:center;gap:10px;
+  min-height:44px;margin-top:auto;padding:0 22px;border-radius:var(--radius-btn);
+  border:1px solid var(--accent);background:var(--accent);color:var(--accent-ink);
+  font:inherit;font-weight:600;font-size:.95rem;text-decoration:none;cursor:pointer;
+  transition:transform .25s var(--ease),background-color .25s,color .25s,box-shadow .25s;
+}
+.ds-plan-cta:hover{transform:translateY(-2px);box-shadow:0 12px 24px -14px var(--accent)}
+.ds-plan-cta:active{transform:translateY(0) scale(.98)}
 
 /* Contacto */
 /* Cabecera propia (el contacto no usa `.section-head` porque va dentro de la

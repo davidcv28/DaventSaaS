@@ -819,6 +819,14 @@ span.ds-product-img.is-empty{display:block}
 .ds-plan-feats li{display:flex;gap:9px;align-items:flex-start}
 .ds-plan-feats li::before{content:"";flex:none;width:6px;height:6px;margin-top:6px;
   background:var(--accent)}
+.ds-plan-cta{display:inline-flex;align-items:center;justify-content:center;gap:9px;align-self:flex-start;
+  margin-top:auto;min-height:44px;padding:0 22px;
+  font-family:var(--font-display);font-size:12px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;
+  text-decoration:none;background:var(--accent);color:var(--accent-ink);
+  border:1px solid var(--accent);border-radius:var(--radius-btn);cursor:pointer;
+  transition:background .22s,color .22s,border-color .22s,transform .22s var(--ease)}
+.ds-plan-cta:hover{background:var(--ink);border-color:var(--ink);color:var(--bg)}
+.ds-plan-cta:active{transform:translateY(1px)}
 @media(max-width:880px){.ds-plans{grid-template-columns:1fr}}
 
 /* ── opiniones ── */

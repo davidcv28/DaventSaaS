@@ -372,6 +372,12 @@
   .offers-grid .ds-plan-feats{list-style:none;margin:14px 0 0;padding:14px 0 0;border-top:1px dashed var(--line);display:flex;flex-direction:column;gap:7px;font-size:12.5px;color:var(--ink-2)}
   .offers-grid .ds-plan-feats li{position:relative;padding-left:18px}
   .offers-grid .ds-plan-feats li::before{content:"";position:absolute;left:0;top:.42em;width:6px;height:6px;background:var(--hazard);clip-path:polygon(50% 0,100% 50%,50% 100%,0 50%)}
+  .offers-grid .ds-plan-cta{display:inline-flex;align-items:center;justify-content:center;margin-top:18px;min-height:44px;
+    padding:12px 20px;font:800 11px/1 var(--font-m);letter-spacing:.12em;text-transform:uppercase;text-decoration:none;
+    border-radius:var(--radius-btn);border:1.5px solid var(--frame);background:var(--hazard);color:var(--hazard-ink);
+    box-shadow:var(--shadow-hard);cursor:pointer;transition:transform .15s var(--ease),box-shadow .15s var(--ease)}
+  @media(hover:hover){.offers-grid .ds-plan-cta:hover{transform:translate(-2px,-2px);box-shadow:8px 8px 0 0 var(--hard)}}
+  .offers-grid .ds-plan-cta:active{transform:translate(2px,2px);box-shadow:2px 2px 0 0 var(--hard)}
 
   /* La empresa */
   .about-grid{display:grid;grid-template-columns:minmax(0,1.1fr) minmax(0,.9fr);gap:40px;align-items:start}

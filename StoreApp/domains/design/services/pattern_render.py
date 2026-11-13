@@ -453,9 +453,10 @@ def _service_fragment(store, flags = None):
 
 def _plans_fragment(store, customization, flags = None):
     """Tarjetas de membresías/packs del negocio (customization.plans):
-    solo publicidad — el alta se coordina por WhatsApp, nunca se cobra
-    online. Vacío cuando la sección está apagada, la página Suscripciones
-    salió de site_templates o no hay planes."""
+    cada ficha cierra con un CTA a /suscripciones — la página del host
+    (PlanesView + PlanSubscribe) cobra la membresía online con los medios
+    manuales del vendedor. Vacío cuando la sección está apagada, la
+    página Suscripciones salió de site_templates o no hay planes."""
     if customization is None or not customization.show_plans:
         return ''
     if flags is None:
@@ -477,6 +478,9 @@ def _plans_fragment(store, customization, flags = None):
             f'<span class="ds-plan-price">{escape(_text(plan.get("price"), 20))}</span>'
             f'<p class="ds-plan-note">{escape(_text(plan.get("note"), 80))}</p>'
             f'{feat_list}'
+            #ds-route 'plans' → el puente avisa al host y Vue navega a
+            #/suscripciones (pago online de la membresía).
+            '<a class="ds-plan-cta" href="#suscripciones" data-ds-route="plans">Suscribirme online</a>'
             '</article>'
         )
     return ''.join(cards)

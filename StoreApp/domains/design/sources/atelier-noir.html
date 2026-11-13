@@ -527,6 +527,10 @@ body.m-open .m-sheet{transform:none}
 .ds-plan-feats{display:grid;gap:7px;margin-top:6px;padding-top:12px;border-top:1px solid var(--line)}
 .ds-plan-feats li{position:relative;padding-left:17px;font-size:14.5px;color:var(--ink-2);line-height:1.5}
 .ds-plan-feats li::before{content:"—";position:absolute;left:0;color:var(--accent)}
+.ds-plan-cta{justify-self:start;margin-top:auto;padding:13px 22px;border:1px solid var(--accent);border-radius:var(--r-btn);
+  font:500 11px/1 var(--mono);letter-spacing:.22em;text-transform:uppercase;text-decoration:none;
+  color:var(--accent);cursor:pointer;transition:background .35s,border-color .35s,color .35s}
+.ds-plan-cta:hover{background:var(--accent);color:var(--on-accent)}
 
 /* ---------- Voces ---------- */
 .quotes{display:grid;grid-template-columns:repeat(auto-fit,minmax(310px,1fr));gap:1px;background:var(--line);border:1px solid var(--line)}

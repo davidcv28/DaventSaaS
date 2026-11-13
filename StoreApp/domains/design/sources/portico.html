@@ -837,6 +837,18 @@ html[data-ds-theme="dark"] .ds-plan:nth-child(2){background:color-mix(in srgb,va
 html[data-ds-theme="dark"] .ds-plan:nth-child(2) .ds-plan-note{color:var(--muted)}
 html[data-ds-theme="dark"] .ds-plan:nth-child(2) .ds-plan-feats{
   border-top-color:var(--line-2)}
+.ds-plan-cta{position:relative;display:inline-flex;align-items:center;justify-content:center;align-self:flex-start;
+  margin-top:auto;min-height:44px;padding:0 22px;border:1px solid transparent;border-radius:var(--radius);
+  font:500 9.5px/1 var(--mono);letter-spacing:.2em;text-transform:uppercase;text-decoration:none;
+  background:var(--copper);color:var(--ds-accent-ink,#fbf7ef);cursor:pointer;overflow:hidden;
+  transition:transform .3s var(--ease),box-shadow .3s var(--ease)}
+.ds-plan-cta::after{content:"";position:absolute;top:0;bottom:0;left:-40%;width:32%;
+  background:linear-gradient(100deg,transparent,color-mix(in srgb,var(--glint) 34%,transparent),transparent);
+  transform:translateX(-120%) skewX(-16deg);transition:transform .7s var(--ease)}
+.ds-plan-cta:hover{transform:translateY(-2px);
+  box-shadow:0 22px 38px -24px color-mix(in srgb,var(--copper) 78%,transparent)}
+.ds-plan-cta:hover::after{transform:translateX(460%) skewX(-16deg)}
+.ds-plan-cta:active{transform:translateY(0) scale(.99)}
 
 /* Video */
 .video-media{position:relative;border:1px solid var(--line);padding:10px;background:var(--card)}
