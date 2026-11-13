@@ -97,6 +97,12 @@
         h = 0
         ;(pinned || []).forEach(function (p) {
           if (p.prop !== 'top') return
+          /* Overlays decorativos pineados (scrim del drawer móvil, veil
+             de filtros): conservan layout a pantalla completa (100vh)
+             aunque estén apagados por opacidad, y sumarlos inflaba el
+             alto de la tira a todo el viewport — la página quedaba
+             debajo de un iframe gigante vacío. */
+          if (p.el.getAttribute('aria-hidden') === 'true') return
           var cs3 = getComputedStyle(p.el)
           if (cs3.display === 'none' || cs3.visibility === 'hidden') return
           var r3 = p.el.getBoundingClientRect()
@@ -375,6 +381,14 @@
          * layout pero su rect entero cae debajo del borde: contarla
          * inflaba el alto del chrome con centenares de px fantasma. */
         if (r.bottom > docBot + 4) return
+        /* La hoja que se cierra por translateX (o por translate hacia
+         * arriba) también conserva layout con r.bottom ≈ docBot — el
+         * test vertical no la descartaba y su alto completo entraba al
+         * cromo. Off-canvas = su rect no pisa el marco visible. El scrim
+         * del menú cae en el mismo caso: aria-hidden + pantalla completa. */
+        if (p.el.getAttribute('aria-hidden') === 'true') return
+        var docRight = frameBox ? frameBox.right - frameBox.left : (window.innerWidth || 0)
+        if (r.right <= 0 || r.left >= docRight || r.bottom <= 0) return
       }
       /* El `base` (margen CSS entre la barra y el borde) se mide en un
        * viewport transitorio mientras el host estira el iframe: una
