@@ -1,6 +1,6 @@
 <script setup>
 import { ref, computed, onMounted, onBeforeUnmount, watch } from 'vue'
-import { fetchSyncState, runSync } from '../../../api/storeSync.api.js'
+import { fetchSyncState } from '../../../api/storeSync.api.js'
 import { apiErr, fmtDateTime, isNotFound } from './shared.js'
 import { useStoreStore } from '../../../stores/store.store.js'
 import AppIcon from '../../AppIcon.vue'
@@ -10,7 +10,6 @@ import AlertMessage from '../../AlertMessage.vue'
 // Estado de conexión + cola de operaciones pendientes de subir a la web.
 const store = useStoreStore()
 const loading = ref(false)
-const running = ref(false)
 const errMsg = ref('')
 const pendingCount = ref(0)
 const lastSyncAt = ref(null)
@@ -71,22 +70,6 @@ async function load() {
   }
 }
 
-async function doSync() {
-  if (offline.value || running.value) return
-  running.value = true
-  errMsg.value = ''
-  try {
-    applyState(await runSync())
-  } catch (e) {
-    if (!e?.response) netFailed.value = true
-    errMsg.value = apiErr(e, 'No se pudo sincronizar. Intentá de nuevo.')
-    // Aunque falle el run, refrescamos el estado por si quedó desactualizado.
-    try { applyState(await fetchSyncState()) } catch { /* sigue el errMsg del run */ }
-  } finally {
-    running.value = false
-  }
-}
-
 function onOnline() { browserOnline.value = true; netFailed.value = false; load() }
 function onOffline() { browserOnline.value = false }
 
@@ -144,21 +127,6 @@ watch(() => store.hasStore, (h) => { if (h) load() })
       <div v-if="offline" class="sp-banner" role="status">
         <AppIcon name="triangle-alert" :size="15" aria-hidden="true" />
         <p>No hay conexión con el servidor. Todo lo que hagas se guarda local y se sube solo cuando vuelva.</p>
-      </div>
-
-      <!-- Acción -->
-      <div class="sp-actions">
-        <button
-          type="button"
-          class="sp-btn-sync"
-          :disabled="offline || running || loading"
-          :aria-busy="running"
-          @click="doSync"
-        >
-          <AppIcon name="refresh-cw" :size="14" :class="{ spin: running }" />
-          {{ running ? 'Sincronizando…' : 'Sincronizar ahora' }}
-        </button>
-        <span class="sp-device hint">Dispositivo: este navegador</span>
       </div>
 
       <!-- Operaciones encoladas -->
@@ -258,26 +226,6 @@ watch(() => store.hasStore, (h) => { if (h) load() })
 .sp-banner .icon { flex: none; margin-top: 1px; }
 .sp-banner p { margin: 0; font-size: 13px; line-height: 1.45; font-weight: 550; }
 
-/* --- Acción --- */
-.sp-actions {
-  display: flex; align-items: center; gap: 14px;
-  margin: 0 0 14px;
-}
-.sp-btn-sync {
-  display: inline-flex; align-items: center; gap: 8px;
-  padding: 9px 18px;
-  border: 0; border-radius: 9px;
-  background: var(--sp-green);
-  color: #0b2417;
-  font-size: 13.5px; font-weight: 700;
-  cursor: pointer;
-  transition: filter .15s ease, transform .05s ease;
-}
-.sp-btn-sync:hover:not(:disabled) { filter: brightness(1.08); }
-.sp-btn-sync:active:not(:disabled) { transform: translateY(1px); }
-.sp-btn-sync:disabled { opacity: .55; cursor: not-allowed; }
-.sp-device { font-size: 12px; }
-
 /* --- Tabla --- */
 .sp-card-head {
   display: flex; align-items: center; justify-content: space-between;
@@ -325,10 +273,6 @@ watch(() => store.hasStore, (h) => { if (h) load() })
 .sp-empty { padding: 34px 16px; text-align: center; display: grid; justify-items: center; gap: 6px; }
 .sp-empty-ico { color: var(--sp-green); }
 .sp-empty p { margin: 0; color: var(--sp-muted); font-size: 13px; }
-
-/* Spinner del botón mientras corre la sincronización. */
-.spin { animation: sync-spin 1s linear infinite; }
-@keyframes sync-spin { to { transform: rotate(360deg); } }
 
 @media (max-width: 720px) {
   .sp-stats { grid-template-columns: 1fr; }
