@@ -1,5 +1,5 @@
 <script setup>
-// Página "Novedades" de la web pública (beneficio has_feed, Estándar+):
+// Página "Novedades" de la web pública (beneficio has_feed, Premium+):
 // feed social de la tienda — posts de texto, fotos, videos propios,
 // publicaciones embebidas de redes (TikTok/YouTube/Instagram/Facebook/X)
 // y encuestas. La lectura es anónima; likear, comentar y votar piden

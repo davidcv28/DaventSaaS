@@ -734,7 +734,7 @@ const showPlans = computed(() => status.value === 'success' && siteTemplates.val
 // apagó. Sin esto el prefetch de portada pegaba un 404 en tiendas sin
 // catálogo (patrones tipo ruta: landing + servicios nomás).
 const catalogPageOn = computed(() => showCatalog.value && siteTemplates.value.includes('catalog'))
-// Página "Novedades" (flag has_feed del plan — Estándar+): el serializer
+// Página "Novedades" (flag has_feed del plan — Premium+): el serializer
 // público manda feed_enabled y el menú muestra el acceso.
 const showFeed = computed(() => status.value === 'success' && Boolean(store.value?.feed_enabled))
 // Web sin portada: el home redirige a la primera página disponible

@@ -827,7 +827,7 @@ class StorePublicSerializer(serializers.ModelSerializer):
         from StoreApp.domains.stores.services.commerce import store_has_customer_auth
         return store_has_customer_auth(store)
     def get_feed_enabled(self, store):
-        #Flag has_feed del plan (Estándar+): la web muestra la página
+        #Flag has_feed del plan (Premium+): la web muestra la página
         #Novedades y su acceso en el menú solo si el plan lo incluye.
         from StoreApp.domains.feed.services import feed_enabled
         return feed_enabled(store.user)

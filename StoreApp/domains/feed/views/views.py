@@ -64,7 +64,7 @@ def _my_store(request):
 def _deny_without_feed(store):
     if not feed_enabled(store.user):
         return Response(
-            {'detail': 'La página de novedades está disponible desde el plan Estándar.'},
+            {'detail': 'La página de novedades está disponible desde el plan Premium.'},
             status = status.HTTP_403_FORBIDDEN,
         )
     return None

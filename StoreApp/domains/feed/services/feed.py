@@ -22,7 +22,7 @@ from StoreApp.domains.stores.services.storage import (
 Servicios del dominio Feed.
 
 - Gate por plan: el flag 'has_feed' habilita la página /novedades y el
-  panel de publicaciones (Estándar en adelante).
+  panel de publicaciones (Premium en adelante).
 - Media propia a R2 con la misma mecánica que la galería (key
   stores/<id>/feed/<uuid>.<ext>, cuota max_storage_mb, BYO storage). La
   imagen pasa por normalize_image (regla global WebP); el video va
@@ -47,7 +47,7 @@ FEED_PAGE_SIZE          =   50
 # GATE (flag has_feed del plan vigente)
 #=========================================
 def feed_enabled(profile):
-    """La página Novedades se habilita con el flag 'has_feed' (Estándar+)."""
+    """La página Novedades se habilita con el flag 'has_feed' (Premium+)."""
     return bool(plan_benefits_of(profile).get('has_feed'))
 def public_feed_store_or_404(slug):
     """

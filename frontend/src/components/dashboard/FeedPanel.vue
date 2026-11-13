@@ -322,7 +322,7 @@ onMounted(loadAll)
     <!-- Plan sin el beneficio has_feed -->
     <div v-else-if="lockedMsg" class="empty">
       <div class="empty-icon"><AppIcon name="lock" :size="28" /></div>
-      <h3>Novedades está disponible desde el plan Estándar</h3>
+      <h3>Novedades está disponible desde el plan Premium</h3>
       <p>{{ lockedMsg }}</p>
       <div class="btn-row" style="justify-content:center">
         <button type="button" class="btn btn-auto" @click="loadAll"><AppIcon name="refresh" :size="15" /> Reintentar</button>
