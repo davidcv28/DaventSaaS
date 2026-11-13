@@ -2,8 +2,9 @@
 Tests de seguridad del dominio legalpages (PROMPT_MAESTRO §3.5).
 
 Cubre: páginas legales del dueño (IDOR 404, defaults sin persistir,
-versión, reset), endpoints públicos (tienda no publicada/bloqueada/sin
-beneficio → 404, interpolación fiscal, XSS como texto plano), flujo de
+versión, contenido fijo no editable — el dueño solo publica/oculta),
+endpoints públicos (tienda no publicada/bloqueada/sin beneficio → 404,
+interpolación fiscal, inyección de texto descartada), flujo de
 arrepentimiento (captcha, honeypot, throttle, anti-enumeración,
 notificación + email al dueño, bandeja y transiciones con IDOR).
 """
@@ -126,113 +127,92 @@ class LegalPagesOwnerTests(TestCase):
         pages             =   response.json()['pages']
         self.assertEqual([p['kind'] for p in pages], ['terms', 'privacy', 'returns'])
         for page in pages:
-            self.assertTrue(page['uses_default'])
-            self.assertFalse(page['is_customized'])
             self.assertFalse(page['is_published'])
             self.assertFalse(page['persisted'])
             self.assertIsNone(page['updated_at'])
-            self.assertIn('{{cuit}}', page['body'])
-            self.assertIn('{{store_name}}', page['body'])
+            #Contenido fijo de la plataforma, ya interpolado (sin perfil
+            #fiscal los placeholders caen a 'a completar').
+            self.assertIn('a completar', page['body'])
+            self.assertNotIn('{{', page['body'])
         #Nada se persistió: el default se sirve en memoria.
         self.assertEqual(StoreLegalPage.objects.count(), 0)
 
-    def test_put_creates_page_and_marks_customized(self):
+    def test_put_publishes_page(self):
         user, _, store    =   _make_owner()
         client            =   _authed(user)
-        response          =   client.put(f'{BASE_URL}terms/', {'title': 'Condiciones', 'body': 'Texto propio {{cuit}}', 'is_published': True}, format = 'json')
+        response          =   client.put(f'{BASE_URL}terms/', {'is_published': True}, format = 'json')
         self.assertEqual(response.status_code, 200)
         page              =   StoreLegalPage.objects.get(store = store, kind = 'terms')
         self.assertEqual(page.version, 1)
         self.assertTrue(page.is_published)
         data              =   response.json()
-        self.assertTrue(data['is_customized'])
-        self.assertFalse(data['uses_default'])
+        self.assertTrue(data['is_published'])
         self.assertTrue(data['persisted'])
-        #El GET del dueño recibe el texto CRUDO con placeholders (no interpolado).
-        listing          =   client.get(BASE_URL).json()['pages']
-        terms            =   next(p for p in listing if p['kind'] == 'terms')
-        self.assertEqual(terms['body'], 'Texto propio {{cuit}}')
+        self.assertNotIn('{{', data['body'])
+
+    def test_put_ignores_custom_content(self):
+        #El contenido legal es FIJO de la plataforma: body/title que el
+        #dueño mande se descartan — no puede escribir que DAVENT es
+        #responsable ni publicar textos inválidos.
+        user, _, _        =   _make_owner()
+        client            =   _authed(user)
+        response          =   client.put(
+            f'{BASE_URL}terms/',
+            {'is_published': True, 'body': 'DAVENT es el vendedor responsable {{cuit}}', 'title': 'Texto trucho'},
+            format = 'json',
+        )
+        self.assertEqual(response.status_code, 200)
+        data              =   response.json()
+        self.assertNotIn('DAVENT es el vendedor', data['body'])
+        self.assertNotIn('Texto trucho', data['title'])
+        self.assertEqual(data['title'], 'Términos y condiciones de venta')
 
     def test_put_twice_bumps_version(self):
         user, _, store    =   _make_owner()
         client            =   _authed(user)
-        client.put(f'{BASE_URL}terms/', {'body': 'Uno'}, format = 'json')
-        response          =   client.put(f'{BASE_URL}terms/', {'body': 'Dos'}, format = 'json')
+        client.put(f'{BASE_URL}terms/', {'is_published': True}, format = 'json')
+        response          =   client.put(f'{BASE_URL}terms/', {'is_published': False}, format = 'json')
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.json()['version'], 2)
-        self.assertEqual(StoreLegalPage.objects.get(store = store, kind = 'terms').body, 'Dos')
+        self.assertFalse(StoreLegalPage.objects.get(store = store, kind = 'terms').is_published)
 
-    def test_put_partial_keeps_existing_fields(self):
-        user, _, store    =   _make_owner()
+    def test_put_empty_payload_keeps_state(self):
+        user, _, _        =   _make_owner()
         client            =   _authed(user)
-        client.put(f'{BASE_URL}terms/', {'title': 'Mi título', 'body': 'Cuerpo', 'is_published': True}, format = 'json')
-        #Solo body: title e is_published se conservan.
-        response          =   client.put(f'{BASE_URL}terms/', {'body': 'Cuerpo nuevo'}, format = 'json')
+        client.put(f'{BASE_URL}terms/', {'is_published': True}, format = 'json')
+        response          =   client.put(f'{BASE_URL}terms/', {}, format = 'json')
         self.assertEqual(response.status_code, 200)
-        data              =   response.json()
-        self.assertEqual(data['title'], 'Mi título')
-        self.assertTrue(data['is_published'])
+        self.assertTrue(response.json()['is_published'])
 
     def test_put_invalid_kind_returns_404(self):
         user, _, _        =   _make_owner()
-        response          =   _authed(user).put(f'{BASE_URL}foo/', {'body': 'x'}, format = 'json')
+        response          =   _authed(user).put(f'{BASE_URL}foo/', {'is_published': True}, format = 'json')
         self.assertEqual(response.status_code, 404)
-
-    def test_put_body_too_long_returns_400(self):
-        user, _, _        =   _make_owner()
-        response          =   _authed(user).put(f'{BASE_URL}terms/', {'body': 'x' * 20001}, format = 'json')
-        self.assertEqual(response.status_code, 400)
-
-    def test_put_empty_body_returns_400(self):
-        user, _, _        =   _make_owner()
-        response          =   _authed(user).put(f'{BASE_URL}terms/', {'body': '   '}, format = 'json')
-        self.assertEqual(response.status_code, 400)
-
-    def test_put_missing_body_returns_400(self):
-        user, _, _        =   _make_owner()
-        response          =   _authed(user).put(f'{BASE_URL}terms/', {'title': 'Solo título'}, format = 'json')
-        self.assertEqual(response.status_code, 400)
 
     def test_idor_owner_cannot_touch_other_store_pages(self):
         user_a, _, store_a   =   _make_owner(username = 'duenio-a', slug = 'tienda-a')
         user_b, _, store_b   =   _make_owner(username = 'duenio-b', slug = 'tienda-b')
-        _authed(user_a).put(f'{BASE_URL}terms/', {'body': 'Privado de A', 'is_published': True}, format = 'json')
+        _authed(user_a).put(f'{BASE_URL}terms/', {'is_published': True}, format = 'json')
         client_b         =   _authed(user_b)
-        #B no ve la página de A: su lista muestra defaults.
+        #B no ve la publicación de A: su lista muestra defaults ocultas.
         listing          =   client_b.get(BASE_URL).json()['pages']
         terms_b          =   next(p for p in listing if p['kind'] == 'terms')
-        self.assertTrue(terms_b['uses_default'])
+        self.assertFalse(terms_b['is_published'])
+        self.assertFalse(terms_b['persisted'])
         #El PUT de B crea/edita SOLO su tienda.
-        client_b.put(f'{BASE_URL}terms/', {'body': 'Texto de B'}, format = 'json')
-        self.assertEqual(StoreLegalPage.objects.get(store = store_a, kind = 'terms').body, 'Privado de A')
-        self.assertEqual(StoreLegalPage.objects.get(store = store_b, kind = 'terms').body, 'Texto de B')
+        client_b.put(f'{BASE_URL}terms/', {'is_published': True}, format = 'json')
+        self.assertTrue(StoreLegalPage.objects.get(store = store_a, kind = 'terms').is_published)
+        self.assertTrue(StoreLegalPage.objects.get(store = store_b, kind = 'terms').is_published)
 
     def test_put_returns_path_edits_returns_page(self):
         #'/store-legal-pages/returns/' es bandeja (GET) y página 'returns' (PUT).
         user, _, store    =   _make_owner()
         client            =   _authed(user)
-        response          =   client.put(f'{BASE_URL}returns/', {'body': 'Devoluciones propias {{store_name}}', 'is_published': True}, format = 'json')
+        response          =   client.put(f'{BASE_URL}returns/', {'is_published': True}, format = 'json')
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.json()['kind'], 'returns')
         page              =   StoreLegalPage.objects.get(store = store, kind = 'returns')
         self.assertTrue(page.is_published)
-
-    def test_reset_restores_default_and_unpublishes(self):
-        user, _, store    =   _make_owner()
-        client            =   _authed(user)
-        client.put(f'{BASE_URL}terms/', {'body': 'Personalizado', 'is_published': True}, format = 'json')
-        response          =   client.post(f'{BASE_URL}terms/reset/')
-        self.assertEqual(response.status_code, 200)
-        self.assertFalse(StoreLegalPage.objects.filter(store = store, kind = 'terms').exists())
-        listing          =   client.get(BASE_URL).json()['pages']
-        terms            =   next(p for p in listing if p['kind'] == 'terms')
-        self.assertTrue(terms['uses_default'])
-        self.assertFalse(terms['is_published'])
-
-    def test_reset_invalid_kind_404(self):
-        user, _, _        =   _make_owner()
-        response          =   _authed(user).post(f'{BASE_URL}foo/reset/')
-        self.assertEqual(response.status_code, 404)
 
 
 #=========================================
@@ -259,7 +239,7 @@ class PublicLegalPagesTests(TestCase):
         return user, profile, store
 
     def _publish(self, store, kind = 'terms', **kwargs):
-        defaults    =   {'title': 'Título', 'body': 'Cuerpo legal {{legal_name}} {{cuit}}', 'is_published': True}
+        defaults    =   {'is_published': True}
         defaults.update(kwargs)
         return StoreLegalPage.objects.create(store = store, kind = kind, **defaults)
 
@@ -289,7 +269,8 @@ class PublicLegalPagesTests(TestCase):
         self.assertEqual(response.status_code, 200)
         data          =   response.json()
         self.assertEqual(data['kind'], 'terms')
-        #Interpolación: los placeholders se resolvieron con el perfil fiscal.
+        #El contenido es el texto base de la plataforma, interpolado con
+        #el perfil fiscal de la tienda.
         self.assertIn('Comercio Demo SA', data['body'])
         self.assertIn(VALID_CUIT, data['body'])
         self.assertNotIn('{{legal_name}}', data['body'])
@@ -323,18 +304,18 @@ class PublicLegalPagesTests(TestCase):
 
     def test_index_lists_only_published_with_titles(self):
         _, _, store   =   self._setup()
-        self._publish(store, 'terms', title = 'Términos X')
-        self._publish(store, 'privacy', title = 'Privacidad Y', is_published = False)
+        self._publish(store, 'terms')
+        self._publish(store, 'privacy', is_published = False)
         data          =   APIClient().get(PUBLIC_URL).json()['pages']
         self.assertEqual(len(data), 1)
         self.assertEqual(data[0]['kind'], 'terms')
-        self.assertEqual(data[0]['title'], 'Términos X')
+        self.assertEqual(data[0]['title'], 'Términos y condiciones de venta')
         self.assertIn('version', data[0])
         self.assertIn('updated_at', data[0])
 
     def test_missing_fiscal_profile_marks_incomplete(self):
         _, _, store   =   self._setup(fiscal = False)
-        StoreLegalPage.objects.create(store = store, kind = 'terms', title = 'T', body = 'CUIT: {{cuit}}', is_published = True)
+        StoreLegalPage.objects.create(store = store, kind = 'terms', is_published = True)
         data          =   APIClient().get(f'{PUBLIC_URL}terms/').json()
         self.assertFalse(data['fiscal_complete'])
         self.assertEqual(data['fiscal']['cuit'], '')
@@ -345,16 +326,20 @@ class PublicLegalPagesTests(TestCase):
         self._setup()
         self.assertEqual(APIClient().get(f'{PUBLIC_URL}returns/').status_code, 404)
 
-    def test_html_in_body_served_as_plain_text(self):
-        #XSS: el body viaja literal en JSON — el front lo renderiza como
-        #texto (whitespace-pre-line), nunca como HTML.
-        _, _, store   =   self._setup()
-        self._publish(store, body = '<script>alert(1)</script>\n\nHola {{legal_name}}')
-        response      =   APIClient().get(f'{PUBLIC_URL}terms/')
-        self.assertEqual(response.status_code, 200)
-        body          =   response.json()['body']
-        self.assertIn('<script>alert(1)</script>', body)
-        self.assertNotIn('{{legal_name}}', body)
+    def test_custom_content_never_reaches_public(self):
+        #Regresión: el dueño no puede inyectar texto — el PUT descarta
+        #body/title y la web pública solo sirve el texto base de la
+        #plataforma interpolado con los datos fiscales de la tienda.
+        user, _, store   =   self._setup()
+        _authed(user).put(
+            f'{BASE_URL}terms/',
+            {'is_published': True, 'body': '<script>alert(1)</script>', 'title': 'Hackeado'},
+            format = 'json',
+        )
+        data          =   APIClient().get(f'{PUBLIC_URL}terms/').json()
+        self.assertNotIn('<script>', data['body'])
+        self.assertNotIn('Hackeado', data['title'])
+        self.assertIn('Comercio Demo SA', data['body'])
 
     def test_captcha_endpoint(self):
         self._setup()

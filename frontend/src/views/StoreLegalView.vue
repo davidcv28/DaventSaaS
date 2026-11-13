@@ -1,9 +1,10 @@
 <script setup>
 // Páginas legales públicas de la tienda: /<slug>/legal (índice),
 // /<slug>/legal/:kind (terms|privacy|returns) o ?p=<kind> como fallback.
-// El `body` es TEXTO PLANO del dueño con placeholders fiscales ya
-// interpolados server-side → se renderiza literal con whitespace-pre-line,
-// NUNCA v-html (no hay sanitizador de HTML en el proyecto).
+// El `body` es el texto legal estándar de la plataforma con placeholders
+// fiscales ya interpolados server-side → se renderiza literal con
+// whitespace-pre-line, NUNCA v-html (no hay sanitizador de HTML en el
+// proyecto).
 import { ref, computed, inject, watch } from 'vue'
 import { useRoute } from 'vue-router'
 import { legalPagesApi, LEGAL_KINDS } from '../api/legalPages.api.js'
@@ -160,7 +161,7 @@ async function submitReturn() {
       </div>
 
       <article v-else class="ec-legal-body">
-        <!-- body = texto plano del dueño — literal, jamás HTML -->
+        <!-- body = texto legal estándar de la plataforma — literal, jamás HTML -->
         <p class="ec-legal-text">{{ page.body }}</p>
 
         <!-- Datos fiscales interpolados -->

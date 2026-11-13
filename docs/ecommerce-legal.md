@@ -11,8 +11,10 @@
 ## 1. Borrador de cláusulas ToS de DAVENT para e-commerce
 
 Texto guía para actualizar los Términos y Condiciones de DAVENT como
-plataforma (no por tienda — las páginas legales de cada comercio las
-redacta/edita el dueño en `StoreLegalPage`).
+plataforma (no por tienda — las páginas legales de cada comercio son
+**textos estándar de la plataforma** en `StoreLegalPage`: el dueño solo
+decide publicarlos u ocultarlos, no puede editarlos; DAVENT los
+interpela con los datos fiscales de cada tienda al servirlos).
 
 ### 1.1 Naturaleza del servicio (no-parte de la compraventa)
 
@@ -118,9 +120,11 @@ comercio (responsable):
   propio vendedor si el comercio lo conecta).
 - Las solicitudes de acceso/rectificación/supresión de compradores se
   canalizan al comercio; DAVENT asiste dentro de lo técnico.
-- Los textos por tienda (`StoreLegalPage` kind=`privacy`) los redacta el
-  dueño; el borrador base ya describe este esquema y debe ser revisado
-  por el comercio.
+- Los textos por tienda (`StoreLegalPage` kind=`privacy`) son fijos de
+  la plataforma (borrador base que describe este esquema, interpolado
+  con los datos fiscales del comercio); el dueño no puede editarlos —
+  DAVENT responde por su contenido y cada comercio sigue siendo el
+  responsable del tratamiento de los datos de SUS compradores.
 
 ### 2.3 Datos técnicos y de seguridad
 

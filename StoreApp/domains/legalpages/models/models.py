@@ -110,14 +110,16 @@ Para cualquier consulta sobre devoluciones: {{contact_email}}.""",
 #=========================================
 class StoreLegalPage(models.Model):
     """
-    Página legal editable por el dueño. `body` es TEXTO PLANO con
-    párrafos separados por líneas en blanco: la web pública lo renderiza
-    con whitespace-pre-line — nunca HTML del usuario (cero superficie
-    XSS; si el dueño pega markup se muestra literal).
+    Página legal de la tienda. El CONTENIDO es fijo de la plataforma
+    (DEFAULT_TITLES/DEFAULT_BODIES interpolados con los datos fiscales
+    de la tienda al servir): el dueño solo decide si se publica — no
+    puede editarlo. Así ningún comercio puede contradecir la posición
+    legal de DAVENT (p. ej. declararla responsable de la venta o del
+    tratamiento de datos) ni publicar textos legalmente inválidos.
 
-    Si la fila no existe, la página se sirve desde DEFAULT_BODIES sin
+    Si la fila no existe, la página se sirve desde los defaults sin
     persistir (ver services.get_or_create_defaults): el dueño que nunca
-    editó no genera filas.
+    publicó no genera filas.
     """
     KIND_TERMS                 =   'terms'
     KIND_PRIVACY               =   'privacy'
@@ -128,11 +130,8 @@ class StoreLegalPage(models.Model):
         (KIND_RETURNS,  'Devoluciones'),
     ]
     KIND_LABELS                =   {code: label for code, label in KIND_CHOICES}
-    BODY_MAX_LENGTH            =   20000
     store                      =   models.ForeignKey('stores.Store', on_delete = models.CASCADE, related_name = 'legal_pages')
     kind                       =   models.CharField(max_length = 10, choices = KIND_CHOICES)
-    title                      =   models.CharField(max_length = 120, blank = True)
-    body                       =   models.TextField(max_length = BODY_MAX_LENGTH, blank = True)
     is_published               =   models.BooleanField(default = False, verbose_name = 'Publicada')
     #Sube en cada guardado: es la "última actualización" que la ley pide
     #mostrar en textos legales.
@@ -167,15 +166,6 @@ class StoreLegalPage(models.Model):
         #hoy el cuerpo es el mismo template con placeholders para todos.
         return DEFAULT_BODIES.get(kind, '')
     @classmethod
-    def is_customized(cls, page, store):
-        """True si la página persistida difiere del texto base."""
-        if page is None:
-            return False
-        return bool(
-            (page.title or '').strip() != cls.default_title(page.kind)
-            or (page.body or '') != cls.default_body(page.kind, store)
-        )
-    @classmethod
     def get_or_create_defaults(cls, store):
         """
         Las 3 páginas efectivas de la tienda SIN persistir las que el dueño
@@ -191,8 +181,6 @@ class StoreLegalPage(models.Model):
                 page    =   cls(
                     store           =   store,
                     kind            =   kind,
-                    title           =   cls.default_title(kind),
-                    body            =   cls.default_body(kind, store),
                     is_published    =   False,
                     version         =   1,
                 )

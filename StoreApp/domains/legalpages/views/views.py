@@ -33,11 +33,15 @@ Vistas del dominio legalpages.
 
 Dueño (JWT, IDOR 404 — solo SU tienda):
 - GET  /api/store-legal-pages/                  → las 3 páginas (defaults si no existen)
-- PUT  /api/store-legal-pages/<kind>/           → guardar página (terms|privacy|returns)
-- POST /api/store-legal-pages/<kind>/reset/     → volver al texto base
+- PUT  /api/store-legal-pages/<kind>/           → publicar/ocultar (terms|privacy|returns)
 - GET  /api/store-legal-pages/returns/          → bandeja de solicitudes (?status=)
-- PUT  /api/store-legal-pages/returns/          → edita la página legal 'returns'
+- PUT  /api/store-legal-pages/returns/          → publica/oculta la página 'returns'
 - POST /api/store-legal-pages/returns/<id>/status/ → gestiona estado de una solicitud
+
+El CONTENIDO legal es fijo de la plataforma (DEFAULT_BODIES interpolado
+con los datos fiscales de la tienda): el dueño no puede editarlo, solo
+decidir si se publica — así ningún comercio puede contradecir la
+posición legal de DAVENT ni publicar textos inválidos.
 
 Público (sin auth, throttles + captcha en el POST):
 - GET  /api/stores/public/<slug>/legal/                  → índice de páginas publicadas
@@ -93,7 +97,7 @@ class StoreLegalPagesView(APIView):
         return Response({'pages': [legal_page_payload(page, store) for page in pages]}, status = status.HTTP_200_OK)
 
 class StoreLegalPageDetailView(APIView):
-    """PUT /api/store-legal-pages/<kind>/ — guarda título/cuerpo/publicación."""
+    """PUT /api/store-legal-pages/<kind>/ — publica/oculta la página."""
     permission_classes    =   [IsAuthenticated]
     def put(self, request, kind):
         _kind_or_404(kind)
@@ -103,19 +107,6 @@ class StoreLegalPageDetailView(APIView):
         page, _     =   save_legal_page(store, kind, serializer.validated_data)
         bump_public_store(store.pk)
         return Response(legal_page_payload(page, store), status = status.HTTP_200_OK)
-
-class StoreLegalPageResetView(APIView):
-    """POST /api/store-legal-pages/<kind>/reset/ — vuelve al texto base."""
-    permission_classes    =   [IsAuthenticated]
-    def post(self, request, kind):
-        _kind_or_404(kind)
-        store   =   _own_store(request)
-        deleted, _   =   StoreLegalPage.objects.filter(store = store, kind = kind).delete()
-        if deleted:
-            #La página vuelve a servirse desde el default y queda
-            #despublicada hasta que el dueño la publique de nuevo.
-            bump_public_store(store.pk)
-        return Response({'ok': True, 'kind': kind}, status = status.HTTP_200_OK)
 
 class ReturnRequestsView(APIView):
     """
@@ -178,7 +169,7 @@ class PublicLegalIndexView(APIView):
             page    =   pages.get(kind)
             if page is None:
                 continue
-            title   =   legal_page_payload(page, store, public = True)['title']
+            title   =   legal_page_payload(page, store)['title']
             index.append({
                 'kind'          :   kind,
                 'kind_label'    :   StoreLegalPage.KIND_LABELS[kind],

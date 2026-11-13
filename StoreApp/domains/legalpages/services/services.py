@@ -85,17 +85,15 @@ def public_store_or_404(slug):
 #=========================================
 # SERIALIZACIÓN PÚBLICA / DUEÑO
 #=========================================
-def legal_page_payload(page, store, *, public = False):
+def legal_page_payload(page, store):
     """
-    Payload de una página. `public=True` interpola título y cuerpo con los
-    datos fiscales vigentes; el dueño siempre recibe el texto crudo con
-    placeholders (es lo que edita).
+    Payload de una página. Título y cuerpo son SIEMPRE los textos base de
+    la plataforma (DEFAULT_TITLES/DEFAULT_BODIES) interpolados con los
+    datos fiscales vigentes — el dueño no puede modificarlos, solo
+    publicar/ocultar. Devuelve el texto final que ve el comprador.
     """
-    title   =   page.title or StoreLegalPage.default_title(page.kind)
-    body    =   page.body or StoreLegalPage.default_body(page.kind, store)
-    if public:
-        title   =   interpolate_text(title, store)
-        body    =   interpolate_text(body, store)
+    title   =   interpolate_text(StoreLegalPage.default_title(page.kind), store)
+    body    =   interpolate_text(StoreLegalPage.default_body(page.kind, store), store)
     persisted   =   page.pk is not None
     return {
         'kind'          :   page.kind,
@@ -103,8 +101,6 @@ def legal_page_payload(page, store, *, public = False):
         'title'         :   title,
         'body'          :   body,
         'is_published'  :   bool(page.is_published),
-        'is_customized' :   StoreLegalPage.is_customized(page, store),
-        'uses_default'  :   not StoreLegalPage.is_customized(page, store),
         'version'       :   page.version or 1,
         'updated_at'    :   page.updated_at.isoformat() if page.updated_at else None,
         'persisted'     :   persisted,
@@ -120,39 +116,28 @@ def legal_detail_payload(page, store):
         'fiscal_address'    :   (profile.fiscal_address if profile else '') or '',
         'point_of_sale'     :   (profile.point_of_sale if profile else '') or '',
     }
-    payload     =   legal_page_payload(page, store, public = True)
+    payload     =   legal_page_payload(page, store)
     payload.pop('is_published', None)
-    payload.pop('is_customized', None)
-    payload.pop('uses_default', None)
     payload.pop('persisted', None)
     payload['fiscal']           =   fiscal
     payload['fiscal_complete']  =   bool(profile and profile.is_complete)
     return payload
 #=========================================
-# GUARDADO (dueño)
+# GUARDADO (dueño — solo publicación)
 #=========================================
 def save_legal_page(store, kind, data):
     """
     Upsert de la página del dueño. `data` = validated_data del
-    LegalPageWriteSerializer: body requerido; title e is_published
-    opcionales (ausentes = conservar lo que haya; título en blanco =
-    volver al título por defecto del kind). Devuelve (page, created).
+    LegalPageWriteSerializer: solo `is_published` (el contenido es fijo
+    de la plataforma). Devuelve (page, created).
     """
     page, created  =   StoreLegalPage.objects.get_or_create(
         store           =   store,
         kind            =   kind,
-        defaults        =   {
-            'title'         :   (data.get('title') or '').strip() or StoreLegalPage.default_title(kind),
-            'body'          :   data['body'],
-            'is_published'  :   bool(data.get('is_published', False)),
-        },
+        defaults        =   {'is_published': bool(data.get('is_published', False))},
     )
-    if not created:
-        if 'title' in data:
-            page.title          =   (data.get('title') or '').strip() or StoreLegalPage.default_title(kind)
-        page.body               =   data['body']
-        if 'is_published' in data:
-            page.is_published   =   bool(data['is_published'])
+    if not created and 'is_published' in data:
+        page.is_published   =   bool(data['is_published'])
         page.save()
     return page, created
 #=========================================

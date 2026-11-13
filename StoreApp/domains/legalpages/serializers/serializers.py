@@ -2,7 +2,7 @@ import re
 
 from rest_framework import serializers
 
-from StoreApp.domains.legalpages.models import ReturnRequest, StoreLegalPage
+from StoreApp.domains.legalpages.models import ReturnRequest
 
 
 def _clean_text(value):
@@ -12,28 +12,19 @@ def _clean_text(value):
 """
 Serializers del dominio legalpages.
 
-- LegalPageWriteSerializer: PUT del dueño (title opcional, body requerido
-  ≤20000, is_published). El body es texto plano — se sirve literal.
+- LegalPageWriteSerializer: PUT del dueño — solo `is_published`. El
+  contenido legal es fijo de la plataforma (DEFAULT_BODIES interpolado
+  con los datos fiscales de la tienda): no hay body/title editables.
 - ReturnRequestCreateSerializer: POST público del arrepentimiento —
   honeypot + challenge de captcha (mismo mecanismo del contacto).
 - ReturnRequestSerializer / ReturnRequestStatusSerializer: bandeja del
   dueño y cambio de estado.
 """
 #=========================================
-# PÁGINAS LEGALES (escritura del dueño)
+# PÁGINAS LEGALES (publicación del dueño)
 #=========================================
 class LegalPageWriteSerializer(serializers.Serializer):
-    title           =   serializers.CharField(max_length = 120, required = False, allow_blank = True)
-    body            =   serializers.CharField(max_length = StoreLegalPage.BODY_MAX_LENGTH)
     is_published    =   serializers.BooleanField(required = False)
-    def validate_title(self, value):
-        #Título saneado: solo trim + largo (el modelo ya capa a 120).
-        return _clean_text(value).strip()
-    def validate_body(self, value):
-        body    =   _clean_text(value).strip()
-        if not body:
-            raise serializers.ValidationError('El texto de la página no puede estar vacío.')
-        return body
 #=========================================
 # SOLICITUDES DE DEVOLUCIÓN (público)
 #=========================================

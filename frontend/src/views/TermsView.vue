@@ -103,6 +103,17 @@ import LegalLayout from '../components/LegalLayout.vue'
         tienda.
       </p>
       <p>
+        Las páginas legales publicadas en la web de cada comercio (términos y
+        condiciones, política de privacidad y devoluciones) son <strong>textos
+        estándar de la plataforma</strong> que DAVENT completa con los datos
+        fiscales declarados por cada comercio, y que el comercio no puede
+        modificar. El comercio es el único responsable de que su actividad,
+        su catálogo y los textos aplicables a su caso cumplan la legislación
+        vigente; DAVENT no responde por el contenido que cada comercio
+        publique en su web ni por las decisiones que tome sobre sus páginas
+        legales.
+      </p>
+      <p>
         DAVENT <strong>no garantiza ni responde por</strong> los productos, precios, stock,
         entregas, pagos, facturación, garantías ni cualquier otra obligación de los comercios
         hacia sus compradores. El comercio es el único responsable frente al consumidor por su

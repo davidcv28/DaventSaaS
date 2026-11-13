@@ -2,9 +2,9 @@ import { publicHttp } from './http.js'
 
 // =============================================================================
 // Páginas legales PÚBLICAS de la tienda (dominio legalpages — sin login).
-// El `body` es TEXTO PLANO del dueño con placeholders fiscales ya
-// interpolados por el servidor: se renderiza literal (whitespace-pre-line),
-// NUNCA como HTML — no usar v-html.
+// El `body` es el texto legal estándar de la plataforma con los
+// placeholders fiscales ya interpolados por el servidor: se renderiza
+// literal (whitespace-pre-line), NUNCA como HTML — no usar v-html.
 //
 // GET  /api/stores/public/<slug>/legal/                  → {pages:[{kind,kind_label,title,updated_at,version}]}
 // GET  /api/stores/public/<slug>/legal/<kind>/           → {kind,kind_label,title,body,fiscal,fiscal_complete,updated_at}

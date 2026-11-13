@@ -5,17 +5,18 @@ import { http } from './http.js'
 // Espejo del archivo público legalPages.api.js (ese queda intacto: acá solo
 // viven los endpoints autenticados del panel).
 //
+// El CONTENIDO legal es FIJO de la plataforma: título y cuerpo salen de
+// DEFAULT_TITLES/DEFAULT_BODIES interpolados con los datos fiscales de la
+// tienda — el dueño NO puede editarlos, solo publicar/ocultar cada página.
+//
 // GET  /api/store-legal-pages/                    → {pages:[{kind,kind_label,
-//      title,body,is_published,is_customized,uses_default,version,updated_at,
-//      persisted}]} — las 3 páginas (defaults si nunca se editaron).
-//      `body` es TEXTO PLANO con placeholders {{...}} que el servidor
-//      interpola solo en la web pública: acá se edita crudo, NUNCA v-html.
-// PUT  /api/store-legal-pages/<kind>/             {title?,body,is_published?}
+//      title,body,is_published,version,updated_at,persisted}]} — las 3
+//      páginas (defaults si nunca se publicaron). `body` es el texto final
+//      ya interpolado: se muestra literal, NUNCA v-html.
+// PUT  /api/store-legal-pages/<kind>/             {is_published?}
 //      kind ∈ terms|privacy|returns → payload de la página.
 //      OJO: 'returns' comparte path con la bandeja (GET = solicitudes,
-//      PUT = la página legal).
-// POST /api/store-legal-pages/<kind>/reset/       → vuelve al texto base
-//      (despublicada hasta re-publicar) → {ok,kind}
+//      PUT = publicar/ocultar la página legal).
 // GET  /api/store-legal-pages/returns/            → {results:[{id,order_ref,
 //      customer_email,name,reason,reason_display,details,status,created_at,
 //      updated_at}]}  (?status= new|in_review|approved|rejected|closed)
@@ -28,9 +29,6 @@ export const legalPagesOwnerApi = {
 
   save: (kind, payload) =>
     http.put(`/store-legal-pages/${kind}/`, payload).then((r) => r.data),
-
-  reset: (kind) =>
-    http.post(`/store-legal-pages/${kind}/reset/`).then((r) => r.data),
 
   returnRequests: ({ status } = {}) => {
     const qs = status ? `?status=${encodeURIComponent(status)}` : ''

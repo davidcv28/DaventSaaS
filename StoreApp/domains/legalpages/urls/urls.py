@@ -8,7 +8,6 @@ from StoreApp.domains.legalpages.views import (
     ReturnRequestStatusView,
     ReturnRequestsView,
     StoreLegalPageDetailView,
-    StoreLegalPageResetView,
     StoreLegalPagesView,
 )
 
@@ -21,8 +20,8 @@ regla de visibilidad que el resto de la web pública de la tienda.
 
 OJO con el solape 'returns': es kind de página Y bandeja de solicitudes.
 /api/store-legal-pages/returns/ despacha por método (GET = bandeja,
-PUT = editar la página 'returns'); /returns/<id>/status/ y /returns/reset/
-siguen sus propias rutas. En el frente público no hay choque porque
+PUT = publicar/ocultar la página 'returns'); /returns/<id>/status/
+sigue su propia ruta. En el frente público no hay choque porque
 /legal/returns/request/ tiene un segmento más que /legal/<kind>/.
 """
 urlpatterns = [
@@ -34,7 +33,6 @@ urlpatterns = [
     #PUT = editar la página legal de devoluciones.
     path('store-legal-pages/returns/', ReturnRequestsView.as_view(), name = 'legal-return-requests'),
     re_path(r'^store-legal-pages/returns/(?P<pk>[0-9]+)/status/$', ReturnRequestStatusView.as_view(), name = 'legal-return-status'),
-    re_path(r'^store-legal-pages/(?P<kind>terms|privacy|returns)/reset/$', StoreLegalPageResetView.as_view(), name = 'legal-page-reset'),
     re_path(r'^store-legal-pages/(?P<kind>terms|privacy|returns)/$', StoreLegalPageDetailView.as_view(), name = 'legal-page-detail'),
     #=========================================
     # PÚBLICO (web de la tienda)

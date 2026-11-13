@@ -1,28 +1,26 @@
 <script setup>
 import { ref, computed, watch } from 'vue'
 import { legalPagesOwnerApi, RETURN_STATUS, RETURN_TRANSITIONS } from '../../../api/legalPagesOwner.api.js'
-import { apiErr, fmtDateTime, statusMeta, isNotFound } from './shared.js'
+import { apiErr, fmtDateTime, isNotFound } from './shared.js'
 import { useStoreStore } from '../../../stores/store.store.js'
 import AppIcon from '../../AppIcon.vue'
 import AlertMessage from '../../AlertMessage.vue'
 
 // Páginas legales + bandeja de devoluciones — /api/store-legal-pages/*.
-// El `body` es TEXTO PLANO con placeholders {{...}} que el servidor
-// interpola solo en la web pública: acá se edita crudo, JAMÁS v-html.
-// OJO: 'returns' comparte path — GET lista solicitudes, PUT guarda la página.
+// El CONTENIDO legal es fijo de la plataforma (texto base interpolado
+// con los datos fiscales de la tienda): el dueño solo decide publicar/
+// ocultar cada página — no hay edición. El `body` es TEXTO PLANO que se
+// muestra literal (whitespace-pre-line), JAMÁS v-html.
+// OJO: 'returns' comparte path — GET lista solicitudes, PUT publica la página.
 const store = useStoreStore()
 const loading = ref(true)
 const errMsg = ref('')
-const pages = ref({}) // kind -> {kind,kind_label,title,body,is_published,uses_default,persisted}
+const pages = ref({}) // kind -> {kind,kind_label,title,body,is_published,version,updated_at,persisted}
 
 const activeKind = ref('terms')
-const editor = ref({ title: '', body: '', is_published: false })
-const saveBusy = ref(false)
+const pubBusy = ref(false)
 const saveMsg = ref('')
 const saveErr = ref('')
-const resetBusy = ref(false)
-const resetMsg = ref('')
-const confirmReset = ref(false)
 
 // ----- Bandeja de solicitudes de devolución -----
 const returns = ref({ results: [] })
@@ -44,7 +42,6 @@ async function loadPages() {
     const data = await legalPagesOwnerApi.list()
     const list = data?.pages || []
     pages.value = Object.fromEntries(list.map((p) => [p.kind, p]))
-    syncEditor()
   } catch (e) {
     errMsg.value = isNotFound(e)
       ? 'Todavía no tenés tu web creada: reservá tu link en «Mi web» para empezar a vender.'
@@ -54,48 +51,23 @@ async function loadPages() {
   }
 }
 
-function syncEditor() {
-  const p = pages.value[activeKind.value]
-  if (!p) return
-  editor.value = {
-    title: p.title || '',
-    body: p.body || '',
-    is_published: Boolean(p.is_published),
-  }
-}
 function selectKind(k) {
   activeKind.value = k
-  saveMsg.value = ''; saveErr.value = ''; confirmReset.value = false
-  syncEditor()
+  saveMsg.value = ''; saveErr.value = ''
 }
 
-async function savePage() {
-  saveBusy.value = true; saveMsg.value = ''; saveErr.value = ''
+async function togglePublish() {
+  const p = pages.value[activeKind.value]
+  if (!p || pubBusy.value) return
+  const target = !p.is_published
+  pubBusy.value = true; saveMsg.value = ''; saveErr.value = ''
   try {
-    const data = await legalPagesOwnerApi.save(activeKind.value, {
-      title: editor.value.title,
-      body: editor.value.body,
-      is_published: editor.value.is_published,
-    })
-    pages.value = { ...pages.value, [activeKind.value]: { ...pages.value[activeKind.value], ...data } }
-    syncEditor()
-    saveMsg.value = 'Página guardada.'
+    const data = await legalPagesOwnerApi.save(activeKind.value, { is_published: target })
+    pages.value = { ...pages.value, [activeKind.value]: { ...p, ...data } }
+    saveMsg.value = target ? 'Página publicada en tu web.' : 'Página despublicada.'
   } catch (e) {
     saveErr.value = apiErr(e)
-  } finally { saveBusy.value = false }
-}
-
-async function resetPage() {
-  if (!confirmReset.value) { confirmReset.value = true; return }
-  resetBusy.value = true; resetMsg.value = ''; saveErr.value = ''
-  try {
-    await legalPagesOwnerApi.reset(activeKind.value)
-    confirmReset.value = false
-    await loadPages()
-    resetMsg.value = 'Página restaurada al texto por defecto (quedó despublicada hasta que la publiques).'
-  } catch (e) {
-    saveErr.value = apiErr(e)
-  } finally { resetBusy.value = false }
+  } finally { pubBusy.value = false }
 }
 
 // ----- Devoluciones -----
@@ -145,10 +117,10 @@ watch(() => store.hasStore, (h) => { if (h) { loadPages(); loadReturns() } }, { 
     <div v-else-if="loading" class="card"><div class="empty-mini"><p>Cargando páginas…</p></div></div>
 
     <template v-else>
-      <!-- ===== Editores de páginas ===== -->
+      <!-- ===== Páginas legales (contenido fijo de la plataforma) ===== -->
       <section class="card">
         <h3><AppIcon name="file-text" :size="18" /> Páginas legales de tu web</h3>
-        <p class="hint" style="margin:-6px 0 12px">Se publican en tu sitio y las puede pedir el comprador al pagar o devolver. El texto admite variables como legal_name, cuit o fiscal_address que se completan solos.</p>
+        <p class="hint" style="margin:-6px 0 12px">Texto legal estándar de DAVENT, completado automáticamente con los datos fiscales de tu tienda. No es editable: si necesitás un cambio, escribinos por soporte.</p>
 
         <nav class="dsg-tabs" role="tablist" aria-label="Página legal">
           <button v-for="k in KINDS" :key="k" type="button" role="tab" class="dsg-tab" :class="{ active: activeKind === k }" :aria-selected="activeKind === k" @click="selectKind(k)">
@@ -158,33 +130,16 @@ watch(() => store.hasStore, (h) => { if (h) { loadPages(); loadReturns() } }, { 
         </nav>
 
         <div v-if="activePage" style="margin-top:14px">
-          <div class="grid-2">
-            <label class="field">
-              <span class="field-label">Título</span>
-              <input v-model="editor.title" class="input" maxlength="160" placeholder="Título de la página" />
-            </label>
-            <label class="check-item" style="align-self:end">
-              <input v-model="editor.is_published" type="checkbox" />
-              <span class="check-text"><strong>Publicada en tu web</strong><small>Si está apagada, la página no es visible para los compradores.</small></span>
-            </label>
-          </div>
-          <label class="field" style="margin-top:12px">
-            <span class="field-label">Contenido <span class="hint">({{ editor.body.length }}/20000)</span></span>
-            <textarea v-model="editor.body" class="textarea" rows="12" maxlength="20000" style="min-height:220px" placeholder="Texto plano. Podés usar variables legal_name, cuit, fiscal_address, store_name…"></textarea>
+          <h4 class="legal-title">{{ activePage.title }}</h4>
+          <div class="legal-readonly">{{ activePage.body }}</div>
+
+          <label class="check-item" style="margin-top:12px">
+            <input type="checkbox" :checked="activePage.is_published" :disabled="pubBusy" @change="togglePublish" />
+            <span class="check-text"><strong>Publicada en tu web</strong><small>Si está apagada, la página no es visible para los compradores.</small></span>
           </label>
-          <p v-if="activePage.uses_default" class="hint" style="margin-top:6px">Estás viendo el texto por defecto de DAVENT — guardalo para personalizarlo.</p>
 
           <AlertMessage v-if="saveErr" kind="error" :message="saveErr" />
           <AlertMessage v-else-if="saveMsg" kind="success" :message="saveMsg" />
-          <AlertMessage v-if="resetMsg" kind="success" :message="resetMsg" />
-
-          <div class="btn-row">
-            <button type="button" class="btn btn-auto" :disabled="saveBusy || !editor.body.trim()" @click="savePage">{{ saveBusy ? 'Guardando…' : 'Guardar página' }}</button>
-            <button v-if="activePage.persisted" type="button" class="btn ghost btn-auto" :disabled="resetBusy" @click="resetPage">
-              {{ confirmReset ? '¿Confirmar restaurar?' : 'Restaurar texto por defecto' }}
-            </button>
-            <button v-if="confirmReset" type="button" class="btn ghost btn-auto" @click="confirmReset = false">Cancelar</button>
-          </div>
         </div>
       </section>
 
@@ -258,4 +213,12 @@ watch(() => store.hasStore, (h) => { if (h) { loadPages(); loadReturns() } }, { 
 .hint { font-size: 12.5px; color: var(--muted); }
 .chip-row { display: flex; gap: 8px; flex-wrap: wrap; }
 .ret-actions { display: flex; gap: 6px; flex-wrap: wrap; }
+.legal-title { margin: 0 0 8px; font-size: 15px; font-weight: 700; }
+.legal-readonly {
+  max-height: 340px; overflow: auto; padding: 14px 16px;
+  border: 1px solid var(--line, rgba(0,0,0,.1)); border-radius: 10px;
+  background: var(--card-2, rgba(0,0,0,.02));
+  font-size: 13px; line-height: 1.65; white-space: pre-line;
+  color: var(--ink-2, inherit);
+}
 </style>

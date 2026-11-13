@@ -1780,8 +1780,9 @@ onBeforeUnmount(() => {
           </nav>
           <nav class="sp-foot-col" aria-label="Información del sitio">
             <p class="sp-foot-heading">Información</p>
-            <!-- Legales de la TIENDA (dominio legalpages — texto del dueño);
-                 las de DAVENT siguen abajo como links de plataforma. -->
+            <!-- Legales de la TIENDA (dominio legalpages — texto estándar
+                 de la plataforma); las de DAVENT siguen abajo como links
+                 de plataforma. -->
             <RouterLink :to="legalTo('terms')">Términos</RouterLink>
             <RouterLink :to="legalTo('privacy')">Privacidad</RouterLink>
             <RouterLink :to="legalTo('returns')">Arrepentimiento y devoluciones</RouterLink>

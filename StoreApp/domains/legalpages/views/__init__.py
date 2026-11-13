@@ -6,14 +6,12 @@ from .views import (
     ReturnRequestStatusView,
     ReturnRequestsView,
     StoreLegalPageDetailView,
-    StoreLegalPageResetView,
     StoreLegalPagesView,
 )
 
 __all__ = [
     'StoreLegalPagesView',
     'StoreLegalPageDetailView',
-    'StoreLegalPageResetView',
     'ReturnRequestsView',
     'ReturnRequestStatusView',
     'PublicLegalIndexView',
