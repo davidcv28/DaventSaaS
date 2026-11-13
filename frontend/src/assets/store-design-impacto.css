@@ -749,6 +749,11 @@
   background: var(--dz-accent);
   color: var(--dz-accent-ink);
 }
+/* La barra ya lleva Novedades: las anclas editoriales de landing saturan
+   la fila — Nosotros/Galería quedan en el drawer y el footer. */
+.store-page[data-design='impacto'][data-nav='announcement-rotator'] .sp-top-links a:is([data-anchor='nosotros'], [data-anchor='galeria']) {
+  display: none;
+}
 .store-page[data-design='impacto'][data-nav='announcement-rotator'] .sp-top .sp-icon-btn {
   border: 1.5px solid var(--dz-line-strong);
   border-radius: var(--dz-radius);

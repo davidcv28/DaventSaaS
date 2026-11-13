@@ -1509,10 +1509,11 @@ onBeforeUnmount(() => {
           <RouterLink v-if="!landingOff" :to="homeTo" :aria-current="shopCurrent === 'home' ? 'page' : undefined">Inicio</RouterLink>
           <RouterLink v-if="showServices" :to="servicesTo" :aria-current="shopCurrent === 'services' ? 'page' : undefined">Servicios</RouterLink>
           <RouterLink v-if="catalogPageOn" :to="catalogTo" :aria-current="shopCurrent === 'catalog' ? 'page' : undefined">Catálogo</RouterLink>
+          <RouterLink v-if="showFeed" :to="feedTo" :aria-current="shopCurrent === 'feed' ? 'page' : undefined">Novedades</RouterLink>
           <RouterLink v-if="showPlans" :to="plansTo" :aria-current="shopCurrent === 'plans' ? 'page' : undefined">Suscripciones</RouterLink>
-          <RouterLink v-if="hasAbout && !landingOff" :to="anchorTo('#nosotros')" :aria-current="shopCurrent === 'nosotros' ? 'location' : undefined" active-class="sp-anchor" exact-active-class="sp-anchor">Nosotros</RouterLink>
-          <RouterLink v-if="showGallery && landingHasGallery && !landingOff" :to="anchorTo('#galeria')" :aria-current="shopCurrent === 'galeria' ? 'location' : undefined" active-class="sp-anchor" exact-active-class="sp-anchor">Galería</RouterLink>
-          <RouterLink v-if="showContact && landingHasContact && !landingOff" :to="anchorTo('#contacto')" :aria-current="shopCurrent === 'contacto' ? 'location' : undefined" active-class="sp-anchor" exact-active-class="sp-anchor">Contacto</RouterLink>
+          <RouterLink v-if="hasAbout && !landingOff" :to="anchorTo('#nosotros')" data-anchor="nosotros" :aria-current="shopCurrent === 'nosotros' ? 'location' : undefined" active-class="sp-anchor" exact-active-class="sp-anchor">Nosotros</RouterLink>
+          <RouterLink v-if="showGallery && landingHasGallery && !landingOff" :to="anchorTo('#galeria')" data-anchor="galeria" :aria-current="shopCurrent === 'galeria' ? 'location' : undefined" active-class="sp-anchor" exact-active-class="sp-anchor">Galería</RouterLink>
+          <RouterLink v-if="showContact && landingHasContact && !landingOff" :to="anchorTo('#contacto')" data-anchor="contacto" :aria-current="shopCurrent === 'contacto' ? 'location' : undefined" active-class="sp-anchor" exact-active-class="sp-anchor">Contacto</RouterLink>
         </nav>
         <!-- Tienda Pro: el buscador del masthead también existe fuera del
              catálogo — Enter o la lupa navegan a /catalogo?q= -->
