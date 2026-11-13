@@ -1,0 +1,47 @@
+{
+  "verdict": "confirmed",
+  "fingerprint": "users-auth:login-csrf-no-origin-check",
+  "title": "No Origin/Referer check on platform session-issuing endpoints -> login CSRF (session donation) on /api/token/ and /api/auth/google/",
+  "description": "CustomTokenObtainPairView and GoogleAuthView plant the session cookies (davent_refresh httpOnly + davent_csrf) in the response with no validation of the request Origin/Referer and no pre-session anti-CSRF token. DRF APIViews are csrf_exempt (rest_framework/views.py:149), the endpoints accept application/x-www-form-urlencoded bodies (a plain cross-site HTML form POST parses into request.data), and SameSite=Lax does not prevent a top-level navigation POST response from storing Set-Cookie. An attacker auto-submitting a form with THEIR credentials (password, or a Google credential minted with the public client_id from /api/config/) leaves the victim's browser holding the attacker's refresh+CSRF cookies; the SPA's silent refresh then logs the victim into the attacker's account, and everything the victim subsequently enters (billing PII, store content) is visible to the attacker. The buyer-side auth implements exactly this defense — _session_origin_allowed is invoked on register/login/google — but it was never ported to the platform auth views.",
+  "root_cause": "Missing origin binding on cookie-session issuance: neither CustomTokenObtainPairView.post (auth_views.py:232) nor GoogleAuthView.post/_social_session_response (auth_views.py:435-460,529-538) checks Origin/Referer against the request host or trusted origins, unlike the sibling customer endpoints.",
+  "intended_behavior": "Session-issuing endpoints must reject cross-site POSTs (Origin/Referer allowlist = request host + CORS_ALLOWED_ORIGINS + CSRF_TRUSTED_ORIGINS), matching _session_origin_allowed semantics used for customer auth.",
+  "trace": [
+    {"kind": "entrypoint", "file": "DaventProject/urls.py", "line": 110, "scope": "urlpatterns", "description": "POST /api/token/ → CustomTokenObtainPairView; POST /api/auth/google/ → GoogleAuthView (:130) — both issue the cookie session"},
+    {"kind": "propagation", "file": "AdminApp/domains/users/views/auth_views.py", "line": 232, "scope": "CustomTokenObtainPairView.post", "description": "post() performs lockout+auth and sets cookies — no Origin/Referer validation anywhere in AdminApp auth (grep for Origin/Referer/Sec-Fetch across the domain returns only unrelated comments)"},
+    {"kind": "sink", "file": "AdminApp/domains/users/views/auth_views.py", "line": 287, "scope": "CustomTokenObtainPairView.post / _set_refresh_cookie", "description": "_set_refresh_cookie/_set_csrf_cookie (also auth_views.py:458-459 for Google) store the attacker's session in the victim's browser; SPA silent refresh (frontend/src/api/http.js:163-167) then authenticates as the attacker"}
+  ],
+  "evidence": [
+    {"file": "AdminApp/domains/users/views/auth_views.py", "line": 287, "description": "Cookies set unconditionally on 200 — no origin gate precedes credential processing or cookie issuance"},
+    {"file": "AdminApp/domains/users/views/auth_views.py", "line": 207, "description": "_require_csrf double-submit guards only refresh/logout, not session issuance"},
+    {"file": "StoreApp/domains/customers/views/auth_views.py", "line": 114, "description": "_session_origin_allowed implements the missing defense ('Anti login-CSRF … Set-Cookie aplica igual aunque SameSite=Lax') and is invoked at :232, :260, :532"},
+    {"file": "venv/Lib/site-packages/rest_framework/views.py", "line": 149, "description": "APIView.as_view returns csrf_exempt(view) — Django CsrfViewMiddleware (settings.py:253) does not apply; JWT auth means no Django session CSRF either"},
+    {"file": "frontend/src/api/http.js", "line": 89, "description": "hasSessionCookie() keys on the JS-readable davent_csrf hint; refreshCall (:163-167) posts /token/refresh/ withCredentials + X-CSRFToken — the planted cookie pair satisfies the double-submit"},
+    {"file": "AdminApp/domains/users/views/auth_views.py", "line": 181, "description": "_set_refresh_cookie/_set_csrf_cookie/_set_remember_cookie explicitly set samesite='Lax' (:181, :192, :199); SameSite governs sending, not setting, on a top-level navigation response"},
+    {"file": "DaventProject/middleware.py", "line": 205, "description": "AdminLoginRateLimitMiddleware.guarded_paths covers only the Django admin login/password-reset paths; the other project middlewares add request IDs, headers, canonical host and body caps — no Origin/Referer/session-origin check for /api/token/"},
+    {"file": "frontend/src/stores/auth.store.js", "line": 230, "description": "initSession() calls ensureSession() on boot (main.js:74 calls auth.initSession() before render); ensureSession()->restoreSession()->tryRefresh()->refreshCall consumes the planted davent_csrf/davent_refresh pair automatically"}
+  ],
+  "conditions": [
+    {"kind": "user_interaction", "description": "Victim must visit an attacker-controlled page that auto-submits a cross-site form POST, then use the SPA while unknowingly logged into the attacker's account."},
+    {"kind": "network_routing", "description": "API and SPA must be served on the same host (path-alias or same-origin deploy — both the compose/nginx and Render/whitenoise modes serve them same-origin) so davent_csrf is readable via document.cookie and the planted cookies are first-party."},
+    {"kind": "authentication_level", "description": "Attacker needs a valid platform account (open registration) whose credentials are embedded in the auto-submitted form."}
+  ],
+  "execution": {
+    "attacker_perspective": "Authenticated platform user aiming to make victims unknowingly operate inside the attacker's account.",
+    "payloads": [
+      "POST /api/token/ (cross-site, Content-Type: application/x-www-form-urlencoded, body: username=<attacker>&password=<pw>&remember=true)",
+      "equivalent for POST /api/auth/google/ {credential: <attacker's Google ID token minted with the public client_id from GET /api/config/>}"
+    ],
+    "instructions": [
+      "1. Host a page with <form method='POST' action='https://<platform>/api/token/'> auto-submitting the attacker's username/password.",
+      "2. Victim visits the page; the top-level navigation POST returns 200 JSON and Set-Cookie stores davent_refresh (httpOnly, Path=/api/token/) + davent_csrf (Path=/) as first-party cookies — SameSite=Lax does not block setting.",
+      "3. Victim later opens the SPA; hasSessionCookie() sees davent_csrf and refreshCall posts /api/token/refresh/ with X-CSRFToken — the double-submit pair matches, rotation succeeds, and the SPA holds the attacker's access token.",
+      "4. Everything the victim enters (billing PII, store content) lands in the attacker's account."
+    ],
+    "observed_result": "Source-traced: no Origin/Referer check exists on either session-issuing endpoint or in DaventProject/middleware.py; DRF APIView is csrf_exempt; FormParser accepts urlencoded bodies; cookies are set unconditionally on 200; the frontend's silent-refresh chain consumes exactly those cookies and the planted CSRF pair passes _require_csrf."
+  },
+  "remediation": {
+    "strategy": "Port the sibling _session_origin_allowed check into every session-issuing endpoint (CustomTokenObtainPairView.post and GoogleAuthView.post) before credentials are processed and cookies set; allow only request-host, CORS_ALLOWED_ORIGINS and CSRF_TRUSTED_ORIGINS origins, permitting absent Origin for non-browser clients."
+  },
+  "severity": {"likelihood": {"score": "medium", "reason": "Requires victim interaction (visiting an attacker page then using the SPA) but no technical barrier — a single auto-submitted form suffices; classic login-CSRF preconditions."}, "impact": {"score": "low", "reason": "Victim unknowingly uses the attacker's account — data they enter (billing PII, store content) is exposed to the attacker; no takeover of the victim's own account and no direct credential theft."}, "overall_severity": "low"},
+  "confidence": {"score": "high", "reason": "All source elements verified: absent origin check, csrf_exempt APIView, form parsing, unconditional cookie issuance, frontend silent-refresh consumption, project middleware has no origin gate, and the sibling implementation proving the intended control; browser cookie semantics are spec-defined."}
+}

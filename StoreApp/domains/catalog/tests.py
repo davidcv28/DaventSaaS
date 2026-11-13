@@ -189,6 +189,68 @@ class TaxonomyValidationTests(TestCase):
         self.assertEqual(response.status_code, 400)
 
 
+class CatalogQuotaTests(TestCase):
+    """
+    Cupos defensivos de taxonomía y descuentos: categories/brands/discounts
+    ya no son colecciones ilimitadas del dueño — cada create se chequea
+    contra su cupo bajo lock de la fila de la tienda (eran el amplificador
+    de la respuesta pública del catálogo).
+    """
+
+    def setUp(self):
+        cache.clear()
+
+    def _client(self):
+        user, profile   =   _make_user('duenio')
+        _grant(profile, has_public_link = True, has_discounts = True)
+        store           =   Store.objects.create(user = profile, slug = 'mi-tienda')
+        client          =   APIClient()
+        client.force_authenticate(user = user)
+        return client, store
+
+    def test_category_quota_boundary(self):
+        from StoreApp.domains.catalog.services.services import TAXONOMY_MAX
+        client, store   =   self._client()
+        Category.objects.bulk_create(
+            [Category(store = store, name = f'Cat {i:03d}') for i in range(TAXONOMY_MAX - 1)])
+        #Uno por debajo del tope todavía entra.
+        ok          =   client.post(CATEGORIES_URL, {'name': 'Última'}, format = 'json')
+        self.assertEqual(ok.status_code, 201)
+        #Lleno: la siguiente create responde 403 (no 400 ni 500).
+        Category.objects.create(store = store, name = 'Overflow')
+        response    =   client.post(CATEGORIES_URL, {'name': 'Sobrante'}, format = 'json')
+        self.assertEqual(response.status_code, 403)
+
+    def test_brand_quota_boundary(self):
+        from StoreApp.domains.catalog.services.services import TAXONOMY_MAX
+        client, store   =   self._client()
+        Brand.objects.bulk_create(
+            [Brand(store = store, name = f'Marca {i:03d}') for i in range(TAXONOMY_MAX - 1)])
+        ok          =   client.post(BRANDS_URL, {'name': 'Última'}, format = 'json')
+        self.assertEqual(ok.status_code, 201)
+        Brand.objects.create(store = store, name = 'Overflow')
+        response    =   client.post(BRANDS_URL, {'name': 'Sobrante'}, format = 'json')
+        self.assertEqual(response.status_code, 403)
+
+    def test_discount_quota_boundary(self):
+        from StoreApp.domains.catalog.services.services import DISCOUNTS_MAX
+        client, store   =   self._client()
+        Discount.objects.bulk_create(
+            [Discount(store = store, name = f'Disc {i:02d}', percent = 10,
+                      scope = 'all', starts_at = timezone.now())
+             for i in range(DISCOUNTS_MAX - 1)])
+        ok          =   client.post(DISCOUNTS_URL, {
+            'name': 'Promo', 'percent': 25, 'scope': 'all',
+            'starts_at': '2030-01-01T00:00:00Z'}, format = 'json')
+        self.assertEqual(ok.status_code, 201)
+        Discount.objects.create(store = store, name = 'Overflow', percent = 10,
+                                scope = 'all', starts_at = timezone.now())
+        response    =   client.post(DISCOUNTS_URL, {
+            'name': 'Sobrante', 'percent': 25, 'scope': 'all',
+            'starts_at': '2030-01-01T00:00:00Z'}, format = 'json')
+        self.assertEqual(response.status_code, 403)
+
+
 class BrandImageTests(TestCase):
     """Logo de marca: upload multipart -> WebP con alfa, cuota y borrado."""
 
@@ -278,7 +340,10 @@ class BrandImageTests(TestCase):
         _, profile      =   _make_user('duenio')
         _grant(profile, has_public_link = True)
         store           =   Store.objects.create(user = profile, slug = 'mi-tienda', is_published = True)
-        Brand.objects.create(store = store, name = 'Nike', image_key = 'stores/1/brands/logo.webp')
+        brand           =   Brand.objects.create(store = store, name = 'Nike', image_key = 'stores/1/brands/logo.webp')
+        #La taxonomía vacía no viaja al público: la marca necesita un
+        #producto activo para aparecer en el payload del catálogo.
+        Product.objects.create(store = store, name = 'Zapatilla', price = 10, brand = brand)
         cfg, val, norm, put, delete, urls   =   self._storage_patches()
         with urls:
             response    =   APIClient().get(PUBLIC_CATALOG.format(slug = 'mi-tienda'))

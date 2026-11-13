@@ -22,6 +22,7 @@ from PIL import Image
 from rest_framework.test import APIClient
 
 from AdminApp.domains.chat.models import ChatMessage, ChatPresence, ChatThread
+from AdminApp.domains.chat.services.attachments import CHAT_ATTACHMENTS_MAX_PER_SENDER
 from AdminApp.domains.suscriptions.models import Suscription, SuscriptionPlan
 from AdminApp.domains.users.models import UserProfile
 from SuscriptionApp.domains.benefits.models import Benefit, PlanBenefit
@@ -402,6 +403,61 @@ class ChatAttachmentTests(TestCase):
         self.assertEqual(response.status_code, 201)
         self.assertEqual(response.data['message']['body'], 'mirá esta captura')
         self.assertTrue(response.data['message']['image_url'])
+
+    def test_attachment_quota_rejects_over_limit(self):
+        #Cupo por remitente (CHAT_ATTACHMENTS_MAX_PER_SENDER): sin él el
+        #storage crecía sin cota — cada imagen se normaliza pero el bucket
+        #no tiene límite ni alerta.
+        thread      =   ChatThread.objects.create(customer = self.user)
+        ChatMessage.objects.bulk_create([
+            ChatMessage(thread = thread, sender = self.user, from_staff = False,
+                        body = '', image_key = f'chat/{thread.id}/f{i}.webp')
+            for i in range(CHAT_ATTACHMENTS_MAX_PER_SENDER)
+        ])
+        response    =   _client(self.user).post(CHAT_SEND_URL, {'image': self._png()}, format = 'multipart')
+        self.assertEqual(response.status_code, 400)
+        self.assertIn('límite', str(response.data))
+        self.assertEqual(ChatMessage.objects.count(), CHAT_ATTACHMENTS_MAX_PER_SENDER)
+
+
+class ChatStaffRosterTests(TestCase):
+    """
+    El roster de soporte que ve el cliente no filtra admins ni logins:
+    superusers e inactivos quedan fuera y el nombre nunca cae al username.
+    """
+
+    def setUp(self):
+        cache.clear()
+
+    def test_roster_excludes_superusers_inactive_and_username_fallback(self):
+        user, profile   =   _make_user('cliente')
+        _grant_chat(profile)
+        agent, _        =   _make_user('agente', staff = True)
+        agent.first_name =   'Ana'
+        agent.last_name  =   'Soporte'
+        agent.save(update_fields = ['first_name', 'last_name'])
+        #Superuser: es admin, no agente de soporte — fuera del roster.
+        User.objects.create_user(
+            username = 'rootx', email = 'rootx@gmail.com',
+            password = 'Xq7#mP2vL9bT', is_staff = True, is_superuser = True,
+        )
+        #Inactivo: no atiende — fuera.
+        ghost, _        =   _make_user('fantasma', staff = True)
+        ghost.is_active =   False
+        ghost.save(update_fields = ['is_active'])
+        #Staff sin nombre cargado: jamás expone el username como fallback.
+        _make_user('sin-nombre', staff = True)
+        response        =   _client(user).get(CHAT_URL)
+        self.assertEqual(response.status_code, 200)
+        staff           =   response.data['staff']
+        ids             =   [s['id'] for s in staff]
+        self.assertIn(agent.id, ids)
+        self.assertNotIn(User.objects.get(username = 'rootx').id, ids)
+        self.assertNotIn(ghost.id, ids)
+        names           =   [s['name'] for s in staff]
+        self.assertNotIn('sin-nombre', names)
+        self.assertNotIn('rootx', names)
+        self.assertNotIn('fantasma', names)
 
 
 ASSISTANT_URL       =   '/api/assistant/'

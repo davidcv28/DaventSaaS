@@ -1,6 +1,7 @@
 from rest_framework import status, viewsets
 from rest_framework.response import Response
-from rest_framework.throttling import AnonRateThrottle
+
+from DaventProject.throttling import ResilientUserRateThrottle
 
 """
 
@@ -11,10 +12,14 @@ Creamos la base de los viewsets que utilizaremos del dominio Legal
 #=========================================
 # CONTENT REPORT THROTTLE (denuncia pública -> email a legal: antispam)
 #=========================================
-class ContentReportRateThrottle(AnonRateThrottle):
+class ContentReportRateThrottle(ResilientUserRateThrottle):
     #Cada create válido dispara un correo a LEGAL_REPORTS_EMAIL: sin scope
     #propio quedaba limitado solo por el anon genérico (100/día) — vector
     #de email-bombing al buzón legal. Scope 'content_report' en settings.
+    #ResilientUserRateThrottle (no AnonRateThrottle): con AnonRateThrottle
+    #get_cache_key devolvía None para requests autenticados y el límite
+    #quedaba desactivado — ahora keyea por user.pk si hay auth y por IP
+    #si no, y falla abierto si el cache cae (consistente con el resto).
     scope   =   'content_report'
 
 #=========================================

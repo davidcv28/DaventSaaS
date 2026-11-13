@@ -46,6 +46,7 @@ import { fetchChat, fetchChatMessages, sendChatMessage, chatHeartbeat } from '..
 import { fetchNotifications, markNotificationRead, markReviewsSeen, fetchChangelog } from '../api/notifications.api.js'
 import { fetchAssistant, sendAssistant } from '../api/assistant.api.js'
 import { extractApiError } from '../api/http.js'
+import { isMpCheckoutUrl, mpCheckoutUrl } from '../utils/mpCheckout.js'
 import { env } from '../config/env.js'
 import {
   TAX_CONDITIONS, validatePassword, validateEmail, validateName,
@@ -3807,9 +3808,10 @@ async function planAction(p) {
         billing.notice = `Cambio a ${p.name} programado: se aplica con el próximo débito automático.`
         return
       }
-      const renewUrl = data?.checkout_url || data?.init_point || data?.sandbox_init_point
-      if (!renewUrl) {
+      const renewUrl = mpCheckoutUrl(data)
+      if (!renewUrl || !isMpCheckoutUrl(renewUrl)) {
         checkoutTab?.close()
+        payments.lastError = 'Enlace de pago no válido.'
         if (payments.billingRequired.length) openBilling({ kind: 'plan', plan: p })
         return
       }
@@ -3820,8 +3822,9 @@ async function planAction(p) {
     }
     // Todos los planes son pagos: la suscripción se establece cuando el pago se acredita.
     const url = await payments.checkout({ suscription: billing.subscription?.id ?? null, planPk: p.id })
-    if (!url) {
+    if (!url || !isMpCheckoutUrl(url)) {
       checkoutTab?.close()
+      payments.lastError = 'Enlace de pago no válido.'
       if (payments.billingRequired.length) openBilling({ kind: 'plan', plan: p })
       return
     }
@@ -3864,9 +3867,10 @@ async function activateAutoRenew() {
       showRenewalActivated()
       return
     }
-    const url = data?.checkout_url || data?.init_point || data?.sandbox_init_point
-    if (!url) {
+    const url = mpCheckoutUrl(data)
+    if (!url || !isMpCheckoutUrl(url)) {
       tab?.close()
+      payments.lastError = 'Enlace de pago no válido.'
       if (payments.billingRequired.length) openBilling({ kind: 'renew' })
       return
     }

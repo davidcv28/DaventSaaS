@@ -6,6 +6,7 @@ import uuid
 
 from django.conf import settings
 from django.http import HttpResponse, HttpResponsePermanentRedirect
+from django.middleware.gzip import GZipMiddleware
 
 from DaventProject.cache_utils import (
     CacheUnavailable,
@@ -139,10 +140,30 @@ class RequestIdMiddleware:
             response['Retry-After'] =   '60'
         if request.path.startswith('/api/'):
             response.setdefault('X-Robots-Tag', 'noindex, nofollow')
+        #request.path viene percent-decoded: un %0a/%0d embebido llega
+        #como salto de línea real y forja líneas de log — se sanitiza
+        #antes de escribir (método igual, por las dudas).
+        safe_path   =   re.sub(r'[\x00-\x1f\x7f-\x9f]', '?', request.path)
+        safe_method =   re.sub(r'[\x00-\x1f\x7f-\x9f]', '?', request.method or '')
         logger.info('request id=%s %s %s -> %s (%.0fms)',
-                    request.request_id, request.method, request.path,
+                    request.request_id, safe_method, safe_path,
                     response.status_code, (time.monotonic() - started) * 1000)
         return response
+
+
+class SSEAwareGZipMiddleware(GZipMiddleware):
+    """
+    GZipMiddleware estándar salvo para `text/event-stream`: en Django 5.2
+    compress_sequence escribe cada chunk del stream sin flush(), así que
+    zlib buffera los eventos SSE hasta ~17 KB o el cierre del stream —
+    los heartbeats y notificaciones en vivo nunca llegan a tiempo (el
+    endpoint de notificaciones del comprador depende de entrega por
+    chunk). El resto de respuestas se comprime igual que antes.
+    """
+    def process_response(self, request, response):
+        if 'text/event-stream' in (response.headers.get('Content-Type') or ''):
+            return response
+        return super().process_response(request, response)
 
 
 class SecurityHeadersMiddleware:

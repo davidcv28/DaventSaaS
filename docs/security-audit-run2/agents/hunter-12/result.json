@@ -1,0 +1,106 @@
+{
+  "agent": "hunter-12",
+  "coverage_id": "wave2",
+  "disposition": "candidate",
+  "candidate_fingerprints": [
+    "public-catalog-and-design:auth-read-exposes-premium-pattern-markup",
+    "public-catalog-and-design:preview-render-no-dedicated-throttle-cache"
+  ],
+  "unresolved": [
+    "Whether premium/imported DesignPattern markup (html/css/js) is intended to be readable/previewable by every authenticated account; frontend shows all designs but backend selection is plan-gated.",
+    "Whether the global user throttle (1000/day) is sufficient for the per-request preview render; requires benchmarking and production capacity data.",
+    "StoreCustomization.template/template_draft are CharField(max_length=12) while DesignPattern.slug allows 120 chars; pattern slugs longer than 12 chars would pass the existence check but cannot be persisted. Functional mismatch, not a security finding.",
+    "Actual deployment behavior of proxies, Redis cache, and throttle fail-open cannot be confirmed from source alone."
+  ],
+  "checks": [
+    {
+      "agent_id": "hunter-12",
+      "reviewed_paths": ["SuscriptionApp/domains/benefits/views/viewset_config.py", "SuscriptionApp/domains/benefits/views/viewset_base.py", "SuscriptionApp/domains/benefits/serializers/serializers.py", "SuscriptionApp/domains/benefits/models/models.py", "SuscriptionApp/domains/benefits/urls/urls.py", "DaventProject/urls.py", "AdminApp/domains/suscriptions/views/viewset_config.py", "AdminApp/domains/suscriptions/serializers/serializers.py", "AdminApp/domains/suscriptions/serializers/config_fields.py", "frontend/src/api/billing.api.js"],
+      "invariant": "public plan catalog exposes only intended marketing fields, no write surface",
+      "method": "source",
+      "result": "pass: GET /api/plans/ AllowAny read-only by construction (GenericViewSet list/retrieve only); PlanCatalogSerializer exposes public fields + computed benefits; fixed ordering; page_size<=200; is_trial intentionally public for legacy benefit resolution but excluded from selection paths.",
+      "artifact": null
+    },
+    {
+      "agent_id": "hunter-12",
+      "reviewed_paths": ["SuscriptionApp/domains/benefits/views/viewset_base.py", "SuscriptionApp/domains/benefits/views/viewset_config.py", "SuscriptionApp/domains/benefits/serializers/serializers.py", "SuscriptionApp/domains/benefits/models/models.py", "AdminApp/domains/suscriptions/serializers/config_fields.py"],
+      "invariant": "no accidental write exposure on public catalog",
+      "method": "source",
+      "result": "pass: no create/update/destroy methods or config keys; serializer fields read_only or SerializerMethodField.",
+      "artifact": null
+    },
+    {
+      "agent_id": "hunter-12",
+      "reviewed_paths": ["StoreApp/domains/design/urls/urls.py", "StoreApp/domains/design/views/viewset_base.py", "StoreApp/domains/design/views/viewset.py", "StoreApp/domains/design/serializers/serializers.py", "StoreApp/domains/design/models/models.py", "StoreApp/domains/design/tests.py", "DaventProject/settings.py"],
+      "invariant": "design catalog writes staff-only, reads active-only for non-staff",
+      "method": "source",
+      "result": "pass: get_permissions AllowAny only for 'default', IsAdminUser for writes, IsAuthenticated otherwise; non-staff queryset is_active=True; serializers constrain code fields CODE_MAX, tokens<=80 keys, clean_style_effects/variables/icon_set; tests confirm anon 401, owner write 403.",
+      "artifact": null
+    },
+    {
+      "agent_id": "hunter-12",
+      "reviewed_paths": ["StoreApp/domains/design/views/viewset_base.py", "StoreApp/domains/design/views/viewset.py", "StoreApp/domains/design/serializers/serializers.py", "StoreApp/domains/design/models/models.py", "StoreApp/domains/design/services/pattern_preview.py", "StoreApp/domains/stores/services/services.py", "frontend/src/components/design/DesignPickers.vue", "frontend/src/api/design.api.js"],
+      "invariant": "pattern retrieve/preview gated by plan entitlement like selection",
+      "method": "source",
+      "result": "partial: retrieve uses DesignPatternSerializer incl html/css/js; preview returns rendered html/css + raw pattern.js; both reachable by ANY authenticated account — no tier/benefit check vs allowed_templates_of. Frontend designApi.pattern(slug) has no call sites (uses listPatterns + patternPreview).",
+      "artifact": null
+    },
+    {
+      "agent_id": "hunter-12",
+      "reviewed_paths": ["DaventProject/settings.py", "DaventProject/throttling.py", "StoreApp/domains/design/views/viewset_base.py", "StoreApp/domains/design/views/viewset.py", "StoreApp/domains/design/services/pattern_preview.py", "StoreApp/domains/design/serializers/serializers.py", "DaventProject/pagination.py"],
+      "invariant": "preview render cost bounded by dedicated throttle or cache",
+      "method": "source",
+      "result": "partial: preview inherits ResilientUserRateThrottle 1000/day; no dedicated scope or cache; single-request bounded by CODE_MAX=200k per field; PublicReadThrottle is NOT dead here (custom get_cache_key pinned-IP per action).",
+      "artifact": null
+    },
+    {
+      "agent_id": "hunter-12",
+      "reviewed_paths": ["StoreApp/domains/stores/views/viewset.py", "StoreApp/domains/stores/serializers/serializers.py", "StoreApp/domains/stores/models/models.py", "StoreApp/domains/stores/site_theme.py", "StoreApp/domains/stores/services/services.py", "StoreApp/domains/stores/services/sync.py", "StoreApp/domains/design/services/pattern_render.py", "StoreApp/domains/stores/tests.py"],
+      "invariant": "store design selection owner-scoped and plan-gated at write/publish/restore/render",
+      "method": "source",
+      "result": "pass: owner-scoped get_object_or_404, has_customization on writes, allowed_templates_of filter on template fields, publish/restore re-check, render_store_pattern re-checks stored template vs current plan with default fallback. Tests cover restore isolation.",
+      "artifact": null
+    },
+    {
+      "agent_id": "hunter-12",
+      "reviewed_paths": ["StoreApp/domains/stores/views/viewset.py", "StoreApp/domains/stores/serializers/serializers.py", "StoreApp/domains/stores/services/sync.py", "StoreApp/domains/design/services/pattern_render.py", "StoreApp/domains/stores/tests.py"],
+      "invariant": "no cross-store design-selection IDOR",
+      "method": "source",
+      "result": "pass: customization resolved from request.user; StudioVersion restore scoped (store,version_id) 404 foreign; public render resolves by slug with own benefits.",
+      "artifact": null
+    },
+    {
+      "agent_id": "hunter-12",
+      "reviewed_paths": ["StoreApp/domains/design/services/pattern_document.py", "StoreApp/domains/design/services/pattern_preview.py", "StoreApp/domains/design/models/models.py", "StoreApp/domains/design/services/pattern_render.py", "StoreApp/domains/stores/views/viewset.py", "frontend/src/components/design/DesignPickers.vue"],
+      "invariant": "pattern markup sanitized before serving as document/preview/srcdoc",
+      "method": "source",
+      "result": "pass: sanitize_markup strips scripts/handlers/dangerous URLs; sanitize_css blocks </style breakout; render escapes non-list vars; preview iframe sandbox no allow-same-origin; public document nonce CSP + XFO SAMEORIGIN. Residual: preview 'accent' only requires '#' prefix (not full hex validation); preview 'style' lookup doesn't filter is_active.",
+      "artifact": null
+    },
+    {
+      "agent_id": "hunter-12",
+      "reviewed_paths": ["StoreApp/domains/design/views/catalog.py", "StoreApp/domains/design/signals.py", "StoreApp/domains/design/views/viewset_base.py", "DaventProject/pagination.py", "DaventProject/cache_utils.py"],
+      "invariant": "public design catalog bounded and cache-consistent",
+      "method": "source",
+      "result": "pass: AllowAny+PublicReadThrottle, active-only, epoch-keyed 300s cache, signals bump epoch on save/delete, filters limited, page_size<=200.",
+      "artifact": null
+    }
+  ],
+  "candidates": [
+    {"fingerprint": "public-catalog-and-design:auth-read-exposes-premium-pattern-markup", "proposed_verdict": "needs_validation", "severity_hint": "medium", "confidence": "medium", "title": "Authenticated design catalog exposes premium pattern markup and preview to all authenticated users"},
+    {"fingerprint": "public-catalog-and-design:preview-render-no-dedicated-throttle-cache", "proposed_verdict": "needs_validation", "severity_hint": "low", "confidence": "low", "title": "Design pattern preview performs per-request server-side render with no dedicated throttle or cache"}
+  ],
+  "hardening": [
+    "Gate design pattern retrieve/preview by plan entitlement or return markup-free serializer to non-entitled users.",
+    "Add dedicated throttle scope and/or server-side cache for preview (key by pattern revision+theme+style, not accent).",
+    "Validate preview params: accent must match HEX_COLOR_RE; style limited to is_active.",
+    "Constrain public default/catalog serializers; consider is_default only for base-tier patterns.",
+    "Add explicit public allowlist for benefit codes in PlanCatalogSerializer.get_benefits.",
+    "Keep PublicReadThrottle's pinned-IP get_cache_key property if refactoring throttles."
+  ],
+  "uncovered": [
+    "Store customization publish/draft/version endpoints beyond design-selection whitelist (partially covered by other units).",
+    "Django admin and management commands writing DesignPattern/DesignStyle (trusted staff paths).",
+    "Other /api/stores/public/<slug>/pattern/* endpoints reviewed only for plan gating/sanitization."
+  ]
+}

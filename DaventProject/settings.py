@@ -83,6 +83,10 @@ REST_FRAMEWORK = {
         #scope propio — compartir el 'anon' de 100/día saturaba visitantes
         #reales detrás de CGNAT (carriers móviles con IP compartida).
         'public_read': '1000/hour',
+        #SSE de notificaciones del comprador: una conexión NO es una
+        #lectura — ocupa un gthread ~50s. Bucket propio y acotado para
+        #que un solo origen no pueda saturar los workers del API.
+        'customer_notifications_stream': '240/hour',
         'login': '5/min',
         #Renovación de JWT por cookie (cada pestaña renueva al expirar el access;
         #holgado para NAT oficinas pero acota brute-force del cookie de sesión).
@@ -238,7 +242,7 @@ MIDDLEWARE = [
     #web pública): ~100 KB de HTML/CSS a ~15 KB. Va antes que los middlewares
     #que pueden escribir el body y después de Security para no comprimir
     #redirects/errores tempranos.
-    'django.middleware.gzip.GZipMiddleware',
+    'DaventProject.middleware.SSEAwareGZipMiddleware',
     'DaventProject.middleware.AdminLoginRateLimitMiddleware',
     #CSP de respaldo para HTML servido por Django (admin, browsable API):
     #rellena el header solo si ninguna capa previa lo seteó (SPA/nginx).

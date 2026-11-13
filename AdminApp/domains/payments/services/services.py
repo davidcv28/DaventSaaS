@@ -266,6 +266,38 @@ def UpdateRevenueRollupsQuery(payment, sign = 1):
 #APPLY PENDING PLAN QUERY (establece el plan una vez acreditado el pago)
 #PRECONDICIÓN: llamar dentro de transaction.atomic — la fila se bloquea con
 #select_for_update para serializar extensiones concurrentes del plan.
+def _plan_paid_for(suscription, paid_amount):
+    """
+    Plan que el monto cobrado acredita. `paid_amount` ya fue validado
+    contra accepted_amounts en CreatePaymentQuery (pending_charge se
+    resuelve aparte como prorrateo): acá solo importan precios de plan.
+    Empate de precio entre planes: pending_plan > plan vigente > menor pk
+    (determinista). None si ningún plan coincide — no debería pasar tras
+    la validación, y el caller cae al comportamiento anterior.
+    """
+    try:
+        amount  =   Decimal(str(paid_amount))
+    except Exception:
+        return None
+    plans   =   list(SuscriptionPlan.objects.filter(is_trial = False))
+    seen    =   {p.pk for p in plans}
+    #El plan vigente puede ser trial histórico o un plan despublicado:
+    #su precio también era aceptado — se incluye si falta en la lista.
+    for extra in (suscription.pending_plan_suscription, suscription.plan_suscription):
+        if extra is not None and extra.pk not in seen:
+            plans.append(extra)
+            seen.add(extra.pk)
+    matches =   [p for p in plans if Decimal(str(p.price)) == amount]
+    if not matches:
+        return None
+    def _rank(plan):
+        if suscription.pending_plan_suscription_id == plan.pk:
+            return 0
+        if suscription.plan_suscription_id == plan.pk:
+            return 1
+        return 2
+    return min(matches, key = lambda p: (_rank(p), p.pk))
+
 def ApplyPendingPlanQuery(suscription, renew = False, paid_amount = None, payment = None):
     suscription         =   Suscription.objects.select_for_update().get(pk = suscription.pk)
     pending_plan        =   suscription.pending_plan_suscription
@@ -284,10 +316,21 @@ def ApplyPendingPlanQuery(suscription, renew = False, paid_amount = None, paymen
         and paid_amount is not None
         and Decimal(str(paid_amount)) == suscription.pending_charge
     )
-    if pending_plan:
-        suscription.plan_suscription            =   pending_plan
-        suscription.pending_plan_suscription    =   None
-        update_fields                          +=   ['plan_suscription', 'pending_plan_suscription']
+    #PLAN ACREDITADO = el plan que el monto pagado compra, nunca un plan
+    #más caro que el cobrado: una preferencia/débito MP emitido antes del
+    #cambio de plan conserva el monto viejo y, sin este binding, aplicaba
+    #pending_plan (el plan caro) por un pago del plan barato. Si el pago
+    #fue de OTRO plan, pending_plan queda pendiente hasta que llegue un
+    #cobro a su precio (prorrateo o precio completo).
+    granted_plan        =   pending_plan
+    if not prorated and paid_amount is not None:
+        granted_plan    =   _plan_paid_for(suscription, paid_amount) or pending_plan
+    if granted_plan is not None:
+        suscription.plan_suscription            =   granted_plan
+        update_fields                          +=   ['plan_suscription']
+        if pending_plan is not None and granted_plan.pk == pending_plan.pk:
+            suscription.pending_plan_suscription    =   None
+            update_fields                          +=   ['pending_plan_suscription']
     suscription.pending_charge    =   None
     #Todo cobro aprobado a precio completo renueva por 30 días desde el
     #cobro (máx. 30). max() con el end_date vigente: un pago viejo

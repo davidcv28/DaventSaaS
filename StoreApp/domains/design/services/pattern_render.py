@@ -197,6 +197,7 @@ def _page_flags(store, customization):
     """
     from StoreApp.domains.feed.services import feed_enabled
     from StoreApp.domains.services.services import effective_site_templates
+    from StoreApp.domains.stores.services import profile_has_benefit
 
     pages = set(effective_site_templates(store))
     def on(name, default = True):
@@ -233,7 +234,10 @@ def _page_flags(store, customization):
         'announcements': on('show_announcements'),
         'video':        on('show_video'),
         'about':        on('show_about'),
-        'location':     on('show_location'),
+        #La zona de ubicación exige el beneficio del plan además del
+        #toggle del dueño: sin has_location_map ni el flag ni la
+        #dirección pueden viajar al documento público.
+        'location':     on('show_location') and profile_has_benefit(store.user, 'has_location_map'),
         'offers':       on('show_offers'),
         'brands':       on('show_brands'),
         'countdown':    on('show_countdown'),
@@ -1139,20 +1143,28 @@ def build_store_context(store, product = None, flags = None, raw_keys = None):
         getattr(customization, 'display_name', '') or getattr(user, 'business_name', ''),
         60,
     )
-    city = _text(getattr(getattr(user, 'city', None), 'name_city', ''), 60)
-    province = _text(getattr(getattr(user, 'province', None), 'name_province', ''), 60)
-    location = ', '.join(part for part in (city, province) if part)
-    address = _text(getattr(user, 'address', ''), 160) if customization and customization.show_location else ''
-    has_whatsapp = bool(str(getattr(customization, 'whatsapp', '') or '').strip())
-    description = _text(getattr(customization, 'description', ''), 400)
-    headline = _text(getattr(customization, 'headline', ''), 140)
-    about = _text(getattr(customization, 'about_text', ''), 400)
     from django.utils import timezone
 
     from StoreApp.domains.stores.services import (
         contact_redirect_path,
         profile_has_benefit,
     )
+    city = _text(getattr(getattr(user, 'city', None), 'name_city', ''), 60)
+    province = _text(getattr(getattr(user, 'province', None), 'name_province', ''), 60)
+    location = ', '.join(part for part in (city, province) if part)
+    #La calle exige AMBOS interruptores públicos: el toggle del dueño
+    #('show_location') y el beneficio del plan ('has_location_map') —
+    #mismo criterio que el serializer del payload público.
+    address = (
+        _text(getattr(user, 'address', ''), 160)
+        if customization and customization.show_location
+        and profile_has_benefit(store.user, 'has_location_map')
+        else ''
+    )
+    has_whatsapp = bool(str(getattr(customization, 'whatsapp', '') or '').strip())
+    description = _text(getattr(customization, 'description', ''), 400)
+    headline = _text(getattr(customization, 'headline', ''), 140)
+    about = _text(getattr(customization, 'about_text', ''), 400)
 
     #El stream en vivo es Premium (has_live_stream): sin el flag la URL no
     #viaja al documento (queda guardada para cuando vuelva el plan).

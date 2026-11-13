@@ -28,6 +28,30 @@ def can_add_product(store):
         return True
     return store.products.count() < limit
 #=========================================
+# TAXONOMY / DISCOUNT QUOTAS (techos defensivos por tienda)
+#=========================================
+#Categorías, marcas y descuentos alimentan el payload público del
+#catálogo: sin cupo un owner los inflaba sin límite y cada request
+#público pagaba el scan de descuentos y la serialización completa
+#(mismo criterio que SERVICES_MAX=24 del dominio services).
+TAXONOMY_MAX             =   100
+DISCOUNTS_MAX            =   50
+_TAXONOMY_LIMITS         =   {'category': TAXONOMY_MAX, 'brand': TAXONOMY_MAX, 'discount': DISCOUNTS_MAX}
+_TAXONOMY_RELATED        =   {'category': 'categories', 'brand': 'brands', 'discount': 'discounts'}
+_TAXONOMY_LABELS         =   {'category': 'categorías', 'brand': 'marcas', 'discount': 'descuentos'}
+
+def taxonomy_limit(kind):
+    return _TAXONOMY_LIMITS[kind]
+
+def can_add_taxonomy(store, kind):
+    """True si la tienda admite una fila más de la colección `kind`
+    ('category' | 'brand' | 'discount'). Llamar bajo lock de la fila
+    de la tienda para que creates concurrentes no pasen el tope."""
+    return getattr(store, _TAXONOMY_RELATED[kind]).count() < _TAXONOMY_LIMITS[kind]
+
+def taxonomy_quota_message(kind):
+    return f'Tu tienda admite hasta {taxonomy_limit(kind)} {_TAXONOMY_LABELS[kind]}.'
+#=========================================
 # CATALOG ENABLED (flag has_public_link del plan)
 #=========================================
 def catalog_enabled(profile):

@@ -128,19 +128,30 @@ def _online_since():
 
 
 def staff_online() -> bool:
-    return ChatPresence.objects.filter(user__is_staff = True, last_seen__gte = _online_since()).exists()
+    #Mismo universo que staff_roster: superusers (admins) no son agentes
+    #de soporte — su presencia no debe marcar "equipo en línea".
+    return ChatPresence.objects.filter(
+        user__is_staff = True, user__is_superuser = False,
+        user__is_active = True, last_seen__gte = _online_since()).exists()
 
 
 def staff_roster():
-    #Equipo visible para el cliente: solo id, nombre publico y presencia
-    #(nunca email ni datos de cuenta). Conectados primero.
+    #Equipo de soporte visible para el cliente: solo id, nombre publico y
+    #presencia (nunca email, username ni datos de cuenta). Superusers
+    #queda fuera — son admins, no agentes de soporte, y exponerlos a todo
+    #cliente pago filtraba el directorio completo del staff. El nombre
+    #nunca cae al username (expone el login): sin nombre cargado va la
+    #etiqueta genérica. Conectados primero.
     since   =   _online_since()
-    online  =   set(ChatPresence.objects.filter(user__is_staff = True, last_seen__gte = since).values_list('user_id', flat = True))
+    online  =   set(ChatPresence.objects.filter(
+        user__is_staff = True, user__is_superuser = False,
+        user__is_active = True, last_seen__gte = since,
+    ).values_list('user_id', flat = True))
     roster  =   []
-    for u in User.objects.filter(is_staff = True, is_active = True).order_by('first_name', 'username'):
+    for u in User.objects.filter(is_staff = True, is_active = True, is_superuser = False).order_by('first_name', 'username'):
         roster.append({
             'id'        :   u.id,
-            'name'      :   u.get_full_name().strip() or u.username,
+            'name'      :   u.get_full_name().strip() or 'Soporte DAVENT',
             'online'    :   u.id in online,
         })
     roster.sort(key = lambda s: not s['online'])

@@ -223,6 +223,22 @@ class EmailVerificationTests(TestCase):
         profile.refresh_from_db()
         self.assertFalse(profile.email_verified)
 
+    def test_verification_token_dies_on_email_change(self):
+        #Regresión users-auth:email-verify-token-not-email-bound: el hash
+        #del token incluye user.email — cambiar el correo invalida los
+        #links ya emitidos (email_verified debe atestiguar la dirección
+        #ACTUAL, no una probada antes del cambio).
+        user, profile   =   _make_user(verified = False)
+        uid             =   urlsafe_base64_encode(force_bytes(user.pk))
+        token           =   email_verification_token.make_token(user)
+        client          =   APIClient()
+        client.force_authenticate(user = user)
+        client.put(USER_UPDATE_URL, {'email': 'nuevo@gmail.com'}, format = 'json')
+        response        =   self.client.get(VERIFY_URL, {'uid': uid, 'token': token})
+        self.assertIn('status=error', response['Location'])
+        profile.refresh_from_db()
+        self.assertFalse(profile.email_verified)
+
     def test_user_update_no_server_error(self):
         """Regresión: el mixin compartido explotaba con KeyError (500)."""
         user, _         =   _make_user()
@@ -341,6 +357,97 @@ class SessionCookieTests(TestCase):
     def test_logout_without_cookie_is_idempotent(self):
         response        =   self.client.post(self.LOGOUT_URL)
         self.assertEqual(response.status_code, 200)
+
+
+class LoginCSRCTests(TestCase):
+    """
+    Anti login-CSRF en los endpoints que EMITEN la sesión por cookie
+    (login por contraseña y login social): un POST cross-site no puede
+    plantar las credenciales del atacante en el browser de la víctima.
+    """
+    LOGIN_URL   =   '/api/token/'
+
+    def setUp(self):
+        cache.clear()
+
+    def test_login_rejects_foreign_origin(self):
+        _make_user()
+        response    =   self.client.post(
+            self.LOGIN_URL,
+            {'username': 'cliente', 'password': STRONG_PASSWORD},
+            format = 'json',
+            HTTP_ORIGIN = 'https://evil.example.com',
+        )
+        self.assertEqual(response.status_code, 403)
+        #La sesión NO se emitió: ni access ni cookies.
+        self.assertNotIn('access', response.json() if response.content else {})
+        self.assertIsNone(response.cookies.get('davent_refresh'))
+
+    def test_login_allows_same_host_and_missing_origin(self):
+        _make_user()
+        #Sin Origin/Referer (cliente no-browser) → permitido.
+        ok      =   self.client.post(self.LOGIN_URL, {'username': 'cliente', 'password': STRONG_PASSWORD}, format = 'json')
+        self.assertEqual(ok.status_code, 200)
+        #Origin same-host → permitido.
+        ok      =   self.client.post(
+            self.LOGIN_URL,
+            {'username': 'cliente', 'password': STRONG_PASSWORD},
+            format = 'json',
+            HTTP_ORIGIN = 'http://testserver',
+        )
+        self.assertEqual(ok.status_code, 200)
+
+    def test_google_rejects_foreign_origin(self):
+        #Mismo gate en el login social (también emite cookies de sesión).
+        tokeninfo   =   {
+            'aud'               :   'google-client-id',
+            'iss'               :   'https://accounts.google.com',
+            'sub'               :   'g-999',
+            'email'             :   'social2@gmail.com',
+            'email_verified'    :   'true',
+        }
+        provider    =   Mock()
+        provider.ok     =   True
+        provider.json   =   lambda: tokeninfo
+        with patch('AdminApp.domains.users.views.auth_views.GOOGLE_CLIENT_ID', 'google-client-id'), \
+             patch('AdminApp.domains.users.services.social.GOOGLE_CLIENT_ID', 'google-client-id'), \
+             patch('AdminApp.domains.users.services.social.requests.get', return_value = provider):
+            response    =   APIClient().post(
+                GOOGLE_AUTH_URL, {'credential': 'id-token'}, format = 'json',
+                HTTP_ORIGIN = 'https://evil.example.com',
+            )
+        self.assertEqual(response.status_code, 403)
+        self.assertIsNone(response.cookies.get('davent_refresh'))
+
+
+class AuthThrottleKeyingTests(TestCase):
+    """
+    Regresión users-auth:anon-throttle-authenticated-bypass: los throttles
+    de endpoints de auth ya no heredan AnonRateThrottle — con request.user
+    seteado su get_cache_key devolvía None y el límite se desactivaba.
+    """
+
+    def test_login_throttle_keys_authenticated_and_anonymous(self):
+        from django.contrib.auth.models import AnonymousUser
+        from rest_framework.test import APIRequestFactory
+        from AdminApp.domains.users.views.auth_views import (
+            LoginRateThrottle,
+            PasswordResetRateThrottle,
+            SocialAuthRateThrottle,
+        )
+        user, _profile   =   _make_user()
+        factory         =   APIRequestFactory()
+        throttle        =   LoginRateThrottle()
+        authed          =   factory.post('/api/token/')
+        authed.user     =   user
+        anon            =   factory.post('/api/token/')
+        anon.user       =   AnonymousUser()
+        self.assertIsNotNone(throttle.get_cache_key(authed, None))
+        self.assertIsNotNone(throttle.get_cache_key(anon, None))
+        for cls in (PasswordResetRateThrottle, SocialAuthRateThrottle):
+            t   =   cls()
+            self.assertIsNotNone(t.get_cache_key(authed, None))
+            self.assertIsNotNone(t.get_cache_key(anon, None))
 
 
 class RegisterSecurityTests(TestCase):
@@ -666,6 +773,25 @@ class SocialAuthTests(TestCase):
     def test_google_503_without_client_id(self):
         response    =   self._post_google(client_id = '')
         self.assertEqual(response.status_code, 503)
+
+    def test_google_autolink_invalidates_usable_password_and_sessions(self):
+        #Regresión users-auth:google-autolink-prehijack: Google probó la
+        #titularidad del EMAIL, no quién eligió la contraseña que ya tenía
+        #la cuenta — cualquier password usable se invalida y las sesiones
+        #emitidas se revocan (mismo patrón que el login social de
+        #compradores). Sin esto un pre-registrante plantaba su clave.
+        from rest_framework_simplejwt.token_blacklist.models import BlacklistedToken
+        user, profile   =   _make_user(email = 'social@gmail.com', verified = False)
+        self.assertTrue(user.has_usable_password())
+        #Sesión previa emitida antes del auto-link: for_user ya persiste
+        #el OutstandingToken (simplejwt >= 5.3).
+        refresh         =   _refresh_for(user)
+        jti             =   RefreshToken(refresh)['jti']
+        response        =   self._post_google()
+        self.assertEqual(response.status_code, 200)
+        user.refresh_from_db()
+        self.assertFalse(user.has_usable_password())
+        self.assertTrue(BlacklistedToken.objects.filter(token__jti = jti).exists())
 
 
 class PublicConfigTests(TestCase):

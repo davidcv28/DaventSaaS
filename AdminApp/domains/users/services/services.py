@@ -204,9 +204,11 @@ class EmailVerificationTokenGenerator(PasswordResetTokenGenerator):
         verified    =   getattr(profile, 'email_verified', False)
         #last_login NO entra en el hash: el link se manda en el alta y el
         #primer login del usuario no debe romperlo. Sí entran pk (uid),
-        #password (se invalida si cambia la clave) y email_verified
-        #(se autoinvalida al verificar).
-        return f'{user.pk}{user.password}{timestamp}{verified}'
+        #password (se invalida si cambia la clave), email_verified
+        #(se autoinvalida al verificar) y email: cambiar user.email
+        #invalida los links ya emitidos — email_verified debe atestiguar
+        #la dirección ACTUAL, no una probada antes del cambio.
+        return f'{user.pk}{user.password}{user.email}{timestamp}{verified}'
 email_verification_token    =   EmailVerificationTokenGenerator()
 
 def _uid_token(user : User, generator) -> tuple:

@@ -1254,3 +1254,89 @@ reiniciando `runserver`, no es defecto.
   del reembolso MP del lado del proveedor — observable solo en MP real).
 - Las cuentas/datos de QA (`qa_buyer`, pedido PED-0001 en `vertice`,
   `payment_config` de prueba) existen solo en la base local.
+
+## 9. Auditoría 2026-11-13 (ronda 7) — run formal `security-audit-run2`
+
+Primera pasada con el workflow formal del skill `security-audit` (modo full
+audit, multi-agente). Artefactos completos en `docs/security-audit-run2/`
+(`findings.json` validado contra schema, `coverage-ledger.json` 13/13
+unidades, `REPORT.md`, `FINDINGS-DETAIL.md`, `NEEDS-VALIDATION.md`).
+
+Método: 13 unidades de cobertura, hunters wave-1+wave-2, coverage critic,
+verificadores Phase-3 frescos por dominio y Phase-5 por cada registro
+retenido (23 verificaciones + 4 rechecks de reemplazos materiales).
+Resultado: **28 registros → 20 confirmados, 3 needs_validation,
+5 rechazados** (los rechazados incluyen falsos positivos verificados:
+bypass de `is_active` de simplejwt, `BlockRenderer.vue` dead code, drift
+de `layout_config` inerte, diseño intencional de sync).
+
+### 9.1 Confirmados → remediados (mismo changeset)
+
+| Severidad | Hallazgo | Fix |
+|---|---|---|
+| **HIGH** | `customers-sse:worker-exhaustion` — el stream SSE de notificaciones del comprador permitía abrir conexiones ilimitadas por cliente: cada una era un worker/generator colgado. | Ticket firmado de un solo uso (JTI consumido en cache), epoch de sesión, throttle dedicado, semáforo de slots concurrentes por cliente, re-check de `is_active` en el loop, vida útil ~50 s + evento `bye`, `X-Accel-Buffering: no`. |
+| MEDIO | `payments.cross-plan-amount-acceptance` — `accepted_amounts` unía todos los precios de planes: pagar el plan barato activaba el pendiente caro. | `_plan_paid_for` liga el plan aplicado al monto realmente debitado (pendiente > vigente > menor pk); prorrateo de upgrade preserva período, pago full-price lo reinicia/extiende; `pending_plan` solo se limpia si se pagó ese plan. |
+| MEDIO | `users-auth:google-autolink-prehijack` — auto-link por email verificado dejaba usable la contraseña plantada por un pre-registrante. | Al linkear cuenta con password usable: `set_unusable_password()` + `_revoke_sessions()` (mismo patrón que el social login de compradores). |
+| MEDIO | `store-customer:stock-reservation-abuse` — reservas de stock ilimitadas vía pedidos `PENDING_PAYMENT` (hold de inventario sin pago). | `MAX_PENDING_ORDERS = 5` por comprador+tienda bajo `select_for_update` de la fila Store, email del comprador verificado obligatorio, throttle por IP `store_order_create_ip` además del por-cuenta. |
+| MEDIO | `store-public:location-address-plan-gate-bypass` — `show_location` del dueño exponía domicilio/`/r/maps/` sin el beneficio `has_location_map`. | Gate doble en `contact_redirect_url` (maps), serializer público y `pattern_render`. |
+| MEDIO | `infra:sitemap-benefit-gate` — el sitemap anunciaba tiendas que `/public/<slug>/` responde 404 (sin `has_public_link`, bloqueadas o no publicadas). | `StoreSitemap.items()` subquery de user_ids con suscripción vigente + flag; `resolve_slug` de dominio propio ahora exige verified + publicada + no bloqueada + `has_public_link`. |
+| MEDIO | `legal.content-report.throttle-anon-only-authenticated-bypass` | `ContentReportRateThrottle` → `ResilientUserRateThrottle` (keyea por user.pk autenticado, IP si no). |
+| MEDIO | `infra:caddy-xcaddy-unpinned` — imagen Caddy/XCaddy sin pin de versión en `docker/caddy/Dockerfile`. | Tag/digest pineado en el Dockerfile. |
+| MEDIO | `infra:debug-bypass-spellings` — spellings alternativos de DEBUG (`True`, `1`, `yes`, `on`) pasaban el guard. | Normalización en `envguard` + entrypoint + check de CI. |
+| LOW | `users-auth:login-csrf-no-origin-check` — login por contraseña y Google emitían cookies de sesión sin validar Origin/Referer (login-CSRF). | `_session_origin_allowed` en ambos endpoints: Origin/Referer same-host o CORS/CSRF-trusted, ausente permitido (clientes no-browser). |
+| LOW | `users-auth:anon-throttle-authenticated-bypass` | Throttles de auth (`LoginRateThrottle`, `PasswordResetRateThrottle`, `SocialAuthRateThrottle`) → `ResilientUserRateThrottle` (el `AnonRateThrottle.get_cache_key` devolvía None con `request.user`). |
+| LOW | `users-auth:email-verify-token-not-email-bound` — el token de verificación sobrevivía a un cambio de email. | El hash del token incluye `user.email`: cambiar el correo invalida links emitidos. |
+| LOW | `feed-customer-writes-unthrottled-anon-throttle` | `FeedWriteThrottle` → `ResilientUserRateThrottle` (scope `store_review`, 10/h). |
+| LOW | `chat.staff-roster-leaks-all-staff-identities` — el roster incluía superusers y exponía username como fallback de nombre. | `staff_roster()` excluye `is_superuser`/`is_active=False` y nunca usa username. |
+| LOW | `uploads:chat-attachments-no-storage-quota` — adjuntos ilimitados por remitente (storage sin cota). | `CHAT_ATTACHMENTS_MAX_PER_SENDER = 200` (el archivo sigue normalizado a WebP por `normalize_image`). |
+| LOW | `catalog-owner:uncapped-taxonomy-discount-public-cost` — categories/brands/discounts sin cupo: scan de descuentos y payload público sin cota. | `TAXONOMY_MAX = 100`, `DISCOUNTS_MAX = 50` con `CatalogQuotaMixin` (create bajo `select_for_update` de la fila Store); payload público filtra taxonomía vacía y acota `promotions` a `CATALOG_PROMOTIONS_MAX = 20`. |
+| LOW | `frontend:mp-checkout-redirect-not-host-validated` | `frontend/src/utils/mpCheckout.js`: allowlist de hosts oficiales MP antes de navegar al checkout. |
+| LOW | `infra:request-path-log-injection` — path/request-id sin sanitizar en logs del middleware. | Sanitización en `RequestIdMiddleware`/logging del request. |
+| LOW | `customers-sse:ticket-replay-no-epoch` | JTI de un solo uso + `tokens_valid_after` como epoch en el ticket. |
+| LOW | `customers-sse:gzip-buffering` — GZipMiddleware buffera `text/event-stream` (~17 KB) y los heartbeats nunca llegan. | `SSEAwareGZipMiddleware` exime ese content-type; renderer `text/event-stream` evita el 406 de DRF. |
+
+### 9.2 Regresión agregada
+
+~35 tests nuevos distribuidos: `users/tests.py` (login-CSRF, token de
+verificación ligado a email, throttle keying, auto-link Google invalida
+password+sesiones), `payments/tests.py` (binding monto→plan: pago viejo,
+upgrade prorrateado, full-price, montos arbitrarios), `orders/tests.py`
+(cupo de pendientes, email no verificado, throttle por IP),
+`customers/tests.py` (ticket SSE: 401 anónimo/inválido/slug ajeno,
+single-use, slot semaphore, no-gzip), `catalog/tests.py` (cupos
+category/brand/discount en el límite), `chat/tests.py` (cupo de
+adjuntos, roster sin superusers/usernames), `legal/tests.py` +
+`feed/tests.py` (throttle keying autenticado+anónimo),
+`stores/tests.py` (maps gate, sitemap, resolve_slug sin beneficio).
+
+### 9.3 Verificación
+
+- `manage.py check` → 0 issues.
+- Suite backend completa por dominios: **~1440 tests OK**
+  (users, payments, chat, legal, feed, orders, customers, catalog,
+  stores, design, suscriptions, invoices, notifications, cart,
+  legalpages, memberships, services, storeadmin, storepayments,
+  support, skills, DaventProject).
+- `vitest run` → 76/78. Los 2 fallos son **pre-existentes en `main`**
+  (`tests/pattern-studio.test.js` espera el selector viejo `.btn,
+  .svc-cta` desde el commit `ac5c07bc` — archivo no tocado por esta
+  remediación).
+- Validadores del run (`validate-coverage-ledger.cjs`,
+  `validate-findings.cjs`) → válidos (sobre copias con el guard
+  `O_NOFOLLOW` relajado — no existe en Windows; semántica idéntica).
+
+### 9.4 Residuales honestos
+
+- **3 needs_validation** (decisivos solo en runtime/deploy):
+  `infra:admin-url-nginx-gap` (ADMIN_URL custom bajo el web tier del VPS),
+  `infra:public-domain-unset` (PUBLIC_DOMAIN sin setear en algún path de
+  deploy → canonical-host/store-domain redirects), 
+  `storepayments:webhook-default-throttle-starvation` (webhook MP de
+  tienda y order-pay público bajo throttles anónimos compartidos —
+  observable solo con tráfico real de MP).
+- El pin de Caddy requiere rebuild del contenedor en el VPS; el estado
+  real de `DEBUG`/secretos en GitHub Environments, Render y `/opt/davent/.env`
+  sigue el checklist §15.2/§17.2 — esta ronda normalizó las spellings y el
+  entrypoint, pero la verificación de valores vive en cada plataforma.
+- Idempotencia del reembolso MP del lado del proveedor sigue siendo
+  needs_validation de run-1 (requiere MP real).

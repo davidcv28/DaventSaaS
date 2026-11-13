@@ -49,7 +49,7 @@ from StoreApp.domains.orders.models import (
     OrderItem,
     PaymentProof,
 )
-from StoreApp.domains.orders.services.checkout import create_order
+from StoreApp.domains.orders.services.checkout import MAX_PENDING_ORDERS, create_order
 from StoreApp.domains.orders.services.events import append_event
 from StoreApp.domains.orders.services.payments import (
     advance_order,
@@ -58,6 +58,7 @@ from StoreApp.domains.orders.services.payments import (
     mark_order_refunded,
 )
 from StoreApp.domains.orders.views.public import (
+    OrderCreateIpThrottle,
     OrderCreateThrottle,
     OrderProofThrottle,
     PublicOrderCreateView,
@@ -638,7 +639,25 @@ class PublicOrderApiTests(TestCase):
     def test_throttle_classes_present(self):
         self.assertTrue(PublicOrderCreateView.throttle_classes)
         self.assertTrue(OrderCreateThrottle.rate)
+        #Bucket por IP además del por-cuenta: las cuentas de comprador
+        #son self-service y el límite por customer.pk se multiplicaba
+        #con cada cuenta minteada.
+        self.assertIn(OrderCreateIpThrottle, PublicOrderCreateView.throttle_classes)
+        self.assertTrue(OrderCreateIpThrottle.rate)
         self.assertTrue(OrderProofThrottle.rate)
+
+    def test_create_requires_verified_email(self):
+        #La reserva blanda de stock y los pedidos al comercio exigen
+        #contacto verificado: el registro self-service sin verificar
+        #permitía mintear cuentas y acaparar stock/spamear pedidos.
+        unverified    =   _make_customer('sinverificar@example.com')
+        unverified.email_verified   =   False
+        unverified.save(update_fields = ['email_verified'])
+        _bearer(self.client, unverified)
+        with patch('StoreApp.domains.orders.views.public.verify_captcha', return_value = True):
+            response    =   self.client.post(self.create_url, self._payload(), format = 'json')
+        self.assertEqual(response.status_code, 403)
+        self.assertFalse(Order.objects.exists())
 
     def test_create_requires_captcha(self):
         with patch('StoreApp.domains.orders.views.public.verify_captcha', return_value = False):
@@ -1416,6 +1435,55 @@ class CustomerOrdersApiTests(TestCase):
         _bearer(other_client, self.other)
         response    =   other_client.get(f'{self.list_url}{self.order_a.tracking_token}/')
         self.assertEqual(response.status_code, 404)
+
+
+class PendingReservationQuotaTests(TestCase):
+    """Cupo de reservas vivas por comprador+tienda (store-customer:
+    stock-reservation-abuse): cuentas self-service ilimitadas ya no
+    acumulan pedidos PENDING_PAYMENT que retienen stock."""
+
+    def setUp(self):
+        self.store      =   _make_store('cuotalimitada')
+        self.store_b    =   _make_store('cuotaotra')
+        self.customer   =   _make_customer()
+        self.product    =   _make_product(self.store, price = '50.00', stock = 999)
+        self.product_b  =   _make_product(self.store_b, price = '50.00', stock = 999)
+
+    def test_pending_orders_cap_enforced(self):
+        for _ in range(MAX_PENDING_ORDERS):
+            create_order(**_order_kwargs(self.store, self.customer, self.product))
+        with self.assertRaises(drf_serializers.ValidationError):
+            create_order(**_order_kwargs(self.store, self.customer, self.product))
+        self.assertEqual(
+            Order.objects.filter(store = self.store, customer = self.customer,
+                                 status = Order.Status.PENDING_PAYMENT).count(),
+            MAX_PENDING_ORDERS,
+        )
+
+    def test_expired_pending_orders_do_not_count(self):
+        for _ in range(MAX_PENDING_ORDERS):
+            order, _created  =   create_order(**_order_kwargs(self.store, self.customer, self.product))
+        #Todos vencidos: la reserva expiró y el cupo se libera.
+        Order.objects.filter(store = self.store).update(
+            expires_at = timezone.now() - timedelta(hours = 1))
+        order, created  =   create_order(**_order_kwargs(self.store, self.customer, self.product))
+        self.assertTrue(created)
+
+    def test_cap_is_scoped_per_store(self):
+        for _ in range(MAX_PENDING_ORDERS):
+            create_order(**_order_kwargs(self.store, self.customer, self.product))
+        #El cupo es por tienda: en otra tienda el mismo comprador compra.
+        order, created  =   create_order(**_order_kwargs(self.store_b, self.customer, self.product_b))
+        self.assertTrue(created)
+
+    def test_paid_or_cancelled_orders_do_not_count(self):
+        for _ in range(MAX_PENDING_ORDERS):
+            order, _created  =   create_order(**_order_kwargs(self.store, self.customer, self.product))
+        #Cancelar los pendientes libera el cupo (status ya no es PENDING).
+        Order.objects.filter(store = self.store, customer = self.customer).update(
+            status = Order.Status.CANCELLED)
+        order, created  =   create_order(**_order_kwargs(self.store, self.customer, self.product))
+        self.assertTrue(created)
 
 
 class CarrierTrackingUrlTests(TestCase):

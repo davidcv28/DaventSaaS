@@ -474,10 +474,12 @@ jobs:
             grep -q '^MP_WEBHOOK_SECRET=.\{32,\}' .env || { echo "FATAL: MP_WEBHOOK_SECRET ausente o <32 chars"; exit 1; }
             grep -q '^SECRET_MP_KEY=.\{16,\}' .env     || { echo "FATAL: SECRET_MP_KEY ausente"; exit 1; }
             grep -q '^SECRET_KEY=.\{32,\}' .env        || { echo "FATAL: SECRET_KEY ausente o <32 chars"; exit 1; }
-            # 2b. DEBUG=True en producción expone trazas, settings y SQL.
-            #     `check --deploy` NO corre al arrancar el contenedor: este es
-            #     el único gate que lo mira en el .env real del VPS.
-            if grep -q '^DEBUG=True' .env; then echo "FATAL: DEBUG=True en el .env de producción"; exit 1; fi
+            # 2b. DEBUG truthy en producción expone trazas, settings y SQL.
+            #     decouple cast=bool acepta 'true'/'1'/'yes'/'on' — un
+            #     spelling no-canónico bypasseaba el grep de string exacto.
+            #     `check --deploy` NO corre al arrancar el contenedor: este
+            #     es el único gate que lo mira en el .env real del VPS.
+            if grep -iqE '^DEBUG[[:space:]]*=[[:space:]]*(true|t|yes|y|on|1)[[:space:]]*$' .env; then echo "FATAL: DEBUG truthy en el .env de producción"; exit 1; fi
             # 2c. ADMIN_URL no predecible (mismo criterio que users.E001): con
             #     el default 'admin/' el panel queda a un escaneo de distancia.
             ADMIN_PATH=$(grep '^ADMIN_URL=' .env | cut -d= -f2- | tr -d '\r')

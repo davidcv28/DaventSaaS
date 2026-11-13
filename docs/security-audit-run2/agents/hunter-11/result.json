@@ -1,0 +1,86 @@
+{
+  "agent": "hunter-11",
+  "coverage_id": "wave2",
+  "disposition": "candidate",
+  "candidate_fingerprints": [
+    "customers-sse:worker-exhaustion",
+    "customers-sse:ticket-replay-no-epoch",
+    "customers-sse:gzip-buffering"
+  ],
+  "unresolved": [
+    "Whether production actually runs docker/api/gunicorn.conf.py (3x4 gthread) or a different platform/worker count — exhaustion math scales linearly; confirm deployed GUNICORN_WORKERS/GUNICORN_THREADS.",
+    "Whether Django 5.2.18's compress_sequence includes the zfile.flush() backport (stable/5.2.x branch HEAD lacks it; needs runtime inspection of the installed package).",
+    "Whether any edge (Caddy in front of nginx for custom store domains, proxy_api_https.conf) adds its own buffering/timeouts for SSE — proxy_read_timeout 60s is consistent with the 50s design but Caddy behavior was not reviewed.",
+    "Frontend behavior when SSE delivers nothing for 50s (if gzip buffering is real): EventSource onerror/reconnect semantics under delayed 'bye' were not fully traced."
+  ],
+  "checks": [
+    {
+      "agent_id": "hunter-11",
+      "reviewed_paths": ["StoreApp/domains/customers/views/notification_views.py", "DaventProject/settings.py", "StoreApp/domains/customers/models/models.py"],
+      "invariant": "stream ticket auth: signature+TTL+slug binding, customer liveness",
+      "method": "source",
+      "result": "partial: Ticket = signing.dumps({'c':pk,'s':slug}, salt='customer-notifications-stream'), max_age=120s, slug equality enforced, customer re-fetched is_active=True per connect. GAPS: no jti/single-use (replayable within TTL), no tokens_valid_after/logout epoch binding, is_active not re-checked inside _events loop (deactivated customer keeps stream up to 50s), ticket travels in URL query -> access logs/browser history. authenticate_customer does not require email_verified.",
+      "artifact": null
+    },
+    {
+      "agent_id": "hunter-11",
+      "reviewed_paths": ["StoreApp/domains/customers/views/notification_views.py", "StoreApp/domains/customers/views/auth_views.py", "DaventProject/settings.py", "docker/api/gunicorn.conf.py", "docker/web/snippets/proxy_api.conf", "docker/web/templates/default.conf.template"],
+      "invariant": "SSE connection concurrency bounded below gunicorn worker capacity",
+      "method": "source",
+      "result": "fail: Each SSE connection holds one gthread up to STREAM_MAX_SECONDS=50. Capacity = 3 workers x 4 threads = 12 concurrent handlers for the whole API. Only bound = CustomerPublicReadThrottle 'public_read' 1000/hour per IP -> ~864 holds/hour x 50s = ~12 concurrent streams = 100% saturation from ONE IP/account; ticket replayable within 120s TTL; throttle fails open on cache outage.",
+      "artifact": null
+    },
+    {
+      "agent_id": "hunter-11",
+      "reviewed_paths": ["StoreApp/domains/customers/views/notification_views.py", "StoreApp/domains/customers/serializers/serializers.py", "StoreApp/domains/customers/models/models.py", "StoreApp/domains/customers/services/notifications.py"],
+      "invariant": "SSE event payload isolation, replay bounds, injection safety",
+      "method": "source",
+      "result": "pass: Last-Event-ID int-parsed, per-poll batch [:50], whitelist serializer payload, JSON-encoded data: lines, bounded 50s generator, clean error handling.",
+      "artifact": null
+    },
+    {
+      "agent_id": "hunter-11",
+      "reviewed_paths": ["StoreApp/domains/customers/views/notification_views.py", "StoreApp/domains/customers/services/customers.py", "StoreApp/domains/stores/models/models.py"],
+      "invariant": "stream queryset scoped to ticketed customer+store",
+      "method": "source",
+      "result": "pass with caveat: customer_id filter always applied; foreign pk unreachable without forging signature. CAVEAT: stream-ticket does not validate slug via resolve_store; nonexistent slug -> store_id=None -> store filter dropped -> streams ALL of customer's own notifications (self-scoped, no privilege gain, logic wart).",
+      "artifact": null
+    },
+    {
+      "agent_id": "hunter-11",
+      "reviewed_paths": ["StoreApp/domains/customers/views/notification_views.py"],
+      "invariant": "error paths bounded, no worker/thread leaks",
+      "method": "source",
+      "result": "pass: malformed/expired ticket -> clean 401; slug mismatch -> 401; unknown/inactive customer -> 401; generator bounded by monotonic deadline; close_old_connections() per poll.",
+      "artifact": null
+    },
+    {
+      "agent_id": "hunter-11",
+      "reviewed_paths": ["DaventProject/settings.py", "requirements.txt", "docker/web/templates/default.conf.template"],
+      "invariant": "SSE chunks reach the wire in real time (no buffering)",
+      "method": "source",
+      "result": "fail(needs_validation): GZipMiddleware enabled (settings.py:241); Django 5.2.18 compress_sequence reportedly lacks zfile.flush() -> gzip buffers SSE chunks until ~17KB or stream close -> events/heartbeats may not arrive until 50s 'bye'. nginx gzip_types excludes text/event-stream; X-Accel-Buffering:no set. Needs runtime confirmation on installed package.",
+      "artifact": null
+    }
+  ],
+  "candidates": [
+    {"fingerprint": "customers-sse:worker-exhaustion", "proposed_verdict": "confirmed", "severity_hint": "high", "confidence": "high", "title": "Single customer account + single IP can saturate all 12 gunicorn gthreads via replayable SSE tickets (full-API DoS)"},
+    {"fingerprint": "customers-sse:ticket-replay-no-epoch", "proposed_verdict": "confirmed", "severity_hint": "low", "confidence": "high", "title": "Stream ticket is a replayable, session-unbound bearer credential in the URL query (120s window)"},
+    {"fingerprint": "customers-sse:gzip-buffering", "proposed_verdict": "needs_validation", "severity_hint": "low", "confidence": "medium", "title": "Django 5.2 GZipMiddleware likely buffers the SSE stream (no per-chunk flush in 5.2.x compress_sequence)"}
+  ],
+  "hardening": [
+    "Add a dedicated throttle scope for the stream endpoint sized for holds plus a per-customer concurrent-stream counter in cache (max 2-3 open streams).",
+    "Make stream tickets single-use or near-single-use: embed a jti recorded in cache for the TTL, or shorten TICKET_TTL to ~30-60s.",
+    "Bind the ticket to session state (tokens_valid_after/session iat floor) and re-check customer.is_active inside _events every ~15s.",
+    "Validate the store slug at ticket mint via resolve_store and treat unknown slug as empty result instead of dropping the filter.",
+    "Bypass GZipMiddleware for text/event-stream (set Content-Encoding identity) to preserve heartbeat delivery.",
+    "Consider nginx limit_conn for the stream route as a second-layer cap.",
+    "Do not log query strings for the stream route (ticket is a bearer credential for up to 120s).",
+    "Bound Last-Event-ID replay."
+  ],
+  "uncovered": [
+    "AdminApp/domains/notifications (staff-side notifications) — different subsystem.",
+    "XSS/rendering safety of notification title/body in CustomerNotificationsBell.vue / AccountNotifications.vue.",
+    "StoreMembership suspension mid-stream: suspended members keep receiving notifications until 50s deadline."
+  ]
+}

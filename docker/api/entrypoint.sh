@@ -17,14 +17,24 @@ if [ "$1" = "gunicorn" ]; then
     # rojo por una var que únicamente se carga desde el dashboard (MP_WEBHOOK_SECRET,
     # SECRETS_MASTER_KEYS, ADMIN_URL) deja el servicio sin forma de volver a
     # verde sin editar el dashboard. En el VPS/CI queda estricto.
-    if [ "$DEBUG" != "True" ]; then
-        if ! python manage.py check --deploy --fail-level ERROR; then
-            if [ "$DEPLOY_CHECK_STRICT" = "1" ]; then
-                echo "deploy check: configuracion de produccion incompleta (DEPLOY_CHECK_STRICT=1) -> abortando arranque"
-                exit 1
-            fi
-            echo "deploy check: configuracion de produccion incompleta -> arranca igual (DEPLOY_CHECK_STRICT=0)"
+    # DEBUG efectivo (settings.DEBUG), no el string crudo del env:
+    # decouple cast=bool acepta 'true'/'1'/'yes'/'on' y un spelling
+    # no-canónico colaba DEBUG=True en producción con los guards de
+    # string mintiendo. Con DEBUG efectivo False corre el deploy check;
+    # con True el arranque se aborta en contexto estricto — DEBUG=True
+    # jamás debe llegar a un deploy.
+    if python -c "import os,django; os.environ.setdefault('DJANGO_SETTINGS_MODULE','DaventProject.settings'); django.setup(); from django.conf import settings; raise SystemExit(0 if settings.DEBUG else 1)"; then
+        if [ "$DEPLOY_CHECK_STRICT" = "1" ]; then
+            echo "DEBUG efectivo es True en produccion -> abortando arranque"
+            exit 1
         fi
+        echo "DEBUG efectivo es True (modo dev) -> se omite el deploy check"
+    elif ! python manage.py check --deploy --fail-level ERROR; then
+        if [ "$DEPLOY_CHECK_STRICT" = "1" ]; then
+            echo "deploy check: configuracion de produccion incompleta (DEPLOY_CHECK_STRICT=1) -> abortando arranque"
+            exit 1
+        fi
+        echo "deploy check: configuracion de produccion incompleta -> arranca igual (DEPLOY_CHECK_STRICT=0)"
     fi
     if [ "$RUN_COLLECTSTATIC" != "0" ]; then
         python manage.py collectstatic --noinput

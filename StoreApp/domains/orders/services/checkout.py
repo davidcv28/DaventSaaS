@@ -88,6 +88,12 @@ logger  =   logging.getLogger(__name__)
 MAX_QTY                 =   100     # tope por línea (espejo de cart)
 MAX_ITEMS               =   50      # tope de líneas distintas por pedido
 DEFAULT_DEADLINE_HOURS  =   48
+#Cupo de reservas vivas por comprador+tienda: sin él, cuentas
+#self-service ilimitadas acumulaban pedidos PENDING_PAYMENT que
+#retenían stock (reserva blanda) y spameaban al comercio. Muy por
+#encima de un checkout legítimo (el retry usa idempotency_key, no
+#pedidos nuevos).
+MAX_PENDING_ORDERS      =   5
 ADDRESS_FIELD_MAX       =   {'label': 40, 'line1': 160, 'line2': 160, 'city': 120, 'province': 120, 'postal_code': 20, 'country': 2}
 ADDRESS_REQUIRED        =   ('line1', 'city', 'province')
 MANUAL_PAYMENT_METHODS  =   {Order.PaymentMethod.TRANSFER, Order.PaymentMethod.WHATSAPP, Order.PaymentMethod.CASH}
@@ -419,6 +425,17 @@ def create_order(*, store, customer, items = None, address = None, shipping_meth
             if cart is not None:
                 from StoreApp.domains.cart.models import Cart
                 cart        =   Cart.objects.select_for_update().get(pk = cart.pk)
+            #Cupo de reservas vivas por comprador en ESTA tienda: se
+            #cuenta dentro del lock de Store para que dos checkouts
+            #concurrentes del mismo comprador no pasen juntos el tope.
+            live_pending    =   Order.objects.filter(
+                store               =   locked_store,
+                customer            =   customer,
+                status              =   Order.Status.PENDING_PAYMENT,
+                expires_at__gt      =   timezone.now(),
+            ).count()
+            if live_pending >= MAX_PENDING_ORDERS:
+                raise serializers.ValidationError({'detail': f'Ya tenés {MAX_PENDING_ORDERS} pedidos pendientes de pago en esta tienda. Completá o esperá a que venzan antes de crear otro.'})
             merged, cart_item_pks =   _merge_lines(items, cart)
             lines           =   _resolve_lines(locked_store, customer, merged)
             priced, subtotal, discount_total   =   _price_lines(lines, locked_store, customer)

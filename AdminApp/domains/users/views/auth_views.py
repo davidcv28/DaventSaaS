@@ -2,6 +2,7 @@ import hashlib
 import logging
 import secrets
 from datetime import timedelta
+from urllib.parse import urlparse
 
 from decouple import config
 from django.conf import settings
@@ -10,7 +11,7 @@ from rest_framework import status
 from rest_framework.exceptions import APIException, PermissionDenied
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
-from rest_framework.throttling import AnonRateThrottle, UserRateThrottle
+from rest_framework.throttling import AnonRateThrottle
 from rest_framework.views import APIView
 from rest_framework_simplejwt.exceptions import InvalidToken, TokenError
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
@@ -42,6 +43,7 @@ from DaventProject.cache_utils import (
     cache_set_strict,
 )
 from DaventProject.middleware import client_ip as _client_ip
+from DaventProject.throttling import ResilientUserRateThrottle
 
 # Sesión web: el REFRESH viaja en cookie httpOnly scopeada a /api/token/ — el
 # JavaScript del cliente jamás lo lee (anti-robo por XSS) y solo viaja a los
@@ -112,39 +114,44 @@ def _register_login_failure(username : str, ip : str) -> None:
         cache_set_strict(key, 1, LOGIN_FAIL_WINDOW)
 
 
-class LoginRateThrottle(AnonRateThrottle):
+#Los throttles de endpoints de auth usan ResilientUserRateThrottle (NO
+#AnonRateThrottle): para requests autenticados AnonRateThrottle.get_cache_key
+#devuelve None y el límite se desactivaba solo — un usuario logueado podía
+#bombear password-reset/social/login sin tope. UserRateThrottle keyea por
+#user.pk si hay auth y por IP si no: mismas cuotas, ambos casos cubiertos.
+class LoginRateThrottle(ResilientUserRateThrottle):
     """
     Throttle personalizado para el endpoint de login.
     Limita las peticiones según el scope 'login' definido en settings.py.
     """
     scope = 'login'
 
-class RefreshRateThrottle(AnonRateThrottle):
+class RefreshRateThrottle(ResilientUserRateThrottle):
     """Scope 'token_refresh' (settings): acota el brute-force del cookie."""
     scope = 'token_refresh'
 
-class PasswordResetRateThrottle(AnonRateThrottle):
+class PasswordResetRateThrottle(ResilientUserRateThrottle):
     """Scope 'password_reset' (settings): frena el abuso del envío de correos."""
     scope = 'password_reset'
 
-class PasswordResetConfirmRateThrottle(AnonRateThrottle):
+class PasswordResetConfirmRateThrottle(ResilientUserRateThrottle):
     """Scope 'password_reset_confirm' (settings): el confirm no manda mails —
     bucket propio y más holgado; compartir el de request dejaba la cuenta
     sin recuperar ~1h tras 2-3 intentos del flujo completo."""
     scope = 'password_reset_confirm'
 
-class VerifyEmailRateThrottle(UserRateThrottle):
+class VerifyEmailRateThrottle(ResilientUserRateThrottle):
     """Scope 'email_verification' (settings): reenvío por usuario autenticado."""
     scope = 'email_verification'
 
-class LogoutRateThrottle(UserRateThrottle):
+class LogoutRateThrottle(ResilientUserRateThrottle):
     """Scope 'logout' (settings): el endpoint es AllowAny y blacklistea el
     refresh de la cookie — acotado por usuario o por IP si no hay auth."""
     scope = 'logout'
 
-class SocialAuthRateThrottle(AnonRateThrottle):
+class SocialAuthRateThrottle(ResilientUserRateThrottle):
     """Scope 'social_auth' (settings): cada exchange pega una llamada al
-    provider (tokeninfo de Google) — se acota por IP."""
+    provider (tokeninfo de Google) — se acota por usuario o por IP."""
     scope = 'social_auth'
 
 class PublicConfigRateThrottle(AnonRateThrottle):
@@ -213,6 +220,36 @@ def _require_csrf(request):
         raise PermissionDenied('CSRF token inválido o ausente')
 
 
+def _session_origin_allowed(request):
+    """
+    Anti login-CSRF: los endpoints que EMITEN la sesión por cookie
+    (login/social) solo aceptan POST desde orígenes confiables. Un POST
+    cross-site de otro sitio puede hacer que el browser de la víctima
+    quede logueado en la cuenta del atacante (Set-Cookie aplica igual
+    aunque SameSite=Lax). Los browsers siempre mandan Origin (o Referer)
+    en POST; un request sin ninguno es un cliente no-browser (app móvil,
+    curl) sin contexto de cookies ajenas → se permite. Misma defensa que
+    StoreApp/domains/customers/views/auth_views.py.
+    """
+    origin  =   (request.headers.get('Origin') or '').strip()
+    if not origin:
+        referer =   (request.headers.get('Referer') or '').strip()
+        if referer:
+            parsed  =   urlparse(referer)
+            origin  =   f'{parsed.scheme}://{parsed.netloc}' if parsed.netloc else ''
+    if not origin:
+        return True
+    host    =   (urlparse(origin).netloc or '').lower()
+    if not host:
+        return False
+    if host == (request.get_host() or '').lower():
+        return True
+    trusted =   set()
+    for o in list(getattr(settings, 'CORS_ALLOWED_ORIGINS', []) or []) + list(getattr(settings, 'CSRF_TRUSTED_ORIGINS', []) or []):
+        trusted.add((urlparse(o).netloc or o).lower())
+    return host in trusted
+
+
 class SpanishTokenObtainPairSerializer(TokenObtainPairSerializer):
     """Credenciales inválidas: mensaje propio en español (el de SimpleJWT
     traducido es ambiguo y depende del catálogo del paquete)."""
@@ -230,6 +267,11 @@ class CustomTokenObtainPairView(TokenObtainPairView):
     throttle_classes = [LoginRateThrottle]
 
     def post(self, request, *args, **kwargs):
+        #Anti login-CSRF: este endpoint emite la sesión por cookie — un
+        #POST cross-site no puede plantar las credenciales del atacante en
+        #el browser de la víctima.
+        if not _session_origin_allowed(request):
+            raise PermissionDenied('Origen no permitido.')
         username    =   request.data.get('username') or ''
         ip          =   _client_ip(request)
         try:
@@ -527,6 +569,10 @@ class GoogleAuthView(APIView):
     throttle_classes    =   [SocialAuthRateThrottle]
 
     def post(self, request):
+        #Misma defensa anti login-CSRF que el login por contraseña: acá
+        #también se emiten las cookies de sesión.
+        if not _session_origin_allowed(request):
+            raise PermissionDenied('Origen no permitido.')
         if not GOOGLE_CLIENT_ID:
             return Response({'detail': 'El ingreso con Google no está disponible por el momento.'}, status = status.HTTP_503_SERVICE_UNAVAILABLE)
         try:

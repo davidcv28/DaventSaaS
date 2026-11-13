@@ -209,6 +209,17 @@ def collect_errors() -> list:
             f'DEBUG="{debug_raw}" no es un booleano reconocible.',
             'Usar True/False (0/1 también se acepta).',
         ))
+    #DEBUG efectivo True en un gate de deploy: collect_errors solo corre
+    #desde check_env / check --deploy (contexto deploy), y con DEBUG=True
+    #todas las reglas prod se apagaban (prod = not settings.DEBUG) — un
+    #spelling truthy de decouple ('true'/'1'/'yes'/'on') bypasseaba los
+    #guards que comparan el string crudo y exponía schema/admin/trazas.
+    if settings.DEBUG:
+        errors.append(_error(
+            'project.E019', 'DEBUG',
+            'DEBUG efectivo es True en un chequeo de deploy (check_env / check --deploy).',
+            'DEBUG=False es obligatorio en cualquier gate de deploy; en dev local no correr check_env ni check --deploy.',
+        ))
 
     return errors
 

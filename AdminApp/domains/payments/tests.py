@@ -797,6 +797,95 @@ class PlanChangeBillingTests(TestCase):
         self.assertGreater(suscription.end_date, timezone.now() + timedelta(days = 25))
 
 
+class CrossPlanAmountBindingTests(TestCase):
+    """Regresión cross-plan-amount-acceptance: accepted_amounts admite
+    cualquier precio de plan pago (preferencias/débitos MP viejos no se
+    pueden rechazar sin dejar plata cobrada sin registrar), pero el plan
+    que se ACREDITA es el que el monto compra — nunca un pending_plan
+    más caro que lo cobrado."""
+
+    def _mp(self, suscription, amount, pid):
+        return {
+            'id'                :   pid,
+            'external_reference':   str(suscription.id),
+            'transaction_amount':   str(amount),
+            'currency_id'       :   'ARS',
+            'status'            :   'approved',
+            'date_approved'     :   timezone.now().isoformat(),
+        }
+
+    def _pay(self, suscription, amount, pid):
+        return CreatePaymentQuery(
+            {'user': suscription.user, 'suscription': suscription, 'payment_id': pid},
+            mp_payment = self._mp(suscription, amount, pid),
+        )
+
+    def test_stale_cheap_payment_does_not_grant_pending_expensive_plan(self):
+        #Preferencia MP emitida antes del cambio de plan: quedó a $1000
+        #mientras el pending_plan nuevo vale $9999. Antes aplicaba el
+        #plan caro por el pago del barato.
+        suscription     =   _make_suscription(auto_renew = False, preapproval_id = None)
+        cheap_price     =   suscription.plan_suscription.price          # 1000
+        premium         =   SuscriptionPlan.objects.create(name = 'Plan caro binding', price = 9999)
+        suscription.pending_plan_suscription    =   premium
+        suscription.save(update_fields = ['pending_plan_suscription'])
+        self._pay(suscription, cheap_price, '555001')
+        suscription.refresh_from_db()
+        #El plan vigente NO sube: el pago del precio viejo renueva el plan
+        #barato y el pendiente queda esperando un cobro a su precio.
+        self.assertNotEqual(suscription.plan_suscription_id, premium.pk)
+        self.assertEqual(suscription.pending_plan_suscription_id, premium.pk)
+        self.assertEqual(suscription.status, Suscription.STATUS_ACTIVE)
+
+    def test_full_price_pending_payment_grants_pending_plan(self):
+        #Pago a precio completo del pending: acredita el cambio y limpia
+        #el pendiente (camino feliz del cambio de plan).
+        suscription     =   _make_suscription(auto_renew = False, preapproval_id = None)
+        premium         =   SuscriptionPlan.objects.create(name = 'Plan caro full', price = 9999)
+        suscription.pending_plan_suscription    =   premium
+        suscription.save(update_fields = ['pending_plan_suscription'])
+        self._pay(suscription, 9999, '555002')
+        suscription.refresh_from_db()
+        self.assertEqual(suscription.plan_suscription_id, premium.pk)
+        self.assertIsNone(suscription.pending_plan_suscription_id)
+
+    def test_third_plan_price_grants_that_plan_not_pending(self):
+        #Un pago del precio de un TERCER plan otorga ESE plan (lo que el
+        #dinero compra), no el pendiente — y el pendiente sobrevive.
+        suscription     =   _make_suscription(auto_renew = False, preapproval_id = None)
+        premium         =   SuscriptionPlan.objects.create(name = 'Plan caro tp', price = 9999)
+        lateral         =   SuscriptionPlan.objects.create(name = 'Plan lateral tp', price = 777)
+        suscription.pending_plan_suscription    =   premium
+        suscription.save(update_fields = ['pending_plan_suscription'])
+        self._pay(suscription, 777, '555003')
+        suscription.refresh_from_db()
+        self.assertEqual(suscription.plan_suscription_id, lateral.pk)
+        self.assertEqual(suscription.pending_plan_suscription_id, premium.pk)
+
+    def test_prorated_pending_charge_still_applies_pending_plan(self):
+        #Regresión del binding: el cargo prorrateado (pending_charge) NO
+        #es precio de plan pero debe seguir acreditando el pending_plan
+        #sin mover el período.
+        suscription                     =   _make_suscription(
+            auto_renew = False, preapproval_id = None,
+            start_date = timezone.now() - timedelta(days = 10),
+            end_date   = timezone.now() + timedelta(days = 20),
+        )
+        suscription.plan_suscription.price  =   1000
+        suscription.plan_suscription.save(update_fields = ['price'])
+        premium         =   SuscriptionPlan.objects.create(name = 'Plan prorrateo bind', price = 2000)
+        from AdminApp.domains.suscriptions.services import RequestPlanChangeQuery
+        RequestPlanChangeQuery(suscription, premium)
+        suscription.refresh_from_db()
+        charge          =   suscription.pending_charge
+        old_end         =   suscription.end_date
+        self._pay(suscription, charge, '555004')
+        suscription.refresh_from_db()
+        self.assertEqual(suscription.plan_suscription_id, premium.pk)
+        self.assertIsNone(suscription.pending_plan_suscription_id)
+        self.assertEqual(suscription.end_date, old_end)
+
+
 class RevenueRollupTests(TestCase):
     """Rollups materializados: F() atómico y contador clampeado a 0."""
 
@@ -1249,7 +1338,9 @@ class PaymentIdempotencyRegressionTests(TestCase):
     def test_debit_at_previous_plan_price_is_registered(self):
         #Si el realineo de la preapproval falló, MP debita el precio VIEJO:
         #antes el check de monto lo rechazaba -> webhook 500 -> reintentos
-        #eternos -> plata cobrada sin Payment. Ahora se registra y renueva.
+        #eternos -> plata cobrada sin Payment. Ahora se registra, pero el
+        #plan aplicado es el que MATCHEA el monto debitado (el vigente a
+        #1000), no el pendiente de 500 — ese sigue esperando su cobro.
         cheap           =   SuscriptionPlan.objects.create(name = 'Plan barato', price = 500)
         suscription     =   _make_suscription(auto_renew = False, preapproval_id = None)
         suscription.pending_plan_suscription    =   cheap
@@ -1261,8 +1352,8 @@ class PaymentIdempotencyRegressionTests(TestCase):
         )
         self.assertEqual(payment.status, Payment.Status.APPROVED)
         suscription.refresh_from_db()
-        self.assertEqual(suscription.plan_suscription, cheap)
-        self.assertIsNone(suscription.pending_plan_suscription)
+        self.assertEqual(suscription.plan_suscription.price, 1000)
+        self.assertEqual(suscription.pending_plan_suscription, cheap)
 
     def test_arbitrary_amount_still_rejected(self):
         suscription     =   _make_suscription(auto_renew = False, preapproval_id = None)

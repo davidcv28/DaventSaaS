@@ -1,0 +1,55 @@
+{
+  "verdict": "confirmed",
+  "fingerprint": "users-auth:email-verify-token-not-email-bound",
+  "title": "Email-verification token is not bound to the email address: a stale link verifies a newly changed, never-proven email",
+  "description": "EmailVerificationTokenGenerator._make_hash_value signs only user.pk + user.password + timestamp + profile.email_verified — user.email is absent. An authenticated user can PATCH /api/user/me/ to change user.email; UpdateUserQuery resets email_verified only when it was previously True, so a token issued while verified=False keeps identical hash inputs after the change. VerifyEmailQuery then sets email_verified=True for the new, never-proven address. StoreViewSet.create (viewset.py:463-469) treats that flag as the mailbox-control attestation for claiming a public store, while phone remains a separate requirement.",
+  "root_cause": "_make_hash_value (services/services.py:202-209) omits user.email from the signed material, so the token proves only 'this user requested verification at time T', not 'this specific address was proven'.",
+  "intended_behavior": "email_verified must attest control of the CURRENT user.email; changing the address must invalidate outstanding verification tokens (include the email — or a hash of it — in the token value).",
+  "trace": [
+    {"kind": "entrypoint", "file": "AdminApp/domains/users/views/viewset_base.py", "line": 52, "scope": "UserBaseViewSet.update", "description": "PATCH /api/user/me/ with UserUpdateSerializer {email} reaches the self-scoped update and calls UpdateUserQuery."},
+    {"kind": "propagation", "file": "AdminApp/domains/users/services/services.py", "line": 48, "scope": "UpdateUserQuery", "description": "email change resets profile.email_verified only when it was True; when already False, no hash input changes."},
+    {"kind": "propagation", "file": "AdminApp/domains/users/services/services.py", "line": 202, "scope": "EmailVerificationTokenGenerator._make_hash_value", "description": "signed material = f'{user.pk}{user.password}{timestamp}{verified}' — user.email absent."},
+    {"kind": "propagation", "file": "AdminApp/domains/users/views/auth_views.py", "line": 404, "scope": "VerifyEmailView.get", "description": "GET /api/verify-email/?uid=&token= is AllowAny and calls VerifyEmailQuery."},
+    {"kind": "sink", "file": "AdminApp/domains/users/services/services.py", "line": 358, "scope": "VerifyEmailQuery", "description": "after check_token succeeds, profile.email_verified=True is persisted for the account's current user.email."}
+  ],
+  "evidence": [
+    {"file": "AdminApp/domains/users/services/services.py", "line": 202, "description": "_make_hash_value returns pk+password+timestamp+verified; user.email absent. The inherited _make_token_with_timestamp signs only this hash value."},
+    {"file": "AdminApp/domains/users/services/services.py", "line": 48, "description": "UpdateUserQuery changes user.email; profile.email_verified is reset only inside `if profile.email_verified`, so an already-False flag leaves every token hash input unchanged."},
+    {"file": "AdminApp/domains/users/serializers/serializers.py", "line": 90, "description": "UserUpdateSerializer exposes only email and UserUpdateMethod calls UpdateUserQuery; UserViewSetConfig.update is IsAuthenticated and self-scoped (viewset_config.py:36-41)."},
+    {"file": "AdminApp/domains/users/serializers/mixins.py", "line": 59, "description": "validate_email only rejects iexact duplicates on other auth.User rows; any unused address is accepted."},
+    {"file": "AdminApp/domains/users/serializers/serializers.py", "line": 158, "description": "RegisterUserSerializer declares required confirm_password; the shared validate() rejects a missing or mismatched confirmation."},
+    {"file": "AdminApp/domains/users/services/services.py", "line": 187, "description": "EmailVerificationTokenGenerator.timeout = 86400 (24h window)."},
+    {"file": "AdminApp/domains/users/services/services.py", "line": 323, "description": "SendVerificationEmailQuery creates uid+token with email_verification_token, builds the /api/verify-email/ link, and _send_branded_mail sends it to user.email."},
+    {"file": "AdminApp/domains/users/tasks.py", "line": 32, "description": "send_verification_email reloads the User and calls SendVerificationEmailQuery; registration enqueues it post-commit (services.py:169) and resend uses the same task (auth_views.py:424)."},
+    {"file": "AdminApp/domains/users/views/auth_views.py", "line": 404, "description": "VerifyEmailView.get is AllowAny and passes uid/token to VerifyEmailQuery."},
+    {"file": "AdminApp/domains/users/urls/urls.py", "line": 13, "description": "router.register(r'user', UserViewSet) exposes the detail route used as /api/user/me/; the configured queryset is self-scoped rather than lookup-scoped."},
+    {"file": "DaventProject/urls.py", "line": 119, "description": "Mounts VerifyEmailView at api/verify-email/."},
+    {"file": "StoreApp/domains/stores/views/viewset.py", "line": 463, "description": "StoreViewSet.create requires profile.email_verified (and phone) — the forged flag satisfies the anti-abuse email gate."}
+  ],
+  "conditions": [
+    {"kind": "authentication_level", "description": "Any registered user with a valid access token; registration is open and the email update is self-scoped."},
+    {"kind": "data_state", "description": "Target email must be unregistered on auth.User (iexact uniqueness); profile.email_verified must be False when the token is generated and False after the email change — already False, or reset from True by UpdateUserQuery."},
+    {"kind": "timing_dependency", "description": "Token use must occur within EmailVerificationTokenGenerator.timeout=86400 of token generation; receive the controlled-address verification mail before changing email because the queued sender uses the address current when it runs."}
+  ],
+  "execution": {
+    "attacker_perspective": "Authenticated platform user wanting to forge the verified-email attestation for an address they do not control.",
+    "payloads": [
+      "POST /api/register/ {username:'attacker', email:'attacker@mail.com', password:'<strong-password>', confirm_password:'<strong-password>', phone:'+5491100000002', accept_terms:true}",
+      "POST /api/token/ {username:'attacker', password:'<strong-password>'}",
+      "PATCH /api/user/me/ {email:'victim@example.com'} (Authorization: Bearer <access>)",
+      "GET /api/verify-email/?uid=<uid from verification email>&token=<token from verification email>"
+    ],
+    "instructions": [
+      "1. Register an account with an email the attacker controls; wait for the verification email at that controlled address and extract uid/token T while profile.email_verified=False. Do not change email before that mail is generated/sent: the Celery task reloads the user and sends to whatever user.email is current.",
+      "2. Log in and send PATCH /api/user/me/ {email:'victim@example.com'} with the Bearer access token; the serializer accepts any iexact-unused address and UpdateUserQuery leaves email_verified False.",
+      "3. GET /api/verify-email/?uid=<uid>&token=T — check_token recomputes the identical hash (pk, password, timestamp, verified all unchanged) and VerifyEmailQuery sets email_verified=True.",
+      "4. The account now carries victim@example.com with email_verified=True — an attestation the mailbox owner never made; store creation's email gate is satisfied (phone anchor still required)."
+    ],
+    "observed_result": "Source-traced: _make_hash_value omits user.email so the pre-change token validates post-change; VerifyEmailQuery sets the flag on check_token success; StoreViewSet.create then treats the unproven address as verified for the claim gate."
+  },
+  "remediation": {
+    "strategy": "Bind the verification token to the address it was issued for: include user.email (or an HMAC of it) in EmailVerificationTokenGenerator._make_hash_value so any email change invalidates outstanding links; alternatively persist the address the mail was sent to and compare it at verification time."
+  },
+  "severity": {"likelihood": {"score": "medium", "reason": "Trivially executable by any registered user within the 24h window; requires only reading one's own verification mail and two API calls."}, "impact": {"score": "low", "reason": "Forges the email_verified attestation for an unproven address — defeats the store-claim anti-abuse email gate (phone anchor still required) and points account mail at an address the owner never authorized; no direct data exposure or account takeover."}, "overall_severity": "low"},
+  "confidence": {"score": "high", "reason": "Hash inputs, the self-scoped /api/user/me/ update path, serializer uniqueness and required register fields, queued token issuance, verify-email route/view, token timeout, and the store-claim consumer were verified line-by-line; the sequence is deterministic once the controlled-address verification mail is received."}
+}

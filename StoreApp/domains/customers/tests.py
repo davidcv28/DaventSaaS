@@ -897,6 +897,64 @@ class CustomerNotificationTests(TestCase):
         self.assertIn('conectado', first)
         gen.close()
 
+    def test_stream_ticket_is_single_use(self):
+        #Regresión customers-sse:ticket-replay: el ticket firmado ya no
+        #es un bearer replayable — el jti se quema en el primer connect
+        #y cualquier replay dentro del TTL responde 401.
+        response    =   self.client_a.post(NOTIFS_TICKET, {'store': self.store.slug}, format = 'json')
+        ticket      =   response.json()['ticket']
+        first       =   APIClient().get(NOTIFS_STREAM, {'ticket': ticket, 'store': self.store.slug}, HTTP_ACCEPT = 'text/event-stream')
+        self.assertEqual(first.status_code, 200)
+        second      =   APIClient().get(NOTIFS_STREAM, {'ticket': ticket, 'store': self.store.slug}, HTTP_ACCEPT = 'text/event-stream')
+        self.assertEqual(second.status_code, 401)
+
+    def test_stream_ticket_dies_on_session_epoch_change(self):
+        #Epoch binding: un logout/revocación posterior a la emisión del
+        #ticket (tokens_valid_after) lo invalida aunque no venció el TTL.
+        response    =   self.client_a.post(NOTIFS_TICKET, {'store': self.store.slug}, format = 'json')
+        ticket      =   response.json()['ticket']
+        self.a.tokens_valid_after  =   timezone.now()
+        self.a.save(update_fields = ['tokens_valid_after'])
+        got     =   APIClient().get(NOTIFS_STREAM, {'ticket': ticket, 'store': self.store.slug}, HTTP_ACCEPT = 'text/event-stream')
+        self.assertEqual(got.status_code, 401)
+
+    def test_stream_concurrency_cap(self):
+        #Regresión customers-sse:worker-exhaustion: máximo
+        #STREAM_MAX_PER_CUSTOMER streams vivos por customer — el cupo se
+        #reclama con cache_add atómico y se libera al cerrar el stream.
+        from StoreApp.domains.customers.views import notification_views as nv
+        slots   =   [nv._acquire_stream_slot(self.a.pk) for _ in range(nv.STREAM_MAX_PER_CUSTOMER)]
+        self.assertTrue(all(ok for ok, _key in slots))
+        self.assertFalse(nv._acquire_stream_slot(self.a.pk)[0])
+        response    =   self.client_a.post(NOTIFS_TICKET, {'store': self.store.slug}, format = 'json')
+        got     =   APIClient().get(NOTIFS_STREAM, {
+            'ticket': response.json()['ticket'], 'store': self.store.slug,
+        }, HTTP_ACCEPT = 'text/event-stream')
+        self.assertEqual(got.status_code, 429)
+        for _ok, key in slots:
+            nv._release_stream_slot(key)
+        self.assertTrue(nv._acquire_stream_slot(self.a.pk)[0])
+
+    def test_sse_response_is_not_gzipped(self):
+        #Regresión customers-sse:gzip-buffering: GZipMiddleware buffera
+        #text/event-stream (~17KB) y los heartbeats nunca llegan — el
+        #middleware propio exime ese content-type.
+        from django.http import HttpResponse, StreamingHttpResponse
+        from DaventProject.middleware import SSEAwareGZipMiddleware
+        mw      =   SSEAwareGZipMiddleware(lambda r: None)
+        sse     =   StreamingHttpResponse(iter([': ping\n\n']), content_type = 'text/event-stream')
+        out     =   mw.process_response(None, sse)
+        self.assertIs(out, sse)
+        self.assertNotIn('Content-Encoding', sse.headers)
+        #El resto de respuestas se comprime igual que antes (payload
+        #> 200 bytes: GZipMiddleware no comprime respuestas más chicas).
+        from unittest.mock import Mock
+        req         =   Mock()
+        req.META    =   {'HTTP_ACCEPT_ENCODING': 'gzip'}
+        json_resp   =   HttpResponse(b'{"ok": true, "pad": "' + b'x' * 300 + b'"}', content_type = 'application/json')
+        out2        =   mw.process_response(req, json_resp)
+        self.assertEqual(out2.headers.get('Content-Encoding'), 'gzip')
+
     def test_dedupe_upsert_revives_unread(self):
         from StoreApp.domains.customers.services.notifications import upsert_customer_notification
         n1  =   upsert_customer_notification(self.a, self.store, 'order', 'v1', dedupe_key = 'k1')

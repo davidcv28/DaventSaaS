@@ -29,8 +29,10 @@ from StoreApp.domains.catalog.services.price_updates import (
 )
 from StoreApp.domains.catalog.services.services import (
     can_add_product,
+    can_add_taxonomy,
     catalog_enabled,
     products_limit,
+    taxonomy_quota_message,
 )
 from StoreApp.domains.stores.services import (
     delete_brand_image,
@@ -82,16 +84,36 @@ class CatalogGateMixin:
         denied  =   self._deny_without_catalog()
         if denied: return denied
         return super().destroy(request, pk)
+class CatalogQuotaMixin:
+    """
+    Cupo defensivo de la colección bajo lock de la fila de la tienda —
+    mismo patrón que ProductViewSet.create (transaction.atomic +
+    select_for_update): dos creates concurrentes no pasan ambos el tope.
+    `quota_kind` lo define cada viewset ('category' | 'brand' | 'discount').
+    """
+    quota_kind  =   None
+    def create(self, request, *args, **kwargs):
+        store   =   self.my_store()
+        with transaction.atomic():
+            locked  =   type(store).objects.select_for_update().get(pk = store.pk)
+            if not can_add_taxonomy(locked, self.quota_kind):
+                return Response(
+                    {'detail': taxonomy_quota_message(self.quota_kind)},
+                    status = status.HTTP_403_FORBIDDEN,
+                )
+            return super().create(request, *args, **kwargs)
 #=========================================
 # CATEGORY VIEWSET
 #=========================================
-class CategoryViewSet(CatalogGateMixin, CatalogBaseViewSet):
+class CategoryViewSet(CatalogGateMixin, CatalogQuotaMixin, CatalogBaseViewSet):
     viewset_config  =   CategoryConfigs
+    quota_kind      =   'category'
 #=========================================
 # BRAND VIEWSET
 #=========================================
-class BrandViewSet(CatalogGateMixin, CatalogBaseViewSet):
+class BrandViewSet(CatalogGateMixin, CatalogQuotaMixin, CatalogBaseViewSet):
     viewset_config  =   BrandConfigs
+    quota_kind      =   'brand'
     #=========================================
     # BRAND IMAGE (logo PNG -> WebP con transparencia, multipart)
     #=========================================
@@ -129,8 +151,9 @@ class BrandViewSet(CatalogGateMixin, CatalogBaseViewSet):
 #=========================================
 # DISCOUNT VIEWSET (descuentos programados de la tienda)
 #=========================================
-class DiscountViewSet(CatalogGateMixin, CatalogBaseViewSet):
+class DiscountViewSet(CatalogGateMixin, CatalogQuotaMixin, CatalogBaseViewSet):
     viewset_config  =   DiscountConfigs
+    quota_kind      =   'discount'
     def _deny_without_discounts(self):
         #Sistema de descuentos programados: función premium
         #('has_discounts'). Sin el flag la web ya no los aplica

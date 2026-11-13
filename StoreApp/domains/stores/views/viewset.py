@@ -167,6 +167,10 @@ CATALOG_IDS_MAX         =   50
 #los más frecuentes; los atributos con menos uso quedan fuera del panel).
 CATALOG_FACET_GROUPS    =   12
 CATALOG_FACET_VALUES    =   30
+#Tope de promociones viajeras en el payload público del catálogo: el
+#owner ya tiene cupo de descuentos (DISCOUNTS_MAX), pero la lista
+#pública se acota igual por defensa en profundidad.
+CATALOG_PROMOTIONS_MAX  =   20
 #TTL del cache server-side de los payloads públicos (web de cliente): solo
 #barre entradas huérfanas — la frescura la garantiza el versionado (epoch,
 #ver) que bustea al instante en cada save/delete de lo que compone el
@@ -1194,10 +1198,13 @@ class StoreViewSet(StoreBaseViewSet):
             items.sort(key = lambda p: p.name)
             items.sort(key = lambda p: p.effective_price, reverse = (sort == 'price_desc'))
         #Los conteos de cada taxonomía viajan en products_count (solo
-        #productos activos, como la lista que se filtra).
+        #productos activos, como la lista que se filtra). Las categorías
+        #y marcas SIN productos activos no viajan al público: el owner
+        #puede tener filas vacías de borradores y el payload no paga ni
+        #expone taxonomía muerta.
         from django.db.models import Count, Q
-        categories      =   store.categories.annotate(products_count = Count('products', filter = Q(products__is_active = True, products__is_exclusive = False)))
-        brands          =   store.brands.annotate(products_count = Count('products', filter = Q(products__is_active = True, products__is_exclusive = False)))
+        categories      =   store.categories.annotate(products_count = Count('products', filter = Q(products__is_active = True, products__is_exclusive = False))).filter(products_count__gt = 0)
+        brands          =   store.brands.annotate(products_count = Count('products', filter = Q(products__is_active = True, products__is_exclusive = False))).filter(products_count__gt = 0)
         #Orden de los grupos de facetas: con categoría elegida, los atributos
         #que esa categoría declara en su feature_schema van primero y en ese
         #mismo orden (la plantilla del dueño manda); el resto por frecuencia.
@@ -1232,8 +1239,9 @@ class StoreViewSet(StoreBaseViewSet):
         facet_list      =   facet_list[:CATALOG_FACET_GROUPS]
         #Las promos vigentes viajan a nivel catálogo (nombre, %, alcance y
         #vencimiento) para que las plantillas armen su propio banner —
-        #ordenadas de mayor a menor descuento.
-        promotions      =   sorted(discounts, key = lambda d: d.percent, reverse = True)
+        #ordenadas de mayor a menor descuento y acotadas por
+        #CATALOG_PROMOTIONS_MAX.
+        promotions      =   sorted(discounts, key = lambda d: d.percent, reverse = True)[:CATALOG_PROMOTIONS_MAX]
         return {
             'categories'    :   CategorySerializer(categories, many = True).data,
             'brands'        :   BrandSerializer(brands, many = True).data,

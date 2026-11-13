@@ -1,0 +1,97 @@
+{
+  "agent": "hunter-13",
+  "coverage_id": "wave2",
+  "disposition": "candidate",
+  "candidate_fingerprints": [
+    "residual-plumbing:sync-run-missing-plan-gate"
+  ],
+  "unresolved": [
+    "sync_run missing has_customization gate — needs_validation pending confirmation that no production plan grants has_public_link without has_customization and that frontend still drops non-canonical layout blocks",
+    "fastmcp_server :8100 — loopback-bound and absent from all repo deployment config; only externally reachable if an operator runs it manually AND exposes it via out-of-repo firewall/port-forward (needs_validation deployment fact, not a source finding)"
+  ],
+  "checks": [
+    {
+      "agent_id": "hunter-13",
+      "reviewed_paths": ["AdminApp/domains/users/views/viewset.py", "AdminApp/domains/users/views/viewset_base.py", "AdminApp/domains/users/views/viewset_config.py", "AdminApp/domains/users/views/auth_views.py", "AdminApp/domains/users/urls/urls.py", "AdminApp/permissions.py", "DaventProject/settings.py"],
+      "invariant": "/api/register/ throttle reaches only anonymous callers",
+      "method": "source",
+      "result": "pass: RegisterUserViewSet IsAnonimous + RegisterRateThrottle(AnonRateThrottle); DRF checks permissions BEFORE throttles so authenticated callers get 403 before throttle — the AnonRateThrottle dead-for-auth pattern NOT exploitable on register. Same bug pattern exists on auth_views.py AllowAny endpoints (covered by users-auth unit). RegisterRateThrottle is plain AnonRateThrottle not Resilient (500s on cache outage; lacks _pinned_ident).",
+      "artifact": null
+    },
+    {
+      "agent_id": "hunter-13",
+      "reviewed_paths": ["StoreApp/domains/stores/views/viewset.py", "StoreApp/domains/stores/services/sync.py", "StoreApp/domains/stores/serializers/serializers.py", "StoreApp/domains/stores/layout_blocks.py", "StoreApp/domains/stores/site_theme.py", "docs/security-audit-run2/agents/verifier-catalog/result.json"],
+      "invariant": "sync/run publish path enforces same plan gates as customization_publish",
+      "method": "source",
+      "result": "partial: POST /api/stores/sync/run/ -> run_sync -> publish_design_draft copies drafts verbatim with ZERO profile_has_benefit checks — lacks even has_customization gate that all sibling Studio actions enforce. Mitigations: draft writes require has_customization at write time; all seeded plans couple has_public_link+has_customization; public page 404s without has_public_link; layout_config read-drift already rejected as inert (frontend drops non-canonical ids).",
+      "artifact": null
+    },
+    {
+      "agent_id": "hunter-13",
+      "reviewed_paths": ["StoreApp/domains/stores/services/ai_design.py", "StoreApp/domains/stores/services/ai_design_copy.py", "StoreApp/domains/stores/services/ai_design_telemetry.py", "StoreApp/domains/stores/services/commerce.py", "StoreApp/domains/stores/services/media_quality.py", "StoreApp/domains/stores/services/imaging.py", "StoreApp/domains/stores/layout_blocks.py", "StoreApp/domains/stores/site_theme.py", "StoreApp/domains/stores/views/viewset.py", "frontend/src/utils/proceduralIcon.js"],
+      "invariant": "AI-design content sanitized before reaching public layout_config/site_theme",
+      "method": "source",
+      "result": "pass: engine deterministic/offline, zero outbound calls; all endpoints require has_customization+has_ai_design + per-user throttles; apply() recalculates server-side; clean_layout_config/clean_site_theme applied; _clean_hint rejects <>{}\\`; imaging BG model fixed URL+sha256 pin (no SSRF); upload_design_image normalize_image+quota recheck. Latent: apply_design_overlay trusts overlay verbatim but has NO caller currently.",
+      "artifact": null
+    },
+    {
+      "agent_id": "hunter-13",
+      "reviewed_paths": ["AdminApp/domains/invoices/views/viewset.py", "AdminApp/domains/invoices/views/viewset_config.py", "AdminApp/domains/invoices/serializers/serializers.py", "AdminApp/domains/invoices/services/vault.py", "AdminApp/domains/invoices/services/services.py", "AdminApp/domains/invoices/services/afip.py"],
+      "invariant": "invoice PII owner-scoped; CAE retry bounded; vault crypto correct",
+      "method": "source",
+      "result": "pass: retry-cae IsAdminUser only, optimistic PROCESSING claim, fail-open status, scrubbed errors, defused XML, 20s timeout; InvoiceUserConfig scopes to request.user; vault AES-256-GCM+nonce+AAD+kid rotation; emails escape all user data; no header injection (Django forbid_multi_line_headers).",
+      "artifact": null
+    },
+    {
+      "agent_id": "hunter-13",
+      "reviewed_paths": ["StoreApp/domains/customers/services/mails.py", "StoreApp/domains/customers/services/notifications.py", "StoreApp/domains/customers/services/customers.py", "StoreApp/domains/customers/tasks.py", "StoreApp/domains/customers/serializers/serializers.py", "StoreApp/domains/customers/views/profile_views.py", "StoreApp/domains/customers/views/membership_views.py", "StoreApp/domains/customers/views/auth_views.py"],
+      "invariant": "customer mails/notifications escape store+customer strings; profile writes customer-scoped",
+      "method": "source",
+      "result": "pass: html.escape on names, fixed subjects, validated recipients; notifications deduped upsert, 500-char bodies, rendered as text; clean_free_text strip_tags; mass-assignment guarded; addresses/profile scoped to request.customer; customer throttles SimpleRateThrottle pk-or-IP (NOT the AnonRateThrottle bug).",
+      "artifact": null
+    },
+    {
+      "agent_id": "hunter-13",
+      "reviewed_paths": ["StoreApp/domains/orders/services/carriers.py", "StoreApp/domains/orders/services/events.py", "StoreApp/domains/orders/services/mails.py", "StoreApp/domains/memberships/services/benefits.py", "StoreApp/domains/legalpages/services/services.py", "StoreApp/domains/legalpages/tasks.py", "StoreApp/domains/legalpages/serializers/serializers.py", "StoreApp/domains/cart/services/cart.py", "StoreApp/domains/cart/serializers/serializers.py"],
+      "invariant": "carrier calls fixed-provider no SSRF; order/legal/cart services bounded",
+      "method": "source",
+      "result": "pass: Andreani fixed https URL+BYO creds+20s timeout+encoded codes (no SSRF); minor unguarded res.json() -> 500 on non-JSON 200 (robustness). events single funnel bounded. mails gated on email_verified, escaped. memberships vigencia at read. legalpages fixed text+captcha+honeypot. cart server-side pricing+stock revalidation+qty bounds.",
+      "artifact": null
+    },
+    {
+      "agent_id": "hunter-13",
+      "reviewed_paths": ["McpApp/fastmcp_server.py", "docker-compose.yml", "docker/caddy/Caddyfile", "docker/web/templates/default.conf.template", "render.yaml", ".github"],
+      "invariant": "MCP server not exposed beyond loopback in any deploy path",
+      "method": "source",
+      "result": "pass: fastmcp_server binds 127.0.0.1:8100; user resolved from Bearer JWT only; mcp_user_access paid non-trial; zero references in compose/caddy/nginx/render/CI — not part of deployed stack; external exposure only via out-of-repo manual port-forward (deployment fact).",
+      "artifact": null
+    },
+    {
+      "agent_id": "hunter-13",
+      "reviewed_paths": ["DaventProject/pagination.py", "DaventProject/celery.py"],
+      "invariant": "pagination bounded; celery no security surface",
+      "method": "source",
+      "result": "pass: page_size capped 200; celery minimal autodiscovery.",
+      "artifact": null
+    }
+  ],
+  "candidates": [
+    {"fingerprint": "residual-plumbing:sync-run-missing-plan-gate", "proposed_verdict": "needs_validation", "severity_hint": "low", "confidence": "medium", "title": "POST /api/stores/sync/run/ publishes design draft with no plan-benefit check (third verbatim publish path)"}
+  ],
+  "hardening": [
+    "RegisterRateThrottle is plain AnonRateThrottle (not Resilient): 500s on cache outage, lacks _pinned_ident REMOTE_ADDR pinning.",
+    "ai_design.apply_design_overlay trusts overlay verbatim — currently unreachable; re-run clean_* inside if a future path wires it.",
+    "invoices retry-cae has no throttle — admin-only but synchronous ARCA round-trips; consider per-admin throttle.",
+    "orders/services/carriers.py res.json() unguarded -> 500 on non-JSON 200; wrap in try/except.",
+    "stores sync GET (line 1726) also lacks has_customization gate — read-only own-store, nil impact, consistency only."
+  ],
+  "uncovered": [
+    "StoreApp/domains/orders/services/{checkout,payments,proofs,notify}.py — checkout payment-claim logic belongs to ecommerce orders unit.",
+    "StoreApp/domains/customers/services/{customers,google,tokens}.py register/login/google flows — belongs to customer-auth unit.",
+    "SuscriptionApp/domains/benefits — covered by hunter-12.",
+    "McpApp/domains/skills/services/{anthropic,llm,mcp,services,dashboard_map}.py and views/viewset.py — AI-AND-LLM unit.",
+    "StoreApp/domains/{storepayments,feed,support,storeadmin,design,catalog} views/services — covered by other units.",
+    "StoreApp/domains/stores/views/viewset.py lines ~430-1560 and 1750+ — partially skimmed for gates only.",
+    "StoreApp/domains/stores/services/{storage,web_quality,domains}.py — skimmed via imports only."
+  ]
+}

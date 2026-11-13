@@ -163,7 +163,18 @@ def contact_redirect_url(store, customization, kind : str, text : str = '') -> s
         #Ubicación en Google Maps: domicilio + ciudad + provincia del perfil.
         #El documento enlaza /r/maps/ y Google resuelve la búsqueda — no se
         #guardan coordenadas ni se expone el domicilio en el HTML servido.
+        #La dirección exige AMBOS interruptores públicos (mismo criterio que
+        #el serializer del payload): el toggle del dueño 'show_location' y
+        #el beneficio del plan 'has_location_map' — sin ellos el redirect
+        #responde vacío y el domicilio no sale ni como query de Google.
+        if customization is None or not getattr(customization, 'show_location', False):
+            return ''
         user        =   getattr(store, 'user', None)
+        if user is None:
+            return ''
+        from StoreApp.domains.stores.services.services import profile_has_benefit
+        if not profile_has_benefit(user, 'has_location_map'):
+            return ''
         parts       =   [
             str(getattr(user, 'address', '') or '').strip(),
             str(getattr(getattr(user, 'city', None), 'name_city', '') or '').strip(),

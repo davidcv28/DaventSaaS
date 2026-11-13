@@ -65,6 +65,21 @@ class OrderCreateThrottle(ResilientUserRateThrottle):
     de un checkout legítimo, corta el flood de pedidos falsos)."""
     scope   =   'store_order_create'
     rate    =   '10/hour'
+class OrderCreateIpThrottle(ResilientAnonRateThrottle):
+    """Cota por IP de origen en paralelo a la por-cuenta: el registro de
+    compradores es self-service (10/h por IP), así que el bucket por
+    customer.pk se multiplica con cada cuenta minteada — la IP acota el
+    total de pedidos que un origen puede crear."""
+    scope   =   'store_order_create_ip'
+    rate    =   '30/hour'
+    def get_cache_key(self, request, view):
+        #Siempre por IP, también con request.user seteado: el
+        #get_cache_key de AnonRateThrottle devolvería None para
+        #autenticados y el límite no aplicaría.
+        ident   =   self.get_ident(request)
+        if not ident:
+            return None
+        return self.cache_format % {'scope': self.scope, 'ident': ident}
 class OrderProofThrottle(ResilientAnonRateThrottle):
     """Subida de comprobantes por IP (10/h — cada una escribe en R2)."""
     scope   =   'store_order_proof'
@@ -122,10 +137,16 @@ class OrderCaptchaView(APIView):
 class PublicOrderCreateView(APIView):
     authentication_classes  =   [CustomerJWTAuthentication]
     permission_classes      =   [IsCustomer]
-    throttle_classes        =   [OrderCreateThrottle]
+    throttle_classes        =   [OrderCreateThrottle, OrderCreateIpThrottle]
     def post(self, request, slug):
         store       =   _sellable_or_404(slug)
         customer    =   request.customer
+        #Gate anti-abuso: la reserva blanda de stock y los pedidos al
+        #comercio exigen contacto verificado — el registro self-service
+        #sin verificación permitía mintear cuentas y acaparar stock o
+        #spamear pedidos falsos que nunca se pagan.
+        if not getattr(customer, 'email_verified', False):
+            return Response({'detail': 'Verificá tu correo electrónico para poder comprar.'}, status = status.HTTP_403_FORBIDDEN)
         serializer  =   OrderCreateSerializer(data = request.data)
         serializer.is_valid(raise_exception = True)
         data        =   serializer.validated_data

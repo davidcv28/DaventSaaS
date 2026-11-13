@@ -1,0 +1,24 @@
+{
+  "agent_id": "critic",
+  "role": "coverage-critic",
+  "decision": "gaps_found",
+  "note": "Reconstructed from run transcript: the coverage critic ran after wave-1 hunters and returned gaps_found. The critic result.json was not persisted by the agent; this record preserves its outcome for ledger bookkeeping. All identified gaps were closed by wave-2 hunters 11-13 and independently verified in Phase-3.",
+  "gaps": [
+    {
+      "unit": "customer-notification-sse",
+      "description": "StoreApp/domains/customers SSE notification stream (ticket issuance, stream lifecycle, worker/thread cost) was not covered by wave-1 hunters.",
+      "closed_by": "hunter-11"
+    },
+    {
+      "unit": "residual-plumbing",
+      "description": "Residual middleware/settings/deployment plumbing surfaces not assigned to any wave-1 unit.",
+      "closed_by": "hunter-13"
+    },
+    {
+      "unit": "public-catalog-design-surfaces",
+      "description": "Public catalog/design serialization and pattern document surfaces beyond the units already covered.",
+      "closed_by": "hunter-12"
+    }
+  ],
+  "wave2_units": ["hunter-11", "hunter-12", "hunter-13"]
+}

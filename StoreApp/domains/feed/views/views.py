@@ -6,7 +6,7 @@ from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
-from DaventProject.throttling import PublicReadThrottle, ResilientAnonRateThrottle
+from DaventProject.throttling import PublicReadThrottle, ResilientUserRateThrottle
 from StoreApp.domains.customers.authentication import CustomerJWTAuthentication, IsCustomer
 from StoreApp.domains.feed.models import FeedComment, FeedPollOption, FeedPost
 from StoreApp.domains.feed.serializers import (
@@ -52,9 +52,13 @@ Público (web de la tienda):
 #=========================================
 # THROTTLES
 #=========================================
-class FeedWriteThrottle(ResilientAnonRateThrottle):
+class FeedWriteThrottle(ResilientUserRateThrottle):
     #Escrituras de comprador (comentar/likear/votar): reusa el scope
-    #antispam de opiniones de producto (10/hour por IP).
+    #antispam de opiniones de producto (10/hour). ResilientUserRateThrottle
+    #y NO ResilientAnonRateThrottle: con AnonRateThrottle get_cache_key
+    #devolvía None para request.user autenticado (Customer JWT setea
+    #request.user) y TODA escritura de comprador pasaba sin límite.
+    #UserRateThrottle keyea por customer.pk si hay auth y por IP si no.
     scope   =   'store_review'
 #=========================================
 # HELPERS

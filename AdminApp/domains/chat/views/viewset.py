@@ -6,7 +6,8 @@ from rest_framework.decorators import action
 from rest_framework.exceptions import PermissionDenied
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
-from rest_framework.throttling import ScopedRateThrottle
+
+from DaventProject.throttling import ResilientUserRateThrottle
 
 from AdminApp.domains.chat.models import AssistantMessage, ChatMessage, ChatThread
 from AdminApp.domains.chat.serializers import (
@@ -48,13 +49,16 @@ heartbeat, sin websockets — el deploy corre gunicorn sync).
 #=========================================
 # CHAT THROTTLES
 #=========================================
-class ChatPollThrottle(ScopedRateThrottle):
+class ChatPollThrottle(ResilientUserRateThrottle):
     #Scope 'chat' (settings): polling de mensajes + heartbeat. Reemplaza el
     #'user' default (1000/dia mataria el polling en ~40 min). Holgado para
-    #intervalo de ~5s pero acota abusos.
+    #intervalo de ~5s pero acota abusos. ResilientUserRateThrottle y NO
+    #ScopedRateThrottle: ScopedRateThrottle lee view.throttle_scope (que
+    #ninguna vista define) y con scope=None permitía TODO — el throttle
+    #era código muerto. UserRateThrottle keyea por user.pk (IsAuthenticated).
     scope   =   'chat'
 
-class ChatSendThrottle(ScopedRateThrottle):
+class ChatSendThrottle(ResilientUserRateThrottle):
     #Scope 'chat_send': spam de mensajes — mucho mas estricto que el read.
     scope   =   'chat_send'
 
@@ -143,7 +147,7 @@ class SupportChatViewSet(viewsets.GenericViewSet):
         if image:
             #El adjunto viaja al bucket/disco — a la DB solo va la key.
             try:
-                image_key   =   upload_chat_image(thread, image)
+                image_key   =   upload_chat_image(thread, image, sender = request.user)
             except ValueError as exc:
                 return Response({'image': [str(exc)]}, status = status.HTTP_400_BAD_REQUEST)
         message     =   send_message(request.user, serializer.validated_data['body'], thread, image_key = image_key)

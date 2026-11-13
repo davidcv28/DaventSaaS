@@ -29,6 +29,7 @@ from StoreApp.domains.stores.models import (
     StoreDailyVisit,
     StoreFiscalProfile,
     StoreGalleryImage,
+    StoreDomain,
     StudioVersion,
 )
 from StoreApp.domains.stores.services import contact as contact_service
@@ -991,6 +992,33 @@ class PublicStoreAccessTests(TestCase):
         response        =   APIClient().get(f'{STORES_URL}public/mi-tienda/')
         self.assertIsNone(response.data['location_address'])
 
+    def test_maps_redirect_gated_by_location_map_benefit(self):
+        #El domicilio del dueño no sale ni como query de Google sin el
+        #beneficio has_location_map — aunque show_location esté prendido.
+        store           =   self._setup()   # has_public_link, sin has_location_map
+        profile         =   store.user
+        profile.address =   'Av. Siempre Viva 742'
+        profile.save(update_fields = ['address'])
+        custom          =   store.customization
+        custom.show_location    =   True
+        custom.save()
+        public          =   APIClient()
+        self.assertEqual(public.get(f'{STORES_URL}public/mi-tienda/r/maps/').status_code, 404)
+        #Con el beneficio el redirect resuelve server-side (el domicilio
+        #viaja solo en la URL de Google, nunca en el HTML del visitante).
+        _, profile2     =   _make_named_user('mapera')
+        _grant(profile2, has_public_link = True, has_location_map = True)
+        profile2.address =   'Av. Corrientes 1234'
+        profile2.save(update_fields = ['address'])
+        store2          =   Store.objects.create(user = profile2, slug = 'con-mapa')
+        custom2         =   StoreCustomization.objects.create(store = store2)
+        custom2.show_location =   True
+        custom2.save()
+        response        =   public.get(f'{STORES_URL}public/con-mapa/r/maps/')
+        self.assertEqual(response.status_code, 302)
+        self.assertIn('maps.google.com', response['Location'])
+        self.assertIn('Corrientes', response['Location'])
+
     def test_catalog_404_without_public_link(self):
         self._setup(suscription = False)
         self.assertEqual(APIClient().get(f'{STORES_URL}public/mi-tienda/catalog/').status_code, 404)
@@ -1008,6 +1036,38 @@ class PublicStoreAccessTests(TestCase):
         self._setup()
         response        =   APIClient().get(f'{STORES_URL}public/mi-tienda/catalog/', {'sort': 'drop_table'})
         self.assertEqual(response.status_code, 200)
+
+
+class StoreSitemapTests(TestCase):
+    """
+    El sitemap público solo anuncia tiendas que el endpoint público sirve:
+    publicadas, no bloqueadas y con has_public_link vigente — el resto
+    respondería 404 a los crawlers.
+    """
+
+    def _store(self, username, slug, published = True, blocked = False, entitled = True):
+        _, profile      =   _make_named_user(username)
+        if entitled:
+            _grant(profile, has_public_link = True)
+        else:
+            #Suscripción vigente en un plan SIN el flag (web apagada).
+            plan        =   SuscriptionPlan.objects.create(name = f'Plan {username}')
+            Suscription.objects.create(
+                user = profile, plan_suscription = plan,
+                end_date = timezone.now() + timedelta(days = 30),
+                status = Suscription.STATUS_ACTIVE,
+            )
+        return Store.objects.create(user = profile, slug = slug,
+                                    is_published = published, is_blocked = blocked)
+
+    def test_sitemap_only_lists_publicly_served_stores(self):
+        from DaventProject.sitemaps import StoreSitemap
+        self._store('ok', 'visible')
+        self._store('sinlink', 'sin-link', entitled = False)
+        self._store('bloq', 'bloqueada', blocked = True)
+        self._store('oculta', 'oculta', published = False)
+        slugs       =   [s.slug for s in StoreSitemap().items()]
+        self.assertEqual(slugs, ['visible'])
 
 
 class CaptchaTests(TestCase):
@@ -2675,7 +2735,9 @@ class StoreDomainTests(TestCase):
     def _make(self, with_benefit = True):
         user, profile   =   _make_user(verified = True)
         if with_benefit:
-            _grant(profile, has_custom_domain = True)
+            #El dominio propio exige la web pública: has_custom_domain para
+            #el alta y has_public_link para que resolve_slug la sirva.
+            _grant(profile, has_custom_domain = True, has_public_link = True)
         store           =   Store.objects.create(user = profile, slug = 'mi-tienda')
         client          =   APIClient()
         client.force_authenticate(user = user)
@@ -2730,6 +2792,20 @@ class StoreDomainTests(TestCase):
         client, _       =   self._make()
         client.post(f'{STORES_URL}domain/', {'domain': 'mitienda.com'}, format = 'json')
         response        =   APIClient().get(f'{STORES_URL}domain/resolve/', {'domain': 'mitienda.com'})
+        self.assertEqual(response.status_code, 404)
+
+    def test_resolve_404_when_public_link_missing(self):
+        #Dominio verified pero la web pública está apagada (sin
+        #has_public_link): resolve_slug devuelve '' — el dominio propio
+        #no puede servir una tienda que /public/<slug>/ responde 404.
+        user, profile   =   _make_named_user('sinlink')
+        _grant(profile, has_custom_domain = True)   #sin has_public_link
+        store           =   Store.objects.create(user = profile, slug = 'otra-tienda')
+        StoreDomain.objects.create(
+            store = store, domain = 'otra.com', verify_token = 'tok',
+            status = StoreDomain.STATUS_VERIFIED, verified_at = timezone.now(),
+        )
+        response        =   APIClient().get(f'{STORES_URL}domain/resolve/', {'domain': 'otra.com'})
         self.assertEqual(response.status_code, 404)
 
     def test_tls_ask_allows_only_verified_domains(self):

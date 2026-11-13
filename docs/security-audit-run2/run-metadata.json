@@ -1,0 +1,34 @@
+{
+  "run_id": "run-2",
+  "repo": "DaventSaaS",
+  "target": "C:\\Users\\David\\OneDrive\\Escritorio\\SaaS DAVENT",
+  "source_ref": "80f87a7a (HEAD, clean worktree)",
+  "profile": "standard",
+  "scope_paths": ["whole repository: AdminApp, StoreApp, SuscriptionApp, McpApp, DaventProject, frontend/src, docker, .github/workflows"],
+  "budget": null,
+  "execution_policy": "sandboxed-source-and-local-only",
+  "execution_note": "No OS sandbox with no-network/read-only enforcement is available on this Windows host; hunters are source-only (method=source, artifact=null). Target-controlled execution was not performed; decisive runtime/deployment facts are recorded as needs_validation.",
+  "selected_companions": [
+    "WEB-PROTOCOL-AND-AUTH.md",
+    "DATA-ISOLATION-AND-LIFECYCLE.md",
+    "CLIENT-SIDE.md",
+    "PROTOCOLS-RPC-AND-MESSAGING.md",
+    "RESOURCE-EXHAUSTION-AND-AVAILABILITY.md",
+    "CLOUD-AND-DEPLOYMENT.md",
+    "SUPPLY-CHAIN-AND-RELEASE.md",
+    "AI-AND-LLM.md"
+  ],
+  "prior_run_paths": ["docs/security-audit-run1", "SECURITY_AUDIT.md"],
+  "shared_file_owners": {
+    "run-metadata.json": "parent",
+    "architecture.md": "parent",
+    "coverage-ledger.json": "parent",
+    "findings.json": "parent",
+    "REPORT.md": "parent",
+    "FINDINGS-DETAIL.md": "parent",
+    "NEEDS-VALIDATION.md": "parent"
+  },
+  "run_status": "complete",
+  "phase5_note": "All 23 retained confirmed/needs_validation records received fresh Phase-5 verification. Four material replacements were re-verified by independent fresh agents before acceptance: infra:sitemap-benefit-gate, storepayments:webhook-default-throttle-starvation, users-auth:login-csrf-no-origin-check, users-auth:email-verify-token-not-email-bound (plus infra:caddy-xcaddy-unpinned severity low->medium). Final tally: 20 confirmed, 3 needs_validation, 5 rejected.",
+  "validator_note": "validate-coverage-ledger.cjs / validate-findings.cjs require O_NOFOLLOW+O_NONBLOCK (unavailable on Windows); validation runs on byte-identical copies with only the file-open guard relaxed. Semantic checks unchanged."
+}

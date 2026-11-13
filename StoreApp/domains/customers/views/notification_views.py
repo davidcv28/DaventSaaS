@@ -1,4 +1,5 @@
 import json
+import secrets
 import time
 
 from django.core import signing
@@ -12,6 +13,13 @@ from rest_framework.views import APIView
 from rest_framework.renderers import BaseRenderer
 from rest_framework.utils.encoders import JSONEncoder
 
+from DaventProject.cache_utils import (
+    CacheUnavailable,
+    cache_add_strict,
+    cache_delete,
+)
+from DaventProject.throttling import PublicReadThrottle
+
 from StoreApp.domains.customers.authentication import (
     CustomerJWTAuthentication,
     IsCustomer,
@@ -20,7 +28,6 @@ from StoreApp.domains.customers.models import Customer, CustomerNotification
 from StoreApp.domains.customers.serializers import CustomerNotificationSerializer
 from StoreApp.domains.customers.views.auth_views import (
     CustomerApiThrottle,
-    CustomerPublicReadThrottle,
 )
 from StoreApp.domains.stores.models import Store
 
@@ -54,6 +61,58 @@ STREAM_MAX_SECONDS  =   50          # < timeout de gunicorn (60s)
 POLL_SECONDS        =   4           # cadencia de consulta a la base
 PING_SECONDS        =   15          # heartbeat SSE (detecta tabs muertas)
 LIST_LIMIT          =   50
+#Un ticket abre UN stream (jti de un solo uso) y un customer no puede
+#tener más de N streams abiertos a la vez: cada conexión ocupa un
+#gthread ~50s — sin estos topes un solo cliente saturaba todos los
+#workers del API (ver customers-sse:worker-exhaustion).
+STREAM_MAX_PER_CUSTOMER =   3
+
+
+class CustomerStreamThrottle(PublicReadThrottle):
+    """Scope propio 'customer_notifications_stream' (settings): una
+    conexión SSE no es una lectura — ocupa un worker-thread ~50s. El
+    bucket es por IP+acción como PublicReadThrottle."""
+    scope   =   'customer_notifications_stream'
+
+
+def _session_epoch(customer):
+    """Epoch de sesión sellado en el ticket: tokens_valid_after del
+    customer (0 si nunca se selló). Si el comprador cierra sesión o se
+    revocan tokens después de emitido el ticket, el epoch cambia y el
+    ticket muere aunque no venció el TTL."""
+    valid_after =   getattr(customer, 'tokens_valid_after', None)
+    return int(valid_after.timestamp()) if valid_after else 0
+
+
+def _claim_ticket(jti):
+    """Un solo uso por jti: el primer connect gana; cualquier replay del
+    mismo ticket dentro del TTL se rechaza. Fail-open si el cache cae
+    (misma política que los throttles — el SSE no puede quedar en 500
+    por una falla de Redis)."""
+    try:
+        return cache_add_strict(f'sse:ticket:{jti}', 1, TICKET_TTL)
+    except CacheUnavailable:
+        return True
+
+
+def _acquire_stream_slot(customer_id):
+    """Reclama un slot libre con cache_add atómico (SET NX): máximo
+    STREAM_MAX_PER_CUSTOMER streams vivos por customer. Devuelve
+    (permitido, slot_key): slot_key None cuando el cache está caído —
+    fail-open igual que los throttles, no hay forma de contar sin él."""
+    try:
+        for i in range(STREAM_MAX_PER_CUSTOMER):
+            key =   f'sse:stream:{customer_id}:{i}'
+            if cache_add_strict(key, 1, STREAM_MAX_SECONDS + 30):
+                return True, key
+        return False, None
+    except CacheUnavailable:
+        return True, None
+
+
+def _release_stream_slot(slot_key):
+    if slot_key:
+        cache_delete(slot_key)
 
 
 def _unread_count(customer_id, store_slug = ''):
@@ -122,7 +181,15 @@ class CustomerNotificationStreamTicketView(APIView):
     throttle_classes        =   [CustomerApiThrottle]
     def post(self, request):
         slug    =   ((request.data or {}).get('store') or '').strip().lower()
-        ticket  =   signing.dumps({'c': request.customer.pk, 's': slug}, salt = STREAM_SALT)
+        #jti de un solo uso + epoch de sesión: el ticket no es un bearer
+        #replayable — abre UN stream y muere si la sesión se revocó.
+        payload =   {
+            'c' :   request.customer.pk,
+            's' :   slug,
+            'j' :   secrets.token_urlsafe(16),
+            'e' :   _session_epoch(request.customer),
+        }
+        ticket  =   signing.dumps(payload, salt = STREAM_SALT)
         return Response({'ticket': ticket, 'expires_in': TICKET_TTL}, status = status.HTTP_200_OK)
 
 
@@ -153,7 +220,7 @@ class CustomerNotificationStreamView(APIView):
     """
     permission_classes      =   [AllowAny]
     authentication_classes  =   []
-    throttle_classes        =   [CustomerPublicReadThrottle]
+    throttle_classes        =   [CustomerStreamThrottle]
     renderer_classes        =   [_EventStreamRenderer]
     def get(self, request):
         ticket  =   (request.query_params.get('ticket') or '').strip()
@@ -167,6 +234,22 @@ class CustomerNotificationStreamView(APIView):
         customer    =   Customer.objects.filter(pk = data.get('c'), is_active = True).first()
         if customer is None:
             return Response({'detail': 'Sesión inválida.'}, status = status.HTTP_401_UNAUTHORIZED)
+        #Epoch de sesión sellado al emitir el ticket: si el comprador
+        #cerró sesión o se revocaron sus tokens después, el ticket
+        #muere aunque no venció el TTL (replay post-logout).
+        try:
+            ticket_epoch =   int(data.get('e') or 0)
+        except (TypeError, ValueError):
+            ticket_epoch =   0
+        if ticket_epoch != _session_epoch(customer):
+            return Response({'detail': 'Sesión revocada.'}, status = status.HTTP_401_UNAUTHORIZED)
+        #Un solo uso por jti: el mismo ticket no abre dos streams.
+        if not data.get('j') or not _claim_ticket(data['j']):
+            return Response({'detail': 'Ticket ya utilizado.'}, status = status.HTTP_401_UNAUTHORIZED)
+        #Cupo de streams concurrentes por customer.
+        allowed, slot_key  =   _acquire_stream_slot(customer.pk)
+        if not allowed:
+            return Response({'detail': 'Demasiadas conexiones simultáneas.'}, status = status.HTTP_429_TOO_MANY_REQUESTS)
         store_id    =   None
         if slug:
             store_id    =   Store.objects.filter(slug = slug).values_list('pk', flat = True).first()
@@ -176,7 +259,7 @@ class CustomerNotificationStreamView(APIView):
         except (TypeError, ValueError):
             last_id =   0
         response    =   StreamingHttpResponse(
-            self._events(customer.pk, store_id, last_id),
+            self._events(customer.pk, store_id, last_id, slot_key),
             content_type    =   'text/event-stream',
         )
         response['Cache-Control']       =   'no-cache'
@@ -184,7 +267,7 @@ class CustomerNotificationStreamView(APIView):
         response['X-Accel-Buffering']   =   'no'
         return response
 
-    def _events(self, customer_id, store_id, last_id):
+    def _events(self, customer_id, store_id, last_id, slot_key = None):
         encoder     =   JSONEncoder()
         deadline    =   time.monotonic() + STREAM_MAX_SECONDS
         next_ping   =   time.monotonic() + PING_SECONDS
@@ -207,9 +290,17 @@ class CustomerNotificationStreamView(APIView):
                 if time.monotonic() >= next_ping:
                     next_ping   =   time.monotonic() + PING_SECONDS
                     yield   ': ping\n\n'
+                    #Re-check de sesión dentro del stream: el epoch del
+                    #ticket solo se valida al conectar — un logout o una
+                    #desactivación a mitad de stream debe cortarlo.
+                    if not Customer.objects.filter(pk = customer_id, is_active = True).exists():
+                        yield 'event: bye\ndata: {}\n\n'
+                        return
                 time.sleep(min(POLL_SECONDS, max(0.5, deadline - time.monotonic())))
             #Cierre limpio antes del timeout del worker/proxy: el front
             #reconecta con ticket nuevo (el viejo puede seguir vivo).
             yield 'event: bye\ndata: {}\n\n'
         except (BrokenPipeError, ConnectionResetError, GeneratorExit):
             return
+        finally:
+            _release_stream_slot(slot_key)

@@ -131,8 +131,16 @@ def resolve_slug(domain):
     from StoreApp.domains.stores.models import StoreDomain
     store_domain    =   (
         StoreDomain.objects
-        .select_related('store')
+        .select_related('store__user')
         .filter(domain = domain, status = StoreDomain.STATUS_VERIFIED, store__is_published = True, store__is_blocked = False)
         .first()
     )
-    return store_domain.store.slug if store_domain else ''
+    if store_domain is None:
+        return ''
+    #Mismo gate que /public/<slug>/: sin suscripción vigente con
+    #has_public_link la web está apagada — el dominio propio tampoco
+    #resuelve (si no, la SPA quedaba cargando una tienda en 404).
+    from StoreApp.domains.stores.services.services import profile_has_benefit
+    if not profile_has_benefit(store_domain.store.user, 'has_public_link'):
+        return ''
+    return store_domain.store.slug

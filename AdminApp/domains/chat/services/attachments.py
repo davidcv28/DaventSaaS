@@ -14,6 +14,7 @@ from uuid import uuid4
 from django.core.files.base import ContentFile
 from django.core.files.storage import default_storage
 
+from AdminApp.domains.chat.models import ChatMessage
 from StoreApp.domains.stores.services import imaging, storage
 
 #La URL del adjunto es firmada y de vida corta: aunque se filtre el link,
@@ -23,16 +24,26 @@ CHAT_IMAGE_TTL_SECONDS  =   60 * 60
 #auth ni expiración): va bajo este prefijo, que nginx bloquea y que solo
 #sirve la vista autenticada GET /api/chat/attachment/<id>/.
 CHAT_PRIVATE_PREFIX     =   'private/'
+#Cupo de adjuntos por remitente: sin él, cualquier usuario pago subía
+#imágenes ilimitadas al bucket (cada una normalizada pero de peso
+#arbitrario hasta el tope del validador) — crecimiento de storage sin
+#cota ni alerta. 200 adjuntos por cuenta sobra para soporte real.
+CHAT_ATTACHMENTS_MAX_PER_SENDER =   200
 
-def upload_chat_image(thread, upload):
+def upload_chat_image(thread, upload, sender = None):
     """
     Valida, normaliza y sube el adjunto. Devuelve la key a persistir en
     ``ChatMessage.image_key`` — nunca el archivo en sí. Lanza ValueError
-    con el motivo si la imagen no es válida o la subida falla.
+    con el motivo si la imagen no es válida, se excede el cupo del
+    remitente o la subida falla.
     """
     error       =   storage.validate_image_file(upload)
     if error:
         raise ValueError(error)
+    if sender is not None:
+        used    =   ChatMessage.objects.filter(sender = sender, image_key__gt = '').count()
+        if used >= CHAT_ATTACHMENTS_MAX_PER_SENDER:
+            raise ValueError('Llegaste al límite de adjuntos del chat de soporte.')
     body, ext, content_type =   imaging.normalize_image(upload, 'chat')
     key         =   f'chat/{thread.id}/{uuid4().hex}.{ext}'
     if storage.storage_configured():

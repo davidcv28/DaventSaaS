@@ -131,6 +131,21 @@ def SocialLoginQuery(info : dict, coupon_code : str = '') -> tuple:
     #El alta social no pide celular (el provider no lo da): profile queda con
     #phone=None y el claim de la web lo exige aparte — el ancla anti-abuso se
     #conserva sin bloquear el ingreso al panel.
+    if not is_new:
+        #Anti-pre-hijacking: Google probó la titularidad del EMAIL, no
+        #quién eligió la contraseña que ya tenía la cuenta (el alta no
+        #exige verificación y el link por email no distingue al
+        #pre-registrante del dueño — ni siquiera si la víctima llegó a
+        #verificar el correo). Cualquier password usable se invalida y
+        #las sesiones ya emitidas se revocan: el dueño entra por Google
+        #o por reset. Mismo patrón que el login social de compradores
+        #StoreApp/domains/customers/services/google.py.
+        if user.has_usable_password():
+            user.set_unusable_password()
+            user.save(update_fields = ['password'])
+            from AdminApp.domains.users.services.services import _revoke_sessions
+            _revoke_sessions(user)
+            logger.info('Auto-link social: password utilizable invalidada y sesiones revocadas (user_id=%s)', user.pk)
     profile, _  =   UserProfile.objects.get_or_create(user = user)
     update_fields   =   []
     if not profile.email_verified:

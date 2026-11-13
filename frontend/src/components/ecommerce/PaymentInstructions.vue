@@ -8,6 +8,7 @@ import { ref, computed } from 'vue'
 import AppIcon from '../AppIcon.vue'
 import { orderPublicApi } from '../../api/storeorders.api.js'
 import { extractApiError } from '../../api/http.js'
+import { isMpCheckoutUrl, mpCheckoutUrl } from '../../utils/mpCheckout.js'
 
 const props = defineProps({
   slug: { type: String, required: true },
@@ -34,25 +35,16 @@ async function copy(text, key) {
 }
 
 // La URL de checkout viene del backend (preferencia de MP), pero se
-// revalida acá: solo hosts oficiales de Mercado Pago pueden recibir el
-// redirect — defensa en profundidad ante un upstream comprometido.
-const MP_HOST_RE = /(^|\.)(mercadopago|mercadolibre)\.[a-z]{2,63}(\.[a-z]{2,63})?$|(^|\.)mpago\.la$/
-function isMpCheckoutUrl(url) {
-  try {
-    const u = new URL(url)
-    return u.protocol === 'https:' && MP_HOST_RE.test(u.hostname.toLowerCase())
-  } catch {
-    return false
-  }
-}
-
+// revalida acá (utils/mpCheckout): solo hosts oficiales de Mercado
+// Pago pueden recibir el redirect — defensa en profundidad ante un
+// upstream comprometido.
 async function payMp() {
   if (!props.orderToken || paying.value) return
   paying.value = true
   payError.value = ''
   try {
     const data = await orderPublicApi.payMp(props.slug, props.orderToken)
-    const url = data?.checkout_url || data?.init_point || data?.sandbox_init_point
+    const url = mpCheckoutUrl(data)
     if (url && isMpCheckoutUrl(url)) window.location.assign(url)
     else if (url) payError.value = 'Enlace de pago no válido.'
     else payError.value = 'No pudimos iniciar el pago. Intentá de nuevo.'

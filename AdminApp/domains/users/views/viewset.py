@@ -1,4 +1,4 @@
-from rest_framework.throttling import AnonRateThrottle
+from DaventProject.throttling import ResilientUserRateThrottle
 
 from .viewset_base import (
     RegisterUserBaseViewSet,
@@ -14,8 +14,10 @@ from .viewset_config import (
 )
 
 
-class RegisterRateThrottle(AnonRateThrottle):
-    """Scope 'register' (settings): frena el alta masiva de cuentas/trials."""
+class RegisterRateThrottle(ResilientUserRateThrottle):
+    """Scope 'register' (settings): frena el alta masiva de cuentas/trials.
+    ResilientUserRateThrottle (no AnonRateThrottle): un request autenticado
+    no puede saltear el límite — la clave es user.pk o IP."""
     scope = 'register'
 
 """

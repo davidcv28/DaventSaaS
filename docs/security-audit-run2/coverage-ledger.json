@@ -1,0 +1,2790 @@
+[
+  {
+    "coverage_id": "AdminApp%2Fdomains%2Fchat%2Bnotifications%2Blegal%2Blocations%20%2B%20McpApp%2Fdomains%2Fskills%23support%20chat%2C%20notifications%2C%20reports%2C%20geo%2C%20LLM%20skills::AdminApp%2Fdomains%2Fchat%2Fservices%23thread%20isolation%2C%20presence%2C%20attachment%20privacy%3B%20McpApp%20skills%20tool%20gating::AdminApp%2Fdomains%2Fchat::ATTACK-CLASSES.md%23Access%20control",
+    "canonical_refs": {
+      "surface": "AdminApp/domains/chat+notifications+legal+locations + McpApp/domains/skills#support chat, notifications, reports, geo, LLM skills",
+      "boundary": "AdminApp/domains/chat/services#thread isolation, presence, attachment privacy; McpApp skills tool gating",
+      "subsystem": "AdminApp/domains/chat",
+      "attack_class": "ATTACK-CLASSES.md#Access control"
+    },
+    "surface": "AdminApp/domains/chat+notifications+legal+locations + McpApp/domains/skills",
+    "boundary": "AdminApp/domains/chat/services#thread isolation, presence, attachment privacy; McpApp skills tool gating",
+    "subsystem": "AdminApp/domains/chat",
+    "attack_class": "Access control",
+    "starting_paths": [
+      "AdminApp/domains/chat",
+      "AdminApp/domains/notifications",
+      "AdminApp/domains/legal",
+      "AdminApp/domains/locations",
+      "McpApp/domains/skills"
+    ],
+    "ordinary_attack_class_block": "ATTACK-CLASSES.md#Access control",
+    "selected_companion_blocks": [
+      "AI-AND-LLM.md#Core discipline",
+      "AI-AND-LLM.md#Tool and action attack classes",
+      "AI-AND-LLM.md#MCP and sub-agent trust classes",
+      "AI-AND-LLM.md#Output and disclosure attack classes",
+      "AI-AND-LLM.md#Universal moves",
+      "AI-AND-LLM.md#Validation rules",
+      "PROTOCOLS-RPC-AND-MESSAGING.md#Core discipline",
+      "PROTOCOLS-RPC-AND-MESSAGING.md#Replay, ordering, and transaction attack classes",
+      "PROTOCOLS-RPC-AND-MESSAGING.md#Universal moves",
+      "PROTOCOLS-RPC-AND-MESSAGING.md#Validation rules"
+    ],
+    "excluded_blocks": [
+      {
+        "block": "AI-AND-LLM.md#Context, retrieval, and memory attack classes",
+        "reason": "skills service is thin; no retrieval/memory store"
+      }
+    ],
+    "prior_status": "prior_covered_same_source",
+    "attempts": [],
+    "wave": 1,
+    "status": "candidate",
+    "agent_id": "hunter-07",
+    "reviewed_paths": [
+      "AdminApp/domains/chat/serializers/serializers.py",
+      "AdminApp/domains/chat/services/assistant.py",
+      "AdminApp/domains/chat/services/services.py",
+      "AdminApp/domains/chat/tests.py",
+      "AdminApp/domains/chat/views/viewset.py",
+      "AdminApp/domains/invoices/mcp.py",
+      "AdminApp/domains/legal/models/models.py",
+      "AdminApp/domains/legal/serializers/mixins.py",
+      "AdminApp/domains/legal/serializers/serializers.py",
+      "AdminApp/domains/legal/services/services.py",
+      "AdminApp/domains/legal/urls/urls.py",
+      "AdminApp/domains/legal/views/viewset.py",
+      "AdminApp/domains/legal/views/viewset_base.py",
+      "AdminApp/domains/legal/views/viewset_config.py",
+      "AdminApp/domains/locations/models/models.py",
+      "AdminApp/domains/locations/serializers/serializers.py",
+      "AdminApp/domains/locations/urls/urls.py",
+      "AdminApp/domains/locations/views/viewset.py",
+      "AdminApp/domains/locations/views/viewset_base.py",
+      "AdminApp/domains/locations/views/viewset_config.py",
+      "AdminApp/domains/notifications/models/models.py",
+      "AdminApp/domains/notifications/serializers/serializers.py",
+      "AdminApp/domains/notifications/services/services.py",
+      "AdminApp/domains/notifications/urls/urls.py",
+      "AdminApp/domains/notifications/views/viewset.py",
+      "AdminApp/domains/payments/mcp.py",
+      "AdminApp/domains/suscriptions/mcp.py",
+      "AdminApp/domains/users/mcp.py",
+      "AdminApp/domains/users/tasks.py",
+      "DaventProject/settings.py",
+      "DaventProject/throttling.py",
+      "DaventProject/urls.py",
+      "McpApp/domains/skills/models/models.py",
+      "McpApp/domains/skills/serializers/serializers.py",
+      "McpApp/domains/skills/services/anthropic.py",
+      "McpApp/domains/skills/services/dashboard_map.py",
+      "McpApp/domains/skills/services/llm.py",
+      "McpApp/domains/skills/services/mcp.py",
+      "McpApp/domains/skills/services/services.py",
+      "McpApp/domains/skills/services/user_tools.py",
+      "McpApp/domains/skills/urls/urls.py",
+      "McpApp/domains/skills/views/viewset.py",
+      "McpApp/fastmcp_server.py",
+      "McpApp/mcp_client.py",
+      "McpApp/mcp_server.py",
+      "StoreApp/domains/catalog/mcp.py",
+      "StoreApp/domains/stores/mcp.py",
+      "frontend/src"
+    ],
+    "local_checks": [
+      {
+        "agent_id": "hunter-07",
+        "reviewed_paths": [
+          "AdminApp/domains/chat/views/viewset.py",
+          "AdminApp/domains/chat/services/services.py",
+          "AdminApp/domains/chat/tests.py"
+        ],
+        "invariant": "Support chat requires authenticated user + paid non-trial plan (staff exempt); customer can only read/write own ChatThread; from_staff server-derived; attachments private; presence self-scoped",
+        "method": "source",
+        "result": "PASS — _gate() calls chat_enabled() on every action (is_staff or suscription.grants_access() and not plan.is_trial); _resolve_thread returns thread_of(request.user) for non-staff ignoring ?thread=; send() for non-staff uses get_or_create_thread(request.user); from_staff = sender.is_staff server-side; sender_name hardcoded 'Soporte DAVENT'; attachment endpoint 404s for non-owner non-staff, local files under private/ served only via authenticated FileResponse, R2 keys get 1h signed URL; touch_presence writes only request.user's ChatPresence. Tests cover anon 401, no-sub 403, trial 403, staff 200, cross-thread denial.",
+        "artifact": null
+      },
+      {
+        "agent_id": "hunter-07",
+        "reviewed_paths": [
+          "AdminApp/domains/chat/views/viewset.py",
+          "AdminApp/domains/chat/services/assistant.py",
+          "McpApp/domains/skills/services/llm.py",
+          "frontend/src"
+        ],
+        "invariant": "Assistant bot cannot act on other tenants' data; LLM output cannot reach tools/actions; no dangerous rendering",
+        "method": "source",
+        "result": "PASS — AssistantViewSet gated by mcp_user_access (paid non-trial); ask_llm is pure text completion (no tool-calling loop); system prompt snapshot built only from request.user's own my_* tools; 'action' returned to client decided by deterministic keyword map _intent_action, never by model; AssistantMessage body rendered as plain text (no v-html/markdown sink found). LLM spend bounded by chat_send 120/hour per user.",
+        "artifact": null
+      },
+      {
+        "agent_id": "hunter-07",
+        "reviewed_paths": [
+          "AdminApp/domains/chat/services/services.py",
+          "AdminApp/domains/chat/views/viewset.py",
+          "AdminApp/domains/chat/serializers/serializers.py"
+        ],
+        "invariant": "Staff anonymity: customers must not learn which staff member replied or staff account identities",
+        "method": "source",
+        "result": "FAIL (partial) — per-message sender_name anonymized to 'Soporte DAVENT' and no email leaks, BUT list()/heartbeat() return staff_roster() = every is_staff+is_active user (including superusers/admins) with {id, name=full name or username, online} to any chat-enabled customer (services.py:134-147, viewset.py:105,198). Candidate reported.",
+        "artifact": null
+      },
+      {
+        "agent_id": "hunter-07",
+        "reviewed_paths": [
+          "AdminApp/domains/notifications/views/viewset.py",
+          "AdminApp/domains/notifications/models/models.py",
+          "AdminApp/domains/notifications/serializers/serializers.py",
+          "AdminApp/domains/notifications/services/services.py",
+          "AdminApp/domains/notifications/urls/urls.py"
+        ],
+        "invariant": "Notification read/mark and reviews-seen only affect request.user's own data; changelog non-staff sees only published; writes staff-only; image upload normalized",
+        "method": "source",
+        "result": "PASS — list/read/reviews-seen all query request.user.notifications or _own_store(request.user); get_queryset filters non-staff to is_published releases + roadmap kinds; get_permissions returns IsAdminUser for non-safe methods; image upload goes through validate_image_file + normalize_image + R2 put_object with server-generated key. No notification-preference tampering surface exists.",
+        "artifact": null
+      },
+      {
+        "agent_id": "hunter-07",
+        "reviewed_paths": [
+          "AdminApp/domains/legal/views/viewset.py",
+          "AdminApp/domains/legal/views/viewset_base.py",
+          "AdminApp/domains/legal/views/viewset_config.py",
+          "AdminApp/domains/legal/serializers/serializers.py",
+          "AdminApp/domains/legal/serializers/mixins.py",
+          "AdminApp/domains/legal/services/services.py",
+          "AdminApp/domains/legal/models/models.py",
+          "AdminApp/domains/legal/urls/urls.py",
+          "AdminApp/domains/users/tasks.py",
+          "DaventProject/settings.py",
+          "DaventProject/throttling.py"
+        ],
+        "invariant": "Content reports: public create bounded by dedicated throttle because each valid create emails LEGAL_REPORTS_EMAIL; list/retrieve/update staff-only; fields validated; email body cannot inject headers",
+        "method": "source",
+        "result": "FAIL — ContentReportRateThrottle extends AnonRateThrottle (viewset_base.py:14-18); DRF AnonRateThrottle.get_cache_key returns None for authenticated users, so scoped 'content_report': '5/hour' never applies to logged-in users — only global 'user' 1000/day remains. Each accepted create enqueues send_legal_report_email -> send_mail to LEGAL_REPORTS_EMAIL. Report fields validated (reporter_name letters-only, reported_url http(s)-only, description >=20 chars, good_faith must be True); reported_by set server-side; update serializer only status/admin_notes; email subject/recipient fixed.",
+        "artifact": null
+      },
+      {
+        "agent_id": "hunter-07",
+        "reviewed_paths": [
+          "AdminApp/domains/locations/views/viewset.py",
+          "AdminApp/domains/locations/views/viewset_base.py",
+          "AdminApp/domains/locations/views/viewset_config.py",
+          "AdminApp/domains/locations/serializers/serializers.py",
+          "AdminApp/domains/locations/models/models.py",
+          "AdminApp/domains/locations/urls/urls.py"
+        ],
+        "invariant": "Geo endpoints expose only public reference data; query params cannot break queryset scoping",
+        "method": "source",
+        "result": "PASS — models contain only name/province/zipcode fields; serializers expose id+names only; AllowAny read intended for registration selects; PublicReadThrottle scoped per action. Nit: ?province=<id> non-numeric value raises ValueError -> 500 (robustness, hardening).",
+        "artifact": null
+      },
+      {
+        "agent_id": "hunter-07",
+        "reviewed_paths": [
+          "McpApp/domains/skills/views/viewset.py",
+          "McpApp/domains/skills/urls/urls.py",
+          "McpApp/domains/skills/services/mcp.py",
+          "McpApp/domains/skills/services/services.py",
+          "McpApp/domains/skills/services/user_tools.py",
+          "McpApp/domains/skills/services/llm.py",
+          "McpApp/domains/skills/services/anthropic.py",
+          "McpApp/domains/skills/services/dashboard_map.py",
+          "McpApp/domains/skills/serializers/serializers.py",
+          "McpApp/domains/skills/models/models.py",
+          "McpApp/mcp_server.py",
+          "McpApp/mcp_client.py",
+          "McpApp/fastmcp_server.py",
+          "AdminApp/domains/users/mcp.py",
+          "AdminApp/domains/suscriptions/mcp.py",
+          "AdminApp/domains/payments/mcp.py",
+          "AdminApp/domains/invoices/mcp.py",
+          "StoreApp/domains/stores/mcp.py",
+          "StoreApp/domains/catalog/mcp.py",
+          "DaventProject/urls.py"
+        ],
+        "invariant": "MCP tools/call: user-data tools require paid non-trial session and are scoped to request.user; no tool accepts user_id/store_id/slug of others; design tools expose only public catalog data; LLM layer no SSRF/secrets; stdio servers not network-exposed; DesignStyleViewSet writes staff-only",
+        "method": "source",
+        "result": "PASS — McpEndpointView IsAuthenticated; call_tool checks name in _user_tools() then requires mcp_user_access(user) before dispatch; all 8 my_* tools derive data strictly from the injected user (no identifier arguments); tools/list hides user tools without access. Design tools read-only queryset reads of active DesignModelMcp/DesignPattern identical to public catalog endpoints; no SSRF sink. Provider URLs hardcoded constants; API keys from settings only, never logged; timeouts set; max_tokens=400; per-user chat_send 120/hour bounds spend; prompt contains only requester's own snapshot; no tool-calling loop so prompt injection cannot reach actions. stdio MCP servers are subprocess tools; fastmcp http mode binds 127.0.0.1 with Bearer JWT + mcp_user_access per tool. DesignStyleViewSet writes IsAdminUser.",
+        "artifact": null
+      }
+    ],
+    "result_fingerprints": [
+      "chat.staff-roster-leaks-all-staff-identities",
+      "legal.content-report.throttle-anon-only-authenticated-bypass"
+    ],
+    "unresolved": [],
+    "hunter": "hunter-07"
+  },
+  {
+    "coverage_id": "AdminApp%2Fdomains%2Fpayments%2Bsuscriptions%2Binvoices%2BSuscriptionApp%2Fbenefits%23checkout%2Cwebhook%2Csync%2Ccoupons%2Cplans%2Cassign::AdminApp%2Fdomains%2Fpayments%2Fservices%23MP%20webhook%20HMAC%2C%20payment%20ownership%2C%20plan%20entitlement%2C%20rollups::AdminApp%2Fdomains%2Fpayments::ATTACK-CLASSES.md%23Business%20logic",
+    "canonical_refs": {
+      "surface": "AdminApp/domains/payments+suscriptions+invoices+SuscriptionApp/benefits#checkout,webhook,sync,coupons,plans,assign",
+      "boundary": "AdminApp/domains/payments/services#MP webhook HMAC, payment ownership, plan entitlement, rollups",
+      "subsystem": "AdminApp/domains/payments",
+      "attack_class": "ATTACK-CLASSES.md#Business logic"
+    },
+    "surface": "AdminApp/domains/payments+suscriptions+invoices+SuscriptionApp/benefits",
+    "boundary": "AdminApp/domains/payments/services#MP webhook HMAC, payment ownership, plan entitlement, rollups",
+    "subsystem": "AdminApp/domains/payments",
+    "attack_class": "Business logic",
+    "starting_paths": [
+      "AdminApp/domains/payments",
+      "AdminApp/domains/suscriptions",
+      "AdminApp/domains/invoices",
+      "SuscriptionApp/domains/benefits"
+    ],
+    "ordinary_attack_class_block": "ATTACK-CLASSES.md#Business logic",
+    "selected_companion_blocks": [
+      "PROTOCOLS-RPC-AND-MESSAGING.md#Core discipline",
+      "PROTOCOLS-RPC-AND-MESSAGING.md#Replay, ordering, and transaction attack classes",
+      "PROTOCOLS-RPC-AND-MESSAGING.md#Universal moves",
+      "PROTOCOLS-RPC-AND-MESSAGING.md#Validation rules",
+      "DATA-ISOLATION-AND-LIFECYCLE.md#Core discipline",
+      "DATA-ISOLATION-AND-LIFECYCLE.md#Tenant and object-isolation attack classes",
+      "DATA-ISOLATION-AND-LIFECYCLE.md#Universal moves",
+      "DATA-ISOLATION-AND-LIFECYCLE.md#Validation rules"
+    ],
+    "excluded_blocks": [
+      {
+        "block": "PROTOCOLS-RPC-AND-MESSAGING.md#Broker and queue isolation attack classes",
+        "reason": "no broker-facing surface; Celery tasks are internal"
+      },
+      {
+        "block": "PROTOCOLS-RPC-AND-MESSAGING.md#Framing, schema, and interpretation attack classes",
+        "reason": "JSON webhook body is not schema-parsed into privileged objects beyond signature check"
+      }
+    ],
+    "prior_status": "prior_covered_same_source",
+    "attempts": [],
+    "wave": 1,
+    "status": "candidate",
+    "agent_id": "hunter-02",
+    "reviewed_paths": [
+      "AdminApp/domains/chat/services/services.py",
+      "AdminApp/domains/invoices/models/models.py",
+      "AdminApp/domains/invoices/services/afip.py",
+      "AdminApp/domains/invoices/services/services.py",
+      "AdminApp/domains/invoices/views/viewset_config.py",
+      "AdminApp/domains/payments/checks.py",
+      "AdminApp/domains/payments/management/commands/audit_orphan_payments.py",
+      "AdminApp/domains/payments/models/models.py",
+      "AdminApp/domains/payments/serializers/mixins.py",
+      "AdminApp/domains/payments/services/services.py",
+      "AdminApp/domains/payments/views/viewset.py",
+      "AdminApp/domains/payments/views/viewset_base.py",
+      "AdminApp/domains/payments/views/viewset_config.py",
+      "AdminApp/domains/suscriptions/management/commands/reconcile_preapprovals.py",
+      "AdminApp/domains/suscriptions/models/models.py",
+      "AdminApp/domains/suscriptions/serializers/serializers.py",
+      "AdminApp/domains/suscriptions/services/services.py",
+      "AdminApp/domains/suscriptions/views/viewset.py",
+      "AdminApp/domains/suscriptions/views/viewset_config.py",
+      "AdminApp/domains/users/serializers/serializers.py",
+      "AdminApp/domains/users/services/services.py",
+      "AdminApp/domains/users/services/social.py",
+      "AdminApp/domains/users/tasks.py",
+      "DaventProject/settings.py",
+      "McpApp/domains/skills/services/user_tools.py",
+      "StoreApp/domains/catalog/services/services.py",
+      "StoreApp/domains/feed/services/feed.py",
+      "StoreApp/domains/memberships/views/customer.py",
+      "StoreApp/domains/storepayments/services/webhook.py",
+      "StoreApp/domains/storepayments/views/webhook.py",
+      "StoreApp/domains/stores/services/services.py",
+      "StoreApp/domains/stores/services/storage.py"
+    ],
+    "local_checks": [
+      {
+        "agent_id": "hunter-02",
+        "reviewed_paths": [
+          "AdminApp/domains/payments/views/viewset.py",
+          "AdminApp/domains/payments/services/services.py",
+          "AdminApp/domains/payments/checks.py",
+          "DaventProject/settings.py"
+        ],
+        "invariant": "MP webhook must be HMAC-verified, fresh (<=10min), deduplicated, and only process the signed data.id",
+        "method": "source",
+        "result": "PASS — _verify_mp_signature builds manifest id:<signed data.id>;request-id;<ts>; with HMAC-SHA256 + compare_digest, 600s freshness (s/ms tolerant), unsigned only when DEBUG AND MP_WEBHOOK_ALLOW_UNSIGNED (deploy checks payments.E001-E003 fail closed). Body size capped 16KB, id regex [A-Za-z0-9_-]{1,64}, body data.id ignored when signed id present, cache.add atomic dedup with release-on-error. topic is unsigned but every branch re-fetches truth from MP by the signed resource_id.",
+        "artifact": null
+      },
+      {
+        "agent_id": "hunter-02",
+        "reviewed_paths": [
+          "AdminApp/domains/payments/services/services.py",
+          "AdminApp/domains/payments/serializers/mixins.py",
+          "AdminApp/domains/payments/views/viewset.py"
+        ],
+        "invariant": "Payment must bind to caller's own suscription via MP external_reference; cross-subscription payment_id reuse rejected",
+        "method": "source",
+        "result": "PASS — CreatePaymentQuery checks external_reference == suscription.id against MP-fetched payment, rejects Payment already registered to another suscription, unique constraint + IntegrityError idempotency. /sync/ and webhook resolve suscription owner-side only.",
+        "artifact": null
+      },
+      {
+        "agent_id": "hunter-02",
+        "reviewed_paths": [
+          "AdminApp/domains/payments/services/services.py"
+        ],
+        "invariant": "Payment amount must correspond to the plan/charge actually being granted (amount==expected entitlement price)",
+        "method": "source",
+        "result": "FAIL — accepted_amounts = {pending_plan-or-current price, current plan price, ALL non-trial plan prices, pending_charge}; any paid plan price satisfies the check regardless of which plan is granted. See candidate payments.cross-plan-amount-acceptance.",
+        "artifact": null
+      },
+      {
+        "agent_id": "hunter-02",
+        "reviewed_paths": [
+          "AdminApp/domains/payments/services/services.py",
+          "StoreApp/domains/storepayments/services/webhook.py"
+        ],
+        "invariant": "Currency must be ARS and test-mode payments rejected in production",
+        "method": "source",
+        "result": "PARTIAL — currency_id != 'ARS' rejected but missing currency_id defaults to 'ARS' (fail-open); _reject_test_payment rejects only live_mode is False, accepts live_mode=None (storepayments sibling fails closed requiring is True). MP always returns both fields; inconsistency only.",
+        "artifact": null
+      },
+      {
+        "agent_id": "hunter-02",
+        "reviewed_paths": [
+          "AdminApp/domains/payments/services/services.py",
+          "AdminApp/domains/suscriptions/services/services.py",
+          "AdminApp/domains/payments/views/viewset.py",
+          "AdminApp/domains/suscriptions/views/viewset.py"
+        ],
+        "invariant": "Plan/charge state transitions serialized: no double-apply, no stale reads on payment, plan change, coupon, preapproval cancel",
+        "method": "source",
+        "result": "PASS — select_for_update on Payment (of='self'), Suscription, Coupon rows in all mutation paths; SuscriptionQuerySet.update busts benefit cache; webhook re-reads status under lock (old_status transition guards); cancel-renewal persists cancel_requested_at before MP call + reconcile_preapprovals cron; subscription action compensates orphaned preapproval on commit failure.",
+        "artifact": null
+      },
+      {
+        "agent_id": "hunter-02",
+        "reviewed_paths": [
+          "AdminApp/domains/payments/services/services.py",
+          "AdminApp/domains/payments/models/models.py"
+        ],
+        "invariant": "Revenue rollups must not go negative or double-count on approve/refund transitions",
+        "method": "source",
+        "result": "PASS — UpdateRevenueRollupsQuery only on real PENDING->APPROVED / APPROVED->other transitions under row lock; F() expressions + Greatest(count,0); effective bucket = paid_at (stable across refund since date_approved preserved or paid_at kept) so +1/-1 land in same day/month.",
+        "artifact": null
+      },
+      {
+        "agent_id": "hunter-02",
+        "reviewed_paths": [
+          "AdminApp/domains/invoices/services/services.py",
+          "AdminApp/domains/invoices/models/models.py",
+          "AdminApp/domains/invoices/views/viewset_config.py",
+          "AdminApp/domains/invoices/services/afip.py"
+        ],
+        "invariant": "Invoice issued once per approved payment, numbering gapless per (type,pos), ARCA CAE claimed atomically, PII scoped to owner/admin",
+        "method": "source",
+        "result": "PASS — Invoice.payment OneToOne + existing-check + unique(type,pos,number) + 3-attempt retry under select_for_update; RequestCaeQuery optimistic PROCESSING claim; user queryset filters user__user=request.user, admin viewset IsAdminUser; serializer exposes only owner's own fiscal PII; AFIP secrets vault AES-256-GCM with purpose AAD + deploy checks.",
+        "artifact": null
+      },
+      {
+        "agent_id": "hunter-02",
+        "reviewed_paths": [
+          "AdminApp/domains/suscriptions/services/services.py",
+          "AdminApp/domains/suscriptions/views/viewset.py",
+          "AdminApp/domains/suscriptions/models/models.py",
+          "AdminApp/domains/users/services/services.py",
+          "AdminApp/domains/users/services/social.py",
+          "AdminApp/domains/users/serializers/serializers.py"
+        ],
+        "invariant": "Coupon redeem: one per user+coupon, max_uses race-safe, rejects expired/inactive/trial-plan/live-preapproval/paid-plan; no trial re-activation",
+        "method": "source",
+        "result": "PASS — coupon row select_for_update serializes max_uses count; UniqueCouponRedemptionConstraint backstop; is_trial plan rejected; grants_access()+non-trial rejects stacking on paid plan; live preapproval (preapproval_id and not cancelled_at) rejected; register/social coupon paths reuse same query inside atomic with failure-tolerant fallback; 10/hour user throttle on redeem endpoint.",
+        "artifact": null
+      },
+      {
+        "agent_id": "hunter-02",
+        "reviewed_paths": [
+          "AdminApp/domains/suscriptions/serializers/serializers.py",
+          "AdminApp/domains/suscriptions/views/viewset_config.py",
+          "AdminApp/domains/suscriptions/views/viewset.py",
+          "AdminApp/domains/payments/views/viewset.py"
+        ],
+        "invariant": "Plan escalation without payment impossible: create forces PENDING_PAYMENT, update only sets pending_plan, assign is admin-only and excludes is_trial",
+        "method": "source",
+        "result": "PASS — SuscriptionSerializer.create forces status=PENDING_PAYMENT/start=end=now; update pops plan_suscription and routes to RequestPlanChangeQuery (pending only) or pending-state correction; is_trial filtered from plan queryset, assign (get_object_or_404 is_trial=False), coupon plan, _resolve_suscription target_plan; benefits resolve only via grants_access().",
+        "artifact": null
+      },
+      {
+        "agent_id": "hunter-02",
+        "reviewed_paths": [
+          "StoreApp/domains/stores/services/services.py",
+          "StoreApp/domains/catalog/services/services.py",
+          "StoreApp/domains/stores/services/storage.py",
+          "StoreApp/domains/feed/services/feed.py",
+          "AdminApp/domains/chat/services/services.py",
+          "McpApp/domains/skills/services/user_tools.py",
+          "AdminApp/domains/suscriptions/models/models.py"
+        ],
+        "invariant": "Benefit gates must require grants_access() (status ACTIVE + end_date + auto_renew grace) consistently; is_trial handled per-feature",
+        "method": "source",
+        "result": "PASS — plan_benefits_of returns {} unless suscription.grants_access(); all consumers (catalog_enabled, storage quotas, feed, stats, chat_enabled, mcp_user_access, allowed_templates_of, public store has_public_link checks) funnel through it; chat/MCP additionally exclude is_trial; grace = end_date+5d only when auto_renew; benefits cache busted on save()/QuerySet.update/post_delete/PlanBenefit signals.",
+        "artifact": null
+      },
+      {
+        "agent_id": "hunter-02",
+        "reviewed_paths": [
+          "AdminApp/domains/payments/views/viewset_config.py",
+          "AdminApp/domains/payments/views/viewset_base.py",
+          "AdminApp/domains/payments/views/viewset.py",
+          "AdminApp/domains/suscriptions/views/viewset_config.py",
+          "AdminApp/domains/invoices/views/viewset_config.py",
+          "DaventProject/settings.py"
+        ],
+        "invariant": "Billing endpoints owner-scoped or staff-only; no IDOR on list/retrieve/approve/admin-summary",
+        "method": "source",
+        "result": "PASS — payment get queryset filters user__user=request.user for non-staff (staff sees all); approve/admin_summary/revenue viewsets IsAdminUser; suscription get queryset owner-scoped; invoice user queryset owner-scoped; coupons admin-only; _resolve_suscription verifies suscription.user.user_id == request.user.id; cancel_renewal/sync/subscription filter by user__user.",
+        "artifact": null
+      },
+      {
+        "agent_id": "hunter-02",
+        "reviewed_paths": [
+          "AdminApp/domains/users/tasks.py",
+          "AdminApp/domains/invoices/services/services.py",
+          "AdminApp/domains/suscriptions/management/commands/reconcile_preapprovals.py",
+          "AdminApp/domains/payments/management/commands/audit_orphan_payments.py"
+        ],
+        "invariant": "Async/ops paths must not re-introduce revoked state or duplicate side effects",
+        "method": "source",
+        "result": "PASS — send_invoice_email reads fresh invoice (idempotent send, retry may duplicate mail = cosmetic); reconcile_preapprovals locks row and re-checks cancel_requested_at; audit_orphan_payments read-only by design; subscription_notices idempotent via unique (suscription,key) claim.",
+        "artifact": null
+      },
+      {
+        "agent_id": "hunter-02",
+        "reviewed_paths": [
+          "StoreApp/domains/storepayments/services/webhook.py",
+          "StoreApp/domains/storepayments/views/webhook.py",
+          "StoreApp/domains/memberships/views/customer.py"
+        ],
+        "invariant": "No external_reference/payment-id collision between platform subscription billing and seller-side MP flows",
+        "method": "source",
+        "result": "PASS — store orders/memberships use seller MP accounts with 'ord:<token>' refs and per-store webhook URL+secret; platform subscription payments use platform MP account with bare suscription.id refs at /api/payments/webhook/; no shared account => no cross-flow replay.",
+        "artifact": null
+      }
+    ],
+    "result_fingerprints": [
+      "payments.cross-plan-amount-acceptance"
+    ],
+    "unresolved": [],
+    "hunter": "hunter-02"
+  },
+  {
+    "coverage_id": "AdminApp%2Fdomains%2Fusers%2Furls%2Furls.py%23token%2Bpassword-reset%2Bverify-email%2Bgoogle%2Bprofile::AdminApp%2Fdomains%2Fusers%2Fservices%23session%20issuance%2C%20JWT%20cookies%2C%20account%20recovery%2C%20social%20login::AdminApp%2Fdomains%2Fusers::ATTACK-CLASSES.md%23Access%20control",
+    "canonical_refs": {
+      "surface": "AdminApp/domains/users/urls/urls.py#token+password-reset+verify-email+google+profile",
+      "boundary": "AdminApp/domains/users/services#session issuance, JWT cookies, account recovery, social login",
+      "subsystem": "AdminApp/domains/users",
+      "attack_class": "ATTACK-CLASSES.md#Access control"
+    },
+    "surface": "AdminApp/domains/users/urls/urls.py",
+    "boundary": "AdminApp/domains/users/services#session issuance, JWT cookies, account recovery, social login",
+    "subsystem": "AdminApp/domains/users",
+    "attack_class": "Access control",
+    "starting_paths": [
+      "AdminApp/domains/users",
+      "DaventProject/urls.py",
+      "DaventProject/middleware.py",
+      "DaventProject/throttling.py"
+    ],
+    "ordinary_attack_class_block": "ATTACK-CLASSES.md#Access control",
+    "selected_companion_blocks": [
+      "WEB-PROTOCOL-AND-AUTH.md#Core discipline",
+      "WEB-PROTOCOL-AND-AUTH.md#Browser-session attack classes",
+      "WEB-PROTOCOL-AND-AUTH.md#Federated-identity attack classes",
+      "WEB-PROTOCOL-AND-AUTH.md#Universal moves",
+      "WEB-PROTOCOL-AND-AUTH.md#Validation rules",
+      "DATA-ISOLATION-AND-LIFECYCLE.md#Core discipline",
+      "DATA-ISOLATION-AND-LIFECYCLE.md#Tenant and object-isolation attack classes",
+      "DATA-ISOLATION-AND-LIFECYCLE.md#Universal moves",
+      "DATA-ISOLATION-AND-LIFECYCLE.md#Validation rules"
+    ],
+    "excluded_blocks": [
+      {
+        "block": "WEB-PROTOCOL-AND-AUTH.md#HTTP framing and cache attack classes",
+        "reason": "session/auth focus; framing covered by infra unit"
+      },
+      {
+        "block": "WEB-PROTOCOL-AND-AUTH.md#MFA, passkey, and account-transition attack classes",
+        "reason": "no MFA/passkeys in product"
+      },
+      {
+        "block": "WEB-PROTOCOL-AND-AUTH.md#API-key and mTLS attack classes",
+        "reason": "no API keys/mTLS"
+      }
+    ],
+    "prior_status": "prior_covered_same_source",
+    "attempts": [],
+    "wave": 1,
+    "status": "candidate",
+    "agent_id": "hunter-01",
+    "reviewed_paths": [
+      "AdminApp/domains/users/serializers/mixins.py",
+      "AdminApp/domains/users/services/services.py",
+      "AdminApp/domains/users/services/social.py",
+      "AdminApp/domains/users/views/auth_views.py",
+      "AdminApp/domains/users/views/viewset_config.py",
+      "DaventProject/middleware.py",
+      "DaventProject/settings.py",
+      "StoreApp/domains/customers/services/google.py",
+      "StoreApp/domains/customers/views/auth_views.py",
+      "StoreApp/domains/stores/views/viewset.py"
+    ],
+    "local_checks": [
+      {
+        "agent_id": "hunter-01",
+        "reviewed_paths": [
+          "AdminApp/domains/users/views/auth_views.py",
+          "DaventProject/settings.py"
+        ],
+        "invariant": "refresh rotation+blacklist+httpOnly cookie scoped /api/token/ + CSRF double-submit present",
+        "method": "source",
+        "result": "Present: SIMPLE_JWT ROTATE_REFRESH_TOKENS+BLACKLIST_AFTER_ROTATION (settings.py:161-166); cookie Path=/api/token/, httponly, SameSite=Lax, secure=SESSION_COOKIE_SECURE (auth_views.py:176-182); _require_csrf compare_digest double-submit (auth_views.py:207-213) enforced on cookie refresh and cookie logout; remember parsing strict (auth_views.py:62-69).",
+        "artifact": null
+      },
+      {
+        "agent_id": "hunter-01",
+        "reviewed_paths": [
+          "AdminApp/domains/users/services/services.py",
+          "AdminApp/domains/users/views/auth_views.py"
+        ],
+        "invariant": "password reset generic 200 + invalidates OutstandingToken + token single-use",
+        "method": "source",
+        "result": "Present: RESET_RESPONSE generic (auth_views.py:361-375), RequestPasswordResetQuery enqueues only if user exists (services.py:299-305); ConfirmPasswordResetQuery set_password + _revoke_sessions bulk-blacklists all OutstandingToken (services.py:58-69,308-315); Django default_token_generator bound to password+last_login so token dies on use; PASSWORD_RESET_TIMEOUT=3600.",
+        "artifact": null
+      },
+      {
+        "agent_id": "hunter-01",
+        "reviewed_paths": [
+          "AdminApp/domains/users/views/auth_views.py",
+          "DaventProject/middleware.py"
+        ],
+        "invariant": "per-account+IP lockout with backoff + admin login rate limit",
+        "method": "source",
+        "result": "Present: _login_fail_key sha256(username|ip), soft 5/60s hard 10/900s fail-closed on CacheUnavailable (auth_views.py:79-113,232-253); AdminLoginRateLimitMiddleware guards admin login+password_reset fail-closed (middleware.py:184-238); client_ip uses NUM_PROXIES last-XFF and nginx real_ip terminates spoofed entries (docker compose chain verified).",
+        "artifact": null
+      },
+      {
+        "agent_id": "hunter-01",
+        "reviewed_paths": [
+          "AdminApp/domains/users/services/social.py",
+          "StoreApp/domains/customers/services/google.py"
+        ],
+        "invariant": "Google login verifies tokeninfo aud==GOOGLE_CLIENT_ID + email_verified",
+        "method": "source",
+        "result": "Present for token validity (social.py:58-61) but sibling controls NOT ported: no is_active check, no anti-pre-hijacking password/session invalidation, no Origin check — see candidates.",
+        "artifact": null
+      },
+      {
+        "agent_id": "hunter-01",
+        "reviewed_paths": [
+          "AdminApp/domains/users/serializers/mixins.py",
+          "AdminApp/domains/users/services/services.py",
+          "AdminApp/domains/users/views/viewset_config.py"
+        ],
+        "invariant": "no mass-assignment / PII exposure on profile+user update; self-scoped querysets",
+        "method": "source",
+        "result": "Clean: UserUpdateSerializer fields=['email'] only; UserProfileSerializer explicit whitelist, terms_*/email_verified read_only, ai_assist one-shot guarded (services.py:84-99); querysets filter user=request.user and ignore pk; phone_verified reset on phone change present; UpdateUserQuery atomic.",
+        "artifact": null
+      },
+      {
+        "agent_id": "hunter-01",
+        "reviewed_paths": [
+          "AdminApp/domains/users/services/services.py",
+          "StoreApp/domains/stores/views/viewset.py"
+        ],
+        "invariant": "email_verified attests control of the CURRENT mailbox",
+        "method": "source",
+        "result": "VIOLATED: EmailVerificationTokenGenerator._make_hash_value = pk+password+timestamp+verified — no email binding; stale token survives email change (services.py:202-209 vs 48-53). See candidate.",
+        "artifact": null
+      },
+      {
+        "agent_id": "hunter-01",
+        "reviewed_paths": [
+          "AdminApp/domains/users/views/auth_views.py",
+          "StoreApp/domains/customers/views/auth_views.py"
+        ],
+        "invariant": "session-issuing endpoints reject cross-site POSTs (login CSRF)",
+        "method": "source",
+        "result": "VIOLATED on platform side: no Origin/Referer check anywhere in AdminApp auth; sibling customer auth implements _session_origin_allowed on register/login/google (customers auth_views.py:114-144,232,260,532). See candidate.",
+        "artifact": null
+      },
+      {
+        "agent_id": "hunter-01",
+        "reviewed_paths": [
+          "AdminApp/domains/users/views/auth_views.py",
+          "StoreApp/domains/customers/views/auth_views.py"
+        ],
+        "invariant": "auth endpoint throttles apply to authenticated callers too",
+        "method": "source",
+        "result": "VIOLATED: all platform auth throttles are plain AnonRateThrottle subclasses whose get_cache_key returns None for authenticated users; sibling CustomerRateThrottle explicitly avoids AnonRateThrottle for this reason (customers auth_views.py:164-178). Password-reset request becomes unbounded for any registered user → mail bombing. See candidate.",
+        "artifact": null
+      },
+      {
+        "agent_id": "hunter-01",
+        "reviewed_paths": [
+          "AdminApp/domains/users/services/social.py",
+          "AdminApp/domains/users/views/auth_views.py",
+          "StoreApp/domains/customers/views/auth_views.py"
+        ],
+        "invariant": "deactivated (is_active=False) accounts cannot obtain new sessions",
+        "method": "source",
+        "result": "VIOLATED on Google path: SocialLoginQuery/_social_session_response never check is_active; password path is gated by authenticate()->user_can_authenticate; sibling checks customer.is_active at customers auth_views.py:269,556. See candidate.",
+        "artifact": null
+      },
+      {
+        "agent_id": "hunter-01",
+        "reviewed_paths": [
+          "AdminApp/domains/users/services/social.py"
+        ],
+        "invariant": "Google token verification parity with sibling (iss/exp checks)",
+        "method": "source",
+        "result": "tokeninfo endpoint validates signature/expiry/issuer server-side and aud+email_verified are checked; customer sibling adds iss+exp double-checks — defense-in-depth gap only, hardening note.",
+        "artifact": null
+      }
+    ],
+    "result_fingerprints": [
+      "users-auth:google-autolink-prehijack",
+      "users-auth:google-login-is-active-bypass",
+      "users-auth:email-verify-token-not-email-bound",
+      "users-auth:login-csrf-no-origin-check",
+      "users-auth:anon-throttle-authenticated-bypass"
+    ],
+    "unresolved": [],
+    "hunter": "hunter-01"
+  },
+  {
+    "coverage_id": "DaventProject%2Fsettings.py%2Bmiddleware.py%2Bthrottling.py%2Bchecks.py%2Benvguard.py%20%2B%20docker%2F%20%2B%20.github%2Fworkflows%20%2B%20requirements.txt%2Fpackage.json::deployment%20config%23DEBUG%2FSECRET%2FSECURE_%2A%20flags%2C%20CORS%2C%20CSP%2C%20admin%20URL%2C%20container%20hardening%2C%20CI%20gates%2C%20dependency%20pins::DaventProject::ATTACK-CLASSES.md%23Cryptography%20and%20secrets",
+    "canonical_refs": {
+      "surface": "DaventProject/settings.py+middleware.py+throttling.py+checks.py+envguard.py + docker/ + .github/workflows + requirements.txt/package.json",
+      "boundary": "deployment config#DEBUG/SECRET/SECURE_* flags, CORS, CSP, admin URL, container hardening, CI gates, dependency pins",
+      "subsystem": "DaventProject",
+      "attack_class": "ATTACK-CLASSES.md#Cryptography and secrets"
+    },
+    "surface": "DaventProject/settings.py+middleware.py+throttling.py+checks.py+envguard.py + docker/ + .github/workflows + requirements.txt/package.json",
+    "boundary": "deployment config#DEBUG/SECRET/SECURE_* flags, CORS, CSP, admin URL, container hardening, CI gates, dependency pins",
+    "subsystem": "DaventProject",
+    "attack_class": "Cryptography and secrets",
+    "starting_paths": [
+      "DaventProject",
+      "docker",
+      ".github/workflows",
+      "requirements.txt",
+      "frontend/package.json",
+      "render.yaml",
+      "docker-compose.yml"
+    ],
+    "ordinary_attack_class_block": "ATTACK-CLASSES.md#Cryptography and secrets",
+    "selected_companion_blocks": [
+      "CLOUD-AND-DEPLOYMENT.md#Core discipline",
+      "CLOUD-AND-DEPLOYMENT.md#Ingress, network, and control-plane attack classes",
+      "CLOUD-AND-DEPLOYMENT.md#Container and orchestration attack classes",
+      "CLOUD-AND-DEPLOYMENT.md#Configuration and secret lifecycle attack classes",
+      "CLOUD-AND-DEPLOYMENT.md#Universal moves",
+      "CLOUD-AND-DEPLOYMENT.md#Validation rules",
+      "SUPPLY-CHAIN-AND-RELEASE.md#Core discipline",
+      "SUPPLY-CHAIN-AND-RELEASE.md#Dependency and build-input attack classes",
+      "SUPPLY-CHAIN-AND-RELEASE.md#CI and automation attack classes",
+      "SUPPLY-CHAIN-AND-RELEASE.md#Universal moves",
+      "SUPPLY-CHAIN-AND-RELEASE.md#Validation rules",
+      "RESOURCE-EXHAUSTION-AND-AVAILABILITY.md#Core discipline",
+      "RESOURCE-EXHAUSTION-AND-AVAILABILITY.md#Failure and recovery attack classes",
+      "RESOURCE-EXHAUSTION-AND-AVAILABILITY.md#Universal moves",
+      "RESOURCE-EXHAUSTION-AND-AVAILABILITY.md#Validation rules"
+    ],
+    "excluded_blocks": [
+      {
+        "block": "SUPPLY-CHAIN-AND-RELEASE.md#Release and update attack classes",
+        "reason": "no self-update mechanism in repo"
+      },
+      {
+        "block": "CLOUD-AND-DEPLOYMENT.md#Workload identity and IAM attack classes",
+        "reason": "no cloud IAM bindings in repo"
+      },
+      {
+        "block": "CLOUD-AND-DEPLOYMENT.md#Managed storage, events, and edge attack classes",
+        "reason": "R2 usage covered by uploads unit"
+      }
+    ],
+    "prior_status": "prior_covered_same_source",
+    "attempts": [],
+    "wave": 1,
+    "status": "candidate",
+    "agent_id": "hunter-09",
+    "reviewed_paths": [
+      ".dockerignore",
+      ".env.example",
+      ".github/dependabot.yml",
+      ".github/workflows/ci-cd.yml",
+      ".github/workflows/keepalive.yml",
+      ".github/workflows/security-schedule.yml",
+      ".gitignore",
+      "AdminApp/domains/users/checks.py",
+      "AdminApp/domains/users/views/auth_views.py",
+      "DaventProject/cache_utils.py",
+      "DaventProject/checks.py",
+      "DaventProject/custom_hosts.py",
+      "DaventProject/envguard.py",
+      "DaventProject/exceptions.py",
+      "DaventProject/logscrub.py",
+      "DaventProject/middleware.py",
+      "DaventProject/settings.py",
+      "DaventProject/sitemaps.py",
+      "DaventProject/throttling.py",
+      "DaventProject/urls.py",
+      "StoreApp/domains/stores/services/domains.py",
+      "StoreApp/domains/stores/services/services.py",
+      "StoreApp/domains/stores/views/viewset.py",
+      "docker-compose.yml",
+      "docker/api/Dockerfile",
+      "docker/api/entrypoint.sh",
+      "docker/api/gunicorn.conf.py",
+      "docker/caddy/Caddyfile",
+      "docker/caddy/Dockerfile",
+      "docker/web/Dockerfile",
+      "docker/web/snippets/*",
+      "docker/web/snippets/proxy_api.conf",
+      "docker/web/snippets/real_ip.conf",
+      "docker/web/snippets/security_headers.conf",
+      "docker/web/templates/default.conf.template",
+      "frontend/package-lock.json",
+      "frontend/package.json",
+      "pyproject.toml",
+      "render.yaml",
+      "requirements.txt"
+    ],
+    "local_checks": [
+      {
+        "agent_id": "hunter-09",
+        "reviewed_paths": [
+          "DaventProject/settings.py",
+          "DaventProject/checks.py",
+          "DaventProject/envguard.py",
+          "AdminApp/domains/users/checks.py",
+          "docker/api/entrypoint.sh",
+          ".github/workflows/ci-cd.yml",
+          "docker-compose.yml",
+          "render.yaml"
+        ],
+        "invariant": "Production transport/security settings cannot be silently disabled; deploy checks fail closed",
+        "method": "source",
+        "result": "E001-E005 + E006-E018 + users.E001-E003 present and wired (entrypoint check --deploy, DEPLOY_CHECK_STRICT=1 on VPS). FAIL-OPEN HOLE: all custom checks early-return on settings.DEBUG; entrypoint skips check only for exact string 'True' and CI greps '^DEBUG=True' case-sensitively, while decouple cast=bool accepts 'true'/'1'/'yes'/'on'. DEBUG=true/1/yes/TRUE -> DEBUG=True in prod, check passes vacuously, urls.py exposes /api/schema/, swagger, redoc, api-auth/, static() media (bypassing nginx /media/private/ 404), technical error pages. See candidate infra:debug-bypass-spellings.",
+        "artifact": null
+      },
+      {
+        "agent_id": "hunter-09",
+        "reviewed_paths": [
+          "DaventProject/settings.py",
+          "DaventProject/middleware.py",
+          "docker/web/snippets/security_headers.conf",
+          "docker/web/templates/default.conf.template",
+          "DaventProject/urls.py"
+        ],
+        "invariant": "All responses carry nosniff, Referrer-Policy, XFO, Permissions-Policy, CORP, HSTS where TLS terminates",
+        "method": "source",
+        "result": "PASS: SecurityHeadersMiddleware sets Permissions-Policy/X-Permitted-Cross-Domain-Policies/CORP same-origin + admin noindex; Django SecurityMiddleware gives nosniff+Referrer-Policy+HSTS(31536000,includeSubDomains); nginx security_headers.conf mirrors on static/SPA; CSP present on SPA with object-src 'none', frame-ancestors scoped; COOP same-origin-allow-popups for GIS popup. CORP same-origin on API JSON is safe.",
+        "artifact": null
+      },
+      {
+        "agent_id": "hunter-09",
+        "reviewed_paths": [
+          "DaventProject/settings.py",
+          "DaventProject/envguard.py",
+          "DaventProject/middleware.py"
+        ],
+        "invariant": "CORS/CSRF cannot be wildcard-with-credentials or regex-broken",
+        "method": "source",
+        "result": "PASS with nits: CORS_ALLOWED_ORIGINS/CSRF_TRUSTED_ORIGINS are required env (config() raises if absent = fail-closed); CORS_ALLOW_CREDENTIALS=True but envguard E010 blocks '*' and '://*' origins; no CORS_ALLOWED_ORIGIN_REGEXES set. Nits: E010 false-positives on legitimate Django 'https://*.domain' CSRF wildcard present in .env.example; E018 'localhost' substring check would exempt 'http://localhost.evil.com'; 'null' origin not checked.",
+        "artifact": null
+      },
+      {
+        "agent_id": "hunter-09",
+        "reviewed_paths": [
+          "DaventProject/middleware.py",
+          "DaventProject/throttling.py",
+          "docker/api/gunicorn.conf.py",
+          "docker/web/snippets/real_ip.conf",
+          "docker/web/snippets/proxy_api.conf",
+          "docker-compose.yml"
+        ],
+        "invariant": "Client IP / rate-limit identity cannot be spoofed via X-Forwarded-For",
+        "method": "source",
+        "result": "PASS for documented topology: nginx real_ip_recursive + $proxy_add_x_forwarded_for puts real client IP LAST in XFF; NUM_PROXIES=1 -> DRF/client_ip take last hop; _pinned_ident composites REMOTE_ADDR|ident so direct hits can't rotate buckets. api/web/db/redis publish NO host ports; internal_net is internal:true. Residual: gunicorn forwarded_allow_ips='*' + edge_net membership means any compromised edge_net container (celery) can spoof XFF/XFP to api:8000 -> lateral throttle/lockout bypass (hardening, post-compromise).",
+        "artifact": null
+      },
+      {
+        "agent_id": "hunter-09",
+        "reviewed_paths": [
+          "DaventProject/cache_utils.py",
+          "DaventProject/throttling.py",
+          "DaventProject/middleware.py",
+          "AdminApp/domains/users/views/auth_views.py",
+          "DaventProject/custom_hosts.py"
+        ],
+        "invariant": "Cache-dependent security controls fail closed where brute-force matters, fail open elsewhere deliberately",
+        "method": "source",
+        "result": "PASS: DRF throttles fail-open w/ warning (documented); AdminLoginRateLimitMiddleware + API login lockout use *_strict -> CacheUnavailable -> 503. Nits: custom_hosts.is_verified_domain_host calls cache.get/cache.set OUTSIDE try -> Redis outage 500s custom-domain hosts (fail-closed but ungraceful); per-unique-Host DB exists()+cache write is gated upstream by nginx/Caddy host filtering.",
+        "artifact": null
+      },
+      {
+        "agent_id": "hunter-09",
+        "reviewed_paths": [
+          "DaventProject/sitemaps.py",
+          "StoreApp/domains/stores/views/viewset.py",
+          "StoreApp/domains/stores/services/services.py"
+        ],
+        "invariant": "Public enumeration surfaces (sitemap) expose only resources that pass the same public-access gate as the endpoints",
+        "method": "source",
+        "result": "FAIL: StoreSitemap.items() filters only is_published+is_blocked; every public store action additionally requires profile_has_benefit(user,'has_public_link') which requires suscription.grants_access(). Stores with lapsed/no subscription appear in /sitemap.xml though their public page 404s -> slug enumeration + dead-store indexing. See candidate infra:sitemap-benefit-gate.",
+        "artifact": null
+      },
+      {
+        "agent_id": "hunter-09",
+        "reviewed_paths": [
+          "DaventProject/urls.py",
+          "DaventProject/middleware.py"
+        ],
+        "invariant": "Catch-all/SEO surfaces don't leak admin paths or serve files for missing assets; healthz/robots disclose nothing",
+        "method": "source",
+        "result": "PASS with one nit: SPA_CATCH_ALL excludes api//admin//assets//static//media//healthz/ and dotted paths; healthz returns {'status':'ok'} only; robots.txt omits ADMIN_URL deliberately; sitemap view is public (see sitemap finding). Nit: RequestIdMiddleware logs request.path unescaped -> %0A in path forges log lines (candidate infra:request-path-log-injection, low).",
+        "artifact": null
+      },
+      {
+        "agent_id": "hunter-09",
+        "reviewed_paths": [
+          "docker/api/Dockerfile",
+          "docker/api/entrypoint.sh",
+          "docker/api/gunicorn.conf.py",
+          "docker-compose.yml",
+          ".dockerignore",
+          "requirements.txt"
+        ],
+        "invariant": "API image: non-root, no secret baking, reproducible pinned deps, fail-closed startup",
+        "method": "source",
+        "result": "PASS mostly: USER app (non-root), read_only+tmpfs+cap_drop ALL+no-new-privileges in compose, .dockerignore covers .env*/.secrets/docker/certbot/**/*.pem|key, pip==24.3.1 pinned, requirements.txt fully == pinned (pip-audit gate in CI), entrypoint check --deploy. Nits: base images tag-mutable; whole repo COPY'd into image — no secrets found in them; no --require-hashes.",
+        "artifact": null
+      },
+      {
+        "agent_id": "hunter-09",
+        "reviewed_paths": [
+          "docker/web/Dockerfile",
+          "docker/web/templates/default.conf.template",
+          "docker/web/snippets/*",
+          "docker-compose.yml"
+        ],
+        "invariant": "nginx: unprivileged, no alias traversal, correct proxy header trust, security headers on all location types",
+        "method": "source",
+        "result": "PASS mostly: uid101 + read_only + tmpfs; alias locations have matching trailing slashes (no traversal); proxy_set_header overwrites client XFF/XFP; real_ip_recursive correct; client_max_body_size 10m matches Django caps; /media/private/ 404; unknown Host -> 444/301. GAP: only /api/ and literal /admin/ proxy to gunicorn — an obfuscated ADMIN_URL (required by users.E001) is unreachable via web tier -> candidate infra:admin-url-nginx-gap (needs_validation). :8081 server_name _ gated by Caddy ask + edge_net isolation.",
+        "artifact": null
+      },
+      {
+        "agent_id": "hunter-09",
+        "reviewed_paths": [
+          "docker/caddy/Dockerfile",
+          "docker/caddy/Caddyfile",
+          "docker-compose.yml"
+        ],
+        "invariant": "Edge TLS terminator built from pinned, reviewable inputs",
+        "method": "source",
+        "result": "FAIL (supply-chain): `xcaddy build --with github.com/caddy-dns/cloudflare` fetches plugin at latest commit — no version pin/go.sum — mutable build input into the component that terminates ALL TLS (platform + on-demand customer domains). Base caddy:2/caddy:2-builder tags also mutable. See candidate infra:caddy-xcaddy-unpinned. tls-ask ask-endpoint design verified; minor: it doesn't check is_published/is_blocked and is a public domain-verification oracle.",
+        "artifact": null
+      },
+      {
+        "agent_id": "hunter-09",
+        "reviewed_paths": [
+          "docker-compose.yml",
+          ".env.example",
+          "render.yaml",
+          "DaventProject/settings.py",
+          "StoreApp/domains/stores/services/domains.py"
+        ],
+        "invariant": "Every env var the app/security logic consumes is passable to each deploy target",
+        "method": "source",
+        "result": "FAIL (config drift): PUBLIC_DOMAIN is read by settings/middleware/domains.py but absent from compose x-api-env allowlist, .env.example, and render.yaml -> hardcoded 'davent.com.ar' everywhere. Affects CanonicalHostMiddleware redirects and StoreDomain CNAME verification target. See candidate infra:public-domain-unset (needs_validation). Also missing from compose: SENTRY_DSN, AI provider keys (features silently off).",
+        "artifact": null
+      },
+      {
+        "agent_id": "hunter-09",
+        "reviewed_paths": [
+          ".github/workflows/ci-cd.yml",
+          ".github/workflows/security-schedule.yml",
+          ".github/workflows/keepalive.yml",
+          ".github/dependabot.yml"
+        ],
+        "invariant": "CI: least-privilege, pinned actions, no secret exposure to PRs, immutable deploy artifacts, no shell injection",
+        "method": "source",
+        "result": "MOSTLY PASS: top permissions contents:read; build elevates packages:write+id-token:write (kept on PR runs — hardening); deploy only push+main+environment:production, SHA-tagged images (never :latest), secrets via scp file 0600 + shred, SSH host fingerprint pinned, preflight greps for required secrets/DEBUG=True/ADMIN_URL/ALLOWED_HOSTS 'api', backup_db before migrate, rollback to previous sha images, concurrency non-canceling. Gaps: first-party/sigstore actions are TAG-pinned while gitleaks/trivy/appleboy are SHA-pinned — mixed state; cosign signs but deploy never verifies; tblib unpinned; DEBUG grep case-sensitive (feeds debug candidate); dependabot docker dirs may not match nested docker/*/Dockerfile.",
+        "artifact": null
+      },
+      {
+        "agent_id": "hunter-09",
+        "reviewed_paths": [
+          "render.yaml",
+          "docker/api/entrypoint.sh",
+          "docker/api/Dockerfile"
+        ],
+        "invariant": "Render deploy path enforces same prod-config invariants as VPS",
+        "method": "source",
+        "result": "PARTIAL: blueprint pins DEBUG=False, SECURE_*=True, ALLOWED_HOSTS/CORS/CSRF explicit, secrets sync:false; DEPLOY_CHECK_STRICT=0 documented tradeoff -> check --deploy violations only logged, service still starts. DEBUG spellings other than exact 'True' run a vacuous check; exact 'True' skips check entirely — no Render-side gate equivalent to the CI grep. needs owner observation of dashboard env.",
+        "artifact": null
+      },
+      {
+        "agent_id": "hunter-09",
+        "reviewed_paths": [
+          "requirements.txt",
+          "frontend/package.json",
+          "frontend/package-lock.json",
+          ".github/workflows/ci-cd.yml",
+          "pyproject.toml"
+        ],
+        "invariant": "Dependencies pinned, no obviously EOL/vulnerable versions, lockfile integrity",
+        "method": "source",
+        "result": "PASS: requirements.txt all == pins incl. transitive closure; versions current (Django 5.2.18, DRF 3.18.3, simplejwt 5.5.1, cors-headers 4.9.0, cryptography 50.0.2, PyJWT 2.15.1, celery 5.4.0, gunicorn 23.0.0, pillow 13.0.0, mcp 1.30.0); pip-audit+trivy+npm audit gates in CI + weekly schedule; package-lock v3 with sha512 integrity for all entries; resolved axios 1.20.0/vue 3.5.44/vite 5.4.21. Nits: no --require-hashes; vite 5.x is an EOL major (devDep, build-time only).",
+        "artifact": null
+      },
+      {
+        "agent_id": "hunter-09",
+        "reviewed_paths": [
+          ".gitignore",
+          ".dockerignore",
+          ".env.example",
+          "docker-compose.yml",
+          "DaventProject/logscrub.py",
+          "DaventProject/exceptions.py"
+        ],
+        "invariant": "Secrets can't be committed or baked; logs can't carry secrets; errors don't leak internals",
+        "method": "source",
+        "result": "MOSTLY PASS: .env*/.secrets//docker/certbot//**/*.pem|key covered by .dockerignore; .env covered by .gitignore; gitleaks in CI; exceptions.py returns generic 500; logscrub filter on all handlers scrubs PEM/JWT/enc:v1:/password/CUIT/path patterns. Gaps (hardening): .secrets/ NOT in .gitignore though deploy drops plaintext MP secrets into /opt/davent/.secrets (repo working tree) pre-shred; logscrub patterns miss '*_SECRET'/'*_KEY' names — no current call site logs them (grep-verified) so it's defense-in-depth only.",
+        "artifact": null
+      }
+    ],
+    "result_fingerprints": [
+      "infra:debug-bypass-spellings",
+      "infra:sitemap-benefit-gate",
+      "infra:request-path-log-injection",
+      "infra:public-domain-unset",
+      "infra:admin-url-nginx-gap",
+      "infra:caddy-xcaddy-unpinned"
+    ],
+    "unresolved": [
+      "Actual VPS .env values (PLATFORM_DOMAIN, PUBLIC_DOMAIN absence is source-confirmed but impact depends on real domain; ADMIN_URL value determines whether Django admin is reachable via nginx; ALLOWED_HOSTS content; DEBUG spelling actually deployed)",
+      "Render dashboard env vars (DEBUG override, DEPLOY_CHECK_STRICT, whether SECRETS_MASTER_KEYS/ADMIN_URL are actually set — sync:false vars are dashboard-only)",
+      "GitHub environment 'production' protection rules (required reviewers?) and branch protection on main — not source-visible",
+      "Whether the VPS compose deploy or the Render deploy is the live production for davent.com.ar/davent.com (both exist; DNS not observable)",
+      "Whether store custom domains / subdomain wildcard DNS are actually enabled in production (VITE_STORE_SUBDOMAINS, certbot wildcard issuance)"
+    ],
+    "hunter": "hunter-09"
+  },
+  {
+    "coverage_id": "StoreApp%2Fdomains%2F%2A%2Fservices%2Fimaging.py%2Bstorage.py%20%2B%20chat%20attachments%20%2B%20order%20proofs%20%2B%20pattern%20sanitize_markup::upload%20pipeline%23magic-byte%20signature%2C%20WebP%20recode%2C%20size%2Fpixel%20caps%2C%20R2%20key%20control%2C%20signed%20URLs%2C%20markup%20sanitization::StoreApp%2Fdomains%2Fstores::ATTACK-CLASSES.md%23Resource%20and%20file%20handling",
+    "canonical_refs": {
+      "surface": "StoreApp/domains/*/services/imaging.py+storage.py + chat attachments + order proofs + pattern sanitize_markup",
+      "boundary": "upload pipeline#magic-byte signature, WebP recode, size/pixel caps, R2 key control, signed URLs, markup sanitization",
+      "subsystem": "StoreApp/domains/stores",
+      "attack_class": "ATTACK-CLASSES.md#Resource and file handling"
+    },
+    "surface": "StoreApp/domains/*/services/imaging.py+storage.py + chat attachments + order proofs + pattern sanitize_markup",
+    "boundary": "upload pipeline#magic-byte signature, WebP recode, size/pixel caps, R2 key control, signed URLs, markup sanitization",
+    "subsystem": "StoreApp/domains/stores",
+    "attack_class": "Resource and file handling",
+    "starting_paths": [
+      "StoreApp/domains/stores/services",
+      "StoreApp/domains/stores/views",
+      "StoreApp/domains/design",
+      "StoreApp/domains/chat",
+      "StoreApp/domains/orders",
+      "StoreApp/domains/customers"
+    ],
+    "ordinary_attack_class_block": "ATTACK-CLASSES.md#Resource and file handling",
+    "selected_companion_blocks": [
+      "DATA-ISOLATION-AND-LIFECYCLE.md#Core discipline",
+      "DATA-ISOLATION-AND-LIFECYCLE.md#Deletion, revocation, and lifecycle attack classes",
+      "DATA-ISOLATION-AND-LIFECYCLE.md#Universal moves",
+      "DATA-ISOLATION-AND-LIFECYCLE.md#Validation rules",
+      "RESOURCE-EXHAUSTION-AND-AVAILABILITY.md#Core discipline",
+      "RESOURCE-EXHAUSTION-AND-AVAILABILITY.md#Computational amplification attack classes",
+      "RESOURCE-EXHAUSTION-AND-AVAILABILITY.md#Universal moves",
+      "RESOURCE-EXHAUSTION-AND-AVAILABILITY.md#Validation rules"
+    ],
+    "excluded_blocks": [
+      {
+        "block": "DATA-ISOLATION-AND-LIFECYCLE.md#Tenant and object-isolation attack classes",
+        "reason": "owner scoping covered by catalog/customers units"
+      }
+    ],
+    "prior_status": "prior_covered_same_source",
+    "attempts": [],
+    "wave": 1,
+    "status": "candidate",
+    "agent_id": "hunter-10",
+    "reviewed_paths": [
+      "AdminApp/domains/chat/models/models.py",
+      "AdminApp/domains/chat/services/attachments.py",
+      "AdminApp/domains/chat/views/viewset.py",
+      "AdminApp/domains/notifications/views/viewset.py",
+      "AdminApp/domains/users/management/commands/purge_personal_data.py",
+      "DaventProject/settings.py",
+      "DaventProject/throttling.py",
+      "DaventProject/urls.py",
+      "StoreApp/domains/catalog/serializers/serializers.py",
+      "StoreApp/domains/catalog/views/viewset.py",
+      "StoreApp/domains/catalog/views/viewset_base.py",
+      "StoreApp/domains/catalog/views/viewset_config.py",
+      "StoreApp/domains/design/services/pattern_document.py",
+      "StoreApp/domains/design/services/pattern_preview.py",
+      "StoreApp/domains/design/services/source_document.py",
+      "StoreApp/domains/design/tests.py",
+      "StoreApp/domains/feed/models/models.py",
+      "StoreApp/domains/feed/serializers/serializers.py",
+      "StoreApp/domains/feed/services/feed.py",
+      "StoreApp/domains/feed/views/views.py",
+      "StoreApp/domains/notifications/views/viewset.py",
+      "StoreApp/domains/orders/management/commands/expire_orders.py",
+      "StoreApp/domains/orders/models/models.py",
+      "StoreApp/domains/orders/serializers/serializers.py",
+      "StoreApp/domains/orders/services/checkout.py",
+      "StoreApp/domains/orders/services/payments.py",
+      "StoreApp/domains/orders/services/proofs.py",
+      "StoreApp/domains/orders/views/public.py",
+      "StoreApp/domains/storepayments/serializers/serializers.py",
+      "StoreApp/domains/storepayments/tests.py",
+      "StoreApp/domains/storepayments/views/integrations.py",
+      "StoreApp/domains/stores/serializers/serializers.py",
+      "StoreApp/domains/stores/services/ai_design.py",
+      "StoreApp/domains/stores/services/imaging.py",
+      "StoreApp/domains/stores/services/storage.py",
+      "StoreApp/domains/stores/tests.py",
+      "StoreApp/domains/stores/views/viewset.py",
+      "docker-compose.yml",
+      "docker/web/templates/default.conf.template"
+    ],
+    "local_checks": [
+      {
+        "agent_id": "hunter-10",
+        "reviewed_paths": [
+          "StoreApp/domains/stores/services/storage.py",
+          "StoreApp/domains/stores/services/imaging.py"
+        ],
+        "invariant": "Every image upload is rejected unless content-type is in {png,jpeg,gif,webp} AND magic bytes match the declared format AND Pillow can fully decode it.",
+        "method": "source",
+        "result": "Holds. validate_image_file (storage.py:435-450) enforces size cap, content-type allowlist (_IMAGE_CONTENT_TYPES, storage.py:60-65), 16-byte head signature per ext (PNG/JPEG/GIF/WebP RIFF+WEBP). imaging._open does upload.seek(0)+Image.open+image.load() and converts UnidentifiedImageError/DecompressionBombError/OSError/ValueError to ValueError. SVG/ZIP/other formats cannot pass the content-type gate; a mismatched body fails either the signature check or Pillow decode.",
+        "artifact": null
+      },
+      {
+        "agent_id": "hunter-10",
+        "reviewed_paths": [
+          "StoreApp/domains/stores/services/imaging.py",
+          "StoreApp/domains/stores/services/storage.py",
+          "AdminApp/domains/chat/services/attachments.py",
+          "StoreApp/domains/orders/views/public.py",
+          "StoreApp/domains/feed/services/feed.py",
+          "AdminApp/domains/notifications/views/viewset.py",
+          "StoreApp/domains/stores/services/ai_design.py",
+          "StoreApp/domains/catalog/views/viewset.py"
+        ],
+        "invariant": "All persisted web images are re-encoded to WebP (EXIF-corrected, size-clamped, alpha only for logo) — no original bytes, polyglots, scripts, or metadata survive.",
+        "method": "source",
+        "result": "Holds for every persisted path: normalize_image always returns ('webp','image/webp') via _encode (WEBP method=6, quality 78/72, <=350KB target floor q60); exif_transpose applied in _open; non-logo kinds convert to RGB/RGBA and drop EXIF/GPS on save; animated GIF/WebP collapse to first frame; output dims <=1600-2200px per kind. Callers: upload_logo/cover/carousel/gallery/decor/product/brand, chat (attachments.py:36), proof (public.py:236), feed image (feed.py:146), changelog (viewset.py:152), AI design (ai_design.py:3128), remove-background preview is NOT persisted. Exception: feed video is raw bytes by design — see hardening.",
+        "artifact": null
+      },
+      {
+        "agent_id": "hunter-10",
+        "reviewed_paths": [
+          "StoreApp/domains/stores/services/storage.py",
+          "StoreApp/domains/stores/services/ai_design.py",
+          "AdminApp/domains/chat/services/attachments.py",
+          "StoreApp/domains/orders/views/public.py",
+          "StoreApp/domains/notifications/views/viewset.py",
+          "StoreApp/domains/feed/services/feed.py",
+          "StoreApp/domains/stores/serializers/serializers.py",
+          "StoreApp/domains/catalog/serializers/serializers.py",
+          "StoreApp/domains/feed/serializers/serializers.py"
+        ],
+        "invariant": "Object keys are server-generated, tenant-scoped, and not injectable or client-writable; no filename/traversal reaches the key.",
+        "method": "source",
+        "result": "Holds. Keys are f'stores/{store.id}/{folder}/{uuid4().hex}.{ext}', 'chat/{thread.id}/{uuid}.webp', 'changelog/{uuid}.{ext}', 'system/offers/{slug}/{uuid}.webp'. No serializer exposes image_key/media_key/logo_key/cover_key/label_key as writable. 'kind' validated against StoreGalleryImage.KINDS. default_storage.save uses uuid names — no collision/traversal.",
+        "artifact": null
+      },
+      {
+        "agent_id": "hunter-10",
+        "reviewed_paths": [
+          "AdminApp/domains/chat/views/viewset.py",
+          "AdminApp/domains/chat/services/attachments.py",
+          "StoreApp/domains/stores/services/storage.py",
+          "docker/web/templates/default.conf.template",
+          "docker-compose.yml",
+          "DaventProject/urls.py"
+        ],
+        "invariant": "Chat attachments are never publicly fetchable: private bucket objects get short-lived signed URLs only to thread owner/staff; local fallback lives under a prefix nginx refuses to serve.",
+        "method": "source",
+        "result": "Holds. R2 path: key 'chat/<thread>/<uuid>.webp' -> object_url(private=True, expires=3600) -> presigned SigV4, public base ignored. Local path: key 'private/chat/...' via default_storage; nginx 'location ^~ /media/private/ { return 404; }' precedes '/media/' on BOTH vhosts; Django static() media serving exists only under settings.DEBUG. Attachment endpoint enforces IsAuthenticated + chat_enabled + owner-or-staff, serves local files via default_storage.open(image_key) with DB-sourced key (no traversal), redirects to fresh 1h presigned URL otherwise. chat_image_url always private=True.",
+        "artifact": null
+      },
+      {
+        "agent_id": "hunter-10",
+        "reviewed_paths": [
+          "StoreApp/domains/orders/views/public.py",
+          "StoreApp/domains/orders/serializers/serializers.py",
+          "StoreApp/domains/orders/services/checkout.py",
+          "StoreApp/domains/orders/services/proofs.py",
+          "StoreApp/domains/orders/models/models.py"
+        ],
+        "invariant": "Payment proofs are private objects: signed URLs only, first-write-wins, quota-accounted, released on unpaid close; public tracking never exposes the proof URL.",
+        "method": "source",
+        "result": "Mostly holds. Upload requires valid tracking_token + PENDING_PAYMENT + non-MP + no existing proof; validate+normalize->WebP; _check_quota fast-path then Store->Order select_for_update recheck; orphan _delete_object on failure; response object_url(key, private=True). Owner serializer get_proof_image uses private=True; public tracking payload exposes only proof_uploaded bool. release_proof deletes row+object+frees quota inside the locking atomic on EXPIRE/CANCEL. Residual: presigned TTL defaults to 7 days vs chat's deliberate 1h — hardening, not a break.",
+        "artifact": null
+      },
+      {
+        "agent_id": "hunter-10",
+        "reviewed_paths": [
+          "StoreApp/domains/stores/views/viewset.py",
+          "StoreApp/domains/catalog/views/viewset.py",
+          "StoreApp/domains/catalog/views/viewset_config.py",
+          "StoreApp/domains/catalog/views/viewset_base.py",
+          "StoreApp/domains/feed/views/views.py",
+          "StoreApp/domains/stores/services/storage.py"
+        ],
+        "invariant": "Upload/delete endpoints resolve the store strictly from the authenticated owner; no cross-tenant object or row access (IDOR).",
+        "method": "source",
+        "result": "Holds. Store actions use get_object_or_404(Store, user__user=request.user) and child rows scoped store=store. Catalog querysets all filter store=view.my_store(); brand/product image actions go through get_object()/owner queryset. Feed post media scoped get_object_or_404(FeedPost, pk, store=store). Order proof is token-scoped to the store. Public pattern ?product= lookup filters store+is_active+not is_exclusive. Deletes take the key from the locked row, never caller input.",
+        "artifact": null
+      },
+      {
+        "agent_id": "hunter-10",
+        "reviewed_paths": [
+          "StoreApp/domains/stores/services/storage.py",
+          "StoreApp/domains/orders/services/proofs.py",
+          "StoreApp/domains/feed/services/feed.py",
+          "StoreApp/domains/stores/services/ai_design.py",
+          "AdminApp/domains/notifications/views/viewset.py"
+        ],
+        "invariant": "Storage quota (max_storage_mb) and image-count caps are enforced atomically: fast-path check, PUT, then recheck under select_for_update on the Store row; failed transactions delete the orphaned object; deletes free quota.",
+        "method": "source",
+        "result": "Holds for all store-scoped uploads. Pattern: validate->normalize->_check_image_slot/_check_quota fast-path->_put_object->atomic{Store select_for_update->recheck->write key+size->_consume_quota}->except ValueError _delete_object(key). Deletes lock Store, clear key/size, _consume_quota(freed), then _delete_object post-commit. release_proof mirrors it for proofs. Exceptions: chat attachments consume NO quota (candidate); changelog has no quota by design (platform asset, staff-only) and has a minor replace race -> orphan.",
+        "artifact": null
+      },
+      {
+        "agent_id": "hunter-10",
+        "reviewed_paths": [
+          "StoreApp/domains/design/services/pattern_document.py",
+          "StoreApp/domains/design/services/pattern_preview.py",
+          "StoreApp/domains/design/services/source_document.py",
+          "StoreApp/domains/stores/views/viewset.py",
+          "StoreApp/domains/design/tests.py",
+          "StoreApp/domains/stores/tests.py"
+        ],
+        "invariant": "Pattern markup served as document/srcdoc cannot execute attacker JS: handlers, scripts, dangerous URL schemes, base/meta/embeds removed; document CSP allows only nonce'd scripts in an opaque-origin sandbox.",
+        "method": "source",
+        "result": "Holds with defense in depth. sanitize_markup strips <script>, on*= handlers with any quote/unquoted form, javascript:/vbscript:/data:text/html in 10 URL attributes incl. entity/whitespace-obfuscated schemes, <base>/<object>/<embed>/<iframe>/<frame>/<frameset>, and ALL <meta>. sanitize_css removes </style breakouts. pattern_document normalizes theme/surface/style attrs, escapes preload URLs, per-response validated nonce. View sets X-Frame-Options SAMEORIGIN + document_csp(nonce): default-src 'none', script-src 'nonce-…' (no unsafe-inline), object-src 'none', base-uri 'none', form-action 'none', connect-src 'none'. Preview token = TimestampSigner TTL 3d bound to store.pk. Even if sanitizer missed markup, CSP nonce + opaque origin block script; residual <link>/<style> are staff-authored catalog content neutralized by style-src 'unsafe-inline' — hardening note only.",
+        "artifact": null
+      },
+      {
+        "agent_id": "hunter-10",
+        "reviewed_paths": [
+          "DaventProject/urls.py",
+          "DaventProject/settings.py",
+          "docker/web/templates/default.conf.template",
+          "docker-compose.yml",
+          "StoreApp/domains/stores/services/storage.py",
+          "AdminApp/domains/chat/services/attachments.py",
+          "StoreApp/domains/stores/services/ai_design.py"
+        ],
+        "invariant": "Local MEDIA_ROOT fallback cannot expose private objects in production; nginx media handling matches the storage layout.",
+        "method": "source",
+        "result": "Holds. Django serves MEDIA_URL only when DEBUG; production media is nginx alias /srv/media <- media_data volume <- /app/media. Only two default_storage writers exist: chat attachments under 'private/' (nginx 404 + authed endpoint) and AI-design gallery images under 'stores/<id>/gallery/' which are public-by-design. Store-scoped R2 helpers require store_storage_configured() — no silent local fallback for proofs/changelog/feed (put_object raises ValueError without backend). proofs/changelog keys can never be served from /media/ because they are never written to default_storage.",
+        "artifact": null
+      },
+      {
+        "agent_id": "hunter-10",
+        "reviewed_paths": [
+          "StoreApp/domains/storepayments/serializers/serializers.py",
+          "StoreApp/domains/storepayments/views/integrations.py",
+          "StoreApp/domains/stores/services/storage.py",
+          "StoreApp/domains/storepayments/tests.py"
+        ],
+        "invariant": "BYO storage: owner-supplied endpoint cannot become SSRF; credentials are write-only/encrypted; URL generation resolves the correct bucket per key; public_base_url cannot inject non-https or dangerous schemes.",
+        "method": "source",
+        "result": "Holds. validate_endpoint enforces https (http only when settings.DEBUG) + host suffix allowlist. bucket regex + region default 'auto'. access_key/secret_key write-only, encrypted via vault purpose per store. _byo_backend requires enabled+endpoint+bucket+both decryptable creds else falls back to DAVENT; _store_id_from_key scopes BYO to 'stores/<id>/...' keys only — chat/changelog/system keys always DAVENT. object_url(private=True) ignores public_base_url -> presigned with owner creds when BYO. public_base_url is arbitrary https — owner could point image URLs at any host, but SPA CSP img-src https: already permits that; no new capability.",
+        "artifact": null
+      },
+      {
+        "agent_id": "hunter-10",
+        "reviewed_paths": [
+          "StoreApp/domains/feed/services/feed.py",
+          "StoreApp/domains/feed/views/views.py",
+          "StoreApp/domains/feed/serializers/serializers.py",
+          "StoreApp/domains/feed/models/models.py",
+          "StoreApp/domains/stores/services/storage.py"
+        ],
+        "invariant": "Feed media uploads are owner-scoped, quota-accounted, and image media is normalized; public feed serves only published posts of enabled stores.",
+        "method": "source",
+        "result": "Partially holds — image path is correct (validate_image_file->normalize_image 'gallery'->WebP, quota fast-path+locked recheck, old media deleted, post delete frees quota+object, owner-scoped 404s, has_feed gate). DEFECT: video branch sets processed=None then calls _put_object which does _IMAGE_CONTENT_TYPES[upload.content_type] -> KeyError for 'video/mp4|webm|quicktime' -> uncaught (view catches only ValueError) -> HTTP 500 on every video upload (feed.py:149-160 + storage.py:322-324). Feature is broken, not exploitable — hardening. Also no container/magic-byte validation would exist even if the crash were fixed (content-type only, up to 120MB raw).",
+        "artifact": null
+      },
+      {
+        "agent_id": "hunter-10",
+        "reviewed_paths": [
+          "DaventProject/settings.py",
+          "DaventProject/throttling.py",
+          "AdminApp/domains/chat/views/viewset.py",
+          "StoreApp/domains/orders/views/public.py",
+          "StoreApp/domains/catalog/views/viewset.py",
+          "StoreApp/domains/stores/services/ai_design.py"
+        ],
+        "invariant": "Upload endpoints have effective rate bounds so a single principal cannot amplify storage/CPU cost without limit.",
+        "method": "source",
+        "result": "Mostly holds: chat_send 120/h, store_order_proof 10/h/IP, store_order_create 10/h, bg_removal 60/h, ai_design_image 60/h, store_review 10/h; XFF-spoof pinned via _pinned_ident. Throttles are deliberately fail-open on cache outage — documented; captcha still gates order creation. GAP: chat attachments have no storage-quota consumption at all (candidate) — only the hourly throttle + annual purge bound total bytes.",
+        "artifact": null
+      },
+      {
+        "agent_id": "hunter-10",
+        "reviewed_paths": [
+          "StoreApp/domains/stores/services/imaging.py",
+          "AdminApp/domains/users/management/commands/purge_personal_data.py",
+          "StoreApp/domains/orders/services/payments.py",
+          "StoreApp/domains/orders/management/commands/expire_orders.py",
+          "AdminApp/domains/chat/models/models.py"
+        ],
+        "invariant": "Decompression bombs, animated/polyglot payloads, and orphaned objects are bounded: pixel cap enforced, single-frame output, failed transactions clean up, lifecycle deletes remove objects.",
+        "method": "source",
+        "result": "Mostly holds: Image.MAX_IMAGE_PIXELS=40M + DecompressionBombError->ValueError; output always single-frame WebP; orphan cleanup on ValueError across all helpers; purge_personal_data deletes chat attachments (R2 via _delete_object or local) for messages older than --days. Residuals (hardening): 40M pixels ~=160MB RGBA transient decode per request is generous vs <=2200px output; _open misses non-standard Pillow exceptions -> 500; chat send uploads object before send_message (DB failure -> orphan); changelog replace race can orphan; _delete_object BYO-first early return can skip the DAVENT delete for fallback-uploaded objects.",
+        "artifact": null
+      }
+    ],
+    "result_fingerprints": [
+      "uploads:chat-attachments-no-storage-quota"
+    ],
+    "unresolved": [
+      "R2 bucket public-access policy: whether R2_PUBLIC_URL/r2.dev exposes 'chat/', 'stores/*/proofs/', 'changelog/', 'backups/' prefixes to anyone holding the key (keys are uuid4-unguessable and never serialized publicly, but bucket list/public-read policy is a deployment fact).",
+      "Whether purge_personal_data cron is actually scheduled in production and with what --days (default 365) — determines real retention bound for chat attachments.",
+      "Whether S3_API/R2_* env credentials are configured in production (determines which local-fallback branches are reachable); check_env likely guards but unverified here.",
+      "Frontend iframe sandbox attributes for the pattern document (published embed + 'Ver este diseño' srcdoc modal) — AGENTS.md documents sandbox without allow-same-origin; front-end code is outside this backend unit."
+    ],
+    "hunter": "hunter-10"
+  },
+  {
+    "coverage_id": "StoreApp%2Fdomains%2Fcatalog%2Bservices%23owner%20CRUD%2C%20discounts%2C%20reviews%20moderation%2C%20services%20CRUD::StoreApp%2Fdomains%2F%2A%2Fviews%23my_store%28%29%20owner%20scoping%20%2B%20plan%2Fbenefit%20gates::StoreApp%2Fdomains%2Fcatalog::ATTACK-CLASSES.md%23Access%20control",
+    "canonical_refs": {
+      "surface": "StoreApp/domains/catalog+services#owner CRUD, discounts, reviews moderation, services CRUD",
+      "boundary": "StoreApp/domains/*/views#my_store() owner scoping + plan/benefit gates",
+      "subsystem": "StoreApp/domains/catalog",
+      "attack_class": "ATTACK-CLASSES.md#Access control"
+    },
+    "surface": "StoreApp/domains/catalog+services",
+    "boundary": "StoreApp/domains/*/views#my_store() owner scoping + plan/benefit gates",
+    "subsystem": "StoreApp/domains/catalog",
+    "attack_class": "Access control",
+    "starting_paths": [
+      "StoreApp/domains/catalog",
+      "StoreApp/domains/services"
+    ],
+    "ordinary_attack_class_block": "ATTACK-CLASSES.md#Access control",
+    "selected_companion_blocks": [
+      "DATA-ISOLATION-AND-LIFECYCLE.md#Core discipline",
+      "DATA-ISOLATION-AND-LIFECYCLE.md#Tenant and object-isolation attack classes",
+      "DATA-ISOLATION-AND-LIFECYCLE.md#Derived-data and disclosure attack classes",
+      "DATA-ISOLATION-AND-LIFECYCLE.md#Universal moves",
+      "DATA-ISOLATION-AND-LIFECYCLE.md#Validation rules"
+    ],
+    "excluded_blocks": [
+      {
+        "block": "DATA-ISOLATION-AND-LIFECYCLE.md#Export, backup, restore, and migration attack classes",
+        "reason": "no export/backup surface in these domains"
+      },
+      {
+        "block": "DATA-ISOLATION-AND-LIFECYCLE.md#Deletion, revocation, and lifecycle attack classes",
+        "reason": "covered by derived-data class for soft-delete/visibility"
+      }
+    ],
+    "prior_status": "prior_covered_same_source",
+    "attempts": [],
+    "wave": 1,
+    "status": "candidate",
+    "agent_id": "hunter-04",
+    "reviewed_paths": [
+      "StoreApp/domains/catalog/serializers/config_fields.py",
+      "StoreApp/domains/catalog/serializers/mixins.py",
+      "StoreApp/domains/catalog/serializers/serializers.py",
+      "StoreApp/domains/catalog/services/price_updates.py",
+      "StoreApp/domains/catalog/services/services.py",
+      "StoreApp/domains/catalog/views/viewset.py",
+      "StoreApp/domains/catalog/views/viewset_base.py",
+      "StoreApp/domains/catalog/views/viewset_config.py",
+      "StoreApp/domains/services/serializers/serializers.py",
+      "StoreApp/domains/services/services/services.py",
+      "StoreApp/domains/services/views/viewset.py",
+      "StoreApp/domains/services/views/viewset_base.py",
+      "StoreApp/domains/services/views/viewset_config.py",
+      "StoreApp/domains/stores/layout_blocks.py",
+      "StoreApp/domains/stores/serializers/mixins.py",
+      "StoreApp/domains/stores/serializers/serializers.py",
+      "StoreApp/domains/stores/serializers/validators.py",
+      "StoreApp/domains/stores/services/storage.py",
+      "StoreApp/domains/stores/site_theme.py",
+      "StoreApp/domains/stores/views/viewset.py",
+      "StoreApp/domains/stores/views/viewset_base.py",
+      "StoreApp/domains/stores/views/viewset_config.py",
+      "SuscriptionApp/domains/benefits/management/commands/seeds.py",
+      "frontend/src/components/store/BlockRenderer.vue",
+      "frontend/src/templates/_shared.js",
+      "frontend/src/templates/blocks.js"
+    ],
+    "local_checks": [
+      {
+        "agent_id": "hunter-04",
+        "reviewed_paths": [
+          "StoreApp/domains/catalog/views/viewset_base.py",
+          "StoreApp/domains/catalog/views/viewset_config.py",
+          "StoreApp/domains/services/views/viewset_base.py",
+          "StoreApp/domains/services/views/viewset_config.py",
+          "StoreApp/domains/stores/views/viewset_config.py",
+          "StoreApp/domains/stores/views/viewset.py"
+        ],
+        "invariant": "An owner may only read/modify objects belonging to their own store; foreign ids must 404, never leak or mutate.",
+        "method": "source",
+        "result": "PASS. CatalogBaseViewSet.my_store() resolves Store via get_object_or_404(Store, user__user=request.user) (viewset_base.py:21-25) and every queryset factory filters store=view.my_store() (viewset_config.py:28-41); get_object() therefore 404s cross-tenant ids on list/retrieve/update/destroy/custom actions. ServicesBaseViewSet and StoreBaseViewSet mirror the pattern. Store-scoped deletes use get_object_or_404(Model, pk=image_id, store=store) (viewset.py:1857,1917) and version restore filters StudioVersion by pk+store (viewset.py:1677).",
+        "artifact": null
+      },
+      {
+        "agent_id": "hunter-04",
+        "reviewed_paths": [
+          "StoreApp/domains/catalog/views/viewset_base.py",
+          "StoreApp/domains/catalog/serializers/serializers.py",
+          "StoreApp/domains/catalog/serializers/mixins.py",
+          "StoreApp/domains/services/serializers/serializers.py",
+          "StoreApp/domains/stores/serializers/serializers.py",
+          "StoreApp/domains/stores/serializers/mixins.py"
+        ],
+        "invariant": "Client input must not mass-assign store FKs, is_blocked, plan/subscription fields, prices bypassing validators, or other privileged columns.",
+        "method": "source",
+        "result": "PASS. create() forces serializer.save(store=self.my_store()); 'store' absent from every write serializer's fields. StoreSerializer exposes only id/user(HiddenField)/slug/is_published — is_blocked/blocked_* not writable; StoreCreateMixin enforces one store per profile. StoreCustomizationSerializer fields list contains no store FK and marks computed fields read-only. Product/Service/Discount write serializers validate category/brand/product ownership against context['store'].",
+        "artifact": null
+      },
+      {
+        "agent_id": "hunter-04",
+        "reviewed_paths": [
+          "StoreApp/domains/catalog/views/viewset.py",
+          "StoreApp/domains/catalog/services/services.py",
+          "StoreApp/domains/services/views/viewset.py",
+          "StoreApp/domains/services/services/services.py",
+          "StoreApp/domains/stores/views/viewset.py",
+          "SuscriptionApp/domains/benefits/management/commands/seeds.py"
+        ],
+        "invariant": "Plan/benefit gates must be enforced on every owner verb and custom action, fail-closed on downgrade.",
+        "method": "source",
+        "result": "PASS with one exception (candidate 1). CatalogGateMixin gates create/update/destroy via catalog_enabled=has_public_link; DiscountViewSet gates all verbs via has_discounts; ReviewViewSet gates list/destroy/reply via store_has_reviews and returns 405 for update/partial_update; ServiceViewSet gates all verbs + order via services_enabled=has_services_site with SERVICES_MAX=24. Stores actions gate per-benefit (has_customization, has_ai_design, has_custom_domain, has_stats, has_chatbot). Customization PATCH drops disallowed premium fields server-side and whitelists template/template_draft. EXCEPTION: published layout_config is not re-filtered on the public read path — see candidate catalog-owner:layout-config-plan-gate-read-drift.",
+        "artifact": null
+      },
+      {
+        "agent_id": "hunter-04",
+        "reviewed_paths": [
+          "StoreApp/domains/catalog/views/viewset.py",
+          "StoreApp/domains/catalog/services/services.py",
+          "StoreApp/domains/catalog/services/price_updates.py",
+          "StoreApp/domains/services/views/viewset.py",
+          "StoreApp/domains/stores/services/storage.py",
+          "StoreApp/domains/stores/views/viewset.py"
+        ],
+        "invariant": "Quota checks (max_products, SERVICES_MAX, image caps) must be race-safe and rechecked under lock.",
+        "method": "source",
+        "result": "PASS for products/services/images. Product create rechecks can_add_product under select_for_update on the store row inside transaction.atomic. Service create does the same with SERVICES_MAX. upload_carousel_image caps at CAROUSEL_MAX_IMAGES=5 and upload_gallery_image enforces plan max_gallery_images + DECOR_MAX_IMAGES + has_design_advanced for decor, each rechecked under select_for_update. bulk_update_prices/import_prices operate on store-scoped querysets only. GAP: categories, brands and discounts have no count quota at all — see candidate catalog-owner:uncapped-taxonomy-discount-public-cost.",
+        "artifact": null
+      },
+      {
+        "agent_id": "hunter-04",
+        "reviewed_paths": [
+          "StoreApp/domains/catalog/serializers/mixins.py",
+          "StoreApp/domains/catalog/serializers/config_fields.py",
+          "StoreApp/domains/catalog/services/services.py",
+          "StoreApp/domains/catalog/views/viewset.py"
+        ],
+        "invariant": "Discounts must not allow invalid percentages, foreign scope targets, inverted/overlapping windows, negative effective prices, or scope inconsistencies.",
+        "method": "source",
+        "result": "PASS. DiscountLimits percent_min=1/percent_max=99 with serializer min/max and DB check; DiscountMixinValidator.validate requires category/brand/products targets to belong to context store, caps products scope at 500, enforces ends_at>starts_at, and excludes overlapping products-scope discounts. Public effective pricing takes min(manual offer, best discount) only when below list price — no negative/zero-price abuse. running_discounts_of fails closed without has_discounts.",
+        "artifact": null
+      },
+      {
+        "agent_id": "hunter-04",
+        "reviewed_paths": [
+          "StoreApp/domains/catalog/views/viewset.py",
+          "StoreApp/domains/catalog/views/viewset_config.py",
+          "StoreApp/domains/catalog/serializers/serializers.py"
+        ],
+        "invariant": "Review moderation must stay inside the owner's store; owners must not create/edit reviews through this endpoint.",
+        "method": "source",
+        "result": "PASS. _own_reviews filters ProductReview by store=my_store(); ReviewViewSet.update/partial_update return 405; reply action resolves via get_object() on the scoped queryset and only writes owner_reply via ReviewReplySerializer; create is not routed (public creation lives under product_reviews with customer auth).",
+        "artifact": null
+      },
+      {
+        "agent_id": "hunter-04",
+        "reviewed_paths": [
+          "StoreApp/domains/stores/views/viewset.py",
+          "StoreApp/domains/stores/services/storage.py"
+        ],
+        "invariant": "Image order/remove actions must only touch the caller's store images; unknown/foreign ids ignored or 404.",
+        "method": "source",
+        "result": "PASS. carousel_order/gallery_order call _apply_order on store-scoped querysets so foreign/duplicate ids are skipped; carousel_remove/gallery_remove use get_object_or_404(Model, pk=image_id, store=store). Uploads enforce plan caps under lock.",
+        "artifact": null
+      },
+      {
+        "agent_id": "hunter-04",
+        "reviewed_paths": [
+          "StoreApp/domains/stores/views/viewset.py",
+          "StoreApp/domains/stores/serializers/serializers.py",
+          "StoreApp/domains/stores/layout_blocks.py",
+          "StoreApp/domains/stores/site_theme.py"
+        ],
+        "invariant": "Customization PATCH must drop plan-gated fields server-side and sanitize layout_config/site_theme/template against the current plan.",
+        "method": "source",
+        "result": "PASS on the write path. The PATCH handler pops DESIGN_ADVANCED/LOCATION/REVIEW/LIVE_STREAM/SITE_THEME fields and ecommerce_enabled-enable without the benefit, and whitelists template/template_draft via allowed_templates_of. StoreCustomizationSerializer.validate_layout_config/_draft run clean_layout_config(value, has_advanced, has_ai) which drops unknown/duplicate/premium/ai_only blocks and sanitizes variants/props; _clean_theme runs clean_site_theme with plan flags. Publish re-checks template_draft against allowed_templates_of — but copies layout_config/site_theme drafts verbatim, and the public serializer does not re-filter layout_config: see candidate 1.",
+        "artifact": null
+      },
+      {
+        "agent_id": "hunter-04",
+        "reviewed_paths": [
+          "StoreApp/domains/stores/views/viewset.py",
+          "StoreApp/domains/catalog/services/price_updates.py"
+        ],
+        "invariant": "Public catalog filters/sorts must be allowlisted; bulk price/import scopes must stay inside the owner's store.",
+        "method": "source",
+        "result": "PASS. CATALOG_SORTS is a closed map; ?category/?brand ids capped at CATALOG_IDS_MAX=50 via _id_list; ?features= bounded to 10 groups/15 values/4096 bytes; ?q= truncated to 80 chars; min/max price clamped to field max. bulk_update_prices and import_prices build Product.objects.filter(store=store) first and narrow within it — foreign product/category/brand ids are silently ignored. Minor robustness gap: non-numeric category/brand/product_ids reach filter(pk=...) and raise ValueError->500 (see hardening).",
+        "artifact": null
+      },
+      {
+        "agent_id": "hunter-04",
+        "reviewed_paths": [
+          "StoreApp/domains/stores/views/viewset.py",
+          "StoreApp/domains/stores/views/viewset_base.py",
+          "StoreApp/domains/stores/views/viewset_config.py",
+          "StoreApp/domains/stores/serializers/serializers.py",
+          "StoreApp/domains/stores/serializers/mixins.py",
+          "StoreApp/domains/stores/serializers/validators.py"
+        ],
+        "invariant": "Store update must be owner-scoped with no privileged-field mass assignment; staff moderation endpoints must be admin-only.",
+        "method": "source",
+        "result": "PASS. update queryset = Store.objects.filter(user__user=request.user) so foreign pk->404; non-staff list/retrieve limited to own store, staff sees all. StoreSerializer writable fields are slug+is_published only; slug validated for format/RESERVED_SLUGS/uniqueness excluding self. block/unblock require IsAdminUser; web_quality enforces owner-or-staff with explicit 403; domain actions are owner-scoped + has_custom_domain; stats scoped via profile.store + has_stats; chatbot GET open to owner, PATCH gated has_chatbot.",
+        "artifact": null
+      },
+      {
+        "agent_id": "hunter-04",
+        "reviewed_paths": [
+          "StoreApp/domains/stores/views/viewset.py",
+          "StoreApp/domains/stores/serializers/serializers.py",
+          "StoreApp/domains/stores/layout_blocks.py",
+          "frontend/src/components/store/BlockRenderer.vue",
+          "frontend/src/templates/_shared.js",
+          "frontend/src/templates/blocks.js",
+          "SuscriptionApp/domains/benefits/management/commands/seeds.py"
+        ],
+        "invariant": "Plan-gated customization data must be re-filtered on the PUBLIC read path, not only at write time (same policy as site_theme/videos/live_stream/site_templates).",
+        "method": "source",
+        "result": "FAIL -> candidate catalog-owner:layout-config-plan-gate-read-drift. StoreCustomizationPublicSerializer.to_representation re-filters site_theme (filter_site_theme), videos cap, live_stream_url, site_templates/show_catalog, accent fields and review toggles but serves layout_config verbatim; publish (viewset.py:1599) and restore (1680-1684) copy draft/snapshot layout_config without re-running clean_layout_config; the Vue BlockRenderer mounts saved ai_* blocks with registered components and no benefit check.",
+        "artifact": null
+      },
+      {
+        "agent_id": "hunter-04",
+        "reviewed_paths": [
+          "StoreApp/domains/catalog/views/viewset.py",
+          "StoreApp/domains/catalog/views/viewset_config.py",
+          "StoreApp/domains/catalog/services/services.py",
+          "StoreApp/domains/stores/views/viewset.py",
+          "SuscriptionApp/domains/benefits/management/commands/seeds.py"
+        ],
+        "invariant": "Owner-writable collections that feed shared public payloads must be bounded like products/services/images.",
+        "method": "source",
+        "result": "FAIL -> candidate catalog-owner:uncapped-taxonomy-discount-public-cost. Category/Brand viewsets gate only on catalog_enabled (has_public_link — cheapest plan) and DiscountViewSet only on has_discounts; none cap row count. Every public catalog request runs running_discount_stamp (viewset.py:1028; services.py:67-91 = query + Python loop over all in-window discounts) even on cache hit; on miss it computes effective_pricing_of per product x discount (1131-1142), serializes ALL categories/brands including empty ones (1194-1195,1233-1234) and all running discounts as promotions (1231-1235).",
+        "artifact": null
+      },
+      {
+        "agent_id": "hunter-04",
+        "reviewed_paths": [
+          "StoreApp/domains/stores/views/viewset.py",
+          "StoreApp/domains/stores/serializers/serializers.py"
+        ],
+        "invariant": "Studio share-preview tokens must be unforgeable, store-bound, expiring, and must not leak other tenants' drafts.",
+        "method": "source",
+        "result": "PASS. customization_share signs {'s': store.pk} with TimestampSigner+salt and PREVIEW_SHARE_TTL=3d; _preview_ok unsigns with max_age and requires data['s']==store.pk; preview swaps draft fields in-memory only, is no-store, skips visit counting. Invalid/foreign token degrades to normal published view.",
+        "artifact": null
+      }
+    ],
+    "result_fingerprints": [
+      "catalog-owner:layout-config-plan-gate-read-drift",
+      "catalog-owner:uncapped-taxonomy-discount-public-cost"
+    ],
+    "unresolved": [],
+    "hunter": "hunter-04"
+  },
+  {
+    "coverage_id": "StoreApp%2Fdomains%2Fcustomers%2Bcart%2Borders%2Bmemberships%2Blegalpages%23buyer%20auth%2C%20cart%2C%20order%20lifecycle%2C%20plans%2C%20legal%20pages::StoreApp%2Fdomains%2Fcustomers%2Fservices%23customer%20JWT%2C%20store%20tenancy%2C%20order%20state%20machine%2C%20proof%20uploads::StoreApp%2Fdomains%2Fcustomers::ATTACK-CLASSES.md%23Access%20control",
+    "canonical_refs": {
+      "surface": "StoreApp/domains/customers+cart+orders+memberships+legalpages#buyer auth, cart, order lifecycle, plans, legal pages",
+      "boundary": "StoreApp/domains/customers/services#customer JWT, store tenancy, order state machine, proof uploads",
+      "subsystem": "StoreApp/domains/customers",
+      "attack_class": "ATTACK-CLASSES.md#Access control"
+    },
+    "surface": "StoreApp/domains/customers+cart+orders+memberships+legalpages",
+    "boundary": "StoreApp/domains/customers/services#customer JWT, store tenancy, order state machine, proof uploads",
+    "subsystem": "StoreApp/domains/customers",
+    "attack_class": "Access control",
+    "starting_paths": [
+      "StoreApp/domains/customers",
+      "StoreApp/domains/cart",
+      "StoreApp/domains/orders",
+      "StoreApp/domains/memberships",
+      "StoreApp/domains/legalpages"
+    ],
+    "ordinary_attack_class_block": "ATTACK-CLASSES.md#Access control",
+    "selected_companion_blocks": [
+      "WEB-PROTOCOL-AND-AUTH.md#Core discipline",
+      "WEB-PROTOCOL-AND-AUTH.md#Browser-session attack classes",
+      "WEB-PROTOCOL-AND-AUTH.md#Universal moves",
+      "WEB-PROTOCOL-AND-AUTH.md#Validation rules",
+      "DATA-ISOLATION-AND-LIFECYCLE.md#Core discipline",
+      "DATA-ISOLATION-AND-LIFECYCLE.md#Tenant and object-isolation attack classes",
+      "DATA-ISOLATION-AND-LIFECYCLE.md#Universal moves",
+      "DATA-ISOLATION-AND-LIFECYCLE.md#Validation rules",
+      "ATTACK-CLASSES.md#Business logic"
+    ],
+    "excluded_blocks": [
+      {
+        "block": "DATA-ISOLATION-AND-LIFECYCLE.md#Export, backup, restore, and migration attack classes",
+        "reason": "no export surface"
+      }
+    ],
+    "prior_status": "prior_covered_same_source",
+    "attempts": [],
+    "wave": 1,
+    "status": "candidate",
+    "agent_id": "hunter-05",
+    "reviewed_paths": [
+      "StoreApp/domains/cart",
+      "StoreApp/domains/cart/views",
+      "StoreApp/domains/customers/authentication.py",
+      "StoreApp/domains/customers/services/customers.py",
+      "StoreApp/domains/customers/services/google.py",
+      "StoreApp/domains/customers/services/tokens.py",
+      "StoreApp/domains/customers/views/auth_views.py",
+      "StoreApp/domains/legalpages/views",
+      "StoreApp/domains/memberships",
+      "StoreApp/domains/memberships/views",
+      "StoreApp/domains/orders/models",
+      "StoreApp/domains/orders/serializers",
+      "StoreApp/domains/orders/services",
+      "StoreApp/domains/orders/services/checkout.py",
+      "StoreApp/domains/orders/services/payments.py",
+      "StoreApp/domains/orders/services/proofs.py",
+      "StoreApp/domains/orders/views",
+      "StoreApp/domains/orders/views/owner.py",
+      "StoreApp/domains/orders/views/public.py"
+    ],
+    "local_checks": [
+      {
+        "agent_id": "hunter-05",
+        "reviewed_paths": [
+          "StoreApp/domains/customers/views/auth_views.py",
+          "StoreApp/domains/customers/services/tokens.py",
+          "StoreApp/domains/customers/services/google.py",
+          "StoreApp/domains/customers/services/customers.py",
+          "StoreApp/domains/customers/authentication.py"
+        ],
+        "invariant": "Customer auth: distinct token types, session epoch check, verified Google login, anti-pre-hijacking, generic reset, refresh rotation, CSRF+origin checks",
+        "method": "source",
+        "result": "PASS — customer_access/customer_refresh distinct types; IsCustomer + customer_session_valid epoch check; Google login verified server-side via tokeninfo with aud/iss/exp/email_verified; anti-pre-hijacking password wipe + session seal on Google link; suspended memberships can't be bypassed; password reset generic + tokens_valid_after revocation; refresh rotation with OutstandingToken row lock; CSRF double-submit + login-CSRF origin check.",
+        "artifact": null
+      },
+      {
+        "agent_id": "hunter-05",
+        "reviewed_paths": [
+          "StoreApp/domains/cart",
+          "StoreApp/domains/orders/views",
+          "StoreApp/domains/orders/services",
+          "StoreApp/domains/orders/models",
+          "StoreApp/domains/memberships/views",
+          "StoreApp/domains/legalpages/views"
+        ],
+        "invariant": "Tenant/object isolation: carts, orders, addresses, notifications, memberships scoped to customer/store; owner views store-scoped",
+        "method": "source",
+        "result": "PASS — carts (customer, store); customer orders filter customer=request.customer; owner orders store=my_store(); public tracking store-scoped by tracking_token (no numeric IDs); addresses/notifications/memberships customer-scoped; owner membership/plans/subscriptions store-scoped.",
+        "artifact": null
+      },
+      {
+        "agent_id": "hunter-05",
+        "reviewed_paths": [
+          "StoreApp/domains/orders/services/checkout.py",
+          "StoreApp/domains/orders/services/payments.py",
+          "StoreApp/domains/orders/services/proofs.py",
+          "StoreApp/domains/orders/views/public.py",
+          "StoreApp/domains/orders/views/owner.py"
+        ],
+        "invariant": "Order integrity: server-side repricing, stock validation under lock, idempotency, state machine, payment proof controls, MP webhook scoping",
+        "method": "source",
+        "result": "PASS with one needs_validation candidate — server-side repricing via effective_pricing_of + member discount, no client amounts; strict int parsing, MAX_QTY/MAX_ITEMS caps; product store+active+exclusive+stock validated under select_for_update; idempotency scoped (store,key,customer) with partial unique constraint; order numbering serialized via Store lock + OrderSequence; cart consumed in same atomic. TRANSITIONS enforced under lock; MP orders can't be manually REFUNDED; mark_order_paid idempotent + expiry gate + conditional stock decrement; owner confirm_payment hardcodes source='manual'. Proof: first-write-wins, 4MB, validate+normalize WebP, private R2 URL, quota under Store lock, release on unpaid close. MP webhook per-store HMAC + freshness + signed data.id + dedup + live_mode fail-closed + amount/currency/status checks. GAP: soft stock reservation counts ALL customers' PENDING_PAYMENT orders — see candidate store-customer:stock-reservation-abuse-needs-validation.",
+        "artifact": null
+      },
+      {
+        "agent_id": "hunter-05",
+        "reviewed_paths": [
+          "StoreApp/domains/orders/services/checkout.py",
+          "StoreApp/domains/orders/serializers",
+          "StoreApp/domains/memberships"
+        ],
+        "invariant": "PII minimization on public payloads; membership benefits gated; legal/returns bounded",
+        "method": "source",
+        "result": "PASS — public tracking/receipt omit email/phone/document/last_name; customer_phone/customer_document EncryptedCharField; proof URL presigned; membership card public token minimal; membership benefits require active membership + active subscription + vigente_hasta>now; discount clamped [0,99]; subscribe creates only pending; return requests anonymous+captcha+honeypot+generic 201+store_contact throttle; legal pages fixed platform text.",
+        "artifact": null
+      },
+      {
+        "agent_id": "hunter-05",
+        "reviewed_paths": [
+          "StoreApp/domains/customers/views/auth_views.py",
+          "StoreApp/domains/orders/views/public.py",
+          "StoreApp/domains/cart/views"
+        ],
+        "invariant": "Order creation abuse controls: captcha, throttles, registration friction",
+        "method": "source",
+        "result": "FAIL (needs_validation) — CustomerRegisterThrottle 10/h/IP with NO captcha on registration; OrderCreateThrottle 10/h keyed by customer.pk (not IP) so one IP minting ~10 accounts/hour yields ~100 orders/hour; captcha is deterministic arithmetic (scriptable); each order claims soft stock across ALL customers' pending orders and fires owner email. See candidate.",
+        "artifact": null
+      }
+    ],
+    "result_fingerprints": [
+      "store-customer:stock-reservation-abuse-needs-validation"
+    ],
+    "unresolved": [
+      "Legal acceptance is never recorded — no consent field/model/timestamp/version binding on Order or anywhere in checkout; the fixed terms text asserts passive acceptance with no evidentiary basis and no version pinning per order. Compliance gap (Ley 24.240 informed consent) — cannot confirm from source whether recorded consent is a product requirement.",
+      "Terms section 8 promises buyer self-cancel of pending orders — no buyer-facing cancel endpoint exists (only owner cancel on PENDING_PAYMENT). Legal text promises a capability that doesn't exist.",
+      "No customer account deletion/anonymization endpoint — Order.customer is PROTECT, no self-service delete; Ley 25.326 suppression right unaddressed.",
+      "StoreMpWebhookView + PublicOrderPayView have no throttle_classes -> they share the default 'anon' 100/day/IP bucket. MP webhook egress IPs exceeding 100/day would 429 payment notifications (MP retries, but delays confirmations). needs_validation on MP's actual IP distribution.",
+      "External/runtime-dependent: Google tokeninfo behavior, MP API/webhook egress patterns, R2 ACL/presigned-URL config, Redis cache fail-open in production, NUM_PROXIES deployment correctness, expire_orders cron schedule, Celery broker availability."
+    ],
+    "hunter": "hunter-05"
+  },
+  {
+    "coverage_id": "StoreApp%2Fdomains%2Fcustomers%2Fviews%2Fnotification_views.py%23SSE%20stream%20%2B%20stream-ticket::StoreApp%2Fdomains%2Fcustomers%23ticket%20auth%20binding%2C%20session%20epoch%2C%20per-connection%20worker%20occupancy::StoreApp%2Fdomains%2Fcustomers::RESOURCE-EXHAUSTION-AND-AVAILABILITY.md%23Resource%20exhaustion",
+    "canonical_refs": {
+      "surface": "StoreApp/domains/customers/views/notification_views.py#SSE stream + stream-ticket",
+      "boundary": "StoreApp/domains/customers#ticket auth binding, session epoch, per-connection worker occupancy",
+      "subsystem": "StoreApp/domains/customers",
+      "attack_class": "RESOURCE-EXHAUSTION-AND-AVAILABILITY.md#Resource exhaustion"
+    },
+    "surface": "StoreApp/domains/customers/views/notification_views.py",
+    "boundary": "StoreApp/domains/customers#ticket auth binding, session epoch, per-connection worker occupancy",
+    "subsystem": "StoreApp/domains/customers",
+    "attack_class": "Resource exhaustion",
+    "starting_paths": [
+      "StoreApp/domains/customers/views/notification_views.py",
+      "StoreApp/domains/customers/services/tokens.py",
+      "StoreApp/domains/customers/views/auth_views.py",
+      "StoreApp/domains/customers/authentication.py",
+      "StoreApp/domains/customers/models/models.py",
+      "DaventProject/throttling.py",
+      "docker/api/gunicorn.conf.py"
+    ],
+    "ordinary_attack_class_block": "RESOURCE-EXHAUSTION-AND-AVAILABILITY.md#Resource exhaustion",
+    "selected_companion_blocks": [
+      "WEB-PROTOCOL-AND-AUTH.md#Core discipline",
+      "WEB-PROTOCOL-AND-AUTH.md#Browser-session attack classes",
+      "WEB-PROTOCOL-AND-AUTH.md#Universal moves",
+      "WEB-PROTOCOL-AND-AUTH.md#Validation rules",
+      "DATA-ISOLATION-AND-LIFECYCLE.md#Core discipline",
+      "DATA-ISOLATION-AND-LIFECYCLE.md#Tenant and object-isolation attack classes",
+      "DATA-ISOLATION-AND-LIFECYCLE.md#Universal moves",
+      "DATA-ISOLATION-AND-LIFECYCLE.md#Validation rules"
+    ],
+    "excluded_blocks": [
+      {
+        "block": "RESOURCE-EXHAUSTION-AND-AVAILABILITY.md#Quota and scheduling attack classes",
+        "reason": "stream holds workers, not quota accounting"
+      }
+    ],
+    "prior_status": "none",
+    "attempts": [],
+    "wave": 2,
+    "status": "candidate",
+    "agent_id": "hunter-11",
+    "reviewed_paths": [
+      "DaventProject/settings.py",
+      "StoreApp/domains/customers/models/models.py",
+      "StoreApp/domains/customers/serializers/serializers.py",
+      "StoreApp/domains/customers/services/customers.py",
+      "StoreApp/domains/customers/services/notifications.py",
+      "StoreApp/domains/customers/views/auth_views.py",
+      "StoreApp/domains/customers/views/notification_views.py",
+      "StoreApp/domains/stores/models/models.py",
+      "docker/api/gunicorn.conf.py",
+      "docker/web/snippets/proxy_api.conf",
+      "docker/web/templates/default.conf.template",
+      "requirements.txt"
+    ],
+    "local_checks": [
+      {
+        "agent_id": "hunter-11",
+        "reviewed_paths": [
+          "StoreApp/domains/customers/views/notification_views.py",
+          "DaventProject/settings.py",
+          "StoreApp/domains/customers/models/models.py"
+        ],
+        "invariant": "stream ticket auth: signature+TTL+slug binding, customer liveness",
+        "method": "source",
+        "result": "partial: Ticket = signing.dumps({'c':pk,'s':slug}, salt='customer-notifications-stream'), max_age=120s, slug equality enforced, customer re-fetched is_active=True per connect. GAPS: no jti/single-use (replayable within TTL), no tokens_valid_after/logout epoch binding, is_active not re-checked inside _events loop (deactivated customer keeps stream up to 50s), ticket travels in URL query -> access logs/browser history. authenticate_customer does not require email_verified.",
+        "artifact": null
+      },
+      {
+        "agent_id": "hunter-11",
+        "reviewed_paths": [
+          "StoreApp/domains/customers/views/notification_views.py",
+          "StoreApp/domains/customers/views/auth_views.py",
+          "DaventProject/settings.py",
+          "docker/api/gunicorn.conf.py",
+          "docker/web/snippets/proxy_api.conf",
+          "docker/web/templates/default.conf.template"
+        ],
+        "invariant": "SSE connection concurrency bounded below gunicorn worker capacity",
+        "method": "source",
+        "result": "fail: Each SSE connection holds one gthread up to STREAM_MAX_SECONDS=50. Capacity = 3 workers x 4 threads = 12 concurrent handlers for the whole API. Only bound = CustomerPublicReadThrottle 'public_read' 1000/hour per IP -> ~864 holds/hour x 50s = ~12 concurrent streams = 100% saturation from ONE IP/account; ticket replayable within 120s TTL; throttle fails open on cache outage.",
+        "artifact": null
+      },
+      {
+        "agent_id": "hunter-11",
+        "reviewed_paths": [
+          "StoreApp/domains/customers/views/notification_views.py",
+          "StoreApp/domains/customers/serializers/serializers.py",
+          "StoreApp/domains/customers/models/models.py",
+          "StoreApp/domains/customers/services/notifications.py"
+        ],
+        "invariant": "SSE event payload isolation, replay bounds, injection safety",
+        "method": "source",
+        "result": "pass: Last-Event-ID int-parsed, per-poll batch [:50], whitelist serializer payload, JSON-encoded data: lines, bounded 50s generator, clean error handling.",
+        "artifact": null
+      },
+      {
+        "agent_id": "hunter-11",
+        "reviewed_paths": [
+          "StoreApp/domains/customers/views/notification_views.py",
+          "StoreApp/domains/customers/services/customers.py",
+          "StoreApp/domains/stores/models/models.py"
+        ],
+        "invariant": "stream queryset scoped to ticketed customer+store",
+        "method": "source",
+        "result": "pass with caveat: customer_id filter always applied; foreign pk unreachable without forging signature. CAVEAT: stream-ticket does not validate slug via resolve_store; nonexistent slug -> store_id=None -> store filter dropped -> streams ALL of customer's own notifications (self-scoped, no privilege gain, logic wart).",
+        "artifact": null
+      },
+      {
+        "agent_id": "hunter-11",
+        "reviewed_paths": [
+          "StoreApp/domains/customers/views/notification_views.py"
+        ],
+        "invariant": "error paths bounded, no worker/thread leaks",
+        "method": "source",
+        "result": "pass: malformed/expired ticket -> clean 401; slug mismatch -> 401; unknown/inactive customer -> 401; generator bounded by monotonic deadline; close_old_connections() per poll.",
+        "artifact": null
+      },
+      {
+        "agent_id": "hunter-11",
+        "reviewed_paths": [
+          "DaventProject/settings.py",
+          "requirements.txt",
+          "docker/web/templates/default.conf.template"
+        ],
+        "invariant": "SSE chunks reach the wire in real time (no buffering)",
+        "method": "source",
+        "result": "fail(needs_validation): GZipMiddleware enabled (settings.py:241); Django 5.2.18 compress_sequence reportedly lacks zfile.flush() -> gzip buffers SSE chunks until ~17KB or stream close -> events/heartbeats may not arrive until 50s 'bye'. nginx gzip_types excludes text/event-stream; X-Accel-Buffering:no set. Needs runtime confirmation on installed package.",
+        "artifact": null
+      }
+    ],
+    "result_fingerprints": [
+      "customers-sse:worker-exhaustion",
+      "customers-sse:ticket-replay-no-epoch",
+      "customers-sse:gzip-buffering"
+    ],
+    "unresolved": [
+      "Whether production actually runs docker/api/gunicorn.conf.py (3x4 gthread) or a different platform/worker count — exhaustion math scales linearly; confirm deployed GUNICORN_WORKERS/GUNICORN_THREADS.",
+      "Whether Django 5.2.18's compress_sequence includes the zfile.flush() backport (stable/5.2.x branch HEAD lacks it; needs runtime inspection of the installed package).",
+      "Whether any edge (Caddy in front of nginx for custom store domains, proxy_api_https.conf) adds its own buffering/timeouts for SSE — proxy_read_timeout 60s is consistent with the 50s design but Caddy behavior was not reviewed.",
+      "Frontend behavior when SSE delivers nothing for 50s (if gzip buffering is real): EventSource onerror/reconnect semantics under delayed 'bye' were not fully traced."
+    ],
+    "hunter": "hunter-11"
+  },
+  {
+    "coverage_id": "StoreApp%2Fdomains%2Fstorepayments%2Bstoreadmin%2Bsupport%2Bfeed%23seller%20MP%20OAuth%2Fconfig%2C%20storage%20BYO%2C%20store%20admin%2C%20support%20chat%2C%20feed::StoreApp%2Fdomains%2Fstorepayments%23merchant%20credential%20handling%2C%20webhook%20scoping%2C%20storage%20endpoint%20validation::StoreApp%2Fdomains%2Fstorepayments::ATTACK-CLASSES.md%23Resource%20and%20file%20handling",
+    "canonical_refs": {
+      "surface": "StoreApp/domains/storepayments+storeadmin+support+feed#seller MP OAuth/config, storage BYO, store admin, support chat, feed",
+      "boundary": "StoreApp/domains/storepayments#merchant credential handling, webhook scoping, storage endpoint validation",
+      "subsystem": "StoreApp/domains/storepayments",
+      "attack_class": "ATTACK-CLASSES.md#Resource and file handling"
+    },
+    "surface": "StoreApp/domains/storepayments+storeadmin+support+feed",
+    "boundary": "StoreApp/domains/storepayments#merchant credential handling, webhook scoping, storage endpoint validation",
+    "subsystem": "StoreApp/domains/storepayments",
+    "attack_class": "Resource and file handling",
+    "starting_paths": [
+      "StoreApp/domains/storepayments",
+      "StoreApp/domains/storeadmin",
+      "StoreApp/domains/support",
+      "StoreApp/domains/feed"
+    ],
+    "ordinary_attack_class_block": "ATTACK-CLASSES.md#Resource and file handling",
+    "selected_companion_blocks": [
+      "DATA-ISOLATION-AND-LIFECYCLE.md#Core discipline",
+      "DATA-ISOLATION-AND-LIFECYCLE.md#Tenant and object-isolation attack classes",
+      "DATA-ISOLATION-AND-LIFECYCLE.md#Universal moves",
+      "DATA-ISOLATION-AND-LIFECYCLE.md#Validation rules",
+      "CLOUD-AND-DEPLOYMENT.md#Core discipline",
+      "CLOUD-AND-DEPLOYMENT.md#Managed storage, events, and edge attack classes",
+      "CLOUD-AND-DEPLOYMENT.md#Universal moves",
+      "CLOUD-AND-DEPLOYMENT.md#Validation rules"
+    ],
+    "excluded_blocks": [
+      {
+        "block": "CLOUD-AND-DEPLOYMENT.md#Container and orchestration attack classes",
+        "reason": "deployment unit covers containers"
+      },
+      {
+        "block": "CLOUD-AND-DEPLOYMENT.md#Workload identity and IAM attack classes",
+        "reason": "no cloud IAM in app code"
+      }
+    ],
+    "prior_status": "prior_covered_same_source",
+    "attempts": [],
+    "wave": 1,
+    "status": "candidate",
+    "agent_id": "hunter-06",
+    "reviewed_paths": [
+      "AdminApp/domains/payments/views/viewset_base.py",
+      "AdminApp/domains/payments/views/viewset_config.py",
+      "DaventProject/settings.py",
+      "DaventProject/throttling.py",
+      "StoreApp/domains/customers/authentication.py",
+      "StoreApp/domains/customers/models/models.py",
+      "StoreApp/domains/customers/services/google.py",
+      "StoreApp/domains/feed/models/models.py",
+      "StoreApp/domains/feed/serializers/serializers.py",
+      "StoreApp/domains/feed/services/feed.py",
+      "StoreApp/domains/feed/views/views.py",
+      "StoreApp/domains/orders/services/checkout.py",
+      "StoreApp/domains/storeadmin/serializers/serializers.py",
+      "StoreApp/domains/storeadmin/services/metrics.py",
+      "StoreApp/domains/storeadmin/urls/urls.py",
+      "StoreApp/domains/storeadmin/views/owner.py",
+      "StoreApp/domains/storepayments/models/models.py",
+      "StoreApp/domains/storepayments/serializers/serializers.py",
+      "StoreApp/domains/storepayments/services/mp_client.py",
+      "StoreApp/domains/storepayments/services/orders_bridge.py",
+      "StoreApp/domains/storepayments/services/preferences.py",
+      "StoreApp/domains/storepayments/services/refunds.py",
+      "StoreApp/domains/storepayments/services/webhook.py",
+      "StoreApp/domains/storepayments/views/checkout.py",
+      "StoreApp/domains/storepayments/views/config.py",
+      "StoreApp/domains/storepayments/views/integrations.py",
+      "StoreApp/domains/storepayments/views/mp.py",
+      "StoreApp/domains/storepayments/views/webhook.py",
+      "StoreApp/domains/stores/models/store_ops.py",
+      "StoreApp/domains/stores/services/storage.py",
+      "StoreApp/domains/stores/views/viewset.py",
+      "StoreApp/domains/support/models/models.py",
+      "StoreApp/domains/support/serializers/serializers.py",
+      "StoreApp/domains/support/services/services.py",
+      "StoreApp/domains/support/tasks.py",
+      "StoreApp/domains/support/views/customer.py",
+      "StoreApp/domains/support/views/owner.py",
+      "venv/Lib/site-packages/rest_framework/throttling.py"
+    ],
+    "local_checks": [
+      {
+        "agent_id": "hunter-06",
+        "reviewed_paths": [
+          "StoreApp/domains/storepayments/serializers/serializers.py",
+          "StoreApp/domains/stores/services/storage.py",
+          "StoreApp/domains/storepayments/views/integrations.py",
+          "StoreApp/domains/stores/models/store_ops.py"
+        ],
+        "invariant": "Seller-controlled storage endpoint must not let the server issue signed S3 requests to arbitrary/internal hosts (SSRF).",
+        "method": "source",
+        "result": "PASS (run1 fix confirmed). StoreStorageConfigSerializer.validate_endpoint requires https:// (http only when settings.DEBUG) and restricts hostname to _STORAGE_ENDPOINT_HOSTS suffix allowlist (r2.cloudflarestorage.com, amazonaws.com, backblazeb2.com, wasabisys.com, digitaloceanspaces.com, supabase.co, storage.googleapis.com) with correct '.'-boundary endswith check — userinfo tricks, suffix spoofs, trailing-dot and IDN variants all fail closed. _byo_backend trusts the DB row but the only write path is this serializer; boto3 client built verbatim from validated endpoint. Bucket regex, region default and credential vault encryption (enc:v1: + per-store AAD purpose) verified; DELETE clears secrets and invalidates the 300s BYO cache.",
+        "artifact": null
+      },
+      {
+        "agent_id": "hunter-06",
+        "reviewed_paths": [
+          "StoreApp/domains/storepayments/views/mp.py",
+          "StoreApp/domains/storepayments/serializers/serializers.py",
+          "StoreApp/domains/storepayments/models/models.py",
+          "StoreApp/domains/storepayments/services/mp_client.py",
+          "StoreApp/domains/storepayments/services/preferences.py",
+          "StoreApp/domains/storepayments/services/refunds.py"
+        ],
+        "invariant": "Merchant MP secrets (access/refresh token, webhook secret) must be write-only: never returned by any read path, never logged, bound to the owning store.",
+        "method": "source",
+        "result": "PASS. MpConnectSerializer fields are write_only; mp_status_payload returns only flags/mp_user_id/connected_at; StoreMpWebhookConfig has_secret flag only. Tokens sealed via encrypt_secret with purpose 'StoreMpAccount.access_token:<store_id>' (AAD binds blob to store). get_access_token() callers are only webhook service, preferences, refunds, checkout TEST- prefix check — none serialize the token. mp_client logs method/path/status only, never the Authorization header. MpConnectView validates the token against MP /users/me before persisting; disconnect clears enc fields.",
+        "artifact": null
+      },
+      {
+        "agent_id": "hunter-06",
+        "reviewed_paths": [
+          "StoreApp/domains/storepayments/views/webhook.py",
+          "StoreApp/domains/storepayments/services/webhook.py",
+          "StoreApp/domains/storepayments/models/models.py",
+          "StoreApp/domains/storepayments/services/orders_bridge.py"
+        ],
+        "invariant": "Webhook authenticity per store: only events signed with that store's MP webhook secret are processed; replay bounded; payment resolution scoped to the store; MP API is source of truth.",
+        "method": "source",
+        "result": "PASS. StoreMpWebhookView: body <=16KB (413), signed data.id from query string only (body id ignored with warning), id regex [A-Za-z0-9_-]{1,64}, HMAC-SHA256 manifest id/request-id/ts vs per-store decrypted secret with compare_digest, +/-600s freshness (s/ms tolerant), cache.add dedup keyed slug+topic+id+request-id with release-on-error, unsigned only when DEBUG AND STORE_MP_WEBHOOK_ALLOW_UNSIGNED. StoreMpWebhookQuery re-fetches GET /v1/payments/<id> with the store's own token, rejects test payments in prod (live_mode fail-closed), requires currency_id=='ARS', resolves order via find_order_by_token(store_id=store.id) + explicit store_id double-check, requires payment_method=='mp', amount==order.total else amount_mismatch event, select_for_update on MpPayment->Order with status-machine guards. Cross-store replay impossible.",
+        "artifact": null
+      },
+      {
+        "agent_id": "hunter-06",
+        "reviewed_paths": [
+          "StoreApp/domains/storepayments/views/mp.py",
+          "StoreApp/domains/storepayments/views/integrations.py",
+          "StoreApp/domains/storepayments/views/config.py",
+          "StoreApp/domains/storepayments/views/checkout.py",
+          "StoreApp/domains/storepayments/serializers/serializers.py",
+          "StoreApp/domains/customers/services/google.py"
+        ],
+        "invariant": "No OAuth state/CSRF surface on MP connect; owner config endpoints cannot be pointed at another store; mass-assignment cannot inject store/secrets fields.",
+        "method": "source",
+        "result": "PASS. MP 'connect' is credential paste (documented MVP — no authorization_code flow, so no state param needed); all owner endpoints resolve store via request.user.profile.store / Store.user__user with no store id in path or body (serializers whitelist fields). FiscalProfile PUT is full-form with CUIT mod-11 check; OAuthConfig google_client_secret write-only vault, client_id suffix-validated; StoreShippingConfig carrier_credentials DictField write-only -> JSON+vault, consumed only by orders carriers.py against fixed ANDREANI_BASE (no SSRF); StorePaymentConfig validates method coherence. PublicOrderPayView: published+unblocked store, orders_enabled, connected MP + mp_enabled, order by tracking_token scoped to store, PENDING_PAYMENT + not expired + payment_method=='mp', select_for_update idempotent preference reuse.",
+        "artifact": null
+      },
+      {
+        "agent_id": "hunter-06",
+        "reviewed_paths": [
+          "StoreApp/domains/storeadmin/views/owner.py",
+          "StoreApp/domains/storeadmin/services/metrics.py",
+          "StoreApp/domains/storeadmin/serializers/serializers.py",
+          "StoreApp/domains/storeadmin/urls/urls.py"
+        ],
+        "invariant": "Store admin panel (sales summary/daily/CSV export, customer list/detail) must be read-only, store-scoped, and safe against CSV injection / ordering injection / unbounded export.",
+        "method": "source",
+        "result": "PASS. All views use _StoreAdminMixin.my_store -> get_object_or_404(Store, user__user=request.user) + has_ecommerce gate; every queryset filters store=store. Read-only (List/Retrieve mixins only). clean_ordering whitelist, clean_payment_method/clean_status enum-validated, date range <=366 days, EXPORT_MAX_ROWS=10_000 -> 400. _csv_safe prefixes ' to cells starting with =+-@\\t\\r after lstrip, applied to every cell incl. attacker-controlled customer name/email; UTF-8 BOM; filename uses safe slug.",
+        "artifact": null
+      },
+      {
+        "agent_id": "hunter-06",
+        "reviewed_paths": [
+          "StoreApp/domains/support/views/customer.py",
+          "StoreApp/domains/support/views/owner.py",
+          "StoreApp/domains/support/services/services.py",
+          "StoreApp/domains/support/models/models.py",
+          "StoreApp/domains/support/serializers/serializers.py",
+          "StoreApp/domains/support/tasks.py",
+          "StoreApp/domains/orders/services/checkout.py"
+        ],
+        "invariant": "Support threads/messages must be isolated per (store, customer): customer A cannot read/write store B's or another customer's threads; owner cannot read other stores' threads; order links double-validated; owner-email abuse bounded.",
+        "method": "source",
+        "result": "PASS. Customer views: _threads_qs filters customer=request.customer, _thread_or_404 -> 404 cross-customer; store resolved via customer_visible_store -> 404; order_token via resolve_order_link -> find_order_by_token(store) + order.customer_id==customer.pk -> 400. Owner ViewSet: get_queryset filters store=my_store() -> IDOR 404; lifecycle open/closed enforced both sides. Serializers whitelist fields only. Support has NO attachments — text-only messages (2000 chars). Email-bombing fix verified present: per-customer throttles (10/h threads, 60/h messages keyed c<pk>), per-store aggregate cap SUPPORT_STORE_MSGS_PER_HOUR=120 (cache fail-open), per-thread email min interval 30min, in-app notification deduped per thread. Worst case ~120 emails/h/store bounded.",
+        "artifact": null
+      },
+      {
+        "agent_id": "hunter-06",
+        "reviewed_paths": [
+          "StoreApp/domains/feed/views/views.py",
+          "StoreApp/domains/feed/services/feed.py",
+          "StoreApp/domains/feed/serializers/serializers.py",
+          "StoreApp/domains/feed/models/models.py",
+          "DaventProject/throttling.py",
+          "venv/Lib/site-packages/rest_framework/throttling.py",
+          "StoreApp/domains/customers/authentication.py",
+          "StoreApp/domains/customers/models/models.py",
+          "StoreApp/domains/stores/views/viewset.py"
+        ],
+        "invariant": "Feed customer writes (comment/like/vote) must be rate-limited for the authenticated-customer principal that is the only caller allowed; public comment listing must be bounded.",
+        "method": "source",
+        "result": "FAIL -> candidate. FeedWriteThrottle (views.py:55-58) extends ResilientAnonRateThrottle (AnonRateThrottle). DRF AnonRateThrottle.get_cache_key returns None when request.user.is_authenticated; CustomerJWTAuthentication returns the Customer as request.user and Customer.is_authenticated==True. Every feed write endpoint requires IsCustomer, so the throttle can NEVER fire — 100% dead code. Sibling StoreReviewThrottle explicitly overrides get_cache_key to bucket POSTs by customer.pk precisely because AnonRateThrottle skips authenticated users; support domain uses _CustomerScopedThrottle keyed c<pk>. Amplifier: PublicFeedCommentsView.get returns ALL non-hidden comments with no limit/pagination -> spammed comments inflate every subsequent public GET. Registration is self-service with is_active=True default and no email-verification gate for customer_access.",
+        "artifact": null
+      },
+      {
+        "agent_id": "hunter-06",
+        "reviewed_paths": [
+          "StoreApp/domains/feed/services/feed.py",
+          "StoreApp/domains/stores/services/storage.py",
+          "StoreApp/domains/feed/serializers/serializers.py",
+          "StoreApp/domains/feed/views/views.py"
+        ],
+        "invariant": "Feed media upload must store validated content; embed URLs must stay on whitelisted hosts; owner endpoints store-scoped.",
+        "method": "source",
+        "result": "PARTIAL — two non-security defects noted in hardening: (a) video uploads always 500 — upload_post_media passes processed=None for video and _put_object then indexes _IMAGE_CONTENT_TYPES['video/mp4'] -> KeyError (storage.py:323) before any store; (b) FeedPostWriteSerializer.validate requires caption for KIND_POLL and embed_url for KIND_EMBED even on partial PATCH, so unrelated edits 400. Security-wise OK: images go through validate_image_file+normalize_image, video claims content-type whitelist +120MB cap, embed provider server-derived from host whitelist, embed_url URLField+hostname whitelist blocks javascript:/data:, all owner querysets filter store=_my_store(), public reads require is_published + public_feed_store_or_404, comment delete scoped post__store+customer.",
+        "artifact": null
+      },
+      {
+        "agent_id": "hunter-06",
+        "reviewed_paths": [
+          "StoreApp/domains/storepayments/views/webhook.py",
+          "DaventProject/settings.py",
+          "AdminApp/domains/payments/views/viewset_config.py",
+          "AdminApp/domains/payments/views/viewset_base.py"
+        ],
+        "invariant": "Webhook endpoint must not be throttle-starved by shared provider egress IPs (availability of payment confirmation).",
+        "method": "source",
+        "result": "UNRESOLVED (needs_validation). StoreMpWebhookView sets no throttle_classes -> defaults apply: ResilientAnonRateThrottle 'anon' 100/day + ResilientUserRateThrottle 'user' 1000/day, both keyed by REMOTE_ADDR|XFF-ident for anonymous requests. All MP webhook deliveries platform-wide arrive from MP's shared egress IPs; >100 signed deliveries/day from one IP -> 429 -> legitimate payment notifications dropped (MP retries, but sustained volume could delay order confirmation). Same exposure exists on the platform webhook. Whether MP's webhook IPs are few/shared and whether 429 responses trigger MP retries is a deployment/provider fact not source-visible.",
+        "artifact": null
+      }
+    ],
+    "result_fingerprints": [
+      "feed-customer-writes-unthrottled-anon-throttle"
+    ],
+    "unresolved": [
+      "StoreMpWebhookView inherits default throttles (anon 100/day + user 1000/day per IP); MP webhook egress IPs are shared across all DAVENT stores — whether legitimate volume can exceed the cap and whether MP retries on 429 is provider/deployment-dependent (needs_validation).",
+      "Order payment-proof images use object_url(key, private=True) with default 7-day presigned TTL (orders domain, adjacent surface) — proofs are buyer PII-ish receipts; whether 7-day bearer URLs are acceptable vs the 1h chat-attachment precedent is a policy question outside this unit's confirmed scope."
+    ],
+    "hunter": "hunter-06"
+  },
+  {
+    "coverage_id": "StoreApp%2Fdomains%2Fstores%2Furls%23public%2Cpublic-catalog%2Ccontact%2Creviews%2Cpattern-document%2Cvisit%2Cstats::StoreApp%2Fdomains%2Fstores%2Fviews%2Fviewset.py%23published%2Bunblocked%2Bhas_public_link%20gate%2C%20captcha%2C%20throttle%2C%20PII%20minimization::StoreApp%2Fdomains%2Fstores::ATTACK-CLASSES.md%23Feature%20abuse%20and%20data%20leakage",
+    "canonical_refs": {
+      "surface": "StoreApp/domains/stores/urls#public,public-catalog,contact,reviews,pattern-document,visit,stats",
+      "boundary": "StoreApp/domains/stores/views/viewset.py#published+unblocked+has_public_link gate, captcha, throttle, PII minimization",
+      "subsystem": "StoreApp/domains/stores",
+      "attack_class": "ATTACK-CLASSES.md#Feature abuse and data leakage"
+    },
+    "surface": "StoreApp/domains/stores/urls",
+    "boundary": "StoreApp/domains/stores/views/viewset.py#published+unblocked+has_public_link gate, captcha, throttle, PII minimization",
+    "subsystem": "StoreApp/domains/stores",
+    "attack_class": "Feature abuse and data leakage",
+    "starting_paths": [
+      "StoreApp/domains/stores",
+      "StoreApp/domains/catalog/views",
+      "StoreApp/domains/services"
+    ],
+    "ordinary_attack_class_block": "ATTACK-CLASSES.md#Feature abuse and data leakage",
+    "selected_companion_blocks": [
+      "WEB-PROTOCOL-AND-AUTH.md#Core discipline",
+      "WEB-PROTOCOL-AND-AUTH.md#HTTP framing and cache attack classes",
+      "WEB-PROTOCOL-AND-AUTH.md#Universal moves",
+      "WEB-PROTOCOL-AND-AUTH.md#Validation rules",
+      "RESOURCE-EXHAUSTION-AND-AVAILABILITY.md#Core discipline",
+      "RESOURCE-EXHAUSTION-AND-AVAILABILITY.md#Quota and scheduling attack classes",
+      "RESOURCE-EXHAUSTION-AND-AVAILABILITY.md#Universal moves",
+      "RESOURCE-EXHAUSTION-AND-AVAILABILITY.md#Validation rules",
+      "CLIENT-SIDE.md#Core discipline",
+      "CLIENT-SIDE.md#Cross-origin messaging and network attack classes",
+      "CLIENT-SIDE.md#Universal moves",
+      "CLIENT-SIDE.md#Validation rules"
+    ],
+    "excluded_blocks": [
+      {
+        "block": "CLIENT-SIDE.md#DOM and object-state attack classes",
+        "reason": "frontend-only; assigned to frontend unit"
+      },
+      {
+        "block": "RESOURCE-EXHAUSTION-AND-AVAILABILITY.md#Computational amplification attack classes",
+        "reason": "catalog queries are bounded by plan quotas; covered under quota class"
+      }
+    ],
+    "prior_status": "prior_covered_same_source",
+    "attempts": [],
+    "wave": 1,
+    "status": "candidate",
+    "agent_id": "hunter-03",
+    "reviewed_paths": [
+      "DaventProject/sitemaps.py",
+      "StoreApp/domains/catalog/views/viewset.py",
+      "StoreApp/domains/customers/services/google.py",
+      "StoreApp/domains/customers/views/auth_views.py",
+      "StoreApp/domains/design/services/pattern_document.py",
+      "StoreApp/domains/design/services/pattern_render.py",
+      "StoreApp/domains/design/views/catalog.py",
+      "StoreApp/domains/feed/views/views.py",
+      "StoreApp/domains/legalpages/views/views.py",
+      "StoreApp/domains/memberships/views/customer.py",
+      "StoreApp/domains/orders/views/public.py",
+      "StoreApp/domains/storepayments/views/checkout.py",
+      "StoreApp/domains/storepayments/views/webhook.py",
+      "StoreApp/domains/stores/serializers/serializers.py",
+      "StoreApp/domains/stores/services/contact.py",
+      "StoreApp/domains/stores/services/domains.py",
+      "StoreApp/domains/stores/views/viewset.py"
+    ],
+    "local_checks": [
+      {
+        "agent_id": "hunter-03",
+        "reviewed_paths": [
+          "StoreApp/domains/stores/views/viewset.py",
+          "StoreApp/domains/stores/services/contact.py",
+          "StoreApp/domains/design/services/pattern_render.py",
+          "StoreApp/domains/design/services/pattern_document.py",
+          "StoreApp/domains/stores/serializers/serializers.py"
+        ],
+        "invariant": "Public store payloads must not expose plan-gated PII (owner address) without has_location_map benefit",
+        "method": "source",
+        "result": "FAIL — StorePublicSerializer.get_location_address correctly gates on show_location+has_location_map, but pattern_render.build_store_context interpolates user.address whenever show_location is true (no benefit check), pattern sources embed {{store_address}}, and contact_redirect_url 'maps' builds a Google Maps URL with the raw address with zero gates. See candidate store-public:location-address-plan-gate-bypass.",
+        "artifact": null
+      },
+      {
+        "agent_id": "hunter-03",
+        "reviewed_paths": [
+          "StoreApp/domains/stores/views/viewset.py",
+          "StoreApp/domains/design/services/pattern_render.py",
+          "StoreApp/domains/design/services/pattern_document.py"
+        ],
+        "invariant": "Pattern document/bridge/script/products/meta routes share the published+unblocked+has_public_link gate; template/style plan tiers enforced",
+        "method": "source",
+        "result": "PASS — all pattern routes share _pattern_store (published+unblocked+has_public_link); render_store_pattern enforces allowed_templates_safe and style tier re-check; preview tokens TimestampSigner salt-bound to store.pk, 3d TTL, no-store; pattern document CSP nonce + opaque origin + sanitize_markup/sanitize_css verified.",
+        "artifact": null
+      },
+      {
+        "agent_id": "hunter-03",
+        "reviewed_paths": [
+          "StoreApp/domains/stores/views/viewset.py",
+          "StoreApp/domains/stores/services/contact.py",
+          "StoreApp/domains/catalog/views/viewset.py"
+        ],
+        "invariant": "Contact/reviews/catalog public endpoints enforce store gates, captcha, throttles, PII minimization",
+        "method": "source",
+        "result": "PASS — _contact_store requires published+unblocked+link+show_contact with honeypot, strip_tags, content dedupe, store_contact throttle, Celery delivery; reviews require store_has_reviews, anonymous GET omits email, POST is IsCustomer+per-customer throttle; catalog bounds all filters (id lists <=50, q[:80], features caps, price clamp, sort whitelist) with epoch+version+discount-stamp cache keys.",
+        "artifact": null
+      },
+      {
+        "agent_id": "hunter-03",
+        "reviewed_paths": [
+          "StoreApp/domains/orders/views/public.py",
+          "StoreApp/domains/storepayments/views/checkout.py",
+          "StoreApp/domains/storepayments/views/webhook.py",
+          "StoreApp/domains/legalpages/views/views.py",
+          "StoreApp/domains/feed/views/views.py",
+          "StoreApp/domains/memberships/views/customer.py"
+        ],
+        "invariant": "Public order/legal/feed/membership surfaces are store-gated, token-scoped, throttled, and minimize PII",
+        "method": "source",
+        "result": "PASS — orders gated by public_store/orders_enabled with store-scoped tracking_token, proof upload first-write-wins+quota+normalize_image; legal pages public_store_or_404 + captcha+honeypot on return requests; feed requires has_feed with embed host whitelist; memberships gated by store_has_ecommerce with unguessable card tokens.",
+        "artifact": null
+      },
+      {
+        "agent_id": "hunter-03",
+        "reviewed_paths": [
+          "StoreApp/domains/customers/views/auth_views.py",
+          "StoreApp/domains/customers/services/google.py",
+          "StoreApp/domains/design/views/catalog.py",
+          "StoreApp/domains/stores/services/domains.py",
+          "DaventProject/sitemaps.py"
+        ],
+        "invariant": "Customer auth, design catalog, custom domains, visits, sitemap expose only intended public data",
+        "method": "source",
+        "result": "PARTIAL — customer auth gates on has_customer_auth with generic reset responses; design catalog public is active-only; visits dedupe by IP hash without storing IP. FAIL on sitemap: StoreSitemap.items() filters only is_published+is_blocked, omitting has_public_link — lapsed stores listed though public page 404s (cross-listed under infra unit as infra:sitemap-benefit-gate).",
+        "artifact": null
+      }
+    ],
+    "result_fingerprints": [
+      "store-public:location-address-plan-gate-bypass"
+    ],
+    "unresolved": [],
+    "hunter": "hunter-03"
+  },
+  {
+    "coverage_id": "SuscriptionApp%2Fdomains%2Fbenefits%20%2B%20StoreApp%2Fdomains%2Fdesign%2Fviews%23public%20plan%20catalog%20%2B%20design%20catalog%20CRUD%2Fpreview::SuscriptionApp%2Fdomains%2Fbenefits%23public%20serializer%20field%20exposure%3B%20StoreApp%2Fdomains%2Fdesign%23read%2Fpreview%20entitlement%20gating::SuscriptionApp%2Fdomains%2Fbenefits::DATA-ISOLATION-AND-LIFECYCLE.md%23Derived-data%20and%20disclosure",
+    "canonical_refs": {
+      "surface": "SuscriptionApp/domains/benefits + StoreApp/domains/design/views#public plan catalog + design catalog CRUD/preview",
+      "boundary": "SuscriptionApp/domains/benefits#public serializer field exposure; StoreApp/domains/design#read/preview entitlement gating",
+      "subsystem": "SuscriptionApp/domains/benefits",
+      "attack_class": "DATA-ISOLATION-AND-LIFECYCLE.md#Derived-data and disclosure"
+    },
+    "surface": "SuscriptionApp/domains/benefits + StoreApp/domains/design/views",
+    "boundary": "SuscriptionApp/domains/benefits#public serializer field exposure; StoreApp/domains/design#read/preview entitlement gating",
+    "subsystem": "SuscriptionApp/domains/benefits",
+    "attack_class": "Derived-data and disclosure",
+    "starting_paths": [
+      "SuscriptionApp/domains/benefits",
+      "StoreApp/domains/design/views",
+      "StoreApp/domains/design/serializers",
+      "StoreApp/domains/design/services/pattern_preview.py",
+      "DaventProject/urls.py"
+    ],
+    "ordinary_attack_class_block": "DATA-ISOLATION-AND-LIFECYCLE.md#Derived-data and disclosure",
+    "selected_companion_blocks": [
+      "ATTACK-CLASSES.md#Access control",
+      "RESOURCE-EXHAUSTION-AND-AVAILABILITY.md#Core discipline",
+      "RESOURCE-EXHAUSTION-AND-AVAILABILITY.md#Computational amplification attack classes",
+      "RESOURCE-EXHAUSTION-AND-AVAILABILITY.md#Universal moves",
+      "RESOURCE-EXHAUSTION-AND-AVAILABILITY.md#Validation rules",
+      "CLIENT-SIDE.md#Core discipline",
+      "CLIENT-SIDE.md#Universal moves",
+      "CLIENT-SIDE.md#Validation rules"
+    ],
+    "excluded_blocks": [],
+    "prior_status": "none",
+    "attempts": [],
+    "wave": 2,
+    "status": "candidate",
+    "agent_id": "hunter-12",
+    "reviewed_paths": [
+      "AdminApp/domains/suscriptions/serializers/config_fields.py",
+      "AdminApp/domains/suscriptions/serializers/serializers.py",
+      "AdminApp/domains/suscriptions/views/viewset_config.py",
+      "DaventProject/cache_utils.py",
+      "DaventProject/pagination.py",
+      "DaventProject/settings.py",
+      "DaventProject/throttling.py",
+      "DaventProject/urls.py",
+      "StoreApp/domains/design/models/models.py",
+      "StoreApp/domains/design/serializers/serializers.py",
+      "StoreApp/domains/design/services/pattern_document.py",
+      "StoreApp/domains/design/services/pattern_preview.py",
+      "StoreApp/domains/design/services/pattern_render.py",
+      "StoreApp/domains/design/signals.py",
+      "StoreApp/domains/design/tests.py",
+      "StoreApp/domains/design/urls/urls.py",
+      "StoreApp/domains/design/views/catalog.py",
+      "StoreApp/domains/design/views/viewset.py",
+      "StoreApp/domains/design/views/viewset_base.py",
+      "StoreApp/domains/stores/models/models.py",
+      "StoreApp/domains/stores/serializers/serializers.py",
+      "StoreApp/domains/stores/services/services.py",
+      "StoreApp/domains/stores/services/sync.py",
+      "StoreApp/domains/stores/site_theme.py",
+      "StoreApp/domains/stores/tests.py",
+      "StoreApp/domains/stores/views/viewset.py",
+      "SuscriptionApp/domains/benefits/models/models.py",
+      "SuscriptionApp/domains/benefits/serializers/serializers.py",
+      "SuscriptionApp/domains/benefits/urls/urls.py",
+      "SuscriptionApp/domains/benefits/views/viewset_base.py",
+      "SuscriptionApp/domains/benefits/views/viewset_config.py",
+      "frontend/src/api/billing.api.js",
+      "frontend/src/api/design.api.js",
+      "frontend/src/components/design/DesignPickers.vue"
+    ],
+    "local_checks": [
+      {
+        "agent_id": "hunter-12",
+        "reviewed_paths": [
+          "SuscriptionApp/domains/benefits/views/viewset_config.py",
+          "SuscriptionApp/domains/benefits/views/viewset_base.py",
+          "SuscriptionApp/domains/benefits/serializers/serializers.py",
+          "SuscriptionApp/domains/benefits/models/models.py",
+          "SuscriptionApp/domains/benefits/urls/urls.py",
+          "DaventProject/urls.py",
+          "AdminApp/domains/suscriptions/views/viewset_config.py",
+          "AdminApp/domains/suscriptions/serializers/serializers.py",
+          "AdminApp/domains/suscriptions/serializers/config_fields.py",
+          "frontend/src/api/billing.api.js"
+        ],
+        "invariant": "public plan catalog exposes only intended marketing fields, no write surface",
+        "method": "source",
+        "result": "pass: GET /api/plans/ AllowAny read-only by construction (GenericViewSet list/retrieve only); PlanCatalogSerializer exposes public fields + computed benefits; fixed ordering; page_size<=200; is_trial intentionally public for legacy benefit resolution but excluded from selection paths.",
+        "artifact": null
+      },
+      {
+        "agent_id": "hunter-12",
+        "reviewed_paths": [
+          "SuscriptionApp/domains/benefits/views/viewset_base.py",
+          "SuscriptionApp/domains/benefits/views/viewset_config.py",
+          "SuscriptionApp/domains/benefits/serializers/serializers.py",
+          "SuscriptionApp/domains/benefits/models/models.py",
+          "AdminApp/domains/suscriptions/serializers/config_fields.py"
+        ],
+        "invariant": "no accidental write exposure on public catalog",
+        "method": "source",
+        "result": "pass: no create/update/destroy methods or config keys; serializer fields read_only or SerializerMethodField.",
+        "artifact": null
+      },
+      {
+        "agent_id": "hunter-12",
+        "reviewed_paths": [
+          "StoreApp/domains/design/urls/urls.py",
+          "StoreApp/domains/design/views/viewset_base.py",
+          "StoreApp/domains/design/views/viewset.py",
+          "StoreApp/domains/design/serializers/serializers.py",
+          "StoreApp/domains/design/models/models.py",
+          "StoreApp/domains/design/tests.py",
+          "DaventProject/settings.py"
+        ],
+        "invariant": "design catalog writes staff-only, reads active-only for non-staff",
+        "method": "source",
+        "result": "pass: get_permissions AllowAny only for 'default', IsAdminUser for writes, IsAuthenticated otherwise; non-staff queryset is_active=True; serializers constrain code fields CODE_MAX, tokens<=80 keys, clean_style_effects/variables/icon_set; tests confirm anon 401, owner write 403.",
+        "artifact": null
+      },
+      {
+        "agent_id": "hunter-12",
+        "reviewed_paths": [
+          "StoreApp/domains/design/views/viewset_base.py",
+          "StoreApp/domains/design/views/viewset.py",
+          "StoreApp/domains/design/serializers/serializers.py",
+          "StoreApp/domains/design/models/models.py",
+          "StoreApp/domains/design/services/pattern_preview.py",
+          "StoreApp/domains/stores/services/services.py",
+          "frontend/src/components/design/DesignPickers.vue",
+          "frontend/src/api/design.api.js"
+        ],
+        "invariant": "pattern retrieve/preview gated by plan entitlement like selection",
+        "method": "source",
+        "result": "partial: retrieve uses DesignPatternSerializer incl html/css/js; preview returns rendered html/css + raw pattern.js; both reachable by ANY authenticated account — no tier/benefit check vs allowed_templates_of. Frontend designApi.pattern(slug) has no call sites (uses listPatterns + patternPreview).",
+        "artifact": null
+      },
+      {
+        "agent_id": "hunter-12",
+        "reviewed_paths": [
+          "DaventProject/settings.py",
+          "DaventProject/throttling.py",
+          "StoreApp/domains/design/views/viewset_base.py",
+          "StoreApp/domains/design/views/viewset.py",
+          "StoreApp/domains/design/services/pattern_preview.py",
+          "StoreApp/domains/design/serializers/serializers.py",
+          "DaventProject/pagination.py"
+        ],
+        "invariant": "preview render cost bounded by dedicated throttle or cache",
+        "method": "source",
+        "result": "partial: preview inherits ResilientUserRateThrottle 1000/day; no dedicated scope or cache; single-request bounded by CODE_MAX=200k per field; PublicReadThrottle is NOT dead here (custom get_cache_key pinned-IP per action).",
+        "artifact": null
+      },
+      {
+        "agent_id": "hunter-12",
+        "reviewed_paths": [
+          "StoreApp/domains/stores/views/viewset.py",
+          "StoreApp/domains/stores/serializers/serializers.py",
+          "StoreApp/domains/stores/models/models.py",
+          "StoreApp/domains/stores/site_theme.py",
+          "StoreApp/domains/stores/services/services.py",
+          "StoreApp/domains/stores/services/sync.py",
+          "StoreApp/domains/design/services/pattern_render.py",
+          "StoreApp/domains/stores/tests.py"
+        ],
+        "invariant": "store design selection owner-scoped and plan-gated at write/publish/restore/render",
+        "method": "source",
+        "result": "pass: owner-scoped get_object_or_404, has_customization on writes, allowed_templates_of filter on template fields, publish/restore re-check, render_store_pattern re-checks stored template vs current plan with default fallback. Tests cover restore isolation.",
+        "artifact": null
+      },
+      {
+        "agent_id": "hunter-12",
+        "reviewed_paths": [
+          "StoreApp/domains/stores/views/viewset.py",
+          "StoreApp/domains/stores/serializers/serializers.py",
+          "StoreApp/domains/stores/services/sync.py",
+          "StoreApp/domains/design/services/pattern_render.py",
+          "StoreApp/domains/stores/tests.py"
+        ],
+        "invariant": "no cross-store design-selection IDOR",
+        "method": "source",
+        "result": "pass: customization resolved from request.user; StudioVersion restore scoped (store,version_id) 404 foreign; public render resolves by slug with own benefits.",
+        "artifact": null
+      },
+      {
+        "agent_id": "hunter-12",
+        "reviewed_paths": [
+          "StoreApp/domains/design/services/pattern_document.py",
+          "StoreApp/domains/design/services/pattern_preview.py",
+          "StoreApp/domains/design/models/models.py",
+          "StoreApp/domains/design/services/pattern_render.py",
+          "StoreApp/domains/stores/views/viewset.py",
+          "frontend/src/components/design/DesignPickers.vue"
+        ],
+        "invariant": "pattern markup sanitized before serving as document/preview/srcdoc",
+        "method": "source",
+        "result": "pass: sanitize_markup strips scripts/handlers/dangerous URLs; sanitize_css blocks </style breakout; render escapes non-list vars; preview iframe sandbox no allow-same-origin; public document nonce CSP + XFO SAMEORIGIN. Residual: preview 'accent' only requires '#' prefix (not full hex validation); preview 'style' lookup doesn't filter is_active.",
+        "artifact": null
+      },
+      {
+        "agent_id": "hunter-12",
+        "reviewed_paths": [
+          "StoreApp/domains/design/views/catalog.py",
+          "StoreApp/domains/design/signals.py",
+          "StoreApp/domains/design/views/viewset_base.py",
+          "DaventProject/pagination.py",
+          "DaventProject/cache_utils.py"
+        ],
+        "invariant": "public design catalog bounded and cache-consistent",
+        "method": "source",
+        "result": "pass: AllowAny+PublicReadThrottle, active-only, epoch-keyed 300s cache, signals bump epoch on save/delete, filters limited, page_size<=200.",
+        "artifact": null
+      }
+    ],
+    "result_fingerprints": [
+      "public-catalog-and-design:auth-read-exposes-premium-pattern-markup",
+      "public-catalog-and-design:preview-render-no-dedicated-throttle-cache"
+    ],
+    "unresolved": [
+      "Whether premium/imported DesignPattern markup (html/css/js) is intended to be readable/previewable by every authenticated account; frontend shows all designs but backend selection is plan-gated.",
+      "Whether the global user throttle (1000/day) is sufficient for the per-request preview render; requires benchmarking and production capacity data.",
+      "StoreCustomization.template/template_draft are CharField(max_length=12) while DesignPattern.slug allows 120 chars; pattern slugs longer than 12 chars would pass the existence check but cannot be persisted. Functional mismatch, not a security finding.",
+      "Actual deployment behavior of proxies, Redis cache, and throttle fail-open cannot be confirmed from source alone."
+    ],
+    "hunter": "hunter-12"
+  },
+  {
+    "coverage_id": "frontend%2Fsrc%23SPA%3A%20stores%2C%20views%2C%20components%2C%20api%20clients%2C%20studio%2C%20pattern%20surfaces::frontend%2Fsrc%23token%20storage%2C%20postMessage%20origins%2C%20v-html%20sinks%2C%20router%20guards%2C%20Sentry%20PII::frontend::ATTACK-CLASSES.md%23Injection",
+    "canonical_refs": {
+      "surface": "frontend/src#SPA: stores, views, components, api clients, studio, pattern surfaces",
+      "boundary": "frontend/src#token storage, postMessage origins, v-html sinks, router guards, Sentry PII",
+      "subsystem": "frontend",
+      "attack_class": "ATTACK-CLASSES.md#Injection"
+    },
+    "surface": "frontend/src",
+    "boundary": "frontend/src#token storage, postMessage origins, v-html sinks, router guards, Sentry PII",
+    "subsystem": "frontend",
+    "attack_class": "Injection",
+    "starting_paths": [
+      "frontend/src"
+    ],
+    "ordinary_attack_class_block": "ATTACK-CLASSES.md#Injection",
+    "selected_companion_blocks": [
+      "CLIENT-SIDE.md#Core discipline",
+      "CLIENT-SIDE.md#DOM and object-state attack classes",
+      "CLIENT-SIDE.md#Cross-origin messaging and network attack classes",
+      "CLIENT-SIDE.md#Service-worker and browser-storage attack classes",
+      "CLIENT-SIDE.md#Cross-site information leak classes",
+      "CLIENT-SIDE.md#UI-redress and navigation attack classes",
+      "CLIENT-SIDE.md#Universal moves",
+      "CLIENT-SIDE.md#Validation rules"
+    ],
+    "excluded_blocks": [],
+    "prior_status": "prior_covered_same_source",
+    "attempts": [],
+    "wave": 1,
+    "status": "candidate",
+    "agent_id": "hunter-08",
+    "reviewed_paths": [
+      "frontend/package-lock.json",
+      "frontend/package.json",
+      "frontend/public",
+      "frontend/src",
+      "frontend/src/api/http.js",
+      "frontend/src/api/payments.api.js",
+      "frontend/src/components/design/AiLiveThumb.vue",
+      "frontend/src/components/design/DesignLivePreview.vue",
+      "frontend/src/components/design/StudioShell.vue",
+      "frontend/src/components/ecommerce/PaymentInstructions.vue",
+      "frontend/src/components/store/BlkVideo.vue",
+      "frontend/src/components/store/PatternSurface.vue",
+      "frontend/src/components/store/StorePublicLayout.vue",
+      "frontend/src/main.js",
+      "frontend/src/router/index.js",
+      "frontend/src/stores",
+      "frontend/src/stores/cart.store.js",
+      "frontend/src/stores/payments.store.js",
+      "frontend/src/utils/aiPreviewPayload.js",
+      "frontend/src/utils/appUpdate.js",
+      "frontend/src/utils/native.js",
+      "frontend/src/views",
+      "frontend/src/views/DashboardView.vue",
+      "frontend/src/views/DownloadView.vue",
+      "frontend/src/views/LoginView.vue",
+      "frontend/src/views/StoreAuthView.vue",
+      "frontend/vercel.json"
+    ],
+    "local_checks": [
+      {
+        "agent_id": "hunter-08",
+        "reviewed_paths": [
+          "frontend/src/components/store/StorePublicLayout.vue",
+          "frontend/src/components/store/PatternSurface.vue",
+          "frontend/src/components/design/StudioShell.vue",
+          "frontend/src/components/design/DesignLivePreview.vue",
+          "frontend/src/components/design/AiLiveThumb.vue",
+          "frontend/src/utils/aiPreviewPayload.js"
+        ],
+        "invariant": "postMessage receivers validate origin AND source; senders never use '*' to untrusted targets",
+        "method": "source",
+        "result": "PASS — all 6 receivers audited: StorePublicLayout davent:layout + davent:studio-* use studioAllowedOrigins allowlist (location.origin + env.appUrl origin + fixed platform subdomains only — store subdomains NOT included); referrer no longer confers trust. PatternSurface davent:ds-* checks e.source === frame.contentWindow + isPatternDoc() gate; ds-api relays through PUBLIC_API_RE whitelist; ds-open URL regex-validated then slug rewritten to current store; payloads validated. StudioShell/DesignLivePreview/AiLiveThumb pin e.source === iframe.contentWindow + isStudioMessage(); senders post to iframe origin, never '*'.",
+        "artifact": null
+      },
+      {
+        "agent_id": "hunter-08",
+        "reviewed_paths": [
+          "frontend/src"
+        ],
+        "invariant": "No arbitrary v-html/innerHTML/outerHTML/insertAdjacentHTML/document.write/eval sinks reachable with attacker data",
+        "method": "source",
+        "result": "PASS — no arbitrary v-html/innerHTML/outerHTML/insertAdjacentHTML/document.write/eval anywhere. AppIcon/proceduralIcon/aiIcons/AiGlyph render only static icon maps or [a-z0-9-]{1,24}-validated procedural SVG. Pattern documents sanitized server-side; DesignPickers srcdoc preview consumes sanitized html/css (raw js is intentional design-script content inside sandbox without allow-same-origin, opaque origin, admin-curated catalog). Legal pages rendered as whitespace-pre-line plaintext. All dynamic :href bindings traced to safe sources.",
+        "artifact": null
+      },
+      {
+        "agent_id": "hunter-08",
+        "reviewed_paths": [
+          "frontend/src/views/LoginView.vue",
+          "frontend/src/views/StoreAuthView.vue",
+          "frontend/src/stores/cart.store.js",
+          "frontend/src/router/index.js",
+          "frontend/src/utils/native.js",
+          "frontend/src/utils/appUpdate.js",
+          "frontend/src/views/DownloadView.vue"
+        ],
+        "invariant": "No open redirect / navigation to attacker-controlled origin",
+        "method": "source",
+        "result": "PASS — router.push(String(next)) cannot leave the app (vue-router resolves in-app only); customer next additionally validated; location.assign(appUrl + to.fullPath) stays on configured origin; native Browser.open shim and APK URLs trace to operator-controlled APP_APK_URL env via /api/config/ (operator trust channel, not a finding).",
+        "artifact": null
+      },
+      {
+        "agent_id": "hunter-08",
+        "reviewed_paths": [
+          "frontend/src/api/http.js",
+          "frontend/src/stores",
+          "frontend/src/main.js"
+        ],
+        "invariant": "Tokens memory-only; refresh via httpOnly cookies + CSRF double-submit; Sentry scrubs PII; session stores reset on logout",
+        "method": "source",
+        "result": "PASS — platform + customer access tokens memory-only; refresh via httpOnly cookies (+ customer_csrf double-submit); Authorization origin-gated to API origin; logout epoch protection; legacy localStorage tokens purged; resetSessionStores() clears account-scoped state + SWR cache. Sentry scrubs token|uid|preview|access_token|refresh_token|next params and /pedido/<token> paths across request URLs, query strings, transaction names, breadcrumb messages/data; no setUser/setContext/custom captures. Minor observation: SSE ?ticket= param isn't in the scrub list, but EventSource isn't captured by default breadcrumbs and tracing is disabled.",
+        "artifact": null
+      },
+      {
+        "agent_id": "hunter-08",
+        "reviewed_paths": [
+          "frontend/src/router/index.js",
+          "frontend/src/views"
+        ],
+        "invariant": "Router guards enforce auth/role/benefit gates; no bypass",
+        "method": "source",
+        "result": "PASS — all guards verified: requiresAuth/requiresGuest/requiresStaff/customerOnly/onboarding/phone-completion/design-studio benefit gating; store-host route allowlist + catch-all; /facturas/:id intentionally staff-or-owner. No bypass found.",
+        "artifact": null
+      },
+      {
+        "agent_id": "hunter-08",
+        "reviewed_paths": [
+          "frontend/src/components/ecommerce/PaymentInstructions.vue",
+          "frontend/src/views/DashboardView.vue",
+          "frontend/src/stores/payments.store.js",
+          "frontend/src/api/payments.api.js",
+          "frontend/src/components/store/BlkVideo.vue",
+          "frontend/src"
+        ],
+        "invariant": "Third-party embeds and checkout redirects host-validated; no external script/style injection",
+        "method": "source",
+        "result": "FAIL — PaymentInstructions.vue isMpCheckoutUrl() enforces https + MP host allowlist before window.location.assign for ORDER payments, but the same control is NOT applied to subscription/plan checkout redirects in DashboardView.vue/payments.store.js — see candidate frontend:mp-checkout-redirect-not-host-validated. Google GSI fixed URL + server-verified credential; Google Fonts from closed STORE_FONTS map; feed embeds server-allowlisted; BlkVideo client host-allowlist. CSP: vercel.json frame-ancestors parity; SPA intentionally has no full script/style CSP; pattern documents get nonce CSP server-side.",
+        "artifact": null
+      },
+      {
+        "agent_id": "hunter-08",
+        "reviewed_paths": [
+          "frontend/src",
+          "frontend/package.json",
+          "frontend/package-lock.json",
+          "frontend/vercel.json",
+          "frontend/public"
+        ],
+        "invariant": "Object URLs revoked; dependencies pinned with integrity; no git deps",
+        "method": "source",
+        "result": "PASS — all createObjectURL sites pair with revokeObjectURL on replace/unmount/send; minor unrevoked blob on repeated AppProducts.vue:85 picks — hygiene only. Registry-only deps, integrity hashes, no git deps, install scripts limited to known native/build packages.",
+        "artifact": null
+      }
+    ],
+    "result_fingerprints": [
+      "frontend:mp-checkout-redirect-not-host-validated"
+    ],
+    "unresolved": [],
+    "hunter": "hunter-08"
+  },
+  {
+    "coverage_id": "residual%20unreviewed%20plumbing%23register%20throttle%2C%20sync%20publish%20path%2C%20AI-design%20submodules%2C%20invoices%2C%20customer%20services%2C%20MCP%20transport%2C%20aux%20serializers::cross-domain%23serializer%20field%20exposure%2C%20email%2Fcontent%20injection%2C%20missing%20plan%20gates%2C%20deployment%20exposure::multi::ATTACK-CLASSES.md%23Feature%20abuse%20and%20data%20leakage",
+    "canonical_refs": {
+      "surface": "residual unreviewed plumbing#register throttle, sync publish path, AI-design submodules, invoices, customer services, MCP transport, aux serializers",
+      "boundary": "cross-domain#serializer field exposure, email/content injection, missing plan gates, deployment exposure",
+      "subsystem": "multi",
+      "attack_class": "ATTACK-CLASSES.md#Feature abuse and data leakage"
+    },
+    "surface": "residual unreviewed plumbing",
+    "boundary": "cross-domain#serializer field exposure, email/content injection, missing plan gates, deployment exposure",
+    "subsystem": "multi",
+    "attack_class": "Feature abuse and data leakage",
+    "starting_paths": [
+      "AdminApp/domains/users/views/viewset.py",
+      "StoreApp/domains/stores/services/sync.py",
+      "StoreApp/domains/stores/services/ai_design_copy.py",
+      "AdminApp/domains/invoices",
+      "StoreApp/domains/customers/services",
+      "McpApp/fastmcp_server.py",
+      "DaventProject/pagination.py"
+    ],
+    "ordinary_attack_class_block": "ATTACK-CLASSES.md#Feature abuse and data leakage",
+    "selected_companion_blocks": [
+      "DATA-ISOLATION-AND-LIFECYCLE.md#Core discipline",
+      "DATA-ISOLATION-AND-LIFECYCLE.md#Tenant and object-isolation attack classes",
+      "DATA-ISOLATION-AND-LIFECYCLE.md#Derived-data and disclosure attack classes",
+      "DATA-ISOLATION-AND-LIFECYCLE.md#Universal moves",
+      "DATA-ISOLATION-AND-LIFECYCLE.md#Validation rules",
+      "RESOURCE-EXHAUSTION-AND-AVAILABILITY.md#Core discipline",
+      "RESOURCE-EXHAUSTION-AND-AVAILABILITY.md#Universal moves",
+      "RESOURCE-EXHAUSTION-AND-AVAILABILITY.md#Validation rules"
+    ],
+    "excluded_blocks": [],
+    "prior_status": "none",
+    "attempts": [],
+    "wave": 2,
+    "status": "candidate",
+    "agent_id": "hunter-13",
+    "reviewed_paths": [
+      ".github",
+      "AdminApp/domains/invoices/serializers/serializers.py",
+      "AdminApp/domains/invoices/services/afip.py",
+      "AdminApp/domains/invoices/services/services.py",
+      "AdminApp/domains/invoices/services/vault.py",
+      "AdminApp/domains/invoices/views/viewset.py",
+      "AdminApp/domains/invoices/views/viewset_config.py",
+      "AdminApp/domains/users/urls/urls.py",
+      "AdminApp/domains/users/views/auth_views.py",
+      "AdminApp/domains/users/views/viewset.py",
+      "AdminApp/domains/users/views/viewset_base.py",
+      "AdminApp/domains/users/views/viewset_config.py",
+      "AdminApp/permissions.py",
+      "DaventProject/celery.py",
+      "DaventProject/pagination.py",
+      "DaventProject/settings.py",
+      "McpApp/fastmcp_server.py",
+      "StoreApp/domains/cart/serializers/serializers.py",
+      "StoreApp/domains/cart/services/cart.py",
+      "StoreApp/domains/customers/serializers/serializers.py",
+      "StoreApp/domains/customers/services/customers.py",
+      "StoreApp/domains/customers/services/mails.py",
+      "StoreApp/domains/customers/services/notifications.py",
+      "StoreApp/domains/customers/tasks.py",
+      "StoreApp/domains/customers/views/auth_views.py",
+      "StoreApp/domains/customers/views/membership_views.py",
+      "StoreApp/domains/customers/views/profile_views.py",
+      "StoreApp/domains/legalpages/serializers/serializers.py",
+      "StoreApp/domains/legalpages/services/services.py",
+      "StoreApp/domains/legalpages/tasks.py",
+      "StoreApp/domains/memberships/services/benefits.py",
+      "StoreApp/domains/orders/services/carriers.py",
+      "StoreApp/domains/orders/services/events.py",
+      "StoreApp/domains/orders/services/mails.py",
+      "StoreApp/domains/stores/layout_blocks.py",
+      "StoreApp/domains/stores/serializers/serializers.py",
+      "StoreApp/domains/stores/services/ai_design.py",
+      "StoreApp/domains/stores/services/ai_design_copy.py",
+      "StoreApp/domains/stores/services/ai_design_telemetry.py",
+      "StoreApp/domains/stores/services/commerce.py",
+      "StoreApp/domains/stores/services/imaging.py",
+      "StoreApp/domains/stores/services/media_quality.py",
+      "StoreApp/domains/stores/services/sync.py",
+      "StoreApp/domains/stores/site_theme.py",
+      "StoreApp/domains/stores/views/viewset.py",
+      "docker-compose.yml",
+      "docker/caddy/Caddyfile",
+      "docker/web/templates/default.conf.template",
+      "docs/security-audit-run2/agents/verifier-catalog/result.json",
+      "frontend/src/utils/proceduralIcon.js",
+      "render.yaml"
+    ],
+    "local_checks": [
+      {
+        "agent_id": "hunter-13",
+        "reviewed_paths": [
+          "AdminApp/domains/users/views/viewset.py",
+          "AdminApp/domains/users/views/viewset_base.py",
+          "AdminApp/domains/users/views/viewset_config.py",
+          "AdminApp/domains/users/views/auth_views.py",
+          "AdminApp/domains/users/urls/urls.py",
+          "AdminApp/permissions.py",
+          "DaventProject/settings.py"
+        ],
+        "invariant": "/api/register/ throttle reaches only anonymous callers",
+        "method": "source",
+        "result": "pass: RegisterUserViewSet IsAnonimous + RegisterRateThrottle(AnonRateThrottle); DRF checks permissions BEFORE throttles so authenticated callers get 403 before throttle — the AnonRateThrottle dead-for-auth pattern NOT exploitable on register. Same bug pattern exists on auth_views.py AllowAny endpoints (covered by users-auth unit). RegisterRateThrottle is plain AnonRateThrottle not Resilient (500s on cache outage; lacks _pinned_ident).",
+        "artifact": null
+      },
+      {
+        "agent_id": "hunter-13",
+        "reviewed_paths": [
+          "StoreApp/domains/stores/views/viewset.py",
+          "StoreApp/domains/stores/services/sync.py",
+          "StoreApp/domains/stores/serializers/serializers.py",
+          "StoreApp/domains/stores/layout_blocks.py",
+          "StoreApp/domains/stores/site_theme.py",
+          "docs/security-audit-run2/agents/verifier-catalog/result.json"
+        ],
+        "invariant": "sync/run publish path enforces same plan gates as customization_publish",
+        "method": "source",
+        "result": "partial: POST /api/stores/sync/run/ -> run_sync -> publish_design_draft copies drafts verbatim with ZERO profile_has_benefit checks — lacks even has_customization gate that all sibling Studio actions enforce. Mitigations: draft writes require has_customization at write time; all seeded plans couple has_public_link+has_customization; public page 404s without has_public_link; layout_config read-drift already rejected as inert (frontend drops non-canonical ids).",
+        "artifact": null
+      },
+      {
+        "agent_id": "hunter-13",
+        "reviewed_paths": [
+          "StoreApp/domains/stores/services/ai_design.py",
+          "StoreApp/domains/stores/services/ai_design_copy.py",
+          "StoreApp/domains/stores/services/ai_design_telemetry.py",
+          "StoreApp/domains/stores/services/commerce.py",
+          "StoreApp/domains/stores/services/media_quality.py",
+          "StoreApp/domains/stores/services/imaging.py",
+          "StoreApp/domains/stores/layout_blocks.py",
+          "StoreApp/domains/stores/site_theme.py",
+          "StoreApp/domains/stores/views/viewset.py",
+          "frontend/src/utils/proceduralIcon.js"
+        ],
+        "invariant": "AI-design content sanitized before reaching public layout_config/site_theme",
+        "method": "source",
+        "result": "pass: engine deterministic/offline, zero outbound calls; all endpoints require has_customization+has_ai_design + per-user throttles; apply() recalculates server-side; clean_layout_config/clean_site_theme applied; _clean_hint rejects <>{}\\`; imaging BG model fixed URL+sha256 pin (no SSRF); upload_design_image normalize_image+quota recheck. Latent: apply_design_overlay trusts overlay verbatim but has NO caller currently.",
+        "artifact": null
+      },
+      {
+        "agent_id": "hunter-13",
+        "reviewed_paths": [
+          "AdminApp/domains/invoices/views/viewset.py",
+          "AdminApp/domains/invoices/views/viewset_config.py",
+          "AdminApp/domains/invoices/serializers/serializers.py",
+          "AdminApp/domains/invoices/services/vault.py",
+          "AdminApp/domains/invoices/services/services.py",
+          "AdminApp/domains/invoices/services/afip.py"
+        ],
+        "invariant": "invoice PII owner-scoped; CAE retry bounded; vault crypto correct",
+        "method": "source",
+        "result": "pass: retry-cae IsAdminUser only, optimistic PROCESSING claim, fail-open status, scrubbed errors, defused XML, 20s timeout; InvoiceUserConfig scopes to request.user; vault AES-256-GCM+nonce+AAD+kid rotation; emails escape all user data; no header injection (Django forbid_multi_line_headers).",
+        "artifact": null
+      },
+      {
+        "agent_id": "hunter-13",
+        "reviewed_paths": [
+          "StoreApp/domains/customers/services/mails.py",
+          "StoreApp/domains/customers/services/notifications.py",
+          "StoreApp/domains/customers/services/customers.py",
+          "StoreApp/domains/customers/tasks.py",
+          "StoreApp/domains/customers/serializers/serializers.py",
+          "StoreApp/domains/customers/views/profile_views.py",
+          "StoreApp/domains/customers/views/membership_views.py",
+          "StoreApp/domains/customers/views/auth_views.py"
+        ],
+        "invariant": "customer mails/notifications escape store+customer strings; profile writes customer-scoped",
+        "method": "source",
+        "result": "pass: html.escape on names, fixed subjects, validated recipients; notifications deduped upsert, 500-char bodies, rendered as text; clean_free_text strip_tags; mass-assignment guarded; addresses/profile scoped to request.customer; customer throttles SimpleRateThrottle pk-or-IP (NOT the AnonRateThrottle bug).",
+        "artifact": null
+      },
+      {
+        "agent_id": "hunter-13",
+        "reviewed_paths": [
+          "StoreApp/domains/orders/services/carriers.py",
+          "StoreApp/domains/orders/services/events.py",
+          "StoreApp/domains/orders/services/mails.py",
+          "StoreApp/domains/memberships/services/benefits.py",
+          "StoreApp/domains/legalpages/services/services.py",
+          "StoreApp/domains/legalpages/tasks.py",
+          "StoreApp/domains/legalpages/serializers/serializers.py",
+          "StoreApp/domains/cart/services/cart.py",
+          "StoreApp/domains/cart/serializers/serializers.py"
+        ],
+        "invariant": "carrier calls fixed-provider no SSRF; order/legal/cart services bounded",
+        "method": "source",
+        "result": "pass: Andreani fixed https URL+BYO creds+20s timeout+encoded codes (no SSRF); minor unguarded res.json() -> 500 on non-JSON 200 (robustness). events single funnel bounded. mails gated on email_verified, escaped. memberships vigencia at read. legalpages fixed text+captcha+honeypot. cart server-side pricing+stock revalidation+qty bounds.",
+        "artifact": null
+      },
+      {
+        "agent_id": "hunter-13",
+        "reviewed_paths": [
+          "McpApp/fastmcp_server.py",
+          "docker-compose.yml",
+          "docker/caddy/Caddyfile",
+          "docker/web/templates/default.conf.template",
+          "render.yaml",
+          ".github"
+        ],
+        "invariant": "MCP server not exposed beyond loopback in any deploy path",
+        "method": "source",
+        "result": "pass: fastmcp_server binds 127.0.0.1:8100; user resolved from Bearer JWT only; mcp_user_access paid non-trial; zero references in compose/caddy/nginx/render/CI — not part of deployed stack; external exposure only via out-of-repo manual port-forward (deployment fact).",
+        "artifact": null
+      },
+      {
+        "agent_id": "hunter-13",
+        "reviewed_paths": [
+          "DaventProject/pagination.py",
+          "DaventProject/celery.py"
+        ],
+        "invariant": "pagination bounded; celery no security surface",
+        "method": "source",
+        "result": "pass: page_size capped 200; celery minimal autodiscovery.",
+        "artifact": null
+      }
+    ],
+    "result_fingerprints": [
+      "residual-plumbing:sync-run-missing-plan-gate"
+    ],
+    "unresolved": [
+      "sync_run missing has_customization gate — needs_validation pending confirmation that no production plan grants has_public_link without has_customization and that frontend still drops non-canonical layout blocks",
+      "fastmcp_server :8100 — loopback-bound and absent from all repo deployment config; only externally reachable if an operator runs it manually AND exposes it via out-of-repo firewall/port-forward (needs_validation deployment fact, not a source finding)"
+    ],
+    "hunter": "hunter-13"
+  }
+]

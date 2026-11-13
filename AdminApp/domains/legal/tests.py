@@ -72,6 +72,28 @@ class ContentReportCreateTests(TestCase):
         self.assertEqual(response.status_code, 400)
 
 
+class ContentReportThrottleTests(TestCase):
+    """
+    Regresión legal:content-report-auth-bypass: el throttle de la denuncia
+    ya no desactiva el límite cuando hay request.user — antes heredaba de
+    AnonRateThrottle cuyo get_cache_key devolvía None autenticado.
+    """
+
+    def test_throttle_keys_authenticated_and_anonymous(self):
+        from django.contrib.auth.models import AnonymousUser
+        from rest_framework.test import APIRequestFactory
+        from AdminApp.domains.legal.views.viewset_base import ContentReportRateThrottle
+        user        =   User.objects.create_user(username = 'rep', password = 'x')
+        factory     =   APIRequestFactory()
+        throttle    =   ContentReportRateThrottle()
+        authed      =   factory.post(REPORTS_URL)
+        authed.user =   user
+        anon        =   factory.post(REPORTS_URL)
+        anon.user   =   AnonymousUser()
+        self.assertIsNotNone(throttle.get_cache_key(authed, None))
+        self.assertIsNotNone(throttle.get_cache_key(anon, None))
+
+
 class ContentReportAccessTests(TestCase):
     """Lectura y gestión de denuncias: solo staff (datos del denunciante)."""
 
