@@ -220,3 +220,46 @@ def notify_store_discount(store, discount):
     if not rows:
         return 0
     return len(CustomerNotification.objects.bulk_create(rows, ignore_conflicts = True, batch_size = 500))
+
+
+#=========================================
+# NOVEDAD — post nuevo del feed → miembros de la tienda
+#=========================================
+def notify_store_feed_post(store, post):
+    """
+    Broadcast: UNA notificación 'feed' por miembro activo de la tienda
+    cuando el dueño publica una publicación en Novedades, deduplicada
+    por (post, comprador) — republicar o re-procesar no duplica. El
+    click lleva a la página /novedades (target 'novedades').
+    """
+    if store is None or post is None:
+        return 0
+    caption     =   (getattr(post, 'caption', '') or '').strip()
+    kind_label  =   {
+        'poll': 'encuesta', 'video': 'video', 'image': 'foto',
+        'embed': 'publicación de sus redes',
+    }.get(getattr(post, 'kind', ''), 'publicación')
+    title       =   f'{_store_label(store)} publicó una {kind_label} nueva'[:200]
+    body        =   caption[:500] if caption else 'Mirá lo último en Novedades.'
+    now         =   timezone.now()
+    rows        =   [
+        CustomerNotification(
+            customer    =   membership.customer,
+            store       =   store,
+            kind        =   CustomerNotification.KIND_FEED,
+            dedupe_key  =   f'feed:{post.pk}',
+            title       =   title,
+            body        =   body,
+            target      =   'novedades',
+            created_at  =   now,
+        )
+        for membership in (
+            StoreMembership.objects
+            .filter(store = store, status = StoreMembership.STATUS_ACTIVE, customer__is_active = True)
+            .select_related('customer')
+            .iterator()
+        )
+    ]
+    if not rows:
+        return 0
+    return len(CustomerNotification.objects.bulk_create(rows, ignore_conflicts = True, batch_size = 500))

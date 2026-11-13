@@ -22,7 +22,7 @@ const authed = computed(() => customerStore.isAuthenticated)
 const open = ref(false)
 const rootRef = ref(null)
 
-const KIND_ICON = { order: 'package', offer: 'tag', support: 'mail', membership: 'crown' }
+const KIND_ICON = { order: 'package', offer: 'tag', support: 'mail', membership: 'crown', feed: 'lucide:newspaper' }
 const kindIcon = (k) => KIND_ICON[k] || 'bell'
 
 const recent = computed(() => notif.items.value.slice(0, 8))
@@ -44,6 +44,8 @@ const fmtWhen = (iso) => {
 function targetTo(n) {
   const t = n?.target || ''
   if (t === 'catalogo') return props.catalogTo
+  //'novedades' = feed público (publicación nueva del dueño).
+  if (t === 'novedades') return { path: props.catalogTo.path.replace(/catalogo$/, 'novedades') }
   if (['pedidos', 'suscripciones', 'soporte', 'notificaciones'].includes(t)) {
     return { path: props.accountTo.path, query: { view: t } }
   }

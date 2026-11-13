@@ -17,8 +17,8 @@ const props = defineProps({
 const router = useRouter()
 const notif = useCustomerNotifications()
 
-const KIND_ICON = { order: 'package', offer: 'tag', support: 'mail', membership: 'crown' }
-const KIND_LABEL = { order: 'Pedido', offer: 'Oferta', support: 'Soporte', membership: 'Suscripción' }
+const KIND_ICON = { order: 'package', offer: 'tag', support: 'mail', membership: 'crown', feed: 'lucide:newspaper' }
+const KIND_LABEL = { order: 'Pedido', offer: 'Oferta', support: 'Soporte', membership: 'Suscripción', feed: 'Novedad' }
 const kindIcon = (k) => KIND_ICON[k] || 'bell'
 const kindLabel = (k) => KIND_LABEL[k] || 'Aviso'
 
@@ -33,6 +33,8 @@ const catalogTo = computed(() => ({ path: storeHostSlug ? '/catalogo' : `/${prop
 function targetTo(n) {
   const t = n?.target || ''
   if (t === 'catalogo') return catalogTo.value
+  //'novedades' = feed público (publicación nueva del dueño).
+  if (t === 'novedades') return { path: storeHostSlug ? '/novedades' : `/${props.slug}/novedades` }
   if (['pedidos', 'suscripciones', 'soporte', 'notificaciones'].includes(t)) {
     return { path: accountPath.value, query: { view: t } }
   }

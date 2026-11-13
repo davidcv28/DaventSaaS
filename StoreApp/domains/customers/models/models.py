@@ -166,7 +166,8 @@ class CustomerNotification(models.Model):
 
     Kinds: 'order' (estado de seguimiento del pedido), 'offer' (ofertas
     y ofertas especiales del dueño), 'support' (respuesta del comercio
-    en un hilo), 'membership' (ciclo de la suscripción a la tienda).
+    en un hilo), 'membership' (ciclo de la suscripción a la tienda),
+    'feed' (publicación nueva en Novedades).
     Los avisos recurrentes usan `dedupe_key` para ser UNO solo que se
     actualiza y vuelve a no-leído (pedido, hilo, suscripción); el
     broadcast de ofertas deduplica por (descuento, comprador).
@@ -175,11 +176,13 @@ class CustomerNotification(models.Model):
     KIND_OFFER          =   'offer'
     KIND_SUPPORT        =   'support'
     KIND_MEMBERSHIP     =   'membership'
+    KIND_FEED           =   'feed'
     KIND_CHOICES        =   [
         (KIND_ORDER,      'Estado del pedido'),
         (KIND_OFFER,      'Oferta'),
         (KIND_SUPPORT,    'Mensaje del comercio'),
         (KIND_MEMBERSHIP, 'Suscripción'),
+        (KIND_FEED,       'Novedad'),
     ]
     customer                =   models.ForeignKey(Customer, on_delete = models.CASCADE, related_name = 'notifications')
     store                   =   models.ForeignKey('stores.Store', on_delete = models.CASCADE, related_name = 'customer_notifications')

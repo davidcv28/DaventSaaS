@@ -75,6 +75,17 @@ def _public_queryset(store):
     return FeedPost.objects.filter(store = store, is_published = True).prefetch_related(
         'poll_options', 'poll_votes', 'likes', 'comments',
     )[:FEED_PAGE_SIZE]
+def _notify_published(store, post):
+    #Aviso in-app a los miembros de la tienda cuando un post pasa a
+    #publicado (dedupe por post: republicar no re-avisa). Best-effort:
+    #una falla acá nunca puede romper el alta/edición.
+    if not getattr(post, 'is_published', False):
+        return
+    try:
+        from StoreApp.domains.customers.services.notifications import notify_store_feed_post
+        notify_store_feed_post(store, post)
+    except Exception:
+        pass
 #=========================================
 # DUEÑO — POSTS
 #=========================================
@@ -93,6 +104,7 @@ class StoreFeedPostsView(APIView):
         serializer  =   FeedPostWriteSerializer(data = request.data, context = {'store': store})
         serializer.is_valid(raise_exception = True)
         post    =   serializer.save(store = store)
+        _notify_published(store, post)
         return Response({'Exito': 'Publicación creada', 'item': owner_post_payload(post)}, status = status.HTTP_201_CREATED)
 class StoreFeedPostDetailView(APIView):
     permission_classes  =   [IsAuthenticated]
@@ -107,6 +119,7 @@ class StoreFeedPostDetailView(APIView):
         serializer  =   FeedPostWriteSerializer(post, data = request.data, partial = True)
         serializer.is_valid(raise_exception = True)
         post    =   serializer.save()
+        _notify_published(store, post)
         return Response({'Exito': 'Publicación actualizada', 'item': owner_post_payload(post)}, status = status.HTTP_200_OK)
     def delete(self, request, pk):
         post, denied    =   self._post(request, pk)
