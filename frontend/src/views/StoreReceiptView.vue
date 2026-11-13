@@ -168,6 +168,7 @@ onMounted(load)
             <tr><th>Producto</th><th class="is-num">Cant.</th><th class="is-num">Precio</th><th class="is-num">Subtotal</th></tr>
           </thead>
           <tbody>
+            <tr v-if="!receipt.items?.length"><td colspan="4" class="is-empty">Sin ítems cargados.</td></tr>
             <tr v-for="(item, i) in receipt.items" :key="i">
               <td>{{ item.name }}</td>
               <td class="is-num">{{ item.qty }}</td>
@@ -263,6 +264,7 @@ onMounted(load)
 .ec-rp-table th { text-align: left; padding: 8px 10px; border-bottom: 1.5px solid var(--sp-ink, currentColor); font-size: 11.5px; text-transform: uppercase; letter-spacing: .06em; color: var(--sp-muted, inherit); }
 .ec-rp-table td { padding: 9px 10px; border-bottom: 1px solid var(--sp-line, rgba(0,0,0,.08)); vertical-align: top; }
 .ec-rp-table .is-num { text-align: right; font-variant-numeric: tabular-nums; white-space: nowrap; }
+.ec-rp-table .is-empty { text-align: center; color: var(--sp-muted, inherit); font-size: 13px; padding: 14px 10px; }
 .ec-rp-totals { display: grid; gap: 6px; margin: 0 0 0 auto; min-width: min(300px, 100%); font-size: 14px; }
 .ec-rp-totals > div { display: flex; justify-content: space-between; gap: 12px; }
 .ec-rp-totals dt { color: var(--sp-muted, inherit); }
@@ -276,6 +278,7 @@ onMounted(load)
 .ec-rp-actions .ec-btn-primary:focus-visible, .ec-rp-link:focus-visible { outline: 2px solid var(--store-accent, #111); outline-offset: 2px; }
 
 @media (max-width: 560px) {
+  .ec-receiptpg { padding-bottom: 88px; }
   .ec-rp-doc { padding: 20px 16px; }
   .ec-rp-order { text-align: left; justify-items: start; }
   .ec-rp-fields > div { flex-direction: column; gap: 1px; }

@@ -142,5 +142,6 @@ async function payMp() {
 .ec-pay-total { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; margin: 0; padding: 10px 2px 0; border-top: 1px dashed var(--sp-line, color-mix(in srgb, currentColor 16%, transparent)); font-size: 13px; color: var(--sp-muted, inherit); }
 .ec-pay-total strong { font-size: 17px; font-weight: 800; font-variant-numeric: tabular-nums; color: var(--sp-ink, inherit); }
 .ec-pay-deadline { display: flex; align-items: center; gap: 7px; margin: 0; padding: 9px 12px; border-radius: calc(var(--sp-radius) * .6); font-size: 12.5px; color: var(--sp-warning, #B45309); background: color-mix(in srgb, var(--sp-warning, #B45309) 10%, transparent); }
+.ec-pay-deadline strong { white-space: nowrap; }
 .ec-pay-copy:focus-visible, .ec-pay-btn:focus-visible { outline: 2px solid var(--store-accent, #111); outline-offset: 2px; }
 </style>
