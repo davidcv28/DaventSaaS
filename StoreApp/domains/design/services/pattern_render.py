@@ -195,6 +195,7 @@ def _page_flags(store, customization):
     zona con `data-flag="<nombre>"`, la regla `[data-flag]{display:none}`
     la apaga entera (título, CTA y enlaces del menú incluidos).
     """
+    from StoreApp.domains.feed.services import feed_enabled
     from StoreApp.domains.services.services import effective_site_templates
 
     pages = set(effective_site_templates(store))
@@ -202,6 +203,9 @@ def _page_flags(store, customization):
         return bool(getattr(customization, name, default))
     catalog_on = 'catalog' in pages and on('show_catalog')
     return {
+        #Página Novedades (has_feed, Premium+): el link del menú del diseño
+        #va `data-flag="feed"` y desaparece en planes sin el beneficio.
+        'feed':     feed_enabled(store.user),
         'catalog':  catalog_on,
         #Bloques de landing que viven del catálogo: apagar la página también
         #apaga sus zonas; el bloque individual las apaga vía _BLOCK_FLAGS.

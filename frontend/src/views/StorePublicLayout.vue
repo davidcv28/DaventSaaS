@@ -254,7 +254,7 @@ function onPatternNavigate({ route, id, q, cat } = {}) {
     router.push({ name: 'store-product', params: { slug: slug.value, productId: id } })
     return
   }
-  const target = { home: homeTo.value, catalog: catalogTo.value, services: servicesTo.value }[route]
+  const target = { home: homeTo.value, catalog: catalogTo.value, services: servicesTo.value, feed: feedTo.value }[route]
   if (!target) return
   // Buscador/sugerencias del chrome del diseño: q = texto, cat = categoría
   // (mismas claves de query que ya lee el catálogo: ?q= y ?category=).

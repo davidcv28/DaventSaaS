@@ -1068,6 +1068,7 @@
       <nav class="top-nav" aria-label="Principal">
         <a href="#inicio" data-ds-route="home" data-spy="inicio">Inicio</a>
         <a href="#servicios" data-ds-route="services" data-flag="services">Servicios</a>
+        <a href="#novedades" data-ds-route="feed" data-flag="feed">Novedades</a>
         <a href="#empresa" data-ds-anchor data-ds-route="home" data-flag="about" data-spy="empresa">La empresa</a>
         <a href="#contacto" data-ds-anchor data-ds-route="home" data-flag="contact" data-spy="contacto">Contacto</a>
       </nav>
@@ -1091,6 +1092,8 @@
       <a class="crumb crumb-home is-current" href="#inicio" data-ds-route="home" aria-current="location"><b>01</b><span>Taquilla</span></a>
       <span class="crumb-sep" aria-hidden="true">→</span>
       <a class="crumb crumb-svc" href="#servicios" data-ds-route="services" data-flag="services"><b>02</b><span>Servicios</span></a>
+      <span class="crumb-sep" aria-hidden="true">→</span>
+      <a class="crumb crumb-feed" href="#novedades" data-ds-route="feed" data-flag="feed"><b>03</b><span>Novedades</span></a>
       <span class="crumb-meta">{{store_location}} · temp. {{year}}</span>
     </div>
   </nav>
@@ -1103,6 +1106,10 @@
     <a class="m-tab" href="#servicios" data-ds-route="services" data-flag="services" data-mspy="services">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="m15.5 8.5-2 5-5 2 2-5z"/></svg>
       <span>Servicios</span>
+    </a>
+    <a class="m-tab" href="#novedades" data-ds-route="feed" data-flag="feed">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 22h16a2 2 0 0 0 2-2V4a2 2 0 0 0-2-2H8a2 2 0 0 0-2 2v16a2 2 0 0 1-2 2 2 2 0 0 1-2-2V9"/><path d="M18 14h-8"/><path d="M15 18h-5"/><path d="M10 6h8v4h-8V6z"/></svg>
+      <span>Novedades</span>
     </a>
     <a class="m-tab" href="#contacto" data-ds-anchor data-ds-route="home" data-flag="contact" data-mspy="contacto">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 11.5a8.5 8.5 0 0 1-12.6 7.4L3 21l2.1-5.4A8.5 8.5 0 1 1 21 11.5Z"/></svg>
@@ -1125,9 +1132,10 @@
     <nav class="m-sheet-nav" aria-label="Todas las secciones">
       <a href="#inicio" data-ds-route="home" data-m-close><span>Inicio</span><span>01</span></a>
       <a href="#servicios" data-ds-route="services" data-flag="services" data-m-close><span>Servicios</span><span>02</span></a>
-      <a href="#empresa" data-ds-anchor data-ds-route="home" data-flag="about" data-m-close><span>La empresa</span><span>03</span></a>
-      <a href="#postales" data-ds-anchor data-ds-route="home" data-flag="gallery" data-m-close><span>Postales</span><span>04</span></a>
-      <a href="#contacto" data-ds-anchor data-ds-route="home" data-flag="contact" data-m-close><span>Contacto</span><span>05</span></a>
+      <a href="#novedades" data-ds-route="feed" data-flag="feed" data-m-close><span>Novedades</span><span>03</span></a>
+      <a href="#empresa" data-ds-anchor data-ds-route="home" data-flag="about" data-m-close><span>La empresa</span><span>04</span></a>
+      <a href="#postales" data-ds-anchor data-ds-route="home" data-flag="gallery" data-m-close><span>Postales</span><span>05</span></a>
+      <a href="#contacto" data-ds-anchor data-ds-route="home" data-flag="contact" data-m-close><span>Contacto</span><span>06</span></a>
     </nav>
     <a class="btn btn-primary m-sheet-cta" href="{{store_whatsapp_url}}">Escribir por WhatsApp</a>
   </div>
@@ -1501,6 +1509,7 @@
       <span>Explorar</span>
       <a href="#inicio" data-ds-route="home">Inicio</a>
       <a href="#servicios" data-ds-route="services" data-flag="services">Servicios</a>
+      <a href="#novedades" data-ds-route="feed" data-flag="feed">Novedades</a>
       <a href="#empresa" data-ds-anchor data-ds-route="home" data-flag="about">La empresa</a>
       <a href="#contacto" data-ds-anchor data-ds-route="home" data-flag="contact">Contacto</a>
     </div>
