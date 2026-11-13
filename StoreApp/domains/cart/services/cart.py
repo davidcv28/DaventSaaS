@@ -117,15 +117,23 @@ def purchasable_product(store, product_id, customer = None):
 
 def _check_stock(product, qty, *, extra_qty = 0):
     """
-    Valida stock trackeado (stock NULL = ilimitado). `extra_qty` permite
-    validar el total resultante al editar una línea existente.
-    Lanza ValidationError si no alcanza — el carrito NO reserva stock,
-    esta es solo una verificación de de cara al checkout.
+    Valida stock trackeado (stock NULL = ilimitado) contra la
+    DISPONIBILIDAD REAL: `stock` menos las unidades comprometidas por
+    pedidos PENDING_PAYMENT no vencidos (reserva blanda — mismo cálculo
+    que orders.services.checkout.claimed_quantities, compartido para
+    que el carrito no prometa lo que el checkout va a rechazar, S-04).
+    `extra_qty` permite validar el total resultante al editar una línea
+    existente. Lanza ValidationError si no alcanza — el carrito NO
+    reserva stock, esta es solo una verificación de cara al checkout.
     """
     if product.stock is None:
         return
-    if qty + extra_qty > product.stock:
-        raise serializers.ValidationError({'qty': f'Stock insuficiente: quedan {product.stock} unidad(es) de "{product.name}".'})
+    #Import perezoso: orders importa cart (create_order consume el
+    #carrito) — un import top-level acá cerraría un ciclo de módulos.
+    from StoreApp.domains.orders.services.checkout import claimed_quantities
+    available   =   product.stock - claimed_quantities([product.pk]).get(product.pk, 0)
+    if qty + extra_qty > available:
+        raise serializers.ValidationError({'qty': f'Stock insuficiente: quedan {max(available, 0)} unidad(es) de "{product.name}".'})
 
 
 def add_item(cart, product, qty):
@@ -163,9 +171,9 @@ def update_item(cart, item_id, qty):
 
 
 def remove_item(cart, item_id):
-    deleted, _  =   CartItem.objects.filter(cart = cart, pk = item_id).delete()
-    if not deleted:
-        raise serializers.ValidationError({'item': 'El item no está en tu carrito.'})
+    #Idempotente: un retry de red o un doble DELETE no debe devolver 400 —
+    #el estado final pedido (la línea fuera del carrito) ya se cumplió.
+    CartItem.objects.filter(cart = cart, pk = item_id).delete()
 
 
 def clear_cart(cart):

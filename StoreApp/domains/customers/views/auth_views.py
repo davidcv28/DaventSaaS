@@ -15,6 +15,7 @@ import secrets
 from urllib.parse import urlparse
 
 from django.conf import settings
+from django.db import transaction
 from rest_framework import status
 from rest_framework.exceptions import PermissionDenied
 from rest_framework.permissions import AllowAny
@@ -22,6 +23,8 @@ from rest_framework.response import Response
 from rest_framework.throttling import SimpleRateThrottle
 from rest_framework.views import APIView
 from rest_framework_simplejwt.exceptions import InvalidToken, TokenError
+from rest_framework_simplejwt.token_blacklist.models import OutstandingToken
+from rest_framework_simplejwt.utils import datetime_from_epoch
 
 from DaventProject.middleware import client_ip as _client_ip
 from DaventProject.throttling import _ResilientThrottleMixin
@@ -60,6 +63,7 @@ from StoreApp.domains.customers.services.google import (
     verify_google_credential,
 )
 from StoreApp.domains.customers.services.tokens import (
+    CustomerRefreshToken,
     issue_customer_tokens,
     parse_refresh_token,
 )
@@ -296,30 +300,62 @@ class CustomerRefreshView(APIView):
             from_cookie =   bool(refresh)
         if from_cookie:
             _require_csrf(request)
-        try:
-            old_refresh =   parse_refresh_token(refresh) if refresh else None
-        except TokenError as exc:
-            #TokenError no es APIException: sin esto un refresh inválido o
-            #en blacklist sale como 500 (paridad CookieTokenRefreshView).
-            raise InvalidToken(exc.args[0] if exc.args else 'Token inválido')
-        if old_refresh is None:
+        if not refresh:
             raise InvalidToken('Token de refresco ausente.')
-        #Revocación global post-reset: un refresh emitido antes del sello
-        #no puede renovarse.
-        customer_id =   old_refresh.get('customer_id')
-        customer    =   Customer.objects.filter(pk = customer_id, is_active = True).first() if customer_id else None
-        if customer is None or not customer_session_valid(customer, old_refresh):
-            try:
+        try:
+            #Decode SIN verificar (firma incluida) solo para leer el jti y
+            #tomar el lock de la fila OutstandingToken ANTES del check de
+            #blacklist — un jti trucho solo crea una fila inerte, nunca una
+            #sesión (la verificación real sigue abajo, dentro del lock).
+            unverified  =   CustomerRefreshToken(refresh, verify = False)
+        except TokenError as exc:
+            raise InvalidToken(exc.args[0] if exc.args else 'Token inválido')
+        try:
+            #IDM-02 (replay concurrente): el verify→blacklist de SimpleJWT
+            #es check-then-insert — dos requests con el MISMO refresh podían
+            #pasar el check antes de que cualquiera escribiera la blacklist
+            #y ambos rotaban (dos sesiones válidas). El get_or_create +
+            #select_for_update sobre el jti serializa la rotación en
+            #Postgres: el perdedor queda bloqueado hasta el commit del
+            #ganador, y su check_blacklist ya ve la fila → 401.
+            #(SQLite no honra select_for_update — la carrera se reproduce
+            #solo en test/local; en Postgres la ventana queda cerrada.)
+            with transaction.atomic():
+                OutstandingToken.objects.select_for_update().get_or_create(
+                    jti         =   unverified['jti'],
+                    defaults    =   {
+                        'token'      :   str(unverified),
+                        'expires_at' :   datetime_from_epoch(unverified['exp']),
+                    },
+                )
+                try:
+                    old_refresh =   parse_refresh_token(refresh)
+                except TokenError as exc:
+                    #TokenError no es APIException: sin esto un refresh
+                    #inválido o en blacklist sale como 500 (paridad
+                    #CookieTokenRefreshView).
+                    raise InvalidToken(exc.args[0] if exc.args else 'Token inválido')
+                #Revocación global post-reset: un refresh emitido antes del
+                #sello no puede renovarse.
+                customer_id =   old_refresh.get('customer_id')
+                customer    =   Customer.objects.filter(pk = customer_id, is_active = True).first() if customer_id else None
+                if customer is None or not customer_session_valid(customer, old_refresh):
+                    try:
+                        old_refresh.blacklist()
+                    except Exception:
+                        pass
+                    raise InvalidToken('La sesión fue revocada. Iniciá sesión de nuevo.')
+                #Rotación: el refresh presentado queda blacklisteado y se
+                #emite par nuevo. Fail-closed a propósito: si el blacklist
+                #no puede escribirse el refresh viejo seguiría válido —
+                #mejor 500 que una sesión duplicada (el lookup del customer
+                #ya demostró que la DB responde).
                 old_refresh.blacklist()
-            except Exception:
-                pass
-            raise InvalidToken('La sesión fue revocada. Iniciá sesión de nuevo.')
-        #Rotación: el refresh presentado queda blacklisteado y se emite par
-        #nuevo. Fail-closed a propósito: si el blacklist no puede escribirse
-        #el refresh viejo seguiría válido — mejor 500 que una sesión
-        #duplicada (el lookup del customer ya demostró que la DB responde).
-        old_refresh.blacklist()
-        access_str, new_refresh  =   issue_customer_tokens(customer)
+                access_str, new_refresh  =   issue_customer_tokens(customer)
+        except InvalidToken:
+            raise
+        except TokenError as exc:
+            raise InvalidToken(exc.args[0] if exc.args else 'Token inválido')
         response    =   Response({'access': access_str}, status = status.HTTP_200_OK)
         if from_cookie:
             _set_refresh_cookie(response, new_refresh)

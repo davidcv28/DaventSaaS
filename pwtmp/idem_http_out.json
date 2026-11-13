@@ -1,0 +1,64 @@
+{
+  "cart_add_parallel": [
+    200,
+    200
+  ],
+  "cart_after_parallel_add": [
+    [
+      23,
+      817,
+      2
+    ]
+  ],
+  "cart_after_retry_same_qty": [
+    [
+      23,
+      2
+    ]
+  ],
+  "cart_patch_parallel": [
+    200,
+    200
+  ],
+  "cart_after_patch": [
+    [
+      23,
+      5
+    ]
+  ],
+  "cart_delete_seq": [
+    200,
+    400,
+    "{\"item\":\"El item no est\u00e1 en tu carrito.\"}"
+  ],
+  "cart_delete_parallel": [
+    400,
+    200
+  ],
+  "reviews_before": 0,
+  "review_parallel": [
+    201,
+    201
+  ],
+  "reviews_mine_count": 2,
+  "review_second_attempt": 409,
+  "contact_parallel_same_challenge": [
+    400,
+    200
+  ],
+  "contact_new_challenge_same_content": 200,
+  "register_parallel": [
+    400,
+    400
+  ],
+  "register_email": "idem-02f13398@test.local",
+  "refresh_parallel": [
+    200,
+    200
+  ],
+  "refresh_parallel_new_access": [
+    true,
+    true
+  ],
+  "refresh_serial_replay": 401
+}

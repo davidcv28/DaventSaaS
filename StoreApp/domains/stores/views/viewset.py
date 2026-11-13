@@ -1349,16 +1349,25 @@ class StoreViewSet(StoreBaseViewSet):
                 {'detail': 'Ya publicaste tu opinión sobre este producto.'},
                 status = status.HTTP_409_CONFLICT,
             )
-        ProductReview.objects.create(
-            store       =   store,
-            product     =   product,
-            customer    =   customer,
-            is_positive =   data.get('is_positive') if can_rate else None,
-            text        =   strip_tags(data.get('text') or '').strip(),
-            name        =   (customer.first_name or customer.email.split('@')[0] or 'Cliente')[:80],
-            surname     =   (customer.last_name or '')[:80],
-            email       =   customer.email,
-        )
+        try:
+            ProductReview.objects.create(
+                store       =   store,
+                product     =   product,
+                customer    =   customer,
+                is_positive =   data.get('is_positive') if can_rate else None,
+                text        =   strip_tags(data.get('text') or '').strip(),
+                name        =   (customer.first_name or customer.email.split('@')[0] or 'Cliente')[:80],
+                surname     =   (customer.last_name or '')[:80],
+                email       =   customer.email,
+            )
+        except IntegrityError:
+            #El exists() de arriba pierde la carrera contra otro POST
+            #concurrente: la constraint uq_review_product_customer gana
+            #siempre — el perdedor recibe el mismo 409 del caso serial.
+            return Response(
+                {'detail': 'Ya publicaste tu opinión sobre este producto.'},
+                status = status.HTTP_409_CONFLICT,
+            )
         #Aviso del sistema al dueño (notificación deduplicada, no chat).
         from AdminApp.domains.notifications.services import notify_product_review
         notify_product_review(store, product_name = product.name)

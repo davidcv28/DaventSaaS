@@ -145,13 +145,49 @@ def mark_order_paid(order, *, source = 'manual', reference = '', actor = None):
     `source`: 'manual' (dueño confirma transferencia/efectivo) | 'mp'
     (webhook de Mercado Pago — track C). `actor`: quién lo originó
     ('owner', 'mp', 'system'); si falta se deriva del source.
+
+    VENCIMIENTO (S-02): si `expires_at` ya pasó aunque el status siga
+    PENDING_PAYMENT (el cron expire_orders todavía no corrió), el pago
+    NO se confirma — mismo gate que la preferencia MP
+    (storepayments/views/checkout.py). En su lugar el pedido se marca
+    EXPIRED acá mismo, con el evento 'expired' y la liberación del
+    comprobante, exactamente como expire_orders: la reserva blanda y la
+    cuota se liberan sin esperar al cron y el cobro tardío queda como
+    pago sobre pedido cerrado (webhook → 'paid_after_close').
     """
     actor   =   actor or ('mp' if source == 'mp' else 'owner')
     reference   =   str(reference or '')[:120]
     with transaction.atomic():
+        #expires_at es inmutable tras crear el pedido: se puede decidir
+        #ANTES del lock si la rama de vencimiento va a necesitar la fila
+        #de Store (release_proof ajusta la cuota). Así el camino feliz
+        #conserva el orden de locks original (solo Order → Product) y la
+        #rama de vencimiento usa Store → Order, igual que expire_orders/
+        #cancel_order — nunca Order → Store, para no deadlockear.
+        expired_by_time =   order.expires_at is not None and order.expires_at <= timezone.now()
+        locked_store    =   None
+        if expired_by_time:
+            from StoreApp.domains.stores.models import Store
+            from StoreApp.domains.orders.services.proofs import release_proof
+            locked_store    =   Store.objects.select_for_update().get(pk = order.store_id)
         locked  =   _lock(order)
         if locked.status != Order.Status.PENDING_PAYMENT:
             #Ya pago / venció / canceló / reembolsó: no-op idempotente.
+            return locked
+        if locked.expires_at is not None and locked.expires_at <= timezone.now():
+            #Vencido por tiempo: NO se confirma. Se lo transiciona a
+            #EXPIRED igual que expire_orders (evento + release del
+            #comprobante + liberación implícita de la reserva blanda).
+            logger.warning('mark_order_paid rechazado por vencimiento: order=%s expires_at=%s', locked.pk, locked.expires_at)
+            locked.status   =   Order.Status.EXPIRED
+            locked.save(update_fields = ['status', 'updated_at'])
+            append_event(locked, 'expired', actor = 'system', status_from = Order.Status.PENDING_PAYMENT, status_to = Order.Status.EXPIRED)
+            if locked_store is None:
+                #Inalcanzable (expires_at es inmutable) — fallback aislado.
+                from StoreApp.domains.stores.models import Store
+                from StoreApp.domains.orders.services.proofs import release_proof
+                locked_store    =   Store.objects.select_for_update().get(pk = order.store_id)
+            release_proof(locked, locked_store = locked_store)
             return locked
         locked.paid_at          =   timezone.now()
         if reference:

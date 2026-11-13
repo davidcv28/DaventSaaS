@@ -292,6 +292,15 @@ class ProductReview(models.Model):
                 condition       =   models.Q(is_positive__isnull = False) | ~models.Q(text = ''),
                 name            =   'ck_review_vote_or_text',
             ),
+            #Una opinión por cliente-producto (IDM-01): el exists() del
+            #POST es solo fast-path — sin esta constraint dos requests
+            #concurrentes pasaban el check y creaban dos filas (TOCTOU).
+            #`customer` es nullable (opiniones históricas anónimas): los
+            #NULL no colisionan entre sí en Postgres/SQLite.
+            models.UniqueConstraint(
+                fields          =   ['product', 'customer'],
+                name            =   'uq_review_product_customer',
+            ),
         ]
     def __str__(self):
         return f'{self.name} sobre {self.product.name} ({self.store.slug})'

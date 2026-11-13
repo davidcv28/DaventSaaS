@@ -148,8 +148,17 @@ def _merge_lines(items, cart = None):
     Normaliza `items` ([{product_id, qty}]) + las líneas del `cart`
     opcional a un dict {product_id: qty} sumado. Valida forma y topes;
     los errores son serializers.ValidationError → 400 en la vista.
+
+    Devuelve (merged, cart_item_pks): los pks de las líneas de carrito
+    EFECTIVAMENTE leídas — create_order borra SOLO esas, porque los
+    mutators del carrito (add_item/update_item/remove_item) no toman el
+    lock de la fila de Cart: un INSERT que commitea entre esta lectura
+    y el vaciado no se mergeó al pedido y borrarlo sería una pérdida
+    silenciosa (S-01). Con delete(pk__in=leídos) ese item concurrente
+    sobrevive como línea nueva del carrito post-checkout.
     """
-    merged  =   {}
+    merged          =   {}
+    cart_item_pks   =   []
     def _strict_int(value):
         #Entero estricto: int() a secas trunca floats ("1.9"→1, 817.5→817)
         #silenciosamente — se acepta solo int o str de dígitos exactos.
@@ -174,6 +183,7 @@ def _merge_lines(items, cart = None):
         _add(entry.get('product_id'), entry.get('qty'), 'items')
     if cart is not None:
         for cart_item in cart.items.all():
+            cart_item_pks.append(cart_item.pk)
             _add(cart_item.product_id, cart_item.qty, 'cart')
     if not merged:
         raise serializers.ValidationError({'items': 'El pedido no tiene items.'})
@@ -182,7 +192,7 @@ def _merge_lines(items, cart = None):
     for pid, qty in merged.items():
         if qty < 1 or qty > MAX_QTY:
             raise serializers.ValidationError({'items': f'Cantidad fuera de rango (1-{MAX_QTY}) para el producto {pid}.'})
-    return merged
+    return merged, cart_item_pks
 
 
 def _payment_config_of(store):
@@ -259,6 +269,32 @@ def _customer_snapshot(customer):
     }
 
 
+def claimed_quantities(product_ids, *, now = None):
+    """
+    Unidades comprometidas por la RESERVA BLANDA por producto:
+    {product_id: qty} sumando OrderItems de pedidos PENDING_PAYMENT
+    cuyo `expires_at` todavía no venció. Los pendientes ya vencidos por
+    tiempo (cron expire_orders aún no corrió) NO cuentan — su reserva
+    está muerta aunque el status siga PENDING (S-03). Compartido con
+    cart.services.cart._check_stock para que el carrito muestre la
+    misma disponibilidad real que exige el checkout (S-04).
+    """
+    now         =   now or timezone.now()
+    claimed     =   {}
+    ids         =   list(product_ids or [])
+    if ids:
+        for row in (OrderItem.objects
+                .filter(
+                    product_id__in        =   ids,
+                    order__status         =   Order.Status.PENDING_PAYMENT,
+                    order__expires_at__gt =   now,
+                )
+                .values('product_id')
+                .annotate(total = Sum('qty'))):
+            claimed[row['product_id']]  =   row['total'] or 0
+    return claimed
+
+
 def _resolve_lines(store, customer, merged):
     """
     Valida productos de ESA tienda (activos, no exclusivos-sin-acceso,
@@ -290,15 +326,10 @@ def _resolve_lines(store, customer, merged):
     if missing:
         raise serializers.ValidationError({'items': f'Producto(s) no disponible(s): {", ".join(str(p) for p in missing)}.'})
     #Unidades ya comprometidas por pedidos pendientes de pago (reserva
-    #blanda — solo para productos con control de stock).
+    #blanda — solo para productos con control de stock; los vencidos
+    #por expires_at no retienen, ver claimed_quantities).
     controlled  =   [pid for pid, product in products.items() if product.stock is not None]
-    claimed     =   {}
-    if controlled:
-        for row in (OrderItem.objects
-                .filter(product_id__in = controlled, order__status = Order.Status.PENDING_PAYMENT)
-                .values('product_id')
-                .annotate(total = Sum('qty'))):
-            claimed[row['product_id']]  =   row['total'] or 0
+    claimed     =   claimed_quantities(controlled)
     has_exclusive   =   has_exclusive_access(customer, store)
     lines           =   []
     for pid, qty in merged.items():
@@ -381,13 +412,14 @@ def create_order(*, store, customer, items = None, address = None, shipping_meth
             #no pueden leer el mismo last_number ni pisarse el unique.
             locked_store    =   Store.objects.select_for_update().get(pk = store.pk)
             #El carrito se bloquea y se lee DENTRO del atomic: dos
-            #checkouts concurrentes del mismo carrito se serializan y un
-            #item agregado entre el fetch de la vista y el delete() no se
-            #pierde sin entrar al pedido.
+            #checkouts concurrentes del mismo carrito se serializan.
+            #OJO: los mutators del carrito NO toman este lock — la
+            #protección contra inserts concurrentes es el delete por pk
+            #de más abajo (ver _merge_lines / S-01), no esta fila.
             if cart is not None:
                 from StoreApp.domains.cart.models import Cart
                 cart        =   Cart.objects.select_for_update().get(pk = cart.pk)
-            merged          =   _merge_lines(items, cart)
+            merged, cart_item_pks =   _merge_lines(items, cart)
             lines           =   _resolve_lines(locked_store, customer, merged)
             priced, subtotal, discount_total   =   _price_lines(lines, locked_store, customer)
             config          =   _payment_config_of(locked_store)
@@ -448,9 +480,13 @@ def create_order(*, store, customer, items = None, address = None, shipping_meth
             ])
             append_event(order, 'created', actor = 'customer', status_to = Order.Status.PENDING_PAYMENT)
             #Carrito consumido en el mismo atomic: si el pedido commitea,
-            #las líneas ya no están para un segundo checkout.
+            #las líneas ya no están para un segundo checkout. Se borran
+            #SOLO las líneas que _merge_lines leyó (pk__in): un item
+            #agregado por otro request entre la lectura y este delete no
+            #entró al pedido y debe sobrevivir en el carrito — borrar
+            #todo acá lo perdería en silencio (S-01).
             if cart is not None:
-                cart.items.all().delete()
+                cart.items.filter(pk__in = cart_item_pks).delete()
             return order, True
     except IntegrityError:
         #Carrera de idempotencia: dos requests con la misma key pasaron el

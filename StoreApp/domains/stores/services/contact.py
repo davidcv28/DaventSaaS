@@ -189,13 +189,29 @@ def contact_target(store) -> str:
     chosen          =   (getattr(customization, 'contact_email', '') or '').strip()
     return chosen or (store.user.user.email or '')
 
+#Dedupe anti doble-submit (IDM-04): un envío lento del usuario puede
+#generar un segundo POST con captcha NUEVO y el mismo contenido — sin
+#huella de contenido cada uno encolaba un mail al vendedor.
+CONTACT_DEDUPE_TTL      =   600     # 10 minutos
+
 def send_contact_message(store, *, name : str, email : str, message : str) -> bool:
     """
     Encola el mensaje del visitante al dueño (el SMTP corre en Celery: el
     request público no espera el envío). False sin destino.
+    El mismo payload (tienda + nombre/email/mensaje normalizados) ya
+    encolado dentro del TTL responde éxito SIN re-encolar: reclamo
+    atómico por cache (set-if-absent), misma técnica que el nonce del
+    captcha — dos posts paralelos con captchas distintos mandan 1 mail.
     """
     if not contact_target(store):
         return False
+    norm    =   re.sub(r'\s+', ' ', f'{name}|{email}|{message}').strip().lower()
+    digest  =   hashlib.sha256(f'{store.pk}:{norm}'.encode()).hexdigest()
+    try:
+        if not cache_add_strict(f'contact:dedupe:{digest}', 1, CONTACT_DEDUPE_TTL):
+            return True
+    except CacheUnavailable:
+        pass    #sin cache no hay dedupe posible: se encola igual (fail-open)
     from AdminApp.domains.users.tasks import send_contact_email
     send_contact_email.delay(store.pk, name, email, message)
     return True

@@ -832,7 +832,9 @@ def _reviews_fragment(store, product, customization):
     if not (can_rate or can_comment):
         return ''
     items = []
-    for review in product.reviews.all()[:REVIEW_LIST_MAX]:
+    #list() sobre el queryset: el slice directo ([:N]) clona el qs y
+    #pisa el prefetch de 'reviews' — una query extra por ficha.
+    for review in list(product.reviews.all())[:REVIEW_LIST_MAX]:
         if review.is_positive is None and not (can_comment and review.text):
             continue
         surname = (review.surname or '').strip()
@@ -877,11 +879,13 @@ def _rating_values(store, product, customization):
     can_rate, _ = _review_flags(store, customization)
     if not can_rate:
         return '', ''
-    votes = product.reviews.filter(is_positive__isnull = False)
-    count = votes.count()
+    #En memoria sobre el prefetch de 'reviews': un filter().count() por
+    #producto pisaba el prefetch y generaba 2 queries por tarjeta (N+1).
+    votes = [review.is_positive for review in product.reviews.all() if review.is_positive is not None]
+    count = len(votes)
     if not count:
         return '', ''
-    avg = round(votes.filter(is_positive = True).count() / count * 5, 1)
+    avg = round(sum(1 for vote in votes if vote) / count * 5, 1)
     return f'{avg:g}', str(count)
 
 
@@ -904,9 +908,9 @@ def _features_fragment(product):
     )
 
 def _related_fragment(store, product):
-    from StoreApp.domains.catalog.models import Product
-
-    base = Product.objects.filter(store = store, is_active = True, is_exclusive = False).exclude(pk = product.pk).select_related('category', 'brand')
+    #_product_queryset ya trae select_related + prefetch de 'reviews':
+    #sin el prefetch, _rating_values volvía a consultar por relacionado.
+    base = _product_queryset(store).exclude(pk = product.pk)
     #Mismo criterio de sugerencia de un marketplace: categoría, marca y
     #después el resto, hasta 4 tarjetas.
     same_cat = list(base.filter(category_id = product.category_id)[:4]) if product.category_id else []
@@ -1019,6 +1023,14 @@ def _product_values(store, product, customization, store_name, flags = None):
         effective_pricing_of,
         running_discounts_of,
     )
+    #El producto del ?product= llega sin prefetch (lo resuelve el
+    #viewset): una sola query de reviews y _rating_values /
+    #_reviews_fragment trabajan sobre el cache en memoria.
+    from django.db.models import prefetch_related_objects
+
+    can_rate, can_comment = _review_flags(store, customization)
+    if can_rate or can_comment:
+        prefetch_related_objects([product], 'reviews')
     #La ficha resuelve el mismo precio que la tarjeta: oferta manual o el
     #mejor descuento vigente (incluidas las campañas), el que quede más bajo.
     discounts = running_discounts_of(store)
