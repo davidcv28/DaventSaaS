@@ -39,6 +39,7 @@ dict_benefits = {
     'has_ecommerce'     :   {'label': 'Venta online: carrito, checkout y pedidos',  'kind': 'flag'},
     'has_customer_auth' :   {'label': 'Cuentas de clientes: registro e ingreso en tu web', 'kind': 'flag'},
     'has_own_storage'   :   {'label': 'Tu propio almacenamiento en la nube (bucket R2)',   'kind': 'flag'},
+    'has_pos_app'       :   {'label': 'App de mostrador (punto de venta para tu local)',   'kind': 'flag'},
 }
 
 dict_plan_benefits = {
@@ -225,6 +226,7 @@ dict_plan_benefits = {
             'has_ecommerce'     :   True,
             'has_customer_auth' :   True,
             'has_own_storage'   :   True,
+            'has_pos_app'       :   True,
         },
         'presentation'  :   {
             'slug'          :   'ecommerce',
@@ -241,6 +243,7 @@ dict_plan_benefits = {
                 'Membresías para tus clientes: planes con beneficios propios',
                 '5 GB de almacenamiento de imágenes',
                 'Tu propia nube: bucket R2 propio para tu multimedia',
+                'App de mostrador incluida (requiere plan activo). Tus datos siempre son tuyos.',
             ],
         },
     },

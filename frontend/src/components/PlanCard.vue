@@ -46,6 +46,7 @@ const perks = computed(() => {
   if (v.max_videos) add('max_videos', 'play', `${v.max_videos} videos`)
   if (v.has_design_advanced) add('has_design_advanced', 'palette', 'Diseños premium')
   else if (v.has_design_plus) add('has_design_plus', 'layout-grid', 'Diseños extra')
+  if (v.has_pos_app) add('has_pos_app', 'monitor', 'App de mostrador')
   if (v.has_discounts) add('has_discounts', 'percent', 'Descuentos')
   if (v.has_product_comments) add('has_product_comments', 'star', 'Opiniones')
   if (v.has_flyer_editor) add('has_flyer_editor', 'pen-tool', 'Editor de folletos')

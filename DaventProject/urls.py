@@ -105,6 +105,8 @@ urlpatterns = [
     path('api/', include('StoreApp.domains.support.urls.urls')),
     path('api/', include('StoreApp.domains.storeadmin.urls.urls')),
     path('api/', include('StoreApp.domains.feed.urls.urls')),
+    #POS (app de mostrador federada: catálogo, vinculación y licencia)
+    path('api/', include('StoreApp.domains.pos.urls.urls')),
     #=================================
     # JWT
     #=================================

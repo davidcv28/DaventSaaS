@@ -3,7 +3,7 @@ import LegalLayout from '../components/LegalLayout.vue'
 </script>
 
 <template>
-  <LegalLayout title="Política de privacidad" subtitle="Versión 1.0 · Última actualización: noviembre de 2026">
+  <LegalLayout title="Política de privacidad" subtitle="Versión 1.1 · Última actualización: noviembre de 2026">
     <article class="legal-doc">
       <h2>1. Responsable del tratamiento</h2>
       <p>
@@ -59,10 +59,35 @@ import LegalLayout from '../components/LegalLayout.vue'
         imágenes, procesador de pagos), con nivel de protección adecuado conforme a la normativa.
       </p>
 
-      <h2>7. Menores</h2>
+      <h2>7. Aplicaciones vinculadas</h2>
+      <p>
+        DAVENT puede ofrecer aplicaciones de escritorio o móviles (p. ej. punto de venta)
+        incluidas en determinados planes. Este anexo describe qué datos tratan esas aplicaciones.
+      </p>
+      <p><strong>Qué reporta la app:</strong></p>
+      <ul>
+        <li>device_id, versión de app, IP de origen, timestamps de conexión, resultado del chequeo de licencia.</li>
+        <li>En fase de sync: los mismos datos que la app ya almacena localmente (productos, ventas, clientes del comercio).</li>
+      </ul>
+      <p>
+        <strong>Rol de DAVENT:</strong> encargado de tratamiento respecto de los datos del
+        comercio y de sus clientes finales (misma figura descripta en la sección 1); responsable
+        respecto de los datos de la cuenta del titular.
+      </p>
+      <p>
+        <strong>Base y plazo:</strong> ejecución del contrato; los registros de licencia se
+        conservan 24 meses; los datos sincronizados se gobiernan por la misma política de
+        retención de la tienda (sección 4).
+      </p>
+      <p>
+        <strong>Lo que la app no hace:</strong> no envía contenido de ventas sin sync activa, no
+        rastrea ubicación, no accede a datos fuera de su base local.
+      </p>
+
+      <h2>8. Menores</h2>
       <p>El servicio está dirigido a personas mayores de 18 años.</p>
 
-      <h2>8. Cambios</h2>
+      <h2>9. Cambios</h2>
       <p>
         Podemos actualizar esta política; la versión vigente es la publicada en esta página con su
         fecha de última actualización.

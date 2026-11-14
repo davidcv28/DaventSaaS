@@ -4,7 +4,9 @@
 > afirma validez legal. Antes de publicar los textos base en producción
 > deben revisarlos un abogado especializado en defensa del consumidor y
 > un contador (facturación/ARCA). Fecha de redacción: iteración e-commerce
-> (rama `ECCOMMERCE-ADD`, dominio `legalpages`).
+> (rama `ECCOMMERCE-ADD`, dominio `legalpages`). Anexo POS / aplicaciones
+> vinculadas (§1.6, §2.4 y checklist §3) agregado en la iteración POS
+> (`PLAN_POS.md` §8), noviembre de 2026.
 
 ---
 
@@ -91,6 +93,22 @@ DAVENT puede modificar, suspender o discontinuar funcionalidades
 (notificaciones en un plazo razonable cuando afecte derechos adquiridos)
 y estas condiciones, publicando la versión vigente en la plataforma.
 
+### 1.6 Aplicaciones vinculadas
+
+*(Cláusula ya incorporada al ToS servido — `TermsView.vue` §9,
+iteración POS `PLAN_POS.md` §8.2.)*
+
+DAVENT puede ofrecer aplicaciones de escritorio o móviles (p. ej. punto
+de venta) incluidas en determinados planes. Las aplicaciones se
+licencian por dispositivo y verifican periódicamente la vigencia del
+plan del titular; para ello transmiten un identificador de dispositivo
+y datos de uso técnico. Si el plan vence o se cancela, las funciones
+operativas de la aplicación se suspenden previo aviso con al menos
+cinco (5) días de anticipación. La suspensión no afecta el acceso,
+consulta, exportación ni las copias de seguridad de la información del
+titular, que permanece disponible en todo momento. DAVENT no elimina
+datos del titular por falta de pago del plan de la aplicación.
+
 ---
 
 ## 2. Nota de privacidad (rol de DAVENT)
@@ -136,6 +154,25 @@ comercio (responsable):
 - Los documentos/teléfonos de compradores se guardan **cifrados en
   reposo** con huella HMAC para búsqueda (patrón `UserProfile`).
 
+### 2.4 Aplicaciones vinculadas (apps de escritorio/móviles)
+
+*(Anexo ya incorporado a la política servida — `PrivacyView.vue` §7,
+iteración POS `PLAN_POS.md` §8.3.)*
+
+- **Qué reporta la app:** `device_id`, versión de app, IP de origen,
+  timestamps de conexión, resultado del chequeo de licencia. En fase de
+  sync: los mismos datos que la app ya almacena localmente (productos,
+  ventas, clientes del comercio).
+- **Rol de DAVENT:** encargado de tratamiento respecto de los datos del
+  comercio y de sus clientes finales (misma figura que §2.2);
+  responsable respecto de los datos de la cuenta del titular.
+- **Base y plazo:** ejecución del contrato; los registros de licencia
+  se conservan 24 meses; los datos sincronizados se gobiernan por la
+  misma política de retención de la tienda.
+- **Lo que la app NO hace:** no envía contenido de ventas sin sync
+  activa, no rastrea ubicación, no accede a datos fuera de su base
+  local.
+
 ---
 
 ## 3. Checklist para revisión legal humana
@@ -166,3 +203,21 @@ revisar:
   `ContentReport`/`LEGAL_REPORTS_EMAIL`) y tiempos de respuesta.
 - [ ] **Cambios de condiciones**: mecanismo de versionado/notificación a
   comercios cuando DAVENT actualice sus ToS.
+
+Aplicaciones vinculadas / POS (`PLAN_POS.md` §8.4) — pendientes de
+revisión humana:
+
+- [ ] Confirmar que el titular del plan se encuadra como comerciante/B2B
+  y no "consumidor final" para la suspensión de funciones (si no,
+  evaluar gracia mayor o suspensión solo tras baja expresa).
+- [ ] Revisar la cláusula §1.6 ("Aplicaciones vinculadas") con letra
+  chica de la provincia del titular (Ley 24.240 es nacional y piso;
+  provincias pueden sumar).
+- [ ] Verificar que el aviso de renovación automática del plan (Decreto
+  274/2019) ya cubre el escenario "plan vence → app se degrada" —
+  enlazarlo desde la cláusula, no duplicarlo.
+- [ ] Registrar la app como software licenciado (no vendido) en el
+  contrato — el cliente compra acceso, no el binario.
+- [ ] Exportación en `DEGRADED`: validar formato (CSV/JSON completo)
+  para que la promesa "tus datos siempre son tuyos" sea cumplible, no
+  marketing.

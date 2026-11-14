@@ -150,6 +150,9 @@ REST_FRAMEWORK = {
         #Logout (por usuario/IP): defensa en profundidad — el endpoint es
         #AllowAny y blacklistea refresh tokens de la cookie.
         'logout': '30/hour',
+        #Canje del código de vinculación POS (anónimo, bucket por código):
+        #el código vive 10 min y el brute-force queda acotado a 5/min.
+        'pos_pair': '5/min',
     },
 
     'DEFAULT_PAGINATION_CLASS': 'DaventProject.pagination.DaventPageNumberPagination',
@@ -177,6 +180,13 @@ SIMPLE_JWT = {
     'ROTATE_REFRESH_TOKENS'    : True,
     'BLACKLIST_AFTER_ROTATION' : True,
 }
+#POS federado (PLAN_POS): clave dedicada para los device_token HS256 —
+#separada de SECRET_KEY así una rotación del secreto de sesiones no
+#desvincula mostradores, y viceversa. Fallback SECRET_KEY en dev.
+POS_DEVICE_TOKEN_KEY          = config('POS_DEVICE_TOKEN_KEY', default = '') or SECRET_KEY
+#Clave privada Ed25519 (base64, 32 bytes crudos) que firma las licencias
+#offline de la app de mostrador: la app embebe solo la pública.
+POS_LICENSE_PRIVATE_KEY_B64   = config('POS_LICENSE_PRIVATE_KEY_B64', default = '')
 
 SPECTACULAR_SETTINGS = {
     'TITLE': 'Davent API - SaaS',
@@ -234,6 +244,8 @@ INSTALLED_APPS = [
     'StoreApp.domains.support.apps.apps.SupportAppConfig',
     'StoreApp.domains.storeadmin.apps.apps.StoreAdminAppConfig',
     'StoreApp.domains.feed.apps.apps.FeedAppConfig',
+    #POS (app de mostrador federada: catálogo, vinculación y licencia Ed25519)
+    'StoreApp.domains.pos.apps.apps.PosAppConfig',
     #MCP APP (biblioteca de estilos de diseño para la IA; servidor MCP propio)
     'McpApp.domains.skills.apps.apps.SkillsAppConfig'
 ]

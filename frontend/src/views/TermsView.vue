@@ -3,7 +3,7 @@ import LegalLayout from '../components/LegalLayout.vue'
 </script>
 
 <template>
-  <LegalLayout title="Términos y condiciones" subtitle="Versión 1.0 · Última actualización: octubre de 2026">
+  <LegalLayout title="Términos y condiciones" subtitle="Versión 1.1 · Última actualización: noviembre de 2026">
     <article class="legal-doc">
       <h2>1. Aceptación de los términos</h2>
       <p>
@@ -86,7 +86,19 @@ import LegalLayout from '../components/LegalLayout.vue'
         muestran antes de contratar y pueden actualizarse con aviso previo.
       </p>
 
-      <h2>9. Limitación de responsabilidad</h2>
+      <h2>9. Aplicaciones vinculadas</h2>
+      <p>
+        DAVENT puede ofrecer aplicaciones de escritorio o móviles (p. ej. punto de venta) incluidas
+        en determinados planes. Las aplicaciones se licencian por dispositivo y verifican
+        periódicamente la vigencia del plan del titular; para ello transmiten un identificador de
+        dispositivo y datos de uso técnico. Si el plan vence o se cancela, las funciones operativas
+        de la aplicación se suspenden previo aviso con al menos cinco (5) días de anticipación. La
+        suspensión no afecta el acceso, consulta, exportación ni las copias de seguridad de la
+        información del titular, que permanece disponible en todo momento. DAVENT no elimina datos
+        del titular por falta de pago del plan de la aplicación.
+      </p>
+
+      <h2>10. Limitación de responsabilidad</h2>
       <p>
         DAVENT no es parte de las ventas que concretes con tus clientes ni controla el contenido que
         publican los comercios. No respondemos por infracciones cometidas por usuarios, pero actuamos
@@ -123,7 +135,7 @@ import LegalLayout from '../components/LegalLayout.vue'
         puede suspender o dar de baja comercios que incumplan la normativa o estos términos.
       </p>
 
-      <h2>10. Legislación y jurisdicción</h2>
+      <h2>11. Legislación y jurisdicción</h2>
       <p>
         Estos términos se rigen por las leyes de la República Argentina. Cualquier controversia se
         somete a los tribunales competentes del domicilio de DAVENT, salvo norma de orden público
@@ -131,7 +143,7 @@ import LegalLayout from '../components/LegalLayout.vue'
         iniciar las acciones que correspondan en su propio domicilio.
       </p>
 
-      <h2>11. Cambios a estos términos</h2>
+      <h2>12. Cambios a estos términos</h2>
       <p>
         Podemos actualizar este documento. Cuando lo hagamos, publicaremos la nueva versión con su fecha
         y, si el cambio es relevante, te lo notificaremos por correo o dentro de la plataforma. El uso
