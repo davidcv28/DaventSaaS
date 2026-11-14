@@ -2,6 +2,7 @@ from django.urls import path
 
 from StoreApp.domains.pos.views import (
     PosAppsView,
+    PosDownloadView,
     PosLicenseView,
     PosPairCodeView,
     PosPairView,
@@ -19,6 +20,7 @@ urlpatterns = [
     #=========================================
     path('pos/pair-code/', PosPairCodeView.as_view(), name = 'pos-pair-code'),
     path('pos/apps/', PosAppsView.as_view(), name = 'pos-apps'),
+    path('pos/download/<slug:slug>/', PosDownloadView.as_view(), name = 'pos-download'),
     #=========================================
     # DISPOSITIVO (app de mostrador)
     #=========================================

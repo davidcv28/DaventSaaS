@@ -106,6 +106,28 @@ class PosAppsView(APIView):
             'rubros'    :   rubro_options(),
             'apps'      :   PosAppSerializer(catalog_for(store, rubro = rubro), many = True).data,
         }, status = status.HTTP_200_OK)
+
+class PosDownloadView(APIView):
+    """
+    GET /api/pos/download/<slug>/ — URL firmada de lectura del instalador
+    en R2 (download_key, 10 min). Misma visibilidad que el catálogo
+    (plan + rubro de SU tienda) MÁS el flag has_pos_app — sin él 403 y
+    sin app/key 404, así no se filtra si el artefacto existe.
+    """
+    permission_classes    =   [IsAuthenticated]
+    def get(self, request, slug):
+        store   =   _own_store(request, pos_benefit = True)
+        app     =   next((a for a in catalog_for(store) if a.slug == slug), None)
+        if app is None or not app.download_key:
+            return Response({'detail': 'App no disponible.'}, status = status.HTTP_404_NOT_FOUND)
+        from StoreApp.domains.stores.services.storage import object_url
+        url     =   object_url(app.download_key, private = True, expires = 600)
+        if not url:
+            return Response(
+                {'detail': 'La descarga no está disponible por ahora. Reintentá en unos minutos.'},
+                status = status.HTTP_503_SERVICE_UNAVAILABLE,
+            )
+        return Response({'url': url}, status = status.HTTP_200_OK)
 #=========================================
 # VISTAS DEL DISPOSITIVO (anónimas — el código/token es la credencial)
 #=========================================

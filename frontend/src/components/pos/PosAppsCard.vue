@@ -1,6 +1,6 @@
 <script setup>
 import { ref, computed, onMounted, onBeforeUnmount } from 'vue'
-import { fetchPosApps, createPosPairCode } from '../../api/pos.api.js'
+import { fetchPosApps, downloadPosApp, createPosPairCode } from '../../api/pos.api.js'
 import { extractApiError } from '../../api/http.js'
 import { useBillingStore } from '../../stores/billing.store.js'
 import AppIcon from '../AppIcon.vue'
@@ -30,6 +30,8 @@ const rubros = ref([])
 
 const pairing = ref(false)
 const pairErr = ref('')
+const downloading = ref('')
+const downloadErr = ref('')
 const pairCode = ref(null) // {code, expires_at}
 const copied = ref(false)
 const now = ref(Date.now())
@@ -77,6 +79,22 @@ async function load() {
   } finally {
     loading.value = false
     switching.value = false
+  }
+}
+
+async function download(app) {
+  // Pide la URL firmada (10 min) y abre la descarga en pestaña nueva:
+  // el artefacto nunca pasa por el front, solo por R2.
+  downloading.value = app.slug
+  downloadErr.value = ''
+  try {
+    const data = await downloadPosApp(app.slug)
+    if (data?.url) window.open(data.url, '_blank', 'noopener')
+    else downloadErr.value = 'La descarga no está disponible por ahora.'
+  } catch (e) {
+    downloadErr.value = extractApiError(e).nonField || 'No se pudo preparar la descarga.'
+  } finally {
+    downloading.value = ''
   }
 }
 
@@ -181,12 +199,21 @@ onBeforeUnmount(() => { if (tick) clearInterval(tick) })
             <span v-if="app.version" class="pill muted">v{{ app.version }}</span>
             <p v-if="app.descripcion || app.description">{{ app.descripcion || app.description }}</p>
           </div>
-          <!-- Descarga: placeholder hasta la fase 3 (instalador en R2) -->
-          <button type="button" class="btn ghost sm pos-dl" disabled title="Disponible próximamente">
-            <AppIcon name="download" :size="14" /> Disponible próximamente
+          <!-- Descarga: URL firmada de R2 si hay instalador publicado -->
+          <button
+            type="button"
+            class="btn ghost sm pos-dl"
+            :disabled="!app.download_key || downloading === app.slug"
+            :title="app.download_key ? 'Descargar instalador' : 'Disponible próximamente'"
+            @click="download(app)"
+          >
+            <span v-if="downloading === app.slug" class="spinner" aria-hidden="true"></span>
+            <AppIcon v-else name="download" :size="14" />
+            {{ app.download_key ? 'Descargar' : 'Próximamente' }}
           </button>
         </li>
       </ul>
+      <AlertMessage v-if="downloadErr" kind="error" :message="downloadErr" />
 
       <!-- Vinculación por código: la app del mostrador lo canjea por su token -->
       <div v-if="apps.length" class="pos-pair">

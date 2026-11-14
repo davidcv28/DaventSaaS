@@ -1,5 +1,6 @@
 from .views import (
     PosAppsView,
+    PosDownloadView,
     PosLicenseView,
     PosPairCodeView,
     PosPairView,
@@ -10,4 +11,5 @@ __all__ = [
     'PosPairView',
     'PosLicenseView',
     'PosAppsView',
+    'PosDownloadView',
 ]

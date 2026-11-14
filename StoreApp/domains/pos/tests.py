@@ -399,3 +399,55 @@ class PosAppsTests(TestCase):
         self.mostrador.save()
         user, _, _      =   _make_owner()
         self.assertEqual(self._apps(_authed(user))['apps'], [])
+
+
+@override_settings(POS_LICENSE_PRIVATE_KEY_B64 = _TEST_KEY_B64)
+class PosDownloadTests(TestCase):
+
+    URL =   '/api/pos/download/mostrador/'
+
+    def setUp(self):
+        cache.clear()
+        self.mostrador  =   PosApp.objects.get(slug = 'mostrador')
+        self.retail     =   DesignCategory.objects.get_or_create(slug = 'retail', defaults = {'nombre': 'Retail'})[0]
+
+    def _retail_owner(self, **kwargs):
+        pattern     =   DesignPattern.objects.create(slug = f'pat-{kwargs.get("slug", "a")}', nombre = 'p', categoria = self.retail)
+        user, _, store  =   _make_owner(**kwargs)
+        store.customization.template    =   pattern.slug
+        store.customization.save()
+        return user
+
+    def test_requires_auth(self):
+        self.assertIn(APIClient().get(self.URL).status_code, (401, 403))
+
+    def test_without_benefit_gets_403(self):
+        user    =   self._retail_owner(codes = ())
+        self.assertEqual(_authed(user).get(self.URL).status_code, 403)
+
+    def test_happy_path_returns_signed_url(self):
+        self.mostrador.download_key =   'pos/apps/mostrador/POS-Setup.exe'
+        self.mostrador.save(update_fields = ['download_key'])
+        user    =   self._retail_owner()
+        response    =   _authed(user).get(self.URL)
+        self.assertEqual(response.status_code, 200)
+        url     =   response.json()['url']
+        self.assertIn(self.mostrador.download_key, url)
+
+    def test_app_without_installer_gets_404(self):
+        self.mostrador.download_key =   ''
+        self.mostrador.save(update_fields = ['download_key'])
+        user    =   self._retail_owner()
+        self.assertEqual(_authed(user).get(self.URL).status_code, 404)
+
+    def test_app_outside_catalog_gets_404(self):
+        #Con instalador publicado pero sin rubro compatible: misma
+        #visibilidad que el catálogo — 404, no se filtra que la key existe.
+        self.mostrador.download_key =   'pos/apps/mostrador/POS-Setup.exe'
+        self.mostrador.save(update_fields = ['download_key'])
+        indumentaria    =   DesignCategory.objects.get_or_create(slug = 'indumentaria', defaults = {'nombre': 'Indumentaria'})[0]
+        pattern         =   DesignPattern.objects.create(slug = 'pat-ind', nombre = 'p', categoria = indumentaria)
+        user, _, store  =   _make_owner()
+        store.customization.template    =   pattern.slug
+        store.customization.save()
+        self.assertEqual(_authed(user).get(self.URL).status_code, 404)
