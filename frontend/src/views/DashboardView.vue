@@ -476,19 +476,6 @@ const navParent = computed(() => {
   return null
 })
 
-// "Vender online" como sub-panel tipo POS: rail lateral propio con los
-// apartados del e-commerce (hub Resumen + tabGroups.selling) y el panel
-// activo a la derecha. Reemplaza a las SectionTabs de ese grupo.
-const sellingIds = computed(() => new Set(['selling', ...tabGroups.value.selling.map((t) => t.id)]))
-const inSelling = computed(() => sellingIds.value.has(section.value))
-const sellRailTabs = computed(() => [
-  { id: 'selling', label: 'Resumen', icon: 'dashboard', hint: 'Tu tienda en una mirada' },
-  ...tabGroups.value.selling
-])
-const sellBrandName = computed(() => business.value || store.store?.slug || 'Mi comercio')
-const sellBrandInitials = computed(() =>
-  sellBrandName.value.trim().split(/\s+/).slice(0, 2).map((w) => w[0]).join('').toUpperCase() || 'MC')
-
 // Deep links del panel: /dashboard/<slug> (español, sin acentos) abre la
 // sección directo — la URL queda prolija y compartible. Pasa por el setter
 // de `section`: valida el plan vigente y abre el candado si falta el
@@ -6163,86 +6150,110 @@ async function changePassword() {
       </div>
     </div>
     <!-- ================= VENDER ONLINE (e-commerce del dueño) ================= -->
-    <!-- Sub-panel tipo POS: rail lateral fijo con los apartados (Resumen +
-         pedidos/ventas/clientes/…) y el panel activo a la derecha. -->
-    <div v-show="inSelling" class="sell-shell">
-      <aside class="sell-rail" aria-label="Menú de tu tienda online">
-        <div class="sell-rail-brand">
-          <span class="sell-rail-logo" aria-hidden="true">{{ sellBrandInitials }}</span>
-          <span class="sell-rail-txt">
-            <strong>{{ sellBrandName }}</strong>
-            <small v-if="store.hasStore"><i class="sell-dot" :class="{ off: !store.store?.is_published }" aria-hidden="true"></i>{{ store.store?.is_published ? 'Publicada' : 'Pausada' }}</small>
-            <small v-else>Tu tienda online</small>
-          </span>
-        </div>
-        <nav class="sell-rail-nav" aria-label="Apartados de vender online">
-          <button
-            v-for="t in sellRailTabs" :key="t.id" type="button"
-            class="sell-rail-item" :class="{ active: section === t.id }"
-            :aria-current="section === t.id ? 'page' : undefined"
-            :title="t.hint || t.label"
-            @click="section = t.id"
-          >
-            <AppIcon :name="t.icon" :size="17" />
-            <span>{{ t.label }}</span>
-          </button>
-        </nav>
-        <button v-if="store.hasStore" type="button" class="sell-rail-store" @click="openStore">
-          <AppIcon name="external-link" :size="15" /> <span>Ver mi tienda</span>
-        </button>
-      </aside>
+    <SellingHub
+      v-if="seen.selling"
+      v-show="section === 'selling'"
+      class="web-scope"
+      :class="{ 'sec-on': section === 'selling' }"
+      :tabs="tabGroups.selling"
+      :locks="navLocks"
+      @select="section = $event"
+    />
 
-      <div class="sell-main">
-        <SellingHub
-          v-if="seen.selling"
-          v-show="section === 'selling'"
-          class="web-scope"
-          :class="{ 'sec-on': section === 'selling' }"
-          :tabs="tabGroups.selling"
-          :locks="navLocks"
-          @select="section = $event"
-        />
-
-        <!-- Pedidos -->
-        <div v-if="seen.orders" v-show="section === 'orders'" class="web-scope" :class="{ 'sec-on': section === 'orders' }">
-          <OrdersPanel />
-        </div>
-
-        <!-- Ventas -->
-        <div v-if="seen.sales" v-show="section === 'sales'" class="web-scope" :class="{ 'sec-on': section === 'sales' }">
-          <SalesPanel />
-        </div>
-
-        <!-- Clientes -->
-        <div v-if="seen.customers" v-show="section === 'customers'" class="web-scope" :class="{ 'sec-on': section === 'customers' }">
-          <CustomersPanel />
-        </div>
-
-        <!-- Consultas de clientes -->
-        <div v-if="seen.inquiries" v-show="section === 'inquiries'" class="web-scope" :class="{ 'sec-on': section === 'inquiries' }">
-          <BuyerSupportPanel />
-        </div>
-
-        <!-- Cobros -->
-        <div v-if="seen.payconfig" v-show="section === 'payconfig'" class="web-scope" :class="{ 'sec-on': section === 'payconfig' }">
-          <PaymentsConfigPanel @locked="openLocked('selling')" />
-        </div>
-
-        <!-- Legal -->
-        <div v-if="seen.legal" v-show="section === 'legal'" class="web-scope" :class="{ 'sec-on': section === 'legal' }">
-          <LegalPagesPanel />
-        </div>
-
-        <!-- Membresías -->
-        <div v-if="seen.memberships" v-show="section === 'memberships'" class="web-scope" :class="{ 'sec-on': section === 'memberships' }">
-          <PlansPanel />
-        </div>
-
-        <!-- Sincronización -->
-        <div v-if="seen.sync" v-show="section === 'sync'" class="web-scope" :class="{ 'sec-on': section === 'sync' }">
-          <SyncPanel />
+    <!-- ================= PEDIDOS ================= -->
+    <div v-if="seen.orders" v-show="section === 'orders'" class="web-scope" :class="{ 'sec-on': section === 'orders' }">
+      <div class="page-head">
+        <div>
+          <h1>Pedidos</h1>
+          <p>Todo lo que te compraron: del pago a la entrega.</p>
         </div>
       </div>
+      <SectionTabs :tabs="tabGroups.selling" active="orders" @select="section = $event" />
+      <OrdersPanel />
+    </div>
+
+    <!-- ================= VENTAS ================= -->
+    <div v-if="seen.sales" v-show="section === 'sales'" class="web-scope" :class="{ 'sec-on': section === 'sales' }">
+      <div class="page-head">
+        <div>
+          <h1>Ventas</h1>
+          <p>Cuánto vendiste en el período, por día, método de pago y estado.</p>
+        </div>
+      </div>
+      <SectionTabs :tabs="tabGroups.selling" active="sales" @select="section = $event" />
+      <SalesPanel />
+    </div>
+
+    <!-- ================= CLIENTES ================= -->
+    <div v-if="seen.customers" v-show="section === 'customers'" class="web-scope" :class="{ 'sec-on': section === 'customers' }">
+      <div class="page-head">
+        <div>
+          <h1>Clientes</h1>
+          <p>Compradores y miembros de tu tienda, con su historial de compras.</p>
+        </div>
+      </div>
+      <SectionTabs :tabs="tabGroups.selling" active="customers" @select="section = $event" />
+      <CustomersPanel />
+    </div>
+
+    <!-- ================= CONSULTAS DE CLIENTES ================= -->
+    <div v-if="seen.inquiries" v-show="section === 'inquiries'" class="web-scope" :class="{ 'sec-on': section === 'inquiries' }">
+      <div class="page-head">
+        <div>
+          <h1>Consultas de clientes</h1>
+          <p>Preguntas y mensajes que te dejan desde tu web.</p>
+        </div>
+      </div>
+      <SectionTabs :tabs="tabGroups.selling" active="inquiries" @select="section = $event" />
+      <BuyerSupportPanel />
+    </div>
+
+    <!-- ================= COBROS ================= -->
+    <div v-if="seen.payconfig" v-show="section === 'payconfig'" class="web-scope" :class="{ 'sec-on': section === 'payconfig' }">
+      <div class="page-head">
+        <div>
+          <h1>Cobros</h1>
+          <p>Venta online, métodos de pago, datos fiscales y Mercado Pago.</p>
+        </div>
+      </div>
+      <SectionTabs :tabs="tabGroups.selling" active="payconfig" @select="section = $event" />
+      <PaymentsConfigPanel @locked="openLocked('selling')" />
+    </div>
+
+    <!-- ================= LEGAL ================= -->
+    <div v-if="seen.legal" v-show="section === 'legal'" class="web-scope" :class="{ 'sec-on': section === 'legal' }">
+      <div class="page-head">
+        <div>
+          <h1>Páginas legales y devoluciones</h1>
+          <p>Términos, privacidad y devoluciones de tu web, más la bandeja de solicitudes.</p>
+        </div>
+      </div>
+      <SectionTabs :tabs="tabGroups.selling" active="legal" @select="section = $event" />
+      <LegalPagesPanel />
+    </div>
+
+    <!-- ================= MEMBRESÍAS ================= -->
+    <div v-if="seen.memberships" v-show="section === 'memberships'" class="web-scope" :class="{ 'sec-on': section === 'memberships' }">
+      <div class="page-head">
+        <div>
+          <h1>Membresías</h1>
+          <p>Planes que tus clientes pueden suscribir desde tu web.</p>
+        </div>
+      </div>
+      <SectionTabs :tabs="tabGroups.selling" active="memberships" @select="section = $event" />
+      <PlansPanel />
+    </div>
+
+    <!-- ================= SINCRONIZACIÓN ================= -->
+    <div v-if="seen.sync" v-show="section === 'sync'" class="web-scope" :class="{ 'sec-on': section === 'sync' }">
+      <div class="page-head">
+        <div>
+          <h1>Sincronización</h1>
+          <p>El estado de tu web y los cambios que quedaron por subir.</p>
+        </div>
+      </div>
+      <SectionTabs :tabs="tabGroups.selling" active="sync" @select="section = $event" />
+      <SyncPanel />
     </div>
 
     <!-- ================= ACCESO DE CLIENTES (plan Ecommerce) ================= -->
