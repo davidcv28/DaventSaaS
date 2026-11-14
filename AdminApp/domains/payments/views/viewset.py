@@ -38,6 +38,7 @@ from AdminApp.domains.payments.services import (
 from AdminApp.domains.suscriptions.models import Suscription, SuscriptionPlan
 from AdminApp.domains.users.models import UserProfile
 from AdminApp.domains.users.services import BillingMissingFieldsQuery
+from DaventProject.throttling import MpWebhookThrottle
 
 from .viewset_base import PaymentBaseViewSet
 from .viewset_config import DailyRevenueConfigs, MonthlyRevenueConfigs, PaymentConfigs
@@ -137,7 +138,11 @@ class PaymentViewSet(PaymentBaseViewSet):
     #=========================================
     # WEBHOOK ACTION (notificaciones IPN de Mercado Pago)
     #=========================================
-    @action(detail = False, methods = ['post'], url_path = 'webhook')
+    #Throttle propio: los webhooks de MP llegan firmados desde IPs de egreso
+    #compartidas — el 'anon' default (100/día por IP) compartía bucket con
+    #las notificaciones de todas las tiendas y podía matar acreditaciones.
+    @action(detail = False, methods = ['post'], url_path = 'webhook',
+            throttle_classes = [MpWebhookThrottle])
     def webhook(self, request):
         #Tamaño acotado: se rechaza por Content-Length y por el body real
         #(un cliente puede mentir el header; request.body queda cacheado

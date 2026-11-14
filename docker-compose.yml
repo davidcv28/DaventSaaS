@@ -43,6 +43,11 @@ x-api-env: &api-env
   BACKEND_URL:           ${BACKEND_URL}
   ADMIN_URL:             ${ADMIN_URL}
   PLATFORM_DOMAIN:       ${PLATFORM_DOMAIN}
+  # Host canónico de la plataforma (www.<dominio>): CanonicalHostMiddleware
+  # y la verificación CNAME de dominios propios lo consumen. Sin esta var en
+  # la allowlist la env nunca llegaba al contenedor y el default hardcodeado
+  # ganaba — los docs de deploy no podían configurarlo.
+  PUBLIC_DOMAIN:         ${PUBLIC_DOMAIN:-www.${PLATFORM_DOMAIN}}
   LOG_LEVEL:             ${LOG_LEVEL:-INFO}
   NUM_TRUSTED_PROXIES:   ${NUM_TRUSTED_PROXIES:-1}
   GUNICORN_WORKERS:      ${GUNICORN_WORKERS:-3}
@@ -297,6 +302,11 @@ services:
     restart: unless-stopped
     environment:
       PLATFORM_DOMAIN: ${PLATFORM_DOMAIN}   # envsubst del template de vhost
+      # Path ofuscado del admin (mismo valor que la api): el entrypoint del
+      # contenedor lo deriva a ADMIN_PATH y envsubst lo incrusta en el
+      # `location` del vhost — sin esto un ADMIN_URL custom caía al SPA.
+      ADMIN_URL: ${ADMIN_URL}
+    entrypoint: ["sh", "/admin-path-entrypoint.sh"]
     # Sin puertos publicados: el edge es Caddy (80/443). nginx queda solo en
     # edge_net — 8080 (healthcheck/ACME legado), 8443 (TLS plataforma, certs
     # propios) y 8081 (dominios propios, tras el TLS on-demand de Caddy).
@@ -306,6 +316,7 @@ services:
       - media_data:/srv/media:ro
       - letsencrypt:/etc/letsencrypt:ro
       - certbot_www:/var/www/certbot:ro
+      - ./docker/web/entrypoint.sh:/admin-path-entrypoint.sh:ro
       - ./docker/web/templates:/etc/nginx/templates:ro
       - ./docker/web/snippets:/etc/nginx/snippets:ro
     depends_on:

@@ -1,5 +1,7 @@
 # Vhosts DAVENT — nginx:unprivileged procesa este template con envsubst al
-# arrancar (solo se sustituye ${PLATFORM_DOMAIN}; las $vars de nginx no se tocan).
+# arrancar (se sustituyen ${PLATFORM_DOMAIN} y ${ADMIN_PATH}; las $vars de
+# nginx no se tocan). ADMIN_PATH lo exporta docker/web/entrypoint.sh a
+# partir de ADMIN_URL (path ofuscado del admin, sin barras).
 # Puertos 8080/8443: el contenedor corre como uid 101 (sin root, sin
 # NET_BIND_SERVICE) y Docker mapea 80->8080 / 443->8443.
 
@@ -114,8 +116,11 @@ server {
         include /etc/nginx/snippets/proxy_api.conf;
     }
 
-    # Admin de Django vive detrás del mismo proxy.
-    location /admin/ {
+    # Admin de Django vive detrás del mismo proxy. El prefijo es el
+    # ADMIN_URL ofuscado (ADMIN_PATH vía entrypoint): un path fijo /admin/
+    # dejaba el panel inalcanzable en producción, donde E001 exige uno
+    # no obvio — todo lo demás caía al fallback del SPA.
+    location /${ADMIN_PATH}/ {
         include /etc/nginx/snippets/proxy_api.conf;
     }
 

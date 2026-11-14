@@ -3,7 +3,7 @@ from decimal import ROUND_HALF_UP, Decimal
 from django.db.models import Q
 from django.utils import timezone
 
-from StoreApp.domains.stores.services import plan_benefits_of
+from StoreApp.domains.stores.services import plan_benefits_of, profile_has_benefit
 
 """
 
@@ -56,7 +56,10 @@ def taxonomy_quota_message(kind):
 #=========================================
 def catalog_enabled(profile):
     """El catálogo se edita solo con suscripción activa (has_public_link)."""
-    return 'has_public_link' in plan_benefits_of(profile)
+    #Truthy, no key-presence: un PlanBenefit(enabled=False) también deja la
+    #clave en el dict — con `in` un plan sin el beneficio editaba catálogo
+    #mientras su web pública ya estaba en 404.
+    return profile_has_benefit(profile, 'has_public_link')
 #=========================================
 # DISCOUNTS (descuentos programados: vigencia evaluada al leer, nunca se
 # materializa en offer_price — sin worker ni tarea cron)

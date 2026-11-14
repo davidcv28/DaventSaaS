@@ -167,6 +167,11 @@ const accountForm = reactive({
   email: '', first_name: '', last_name: '', tax_condition: 'CF', business_name: '',
   document: '', province: '', city: '', address: '', phone: ''
 })
+//Step-up del cambio de correo: el backend exige current_password cuando el
+//email realmente cambia (robo de sesión de 5min ya no reasigna la cuenta).
+const accountPassword = ref('')
+const emailChanged = computed(() =>
+  accountForm.email.trim().toLowerCase() !== (auth.user?.email || '').trim().toLowerCase())
 const accountTouched = reactive({})
 const accountMsg = ref('')
 const accountErr = ref('')
@@ -259,6 +264,7 @@ function accountFieldErr(name) {
 
 async function saveAccount() {
   Object.keys(accountForm).forEach((k) => { accountTouched[k] = true })
+  accountTouched.current_password = true
   accountMsg.value = ''
   accountErr.value = ''
   if (Object.keys(accountErrors.value).length) return
@@ -266,6 +272,7 @@ async function saveAccount() {
   try {
     const res = await auth.updateAccount({
       email: accountForm.email.trim(),
+      current_password: accountPassword.value || undefined,
       profile: {
         first_name: accountForm.first_name.trim(),
         last_name: accountForm.last_name.trim(),
@@ -280,6 +287,7 @@ async function saveAccount() {
     })
     if (res.ok) {
       accountMsg.value = res.message
+      accountPassword.value = ''
       pushToast('Tus datos quedaron guardados ✓')
       await fillAccountForm()
     } else {
@@ -3755,7 +3763,9 @@ async function saveBilling() {
   billingBusy.value = true
   try {
     const res = await auth.updateAccount({
-      email: accountForm.email.trim() || auth.user?.email,
+      //La sección de facturación no edita el correo: manda el vigente para
+      //no disparar el step-up de password que pide el cambio de email.
+      email: auth.user?.email || accountForm.email.trim(),
       profile: {
         first_name: accountForm.first_name.trim(),
         last_name: accountForm.last_name.trim(),
@@ -3815,7 +3825,8 @@ async function planAction(p) {
         if (payments.billingRequired.length) openBilling({ kind: 'plan', plan: p })
         return
       }
-      checkoutTab.location.href = renewUrl
+      if (checkoutTab) checkoutTab.location.href = renewUrl
+      else window.location.href = renewUrl   //popup bloqueado: misma pestaña
       billing.notice = 'Abrimos Mercado Pago en otra pestaña para autorizar el débito automático.'
       startRenewalWatch()
       return
@@ -3828,7 +3839,8 @@ async function planAction(p) {
       if (payments.billingRequired.length) openBilling({ kind: 'plan', plan: p })
       return
     }
-    checkoutTab.location.href = url
+    if (checkoutTab) checkoutTab.location.href = url
+    else window.location.href = url   //popup bloqueado: misma pestaña
     billing.notice = 'Abrimos Mercado Pago en otra pestaña. Cuando el pago se acredite, tu plan se activa solo.'
     startCheckoutWatch(p.id)
   } finally {
@@ -3874,7 +3886,8 @@ async function activateAutoRenew() {
       if (payments.billingRequired.length) openBilling({ kind: 'renew' })
       return
     }
-    tab.location.href = url
+    if (tab) tab.location.href = url
+    else window.location.href = url   //popup bloqueado: misma pestaña
     billing.notice = 'Abrimos Mercado Pago en otra pestaña para autorizar el débito automático.'
     startRenewalWatch()
   } finally {
@@ -6809,6 +6822,7 @@ async function changePassword() {
           <AlertMessage v-if="geoErr" kind="error" :message="geoErr" />
           <form class="form-top" @submit.prevent="saveAccount" novalidate>
             <AppInput v-model="accountForm.email" label="Correo electrónico" name="acc_email" type="email" autocomplete="email" placeholder="Ej. alfredito2026@outlook.com" hint="Si lo cambiás, tenés que verificar el nuevo correo." required :error="accountFieldErr('email')" @blur="accountTouched.email = true" />
+            <AppInput v-if="emailChanged" v-model="accountPassword" label="Contraseña actual" name="acc_current_password" type="password" autocomplete="current-password" hint="Confirmala para cambiar tu correo (si entras con Google podés dejarla vacía)." :error="accountFieldErr('current_password')" @blur="accountTouched.current_password = true" />
             <div class="grid-2">
               <AppInput v-model="accountForm.first_name" label="Nombre" name="acc_first_name" autocomplete="given-name" placeholder="Escribe tu nombre" required :error="accountFieldErr('first_name')" @blur="accountTouched.first_name = true" />
               <AppInput v-model="accountForm.last_name" label="Apellido/s" name="acc_last_name" autocomplete="family-name" placeholder="Escribe tu/s apellido/s" required :error="accountFieldErr('last_name')" @blur="accountTouched.last_name = true" />

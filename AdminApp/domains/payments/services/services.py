@@ -2,7 +2,7 @@ import logging
 import math
 import re
 from datetime import timedelta
-from decimal import Decimal
+from decimal import Decimal, InvalidOperation
 
 import mercadopago
 import requests
@@ -100,7 +100,13 @@ def CreatePaymentQuery(validated_data : dict, mp_payment : dict = None) -> Payme
     #o el cargo prorrateado de un upgrade (pending_charge). Un pago a
     #precio completo con upgrade pendiente también es válido: cubre el
     #cambio a período completo y ApplyPendingPlanQuery reinicia las fechas.
-    amount              =   Decimal(str(mp_payment.get('transaction_amount', '0')))
+    try:
+        amount              =   Decimal(str(mp_payment.get('transaction_amount') or '0'))
+    except (InvalidOperation, ValueError):
+        #JSON con transaction_amount=null u otro no-numérico: sin guardia
+        #Decimal('None') explotaba -> 500 -> MP reintentaba el webhook
+        #para siempre sobre un cobro real.
+        raise serializers.ValidationError({'payment_id': 'El monto del pago es inválido.'})
     pending_plan        =   suscription.pending_plan_suscription
     plan_price          =   (pending_plan or suscription.plan_suscription).price
     expected_amount     =   suscription.pending_charge if suscription.pending_charge is not None else plan_price
@@ -164,7 +170,12 @@ def PaymentWebhookQuery(payment_id):
     if not payment:
         #El webhook puede llegar antes que cualquier redirect/confirmación: se registra igual.
         #external_reference = id de suscripción, seteado al crear la preferencia.
-        suscription     =   Suscription.objects.select_related('user', 'plan_suscription', 'pending_plan_suscription').filter(pk = mp_payment.get('external_reference')).first()
+        #Un external_reference no numérico (pref de otra integración, basura)
+        #hace ValueError en el lookup de pk -> 500 -> MP reintentaba eternamente.
+        try:
+            suscription     =   Suscription.objects.select_related('user', 'plan_suscription', 'pending_plan_suscription').filter(pk = mp_payment.get('external_reference')).first()
+        except (ValueError, TypeError):
+            return None
         if not suscription:
             return None
         return CreatePaymentQuery(
@@ -283,8 +294,10 @@ def _plan_paid_for(suscription, paid_amount):
     seen    =   {p.pk for p in plans}
     #El plan vigente puede ser trial histórico o un plan despublicado:
     #su precio también era aceptado — se incluye si falta en la lista.
+    #Un trial NUNCA se reactiva por pago (invariante del dominio): su
+    #precio histórico no puede acreditar nada.
     for extra in (suscription.pending_plan_suscription, suscription.plan_suscription):
-        if extra is not None and extra.pk not in seen:
+        if extra is not None and extra.pk not in seen and not extra.is_trial:
             plans.append(extra)
             seen.add(extra.pk)
     matches =   [p for p in plans if Decimal(str(p.price)) == amount]
@@ -322,9 +335,17 @@ def ApplyPendingPlanQuery(suscription, renew = False, paid_amount = None, paymen
     #pending_plan (el plan caro) por un pago del plan barato. Si el pago
     #fue de OTRO plan, pending_plan queda pendiente hasta que llegue un
     #cobro a su precio (prorrateo o precio completo).
+    #SIN FALLBACK A pending_plan: un pago PENDING (efectivo/pending de MP)
+    #se registra con el pending_charge de ESE momento y se acredita días
+    #después — si el usuario cambió el plan pendiente en el medio, el
+    #monto ya no es ni precio de plan ni el pending_charge vigente, y
+    #caer a pending_plan regalaba el plan caro por una prorrata vieja.
+    #En ese caso no se cambia de plan: el pago igual renueva el período
+    #del plan vigente y pending_plan espera un cobro a su precio.
     granted_plan        =   pending_plan
     if not prorated and paid_amount is not None:
-        granted_plan    =   _plan_paid_for(suscription, paid_amount) or pending_plan
+        matched         =   _plan_paid_for(suscription, paid_amount)
+        granted_plan    =   matched if matched is not None else None
     if granted_plan is not None:
         suscription.plan_suscription            =   granted_plan
         update_fields                          +=   ['plan_suscription']

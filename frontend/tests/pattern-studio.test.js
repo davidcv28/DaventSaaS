@@ -88,7 +88,7 @@ describe('patternStudioCss (documentos de diseño)', () => {
   })
 
   it('botones: estilo, borde, forma y tamaño sobre .btn y CTAs', () => {
-    expect(css).toContain('.btn, .svc-cta, .pdp-buy')
+    expect(css).toContain('.btn:not(.pdp-buy *), .svc-cta, .pdp-buy:is(a, button)')
     expect(css).toContain('background:transparent!important')
     expect(css).toContain('border-style:dotted!important')
     expect(css).toContain('border-width:2px!important')
@@ -108,7 +108,7 @@ describe('patternStudioCss (documentos de diseño)', () => {
 
   it('los roles van antes que las reglas de botones (buttons.size gana font-size)', () => {
     const roleAt = css.indexOf('h2{')
-    const btnAt = css.indexOf('.btn, .svc-cta')
+    const btnAt = css.indexOf('.btn:not(.pdp-buy *)')
     expect(roleAt).toBeGreaterThan(-1)
     expect(btnAt).toBeGreaterThan(roleAt)
   })

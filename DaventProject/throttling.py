@@ -2,6 +2,8 @@ import logging
 
 from rest_framework.throttling import AnonRateThrottle, UserRateThrottle
 
+from DaventProject.middleware import client_ip
+
 """
 
 Throttles compartidos entre dominios.
@@ -48,7 +50,10 @@ class PublicReadThrottle(AnonRateThrottle):
     scope   =   'public_read'
 
     def get_ident(self, request):
-        return _pinned_ident(super().get_ident(request), request)
+        #client_ip() aplica la regla de proxy confiable y descarta XFF en
+        #acceso directo (REMOTE_ADDR público): el ident ya no es rotable
+        #por header — _pinned_ident solo agregaba ruido sin cerrar el hueco.
+        return client_ip(request) or super().get_ident(request)
 
     def get_cache_key(self, request, view):
         ident   =   self.get_ident(request)
@@ -85,7 +90,10 @@ class _ResilientThrottleMixin:
             return None
 
     def get_ident(self, request):
-        return _pinned_ident(super().get_ident(request), request)
+        #Misma razón que PublicReadThrottle: client_ip() ya descarta XFF
+        #cuando el request no vino de un proxy interno — el bucket no se
+        #renueva rotando el header en acceso directo.
+        return client_ip(request) or super().get_ident(request)
 
 
 class ResilientAnonRateThrottle(_ResilientThrottleMixin, AnonRateThrottle):
@@ -94,3 +102,24 @@ class ResilientAnonRateThrottle(_ResilientThrottleMixin, AnonRateThrottle):
 
 class ResilientUserRateThrottle(_ResilientThrottleMixin, UserRateThrottle):
     pass
+
+
+class MpWebhookThrottle(_ResilientThrottleMixin, AnonRateThrottle):
+    """
+    Webhooks de Mercado Pago (suscripciones de la plataforma y de cada
+    tienda). La autenticación es la firma HMAC, no la sesión — pero los IPs
+    de egreso de MP son compartidos entre TODOS los vendedores: con el
+    throttle default 'anon' (100/día por IP) todas las notificaciones de
+    pago del sistema compartían un solo bucket y una tienda exitosa podía
+    dejar sin cupo a las demás (pagos acreditados tarde o nunca).
+
+    Bucket propio por (slug de tienda | 'platform', IP) con rate holgado:
+    el volumen legítimo por tienda es ínfimo y el de plataforma acotado —
+    un atacante sin el secreto solo quema su propia IP, nunca la de MP.
+    """
+    scope   =   'mp_webhook'
+
+    def get_cache_key(self, request, view):
+        kwargs  =   getattr(request, 'parser_context', {}).get('kwargs') or {}
+        slug    =   kwargs.get('slug') or 'platform'
+        return  'throttle_%s_%s_%s' % (self.scope, slug, self.get_ident(request))

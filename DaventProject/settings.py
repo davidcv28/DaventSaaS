@@ -87,6 +87,10 @@ REST_FRAMEWORK = {
         #lectura — ocupa un gthread ~50s. Bucket propio y acotado para
         #que un solo origen no pueda saturar los workers del API.
         'customer_notifications_stream': '240/hour',
+        #Mint del ticket SSE (~72/h por pestaña abierta): scope propio —
+        #compartir 'user' (1000/día) auto-429aba al comprador con la
+        #campana abierta ~14h junto al resto de su API.
+        'customer_notifications_ticket': '500/hour',
         'login': '5/min',
         #Renovación de JWT por cookie (cada pestaña renueva al expirar el access;
         #holgado para NAT oficinas pero acota brute-force del cookie de sesión).
@@ -113,6 +117,11 @@ REST_FRAMEWORK = {
         'email_verification': '5/hour',
         #Alta de cuentas (por IP): cada registro dispara un mail y un trial.
         'register': '10/hour',
+        #Webhooks de Mercado Pago (plataforma + tiendas): firmados por HMAC
+        #y con egreso compartido entre vendedores — bucket propio por
+        #slug/IP para que el volumen de una tienda no coma la cuota de las
+        #demás ni la de las suscripciones de la plataforma.
+        'mp_webhook': '1000/hour',
         #Login social (por IP): cada exchange pega llamadas al provider.
         'social_auth': '20/hour',
         #Editor de fondo de imágenes de producto (inferencia en CPU, por usuario).

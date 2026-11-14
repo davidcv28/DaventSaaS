@@ -221,7 +221,7 @@ class PatternRenderServiceTests(TestCase):
         self.assertIn('body, main{background:linear-gradient(120deg,#111,#333)!important}', css)
         self.assertIn('body::after{content:"";position:fixed;inset:0;', css)
         #Botones: estilo + borde + forma + tamaño.
-        self.assertIn('.btn, .svc-cta, .pdp-buy', css)
+        self.assertIn('.btn:not(.pdp-buy *), .svc-cta, .pdp-buy:is(a, button)', css)
         self.assertIn('border-style:dotted!important', css)
         self.assertIn('border-radius:999px!important', css)
         self.assertIn('min-height:54px!important', css)

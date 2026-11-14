@@ -201,7 +201,9 @@ def _id_list(raw):
     ids =   set()
     for piece in str(raw or '').split(','):
         piece   =   piece.strip()
-        if piece.isdigit():
+        #Longitud acotada: isdigit() acepta dígitos ilimitados y un int() de
+        #~5000 dígitos supera el límite de conversión de Python -> 500 público.
+        if piece.isdigit() and len(piece) <= 18:
             ids.add(int(piece))
         if len(ids) >= CATALOG_IDS_MAX:
             break
@@ -333,6 +335,12 @@ def _params_fingerprint(request):
         if name in ('min_price', 'max_price'):
             bound   =   _price_bound(raw)
             return str(bound) if bound is not None else ''
+        if name == 'sort':
+            #Canonizado a la whitelist: un ?sort=<junk> distinto por request
+            #mintaba una entrada de cache por string aunque el payload sea
+            #idéntico (fallback al ordering default) — cache flooding.
+            value   =   raw.strip()
+            return value if value in CATALOG_SORTS else ''
         return raw.strip()
     canonical =   tuple((name, _canon(name)) for name in CATALOG_FINGERPRINT_PARAMS)
     return hashlib.md5(repr(canonical).encode(), usedforsecurity=False).hexdigest()

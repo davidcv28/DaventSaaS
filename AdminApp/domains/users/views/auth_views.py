@@ -25,6 +25,7 @@ from AdminApp.domains.users.serializers import (
 from AdminApp.domains.users.services import (
     FRONTEND_URL,
     GOOGLE_CLIENT_ID,
+    ConfirmEmailChangeQuery,
     ConfirmPasswordResetQuery,
     RequestPasswordResetQuery,
     SocialAuthError,
@@ -220,6 +221,12 @@ def _require_csrf(request):
         raise PermissionDenied('CSRF token inválido o ausente')
 
 
+def _safe_log_text(value, limit = 80):
+    """Input de request para logs: sin chars de control — un username con
+    '\\n' forjaba líneas de log (log injection) en cada login fallido."""
+    return ''.join(ch if ch >= ' ' and ch != '\x7f' else '?' for ch in str(value or ''))[:limit]
+
+
 def _session_origin_allowed(request):
     """
     Anti login-CSRF: los endpoints que EMITEN la sesión por cookie
@@ -243,7 +250,24 @@ def _session_origin_allowed(request):
     if not host:
         return False
     if host == (request.get_host() or '').lower():
-        return True
+        #Mismo host NO alcanza: las webs de tienda (<slug>.<dominio> y
+        #dominios propios verificados) sirven esta misma URLconf — un XSS
+        #en una tienda los convertiría en origen "confiable" para plantar
+        #la sesión del panel. Solo el dominio de plataforma (y loopback
+        #de desarrollo) es origen propio válido.
+        bare    =   host.split(':')[0]
+        #testserver: hostname del test client de Django — en prod jamás
+        #resuelve (y ALLOWED_HOSTS no lo incluye), solo existe en tests.
+        if bare in ('localhost', '127.0.0.1', '::1', 'testserver'):
+            return True
+        platform=   set()
+        for domain in (getattr(settings, 'PUBLIC_DOMAIN', ''), getattr(settings, 'PLATFORM_DOMAIN', '')):
+            domain  =   (domain or '').strip().lower()
+            if not domain:
+                continue
+            platform.add(domain)
+            platform.add(domain[4:] if domain.startswith('www.') else f'www.{domain}')
+        return bare in platform
     trusted =   set()
     for o in list(getattr(settings, 'CORS_ALLOWED_ORIGINS', []) or []) + list(getattr(settings, 'CSRF_TRUSTED_ORIGINS', []) or []):
         trusted.add((urlparse(o).netloc or o).lower())
@@ -300,14 +324,14 @@ class CustomTokenObtainPairView(TokenObtainPairView):
             response = super().post(request, *args, **kwargs)
         except APIException as exc:
             logger.warning('Login rechazado (status=%s user=%s ip=%s)',
-                           exc.status_code, username, ip)
+                           exc.status_code, _safe_log_text(username), ip)
             if exc.status_code in (400, 401):
                 _register_login_failure(username, ip)
             raise
         if response.status_code != 200:
             #Auditoría de fuerza bruta: nunca se loguea la contraseña.
             logger.warning('Login rechazado (status=%s user=%s ip=%s)',
-                           response.status_code, username, ip)
+                           response.status_code, _safe_log_text(username), ip)
             #Solo credenciales inválidas cuentan: un 429 del throttle no es un
             #intento de adivinar y no debe alargar el lockout.
             if response.status_code in (400, 401):
@@ -382,6 +406,11 @@ class TokenLogoutView(APIView):
     throttle_classes   = [LogoutRateThrottle]
 
     def post(self, request):
+        #Mismo gate que login/refresh: sin él un POST cross-site (la cookie
+        #refresh es SameSite=Lax y no viaja, pero el Set-Cookie de borrado
+        #sí sale) forzaba el logout de la víctima — logout-CSRF.
+        if not _session_origin_allowed(request):
+            raise PermissionDenied('Origen no permitido.')
         refresh = request.COOKIES.get(REFRESH_COOKIE)
         if refresh:
             _require_csrf(request)
@@ -448,6 +477,20 @@ class VerifyEmailView(APIView):
             request.query_params.get('token', ''),
         )
         return HttpResponseRedirect(f"{FRONTEND_URL}/verificar-email?status={'ok' if ok else 'error'}")
+
+
+class ConfirmEmailChangeView(APIView):
+    """
+    GET /api/confirm-email-change/?token=... — el link firmado que llega al
+    correo ACTUAL de la cuenta aprueba el cambio de email pendiente
+    (cuentas sociales, sin password usable para step-up). Idempotente:
+    un link reusado con el email ya aplicado no tiene efectos extra.
+    """
+    permission_classes  =   [AllowAny]
+
+    def get(self, request):
+        ok      =   ConfirmEmailChangeQuery(request.query_params.get('token', ''))
+        return HttpResponseRedirect(f"{FRONTEND_URL}/dashboard?email_change={'ok' if ok else 'error'}")
 
 
 class VerifyEmailResendView(APIView):

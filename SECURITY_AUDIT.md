@@ -1340,3 +1340,61 @@ adjuntos, roster sin superusers/usernames), `legal/tests.py` +
   entrypoint, pero la verificación de valores vive en cada plataforma.
 - Idempotencia del reembolso MP del lado del proveedor sigue siendo
   needs_validation de run-1 (requiere MP real).
+
+## 10. Auditoría 2026-11-14 (ronda 8) — ola de ataque post-remediación (6 agentes)
+
+Segunda pasada de agentes sobre la remediación de la ronda 7: verificación
+de los fixes + hunting nuevo por dominio (SSE, payments, orders, auth de
+plataforma, catálogo/tiendas, chat/infra/frontend). Cada hallazgo fue
+re-verificado contra el código actual por el mismo agente antes de fixear.
+
+### 10.1 Confirmados → remediados
+
+| Hallazgo | Fix |
+|---|---|
+| `payments`: fallback `or pending_plan` en `ApplyPendingPlanQuery` — pago MP pendiente (efectivo) registrado con `pending_charge` viejo y acreditado tras cambiar el plan pendiente regalaba el plan caro por una prorrata (CRITICAL) | Sin fallback: monto que no es precio de plan ni `pending_charge` vigente no otorga plan (renueva el vigente y deja el pendiente esperando cobro a su precio). Test `test_stale_pending_charge_does_not_grant_new_pending_plan` |
+| `payments`: webhook 500-retry-storm — `transaction_amount=null` (`InvalidOperation`) y `external_reference` no numérico (`ValueError`) | Parseos guardados → `ValidationError`/`return None` |
+| `payments`: plan trial histórico pagable reactiva trial "no reactivable" | `_plan_paid_for` excluye `is_trial` de los extras |
+| `customers-sse`: leak del slot GLOBAL en el path 429 (rechazo por cupo por-customer devolvía las keys sin liberar → ~10 IPs agotaban el cupo global) | `_release_stream_slots` antes del 429 |
+| `customers`: logout no sellaba `tokens_valid_after` — access tokens (30 min) y tickets SSE seguían vivos post-logout (la SPA cierra sesión solo con cookies, sin Bearer) | Sello de epoch resuelto desde `request.customer` o del claim `customer_id` del refresh antes del blacklist |
+| `users`: cambio de email en cuentas sociales (sin password usable) no tenía step-up — access token robado (5 min) → reset al buzón del atacante | `UserUpdateSerializer.update`: sin password usable el cambio queda pendiente y se envía link firmado (`signing`, 24 h) al correo ACTUAL; `GET /api/confirm-email-change/` aplica + resetea `email_verified` + revoca sesiones. Response `email_change_pending` + frontend muestra el mensaje correcto |
+| `orders`: membresía suspendida no frenaba creación de pedidos | 403 `MembershipSuspended` antes del serializer |
+| `customers-auth`: throttle register/social encadenable por `customer.pk` → cuentas ilimitadas | `_IpOnlyCustomerThrottle` (ident por IP siempre) |
+| `catalog`: `?sort=<junk>` no canonizado en la huella → cache flooding del payload público | `sort` canonizado a `CATALOG_SORTS` en `_canon` |
+| `catalog`: `_id_list` `int()` sobre dígitos ilimitados → 500 público | Guard `len(piece) <= 18` |
+| `catalog`: `catalog_enabled` por key-presence (plan con benefit `enabled=False` editaba catálogo con web oscura) | `profile_has_benefit` (truthiness) |
+| `suscriptions`: `QuerySet.update()` no bump-eaba el epoch del payload público | `bump_public_owner` por perfil en el bulk update |
+| `legal`: `ContentReportRateThrottle` 5/h también throttlaba list/retrieve/update del staff | `get_throttles` solo para `create` |
+| `chat`: `messages?after=-1`/`after=1` devolvía historial sin tope | `after > 0` + cap `MESSAGES_PAGE_SIZE*4` |
+| `infra`: `DEBUG=True` deployable con `DEPLOY_CHECK_STRICT=0` (Render) | entrypoint aborta siempre salvo `ALLOW_DEBUG_DEPLOY=1` explícita; la variable entra a `envguard.DANGEROUS_NAMES` |
+| `infra`: `ALLOW_DEBUG_DEPLOY` sin flag en envguard | ídem |
+| `frontend`: `sandbox_init_point` de MP aceptado en producción | solo en builds no-PROD |
+| `frontend`: `checkoutTab.location.href` null-deref con popup bloqueado | fallback `window.location` en los 3 flujos de checkout MP |
+| `infra`: binario Caddy flotante (`xcaddy build` sin versión) | `xcaddy build v2.11.4` pineado |
+
+### 10.2 Verificado como no-vulnerable / por diseño (re-checks)
+
+- SSE: replay JTI (TOCTOU atómico), cross-store ticket, spoofing XFF en
+  throttles, gzip smuggling, fugas de payload, `Last-Event-ID`, slowloris.
+- Orders: reserva de stock residual (5 pending × 100 × 50 items por cuenta
+  verificada, ventana 48 h) — trade-off blando acotado por el throttle de
+  registro por IP; captcha aritmético = fricción scriptable, acotado.
+- Auth: `_revoke_sessions` SELECT→bulk_create no atómico y email no
+  DB-unique (bajo); throttles fail-open en cache (política aceptada,
+  login fail-closed); `mercadolibre.*` en allowlist MP (informativo).
+- Chat: cuota staff-global 200 lifetime + TOCTOU (bajo, by design).
+- `public_contact` ignora `show_contact` en canales directos
+  (`/r/whatsapp/` etc.) — decisión de diseño consistente en todas las
+  superficies; el form de contacto sí se apaga.
+
+### 10.3 Residuales honestos
+
+- `NUM_TRUSTED_PROXIES` debe igualar la cantidad real de proxies que
+  agregan XFF — verificable solo en el deploy.
+- Reembolso/chargeback de pago prorrateado no revierte `plan_suscription`
+  (acceso hasta `end_date`, ≤30 días; codificado como comportamiento en
+  `test_refund_of_prorated_upgrade_keeps_period` — decisión de producto).
+- Planes con precio idéntico son indistinguibles para el binding
+  monto→plan (config-dependent).
+- `django.request` loguea el path decodificado en 500s sin sanitizar
+  (bajo — el middleware propio sí sanitiza su línea).

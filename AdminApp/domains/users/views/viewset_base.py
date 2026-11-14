@@ -55,11 +55,15 @@ class UserBaseViewSet(viewsets.GenericViewSet):
         serializer       =  self.get_serializer(instance, data=request.data, context={'request': request}, partial=True)
         serializer.is_valid(raise_exception=True)
         serializer.save()
-        return Response(
-            {
-                'Exito' :   message
-            }, status=status.HTTP_200_OK
-        )
+        #Cambio de email en cuenta social (sin password): no se aplicó —
+        #quedó pendiente del link de confirmación enviado al correo actual.
+        email_pending    =   getattr(serializer, 'email_change_pending', False)
+        if email_pending:
+            message =   'Te enviamos un enlace de confirmación a tu correo actual. El cambio se aplica cuando lo abras.'
+        payload         =   {'Exito': message}
+        if email_pending:
+            payload['email_change_pending'] =   True
+        return Response(payload, status = status.HTTP_200_OK)
 
     #///PARTIAL UPDATE METHOD///
     def partial_update(self, request, *args, **kwargs):

@@ -28,6 +28,14 @@ class ContentReportRateThrottle(ResilientUserRateThrottle):
 class ContentReportBaseViewSet(viewsets.GenericViewSet):
     viewset_config  =   {}
     throttle_classes =  [ContentReportRateThrottle]
+    def get_throttles(self):
+        #La cuota 'content_report' (5/h) es para el create PÚBLICO — cada
+        #reporte dispara un mail a legal. Sin este override el staff que
+        #revisaba >5 reportes/hora se auto-429aba en list/retrieve/update.
+        if self.action == 'create':
+            return [ContentReportRateThrottle()]
+        from rest_framework.settings import api_settings
+        return [throttle() for throttle in api_settings.DEFAULT_THROTTLE_CLASSES]
     def get_action_key(self):
         if self.action == 'create':
             return 'create'

@@ -122,6 +122,7 @@ class SupportChatViewSet(viewsets.GenericViewSet):
             after   =   int(request.query_params.get('after', 0) or 0)
         except (TypeError, ValueError):
             after   =   0
+        after   =   max(0, after)   #negativo == "todo el historial" sin tope
         messages    =   messages_payload(request.user, thread, after = after)
         return Response({'messages': ChatMessageSerializer(messages, many = True, context = {'request': request}).data})
 

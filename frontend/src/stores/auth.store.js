@@ -155,12 +155,12 @@ export const useAuthStore = defineStore('auth', () => {
 
   // Correo (/user/me/) + perfil fiscal (/profile/me/) van a endpoints distintos.
   // Se disparan en paralelo y se consolidan los errores por campo.
-  async function updateAccount({ email, profile }) {
+  async function updateAccount({ email, profile, current_password }) {
     status.value = 'loading'
     lastError.value = ''
     fieldErrors.value = {}
     const results = await Promise.allSettled([
-      authApi.updateUser({ email }),
+      authApi.updateUser({ email, ...(current_password ? { current_password } : {}) }),
       authApi.updateProfile(profile)
     ])
     const errors = {}
@@ -177,6 +177,14 @@ export const useAuthStore = defineStore('auth', () => {
     if (failed) {
       if (!lastError.value) lastError.value = 'Algunos datos no se pudieron guardar. Revisá los campos marcados.'
       return { ok: false }
+    }
+    //Cuenta social: el backend no aplica el email — manda link de
+    //confirmación al correo actual (email_change_pending). El mensaje
+    //tiene que decirlo, no "guardado".
+    const userResult   =   results[0].status === 'fulfilled' ? results[0].value : null
+    if (userResult?.email_change_pending) {
+      await fetchMe({ force: true }).catch(() => {})
+      return { ok: true, message: 'Te enviamos un enlace de confirmación a tu correo actual. El cambio se aplica cuando lo abras.' }
     }
     await fetchMe({ force: true }).catch(() => {})
     return { ok: true, message: 'Tus datos se actualizaron correctamente' }

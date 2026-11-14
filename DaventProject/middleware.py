@@ -47,16 +47,28 @@ def client_ip(request) -> str:
     el primero — el cliente puede inyectar ese header y falsear la IP con la
     que se cuenta el rate-limit (bypass de fuerza bruta). Sin proxies
     confiables el XFF se ignora por completo y manda REMOTE_ADDR.
+
+    Además el XFF solo se honra cuando REMOTE_ADDR es una IP privada
+    (red docker/Render): si la app recibe el request directo desde una IP
+    pública, el header es 100% del cliente y rotarlo renovaba buckets de
+    throttle, lockouts de login y la IP de auditoría en cada request.
     """
+    remote      =   _valid_ip(request.META.get('REMOTE_ADDR') or '')
+    remote_is_internal   =   False
+    if remote:
+        try:
+            remote_is_internal   =   ipaddress.ip_address(remote).is_private
+        except ValueError:
+            remote_is_internal   =   False
     proxies     =   _trusted_proxies()
     forwarded   =   request.META.get('HTTP_X_FORWARDED_FOR') or ''
-    if proxies and forwarded:
+    if proxies and forwarded and remote_is_internal:
         parts   =   [p.strip() for p in forwarded.split(',') if p.strip()]
         if len(parts) >= proxies:
             ip  =   _valid_ip(parts[-proxies])
             if ip:
                 return ip
-    return _valid_ip(request.META.get('REMOTE_ADDR') or '') or '-'
+    return remote or '-'
 
 
 class ContentSecurityPolicyMiddleware:

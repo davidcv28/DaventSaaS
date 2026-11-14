@@ -36,6 +36,7 @@ from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
+from DaventProject.throttling import MpWebhookThrottle
 from StoreApp.domains.storepayments.services.webhook import StoreMpWebhookQuery
 from StoreApp.domains.stores.models import Store
 
@@ -111,6 +112,10 @@ class StoreMpWebhookView(APIView):
     #Sin sesión: la autenticación ES la firma HMAC (un JWT inválido no
     #debe convertir una notificación legítima de MP en 401).
     authentication_classes  =   []
+    #Throttle propio por slug+IP: el default 'anon' (100/día) lo comparten
+    #todos los vendedores vía los IPs de egreso de MP — una tienda activa
+    #podía dejar sin cupo las notificaciones de pago del resto.
+    throttle_classes        =   [MpWebhookThrottle]
     def post(self, request, slug):
         #Tamaño acotado: Content-Length y body real (un cliente puede
         #mentir el header; request.body queda cacheado para DRF).

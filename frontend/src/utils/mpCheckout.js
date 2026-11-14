@@ -16,8 +16,12 @@ export function isMpCheckoutUrl(url) {
 }
 
 // URL de checkout desde la respuesta de MP: prefiere checkout_url y
-// cae a init_point/sandbox_init_point (init_point es el nombre que usa
-// la API de preapproval; checkout_url el de payments).
+// cae a init_point (init_point es el nombre que usa la API de
+// preapproval; checkout_url el de payments). sandbox_init_point SOLO en
+// builds de desarrollo: un checkout de testing jamás debe recibir un
+// redirect en producción.
 export function mpCheckoutUrl(data) {
-  return data?.checkout_url || data?.init_point || data?.sandbox_init_point || null
+  const live = data?.checkout_url || data?.init_point || null
+  if (live) return live
+  return import.meta.env?.PROD ? null : (data?.sandbox_init_point || null)
 }

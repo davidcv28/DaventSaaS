@@ -46,9 +46,14 @@ class SuscriptionQuerySet(models.QuerySet):
     def update(self, **kwargs):
         #QuerySet.update() bypassa save(): la invalidación corre acá igual
         #para que un downgrade/upgrade por bulk no sirva el plan viejo.
+        #También el epoch del payload público: sin él un bulk update dejaba
+        #benefits stale hasta PUBLIC_CACHE_TTL en webs que siguen públicas.
         profiles    =   list(self.values_list('user_id', flat = True))
         updated     =   super().update(**kwargs)
         _bust_benefits_cache(*profiles)
+        from StoreApp.domains.stores.public_cache import bump_public_owner
+        for user_id in set(profiles):
+            bump_public_owner(user_id)
         return updated
 #=========================================
 #SUSCRIPTION MODEL

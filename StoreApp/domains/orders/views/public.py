@@ -17,6 +17,7 @@ import uuid
 
 from django.db import transaction
 from django.http import Http404
+from django.utils import timezone
 from rest_framework import serializers, status
 from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
@@ -31,7 +32,8 @@ from StoreApp.domains.customers.authentication import (
     CustomerJWTAuthentication,
     IsCustomer,
 )
-from StoreApp.domains.customers.models import CustomerAddress
+from StoreApp.domains.customers.models import CustomerAddress, StoreMembership
+from StoreApp.domains.customers.services.customers import MembershipSuspended
 from StoreApp.domains.orders.models import Order, PaymentProof
 from StoreApp.domains.orders.serializers import OrderCreateSerializer
 from StoreApp.domains.orders.services.checkout import (
@@ -147,6 +149,12 @@ class PublicOrderCreateView(APIView):
         #spamear pedidos falsos que nunca se pagan.
         if not getattr(customer, 'email_verified', False):
             return Response({'detail': 'Verificá tu correo electrónico para poder comprar.'}, status = status.HTTP_403_FORBIDDEN)
+        #Suspensión del dueño: ensure_membership solo corre en login/register
+        #con store_slug — sin este check un cliente suspendido pedía JWT sin
+        #store_slug y seguía creando pedidos (reserva de stock incluida).
+        membership  =   StoreMembership.objects.filter(customer = customer, store = store).first()
+        if membership is not None and membership.status == StoreMembership.STATUS_SUSPENDED:
+            raise MembershipSuspended()
         serializer  =   OrderCreateSerializer(data = request.data)
         serializer.is_valid(raise_exception = True)
         data        =   serializer.validated_data
@@ -236,6 +244,11 @@ class PublicOrderProofView(APIView):
         #solo por webhook y un pedido pago/cerrado no admite comprobante.
         if order.status != Order.Status.PENDING_PAYMENT or order.payment_method == Order.PaymentMethod.MP:
             return Response({'detail': 'Este pedido no admite comprobante de pago.'}, status = status.HTTP_400_BAD_REQUEST)
+        #Un pedido vencido ya no admite pago: sin este check el comprobante
+        #se aceptaba en la ventana entre expires_at y el lazy-expire del
+        #cron (quota de storage + objeto R2 consumidos por nada).
+        if order.expires_at is not None and order.expires_at <= timezone.now():
+            return Response({'detail': 'Este pedido expiró. Generá uno nuevo para pagar.'}, status = status.HTTP_400_BAD_REQUEST)
         #First-write-wins: el tracking_token es una credencial pública
         #(viaja en mails/WhatsApp) — si se permitiera reemplazar el
         #comprobante, cualquier poseedor del link podría pisar la

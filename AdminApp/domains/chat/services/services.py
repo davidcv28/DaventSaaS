@@ -94,8 +94,12 @@ def messages_payload(user : User, thread : ChatThread, after : int = 0):
     #La lectura marca la contraparte como leida para este usuario.
     mark_counterpart_read(user, thread)
     qs      =   thread.messages.select_related('sender').order_by('created_at')
-    if after:
-        return qs.filter(id__gt = after)
+    if after and after > 0:
+        #Tope en incremental: after=1 (o negativo que esquivaba el else)
+        #devolvía TODO el historial sin límite — el cliente propio, pero
+        #payload/egress no acotado. Con >page_size el front se pone al día
+        #en el siguiente poll (avanza last_id con lo recibido).
+        return qs.filter(id__gt = after).order_by('id')[:MESSAGES_PAGE_SIZE * 4]
     return qs.order_by('-created_at')[:MESSAGES_PAGE_SIZE][::-1]
 
 

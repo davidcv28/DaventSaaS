@@ -66,6 +66,10 @@ LIST_LIMIT          =   50
 #gthread ~50s — sin estos topes un solo cliente saturaba todos los
 #workers del API (ver customers-sse:worker-exhaustion).
 STREAM_MAX_PER_CUSTOMER =   3
+#Cupo GLOBAL de streams simultáneos: los topes por customer (3) y por IP
+#(~3.3 sostenidos) son multiplicativos — ~4 IPs + 4 cuentas alcanzaban a
+#arrendar los 12 gthreads del API. El global corta el agregado.
+STREAM_MAX_GLOBAL       =   10
 
 
 class CustomerStreamThrottle(PublicReadThrottle):
@@ -96,23 +100,33 @@ def _claim_ticket(jti):
 
 
 def _acquire_stream_slot(customer_id):
-    """Reclama un slot libre con cache_add atómico (SET NX): máximo
-    STREAM_MAX_PER_CUSTOMER streams vivos por customer. Devuelve
-    (permitido, slot_key): slot_key None cuando el cache está caído —
-    fail-open igual que los throttles, no hay forma de contar sin él."""
+    """Reclama un slot global y uno por-customer con cache_add atómico
+    (SET NX). Devuelve (permitido, keys): keys es la lista de claves
+    tomadas — el caller las libera todas al cerrar (o si la segunda fase
+    falla). Cache caído -> fail-open igual que los throttles."""
+    keys    =   []
     try:
+        for i in range(STREAM_MAX_GLOBAL):
+            gkey    =   f'sse:stream:global:{i}'
+            if cache_add_strict(gkey, 1, STREAM_MAX_SECONDS + 30):
+                keys.append(gkey)
+                break
+        else:
+            return False, []
         for i in range(STREAM_MAX_PER_CUSTOMER):
-            key =   f'sse:stream:{customer_id}:{i}'
-            if cache_add_strict(key, 1, STREAM_MAX_SECONDS + 30):
-                return True, key
-        return False, None
+            ckey    =   f'sse:stream:{customer_id}:{i}'
+            if cache_add_strict(ckey, 1, STREAM_MAX_SECONDS + 30):
+                keys.append(ckey)
+                return True, keys
+        return False, keys
     except CacheUnavailable:
-        return True, None
+        _release_stream_slots(keys)
+        return True, []
 
 
-def _release_stream_slot(slot_key):
-    if slot_key:
-        cache_delete(slot_key)
+def _release_stream_slots(keys):
+    for key in keys or ():
+        cache_delete(key)
 
 
 def _unread_count(customer_id, store_slug = ''):
@@ -170,6 +184,14 @@ class CustomerNotificationReadView(APIView):
         return Response({'ok': True, 'unread': _unread_count(customer.pk)}, status = status.HTTP_200_OK)
 
 
+class CustomerStreamTicketThrottle(CustomerApiThrottle):
+    """Scope propio para el mint del ticket de stream: el POST que lo
+    emite corre ~72/hora por pestaña abierta y montaba el bucket 'user'
+    de 1000/día compartido con TODO el resto de la API del comprador —
+    una pestaña abierta ~14h se auto-429aba (self-DoS)."""
+    scope   =   'customer_notifications_ticket'
+
+
 class CustomerNotificationStreamTicketView(APIView):
     """
     POST /api/customer/notifications/stream-ticket/ {store} →
@@ -178,9 +200,14 @@ class CustomerNotificationStreamTicketView(APIView):
     """
     authentication_classes  =   [CustomerJWTAuthentication]
     permission_classes      =   [IsCustomer]
-    throttle_classes        =   [CustomerApiThrottle]
+    throttle_classes        =   [CustomerStreamTicketThrottle]
     def post(self, request):
         slug    =   ((request.data or {}).get('store') or '').strip().lower()
+        #Slug resoluble: un slug inventado firmaba 's' pero dejaba
+        #store_id=None en el stream -> notificaba TODAS las tiendas del
+        #comprador (la lista con el mismo slug devolvía vacío — divergían).
+        if slug and not Store.objects.filter(slug = slug).exists():
+            return Response({'detail': 'Tienda no encontrada.'}, status = status.HTTP_404_NOT_FOUND)
         #jti de un solo uso + epoch de sesión: el ticket no es un bearer
         #replayable — abre UN stream y muere si la sesión se revocó.
         payload =   {
@@ -243,13 +270,19 @@ class CustomerNotificationStreamView(APIView):
             ticket_epoch =   0
         if ticket_epoch != _session_epoch(customer):
             return Response({'detail': 'Sesión revocada.'}, status = status.HTTP_401_UNAUTHORIZED)
+        #Cupo de streams (global + por customer) ANTES de quemar el jti:
+        #un 429 por slots llenos no debe invalidar un ticket reutilizable.
+        allowed, slot_keys  =   _acquire_stream_slot(customer.pk)
+        if not allowed:
+            #El path de rechazo puede venir con el slot GLOBAL ya tomado
+            #(_acquire devuelve las keys parciales): sin liberarlas cada
+            #429 clavaba un slot ~80s y ~10 IPs agotaban el cupo global.
+            _release_stream_slots(slot_keys)
+            return Response({'detail': 'Demasiadas conexiones simultáneas.'}, status = status.HTTP_429_TOO_MANY_REQUESTS)
         #Un solo uso por jti: el mismo ticket no abre dos streams.
         if not data.get('j') or not _claim_ticket(data['j']):
+            _release_stream_slots(slot_keys)
             return Response({'detail': 'Ticket ya utilizado.'}, status = status.HTTP_401_UNAUTHORIZED)
-        #Cupo de streams concurrentes por customer.
-        allowed, slot_key  =   _acquire_stream_slot(customer.pk)
-        if not allowed:
-            return Response({'detail': 'Demasiadas conexiones simultáneas.'}, status = status.HTTP_429_TOO_MANY_REQUESTS)
         store_id    =   None
         if slug:
             store_id    =   Store.objects.filter(slug = slug).values_list('pk', flat = True).first()
@@ -259,7 +292,7 @@ class CustomerNotificationStreamView(APIView):
         except (TypeError, ValueError):
             last_id =   0
         response    =   StreamingHttpResponse(
-            self._events(customer.pk, store_id, last_id, slot_key),
+            self._events(customer.pk, store_id, last_id, slot_keys, ticket_epoch),
             content_type    =   'text/event-stream',
         )
         response['Cache-Control']       =   'no-cache'
@@ -267,7 +300,7 @@ class CustomerNotificationStreamView(APIView):
         response['X-Accel-Buffering']   =   'no'
         return response
 
-    def _events(self, customer_id, store_id, last_id, slot_key = None):
+    def _events(self, customer_id, store_id, last_id, slot_keys = None, epoch = 0):
         encoder     =   JSONEncoder()
         deadline    =   time.monotonic() + STREAM_MAX_SECONDS
         next_ping   =   time.monotonic() + PING_SECONDS
@@ -291,9 +324,11 @@ class CustomerNotificationStreamView(APIView):
                     next_ping   =   time.monotonic() + PING_SECONDS
                     yield   ': ping\n\n'
                     #Re-check de sesión dentro del stream: el epoch del
-                    #ticket solo se valida al conectar — un logout o una
-                    #desactivación a mitad de stream debe cortarlo.
-                    if not Customer.objects.filter(pk = customer_id, is_active = True).exists():
+                    #ticket solo se valida al conectar — una revocación
+                    #(tokens_valid_after) o desactivación a mitad de
+                    #stream debe cortarlo, no esperar al deadline.
+                    current =   Customer.objects.filter(pk = customer_id, is_active = True).only('tokens_valid_after').first()
+                    if current is None or _session_epoch(current) != epoch:
                         yield 'event: bye\ndata: {}\n\n'
                         return
                 time.sleep(min(POLL_SECONDS, max(0.5, deadline - time.monotonic())))
@@ -303,4 +338,4 @@ class CustomerNotificationStreamView(APIView):
         except (BrokenPipeError, ConnectionResetError, GeneratorExit):
             return
         finally:
-            _release_stream_slot(slot_key)
+            _release_stream_slots(slot_keys)

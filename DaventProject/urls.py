@@ -53,6 +53,7 @@ from drf_spectacular.views import (
 from rest_framework_simplejwt.views import TokenVerifyView
 
 from AdminApp.domains.users.views.auth_views import (
+    ConfirmEmailChangeView,
     CookieTokenRefreshView,
     CustomTokenObtainPairView,
     GoogleAuthView,
@@ -118,6 +119,7 @@ urlpatterns = [
     path('api/password-reset/confirm/', PasswordResetConfirmView.as_view(), name='password_reset_confirm'),
     path('api/verify-email/', VerifyEmailView.as_view(), name='verify_email'),
     path('api/verify-email/resend/', VerifyEmailResendView.as_view(), name='verify_email_resend'),
+    path('api/confirm-email-change/', ConfirmEmailChangeView.as_view(), name='confirm_email_change'),
     #=================================
     # CONFIG PÚBLICA DEL FRONTEND (servida en runtime — no horneada en el
     # bundle: el client ID de Google sale del env del backend, nunca del

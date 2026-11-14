@@ -7,7 +7,10 @@ from django.contrib.auth.tokens import (
     PasswordResetTokenGenerator,
     default_token_generator,
 )
+from django.core import signing
 from django.core.mail import EmailMultiAlternatives
+from django.core.validators import validate_email
+from django.core.exceptions import ValidationError as DjangoValidationError
 from django.db import IntegrityError, transaction
 from django.utils import timezone
 from django.utils.crypto import constant_time_compare
@@ -360,6 +363,73 @@ def VerifyEmailQuery(uid_b64 : str, token : str) -> bool:
         profile.email_verified    =   True
         profile.email_verified_at =   timezone.now()
         profile.save(update_fields = ['email_verified', 'email_verified_at'])
+    return True
+#=================================
+# EMAIL CHANGE — cuentas sin password usable (login social)
+#=================================
+#Una cuenta Google no tiene contraseña que pedir como step-up: el único
+#secreto que el atacante con un access token robado NO tiene es el buzón
+#actual. El cambio de email queda pendiente hasta que el dueño abra el
+#link firmado que se manda a su correo vigente.
+EMAIL_CHANGE_SALT      =   'davent.users.email-change'
+EMAIL_CHANGE_TIMEOUT   =   24 * 3600
+
+def SendEmailChangeConfirmationQuery(user : User, new_email : str) -> None:
+    if not (user.email or '').strip():
+        return
+    token   =   signing.dumps({'u': user.pk, 'e': new_email}, salt = EMAIL_CHANGE_SALT, compress = True)
+    link    =   f'{BACKEND_URL}/api/confirm-email-change/?token={token}'
+    name    =   escape(_display_name(user))
+    new_email   =   escape(new_email)
+    _send_branded_mail(
+        user,
+        subject     =   'Confirmá el cambio de correo — DAVENT',
+        body        =   (
+            f'Hola {_display_name(user)},\n\n'
+            f'Recibimos un pedido para cambiar el correo de tu cuenta DAVENT a {new_email}.\n\n'
+            f'Para aprobarlo abrí este enlace: {link}\n\n'
+            f'El enlace vence en 24 horas. Si no pediste el cambio, ignorá este correo: tu correo no se modifica.'
+        ),
+        html        =   _mail_html(
+            title       =   'Confirmá el cambio de correo',
+            intro       =   f'Hola {name}, recibimos un pedido para cambiar el correo de tu cuenta a <strong>{new_email}</strong>. Aprobarlo requiere que abras el enlace desde este buzón.',
+            button_label=   'Confirmar cambio de correo',
+            link        =   link,
+            note        =   'El enlace vence en 24 horas. Si no pediste el cambio, ignorá este correo: tu correo no se modifica.',
+        ),
+    )
+
+def ConfirmEmailChangeQuery(token : str) -> bool:
+    """Aplica el email pendiente si la firma es válida y el correo nuevo
+    sigue siendo libre. Idempotente: re-click sobre el mismo link con el
+    email ya aplicado devuelve True sin efectos extra."""
+    try:
+        data        =   signing.loads(token or '', salt = EMAIL_CHANGE_SALT, max_age = EMAIL_CHANGE_TIMEOUT)
+        user        =   User.objects.select_related('profile').get(pk = data['u'])
+        new_email   =   str(data.get('e') or '').strip().lower()
+        validate_email(new_email)
+    except (signing.BadSignature, User.DoesNotExist, DjangoValidationError, TypeError, ValueError, KeyError):
+        return False
+    old_email   =   str(user.email or '').strip().lower()
+    if new_email == old_email:
+        return True
+    #El correo destino no puede estar tomado por OTRA cuenta (email no es
+    #unique a nivel DB — la unicidad se enforcea acá, iexact como el alta).
+    if User.objects.filter(email__iexact = new_email).exclude(pk = user.pk).exists():
+        return False
+    user.email  =   new_email
+    user.save(update_fields = ['email'])
+    profile     =   getattr(user, 'profile', None)
+    if profile:
+        #El correo nuevo no está verificado: email_verified atestigua la
+        #dirección ACTUAL — cambiarla lo vuelve a dejar pendiente.
+        profile.email_verified      =   False
+        profile.email_verified_at   =   None
+        profile.save(update_fields = ['email_verified', 'email_verified_at'])
+    #Cierra todas las sesiones: el cambio de identidad no puede dejar
+    #vivos tokens emitidos para el correo anterior.
+    _revoke_sessions(user)
+    logger.info('Cambio de correo confirmado por link: user_id=%s', user.pk)
     return True
 #=================================
 # PHONE VERIFICATION — retirada

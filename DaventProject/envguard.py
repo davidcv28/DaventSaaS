@@ -29,6 +29,9 @@ DANGEROUS_NAMES = frozenset({
     'DJANGO_SETTINGS_MODULE',
     'AUTO_SEED',
     'DJANGO_SUPERUSER_PASSWORD',
+    #Escape hatch del entrypoint: puesta en un entorno productivo
+    #re-habilita DEBUG=True aunque el deploy check lo detecte.
+    'ALLOW_DEBUG_DEPLOY',
 })
 
 #Placeholders que nunca son una clave real (los del .env.example, CI y dev).

@@ -16,6 +16,7 @@ from urllib.parse import urlparse
 
 from django.conf import settings
 from django.db import transaction
+from django.utils import timezone
 from rest_framework import status
 from rest_framework.exceptions import PermissionDenied
 from rest_framework.permissions import AllowAny
@@ -180,7 +181,21 @@ class CustomerRateThrottle(_ResilientThrottleMixin, SimpleRateThrottle):
 class CustomerLoginThrottle(CustomerRateThrottle):
     scope   =   'login'
 
-class CustomerRegisterThrottle(CustomerRateThrottle):
+class _IpOnlyCustomerThrottle(CustomerRateThrottle):
+    """
+    Keyea siempre por IP, nunca por customer.pk: los endpoints que emiten
+    la sesión de una cuenta RECIÉN creada (register, social) respondían
+    con el JWT nuevo — portando ese Bearer en el request siguiente el
+    throttle keyeaba por la cuenta anterior (bucket fresco por registro)
+    y el límite de altas por IP quedaba eludido por encadenamiento.
+    """
+    def get_cache_key(self, request, view):
+        ident   =   self.get_ident(request)
+        if not ident:
+            return None
+        return self.cache_format % {'scope': self.scope, 'ident': ident}
+
+class CustomerRegisterThrottle(_IpOnlyCustomerThrottle):
     scope   =   'register'
 
 class CustomerRefreshThrottle(CustomerRateThrottle):
@@ -201,7 +216,9 @@ class CustomerPasswordResetConfirmThrottle(CustomerRateThrottle):
 class CustomerVerifyEmailThrottle(CustomerRateThrottle):
     scope   =   'email_verification'
 
-class CustomerSocialAuthThrottle(CustomerRateThrottle):
+class CustomerSocialAuthThrottle(_IpOnlyCustomerThrottle):
+    #Mismo motivo que register: el exchange puede crear la cuenta y
+    #devuelve su JWT — con key por customer.pk se encadenaban altas.
     scope   =   'social_auth'
 
 class CustomerPublicReadThrottle(CustomerRateThrottle):
@@ -381,11 +398,31 @@ class CustomerLogoutView(APIView):
             _require_csrf(request)
         else:
             refresh =   request.data.get('refresh')
+        #Identidad para el sello de epoch: el Bearer si vino, si no el
+        #claim customer_id del refresh — la SPA cierra sesión SOLO con
+        #cookies (el access vive en memoria y no viaja en este request).
+        #Se resuelve ANTES del blacklist: parsear un token ya blacklisteado
+        #falla y el customer quedaría sin identificar.
+        customer    =   getattr(request, 'customer', None)
+        if customer is None and refresh:
+            try:
+                cid =   parse_refresh_token(refresh).get('customer_id')
+                if cid:
+                    customer    =   Customer.objects.filter(pk = cid, is_active = True).first()
+            except Exception:
+                customer    =   None
         if refresh:
             try:
                 parse_refresh_token(refresh).blacklist()
             except Exception:
                 pass  #token inválido/expirado: las cookies se limpian igual
+        #Sellar tokens_valid_after: el blacklist solo mata el refresh —
+        #sin el sello los access tokens vivos (hasta 30 min) y los tickets
+        #SSE emitidos antes del logout seguían operativos. Sello = cierre
+        #de sesión en TODOS los dispositivos del comprador.
+        if customer is not None:
+            customer.tokens_valid_after   =   timezone.now().replace(microsecond = 0)
+            customer.save(update_fields = ['tokens_valid_after'])
         response    =   Response({'detail': 'Sesión cerrada.'}, status = status.HTTP_200_OK)
         _clear_session_cookies(response)
         return response

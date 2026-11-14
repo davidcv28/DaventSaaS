@@ -268,6 +268,21 @@ class CustomerAuthFlowTests(TestCase):
         again   =   self.client.post(REFRESH_URL, {}, format = 'json', HTTP_X_CSRFTOKEN = csrf)
         self.assertEqual(again.status_code, 401)
 
+    def test_logout_seals_tokens_valid_after(self):
+        #Regresión customers-sse F1: el blacklist solo mata el refresh —
+        #sin sellar tokens_valid_after los access tokens vivos (30 min) y
+        #los tickets SSE emitidos antes del logout seguían operativos.
+        response    =   self._session_cookies()
+        csrf        =   response.cookies['customer_csrf'].value
+        refresh     =   response.cookies['customer_refresh'].value
+        self.client.cookies['customer_refresh'] =   refresh
+        self.client.cookies['customer_csrf']    =   csrf
+        out =   self.client.post(LOGOUT_URL, {}, format = 'json', HTTP_X_CSRFTOKEN = csrf)
+        self.assertEqual(out.status_code, 200)
+        #El customer autenticado por cookie queda con epoch sellado.
+        cust        =   Customer.objects.get(email = 'ana@example.com')
+        self.assertIsNotNone(cust.tokens_valid_after)
+
     #ME / PROFILE
     def test_me_and_patch_profile(self):
         customer    =   _make_customer()
@@ -931,8 +946,8 @@ class CustomerNotificationTests(TestCase):
             'ticket': response.json()['ticket'], 'store': self.store.slug,
         }, HTTP_ACCEPT = 'text/event-stream')
         self.assertEqual(got.status_code, 429)
-        for _ok, key in slots:
-            nv._release_stream_slot(key)
+        for _ok, keys in slots:
+            nv._release_stream_slots(keys)
         self.assertTrue(nv._acquire_stream_slot(self.a.pk)[0])
 
     def test_sse_response_is_not_gzipped(self):

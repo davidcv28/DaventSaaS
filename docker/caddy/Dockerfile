@@ -8,7 +8,9 @@
 FROM caddy:2-builder@sha256:6350162b3889ca32600b3c699c61572fa0eb3ad6b2a51874f19b158a7df77511 AS builder
 # x/net v0.60.0 (la que resuelve caddy 2.11.x) tiene CVE-2026-78661 (DoS en
 # x/net/html): --replace fuerza v0.62.0 hasta que upstream actualice go.mod.
-RUN xcaddy build --with github.com/caddy-dns/cloudflare@v0.2.4 \
+# Versión de Caddy pineada como arg posicional de xcaddy: sin ella el build
+# tomaba `latest` y el binario del edge flotaba entre rebuilds.
+RUN xcaddy build v2.11.4 --with github.com/caddy-dns/cloudflare@v0.2.4 \
     --replace golang.org/x/net=golang.org/x/net@v0.62.0
 
 FROM caddy:2@sha256:4e2425f6009577e7c651010f16679c28f7d12df3e7b1914f941a7a3370746b3c

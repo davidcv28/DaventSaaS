@@ -21,6 +21,7 @@ from rest_framework.test import APIClient
 from AdminApp.domains.locations.models import City, Province, ZipCode
 from AdminApp.domains.payments.models import DailyRevenue, MonthlyRevenue, Payment
 from AdminApp.domains.payments.services.services import (
+    ApplyPendingPlanQuery,
     CancelPreapprovalQuery,
     CreatePaymentQuery,
     CreatePreapprovalQuery,
@@ -884,6 +885,44 @@ class CrossPlanAmountBindingTests(TestCase):
         self.assertEqual(suscription.plan_suscription_id, premium.pk)
         self.assertIsNone(suscription.pending_plan_suscription_id)
         self.assertEqual(suscription.end_date, old_end)
+
+    def test_stale_pending_charge_does_not_grant_new_pending_plan(self):
+        #Regresión del fallback `or pending_plan`: un pago MP en efectivo
+        #queda PENDING con el pending_charge VIEJO; si el usuario cambia el
+        #plan pendiente antes de que MP acredite, el monto ya no es precio
+        #de plan ni el pending_charge vigente. Acreditar pending_plan ahí
+        #regalaba el plan caro por una prorrata vieja.
+        from AdminApp.domains.suscriptions.services import RequestPlanChangeQuery
+        suscription                     =   _make_suscription(
+            auto_renew = False, preapproval_id = None,
+            start_date = timezone.now() - timedelta(days = 10),
+            end_date   = timezone.now() + timedelta(days = 20),
+        )
+        cheap_plan      =   suscription.plan_suscription
+        premium         =   SuscriptionPlan.objects.create(name = 'Plan prorrata vieja', price = 2000)
+        RequestPlanChangeQuery(suscription, premium)
+        suscription.refresh_from_db()
+        stale_charge    =   suscription.pending_charge
+        self.assertIsNotNone(stale_charge)
+        #El pago queda registrado PENDING (efectivo) al monto prorrateado.
+        payment         =   Payment.objects.create(
+            user = suscription.user, suscription = suscription,
+            amount = stale_charge, status = Payment.Status.PENDING,
+            external_reference = 'mp-stale-1',
+        )
+        #Antes de la acreditación el usuario cambia el plan pendiente.
+        other           =   SuscriptionPlan.objects.create(name = 'Plan pendiente nuevo', price = 3000)
+        RequestPlanChangeQuery(suscription, other)
+        suscription.refresh_from_db()
+        #MP aprueba el pago viejo: webhook -> ApplyPendingPlanQuery.
+        ApplyPendingPlanQuery(suscription, renew = True, paid_amount = payment.amount, payment = payment)
+        suscription.refresh_from_db()
+        #NO se otorga `other` (ni premium): el monto no compra ningún plan.
+        self.assertEqual(suscription.plan_suscription_id, cheap_plan.pk)
+        self.assertEqual(suscription.pending_plan_suscription_id, other.pk)
+        #El pago real igual renueva el período del plan vigente.
+        self.assertEqual(suscription.status, Suscription.STATUS_ACTIVE)
+        self.assertGreater(suscription.end_date, timezone.now() + timedelta(days = 25))
 
 
 class RevenueRollupTests(TestCase):

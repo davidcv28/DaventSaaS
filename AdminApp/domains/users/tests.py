@@ -22,7 +22,11 @@ from rest_framework_simplejwt.tokens import RefreshToken
 from AdminApp.domains.locations.models import City, Province, ZipCode
 from AdminApp.domains.suscriptions.models import Coupon, Suscription, SuscriptionPlan
 from AdminApp.domains.users.models import UserProfile
-from AdminApp.domains.users.services.services import email_verification_token
+from AdminApp.domains.users.services.services import (
+    ConfirmEmailChangeQuery,
+    SendEmailChangeConfirmationQuery,
+    email_verification_token,
+)
 
 STRONG_PASSWORD = 'Xq7#mP2vL9bT'
 NEW_PASSWORD    = 'Kp4$wN8rT3sD'
@@ -218,7 +222,7 @@ class EmailVerificationTests(TestCase):
         user, profile   =   _make_user(verified = True)
         client          =   APIClient()
         client.force_authenticate(user = user)
-        response        =   client.put(USER_UPDATE_URL, {'email': 'otro@gmail.com'}, format = 'json')
+        response        =   client.put(USER_UPDATE_URL, {'email': 'otro@gmail.com', 'current_password': STRONG_PASSWORD}, format = 'json')
         self.assertEqual(response.status_code, 200)
         profile.refresh_from_db()
         self.assertFalse(profile.email_verified)
@@ -233,7 +237,7 @@ class EmailVerificationTests(TestCase):
         token           =   email_verification_token.make_token(user)
         client          =   APIClient()
         client.force_authenticate(user = user)
-        client.put(USER_UPDATE_URL, {'email': 'nuevo@gmail.com'}, format = 'json')
+        client.put(USER_UPDATE_URL, {'email': 'nuevo@gmail.com', 'current_password': STRONG_PASSWORD}, format = 'json')
         response        =   self.client.get(VERIFY_URL, {'uid': uid, 'token': token})
         self.assertIn('status=error', response['Location'])
         profile.refresh_from_db()
@@ -270,6 +274,88 @@ class EmailVerificationTests(TestCase):
         self.assertEqual(response.status_code, 200)
         profile.refresh_from_db()
         self.assertFalse(profile.phone_verified)
+
+
+class SocialEmailChangeTests(TestCase):
+    """
+    Regresión users-auth:email-change-sin-step-up-social: una cuenta sin
+    password usable (login Google) no puede pedir current_password — el
+    cambio de email queda pendiente hasta que el dueño abra el link
+    firmado enviado a su correo ACTUAL. Sin esto un access token robado
+    (ventana residual de 5min) cambiaba el email y redirigía el reset de
+    contraseña al buzón del atacante.
+    """
+
+    def _social_user(self, email = 'social@gmail.com'):
+        user            =   User.objects.create_user(username = 'social', email = email)
+        user.set_unusable_password()
+        user.save(update_fields = ['password'])
+        province, city  =   _location()
+        profile         =   UserProfile.objects.create(
+            user = user, first_name = 'Sol', last_name = 'Social',
+            document = '30999000', province = province, city = city,
+            email_verified = True,
+        )
+        return user, profile
+
+    def test_social_email_change_is_pending_not_applied(self):
+        user, profile   =   self._social_user()
+        client          =   APIClient()
+        client.force_authenticate(user = user)
+        with self.settings(EMAIL_BACKEND = 'django.core.mail.backends.locmem.EmailBackend'):
+            from django.core import mail
+            mail.outbox = []
+            response    =   client.put(USER_UPDATE_URL, {'email': 'nuevo-social@gmail.com'}, format = 'json')
+        self.assertEqual(response.status_code, 200)
+        self.assertTrue(response.data.get('email_change_pending'))
+        user.refresh_from_db()
+        #El email NO cambió: queda pendiente del link al correo actual.
+        self.assertEqual(user.email, 'social@gmail.com')
+        self.assertEqual(len(mail.outbox), 1)
+        self.assertIn('nuevo-social@gmail.com', mail.outbox[0].body)
+
+    def test_confirm_link_applies_email_and_resets_verification(self):
+        user, profile   =   self._social_user()
+        SendEmailChangeConfirmationQuery(user, 'aprobado@gmail.com')
+        #El token viaja en el link del correo — se regenera con el mismo
+        #salt para no depender del parsing del HTML.
+        from django.core import signing
+        from AdminApp.domains.users.services.services import EMAIL_CHANGE_SALT
+        token   =   signing.dumps({'u': user.pk, 'e': 'aprobado@gmail.com'}, salt = EMAIL_CHANGE_SALT, compress = True)
+        self.assertTrue(ConfirmEmailChangeQuery(token))
+        user.refresh_from_db()
+        profile.refresh_from_db()
+        self.assertEqual(user.email, 'aprobado@gmail.com')
+        self.assertFalse(profile.email_verified)
+        #Idempotente: re-click no rompe ni duplica efectos.
+        self.assertTrue(ConfirmEmailChangeQuery(token))
+
+    def test_confirm_rejects_forged_and_taken_email(self):
+        user, _         =   self._social_user()
+        _make_user(username = 'ocupado', email = 'ocupado@gmail.com', document = '30999001')
+        from django.core import signing
+        from AdminApp.domains.users.services.services import EMAIL_CHANGE_SALT
+        self.assertFalse(ConfirmEmailChangeQuery('token-trucho'))
+        #Correo ya tomado por otra cuenta: la firma es válida pero el
+        #destino no está libre -> no aplica.
+        token   =   signing.dumps({'u': user.pk, 'e': 'OCUPADO@gmail.com'}, salt = EMAIL_CHANGE_SALT, compress = True)
+        self.assertFalse(ConfirmEmailChangeQuery(token))
+        user.refresh_from_db()
+        self.assertEqual(user.email, 'social@gmail.com')
+
+    def test_password_account_still_requires_password_not_link(self):
+        #La vía del link es SOLO para cuentas sin password: con password
+        #usable el step-up sigue siendo current_password (sin mail).
+        user, _         =   _make_user()
+        client          =   APIClient()
+        client.force_authenticate(user = user)
+        with self.settings(EMAIL_BACKEND = 'django.core.mail.backends.locmem.EmailBackend'):
+            from django.core import mail
+            mail.outbox = []
+            response    =   client.put(USER_UPDATE_URL, {'email': 'otro-pass@gmail.com'}, format = 'json')
+        self.assertEqual(response.status_code, 400)
+        self.assertIn('current_password', response.data)
+        self.assertEqual(len(mail.outbox), 0)
 
 
 class SessionCookieTests(TestCase):

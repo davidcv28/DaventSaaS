@@ -24,11 +24,16 @@ if [ "$1" = "gunicorn" ]; then
     # con True el arranque se aborta en contexto estricto — DEBUG=True
     # jamás debe llegar a un deploy.
     if python -c "import os,django; os.environ.setdefault('DJANGO_SETTINGS_MODULE','DaventProject.settings'); django.setup(); from django.conf import settings; raise SystemExit(0 if settings.DEBUG else 1)"; then
-        if [ "$DEPLOY_CHECK_STRICT" = "1" ]; then
-            echo "DEBUG efectivo es True en produccion -> abortando arranque"
+        #DEBUG=True efectivo ABORTA siempre que el entrypoint corre (solo
+        #arranca gunicorn en deploys): con STRICT=0 (Render) el warn+continue
+        #servía la debug page pública — traces, settings y SQL echo. La única
+        #válvula es ALLOW_DEBUG_DEPLOY=1 explícita para un entorno de prueba.
+        if [ "$ALLOW_DEBUG_DEPLOY" = "1" ]; then
+            echo "DEBUG efectivo es True (ALLOW_DEBUG_DEPLOY=1) -> se omite el deploy check"
+        else
+            echo "DEBUG efectivo es True -> abortando arranque (DEBUG=True no debe llegar a un deploy)"
             exit 1
         fi
-        echo "DEBUG efectivo es True (modo dev) -> se omite el deploy check"
     elif ! python manage.py check --deploy --fail-level ERROR; then
         if [ "$DEPLOY_CHECK_STRICT" = "1" ]; then
             echo "deploy check: configuracion de produccion incompleta (DEPLOY_CHECK_STRICT=1) -> abortando arranque"

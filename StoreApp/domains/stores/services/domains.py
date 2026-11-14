@@ -19,8 +19,15 @@ disponible (sin dnspython o sin red) se responde 'pending', nunca 'failed':
 #=========================================
 _DOMAIN_LABEL   =   re.compile(r'^[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?$')
 def public_domain():
-    """Host canónico al que deben apuntar los CNAME de los dominios propios."""
-    return getattr(settings, 'PUBLIC_DOMAIN', 'davent.com.ar').strip().lower().strip('.')
+    """
+    Host canónico al que deben apuntar los CNAME de los dominios propios.
+    PUBLIC_DOMAIN es el host canónico de la plataforma (www.<dominio>);
+    para DNS el target es el apex — el 'www.' se recorta porque un CNAME
+    a 'www.' resuelve igual pero el apex es la forma estándar y la que
+    check_domain/serialize_domain le muestran al dueño.
+    """
+    host    =   getattr(settings, 'PUBLIC_DOMAIN', 'davent.com.ar').strip().lower().strip('.')
+    return  host[4:] if host.startswith('www.') else host
 def normalize_domain(raw):
     """
     Limpia el input del usuario ('https://www.MiTienda.com/path' →

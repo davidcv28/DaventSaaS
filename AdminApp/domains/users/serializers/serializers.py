@@ -89,9 +89,39 @@ class UserSerializer(serializers.ModelSerializer):
 #=============================
 class UserUpdateSerializer(UsersValidatorsMixins,UserUpdateMethod,serializers.ModelSerializer):
     email               =   serializers.EmailField(**UserFieldsConfig['email'])
+    #Step-up del cambio de correo: sin él un access token robado (o el
+    #residual de 5min tras una revocación de sesión) cambiaba el email y
+    #reasignaba la cuenta vía password-reset al buzón del atacante.
+    current_password    =   serializers.CharField(write_only = True, required = False)
     class Meta:
         model           =   User
-        fields          =   ['email']
+        fields          =   ['email', 'current_password']
+
+    def validate(self, attrs):
+        attrs       =   super().validate(attrs)
+        instance    =   self.instance
+        password    =   attrs.pop('current_password', None)
+        if instance is not None and instance.has_usable_password():
+            new_email   =   str(attrs.get('email') or instance.email or '').strip().lower()
+            old_email   =   str(instance.email or '').strip().lower()
+            if new_email != old_email and not (password and instance.check_password(password)):
+                raise serializers.ValidationError(
+                    {'current_password': 'Para cambiar el correo confirmá tu contraseña actual.'})
+        return attrs
+
+    def update(self, instance, validated_data):
+        #Cuenta SIN password usable (login social): no hay secreto que
+        #pedir como step-up — el cambio se confirma desde el correo
+        #ACTUAL (único dato que un access token robado no tiene). No se
+        #persiste nada: el email cambia recién al abrir el link.
+        new_email   =   str(validated_data.get('email') or instance.email or '').strip().lower()
+        old_email   =   str(instance.email or '').strip().lower()
+        if new_email != old_email and not instance.has_usable_password():
+            from AdminApp.domains.users.services import SendEmailChangeConfirmationQuery
+            SendEmailChangeConfirmationQuery(instance, new_email)
+            self.email_change_pending    =   True
+            return instance
+        return super().update(instance, validated_data)
 
 #=============================
 # USER UPDATE PASSWORD

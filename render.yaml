@@ -47,12 +47,18 @@ services:
       - key: CSRF_TRUSTED_ORIGINS
         value: https://daventsaas.onrender.com,https://davent.com.ar,https://www.davent.com.ar,https://localhost
       - key: FRONTEND_URL
-        value: https://davent.com.ar              # apex = canónico SEO;
-                                        # www.davent.com.ar redirige 301 acá
+        value: https://www.davent.com.ar          # canónico = www (AGENTS.md
+                                        # "Dominio y URLs canónicas"); el apex
+                                        # redirige 301 -> www
       - key: BACKEND_URL
-        value: https://davent.com.ar              # mismo servicio sirve API+SPA;
+        value: https://www.davent.com.ar          # mismo servicio sirve API+SPA;
                                         # alimenta los links de los mails
                                         # (verify-email / password-reset)
+      # Host canónico completo (con www.): CanonicalHostMiddleware y la
+      # verificación CNAME de dominios propios. Sin declararla caía al
+      # default 'davent.com.ar' y canonicalizaba al revés que el VPS.
+      - key: PUBLIC_DOMAIN
+        value: www.davent.com.ar
 
       # ---- TLS detrás del proxy de Render ------------------------------------
       - key: SECURE_PROXY_SSL             # Render termina TLS y manda
