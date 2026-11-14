@@ -138,7 +138,87 @@ Sin tocar el backend local (deploy LAN-only sigue existiendo):
 - Nada de "chequeo oculto": la conexión se justifica por licencia+sync; el
   estado degradado es siempre visible con aviso.
 
-## 8. Decisiones abiertas
+## 8. Marco legal y política al usuario
+
+Principio rector: la suspensión es **de servicio, nunca de datos**. Informada
+de forma pre-contractual (Ley 24.240 art. 4), gradual, con aviso previo y
+acceso/exportación garantizados. Todo texto de abajo va listo para aplicar;
+la revisión humana queda registrada en `docs/legal-review-ecommerce.md`.
+
+### 8.1 Textos de superficie (visibles para el cliente)
+
+**Descripción del beneficio (grilla de planes):**
+> "App de mostrador incluida (requiere plan activo). Tus datos siempre son tuyos."
+
+**Pantalla de vinculación (dashboard + app):**
+> "Esta app queda vinculada al plan de tu tienda. Si el plan vence, las
+> funciones de venta y de registros nuevos se pausan después de un período de
+> aviso, pero tu historial, reportes y copias de seguridad quedan siempre
+> accesibles y exportables."
+
+**Aviso in-app durante `DENIED_GRACE`:**
+> "Tu plan venció el {fecha}. Podés seguir consultando todo tu historial;
+> para volver a registrar ventas, renová tu plan desde tu panel. Tenés
+> {N} días antes de que las funciones operativas se pausen. Tu información
+> no se pierde."
+
+**Aviso in-app `DEGRADED`:**
+> "Funciones de venta pausadas por plan vencido. Tu historial, reportes y
+> backups siguen disponibles y podés exportar todo. Renovando el plan la app
+> vuelve a funcionar completa sin reinstalar ni perder nada."
+
+### 8.2 Cláusula ToS de DAVENT (nueva sección, misma casa que `docs/ecommerce-legal.md` §1)
+
+> **Aplicaciones vinculadas.** DAVENT puede ofrecer aplicaciones de escritorio
+> o móviles (p. ej. punto de venta) incluidas en determinados planes. Las
+> aplicaciones se licencian por dispositivo y verifican periódicamente la
+> vigencia del plan del titular; para ello transmiten un identificador de
+> dispositivo y datos de uso técnico. Si el plan vence o se cancela, las
+> funciones operativas de la aplicación se suspenden previo aviso con al menos
+> cinco (5) días de anticipación. La suspensión no afecta el acceso,
+> consulta, exportación ni las copias de seguridad de la información del
+> titular, que permanece disponible en todo momento. DAVENT no elimina datos
+> del titular por falta de pago del plan de la aplicación.
+
+### 8.3 Privacidad (anexo a la política de DAVENT — extender `docs/ecommerce-legal.md` §2)
+
+- **Qué reporta la app:** `device_id`, versión de app, IP de origen,
+  timestamps de conexión, resultado del chequeo de licencia. En fase de sync:
+  los mismos datos que la app ya almacena localmente (productos, ventas,
+  clientes del comercio).
+- **Rol de DAVENT:** encargado de tratamiento respecto de los datos del
+  comercio y de sus clientes finales (misma figura que §2.2); responsable
+  respecto de los datos de la cuenta del titular.
+- **Base y plazo:** ejecución del contrato; los registros de licencia se
+  conservan 24 meses; los datos sincronizados se gobiernan por la misma
+  política de retención de la tienda.
+- **Lo que la app NO hace:** no envía contenido de ventas sin sync activa,
+  no rastrea ubicación, no accede a datos fuera de su base local.
+
+### 8.4 Checklist para revisión legal humana (sumar a `docs/legal-review-ecommerce.md`)
+
+1. Confirmar que el titular del plan se encuadra como comerciante/B2B y no
+   "consumidor final" para la suspensión de funciones (si no, evaluar gracia
+   mayor o suspensión solo tras baja expresa).
+2. Revisar la cláusula §8.2 con letra chica de la provincia del titular
+   (Ley 24.240 es nacional y piso; provincias pueden sumar).
+3. Verificar que el aviso de renovación automática del plan (Decreto
+   274/2019) ya cubre el escenario "plan vence → app se degrada" — enlazarlo
+   desde la cláusula, no duplicarlo.
+4. Registrar la app como software licenciado (no vendido) en el contrato —
+   el cliente compra acceso, no el binario.
+5. Exportación en `DEGRADED`: validar formato (CSV/JSON completo) para que la
+   promesa "tus datos siempre son tuyos" sea cumplible, no marketing.
+
+### 8.5 Lo que queda prohibido por diseño (guardarraíles)
+
+- Nunca bloqueo sin aviso previo visible.
+- Nunca retener datos, historial ni exportación tras la suspensión.
+- Nunca re-activar funciones cobrando cargos adicionales no informados.
+- Nunca telemetría encubierta: toda comunicación de la app es licencia o
+  sync, documentada en §8.3.
+
+## 9. Decisiones abiertas
 
 1. **Multi-caja sin internet**: dos mostradores del mismo local no se ven entre
    sí offline (cada uno synca a DAVENT por su cuenta). Si importa: PC-servidor
