@@ -289,6 +289,10 @@ class PaymentViewSet(PaymentBaseViewSet):
     #=========================================
     @action(detail = False, methods = ['post'], url_path = 'checkout')
     def checkout(self, request):
+        #Kill-switch del billing de plataforma (beta gratuita, etc.): los
+        #cupones siguen activos; solo se cierran los caminos que cobran.
+        if not config('PLATFORM_BILLING_ENABLED', default = True, cast = bool):
+            return Response({'detail': 'Los pagos en línea están temporalmente deshabilitados.'}, status = status.HTTP_503_SERVICE_UNAVAILABLE)
         suscription     =   self._resolve_suscription(request)
         #Cambio de plan vía checkout con débito vivo: el próximo cobro
         #automático también debe cargar el plan pendiente o el plan nuevo de
@@ -316,6 +320,8 @@ class PaymentViewSet(PaymentBaseViewSet):
     #=========================================
     @action(detail = False, methods = ['post'], url_path = 'subscription')
     def subscription(self, request):
+        if not config('PLATFORM_BILLING_ENABLED', default = True, cast = bool):
+            return Response({'detail': 'Los pagos en línea están temporalmente deshabilitados.'}, status = status.HTTP_503_SERVICE_UNAVAILABLE)
         suscription     =   self._resolve_suscription(request)
         previous_preapproval_id =   suscription.preapproval_id
         #CONCURRENCIA/IDEMPOTENCIA: el preapproval es un recurso externo único

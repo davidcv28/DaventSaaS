@@ -570,7 +570,12 @@ class PublicConfigView(APIView):
     throttle_classes    =   [PublicConfigRateThrottle]
 
     def get(self, request):
-        payload     =   {'google_client_id': GOOGLE_CLIENT_ID}
+        payload     =   {
+            'google_client_id': GOOGLE_CLIENT_ID,
+            #Kill-switch del billing de plataforma: el front oculta/deshabilita
+            #los botones de pago de los planes cuando es false (beta gratuita).
+            'platform_billing_enabled': config('PLATFORM_BILLING_ENABLED', default = True, cast = bool),
+        }
         app         =   self._app_info()
         if app:
             payload['app']  =   app

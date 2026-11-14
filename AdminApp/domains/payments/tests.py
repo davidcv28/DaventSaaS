@@ -293,6 +293,14 @@ class SubscriptionActionTests(TestCase):
         return client, profile, suscription
 
     @patch(f'{VIEWS}.CreatePreapprovalQuery')
+    @patch.dict(os.environ, {'PLATFORM_BILLING_ENABLED': 'false'})
+    def test_subscription_disabled_by_kill_switch(self, create):
+        client, _, _    =   self._client()
+        response        =   client.post(self.URL, {}, format = 'json')
+        self.assertEqual(response.status_code, 503)
+        create.assert_not_called()
+
+    @patch(f'{VIEWS}.CreatePreapprovalQuery')
     def test_requires_billing_fields_before_mp(self, create):
         #Usuario activo por cupón sin datos fiscales: primero el form de
         #facturación (400 billing_required) — jamás se crea el débito en MP.
@@ -545,6 +553,17 @@ class CheckoutResolutionTests(TestCase):
         self.assertEqual(response.status_code, 200)
         suscription     =   Suscription.objects.get(user = profile)
         self.assertEqual(suscription.status, Suscription.STATUS_PENDING_PAYMENT)
+
+    @patch('AdminApp.domains.payments.views.viewset.CreateCheckoutPreferenceQuery')
+    @patch.dict(os.environ, {'PLATFORM_BILLING_ENABLED': 'false'})
+    def test_checkout_disabled_by_kill_switch(self, preference):
+        #Beta gratuita: PLATFORM_BILLING_ENABLED=false cierra checkout y
+        #débito automático sin tocar cupones ni webhooks.
+        client, _       =   self._client()
+        plan            =   SuscriptionPlan.objects.create(name = 'Plan pago off', price = 1000)
+        response        =   client.post(self.URL, {'plan_suscription': plan.pk}, format = 'json')
+        self.assertEqual(response.status_code, 503)
+        preference.assert_not_called()
 
     @patch('AdminApp.domains.payments.services.UpdatePreapprovalPlanQuery')
     @patch('AdminApp.domains.payments.views.viewset.UpdatePreapprovalPlanQuery')

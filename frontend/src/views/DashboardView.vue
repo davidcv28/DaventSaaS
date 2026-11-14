@@ -3001,7 +3001,7 @@ onMounted(async () => {
   // Vía rápida: plan + tienda destraban stats, la precarga del catálogo y el
   // retorno de MP sin esperar a los listados de pagos/facturas (los stores
   // SWR ya pintan con la data cacheada mientras revalidan).
-  const fastLane = Promise.all([billing.loadPlans(), billing.loadMine(), storeReady]).then(async () => {
+  const fastLane = Promise.all([billing.loadPlans(), billing.loadMine(), billing.loadBillingConfig(), storeReady]).then(async () => {
     if (canStats.value) store.loadStats()
     // Precarga silenciosa del catálogo para los próximos pasos del resumen.
     ensureCatalog()
@@ -3796,6 +3796,12 @@ async function saveBilling() {
 
 async function planAction(p) {
   if (p.is_trial) return // plan de prueba: informativo, no se puede elegir
+  if (!billing.paymentsEnabled) {
+    billing.notice = ''
+    billing.lastError = ''
+    payments.lastError = 'Los pagos en línea abren pronto. Mientras tanto podés activar tu plan con un cupón.'
+    return
+  }
   busyPlan.value = p.id
   billing.lastError = ''
   billing.notice = ''
@@ -6593,6 +6599,7 @@ async function changePassword() {
           :prev="i > 0 ? paidPlans[i - 1] : null"
           :current="billing.hasSubscription && plan?.pk === p.id"
           :busy="busyPlan === p.id"
+          :payments-off="!billing.paymentsEnabled"
           @select="planAction"
         />
       </div>

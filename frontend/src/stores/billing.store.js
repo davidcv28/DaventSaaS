@@ -1,7 +1,7 @@
 import { ref, computed } from 'vue'
 import { defineStore } from 'pinia'
 import { billingApi, daysLeft } from '../api/billing.api.js'
-import { extractApiError } from '../api/http.js'
+import { extractApiError, http } from '../api/http.js'
 import { swrGet, swrSet } from '../utils/swr.js'
 
 // Fuente de suscripción (FRONTEND_RULES §1: stores en Composition style).
@@ -13,6 +13,19 @@ export const useBillingStore = defineStore('billing', () => {
   const plansStatus = ref('idle')
   const lastError = ref('')
   const notice = ref('')
+  //Kill-switch del billing (PLATFORM_BILLING_ENABLED del backend, publicado
+  //en /api/config/): false = beta gratuita, botones de pago de planes off.
+  const paymentsEnabled = ref(true)
+  let billingConfigPromise = null
+
+  function loadBillingConfig() {
+    if (!billingConfigPromise) {
+      billingConfigPromise = http.get('/config/')
+        .then(({ data }) => { paymentsEnabled.value = data?.platform_billing_enabled !== false })
+        .catch(() => {})
+    }
+    return billingConfigPromise
+  }
 
   const hasSubscription = computed(() => Boolean(subscription.value))
   const currentPlan = computed(() => {
@@ -161,6 +174,7 @@ export const useBillingStore = defineStore('billing', () => {
   return {
     plans, subscription, status, plansStatus, lastError, notice,
     hasSubscription, currentPlan, redemptions, redemptionsStatus,
-    loadPlans, loadMine, subscribe, changePlan, redeemCoupon, loadRedemptions, reset
+    paymentsEnabled,
+    loadPlans, loadMine, subscribe, changePlan, redeemCoupon, loadRedemptions, loadBillingConfig, reset
   }
 })

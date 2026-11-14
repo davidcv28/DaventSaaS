@@ -7,7 +7,8 @@ const props = defineProps({
   plan: { type: Object, required: true },
   prev: { type: Object, default: null },
   current: { type: Boolean, default: false },
-  busy: { type: Boolean, default: false }
+  busy: { type: Boolean, default: false },
+  paymentsOff: { type: Boolean, default: false }
 })
 
 const emit = defineEmits(['select'])
@@ -79,10 +80,10 @@ const upsCount = computed(() => perks.value.filter((p) => p.up).length)
         <li v-for="f in plan.bullets" :key="f"><AppIcon name="check" :size="15" :stroke="2.4" /> <span>{{ f }}</span></li>
       </ul>
     </details>
-    <button class="btn" :class="current || plan.is_trial ? 'ghost' : ''" :disabled="current || busy || plan.is_trial" @click="emit('select', plan)">
+    <button class="btn" :class="current || plan.is_trial ? 'ghost' : ''" :disabled="current || busy || plan.is_trial || paymentsOff" @click="emit('select', plan)">
       <span v-if="busy" class="spinner" aria-hidden="true"></span>
-      {{ current ? 'Plan actual' : (plan.cta_label || 'Elegir plan') }}
-      <AppIcon v-if="!current && !plan.is_trial && !busy" name="arrow-right" :size="15" />
+      {{ current ? 'Plan actual' : (paymentsOff && !plan.is_trial ? 'Próximamente' : (plan.cta_label || 'Elegir plan')) }}
+      <AppIcon v-if="!current && !plan.is_trial && !busy && !paymentsOff" name="arrow-right" :size="15" />
     </button>
   </div>
 </template>
