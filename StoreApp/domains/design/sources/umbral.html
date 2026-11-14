@@ -237,6 +237,31 @@ html[data-ds-theme="dark"] .ds-theme-toggle .i-moon{display:none}
   transition:border-color .18s,color .18s,background .18s,transform .18s var(--ease)}
 .top-inner>.dsx-account:hover{border-color:var(--accent);color:var(--accent-text);
   background:var(--accent-soft);transform:translateY(-2px)}
+/* Carrito junto a la cuenta: misma píldora fantasma y order 4 — con el
+   order:0 por defecto se plantaba antes de la marca, a la izquierda. */
+.top-inner>.dsx-cart{
+  order:4;flex:none;min-height:44px;min-width:44px;padding:0 13px;
+  border:1px solid var(--line);border-radius:999px;
+  background:transparent;color:var(--ink);opacity:.9;
+  transition:border-color .18s,color .18s,background .18s,transform .18s var(--ease)}
+.top-inner>.dsx-cart:hover{border-color:var(--accent);color:var(--accent-text);
+  background:var(--accent-soft);transform:translateY(-2px)}
+@media(min-width:961px) and (max-width:1360px){
+  /* El cluster marca+nav+CTA+cuenta+carrito+tema no entra en el wrap de
+     1280: se compacta y la cuenta pasa a solo-icono. */
+  .top-inner{gap:clamp(12px,1.8vw,26px)}
+  .nav{gap:clamp(10px,1.4vw,20px)}
+  .nav a{padding:10px 9px}
+  .top-inner>.dsx-account{width:44px;min-width:44px;padding:0;justify-content:center;gap:0}
+  .top-inner>.dsx-account [data-dsx-account-label]{display:none}
+}
+@media(min-width:961px) and (max-width:1180px){
+  /* Con venta online (cuenta+carrito) ni compactado entra: el nav cede
+     al menú y el CTA empuja el cluster a la derecha. */
+  html[data-ds-commerce="1"] .nav{display:none}
+  html[data-ds-commerce="1"] .top-cta{margin-left:auto}
+  html[data-ds-commerce="1"] .m-open{display:grid}
+}
 @media(max-width:960px){
   /* En móvil la cuenta toma el auto-margin y el toggle lo cede: el trío
      cuenta·tema·menú queda unido a la derecha. */
