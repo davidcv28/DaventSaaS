@@ -451,3 +451,17 @@ class PosDownloadTests(TestCase):
         store.customization.template    =   pattern.slug
         store.customization.save()
         self.assertEqual(_authed(user).get(self.URL).status_code, 404)
+
+    def test_rubro_param_unlocks_download(self):
+        #La tienda indumentaria que eligió 'retail' en el selector puede
+        #bajar la app de retail — lo que la card muestra, la card baja.
+        self.mostrador.download_key =   'pos/apps/mostrador/POS-Setup.exe'
+        self.mostrador.save(update_fields = ['download_key'])
+        indumentaria    =   DesignCategory.objects.get_or_create(slug = 'indumentaria', defaults = {'nombre': 'Indumentaria'})[0]
+        pattern         =   DesignPattern.objects.create(slug = 'pat-ind2', nombre = 'p', categoria = indumentaria)
+        user, _, store  =   _make_owner()
+        store.customization.template    =   pattern.slug
+        store.customization.save()
+        response    =   _authed(user).get(f'{self.URL}?rubro=retail')
+        self.assertEqual(response.status_code, 200)
+        self.assertIn(self.mostrador.download_key, response.json()['url'])

@@ -88,7 +88,7 @@ async function download(app) {
   downloading.value = app.slug
   downloadErr.value = ''
   try {
-    const data = await downloadPosApp(app.slug)
+    const data = await downloadPosApp(app.slug, rubro.value || undefined)
     if (data?.url) window.open(data.url, '_blank', 'noopener')
     else downloadErr.value = 'La descarga no está disponible por ahora.'
   } catch (e) {

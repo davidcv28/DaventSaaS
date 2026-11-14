@@ -117,7 +117,10 @@ class PosDownloadView(APIView):
     permission_classes    =   [IsAuthenticated]
     def get(self, request, slug):
         store   =   _own_store(request, pos_benefit = True)
-        app     =   next((a for a in catalog_for(store) if a.slug == slug), None)
+        #Mismo rubro que el selector del catálogo: si la app es visible
+        #en la card bajo el rubro elegido, también se puede descargar.
+        rubro   =   str(request.query_params.get('rubro') or '').strip() or None
+        app     =   next((a for a in catalog_for(store, rubro = rubro) if a.slug == slug), None)
         if app is None or not app.download_key:
             return Response({'detail': 'App no disponible.'}, status = status.HTTP_404_NOT_FOUND)
         from StoreApp.domains.stores.services.storage import object_url

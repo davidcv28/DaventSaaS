@@ -15,6 +15,9 @@ import { http } from './http.js'
 
 export const fetchPosApps = (rubro) =>
   http.get('/pos/apps/', { params: rubro ? { rubro } : {} }).then((r) => r.data)
-// GET /api/pos/download/<slug>/ → {url} — URL firmada de R2 (10 min).
-export const downloadPosApp = (slug) => http.get(`/pos/download/${slug}/`).then((r) => r.data)
+// GET /api/pos/download/<slug>/?rubro=<slug> → {url} — URL firmada de
+// R2 (10 min); el rubro tiene que ser el mismo con el que la app se ve
+// en el catálogo.
+export const downloadPosApp = (slug, rubro) =>
+  http.get(`/pos/download/${slug}/`, { params: rubro ? { rubro } : {} }).then((r) => r.data)
 export const createPosPairCode = () => http.post('/pos/pair-code/').then((r) => r.data)
