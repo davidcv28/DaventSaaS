@@ -9,6 +9,7 @@ from .services import (
     license_state,
     plan_slug_of,
     redeem_pairing_code,
+    rubro_options,
     store_rubro,
 )
 
@@ -23,5 +24,6 @@ __all__ = [
     'license_state',
     'plan_slug_of',
     'redeem_pairing_code',
+    'rubro_options',
     'store_rubro',
 ]

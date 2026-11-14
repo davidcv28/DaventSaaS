@@ -10,6 +10,8 @@ Serializers del dominio POS.
 # POS APP SERIALIZER (catálogo — solo lectura)
 #=========================================
 class PosAppSerializer(serializers.ModelSerializer):
+    preview_url         =   serializers.SerializerMethodField()
+
     class Meta:
         model   =   PosApp
         fields  =   (
@@ -20,9 +22,16 @@ class PosAppSerializer(serializers.ModelSerializer):
             'tier_min',
             'version',
             'download_key',
+            'preview_url',
             'position',
         )
         read_only_fields    =   fields
+
+    def get_preview_url(self, obj):
+        """URL servible de la preview (R2 público o firmada). None sin key
+        o sin storage configurado — el front muestra su placeholder."""
+        from StoreApp.domains.stores.services.storage import object_url
+        return object_url(obj.preview_key) if obj.preview_key else None
 #=========================================
 # PAIR REQUEST SERIALIZER (canje del código de vinculación)
 #=========================================

@@ -113,15 +113,17 @@ def store_rubro(store):
 #=========================================
 # CATÁLOGO VISIBLE (plan + rubro)
 #=========================================
-def catalog_for(store):
+def catalog_for(store, rubro = None):
     """
     Apps activas visibles para la tienda: tier_min <= plan vigente del
-    dueño Y (rubro de la tienda ∈ rubros, o la app trae 'general'). Una
-    tienda sin diseño elegido (rubro 'general') ve todo el catálogo que
-    su plan alcanza — la indecisión no la penaliza (PLAN_POS §1).
+    dueño Y (rubro ∈ rubros de la app, o la app trae 'general'). `rubro`
+    puede venir elegido por el usuario (?rubro= del endpoint) — por
+    defecto es el derivado del diseño. Una tienda sin diseño elegido
+    (rubro 'general') ve todo el catálogo que su plan alcanza — la
+    indecisión no la penaliza (PLAN_POS §1).
     """
     plan_rank   =   TIER_RANK.get(plan_slug_of(store.user) or '', -1)
-    rubro       =   store_rubro(store)
+    rubro       =   rubro or store_rubro(store)
     apps        =   []
     for app in PosApp.objects.filter(is_active = True).order_by('position', 'id'):
         if TIER_RANK.get(app.tier_min, 99) > plan_rank:
@@ -131,6 +133,23 @@ def catalog_for(store):
             continue
         apps.append(app)
     return apps
+
+def rubro_options():
+    """
+    Rubros elegibles para el selector del catálogo: todos los
+    DesignCategory activos ('general' primero — es el fallback).
+    """
+    from StoreApp.domains.design.models import DesignCategory
+    options =   [
+        {'slug': GENERAL_RUBRO, 'nombre': 'Todos los rubros'},
+    ]
+    options += list(
+        DesignCategory.objects.filter(is_active = True)
+        .exclude(slug = GENERAL_RUBRO)
+        .order_by('position', 'nombre')
+        .values('slug', 'nombre')
+    )
+    return options
 #=========================================
 # CÓDIGO DE VINCULACIÓN (un solo uso, 10 min)
 #=========================================

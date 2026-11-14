@@ -20,8 +20,13 @@ const resolvedBenefits = computed(() => props.benefits ?? billing.currentPlan?.b
 const canPosApp = computed(() => Boolean(resolvedBenefits.value?.has_pos_app))
 
 const loading = ref(true)
+const switching = ref(false)
 const errMsg = ref('')
 const apps = ref([])
+// Selector de rubro: la respuesta trae las opciones ({slug, nombre}) y
+// el rubro efectivo (derivado del diseño de la tienda salvo override).
+const rubro = ref('')
+const rubros = ref([])
 
 const pairing = ref(false)
 const pairErr = ref('')
@@ -49,10 +54,17 @@ const pairCountdown = computed(() => {
 })
 
 async function load() {
-  loading.value = true
+  // Primer fetch: spinner grande. Refetch por cambio de rubro: la lista
+  // queda visible y solo se deshabilita el select (feedback mínimo).
+  const firstLoad = !rubros.value.length && !apps.value.length
+  loading.value = firstLoad
+  switching.value = !firstLoad
   errMsg.value = ''
   try {
-    apps.value = unwrapApps(await fetchPosApps())
+    const data = await fetchPosApps(rubro.value || undefined)
+    apps.value = unwrapApps(data)
+    if (Array.isArray(data?.rubros)) rubros.value = data.rubros
+    if (data?.rubro && data.rubro !== rubro.value) rubro.value = data.rubro
   } catch (e) {
     apps.value = []
     // 403/404 con el flag ausente también se muestran como "plan no alcanza".
@@ -64,6 +76,7 @@ async function load() {
     }
   } finally {
     loading.value = false
+    switching.value = false
   }
 }
 
@@ -140,13 +153,29 @@ onBeforeUnmount(() => { if (tick) clearInterval(tick) })
     </div>
 
     <template v-else>
+      <!-- Selector de rubro: explora las apps disponibles por rubro -->
+      <label v-if="rubros.length" class="pos-rubro">
+        <span class="pos-rubro-label">Rubro</span>
+        <select class="pos-rubro-select" v-model="rubro" :disabled="switching" @change="load">
+          <option v-for="r in rubros" :key="r.slug" :value="r.slug">{{ r.nombre }}</option>
+        </select>
+        <span v-if="switching" class="spinner spinner-brand" aria-hidden="true"></span>
+      </label>
+
       <!-- Catálogo de apps (hoy: mostrador) -->
       <div v-if="!apps.length" class="empty-mini">
         <p>Todavía no hay apps publicadas para tu rubro. Avisamos cuando lleguen.</p>
       </div>
-      <ul v-else class="pos-app-list">
+      <ul v-else class="pos-app-list" :aria-busy="switching || undefined">
         <li v-for="app in apps" :key="app.slug || app.nombre" class="pos-app">
-          <span class="pos-app-ico"><AppIcon name="monitor" :size="20" /></span>
+          <img
+            v-if="app.preview_url"
+            class="pos-app-img"
+            :src="app.preview_url"
+            :alt="`Vista previa de ${app.nombre || app.slug}`"
+            loading="lazy"
+          >
+          <span v-else class="pos-app-ico"><AppIcon name="monitor" :size="20" /></span>
           <div class="pos-app-info">
             <strong>{{ app.nombre || app.name || app.slug }}</strong>
             <span v-if="app.version" class="pill muted">v{{ app.version }}</span>
@@ -195,11 +224,28 @@ onBeforeUnmount(() => { if (tick) clearInterval(tick) })
   background: var(--brand-soft); color: var(--brand-ink);
 }
 .pos-locked p { margin: 0; }
+.pos-rubro { display: flex; align-items: center; gap: 10px; margin-bottom: 12px; }
+.pos-rubro-label { font-size: 13px; font-weight: 600; color: var(--ink-2); }
+/* Select nativo estilizado (browser-ui-theming: no recrear el widget —
+   conserva teclado/AT gratis; solo superficie, borde y tipografía) */
+.pos-rubro-select {
+  padding: 7px 12px; font-size: 13px; color: var(--ink);
+  background: var(--surface); color-scheme: light dark;
+  border: 1px solid var(--line-strong); border-radius: var(--radius-sm);
+  cursor: pointer;
+}
+.pos-rubro-select:disabled { opacity: .6; cursor: wait; }
+.pos-rubro-select:focus-visible { outline: 2px solid var(--brand); outline-offset: 1px; }
 .pos-app-list { list-style: none; margin: 0 0 16px; padding: 0; display: grid; gap: 10px; }
 .pos-app {
   display: flex; align-items: center; gap: 12px;
   padding: 12px 14px;
   border: 1px solid var(--line); border-radius: var(--radius-sm);
+}
+.pos-app-img {
+  flex: none; width: 128px; height: 80px; object-fit: cover;
+  border-radius: 10px; border: 1px solid var(--line);
+  background: var(--surface);
 }
 .pos-app-ico {
   flex: none; width: 40px; height: 40px; border-radius: 10px;
@@ -225,6 +271,7 @@ onBeforeUnmount(() => { if (tick) clearInterval(tick) })
 .pos-pair-exp.expired { color: var(--danger-ink, #b42318); }
 @media (max-width: 560px) {
   .pos-app { flex-wrap: wrap; }
+  .pos-app-img { width: 100%; height: auto; aspect-ratio: 16 / 10; }
   .pos-dl { width: 100%; }
   .pos-code { font-size: 22px; }
 }

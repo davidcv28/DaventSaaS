@@ -304,38 +304,76 @@ class PosAppsTests(TestCase):
     def test_requires_auth(self):
         self.assertIn(APIClient().get(APPS_URL).status_code, (401, 403))
 
+    def _apps(self, client, rubro = None):
+        url     =   APPS_URL if rubro is None else f'{APPS_URL}?rubro={rubro}'
+        return client.get(url).json()
+
     def test_ecommerce_plan_with_retail_design_sees_mostrador(self):
         pattern             =   self._pattern(self.retail, 'pos-retail-a')
         user, _, store      =   _make_owner()
         store.customization.template    =   pattern.slug
         store.customization.save()
-        data                =   _authed(user).get(APPS_URL).json()
-        slugs               =   [app['slug'] for app in data]
+        data                =   self._apps(_authed(user))
+        slugs               =   [app['slug'] for app in data['apps']]
         self.assertIn('mostrador', slugs)
-        app                 =   next(a for a in data if a['slug'] == 'mostrador')
+        self.assertEqual(data['rubro'], 'retail')
+        app                 =   next(a for a in data['apps'] if a['slug'] == 'mostrador')
         self.assertEqual(app['tier_min'], 'ecommerce')
         self.assertEqual(app['rubros'], ['retail'])
+        self.assertIn('preview_url', app)
+
+    def test_rubros_options_in_response(self):
+        #El selector de la card sale del mismo response: 'general'
+        #primero, después las categorías activas.
+        user, _, _      =   _make_owner()
+        data            =   self._apps(_authed(user))
+        slugs           =   [r['slug'] for r in data['rubros']]
+        self.assertEqual(slugs[0], 'general')
+        self.assertIn('retail', slugs)
+        self.assertIn('indumentaria', slugs)
+
+    def test_rubro_param_overrides_derived(self):
+        #Tienda indumentaria que elige 'retail' en el selector ve las
+        #apps de retail (exploración, no asignación).
+        pattern             =   self._pattern(self.indumentaria, 'sastreria-x')
+        user, _, store      =   _make_owner()
+        store.customization.template    =   pattern.slug
+        store.customization.save()
+        data                =   self._apps(_authed(user), rubro = 'retail')
+        self.assertEqual(data['rubro'], 'retail')
+        self.assertIn('mostrador', [app['slug'] for app in data['apps']])
+
+    def test_rubro_param_filters(self):
+        #Tienda retail que elige 'indumentaria' deja de ver mostrador.
+        pattern             =   self._pattern(self.retail, 'pos-retail-c')
+        user, _, store      =   _make_owner()
+        store.customization.template    =   pattern.slug
+        store.customization.save()
+        data                =   self._apps(_authed(user), rubro = 'indumentaria')
+        self.assertEqual(data['rubro'], 'indumentaria')
+        self.assertNotIn('mostrador', [app['slug'] for app in data['apps']])
 
     def test_lower_plan_does_not_see_ecommerce_app(self):
         user, _, store      =   _make_owner(plan_name = 'Plan basico', plan_slug = 'basico')
         pattern             =   self._pattern(self.retail, 'pos-retail-b')
         store.customization.template    =   pattern.slug
         store.customization.save()
-        self.assertEqual(_authed(user).get(APPS_URL).json(), [])
+        self.assertEqual(self._apps(_authed(user))['apps'], [])
 
     def test_other_rubro_does_not_see_retail_app(self):
-        pattern             =   self._pattern(self.indumentaria, 'sastreria-x')
+        pattern             =   self._pattern(self.indumentaria, 'sastreria-x2')
         user, _, store      =   _make_owner()
         store.customization.template    =   pattern.slug
         store.customization.save()
-        self.assertNotIn('mostrador', [app['slug'] for app in _authed(user).get(APPS_URL).json()])
+        self.assertNotIn('mostrador', [app['slug'] for app in self._apps(_authed(user))['apps']])
 
     def test_store_without_design_sees_catalog(self):
         #Rubro 'general' (sin diseño elegido): la app sigue visible — no
         #se penaliza la indecisión (PLAN_POS §1).
         user, _, _      =   _make_owner()
-        slugs           =   [app['slug'] for app in _authed(user).get(APPS_URL).json()]
-        self.assertIn('mostrador', slugs)
+        data            =   self._apps(_authed(user))
+        self.assertEqual(data['rubro'], 'general')
+        self.assertIn('mostrador', [app['slug'] for app in data['apps']])
 
     def test_style_rubro_counts(self):
         #Sin patrón propio en catálogo pero con estilo elegido del rubro
@@ -344,7 +382,7 @@ class PosAppsTests(TestCase):
         user, _, store  =   _make_owner()
         store.customization.site_theme  =   {'style': {'id': style.slug}}
         store.customization.save()
-        self.assertIn('mostrador', [app['slug'] for app in _authed(user).get(APPS_URL).json()])
+        self.assertIn('mostrador', [app['slug'] for app in self._apps(_authed(user))['apps']])
 
     def test_app_with_general_rubro_visible_for_any_store(self):
         PosApp.objects.create(slug = 'generica', nombre = 'Genérica', rubros = ['general'], tier_min = 'ecommerce')
@@ -352,7 +390,7 @@ class PosAppsTests(TestCase):
         user, _, store      =   _make_owner()
         store.customization.template    =   pattern.slug
         store.customization.save()
-        slugs               =   [app['slug'] for app in _authed(user).get(APPS_URL).json()]
+        slugs               =   [app['slug'] for app in self._apps(_authed(user))['apps']]
         self.assertIn('generica', slugs)
         self.assertNotIn('mostrador', slugs)
 
@@ -360,4 +398,4 @@ class PosAppsTests(TestCase):
         self.mostrador.is_active    =   False
         self.mostrador.save()
         user, _, _      =   _make_owner()
-        self.assertEqual(_authed(user).get(APPS_URL).json(), [])
+        self.assertEqual(self._apps(_authed(user))['apps'], [])

@@ -18,6 +18,8 @@ from StoreApp.domains.pos.services import (
     issue_device_token,
     issue_license,
     redeem_pairing_code,
+    rubro_options,
+    store_rubro,
 )
 from StoreApp.domains.stores.models import Store
 
@@ -88,12 +90,22 @@ class PosPairCodeView(APIView):
         return Response({'code': row.code, 'expires_at': row.expires_at}, status = status.HTTP_201_CREATED)
 
 class PosAppsView(APIView):
-    """GET /api/pos/apps/ — catálogo filtrado por plan + rubro de SU tienda."""
+    """
+    GET /api/pos/apps/ — catálogo filtrado por plan + rubro de SU tienda.
+    ?rubro=<slug> pisa el rubro derivado del diseño (el dueño puede
+    explorar apps de otros rubros desde el selector de la card).
+    Responde {rubro, rubros, apps}.
+    """
     permission_classes    =   [IsAuthenticated]
     def get(self, request):
         store   =   _own_store(request)
-        apps    =   catalog_for(store)
-        return Response(PosAppSerializer(apps, many = True).data, status = status.HTTP_200_OK)
+        derived =   store_rubro(store)
+        rubro   =   str(request.query_params.get('rubro') or '').strip() or derived
+        return Response({
+            'rubro'     :   rubro,
+            'rubros'    :   rubro_options(),
+            'apps'      :   PosAppSerializer(catalog_for(store, rubro = rubro), many = True).data,
+        }, status = status.HTTP_200_OK)
 #=========================================
 # VISTAS DEL DISPOSITIVO (anónimas — el código/token es la credencial)
 #=========================================

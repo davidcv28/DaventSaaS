@@ -39,6 +39,9 @@ class PosApp(models.Model):
     version             =   models.CharField(max_length = 20, blank = True, verbose_name = 'Versión')
     #Key del instalador en R2 (la descarga firmada es fase 3).
     download_key        =   models.CharField(max_length = 255, blank = True, verbose_name = 'Instalador (key en R2)')
+    #Key de la imagen de vista previa en R2 (WebP; la URL sale por
+    #object_url en el serializer — pública, es contenido de catálogo).
+    preview_key         =   models.CharField(max_length = 255, blank = True, verbose_name = 'Vista previa (key en R2)')
     is_active           =   models.BooleanField(default = True, db_index = True, verbose_name = 'Activa')
     position            =   models.PositiveIntegerField(default = 0, verbose_name = 'Orden')
     created_at          =   models.DateTimeField(auto_now_add = True)
