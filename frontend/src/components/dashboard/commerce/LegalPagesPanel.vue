@@ -8,8 +8,9 @@ import AlertMessage from '../../AlertMessage.vue'
 
 // Páginas legales + bandeja de devoluciones — /api/store-legal-pages/*.
 // El CONTENIDO legal es fijo de la plataforma (texto base interpolado
-// con los datos fiscales de la tienda): el dueño solo decide publicar/
-// ocultar cada página — no hay edición. El `body` es TEXTO PLANO que se
+// con los datos fiscales de la tienda) y va siempre publicado: no hay
+// edición ni opción de ocultarlo (es la protección legal de la tienda
+// y del comprador, no un feature). El `body` es TEXTO PLANO que se
 // muestra literal (whitespace-pre-line), JAMÁS v-html.
 // OJO: 'returns' comparte path — GET lista solicitudes, PUT publica la página.
 const store = useStoreStore()
@@ -56,15 +57,17 @@ function selectKind(k) {
   saveMsg.value = ''; saveErr.value = ''
 }
 
-async function togglePublish() {
+// Solo existe para rescatar páginas que alguna vez quedaron ocultas en la
+// base: el toggle de publicar/despublicar se eliminó, no hay opción de
+// apagar estas páginas.
+async function publishPage() {
   const p = pages.value[activeKind.value]
   if (!p || pubBusy.value) return
-  const target = !p.is_published
   pubBusy.value = true; saveMsg.value = ''; saveErr.value = ''
   try {
-    const data = await legalPagesOwnerApi.save(activeKind.value, { is_published: target })
+    const data = await legalPagesOwnerApi.save(activeKind.value, { is_published: true })
     pages.value = { ...pages.value, [activeKind.value]: { ...p, ...data } }
-    saveMsg.value = target ? 'Página publicada en tu web.' : 'Página despublicada.'
+    saveMsg.value = 'Página publicada en tu web.'
   } catch (e) {
     saveErr.value = apiErr(e)
   } finally { pubBusy.value = false }
@@ -120,7 +123,7 @@ watch(() => store.hasStore, (h) => { if (h) { loadPages(); loadReturns() } }, { 
       <!-- ===== Páginas legales (contenido fijo de la plataforma) ===== -->
       <section class="card">
         <h3><AppIcon name="file-text" :size="18" /> Páginas legales de tu web</h3>
-        <p class="hint">Texto legal estándar de DAVENT, completado automáticamente con los datos fiscales de tu tienda. Viene publicado por defecto — podés ocultarlo, pero tu tienda queda sin esa protección legal. No es editable: si necesitás un cambio, escribinos por soporte.</p>
+        <p class="hint">Texto legal estándar de DAVENT, completado automáticamente con los datos fiscales de tu tienda. Va siempre publicado: es la protección legal de tu tienda y de tus compradores. No es editable: si necesitás un cambio, escribinos por soporte.</p>
 
         <nav class="dsg-tabs" role="tablist" aria-label="Página legal">
           <button v-for="k in KINDS" :key="k" type="button" role="tab" class="dsg-tab" :class="{ active: activeKind === k }" :aria-selected="activeKind === k" @click="selectKind(k)">
@@ -143,11 +146,9 @@ watch(() => store.hasStore, (h) => { if (h) { loadPages(); loadReturns() } }, { 
           </div>
           <div class="legal-readonly">{{ activePage.body }}</div>
 
-          <label class="svc-switch legal-publish">
-            <input type="checkbox" role="switch" :checked="activePage.is_published" :aria-checked="activePage.is_published" :disabled="pubBusy" @change="togglePublish" />
-            <span class="svc-switch-track" aria-hidden="true"><i></i></span>
-            <span class="check-text"><strong>Publicada en tu web</strong><small>Si está apagada, la página no es visible para los compradores.</small></span>
-          </label>
+          <button v-if="!activePage.is_published" type="button" class="btn ghost btn-auto legal-publish" :disabled="pubBusy" @click="publishPage">
+            <AppIcon name="eye" :size="14" /> Volver a publicarla
+          </button>
 
           <AlertMessage v-if="saveErr" kind="error" :message="saveErr" />
           <AlertMessage v-else-if="saveMsg" kind="success" :message="saveMsg" />
@@ -233,9 +234,7 @@ watch(() => store.hasStore, (h) => { if (h) { loadPages(); loadReturns() } }, { 
 .legal-viewer { margin-top: 14px; }
 .legal-viewer-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 8px 14px; flex-wrap: wrap; margin-bottom: 10px; }
 .legal-viewer-head .pill { flex: none; margin-top: 1px; }
-.svc-switch.legal-publish { margin: 14px 0 0; }
-.svc-switch .check-text strong { display: block; font-size: 13.5px; font-weight: 600; color: var(--ink); }
-.svc-switch .check-text small { display: block; font-size: 12px; color: var(--muted); margin-top: 1px; line-height: 1.45; }
+.legal-publish { margin: 14px 0 0; }
 .legal-panel .toolbar { align-items: center; }
 .legal-readonly {
   max-height: 340px; overflow: auto; padding: 14px 16px;

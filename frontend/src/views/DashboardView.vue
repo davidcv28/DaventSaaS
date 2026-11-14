@@ -95,7 +95,7 @@ import LegalPagesPanel from '../components/dashboard/commerce/LegalPagesPanel.vu
 import PlansPanel from '../components/dashboard/commerce/PlansPanel.vue'
 import SyncPanel from '../components/dashboard/commerce/SyncPanel.vue'
 import CustomerAuthPanel from '../components/dashboard/commerce/CustomerAuthPanel.vue'
-import SellingHub from '../components/dashboard/SellingHub.vue'
+import PosAppsCard from '../components/pos/PosAppsCard.vue'
 import FeedPanel from '../components/dashboard/FeedPanel.vue'
 
 const router = useRouter()
@@ -117,7 +117,15 @@ const section = computed({
   set: (id) => {
     // Las secciones bloqueadas no navegan: abren la vista previa del
     // beneficio (también los `section = 'x'` internos pasan por acá).
-    if (navLocks.value?.[id]) { openLocked(id); return }
+    // 'selling' y 'web' son solo contenedores del rail: abren si al menos
+    // un apartado es accesible — menú en móvil, primer apartado libre en
+    // desktop. Sin nada adentro, el candado vende el beneficio entero.
+    if (id === 'selling' || id === 'web') {
+      const free = tabGroups.value[id].find((t) => !navLocks.value?.[t.id])
+      if (!free) { openLocked(id); return }
+      if (!railMobile.value) id = free.id
+    }
+    if (id !== 'selling' && id !== 'web' && navLocks.value?.[id]) { openLocked(LOCKED_FEATURES[id] ? id : 'selling'); return }
     const next = validIds.value.has(id) ? id : 'overview'
     if (sectionInner.value === 'design' && next !== 'design' && designDirtyAll.value) {
       leaveGuard.target = next
@@ -315,18 +323,21 @@ const paidPlans = computed(() => billing.plans.filter((p) => !p.is_trial))
 
 // Apartados agrupados (pestañas dentro de una misma sección): la navegación
 // apunta al primer apartado y las pestañas viven adentro.
+// Plan con e-commerce: catálogo, servicios y acceso de clientes salen del
+// menú principal y se unifican dentro de la sección "Mi tienda" (rail).
+const hasEcommerce = computed(() => Boolean(plan.value?.isCurrent && plan.value?.benefits?.has_ecommerce))
+
 const tabGroups = computed(() => {
-  const b = plan.value?.benefits || {}
-  const hasAccess = Boolean(plan.value?.isCurrent)
-  const web = [{ id: 'store', label: 'Mi dirección web', icon: 'share-2', hint: 'Link para compartir' }]
-  if (hasAccess && b.has_customization) {
-    web.push(
-      { id: 'photos', label: 'Mis fotos', icon: 'images', hint: 'Logo, portada y galería' },
-      { id: 'design', label: 'Diseño', icon: 'palette', hint: 'Cómo se ve tu página' },
-      { id: 'company', label: 'Sobre mi negocio', icon: 'building-2', hint: 'Servicios, horarios y más' }
-    )
-  }
-  const promo = [
+  // Todo lo de la web pública vive en "Mi página" (rail): dirección, fotos,
+  // diseño, empresa y difusión (novedades/opiniones/QR/visitas). Los que el
+  // plan no trae quedan con candado, igual que en "Mi tienda".
+  const web = [
+    { id: 'store', label: 'Mi dirección web', icon: 'share-2', hint: 'Link para compartir' },
+    { id: 'photos', label: 'Mis fotos', icon: 'images', hint: 'Logo, portada y galería' },
+    { id: 'design', label: 'Diseño', icon: 'palette', hint: 'Cómo se ve tu página' },
+    { id: 'company', label: 'Sobre mi negocio', icon: 'building-2', hint: 'Servicios, horarios y más' },
+    { id: 'feed', label: 'Novedades', icon: 'lucide:newspaper', hint: 'Posts, fotos y encuestas' },
+    { id: 'reviews', label: 'Opiniones', icon: 'star', hint: 'Lo que dicen de vos' },
     { id: 'tools', label: 'QR y folletos', icon: 'qr-code', hint: 'Para imprimir y repartir' },
     { id: 'stats', label: 'Mis visitas', icon: 'trending-up', hint: 'Cuánta gente te mira' }
   ]
@@ -341,13 +352,24 @@ const tabGroups = computed(() => {
     { id: 'orders', label: 'Pedidos', icon: 'package', hint: 'Lo que te compraron' },
     { id: 'sales', label: 'Ventas', icon: 'trending-up', hint: 'Números del período' },
     { id: 'customers', label: 'Clientes', icon: 'users', hint: 'Compradores y miembros' },
-    { id: 'inquiries', label: 'Consultas', icon: 'message-circle', hint: 'Preguntas de clientes' },
+    { id: 'inquiries', label: 'Consultas', icon: 'message-circle', hint: 'Preguntas de clientes' }
+  ]
+  // Catálogo/servicios/acceso viven acá dentro en todos los planes: el
+  // menú principal los esconde (ver navItems) y cada uno muestra su propio
+  // candado si el plan no trae el beneficio.
+  selling.push(
+    { id: 'catalogs', label: 'Productos', icon: 'package', hint: 'Fotos, precios y categorías' },
+    { id: 'services', label: 'Servicios', icon: 'wrench', hint: 'Lo que ofrecés hacer' },
+    { id: 'accounts', label: 'Acceso de clientes', icon: 'lucide:id-card', hint: 'Registro e ingreso en tu web' }
+  )
+  selling.push(
     { id: 'payconfig', label: 'Cobros', icon: 'wallet', hint: 'Métodos, fiscal y Mercado Pago' },
     { id: 'legal', label: 'Legal', icon: 'file-text', hint: 'Páginas y devoluciones' },
     { id: 'memberships', label: 'Membresías', icon: 'crown', hint: 'Planes de tus clientes' },
+    { id: 'pos', label: 'App de mostrador', icon: 'monitor', hint: 'Venta en persona en tu local' },
     { id: 'sync', label: 'Sincronización', icon: 'refresh-cw', hint: 'Estado y cambios de tu web' }
-  ]
-  return { web, promo, billing: billingTabs, selling }
+  )
+  return { web, billing: billingTabs, selling }
 })
 
 // Qué secciones se bloquean por plan y con qué copy abre el candado
@@ -365,7 +387,11 @@ const SECTION_BENEFITS = {
   bot: ['has_chatbot'],
   stats: ['has_stats'],
   tools: ['has_qr', 'has_flyers'],
-  flyer_editor: ['has_flyer_editor']
+  flyer_editor: ['has_flyer_editor'],
+  pos: ['has_pos_app'],
+  photos: ['has_customization'],
+  design: ['has_customization'],
+  company: ['has_customization']
 }
 const LOCKED_FEATURES = {
   selling: { icon: 'lucide:shopping-cart', title: 'Vender online', text: 'Carrito, checkout y seguimiento de pedidos en tu web; cobros con tu Mercado Pago, membresías para tus clientes y registro de ventas.' },
@@ -375,13 +401,26 @@ const LOCKED_FEATURES = {
   catalogs: { icon: 'package', title: 'Tu catálogo de productos', text: 'Cargá productos con foto, precio y categorías: se publican solos en tu web.' },
   services: { icon: 'wrench', title: 'Página de servicios', text: 'Una página propia para mostrar lo que hacés, con duración, precio y botón de consulta directa a tu WhatsApp.' },
   feed: { icon: 'lucide:newspaper', title: 'Novedades', text: 'Una página tipo feed en tu web: publicá fotos, videos, posts de TikTok/YouTube/Instagram y encuestas; tus clientes comentan, likean y votan.' },
-  pos: { icon: 'monitor', title: 'Venta en persona', text: 'Cobrá en tu local usando el mismo catálogo de tu web. Llega muy pronto.' },
+  pos: { icon: 'monitor', title: 'App de mostrador', text: 'La app de punto de venta para tu local: vendé en persona con el mismo catálogo de tu web. Funciona sin internet.' },
   reviews: { icon: 'star', title: 'Opiniones de clientes', text: 'Tus clientes valoran tus productos y dejan comentarios que se muestran en tu web; vos decidís qué se ve.' },
   support: { icon: 'message-circle', title: 'Tu Asistente', text: 'Te responde sobre tu cuenta: plan, tienda, productos, visitas, pagos y facturas.' },
   bot: { icon: 'bot', title: 'Asistente virtual', text: 'Un ayudante en tu web que responde solo las preguntas frecuentes de tus clientes, las 24 horas.' },
   tools: { icon: 'qr-code', title: 'QR y folletos', text: 'Código QR y folletos listos para imprimir y repartir: del papel a tu web en un escaneo.' },
   flyer_editor: { icon: 'pen-tool', title: 'Editor avanzado de folletos', text: 'Un lienzo libre para diseñar tu folleto pieza por pieza: textos, fotos, productos y QR donde quieras, y salida lista para imprenta.' },
-  stats: { icon: 'trending-up', title: 'Estadísticas de visitas', text: 'Cuánta gente entra a tu web día por día durante el último mes.' }
+  stats: { icon: 'trending-up', title: 'Estadísticas de visitas', text: 'Cuánta gente entra a tu web día por día durante el último mes.' },
+  photos: { icon: 'images', title: 'Mis fotos', text: 'El logo, la foto de portada y la galería de tu página.' },
+  design: { icon: 'palette', title: 'Diseño de tu página', text: 'Elegí el diseño, el estilo y las tipografías de tu web.' },
+  company: { icon: 'building-2', title: 'Sobre mi negocio', text: 'Servicios, horarios y los datos de tu comercio en tu página.' },
+  // Apartados de "Mi tienda": todos cuelgan del mismo beneficio e-commerce,
+  // pero cada uno vende su función puntual en el modal del candado.
+  orders: { icon: 'package', title: 'Pedidos', text: 'Seguimiento de lo que te compran: estados, entregas y avisos a tus clientes.' },
+  sales: { icon: 'trending-up', title: 'Ventas', text: 'Los números de tu tienda por período: facturación y ticket promedio.' },
+  customers: { icon: 'users', title: 'Clientes', text: 'Quiénes te compran: historial de pedidos y membresías activas.' },
+  inquiries: { icon: 'message-circle', title: 'Consultas', text: 'Las preguntas que te dejan los compradores desde tu web.' },
+  payconfig: { icon: 'wallet', title: 'Cobros', text: 'Métodos de pago, datos fiscales y tu cobro con Mercado Pago.' },
+  legal: { icon: 'file-text', title: 'Páginas legales', text: 'Términos, privacidad y devoluciones siempre publicadas en tu web.' },
+  memberships: { icon: 'crown', title: 'Membresías', text: 'Planes de suscripción para tus clientes con cobro recurrente.' },
+  sync: { icon: 'refresh-cw', title: 'Sincronización', text: 'Estado de tu web y los últimos cambios publicados.' }
 }
 
 // Por sección: null = accesible, 'expired' = plan vencido, 'upgrade' = falta
@@ -392,14 +431,22 @@ const navLocks = computed(() => {
   const hasAccess = Boolean(plan.value?.isCurrent)
   const map = {}
   const gated = (id) => (SECTION_BENEFITS[id] || []).some((k) => !b[k])
-  for (const id of ['catalogs', 'services', 'pos', 'reviews', 'feed', 'support', 'bot', 'tools', 'stats', 'design_assisted', 'design_studio', 'flyer_editor', 'selling', 'accounts']) {
+  for (const id of ['catalogs', 'services', 'pos', 'reviews', 'feed', 'support', 'bot', 'tools', 'stats', 'design_assisted', 'design_studio', 'flyer_editor', 'selling', 'accounts', 'photos', 'design', 'company']) {
     // El asistente/soporte es para planes pagos (gate mcp_user_access en
     // el backend): el trial queda con candado de upgrade aunque esté vigente.
     // Sin suscripción (plan null) no es "venció": es que nunca eligió plan.
     map[id] = !plan.value ? 'none' : !hasAccess ? 'expired' : (id === 'support' && plan.value?.isTrial) ? 'upgrade' : gated(id) ? 'upgrade' : null
   }
+  // Los apartados del e-commerce heredan el candado de "Mi tienda": un deep
+  // link directo (/dashboard/pedidos) no puede saltearse el plan. Las que
+  // tienen beneficio propio (catálogo, servicios, acceso) conservan el suyo.
+  for (const t of tabGroups.value.selling) if (!(t.id in map)) map[t.id] = map.selling
   return map
 })
+// El área de tienda abre si al menos un apartado es accesible; con todo
+// bloqueado (sin plan, plan vencido) el ítem queda con candado y vende el
+// beneficio completo en la vista previa.
+const sellHasFree = computed(() => tabGroups.value.selling.some((t) => !navLocks.value[t.id]))
 
 //Opiniones sin leer: badge del ítem "Opiniones" del menú (viene en el
 //mismo poll que las notificaciones). Declarado acá arriba porque navItems
@@ -411,18 +458,15 @@ const chatUnread = ref(0)
 // Menú por intención: lo que el dueño quiere hacer, no el módulo técnico.
 const navItems = computed(() => {
   const L = navLocks.value
-  return [
+  const items = [
     { id: 'overview', label: 'Inicio', icon: 'dashboard', hint: 'Tu negocio hoy' },
     { id: 'catalogs', label: 'Mis productos', icon: 'package', hint: 'Fotos, precios y categorías', locked: L.catalogs, badge: catalog.products.length || null },
     { id: 'services', label: 'Mis servicios', icon: 'wrench', hint: 'Lo que ofrecés hacer', locked: L.services },
-    { id: 'selling', label: 'Vender online', icon: 'lucide:shopping-cart', hint: 'Pedidos, ventas y cobros de tu tienda', locked: L.selling },
+    { id: 'selling', label: hasEcommerce.value ? 'Mi tienda' : 'Vender online', icon: 'lucide:shopping-cart', hint: 'Pedidos, ventas y cobros de tu tienda', locked: sellHasFree.value ? null : L.selling },
     { id: 'accounts', label: 'Acceso de clientes', icon: 'lucide:id-card', hint: 'Registro e ingreso en tu web', locked: L.accounts },
     // "Vender en persona" se comunica como novedad (roadmap), no como sección.
 
-    { id: 'web', label: 'Mi página', icon: 'store', hint: 'Diseño, secciones y dirección' },
-    { id: 'reviews', label: 'Opiniones', icon: 'star', hint: 'Lo que dicen de vos', locked: L.reviews, badge: unreadReviewsCount.value || null },
-    { id: 'feed', label: 'Novedades', icon: 'lucide:newspaper', hint: 'Posts, encuestas y comentarios', locked: L.feed },
-    { id: 'tools', label: 'Promocionar', icon: 'megaphone', hint: 'QR, folletos y visitas', locked: L.tools },
+    { id: 'web', label: 'Mi página', icon: 'store', hint: 'Diseño, secciones y dirección', badge: unreadReviewsCount.value || null },
     { id: 'support', label: 'Ayuda', icon: 'message-circle', hint: 'Te ayuda con tu cuenta', locked: L.support },
     { id: 'bot', label: 'Asistente virtual', icon: 'bot', hint: 'Responde por vos en tu web', locked: L.bot },
     { sep: true },
@@ -431,6 +475,9 @@ const navItems = computed(() => {
     //Discreto a propósito: el changelog no compite con las secciones de trabajo.
     { id: 'changelog', label: 'Novedades', icon: 'history', hint: 'Lo nuevo en DAVENT' }
   ]
+  // Productos/servicios/acceso viven dentro del área de tienda (ver
+  // tabGroups.selling): mostrarlos acá duplicaba la navegación.
+  return items.filter((i) => !['catalogs', 'services', 'accounts'].includes(i.id))
 })
 
 const validIds = computed(() => {
@@ -476,6 +523,40 @@ const navParent = computed(() => {
   return null
 })
 
+// Sub-paneles tipo POS con rail lateral propio: "Mi tienda" (e-commerce) y
+// "Mi página" (todo lo de la web pública). El rail reemplaza a las
+// SectionTabs de cada grupo; en móvil es la pantalla de menú.
+const sellingIds = computed(() => new Set(['selling', ...tabGroups.value.selling.map((t) => t.id)]))
+const webIds = computed(() => new Set(['web', ...tabGroups.value.web.map((t) => t.id)]))
+const inShell = computed(() => sellingIds.value.has(section.value))
+const inWebShell = computed(() => webIds.value.has(section.value))
+// Los apartados accesibles van primero: lo bloqueado queda al fondo como
+// muestra de lo que habilita el plan superior, no como pared de candados.
+const byUnlocked = (a, b) => Number(Boolean(navLocks.value[b.id])) - Number(Boolean(navLocks.value[a.id]))
+const sellRailTabs = computed(() => [...tabGroups.value.selling].sort(byUnlocked))
+const webRailTabs = computed(() => [...tabGroups.value.web].sort(byUnlocked))
+// Breakpoint del rail/cards (mismo que el media query de sell.css): en
+// móvil el contenedor es una pantalla de menú, en desktop un alias del
+// primer apartado libre. Si se agranda parado en un menú, cae al primero.
+const mqRailMobile = window.matchMedia('(max-width: 900px)')
+const railMobile = ref(mqRailMobile.matches)
+mqRailMobile.addEventListener('change', (e) => { railMobile.value = e.matches })
+watch(railMobile, (m) => {
+  if (!m && (sectionInner.value === 'selling' || sectionInner.value === 'web'))
+    section.value = sectionInner.value
+})
+const sellBrandName = computed(() => business.value || store.store?.slug || 'Mi comercio')
+const sellBrandInitials = computed(() =>
+  sellBrandName.value.trim().split(/\s+/).slice(0, 2).map((w) => w[0]).join('').toUpperCase() || 'MC')
+// Tonos por módulo para las cards del rail en móvil.
+const RAIL_TONES = {
+  orders: 'brand', sales: 'ok', customers: 'info', inquiries: 'warn', catalogs: 'brand', services: 'info',
+  accounts: 'info', payconfig: 'ok', legal: 'info', memberships: 'warn', sync: 'brand', selling: 'brand',
+  store: 'brand', photos: 'info', design: 'warn', company: 'info', feed: 'info', reviews: 'warn',
+  tools: 'brand', stats: 'ok', web: 'brand'
+}
+const railTone = (id) => RAIL_TONES[id] || 'brand'
+
 // Deep links del panel: /dashboard/<slug> (español, sin acentos) abre la
 // sección directo — la URL queda prolija y compartible. Pasa por el setter
 // de `section`: valida el plan vigente y abre el candado si falta el
@@ -484,7 +565,7 @@ const SECTION_SLUGS = {
   inicio: 'overview',
   productos: 'catalogs', catalogo: 'catalogs', catalogos: 'catalogs',
   servicios: 'services',
-  vender: 'selling', ventas: 'sales', pedidos: 'orders',
+  vender: 'selling', tienda: 'selling', ventas: 'sales', pedidos: 'orders',
   clientes: 'customers', consultas: 'inquiries', cobros: 'payconfig',
   cuentas: 'accounts', acceso: 'accounts', accesos: 'accounts',
   legal: 'legal', membresias: 'memberships', sincronizacion: 'sync',
@@ -506,20 +587,25 @@ watch(() => route.params.section, (slug) => {
   if (id) section.value = id
 })
 
-// Plan más barato que incluye alguno de los beneficios pedidos (para el
-// "Disponible en {plan}" del candado).
-function minPlanFor(keys) {
+// Planes que incluyen TODOS los beneficios pedidos (para el "Disponible en
+// {planes}" del candado; más barato primero).
+function plansFor(keys) {
   const list = Array.isArray(keys) ? keys : [keys]
-  const cands = billing.plans.filter((p) => !p.is_trial && list.some((k) => p.benefits?.[k]))
-  cands.sort((a, b) => Number(a.price) - Number(b.price))
-  return cands[0]?.name || null
+  if (!list.length) return []
+  return billing.plans
+    .filter((p) => !p.is_trial && list.every((k) => p.benefits?.[k]))
+    .sort((a, b) => Number(a.price) - Number(b.price))
+    .map((p) => p.name)
 }
 const lockedFeature = ref(null)
 function openLocked(id) {
   const meta = LOCKED_FEATURES[id] || { icon: 'lock', title: 'Función bloqueada', text: '' }
   const reason = navLocks.value[id] || 'upgrade'
-  const planName = reason === 'upgrade' ? minPlanFor(SECTION_BENEFITS[id] || []) : null
-  lockedFeature.value = { id, reason, planName, ...meta }
+  // Los apartados del rail no figuran en SECTION_BENEFITS: cuelgan del
+  // beneficio e-commerce del área.
+  const keys = SECTION_BENEFITS[id]?.length ? SECTION_BENEFITS[id] : SECTION_BENEFITS.selling
+  const plans = reason === 'upgrade' ? plansFor(keys) : []
+  lockedFeature.value = { id, reason, plans, ...meta }
 }
 function onLockedNav(item) { openLocked(item.id) }
 function goPlansFromLocked() {
@@ -532,6 +618,9 @@ watch(validIds, (ids) => {
   if (!ids.has(section.value)) sectionInner.value = 'overview'
 })
 watch(navLocks, (locks) => {
+  // 'selling' con algún apartado libre es pantalla válida aunque el
+  // beneficio e-commerce falte (el menú vende lo demás).
+  if (sectionInner.value === 'selling' && sellHasFree.value) return
   if (locks[section.value]) sectionInner.value = 'overview'
 })
 
@@ -580,6 +669,14 @@ const searchCommands = computed(() => {
   for (const i of navItems.value.filter((x) => x.id)) {
     cmds.push({ id: i.id, label: i.label, hint: i.hint || '', icon: i.icon, kw: KW[i.id] || '', locked: i.locked, run: go(i.id), group: 'Secciones' })
   }
+  // Los apartados de los rails (tienda y página) también son destinos.
+  const cmdIds = new Set(cmds.map((c) => c.id))
+  for (const tabs of Object.values(tabGroups.value)) {
+    for (const t of tabs) {
+      if (cmdIds.has(t.id)) continue
+      cmds.push({ id: t.id, label: t.label, hint: t.hint || '', icon: t.icon, kw: KW[t.id] || '', locked: navLocks.value[t.id] || null, run: go(t.id), group: 'Secciones' })
+    }
+  }
   if (store.hasStore) {
     cmds.push({ id: 'copy-link', label: 'Copiar mi link', hint: 'La dirección de tu web, lista para pegar', icon: 'copy', kw: 'copiar link url direccion compartir pegar', run: () => copyLink(), group: 'Acciones' })
     cmds.push({ id: 'open-store', label: 'Ver mi página', hint: 'Abrirla como la ven tus clientes', icon: 'external-link', kw: 'ver tienda pagina publica preview abrir mirar', run: () => openStore(), group: 'Acciones' })
@@ -597,7 +694,7 @@ const searchCommands = computed(() => {
 // Los 4 destinos del pulgar + "Más" (el quinto tab lo dibuja el layout).
 const mobileTabs = computed(() => [
   { id: 'overview', label: 'Inicio', icon: 'dashboard' },
-  { id: 'catalogs', label: 'Vender', icon: 'package', locked: navLocks.value.catalogs },
+  { id: 'selling', label: 'Vender', icon: 'package', locked: sellHasFree.value ? null : navLocks.value.selling },
   { id: 'web', label: 'Mi web', icon: 'store' },
   { id: 'chat', label: 'Mensajes', icon: 'message-circle', badge: chatUnread.value }
 ])
@@ -4314,2085 +4411,2102 @@ async function changePassword() {
       </div>
     </div>
 
-    <!-- ================= CATÁLOGO ================= -->
-    <div v-if="seen.catalogs" v-show="section === 'catalogs'" :class="{ 'sec-on': section === 'catalogs' }">
-      <div class="page-head">
-        <div>
-          <h1>Mis productos</h1>
-          <p>Acá cargás lo que vendés: aparece solo en tu página web. {{ billing.hasSubscription ? productsCountText : catalogLimit }}</p>
-          <div v-if="billing.hasSubscription && catalog.products.length" class="cat-stats">
-            <span class="cat-stat tone-info"><AppIcon name="eye" :size="13" aria-hidden="true" /> {{ productStats.visible }} visibles</span>
-            <span class="cat-stat tone-warn"><AppIcon name="percent" :size="13" aria-hidden="true" /> {{ productStats.offers }} en oferta</span>
-            <span class="cat-stat tone-ok"><AppIcon name="image" :size="13" aria-hidden="true" /> {{ productStats.noImage }} sin foto</span>
-            <span class="cat-stat tone-brand"><AppIcon name="tag" :size="13" aria-hidden="true" /> {{ productStats.discounted }} con descuento</span>
+        <!-- ================= MI PÁGINA (web pública del dueño) ================= -->
+    <!-- Sub-panel tipo rail: dirección, fotos, diseño, empresa y difusión
+         (novedades/opiniones/QR/visitas). En móvil el rail es el menú. -->
+    <div v-show="inWebShell" class="rail-shell" :class="{ 'rail-shell--menu': section === 'web' }">
+      <aside v-show="inWebShell" class="rail" aria-label="Menú de tu página web">
+        <div class="rail-brand">
+          <span class="rail-logo" aria-hidden="true"><AppIcon name="store" :size="18" /></span>
+          <span class="rail-txt">
+            <strong>Mi página</strong>
+            <small v-if="store.hasStore"><i class="rail-dot" :class="{ off: !store.store?.is_published }" aria-hidden="true"></i>{{ store.store?.is_published ? 'En vivo' : 'Pausada' }}</small>
+            <small v-else>Tu web pública</small>
+          </span>
+        </div>
+        <nav class="rail-nav" aria-label="Apartados de tu página">
+          <button
+            v-for="t in webRailTabs" :key="t.id" type="button"
+            class="rail-item" :class="[`tone-${railTone(t.id)}`, { active: section === t.id, locked: navLocks[t.id] }]"
+            :aria-current="section === t.id ? 'page' : undefined"
+            :title="t.hint || t.label"
+            @click="section = t.id"
+          >
+            <span class="rail-ico"><AppIcon :name="t.icon" :size="17" /></span>
+            <span class="rail-item-txt">
+              <strong>{{ t.label }}</strong>
+              <small v-if="t.hint" class="rail-hint">{{ t.hint }}</small>
+            </span>
+            <AppIcon v-if="navLocks[t.id]" name="lock" :size="13" class="rail-lock" />
+            <AppIcon v-else name="chevron-right" :size="15" class="rail-go" />
+          </button>
+        </nav>
+        <button
+          type="button" class="rail-store"
+          @click="store.hasStore ? openStore() : (section = 'store')"
+        >
+          <AppIcon :name="store.hasStore ? 'external-link' : 'arrow-right'" :size="15" /> <span>{{ store.hasStore ? 'Ver mi página' : 'Reservar mi link' }}</span>
+        </button>
+      </aside>
+
+      <div class="rail-main">
+        <!-- Igual que en Mi tienda: volver a la pantalla de cards (<=900px). -->
+        <button type="button" class="rail-back" @click="section = 'web'">
+          <AppIcon name="chevron-left" :size="16" /> <span>Menú</span>
+        </button>
+    <!-- ================= MI TIENDA ================= -->
+        <div v-if="seen.store" v-show="section === 'store'" class="web-scope" :class="{ 'sec-on': section === 'store' }">
+          <div class="page-head">
+            <div>
+              <h1>Mi página web</h1>
+              <p>Tu dirección en internet. Compartí el link por WhatsApp o donde quieras.</p>
+            </div>
           </div>
-        </div>
-        <div class="page-head-actions cat-actions">
-          <button class="btn ghost btn-auto" @click="catalog.loadAll()"><AppIcon name="refresh" :size="16" /> Recargar</button>
-          <button v-if="billing.hasSubscription && !catalog.denied" class="btn btn-auto" @click="focusProductForm"><AppIcon name="plus" :size="16" /> Cargar producto</button>
-        </div>
-      </div>
 
-      <AlertMessage v-if="catalog.notice" kind="success" :message="catalog.notice" />
-      <AlertMessage v-if="catalog.lastError" kind="error" :message="catalog.lastError" />
+          <AlertMessage v-if="store.notice" kind="success" :message="store.notice" />
+          <AlertMessage v-if="store.lastError" kind="error" :message="store.lastError" />
 
-      <template v-if="!billing.hasSubscription || catalog.denied">
-        <div class="empty">
-          <span class="empty-icon"><AppIcon name="library" :size="28" /></span>
-          <h3>Para cargar productos necesitás un plan activo</h3>
-          <p>Elegí un plan y en un minuto podés empezar a publicar tus productos.</p>
-          <button class="btn btn-auto" @click="section = 'plans'">Ver planes</button>
-        </div>
-      </template>
-
-      <template v-else>
-        <SectionTabs :tabs="catalogSectionTabs" :active="catalogTab" @select="catalogTab = $event" />
-
-        <div v-if="catalog.status === 'loading'" class="card card-loading"><span class="spinner spinner-brand"></span><p>Cargando tu catálogo…</p></div>
-
-        <template v-else>
-          <!-- -------- Productos: inventario a ancho completo; el formulario
-               vive en el drawer lateral (Teleport al final del layout). -------- -->
-          <div v-show="catalogTab === 'products'">
+          <div v-if="store.status === 'loading'" class="card card-loading"><span class="spinner spinner-brand"></span><p>Cargando tu tienda…</p></div>
+          <template v-else-if="store.hasStore">
             <div class="card">
-              <StorageMeter />
-              <div v-if="!catalog.products.length" class="empty-mini">
-                <AppIcon name="package" :size="22" />
-                <div><p>Todavía no cargaste productos. El primero tarda un minuto: nombre, precio y una foto.</p><button type="button" class="empty-mini-cta" @click="focusProductForm">Cargar el primero</button></div>
+              <h3><AppIcon name="share-2" :size="18" /> Tu dirección web</h3>
+              <AlertMessage
+                v-if="store.store.is_blocked"
+                kind="error"
+                :message="`Tu web fue bloqueada por DAVENT${store.store.blocked_reason ? ` — motivo: ${store.store.blocked_reason}` : ''}. Si creés que es un error, escribime desde la sección de ayuda.`"
+              />
+              <div class="link-bar">
+                <code class="mono link-url">{{ publicUrl }}</code>
+                <span class="pill" :class="store.store.is_blocked ? 'danger' : (store.store.is_published ? 'ok' : 'muted')">{{ store.store.is_blocked ? 'Bloqueada' : (store.store.is_published ? 'Activo' : 'Pausado') }}</span>
               </div>
-              <template v-else>
-                <div class="inv-head">
-                  <h3><AppIcon name="package" :size="17" /> Inventario <small>· {{ filteredProducts.length }} de {{ catalog.products.length }}</small></h3>
-                  <button type="button" class="btn inv-add" @click="focusProductForm"><AppIcon name="plus" :size="15" /> Registrar nuevo producto</button>
+              <div class="btn-row link-actions">
+                <button class="btn btn-auto" @click="copyLink"><AppIcon name="copy" :size="16" /> Copiar dirección</button>
+                <button class="btn secondary btn-auto" @click="openStore"><AppIcon name="external-link" :size="16" /> Ver mi página</button>
+                <button class="btn ghost btn-auto" :disabled="storeBusy" @click="togglePublished">{{ store.store.is_published ? 'Pausar mi página' : 'Volver a publicarla' }}</button>
+              </div>
+              <p class="hint">Si la pausás, tus clientes ven un aviso hasta que la vuelvas a publicar.</p>
+            </div>
+
+            <details class="card more-card">
+              <summary><AppIcon name="pencil" :size="18" /> Cambiar mi dirección <small>Solo si de verdad lo necesitás</small></summary>
+              <div class="field">
+                <label for="rename-slug">Nuevo link <TipHint text="El «slug» es la última parte de tu dirección web: lo que va después de la barra. Tiene que ser corto y fácil de decir, como el nombre de tu negocio." /></label>
+                <div class="slug-box" :class="{ invalid: renameKind === 'err' || !!store.fieldErrors.slug }">
+                  <span class="slug-prefix">{{ slugPrefix }}</span>
+                  <input
+                    id="rename-slug"
+                    name="rename-slug"
+                    type="text"
+                    class="input slug-input"
+                    :value="renameSlug"
+                    :placeholder="store.store.slug"
+                    maxlength="60"
+                    autocomplete="off"
+                    @input="onRenameInput"
+                  />
+
                 </div>
-                <CatalogToolbar
-                  v-model:query="productQuery" v-model:category="prodFilterCategory" v-model:brand="prodFilterBrand"
-                  v-model:only-offers="prodOnlyOffers" v-model:sort="prodSort"
-                  :categories="catalog.categories" :brands="catalog.brands"
-                  @prices="showPriceUpdate = true"
-                />
-                <div v-if="!filteredProducts.length" class="empty-mini">
-                  <AppIcon name="search" :size="22" />
-                  <div>
-                    <p>No hay productos que coincidan con los filtros.</p>
-                    <button type="button" class="empty-mini-cta" @click="productQuery = ''; prodFilterCategory = ''; prodFilterBrand = ''; prodOnlyOffers = false">Limpiar filtros</button>
-                  </div>
+                <p class="hint">Ojo: la dirección anterior deja de funcionar y vas a tener que avisarles a tus clientes.</p>
+                <p v-if="store.fieldErrors.slug" class="field-error" role="alert">{{ store.fieldErrors.slug }}</p>
+                <p v-else-if="renameMsg" class="slug-check" :class="renameKind" role="status">
+                  <AppIcon v-if="renameCheck === 'available'" name="circle-check" :size="14" />
+                  <span v-else-if="renameCheck === 'checking'" class="spinner spinner-brand" aria-hidden="true"></span>
+                  {{ renameMsg }}
+                </p>
+              </div>
+              <button class="btn btn-auto" :disabled="!canRename" @click="saveRename">
+                <span v-if="renameBusy" class="spinner" aria-hidden="true"></span>Guardar nueva dirección
+              </button>
+            </details>
+
+            <div class="card domain-card">
+              <h3><AppIcon name="globe" :size="18" /> Tu dominio propio</h3>
+              <template v-if="!canCustomDomain">
+                <p>Usá un dominio que ya sea tuyo (por ejemplo <code class="mono">mitienda.com</code>) en lugar del link de DAVENT.</p>
+                <p class="hint">Disponible en el plan Premium.</p>
+                <button class="btn secondary btn-auto" @click="section = 'plans'">Ver planes <AppIcon name="arrow-right" :size="16" /></button>
+              </template>
+              <template v-else>
+                <p>¿Querés que tu web tenga nombre propio, como <code class="mono">mitienda.com</code>? Comprá el dominio y conectalo acá — te guiamos paso a paso.</p>
+                <AlertMessage v-if="domainErr" kind="error" :message="domainErr" />
+                <div v-if="domainInfo?.status === 'verified'" class="link-bar">
+                  <code class="mono link-url">{{ domainUrl }}</code>
+                  <span class="pill ok">Verificado</span>
                 </div>
                 <template v-else>
-                  <div v-if="selectedIds.length" class="prod-bulkbar">
-                    <AppIcon name="check" :size="15" />
-                    <span>{{ selectedIds.length }} seleccionado{{ selectedIds.length === 1 ? '' : 's' }}</span>
-                    <button type="button" @click="bulkDuplicate" :disabled="bulkBusy">Duplicar</button>
-                    <button type="button" @click="bulkSetActive(true)" :disabled="bulkBusy">Mostrar</button>
-                    <button type="button" @click="bulkSetActive(false)" :disabled="bulkBusy">Ocultar</button>
-                    <button type="button" class="danger" @click="bulkRemove" :disabled="bulkBusy">Eliminar</button>
-                    <span class="prod-bulkbar-hint">Seleccioná con la casilla de cada fila</span>
-                    <button type="button" class="prod-bulkbar-x" aria-label="Limpiar selección" @click="selectedIds = []"><AppIcon name="x" :size="14" /></button>
-                  </div>
-                  <ProductTable
-                    :products="pagedProducts" v-model:selected-ids="selectedIds"
-                    :campaign-of="(id) => productCampaign.get(id) || null"
-                    :stock-enabled="hasStockControl"
-                    @edit="editProduct" @duplicate="duplicateProduct"
-                    @toggle-active="toggleProductActive" @remove="removeProduct"
-                  />
-                  <div v-if="prodPageInfo.pages > 1" class="prod-pager">
-                    <span>Mostrando {{ prodPageInfo.from }}–{{ prodPageInfo.to }} de {{ prodPageInfo.total }}</span>
-                    <span class="prod-pager-btns">
-                      <button type="button" class="btn ghost btn-auto" :disabled="prodPage <= 1" @click="prodPage--">← Anterior</button>
-                      <button type="button" class="btn ghost btn-auto" :disabled="prodPage >= prodPageInfo.pages" @click="prodPage++">Siguiente →</button>
-                    </span>
+                  <ol v-if="!domainInfo" class="domain-mini-steps">
+                    <li><span>1</span> Comprá tu dominio</li>
+                    <li><span>2</span> Pegalo en el campo de abajo</li>
+                    <li><span>3</span> Copiá 2 datos en tu registrador</li>
+                  </ol>
+                  <div class="field">
+                    <label for="custom-domain">Tu dominio</label>
+                    <input
+                      id="custom-domain"
+                      name="custom-domain"
+                      type="text"
+                      class="input"
+                      v-model="domainInput"
+                      placeholder="mitienda.com"
+                      maxlength="253"
+                      autocomplete="off"
+                      @keyup.enter="saveDomainLink"
+                    />
                   </div>
                 </template>
+                <div v-if="domainInfo && domainInfo.status !== 'verified'" class="domain-dns">
+                  <p class="hint">Copiá estos dos datos en tu registrador (buscá «DNS» o «Registros» en su menú) y después verificá:</p>
+                  <div class="dns-row">
+                    <span class="pill muted">CNAME</span>
+                    <code class="mono">{{ domainInfo.domain }}</code>
+                    <span>→</span>
+                    <code class="mono">{{ domainInfo.cname_target }}</code>
+                  </div>
+                  <div class="dns-row">
+                    <span class="pill muted">TXT</span>
+                    <code class="mono">{{ domainInfo.txt_name }}</code>
+                    <span>→</span>
+                    <code class="mono dns-txt">{{ domainInfo.txt_value }}</code>
+                  </div>
+                  <p class="hint">Los cambios pueden tardar hasta 48 h en verse.</p>
+                  <p v-if="domainStatus" class="slug-check" role="status">
+                    <span class="pill" :class="domainStatus.kind">{{ domainStatus.text }}</span>
+                  </p>
+                </div>
+                <div class="btn-row link-actions">
+                  <button v-if="domainInfo?.status === 'verified'" class="btn btn-auto" @click="openDomain"><AppIcon name="external-link" :size="16" /> Abrir {{ domainInfo.domain }}</button>
+                  <button v-else class="btn btn-auto" :disabled="domainBusy || !domainInput.trim()" @click="saveDomainLink">
+                    <span v-if="domainBusy" class="spinner" aria-hidden="true"></span>{{ domainInfo ? 'Guardar cambios' : 'Conectar mi dominio' }}
+                  </button>
+                  <button v-if="domainInfo && domainInfo.status !== 'verified'" class="btn secondary btn-auto" :disabled="domainBusy" @click="checkDomainNow">Ya lo configuré, verificar</button>
+                  <button v-if="domainInfo" class="btn ghost btn-auto" :disabled="domainBusy" @click="removeDomain">Quitar dominio</button>
+                </div>
+                <details class="domain-guide" :open="!domainInfo">
+                  <summary><AppIcon name="circle-help" :size="15" /> Guía paso a paso</summary>
+                  <ol>
+                    <li><strong>Comprá tu dominio</strong> en NIC Argentina, GoDaddy o Cloudflare. Sale muy poco al año.</li>
+                    <li><strong>Pegalo en el campo de arriba</strong> y tocá «Conectar mi dominio».</li>
+                    <li><strong>Copiá los 2 datos</strong> que te mostramos y pegalos en tu registrador (sección «DNS» o «Registros DNS»).</li>
+                    <li><strong>Tocá «Ya lo configuré, verificar»</strong>. Puede tardar hasta 48 h.</li>
+                  </ol>
+                  <button type="button" class="btn ghost btn-auto domain-guide-help" @click="section = 'support'">¿Dudas? Pedile ayuda a tu asistente</button>
+                </details>
               </template>
             </div>
+
+          </template>
+        </div>
+    
+    <!-- ================= MIS FOTOS ================= -->
+        <div v-if="seen.photos" v-show="section === 'photos'" :class="{ 'sec-on': section === 'photos' }">
+          <div class="page-head">
+            <div>
+              <h1>Mis fotos</h1>
+              <p>El logo, la portada y las imágenes que se ven en tu página.</p>
+            </div>
+            <button class="btn ghost btn-auto" @click="openStore"><AppIcon name="external-link" :size="16" /> Ver mi página</button>
           </div>
 
-          <!-- -------- Categorías -------- -->
-          <div v-show="catalogTab === 'categories'" class="card">
-            <div class="inv-head">
-              <h3><AppIcon name="layout-grid" :size="17" /> Categorías <small>· {{ catalog.categories.length }}</small></h3>
-              <small class="inv-head-note">Agrupan tus productos en el menú de tu página</small>
-            </div>
-            <div class="tax-add">
-              <div class="tax-fields">
-                <AppInput v-model="taxonomyForm.category" :label="taxonomyEditing ? 'Editar categoría' : 'Nueva categoría'" name="cat_name" placeholder="Ej. Indumentaria" :error="taxonomyErr.category" />
-                <div class="field">
-                  <label for="cat_feature">Características <small class="tab-sub">(opcional)</small></label>
-                  <div class="feat-add">
-                    <input
-                      id="cat_feature" v-model="taxonomyFeatureInput" class="input" type="text"
-                      placeholder="Ej. Talle" @keydown.enter.prevent="addTaxonomyFeature"
-                    />
-                    <button type="button" class="btn ghost btn-auto" :disabled="!taxonomyFeatureInput.trim()" @click="addTaxonomyFeature"><AppIcon name="plus" :size="14" /> Agregar</button>
-                  </div>
-                  <div v-if="taxonomyFeatures.length" class="feat-chips">
-                    <span v-for="(f, i) in taxonomyFeatures" :key="f" class="feat-chip">
-                      {{ f }}
-                      <button type="button" :aria-label="`Quitar ${f}`" @click="taxonomyFeatures.splice(i, 1)"><AppIcon name="x" :size="11" /></button>
-                    </span>
-                  </div>
-                  <p class="hint">Se sugieren al cargar productos de esta categoría.</p>
-                </div>
-                <div class="tax-actions">
-                  <button v-if="taxonomyEditing" type="button" class="btn ghost btn-auto" @click="cancelCategoryEdit">Cancelar</button>
-                  <AppButton :loading="taxonomyBusy.category" class="btn-auto" @click="addTaxonomy('category')">{{ taxonomyEditing ? 'Guardar' : 'Agregar categoría' }}</AppButton>
+          <AlertMessage v-if="store.notice" kind="success" :message="store.notice" />
+          <AlertMessage v-if="store.lastError" kind="error" :message="store.lastError" />
+
+          <template v-if="canCustomize">
+            <div class="photos-grid">
+            <div class="card">
+              <h3><AppIcon name="store" :size="18" /> Logo</h3>
+              <div class="logo-box">
+                <span class="logo-thumb">
+                  <img v-if="currentLogo" :src="currentLogo" alt="Logo de tu negocio" />
+                  <AppIcon v-else name="image" :size="22" />
+                </span>
+                <div class="logo-actions">
+                  <AppButton type="button" class="btn-auto" :loading="logoBusy" @click="logoInput?.click()"><AppIcon name="upload" :size="15" /> {{ currentLogo ? 'Cambiar' : 'Subir logo' }}</AppButton>
+                  <button v-if="currentLogo" type="button" class="btn ghost btn-auto" :disabled="logoBusy" @click="onRemoveLogo"><AppIcon name="trash" :size="15" /> Quitar</button>
                 </div>
               </div>
+              <input ref="logoInput" type="file" class="sr-only" :accept="LOGO_ACCEPT_TYPES" aria-label="Subir logo" @change="onLogoPicked" />
+              <p class="hint">Aparece arriba de todo en tu web. PNG o JPG de hasta 4 MB.</p>
+              <p v-if="logoErr" class="field-error" role="alert">{{ logoErr }}</p>
             </div>
-            <ul v-if="catalog.categories.length" class="tax-list">
-              <li v-for="c in catalog.categories" :key="c.id">
-                <span class="tax-dot" :style="{ '--h': taxonomyHue(c.name) }" aria-hidden="true"></span>
-                <span class="tax-name">
-                  <strong>{{ c.name }}</strong>
-                  <small>{{ c.products_count || 0 }} productos<template v-if="c.feature_schema?.length"> · {{ c.feature_schema.join(' · ') }}</template></small>
-                </span>
-                <span class="tax-item-actions">
-                  <button type="button" class="icon-btn" aria-label="Editar categoría" @click="editCategory(c)"><AppIcon name="pencil" :size="15" /></button>
-                  <button type="button" class="icon-btn danger" aria-label="Eliminar categoría" @click="removeTaxonomy('category', c)"><AppIcon name="trash" :size="15" /></button>
-                </span>
-              </li>
-            </ul>
-            <p v-else class="hint">Sin categorías todavía.</p>
-          </div>
 
-          <!-- -------- Marcas -------- -->
-          <div v-show="catalogTab === 'brands'" class="card">
-            <div class="inv-head">
-              <h3><AppIcon name="tag" :size="17" /> Marcas <small>· {{ catalog.brands.length }}</small></h3>
-              <small class="inv-head-note">Filtran tus productos por marca en el menú de tu página</small>
-            </div>
-            <div class="tax-add">
-              <div class="tax-fields">
-                <AppInput v-model="taxonomyForm.brand" :label="brandEditing ? 'Editar marca' : 'Nueva marca'" name="brand_name" placeholder="Ej. Nike" :error="taxonomyErr.brand" />
-                <div class="field">
-                  <label>Logo <small class="tab-sub">(opcional)</small></label>
-                  <div class="brand-logo-pick">
-                    <span class="brand-logo-thumb">
-                      <img v-if="brandFormPreview" :src="brandFormPreview" alt="Logo de la marca" />
-                      <AppIcon v-else name="image" :size="18" />
-                    </span>
-                    <span class="brand-logo-meta">
-                      <strong>{{ brandFormImage ? brandFormImage.name : (brandEditing ? 'Logo actual' : 'Sin imagen') }}</strong>
-                      <small>PNG, JPG, WebP o GIF de hasta 2 MB</small>
-                    </span>
-                    <button type="button" class="btn ghost btn-auto" @click="brandFormImageInput?.click()">
-                      <AppIcon name="upload" :size="14" /> {{ brandFormImage || brandFormPreview ? 'Cambiar' : 'Elegir' }}
-                    </button>
-                    <button v-if="brandFormImage" type="button" class="icon-btn danger" aria-label="Quitar imagen" @click="clearBrandFormImage"><AppIcon name="x" :size="15" /></button>
-                  </div>
-                  <input ref="brandFormImageInput" type="file" class="sr-only" :accept="LOGO_ACCEPT_TYPES" aria-label="Logo de la marca" @change="onBrandFormImagePicked" />
-                  <p v-if="brandFormErr" class="field-error" role="alert">{{ brandFormErr }}</p>
-                </div>
-                <div class="tax-actions">
-                  <button v-if="brandEditing" type="button" class="btn ghost btn-auto" @click="cancelBrandEdit">Cancelar</button>
-                  <AppButton :loading="taxonomyBusy.brand" class="btn-auto" @click="addTaxonomy('brand')">{{ brandEditing ? 'Guardar' : 'Agregar marca' }}</AppButton>
+            <div class="card">
+              <h3><AppIcon name="image" :size="18" /> Foto de portada</h3>
+              <div class="cover-box">
+                <span class="cover-thumb" :class="{ empty: !currentCover }">
+                  <img v-if="currentCover" :src="currentCover" alt="Foto de portada" />
+                  <AppIcon v-else name="image" :size="22" />
+                </span>
+                <div class="logo-actions">
+                  <AppButton type="button" class="btn-auto" :loading="coverBusy" @click="coverInput?.click()"><AppIcon name="upload" :size="15" /> {{ currentCover ? 'Cambiar' : 'Subir portada' }}</AppButton>
+                  <button v-if="currentCover" type="button" class="btn ghost btn-auto" :disabled="coverBusy" @click="onRemoveCover"><AppIcon name="trash" :size="15" /> Quitar</button>
                 </div>
               </div>
+              <input ref="coverInput" type="file" class="sr-only" :accept="LOGO_ACCEPT_TYPES" aria-label="Subir foto de portada" @change="onCoverPicked" />
+              <p class="hint">La foto grande al entrar a tu web. Horizontal, hasta 4 MB.</p>
+              <p v-if="coverErr" class="field-error" role="alert">{{ coverErr }}</p>
             </div>
-            <p class="hint">Logo opcional por marca: PNG, JPG, WebP o GIF de hasta 2 MB. Se convierte a WebP con fondo transparente.</p>
-            <div v-if="catalog.brands.length" class="brand-search">
-              <AppIcon name="search" :size="15" />
-              <input v-model="brandQuery" class="input" type="search" placeholder="Buscar marca…" aria-label="Buscar marca" />
-            </div>
-            <ul v-if="filteredBrands.length" class="tax-list">
-              <li v-for="b in filteredBrands" :key="b.id">
-                <img v-if="b.image" class="tax-thumb" :src="b.image" :alt="`Logo de ${b.name}`" loading="lazy" decoding="async" />
-                <span v-else class="tax-dot" :style="{ '--h': taxonomyHue(b.name) }" aria-hidden="true"></span>
-                <span class="tax-name">
-                  <strong>{{ b.name }}</strong>
-                  <small>{{ b.products_count || 0 }} productos</small>
-                </span>
-                <span class="tax-item-actions">
-                  <button type="button" class="icon-btn" aria-label="Editar marca" @click="editBrand(b)"><AppIcon name="pencil" :size="15" /></button>
-                  <button type="button" class="icon-btn" :disabled="brandImageBusy === b.id" :aria-label="b.image ? `Cambiar imagen de ${b.name}` : `Subir imagen de ${b.name}`" @click="pickBrandImage(b)"><AppIcon name="image" :size="15" /></button>
-                  <button v-if="b.image" type="button" class="icon-btn danger" :disabled="brandImageBusy === b.id" :aria-label="`Quitar imagen de ${b.name}`" @click="removeBrandImage(b)"><AppIcon name="x" :size="15" /></button>
-                  <button type="button" class="icon-btn danger" aria-label="Eliminar marca" @click="removeTaxonomy('brand', b)"><AppIcon name="trash" :size="15" /></button>
-                </span>
-              </li>
-            </ul>
-            <input ref="brandImageInput" type="file" class="sr-only" :accept="LOGO_ACCEPT_TYPES" aria-label="Subir imagen de marca" @change="onBrandImagePicked" />
-            <p v-if="brandImageErr" class="field-error" role="alert">{{ brandImageErr }}</p>
-            <p v-if="!catalog.brands.length" class="hint">Sin marcas todavía.</p>
-            <p v-else-if="!filteredBrands.length" class="hint">
-              Ninguna marca coincide con «{{ brandQuery.trim() }}».
-              <button type="button" class="empty-mini-cta" @click="brandQuery = ''">Limpiar búsqueda</button>
-            </p>
-          </div>
 
-          <!-- -------- Descuentos programados (premium) -------- -->
-          <div v-show="catalogTab === 'discounts'">
-          <div v-if="!canDiscounts" class="empty">
-            <span class="empty-icon"><AppIcon name="percent" :size="28" /></span>
-            <h3>Los descuentos programados son Premium</h3>
-            <p>Con el Plan premium creás ofertas que se activan y se apagan solas en las fechas que elijas, sin tocar los precios a mano.</p>
+            <div class="card">
+              <h3><AppIcon name="images" :size="18" /> Carrusel de portada</h3>
+              <div class="carousel-box">
+                <div v-for="(img, i) in carouselImages" :key="img.id" class="carousel-thumb">
+                  <img :src="img.url" :alt="`Imagen ${i + 1} del carrusel`" />
+                  <div class="carousel-thumb-actions">
+                    <button type="button" class="icon-btn" aria-label="Mover a la izquierda" :disabled="i === 0 || carouselBusy" @click="onMoveCarousel(img.id, -1)"><AppIcon name="chevron-left" :size="13" /></button>
+                    <button type="button" class="icon-btn" aria-label="Mover a la derecha" :disabled="i === carouselImages.length - 1 || carouselBusy" @click="onMoveCarousel(img.id, 1)"><AppIcon name="chevron-right" :size="13" /></button>
+                    <button type="button" class="icon-btn danger" aria-label="Eliminar imagen" :disabled="carouselBusy" @click="onRemoveCarousel(img.id)"><AppIcon name="trash" :size="13" /></button>
+                  </div>
+                </div>
+                <button
+                  v-if="carouselImages.length < CAROUSEL_MAX_IMAGES"
+                  type="button" class="carousel-add" :disabled="carouselBusy"
+                  @click="carouselInput?.click()"
+                >
+                  <span v-if="carouselBusy" class="spinner" aria-hidden="true"></span>
+                  <AppIcon v-else name="images" :size="20" />
+                  Agregar
+                </button>
+              </div>
+              <input ref="carouselInput" type="file" class="sr-only" :accept="LOGO_ACCEPT_TYPES" aria-label="Agregar imagen al carrusel" @change="onCarouselPicked" />
+              <p class="hint">Hasta {{ CAROUSEL_MAX_IMAGES }} imágenes de 4 MB. Rotan como banners en tu portada.</p>
+              <p v-if="carouselErr" class="field-error" role="alert">{{ carouselErr }}</p>
+            </div>
+
+            <div class="card">
+              <h3><AppIcon name="layout-grid" :size="18" /> Galería</h3>
+              <div class="carousel-box">
+                <div v-for="(img, i) in galleryImages" :key="img.id" class="carousel-thumb">
+                  <img :src="img.url" :alt="`Imagen ${i + 1} de la galería`" />
+                  <div class="carousel-thumb-actions">
+                    <button type="button" class="icon-btn" aria-label="Mover a la izquierda" :disabled="i === 0 || galleryBusy" @click="onMoveGallery(img.id, -1)"><AppIcon name="chevron-left" :size="13" /></button>
+                    <button type="button" class="icon-btn" aria-label="Mover a la derecha" :disabled="i === galleryImages.length - 1 || galleryBusy" @click="onMoveGallery(img.id, 1)"><AppIcon name="chevron-right" :size="13" /></button>
+                    <button type="button" class="icon-btn danger" aria-label="Eliminar imagen" :disabled="galleryBusy" @click="onRemoveGallery(img.id)"><AppIcon name="trash" :size="13" /></button>
+                  </div>
+                </div>
+                <button
+                  v-if="canAddGallery"
+                  type="button" class="carousel-add" :disabled="galleryBusy"
+                  @click="galleryInput?.click()"
+                >
+                  <span v-if="galleryBusy" class="spinner" aria-hidden="true"></span>
+                  <AppIcon v-else name="images" :size="20" />
+                  Agregar
+                </button>
+              </div>
+              <input ref="galleryInput" type="file" class="sr-only" :accept="LOGO_ACCEPT_TYPES" aria-label="Agregar imagen a la galería" @change="onGalleryPicked" />
+              <p class="hint">{{ galleryHint }}</p>
+              <p v-if="galleryErr" class="field-error" role="alert">{{ galleryErr }}</p>
+            </div>
+
+            <div v-if="canDesignAdvanced || decorImages.length" class="card">
+              <h3><AppIcon name="sparkles" :size="18" /> Fotos decorativas</h3>
+              <div class="carousel-box">
+                <div v-for="(img, i) in decorImages" :key="img.id" class="carousel-thumb">
+                  <img :src="img.url" :alt="`Imagen decorativa ${i + 1}`" />
+                  <div class="carousel-thumb-actions">
+                    <button type="button" class="icon-btn danger" aria-label="Eliminar imagen" :disabled="galleryBusy" @click="onRemoveGallery(img.id)"><AppIcon name="trash" :size="13" /></button>
+                  </div>
+                </div>
+                <button
+                  v-if="canAddDecor"
+                  type="button" class="carousel-add" :disabled="galleryBusy"
+                  @click="decorInput?.click()"
+                >
+                  <span v-if="galleryBusy" class="spinner" aria-hidden="true"></span>
+                  <AppIcon v-else name="images" :size="20" />
+                  Agregar
+                </button>
+              </div>
+              <input ref="decorInput" type="file" class="sr-only" :accept="LOGO_ACCEPT_TYPES" aria-label="Agregar imagen decorativa" @change="onDecorPicked" />
+              <p class="hint">Hasta {{ DECOR_MAX_IMAGES }} fotos que ilustran tu portada. Comparten el cupo de la galería. <span v-if="!canDesignAdvanced" class="lock-badge"><AppIcon name="lock" :size="11" :stroke="2" /> Premium</span></p>
+            </div>
+            </div>
+          </template>
+          <div v-else class="empty">
+            <span class="empty-icon"><AppIcon name="lock" :size="28" /></span>
+            <h3>Las fotos de tu web vienen con tu plan</h3>
+            <p>Activá una suscripción para subir el logo, la portada y tu galería.</p>
             <button class="btn btn-auto" @click="section = 'plans'">Ver planes</button>
           </div>
-          <div v-else class="disc-wrap">
-          <!-- Aviso de evento próximo: solo aparece cuando una campaña entró
-               en su ventana de configuración y no tiene descuento armado. -->
-          <div v-for="c in upcomingCampaigns" :key="c.id" class="disc-alert">
-            <span class="disc-alert-ico" :style="c.accent ? { background: c.accent } : null"><AppIcon name="percent" :size="16" /></span>
-            <div class="disc-alert-txt">
-              <strong>Se acerca {{ c.name }} <span class="disc-alert-when">· {{ campaignWindowLabel(c) }}</span></strong>
-              <small>Programá un descuento ahora: se enciende y se apaga solo durante el evento.</small>
+        </div>
+    
+    <!-- ================= DISEÑO ================= -->
+        <div v-if="seen.design" v-show="section === 'design'" class="web-scope" :class="{ 'sec-on': section === 'design' }">
+          <div class="page-head">
+            <div>
+              <h1>Diseño</h1>
+              <p>Elegí el diseño y los colores de tu página.</p>
             </div>
-            <button type="button" class="btn btn-auto disc-alert-cta" @click="newCampaignDiscount(c)">Programar oferta</button>
           </div>
-          <!-- El formulario vive en un drawer como el de productos: la lista
-               queda limpia y sin competir con los pasos del alta. -->
-          <Teleport to="body">
-            <Transition name="pf">
-              <div v-if="discountFormOpen" class="pf-overlay" @click.self="closeDiscountForm">
-                <div class="pf-drawer" role="dialog" aria-modal="true" :aria-label="discountEditing ? 'Editar descuento' : 'Nuevo descuento'">
-                  <header class="pf-drawer-head">
-                    <div class="pf-drawer-title">
-                      <span class="pf-drawer-ico"><AppIcon :name="discountEditing ? 'pencil' : 'percent'" :size="17" /></span>
-                      <h3>{{ discountEditing ? 'Editar descuento' : 'Nuevo descuento' }}</h3>
-                    </div>
-                    <button type="button" class="icon-btn" aria-label="Cerrar" @click="closeDiscountForm"><AppIcon name="x" :size="16" /></button>
-                  </header>
-                  <div class="pf-drawer-body">
-              <p class="lead">Programá una oferta: se activa y se apaga sola en las fechas que elijas, sin que tengas que tocar los precios.</p>
-              <div class="disc-preview" aria-hidden="true">
-                <span class="disc-preview-badge"><b>-{{ discountPreviewPct }}</b><i>%</i></span>
-                <div class="disc-preview-info">
-                  <small>Así se verá en tu tienda</small>
-                  <strong>{{ discountForm.name || 'Nombre de tu oferta' }}</strong>
-                  <span class="disc-preview-price"><s>{{ formatARS(10000) }}</s><b>{{ formatARS(10000 * (1 - discountPreviewPct / 100)) }}</b></span>
-                </div>
-              </div>
-              <AppInput v-model="discountForm.name" label="Nombre" name="disc_name" icon="tag" placeholder="Ej. Semana de ofertas" :error="discountFieldErr('name')" @blur="discountTouched.name = true" />
 
-              <div class="form-step"><span class="form-step-num">1</span> ¿A qué aplica?</div>
+          <div v-if="aiAssistEnabled" class="next-card assist-card">
+            <span class="next-icon"><AppIcon name="sparkles" :size="22" /></span>
+            <div><strong>Asistencia con IA</strong><small>Respondé unas preguntas y te armamos el diseño de tu web.</small></div>
+            <button class="btn btn-auto assist-btn" @click="openAssist('design')">
+              <AppIcon v-if="navLocks.design_assisted" name="lock" :size="15" /><AppIcon v-else name="sparkles" :size="15" /> Empezar
+            </button>
+          </div>
+
+          <DesignStylesTab
+            :form="designForm" :benefits="plan?.benefits || {}"
+            :shop-name="store.customization?.display_name || business" :can-studio="canDesignAdvanced"
+            :site-templates="designSiteTemplates" v-model:preview-open="designPreviewOpen"
+            :page-options="designPageOptions" @toggle-page="toggleSiteTemplate" :on-save-show="saveShowFromModal"
+            @navigate="section = $event" @open-studio="onOpenStudio" @support="onBellClick"
+          >
+            <template #actions>
+              <div class="design-actions">
+                <AppButton :loading="designBusy" :disabled="!designDirtyAll" @click="saveDesign()"><AppIcon name="check" :size="16" /> Guardar cambios</AppButton>
+                <button type="button" class="btn secondary btn-auto" @click="openStore"><AppIcon name="external-link" :size="16" /> Ver mi web</button>
+              </div>
+              <p v-if="designDirtyAll" class="hint design-dirty-hint"><AppIcon name="pencil" :size="13" /> Los cambios ya se ven en la vista previa, pero todavía no están publicados: tocá «Guardar cambios».</p>
+            </template>
+          </DesignStylesTab>
+        </div>
+
+        <!-- Editor Avanzado (Premium): modal fullscreen con el preview al
+             centro y los editores del site_theme en el sidebar izquierdo. -->
+        <Teleport to="body">
+          <DesignStudioTab
+            v-if="studioModalOpen" :form="designForm" :benefits="plan?.benefits || {}"
+            :customization="store.customization || {}" @close="studioModalOpen = false"
+          >
+            <template #actions>
+              <div class="design-actions">
+                <AppButton :loading="designBusy" :disabled="!designDirtyAll" @click="saveDesign()"><AppIcon name="check" :size="16" /> Guardar cambios</AppButton>
+                <button type="button" class="btn secondary btn-auto" @click="openStore"><AppIcon name="external-link" :size="16" /> Ver mi web</button>
+              </div>
+              <p v-if="designDirtyAll" class="hint design-dirty-hint"><AppIcon name="pencil" :size="13" /> Los cambios ya se ven en la vista previa, pero todavía no están publicados: tocá «Guardar cambios».</p>
+            </template>
+          </DesignStudioTab>
+        </Teleport>
+    
+    <!-- ================= MI EMPRESA (marketing de la portada) ================= -->
+        <div v-if="seen.company" v-show="section === 'company'" :class="{ 'sec-on': section === 'company' }">
+          <div class="page-head">
+            <div>
+              <h1>Sobre mi negocio</h1>
+              <p>Tocá una tarjeta, completá el formulario y listo. Lo que dejes vacío no aparece en tu web.</p>
+            </div>
+            <button class="btn ghost btn-auto" @click="openStore"><AppIcon name="external-link" :size="16" /> Ver mi página</button>
+          </div>
+
+          <div v-if="aiAssistEnabled" class="next-card assist-card">
+            <span class="next-icon"><AppIcon name="sparkles" :size="22" /></span>
+            <div><strong>Asistencia con IA</strong><small>Te ayudamos a completar los datos de tu negocio, sin pisar lo que ya cargaste.</small></div>
+            <button class="btn btn-auto assist-btn" @click="openAssist('business')">
+              <AppIcon v-if="navLocks.design_assisted" name="lock" :size="15" /><AppIcon v-else name="sparkles" :size="15" /> Empezar
+            </button>
+          </div>
+
+          <AlertMessage v-if="store.notice" kind="success" :message="store.notice" />
+          <AlertMessage v-if="store.lastError" kind="error" :message="store.lastError" />
+
+          <template v-if="canCustomize">
+            <nav class="mk-launch" aria-label="Secciones de tu página">
+              <button
+                v-for="l in mkNav" :key="l.key" type="button" class="mk-launcher"
+                @click="mkOpen = l.key"
+              >
+                <span class="mk-launcher-ico" :class="`hue-${l.key}`"><AppIcon :name="l.icon" :size="20" /></span>
+                <span class="mk-launcher-txt">
+                  <strong>{{ l.label }}</strong>
+                  <small>{{ l.desc }}</small>
+                </span>
+                <span class="mk-launcher-side">
+                  <span v-if="mkSummary(l.key)" class="mk-done"><AppIcon name="check" :size="12" :stroke="2.5" /> {{ mkSummary(l.key) }}</span>
+                  <AppIcon name="chevron-right" :size="16" class="mk-launcher-go" />
+                </span>
+              </button>
+            </nav>
+            <p class="hint mk-launch-hint">Tocá una tarjeta para editarla.</p>
+
+            <!-- ===== Modal de edición: un bloque a la vez ===== -->
+            <div v-if="mkOpen" class="mk-overlay" @click.self="mkOpen = null">
+              <div class="mk-modal" role="dialog" aria-modal="true" :aria-label="mkOpenMeta?.label || 'Editar sección'">
+                <header class="mk-modal-head">
+                  <span class="mk-modal-ico" :class="`hue-${mkOpen}`"><AppIcon :name="mkOpenMeta?.icon || 'pencil'" :size="20" /></span>
+                  <div class="mk-modal-txt">
+                    <h2>{{ mkOpenMeta?.label }}</h2>
+                    <small>{{ mkOpenMeta?.desc }}</small>
+                  </div>
+                  <button type="button" class="mk-modal-x" aria-label="Cerrar" @click="mkOpen = null"><AppIcon name="x" :size="18" /></button>
+                </header>
+                <div class="mk-modal-body">
+
+            <!-- ===== Tu negocio (nombre visible, titular y descripción) ===== -->
+            <div v-show="mkOpen === 'identity'" class="card mk-card">
+              <h3><AppIcon name="user" :size="18" /> Tu negocio</h3>
+              <p class="mk-tip"><AppIcon name="info" :size="15" /><span>Lo primero que se ve en tu portada: el nombre, una frase corta y una descripción.</span></p>
+              <AppInput v-model="designForm.display_name" label="Nombre que se muestra" name="company_display_name" placeholder="Ej. Almacén Don Pedro" hint="Vacío: se usa el nombre de tu cuenta." maxlength="60" :error="designFieldErr('display_name')" @blur="designTouched.display_name = true" />
+              <AppInput v-model="designForm.headline" label="Titular" name="company_headline" placeholder="Ej. Tu almacén de barrio, ahora también online" hint="Frase corta debajo del nombre. Vacío: no se muestra." maxlength="140" :error="designFieldErr('headline')" @blur="designTouched.headline = true" />
               <div class="field">
-                <label id="disc-scope-label" for="disc-scope"><AppIcon name="layout-grid" :size="14" class="label-icon" aria-hidden="true" />Alcance</label>
-                <select id="disc-scope" v-model="discountForm.scope" class="select">
-                  <option v-for="s in DISCOUNT_SCOPES" :key="s.value" :value="s.value">{{ s.label }}</option>
-                </select>
+                <label for="company-description">Descripción</label>
+                <textarea
+                  id="company-description"
+                  v-model="designForm.description"
+                  class="textarea"
+                  :class="{ invalid: designFieldErr('description') }"
+                  placeholder="Contá en pocas líneas qué hace tu negocio"
+                  maxlength="800"
+                  rows="4"
+                  @blur="designTouched.description = true"
+                ></textarea>
+                <p class="hint">Se ve en la portada y al compartir el link de tu web. {{ designForm.description.length }}/800</p>
+                <p v-if="designFieldErr('description')" class="field-error" role="alert">{{ designFieldErr('description') }}</p>
               </div>
+              <div class="btn-row">
+                <AppButton :loading="companyBusy" @click="saveIdentity">Guardar información</AppButton>
+              </div>
+            </div>
 
-              <div v-if="discountForm.scope === 'category'" class="field">
-                <label for="disc-category"><AppIcon name="checklist" :size="14" class="label-icon" aria-hidden="true" />Categoría</label>
-                <select id="disc-category" v-model="discountForm.category" class="select" :class="{ invalid: discountFieldErr('category') }">
-                  <option value="">Elegí una categoría</option>
-                  <option v-for="c in catalog.categories" :key="c.id" :value="c.id">{{ c.name }}</option>
-                </select>
-                <p v-if="!catalog.categories.length" class="hint">No tenés categorías: cargalas en la pestaña Categorías.</p>
-                <p v-if="discountFieldErr('category')" class="field-error" role="alert">{{ discountFieldErr('category') }}</p>
-              </div>
-              <div v-if="discountForm.scope === 'brand'" class="field">
-                <label for="disc-brand"><AppIcon name="tag" :size="14" class="label-icon" aria-hidden="true" />Marca</label>
-                <select id="disc-brand" v-model="discountForm.brand" class="select" :class="{ invalid: discountFieldErr('brand') }">
-                  <option value="">Elegí una marca</option>
-                  <option v-for="b in catalog.brands" :key="b.id" :value="b.id">{{ b.name }}</option>
-                </select>
-                <p v-if="!catalog.brands.length" class="hint">No tenés marcas: cargalas en la pestaña Marcas.</p>
-                <p v-if="discountFieldErr('brand')" class="field-error" role="alert">{{ discountFieldErr('brand') }}</p>
-              </div>
-              <div v-if="discountForm.scope === 'products'" class="field">
-                <label id="disc-products-label"><AppIcon name="package" :size="14" class="label-icon" aria-hidden="true" />Productos incluidos</label>
-                <template v-if="catalog.products.length">
-                  <div class="disc-products-tools">
-                    <button type="button" class="disc-tool" @click="discountForm.product_ids = catalog.products.filter((p) => !discountTakenBy.has(p.id)).map((p) => p.id)"><AppIcon name="check" :size="13" /> Todos</button>
-                    <button type="button" class="disc-tool" @click="discountForm.product_ids = []"><AppIcon name="x" :size="13" /> Ninguno</button>
-                    <span class="hint">{{ discountForm.product_ids.length }} seleccionados</span>
-                  </div>
-                  <div class="check-list disc-products" role="group" aria-labelledby="disc-products-label">
-                    <label v-for="p in catalog.products" :key="p.id" class="check-item" :class="{ taken: discountTakenBy.has(p.id) }">
-                      <input type="checkbox" :value="p.id" v-model="discountForm.product_ids" :disabled="discountTakenBy.has(p.id)" />
-                      <span class="check-text"><strong>{{ p.name }}</strong><small>{{ formatARS(p.price) }}</small></span>
-                      <span v-if="discountTakenBy.has(p.id)" class="check-taken" :title="`Ya está en el descuento «${discountTakenBy.get(p.id)}»`"><AppIcon name="lock" :size="11" /> {{ discountTakenBy.get(p.id) }}</span>
-                    </label>
-                  </div>
-                  <p v-if="discountTakenBy.size" class="hint">Los productos que ya están en otro descuento vigente no se pueden elegir.</p>
-                </template>
-                <p v-else class="hint">Todavía no cargaste productos.</p>
-                <p v-if="discountFieldErr('products')" class="field-error" role="alert">{{ discountFieldErr('products') }}</p>
-              </div>
-
-              <div class="form-step"><span class="form-step-num">2</span> ¿Cuánto descuenta?</div>
+            <!-- ===== Sobre nosotros ===== -->
+            <div v-show="mkOpen === 'about'" class="card mk-card">
+              <h3><AppIcon name="building-2" :size="18" /> Sobre nosotros</h3>
+              <p class="mk-tip"><AppIcon name="info" :size="15" /><span>Contá quién sos y qué hace tu negocio. Lo que dejes vacío no se muestra en tu página.</span></p>
+              <AppInput v-model="designForm.about_title" label="Título de la sección" name="company_about_title" placeholder="Sobre nosotros" hint="Encabezado de la sección en tu web. Vacío: se muestra 'Sobre nosotros'." :error="designFieldErr('about_title')" @blur="designTouched.about_title = true" />
               <div class="field">
-                <label for="disc-percent" class="sr-only"><AppIcon name="percent" :size="14" class="label-icon" aria-hidden="true" />Descuento</label>
-                <div class="disc-pct-row">
-                  <input id="disc-percent" v-model="discountForm.percent" type="number" min="1" max="99" step="1" class="input disc-pct-input" :class="{ invalid: discountFieldErr('percent') }" placeholder="25" aria-label="Porcentaje de descuento" @blur="discountTouched.percent = true" />
-                  <span class="disc-pct-sign" aria-hidden="true">%</span>
-                  <input v-model="discountForm.percent" type="range" min="1" max="99" step="1" class="disc-pct-slider" aria-label="Descuento en porcentaje" />
-                </div>
-                <p v-if="discountFieldErr('percent')" class="field-error" role="alert">{{ discountFieldErr('percent') }}</p>
+                <label for="company-about-text">Descripción de la empresa</label>
+                <textarea
+                  id="company-about-text"
+                  v-model="designForm.about_text"
+                  class="textarea"
+                  :class="{ invalid: designFieldErr('about_text') }"
+                  placeholder="Contá la historia de tu negocio: qué hacen, hace cuánto y qué los diferencia"
+                  maxlength="2000"
+                  rows="6"
+                  @blur="designTouched.about_text = true"
+                ></textarea>
+                <p class="hint">El texto principal de la sección. {{ designForm.about_text.length }}/2000</p>
+                <p v-if="designFieldErr('about_text')" class="field-error" role="alert">{{ designFieldErr('about_text') }}</p>
               </div>
-
-              <div class="form-step"><span class="form-step-num">3</span> ¿Cuándo aplica?</div>
+              <div class="grid-2">
+                <AppInput v-model="designForm.about_years" label="Años de trayectoria" name="company_about_years" type="number" placeholder="Ej. 15" hint="Se muestra destacado en la sección. Vacío: no se muestra." :error="designFieldErr('about_years')" @blur="designTouched.about_years = true" />
+                <AppInput v-model="designForm.about_specialties" label="Especialidades" name="company_about_specialties" placeholder="Ej. Venta mayorista, Envíos, Atención personalizada" hint="Separadas por coma: aparecen como etiquetas en la sección." :error="designFieldErr('about_specialties')" @blur="designTouched.about_specialties = true" />
+              </div>
               <div class="field">
-                <label id="disc-window-label" for="disc-when"><AppIcon name="calendar" :size="14" class="label-icon" aria-hidden="true" />Vigencia</label>
-                <select id="disc-when" v-model="discountWhen" class="select" :disabled="!!selectedCampaign">
-                  <option value="none">Sin fin — queda activo siempre</option>
-                  <option value="today">Solo hoy</option>
-                  <option value="week">Esta semana</option>
-                  <option value="fortnight">Próximos 15 días</option>
-                  <option value="month">Hasta fin de mes</option>
-                  <option value="custom">Otras fechas…</option>
-                  <optgroup v-if="campaignOptions.length" label="Eventos especiales">
-                    <option v-for="c in campaignOptions" :key="c.id" :value="`camp:${c.id}`">{{ c.name }} · {{ campaignWindowLabel(c) }}</option>
-                  </optgroup>
-                </select>
-                <div v-if="selectedCampaign" class="disc-event-lock">
-                  <AppIcon name="lock" :size="14" aria-hidden="true" />
-                  <span><strong>{{ selectedCampaign.name }}</strong> · {{ campaignWindowLabel(selectedCampaign) }}<small>Fechas fijas del evento: se enciende y se apaga solo.</small></span>
-                  <button type="button" class="disc-event-unlock" title="Usar otra vigencia" @click="discountForm.campaign = ''; discountWindowPreset = 'none'"><AppIcon name="x" :size="13" /></button>
-                </div>
-                <div v-if="discountWindowPreset === 'custom'" class="disc-window">
-                  <div class="disc-when">
-                    <span class="disc-when-label"><AppIcon name="calendar" :size="13" aria-hidden="true" /> Empieza</span>
-                    <div class="disc-when-fields">
-                      <input v-model="discountForm.start_date" type="date" class="input" :class="{ invalid: discountFieldErr('start_date') }" aria-label="Fecha de inicio" @blur="discountTouched.start_date = true" />
-                      <input v-model="discountForm.start_time" type="time" class="input" :class="{ invalid: discountFieldErr('start_date') }" aria-label="Hora de inicio" @blur="discountTouched.start_date = true" />
-                    </div>
-                    <p v-if="discountFieldErr('start_date')" class="field-error" role="alert">{{ discountFieldErr('start_date') }}</p>
-                  </div>
-                  <div class="disc-when">
-                    <span class="disc-when-label"><AppIcon name="clock" :size="13" aria-hidden="true" /> Termina</span>
-                    <label class="disc-none">
-                      <input v-model="discountForm.end_none" type="checkbox" />
-                      <span>Sin fin definido</span>
-                    </label>
-                    <div v-if="!discountForm.end_none" class="disc-when-fields">
-                      <input v-model="discountForm.end_date" type="date" class="input" :class="{ invalid: discountFieldErr('end_date') }" :min="discountForm.start_date || undefined" aria-label="Fecha de fin" @blur="discountTouched.end_date = true" />
-                      <input v-model="discountForm.end_time" type="time" class="input" :class="{ invalid: discountFieldErr('end_date') }" aria-label="Hora de fin" @blur="discountTouched.end_date = true" />
-                    </div>
-                    <p v-if="discountFieldErr('end_date')" class="field-error" role="alert">{{ discountFieldErr('end_date') }}</p>
-                  </div>
-                </div>
+                <label for="company-about-mission">Misión</label>
+                <textarea
+                  id="company-about-mission"
+                  v-model="designForm.about_mission"
+                  class="textarea"
+                  :class="{ invalid: designFieldErr('about_mission') }"
+                  placeholder="Qué busca lograr tu empresa cada día"
+                  maxlength="400"
+                  rows="3"
+                  @blur="designTouched.about_mission = true"
+                ></textarea>
+                <p class="hint">Se muestra destacada debajo de la descripción. {{ designForm.about_mission.length }}/400</p>
+                <p v-if="designFieldErr('about_mission')" class="field-error" role="alert">{{ designFieldErr('about_mission') }}</p>
               </div>
+              <p class="hint">La sección se apaga desde "Cómo se ve", en la pestaña "Qué mostrar". También se oculta sola si no cargaste ningún contenido.</p>
+              <div class="btn-row">
+                <AppButton :loading="companyBusy" @click="saveCompany">Guardar información</AppButton>
+              </div>
+            </div>
 
-              <details v-if="selectedCampaign" class="disc-adv">
-                <summary>Sobre el evento</summary>
-                <p class="hint">Las fechas de <strong>{{ selectedCampaign.name }}</strong> son fijas y no se pueden editar. Para usar fechas propias, elegí otra vigencia arriba.</p>
-              </details>
-
+            <!-- ===== Qué ofrecemos (servicios/ventajas con ícono) ===== -->
+            <div v-show="mkOpen === 'services'" class="card mk-card">
+              <h3><AppIcon name="layout-grid" :size="18" /> Qué ofrecemos <span v-if="!supportsServices" class="lock-badge"><AppIcon name="lock" :size="11" :stroke="2" /> No disponible en este diseño</span></h3>
+              <p v-if="!supportsServices" class="hint">La plantilla que elegiste no tiene apartado de servicios. Disponible en: {{ blockDesigns('services') }}.</p>
+              <p class="mk-tip"><AppIcon name="info" :size="15" /><span>Sumá tarjetas con ícono que resuman lo que ofrecés. Podés agregar varias y ordenarlas con las flechas.</span></p>
+              <fieldset class="mk-fieldset" :disabled="!supportsServices">
               <div class="check-list">
                 <label class="check-item">
-                  <input type="checkbox" v-model="discountForm.is_active" />
-                  <span class="check-text"><strong><AppIcon name="zap" :size="14" class="label-icon" aria-hidden="true" /> Descuento activo</strong><small>Si lo pausás, deja de aplicarse aunque esté en fecha.</small></span>
+                  <input v-model="designForm.show_services" type="checkbox" />
+                  <span class="check-text">
+                    <strong>Mostrar en tu web</strong>
+                    <small>Tarjetas con ícono que resumen tus servicios o ventajas. Se ocultan solas si no cargás ninguna.</small>
+                  </span>
+                </label>
+              </div>
+              <AppInput v-model="designForm.services_title" label="Título de la sección" name="company_services_title" placeholder="Qué ofrecemos" hint="Vacío: se muestra 'Qué ofrecemos'." maxlength="80" />
+              <div class="field">
+                <label>Servicios o ventajas <span class="hint-inline">({{ designForm.services.length }}/{{ mkLimits.services }})</span></label>
+                <div v-if="designForm.services.length" class="qa-list">
+                  <div v-for="(s, i) in designForm.services" :key="i" class="qa-item">
+                    <div class="qa-fields">
+                      <span class="qa-num">Servicio {{ i + 1 }}</span>
+                      <label class="mk-mini"><span>Ícono que se muestra</span>
+                        <div class="mk-icon-field">
+                          <span class="mk-icon-preview" aria-hidden="true"><AppIcon :name="serviceIcons[s.icon] ? s.icon : 'package'" :size="17" /></span>
+                          <select v-model="s.icon" class="select" :aria-label="`Ícono del servicio ${i + 1}`">
+                            <option v-for="(label, key) in serviceIcons" :key="key" :value="key">{{ label }}</option>
+                          </select>
+                        </div>
+                      </label>
+                      <label class="mk-mini"><span>Nombre</span>
+                        <input v-model="s.title" class="input" type="text" :maxlength="mkLimits.serviceTitle" placeholder="Ej. Envíos a todo el país" :aria-label="`Título del servicio ${i + 1}`" />
+                      </label>
+                      <label class="mk-mini"><span>Descripción corta</span>
+                        <textarea v-model="s.text" class="textarea" rows="2" :maxlength="mkLimits.serviceText" placeholder="Una línea que lo describa" :aria-label="`Descripción del servicio ${i + 1}`"></textarea>
+                      </label>
+                    </div>
+                    <div class="qa-actions">
+                      <button type="button" class="icon-btn" :disabled="i === 0" :aria-label="`Subir el servicio ${i + 1}`" @click="moveRow(designForm.services, i, -1)"><AppIcon name="chevron-up" :size="14" /></button>
+                      <button type="button" class="icon-btn" :disabled="i === designForm.services.length - 1" :aria-label="`Bajar el servicio ${i + 1}`" @click="moveRow(designForm.services, i, 1)"><AppIcon name="chevron-down" :size="14" /></button>
+                      <button type="button" class="icon-btn danger" :aria-label="`Borrar el servicio ${i + 1}`" @click="designForm.services.splice(i, 1)"><AppIcon name="trash" :size="15" /></button>
+                    </div>
+                  </div>
+                </div>
+                <div v-else class="mk-empty"><AppIcon name="inbox" :size="16" /><span>Todavía no cargaste servicios.</span></div>
+                <button type="button" class="btn ghost btn-auto mk-add" :disabled="designForm.services.length >= mkLimits.services" @click="addRow(designForm.services, mkLimits.services, { icon: 'package', title: '', text: '' })">
+                  <AppIcon name="plus" :size="15" /> Agregar servicio
+                </button>
+                <p class="hint">Se muestran como tarjetas con ícono. Ordenalas con las flechas.</p>
+                <p v-if="companyErrs.services" class="field-error" role="alert">{{ companyErrs.services }}</p>
+              </div>
+              <div class="btn-row">
+                <AppButton :loading="companyBusy" @click="saveServices">Guardar sección</AppButton>
+              </div>
+              </fieldset>
+            </div>
+
+            <!-- ===== Planes de suscripción (publicidad, sin cobro online) ===== -->
+            <div v-show="mkOpen === 'plans'" class="card mk-card">
+              <h3><AppIcon name="crown" :size="18" /> Planes de suscripción</h3>
+              <p v-if="!supportsPlans" class="hint">El diseño elegido no muestra este apartado en tu web, pero podés cargar los planes igual: se ven cuando cambies a un diseño que lo incluya ({{ blockDesigns('plans') }}).</p>
+              <p class="mk-tip"><AppIcon name="info" :size="15" /><span>Publicá membresías o clubs sin cobro online: los interesados te escriben por WhatsApp o el formulario.</span></p>
+              <fieldset class="mk-fieldset">
+              <div class="check-list">
+                <label class="check-item">
+                  <input v-model="designForm.show_plans" type="checkbox" />
+                  <span class="check-text">
+                    <strong>Mostrar en tu web</strong>
+                    <small>Tarjetas con membresías, clubs o packs por suscripción que ofrecés a tus clientes. Es solo publicidad: no se cobran desde la plataforma. Se oculta sola si no cargás ninguno.</small>
+                  </span>
+                </label>
+              </div>
+              <AppInput v-model="designForm.plans_title" label="Título de la sección" name="company_plans_title" placeholder="Planes y membresías" hint="Vacío: se muestra 'Planes y membresías'." maxlength="80" />
+              <div class="field">
+                <label>Planes <span class="hint-inline">({{ designForm.plans.length }}/{{ mkLimits.plans }})</span></label>
+                <div v-if="designForm.plans.length" class="qa-list">
+                  <div v-for="(p, i) in designForm.plans" :key="i" class="qa-item">
+                    <div class="qa-fields">
+                      <span class="qa-num">Plan {{ i + 1 }}</span>
+                      <div class="mk-pair">
+                        <label class="mk-mini"><span>Nombre</span>
+                          <input v-model="p.name" class="input" type="text" :maxlength="mkLimits.planName" placeholder="Ej. Club mensual" :aria-label="`Nombre del plan ${i + 1}`" />
+                        </label>
+                        <label class="mk-mini"><span>Precio</span>
+                          <input v-model="p.price" class="input" type="text" :maxlength="mkLimits.planPrice" placeholder="Ej. $15.000/mes" :aria-label="`Precio del plan ${i + 1}`" />
+                        </label>
+                      </div>
+                      <label class="mk-mini"><span>Detalle <em>(opcional)</em></span>
+                        <input v-model="p.note" class="input" type="text" :maxlength="mkLimits.planNote" placeholder="Ej. El más elegido — sin permanencia" :aria-label="`Detalle del plan ${i + 1}`" />
+                      </label>
+                      <label class="mk-mini"><span>Beneficios, uno por línea</span>
+                        <textarea v-model="p.items" class="textarea" rows="3" placeholder="Un beneficio por línea. Ej.&#10;2 visitas al mes&#10;Descuento en productos" :aria-label="`Beneficios del plan ${i + 1}`"></textarea>
+                      </label>
+                    </div>
+                    <div class="qa-actions">
+                      <button type="button" class="icon-btn" :disabled="i === 0" :aria-label="`Subir el plan ${i + 1}`" @click="moveRow(designForm.plans, i, -1)"><AppIcon name="chevron-up" :size="14" /></button>
+                      <button type="button" class="icon-btn" :disabled="i === designForm.plans.length - 1" :aria-label="`Bajar el plan ${i + 1}`" @click="moveRow(designForm.plans, i, 1)"><AppIcon name="chevron-down" :size="14" /></button>
+                      <button type="button" class="icon-btn danger" :aria-label="`Borrar el plan ${i + 1}`" @click="designForm.plans.splice(i, 1)"><AppIcon name="trash" :size="15" /></button>
+                    </div>
+                  </div>
+                </div>
+                <div v-else class="mk-empty"><AppIcon name="inbox" :size="16" /><span>Todavía no cargaste planes.</span></div>
+                <button type="button" class="btn ghost btn-auto mk-add" :disabled="designForm.plans.length >= mkLimits.plans" @click="addRow(designForm.plans, mkLimits.plans, { name: '', price: '', note: '', items: '' })">
+                  <AppIcon name="plus" :size="15" /> Agregar plan
+                </button>
+                <p class="hint">El precio es texto libre (ej. "$15.000/mes" o "Consultar"). Los interesados te escriben por WhatsApp o el formulario de contacto — acá no se cobra nada.</p>
+                <p v-if="companyErrs.plans" class="field-error" role="alert">{{ companyErrs.plans }}</p>
+              </div>
+              <div class="btn-row">
+                <AppButton :loading="companyBusy" @click="savePlans">Guardar sección</AppButton>
+              </div>
+              </fieldset>
+            </div>
+
+            <!-- ===== Tus números (cifras destacadas) ===== -->
+            <div v-show="mkOpen === 'stats'" class="card mk-card">
+              <h3><AppIcon name="trending-up" :size="18" /> Tus números</h3>
+              <p class="mk-tip"><AppIcon name="info" :size="15" /><span>Mostrá cifras que generan confianza: cuántos clientes, años de trayectoria o productos vendidos.</span></p>
+              <div class="check-list">
+                <label class="check-item">
+                  <input v-model="designForm.show_stats" type="checkbox" />
+                  <span class="check-text">
+                    <strong>Mostrar en tu web</strong>
+                    <small>Banda de cifras que resume tu negocio: clientes, años, productos vendidos.</small>
+                  </span>
+                </label>
+              </div>
+              <div class="field">
+                <label>Cifras <span class="hint-inline">({{ designForm.stats.length }}/{{ mkLimits.stats }})</span></label>
+                <div v-if="designForm.stats.length" class="qa-list">
+                  <div v-for="(s, i) in designForm.stats" :key="i" class="qa-item">
+                    <div class="qa-fields">
+                      <span class="qa-num">Cifra {{ i + 1 }}</span>
+                      <div class="mk-pair">
+                        <label class="mk-mini"><span>Número</span>
+                          <input v-model="s.value" class="input" type="text" :maxlength="mkLimits.statValue" placeholder="+500" :aria-label="`Valor de la cifra ${i + 1}`" />
+                        </label>
+                        <label class="mk-mini"><span>Qué significa</span>
+                          <input v-model="s.label" class="input" type="text" :maxlength="mkLimits.statLabel" placeholder="clientes que nos eligen" :aria-label="`Etiqueta de la cifra ${i + 1}`" />
+                        </label>
+                      </div>
+                    </div>
+                    <div class="qa-actions">
+                      <button type="button" class="icon-btn" :disabled="i === 0" :aria-label="`Subir la cifra ${i + 1}`" @click="moveRow(designForm.stats, i, -1)"><AppIcon name="chevron-up" :size="14" /></button>
+                      <button type="button" class="icon-btn" :disabled="i === designForm.stats.length - 1" :aria-label="`Bajar la cifra ${i + 1}`" @click="moveRow(designForm.stats, i, 1)"><AppIcon name="chevron-down" :size="14" /></button>
+                      <button type="button" class="icon-btn danger" :aria-label="`Borrar la cifra ${i + 1}`" @click="designForm.stats.splice(i, 1)"><AppIcon name="trash" :size="15" /></button>
+                    </div>
+                  </div>
+                </div>
+                <div v-else class="mk-empty"><AppIcon name="inbox" :size="16" /><span>Todavía no cargaste cifras.</span></div>
+                <button type="button" class="btn ghost btn-auto mk-add" :disabled="designForm.stats.length >= mkLimits.stats" @click="addRow(designForm.stats, mkLimits.stats, { value: '', label: '' })">
+                  <AppIcon name="plus" :size="15" /> Agregar cifra
+                </button>
+                <p class="hint">Ej. "+500" y "clientes", o "15" y "años de trayectoria". Se ven en grande en una banda de tu portada.</p>
+                <p v-if="companyErrs.stats" class="field-error" role="alert">{{ companyErrs.stats }}</p>
+              </div>
+              <div class="btn-row">
+                <AppButton :loading="companyBusy" @click="saveStats">Guardar sección</AppButton>
+              </div>
+            </div>
+
+            <!-- ===== Testimonios ===== -->
+            <div v-show="mkOpen === 'testimonials'" class="card mk-card">
+              <h3><AppIcon name="quote" :size="18" /> Testimonios</h3>
+              <p class="mk-tip"><AppIcon name="info" :size="15" /><span>Las opiniones de tus clientes convencen mejor que cualquier anuncio. Pediles permiso antes de publicarlas.</span></p>
+              <div class="check-list">
+                <label class="check-item">
+                  <input v-model="designForm.show_testimonials" type="checkbox" />
+                  <span class="check-text">
+                    <strong>Mostrar en tu web</strong>
+                    <small>Opiniones de tus clientes: la mejor prueba social para vender más.</small>
+                  </span>
+                </label>
+              </div>
+              <AppInput v-model="designForm.testimonials_title" label="Título de la sección" name="company_testimonials_title" placeholder="Lo que dicen nuestros clientes" hint="Vacío: se muestra 'Lo que dicen nuestros clientes'." maxlength="80" />
+              <div class="field">
+                <label>Testimonios <span class="hint-inline">({{ designForm.testimonials.length }}/{{ mkLimits.testimonials }})</span></label>
+                <div v-if="designForm.testimonials.length" class="qa-list">
+                  <div v-for="(t, i) in designForm.testimonials" :key="i" class="qa-item">
+                    <div class="qa-fields">
+                      <span class="qa-num">Testimonio {{ i + 1 }}</span>
+                      <div class="mk-pair">
+                        <label class="mk-mini"><span>Nombre del cliente</span>
+                          <input v-model="t.name" class="input" type="text" :maxlength="mkLimits.testimonialName" placeholder="Ej. María Gómez" :aria-label="`Nombre del testimonio ${i + 1}`" />
+                        </label>
+                        <label class="mk-mini"><span>Detalle <em>(opcional)</em></span>
+                          <input v-model="t.detail" class="input" type="text" :maxlength="mkLimits.testimonialDetail" placeholder="Ej. Cliente desde 2019" :aria-label="`Detalle del testimonio ${i + 1}`" />
+                        </label>
+                      </div>
+                      <label class="mk-mini"><span>Su opinión</span>
+                        <textarea v-model="t.text" class="textarea" rows="2" :maxlength="mkLimits.testimonialText" placeholder="Lo que dijo de tu negocio" :aria-label="`Texto del testimonio ${i + 1}`"></textarea>
+                      </label>
+                    </div>
+                    <div class="qa-actions">
+                      <button type="button" class="icon-btn" :disabled="i === 0" :aria-label="`Subir el testimonio ${i + 1}`" @click="moveRow(designForm.testimonials, i, -1)"><AppIcon name="chevron-up" :size="14" /></button>
+                      <button type="button" class="icon-btn" :disabled="i === designForm.testimonials.length - 1" :aria-label="`Bajar el testimonio ${i + 1}`" @click="moveRow(designForm.testimonials, i, 1)"><AppIcon name="chevron-down" :size="14" /></button>
+                      <button type="button" class="icon-btn danger" :aria-label="`Borrar el testimonio ${i + 1}`" @click="designForm.testimonials.splice(i, 1)"><AppIcon name="trash" :size="15" /></button>
+                    </div>
+                  </div>
+                </div>
+                <div v-else class="mk-empty"><AppIcon name="inbox" :size="16" /><span>Todavía no cargaste testimonios.</span></div>
+                <button type="button" class="btn ghost btn-auto mk-add" :disabled="designForm.testimonials.length >= mkLimits.testimonials" @click="addRow(designForm.testimonials, mkLimits.testimonials, { name: '', detail: '', text: '' })">
+                  <AppIcon name="plus" :size="15" /> Agregar testimonio
+                </button>
+                <p class="hint">Publicá solo opiniones reales de clientes que te hayan autorizado a usarlas.</p>
+                <p v-if="companyErrs.testimonials" class="field-error" role="alert">{{ companyErrs.testimonials }}</p>
+              </div>
+              <div class="btn-row">
+                <AppButton :loading="companyBusy" @click="saveTestimonials">Guardar sección</AppButton>
+              </div>
+            </div>
+
+            <!-- ===== Preguntas frecuentes ===== -->
+            <div v-show="mkOpen === 'faqs'" class="card mk-card">
+              <h3><AppIcon name="message-circle" :size="18" /> Preguntas frecuentes</h3>
+              <p class="mk-tip"><AppIcon name="info" :size="15" /><span>Ahorrá consultas repetidas: escribí la pregunta tal como te la haría un cliente y su respuesta.</span></p>
+              <div class="check-list">
+                <label class="check-item">
+                  <input v-model="designForm.show_faq" type="checkbox" />
+                  <span class="check-text">
+                    <strong>Mostrar en tu web</strong>
+                    <small>Respuestas que se despliegan al tocarlas: ahorran consultas repetidas.</small>
+                  </span>
+                </label>
+              </div>
+              <AppInput v-model="designForm.faqs_title" label="Título de la sección" name="company_faqs_title" placeholder="Preguntas frecuentes" hint="Vacío: se muestra 'Preguntas frecuentes'." maxlength="80" />
+              <div class="field">
+                <label>Preguntas y respuestas <span class="hint-inline">({{ designForm.faqs.length }}/{{ mkLimits.faqs }})</span></label>
+                <div v-if="designForm.faqs.length" class="qa-list">
+                  <div v-for="(f, i) in designForm.faqs" :key="i" class="qa-item">
+                    <div class="qa-fields">
+                      <span class="qa-num">Pregunta {{ i + 1 }}</span>
+                      <label class="mk-mini"><span>La pregunta</span>
+                        <input v-model="f.q" class="input" type="text" :maxlength="mkLimits.faqQ" placeholder="Ej. ¿Hacen envíos?" :aria-label="`Pregunta ${i + 1}`" />
+                      </label>
+                      <label class="mk-mini"><span>La respuesta</span>
+                        <textarea v-model="f.a" class="textarea" rows="2" :maxlength="mkLimits.faqA" placeholder="Respuesta que ve la visita" :aria-label="`Respuesta ${i + 1}`"></textarea>
+                      </label>
+                    </div>
+                    <div class="qa-actions">
+                      <button type="button" class="icon-btn" :disabled="i === 0" :aria-label="`Subir la pregunta ${i + 1}`" @click="moveRow(designForm.faqs, i, -1)"><AppIcon name="chevron-up" :size="14" /></button>
+                      <button type="button" class="icon-btn" :disabled="i === designForm.faqs.length - 1" :aria-label="`Bajar la pregunta ${i + 1}`" @click="moveRow(designForm.faqs, i, 1)"><AppIcon name="chevron-down" :size="14" /></button>
+                      <button type="button" class="icon-btn danger" :aria-label="`Borrar la pregunta ${i + 1}`" @click="designForm.faqs.splice(i, 1)"><AppIcon name="trash" :size="15" /></button>
+                    </div>
+                  </div>
+                </div>
+                <div v-else class="mk-empty"><AppIcon name="inbox" :size="16" /><span>Todavía no cargaste preguntas.</span></div>
+                <button type="button" class="btn ghost btn-auto mk-add" :disabled="designForm.faqs.length >= mkLimits.faqs" @click="addRow(designForm.faqs, mkLimits.faqs, { q: '', a: '' })">
+                  <AppIcon name="plus" :size="15" /> Agregar pregunta
+                </button>
+                <p v-if="companyErrs.faqs" class="field-error" role="alert">{{ companyErrs.faqs }}</p>
+              </div>
+              <div class="btn-row">
+                <AppButton :loading="companyBusy" @click="saveFaqs">Guardar sección</AppButton>
+              </div>
+            </div>
+
+            <!-- ===== Garantías y beneficios ===== -->
+            <div v-show="mkOpen === 'benefits'" class="card mk-card">
+              <h3><AppIcon name="shield-check" :size="18" /> Garantías y beneficios</h3>
+              <p class="mk-tip"><AppIcon name="info" :size="15" /><span>Envíos, garantía y medios de pago: lo que tranquiliza a quien está por comprar.</span></p>
+              <div class="check-list">
+                <label class="check-item">
+                  <input v-model="designForm.show_benefits" type="checkbox" />
+                  <span class="check-text">
+                    <strong>Mostrar en tu web</strong>
+                    <small>Envíos, garantías, medios de pago, devoluciones. Se oculta sola si no cargás ninguno.</small>
+                  </span>
+                </label>
+              </div>
+              <div class="field">
+                <label>Beneficios <span class="hint-inline">({{ designForm.benefits.length }}/{{ mkLimits.benefits }})</span></label>
+                <div v-if="designForm.benefits.length" class="qa-list">
+                  <div v-for="(b, i) in designForm.benefits" :key="i" class="qa-item">
+                    <div class="qa-fields">
+                      <span class="qa-num">Beneficio {{ i + 1 }}</span>
+                      <label class="mk-mini"><span>Ícono que se muestra</span>
+                        <div class="mk-icon-field">
+                          <span class="mk-icon-preview" aria-hidden="true"><AppIcon :name="serviceIcons[b.icon] ? b.icon : 'shield-check'" :size="17" /></span>
+                          <select v-model="b.icon" class="select" :aria-label="`Ícono del beneficio ${i + 1}`">
+                            <option v-for="(label, key) in serviceIcons" :key="key" :value="key">{{ label }}</option>
+                          </select>
+                        </div>
+                      </label>
+                      <label class="mk-mini"><span>Nombre</span>
+                        <input v-model="b.title" class="input" type="text" :maxlength="mkLimits.benefitTitle" placeholder="Ej. Garantía de 30 días" :aria-label="`Título del beneficio ${i + 1}`" />
+                      </label>
+                      <label class="mk-mini"><span>Descripción corta</span>
+                        <textarea v-model="b.text" class="textarea" rows="2" :maxlength="mkLimits.benefitText" placeholder="Una línea que lo describa" :aria-label="`Descripción del beneficio ${i + 1}`"></textarea>
+                      </label>
+                    </div>
+                    <div class="qa-actions">
+                      <button type="button" class="icon-btn" :disabled="i === 0" :aria-label="`Subir el beneficio ${i + 1}`" @click="moveRow(designForm.benefits, i, -1)"><AppIcon name="chevron-up" :size="14" /></button>
+                      <button type="button" class="icon-btn" :disabled="i === designForm.benefits.length - 1" :aria-label="`Bajar el beneficio ${i + 1}`" @click="moveRow(designForm.benefits, i, 1)"><AppIcon name="chevron-down" :size="14" /></button>
+                      <button type="button" class="icon-btn danger" :aria-label="`Borrar el beneficio ${i + 1}`" @click="designForm.benefits.splice(i, 1)"><AppIcon name="trash" :size="15" /></button>
+                    </div>
+                  </div>
+                </div>
+                <div v-else class="mk-empty"><AppIcon name="inbox" :size="16" /><span>Todavía no cargaste beneficios.</span></div>
+                <button type="button" class="btn ghost btn-auto mk-add" :disabled="designForm.benefits.length >= mkLimits.benefits" @click="addRow(designForm.benefits, mkLimits.benefits, { icon: 'shield-check', title: '', text: '' })">
+                  <AppIcon name="plus" :size="15" /> Agregar beneficio
+                </button>
+                <p v-if="companyErrs.benefits" class="field-error" role="alert">{{ companyErrs.benefits }}</p>
+              </div>
+              <div class="btn-row">
+                <AppButton :loading="companyBusy" @click="saveBenefits">Guardar sección</AppButton>
+              </div>
+            </div>
+
+            <!-- ===== Línea de tiempo ===== -->
+            <div v-show="mkOpen === 'timeline'" class="card mk-card">
+              <h3><AppIcon name="flag" :size="18" /> Línea de tiempo</h3>
+              <p class="mk-tip"><AppIcon name="info" :size="15" /><span>Contá tu historia paso a paso: cuándo empezaste, el local nuevo, cada logro.</span></p>
+              <div class="check-list">
+                <label class="check-item">
+                  <input v-model="designForm.show_timeline" type="checkbox" />
+                  <span class="check-text">
+                    <strong>Mostrar en tu web</strong>
+                    <small>Los hitos del negocio: fundación, local nuevo, logros. Se oculta sola si no cargás ninguno.</small>
+                  </span>
+                </label>
+              </div>
+              <div class="field">
+                <label>Hitos <span class="hint-inline">({{ designForm.timeline.length }}/{{ mkLimits.timeline }})</span></label>
+                <div v-if="designForm.timeline.length" class="qa-list">
+                  <div v-for="(t, i) in designForm.timeline" :key="i" class="qa-item">
+                    <div class="qa-fields">
+                      <span class="qa-num">Hito {{ i + 1 }}</span>
+                      <label class="mk-mini"><span>Cuándo <em>(año o etapa)</em></span>
+                        <input v-model="t.label" class="input" type="text" :maxlength="mkLimits.timelineLabel" placeholder="Ej. 2015 o Hoy" :aria-label="`Rótulo del hito ${i + 1}`" />
+                      </label>
+                      <label class="mk-mini"><span>Qué pasó</span>
+                        <textarea v-model="t.text" class="textarea" rows="2" :maxlength="mkLimits.timelineText" placeholder="Qué pasó en ese momento" :aria-label="`Texto del hito ${i + 1}`"></textarea>
+                      </label>
+                    </div>
+                    <div class="qa-actions">
+                      <button type="button" class="icon-btn" :disabled="i === 0" :aria-label="`Subir el hito ${i + 1}`" @click="moveRow(designForm.timeline, i, -1)"><AppIcon name="chevron-up" :size="14" /></button>
+                      <button type="button" class="icon-btn" :disabled="i === designForm.timeline.length - 1" :aria-label="`Bajar el hito ${i + 1}`" @click="moveRow(designForm.timeline, i, 1)"><AppIcon name="chevron-down" :size="14" /></button>
+                      <button type="button" class="icon-btn danger" :aria-label="`Borrar el hito ${i + 1}`" @click="designForm.timeline.splice(i, 1)"><AppIcon name="trash" :size="15" /></button>
+                    </div>
+                  </div>
+                </div>
+                <div v-else class="mk-empty"><AppIcon name="inbox" :size="16" /><span>Todavía no cargaste hitos.</span></div>
+                <button type="button" class="btn ghost btn-auto mk-add" :disabled="designForm.timeline.length >= mkLimits.timeline" @click="addRow(designForm.timeline, mkLimits.timeline, { label: '', text: '' })">
+                  <AppIcon name="plus" :size="15" /> Agregar hito
+                </button>
+                <p v-if="companyErrs.timeline" class="field-error" role="alert">{{ companyErrs.timeline }}</p>
+              </div>
+              <div class="btn-row">
+                <AppButton :loading="companyBusy" @click="saveTimeline">Guardar sección</AppButton>
+              </div>
+            </div>
+
+            <!-- ===== Equipo ===== -->
+            <div v-show="mkOpen === 'team'" class="card mk-card">
+              <h3><AppIcon name="users" :size="18" /> Equipo</h3>
+              <p class="mk-tip"><AppIcon name="info" :size="15" /><span>Presentá a las personas detrás del negocio con su nombre y su rol.</span></p>
+              <div class="check-list">
+                <label class="check-item">
+                  <input v-model="designForm.show_team" type="checkbox" />
+                  <span class="check-text">
+                    <strong>Mostrar en tu web</strong>
+                    <small>Las personas detrás del negocio, con su rol. Se oculta sola si no cargás a nadie.</small>
+                  </span>
+                </label>
+              </div>
+              <div class="field">
+                <label>Integrantes <span class="hint-inline">({{ designForm.team.length }}/{{ mkLimits.team }})</span></label>
+                <div v-if="designForm.team.length" class="qa-list">
+                  <div v-for="(m, i) in designForm.team" :key="i" class="qa-item">
+                    <div class="qa-fields">
+                      <span class="qa-num">Integrante {{ i + 1 }}</span>
+                      <div class="mk-pair">
+                        <label class="mk-mini"><span>Nombre</span>
+                          <input v-model="m.name" class="input" type="text" :maxlength="mkLimits.teamName" placeholder="Ej. Laura" :aria-label="`Nombre del integrante ${i + 1}`" />
+                        </label>
+                        <label class="mk-mini"><span>Su rol</span>
+                          <input v-model="m.role" class="input" type="text" :maxlength="mkLimits.teamRole" placeholder="Ej. Dueña, Técnica" :aria-label="`Rol del integrante ${i + 1}`" />
+                        </label>
+                      </div>
+                    </div>
+                    <div class="qa-actions">
+                      <button type="button" class="icon-btn" :disabled="i === 0" :aria-label="`Subir el integrante ${i + 1}`" @click="moveRow(designForm.team, i, -1)"><AppIcon name="chevron-up" :size="14" /></button>
+                      <button type="button" class="icon-btn" :disabled="i === designForm.team.length - 1" :aria-label="`Bajar el integrante ${i + 1}`" @click="moveRow(designForm.team, i, 1)"><AppIcon name="chevron-down" :size="14" /></button>
+                      <button type="button" class="icon-btn danger" :aria-label="`Borrar el integrante ${i + 1}`" @click="designForm.team.splice(i, 1)"><AppIcon name="trash" :size="15" /></button>
+                    </div>
+                  </div>
+                </div>
+                <div v-else class="mk-empty"><AppIcon name="inbox" :size="16" /><span>Todavía no cargaste integrantes.</span></div>
+                <button type="button" class="btn ghost btn-auto mk-add" :disabled="designForm.team.length >= mkLimits.team" @click="addRow(designForm.team, mkLimits.team, { name: '', role: '' })">
+                  <AppIcon name="plus" :size="15" /> Agregar integrante
+                </button>
+                <p v-if="companyErrs.team" class="field-error" role="alert">{{ companyErrs.team }}</p>
+              </div>
+              <div class="btn-row">
+                <AppButton :loading="companyBusy" @click="saveTeam">Guardar sección</AppButton>
+              </div>
+            </div>
+
+            <!-- ===== Horarios de atención ===== -->
+            <div v-show="mkOpen === 'hours'" class="card mk-card">
+              <h3><AppIcon name="clock" :size="18" /> Horarios de atención</h3>
+              <p class="mk-tip"><AppIcon name="info" :size="15" /><span>Indicá cuándo atendés: aparece junto a tus datos de contacto en la web.</span></p>
+              <div class="check-list">
+                <label class="check-item">
+                  <input v-model="designForm.show_hours" type="checkbox" />
+                  <span class="check-text">
+                    <strong>Mostrar en tu web</strong>
+                    <small>Aparecen dentro de la sección Contáctanos, junto a tus canales.</small>
+                  </span>
+                </label>
+              </div>
+              <div class="field">
+                <label>Horarios <span class="hint-inline">({{ designForm.hours.length }}/{{ mkLimits.hours }})</span></label>
+                <div v-if="designForm.hours.length" class="qa-list">
+                  <div v-for="(h, i) in designForm.hours" :key="i" class="qa-item">
+                    <div class="qa-fields">
+                      <span class="qa-num">Horario {{ i + 1 }}</span>
+                      <div class="mk-pair">
+                        <label class="mk-mini"><span>Días</span>
+                          <input v-model="h.label" class="input" type="text" :maxlength="mkLimits.hourLabel" placeholder="Lunes a viernes" :aria-label="`Días del horario ${i + 1}`" />
+                        </label>
+                        <label class="mk-mini"><span>Horario</span>
+                          <input v-model="h.value" class="input" type="text" :maxlength="mkLimits.hourValue" placeholder="9 a 18 h" :aria-label="`Franja del horario ${i + 1}`" />
+                        </label>
+                      </div>
+                    </div>
+                    <div class="qa-actions">
+                      <button type="button" class="icon-btn" :disabled="i === 0" :aria-label="`Subir el horario ${i + 1}`" @click="moveRow(designForm.hours, i, -1)"><AppIcon name="chevron-up" :size="14" /></button>
+                      <button type="button" class="icon-btn" :disabled="i === designForm.hours.length - 1" :aria-label="`Bajar el horario ${i + 1}`" @click="moveRow(designForm.hours, i, 1)"><AppIcon name="chevron-down" :size="14" /></button>
+                      <button type="button" class="icon-btn danger" :aria-label="`Borrar el horario ${i + 1}`" @click="designForm.hours.splice(i, 1)"><AppIcon name="trash" :size="15" /></button>
+                    </div>
+                  </div>
+                </div>
+                <div v-else class="mk-empty"><AppIcon name="inbox" :size="16" /><span>Todavía no cargaste horarios.</span></div>
+                <button type="button" class="btn ghost btn-auto mk-add" :disabled="designForm.hours.length >= mkLimits.hours" @click="addRow(designForm.hours, mkLimits.hours, { label: '', value: '' })">
+                  <AppIcon name="plus" :size="15" /> Agregar horario
+                </button>
+                <p class="hint">Si apagás la sección Contáctanos desde "Cómo se ve", los horarios también se ocultan.</p>
+                <p v-if="companyErrs.hours" class="field-error" role="alert">{{ companyErrs.hours }}</p>
+              </div>
+              <div class="btn-row">
+                <AppButton :loading="companyBusy" @click="saveHours">Guardar sección</AppButton>
+              </div>
+            </div>
+
+            <!-- ===== Llamado a la acción ===== -->
+            <div v-show="mkOpen === 'cta'" class="card mk-card">
+              <h3><AppIcon name="megaphone" :size="18" /> Llamado a la acción</h3>
+              <p class="mk-tip"><AppIcon name="info" :size="15" /><span>La banda final de tu portada: un título, una frase y un botón grande para que te escriban.</span></p>
+              <div class="check-list">
+                <label class="check-item">
+                  <input v-model="designForm.show_cta" type="checkbox" />
+                  <span class="check-text">
+                    <strong>Mostrar en tu web</strong>
+                    <small>Banda de cierre de tu portada con un botón grande para que te escriban.</small>
+                  </span>
+                </label>
+              </div>
+              <AppInput v-model="designForm.cta_title" label="Título" name="company_cta_title" placeholder="¿Listo para hacer tu pedido?" maxlength="120" />
+              <AppInput v-model="designForm.cta_text" label="Texto" name="company_cta_text" placeholder="Escribinos y te armamos el pedido en el día." hint="Frase corta que acompaña al título." maxlength="280" />
+              <AppInput v-model="designForm.cta_label" label="Texto del botón" name="company_cta_label" placeholder="Escribinos por WhatsApp" hint="Vacío: se usa uno genérico según el destino del botón." maxlength="40" />
+              <p class="hint">El botón abre tu WhatsApp si cargaste uno; si no, lleva al formulario de contacto o a tu catálogo. La banda solo aparece si hay título o texto.</p>
+              <p v-if="companyErrs.cta" class="field-error" role="alert">{{ companyErrs.cta }}</p>
+              <div class="btn-row">
+                <AppButton :loading="companyBusy" @click="saveCta">Guardar sección</AppButton>
+              </div>
+            </div>
+
+            <!-- ===== Cinta de anuncios (marquee bajo la portada) ===== -->
+            <div v-show="mkOpen === 'ann'" class="card mk-card">
+              <h3><AppIcon name="megaphone" :size="18" /> Cinta de anuncios</h3>
+              <p class="mk-tip"><AppIcon name="info" :size="15" /><span>Avisos cortos que corren en bucle debajo de tu portada: promos, envíos gratis, cuotas.</span></p>
+              <div class="check-list">
+                <label class="check-item">
+                  <input v-model="designForm.show_announcements" type="checkbox" />
+                  <span class="check-text">
+                    <strong>Mostrar en tu web</strong>
+                    <small>Banda que corre en bucle debajo de la portada con tus avisos cortos (envíos gratis, cuotas, promos).</small>
+                  </span>
+                </label>
+              </div>
+              <div class="field">
+                <label>Anuncios <span class="hint-inline">({{ designForm.announcements.length }}/{{ mkLimits.announcements }})</span></label>
+                <div v-if="designForm.announcements.length" class="qa-list">
+                  <div v-for="(a, i) in designForm.announcements" :key="i" class="qa-item">
+                    <div class="qa-fields">
+                      <span class="qa-num">Anuncio {{ i + 1 }}</span>
+                      <div class="mk-pair">
+                        <label class="mk-mini"><span>Ícono</span>
+                          <div class="mk-icon-field">
+                            <span class="mk-icon-preview" aria-hidden="true"><AppIcon :name="serviceIcons[a.icon] ? a.icon : 'megaphone'" :size="17" /></span>
+                            <select v-model="a.icon" class="select" :aria-label="`Ícono del anuncio ${i + 1}`">
+                              <option v-for="(label, key) in serviceIcons" :key="key" :value="key">{{ label }}</option>
+                            </select>
+                          </div>
+                        </label>
+                        <label class="mk-mini"><span>Texto del anuncio</span>
+                          <input v-model="a.text" class="input" type="text" :maxlength="mkLimits.announcementText" placeholder="Ej. Envíos gratis superando $80.000" :aria-label="`Texto del anuncio ${i + 1}`" />
+                        </label>
+                      </div>
+                    </div>
+                    <div class="qa-actions">
+                      <button type="button" class="icon-btn" :disabled="i === 0" :aria-label="`Subir el anuncio ${i + 1}`" @click="moveRow(designForm.announcements, i, -1)"><AppIcon name="chevron-up" :size="14" /></button>
+                      <button type="button" class="icon-btn" :disabled="i === designForm.announcements.length - 1" :aria-label="`Bajar el anuncio ${i + 1}`" @click="moveRow(designForm.announcements, i, 1)"><AppIcon name="chevron-down" :size="14" /></button>
+                      <button type="button" class="icon-btn danger" :aria-label="`Borrar el anuncio ${i + 1}`" @click="designForm.announcements.splice(i, 1)"><AppIcon name="trash" :size="15" /></button>
+                    </div>
+                  </div>
+                </div>
+                <div v-else class="mk-empty"><AppIcon name="inbox" :size="16" /><span>Todavía no cargaste anuncios.</span></div>
+                <button type="button" class="btn ghost btn-auto mk-add" :disabled="designForm.announcements.length >= mkLimits.announcements" @click="addRow(designForm.announcements, mkLimits.announcements, { icon: 'megaphone', text: '' })">
+                  <AppIcon name="plus" :size="15" /> Agregar anuncio
+                </button>
+                <p class="hint">Frases cortas con ícono que se repiten en bucle. Se ocultan solas si no cargás ninguna.</p>
+                <p v-if="companyErrs.announcements" class="field-error" role="alert">{{ companyErrs.announcements }}</p>
+              </div>
+              <div class="btn-row">
+                <AppButton :loading="companyBusy" @click="saveAnnouncements">Guardar sección</AppButton>
+              </div>
+            </div>
+
+            <!-- ===== Videos (embeds de redes + stream en vivo Premium) ===== -->
+            <div v-show="mkOpen === 'video'" class="card mk-card">
+              <h3><AppIcon name="play" :size="18" /> Videos</h3>
+              <p class="mk-tip"><AppIcon name="info" :size="15" /><span>Pegá el link completo de cada video de TikTok, Instagram, YouTube, Facebook o Vimeo: se muestran como tarjetas en tu página.</span></p>
+              <div class="check-list">
+                <label class="check-item">
+                  <input v-model="designForm.show_video" type="checkbox" />
+                  <span class="check-text">
+                    <strong>Mostrar en tu web</strong>
+                    <small>Sección con tus videos y, si cargás un stream, el botón "Transmitiendo en vivo".</small>
+                  </span>
+                </label>
+              </div>
+              <div class="field">
+                <label>Links de videos <span class="hint-inline">({{ (designForm.videos || []).length }}/{{ videosCap }})</span></label>
+                <div v-if="(designForm.videos || []).length" class="qa-list">
+                  <div v-for="(u, i) in designForm.videos" :key="i" class="qa-item">
+                    <div class="qa-fields">
+                      <span class="qa-num">Video {{ i + 1 }}</span>
+                      <input v-model="designForm.videos[i]" class="input" type="url" maxlength="300" placeholder="https://www.tiktok.com/@tunegocio/video/…" :aria-label="`Link del video ${i + 1}`" />
+                    </div>
+                    <div class="qa-actions">
+                      <button type="button" class="icon-btn" :disabled="i === 0" :aria-label="`Subir el video ${i + 1}`" @click="moveRow(designForm.videos, i, -1)"><AppIcon name="chevron-up" :size="14" /></button>
+                      <button type="button" class="icon-btn" :disabled="i === designForm.videos.length - 1" :aria-label="`Bajar el video ${i + 1}`" @click="moveRow(designForm.videos, i, 1)"><AppIcon name="chevron-down" :size="14" /></button>
+                      <button type="button" class="icon-btn danger" :aria-label="`Borrar el video ${i + 1}`" @click="designForm.videos.splice(i, 1)"><AppIcon name="trash" :size="15" /></button>
+                    </div>
+                  </div>
+                </div>
+                <div v-else class="mk-empty"><AppIcon name="inbox" :size="16" /><span>Todavía no cargaste videos.</span></div>
+                <button type="button" class="btn ghost btn-auto mk-add" :disabled="(designForm.videos || []).length >= videosCap" @click="addRow(designForm.videos, videosCap, '')">
+                  <AppIcon name="plus" :size="15" /> Agregar video
+                </button>
+                <p class="hint">YouTube, Vimeo, TikTok, Instagram o Facebook. Tu plan admite hasta {{ videosCap }} videos.</p>
+              </div>
+              <div class="field" :class="{ locked: !canLiveStream }">
+                <AppInput v-model="designForm.live_stream_url" label="Link del stream en vivo" name="company_live_stream_url" placeholder="Link del stream (YouTube, Facebook) o de tu canal de Twitch" hint="Con un link cargado aparece el botón «Transmitiendo en vivo» en tu portada: al tocarlo se abre el stream en un modal. Disponible en el plan Premium." maxlength="300" />
+              </div>
+              <AppInput v-model="designForm.video_title" label="Título de la sección" name="company_video_title" placeholder="Mirá nuestro video" hint="Vacío: se muestra 'Mirá nuestro video'." maxlength="80" />
+              <p class="hint">Aparece en un orden fijo entre las secciones de tu página.</p>
+              <p v-if="companyErrs.video" class="field-error" role="alert">{{ companyErrs.video }}</p>
+              <div class="btn-row">
+                <AppButton :loading="companyBusy" @click="saveVideo">Guardar sección</AppButton>
+              </div>
+            </div>
+
+            <!-- ===== Contacto y redes (WhatsApp, redes, email público y mapa) ===== -->
+            <div v-show="mkOpen === 'contact'" class="card mk-card">
+              <h3><AppIcon name="phone" :size="18" /> Contacto y redes</h3>
+              <p class="mk-tip"><AppIcon name="info" :size="15" /><span>Cómo te escriben tus clientes: el botón de WhatsApp, tus redes y la sección de contacto al final de la página.</span></p>
+              <AppInput v-model="designForm.whatsapp" label="WhatsApp" name="company_whatsapp" type="tel" placeholder="+5493871551234" hint="Número con código de país. Los botones «Escribime» de tu web abren este chat. Vacío: no hay botón." :error="designFieldErr('whatsapp')" @blur="designTouched.whatsapp = true" />
+              <div class="grid-2">
+                <AppInput v-model="designForm.instagram" label="Instagram" name="company_instagram" placeholder="tunegocio" hint="Solo el usuario, sin «@»." :error="designFieldErr('instagram')" @blur="designTouched.instagram = true" />
+                <AppInput v-model="designForm.tiktok" label="TikTok" name="company_tiktok" placeholder="tunegocio" hint="Solo el usuario, sin «@»." :error="designFieldErr('tiktok')" @blur="designTouched.tiktok = true" />
+              </div>
+              <AppInput v-model="designForm.facebook" label="Facebook" name="company_facebook" placeholder="tunegocio o link de tu página" hint="El nombre de tu página o tu usuario." :error="designFieldErr('facebook')" @blur="designTouched.facebook = true" />
+              <AppInput v-model="designForm.contact_email" label="Email de contacto público" name="company_contact_email" type="email" placeholder="hola@tunegocio.com" hint="Los mensajes del formulario de contacto llegan acá. Vacío: llegan al email de tu cuenta." :error="designFieldErr('contact_email')" @blur="designTouched.contact_email = true" />
+              <div class="check-list">
+                <label class="check-item">
+                  <input v-model="designForm.show_contact" type="checkbox" />
+                  <span class="check-text">
+                    <strong>Mostrar sección de contacto</strong>
+                    <small>El formulario «Escribinos» al final de tu página. Se oculta sola si no hay datos de contacto.</small>
+                  </span>
+                </label>
+                <label class="check-item" :class="{ disabled: !canLocationMap }">
+                  <input v-model="designForm.show_location" type="checkbox" :disabled="!canLocationMap" />
+                  <span class="check-text">
+                    <strong>Mostrar mapa de ubicación <span v-if="!canLocationMap" class="lock-badge"><AppIcon name="lock" :size="11" :stroke="2" /> Plan Estándar en adelante</span></strong>
+                    <small>Tu domicilio en un mapa dentro de la sección de contacto.</small>
+                  </span>
                 </label>
               </div>
               <div class="btn-row">
-                <AppButton :loading="discountBusy" @click="saveDiscount"><AppIcon name="check" :size="16" /> {{ discountEditing ? 'Guardar cambios' : 'Crear descuento' }}</AppButton>
-                <button type="button" class="btn ghost btn-auto" @click="closeDiscountForm">Cancelar</button>
-              </div>
-                  </div>
-                </div>
-              </div>
-            </Transition>
-          </Teleport>
-
-            <div class="card disc-card">
-              <div class="inv-head">
-                <h3><AppIcon name="percent" :size="17" /> Descuentos <small>· {{ catalog.discounts.length }}</small></h3>
-                <button type="button" class="btn btn-auto" @click="newDiscount"><AppIcon name="plus" :size="15" /> Nuevo descuento</button>
-              </div>
-              <div v-if="!catalog.discounts.length" class="disc-empty">
-                <span class="disc-empty-icon"><AppIcon name="percent" :size="22" /></span>
-                <strong>Todavía no programaste descuentos</strong>
-                <p>Creá una oferta y se enciende y se apaga sola en las fechas que elijas.</p>
-                <ul class="disc-empty-tips">
-                  <li><AppIcon name="zap" :size="13" /> Se activa sola</li>
-                  <li><AppIcon name="clock" :size="13" /> Se apaga sola</li>
-                  <li><AppIcon name="eye" :size="13" /> Se ve en tu web</li>
-                </ul>
-              </div>
-              <div v-else class="disc-cards">
-                <DiscountCard
-                  v-for="d in catalog.discounts" :key="d.id" :d="d" :busy="discountBusy"
-                  @toggle="toggleDiscount" @edit="editDiscount" @remove="removeDiscount"
-                />
+                <AppButton :loading="companyBusy" @click="saveContact">Guardar información</AppButton>
               </div>
             </div>
-          </div>
-          </div>
 
-        </template>
-      </template>
-    </div>
-    <!-- ================= MIS SERVICIOS ================= -->
-    <div v-if="seen.services" v-show="section === 'services'" class="sec-serv" :class="{ 'sec-on': section === 'services' }">
-      <div class="page-head">
-        <div>
-          <h1>Mis servicios</h1>
-          <p>Mostrá lo que hacés, con precio y duración, en tu página. El cliente arma su presupuesto y el pedido te llega por WhatsApp; nada se cobra online.</p>
-        </div>
-        <button class="btn ghost btn-auto" @click="services.loadAll()"><AppIcon name="refresh" :size="16" /> Recargar</button>
-      </div>
-
-      <AlertMessage v-if="services.notice" kind="success" :message="services.notice" />
-      <AlertMessage v-if="services.lastError" kind="error" :message="services.lastError" />
-
-      <template v-if="services.denied">
-        <div class="empty">
-          <span class="empty-icon"><AppIcon name="wrench" :size="28" /></span>
-          <h3>La página Servicios está disponible desde el plan Estándar</h3>
-          <p>Sumala a tu web: tus clientes eligen servicios, ven un presupuesto orientativo y te escriben por WhatsApp.</p>
-          <button class="btn btn-auto" @click="section = 'plans'">Ver planes</button>
-        </div>
-      </template>
-
-      <template v-else>
-        <div v-if="!designSiteTemplates.includes('services')" class="card svc-note" role="note">
-          <span class="svc-note-ico" aria-hidden="true"><AppIcon name="eye-off" :size="18" /></span>
-          <div class="svc-note-body">
-            <h3>Tu página de servicios está apagada</h3>
-            <p class="hint">Los clientes no la ven en tu web. Tus servicios quedan guardados: activá la página en <a href="#" @click.prevent="section = 'pages'"><strong>Plantillas</strong></a> cuando quieras mostrarla.</p>
-          </div>
-        </div>
-        <div v-if="services.status === 'loading'" class="card card-loading"><span class="spinner spinner-brand"></span><p>Cargando tus servicios…</p></div>
-        <template v-else>
-          <div class="svc-stats">
-            <div v-for="st in serviceStats" :key="st.key" class="svc-stat" :style="{ '--h': st.hue }">
-              <span class="svc-stat-ico"><AppIcon :name="st.icon" :size="20" aria-hidden="true" /></span>
-              <div>
-                <strong>{{ st.value }}</strong>
-                <span>{{ st.label }}</span>
-                <small>{{ st.hint }}</small>
+            <!-- ===== Extras (aviso del catálogo + texto del pie) ===== -->
+            <div v-show="mkOpen === 'extras'" class="card mk-card">
+              <h3><AppIcon name="plus" :size="18" /> Extras</h3>
+              <p class="mk-tip"><AppIcon name="info" :size="15" /><span>Dos detalles finales: un aviso arriba del catálogo y una frase al pie de tu página.</span></p>
+              <AppInput v-model="designForm.catalog_note" label="Aviso del catálogo" name="company_catalog_note" placeholder="Ej. Envíos a todo el país · Aceptamos todos los medios de pago" hint="Tira informativa que aparece arriba de tu página de catálogo. Vacío: no se muestra." maxlength="160" />
+              <AppInput v-model="designForm.footer_text" label="Frase del pie" name="company_footer_text" placeholder="Ej. Tienda familiar desde 1998" hint="Línea extra al final de tu web, debajo del copyright. Vacío: no se muestra." maxlength="160" />
+              <p v-if="companyErrs.extras" class="field-error" role="alert">{{ companyErrs.extras }}</p>
+              <div class="btn-row">
+                <AppButton :loading="companyBusy" @click="saveExtras">Guardar sección</AppButton>
               </div>
             </div>
+
+                </div>
+              </div>
+            </div>
+          </template>
+          <div v-else class="empty">
+            <span class="empty-icon"><AppIcon name="lock" :size="28" /></span>
+            <h3>El contenido de tu empresa viene con tu plan</h3>
+            <p>Activá una suscripción para completar las secciones de marketing de tu página pública.</p>
+            <button class="btn btn-auto" @click="section = 'plans'">Ver planes</button>
           </div>
-          <div class="svc-meter" role="progressbar" :aria-valuenow="serviceUsage" aria-valuemin="0" aria-valuemax="100" aria-label="Cupo de servicios usado">
-            <span :style="{ width: serviceUsage + '%' }"></span>
+        </div>
+    
+    <!-- ================= NOVEDADES (feed social) ================= -->
+        <div v-if="seen.feed" v-show="section === 'feed'" class="sec-feed" :class="{ 'sec-on': section === 'feed' }">
+          <div class="page-head">
+            <div>
+              <h1>Novedades</h1>
+              <p>Tu feed en la web: publicá fotos, videos, posts de tus redes y encuestas. Tus clientes comentan, likean y votan con su cuenta.</p>
+            </div>
           </div>
-          <div class="grid-2 svc-grid">
-            <div class="card svc-form">
-              <header class="svc-form-head">
-                <h3><AppIcon :name="serviceEditing ? 'pencil' : 'plus'" :size="18" /> {{ serviceEditing ? 'Editar servicio' : 'Agregar un servicio' }}</h3>
-                <p class="hint">Completá los campos: arriba ves una vista previa de cómo queda en tu web.</p>
-              </header>
-              <div class="svc-preview" :style="{ '--h': serviceHue(serviceForm.icon) }" aria-hidden="true">
-                <span class="svc-ico"><AppIcon :name="serviceIcon(serviceForm.icon)" :size="22" /></span>
-                <div>
-                  <strong>{{ serviceForm.name || 'Nombre del servicio' }}</strong>
-                  <small>{{ servicePriceLabel(serviceForm) }}<template v-if="serviceForm.duration"> · {{ serviceForm.duration }}</template></small>
-                </div>
+          <FeedPanel />
+        </div>
+    
+    <!-- ================= OPINIONES ================= -->
+        <div v-if="seen.reviews" v-show="section === 'reviews'" class="sec-rev" :class="{ 'sec-on': section === 'reviews' }">
+          <div class="page-head">
+            <div>
+              <h1>Opiniones</h1>
+              <p>Las valoraciones y comentarios que los visitantes dejan en los productos de tu web.</p>
+            </div>
+          </div>
+
+          <AlertMessage v-if="catalog.notice" kind="success" :message="catalog.notice" />
+          <AlertMessage v-if="catalog.lastError" kind="error" :message="catalog.lastError" />
+
+          <div v-if="store.status === 'loading' || store.status === 'idle'" class="card card-loading"><span class="spinner spinner-brand"></span><p>Cargando tu tienda…</p></div>
+
+          <div v-else-if="!store.hasStore" class="empty">
+            <span class="empty-icon"><AppIcon name="store" :size="28" /></span>
+            <h3>Primero creá tu página web</h3>
+            <p>Las opiniones se dejan en los productos de tu web. Cuando la tengas, volvé acá para activarlas.</p>
+            <button class="btn btn-auto" @click="section = 'store'">Crear mi página web</button>
+          </div>
+
+          <div v-else-if="!canProductComments" class="empty">
+            <span class="empty-icon"><AppIcon name="star" :size="28" /></span>
+            <h3>Las opiniones son una función Premium</h3>
+            <p>Con el Plan premium tus clientes valoran tus productos y dejan comentarios que se muestran en tu web. Vos decidís cuáles se ven.</p>
+            <button class="btn btn-auto" @click="section = 'plans'">Ver planes</button>
+          </div>
+
+          <template v-else>
+            <div class="card">
+              <h3><AppIcon name="star" :size="18" /> Opiniones de tus clientes</h3>
+              <p class="hint">Elegí qué pueden dejar los visitantes en tus productos. Los cambios se aplican al instante.</p>
+              <div class="check-list" role="group" aria-label="Opiniones de tus clientes">
+                <label class="check-item" :class="{ disabled: reviewToggleBusy }">
+                  <input type="checkbox" :checked="designForm.show_reviews" :disabled="reviewToggleBusy" @change="toggleShowReviews" />
+                  <span class="check-text">
+                    <strong>Valoraciones de productos <span v-if="reviewToggleBusy" class="spinner spinner-brand" aria-hidden="true"></span></strong>
+                    <small>Los visitantes votan “me gustó” o “no me gustó”; el resultado se ve en el catálogo.</small>
+                  </span>
+                </label>
+                <label class="check-item" :class="{ disabled: reviewToggleBusy }">
+                  <input type="checkbox" :checked="designForm.show_comments" :disabled="reviewToggleBusy" @change="toggleShowComments" />
+                  <span class="check-text">
+                    <strong>Comentarios en productos</strong>
+                    <small>Opinan con nombre, apellido, email y captcha antispam. Los moderás en la lista de abajo.</small>
+                  </span>
+                </label>
               </div>
-              <div class="svc-group">
-                <span class="svc-group-label">Qué ofrecés</span>
-                <AppInput v-model="serviceForm.name" label="Nombre" icon="pencil" name="svc_name" placeholder="Ej. Reparación a domicilio" :error="serviceFieldErr('name')" @blur="serviceTouched.name = true" />
-                <div class="field">
-                  <label for="svc-description"><AppIcon name="message-circle" :size="14" class="label-icon" aria-hidden="true" />Descripción corta <span class="svc-opt">opcional</span></label>
-                  <textarea id="svc-description" v-model="serviceForm.description" class="textarea" :class="{ invalid: serviceFieldErr('description') }" placeholder="Qué incluye o cómo se coordina" :maxlength="serviceLimits.description" rows="2" @blur="serviceTouched.description = true"></textarea>
-                  <p class="hint">{{ serviceForm.description.length }}/{{ serviceLimits.description }}</p>
-                  <p v-if="serviceFieldErr('description')" class="field-error" role="alert">{{ serviceFieldErr('description') }}</p>
-                </div>
+            </div>
+
+            <div class="card">
+              <h3><AppIcon name="checklist" :size="18" /> Opiniones recibidas</h3>
+              <p class="hint">Podés borrar las que no quieras mostrar en tu web.</p>
+              <div v-if="!catalog.reviews.length" class="empty-mini">
+                <AppIcon name="star" :size="22" />
+                <div><p>Todavía no recibiste opiniones. Compartí tu link y pediles a tus clientes que te dejen una valoración.</p><button type="button" class="empty-mini-cta" @click="copyLink">Copiar mi link</button></div>
               </div>
-              <div class="svc-group">
-                <span class="svc-group-label">Precio y duración</span>
-                <div class="grid-2">
-                  <AppInput v-model="serviceForm.price" label="Precio orientativo" icon="tag" name="svc_price" type="number" min="0" step="0.01" placeholder="Vacío = a convenir" :error="serviceFieldErr('price')" @blur="serviceTouched.price = true" />
-                  <AppInput v-model="serviceForm.duration" label="Duración estimada" icon="clock" name="svc_duration" placeholder="Ej. ≈ 45 min" :error="serviceFieldErr('duration')" @blur="serviceTouched.duration = true" />
-                </div>
-                <p class="hint">Si dejás el precio vacío, en tu web se muestra como «a convenir».</p>
-              </div>
-              <div class="svc-group">
-                <span class="svc-group-label">Cómo se ve en tu web</span>
-                <div class="grid-2">
-                  <div class="field">
-                    <label for="svc-icon"><AppIcon name="sparkles" :size="14" class="label-icon" aria-hidden="true" />Icono</label>
-                    <IconSelect id="svc-icon" v-model="serviceForm.icon" :options="serviceIconOptions" />
+              <ul v-else class="rev-list">
+                <li v-for="r in catalog.reviews" :key="r.id" class="rev-item" :class="{ 'rev-unread': isReviewUnread(r) }">
+                  <div class="rev-head">
+                    <span v-if="r.is_positive != null" class="rev-vote" :class="{ down: !r.is_positive }" :title="r.is_positive ? 'Le gustó' : 'No le gustó'">
+                      <AppIcon :name="r.is_positive ? 'thumbs-up' : 'thumbs-down'" :size="14" />
+                    </span>
+                    <strong>{{ r.name }} {{ r.surname }}</strong>
+                    <span v-if="isReviewUnread(r)" class="rev-new">Sin leer</span>
+                    <span class="rev-mail">{{ r.email }}</span>
+                    <span class="rev-date">{{ fmtDate(r.created_at) }}</span>
                   </div>
-                  <div class="field">
-                    <label for="svc-active"><AppIcon name="eye" :size="14" class="label-icon" aria-hidden="true" />Visibilidad</label>
-                    <IconSelect id="svc-active" v-model="serviceForm.is_active" :options="serviceVisibilityOptions" />
+                  <span class="rev-prod"><AppIcon name="package" :size="12" /> Sobre
+                    <button type="button" class="rev-prod-link" @click="goToReviewProduct(r)">{{ r.product_name }}</button>
+                  </span>
+                  <p v-if="r.text" class="rev-text">{{ r.text }}</p>
+                  <div v-if="r.owner_reply && reviewReplying !== r.id" class="rev-reply">
+                    <strong><AppIcon name="store" :size="12" /> Tu respuesta</strong>
+                    <p>{{ r.owner_reply }}</p>
                   </div>
-                </div>
+                  <div v-if="reviewReplying === r.id" class="rev-reply-form">
+                    <label :for="`rev-reply-${r.id}`">Tu respuesta <small>se muestra en la web, bajo la opinión</small></label>
+                    <textarea
+                      :id="`rev-reply-${r.id}`" v-model="reviewReplyText" class="textarea" rows="3"
+                      maxlength="600" placeholder="Gracias por tu opinión. Si tenés alguna duda, escribinos."
+                    ></textarea>
+                    <div class="rev-reply-actions">
+                      <button type="button" class="btn ghost" :disabled="reviewReplyBusy" @click="cancelReviewReply">Cancelar</button>
+                      <button type="button" class="btn btn-auto" :disabled="reviewReplyBusy" @click="saveReviewReply(r)">
+                        <span v-if="reviewReplyBusy" class="spinner spinner-brand" aria-hidden="true"></span>
+                        {{ reviewReplyText.trim() ? 'Guardar respuesta' : 'Quitar respuesta' }}
+                      </button>
+                    </div>
+                  </div>
+                  <div class="rev-foot">
+                    <button
+                      type="button" class="icon-btn" :disabled="reviewReplyBusy"
+                      :aria-label="r.owner_reply ? `Editar tu respuesta a ${r.name}` : `Responder la opinión de ${r.name}`"
+                      :title="r.owner_reply ? 'Editar respuesta' : 'Responder'" @click="startReviewReply(r)"
+                    >
+                      <AppIcon name="message-circle" :size="15" />
+                    </button>
+                    <button
+                      type="button" class="icon-btn danger" :disabled="reviewDeleting === r.id"
+                      :aria-label="`Eliminar la opinión de ${r.name}`" @click="onDeleteReview(r)"
+                    >
+                      <span v-if="reviewDeleting === r.id" class="spinner" aria-hidden="true"></span>
+                      <AppIcon v-else name="trash" :size="15" />
+                    </button>
+                  </div>
+                </li>
+              </ul>
+            </div>
+          </template>
+        </div>
+    
+    <!-- ================= QR Y FOLLETOS (premium) ================= -->
+        <div v-if="seen.tools" v-show="section === 'tools'" class="promo-sec promo-tools" :class="{ 'sec-on': section === 'tools' }">
+          <div class="page-head">
+            <div>
+              <h1>QR y folletos</h1>
+              <p>Material listo para imprimir o compartir, para que más gente llegue a tu página.</p>
+            </div>
+            <button class="btn ghost btn-auto" @click="openStore"><AppIcon name="external-link" :size="16" /> Ver mi página</button>
+          </div>
+
+          <div class="tools-hero">
+            <span class="tools-hero-icon"><AppIcon name="megaphone" :size="26" /></span>
+            <div>
+              <strong>Llevá tu tienda al mundo real</strong>
+              <p>Un QR en la vidriera, un folleto en la mano: cada impreso es un cliente más que entra a tu página.</p>
+            </div>
+            <span v-if="visitDays.length && canStats" class="tools-hero-chip"><AppIcon name="eye" :size="14" /> {{ store.visitStats?.total ?? 0 }} visitas</span>
+          </div>
+
+          <nav class="dsg-tabs tools-tabs" role="tablist" aria-label="Herramientas">
+            <button type="button" role="tab" class="dsg-tab" :class="{ active: toolsTab === 'ready' }" :aria-selected="toolsTab === 'ready'" @click="toolsTab = 'ready'"><AppIcon name="qr-code" :size="15" /> QR y folleto rápido</button>
+            <button v-if="canFlyers" type="button" role="tab" class="dsg-tab" :class="{ active: toolsTab === 'studio' }" :aria-selected="toolsTab === 'studio'" @click="toolsTab = 'studio'"><AppIcon name="sparkles" :size="15" /> Diseñá tu folleto <span class="tools-new">Nuevo</span></button>
+            <button v-if="canFlyers" type="button" role="tab" class="dsg-tab" :class="{ active: toolsTab === 'editor', locked: !canFlyerEditor }" :aria-selected="toolsTab === 'editor'" @click="canFlyerEditor ? toolsTab = 'editor' : openLocked('flyer_editor')"><AppIcon name="pen-tool" :size="15" /> Editor libre <span v-if="canFlyerEditor" class="tools-new">Nuevo</span><AppIcon v-else name="lock" :size="13" /></button>
+          </nav>
+
+          <div v-show="toolsTab === 'ready'" class="grid-2 tools-grid">
+            <div v-if="canQr" class="card tools-card">
+              <h3><AppIcon name="qr-code" :size="18" /> Tu código QR</h3>
+              <p>Quien lo escanee con el celular entra directo a tu página. Pegalo en tu vidriera, mostrador o paquetes.</p>
+              <div class="qr-stage">
+                <div v-if="qrDataUrl" class="qr-frame"><i></i><i></i><i></i><i></i><img :src="qrDataUrl" alt="Código QR de tu tienda" /></div>
+                <span v-else class="spinner spinner-brand" aria-hidden="true"></span>
+              </div>
+              <button type="button" class="qr-link" title="Copiar dirección" @click="copyLink"><AppIcon name="external-link" :size="14" /> <span>{{ publicUrl.replace(/^https?:\/\//, '') }}</span> <AppIcon name="copy" :size="14" /></button>
+              <ul class="tools-tips">
+                <li><AppIcon name="store" :size="15" /> Vidriera o puerta del local</li>
+                <li><AppIcon name="package" :size="15" /> Bolsas, cajas y paquetes</li>
+                <li><AppIcon name="receipt" :size="15" /> Tickets y tarjetas personales</li>
+              </ul>
+              <div class="btn-row">
+                <button class="btn btn-auto" :disabled="!qrDataUrl" @click="downloadQr"><AppIcon name="download" :size="16" /> Descargar QR</button>
+                <button class="btn ghost btn-auto" @click="copyLink"><AppIcon name="copy" :size="16" /> Copiar dirección</button>
+              </div>
+            </div>
+            <div v-if="canFlyers" class="card tools-card">
+              <h3><AppIcon name="file-text" :size="18" /> Folleto rápido</h3>
+              <p>Un folleto a color con tu logo, tus productos, tu contacto y el QR, armado solo. Salen 4 por hoja: imprimilos, cortalos y repartilos (o guardalos como PDF).</p>
+              <div class="flyer-mini" aria-hidden="true">
+                <span class="flyer-mini-top"><i></i><b></b></span>
+                <span class="flyer-mini-lines"><b></b><b></b><b></b></span>
+                <span class="flyer-mini-prods"><i></i><i></i><i></i></span>
+                <span class="flyer-mini-foot"><i></i><b></b></span>
               </div>
               <div class="btn-row">
-                <AppButton :loading="serviceBusy" :disabled="!serviceEditing && services.limitReached" @click="saveService">{{ serviceEditing ? 'Guardar cambios' : 'Publicar servicio' }}</AppButton>
-                <button v-if="serviceEditing" type="button" class="btn ghost btn-auto" @click="resetServiceForm">Cancelar</button>
+                <button class="btn btn-auto" @click="openFlyer"><AppIcon name="printer" :size="16" /> Generar folleto</button>
+                <button class="btn ghost btn-auto" @click="toolsTab = 'studio'"><AppIcon name="sparkles" :size="16" /> Quiero diseñarlo yo</button>
               </div>
-              <p v-if="services.limitReached" class="hint">Llegaste al máximo de {{ serviceLimits.max }} servicios por página.</p>
-            </div>
-
-            <div class="card svc-list-card">
-              <header class="svc-list-head">
-                <h3><AppIcon name="wrench" :size="18" /> Tus servicios</h3>
-                <p class="hint">Aparecen en tu web en este orden.</p>
-              </header>
-              <div v-if="!services.items.length" class="empty-mini svc-empty">
-                <span class="svc-empty-ico" aria-hidden="true"><AppIcon name="wrench" :size="26" /></span>
-                <h4>Empezá tu carta de servicios</h4>
-                <ul class="svc-empty-points">
-                  <li><AppIcon name="check" :size="14" aria-hidden="true" /> Mostrá qué hacés, con precio y duración</li>
-                  <li><AppIcon name="check" :size="14" aria-hidden="true" /> El cliente arma su presupuesto solo</li>
-                  <li><AppIcon name="check" :size="14" aria-hidden="true" /> El pedido te llega por WhatsApp</li>
-                </ul>
-                <button type="button" class="empty-mini-cta svc-empty-cta" @click="focusField('svc_name')"><AppIcon name="plus" :size="15" aria-hidden="true" /> Agregar mi primer servicio</button>
-              </div>
-              <ul v-else class="svc-list">
-                <li v-for="(s, i) in services.items" :key="s.id" class="svc-card" :class="{ off: !s.is_active, editing: serviceEditing?.id === s.id }" :style="{ '--h': serviceHue(s.icon) }">
-                  <span class="svc-ico"><AppIcon :name="serviceIcon(s.icon)" :size="22" aria-hidden="true" /></span>
-                  <div class="svc-body">
-                    <div class="svc-title">
-                      <span class="svc-num">{{ String(i + 1).padStart(2, '0') }}</span>
-                      <strong>{{ s.name }}</strong>
-                    </div>
-                    <div class="svc-meta">
-                      <span><AppIcon name="tag" :size="13" aria-hidden="true" /> {{ servicePriceLabel(s) }}</span>
-                      <span v-if="s.duration"><AppIcon name="clock" :size="13" aria-hidden="true" /> {{ s.duration }}</span>
-                    </div>
-                    <p v-if="s.description" class="svc-desc">{{ s.description }}</p>
-                  </div>
-                  <div class="svc-side">
-                    <button type="button" class="svc-vis" :class="{ on: s.is_active }" role="switch" :aria-checked="s.is_active" :aria-label="s.is_active ? 'Ocultar servicio' : 'Mostrar servicio'" :title="s.is_active ? 'Ocultarlo en tu web' : 'Mostrarlo en tu web'" @click="services.toggleService(s)">
-                      <span class="svc-vis-track" aria-hidden="true"><i></i></span>
-                      <span class="svc-vis-text">{{ s.is_active ? 'Visible' : 'Oculto' }}</span>
-                    </button>
-                    <div class="svc-actions">
-                      <button type="button" class="icon-btn" aria-label="Subir" :disabled="i === 0" @click="moveService(s, -1)"><AppIcon name="chevron-up" :size="14" /></button>
-                      <button type="button" class="icon-btn" aria-label="Bajar" :disabled="i === services.items.length - 1" @click="moveService(s, 1)"><AppIcon name="chevron-down" :size="14" /></button>
-                      <button type="button" class="icon-btn" aria-label="Editar servicio" title="Editar" @click="editService(s)"><AppIcon name="pencil" :size="15" /></button>
-                      <button type="button" class="icon-btn danger" aria-label="Eliminar servicio" title="Eliminar" @click="removeService(s)"><AppIcon name="trash" :size="15" /></button>
-                    </div>
-                  </div>
-                </li>
-              </ul>
             </div>
           </div>
 
-          <div class="card">
-            <h3><AppIcon name="wrench" :size="18" /> Tu página de servicios</h3>
-            <p class="lead">Ajustá cómo pide los datos el formulario y qué leen tus clientes junto al presupuesto.</p>
-            <section class="svc-block">
-              <header class="svc-block-head" style="--h: 250">
-                <span class="svc-block-ico"><AppIcon name="checklist" :size="18" aria-hidden="true" /></span>
-                <div>
-                  <h4 id="svc-steps-label">Cómo funciona</h4>
-                  <p>Los pasos que ve tu cliente antes de pedir. Hasta {{ servicePageLimits.steps }}; sin pasos se usan unos por defecto.</p>
-                </div>
-                <span class="svc-count">{{ (designForm.service_steps || []).length }}/{{ servicePageLimits.steps }}</span>
-              </header>
-              <ul v-if="(designForm.service_steps || []).length" class="feat-rows" aria-labelledby="svc-steps-label">
-                <li v-for="(row, i) in designForm.service_steps" :key="i" class="feat-row svc-step-row">
-                  <IconSelect v-model="row.icon" :id="`svc-step-icon-${i}`" class="svc-step-icon" :options="serviceIconOptions" :aria-label="`Icono del paso ${i + 1}`" />
-                  <input v-model="row.title" class="input" type="text" :maxlength="servicePageLimits.stepTitle" placeholder="Título (ej. Confirmamos por WhatsApp)" :aria-label="`Título del paso ${i + 1}`" />
-                  <input v-model="row.text" class="input" type="text" :maxlength="servicePageLimits.stepText" placeholder="Descripción breve" :aria-label="`Texto del paso ${i + 1}`" />
-                  <button type="button" class="icon-btn danger" aria-label="Quitar paso" @click="removeServiceStep(i)"><AppIcon name="trash" :size="15" /></button>
-                </li>
-              </ul>
-              <button type="button" class="btn ghost btn-auto" :disabled="(designForm.service_steps || []).length >= servicePageLimits.steps" @click="addServiceStep"><AppIcon name="plus" :size="15" /> Agregar paso</button>
-            </section>
-
-            <section class="svc-block">
-              <header class="svc-block-head" style="--h: 195">
-                <span class="svc-block-ico"><AppIcon name="calendar" :size="18" aria-hidden="true" /></span>
-                <div>
-                  <h4>Cuándo atendés</h4>
-                  <p>Escribí y presioná Enter, o tocá una sugerencia. Si lo dejás vacío, la página propone opciones genéricas.</p>
-                </div>
-              </header>
-              <div class="grid-2">
-                <div v-for="f in [{ k: 'service_days', label: 'Días que ofrecés', icon: 'calendar', ph: 'Ej. Sábado' }, { k: 'service_slots', label: 'Franjas horarias', icon: 'clock', ph: 'Ej. 9 a 12 h' }]" :key="f.k" class="field">
-                  <label :for="`chip-${f.k}`">{{ f.label }} <span class="svc-count">{{ (designForm[f.k] || []).length }}/{{ chipMax(f.k) }}</span></label>
-                  <div class="svc-chips" @click="$refs[`chip_${f.k}`]?.[0]?.focus()">
-                    <span v-for="(c, i) in designForm[f.k] || []" :key="c" class="svc-chip">
-                      <AppIcon :name="f.icon" :size="12" aria-hidden="true" /> {{ c }}
-                      <button type="button" :aria-label="`Quitar ${c}`" @click.stop="removeServiceChip(f.k, i)"><AppIcon name="x" :size="12" /></button>
-                    </span>
-                    <input :id="`chip-${f.k}`" :ref="`chip_${f.k}`" v-model="serviceChipDraft[f.k]" type="text" class="svc-chip-input" :maxlength="servicePageLimits.day" :placeholder="(designForm[f.k] || []).length ? 'Agregar otro…' : f.ph" :disabled="(designForm[f.k] || []).length >= chipMax(f.k)" @keydown="onChipKey($event, f.k)" @blur="addServiceChip(f.k)" />
-                  </div>
-                  <div class="svc-sugg">
-                    <button v-for="sg in SERVICE_CHIP_SUGGESTIONS[f.k].filter((x) => !(designForm[f.k] || []).includes(x))" :key="sg" type="button" @click="addServiceChip(f.k, sg)"><AppIcon name="plus" :size="11" aria-hidden="true" /> {{ sg }}</button>
-                  </div>
-                </div>
-              </div>
-            </section>
-
-            <section class="svc-block">
-              <header class="svc-block-head" style="--h: 330">
-                <span class="svc-block-ico"><AppIcon name="message-circle" :size="18" aria-hidden="true" /></span>
-                <div>
-                  <h4>Datos y mensajes</h4>
-                  <p>Qué te pide el formulario y qué aclaraciones lee el cliente junto al presupuesto.</p>
-                </div>
-              </header>
-              <label class="svc-switch">
-                <input v-model="designForm.service_ask_address" type="checkbox" role="switch" />
-                <span class="svc-switch-track" aria-hidden="true"><i></i></span>
-                <span class="check-text">
-                  <strong>Pedir dirección en el pedido</strong>
-                  <small>Útil si trabajás a domicilio. Si no lo necesitás, el formulario la omite.</small>
-                </span>
-              </label>
-              <div class="grid-2">
-                <AppInput v-model="designForm.service_price_note" label="Nota de precios" name="svc_price_note" placeholder="Ej. El valor final se confirma al ver el trabajo" />
-                <AppInput v-model="designForm.service_pay_note" label="Nota de pago" name="svc_pay_note" placeholder="Ej. Se paga en persona: efectivo, débito o transferencia" />
-              </div>
-            </section>
-
-            <p v-if="companyErrs.servicePage" class="field-error" role="alert">{{ companyErrs.servicePage }}</p>
-            <div class="btn-row">
-              <AppButton :loading="svcBusy" @click="saveServicePage">Guardar configuración</AppButton>
-            </div>
-          </div>
-        </template>
-      </template>
-    </div>
-    <!-- ================= OPINIONES ================= -->
-    <div v-if="seen.reviews" v-show="section === 'reviews'" class="sec-rev" :class="{ 'sec-on': section === 'reviews' }">
-      <div class="page-head">
-        <div>
-          <h1>Opiniones</h1>
-          <p>Las valoraciones y comentarios que los visitantes dejan en los productos de tu web.</p>
-        </div>
-      </div>
-
-      <AlertMessage v-if="catalog.notice" kind="success" :message="catalog.notice" />
-      <AlertMessage v-if="catalog.lastError" kind="error" :message="catalog.lastError" />
-
-      <div v-if="store.status === 'loading' || store.status === 'idle'" class="card card-loading"><span class="spinner spinner-brand"></span><p>Cargando tu tienda…</p></div>
-
-      <div v-else-if="!store.hasStore" class="empty">
-        <span class="empty-icon"><AppIcon name="store" :size="28" /></span>
-        <h3>Primero creá tu página web</h3>
-        <p>Las opiniones se dejan en los productos de tu web. Cuando la tengas, volvé acá para activarlas.</p>
-        <button class="btn btn-auto" @click="section = 'store'">Crear mi página web</button>
-      </div>
-
-      <div v-else-if="!canProductComments" class="empty">
-        <span class="empty-icon"><AppIcon name="star" :size="28" /></span>
-        <h3>Las opiniones son una función Premium</h3>
-        <p>Con el Plan premium tus clientes valoran tus productos y dejan comentarios que se muestran en tu web. Vos decidís cuáles se ven.</p>
-        <button class="btn btn-auto" @click="section = 'plans'">Ver planes</button>
-      </div>
-
-      <template v-else>
-        <div class="card">
-          <h3><AppIcon name="star" :size="18" /> Opiniones de tus clientes</h3>
-          <p class="hint">Elegí qué pueden dejar los visitantes en tus productos. Los cambios se aplican al instante.</p>
-          <div class="check-list" role="group" aria-label="Opiniones de tus clientes">
-            <label class="check-item" :class="{ disabled: reviewToggleBusy }">
-              <input type="checkbox" :checked="designForm.show_reviews" :disabled="reviewToggleBusy" @change="toggleShowReviews" />
-              <span class="check-text">
-                <strong>Valoraciones de productos <span v-if="reviewToggleBusy" class="spinner spinner-brand" aria-hidden="true"></span></strong>
-                <small>Los visitantes votan “me gustó” o “no me gustó”; el resultado se ve en el catálogo.</small>
-              </span>
-            </label>
-            <label class="check-item" :class="{ disabled: reviewToggleBusy }">
-              <input type="checkbox" :checked="designForm.show_comments" :disabled="reviewToggleBusy" @change="toggleShowComments" />
-              <span class="check-text">
-                <strong>Comentarios en productos</strong>
-                <small>Opinan con nombre, apellido, email y captcha antispam. Los moderás en la lista de abajo.</small>
-              </span>
-            </label>
-          </div>
-        </div>
-
-        <div class="card">
-          <h3><AppIcon name="checklist" :size="18" /> Opiniones recibidas</h3>
-          <p class="hint">Podés borrar las que no quieras mostrar en tu web.</p>
-          <div v-if="!catalog.reviews.length" class="empty-mini">
-            <AppIcon name="star" :size="22" />
-            <div><p>Todavía no recibiste opiniones. Compartí tu link y pediles a tus clientes que te dejen una valoración.</p><button type="button" class="empty-mini-cta" @click="copyLink">Copiar mi link</button></div>
-          </div>
-          <ul v-else class="rev-list">
-            <li v-for="r in catalog.reviews" :key="r.id" class="rev-item" :class="{ 'rev-unread': isReviewUnread(r) }">
-              <div class="rev-head">
-                <span v-if="r.is_positive != null" class="rev-vote" :class="{ down: !r.is_positive }" :title="r.is_positive ? 'Le gustó' : 'No le gustó'">
-                  <AppIcon :name="r.is_positive ? 'thumbs-up' : 'thumbs-down'" :size="14" />
-                </span>
-                <strong>{{ r.name }} {{ r.surname }}</strong>
-                <span v-if="isReviewUnread(r)" class="rev-new">Sin leer</span>
-                <span class="rev-mail">{{ r.email }}</span>
-                <span class="rev-date">{{ fmtDate(r.created_at) }}</span>
-              </div>
-              <span class="rev-prod"><AppIcon name="package" :size="12" /> Sobre
-                <button type="button" class="rev-prod-link" @click="goToReviewProduct(r)">{{ r.product_name }}</button>
-              </span>
-              <p v-if="r.text" class="rev-text">{{ r.text }}</p>
-              <div v-if="r.owner_reply && reviewReplying !== r.id" class="rev-reply">
-                <strong><AppIcon name="store" :size="12" /> Tu respuesta</strong>
-                <p>{{ r.owner_reply }}</p>
-              </div>
-              <div v-if="reviewReplying === r.id" class="rev-reply-form">
-                <label :for="`rev-reply-${r.id}`">Tu respuesta <small>se muestra en la web, bajo la opinión</small></label>
-                <textarea
-                  :id="`rev-reply-${r.id}`" v-model="reviewReplyText" class="textarea" rows="3"
-                  maxlength="600" placeholder="Gracias por tu opinión. Si tenés alguna duda, escribinos."
-                ></textarea>
-                <div class="rev-reply-actions">
-                  <button type="button" class="btn ghost" :disabled="reviewReplyBusy" @click="cancelReviewReply">Cancelar</button>
-                  <button type="button" class="btn btn-auto" :disabled="reviewReplyBusy" @click="saveReviewReply(r)">
-                    <span v-if="reviewReplyBusy" class="spinner spinner-brand" aria-hidden="true"></span>
-                    {{ reviewReplyText.trim() ? 'Guardar respuesta' : 'Quitar respuesta' }}
-                  </button>
-                </div>
-              </div>
-              <div class="rev-foot">
-                <button
-                  type="button" class="icon-btn" :disabled="reviewReplyBusy"
-                  :aria-label="r.owner_reply ? `Editar tu respuesta a ${r.name}` : `Responder la opinión de ${r.name}`"
-                  :title="r.owner_reply ? 'Editar respuesta' : 'Responder'" @click="startReviewReply(r)"
-                >
-                  <AppIcon name="message-circle" :size="15" />
-                </button>
-                <button
-                  type="button" class="icon-btn danger" :disabled="reviewDeleting === r.id"
-                  :aria-label="`Eliminar la opinión de ${r.name}`" @click="onDeleteReview(r)"
-                >
-                  <span v-if="reviewDeleting === r.id" class="spinner" aria-hidden="true"></span>
-                  <AppIcon v-else name="trash" :size="15" />
-                </button>
-              </div>
-            </li>
-          </ul>
-        </div>
-      </template>
-    </div>
-    <!-- ================= NOVEDADES (feed social) ================= -->
-    <div v-if="seen.feed" v-show="section === 'feed'" class="sec-feed" :class="{ 'sec-on': section === 'feed' }">
-      <div class="page-head">
-        <div>
-          <h1>Novedades</h1>
-          <p>Tu feed en la web: publicá fotos, videos, posts de tus redes y encuestas. Tus clientes comentan, likean y votan con su cuenta.</p>
-        </div>
-      </div>
-      <FeedPanel />
-    </div>
-    <!-- ================= MI PÁGINA (índice de apartados) ================= -->
-    <div v-if="seen.web" v-show="section === 'web'" class="web-scope" :class="{ 'sec-on': section === 'web' }">
-      <div class="page-head">
-        <div>
-          <h1>Mi página</h1>
-          <p>Lo que ven tus clientes en internet. Elegí un apartado para empezar.</p>
-        </div>
-      </div>
-      <SectionTabs :tabs="tabGroups.web" :active="''" @select="section = $event" />
-      <div v-if="store.hasStore" class="web-live">
-        <span class="web-live-icon"><AppIcon name="external-link" :size="20" /></span>
-        <div class="web-live-txt">
-          <strong>Tu página está en vivo</strong>
-          <small>{{ publicUrl }}</small>
-        </div>
-        <div class="web-live-actions">
-          <button type="button" class="btn ghost btn-auto" @click="copyLink"><AppIcon name="copy" :size="16" /> Copiar link</button>
-          <button type="button" class="btn btn-auto" @click="openStore"><AppIcon name="external-link" :size="16" /> Abrir mi página</button>
-        </div>
-      </div>
-    </div>
-    <!-- ================= MI TIENDA ================= -->
-    <div v-if="seen.store" v-show="section === 'store' || (section === 'web' && tabGroups.web.length === 1)" class="web-scope" :class="{ 'sec-on': section === 'store' }">
-      <div class="page-head">
-        <div>
-          <h1>Mi página web</h1>
-          <p>Tu dirección en internet. Compartí el link por WhatsApp o donde quieras.</p>
-        </div>
-      </div>
-      <SectionTabs :tabs="tabGroups.web" active="store" @select="section = $event" />
-
-      <AlertMessage v-if="store.notice" kind="success" :message="store.notice" />
-      <AlertMessage v-if="store.lastError" kind="error" :message="store.lastError" />
-
-      <div v-if="store.status === 'loading'" class="card card-loading"><span class="spinner spinner-brand"></span><p>Cargando tu tienda…</p></div>
-      <template v-else-if="store.hasStore">
-        <div class="card">
-          <h3><AppIcon name="share-2" :size="18" /> Tu dirección web</h3>
-          <AlertMessage
-            v-if="store.store.is_blocked"
-            kind="error"
-            :message="`Tu web fue bloqueada por DAVENT${store.store.blocked_reason ? ` — motivo: ${store.store.blocked_reason}` : ''}. Si creés que es un error, escribime desde la sección de ayuda.`"
+          <FlyerStudio
+            v-if="canFlyers && toolsTab === 'studio'"
+            :slug="store.store?.slug || ''"
+            :shop-name="designShopName"
+            :logo="currentLogo"
+            :qr="qrDataUrl"
+            :url="publicUrl"
+            :contact="designForm.whatsapp || auth.user?.profile?.phone || ''"
+            :can-add-gallery="canAddGallery"
+            @print="openFlyer(true)"
           />
-          <div class="link-bar">
-            <code class="mono link-url">{{ publicUrl }}</code>
-            <span class="pill" :class="store.store.is_blocked ? 'danger' : (store.store.is_published ? 'ok' : 'muted')">{{ store.store.is_blocked ? 'Bloqueada' : (store.store.is_published ? 'Activo' : 'Pausado') }}</span>
-          </div>
-          <div class="btn-row link-actions">
-            <button class="btn btn-auto" @click="copyLink"><AppIcon name="copy" :size="16" /> Copiar dirección</button>
-            <button class="btn secondary btn-auto" @click="openStore"><AppIcon name="external-link" :size="16" /> Ver mi página</button>
-            <button class="btn ghost btn-auto" :disabled="storeBusy" @click="togglePublished">{{ store.store.is_published ? 'Pausar mi página' : 'Volver a publicarla' }}</button>
-          </div>
-          <p class="hint">Si la pausás, tus clientes ven un aviso hasta que la vuelvas a publicar.</p>
+
+          <FlyerEditor
+            v-if="canFlyerEditor && toolsTab === 'editor'"
+            :slug="store.store?.slug || ''"
+            :shop-name="designShopName"
+            :logo="currentLogo"
+            :qr="qrDataUrl"
+            :url="publicUrl"
+            :can-add-gallery="canAddGallery"
+            @print="openFlyer('2')"
+          />
         </div>
 
-        <details class="card more-card">
-          <summary><AppIcon name="pencil" :size="18" /> Cambiar mi dirección <small>Solo si de verdad lo necesitás</small></summary>
-          <div class="field">
-            <label for="rename-slug">Nuevo link <TipHint text="El «slug» es la última parte de tu dirección web: lo que va después de la barra. Tiene que ser corto y fácil de decir, como el nombre de tu negocio." /></label>
-            <div class="slug-box" :class="{ invalid: renameKind === 'err' || !!store.fieldErrors.slug }">
-              <span class="slug-prefix">{{ slugPrefix }}</span>
-              <input
-                id="rename-slug"
-                name="rename-slug"
-                type="text"
-                class="input slug-input"
-                :value="renameSlug"
-                :placeholder="store.store.slug"
-                maxlength="60"
-                autocomplete="off"
-                @input="onRenameInput"
-              />
-
+    
+    <!-- ================= ESTADÍSTICAS (premium) ================= -->
+        <div v-if="seen.stats" v-show="section === 'stats'" class="promo-sec promo-stats" :class="{ 'sec-on': section === 'stats' }">
+          <div class="page-head">
+            <div>
+              <h1>Mis visitas</h1>
+              <p>Cuánta gente entró a tu página web.</p>
             </div>
-            <p class="hint">Ojo: la dirección anterior deja de funcionar y vas a tener que avisarles a tus clientes.</p>
-            <p v-if="store.fieldErrors.slug" class="field-error" role="alert">{{ store.fieldErrors.slug }}</p>
-            <p v-else-if="renameMsg" class="slug-check" :class="renameKind" role="status">
-              <AppIcon v-if="renameCheck === 'available'" name="circle-check" :size="14" />
-              <span v-else-if="renameCheck === 'checking'" class="spinner spinner-brand" aria-hidden="true"></span>
-              {{ renameMsg }}
-            </p>
           </div>
-          <button class="btn btn-auto" :disabled="!canRename" @click="saveRename">
-            <span v-if="renameBusy" class="spinner" aria-hidden="true"></span>Guardar nueva dirección
-          </button>
-        </details>
 
-        <div class="card domain-card">
-          <h3><AppIcon name="globe" :size="18" /> Tu dominio propio</h3>
-          <template v-if="!canCustomDomain">
-            <p>Usá un dominio que ya sea tuyo (por ejemplo <code class="mono">mitienda.com</code>) en lugar del link de DAVENT.</p>
-            <p class="hint">Disponible en el plan Premium.</p>
-            <button class="btn secondary btn-auto" @click="section = 'plans'">Ver planes <AppIcon name="arrow-right" :size="16" /></button>
+          <template v-if="store.visitStats">
+            <div class="stats">
+              <div class="stat"><span class="stat-icon"><AppIcon name="eye" :size="20" /></span><div><strong>{{ store.visitStats.total }}</strong><small>Visitas totales</small></div></div>
+              <div class="stat"><span class="stat-icon"><AppIcon name="trending-up" :size="20" /></span><div><strong>{{ store.visitStats.today }}</strong><small>Visitas hoy</small></div></div>
+              <div class="stat"><span class="stat-icon"><AppIcon name="calendar" :size="20" /></span><div><strong>{{ visitAvg }}</strong><small>Promedio por día (último mes)</small></div></div>
+            </div>
+            <div class="card">
+              <h3><AppIcon name="trending-up" :size="18" /> Visitas de los últimos 30 días</h3>
+              <div v-if="visitHasData" class="stats-chart" role="img" aria-label="Visitas por día">
+                <span
+                  v-for="d in visitDays" :key="d.date" class="stats-bar"
+                  :class="{ today: d.date === visitDays[visitDays.length - 1]?.date }"
+                  :style="{ height: `${Math.max(2, (d.count / visitMax) * 100)}%` }"
+                  :title="`${d.date}: ${d.count} visita${d.count === 1 ? '' : 's'}`"
+                ></span>
+              </div>
+              <div v-if="visitHasData" class="stats-chart-axis"><span>{{ visitDays[0]?.date?.slice(5) }}</span><span>{{ visitDays[visitDays.length - 1]?.date?.slice(5) }}</span></div>
+              <div v-else class="stats-empty">
+                <span class="stats-empty-icon"><AppIcon name="eye" :size="24" /></span>
+                <strong>Todavía no hay visitas este mes</strong>
+                <p>Cuando alguien abra tu página lo vas a ver acá, día por día.</p>
+                <button type="button" class="btn btn-auto" @click="shareWhatsApp"><AppIcon name="phone" :size="16" /> Compartir mi página</button>
+              </div>
+              <p v-if="visitHasData" class="hint">Cada barra es un día; cuanto más alta, más visitas. Contamos una visita por persona por día.</p>
+            </div>
           </template>
-          <template v-else>
-            <p>¿Querés que tu web tenga nombre propio, como <code class="mono">mitienda.com</code>? Comprá el dominio y conectalo acá — te guiamos paso a paso.</p>
-            <AlertMessage v-if="domainErr" kind="error" :message="domainErr" />
-            <div v-if="domainInfo?.status === 'verified'" class="link-bar">
-              <code class="mono link-url">{{ domainUrl }}</code>
-              <span class="pill ok">Verificado</span>
-            </div>
-            <template v-else>
-              <ol v-if="!domainInfo" class="domain-mini-steps">
-                <li><span>1</span> Comprá tu dominio</li>
-                <li><span>2</span> Pegalo en el campo de abajo</li>
-                <li><span>3</span> Copiá 2 datos en tu registrador</li>
-              </ol>
-              <div class="field">
-                <label for="custom-domain">Tu dominio</label>
-                <input
-                  id="custom-domain"
-                  name="custom-domain"
-                  type="text"
-                  class="input"
-                  v-model="domainInput"
-                  placeholder="mitienda.com"
-                  maxlength="253"
-                  autocomplete="off"
-                  @keyup.enter="saveDomainLink"
-                />
-              </div>
-            </template>
-            <div v-if="domainInfo && domainInfo.status !== 'verified'" class="domain-dns">
-              <p class="hint">Copiá estos dos datos en tu registrador (buscá «DNS» o «Registros» en su menú) y después verificá:</p>
-              <div class="dns-row">
-                <span class="pill muted">CNAME</span>
-                <code class="mono">{{ domainInfo.domain }}</code>
-                <span>→</span>
-                <code class="mono">{{ domainInfo.cname_target }}</code>
-              </div>
-              <div class="dns-row">
-                <span class="pill muted">TXT</span>
-                <code class="mono">{{ domainInfo.txt_name }}</code>
-                <span>→</span>
-                <code class="mono dns-txt">{{ domainInfo.txt_value }}</code>
-              </div>
-              <p class="hint">Los cambios pueden tardar hasta 48 h en verse.</p>
-              <p v-if="domainStatus" class="slug-check" role="status">
-                <span class="pill" :class="domainStatus.kind">{{ domainStatus.text }}</span>
-              </p>
-            </div>
-            <div class="btn-row link-actions">
-              <button v-if="domainInfo?.status === 'verified'" class="btn btn-auto" @click="openDomain"><AppIcon name="external-link" :size="16" /> Abrir {{ domainInfo.domain }}</button>
-              <button v-else class="btn btn-auto" :disabled="domainBusy || !domainInput.trim()" @click="saveDomainLink">
-                <span v-if="domainBusy" class="spinner" aria-hidden="true"></span>{{ domainInfo ? 'Guardar cambios' : 'Conectar mi dominio' }}
-              </button>
-              <button v-if="domainInfo && domainInfo.status !== 'verified'" class="btn secondary btn-auto" :disabled="domainBusy" @click="checkDomainNow">Ya lo configuré, verificar</button>
-              <button v-if="domainInfo" class="btn ghost btn-auto" :disabled="domainBusy" @click="removeDomain">Quitar dominio</button>
-            </div>
-            <details class="domain-guide" :open="!domainInfo">
-              <summary><AppIcon name="circle-help" :size="15" /> Guía paso a paso</summary>
-              <ol>
-                <li><strong>Comprá tu dominio</strong> en NIC Argentina, GoDaddy o Cloudflare. Sale muy poco al año.</li>
-                <li><strong>Pegalo en el campo de arriba</strong> y tocá «Conectar mi dominio».</li>
-                <li><strong>Copiá los 2 datos</strong> que te mostramos y pegalos en tu registrador (sección «DNS» o «Registros DNS»).</li>
-                <li><strong>Tocá «Ya lo configuré, verificar»</strong>. Puede tardar hasta 48 h.</li>
-              </ol>
-              <button type="button" class="btn ghost btn-auto domain-guide-help" @click="section = 'support'">¿Dudas? Pedile ayuda a tu asistente</button>
-            </details>
-          </template>
-        </div>
-
-      </template>
-    </div>
-    <!-- ================= DISEÑO ================= -->
-    <div v-if="seen.design" v-show="section === 'design'" class="web-scope" :class="{ 'sec-on': section === 'design' }">
-      <div class="page-head">
-        <div>
-          <h1>Diseño</h1>
-          <p>Elegí el diseño y los colores de tu página.</p>
-        </div>
-      </div>
-      <SectionTabs :tabs="tabGroups.web" active="design" @select="section = $event" />
-
-      <div v-if="aiAssistEnabled" class="next-card assist-card">
-        <span class="next-icon"><AppIcon name="sparkles" :size="22" /></span>
-        <div><strong>Asistencia con IA</strong><small>Respondé unas preguntas y te armamos el diseño de tu web.</small></div>
-        <button class="btn btn-auto assist-btn" @click="openAssist('design')">
-          <AppIcon v-if="navLocks.design_assisted" name="lock" :size="15" /><AppIcon v-else name="sparkles" :size="15" /> Empezar
-        </button>
-      </div>
-
-      <DesignStylesTab
-        :form="designForm" :benefits="plan?.benefits || {}"
-        :shop-name="store.customization?.display_name || business" :can-studio="canDesignAdvanced"
-        :site-templates="designSiteTemplates" v-model:preview-open="designPreviewOpen"
-        :page-options="designPageOptions" @toggle-page="toggleSiteTemplate" :on-save-show="saveShowFromModal"
-        @navigate="section = $event" @open-studio="onOpenStudio" @support="onBellClick"
-      >
-        <template #actions>
-          <div class="design-actions">
-            <AppButton :loading="designBusy" :disabled="!designDirtyAll" @click="saveDesign()"><AppIcon name="check" :size="16" /> Guardar cambios</AppButton>
-            <button type="button" class="btn secondary btn-auto" @click="openStore"><AppIcon name="external-link" :size="16" /> Ver mi web</button>
+          <div v-else class="empty">
+            <span class="empty-icon"><AppIcon name="trending-up" :size="28" /></span>
+            <h3>Todavía nadie visitó tu página</h3>
+            <p>Compartí tu dirección web con tus clientes: apenas alguien entre, lo vas a ver acá.</p>
+            <button class="btn btn-auto" @click="copyLink"><AppIcon name="copy" :size="16" /> Copiar mi dirección</button>
           </div>
-          <p v-if="designDirtyAll" class="hint design-dirty-hint"><AppIcon name="pencil" :size="13" /> Los cambios ya se ven en la vista previa, pero todavía no están publicados: tocá «Guardar cambios».</p>
-        </template>
-      </DesignStylesTab>
-    </div>
-
-    <!-- Editor Avanzado (Premium): modal fullscreen con el preview al
-         centro y los editores del site_theme en el sidebar izquierdo. -->
-    <Teleport to="body">
-      <DesignStudioTab
-        v-if="studioModalOpen" :form="designForm" :benefits="plan?.benefits || {}"
-        :customization="store.customization || {}" @close="studioModalOpen = false"
-      >
-        <template #actions>
-          <div class="design-actions">
-            <AppButton :loading="designBusy" :disabled="!designDirtyAll" @click="saveDesign()"><AppIcon name="check" :size="16" /> Guardar cambios</AppButton>
-            <button type="button" class="btn secondary btn-auto" @click="openStore"><AppIcon name="external-link" :size="16" /> Ver mi web</button>
-          </div>
-          <p v-if="designDirtyAll" class="hint design-dirty-hint"><AppIcon name="pencil" :size="13" /> Los cambios ya se ven en la vista previa, pero todavía no están publicados: tocá «Guardar cambios».</p>
-        </template>
-      </DesignStudioTab>
-    </Teleport>
-    <!-- ================= MI EMPRESA (marketing de la portada) ================= -->
-    <div v-if="seen.company" v-show="section === 'company'" :class="{ 'sec-on': section === 'company' }">
-      <div class="page-head">
-        <div>
-          <h1>Sobre mi negocio</h1>
-          <p>Tocá una tarjeta, completá el formulario y listo. Lo que dejes vacío no aparece en tu web.</p>
         </div>
-        <button class="btn ghost btn-auto" @click="openStore"><AppIcon name="external-link" :size="16" /> Ver mi página</button>
+    
       </div>
-      <SectionTabs :tabs="tabGroups.web" active="company" @select="section = $event" />
-
-      <div v-if="aiAssistEnabled" class="next-card assist-card">
-        <span class="next-icon"><AppIcon name="sparkles" :size="22" /></span>
-        <div><strong>Asistencia con IA</strong><small>Te ayudamos a completar los datos de tu negocio, sin pisar lo que ya cargaste.</small></div>
-        <button class="btn btn-auto assist-btn" @click="openAssist('business')">
-          <AppIcon v-if="navLocks.design_assisted" name="lock" :size="15" /><AppIcon v-else name="sparkles" :size="15" /> Empezar
-        </button>
-      </div>
-
-      <AlertMessage v-if="store.notice" kind="success" :message="store.notice" />
-      <AlertMessage v-if="store.lastError" kind="error" :message="store.lastError" />
-
-      <template v-if="canCustomize">
-        <nav class="mk-launch" aria-label="Secciones de tu página">
+    </div>
+<!-- ================= VENDER ONLINE (e-commerce del dueño) ================= -->
+    <!-- Sub-panel tipo POS: rail lateral fijo con los apartados (Resumen +
+         pedidos/ventas/clientes/…) y el panel activo a la derecha. -->
+    <div v-show="inShell" class="rail-shell" :class="{ 'rail-shell--menu': section === 'selling' }">
+      <aside v-show="inShell" class="rail" aria-label="Menú de tu tienda online">
+        <div class="rail-brand">
+          <span class="rail-logo" aria-hidden="true">{{ sellBrandInitials }}</span>
+          <span class="rail-txt">
+            <strong>{{ sellBrandName }}</strong>
+            <small v-if="store.hasStore"><i class="rail-dot" :class="{ off: !store.store?.is_published }" aria-hidden="true"></i>{{ store.store?.is_published ? 'Publicada' : 'Pausada' }}</small>
+            <small v-else>Tu tienda online</small>
+          </span>
+        </div>
+        <nav class="rail-nav" aria-label="Apartados de tu tienda">
           <button
-            v-for="l in mkNav" :key="l.key" type="button" class="mk-launcher"
-            @click="mkOpen = l.key"
+            v-for="t in sellRailTabs" :key="t.id" type="button"
+            class="rail-item" :class="[`tone-${railTone(t.id)}`, { active: section === t.id, locked: navLocks[t.id] }]"
+            :aria-current="section === t.id ? 'page' : undefined"
+            :title="t.hint || t.label"
+            @click="section = t.id"
           >
-            <span class="mk-launcher-ico" :class="`hue-${l.key}`"><AppIcon :name="l.icon" :size="20" /></span>
-            <span class="mk-launcher-txt">
-              <strong>{{ l.label }}</strong>
-              <small>{{ l.desc }}</small>
+            <span class="rail-ico"><AppIcon :name="t.icon" :size="17" /></span>
+            <span class="rail-item-txt">
+              <strong>{{ t.label }}</strong>
+              <small v-if="t.hint" class="rail-hint">{{ t.hint }}</small>
             </span>
-            <span class="mk-launcher-side">
-              <span v-if="mkSummary(l.key)" class="mk-done"><AppIcon name="check" :size="12" :stroke="2.5" /> {{ mkSummary(l.key) }}</span>
-              <AppIcon name="chevron-right" :size="16" class="mk-launcher-go" />
-            </span>
+            <AppIcon v-if="navLocks[t.id]" name="lock" :size="13" class="rail-lock" />
+            <AppIcon v-else name="chevron-right" :size="15" class="rail-go" />
           </button>
         </nav>
-        <p class="hint mk-launch-hint">Tocá una tarjeta para editarla.</p>
+        <button
+          type="button" class="rail-store"
+          @click="store.hasStore ? openStore() : (section = 'store')"
+        >
+          <AppIcon :name="store.hasStore ? 'external-link' : 'arrow-right'" :size="15" /> <span>{{ store.hasStore ? 'Ver mi tienda' : 'Reservar mi link' }}</span>
+        </button>
+      </aside>
 
-        <!-- ===== Modal de edición: un bloque a la vez ===== -->
-        <div v-if="mkOpen" class="mk-overlay" @click.self="mkOpen = null">
-          <div class="mk-modal" role="dialog" aria-modal="true" :aria-label="mkOpenMeta?.label || 'Editar sección'">
-            <header class="mk-modal-head">
-              <span class="mk-modal-ico" :class="`hue-${mkOpen}`"><AppIcon :name="mkOpenMeta?.icon || 'pencil'" :size="20" /></span>
-              <div class="mk-modal-txt">
-                <h2>{{ mkOpenMeta?.label }}</h2>
-                <small>{{ mkOpenMeta?.desc }}</small>
+      <div class="rail-main">
+        <!-- En móvil con un apartado abierto el menú se oculta: este botón
+             vuelve a la pantalla de cards (solo visible <=900px por CSS). -->
+        <button type="button" class="rail-back" @click="section = 'selling'">
+          <AppIcon name="chevron-left" :size="16" /> <span>Menú</span>
+        </button>
+        <!-- Pedidos -->
+        <div v-if="seen.orders" v-show="section === 'orders'" class="web-scope" :class="{ 'sec-on': section === 'orders' }">
+          <OrdersPanel />
+        </div>
+
+        <!-- Ventas -->
+        <div v-if="seen.sales" v-show="section === 'sales'" class="web-scope" :class="{ 'sec-on': section === 'sales' }">
+          <SalesPanel />
+        </div>
+
+        <!-- Clientes -->
+        <div v-if="seen.customers" v-show="section === 'customers'" class="web-scope" :class="{ 'sec-on': section === 'customers' }">
+          <CustomersPanel />
+        </div>
+
+        <!-- Consultas de clientes -->
+        <div v-if="seen.inquiries" v-show="section === 'inquiries'" class="web-scope" :class="{ 'sec-on': section === 'inquiries' }">
+          <BuyerSupportPanel />
+        </div>
+
+        <!-- Cobros -->
+        <div v-if="seen.payconfig" v-show="section === 'payconfig'" class="web-scope" :class="{ 'sec-on': section === 'payconfig' }">
+          <PaymentsConfigPanel @locked="openLocked('selling')" />
+        </div>
+
+        <!-- Legal -->
+        <div v-if="seen.legal" v-show="section === 'legal'" class="web-scope" :class="{ 'sec-on': section === 'legal' }">
+          <LegalPagesPanel />
+        </div>
+
+        <!-- Membresías -->
+        <div v-if="seen.memberships" v-show="section === 'memberships'" class="web-scope" :class="{ 'sec-on': section === 'memberships' }">
+          <PlansPanel />
+        </div>
+
+        <!-- Sincronización -->
+        <div v-if="seen.sync" v-show="section === 'sync'" class="web-scope" :class="{ 'sec-on': section === 'sync' }">
+          <SyncPanel />
+        </div>
+
+        <!-- App de mostrador -->
+        <div v-if="seen.pos" v-show="section === 'pos'" class="web-scope" :class="{ 'sec-on': section === 'pos' }">
+          <div class="page-head">
+            <div>
+              <h1>App de mostrador</h1>
+              <p>Punto de venta para tu local: cobrá en persona con el mismo catálogo de tu web. Funciona sin internet.</p>
+            </div>
+          </div>
+          <PosAppsCard />
+        </div>
+
+        <!-- Productos / servicios / acceso (unificados dentro de la tienda) -->
+        <div v-if="seen.catalogs" v-show="section === 'catalogs'" :class="{ 'sec-on': section === 'catalogs' }">
+          <div class="page-head">
+            <div>
+              <h1>Mis productos</h1>
+              <p>Acá cargás lo que vendés: aparece solo en tu página web. {{ billing.hasSubscription ? productsCountText : catalogLimit }}</p>
+              <div v-if="billing.hasSubscription && catalog.products.length" class="cat-stats">
+                <span class="cat-stat tone-info"><AppIcon name="eye" :size="13" aria-hidden="true" /> {{ productStats.visible }} visibles</span>
+                <span class="cat-stat tone-warn"><AppIcon name="percent" :size="13" aria-hidden="true" /> {{ productStats.offers }} en oferta</span>
+                <span class="cat-stat tone-ok"><AppIcon name="image" :size="13" aria-hidden="true" /> {{ productStats.noImage }} sin foto</span>
+                <span class="cat-stat tone-brand"><AppIcon name="tag" :size="13" aria-hidden="true" /> {{ productStats.discounted }} con descuento</span>
               </div>
-              <button type="button" class="mk-modal-x" aria-label="Cerrar" @click="mkOpen = null"><AppIcon name="x" :size="18" /></button>
-            </header>
-            <div class="mk-modal-body">
+            </div>
+            <div class="page-head-actions cat-actions">
+              <button class="btn ghost btn-auto" @click="catalog.loadAll()"><AppIcon name="refresh" :size="16" /> Recargar</button>
+              <button v-if="billing.hasSubscription && !catalog.denied" class="btn btn-auto" @click="focusProductForm"><AppIcon name="plus" :size="16" /> Cargar producto</button>
+            </div>
+          </div>
 
-        <!-- ===== Tu negocio (nombre visible, titular y descripción) ===== -->
-        <div v-show="mkOpen === 'identity'" class="card mk-card">
-          <h3><AppIcon name="user" :size="18" /> Tu negocio</h3>
-          <p class="mk-tip"><AppIcon name="info" :size="15" /><span>Lo primero que se ve en tu portada: el nombre, una frase corta y una descripción.</span></p>
-          <AppInput v-model="designForm.display_name" label="Nombre que se muestra" name="company_display_name" placeholder="Ej. Almacén Don Pedro" hint="Vacío: se usa el nombre de tu cuenta." maxlength="60" :error="designFieldErr('display_name')" @blur="designTouched.display_name = true" />
-          <AppInput v-model="designForm.headline" label="Titular" name="company_headline" placeholder="Ej. Tu almacén de barrio, ahora también online" hint="Frase corta debajo del nombre. Vacío: no se muestra." maxlength="140" :error="designFieldErr('headline')" @blur="designTouched.headline = true" />
-          <div class="field">
-            <label for="company-description">Descripción</label>
-            <textarea
-              id="company-description"
-              v-model="designForm.description"
-              class="textarea"
-              :class="{ invalid: designFieldErr('description') }"
-              placeholder="Contá en pocas líneas qué hace tu negocio"
-              maxlength="800"
-              rows="4"
-              @blur="designTouched.description = true"
-            ></textarea>
-            <p class="hint">Se ve en la portada y al compartir el link de tu web. {{ designForm.description.length }}/800</p>
-            <p v-if="designFieldErr('description')" class="field-error" role="alert">{{ designFieldErr('description') }}</p>
-          </div>
-          <div class="btn-row">
-            <AppButton :loading="companyBusy" @click="saveIdentity">Guardar información</AppButton>
-          </div>
-        </div>
+          <AlertMessage v-if="catalog.notice" kind="success" :message="catalog.notice" />
+          <AlertMessage v-if="catalog.lastError" kind="error" :message="catalog.lastError" />
 
-        <!-- ===== Sobre nosotros ===== -->
-        <div v-show="mkOpen === 'about'" class="card mk-card">
-          <h3><AppIcon name="building-2" :size="18" /> Sobre nosotros</h3>
-          <p class="mk-tip"><AppIcon name="info" :size="15" /><span>Contá quién sos y qué hace tu negocio. Lo que dejes vacío no se muestra en tu página.</span></p>
-          <AppInput v-model="designForm.about_title" label="Título de la sección" name="company_about_title" placeholder="Sobre nosotros" hint="Encabezado de la sección en tu web. Vacío: se muestra 'Sobre nosotros'." :error="designFieldErr('about_title')" @blur="designTouched.about_title = true" />
-          <div class="field">
-            <label for="company-about-text">Descripción de la empresa</label>
-            <textarea
-              id="company-about-text"
-              v-model="designForm.about_text"
-              class="textarea"
-              :class="{ invalid: designFieldErr('about_text') }"
-              placeholder="Contá la historia de tu negocio: qué hacen, hace cuánto y qué los diferencia"
-              maxlength="2000"
-              rows="6"
-              @blur="designTouched.about_text = true"
-            ></textarea>
-            <p class="hint">El texto principal de la sección. {{ designForm.about_text.length }}/2000</p>
-            <p v-if="designFieldErr('about_text')" class="field-error" role="alert">{{ designFieldErr('about_text') }}</p>
-          </div>
-          <div class="grid-2">
-            <AppInput v-model="designForm.about_years" label="Años de trayectoria" name="company_about_years" type="number" placeholder="Ej. 15" hint="Se muestra destacado en la sección. Vacío: no se muestra." :error="designFieldErr('about_years')" @blur="designTouched.about_years = true" />
-            <AppInput v-model="designForm.about_specialties" label="Especialidades" name="company_about_specialties" placeholder="Ej. Venta mayorista, Envíos, Atención personalizada" hint="Separadas por coma: aparecen como etiquetas en la sección." :error="designFieldErr('about_specialties')" @blur="designTouched.about_specialties = true" />
-          </div>
-          <div class="field">
-            <label for="company-about-mission">Misión</label>
-            <textarea
-              id="company-about-mission"
-              v-model="designForm.about_mission"
-              class="textarea"
-              :class="{ invalid: designFieldErr('about_mission') }"
-              placeholder="Qué busca lograr tu empresa cada día"
-              maxlength="400"
-              rows="3"
-              @blur="designTouched.about_mission = true"
-            ></textarea>
-            <p class="hint">Se muestra destacada debajo de la descripción. {{ designForm.about_mission.length }}/400</p>
-            <p v-if="designFieldErr('about_mission')" class="field-error" role="alert">{{ designFieldErr('about_mission') }}</p>
-          </div>
-          <p class="hint">La sección se apaga desde "Cómo se ve", en la pestaña "Qué mostrar". También se oculta sola si no cargaste ningún contenido.</p>
-          <div class="btn-row">
-            <AppButton :loading="companyBusy" @click="saveCompany">Guardar información</AppButton>
-          </div>
-        </div>
+          <template v-if="!billing.hasSubscription || catalog.denied">
+            <div class="empty">
+              <span class="empty-icon"><AppIcon name="library" :size="28" /></span>
+              <h3>Para cargar productos necesitás un plan activo</h3>
+              <p>Elegí un plan y en un minuto podés empezar a publicar tus productos.</p>
+              <button class="btn btn-auto" @click="section = 'plans'">Ver planes</button>
+            </div>
+          </template>
 
-        <!-- ===== Qué ofrecemos (servicios/ventajas con ícono) ===== -->
-        <div v-show="mkOpen === 'services'" class="card mk-card">
-          <h3><AppIcon name="layout-grid" :size="18" /> Qué ofrecemos <span v-if="!supportsServices" class="lock-badge"><AppIcon name="lock" :size="11" :stroke="2" /> No disponible en este diseño</span></h3>
-          <p v-if="!supportsServices" class="hint">La plantilla que elegiste no tiene apartado de servicios. Disponible en: {{ blockDesigns('services') }}.</p>
-          <p class="mk-tip"><AppIcon name="info" :size="15" /><span>Sumá tarjetas con ícono que resuman lo que ofrecés. Podés agregar varias y ordenarlas con las flechas.</span></p>
-          <fieldset class="mk-fieldset" :disabled="!supportsServices">
-          <div class="check-list">
-            <label class="check-item">
-              <input v-model="designForm.show_services" type="checkbox" />
-              <span class="check-text">
-                <strong>Mostrar en tu web</strong>
-                <small>Tarjetas con ícono que resumen tus servicios o ventajas. Se ocultan solas si no cargás ninguna.</small>
-              </span>
-            </label>
-          </div>
-          <AppInput v-model="designForm.services_title" label="Título de la sección" name="company_services_title" placeholder="Qué ofrecemos" hint="Vacío: se muestra 'Qué ofrecemos'." maxlength="80" />
-          <div class="field">
-            <label>Servicios o ventajas <span class="hint-inline">({{ designForm.services.length }}/{{ mkLimits.services }})</span></label>
-            <div v-if="designForm.services.length" class="qa-list">
-              <div v-for="(s, i) in designForm.services" :key="i" class="qa-item">
-                <div class="qa-fields">
-                  <span class="qa-num">Servicio {{ i + 1 }}</span>
-                  <label class="mk-mini"><span>Ícono que se muestra</span>
-                    <div class="mk-icon-field">
-                      <span class="mk-icon-preview" aria-hidden="true"><AppIcon :name="serviceIcons[s.icon] ? s.icon : 'package'" :size="17" /></span>
-                      <select v-model="s.icon" class="select" :aria-label="`Ícono del servicio ${i + 1}`">
-                        <option v-for="(label, key) in serviceIcons" :key="key" :value="key">{{ label }}</option>
-                      </select>
+          <template v-else>
+            <SectionTabs :tabs="catalogSectionTabs" :active="catalogTab" @select="catalogTab = $event" />
+
+            <div v-if="catalog.status === 'loading'" class="card card-loading"><span class="spinner spinner-brand"></span><p>Cargando tu catálogo…</p></div>
+
+            <template v-else>
+              <!-- -------- Productos: inventario a ancho completo; el formulario
+                   vive en el drawer lateral (Teleport al final del layout). -------- -->
+              <div v-show="catalogTab === 'products'">
+                <div class="card">
+                  <StorageMeter />
+                  <div v-if="!catalog.products.length" class="empty-mini">
+                    <AppIcon name="package" :size="22" />
+                    <div><p>Todavía no cargaste productos. El primero tarda un minuto: nombre, precio y una foto.</p><button type="button" class="empty-mini-cta" @click="focusProductForm">Cargar el primero</button></div>
+                  </div>
+                  <template v-else>
+                    <div class="inv-head">
+                      <h3><AppIcon name="package" :size="17" /> Inventario <small>· {{ filteredProducts.length }} de {{ catalog.products.length }}</small></h3>
+                      <button type="button" class="btn inv-add" @click="focusProductForm"><AppIcon name="plus" :size="15" /> Registrar nuevo producto</button>
                     </div>
-                  </label>
-                  <label class="mk-mini"><span>Nombre</span>
-                    <input v-model="s.title" class="input" type="text" :maxlength="mkLimits.serviceTitle" placeholder="Ej. Envíos a todo el país" :aria-label="`Título del servicio ${i + 1}`" />
-                  </label>
-                  <label class="mk-mini"><span>Descripción corta</span>
-                    <textarea v-model="s.text" class="textarea" rows="2" :maxlength="mkLimits.serviceText" placeholder="Una línea que lo describa" :aria-label="`Descripción del servicio ${i + 1}`"></textarea>
-                  </label>
-                </div>
-                <div class="qa-actions">
-                  <button type="button" class="icon-btn" :disabled="i === 0" :aria-label="`Subir el servicio ${i + 1}`" @click="moveRow(designForm.services, i, -1)"><AppIcon name="chevron-up" :size="14" /></button>
-                  <button type="button" class="icon-btn" :disabled="i === designForm.services.length - 1" :aria-label="`Bajar el servicio ${i + 1}`" @click="moveRow(designForm.services, i, 1)"><AppIcon name="chevron-down" :size="14" /></button>
-                  <button type="button" class="icon-btn danger" :aria-label="`Borrar el servicio ${i + 1}`" @click="designForm.services.splice(i, 1)"><AppIcon name="trash" :size="15" /></button>
-                </div>
-              </div>
-            </div>
-            <div v-else class="mk-empty"><AppIcon name="inbox" :size="16" /><span>Todavía no cargaste servicios.</span></div>
-            <button type="button" class="btn ghost btn-auto mk-add" :disabled="designForm.services.length >= mkLimits.services" @click="addRow(designForm.services, mkLimits.services, { icon: 'package', title: '', text: '' })">
-              <AppIcon name="plus" :size="15" /> Agregar servicio
-            </button>
-            <p class="hint">Se muestran como tarjetas con ícono. Ordenalas con las flechas.</p>
-            <p v-if="companyErrs.services" class="field-error" role="alert">{{ companyErrs.services }}</p>
-          </div>
-          <div class="btn-row">
-            <AppButton :loading="companyBusy" @click="saveServices">Guardar sección</AppButton>
-          </div>
-          </fieldset>
-        </div>
-
-        <!-- ===== Planes de suscripción (publicidad, sin cobro online) ===== -->
-        <div v-show="mkOpen === 'plans'" class="card mk-card">
-          <h3><AppIcon name="crown" :size="18" /> Planes de suscripción</h3>
-          <p v-if="!supportsPlans" class="hint">El diseño elegido no muestra este apartado en tu web, pero podés cargar los planes igual: se ven cuando cambies a un diseño que lo incluya ({{ blockDesigns('plans') }}).</p>
-          <p class="mk-tip"><AppIcon name="info" :size="15" /><span>Publicá membresías o clubs sin cobro online: los interesados te escriben por WhatsApp o el formulario.</span></p>
-          <fieldset class="mk-fieldset">
-          <div class="check-list">
-            <label class="check-item">
-              <input v-model="designForm.show_plans" type="checkbox" />
-              <span class="check-text">
-                <strong>Mostrar en tu web</strong>
-                <small>Tarjetas con membresías, clubs o packs por suscripción que ofrecés a tus clientes. Es solo publicidad: no se cobran desde la plataforma. Se oculta sola si no cargás ninguno.</small>
-              </span>
-            </label>
-          </div>
-          <AppInput v-model="designForm.plans_title" label="Título de la sección" name="company_plans_title" placeholder="Planes y membresías" hint="Vacío: se muestra 'Planes y membresías'." maxlength="80" />
-          <div class="field">
-            <label>Planes <span class="hint-inline">({{ designForm.plans.length }}/{{ mkLimits.plans }})</span></label>
-            <div v-if="designForm.plans.length" class="qa-list">
-              <div v-for="(p, i) in designForm.plans" :key="i" class="qa-item">
-                <div class="qa-fields">
-                  <span class="qa-num">Plan {{ i + 1 }}</span>
-                  <div class="mk-pair">
-                    <label class="mk-mini"><span>Nombre</span>
-                      <input v-model="p.name" class="input" type="text" :maxlength="mkLimits.planName" placeholder="Ej. Club mensual" :aria-label="`Nombre del plan ${i + 1}`" />
-                    </label>
-                    <label class="mk-mini"><span>Precio</span>
-                      <input v-model="p.price" class="input" type="text" :maxlength="mkLimits.planPrice" placeholder="Ej. $15.000/mes" :aria-label="`Precio del plan ${i + 1}`" />
-                    </label>
-                  </div>
-                  <label class="mk-mini"><span>Detalle <em>(opcional)</em></span>
-                    <input v-model="p.note" class="input" type="text" :maxlength="mkLimits.planNote" placeholder="Ej. El más elegido — sin permanencia" :aria-label="`Detalle del plan ${i + 1}`" />
-                  </label>
-                  <label class="mk-mini"><span>Beneficios, uno por línea</span>
-                    <textarea v-model="p.items" class="textarea" rows="3" placeholder="Un beneficio por línea. Ej.&#10;2 visitas al mes&#10;Descuento en productos" :aria-label="`Beneficios del plan ${i + 1}`"></textarea>
-                  </label>
-                </div>
-                <div class="qa-actions">
-                  <button type="button" class="icon-btn" :disabled="i === 0" :aria-label="`Subir el plan ${i + 1}`" @click="moveRow(designForm.plans, i, -1)"><AppIcon name="chevron-up" :size="14" /></button>
-                  <button type="button" class="icon-btn" :disabled="i === designForm.plans.length - 1" :aria-label="`Bajar el plan ${i + 1}`" @click="moveRow(designForm.plans, i, 1)"><AppIcon name="chevron-down" :size="14" /></button>
-                  <button type="button" class="icon-btn danger" :aria-label="`Borrar el plan ${i + 1}`" @click="designForm.plans.splice(i, 1)"><AppIcon name="trash" :size="15" /></button>
-                </div>
-              </div>
-            </div>
-            <div v-else class="mk-empty"><AppIcon name="inbox" :size="16" /><span>Todavía no cargaste planes.</span></div>
-            <button type="button" class="btn ghost btn-auto mk-add" :disabled="designForm.plans.length >= mkLimits.plans" @click="addRow(designForm.plans, mkLimits.plans, { name: '', price: '', note: '', items: '' })">
-              <AppIcon name="plus" :size="15" /> Agregar plan
-            </button>
-            <p class="hint">El precio es texto libre (ej. "$15.000/mes" o "Consultar"). Los interesados te escriben por WhatsApp o el formulario de contacto — acá no se cobra nada.</p>
-            <p v-if="companyErrs.plans" class="field-error" role="alert">{{ companyErrs.plans }}</p>
-          </div>
-          <div class="btn-row">
-            <AppButton :loading="companyBusy" @click="savePlans">Guardar sección</AppButton>
-          </div>
-          </fieldset>
-        </div>
-
-        <!-- ===== Tus números (cifras destacadas) ===== -->
-        <div v-show="mkOpen === 'stats'" class="card mk-card">
-          <h3><AppIcon name="trending-up" :size="18" /> Tus números</h3>
-          <p class="mk-tip"><AppIcon name="info" :size="15" /><span>Mostrá cifras que generan confianza: cuántos clientes, años de trayectoria o productos vendidos.</span></p>
-          <div class="check-list">
-            <label class="check-item">
-              <input v-model="designForm.show_stats" type="checkbox" />
-              <span class="check-text">
-                <strong>Mostrar en tu web</strong>
-                <small>Banda de cifras que resume tu negocio: clientes, años, productos vendidos.</small>
-              </span>
-            </label>
-          </div>
-          <div class="field">
-            <label>Cifras <span class="hint-inline">({{ designForm.stats.length }}/{{ mkLimits.stats }})</span></label>
-            <div v-if="designForm.stats.length" class="qa-list">
-              <div v-for="(s, i) in designForm.stats" :key="i" class="qa-item">
-                <div class="qa-fields">
-                  <span class="qa-num">Cifra {{ i + 1 }}</span>
-                  <div class="mk-pair">
-                    <label class="mk-mini"><span>Número</span>
-                      <input v-model="s.value" class="input" type="text" :maxlength="mkLimits.statValue" placeholder="+500" :aria-label="`Valor de la cifra ${i + 1}`" />
-                    </label>
-                    <label class="mk-mini"><span>Qué significa</span>
-                      <input v-model="s.label" class="input" type="text" :maxlength="mkLimits.statLabel" placeholder="clientes que nos eligen" :aria-label="`Etiqueta de la cifra ${i + 1}`" />
-                    </label>
-                  </div>
-                </div>
-                <div class="qa-actions">
-                  <button type="button" class="icon-btn" :disabled="i === 0" :aria-label="`Subir la cifra ${i + 1}`" @click="moveRow(designForm.stats, i, -1)"><AppIcon name="chevron-up" :size="14" /></button>
-                  <button type="button" class="icon-btn" :disabled="i === designForm.stats.length - 1" :aria-label="`Bajar la cifra ${i + 1}`" @click="moveRow(designForm.stats, i, 1)"><AppIcon name="chevron-down" :size="14" /></button>
-                  <button type="button" class="icon-btn danger" :aria-label="`Borrar la cifra ${i + 1}`" @click="designForm.stats.splice(i, 1)"><AppIcon name="trash" :size="15" /></button>
-                </div>
-              </div>
-            </div>
-            <div v-else class="mk-empty"><AppIcon name="inbox" :size="16" /><span>Todavía no cargaste cifras.</span></div>
-            <button type="button" class="btn ghost btn-auto mk-add" :disabled="designForm.stats.length >= mkLimits.stats" @click="addRow(designForm.stats, mkLimits.stats, { value: '', label: '' })">
-              <AppIcon name="plus" :size="15" /> Agregar cifra
-            </button>
-            <p class="hint">Ej. "+500" y "clientes", o "15" y "años de trayectoria". Se ven en grande en una banda de tu portada.</p>
-            <p v-if="companyErrs.stats" class="field-error" role="alert">{{ companyErrs.stats }}</p>
-          </div>
-          <div class="btn-row">
-            <AppButton :loading="companyBusy" @click="saveStats">Guardar sección</AppButton>
-          </div>
-        </div>
-
-        <!-- ===== Testimonios ===== -->
-        <div v-show="mkOpen === 'testimonials'" class="card mk-card">
-          <h3><AppIcon name="quote" :size="18" /> Testimonios</h3>
-          <p class="mk-tip"><AppIcon name="info" :size="15" /><span>Las opiniones de tus clientes convencen mejor que cualquier anuncio. Pediles permiso antes de publicarlas.</span></p>
-          <div class="check-list">
-            <label class="check-item">
-              <input v-model="designForm.show_testimonials" type="checkbox" />
-              <span class="check-text">
-                <strong>Mostrar en tu web</strong>
-                <small>Opiniones de tus clientes: la mejor prueba social para vender más.</small>
-              </span>
-            </label>
-          </div>
-          <AppInput v-model="designForm.testimonials_title" label="Título de la sección" name="company_testimonials_title" placeholder="Lo que dicen nuestros clientes" hint="Vacío: se muestra 'Lo que dicen nuestros clientes'." maxlength="80" />
-          <div class="field">
-            <label>Testimonios <span class="hint-inline">({{ designForm.testimonials.length }}/{{ mkLimits.testimonials }})</span></label>
-            <div v-if="designForm.testimonials.length" class="qa-list">
-              <div v-for="(t, i) in designForm.testimonials" :key="i" class="qa-item">
-                <div class="qa-fields">
-                  <span class="qa-num">Testimonio {{ i + 1 }}</span>
-                  <div class="mk-pair">
-                    <label class="mk-mini"><span>Nombre del cliente</span>
-                      <input v-model="t.name" class="input" type="text" :maxlength="mkLimits.testimonialName" placeholder="Ej. María Gómez" :aria-label="`Nombre del testimonio ${i + 1}`" />
-                    </label>
-                    <label class="mk-mini"><span>Detalle <em>(opcional)</em></span>
-                      <input v-model="t.detail" class="input" type="text" :maxlength="mkLimits.testimonialDetail" placeholder="Ej. Cliente desde 2019" :aria-label="`Detalle del testimonio ${i + 1}`" />
-                    </label>
-                  </div>
-                  <label class="mk-mini"><span>Su opinión</span>
-                    <textarea v-model="t.text" class="textarea" rows="2" :maxlength="mkLimits.testimonialText" placeholder="Lo que dijo de tu negocio" :aria-label="`Texto del testimonio ${i + 1}`"></textarea>
-                  </label>
-                </div>
-                <div class="qa-actions">
-                  <button type="button" class="icon-btn" :disabled="i === 0" :aria-label="`Subir el testimonio ${i + 1}`" @click="moveRow(designForm.testimonials, i, -1)"><AppIcon name="chevron-up" :size="14" /></button>
-                  <button type="button" class="icon-btn" :disabled="i === designForm.testimonials.length - 1" :aria-label="`Bajar el testimonio ${i + 1}`" @click="moveRow(designForm.testimonials, i, 1)"><AppIcon name="chevron-down" :size="14" /></button>
-                  <button type="button" class="icon-btn danger" :aria-label="`Borrar el testimonio ${i + 1}`" @click="designForm.testimonials.splice(i, 1)"><AppIcon name="trash" :size="15" /></button>
-                </div>
-              </div>
-            </div>
-            <div v-else class="mk-empty"><AppIcon name="inbox" :size="16" /><span>Todavía no cargaste testimonios.</span></div>
-            <button type="button" class="btn ghost btn-auto mk-add" :disabled="designForm.testimonials.length >= mkLimits.testimonials" @click="addRow(designForm.testimonials, mkLimits.testimonials, { name: '', detail: '', text: '' })">
-              <AppIcon name="plus" :size="15" /> Agregar testimonio
-            </button>
-            <p class="hint">Publicá solo opiniones reales de clientes que te hayan autorizado a usarlas.</p>
-            <p v-if="companyErrs.testimonials" class="field-error" role="alert">{{ companyErrs.testimonials }}</p>
-          </div>
-          <div class="btn-row">
-            <AppButton :loading="companyBusy" @click="saveTestimonials">Guardar sección</AppButton>
-          </div>
-        </div>
-
-        <!-- ===== Preguntas frecuentes ===== -->
-        <div v-show="mkOpen === 'faqs'" class="card mk-card">
-          <h3><AppIcon name="message-circle" :size="18" /> Preguntas frecuentes</h3>
-          <p class="mk-tip"><AppIcon name="info" :size="15" /><span>Ahorrá consultas repetidas: escribí la pregunta tal como te la haría un cliente y su respuesta.</span></p>
-          <div class="check-list">
-            <label class="check-item">
-              <input v-model="designForm.show_faq" type="checkbox" />
-              <span class="check-text">
-                <strong>Mostrar en tu web</strong>
-                <small>Respuestas que se despliegan al tocarlas: ahorran consultas repetidas.</small>
-              </span>
-            </label>
-          </div>
-          <AppInput v-model="designForm.faqs_title" label="Título de la sección" name="company_faqs_title" placeholder="Preguntas frecuentes" hint="Vacío: se muestra 'Preguntas frecuentes'." maxlength="80" />
-          <div class="field">
-            <label>Preguntas y respuestas <span class="hint-inline">({{ designForm.faqs.length }}/{{ mkLimits.faqs }})</span></label>
-            <div v-if="designForm.faqs.length" class="qa-list">
-              <div v-for="(f, i) in designForm.faqs" :key="i" class="qa-item">
-                <div class="qa-fields">
-                  <span class="qa-num">Pregunta {{ i + 1 }}</span>
-                  <label class="mk-mini"><span>La pregunta</span>
-                    <input v-model="f.q" class="input" type="text" :maxlength="mkLimits.faqQ" placeholder="Ej. ¿Hacen envíos?" :aria-label="`Pregunta ${i + 1}`" />
-                  </label>
-                  <label class="mk-mini"><span>La respuesta</span>
-                    <textarea v-model="f.a" class="textarea" rows="2" :maxlength="mkLimits.faqA" placeholder="Respuesta que ve la visita" :aria-label="`Respuesta ${i + 1}`"></textarea>
-                  </label>
-                </div>
-                <div class="qa-actions">
-                  <button type="button" class="icon-btn" :disabled="i === 0" :aria-label="`Subir la pregunta ${i + 1}`" @click="moveRow(designForm.faqs, i, -1)"><AppIcon name="chevron-up" :size="14" /></button>
-                  <button type="button" class="icon-btn" :disabled="i === designForm.faqs.length - 1" :aria-label="`Bajar la pregunta ${i + 1}`" @click="moveRow(designForm.faqs, i, 1)"><AppIcon name="chevron-down" :size="14" /></button>
-                  <button type="button" class="icon-btn danger" :aria-label="`Borrar la pregunta ${i + 1}`" @click="designForm.faqs.splice(i, 1)"><AppIcon name="trash" :size="15" /></button>
-                </div>
-              </div>
-            </div>
-            <div v-else class="mk-empty"><AppIcon name="inbox" :size="16" /><span>Todavía no cargaste preguntas.</span></div>
-            <button type="button" class="btn ghost btn-auto mk-add" :disabled="designForm.faqs.length >= mkLimits.faqs" @click="addRow(designForm.faqs, mkLimits.faqs, { q: '', a: '' })">
-              <AppIcon name="plus" :size="15" /> Agregar pregunta
-            </button>
-            <p v-if="companyErrs.faqs" class="field-error" role="alert">{{ companyErrs.faqs }}</p>
-          </div>
-          <div class="btn-row">
-            <AppButton :loading="companyBusy" @click="saveFaqs">Guardar sección</AppButton>
-          </div>
-        </div>
-
-        <!-- ===== Garantías y beneficios ===== -->
-        <div v-show="mkOpen === 'benefits'" class="card mk-card">
-          <h3><AppIcon name="shield-check" :size="18" /> Garantías y beneficios</h3>
-          <p class="mk-tip"><AppIcon name="info" :size="15" /><span>Envíos, garantía y medios de pago: lo que tranquiliza a quien está por comprar.</span></p>
-          <div class="check-list">
-            <label class="check-item">
-              <input v-model="designForm.show_benefits" type="checkbox" />
-              <span class="check-text">
-                <strong>Mostrar en tu web</strong>
-                <small>Envíos, garantías, medios de pago, devoluciones. Se oculta sola si no cargás ninguno.</small>
-              </span>
-            </label>
-          </div>
-          <div class="field">
-            <label>Beneficios <span class="hint-inline">({{ designForm.benefits.length }}/{{ mkLimits.benefits }})</span></label>
-            <div v-if="designForm.benefits.length" class="qa-list">
-              <div v-for="(b, i) in designForm.benefits" :key="i" class="qa-item">
-                <div class="qa-fields">
-                  <span class="qa-num">Beneficio {{ i + 1 }}</span>
-                  <label class="mk-mini"><span>Ícono que se muestra</span>
-                    <div class="mk-icon-field">
-                      <span class="mk-icon-preview" aria-hidden="true"><AppIcon :name="serviceIcons[b.icon] ? b.icon : 'shield-check'" :size="17" /></span>
-                      <select v-model="b.icon" class="select" :aria-label="`Ícono del beneficio ${i + 1}`">
-                        <option v-for="(label, key) in serviceIcons" :key="key" :value="key">{{ label }}</option>
-                      </select>
-                    </div>
-                  </label>
-                  <label class="mk-mini"><span>Nombre</span>
-                    <input v-model="b.title" class="input" type="text" :maxlength="mkLimits.benefitTitle" placeholder="Ej. Garantía de 30 días" :aria-label="`Título del beneficio ${i + 1}`" />
-                  </label>
-                  <label class="mk-mini"><span>Descripción corta</span>
-                    <textarea v-model="b.text" class="textarea" rows="2" :maxlength="mkLimits.benefitText" placeholder="Una línea que lo describa" :aria-label="`Descripción del beneficio ${i + 1}`"></textarea>
-                  </label>
-                </div>
-                <div class="qa-actions">
-                  <button type="button" class="icon-btn" :disabled="i === 0" :aria-label="`Subir el beneficio ${i + 1}`" @click="moveRow(designForm.benefits, i, -1)"><AppIcon name="chevron-up" :size="14" /></button>
-                  <button type="button" class="icon-btn" :disabled="i === designForm.benefits.length - 1" :aria-label="`Bajar el beneficio ${i + 1}`" @click="moveRow(designForm.benefits, i, 1)"><AppIcon name="chevron-down" :size="14" /></button>
-                  <button type="button" class="icon-btn danger" :aria-label="`Borrar el beneficio ${i + 1}`" @click="designForm.benefits.splice(i, 1)"><AppIcon name="trash" :size="15" /></button>
-                </div>
-              </div>
-            </div>
-            <div v-else class="mk-empty"><AppIcon name="inbox" :size="16" /><span>Todavía no cargaste beneficios.</span></div>
-            <button type="button" class="btn ghost btn-auto mk-add" :disabled="designForm.benefits.length >= mkLimits.benefits" @click="addRow(designForm.benefits, mkLimits.benefits, { icon: 'shield-check', title: '', text: '' })">
-              <AppIcon name="plus" :size="15" /> Agregar beneficio
-            </button>
-            <p v-if="companyErrs.benefits" class="field-error" role="alert">{{ companyErrs.benefits }}</p>
-          </div>
-          <div class="btn-row">
-            <AppButton :loading="companyBusy" @click="saveBenefits">Guardar sección</AppButton>
-          </div>
-        </div>
-
-        <!-- ===== Línea de tiempo ===== -->
-        <div v-show="mkOpen === 'timeline'" class="card mk-card">
-          <h3><AppIcon name="flag" :size="18" /> Línea de tiempo</h3>
-          <p class="mk-tip"><AppIcon name="info" :size="15" /><span>Contá tu historia paso a paso: cuándo empezaste, el local nuevo, cada logro.</span></p>
-          <div class="check-list">
-            <label class="check-item">
-              <input v-model="designForm.show_timeline" type="checkbox" />
-              <span class="check-text">
-                <strong>Mostrar en tu web</strong>
-                <small>Los hitos del negocio: fundación, local nuevo, logros. Se oculta sola si no cargás ninguno.</small>
-              </span>
-            </label>
-          </div>
-          <div class="field">
-            <label>Hitos <span class="hint-inline">({{ designForm.timeline.length }}/{{ mkLimits.timeline }})</span></label>
-            <div v-if="designForm.timeline.length" class="qa-list">
-              <div v-for="(t, i) in designForm.timeline" :key="i" class="qa-item">
-                <div class="qa-fields">
-                  <span class="qa-num">Hito {{ i + 1 }}</span>
-                  <label class="mk-mini"><span>Cuándo <em>(año o etapa)</em></span>
-                    <input v-model="t.label" class="input" type="text" :maxlength="mkLimits.timelineLabel" placeholder="Ej. 2015 o Hoy" :aria-label="`Rótulo del hito ${i + 1}`" />
-                  </label>
-                  <label class="mk-mini"><span>Qué pasó</span>
-                    <textarea v-model="t.text" class="textarea" rows="2" :maxlength="mkLimits.timelineText" placeholder="Qué pasó en ese momento" :aria-label="`Texto del hito ${i + 1}`"></textarea>
-                  </label>
-                </div>
-                <div class="qa-actions">
-                  <button type="button" class="icon-btn" :disabled="i === 0" :aria-label="`Subir el hito ${i + 1}`" @click="moveRow(designForm.timeline, i, -1)"><AppIcon name="chevron-up" :size="14" /></button>
-                  <button type="button" class="icon-btn" :disabled="i === designForm.timeline.length - 1" :aria-label="`Bajar el hito ${i + 1}`" @click="moveRow(designForm.timeline, i, 1)"><AppIcon name="chevron-down" :size="14" /></button>
-                  <button type="button" class="icon-btn danger" :aria-label="`Borrar el hito ${i + 1}`" @click="designForm.timeline.splice(i, 1)"><AppIcon name="trash" :size="15" /></button>
-                </div>
-              </div>
-            </div>
-            <div v-else class="mk-empty"><AppIcon name="inbox" :size="16" /><span>Todavía no cargaste hitos.</span></div>
-            <button type="button" class="btn ghost btn-auto mk-add" :disabled="designForm.timeline.length >= mkLimits.timeline" @click="addRow(designForm.timeline, mkLimits.timeline, { label: '', text: '' })">
-              <AppIcon name="plus" :size="15" /> Agregar hito
-            </button>
-            <p v-if="companyErrs.timeline" class="field-error" role="alert">{{ companyErrs.timeline }}</p>
-          </div>
-          <div class="btn-row">
-            <AppButton :loading="companyBusy" @click="saveTimeline">Guardar sección</AppButton>
-          </div>
-        </div>
-
-        <!-- ===== Equipo ===== -->
-        <div v-show="mkOpen === 'team'" class="card mk-card">
-          <h3><AppIcon name="users" :size="18" /> Equipo</h3>
-          <p class="mk-tip"><AppIcon name="info" :size="15" /><span>Presentá a las personas detrás del negocio con su nombre y su rol.</span></p>
-          <div class="check-list">
-            <label class="check-item">
-              <input v-model="designForm.show_team" type="checkbox" />
-              <span class="check-text">
-                <strong>Mostrar en tu web</strong>
-                <small>Las personas detrás del negocio, con su rol. Se oculta sola si no cargás a nadie.</small>
-              </span>
-            </label>
-          </div>
-          <div class="field">
-            <label>Integrantes <span class="hint-inline">({{ designForm.team.length }}/{{ mkLimits.team }})</span></label>
-            <div v-if="designForm.team.length" class="qa-list">
-              <div v-for="(m, i) in designForm.team" :key="i" class="qa-item">
-                <div class="qa-fields">
-                  <span class="qa-num">Integrante {{ i + 1 }}</span>
-                  <div class="mk-pair">
-                    <label class="mk-mini"><span>Nombre</span>
-                      <input v-model="m.name" class="input" type="text" :maxlength="mkLimits.teamName" placeholder="Ej. Laura" :aria-label="`Nombre del integrante ${i + 1}`" />
-                    </label>
-                    <label class="mk-mini"><span>Su rol</span>
-                      <input v-model="m.role" class="input" type="text" :maxlength="mkLimits.teamRole" placeholder="Ej. Dueña, Técnica" :aria-label="`Rol del integrante ${i + 1}`" />
-                    </label>
-                  </div>
-                </div>
-                <div class="qa-actions">
-                  <button type="button" class="icon-btn" :disabled="i === 0" :aria-label="`Subir el integrante ${i + 1}`" @click="moveRow(designForm.team, i, -1)"><AppIcon name="chevron-up" :size="14" /></button>
-                  <button type="button" class="icon-btn" :disabled="i === designForm.team.length - 1" :aria-label="`Bajar el integrante ${i + 1}`" @click="moveRow(designForm.team, i, 1)"><AppIcon name="chevron-down" :size="14" /></button>
-                  <button type="button" class="icon-btn danger" :aria-label="`Borrar el integrante ${i + 1}`" @click="designForm.team.splice(i, 1)"><AppIcon name="trash" :size="15" /></button>
-                </div>
-              </div>
-            </div>
-            <div v-else class="mk-empty"><AppIcon name="inbox" :size="16" /><span>Todavía no cargaste integrantes.</span></div>
-            <button type="button" class="btn ghost btn-auto mk-add" :disabled="designForm.team.length >= mkLimits.team" @click="addRow(designForm.team, mkLimits.team, { name: '', role: '' })">
-              <AppIcon name="plus" :size="15" /> Agregar integrante
-            </button>
-            <p v-if="companyErrs.team" class="field-error" role="alert">{{ companyErrs.team }}</p>
-          </div>
-          <div class="btn-row">
-            <AppButton :loading="companyBusy" @click="saveTeam">Guardar sección</AppButton>
-          </div>
-        </div>
-
-        <!-- ===== Horarios de atención ===== -->
-        <div v-show="mkOpen === 'hours'" class="card mk-card">
-          <h3><AppIcon name="clock" :size="18" /> Horarios de atención</h3>
-          <p class="mk-tip"><AppIcon name="info" :size="15" /><span>Indicá cuándo atendés: aparece junto a tus datos de contacto en la web.</span></p>
-          <div class="check-list">
-            <label class="check-item">
-              <input v-model="designForm.show_hours" type="checkbox" />
-              <span class="check-text">
-                <strong>Mostrar en tu web</strong>
-                <small>Aparecen dentro de la sección Contáctanos, junto a tus canales.</small>
-              </span>
-            </label>
-          </div>
-          <div class="field">
-            <label>Horarios <span class="hint-inline">({{ designForm.hours.length }}/{{ mkLimits.hours }})</span></label>
-            <div v-if="designForm.hours.length" class="qa-list">
-              <div v-for="(h, i) in designForm.hours" :key="i" class="qa-item">
-                <div class="qa-fields">
-                  <span class="qa-num">Horario {{ i + 1 }}</span>
-                  <div class="mk-pair">
-                    <label class="mk-mini"><span>Días</span>
-                      <input v-model="h.label" class="input" type="text" :maxlength="mkLimits.hourLabel" placeholder="Lunes a viernes" :aria-label="`Días del horario ${i + 1}`" />
-                    </label>
-                    <label class="mk-mini"><span>Horario</span>
-                      <input v-model="h.value" class="input" type="text" :maxlength="mkLimits.hourValue" placeholder="9 a 18 h" :aria-label="`Franja del horario ${i + 1}`" />
-                    </label>
-                  </div>
-                </div>
-                <div class="qa-actions">
-                  <button type="button" class="icon-btn" :disabled="i === 0" :aria-label="`Subir el horario ${i + 1}`" @click="moveRow(designForm.hours, i, -1)"><AppIcon name="chevron-up" :size="14" /></button>
-                  <button type="button" class="icon-btn" :disabled="i === designForm.hours.length - 1" :aria-label="`Bajar el horario ${i + 1}`" @click="moveRow(designForm.hours, i, 1)"><AppIcon name="chevron-down" :size="14" /></button>
-                  <button type="button" class="icon-btn danger" :aria-label="`Borrar el horario ${i + 1}`" @click="designForm.hours.splice(i, 1)"><AppIcon name="trash" :size="15" /></button>
-                </div>
-              </div>
-            </div>
-            <div v-else class="mk-empty"><AppIcon name="inbox" :size="16" /><span>Todavía no cargaste horarios.</span></div>
-            <button type="button" class="btn ghost btn-auto mk-add" :disabled="designForm.hours.length >= mkLimits.hours" @click="addRow(designForm.hours, mkLimits.hours, { label: '', value: '' })">
-              <AppIcon name="plus" :size="15" /> Agregar horario
-            </button>
-            <p class="hint">Si apagás la sección Contáctanos desde "Cómo se ve", los horarios también se ocultan.</p>
-            <p v-if="companyErrs.hours" class="field-error" role="alert">{{ companyErrs.hours }}</p>
-          </div>
-          <div class="btn-row">
-            <AppButton :loading="companyBusy" @click="saveHours">Guardar sección</AppButton>
-          </div>
-        </div>
-
-        <!-- ===== Llamado a la acción ===== -->
-        <div v-show="mkOpen === 'cta'" class="card mk-card">
-          <h3><AppIcon name="megaphone" :size="18" /> Llamado a la acción</h3>
-          <p class="mk-tip"><AppIcon name="info" :size="15" /><span>La banda final de tu portada: un título, una frase y un botón grande para que te escriban.</span></p>
-          <div class="check-list">
-            <label class="check-item">
-              <input v-model="designForm.show_cta" type="checkbox" />
-              <span class="check-text">
-                <strong>Mostrar en tu web</strong>
-                <small>Banda de cierre de tu portada con un botón grande para que te escriban.</small>
-              </span>
-            </label>
-          </div>
-          <AppInput v-model="designForm.cta_title" label="Título" name="company_cta_title" placeholder="¿Listo para hacer tu pedido?" maxlength="120" />
-          <AppInput v-model="designForm.cta_text" label="Texto" name="company_cta_text" placeholder="Escribinos y te armamos el pedido en el día." hint="Frase corta que acompaña al título." maxlength="280" />
-          <AppInput v-model="designForm.cta_label" label="Texto del botón" name="company_cta_label" placeholder="Escribinos por WhatsApp" hint="Vacío: se usa uno genérico según el destino del botón." maxlength="40" />
-          <p class="hint">El botón abre tu WhatsApp si cargaste uno; si no, lleva al formulario de contacto o a tu catálogo. La banda solo aparece si hay título o texto.</p>
-          <p v-if="companyErrs.cta" class="field-error" role="alert">{{ companyErrs.cta }}</p>
-          <div class="btn-row">
-            <AppButton :loading="companyBusy" @click="saveCta">Guardar sección</AppButton>
-          </div>
-        </div>
-
-        <!-- ===== Cinta de anuncios (marquee bajo la portada) ===== -->
-        <div v-show="mkOpen === 'ann'" class="card mk-card">
-          <h3><AppIcon name="megaphone" :size="18" /> Cinta de anuncios</h3>
-          <p class="mk-tip"><AppIcon name="info" :size="15" /><span>Avisos cortos que corren en bucle debajo de tu portada: promos, envíos gratis, cuotas.</span></p>
-          <div class="check-list">
-            <label class="check-item">
-              <input v-model="designForm.show_announcements" type="checkbox" />
-              <span class="check-text">
-                <strong>Mostrar en tu web</strong>
-                <small>Banda que corre en bucle debajo de la portada con tus avisos cortos (envíos gratis, cuotas, promos).</small>
-              </span>
-            </label>
-          </div>
-          <div class="field">
-            <label>Anuncios <span class="hint-inline">({{ designForm.announcements.length }}/{{ mkLimits.announcements }})</span></label>
-            <div v-if="designForm.announcements.length" class="qa-list">
-              <div v-for="(a, i) in designForm.announcements" :key="i" class="qa-item">
-                <div class="qa-fields">
-                  <span class="qa-num">Anuncio {{ i + 1 }}</span>
-                  <div class="mk-pair">
-                    <label class="mk-mini"><span>Ícono</span>
-                      <div class="mk-icon-field">
-                        <span class="mk-icon-preview" aria-hidden="true"><AppIcon :name="serviceIcons[a.icon] ? a.icon : 'megaphone'" :size="17" /></span>
-                        <select v-model="a.icon" class="select" :aria-label="`Ícono del anuncio ${i + 1}`">
-                          <option v-for="(label, key) in serviceIcons" :key="key" :value="key">{{ label }}</option>
-                        </select>
+                    <CatalogToolbar
+                      v-model:query="productQuery" v-model:category="prodFilterCategory" v-model:brand="prodFilterBrand"
+                      v-model:only-offers="prodOnlyOffers" v-model:sort="prodSort"
+                      :categories="catalog.categories" :brands="catalog.brands"
+                      @prices="showPriceUpdate = true"
+                    />
+                    <div v-if="!filteredProducts.length" class="empty-mini">
+                      <AppIcon name="search" :size="22" />
+                      <div>
+                        <p>No hay productos que coincidan con los filtros.</p>
+                        <button type="button" class="empty-mini-cta" @click="productQuery = ''; prodFilterCategory = ''; prodFilterBrand = ''; prodOnlyOffers = false">Limpiar filtros</button>
                       </div>
-                    </label>
-                    <label class="mk-mini"><span>Texto del anuncio</span>
-                      <input v-model="a.text" class="input" type="text" :maxlength="mkLimits.announcementText" placeholder="Ej. Envíos gratis superando $80.000" :aria-label="`Texto del anuncio ${i + 1}`" />
-                    </label>
+                    </div>
+                    <template v-else>
+                      <div v-if="selectedIds.length" class="prod-bulkbar">
+                        <AppIcon name="check" :size="15" />
+                        <span>{{ selectedIds.length }} seleccionado{{ selectedIds.length === 1 ? '' : 's' }}</span>
+                        <button type="button" @click="bulkDuplicate" :disabled="bulkBusy">Duplicar</button>
+                        <button type="button" @click="bulkSetActive(true)" :disabled="bulkBusy">Mostrar</button>
+                        <button type="button" @click="bulkSetActive(false)" :disabled="bulkBusy">Ocultar</button>
+                        <button type="button" class="danger" @click="bulkRemove" :disabled="bulkBusy">Eliminar</button>
+                        <span class="prod-bulkbar-hint">Seleccioná con la casilla de cada fila</span>
+                        <button type="button" class="prod-bulkbar-x" aria-label="Limpiar selección" @click="selectedIds = []"><AppIcon name="x" :size="14" /></button>
+                      </div>
+                      <ProductTable
+                        :products="pagedProducts" v-model:selected-ids="selectedIds"
+                        :campaign-of="(id) => productCampaign.get(id) || null"
+                        :stock-enabled="hasStockControl"
+                        @edit="editProduct" @duplicate="duplicateProduct"
+                        @toggle-active="toggleProductActive" @remove="removeProduct"
+                      />
+                      <div v-if="prodPageInfo.pages > 1" class="prod-pager">
+                        <span>Mostrando {{ prodPageInfo.from }}–{{ prodPageInfo.to }} de {{ prodPageInfo.total }}</span>
+                        <span class="prod-pager-btns">
+                          <button type="button" class="btn ghost btn-auto" :disabled="prodPage <= 1" @click="prodPage--">← Anterior</button>
+                          <button type="button" class="btn ghost btn-auto" :disabled="prodPage >= prodPageInfo.pages" @click="prodPage++">Siguiente →</button>
+                        </span>
+                      </div>
+                    </template>
+                  </template>
+                </div>
+              </div>
+
+              <!-- -------- Categorías -------- -->
+              <div v-show="catalogTab === 'categories'" class="card">
+                <div class="inv-head">
+                  <h3><AppIcon name="layout-grid" :size="17" /> Categorías <small>· {{ catalog.categories.length }}</small></h3>
+                  <small class="inv-head-note">Agrupan tus productos en el menú de tu página</small>
+                </div>
+                <div class="tax-add">
+                  <div class="tax-fields">
+                    <AppInput v-model="taxonomyForm.category" :label="taxonomyEditing ? 'Editar categoría' : 'Nueva categoría'" name="cat_name" placeholder="Ej. Indumentaria" :error="taxonomyErr.category" />
+                    <div class="field">
+                      <label for="cat_feature">Características <small class="tab-sub">(opcional)</small></label>
+                      <div class="feat-add">
+                        <input
+                          id="cat_feature" v-model="taxonomyFeatureInput" class="input" type="text"
+                          placeholder="Ej. Talle" @keydown.enter.prevent="addTaxonomyFeature"
+                        />
+                        <button type="button" class="btn ghost btn-auto" :disabled="!taxonomyFeatureInput.trim()" @click="addTaxonomyFeature"><AppIcon name="plus" :size="14" /> Agregar</button>
+                      </div>
+                      <div v-if="taxonomyFeatures.length" class="feat-chips">
+                        <span v-for="(f, i) in taxonomyFeatures" :key="f" class="feat-chip">
+                          {{ f }}
+                          <button type="button" :aria-label="`Quitar ${f}`" @click="taxonomyFeatures.splice(i, 1)"><AppIcon name="x" :size="11" /></button>
+                        </span>
+                      </div>
+                      <p class="hint">Se sugieren al cargar productos de esta categoría.</p>
+                    </div>
+                    <div class="tax-actions">
+                      <button v-if="taxonomyEditing" type="button" class="btn ghost btn-auto" @click="cancelCategoryEdit">Cancelar</button>
+                      <AppButton :loading="taxonomyBusy.category" class="btn-auto" @click="addTaxonomy('category')">{{ taxonomyEditing ? 'Guardar' : 'Agregar categoría' }}</AppButton>
+                    </div>
                   </div>
                 </div>
-                <div class="qa-actions">
-                  <button type="button" class="icon-btn" :disabled="i === 0" :aria-label="`Subir el anuncio ${i + 1}`" @click="moveRow(designForm.announcements, i, -1)"><AppIcon name="chevron-up" :size="14" /></button>
-                  <button type="button" class="icon-btn" :disabled="i === designForm.announcements.length - 1" :aria-label="`Bajar el anuncio ${i + 1}`" @click="moveRow(designForm.announcements, i, 1)"><AppIcon name="chevron-down" :size="14" /></button>
-                  <button type="button" class="icon-btn danger" :aria-label="`Borrar el anuncio ${i + 1}`" @click="designForm.announcements.splice(i, 1)"><AppIcon name="trash" :size="15" /></button>
+                <ul v-if="catalog.categories.length" class="tax-list">
+                  <li v-for="c in catalog.categories" :key="c.id">
+                    <span class="tax-dot" :style="{ '--h': taxonomyHue(c.name) }" aria-hidden="true"></span>
+                    <span class="tax-name">
+                      <strong>{{ c.name }}</strong>
+                      <small>{{ c.products_count || 0 }} productos<template v-if="c.feature_schema?.length"> · {{ c.feature_schema.join(' · ') }}</template></small>
+                    </span>
+                    <span class="tax-item-actions">
+                      <button type="button" class="icon-btn" aria-label="Editar categoría" @click="editCategory(c)"><AppIcon name="pencil" :size="15" /></button>
+                      <button type="button" class="icon-btn danger" aria-label="Eliminar categoría" @click="removeTaxonomy('category', c)"><AppIcon name="trash" :size="15" /></button>
+                    </span>
+                  </li>
+                </ul>
+                <p v-else class="hint">Sin categorías todavía.</p>
+              </div>
+
+              <!-- -------- Marcas -------- -->
+              <div v-show="catalogTab === 'brands'" class="card">
+                <div class="inv-head">
+                  <h3><AppIcon name="tag" :size="17" /> Marcas <small>· {{ catalog.brands.length }}</small></h3>
+                  <small class="inv-head-note">Filtran tus productos por marca en el menú de tu página</small>
+                </div>
+                <div class="tax-add">
+                  <div class="tax-fields">
+                    <AppInput v-model="taxonomyForm.brand" :label="brandEditing ? 'Editar marca' : 'Nueva marca'" name="brand_name" placeholder="Ej. Nike" :error="taxonomyErr.brand" />
+                    <div class="field">
+                      <label>Logo <small class="tab-sub">(opcional)</small></label>
+                      <div class="brand-logo-pick">
+                        <span class="brand-logo-thumb">
+                          <img v-if="brandFormPreview" :src="brandFormPreview" alt="Logo de la marca" />
+                          <AppIcon v-else name="image" :size="18" />
+                        </span>
+                        <span class="brand-logo-meta">
+                          <strong>{{ brandFormImage ? brandFormImage.name : (brandEditing ? 'Logo actual' : 'Sin imagen') }}</strong>
+                          <small>PNG, JPG, WebP o GIF de hasta 2 MB</small>
+                        </span>
+                        <button type="button" class="btn ghost btn-auto" @click="brandFormImageInput?.click()">
+                          <AppIcon name="upload" :size="14" /> {{ brandFormImage || brandFormPreview ? 'Cambiar' : 'Elegir' }}
+                        </button>
+                        <button v-if="brandFormImage" type="button" class="icon-btn danger" aria-label="Quitar imagen" @click="clearBrandFormImage"><AppIcon name="x" :size="15" /></button>
+                      </div>
+                      <input ref="brandFormImageInput" type="file" class="sr-only" :accept="LOGO_ACCEPT_TYPES" aria-label="Logo de la marca" @change="onBrandFormImagePicked" />
+                      <p v-if="brandFormErr" class="field-error" role="alert">{{ brandFormErr }}</p>
+                    </div>
+                    <div class="tax-actions">
+                      <button v-if="brandEditing" type="button" class="btn ghost btn-auto" @click="cancelBrandEdit">Cancelar</button>
+                      <AppButton :loading="taxonomyBusy.brand" class="btn-auto" @click="addTaxonomy('brand')">{{ brandEditing ? 'Guardar' : 'Agregar marca' }}</AppButton>
+                    </div>
+                  </div>
+                </div>
+                <p class="hint">Logo opcional por marca: PNG, JPG, WebP o GIF de hasta 2 MB. Se convierte a WebP con fondo transparente.</p>
+                <div v-if="catalog.brands.length" class="brand-search">
+                  <AppIcon name="search" :size="15" />
+                  <input v-model="brandQuery" class="input" type="search" placeholder="Buscar marca…" aria-label="Buscar marca" />
+                </div>
+                <ul v-if="filteredBrands.length" class="tax-list">
+                  <li v-for="b in filteredBrands" :key="b.id">
+                    <img v-if="b.image" class="tax-thumb" :src="b.image" :alt="`Logo de ${b.name}`" loading="lazy" decoding="async" />
+                    <span v-else class="tax-dot" :style="{ '--h': taxonomyHue(b.name) }" aria-hidden="true"></span>
+                    <span class="tax-name">
+                      <strong>{{ b.name }}</strong>
+                      <small>{{ b.products_count || 0 }} productos</small>
+                    </span>
+                    <span class="tax-item-actions">
+                      <button type="button" class="icon-btn" aria-label="Editar marca" @click="editBrand(b)"><AppIcon name="pencil" :size="15" /></button>
+                      <button type="button" class="icon-btn" :disabled="brandImageBusy === b.id" :aria-label="b.image ? `Cambiar imagen de ${b.name}` : `Subir imagen de ${b.name}`" @click="pickBrandImage(b)"><AppIcon name="image" :size="15" /></button>
+                      <button v-if="b.image" type="button" class="icon-btn danger" :disabled="brandImageBusy === b.id" :aria-label="`Quitar imagen de ${b.name}`" @click="removeBrandImage(b)"><AppIcon name="x" :size="15" /></button>
+                      <button type="button" class="icon-btn danger" aria-label="Eliminar marca" @click="removeTaxonomy('brand', b)"><AppIcon name="trash" :size="15" /></button>
+                    </span>
+                  </li>
+                </ul>
+                <input ref="brandImageInput" type="file" class="sr-only" :accept="LOGO_ACCEPT_TYPES" aria-label="Subir imagen de marca" @change="onBrandImagePicked" />
+                <p v-if="brandImageErr" class="field-error" role="alert">{{ brandImageErr }}</p>
+                <p v-if="!catalog.brands.length" class="hint">Sin marcas todavía.</p>
+                <p v-else-if="!filteredBrands.length" class="hint">
+                  Ninguna marca coincide con «{{ brandQuery.trim() }}».
+                  <button type="button" class="empty-mini-cta" @click="brandQuery = ''">Limpiar búsqueda</button>
+                </p>
+              </div>
+
+              <!-- -------- Descuentos programados (premium) -------- -->
+              <div v-show="catalogTab === 'discounts'">
+              <div v-if="!canDiscounts" class="empty">
+                <span class="empty-icon"><AppIcon name="percent" :size="28" /></span>
+                <h3>Los descuentos programados son Premium</h3>
+                <p>Con el Plan premium creás ofertas que se activan y se apagan solas en las fechas que elijas, sin tocar los precios a mano.</p>
+                <button class="btn btn-auto" @click="section = 'plans'">Ver planes</button>
+              </div>
+              <div v-else class="disc-wrap">
+              <!-- Aviso de evento próximo: solo aparece cuando una campaña entró
+                   en su ventana de configuración y no tiene descuento armado. -->
+              <div v-for="c in upcomingCampaigns" :key="c.id" class="disc-alert">
+                <span class="disc-alert-ico" :style="c.accent ? { background: c.accent } : null"><AppIcon name="percent" :size="16" /></span>
+                <div class="disc-alert-txt">
+                  <strong>Se acerca {{ c.name }} <span class="disc-alert-when">· {{ campaignWindowLabel(c) }}</span></strong>
+                  <small>Programá un descuento ahora: se enciende y se apaga solo durante el evento.</small>
+                </div>
+                <button type="button" class="btn btn-auto disc-alert-cta" @click="newCampaignDiscount(c)">Programar oferta</button>
+              </div>
+              <!-- El formulario vive en un drawer como el de productos: la lista
+                   queda limpia y sin competir con los pasos del alta. -->
+              <Teleport to="body">
+                <Transition name="pf">
+                  <div v-if="discountFormOpen" class="pf-overlay" @click.self="closeDiscountForm">
+                    <div class="pf-drawer" role="dialog" aria-modal="true" :aria-label="discountEditing ? 'Editar descuento' : 'Nuevo descuento'">
+                      <header class="pf-drawer-head">
+                        <div class="pf-drawer-title">
+                          <span class="pf-drawer-ico"><AppIcon :name="discountEditing ? 'pencil' : 'percent'" :size="17" /></span>
+                          <h3>{{ discountEditing ? 'Editar descuento' : 'Nuevo descuento' }}</h3>
+                        </div>
+                        <button type="button" class="icon-btn" aria-label="Cerrar" @click="closeDiscountForm"><AppIcon name="x" :size="16" /></button>
+                      </header>
+                      <div class="pf-drawer-body">
+                  <p class="lead">Programá una oferta: se activa y se apaga sola en las fechas que elijas, sin que tengas que tocar los precios.</p>
+                  <div class="disc-preview" aria-hidden="true">
+                    <span class="disc-preview-badge"><b>-{{ discountPreviewPct }}</b><i>%</i></span>
+                    <div class="disc-preview-info">
+                      <small>Así se verá en tu tienda</small>
+                      <strong>{{ discountForm.name || 'Nombre de tu oferta' }}</strong>
+                      <span class="disc-preview-price"><s>{{ formatARS(10000) }}</s><b>{{ formatARS(10000 * (1 - discountPreviewPct / 100)) }}</b></span>
+                    </div>
+                  </div>
+                  <AppInput v-model="discountForm.name" label="Nombre" name="disc_name" icon="tag" placeholder="Ej. Semana de ofertas" :error="discountFieldErr('name')" @blur="discountTouched.name = true" />
+
+                  <div class="form-step"><span class="form-step-num">1</span> ¿A qué aplica?</div>
+                  <div class="field">
+                    <label id="disc-scope-label" for="disc-scope"><AppIcon name="layout-grid" :size="14" class="label-icon" aria-hidden="true" />Alcance</label>
+                    <select id="disc-scope" v-model="discountForm.scope" class="select">
+                      <option v-for="s in DISCOUNT_SCOPES" :key="s.value" :value="s.value">{{ s.label }}</option>
+                    </select>
+                  </div>
+
+                  <div v-if="discountForm.scope === 'category'" class="field">
+                    <label for="disc-category"><AppIcon name="checklist" :size="14" class="label-icon" aria-hidden="true" />Categoría</label>
+                    <select id="disc-category" v-model="discountForm.category" class="select" :class="{ invalid: discountFieldErr('category') }">
+                      <option value="">Elegí una categoría</option>
+                      <option v-for="c in catalog.categories" :key="c.id" :value="c.id">{{ c.name }}</option>
+                    </select>
+                    <p v-if="!catalog.categories.length" class="hint">No tenés categorías: cargalas en la pestaña Categorías.</p>
+                    <p v-if="discountFieldErr('category')" class="field-error" role="alert">{{ discountFieldErr('category') }}</p>
+                  </div>
+                  <div v-if="discountForm.scope === 'brand'" class="field">
+                    <label for="disc-brand"><AppIcon name="tag" :size="14" class="label-icon" aria-hidden="true" />Marca</label>
+                    <select id="disc-brand" v-model="discountForm.brand" class="select" :class="{ invalid: discountFieldErr('brand') }">
+                      <option value="">Elegí una marca</option>
+                      <option v-for="b in catalog.brands" :key="b.id" :value="b.id">{{ b.name }}</option>
+                    </select>
+                    <p v-if="!catalog.brands.length" class="hint">No tenés marcas: cargalas en la pestaña Marcas.</p>
+                    <p v-if="discountFieldErr('brand')" class="field-error" role="alert">{{ discountFieldErr('brand') }}</p>
+                  </div>
+                  <div v-if="discountForm.scope === 'products'" class="field">
+                    <label id="disc-products-label"><AppIcon name="package" :size="14" class="label-icon" aria-hidden="true" />Productos incluidos</label>
+                    <template v-if="catalog.products.length">
+                      <div class="disc-products-tools">
+                        <button type="button" class="disc-tool" @click="discountForm.product_ids = catalog.products.filter((p) => !discountTakenBy.has(p.id)).map((p) => p.id)"><AppIcon name="check" :size="13" /> Todos</button>
+                        <button type="button" class="disc-tool" @click="discountForm.product_ids = []"><AppIcon name="x" :size="13" /> Ninguno</button>
+                        <span class="hint">{{ discountForm.product_ids.length }} seleccionados</span>
+                      </div>
+                      <div class="check-list disc-products" role="group" aria-labelledby="disc-products-label">
+                        <label v-for="p in catalog.products" :key="p.id" class="check-item" :class="{ taken: discountTakenBy.has(p.id) }">
+                          <input type="checkbox" :value="p.id" v-model="discountForm.product_ids" :disabled="discountTakenBy.has(p.id)" />
+                          <span class="check-text"><strong>{{ p.name }}</strong><small>{{ formatARS(p.price) }}</small></span>
+                          <span v-if="discountTakenBy.has(p.id)" class="check-taken" :title="`Ya está en el descuento «${discountTakenBy.get(p.id)}»`"><AppIcon name="lock" :size="11" /> {{ discountTakenBy.get(p.id) }}</span>
+                        </label>
+                      </div>
+                      <p v-if="discountTakenBy.size" class="hint">Los productos que ya están en otro descuento vigente no se pueden elegir.</p>
+                    </template>
+                    <p v-else class="hint">Todavía no cargaste productos.</p>
+                    <p v-if="discountFieldErr('products')" class="field-error" role="alert">{{ discountFieldErr('products') }}</p>
+                  </div>
+
+                  <div class="form-step"><span class="form-step-num">2</span> ¿Cuánto descuenta?</div>
+                  <div class="field">
+                    <label for="disc-percent" class="sr-only"><AppIcon name="percent" :size="14" class="label-icon" aria-hidden="true" />Descuento</label>
+                    <div class="disc-pct-row">
+                      <input id="disc-percent" v-model="discountForm.percent" type="number" min="1" max="99" step="1" class="input disc-pct-input" :class="{ invalid: discountFieldErr('percent') }" placeholder="25" aria-label="Porcentaje de descuento" @blur="discountTouched.percent = true" />
+                      <span class="disc-pct-sign" aria-hidden="true">%</span>
+                      <input v-model="discountForm.percent" type="range" min="1" max="99" step="1" class="disc-pct-slider" aria-label="Descuento en porcentaje" />
+                    </div>
+                    <p v-if="discountFieldErr('percent')" class="field-error" role="alert">{{ discountFieldErr('percent') }}</p>
+                  </div>
+
+                  <div class="form-step"><span class="form-step-num">3</span> ¿Cuándo aplica?</div>
+                  <div class="field">
+                    <label id="disc-window-label" for="disc-when"><AppIcon name="calendar" :size="14" class="label-icon" aria-hidden="true" />Vigencia</label>
+                    <select id="disc-when" v-model="discountWhen" class="select" :disabled="!!selectedCampaign">
+                      <option value="none">Sin fin — queda activo siempre</option>
+                      <option value="today">Solo hoy</option>
+                      <option value="week">Esta semana</option>
+                      <option value="fortnight">Próximos 15 días</option>
+                      <option value="month">Hasta fin de mes</option>
+                      <option value="custom">Otras fechas…</option>
+                      <optgroup v-if="campaignOptions.length" label="Eventos especiales">
+                        <option v-for="c in campaignOptions" :key="c.id" :value="`camp:${c.id}`">{{ c.name }} · {{ campaignWindowLabel(c) }}</option>
+                      </optgroup>
+                    </select>
+                    <div v-if="selectedCampaign" class="disc-event-lock">
+                      <AppIcon name="lock" :size="14" aria-hidden="true" />
+                      <span><strong>{{ selectedCampaign.name }}</strong> · {{ campaignWindowLabel(selectedCampaign) }}<small>Fechas fijas del evento: se enciende y se apaga solo.</small></span>
+                      <button type="button" class="disc-event-unlock" title="Usar otra vigencia" @click="discountForm.campaign = ''; discountWindowPreset = 'none'"><AppIcon name="x" :size="13" /></button>
+                    </div>
+                    <div v-if="discountWindowPreset === 'custom'" class="disc-window">
+                      <div class="disc-when">
+                        <span class="disc-when-label"><AppIcon name="calendar" :size="13" aria-hidden="true" /> Empieza</span>
+                        <div class="disc-when-fields">
+                          <input v-model="discountForm.start_date" type="date" class="input" :class="{ invalid: discountFieldErr('start_date') }" aria-label="Fecha de inicio" @blur="discountTouched.start_date = true" />
+                          <input v-model="discountForm.start_time" type="time" class="input" :class="{ invalid: discountFieldErr('start_date') }" aria-label="Hora de inicio" @blur="discountTouched.start_date = true" />
+                        </div>
+                        <p v-if="discountFieldErr('start_date')" class="field-error" role="alert">{{ discountFieldErr('start_date') }}</p>
+                      </div>
+                      <div class="disc-when">
+                        <span class="disc-when-label"><AppIcon name="clock" :size="13" aria-hidden="true" /> Termina</span>
+                        <label class="disc-none">
+                          <input v-model="discountForm.end_none" type="checkbox" />
+                          <span>Sin fin definido</span>
+                        </label>
+                        <div v-if="!discountForm.end_none" class="disc-when-fields">
+                          <input v-model="discountForm.end_date" type="date" class="input" :class="{ invalid: discountFieldErr('end_date') }" :min="discountForm.start_date || undefined" aria-label="Fecha de fin" @blur="discountTouched.end_date = true" />
+                          <input v-model="discountForm.end_time" type="time" class="input" :class="{ invalid: discountFieldErr('end_date') }" aria-label="Hora de fin" @blur="discountTouched.end_date = true" />
+                        </div>
+                        <p v-if="discountFieldErr('end_date')" class="field-error" role="alert">{{ discountFieldErr('end_date') }}</p>
+                      </div>
+                    </div>
+                  </div>
+
+                  <details v-if="selectedCampaign" class="disc-adv">
+                    <summary>Sobre el evento</summary>
+                    <p class="hint">Las fechas de <strong>{{ selectedCampaign.name }}</strong> son fijas y no se pueden editar. Para usar fechas propias, elegí otra vigencia arriba.</p>
+                  </details>
+
+                  <div class="check-list">
+                    <label class="check-item">
+                      <input type="checkbox" v-model="discountForm.is_active" />
+                      <span class="check-text"><strong><AppIcon name="zap" :size="14" class="label-icon" aria-hidden="true" /> Descuento activo</strong><small>Si lo pausás, deja de aplicarse aunque esté en fecha.</small></span>
+                    </label>
+                  </div>
+                  <div class="btn-row">
+                    <AppButton :loading="discountBusy" @click="saveDiscount"><AppIcon name="check" :size="16" /> {{ discountEditing ? 'Guardar cambios' : 'Crear descuento' }}</AppButton>
+                    <button type="button" class="btn ghost btn-auto" @click="closeDiscountForm">Cancelar</button>
+                  </div>
+                      </div>
+                    </div>
+                  </div>
+                </Transition>
+              </Teleport>
+
+                <div class="card disc-card">
+                  <div class="inv-head">
+                    <h3><AppIcon name="percent" :size="17" /> Descuentos <small>· {{ catalog.discounts.length }}</small></h3>
+                    <button type="button" class="btn btn-auto" @click="newDiscount"><AppIcon name="plus" :size="15" /> Nuevo descuento</button>
+                  </div>
+                  <div v-if="!catalog.discounts.length" class="disc-empty">
+                    <span class="disc-empty-icon"><AppIcon name="percent" :size="22" /></span>
+                    <strong>Todavía no programaste descuentos</strong>
+                    <p>Creá una oferta y se enciende y se apaga sola en las fechas que elijas.</p>
+                    <ul class="disc-empty-tips">
+                      <li><AppIcon name="zap" :size="13" /> Se activa sola</li>
+                      <li><AppIcon name="clock" :size="13" /> Se apaga sola</li>
+                      <li><AppIcon name="eye" :size="13" /> Se ve en tu web</li>
+                    </ul>
+                  </div>
+                  <div v-else class="disc-cards">
+                    <DiscountCard
+                      v-for="d in catalog.discounts" :key="d.id" :d="d" :busy="discountBusy"
+                      @toggle="toggleDiscount" @edit="editDiscount" @remove="removeDiscount"
+                    />
+                  </div>
                 </div>
               </div>
-            </div>
-            <div v-else class="mk-empty"><AppIcon name="inbox" :size="16" /><span>Todavía no cargaste anuncios.</span></div>
-            <button type="button" class="btn ghost btn-auto mk-add" :disabled="designForm.announcements.length >= mkLimits.announcements" @click="addRow(designForm.announcements, mkLimits.announcements, { icon: 'megaphone', text: '' })">
-              <AppIcon name="plus" :size="15" /> Agregar anuncio
-            </button>
-            <p class="hint">Frases cortas con ícono que se repiten en bucle. Se ocultan solas si no cargás ninguna.</p>
-            <p v-if="companyErrs.announcements" class="field-error" role="alert">{{ companyErrs.announcements }}</p>
-          </div>
-          <div class="btn-row">
-            <AppButton :loading="companyBusy" @click="saveAnnouncements">Guardar sección</AppButton>
-          </div>
+              </div>
+
+            </template>
+          </template>
         </div>
 
-        <!-- ===== Videos (embeds de redes + stream en vivo Premium) ===== -->
-        <div v-show="mkOpen === 'video'" class="card mk-card">
-          <h3><AppIcon name="play" :size="18" /> Videos</h3>
-          <p class="mk-tip"><AppIcon name="info" :size="15" /><span>Pegá el link completo de cada video de TikTok, Instagram, YouTube, Facebook o Vimeo: se muestran como tarjetas en tu página.</span></p>
-          <div class="check-list">
-            <label class="check-item">
-              <input v-model="designForm.show_video" type="checkbox" />
-              <span class="check-text">
-                <strong>Mostrar en tu web</strong>
-                <small>Sección con tus videos y, si cargás un stream, el botón "Transmitiendo en vivo".</small>
-              </span>
-            </label>
+        <div v-if="seen.services" v-show="section === 'services'" class="sec-serv" :class="{ 'sec-on': section === 'services' }">
+          <div class="page-head">
+            <div>
+              <h1>Mis servicios</h1>
+              <p>Mostrá lo que hacés, con precio y duración, en tu página. El cliente arma su presupuesto y el pedido te llega por WhatsApp; nada se cobra online.</p>
+            </div>
+            <button class="btn ghost btn-auto" @click="services.loadAll()"><AppIcon name="refresh" :size="16" /> Recargar</button>
           </div>
-          <div class="field">
-            <label>Links de videos <span class="hint-inline">({{ (designForm.videos || []).length }}/{{ videosCap }})</span></label>
-            <div v-if="(designForm.videos || []).length" class="qa-list">
-              <div v-for="(u, i) in designForm.videos" :key="i" class="qa-item">
-                <div class="qa-fields">
-                  <span class="qa-num">Video {{ i + 1 }}</span>
-                  <input v-model="designForm.videos[i]" class="input" type="url" maxlength="300" placeholder="https://www.tiktok.com/@tunegocio/video/…" :aria-label="`Link del video ${i + 1}`" />
+
+          <AlertMessage v-if="services.notice" kind="success" :message="services.notice" />
+          <AlertMessage v-if="services.lastError" kind="error" :message="services.lastError" />
+
+          <template v-if="services.denied">
+            <div class="empty">
+              <span class="empty-icon"><AppIcon name="wrench" :size="28" /></span>
+              <h3>La página Servicios está disponible desde el plan Estándar</h3>
+              <p>Sumala a tu web: tus clientes eligen servicios, ven un presupuesto orientativo y te escriben por WhatsApp.</p>
+              <button class="btn btn-auto" @click="section = 'plans'">Ver planes</button>
+            </div>
+          </template>
+
+          <template v-else>
+            <div v-if="!designSiteTemplates.includes('services')" class="card svc-note" role="note">
+              <span class="svc-note-ico" aria-hidden="true"><AppIcon name="eye-off" :size="18" /></span>
+              <div class="svc-note-body">
+                <h3>Tu página de servicios está apagada</h3>
+                <p class="hint">Los clientes no la ven en tu web. Tus servicios quedan guardados: activá la página en <a href="#" @click.prevent="section = 'pages'"><strong>Plantillas</strong></a> cuando quieras mostrarla.</p>
+              </div>
+            </div>
+            <div v-if="services.status === 'loading'" class="card card-loading"><span class="spinner spinner-brand"></span><p>Cargando tus servicios…</p></div>
+            <template v-else>
+              <div class="svc-stats">
+                <div v-for="st in serviceStats" :key="st.key" class="svc-stat" :style="{ '--h': st.hue }">
+                  <span class="svc-stat-ico"><AppIcon :name="st.icon" :size="20" aria-hidden="true" /></span>
+                  <div>
+                    <strong>{{ st.value }}</strong>
+                    <span>{{ st.label }}</span>
+                    <small>{{ st.hint }}</small>
+                  </div>
                 </div>
-                <div class="qa-actions">
-                  <button type="button" class="icon-btn" :disabled="i === 0" :aria-label="`Subir el video ${i + 1}`" @click="moveRow(designForm.videos, i, -1)"><AppIcon name="chevron-up" :size="14" /></button>
-                  <button type="button" class="icon-btn" :disabled="i === designForm.videos.length - 1" :aria-label="`Bajar el video ${i + 1}`" @click="moveRow(designForm.videos, i, 1)"><AppIcon name="chevron-down" :size="14" /></button>
-                  <button type="button" class="icon-btn danger" :aria-label="`Borrar el video ${i + 1}`" @click="designForm.videos.splice(i, 1)"><AppIcon name="trash" :size="15" /></button>
+              </div>
+              <div class="svc-meter" role="progressbar" :aria-valuenow="serviceUsage" aria-valuemin="0" aria-valuemax="100" aria-label="Cupo de servicios usado">
+                <span :style="{ width: serviceUsage + '%' }"></span>
+              </div>
+              <div class="grid-2 svc-grid">
+                <div class="card svc-form">
+                  <header class="svc-form-head">
+                    <h3><AppIcon :name="serviceEditing ? 'pencil' : 'plus'" :size="18" /> {{ serviceEditing ? 'Editar servicio' : 'Agregar un servicio' }}</h3>
+                    <p class="hint">Completá los campos: arriba ves una vista previa de cómo queda en tu web.</p>
+                  </header>
+                  <div class="svc-preview" :style="{ '--h': serviceHue(serviceForm.icon) }" aria-hidden="true">
+                    <span class="svc-ico"><AppIcon :name="serviceIcon(serviceForm.icon)" :size="22" /></span>
+                    <div>
+                      <strong>{{ serviceForm.name || 'Nombre del servicio' }}</strong>
+                      <small>{{ servicePriceLabel(serviceForm) }}<template v-if="serviceForm.duration"> · {{ serviceForm.duration }}</template></small>
+                    </div>
+                  </div>
+                  <div class="svc-group">
+                    <span class="svc-group-label">Qué ofrecés</span>
+                    <AppInput v-model="serviceForm.name" label="Nombre" icon="pencil" name="svc_name" placeholder="Ej. Reparación a domicilio" :error="serviceFieldErr('name')" @blur="serviceTouched.name = true" />
+                    <div class="field">
+                      <label for="svc-description"><AppIcon name="message-circle" :size="14" class="label-icon" aria-hidden="true" />Descripción corta <span class="svc-opt">opcional</span></label>
+                      <textarea id="svc-description" v-model="serviceForm.description" class="textarea" :class="{ invalid: serviceFieldErr('description') }" placeholder="Qué incluye o cómo se coordina" :maxlength="serviceLimits.description" rows="2" @blur="serviceTouched.description = true"></textarea>
+                      <p class="hint">{{ serviceForm.description.length }}/{{ serviceLimits.description }}</p>
+                      <p v-if="serviceFieldErr('description')" class="field-error" role="alert">{{ serviceFieldErr('description') }}</p>
+                    </div>
+                  </div>
+                  <div class="svc-group">
+                    <span class="svc-group-label">Precio y duración</span>
+                    <div class="grid-2">
+                      <AppInput v-model="serviceForm.price" label="Precio orientativo" icon="tag" name="svc_price" type="number" min="0" step="0.01" placeholder="Vacío = a convenir" :error="serviceFieldErr('price')" @blur="serviceTouched.price = true" />
+                      <AppInput v-model="serviceForm.duration" label="Duración estimada" icon="clock" name="svc_duration" placeholder="Ej. ≈ 45 min" :error="serviceFieldErr('duration')" @blur="serviceTouched.duration = true" />
+                    </div>
+                    <p class="hint">Si dejás el precio vacío, en tu web se muestra como «a convenir».</p>
+                  </div>
+                  <div class="svc-group">
+                    <span class="svc-group-label">Cómo se ve en tu web</span>
+                    <div class="grid-2">
+                      <div class="field">
+                        <label for="svc-icon"><AppIcon name="sparkles" :size="14" class="label-icon" aria-hidden="true" />Icono</label>
+                        <IconSelect id="svc-icon" v-model="serviceForm.icon" :options="serviceIconOptions" />
+                      </div>
+                      <div class="field">
+                        <label for="svc-active"><AppIcon name="eye" :size="14" class="label-icon" aria-hidden="true" />Visibilidad</label>
+                        <IconSelect id="svc-active" v-model="serviceForm.is_active" :options="serviceVisibilityOptions" />
+                      </div>
+                    </div>
+                  </div>
+                  <div class="btn-row">
+                    <AppButton :loading="serviceBusy" :disabled="!serviceEditing && services.limitReached" @click="saveService">{{ serviceEditing ? 'Guardar cambios' : 'Publicar servicio' }}</AppButton>
+                    <button v-if="serviceEditing" type="button" class="btn ghost btn-auto" @click="resetServiceForm">Cancelar</button>
+                  </div>
+                  <p v-if="services.limitReached" class="hint">Llegaste al máximo de {{ serviceLimits.max }} servicios por página.</p>
+                </div>
+
+                <div class="card svc-list-card">
+                  <header class="svc-list-head">
+                    <h3><AppIcon name="wrench" :size="18" /> Tus servicios</h3>
+                    <p class="hint">Aparecen en tu web en este orden.</p>
+                  </header>
+                  <div v-if="!services.items.length" class="empty-mini svc-empty">
+                    <span class="svc-empty-ico" aria-hidden="true"><AppIcon name="wrench" :size="26" /></span>
+                    <h4>Empezá tu carta de servicios</h4>
+                    <ul class="svc-empty-points">
+                      <li><AppIcon name="check" :size="14" aria-hidden="true" /> Mostrá qué hacés, con precio y duración</li>
+                      <li><AppIcon name="check" :size="14" aria-hidden="true" /> El cliente arma su presupuesto solo</li>
+                      <li><AppIcon name="check" :size="14" aria-hidden="true" /> El pedido te llega por WhatsApp</li>
+                    </ul>
+                    <button type="button" class="empty-mini-cta svc-empty-cta" @click="focusField('svc_name')"><AppIcon name="plus" :size="15" aria-hidden="true" /> Agregar mi primer servicio</button>
+                  </div>
+                  <ul v-else class="svc-list">
+                    <li v-for="(s, i) in services.items" :key="s.id" class="svc-card" :class="{ off: !s.is_active, editing: serviceEditing?.id === s.id }" :style="{ '--h': serviceHue(s.icon) }">
+                      <span class="svc-ico"><AppIcon :name="serviceIcon(s.icon)" :size="22" aria-hidden="true" /></span>
+                      <div class="svc-body">
+                        <div class="svc-title">
+                          <span class="svc-num">{{ String(i + 1).padStart(2, '0') }}</span>
+                          <strong>{{ s.name }}</strong>
+                        </div>
+                        <div class="svc-meta">
+                          <span><AppIcon name="tag" :size="13" aria-hidden="true" /> {{ servicePriceLabel(s) }}</span>
+                          <span v-if="s.duration"><AppIcon name="clock" :size="13" aria-hidden="true" /> {{ s.duration }}</span>
+                        </div>
+                        <p v-if="s.description" class="svc-desc">{{ s.description }}</p>
+                      </div>
+                      <div class="svc-side">
+                        <button type="button" class="svc-vis" :class="{ on: s.is_active }" role="switch" :aria-checked="s.is_active" :aria-label="s.is_active ? 'Ocultar servicio' : 'Mostrar servicio'" :title="s.is_active ? 'Ocultarlo en tu web' : 'Mostrarlo en tu web'" @click="services.toggleService(s)">
+                          <span class="svc-vis-track" aria-hidden="true"><i></i></span>
+                          <span class="svc-vis-text">{{ s.is_active ? 'Visible' : 'Oculto' }}</span>
+                        </button>
+                        <div class="svc-actions">
+                          <button type="button" class="icon-btn" aria-label="Subir" :disabled="i === 0" @click="moveService(s, -1)"><AppIcon name="chevron-up" :size="14" /></button>
+                          <button type="button" class="icon-btn" aria-label="Bajar" :disabled="i === services.items.length - 1" @click="moveService(s, 1)"><AppIcon name="chevron-down" :size="14" /></button>
+                          <button type="button" class="icon-btn" aria-label="Editar servicio" title="Editar" @click="editService(s)"><AppIcon name="pencil" :size="15" /></button>
+                          <button type="button" class="icon-btn danger" aria-label="Eliminar servicio" title="Eliminar" @click="removeService(s)"><AppIcon name="trash" :size="15" /></button>
+                        </div>
+                      </div>
+                    </li>
+                  </ul>
                 </div>
               </div>
-            </div>
-            <div v-else class="mk-empty"><AppIcon name="inbox" :size="16" /><span>Todavía no cargaste videos.</span></div>
-            <button type="button" class="btn ghost btn-auto mk-add" :disabled="(designForm.videos || []).length >= videosCap" @click="addRow(designForm.videos, videosCap, '')">
-              <AppIcon name="plus" :size="15" /> Agregar video
-            </button>
-            <p class="hint">YouTube, Vimeo, TikTok, Instagram o Facebook. Tu plan admite hasta {{ videosCap }} videos.</p>
-          </div>
-          <div class="field" :class="{ locked: !canLiveStream }">
-            <AppInput v-model="designForm.live_stream_url" label="Link del stream en vivo" name="company_live_stream_url" placeholder="Link del stream (YouTube, Facebook) o de tu canal de Twitch" hint="Con un link cargado aparece el botón «Transmitiendo en vivo» en tu portada: al tocarlo se abre el stream en un modal. Disponible en el plan Premium." maxlength="300" />
-          </div>
-          <AppInput v-model="designForm.video_title" label="Título de la sección" name="company_video_title" placeholder="Mirá nuestro video" hint="Vacío: se muestra 'Mirá nuestro video'." maxlength="80" />
-          <p class="hint">Aparece en un orden fijo entre las secciones de tu página.</p>
-          <p v-if="companyErrs.video" class="field-error" role="alert">{{ companyErrs.video }}</p>
-          <div class="btn-row">
-            <AppButton :loading="companyBusy" @click="saveVideo">Guardar sección</AppButton>
-          </div>
-        </div>
 
-        <!-- ===== Contacto y redes (WhatsApp, redes, email público y mapa) ===== -->
-        <div v-show="mkOpen === 'contact'" class="card mk-card">
-          <h3><AppIcon name="phone" :size="18" /> Contacto y redes</h3>
-          <p class="mk-tip"><AppIcon name="info" :size="15" /><span>Cómo te escriben tus clientes: el botón de WhatsApp, tus redes y la sección de contacto al final de la página.</span></p>
-          <AppInput v-model="designForm.whatsapp" label="WhatsApp" name="company_whatsapp" type="tel" placeholder="+5493871551234" hint="Número con código de país. Los botones «Escribime» de tu web abren este chat. Vacío: no hay botón." :error="designFieldErr('whatsapp')" @blur="designTouched.whatsapp = true" />
-          <div class="grid-2">
-            <AppInput v-model="designForm.instagram" label="Instagram" name="company_instagram" placeholder="tunegocio" hint="Solo el usuario, sin «@»." :error="designFieldErr('instagram')" @blur="designTouched.instagram = true" />
-            <AppInput v-model="designForm.tiktok" label="TikTok" name="company_tiktok" placeholder="tunegocio" hint="Solo el usuario, sin «@»." :error="designFieldErr('tiktok')" @blur="designTouched.tiktok = true" />
-          </div>
-          <AppInput v-model="designForm.facebook" label="Facebook" name="company_facebook" placeholder="tunegocio o link de tu página" hint="El nombre de tu página o tu usuario." :error="designFieldErr('facebook')" @blur="designTouched.facebook = true" />
-          <AppInput v-model="designForm.contact_email" label="Email de contacto público" name="company_contact_email" type="email" placeholder="hola@tunegocio.com" hint="Los mensajes del formulario de contacto llegan acá. Vacío: llegan al email de tu cuenta." :error="designFieldErr('contact_email')" @blur="designTouched.contact_email = true" />
-          <div class="check-list">
-            <label class="check-item">
-              <input v-model="designForm.show_contact" type="checkbox" />
-              <span class="check-text">
-                <strong>Mostrar sección de contacto</strong>
-                <small>El formulario «Escribinos» al final de tu página. Se oculta sola si no hay datos de contacto.</small>
-              </span>
-            </label>
-            <label class="check-item" :class="{ disabled: !canLocationMap }">
-              <input v-model="designForm.show_location" type="checkbox" :disabled="!canLocationMap" />
-              <span class="check-text">
-                <strong>Mostrar mapa de ubicación <span v-if="!canLocationMap" class="lock-badge"><AppIcon name="lock" :size="11" :stroke="2" /> Plan Estándar en adelante</span></strong>
-                <small>Tu domicilio en un mapa dentro de la sección de contacto.</small>
-              </span>
-            </label>
-          </div>
-          <div class="btn-row">
-            <AppButton :loading="companyBusy" @click="saveContact">Guardar información</AppButton>
-          </div>
-        </div>
+              <div class="card">
+                <h3><AppIcon name="wrench" :size="18" /> Tu página de servicios</h3>
+                <p class="lead">Ajustá cómo pide los datos el formulario y qué leen tus clientes junto al presupuesto.</p>
+                <section class="svc-block">
+                  <header class="svc-block-head" style="--h: 250">
+                    <span class="svc-block-ico"><AppIcon name="checklist" :size="18" aria-hidden="true" /></span>
+                    <div>
+                      <h4 id="svc-steps-label">Cómo funciona</h4>
+                      <p>Los pasos que ve tu cliente antes de pedir. Hasta {{ servicePageLimits.steps }}; sin pasos se usan unos por defecto.</p>
+                    </div>
+                    <span class="svc-count">{{ (designForm.service_steps || []).length }}/{{ servicePageLimits.steps }}</span>
+                  </header>
+                  <ul v-if="(designForm.service_steps || []).length" class="feat-rows" aria-labelledby="svc-steps-label">
+                    <li v-for="(row, i) in designForm.service_steps" :key="i" class="feat-row svc-step-row">
+                      <IconSelect v-model="row.icon" :id="`svc-step-icon-${i}`" class="svc-step-icon" :options="serviceIconOptions" :aria-label="`Icono del paso ${i + 1}`" />
+                      <input v-model="row.title" class="input" type="text" :maxlength="servicePageLimits.stepTitle" placeholder="Título (ej. Confirmamos por WhatsApp)" :aria-label="`Título del paso ${i + 1}`" />
+                      <input v-model="row.text" class="input" type="text" :maxlength="servicePageLimits.stepText" placeholder="Descripción breve" :aria-label="`Texto del paso ${i + 1}`" />
+                      <button type="button" class="icon-btn danger" aria-label="Quitar paso" @click="removeServiceStep(i)"><AppIcon name="trash" :size="15" /></button>
+                    </li>
+                  </ul>
+                  <button type="button" class="btn ghost btn-auto" :disabled="(designForm.service_steps || []).length >= servicePageLimits.steps" @click="addServiceStep"><AppIcon name="plus" :size="15" /> Agregar paso</button>
+                </section>
 
-        <!-- ===== Extras (aviso del catálogo + texto del pie) ===== -->
-        <div v-show="mkOpen === 'extras'" class="card mk-card">
-          <h3><AppIcon name="plus" :size="18" /> Extras</h3>
-          <p class="mk-tip"><AppIcon name="info" :size="15" /><span>Dos detalles finales: un aviso arriba del catálogo y una frase al pie de tu página.</span></p>
-          <AppInput v-model="designForm.catalog_note" label="Aviso del catálogo" name="company_catalog_note" placeholder="Ej. Envíos a todo el país · Aceptamos todos los medios de pago" hint="Tira informativa que aparece arriba de tu página de catálogo. Vacío: no se muestra." maxlength="160" />
-          <AppInput v-model="designForm.footer_text" label="Frase del pie" name="company_footer_text" placeholder="Ej. Tienda familiar desde 1998" hint="Línea extra al final de tu web, debajo del copyright. Vacío: no se muestra." maxlength="160" />
-          <p v-if="companyErrs.extras" class="field-error" role="alert">{{ companyErrs.extras }}</p>
-          <div class="btn-row">
-            <AppButton :loading="companyBusy" @click="saveExtras">Guardar sección</AppButton>
-          </div>
-        </div>
+                <section class="svc-block">
+                  <header class="svc-block-head" style="--h: 195">
+                    <span class="svc-block-ico"><AppIcon name="calendar" :size="18" aria-hidden="true" /></span>
+                    <div>
+                      <h4>Cuándo atendés</h4>
+                      <p>Escribí y presioná Enter, o tocá una sugerencia. Si lo dejás vacío, la página propone opciones genéricas.</p>
+                    </div>
+                  </header>
+                  <div class="grid-2">
+                    <div v-for="f in [{ k: 'service_days', label: 'Días que ofrecés', icon: 'calendar', ph: 'Ej. Sábado' }, { k: 'service_slots', label: 'Franjas horarias', icon: 'clock', ph: 'Ej. 9 a 12 h' }]" :key="f.k" class="field">
+                      <label :for="`chip-${f.k}`">{{ f.label }} <span class="svc-count">{{ (designForm[f.k] || []).length }}/{{ chipMax(f.k) }}</span></label>
+                      <div class="svc-chips" @click="$refs[`chip_${f.k}`]?.[0]?.focus()">
+                        <span v-for="(c, i) in designForm[f.k] || []" :key="c" class="svc-chip">
+                          <AppIcon :name="f.icon" :size="12" aria-hidden="true" /> {{ c }}
+                          <button type="button" :aria-label="`Quitar ${c}`" @click.stop="removeServiceChip(f.k, i)"><AppIcon name="x" :size="12" /></button>
+                        </span>
+                        <input :id="`chip-${f.k}`" :ref="`chip_${f.k}`" v-model="serviceChipDraft[f.k]" type="text" class="svc-chip-input" :maxlength="servicePageLimits.day" :placeholder="(designForm[f.k] || []).length ? 'Agregar otro…' : f.ph" :disabled="(designForm[f.k] || []).length >= chipMax(f.k)" @keydown="onChipKey($event, f.k)" @blur="addServiceChip(f.k)" />
+                      </div>
+                      <div class="svc-sugg">
+                        <button v-for="sg in SERVICE_CHIP_SUGGESTIONS[f.k].filter((x) => !(designForm[f.k] || []).includes(x))" :key="sg" type="button" @click="addServiceChip(f.k, sg)"><AppIcon name="plus" :size="11" aria-hidden="true" /> {{ sg }}</button>
+                      </div>
+                    </div>
+                  </div>
+                </section>
 
-            </div>
-          </div>
-        </div>
-      </template>
-      <div v-else class="empty">
-        <span class="empty-icon"><AppIcon name="lock" :size="28" /></span>
-        <h3>El contenido de tu empresa viene con tu plan</h3>
-        <p>Activá una suscripción para completar las secciones de marketing de tu página pública.</p>
-        <button class="btn btn-auto" @click="section = 'plans'">Ver planes</button>
-      </div>
-    </div>
-    <!-- ================= MIS FOTOS ================= -->
-    <div v-if="seen.photos" v-show="section === 'photos'" :class="{ 'sec-on': section === 'photos' }">
-      <div class="page-head">
-        <div>
-          <h1>Mis fotos</h1>
-          <p>El logo, la portada y las imágenes que se ven en tu página.</p>
-        </div>
-        <button class="btn ghost btn-auto" @click="openStore"><AppIcon name="external-link" :size="16" /> Ver mi página</button>
-      </div>
-      <SectionTabs :tabs="tabGroups.web" active="photos" @select="section = $event" />
+                <section class="svc-block">
+                  <header class="svc-block-head" style="--h: 330">
+                    <span class="svc-block-ico"><AppIcon name="message-circle" :size="18" aria-hidden="true" /></span>
+                    <div>
+                      <h4>Datos y mensajes</h4>
+                      <p>Qué te pide el formulario y qué aclaraciones lee el cliente junto al presupuesto.</p>
+                    </div>
+                  </header>
+                  <label class="svc-switch">
+                    <input v-model="designForm.service_ask_address" type="checkbox" role="switch" />
+                    <span class="svc-switch-track" aria-hidden="true"><i></i></span>
+                    <span class="check-text">
+                      <strong>Pedir dirección en el pedido</strong>
+                      <small>Útil si trabajás a domicilio. Si no lo necesitás, el formulario la omite.</small>
+                    </span>
+                  </label>
+                  <div class="grid-2">
+                    <AppInput v-model="designForm.service_price_note" label="Nota de precios" name="svc_price_note" placeholder="Ej. El valor final se confirma al ver el trabajo" />
+                    <AppInput v-model="designForm.service_pay_note" label="Nota de pago" name="svc_pay_note" placeholder="Ej. Se paga en persona: efectivo, débito o transferencia" />
+                  </div>
+                </section>
 
-      <AlertMessage v-if="store.notice" kind="success" :message="store.notice" />
-      <AlertMessage v-if="store.lastError" kind="error" :message="store.lastError" />
-
-      <template v-if="canCustomize">
-        <div class="photos-grid">
-        <div class="card">
-          <h3><AppIcon name="store" :size="18" /> Logo</h3>
-          <div class="logo-box">
-            <span class="logo-thumb">
-              <img v-if="currentLogo" :src="currentLogo" alt="Logo de tu negocio" />
-              <AppIcon v-else name="image" :size="22" />
-            </span>
-            <div class="logo-actions">
-              <AppButton type="button" class="btn-auto" :loading="logoBusy" @click="logoInput?.click()"><AppIcon name="upload" :size="15" /> {{ currentLogo ? 'Cambiar' : 'Subir logo' }}</AppButton>
-              <button v-if="currentLogo" type="button" class="btn ghost btn-auto" :disabled="logoBusy" @click="onRemoveLogo"><AppIcon name="trash" :size="15" /> Quitar</button>
-            </div>
-          </div>
-          <input ref="logoInput" type="file" class="sr-only" :accept="LOGO_ACCEPT_TYPES" aria-label="Subir logo" @change="onLogoPicked" />
-          <p class="hint">Aparece arriba de todo en tu web. PNG o JPG de hasta 4 MB.</p>
-          <p v-if="logoErr" class="field-error" role="alert">{{ logoErr }}</p>
-        </div>
-
-        <div class="card">
-          <h3><AppIcon name="image" :size="18" /> Foto de portada</h3>
-          <div class="cover-box">
-            <span class="cover-thumb" :class="{ empty: !currentCover }">
-              <img v-if="currentCover" :src="currentCover" alt="Foto de portada" />
-              <AppIcon v-else name="image" :size="22" />
-            </span>
-            <div class="logo-actions">
-              <AppButton type="button" class="btn-auto" :loading="coverBusy" @click="coverInput?.click()"><AppIcon name="upload" :size="15" /> {{ currentCover ? 'Cambiar' : 'Subir portada' }}</AppButton>
-              <button v-if="currentCover" type="button" class="btn ghost btn-auto" :disabled="coverBusy" @click="onRemoveCover"><AppIcon name="trash" :size="15" /> Quitar</button>
-            </div>
-          </div>
-          <input ref="coverInput" type="file" class="sr-only" :accept="LOGO_ACCEPT_TYPES" aria-label="Subir foto de portada" @change="onCoverPicked" />
-          <p class="hint">La foto grande al entrar a tu web. Horizontal, hasta 4 MB.</p>
-          <p v-if="coverErr" class="field-error" role="alert">{{ coverErr }}</p>
-        </div>
-
-        <div class="card">
-          <h3><AppIcon name="images" :size="18" /> Carrusel de portada</h3>
-          <div class="carousel-box">
-            <div v-for="(img, i) in carouselImages" :key="img.id" class="carousel-thumb">
-              <img :src="img.url" :alt="`Imagen ${i + 1} del carrusel`" />
-              <div class="carousel-thumb-actions">
-                <button type="button" class="icon-btn" aria-label="Mover a la izquierda" :disabled="i === 0 || carouselBusy" @click="onMoveCarousel(img.id, -1)"><AppIcon name="chevron-left" :size="13" /></button>
-                <button type="button" class="icon-btn" aria-label="Mover a la derecha" :disabled="i === carouselImages.length - 1 || carouselBusy" @click="onMoveCarousel(img.id, 1)"><AppIcon name="chevron-right" :size="13" /></button>
-                <button type="button" class="icon-btn danger" aria-label="Eliminar imagen" :disabled="carouselBusy" @click="onRemoveCarousel(img.id)"><AppIcon name="trash" :size="13" /></button>
+                <p v-if="companyErrs.servicePage" class="field-error" role="alert">{{ companyErrs.servicePage }}</p>
+                <div class="btn-row">
+                  <AppButton :loading="svcBusy" @click="saveServicePage">Guardar configuración</AppButton>
+                </div>
               </div>
+            </template>
+          </template>
+        </div>
+
+        <div v-if="seen.accounts" v-show="section === 'accounts'" class="web-scope" :class="{ 'sec-on': section === 'accounts' }">
+          <div class="page-head">
+            <div>
+              <h1>Acceso de clientes</h1>
+              <p>Tus compradores crean su cuenta en tu web e ingresan con email o Google.</p>
             </div>
-            <button
-              v-if="carouselImages.length < CAROUSEL_MAX_IMAGES"
-              type="button" class="carousel-add" :disabled="carouselBusy"
-              @click="carouselInput?.click()"
-            >
-              <span v-if="carouselBusy" class="spinner" aria-hidden="true"></span>
-              <AppIcon v-else name="images" :size="20" />
-              Agregar
-            </button>
           </div>
-          <input ref="carouselInput" type="file" class="sr-only" :accept="LOGO_ACCEPT_TYPES" aria-label="Agregar imagen al carrusel" @change="onCarouselPicked" />
-          <p class="hint">Hasta {{ CAROUSEL_MAX_IMAGES }} imágenes de 4 MB. Rotan como banners en tu portada.</p>
-          <p v-if="carouselErr" class="field-error" role="alert">{{ carouselErr }}</p>
+          <CustomerAuthPanel />
         </div>
 
-        <div class="card">
-          <h3><AppIcon name="layout-grid" :size="18" /> Galería</h3>
-          <div class="carousel-box">
-            <div v-for="(img, i) in galleryImages" :key="img.id" class="carousel-thumb">
-              <img :src="img.url" :alt="`Imagen ${i + 1} de la galería`" />
-              <div class="carousel-thumb-actions">
-                <button type="button" class="icon-btn" aria-label="Mover a la izquierda" :disabled="i === 0 || galleryBusy" @click="onMoveGallery(img.id, -1)"><AppIcon name="chevron-left" :size="13" /></button>
-                <button type="button" class="icon-btn" aria-label="Mover a la derecha" :disabled="i === galleryImages.length - 1 || galleryBusy" @click="onMoveGallery(img.id, 1)"><AppIcon name="chevron-right" :size="13" /></button>
-                <button type="button" class="icon-btn danger" aria-label="Eliminar imagen" :disabled="galleryBusy" @click="onRemoveGallery(img.id)"><AppIcon name="trash" :size="13" /></button>
-              </div>
-            </div>
-            <button
-              v-if="canAddGallery"
-              type="button" class="carousel-add" :disabled="galleryBusy"
-              @click="galleryInput?.click()"
-            >
-              <span v-if="galleryBusy" class="spinner" aria-hidden="true"></span>
-              <AppIcon v-else name="images" :size="20" />
-              Agregar
-            </button>
-          </div>
-          <input ref="galleryInput" type="file" class="sr-only" :accept="LOGO_ACCEPT_TYPES" aria-label="Agregar imagen a la galería" @change="onGalleryPicked" />
-          <p class="hint">{{ galleryHint }}</p>
-          <p v-if="galleryErr" class="field-error" role="alert">{{ galleryErr }}</p>
-        </div>
-
-        <div v-if="canDesignAdvanced || decorImages.length" class="card">
-          <h3><AppIcon name="sparkles" :size="18" /> Fotos decorativas</h3>
-          <div class="carousel-box">
-            <div v-for="(img, i) in decorImages" :key="img.id" class="carousel-thumb">
-              <img :src="img.url" :alt="`Imagen decorativa ${i + 1}`" />
-              <div class="carousel-thumb-actions">
-                <button type="button" class="icon-btn danger" aria-label="Eliminar imagen" :disabled="galleryBusy" @click="onRemoveGallery(img.id)"><AppIcon name="trash" :size="13" /></button>
-              </div>
-            </div>
-            <button
-              v-if="canAddDecor"
-              type="button" class="carousel-add" :disabled="galleryBusy"
-              @click="decorInput?.click()"
-            >
-              <span v-if="galleryBusy" class="spinner" aria-hidden="true"></span>
-              <AppIcon v-else name="images" :size="20" />
-              Agregar
-            </button>
-          </div>
-          <input ref="decorInput" type="file" class="sr-only" :accept="LOGO_ACCEPT_TYPES" aria-label="Agregar imagen decorativa" @change="onDecorPicked" />
-          <p class="hint">Hasta {{ DECOR_MAX_IMAGES }} fotos que ilustran tu portada. Comparten el cupo de la galería. <span v-if="!canDesignAdvanced" class="lock-badge"><AppIcon name="lock" :size="11" :stroke="2" /> Premium</span></p>
-        </div>
-        </div>
-      </template>
-      <div v-else class="empty">
-        <span class="empty-icon"><AppIcon name="lock" :size="28" /></span>
-        <h3>Las fotos de tu web vienen con tu plan</h3>
-        <p>Activá una suscripción para subir el logo, la portada y tu galería.</p>
-        <button class="btn btn-auto" @click="section = 'plans'">Ver planes</button>
       </div>
-    </div>
-    <!-- ================= VENDER ONLINE (e-commerce del dueño) ================= -->
-    <SellingHub
-      v-if="seen.selling"
-      v-show="section === 'selling'"
-      class="web-scope"
-      :class="{ 'sec-on': section === 'selling' }"
-      :tabs="tabGroups.selling"
-      :locks="navLocks"
-      @select="section = $event"
-    />
-
-    <!-- ================= PEDIDOS ================= -->
-    <div v-if="seen.orders" v-show="section === 'orders'" class="web-scope" :class="{ 'sec-on': section === 'orders' }">
-      <div class="page-head">
-        <div>
-          <h1>Pedidos</h1>
-          <p>Todo lo que te compraron: del pago a la entrega.</p>
-        </div>
-      </div>
-      <SectionTabs :tabs="tabGroups.selling" active="orders" @select="section = $event" />
-      <OrdersPanel />
-    </div>
-
-    <!-- ================= VENTAS ================= -->
-    <div v-if="seen.sales" v-show="section === 'sales'" class="web-scope" :class="{ 'sec-on': section === 'sales' }">
-      <div class="page-head">
-        <div>
-          <h1>Ventas</h1>
-          <p>Cuánto vendiste en el período, por día, método de pago y estado.</p>
-        </div>
-      </div>
-      <SectionTabs :tabs="tabGroups.selling" active="sales" @select="section = $event" />
-      <SalesPanel />
-    </div>
-
-    <!-- ================= CLIENTES ================= -->
-    <div v-if="seen.customers" v-show="section === 'customers'" class="web-scope" :class="{ 'sec-on': section === 'customers' }">
-      <div class="page-head">
-        <div>
-          <h1>Clientes</h1>
-          <p>Compradores y miembros de tu tienda, con su historial de compras.</p>
-        </div>
-      </div>
-      <SectionTabs :tabs="tabGroups.selling" active="customers" @select="section = $event" />
-      <CustomersPanel />
-    </div>
-
-    <!-- ================= CONSULTAS DE CLIENTES ================= -->
-    <div v-if="seen.inquiries" v-show="section === 'inquiries'" class="web-scope" :class="{ 'sec-on': section === 'inquiries' }">
-      <div class="page-head">
-        <div>
-          <h1>Consultas de clientes</h1>
-          <p>Preguntas y mensajes que te dejan desde tu web.</p>
-        </div>
-      </div>
-      <SectionTabs :tabs="tabGroups.selling" active="inquiries" @select="section = $event" />
-      <BuyerSupportPanel />
-    </div>
-
-    <!-- ================= COBROS ================= -->
-    <div v-if="seen.payconfig" v-show="section === 'payconfig'" class="web-scope" :class="{ 'sec-on': section === 'payconfig' }">
-      <div class="page-head">
-        <div>
-          <h1>Cobros</h1>
-          <p>Venta online, métodos de pago, datos fiscales y Mercado Pago.</p>
-        </div>
-      </div>
-      <SectionTabs :tabs="tabGroups.selling" active="payconfig" @select="section = $event" />
-      <PaymentsConfigPanel @locked="openLocked('selling')" />
-    </div>
-
-    <!-- ================= LEGAL ================= -->
-    <div v-if="seen.legal" v-show="section === 'legal'" class="web-scope" :class="{ 'sec-on': section === 'legal' }">
-      <div class="page-head">
-        <div>
-          <h1>Páginas legales y devoluciones</h1>
-          <p>Términos, privacidad y devoluciones de tu web, más la bandeja de solicitudes.</p>
-        </div>
-      </div>
-      <SectionTabs :tabs="tabGroups.selling" active="legal" @select="section = $event" />
-      <LegalPagesPanel />
-    </div>
-
-    <!-- ================= MEMBRESÍAS ================= -->
-    <div v-if="seen.memberships" v-show="section === 'memberships'" class="web-scope" :class="{ 'sec-on': section === 'memberships' }">
-      <div class="page-head">
-        <div>
-          <h1>Membresías</h1>
-          <p>Planes que tus clientes pueden suscribir desde tu web.</p>
-        </div>
-      </div>
-      <SectionTabs :tabs="tabGroups.selling" active="memberships" @select="section = $event" />
-      <PlansPanel />
-    </div>
-
-    <!-- ================= SINCRONIZACIÓN ================= -->
-    <div v-if="seen.sync" v-show="section === 'sync'" class="web-scope" :class="{ 'sec-on': section === 'sync' }">
-      <div class="page-head">
-        <div>
-          <h1>Sincronización</h1>
-          <p>El estado de tu web y los cambios que quedaron por subir.</p>
-        </div>
-      </div>
-      <SectionTabs :tabs="tabGroups.selling" active="sync" @select="section = $event" />
-      <SyncPanel />
-    </div>
-
-    <!-- ================= ACCESO DE CLIENTES (plan Ecommerce) ================= -->
-    <div v-if="seen.accounts" v-show="section === 'accounts'" class="web-scope" :class="{ 'sec-on': section === 'accounts' }">
-      <div class="page-head">
-        <div>
-          <h1>Acceso de clientes</h1>
-          <p>Tus compradores crean su cuenta en tu web e ingresan con email o Google.</p>
-        </div>
-      </div>
-      <CustomerAuthPanel />
-    </div>
-
-    <!-- ================= ESTADÍSTICAS (premium) ================= -->
-    <div v-if="seen.stats" v-show="section === 'stats'" class="promo-sec promo-stats" :class="{ 'sec-on': section === 'stats' }">
-      <div class="page-head">
-        <div>
-          <h1>Mis visitas</h1>
-          <p>Cuánta gente entró a tu página web.</p>
-        </div>
-      </div>
-      <SectionTabs :tabs="tabGroups.promo" active="stats" @select="section = $event" />
-
-      <template v-if="store.visitStats">
-        <div class="stats">
-          <div class="stat"><span class="stat-icon"><AppIcon name="eye" :size="20" /></span><div><strong>{{ store.visitStats.total }}</strong><small>Visitas totales</small></div></div>
-          <div class="stat"><span class="stat-icon"><AppIcon name="trending-up" :size="20" /></span><div><strong>{{ store.visitStats.today }}</strong><small>Visitas hoy</small></div></div>
-          <div class="stat"><span class="stat-icon"><AppIcon name="calendar" :size="20" /></span><div><strong>{{ visitAvg }}</strong><small>Promedio por día (último mes)</small></div></div>
-        </div>
-        <div class="card">
-          <h3><AppIcon name="trending-up" :size="18" /> Visitas de los últimos 30 días</h3>
-          <div v-if="visitHasData" class="stats-chart" role="img" aria-label="Visitas por día">
-            <span
-              v-for="d in visitDays" :key="d.date" class="stats-bar"
-              :class="{ today: d.date === visitDays[visitDays.length - 1]?.date }"
-              :style="{ height: `${Math.max(2, (d.count / visitMax) * 100)}%` }"
-              :title="`${d.date}: ${d.count} visita${d.count === 1 ? '' : 's'}`"
-            ></span>
-          </div>
-          <div v-if="visitHasData" class="stats-chart-axis"><span>{{ visitDays[0]?.date?.slice(5) }}</span><span>{{ visitDays[visitDays.length - 1]?.date?.slice(5) }}</span></div>
-          <div v-else class="stats-empty">
-            <span class="stats-empty-icon"><AppIcon name="eye" :size="24" /></span>
-            <strong>Todavía no hay visitas este mes</strong>
-            <p>Cuando alguien abra tu página lo vas a ver acá, día por día.</p>
-            <button type="button" class="btn btn-auto" @click="shareWhatsApp"><AppIcon name="phone" :size="16" /> Compartir mi página</button>
-          </div>
-          <p v-if="visitHasData" class="hint">Cada barra es un día; cuanto más alta, más visitas. Contamos una visita por persona por día.</p>
-        </div>
-      </template>
-      <div v-else class="empty">
-        <span class="empty-icon"><AppIcon name="trending-up" :size="28" /></span>
-        <h3>Todavía nadie visitó tu página</h3>
-        <p>Compartí tu dirección web con tus clientes: apenas alguien entre, lo vas a ver acá.</p>
-        <button class="btn btn-auto" @click="copyLink"><AppIcon name="copy" :size="16" /> Copiar mi dirección</button>
-      </div>
-    </div>
-    <!-- ================= QR Y FOLLETOS (premium) ================= -->
-    <div v-if="seen.tools" v-show="section === 'tools'" class="promo-sec promo-tools" :class="{ 'sec-on': section === 'tools' }">
-      <div class="page-head">
-        <div>
-          <h1>QR y folletos</h1>
-          <p>Material listo para imprimir o compartir, para que más gente llegue a tu página.</p>
-        </div>
-        <button class="btn ghost btn-auto" @click="openStore"><AppIcon name="external-link" :size="16" /> Ver mi página</button>
-      </div>
-      <SectionTabs :tabs="tabGroups.promo" active="tools" @select="section = $event" />
-
-      <div class="tools-hero">
-        <span class="tools-hero-icon"><AppIcon name="megaphone" :size="26" /></span>
-        <div>
-          <strong>Llevá tu tienda al mundo real</strong>
-          <p>Un QR en la vidriera, un folleto en la mano: cada impreso es un cliente más que entra a tu página.</p>
-        </div>
-        <span v-if="visitDays.length && canStats" class="tools-hero-chip"><AppIcon name="eye" :size="14" /> {{ store.visitStats?.total ?? 0 }} visitas</span>
-      </div>
-
-      <nav class="dsg-tabs tools-tabs" role="tablist" aria-label="Herramientas">
-        <button type="button" role="tab" class="dsg-tab" :class="{ active: toolsTab === 'ready' }" :aria-selected="toolsTab === 'ready'" @click="toolsTab = 'ready'"><AppIcon name="qr-code" :size="15" /> QR y folleto rápido</button>
-        <button v-if="canFlyers" type="button" role="tab" class="dsg-tab" :class="{ active: toolsTab === 'studio' }" :aria-selected="toolsTab === 'studio'" @click="toolsTab = 'studio'"><AppIcon name="sparkles" :size="15" /> Diseñá tu folleto <span class="tools-new">Nuevo</span></button>
-        <button v-if="canFlyers" type="button" role="tab" class="dsg-tab" :class="{ active: toolsTab === 'editor', locked: !canFlyerEditor }" :aria-selected="toolsTab === 'editor'" @click="canFlyerEditor ? toolsTab = 'editor' : openLocked('flyer_editor')"><AppIcon name="pen-tool" :size="15" /> Editor libre <span v-if="canFlyerEditor" class="tools-new">Nuevo</span><AppIcon v-else name="lock" :size="13" /></button>
-      </nav>
-
-      <div v-show="toolsTab === 'ready'" class="grid-2 tools-grid">
-        <div v-if="canQr" class="card tools-card">
-          <h3><AppIcon name="qr-code" :size="18" /> Tu código QR</h3>
-          <p>Quien lo escanee con el celular entra directo a tu página. Pegalo en tu vidriera, mostrador o paquetes.</p>
-          <div class="qr-stage">
-            <div v-if="qrDataUrl" class="qr-frame"><i></i><i></i><i></i><i></i><img :src="qrDataUrl" alt="Código QR de tu tienda" /></div>
-            <span v-else class="spinner spinner-brand" aria-hidden="true"></span>
-          </div>
-          <button type="button" class="qr-link" title="Copiar dirección" @click="copyLink"><AppIcon name="external-link" :size="14" /> <span>{{ publicUrl.replace(/^https?:\/\//, '') }}</span> <AppIcon name="copy" :size="14" /></button>
-          <ul class="tools-tips">
-            <li><AppIcon name="store" :size="15" /> Vidriera o puerta del local</li>
-            <li><AppIcon name="package" :size="15" /> Bolsas, cajas y paquetes</li>
-            <li><AppIcon name="receipt" :size="15" /> Tickets y tarjetas personales</li>
-          </ul>
-          <div class="btn-row">
-            <button class="btn btn-auto" :disabled="!qrDataUrl" @click="downloadQr"><AppIcon name="download" :size="16" /> Descargar QR</button>
-            <button class="btn ghost btn-auto" @click="copyLink"><AppIcon name="copy" :size="16" /> Copiar dirección</button>
-          </div>
-        </div>
-        <div v-if="canFlyers" class="card tools-card">
-          <h3><AppIcon name="file-text" :size="18" /> Folleto rápido</h3>
-          <p>Un folleto a color con tu logo, tus productos, tu contacto y el QR, armado solo. Salen 4 por hoja: imprimilos, cortalos y repartilos (o guardalos como PDF).</p>
-          <div class="flyer-mini" aria-hidden="true">
-            <span class="flyer-mini-top"><i></i><b></b></span>
-            <span class="flyer-mini-lines"><b></b><b></b><b></b></span>
-            <span class="flyer-mini-prods"><i></i><i></i><i></i></span>
-            <span class="flyer-mini-foot"><i></i><b></b></span>
-          </div>
-          <div class="btn-row">
-            <button class="btn btn-auto" @click="openFlyer"><AppIcon name="printer" :size="16" /> Generar folleto</button>
-            <button class="btn ghost btn-auto" @click="toolsTab = 'studio'"><AppIcon name="sparkles" :size="16" /> Quiero diseñarlo yo</button>
-          </div>
-        </div>
-      </div>
-
-      <FlyerStudio
-        v-if="canFlyers && toolsTab === 'studio'"
-        :slug="store.store?.slug || ''"
-        :shop-name="designShopName"
-        :logo="currentLogo"
-        :qr="qrDataUrl"
-        :url="publicUrl"
-        :contact="designForm.whatsapp || auth.user?.profile?.phone || ''"
-        :can-add-gallery="canAddGallery"
-        @print="openFlyer(true)"
-      />
-
-      <FlyerEditor
-        v-if="canFlyerEditor && toolsTab === 'editor'"
-        :slug="store.store?.slug || ''"
-        :shop-name="designShopName"
-        :logo="currentLogo"
-        :qr="qrDataUrl"
-        :url="publicUrl"
-        :can-add-gallery="canAddGallery"
-        @print="openFlyer('2')"
-      />
     </div>
 
     <!-- ================= VENTA EN LOCAL (próximamente) ================= -->
@@ -7172,7 +7286,7 @@ async function changePassword() {
               <AppIcon name="lock" :size="12" />
               <span v-if="lockedFeature.reason === 'expired'">Tu plan venció — renová para volver a usarla</span>
               <span v-else-if="lockedFeature.reason === 'none'">Elegí un plan para usarla</span>
-              <span v-else>Disponible en {{ lockedFeature.planName || 'planes superiores' }}</span>
+              <span v-else>Disponible en {{ lockedFeature.plans?.length ? lockedFeature.plans.join(' · ') : 'planes superiores' }}</span>
             </p>
             <h3>{{ lockedFeature.title }}</h3>
             <p class="lock-text">{{ lockedFeature.text }}</p>

@@ -468,5 +468,5 @@
   .app .web-scope .sec-tab:hover { transform: none; }
 }
 
-/* El hub "Vender online" vive en components/dashboard/SellingHub.vue y sus
-   estilos en dash-redesign/sell.css (este bloque reemplazó a .sell-entry). */
+/* "Mi tienda" (ex "Vender online") es un rail propio sobre .sell-shell; sus
+   estilos viven en dash-redesign/sell.css. */

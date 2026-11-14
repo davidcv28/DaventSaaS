@@ -1,281 +1,8 @@
-/* ===== dash-redesign/sell — Hub "Vender online" (e-commerce del dueño) =====
+/* ===== dash-redesign/sell — Rail de áreas (Mi tienda + Mi página) =====
    Modo Operate: superficies planas, hairlines --line-soft, un solo acento
    --brand-500/--brand-ink, cero gradientes/glow/sombras en reposo.
-   Scope: .app .sell-hub — DashboardView le pasa web-scope + sec-on al root
-   del componente por fallthrough de attrs (misma mecánica que las demás
-   secciones del panel). */
-
-/* ---------- Header ---------- */
-.app .sell-hub .sell-head { margin-bottom: 18px; }
-.app .sell-hub .sell-head-actions { flex: none; }
-
-/* ---------- Tira de estado de la tienda ---------- */
-.app .sell-hub .sell-status {
-  display: flex;
-  align-items: center;
-  flex-wrap: wrap;
-  gap: 12px;
-  margin: 0 0 24px;
-  padding: 13px 16px;
-  background: var(--card);
-  border: 1px solid var(--line-soft);
-  border-radius: 14px;
-  box-shadow: var(--shadow-sm);
-}
-.app .sell-hub .sell-status-ico {
-  flex: none;
-  display: grid;
-  place-items: center;
-  width: 40px;
-  height: 40px;
-  border-radius: 11px;
-  background: var(--surface);
-  border: 1px solid var(--line-soft);
-  color: var(--brand-ink);
-}
-.app .sell-hub .sell-status-txt {
-  flex: 1 1 200px;
-  min-width: 0;
-  display: grid;
-  gap: 2px;
-}
-.app .sell-hub .sell-status-txt strong {
-  font-size: 14px;
-  font-weight: 650;
-  letter-spacing: -.01em;
-  color: var(--ink);
-}
-.app .sell-hub .sell-status-txt > span:not(.sell-url) {
-  font-size: 13px;
-  color: var(--muted);
-}
-.app .sell-hub .sell-url {
-  font-family: var(--dv-mono, ui-monospace, 'Cascadia Code', Consolas, monospace);
-  font-size: 12.5px;
-  font-weight: 600;
-  color: var(--ink-2);
-  overflow-wrap: anywhere;
-  font-variant-numeric: tabular-nums;
-}
-.app .sell-hub .sell-status-actions { display: flex; gap: 8px; flex: none; }
-.app .sell-hub .sell-status-actions .icon-btn.done {
-  border-color: var(--ok-line);
-  color: var(--ok-ink);
-}
-
-/* ---------- Grupos de módulos ---------- */
-.app .sell-hub .sell-group + .sell-group { margin-top: 24px; }
-.app .sell-hub .sell-group-head {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  margin: 0 4px 12px;
-}
-.app .sell-hub .sell-group-ico {
-  flex: none;
-  display: grid;
-  place-items: center;
-  width: 30px;
-  height: 30px;
-  border-radius: 9px;
-  background: var(--surface);
-  border: 1px solid var(--line-soft);
-  color: var(--brand-ink);
-}
-.app .sell-hub .sell-group-txt {
-  min-width: 0;
-  display: grid;
-  gap: 2px;
-}
-.app .sell-hub .sell-group-head h2 {
-  margin: 0;
-  font-size: 13.5px;
-  font-weight: 700;
-  letter-spacing: -.01em;
-  color: var(--ink);
-}
-.app .sell-hub .sell-group-head p {
-  margin: 0;
-  font-size: 12.5px;
-  color: var(--muted);
-}
-
-.app .sell-hub .sell-mod-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
-  gap: 12px;
-}
-.app .sell-hub .sell-mod {
-  --t-bg: var(--brand-soft);
-  --t-line: var(--brand-soft-line);
-  --t-ink: var(--brand-ink);
-  position: relative;
-  display: flex;
-  align-items: center;
-  gap: 13px;
-  width: 100%;
-  min-height: 72px;
-  padding: 14px 16px;
-  border: 1px solid var(--line-soft);
-  border-radius: 14px;
-  background: var(--card);
-  box-shadow: var(--shadow-sm);
-  font: inherit;
-  text-align: left;
-  color: var(--ink-2);
-  cursor: pointer;
-  transition: border-color .15s var(--ease-out), background-color .15s var(--ease-out),
-              transform .15s var(--ease-out);
-}
-.app .sell-hub .sell-mod.tone-ok { --t-bg: var(--ok-bg); --t-line: var(--ok-line); --t-ink: var(--ok-ink); }
-.app .sell-hub .sell-mod.tone-info { --t-bg: var(--info-bg); --t-line: var(--info-line); --t-ink: var(--info-ink); }
-.app .sell-hub .sell-mod.tone-warn { --t-bg: var(--warn-bg); --t-line: var(--warn-line); --t-ink: var(--warn-ink); }
-.app .sell-hub .sell-mod-ico {
-  flex: none;
-  display: grid;
-  place-items: center;
-  width: 42px;
-  height: 42px;
-  border-radius: 12px;
-  background: var(--t-bg);
-  border: 1px solid var(--t-line);
-  color: var(--t-ink);
-}
-.app .sell-hub .sell-mod-txt {
-  flex: 1;
-  min-width: 0;
-  display: grid;
-  gap: 2px;
-}
-.app .sell-hub .sell-mod-txt strong {
-  font-size: 14.5px;
-  font-weight: 650;
-  letter-spacing: -.01em;
-  color: var(--ink);
-}
-.app .sell-hub .sell-mod-txt small {
-  font-size: 12.5px;
-  line-height: 1.35;
-  color: var(--muted);
-}
-.app .sell-hub .sell-mod-go {
-  flex: none;
-  color: var(--muted);
-  transition: color .15s var(--ease-out), transform .15s var(--ease-out);
-}
-/* Bloqueado: navega igual (abre la vista previa del beneficio); el candado lo delata. */
-.app .sell-hub .sell-mod.locked .sell-mod-ico { filter: grayscale(.7); opacity: .8; }
-.app .sell-hub .sell-mod.locked .sell-mod-txt strong { color: var(--ink-2); }
-.app .sell-hub .sell-mod-lock {
-  flex: none;
-  display: inline-flex;
-  align-items: center;
-  gap: 5px;
-  padding: 4px 10px;
-  border: 1px solid var(--warn-line);
-  border-radius: 99px;
-  background: var(--warn-bg);
-  color: var(--warn-ink);
-  font-size: 11.5px;
-  font-weight: 700;
-  white-space: nowrap;
-}
-
-@media (hover: hover) and (pointer: fine) {
-  .app .sell-hub .sell-mod:hover { border-color: var(--t-line); background: var(--surface); }
-  .app .sell-hub .sell-mod:hover .sell-mod-go { color: var(--t-ink); transform: translateX(2px); }
-}
-.app .sell-hub .sell-mod:active { background: var(--surface); }
-.app .sell-hub .sell-mod:focus-visible {
-  outline: 2px solid var(--brand-500);
-  outline-offset: 2px;
-}
-
-/* ---------- Modal "Compartí tu tienda" ---------- */
-.app .sell-hub .mk-modal.sell-share { width: min(430px, 100%); }
-.app .sell-hub .sell-share-body {
-  display: grid;
-  justify-items: center;
-  gap: 14px;
-  padding-bottom: 22px;
-  text-align: center;
-}
-.app .sell-hub .sell-qr {
-  width: 188px;
-  height: 188px;
-  display: grid;
-  place-items: center;
-  padding: 12px;
-  background: #fff;
-  border: 1px solid var(--line-soft);
-  border-radius: 14px;
-}
-.app .sell-hub .sell-qr img { width: 100%; height: 100%; display: block; }
-.app .sell-hub .sell-share-tip {
-  margin: 0;
-  max-width: 36ch;
-  font-size: 13px;
-  line-height: 1.45;
-  color: var(--muted);
-}
-.app .sell-hub .sell-urlbox {
-  display: flex;
-  align-items: center;
-  gap: 9px;
-  width: 100%;
-  min-height: 44px;
-  padding: 10px 13px;
-  border: 1px solid var(--line-soft);
-  border-radius: 11px;
-  background: var(--surface);
-  font: inherit;
-  cursor: pointer;
-  transition: border-color .15s var(--ease-out), background-color .15s var(--ease-out);
-}
-.app .sell-hub .sell-urlbox-ico { flex: none; color: var(--muted); }
-.app .sell-hub .sell-urlbox-text {
-  flex: 1;
-  min-width: 0;
-  font-family: var(--dv-mono, ui-monospace, 'Cascadia Code', Consolas, monospace);
-  font-size: 12.5px;
-  font-weight: 600;
-  color: var(--ink);
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-  text-align: left;
-}
-@media (hover: hover) and (pointer: fine) {
-  .app .sell-hub .sell-urlbox:hover {
-    border-color: var(--brand-soft-line);
-    background: var(--brand-soft);
-  }
-  .app .sell-hub .sell-urlbox:hover .sell-urlbox-ico { color: var(--brand-ink); }
-}
-.app .sell-hub .sell-urlbox:focus-visible {
-  outline: none;
-  border-color: var(--brand-500);
-  box-shadow: var(--ring);
-}
-.app .sell-hub .sell-share-actions {
-  display: flex;
-  gap: 10px;
-  width: 100%;
-}
-.app .sell-hub .sell-share-actions .btn { flex: 1; }
-
-/* ---------- Responsive ---------- */
-@media (max-width: 640px) {
-  /* .page-head se centra en móvil: las acciones van a ancho completo. */
-  .app .sell-hub .sell-head-actions { width: 100%; }
-  .app .sell-hub .sell-head-actions .btn { flex: 1; }
-  .app .sell-hub .sell-status { padding: 12px; gap: 10px; }
-  .app .sell-hub .sell-status-actions { margin-left: auto; }
-  .app .sell-hub .sell-status--empty .btn { width: 100%; }
-  .app .sell-hub .sell-mod-grid { grid-template-columns: 1fr; }
-  .app .sell-hub .sell-mod { min-height: 64px; padding: 12px 14px; }
-  .app .sell-hub .sell-share-actions { flex-direction: column; }
-}
+   El rail (.rail-*) es genérico: lo usan "Mi tienda" (e-commerce) y
+   "Mi página" (web pública) en DashboardView. */
 
 /* ==========================================================================
    Helpers compartidos de los paneles operativos del e-commerce (pedidos,
@@ -479,13 +206,236 @@
 
 /* ---------- Movimiento reducido ---------- */
 @media (prefers-reduced-motion: reduce) {
-  .app .sell-hub .sell-mod,
-  .app .sell-hub .sell-mod-go,
-  .app .sell-hub .sell-urlbox,
-  .app .sell-hub .sell-urlbox-ico,
   .app .plans-panel .check-item,
-  .app .custauth-panel .check-item {
+  .app .custauth-panel .check-item,
+  .app .rail-item,
+  .app .rail-store {
     transition: none;
   }
-  .app .sell-hub .sell-mod:hover .sell-mod-go { transform: none; }
+}
+
+/* ==========================================================================
+   "Mi tienda" tipo POS: rail lateral propio (marca de la tienda + apartados)
+   y el panel activo a la derecha. Reemplaza a las SectionTabs del grupo
+   selling; en móvil el rail se vuelve la navegación de cards.
+   ========================================================================== */
+.app .rail-shell {
+  display: grid;
+  grid-template-columns: 212px minmax(0, 1fr);
+  gap: 18px;
+  align-items: start;
+}
+
+/* ---------- Rail ---------- */
+.app .rail {
+  position: sticky;
+  top: 72px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  min-height: min(560px, calc(100dvh - 132px));
+  max-height: calc(100dvh - 92px);
+  padding: 14px 12px;
+  background: var(--card);
+  border: 1px solid var(--line-soft);
+  border-radius: 16px;
+  box-shadow: var(--shadow-sm);
+}
+.app .rail-brand {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 2px 4px 12px;
+  border-bottom: 1px solid var(--line-soft);
+}
+.app .rail-logo {
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: 38px;
+  height: 38px;
+  border-radius: 10px;
+  background: var(--brand-500);
+  color: #fff;
+  font-size: 13px;
+  font-weight: 800;
+  letter-spacing: .02em;
+}
+.app .rail-txt { min-width: 0; display: grid; gap: 2px; }
+.app .rail-txt strong {
+  font-size: 13.5px;
+  font-weight: 700;
+  letter-spacing: -.01em;
+  color: var(--ink);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.app .rail-txt small {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 11.5px;
+  color: var(--muted);
+}
+.app .rail-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--ok); }
+.app .rail-dot.off { background: var(--muted); }
+
+.app .rail-nav {
+  display: grid;
+  gap: 2px;
+  overflow-y: auto;
+  scrollbar-width: thin;
+}
+.app .rail-item {
+  --t-bg: var(--brand-soft);
+  --t-line: var(--brand-soft-line);
+  --t-ink: var(--brand-ink);
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 38px;
+  padding: 8px 10px;
+  border: 0;
+  border-radius: 10px;
+  background: transparent;
+  font: inherit;
+  font-size: 13.5px;
+  font-weight: 500;
+  color: var(--ink-2);
+  text-align: left;
+  cursor: pointer;
+  transition: background-color .15s var(--ease-out), color .15s var(--ease-out),
+              border-color .15s var(--ease-out);
+}
+.app .rail-item.tone-ok { --t-bg: var(--ok-bg); --t-line: var(--ok-line); --t-ink: var(--ok-ink); }
+.app .rail-item.tone-info { --t-bg: var(--info-bg); --t-line: var(--info-line); --t-ink: var(--info-ink); }
+.app .rail-item.tone-warn { --t-bg: var(--warn-bg); --t-line: var(--warn-line); --t-ink: var(--warn-ink); }
+.app .rail-ico { flex: none; display: grid; place-items: center; color: var(--muted); transition: color .15s var(--ease-out); }
+.app .rail-item-txt { min-width: 0; display: grid; gap: 1px; }
+.app .rail-item-txt strong {
+  font-weight: inherit;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+/* El hint y la flecha solo viven en la vista de cards (móvil); en el rail
+   de escritorio el ítem es una fila compacta icono+label. */
+.app .rail-hint, .app .rail-go { display: none; }
+@media (hover: hover) and (pointer: fine) {
+  .app .rail-item:hover { background: var(--surface); }
+  .app .rail-item:hover .rail-ico { color: var(--brand-ink); }
+}
+.app .rail-item.active {
+  background: var(--brand-soft);
+  color: var(--brand-ink);
+  font-weight: 650;
+  box-shadow: inset 0 0 0 1px var(--brand-soft-line);
+}
+.app .rail-item.active .rail-ico { color: var(--brand-ink); }
+/* Item con candado: navega igual (el setter abre la vista previa del plan),
+   el candado solo delata que falta el beneficio. */
+.app .rail-item.locked .rail-ico { opacity: .55; }
+.app .rail-lock { flex: none; color: var(--warn-ink); }
+
+/* "Ver mi tienda": acción secundaria clavada al pie del rail (como el
+   Config/Sync del POS), separada de la navegación. */
+.app .rail-store {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  margin-top: auto;
+  min-height: 38px;
+  padding: 8px 10px;
+  border: 1px dashed var(--line-strong);
+  border-radius: 10px;
+  background: transparent;
+  font: inherit;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--muted);
+  cursor: pointer;
+  transition: border-color .15s var(--ease-out), background-color .15s var(--ease-out), color .15s var(--ease-out);
+}
+@media (hover: hover) and (pointer: fine) {
+  .app .rail-store:hover {
+    border-color: var(--brand-soft-line);
+    background: var(--brand-soft);
+    color: var(--brand-ink);
+  }
+}
+
+/* ---------- Panel ---------- */
+.app .rail-main { min-width: 0; }
+
+/* "‹ Menú": solo existe en móvil con un apartado abierto (el menú de cards
+   se oculta y este botón es la vuelta). En desktop siempre oculto. */
+.app .rail-back { display: none; }
+
+/* ---------- Responsive: en móvil el rail se muestra como el menú de
+   apartados — cards de ancho completo con ícono de color, label, hint y
+   flecha. ---------- */
+@media (max-width: 900px) {
+  .app .rail-shell { grid-template-columns: 1fr; }
+  /* Menú O panel, nunca apilados: con un apartado abierto se esconde el
+     rail; en la pantalla de menú se esconde el área de contenido. */
+  .app .rail-shell:not(.rail-shell--menu) .rail { display: none; }
+  .app .rail-shell--menu .rail-main { display: none; }
+  .app .rail-shell:not(.rail-shell--menu) .rail-back {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    margin: 0 0 12px;
+    padding: 7px 12px 7px 8px;
+    border: 1px solid var(--line-soft);
+    border-radius: 10px;
+    background: var(--card);
+    color: var(--ink-2);
+    font: inherit;
+    font-size: 13.5px;
+    font-weight: 600;
+    cursor: pointer;
+  }
+  .app .rail {
+    position: static;
+    min-height: 0;
+    max-height: none;
+    padding: 14px;
+  }
+  .app .rail-brand { margin-bottom: 2px; }
+  .app .rail-nav { display: grid; gap: 10px; overflow: visible; }
+  .app .rail-item {
+    min-height: 0;
+    padding: 12px 14px;
+    gap: 12px;
+    border: 1px solid var(--line-soft);
+    border-radius: 14px;
+    background: var(--card);
+    font-size: 14.5px;
+  }
+  .app .rail-ico {
+    width: 40px;
+    height: 40px;
+    border-radius: 11px;
+    background: var(--t-bg);
+    border: 1px solid var(--t-line);
+    color: var(--t-ink);
+  }
+  .app .rail-item-txt { flex: 1; gap: 2px; }
+  .app .rail-item-txt strong { font-weight: 650; color: var(--ink); }
+  .app .rail-hint {
+    display: block;
+    font-size: 12.5px;
+    font-weight: 400;
+    line-height: 1.35;
+    color: var(--muted);
+  }
+  .app .rail-go { display: block; flex: none; color: var(--muted); }
+  .app .rail-item.active {
+    border-color: var(--brand-500);
+    box-shadow: 0 0 0 1px var(--brand-500);
+  }
+  .app .rail-item.active .rail-item-txt strong { color: var(--brand-ink); }
+  .app .rail-store { margin-top: 4px; }
 }

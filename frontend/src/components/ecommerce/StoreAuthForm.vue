@@ -12,6 +12,7 @@ import { ref, computed, watch, onMounted, onUnmounted, nextTick } from 'vue'
 import { useCustomerStore } from '../../stores/customer.store.js'
 import { useCartStore } from '../../stores/cart.store.js'
 import { customerPublicApi, customerApi } from '../../api/customer.api.js'
+import { storeHostSlug } from '../../config/env.js'
 import AppIcon from '../AppIcon.vue'
 
 const props = defineProps({
@@ -42,6 +43,12 @@ const firstNameInput = ref(null)
 const lastNameInput = ref(null)
 const forgotInput = ref(null)
 const confirmInput = ref(null)
+// Consentimiento legal del comprador: el registro exige aceptar los
+// términos/privacidad DE LA TIENDA (no son opcionales para el comercio).
+const acceptTerms = ref(false)
+const termsError = ref('')
+const termsInput = ref(null)
+const legalTo = (kind) => storeHostSlug ? `/legal/${kind}` : `/${props.slug}/legal/${kind}`
 // Aviso/error del formulario: recibe el foco cuando el envío falla y el
 // problema no es de un campo concreto.
 const msgRef = ref(null)
@@ -147,6 +154,7 @@ watch(() => props.mode, () => {
   clearErrors()
   resetInvalid()
   registeredPending.value = false
+  termsError.value = ''
   focusFirst()
 })
 onMounted(() => { clearErrors(); focusFirst() })
@@ -172,6 +180,13 @@ async function submit() {
       busy.value = false
       await nextTick()
       confirmInput.value?.focus()
+      return
+    }
+    if (!acceptTerms.value) {
+      termsError.value = 'Tenés que aceptar los términos y la política de privacidad para crear tu cuenta.'
+      busy.value = false
+      await nextTick()
+      termsInput.value?.focus()
       return
     }
   }
@@ -448,6 +463,24 @@ onUnmounted(() => resizeObs?.disconnect())
           </span>
           <span v-if="mismatch" id="ec-auth-confirm-error" class="sp-form-error">{{ mismatch }}</span>
         </label>
+        <template v-if="mode === 'register'">
+          <label class="ecaf-terms">
+            <input
+              ref="termsInput" v-model="acceptTerms" type="checkbox" :disabled="busy"
+              :aria-invalid="termsError ? 'true' : undefined"
+              :aria-describedby="termsError ? 'ec-auth-terms-error' : undefined"
+              @change="termsError = ''"
+            />
+            <span class="ecaf-terms-text">
+              Acepto los
+              <RouterLink :to="legalTo('terms')" target="_blank" rel="noopener" @click.stop>Términos y condiciones</RouterLink>
+              y la
+              <RouterLink :to="legalTo('privacy')" target="_blank" rel="noopener" @click.stop>Política de privacidad</RouterLink>
+              de la tienda.
+            </span>
+          </label>
+          <span v-if="termsError" id="ec-auth-terms-error" class="sp-form-error" role="alert">{{ termsError }}</span>
+        </template>
       </template>
 
       <button type="submit" class="ecaf-submit" :disabled="busy || googleBusy">
@@ -459,6 +492,11 @@ onUnmounted(() => resizeObs?.disconnect())
     <div v-if="googleEnabled && mode !== 'forgot'" class="ecaf-google">
       <div class="ecaf-divider"><span>o continuá con</span></div>
       <div ref="googleEl" class="ecaf-google-btn" :class="{ 'is-busy': googleBusy }"></div>
+      <p v-if="mode === 'register'" class="ecaf-terms-note">
+        Al continuar con Google también aceptás los
+        <RouterLink :to="legalTo('terms')" target="_blank" rel="noopener">Términos</RouterLink> y la
+        <RouterLink :to="legalTo('privacy')" target="_blank" rel="noopener">Política de privacidad</RouterLink>.
+      </p>
     </div>
 
     <footer class="ecaf-foot">
@@ -632,6 +670,27 @@ onUnmounted(() => resizeObs?.disconnect())
 .ecaf-spin { animation: ecaf-rotate 1s linear infinite; }
 @keyframes ecaf-rotate { to { transform: rotate(360deg); } }
 .ecaf-google { margin-top: 2px; }
+/* Consentimiento legal: checkbox + enlaces a las páginas legales de la
+   tienda (rutas públicas /<slug>/legal/* o /legal/* en host de tienda). */
+.ecaf-terms {
+  display: flex; align-items: flex-start; gap: 9px;
+  font-size: 13px; line-height: 1.45;
+  color: var(--sp-ink-2, var(--sp-ink, #0f172a));
+  cursor: pointer;
+}
+.ecaf-terms input[type='checkbox'] {
+  flex: none; width: 16px; height: 16px; margin: 2px 0 0;
+  accent-color: var(--store-accent, #4f46e5); cursor: pointer;
+}
+.ecaf-terms-text a {
+  color: var(--sp-accent-text, var(--store-accent-ink, #111));
+  font-weight: 600; text-decoration: underline; text-underline-offset: 2px;
+}
+.ecaf-terms-note {
+  margin: 10px 0 0; font-size: 11.5px; line-height: 1.5; text-align: center;
+  color: var(--sp-muted, #5b6678);
+}
+.ecaf-terms-note a { color: inherit; font-weight: 600; text-decoration: underline; text-underline-offset: 2px; }
 .ecaf-divider {
   display: flex; align-items: center; gap: 12px; margin-bottom: 12px;
   font-size: 11.5px; font-weight: 600; letter-spacing: .08em; text-transform: uppercase;
